@@ -2,8 +2,8 @@
 
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-05-02
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
-> Guide Components **Total Pages**: 216 implemented **Total Flows**: 42 **API
-> Routers**: 76 (444 procedures)
+> Guide Components **Total Pages**: 220 implemented **Total Flows**: 42 **API
+> Routers**: 76 (461 procedures)
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -130,28 +130,33 @@ in `/admin/users` and `/admin/roles`.
 
 ### Public / Marketing Section
 
-| Route                   | Task ID | Sprint | Status | Primary Flow | Components Required                                                                 | API Router        |
-| ----------------------- | ------- | ------ | ------ | ------------ | ----------------------------------------------------------------------------------- | ----------------- |
-| `/`                     | -       | 14     | ✅     | -            | hero, card-grid, btn-primary, testimonials                                          | -                 |
-| `/about`                | -       | 14     | ✅     | -            | card, team-grid                                                                     | -                 |
-| `/blog`                 | -       | 14     | ✅     | -            | card-grid, search-input                                                             | -                 |
-| `/blog/[slug]`          | -       | 14     | ✅     | -            | article-content, breadcrumb                                                         | -                 |
-| `/careers`              | -       | 14     | ✅     | -            | card-grid, badge                                                                    | -                 |
-| `/careers/[id]`         | -       | 14     | ✅     | -            | card, btn-primary                                                                   | -                 |
-| `/contact`              | -       | 14     | ✅     | -            | input, textarea, btn-primary                                                        | -                 |
-| `/features`             | -       | 14     | ✅     | -            | card-grid, hero                                                                     | -                 |
-| `/lp/[slug]`            | -       | 14     | ✅     | -            | hero, card, btn-primary                                                             | -                 |
-| `/partners`             | -       | 14     | ✅     | -            | card-grid, logo-grid                                                                | -                 |
-| `/press`                | -       | 14     | ✅     | -            | card-grid, date-badge                                                               | -                 |
-| `/pricing`              | -       | 14     | ✅     | FLOW-010     | pricing-card, toggle-switch, btn-primary                                            | -                 |
-| `/security`             | -       | 14     | ✅     | -            | card, badge                                                                         | -                 |
-| `/status`               | -       | 14     | ✅     | -            | metric-card, badge                                                                  | -                 |
-| `/book/[handle]/[slug]` | PG-203  | 18     | ✅     | FLOW-019     | booking-form, slot-picker, card, btn-primary (external entry, noindex, chrome-free) | `publicBooking.*` |
+| Route                   | Task ID | Sprint | Status | Primary Flow    | Components Required                                                                 | API Router                          |
+| ----------------------- | ------- | ------ | ------ | --------------- | ----------------------------------------------------------------------------------- | ----------------------------------- |
+| `/`                     | -       | 14     | ✅     | -               | hero, card-grid, btn-primary, testimonials                                          | -                                   |
+| `/about`                | -       | 14     | ✅     | -               | card, team-grid                                                                     | -                                   |
+| `/blog`                 | -       | 14     | ✅     | -               | card-grid, search-input                                                             | -                                   |
+| `/blog/[slug]`          | -       | 14     | ✅     | -               | article-content, breadcrumb                                                         | -                                   |
+| `/careers`              | -       | 14     | ✅     | -               | card-grid, badge                                                                    | -                                   |
+| `/careers/[id]`         | -       | 14     | ✅     | -               | card, btn-primary                                                                   | -                                   |
+| `/contact`              | -       | 14     | ✅     | -               | input, textarea, btn-primary                                                        | -                                   |
+| `/features`             | -       | 14     | ✅     | -               | card-grid, hero                                                                     | -                                   |
+| `/lp/[slug]`            | -       | 14     | ✅     | -               | hero, card, btn-primary                                                             | -                                   |
+| `/partners`             | -       | 14     | ✅     | -               | card-grid, logo-grid                                                                | -                                   |
+| `/press`                | -       | 14     | ✅     | -               | card-grid, date-badge                                                               | -                                   |
+| `/pricing`              | -       | 14     | ✅     | FLOW-010        | pricing-card, toggle-switch, btn-primary                                            | -                                   |
+| `/security`             | -       | 14     | ✅     | -               | card, badge                                                                         | -                                   |
+| `/status`               | -       | 14     | ✅     | -               | metric-card, badge                                                                  | -                                   |
+| `/book/[handle]/[slug]` | PG-203  | 18     | ✅     | FLOW-019        | booking-form, slot-picker, card, btn-primary (external entry, noindex, chrome-free) | `publicBooking.*`                   |
+| `/dsar/[handle]`        | PG-203  | 18     | ✅     | FLOW-040 (DSAR) | request-form, card, btn-primary (external entry, noindex, chrome-free)              | `privacy.getFirm`, `privacy.submit` |
+| `/dsar/[handle]/verify` | PG-203  | 18     | ✅     | FLOW-040 (DSAR) | card, status-message (external entry from email, noindex, chrome-free)              | `privacy.verify`                    |
+| `/dsar/[handle]/export` | PG-203  | 18     | ✅     | FLOW-040 (DSAR) | card, btn-primary (external entry from email, noindex, chrome-free)                 | `privacy.downloadExport`            |
 
 **Note**: All public marketing pages are static content. No tRPC backend
-required. The one exception is `/book/[handle]/[slug]` (PG-203), the
+required. The exceptions are `/book/[handle]/[slug]` (PG-203), the
 unauthenticated booking page, which calls the `publicBooking` router (3 public
-procedures: `getEventType`, `listSlots`, `book`; ADR-083).
+procedures: `getEventType`, `listSlots`, `book`; ADR-083), and the three
+`/dsar/[handle]` pages (PG-203), which call the `privacy` router's public
+procedures (`getFirm`, `submit`, `verify`, `downloadExport`).
 
 ---
 
@@ -587,21 +592,22 @@ procedures: `getEventType`, `listSlots`, `book`; ADR-083).
 
 ### Settings Section
 
-| Route                     | Task ID | Sprint | Status | Primary Flow | Components Required              | API Router         |
-| ------------------------- | ------- | ------ | ------ | ------------ | -------------------------------- | ------------------ |
-| `/settings`               | -       | -      | ✅     | -            | card, nav-list                   | -                  |
-| `/settings/account`       | -       | -      | ✅     | FLOW-035     | input, avatar, btn-primary       | `auth.*`           |
-| `/settings/team`          | -       | -      | ✅     | FLOW-002     | data-table, avatar, modal        | `auth.*`           |
-| `/settings/ai`            | -       | -      | ✅     | FLOW-045     | data-table, badge, toggle-switch | `chainVersion.*`   |
-| `/settings/integrations`  | -       | -      | ✅     | FLOW-036     | card-grid, badge                 | `integrations.*`   |
-| `/settings/notifications` | -       | -      | ✅     | FLOW-021     | toggle-switch, select            | -                  |
-| `/settings/pipeline`      | -       | -      | ✅     | FLOW-007     | data-table, drag-drop            | `pipelineConfig.*` |
-| `/settings/routing`       | -       | 14     | ✅     | -            | data-table, card, btn-primary    | `routing.*`        |
-| `/settings/security/mfa`  | -       | -      | ✅     | FLOW-001     | card, input, btn-primary         | `auth.*`           |
-| `/settings/profile`       | -       | -      | ⏳     | FLOW-035     | input, avatar, btn-primary       | `auth.*`           |
-| `/settings/preferences`   | -       | -      | ⏳     | FLOW-035     | toggle-switch, select            | -                  |
-| `/settings/devices`       | -       | -      | ⏳     | FLOW-004     | data-table, badge                | `auth.*`           |
-| `/settings/activity`      | -       | -      | ⏳     | FLOW-020     | timeline                         | `timeline.*`       |
+| Route                        | Task ID | Sprint | Status | Primary Flow    | Components Required              | API Router         |
+| ---------------------------- | ------- | ------ | ------ | --------------- | -------------------------------- | ------------------ |
+| `/settings`                  | -       | -      | ✅     | -               | card, nav-list                   | -                  |
+| `/settings/account`          | -       | -      | ✅     | FLOW-035        | input, avatar, btn-primary       | `auth.*`           |
+| `/settings/team`             | -       | -      | ✅     | FLOW-002        | data-table, avatar, modal        | `auth.*`           |
+| `/settings/ai`               | -       | -      | ✅     | FLOW-045        | data-table, badge, toggle-switch | `chainVersion.*`   |
+| `/settings/integrations`     | -       | -      | ✅     | FLOW-036        | card-grid, badge                 | `integrations.*`   |
+| `/settings/notifications`    | -       | -      | ✅     | FLOW-021        | toggle-switch, select            | -                  |
+| `/settings/pipeline`         | -       | -      | ✅     | FLOW-007        | data-table, drag-drop            | `pipelineConfig.*` |
+| `/settings/privacy-requests` | PG-203  | 18     | ✅     | FLOW-040 (DSAR) | data-table, dialog, badge        | `privacy.admin.*`  |
+| `/settings/routing`          | -       | 14     | ✅     | -               | data-table, card, btn-primary    | `routing.*`        |
+| `/settings/security/mfa`     | -       | -      | ✅     | FLOW-001        | card, input, btn-primary         | `auth.*`           |
+| `/settings/profile`          | -       | -      | ⏳     | FLOW-035        | input, avatar, btn-primary       | `auth.*`           |
+| `/settings/preferences`      | -       | -      | ⏳     | FLOW-035        | toggle-switch, select            | -                  |
+| `/settings/devices`          | -       | -      | ⏳     | FLOW-004        | data-table, badge                | `auth.*`           |
+| `/settings/activity`         | -       | -      | ⏳     | FLOW-020        | timeline                         | `timeline.*`       |
 
 **Routing Router Procedures** (11 total):
 
@@ -707,64 +713,65 @@ data
 
 ## API Router Summary
 
-| Router                       | Procedures | Primary Routes                                        | Status            |
-| ---------------------------- | ---------- | ----------------------------------------------------- | ----------------- |
-| `auth`                       | 18         | `/login`, `/signup`, `/auth/*`, `/settings/account`   | ✅ Active         |
-| `lead`                       | 18         | `/leads`, `/leads/new`, `/leads/[id]`                 | ✅ Active         |
-| `contact`                    | 17         | `/contacts`, `/contacts/new`, `/contacts/[id]`        | ✅ Active         |
-| `account`                    | 12         | `/accounts`, `/accounts/[id]`                         | ✅ Active         |
-| `opportunity`                | 12         | `/deals`, `/deals/[id]`                               | ✅ Active         |
-| `pipelineConfig`             | 5          | `/settings/pipeline`                                  | ✅ Active         |
-| `task`                       | 12         | `/tasks`, `/tasks/[id]`                               | ✅ Active         |
-| `ticket`                     | 15         | `/tickets`, `/tickets/[id]`                           | ✅ Active         |
-| `ticketRouting`              | 2          | Ticket auto-routing (IFC-067)                         | ✅ Active         |
-| `analytics`                  | 13         | `/analytics`, `/dashboard`                            | ✅ Active         |
-| `cases`                      | 12         | `/cases`, `/cases/new`, `/cases/[id]`                 | ✅ Active         |
-| `appointments`               | 19         | `/calendar`, `/calendar/new`, `/calendar/[id]`        | ✅ Active         |
-| `documents`                  | 18         | `/documents`, `/documents/[id]`                       | ✅ Active         |
-| `upload`                     | 2          | `/documents/new` (file upload)                        | ✅ Active         |
-| `billing`                    | 16         | `/billing/*`                                          | ⏳ Stripe pending |
-| `agent`                      | 8          | `/agent-approvals`, `/agent-approvals/agents`         | ✅ Active         |
-| `chainVersion`               | 14         | `/settings/ai`                                        | ✅ Active         |
-| `zepBudget`                  | 3          | AI memory budget management                           | ✅ Active         |
-| `intelligence`               | 10         | `/agent-approvals/churn-risk`, `/deals/[id]/forecast` | ✅ Active         |
-| `autoResponse`               | 13         | Auto-response management (IFC-029)                    | ✅ Active         |
-| `aiMonitoring`               | 8          | `/agent-approvals/drift`, `/agent-approvals/latency`  | ✅ Active         |
-| `aiReview`                   | 7          | `/agent-approvals/ai-review`                          | ✅ Active         |
-| `experiment`                 | 15         | `/agent-approvals/experiments`                        | ✅ Active         |
-| `audit`                      | 5          | `/governance/*`                                       | ✅ Active         |
-| `health`                     | 5          | Health checks                                         | ✅ Active         |
-| `system`                     | 8          | System info                                           | ✅ Active         |
-| `timeline`                   | 8          | `/cases/timeline`                                     | ✅ Active         |
-| `subscriptions`              | 5          | Real-time WebSocket subscriptions                     | ✅ Active         |
-| `integrations`               | 6          | `/settings/integrations`                              | ✅ Active         |
-| `email`                      | 12         | `/email`, `/email/[id]`                               | ✅ Active         |
-| `emailMailbox`               | 7          | `/email/email-settings`, `/email/oauth/callback`      | ✅ Active         |
-| `emailSettings`              | 6          | `/email/email-settings` (incl. `suppression.*`)       | ✅ Active         |
-| `emailSignatures`            | 6          | `/email/signatures`, `/email/compose`                 | ✅ Active         |
-| `emailAttachments`           | 1          | `/email/compose`                                      | ✅ Active         |
-| `webhooks`                   | 9          | `/docs/webhooks`, webhook management                  | ✅ Active         |
-| `home`                       | 7          | Authenticated home page data (IFC-182)                | ✅ Active         |
-| `notifications`              | 8          | `/notifications`, `/notifications/settings`           | ✅ Active         |
-| `workflow`                   | 2          | Workflow engine (IFC-028)                             | ✅ Active         |
-| `queuesAdmin`                | 2          | Admin queue management                                | ✅ Active         |
-| `activityFeed`               | 2          | Activity feed (IFC-069)                               | ✅ Active         |
-| `moduleAccess`               | 3          | Module access control (IFC-209)                       | ✅ Active         |
-| `routing`                    | 11         | `/settings/routing`, lead routing (PG-132)            | ✅ Active         |
-| `feedbackSurvey`             | 4          | `/analytics/feedback` (IFC-068)                       | ✅ Active         |
-| `inbound`                    | 1          | Cross-repo intake (`inbound.createLead`)              | ✅ Active         |
-| `termsAcceptance`            | 2          | `/terms` (server-side ToS acceptance audit, IFC-309)  | ✅ Active         |
-| `accountTiers`               | 3          | `/accounts/account-tiers` (PG-196)                    | ✅ Active         |
-| `accountTerritories`         | 8          | `/accounts/territory-mapping` (PG-197)                | ✅ Active         |
-| `caseTypes`                  | 6          | `/cases/case-types`, `/cases/new` (PG-204)            | ✅ Active         |
-| `contactTypes`               | 6          | `/contacts/contact-types`, `/contacts/new` (PG-205)   | ✅ Active         |
-| `analytics.scheduledReports` | 10         | `/analytics/scheduled-reports` (PG-201)               | ✅ Active         |
-| `approvalPolicies`           | 7          | `/agent-approvals/approval-policies` (PG-198)         | ✅ Active         |
-| `calendar.availability`      | 3          | `/calendar/availability` (PG-202)                     | ✅ Active         |
-| `modelConfig`                | 3          | `/agent-approvals/model-config` (PG-199)              | ✅ Active         |
-| `calendar.eventTypes`        | 6          | `/calendar/event-types`, `/calendar/new` (PG-203)     | ✅ Active         |
-| `publicBooking`              | 3          | `/book/[handle]/[slug]` (PG-203, public)              | ✅ Active         |
-| **Total**                    | **444**    | **55 routers**                                        |                   |
+| Router                       | Procedures | Primary Routes                                                                                             | Status            |
+| ---------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------- | ----------------- |
+| `auth`                       | 18         | `/login`, `/signup`, `/auth/*`, `/settings/account`                                                        | ✅ Active         |
+| `lead`                       | 18         | `/leads`, `/leads/new`, `/leads/[id]`                                                                      | ✅ Active         |
+| `contact`                    | 17         | `/contacts`, `/contacts/new`, `/contacts/[id]`                                                             | ✅ Active         |
+| `account`                    | 12         | `/accounts`, `/accounts/[id]`                                                                              | ✅ Active         |
+| `opportunity`                | 12         | `/deals`, `/deals/[id]`                                                                                    | ✅ Active         |
+| `pipelineConfig`             | 5          | `/settings/pipeline`                                                                                       | ✅ Active         |
+| `task`                       | 12         | `/tasks`, `/tasks/[id]`                                                                                    | ✅ Active         |
+| `ticket`                     | 15         | `/tickets`, `/tickets/[id]`                                                                                | ✅ Active         |
+| `ticketRouting`              | 2          | Ticket auto-routing (IFC-067)                                                                              | ✅ Active         |
+| `analytics`                  | 13         | `/analytics`, `/dashboard`                                                                                 | ✅ Active         |
+| `cases`                      | 12         | `/cases`, `/cases/new`, `/cases/[id]`                                                                      | ✅ Active         |
+| `appointments`               | 19         | `/calendar`, `/calendar/new`, `/calendar/[id]`                                                             | ✅ Active         |
+| `documents`                  | 18         | `/documents`, `/documents/[id]`                                                                            | ✅ Active         |
+| `upload`                     | 2          | `/documents/new` (file upload)                                                                             | ✅ Active         |
+| `billing`                    | 16         | `/billing/*`                                                                                               | ⏳ Stripe pending |
+| `agent`                      | 8          | `/agent-approvals`, `/agent-approvals/agents`                                                              | ✅ Active         |
+| `chainVersion`               | 14         | `/settings/ai`                                                                                             | ✅ Active         |
+| `zepBudget`                  | 3          | AI memory budget management                                                                                | ✅ Active         |
+| `intelligence`               | 10         | `/agent-approvals/churn-risk`, `/deals/[id]/forecast`                                                      | ✅ Active         |
+| `autoResponse`               | 13         | Auto-response management (IFC-029)                                                                         | ✅ Active         |
+| `aiMonitoring`               | 8          | `/agent-approvals/drift`, `/agent-approvals/latency`                                                       | ✅ Active         |
+| `aiReview`                   | 7          | `/agent-approvals/ai-review`                                                                               | ✅ Active         |
+| `experiment`                 | 15         | `/agent-approvals/experiments`                                                                             | ✅ Active         |
+| `audit`                      | 5          | `/governance/*`                                                                                            | ✅ Active         |
+| `health`                     | 5          | Health checks                                                                                              | ✅ Active         |
+| `system`                     | 8          | System info                                                                                                | ✅ Active         |
+| `timeline`                   | 8          | `/cases/timeline`                                                                                          | ✅ Active         |
+| `subscriptions`              | 5          | Real-time WebSocket subscriptions                                                                          | ✅ Active         |
+| `integrations`               | 6          | `/settings/integrations`                                                                                   | ✅ Active         |
+| `email`                      | 12         | `/email`, `/email/[id]`                                                                                    | ✅ Active         |
+| `emailMailbox`               | 7          | `/email/email-settings`, `/email/oauth/callback`                                                           | ✅ Active         |
+| `emailSettings`              | 6          | `/email/email-settings` (incl. `suppression.*`)                                                            | ✅ Active         |
+| `emailSignatures`            | 6          | `/email/signatures`, `/email/compose`                                                                      | ✅ Active         |
+| `emailAttachments`           | 1          | `/email/compose`                                                                                           | ✅ Active         |
+| `webhooks`                   | 9          | `/docs/webhooks`, webhook management                                                                       | ✅ Active         |
+| `home`                       | 7          | Authenticated home page data (IFC-182)                                                                     | ✅ Active         |
+| `notifications`              | 8          | `/notifications`, `/notifications/settings`                                                                | ✅ Active         |
+| `workflow`                   | 2          | Workflow engine (IFC-028)                                                                                  | ✅ Active         |
+| `queuesAdmin`                | 2          | Admin queue management                                                                                     | ✅ Active         |
+| `activityFeed`               | 2          | Activity feed (IFC-069)                                                                                    | ✅ Active         |
+| `moduleAccess`               | 3          | Module access control (IFC-209)                                                                            | ✅ Active         |
+| `routing`                    | 11         | `/settings/routing`, lead routing (PG-132)                                                                 | ✅ Active         |
+| `feedbackSurvey`             | 4          | `/analytics/feedback` (IFC-068)                                                                            | ✅ Active         |
+| `inbound`                    | 1          | Cross-repo intake (`inbound.createLead`)                                                                   | ✅ Active         |
+| `termsAcceptance`            | 2          | `/terms` (server-side ToS acceptance audit, IFC-309)                                                       | ✅ Active         |
+| `accountTiers`               | 3          | `/accounts/account-tiers` (PG-196)                                                                         | ✅ Active         |
+| `accountTerritories`         | 8          | `/accounts/territory-mapping` (PG-197)                                                                     | ✅ Active         |
+| `caseTypes`                  | 6          | `/cases/case-types`, `/cases/new` (PG-204)                                                                 | ✅ Active         |
+| `contactTypes`               | 6          | `/contacts/contact-types`, `/contacts/new` (PG-205)                                                        | ✅ Active         |
+| `analytics.scheduledReports` | 10         | `/analytics/scheduled-reports` (PG-201)                                                                    | ✅ Active         |
+| `approvalPolicies`           | 7          | `/agent-approvals/approval-policies` (PG-198)                                                              | ✅ Active         |
+| `calendar.availability`      | 3          | `/calendar/availability` (PG-202)                                                                          | ✅ Active         |
+| `modelConfig`                | 3          | `/agent-approvals/model-config` (PG-199)                                                                   | ✅ Active         |
+| `calendar.eventTypes`        | 6          | `/calendar/event-types`, `/calendar/new` (PG-203)                                                          | ✅ Active         |
+| `publicBooking`              | 3          | `/book/[handle]/[slug]` (PG-203, public)                                                                   | ✅ Active         |
+| `privacy`                    | 17         | `/dsar/[handle]/*` (public), `/settings/privacy-requests` (admin), lead and contact detail banner (PG-203) | ✅ Active         |
+| **Total**                    | **461**    | **56 routers**                                                                                             |                   |
 
 ---
 

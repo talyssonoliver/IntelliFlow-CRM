@@ -1,0 +1,31 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 60 files total
+[codex-review] in scope : 34 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T07:57:19.026Z
+Base ref  : origin/main
+Files in scope : 34
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/calendar/public-booking.router.ts:508 — incomplete-booking-lock-coordination
+    Issue    : The booking lock does not coordinate with internal appointment creation or rescheduling, so concurrent bookings can exceed the firm's daily cap.
+    Evidence : The transaction takes `await lockTenant(tx, tenantId, 'booking')` before `computeSlots` checks the daily count, but appointments.router.ts calls assertAppointmentWithinAvailability and then the scheduling use case without acquiring this lock. With maxDailyBookings=1 and no existing appointments, a public request and an internal request can both observe zero bookings and commit appointments at different times on the same day. The database exclusion constraint only prevents overlapping times for the same organizer, so it does not prevent this cap violation. The public-booking tests assert that the advisory lock is called but do not exercise coordination with internal writes.
+    Fix      : Make public and internal appointment creation and rescheduling acquire the same tenant lock, and perform the daily-cap check and appointment write within the transaction holding that lock.
+    Fingerprint: 283b28bc7d89203adc3672b6d0e2324890e7fe34338adb652ec098b0bef7f0a5
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

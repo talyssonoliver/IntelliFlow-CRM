@@ -25,6 +25,13 @@ const prismaContactCountMock = vi.fn();
 const prismaOpportunityCountMock = vi.fn();
 const prismaIndustryFindManyMock = vi.fn().mockResolvedValue([]);
 
+// PG-203 #1002: every person eligible here; the blocked paths have their own tests.
+vi.mock('../../lib/data-request-guard', async (importOriginal) =>
+  (await import('../../test/mocks/data-request-guard.mock')).passThroughGuard(
+    await importOriginal()
+  )
+);
+
 vi.mock('@intelliflow/db', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@intelliflow/db');
   return {
@@ -33,6 +40,14 @@ vi.mock('@intelliflow/db', async () => {
       contactAutomationSetting: prismaContactSettingMock,
       accountAutomationSetting: prismaAccountSettingMock,
       contact: {
+        // PG-203 Q22: the tag job reads the profile as stored now.
+        findFirst: vi.fn().mockResolvedValue({
+          firstName: 'Ada',
+          lastName: 'Lovelace',
+          title: 'Engineer',
+          company: 'Engines',
+          contactNotes: 'engineer',
+        }),
         findUnique: prismaContactFindUniqueMock,
         count: prismaContactCountMock,
         update: prismaContactUpdateMock,
@@ -44,6 +59,8 @@ vi.mock('@intelliflow/db', async () => {
       contactAIInsight: { upsert: prismaContactAIInsightUpsertMock },
       accountAIInsight: { upsert: prismaAccountAIInsightUpsertMock },
       contactReplyDraft: { create: prismaReplyDraftCreateMock },
+      // PG-203: the reply-draft write takes each thread participant's address lock.
+      $queryRaw: vi.fn().mockResolvedValue([{ locked: 1 }]),
       opportunity: { count: prismaOpportunityCountMock },
       accountIndustryOption: { findMany: prismaIndustryFindManyMock },
     },
@@ -111,7 +128,7 @@ describe('IFC-312 job happy paths', () => {
       prismaContactSettingMock.findUnique.mockResolvedValue({ aiEnrichment: true });
       prismaContactFindUniqueMock.mockResolvedValue({
         id: 'c-1',
-        email: 'jane@acme.com',
+        email: 'subject@example.invalid',
         firstName: 'Jane',
         lastName: null,
         company: null,

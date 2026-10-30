@@ -608,3 +608,653 @@ Open plan-time items:
 - A recording-prisma tenantId helper (test).
 - A test that a staff WEBSITE lead with the same email is not linked (domain/test).
 - `/book` is added to the navigation hide list (frontend).
+
+---
+
+## Addendum A: DSAR end to end (owner Q13, Q14, Q16-Q19; runner conditions; review round 2, 2026-10-21)
+
+**Why it is in PG-203.** AC-022 requires that DSAR export and erasure cover the booking fields. Scoping found the DSAR
+path broken end to end:
+
+- `dsar-workflow.ts` calls Prisma accessors that do not exist (`db.leads`, `db.data_subject_requests`, …).
+- Its tables and `anonymize_record` exist only in an unapplied Supabase SQL file. They are absent from the production
+  snapshot and from every migration.
+- The subject is the nil UUID.
+- A public GET can trigger an erasure.
+- There are no `/dsar` pages and no SLA job.
+
+The owner chose to fix it fully. It ships as a separate commit with its own tests (runner).
+
+**Review round 1** (security-lead, compliance, backend-architect) rejected the first draft. Every must-fix is folded
+in below. Owner rulings Q18 and Q19 settled the two scope questions the reviews raised.
+
+### Roles and identity
+
+- **Controller and processor.** Each firm (tenant) is the controller. Aurora is the processor and gives assistance
+  under its DPA. Every request is addressed to one firm.
+- **Subject.** `(tenantId, normalised email)`: `lower(btrim(email))`, an exact match with no `+tag` folding, and
+  scoped to that firm only. A user UUID is never the subject. CRM rows are matched by `lower(btrim(email))` in raw SQL,
+  because existing rows are not guaranteed lowercase. That predicate is not index-assisted; it is bounded by `tenantId`
+  and acceptable at DSAR volume.
+
+### Entry and automation (Q16, Q17)
+
+- **Public requests.** The public page is `/dsar/<bookingHandle>`, linked from the booking page footer and from the
+  booking confirmation email. A firm without a handle cannot receive public requests.
+- **Staff-logged requests.** Staff log the request in the app for the person. The admin must type how identity was
+  checked (`identityNote`, required). The request starts VERIFIED.
+- **Automatic after verification.** ACCESS and PORTABILITY complete automatically. The export downloads through an
+  emailed, expiring link.
+- **Admin decision.** ERASURE, RECTIFICATION, RESTRICTION and OBJECTION wait for a firm admin on
+  `/settings/privacy-requests`.
+- **SLA alerts.** A job emails admins before the deadline.
+
+### Storage (Option A, Class A: new tables and enums only)
+
+The migration is `20261022120000_dsar_requests`. It copies the `20261021120100_event_types` shape:
+
+- `SET LOCAL lock_timeout`, `CREATE TYPE`, named CHECKs and cuid ids;
+- a `(tenantId, id)` unique key, and a tenant FK with ON DELETE CASCADE;
+- RLS with USING and WITH CHECK inside the `DO $$ … duplicate_object` block;
+- a `^[0-9a-f]{64}$` CHECK on every hash column.
+
+No Supabase table name is reused.
+
+**`dsar_requests`**
+
+| Field | Notes |
+|---|---|
+| `id`, `tenantId` | |
+| `type` | `DsarRequestType`: ACCESS, RECTIFICATION, ERASURE, RESTRICTION, PORTABILITY, OBJECTION |
+| `status` | `DsarRequestStatus`: PENDING_VERIFICATION, VERIFIED, COMPLETED, REJECTED |
+| `source` | CHECK PUBLIC_FORM or STAFF |
+| `subjectEmail` | varchar(320). CHECK equals `lower(btrim())` |
+| `subjectEmailHash` | char(64). HMAC, used for the cross-tenant cap |
+| `details` | ≤ 2000 |
+| `identityNote` | ≤ 500. CHECK: required when the source is STAFF |
+| `verificationTokenHash` | |
+| `verificationExpiresAt` | |
+| `receivedAt` | Default now |
+| `verifiedAt` | |
+| `slaDeadline` | |
+| `extendedUntil` | |
+| `extensionReason` | |
+| `exportTokenHash` | CHECK: set together with `exportExpiresAt` |
+| `exportExpiresAt` | CHECK: set together with `exportTokenHash` |
+| `exportDownloadedAt` | |
+| `ipHash` | |
+| `createdById` | User FK, SET NULL |
+| `resolvedById` | User FK, SET NULL |
+| `resolutionNote` | ≤ 2000 |
+| `noHoldConfirmedAt` | |
+| `slaAlertedAt` | |
+| `completedAt`, `createdAt`, `updatedAt` | |
+
+Indexes:
+
+- `(tenantId, status, slaDeadline)`
+- `(tenantId, subjectEmail, createdAt)`
+- `(tenantId, ipHash, createdAt)`
+- `(subjectEmailHash, createdAt)`
+
+**`processing_restrictions` (Q18)**
+
+| Field | Notes |
+|---|---|
+| `id`, `tenantId` | |
+| `subjectEmail` | Normalised |
+| `kind` | CHECK RESTRICTION or OBJECTION |
+| `dsarRequestId` | FK SET NULL |
+| `createdById` | |
+| `createdAt` | |
+| `liftedAt` | |
+| `liftedById` | |
+| `liftNote` | |
+
+Constraints: a partial unique index `(tenantId, subjectEmail) WHERE "liftedAt" IS NULL`, and RLS as above.
+
+**ADR-007.** Its note that legal holds and DSAR use "existing raw-SQL relations" is corrected. No legal-hold registry
+exists anywhere. See the erasure confirmation below.
+
+### Security model (security-lead must-fixes)
+
+- **Tokens.** 32 random bytes, base64url. They are stored only as an HMAC-SHA256 under a key derived from
+  `BOOKING_IP_SALT` with the label `dsar-token:`. No new production secret is needed. As with `getBookingSalt`,
+  production fails closed without the salt.
+- **Token comparison.**
+  - Compare with `crypto.timingSafeEqual` on equal-length buffers.
+  - `verify` and `downloadExport` always make the same reads: the row by id, then the compare. A missing id compares
+    against a dummy hash (the `NONE` pattern).
+  - Every failure returns one generic error.
+- **Transport.** No token appears in any URL the server sees.
+  - Links carry `#r=<id>.<token>` in the URL fragment.
+  - The page reads the fragment, strips it immediately with `history.replaceState`, and sends it in a tRPC
+    **mutation** (POST body).
+  - `downloadExport` is a mutation too.
+  - `/dsar/*` is served with `Referrer-Policy: no-referrer` and `Cache-Control: no-store`.
+  - Tokens and emails are never logged.
+- **Verification link.** Single-use (the hash is cleared on use), with a 24 h expiry.
+- **Export link.** A 72 h expiry. It is multi-use inside the window. Each download sets `exportDownloadedAt` and is
+  audit-logged.
+- **Abuse caps** are counted from `dsar_requests` under per-tenant and per-email-hash advisory locks, atomically,
+  before any email is sent:
+  - per tenant+email: 3 per 24 h;
+  - per tenant+ipHash: 10 per hour, skipped when the IP is `unknown` (the email caps still apply);
+  - **global per subjectEmailHash, across all tenants: 3 per 24 h** (stops email-bombing).
+  - Resend cooldown: if the same tenant, type and email already has a PENDING request less than 1 hour old, the
+    submit sends no new email and returns the same response.
+  - A cap hit gets the booking-identical TOO_MANY_REQUESTS.
+- **Enumeration.**
+  - `getFirm` makes the same single handle read whatever the outcome. An unknown handle and a firm with booking off
+    return the identical NOT_FOUND.
+  - `submit` returns one response and sends the verification email whether or not the email matches CRM data.
+  - Emails use fixed templates. They carry no visitor-typed text: no `details`, no name.
+  - A filled honeypot gets a fake success with zero DB calls.
+- **Admin authorisation.** Every `privacy.admin.*` procedure uses `adminTenantProcedure` (trpc.ts: isAuthed, then
+  isAdmin, then tenant). That means ADMIN only; MANAGER and OWNER are not included. Every `where` uses the context
+  tenantId, and a foreign id returns NOT_FOUND. The restriction-banner read (`privacy.restrictionFor`) is a
+  `tenantProcedure` read for any member of the tenant.
+- **Erasure guards.**
+  - Runs only for a VERIFIED ERASURE request.
+  - Requires `noHoldConfirmed: true`.
+  - Inside the transaction, the request row is re-read `FOR UPDATE` and its status re-checked, so a double click or
+    two admins can never run it twice.
+  - The audit row stores counts and the admin id, never erased values. It is awaited, not fire-and-forget.
+
+### Public flow
+
+The public procedures live in their own `privacy-public.router.ts`, which is the file in the
+`tenant-procedure-enforcement` allowlist.
+
+- **`getFirm({handle})`**: returns `{firmName, privacyUrl}`.
+- **`submit({handle, type, email, details?, consent: true, __honeypot})`**:
+  - writes PENDING_VERIFICATION with the token hash and expiry;
+  - emails the fixed verification template: firm name, request type, link, expiry, and what happens next;
+  - responds "check your email".
+- **`verify({requestId, token})`**:
+  - Sets VERIFIED and `verifiedAt`.
+  - Sets `slaDeadline = addCalendarMonths(verifiedAt, 1)`. If the target month is shorter, the deadline is that
+    month's last day. The clock starts at verification because identity proof is needed; for staff-logged requests
+    it starts at logging.
+  - Emails the requester a confirmation with the type and **due date**, and emails the firm's admins (no personal
+    data).
+  - For ACCESS or PORTABILITY it also sets COMPLETED, issues an export token and **emails** the export link. The token
+    is not returned to the browser.
+  - The page shows the outcome and the due date.
+- **`downloadExport({requestId, token})`**: returns the export JSON, which the page saves as a file.
+- **Removed.** The old `submitDSAR` and `getDSARStatus`, the console email stub that logged recipients, and the
+  `error.message` pass-through. A grep found no web or api-client caller.
+
+### Export (Art 15 and Art 20)
+
+- **Scope.** Computed live and scoped to tenant plus email. Each category has an explicit field allowlist, is capped
+  at 500 rows, and is returned as an attachment.
+- **`processingInformation`.** Holds the controller (firm name and privacy URL), purposes, categories, recipients
+  and sub-processors (hosting and database, the email provider, the AI provider for lead scoring), retention, source,
+  and the Art 16-18 and Art 21 rights. It also states the right to complain to the ICO and that AI lead scoring is
+  used (no solely-automated decisions with legal effect).
+- **`data` categories:**
+  - lead profile, including source, status, score and the latest AI score summary;
+  - lead activities (type, title, time);
+  - contact profile;
+  - contact activities (type, title, time);
+  - appointments booked with the email, including the booker fields, consent time and version;
+  - communications metadata: email records (date, direction, subject), tickets (subject, status, date), chats (date,
+    status) and feedback (date, rating, the subject's own comment);
+  - the subject's own DSAR history.
+- **Not exported automatically:**
+  - free-text staff notes, which may be legally privileged (DPA 2018 Sch 2 para 19) or name third parties;
+  - email and chat bodies;
+  - documents.
+  The export says these are reviewed by the firm and provided separately where not exempt. The admin page lists them
+  with counts.
+- **Format.** JSON, which meets Art 20 (structured, commonly used, machine-readable). Portability covers what the
+  person provided; derived scores are labelled as such. A CSV export and direct transmission to another controller
+  (Art 20(2)) are follow-ups.
+- **No-data case.** When nothing matches, the export still completes, with an empty `data` and the processing
+  information. The person always gets an answer.
+
+### Admin flow (`privacy-admin.router.ts`, all `adminTenantProcedure`, awaited audit)
+
+- **`list({status?})`**: shows the due date, `extendedUntil` and overdue first.
+- **`logRequest({type, email, details?, identityNote})`**: source STAFF, VERIFIED, and the deadline from now.
+- **`extend({id, months: 1|2, reason})`**:
+  - only while the request is VERIFIED and before the original deadline;
+  - sets `extendedUntil`;
+  - emails the requester the new date and the reason category (Art 12(3)).
+- **`complete({id, note, noHoldConfirmed?})`**:
+  - **ERASURE (Q19).** One transaction. The confirmation text names the SRA, AML and legal-claims retention duties.
+    It anonymises in place, scoped by tenant and email:
+    - **Leads:** email becomes `erased-<row cuid>@erased.invalid`, which is unique per row and safe under
+      `@@unique([email, tenantId])`. Set to NULL: firstName, lastName, company, title, phone, location, website,
+      avatarUrl, budget, authority, need, timeline, annualRevenue, utm*, clickId, referrer, landingPath. `tags` becomes
+      empty. `embedding` becomes NULL.
+    - **Contacts:** email as for leads; firstName and lastName become `Erased`. Set to NULL: title, phone,
+      department, streetAddress, city, zipCode, company, linkedInUrl, contactNotes, avatarUrl. `tags` becomes empty.
+      `embedding` becomes NULL.
+    - **Lead and contact notes:** content becomes `[erased under a data request]`. `embedding` and `search_vector`
+      become NULL.
+    - **Lead and contact activities:** title becomes `Erased activity`. description and metadata become NULL.
+    - **Lead file rows:** name becomes `erased`. The stored objects appear in the checklist.
+    - **AI score and insight rows** for the matched leads and contacts are deleted (derived data).
+    - **Appointments booked with the email:** bookerName, bookerEmail, bookingAnswers, bookingConsentAt and
+      bookingConsentVersion become NULL, and the title becomes `Booked appointment`.
+    - **Communications checklist (counts, manual, follow-up task):** email records, tickets, chats, feedback surveys,
+      public feedback, notifications, auto-response drafts, stored lead files.
+    - **Audit logs** keep their history under the legal-obligation basis (documented).
+    - **Backups.** Erased data remains in encrypted backups until they expire on the provider's retention cycle. It is
+      "put beyond use" and is never restored selectively. Any restore must replay the erasures, which are listed from
+      `dsar_requests`.
+  - **RESTRICTION or OBJECTION (Q18).** Creates an active `processing_restrictions` row with the kind and request.
+  - **RECTIFICATION.** Records the note. The admin edits the record in the CRM.
+  - **Staff ACCESS or PORTABILITY.** Available through `exportData`.
+  - **Every type.** Sets COMPLETED and `resolvedById`, and emails the requester a completion notice (fixed text).
+- **`reject({id, reason})`**: REJECTED. The requester's email gives the reason and the right to complain to the ICO
+  and to seek a judicial remedy (Art 12(4)).
+- **`exportData({id})`**: the same export for a staff-handled ACCESS or PORTABILITY request.
+- **`liftRestriction({restrictionId, note})`**: sets `liftedAt`. The person must be informed before it is lifted
+  (Art 18(3)), so the email is sent first.
+- **`restrictionFor({email})`** (tenantProcedure): the active restriction, if any, for the banner.
+
+### Restriction enforcement (Q18)
+
+`isProcessingRestricted(db, tenantId, email)` is a single indexed read. It is checked at these points:
+
+- before `enqueueLeadScoring` (lead create, public booking);
+- in `lead.scoreLead` (manual scoring, which returns a clear PRECONDITION_FAILED);
+- before the contact embedding job is enqueued and before `updateLeadEmbedding`;
+- in `AutoResponseService` draft creation for that recipient;
+- in the AI insight and prediction workers (owner Q21, issue #1002), for restriction and erasure alike: the
+  contact insight chain, the tenant insight job and the prediction job leave the person out before the model
+  call, and write only under the row and address locks after a re-check (`writeSubjectIfStillEligible`);
+- on every other AI path that sends a person's data to a model (owner Q22): contact enrichment, contact tag
+  suggestions, contact reply drafts, the duplicate-detection embedding, RAG retrieval (notes, lead and contact search),
+  deals at risk (through their contact), and the `lead.update` re-score. The rule is the same: check before the model
+  call, and write under the locks. Plan Addendum B lists every path and what is out of scope.
+
+The lead and contact detail pages show a banner, "Processing restricted (data request)", with the date. Outreach and
+marketing suppression is a follow-up task, recorded in the docs.
+
+### Architecture (backend-architect must-fixes)
+
+- **Ports.** `packages/application`: `DataSubjectRequestService`, plus the ports `DsarRepositoryPort` and
+  `SubjectDataPort`. The precedent is LeadService/ContactService with their repository ports.
+- **Adapters.** `packages/adapters`: the Prisma adapters, with the raw-SQL email matching and the erasure
+  transaction.
+- **Wiring.** Registered in `container.ts` and exposed through `context.ts`, per the apps/api wiring rule. The routers
+  never reach the notification adapter ad hoc. Booking-style email templates go in `apps/api/src/modules/privacy/`.
+- **SLA job.** `apps/api/src/modules/privacy/dsar-sla-scheduler.ts` is its own module. It does not reuse the approval
+  sweep singleton.
+  - Started from `startApiServer`. Disabled under test, on serverless, and when `DSAR_SLA_INTERVAL_MS=0`.
+  - Each tick takes `pg_try_advisory_xact_lock`, picks VERIFIED requests within 7 days of the effective deadline
+    (`extendedUntil ?? slaDeadline`) or past it, and sets `slaAlertedAt` before sending. Delivery is at most once.
+  - The alert goes to that tenant's ADMIN users only. It contains the type, deadline, request id and the page link,
+    and no personal data.
+- **Removed:** `apps/api/src/workflow/dsar-workflow.ts`, its exports in `workflow/index.ts`, and the three DSAR test
+  files. The search-purge assertions are ported to the new erasure tests first.
+- **Split:** the DSAR parts of `tests/compliance/data-governance.spec.ts`; the non-DSAR parts stay.
+- **Doc references updated:** the tRPC catalogs, `FLOW-040.md`, and the codex waiver entries that cite the deleted
+  file.
+- **Guard test:** every Prisma delegate the DSAR adapters use exists on the generated client.
+
+### Web
+
+- `(public)/dsar/[handle]/page.tsx`: the request form (type, email, details, consent, honeypot).
+- `(public)/dsar/[handle]/verify/page.tsx`: verifies from the fragment and shows the outcome and due date.
+- `(public)/dsar/[handle]/export/page.tsx`: downloads from the fragment, as a file save.
+- All three are noindex and chrome-free, with the `/book` shell treatment. `robots` disallows `/dsar/`.
+- `settings/privacy-requests/page.tsx`: the admin table (due date, extension, overdue). It has the log, extend,
+  complete and reject dialogs. Erasure shows the confirmation and the counted checklist; restrictions can be lifted.
+- A restriction banner component on the lead and contact detail pages.
+- Links: the booking page footer ("Your data rights") and the booking confirmation email go to `/dsar/<handle>`. The
+  settings navigation links to the admin page.
+- The page total grows by 4.
+
+### Acceptance criteria (DSAR)
+
+- **D-AC-01:** The migration's two tables are Class A and pass the SQL review. Prisma and SQL are in parity. RLS hides
+  the other tenant's rows under `SET LOCAL ROLE authenticated`.
+- **D-AC-02:** Enumeration and abuse resistance:
+  - `submit` gives an identical response and makes the identical calls whether or not the email matches CRM data;
+  - an unknown handle gets the booking-identical NOT_FOUND;
+  - the honeypot gets a fake success;
+  - all three caps (including the global email cap) and the resend cooldown hold under concurrency (real DB).
+- **D-AC-03:** Verification token:
+  - 32 bytes, stored as an HMAC only, and compared with timingSafeEqual;
+  - single-use, with a 24 h expiry;
+  - one generic error;
+  - an unknown id makes the same reads.
+- **D-AC-04:** ACCESS and PORTABILITY:
+  - verifying completes the request and emails the export link;
+  - the export expires after 72 h and is computed live with the allowlist and processingInformation;
+  - it is tenant plus exact-email scoped (no other tenant's rows, no `+tag` rows);
+  - no-data still answers.
+- **D-AC-05:** Deadlines:
+  - the deadline is one calendar month (end-of-month clamp), from verification or logging;
+  - the confirmation email states it;
+  - an extension within the first month emails the new date.
+- **D-AC-06:** Erasure:
+  - covers the Q19 core field list, embeddings, search vectors and booker fields, for that tenant and email only;
+  - one transaction with `FOR UPDATE`, run once;
+  - rolls back fully on failure (real DB);
+  - the audit holds counts only;
+  - the checklist counts are returned.
+- **D-AC-07:** Admin procedures are ADMIN only; MANAGER and another tenant's ADMIN get FORBIDDEN or NOT_FOUND. Every
+  query is tenant-scoped.
+- **D-AC-08:** Restriction:
+  - completing a RESTRICTION or OBJECTION creates an active restriction;
+  - scoring, embedding and draft creation skip or refuse for that email;
+  - AI insights and predictions are neither generated nor written for a restricted or erased person (Q21);
+  - no AI path sends a restricted or erased person's data to a model, or stores its output (Q22);
+  - the banner shows;
+  - lifting informs the person first.
+- **D-AC-09:** The SLA job alerts ADMINs once per request, inside 7 days or overdue, with no PII. It is
+  replica-safe.
+- **D-AC-10:** No token appears in a server-visible URL, a log or rendered output. `/dsar/*` sends no-referrer and
+  no-store. The pages pass axe.
+- **D-AC-11:** The old workflow, its mocks and the GET-that-processes are gone. The delegate guard test passes. The
+  ports are wired in container.ts and context.ts, with a runtime check.
+- **D-AC-12:** The docs match the code:
+  - `dsar-process.md` is rewritten;
+  - `gdpr-compliance.md` gets the controller/processor statement and corrected evidence;
+  - the `gdpr-compliance-checklist.csv` GDPR-005..010, -021, -023 and -031 evidence is updated;
+  - `security-claims-audit.md` Missing items are resolved;
+  - ADR-007 gets an addendum, and ADR-083 a DSAR section;
+  - the page registries and IA include the 4 pages;
+  - the follow-ups are recorded (outreach suppression, comms erasure automation, CSV export and Art 20(2), Art 19
+    notification).
+
+### Risks
+
+- **Scope.** This roughly doubles PG-203; the runner has been told. Owner rulings Q16-Q19 bound it.
+- **Email trust.** Ownership of the address is the identity check for public requests. Staff-logged requests require
+  a written identity note.
+- **Partial erasure.** Communications and stored files are a counted manual checklist plus a follow-up (Q19), not
+  silent.
+- **Restriction coverage.** The enforcement points above cover AI and drafts. Outreach suppression is a follow-up.
+
+### Review round 3 amendments (2026-10-22)
+
+Round 2 (security-lead, compliance, backend-architect) confirmed every round-1 must-fix as fixed and raised the
+items below. These amendments **override** the sections above where they conflict.
+
+#### Requests and states
+
+- **Access is not "done" until the firm has reviewed what was withheld** (compliance 1).
+  - A verified ACCESS or PORTABILITY request emails its automatic export, then stays **VERIFIED** with
+    `exportIssuedAt` set.
+  - The firm finishes it with `completeAccess({id, note, withheld: [{category, count, reason}]})`. That sends the
+    supplementary disclosure, or the notice of what is withheld and why, then sets COMPLETED.
+  - The SLA job watches it like any VERIFIED request.
+  - When nothing was withheld (no notes, bodies or documents), the request completes at verification as before.
+- **What the automatic export withholds pending firm review** (compliance 2):
+  - free-text staff notes;
+  - activity titles and descriptions;
+  - ticket subjects;
+  - email and chat bodies;
+  - documents.
+  - The exported metadata keeps only types, dates, statuses and counts.
+  - The export states, with counts, which categories are not in this file. It says the firm is reviewing them, that
+    the person will receive them, or notice of any withholding, by the due date, and that the ICO complaint right and
+    judicial remedy apply. It never asserts that an exemption applies.
+- **Staff-logged requests** (compliance 4):
+  - `logRequest` takes `receivedOn` (default today; may be backdated up to 30 days) and a `receivedOnReason` when it is
+    earlier than today.
+  - The deadline runs from `receivedOn`.
+  - The identity check is a structured `identityMethod` (`IN_PERSON_ID`, `KNOWN_CLIENT_CALLBACK`, `SIGNED_LETTER`,
+    `OTHER`) plus a note of at least 20 characters (security S5).
+- **Staff-logged ERASURE needs a second person or a pause** (security S5).
+  - If the tenant has more than one ADMIN, `complete` requires `resolvedById != createdById`.
+  - With a single ADMIN, the erasure runs no earlier than 24 h after it was logged, and it can be cancelled during
+    that time.
+  - Either way, the subject is emailed a fixed notice at logging.
+- **Objection to direct marketing** (compliance 3; Art 21(3) is absolute), within owner Q18:
+  - OBJECTION takes `objectionScope`: `MARKETING` or `OTHER`.
+  - A MARKETING objection creates the restriction (which blocks the Q18 AI paths, including the agent
+    `draft-message` tool).
+  - `complete` requires the admin to tick **"marketing to this person has been stopped"**. Completion records that
+    tick and opens a counted follow-up.
+  - The completion email says the objection is recorded and that marketing has stopped. It never mentions automated
+    suppression.
+  - Automated outreach suppression stays the Q18 follow-up task.
+- **RESTRICTION (Art 18(1)(a), accuracy contested) applies at VERIFIED**, not at completion (compliance 8).
+- **Rejections** (compliance 5): `reject` is refused after the deadline (Art 12(4)). Every completion and rejection
+  email carries the ICO complaint right and the judicial remedy.
+- **Emails** (compliance 9): the submit email says the deadline starts when the person confirms, and that an expired
+  link means they must ask again.
+
+#### Abuse and transport (security)
+
+- **Global cap and plus-tags** (S1). The global cap hashes `normalizeEmailForCap(email)`, which strips `+tag`, into a
+  separate `capEmailHash` column. `subjectEmail` stays exact for matching.
+  - The global count runs on the API's unscoped client: the same BYPASSRLS connection the public booking uses, before
+    any tenant `set_config`. A real-DB test proves it counts other tenants' rows.
+  - Lock order is the tenant lock first, then the email-hash lock.
+- **Per-IP limiters before any database read** (S2). `getFirm`, `verify` and `downloadExport` use the lookup limiter,
+  and `submit` uses the submit limiter. Both come from `booking-abuse.ts` and are keyed by `ipHashOf`.
+- **Shell and headers** (S3).
+  - `PublicLayoutShell.tsx` `AUTH_PAGES_NO_CHROME` gains `/dsar/`.
+  - `apps/web/next.config.js` `headers()` gains a `/dsar/:path*` entry, after the `/:path*` block so it overrides that
+    block's Referrer-Policy. It sets `Referrer-Policy: no-referrer` and `Cache-Control: no-store`.
+  - The pages are dynamic.
+  - A test asserts the configured header values for `/dsar/x`.
+- **Fragment hygiene** (S4).
+  - The page reads `location.hash` once, into a ref, in the first effect, and strips it at once with
+    `history.replaceState`. A StrictMode double run reads the ref, not the URL.
+  - The Sentry `beforeSend`/`beforeBreadcrumb` scrub drops any URL fragment.
+  - A test covers both.
+- **Token key** (security should-fix 1). The key is `HMAC(BOOKING_IP_SALT, 'dsar-token-v1')`, and tokens are
+  HMAC-SHA256 under that key. Rotating the salt invalidates outstanding links and caps; this is documented.
+- **No timing channel in `submit`** (security should-fix 2). Emails are sent detached on both the cooldown and send
+  paths, so the response time is the same.
+- **`restrictionFor({entity, id})`** (security should-fix 3). The email is resolved server-side, and the read returns
+  only `{restricted, since}`.
+- **Export downloads** (security should-fix 4). Capped at 5. The token is bound to an ACCESS or PORTABILITY request
+  that has `exportIssuedAt`. A cleared hash compares against the dummy.
+  - `revokeExport({id})` (admin) is added for a link sent to the wrong address (compliance 7).
+
+#### SLA job (security should-fixes 6 and 7)
+
+- Rows are claimed with `FOR UPDATE SKIP LOCKED`, and `slaAlertedAt` is set **after** a successful send. An overdue
+  request repeats its alert every 3 days.
+- If the tenant has no ADMIN, the alert goes to the tenant's owner user. Failing that, it is logged at error level
+  with the tenant id only.
+- The sweep runs on the unscoped client.
+
+#### Erasure fixes (backend-architect)
+
+- `ContactActivity.description` is NOT NULL, so it becomes the string `Erased activity`. `LeadActivity.description`
+  becomes NULL.
+- `LeadFile.url` becomes NULL as well as `name`.
+- `AIInsight` rows whose `entityId` is a matched lead or contact are deleted, along with the AIScore,
+  LeadAIInsight and ContactAIInsight rows.
+- The checklist also counts ContactReplyDraft, CalendarEvent (contact relation) and ExperimentAssignment, or the
+  docs name them as out of scope.
+- `BookingAttempt` rows hold only salted hashes and expire after 48 h. They are documented as such and are not
+  exported (security should-fix 8).
+
+#### Restriction enforcement points (corrected; backend-architect)
+
+1. Before `enqueueLeadScoring`, at its two callers: `lead.router.ts` create and the public booking.
+2. In `LeadService.scoreLead` (`packages/application`), through a `ProcessingRestrictionPort`. This covers the
+   `scoreWithAI` procedure and the bulk path.
+3. In `ContactEmbedWorker.processForTenant` (`apps/ai-worker`). It already has the contact's email and tenant, and it
+   also catches jobs queued before the restriction.
+4. The `updateLeadEmbedding` point is **removed**: neither definition has a caller.
+5. At AutoResponseDraft creation in `autoresponse.router.ts` (`AutoResponseDraft.create`). If
+   `approval-escalation-sweep.ts` also creates drafts, it gets the same check. `AutoResponseService` is not wired, so
+   it is not an enforcement point.
+6. In the agent `draft-message` tool (`apps/api/src/agent/tools/draft-message.ts`).
+
+Queued AI-scoring jobs re-check in the worker, or the docs say they do not; the plan decides after reading the worker.
+
+#### Routing (backend-architect)
+
+- `router.ts` keeps one `privacy` key: `privacy: createTRPCRouter({ ...publicProcedures, admin: privacyAdminRouter })`,
+  merged from `privacy-public.router.ts` and `privacy-admin.router.ts`. The client paths are `privacy.submit`,
+  `privacy.verify` and so on, and `privacy.admin.*`.
+- The public-only router file needs no allowlist entry. The stale `'dsar.router.ts'` allowlist entry is removed.
+
+#### Acceptance criteria deltas
+
+- **D-AC-02** adds: the global cap counts plus-tag variants and other tenants' rows (real DB). The per-IP limiters run
+  before any read on all four public procedures. The cooldown and send paths have equal timing.
+- **D-AC-04** adds: the request stays VERIFIED until `completeAccess` whenever something was withheld. The export lists
+  withheld categories with counts. Downloads are capped at 5. `revokeExport` works.
+- **D-AC-05** adds: staff `receivedOn` and its reason; `reject` refused after the deadline; ICO wording in every
+  completion and rejection email.
+- **D-AC-06** adds:
+  - the second-admin or 24 h rule for staff-logged erasure;
+  - the corrected column rules (ContactActivity description, LeadFile url, AIInsight).
+- **D-AC-08**: the corrected six enforcement points; a RESTRICTION active from VERIFIED; a MARKETING objection requires
+  the manual-stop tick.
+- **D-AC-09**: at-least-once alerting with a repeat when overdue, and the owner fallback.
+- **D-AC-10**: the headers come from `next.config.js` for `/dsar/:path*`, verified by a test. The fragment is read
+  once and scrubbed from Sentry. `/dsar/` is in the shell's no-chrome list.
+
+### Review round 4 amendments (2026-10-22)
+
+Round 3 status:
+- backend-architect: APPROVED, with two conditions carried in below;
+- security-lead: REJECTED on the RESTRICTION lifecycle, plus small items;
+- compliance: REJECTED on the wording of the Art 21(3) objection.
+
+These amendments override any earlier text that conflicts.
+
+#### Objection to direct marketing (compliance must-fix)
+
+- The `complete` input for a MARKETING objection requires both:
+  - `marketingStoppedConfirmed: true`;
+  - `marketingStopMethod`: free text of at least 10 characters, for example "removed from newsletter list X; owner told".
+  - Both are stored on the request and in the audit row. The schema refuses completion without them, and a test
+    proves the refusal.
+- The completion email says: "Your objection is recorded and the firm has confirmed that marketing to you has
+  stopped." It never says marketing was stopped automatically.
+- `processing_restrictions` gains `blocksMarketing BOOLEAN NOT NULL DEFAULT false`. A MARKETING objection sets it to
+  true, so the outreach-suppression follow-up has data to key on.
+- The lead and contact banner then reads "Do not send marketing (data request)".
+
+#### RESTRICTION lifecycle (security new 1)
+
+- `verify`, and `logRequest` for a staff RESTRICTION, create the active `processing_restrictions` row (kind
+  RESTRICTION).
+- `reject` of a RESTRICTION lifts it and emails the person **before** lifting (Art 18(3)).
+- `complete` keeps it until the admin lifts it with `liftRestriction`.
+- D-AC-08 tests the verify, reject and lift paths.
+- **Restriction follows the record** (compliance should-fix): if the lead or contact email is edited, the active
+  restriction moves to the new normalised email. This happens in the same update, through the lead and contact
+  update use cases, and is tested.
+
+#### Deadlines and exits (security new 2 and 3)
+
+- **Effective deadline:** `extendedUntil ?? slaDeadline`, everywhere.
+- **Late rejection:** after the effective deadline, `reject` is still allowed but stored and worded as a **late
+  rejection** ("we are sorry this reply is late"), with the ICO and judicial-remedy wording. Requests can always reach
+  a terminal state.
+- **Overdue alerts** repeat every 3 days until the request is terminal.
+- **Withholding:** the rule "completes at verification when nothing is withheld" means *every withheld-category count
+  is zero*, and a test covers it.
+
+#### Staff erasure details (security S5 follow-ups; compliance new 1)
+
+- With a single ADMIN, `complete` refuses an ERASURE until 24 h after `createdAt`.
+- `cancelErasure({id, reason})` sets REJECTED with reason "cancelled", audits it, and emails the person. Any ADMIN of
+  the tenant may cancel.
+- If `createdById` is NULL (the user was deleted), the rule treats the request as created by a different person only
+  when the tenant has two or more ADMINs. Otherwise the 24 h rule applies. The check can never be skipped.
+
+#### Worker-side enforcement (backend conditions 1-2; compliance new 3)
+
+- **Mandatory, not optional.** `apps/ai-worker` `processScoringJob` (`scoring.job.ts`), right after its feature-flag
+  gate, re-reads the lead by `(tenantId, leadId)`. It then **skips without writing** when:
+  - the lead is missing;
+  - the lead is erased (email under `@erased.invalid`);
+  - the lead's current email differs from the payload email;
+  - an active restriction exists for that email.
+- This covers the scheduled dispatcher (`handleScheduledDispatch`), which bypasses the enqueue sites. It also stops a
+  job queued before an erasure from re-creating `LeadAIInsight`.
+- The docs state the Redis job retention window.
+- **Second draft creator:** `autoresponse.router.ts` has two `AutoResponseDraft.create` sites (create and regenerate),
+  and both check.
+- **Sweep:** `approval-escalation-sweep.ts` creates no drafts (verified), so it needs no check.
+
+#### Checklist scope (compliance new 4)
+
+The admin erasure checklist **counts** ContactReplyDraft, CalendarEvent (contact relation) and ExperimentAssignment
+alongside the communications. None is silently omitted.
+
+#### Art 15 additions (compliance should-fix 6)
+
+- `processingInformation.retention` and the transfer statement come from the firm. They are taken from the firm's
+  privacy notice URL, which is linked rather than asserted, and Aurora never states a retention period for the
+  controller.
+- The export names the AI provider as a processor and says international-transfer safeguards are described in the
+  firm's privacy notice.
+- The export download page also renders a plain, human-readable summary of the JSON (headings and tables), so a
+  layperson can read it.
+
+#### Logging and transport (security S4, 2, 9, 10)
+
+- **Sentry:** the scrub covers `event.request.url`, transaction names, breadcrumbs and replay URLs (fragment dropped).
+  No other analytics script reads `location.href` on `/dsar/*`; the plan confirms this with a grep.
+- **Detached sends:** failures log the request id and error class only, never the recipient (as public booking does).
+- **Locked-out victims:** the docs state that a person blocked by the caps can ask the firm, which logs the request
+  (staff path).
+- **Mutation bodies:** a log-capture test proves no DSAR mutation body (email, token, details) reaches any logger.
+- **Booking attempts:** the 48 h purge is documented as best effort; it runs when the firm takes bookings.
+
+#### Router and allowlist (security new 4)
+
+- `router.ts` mounts `privacy: mergeRouters(privacyPublicRouter, createTRPCRouter({ admin: privacyAdminRouter }))`,
+  using the tRPC v11 `mergeRouters`. No plain spread is used.
+- Before removing the `dsar.router.ts` allowlist entry, the plan reads
+  `tests/architecture/tenant-procedure-enforcement.test.ts`. It then either removes the stale entry or adds
+  `privacy-public.router.ts`, whichever that test requires.
+
+### D12 review amendments (owner Q23-Q26, 2026-10-25)
+
+After the D12 compliance (FAIL), security-lead (PASS WITH MINOR) and a11y-expert (PASS WITH MINOR) reviews:
+
+- **Q23 — deals and tasks.** The export includes the person's deals (through their contacts) and tasks (through
+  their leads and contacts): names or titles, values, stages, statuses and dates. Descriptions are withheld and
+  counted. Erasure counts both on the manual checklist; it does not change them (consistent with Q19).
+- **Q24 — public form flooding.** A per-firm daily cap on public submissions (50, same generic reply); the deadline
+  job deletes unverified requests 7 days after their link expired; the admin list leaves expired unverified requests
+  out.
+- **Q25 — staff-logged erasure.** Always waits 24 hours after the warning email; with two or more admins it also
+  needs an admin other than the one who logged it.
+- **Q26 — free text in the export.** AI free text, staff tags and other staff free text, and booking answers are
+  withheld and counted like notes, and released by the firm when it completes the request. Structured scores still
+  export.
+- Without an owner choice (the review findings themselves): completing an access request must give a reason for
+  every category the live export withholds; an extension counts from the start of the clock (one month plus the
+  extension in one step); the staff export audit is awaited; public export downloads are audited; the Art 22
+  wording in the processing information is qualified.
+
+### Addendum A sign-off (2026-10-22)
+
+| Reviewer | R1 | R2 | R3 | R4 |
+|---|---|---|---|---|
+| security-lead | REJECTED | REJECTED | REJECTED | **APPROVED** (conditions) |
+| compliance | REJECTED | REJECTED | REJECTED | **APPROVED** (2 notes) |
+| backend-architect | REJECTED | REJECTED | **APPROVED** (conditions) | n/a |
+
+**Consensus: 3/3 APPROVED.** The plan must carry every condition below.
+
+1. **Restriction uniqueness** (security R4).
+   - The active-restriction partial unique index stays on `(tenantId, subjectEmail)`. Writes are upserts into the one
+     active row: `blocksMarketing` is OR-ed, and the triggering request ids go into a `dsarRequestIds` text array.
+   - An email edit that moves a restriction onto an email that already has an active one merges the two the same way.
+   - D-AC-08 tests a RESTRICTION followed by an OBJECTION on the same email.
+2. **Export summary rendering** (security R4). React text nodes only, never `dangerouslySetInnerHTML`. The data stays
+   in component state and is never written to browser storage.
+3. **`restrictionFor`** (security R4) returns `{restricted, blocksMarketing, since}`: booleans and a date only.
+4. **Restriction-follows-the-record coverage** (security R4). The plan checks the bulk import and sync paths, then
+   either covers them or documents them as out of scope.
+5. **Late rejection** (compliance R4). It is audited with a `clockBreached` flag, so the firm can see which requests
+   breached the Art 12(4) month.
+6. **Follow-up link** (compliance R4). The outreach-suppression follow-up task is created by `/create-task` and keyed
+   to `processing_restrictions.blocksMarketing`.
+7. **Draft creators** (backend R3). Both `AutoResponseDraft.create` sites in `autoresponse.router.ts` check, and
+   `approval-escalation-sweep.ts` is verified as not creating drafts.
+8. **Worker re-check** (backend R3). It is mandatory in `processScoringJob` and covers `handleScheduledDispatch`.

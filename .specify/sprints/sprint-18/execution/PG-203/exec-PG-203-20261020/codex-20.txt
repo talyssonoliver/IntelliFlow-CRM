@@ -1,0 +1,58 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 100 files total
+[codex-review] in scope : 70 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] WARN: Codex produced no parseable findings (exit 1) — likely the OpenAI usage/tier cap or a transient error. Raw: artifacts/codex-review/codex-raw.txt
+OpenAI Codex v0.163.0
+--------
+workdir: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 01a15db6-5b4b-7812-b29d-c8013c3029bc
+--------
+user
+You are an independent code auditor. Your task is to find REAL bugs in the diff below.
+
+Scope: only the following files changed in this PR (diff vs origin/main):
+  - apps/api/src/modules/calendar/__tests__/booking-abuse.test.ts
+  - apps/api/src/modules/calendar/__tests__/booking-email.test.ts
+  - apps/api/src/modules/calendar/__tests__/event-types.router.test.ts
+  - apps/api/src/modules/calendar/__tests__/public-booking.router.test.ts
+  - apps/api/src/modules/calendar/booking-abuse.ts
+  - apps/api/src/modules/calendar/booking-email.ts
+  - apps/api/src/modules/calendar/calendar.router.ts
+  - apps/api/src/modules/calendar/event-types.router.ts
+  - apps/api/src/modules/calendar/public-booking.router.ts
+  -
+[codex-review] Falling back to Claude review (claude -p, local) ...
+[codex-review] reviewer : claude
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (claude) — 2026-10-21T09:08:09.302Z
+Base ref  : origin/main
+Files in scope : 70
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/calendar/booking-email.ts:108-119 — unverified-recipient-content-injection
+    Issue    : The booker confirmation goes to an unverified address that anyone can type in, and it repeats the free-text booker name in the body. An anonymous visitor can therefore make the firm's own email domain deliver attacker-written text to any inbox.
+    Evidence : textBody: [`Hello ${d.bookerName},`, ...] and htmlBody: `Hello ${escapeHtml(d.bookerName)},`. The module header says the booker mail "never echoes free-text answers" because the address is unverified, but `name` is also free text. publicBookInputSchema only strips control characters and allows up to 200 characters, so a name like 'Your account is locked, reset it at evil.example' is accepted. Escaping stops HTML injection but not phishing text, and the text body puts it in raw. The only limit is 3 per email per tenant per 24 h and 10 per IP per hour, so rotating IPs or target addresses (each new address has its own 3/day allowance) turns the endpoint into a spam/phishing relay signed by the firm. The tests only check that the name is HTML-escaped, so they share the same assumption.
+    Fix      : Leave the booker-supplied name out of the booker confirmation (for example a fixed 'Hello,'), or shorten it hard to a plain-name pattern (letters, spaces, hyphens, apostrophes, about 60 characters) before it goes into any email sent to the unverified address.
+    Fingerprint: 15a74f26a20bbdc1a0ca2ed69a6bc836f6f1c77b4361d86d3ac4c9dc14c8dc21
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

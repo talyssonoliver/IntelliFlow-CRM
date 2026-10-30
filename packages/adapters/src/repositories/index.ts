@@ -66,6 +66,11 @@ export * from './PrismaSetupInstalmentRepository';
 // Stripe Subscription Repository (IFC-314)
 export * from './PrismaStripeSubscriptionRepository';
 
+// Data subject requests and processing restrictions (PG-203)
+export * from './PrismaDsarRepository';
+export * from './PrismaProcessingRestrictionRepository';
+export * from './PrismaSubjectDataRepository';
+
 // In-memory implementations (testing)
 export * from './InMemorySetupInstalmentRepository';
 export * from './InMemoryStripeSubscriptionRepository';

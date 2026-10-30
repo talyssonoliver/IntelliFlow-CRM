@@ -260,9 +260,6 @@ export default defineConfig({
             'packages/validators/**',
             'packages/webhooks/**',
             'tests/architecture/**',
-            // TDD RED-phase tests that import unimplemented modules — excluded until
-            // the source modules they reference are created
-            'tests/compliance/data-governance.spec.ts',
             // PG-195 .mjs subset test has its own dedicated config
             // (tools/scripts/__tests__/pg195.vitest.config.ts) that registers
             // the .mjs extension with Istanbul. Loaded under the root project

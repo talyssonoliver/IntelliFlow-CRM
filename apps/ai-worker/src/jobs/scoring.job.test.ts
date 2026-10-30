@@ -56,13 +56,26 @@ vi.mock('../versioning/chain-version-loader', () => ({
 
 // Mock @intelliflow/db — required because tenantId is now mandatory and
 // persistScoringResult is always called on the normal scoring path.
-vi.mock('@intelliflow/db', () => ({
-  prisma: {
+// PG-203: by default the stored lead still has the job's email and nobody is restricted.
+const stored = vi.hoisted(() => ({ leadEmail: null as string | null }));
+vi.mock('@intelliflow/db', () => {
+  const prisma: Record<string, any> = {
     leadAIInsight: {
       upsert: vi.fn().mockResolvedValue({ id: 'insight-1' }),
     },
-  },
-}));
+    lead: {
+      findFirst: vi.fn(async () => (stored.leadEmail ? { email: stored.leadEmail } : null)),
+    },
+    processingRestriction: {
+      findFirst: vi.fn().mockResolvedValue(null),
+      findMany: vi.fn().mockResolvedValue([]),
+    },
+    // The locked re-check before the insight write (SELECT email ... FOR UPDATE).
+    $queryRaw: vi.fn(async () => (stored.leadEmail ? [{ email: stored.leadEmail }] : [])),
+  };
+  prisma.$transaction = vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma));
+  return { prisma };
+});
 
 // Partially mock the factory: keep getLLMBreaker/__resetBreakers real, but force
 // a configured fallback provider so the #324 job-level fallback path is exercised
@@ -106,6 +119,7 @@ const mockScoringResult = {
 
 // Create mock job
 function createMockJob(data: ScoringJobData): Job<ScoringJobData> {
+  stored.leadEmail = data.lead.email;
   return {
     data,
     id: 'test-job-id',
@@ -720,6 +734,10 @@ describe('ScoringJob', () => {
         source: 'WEBSITE',
       },
     });
+    // Built once at collection time: point the stored lead back at this job before each test.
+    beforeEach(() => {
+      stored.leadEmail = 'flag@test.com';
+    });
 
     it('should return early with skipped result when flag is disabled', async () => {
       vi.stubEnv('ENABLE_AI_SCORING_JOB', 'false');
@@ -753,6 +771,77 @@ describe('ScoringJob', () => {
   // ============================================
   // Placeholder / nil-UUID guard (FK violation prevention)
   // ============================================
+
+  describe('data requests (PG-203, owner Q18, sign-off 8)', () => {
+    const db = prisma as unknown as {
+      lead: { findFirst: ReturnType<typeof vi.fn> };
+      processingRestriction: { findFirst: ReturnType<typeof vi.fn> };
+    };
+    const job = () =>
+      createMockJob({
+        leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
+        lead: { email: 'Test@Example.com', source: 'WEBSITE' },
+      });
+
+    it.each([
+      ['RESTRICTED', () => db.processingRestriction.findFirst.mockResolvedValueOnce({ id: 'r1' })],
+      ['LEAD_MISSING', () => db.lead.findFirst.mockResolvedValueOnce(null)],
+      [
+        'ERASED',
+        () => db.lead.findFirst.mockResolvedValueOnce({ email: 'erased-x@erased.invalid' }),
+      ],
+      [
+        'EMAIL_CHANGED',
+        () => db.lead.findFirst.mockResolvedValueOnce({ email: 'other@example.com' }),
+      ],
+    ])('skips a %s lead before any AI call', async (reason, arrange) => {
+      const queued = job();
+      arrange();
+      const result = (await processScoringJob(queued)) as any;
+      expect(result).toEqual({ skipped: true, reason });
+      expect(mockScoreLead).not.toHaveBeenCalled();
+      expect(
+        (prisma as { leadAIInsight: { upsert: ReturnType<typeof vi.fn> } }).leadAIInsight.upsert
+      ).not.toHaveBeenCalled();
+    });
+
+    it('discards the result when the person is erased while the AI call runs (codex)', async () => {
+      const queued = job();
+      const raw = (prisma as unknown as { $queryRaw: ReturnType<typeof vi.fn> }).$queryRaw;
+      // Eligible at the start; erased by the time the result is written.
+      raw.mockResolvedValueOnce([{ email: 'erased-l1@erased.invalid' }]);
+      const result = (await processScoringJob(queued)) as any;
+      expect(mockScoreLead).toHaveBeenCalled();
+      // BullMQ keeps the job result in Redis: it carries no score either (codex).
+      expect(result).toEqual({ skipped: true, reason: 'ERASED' });
+      expect(
+        (prisma as { leadAIInsight: { upsert: ReturnType<typeof vi.fn> } }).leadAIInsight.upsert
+      ).not.toHaveBeenCalled();
+      expect(raw.mock.calls[0]![0].join('?')).toContain('FOR UPDATE');
+    });
+
+    it('returns no score when the locked re-check cannot run (fails closed, codex)', async () => {
+      const tx = (prisma as unknown as { $transaction: ReturnType<typeof vi.fn> }).$transaction;
+      tx.mockRejectedValueOnce(new Error('lock timeout'));
+      const result = (await processScoringJob(job())) as any;
+      expect(mockScoreLead).toHaveBeenCalled();
+      expect(result).toEqual({ skipped: true, reason: 'UNVERIFIED' });
+    });
+
+    it('reads the lead and the restriction inside the job tenant, by normalised email', async () => {
+      await processScoringJob(job());
+      expect(db.lead.findFirst).toHaveBeenCalledWith({
+        where: { id: TEST_UUIDS.lead1, tenantId: TEST_UUIDS.tenant1 },
+        select: { email: true },
+      });
+      expect(db.processingRestriction.findFirst).toHaveBeenCalledWith({
+        where: { tenantId: TEST_UUIDS.tenant1, subjectEmail: 'test@example.com', liftedAt: null },
+        select: { id: true },
+      });
+      expect(mockScoreLead).toHaveBeenCalled();
+    });
+  });
 
   describe('nil-UUID scheduled sentinel', () => {
     it('exposes the documented nil-UUID placeholder constant', () => {

@@ -1,0 +1,13 @@
+# 2026-10-20T23:31:56Z
+# 91c6477ac5cbe5f21cf81c522b36ec57bad849eb
+# pnpm --filter @intelliflow/application exec vitest run src/services/__tests__/LeadService.createLeadInTransaction.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/application
+
+
+ Test Files  1 passed (1)
+      Tests  7 passed (7)
+   Start at  00:31:57
+   Duration  580ms (transform 257ms, setup 0ms, import 378ms, tests 9ms, environment 0ms)
+
+# exit=0

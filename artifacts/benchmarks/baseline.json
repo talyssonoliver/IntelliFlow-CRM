@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-29T18:28:54.163Z",
+  "timestamp": "2026-10-30T00:37:42.878Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 78,
-    "total_endpoints": 599,
-    "total_queries": 255,
-    "total_mutations": 344,
+    "total_routers": 77,
+    "total_endpoints": 597,
+    "total_queries": 254,
+    "total_mutations": 343,
     "routers": [
       {
         "name": "contact",
@@ -1441,12 +1441,6 @@
         "mutations": 1
       },
       {
-        "name": "dsar",
-        "endpoints": 2,
-        "queries": 1,
-        "mutations": 1
-      },
-      {
         "name": "accountTiers",
         "endpoints": 1,
         "queries": 0,
@@ -1491,16 +1485,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 209,
-    "total_fields": 3032,
-    "total_indexes": 935,
-    "total_relations": 295,
+    "total_tables": 211,
+    "total_fields": 3083,
+    "total_indexes": 944,
+    "total_relations": 297,
     "tables_with_embeddings": 4,
-    "enums": 79,
+    "enums": 81,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 185,
+        "fields": 187,
         "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
@@ -1532,6 +1526,13 @@
         "indexes": 15,
         "relations": 4,
         "hasEmbedding": true
+      },
+      {
+        "name": "DsarRequest",
+        "fields": 37,
+        "indexes": 6,
+        "relations": 1,
+        "hasEmbedding": false
       },
       {
         "name": "ConversationRecord",
@@ -2154,6 +2155,13 @@
         "fields": 12,
         "indexes": 4,
         "relations": 3,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ProcessingRestriction",
+        "fields": 12,
+        "indexes": 3,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -3326,10 +3334,10 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 65,
-    "total_schemas": 671,
+    "total_validators": 66,
+    "total_schemas": 681,
     "by_complexity": {
-      "complex": 37,
+      "complex": 38,
       "moderate": 23,
       "simple": 5
     },
@@ -3493,6 +3501,12 @@
       {
         "name": "contact-settings",
         "file": "contact-settings.ts",
+        "schemas": 10,
+        "complexity": "complex"
+      },
+      {
+        "name": "dsar",
+        "file": "dsar.ts",
         "schemas": 10,
         "complexity": "complex"
       },
@@ -6417,18 +6431,6 @@
         "name": "pipelineConfig.getStats",
         "method": "GET",
         "description": "Get stats"
-      }
-    ],
-    "dsar": [
-      {
-        "name": "dsar.submitDSAR",
-        "method": "POST",
-        "description": "Submit d s a r"
-      },
-      {
-        "name": "dsar.getDSARStatus",
-        "method": "GET",
-        "description": "Get d s a r status"
       }
     ],
     "publicFeedback": [

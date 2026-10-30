@@ -74,7 +74,7 @@ import { userRouter } from './modules/user/user.router';
 import { teamRouter } from './modules/team/team.router';
 import { calendarRouter } from './modules/calendar/calendar.router';
 import { calendarWebhooksRouter } from './modules/calendar/calendar-webhook.router';
-import { dsarRouter } from './modules/privacy/dsar.router';
+import { privacyRouter } from './modules/privacy/privacy.router';
 import { helpArticleRouter } from './modules/help-article/help-article.router';
 import { customNodeTypeRouter } from './modules/custom-node-type/custom-node-type.router';
 import { customActionHandlerRouter } from './modules/custom-action-handler/custom-action-handler.router';
@@ -256,7 +256,7 @@ export const appRouter = createTRPCRouter({
   calendarWebhooks: calendarWebhooksRouter,
 
   // Privacy & GDPR (Fix #17 — IFC-140)
-  privacy: dsarRouter,
+  privacy: privacyRouter, // PG-203: public data requests, banner read, admin handling
 
   // Support Help Center (IFC-299)
   helpArticle: helpArticleRouter,
