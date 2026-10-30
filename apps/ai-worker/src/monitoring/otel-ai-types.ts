@@ -132,92 +132,36 @@ export interface AiMetricDefinition {
   description: string;
 }
 
-/** Every instrument the facade registers. The tools-side asset check cross-references this list. */
+const METRIC_TYPES: readonly AiMetricDefinition['type'][] = ['counter', 'histogram', 'gauge'];
+
+/** Parse one `name | type | unit | description` row of the instrument table (the unit may be empty). */
+export function parseAiMetricRow(row: string): AiMetricDefinition {
+  const fields = row.split('|').map((field) => field.trim());
+  const [name, type, unit, description] = fields;
+  const known = METRIC_TYPES.find((t) => t === type);
+  if (fields.length !== 4 || !name || !known || !description) {
+    throw new Error(`Malformed AI metric row: ${row}`);
+  }
+  return { name, type: known, unit, description };
+}
+
+/**
+ * Every instrument the facade registers, one `name | type | unit | description` row each. The
+ * tools-side asset check cross-references this list.
+ */
 export const AI_METRIC_DEFINITIONS: readonly AiMetricDefinition[] = [
-  {
-    name: 'intelliflow.ai.inference.latency',
-    type: 'histogram',
-    unit: 'ms',
-    description: 'Wall time of a monitored AI chain call',
-  },
-  {
-    name: 'intelliflow.ai.inference.count',
-    type: 'counter',
-    unit: '1',
-    description: 'Monitored AI chain calls by outcome',
-  },
-  {
-    name: 'intelliflow.ai.confidence',
-    type: 'histogram',
-    unit: '',
-    description: 'Model-reported confidence (0-1) of successful calls',
-  },
-  {
-    name: 'intelliflow.ai.cost.usd',
-    type: 'counter',
-    unit: '',
-    description: 'Token cost of AI calls in USD',
-  },
-  {
-    name: 'intelliflow.ai.value.estimated.usd',
-    type: 'counter',
-    unit: '',
-    description:
-      'Estimated value booked for AI outcomes in USD (configured estimate, not a measured outcome)',
-  },
-  {
-    name: 'intelliflow.ai.hallucination.checks',
-    type: 'counter',
-    unit: '1',
-    description: 'Outputs run through the heuristic hallucination checker',
-  },
-  {
-    name: 'intelliflow.ai.hallucination.detected',
-    type: 'counter',
-    unit: '1',
-    description: 'Outputs the heuristic checker flagged as hallucinated',
-  },
-  {
-    name: 'intelliflow.ai.hallucination.types',
-    type: 'counter',
-    unit: '1',
-    description: 'Hallucination types on flagged outputs',
-  },
-  {
-    name: 'intelliflow.ai.hallucination.skipped',
-    type: 'counter',
-    unit: '1',
-    description: 'Hallucination checks skipped, by reason',
-  },
-  {
-    name: 'intelliflow.ai.drift.score',
-    type: 'gauge',
-    unit: '',
-    description: 'Latest output-distribution shift score (display only)',
-  },
-  {
-    name: 'intelliflow.ai.drift.detections',
-    type: 'counter',
-    unit: '1',
-    description:
-      'Output-distribution shift events (counted at onset and again on each severity escalation)',
-  },
-  {
-    name: 'intelliflow.ai.drift.checks',
-    type: 'counter',
-    unit: '1',
-    description: 'Scheduled drift evaluations, by status',
-  },
-  {
-    name: 'intelliflow.ai.drift.last_check',
-    type: 'gauge',
-    unit: '',
-    description: 'Epoch seconds of the last scheduled drift tick',
-  },
-  {
-    name: 'intelliflow.ai.retraining.triggers',
-    type: 'counter',
-    unit: '1',
-    description: 'Retraining threshold breaches from the feedback-analytics job',
-  },
-];
+  'intelliflow.ai.inference.latency | histogram | ms | Wall time of a monitored AI chain call',
+  'intelliflow.ai.inference.count | counter | 1 | Monitored AI chain calls by outcome',
+  'intelliflow.ai.confidence | histogram |  | Model-reported confidence (0-1) of successful calls',
+  'intelliflow.ai.cost.usd | counter |  | Token cost of AI calls in USD',
+  'intelliflow.ai.value.estimated.usd | counter |  | Estimated value booked for AI outcomes in USD (configured estimate, not a measured outcome)',
+  'intelliflow.ai.hallucination.checks | counter | 1 | Outputs run through the heuristic hallucination checker',
+  'intelliflow.ai.hallucination.detected | counter | 1 | Outputs the heuristic checker flagged as hallucinated',
+  'intelliflow.ai.hallucination.types | counter | 1 | Hallucination types on flagged outputs',
+  'intelliflow.ai.hallucination.skipped | counter | 1 | Hallucination checks skipped, by reason',
+  'intelliflow.ai.drift.score | gauge |  | Latest output-distribution shift score (display only)',
+  'intelliflow.ai.drift.detections | counter | 1 | Output-distribution shift events (counted at onset and again on each severity escalation)',
+  'intelliflow.ai.drift.checks | counter | 1 | Scheduled drift evaluations, by status',
+  'intelliflow.ai.drift.last_check | gauge |  | Epoch seconds of the last scheduled drift tick',
+  'intelliflow.ai.retraining.triggers | counter | 1 | Retraining threshold breaches from the feedback-analytics job',
+].map(parseAiMetricRow);
