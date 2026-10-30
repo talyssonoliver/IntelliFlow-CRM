@@ -101,4 +101,23 @@ describe('api HTTP server spans (#1098)', () => {
     await get('/api/multisigs');
     expect(await serverSpansFor('/api/multisigs')).toHaveLength(1);
   });
+
+  // Our span is named only by method ("GET"), so the SLOs' span_name health
+  // exclusion cannot match it. Probes must produce no SERVER span at all.
+  it.each(['/health', '/health/ready', '/api/health', '/api/health/detailed', '/health?probe=1'])(
+    'creates no SERVER span for the health probe %s',
+    async (path) => {
+      await get(path);
+      await processor.forceFlush();
+      expect(exporter.getFinishedSpans().filter((s) => s.kind === SpanKind.SERVER)).toHaveLength(0);
+    }
+  );
+
+  it.each(['/healthcare', '/api/healthz', '/api/contacts/health'])(
+    'still traces %s, which only looks like a health path',
+    async (path) => {
+      await get(path);
+      expect(await serverSpansFor(path)).toHaveLength(1);
+    }
+  );
 });

@@ -21,6 +21,19 @@
  */
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 
+// /health, /api/health and their sub-paths, matched on the whole path so
+// routes such as /healthcare or /api/healthz are still traced.
+const HEALTH_PROBE_PATH = /^(?:\/api)?\/health(?:\/[^?#]*)?(?:[?#].*)?$/;
+
+/**
+ * #1098: health probes get no SERVER span. Our HTTP server span is named by
+ * method only ("GET"), so the api SLOs' span_name health exclusion cannot
+ * match it; without this, probes would count towards availability and latency.
+ */
+function isHealthProbe(req: { url?: string }): boolean {
+  return HEALTH_PROBE_PATH.test(req.url ?? '');
+}
+
 /**
  * Build the Node auto-instrumentations array for a service's NodeSDK.
  *
@@ -30,7 +43,10 @@ export function getStandardNodeInstrumentations(): ReturnType<typeof getNodeAuto
   return getNodeAutoInstrumentations({
     // Disable filesystem instrumentation — too noisy
     '@opentelemetry/instrumentation-fs': { enabled: false },
-    '@opentelemetry/instrumentation-http': { enabled: true },
+    '@opentelemetry/instrumentation-http': {
+      enabled: true,
+      ignoreIncomingRequestHook: isHealthProbe,
+    },
     '@opentelemetry/instrumentation-pino': {
       disableLogSending: false,
     },
