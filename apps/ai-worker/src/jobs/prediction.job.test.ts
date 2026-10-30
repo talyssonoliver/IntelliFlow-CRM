@@ -223,10 +223,10 @@ describe('PredictionJob', () => {
       });
     });
 
-    it('should reject invalid UUID', () => {
+    it('should reject an unsafe entityId', () => {
       const invalidData = {
         ...validJobData,
-        entityId: 'not-a-uuid',
+        entityId: 'not a/valid id',
       };
 
       const result = PredictionJobDataSchema.safeParse(invalidData);
@@ -349,10 +349,10 @@ describe('PredictionJob', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject invalid UUID in entityId', () => {
+    it('should reject an unsafe entityId in the result', () => {
       const invalidResult = {
         ...validResult,
-        entityId: 'not-a-uuid',
+        entityId: 'not a/valid id',
       };
 
       const result = PredictionJobResultSchema.safeParse(invalidResult);

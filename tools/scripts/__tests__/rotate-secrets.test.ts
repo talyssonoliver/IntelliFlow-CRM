@@ -281,7 +281,14 @@ describe('checkRotation', () => {
 
   it('lists secrets that need immediate rotation', async () => {
     randomInt.mockImplementation(((max: number) => (max === 10 ? 0 : max)) as never);
-    await checkRotation({ schedule: schedule() });
+    // A full-interval age puts next_rotation at the instant the metadata is built. checkRotation
+    // reads `now` first, so under load a millisecond between the two made it 1 day away, not due.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      await checkRotation({ schedule: schedule() });
+    } finally {
+      vi.useRealTimers();
+    }
     expect(output()).toContain('Secrets requiring immediate rotation:');
   });
 

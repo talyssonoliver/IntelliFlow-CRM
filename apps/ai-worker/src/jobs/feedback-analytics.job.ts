@@ -15,6 +15,7 @@
 
 import type { Job } from 'bullmq';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 import {
   runFeedbackAnalytics,
@@ -44,7 +45,7 @@ export const FEEDBACK_ANALYTICS_CRON = '0 2 * * *';
 /** Job data — no required fields for the cron case; tenantId/periodDays optional for manual triggers */
 export const FeedbackAnalyticsJobDataSchema = z.object({
   /** Optional: restrict analysis to a single tenant (omit for global sweep) */
-  tenantId: z.string().uuid().optional(),
+  tenantId: recordIdSchema.optional(),
   /** Rolling window in days (default: 30) */
   periodDays: z.number().int().positive().default(30),
   /** Write result file to disk (default: false for cron; true for CLI) */

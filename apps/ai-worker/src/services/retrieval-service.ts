@@ -25,6 +25,7 @@ import {
   TicketStatus as PrismaTicketStatus,
 } from '@intelliflow/db';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { EmbeddingChain } from '../chains/embedding.chain';
 import { DEFAULT_RELEVANCE_CONFIG as CANONICAL_RELEVANCE_CONFIG } from '../config/relevance-config';
 import type { ConversationRecordData, MessageRecordWithConversation } from '@intelliflow/domain';
@@ -223,7 +224,7 @@ export const SearchConfigSchema = z.object({
     })
     .optional(),
   // IFC-155: Case-scoped search
-  caseId: z.uuid().optional(),
+  caseId: recordIdSchema.optional(),
   searchType: z.enum(['fulltext', 'semantic', 'hybrid']).optional().default('hybrid'),
   limit: z.number().min(1).max(100).optional().default(20),
   offset: z.number().min(0).optional().default(0),

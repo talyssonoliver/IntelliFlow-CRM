@@ -10,6 +10,7 @@
 
 import type { Job } from 'bullmq';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 import {
   getInsightGenerationChain,
@@ -46,7 +47,7 @@ export const SCHEDULED_INSIGHT_JOB_NAME = 'scheduled-insight-refresh';
 
 /** Schema for insight job data */
 export const InsightJobDataSchema = z.object({
-  tenantId: z.string().uuid('tenantId must be a valid UUID'),
+  tenantId: recordIdSchema,
   userId: z.string(),
   correlationId: z.string().optional(),
   dealsAtRisk: z

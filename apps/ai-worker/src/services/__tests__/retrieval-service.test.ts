@@ -208,7 +208,7 @@ describe('SearchConfigSchema', () => {
     }
   });
 
-  it('should validate caseId as UUID when provided', () => {
+  it('should validate caseId as a record id when provided', () => {
     const validResult = SearchConfigSchema.safeParse({
       tenantId: 't',
       userId: 'u',
@@ -221,7 +221,7 @@ describe('SearchConfigSchema', () => {
       tenantId: 't',
       userId: 'u',
       query: 'q',
-      caseId: 'not-a-uuid',
+      caseId: 'not a/valid id',
     });
     expect(invalidResult.success).toBe(false);
   });
