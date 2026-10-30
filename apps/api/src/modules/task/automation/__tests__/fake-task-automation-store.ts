@@ -234,7 +234,13 @@ export class FakeTaskAutomationStore implements TaskAutomationStore {
 
   async claimDueSchedule(schedule: DueSchedule, next: Date) {
     const rule = this.rules.find((r) => r.id === schedule.id && r.tenantId === schedule.tenantId);
-    if (!rule?.isActive || rule.nextRunAt?.getTime() !== schedule.nextRunAt.getTime()) return false;
+    if (
+      !rule?.isActive ||
+      rule.nextRunAt?.getTime() !== schedule.nextRunAt.getTime() ||
+      rule.scheduleCron !== schedule.scheduleCron ||
+      rule.scheduleTimezone !== schedule.scheduleTimezone
+    )
+      return false;
     rule.nextRunAt = next;
     return true;
   }

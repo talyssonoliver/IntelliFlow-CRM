@@ -237,7 +237,16 @@ describe('createTaskAutomationStore (PG-208)', () => {
     const next = new Date('2026-10-21T09:00:00.000Z');
     await expect(store.claimDueSchedule(due[0], next)).resolves.toBe(true);
     expect(m.taskAutomationRule.updateMany.mock.calls.at(-1)[0]).toEqual({
-      where: { id: 'r1', tenantId: 't1', isActive: true, nextRunAt: NOW },
+      // The slot's schedule is part of the compare-and-set: an edit that keeps the same next
+      // slot must still make a claim computed from the old cron lose.
+      where: {
+        id: 'r1',
+        tenantId: 't1',
+        isActive: true,
+        nextRunAt: NOW,
+        scheduleCron: '0 9 * * *',
+        scheduleTimezone: 'UTC',
+      },
       data: { nextRunAt: next },
     });
     m.taskAutomationRule.updateMany.mockResolvedValueOnce({ count: 0 });
@@ -442,7 +451,14 @@ describe('createTaskAutomationStore (PG-208)', () => {
         runId: 'slot-run',
       });
       expect(m.taskAutomationRule.updateMany.mock.calls.at(-1)[0]).toEqual({
-        where: { id: 'r1', tenantId: 't1', isActive: true, nextRunAt: NOW },
+        where: {
+          id: 'r1',
+          tenantId: 't1',
+          isActive: true,
+          nextRunAt: NOW,
+          scheduleCron: '0 9 * * *',
+          scheduleTimezone: 'UTC',
+        },
         data: { nextRunAt: next },
       });
     });

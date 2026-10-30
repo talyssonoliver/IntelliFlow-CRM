@@ -356,6 +356,18 @@ async function admitInTransaction(
 }
 
 /** Store over the shared API Prisma client (`@intelliflow/db` `prisma`). */
+/**
+ * The compare-and-set for a schedule slot: the slot AND the cron and timezone `next` was
+ * computed from. An edit that keeps the same next slot still makes a stale claim lose.
+ */
+function slotPredicate(schedule: DueSchedule) {
+  return {
+    nextRunAt: schedule.nextRunAt,
+    scheduleCron: schedule.scheduleCron,
+    scheduleTimezone: schedule.scheduleTimezone,
+  };
+}
+
 export function createTaskAutomationStore(db: PrismaClient): TaskAutomationStore {
   return {
     async activeEventTypes() {
@@ -528,7 +540,7 @@ export function createTaskAutomationStore(db: PrismaClient): TaskAutomationStore
             id: schedule.id,
             tenantId: schedule.tenantId,
             isActive: true,
-            nextRunAt: schedule.nextRunAt,
+            ...slotPredicate(schedule),
           },
           data: { nextRunAt: next },
         });
@@ -573,7 +585,7 @@ export function createTaskAutomationStore(db: PrismaClient): TaskAutomationStore
           id: schedule.id,
           tenantId: schedule.tenantId,
           isActive: true,
-          nextRunAt: schedule.nextRunAt,
+          ...slotPredicate(schedule),
         },
         data: { nextRunAt: next },
       });

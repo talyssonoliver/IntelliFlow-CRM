@@ -600,6 +600,39 @@ describeDb('PG-208 task automation (real DB)', () => {
       expect(stored.nextRunAt.toISOString()).toBe(next.toISOString());
     });
 
+    it('loses a slot claim when the schedule was edited after the due read, even with the same slot', async () => {
+      const slot = new Date(Date.now() - 60_000);
+      const rule = await prisma.taskAutomationRule.create({
+        data: scheduleRule(TENANT_A, { nextRunAt: slot }),
+      });
+      const due = {
+        id: rule.id,
+        tenantId: TENANT_A,
+        nextRunAt: slot,
+        scheduleCron: '0 9 * * *',
+        scheduleTimezone: 'Europe/London',
+      };
+      // Daily → weekly, committed after the runner read the rule; the next slot is unchanged.
+      await prisma.taskAutomationRule.update({
+        where: { id: rule.id },
+        data: { scheduleCadence: 'weekly', scheduleCron: '0 9 * * 1' },
+      });
+      const next = new Date(Date.now() + 86_400_000);
+      await expect(store().claimDueSchedule(due, next)).resolves.toBe(false);
+      const run = {
+        tenantId: TENANT_A,
+        ruleId: rule.id,
+        triggerType: 'SCHEDULE' as const,
+        idempotencyKey: `schedule:${slot.toISOString()}`,
+        context: { slot: slot.toISOString() },
+      };
+      await expect(
+        store().claimSlotAndAdmit(due, next, run, { perHour: 60 }, new Date())
+      ).resolves.toEqual({ claimed: false });
+      const after = await prisma.taskAutomationRule.findUniqueOrThrow({ where: { id: rule.id } });
+      expect(after.nextRunAt?.toISOString()).toBe(slot.toISOString());
+    });
+
     it('admits a schedule run with actions edited after the due read, not the stale ones', async () => {
       const slot = new Date(Date.now() - 60_000);
       const rule = await prisma.taskAutomationRule.create({
