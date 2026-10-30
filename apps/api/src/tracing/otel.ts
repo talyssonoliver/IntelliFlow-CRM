@@ -14,6 +14,7 @@
  *
  * Environment Variables:
  * - OTEL_ENABLED: Enable/disable tracing (default: true)
+ * - OTEL_SDK_DISABLED: the standard OTel switch; 'true' disables tracing too
  * - OTEL_SERVICE_NAME: Service name (default: intelliflow-api)
  * - OTEL_EXPORTER_OTLP_ENDPOINT: OTLP collector endpoint (default: http://localhost:4318)
  * - OTEL_LOGS_EXPORTER: Logs exporter — 'otlp' (default via NodeSDK, same as
@@ -67,7 +68,12 @@ function getOtelConfig(): OtelConfig {
   // OTEL_EXPORTER_OTLP_ENDPOINT runs with tracing OFF rather than throwing or
   // silently dialing localhost:4318. (#228 — fixes the E2E `next start` crash.)
   const hasEndpoint = Boolean(process.env.OTEL_EXPORTER_OTLP_ENDPOINT);
-  const enabled = process.env.OTEL_ENABLED !== 'false' && (hasEndpoint || !isProductionEnv());
+  // #1098: the standard OTEL_SDK_DISABLED=true makes NodeSDK.start() a no-op
+  // (read trimmed and case-insensitive, as sdk-node does). Treat it as disabled
+  // so the SDK is never marked started and Sentry keeps its HTTP spans.
+  const sdkDisabled = process.env.OTEL_SDK_DISABLED?.trim().toLowerCase() === 'true';
+  const enabled =
+    process.env.OTEL_ENABLED !== 'false' && !sdkDisabled && (hasEndpoint || !isProductionEnv());
 
   return {
     enabled,
