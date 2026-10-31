@@ -225,7 +225,7 @@ export const documentsRouter = createTRPCRouter({
       const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
       // Find document
-      const document = await documentRepo.findById(input.documentId);
+      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
       if (!document) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
       }
@@ -269,7 +269,7 @@ export const documentsRouter = createTRPCRouter({
 
     const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
-    const document = await documentRepo.findById(input.id);
+    const document = await documentRepo.findById(input.id, ctx.tenant.tenantId);
     if (!document) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
     }
@@ -315,7 +315,7 @@ export const documentsRouter = createTRPCRouter({
       let documents: CaseDocument[];
 
       if (input?.caseId) {
-        documents = await documentRepo.findByCaseId(input.caseId);
+        documents = await documentRepo.findByCaseId(input.caseId, ctx.tenant.tenantId);
       } else {
         documents = await documentRepo.findAccessibleByUser(userId, ctx.user?.tenantId ?? userId);
       }
@@ -356,7 +356,7 @@ export const documentsRouter = createTRPCRouter({
 
     const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
-    const document = await documentRepo.findById(input.documentId);
+    const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
     if (!document) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
     }
@@ -393,7 +393,7 @@ export const documentsRouter = createTRPCRouter({
 
       const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
-      const document = await documentRepo.findById(input.documentId);
+      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
       if (!document) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
       }
@@ -427,7 +427,7 @@ export const documentsRouter = createTRPCRouter({
 
       const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
-      const document = await documentRepo.findById(input.documentId);
+      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
       if (!document) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
       }
@@ -460,7 +460,7 @@ export const documentsRouter = createTRPCRouter({
 
       const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
-      const document = await documentRepo.findById(input.documentId);
+      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
       if (!document) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
       }
@@ -494,7 +494,7 @@ export const documentsRouter = createTRPCRouter({
 
     const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
-    const document = await documentRepo.findById(input.documentId);
+    const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
     if (!document) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
     }
@@ -552,7 +552,7 @@ export const documentsRouter = createTRPCRouter({
 
       const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
-      const document = await documentRepo.findById(input.documentId);
+      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
       if (!document) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
       }
@@ -590,7 +590,7 @@ export const documentsRouter = createTRPCRouter({
 
       const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
-      const document = await documentRepo.findById(input.documentId);
+      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
       if (!document) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
       }
@@ -620,7 +620,7 @@ export const documentsRouter = createTRPCRouter({
 
       const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
-      const document = await documentRepo.findById(input.documentId);
+      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
       if (!document) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
       }
@@ -645,7 +645,7 @@ export const documentsRouter = createTRPCRouter({
 
       const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
 
-      const document = await documentRepo.findById(input.documentId);
+      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
       if (!document) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
       }
@@ -676,7 +676,7 @@ export const documentsRouter = createTRPCRouter({
       }
 
       const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-      const document = await documentRepo.findById(input.documentId);
+      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
       if (!document) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
       }
@@ -710,7 +710,7 @@ export const documentsRouter = createTRPCRouter({
 
       // Check VIEW access (AC-008)
       const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-      const document = await documentRepo.findById(input.documentId);
+      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
       if (!document) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
       }
@@ -754,7 +754,7 @@ export const documentsRouter = createTRPCRouter({
 
       // Deduplicate ids before the batch fetch; preserve original iteration order
       const uniqueIds = [...new Set(ids)];
-      const fetched = await documentRepo.findByIds(uniqueIds);
+      const fetched = await documentRepo.findByIds(uniqueIds, ctx.tenant.tenantId);
       const docMap = new Map(fetched.map((d) => [d.id, d]));
 
       const successful: string[] = [];
@@ -808,7 +808,7 @@ export const documentsRouter = createTRPCRouter({
 
       // Batch-fetch all documents in a single query (NP-037 fix)
       const uniqueIds = [...new Set(ids)];
-      const fetched = await documentRepo.findByIds(uniqueIds);
+      const fetched = await documentRepo.findByIds(uniqueIds, ctx.tenant.tenantId);
       const docMap = new Map(fetched.map((d) => [d.id, d]));
 
       const successful: string[] = [];
@@ -859,7 +859,7 @@ export const documentsRouter = createTRPCRouter({
 
     // Batch-fetch all documents in a single query (NP-038 fix)
     const uniqueIds = [...new Set(ids)];
-    const fetched = await documentRepo.findByIds(uniqueIds);
+    const fetched = await documentRepo.findByIds(uniqueIds, ctx.tenant.tenantId);
     const docMap = new Map(fetched.map((d) => [d.id, d]));
 
     const successful: string[] = [];
