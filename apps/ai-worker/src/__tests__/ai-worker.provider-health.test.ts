@@ -22,9 +22,17 @@ async function healthFor(provider: string) {
 
 describe('AIWorker provider health', () => {
   const originalProvider = aiConfig.provider;
+  const originalOpenAI = { ...aiConfig.openai };
+  const originalLiteLLM = { ...aiConfig.litellm };
+
+  beforeEach(() => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, status: 200 }));
+  });
 
   afterEach(() => {
     (aiConfig as { provider: string }).provider = originalProvider;
+    Object.assign(aiConfig.openai, originalOpenAI);
+    Object.assign(aiConfig.litellm, originalLiteLLM);
     vi.unstubAllEnvs();
   });
 
@@ -66,6 +74,59 @@ describe('AIWorker provider health', () => {
 
     expect(health.status).toBe('error');
     expect(health.message).toContain('OPENROUTER_API_KEY');
+  });
+
+  it('probes an OpenAI-compatible provider and reports degraded when it is unreachable', async () => {
+    vi.stubEnv('LITELLM_BASE_URL', 'https://litellm.example.test/v1');
+    vi.stubEnv('LITELLM_MASTER_KEY', 'secret');
+    (aiConfig.litellm as { baseUrl: string; masterKey: string }).baseUrl =
+      'https://litellm.example.test/v1';
+    (aiConfig.litellm as { baseUrl: string; masterKey: string }).masterKey = 'secret';
+    (aiConfig as { provider: string }).provider = 'litellm';
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('connection refused')));
+
+    const health = await healthFor('litellm');
+
+    expect(health.status).toBe('degraded');
+    expect(health.message).toContain('connection refused');
+    expect(vi.mocked(fetch)).toHaveBeenCalledWith(
+      'https://litellm.example.test/v1/models',
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer secret' }),
+      })
+    );
+  });
+
+  it('reports degraded for a non-successful provider response', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: false, status: 503 });
+    vi.stubGlobal('fetch', fetchMock);
+    (aiConfig.openai as { apiKey?: string }).apiKey = 'secret';
+    (aiConfig as { provider: string }).provider = 'openai';
+
+    const health = await healthFor('openai');
+
+    expect(health.status).toBe('degraded');
+    expect(health.message).toContain('503');
+  });
+
+  it('caches compatible-provider probes for one minute', async () => {
+    vi.stubEnv('OPENAI_API_KEY', 'secret');
+    vi.stubEnv('OPENAI_BASE_URL', 'https://openai.example.test/v1');
+    (aiConfig.openai as { apiKey?: string; baseUrl?: string }).apiKey = 'secret';
+    (aiConfig.openai as { apiKey?: string; baseUrl?: string }).baseUrl =
+      'https://openai.example.test/v1';
+    const fetchMock = vi.mocked(fetch);
+
+    const worker = probe();
+    (aiConfig as { provider: string }).provider = 'openai';
+    await (
+      worker as HealthProbe & { getOpenAIProviderHealth(lastCheck: string): Promise<unknown> }
+    ).getOpenAIProviderHealth('one');
+    await (
+      worker as HealthProbe & { getOpenAIProviderHealth(lastCheck: string): Promise<unknown> }
+    ).getOpenAIProviderHealth('two');
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it.each(AIProviderSchema.options)(
