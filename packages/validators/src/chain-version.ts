@@ -8,6 +8,7 @@
  */
 
 import { z } from 'zod';
+import { recordIdSchema } from './record-id';
 import {
   CHAIN_VERSION_STATUSES,
   CHAIN_TYPES,
@@ -61,7 +62,7 @@ export const createChainVersionSchema = z.object({
     .default(CHAIN_VERSION_DEFAULTS.DEFAULT_MAX_TOKENS),
   additionalParams: z.record(z.string(), z.unknown()).optional(),
   description: z.string().max(1000).optional(),
-  parentVersionId: z.uuid().optional(),
+  parentVersionId: recordIdSchema.optional(),
   rolloutStrategy: versionRolloutStrategySchema.default(
     CHAIN_VERSION_DEFAULTS.DEFAULT_ROLLOUT_STRATEGY
   ),
@@ -111,7 +112,7 @@ export type UpdateChainVersionInput = z.infer<typeof updateChainVersionSchema>;
 const dateOrString = z.union([z.date(), z.iso.datetime()]);
 
 export const chainVersionSchema = z.object({
-  id: z.uuid(),
+  id: recordIdSchema,
   chainType: chainTypeSchema,
   status: chainVersionStatusSchema,
   prompt: z.string(),
@@ -120,7 +121,7 @@ export const chainVersionSchema = z.object({
   maxTokens: z.number().int(),
   additionalParams: z.record(z.string(), z.unknown()).nullable(),
   description: z.string().nullable(),
-  parentVersionId: z.uuid().nullable(),
+  parentVersionId: recordIdSchema.nullable(),
   rolloutStrategy: versionRolloutStrategySchema,
   rolloutPercent: z.number().int().nullable(),
   experimentId: z
@@ -140,7 +141,7 @@ export type ChainVersion = z.infer<typeof chainVersionSchema>;
 // =============================================================================
 
 export const chainVersionSummarySchema = z.object({
-  id: z.uuid(),
+  id: recordIdSchema,
   chainType: chainTypeSchema,
   status: chainVersionStatusSchema,
   model: z.string(),
@@ -158,7 +159,7 @@ export type ChainVersionSummary = z.infer<typeof chainVersionSummarySchema>;
 // =============================================================================
 
 export const activateVersionSchema = z.object({
-  versionId: z.uuid(),
+  versionId: recordIdSchema,
 });
 
 export type ActivateVersionInput = z.infer<typeof activateVersionSchema>;
@@ -168,7 +169,7 @@ export type ActivateVersionInput = z.infer<typeof activateVersionSchema>;
 // =============================================================================
 
 export const rollbackVersionSchema = z.object({
-  versionId: z.uuid(),
+  versionId: recordIdSchema,
   reason: z.string().min(10).max(500),
 });
 
@@ -180,9 +181,9 @@ export type RollbackVersionInput = z.infer<typeof rollbackVersionSchema>;
 
 export const rollbackResultSchema = z.object({
   success: z.boolean(),
-  previousVersionId: z.uuid(),
-  rolledBackVersionId: z.uuid(),
-  auditId: z.uuid(),
+  previousVersionId: recordIdSchema,
+  rolledBackVersionId: recordIdSchema,
+  auditId: recordIdSchema,
   rolledBackAt: dateOrString,
 });
 
@@ -193,8 +194,8 @@ export type RollbackResult = z.infer<typeof rollbackResultSchema>;
 // =============================================================================
 
 export const chainVersionAuditSchema = z.object({
-  id: z.uuid(),
-  versionId: z.uuid(),
+  id: recordIdSchema,
+  versionId: recordIdSchema,
   action: chainVersionAuditActionSchema,
   previousState: z.record(z.string(), z.unknown()).nullable(),
   newState: z.record(z.string(), z.unknown()).nullable(),

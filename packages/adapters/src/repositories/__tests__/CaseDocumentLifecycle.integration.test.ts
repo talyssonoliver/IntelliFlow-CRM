@@ -63,14 +63,17 @@ describe('Case Document Lifecycle Integration', () => {
       document.submitForReview('123e4567-e89b-12d3-a456-426614174001');
       await repository.save(document);
 
-      let retrieved = await repository.findById(document.id);
+      let retrieved = await repository.findById(
+        document.id,
+        '123e4567-e89b-12d3-a456-426614174000'
+      );
       expect(retrieved?.status).toBe(DocumentStatus.UNDER_REVIEW);
 
       // 3. Approve
       document.approve('123e4567-e89b-12d3-a456-426614174002');
       await repository.save(document);
 
-      retrieved = await repository.findById(document.id);
+      retrieved = await repository.findById(document.id, '123e4567-e89b-12d3-a456-426614174000');
       expect(retrieved?.status).toBe(DocumentStatus.APPROVED);
 
       // 4. E-sign
@@ -82,7 +85,7 @@ describe('Case Document Lifecycle Integration', () => {
       );
       await repository.save(document);
 
-      retrieved = await repository.findById(document.id);
+      retrieved = await repository.findById(document.id, '123e4567-e89b-12d3-a456-426614174000');
       expect(retrieved?.status).toBe(DocumentStatus.SIGNED);
       expect(retrieved?.toJSON().eSignature).toBeDefined();
       expect(retrieved?.toJSON().eSignature?.signedBy).toBe('123e4567-e89b-12d3-a456-426614174001');
@@ -91,7 +94,7 @@ describe('Case Document Lifecycle Integration', () => {
       document.archive('123e4567-e89b-12d3-a456-426614174001');
       await repository.save(document);
 
-      retrieved = await repository.findById(document.id);
+      retrieved = await repository.findById(document.id, '123e4567-e89b-12d3-a456-426614174000');
       expect(retrieved?.status).toBe(DocumentStatus.ARCHIVED);
     });
 
@@ -174,7 +177,10 @@ describe('Case Document Lifecycle Integration', () => {
       expect(allVersions[2].version.toString()).toBe('1.1.1');
 
       // Verify only latest version is returned in queries
-      const latestOnly = await repository.findByCaseId('123e4567-e89b-12d3-a456-426614174003');
+      const latestOnly = await repository.findByCaseId(
+        '123e4567-e89b-12d3-a456-426614174003',
+        '123e4567-e89b-12d3-a456-426614174000'
+      );
       expect(latestOnly).toHaveLength(0); // No related case ID in this test
     });
 
@@ -217,7 +223,10 @@ describe('Case Document Lifecycle Integration', () => {
       expect(() => document.delete('123e4567-e89b-12d3-a456-426614174001')).not.toThrow();
       await repository.save(document);
 
-      const retrieved = await repository.findById(document.id);
+      const retrieved = await repository.findById(
+        document.id,
+        '123e4567-e89b-12d3-a456-426614174000'
+      );
       expect(retrieved?.isDeleted).toBe(true);
     });
 
@@ -430,7 +439,10 @@ describe('Case Document Lifecycle Integration', () => {
       expect(invalidDetach.isFailure).toBe(true);
 
       // Query documents by case ID
-      const caseDocs = await repository.findByCaseId(legalCase.id.value);
+      const caseDocs = await repository.findByCaseId(
+        legalCase.id.value,
+        '123e4567-e89b-12d3-a456-426614174000'
+      );
       expect(caseDocs).toHaveLength(2); // Both docs have relatedCaseId
 
       // Verify case JSON includes document info
@@ -539,10 +551,13 @@ describe('Case Document Lifecycle Integration', () => {
       await repository.save(document);
 
       // Verify document exists
-      let found = await repository.findById(document.id);
+      let found = await repository.findById(document.id, '123e4567-e89b-12d3-a456-426614174000');
       expect(found).not.toBeNull();
 
-      let caseDocs = await repository.findByCaseId('123e4567-e89b-12d3-a456-426614174003');
+      let caseDocs = await repository.findByCaseId(
+        '123e4567-e89b-12d3-a456-426614174003',
+        '123e4567-e89b-12d3-a456-426614174000'
+      );
       expect(caseDocs).toHaveLength(1);
 
       // Soft delete
@@ -550,11 +565,14 @@ describe('Case Document Lifecycle Integration', () => {
       await repository.save(document);
 
       // Verify soft delete
-      found = await repository.findById(document.id);
+      found = await repository.findById(document.id, '123e4567-e89b-12d3-a456-426614174000');
       expect(found?.isDeleted).toBe(true);
 
       // Verify excluded from queries
-      caseDocs = await repository.findByCaseId('123e4567-e89b-12d3-a456-426614174003');
+      caseDocs = await repository.findByCaseId(
+        '123e4567-e89b-12d3-a456-426614174003',
+        '123e4567-e89b-12d3-a456-426614174000'
+      );
       expect(caseDocs).toHaveLength(0);
 
       const userDocs = await repository.findAccessibleByUser(
@@ -586,7 +604,7 @@ describe('Case Document Lifecycle Integration', () => {
       await repository.delete(document.id);
 
       // Verify completely removed
-      const found = await repository.findById(document.id);
+      const found = await repository.findById(document.id, '123e4567-e89b-12d3-a456-426614174000');
       expect(found).toBeNull();
     });
   });

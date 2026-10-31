@@ -10,6 +10,7 @@
  */
 
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
@@ -613,6 +614,9 @@ async function executeMoveStage(
   return opportunityService.changeStage(input.id, input.targetStage, userId, tenantId);
 }
 
+/** dealForecast input: the opportunity's record id (a cuid). */
+const dealForecastInputSchema = z.object({ id: recordIdSchema });
+
 export const opportunityRouter = createTRPCRouter({
   /**
    * Create a new opportunity
@@ -1088,7 +1092,7 @@ export const opportunityRouter = createTRPCRouter({
    * Restore a soft-deleted opportunity from trash
    */
   restore: tenantProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const opportunityService = getOpportunityService(ctx);
@@ -1109,7 +1113,7 @@ export const opportunityRouter = createTRPCRouter({
    * Permanently delete a trashed opportunity (cannot be undone)
    */
   permanentDelete: tenantProcedure
-    .input(z.object({ id: z.string().uuid() }))
+    .input(z.object({ id: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const opportunityService = getOpportunityService(ctx);
@@ -1474,12 +1478,12 @@ export const opportunityRouter = createTRPCRouter({
    * Get deal-specific forecast with risk factors, recommendations, history
    * PG-131: Deterministic risk scoring — no AI chain dependency
    */
-  dealForecast: tenantProcedure.input(z.object({ id: z.uuid() })).query(async ({ ctx, input }) => {
+  dealForecast: tenantProcedure.input(dealForecastInputSchema).query(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
 
-    // Fetch opportunity with relations
-    const opportunity = await typedCtx.prismaWithTenant.opportunity.findUnique({
-      where: { id: input.id },
+    // Fetch opportunity with relations, only in the caller's tenant (#1075 review)
+    const opportunity = await typedCtx.prismaWithTenant.opportunity.findFirst({
+      where: { id: input.id, tenantId: typedCtx.tenant.tenantId },
       include: {
         owner: { select: { id: true, name: true, email: true } },
         account: { select: { id: true, name: true } },

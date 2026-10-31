@@ -8,6 +8,7 @@
 
 import type { Job } from 'bullmq';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 import { prisma } from '@intelliflow/db';
 import { draftContactReply, type EmailThreadEntry } from '../contact-reply-draft.chain.js';
@@ -33,7 +34,7 @@ const ThreadEntrySchema = z.object({
 
 export const ReplyDraftJobDataSchema = z.object({
   contactId: z.string().min(1),
-  tenantId: z.string().min(1),
+  tenantId: recordIdSchema,
   emailThreadId: z.string().optional(),
   emailThread: z.array(ThreadEntrySchema).min(1),
   userInstructions: z.string().optional(),

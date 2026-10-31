@@ -48,7 +48,7 @@ export type LeadTier = 'HOT' | 'WARM' | 'COLD' | 'UNQUALIFIED';
 /** Schema for scoring job data */
 export const ScoringJobDataSchema = z.object({
   leadId: recordIdSchema,
-  tenantId: z.string().min(1),
+  tenantId: recordIdSchema,
   lead: z.object({
     email: z.email(),
     firstName: z.string().optional(),

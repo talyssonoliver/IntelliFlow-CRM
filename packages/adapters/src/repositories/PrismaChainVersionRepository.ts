@@ -106,8 +106,9 @@ export class PrismaChainVersionRepository implements ChainVersionRepositoryPort 
     return this.toRecord(row);
   }
 
-  async findById(id: string): Promise<ChainVersionRecord | null> {
-    const row = await this.prisma.chainVersion.findUnique({ where: { id } });
+  async findById(id: string, tenantId: string): Promise<ChainVersionRecord | null> {
+    // Tenant-scoped: another tenant's version id finds nothing (#1075 review).
+    const row = await this.prisma.chainVersion.findFirst({ where: { id, tenantId } });
     return row ? this.toRecord(row) : null;
   }
 

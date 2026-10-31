@@ -34,13 +34,13 @@ describe('intelligence.triggerPrediction quota guard', () => {
       intelligenceRouter.createCaller(ctx).triggerPrediction(input)
     ).rejects.toMatchObject(quotaRejection('aiSpendCentsPerMonth', 2000, 2000));
     expect(mockQueueAdd).not.toHaveBeenCalled();
-    expect(prismaMock.lead.findUnique).not.toHaveBeenCalled();
+    expect(prismaMock.lead.findFirst).not.toHaveBeenCalled();
   });
 
   it('enqueues the prediction when the budget has headroom', async () => {
     mockQueueAdd.mockReset();
     mockQueueAdd.mockResolvedValue({ id: 'job-123' });
-    prismaMock.lead.findUnique.mockResolvedValue({ id: TEST_UUIDS.lead1 } as never);
+    prismaMock.lead.findFirst.mockResolvedValue({ id: TEST_UUIDS.lead1 } as never);
     const quota = underQuota();
     const ctx = createTestContext({ services: { ...mockServices, quota: quota as never } });
 

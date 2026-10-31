@@ -15,6 +15,7 @@
 
 import { context as otelContext, propagation } from '@opentelemetry/api';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
 import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
@@ -162,7 +163,7 @@ const entityTypeSchema = z.enum(['lead', 'contact', 'opportunity', 'account']);
  */
 const getInsightsInputSchema = z.object({
   entityType: entityTypeSchema,
-  entityId: z.uuid(),
+  entityId: recordIdSchema,
 });
 
 /**
@@ -170,7 +171,7 @@ const getInsightsInputSchema = z.object({
  */
 const triggerPredictionInputSchema = z.object({
   entityType: entityTypeSchema,
-  entityId: z.uuid(),
+  entityId: recordIdSchema,
   predictionType: z.enum(['CHURN_RISK', 'NEXT_BEST_ACTION', 'QUALIFICATION']),
   priority: z.enum(['LOW', 'NORMAL', 'HIGH']).default('NORMAL'),
 });
@@ -727,16 +728,16 @@ export const intelligenceRouter = createTRPCRouter({
    * Returns the stored AI insights from LeadAIInsight model
    */
   getLeadInsights: tenantProcedure
-    .input(z.object({ leadId: z.uuid() }))
+    .input(z.object({ leadId: recordIdSchema }))
     .output(aiInsightsResponseSchema.nullable())
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
 
-      // Verify lead exists and belongs to tenant
-      const lead = await typedCtx.prismaWithTenant.lead.findUnique({
-        where: { id: input.leadId },
+      // The lead and its insight must both be the caller's (#1075 review).
+      const lead = await typedCtx.prismaWithTenant.lead.findFirst({
+        where: { id: input.leadId, tenantId: typedCtx.tenant.tenantId },
         include: {
-          aiInsights: { take: 1 },
+          aiInsights: { where: { tenantId: typedCtx.tenant.tenantId }, take: 1 },
         },
       });
 
@@ -777,14 +778,14 @@ export const intelligenceRouter = createTRPCRouter({
    * Returns the stored AI insights from ContactAIInsight model
    */
   getContactInsights: tenantProcedure
-    .input(z.object({ contactId: z.uuid() }))
+    .input(z.object({ contactId: recordIdSchema }))
     .output(aiInsightsResponseSchema.nullable())
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
 
-      // Verify contact exists and belongs to tenant
-      const contact = await typedCtx.prismaWithTenant.contact.findUnique({
-        where: { id: input.contactId },
+      // Verify contact exists and belongs to tenant (#1075 review)
+      const contact = await typedCtx.prismaWithTenant.contact.findFirst({
+        where: { id: input.contactId, tenantId: typedCtx.tenant.tenantId },
         include: {
           aiInsight: true,
         },
@@ -844,16 +845,16 @@ export const intelligenceRouter = createTRPCRouter({
       } | null = null;
 
       if (entityType === 'lead') {
-        const lead = await typedCtx.prismaWithTenant.lead.findUnique({
-          where: { id: entityId },
-          include: { aiInsights: { take: 1 } },
+        const lead = await typedCtx.prismaWithTenant.lead.findFirst({
+          where: { id: entityId, tenantId: typedCtx.tenant.tenantId },
+          include: { aiInsights: { where: { tenantId: typedCtx.tenant.tenantId }, take: 1 } },
         });
         if (lead?.aiInsights[0]) {
           aiInsight = lead.aiInsights[0];
         }
       } else if (entityType === 'contact') {
-        const contact = await typedCtx.prismaWithTenant.contact.findUnique({
-          where: { id: entityId },
+        const contact = await typedCtx.prismaWithTenant.contact.findFirst({
+          where: { id: entityId, tenantId: typedCtx.tenant.tenantId },
           include: { aiInsight: true },
         });
         if (contact?.aiInsight) {
@@ -937,8 +938,8 @@ export const intelligenceRouter = createTRPCRouter({
 
       // Verify entity exists
       if (entityType === 'lead') {
-        const lead = await typedCtx.prismaWithTenant.lead.findUnique({
-          where: { id: entityId },
+        const lead = await typedCtx.prismaWithTenant.lead.findFirst({
+          where: { id: entityId, tenantId: typedCtx.tenant.tenantId },
         });
         if (!lead) {
           throw new TRPCError({
@@ -947,8 +948,8 @@ export const intelligenceRouter = createTRPCRouter({
           });
         }
       } else if (entityType === 'contact') {
-        const contact = await typedCtx.prismaWithTenant.contact.findUnique({
-          where: { id: entityId },
+        const contact = await typedCtx.prismaWithTenant.contact.findFirst({
+          where: { id: entityId, tenantId: typedCtx.tenant.tenantId },
         });
         if (!contact) {
           throw new TRPCError({
@@ -1034,7 +1035,7 @@ export const intelligenceRouter = createTRPCRouter({
   updateLeadInsights: tenantProcedure
     .input(
       z.object({
-        leadId: z.uuid(),
+        leadId: recordIdSchema,
         churnRisk: churnRiskLevelSchema.optional(),
         conversionProbability: z.number().min(0).max(100).optional(),
         estimatedValue: z.number().optional(),
@@ -1054,8 +1055,8 @@ export const intelligenceRouter = createTRPCRouter({
       const { leadId, confidence, emotions, keyPhrases, primaryEmotion, ...updateData } = input;
 
       // Verify lead exists
-      const lead = await typedCtx.prismaWithTenant.lead.findUnique({
-        where: { id: leadId },
+      const lead = await typedCtx.prismaWithTenant.lead.findFirst({
+        where: { id: leadId, tenantId: typedCtx.tenant.tenantId },
       });
 
       if (!lead) {
@@ -1122,7 +1123,7 @@ export const intelligenceRouter = createTRPCRouter({
   updateContactInsights: tenantProcedure
     .input(
       z.object({
-        contactId: z.uuid(),
+        contactId: recordIdSchema,
         churnRisk: churnRiskLevelSchema.optional(),
         conversionProbability: z.number().min(0).max(100).optional(),
         lifetimeValue: z.number().optional(),
@@ -1141,8 +1142,8 @@ export const intelligenceRouter = createTRPCRouter({
       const { contactId, emotions, keyPhrases, primaryEmotion, ...updateData } = input;
 
       // Verify contact exists
-      const contact = await typedCtx.prismaWithTenant.contact.findUnique({
-        where: { id: contactId },
+      const contact = await typedCtx.prismaWithTenant.contact.findFirst({
+        where: { id: contactId, tenantId: typedCtx.tenant.tenantId },
       });
 
       if (!contact) {

@@ -195,8 +195,14 @@ describe('activateVersionSchema', () => {
     expect(result.versionId).toBe('550e8400-e29b-41d4-a716-446655440000');
   });
 
-  it('should reject invalid UUID', () => {
-    expect(() => activateVersionSchema.parse({ versionId: 'not-a-uuid' })).toThrow();
+  // #1075: version ids are cuid record ids, bounded and URL-safe.
+  it('should accept a cuid', () => {
+    const result = activateVersionSchema.parse({ versionId: 'cmhbx3k2p0000l8086a1b2c3d' });
+    expect(result.versionId).toBe('cmhbx3k2p0000l8086a1b2c3d');
+  });
+
+  it('should reject an unsafe id', () => {
+    expect(() => activateVersionSchema.parse({ versionId: 'not a/valid id' })).toThrow();
   });
 });
 

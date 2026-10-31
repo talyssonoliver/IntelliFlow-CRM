@@ -13,16 +13,17 @@ export class InMemoryCaseDocumentRepository implements CaseDocumentRepository {
     this.documents.set(document.id, document);
   }
 
-  async findById(id: string): Promise<CaseDocument | null> {
-    return this.documents.get(id) || null;
+  async findById(id: string, tenantId: string): Promise<CaseDocument | null> {
+    const doc = this.documents.get(id);
+    return doc && doc.tenantId === tenantId ? doc : null;
   }
 
-  async findByIds(ids: string[]): Promise<CaseDocument[]> {
-    // Mirror the Prisma adapter: dedupe ids, exclude soft-deleted rows.
+  async findByIds(ids: string[], tenantId: string): Promise<CaseDocument[]> {
+    // Mirror the Prisma adapter: dedupe ids, tenant only, exclude soft-deleted rows.
     const result: CaseDocument[] = [];
     for (const id of new Set(ids)) {
       const doc = this.documents.get(id);
-      if (doc && !doc.toJSON().deletedAt) result.push(doc);
+      if (doc && doc.tenantId === tenantId && !doc.toJSON().deletedAt) result.push(doc);
     }
     return result;
   }
@@ -85,10 +86,15 @@ export class InMemoryCaseDocumentRepository implements CaseDocumentRepository {
     });
   }
 
-  async findByCaseId(caseId: string): Promise<CaseDocument[]> {
+  async findByCaseId(caseId: string, tenantId: string): Promise<CaseDocument[]> {
     return Array.from(this.documents.values()).filter((doc) => {
       const data = doc.toJSON();
-      return data.metadata.relatedCaseId === caseId && !data.deletedAt && data.isLatestVersion;
+      return (
+        data.tenantId === tenantId &&
+        data.metadata.relatedCaseId === caseId &&
+        !data.deletedAt &&
+        data.isLatestVersion
+      );
     });
   }
 

@@ -12,6 +12,7 @@
 
 import type { Job, Queue } from 'bullmq';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 import { prisma } from '@intelliflow/db';
 import { scoreAccount } from '../account-scoring.chain.js';
@@ -27,7 +28,7 @@ const PER_TENANT_CAP = 500;
 
 export const AccountScoringJobDataSchema = z.object({
   accountId: z.string().min(1),
-  tenantId: z.string().min(1),
+  tenantId: recordIdSchema,
   _otelCarrier: z.record(z.string(), z.string()).optional(),
 });
 export type AccountScoringJobData = z.infer<typeof AccountScoringJobDataSchema>;
