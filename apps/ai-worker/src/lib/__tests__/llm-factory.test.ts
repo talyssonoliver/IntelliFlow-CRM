@@ -93,6 +93,13 @@ async function importFactory(provider: 'litellm' | 'openai' | 'ollama' | 'mock' 
   return mod;
 }
 
+// embeddingDimensions reads the same doMock'd config. Imported from its own module: a
+// re-export through llm-factory comes out undefined under istanbul coverage.
+async function importDimensions(provider: 'litellm' | 'ollama' | 'openrouter') {
+  await importFactory(provider);
+  return (await import('../embedding-dimensions.js')).embeddingDimensions;
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -500,27 +507,27 @@ describe('createEmbeddings()', () => {
 
     it('is 2048 for OpenRouter, the only size its free Nemotron model returns', async () => {
       vi.stubEnv('EMBEDDING_PROVIDER', 'openrouter');
-      const { embeddingDimensions } = await importFactory('openrouter');
+      const embeddingDimensions = await importDimensions('openrouter');
 
       expect(embeddingDimensions()).toBe(2048);
     });
 
     it('keeps 1536 for Gemini and the LiteLLM path, and 768 for Ollama', async () => {
       vi.stubEnv('EMBEDDING_PROVIDER', 'gemini');
-      expect((await importFactory('openrouter')).embeddingDimensions()).toBe(1536);
+      expect((await importDimensions('openrouter'))()).toBe(1536);
 
       vi.resetModules();
       vi.stubEnv('EMBEDDING_PROVIDER', '');
-      expect((await importFactory('litellm')).embeddingDimensions()).toBe(1536);
+      expect((await importDimensions('litellm'))()).toBe(1536);
 
       vi.resetModules();
-      expect((await importFactory('ollama')).embeddingDimensions()).toBe(768);
+      expect((await importDimensions('ollama'))()).toBe(768);
     });
 
     it('EMBEDDING_DIMENSIONS overrides the provider default', async () => {
       vi.stubEnv('EMBEDDING_PROVIDER', 'openrouter');
       vi.stubEnv('EMBEDDING_DIMENSIONS', '1024');
-      const { embeddingDimensions } = await importFactory('openrouter');
+      const embeddingDimensions = await importDimensions('openrouter');
 
       expect(embeddingDimensions()).toBe(1024);
     });

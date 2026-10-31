@@ -10,8 +10,6 @@ import { wrapModelWithTracing, wrapEmbeddingsWithTracing } from '../tracing/llm-
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { GeminiEmbeddings } from './gemini-embeddings.js';
 import { embeddingDimensions } from './embedding-dimensions.js';
-
-export { embeddingDimensions };
 import {
   getCatalogEntry,
   type LLMPurpose as DomainLLMPurpose,
