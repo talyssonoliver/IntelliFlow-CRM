@@ -93,7 +93,10 @@ export interface GuardrailsConfig {
   /** Enable bias detection and metrics collection */
   enableBiasDetection?: boolean;
 
-  /** Maximum requests per minute (default: 10) */
+  /**
+   * Maximum requests per minute per tenant and actor
+   * (default: DEFAULT_GUARDRAILS_RATE_LIMIT_PER_MIN)
+   */
   rateLimit?: number;
 
   /** Log all security events */
@@ -104,6 +107,27 @@ export interface GuardrailsConfig {
 
   /** Model version for ISO 42001 traceability */
   modelVersion?: string;
+}
+
+/**
+ * Per-tenant AI requests per minute when the deployment sets no limit. The API
+ * runs every call as the system actor, so this bucket is shared by every user of
+ * a tenant: it must sit above a normal bulk action (bulk scoring, an import),
+ * or that action fails with AI_RATE_LIMITED. 120 is a starting point; the right
+ * number should come from real usage (#1043).
+ */
+export const DEFAULT_GUARDRAILS_RATE_LIMIT_PER_MIN = 120;
+
+/**
+ * A configured limit (the API passes Number(AI_GUARDRAILS_RATE_LIMIT_PER_MIN)).
+ * Anything but a positive integer (unset, NaN, 0, negative, fractional) falls
+ * back to the default: a bad value must neither disable the limit nor block
+ * every call.
+ */
+function rateLimitOrDefault(value: number | undefined): number {
+  return Number.isInteger(value) && (value as number) > 0
+    ? (value as number)
+    : DEFAULT_GUARDRAILS_RATE_LIMIT_PER_MIN;
 }
 
 /**
@@ -128,6 +152,34 @@ interface LogSecurityEventOptions {
   resourceId?: string;
   inputHash?: string;
   detectionConfidence?: number;
+  /** The call's real tenant (opts.tenantId); falls back to config.tenantId. */
+  tenantId?: string;
+  /** The requesting user (opts.userId); falls back to the configured system actor. */
+  userId?: string;
+}
+
+/** Generic message per operation; the distinct code says what actually failed. */
+const GENERIC_FAILURE_MESSAGE = {
+  scoreLead: 'AI service request failed security validation',
+  qualifyLead: 'AI qualification failed security validation',
+  generateEmail: 'Email generation failed security validation',
+} as const;
+
+const PROMPT_GUARD_CODES = new Set([
+  'AI_PROMPT_STRUCTURE_INVALID',
+  'AI_PROMPT_REJECTED',
+  'AI_RATE_LIMITED',
+]);
+
+/**
+ * Map a caught error to a failure code. An invalid prompt structure is a bug in
+ * our own call (e.g. a bad configured actor id), not an attack, so it gets its
+ * own code and a console error instead of hiding behind the generic one.
+ */
+function failureCodeFor(error: unknown): string {
+  const code = (error as { code?: unknown } | null)?.code;
+  if (typeof code !== 'string' || !PROMPT_GUARD_CODES.has(code)) return 'AI_GUARDRAILS_ERROR';
+  return code === 'AI_PROMPT_STRUCTURE_INVALID' ? 'AI_GUARDRAILS_CONFIG_ERROR' : code;
 }
 
 /**
@@ -179,7 +231,7 @@ export class GuardrailsAIService implements AIServicePort {
 
     this.config = {
       enableBiasDetection: config.enableBiasDetection ?? true,
-      rateLimit: config.rateLimit ?? 10,
+      rateLimit: rateLimitOrDefault(config.rateLimit),
       enableLogging: config.enableLogging ?? true,
       userId: config.userId,
       tenantId: config.tenantId,
@@ -202,7 +254,7 @@ export class GuardrailsAIService implements AIServicePort {
   ): Promise<Result<LeadScoringResult, DomainError>> {
     try {
       // Step 1: Sanitize input
-      const sanitizedInput = await this.sanitizeInput(input);
+      const sanitizedInput = await this.sanitizeInput(input, opts);
 
       // Step 2: Call underlying AI service (forward opts so queue adapters
       //         receive the real tenantId / leadId).
@@ -213,7 +265,7 @@ export class GuardrailsAIService implements AIServicePort {
       }
 
       // Step 3: Redact PII from output
-      const safeResult = this.sanitizeOutput(result.value);
+      const safeResult = this.sanitizeOutput(result.value, opts);
 
       // Step 4: Collect bias metrics (if enabled)
       if (this.config.enableBiasDetection) {
@@ -222,17 +274,9 @@ export class GuardrailsAIService implements AIServicePort {
 
       return Result.ok(safeResult);
     } catch (error) {
-      // Log to AuditLogPort instead of just console
-      await this.logSecurityEvent('AI_CHAIN_FAILURE', {
-        error: error instanceof Error ? error.message : String(error),
+      return this.failCall('scoreLead', error, opts, {
         input: this.sanitizeInputForLogging(input),
-        operation: 'scoreLead',
       });
-
-      return Result.fail({
-        message: 'AI service request failed security validation',
-        code: 'AI_GUARDRAILS_ERROR',
-      } as DomainError);
     }
   }
 
@@ -246,22 +290,14 @@ export class GuardrailsAIService implements AIServicePort {
   ): Promise<Result<boolean, DomainError>> {
     try {
       // Step 1: Sanitize input
-      const sanitizedInput = await this.sanitizeInput(input);
+      const sanitizedInput = await this.sanitizeInput(input, opts);
 
       // Step 2: Call underlying AI service (forward opts).
       const result = await this.innerService.qualifyLead(sanitizedInput, opts);
 
       return result;
     } catch (error) {
-      await this.logSecurityEvent('AI_CHAIN_FAILURE', {
-        error: error instanceof Error ? error.message : String(error),
-        operation: 'qualifyLead',
-      });
-
-      return Result.fail({
-        message: 'AI qualification failed security validation',
-        code: 'AI_GUARDRAILS_ERROR',
-      } as DomainError);
+      return this.failCall('qualifyLead', error, opts);
     }
   }
 
@@ -285,16 +321,7 @@ export class GuardrailsAIService implements AIServicePort {
 
       return Result.ok(safeEmail);
     } catch (error) {
-      await this.logSecurityEvent('AI_CHAIN_FAILURE', {
-        error: error instanceof Error ? error.message : String(error),
-        operation: 'generateEmail',
-        leadId,
-      });
-
-      return Result.fail({
-        message: 'Email generation failed security validation',
-        code: 'AI_GUARDRAILS_ERROR',
-      } as DomainError);
+      return this.failCall('generateEmail', error, undefined, { leadId });
     }
   }
 
@@ -400,6 +427,40 @@ export class GuardrailsAIService implements AIServicePort {
   }
 
   /**
+   * Audit a failed call (under the call's real tenant) and return the generic
+   * user-facing message with a distinct code. The real error stays in the audit
+   * details, and a config error is also written to the console.
+   */
+  private async failCall<T>(
+    operation: keyof typeof GENERIC_FAILURE_MESSAGE,
+    error: unknown,
+    opts: AIServiceCallOptions | undefined,
+    extra: Record<string, unknown> = {}
+  ): Promise<Result<T, DomainError>> {
+    const errorCode = failureCodeFor(error);
+    const message = error instanceof Error ? error.message : String(error);
+    if (errorCode === 'AI_GUARDRAILS_CONFIG_ERROR') {
+      console.error(`[GUARDRAILS] ${errorCode} in ${operation}:`, message);
+    }
+
+    await this.logSecurityEvent(
+      'AI_CHAIN_FAILURE',
+      { error: message, errorCode, operation, ...extra },
+      {
+        tenantId: opts?.tenantId,
+        userId: opts?.userId,
+        resourceType: opts?.leadId ? 'lead' : undefined,
+        resourceId: opts?.leadId,
+      }
+    );
+
+    return Result.fail({
+      message: GENERIC_FAILURE_MESSAGE[operation],
+      code: errorCode,
+    } as DomainError);
+  }
+
+  /**
    * Log security event to AuditLogPort
    *
    * Replaces the previous console-only logging with proper audit trail persistence.
@@ -415,12 +476,15 @@ export class GuardrailsAIService implements AIServicePort {
     // Get severity from domain constants
     const severity = isAISecurityEventType(eventType) ? AI_EVENT_SEVERITY_MAP[eventType] : 'MEDIUM';
 
+    const tenantId = options.tenantId ?? this.config.tenantId;
+    const userId = options.userId ?? this.config.userId;
+
     // Build the event input for AuditLogPort
     const event: AISecurityEventInput = {
       eventType,
       severity,
-      tenantId: this.config.tenantId,
-      userId: this.config.userId,
+      tenantId,
+      userId,
       resourceType: options.resourceType,
       resourceId: options.resourceId,
       description: this.buildDescription(eventType, details),
@@ -439,8 +503,8 @@ export class GuardrailsAIService implements AIServicePort {
 
     // Build tenant context
     const tenantContext: TenantContext = {
-      tenantId: this.config.tenantId,
-      userId: this.config.userId,
+      tenantId,
+      userId,
       jurisdiction: this.config.jurisdiction,
     };
 
@@ -462,7 +526,10 @@ export class GuardrailsAIService implements AIServicePort {
   /**
    * Sanitize lead scoring input
    */
-  private async sanitizeInput(input: LeadScoringInput): Promise<LeadScoringInput> {
+  private async sanitizeInput(
+    input: LeadScoringInput,
+    opts?: AIServiceCallOptions
+  ): Promise<LeadScoringInput> {
     // Import sanitizer from the canonical domain module (QUAL-015: was a
     // locally-duplicated ../shared/prompt-sanitizer.js that had diverged
     // from apps/api's copy; both now live in @intelliflow/domain).
@@ -471,11 +538,16 @@ export class GuardrailsAIService implements AIServicePort {
     // Build prompt from input
     const promptText = this.buildPromptFromInput(input);
 
-    // Sanitize the prompt
-    const sanitized = await sanitizationPipeline({
+    // Sanitize the prompt as the requesting user (else the system actor). The
+    // rate-limit bucket stays per tenant: keyed on the configured actor, not the
+    // user, so a tenant's budget is shared by its users.
+    const tenantId = opts?.tenantId ?? this.config.tenantId;
+    await sanitizationPipeline({
       text: promptText,
-      userId: this.config.userId,
+      userId: opts?.userId ?? this.config.userId,
       context: { operation: 'lead_scoring', leadEmail: input.email },
+      rateLimitKey: `${tenantId}:${this.config.userId}`,
+      maxRequestsPerMinute: this.config.rateLimit,
     });
 
     // Return original input (sanitization validated it's safe)
@@ -487,11 +559,14 @@ export class GuardrailsAIService implements AIServicePort {
   /**
    * Sanitize AI output
    */
-  private sanitizeOutput(result: LeadScoringResult): LeadScoringResult {
+  private sanitizeOutput(
+    result: LeadScoringResult,
+    opts?: AIServiceCallOptions
+  ): LeadScoringResult {
     // For numeric outputs, no sanitization needed
     // But we redact PII from reasoning if present
     if (result.reasoning) {
-      const sanitized = this.sanitizeText(result.reasoning, 'reasoning');
+      const sanitized = this.sanitizeText(result.reasoning, 'reasoning', opts);
       return {
         ...result,
         reasoning: sanitized,
@@ -513,7 +588,7 @@ export class GuardrailsAIService implements AIServicePort {
    *  - NHS numbers (UK) — only when preceded by keyword context
    *  - Brazilian CPF numbers
    */
-  private sanitizeText(text: string, context: string): string {
+  private sanitizeText(text: string, context: string, opts?: AIServiceCallOptions): string {
     // 1. Email
     let result = text.replaceAll(
       /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
@@ -552,10 +627,16 @@ export class GuardrailsAIService implements AIServicePort {
     if (result !== text) {
       // sanitizeText is synchronous, so the audit write is fire-and-forget; a rejection
       // (e.g. while building the event, before the port call) is reported like any audit failure.
-      this.logSecurityEvent('AI_PII_EXPOSURE_BLOCKED', {
-        context,
-        redactionCount: (text.match(/@/g) || []).length,
-      }).catch((error: unknown) => this.reportAuditLogFailure(error));
+      this.logSecurityEvent(
+        'AI_PII_EXPOSURE_BLOCKED',
+        { context, redactionCount: (text.match(/@/g) || []).length },
+        {
+          tenantId: opts?.tenantId,
+          userId: opts?.userId,
+          resourceType: opts?.leadId ? 'lead' : undefined,
+          resourceId: opts?.leadId,
+        }
+      ).catch((error: unknown) => this.reportAuditLogFailure(error));
     }
 
     return result;

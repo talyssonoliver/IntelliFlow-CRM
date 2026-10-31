@@ -1,0 +1,113 @@
+{
+  "task_id": "PG-203",
+  "run_id": "20261020232057-32e38201",
+  "files_read": [
+    {
+      "path": "apps/web/src/components/sidebar/configs/appointments.ts",
+      "sha256": "6051736091c046ff488153814d6c0e25df3aaba0d3c08d5b9ee28c4e54dec33e",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "apps/web/src/app/calendar/calendar-settings/page.tsx",
+      "sha256": "adc97f2590b815f2da0475464478e47d92bc2902d89eae28f918b442c35722c6",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "docs/planning/module-settings-playbook.md",
+      "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "docs/planning/prd-module-settings.md",
+      "sha256": "8ec749e72af59b909bad9ec68d2c9cad4448a8041ceeaab13b4dbc4493605d40",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/specifications/PG-203-spec.md",
+      "sha256": "f2c1c07284c6aac61654576342805b17e00e66027a6367a17350776ad03276a6",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/planning/PG-203-plan.md",
+      "sha256": "2103064bc7de5f3d3593be84d369e7abc2d2302233a2105a832fe8bb756745a4",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/context/PG-203/PG-203-owner-ruling.md",
+      "sha256": "0ca3c9575a58f27fc355a03d6d101c842061da220c4580b0b271b155620e6e8b",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "docs/architecture/adr/ADR-083-event-types-public-booking.md",
+      "sha256": "c6421fcaa358259e3dca606bd5c47000129cfc4c9ef44ce2bf3b26e3bda58cdf",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "docs/architecture/adr/ADR-081-tenant-availability.md",
+      "sha256": "dc2f6ca332714d3b69a4aff20c26b80ccc52ab3604221ba76973b77111666ffc",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "apps/web/src/components/sidebar/configs/calendar.ts",
+      "sha256": "28bcf48807bf8a838de162b0d640864c40553be9ebfa139096e3f7000b8fa4d6",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "apps/web/src/app/calendar/event-types/page.tsx",
+      "sha256": "21749b50c5c277bc50dcec7e89108063c81126f8bdf6adaceba9c46cd02a8789",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "apps/api/src/modules/public-feedback/public-feedback.router.ts",
+      "sha256": "d2eb073d2f1cbd88d4bebda9305bb2aa91ee8a6c7bcd027720689309d837eab7",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "apps/api/src/security/public-rate-limiter.ts",
+      "sha256": "a0ec8d0ee9318de9b7535454b21b9b901268091486ac2ff491bf448ff316ce6a",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "packages/application/src/services/LeadService.ts",
+      "sha256": "ae8ea79465910780b5d306c81599d82f65b006992a2d0e958675df3844846079",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "packages/adapters/src/persistence/PrismaTransactionManager.ts",
+      "sha256": "e65193fd0b408d5f2c333530d25037fcd43f490088d6fbadd6d889f6b6984d8b",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "apps/api/src/workflow/dsar-workflow.ts",
+      "sha256": "5d524f0157ecb66b0ce8dde7317ebee8ccb0147ce4f200f8d03019daa2a38348",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "packages/db/prisma/schema.prisma",
+      "sha256": "f854ad7b01d32fa2dbacff28538b52422bbf95cd334496cd99ff42a9d4bb981a",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "packages/db/prisma/migrations/20261017120100_contacts_type_idx/migration.sql",
+      "sha256": "62079575ee1afae7c8a1c835377b4e833ea0fc30308c2db0bf128c4275204333",
+      "read_at": "2026-10-20T23:21:27Z"
+    },
+    {
+      "path": "apps/web/src/components/appointments/AppointmentForm.tsx",
+      "sha256": "2be32792419d1e30392a670e2e0f384b51a47897e54e0ed8daca9e21646cb5df",
+      "read_at": "2026-10-20T23:21:27Z"
+    }
+  ],
+  "invariants_acknowledged": [
+    "Every event-type and public-booking query and write carries an explicit tenantId; RLS is not the tenant boundary (tenant-context.ts:131-135).",
+    "Public booking resolves the tenant only from Tenant.bookingHandle via one lookup query; tenantId/hostId/leadId are never accepted from the request body (strict schemas).",
+    "Unknown handle, unknown slug, inactive type, firm without saved availability and unavailable host all return an identical NOT_FOUND after the same single DB call.",
+    "A booking re-checks the slot inside one transaction under a per-tenant pg_advisory_xact_lock with transaction-local app.current_tenant_id; two concurrent books of one slot yield one success and one CONFLICT.",
+    "Booking leads are always AI-scored (owner Q8/Q9); there is no AI toggle; LeadCreated lands in the outbox in the same transaction via LeadService.createLeadInTransaction.",
+    "Existing leads and contacts are never linked or modified from anonymous input (owner Q11); only the host email flags a match.",
+    "All destructive event-type writes run in $transaction; no skipDuplicates; colorToken is CHECK-constrained to the 18-token TAG palette; duplicate booking slugs rejected by Zod superRefine and the DB unique.",
+    "All five migrations are additive Class A, applied only to the local test DB in this task; production apply is manual and must precede the API ship (L13).",
+    "Emails use fixed templates with every interpolated value HTML-escaped and CR/LF stripped from subjects; tests use the mock notification adapter and never send real mail."
+  ],
+  "created_at": "2026-10-20T23:21:27Z"
+}

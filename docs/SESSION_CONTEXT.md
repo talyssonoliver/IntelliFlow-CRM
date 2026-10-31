@@ -1,24 +1,22 @@
 # Session Context Snapshot
-_Generated: 2026-10-23T15:36:43.603Z • Branch: feat/ifc-033-ifc033_
+_Generated: 2026-10-30T20:52:09.890Z • Branch: feat/pg-208-task-automation_
 
 > Auto-generated from `apps/project-tracker/docs/metrics/`. **Do not edit by hand** — regenerate with `npx tsx apps/project-tracker/scripts/generate-context.ts`.
 
 ## Where We Left Off
 
-Active sprint: **Sprint 0** (sprint-0) — 100% complete (32/32 tasks). 19 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 2s ago; 622 total tasks across the project.
+Active sprint: **Sprint 0** (sprint-0) — 100% complete (32/32 tasks). 18 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 2s ago; 626 total tasks across the project.
 
 ## Project Health
 
-- **Progress:** 439/622 tasks completed (70.58%) — 164 backlog, 0 blocked, 19 in progress.
+- **Progress:** 441/626 tasks completed (70.45%) — 167 backlog, 0 blocked, 18 in progress.
 - **Focus band:** Sprints 15, 18, 19, 20 carry the earliest remaining backlog.
-- **Evidence issues:** 24 attested but CSV not updated; 11 sprint path mismatches.
+- **Evidence issues:** 22 attested but CSV not updated; 8 sprint path mismatches.
 - _Source: `docs/CURRENT_STATE_REPORT.md` (0s ago) — full sprint-by-sprint breakdown._
 
 ## Active Tasks (IN_PROGRESS)
 
-- **[ENV-008-AI]** Automated Observability with Predictive Monitoring — started 17d ago, Backend Dev + AI Specialist (STOA-Intelligence)
-  - artifacts: 0 created / 0 missing
-- **[EP-001-AI]** EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline) — started 17d ago, DevOps + Claude Code (STOA-Automation)
+- **[EP-001-AI]** EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline) — started 24d ago, DevOps + Claude Code (STOA-Automation)
   - artifacts: 0 created / 0 missing
 
 ## Recently Completed (last 5)
@@ -37,19 +35,19 @@ Active sprint: **Sprint 0** (sprint-0) — 100% complete (32/32 tasks). 19 task(
 
 ## Git Activity
 
-- **Branch:** `feat/ifc-033-ifc033` (13 dirty file(s))
-- **Dirty preview:** `.claude/skills/exec-attestation/SKILL.md`, `.claude/skills/sonarqube-fix/agents/automation-agent.md`, `.claude/skills/sonarqube-fix/agents/quality-agent.md`, `.claude/skills/sonarqube-fix/agents/security-agent.md`, `.claude/skills/sonarqube-fix/examples/example-usage.md` …
+- **Branch:** `feat/pg-208-task-automation` (127 dirty file(s))
+- **Dirty preview:** `.github/workflows/grafana-ai-alert-rules.yml`, `.specify/sprints/sprint-18/attestations/IFC-117/attestation-latest.json`, `.specify/sprints/sprint-18/attestations/IFC-117/attestation.json`, `.specify/sprints/sprint-18/attestations/IFC-117/task-tracking.json`, `.specify/sprints/sprint-18/context/IFC-117/IFC-117-agent-selection.json` …
 - **Last 10 commits:**
-  - `b3a00801d` Merge remote-tracking branch 'origin/main' into feat/ifc-033-ifc033 — Talysson Oliveira, 5 minutes ago
-  - `0cd045e4b` chore(ifc-033): commit tracker reports regenerated during the ifc-033 run — Talysson Oliveira, 12 minutes ago
-  - `c75cac658` chore(ifc-033): attest the production load test and mark the task completed — Talysson Oliveira, 13 minutes ago
-  - `fed314f7a` docs(ifc-033): cite the staging url by its workflow, not a non-canonical host — Talysson Oliveira, 23 minutes ago
-  - `4294419cb` feat(pg-203): event types, appointment picker and public booking page (#1003) — Talysson Oliveira, 24 minutes ago
-  - `586f21f6e` feat(email): user mailboxes, bounce reading and email settings (pg-207) (#983) — Talysson Oliveira, 14 hours ago
-  - `02023bf9d` fix(k6): stop ifc-033 tenant prep trusting a 200 from bulkUpdateStatus — Talysson Oliveira, 15 hours ago
-  - `b7c58cff6` test(ifc-033): record the production k6 run and its bottleneck — Talysson Oliveira, 15 hours ago
-  - `dd164c4ca` feat(k6): let the ifc-033 load test run against a deployed api — Talysson Oliveira, 15 hours ago
-  - `e7ce625b2` fix(deps): raise follow-redirects and vite floors to patched versions (#975) — Talysson Oliveira, 2 days ago
+  - `3b5e16703` chore(tasks): refresh the pg-208 attestation for the db push integration fix (pg-208) — Talysson Oliveira, 6 hours ago
+  - `1d765b915` test(tasks): apply the automation migration on a db push test database (pg-208) — Talysson Oliveira, 6 hours ago
+  - `cf79859ac` chore(tasks): refresh the pg-208 attestation after the pg-203 main merge (pg-208) — Talysson Oliveira, 9 hours ago
+  - `403bd097b` chore(tasks): merge main into pg-208 after the pg-203 data subject requests (pg-208) — Talysson Oliveira, 10 hours ago
+  - `e032ee9f4` feat(pg-203): data subject requests with export, erasure and processing restriction (#1056) — Talysson Oliveira, 10 hours ago
+  - `c2e62a2f8` chore(tasks): resolve the schedule timezone debt entry now fixed in the pg-208 pr (pg-208) — Talysson Oliveira, 20 hours ago
+  - `42127081a` fix(tasks): make a schedule slot claim lose when the schedule was edited after the due read (pg-208) — Talysson Oliveira, 20 hours ago
+  - `28e3c906e` fix(tasks): write automation settings under a tenant lock so a re-enable is always stamped (pg-208) — Talysson Oliveira, 20 hours ago
+  - `0bde34ef4` chore(tasks): merge main into pg-208 after the cuid record id fix (pg-208) — Talysson Oliveira, 20 hours ago
+  - `7ba4ce7e7` fix(ai-worker): accept cuid record ids in job and queue schemas (#1095) — Talysson Oliveira, 21 hours ago
 
 ## Key File References
 

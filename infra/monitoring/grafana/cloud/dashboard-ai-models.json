@@ -1,0 +1,280 @@
+{
+  "folderUid": "intelliflow-prod",
+  "dashboard": {
+    "uid": "ifc117-ai-models",
+    "title": "IntelliFlow AI models",
+    "description": "IFC-117 (ADR-088): AI chain latency, errors, cost, estimated value, heuristic hallucination rate and output-distribution drift, from the OTel instruments ai-worker exports. Kept in the repo; never edited in the Grafana UI.",
+    "tags": ["intelliflow", "ai", "ifc-117"],
+    "timezone": "utc",
+    "schemaVersion": 39,
+    "refresh": "5m",
+    "time": { "from": "now-24h", "to": "now" },
+    "panels": [
+      {
+        "type": "text",
+        "title": "How to read this dashboard",
+        "gridPos": { "h": 5, "w": 24, "x": 0, "y": 0 },
+        "options": {
+          "mode": "markdown",
+          "content": "Metrics come from the monitored chains in ai-worker (lead scoring). **Auto-response is not monitored in production**: its chain is instrumented but no production caller runs it yet, so it shows no data. A call that times out is counted once as an error by the chain monitor and again by the retry of its caller, so the error ratio can double-count timeouts. Hallucination rates are what the heuristic checker detects, a floor rather than ground truth. Value is an estimate (a fixed value per scored lead), not booked revenue. Drift is a shift in the output distribution compared with the same hours on the previous 7 days; it can be a change in lead mix as well as in the model."
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Inference p50 / p95 latency (ms)",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+        "fieldConfig": { "defaults": { "unit": "ms" }, "overrides": [] },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "legendFormat": "p50 {{chain}}",
+            "expr": "histogram_quantile(0.5, sum by (le, chain) (rate(intelliflow_ai_inference_latency_milliseconds_bucket{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[10m])))"
+          },
+          {
+            "refId": "B",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "legendFormat": "p95 {{chain}}",
+            "expr": "histogram_quantile(0.95, sum by (le, chain) (rate(intelliflow_ai_inference_latency_milliseconds_bucket{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[10m])))"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Inference calls by outcome",
+        "description": "Error counts can include a timeout twice (chain monitor and caller retry).",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+        "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "legendFormat": "{{chain}} {{outcome}}",
+            "expr": "sum by (chain, outcome) (increase(intelliflow_ai_inference_count_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[10m]))"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Errors by class",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 13 },
+        "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "legendFormat": "{{error_class}}",
+            "expr": "sum by (error_class) (increase(intelliflow_ai_inference_count_total{job=~\"(.*/)?(intelliflow-)?ai-worker\", outcome=\"error\"}[10m]))"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Model confidence (mean)",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 13 },
+        "fieldConfig": {
+          "defaults": { "unit": "percentunit", "min": 0, "max": 1 },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "legendFormat": "{{model}}",
+            "expr": "sum by (model) (rate(intelliflow_ai_confidence_sum{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[1h])) / sum by (model) (rate(intelliflow_ai_confidence_count{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[1h]))"
+          }
+        ]
+      },
+      {
+        "type": "stat",
+        "title": "Hallucination rate, detected by heuristic checker (1h)",
+        "description": "Share of checked outputs the heuristic checker flagged: a floor of what it can see, not ground truth. Alert at 5% with at least 20 checks.",
+        "gridPos": { "h": 6, "w": 8, "x": 0, "y": 21 },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "red", "value": 0.05 }
+              ]
+            },
+            "mappings": [
+              {
+                "type": "special",
+                "options": { "match": "nan", "result": { "text": "n/a" } }
+              }
+            ]
+          },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "expr": "(sum(increase(intelliflow_ai_hallucination_detected_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[1h])) or vector(0)) / sum(increase(intelliflow_ai_hallucination_checks_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[1h]))"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Hallucinations by type and skipped checks",
+        "gridPos": { "h": 6, "w": 16, "x": 8, "y": 21 },
+        "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "legendFormat": "{{hallucination_type}}",
+            "expr": "sum by (hallucination_type) (increase(intelliflow_ai_hallucination_types_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[1h]))"
+          },
+          {
+            "refId": "B",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "legendFormat": "skipped: {{reason}}",
+            "expr": "sum by (reason) (increase(intelliflow_ai_hallucination_skipped_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[1h]))"
+          }
+        ]
+      },
+      {
+        "type": "stat",
+        "title": "LLM cost (USD, 24h)",
+        "gridPos": { "h": 6, "w": 8, "x": 0, "y": 27 },
+        "fieldConfig": {
+          "defaults": { "unit": "currencyUSD", "decimals": 4 },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "expr": "sum(increase(intelliflow_ai_cost_usd_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[24h]))"
+          }
+        ]
+      },
+      {
+        "type": "stat",
+        "title": "Estimated value (USD, 24h)",
+        "description": "Estimated: a fixed value per scored lead, not booked revenue.",
+        "gridPos": { "h": 6, "w": 8, "x": 8, "y": 27 },
+        "fieldConfig": {
+          "defaults": { "unit": "currencyUSD", "decimals": 2 },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "expr": "sum(increase(intelliflow_ai_value_estimated_usd_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[24h]))"
+          }
+        ]
+      },
+      {
+        "type": "stat",
+        "title": "Estimated ROI (24h)",
+        "description": "Estimated value divided by LLM cost. Shows n/a when there was no cost to divide by (no paid calls, or free models only).",
+        "gridPos": { "h": 6, "w": 8, "x": 16, "y": 27 },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "x",
+            "decimals": 1,
+            "noValue": "n/a",
+            "mappings": [
+              {
+                "type": "special",
+                "options": { "match": "nan", "result": { "text": "n/a" } }
+              },
+              {
+                "type": "special",
+                "options": { "match": "null", "result": { "text": "n/a" } }
+              }
+            ]
+          },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "expr": "sum(increase(intelliflow_ai_value_estimated_usd_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[24h])) / (sum(increase(intelliflow_ai_cost_usd_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[24h])) > 0)"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Drift score by model and metric",
+        "description": "Composite of excess PSI and the two-sample KS statistic against the same hours on the previous 7 days.",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 33 },
+        "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "legendFormat": "{{model}} {{metric}}",
+            "expr": "max by (model, metric) (intelliflow_ai_drift_score{job=~\"(.*/)?(intelliflow-)?ai-worker\"})"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Drift checks and detections",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 33 },
+        "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "legendFormat": "checks {{status}}",
+            "expr": "sum by (status) (increase(intelliflow_ai_drift_checks_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[1h]))"
+          },
+          {
+            "refId": "B",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "legendFormat": "detected {{severity}}",
+            "expr": "sum by (severity) (increase(intelliflow_ai_drift_detections_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[1d]))"
+          }
+        ]
+      },
+      {
+        "type": "stat",
+        "title": "Minutes since last drift check",
+        "gridPos": { "h": 6, "w": 12, "x": 0, "y": 41 },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "m",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "red", "value": 120 }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "expr": "(time() - max(intelliflow_ai_drift_last_check{job=~\"(.*/)?(intelliflow-)?ai-worker\"})) / 60"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Retraining triggers",
+        "gridPos": { "h": 6, "w": 12, "x": 12, "y": 41 },
+        "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "uid": "grafanacloud-prom" },
+            "legendFormat": "{{urgency}}",
+            "expr": "sum by (urgency) (increase(intelliflow_ai_retraining_triggers_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[1d]))"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -5,9 +5,17 @@
  * the leads it creates exactly like an in-app lead (owner rulings Q8/Q9: AI
  * scoring is never off for booking leads). Never throws: a missing Redis or
  * BullMQ only costs the score, never the lead.
+ *
+ * PG-203 (owner Q18): a person with an active processing restriction is never sent for AI
+ * scoring. The reader is a required argument so no caller can skip the check, and a failed
+ * check skips the job (not scoring is the safe direction). The worker checks again, which
+ * also covers jobs queued before a restriction became active.
  */
 import { context as otelContext, propagation } from '@opentelemetry/api';
+import type { ProcessingRestrictionPort } from '@intelliflow/application';
 import { loadBullMQ } from '../../lib/load-bullmq';
+
+export type RestrictionReader = Pick<ProcessingRestrictionPort, 'status'>;
 
 export interface LeadScoringJob {
   leadId: string;
@@ -90,7 +98,26 @@ function withTimeout<T>(work: Promise<T>, ms: number): Promise<T> {
   return Promise.race([work, timeout]).finally(() => clearTimeout(timer));
 }
 
-export async function enqueueLeadScoring(job: LeadScoringJob): Promise<void> {
+async function isRestricted(job: LeadScoringJob, restrictions: RestrictionReader) {
+  try {
+    return (await restrictions.status(job.tenantId, job.lead.email)).restricted;
+  } catch (error) {
+    console.warn('[lead-scoring] Restriction check failed; not scoring', {
+      leadId: job.leadId,
+      error: error instanceof Error ? error.name : 'unknown',
+    });
+    return true;
+  }
+}
+
+export async function enqueueLeadScoring(
+  job: LeadScoringJob,
+  restrictions: RestrictionReader
+): Promise<void> {
+  if (await isRestricted(job, restrictions)) {
+    console.info('[lead-scoring] Not queued: processing is restricted', { leadId: job.leadId });
+    return;
+  }
   try {
     if (inFlight >= MAX_IN_FLIGHT) {
       throw new Error(`enqueue skipped: ${MAX_IN_FLIGHT} calls still waiting on Redis`);

@@ -40,6 +40,25 @@ describe('combined-worker main', () => {
     expect(await defaultLoaders['ingestion-worker']()).toEqual({ name: 'ingestion-instance' });
   });
 
+  it('loads the api background jobs lazily, only when the loader runs', async () => {
+    const start = vi.fn(() => ({ approvalSweep: true, bounceScan: true, dsarSla: true }));
+    const stop = vi.fn();
+    vi.doMock('@intelliflow/api/dist/background-jobs.js', () => ({
+      startBackgroundJobs: start,
+      stopBackgroundJobs: stop,
+    }));
+    try {
+      const worker = await defaultLoaders['background-jobs']!();
+      expect(start).not.toHaveBeenCalled();
+      await worker.start();
+      expect(start).toHaveBeenCalledTimes(1);
+      await worker.stop();
+      expect(stop).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.doUnmock('@intelliflow/api/dist/background-jobs.js');
+    }
+  });
+
   it('starts the combined runtime with the default loaders', async () => {
     startCombinedWorker.mockResolvedValue({});
 

@@ -3,10 +3,12 @@
  *
  * @implements IFC-117: AI Model Monitoring
  *
- * Tests for model drift detection using statistical tests
+ * Tests for model drift detection using statistical tests. Deterministic: fixed values and a
+ * pinned clock (the IFC-117 rewrite replaced the old Math.random cases, which asserted only
+ * toBeDefined). The statistics themselves are covered in __tests__/drift-detector.shift.test.ts.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   DriftDetector,
   defaultDriftConfig,
@@ -15,34 +17,66 @@ import {
   type FeedbackDriftSignal,
 } from './drift-detector';
 
-// Mock pino logger
-vi.mock('pino', () => ({
-  default: () => ({
-    info: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn(),
-    error: vi.fn(),
-  }),
+// Mock pino logger (one shared instance, so tests can read what was logged)
+const pinoLogger = vi.hoisted(() => ({
+  info: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn(),
+  error: vi.fn(),
 }));
+vi.mock('pino', () => ({
+  default: () => pinoLogger,
+}));
+
+const HOUR = 60 * 60 * 1000;
+const DAY = 24 * HOUR;
+const NOW = Date.UTC(2026, 9, 25, 12, 0, 0);
+
+/** A spread of n values around `center`, deterministic. */
+function spread(n: number, center: number, width = 0.1): number[] {
+  return Array.from({ length: n }, (_, i) => center - width / 2 + (width * i) / Math.max(1, n - 1));
+}
 
 describe('DriftDetector', () => {
   let detector: DriftDetector;
   let config: DriftDetectorConfig;
 
+  function add(values: number[], start: number, end: number, metric = 'score_distribution'): void {
+    const step = (end - start) / values.length;
+    values.forEach((value, i) =>
+      detector.recordSample({
+        value,
+        timestamp: new Date(start + i * step),
+        model: 'gpt-4',
+        metric,
+      })
+    );
+  }
+
+  /** Reference: the same 6h slice on each of the previous 7 days. */
+  function addReference(perDay: number, center: number, metric = 'score_distribution'): void {
+    for (let day = 1; day <= 7; day++) {
+      const end = NOW - day * DAY;
+      add(spread(perDay, center), end - 6 * HOUR, end, metric);
+    }
+  }
+
+  function addCurrent(n: number, center: number, metric = 'score_distribution'): void {
+    add(spread(n, center), NOW - 6 * HOUR + 1, NOW, metric);
+  }
+
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW);
     config = {
-      windowSizeHours: 6,
-      slidingIntervalMinutes: 30,
-      pValueThreshold: 0.05,
+      ...defaultDriftConfig,
       minSamplesRequired: 10, // Lower for testing
-      driftScoreThresholds: {
-        low: 0.1,
-        medium: 0.25,
-        high: 0.5,
-        critical: 0.75,
-      },
     };
     detector = new DriftDetector(config);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   // ============================================
@@ -65,14 +99,13 @@ describe('DriftDetector', () => {
       expect(status.totalSamples).toBe(1);
     });
 
-    it('should group samples by model:metric key', () => {
+    it('should group samples by model and metric', () => {
       detector.recordSample({
         value: 0.75,
         timestamp: new Date(),
         model: 'gpt-4',
         metric: 'score_distribution',
       });
-
       detector.recordSample({
         value: 0.8,
         timestamp: new Date(),
@@ -85,17 +118,123 @@ describe('DriftDetector', () => {
       expect(status.totalSamples).toBe(2);
     });
 
-    it('should prune old samples automatically', () => {
-      // Add a sample
+    it('should prune samples beyond retention on the scheduled tick', () => {
       detector.recordSample({
         value: 0.75,
-        timestamp: new Date(),
+        timestamp: new Date(NOW - 7.5 * DAY),
+        model: 'gpt-4',
+        metric: 'score_distribution',
+      });
+      detector.recordSample({
+        value: 0.75,
+        timestamp: new Date(NOW),
+        model: 'gpt-4',
+        metric: 'score_distribution',
+      });
+      expect(detector.getStatus().totalSamples).toBe(2);
+
+      detector.pruneOnTick(NOW + DAY);
+      expect(detector.getStatus().totalSamples).toBe(1);
+    });
+
+    it('rejects a sample timestamped beyond now plus the clock skew allowance', () => {
+      detector.recordSample({
+        value: 0.75,
+        timestamp: new Date(NOW + 60_000),
+        model: 'gpt-4',
+        metric: 'score_distribution',
+      });
+      detector.recordSample({
+        value: 0.75,
+        timestamp: new Date(NOW + 2 * DAY),
         model: 'gpt-4',
         metric: 'score_distribution',
       });
 
-      const status = detector.getStatus();
-      expect(status.totalSamples).toBe(1);
+      // A minute of skew is kept; a future day bucket would never be pruned.
+      expect(detector.getStatus().totalSamples).toBe(1);
+    });
+
+    it('rejects a sample already older than retention', () => {
+      detector.recordSample({
+        value: 0.75,
+        timestamp: new Date(NOW - 9 * DAY),
+        model: 'gpt-4',
+        metric: 'score_distribution',
+      });
+
+      expect(detector.getStatus()).toMatchObject({ trackedMetrics: 0, totalSamples: 0 });
+    });
+
+    it('keeps samples at the window edges and drops an invalid timestamp, warning once', () => {
+      pinoLogger.warn.mockClear();
+      const at = (t: number) =>
+        detector.recordSample({
+          value: 0.5,
+          timestamp: new Date(t),
+          model: 'gpt-4',
+          metric: 'score_distribution',
+        });
+      at(NOW + 5 * 60 * 1000);
+      at(NOW - config.retentionDays * DAY);
+      at(NOW + 5 * 60 * 1000 + 1);
+      at(Number.NaN);
+
+      expect(detector.getStatus().totalSamples).toBe(2);
+      expect(
+        pinoLogger.warn.mock.calls.filter(([, msg]) => String(msg).includes('retention window'))
+      ).toHaveLength(1);
+    });
+
+    it('applies the default series cap when a config leaves maxSeries out', () => {
+      const { maxSeries: _omitted, ...partial } = config;
+      detector = new DriftDetector(partial as DriftDetectorConfig);
+      for (let i = 0; i < defaultDriftConfig.maxSeries + 5; i++) {
+        detector.recordSample({
+          value: 0.5,
+          timestamp: new Date(NOW),
+          model: `model-${i}`,
+          metric: 'score_distribution',
+        });
+      }
+      expect(detector.getStatus().trackedMetrics).toBe(defaultDriftConfig.maxSeries);
+    });
+
+    it('drops a sample whose value is not a finite number', () => {
+      for (const value of [Number.NaN, Number.POSITIVE_INFINITY, 0.5]) {
+        detector.recordSample({
+          value,
+          timestamp: new Date(NOW),
+          model: 'gpt-4',
+          metric: 'user_correction_error',
+        });
+      }
+      expect(detector.getStatus().totalSamples).toBe(1);
+    });
+
+    it('caps the number of series and drops samples for new keys past the cap', () => {
+      detector = new DriftDetector({ ...config, maxSeries: 3 });
+      pinoLogger.warn.mockClear();
+      for (let i = 0; i < 10; i++) {
+        detector.recordSample({
+          value: 0.5,
+          timestamp: new Date(NOW),
+          model: `model-${i}`,
+          metric: 'score_distribution',
+        });
+      }
+      // An existing series still accepts samples at the cap.
+      detector.recordSample({
+        value: 0.6,
+        timestamp: new Date(NOW),
+        model: 'model-0',
+        metric: 'score_distribution',
+      });
+
+      expect(detector.getStatus()).toMatchObject({ trackedMetrics: 3, totalSamples: 4 });
+      expect(
+        pinoLogger.warn.mock.calls.filter(([, msg]) => String(msg).includes('series cap'))
+      ).toHaveLength(1);
     });
 
     it('should include metadata', () => {
@@ -126,8 +265,7 @@ describe('DriftDetector', () => {
 
       detector.recordFeedbackAsSignal(feedback);
 
-      const status = detector.getStatus();
-      expect(status.totalSamples).toBe(1);
+      expect(detector.getStatus().totalSamples).toBe(1);
     });
 
     it('should record THUMBS_DOWN as satisfaction 0', () => {
@@ -139,8 +277,7 @@ describe('DriftDetector', () => {
 
       detector.recordFeedbackAsSignal(feedback);
 
-      const status = detector.getStatus();
-      expect(status.totalSamples).toBe(1);
+      expect(detector.getStatus().totalSamples).toBe(1);
     });
 
     it('should record SCORE_CORRECTION with error magnitude', () => {
@@ -153,9 +290,8 @@ describe('DriftDetector', () => {
 
       detector.recordFeedbackAsSignal(feedback);
 
-      const status = detector.getStatus();
       // Should have both satisfaction and error samples
-      expect(status.totalSamples).toBe(2);
+      expect(detector.getStatus().totalSamples).toBe(2);
     });
 
     it('should track user_correction_error metric', () => {
@@ -168,8 +304,7 @@ describe('DriftDetector', () => {
 
       detector.recordFeedbackAsSignal(feedback);
 
-      const status = detector.getStatus();
-      expect(status.trackedMetrics).toBe(2); // user_satisfaction and user_correction_error
+      expect(detector.getStatus().trackedMetrics).toBe(2); // user_satisfaction and user_correction_error
     });
   });
 
@@ -178,37 +313,20 @@ describe('DriftDetector', () => {
   // ============================================
 
   describe('computeBaseline', () => {
-    it('should return null with insufficient samples', () => {
-      // Add fewer samples than required
-      for (let i = 0; i < 5; i++) {
-        detector.recordSample({
-          value: 0.75 + i * 0.01,
-          timestamp: new Date(),
-          model: 'gpt-4',
-          metric: 'score_distribution',
-        });
-      }
-
-      const baseline = detector.computeBaseline('gpt-4', 'score_distribution');
-      expect(baseline).toBeNull();
+    it('should return null with insufficient reference samples', () => {
+      addReference(1, 0.75); // 7 < 10 required
+      expect(detector.computeBaseline('gpt-4', 'score_distribution', NOW)).toBeNull();
     });
 
-    it('should compute baseline with sufficient samples', () => {
-      // Add enough samples
-      for (let i = 0; i < 20; i++) {
-        detector.recordSample({
-          value: 0.75 + i * 0.01,
-          timestamp: new Date(Date.now() - i * 60000),
-          model: 'gpt-4',
-          metric: 'score_distribution',
-        });
-      }
+    it('should compute the time-of-day reference window with sufficient samples', () => {
+      addReference(3, 0.75); // 21 reference samples
 
-      const baseline = detector.computeBaseline('gpt-4', 'score_distribution');
+      const baseline = detector.computeBaseline('gpt-4', 'score_distribution', NOW);
 
       expect(baseline).not.toBeNull();
-      expect(baseline!.sampleCount).toBeGreaterThan(0);
-      expect(baseline!.mean).toBeGreaterThan(0);
+      expect(baseline!.sampleCount).toBe(21);
+      expect(baseline!.mean).toBeCloseTo(0.75, 6);
+      expect(baseline!.endTime.getTime()).toBeLessThanOrEqual(NOW - DAY);
     });
   });
 
@@ -217,98 +335,63 @@ describe('DriftDetector', () => {
   // ============================================
 
   describe('detectDrift', () => {
-    it('should return no drift with insufficient data', () => {
+    it('should report insufficient data, never healthy, when there is no data', () => {
       const result = detector.detectDrift('gpt-4', 'score_distribution');
 
+      expect(result.status).toBe('insufficient_data');
       expect(result.detected).toBe(false);
       expect(result.severity).toBe('none');
     });
 
-    it('should detect no drift with stable distribution', () => {
-      // Add stable samples with consistent values (no random variance)
-      // Use same fixed values for both baseline and current window
-      const fixedValues = [
-        0.7, 0.72, 0.74, 0.76, 0.78, 0.8, 0.71, 0.73, 0.75, 0.77, 0.79, 0.81, 0.72, 0.74, 0.76,
-      ];
+    it('should detect no drift with a stable distribution', () => {
+      addReference(10, 0.75);
+      addCurrent(30, 0.75);
 
-      for (let i = 0; i < fixedValues.length; i++) {
-        detector.recordSample({
-          value: fixedValues[i],
-          timestamp: new Date(Date.now() - (30 + i) * 60000), // Baseline period
-          model: 'gpt-4',
-          metric: 'score_distribution',
-        });
-      }
+      const result = detector.detectDrift('gpt-4', 'score_distribution', NOW);
 
-      // Add same distribution for current period
-      for (let i = 0; i < fixedValues.length; i++) {
-        detector.recordSample({
-          value: fixedValues[i],
-          timestamp: new Date(Date.now() - i * 60000), // Current period
-          model: 'gpt-4',
-          metric: 'score_distribution',
-        });
-      }
-
-      const result = detector.detectDrift('gpt-4', 'score_distribution');
-
-      // With identical distribution, drift score should be low
-      // The test verifies the detector returns a result with proper structure
-      expect(result.detected).toBeDefined();
-      expect(result.severity).toBeDefined();
-      expect(result.driftScore).toBeGreaterThanOrEqual(0);
+      expect(result.status).toBe('evaluated');
+      expect(result.detected).toBe(false);
+      expect(result.severity).toBe('none');
     });
 
-    it('should detect drift with shifted distribution', () => {
-      // Add baseline samples (mean ~0.5)
-      for (let i = 0; i < 15; i++) {
-        detector.recordSample({
-          value: 0.4 + Math.random() * 0.2,
-          timestamp: new Date(Date.now() - (30 + i) * 60000),
-          model: 'gpt-4',
-          metric: 'score_distribution',
-        });
-      }
+    it('should detect drift with a shifted distribution', () => {
+      addReference(10, 0.5);
+      addCurrent(30, 0.9);
 
-      // Compute baseline from early samples
-      detector.computeBaseline('gpt-4', 'score_distribution');
+      const result = detector.detectDrift('gpt-4', 'score_distribution', NOW);
 
-      // Add drifted samples (mean ~0.9)
-      for (let i = 0; i < 15; i++) {
-        detector.recordSample({
-          value: 0.8 + Math.random() * 0.2,
-          timestamp: new Date(Date.now() - i * 60000),
-          model: 'gpt-4',
-          metric: 'score_distribution',
-        });
-      }
+      expect(result.detected).toBe(true);
+      expect(result.pValue).toBeLessThan(0.01);
+      expect(result.severity).not.toBe('none');
+    });
 
-      const result = detector.detectDrift('gpt-4', 'score_distribution');
+    // Loki reads a top-level `severity` field as the line's level, so a warn
+    // line carrying `severity: 'critical'` would be indexed at that level and
+    // trip the error-log alert (the latency monitor did, 2026-10-28).
+    it('logs detected drift at warn without a top-level severity field that Loki would read as the level', () => {
+      addReference(10, 0.3);
+      addCurrent(30, 0.85);
+      pinoLogger.warn.mockClear();
 
-      // Should detect some level of drift due to mean shift
-      expect(result.pValue).toBeDefined();
-      expect(result.driftScore).toBeDefined();
+      const result = detector.detectDrift('gpt-4', 'score_distribution', NOW);
+
+      expect(result.detected).toBe(true);
+      const call = pinoLogger.warn.mock.calls.find(
+        (c) => c[1] === 'Output distribution shift detected on this tick'
+      );
+      expect(call).toBeDefined();
+      expect(call?.[0]).not.toHaveProperty('severity');
+      expect(call?.[0]).toMatchObject({ driftSeverity: result.severity });
     });
 
     it('should include recommendations for detected drift', () => {
-      // Add samples that will trigger drift
-      for (let i = 0; i < 30; i++) {
-        const value = i < 15 ? 0.3 + Math.random() * 0.1 : 0.8 + Math.random() * 0.1;
-        detector.recordSample({
-          value,
-          timestamp: new Date(Date.now() - i * 60000),
-          model: 'gpt-4',
-          metric: 'score_distribution',
-        });
-      }
+      addReference(10, 0.3);
+      addCurrent(30, 0.85);
 
-      detector.computeBaseline('gpt-4', 'score_distribution');
-      const result = detector.detectDrift('gpt-4', 'score_distribution');
+      const result = detector.detectDrift('gpt-4', 'score_distribution', NOW);
 
-      // Should have recommendations if drift detected
-      if (result.detected) {
-        expect(result.recommendations.length).toBeGreaterThan(0);
-      }
+      expect(result.detected).toBe(true);
+      expect(result.recommendations.length).toBeGreaterThan(0);
     });
   });
 
@@ -318,25 +401,17 @@ describe('DriftDetector', () => {
 
   describe('detectAllDrift', () => {
     it('should run drift detection for all tracked metrics', () => {
-      // Add samples for multiple metrics
-      for (let i = 0; i < 15; i++) {
-        detector.recordSample({
-          value: 0.75,
-          timestamp: new Date(Date.now() - i * 60000),
-          model: 'gpt-4',
-          metric: 'score_distribution',
-        });
-        detector.recordSample({
-          value: 0.8,
-          timestamp: new Date(Date.now() - i * 60000),
-          model: 'gpt-4',
-          metric: 'confidence_level',
-        });
-      }
+      addReference(10, 0.75, 'score_distribution');
+      addReference(10, 0.8, 'confidence_level');
+      addCurrent(15, 0.75, 'score_distribution');
+      addCurrent(15, 0.8, 'confidence_level');
 
-      const results = detector.detectAllDrift();
+      const results = detector.detectAllDrift({ now: NOW });
 
-      expect(results.length).toBe(2);
+      expect(results.map((r) => r.metric).sort()).toEqual([
+        'confidence_level',
+        'score_distribution',
+      ]);
     });
   });
 
@@ -363,20 +438,88 @@ describe('DriftDetector', () => {
       expect(status.highSeverityCount).toBe(0);
     });
 
-    it('should track last check time', () => {
-      for (let i = 0; i < 15; i++) {
-        detector.recordSample({
-          value: 0.75,
-          timestamp: new Date(Date.now() - i * 60000),
-          model: 'gpt-4',
-          metric: 'score_distribution',
-        });
+    describe('a series that stops receiving samples', () => {
+      /** Open a critical event on gpt-4 score_distribution through three detected ticks. */
+      function openEvent(): void {
+        for (let tick = 0; tick < 3; tick++) {
+          detector.applyPersistence('gpt-4', 'score_distribution', true, 'critical');
+        }
+        addCurrent(30, 0.85);
       }
 
-      detector.detectDrift('gpt-4', 'score_distribution');
-      const status = detector.getStatus();
+      it('closes its open event once no samples are left in retention', () => {
+        openEvent();
+        expect(detector.getStatus()).toMatchObject({ driftDetected: true, highSeverityCount: 1 });
 
-      expect(status.lastCheck).toBeInstanceOf(Date);
+        const later = NOW + (config.retentionDays + 1) * DAY;
+        detector.pruneOnTick(later);
+        detector.detectAllDrift({ now: later });
+
+        expect(detector.getStatus()).toMatchObject({
+          trackedMetrics: 0,
+          totalSamples: 0,
+          driftDetected: false,
+          highSeverityCount: 0,
+        });
+      });
+
+      it('logs the closed event once, with driftSeverity and the reason', () => {
+        openEvent();
+        pinoLogger.info.mockClear();
+
+        const later = NOW + (config.retentionDays + 1) * DAY;
+        detector.pruneOnTick(later);
+        detector.pruneOnTick(later + HOUR);
+
+        const closed = pinoLogger.info.mock.calls.filter(
+          (c) => c[1] === 'Drift event closed: series retired, no samples in retention'
+        );
+        expect(closed).toHaveLength(1);
+        expect(closed[0][0]).toMatchObject({
+          model: 'gpt-4',
+          metric: 'score_distribution',
+          driftSeverity: 'critical',
+        });
+        expect(closed[0][0]).not.toHaveProperty('severity');
+      });
+
+      it('keeps the open event of a series that still has samples in retention', () => {
+        openEvent();
+
+        detector.pruneOnTick(NOW + DAY);
+
+        expect(detector.getStatus()).toMatchObject({
+          trackedMetrics: 1,
+          driftDetected: true,
+          highSeverityCount: 1,
+        });
+      });
+    });
+
+    it('carries the open event severity on a clear tick inside the event', () => {
+      for (let tick = 0; tick < 3; tick++) {
+        detector.applyPersistence('gpt-4', 'score_distribution', true, 'critical');
+      }
+      addReference(10, 0.3);
+      addCurrent(30, 0.3);
+
+      const [result] = detector.detectAllDrift({ now: NOW });
+
+      expect(result).toMatchObject({
+        status: 'evaluated',
+        detectedTick: false,
+        severity: 'none',
+        inEvent: true,
+        eventSeverity: 'critical',
+      });
+    });
+
+    it('should track the last scheduled check time', () => {
+      expect(detector.getStatus().lastCheck).toBeNull();
+
+      detector.detectAllDrift({ now: NOW });
+
+      expect(detector.getStatus().lastCheck).toEqual(new Date(NOW));
     });
   });
 
@@ -385,42 +528,33 @@ describe('DriftDetector', () => {
   // ============================================
 
   describe('getHistory', () => {
-    it('should return drift history sorted by timestamp', () => {
-      // Generate drift results
-      for (let i = 0; i < 20; i++) {
-        detector.recordSample({
-          value: 0.75,
-          timestamp: new Date(Date.now() - i * 60000),
-          model: 'gpt-4',
-          metric: 'score_distribution',
-        });
-      }
+    it('should return evaluated results newest first', () => {
+      addReference(10, 0.75);
+      addCurrent(15, 0.75);
 
-      detector.detectDrift('gpt-4', 'score_distribution');
-      detector.detectDrift('gpt-4', 'score_distribution');
+      detector.detectDrift('gpt-4', 'score_distribution', NOW - HOUR);
+      detector.detectDrift('gpt-4', 'score_distribution', NOW);
 
       const history = detector.getHistory();
 
-      expect(history.length).toBeGreaterThanOrEqual(0);
+      expect(history).toHaveLength(2);
+      expect(history[0].timestamp.getTime()).toBeGreaterThan(history[1].timestamp.getTime());
     });
 
     it('should respect limit parameter', () => {
-      for (let i = 0; i < 20; i++) {
-        detector.recordSample({
-          value: 0.75,
-          timestamp: new Date(Date.now() - i * 60000),
-          model: 'gpt-4',
-          metric: 'score_distribution',
-        });
-      }
+      addReference(10, 0.75);
+      addCurrent(15, 0.75);
 
-      // Run multiple detections
       for (let i = 0; i < 10; i++) {
-        detector.detectDrift('gpt-4', 'score_distribution');
+        detector.detectDrift('gpt-4', 'score_distribution', NOW);
       }
 
-      const history = detector.getHistory(5);
-      expect(history.length).toBeLessThanOrEqual(5);
+      expect(detector.getHistory(5)).toHaveLength(5);
+    });
+
+    it('should not record insufficient-data results', () => {
+      detector.detectDrift('gpt-4', 'score_distribution', NOW);
+      expect(detector.getHistory()).toHaveLength(0);
     });
   });
 
@@ -429,10 +563,10 @@ describe('DriftDetector', () => {
   // ============================================
 
   describe('setBaseline', () => {
-    it('should manually set baseline window', () => {
+    it('should use a manually pinned baseline window', () => {
       const window = {
-        startTime: new Date(Date.now() - 60 * 60 * 1000),
-        endTime: new Date(),
+        startTime: new Date(NOW - HOUR),
+        endTime: new Date(NOW),
         sampleCount: 100,
         mean: 0.75,
         variance: 0.01,
@@ -442,18 +576,10 @@ describe('DriftDetector', () => {
       };
 
       detector.setBaseline('gpt-4', 'score_distribution', window);
+      addCurrent(15, 0.75);
 
-      // Add current samples and detect - should use the set baseline
-      for (let i = 0; i < 15; i++) {
-        detector.recordSample({
-          value: 0.75,
-          timestamp: new Date(),
-          model: 'gpt-4',
-          metric: 'score_distribution',
-        });
-      }
-
-      const result = detector.detectDrift('gpt-4', 'score_distribution');
+      const result = detector.detectDrift('gpt-4', 'score_distribution', NOW);
+      expect(result.status).toBe('evaluated');
       expect(result.baselineWindow.mean).toBe(0.75);
     });
   });
@@ -463,23 +589,27 @@ describe('DriftDetector', () => {
   // ============================================
 
   describe('defaultDriftConfig', () => {
-    it('should have appropriate window size', () => {
+    it('should have appropriate window size and interval', () => {
       expect(defaultDriftConfig.windowSizeHours).toBe(6);
+      expect(defaultDriftConfig.slidingIntervalMinutes).toBe(30);
     });
 
     it('should have minimum samples requirement', () => {
       expect(defaultDriftConfig.minSamplesRequired).toBe(50);
     });
 
-    it('should have severity thresholds', () => {
-      expect(defaultDriftConfig.driftScoreThresholds.low).toBe(0.1);
-      expect(defaultDriftConfig.driftScoreThresholds.medium).toBe(0.25);
-      expect(defaultDriftConfig.driftScoreThresholds.high).toBe(0.5);
-      expect(defaultDriftConfig.driftScoreThresholds.critical).toBe(0.75);
+    it('should use a strict p-value threshold (48 ticks a day)', () => {
+      expect(defaultDriftConfig.pValueThreshold).toBe(0.01);
     });
 
-    it('should use standard p-value threshold', () => {
-      expect(defaultDriftConfig.pValueThreshold).toBe(0.05);
+    it('should keep 8 days of samples for a 7-day time-of-day reference', () => {
+      expect(defaultDriftConfig.referenceDays).toBe(7);
+      expect(defaultDriftConfig.retentionDays).toBe(8);
+      expect(defaultDriftConfig.maxSamplesPerKey).toBe(50_000);
+    });
+
+    it('bounds the number of series', () => {
+      expect(defaultDriftConfig.maxSeries).toBe(64);
     });
   });
 });

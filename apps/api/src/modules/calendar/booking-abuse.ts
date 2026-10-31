@@ -83,6 +83,11 @@ export function hashBookingValue(value: string, salt: string): string {
   return createHmac('sha256', salt).update(value, 'utf8').digest('hex');
 }
 
+/** The salted hash of the client IP: the only form an IP is ever counted or stored in. */
+export function ipHashOf(req: Request | undefined, salt: string): string {
+  return hashBookingValue(bookingClientIp(req), salt);
+}
+
 /** One inbox counts once: lowercase, and drop a `+tag` from the local part. */
 export function normalizeEmailForCap(email: string): string {
   const lower = email.trim().toLowerCase();

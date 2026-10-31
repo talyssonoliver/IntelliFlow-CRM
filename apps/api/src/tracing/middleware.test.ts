@@ -79,6 +79,12 @@ vi.mock('../trpc', () => ({
   protectedProcedure: { use: vi.fn(() => ({})) },
 }));
 
+/** The spy logger installed for every api test by src/test/setup.ts (IFC-074). */
+async function apiLogger() {
+  const { getApiLogger } = await import('./logger.js');
+  return getApiLogger() as unknown as Record<'info' | 'warn' | 'error', ReturnType<typeof vi.fn>>;
+}
+
 describe('tRPC tracing middleware (middleware.ts)', () => {
   beforeEach(() => {
     // Reset modules first to ensure fresh imports
@@ -125,7 +131,20 @@ describe('tRPC tracing middleware (middleware.ts)', () => {
     expect(span.setAttribute).toHaveBeenCalledWith('db.query.over_budget', expect.any(Boolean));
     expect(setUser).toHaveBeenCalled();
     expect(setTag).toHaveBeenCalled();
-    expect(console.log).toHaveBeenCalled();
+    // IFC-074: the request record goes through the api pino logger, not console.
+    const logger = await apiLogger();
+    expect(logger.info).toHaveBeenCalledWith(
+      {
+        type: 'trpc.request',
+        correlationId: 'cid',
+        path: 'misc.health',
+        method: 'query',
+        durationMs: expect.any(Number),
+        status: 'success',
+      },
+      'trpc request'
+    );
+    expect(console.log).not.toHaveBeenCalledWith(expect.stringContaining('trpc.request'));
   });
 
   it('records error spans and captures exceptions', async () => {
@@ -152,7 +171,180 @@ describe('tRPC tracing middleware (middleware.ts)', () => {
     expect(span.recordException).toHaveBeenCalled();
     expect(span.end).toHaveBeenCalled();
     expect(captureException).toHaveBeenCalled();
-    expect(console.error).toHaveBeenCalled();
+    const logger = await apiLogger();
+    expect(logger.error).toHaveBeenCalledWith(
+      {
+        type: 'trpc.error',
+        correlationId: 'cid',
+        path: 'misc.health',
+        method: 'query',
+        durationMs: expect.any(Number),
+        status: 'error',
+        code: 'INTERNAL_SERVER_ERROR',
+        errorName: 'Error',
+      },
+      'trpc error'
+    );
+  });
+
+  it('never puts the error message, stack, cause or request id on the error record', async () => {
+    const { tracingMiddleware } = await import('./middleware.js');
+    const err = new MockTRPCError({
+      code: 'BAD_REQUEST',
+      message: 'person@example.invalid is bad',
+    });
+    (err as Error & { cause?: unknown }).cause = new Error('inner');
+    const next = async () => {
+      throw err;
+    };
+
+    await expect(
+      (tracingMiddleware as any)({ path: 'lead.create', type: 'mutation', next, ctx: {} })
+    ).rejects.toThrow();
+
+    const logger = await apiLogger();
+    const [record] = logger.error.mock.calls[0] as [Record<string, unknown>, string];
+    expect(record).not.toHaveProperty('message');
+    expect(record).not.toHaveProperty('error');
+    expect(record).not.toHaveProperty('stack');
+    expect(record).not.toHaveProperty('cause');
+    expect(record).not.toHaveProperty('requestId');
+    expect(JSON.stringify(record)).not.toContain('example.invalid');
+    expect(record.code).toBe('BAD_REQUEST');
+  });
+
+  it('omits code for a non-TRPC error', async () => {
+    const { tracingMiddleware } = await import('./middleware.js');
+    const next = async () => {
+      throw new TypeError('x');
+    };
+
+    await expect(
+      (tracingMiddleware as any)({ path: 'misc.health', type: 'query', next, ctx: {} })
+    ).rejects.toThrow();
+
+    const logger = await apiLogger();
+    const [record] = logger.error.mock.calls[0] as [Record<string, unknown>, string];
+    expect(record.code).toBeUndefined();
+    expect(record.errorName).toBe('TypeError');
+  });
+
+  it.each([
+    ['spaces and symbols', 'x y<>'],
+    ['a newline', 'Bad' + String.fromCharCode(10) + 'Name'],
+    ['62 characters', 'E'.repeat(62)],
+    ['an empty name', ''],
+  ])('falls back to errorName "Error" for a name with %s', async (_label, name) => {
+    const { tracingMiddleware } = await import('./middleware.js');
+    const err = new Error('boom');
+    err.name = name;
+    const next = async () => {
+      throw err;
+    };
+
+    await expect(
+      (tracingMiddleware as any)({ path: 'misc.health', type: 'query', next, ctx: {} })
+    ).rejects.toThrow();
+
+    const logger = await apiLogger();
+    const [record] = logger.error.mock.calls[0] as [Record<string, unknown>, string];
+    expect(record.errorName).toBe('Error');
+  });
+
+  it('logs "invalid" for a path outside the procedure-name pattern', async () => {
+    const { tracingMiddleware } = await import('./middleware.js');
+
+    await (tracingMiddleware as any)({
+      path: 'a b',
+      type: 'query',
+      next: async () => 'ok',
+      ctx: {},
+    });
+
+    const logger = await apiLogger();
+    const [record] = logger.info.mock.calls[0] as [Record<string, unknown>, string];
+    expect(record.path).toBe('invalid');
+  });
+
+  it('logs a trpc.slow warning for requests over 50ms', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      const { tracingMiddleware } = await import('./middleware.js');
+      const next = vi.fn(async () => {
+        vi.setSystemTime(Date.now() + 60);
+        return 'slow';
+      });
+
+      await (tracingMiddleware as any)({ path: 'lead.list', type: 'query', next, ctx: {} });
+
+      const logger = await apiLogger();
+      expect(logger.warn).toHaveBeenCalledWith(
+        {
+          type: 'trpc.slow',
+          correlationId: 'cid',
+          path: 'lead.list',
+          method: 'query',
+          durationMs: expect.any(Number),
+          targetMs: 50,
+        },
+        'slow trpc request'
+      );
+      const [record] = logger.warn.mock.calls[0] as [Record<string, number>, string];
+      expect(record.durationMs).toBeGreaterThan(50);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('does not warn for a fast request', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      const { tracingMiddleware } = await import('./middleware.js');
+
+      await (tracingMiddleware as any)({
+        path: 'lead.list',
+        type: 'query',
+        next: async () => 'fast',
+        ctx: {},
+      });
+
+      const logger = await apiLogger();
+      expect(logger.warn).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('emits the request record before the span ends', async () => {
+    const { tracingMiddleware } = await import('./middleware.js');
+
+    await (tracingMiddleware as any)({
+      path: 'misc.health',
+      type: 'query',
+      next: async () => 'ok',
+      ctx: {},
+    });
+
+    const logger = await apiLogger();
+    expect(logger.info.mock.invocationCallOrder[0]).toBeLessThan(
+      span.end.mock.invocationCallOrder[0]
+    );
+  });
+
+  it('emits the error record before the span ends', async () => {
+    const { tracingMiddleware } = await import('./middleware.js');
+    const next = async () => {
+      throw new Error('x');
+    };
+
+    await expect(
+      (tracingMiddleware as any)({ path: 'misc.health', type: 'query', next, ctx: {} })
+    ).rejects.toThrow();
+
+    const logger = await apiLogger();
+    expect(logger.error.mock.invocationCallOrder[0]).toBeLessThan(
+      span.end.mock.invocationCallOrder[0]
+    );
   });
 
   it('metricsMiddleware logs success and error', async () => {

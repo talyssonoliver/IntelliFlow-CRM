@@ -1,0 +1,364 @@
+[test-slot] waiting for intelliflow-db to be free: only one runs at a time (group-intelliflow-db PG-203@feat/pg-203-event-types pid 42420, 9m)
+[test-slot] waiting for intelliflow-db to be free: only one runs at a time (group-intelliflow-db PG-203@feat/pg-203-event-types pid 42420, 10m)
+[test-slot] waiting for intelliflow-db to be free: only one runs at a time (group-intelliflow-db PG-203@feat/pg-203-event-types pid 42420, 11m)
+[test-slot] waiting for intelliflow-db to be free: only one runs at a time (group-intelliflow-db PG-203@feat/pg-203-event-types pid 42420, 11m)
+[test-slot] slot2 taken for PG-208@feat/pg-208-task-automation (holding group-intelliflow-db): node scripts/test-db.mjs run -- pnpm exec vitest run --project integration tests/integration/task-automation.test.ts -t caller
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/db@0.1.0 db:migrate C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208\packages\db
+> prisma migrate deploy
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+Datasource "db": PostgreSQL database "intelliflow_test_run_tnbacm_nac_74qa", schema "public" at "localhost:5433"
+
+79 migrations found in prisma/migrations
+
+Applying migration `20260317000000_baseline`
+Applying migration `20260318000000_add_contact_avatar_url`
+Applying migration `20260319000000_add_opportunity_deleted_at`
+Applying migration `20260407000000_enable_rls_on_remaining_public_tables`
+Applying migration `20260410000000_add_workflow_deleted_at`
+Applying migration `20260412031212_add_user_profile_fields`
+Applying migration `20260412040000_add_lead_status_disqualified_archived`
+Applying migration `20260413000000_home_ai_insights_indexes`
+Applying migration `20260413150000_contact_settings`
+Applying migration `20260414000000_account_settings`
+Applying migration `20260414000001_add_custom_workflow_extensions`
+Applying migration `20260414100000_contact_ai_settings`
+Applying migration `20260414110000_contact_automation_hygiene`
+Applying migration `20260414120000_contact_settings_hardening`
+Applying migration `20260414130000_contact_ai_defaults_complete`
+Applying migration `20260414140000_account_settings_hardening`
+Applying migration `20260416000000_add_document_custom_types`
+Applying migration `20260417120000_deal_settings`
+Applying migration `20260417120100_deal_settings_hardening`
+Applying migration `20260417210000_add_task_assignee`
+Applying migration `20260418120000_ticket_settings`
+Applying migration `20260418120100_ticket_settings_hardening`
+Applying migration `20260419120000_document_settings`
+Applying migration `20260419120100_document_settings_hardening`
+Applying migration `20260419200000_case_settings`
+Applying migration `20260419200100_appointment_settings`
+Applying migration `20260419200200_report_settings`
+Applying migration `20260419210000_appointment_settings_primary_calendar_fk`
+Applying migration `20260419210000_case_settings_scope_up`
+Applying migration `20260420000000_enable_rls_for_remaining_settings_tables`
+Applying migration `20260420000100_enable_rls_for_document_type_definitions`
+Applying migration `20260420120000_case_tag_color_token_check`
+Applying migration `20260421000000_feat_agent_system_tenant_customization`
+Applying migration `20260421000000_ifc312_ai_chains`
+Applying migration `20260422000000_add_message_content_gin_index`
+Applying migration `20260422000001_add_field_encryption_annotations`
+Applying migration `20260423000000_tenant_memory_and_rate_limits`
+Applying migration `20260424000000_add_lead_is_starred`
+Applying migration `20260424100000_case_ai_insight`
+Applying migration `20260424200000_account_tags_ifc312_audit`
+Applying migration `20260424210000_public_feedback_pg126`
+Applying migration `20260426000000_add_case_ai_insight`
+Applying migration `20260426220000_public_feedback_rls`
+Applying migration `20260426230000_add_tenant_goal_default`
+Applying migration `20260427_add_account_to_lead`
+Applying migration `20260427183000_add_workflow_id_to_routing_audit`
+Applying migration `20260502000000_rename_lead_account_id_to_camel_case`
+Applying migration `20260530000000_appointment_no_overlap_exclusion`
+Applying migration `20260607000000_add_portal_delivery_sync`
+Applying migration `20260607000001_add_stripe_subscription`
+Applying migration `20260607000002_enable_rls_portal_tables`
+Applying migration `20260608000003_add_opportunity_stripe_customer`
+Applying migration `20260609000001_adr_007_data_governance`
+Applying migration `20260614000000_add_lead_bant_fields`
+Applying migration `20260621000000_add_portal_pm_deliveries`
+Applying migration `20260624000000_add_setup_instalment_hosted_invoice_url`
+Applying migration `20260629000000_add_terms_acceptance`
+Applying migration `20260629000001_add_report_templates`
+Applying migration `20260629000002_report_templates_partial_unique`
+Applying migration `20260714000000_task_settings`
+Applying migration `20260726120000_help_article_analytics`
+Applying migration `20260930000000_tenant_quotas_usage`
+Applying migration `20260930120000_tenant_provenance_partner`
+Applying migration `20261001120000_tenant_memberships`
+Applying migration `20261004120000_routing_rule_type`
+Applying migration `20261007120000_account_tiers`
+Applying migration `20261007130000_account_territories`
+Applying migration `20261008000000_help_article_system_scope`
+Applying migration `20261013000000_routing_audit_lead_id`
+Applying migration `20261013120000_case_types`
+Applying migration `20261013120000_report_schedules_pg201`
+Applying migration `20261016120000_approval_policies`
+Applying migration `20261016120100_agent_actions_pending_sweep_idx`
+Applying migration `20261017120000_contact_types`
+Applying migration `20261017120100_contacts_type_idx`
+Applying migration `20261017130000_availability`
+Applying migration `20261019120000_tenant_model_config`
+Applying migration `20261019120100_tenant_ai_config_rls`
+Applying migration `20261020120000_task_automation`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260317000000_baseline/
+    └─ migration.sql
+  └─ 20260318000000_add_contact_avatar_url/
+    └─ migration.sql
+  └─ 20260319000000_add_opportunity_deleted_at/
+    └─ migration.sql
+  └─ 20260407000000_enable_rls_on_remaining_public_tables/
+    └─ migration.sql
+  └─ 20260410000000_add_workflow_deleted_at/
+    └─ migration.sql
+  └─ 20260412031212_add_user_profile_fields/
+    └─ migration.sql
+  └─ 20260412040000_add_lead_status_disqualified_archived/
+    └─ migration.sql
+  └─ 20260413000000_home_ai_insights_indexes/
+    └─ migration.sql
+  └─ 20260413150000_contact_settings/
+    └─ migration.sql
+  └─ 20260414000000_account_settings/
+    └─ migration.sql
+  └─ 20260414000001_add_custom_workflow_extensions/
+    └─ migration.sql
+  └─ 20260414100000_contact_ai_settings/
+    └─ migration.sql
+  └─ 20260414110000_contact_automation_hygiene/
+    └─ migration.sql
+  └─ 20260414120000_contact_settings_hardening/
+    └─ migration.sql
+  └─ 20260414130000_contact_ai_defaults_complete/
+    └─ migration.sql
+  └─ 20260414140000_account_settings_hardening/
+    └─ migration.sql
+  └─ 20260416000000_add_document_custom_types/
+    └─ migration.sql
+  └─ 20260417120000_deal_settings/
+    └─ migration.sql
+  └─ 20260417120100_deal_settings_hardening/
+    └─ migration.sql
+  └─ 20260417210000_add_task_assignee/
+    └─ migration.sql
+  └─ 20260418120000_ticket_settings/
+    └─ migration.sql
+  └─ 20260418120100_ticket_settings_hardening/
+    └─ migration.sql
+  └─ 20260419120000_document_settings/
+    └─ migration.sql
+  └─ 20260419120100_document_settings_hardening/
+    └─ migration.sql
+  └─ 20260419200000_case_settings/
+    └─ migration.sql
+  └─ 20260419200100_appointment_settings/
+    └─ migration.sql
+  └─ 20260419200200_report_settings/
+    └─ migration.sql
+  └─ 20260419210000_appointment_settings_primary_calendar_fk/
+    └─ migration.sql
+  └─ 20260419210000_case_settings_scope_up/
+    └─ migration.sql
+  └─ 20260420000000_enable_rls_for_remaining_settings_tables/
+    └─ migration.sql
+  └─ 20260420000100_enable_rls_for_document_type_definitions/
+    └─ migration.sql
+  └─ 20260420120000_case_tag_color_token_check/
+    └─ migration.sql
+  └─ 20260421000000_feat_agent_system_tenant_customization/
+    └─ migration.sql
+  └─ 20260421000000_ifc312_ai_chains/
+    └─ migration.sql
+  └─ 20260422000000_add_message_content_gin_index/
+    └─ migration.sql
+  └─ 20260422000001_add_field_encryption_annotations/
+    └─ migration.sql
+  └─ 20260423000000_tenant_memory_and_rate_limits/
+    └─ migration.sql
+  └─ 20260424000000_add_lead_is_starred/
+    └─ migration.sql
+  └─ 20260424100000_case_ai_insight/
+    └─ migration.sql
+  └─ 20260424200000_account_tags_ifc312_audit/
+    └─ migration.sql
+  └─ 20260424210000_public_feedback_pg126/
+    └─ migration.sql
+  └─ 20260426000000_add_case_ai_insight/
+    └─ migration.sql
+  └─ 20260426220000_public_feedback_rls/
+    └─ migration.sql
+  └─ 20260426230000_add_tenant_goal_default/
+    └─ migration.sql
+  └─ 20260427_add_account_to_lead/
+    └─ migration.sql
+  └─ 20260427183000_add_workflow_id_to_routing_audit/
+    └─ migration.sql
+  └─ 20260502000000_rename_lead_account_id_to_camel_case/
+    └─ migration.sql
+  └─ 20260530000000_appointment_no_overlap_exclusion/
+    └─ migration.sql
+  └─ 20260607000000_add_portal_delivery_sync/
+    └─ migration.sql
+  └─ 20260607000001_add_stripe_subscription/
+    └─ migration.sql
+  └─ 20260607000002_enable_rls_portal_tables/
+    └─ migration.sql
+  └─ 20260608000003_add_opportunity_stripe_customer/
+    └─ migration.sql
+  └─ 20260609000001_adr_007_data_governance/
+    └─ migration.sql
+  └─ 20260614000000_add_lead_bant_fields/
+    └─ migration.sql
+  └─ 20260621000000_add_portal_pm_deliveries/
+    └─ migration.sql
+  └─ 20260624000000_add_setup_instalment_hosted_invoice_url/
+    └─ migration.sql
+  └─ 20260629000000_add_terms_acceptance/
+    └─ migration.sql
+  └─ 20260629000001_add_report_templates/
+    └─ migration.sql
+  └─ 20260629000002_report_templates_partial_unique/
+    └─ migration.sql
+  └─ 20260714000000_task_settings/
+    └─ migration.sql
+  └─ 20260726120000_help_article_analytics/
+    └─ migration.sql
+  └─ 20260930000000_tenant_quotas_usage/
+    └─ migration.sql
+  └─ 20260930120000_tenant_provenance_partner/
+    └─ migration.sql
+  └─ 20261001120000_tenant_memberships/
+    └─ migration.sql
+  └─ 20261004120000_routing_rule_type/
+    └─ migration.sql
+  └─ 20261007120000_account_tiers/
+    └─ migration.sql
+  └─ 20261007130000_account_territories/
+    └─ migration.sql
+  └─ 20261008000000_help_article_system_scope/
+    └─ migration.sql
+  └─ 20261013000000_routing_audit_lead_id/
+    └─ migration.sql
+  └─ 20261013120000_case_types/
+    └─ migration.sql
+  └─ 20261013120000_report_schedules_pg201/
+    └─ migration.sql
+  └─ 20261016120000_approval_policies/
+    └─ migration.sql
+  └─ 20261016120100_agent_actions_pending_sweep_idx/
+    └─ migration.sql
+  └─ 20261017120000_contact_types/
+    └─ migration.sql
+  └─ 20261017120100_contacts_type_idx/
+    └─ migration.sql
+  └─ 20261017130000_availability/
+    └─ migration.sql
+  └─ 20261019120000_tenant_model_config/
+    └─ migration.sql
+  └─ 20261019120100_tenant_ai_config_rls/
+    └─ migration.sql
+  └─ 20261020120000_task_automation/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+[test-db] using ephemeral intelliflow_test_run_tnbacm_nac_74qa on postgresql://***@localhost:5433/intelliflow_test?schema=public
+(node:30180) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208
+
+stdout | task-automation.test.ts
+🧪 Integration Test Suite Starting...
+📦 Using existing DATABASE_URL
+
+stdout | task-automation.test.ts
+✅ Integration Test Suite Complete
+
+ ❯ |integration| task-automation.test.ts (50 tests | 3 failed | 47 skipped) 310ms
+       × admits an event run with the actions the rule holds at admission, not the caller’s read 51ms
+       × admits a webhook run with the actions the rule holds at admission, not the caller’s read 19ms
+       × admits nothing for a rule deactivated after the caller read it 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |integration| task-automation.test.ts > PG-208 task automation (real DB) > store behaviour > admits an event run with the actions the rule holds at admission, not the caller’s read
+AssertionError: expected [ { type: 'CREATE_TASK', …(4) } ] to deeply equal [ { type: 'CREATE_TASK', …(4) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "dueInDays": 1,
+      "linkToRecord": true,
+      "priority": "MEDIUM",
+-     "titleTemplate": "Edited ENTITY_EVENT",
++     "titleTemplate": "Call",
+      "type": "CREATE_TASK",
+    },
+  ]
+
+ ❯ task-automation.test.ts:658:32
+    656|           select: { actions: true },
+    657|         });
+    658|         expect(stored.actions).toEqual(edited);
+       |                                ^
+    659|       }
+    660|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |integration| task-automation.test.ts > PG-208 task automation (real DB) > store behaviour > admits a webhook run with the actions the rule holds at admission, not the caller’s read
+AssertionError: expected [ { type: 'CREATE_TASK', …(4) } ] to deeply equal [ { type: 'CREATE_TASK', …(4) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "dueInDays": 1,
+      "linkToRecord": true,
+      "priority": "MEDIUM",
+-     "titleTemplate": "Edited WEBHOOK",
++     "titleTemplate": "Call",
+      "type": "CREATE_TASK",
+    },
+  ]
+
+ ❯ task-automation.test.ts:658:32
+    656|           select: { actions: true },
+    657|         });
+    658|         expect(stored.actions).toEqual(edited);
+       |                                ^
+    659|       }
+    660|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |integration| task-automation.test.ts > PG-208 task automation (real DB) > store behaviour > admits nothing for a rule deactivated after the caller read it
+AssertionError: expected { created: true, …(1) } to deeply equal { inactive: true }
+
+- Expected
++ Received
+
+  {
+-   "inactive": true,
++   "created": true,
++   "runId": "cmvjljpfu00051sp53ppououa",
+  }
+
+ ❯ task-automation.test.ts:677:22
+    675|         new Date()
+    676|       );
+    677|       expect(result).toEqual({ inactive: true });
+       |                      ^
+    678|       await expect(prisma.taskAutomationRun.count({ where: { ruleId: r…
+    679|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 47 skipped (50)
+   Start at  14:48:28
+   Duration  2.74s (transform 822ms, setup 636ms, import 1.63s, tests 310ms, environment 0ms)
+
+[test-db] dropped intelliflow_test_run_tnbacm_nac_74qa

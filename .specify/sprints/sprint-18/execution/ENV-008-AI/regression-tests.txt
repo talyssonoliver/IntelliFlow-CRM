@@ -1,0 +1,12 @@
+# HEAD e0b478906, 2026-10-25T16:47:33Z
+[test-slot] slot2 taken for ENV-008-AI@feat/env-008-ai-env008: pnpm exec vitest run --project root tools/scripts/security/__tests__/workflow-secret-lint.test.ts tools/scripts/observability/__tests__/
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/env-008-ai
+
+
+ Test Files  3 passed (3)
+      Tests  20 passed (20)
+   Start at  16:47:34
+   Duration  1.93s (transform 1.19s, setup 2.02s, import 95ms, tests 996ms, environment 0ms)
+
+exit=0

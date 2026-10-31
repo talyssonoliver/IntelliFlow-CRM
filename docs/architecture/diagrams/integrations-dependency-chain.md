@@ -117,14 +117,15 @@ IMAP server (user) ─► ImapBounceReader ✅ ──────┴──► bo
 
 ### Overview
 
-| Layer       | Task ID              | Status | Description                     |
-| ----------- | -------------------- | ------ | ------------------------------- |
-| Domain      | ENV-008-AI           | ✅     | OpenTelemetry Setup             |
-| Validators  | traces.ts            | ⬜     | Trace schemas                   |
-| Application | IFC-116              | ⬜     | Metrics Collection              |
-| Adapters    | IFC-142              | ⬜     | Alerting & SLOs                 |
-| API         | -                    | ⬜     | Metrics router                  |
-| UI          | TRACK-001, TRACK-006 | 🔶     | Status ✅ & Build ⬜ Dashboards |
+| Layer       | Task ID              | Status | Description                                                                                                              |
+| ----------- | -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Domain      | ENV-008-AI           | ⏳     | OpenTelemetry Setup                                                                                                      |
+| Validators  | traces.ts            | ⬜     | Trace schemas                                                                                                            |
+| Application | IFC-116              | ⬜     | Metrics Collection                                                                                                       |
+| Adapters    | IFC-142              | ⬜     | Alerting & SLOs                                                                                                          |
+| API         | -                    | ⬜     | Metrics router                                                                                                           |
+| UI          | TRACK-001, TRACK-006 | 🔶     | Status ✅ & Build ⬜ Dashboards                                                                                          |
+| Cross-cut   | IFC-074              | 🔶     | Log/trace/metric correlation + MTTD evidence (api pino → Loki; read-only collector). In Progress: api row pending deploy |
 
 ### Dependency Diagram
 
@@ -169,7 +170,7 @@ IMAP server (user) ─► ImapBounceReader ✅ ──────┴──► bo
 ### Dependency Chain
 
 ```
-ENV-008-AI (OTel) ✅ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana Dashboards ⬜ ──┬──► TRACK-001 (Status) ✅
+ENV-008-AI (OTel) ⏳ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana Dashboards ⬜ ──┬──► TRACK-001 (Status) ✅
                        ├──► IFC-142 (Alerting) ⬜ ────────────────────────────┴──► TRACK-006 (Build) ⬜
                        └──► traces.ts (Val) ⬜ ───────────────────────────────────────────────────────┘
 ```
@@ -191,6 +192,7 @@ ENV-008-AI (OTel) ✅ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana
    - IFC-036: WhatsApp Business API integration
 
 2. **Observability Stack**:
-   - ENV-008-AI: ✅ Already complete
+   - ENV-008-AI: ⏳ SLOs, dashboard and Railway self-healing built as code
+     (ADR-087); production evidence after merge
    - IFC-116: Metrics collection implementation
    - IFC-142: Alerting rules and SLO definitions

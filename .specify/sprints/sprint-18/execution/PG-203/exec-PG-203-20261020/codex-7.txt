@@ -1,0 +1,37 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 60 files total
+[codex-review] in scope : 34 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T00:25:01.811Z
+Base ref  : origin/main
+Files in scope : 34
+Total findings : 2
+  Waived       : 0
+  Unwaived     : 2
+
+UNWAIVED FINDINGS (BLOCKING):
+  [HIGH] apps/api/src/modules/calendar/public-booking.router.ts:464-465 — non-atomic-booking-caps
+    Issue    : Concurrent anonymous requests can bypass the booking abuse caps because checking and recording an attempt are separate operations.
+    Evidence : `await assertBookingCaps(ctx.prisma, keys, now)` precedes `await recordBookingAttempt(ctx.prisma, keys)` outside the advisory-locked transaction. With two existing email attempts, multiple concurrent requests can all observe a count of two and insert another attempt, exceeding the three-per-day cap; the later booking lock does not recheck these caps.
+    Fix      : Serialize the cap check and attempt insertion per tenant in a dedicated transaction using a shared advisory lock, and commit that attempt before processing the booking so failed bookings remain counted.
+    Fingerprint: 3f4f9ec8dc52c9cba1adedf3823bec48522d1567be2b3b94f96881f4af7e0307
+
+  [MEDIUM] apps/api/src/modules/calendar/public-booking.router.ts:478 — stale-bookability-check
+    Issue    : Booking validation inside the transaction uses an event type resolved before the transaction, allowing bookings after the event type has been disabled or its host changed.
+    Evidence : `computeSlots(tx, bookable, rules, date, 1, now)` reuses `bookable` obtained by `resolveBookable(ctx.prisma, input.handle, input.slug)` before taking the booking lock. The event-type update endpoint can commit `isActive: false` or a different `hostUserId` between those operations; the transaction never reloads the event type or host membership and creates the appointment using the previous configuration.
+    Fix      : Resolve and validate the event type, booking handle, settings, and host membership again inside the booking transaction, and coordinate configuration updates with booking through a shared lock or appropriate row locking.
+    Fingerprint: 349b41c39051aea89fbd73014b3d37ad75e7dcb603c1095dbf40a0071c462428
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 2 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

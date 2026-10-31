@@ -49,6 +49,14 @@ describe('schema.prisma — @encrypted annotations', () => {
     expect(n).toContain('/// @encrypted\n  secret      String?');
   });
 
+  it('annotates TaskAutomationRule.webhookSecret and webhookSecretPrevious (PG-208)', () => {
+    const n = schema.replace(/\r\n/g, '\n');
+    expect(n).toMatch(/\/\/\/ @encrypted[^\n]*\n\s+webhookSecret\s+String\?/);
+    expect(n).toMatch(/\/\/\/ @encrypted[^\n]*\n\s+webhookSecretPrevious\s+String\?/);
+    // The URL token is stored only as a hash and must not be encrypted.
+    expect(n).not.toMatch(/\/\/\/\s*@encrypted[^\n]*\n\s*webhookTokenHash/);
+  });
+
   it('does NOT annotate promptHash with /// @encrypted (must stay plaintext)', () => {
     // promptHash must not have @encrypted — it is a SHA-256 hash used for
     // integrity checks and must remain readable without the encryption key.
@@ -60,9 +68,9 @@ describe('schema.prisma — @encrypted annotations', () => {
     expect(n).not.toMatch(/\/\/\/\s*@encrypted[^\n]*\n\s*promptHash/);
   });
 
-  it('contains exactly seven @encrypted annotations total (3 + PG-207 mailbox and OAuth secrets)', () => {
+  it('contains exactly nine @encrypted annotations total (3 + PG-207 mailbox and OAuth secrets + PG-208 webhook secrets)', () => {
     const matches = schema.match(/\/\/\/\s*@encrypted/gm) ?? [];
-    expect(matches).toHaveLength(7);
+    expect(matches).toHaveLength(9);
   });
 
   it('annotates the PG-207 mailbox and OAuth-state secrets', () => {
@@ -92,6 +100,7 @@ describe('schema.prisma — @encrypted annotations', () => {
     expect([...annotated].sort()).toEqual([...mapped].sort());
     expect(ENCRYPTED_FIELDS.EmailMailbox).toEqual(['smtpPassword', 'imapPassword', 'refreshToken']);
     expect(ENCRYPTED_FIELDS.EmailOAuthState).toEqual(['codeVerifier']);
+    expect(ENCRYPTED_FIELDS.TaskAutomationRule).toEqual(['webhookSecret', 'webhookSecretPrevious']);
   });
 });
 

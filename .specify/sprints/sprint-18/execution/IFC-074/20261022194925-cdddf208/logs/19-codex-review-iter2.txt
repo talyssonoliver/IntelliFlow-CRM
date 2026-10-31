@@ -1,0 +1,18 @@
+Semantic Review (claude) — 2026-10-22T20:24:45.014Z
+Base ref  : origin/main
+Files in scope : 10
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/tracing/logger.ts:39-48 — failed-init-retried-per-request-leaks-transport
+    Issue    : If createLogger throws, nothing is cached, so apiLog builds the logger again on every request; in development each attempt starts a pino-pretty worker thread before pino rejects the level, and those threads are never released.
+    Evidence : getApiLogger does `apiLogger ??= createLogger({...})`. When createLogger throws, apiLogger stays undefined and the catch in apiLog only sets `failureReported`, so the next apiLog call runs createLogger again. In packages/observability/src/logging.ts:162, `pino(options, transport ? pino.transport(transport) : destinationOrUndefined)` evaluates `pino.transport(...)` (which spawns a thread-stream worker for pino-pretty when NODE_ENV!=='production' && !CI) before `pino()` validates `level` and throws on an unknown LOG_LEVEL such as 'INFO'. Nothing references or closes that transport, so every tRPC request (up to 2 calls per request on the slow path) leaks one more worker thread. In production it still rebuilds pino options on every call. The tests mock createLogger to throw synchronously and check only that console.error fires once, so they cannot see repeated construction or leaked transports.
+    Fix      : Remember the failure: set a module-level `loggerUnavailable = true` in the catch when construction fails, and have apiLog return early after that, so construction is not retried per request (clear the flag in resetApiLoggerForTests). Alternatively, validate the level against pino.levels.values in createLogger before creating the transport.
+    Fingerprint: 0ac6ac755ff4a221eaf557f36b2da6b2be1f0b5e53f566a13a7bb664ad5e2959
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

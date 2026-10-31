@@ -1,0 +1,31 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 98 files total
+[codex-review] in scope : 70 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T08:46:54.731Z
+Base ref  : origin/main
+Files in scope : 70
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/web/src/components/appointments/AppointmentForm.tsx:52 — local-utc-duration-mismatch
+    Issue    : Applying an event type calculates the end time in UTC and displays it as local time, producing incorrect durations outside UTC.
+    Evidence : `toLocalDateTimeString(new Date(new Date(value).getTime() + minutes * 60_000))` parses the datetime-local value in the browser timezone, but toLocalDateTimeString formats using getUTC* getters. Reproduced with Europe/London: start '2026-07-01T10:00' plus 30 minutes produces '2026-07-01T09:30', which fails the form's end-after-start validation; negative UTC offsets instead silently lengthen appointments.
+    Fix      : Format the calculated end using local date/time getters consistent with the datetime-local input, or perform the calculation and formatting consistently as wall-clock values.
+    Fingerprint: 1bb01d8cb83241af6d1ed54d57779f6705a7baad77c88174d0f9d38f893b5743
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

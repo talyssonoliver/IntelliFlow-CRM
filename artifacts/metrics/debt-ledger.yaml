@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-10-21
+last_updated: 2026-10-25
 maintainer: Tech Lead
 items:
   LEGAL-MERGED-LCOV-DEADZONE-001:
@@ -5082,6 +5082,106 @@ items:
       Forward aria-label/aria-labelledby to SliderPrimitive.Thumb; axe test in packages/ui.
     status: open
     notes: 'gh issue #929. Found during PG-199; pre-existing, out of scope.'
+  ENV008-DEAD-WORKFLOW-RULES-001:
+    origin_task: ENV-008-AI
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      Three IFC-032 alert rules (ifc032-lead-routing-failures, ifc032-workflow-error-rate,
+      ifc032-workflow-p95-latency) watch the workflow.lead.route span, which production never
+      emits: only tools/scripts/observability/capture-trace-examples.ts calls setWorkflowTracer
+      (apps/api/src/services/LeadRoutingService.ts:167-171). The p95 rule also queries the absent
+      traces_spanmetrics_latency_bucket series (alert-rules.json:49-50).
+    created_at: 2026-10-25
+    expiry_date: 2027-01-24
+    remediation_sprint: 19
+    remediation_plan: >-
+      Wire setWorkflowTracer in the production api container, rewrite the p95 rule on the native
+      histogram traces_spanmetrics_latency, then drop requireSeries:false from the three rules.
+    status: open
+    notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1028. Found during ENV-008-AI; alert-rules.json is not edited by that task.'
+  ENV008-LLM-INVOKE-ERRORS-001:
+    origin_task: ENV-008-AI
+    owner: AI Specialist
+    severity: high
+    description: >-
+      Every ai-worker llm.invoke span in production ends with status ERROR (Grafana span metrics,
+      read 2026-10-22), alongside about 140 failed Postgres INSERTs in the ai-worker logs. SLO
+      env008llmsuccess therefore ships without burn-rate alerting.
+    created_at: 2026-10-25
+    expiry_date: 2027-01-24
+    remediation_sprint: 19
+    remediation_plan: >-
+      Find the llm.invoke failure from a trace's exception events, fix it, confirm OK spans, then
+      enable alerting on SLO env008llmsuccess in infra/monitoring/grafana/cloud/slos.json.
+    status: open
+    notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1029 (related #805).'
+  ENV008-PUBLIC-HEALTH-DETAIL-001:
+    origin_task: ENV-008-AI
+    owner: Security Lead
+    severity: medium
+    description: >-
+      /health/detailed, /health/db (apps/api/src/http-server.ts:346-368) and the publicProcedure
+      health.dbStats (apps/api/src/modules/misc/health.router.ts:87) return database and component
+      detail to unauthenticated callers in production.
+    created_at: 2026-10-25
+    expiry_date: 2027-01-24
+    remediation_sprint: 19
+    remediation_plan: >-
+      Keep /health/live and /health/ready public and minimal; put the detailed endpoints and
+      dbStats behind an admin or service role; add negative auth tests.
+    status: open
+    notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1030.'
+  ENV008-RAILWAY-TOKEN-SCOPE-001:
+    origin_task: ENV-008-AI
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      RAILWAY_TOKEN is an account-wide token stored as a repository secret, read by
+      promote-production.yml (no environment) and now railway-self-healing.yml; the Railway CLI is
+      pinned only to @railway/cli@4 (promote-production.yml:194).
+    created_at: 2026-10-25
+    expiry_date: 2027-01-24
+    remediation_sprint: 19
+    remediation_plan: >-
+      Owner creates a production-scoped Railway project token as a Production environment secret,
+      both workflows use environment Production, the account token is revoked, and the CLI is
+      pinned to an exact version.
+    status: open
+    notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1031. Needs the owner (secret store at its cap).'
+  ENV008-API-P95-LATENCY-001:
+    origin_task: ENV-008-AI
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      Production api server-side p95 was 2.72 s over a day (2026-10-22) against the 200 ms
+      objective (docs/operations/slo-definitions.md:56), so SLO env008apip95 ships without
+      burn-rate alerting.
+    created_at: 2026-10-25
+    expiry_date: 2027-01-24
+    remediation_sprint: 19
+    remediation_plan: >-
+      Fix the cross-region database round-trip tracked in #1001, then enable alerting on SLO
+      env008apip95 in infra/monitoring/grafana/cloud/slos.json.
+    status: open
+    notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1001 (existing issue reused; ENV-008-AI acceptance item added as a comment).'
+  ENV008-PROD-ENV-BRANCH-POLICY-001:
+    origin_task: ENV-008-AI
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      The GitHub environment Production has no deployment branch policy and no protection rules
+      (deployment_branch_policy null, read 2026-10-25), so a workflow_dispatch of a modified
+      workflow from any branch runs with the Production secrets (GRAFANA_SA_TOKEN and the
+      secrets of the five Production-environment workflows).
+    created_at: 2026-10-25
+    expiry_date: 2027-01-24
+    remediation_sprint: 19
+    remediation_plan: >-
+      Owner restricts Production to deployments from main (and optionally a required reviewer),
+      then confirms push-to-main and dispatch-from-main runs still work.
+    status: open
+    notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1032. Raised by the ENV-008-AI STOA-security review; a GitHub settings change, owner-only.'
   PG-203-OUTBOX-NOT-WIRED-001:
     origin_task: PG-203
     owner: Backend Architect
@@ -5172,6 +5272,1017 @@ items:
       git issue #1001. Owner ruling 2026-10-22: IFC-033 closes on throughput, and the p95
       gap is tracked here, in #1001 and in docs/shared/bottleneck-analysis.md (production
       section). Tracked per project Rule 8.
+  PG-208-HTTP-BODY-NO-CAP-001:
+    origin_task: PG-208
+    owner: Security Lead
+    severity: medium
+    description: >-
+      apps/api/src/http-server.ts:84-95 (called at :521): readRequestBody
+      concatenates every chunk into memory for all non-GET/HEAD routes (Stripe
+      webhook, pm-events, tRPC) with no maximum size and no read timeout. One
+      large or slow-drip request can exhaust memory or hold a socket indefinitely.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Enforce a per-route byte cap (for example 1 MiB default, larger for the
+      Stripe route) and a read timeout; reject with 413 / 408 and destroy the
+      request. Add tests for oversize and stalled bodies.
+    status: open
+    notes: 'gh issue #937. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-HTTP-500-ECHOES-MESSAGE-001:
+    origin_task: PG-208
+    owner: Security Lead
+    severity: low
+    description: >-
+      apps/api/src/http-server.ts:286-301 (message at :299): The 500 response body
+      includes error.message verbatim, which can leak internal details (SQL, file
+      paths, upstream hosts) to unauthenticated callers.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Return a generic message plus the correlation id already set by
+      applyCorrelationHeaders; log the real error server-side only.
+    status: open
+    notes: 'gh issue #938. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-PM-EVENT-SECRET-COMPARE-001:
+    origin_task: PG-208
+    owner: Security Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/pm-events/process-pm-event.ts:50 (parts[1] !== secret):
+      The bearer token is compared with !==, which short-circuits on the first
+      differing byte and leaks timing information about the shared
+      server-to-server secret.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Hash both sides (sha256) and compare with crypto.timingSafeEqual, or reuse
+      an existing constant-time helper. Add a test for equal-length and
+      different-length tokens.
+    status: open
+    notes: 'gh issue #939. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-STRIPE-VERIFY-NAN-TIMESTAMP-001:
+    origin_task: PG-208
+    owner: Security Lead
+    severity: low
+    description: >-
+      packages/webhooks/src/framework.ts:172 (stripeVerify) and
+      apps/api/src/webhooks/handler.ts:133 (StripeSignatureVerifier.verify): A
+      missing t= is rejected, but a present, garbled t= (for example t=abc) parses
+      to NaN, and Math.abs(now - NaN) > tolerance is false, so the replay-window
+      check is skipped. Forging a valid v1 still needs the secret, so this weakens
+      replay protection rather than authentication. framework.ts also calls
+      Number.parseInt without a radix.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Parse with Number.parseInt(t, 10), reject when !Number.isFinite(result), in
+      both verifiers (or delete the duplicate and share one). Add tests for t=abc
+      and t=.
+    status: open
+    notes: 'gh issue #940. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-WEBHOOK-DEADLETTER-NO-ADMIN-001:
+    origin_task: PG-208
+    owner: Security Lead
+    severity: medium
+    description: >-
+      apps/api/src/modules/webhooks/webhooks.router.ts:226 (getDeadLetterEntries),
+      :244 (reprocessDeadLetter); same gate on :206 processRetries and :272
+      cleanup: These procedures use protectedProcedure, so any logged-in user can
+      list failed webhook payloads and re-run them.
+      registerSource/unregisterSource in the same file already use adminProcedure
+      (:118, :147) and the comment at :116 states the intent.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Switch the dead-letter, processRetries and cleanup procedures to
+      adminProcedure (confirm getSources/getMetrics intent), and add FORBIDDEN
+      tests for a non-admin caller.
+    status: open
+    notes: 'gh issue #941. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-TERRITORY-ADMIN-DENIAL-NOT-AUDITED-001:
+    origin_task: PG-208
+    owner: Security Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/account/account-territories.router.ts:32-38 (used at
+      :235, :282, :319, :335): A non-admin attempting to create, update, delete or
+      reorder territories gets FORBIDDEN, but no audit record is written, so
+      privilege-probing is invisible.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Write an audit entry (actor, procedure, tenant) before throwing, using the
+      same audit logger as the successful writes.
+    status: open
+    notes: 'gh issue #942. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-BULK-OPS-BYPASS-DOMAIN-EVENTS-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      apps/api/src/modules/opportunity/opportunity.router.ts:1608-1617
+      (bulkUpdateStage, updateMany) and
+      apps/api/src/modules/lead/lead.router.ts:1539-1589 (bulkConvert,
+      createMany): Both mutations write with Prisma updateMany/createMany
+      directly. No OpportunityStageChanged/Won/Lost or lead-converted events are
+      published, so event consumers (including PG-208 task automation rules) never
+      fire for bulk changes, and domain rules (closed deals cannot change) are
+      skipped. Related but distinct from #908 item 3 (skipDuplicates).
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Route each row through the services (or emit the same events after the bulk
+      write, in the same transaction/outbox) and cover with tests that assert
+      events.
+    status: open
+    notes: 'gh issue #943. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-CHANGESTAGE-CLOSES-WITHOUT-EVENTS-001:
+    origin_task: PG-208
+    owner: Domain Lead
+    severity: medium
+    description: >-
+      packages/domain/src/crm/opportunity/Opportunity.ts:267-288 (changeStage) vs
+      :401-440 (markAsWon / markAsLost): changeStage accepts any target stage,
+      including the closing stages, and emits only OpportunityStageChangedEvent.
+      markAsWon/markAsLost are the only paths that emit
+      OpportunityWonEvent/OpportunityLostEvent (and set lost reason, close date).
+      PG-208 works around this by mapping closing stage changes to won/lost
+      triggers.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Reject CLOSED_WON/CLOSED_LOST in changeStage (force markAsWon/markAsLost) or
+      have it delegate to them; update callers and tests, then drop the PG-208
+      mapping workaround.
+    status: open
+    notes: 'gh issue #944. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-TASK-SETTINGS-NEVER-READ-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      apps/api/src/modules/task/task-settings.router.ts (settings CRUD) vs
+      apps/api/src/modules/task/task.router.ts:247 (create path):
+      dueDateOffsetDays and reminderDefaults are saved per tenant, but no other
+      code reads task settings (grep finds only task-settings.router.ts and
+      router.ts), so the settings page changes nothing.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Read the tenant settings in task creation (default due date when none is
+      given, default reminder) with tests; or remove the controls until wired.
+    status: open
+    notes: 'gh issue #945. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-TASK-ASSIGNEE-ACCESS-GAPS-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/task/task.router.ts:213 (assignee widening), :423
+      (update), :770 (stats), :929-936 (getReminders), :951 (getByEntity): PG-208
+      ruling 6 lets an assignee see tasks assigned to them, but update stays
+      owner-scoped, and getReminders (overdue/due soon), stats and getByEntity do
+      not include assigned tasks, so round-robin assignees are not reminded about
+      work assigned to them.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Decide the assignee permission set (edit status/notes at least), widen the
+      same way as the list query, and add tests per procedure.
+    status: open
+    notes: 'gh issue #946. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-MEMBER-MULTISELECT-LABEL-IN-NAME-001:
+    origin_task: PG-208
+    owner: Frontend Lead
+    severity: low
+    description: >-
+      apps/web/src/components/shared/member-multi-select.tsx:68; caller
+      apps/web/src/app/tasks/(list)/automation/components/ActionFields.tsx:170-176:
+      The trigger button uses aria-label={`${label}, ${count} selected`}. When the
+      caller shows a different visible Label (ActionFields shows "Assign in turn
+      to" but passes label="Round-robin group"), the accessible name omits the
+      visible text, so speech-input users cannot activate it by name.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Make the visible label the start of the accessible name (use aria-labelledby
+      on the visible label plus the count, or require label to equal the visible
+      text) and add an axe/RTL test.
+    status: open
+    notes: 'gh issue #947. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-SETTINGS-TAGS-ROUTER-DUPLICATION-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/task/task-automation.router.ts:541 and
+      apps/api/src/modules/analytics/scheduled-reports.router.ts:465: Both define
+      a near-identical tagsRouter (list/create/update/delete plus rename
+      rewrites). The web TagsTab was already shared in PG-208; the API side was
+      not, so fixes must be made twice.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Extract createSettingsTagsRouter(config) (model delegate, rewrite callback,
+      role gate) and use it from both routers, keeping the existing tests green.
+    status: open
+    notes: 'gh issue #948. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-AUTOMATION-LEAD-CREATED-SOURCE-FILTER-001:
+    origin_task: PG-208
+    owner: Product Owner
+    severity: low
+    description: >-
+      apps/api/src/modules/task/task-automation.router.ts:296-300 (event trigger
+      columns carry only a toStage filter);
+      apps/api/src/modules/task/automation/task-automation-event-intake.ts: A
+      lead.created rule fires for every new lead regardless of how it was created.
+      Owner deferred a source filter (web form, import, manual) during PG-208.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Add an optional filter.source to the trigger schema, persist it with the
+      event filter, evaluate it in the engine/intake, and expose it in the rule
+      form.
+    status: open
+    notes: 'gh issue #949. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-INTERVAL-RUNNER-DUPLICATION-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/task/automation/task-automation-runner.ts:15-64 and
+      apps/api/src/agent/approval-sweep-scheduler.ts:14-63: Both files hand-roll
+      the same module-level timer plus running flag, skip-while-running tick,
+      unref and stop logic.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Add createIntervalJob({ name, intervalMs, run }) returning start/stop,
+      migrate both callers, keep their tests.
+    status: open
+    notes: 'gh issue #950. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-AUTOMATION-SCHEDULE-COLUMNS-NOT-CLEARED-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/task/task-automation.router.ts:282-310 (triggerColumns;
+      day fields at :307-308): The SCHEDULE branch persists dayOfWeek/dayOfMonth
+      whenever supplied, even for cadences that do not use them, leaving stale
+      values. scheduled-reports has buildScheduleColumns
+      (scheduled-reports.schedule.ts:112) which clears inapplicable day fields.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Reuse buildScheduleColumns (or extract it to a shared module) in
+      triggerColumns and add a test that switching cadence clears the day fields.
+    status: open
+    notes: 'gh issue #951. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-TASK-REPOSITORY-FINDBYID-NO-TENANT-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      packages/domain/src/crm/task/TaskRepository.ts:23;
+      packages/application/src/services/TaskService.ts:696-712 (only assignTask
+      compares tenantId): findById(id) is not tenant-scoped, so every mutator must
+      remember to compare the loaded task tenant. Only assignTask does.
+      OpportunityRepository.findById(id, tenantId?) already shows the pattern.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Add an optional tenantId to TaskRepository.findById (as
+      OpportunityRepository), pass it from all TaskService mutators and the Prisma
+      adapter, and add cross-tenant tests.
+    status: open
+    notes: 'gh issue #952. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-PRISMA-SCHEMA-MIGRATION-DRIFT-001:
+    origin_task: PG-208
+    owner: Data Engineer
+    severity: medium
+    description: >-
+      packages/db/prisma/schema.prisma vs packages/db/prisma/migrations (found
+      with prisma migrate diff from a freshly migrated DB to schema.prisma): Four
+      differences: (1) cases FK (tenantId, caseTypeId) exists in the DB but is
+      missing from schema.prisma; (2) document_type_definitions.updatedAt default
+      differs; (3) report_templates index (tenantId, name) differs; (4)
+      users.locale default is en-GB in the DB but en-US in the schema.
+      Pre-existing on main, not caused by PG-208.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Decide the intended state for each, then reconcile with one additive Class A
+      migration or a schema update (never db push); add a CI step that fails on
+      migrate diff drift.
+    status: open
+    notes: 'gh issue #953. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-AUTOMATION-ONE-BY-ONE-WRITES-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/task/automation/task-automation-store.ts:390-405
+      (claimPendingRuns);
+      apps/api/src/modules/task/task-automation.router.ts:521-537
+      (rewriteRuleTags): claimPendingRuns issues one updateMany per candidate run,
+      and rewriteRuleTags issues one updateMany per rule. Both are bounded (run
+      batch size, 50 rules per tenant) so impact is small.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Claim with a single updateMany on the candidate ids (status guard kept) and
+      re-read, and batch the tag rewrites in one statement or a Promise.all inside
+      the transaction.
+    status: open
+    notes: 'gh issue #954. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-TENANT-WHERE-ADMIN-ONLY-001:
+    origin_task: PG-208
+    owner: Security Lead
+    severity: medium
+    description: >-
+      apps/api/src/security/tenant-context.ts:359 (createTenantWhereClause): only
+      role ADMIN is tenant-wide; OWNER and SUPER_ADMIN get owner scope on every
+      router using the helper (e.g. task.list), while module gates treat them as
+      admins. Pre-existing; found by the PG-208 security review.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Derive the tenant-wide role set from one shared domain constant, decide the
+      MANAGER scope explicitly, add per-role tests and re-check every caller.
+    status: open
+    notes: 'gh issue #959. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-REVIEW-MINOR-FOLLOWUPS-001:
+    origin_task: PG-208
+    owner: Frontend Lead
+    severity: low
+    description: >-
+      Minor items from the PG-208 a11y-expert and security-lead reviews not fixed
+      on the branch: Priority caption not a real label, VariablePicker raw
+      textarea, focus loss when controls disable, toast plus live-region double
+      speech, webhook trusted-proxy hop config, db crypto helpers as root exports,
+      optional actions jsonb CHECK.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Work through the seven items listed in the issue; each is independent and
+      small.
+    status: open
+    notes: 'gh issue #960. Tracked per project Rule 8.'
+  PG-208-CONVERSION-EXISTING-ACCOUNT-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/task/automation/task-automation-event-intake.ts:148: a lead
+      converted into an existing account marks that account conversion-born, so its
+      buffered account.created rules are skipped.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Carry an "account created by this conversion" flag on lead.converted and correlate
+      only those accounts; add the existing-account test.
+    status: open
+    notes: 'gh issue #968. Codex waiver per owner ruling 9. Tracked per project Rule 8.'
+  PG-208-RUN-PURGE-THROUGHPUT-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/task/automation/task-automation-engine.ts maintenance(): run
+      retention purges at most 500 expired rows per hour globally, which sustained high
+      run volume can outpace.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Drain expired rows in bounded batches each tick until none remain; test a backlog
+      larger than one batch.
+    status: resolved
+    resolved_at: 2026-10-29
+    resolution: >-
+      Fixed in the PG-208 PR (orchestrator ruling 2026-10-29, raised again by the
+      full-branch codex review). maintenance() purges in batches of purgeBatchSize until
+      one comes back short, at most purgeMaxBatchesPerTick per tick; a backlog left at
+      that cap or by a failed batch continues on the next tick, not the next hour.
+      Tests: a backlog larger than one batch is purged in one tick, the per-tick cap
+      carries over, a failed batch is retried next tick. The codex waiver for this
+      finding is retired in the same change.
+    notes: 'gh issue #969 (closed by the PG-208 PR). Codex waiver per owner ruling 9, now retired. Tracked per project Rule 8.'
+  PG-208-AUTOMATION-OFF-IN-PROD-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      Task automation ships OFF in production (owner ruling 2026-10-28,
+      TASK_AUTOMATION_INTERVAL_MS=0). The runner's 15 s tick queries the database, so
+      it would keep an idle api awake when API_BACKGROUND_JOBS=off lets Railway sleep
+      it (#1046). It cannot move to the combined worker today: its event intake
+      listens on the api's InMemoryEventBus (apps/api/src/http-server.ts runner start,
+      task-automation-runtime.ts), so entity-event rules only see events published in
+      the api process. While it is off, rules can still be created and webhook calls
+      are still admitted, but no run executes.
+    created_at: 2026-10-28
+    expiry_date: 2027-01-28
+    remediation_sprint: 19
+    remediation_plan: >-
+      Route the nine v1 automation events through the outbox (shared with
+      PG-203-OUTBOX-NOT-WIRED-001 / gh #966), run the automation tick from
+      startBackgroundJobs so the combined worker can own it, and only then set
+      TASK_AUTOMATION_INTERVAL_MS above 0 in production. Until then, consider telling
+      admins on /tasks/automation that rules are paused.
+    status: open
+    notes: 'Owner ruling relayed by Aurora 2026-10-28. Blocks switching automation on in production.'
+  PG-208-RUNTIME-INIT-NO-RETRY-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      If buildTaskAutomationRuntime's first activeEventTypes() query fails at boot
+      (a transient database error), apps/api/src/http-server.ts logs it and never
+      tries again: no tick runs and no entity event is buffered until the api
+      restarts. Moot while production runs with TASK_AUTOMATION_INTERVAL_MS=0
+      (PG-208-AUTOMATION-OFF-IN-PROD-001). Found by the full-branch codex review.
+    created_at: 2026-10-29
+    expiry_date: 2027-01-29
+    remediation_sprint: 19
+    remediation_plan: >-
+      Retry the runtime initialisation with bounded backoff, stopped by
+      stopTaskAutomationRunner on shutdown, before automation is switched on in
+      production (or as part of moving it to the combined worker).
+    status: open
+    notes: 'Orchestrator ruling 2026-10-29: follow-up, not fixed in the PG-208 PR. Codex waiver 041c5b04 (expires with this entry).'
+  PG-208-CONVERSION-SKIP-BYPASSES-CAPS-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      Runs recorded as SKIPPED for conversion-born contacts and accounts
+      (covered_by_lead_conversion) are written with insertRunIfAbsent in
+      task-automation-engine.ts, outside the admission lock and the hourly caps. They
+      still count toward the tenant's hourly run cap in admitInTransaction, so a burst
+      of lead conversions can suppress other rules' runs for the rest of the hour
+      without creating any task. Found by the full-branch codex review.
+    created_at: 2026-10-29
+    expiry_date: 2027-01-29
+    remediation_sprint: 19
+    remediation_plan: >-
+      Either leave SKIPPED conversion rows out of the cap counts, or write them
+      through the capped admission path so they cannot exceed the caps; add a test
+      with a per-rule cap of one and several conversion-born events.
+    status: open
+    notes: 'Orchestrator ruling 2026-10-29: follow-up, not fixed in the PG-208 PR.'
+  PG-208-SCHEDULE-TZ-NOT-SNAPSHOTTED-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      A run snapshots its rule's actions at admission but not the schedule time
+      zone. Execution reads the rule's current scheduleTimezone
+      (task-automation-engine.ts), so changing a schedule's time zone after a run is
+      queued moves that run's task due date and its schedule variables (e.g. a
+      dueInDays 0 run admitted at 22:30Z becomes due the next day after a switch to
+      Pacific/Auckland). Found by the full-branch codex review.
+    created_at: 2026-10-29
+    expiry_date: 2027-01-29
+    remediation_sprint: 19
+    remediation_plan: >-
+      Store the schedule time zone in the run's context at admission (as the
+      actions are) and render due dates and schedule variables from that snapshot.
+    status: resolved
+    resolved_at: 2026-10-30
+    resolution: >-
+      Fixed in the PG-208 PR (orchestrator ruling 2026-10-29, raised again by a
+      standalone codex pass after the merge with main). Admission stores
+      scheduleTimezone in the run context with the slot; due dates and schedule.date
+      read it, falling back to the rule's timezone for runs admitted earlier. Test:
+      a timezone edit after admission keeps the run's date and due date.
+    notes: 'Orchestrator ruling 2026-10-29 kept it as a follow-up; ruling 2026-10-29 (option a) fixed it in the PG-208 PR.'
+  PG-208-POSTCONDITION-NOT-COMMIT-EVIDENCE-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      Entity events are published inside the writing transaction, so the automation drain
+      (task-automation-engine.ts) uses the record's current state (postconditionHolds) as
+      evidence that the write committed. A lead that is qualified and then moved to LOST,
+      UNQUALIFIED or CONTACTED before the next tick fails the postcondition, is retried for
+      the 30 s grace and then dropped, so its lead.qualified rules never run. Accepted limit
+      of ADR-084 (postcondition grace and the at-most-once intake window). Found by the
+      pre-ship codex gate.
+    created_at: 2026-10-29
+    expiry_date: 2027-01-29
+    remediation_sprint: 19
+    remediation_plan: >-
+      Deliver entity events after commit through the transactional outbox (#966) when
+      automation moves to the combined worker, and process a committed event even when a
+      later status change has happened; drop the postcondition check for those events.
+    status: open
+    notes: 'Orchestrator ruling 2026-10-29: waived (codex fingerprint 207bcd9f, expires with this entry), fixed with the outbox move (#966, PG-208-AUTOMATION-OFF-IN-PROD-001).'
+  PG-208-WEBHOOK-UNKNOWN-TOKEN-IP-BUCKET-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      The webhook failure limiter (task-automation-webhook.ts) counts failures on a
+      token that names a rule against that token from the caller's IP, but a
+      well-formed token that matches no rule (for example the old URL after "New
+      URL") still counts against the bare IP. A sender stuck on a regenerated URL
+      behind a shared egress IP (Zapier, Make, n8n) can therefore still get that IP
+      throttled for other tenants. Kept on purpose: keying unknown tokens per token
+      would let random tokens dodge the bare-IP guard, and tokens are 256-bit. Found
+      by the pre-ship full-scope review.
+    created_at: 2026-10-29
+    expiry_date: 2027-01-29
+    remediation_sprint: 19
+    remediation_plan: >-
+      Remember the hashes of recently replaced webhook tokens for a grace period and
+      count failures on them per token, or give unknown well-formed tokens a separate,
+      higher bare-IP ceiling; test with a regenerated URL called from a shared IP.
+    status: open
+    notes: 'Orchestrator ruling 2026-10-29: accepted residual of the cross-tenant limiter fix in the PG-208 PR.'
+  PG-208-ASSIGNEE-REMINDERS-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      Owner ruling 6 lets a non-admin see tasks they own or are assigned to. task.list,
+      task.getById and task.getByEntity apply it, but task.getReminders still reads
+      overdue and due-soon tasks by owner only (getOverdueTasks(ownerId),
+      getTasksDueSoon(ownerId)), so a round-robin assignee gets no reminder for a task
+      automation assigned to them. Nobody is affected while automation is off in
+      production (PG-208-AUTOMATION-OFF-IN-PROD-001). Found by the pre-ship full-scope
+      review.
+    created_at: 2026-10-29
+    expiry_date: 2027-01-29
+    remediation_sprint: 19
+    remediation_plan: >-
+      Include assigneeId = userId in the overdue and due-soon repository queries (or
+      add assignee variants) before automation is switched on in production; add a
+      router test for an assignee who does not own the task.
+    status: open
+    notes: 'Orchestrator ruling 2026-10-29: follow-up, not fixed in the PG-208 PR.'
+  PG-208-WEBHOOK-PENDING-WHILE-OFF-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      While task automation is off (TASK_AUTOMATION_INTERVAL_MS=0, the production
+      setting), the inbound webhook route still accepts signed calls and records a
+      PENDING run with its webhook context. No runner drains those runs and the
+      run purge does not remove PENDING rows, so they and their payload context
+      stay in the database indefinitely. Found by the PG-208 Security STOA re-run
+      (2026-10-29).
+    created_at: 2026-10-29
+    expiry_date: 2027-01-29
+    remediation_sprint: 19
+    remediation_plan: >-
+      Either refuse webhook calls with 503 while the runner is off, or let the run
+      purge remove PENDING runs older than the retention window; add a test for
+      the interval=0 case. Revisit when the outbox move (#966) lands.
+    status: open
+    notes: 'Orchestrator ruling 2026-10-29: low debt entry, follow-up, not fixed in the PG-208 PR.'
+  IFC074-F1:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      logContextMiddleware reads ctx.correlationId, which nothing sets.
+      logContextMiddleware binds `(ctx as Record<string,
+      unknown>).correlationId` into the pino log context, but
+      createContext never sets it, so correlationId in the
+      AsyncLocalStorage log context is always undefined. Only
+      tenantId/userId are bound. Where: apps/api/src/trpc.ts:107-116
+      (logContextMiddleware); apps/api/src/context.ts (no correlationId
+      field)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 19
+    remediation_plan: >-
+      Bind the correlation id from the tracing correlation context
+      (apps/api/src/tracing/correlation.ts getCorrelationId) or set
+      ctx.correlationId in createContext; add a test that a protected
+      procedure's log context carries the request's correlationId.
+    notes: >-
+      git issue #987. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F2:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      redactSensitiveData never matches apiKey (case bug) and only checks
+      key names. The helper compares `key.toLowerCase()` against a list
+      containing 'apiKey' (upper-case K), so apiKey is never redacted. It
+      is opt-in, matches key names only and never looks at values. Where:
+      packages/observability/src/logging.ts:494-517 (redactSensitiveData)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 20
+    remediation_plan: >-
+      Lower-case the sensitive list (or compare case-insensitively), add
+      tests; prefer the pino `redact` option added to createLogger in
+      IFC-074 for anything logged through pino.
+    notes: >-
+      git issue #988. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F3:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      pino bindings put the host name on every exported log line.
+      createLogger keeps `hostname` in every record. With IFC-074 the
+      api's records leave the process over OTLP to Grafana Cloud Loki, so
+      the container/host name is exported on every line; the OTel resource
+      already carries host attributes. Where:
+      packages/observability/src/logging.ts:89-94 (formatters.bindings)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 20
+    remediation_plan: >-
+      Drop hostname from the bindings formatter (keep pid if useful), or
+      gate it behind an option; verify Loki queries do not rely on it.
+    notes: >-
+      git issue #989. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F4:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      metricsMiddleware in tracing/middleware.ts is dead code.
+      metricsMiddleware is not used by apps/api/src/trpc.ts; it logs with
+      console.* and only its own test calls it. Where:
+      apps/api/src/tracing/middleware.ts:229-264 (metricsMiddleware) and
+      its deprecated builders
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 20
+    remediation_plan: >-
+      Remove metricsMiddleware and its deprecated builders after
+      confirming no consumer (grep apps/ packages/), update
+      middleware.test.ts.
+    notes: >-
+      git issue #990. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F5:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      OTEL_SERVICE_NAME drift: Railway hand-set 'api'/'ai-worker' vs
+      Terraform unset. Grafana Tempo/Loki show service names 'api' and
+      'ai-worker', which match neither the code defaults nor Terraform;
+      the alert rules and the IFC-074 collector depend on the hand-set
+      values, so a redeploy that drops them silently renames the services
+      and breaks the ifc032-api-error-rate rule (requireSeries:false).
+      Where: infra/terraform/modules/monitoring/main.tf:16-17
+      (OTEL_SERVICE_NAME deliberately unset);
+      apps/api/src/tracing/otel.ts:73 (default intelliflow-api); apps/ai-
+      worker/src/tracing/otel.ts:48
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 19
+    remediation_plan: >-
+      Manage OTEL_SERVICE_NAME in Terraform
+      (railway_variable.observability) with the live values, or change the
+      code defaults to match; add a series-existence check for the api
+      rule.
+    notes: >-
+      git issue #991. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F6:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      alert-rules.json _comment points at a script path that does not
+      exist. The comment names tools/scripts/grafana/apply-alert-
+      rules.mjs; the script is tools/scripts/observability/apply-grafana-
+      alert-rules.mjs. Where: infra/monitoring/grafana/cloud/alert-
+      rules.json:2
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 20
+    remediation_plan: >-
+      Correct the path in the comment.
+    notes: >-
+      git issue #992. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F7:
+    origin_task: IFC-074
+    owner: Owner (Grafana UI)
+    severity: medium
+    description: >-
+      Evidence collector runs with an Admin Grafana service-account token.
+      The read-only IFC-074 collector only needs Viewer access, but the
+      only local token is the Admin one used to apply alert rules, so an
+      operator shell holds a token that can change alerting. Where:
+      tools/scripts/observability/collect-observability-evidence.mjs
+      (reads GRAFANA_SA_TOKEN); .github/workflows/grafana-alert-rules.yml
+      (Admin token)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 19
+    remediation_plan: >-
+      Create a Viewer-role Grafana service account for the collector (e.g.
+      GRAFANA_READ_TOKEN), document it in docs/operations/incident-
+      runbook.md 5.5, and keep the Admin token for the apply workflow
+      only. Owner action (Grafana UI).
+    notes: >-
+      git issue #993. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F8:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: high
+    description: >-
+      pino base.environment reads unset ENVIRONMENT, so production logs
+      say 'development'. Railway does not set ENVIRONMENT, so every record
+      from createLogger (now including the api's request logs in Loki)
+      carries environment=development in production, which misleads
+      filtering during incidents. Where:
+      packages/observability/src/logging.ts:66-69 (base.environment =
+      process.env.ENVIRONMENT || 'development')
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 19
+    remediation_plan: >-
+      Derive environment from SENTRY_ENVIRONMENT / NODE_ENV / the OTel
+      deployment.environment resource attribute; add a unit test for the
+      production case.
+    notes: >-
+      git issue #994. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F9:
+    origin_task: IFC-074
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      SIGTERM race: main.ts exits before the OTel SDK flushes. Two SIGTERM
+      handlers race; whichever calls process.exit first wins, so the last
+      batch of spans and (with IFC-074) logs before a deploy or restart
+      can be lost. Where: apps/api/src/main.ts:26-32 (process.exit(0)
+      after queues/Prisma) vs apps/api/src/tracing/otel.ts startTracing
+      SIGTERM handler (sdk.shutdown then exit)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 19
+    remediation_plan: >-
+      Have a single shutdown sequence in main.ts that awaits
+      shutdownOpenTelemetry(getSDKInstance()) before process.exit, and
+      remove the exit from otel.ts's handler.
+    notes: >-
+      git issue #995. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F10:
+    origin_task: IFC-074
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      ai-worker has SENTRY_DSN provisioned but never initialises Sentry.
+      Terraform provisions SENTRY_DSN on the ai-worker service, but the
+      worker has no Sentry SDK, so its exceptions never reach Sentry (they
+      do reach Grafana as error spans). Where: apps/ai-worker/package.json
+      (no @sentry/* dependency); infra/terraform/main.tf:184-196
+      (SENTRY_DSN set on ai-worker)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 19
+    remediation_plan: >-
+      Either initialise @sentry/node in apps/ai-worker (mirroring
+      apps/api/src/tracing/sentry.ts) or stop provisioning the DSN there
+      and document Grafana as the ai-worker error channel.
+    notes: >-
+      git issue #996. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F11:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      tRPC client errors are logged at error level. Every failed
+      procedure, including UNAUTHORIZED, NOT_FOUND, BAD_REQUEST and
+      TOO_MANY_REQUESTS, is logged at `error`, so expired sessions and
+      rate limits add noise to error-level views in Loki. Where:
+      apps/api/src/tracing/middleware.ts (trpc.error record)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 20
+    remediation_plan: >-
+      Log client TRPC codes at warn and server codes
+      (INTERNAL_SERVER_ERROR, TIMEOUT, no code) at error; add an it.each
+      over the codes.
+    notes: >-
+      git issue #997. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F12:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      ai-worker pino logger has no redaction. ai-worker builds its own
+      pino logger, which already exports to Loki, without the
+      credential/email redaction that createLogger now has. Where:
+      apps/ai-worker/src/utils/logger.ts:24-47 (builds its own pino()
+      without redact)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 19
+    remediation_plan: >-
+      Use @intelliflow/observability createLogger in ai-worker or add the
+      same redact paths; add a test.
+    notes: >-
+      git issue #998. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F13:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      admin, partner and auth procedures skip logContextMiddleware. These
+      builders use tracingMiddleware but not logContextMiddleware, so
+      their log records carry no tenantId/userId context. Where:
+      apps/api/src/trpc.ts:312 (adminProcedure), :344 (partnerProcedure),
+      :567-571 (adminTenantProcedure), :594 (authProcedure)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 20
+    remediation_plan: >-
+      Apply logContextMiddleware to these builders (after auth so the user
+      is known) and add a test per builder.
+    notes: >-
+      git issue #999. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F14:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      The Loki error-log rule ifc074-error-logs-direct selects
+      {service_name="ai-worker"} only (infra/monitoring/grafana/cloud/alert-rules.json),
+      so once the api ships request logs, api errors still reach only the span
+      rule (modelled 162-203 s) and api episodes are expected to miss MTTD < 120 s.
+    created_at: 2026-10-29
+    status: open
+    expiry_date: 2027-01-27
+    remediation_sprint: 20
+    remediation_plan: >-
+      After #997 (client TRPC codes at warn), widen the selector to
+      {service_name=~"ai-worker|api"}, dry-run grafana-alert-rules.yml, and check
+      a week of buckets for false alarms first.
+    notes: >-
+      git issue #1067. Found by the IFC-074 addendum spec session (2026-10-29);
+      out of scope under the minimal-change rule. Tracked per project Rule 8.
+  IFC074-F15:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      No tripwire on Loki log volume. IFC-074 adds one Loki line per tRPC call
+      (two when slower than 50 ms); past the free-tier quota ingestion is dropped
+      and the Loki detection rule goes silent without an error.
+    created_at: 2026-10-29
+    status: open
+    expiry_date: 2027-01-27
+    remediation_sprint: 20
+    remediation_plan: >-
+      Alert on the stack's ingested-log-bytes usage (or a daily api line count)
+      at about 70% of the monthly quota, routed like the other production alerts.
+    notes: >-
+      git issue #1068. Found by the IFC-074 addendum spec session (2026-10-29).
+      Tracked per project Rule 8.
+  IFC074-F16:
+    origin_task: IFC-074
+    owner: SRE Lead
+    severity: low
+    description: >-
+      artifacts/reports/*/dora-metrics.json is not computed from real data,
+      although deploy events (production promotion ledger) and incident and
+      detection times (IFC-074 collector) now exist.
+    created_at: 2026-10-29
+    status: open
+    expiry_date: 2027-01-27
+    remediation_sprint: 20
+    remediation_plan: >-
+      Generate dora-metrics.json from the promotion ledger (deploy frequency,
+      lead time, change failure rate) and the collector output (incidents, time
+      to restore including MTTD).
+    notes: >-
+      git issue #1069. Owner ruling 4 (2026-10-29): debt-ledger follow-up, not in
+      the IFC-074 PR.
+  IFC074-F17:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      Generated task caches do not match task-status.schema.json: 277 of 428
+      fail it under Ajv (30 on kpis; the rest on artifacts.created shape,
+      validations keys, status_history statuses, started_at format), and
+      tools/scripts/validate-schemas.ts fails at base on 252 files, so neither is
+      a gate. IFC-074's own cache still fails on three status_history statuses
+      written on 2026-10-22 (append-only history).
+    created_at: 2026-10-29
+    status: open
+    expiry_date: 2027-01-27
+    remediation_sprint: 20
+    remediation_plan: >-
+      Decide per field whether the generator or the schema is right, fix the
+      generator output (or widen the schema deliberately), then make
+      validate-schemas a gate.
+    notes: >-
+      git issue #1070. Measured during the IFC-074 addendum exec (2026-10-29).
+  IFC074-F18:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      The committed generated schemas (apps/project-tracker/docs/metrics/schemas,
+      last generated 2026-05-10) have drifted from what pnpm generate:schemas now
+      emits with Zod 4.6.7: a regeneration rewrites all 11 files, including key
+      order and the meaning of some date-time patterns.
+    created_at: 2026-10-29
+    status: open
+    expiry_date: 2027-01-27
+    remediation_sprint: 20
+    remediation_plan: >-
+      One dedicated PR: regenerate all schemas, review the pattern changes, and
+      run the data validators against the result.
+    notes: >-
+      git issue #1071. IFC-074 added only the generator's exact fragment for its
+      new KPI source field instead of regenerating.
+  IFC074-F19:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      The api OTel metrics reader could block Railway idle sleep if metrics
+      export is ever enabled: the NodeSDK default OTLP reader (60 s) skips an
+      export only when no instrument has recorded, and under cumulative
+      temporality one recorded instrument is exported every cycle.
+    created_at: 2026-10-29
+    status: open
+    expiry_date: 2027-01-27
+    remediation_sprint: 20
+    remediation_plan: >-
+      If api metrics export is enabled, set OTEL_METRICS_EXPORTER=none on the api
+      service or a delta temporality preference.
+    notes: >-
+      Ledger only, no gh issue (coordinator, 2026-10-29). Evidence: the
+      coordinator's live check on 2026-10-29 found the api deployment SLEEPING
+      (last change 09:28:30Z, after the restart) and no target_info or OTel
+      metric series from service api in Grafana, so the export is not reaching
+      Grafana today. IFC-074's api request logs add no idle traffic (records only
+      inside tRPC calls; the sdk-logs batch timer is armed only while records are
+      buffered and is unref'd).
 summary:
   total_items: 443
   by_severity:
@@ -5625,11 +6736,13 @@ alerts:
     severity: medium
     description: 'Predictive monitoring and self-healing features deferred. Basic OpenTelemetry configuration in place, advanced features pending.'
     created_at: 2025-12-17
-    status: open
+    status: resolved
     expiry_date: 2026-02-28
     remediation_sprint: 3
     remediation_plan: '1. Implement anomaly detection rules 2. Configure predictive alerting 3. Set up self-healing automation 4. Create monitoring runbooks'
     notes: 'Basic OTEL config sufficient for Sprint 0. Predictive features are Sprint 2+.'
+    resolved_at: 2026-10-25T00:00:00.000Z
+    resolution: 'Resolved by ENV-008-AI (Sprint 18, ADR-087): anomaly detection is Grafana Asserts on the api and ai-worker span metrics; predictive alerting is the IFC-032 rules plus fast/slow burn-rate alerts on SLO env008apiavail (infra/monitoring/grafana/cloud/slos.json); self-healing is the Railway ON_FAILURE restart policy plus a probe-gated api deploy health check (railway-self-healing.yml). Production proof follows merge and is recorded as NEEDS_HUMAN in the ENV-008-AI attestation.'
   debt_003:
     origin_task: ENV-010-AI
     owner: QA Lead

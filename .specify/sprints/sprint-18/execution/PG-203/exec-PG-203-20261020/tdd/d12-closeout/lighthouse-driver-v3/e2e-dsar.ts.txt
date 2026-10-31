@@ -1,0 +1,400 @@
+/**
+ * PG-203 D12 — local end-to-end DSAR run and Lighthouse (owner ruling 2026-10-24: no staging).
+ *
+ * Runs inside `pnpm test:db:run --seed` (a fresh, migrated, seeded database). Starts the API in
+ * this process, so the mock email adapter's captured messages can be read back:
+ *   submit (browser) → verification email (captured) → verify (browser) → export email
+ *   (captured) → download (browser).
+ * Then Lighthouse on the three public pages and an authenticated LHCI run on the admin queue.
+ * Writes a JSON summary to tmp/pg203-local/result.json. Never prints keys or passwords.
+ */
+import { spawn } from 'node:child_process';
+
+/**
+ * Runs a child process WITHOUT blocking this process: the API under test lives in this process,
+ * so a synchronous child (execFileSync) froze it and every measured page stayed on its loading
+ * state (found 2026-10-29 from the reports' final screenshots).
+ */
+function run(cmd: string, args: string[], opts: { inherit?: boolean; shell?: boolean } = {}): Promise<number> {
+  return new Promise((resolve) => {
+    const child = spawn(cmd, args, { stdio: opts.inherit ? 'inherit' : 'ignore', shell: opts.shell });
+    child.on('exit', (code) => resolve(code ?? 1));
+    child.on('error', () => resolve(1));
+  });
+}
+import { mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { chromium, type Page } from '@playwright/test';
+import { pathToFileURL } from 'node:url';
+
+const ROOT = process.cwd();
+const OUT = join(ROOT, 'tmp', 'pg203-local');
+const WEB = 'http://localhost:3400';
+const HANDLE = 'e2e-firm';
+const LH_DIR = join(ROOT, 'artifacts', 'lighthouse', 'PG-203');
+
+type Captured = { options: { to: string[]; subject: string; textBody?: string } };
+
+function lighthouseCli(): string {
+  const base = join(ROOT, 'node_modules', '.pnpm');
+  const dir = readdirSync(base).find((d) => d.startsWith('lighthouse@'));
+  if (!dir) throw new Error('lighthouse package not found');
+  return join(base, dir, 'node_modules', 'lighthouse', 'cli', 'index.js');
+}
+
+async function lighthouse(url: string, name: string): Promise<Record<string, number>> {
+  const output = join(LH_DIR, `${name}.report.json`);
+  // chrome-launcher's temp cleanup can exit non-zero after the report is written (EPERM).
+  await run(
+      process.execPath,
+      [
+        lighthouseCli(),
+        url,
+        '--preset=desktop',
+        '--only-categories=performance,accessibility,best-practices,seo',
+        '--output=json',
+        `--output-path=${output}`,
+        '--chrome-flags=--headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage',
+        '--quiet',
+      ]
+    );
+  const report = JSON.parse(require('node:fs').readFileSync(output, 'utf8'));
+  const scores: Record<string, number> = {};
+  for (const [key, cat] of Object.entries<{ score: number }>(report.categories)) {
+    scores[key] = Math.round(cat.score * 100);
+  }
+  scores.finalUrlMatches = report.finalDisplayedUrl.startsWith(url.split('#')[0]) ? 1 : 0;
+  return scores;
+}
+
+/** The tracked .lighthouseci files present before this run; everything else there is ours. */
+const LHCI_DIR = join(ROOT, '.lighthouseci');
+const LHCI_TRACKED = new Set(['assertion-results.json', 'lhr-1777061161816.html', 'lhr-1777061161816.json']);
+const ADMIN_PAGES: Record<string, string> = {
+  '/settings/privacy-requests': 'settings-privacy-requests',
+  '/calendar/event-types': 'calendar-event-types',
+};
+
+/** Copies each admin URL's median-performance run to the top level, then removes our lhr files. */
+function medianReports(): Record<string, unknown> {
+  const fs = require('node:fs') as typeof import('node:fs');
+  const ours = fs.readdirSync(LHCI_DIR).filter((f) => !LHCI_TRACKED.has(f));
+  const runs = ours
+    .filter((f) => f.endsWith('.json'))
+    .map((f) => JSON.parse(fs.readFileSync(join(LHCI_DIR, f), 'utf8')));
+  const out: Record<string, unknown> = {};
+  for (const [path, name] of Object.entries(ADMIN_PAGES)) {
+    const mine = runs
+      .filter((r) => new URL(r.requestedUrl).pathname === path)
+      .sort((a, b) => a.categories.performance.score - b.categories.performance.score);
+    if (mine.length === 0) {
+      out[name] = 'no runs';
+      continue;
+    }
+    const median = mine[Math.floor(mine.length / 2)];
+    fs.writeFileSync(join(LH_DIR, `${name}.report.json`), JSON.stringify(median));
+    out[name] = {
+      runs: mine.map((r) => ({
+        finalUrl: new URL(r.finalDisplayedUrl).pathname,
+        performance: Math.round(r.categories.performance.score * 100),
+        accessibility: Math.round(r.categories.accessibility.score * 100),
+      })),
+    };
+  }
+  for (const f of ours) fs.rmSync(join(LHCI_DIR, f));
+  return out;
+}
+
+/** Three Lighthouse runs of the booking page; the median-performance report becomes book.report.json. */
+async function bookMedian(): Promise<Record<string, unknown>> {
+  const fs = require('node:fs') as typeof import('node:fs');
+  const runs: Array<Record<string, number> & { name: string }> = [];
+  for (const i of [1, 2, 3]) {
+    runs.push({ ...(await lighthouse(`${WEB}/book/${HANDLE}/intro`, `book-run${i}`)), name: `book-run${i}` });
+  }
+  const sorted = [...runs].sort((a, b) => a.performance - b.performance);
+  const median = sorted[1];
+  fs.copyFileSync(join(LH_DIR, `${median.name}.report.json`), join(LH_DIR, 'book.report.json'));
+  for (const r of runs) fs.rmSync(join(LH_DIR, `${r.name}.report.json`));
+  return { median: median.name, runs };
+}
+
+function linkFrom(mail: Captured, page: 'verify' | 'export'): string {
+  const match = (mail.options.textBody ?? '').match(new RegExp(`https?://\\S+/${page}#\\S+`));
+  if (!match) throw new Error(`no ${page} link in the email`);
+  return match[0];
+}
+
+async function waitForMail(
+  sent: Captured[],
+  to: string,
+  page: 'verify' | 'export'
+): Promise<Captured> {
+  for (let i = 0; i < 50; i += 1) {
+    const mail = sent.find(
+      (m) => m.options.to.includes(to) && (m.options.textBody ?? '').includes(`/${page}#`)
+    );
+    if (mail) return mail;
+    await new Promise((r) => setTimeout(r, 200));
+  }
+  throw new Error(`no ${page} email captured for the subject`);
+}
+
+/** Submit and verify share a 2-second per-IP throttle: a person reading their email is slower. */
+const pause = () => new Promise((resolve) => setTimeout(resolve, 2500));
+
+async function submit(page: Page, email: string): Promise<void> {
+  await pause();
+  await page.goto(`${WEB}/dsar/${HANDLE}`);
+  await page.getByLabel('Get a copy of my data').check();
+  await page.getByLabel('Your email address').fill(email);
+  await page.locator('#dsar-consent').check();
+  await page.getByRole('button', { name: 'Send request' }).click();
+  await page.getByRole('heading', { name: 'Check your email' }).waitFor({ timeout: 20_000 });
+}
+
+async function main(): Promise<void> {
+  mkdirSync(OUT, { recursive: true });
+  mkdirSync(LH_DIR, { recursive: true });
+  const { startApiServer } = await import('../../apps/api/src/http-server');
+  const { container, containerReady } = await import('../../apps/api/src/container');
+  // The ESM entry the API imports (the workspace link resolves to this real path), so this is
+  // the container's own client instance.
+  const { prisma } = (await import(
+    pathToFileURL(join(ROOT, 'packages', 'db', 'dist', 'index.mjs')).href
+  )) as typeof import('@intelliflow/db');
+  const server = startApiServer({ port: 4000 });
+  await containerReady;
+
+  const result: Record<string, unknown> = { startedAt: new Date().toISOString() };
+  const admin = await prisma.user.findFirst({
+    where: { email: 'admin@intelliflow.dev' },
+    select: { tenantId: true },
+  });
+  if (!admin) throw new Error('seeded admin not found');
+  const tenantId = admin.tenantId;
+  await prisma.tenant.update({ where: { id: tenantId }, data: { bookingHandle: HANDLE } });
+  // 2026-10-29 re-measure: a real event type and opening hours, so /book and /calendar/event-types
+  // are measured with content rather than their empty or "not available" states.
+  const host = await prisma.user.findFirst({
+    where: { email: 'admin@intelliflow.dev' },
+    select: { id: true },
+  });
+  if ((await prisma.availabilityHour.count({ where: { tenantId } })) === 0) {
+    await prisma.availabilityHour.createMany({
+      data: [0, 1, 2, 3, 4, 5, 6].map((weekday) => ({
+        tenantId,
+        weekday,
+        startMinute: 540,
+        endMinute: 1020,
+      })),
+    });
+  }
+  // Saving availability in the app stamps availabilityConfiguredAt; public booking needs it.
+  await prisma.appointmentSettings.upsert({
+    where: { tenantId },
+    update: { availabilityConfiguredAt: new Date(), defaultTimezone: 'Europe/London' },
+    create: { tenantId, availabilityConfiguredAt: new Date(), defaultTimezone: 'Europe/London' },
+  });
+  await prisma.eventType.upsert({
+    where: { tenantId_slug: { tenantId, slug: 'intro' } },
+    update: {},
+    create: {
+      tenantId,
+      name: 'Initial consultation',
+      slug: 'intro',
+      description: 'A first call to understand your matter.',
+      durationMinutes: 30,
+      hostUserId: host!.id,
+    },
+  });
+  // A real seeded person, so the export carries real rows.
+  const lead = await prisma.lead.findFirst({
+    where: { tenantId, email: { not: '' } },
+    select: { email: true },
+    orderBy: { createdAt: 'asc' },
+  });
+  if (!lead?.email) throw new Error('no seeded lead with an email');
+  const subject = lead.email.trim().toLowerCase();
+
+  const sent = (container.adapters.notificationService as unknown as { sentEmails: Captured[] })
+    .sentEmails;
+  const browser = await chromium.launch({ headless: true });
+  const page = await browser.newPage();
+  const steps: Record<string, string> = {};
+  try {
+    await submit(page, subject);
+    steps.submit = 'Check your email shown';
+    const verifyMail = await waitForMail(sent, subject, 'verify');
+    steps.verificationEmail = `captured: "${verifyMail.options.subject}"`;
+    const verifyLink = linkFrom(verifyMail, 'verify').replace(/^https?:\/\/[^/]+/, WEB);
+    await pause();
+    await page.goto(verifyLink);
+    await page
+      .getByRole('heading', { name: 'Your request is confirmed' })
+      .waitFor({ timeout: 30_000 });
+    steps.verify = 'Your request is confirmed shown';
+    steps.urlAfterVerify = new URL(page.url()).hash === '' ? 'fragment stripped' : 'FRAGMENT KEPT';
+    const exportMail = await waitForMail(sent, subject, 'export');
+    steps.exportEmail = `captured: "${exportMail.options.subject}"`;
+    const exportLink = linkFrom(exportMail, 'export').replace(/^https?:\/\/[^/]+/, WEB);
+    await page.goto(exportLink);
+    await page.getByRole('button', { name: 'Get my data' }).click();
+    await page.locator('#export-data').waitFor({ timeout: 30_000 });
+    steps.download = 'export data shown';
+    steps.withheldSection = (await page.locator('#export-withheld').count()) > 0 ? 'shown' : 'none';
+    const row = await prisma.dsarRequest.findFirst({
+      where: { tenantId, subjectEmail: subject },
+      orderBy: { createdAt: 'desc' },
+      select: { status: true, exportDownloads: true, exportIssuedAt: true, verifiedAt: true },
+    });
+    steps.dbRow = JSON.stringify({
+      status: row?.status,
+      verified: Boolean(row?.verifiedAt),
+      exportIssued: Boolean(row?.exportIssuedAt),
+      exportDownloads: row?.exportDownloads,
+    });
+    steps.adminAlert = sent.some((m) => m.options.subject === 'New data subject request')
+      ? 'sent to the firm admins'
+      : 'NOT SENT';
+    // No token in any email subject or in the API process's own log lines is checked by
+    // construction: the token only exists in the link fragment.
+    result.e2e = { ok: true, steps };
+
+    // Lighthouse: a fresh request for the verify page, so it measures the confirmed state.
+    const second = `pg203-lh-${Date.now()}@example.invalid`;
+    await submit(page, second);
+    const lhVerify = linkFrom(await waitForMail(sent, second, 'verify'), 'verify').replace(
+      /^https?:\/\/[^/]+/,
+      WEB
+    );
+    // The e2e above spent this IP's lookup budget; the limiters live in this process.
+    const abuse = await import('../../apps/api/src/modules/calendar/booking-abuse');
+    for (const limiter of [abuse.bookingLookupLimiter, abuse.bookingSlotsLimiter, abuse.bookingSubmitLimiter]) {
+      limiter.reset();
+    }
+    // CLS diagnosis (2026-10-29): record every layout shift with its sources, in a fresh page
+    // at Lighthouse's desktop size, so the cause is measured rather than guessed.
+    const diag = await browser.newPage({ viewport: { width: 1350, height: 940 } });
+    await diag.addInitScript(() => {
+      const w = window as unknown as { __shifts: unknown[] };
+      w.__shifts = [];
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries() as unknown as Array<{
+          value: number;
+          startTime: number;
+          hadRecentInput: boolean;
+          sources?: Array<{ node?: Element; previousRect: DOMRectReadOnly; currentRect: DOMRectReadOnly }>;
+        }>) {
+          w.__shifts.push({
+            value: e.value,
+            t: Math.round(e.startTime),
+            input: e.hadRecentInput,
+            sources: (e.sources ?? []).map((s) => ({
+              node: s.node ? `${s.node.nodeName}.${(s.node as HTMLElement).className ?? ''}`.slice(0, 120) : null,
+              text: s.node ? (s.node.textContent ?? '').replace(/\s+/g, ' ').slice(0, 60) : null,
+              prev: [s.previousRect.x, s.previousRect.y, s.previousRect.width, s.previousRect.height],
+              curr: [s.currentRect.x, s.currentRect.y, s.currentRect.width, s.currentRect.height],
+            })),
+          });
+        }
+      }).observe({ type: 'layout-shift', buffered: true });
+    });
+    for (const path of [`/book/${HANDLE}/intro`, `/dsar/${HANDLE}`]) {
+      for (const limiter of [abuse.bookingLookupLimiter, abuse.bookingSlotsLimiter]) limiter.reset();
+      await diag.goto(`${WEB}${path}`);
+      await diag.waitForLoadState('networkidle');
+      await new Promise((r) => setTimeout(r, 1500));
+      (result.clsDiag ??= {} as Record<string, unknown>) as Record<string, unknown>;
+      (result.clsDiag as Record<string, unknown>)[path] = await diag.evaluate(
+        () => (window as unknown as { __shifts: unknown[] }).__shifts
+      );
+    }
+    await diag.close();
+    for (const limiter of [abuse.bookingLookupLimiter, abuse.bookingSlotsLimiter]) limiter.reset();
+    await page.goto(`${WEB}/book/${HANDLE}/intro`);
+    await page.getByText('Initial consultation').first().waitFor({ timeout: 20_000 }).catch(() => undefined);
+    await page.waitForLoadState('networkidle');
+    const bookText = await page.locator('main').innerText();
+    result.bookState = {
+      eventName: bookText.includes('Initial consultation'),
+      unavailable: bookText.includes('This booking page is not available'),
+      text: bookText.replace(/\s+/g, ' ').slice(0, 400),
+    };
+    await browser.close();
+    result.lighthouse = {
+      book: await bookMedian(),
+      request: await lighthouse(`${WEB}/dsar/${HANDLE}`, 'dsar-request'),
+      verify: await lighthouse(lhVerify, 'dsar-verify'),
+      export: await lighthouse(exportLink, 'dsar-export'),
+    };
+  } catch (error) {
+    result.e2e = { ok: false, steps, error: error instanceof Error ? error.message : String(error) };
+    await page.screenshot({ path: join(OUT, 'failure.png') }).catch(() => undefined);
+    await browser.close().catch(() => undefined);
+  }
+
+  // Authenticated admin queue (Path C): the repo's LHCI login hook against local Supabase.
+  if (process.env.RUN_ADMIN_LHCI === '1') {
+    try {
+      // The local Supabase volume can keep an admin from an earlier run with an older throwaway
+      // password (the seed skips existing users), so set this run's password first. Local only.
+      const adminHeaders = {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? '',
+        authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY ?? ''}`,
+        'content-type': 'application/json',
+      };
+      const listed = await fetch(`${process.env.SUPABASE_URL}/auth/v1/admin/users?per_page=200`, {
+        headers: adminHeaders,
+      }).then((r) => r.json() as Promise<{ users?: Array<{ id: string; email?: string }> }>);
+      const adminUser = listed.users?.find((u) => u.email === process.env.LHCI_TEST_EMAIL);
+      if (!adminUser) throw new Error('local admin auth user not found');
+      const reset = await fetch(`${process.env.SUPABASE_URL}/auth/v1/admin/users/${adminUser.id}`, {
+        method: 'PUT',
+        headers: adminHeaders,
+        body: JSON.stringify({ password: process.env.LHCI_TEST_PASSWORD }),
+      });
+      result.adminPasswordReset = reset.status;
+      // Finish onboarding for the seeded admin, or the welcome dialog covers the page.
+      const auth = await fetch(`${process.env.SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: {
+          apikey: process.env.SUPABASE_ANON_KEY ?? '',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: process.env.LHCI_TEST_EMAIL,
+          password: process.env.LHCI_TEST_PASSWORD,
+        }),
+      }).then((r) => r.json() as Promise<{ access_token?: string }>);
+      if (!auth.access_token) throw new Error('admin sign-in failed');
+      const done = await fetch('http://localhost:4000/api/trpc/onboarding.complete', {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${auth.access_token}`,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({}),
+      });
+      result.onboarding = done.status;
+      await run(
+        join(ROOT, 'node_modules', '.bin', process.platform === 'win32' ? 'lhci.CMD' : 'lhci'),
+        ['collect', '--additive', `--config=${join('tmp', 'pg203-local', 'lhci-admin.json')}`],
+        { inherit: true, shell: process.platform === 'win32' }
+      );
+      result.adminLhci = medianReports();
+    } catch (error) {
+      result.adminLhci = `failed: ${error instanceof Error ? error.message.split('\n')[0] : 'unknown'}`;
+    }
+  }
+
+  writeFileSync(join(OUT, 'result.json'), JSON.stringify(result, null, 2));
+  server.close();
+  await prisma.$disconnect();
+  process.exit(0);
+}
+
+main().catch((error: unknown) => {
+  console.error('[pg203-local] failed:', error instanceof Error ? error.message : error);
+  process.exit(1);
+});

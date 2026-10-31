@@ -1,0 +1,119 @@
+{
+  "task_id": "IFC-117",
+  "phase": "after",
+  "captured_at": "2026-10-25T19:32:45.986Z",
+  "description": "After IFC-117 exec on feat/IFC-117-ai-model-monitoring (HEAD d9ff7c188). Same scope as before; src/metrics no longer exists (prometheus-exporter.ts deleted).",
+  "measurement_scope": [
+    "apps/ai-worker/src/monitoring/**/*.ts",
+    "apps/ai-worker/src/chains/scoring.chain.ts",
+    "apps/ai-worker/src/jobs/feedback-analytics.job.ts",
+    "apps/ai-worker/src/metrics/**/*.ts"
+  ],
+  "command": "(apps/ai-worker) npx vitest run src/monitoring src/chains src/jobs/__tests__/feedback-analytics.job.test.ts --coverage.enabled --coverage.provider=istanbul --coverage.include=<scope> --coverage.exclude=**/__tests__/** --coverage.reporter=json-summary",
+  "tests": "37 files passed, 1 skipped; 761 tests passed, 8 skipped",
+  "totals": {
+    "lines": 98.2,
+    "branches": 88.49,
+    "functions": 95.18,
+    "statements": 97.27,
+    "file_count": 15
+  },
+  "delta_vs_before": {
+    "lines": 0.69,
+    "branches": 3.49,
+    "functions": 1.38,
+    "statements": 0.66
+  },
+  "files": {
+    "apps/ai-worker/src/chains/scoring.chain.ts": {
+      "lines": 98.23,
+      "branches": 86.3,
+      "functions": 100,
+      "statements": 98.26
+    },
+    "apps/ai-worker/src/jobs/feedback-analytics.job.ts": {
+      "lines": 100,
+      "branches": 75,
+      "functions": 100,
+      "statements": 100
+    },
+    "apps/ai-worker/src/monitoring/ai-monitoring-payload.schema.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100,
+      "statements": 100
+    },
+    "apps/ai-worker/src/monitoring/chain-monitor.ts": {
+      "lines": 98.68,
+      "branches": 90.24,
+      "functions": 92.3,
+      "statements": 97.56
+    },
+    "apps/ai-worker/src/monitoring/drift-detector.ts": {
+      "lines": 96.4,
+      "branches": 94.84,
+      "functions": 97.67,
+      "statements": 96.19
+    },
+    "apps/ai-worker/src/monitoring/drift-scheduler.ts": {
+      "lines": 100,
+      "branches": 94.73,
+      "functions": 100,
+      "statements": 100
+    },
+    "apps/ai-worker/src/monitoring/drift-stats.ts": {
+      "lines": 100,
+      "branches": 86.66,
+      "functions": 100,
+      "statements": 95.55
+    },
+    "apps/ai-worker/src/monitoring/hallucination-checker.ts": {
+      "lines": 97.87,
+      "branches": 87.85,
+      "functions": 97.72,
+      "statements": 97.51
+    },
+    "apps/ai-worker/src/monitoring/index.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100,
+      "statements": 100
+    },
+    "apps/ai-worker/src/monitoring/latency-monitor.ts": {
+      "lines": 99.43,
+      "branches": 94.23,
+      "functions": 95.34,
+      "statements": 98.46
+    },
+    "apps/ai-worker/src/monitoring/monitoring-flush.service.ts": {
+      "lines": 88.13,
+      "branches": 70,
+      "functions": 54.54,
+      "statements": 85.48
+    },
+    "apps/ai-worker/src/monitoring/otel-ai-metrics.ts": {
+      "lines": 99.24,
+      "branches": 94.31,
+      "functions": 100,
+      "statements": 97.98
+    },
+    "apps/ai-worker/src/monitoring/otel-ai-types.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100,
+      "statements": 100
+    },
+    "apps/ai-worker/src/monitoring/redis-monitoring-publisher.ts": {
+      "lines": 99.18,
+      "branches": 81.88,
+      "functions": 95.74,
+      "statements": 98.01
+    },
+    "apps/ai-worker/src/monitoring/roi-tracker.ts": {
+      "lines": 98.9,
+      "branches": 93.05,
+      "functions": 91.66,
+      "statements": 98.02
+    }
+  }
+}

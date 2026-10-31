@@ -1,0 +1,10 @@
+[test-slot] slot1 taken for PG-203@feat/pg-203-dsar: pnpm --filter @intelliflow/api exec vitest run src/modules/privacy/__tests__/dsar-timing-parity.test.ts
+
+ RUN  v4.1.12 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203-dsar/apps/api
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed (2)
+   Start at  09:13:50
+   Duration  2.00s (transform 829ms, setup 988ms, import 795ms, tests 42ms, environment 0ms)
+

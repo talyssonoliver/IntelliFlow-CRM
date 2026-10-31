@@ -406,6 +406,10 @@
           },
           "unit": {
             "type": "string"
+          },
+          "source": {
+            "description": "Evidence file and SHA-256 behind the actual value",
+            "type": "string"
           }
         },
         "required": ["target", "actual", "met"],

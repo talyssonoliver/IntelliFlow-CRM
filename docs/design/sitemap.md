@@ -1,6 +1,6 @@
 # IntelliFlow CRM - Sitemap
 
-**Total Pages**: 216 | **Flows**: 42 | **Layouts**: 37 | **API Routers**: 60
+**Total Pages**: 220 | **Flows**: 42 | **Layouts**: 37 | **API Routers**: 60
 
 _Location_: `docs/design/sitemap.md` · _Last Updated_: 2026-07-21 · _Procs_: 232
 
@@ -8,7 +8,7 @@ _Location_: `docs/design/sitemap.md` · _Last Updated_: 2026-07-21 · _Procs_: 2
 > `tools/scripts/content-audit.ts` — each `page.tsx` under `apps/web/src/app/**`
 > counts once; route groups (`(public)`, `(developer)`, `(list)`, …) are
 > stripped from the URL; dynamic segments (`[id]`) collapse to one route;
-> `app/api/` is excluded. The category-bucket sum further down (257) uses a
+> `app/api/` is excluded. The category-bucket sum further down (261) uses a
 > different denominator and is NOT the filesystem total. See
 > `docs/design/content-audit.md` for the full rule. Verified: 2026-07-21.
 
@@ -76,6 +76,10 @@ intelliflow.com
 │   ├── /lp/[slug]                        [PG-013] Campaign landing pages
 │   │
 │   ├── /book/[handle]/[slug]             [PG-203] Public booking page (external entry, noindex, not in sitemap.xml, no sidebar)
+│   │
+│   ├── /dsar/[handle]                    [PG-203] Public data subject request form (external entry, noindex, not in sitemap.xml, no sidebar) → FLOW-040 (DSAR)
+│   │   ├── /dsar/[handle]/verify         [PG-203] Confirm request from emailed link (external entry, noindex, token in URL fragment)
+│   │   └── /dsar/[handle]/export         [PG-203] Download data export from emailed link (external entry, noindex, token in URL fragment)
 │   │
 │   ├── /login                            → FLOW-001
 │   ├── /signup                           → FLOW-001
@@ -197,7 +201,7 @@ intelliflow.com
 │   ├── /tasks/[id]                       Task detail
 │   ├── /tasks/task-types                 Custom task type labels and icons
 │   ├── /tasks/task-settings              Tenant task defaults (due-date, assignee)
-│   └── /tasks/automation                 Automation rules on task status/priority
+│   └── /tasks/automation                 Task automation rules: event, schedule, webhook (PG-208)
 │
 ├── CALENDAR ────────────────────────────── Layout: calendar/(list)
 │   │
@@ -287,6 +291,7 @@ intelliflow.com
 │   ├── /settings/appointments            Appointment defaults
 │   ├── /settings/cases                   Case defaults
 │   ├── /settings/tasks                   Task defaults
+│   ├── /settings/privacy-requests        Data subject request handling (PG-203 — ADMIN) → FLOW-040 (DSAR)
 │   └── /settings/help-center/articles    Help article admin list (PG-180 — ADMIN/MANAGER)
 │
 ├── BILLING ──────────────────────────────── Layout: billing
@@ -347,7 +352,7 @@ intelliflow.com
 
 | Section                       | Pages   | Status                                                                                                                        |
 | ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Public Pages                  | 33      | Marketing, auth, blog, careers, callbacks, SSO, legal, system, AUP, public booking (noindex)                                  |
+| Public Pages                  | 36      | Marketing, auth, blog, careers, callbacks, SSO, legal, system, AUP, public booking and DSAR (noindex)                         |
 | Developer Portal              | 14      | Docs (10), apps (3), apps/new (1)                                                                                             |
 | Dashboard                     | 3       | Main, new, customize                                                                                                          |
 | CRM Core: Leads               | 7       | List, new, detail, edit, pipeline, routing, lead-settings                                                                     |
@@ -364,14 +369,14 @@ intelliflow.com
 | AI & Automation               | 20      | Queue + 19 sub-pages                                                                                                          |
 | AI Insights                   | 1       | All insights (paginated, filtered)                                                                                            |
 | Analytics                     | 8       | Dashboard, feedback, weekly, monthly, quarterly, templates, scheduled, settings                                               |
-| Settings                      | 23      | Core (12) + module settings (11)                                                                                              |
+| Settings                      | 24      | Core (12) + module settings (12)                                                                                              |
 | Billing                       | 13      | Overview, checkout, subscriptions, usage, plans, upgrade, cancel, settings, etc.                                              |
 | Governance                    | 10      | ADR, compliance, policies, reports, lighthouse, coverage, performance, trpc-benchmark                                         |
 | Notifications                 | 4       | List, settings, channels, quiet-hours                                                                                         |
 | Profile                       | 1       | User profile                                                                                                                  |
 | Support Portal                | 3       | SLA queue, new, detail                                                                                                        |
 | Support / Help Center         | 3       | Index, search, article                                                                                                        |
-| **Sum of category subtotals** | **258** | Bucketing-based sum (Settings 23 = Core 12 + Module Settings 11; not filesystem-equivalent — see Canonical counts admonition) |
+| **Sum of category subtotals** | **262** | Bucketing-based sum (Settings 24 = Core 12 + Module Settings 12; not filesystem-equivalent — see Canonical counts admonition) |
 
 ---
 
@@ -431,11 +436,11 @@ in the sitemap.
 
 ## Implementation Status
 
-### Implemented Pages (209 unique routes; 257 across category buckets)
+### Implemented Pages (209 unique routes; 261 across category buckets)
 
 | Category      | Route                                                                                                                                                                                                                                                            | Status      | Flow               |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------ |
-| Public        | `/`, `/login`, `/signup`, `/sso`, `/aup`, `/book/[handle]/[slug]` (noindex), etc. (33 pages)                                                                                                                                                                     | Implemented | FLOW-001           |
+| Public        | `/`, `/login`, `/signup`, `/sso`, `/aup`, `/book/[handle]/[slug]` (noindex), `/dsar/[handle]` (noindex), etc. (36 pages)                                                                                                                                         | Implemented | FLOW-001           |
 | Developer     | `/docs`, `/docs/api`, `/docs/auth`, `/docs/changelog`, `/docs/guides`, `/docs/integrations`, `/docs/sdk`, `/docs/webhooks`, `/docs/architecture`, `/docs/cli`, `/developers/apps`, `/developers/apps/new`, `/developers/apps/[id]`, `/developers/apps/[id]/edit` | Implemented | -                  |
 | Dashboard     | `/dashboard`, `/dashboard/new`, `/dashboard/customize`                                                                                                                                                                                                           | Implemented | FLOW-025           |
 | Leads         | `/leads`, `/leads/new`, `/leads/[id]`, `/leads/[id]/edit`, `/leads/pipeline`, `/leads/routing`, `/leads/lead-settings`                                                                                                                                           | Implemented | FLOW-005, FLOW-006 |
@@ -451,7 +456,7 @@ in the sitemap.
 | Email         | `/email`, `/email/[id]`, `/email/compose`, `/email/templates`, `/email/signatures`, `/email/email-settings`, `/email/oauth/callback`                                                                                                                             | Implemented | -                  |
 | AI            | `/agent-approvals` + 19 sub-pages (ai-settings, approval-policies, model-config included)                                                                                                                                                                        | Implemented | IFC-149            |
 | Analytics     | `/analytics`, `/analytics/feedback`, `/analytics/saved/weekly`, `/analytics/saved/monthly`, `/analytics/saved/quarterly`, `/analytics/report-templates`, `/analytics/scheduled-reports`, `/analytics/report-settings`                                            | Implemented | FLOW-023           |
-| Settings      | `/settings/*` (23 pages: core 12 + module settings 11)                                                                                                                                                                                                           | Implemented | FLOW-035, FLOW-045 |
+| Settings      | `/settings/*` (24 pages: core 12 + module settings 12)                                                                                                                                                                                                           | Implemented | FLOW-035, FLOW-045 |
 | Billing       | `/billing/*` (13 pages)                                                                                                                                                                                                                                          | Implemented | FLOW-010           |
 | Governance    | `/governance/*` (10 pages, including trpc-benchmark)                                                                                                                                                                                                             | Implemented | FLOW-032           |
 | Notifications | `/notifications`, `/notifications/settings`, `/notifications/channels`, `/notifications/quiet-hours`                                                                                                                                                             | Implemented | -                  |
@@ -626,7 +631,11 @@ apps/web/src/app/
 │   │   ├── page.tsx              # /careers
 │   │   └── [id]/page.tsx         # /careers/[id]
 │   ├── lp/[slug]/page.tsx        # /lp/[slug]
-│   └── book/[handle]/[slug]/page.tsx  # /book/[handle]/[slug] (PG-203, noindex)
+│   ├── book/[handle]/[slug]/page.tsx  # /book/[handle]/[slug] (PG-203, noindex)
+│   └── dsar/[handle]/
+│       ├── page.tsx              # /dsar/[handle] (PG-203, noindex)
+│       ├── verify/page.tsx       # /dsar/[handle]/verify (PG-203, noindex)
+│       └── export/page.tsx       # /dsar/[handle]/export (PG-203, noindex)
 │
 ├── (developer)/                  # DEVELOPER PORTAL (14 pages)
 │   ├── developers/apps/page.tsx  # /developers/apps

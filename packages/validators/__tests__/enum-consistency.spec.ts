@@ -31,7 +31,10 @@ import {
   EVENT_LOCATION_TYPES,
   EVENT_TYPE_LEAD_SOURCES,
   EVENT_TYPE_REQUIRED_FIELDS,
+  DSAR_REQUEST_TYPES,
+  DSAR_STATUSES,
 } from '@intelliflow/domain';
+import { dsarRequestTypeSchema, dsarStatusSchema } from '../src/dsar';
 import {
   EVENT_TYPE_COLOR_TOKENS,
   eventLocationTypeSchema,
@@ -207,6 +210,13 @@ describe('Enum Consistency - DRY Architecture', () => {
 
     it('should use the tag colour tokens for event types', () => {
       expect([...EVENT_TYPE_COLOR_TOKENS]).toEqual([...TAG_COLOR_TOKENS]);
+    });
+
+    it('should keep the DSAR enums identical in domain, validators and Prisma (PG-203 DSAR)', () => {
+      expect(dsarRequestTypeSchema.options).toEqual([...DSAR_REQUEST_TYPES]);
+      expect(prismaEnum('DsarRequestType')).toEqual([...DSAR_REQUEST_TYPES]);
+      expect(dsarStatusSchema.options).toEqual([...DSAR_STATUSES]);
+      expect(prismaEnum('DsarRequestStatus')).toEqual([...DSAR_STATUSES]);
     });
   });
 

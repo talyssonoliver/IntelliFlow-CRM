@@ -1,0 +1,24 @@
+# PG-208 Step 18 registries — 2026-10-21T02:08:33Z
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/apps/web
+
+
+ Test Files  3 passed (3)
+      Tests  15 passed (15)
+   Start at  03:08:35
+   Duration  1.24s (transform 199ms, setup 885ms, import 99ms, tests 462ms, environment 1.29s)
+
+# exit=0
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208
+
+
+ Test Files  4 passed (4)
+      Tests  122 passed (122)
+   Start at  03:08:38
+   Duration  1.21s (transform 1.43s, setup 2.00s, import 449ms, tests 716ms, environment 0ms)
+
+# exit=0
+[preflight] Checking PG-208 (sprint 18) — C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208\.specify\sprints\sprint-18\planning\PG-208-plan.md
+[preflight] OK — plan does not create any page.tsx; § 3.2 gate does not apply.
+# exit=0

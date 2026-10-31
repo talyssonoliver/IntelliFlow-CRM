@@ -1,0 +1,42 @@
+{
+  "task_id": "ENV-008-AI",
+  "selected_at": "2026-10-22T23:20:00Z",
+  "mode": "subagent",
+  "mode_reason": "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 but no TeamCreate tool is available in this session; falling back to subagent mode as the skill directs.",
+  "agents": [
+    {
+      "name": "DevOps-Lead",
+      "role": "DevOps-Lead",
+      "file": ".claude/agents/devops-lead.md",
+      "why": "Grafana Cloud as code, Railway restart policy via CI, Terraform"
+    },
+    {
+      "name": "Security-Lead",
+      "role": "Security-Lead",
+      "file": ".claude/agents/security-lead.md",
+      "why": "Production tokens used in CI (GRAFANA_SA_TOKEN, RAILWAY_TOKEN); no secret-shaped strings committed"
+    },
+    {
+      "name": "Domain-Expert",
+      "role": "Domain-Expert",
+      "file": ".claude/agents/domain-expert.md",
+      "why": "Always included; SLO choice per business flow (lead routing, workflows)"
+    },
+    {
+      "name": "Test-Engineer",
+      "role": "Test-Engineer",
+      "file": ".claude/agents/test-engineer.md",
+      "why": "Always included; tests for apply scripts and config validators"
+    }
+  ],
+  "not_selected": [
+    {
+      "role": "AI-Specialist",
+      "why": "Owner ruling A uses Grafana Asserts for anomaly detection; no LLM or ML code is written"
+    },
+    {
+      "role": "Frontend-Lead",
+      "why": "No UI"
+    }
+  ]
+}

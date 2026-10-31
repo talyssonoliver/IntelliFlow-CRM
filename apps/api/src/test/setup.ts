@@ -17,6 +17,7 @@ process.env.QUOTA_GUARD_ALLOW_MISSING_SERVICE = '1';
 import type { PrismaClient, Prisma as PrismaNamespace } from '@intelliflow/db';
 import { Prisma } from '@intelliflow/db';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
+import { NOT_RESTRICTED } from '@intelliflow/application';
 import type { BaseContext } from '../context';
 
 // ============================================================================
@@ -44,6 +45,8 @@ vi.mock('../tracing/correlation', () => ({
 
 vi.mock('@opentelemetry/api', () => ({
   trace: {
+    // The observability pino mixin reads the active span; there is none here.
+    getActiveSpan: () => undefined,
     getTracer: () => ({
       startActiveSpan: (_name: string, _opts: unknown, fn: (span: unknown) => unknown) => {
         const mockSpan = {
@@ -79,6 +82,23 @@ vi.mock('../tracing/sentry', () => ({
 vi.mock('../tracing/otel', () => ({
   getSDKInstance: vi.fn(() => null),
   startTracing: vi.fn(),
+}));
+
+// IFC-074: tracingMiddleware logs through the api pino logger. Router suites get
+// a spy logger; `getApiLogger` is a plain function so mockReset cannot wipe it.
+// The real module is tested in src/tracing/logger.test.ts (vi.unmock).
+const apiLogger = vi.hoisted(() => ({
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  debug: vi.fn(),
+  child: vi.fn(),
+}));
+vi.mock('../tracing/logger', () => ({
+  getApiLogger: () => apiLogger,
+  apiLog: (level: 'info' | 'warn' | 'error', record: unknown, message: string) =>
+    apiLogger[level](record, message),
+  resetApiLoggerForTests: () => undefined,
 }));
 
 /**
@@ -142,6 +162,9 @@ beforeEach(() => {
   Object.values(mockSecurityServices).forEach(safeMockReset);
   // Reset mockAdapters
   Object.values(mockAdapters).forEach(safeMockReset);
+  // PG-203: nobody is restricted by a data request unless a test says so (the reset above
+  // leaves the deep mock answering undefined, which the restriction checks treat as a failure).
+  mockAdapters.processingRestrictionRepository.status.mockResolvedValue(NOT_RESTRICTED);
 });
 
 /**
@@ -167,6 +190,7 @@ afterAll(() => {
  */
 export const mockServices = {
   lead: mockDeep<any>(),
+  dsar: mockDeep<any>(), // PG-203
   contact: mockDeep<any>(),
   account: mockDeep<any>(),
   opportunity: mockDeep<any>(),
@@ -287,6 +311,10 @@ export const mockAdapters = {
   notificationAuditLogger: mockDeep<any>(),
   experimentRepository: mockDeep<any>(),
   appointmentRepository: mockDeep<any>(),
+  // PG-203 DSAR
+  dsarRepository: mockDeep<any>(),
+  processingRestrictionRepository: mockDeep<any>(),
+  subjectDataRepository: mockDeep<any>(),
   quotaRepository: mockDeep<any>(),
   mailboxTransports: mockDeep<any>(),
 };

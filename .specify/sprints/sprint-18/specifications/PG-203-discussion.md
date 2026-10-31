@@ -111,3 +111,78 @@ Non-blocking items: NOT_FOUND by shape and call sequence (not timing), mocking s
    - no slot lister;
    - no `escapeHtml`.
 4. Proposals build on the cited patterns: contact-types, availability, public-feedback and scheduled-reports locks.
+
+## Addendum A (DSAR): review rounds R1-R4
+
+*Added 2026-10-29 at the D12 close-out.* The rounds below ran on 2026-10-21 and 22 and were not written here at the
+time; an adversarial review of PR #1056 found the gap. This section is rebuilt from the session transcripts, not
+from memory. The full texts are preserved in the lane's local Claude Code transcripts, which are not in the
+repository: the main session `f7d22516-a758-41d6-8916-a2c4accfdecc.jsonl` and its `subagents/` folder under
+`~/.claude/projects/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-203/`. The spec's sign-off table
+(`PG-203-spec.md`, "Addendum A sign-off") matches them exactly. Times are UTC; the spec dates are BST, so R2-R4
+fall on 22 Oct local time.
+
+### How the rounds ran
+
+| Round | What ran |
+|---|---|
+| Owner rulings | Q13 "Fix DSAR in PG-203" (asked 21 Oct 00:17, answered 00:22). Q14 "Full end to end in PG-203" (00:25, answered 07:50). Q16/Q17 "Firm booking handle", "Export auto, erase on approval" (14:38, answered 16:46). |
+| R1 | 3 fresh subagents (security-lead, compliance, backend-architect), launched 16:49:37-16:49:55, on spec lines 612-783 in the PR 1 worktree. All REJECTED (16:50:43-16:51:18). |
+| Owner rulings | Q18/Q19 "Restriction flag now", "CRM core auto, comms checklist" (asked 16:51:35 straight after the R1 verdicts, answered 16:56). They scoped R2. |
+| R2 | 3 fresh subagents ("re-review round 2"), launched 23:52:37-23:52:52, on the `pg-203-dsar` spec. All REJECTED (23:53:45-23:54:24). |
+| R3 | Not new agents: SendMessage to the same three R2 agents (23:55:18-23:55:25), with the round 3 amendments. Backend APPROVED with conditions; security and compliance REJECTED. |
+| R4 | SendMessage to security and compliance only (23:56:23-23:56:26). Both APPROVED (23:56:36, 23:56:45). Backend had already approved, so it had no R4. |
+
+Transcript files (`subagents/`): security `agent-a05871def0d9572b4` (R1), `agent-afcaf17df25bb9c6f` (R2-R4);
+compliance `agent-ae239493cec5f8bb5` (R1), `agent-a92a5c17bd8ac6251` (R2-R4); backend-architect
+`agent-a43d679a9952ec547` (R1), `agent-ab930e2a688a986ba` (R2-R3).
+
+### Verdicts
+
+| Reviewer | R1 | R2 | R3 | R4 |
+|---|---|---|---|---|
+| security-lead | REJECTED | REJECTED | REJECTED | **APPROVED** (2 conditions) |
+| compliance | REJECTED | REJECTED | REJECTED | **APPROVED** (2 non-blocking notes) |
+| backend-architect | REJECTED | REJECTED | **APPROVED** (plan conditions) | n/a |
+
+### Must-fix items by round (summarised from the transcripts)
+
+**security-lead**
+- R1: tokens in the URL query string (move to the fragment, no-referrer and no-store, POST download); email bombing
+  through `submit` (a global per-email cap counted before any send); admin authz (`adminTenantProcedure`, ADMIN
+  only, tested against MANAGER and another tenant's ADMIN); enumeration and timing in verify and download
+  (constant reads, dummy hash, `timingSafeEqual`, a DSAR-specific secret).
+- R2: the global cap could be bypassed with `+tags` and might be blind under RLS (a separate `capEmailHash`, counted
+  on the unscoped client, lock order); no per-IP limiter on the four public procedures; `/dsar/` missing from the
+  chrome-free shell and the header config; the fragment could reach scripts before it is stripped (read once,
+  strip, scrub `#r=` in Sentry).
+- R3: a RESTRICTION must apply at verification, and a rejection must lift it and tell the person (Art 18(3));
+  late rejection must be possible and flagged; "nothing withheld" restated as "all withheld counts are zero";
+  `mergeRouters` for the public procedures; a mandatory marketing-stop tick on objections.
+- R4 conditions: one active restriction row per `(tenantId, subjectEmail)` with upsert merge; the export summary
+  rendered as React text nodes only, never stored in the browser.
+
+**compliance**
+- R1: the clock is a calendar month (`addCalendarMonths`), with extension fields; the acknowledgement states the
+  deadline; Art 15 needs processing information and the AI data; restriction and objection need system state that
+  stops AI and marketing; a statement on backups.
+- R2: an ACCESS request stays open until the firm has reviewed it, and the export lists what is withheld; free
+  text (activity titles, ticket subjects, feedback) withheld; minimum Art 21(3) (objection scope, gate the marketing
+  paths or require a stated manual stop); an editable `receivedOn` for logged requests.
+- R3: a tick alone could make a false "marketing has stopped" statement, so a stated stop method is required and
+  `blocksMarketing` is stored on the restriction; the cancel path needs an audit entry and an email; worker re-checks
+  are mandatory; the checklist counts every relation.
+- R4 notes: flag late rejections as clock breaches; link the marketing follow-up task to `blocksMarketing`.
+
+**backend-architect**
+- R1: embeddings and search vectors survive anonymisation; other PII holders (tickets, emails, chats, feedback,
+  notifications, drafts) missing from export and erasure; more PII columns on the listed tables; a unique,
+  tenant-safe anonymised email; hexagonal placement (application service, port, container wiring).
+- R2: `ContactActivity.description` is NOT NULL; the restriction check belongs in `LeadService.scoreLead`; the
+  contact embedding check belongs in `ContactEmbedWorker.processForTenant`; the draft check belongs in
+  `autoresponse.router.ts`; how the public and admin routers merge into one `privacy` namespace.
+- R3 conditions: the second `AutoResponseDraft.create` site; a mandatory worker-side re-check in
+  `processScoringJob`, covering `handleScheduledDispatch`; queued jobs re-read the lead and skip it when erased.
+
+The 8 conditions in the spec sign-off map to these: 1-4 from security R4, 5-6 from compliance R4, 7-8 from backend
+R3. The plan-reviewer for Plan Addendum A started at 23:58:31 (see the plan's "Plan-Reviewer Sign-off: Addendum A").

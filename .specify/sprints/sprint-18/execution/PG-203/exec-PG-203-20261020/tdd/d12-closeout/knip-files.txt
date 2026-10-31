@@ -1,0 +1,38 @@
+.specify/sprints/sprint-18/execution/PG-203/exec-PG-203-20261020/tdd/d12-closeout/lighthouse-driver-v3/e2e-dsar.ts
+apps/ai-worker/src/case-tag-suggestion.chain.ts                                                                   
+apps/ai-worker/src/utils/openai-client.ts                                                                         
+apps/api/src/modules/home/home.cache.bench.ts                                                                     
+apps/api/src/security/audit-coverage-test.ts                                                                      
+apps/web/src/app/settings/help-center/articles/actions.ts                                                         
+apps/web/src/components/aurora-site/index.ts                                                                      
+apps/web/src/components/home/index.ts                                                                             
+apps/web/src/components/public/PublicHeader.tsx                                                                   
+apps/web/src/components/workflows/admin/FieldDescriptorBuilder.tsx                                                
+apps/web/src/lib/auth/auth-status-cache.ts                                                                        
+packages/observability/src/required-url.ts                                                                        
+tests/e2e/auth.setup.ts                                                                                           
+Configuration hints (47)
+**/dist/**                                                             knip.json  Remove from ignore                 
+**/coverage/**                                                         knip.json  Remove from ignore                 
+**/.next/**                                                            knip.json  Remove from ignore                 
+**/generated/**                                                        knip.json  Remove from ignore                 
+**/.tsup/**                                                            knip.json  Remove from ignore                 
+**/migrations/**                                                       knip.json  Remove from ignore                 
+artifacts/misc/**/*.ts                                                 knip.json  Remove from ignore                 
+tools/integrations/**/*.ts                                             knip.json  Remove from ignore                 
+apps/ai-worker/src/agents/**                                           knip.json  Remove from ignore                 
+packages/db/prisma/schema-audit.prisma                                 knip.json  Remove from ignore                 
+...8 more similar hints                                                                                              
+[src/index.ts]                          packages/typescript-config     knip.json  Refine entry pattern (no matches)  
+[src/**/*.{ts,tsx}]                     packages/typescript-config     knip.json  Refine project pattern (no matches)
+src/index.ts                            packages/sdk                   knip.json  Remove redundant entry pattern     
+src/app/not-found.tsx                   apps/web                       knip.json  Remove redundant entry pattern     
+src/app/global-error.tsx                apps/web                       knip.json  Remove redundant entry pattern     
+src/main.ts                             apps/workers/combined-worker   knip.json  Remove redundant entry pattern     
+src/index.ts                            packages/api-client            knip.json  Remove redundant entry pattern     
+src/main.ts                             apps/workers/ingestion-worker  knip.json  Remove redundant entry pattern     
+src/index.ts                            apps/api                       knip.json  Remove redundant entry pattern     
+src/main.ts                             apps/api                       knip.json  Remove redundant entry pattern     
+src/ws-server.ts                        apps/api                       knip.json  Remove redundant entry pattern     
+src/main.ts                             apps/workers/events-worker     knip.json  Remove redundant entry pattern     
+...17 more similar hints                                                                                             

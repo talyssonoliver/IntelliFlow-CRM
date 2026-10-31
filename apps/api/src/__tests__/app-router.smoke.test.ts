@@ -254,6 +254,37 @@ describe('appRouter smoke — PG-190 module-settings registration', () => {
     expect(taskSettings?.resetToDefaults).toBeDefined();
   });
 
+  it('registers the PG-208 taskAutomation router with every procedure', async () => {
+    const { appRouter } = await import('../router.js');
+    const record = appRouter._def.record as Record<string, unknown>;
+    const taskAutomation = record.taskAutomation as
+      | Record<string, Record<string, unknown>>
+      | undefined;
+
+    expect(taskAutomation).toBeDefined();
+    for (const name of [
+      'list',
+      'listRuns',
+      'create',
+      'update',
+      'delete',
+      'setActive',
+      'reorder',
+      'rotateWebhookSecret',
+      'regenerateWebhookUrl',
+      'runNow',
+      'resetToDefaults',
+    ]) {
+      expect(taskAutomation?.[name], name).toBeDefined();
+    }
+    for (const name of ['get', 'update']) {
+      expect(taskAutomation?.settings?.[name], `settings.${name}`).toBeDefined();
+    }
+    for (const name of ['list', 'create', 'update', 'delete']) {
+      expect(taskAutomation?.tags?.[name], `tags.${name}`).toBeDefined();
+    }
+  });
+
   it('registers the PG-196 accountTiers router with get/update/resetToDefaults', async () => {
     const { appRouter } = await import('../router.js');
     const record = appRouter._def.record as Record<string, unknown>;

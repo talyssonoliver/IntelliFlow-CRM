@@ -1,18 +1,43 @@
 /**
  * AI Model Drift Detector
- * Monitors AI model outputs for distribution shifts and performance degradation.
- * Implements statistical tests to detect drift within 1 day (KPI requirement).
+ * Monitors AI model outputs for distribution shifts (lead mix or model).
+ *
+ * IFC-117 (ADR-088): detection runs on a schedule (drift-scheduler.ts) against a
+ * time-of-day-matched reference — the same window on each of the previous days — using shared
+ * bin edges, bias-corrected PSI and a tie-aware two-sample KS test with the real sample sizes.
+ * A drift EVENT starts only after three consecutive detected ticks and ends after three clear
+ * ones, so a single noisy window never alerts.
  *
  * @module drift-detector
  * @task IFC-117
  */
 
+import { randomInt } from 'node:crypto';
 import pino from 'pino';
+import {
+  binCounts,
+  compositeScore,
+  excessPsi,
+  fixedEdges,
+  isDetectedTick,
+  ksFromCounts,
+  ksTwoSample,
+  severityFrom,
+  type Severity,
+} from './drift-stats';
+import type { DriftStatus, DriftTickResult } from './otel-ai-types';
 
 const logger = pino({
   name: 'drift-detector',
   level: process.env.LOG_LEVEL || 'info',
 });
+
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
+/** Consecutive detected (or clear) ticks needed to open (or close) a drift event. */
+const PERSISTENCE_TICKS = 3;
+/** Metrics whose values live in [0, 1], so fixed [0, 1] bin edges are always right. */
+const BOUNDED_METRICS = new Set(['score_distribution', 'confidence_level', 'user_satisfaction']);
 
 /**
  * Statistical window for drift detection
@@ -26,19 +51,21 @@ export interface DriftWindow {
   min: number;
   max: number;
   distribution: number[];
+  /** The `distribution.length + 1` edges it was binned on, so a pinned window keeps its bins. */
+  binEdges?: number[];
 }
 
 /**
- * Drift detection result
+ * Drift detection result. Structurally a DriftTickResult, plus the windows for the in-app tier.
  */
-export interface DriftResult {
+export interface DriftResult extends DriftTickResult {
+  /** Same as detectedTick; kept for the persisted drift events and in-app consumers. */
   detected: boolean;
   severity: 'none' | 'low' | 'medium' | 'high' | 'critical';
-  metric: string;
+  /** Highest severity the open event has reached after this tick; 'none' outside an event. */
+  eventSeverity?: Severity;
   baselineWindow: DriftWindow;
   currentWindow: DriftWindow;
-  pValue: number;
-  driftScore: number;
   timestamp: Date;
   recommendations: string[];
 }
@@ -50,13 +77,21 @@ export interface DriftDetectorConfig {
   windowSizeHours: number;
   slidingIntervalMinutes: number;
   pValueThreshold: number;
+  /** Minimum reference samples; the current window needs half of this. */
   minSamplesRequired: number;
-  driftScoreThresholds: {
-    low: number;
-    medium: number;
-    high: number;
-    critical: number;
-  };
+  /** Days of time-of-day-matched reference slices to pool. */
+  referenceDays: number;
+  /** How long samples are kept (must exceed referenceDays + window). */
+  retentionDays: number;
+  /**
+   * Most samples kept per (model, metric). Split evenly over the UTC days a retention window
+   * touches (retentionDays + 1), each day reservoir-sampled, so one busy day never evicts the
+   * previous days' reference.
+   */
+  maxSamplesPerKey: number;
+  /** Most (model, metric) series kept; samples for a new key past the cap are dropped. */
+  maxSeries: number;
+  binCount: number;
 }
 
 /**
@@ -94,45 +129,128 @@ export interface FeedbackDriftSignal {
   modelVersion: string;
 }
 
+/** One UTC day of a series: a uniform reservoir of the `seen` samples recorded that day. */
+interface DayBucket {
+  samples: DriftSample[];
+  seen: number;
+}
+
+interface SeriesEntry {
+  model: string;
+  metric: string;
+  days: Map<number, DayBucket>;
+}
+
+function utcDay(timestamp: Date): number {
+  return Math.floor(timestamp.getTime() / DAY_MS);
+}
+
+function allSamples(entry: SeriesEntry | undefined): DriftSample[] {
+  return entry ? [...entry.days.values()].flatMap((bucket) => bucket.samples) : [];
+}
+
+interface PersistenceState {
+  consecutiveDetected: number;
+  consecutiveClear: number;
+  inEvent: boolean;
+  /** Highest severity the open event has reached; 'none' outside an event. */
+  peakSeverity: Severity;
+}
+
+const SEVERITY_ORDER: readonly Severity[] = ['none', 'low', 'medium', 'high', 'critical'];
+
+function isHighSeverity(severity: Severity): boolean {
+  return severity === 'high' || severity === 'critical';
+}
+
+/** Clock skew allowed on a sample's timestamp; a later one would open a day bucket never pruned. */
+const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
+
+function seriesKey(model: string, metric: string): string {
+  return JSON.stringify([model, metric]);
+}
+
 /**
  * Drift Detector Service
- * Monitors AI model outputs for statistical drift using Kolmogorov-Smirnov test
- * and Population Stability Index (PSI).
  */
 export class DriftDetector {
-  private readonly samples: Map<string, DriftSample[]> = new Map();
+  private readonly series: Map<string, SeriesEntry> = new Map();
   private readonly baselines: Map<string, DriftWindow> = new Map();
-  private readonly driftHistory: DriftResult[] = [];
+  private readonly persistence: Map<string, PersistenceState> = new Map();
+  private driftHistory: DriftResult[] = [];
+  private lastTickAt: Date | null = null;
+  private readonly warned = new Set<'series_cap' | 'out_of_window' | 'non_finite_value'>();
 
-  constructor(private readonly config: DriftDetectorConfig) {
+  /**
+   * @param randomIndex Uniform integer in [0, n) for reservoir sampling; injectable for tests.
+   */
+  constructor(
+    private readonly config: DriftDetectorConfig,
+    private readonly randomIndex: (n: number) => number = randomInt
+  ) {
     logger.info({ config }, 'DriftDetector initialized');
   }
 
+  /** Samples kept per UTC day: a retention window touches retentionDays + 1 of them. */
+  private perDayCap(): number {
+    return Math.max(1, Math.floor(this.config.maxSamplesPerKey / (this.config.retentionDays + 1)));
+  }
+
   /**
-   * Record a new sample for drift monitoring
+   * Record a new sample for drift monitoring. O(1): it goes into its UTC day's bucket, and a full
+   * bucket keeps a uniform sample of the day (Algorithm R) instead of dropping older samples.
+   * Pruning by age happens on the scheduled tick. Memory is bounded: a sample outside
+   * [now - retention, now + skew] is dropped, and so is one for a new key past `maxSeries`.
    */
   recordSample(sample: DriftSample): void {
-    const key = `${sample.model}:${sample.metric}`;
-
-    if (!this.samples.has(key)) {
-      this.samples.set(key, []);
+    if (!Number.isFinite(sample.value)) {
+      this.warnOnce('non_finite_value', 'Drift sample dropped: value is not a finite number');
+      return;
     }
+    const at = sample.timestamp.getTime();
+    const now = Date.now();
+    if (!(at <= now + MAX_FUTURE_SKEW_MS) || at < now - this.config.retentionDays * DAY_MS) {
+      this.warnOnce(
+        'out_of_window',
+        'Drift sample dropped: timestamp outside the retention window'
+      );
+      return;
+    }
+    const key = seriesKey(sample.model, sample.metric);
+    let entry = this.series.get(key);
+    if (!entry) {
+      if (this.series.size >= (this.config.maxSeries ?? defaultDriftConfig.maxSeries)) {
+        this.warnOnce('series_cap', 'Drift sample dropped: series cap reached');
+        return;
+      }
+      entry = { model: sample.model, metric: sample.metric, days: new Map() };
+      this.series.set(key, entry);
+    }
+    const day = utcDay(sample.timestamp);
+    let bucket = entry.days.get(day);
+    if (!bucket) {
+      bucket = { samples: [], seen: 0 };
+      entry.days.set(day, bucket);
+    }
+    bucket.seen++;
+    if (bucket.samples.length < this.perDayCap()) {
+      bucket.samples.push(sample);
+      return;
+    }
+    const slot = this.randomIndex(bucket.seen);
+    if (slot < bucket.samples.length) bucket.samples[slot] = sample;
+  }
 
-    const samples = this.samples.get(key)!;
-    samples.push(sample);
-
-    // Prune old samples (keep 48 hours of data)
-    const cutoffTime = new Date(Date.now() - 48 * 60 * 60 * 1000);
-    const prunedSamples = samples.filter((s) => s.timestamp > cutoffTime);
-    this.samples.set(key, prunedSamples);
-
-    logger.debug(
-      {
-        key,
-        value: sample.value,
-        sampleCount: prunedSamples.length,
-      },
-      'Drift sample recorded'
+  /** Log a dropped-sample reason once per detector; the key itself is never logged. */
+  private warnOnce(
+    reason: 'series_cap' | 'out_of_window' | 'non_finite_value',
+    message: string
+  ): void {
+    if (this.warned.has(reason)) return;
+    this.warned.add(reason);
+    logger.warn(
+      { reason, maxSeries: this.config.maxSeries, retentionDays: this.config.retentionDays },
+      message
     );
   }
 
@@ -184,155 +302,191 @@ export class DriftDetector {
   }
 
   /**
-   * Set baseline window for a specific metric
+   * Pin a baseline window for a metric (overrides the time-of-day reference).
    */
   setBaseline(model: string, metric: string, window: DriftWindow): void {
-    const key = `${model}:${metric}`;
+    const key = seriesKey(model, metric);
     this.baselines.set(key, window);
 
-    logger.info(
-      {
-        key,
-        sampleCount: window.sampleCount,
-        mean: window.mean,
-      },
-      'Baseline window set'
-    );
+    logger.info({ model, metric, sampleCount: window.sampleCount }, 'Baseline window set');
   }
 
   /**
-   * Compute baseline from current samples
+   * The time-of-day-matched reference window for a metric, or null when it has too few samples.
    */
-  computeBaseline(model: string, metric: string): DriftWindow | null {
-    const key = `${model}:${metric}`;
-    const samples = this.samples.get(key);
-
-    if (!samples || samples.length < this.config.minSamplesRequired) {
+  computeBaseline(model: string, metric: string, now: number = Date.now()): DriftWindow | null {
+    const reference = this.referenceSamples(
+      allSamples(this.series.get(seriesKey(model, metric))),
+      now
+    );
+    if (reference.length < this.config.minSamplesRequired) {
       logger.warn(
-        { key, sampleCount: samples?.length ?? 0, required: this.config.minSamplesRequired },
+        { model, metric, sampleCount: reference.length, required: this.config.minSamplesRequired },
         'Insufficient samples for baseline'
       );
       return null;
     }
-
-    // Use oldest samples for baseline
-    const sortedSamples = [...samples].sort(
-      (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
-    );
-
-    const baselineCutoff = sortedSamples.length / 2;
-    const baselineSamples = sortedSamples.slice(0, baselineCutoff);
-    const values = baselineSamples.map((s) => s.value);
-
-    const window = this.computeWindow(values, baselineSamples);
-    this.setBaseline(model, metric, window);
-
-    return window;
+    const values = reference.map((s) => s.value);
+    return this.computeWindow(values, reference, this.edgesFor(metric, values));
   }
 
   /**
-   * Detect drift for a specific model and metric
+   * Evaluate one (model, metric) at `now`. Does not advance the event state machine; the
+   * scheduled detectAllDrift() does.
    */
-  detectDrift(model: string, metric: string): DriftResult {
-    const key = `${model}:${metric}`;
-    const samples = this.samples.get(key);
-    const baseline = this.baselines.get(key);
-
-    // Default result for insufficient data
-    const defaultResult: DriftResult = {
-      detected: false,
-      severity: 'none',
-      metric,
-      baselineWindow: baseline ?? this.emptyWindow(),
-      currentWindow: this.emptyWindow(),
-      pValue: 1,
-      driftScore: 0,
-      timestamp: new Date(),
-      recommendations: [],
-    };
-
-    if (!samples || samples.length < this.config.minSamplesRequired) {
-      logger.debug({ key }, 'Insufficient samples for drift detection');
-      return defaultResult;
-    }
-
-    // Compute or use existing baseline
-    const baselineWindow = baseline ?? this.computeBaseline(model, metric);
-    if (!baselineWindow) {
-      return defaultResult;
-    }
-
-    // Get current window samples
-    const windowCutoff = new Date(Date.now() - this.config.windowSizeHours * 60 * 60 * 1000);
-    const currentSamples = samples.filter((s) => s.timestamp > windowCutoff);
-
-    if (currentSamples.length < this.config.minSamplesRequired / 2) {
-      logger.debug({ key, currentCount: currentSamples.length }, 'Insufficient current samples');
-      return defaultResult;
-    }
-
-    const currentValues = currentSamples.map((s) => s.value);
-    const currentWindow = this.computeWindow(currentValues, currentSamples);
-
-    // Perform statistical tests
-    const ksResult = this.kolmogorovSmirnovTest(
-      baselineWindow.distribution,
-      currentWindow.distribution
+  detectDrift(model: string, metric: string, now: number = Date.now()): DriftResult {
+    const key = seriesKey(model, metric);
+    const samples = allSamples(this.series.get(key));
+    const current = samples.filter(
+      (s) => s.timestamp.getTime() > now - this.windowMs() && s.timestamp.getTime() <= now
     );
-    const psi = this.populationStabilityIndex(
-      baselineWindow.distribution,
-      currentWindow.distribution
-    );
+    const pinned = this.baselines.get(key);
+    const state = this.persistence.get(key);
+    const minCurrent = this.config.minSamplesRequired / 2;
 
-    // Combine scores
-    const driftScore = (1 - ksResult.pValue) * 0.5 + Math.min(psi / 0.25, 1) * 0.5;
-    const severity = this.classifySeverity(driftScore);
-    const detected = severity !== 'none';
+    const result = pinned
+      ? this.evaluateAgainstPinned(model, metric, pinned, current, minCurrent, now)
+      : this.evaluateAgainstReference(model, metric, samples, current, minCurrent, now);
+    result.inEvent = state?.inEvent ?? false;
+    result.eventSeverity = state?.inEvent ? state.peakSeverity : 'none';
 
-    const result: DriftResult = {
-      detected,
-      severity,
-      metric,
-      baselineWindow,
-      currentWindow,
-      pValue: ksResult.pValue,
-      driftScore,
-      timestamp: new Date(),
-      recommendations: this.generateRecommendations(severity, metric, driftScore),
-    };
-
-    this.driftHistory.push(result);
-
-    if (detected) {
-      logger.warn(
-        {
-          key,
-          severity,
-          driftScore: driftScore.toFixed(4),
-          pValue: ksResult.pValue.toFixed(4),
-          baselineMean: baselineWindow.mean.toFixed(4),
-          currentMean: currentWindow.mean.toFixed(4),
-        },
-        'Drift detected!'
-      );
+    if (result.status === 'evaluated') {
+      this.pushHistory(result, now);
+      if (result.detectedTick) {
+        // `driftSeverity`, not `severity`: Loki reads a top-level `severity`
+        // field as the line's level, which would index this warn line as critical.
+        logger.warn(
+          {
+            model,
+            metric,
+            driftSeverity: result.severity,
+            pValue: Number(result.pValue.toFixed(6)),
+            driftScore: Number(result.driftScore.toFixed(4)),
+          },
+          'Output distribution shift detected on this tick'
+        );
+      }
     }
-
     return result;
   }
 
   /**
-   * Run drift detection for all tracked model-metric pairs
+   * One scheduled tick: evaluate every tracked (model, metric) — optionally only `metrics` — and
+   * advance the persistence state machine. Insufficient-data results never advance it.
    */
-  detectAllDrift(): DriftResult[] {
+  detectAllDrift(options: { metrics?: readonly string[]; now?: number } = {}): DriftResult[] {
+    const now = options.now ?? Date.now();
     const results: DriftResult[] = [];
 
-    for (const key of this.samples.keys()) {
-      const [model, metric] = key.split(':');
-      const result = this.detectDrift(model, metric);
+    for (const entry of this.series.values()) {
+      if (options.metrics && !options.metrics.includes(entry.metric)) continue;
+      const result = this.detectDrift(entry.model, entry.metric, now);
+      if (result.status === 'evaluated') {
+        const step = this.applyPersistence(
+          entry.model,
+          entry.metric,
+          result.detectedTick,
+          result.severity
+        );
+        result.onset = step.onset;
+        result.inEvent = step.inEvent;
+        result.escalated = step.escalated;
+        result.eventSeverity = step.eventSeverity;
+      }
       results.push(result);
     }
 
+    this.lastTickAt = new Date(now);
     return results;
+  }
+
+  /**
+   * Advance the event state machine for one evaluated tick: an event opens on the third
+   * consecutive detected tick (the onset) and closes after three consecutive clear ticks. A
+   * detected tick that lifts an open event above the highest severity it had reached is an
+   * escalation.
+   */
+  applyPersistence(
+    model: string,
+    metric: string,
+    detected: boolean,
+    severity: Severity = 'none'
+  ): { onset: boolean; inEvent: boolean; escalated: boolean; eventSeverity: Severity } {
+    const key = seriesKey(model, metric);
+    const state = this.persistence.get(key) ?? {
+      consecutiveDetected: 0,
+      consecutiveClear: 0,
+      inEvent: false,
+      peakSeverity: 'none',
+    };
+    let onset = false;
+    let escalated = false;
+
+    if (detected) {
+      state.consecutiveDetected++;
+      state.consecutiveClear = 0;
+      if (!state.inEvent && state.consecutiveDetected >= PERSISTENCE_TICKS) {
+        state.inEvent = true;
+        state.peakSeverity = severity;
+        onset = true;
+      } else if (
+        state.inEvent &&
+        SEVERITY_ORDER.indexOf(severity) > SEVERITY_ORDER.indexOf(state.peakSeverity)
+      ) {
+        state.peakSeverity = severity;
+        escalated = true;
+      }
+    } else {
+      state.consecutiveClear++;
+      state.consecutiveDetected = 0;
+      if (state.inEvent && state.consecutiveClear >= PERSISTENCE_TICKS) {
+        state.inEvent = false;
+        state.peakSeverity = 'none';
+      }
+    }
+
+    this.persistence.set(key, state);
+    return { onset, inEvent: state.inEvent, escalated, eventSeverity: state.peakSeverity };
+  }
+
+  /**
+   * Drop samples older than the retention window (whole day buckets, and the older part of the
+   * boundary day) and age out history. The per-day caps already bound each key.
+   *
+   * A series with no samples left in retention is retired with its event state. Its ticks are
+   * all insufficient_data, which never advance the state machine, so an event it had open would
+   * otherwise keep health unhealthy forever.
+   */
+  pruneOnTick(now: number = Date.now()): void {
+    const cutoff = now - this.config.retentionDays * DAY_MS;
+    const cutoffDay = Math.floor(cutoff / DAY_MS);
+    for (const [key, entry] of this.series) {
+      for (const [day, bucket] of entry.days) {
+        if (day < cutoffDay) entry.days.delete(day);
+        else if (day === cutoffDay)
+          bucket.samples = bucket.samples.filter((s) => s.timestamp.getTime() >= cutoff);
+      }
+      if (allSamples(entry).length === 0) this.retireSeries(key, entry);
+    }
+    this.pruneHistory(now);
+  }
+
+  private retireSeries(key: string, entry: SeriesEntry): void {
+    const state = this.persistence.get(key);
+    if (state?.inEvent) {
+      // `driftSeverity`, not `severity`: Loki reads a top-level `severity` field as the level.
+      logger.info(
+        {
+          model: entry.model,
+          metric: entry.metric,
+          driftSeverity: state.peakSeverity,
+          retentionDays: this.config.retentionDays,
+        },
+        'Drift event closed: series retired, no samples in retention'
+      );
+    }
+    this.persistence.delete(key);
+    this.series.delete(key);
   }
 
   /**
@@ -356,143 +510,229 @@ export class DriftDetector {
     lastCheck: Date | null;
   } {
     let totalSamples = 0;
-    for (const samples of this.samples.values()) {
-      totalSamples += samples.length;
+    for (const entry of this.series.values()) {
+      for (const bucket of entry.days.values()) totalSamples += bucket.samples.length;
     }
 
-    const recentDrift = this.driftHistory.filter(
-      (d) => d.timestamp > new Date(Date.now() - 24 * 60 * 60 * 1000)
-    );
-
-    const highSeverity = recentDrift.filter(
-      (d) => d.severity === 'high' || d.severity === 'critical'
-    );
+    // Health follows the events open now (3 consecutive ticks), never a single detected tick
+    // and never a snapshot from an event that has since closed.
+    const openEvents = [...this.persistence.values()].filter((s) => s.inEvent);
 
     return {
-      trackedMetrics: this.samples.size,
+      trackedMetrics: this.series.size,
       totalSamples,
-      driftDetected: recentDrift.some((d) => d.detected),
-      highSeverityCount: highSeverity.length,
-      lastCheck: this.driftHistory.length > 0 ? this.driftHistory.at(-1)!.timestamp : null,
+      driftDetected: openEvents.length > 0,
+      highSeverityCount: openEvents.filter((s) => isHighSeverity(s.peakSeverity)).length,
+      lastCheck:
+        this.lastTickAt ??
+        (this.driftHistory.length > 0 ? this.driftHistory.at(-1)!.timestamp : null),
     };
   }
 
-  /**
-   * Compute statistical window from values
-   */
-  private computeWindow(values: number[], samples: DriftSample[]): DriftWindow {
-    const n = values.length;
-    const sum = values.reduce((a, b) => a + b, 0);
-    const mean = sum / n;
-    const variance = values.reduce((acc, v) => acc + (v - mean) ** 2, 0) / n;
-    const min = Math.min(...values);
-    const max = Math.max(...values);
+  private windowMs(): number {
+    return this.config.windowSizeHours * HOUR_MS;
+  }
 
-    // Create histogram for distribution comparison (10 bins)
-    const binCount = 10;
-    const binWidth = (max - min) / binCount || 1;
-    const distribution = new Array(binCount).fill(0);
+  /** The same `windowSizeHours` slice on each of the previous `referenceDays` days. */
+  private referenceSamples(samples: readonly DriftSample[], now: number): DriftSample[] {
+    const out: DriftSample[] = [];
+    for (let day = 1; day <= this.config.referenceDays; day++) {
+      const end = now - day * DAY_MS;
+      const start = end - this.windowMs();
+      for (const s of samples) {
+        const t = s.timestamp.getTime();
+        if (t >= start && t < end) out.push(s);
+      }
+    }
+    return out.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+  }
 
-    for (const v of values) {
-      const binIndex = Math.min(Math.floor((v - min) / binWidth), binCount - 1);
-      distribution[binIndex]++;
+  private edgesFor(metric: string, referenceValues: readonly number[]): number[] {
+    if (BOUNDED_METRICS.has(metric)) return fixedEdges(0, 1, this.config.binCount);
+    return fixedEdges(
+      Math.min(...referenceValues),
+      Math.max(...referenceValues),
+      this.config.binCount
+    );
+  }
+
+  private evaluateAgainstReference(
+    model: string,
+    metric: string,
+    samples: readonly DriftSample[],
+    current: DriftSample[],
+    minCurrent: number,
+    now: number
+  ): DriftResult {
+    const reference = this.referenceSamples(samples, now);
+    const refValues = reference.map((s) => s.value);
+    const curValues = current.map((s) => s.value);
+
+    if (reference.length < this.config.minSamplesRequired || current.length < minCurrent) {
+      return this.insufficient(model, metric, refValues, reference, curValues, current, now);
     }
 
-    // Normalize to probabilities
-    const normalizedDist = distribution.map((count) => count / n);
+    const edges = this.edgesFor(metric, refValues);
+    const refCounts = binCounts(refValues, edges);
+    const curCounts = binCounts(curValues, edges);
+    const ks = ksTwoSample(refValues, curValues);
+    return this.buildResult(model, metric, {
+      ks,
+      psi: excessPsi(refCounts, curCounts),
+      baselineWindow: this.computeWindow(refValues, reference, edges),
+      currentWindow: this.computeWindow(curValues, current, edges),
+      now,
+    });
+  }
 
+  /**
+   * The edges a pinned window was binned on. Windows from computeBaseline() carry them; a
+   * legacy window without them falls back to [0, 1] for bounded metrics, else its extrema.
+   */
+  private pinnedEdges(metric: string, pinned: DriftWindow): number[] {
+    const bins = pinned.distribution.length;
+    if (pinned.binEdges?.length === bins + 1) return pinned.binEdges;
+    if (BOUNDED_METRICS.has(metric)) return fixedEdges(0, 1, bins);
+    return fixedEdges(pinned.min, pinned.max, bins);
+  }
+
+  private evaluateAgainstPinned(
+    model: string,
+    metric: string,
+    pinned: DriftWindow,
+    current: DriftSample[],
+    minCurrent: number,
+    now: number
+  ): DriftResult {
+    const curValues = current.map((s) => s.value);
+    if (
+      pinned.distribution.length === 0 ||
+      pinned.sampleCount < this.config.minSamplesRequired ||
+      current.length < minCurrent
+    ) {
+      return this.insufficient(model, metric, [], [], curValues, current, now, pinned);
+    }
+
+    const edges = this.pinnedEdges(metric, pinned);
+    const refCounts = pinned.distribution.map((p) => p * pinned.sampleCount);
+    const curCounts = binCounts(curValues, edges);
+    return this.buildResult(model, metric, {
+      ks: ksFromCounts(refCounts, curCounts),
+      psi: excessPsi(refCounts, curCounts),
+      baselineWindow: pinned,
+      currentWindow: this.computeWindow(curValues, current, edges),
+      now,
+    });
+  }
+
+  private buildResult(
+    model: string,
+    metric: string,
+    input: {
+      ks: { d: number; pValue: number };
+      psi: number;
+      baselineWindow: DriftWindow;
+      currentWindow: DriftWindow;
+      now: number;
+    }
+  ): DriftResult {
+    const effects = { excessPsi: input.psi, d: input.ks.d };
+    const detectedTick = isDetectedTick(
+      { pValue: input.ks.pValue, ...effects },
+      this.config.pValueThreshold
+    );
+    const severity = detectedTick ? severityFrom(effects) : 'none';
     return {
-      startTime: samples.length > 0 ? samples[0].timestamp : new Date(),
-      endTime: samples.length > 0 ? samples.at(-1)!.timestamp : new Date(),
+      model,
+      metric,
+      status: 'evaluated',
+      detected: detectedTick,
+      detectedTick,
+      onset: false,
+      inEvent: false,
+      severity,
+      baselineWindow: input.baselineWindow,
+      currentWindow: input.currentWindow,
+      pValue: input.ks.pValue,
+      driftScore: compositeScore(effects),
+      timestamp: new Date(input.now),
+      recommendations: this.generateRecommendations(severity, metric),
+    };
+  }
+
+  private insufficient(
+    model: string,
+    metric: string,
+    refValues: number[],
+    reference: DriftSample[],
+    curValues: number[],
+    current: DriftSample[],
+    now: number,
+    pinned?: DriftWindow
+  ): DriftResult {
+    const status: DriftStatus = 'insufficient_data';
+    const edges = fixedEdges(0, 1, this.config.binCount);
+    return {
+      model,
+      metric,
+      status,
+      detected: false,
+      detectedTick: false,
+      onset: false,
+      inEvent: false,
+      severity: 'none',
+      baselineWindow: pinned ?? this.computeWindow(refValues, reference, edges),
+      currentWindow: this.computeWindow(curValues, current, edges),
+      pValue: 1,
+      driftScore: 0,
+      timestamp: new Date(now),
+      recommendations: [],
+    };
+  }
+
+  private pushHistory(result: DriftResult, now: number): void {
+    this.driftHistory.push(result);
+    // Amortised: only rebuild when the oldest entry has aged out.
+    if (this.driftHistory[0].timestamp.getTime() < now - this.config.referenceDays * DAY_MS) {
+      this.pruneHistory(now);
+    }
+  }
+
+  private pruneHistory(now: number): void {
+    const cutoff = now - this.config.referenceDays * DAY_MS;
+    this.driftHistory = this.driftHistory.filter((r) => r.timestamp.getTime() >= cutoff);
+  }
+
+  /**
+   * Compute a statistical window from values, binned on the shared edges
+   */
+  private computeWindow(
+    values: readonly number[],
+    samples: readonly DriftSample[],
+    edges: readonly number[]
+  ): DriftWindow {
+    const n = values.length;
+    if (n === 0) return this.emptyWindow();
+    const mean = values.reduce((a, b) => a + b, 0) / n;
+    const variance = values.reduce((acc, v) => acc + (v - mean) ** 2, 0) / n;
+    const times = samples.map((s) => s.timestamp.getTime());
+    return {
+      startTime: new Date(Math.min(...times)),
+      endTime: new Date(Math.max(...times)),
       sampleCount: n,
       mean,
       variance,
-      min,
-      max,
-      distribution: normalizedDist,
+      min: Math.min(...values),
+      max: Math.max(...values),
+      distribution: binCounts(values, edges).map((count) => count / n),
+      binEdges: [...edges],
     };
-  }
-
-  /**
-   * Kolmogorov-Smirnov test approximation
-   */
-  private kolmogorovSmirnovTest(
-    dist1: number[],
-    dist2: number[]
-  ): { statistic: number; pValue: number } {
-    // Compute cumulative distributions
-    const cdf1 = this.toCDF(dist1);
-    const cdf2 = this.toCDF(dist2);
-
-    // Find maximum difference
-    let maxDiff = 0;
-    for (let i = 0; i < cdf1.length; i++) {
-      const diff = Math.abs(cdf1[i] - cdf2[i]);
-      if (diff > maxDiff) {
-        maxDiff = diff;
-      }
-    }
-
-    // Approximate p-value using asymptotic formula
-    // For large samples, D * sqrt(n) follows Kolmogorov distribution
-    const n = 100; // Effective sample size
-    const lambda = (Math.sqrt(n) + 0.12 + 0.11 / Math.sqrt(n)) * maxDiff;
-    const pValue = 2 * Math.exp(-2 * lambda * lambda);
-
-    return {
-      statistic: maxDiff,
-      pValue: Math.min(1, Math.max(0, pValue)),
-    };
-  }
-
-  /**
-   * Population Stability Index (PSI)
-   */
-  private populationStabilityIndex(expected: number[], actual: number[]): number {
-    let psi = 0;
-    const epsilon = 0.0001; // Avoid log(0)
-
-    for (let i = 0; i < expected.length; i++) {
-      const e = Math.max(expected[i], epsilon);
-      const a = Math.max(actual[i], epsilon);
-      psi += (a - e) * Math.log(a / e);
-    }
-
-    return psi;
-  }
-
-  /**
-   * Convert probability distribution to CDF
-   */
-  private toCDF(distribution: number[]): number[] {
-    const cdf: number[] = [];
-    let cumulative = 0;
-
-    for (const prob of distribution) {
-      cumulative += prob;
-      cdf.push(cumulative);
-    }
-
-    return cdf;
-  }
-
-  /**
-   * Classify drift severity based on score
-   */
-  private classifySeverity(driftScore: number): 'none' | 'low' | 'medium' | 'high' | 'critical' {
-    const { driftScoreThresholds } = this.config;
-
-    if (driftScore >= driftScoreThresholds.critical) return 'critical';
-    if (driftScore >= driftScoreThresholds.high) return 'high';
-    if (driftScore >= driftScoreThresholds.medium) return 'medium';
-    if (driftScore >= driftScoreThresholds.low) return 'low';
-    return 'none';
   }
 
   /**
    * Generate recommendations based on drift severity
    */
-  private generateRecommendations(severity: string, metric: string, _driftScore: number): string[] {
+  private generateRecommendations(severity: string, metric: string): string[] {
     const recommendations: string[] = [];
 
     switch (severity) {
@@ -551,61 +791,23 @@ export class DriftDetector {
 }
 
 /**
- * Default drift detector configuration
- * Configured to detect drift within 1 day (KPI requirement)
+ * Default drift detector configuration.
+ * A 6h current window checked every 30 min against the same 6h slice on the previous 7 days;
+ * α = 0.01 because there are 48 ticks a day; samples kept 8 days (7 reference days + window).
  */
 export const defaultDriftConfig: DriftDetectorConfig = {
-  windowSizeHours: 6, // 6-hour windows for comparison
-  slidingIntervalMinutes: 30, // Check every 30 minutes
-  pValueThreshold: 0.05, // Standard statistical significance
-  minSamplesRequired: 50, // Minimum samples for statistical validity
-  driftScoreThresholds: {
-    low: 0.1,
-    medium: 0.25,
-    high: 0.5,
-    critical: 0.75,
-  },
+  windowSizeHours: 6,
+  slidingIntervalMinutes: 30,
+  pValueThreshold: 0.01,
+  minSamplesRequired: 50,
+  referenceDays: 7,
+  retentionDays: 8,
+  maxSamplesPerKey: 50_000,
+  maxSeries: 64,
+  binCount: 10,
 };
 
 /**
  * Global drift detector instance
  */
 export const driftDetector = new DriftDetector(defaultDriftConfig);
-
-/**
- * Prometheus metrics format for drift detection
- */
-export function getDriftMetrics(): string {
-  const status = driftDetector.getStatus();
-  const history = driftDetector.getHistory(10);
-
-  let metrics = '';
-
-  // Gauge metrics
-  metrics += `# HELP intelliflow_ai_drift_tracked_metrics Number of tracked drift metrics\n`;
-  metrics += `# TYPE intelliflow_ai_drift_tracked_metrics gauge\n`;
-  metrics += `intelliflow_ai_drift_tracked_metrics ${status.trackedMetrics}\n`;
-
-  metrics += `# HELP intelliflow_ai_drift_total_samples Total drift samples collected\n`;
-  metrics += `# TYPE intelliflow_ai_drift_total_samples gauge\n`;
-  metrics += `intelliflow_ai_drift_total_samples ${status.totalSamples}\n`;
-
-  metrics += `# HELP intelliflow_ai_drift_detected Whether drift is detected (1=yes, 0=no)\n`;
-  metrics += `# TYPE intelliflow_ai_drift_detected gauge\n`;
-  metrics += `intelliflow_ai_drift_detected ${status.driftDetected ? 1 : 0}\n`;
-
-  metrics += `# HELP intelliflow_ai_drift_high_severity_count High severity drift detections in last 24h\n`;
-  metrics += `# TYPE intelliflow_ai_drift_high_severity_count gauge\n`;
-  metrics += `intelliflow_ai_drift_high_severity_count ${status.highSeverityCount}\n`;
-
-  // Per-metric drift scores
-  metrics += `# HELP intelliflow_ai_drift_score Drift score by model and metric\n`;
-  metrics += `# TYPE intelliflow_ai_drift_score gauge\n`;
-  for (const result of history) {
-    if (result.baselineWindow.sampleCount > 0) {
-      metrics += `intelliflow_ai_drift_score{metric="${result.metric}",severity="${result.severity}"} ${result.driftScore.toFixed(4)}\n`;
-    }
-  }
-
-  return metrics;
-}

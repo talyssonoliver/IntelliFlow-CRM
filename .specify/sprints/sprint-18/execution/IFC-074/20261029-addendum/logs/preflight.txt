@@ -1,0 +1,60 @@
+=== node tools/scripts/exec-preflight/check-page-doc-cochange.mjs IFC-074
+[preflight] Checking IFC-074 (sprint 18) — C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-074\.specify\sprints\sprint-18\planning\IFC-074-plan.md
+[preflight] OK — plan does not create any page.tsx; § 3.2 gate does not apply.
+exit 0
+=== node tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs IFC-074
+[preflight] Checking IFC-074 plan at C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-074\.specify\sprints\sprint-18\planning\IFC-074-plan.md
+[preflight] OK — real Plan-Reviewer subagent evidence found.
+           ✓ <!-- plan-reviewer: subagent -->
+           ✓ reviewer_subagent: … line
+exit 0
+=== node tools/scripts/exec-preflight/check-exec-readiness.mjs IFC-074
+
+[exec-readiness] IFC-074 — sprint 18
+  ✓ (1) Task JSON $schema path resolves                    PASS
+      $schema resolves (../schemas/task-status.schema.json)
+  ✓ (2) Exec session-start metrics recorded                PASS
+      started_at=2026-10-22T19:47:10Z; 9 status transitions recorded
+  ✓ (3) Coverage before-capture snapshot                   PASS
+      before-capture exists at C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-074\artifacts\coverage\IFC-074-before.json
+  ✓ (4) Dependency attestations on disk                    PASS
+      1/1 dep attestations located: IFC-003
+  ✓ (5) Plan has Preflight Checks section (or N/A)         PASS
+      ## Preflight Checks section present.
+
+[exec-readiness] OK — 5 checks (0 WARN, 0 BLOCK). Safe to proceed to Phase 2.
+exit 0
+=== node tools/scripts/exec-preflight/check-nav-wiring.mjs IFC-074
+[nav-wiring] Checking IFC-074 (sprint 18) — C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-074\.specify\sprints\sprint-18\planning\IFC-074-plan.md
+[nav-wiring] OK — plan does not create any page.tsx under apps/web/src/app/.
+exit 0
+=== node tools/scripts/exec-preflight/check-worktree-landed.mjs IFC-074 18
+[gate-4b] Checking worktree-landed state for IFC-074 (sprint 18)
+PASS: [gate-4b] Working tree is clean.
+PASS: [gate-4b] Branch name "agent/IFC-074-observability" matches agent/<TASK_ID> pattern.
+PASS: [gate-4b] Branch is 20 commit(s) ahead of origin/main.
+BLOCK: [gate-4b] Branch not yet pushed. Run: `git push -u origin agent/IFC-074-observability --force-with-lease`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  BLOCK: Gate 4b — Worktree Landed
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Task: IFC-074  Sprint: 18
+
+  One or more checks above failed. The worktree work has NOT landed
+  on the remote branch yet. Marking the task COMPLETE at this stage
+  would stamp a verdict against state that can be silently lost.
+
+  IFC-227, IFC-031, PG-053, and PG-054 were all stamped COMPLETE
+  against worktree-only state. Three of them were permanently lost.
+
+  Recovery steps and waiver procedure: docs/runbooks/gate-4b-recovery.md
+
+  Source: .claude/skills/exec/references/phase4-completion-gates.md Gate 4b
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+exit 1
+=== node tools/scripts/exec-preflight/check-lighthouse-evidence.mjs IFC-074 18
+[lighthouse-evidence] No attestation yet at C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-074\.specify\sprints\sprint-18\attestations\IFC-074\attestation.json — gate will re-run after write.
+exit 0
+=== validate-task-json-schemas
+[schema-validator] checked 431 files — 0 broken

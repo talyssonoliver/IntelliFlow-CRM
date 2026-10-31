@@ -88,6 +88,38 @@ describe('loadCombinedConfig', () => {
     expect(config.workers).toEqual(['events-worker', 'ai-worker']);
   });
 
+  it('leaves the api timer jobs off unless COMBINED_BACKGROUND_JOBS is on', () => {
+    expect(loadCombinedConfig({}).workers).not.toContain('background-jobs');
+    expect(loadCombinedConfig({ COMBINED_BACKGROUND_JOBS: 'off' }).workers).not.toContain(
+      'background-jobs'
+    );
+    expect(loadCombinedConfig({ COMBINED_BACKGROUND_JOBS: '' }).workers).not.toContain(
+      'background-jobs'
+    );
+  });
+
+  it.each(['on', 'ON', 'true', '1', ' yes '])(
+    'COMBINED_BACKGROUND_JOBS=%s adds background-jobs after the selected workers',
+    (value) => {
+      expect(loadCombinedConfig({ COMBINED_BACKGROUND_JOBS: value }).workers).toEqual([
+        'ai-worker',
+        'events-worker',
+        'ingestion-worker',
+        'background-jobs',
+      ]);
+      expect(
+        loadCombinedConfig({ COMBINED_WORKERS: 'events-worker', COMBINED_BACKGROUND_JOBS: value })
+          .workers
+      ).toEqual(['events-worker', 'background-jobs']);
+    }
+  );
+
+  it('does not accept background-jobs through COMBINED_WORKERS', () => {
+    expect(() => loadCombinedConfig({ COMBINED_WORKERS: 'background-jobs' })).toThrow(
+      /Unknown worker\(s\)/
+    );
+  });
+
   it('reads the partial flag and shutdown timeout', () => {
     const config = loadCombinedConfig({
       COMBINED_ALLOW_PARTIAL: 'true',
@@ -130,10 +162,155 @@ describe('startCombinedWorker', () => {
     expect(listenerCounts()).toEqual(baseline);
   });
 
+  it('runs the background jobs as a fourth worker only when the flag is on', async () => {
+    const jobs = new FakeWorker();
+    const { workers, loaders } = makeLoaders();
+    const withJobs: WorkerLoaders = { ...loaders, 'background-jobs': async () => jobs };
+
+    env.COMBINED_BACKGROUND_JOBS = 'on';
+    handle = await startCombinedWorker({ loaders: withJobs, env, logger: silent, exit });
+
+    expect(jobs.start).toHaveBeenCalledTimes(1);
+    expect(workers['ai-worker'].start).toHaveBeenCalledTimes(1);
+    const health = JSON.parse((await get(handle.healthPort, '/health')).body);
+    expect(health.workers['background-jobs']).toEqual({
+      state: 'running',
+      checks: { redis: { status: 'ok' } },
+    });
+
+    await handle.shutdown('test');
+    expect(jobs.stop).toHaveBeenCalledTimes(1);
+    handle = undefined;
+  });
+
+  it('works with COMBINED_WORKERS subsets: the selected workers plus the jobs', async () => {
+    const jobs = new FakeWorker();
+    const { workers, loaders } = makeLoaders();
+    env.COMBINED_WORKERS = 'events-worker';
+    env.COMBINED_BACKGROUND_JOBS = 'on';
+
+    handle = await startCombinedWorker({
+      loaders: { ...loaders, 'background-jobs': async () => jobs },
+      env,
+      logger: silent,
+      exit,
+    });
+
+    expect(Object.keys((await handle.getHealth()).workers)).toEqual([
+      'events-worker',
+      'background-jobs',
+    ]);
+    expect(workers['ai-worker'].start).not.toHaveBeenCalled();
+  });
+
+  it('reports unhealthy (503) when the jobs health check errors', async () => {
+    const jobs = new FakeWorker();
+    jobs.checks = { timers: { status: 'error', message: 'stopped' } };
+    const { loaders } = makeLoaders();
+    env.COMBINED_BACKGROUND_JOBS = 'on';
+
+    handle = await startCombinedWorker({
+      loaders: { ...loaders, 'background-jobs': async () => jobs },
+      env,
+      logger: silent,
+      exit,
+    });
+
+    expect((await get(handle.healthPort, '/health')).status).toBe(503);
+    expect((await handle.getHealth()).workers['background-jobs']?.state).toBe('unhealthy');
+  });
+
+  it('fail-fast cleanup stops the started workers and the jobs once when the jobs fail to start', async () => {
+    const jobs = new FakeWorker();
+    jobs.start.mockRejectedValue(new Error('no container'));
+    const { workers, loaders } = makeLoaders();
+    env.COMBINED_BACKGROUND_JOBS = 'on';
+
+    await expect(
+      startCombinedWorker({
+        loaders: { ...loaders, 'background-jobs': async () => jobs },
+        env,
+        logger: silent,
+        exit,
+      })
+    ).rejects.toThrow('Worker background-jobs failed to start: no container');
+
+    for (const worker of Object.values(workers)) expect(worker.stop).toHaveBeenCalledTimes(1);
+    expect(jobs.stop).toHaveBeenCalledTimes(1);
+    expect(listenerCounts()).toEqual(baseline);
+  });
+
+  it('SIGTERM stops the jobs through the shared shutdown path, once, and runs onShutdown', async () => {
+    const jobs = new FakeWorker();
+    const { workers, loaders } = makeLoaders();
+    const onShutdown = vi.fn(async () => undefined);
+    env.COMBINED_BACKGROUND_JOBS = 'on';
+
+    handle = await startCombinedWorker({
+      loaders: { ...loaders, 'background-jobs': async () => jobs },
+      env,
+      logger: silent,
+      exit,
+      onShutdown,
+    });
+    process.emit('SIGTERM');
+    await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(0));
+
+    expect(jobs.stop).toHaveBeenCalledTimes(1);
+    expect(workers['ai-worker'].stop).toHaveBeenCalledTimes(1);
+    expect(onShutdown).toHaveBeenCalledTimes(1);
+    handle = undefined;
+  });
+
+  it('SIGTERM while the jobs are still starting waits for them, then stops them', async () => {
+    const jobs = new FakeWorker();
+    let finishStart!: () => void;
+    jobs.start.mockImplementation(() => new Promise<void>((resolve) => (finishStart = resolve)));
+    const { loaders } = makeLoaders();
+    env.COMBINED_BACKGROUND_JOBS = 'on';
+
+    const starting = startCombinedWorker({
+      loaders: { ...loaders, 'background-jobs': async () => jobs },
+      env,
+      logger: silent,
+      exit,
+    });
+    await vi.waitFor(() => expect(jobs.start).toHaveBeenCalled());
+    process.emit('SIGTERM');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(jobs.stop).not.toHaveBeenCalled();
+
+    finishStart();
+    await starting;
+    await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(0));
+    expect(jobs.stop).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not touch the background jobs loader when the flag is off', async () => {
+    const jobs = new FakeWorker();
+    const { loaders } = makeLoaders();
+    const withJobs: WorkerLoaders = { ...loaders, 'background-jobs': async () => jobs };
+
+    handle = await startCombinedWorker({ loaders: withJobs, env, logger: silent, exit });
+
+    expect(jobs.start).not.toHaveBeenCalled();
+    const health = JSON.parse((await get(handle.healthPort, '/health')).body);
+    expect(health.workers).not.toHaveProperty('background-jobs');
+  });
+
+  it('fails fast when the flag is on but no loader is registered', async () => {
+    const { loaders } = makeLoaders();
+    env.COMBINED_BACKGROUND_JOBS = 'on';
+
+    await expect(startCombinedWorker({ loaders, env, logger: silent, exit })).rejects.toThrow(
+      /No loader registered for background-jobs/
+    );
+  });
+
   it('starts every worker in order and serves aggregated health', async () => {
     const order: string[] = [];
     const { workers, loaders } = makeLoaders();
-    for (const name of Object.keys(workers) as WorkerName[]) {
+    for (const name of Object.keys(workers) as Array<keyof typeof workers>) {
       workers[name].start.mockImplementation(async () => {
         order.push(name);
         workers[name].state = 'running';

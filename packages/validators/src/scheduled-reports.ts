@@ -107,11 +107,11 @@ const scheduleIdField = z.string().trim().min(1).max(191);
 // (not .partial().extend()) to avoid TS2589 through tRPC generics (PG-200 note).
 const nameField = z.string().trim().min(1).max(SCHEDULE_LIMITS.maxNameLength);
 const descriptionField = z.string().trim().max(500);
-const dayOfWeekField = z.number().int().min(0).max(6);
-const dayOfMonthField = z.number().int().min(1).max(SCHEDULE_LIMITS.maxDayOfMonth);
-const timeOfDayField = z.string().regex(SCHEDULE_TIME_REGEX, 'Use HH:MM (24-hour) format.');
+export const dayOfWeekField = z.number().int().min(0).max(6);
+export const dayOfMonthField = z.number().int().min(1).max(SCHEDULE_LIMITS.maxDayOfMonth);
+export const timeOfDayField = z.string().regex(SCHEDULE_TIME_REGEX, 'Use HH:MM (24-hour) format.');
 
-interface CadenceFields {
+export interface CadenceFields {
   cadence?: ScheduleCadence;
   dayOfWeek?: number;
   dayOfMonth?: number;
@@ -120,7 +120,8 @@ interface CadenceFields {
   timezone?: string;
 }
 
-function checkCadenceRules(value: CadenceFields, ctx: z.RefinementCtx): void {
+/** Cadence completeness rules, shared with task-automation schedule triggers (PG-208). */
+export function checkCadenceRules(value: CadenceFields, ctx: z.RefinementCtx): void {
   const { cadence } = value;
   if (cadence === undefined) return;
   if (cadence === 'custom') {

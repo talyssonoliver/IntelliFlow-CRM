@@ -164,6 +164,7 @@ describe('TaskService', () => {
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('converted leads');
+      expect((result.error as { reason?: string }).reason).toBe('TASK_LINK_REJECTED');
     });
 
     it('should fail if assigned to closed opportunity', async () => {
@@ -771,5 +772,131 @@ describe('TaskService', () => {
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Task not found');
     });
+  });
+});
+
+// PG-208: round-robin assignment — assignee set at create, and assignTask emits task.assigned.
+describe('TaskService assignee (PG-208)', () => {
+  let taskRepository: InMemoryTaskRepository;
+  let eventBus: InMemoryEventBus;
+  let service: TaskService;
+
+  beforeEach(() => {
+    taskRepository = new InMemoryTaskRepository();
+    eventBus = new InMemoryEventBus();
+    service = new TaskService(
+      taskRepository,
+      new InMemoryLeadRepository(),
+      new InMemoryContactRepository(),
+      new InMemoryOpportunityRepository(),
+      eventBus
+    );
+  });
+
+  async function created(tenantId = 'tenant-1') {
+    const result = await service.createTask({
+      title: 'Follow up',
+      ownerId: 'owner-1',
+      tenantId,
+      assigneeId: 'assignee-1',
+      dueDate: new Date(Date.now() + 86_400_000),
+    });
+    expect(result.isSuccess).toBe(true);
+    return result.value;
+  }
+
+  it('persists the assignee given at create', async () => {
+    const task = await created();
+    const stored = await taskRepository.findById(task.id);
+    expect(stored?.assigneeId).toBe('assignee-1');
+  });
+
+  it('assignTask changes the assignee and publishes task.assigned', async () => {
+    const task = await created();
+    eventBus.clearPublishedEvents();
+    const result = await service.assignTask(
+      task.id.value,
+      'assignee-2',
+      'system:task-automation',
+      'tenant-1'
+    );
+    expect(result.isSuccess).toBe(true);
+    expect((await taskRepository.findById(task.id))?.assigneeId).toBe('assignee-2');
+    const events = eventBus.getPublishedEvents().map((e) => e.eventType);
+    expect(events).toContain('task.assigned');
+  });
+
+  it('assignTask to the same assignee is a no-op without an event', async () => {
+    const task = await created();
+    eventBus.clearPublishedEvents();
+    const result = await service.assignTask(
+      task.id.value,
+      'assignee-1',
+      'system:task-automation',
+      'tenant-1'
+    );
+    expect(result.isSuccess).toBe(true);
+    expect(eventBus.getPublishedEvents()).toHaveLength(0);
+  });
+
+  it('assignTask refuses a task of another tenant (NotFound, nothing saved)', async () => {
+    const task = await created('tenant-1');
+    const result = await service.assignTask(
+      task.id.value,
+      'assignee-2',
+      'system:task-automation',
+      'tenant-2'
+    );
+    expect(result.isFailure).toBe(true);
+    expect(result.error.message).toContain('Task not found');
+    expect((await taskRepository.findById(task.id))?.assigneeId).toBe('assignee-1');
+  });
+
+  it('assignTask does not bring back a task deleted after it was read', async () => {
+    const task = await created();
+    const read = taskRepository.findById.bind(taskRepository);
+    vi.spyOn(taskRepository, 'findById').mockImplementationOnce(async (id) => {
+      const found = await read(id);
+      await taskRepository.delete(id);
+      return found;
+    });
+    eventBus.clearPublishedEvents();
+    const result = await service.assignTask(
+      task.id.value,
+      'assignee-2',
+      'system:task-automation',
+      'tenant-1'
+    );
+    expect(result.isFailure).toBe(true);
+    expect(await taskRepository.findById(task.id)).toBeNull();
+    expect(eventBus.getPublishedEvents()).toHaveLength(0);
+  });
+
+  it('assignTask saves only the assignment, guarded by the updatedAt it read', async () => {
+    const task = await created();
+    const readAt = task.updatedAt;
+    const save = vi.spyOn(taskRepository, 'save');
+    const saveAssignment = vi.spyOn(taskRepository, 'saveAssignment').mockResolvedValueOnce(false);
+    eventBus.clearPublishedEvents();
+    const result = await service.assignTask(
+      task.id.value,
+      'assignee-2',
+      'system:task-automation',
+      'tenant-1'
+    );
+    expect(saveAssignment).toHaveBeenCalledWith(task, readAt);
+    expect(save).not.toHaveBeenCalled();
+    expect(result.isFailure).toBe(true);
+    expect(eventBus.getPublishedEvents()).toHaveLength(0);
+  });
+
+  it('assignTask rejects an invalid id', async () => {
+    const result = await service.assignTask(
+      'not-a-uuid',
+      'assignee-2',
+      'system:task-automation',
+      'tenant-1'
+    );
+    expect(result.isFailure).toBe(true);
   });
 });

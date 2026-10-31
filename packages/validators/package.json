@@ -17,6 +17,11 @@
       "import": "./dist/required-url.mjs",
       "require": "./dist/required-url.js"
     },
+    "./record-id": {
+      "types": "./dist/record-id.d.ts",
+      "import": "./dist/record-id.mjs",
+      "require": "./dist/record-id.js"
+    },
     "./lead": {
       "types": "./dist/lead.d.ts",
       "import": "./dist/lead.mjs",
@@ -72,6 +77,11 @@
       "import": "./dist/event-types.mjs",
       "require": "./dist/event-types.js"
     },
+    "./dsar": {
+      "types": "./dist/dsar.d.ts",
+      "import": "./dist/dsar.mjs",
+      "require": "./dist/dsar.js"
+    },
     "./case": {
       "types": "./dist/case.d.ts",
       "import": "./dist/case.mjs",
@@ -89,8 +99,8 @@
     }
   },
   "scripts": {
-    "build": "tsup src/index.ts src/required-url.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/ticket.ts src/common.ts src/env.ts src/base-schemas.ts src/ai-review.ts src/case.ts src/help-article.ts src/terms-acceptance.ts src/event-types.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts src/required-url.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/ticket.ts src/common.ts src/env.ts src/base-schemas.ts src/ai-review.ts src/case.ts src/help-article.ts src/terms-acceptance.ts src/event-types.ts --format cjs,esm --dts --watch",
+    "build": "tsup src/index.ts src/required-url.ts src/record-id.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/ticket.ts src/common.ts src/env.ts src/base-schemas.ts src/ai-review.ts src/case.ts src/help-article.ts src/terms-acceptance.ts src/event-types.ts src/dsar.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts src/required-url.ts src/record-id.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/ticket.ts src/common.ts src/env.ts src/base-schemas.ts src/ai-review.ts src/case.ts src/help-article.ts src/terms-acceptance.ts src/event-types.ts src/dsar.ts --format cjs,esm --dts --watch",
     "clean": "rm -rf dist .turbo",
     "typecheck": "tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\"",
@@ -99,13 +109,13 @@
   },
   "dependencies": {
     "@intelliflow/domain": "workspace:*",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@intelliflow/typescript-config": "workspace:*",
     "@types/node": "^25.9.2",
     "tsup": "^8.0.0",
     "typescript": "^5.3.0",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   }
 }

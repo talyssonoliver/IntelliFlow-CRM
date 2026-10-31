@@ -16,13 +16,26 @@ import {
   getReadinessHealth,
 } from './modules/misc/health.service';
 import { container, containerReady } from './container';
-import { approvalSweepIntervalFromEnv, startApprovalSweep } from './agent/approval-sweep-scheduler';
-import { createDefaultSweepDeps, runApprovalSweep } from './agent/approval-escalation-sweep';
-import { bounceScanIntervalFromEnv, startBounceScanner } from './modules/email/bounce-scheduler';
-import { createBounceReaderDeps, runBounceScan } from './modules/email/bounce-reader';
+import {
+  API_BACKGROUND_JOBS_ENV,
+  apiBackgroundJobsEnabled,
+  startBackgroundJobs,
+} from './background-jobs';
 import { getHealthProbes } from './modules/misc/health-probes';
 import { processStripeWebhook } from './webhooks/stripe-webhook';
 import { handlePmEventsRoute } from './modules/pm-events/handle-pm-events-route';
+import {
+  handleTaskAutomationWebhookRoute,
+  matchTaskAutomationWebhookPath,
+} from './modules/task/automation/task-automation-webhook';
+import {
+  createTaskAutomationRuntime,
+  getTaskAutomationWebhookDeps,
+} from './modules/task/automation/task-automation-runtime';
+import {
+  startTaskAutomationRunner,
+  taskAutomationRunnerIntervalFromEnv,
+} from './modules/task/automation/task-automation-runner';
 
 export const API_PORT = Number(process.env.PORT ?? 4000);
 
@@ -479,6 +492,20 @@ async function handleRequest(
   const method = req.method?.toUpperCase() ?? 'GET';
   const headOnly = method === 'HEAD';
 
+  // PG-208: signed task-automation webhook. Matched before CORS (server-to-server,
+  // no browser access) and before the global body read (its own 64 KB bounded read).
+  const webhookToken = matchTaskAutomationWebhookPath(pathname);
+  if (webhookToken !== null) {
+    applyCorrelationHeaders(res);
+    await handleTaskAutomationWebhookRoute(
+      req,
+      res,
+      webhookToken,
+      await getTaskAutomationWebhookDeps()
+    );
+    return;
+  }
+
   // CORS: echo an allowed origin onto every response, and short-circuit the
   // preflight here — OPTIONS must never reach the health/tRPC routers (they'd
   // 404/405 it and the browser would block the real request). Disallowed
@@ -560,23 +587,39 @@ export function startApiServer(options: ApiServerOptions = {}): http.Server {
     console.log(`[API] HTTP server listening on http://localhost:${port}`);
   });
 
-  // PG-198: approval escalation/expiry sweep — long-lived server process only.
-  startApprovalSweep({
-    intervalMs: approvalSweepIntervalFromEnv(process.env),
-    run: async () => {
-      await containerReady;
-      return runApprovalSweep(await createDefaultSweepDeps());
-    },
-  });
+  // PG-198 / PG-207 / PG-203: approval sweep, bounce scanner and DSAR deadline
+  // alerts — long-lived server
+  // process only. API_BACKGROUND_JOBS=off keeps an idle api free of outbound
+  // traffic so Railway can sleep it; the combined worker runs them instead.
+  if (apiBackgroundJobsEnabled(process.env)) {
+    startBackgroundJobs({ ready: () => containerReady });
+  } else {
+    console.warn(
+      `[API] WARN background jobs disabled (${API_BACKGROUND_JOBS_ENV}=off): the approval sweep, ` +
+        'email bounce scan and DSAR deadline alerts run only if the combined worker has COMBINED_BACKGROUND_JOBS=on. ' +
+        'If neither is set nothing runs them; /health/detailed reports degraded after 3x the interval.'
+    );
+  }
 
-  // PG-207: bounce scanner — reads delivery reports from connected mailboxes.
-  startBounceScanner({
-    intervalMs: bounceScanIntervalFromEnv(process.env),
-    run: async () => {
-      await containerReady;
-      return runBounceScan(await createBounceReaderDeps());
-    },
-  });
+  // PG-208: task automation runner — long-lived server process only, and the event
+  // intake is registered only when the runner runs (a disabled runner never buffers).
+  // Not behind API_BACKGROUND_JOBS: the intake listens on the in-memory event bus,
+  // so entity-event rules only see events published in this process, and the
+  // combined worker could not run them. TASK_AUTOMATION_INTERVAL_MS=0 turns it off.
+  const automationIntervalMs = taskAutomationRunnerIntervalFromEnv(process.env);
+  if (automationIntervalMs > 0) {
+    containerReady
+      .then(() => createTaskAutomationRuntime())
+      .then((runtime) =>
+        startTaskAutomationRunner({ intervalMs: automationIntervalMs, run: () => runtime.tick() })
+      )
+      .catch((error: unknown) => {
+        console.error(
+          '[task-automation] runtime failed to start:',
+          error instanceof Error ? error.message : error
+        );
+      });
+  }
 
   return server;
 }

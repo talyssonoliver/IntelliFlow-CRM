@@ -1,0 +1,25 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 97 files total
+[codex-review] in scope : 70 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T08:36:26.327Z
+Base ref  : origin/main
+Files in scope : 70
+Total findings : 1
+  Waived       : 1
+  Unwaived     : 0
+
+WAIVED FINDINGS (suppressed):
+  [HIGH] apps/api/src/modules/calendar/public-booking.router.ts:530-543 — incomplete-booking-serialization (fp: 283b28bc7d89...)
+
+Verdict: PASS
+[codex-review] Gate PASS — no unwaived findings.

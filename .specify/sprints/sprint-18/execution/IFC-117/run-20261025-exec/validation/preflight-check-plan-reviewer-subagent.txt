@@ -1,0 +1,4 @@
+[preflight] Checking IFC-117 plan at C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-117\.specify\sprints\sprint-18\planning\IFC-117-plan.md
+[preflight] OK — real Plan-Reviewer subagent evidence found.
+           ✓ <!-- plan-reviewer: subagent -->
+           ✓ reviewer_subagent: … line

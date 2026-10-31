@@ -1,0 +1,10 @@
+2026-10-20T23:33:20Z
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/packages/validators
+
+
+ Test Files  2 passed (2)
+      Tests  111 passed (111)
+   Start at  00:33:21
+   Duration  753ms (transform 547ms, setup 0ms, import 898ms, tests 74ms, environment 0ms)
+
