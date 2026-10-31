@@ -16,6 +16,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CaseDocument, DocumentClassification } from '@intelliflow/domain';
 import type { InMemoryCaseDocumentRepository as Repo } from '@intelliflow/adapters';
 import { documentsRouter } from '../documents.router';
+import { uploadRouter } from '../../documents/upload.router';
 import { createAdminContext, TEST_UUIDS } from '../../../test/setup';
 
 const store = vi.hoisted(() => ({ repo: null as unknown as Repo }));
@@ -175,5 +176,25 @@ describe('case documents are tenant-scoped', () => {
     expect(JSON.stringify(result)).not.toContain('foreign-contract');
     const stored = await store.repo.findById(foreign.id, OTHER_TENANT);
     expect(JSON.stringify(stored?.toJSON())).toBe(before);
+  });
+
+  // upload.router reads the same repository through the container. A foreign id
+  // must be answered like a missing one, never FORBIDDEN, or the reply confirms
+  // that another tenant's document exists.
+  it("upload.getUploadStatus: another tenant's document is NOT_FOUND, like a missing one", async () => {
+    const upload = uploadRouter.createCaller(
+      createAdminContext({ container: { get: () => store.repo } as never })
+    );
+
+    await expect(upload.getUploadStatus({ documentId: foreign.id })).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+      message: 'Document not found',
+    });
+    await expect(
+      upload.getUploadStatus({ documentId: '0ddba11c-0000-4000-8000-0ddba11c0000' })
+    ).rejects.toMatchObject({ code: 'NOT_FOUND', message: 'Document not found' });
+    await expect(upload.getUploadStatus({ documentId: own.id })).resolves.toMatchObject({
+      id: own.id,
+    });
   });
 });
