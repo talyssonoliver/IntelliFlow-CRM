@@ -208,17 +208,20 @@ describe('uploadRouter', () => {
 
   describe('getUploadStatus', () => {
     it('should return document status when found', async () => {
+      const createdAt = new Date('2026-10-31T09:00:00Z');
       mockRepository.findById.mockResolvedValue({
         id: DOC_ID,
         tenantId: TENANT_ID,
         metadata: { title: 'report.pdf' },
         status: 'PROCESSED',
-        createdAt: new Date(),
+        toJSON: () => ({ createdAt }),
       });
       const result = await caller.getUploadStatus({ documentId: DOC_ID });
       expect(result.id).toBe(DOC_ID);
       expect(result.filename).toBe('report.pdf');
       expect(result.status).toBe('PROCESSED');
+      // CaseDocument keeps createdAt in its data; it used to come back undefined.
+      expect(result.createdAt).toEqual(createdAt);
     });
 
     it('should throw NOT_FOUND when document missing', async () => {
@@ -228,15 +231,29 @@ describe('uploadRouter', () => {
       );
     });
 
-    it('should throw FORBIDDEN when tenant mismatch', async () => {
-      mockRepository.findById.mockResolvedValue({
+    // #1075 review: the lookup is tenant-scoped, and another tenant's document is
+    // answered exactly like a missing one, so its id cannot be confirmed.
+    it('looks the document up in the caller tenant only', async () => {
+      mockRepository.findById.mockResolvedValue(null);
+      await caller.getUploadStatus({ documentId: DOC_ID }).catch(() => {});
+      expect(mockRepository.findById).toHaveBeenCalledWith(DOC_ID, TENANT_ID);
+    });
+
+    it("answers NOT_FOUND, not FORBIDDEN, for another tenant's document", async () => {
+      const foreign = {
         id: DOC_ID,
         tenantId: 'other-tenant',
         metadata: { title: 'x' },
         status: 'READY',
         createdAt: new Date(),
+      };
+      // Like the real repository: only the owning tenant finds it.
+      mockRepository.findById.mockImplementation(async (_id: string, tenantId?: string) =>
+        tenantId === undefined || tenantId === foreign.tenantId ? foreign : null
+      );
+      await expect(caller.getUploadStatus({ documentId: DOC_ID })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
       });
-      await expect(caller.getUploadStatus({ documentId: DOC_ID })).rejects.toThrow('Access denied');
     });
   });
 });

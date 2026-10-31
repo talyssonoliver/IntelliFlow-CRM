@@ -78,7 +78,7 @@ describe('intelligenceRouter', () => {
   describe('getLeadInsights', () => {
     it('should return AI insights for a lead with valid data', async () => {
       const aiInsight = createMockLeadAIInsight();
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
         aiInsights: [aiInsight],
       } as any);
@@ -100,7 +100,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should return null when lead has no AI insight', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
         aiInsights: [],
       } as any);
@@ -111,7 +111,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should throw NOT_FOUND when lead does not exist', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(null);
+      prismaMock.lead.findFirst.mockResolvedValue(null);
 
       await expect(caller.getLeadInsights({ leadId: TEST_UUIDS.nonExistent })).rejects.toThrow(
         TRPCError
@@ -126,22 +126,22 @@ describe('intelligenceRouter', () => {
     });
 
     it('should include aiInsight in the Prisma query', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
         aiInsights: [],
       } as any);
 
       await caller.getLeadInsights({ leadId: TEST_UUIDS.lead1 });
 
-      expect(prismaMock.lead.findUnique).toHaveBeenCalledWith({
-        where: { id: TEST_UUIDS.lead1 },
-        include: { aiInsights: { take: 1 } },
+      expect(prismaMock.lead.findFirst).toHaveBeenCalledWith({
+        where: { id: TEST_UUIDS.lead1, tenantId: TEST_UUIDS.tenant },
+        include: { aiInsights: { where: { tenantId: TEST_UUIDS.tenant }, take: 1 } },
       });
     });
 
     it('should return churnRiskScore as null (computed from level)', async () => {
       const aiInsight = createMockLeadAIInsight();
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
         aiInsights: [aiInsight],
       } as any);
@@ -153,7 +153,7 @@ describe('intelligenceRouter', () => {
 
     it('should return lifetimeValue as null for leads', async () => {
       const aiInsight = createMockLeadAIInsight();
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
         aiInsights: [aiInsight],
       } as any);
@@ -167,7 +167,7 @@ describe('intelligenceRouter', () => {
   describe('getContactInsights', () => {
     it('should return AI insights for a contact with valid data', async () => {
       const aiInsight = createMockContactAIInsight();
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         aiInsight,
       } as any);
@@ -187,7 +187,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should return null when contact has no AI insight', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         aiInsight: null,
       } as any);
@@ -198,7 +198,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should throw NOT_FOUND when contact does not exist', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(null);
+      prismaMock.contact.findFirst.mockResolvedValue(null);
 
       await expect(
         caller.getContactInsights({ contactId: TEST_UUIDS.nonExistent })
@@ -212,22 +212,22 @@ describe('intelligenceRouter', () => {
     });
 
     it('should include aiInsight in the Prisma query', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         aiInsight: null,
       } as any);
 
       await caller.getContactInsights({ contactId: TEST_UUIDS.contact1 });
 
-      expect(prismaMock.contact.findUnique).toHaveBeenCalledWith({
-        where: { id: TEST_UUIDS.contact1 },
+      expect(prismaMock.contact.findFirst).toHaveBeenCalledWith({
+        where: { id: TEST_UUIDS.contact1, tenantId: TEST_UUIDS.tenant },
         include: { aiInsight: true },
       });
     });
 
     it('should return estimatedValue as null for contacts', async () => {
       const aiInsight = createMockContactAIInsight();
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         aiInsight,
       } as any);
@@ -241,7 +241,7 @@ describe('intelligenceRouter', () => {
   describe('getInsightsSummary', () => {
     it('should return summary for a lead entity', async () => {
       const aiInsight = createMockLeadAIInsight();
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
         aiInsights: [aiInsight],
       } as any);
@@ -263,7 +263,7 @@ describe('intelligenceRouter', () => {
 
     it('should return summary for a contact entity', async () => {
       const aiInsight = createMockContactAIInsight();
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
         aiInsight,
       } as any);
@@ -280,7 +280,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should return null when entity has no AI insight', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
         aiInsights: [],
       } as any);
@@ -305,7 +305,7 @@ describe('intelligenceRouter', () => {
 
     it('should map HIGH churn risk to score 80', async () => {
       const aiInsight = createMockLeadAIInsight({ churnRisk: 'HIGH' });
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
         aiInsights: [aiInsight],
       } as any);
@@ -320,7 +320,7 @@ describe('intelligenceRouter', () => {
 
     it('should default nextBestAction to WAIT when null', async () => {
       const aiInsight = createMockLeadAIInsight({ nextBestAction: null });
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
         aiInsights: [aiInsight],
       } as any);
@@ -336,7 +336,7 @@ describe('intelligenceRouter', () => {
 
     it('should include lastAssessedAt in churnRisk', async () => {
       const aiInsight = createMockLeadAIInsight();
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
         aiInsights: [aiInsight],
       } as any);
@@ -352,7 +352,7 @@ describe('intelligenceRouter', () => {
 
     it('should use lifetimeValue or fall back to estimatedValue', async () => {
       const aiInsight = createMockLeadAIInsight({ estimatedValue: 30000 });
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
         aiInsights: [aiInsight],
       } as any);
@@ -374,7 +374,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should enqueue a lead prediction and return QUEUED status', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
       } as any);
 
@@ -403,7 +403,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should enqueue a contact prediction and return QUEUED status', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
       } as any);
 
@@ -422,7 +422,7 @@ describe('intelligenceRouter', () => {
     it('should fall back to PENDING when Redis is unavailable', async () => {
       mockQueueAdd.mockRejectedValue(new Error('Connection refused'));
 
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
       } as any);
 
@@ -438,7 +438,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should throw NOT_FOUND when lead does not exist', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(null);
+      prismaMock.lead.findFirst.mockResolvedValue(null);
 
       await expect(
         caller.triggerPrediction({
@@ -460,7 +460,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should throw NOT_FOUND when contact does not exist', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(null);
+      prismaMock.contact.findFirst.mockResolvedValue(null);
 
       await expect(
         caller.triggerPrediction({
@@ -472,7 +472,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should accept priority parameter and map to numeric priority', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
       } as any);
 
@@ -492,7 +492,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should default priority to NORMAL', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
       } as any);
 
@@ -519,8 +519,8 @@ describe('intelligenceRouter', () => {
       });
 
       // No entity verification for unsupported types
-      expect(prismaMock.lead.findUnique).not.toHaveBeenCalled();
-      expect(prismaMock.contact.findUnique).not.toHaveBeenCalled();
+      expect(prismaMock.lead.findFirst).not.toHaveBeenCalled();
+      expect(prismaMock.contact.findFirst).not.toHaveBeenCalled();
       expect(result.status).toBe('QUEUED');
     });
   });
@@ -528,7 +528,7 @@ describe('intelligenceRouter', () => {
   describe('updateLeadInsights', () => {
     it('should upsert AI insights for a lead', async () => {
       const aiInsight = createMockLeadAIInsight();
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
       } as any);
       prismaMock.leadAIInsight.upsert.mockResolvedValue(aiInsight as any);
@@ -549,7 +549,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should throw NOT_FOUND when lead does not exist', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue(null);
+      prismaMock.lead.findFirst.mockResolvedValue(null);
 
       await expect(
         caller.updateLeadInsights({
@@ -569,7 +569,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should create with defaults when insight does not exist', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
       } as any);
       prismaMock.leadAIInsight.upsert.mockResolvedValue({} as any);
@@ -604,7 +604,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should accept partial updates', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
       } as any);
       prismaMock.leadAIInsight.upsert.mockResolvedValue({} as any);
@@ -623,7 +623,7 @@ describe('intelligenceRouter', () => {
   describe('updateContactInsights', () => {
     it('should upsert AI insights for a contact', async () => {
       const aiInsight = createMockContactAIInsight();
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
       } as any);
       prismaMock.contactAIInsight.upsert.mockResolvedValue(aiInsight as any);
@@ -644,7 +644,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should throw NOT_FOUND when contact does not exist', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue(null);
+      prismaMock.contact.findFirst.mockResolvedValue(null);
 
       await expect(
         caller.updateContactInsights({
@@ -655,7 +655,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should create with defaults when insight does not exist', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
       } as any);
       prismaMock.contactAIInsight.upsert.mockResolvedValue({} as any);
@@ -680,7 +680,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should include tenantId in the create payload', async () => {
-      prismaMock.contact.findUnique.mockResolvedValue({
+      prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
       } as any);
       prismaMock.contactAIInsight.upsert.mockResolvedValue({} as any);
@@ -724,7 +724,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should reject conversionProbability outside 0-100 range', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
       } as any);
 
@@ -737,7 +737,7 @@ describe('intelligenceRouter', () => {
     });
 
     it('should reject engagementScore outside 0-100 range', async () => {
-      prismaMock.lead.findUnique.mockResolvedValue({
+      prismaMock.lead.findFirst.mockResolvedValue({
         id: TEST_UUIDS.lead1,
       } as any);
 

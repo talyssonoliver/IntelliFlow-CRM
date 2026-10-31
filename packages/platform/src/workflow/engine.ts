@@ -10,6 +10,7 @@
  */
 
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { CASE_EVENT_WORKFLOW_ROUTING, type CaseEventType } from '@intelliflow/domain';
 
 // ============================================================================
@@ -58,7 +59,7 @@ export type WorkflowDefinition = z.infer<typeof workflowDefinitionSchema>;
  * Workflow instance (running or completed workflow)
  */
 export const workflowInstanceSchema = z.object({
-  id: z.uuid(),
+  id: recordIdSchema,
   definitionId: z.string(),
   status: z.enum(['pending', 'running', 'completed', 'failed', 'cancelled', 'waiting_for_input']),
   input: z.record(z.string(), z.unknown()).optional(),

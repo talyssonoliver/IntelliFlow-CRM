@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure, tenantProcedure } from '../../trpc';
 import { TRPCError } from '@trpc/server';
 import { IngestionOrchestrator } from '@intelliflow/application';
+import type { CaseDocumentRepository } from '@intelliflow/domain';
 import { loadBullMQ } from '../../lib/load-bullmq';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { loadDocumentAutomation, normalizeFilename } from '../legal/document-automation';
@@ -164,8 +165,11 @@ export const uploadRouter = createTRPCRouter({
   getUploadStatus: protectedProcedure
     .input(z.object({ documentId: z.string() }))
     .query(async ({ input, ctx }) => {
-      const repository = ctx.container!.get('CaseDocumentRepository');
-      const document = await repository.findById(input.documentId);
+      // Typed, so the compiler checks the tenant-scoped signature (#1075 review).
+      const repository = ctx.container!.get<CaseDocumentRepository>('CaseDocumentRepository');
+      // Another tenant's document is answered exactly like a missing one, so the
+      // reply never confirms that a foreign document id exists.
+      const document = await repository.findById(input.documentId, ctx.user.tenantId);
 
       if (!document) {
         throw new TRPCError({
@@ -174,19 +178,12 @@ export const uploadRouter = createTRPCRouter({
         });
       }
 
-      // Check if user has access
-      if (document.tenantId !== ctx.user.tenantId) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Access denied',
-        });
-      }
-
       return {
         id: document.id,
         filename: document.metadata.title,
         status: document.status,
-        createdAt: document.createdAt,
+        // CaseDocument has no createdAt getter; this was always undefined while untyped.
+        createdAt: document.toJSON().createdAt,
       };
     }),
 });

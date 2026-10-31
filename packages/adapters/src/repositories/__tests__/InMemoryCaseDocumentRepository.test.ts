@@ -59,13 +59,33 @@ describe('InMemoryCaseDocumentRepository', () => {
     });
   };
 
+  // #1075 review: a document id, a list of ids or a case id from one tenant must
+  // never find another tenant's documents.
+  describe('tenant scoping', () => {
+    it('findById, findByIds and findByCaseId only return the given tenant', async () => {
+      const own = createTestDocument({ relatedCaseId: testCaseId });
+      const foreign = createTestDocument({ tenantId: testTenant2Id, relatedCaseId: testCaseId });
+      await repository.save(own);
+      await repository.save(foreign);
+
+      expect(await repository.findById(foreign.id, testTenantId)).toBeNull();
+      expect(await repository.findById(foreign.id, testTenant2Id)).not.toBeNull();
+      expect(
+        (await repository.findByIds([own.id, foreign.id], testTenantId)).map((d) => d.id)
+      ).toEqual([own.id]);
+      expect((await repository.findByCaseId(testCaseId, testTenantId)).map((d) => d.id)).toEqual([
+        own.id,
+      ]);
+    });
+  });
+
   describe('save()', () => {
     it('should save a new document', async () => {
       const document = createTestDocument();
 
       await repository.save(document);
 
-      const retrieved = await repository.findById(document.id);
+      const retrieved = await repository.findById(document.id, testTenantId);
       expect(retrieved).not.toBeNull();
       expect(retrieved?.id).toBe(document.id);
     });
@@ -78,7 +98,7 @@ describe('InMemoryCaseDocumentRepository', () => {
       document.grantAccess(testUser2Id, 'USER', AccessLevel.VIEW, testUserId);
       await repository.save(document);
 
-      const retrieved = await repository.findById(document.id);
+      const retrieved = await repository.findById(document.id, testTenantId);
       expect(retrieved?.acl).toHaveLength(1);
       expect(retrieved?.acl[0].principalId).toBe(testUser2Id);
     });
@@ -102,7 +122,7 @@ describe('InMemoryCaseDocumentRepository', () => {
       const document = createTestDocument();
       await repository.save(document);
 
-      const found = await repository.findById(document.id);
+      const found = await repository.findById(document.id, testTenantId);
 
       expect(found).not.toBeNull();
       expect(found?.id).toBe(document.id);
@@ -110,7 +130,7 @@ describe('InMemoryCaseDocumentRepository', () => {
     });
 
     it('should return null for non-existent ID', async () => {
-      const found = await repository.findById('non-existent-id');
+      const found = await repository.findById('non-existent-id', testTenantId);
       expect(found).toBeNull();
     });
   });
@@ -213,8 +233,8 @@ describe('InMemoryCaseDocumentRepository', () => {
       await repository.save(doc2);
       await repository.save(doc3);
 
-      const case1Docs = await repository.findByCaseId(testCaseId);
-      const case2Docs = await repository.findByCaseId(testCase2Id);
+      const case1Docs = await repository.findByCaseId(testCaseId, testTenantId);
+      const case2Docs = await repository.findByCaseId(testCase2Id, testTenantId);
 
       expect(case1Docs).toHaveLength(2);
       expect(case2Docs).toHaveLength(1);
@@ -228,7 +248,7 @@ describe('InMemoryCaseDocumentRepository', () => {
       await repository.save(document);
       await repository.save(newVersion);
 
-      const caseDocs = await repository.findByCaseId(testCaseId);
+      const caseDocs = await repository.findByCaseId(testCaseId, testTenantId);
 
       expect(caseDocs).toHaveLength(1);
       expect(caseDocs[0].isLatestVersion).toBe(true);
@@ -241,13 +261,13 @@ describe('InMemoryCaseDocumentRepository', () => {
       document.delete(testUserId);
       await repository.save(document);
 
-      const caseDocs = await repository.findByCaseId(testCaseId);
+      const caseDocs = await repository.findByCaseId(testCaseId, testTenantId);
 
       expect(caseDocs).toHaveLength(0);
     });
 
     it('should return empty array for case with no documents', async () => {
-      const docs = await repository.findByCaseId('case-999');
+      const docs = await repository.findByCaseId('case-999', testTenantId);
       expect(docs).toHaveLength(0);
     });
   });
@@ -347,11 +367,11 @@ describe('InMemoryCaseDocumentRepository', () => {
       const document = createTestDocument();
       await repository.save(document);
 
-      expect(await repository.findById(document.id)).not.toBeNull();
+      expect(await repository.findById(document.id, testTenantId)).not.toBeNull();
 
       await repository.delete(document.id);
 
-      expect(await repository.findById(document.id)).toBeNull();
+      expect(await repository.findById(document.id, testTenantId)).toBeNull();
     });
 
     it('should not throw when deleting non-existent document', async () => {
@@ -364,7 +384,7 @@ describe('InMemoryCaseDocumentRepository', () => {
 
       await repository.delete(document.id);
 
-      const caseDocs = await repository.findByCaseId(testCaseId);
+      const caseDocs = await repository.findByCaseId(testCaseId, testTenantId);
       expect(caseDocs).toHaveLength(0);
     });
   });
@@ -377,7 +397,7 @@ describe('InMemoryCaseDocumentRepository', () => {
 
       await repository.save(document);
 
-      const retrieved = await repository.findById(document.id);
+      const retrieved = await repository.findById(document.id, testTenantId);
       expect(retrieved?.acl).toHaveLength(2);
     });
 
@@ -388,7 +408,7 @@ describe('InMemoryCaseDocumentRepository', () => {
       document.grantAccess(testUser2Id, 'USER', AccessLevel.VIEW, testUserId);
       await repository.save(document);
 
-      const retrieved = await repository.findById(document.id);
+      const retrieved = await repository.findById(document.id, testTenantId);
       expect(retrieved?.acl).toHaveLength(1);
       expect(retrieved?.acl[0].accessLevel).toBe(AccessLevel.VIEW);
     });
@@ -401,7 +421,7 @@ describe('InMemoryCaseDocumentRepository', () => {
       document.grantAccess(testUser2Id, 'USER', AccessLevel.VIEW, testUserId, tomorrow);
       await repository.save(document);
 
-      const retrieved = await repository.findById(document.id);
+      const retrieved = await repository.findById(document.id, testTenantId);
       expect(retrieved?.acl[0].expiresAt).toBeDefined();
     });
   });
@@ -427,7 +447,7 @@ describe('InMemoryCaseDocumentRepository', () => {
       await repository.save(v1);
       await repository.save(v2);
 
-      const oldVersion = await repository.findById(v1.id);
+      const oldVersion = await repository.findById(v1.id, testTenantId);
       expect(oldVersion?.isLatestVersion).toBe(false);
       expect(oldVersion?.status).toBe(DocumentStatus.SUPERSEDED);
     });
@@ -441,7 +461,7 @@ describe('InMemoryCaseDocumentRepository', () => {
       document.delete(testUserId);
       await repository.save(document);
 
-      const retrieved = await repository.findById(document.id);
+      const retrieved = await repository.findById(document.id, testTenantId);
       expect(retrieved?.isDeleted).toBe(true);
     });
 
@@ -452,7 +472,7 @@ describe('InMemoryCaseDocumentRepository', () => {
       document.delete(testUserId);
       await repository.save(document);
 
-      const byCaseId = await repository.findByCaseId(testCaseId);
+      const byCaseId = await repository.findByCaseId(testCaseId, testTenantId);
       const byUser = await repository.findAccessibleByUser(testUserId, testTenantId);
 
       expect(byCaseId).toHaveLength(0);

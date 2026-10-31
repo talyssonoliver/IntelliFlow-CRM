@@ -213,6 +213,7 @@ describe('Chain Version Router', () => {
         expect(result).toBeDefined();
         expect(mockChainVersionService.updateVersion).toHaveBeenCalledWith(
           TEST_VERSION_ID,
+          TEST_UUIDS.tenant,
           { name: 'v1.1.0' },
           expect.any(String) // userId
         );
@@ -229,7 +230,11 @@ describe('Chain Version Router', () => {
 
         expect(result).toBeDefined();
         expect(result.status).toBe('ACTIVE');
-        expect(mockChainVersionService.activateVersion).toHaveBeenCalled();
+        expect(mockChainVersionService.activateVersion).toHaveBeenCalledWith(
+          TEST_VERSION_ID,
+          TEST_UUIDS.tenant,
+          expect.any(String)
+        );
       });
 
       it('should reject non-admin users', async () => {
@@ -250,7 +255,11 @@ describe('Chain Version Router', () => {
         });
 
         expect(result).toBeDefined();
-        expect(mockChainVersionService.deprecateVersion).toHaveBeenCalled();
+        expect(mockChainVersionService.deprecateVersion).toHaveBeenCalledWith(
+          TEST_VERSION_ID,
+          TEST_UUIDS.tenant,
+          expect.any(String)
+        );
       });
     });
 
@@ -263,7 +272,11 @@ describe('Chain Version Router', () => {
         });
 
         expect(result).toBeDefined();
-        expect(mockChainVersionService.archiveVersion).toHaveBeenCalled();
+        expect(mockChainVersionService.archiveVersion).toHaveBeenCalledWith(
+          TEST_VERSION_ID,
+          TEST_UUIDS.tenant,
+          expect.any(String)
+        );
       });
     });
 
@@ -279,6 +292,7 @@ describe('Chain Version Router', () => {
         expect(result).toBeDefined();
         expect(mockChainVersionService.rollbackToVersion).toHaveBeenCalledWith(
           TEST_VERSION_ID,
+          TEST_UUIDS.tenant,
           'Performance regression',
           expect.any(String)
         );
@@ -297,7 +311,10 @@ describe('Chain Version Router', () => {
 
         expect(result).toBeDefined();
         expect(result!.id).toBe(TEST_VERSION_ID);
-        expect(mockChainVersionService.getVersion).toHaveBeenCalledWith(TEST_VERSION_ID);
+        expect(mockChainVersionService.getVersion).toHaveBeenCalledWith(
+          TEST_VERSION_ID,
+          TEST_UUIDS.tenant
+        );
       });
     });
 
@@ -428,6 +445,7 @@ describe('Chain Version Router', () => {
         expect(result).toBeDefined();
         expect(mockChainVersionService.getVersionAuditLog).toHaveBeenCalledWith(
           TEST_VERSION_ID,
+          TEST_UUIDS.tenant,
           50 // default limit
         );
       });
@@ -469,7 +487,8 @@ describe('Chain Version Router', () => {
         expect(result).toBeDefined();
         expect(mockChainVersionService.compareVersions).toHaveBeenCalledWith(
           TEST_VERSION_ID,
-          TEST_VERSION_ID_B
+          TEST_VERSION_ID_B,
+          TEST_UUIDS.tenant
         );
       });
     });

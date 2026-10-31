@@ -1962,16 +1962,21 @@ export const homeRouter = createTRPCRouter({
         });
       }
 
-      const target = await ctx.prismaWithTenant.user.findUnique({
-        where: { id: targetUserId },
+      // #1075 review: ADMIN skips the team check, so the target must be found and
+      // written only inside the caller's tenant.
+      const target = await ctx.prismaWithTenant.user.findFirst({
+        where: { id: targetUserId, tenantId },
         select: { preferences: true },
       });
-      const prefs = (target?.preferences as Record<string, unknown> | null) || {};
+      if (!target) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Team member not found' });
+      }
+      const prefs = (target.preferences as Record<string, unknown> | null) || {};
       const beforeState = (prefs.dailyGoal as Record<string, unknown> | undefined) ?? undefined;
       const afterState = { type, targetValue, label, customUnit };
 
-      await ctx.prismaWithTenant.user.update({
-        where: { id: targetUserId },
+      await ctx.prismaWithTenant.user.updateMany({
+        where: { id: targetUserId, tenantId },
         data: { preferences: { ...prefs, dailyGoal: afterState } },
       });
 

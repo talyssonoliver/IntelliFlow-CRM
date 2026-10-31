@@ -10,6 +10,7 @@
  */
 
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import type { ReindexProgress } from './indexer';
 
 // ============================================
@@ -27,9 +28,9 @@ export const REINDEX_QUEUE_NAME = 'intelliflow:document-reindex';
 
 export const ReindexJobDataSchema = z.object({
   // Target scope
-  tenantId: z.uuid().optional(),
-  documentIds: z.array(z.uuid()).optional(),
-  noteIds: z.array(z.uuid()).optional(),
+  tenantId: recordIdSchema.optional(),
+  documentIds: z.array(recordIdSchema).optional(),
+  noteIds: z.array(recordIdSchema).optional(),
 
   // Processing options
   indexType: z.enum(['documents', 'notes', 'all']).default('all'),
@@ -37,7 +38,7 @@ export const ReindexJobDataSchema = z.object({
   forceRegenerate: z.boolean().default(false),
 
   // Job metadata
-  requestedBy: z.uuid().optional(),
+  requestedBy: recordIdSchema.optional(),
   reason: z.string().optional(),
 });
 
