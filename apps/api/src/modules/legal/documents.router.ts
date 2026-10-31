@@ -25,6 +25,56 @@ import { container } from '../../container';
 // only thing between a lower tier and the LEGAL module. Aliased to the original
 // name so every procedure below is gated with a one-line change.
 const tenantProcedure = moduleTenantProcedure('LEGAL');
+
+/** What the document helpers need from a LEGAL tenant procedure's context. */
+type DocumentContext = {
+  user?: { userId?: string } | null;
+  prismaWithTenant: ConstructorParameters<typeof PrismaCaseDocumentRepository>[0];
+  tenant: { tenantId: string };
+};
+
+function requireUserId(ctx: DocumentContext): string {
+  const userId = ctx.user?.userId;
+  if (!userId) {
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
+  }
+  return userId;
+}
+
+/**
+ * This tenant's document. A document that is missing or belongs to another
+ * tenant is NOT_FOUND alike (#1075 review).
+ */
+async function findTenantDocument(ctx: DocumentContext, documentId: string) {
+  const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
+  const document = await documentRepo.findById(documentId, ctx.tenant.tenantId);
+  if (!document) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+  }
+  return { documentRepo, document };
+}
+
+/** The caller's id (UNAUTHORIZED without one), then this tenant's document. */
+async function loadTenantDocument(ctx: DocumentContext, documentId: string) {
+  const userId = requireUserId(ctx);
+  return { userId, ...(await findTenantDocument(ctx, documentId)) };
+}
+
+/** This tenant's documents for a bulk operation, by id (one query). */
+async function loadTenantDocuments(ctx: DocumentContext, ids: string[]) {
+  const userId = requireUserId(ctx);
+  const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
+  const fetched = await documentRepo.findByIds([...new Set(ids)], ctx.tenant.tenantId);
+  const docMap = new Map(fetched.map((d) => [d.id, d]));
+  return { userId, documentRepo, docMap };
+}
+
+/** FORBIDDEN unless the user holds `level` on the document or created it. */
+function assertDocumentAccess(document: CaseDocument, userId: string, level: AccessLevel): void {
+  if (!document.hasAccess(userId, level) && document.toJSON().createdBy !== userId) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
+  }
+}
 import { loadBullMQ } from '../../lib/load-bullmq';
 import { loadDocumentAutomation, assertNotDeleteGuarded } from './document-automation';
 import { enforceDocumentPolicies } from './document-policies';
@@ -217,18 +267,7 @@ export const documentsRouter = createTRPCRouter({
   createVersion: tenantProcedure
     .input(createVersionInputSchema)
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.user?.userId;
-      if (!userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-      }
-
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-
-      // Find document
-      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
-      if (!document) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-      }
+      const { userId, documentRepo, document } = await loadTenantDocument(ctx, input.documentId);
 
       // Check access (user must have EDIT or ADMIN)
       if (!document.hasAccess(userId, AccessLevel.EDIT)) {
@@ -262,17 +301,7 @@ export const documentsRouter = createTRPCRouter({
    * Get document by ID
    */
   getById: tenantProcedure.input(z.object({ id: recordIdSchema })).query(async ({ ctx, input }) => {
-    const userId = ctx.user?.userId;
-    if (!userId) {
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-    }
-
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-
-    const document = await documentRepo.findById(input.id, ctx.tenant.tenantId);
-    if (!document) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-    }
+    const { userId, document } = await loadTenantDocument(ctx, input.id);
 
     // Check if deleted
     if (document.isDeleted) {
@@ -349,22 +378,10 @@ export const documentsRouter = createTRPCRouter({
    * Grant access to a user or role
    */
   grantAccess: tenantProcedure.input(grantAccessInputSchema).mutation(async ({ ctx, input }) => {
-    const userId = ctx.user?.userId;
-    if (!userId) {
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-    }
-
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-
-    const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
-    if (!document) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-    }
+    const { userId, documentRepo, document } = await loadTenantDocument(ctx, input.documentId);
 
     // Check if user has ADMIN access
-    if (!document.hasAccess(userId, AccessLevel.ADMIN) && document.toJSON().createdBy !== userId) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
-    }
+    assertDocumentAccess(document, userId, AccessLevel.ADMIN);
 
     // Grant access using domain method
     document.grantAccess(
@@ -386,25 +403,10 @@ export const documentsRouter = createTRPCRouter({
   revokeAccess: tenantProcedure
     .input(z.object({ documentId: recordIdSchema, principalId: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.user?.userId;
-      if (!userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-      }
-
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-
-      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
-      if (!document) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-      }
+      const { userId, documentRepo, document } = await loadTenantDocument(ctx, input.documentId);
 
       // Check ADMIN access
-      if (
-        !document.hasAccess(userId, AccessLevel.ADMIN) &&
-        document.toJSON().createdBy !== userId
-      ) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
-      }
+      assertDocumentAccess(document, userId, AccessLevel.ADMIN);
 
       // Revoke access using domain method
       document.revokeAccess(input.principalId, userId);
@@ -420,22 +422,10 @@ export const documentsRouter = createTRPCRouter({
   submitForReview: tenantProcedure
     .input(z.object({ documentId: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.user?.userId;
-      if (!userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-      }
-
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-
-      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
-      if (!document) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-      }
+      const { userId, documentRepo, document } = await loadTenantDocument(ctx, input.documentId);
 
       // Check access
-      if (!document.hasAccess(userId, AccessLevel.EDIT) && document.toJSON().createdBy !== userId) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
-      }
+      assertDocumentAccess(document, userId, AccessLevel.EDIT);
 
       // Submit for review using domain method
       try {
@@ -453,25 +443,10 @@ export const documentsRouter = createTRPCRouter({
   approve: tenantProcedure
     .input(z.object({ documentId: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.user?.userId;
-      if (!userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-      }
-
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-
-      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
-      if (!document) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-      }
+      const { userId, documentRepo, document } = await loadTenantDocument(ctx, input.documentId);
 
       // Check ADMIN access
-      if (
-        !document.hasAccess(userId, AccessLevel.ADMIN) &&
-        document.toJSON().createdBy !== userId
-      ) {
-        throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
-      }
+      assertDocumentAccess(document, userId, AccessLevel.ADMIN);
 
       // Approve using domain method
       try {
@@ -487,22 +462,10 @@ export const documentsRouter = createTRPCRouter({
    * Sign document with e-signature
    */
   sign: tenantProcedure.input(signDocumentInputSchema).mutation(async ({ ctx, input }) => {
-    const userId = ctx.user?.userId;
-    if (!userId) {
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-    }
-
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-
-    const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
-    if (!document) {
-      throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-    }
+    const { userId, documentRepo, document } = await loadTenantDocument(ctx, input.documentId);
 
     // Check access
-    if (!document.hasAccess(userId, AccessLevel.EDIT) && document.toJSON().createdBy !== userId) {
-      throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
-    }
+    assertDocumentAccess(document, userId, AccessLevel.EDIT);
 
     // Extract IP and User-Agent from request headers server-side (AC-003).
     // ctx.req is a Fetch Request (headers is a Headers object). Use the
@@ -545,17 +508,7 @@ export const documentsRouter = createTRPCRouter({
   archive: tenantProcedure
     .input(z.object({ documentId: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.user?.userId;
-      if (!userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-      }
-
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-
-      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
-      if (!document) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-      }
+      const { userId, documentRepo, document } = await loadTenantDocument(ctx, input.documentId);
 
       // Check EDIT access (AC-008)
       if (!document.hasAccess(userId, AccessLevel.EDIT) && document.toJSON().createdBy !== userId) {
@@ -588,12 +541,7 @@ export const documentsRouter = createTRPCRouter({
         });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-
-      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
-      if (!document) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-      }
+      const { documentRepo, document } = await findTenantDocument(ctx, input.documentId);
 
       // Place legal hold using domain method
       document.placeLegalHold(input.retentionUntil, userId);
@@ -618,12 +566,7 @@ export const documentsRouter = createTRPCRouter({
         });
       }
 
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-
-      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
-      if (!document) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-      }
+      const { documentRepo, document } = await findTenantDocument(ctx, input.documentId);
 
       // Release legal hold using domain method
       document.releaseLegalHold(userId);
@@ -638,17 +581,7 @@ export const documentsRouter = createTRPCRouter({
   delete: tenantProcedure
     .input(z.object({ documentId: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.user?.userId;
-      if (!userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-      }
-
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-
-      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
-      if (!document) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-      }
+      const { userId, documentRepo, document } = await loadTenantDocument(ctx, input.documentId);
 
       // PG-186: Check automation delete guard
       const deleteFlags = await loadDocumentAutomation(ctx);
@@ -670,16 +603,7 @@ export const documentsRouter = createTRPCRouter({
   getSignedUrl: tenantProcedure
     .input(z.object({ documentId: recordIdSchema }))
     .query(async ({ ctx, input }) => {
-      const userId = ctx.user?.userId;
-      if (!userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-      }
-
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
-      if (!document) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-      }
+      const { userId, document } = await loadTenantDocument(ctx, input.documentId);
 
       // Check VIEW access
       if (!document.hasAccess(userId, AccessLevel.VIEW) && document.toJSON().createdBy !== userId) {
@@ -703,17 +627,8 @@ export const documentsRouter = createTRPCRouter({
   getAuditTrail: tenantProcedure
     .input(z.object({ documentId: recordIdSchema }))
     .query(async ({ ctx, input }): Promise<DocumentAuditEntryDto[]> => {
-      const userId = ctx.user?.userId;
-      if (!userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-      }
-
       // Check VIEW access (AC-008)
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
-      const document = await documentRepo.findById(input.documentId, ctx.tenant.tenantId);
-      if (!document) {
-        throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
-      }
+      const { userId, document } = await loadTenantDocument(ctx, input.documentId);
       if (!document.hasAccess(userId, AccessLevel.VIEW) && document.toJSON().createdBy !== userId) {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied to audit trail' });
       }
@@ -744,18 +659,9 @@ export const documentsRouter = createTRPCRouter({
   bulkDownload: tenantProcedure
     .input(bulkDownloadDocumentsSchema)
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.user?.userId;
-      if (!userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-      }
-
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
       const { ids } = input;
-
       // Deduplicate ids before the batch fetch; preserve original iteration order
-      const uniqueIds = [...new Set(ids)];
-      const fetched = await documentRepo.findByIds(uniqueIds, ctx.tenant.tenantId);
-      const docMap = new Map(fetched.map((d) => [d.id, d]));
+      const { userId, docMap } = await loadTenantDocuments(ctx, ids);
 
       const successful: string[] = [];
       const failed: Array<{ id: string; error: string }> = [];
@@ -798,18 +704,9 @@ export const documentsRouter = createTRPCRouter({
   bulkArchive: tenantProcedure
     .input(bulkArchiveDocumentsSchema)
     .mutation(async ({ ctx, input }) => {
-      const userId = ctx.user?.userId;
-      if (!userId) {
-        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-      }
-
-      const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
       const { ids } = input;
-
       // Batch-fetch all documents in a single query (NP-037 fix)
-      const uniqueIds = [...new Set(ids)];
-      const fetched = await documentRepo.findByIds(uniqueIds, ctx.tenant.tenantId);
-      const docMap = new Map(fetched.map((d) => [d.id, d]));
+      const { userId, documentRepo, docMap } = await loadTenantDocuments(ctx, ids);
 
       const successful: string[] = [];
       const failed: Array<{ id: string; error: string }> = [];
@@ -849,18 +746,9 @@ export const documentsRouter = createTRPCRouter({
    * Bulk delete documents (soft delete)
    */
   bulkDelete: tenantProcedure.input(bulkDeleteDocumentsSchema).mutation(async ({ ctx, input }) => {
-    const userId = ctx.user?.userId;
-    if (!userId) {
-      throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
-    }
-
-    const documentRepo = new PrismaCaseDocumentRepository(ctx.prismaWithTenant);
     const { ids } = input;
-
     // Batch-fetch all documents in a single query (NP-038 fix)
-    const uniqueIds = [...new Set(ids)];
-    const fetched = await documentRepo.findByIds(uniqueIds, ctx.tenant.tenantId);
-    const docMap = new Map(fetched.map((d) => [d.id, d]));
+    const { userId, documentRepo, docMap } = await loadTenantDocuments(ctx, ids);
 
     const successful: string[] = [];
     const failed: Array<{ id: string; error: string }> = [];
