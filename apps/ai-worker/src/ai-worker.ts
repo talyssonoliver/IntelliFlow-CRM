@@ -461,6 +461,17 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       );
       await this.contactEmbedWorker.start();
       this.logger.info('ContactEmbedWorker started — intelliflow-contact-embed queue consumed');
+      // Re-embed contacts left without an embedding (the vector(2048) migration clears them all).
+      // Not awaited: the sweep pages through contacts and must not hold up boot.
+      this.contactEmbedWorker
+        .enqueueMissingEmbeddings()
+        .then((queued) => this.logger.info({ queued }, 'Contact embedding backfill queued'))
+        .catch((error: unknown) =>
+          this.logger.warn(
+            { error: error instanceof Error ? error.message : String(error) },
+            'Contact embedding backfill not queued'
+          )
+        );
     } catch (error) {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },

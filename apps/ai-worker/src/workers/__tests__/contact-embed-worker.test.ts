@@ -8,12 +8,14 @@ const constructorCalls: {
   Worker: unknown[];
   QueueEvents: unknown[];
   workerOn: Array<[string, unknown]>;
+  addBulk: unknown[][];
   closed: { worker: number; events: number; queue: number };
 } = {
   Queue: [],
   Worker: [],
   QueueEvents: [],
   workerOn: [],
+  addBulk: [],
   closed: { worker: 0, events: 0, queue: 0 },
 };
 
@@ -27,6 +29,10 @@ vi.mock('bullmq', () => {
     }
     async add() {
       return { id: 'job-1' };
+    }
+    async addBulk(jobs: unknown[]) {
+      constructorCalls.addBulk.push(jobs);
+      return jobs;
     }
   }
   class MockWorker {
@@ -64,6 +70,7 @@ import {
   ContactEmbedWorker,
   createContactEmbedWorker,
   CONTACT_EMBED_QUEUE_NAME,
+  BACKFILL_SPACING_MS,
 } from '../contact-embed-worker';
 import type { Job } from 'bullmq';
 
@@ -72,6 +79,7 @@ beforeEach(() => {
   constructorCalls.Worker.length = 0;
   constructorCalls.QueueEvents.length = 0;
   constructorCalls.workerOn.length = 0;
+  constructorCalls.addBulk.length = 0;
   constructorCalls.closed.worker = 0;
   constructorCalls.closed.events = 0;
   constructorCalls.closed.queue = 0;
@@ -515,5 +523,77 @@ describe('ContactEmbedWorker.process — tenant scope and rag ceiling (PG-199)',
 
     await expect(worker.process(job as never, 'lock-token')).rejects.toThrow('provider 503');
     expect(job.moveToDelayed).not.toHaveBeenCalled();
+  });
+});
+
+describe('ContactEmbedWorker.enqueueMissingEmbeddings (backfill after the vector(2048) migration)', () => {
+  const redis = { host: 'localhost', port: 6379 };
+
+  it('accepts backfill as a job reason', () => {
+    expect(
+      ContactEmbedJobDataSchema.parse({ contactId: 'c-1', tenantId: 't-1', reason: 'backfill' })
+        .reason
+    ).toBe('backfill');
+  });
+
+  it('queues every contact whose embedding is NULL, page by page, deduped and spaced', async () => {
+    const pages = [
+      [
+        { id: 'c-1', tenantId: 't-1' },
+        { id: 'c-2', tenantId: 't-2' },
+      ],
+      [{ id: 'c-3', tenantId: 't-1' }],
+    ];
+    const prisma = { $queryRaw: vi.fn(async () => pages.shift() ?? []) };
+    const worker = new ContactEmbedWorker(
+      prisma as any,
+      redis,
+      { generateEmbedding: vi.fn() },
+      vi.fn()
+    );
+    await worker.start();
+
+    await expect(worker.enqueueMissingEmbeddings(2)).resolves.toBe(3);
+
+    const job = (contactId: string, tenantId: string, index: number) => ({
+      name: 'embed',
+      data: { contactId, tenantId, reason: 'backfill' },
+      opts: { jobId: `backfill-${contactId}`, delay: index * BACKFILL_SPACING_MS },
+    });
+    expect(constructorCalls.addBulk.flat()).toEqual([
+      job('c-1', 't-1', 0),
+      job('c-2', 't-2', 1),
+      job('c-3', 't-1', 2),
+    ]);
+    // Only NULL embeddings are read, and the second page resumes after the last id.
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);
+    const [sql, ...values] = prisma.$queryRaw.mock.calls[1] as unknown as [string[], ...unknown[]];
+    expect(sql.join('?')).toMatch(/FROM contacts\s+WHERE embedding IS NULL AND id > \?/);
+    expect(values).toEqual(['c-2', 2]);
+  });
+
+  it('queues nothing when every contact already has an embedding', async () => {
+    const prisma = { $queryRaw: vi.fn(async () => []) };
+    const worker = new ContactEmbedWorker(
+      prisma as any,
+      redis,
+      { generateEmbedding: vi.fn() },
+      vi.fn()
+    );
+    await worker.start();
+
+    await expect(worker.enqueueMissingEmbeddings()).resolves.toBe(0);
+    expect(constructorCalls.addBulk).toEqual([]);
+  });
+
+  it('refuses to run before start()', async () => {
+    const worker = new ContactEmbedWorker(
+      {} as any,
+      redis,
+      { generateEmbedding: vi.fn() },
+      vi.fn()
+    );
+
+    await expect(worker.enqueueMissingEmbeddings()).rejects.toThrow(/not started/);
   });
 });

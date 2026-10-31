@@ -165,6 +165,17 @@ export const MODEL_CATALOG: readonly ModelCatalogEntry[] = [
     providers: {},
     dimensions: 1536,
   },
+  {
+    // Free on OpenRouter (owner ruling 2026-10-31), and only while there are no real customers:
+    // free routes may train on what we send (gh #1108). Its only output size is 2048.
+    id: 'nvidia/nemotron-3-embed-1b:free',
+    kind: 'embedding',
+    purposes: ['rag'],
+    priceMicroUsdPer1k: { input: 0, output: 0 },
+    pricingKey: 'nvidia/nemotron-3-embed-1b:free',
+    providers: {},
+    dimensions: 2048,
+  },
 ];
 
 const CATALOG_BY_ID: ReadonlyMap<string, ModelCatalogEntry> = new Map(

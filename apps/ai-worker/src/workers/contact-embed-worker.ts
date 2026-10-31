@@ -32,10 +32,19 @@ export const CONTACT_EMBED_QUEUE_NAME = 'intelliflow-contact-embed';
  */
 export const CEILING_RETRY_DELAY_MS = 15 * 60_000;
 
+/** Contacts read per page by the backfill sweep. */
+export const BACKFILL_PAGE_SIZE = 500;
+
+/**
+ * Gap between backfill jobs: 15 a minute, under the 20 requests a minute OpenRouter allows on
+ * free models, so a backlog does not fail on 429s and burn its retries.
+ */
+export const BACKFILL_SPACING_MS = 4_000;
+
 export const ContactEmbedJobDataSchema = z.object({
   contactId: z.string().min(1),
   tenantId: z.string().min(1),
-  reason: z.enum(['create', 'update', 'merge']),
+  reason: z.enum(['create', 'update', 'merge', 'backfill']),
 });
 
 export type ContactEmbedJobData = z.infer<typeof ContactEmbedJobDataSchema>;
@@ -112,6 +121,37 @@ export class ContactEmbedWorker {
     this.worker.on('failed', (job, error) => {
       console.warn(`[contact-embed-worker] job ${job?.id} failed:`, error?.message);
     });
+  }
+
+  /**
+   * Queues a `backfill` job for every contact whose embedding is NULL, so contacts left without
+   * one (the vector(2048) migration clears them all) are embedded again without waiting for an
+   * edit. The job id dedupes a contact already queued, and each job still re-checks erasure and
+   * restriction before it writes. Returns the number of contacts queued.
+   */
+  async enqueueMissingEmbeddings(pageSize: number = BACKFILL_PAGE_SIZE): Promise<number> {
+    if (!this.queue) throw new Error('ContactEmbedWorker not started');
+    let after = '';
+    let queued = 0;
+    for (;;) {
+      const rows = await this.prisma.$queryRaw<Array<{ id: string; tenantId: string }>>`
+        SELECT id, "tenantId" FROM contacts
+        WHERE embedding IS NULL AND id > ${after}
+        ORDER BY id
+        LIMIT ${pageSize}`;
+      const last = rows.at(-1);
+      if (!last) return queued;
+      await this.queue.addBulk(
+        rows.map((row, index) => ({
+          name: 'embed',
+          data: { contactId: row.id, tenantId: row.tenantId, reason: 'backfill' as const },
+          opts: { jobId: `backfill-${row.id}`, delay: (queued + index) * BACKFILL_SPACING_MS },
+        }))
+      );
+      queued += rows.length;
+      if (rows.length < pageSize) return queued;
+      after = last.id;
+    }
   }
 
   async stop(): Promise<void> {

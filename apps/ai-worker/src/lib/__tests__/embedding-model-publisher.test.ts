@@ -44,6 +44,16 @@ describe('active embedding model publisher (PG-199 Q10)', () => {
     expect(activeEmbeddingModel()).toEqual({ id: 'gemini-embedding-001', dimensions: 768 });
   });
 
+  it('reports the OpenRouter model at 2048 dimensions when EMBEDDING_PROVIDER=openrouter', async () => {
+    process.env['EMBEDDING_PROVIDER'] = 'openrouter';
+    delete process.env['OPENROUTER_EMBEDDING_MODEL'];
+    const { activeEmbeddingModel } = await load('openrouter');
+    expect(activeEmbeddingModel()).toEqual({
+      id: 'nvidia/nemotron-3-embed-1b:free',
+      dimensions: 2048,
+    });
+  });
+
   it('reports the LiteLLM rag-free model otherwise', async () => {
     const { activeEmbeddingModel } = await load();
     expect(activeEmbeddingModel()).toEqual({ id: 'nomic-embed-text', dimensions: 768 });

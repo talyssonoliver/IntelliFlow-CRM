@@ -15,6 +15,7 @@ import {
   VectorEmbedding,
   VectorSearchResult,
   executeRawWithTiming,
+  VECTOR_COLUMN_DIMENSIONS,
 } from './client';
 
 /**
@@ -71,7 +72,7 @@ function getDistanceOperator(metric: DistanceMetric): string {
  */
 export function validateEmbedding(
   embedding: unknown,
-  expectedDimensions: number = EMBEDDING_DIMENSIONS.ADA_002 as number
+  expectedDimensions: number = VECTOR_COLUMN_DIMENSIONS
 ): embedding is VectorEmbedding {
   if (!Array.isArray(embedding)) return false;
   if (embedding.length !== expectedDimensions) return false;
@@ -147,7 +148,7 @@ export async function findSimilarLeads(
     metric = 'cosine',
     threshold = 0.7,
     limit = 10,
-    dimensions = EMBEDDING_DIMENSIONS.ADA_002,
+    dimensions = VECTOR_COLUMN_DIMENSIONS,
   } = options;
 
   if (!validateEmbedding(embedding, dimensions)) {
@@ -200,7 +201,7 @@ export async function findSimilarContacts(
     metric = 'cosine',
     threshold = 0.7,
     limit = 10,
-    dimensions = EMBEDDING_DIMENSIONS.ADA_002,
+    dimensions = VECTOR_COLUMN_DIMENSIONS,
   } = options;
 
   if (!validateEmbedding(embedding, dimensions)) {
@@ -245,7 +246,7 @@ export async function updateLeadEmbedding(
   embedding: VectorEmbedding
 ): Promise<void> {
   if (!validateEmbedding(embedding)) {
-    throw new Error(`Invalid embedding: expected ${EMBEDDING_DIMENSIONS.ADA_002} dimensions`);
+    throw new Error(`Invalid embedding: expected ${VECTOR_COLUMN_DIMENSIONS} dimensions`);
   }
 
   const embeddingStr = formatEmbedding(embedding);
@@ -265,7 +266,7 @@ export async function updateContactEmbedding(
   embedding: VectorEmbedding
 ): Promise<void> {
   if (!validateEmbedding(embedding)) {
-    throw new Error(`Invalid embedding: expected ${EMBEDDING_DIMENSIONS.ADA_002} dimensions`);
+    throw new Error(`Invalid embedding: expected ${VECTOR_COLUMN_DIMENSIONS} dimensions`);
   }
 
   const embeddingStr = formatEmbedding(embedding);

@@ -30,6 +30,7 @@ const h = vi.hoisted(() => {
 
   let capturedGenerateEmbeddingCb: ((text: string) => Promise<number[] | null>) | null = null;
   const mockContactEmbedWorkerStart = vi.fn().mockResolvedValue(undefined);
+  const mockEnqueueMissingEmbeddings = vi.fn().mockResolvedValue(0);
   const MockContactEmbedWorkerCtor = vi.fn().mockImplementation(function (
     _prisma: unknown,
     _redisConnection: unknown,
@@ -37,7 +38,10 @@ const h = vi.hoisted(() => {
     _updateFn: unknown
   ) {
     capturedGenerateEmbeddingCb = embeddingChainLike.generateEmbedding;
-    return { start: mockContactEmbedWorkerStart };
+    return {
+      start: mockContactEmbedWorkerStart,
+      enqueueMissingEmbeddings: mockEnqueueMissingEmbeddings,
+    };
   });
 
   return {
@@ -45,6 +49,7 @@ const h = vi.hoisted(() => {
     mockGetEmbeddingChain,
     capturedGenerateEmbeddingCb: () => capturedGenerateEmbeddingCb,
     mockContactEmbedWorkerStart,
+    mockEnqueueMissingEmbeddings,
     MockContactEmbedWorkerCtor,
   };
 });
@@ -253,6 +258,7 @@ describe('AIWorker.bootContactEmbedWorker — changed-line coverage (D2 PR #264)
       text: 'hello',
     });
     h.mockContactEmbedWorkerStart.mockResolvedValue(undefined);
+    h.mockEnqueueMissingEmbeddings.mockResolvedValue(0);
     h.MockContactEmbedWorkerCtor.mockImplementation(function (
       _prisma: unknown,
       _redisConnection: unknown,
@@ -261,7 +267,10 @@ describe('AIWorker.bootContactEmbedWorker — changed-line coverage (D2 PR #264)
     ) {
       (h as any)._cb = embeddingChainLike.generateEmbedding;
       (h as any)._update = updateFn;
-      return { start: h.mockContactEmbedWorkerStart };
+      return {
+        start: h.mockContactEmbedWorkerStart,
+        enqueueMissingEmbeddings: h.mockEnqueueMissingEmbeddings,
+      };
     });
   });
 
@@ -325,6 +334,40 @@ describe('AIWorker.bootContactEmbedWorker — changed-line coverage (D2 PR #264)
     const cb = (h as any)._cb as ((text: string) => Promise<number[] | null>) | undefined;
     const result = await cb!('text without vector');
     expect(result).toBeNull();
+  });
+
+  it('queues the NULL-embedding backfill once the worker has started (vector(2048) migration)', async () => {
+    h.mockEnqueueMissingEmbeddings.mockResolvedValue(4);
+    const worker = new AIWorker();
+    (worker as any).prisma = { $connect: vi.fn(), $disconnect: vi.fn() };
+
+    await (worker as any).bootContactEmbedWorker();
+    await vi.waitFor(() => expect(h.mockEnqueueMissingEmbeddings).toHaveBeenCalledTimes(1));
+
+    expect(h.mockContactEmbedWorkerStart.mock.invocationCallOrder[0]).toBeLessThan(
+      h.mockEnqueueMissingEmbeddings.mock.invocationCallOrder[0]!
+    );
+    await vi.waitFor(() =>
+      expect((worker as any).logger.info).toHaveBeenCalledWith(
+        { queued: 4 },
+        expect.stringContaining('backfill')
+      )
+    );
+  });
+
+  it('a failed backfill only logs a warning; the worker stays up', async () => {
+    h.mockEnqueueMissingEmbeddings.mockRejectedValue(new Error('redis down'));
+    const worker = new AIWorker();
+    (worker as any).prisma = { $connect: vi.fn(), $disconnect: vi.fn() };
+
+    await expect((worker as any).bootContactEmbedWorker()).resolves.toBeUndefined();
+    await vi.waitFor(() =>
+      expect((worker as any).logger.warn).toHaveBeenCalledWith(
+        { error: 'redis down' },
+        expect.stringContaining('backfill')
+      )
+    );
+    expect((worker as any).contactEmbedWorker).toBeDefined();
   });
 
   it('bootContactEmbedWorker swallows errors and logs a warning (resilience)', async () => {

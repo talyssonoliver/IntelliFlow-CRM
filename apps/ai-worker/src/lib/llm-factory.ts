@@ -1,7 +1,7 @@
 import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
 import { ChatOllama } from '@langchain/ollama';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
-import type { Embeddings } from '@langchain/core/embeddings';
+import { Embeddings } from '@langchain/core/embeddings';
 import { aiConfig, AIProviderSchema, type AIProvider } from '../config/ai.config.js';
 import { CircuitBreaker } from '../utils/circuit-breaker.js';
 import { resolveEffectiveTier } from './tenant-ai-config.js';
@@ -9,6 +9,9 @@ import { assertWithinCeiling } from './purpose-ceiling.js';
 import { wrapModelWithTracing, wrapEmbeddingsWithTracing } from '../tracing/llm-tracer.js';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { GeminiEmbeddings } from './gemini-embeddings.js';
+import { embeddingDimensions } from './embedding-dimensions.js';
+
+export { embeddingDimensions };
 import {
   getCatalogEntry,
   type LLMPurpose as DomainLLMPurpose,
@@ -668,8 +671,68 @@ export async function createLLMForTenant(
   );
 }
 
+/**
+ * Default OpenRouter embedding model (owner ruling 2026-10-31): free, and accepted only
+ * while there are no real customers, because free routes may train on what we send
+ * (debt EMBEDDINGS-FREE-PROVIDER-TRAINS-001, gh #1108).
+ */
+const DEFAULT_OPENROUTER_EMBEDDING_MODEL = 'nvidia/nemotron-3-embed-1b:free';
+
+/** The OpenRouter embedding model id: `OPENROUTER_EMBEDDING_MODEL`, else the default. */
+function openRouterEmbeddingModel(): string {
+  return process.env['OPENROUTER_EMBEDDING_MODEL'] || DEFAULT_OPENROUTER_EMBEDDING_MODEL;
+}
+
+/**
+ * Stands in for a refused embeddings configuration. It fails on the first embed call
+ * instead of at construction: `new EmbeddingChain()` runs createEmbeddings() at import,
+ * and a throw there crash-loops ai-worker (#238).
+ */
+class RefusedEmbeddings extends Embeddings {
+  constructor(private readonly reason: string) {
+    super({});
+  }
+
+  embedQuery(): Promise<number[]> {
+    return Promise.reject(new Error(this.reason));
+  }
+
+  embedDocuments(): Promise<number[][]> {
+    return Promise.reject(new Error(this.reason));
+  }
+}
+
+/**
+ * Embeddings through OpenRouter's OpenAI-compatible `/embeddings`. Only `:free` ids are
+ * sent, as with chat: there is no paid fallback, so a paid id is refused, not called.
+ * No `dimensions` is sent: the free Nemotron model accepts only its native size and
+ * answers 400 to any other.
+ */
+function createOpenRouterEmbeddings(model: string): Embeddings {
+  if (!model.endsWith(':free')) {
+    return new RefusedEmbeddings(
+      `[llm-factory] OPENROUTER_EMBEDDING_MODEL "${model}" refused: only :free models are allowed for embeddings (owner ruling 2026-10-31)`
+    );
+  }
+  return new OpenAIEmbeddings({
+    apiKey: process.env['OPENROUTER_API_KEY'] || '',
+    model,
+    configuration: {
+      baseURL: process.env['OPENROUTER_BASE_URL'] || 'https://openrouter.ai/api/v1',
+      defaultHeaders: {
+        'HTTP-Referer': process.env['OPENROUTER_SITE_URL'] || 'https://intelliflow-crm.app',
+        'X-Title': 'IntelliFlow CRM',
+      },
+      fetch: bodySafeFetch,
+    },
+  });
+}
+
 /** PG-199: MODEL_PRICING key of the embeddings provider createEmbeddings builds. */
 export function embeddingsPricingKey(tier: LLMTier): string {
+  if (aiConfig.provider !== 'mock' && process.env['EMBEDDING_PROVIDER'] === 'openrouter') {
+    return openRouterEmbeddingModel();
+  }
   if (aiConfig.provider !== 'mock' && process.env['EMBEDDING_PROVIDER'] === 'gemini') {
     return process.env['GEMINI_EMBEDDING_MODEL'] || 'gemini-embedding-001';
   }
@@ -699,15 +762,16 @@ export function createEmbeddings(tier: LLMTier = 'free'): Embeddings {
       modelName: `rag-${tier}`,
       configuration: { baseURL: 'http://mock-litellm' },
     });
+  } else if (process.env['EMBEDDING_PROVIDER'] === 'openrouter') {
+    embeddings = createOpenRouterEmbeddings(openRouterEmbeddingModel());
   } else if (process.env['EMBEDDING_PROVIDER'] === 'gemini') {
-    // Production embeddings via Google `gemini-embedding-001` at a dimension that
-    // matches the pgvector(1536) columns (no DB migration). OpenRouter has no free
-    // embeddings, so chat (OpenRouter) and embeddings (Gemini) are decoupled. The
-    // adapter makes no network call at construction, so module-init stays safe.
+    // Legacy: Google `gemini-embedding-001` at a dimension that matches the
+    // pgvector(1536) columns. Superseded by EMBEDDING_PROVIDER=openrouter (owner
+    // ruling 2026-10-31); the adapter makes no network call at construction.
     embeddings = new GeminiEmbeddings({
       apiKey: process.env['GEMINI_API_KEY'] || '',
       model: process.env['GEMINI_EMBEDDING_MODEL'] || 'gemini-embedding-001',
-      dimensions: Number.parseInt(process.env['EMBEDDING_DIMENSIONS'] || '1536', 10),
+      dimensions: embeddingDimensions(),
     });
   } else {
     // Primary + ollama fallback — both route through LiteLLM proxy.
