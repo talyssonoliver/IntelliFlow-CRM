@@ -44,7 +44,11 @@ const h = vi.hoisted(() => {
     };
   });
 
+  // Size the configured embedding provider returns; the mocked column is 2048.
+  const dims = { provider: 2048 };
+
   return {
+    dims,
     mockGenerateEmbedding,
     mockGetEmbeddingChain,
     capturedGenerateEmbeddingCb: () => capturedGenerateEmbeddingCb,
@@ -90,7 +94,12 @@ vi.mock('../workers/contact-embed-worker', () => ({
   ContactEmbedWorker: h.MockContactEmbedWorkerCtor,
 }));
 
+vi.mock('../lib/embedding-dimensions', () => ({
+  embeddingDimensions: () => h.dims.provider,
+}));
+
 vi.mock('@intelliflow/db', () => ({
+  VECTOR_COLUMN_DIMENSIONS: 2048,
   prisma: { $connect: vi.fn(), $disconnect: vi.fn() },
   PrismaClient: vi.fn(),
   updateContactEmbedding: vi.fn().mockResolvedValue(undefined),
@@ -257,6 +266,7 @@ describe('AIWorker.bootContactEmbedWorker — changed-line coverage (D2 PR #264)
       model: 'rag-free',
       text: 'hello',
     });
+    h.dims.provider = 2048;
     h.mockContactEmbedWorkerStart.mockResolvedValue(undefined);
     h.mockEnqueueMissingEmbeddings.mockResolvedValue(0);
     h.MockContactEmbedWorkerCtor.mockImplementation(function (
@@ -334,6 +344,22 @@ describe('AIWorker.bootContactEmbedWorker — changed-line coverage (D2 PR #264)
     const cb = (h as any)._cb as ((text: string) => Promise<number[] | null>) | undefined;
     const result = await cb!('text without vector');
     expect(result).toBeNull();
+  });
+
+  it('does not start when the provider returns vectors that do not fit the embedding column', async () => {
+    // e.g. the LiteLLM path (1536) against the vector(2048) columns: every write would be refused.
+    h.dims.provider = 1536;
+    const worker = new AIWorker();
+    (worker as any).prisma = { $connect: vi.fn(), $disconnect: vi.fn() };
+
+    await expect((worker as any).bootContactEmbedWorker()).resolves.toBeUndefined();
+
+    expect(h.MockContactEmbedWorkerCtor).not.toHaveBeenCalled();
+    expect(h.mockEnqueueMissingEmbeddings).not.toHaveBeenCalled();
+    expect((worker as any).logger.error).toHaveBeenCalledWith(
+      { dimensions: 1536, column: 2048 },
+      expect.stringContaining('not started')
+    );
   });
 
   it('queues the NULL-embedding backfill once the worker has started (vector(2048) migration)', async () => {

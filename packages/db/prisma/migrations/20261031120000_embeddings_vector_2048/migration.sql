@@ -23,9 +23,12 @@
 -- as before.
 --
 -- Recovery plan: re-running the backfill is safe (it only picks NULL rows; job ids dedupe a contact
--- already queued). Rollback = a migration back to vector(1536) USING NULL, EMBEDDING_PROVIDER=gemini
--- with GEMINI_API_KEY, and the same backfill to re-embed with Gemini. Production applies only through
--- the gated `prisma migrate deploy` workflow, before ai-worker ships.
+-- already queued, and a job that used up its retries is re-queued). Rollback = EMBEDDING_PROVIDER=gemini
+-- with GEMINI_API_KEY (Gemini also defaults to 2048, so the columns stay as they are), a migration
+-- that sets the stored embeddings to NULL (Nemotron and Gemini vectors are not comparable), and the
+-- same backfill to re-embed with Gemini. ai-worker does not start the embedding worker when the
+-- provider's size does not match the column. Production applies only through the gated
+-- `prisma migrate deploy` workflow, before ai-worker ships.
 SET LOCAL lock_timeout = '5s';
 
 ALTER TABLE "leads"

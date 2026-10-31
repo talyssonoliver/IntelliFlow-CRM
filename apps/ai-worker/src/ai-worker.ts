@@ -433,7 +433,18 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     try {
       const { ContactEmbedWorker } = await import('./workers/contact-embed-worker.js');
       const { getEmbeddingChain } = await import('./chains/embedding.chain.js');
-      const { formatEmbeddingForPgVector, validateEmbedding } = await import('@intelliflow/db');
+      const { formatEmbeddingForPgVector, validateEmbedding, VECTOR_COLUMN_DIMENSIONS } =
+        await import('@intelliflow/db');
+      const { embeddingDimensions } = await import('./lib/embedding-dimensions.js');
+      // Every vector of another size would be refused on write, so do not consume the queue at all.
+      const dimensions = embeddingDimensions();
+      if (dimensions !== VECTOR_COLUMN_DIMENSIONS) {
+        this.logger.error(
+          { dimensions, column: VECTOR_COLUMN_DIMENSIONS },
+          'ContactEmbedWorker not started — the embedding provider returns vectors that do not fit the embedding column'
+        );
+        return;
+      }
       const redisConnection = {
         host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),

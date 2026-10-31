@@ -512,11 +512,12 @@ describe('createEmbeddings()', () => {
       expect(embeddingDimensions()).toBe(2048);
     });
 
-    it('keeps 1536 for Gemini and the LiteLLM path, and 768 for Ollama', async () => {
+    it('is 2048 for Gemini too, so the Gemini rollback fits the vector(2048) columns', async () => {
       vi.stubEnv('EMBEDDING_PROVIDER', 'gemini');
-      expect((await importDimensions('openrouter'))()).toBe(1536);
+      expect((await importDimensions('openrouter'))()).toBe(2048);
+    });
 
-      vi.resetModules();
+    it('keeps 1536 for the LiteLLM path and 768 for Ollama', async () => {
       vi.stubEnv('EMBEDDING_PROVIDER', '');
       expect((await importDimensions('litellm'))()).toBe(1536);
 
