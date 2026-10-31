@@ -114,6 +114,8 @@ describe('robots()', () => {
   it('disallows the public booking pages (per-firm links, never indexed — PG-203)', () => {
     const disallowed = getAllDisallowed();
     expect(disallowed).toContain('/book/');
+    // PG-203 DSAR: data request pages are per-firm and their links carry tokens.
+    expect(disallowed).toContain('/dsar/');
   });
 
   it('public marketing pages are not disallowed', () => {

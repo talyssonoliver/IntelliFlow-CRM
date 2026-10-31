@@ -3,13 +3,22 @@
  */
 import type { PrismaClient } from '@intelliflow/db';
 import pino from 'pino';
-import { driftDetector } from './drift-detector';
+import { driftDetector, type DriftResult } from './drift-detector';
 import { latencyMonitor } from './latency-monitor';
 import { hallucinationChecker } from './hallucination-checker';
 import { roiTracker } from './roi-tracker';
 import { AIMonitoringPayloadSchema } from './ai-monitoring-payload.schema';
 
 const logger = pino({ name: 'monitoring-flush', level: process.env.LOG_LEVEL || 'info' });
+
+/**
+ * A drift row is flagged only inside a confirmed event, so its severity is the event's: the
+ * highest it has reached, or 'none' outside an event. The tick's own severity goes in the payload.
+ */
+function driftRowSeverity(dr: DriftResult): string {
+  if (!dr.inEvent) return 'none';
+  return dr.eventSeverity ?? dr.severity ?? 'none';
+}
 
 export class MonitoringFlushService {
   private flushInterval: ReturnType<typeof setInterval> | null = null;
@@ -81,13 +90,17 @@ export class MonitoringFlushService {
       if (dr.timestamp > this.lastFlushedAt.drift) {
         events.push({
           eventType: 'drift',
-          model: dr.metric ?? null,
+          model: dr.model ?? null,
           metric: dr.metric ?? null,
           value: dr.driftScore ?? null,
-          flagged: dr.detected,
-          severity: dr.severity ?? 'none',
+          // Flag confirmed events only; the raw tick stays in the payload for diagnostics.
+          flagged: dr.inEvent ?? false,
+          severity: driftRowSeverity(dr),
           payload: {
+            tickSeverity: dr.severity ?? 'none',
             pValue: dr.pValue,
+            detectedTick: dr.detectedTick ?? dr.detected,
+            inEvent: dr.inEvent ?? false,
             baselineWindow: dr.baselineWindow,
             currentWindow: dr.currentWindow,
             recommendations: dr.recommendations,

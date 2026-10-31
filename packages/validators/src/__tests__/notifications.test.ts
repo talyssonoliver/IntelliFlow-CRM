@@ -73,8 +73,12 @@ describe('Notifications Validators', () => {
   // Enum Arrays
   // =========================================================================
   describe('Enum arrays', () => {
-    it('should have 56 notification types', () => {
-      expect(NOTIFICATION_TYPES).toHaveLength(56);
+    it('should have 57 notification types', () => {
+      expect(NOTIFICATION_TYPES).toHaveLength(57);
+    });
+
+    it('NOTIFICATION_TYPES contains task_automation (PG-208)', () => {
+      expect(NOTIFICATION_TYPES).toContain('task_automation');
     });
 
     it('NOTIFICATION_TYPES contains email_bounced (PG-207)', () => {

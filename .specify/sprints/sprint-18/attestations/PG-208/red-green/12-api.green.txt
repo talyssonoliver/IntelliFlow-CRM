@@ -1,0 +1,19 @@
+2026-10-21T00:06:17Z
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/apps/api
+
+
+ Test Files  5 passed (5)
+      Tests  171 passed (171)
+   Start at  01:06:18
+   Duration  4.56s (transform 4.08s, setup 2.27s, import 5.17s, tests 5.10s, environment 1ms)
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208
+
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  01:06:24
+   Duration  254ms (transform 21ms, setup 0ms, import 37ms, tests 31ms, environment 0ms)
+

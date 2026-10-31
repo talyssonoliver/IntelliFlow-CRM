@@ -1,14 +1,16 @@
 /**
- * The api's timer jobs (approval sweep, email bounce scan) as a managed worker.
+ * The api's timer jobs (approval sweep, email bounce scan, DSAR deadline alerts)
+ * as a managed worker.
  *
  * Why here: the api service must make no outbound traffic while idle so Railway
  * can sleep it (API_BACKGROUND_JOBS=off). The jobs still have to run somewhere,
  * and this process never sleeps. Enabled with COMBINED_BACKGROUND_JOBS=on.
  *
  * Safe to run alongside an api that still has the jobs on: the approval sweep
- * takes a transaction-scoped Postgres advisory lock each tick and the bounce
- * scan claims each mailbox with a lease, so two processes never do the same
- * work twice.
+ * takes a transaction-scoped Postgres advisory lock each tick, the bounce scan
+ * claims each mailbox with a lease, and the DSAR alerts take an advisory lock and
+ * claim each request with SKIP LOCKED, so two processes never do the same work
+ * twice.
  *
  * @module combined-worker/background-jobs
  */
@@ -17,7 +19,7 @@ import type { ComponentCheck, ManagedWorker } from './combined';
 
 /** The slice of `@intelliflow/api`'s background-jobs module used here. */
 export interface ApiBackgroundJobsModule {
-  startBackgroundJobs(): { approvalSweep: boolean; bounceScan: boolean };
+  startBackgroundJobs(): { approvalSweep: boolean; bounceScan: boolean; dsarSla: boolean };
   stopBackgroundJobs(): Promise<void>;
   /** Last-tick heartbeat judgement; read on request only. */
   checkBackgroundJobsHealth(): Promise<{
@@ -44,7 +46,8 @@ export function createBackgroundJobsWorker(
       state = 'running';
       log.info(
         `[background-jobs] approval-sweep=${started.approvalSweep ? 'on' : 'off'} ` +
-          `email-bounce-scan=${started.bounceScan ? 'on' : 'off'}`
+          `email-bounce-scan=${started.bounceScan ? 'on' : 'off'} ` +
+          `dsar-sla=${started.dsarSla ? 'on' : 'off'}`
       );
     },
     async stop() {

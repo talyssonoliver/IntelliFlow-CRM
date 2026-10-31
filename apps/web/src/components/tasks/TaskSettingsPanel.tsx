@@ -23,7 +23,7 @@ const TASK_SETTINGS_ITEMS: ModuleSettingsNavItem[] = [
   {
     id: 'automation',
     label: 'Task Automation',
-    description: 'Auto-assign & recurring rules',
+    description: 'Rules that create & assign tasks',
     icon: 'auto_awesome',
     href: '/tasks/automation',
   },

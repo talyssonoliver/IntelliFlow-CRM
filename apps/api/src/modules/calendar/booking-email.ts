@@ -31,6 +31,8 @@ export interface BookingEmailDetails {
   linkedEarlierBookingLead?: boolean;
   /** The new booker's lead could not be created after the booking (owner Q20). */
   leadNotCreated?: boolean;
+  /** The firm's public data request page (PG-203 DSAR), shown to the booker. */
+  dataRequestUrl?: string;
 }
 
 interface EmailMessage {
@@ -118,6 +120,9 @@ export function buildBookerConfirmation(d: BookingEmailDetails): EmailMessage {
       `Where: ${locationText(d)}`,
       '',
       `To change or cancel this booking, contact ${d.firmName} by replying to this email.`,
+      ...(d.dataRequestUrl
+        ? ['', `To ask ${d.firmName} about your personal data: ${d.dataRequestUrl}`]
+        : []),
     ].join('\n'),
     htmlBody: paragraphs([
       'Hello,',
@@ -125,6 +130,11 @@ export function buildBookerConfirmation(d: BookingEmailDetails): EmailMessage {
       `<strong>When:</strong> ${escapeHtml(when)}`,
       `<strong>Where:</strong> ${locationHtml(d)}`,
       `To change or cancel this booking, contact ${escapeHtml(d.firmName)} by replying to this email.`,
+      ...(d.dataRequestUrl
+        ? [
+            `<a href="${escapeHtml(d.dataRequestUrl)}">Ask ${escapeHtml(d.firmName)} about your personal data</a>`,
+          ]
+        : []),
     ]),
   };
 }

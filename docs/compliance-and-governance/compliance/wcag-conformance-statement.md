@@ -20,7 +20,7 @@ partially supported on the `/deals` pipeline view.
 
 ## 2. Scope
 
-This statement covers the IntelliFlow CRM web application across all 184
+This statement covers the IntelliFlow CRM web application across all 185
 user-facing routes. Dynamic segment routes (e.g., `/contacts/[id]`,
 `/settings/help-center/articles/[id]/edit`) inherit conformance status from
 their parent static route and are not listed separately.
@@ -81,7 +81,7 @@ their parent static route and are not listed separately.
 - **Notifications, Help & Profile (7):** `/help-center`, `/help-center/search`,
   `/notifications`, `/notifications/channels`, `/notifications/quiet-hours`,
   `/notifications/settings`, `/profile`
-- **Settings (25):** `/settings`, `/settings/account`, `/settings/accounts`,
+- **Settings (26):** `/settings`, `/settings/account`, `/settings/accounts`,
   `/settings/appointments`, `/settings/automation`,
   `/settings/automation/custom-actions`,
   `/settings/automation/custom-node-types`, `/settings/billing`,
@@ -89,14 +89,20 @@ their parent static route and are not listed separately.
   `/settings/documents`, `/settings/help-center/articles`,
   `/settings/help-center/articles/new`, `/settings/integrations`,
   `/settings/leads`, `/settings/notifications`, `/settings/pipeline`,
-  `/settings/reports`, `/settings/routing`, `/settings/security/mfa`,
-  `/settings/security/mfa/setup`, `/settings/tasks`, `/settings/team`,
-  `/settings/tickets`
+  `/settings/privacy-requests`, `/settings/reports`, `/settings/routing`,
+  `/settings/security/mfa`, `/settings/security/mfa/setup`, `/settings/tasks`,
+  `/settings/team`, `/settings/tickets`
 - **Developer portal (2):** `/developers/apps`, `/developers/apps/new`
 - **Docs portal (9):** `/docs`, `/docs/architecture`, `/docs/auth`,
   `/docs/changelog`, `/docs/cli`, `/docs/guides`, `/docs/integrations`,
   `/docs/sdk`, `/docs/webhooks`
 - **System pages (3):** `/404`, `/500`, `/maintenance`
+- **Data subject request pages (dynamic, no static parent):** `/dsar/[handle]`,
+  `/dsar/[handle]/verify` and `/dsar/[handle]/export` — public, no app chrome
+  and `noindex`; covered by this statement on their own, since they have no
+  parent route to inherit from.
+- **Public booking page (dynamic, no static parent):** `/book/[handle]/[slug]` —
+  public, no app chrome and `noindex`; covered on its own for the same reason.
 - **Design previews (1):** `/preview/aurora` — the Aurora landing page under
   review; unlinked and `noindex`. Not yet assessed (see Section 3).
 
@@ -272,3 +278,5 @@ Users who encounter accessibility barriers can report issues via:
 | 1.10.0  | 2026-10-18 | Engineering (PG-205)          | `/contacts/contact-types` stub replaced at the same URL (route count unchanged); `/contacts/new`, contact edit and the contacts list gain the contact type picker, Type filter and badges; labelled fieldsets, `<output>` live regions, `role="alert"` errors with focus on the invalid field, text for every colour cue; a11y-expert WCAG 2.1 AA review PASS WITH FIXES (fixed)                                                                                                                                                                                                                                                                    |
 | 1.11.0  | 2026-10-19 | Engineering (PG-199)          | `/agent-approvals/model-config` stub replaced at the same URL (already in scope; route count unchanged): one card per AI purpose with labelled model selects, a native range plus "Custom temperature" checkbox (aria-valuetext), fallback reorder buttons with live announcements, errors tied to their controls with focus on the first invalid field, notes in a mounted live region, focus kept after confirm dialogs; axe in component tests; a11y-expert review FAIL, then fixed. Known gap: shared Slider thumb has no accessible name (gh #929, not used here)                                                                              |
 | 1.12.0  | 2026-10-21 | Engineering (PG-207)          | Added `/email/oauth/callback` (the mailbox OAuth return page, `noindex`) — scope now 184 routes; `/email/email-settings` and `/email/signatures` stubs replaced at the same URLs. Sectioned cards with `aria-labelledby`, secret fields with show/hide, the Save button stays enabled and focuses the first invalid field, `role="alert"` send refusals that take focus, a signature preview that is `inert`, and a callback page heading that states the outcome; axe in component tests; a11y-expert WCAG 2.1 AA review: 3 high and 6 medium findings fixed (`abdc38383`), no new conformance exceptions                                          |
+| 1.13.0  | 2026-10-24 | Engineering (PG-203)          | Added `/settings/privacy-requests` (the ADMIN data subject request queue) — scope now 185 routes; listed the three public `/dsar/[handle]` request, verify and export pages, which have no static parent to inherit from. Axe checks run in their component tests; the a11y-expert WCAG 2.1 AA review is part of the PG-203 close                                                                                                                                                                                                                                                                                                                   |
+| 1.14.0  | 2026-10-29 | Engineering (PG-203)          | Listed the public booking page `/book/[handle]/[slug]` (PG-203 PR 1, #1003), which has no static parent and was missed when it shipped; route count unchanged (185). Lighthouse on 2026-10-29 with real content: `/book` accessibility 96 (after a layout-shift fix), `/calendar/event-types` 93, `/settings/privacy-requests` 96, `/dsar` pages 96-100 (artifacts/lighthouse/PG-203/local-run-note.md)                                                                                                                                                                                                                                             |

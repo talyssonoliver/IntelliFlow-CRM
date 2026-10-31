@@ -1,0 +1,120 @@
+{
+  "startedAt": "2026-10-29T10:43:19.376Z",
+  "e2e": {
+    "ok": true,
+    "steps": {
+      "submit": "Check your email shown",
+      "verificationEmail": "captured: \"Confirm your data request to Default Organization\"",
+      "verify": "Your request is confirmed shown",
+      "urlAfterVerify": "fragment stripped",
+      "exportEmail": "captured: \"Your personal data from Default Organization\"",
+      "download": "export data shown",
+      "withheldSection": "shown",
+      "dbRow": "{\"status\":\"VERIFIED\",\"verified\":true,\"exportIssued\":true,\"exportDownloads\":1}",
+      "adminAlert": "sent to the firm admins"
+    }
+  },
+  "clsDiag": {
+    "/book/e2e-firm/intro": [],
+    "/dsar/e2e-firm": []
+  },
+  "bookState": {
+    "eventName": true,
+    "unavailable": false,
+    "text": "Default Organization Initial consultation 30 min · Video call A first call to understand your matter. Choose a time Earlier dates Later dates 20 times available on Thu 29 Oct. check_circle Thu 29 Oct 20 times Fri 30 Oct 31 times Sat 31 Oct 31 times Sun 1 Nov 31 times Mon 2 Nov 31 times Tue 3 Nov 31 times Wed 4 Nov 31 times Thu 5 Nov 31 times Fri 6 Nov 31 times Sat 7 Nov 31 times Sun 8 Nov 31 times"
+  },
+  "lighthouse": {
+    "book": {
+      "median": "book-run3",
+      "runs": [
+        {
+          "performance": 93,
+          "accessibility": 96,
+          "best-practices": 78,
+          "seo": 66,
+          "finalUrlMatches": 1,
+          "name": "book-run1"
+        },
+        {
+          "performance": 94,
+          "accessibility": 96,
+          "best-practices": 78,
+          "seo": 66,
+          "finalUrlMatches": 1,
+          "name": "book-run2"
+        },
+        {
+          "performance": 93,
+          "accessibility": 96,
+          "best-practices": 78,
+          "seo": 66,
+          "finalUrlMatches": 1,
+          "name": "book-run3"
+        }
+      ]
+    },
+    "request": {
+      "performance": 93,
+      "accessibility": 96,
+      "best-practices": 78,
+      "seo": 66,
+      "finalUrlMatches": 1
+    },
+    "verify": {
+      "performance": 93,
+      "accessibility": 100,
+      "best-practices": 78,
+      "seo": 66,
+      "finalUrlMatches": 1
+    },
+    "export": {
+      "performance": 93,
+      "accessibility": 96,
+      "best-practices": 78,
+      "seo": 66,
+      "finalUrlMatches": 1
+    }
+  },
+  "adminPasswordReset": 200,
+  "onboarding": 200,
+  "adminLhci": {
+    "settings-privacy-requests": {
+      "runs": [
+        {
+          "finalUrl": "/settings/privacy-requests",
+          "performance": 91,
+          "accessibility": 96
+        },
+        {
+          "finalUrl": "/settings/privacy-requests",
+          "performance": 92,
+          "accessibility": 96
+        },
+        {
+          "finalUrl": "/settings/privacy-requests",
+          "performance": 93,
+          "accessibility": 96
+        }
+      ]
+    },
+    "calendar-event-types": {
+      "runs": [
+        {
+          "finalUrl": "/calendar/event-types",
+          "performance": 94,
+          "accessibility": 93
+        },
+        {
+          "finalUrl": "/calendar/event-types",
+          "performance": 95,
+          "accessibility": 93
+        },
+        {
+          "finalUrl": "/calendar/event-types",
+          "performance": 95,
+          "accessibility": 93
+        }
+      ]
+    }
+  }
+}

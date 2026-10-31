@@ -1,0 +1,72 @@
+# 2026-10-20T23:31:31Z
+# 91c6477ac5cbe5f21cf81c522b36ec57bad849eb
+# pnpm --filter @intelliflow/application exec vitest run src/services/__tests__/LeadService.createLeadInTransaction.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/application
+
+ ❯ |application| src/services/__tests__/LeadService.createLeadInTransaction.test.ts (7 tests | 4 failed) 9ms
+     × saves the lead and publishes LeadCreated on the caller transaction 3ms
+     × runs no duplicate pre-check and opens no transaction of its own 1ms
+     × fails without saving when the domain rejects the input 0ms
+     × propagates persistence failures so the caller transaction rolls back 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |application| src/services/__tests__/LeadService.createLeadInTransaction.test.ts > LeadService.createLeadInTransaction > saves the lead and publishes LeadCreated on the caller transaction
+TypeError: ctx.service.createLeadInTransaction is not a function
+ ❯ src/services/__tests__/LeadService.createLeadInTransaction.test.ts:52:38
+     50|
+     51|   it('saves the lead and publishes LeadCreated on the caller transacti…
+     52|     const result = await ctx.service.createLeadInTransaction(props, TX…
+       |                                      ^
+     53|     expect(result.isSuccess).toBe(true);
+     54|     const lead = result.value;
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  |application| src/services/__tests__/LeadService.createLeadInTransaction.test.ts > LeadService.createLeadInTransaction > runs no duplicate pre-check and opens no transaction of its own
+TypeError: ctx.service.createLeadInTransaction is not a function
+ ❯ src/services/__tests__/LeadService.createLeadInTransaction.test.ts:66:23
+     64|
+     65|   it('runs no duplicate pre-check and opens no transaction of its own'…
+     66|     await ctx.service.createLeadInTransaction(props, TX);
+       |                       ^
+     67|     expect(ctx.leadRepository.existsByEmailInTenant).not.toHaveBeenCal…
+     68|     expect(ctx.transactionManager.run).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  |application| src/services/__tests__/LeadService.createLeadInTransaction.test.ts > LeadService.createLeadInTransaction > fails without saving when the domain rejects the input
+TypeError: ctx.service.createLeadInTransaction is not a function
+ ❯ src/services/__tests__/LeadService.createLeadInTransaction.test.ts:72:38
+     70|
+     71|   it('fails without saving when the domain rejects the input', async (…
+     72|     const result = await ctx.service.createLeadInTransaction({ ...prop…
+       |                                      ^
+     73|     expect(result.isFailure).toBe(true);
+     74|     expect(ctx.leadRepository.save).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  |application| src/services/__tests__/LeadService.createLeadInTransaction.test.ts > LeadService.createLeadInTransaction > propagates persistence failures so the caller transaction rolls back
+TypeError: ctx.service.createLeadInTransaction is not a function
+ ❯ src/services/__tests__/LeadService.createLeadInTransaction.test.ts:80:30
+     78|   it('propagates persistence failures so the caller transaction rolls …
+     79|     ctx.eventBus.publishAll.mockRejectedValueOnce(new Error('outbox do…
+     80|     await expect(ctx.service.createLeadInTransaction(props, TX)).rejec…
+       |                              ^
+     81|   });
+     82| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 3 passed (7)
+   Start at  00:31:33
+   Duration  811ms (transform 347ms, setup 0ms, import 517ms, tests 9ms, environment 0ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\packages\application:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/services/__tests__/LeadService.createLeadInTransaction.test.ts
+# exit=1

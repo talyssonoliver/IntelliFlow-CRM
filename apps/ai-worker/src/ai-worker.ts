@@ -86,6 +86,10 @@ import { hallucinationChecker, RedisMonitoringPublisher } from './monitoring';
 import { EmbeddingModelPublisher } from './lib/embedding-model-publisher';
 import type { MonitoringRedisLike } from './monitoring';
 import { MonitoringFlushService } from './monitoring/monitoring-flush.service';
+// IFC-117: imported from their own modules (not ./monitoring) so the boot tests' barrel mock stays small.
+import { DriftDetectionScheduler } from './monitoring/drift-scheduler';
+import { driftDetector } from './monitoring/drift-detector';
+import { registerAiMetrics } from './monitoring/otel-ai-metrics';
 import { setAuditLogAdapter } from './utils/audit-log';
 import { tenantContextStore } from './tracing/tenant-context.js';
 import { runWithLogContext } from '@intelliflow/observability';
@@ -145,6 +149,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private configLoaded = false;
   private dashboardServer: Server | null = null;
   private monitoringFlushService?: MonitoringFlushService;
+  // IFC-117: scheduled drift detection (first production caller of detectAllDrift).
+  private driftScheduler?: DriftDetectionScheduler;
   // IFC-214: Redis-backed live snapshot publisher (paired with API-side store).
   private redisMonitoringPublisher?: RedisMonitoringPublisher;
   private embeddingModelPublisher?: EmbeddingModelPublisher;
@@ -197,6 +203,10 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     loadAIConfig();
     this.configLoaded = true;
 
+    // IFC-117: AI metrics and drift detection start first and on their own, so a later boot
+    // step that throws (Redis, Prisma, dashboard) can never leave them off. Neither needs the DB.
+    this.startAiMonitoring();
+
     const model = this.getProviderModel();
     const endpoint = this.getProviderEndpoint();
     this.logger.info(
@@ -229,6 +239,20 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
     // H4 + M3 + IFC-310: wire prisma-dependent services
     await this.initPrismaDependentServices();
+  }
+
+  /** IFC-117: register the OTel AI metrics and start the drift detection scheduler. */
+  private startAiMonitoring(): void {
+    try {
+      registerAiMetrics();
+      this.driftScheduler = new DriftDetectionScheduler(driftDetector);
+      this.driftScheduler.start();
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'AI monitoring (OTel metrics / drift scheduler) failed to start'
+      );
+    }
   }
 
   /** IFC-297: Boot Prisma client and start the monitoring flush service. */
@@ -409,7 +433,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     try {
       const { ContactEmbedWorker } = await import('./workers/contact-embed-worker.js');
       const { getEmbeddingChain } = await import('./chains/embedding.chain.js');
-      const { updateContactEmbedding } = await import('@intelliflow/db');
+      const { formatEmbeddingForPgVector, validateEmbedding } = await import('@intelliflow/db');
       const redisConnection = {
         host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
@@ -424,8 +448,15 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
             return result?.vector ?? null;
           },
         },
-        async (_prisma, contactId, _tenantId, embedding) => {
-          await updateContactEmbedding(contactId, embedding);
+        // PG-203: written through the transaction the worker passes (it holds the contact row
+        // lock taken after the data-request re-check), scoped to the tenant.
+        async (db, contactId, tenantId, embedding) => {
+          if (!validateEmbedding(embedding)) {
+            throw new Error('Invalid embedding: unexpected dimensions');
+          }
+          await db.$executeRaw`
+            UPDATE contacts SET embedding = ${formatEmbeddingForPgVector(embedding)}::vector
+            WHERE id = ${contactId} AND "tenantId" = ${tenantId}`;
         }
       );
       await this.contactEmbedWorker.start();
@@ -992,6 +1023,9 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     this.logger.info('Shutting down AI Worker...');
 
     this.stopTenantAiSpend?.();
+
+    // IFC-117: stop drift detection before the flush, so the final flush holds the last results
+    this.driftScheduler?.stop();
 
     // IFC-297: Drain monitoring data before shutdown
     if (this.monitoringFlushService) {

@@ -1,5 +1,6 @@
 /**
- * Heartbeat for the api's timer jobs (approval sweep, email bounce scan).
+ * Heartbeat for the api's timer jobs (approval sweep, email bounce scan, DSAR
+ * deadline alerts).
  *
  * With API_BACKGROUND_JOBS=off on the api and COMBINED_BACKGROUND_JOBS unset on
  * the combined worker, nobody runs the jobs and nothing notices. Each completed
@@ -17,8 +18,9 @@
 
 import { approvalSweepIntervalFromEnv } from './agent/approval-sweep-scheduler';
 import { bounceScanIntervalFromEnv } from './modules/email/bounce-scheduler';
+import { dsarSlaIntervalFromEnv } from './modules/privacy/dsar-sla-scheduler';
 
-export const HEARTBEAT_JOBS = ['approvalSweep', 'bounceScan'] as const;
+export const HEARTBEAT_JOBS = ['approvalSweep', 'bounceScan', 'dsarSla'] as const;
 export type HeartbeatJob = (typeof HEARTBEAT_JOBS)[number];
 
 /** A job is stale once it has not ticked for this many of its intervals. */
@@ -189,6 +191,7 @@ export function heartbeatIntervals(env: NodeJS.ProcessEnv): Record<HeartbeatJob,
   return {
     approvalSweep: approvalSweepIntervalFromEnv(asScheduled),
     bounceScan: bounceScanIntervalFromEnv(asScheduled),
+    dsarSla: dsarSlaIntervalFromEnv(asScheduled),
   };
 }
 

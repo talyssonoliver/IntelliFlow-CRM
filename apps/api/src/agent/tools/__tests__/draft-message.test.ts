@@ -25,7 +25,21 @@ vi.mock('../../approval-workflow', () => ({
   },
 }));
 
+// PG-203: the recipient lookup and the restriction read run on the session's client.
+const restriction = vi.hoisted(() => ({ active: null as { blocksMarketing: boolean } | null }));
+const mockPrisma = {
+  lead: { findFirst: vi.fn(async () => ({ email: 'ada@example.invalid' })) },
+  contact: { findFirst: vi.fn(async () => ({ email: 'bob@example.invalid' })) },
+  processingRestriction: {
+    findFirst: vi.fn(async () =>
+      restriction.active ? { ...restriction.active, createdAt: new Date() } : null
+    ),
+  },
+};
+
 const createMockContext = (overrides?: Partial<AgentAuthContext>): AgentAuthContext => ({
+  tenantId: 'tenant-1',
+  prisma: mockPrisma as never,
   userId: 'user-123',
   userRole: 'SALES_REP',
   permissions: ['draft:message', 'create:message'],
@@ -48,6 +62,73 @@ const createMockContext = (overrides?: Partial<AgentAuthContext>): AgentAuthCont
 describe('Draft Message Agent Tool', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    restriction.active = null;
+  });
+
+  describe('data-request restrictions (PG-203, owner Q18)', () => {
+    const input = {
+      type: 'EMAIL' as const,
+      recipientType: 'LEAD' as const,
+      recipientId: 'lead-123',
+      subject: 'Follow-up',
+      body: 'Thank you for your interest.',
+    };
+
+    it('refuses to draft for a restricted lead and stores nothing', async () => {
+      restriction.active = { blocksMarketing: false };
+      const result = await draftMessageTool.execute(input, createMockContext());
+      expect(result).toMatchObject({
+        success: false,
+        error: 'Processing is restricted for this person (data request).',
+      });
+      expect(mockPrisma.lead.findFirst).toHaveBeenCalledWith({
+        where: { id: 'lead-123', tenantId: 'tenant-1' },
+        select: { email: true },
+      });
+    });
+
+    it('refuses an erased lead: its placeholder address carries no restriction (codex)', async () => {
+      mockPrisma.lead.findFirst.mockResolvedValueOnce({ email: 'erased-lead-123@erased.invalid' });
+      const result = await draftMessageTool.execute(input, createMockContext());
+      expect(result).toMatchObject({
+        success: false,
+        error: 'Processing is restricted for this person (data request).',
+      });
+    });
+
+    it('checks a contact recipient by its own email', async () => {
+      restriction.active = { blocksMarketing: true };
+      const result = await draftMessageTool.execute(
+        { ...input, recipientType: 'CONTACT', recipientId: 'contact-1' },
+        createMockContext()
+      );
+      expect(result.success).toBe(false);
+      expect(mockPrisma.processingRestriction.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ subjectEmail: 'bob@example.invalid' }),
+        })
+      );
+    });
+
+    it('refuses when the session cannot check (no tenant or client)', async () => {
+      const result = await draftMessageTool.execute(
+        input,
+        createMockContext({ prisma: undefined })
+      );
+      expect(result).toMatchObject({
+        success: false,
+        error: 'Cannot check data-request restrictions without a tenant',
+      });
+    });
+
+    it('drafts for an account, which is not a person', async () => {
+      const result = await draftMessageTool.execute(
+        { ...input, recipientType: 'ACCOUNT', recipientId: 'account-1' },
+        createMockContext()
+      );
+      expect(result.success).toBe(true);
+      expect(mockPrisma.processingRestriction.findFirst).not.toHaveBeenCalled();
+    });
   });
 
   afterEach(() => {

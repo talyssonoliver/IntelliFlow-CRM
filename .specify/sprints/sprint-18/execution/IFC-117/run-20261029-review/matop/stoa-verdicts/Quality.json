@@ -1,0 +1,43 @@
+{
+  "task_id": "IFC-117",
+  "run_id": "run-20261029-review",
+  "reviewed_at": "2026-10-29",
+  "reviewed_head": "87bbac6cc plus the uncommitted working tree that became f4d9290d3",
+  "mode": "read-only (no test, build or lint run by the reviewer; memory commit above 80%)",
+  "stoa": "Quality",
+  "agent": "stoa-quality subagent (Agent tool)",
+  "verdict": "WARN",
+  "gates": [
+    "preship last run PASS incl. coverage",
+    "pre-ship covers current tree",
+    "new tests behavioural",
+    "touched suite regression",
+    "plan checkbox honesty"
+  ],
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "where": "drift-detector.ts out-of-window drop",
+      "issue": "no warn-once assertion, no NaN or boundary cases",
+      "resolution": "fixed: edge and NaN-timestamp test with warn-once assertion (f4d9290d3)"
+    },
+    {
+      "severity": "LOW",
+      "where": "chain-monitor tests with partial DriftDetector configs",
+      "issue": "maxSeries undefined disabled the cap",
+      "resolution": "fixed: falls back to defaultDriftConfig.maxSeries, with a test (f4d9290d3)"
+    },
+    {
+      "severity": "MEDIUM",
+      "where": "working tree",
+      "issue": "edits not covered by the pre-ship at 87bbac6cc",
+      "resolution": "committed; pre-ship runs on the new head after the coordinator GO"
+    },
+    {
+      "severity": "LOW",
+      "where": "IFC-117-plan.md",
+      "issue": "reported 20 unchecked items",
+      "resolution": "not a defect: the 133 task checkboxes are all checked; the open \"N. [ ]\" lines are the numbered preflight list format"
+    }
+  ]
+}

@@ -14,7 +14,14 @@
 
 import pino from 'pino';
 import { prisma } from '@intelliflow/db';
+import { normalizeSubjectEmail } from '@intelliflow/domain';
 import { getEnrichmentAdapter, type ContactSeed } from './shared/enrichment-adapter.js';
+import {
+  eligibleSubjectEmail,
+  SUBJECT_NOT_PROCESSABLE,
+  writeSubjectIfStillEligible,
+  type SubjectPrisma,
+} from './lib/data-request-guard.js';
 
 const logger = pino({
   name: 'contact-enrichment.chain',
@@ -73,6 +80,19 @@ export async function enrichContact(input: EnrichContactInput): Promise<EnrichCo
     return { success: false, reason: 'contact-not-found' };
   }
 
+  // PG-203 Q22: an erased or restricted person is never sent to the model.
+  const email = await eligibleSubjectEmail(prisma as unknown as SubjectPrisma, {
+    kind: 'contact',
+    id: contactId,
+    tenantId,
+  });
+  if (email === null) return { success: false, reason: SUBJECT_NOT_PROCESSABLE };
+  // The seed is what reaches the provider: it must be the identity just checked, not an older
+  // address the contact has since moved from (codex).
+  if (normalizeSubjectEmail(seed.email) !== normalizeSubjectEmail(email)) {
+    return { success: false, reason: SUBJECT_NOT_PROCESSABLE };
+  }
+
   const adapter = getEnrichmentAdapter();
   const enrichment = await adapter.enrichContact(seed, tenantId);
   if (!enrichment) {
@@ -99,10 +119,18 @@ export async function enrichContact(input: EnrichContactInput): Promise<EnrichCo
   }
 
   try {
-    await prisma.contact.update({
-      where: { tenantId_id: { tenantId, id: contactId } },
-      data,
-    });
+    // Filled in only under the contact row and address locks, after re-checking: an erasure
+    // that ran during the model call must not get company or title written back (Q22).
+    const outcome = await writeSubjectIfStillEligible(
+      prisma as never,
+      { kind: 'contact', id: contactId, tenantId, email },
+      (tx) =>
+        (tx as unknown as typeof prisma).contact.update({
+          where: { tenantId_id: { tenantId, id: contactId } },
+          data,
+        })
+    );
+    if (!outcome.written) return { success: false, reason: SUBJECT_NOT_PROCESSABLE };
   } catch (err) {
     logger.warn({ err, contactId, tenantId }, 'Prisma update failed');
     return { success: false, reason: 'db-update-error' };

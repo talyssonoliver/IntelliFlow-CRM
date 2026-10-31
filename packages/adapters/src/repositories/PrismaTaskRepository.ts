@@ -1,4 +1,4 @@
-import { PrismaClient } from '@intelliflow/db';
+import { PrismaClient, type Task as TaskRecord } from '@intelliflow/db';
 import { Task, TaskId, type TaskPriority, type TaskStatus } from '@intelliflow/domain';
 import { TaskRepository } from '@intelliflow/application';
 
@@ -11,6 +11,30 @@ function createTaskId(id: string): TaskId {
     throw new Error(`Invalid TaskId: ${id}`);
   }
   return result.value;
+}
+
+/**
+ * Prisma task row → domain Task. One mapper for every read path so a field
+ * (e.g. PG-208's assigneeId) cannot be dropped by one reader and then nulled
+ * by the next save.
+ */
+function toDomain(record: TaskRecord): Task {
+  return Task.reconstitute(createTaskId(record.id), {
+    title: record.title,
+    description: record.description ?? undefined,
+    dueDate: record.dueDate ?? undefined,
+    priority: record.priority as TaskPriority,
+    status: record.status as TaskStatus,
+    leadId: record.leadId ?? undefined,
+    contactId: record.contactId ?? undefined,
+    opportunityId: record.opportunityId ?? undefined,
+    ownerId: record.ownerId,
+    assigneeId: record.assigneeId ?? null,
+    tenantId: record.tenantId,
+    createdAt: record.createdAt,
+    updatedAt: record.updatedAt,
+    completedAt: record.completedAt ?? undefined,
+  });
 }
 
 /**
@@ -32,17 +56,29 @@ export class PrismaTaskRepository implements TaskRepository {
       contactId: task.contactId ?? null,
       opportunityId: task.opportunityId ?? null,
       ownerId: task.ownerId,
+      assigneeId: task.assigneeId,
       tenantId: task.tenantId,
       createdAt: task.createdAt,
       updatedAt: task.updatedAt,
       completedAt: task.completedAt ?? null,
     };
 
+    // The assignee is written on create only. Changes go through saveAssignment,
+    // so an edit that read the task before an automatic assignment cannot wipe it.
+    const { assigneeId: _setOnCreate, ...update } = data;
     await this.prisma.task.upsert({
       where: { id: data.id },
       create: data,
-      update: data,
+      update,
     });
+  }
+
+  async saveAssignment(task: Task, expectedUpdatedAt: Date): Promise<boolean> {
+    const { count } = await this.prisma.task.updateMany({
+      where: { id: task.id.value, tenantId: task.tenantId, updatedAt: expectedUpdatedAt },
+      data: { assigneeId: task.assigneeId, updatedAt: task.updatedAt },
+    });
+    return count === 1;
   }
 
   async findById(id: TaskId): Promise<Task | null> {
@@ -52,21 +88,7 @@ export class PrismaTaskRepository implements TaskRepository {
 
     if (!record) return null;
 
-    return Task.reconstitute(createTaskId(record.id), {
-      title: record.title,
-      description: record.description ?? undefined,
-      dueDate: record.dueDate ?? undefined,
-      priority: record.priority as TaskPriority,
-      status: record.status as TaskStatus,
-      leadId: record.leadId ?? undefined,
-      contactId: record.contactId ?? undefined,
-      opportunityId: record.opportunityId ?? undefined,
-      ownerId: record.ownerId,
-      tenantId: record.tenantId,
-      createdAt: record.createdAt,
-      updatedAt: record.updatedAt,
-      completedAt: record.completedAt ?? undefined,
-    });
+    return toDomain(record);
   }
 
   async findByIds(ids: string[]): Promise<Task[]> {
@@ -93,23 +115,7 @@ export class PrismaTaskRepository implements TaskRepository {
     return uniqueIds.reduce<Task[]>((acc, id) => {
       const record = recordMap.get(id);
       if (record) {
-        acc.push(
-          Task.reconstitute(createTaskId(record.id), {
-            title: record.title,
-            description: record.description ?? undefined,
-            dueDate: record.dueDate ?? undefined,
-            priority: record.priority as TaskPriority,
-            status: record.status as TaskStatus,
-            leadId: record.leadId ?? undefined,
-            contactId: record.contactId ?? undefined,
-            opportunityId: record.opportunityId ?? undefined,
-            ownerId: record.ownerId,
-            tenantId: record.tenantId,
-            createdAt: record.createdAt,
-            updatedAt: record.updatedAt,
-            completedAt: record.completedAt ?? undefined,
-          })
-        );
+        acc.push(toDomain(record));
       }
       return acc;
     }, []);
@@ -121,23 +127,7 @@ export class PrismaTaskRepository implements TaskRepository {
       orderBy: [{ dueDate: 'asc' }, { priority: 'desc' }],
     });
 
-    return records.map((record) =>
-      Task.reconstitute(createTaskId(record.id), {
-        title: record.title,
-        description: record.description ?? undefined,
-        dueDate: record.dueDate ?? undefined,
-        priority: record.priority as TaskPriority,
-        status: record.status as TaskStatus,
-        leadId: record.leadId ?? undefined,
-        contactId: record.contactId ?? undefined,
-        opportunityId: record.opportunityId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        completedAt: record.completedAt ?? undefined,
-      })
-    );
+    return records.map((record) => toDomain(record));
   }
 
   async findByLeadId(leadId: string): Promise<Task[]> {
@@ -146,23 +136,7 @@ export class PrismaTaskRepository implements TaskRepository {
       orderBy: { dueDate: 'asc' },
     });
 
-    return records.map((record) =>
-      Task.reconstitute(createTaskId(record.id), {
-        title: record.title,
-        description: record.description ?? undefined,
-        dueDate: record.dueDate ?? undefined,
-        priority: record.priority as TaskPriority,
-        status: record.status as TaskStatus,
-        leadId: record.leadId ?? undefined,
-        contactId: record.contactId ?? undefined,
-        opportunityId: record.opportunityId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        completedAt: record.completedAt ?? undefined,
-      })
-    );
+    return records.map((record) => toDomain(record));
   }
 
   async findByContactId(contactId: string): Promise<Task[]> {
@@ -171,23 +145,7 @@ export class PrismaTaskRepository implements TaskRepository {
       orderBy: { dueDate: 'asc' },
     });
 
-    return records.map((record) =>
-      Task.reconstitute(createTaskId(record.id), {
-        title: record.title,
-        description: record.description ?? undefined,
-        dueDate: record.dueDate ?? undefined,
-        priority: record.priority as TaskPriority,
-        status: record.status as TaskStatus,
-        leadId: record.leadId ?? undefined,
-        contactId: record.contactId ?? undefined,
-        opportunityId: record.opportunityId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        completedAt: record.completedAt ?? undefined,
-      })
-    );
+    return records.map((record) => toDomain(record));
   }
 
   async findByOpportunityId(opportunityId: string): Promise<Task[]> {
@@ -196,23 +154,7 @@ export class PrismaTaskRepository implements TaskRepository {
       orderBy: { dueDate: 'asc' },
     });
 
-    return records.map((record) =>
-      Task.reconstitute(createTaskId(record.id), {
-        title: record.title,
-        description: record.description ?? undefined,
-        dueDate: record.dueDate ?? undefined,
-        priority: record.priority as TaskPriority,
-        status: record.status as TaskStatus,
-        leadId: record.leadId ?? undefined,
-        contactId: record.contactId ?? undefined,
-        opportunityId: record.opportunityId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        completedAt: record.completedAt ?? undefined,
-      })
-    );
+    return records.map((record) => toDomain(record));
   }
 
   async findByStatus(status: TaskStatus, ownerId?: string): Promise<Task[]> {
@@ -224,23 +166,7 @@ export class PrismaTaskRepository implements TaskRepository {
       orderBy: [{ dueDate: 'asc' }, { priority: 'desc' }],
     });
 
-    return records.map((record) =>
-      Task.reconstitute(createTaskId(record.id), {
-        title: record.title,
-        description: record.description ?? undefined,
-        dueDate: record.dueDate ?? undefined,
-        priority: record.priority as TaskPriority,
-        status: record.status as TaskStatus,
-        leadId: record.leadId ?? undefined,
-        contactId: record.contactId ?? undefined,
-        opportunityId: record.opportunityId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        completedAt: record.completedAt ?? undefined,
-      })
-    );
+    return records.map((record) => toDomain(record));
   }
 
   async findOverdue(ownerId?: string): Promise<Task[]> {
@@ -255,23 +181,7 @@ export class PrismaTaskRepository implements TaskRepository {
       orderBy: { dueDate: 'asc' },
     });
 
-    return records.map((record) =>
-      Task.reconstitute(createTaskId(record.id), {
-        title: record.title,
-        description: record.description ?? undefined,
-        dueDate: record.dueDate ?? undefined,
-        priority: record.priority as TaskPriority,
-        status: record.status as TaskStatus,
-        leadId: record.leadId ?? undefined,
-        contactId: record.contactId ?? undefined,
-        opportunityId: record.opportunityId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        completedAt: record.completedAt ?? undefined,
-      })
-    );
+    return records.map((record) => toDomain(record));
   }
 
   async findDueToday(ownerId?: string): Promise<Task[]> {
@@ -289,23 +199,7 @@ export class PrismaTaskRepository implements TaskRepository {
       orderBy: { priority: 'desc' },
     });
 
-    return records.map((record) =>
-      Task.reconstitute(createTaskId(record.id), {
-        title: record.title,
-        description: record.description ?? undefined,
-        dueDate: record.dueDate ?? undefined,
-        priority: record.priority as TaskPriority,
-        status: record.status as TaskStatus,
-        leadId: record.leadId ?? undefined,
-        contactId: record.contactId ?? undefined,
-        opportunityId: record.opportunityId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        completedAt: record.completedAt ?? undefined,
-      })
-    );
+    return records.map((record) => toDomain(record));
   }
 
   async delete(id: TaskId): Promise<void> {
@@ -339,23 +233,7 @@ export class PrismaTaskRepository implements TaskRepository {
       orderBy: [{ dueDate: 'asc' }],
     });
 
-    return records.map((record) =>
-      Task.reconstitute(createTaskId(record.id), {
-        title: record.title,
-        description: record.description ?? undefined,
-        dueDate: record.dueDate ?? undefined,
-        priority: record.priority as TaskPriority,
-        status: record.status as TaskStatus,
-        leadId: record.leadId ?? undefined,
-        contactId: record.contactId ?? undefined,
-        opportunityId: record.opportunityId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        completedAt: record.completedAt ?? undefined,
-      })
-    );
+    return records.map((record) => toDomain(record));
   }
 
   async findDueSoon(ownerId?: string): Promise<Task[]> {
@@ -372,22 +250,6 @@ export class PrismaTaskRepository implements TaskRepository {
       orderBy: { dueDate: 'asc' },
     });
 
-    return records.map((record) =>
-      Task.reconstitute(createTaskId(record.id), {
-        title: record.title,
-        description: record.description ?? undefined,
-        dueDate: record.dueDate ?? undefined,
-        priority: record.priority as TaskPriority,
-        status: record.status as TaskStatus,
-        leadId: record.leadId ?? undefined,
-        contactId: record.contactId ?? undefined,
-        opportunityId: record.opportunityId ?? undefined,
-        ownerId: record.ownerId,
-        tenantId: record.tenantId,
-        createdAt: record.createdAt,
-        updatedAt: record.updatedAt,
-        completedAt: record.completedAt ?? undefined,
-      })
-    );
+    return records.map((record) => toDomain(record));
   }
 }

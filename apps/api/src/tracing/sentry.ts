@@ -22,6 +22,8 @@
  * @see https://docs.sentry.io/platforms/node/
  */
 
+import { isNodeSdkStarted } from './otel-state';
+
 type SentryNodeModule = typeof import('@sentry/node');
 type SentrySeverityLevel = 'fatal' | 'error' | 'warning' | 'log' | 'info' | 'debug';
 type SentryUser = { id: string; email?: string; username?: string } | null;
@@ -132,6 +134,81 @@ function getSentryConfig(): SentryConfig {
   };
 }
 
+// Secrets that can appear in a URL: the PG-208 task-automation webhook token (a
+// path segment) and an `apikey` query parameter. One list, applied to every
+// URL-bearing field of events and breadcrumbs.
+const SENSITIVE_URL_PATTERNS: ReadonlyArray<readonly [RegExp, string]> = [
+  [/(\/webhooks\/task-automation\/)[^/?#\s]+/g, '$1***'],
+  [/(apikey=)[^&#\s]+/gi, '$1***'],
+];
+
+/** Replace secrets in a URL (or a `METHOD /path` string) with `***`. */
+export function scrubSensitiveUrl(value: string): string {
+  return SENSITIVE_URL_PATTERNS.reduce(
+    (out, [pattern, replacement]) => out.replaceAll(pattern, replacement),
+    value
+  );
+}
+
+/** Same rule as @intelliflow/observability `isSecretBearingPath`: these requests are not traced. */
+export function isSecretBearingPath(urlPath: string): boolean {
+  return urlPath.includes('/webhooks/task-automation/');
+}
+
+type SpanData = Record<string, unknown>;
+
+interface ScrubbableEvent {
+  request?: { url?: string; headers?: Record<string, string> };
+  transaction?: string;
+  spans?: Array<{ description?: string; data?: SpanData }>;
+  contexts?: { trace?: { data?: SpanData } };
+}
+
+/** Span attributes such as `url.full`, `url.path`, `http.target`. */
+function scrubStringValues(data: SpanData | undefined): void {
+  if (!data) return;
+  for (const [key, value] of Object.entries(data)) {
+    if (typeof value === 'string') data[key] = scrubSensitiveUrl(value);
+  }
+}
+
+/** Error AND transaction events: every URL-bearing field, span attributes included. */
+export function scrubSensitiveEventUrls(event: ScrubbableEvent): void {
+  if (event.request?.url) event.request.url = scrubSensitiveUrl(event.request.url);
+  if (event.transaction) event.transaction = scrubSensitiveUrl(event.transaction);
+  for (const span of event.spans ?? []) {
+    if (span.description) span.description = scrubSensitiveUrl(span.description);
+    scrubStringValues(span.data);
+  }
+  scrubStringValues(event.contexts?.trace?.data);
+}
+
+/** Request headers never sent to Sentry (credentials, and the replayable webhook signature). */
+const SENSITIVE_HEADERS = [
+  'authorization',
+  'cookie',
+  'x-api-key',
+  'x-intelliflow-signature',
+  'idempotency-key',
+];
+
+export function scrubSensitiveHeaders(event: ScrubbableEvent): void {
+  const headers = event.request?.headers;
+  if (!headers) return;
+  for (const name of Object.keys(headers)) {
+    if (SENSITIVE_HEADERS.includes(name.toLowerCase())) delete headers[name];
+  }
+}
+
+export function scrubSensitiveBreadcrumbUrls(breadcrumb: { data?: Record<string, unknown> }): void {
+  const data = breadcrumb.data;
+  if (!data) return;
+  for (const key of ['url', 'to', 'from']) {
+    const value = data[key];
+    if (typeof value === 'string') data[key] = scrubSensitiveUrl(value);
+  }
+}
+
 /**
  * Initialize Sentry error tracking
  *
@@ -170,20 +247,31 @@ export async function initializeSentry(): Promise<void> {
       // Performance Monitoring
       tracesSampleRate: config.tracesSampleRate, // Sample 10% of transactions
 
-      // Integrations (using modern API)
-      integrations: [Sentry.httpIntegration(), Sentry.nativeNodeFetchIntegration()],
+      // Integrations (using modern API).
+      // #1098: when our NodeSDK (src/instrument.ts) is running it already traces
+      // every request with a semconv HTTP server span. With spans on, Sentry
+      // registered a second HttpInstrumentation whose server span went to our
+      // exporter and marked 4xx as an error, so scanner 404s burned the
+      // availability SLO. `spans: false` keeps Sentry's request isolation and
+      // breadcrumbs without that second span. When the NodeSDK is off
+      // (OTEL_ENABLED=false, or production without an OTLP endpoint), Sentry is
+      // the only HTTP tracer and keeps its spans.
+      integrations: [
+        Sentry.httpIntegration({
+          spans: !isNodeSdkStarted(),
+          // A webhook URL whose path is its credential gets no transaction at all.
+          ignoreIncomingRequests: (urlPath) => isSecretBearingPath(urlPath),
+        }),
+        Sentry.nativeNodeFetchIntegration(),
+      ],
 
       // Debug mode (verbose logging)
       debug: config.debug,
 
       // Before sending to Sentry, scrub sensitive data
       beforeSend(event) {
-        // Remove sensitive headers
-        if (event.request?.headers) {
-          delete event.request.headers.authorization;
-          delete event.request.headers.cookie;
-          delete event.request.headers['x-api-key'];
-        }
+        scrubSensitiveEventUrls(event);
+        scrubSensitiveHeaders(event);
 
         // Remove sensitive data from context
         if (event.contexts?.user) {
@@ -197,6 +285,13 @@ export async function initializeSentry(): Promise<void> {
         return event;
       },
 
+      // Transactions skip beforeSend: scrub their URLs and span attributes too.
+      beforeSendTransaction(event) {
+        scrubSensitiveEventUrls(event);
+        scrubSensitiveHeaders(event);
+        return event;
+      },
+
       // Before sending breadcrumbs
       beforeBreadcrumb(breadcrumb) {
         // Filter out noisy breadcrumbs
@@ -205,9 +300,7 @@ export async function initializeSentry(): Promise<void> {
         }
 
         // Scrub sensitive URLs
-        if (breadcrumb.data?.url) {
-          breadcrumb.data.url = breadcrumb.data.url.replaceAll(/apikey=[^&]+/gi, 'apikey=***');
-        }
+        scrubSensitiveBreadcrumbUrls(breadcrumb);
 
         return breadcrumb;
       },

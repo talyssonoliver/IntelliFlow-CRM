@@ -14,6 +14,11 @@ const ENRICHMENT_PAYLOAD = {
   source: 'llm' as const,
 };
 
+// PG-203 Q22: every person eligible here; the blocked paths have their own tests.
+vi.mock('../lib/data-request-guard', async (importOriginal) =>
+  (await import('../test/mocks/data-request-guard.mock')).passThroughGuard(await importOriginal())
+);
+
 vi.mock('../shared/enrichment-adapter.js', () => ({
   getEnrichmentAdapter: vi.fn(() => ({
     enrichContact: vi.fn().mockResolvedValue(ENRICHMENT_PAYLOAD),
@@ -68,7 +73,7 @@ describe('ContactEnrichmentChain (IFC-312)', () => {
     prismaFindUniqueMock.mockResolvedValue({
       id: 'c-1',
       tenantId: 't-1',
-      email: 'jane@acme.com',
+      email: 'subject@example.invalid',
       firstName: null,
       lastName: null,
       company: null,
@@ -86,7 +91,7 @@ describe('ContactEnrichmentChain (IFC-312)', () => {
     const out = await mod.enrichContact({
       contactId: 'c-1',
       tenantId: 't-1',
-      seed: { email: 'jane@acme.com', firstName: 'Jane' },
+      seed: { email: 'subject@example.invalid', firstName: 'Jane' },
     });
     expect(out.success).toBe(false);
     if (!out.success) {
@@ -98,7 +103,7 @@ describe('ContactEnrichmentChain (IFC-312)', () => {
     prismaFindUniqueMock.mockResolvedValue({
       id: 'c-1',
       tenantId: 't-1',
-      email: 'jane@acme.com',
+      email: 'subject@example.invalid',
       firstName: 'Jane',
       lastName: 'Doe',
       company: 'ExistingCo', // already set → must NOT be overwritten
@@ -112,7 +117,7 @@ describe('ContactEnrichmentChain (IFC-312)', () => {
     const out = await mod.enrichContact({
       contactId: 'c-1',
       tenantId: 't-1',
-      seed: { email: 'jane@acme.com' },
+      seed: { email: 'subject@example.invalid' },
     });
     expect(out.success).toBe(true);
     expect(prismaUpdateMock).toHaveBeenCalledTimes(1);
@@ -125,7 +130,7 @@ describe('ContactEnrichmentChain (IFC-312)', () => {
     prismaFindUniqueMock.mockResolvedValue({
       id: 'c-1',
       tenantId: 't-1',
-      email: 'jane@acme.com',
+      email: 'subject@example.invalid',
       firstName: null,
       lastName: null,
       company: null,
@@ -137,7 +142,7 @@ describe('ContactEnrichmentChain (IFC-312)', () => {
     await mod.enrichContact({
       contactId: 'c-1',
       tenantId: 't-1',
-      seed: { email: 'jane@acme.com' },
+      seed: { email: 'subject@example.invalid' },
     });
     const updateCall = prismaUpdateMock.mock.calls[0]![0];
     expect(updateCall.where).toEqual({ tenantId_id: { tenantId: 't-1', id: 'c-1' } });
@@ -147,7 +152,7 @@ describe('ContactEnrichmentChain (IFC-312)', () => {
     prismaFindUniqueMock.mockResolvedValue({
       id: 'c-1',
       tenantId: 't-1',
-      email: 'jane@acme.com',
+      email: 'subject@example.invalid',
       firstName: null,
       lastName: null,
       company: null,
@@ -159,7 +164,7 @@ describe('ContactEnrichmentChain (IFC-312)', () => {
     const out = await mod.enrichContact({
       contactId: 'c-1',
       tenantId: 't-1',
-      seed: { email: 'jane@acme.com' },
+      seed: { email: 'subject@example.invalid' },
     });
     expect(out.success).toBe(true);
     expect(out.updated).toBeGreaterThan(0);
@@ -169,7 +174,7 @@ describe('ContactEnrichmentChain (IFC-312)', () => {
     prismaFindUniqueMock.mockResolvedValue({
       id: 'c-1',
       tenantId: 't-1',
-      email: 'jane@acme.com',
+      email: 'subject@example.invalid',
       firstName: null,
       lastName: null,
       company: null,
@@ -181,7 +186,7 @@ describe('ContactEnrichmentChain (IFC-312)', () => {
     const out = await mod.enrichContact({
       contactId: 'c-1',
       tenantId: 't-1',
-      seed: { email: 'jane@acme.com' },
+      seed: { email: 'subject@example.invalid' },
     });
     expect(out.success).toBe(true);
     expect(out.modelVersion).toBe('enrichment-litellm-v1');
@@ -205,7 +210,7 @@ describe('ContactEnrichmentChain (IFC-312)', () => {
     prismaFindUniqueMock.mockResolvedValue({
       id: 'c-1',
       tenantId: 't-1',
-      email: 'jane@acme.com',
+      email: 'subject@example.invalid',
       firstName: null,
       lastName: null,
       company: null,
@@ -218,7 +223,7 @@ describe('ContactEnrichmentChain (IFC-312)', () => {
     const out = await mod.enrichContact({
       contactId: 'c-1',
       tenantId: 't-1',
-      seed: { email: 'jane@acme.com' },
+      seed: { email: 'subject@example.invalid' },
     });
     expect(out.success).toBe(false);
   });

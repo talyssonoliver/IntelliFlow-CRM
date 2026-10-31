@@ -102,6 +102,14 @@ export const settingsSidebarConfig: SidebarConfig = {
           icon: 'security',
           href: '/settings/security/mfa',
         },
+        {
+          // PG-203 DSAR: data subject requests and processing restrictions.
+          id: 'privacy-requests',
+          label: 'Privacy Requests',
+          icon: 'shield_person',
+          href: '/settings/privacy-requests',
+          roles: ['ADMIN'],
+        },
       ],
     },
     {

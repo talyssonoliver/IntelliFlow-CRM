@@ -20,6 +20,7 @@ import { pipelineConfigRouter } from './modules/opportunity/pipeline-config.rout
 import { dealSettingsRouter } from './modules/opportunity/deal-settings.router';
 import { taskRouter } from './modules/task/task.router';
 import { taskSettingsRouter } from './modules/task/task-settings.router';
+import { taskAutomationRouter } from './modules/task/task-automation.router';
 import { ticketRouter } from './modules/ticket/ticket.router';
 import { ticketRoutingRouter } from './modules/ticket/ticket-routing.router';
 import { ticketConfigRouter } from './modules/ticket/ticket-config.router';
@@ -74,7 +75,7 @@ import { userRouter } from './modules/user/user.router';
 import { teamRouter } from './modules/team/team.router';
 import { calendarRouter } from './modules/calendar/calendar.router';
 import { calendarWebhooksRouter } from './modules/calendar/calendar-webhook.router';
-import { dsarRouter } from './modules/privacy/dsar.router';
+import { privacyRouter } from './modules/privacy/privacy.router';
 import { helpArticleRouter } from './modules/help-article/help-article.router';
 import { customNodeTypeRouter } from './modules/custom-node-type/custom-node-type.router';
 import { customActionHandlerRouter } from './modules/custom-action-handler/custom-action-handler.router';
@@ -162,6 +163,7 @@ export const appRouter = createTRPCRouter({
   appointmentSettings: appointmentSettingsRouter, // PG-189: Appointment/Calendar Settings (wired alongside PG-190)
   reportSettings: reportSettingsRouter, // PG-187: Report Settings (wired alongside PG-190)
   taskSettings: taskSettingsRouter, // PG-191: Task Settings Configuration
+  taskAutomation: taskAutomationRouter, // PG-208: Task Automation rules (ADR-084)
 
   // Analytics & Reporting
   analytics: analyticsRouter,
@@ -256,7 +258,7 @@ export const appRouter = createTRPCRouter({
   calendarWebhooks: calendarWebhooksRouter,
 
   // Privacy & GDPR (Fix #17 — IFC-140)
-  privacy: dsarRouter,
+  privacy: privacyRouter, // PG-203: public data requests, banner read, admin handling
 
   // Support Help Center (IFC-299)
   helpArticle: helpArticleRouter,

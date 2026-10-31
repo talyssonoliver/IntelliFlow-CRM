@@ -341,6 +341,16 @@ export default function BookingContent({
     slotsQuery.refetch().catch(() => undefined);
   };
   const bookMutation = trpc.publicBooking.book.useMutation();
+  // The details form and footer sit below the times. Rendered under the first "Loading available
+  // times", they were pushed down about 550px when the times arrived (Lighthouse CLS 0.25), so
+  // they wait for the first load to settle. Later loads (other dates) keep them on screen.
+  // isPending, not isLoading: the query waits for the event, and a waiting (disabled) query with
+  // no data is pending but not loading.
+  const [timesSettled, setTimesSettled] = useState(false);
+  useEffect(() => {
+    if (!slotsQuery.isPending) setTimesSettled(true);
+  }, [slotsQuery.isPending]);
+  const showDetails = timesSettled || !slotsQuery.isPending;
 
   const [visitorZone, setVisitorZone] = useState<string | null>(null);
   useEffect(() => setVisitorZone(Intl.DateTimeFormat().resolvedOptions().timeZone), []);
@@ -540,118 +550,131 @@ export default function BookingContent({
         )}
       </section>
 
-      <form
-        aria-labelledby="booking-details"
-        className="mt-8 space-y-4"
-        noValidate
-        onSubmit={(e) => {
-          e.preventDefault();
-          submit().catch(() => setErrors({ form: GENERIC_ERROR }));
-        }}
-      >
-        <h2 id="booking-details" className="text-lg font-semibold text-foreground">
-          Your details
-        </h2>
-        <p className="text-xs text-muted-foreground">All fields are required.</p>
-        <div className="space-y-1.5">
-          <Label htmlFor="booking-name">Your name</Label>
-          <Input
-            id="booking-name"
-            value={draft.name}
-            maxLength={200}
-            autoComplete="name"
-            required
-            onChange={(e) => update('name', e.target.value)}
-            aria-invalid={errors.name ? true : undefined}
-            aria-describedby={errors.name ? 'booking-name-error' : undefined}
-          />
-          <FieldError id="booking-name-error" message={errors.name} />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="booking-email">Email</Label>
-          <Input
-            id="booking-email"
-            type="email"
-            value={draft.email}
-            maxLength={320}
-            autoComplete="email"
-            required
-            onChange={(e) => update('email', e.target.value)}
-            aria-invalid={errors.email ? true : undefined}
-            aria-describedby={errors.email ? 'booking-email-error' : undefined}
-          />
-          <FieldError id="booking-email-error" message={errors.email} />
-        </div>
-        {requiredFields.map((field) => (
-          <div key={field} className="space-y-1.5">
-            <Label htmlFor={`booking-${field}`}>{FIELD_LABELS[field]}</Label>
-            {answerField(field)}
-            <FieldError id={`booking-${field}-error`} message={errors.answers?.[field]} />
-          </div>
-        ))}
+      {showDetails && (
+        <>
+          <form
+            aria-labelledby="booking-details"
+            className="mt-8 space-y-4"
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit().catch(() => setErrors({ form: GENERIC_ERROR }));
+            }}
+          >
+            <h2 id="booking-details" className="text-lg font-semibold text-foreground">
+              Your details
+            </h2>
+            <p className="text-xs text-muted-foreground">All fields are required.</p>
+            <div className="space-y-1.5">
+              <Label htmlFor="booking-name">Your name</Label>
+              <Input
+                id="booking-name"
+                value={draft.name}
+                maxLength={200}
+                autoComplete="name"
+                required
+                onChange={(e) => update('name', e.target.value)}
+                aria-invalid={errors.name ? true : undefined}
+                aria-describedby={errors.name ? 'booking-name-error' : undefined}
+              />
+              <FieldError id="booking-name-error" message={errors.name} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="booking-email">Email</Label>
+              <Input
+                id="booking-email"
+                type="email"
+                value={draft.email}
+                maxLength={320}
+                autoComplete="email"
+                required
+                onChange={(e) => update('email', e.target.value)}
+                aria-invalid={errors.email ? true : undefined}
+                aria-describedby={errors.email ? 'booking-email-error' : undefined}
+              />
+              <FieldError id="booking-email-error" message={errors.email} />
+            </div>
+            {requiredFields.map((field) => (
+              <div key={field} className="space-y-1.5">
+                <Label htmlFor={`booking-${field}`}>{FIELD_LABELS[field]}</Label>
+                {answerField(field)}
+                <FieldError id={`booking-${field}-error`} message={errors.answers?.[field]} />
+              </div>
+            ))}
 
-        {/* Honeypot: off-screen, out of the tab order and hidden from assistive tech; bots still see it. */}
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            left: '-10000px',
-            width: 1,
-            height: 1,
-            overflow: 'hidden',
-          }}
-        >
-          <label htmlFor="booking-website">Leave this field empty</label>
-          <input
-            id="booking-website"
-            type="text"
-            tabIndex={-1}
-            autoComplete="off"
-            value={honeypot}
-            onChange={(e) => setHoneypot(e.target.value)}
-          />
-        </div>
-
-        <div className="flex items-start gap-2">
-          <Checkbox
-            id="booking-consent"
-            checked={draft.consent}
-            onCheckedChange={(checked) => update('consent', checked === true)}
-            aria-invalid={errors.consent ? true : undefined}
-            aria-describedby={errors.consent ? 'booking-consent-error' : undefined}
-          />
-          <Label htmlFor="booking-consent" className="text-sm font-normal leading-snug">
-            {`I agree that ${event.firmName} may use these details to arrange this appointment, as described in its `}
-            <a
-              href={event.privacyUrl ?? '/privacy'}
-              className="underline underline-offset-2"
-              target="_blank"
-              rel="noopener noreferrer"
+            {/* Honeypot: off-screen, out of the tab order and hidden from assistive tech; bots still see it. */}
+            <div
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                left: '-10000px',
+                width: 1,
+                height: 1,
+                overflow: 'hidden',
+              }}
             >
-              privacy notice<span className="sr-only"> (opens in a new tab)</span>
-            </a>
-            {'.'}
-          </Label>
-        </div>
-        <FieldError id="booking-consent-error" message={errors.consent} />
+              <label htmlFor="booking-website">Leave this field empty</label>
+              <input
+                id="booking-website"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={honeypot}
+                onChange={(e) => setHoneypot(e.target.value)}
+              />
+            </div>
 
-        {errors.form && (
-          <p role="alert" className="text-sm text-red-700 dark:text-red-300">
-            {errors.form}
-          </p>
-        )}
+            <div className="flex items-start gap-2">
+              <Checkbox
+                id="booking-consent"
+                checked={draft.consent}
+                onCheckedChange={(checked) => update('consent', checked === true)}
+                aria-invalid={errors.consent ? true : undefined}
+                aria-describedby={errors.consent ? 'booking-consent-error' : undefined}
+              />
+              <Label htmlFor="booking-consent" className="text-sm font-normal leading-snug">
+                {`I agree that ${event.firmName} may use these details to arrange this appointment, as described in its `}
+                <a
+                  href={event.privacyUrl ?? '/privacy'}
+                  className="underline underline-offset-2"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  privacy notice<span className="sr-only"> (opens in a new tab)</span>
+                </a>
+                {'.'}
+              </Label>
+            </div>
+            <FieldError id="booking-consent-error" message={errors.consent} />
 
-        <Button type="submit" disabled={bookMutation.isPending}>
-          {bookMutation.isPending ? 'Booking…' : 'Book'}
-        </Button>
-      </form>
+            {errors.form && (
+              <p role="alert" className="text-sm text-red-700 dark:text-red-300">
+                {errors.form}
+              </p>
+            )}
 
-      <footer className="mt-12 text-xs text-muted-foreground">
-        {'Powered by '}
-        <Link href="/" className="underline underline-offset-2">
-          Aurora
-        </Link>
-      </footer>
+            <Button type="submit" disabled={bookMutation.isPending}>
+              {bookMutation.isPending ? 'Booking…' : 'Book'}
+            </Button>
+          </form>
+
+          <footer className="mt-12 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span>
+              {'Powered by '}
+              <Link href="/" className="underline underline-offset-2">
+                Aurora
+              </Link>
+            </span>
+            {/* PG-203 DSAR: the firm's data request page. */}
+            <Link
+              href={`/dsar/${encodeURIComponent(handle)}`}
+              className="underline underline-offset-2"
+            >
+              Your personal data
+            </Link>
+          </footer>
+        </>
+      )}
     </main>
   );
 }

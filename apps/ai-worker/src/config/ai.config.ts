@@ -320,7 +320,8 @@ const unknownPricingWarned = new Set<string>();
 
 export function calculateCost(model: string, inputTokens: number, outputTokens: number): number {
   // PG-199: OpenRouter's explicit free variants (`<vendor>/<model>:free`) cost nothing.
-  if (model.endsWith(':free')) return 0;
+  // Provider model ids are case-insensitive, as in the scoring chain's TokenUsageCallbackHandler.
+  if (model.trim().toLowerCase().endsWith(':free')) return 0;
   const known = MODEL_PRICING[model as ModelName];
   if (!known && !unknownPricingWarned.has(model)) {
     unknownPricingWarned.add(model);

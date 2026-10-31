@@ -1,0 +1,10 @@
+[test-slot] slot2 taken for PG-203@feat/pg-203-dsar: pnpm --filter @intelliflow/web exec vitest run src/app/(public)/book
+
+ RUN  v4.1.12 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203-dsar/apps/web
+
+
+ Test Files  2 passed (2)
+      Tests  28 passed (28)
+   Start at  10:34:33
+   Duration  3.10s (transform 726ms, setup 516ms, import 1.18s, tests 751ms, environment 1.49s)
+

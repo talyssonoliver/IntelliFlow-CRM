@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-29T18:28:54.163Z",
+  "timestamp": "2026-10-30T11:17:39.798Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 78,
-    "total_endpoints": 599,
-    "total_queries": 255,
-    "total_mutations": 344,
+    "total_endpoints": 606,
+    "total_queries": 256,
+    "total_mutations": 350,
     "routers": [
       {
         "name": "contact",
@@ -1145,6 +1145,12 @@
         "endpoints": 9,
         "queries": 5,
         "mutations": 4
+      },
+      {
+        "name": "taskAutomation",
+        "endpoints": 9,
+        "queries": 2,
+        "mutations": 7
       },
       {
         "name": "webhooks",
@@ -1441,12 +1447,6 @@
         "mutations": 1
       },
       {
-        "name": "dsar",
-        "endpoints": 2,
-        "queries": 1,
-        "mutations": 1
-      },
-      {
         "name": "accountTiers",
         "endpoints": 1,
         "queries": 0,
@@ -1491,18 +1491,25 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 209,
-    "total_fields": 3032,
-    "total_indexes": 935,
-    "total_relations": 295,
+    "total_tables": 215,
+    "total_fields": 3155,
+    "total_indexes": 954,
+    "total_relations": 304,
     "tables_with_embeddings": 4,
-    "enums": 79,
+    "enums": 81,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 185,
+        "fields": 191,
         "indexes": 7,
         "relations": 3,
+        "hasEmbedding": false
+      },
+      {
+        "name": "User",
+        "fields": 49,
+        "indexes": 7,
+        "relations": 9,
         "hasEmbedding": false
       },
       {
@@ -1511,13 +1518,6 @@
         "indexes": 15,
         "relations": 3,
         "hasEmbedding": true
-      },
-      {
-        "name": "User",
-        "fields": 48,
-        "indexes": 7,
-        "relations": 8,
-        "hasEmbedding": false
       },
       {
         "name": "Appointment",
@@ -1532,6 +1532,20 @@
         "indexes": 15,
         "relations": 4,
         "hasEmbedding": true
+      },
+      {
+        "name": "DsarRequest",
+        "fields": 37,
+        "indexes": 6,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TaskAutomationRule",
+        "fields": 37,
+        "indexes": 4,
+        "relations": 2,
+        "hasEmbedding": false
       },
       {
         "name": "ConversationRecord",
@@ -2157,6 +2171,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "ProcessingRestriction",
+        "fields": 12,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "TicketAttachment",
         "fields": 12,
         "indexes": 3,
@@ -2252,6 +2273,13 @@
         "fields": 11,
         "indexes": 4,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TaskAutomationRun",
+        "fields": 11,
+        "indexes": 1,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -2437,6 +2465,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TaskAutomationTag",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "ReportScheduleTag",
         "fields": 10,
         "indexes": 3,
@@ -2557,6 +2592,13 @@
       },
       {
         "name": "AccountTerritoryRule",
+        "fields": 9,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TaskAutomationSetting",
         "fields": 9,
         "indexes": 2,
         "relations": 1,
@@ -3326,10 +3368,10 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 65,
-    "total_schemas": 671,
+    "total_validators": 67,
+    "total_schemas": 689,
     "by_complexity": {
-      "complex": 37,
+      "complex": 39,
       "moderate": 23,
       "simple": 5
     },
@@ -3497,6 +3539,12 @@
         "complexity": "complex"
       },
       {
+        "name": "dsar",
+        "file": "dsar.ts",
+        "schemas": 10,
+        "complexity": "complex"
+      },
+      {
         "name": "common",
         "file": "common.ts",
         "schemas": 9,
@@ -3529,6 +3577,12 @@
       {
         "name": "lead-settings",
         "file": "lead-settings.ts",
+        "schemas": 8,
+        "complexity": "complex"
+      },
+      {
+        "name": "task-automation",
+        "file": "task-automation.ts",
         "schemas": 8,
         "complexity": "complex"
       },
@@ -6419,18 +6473,6 @@
         "description": "Get stats"
       }
     ],
-    "dsar": [
-      {
-        "name": "dsar.submitDSAR",
-        "method": "POST",
-        "description": "Submit d s a r"
-      },
-      {
-        "name": "dsar.getDSARStatus",
-        "method": "GET",
-        "description": "Get d s a r status"
-      }
-    ],
     "publicFeedback": [
       {
         "name": "publicFeedback.submit",
@@ -6549,6 +6591,53 @@
         "name": "subscription.getUsage",
         "method": "POST",
         "description": "Get usage"
+      }
+    ],
+    "taskAutomation": [
+      {
+        "name": "taskAutomation.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "taskAutomation.update",
+        "method": "POST",
+        "description": "Update taskAutomation"
+      },
+      {
+        "name": "taskAutomation.list",
+        "method": "GET",
+        "description": "List taskAutomations with pagination"
+      },
+      {
+        "name": "taskAutomation.create",
+        "method": "POST",
+        "description": "Create new taskAutomation"
+      },
+      {
+        "name": "taskAutomation.delete",
+        "method": "POST",
+        "description": "Delete taskAutomation"
+      },
+      {
+        "name": "taskAutomation.listRuns",
+        "method": "POST",
+        "description": "List runs"
+      },
+      {
+        "name": "taskAutomation.setActive",
+        "method": "POST",
+        "description": "Set active"
+      },
+      {
+        "name": "taskAutomation.reorder",
+        "method": "POST",
+        "description": "Reorder"
+      },
+      {
+        "name": "taskAutomation.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
       }
     ],
     "taskSettings": [

@@ -1,0 +1,43 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 102 files total
+[codex-review] in scope : 72 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T14:28:07.600Z
+Base ref  : origin/main
+Files in scope : 72
+Total findings : 3
+  Waived       : 0
+  Unwaived     : 3
+
+UNWAIVED FINDINGS (BLOCKING):
+  [HIGH] apps/api/src/modules/calendar/booking-abuse.ts:74-79 — failed-attempts-disable-public-booking
+    Issue    : Failed booking attempts consume the shared event-type quota, allowing anonymous visitors to disable an event's bookings for an hour without booking anything.
+    Evidence : The event-wide count queries `bookingAttempt` by `eventTypeId`, and `byEventType >= BOOKING_CAPS.perEventTypePerHour` rejects everyone. public-booking.router.ts commits each attempt before validating the requested slot. Thirty requests for unavailable or past slots, distributed across three IPs and ten email addresses to satisfy the other caps, therefore block every legitimate visitor despite creating zero appointments. The tests explicitly assert this same attempt-based event quota.
+    Fix      : Keep email/IP quotas attempt-based, but count successfully created public appointments for the shared event-type quota and enforce it inside the booking transaction under the booking lock.
+    Fingerprint: 0841b6ae973e691edb51af15fd79547d704692dae82283534a9fe51a30f05c0a
+
+  [MEDIUM] apps/api/src/modules/calendar/booking-email.ts:108-118 — unverified-recipient-content-injection
+    Issue    : Anonymous visitors can send attacker-authored messages to arbitrary email addresses through the booking confirmation's name field.
+    Evidence : `Hello ${d.bookerName}` is included in both confirmation bodies, while `to: [d.bookerEmail]` uses an unverified address. The name validator permits arbitrary text up to 200 characters, including a phishing instruction and URL. HTML escaping prevents markup injection but preserves that attacker-authored message and URL; the email tests explicitly expect the supplied name to be echoed.
+    Fix      : Use a fixed greeting in the unverified booker's confirmation, retaining the supplied name only in the host notification, or verify address ownership before sending visitor-authored content.
+    Fingerprint: 15a74f26a20bbdc1a0ca2ed69a6bc836f6f1c77b4361d86d3ac4c9dc14c8dc21
+
+  [MEDIUM] apps/web/src/app/(public)/book/[handle]/[slug]/BookingContent.tsx:375-376 — slot-query-errors-hide-booking-controls
+    Issue    : A failed slot lookup leaves the visitor without available times, an error explanation, or a retry control.
+    Evidence : The slot query sets `retry: false`, and `days` defaults to `[]` when it fails. This section renders loading only while `slotsQuery.isLoading`, and the empty-state message requires `days.length > 0`; no branch renders `slotsQuery.isError`. A rate-limited lookup, which the server explicitly produces within its 500 ms per-IP window, consequently leaves the time-selection section empty.
+    Fix      : Render slot-query failures with an explanatory message and a retry button that calls `slotsQuery.refetch()`, including an appropriate rate-limit message.
+    Fingerprint: 09b86fba05ce506c9b8d4e0ddf73ae47a82c67eec394ad5fde8f474277b8655d
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 3 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

@@ -138,6 +138,17 @@ const nextConfig = {
           // swap scripts — leaving streamed pages stuck on their fallback HTML.
         ],
       },
+      // PG-203 DSAR (spec sign-off D-AC-10): the confirm and download links carry a token in
+      // the URL fragment. No Referer at all leaves these pages, and nothing they return (a
+      // personal-data export included) may be stored by the browser or any cache. Listed after
+      // '/:path*' so these values win for the same keys.
+      {
+        source: '/dsar/:path*',
+        headers: [
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'Cache-Control', value: 'no-store' },
+        ],
+      },
       // PERF-06: bfcache / repeat-visit caching for the two confirmed
       // non-personalized public pages. `/login` and `/pricing` bake NO per-user
       // data into their SSR HTML, so a shared (edge) cache is safe. The root `/`

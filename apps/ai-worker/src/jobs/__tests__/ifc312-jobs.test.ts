@@ -12,6 +12,13 @@ const prismaOpportunityMock = { count: vi.fn() };
 const prismaReplyDraftMock = { create: vi.fn() };
 const prismaContactCountMock = vi.fn();
 
+// PG-203 Q22: every person eligible here; the blocked paths have their own tests.
+vi.mock('../../lib/data-request-guard', async (importOriginal) =>
+  (await import('../../test/mocks/data-request-guard.mock')).passThroughGuard(
+    await importOriginal()
+  )
+);
+
 vi.mock('@intelliflow/db', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@intelliflow/db');
   return {
@@ -27,6 +34,8 @@ vi.mock('@intelliflow/db', async () => {
       account: { findUnique: prismaAccountMock.findUnique, update: vi.fn().mockResolvedValue({}) },
       opportunity: { count: prismaOpportunityMock.count },
       contactReplyDraft: prismaReplyDraftMock,
+      // PG-203: the reply-draft write takes each thread participant's address lock.
+      $queryRaw: vi.fn().mockResolvedValue([{ locked: 1 }]),
       contactAIInsight: { upsert: vi.fn().mockResolvedValue({}) },
       accountAIInsight: { upsert: vi.fn().mockResolvedValue({}) },
       accountIndustryOption: { findMany: vi.fn().mockResolvedValue([]) },

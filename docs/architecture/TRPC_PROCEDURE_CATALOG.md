@@ -2,19 +2,19 @@
 
 **Generated**: 2026-04-12  
 **Source**: `apps/api/src/modules/*/*.router.ts`  
-**Total procedures**: 323 (240 queries + 83 mutations + 1 subscription)  
+**Total procedures**: 338 (244 queries + 94 mutations + 1 subscription)  
 **Module count**: 30
 
 ---
 
 ## Key
 
-| Column       | Meaning                                                                                                                                                                                                                                   |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Procedure    | `module.procedureName`                                                                                                                                                                                                                    |
-| Type         | Q = query, M = mutation, S = subscription                                                                                                                                                                                                 |
-| Auth         | `pub` = publicProcedure, `auth` = protectedProcedure, `tenant` = tenantProcedure, `admin` = adminProcedure, `authP` = authProcedure (pre-session), `platform` = platformAdminProcedure (operator email on PLATFORM_ADMIN_EMAILS, ADR-070) |
-| Input schema | Named Zod schema from `@intelliflow/validators` (or `inline` if defined locally)                                                                                                                                                          |
+| Column       | Meaning                                                                                                                                                                                                                                                                                                |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Procedure    | `module.procedureName`                                                                                                                                                                                                                                                                                 |
+| Type         | Q = query, M = mutation, S = subscription                                                                                                                                                                                                                                                              |
+| Auth         | `pub` = publicProcedure, `auth` = protectedProcedure, `tenant` = tenantProcedure, `admin` = adminProcedure, `adminT` = adminTenantProcedure (ADMIN role, tenant-scoped), `authP` = authProcedure (pre-session), `platform` = platformAdminProcedure (operator email on PLATFORM_ADMIN_EMAILS, ADR-070) |
+| Input schema | Named Zod schema from `@intelliflow/validators` (or `inline` if defined locally)                                                                                                                                                                                                                       |
 
 ---
 
@@ -612,12 +612,27 @@
 
 ---
 
-## privacy/dsar (2)
+## privacy (17)
 
-| Procedure            | Type | Auth | Input schema                              | Summary                         |
-| -------------------- | ---- | ---- | ----------------------------------------- | ------------------------------- |
-| `dsar.submitDSAR`    | M    | pub  | inline `{ type, email, description? }`    | Submit a GDPR rights request    |
-| `dsar.getDSARStatus` | Q    | pub  | inline `{ requestId, verificationToken }` | Check DSAR status (token-gated) |
+| Procedure                       | Type | Auth   | Input schema                | Summary                                            |
+| ------------------------------- | ---- | ------ | --------------------------- | -------------------------------------------------- |
+| `privacy.getFirm`               | Q    | pub    | `dsarFirmLookupSchema`      | Public firm lookup by handle for the request form  |
+| `privacy.submit`                | M    | pub    | `dsarSubmitSchema`          | Submit a data subject request (email-verified)     |
+| `privacy.verify`                | M    | pub    | `dsarTokenInputSchema`      | Verify a request by emailed token                  |
+| `privacy.downloadExport`        | M    | pub    | `dsarTokenInputSchema`      | Download the access export (token-gated)           |
+| `privacy.restrictionFor`        | Q    | tenant | `restrictionForSchema`      | Processing-restriction banner status for a record  |
+| `privacy.admin.list`            | Q    | adminT | `dsarListSchema`            | List data requests (optional status filter)        |
+| `privacy.admin.restrictions`    | Q    | adminT | —                           | List active processing restrictions                |
+| `privacy.admin.logRequest`      | M    | adminT | `dsarLogRequestSchema`      | Log a request received outside the form            |
+| `privacy.admin.extend`          | M    | adminT | `dsarExtendSchema`          | Extend the response deadline                       |
+| `privacy.admin.previewErasure`  | Q    | adminT | `dsarIdInputSchema`         | Preview what an erasure would remove               |
+| `privacy.admin.complete`        | M    | adminT | `dsarCompleteSchema`        | Complete a request (runs erasure where applicable) |
+| `privacy.admin.completeAccess`  | M    | adminT | `dsarCompleteAccessSchema`  | Complete an access or portability request          |
+| `privacy.admin.reject`          | M    | adminT | `dsarRejectSchema`          | Reject a request with a reason                     |
+| `privacy.admin.cancelErasure`   | M    | adminT | `dsarCancelErasureSchema`   | Cancel a pending erasure                           |
+| `privacy.admin.liftRestriction` | M    | adminT | `dsarLiftRestrictionSchema` | Lift a processing restriction                      |
+| `privacy.admin.revokeExport`    | M    | adminT | `dsarIdInputSchema`         | Revoke a generated export link                     |
+| `privacy.admin.exportData`      | M    | adminT | `dsarIdInputSchema`         | Generate the data export for a request             |
 
 ---
 
@@ -820,9 +835,9 @@
 | Metric            | Count |
 | ----------------- | ----- |
 | Total modules     | 30    |
-| Total procedures  | 323   |
-| Queries (Q)       | 161   |
-| Mutations (M)     | 161   |
+| Total procedures  | 338   |
+| Queries (Q)       | 165   |
+| Mutations (M)     | 172   |
 | Subscriptions (S) | 1     |
 | Router files      | 50    |
 

@@ -1,0 +1,86 @@
+{
+  "_comment": "IFC-117 AI-model alert rules for the Grafana Cloud stack (ADR-088). Applied by tools/scripts/observability/apply-grafana-ai-alert-rules.mjs (workflow: grafana-ai-alert-rules.yml), never by hand. Metrics are the OTel instruments ai-worker exports over OTLP (apps/ai-worker/src/monitoring/otel-ai-metrics.ts); their Prometheus names (dots to underscores, _total, _milliseconds) are an assumption until the post-deploy dry run. Own folder and group: the IFC-032 script PUTs the whole intelliflow-prod group. Every rule is requireSeries:false + noData:OK until ai-worker is promoted; the stalled and silent rules are additionally gated on the AI series existing, so they cannot fire before promotion. Hallucination rates are what the heuristic checker detects (a floor, not ground truth); drift is an output-distribution shift (lead mix or model).",
+  "folder": { "uid": "intelliflow-ai", "title": "IntelliFlow AI models" },
+  "datasourceUid": "grafanacloud-prom",
+  "group": { "name": "intelliflow-ai", "intervalSeconds": 60 },
+  "rules": [
+    {
+      "uid": "ifc117-hallucination-rate",
+      "title": "AI hallucination rate (detected by heuristic checker) at or above 5%",
+      "expr": "((sum(increase(intelliflow_ai_hallucination_detected_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[1h])) or vector(0)) / clamp_min(sum(increase(intelliflow_ai_hallucination_checks_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[1h])), 1) >= bool 0.05) and on() (sum(increase(intelliflow_ai_hallucination_checks_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[1h])) >= 20)",
+      "selector": "intelliflow_ai_hallucination_checks_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}",
+      "operator": "gt",
+      "threshold": 0,
+      "for": "15m",
+      "noData": "OK",
+      "severity": "high",
+      "requireSeries": false,
+      "summary": "At least 5% of lead-scoring outputs in the last hour were flagged by the heuristic hallucination checker (with at least 20 checks). The rate is a floor of what the checker can detect, not ground truth."
+    },
+    {
+      "uid": "ifc117-drift-shift",
+      "title": "AI output distribution shift (lead mix or model)",
+      "expr": "sum(increase(intelliflow_ai_drift_detections_total{job=~\"(.*/)?(intelliflow-)?ai-worker\", severity=~\"high|critical\"}[1d])) or vector(0)",
+      "selector": "intelliflow_ai_drift_detections_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}",
+      "operator": "gt",
+      "threshold": 0,
+      "for": "0m",
+      "noData": "OK",
+      "severity": "medium",
+      "requireSeries": false,
+      "summary": "A high or critical shift in the lead-score or confidence distribution persisted for three consecutive 30-minute checks against the same hours on the previous 7 days. It can be a change in lead mix or in the model; check recent lead sources and model or prompt changes."
+    },
+    {
+      "uid": "ifc117-drift-stalled",
+      "title": "AI drift detection has not run for 2 hours",
+      "expr": "((time() - (max(intelliflow_ai_drift_last_check{job=~\"(.*/)?(intelliflow-)?ai-worker\"}) or vector(0))) > bool 7200) and on() (count(intelliflow_ai_drift_checks_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}) > 0) and on() (sum(rate(traces_spanmetrics_calls_total{service=~\"(intelliflow-)?ai-worker\", span_name=~\"llm.*\"}[30m])) > 0)",
+      "selector": "intelliflow_ai_drift_checks_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}",
+      "operator": "gt",
+      "threshold": 0,
+      "for": "30m",
+      "noData": "OK",
+      "severity": "medium",
+      "requireSeries": false,
+      "summary": "ai-worker serves LLM calls but its drift scheduler has not completed a check in over 2 hours. A silent detector looks exactly like 'no drift'."
+    },
+    {
+      "uid": "ifc117-inference-p95-latency",
+      "title": "AI chain p95 latency above 2 seconds",
+      "expr": "histogram_quantile(0.95, sum by (le) (rate(intelliflow_ai_inference_latency_milliseconds_bucket{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[10m]))) and on() (sum(increase(intelliflow_ai_inference_count_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[10m])) >= 10)",
+      "selector": "intelliflow_ai_inference_latency_milliseconds_bucket{job=~\"(.*/)?(intelliflow-)?ai-worker\"}",
+      "operator": "gt",
+      "threshold": 2000,
+      "for": "10m",
+      "noData": "OK",
+      "severity": "medium",
+      "requireSeries": false,
+      "summary": "The p95 latency of monitored AI chain calls has been above 2000 ms for 10 minutes (at least 10 calls). The 2000 ms target is re-checked after the first measured production week."
+    },
+    {
+      "uid": "ifc117-inference-error-ratio",
+      "title": "AI chain error ratio above 5%",
+      "expr": "((sum(increase(intelliflow_ai_inference_count_total{job=~\"(.*/)?(intelliflow-)?ai-worker\", outcome=\"error\"}[10m])) or vector(0)) / clamp_min(sum(increase(intelliflow_ai_inference_count_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[10m])), 1) > bool 0.05) and on() (sum(increase(intelliflow_ai_inference_count_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[10m])) >= 10)",
+      "selector": "intelliflow_ai_inference_count_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}",
+      "operator": "gt",
+      "threshold": 0,
+      "for": "10m",
+      "noData": "OK",
+      "severity": "high",
+      "requireSeries": false,
+      "summary": "More than 5% of monitored AI chain calls failed in the last 10 minutes (at least 10 calls). Lead scoring falls back to a score of 0 on these."
+    },
+    {
+      "uid": "ifc117-ai-metrics-silent",
+      "title": "ai-worker serves LLM calls but records no AI metrics",
+      "expr": "((sum(rate(traces_spanmetrics_calls_total{service=~\"(intelliflow-)?ai-worker\", span_name=~\"llm.*\"}[30m])) > bool 0) unless on() (sum(increase(intelliflow_ai_inference_count_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[30m])) > 0)) and on() (count(intelliflow_ai_inference_count_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}) > 0)",
+      "selector": "intelliflow_ai_inference_count_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}",
+      "operator": "gt",
+      "threshold": 0,
+      "for": "2h",
+      "noData": "OK",
+      "severity": "low",
+      "requireSeries": false,
+      "summary": "ai-worker has LLM spans but no AI inference has been recorded for 2 hours: the OTel metrics path may be broken, or LLM calls bypass the monitored chains."
+    }
+  ]
+}
