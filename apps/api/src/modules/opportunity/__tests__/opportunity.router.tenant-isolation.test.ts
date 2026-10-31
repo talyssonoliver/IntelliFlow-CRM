@@ -176,4 +176,56 @@ describe('Opportunity Router — Tenant Isolation (IFC-281 AC-003/AC-004/AC-005)
       );
     });
   });
+
+  // ── #1075 review: dealForecast reads the opportunity itself ──────────────
+
+  describe('dealForecast — cross-tenant access denial', () => {
+    const FOREIGN_OPPORTUNITY = 'cmforeignopp0000l8086a1b2c';
+    const row = (id: string, tenantId: string) => ({
+      id,
+      tenantId,
+      name: tenantId === TEST_UUIDS.tenant ? 'Big Deal' : 'Foreign Deal',
+      stage: 'PROPOSAL',
+      probability: 60,
+      value: 50000,
+      expectedCloseDate: new Date('2026-12-31'),
+      owner: { id: 'owner-1', name: 'Owner', email: 'owner@example.invalid' },
+      account: { id: 'acc-1', name: 'Account' },
+      contact: { id: 'con-1', firstName: 'Ada', lastName: 'Lovelace', title: null },
+    });
+    const rows = [
+      row(TEST_UUIDS.opportunity1, TEST_UUIDS.tenant),
+      row(FOREIGN_OPPORTUNITY, 'cmothertenant000l8086a1b2c'),
+    ];
+
+    beforeEach(() => {
+      // An unfiltered lookup finds any tenant's row; findFirst honours its where.
+      prismaMock.opportunity.findUnique.mockImplementation(
+        (async ({ where }: any) => rows.find((r) => r.id === where.id) ?? null) as never
+      );
+      prismaMock.opportunity.findFirst.mockImplementation(
+        (async ({ where }: any) =>
+          rows.find((r) => r.id === where.id && r.tenantId === where.tenantId) ?? null) as never
+      );
+      prismaMock.activityEvent.findMany.mockResolvedValue([] as never);
+    });
+
+    it("returns NOT_FOUND for another tenant's opportunity and reads nothing else", async () => {
+      await expect(caller.dealForecast({ id: FOREIGN_OPPORTUNITY })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
+      expect(prismaMock.activityEvent.findMany).not.toHaveBeenCalled();
+    });
+
+    it('still forecasts the caller tenant opportunity', async () => {
+      const result = await caller.dealForecast({ id: TEST_UUIDS.opportunity1 });
+
+      expect(JSON.stringify(result)).toContain('Big Deal');
+      expect(prismaMock.opportunity.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: TEST_UUIDS.opportunity1, tenantId: TEST_UUIDS.tenant },
+        })
+      );
+    });
+  });
 });

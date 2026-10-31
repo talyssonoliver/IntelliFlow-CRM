@@ -1,5 +1,6 @@
 /**
- * Guard (#1074): no id field on the job and queue path is validated as a UUID.
+ * Guard (#1074, #1075): no id field on the job and queue path, or in an api router input, is
+ * validated as a UUID.
  *
  * Record ids are cuids (schema.prisma has no uuid column), so an id field must use
  * `recordIdSchema` from @intelliflow/validators. A field that really holds a UUID
@@ -14,21 +15,33 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../../..');
 
-/** Directories on the job and queue path (producers and consumers). */
+/** The job and queue path (producers and consumers), api inputs, and the shared schemas. */
 const SCOPE = [
   'apps/ai-worker/src',
   'apps/workers',
   'packages/platform/src/queues',
+  'packages/platform/src/workflow',
   'apps/api/src/shared',
+  'apps/api/src/modules',
+  'apps/api/src/workflow',
+  'packages/search/src',
+  'packages/validators/src',
 ];
 
-/** `file:field` entries that really are UUIDs, with the reason. None today. */
-const ALLOWED: Record<string, string> = {};
+/** `file:field` entries that really are UUIDs, with the reason. */
+const ALLOWED: Record<string, string> = {
+  'apps/api/src/workflow/types.ts:workflowId':
+    'state-machine workflows are keyed by randomUUID() (apps/api/src/workflow/state-machine.ts), not a record id',
+  'packages/validators/src/auth.ts:mfaChallengeId':
+    'MFA challenge ids are issued by mfa.service, not a record id; they become randomUUID() in #1096',
+  'packages/validators/src/auth.ts:challengeId':
+    'MFA challenge ids are issued by mfa.service, not a record id; they become randomUUID() in #1096',
+};
 
-// `fooId: z.uuid(`, `fooId: z.string().uuid(`, `fooIds: z.array(z.uuid(`, and
-// actor fields such as `requestedBy: z.uuid(` (they hold a user id).
+// `fooId: z.uuid(`, `fooId: z.string().uuid(`, `fooIds: z.array(z.uuid(`, pairs such as
+// `versionIdA: z.uuid(`, and actor fields such as `requestedBy: z.uuid(` (they hold a user id).
 const ID_AS_UUID =
-  /\b(\w*(?:Id|Ids|id|ids|By))\s*:\s*z(?:\.string\(\))?\.(?:uuid\(|array\(\s*z(?:\.string\(\))?\.uuid\()/g;
+  /\b(\w*(?:Id|Ids|id|ids|By)[A-Z]?)\s*:\s*z(?:\.string\(\))?\.(?:uuid\(|array\(\s*z(?:\.string\(\))?\.uuid\()/g;
 
 const SKIP_DIR = new Set(['node_modules', 'dist', '__tests__', 'coverage']);
 
@@ -62,7 +75,7 @@ function findUuidIdFields(files: string[], root = ROOT): string[] {
   return hits;
 }
 
-describe('no uuid-validated id fields on the job path (#1074)', () => {
+describe('no uuid-validated id fields on the job path or in api inputs (#1074, #1075)', () => {
   it('scans a non-empty set of source files', () => {
     const files = SCOPE.flatMap((d) => sourceFiles(path.join(ROOT, d)));
     expect(files.length).toBeGreaterThan(50);
@@ -85,6 +98,7 @@ describe('no uuid-validated id fields on the job path (#1074)', () => {
           "  leadId: z.string().uuid('must be a uuid'),",
           '  documentIds: z.array(z.uuid()).optional(),',
           '  requestedBy: z.uuid().optional(),',
+          '  versionIdA: z.uuid(),',
           '  traceparent: z.uuid(),',
           '});',
         ].join('\n')
@@ -94,6 +108,7 @@ describe('no uuid-validated id fields on the job path (#1074)', () => {
         'sample.ts:3 leadId',
         'sample.ts:4 documentIds',
         'sample.ts:5 requestedBy',
+        'sample.ts:6 versionIdA',
       ]);
     } finally {
       fs.rmSync(dir, { recursive: true, force: true });

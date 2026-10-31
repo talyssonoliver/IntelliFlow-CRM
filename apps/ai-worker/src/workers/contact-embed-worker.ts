@@ -15,6 +15,7 @@ import { DelayedError, Job, Worker, Queue, QueueEvents } from 'bullmq';
 import { getDrainDelaySeconds } from '@intelliflow/platform/queues/connection';
 import { PrismaClient } from '@intelliflow/db';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { tenantContextStore } from '../tracing/tenant-context';
 import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
 import {
@@ -43,7 +44,7 @@ export const BACKFILL_SPACING_MS = 4_000;
 
 export const ContactEmbedJobDataSchema = z.object({
   contactId: z.string().min(1),
-  tenantId: z.string().min(1),
+  tenantId: recordIdSchema,
   reason: z.enum(['create', 'update', 'merge', 'backfill']),
 });
 

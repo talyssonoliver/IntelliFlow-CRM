@@ -258,9 +258,9 @@ describe('PrismaCaseDocumentRepository', () => {
   describe('findById()', () => {
     it('should return CaseDocument when found', async () => {
       const record = createMockDbRecord();
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
+      mockPrisma.caseDocument.findFirst.mockResolvedValue(record);
 
-      const result = await repo.findById(DOC_ID);
+      const result = await repo.findById(DOC_ID, TENANT_ID);
 
       expect(result).not.toBeNull();
       expect(result!.id).toBe(DOC_ID);
@@ -270,20 +270,20 @@ describe('PrismaCaseDocumentRepository', () => {
     });
 
     it('should return null when not found', async () => {
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(null);
+      mockPrisma.caseDocument.findFirst.mockResolvedValue(null);
 
-      const result = await repo.findById('non-existent');
+      const result = await repo.findById('non-existent', TENANT_ID);
 
       expect(result).toBeNull();
     });
 
     it('should include ACL in query', async () => {
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(null);
+      mockPrisma.caseDocument.findFirst.mockResolvedValue(null);
 
-      await repo.findById(DOC_ID);
+      await repo.findById(DOC_ID, TENANT_ID);
 
-      expect(mockPrisma.caseDocument.findUnique).toHaveBeenCalledWith({
-        where: { id: DOC_ID },
+      expect(mockPrisma.caseDocument.findFirst).toHaveBeenCalledWith({
+        where: { id: DOC_ID, tenantId: TENANT_ID },
         include: { acl: true },
       });
     });
@@ -309,9 +309,9 @@ describe('PrismaCaseDocumentRepository', () => {
           },
         ],
       });
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
+      mockPrisma.caseDocument.findFirst.mockResolvedValue(record);
 
-      const result = await repo.findById(DOC_ID);
+      const result = await repo.findById(DOC_ID, TENANT_ID);
       const acl = result!.acl;
 
       expect(acl).toHaveLength(2);
@@ -333,9 +333,9 @@ describe('PrismaCaseDocumentRepository', () => {
         signatureUserAgent: 'Chrome/120',
         status: 'SIGNED',
       });
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
+      mockPrisma.caseDocument.findFirst.mockResolvedValue(record);
 
-      const result = await repo.findById(DOC_ID);
+      const result = await repo.findById(DOC_ID, TENANT_ID);
       const json = result!.toJSON();
 
       expect(json.eSignature).toBeDefined();
@@ -346,9 +346,9 @@ describe('PrismaCaseDocumentRepository', () => {
 
     it('should handle record without eSignature', async () => {
       const record = createMockDbRecord();
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
+      mockPrisma.caseDocument.findFirst.mockResolvedValue(record);
 
-      const result = await repo.findById(DOC_ID);
+      const result = await repo.findById(DOC_ID, TENANT_ID);
       const json = result!.toJSON();
 
       expect(json.eSignature).toBeUndefined();
@@ -361,9 +361,9 @@ describe('PrismaCaseDocumentRepository', () => {
         relatedContactId: null,
         tags: [],
       });
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
+      mockPrisma.caseDocument.findFirst.mockResolvedValue(record);
 
-      const result = await repo.findById(DOC_ID);
+      const result = await repo.findById(DOC_ID, TENANT_ID);
 
       expect(result!.metadata.description).toBeUndefined();
       expect(result!.metadata.relatedCaseId).toBeUndefined();
@@ -373,9 +373,9 @@ describe('PrismaCaseDocumentRepository', () => {
 
     it('should handle empty ACL', async () => {
       const record = createMockDbRecord({ acl: [] });
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
+      mockPrisma.caseDocument.findFirst.mockResolvedValue(record);
 
-      const result = await repo.findById(DOC_ID);
+      const result = await repo.findById(DOC_ID, TENANT_ID);
 
       expect(result!.acl).toEqual([]);
     });
@@ -386,7 +386,7 @@ describe('PrismaCaseDocumentRepository', () => {
   // ============================================
   describe('findByIds()', () => {
     it('should return empty array when given empty ids', async () => {
-      const result = await repo.findByIds([]);
+      const result = await repo.findByIds([], TENANT_ID);
 
       expect(result).toEqual([]);
       expect(mockPrisma.caseDocument.findMany).not.toHaveBeenCalled();
@@ -399,11 +399,11 @@ describe('PrismaCaseDocumentRepository', () => {
       ];
       mockPrisma.caseDocument.findMany.mockResolvedValue(records);
 
-      const result = await repo.findByIds([DOC_ID, DOC_CHILD_ID]);
+      const result = await repo.findByIds([DOC_ID, DOC_CHILD_ID], TENANT_ID);
 
       expect(mockPrisma.caseDocument.findMany).toHaveBeenCalledTimes(1);
       expect(mockPrisma.caseDocument.findMany).toHaveBeenCalledWith({
-        where: { id: { in: [DOC_ID, DOC_CHILD_ID] }, deletedAt: null },
+        where: { id: { in: [DOC_ID, DOC_CHILD_ID] }, tenantId: TENANT_ID, deletedAt: null },
         include: { acl: true },
       });
       expect(result).toHaveLength(2);
@@ -413,7 +413,7 @@ describe('PrismaCaseDocumentRepository', () => {
       const records = [createMockDbRecord({ id: DOC_ID })];
       mockPrisma.caseDocument.findMany.mockResolvedValue(records);
 
-      const result = await repo.findByIds([DOC_ID, DOC_ID, DOC_ID]);
+      const result = await repo.findByIds([DOC_ID, DOC_ID, DOC_ID], TENANT_ID);
 
       expect(mockPrisma.caseDocument.findMany).toHaveBeenCalledTimes(1);
       const callArg = mockPrisma.caseDocument.findMany.mock.calls[0][0];
@@ -425,7 +425,7 @@ describe('PrismaCaseDocumentRepository', () => {
     it('should return empty array when no records found', async () => {
       mockPrisma.caseDocument.findMany.mockResolvedValue([]);
 
-      const result = await repo.findByIds([DOC_ID, DOC_CHILD_ID]);
+      const result = await repo.findByIds([DOC_ID, DOC_CHILD_ID], TENANT_ID);
 
       expect(result).toEqual([]);
     });
@@ -433,7 +433,7 @@ describe('PrismaCaseDocumentRepository', () => {
     it('should only fetch non-deleted documents (deletedAt: null)', async () => {
       mockPrisma.caseDocument.findMany.mockResolvedValue([]);
 
-      await repo.findByIds([DOC_ID]);
+      await repo.findByIds([DOC_ID], TENANT_ID);
 
       const callArg = mockPrisma.caseDocument.findMany.mock.calls[0][0];
       expect(callArg.where.deletedAt).toBeNull();
@@ -442,7 +442,7 @@ describe('PrismaCaseDocumentRepository', () => {
     it('should include ACL in query', async () => {
       mockPrisma.caseDocument.findMany.mockResolvedValue([]);
 
-      await repo.findByIds([DOC_ID]);
+      await repo.findByIds([DOC_ID], TENANT_ID);
 
       const callArg = mockPrisma.caseDocument.findMany.mock.calls[0][0];
       expect(callArg.include).toEqual({ acl: true });
@@ -452,7 +452,7 @@ describe('PrismaCaseDocumentRepository', () => {
       const record = createMockDbRecord({ id: DOC_ID });
       mockPrisma.caseDocument.findMany.mockResolvedValue([record]);
 
-      const result = await repo.findByIds([DOC_ID]);
+      const result = await repo.findByIds([DOC_ID], TENANT_ID);
 
       expect(result).toHaveLength(1);
       expect(result[0].id).toBe(DOC_ID);
@@ -593,11 +593,12 @@ describe('PrismaCaseDocumentRepository', () => {
       ];
       mockPrisma.caseDocument.findMany.mockResolvedValue(records);
 
-      const result = await repo.findByCaseId(CASE_ID);
+      const result = await repo.findByCaseId(CASE_ID, TENANT_ID);
 
       expect(result).toHaveLength(2);
       expect(mockPrisma.caseDocument.findMany).toHaveBeenCalledWith({
         where: {
+          tenantId: TENANT_ID,
           relatedCaseId: CASE_ID,
           deletedAt: null,
           isLatestVersion: true,
@@ -610,7 +611,7 @@ describe('PrismaCaseDocumentRepository', () => {
     it('should return empty array when no documents found', async () => {
       mockPrisma.caseDocument.findMany.mockResolvedValue([]);
 
-      const result = await repo.findByCaseId('non-existent-case');
+      const result = await repo.findByCaseId('non-existent-case', TENANT_ID);
 
       expect(result).toEqual([]);
     });
@@ -721,9 +722,9 @@ describe('PrismaCaseDocumentRepository', () => {
     it('should map retentionUntil correctly', async () => {
       const retentionDate = new Date('2027-01-01T00:00:00Z');
       const record = createMockDbRecord({ retentionUntil: retentionDate });
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
+      mockPrisma.caseDocument.findFirst.mockResolvedValue(record);
 
-      const result = await repo.findById(DOC_ID);
+      const result = await repo.findById(DOC_ID, TENANT_ID);
       const json = result!.toJSON();
 
       expect(json.retentionUntil).toEqual(retentionDate);
@@ -732,18 +733,18 @@ describe('PrismaCaseDocumentRepository', () => {
     it('should map deletedAt correctly', async () => {
       const deletedAt = new Date('2026-06-01T00:00:00Z');
       const record = createMockDbRecord({ deletedAt: deletedAt });
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
+      mockPrisma.caseDocument.findFirst.mockResolvedValue(record);
 
-      const result = await repo.findById(DOC_ID);
+      const result = await repo.findById(DOC_ID, TENANT_ID);
 
       expect(result!.isDeleted).toBe(true);
     });
 
     it('should handle record with no ACL', async () => {
       const record = createMockDbRecord({ acl: undefined });
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
+      mockPrisma.caseDocument.findFirst.mockResolvedValue(record);
 
-      const result = await repo.findById(DOC_ID);
+      const result = await repo.findById(DOC_ID, TENANT_ID);
 
       expect(result!.acl).toEqual([]);
     });
@@ -754,9 +755,9 @@ describe('PrismaCaseDocumentRepository', () => {
         versionMinor: 2,
         versionPatch: 1,
       });
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
+      mockPrisma.caseDocument.findFirst.mockResolvedValue(record);
 
-      const result = await repo.findById(DOC_ID);
+      const result = await repo.findById(DOC_ID, TENANT_ID);
       const version = result!.version;
 
       expect(version.major).toBe(3);
@@ -778,9 +779,9 @@ describe('PrismaCaseDocumentRepository', () => {
           },
         ],
       });
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
+      mockPrisma.caseDocument.findFirst.mockResolvedValue(record);
 
-      const result = await repo.findById(DOC_ID);
+      const result = await repo.findById(DOC_ID, TENANT_ID);
       const ace = result!.acl[0];
 
       expect(ace.expiresAt).toBeUndefined();
@@ -790,9 +791,9 @@ describe('PrismaCaseDocumentRepository', () => {
       const record = createMockDbRecord({
         parentVersionId: DOC_CHILD_ID,
       });
-      mockPrisma.caseDocument.findUnique.mockResolvedValue(record);
+      mockPrisma.caseDocument.findFirst.mockResolvedValue(record);
 
-      const result = await repo.findById(DOC_ID);
+      const result = await repo.findById(DOC_ID, TENANT_ID);
       const json = result!.toJSON();
 
       expect(json.parentVersionId).toBe(DOC_CHILD_ID);

@@ -46,6 +46,11 @@ const nextConfig = {
     // Reduce webpack build-time peak memory (Next 15+). The production build runs
     // `next build --webpack` in a memory-constrained Vercel container (#473).
     webpackMemoryOptimizations: true,
+    // Page-generation workers. Next defaults to one per CPU core less one; local
+    // pre-ship sets NEXT_BUILD_CPUS to cap them (#1111). Unset on Vercel and CI.
+    ...(/^\d+$/.test(process.env.NEXT_BUILD_CPUS ?? '') && Number(process.env.NEXT_BUILD_CPUS) > 0
+      ? { cpus: Number(process.env.NEXT_BUILD_CPUS) }
+      : {}),
     // Server actions configuration
     serverActions: {
       bodySizeLimit: '2mb',

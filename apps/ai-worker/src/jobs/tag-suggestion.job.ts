@@ -9,6 +9,7 @@
 
 import type { Job } from 'bullmq';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 import { prisma } from '@intelliflow/db';
 import {
@@ -33,7 +34,7 @@ const logger = pino({
 export const TagSuggestionJobDataSchema = z.object({
   entityType: z.enum(['contact', 'account']),
   entityId: z.string().min(1),
-  tenantId: z.string().min(1),
+  tenantId: recordIdSchema,
   profileSnapshot: z.record(z.string(), z.unknown()),
   _otelCarrier: z.record(z.string(), z.string()).optional(),
 });

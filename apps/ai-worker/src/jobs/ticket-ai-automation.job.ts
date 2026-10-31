@@ -17,11 +17,12 @@
 import { Job } from 'bullmq';
 import { PrismaClient } from '@intelliflow/db';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 
 export const TICKET_AI_AUTOMATION_QUEUE = 'intelliflow-ticket-ai-automation';
 
 export const TicketAiAutomationJobDataSchema = z.object({
-  tenantId: z.string().min(1),
+  tenantId: recordIdSchema,
   ticketId: z.string().min(1),
   operation: z.enum([
     'duplicate-detection',
