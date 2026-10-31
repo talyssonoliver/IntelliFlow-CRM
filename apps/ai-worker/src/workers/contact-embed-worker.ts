@@ -142,6 +142,7 @@ export class ContactEmbedWorker {
         LIMIT ${pageSize}`;
       const last = rows.at(-1);
       if (!last) return queued;
+      await Promise.all(rows.map((row) => this.clearFailedBackfill(row.id)));
       await this.queue.addBulk(
         rows.map((row, index) => ({
           name: 'embed',
@@ -153,6 +154,16 @@ export class ContactEmbedWorker {
       if (rows.length < pageSize) return queued;
       after = last.id;
     }
+  }
+
+  /**
+   * A backfill job that used up its retries is kept for a week (`removeOnFail`), and BullMQ would
+   * dedupe the next sweep's job against it, so the contact would never be embedded. Removing it
+   * lets the sweep queue the contact again; a job still waiting, delayed or active is left alone.
+   */
+  private async clearFailedBackfill(contactId: string): Promise<void> {
+    const existing = await this.queue?.getJob(`backfill-${contactId}`);
+    if (existing && (await existing.isFailed())) await existing.remove();
   }
 
   async stop(): Promise<void> {

@@ -10,6 +10,8 @@ const constructorCalls: {
   workerOn: Array<[string, unknown]>;
   addBulk: unknown[][];
   closed: { worker: number; events: number; queue: number };
+  /** Jobs the queue still holds, by id, as BullMQ keeps them after they finish. */
+  retained: Map<string, { failed: boolean; removed: boolean }>;
 } = {
   Queue: [],
   Worker: [],
@@ -17,6 +19,7 @@ const constructorCalls: {
   workerOn: [],
   addBulk: [],
   closed: { worker: 0, events: 0, queue: 0 },
+  retained: new Map(),
 };
 
 vi.mock('bullmq', () => {
@@ -33,6 +36,16 @@ vi.mock('bullmq', () => {
     async addBulk(jobs: unknown[]) {
       constructorCalls.addBulk.push(jobs);
       return jobs;
+    }
+    async getJob(id: string) {
+      const held = constructorCalls.retained.get(id);
+      if (!held || held.removed) return undefined;
+      return {
+        isFailed: async () => held.failed,
+        remove: async () => {
+          held.removed = true;
+        },
+      };
     }
   }
   class MockWorker {
@@ -83,6 +96,7 @@ beforeEach(() => {
   constructorCalls.closed.worker = 0;
   constructorCalls.closed.events = 0;
   constructorCalls.closed.queue = 0;
+  constructorCalls.retained.clear();
 });
 
 function buildPrisma(
@@ -570,6 +584,41 @@ describe('ContactEmbedWorker.enqueueMissingEmbeddings (backfill after the vector
     const [sql, ...values] = prisma.$queryRaw.mock.calls[1] as unknown as [string[], ...unknown[]];
     expect(sql.join('?')).toMatch(/FROM contacts\s+WHERE embedding IS NULL AND id > \?/);
     expect(values).toEqual(['c-2', 2]);
+  });
+
+  it('re-queues a contact whose earlier backfill job failed, so an outage is recovered at the next boot', async () => {
+    // A provider outage used up c-1's retries; BullMQ keeps that failed job for a week, and
+    // adding the same job id again would be deduplicated against it.
+    constructorCalls.retained.set('backfill-c-1', { failed: true, removed: false });
+    const prisma = { $queryRaw: vi.fn(async () => [{ id: 'c-1', tenantId: 't-1' }]) };
+    const worker = new ContactEmbedWorker(
+      prisma as any,
+      redis,
+      { generateEmbedding: vi.fn() },
+      vi.fn()
+    );
+    await worker.start();
+
+    await expect(worker.enqueueMissingEmbeddings()).resolves.toBe(1);
+
+    expect(constructorCalls.retained.get('backfill-c-1')?.removed).toBe(true);
+    expect(constructorCalls.addBulk.flat()).toHaveLength(1);
+  });
+
+  it('leaves a backfill job that is still waiting in place, so the id still dedupes it', async () => {
+    constructorCalls.retained.set('backfill-c-1', { failed: false, removed: false });
+    const prisma = { $queryRaw: vi.fn(async () => [{ id: 'c-1', tenantId: 't-1' }]) };
+    const worker = new ContactEmbedWorker(
+      prisma as any,
+      redis,
+      { generateEmbedding: vi.fn() },
+      vi.fn()
+    );
+    await worker.start();
+
+    await worker.enqueueMissingEmbeddings();
+
+    expect(constructorCalls.retained.get('backfill-c-1')?.removed).toBe(false);
   });
 
   it('queues nothing when every contact already has an embedding', async () => {
