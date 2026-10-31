@@ -78,6 +78,32 @@ describe('getStandardNodeInstrumentations', () => {
     expect(config['@opentelemetry/instrumentation-pino']?.disableLogSending).toBe(false);
   });
 
+  // #1098: health probes get no SERVER span, so they stay out of the api SLOs.
+  it('ignores health probe requests by path, not by substring', async () => {
+    const { getStandardNodeInstrumentations } = await import('./node-instrumentations');
+
+    getStandardNodeInstrumentations();
+
+    const config = lastConfig as Record<
+      string,
+      { ignoreIncomingRequestHook?: (req: { url?: string }) => boolean } | undefined
+    >;
+    const ignore = config['@opentelemetry/instrumentation-http']?.ignoreIncomingRequestHook;
+    expect(ignore).toBeTypeOf('function');
+    for (const url of [
+      '/health',
+      '/health/',
+      '/health/db',
+      '/api/health',
+      '/api/health/ready?x=1',
+    ]) {
+      expect(ignore?.({ url })).toBe(true);
+    }
+    for (const url of ['/healthcare', '/api/healthz', '/api/contacts/health', '/', undefined]) {
+      expect(ignore?.({ url })).toBe(false);
+    }
+  });
+
   it('does not load pino when imported', async () => {
     vi.resetModules();
 

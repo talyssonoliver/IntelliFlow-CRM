@@ -94,12 +94,16 @@ describe('Sentry integration (sentry.ts)', () => {
     process.env.SENTRY_TRACES_SAMPLE_RATE = '0.25';
     process.env.npm_package_version = '1.2.3';
 
+    const { setNodeSdkStarted } = await import('./otel-state.js');
+    setNodeSdkStarted(true);
     const { initializeSentry, flushSentry, closeSentry, captureException, captureMessage } =
       await import('./sentry.js');
 
     await initializeSentry();
 
     expect(sentryInit).toHaveBeenCalledTimes(1);
+    // #1098: our NodeSDK owns the HTTP server span; Sentry must not add a second one.
+    expect(httpIntegration).toHaveBeenCalledWith(expect.objectContaining({ spans: false }));
 
     const options = sentryInit.mock.calls[0]?.[0] as SentryInitOptions;
     expect(options.dsn).toBe(process.env.SENTRY_DSN);
@@ -199,6 +203,19 @@ describe('Sentry integration (sentry.ts)', () => {
     expect(flushed).toBe(true);
     await closeSentry();
     expect(sentryClose).toHaveBeenCalled();
+  });
+
+  // #1098: with OTEL_ENABLED=false, or production without an OTLP endpoint, our
+  // NodeSDK never starts and Sentry is the only HTTP tracer, so it keeps its spans.
+  it('keeps Sentry HTTP spans when our NodeSDK is not running', async () => {
+    process.env.NODE_ENV = 'production';
+    process.env.SENTRY_DSN = 'https://example@dsn.ingest.sentry.io/123';
+
+    const { initializeSentry } = await import('./sentry.js');
+    await initializeSentry();
+
+    expect(sentryInit).toHaveBeenCalledTimes(1);
+    expect(httpIntegration).toHaveBeenCalledWith(expect.objectContaining({ spans: true }));
   });
 
   it('flushSentry returns false when flush throws', async () => {
