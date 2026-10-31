@@ -26,6 +26,7 @@ import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 import { mapTicketToDetailData } from '@/lib/tickets/ticket-detail-mapper';
 import { revalidateTicketsCache } from '@/lib/tickets/revalidate-tickets-cache';
 import { isRecordId } from '@/lib/shared/record-id';
+import { INVALID_ASSIGNEE_TOAST, toAssigneeId } from '@/lib/tickets/ticket-assignee';
 
 const LEFT_META_SKELETON_KEYS = [
   'meta-0',
@@ -133,14 +134,9 @@ export default function TicketDetailPage() {
   };
 
   const handleAssign = async (userId: string) => {
-    const assigneeId = userId?.trim();
-
-    if (!assigneeId || !isRecordId(assigneeId)) {
-      toast({
-        title: 'Invalid Assignee',
-        description: 'Cannot assign ticket because user ID is invalid.',
-        variant: 'destructive',
-      });
+    const assigneeId = toAssigneeId(userId);
+    if (!assigneeId) {
+      toast(INVALID_ASSIGNEE_TOAST);
       return;
     }
 
