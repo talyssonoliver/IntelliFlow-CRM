@@ -1,0 +1,58 @@
+{
+  "task_id": "PG-208",
+  "run_id": "20261020231931-3d9aa8b9",
+  "files_read": [
+    {
+      "path": "apps/web/src/components/sidebar/configs/tasks.ts",
+      "sha256": "7b5eae2b337198c73fc922ff4bc3011baf3acf25b1f3aaae8a485eeea8c0718d",
+      "read_at": "2026-10-20T23:21:19Z"
+    },
+    {
+      "path": "apps/web/src/app/tasks/(list)/task-settings/page.tsx",
+      "sha256": "0be3cbd2258063c6e5342cf568d0e1b2c41e3a8e8e06a2d81dd6857cc4a0bfc0",
+      "read_at": "2026-10-20T23:21:19Z"
+    },
+    {
+      "path": "docs/planning/module-settings-playbook.md",
+      "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3",
+      "read_at": "2026-10-20T23:21:19Z"
+    },
+    {
+      "path": "docs/planning/prd-module-settings.md",
+      "sha256": "ce436b84c811e661855aa2d5aa8504336d4626b23ad9dd95fb36e6963249de35",
+      "read_at": "2026-10-20T23:21:19Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/specifications/PG-208-spec.md",
+      "sha256": "764b9a8972784a4273c7c9c75011ebd9fc6a8e22f28c72dc183d8174645b1206",
+      "read_at": "2026-10-20T23:21:19Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/planning/PG-208-plan.md",
+      "sha256": "fd45db3afd69e83ff32ae9889ae5d7e79177da60c15ce8e89bcba2e0a6ecc387",
+      "read_at": "2026-10-20T23:21:19Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/context/PG-208/PG-208-owner-ruling.md",
+      "sha256": "fbfc61a66ce44b7ce5674f7d6129c70442ede33226bac801ef227620398aab7e",
+      "read_at": "2026-10-20T23:21:19Z"
+    },
+    {
+      "path": "docs/architecture/adr/ADR-084-task-automation-engine.md",
+      "sha256": "897607afc01a06dcf66f06b82bcb12eb848ed546508631eddc835930431a56d3",
+      "read_at": "2026-10-20T23:21:19Z"
+    }
+  ],
+  "invariants_acknowledged": [
+    "All three trigger types (entity event, schedule, webhook) must execute in this PR; no trigger type may be saved without a runtime that acts on it (owner ruling 1).",
+    "Rules execute inside the API process: in-process bus intake buffers only and never throws, a locked interval runner executes durable run rows (owner ruling 2, ADR-084).",
+    "Every query passes tenantId explicitly; the engine takes the tenant only from the record, schedule or webhook-token row; foreign ids give NOT_FOUND with no write.",
+    "Webhook signing secrets are encrypted at rest and URL tokens stored only as SHA-256; neither appears in outputs, logs, audit entries, run rows or Sentry events.",
+    "Destructive and multi-row writes run in $transaction; never skipDuplicates; P2002 -> CONFLICT; P2025 -> NOT_FOUND (playbook section 5).",
+    "Page follows the module-settings playbook: PageHeader + 12-col bento, shared SectionHeader action slot, passive EmptyState entity=rules, Button size=sm Title Case, TagsTab via forwardRef.",
+    "Every Boolean toggle is category 1 (wired now); no AI toggles exist (AI defaults FALSE = N/A).",
+    "The one Prisma migration is additive Class A with no backfill; it is applied to production only by the runner after merge (L13).",
+    "Lead conversion fires lead.converted rules only; task events are never triggers; assignees see owned or assigned tasks (owner rulings 4, 6, 7)."
+  ],
+  "created_at": "2026-10-20T23:21:19Z"
+}

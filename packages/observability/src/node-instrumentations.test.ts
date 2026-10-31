@@ -50,6 +50,22 @@ describe('getStandardNodeInstrumentations', () => {
     expect(config['@opentelemetry/instrumentation-http']?.enabled).toBe(true);
   });
 
+  // PG-208: a task-automation webhook URL carries its token; it must never be traced.
+  it('does not trace incoming requests whose path carries a credential', async () => {
+    const { getStandardNodeInstrumentations, isSecretBearingPath } =
+      await import('./node-instrumentations');
+
+    getStandardNodeInstrumentations();
+
+    const http = (lastConfig as Record<string, unknown>)['@opentelemetry/instrumentation-http'] as {
+      ignoreIncomingRequestHook: (req: { url?: string }) => boolean;
+    };
+    expect(http.ignoreIncomingRequestHook({ url: '/api/webhooks/task-automation/tok' })).toBe(true);
+    expect(http.ignoreIncomingRequestHook({ url: '/trpc/task.list' })).toBe(false);
+    expect(http.ignoreIncomingRequestHook({})).toBe(false);
+    expect(isSecretBearingPath('/webhooks/task-automation/x?y=1')).toBe(true);
+  });
+
   // #809 (IFC-032 follow-up): production logs must reach the same OTLP
   // gateway as traces/metrics, with trace_id/span_id attached, so Grafana's
   // "Logs for this trace" is not empty.

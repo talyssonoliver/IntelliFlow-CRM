@@ -6,9 +6,24 @@ import { Task, TaskId, TaskStatus, TaskPriority, TaskRepository } from '@intelli
  */
 export class InMemoryTaskRepository implements TaskRepository {
   private readonly tasks: Map<string, Task> = new Map();
+  /** updatedAt as of each task's last save: the stored objects are shared references. */
+  private readonly savedAt: Map<string, number> = new Map();
 
   async save(task: Task): Promise<void> {
     this.tasks.set(task.id.value, task);
+    this.savedAt.set(task.id.value, task.updatedAt.getTime());
+  }
+
+  async saveAssignment(task: Task, expectedUpdatedAt: Date): Promise<boolean> {
+    const stored = this.tasks.get(task.id.value);
+    if (
+      stored?.tenantId !== task.tenantId ||
+      this.savedAt.get(task.id.value) !== expectedUpdatedAt.getTime()
+    ) {
+      return false;
+    }
+    await this.save(task);
+    return true;
   }
 
   async findById(id: TaskId): Promise<Task | null> {

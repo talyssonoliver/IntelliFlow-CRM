@@ -3,7 +3,7 @@
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-05-02
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
 > Guide Components **Total Pages**: 220 implemented **Total Flows**: 42 **API
-> Routers**: 76 (461 procedures)
+> Routers**: 77 (461 procedures)
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -283,10 +283,11 @@ procedures (`getFirm`, `submit`, `verify`, `downloadExport`).
 
 ### Tasks Section
 
-| Route         | Task ID | Sprint | Status | Primary Flow | Components Required                          | API Router |
-| ------------- | ------- | ------ | ------ | ------------ | -------------------------------------------- | ---------- |
-| `/tasks`      | -       | 14     | ✅     | FLOW-020     | data-table, badge, btn-primary, search-input | `task.*`   |
-| `/tasks/[id]` | -       | 14     | ✅     | FLOW-020     | card, tab-nav, badge, timeline               | `task.*`   |
+| Route               | Task ID | Sprint | Status | Primary Flow | Components Required                          | API Router         |
+| ------------------- | ------- | ------ | ------ | ------------ | -------------------------------------------- | ------------------ |
+| `/tasks`            | -       | 14     | ✅     | FLOW-020     | data-table, badge, btn-primary, search-input | `task.*`           |
+| `/tasks/[id]`       | -       | 14     | ✅     | FLOW-020     | card, tab-nav, badge, timeline               | `task.*`           |
+| `/tasks/automation` | PG-208  | 18     | ✅     | -            | card, switch, dialog, badge, empty-state     | `taskAutomation.*` |
 
 **Task Router Procedures** (12 total):
 
@@ -768,6 +769,7 @@ data
 | `approvalPolicies`           | 7          | `/agent-approvals/approval-policies` (PG-198)                                                              | ✅ Active         |
 | `calendar.availability`      | 3          | `/calendar/availability` (PG-202)                                                                          | ✅ Active         |
 | `modelConfig`                | 3          | `/agent-approvals/model-config` (PG-199)                                                                   | ✅ Active         |
+| `taskAutomation`             | 17         | `/tasks/automation` (PG-208)                                                                               | ✅ Active         |
 | `calendar.eventTypes`        | 6          | `/calendar/event-types`, `/calendar/new` (PG-203)                                                          | ✅ Active         |
 | `publicBooking`              | 3          | `/book/[handle]/[slug]` (PG-203, public)                                                                   | ✅ Active         |
 | `privacy`                    | 17         | `/dsar/[handle]/*` (public), `/settings/privacy-requests` (admin), lead and contact detail banner (PG-203) | ✅ Active         |

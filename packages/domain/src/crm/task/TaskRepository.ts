@@ -18,6 +18,14 @@ export interface TaskRepository {
   save(task: Task): Promise<void>;
 
   /**
+   * Persist only the task's assignee, and only if the stored task (same id and
+   * tenant) still has the `updatedAt` it was read with. Returns false when it
+   * was edited or deleted since: nothing is written, so a concurrent edit is
+   * never overwritten and a deleted task is never brought back (PG-208).
+   */
+  saveAssignment(task: Task, expectedUpdatedAt: Date): Promise<boolean>;
+
+  /**
    * Find a task by ID
    */
   findById(id: TaskId): Promise<Task | null>;

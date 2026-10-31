@@ -10,10 +10,11 @@ type SentryInitOptions = {
   tracesSampleRate?: number;
   beforeSend?: (event: any, hint?: any) => any;
   beforeBreadcrumb?: (breadcrumb: any, hint?: any) => any;
+  beforeSendTransaction?: (event: any, hint?: any) => any;
 };
 
 const sentryInit = vi.fn();
-const httpIntegration = vi.fn(() => ({ name: 'httpIntegration' }));
+const httpIntegration = vi.fn((_options?: unknown) => ({ name: 'httpIntegration' }));
 const nativeNodeFetchIntegration = vi.fn(() => ({ name: 'nativeNodeFetchIntegration' }));
 const sentryFlush = vi.fn(async () => true);
 const sentryClose = vi.fn(async () => {});
@@ -102,7 +103,7 @@ describe('Sentry integration (sentry.ts)', () => {
 
     expect(sentryInit).toHaveBeenCalledTimes(1);
     // #1098: our NodeSDK owns the HTTP server span; Sentry must not add a second one.
-    expect(httpIntegration).toHaveBeenCalledWith({ spans: false });
+    expect(httpIntegration).toHaveBeenCalledWith(expect.objectContaining({ spans: false }));
 
     const options = sentryInit.mock.calls[0]?.[0] as SentryInitOptions;
     expect(options.dsn).toBe(process.env.SENTRY_DSN);
@@ -142,6 +143,57 @@ describe('Sentry integration (sentry.ts)', () => {
     const cleaned = options.beforeBreadcrumb?.(breadcrumb);
     expect(cleaned.data.url).toBe('https://example.com/?apikey=***&x=1');
 
+    // PG-208: the task-automation webhook token never reaches Sentry.
+    const token = 'tat_' + 'k'.repeat(43);
+    const path = `/api/webhooks/task-automation/${token}`;
+    const webhookEvent: any = {
+      request: { url: `https://api.example.invalid${path}?x=1` },
+      transaction: `POST ${path}`,
+      spans: [{ description: `POST ${path}` }, {}],
+    };
+    const scrubbedEvent = options.beforeSend?.(webhookEvent);
+    expect(scrubbedEvent.request.url).toBe(
+      'https://api.example.invalid/api/webhooks/task-automation/***?x=1'
+    );
+    expect(scrubbedEvent.transaction).toBe('POST /api/webhooks/task-automation/***');
+    expect(scrubbedEvent.spans[0].description).toBe('POST /api/webhooks/task-automation/***');
+    const crumb = options.beforeBreadcrumb?.({
+      category: 'http',
+      data: {
+        url: `https://api.example.invalid${path}`,
+        to: `/webhooks/task-automation/${token}`,
+        from: 'x',
+      },
+    } as any);
+    expect(crumb.data.url).toBe('https://api.example.invalid/api/webhooks/task-automation/***');
+    expect(crumb.data.to).toBe('/webhooks/task-automation/***');
+    expect(JSON.stringify([scrubbedEvent, crumb])).not.toContain(token);
+
+    // Transactions skip beforeSend: their URLs, span attributes and headers are scrubbed too.
+    const transaction: any = {
+      transaction: `POST ${path}`,
+      request: {
+        url: `https://api.example.invalid${path}`,
+        headers: { 'X-IntelliFlow-Signature': 't=1,v1=ab', 'Idempotency-Key': 'k1', accept: '*/*' },
+      },
+      spans: [
+        { data: { 'url.full': `https://api.example.invalid${path}`, 'http.status_code': 202 } },
+      ],
+      contexts: { trace: { data: { 'http.target': path } } },
+    };
+    const scrubbedTransaction = options.beforeSendTransaction?.(transaction);
+    expect(JSON.stringify(scrubbedTransaction)).not.toContain(token);
+    expect(scrubbedTransaction.spans[0].data['http.status_code']).toBe(202);
+    expect(scrubbedTransaction.request.headers).toEqual({ accept: '*/*' });
+    expect(options.beforeSendTransaction?.({} as any)).toEqual({});
+
+    // The webhook path is not traced at all.
+    const httpOptions = httpIntegration.mock.calls[0]?.[0] as {
+      ignoreIncomingRequests: (urlPath: string) => boolean;
+    };
+    expect(httpOptions.ignoreIncomingRequests(path)).toBe(true);
+    expect(httpOptions.ignoreIncomingRequests('/trpc/task.list')).toBe(false);
+
     captureException(new Error('boom'), { user: { id: 'u' } });
     captureMessage('hello');
     expect(sentryCaptureException).toHaveBeenCalled();
@@ -163,7 +215,7 @@ describe('Sentry integration (sentry.ts)', () => {
     await initializeSentry();
 
     expect(sentryInit).toHaveBeenCalledTimes(1);
-    expect(httpIntegration).toHaveBeenCalledWith({ spans: true });
+    expect(httpIntegration).toHaveBeenCalledWith(expect.objectContaining({ spans: true }));
   });
 
   it('flushSentry returns false when flush throws', async () => {

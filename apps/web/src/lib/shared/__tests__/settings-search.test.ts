@@ -10,10 +10,17 @@ import {
 
 describe('settings-search', () => {
   describe('SETTINGS_ITEMS', () => {
-    it('contains 15 settings items', () => {
+    it('contains 16 settings items', () => {
       // Item count tracked against SETTINGS_ITEMS source; bump when adding/removing hubs.
-      // 15: Privacy Requests (PG-203 DSAR).
-      expect(SETTINGS_ITEMS).toHaveLength(15);
+      // 16: Task Automation (PG-208) and Privacy Requests (PG-203 DSAR).
+      expect(SETTINGS_ITEMS).toHaveLength(16);
+    });
+
+    it('includes Task Automation in AI & Automation (PG-208)', () => {
+      const item = SETTINGS_ITEMS.find((i) => i.id === 'task-automation');
+      expect(item?.href).toBe('/tasks/automation');
+      const category = SETTINGS_CATEGORIES.find((c) => c.id === 'ai-automation');
+      expect(category?.itemIds).toContain('task-automation');
     });
 
     it('includes Privacy Requests under Security & Compliance (PG-203 DSAR)', () => {

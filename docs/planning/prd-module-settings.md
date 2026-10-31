@@ -1,13 +1,13 @@
 # PRD: Module Settings Pages
 
-| Field         | Value                                                                                  |
-| ------------- | -------------------------------------------------------------------------------------- |
-| Feature Name  | Module Settings Pages                                                                  |
-| Status        | Active                                                                                 |
-| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-199, PG-201, PG-202, PG-203, PG-204, PG-207 |
-| Created       | 2026-03-11                                                                             |
-| Last Updated  | 2026-10-21                                                                             |
-| Author        | Spec Session (PG-178)                                                                  |
+| Field         | Value                                                                                          |
+| ------------- | ---------------------------------------------------------------------------------------------- |
+| Feature Name  | Module Settings Pages                                                                          |
+| Status        | Active                                                                                         |
+| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-199, PG-201, PG-202, PG-203, PG-204, PG-207, PG-208 |
+| Created       | 2026-03-11                                                                                     |
+| Last Updated  | 2026-10-21                                                                                     |
+| Author        | Spec Session (PG-178)                                                                          |
 
 ## Problem Statement
 
@@ -1311,3 +1311,91 @@ executables refused) in the private `email-attachments` bucket through
 `EmailAttachmentStoragePort`; `sendEmail` takes the storage paths and fails the
 send if any attachment cannot be read. Findings and deviations:
 `.specify/sprints/sprint-18/execution/PG-207/PG-207-findings.md`.
+
+## PG-208 Addendum: Task Automation (2026-10-21)
+
+Owner rulings (2026-10-20/21,
+`.specify/sprints/sprint-18/context/PG-208/PG-208-owner-ruling.md`): all three
+trigger types (entity event, schedule, webhook) execute in this task; rules run
+inside the API process (ADR-084); an automation task is owned by the trigger
+record's owner (schedule and webhook rules: the rule's creator); task events are
+not triggers; a converted lead links the task to the new contact and a won/lost
+deal leaves it unlinked with the deal named; assignees see tasks assigned to
+them; a lead conversion fires `lead.converted` rules only. Spec:
+`.specify/sprints/sprint-18/specifications/PG-208-spec.md`.
+
+### Additional User Stories
+
+- **US-TA1 (Event rules)**: As a tenant admin, I want a rule that creates a task
+  when a lead, contact, deal or account event happens, so that follow-up work
+  starts without anyone remembering to do it.
+- **US-TA2 (Scheduled rules)**: As a tenant admin, I want rules that run on a
+  daily, weekly, monthly or custom schedule in my timezone, so that recurring
+  work is created automatically.
+- **US-TA3 (Webhook rules)**: As a tenant admin, I want an external system to
+  create a task by sending a signed request to a per-rule URL, so that events
+  from outside the CRM become work.
+- **US-TA4 (Round-robin)**: As a tenant admin, I want a rule to hand tasks to a
+  chosen group of teammates in turn, so that workload is shared evenly.
+- **US-TA5 (Trust)**: As a sales rep, I want to be notified about automated
+  tasks and to see which rule created a task and why a rule did or did not run,
+  so that I trust automatically created work.
+
+### Additional Acceptance Criteria
+
+Defined as AC-TA-001..020 in the spec (finalised at spec consensus). In summary:
+
+- AC-TA-001: the page follows the module-settings playbook.
+- AC-TA-002: admins and managers manage rules (up to 50); only admins and owners
+  manage webhook secrets; others read only; denials audit-logged.
+- AC-TA-003: one trigger and up to three actions in a fixed order; repeated
+  actions and identical active rules refused.
+- AC-TA-004 to 006: event, schedule and webhook triggers execute (nine v1
+  events; once per schedule slot; signed, replay-safe webhook).
+- AC-TA-007 to 011: create task (templates, due date, owner, link), round-robin,
+  assignee visibility, notify, lead-conversion rule.
+- AC-TA-012 / 013: run history and guardrails (caps before any run is written).
+- AC-TA-014 / 015: settings card with Reset to Defaults; tag catalogue with
+  colour CHECK.
+- AC-TA-016 to 018: tenant isolation, secrets never exposed, transactional
+  writes.
+- AC-TA-019 / 020: WCAG 2.1 AA, Lighthouse ≥ 90 (or NEEDS_HUMAN), registries.
+
+### Boolean toggles (playbook §8)
+
+| Toggle                                           | Category | Runtime consumer                              |
+| ------------------------------------------------ | -------- | --------------------------------------------- |
+| `TaskAutomationRule.isActive`                    | 1, wired | intake, schedule claim, execution, Test Rule  |
+| `TaskAutomationSetting.automationEnabled`        | 1, wired | intake, webhook, execution, Test Rule         |
+| `TaskAutomationSetting.notifyRuleOwnerOnFailure` | 1, wired | engine notifies the rule creator on a failure |
+| `TaskAutomationTag.isActive`                     | 1, wired | inactive tags hidden from the rule picker     |
+
+No AI toggles exist on these models ("AI defaults FALSE": N/A).
+
+**Prisma migration** `20261020120000_task_automation` (Class A, additive, no
+backfill) must be applied to production before this ships.
+
+### Delivery Status (2026-10-21, branch `feat/pg-208-task-automation`)
+
+| AC        | Status    | Evidence                                                                                                                                                                                          |
+| --------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-TA-001 | Delivered | `TaskAutomationContent.tsx` (PageHeader, 8 / 4 bento, passive EmptyState `rules`, `New Rule` / `New Tag` in SectionHeaders); `matop/design-check.md`                                              |
+| AC-TA-002 | Delivered | `task-automation.router.ts` admin / webhook-admin gates with audited denials; 50-rule cap under the tenant lock; keyboard Move Up / Down                                                          |
+| AC-TA-003 | Delivered | validator superRefine ("actions N and M"); partial unique `ruleKey` among active rules (CONFLICT); canonical schedule keys                                                                        |
+| AC-TA-004 | Delivered | nine v1 events through the in-process event bus (`container.ts` `InMemoryEventBus`; independent of #966 / #889); postconditions for lead events; closing stage changes run won / lost rules       |
+| AC-TA-005 | Delivered | schedule slot claim and run admission in one transaction; one run after downtime; invalid schedules turn off only their rule                                                                      |
+| AC-TA-006 | Delivered | signed webhook route (timestamped HMAC over key and body, 64 KB cap, identical 404 / 401, replay 202 / 409, 24 h secret grace)                                                                    |
+| AC-TA-007 | Delivered | plain-text templates (control, zero-width and bidi characters stripped), due date floor, owner chain, link rules                                                                                  |
+| AC-TA-008 | Delivered | round-robin over live users with an atomic cursor; `assigneeId` persisted; `task.assigned` emitted                                                                                                |
+| AC-TA-009 | Delivered | `task.list` / `task.getById` show owned or assigned tasks (owner ruling 6); an explicit owner filter stays a filter                                                                               |
+| AC-TA-010 | Delivered | `task_automation` notifications through the orchestrator; one failed recipient never stops the others                                                                                             |
+| AC-TA-011 | Delivered | conversion-born contacts / accounts skip (ruling 7); #968 tracks the existing-account edge                                                                                                        |
+| AC-TA-012 | Delivered | run rows with plain-language outcomes, 20 recent runs, interrupted after 10 min, 30-day purge (#969 tracks purge throughput)                                                                      |
+| AC-TA-013 | Delivered | caps counted and runs inserted under one per-tenant lock on every path (owner ruling 8)                                                                                                           |
+| AC-TA-014 | Delivered | settings card (unsaved edits survive refetches); Reset to Defaults keeps rules, runs and tags; off-period events never run                                                                        |
+| AC-TA-015 | Delivered | tag catalogue (18-token CHECK) via the shared TagsTab; rename / delete rewrite rules under the rule lock                                                                                          |
+| AC-TA-016 | Delivered | tenantId on every query; cross-tenant NOT_FOUND tests; engine takes the tenant from the row                                                                                                       |
+| AC-TA-017 | Delivered | token stored as SHA-256, encrypted secrets, no secret in outputs, logs, telemetry or the query cache                                                                                              |
+| AC-TA-018 | Delivered | `$transaction` on destructive and multi-row writes; P2002 → CONFLICT, P2025 → NOT_FOUND                                                                                                           |
+| AC-TA-019 | **Open**  | WCAG: a11y-expert review PASS WITH FIXES (fixed) and axe tests. Lighthouse NEEDS_HUMAN: no test credentials or non-production Supabase locally (`artifacts/lighthouse/PG-208/waiver-evidence.md`) |
+| AC-TA-020 | Delivered | registries (Step 18), this addendum, ADR-084 Accepted, dependency chain, Sprint_plan + split; one Class A migration declared                                                                      |

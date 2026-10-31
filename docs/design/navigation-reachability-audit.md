@@ -366,13 +366,13 @@ Legend:
 
 ### Tasks (5 routes)
 
-| Route                  |  H  | UM  | SB  | IP  | Reachable? | Notes                      |
-| ---------------------- | :-: | :-: | :-: | :-: | :--------: | -------------------------- |
-| `/tasks`               | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM)      |
-| `/tasks/[id]`          | --  | --  | --  | IP  |     OK     | From list rows             |
-| `/tasks/task-types`    | --  | --  | SB  | --  |    YES     | Tasks sidebar              |
-| `/tasks/task-settings` | --  | --  | SB  | --  |    YES     | Tasks sidebar settingsHref |
-| `/tasks/automation`    | --  | --  | SB  | --  |    YES     | Tasks sidebar              |
+| Route                  |  H  | UM  | SB  | IP  | Reachable? | Notes                                                     |
+| ---------------------- | :-: | :-: | :-: | :-: | :--------: | --------------------------------------------------------- |
+| `/tasks`               | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM)                                     |
+| `/tasks/[id]`          | --  | --  | --  | IP  |     OK     | From list rows                                            |
+| `/tasks/task-types`    | --  | --  | SB  | --  |    YES     | Tasks sidebar                                             |
+| `/tasks/task-settings` | --  | --  | SB  | --  |    YES     | Tasks sidebar settingsHref                                |
+| `/tasks/automation`    | --  | --  | SB  | --  |    YES     | Tasks sidebar + Task Settings panel; implemented (PG-208) |
 
 ### Tickets (6 routes)
 

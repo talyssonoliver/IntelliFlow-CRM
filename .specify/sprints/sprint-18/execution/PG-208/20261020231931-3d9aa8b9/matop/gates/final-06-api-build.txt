@@ -1,0 +1,59 @@
+[test-slot] slot1 taken for PG-208@feat/pg-208-task-automation: pnpm --filter ./apps/api build
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/api@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208\apps\api
+> tsup
+
+CLI Building entry: src/index.ts, src/main.ts, src/ws-server.ts
+CLI Using tsconfig: tsconfig.build.json
+CLI tsup v8.5.1
+CLI Using tsup config: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208\apps\api\tsup.config.ts
+CLI Target: es2022
+CLI Cleaning output folder
+CJS Build start
+ESM Build start
+ESM dist\chunk-FH72RMLK.mjs                0 B
+ESM dist\cases.router-XJYP2BPC.mjs         204.00 B
+ESM dist\appointments.router-YXJZSWFV.mjs  311.00 B
+ESM dist\escalation-target-H4QBBF4Z.mjs    131.00 B
+ESM dist\inbound.router-GSGEWMRT.mjs       350.00 B
+ESM dist\main.mjs                          77.09 KB
+ESM dist\ws-server.mjs                     4.86 KB
+ESM dist\index.mjs                         22.57 KB
+ESM dist\chunk-5DX23VSP.mjs                4.23 KB
+ESM dist\chunk-ITF5OBY4.mjs                23.62 KB
+ESM dist\chunk-TFVEIYEU.mjs                3.36 KB
+ESM dist\chunk-TMIBOYC5.mjs                58.82 KB
+ESM dist\chunk-SDUC6J7S.mjs                35.94 KB
+ESM dist\audit-XXEDSSNO.mjs                865.00 B
+ESM dist\notifications.router-TEGBPHTR.mjs 306.00 B
+ESM dist\lead.router-6XUF5GNZ.mjs          264.00 B
+ESM dist\chunk-JFF6C52X.mjs                3.12 KB
+ESM dist\contact.router-XD34T3ET.mjs       270.00 B
+ESM dist\chunk-KXMF6UTF.mjs                54.79 KB
+ESM dist\chunk-RCWQWZB6.mjs                5.07 KB
+ESM dist\chunk-WEY37ZVH.mjs                91.44 KB
+ESM dist\container-WEY2XHGI.mjs            325.00 B
+ESM dist\chunk-2SQESQ43.mjs                196.67 KB
+ESM dist\chunk-J6R2QKEE.mjs                23.02 KB
+ESM dist\chunk-Y6FXYEAI.mjs                390.00 B
+ESM dist\chunk-2SY57COA.mjs                51.05 KB
+ESM dist\chunk-7Y27MIJ3.mjs                20.79 KB
+ESM dist\chunk-W32IZUK4.mjs                1.21 MB
+ESM ⚡️ Build success in 308ms
+CJS dist\index.js     1.86 MB
+CJS dist\main.js      1.90 MB
+CJS dist\ws-server.js 1.80 MB
+CJS ⚡️ Build success in 308ms
+DTS Build start
+"isLiveMembership", "liveMembershipWhere", "seatUserWhere" and "MembershipLiveness" are imported from external module "@intelliflow/db" but never used in "src/security/membership.ts".
+"NODE_TYPE_IDS" is imported from external module "@intelliflow/domain" but never used in "src/modules/workflow/workflow.router.ts".
+"ACTIVE_TENANT_HEADER" is imported from external module "@intelliflow/partner-sdk" but never used in "src/security/membership.ts".
+DTS ⚡️ Build success in 47952ms
+DTS dist\main.d.ts       13.00 B
+DTS dist\ws-server.d.ts  1.70 KB
+DTS dist\index.d.ts      919.75 KB
+DTS dist\main.d.mts      13.00 B
+DTS dist\ws-server.d.mts 1.70 KB
+DTS dist\index.d.mts     919.75 KB

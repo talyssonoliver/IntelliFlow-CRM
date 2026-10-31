@@ -1,0 +1,2 @@
+sonar-guard: checking 101 changed TS/TSX files.
+sonar-guard: running web accessibility guard on 40 file(s).

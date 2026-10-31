@@ -116,6 +116,22 @@ describe('api HTTP server spans (#1098)', () => {
     }
   );
 
+  // PG-208: the task-automation webhook token is a path segment, so neither our
+  // NodeSDK nor Sentry may export a span for it, with both SDKs running together.
+  it.each(['/webhooks/task-automation/', '/api/webhooks/task-automation/'])(
+    'creates no SERVER span for the secret-bearing webhook path %s<token>',
+    async (prefix) => {
+      const token = 'x'.repeat(32);
+      await get(`${prefix}${token}`);
+      await processor.forceFlush();
+      // The CLIENT spans are this test's own fetch() to the server; in production
+      // that span belongs to the webhook sender, not to the api.
+      const apiSpans = exporter.getFinishedSpans().filter((s) => s.kind !== SpanKind.CLIENT);
+      expect(apiSpans.filter((s) => s.kind === SpanKind.SERVER)).toHaveLength(0);
+      expect(JSON.stringify(apiSpans.map((s) => s.attributes))).not.toContain(token);
+    }
+  );
+
   it.each(['/healthcare', '/api/healthz', '/api/contacts/health'])(
     'still traces %s, which only looks like a health path',
     async (path) => {

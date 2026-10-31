@@ -1,0 +1,41 @@
+{
+  "taskId": "PG-208",
+  "selectedAgents": [
+    "Backend-Architect",
+    "Security-Lead",
+    "Frontend-Lead",
+    "Domain-Expert",
+    "Test-Engineer"
+  ],
+  "selectionRationale": {
+    "Backend-Architect": "Keyword match: router, database, events-worker runtime engine (owner ruling B)",
+    "Security-Lead": "Owner ruling B adds a public signed webhook trigger endpoint (secrets, signatures, replay)",
+    "Frontend-Lead": "Keyword match: page, rule builder UI under apps/web",
+    "Domain-Expert": "Always included for all tasks",
+    "Test-Engineer": "Always included for all tasks"
+  },
+  "notSelected": {
+    "Data-Engineer": "Cap of 5; Prisma/migration review folded into Backend-Architect",
+    "A11y-Expert": "Runs as the mandatory a11y review pass at /exec (UI task)",
+    "AI-Specialist": "No AI chain in scope; AI toggles default FALSE only"
+  },
+  "taskDomain": "full-stack",
+  "selectedAt": "2026-10-20T23:30:00Z",
+  "agents": [
+    {
+      "name": "Backend-Architect"
+    },
+    {
+      "name": "Security-Lead"
+    },
+    {
+      "name": "Frontend-Lead"
+    },
+    {
+      "name": "Domain-Expert"
+    },
+    {
+      "name": "Test-Engineer"
+    }
+  ]
+}
