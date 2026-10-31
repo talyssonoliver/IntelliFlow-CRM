@@ -33,6 +33,7 @@ export interface FieldEncryptionConfig {
 export const ENCRYPTED_FIELDS: Record<string, readonly string[]> = {
   ChainVersion: ['prompt', 'systemPrompt'],
   WebhookEndpoint: ['secret'],
+  TaskAutomationRule: ['webhookSecret', 'webhookSecretPrevious'], // PG-208
   // PG-207 (ADR-085): mailbox credentials and the OAuth PKCE verifier.
   EmailMailbox: ['smtpPassword', 'imapPassword', 'refreshToken'],
   EmailOAuthState: ['codeVerifier'],

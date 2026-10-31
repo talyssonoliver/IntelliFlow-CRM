@@ -1,0 +1,32 @@
+# 2026-10-21T00:11:47Z
+# 7fd27d0a5180f3eb39cb20d0b2197563171fe92c
+# pnpm --filter @intelliflow/api exec vitest run src/modules/calendar/__tests__/public-booking.router.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/api
+
+ ❯ |api| src/modules/calendar/__tests__/public-booking.router.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/modules/calendar/__tests__/public-booking.router.test.ts [ src/modules/calendar/__tests__/public-booking.router.test.ts ]
+Error: Cannot find module '/src/modules/calendar/public-booking.router' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/api/src/modules/calendar/__tests__/public-booking.router.test.ts
+ ❯ src/modules/calendar/__tests__/public-booking.router.test.ts:10:1
+      8|  */
+      9| import { describe, it, expect, beforeEach, afterEach, vi } from 'vites…
+     10| import { publicBookingRouter } from '../public-booking.router';
+       | ^
+     11| import { bookingSlotsLimiter } from '../booking-abuse';
+     12| import { prismaMock, createPublicContext } from '../../../test/setup';
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  01:11:48
+   Duration  739ms (transform 385ms, setup 525ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\apps\api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/calendar/__tests__/public-booking.router.test.ts
+# exit=1

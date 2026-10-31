@@ -1,0 +1,118 @@
+# PG-208 Step 7 RED — run 2026-10-21T01:12:25Z against the pre-PG-208 stub page.tsx (git HEAD), restored afterwards.
+# Tests were written alongside the implementation (deviation). This run executes only page.test.tsx against the stub;
+# the other Step 7 suites import Step 16 modules that did not exist before, so they could not even load.
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/apps/web
+
+ ❯ |web| src/app/tasks/(list)/automation/__tests__/page.test.tsx (3 tests | 3 failed) 23ms
+     × exports metadata with title and description 2ms
+     × renders TaskAutomationContent inside Suspense 12ms
+     × is a server component without placeholder copy 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| src/app/tasks/(list)/automation/__tests__/page.test.tsx > Task Automation page.tsx > exports metadata with title and description
+TypeError: Cannot read properties of undefined (reading 'title')
+ ❯ src/app/tasks/(list)/automation/__tests__/page.test.tsx:22:21
+     20| describe('Task Automation page.tsx', () => {
+     21|   it('exports metadata with title and description', () => {
+     22|     expect(metadata.title).toMatch(/Task Automation/);
+       |                     ^
+     23|     expect(metadata.description).toMatch(/rules/i);
+     24|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |web| src/app/tasks/(list)/automation/__tests__/page.test.tsx > Task Automation page.tsx > renders TaskAutomationContent inside Suspense
+TestingLibraryElementError: Unable to find an element by: [data-testid="content-stub"]
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"space-y-6"[39m
+    [36m>[39m
+      [36m<div>[39m
+        [36m<h1[39m
+          [33mclass[39m=[32m"text-2xl font-bold text-foreground"[39m
+        [36m>[39m
+          [0mTask Automation[0m
+        [36m</h1>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-muted-foreground mt-1"[39m
+        [36m>[39m
+          [0mConfigure auto-assign and recurring task rules.[0m
+        [36m</p>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"rounded-lg border border-border bg-card p-8 text-center text-muted-foreground"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"material-symbols-outlined text-4xl mb-2 block"[39m
+        [36m>[39m
+          [0mauto_awesome[0m
+        [36m</span>[39m
+        [36m<p>[39m
+          [0mTask automation configuration coming soon.[0m
+        [36m</p>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/tasks/(list)/automation/__tests__/page.test.tsx:28:19
+     26|   it('renders TaskAutomationContent inside Suspense', () => {
+     27|     render(<Page />);
+     28|     expect(screen.getByTestId('content-stub')).toBeInTheDocument();
+       |                   ^
+     29|   });
+     30|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |web| src/app/tasks/(list)/automation/__tests__/page.test.tsx > Task Automation page.tsx > is a server component without placeholder copy
+AssertionError: expected '\'use client\';\n\nexport default fun…' not to match /'use client'/
+
+- Expected:
+/'use client'/
+
++ Received:
+"'use client';
+
+export default function TaskAutomationPage() {
+  return (
+    <div className=\"space-y-6\">
+      <div>
+        <h1 className=\"text-2xl font-bold text-foreground\">Task Automation</h1>
+        <p className=\"text-muted-foreground mt-1\">
+          Configure auto-assign and recurring task rules.
+        </p>
+      </div>
+      <div className=\"rounded-lg border border-border bg-card p-8 text-center text-muted-foreground\">
+        <span className=\"material-symbols-outlined text-4xl mb-2 block\">auto_awesome</span>
+        <p>Task automation configuration coming soon.</p>
+      </div>
+    </div>
+  );
+}
+"
+
+ ❯ src/app/tasks/(list)/automation/__tests__/page.test.tsx:35:21
+     33|     const path = await import('node:path');
+     34|     const src = fs.readFileSync(path.resolve(__dirname, '..', 'page.ts…
+     35|     expect(src).not.toMatch(/'use client'/);
+       |                     ^
+     36|     expect(src).not.toMatch(/coming soon/i);
+     37|     expect(src).toMatch(/<Suspense fallback=\{<TaskAutomationLoading \…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed (3)
+   Start at  02:12:26
+   Duration  670ms (transform 52ms, setup 205ms, import 20ms, tests 23ms, environment 270ms)
+

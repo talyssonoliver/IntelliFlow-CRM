@@ -50,6 +50,7 @@
   },
   "devDependencies": {
     "@intelliflow/typescript-config": "workspace:*",
+    "@opentelemetry/sdk-metrics": "2.8.0",
     "@opentelemetry/sdk-trace-base": "^2.8.0",
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.2",

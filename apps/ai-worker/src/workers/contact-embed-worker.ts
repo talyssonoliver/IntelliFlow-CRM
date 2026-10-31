@@ -18,6 +18,11 @@ import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { tenantContextStore } from '../tracing/tenant-context';
 import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
+import {
+  isRestrictedOrErased,
+  writeContactIfStillEligible,
+  type GuardPrisma,
+} from '../lib/data-request-guard';
 
 export const CONTACT_EMBED_QUEUE_NAME = 'intelliflow-contact-embed';
 
@@ -48,8 +53,12 @@ export interface EmbeddingChainLike {
   generateEmbedding(text: string): Promise<number[] | null>;
 }
 
+/**
+ * Writes the embedding through the client it is given. The worker passes the transaction that
+ * holds the contact row lock (PG-203), so the write must not use any other client.
+ */
 export interface UpdateContactEmbeddingFn {
-  (prisma: PrismaClient, contactId: string, tenantId: string, embedding: number[]): Promise<void>;
+  (db: PrismaClient, contactId: string, tenantId: string, embedding: number[]): Promise<void>;
 }
 
 export function contactToEmbeddableText(c: {
@@ -153,7 +162,17 @@ export class ContactEmbedWorker {
       },
     });
 
-    if (!contact) {
+    // PG-203 (owner Q18): an erased or restricted person is not sent to the embedding model.
+    // Checked here, not only when queued, so jobs queued before the restriction are caught.
+    if (
+      !contact ||
+      (contact.email &&
+        (await isRestrictedOrErased(
+          this.prisma as unknown as GuardPrisma,
+          data.tenantId,
+          contact.email
+        )))
+    ) {
       return {
         contactId: data.contactId,
         embedded: false,
@@ -192,11 +211,23 @@ export class ContactEmbedWorker {
       };
     }
 
-    await this.updateContactEmbedding(this.prisma, data.contactId, data.tenantId, embedding);
+    // PG-203 (codex): the person may have been erased or restricted during the embedding call.
+    // Write only under the contact row lock, after re-checking, so the erasure always wins.
+    const outcome = await writeContactIfStillEligible(
+      this.prisma as never,
+      { contactId: data.contactId, tenantId: data.tenantId, email: contact.email ?? '' },
+      (tx) =>
+        this.updateContactEmbedding(
+          tx as unknown as PrismaClient,
+          data.contactId,
+          data.tenantId,
+          embedding
+        )
+    );
 
     return {
       contactId: data.contactId,
-      embedded: true,
+      embedded: outcome.written,
       reason: data.reason,
       elapsedMs: Date.now() - start,
       completedAt: new Date().toISOString(),

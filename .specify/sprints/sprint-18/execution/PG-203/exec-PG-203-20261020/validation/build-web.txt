@@ -1,0 +1,308 @@
+[test-slot] slot1 taken for PG-203@feat/pg-203-event-types: pnpm --filter @intelliflow/web build
+
+> @intelliflow/web@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\apps\web
+> next build --webpack
+
+▲ Next.js 16.3.8 (webpack)
+⚠ `eslint` configuration in next.config.js is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+⚠ Invalid next.config.js options detected: 
+⚠     Unrecognized key(s) in object: 'eslint'
+⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+⚠ `experimental.useCache` is deprecated. Please use the top-level `cacheComponents` option instead in next.config.js.
+✓ Running next.config.js took 379ms
+- Experiments (use with caution):
+  · clientTraceMetadata
+  · optimizePackageImports
+  · serverActions
+  ✓ useCache
+  ✓ webpackMemoryOptimizations
+
+  Creating an optimized production build ...
+⚠ Compiled with warnings in 105s
+
+../../node_modules/.pnpm/web-worker@1.5.0/node_modules/web-worker/src/node/index.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+../../node_modules/.pnpm/web-worker@1.5.0/node_modules/web-worker/src/node/index.js
+../../node_modules/.pnpm/make-asynchronous@1.1.0/node_modules/make-asynchronous/index.js
+../../node_modules/.pnpm/super-regex@1.1.0/node_modules/super-regex/index.js
+../../node_modules/.pnpm/is-identifier@1.0.1/node_modules/is-identifier/index.js
+../../node_modules/.pnpm/stringify-object@6.0.0/node_modules/stringify-object/index.js
+../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/httpsnippet-lite/targets/javascript/jquery/client.js
+../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/plugins/js/jquery/jquery.js
+../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/plugins/js/jquery/index.js
+../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/clients/index.js
+../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/snippetz.js
+../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/index.js
+../../node_modules/.pnpm/@scalar+api-client@3.10.4_axios@1.20.0_tailwindcss@4.3.0_typescript@5.9.3/node_modules/@scalar/api-client/dist/v2/blocks/operation-code-sample/helpers/find-client.js
+../../node_modules/.pnpm/@scalar+api-client@3.10.4_axios@1.20.0_tailwindcss@4.3.0_typescript@5.9.3/node_modules/@scalar/api-client/dist/v2/blocks/operation-code-sample/index.js
+../../node_modules/.pnpm/@scalar+api-reference@1.60.0_axios@1.20.0_tailwindcss@4.3.0_typescript@5.9.3_zod@4.4.3/node_modules/@scalar/api-reference/dist/helpers/load-from-perssistance.js
+../../node_modules/.pnpm/@scalar+api-reference@1.60.0_axios@1.20.0_tailwindcss@4.3.0_typescript@5.9.3_zod@4.4.3/node_modules/@scalar/api-reference/dist/components/ApiReference.vue.script.js
+../../node_modules/.pnpm/@scalar+api-reference@1.60.0_axios@1.20.0_tailwindcss@4.3.0_typescript@5.9.3_zod@4.4.3/node_modules/@scalar/api-reference/dist/components/ApiReference.vue.js
+../../node_modules/.pnpm/@scalar+api-reference@1.60.0_axios@1.20.0_tailwindcss@4.3.0_typescript@5.9.3_zod@4.4.3/node_modules/@scalar/api-reference/dist/index.js
+../../node_modules/.pnpm/@scalar+api-reference-react@0.9.47_axios@1.20.0_react@19.2.7_tailwindcss@4.3.0_typescript@5.9.3_zod@4.4.3/node_modules/@scalar/api-reference-react/dist/index.js
+./src/components/shared/api-reference-renderer.tsx
+./src/components/shared/api-reference-client.tsx
+
+  Skipping validation of types
+  Finished TypeScript config validation in 6ms ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/224) ...
+  Generating static pages using 11 workers (56/224) 
+  Generating static pages using 11 workers (112/224) 
+  Generating static pages using 11 workers (168/224) 
+✓ Generating static pages using 11 workers (224/224) in 11.8s
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)                                     Revalidate  Expire
+┌ ƒ /
+├ ○ /_not-found
+├ ○ /404
+├ ○ /500
+├ ƒ /about
+├ ƒ /accounts
+├ ƒ /accounts/[id]
+├ ƒ /accounts/[id]/edit
+├ ○ /accounts/account-settings
+├ ○ /accounts/account-tiers
+├ ○ /accounts/new
+├ ○ /accounts/territory-mapping
+├ ○ /activity
+├ ○ /agent-approvals
+├ ○ /agent-approvals/agents
+├ ○ /agent-approvals/ai-review
+├ ƒ /agent-approvals/ai-review/[id]
+├ ○ /agent-approvals/ai-search
+├ ○ /agent-approvals/ai-settings
+├ ○ /agent-approvals/approval-policies
+├ ○ /agent-approvals/churn-risk
+├ ○ /agent-approvals/drift
+├ ○ /agent-approvals/experiments
+├ ○ /agent-approvals/history
+├ ○ /agent-approvals/insights
+├ ○ /agent-approvals/latency
+├ ○ /agent-approvals/lead-scoring
+├ ○ /agent-approvals/logs
+├ ƒ /agent-approvals/logs/[id]
+├ ○ /agent-approvals/model-config
+├ ○ /agent-approvals/preview
+├ ○ /agent-approvals/sentiment
+├ ○ /agent-approvals/tools
+├ ○ /analytics
+├ ○ /analytics/feedback
+├ ○ /analytics/report-settings
+├ ○ /analytics/report-templates
+├ ○ /analytics/saved/monthly
+├ ○ /analytics/saved/quarterly
+├ ○ /analytics/saved/weekly
+├ ○ /analytics/scheduled-reports
+├ ƒ /api/adr
+├ ƒ /api/adr/create
+├ ƒ /api/adr/index
+├ ƒ /api/adr/status
+├ ƒ /api/adr/validate
+├ ƒ /api/avatar-proxy
+├ ƒ /api/billing/pdf-proxy
+├ ƒ /api/compliance/[standardId]
+├ ƒ /api/compliance/risks
+├ ƒ /api/compliance/timeline
+├ ƒ /api/developer/changelog-rss
+├ ƒ /api/developer/webhook-test
+├ ƒ /api/health
+├ ƒ /api/openapi
+├ ƒ /api/quality-reports
+├ ƒ /api/quality-reports/generate
+├ ƒ /api/quality-reports/status
+├ ƒ /api/quality-reports/test-run
+├ ƒ /api/quality-reports/test-run/[runId]
+├ ƒ /api/quality-reports/test-run/events
+├ ƒ /api/quality-reports/view
+├ ƒ /api/webhooks/google/calendar
+├ ƒ /api/webhooks/microsoft/calendar
+├ ○ /appointments
+├ ƒ /appointments/[id]
+├ ○ /appointments/new
+├ ƒ /aup
+├ ƒ /auth/callback
+├ ○ /billing
+├ ○ /billing/cancel
+├ ○ /billing/checkout
+├ ○ /billing/invoices
+├ ƒ /billing/invoices/[id]
+├ ○ /billing/payment-methods
+├ ○ /billing/plans
+├ ○ /billing/receipts
+├ ○ /billing/settings
+├ ○ /billing/subscriptions
+├ ○ /billing/upgrade
+├ ○ /billing/usage
+├ ƒ /blog
+├ ƒ /blog/[slug]
+├ ƒ /book/[handle]/[slug]
+├ ○ /calendar
+├ ○ /calendar/availability
+├ ○ /calendar/calendar-settings
+├ ○ /calendar/event-types
+├ ƒ /careers
+├ ƒ /careers/[id]
+├ ○ /cases
+├ ƒ /cases/[id]
+├ ○ /cases/case-settings
+├ ○ /cases/case-types
+├ ○ /cases/case-workflows
+├ ƒ /cases/case-workflows/[id]
+├ ○ /cases/case-workflows/new
+├ ○ /cases/new
+├ ○ /cases/timeline
+├ ƒ /contact
+├ ƒ /contacts
+├ ƒ /contacts/[id]
+├ ƒ /contacts/[id]/edit
+├ ○ /contacts/contact-settings
+├ ○ /contacts/contact-types
+├ ○ /contacts/import-export
+├ ○ /contacts/new
+├ ƒ /cookies
+├ ƒ /dashboard
+├ ○ /dashboard/customize
+├ ○ /dashboard/new
+├ ○ /deals
+├ ƒ /deals/[id]
+├ ƒ /deals/[id]/forecast
+├ ○ /deals/all/forecast
+├ ○ /deals/deal-automation
+├ ○ /deals/deal-settings
+├ ○ /deals/deal-stages
+├ ○ /deals/forecast
+├ ○ /deals/new
+├ ○ /deals/trash
+├ ○ /developers/apps
+├ ƒ /developers/apps/[id]
+├ ƒ /developers/apps/[id]/edit
+├ ○ /developers/apps/new
+├ ○ /docs
+├ ○ /docs/api
+├ ○ /docs/architecture
+├ ○ /docs/auth
+├ ○ /docs/changelog
+├ ○ /docs/cli
+├ ○ /docs/guides
+├ ○ /docs/integrations
+├ ○ /docs/sdk
+├ ○ /docs/webhooks
+├ ○ /documents
+├ ƒ /documents/[id]
+├ ○ /documents/document-settings
+├ ○ /documents/document-types
+├ ○ /documents/new
+├ ○ /documents/storage-policies
+├ ƒ /dpa
+├ ○ /email
+├ ƒ /email/[id]
+├ ○ /email/compose
+├ ○ /email/email-settings
+├ ○ /email/signatures
+├ ○ /email/templates
+├ ƒ /features
+├ ƒ /forgot-password
+├ ○ /governance
+├ ○ /governance/adr
+├ ○ /governance/compliance
+├ ○ /governance/policies
+├ ○ /governance/quality-reports
+├ ƒ /governance/quality-reports/[reportId]
+├ ○ /governance/quality-reports/coverage
+├ ○ /governance/quality-reports/lighthouse
+├ ○ /governance/quality-reports/performance
+├ ○ /governance/quality-reports/trpc-benchmark
+├ ○ /help-center
+├ ƒ /help-center/[article]
+├ ○ /help-center/search
+├ ○ /icon.svg
+├ ○ /insights
+├ ƒ /leads
+├ ƒ /leads/[id]
+├ ƒ /leads/[id]/edit
+├ ○ /leads/import
+├ ○ /leads/lead-settings
+├ ○ /leads/new
+├ ○ /leads/pipeline
+├ ○ /leads/routing
+├ ƒ /login
+├ ƒ /logout
+├ ƒ /lp/[slug]
+├ ƒ /maintenance
+├ ○ /manifest.webmanifest
+├ ƒ /mfa/verify
+├ ○ /notifications
+├ ○ /notifications/channels
+├ ○ /notifications/quiet-hours
+├ ○ /notifications/settings
+├ ○ /opengraph-image
+├ ƒ /partners
+├ ƒ /press
+├ ƒ /press/[id]
+├ ○ /preview/aurora                                     1d      1y
+├ ƒ /pricing
+├ ƒ /privacy
+├ ○ /profile
+├ ƒ /reset-password/[token]
+├ ƒ /reset-password/callback
+├ ○ /robots.txt
+├ ƒ /security
+├ ○ /settings
+├ ○ /settings/account
+├ ○ /settings/accounts
+├ ○ /settings/appointments
+├ ○ /settings/automation
+├ ○ /settings/automation/custom-actions
+├ ○ /settings/automation/custom-node-types
+├ ○ /settings/billing
+├ ○ /settings/cases
+├ ○ /settings/contacts
+├ ○ /settings/deals
+├ ○ /settings/documents
+├ ƒ /settings/help-center/articles
+├ ƒ /settings/help-center/articles/[id]/edit
+├ ○ /settings/help-center/articles/new
+├ ○ /settings/integrations
+├ ○ /settings/leads
+├ ○ /settings/notifications
+├ ○ /settings/pipeline
+├ ○ /settings/reports
+├ ○ /settings/routing
+├ ○ /settings/security/mfa
+├ ○ /settings/security/mfa/setup
+├ ○ /settings/tasks
+├ ○ /settings/team
+├ ○ /settings/tickets
+├ ƒ /signup
+├ ƒ /signup/success
+├ ○ /sitemap.xml
+├ ƒ /sso
+├ ƒ /status
+├ ○ /support/tickets
+├ ƒ /support/tickets/[id]
+├ ○ /support/tickets/new
+├ ○ /tasks
+├ ƒ /tasks/[id]
+├ ○ /tasks/automation
+├ ○ /tasks/task-settings
+├ ○ /tasks/task-types
+├ ƒ /terms
+├ ○ /tickets
+├ ƒ /tickets/[id]
+├ ○ /tickets/automations
+├ ○ /tickets/new
+├ ○ /tickets/sla-policies
+├ ○ /tickets/types
+├ ○ /upgrade
+├ ƒ /verify-email/[token]
+└ ƒ /verify-email/callback
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

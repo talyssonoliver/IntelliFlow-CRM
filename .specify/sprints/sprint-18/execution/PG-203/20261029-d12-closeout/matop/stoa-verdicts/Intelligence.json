@@ -1,0 +1,98 @@
+{
+  "stoa": "Intelligence",
+  "task_id": "PG-203",
+  "run_id": "20261029-d12-closeout",
+  "verdict": "PASS",
+  "produced_by": "stoa-intelligence sub-agent",
+  "produced_at": "2026-10-29T12:00:00Z",
+  "head": "5c716511ad0f9e2d70c5e38887541d1a0035348d",
+  "gates": [
+    {
+      "gate": "guard-lock-order",
+      "result": "PASS",
+      "evidence_log": "apps/ai-worker/src/lib/data-request-guard.ts",
+      "notes": "Read, not run. writeIfStillEligible and writeContactIfStillEligible take SELECT ... FOR UPDATE on the leads/contacts row first; writeIfEligibleRow then takes dsar_subject_lock per address, sorted with byCodeUnit (the row's own address plus alsoLock, de-duplicated), then re-runs isRestrictedOrErased on the tx before write(). writeIfAddressesStillClear has no row, so it takes all address locks in byCodeUnit order, then re-checks every address with queuedAddressBlocked (restriction, erased placeholder, completed ERASURE request). Same order as the address-change trigger (row, then address). One restricted or erased address cancels the whole write."
+    },
+    {
+      "gate": "ai-path-check-before-model-call",
+      "result": "PASS",
+      "evidence_log": "apps/ai-worker/src/jobs/scoring.job.ts; apps/ai-worker/src/jobs/insight-generation.job.ts; apps/ai-worker/src/jobs/prediction.job.ts; apps/ai-worker/src/jobs/reply-draft.job.ts; apps/ai-worker/src/jobs/tag-suggestion.job.ts; apps/ai-worker/src/workers/contact-embed-worker.ts; apps/ai-worker/src/contact-insight.chain.ts; apps/ai-worker/src/contact-enrichment.chain.ts; apps/api/src/modules/lead/lead-scoring-enqueue.ts; apps/api/src/agent/tools/draft-message.ts",
+      "notes": "Every path reads the person before the model call. Scoring: scoringBlockedBy re-reads the lead (LEAD_MISSING/ERASED/EMAIL_CHANGED/RESTRICTED); the dispatcher excludes erased and restricted people in SQL before LIMIT (dispatchCandidateIds) and again in code (scorableLeads). Insights: processableJobData drops people first. Predictions: eligibleSubjectEmail plus stale-context and unlinked-person checks. Embedding: isRestrictedOrErased before generateEmbedding. Enqueue and draft-message fail closed when the check errors or a tenant is missing. autoresponse.router checks the recipient and the lead as stored now (assertLeadStillProcessable)."
+    },
+    {
+      "gate": "ai-path-locked-recheck-before-write",
+      "result": "PASS",
+      "evidence_log": "apps/ai-worker/src/jobs/scoring.job.ts; apps/ai-worker/src/jobs/prediction.job.ts; apps/ai-worker/src/jobs/insight-generation.job.ts; apps/ai-worker/src/workers/contact-embed-worker.ts; packages/application/src/services/LeadService.ts",
+      "notes": "Writes go through writeIfStillEligible / writeSubjectIfStillEligible / writeContactIfStillEligible / writeIfQueuedAddressStillClear. This includes the high-priority insight side effects (activity, notification, task), the churn alert, and the deal-result keep decision. LeadService.scoreLead re-checks the restriction on the tx after the AI call and rolls back with ProcessingRestrictedError. Reply drafts re-check every participant address inside the locked write. The DB triggers are a second line (see db-triggers gate)."
+    },
+    {
+      "gate": "current-names-not-queued-names (codex af914b757)",
+      "result": "PASS",
+      "evidence_log": "apps/ai-worker/src/lib/data-request-guard.ts; apps/ai-worker/src/jobs/insight-generation.job.ts",
+      "notes": "eligibleNamedSubjects reads name, company and address from one row. processableJobData rebuilds hotLeads and staleContacts from that row, and deal names come from currentDeals. Deals follow their current contact (dealContactIds). Commit af914b757 exists, titled 'guard batch-wide insights and send current names to the model'. Residual: the single-lead scoring path still sends the queued lead fields; it is gated by the EMAIL_CHANGED check, so it is the same person. See finding F3."
+    },
+    {
+      "gate": "batch-wide-insights (writeIfAddressesStillClear)",
+      "result": "PASS",
+      "evidence_log": "apps/ai-worker/src/jobs/insight-generation.job.ts",
+      "notes": "persistInsightForSubject sends an insight about no single person through writeIfAddressesStillClear over every kept lead and contact address. Dropped people never reach the prompt, so the lock set covers everyone the model saw (wider than needed when arrays are capped, which is the safe direction)."
+    },
+    {
+      "gate": "rag-retrieval",
+      "result": "PASS",
+      "evidence_log": "apps/ai-worker/src/services/retrieval-service.ts",
+      "notes": "Lead, contact, opportunity and ticket results go through withoutDataRequestSubjects (restricted plus completed-erasure addresses, normalised). Tickets are checked via the linked contact's current address. The notes SQL joins contacts and excludes @erased.invalid and active restrictions. Conversation search, message search and accounts are unfiltered. Message search has no production caller and conversation summaries are unreachable per plan Q11; waived as #1015 (expires 2026-11-23). Not a block; see F4."
+    },
+    {
+      "gate": "db-triggers (migration 20261022120000_dsar_requests)",
+      "result": "PASS",
+      "evidence_log": "packages/db/prisma/migrations/20261022120000_dsar_requests/migration.sql",
+      "notes": "BEFORE INSERT/UPDATE triggers on ai_scores, lead_ai_insights, contact_ai_insights and ai_insights call SECURITY DEFINER checks that take FOR KEY SHARE on the subject row. An in-flight erasure is waited on, and a write that gets there first is deleted by the erasure. Both orders end with no derived data. dsar_keep_erased blocks write-back of an erased row. Commit 5c716511a only removed DROP TRIGGER IF EXISTS lines (to avoid ACCESS EXCLUSIVE locks) and added a rollback note, after the unit pre-ship at 4db3266f1. The trigger bodies are unchanged. I did not read a real-DB run of that edit."
+    },
+    {
+      "gate": "ai-worker unit evidence",
+      "result": "PASS-WITH-CAVEAT",
+      "evidence_log": "artifacts/preship/logs/unit-tests.log",
+      "notes": "Logs read, not re-run. The pre-ship at 4db3266f1 (full scope) shows 'Test Files 1990 passed | 3 skipped (1993); Tests 41195 passed | 33 skipped' in aggregate; the level-50 lines from the ai-worker are logged test fixtures, not failures. d7-aiworker.txt (.specify/sprints/sprint-18/execution/PG-203/exec-PG-203-20261020/tdd/dsar/d7-aiworker.txt) shows 45 files / 660 tests for src/jobs, src/workers and src/lib only, so it does not include src/services (retrieval) or the chain files. The PR body figure 'ai-worker 2545 passed' appears in neither log, so it is unverified here. The ai-worker has exited 1 on a green suite before (#878); no exit code is shown in these logs."
+    },
+    {
+      "gate": "prompt-lint / model availability / rate limit / zod",
+      "result": "NOT_EVALUATED",
+      "evidence_log": "",
+      "notes": "Out of scope for this delta: no prompt templates, model configuration or rate limits changed in PG-203, and no suite or ollama command was run (read-only, memory-limited). No new LLM output schemas were introduced; the guards only gate inputs and writes."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "info",
+      "title": "#1063 (unlinked insights naming a person survive erasure) does not block",
+      "detail": "It is an erasure-completeness gap for past batch-wide AI output, not a path that sends data to a model or writes new output. Q22 (stop every AI path) is met: after erasure, writeIfAddressesStillClear and the processableJobData filter stop new insights naming the person, and the triggers refuse AI rows for erased ids. Residual: an insight text written before the erasure that names the person remains. Keep the waiver expiry and the issue open, and make sure the erasure checklist tells the admin that unlinked insights are not searched."
+    },
+    {
+      "id": "F2",
+      "severity": "info",
+      "title": "#1010 (AI-created tasks carry no lead or contact id) does not block",
+      "detail": "The write side is closed: the insight side effects (activity, notification, task) are written only inside the locked re-check, so no new task is created for an erased or restricted person. Only tasks created before the erasure cannot be matched. This needs a provenance column (schema change). Waiver expires 2026-11-22; schedule the schema change before then."
+    },
+    {
+      "id": "F3",
+      "severity": "low",
+      "title": "Scoring sends queued lead fields, not re-read fields",
+      "detail": "scoring.job.ts builds chainInput from job.data.lead after scoringBlockedBy confirms the stored email equals the queued email. The address is unchanged, so it is the same person and there is no wrong-person leak. But a name, company or phone edited after queueing would be sent as queued. Consider re-reading those fields in scoringBlockedBy, as the insight path does (af914b757). Not blocking."
+    },
+    {
+      "id": "F4",
+      "severity": "low",
+      "title": "Conversation, message and account RAG results are unfiltered",
+      "detail": "Waived as #1015 (expires 2026-11-23): no person key on those records, no production caller for messages, summaries unreachable. #1021 also notes restricted rows are filtered after the 100-row limit (too few results, fail-safe). Not blocking, but re-check the waiver if any caller starts requesting 'messages' or conversation recording is wired."
+    },
+    {
+      "id": "F5",
+      "severity": "low",
+      "title": "Evidence gap on counts and head",
+      "detail": "The unit pre-ship ran on 4db3266f1 while HEAD is 5c716511a; the only AI-relevant file changed in between is migration.sql (DROP TRIGGER IF EXISTS lines removed, comment added). The ai-worker count of 2545 in the PR body is not visible in the logs I read. Attach the per-package ai-worker count, including the retrieval and chain suites, before merge."
+    }
+  ],
+  "summary": "PASS. Static review of the guard, the ai-worker jobs, the RAG filter, the API enqueue and draft sites, LeadService.scoreLead and the DSAR triggers found that every model-calling path checks the person first, writes only under a locked re-check (row FOR UPDATE, then address locks in code-unit order), and uses current names (af914b757). Batch-wide insights use writeIfAddressesStillClear. #1063 and #1010 are erasure-completeness gaps for earlier data, not live AI paths, and are waived with expiries; neither blocks. Caveats: no tests were run for this verdict; the unit pre-ship is at 4db3266f1, not HEAD; the 2545 ai-worker count is not in the logs read; conversation and message RAG stays unfiltered under waiver #1015."
+}

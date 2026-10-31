@@ -65,14 +65,15 @@ describe('createRedisHeartbeatStore', () => {
     );
   });
 
-  it('reads both jobs, mapping missing or garbage values to null', async () => {
-    const redis = fakeRedis(['1700', 'garbage']);
+  it('reads every job, mapping missing or garbage values to null', async () => {
+    const redis = fakeRedis(['1700', 'garbage', '1800']);
     const store = createRedisHeartbeatStore({ REDIS_HOST: 'h' }, async () => redis)!;
 
-    expect(await store.read()).toEqual({ approvalSweep: 1700, bounceScan: null });
+    expect(await store.read()).toEqual({ approvalSweep: 1700, bounceScan: null, dsarSla: 1800 });
     expect(redis.mget).toHaveBeenCalledWith(
       'ifc:background-jobs:heartbeat:approvalSweep',
-      'ifc:background-jobs:heartbeat:bounceScan'
+      'ifc:background-jobs:heartbeat:bounceScan',
+      'ifc:background-jobs:heartbeat:dsarSla'
     );
   });
 
@@ -126,7 +127,11 @@ describe('connection lifecycle', () => {
     const store = createRedisHeartbeatStore(env, create)!;
 
     await expect(store.read()).rejects.toThrow('import failed');
-    await expect(store.read()).resolves.toEqual({ approvalSweep: null, bounceScan: null });
+    await expect(store.read()).resolves.toEqual({
+      approvalSweep: null,
+      bounceScan: null,
+      dsarSla: null,
+    });
     expect(create).toHaveBeenCalledTimes(2);
   });
 
@@ -195,34 +200,41 @@ describe('default redis client', () => {
 describe('heartbeatIntervals', () => {
   it('reads each job interval from its env, 0 when disabled', () => {
     expect(
-      heartbeatIntervals({ APPROVAL_SWEEP_INTERVAL_MS: '5000', EMAIL_BOUNCE_SCAN_INTERVAL_MS: '0' })
-    ).toEqual({ approvalSweep: 5000, bounceScan: 0 });
+      heartbeatIntervals({
+        APPROVAL_SWEEP_INTERVAL_MS: '5000',
+        EMAIL_BOUNCE_SCAN_INTERVAL_MS: '0',
+        DSAR_SLA_INTERVAL_MS: '9000',
+      })
+    ).toEqual({ approvalSweep: 5000, bounceScan: 0, dsarSla: 9000 });
   });
 
   it('keeps watching on Vercel/Lambda, where only local timers are disabled', () => {
     const serverless = {
       APPROVAL_SWEEP_INTERVAL_MS: '5000',
       EMAIL_BOUNCE_SCAN_INTERVAL_MS: '7000',
+      DSAR_SLA_INTERVAL_MS: '9000',
     };
     expect(heartbeatIntervals({ ...serverless, VERCEL: '1' })).toEqual({
       approvalSweep: 5000,
       bounceScan: 7000,
+      dsarSla: 9000,
     });
     expect(heartbeatIntervals({ ...serverless, AWS_LAMBDA_FUNCTION_NAME: 'fn' })).toEqual({
       approvalSweep: 5000,
       bounceScan: 7000,
+      dsarSla: 9000,
     });
   });
 });
 
 describe('evaluateHeartbeats', () => {
-  const intervals = { approvalSweep: MINUTE, bounceScan: MINUTE };
+  const intervals = { approvalSweep: MINUTE, bounceScan: MINUTE, dsarSla: MINUTE };
   const limit = HEARTBEAT_STALE_FACTOR * MINUTE;
 
   it('is ok when both jobs ticked within 3x their interval', () => {
     const result = evaluateHeartbeats({
       now: NOW,
-      reads: { approvalSweep: NOW - 10_000, bounceScan: NOW - limit },
+      reads: { approvalSweep: NOW - 10_000, bounceScan: NOW - limit, dsarSla: NOW },
       intervals,
       uptimeMs: 10 * MINUTE,
       runsJobsHere: true,
@@ -234,7 +246,7 @@ describe('evaluateHeartbeats', () => {
   it('is degraded, naming the fix, when a job is silent for more than 3x its interval', () => {
     const result = evaluateHeartbeats({
       now: NOW,
-      reads: { approvalSweep: NOW - limit - 1, bounceScan: NOW },
+      reads: { approvalSweep: NOW - limit - 1, bounceScan: NOW, dsarSla: NOW },
       intervals,
       uptimeMs: 10 * MINUTE,
       runsJobsHere: true,
@@ -246,8 +258,22 @@ describe('evaluateHeartbeats', () => {
     expect(result.message).toContain('COMBINED_BACKGROUND_JOBS=on');
   });
 
+  // PG-203 D8: statutory deadlines depend on the DSAR alerts, so a silent alert job degrades too.
+  it('is degraded when only the DSAR deadline alerts stopped ticking', () => {
+    const result = evaluateHeartbeats({
+      now: NOW,
+      reads: { approvalSweep: NOW, bounceScan: NOW, dsarSla: NOW - limit - 1 },
+      intervals,
+      uptimeMs: 10 * MINUTE,
+      runsJobsHere: true,
+    });
+    expect(result.status).toBe('degraded');
+    expect(result.jobs!.dsarSla.status).toBe('stale');
+    expect(result.message).toContain('dsarSla');
+  });
+
   it('gives a job that never ticked its first 3x interval of process uptime', () => {
-    const reads = { approvalSweep: null, bounceScan: null };
+    const reads = { approvalSweep: null, bounceScan: null, dsarSla: null };
     expect(
       evaluateHeartbeats({ now: NOW, reads, intervals, uptimeMs: limit, runsJobsHere: true }).status
     ).toBe('ok');
@@ -263,7 +289,7 @@ describe('evaluateHeartbeats', () => {
   });
 
   it('an observer that does not run the jobs gets no grace for a missing heartbeat', () => {
-    const reads = { approvalSweep: null, bounceScan: NOW - 1000 };
+    const reads = { approvalSweep: null, bounceScan: NOW - 1000, dsarSla: NOW - 1000 };
     const result = evaluateHeartbeats({
       now: NOW,
       reads,
@@ -279,8 +305,8 @@ describe('evaluateHeartbeats', () => {
   it('skips a job whose interval is 0 (disabled on purpose)', () => {
     const result = evaluateHeartbeats({
       now: NOW,
-      reads: { approvalSweep: null, bounceScan: null },
-      intervals: { approvalSweep: 0, bounceScan: 0 },
+      reads: { approvalSweep: null, bounceScan: null, dsarSla: null },
+      intervals: { approvalSweep: 0, bounceScan: 0, dsarSla: 0 },
       uptimeMs: 99 * MINUTE,
       runsJobsHere: true,
     });
@@ -322,7 +348,11 @@ describe('checkBackgroundJobsHeartbeat', () => {
       env,
       now: () => NOW,
       uptimeMs: () => 10 * MINUTE,
-      store: store(async () => ({ approvalSweep: NOW - 1000, bounceScan: NOW - 1000 })),
+      store: store(async () => ({
+        approvalSweep: NOW - 1000,
+        bounceScan: NOW - 1000,
+        dsarSla: NOW - 1000,
+      })),
     });
     expect(fresh.status).toBe('ok');
 
@@ -330,7 +360,7 @@ describe('checkBackgroundJobsHeartbeat', () => {
       env,
       now: () => NOW,
       uptimeMs: () => 10 * MINUTE,
-      store: store(async () => ({ approvalSweep: null, bounceScan: null })),
+      store: store(async () => ({ approvalSweep: null, bounceScan: null, dsarSla: null })),
     });
     expect(silent.status).toBe('degraded');
   });

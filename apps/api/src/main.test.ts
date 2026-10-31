@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   disconnectPrisma: vi.fn(),
   shutdownAllQueues: vi.fn(),
   stopBackgroundJobs: vi.fn(),
+  stopTaskAutomationRunner: vi.fn(),
 }));
 
 vi.mock('./tracing/otel', () => ({ startTracing: mocks.startTracing }));
@@ -16,6 +17,9 @@ vi.mock('@intelliflow/platform/queues', () => ({ shutdownAllQueues: mocks.shutdo
 vi.mock('./http-server', () => ({ startApiServer: mocks.startApiServer }));
 vi.mock('./background-jobs', () => ({
   stopBackgroundJobs: mocks.stopBackgroundJobs,
+}));
+vi.mock('./modules/task/automation/task-automation-runner', () => ({
+  stopTaskAutomationRunner: mocks.stopTaskAutomationRunner,
 }));
 
 describe('api main entry point', () => {
@@ -83,6 +87,11 @@ describe('api main entry point', () => {
     )![1] as () => Promise<void>;
     await handler();
 
+    // PG-208: the task-automation runner stops before queues and Prisma close.
+    expect(mocks.stopTaskAutomationRunner).toHaveBeenCalledTimes(1);
+    expect(mocks.stopTaskAutomationRunner.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.shutdownAllQueues.mock.invocationCallOrder[0]!
+    );
     expect(mocks.stopBackgroundJobs).toHaveBeenCalledTimes(1);
     expect(mocks.stopBackgroundJobs.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.shutdownAllQueues.mock.invocationCallOrder[0]!
@@ -121,6 +130,23 @@ describe('api main entry point', () => {
       expect(warn).toHaveBeenCalledWith(expect.stringContaining('still running after 10000ms'));
       expect(mocks.shutdownAllQueues).toHaveBeenCalledTimes(1);
       expect(mocks.disconnectPrisma).toHaveBeenCalledTimes(1);
+      expect(exitSpy).toHaveBeenCalledWith(0);
+    });
+
+    it('caps a task-automation tick that never finishes the same way (PG-208)', async () => {
+      vi.useFakeTimers();
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      mocks.stopBackgroundJobs.mockResolvedValue(undefined);
+      mocks.stopTaskAutomationRunner.mockReturnValueOnce(new Promise<void>(() => undefined));
+      const handler = await sigterm();
+
+      const done = handler();
+      await vi.advanceTimersByTimeAsync(9_999);
+      expect(mocks.shutdownAllQueues).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(1);
+      await done;
+      expect(mocks.shutdownAllQueues).toHaveBeenCalledTimes(1);
       expect(exitSpy).toHaveBeenCalledWith(0);
     });
 

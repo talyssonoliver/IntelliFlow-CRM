@@ -45,12 +45,14 @@ import { getAuditLogger } from '../../security/audit-logger';
 import { assertQuota, withQuotaLock } from '../../shared/quota-guard';
 import { detectScoreBias, type LeadScoringBiasCheck } from '@intelliflow/adapters';
 import { createNotification } from '../notifications/notifications.router';
+import { restrictionReader } from '../privacy/restriction-reader';
 import { deriveLeadInsights } from '../../shared/lead-insight-deriver';
 import {
   Lead,
   LeadId,
   Email,
   PhoneNumber,
+  ProcessingRestrictedError,
   type LeadStatus,
   type LeadSource,
 } from '@intelliflow/domain';
@@ -532,20 +534,23 @@ export const leadRouter = createTRPCRouter({
 
     // Fire-and-forget: enqueue AI lead scoring (best-effort; shared with public booking, PG-203).
     // enqueueLeadScoring logs its own failures; this handler only covers an unexpected rejection.
-    enqueueLeadScoring({
-      leadId: result.value.id.value,
-      tenantId: typedCtx.tenant.tenantId,
-      lead: {
-        email: input.email,
-        source: input.source,
-        firstName: input.firstName,
-        lastName: input.lastName,
-        company: input.company,
-        title: input.title,
-        phone: input.phone?.value,
+    enqueueLeadScoring(
+      {
+        leadId: result.value.id.value,
+        tenantId: typedCtx.tenant.tenantId,
+        lead: {
+          email: input.email,
+          source: input.source,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          company: input.company,
+          title: input.title,
+          phone: input.phone?.value,
+        },
+        correlationId: `lead-create-${result.value.id.value}`,
       },
-      correlationId: `lead-create-${result.value.id.value}`,
-    }).catch((error: unknown) => {
+      restrictionReader(ctx)
+    ).catch((error: unknown) => {
       console.warn('[lead.router] AI scoring enqueue failed', {
         error: error instanceof Error ? error.name : 'unknown',
       });
@@ -789,20 +794,11 @@ export const leadRouter = createTRPCRouter({
       throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
     }
 
-    // Fire-and-forget: re-score lead after update (best-effort)
-    (async () => {
-      const { Queue } = await loadBullMQ();
-      const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
-      const lead = result.value;
-      const queue = new Queue(QUEUE_NAMES.AI_SCORING, {
-        connection: {
-          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-        },
-      });
-      const _otelCarrierUpdate: Record<string, string> = {};
-      propagation.inject(otelContext.active(), _otelCarrierUpdate);
-      await queue.add('score-lead', {
+    // Fire-and-forget: re-score lead after update (best-effort). Through the shared enqueue,
+    // so a restricted or erased person is never queued (PG-203 Q22; the worker checks again).
+    const lead = result.value;
+    enqueueLeadScoring(
+      {
         leadId: id,
         tenantId: typedCtx.tenant.tenantId,
         lead: {
@@ -815,10 +811,13 @@ export const leadRouter = createTRPCRouter({
           phone: lead.phone?.value,
         },
         correlationId: `lead-update-${id}`,
-        _otelCarrier: _otelCarrierUpdate,
+      },
+      restrictionReader(ctx)
+    ).catch((error: unknown) => {
+      console.warn('[lead.router] AI scoring enqueue failed', {
+        error: error instanceof Error ? error.name : 'unknown',
       });
-      await queue.close();
-    })().catch(() => {});
+    });
 
     // IFC-240: fire-and-forget audit logging with a real before/after diff over
     // exactly the fields this update changed — covers every editable field in
@@ -1190,6 +1189,10 @@ export const leadRouter = createTRPCRouter({
             code: 'NOT_FOUND',
             message: result.error.message,
           });
+        }
+        // PG-203 (owner Q18): a data request restricted processing of this person.
+        if (result.error instanceof ProcessingRestrictedError) {
+          throw new TRPCError({ code: 'PRECONDITION_FAILED', message: result.error.message });
         }
 
         throw new TRPCError({

@@ -1,0 +1,10 @@
+2026-10-20T23:29:14Z
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/packages/domain
+
+
+ Test Files  1 passed (1)
+      Tests  34 passed (34)
+   Start at  00:29:15
+   Duration  483ms (transform 274ms, setup 0ms, import 304ms, tests 23ms, environment 0ms)
+

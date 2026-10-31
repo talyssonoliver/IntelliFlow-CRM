@@ -1,0 +1,13 @@
+# 2026-10-20T23:21:27Z
+# d4db133c9481988b96b250bd278cdbcc79b94400
+# pnpm --filter @intelliflow/validators exec vitest run __tests__/enum-consistency.spec.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/validators
+
+
+ Test Files  1 passed (1)
+      Tests  18 passed (18)
+   Start at  00:21:28
+   Duration  904ms (transform 395ms, setup 0ms, import 611ms, tests 8ms, environment 0ms)
+
+# exit=0

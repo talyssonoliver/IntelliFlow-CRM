@@ -82,6 +82,8 @@ export { getHomeTenantId, isActingOutsideHome };
  */
 export type Services = {
   lead: Container['leadService'];
+  // PG-203: data subject requests
+  dsar: Container['dataSubjectRequestService'];
   contact: Container['contactService'];
   account: Container['accountService'];
   opportunity: Container['opportunityService'];
@@ -238,6 +240,7 @@ function isDevAuthFallbackEnabled(): boolean {
 function buildServicesFromContainer(): Services {
   return {
     lead: container.leadService,
+    dsar: container.dataSubjectRequestService,
     contact: container.contactService,
     account: container.accountService,
     opportunity: container.opportunityService,

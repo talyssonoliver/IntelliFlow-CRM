@@ -20,6 +20,11 @@ const m = vi.hoisted(() => ({
   bounceScanIntervalFromEnv: vi.fn(() => 222),
   runBounceScan: vi.fn().mockResolvedValue({ mailboxesScanned: 0 }),
   createBounceReaderDeps: vi.fn().mockResolvedValue({ marker: 'bounce-deps' }),
+  startDsarSlaScheduler: vi.fn((_options: SchedulerOptions) => true),
+  stopDsarSlaScheduler: vi.fn<() => Promise<void>>(async () => undefined),
+  dsarSlaIntervalFromEnv: vi.fn(() => 333),
+  runDsarSlaSweep: vi.fn().mockResolvedValue({ alerted: 0 }),
+  createDsarSlaDeps: vi.fn().mockResolvedValue({ marker: 'dsar-deps' }),
 }));
 
 vi.mock('../agent/approval-sweep-scheduler', () => ({
@@ -39,6 +44,13 @@ vi.mock('../modules/email/bounce-scheduler', () => ({
 vi.mock('../modules/email/bounce-reader', () => ({
   runBounceScan: m.runBounceScan,
   createBounceReaderDeps: m.createBounceReaderDeps,
+}));
+vi.mock('../modules/privacy/dsar-sla-scheduler', () => ({
+  startDsarSlaScheduler: m.startDsarSlaScheduler,
+  stopDsarSlaScheduler: m.stopDsarSlaScheduler,
+  dsarSlaIntervalFromEnv: m.dsarSlaIntervalFromEnv,
+  runDsarSlaSweep: m.runDsarSlaSweep,
+  createDsarSlaDeps: m.createDsarSlaDeps,
 }));
 vi.mock('../background-jobs-heartbeat', () => ({
   checkBackgroundJobsHeartbeat: m.checkBackgroundJobsHeartbeat,
@@ -72,6 +84,11 @@ beforeEach(() => {
   m.stopBounceScanner.mockResolvedValue(undefined);
   m.checkBackgroundJobsHeartbeat.mockResolvedValue({ status: 'ok' });
   m.closeHeartbeatStore.mockResolvedValue(undefined);
+  m.startDsarSlaScheduler.mockReturnValue(true);
+  m.stopDsarSlaScheduler.mockResolvedValue(undefined);
+  m.dsarSlaIntervalFromEnv.mockReturnValue(333);
+  m.runDsarSlaSweep.mockResolvedValue({ alerted: 0 });
+  m.createDsarSlaDeps.mockResolvedValue({ marker: 'dsar-deps' });
 });
 
 describe('backgroundJobsFlagEnabled', () => {
@@ -104,7 +121,7 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
     const env = { MARK: 'x' } as NodeJS.ProcessEnv;
     const result = startBackgroundJobs({ env, ready: async () => undefined });
 
-    expect(result).toEqual({ approvalSweep: true, bounceScan: true });
+    expect(result).toEqual({ approvalSweep: true, bounceScan: true, dsarSla: true });
     expect(m.approvalSweepIntervalFromEnv).toHaveBeenCalledWith(env);
     expect(m.bounceScanIntervalFromEnv).toHaveBeenCalledWith(env);
     expect(m.startApprovalSweep.mock.calls[0]![0]).toMatchObject({ intervalMs: 111 });
@@ -114,7 +131,43 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
   it('reports a job that its scheduler declined to start', () => {
     m.startApprovalSweep.mockReturnValueOnce(false);
     const result = startBackgroundJobs({ env: {}, ready: async () => undefined });
-    expect(result).toEqual({ approvalSweep: false, bounceScan: true });
+    expect(result).toEqual({ approvalSweep: false, bounceScan: true, dsarSla: true });
+  });
+
+  // PG-203 D8: the DSAR deadline alerts follow the same flag, so an api with
+  // API_BACKGROUND_JOBS=off makes no outbound traffic for them either.
+  it('starts the DSAR deadline alerts with their env interval; a run builds deps and beats', async () => {
+    const env = { MARK: 'x' } as NodeJS.ProcessEnv;
+    const heartbeat = {
+      record: vi.fn(async (_job: string, _at: number) => undefined),
+      read: vi.fn(),
+      close: vi.fn(async () => undefined),
+    };
+    const order: string[] = [];
+    const ready = vi.fn(async () => {
+      order.push('ready');
+    });
+    m.createDsarSlaDeps.mockImplementationOnce(async () => {
+      order.push('dsar-deps');
+      return { marker: 'dsar-deps' };
+    });
+    startBackgroundJobs({ env, ready, heartbeat });
+
+    expect(m.dsarSlaIntervalFromEnv).toHaveBeenCalledWith(env);
+    expect(m.startDsarSlaScheduler.mock.calls[0]![0]).toMatchObject({ intervalMs: 333 });
+    await expect(m.startDsarSlaScheduler.mock.calls[0]![0].run()).resolves.toEqual({
+      alerted: 0,
+    });
+    expect(m.runDsarSlaSweep).toHaveBeenCalledWith({ marker: 'dsar-deps' });
+    expect(order).toEqual(['ready', 'dsar-deps']);
+    expect(heartbeat.record).toHaveBeenCalledWith('dsarSla', expect.any(Number));
+  });
+
+  it('counts the DSAR alerts as jobs running here even when the others are off', () => {
+    m.startApprovalSweep.mockReturnValueOnce(false);
+    m.startBounceScanner.mockReturnValueOnce(false);
+    startBackgroundJobs({ env: {}, ready: async () => undefined });
+    expect(m.markJobsRunningHere).toHaveBeenLastCalledWith(true);
   });
 
   it('each run waits for readiness, then builds deps and runs the job', async () => {
@@ -156,6 +209,7 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(m.stopApprovalSweep).toHaveBeenCalledTimes(1);
     expect(m.stopBounceScanner).toHaveBeenCalledTimes(1);
+    expect(m.stopDsarSlaScheduler).toHaveBeenCalledTimes(1);
     expect(done).toBe(false);
 
     expect(m.closeHeartbeatStore).not.toHaveBeenCalled(); // only after the ticks drained
@@ -163,6 +217,21 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
     finishSweep();
     await stopping;
     expect(done).toBe(true);
+    expect(m.closeHeartbeatStore).toHaveBeenCalledTimes(1);
+  });
+
+  it('waits for a DSAR alert tick in flight before closing the heartbeat', async () => {
+    let finishDsar!: () => void;
+    m.stopDsarSlaScheduler.mockImplementation(() => new Promise<void>((r) => (finishDsar = r)));
+    let done = false;
+
+    const stopping = stopBackgroundJobs().then(() => (done = true));
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(done).toBe(false);
+    expect(m.closeHeartbeatStore).not.toHaveBeenCalled();
+
+    finishDsar();
+    await stopping;
     expect(m.closeHeartbeatStore).toHaveBeenCalledTimes(1);
   });
 

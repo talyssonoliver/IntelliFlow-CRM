@@ -22,6 +22,18 @@
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 
 /**
+ * Incoming request paths whose URL itself is a credential (PG-208: the
+ * task-automation webhook token is a path segment). Such requests get no HTTP
+ * span, so the token never reaches the trace backend. apps/api's Sentry setup
+ * applies the same rule (`apps/api/src/tracing/sentry.ts`).
+ */
+export const SECRET_BEARING_PATH_MARKERS: readonly string[] = ['/webhooks/task-automation/'];
+
+export function isSecretBearingPath(url: string | undefined): boolean {
+  return url !== undefined && SECRET_BEARING_PATH_MARKERS.some((marker) => url.includes(marker));
+}
+
+/**
  * Build the Node auto-instrumentations array for a service's NodeSDK.
  *
  * @returns the value to spread/assign into `new NodeSDK({ instrumentations })`
@@ -30,7 +42,10 @@ export function getStandardNodeInstrumentations(): ReturnType<typeof getNodeAuto
   return getNodeAutoInstrumentations({
     // Disable filesystem instrumentation — too noisy
     '@opentelemetry/instrumentation-fs': { enabled: false },
-    '@opentelemetry/instrumentation-http': { enabled: true },
+    '@opentelemetry/instrumentation-http': {
+      enabled: true,
+      ignoreIncomingRequestHook: (request) => isSecretBearingPath(request.url),
+    },
     '@opentelemetry/instrumentation-pino': {
       disableLogSending: false,
     },

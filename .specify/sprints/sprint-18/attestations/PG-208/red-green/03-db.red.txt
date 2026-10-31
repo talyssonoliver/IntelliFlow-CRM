@@ -1,0 +1,74 @@
+2026-10-20T23:41:05Z
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/packages/db
+
+ ❯ |db| src/__tests__/field-encryption-extension.test.ts (35 tests | 3 failed) 24ms
+     × encrypts both secrets on create and leaves other fields alone 4ms
+     × encrypts on update and updateMany 1ms
+     × decrypts on findUnique and passes a null previous secret through 0ms
+ ❯ |db| src/__tests__/field-encryption.test.ts (12 tests | 1 failed | 5 skipped) 616ms
+     × contains exactly three @encrypted annotations total 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |db| src/__tests__/field-encryption-extension.test.ts > fieldEncryptionExtension — TaskAutomationRule webhook secrets > encrypts both secrets on create and leaves other fields alone
+TypeError: Cannot read properties of undefined (reading 'create')
+ ❯ src/__tests__/field-encryption-extension.test.ts:529:18
+    527|     const previous = randomBytes(32).toString('hex');
+    528|     let captured: Record<string, unknown> = {};
+    529|     await ops(key)['create']!({
+       |                  ^
+    530|       model: 'TaskAutomationRule',
+    531|       operation: 'create',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  |db| src/__tests__/field-encryption-extension.test.ts > fieldEncryptionExtension — TaskAutomationRule webhook secrets > encrypts on update and updateMany
+TypeError: Cannot read properties of undefined (reading 'update')
+ ❯ src/__tests__/field-encryption-extension.test.ts:549:20
+    547|     for (const operation of ['update', 'updateMany']) {
+    548|       let captured: Record<string, unknown> = {};
+    549|       await ops(key)[operation]!({
+       |                    ^
+    550|         model: 'TaskAutomationRule',
+    551|         operation,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  |db| src/__tests__/field-encryption-extension.test.ts > fieldEncryptionExtension — TaskAutomationRule webhook secrets > decrypts on findUnique and passes a null previous secret through
+TypeError: Cannot read properties of undefined (reading 'findUnique')
+ ❯ src/__tests__/field-encryption-extension.test.ts:566:34
+    564|     const key = makeKey();
+    565|     const secret = randomBytes(32).toString('hex');
+    566|     const result = (await ops(key)['findUnique']!({
+       |                                  ^
+    567|       model: 'TaskAutomationRule',
+    568|       operation: 'findUnique',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  |db| src/__tests__/field-encryption.test.ts > schema.prisma — @encrypted annotations > contains exactly three @encrypted annotations total
+AssertionError: expected [ '/// @encrypted', …(4) ] to have a length of 3 but got 5
+
+- Expected
++ Received
+
+- 3
++ 5
+
+ ❯ src/__tests__/field-encryption.test.ts:73:21
+     71|   it('contains exactly three @encrypted annotations total', () => {
+     72|     const matches = schema.match(/\/\/\/\s*@encrypted/gm) ?? [];
+     73|     expect(matches).toHaveLength(3);
+       |                     ^
+     74|   });
+     75| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 38 passed | 5 skipped (47)
+   Start at  00:41:06
+   Duration  980ms (transform 626ms, setup 0ms, import 246ms, tests 640ms, environment 1ms)
+

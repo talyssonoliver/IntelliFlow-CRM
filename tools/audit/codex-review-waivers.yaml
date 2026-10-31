@@ -1128,6 +1128,18 @@ waivers:
       PG-202-AVAILABILITY-KNOWN-LIMITS-001.
     author: talyssonoliver (approved in the PG-202 lane modal, 2026-10-17)
     date: '2026-10-17'
+  - fingerprint: 00e5b9b97b0b849930b77eced996bf7e74aa7d7c198f74b96ff699ee51bbd4c0
+    reason: >-
+      PG-208 Codex finding conversion-correlation-misidentifies-existing-account (MEDIUM):
+      a lead converted into an EXISTING account can mark that account conversion-born and
+      skip its account.created rules. Raised by the single confirming round allowed after
+      owner ruling 9 ("Fix all 3, then stop": further findings become tracked issues, not
+      fixes; .specify/sprints/sprint-18/context/PG-208/PG-208-owner-ruling.md). Tracked in
+      gh #968 and debt-ledger PG-208-CONVERSION-EXISTING-ACCOUNT-001. Impact: one automation
+      rule run missed in a narrow window; no data corruption or cross-tenant effect.
+    author: talyssonoliver (owner ruling 9 in the PG-208 lane modal, relayed by runner projects-8c, 2026-10-21)
+    date: '2026-10-21'
+    expires: '2026-12-31'
   - fingerprint: 283b28bc7d89203adc3672b6d0e2324890e7fe34338adb652ec098b0bef7f0a5
     reason: >-
       PG-203 public booking vs in-app create/reschedule and the firm daily cap. This is the same accepted
@@ -1253,3 +1265,193 @@ waivers:
     author: talyssonoliver (approved in the PG-207 modal, 2026-10-22)
     date: '2026-10-22'
     expires: '2026-11-21'
+  - fingerprint: 041c5b04af2f7f81a29177fcd91252d5abbdae23ef255be5afbc3dc5cb2e3637
+    reason: >-
+      PG-208 Codex finding automation-startup-never-recovers (MEDIUM, apps/api/src/http-server.ts):
+      if the first database read in buildTaskAutomationRuntime fails at boot, task automation is
+      not retried until the api restarts. Accepted follow-up, tracked in debt-ledger
+      PG-208-RUNTIME-INIT-NO-RETRY-001 (retry with bounded backoff, cancelled on shutdown). The
+      code path does not run in production: owner ruling 2026-10-28 ships task automation OFF
+      there (TASK_AUTOMATION_INTERVAL_MS=0, debt-ledger PG-208-AUTOMATION-OFF-IN-PROD-001) until it
+      moves to the combined worker through the outbox. The waiver expires with the debt entry.
+    author: talyssonoliver (owner ruling 2026-10-28, automation off in production; waiver ruled by the orchestrator Aurora, 2026-10-29)
+    date: '2026-10-29'
+    expires: '2027-01-29'
+  - fingerprint: 207bcd9f337014fa673c0d308e2a12e2b04f94248cce8a5485817dc5ff168f63
+    reason: >-
+      PG-208 Codex finding mutable-state-is-not-commit-evidence (MEDIUM,
+      task-automation-engine.ts postconditionHolds): events are published inside the writing
+      transaction, so the drain takes the record's current state as evidence the write
+      committed. A lead qualified and then moved to LOST, UNQUALIFIED or CONTACTED before the
+      next tick has its lead.qualified run dropped after the 30 s grace. Accepted design limit of
+      ADR-084 (postcondition grace and the at-most-once intake window); the effect is a missed
+      automation run, with nothing overwritten or lost. The fix is delivery after commit through
+      the outbox (#966), tracked in debt-ledger PG-208-POSTCONDITION-NOT-COMMIT-EVIDENCE-001. The
+      path is off in production (TASK_AUTOMATION_INTERVAL_MS=0, owner ruling 2026-10-28).
+    author: talyssonoliver (owner ruling 2026-10-28, automation off in production; waiver ruled by the orchestrator Aurora, 2026-10-29)
+    date: '2026-10-29'
+    expires: '2027-01-29'
+  - fingerprint: 0b96db390cd3c70b99d550184155e48462f64d405b2475dab1dfd7460d4ae08e
+    reason: >-
+      Real but fail-safe race, tracked in gh #1007. A rejection racing a concurrent address
+      change can leave one extra ACTIVE restriction on the new address. That direction keeps
+      AI processing off for the person (more protection, never less), exposes and loses no
+      data, and an admin can lift the copy by id on /settings/privacy-requests. The fix is a
+      shared lock protocol across liftForRequest and dsar_carry_restriction plus a real-DB
+      race test, which is out of scope for the PR 2 spiral (security/data-loss only).
+    author: PG-203 lane
+    date: '2026-10-23'
+    expires: '2026-11-22'
+  - fingerprint: 06873f7e4645800930d22c803069993f274f8f194a81bab7f4fc70e6e90050fe
+    reason: >-
+      Missed-feature gap, tracked in gh #1009: the admin UI does not keep the post-erasure
+      manual cleanup checklist on completed requests. No data is exposed or lost; the erasure
+      itself is complete and the preview shows the checklist before it runs. Persisting it
+      needs a new request column and UI, out of scope for the PR 2 spiral (security/data-loss).
+    author: PG-203 lane
+    date: '2026-10-23'
+    expires: '2026-11-22'
+  - fingerprint: 2712acaa3686fee514bea9d5c64a76250c69346af659ceac6a925b76e1e0f135
+    reason: >-
+      Pre-existing data-model gap, tracked in gh #1010: AI-created tasks store no lead or contact
+      id, so the erasure cannot match tasks created before it. Since #1002 (owner Q21) no task,
+      insight, notification or activity is created for an erased or restricted person (locked
+      re-check). Matching older tasks needs a provenance column on tasks (schema change), out of
+      scope for the PR 2 spiral.
+    author: PG-203 lane
+    date: '2026-10-23'
+    expires: '2026-11-22'
+  - fingerprint: 5b63b61f24c8c0387832ac82cdc68951c3d8f0df933e013676ecc11fc6342e67
+    reason: >-
+      False positive. The finding says processableJobData returns dealsAtRisk unchanged, but it
+      returns `dealsAtRisk: keptDeals` (insight-generation.job.ts processableJobData), where
+      keptDeals drops every deal whose contact is erased or restricted (dealContactIds +
+      eligibleSubjects). Deal insights are written under the contact's locks (insightSubject).
+      Tests use real deals: insights-predictions-data-requests.test.ts 'deals at risk follow their
+      contact' (a restricted contact's deal is absent from the model input).
+    author: PG-203 lane
+    date: '2026-10-23'
+  - fingerprint: 1536a6ef22f2143a525f731fe1c9b8307d1260835c67dbb1cfad96b54175a49c
+    reason: >-
+      Delivery-reliability gap, not a security, data-loss or regression finding (codex spiral
+      rule). A refused rejection/completion email is logged by kind and not retried or shown to
+      the admin. Tracked in #1014 (await the notice and return personNotified, or an outbox
+      retried by the D8 sweep).
+    author: PG-203 lane
+    date: '2026-10-24'
+    expires: '2026-11-23'
+  - fingerprint: 02c0c7751a4bd6084002b02d0bfb39eba7d3cac8932a68409f11323dd1ea10ee
+    reason: >-
+      Scoped out in PG-203 Plan Addendum B (Q11), approved by the plan reviewer: conversation and
+      message records carry no person key to filter on; message search has no production caller,
+      and conversation summaries are unreachable (attachConversationRecording has no caller).
+      Tracked in #1015: tag them with their person, then filter RAG and reach them from erasure.
+    author: PG-203 lane
+    date: '2026-10-24'
+    expires: '2026-11-23'
+  - fingerprint: 0d03e2fa595a91c2459e432f84de2a4e5d2f6c14e74fac88dd147f2c18b36fb7
+    reason: >-
+      Same delivery-reliability gap as 1536a6ef (fire-and-forget notices), here for the
+      extension email. Not a security, data-loss or regression finding (codex spiral rule).
+      Tracked in #1014 (comment added): await the notice and return personNotified, or an outbox.
+    author: PG-203 lane
+    date: '2026-10-24'
+    expires: '2026-11-23'
+  - fingerprint: 24c6b825e5af0ce579dbbd64ce0a4d88d4003e9ff89e7e8929819fa3154f37ff
+    reason: >-
+      Same fire-and-forget notice gap as 1536a6ef and 0d03e2fa, here for the access completion
+      email (with the withholding reasons). Not a security, data-loss or regression finding
+      (codex spiral rule). Tracked in #1014, whose body already names the completion notice.
+    author: PG-203 lane
+    date: '2026-10-24'
+    expires: '2026-11-23'
+  - fingerprint: 13391d7a0e546774a297e520d6767850855e9d6d7c6243af0fa786085c347449
+    reason: >-
+      Narrow timing case: free text added between verification and download is withheld from an
+      auto-completed access export with the "reasons emailed" note. Art 15 is answered as of the
+      request; not a security, data-loss or regression finding (codex spiral rule). Tracked in
+      #1020 (serve the verification snapshot, or reword the note for later data).
+    author: PG-203 lane
+    date: '2026-10-24'
+    expires: '2026-11-23'
+  - fingerprint: 02b088e4de2cb2fea357b3b244bfc430f7d624ce34ba1d590045551dc3070576
+    reason: >-
+      Codex has used this fingerprint for two findings in PrismaSubjectDataRepository.ts.
+      (1) AI-created tasks carry no lead or contact id, so erasure cannot find them: #1010.
+      (2) Deal names and task titles appear in the export while descriptions are withheld: this
+      is owner ruling Q23 (2026-10-25: "deals (name, value, stage, dates) and tasks (title,
+      status, dates); descriptions withheld"), recorded in PG-203-owner-ruling.md. Changing it
+      needs a new owner decision, not a code fix.
+    author: PG-203 lane
+    date: '2026-10-25'
+    expires: '2026-11-24'
+  - fingerprint: 071999c8ad8086fb913bb0ad820e0c26865dcac94e8498d4ec8b9aef16e4b5be
+    reason: >-
+      Recall, not privacy: the Q22 filter runs after each source's 100-row query, so heavy
+      restricted matches can crowd out eligible ones. Fail-safe (no restricted data reaches a
+      prompt); not a security, data-loss or regression finding (codex spiral rule). Tracked in
+      #1021 (push the exclusion into the source queries).
+    author: PG-203 lane
+    date: '2026-10-24'
+    expires: '2026-11-23'
+  - fingerprint: 10bd40e109ea14b5338e9520437715b79bf05f168f6dc5953bfe04d313dcdcd9
+    reason: >-
+      Same finding as 13391d7a, tracked in #1020: a completed access export rebuilt at download
+      time can show data added after the request was answered with the "reasons emailed" note.
+      Art 15 is answered as of the request; a narrow timing case, not a security, data-loss or
+      regression finding (codex spiral rule).
+    author: PG-203 lane
+    date: '2026-10-25'
+    expires: '2026-11-24'
+  - fingerprint: 17e93f5337a708618a81c280a1472b519e144f41679315264489dcf789cce557
+    reason: >-
+      Same gap as #1010 (and fingerprint 02b088e4): AI-generated tasks carry no lead or contact id,
+      so neither the export nor the erasure checklist can find them. Tagging tasks with their
+      person needs a schema change, tracked in #1010; new tasks for a restricted or erased person
+      are not created (Q21).
+    author: PG-203 lane
+    date: '2026-10-25'
+    expires: '2026-11-24'
+  - fingerprint: 70c3c847f16c3283b6bb17fa37770efbb6ded3de78b9050596c2257541006011
+    reason: >-
+      Third fingerprint for #1020 (see 13391d7a and 10bd40e1): a completed access export rebuilt
+      at download time can show data added after the request was answered, with the "reasons
+      emailed" note. Narrow timing case, not a security, data-loss or regression finding.
+    author: PG-203 lane
+    date: '2026-10-25'
+    expires: '2026-11-24'
+  - fingerprint: 19f1b339aef58e3ef60419526b05bfa6732bd808a9c0a7190ae49dd5b2d8a7ed
+    reason: >-
+      By design (PG-203 spec Addendum A; SubmitCaps documents "same tenant + same IP hash"):
+      the database IP cap is per firm. Across firms, an IP is throttled by the in-memory submit
+      limiter in booking-abuse.ts (bookingSubmitLimiter, per IP for every firm), the global
+      folded-email cap, and now the per-firm daily cap (Q24). LOW, not a security regression.
+    author: PG-203 lane
+    date: '2026-10-25'
+    expires: '2026-11-24'
+  - fingerprint: 1350993204ce39b35b7aa2faf73aa439424e27cb5238341df6e2c77e7865ac41
+    reason: >-
+      LOW, fail-safe: when a rejected RESTRICTION request shares its restriction with another open
+      request, the lifting notice goes out though the restriction stays. Processing stays
+      restricted. Tracked in #1027 (check the restriction is held only by this request first).
+    author: PG-203 lane
+    date: '2026-10-25'
+    expires: '2026-11-24'
+  - fingerprint: 1cf9b7a151fed56e7b69ae347b861726a983b09802ea344618d977d72b12eceb
+    reason: >-
+      LOW, fail-safe: with several restriction rows for one request (an address change carries
+      the ids), lifting one row still reports restrictionKept false while another stays active.
+      Processing stays restricted. Tracked in #1027 (comment added): the port should report
+      whether any row is still held, for both the notice and restrictionKept.
+    author: PG-203 lane
+    date: '2026-10-25'
+    expires: '2026-11-24'
+  - fingerprint: 05d1fa75998a9bc306ef96f9a9043f8f8fe665513525f74d8323540b224f43bc
+    reason: >-
+      Same fire-and-forget notice gap as 1536a6ef, 0d03e2fa and 24c6b825, reworded after the
+      main merge: a refused completion or refusal email is not retried. Delivery reliability,
+      not a security, data-loss or regression finding (codex spiral rule). Tracked in #1014,
+      which already proposes the durable outbox retried by the D8 sweep.
+    author: PG-203 lane
+    date: '2026-10-27'
+    expires: '2026-11-26'

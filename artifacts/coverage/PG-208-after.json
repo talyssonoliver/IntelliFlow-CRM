@@ -1,0 +1,1282 @@
+{
+  "task_id": "PG-208",
+  "phase": "after",
+  "captured_at": "2026-10-21T20:17:22.782Z",
+  "git_commit": "743586efe1a1545e6f96d76f7bd344ebab30b250",
+  "source": "artifacts/coverage/coverage-summary.json from a fresh `pnpm test:coverage` at HEAD (17/17 projects passed, rc=0); diff coverage `node scripts/check-diff-coverage.mjs` = 95.6% (2517/2633)",
+  "note": "The BEFORE snapshot came from a stale committed baseline (total lines 10.3%), so the package-wide totals are not comparable; compare the per-file entries and the changed-files aggregate.",
+  "total": {
+    "lines": {
+      "total": 100631,
+      "covered": 64970,
+      "skipped": 0,
+      "pct": 64.56
+    },
+    "statements": {
+      "total": 109619,
+      "covered": 69958,
+      "skipped": 0,
+      "pct": 63.81
+    },
+    "functions": {
+      "total": 23889,
+      "covered": 16527,
+      "skipped": 0,
+      "pct": 69.18
+    },
+    "branches": {
+      "total": 70547,
+      "covered": 42483,
+      "skipped": 0,
+      "pct": 60.21
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "changed_source_files_aggregate": {
+    "lines": {
+      "covered": 2851,
+      "total": 3017,
+      "pct": 94.5
+    },
+    "statements": {
+      "covered": 3163,
+      "total": 3368,
+      "pct": 93.91
+    },
+    "functions": {
+      "covered": 776,
+      "total": 828,
+      "pct": 93.72
+    },
+    "branches": {
+      "covered": 2008,
+      "total": 2322,
+      "pct": 86.48
+    }
+  },
+  "diff_coverage_pct": 95.6,
+  "files": {
+    "apps/api/src/http-server.ts": {
+      "lines": {
+        "total": 215,
+        "covered": 186,
+        "skipped": 0,
+        "pct": 86.51
+      },
+      "functions": {
+        "total": 38,
+        "covered": 37,
+        "skipped": 0,
+        "pct": 97.36
+      },
+      "statements": {
+        "total": 220,
+        "covered": 190,
+        "skipped": 0,
+        "pct": 86.36
+      },
+      "branches": {
+        "total": 137,
+        "covered": 97,
+        "skipped": 0,
+        "pct": 70.8
+      }
+    },
+    "apps/api/src/main.ts": {
+      "lines": {
+        "total": 12,
+        "covered": 12,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 4,
+        "covered": 4,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 12,
+        "covered": 12,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/api/src/modules/task/automation/task-automation-admin.ts": {
+      "lines": {
+        "total": 7,
+        "covered": 7,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 3,
+        "covered": 3,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 8,
+        "covered": 8,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 12,
+        "covered": 12,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/api/src/modules/task/automation/task-automation-engine.ts": {
+      "lines": {
+        "total": 254,
+        "covered": 253,
+        "skipped": 0,
+        "pct": 99.6
+      },
+      "functions": {
+        "total": 40,
+        "covered": 40,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 304,
+        "covered": 296,
+        "skipped": 0,
+        "pct": 97.36
+      },
+      "branches": {
+        "total": 230,
+        "covered": 204,
+        "skipped": 0,
+        "pct": 88.69
+      }
+    },
+    "apps/api/src/modules/task/automation/task-automation-event-intake.ts": {
+      "lines": {
+        "total": 42,
+        "covered": 42,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 15,
+        "covered": 15,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 51,
+        "covered": 51,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 41,
+        "covered": 36,
+        "skipped": 0,
+        "pct": 87.8
+      }
+    },
+    "apps/api/src/modules/task/automation/task-automation-runner.ts": {
+      "lines": {
+        "total": 24,
+        "covered": 24,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 6,
+        "covered": 6,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 31,
+        "covered": 31,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 27,
+        "covered": 26,
+        "skipped": 0,
+        "pct": 96.29
+      }
+    },
+    "apps/api/src/modules/task/automation/task-automation-runtime.ts": {
+      "lines": {
+        "total": 29,
+        "covered": 27,
+        "skipped": 0,
+        "pct": 93.1
+      },
+      "functions": {
+        "total": 12,
+        "covered": 11,
+        "skipped": 0,
+        "pct": 91.66
+      },
+      "statements": {
+        "total": 32,
+        "covered": 30,
+        "skipped": 0,
+        "pct": 93.75
+      },
+      "branches": {
+        "total": 18,
+        "covered": 12,
+        "skipped": 0,
+        "pct": 66.66
+      }
+    },
+    "apps/api/src/modules/task/automation/task-automation-store.ts": {
+      "lines": {
+        "total": 94,
+        "covered": 94,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 38,
+        "covered": 38,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 110,
+        "covered": 110,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 75,
+        "covered": 70,
+        "skipped": 0,
+        "pct": 93.33
+      }
+    },
+    "apps/api/src/modules/task/automation/task-automation-webhook.ts": {
+      "lines": {
+        "total": 158,
+        "covered": 158,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 31,
+        "covered": 28,
+        "skipped": 0,
+        "pct": 90.32
+      },
+      "statements": {
+        "total": 187,
+        "covered": 181,
+        "skipped": 0,
+        "pct": 96.79
+      },
+      "branches": {
+        "total": 126,
+        "covered": 116,
+        "skipped": 0,
+        "pct": 92.06
+      }
+    },
+    "apps/api/src/modules/task/task-automation.router.ts": {
+      "lines": {
+        "total": 283,
+        "covered": 279,
+        "skipped": 0,
+        "pct": 98.58
+      },
+      "functions": {
+        "total": 67,
+        "covered": 65,
+        "skipped": 0,
+        "pct": 97.01
+      },
+      "statements": {
+        "total": 308,
+        "covered": 298,
+        "skipped": 0,
+        "pct": 96.75
+      },
+      "branches": {
+        "total": 201,
+        "covered": 179,
+        "skipped": 0,
+        "pct": 89.05
+      }
+    },
+    "apps/api/src/modules/task/task.router.ts": {
+      "lines": {
+        "total": 237,
+        "covered": 176,
+        "skipped": 0,
+        "pct": 74.26
+      },
+      "functions": {
+        "total": 38,
+        "covered": 24,
+        "skipped": 0,
+        "pct": 63.15
+      },
+      "statements": {
+        "total": 247,
+        "covered": 184,
+        "skipped": 0,
+        "pct": 74.49
+      },
+      "branches": {
+        "total": 195,
+        "covered": 127,
+        "skipped": 0,
+        "pct": 65.12
+      }
+    },
+    "apps/api/src/tracing/sentry.ts": {
+      "lines": {
+        "total": 96,
+        "covered": 81,
+        "skipped": 0,
+        "pct": 84.37
+      },
+      "functions": {
+        "total": 42,
+        "covered": 25,
+        "skipped": 0,
+        "pct": 59.52
+      },
+      "statements": {
+        "total": 106,
+        "covered": 90,
+        "skipped": 0,
+        "pct": 84.9
+      },
+      "branches": {
+        "total": 43,
+        "covered": 35,
+        "skipped": 0,
+        "pct": 81.39
+      }
+    },
+    "apps/web/src/app/accounts/(list)/territory-mapping/components/TerritoryDialog.tsx": {
+      "lines": {
+        "total": 45,
+        "covered": 44,
+        "skipped": 0,
+        "pct": 97.77
+      },
+      "functions": {
+        "total": 27,
+        "covered": 26,
+        "skipped": 0,
+        "pct": 96.29
+      },
+      "statements": {
+        "total": 52,
+        "covered": 50,
+        "skipped": 0,
+        "pct": 96.15
+      },
+      "branches": {
+        "total": 51,
+        "covered": 45,
+        "skipped": 0,
+        "pct": 88.23
+      }
+    },
+    "apps/web/src/app/accounts/(list)/territory-mapping/components/TerritoryList.tsx": {
+      "lines": {
+        "total": 49,
+        "covered": 49,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 27,
+        "covered": 27,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 60,
+        "covered": 60,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 40,
+        "covered": 36,
+        "skipped": 0,
+        "pct": 90
+      }
+    },
+    "apps/web/src/app/analytics/scheduled-reports/components/ScheduleDialog.tsx": {
+      "lines": {
+        "total": 100,
+        "covered": 96,
+        "skipped": 0,
+        "pct": 96
+      },
+      "functions": {
+        "total": 47,
+        "covered": 46,
+        "skipped": 0,
+        "pct": 97.87
+      },
+      "statements": {
+        "total": 128,
+        "covered": 121,
+        "skipped": 0,
+        "pct": 94.53
+      },
+      "branches": {
+        "total": 131,
+        "covered": 111,
+        "skipped": 0,
+        "pct": 84.73
+      }
+    },
+    "apps/web/src/app/tasks/(list)/automation/TaskAutomationContent.tsx": {
+      "lines": {
+        "total": 129,
+        "covered": 128,
+        "skipped": 0,
+        "pct": 99.22
+      },
+      "functions": {
+        "total": 43,
+        "covered": 42,
+        "skipped": 0,
+        "pct": 97.67
+      },
+      "statements": {
+        "total": 143,
+        "covered": 138,
+        "skipped": 0,
+        "pct": 96.5
+      },
+      "branches": {
+        "total": 90,
+        "covered": 80,
+        "skipped": 0,
+        "pct": 88.88
+      }
+    },
+    "apps/web/src/app/tasks/(list)/automation/TaskAutomationLoading.tsx": {
+      "lines": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/web/src/app/tasks/(list)/automation/components/ActionFields.tsx": {
+      "lines": {
+        "total": 25,
+        "covered": 23,
+        "skipped": 0,
+        "pct": 92
+      },
+      "functions": {
+        "total": 19,
+        "covered": 17,
+        "skipped": 0,
+        "pct": 89.47
+      },
+      "statements": {
+        "total": 26,
+        "covered": 23,
+        "skipped": 0,
+        "pct": 88.46
+      },
+      "branches": {
+        "total": 26,
+        "covered": 20,
+        "skipped": 0,
+        "pct": 76.92
+      }
+    },
+    "apps/web/src/app/tasks/(list)/automation/components/AutomationRuleDialog.tsx": {
+      "lines": {
+        "total": 33,
+        "covered": 32,
+        "skipped": 0,
+        "pct": 96.96
+      },
+      "functions": {
+        "total": 18,
+        "covered": 17,
+        "skipped": 0,
+        "pct": 94.44
+      },
+      "statements": {
+        "total": 37,
+        "covered": 36,
+        "skipped": 0,
+        "pct": 97.29
+      },
+      "branches": {
+        "total": 22,
+        "covered": 22,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/web/src/app/tasks/(list)/automation/components/AutomationRuleList.tsx": {
+      "lines": {
+        "total": 59,
+        "covered": 58,
+        "skipped": 0,
+        "pct": 98.3
+      },
+      "functions": {
+        "total": 37,
+        "covered": 36,
+        "skipped": 0,
+        "pct": 97.29
+      },
+      "statements": {
+        "total": 69,
+        "covered": 68,
+        "skipped": 0,
+        "pct": 98.55
+      },
+      "branches": {
+        "total": 64,
+        "covered": 56,
+        "skipped": 0,
+        "pct": 87.5
+      }
+    },
+    "apps/web/src/app/tasks/(list)/automation/components/AutomationSettingsCard.tsx": {
+      "lines": {
+        "total": 39,
+        "covered": 39,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 15,
+        "covered": 15,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 44,
+        "covered": 44,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 31,
+        "covered": 31,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/web/src/app/tasks/(list)/automation/components/DeleteAutomationRuleDialog.tsx": {
+      "lines": {
+        "total": 4,
+        "covered": 4,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 2,
+        "covered": 2,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 5,
+        "covered": 5,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 2,
+        "covered": 2,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/web/src/app/tasks/(list)/automation/components/RecentRunsDialog.tsx": {
+      "lines": {
+        "total": 14,
+        "covered": 13,
+        "skipped": 0,
+        "pct": 92.85
+      },
+      "functions": {
+        "total": 4,
+        "covered": 3,
+        "skipped": 0,
+        "pct": 75
+      },
+      "statements": {
+        "total": 14,
+        "covered": 13,
+        "skipped": 0,
+        "pct": 92.85
+      },
+      "branches": {
+        "total": 22,
+        "covered": 19,
+        "skipped": 0,
+        "pct": 86.36
+      }
+    },
+    "apps/web/src/app/tasks/(list)/automation/components/TagsTab.tsx": {
+      "lines": {
+        "total": 3,
+        "covered": 3,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 3,
+        "covered": 3,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/web/src/app/tasks/(list)/automation/components/TriggerFields.tsx": {
+      "lines": {
+        "total": 21,
+        "covered": 21,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 16,
+        "covered": 16,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 24,
+        "covered": 24,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 27,
+        "covered": 23,
+        "skipped": 0,
+        "pct": 85.18
+      }
+    },
+    "apps/web/src/app/tasks/(list)/automation/components/WebhookSecretDialog.tsx": {
+      "lines": {
+        "total": 13,
+        "covered": 12,
+        "skipped": 0,
+        "pct": 92.3
+      },
+      "functions": {
+        "total": 8,
+        "covered": 7,
+        "skipped": 0,
+        "pct": 87.5
+      },
+      "statements": {
+        "total": 13,
+        "covered": 12,
+        "skipped": 0,
+        "pct": 92.3
+      },
+      "branches": {
+        "total": 10,
+        "covered": 8,
+        "skipped": 0,
+        "pct": 80
+      }
+    },
+    "apps/web/src/app/tasks/(list)/automation/components/rule-form.ts": {
+      "lines": {
+        "total": 72,
+        "covered": 72,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 14,
+        "covered": 14,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 84,
+        "covered": 84,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 87,
+        "covered": 87,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/web/src/app/tasks/(list)/automation/loading.tsx": {
+      "lines": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/web/src/app/tasks/(list)/automation/task-automation-labels.ts": {
+      "lines": {
+        "total": 24,
+        "covered": 24,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 9,
+        "covered": 9,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 30,
+        "covered": 30,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 22,
+        "covered": 22,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/web/src/components/notifications/notification-utils.ts": {
+      "lines": {
+        "total": 28,
+        "covered": 28,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 7,
+        "covered": 7,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 35,
+        "covered": 34,
+        "skipped": 0,
+        "pct": 97.14
+      },
+      "branches": {
+        "total": 23,
+        "covered": 21,
+        "skipped": 0,
+        "pct": 91.3
+      }
+    },
+    "apps/web/src/components/shared/copy-field.tsx": {
+      "lines": {
+        "total": 29,
+        "covered": 29,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 7,
+        "covered": 7,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 35,
+        "covered": 34,
+        "skipped": 0,
+        "pct": 97.14
+      },
+      "branches": {
+        "total": 23,
+        "covered": 22,
+        "skipped": 0,
+        "pct": 95.65
+      }
+    },
+    "apps/web/src/components/shared/field-error.tsx": {
+      "lines": {
+        "total": 3,
+        "covered": 3,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 2,
+        "covered": 2,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 4,
+        "covered": 4,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 8,
+        "covered": 8,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/web/src/components/shared/schedule-cadence-fields.tsx": {
+      "lines": {
+        "total": 21,
+        "covered": 21,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 12,
+        "covered": 12,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 24,
+        "covered": 24,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 21,
+        "covered": 21,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/web/src/components/shared/tags-tab.tsx": {
+      "lines": {
+        "total": 28,
+        "covered": 27,
+        "skipped": 0,
+        "pct": 96.42
+      },
+      "functions": {
+        "total": 17,
+        "covered": 16,
+        "skipped": 0,
+        "pct": 94.11
+      },
+      "statements": {
+        "total": 35,
+        "covered": 33,
+        "skipped": 0,
+        "pct": 94.28
+      },
+      "branches": {
+        "total": 25,
+        "covered": 22,
+        "skipped": 0,
+        "pct": 88
+      }
+    },
+    "apps/web/src/components/shared/variable-picker.tsx": {
+      "lines": {
+        "total": 32,
+        "covered": 26,
+        "skipped": 0,
+        "pct": 81.25
+      },
+      "functions": {
+        "total": 10,
+        "covered": 10,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 34,
+        "covered": 27,
+        "skipped": 0,
+        "pct": 79.41
+      },
+      "branches": {
+        "total": 30,
+        "covered": 24,
+        "skipped": 0,
+        "pct": 80
+      }
+    },
+    "apps/web/src/components/tasks/TaskSettingsPanel.tsx": {
+      "lines": {
+        "total": 2,
+        "covered": 2,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 1,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 2,
+        "covered": 2,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/web/src/lib/color-tokens.ts": {
+      "lines": {
+        "total": 5,
+        "covered": 5,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 4,
+        "covered": 4,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 6,
+        "covered": 6,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 2,
+        "covered": 2,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/web/src/lib/shared/settings-search.ts": {
+      "lines": {
+        "total": 36,
+        "covered": 36,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 15,
+        "covered": 15,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 46,
+        "covered": 46,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 18,
+        "covered": 17,
+        "skipped": 0,
+        "pct": 94.44
+      }
+    },
+    "packages/adapters/src/repositories/PrismaTaskRepository.ts": {
+      "lines": {
+        "total": 56,
+        "covered": 56,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 29,
+        "covered": 29,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 68,
+        "covered": 68,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 48,
+        "covered": 46,
+        "skipped": 0,
+        "pct": 95.83
+      }
+    },
+    "packages/application/src/services/TaskService.ts": {
+      "lines": {
+        "total": 343,
+        "covered": 315,
+        "skipped": 0,
+        "pct": 91.83
+      },
+      "functions": {
+        "total": 33,
+        "covered": 32,
+        "skipped": 0,
+        "pct": 96.96
+      },
+      "statements": {
+        "total": 346,
+        "covered": 318,
+        "skipped": 0,
+        "pct": 91.9
+      },
+      "branches": {
+        "total": 201,
+        "covered": 174,
+        "skipped": 0,
+        "pct": 86.56
+      }
+    },
+    "packages/db/src/field-encryption.ts": {
+      "lines": {
+        "total": 78,
+        "covered": 75,
+        "skipped": 0,
+        "pct": 96.15
+      },
+      "functions": {
+        "total": 13,
+        "covered": 12,
+        "skipped": 0,
+        "pct": 92.3
+      },
+      "statements": {
+        "total": 82,
+        "covered": 76,
+        "skipped": 0,
+        "pct": 92.68
+      },
+      "branches": {
+        "total": 34,
+        "covered": 26,
+        "skipped": 0,
+        "pct": 76.47
+      }
+    },
+    "packages/domain/src/crm/task/automation/task-automation-constants.ts": {
+      "lines": {
+        "total": 86,
+        "covered": 84,
+        "skipped": 0,
+        "pct": 97.67
+      },
+      "functions": {
+        "total": 24,
+        "covered": 23,
+        "skipped": 0,
+        "pct": 95.83
+      },
+      "statements": {
+        "total": 102,
+        "covered": 100,
+        "skipped": 0,
+        "pct": 98.03
+      },
+      "branches": {
+        "total": 70,
+        "covered": 63,
+        "skipped": 0,
+        "pct": 90
+      }
+    },
+    "packages/validators/src/notifications.ts": {
+      "lines": {
+        "total": 20,
+        "covered": 20,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 20,
+        "covered": 20,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "packages/validators/src/scheduled-reports.ts": {
+      "lines": {
+        "total": 89,
+        "covered": 89,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 16,
+        "covered": 16,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 96,
+        "covered": 96,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 58,
+        "covered": 57,
+        "skipped": 0,
+        "pct": 98.27
+      }
+    },
+    "packages/validators/src/task-automation.ts": {
+      "lines": {
+        "total": 78,
+        "covered": 76,
+        "skipped": 0,
+        "pct": 97.43
+      },
+      "functions": {
+        "total": 15,
+        "covered": 14,
+        "skipped": 0,
+        "pct": 93.33
+      },
+      "statements": {
+        "total": 83,
+        "covered": 81,
+        "skipped": 0,
+        "pct": 97.59
+      },
+      "branches": {
+        "total": 31,
+        "covered": 29,
+        "skipped": 0,
+        "pct": 93.54
+      }
+    }
+  },
+  "per_file_line_delta_vs_before": {
+    "apps/api/src/http-server.ts": {
+      "lines": 0.73
+    },
+    "apps/api/src/main.ts": {
+      "lines": 0
+    },
+    "apps/api/src/modules/task/task.router.ts": {
+      "lines": 73.83
+    },
+    "apps/api/src/tracing/sentry.ts": {
+      "lines": 84.37
+    },
+    "apps/web/src/components/notifications/notification-utils.ts": {
+      "lines": 82.15
+    },
+    "apps/web/src/components/shared/variable-picker.tsx": {
+      "lines": 81.25
+    },
+    "apps/web/src/lib/shared/settings-search.ts": {
+      "lines": 33.34
+    },
+    "packages/adapters/src/repositories/PrismaTaskRepository.ts": {
+      "lines": 100
+    },
+    "packages/application/src/services/TaskService.ts": {
+      "lines": 91.83
+    },
+    "packages/db/src/field-encryption.ts": {
+      "lines": 92.31
+    },
+    "packages/validators/src/notifications.ts": {
+      "lines": 100
+    }
+  },
+  "not_in_istanbul_report": [
+    "apps/api/src/router.ts",
+    "apps/web/src/app/analytics/scheduled-reports/components/TagsTab.tsx",
+    "apps/web/src/app/analytics/scheduled-reports/components/schedule-colors.ts",
+    "apps/web/src/app/tasks/(list)/automation/page.tsx",
+    "packages/db/src/client.ts",
+    "packages/db/src/index.ts",
+    "packages/domain/src/crm/task/automation/index.ts",
+    "packages/domain/src/index.ts",
+    "packages/observability/src/node-instrumentations.ts",
+    "packages/validators/src/index.ts"
+  ]
+}
