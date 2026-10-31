@@ -13,6 +13,8 @@
 import { CONTACT_STATUSES } from '@intelliflow/domain';
 import type { ContactListSegment } from '@intelliflow/validators';
 
+import { isRecordId } from '@/lib/shared/record-id';
+
 /** UI sort dropdown values. */
 export type ContactSortValue = 'newest' | 'oldest' | 'name';
 
@@ -75,14 +77,6 @@ export const SORT_OPTIONS: Array<{ value: ContactSortValue; label: string }> = [
   { value: 'name', label: 'Name A-Z' },
 ];
 
-/**
- * Validates a UUID v4-shaped account id. Kept local (identical regex to the app
- * util) so this module stays free of React/hook imports.
- */
-function isValidAccountId(value: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-}
-
 /** Maps a UI sort value to the column + direction the API orders by. */
 export function getContactSortParams(sortOrder: string): ContactSortParams {
   switch (sortOrder) {
@@ -113,9 +107,7 @@ export function buildContactListQuery(state: ContactListFilterState): ContactLis
       ? (state.statusFilter as (typeof CONTACT_STATUSES)[number])
       : undefined,
     accountId:
-      state.companyFilter && isValidAccountId(state.companyFilter)
-        ? state.companyFilter
-        : undefined,
+      state.companyFilter && isRecordId(state.companyFilter) ? state.companyFilter : undefined,
     contactType: state.typeFilter || undefined,
     segment: state.segmentFilter || undefined,
     sortBy,
