@@ -148,6 +148,8 @@ export * from './report-templates';
 export * from './scheduled-reports';
 // Terms Acceptance Schemas (IFC-309)
 export * from './terms-acceptance';
+// Task Automation Schemas (PG-208)
+export * from './task-automation';
 
 // PG-207 (ADR-085): user mailboxes, email settings, suppression, signatures
 export * from './email-mailbox';

@@ -206,13 +206,13 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 8. CRM Core — Tasks (5 pages)
 
-| Route                  | Page            | Description                                                |
-| ---------------------- | --------------- | ---------------------------------------------------------- |
-| `/tasks`               | Task List       | Task queue with list/calendar toggle, filters, priority    |
-| `/tasks/[id]`          | Task Detail     | Task view with assignee and status                         |
-| `/tasks/task-types`    | Task Types      | Configure custom task type labels and icons                |
-| `/tasks/task-settings` | Task Settings   | Tenant-level task defaults: due-date rules, assignee       |
-| `/tasks/automation`    | Task Automation | Automation rules triggered on task status/priority changes |
+| Route                  | Page            | Description                                                                                         |
+| ---------------------- | --------------- | --------------------------------------------------------------------------------------------------- |
+| `/tasks`               | Task List       | Task queue with list/calendar toggle, filters, priority                                             |
+| `/tasks/[id]`          | Task Detail     | Task view with assignee and status                                                                  |
+| `/tasks/task-types`    | Task Types      | Configure custom task type labels and icons                                                         |
+| `/tasks/task-settings` | Task Settings   | Tenant-level task defaults: due-date rules, assignee                                                |
+| `/tasks/automation`    | Task Automation | Rules that create, assign and announce tasks on CRM events, a schedule or a signed webhook (PG-208) |
 
 ---
 

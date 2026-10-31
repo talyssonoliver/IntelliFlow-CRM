@@ -27,7 +27,7 @@ vi.mock('../../../security/rbac', () => ({
   },
 }));
 
-import { taskRouter } from '../task.router';
+import { taskListWhere, taskRouter, withAssigneeVisibility } from '../task.router';
 import {
   prismaMock,
   createTestContext,
@@ -327,10 +327,12 @@ describe('Task Router', () => {
 
       await caller.list({ ownerId: TEST_UUIDS.user1 });
 
+      // PG-208 ruling 6: visibility is "owner or assignee"; an explicit owner filter still narrows it.
       expect(prismaMock.task.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
             ownerId: TEST_UUIDS.user1,
+            AND: [{ OR: [{ ownerId: TEST_UUIDS.user1 }, { assigneeId: TEST_UUIDS.user1 }] }],
           }),
         })
       );
@@ -1100,5 +1102,135 @@ describe('Task Router', () => {
     it('should validate limit is positive', async () => {
       await expect(caller.list({ limit: 0 })).rejects.toThrow();
     });
+  });
+});
+
+// PG-208 owner ruling 6: non-admins see tasks they own OR are assigned to (list + detail).
+describe('Task Router assignee visibility (PG-208)', () => {
+  const userCtx = createTestContext();
+  const userId = TEST_UUIDS.user1;
+  const tenantId = TEST_UUIDS.tenant;
+  const caller = taskRouter.createCaller(userCtx);
+
+  function lastWhere(fn: { mock: { calls: unknown[][] } }) {
+    return (fn.mock.calls.at(-1)![0] as { where: Record<string, unknown> }).where;
+  }
+
+  it('lists owned or assigned tasks for a regular user', async () => {
+    prismaMock.task.findMany.mockResolvedValue([]);
+    prismaMock.task.count.mockResolvedValue(0);
+    await caller.list({});
+    const where = lastWhere(prismaMock.task.findMany as never);
+    expect(where.tenantId).toBe(tenantId);
+    expect(where.ownerId).toBeUndefined();
+    expect(where.AND).toEqual([{ OR: [{ ownerId: userId }, { assigneeId: userId }] }]);
+  });
+
+  it('keeps the search filter alongside the visibility filter', async () => {
+    prismaMock.task.findMany.mockResolvedValue([]);
+    prismaMock.task.count.mockResolvedValue(0);
+    await caller.list({ search: 'call' });
+    const where = lastWhere(prismaMock.task.findMany as never);
+    expect(where.OR).toEqual([
+      { title: { contains: 'call', mode: 'insensitive' } },
+      { description: { contains: 'call', mode: 'insensitive' } },
+    ]);
+    expect(where.AND).toEqual([{ OR: [{ ownerId: userId }, { assigneeId: userId }] }]);
+    expect(lastWhere(prismaMock.task.count as never)).toEqual(where);
+  });
+
+  it('getById finds an assigned task within the tenant only', async () => {
+    prismaMock.task.findFirst.mockResolvedValue({
+      id: TEST_UUIDS.task1,
+      assigneeId: userId,
+    } as never);
+    await caller.getById({ id: TEST_UUIDS.task1 });
+    const where = lastWhere(prismaMock.task.findFirst as never);
+    expect(where).toEqual({
+      id: TEST_UUIDS.task1,
+      tenantId,
+      AND: [{ OR: [{ ownerId: userId }, { assigneeId: userId }] }],
+    });
+  });
+
+  it("getByEntity shows a record's tasks the user owns or is assigned to", async () => {
+    prismaMock.task.findMany.mockResolvedValue([]);
+    await caller.getByEntity({ entityType: 'lead', entityId: TEST_UUIDS.lead1 });
+    const where = lastWhere(prismaMock.task.findMany as never);
+    expect(where).toEqual({
+      leadId: TEST_UUIDS.lead1,
+      tenantId,
+      AND: [{ OR: [{ ownerId: userId }, { assigneeId: userId }] }],
+    });
+  });
+
+  it('getById of a task neither owned nor assigned is NOT_FOUND', async () => {
+    prismaMock.task.findFirst.mockResolvedValue(null);
+    await expect(caller.getById({ id: TEST_UUIDS.task2 })).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    });
+  });
+});
+
+describe('withAssigneeVisibility (PG-208)', () => {
+  it('widens a manager team filter to the manager’s assigned tasks', () => {
+    expect(
+      withAssigneeVisibility({ tenantId: 't1', ownerId: { in: ['u1', 'member-1'] } }, 'u1')
+    ).toEqual({
+      tenantId: 't1',
+      AND: [{ OR: [{ ownerId: { in: ['u1', 'member-1'] } }, { assigneeId: 'u1' }] }],
+    });
+  });
+
+  it('leaves an admin where (no owner filter) unchanged', () => {
+    const where = { tenantId: 't1', status: { in: ['PENDING'] } };
+    expect(withAssigneeVisibility(where, 'u1')).toBe(where);
+  });
+
+  it('wraps a single-object AND instead of dropping it', () => {
+    expect(
+      withAssigneeVisibility({ tenantId: 't1', ownerId: 'u1', AND: { leadId: 'l1' } }, 'u1')
+    ).toEqual({
+      tenantId: 't1',
+      AND: [{ leadId: 'l1' }, { OR: [{ ownerId: 'u1' }, { assigneeId: 'u1' }] }],
+    });
+  });
+
+  it('appends to an existing AND', () => {
+    expect(
+      withAssigneeVisibility({ tenantId: 't1', ownerId: 'u1', AND: [{ leadId: 'l1' }] }, 'u1')
+    ).toEqual({
+      tenantId: 't1',
+      AND: [{ leadId: 'l1' }, { OR: [{ ownerId: 'u1' }, { assigneeId: 'u1' }] }],
+    });
+  });
+});
+
+describe('taskListWhere (PG-208)', () => {
+  const admin = { tenantId: 't1', userId: 'u1', role: 'ADMIN' } as never;
+  const user = { tenantId: 't1', userId: 'u1', role: 'USER' } as never;
+
+  it('keeps an admin owner filter a plain filter (never widened to assignee)', () => {
+    expect(taskListWhere(admin, { ownerId: 'u9', status: { in: ['PENDING'] } })).toEqual({
+      tenantId: 't1',
+      ownerId: 'u9',
+      status: { in: ['PENDING'] },
+    });
+  });
+
+  it('gives a user owner-or-assignee visibility, narrowed by an owner filter', () => {
+    expect(taskListWhere(user, {})).toEqual({
+      tenantId: 't1',
+      AND: [{ OR: [{ ownerId: 'u1' }, { assigneeId: 'u1' }] }],
+    });
+    expect(taskListWhere(user, { ownerId: 'u9' })).toEqual({
+      tenantId: 't1',
+      ownerId: 'u9',
+      AND: [{ OR: [{ ownerId: 'u1' }, { assigneeId: 'u1' }] }],
+    });
+  });
+
+  it('leaves an admin without filters unscoped by owner', () => {
+    expect(taskListWhere(admin, {})).toEqual({ tenantId: 't1' });
   });
 });

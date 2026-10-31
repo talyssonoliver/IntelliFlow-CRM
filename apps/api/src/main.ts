@@ -12,6 +12,7 @@ import { disconnectPrisma } from '@intelliflow/db';
 import { shutdownAllQueues } from '@intelliflow/platform/queues';
 import { startApiServer } from './http-server';
 import { stopBackgroundJobs } from './background-jobs';
+import { stopTaskAutomationRunner } from './modules/task/automation/task-automation-runner';
 
 initializeSentry()
   .catch((err) => {
@@ -50,7 +51,10 @@ process.on('SIGTERM', async () => {
   console.log('[API] SIGTERM received — shutting down gracefully');
   // Let a mid-flight tick finish, but never past the cap: the queues and Prisma
   // below must still close before Railway's SIGKILL.
-  await withCap(stopBackgroundJobs(), jobsDrainTimeoutMs(process.env));
+  await withCap(
+    Promise.all([stopTaskAutomationRunner(), stopBackgroundJobs()]),
+    jobsDrainTimeoutMs(process.env)
+  );
   await shutdownAllQueues();
   await disconnectPrisma();
   process.exit(0);

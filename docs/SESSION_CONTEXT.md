@@ -1,22 +1,22 @@
 # Session Context Snapshot
-_Generated: 2026-10-29T14:25:47.319Z • Branch: feat/pg-203-dsar_
+_Generated: 2026-10-30T20:52:09.890Z • Branch: feat/pg-208-task-automation_
 
 > Auto-generated from `apps/project-tracker/docs/metrics/`. **Do not edit by hand** — regenerate with `npx tsx apps/project-tracker/scripts/generate-context.ts`.
 
 ## Where We Left Off
 
-Active sprint: **Sprint 0** (sprint-0) — 100% complete (32/32 tasks). 18 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 3s ago; 626 total tasks across the project.
+Active sprint: **Sprint 0** (sprint-0) — 100% complete (32/32 tasks). 18 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 2s ago; 626 total tasks across the project.
 
 ## Project Health
 
-- **Progress:** 440/626 tasks completed (70.29%) — 168 backlog, 0 blocked, 18 in progress.
+- **Progress:** 441/626 tasks completed (70.45%) — 167 backlog, 0 blocked, 18 in progress.
 - **Focus band:** Sprints 15, 18, 19, 20 carry the earliest remaining backlog.
-- **Evidence issues:** 23 attested but CSV not updated; 10 sprint path mismatches.
+- **Evidence issues:** 22 attested but CSV not updated; 8 sprint path mismatches.
 - _Source: `docs/CURRENT_STATE_REPORT.md` (0s ago) — full sprint-by-sprint breakdown._
 
 ## Active Tasks (IN_PROGRESS)
 
-- **[EP-001-AI]** EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline) — started 23d ago, DevOps + Claude Code (STOA-Automation)
+- **[EP-001-AI]** EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline) — started 24d ago, DevOps + Claude Code (STOA-Automation)
   - artifacts: 0 created / 0 missing
 
 ## Recently Completed (last 5)
@@ -35,19 +35,19 @@ Active sprint: **Sprint 0** (sprint-0) — 100% complete (32/32 tasks). 18 task(
 
 ## Git Activity
 
-- **Branch:** `feat/pg-203-dsar` (21 dirty file(s))
-- **Dirty preview:** `.specify/sprints/sprint-18/attestations/PG-203/attestation.json`, `.specify/sprints/sprint-18/attestations/PG-203/task-tracking.json`, `.specify/sprints/sprint-18/execution/PG-203/PG-203-findings.md`, `.specify/sprints/sprint-18/planning/PG-203-plan.md`, `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` …
+- **Branch:** `feat/pg-208-task-automation` (127 dirty file(s))
+- **Dirty preview:** `.github/workflows/grafana-ai-alert-rules.yml`, `.specify/sprints/sprint-18/attestations/IFC-117/attestation-latest.json`, `.specify/sprints/sprint-18/attestations/IFC-117/attestation.json`, `.specify/sprints/sprint-18/attestations/IFC-117/task-tracking.json`, `.specify/sprints/sprint-18/context/IFC-117/IFC-117-agent-selection.json` …
 - **Last 10 commits:**
-  - `5c716511a` chore(pg-203): close the dsar review gaps and commit the missing evidence — Talysson Oliveira, 5 hours ago
-  - `4db3266f1` chore(pg-203): merge origin/main into the dsar branch — Talysson Oliveira, 14 hours ago
-  - `af914b757` fix(pg-203): guard batch-wide insights and send current names to the model — Talysson Oliveira, 14 hours ago
-  - `0b83c3740` fix(ai-worker): rethrow body read failures instead of reading the body twice (#1061) — Talysson Oliveira, 14 hours ago
-  - `f3e0e3421` fix(pg-203): erase records moved onto the address before the erasure lock — Talysson Oliveira, 15 hours ago
-  - `4f93b7b28` fix(workers): typecheck the workers only after the combined-worker build (#1058) — Talysson Oliveira, 15 hours ago
-  - `981a16d45` fix(pg-203): take the subject address lock before lifting a restriction — Talysson Oliveira, 16 hours ago
-  - `be2be4075` fix(env-008-ai): use lower-case alphanumeric SLO ids and a 7-day series check (#1057) — Talysson Oliveira, 16 hours ago
-  - `a09d3b694` fix(pg-203): clear the two sonar bugs in the ai-worker dsar guard — Talysson Oliveira, 17 hours ago
-  - `3844d4d18` test(pg-203): drop the rls cases the main merge brought back — Talysson Oliveira, 25 hours ago
+  - `3b5e16703` chore(tasks): refresh the pg-208 attestation for the db push integration fix (pg-208) — Talysson Oliveira, 6 hours ago
+  - `1d765b915` test(tasks): apply the automation migration on a db push test database (pg-208) — Talysson Oliveira, 6 hours ago
+  - `cf79859ac` chore(tasks): refresh the pg-208 attestation after the pg-203 main merge (pg-208) — Talysson Oliveira, 9 hours ago
+  - `403bd097b` chore(tasks): merge main into pg-208 after the pg-203 data subject requests (pg-208) — Talysson Oliveira, 10 hours ago
+  - `e032ee9f4` feat(pg-203): data subject requests with export, erasure and processing restriction (#1056) — Talysson Oliveira, 10 hours ago
+  - `c2e62a2f8` chore(tasks): resolve the schedule timezone debt entry now fixed in the pg-208 pr (pg-208) — Talysson Oliveira, 20 hours ago
+  - `42127081a` fix(tasks): make a schedule slot claim lose when the schedule was edited after the due read (pg-208) — Talysson Oliveira, 20 hours ago
+  - `28e3c906e` fix(tasks): write automation settings under a tenant lock so a re-enable is always stamped (pg-208) — Talysson Oliveira, 20 hours ago
+  - `0bde34ef4` chore(tasks): merge main into pg-208 after the cuid record id fix (pg-208) — Talysson Oliveira, 20 hours ago
+  - `7ba4ce7e7` fix(ai-worker): accept cuid record ids in job and queue schemas (#1095) — Talysson Oliveira, 21 hours ago
 
 ## Key File References
 

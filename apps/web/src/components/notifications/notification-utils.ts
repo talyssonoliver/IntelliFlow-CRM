@@ -126,6 +126,15 @@ const TYPE_CONFIGS: Record<string, TypeConfig> = {
     label: 'Comment',
     group: 'Task',
   },
+  // PG-208: Notify action of a task automation rule
+  task_automation: {
+    icon: 'auto_awesome',
+    bgColor: 'bg-violet-50 dark:bg-violet-900/20',
+    iconColor: 'text-violet-600 dark:text-violet-400',
+    ringColor: 'ring-violet-100 dark:ring-violet-800',
+    label: 'Task Automation',
+    group: 'Task',
+  },
   // Calendar/Appointment notifications
   appointment_scheduled: {
     icon: 'event_available',

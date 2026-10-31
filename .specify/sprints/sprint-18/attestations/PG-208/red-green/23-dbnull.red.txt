@@ -1,0 +1,60 @@
+# PG-208 Codex round 5 RED — 2026-10-21T08:20:58Z: router DB_NULL reverted to a bare null (JSON null), then restored.
+# Real-DB integration 'constraints: columns written by the router' fails on the trigger-column CHECK:
+[test-slot] slot1 taken for PG-208@feat/pg-208-task-automation (holding group-intelliflow-db): pnpm exec vitest run --project integration tests/integration/task-automation.test.ts -t triggerColumns
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208
+
+stdout | task-automation.test.ts
+🧪 Integration Test Suite Starting...
+📦 Using existing DATABASE_URL
+
+stdout | task-automation.test.ts
+✅ Integration Test Suite Complete
+
+ ❯ |integration| task-automation.test.ts (44 tests | 3 failed | 40 skipped) 592ms
+       × accepts a schedule rule from triggerColumns 290ms
+       × accepts a webhook rule from triggerColumns 16ms
+       × accepts a event rule from triggerColumns 20ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |integration| task-automation.test.ts > PG-208 task automation (real DB) > constraints: columns written by the router > accepts a schedule rule from triggerColumns
+ FAIL  |integration| task-automation.test.ts > PG-208 task automation (real DB) > constraints: columns written by the router > accepts a webhook rule from triggerColumns
+DriverAdapterError: new row for relation "task_automation_rules" violates check constraint "task_automation_rules_trigger_columns_check"
+ ❯ PrismaPgAdapter.onError ../../node_modules/.pnpm/@prisma+adapter-pg@7.8.0/node_modules/@prisma/adapter-pg/dist/index.mjs:642:11
+ ❯ PrismaPgAdapter.performIO ../../node_modules/.pnpm/@prisma+adapter-pg@7.8.0/node_modules/@prisma/adapter-pg/dist/index.mjs:637:12
+ ❯ PrismaPgAdapter.queryRaw ../../node_modules/.pnpm/@prisma+adapter-pg@7.8.0/node_modules/@prisma/adapter-pg/dist/index.mjs:568:30
+ ❯ e.interpretNode ../../node_modules/.pnpm/@prisma+client@7.8.0_prisma@7.8.0_@types+node@25.9.2_@types+react-dom@19.2.3_@types+react@19._o2za64sa4keen2f2bh6q2jl7o4/node_modules/@prisma/client-engine-runtime/src/interpreter/query-interpreter.ts:186:25
+ ❯ e.interpretNode ../../node_modules/.pnpm/@prisma+client@7.8.0_prisma@7.8.0_@types+node@25.9.2_@types+react-dom@19.2.3_@types+react@19._o2za64sa4keen2f2bh6q2jl7o4/node_modules/@prisma/client-engine-runtime/src/interpreter/query-interpreter.ts:213:40
+ ❯ e.interpretNode ../../node_modules/.pnpm/@prisma+client@7.8.0_prisma@7.8.0_@types+node@25.9.2_@types+react-dom@19.2.3_@types+react@19._o2za64sa4keen2f2bh6q2jl7o4/node_modules/@prisma/client-engine-runtime/src/interpreter/query-interpreter.ts:272:40
+ ❯ e.run ../../node_modules/.pnpm/@prisma+client@7.8.0_prisma@7.8.0_@types+node@25.9.2_@types+react-dom@19.2.3_@types+react@19._o2za64sa4keen2f2bh6q2jl7o4/node_modules/@prisma/client-engine-runtime/src/interpreter/query-interpreter.ts:94:22
+ ❯ execute ../../node_modules/.pnpm/@prisma+client@7.8.0_prisma@7.8.0_@types+node@25.9.2_@types+react-dom@19.2.3_@types+react@19._o2za64sa4keen2f2bh6q2jl7o4/node_modules/@prisma/client/src/runtime/core/engines/client/LocalExecutor.ts:81:11
+ ❯ jt.request ../../node_modules/.pnpm/@prisma+client@7.8.0_prisma@7.8.0_@types+node@25.9.2_@types+react-dom@19.2.3_@types+react@19._o2za64sa4keen2f2bh6q2jl7o4/node_modules/@prisma/client/src/runtime/core/engines/client/ClientEngine.ts:504:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |integration| task-automation.test.ts > PG-208 task automation (real DB) > constraints: columns written by the router > accepts a event rule from triggerColumns
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ task-automation.test.ts:355:32
+    353|         row.id
+    354|       );
+    355|       expect(stored[0].isNull).toBe(trigger.type !== 'ENTITY_EVENT' ||…
+       |                                ^
+    356|     });
+    357|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 1 passed | 40 skipped (44)
+   Start at  09:20:41
+   Duration  2.86s (transform 749ms, setup 565ms, import 1.49s, tests 592ms, environment 0ms)
+

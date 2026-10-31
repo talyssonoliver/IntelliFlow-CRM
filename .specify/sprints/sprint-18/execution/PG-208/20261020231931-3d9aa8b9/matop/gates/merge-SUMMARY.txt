@@ -1,0 +1,9 @@
+HEAD 5f11ac307ae54493d1a88142f0853adcde772e04
+01-typecheck rc=0 155s
+02-lint rc=0 44s
+03-web-suites rc=1 19s
+03b-coverage rc=1 1064s
+04-diff-coverage rc=0 0s
+07-integration rc=0 14s
+08-migrate-diff rc=1 10s
+DONE

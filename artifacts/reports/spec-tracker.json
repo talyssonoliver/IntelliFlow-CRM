@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-10-23T15:36:43.471Z",
+  "generated_at": "2026-10-28T23:22:37.345Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 527,
-    "completed": 439,
-    "partially_done": 23,
+    "completed": 440,
+    "partially_done": 22,
     "spec_only": 55,
     "uncertain": 10
   },
@@ -260,12 +260,6 @@
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
       "recommendation": "Run /exec PG-206 when ready for implementation."
-    },
-    {
-      "task_id": "PG-208",
-      "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec PG-208 when ready for implementation."
     },
     {
       "task_id": "PG-209",
@@ -1005,9 +999,9 @@
       "task_id": "ENV-008-AI",
       "title": "Automated Observability with Predictive Monitoring",
       "sprint": 18,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
+      "spec_path": ".specify/sprints/sprint-18/specifications/ENV-008-AI-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": true,
       "csv_status": "In Progress",
       "metric_status": "IN_PROGRESS",
@@ -8652,18 +8646,18 @@
       "task_id": "PG-208",
       "title": "Module Settings - Task Automation (/tasks/(list)/automation)",
       "sprint": 18,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
+      "spec_path": ".specify/sprints/sprint-18/specifications/PG-208-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-191"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-209",

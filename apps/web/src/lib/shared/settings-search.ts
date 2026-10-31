@@ -194,6 +194,16 @@ export const SETTINGS_ITEMS: SettingItem[] = [
     color: 'bg-primary/62',
     keywords: ['task', 'due date', 'offset', 'reminder', 'template', 'default'],
   },
+  {
+    id: 'task-automation',
+    title: 'Task Automation',
+    description:
+      'Rules that create, assign and announce tasks on CRM events, a schedule or a webhook',
+    href: '/tasks/automation',
+    icon: 'auto_awesome',
+    color: 'bg-primary/72',
+    keywords: ['task', 'automation', 'rule', 'round-robin', 'assign', 'recurring', 'webhook'],
+  },
 ];
 
 /**
@@ -218,6 +228,7 @@ export const SETTINGS_CATEGORIES: SettingCategory[] = [
       'tickets',
       'documents',
       'tasks',
+      'task-automation',
     ],
   },
   {

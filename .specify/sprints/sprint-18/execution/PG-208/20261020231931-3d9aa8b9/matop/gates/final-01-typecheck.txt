@@ -1,0 +1,217 @@
+[test-slot] slot1 taken for PG-208@feat/pg-208-task-automation: pnpm run typecheck
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> intelliflow-crm@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208
+> turbo run typecheck && pnpm run lint:sonar:guard
+
+• turbo 2.9.16
+
+   • Packages in scope: @intelliflow/adapters, @intelliflow/ai, @intelliflow/ai-worker, @intelliflow/api, @intelliflow/api-client, @intelliflow/application, @intelliflow/db, @intelliflow/domain, @intelliflow/events-worker, @intelliflow/ingestion-worker, @intelliflow/observability, @intelliflow/partner-sdk, @intelliflow/plan-linter, @intelliflow/platform, @intelliflow/project-tracker, @intelliflow/sdk, @intelliflow/search, @intelliflow/test-fixtures, @intelliflow/typescript-config, @intelliflow/ui, @intelliflow/validators, @intelliflow/web, @intelliflow/webhooks, @intelliflow/worker-shared, @intelliflow/workers
+   • Running typecheck in 25 packages
+   • Remote caching disabled, using shared worktree cache
+
+@intelliflow/webhooks:build: cache hit, suppressing logs 36998465a614d344
+@intelliflow/domain:build: cache hit, suppressing logs bba59d10564883d4
+@intelliflow/partner-sdk:build: cache hit, suppressing logs 01e62c2d0c7c50ce
+@intelliflow/observability:build: cache hit, suppressing logs 6da5ad9e0e0e5a33
+@intelliflow/db:build: cache hit, suppressing logs cb9b16fad3e24223
+@intelliflow/validators:build: cache hit, suppressing logs 5d2d46c0584f5026
+@intelliflow/application:build: cache hit, suppressing logs a92f3e549f27b699
+@intelliflow/platform:build: cache hit, suppressing logs 51de591bf63799a7
+@intelliflow/adapters:build: cache miss, executing 3e8c639332e19894
+@intelliflow/worker-shared:build: cache hit, suppressing logs 8a751aafa494dcbd
+@intelliflow/adapters:build: 
+@intelliflow/adapters:build: > @intelliflow/adapters@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208\packages\adapters
+@intelliflow/adapters:build: > tsup src/index.ts src/external/OllamaAIService.ts src/external/LiteLLMAIService.ts --format cjs,esm --experimental-dts
+@intelliflow/adapters:build: 
+@intelliflow/adapters:build: CLI Building entry: src/index.ts, src/external/LiteLLMAIService.ts, src/external/OllamaAIService.ts
+@intelliflow/adapters:build: CLI Using tsconfig: tsconfig.json
+@intelliflow/adapters:build: CLI tsup v8.5.1
+@intelliflow/adapters:build: TSC Build start
+@intelliflow/adapters:build: TSC ⚡️ Build success in 8300ms
+@intelliflow/adapters:build: DTS Build start
+@intelliflow/adapters:build: CLI Target: es2022
+@intelliflow/adapters:build: CJS Build start
+@intelliflow/adapters:build: ESM Build start
+@intelliflow/adapters:build: Analysis will use the bundled TypeScript version 5.8.2
+@intelliflow/adapters:build: *** The target project appears to use TypeScript 5.9.3 which is newer than the bundled compiler engine; consider upgrading API Extractor.
+@intelliflow/adapters:build: Writing package typings: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208\packages\adapters\dist\_tsup-dts-rollup.d.ts
+@intelliflow/adapters:build: Analysis will use the bundled TypeScript version 5.8.2
+@intelliflow/adapters:build: *** The target project appears to use TypeScript 5.9.3 which is newer than the bundled compiler engine; consider upgrading API Extractor.
+@intelliflow/adapters:build: Writing package typings: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208\packages\adapters\dist\_tsup-dts-rollup.d.mts
+@intelliflow/adapters:build: DTS ⚡️ Build success in 8730ms
+@intelliflow/adapters:build: CJS dist\external\OllamaAIService.js  6.55 KB
+@intelliflow/adapters:build: CJS dist\external\LiteLLMAIService.js 7.85 KB
+@intelliflow/adapters:build: CJS dist\index.js                     701.70 KB
+@intelliflow/adapters:build: CJS ⚡️ Build success in 8817ms
+@intelliflow/adapters:build: ESM dist\external\LiteLLMAIService.mjs 6.55 KB
+@intelliflow/adapters:build: ESM dist\external\OllamaAIService.mjs  5.45 KB
+@intelliflow/adapters:build: ESM dist\bias-detector-X67DABQE.mjs    119.00 B
+@intelliflow/adapters:build: ESM dist\chunk-Y6FXYEAI.mjs            390.00 B
+@intelliflow/adapters:build: ESM dist\chunk-7AXQV473.mjs            2.85 KB
+@intelliflow/adapters:build: ESM dist\index.mjs                     672.11 KB
+@intelliflow/adapters:build: ESM ⚡️ Build success in 8817ms
+@intelliflow/events-worker:build: cache miss, executing baf69165f9095b7f
+@intelliflow/ai-worker:build: cache miss, executing 3ea78e9c3ca7a4e7
+@intelliflow/events-worker:build: 
+@intelliflow/events-worker:build: > @intelliflow/events-worker@0.0.1 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208\apps\workers\events-worker
+@intelliflow/events-worker:build: > tsup src/main.ts --format cjs,esm --dts
+@intelliflow/events-worker:build: 
+@intelliflow/ai-worker:build:  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+@intelliflow/ai-worker:build: 
+@intelliflow/ai-worker:build: > @intelliflow/ai-worker@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208\apps\ai-worker
+@intelliflow/ai-worker:build: > tsup src/index.ts --format cjs,esm && tsc -p tsconfig.json --emitDeclarationOnly
+@intelliflow/ai-worker:build: 
+@intelliflow/events-worker:build: CLI Building entry: src/main.ts
+@intelliflow/events-worker:build: CLI Using tsconfig: tsconfig.json
+@intelliflow/events-worker:build: CLI tsup v8.5.1
+@intelliflow/events-worker:build: CLI Target: es2022
+@intelliflow/events-worker:build: CJS Build start
+@intelliflow/events-worker:build: ESM Build start
+@intelliflow/events-worker:build: CJS dist\main.js 68.94 KB
+@intelliflow/events-worker:build: CJS ⚡️ Build success in 109ms
+@intelliflow/events-worker:build: ESM dist\main.mjs 67.22 KB
+@intelliflow/events-worker:build: ESM ⚡️ Build success in 109ms
+@intelliflow/ai-worker:build: CLI Building entry: src/index.ts
+@intelliflow/ai-worker:build: CLI Using tsconfig: tsconfig.json
+@intelliflow/ai-worker:build: CLI tsup v8.5.1
+@intelliflow/ai-worker:build: CLI Target: es2022
+@intelliflow/ai-worker:build: CJS Build start
+@intelliflow/ai-worker:build: ESM Build start
+@intelliflow/events-worker:build: DTS Build start
+@intelliflow/ai-worker:build: ESM dist\rag-context.chain-IDEYINFF.mjs         553.00 B
+@intelliflow/ai-worker:build: ESM dist\retrieval-service-EZHTIMR5.mjs         34.57 KB
+@intelliflow/ai-worker:build: ESM dist\ingestion-workers-KMZNURGU.mjs         7.51 KB
+@intelliflow/ai-worker:build: ESM dist\ai-worker-JGUTMOGO.mjs                 451.00 B
+@intelliflow/ai-worker:build: ESM dist\notification-email-worker-UZH7XZ5Y.mjs 6.73 KB
+@intelliflow/ai-worker:build: ESM dist\index.mjs                              89.22 KB
+@intelliflow/ai-worker:build: ESM dist\chunk-VFF326N6.mjs                     7.82 KB
+@intelliflow/ai-worker:build: ESM dist\chunk-GYZ5JDU2.mjs                     7.50 KB
+@intelliflow/ai-worker:build: ESM dist\chunk-JMUZ3SIZ.mjs                     10.45 KB
+@intelliflow/ai-worker:build: ESM dist\cost-tracker-UO4DJF6B.mjs              172.00 B
+@intelliflow/ai-worker:build: ESM dist\ai.config-TSUREFNU.mjs                 281.00 B
+@intelliflow/ai-worker:build: ESM dist\scoring.chain-ZD62XOCU.mjs             427.00 B
+@intelliflow/ai-worker:build: ESM dist\chunk-43YIJMKA.mjs                     71.64 KB
+@intelliflow/ai-worker:build: ESM dist\chunk-OLLVAK6C.mjs                     1.29 KB
+@intelliflow/ai-worker:build: ESM dist\embedding.chain-ZA6WT3JJ.mjs           319.00 B
+@intelliflow/ai-worker:build: ESM dist\chunk-QBVB7FAK.mjs                     7.51 KB
+@intelliflow/ai-worker:build: ESM dist\qualification.agent-JTVIJIHI.mjs       519.00 B
+@intelliflow/ai-worker:build: ESM dist\chunk-LNEETQ6M.mjs                     6.08 KB
+@intelliflow/ai-worker:build: ESM dist\chunk-CDVSIDZ6.mjs                     45.82 KB
+@intelliflow/ai-worker:build: ESM dist\audit-log-ARFV6TGO.mjs                 209.00 B
+@intelliflow/ai-worker:build: ESM dist\chunk-AUO7534U.mjs                     18.30 KB
+@intelliflow/ai-worker:build: ESM dist\chunk-3QPHCNSB.mjs                     19.30 KB
+@intelliflow/ai-worker:build: ESM dist\chunk-KKTUSRLH.mjs                     7.91 KB
+@intelliflow/ai-worker:build: ESM dist\chunk-OMS32KMR.mjs                     3.75 KB
+@intelliflow/ai-worker:build: ESM dist\contact-embed-worker-PWD2EBTS.mjs      349.00 B
+@intelliflow/ai-worker:build: ESM dist\chunk-JJF4IYLE.mjs                     597.13 KB
+@intelliflow/ai-worker:build: ESM dist\chunk-76HNXZWQ.mjs                     1.95 KB
+@intelliflow/ai-worker:build: ESM dist\chunk-YYOKLJEE.mjs                     1.60 KB
+@intelliflow/ai-worker:build: ESM ⚡️ Build success in 464ms
+@intelliflow/ai-worker:build: CJS dist\index.js 1021.43 KB
+@intelliflow/ai-worker:build: CJS ⚡️ Build success in 466ms
+@intelliflow/events-worker:build: DTS ⚡️ Build success in 5892ms
+@intelliflow/events-worker:build: DTS dist\main.d.ts  10.34 KB
+@intelliflow/events-worker:build: DTS dist\main.d.mts 10.34 KB
+@intelliflow/ingestion-worker:build: cache miss, executing 9e5bc5c0f040a88e
+@intelliflow/api:build: cache miss, executing 12e0a42a61a9b0ef
+@intelliflow/ingestion-worker:build: 
+@intelliflow/ingestion-worker:build: > @intelliflow/ingestion-worker@0.0.1 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208\apps\workers\ingestion-worker
+@intelliflow/ingestion-worker:build: > tsup src/main.ts --format cjs,esm --dts
+@intelliflow/ingestion-worker:build: 
+@intelliflow/api:build: 
+@intelliflow/api:build: > @intelliflow/api@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208\apps\api
+@intelliflow/api:build: > tsup
+@intelliflow/api:build: 
+@intelliflow/ingestion-worker:build: CLI Building entry: src/main.ts
+@intelliflow/ingestion-worker:build: CLI Using tsconfig: tsconfig.json
+@intelliflow/ingestion-worker:build: CLI tsup v8.5.1
+@intelliflow/ingestion-worker:build: CLI Target: es2022
+@intelliflow/ingestion-worker:build: CJS Build start
+@intelliflow/ingestion-worker:build: ESM Build start
+@intelliflow/ingestion-worker:build: CJS dist\main.js 16.26 KB
+@intelliflow/ingestion-worker:build: CJS ⚡️ Build success in 251ms
+@intelliflow/ingestion-worker:build: ESM dist\main.mjs 14.67 KB
+@intelliflow/ingestion-worker:build: ESM ⚡️ Build success in 264ms
+@intelliflow/api:build: CLI Building entry: src/index.ts, src/main.ts, src/ws-server.ts
+@intelliflow/api:build: CLI Using tsconfig: tsconfig.build.json
+@intelliflow/api:build: CLI tsup v8.5.1
+@intelliflow/api:build: CLI Using tsup config: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208\apps\api\tsup.config.ts
+@intelliflow/api:build: CLI Target: es2022
+@intelliflow/api:build: CLI Cleaning output folder
+@intelliflow/api:build: CJS Build start
+@intelliflow/api:build: ESM Build start
+@intelliflow/ingestion-worker:build: DTS Build start
+@intelliflow/api:build: DTS Build start
+@intelliflow/api:build: ESM dist\chunk-FH72RMLK.mjs                0 B
+@intelliflow/api:build: ESM dist\escalation-target-H4QBBF4Z.mjs    131.00 B
+@intelliflow/api:build: ESM dist\inbound.router-GSGEWMRT.mjs       350.00 B
+@intelliflow/api:build: ESM dist\appointments.router-YXJZSWFV.mjs  311.00 B
+@intelliflow/api:build: ESM dist\cases.router-XJYP2BPC.mjs         204.00 B
+@intelliflow/api:build: ESM dist\ws-server.mjs                     4.86 KB
+@intelliflow/api:build: ESM dist\chunk-5DX23VSP.mjs                4.23 KB
+@intelliflow/api:build: ESM dist\index.mjs                         22.57 KB
+@intelliflow/api:build: ESM dist\chunk-ITF5OBY4.mjs                23.62 KB
+@intelliflow/api:build: ESM dist\main.mjs                          77.09 KB
+@intelliflow/api:build: ESM dist\chunk-TMIBOYC5.mjs                58.82 KB
+@intelliflow/api:build: ESM dist\chunk-JFF6C52X.mjs                3.12 KB
+@intelliflow/api:build: ESM dist\chunk-SDUC6J7S.mjs                35.94 KB
+@intelliflow/api:build: ESM dist\audit-XXEDSSNO.mjs                865.00 B
+@intelliflow/api:build: ESM dist\lead.router-6XUF5GNZ.mjs          264.00 B
+@intelliflow/api:build: ESM dist\chunk-TFVEIYEU.mjs                3.36 KB
+@intelliflow/api:build: ESM dist\notifications.router-TEGBPHTR.mjs 306.00 B
+@intelliflow/api:build: ESM dist\contact.router-XD34T3ET.mjs       270.00 B
+@intelliflow/api:build: ESM dist\chunk-RCWQWZB6.mjs                5.07 KB
+@intelliflow/api:build: ESM dist\container-WEY2XHGI.mjs            325.00 B
+@intelliflow/api:build: ESM dist\chunk-KXMF6UTF.mjs                54.79 KB
+@intelliflow/api:build: ESM dist\chunk-WEY37ZVH.mjs                91.44 KB
+@intelliflow/api:build: ESM dist\chunk-2SQESQ43.mjs                196.67 KB
+@intelliflow/api:build: ESM dist\chunk-7Y27MIJ3.mjs                20.79 KB
+@intelliflow/api:build: ESM dist\chunk-2SY57COA.mjs                51.05 KB
+@intelliflow/api:build: ESM dist\chunk-J6R2QKEE.mjs                23.02 KB
+@intelliflow/api:build: ESM dist\chunk-Y6FXYEAI.mjs                390.00 B
+@intelliflow/api:build: ESM dist\chunk-W32IZUK4.mjs                1.21 MB
+@intelliflow/api:build: ESM ⚡️ Build success in 1136ms
+@intelliflow/api:build: CJS dist\ws-server.js 1.80 MB
+@intelliflow/api:build: CJS dist\main.js      1.90 MB
+@intelliflow/api:build: CJS dist\index.js     1.86 MB
+@intelliflow/api:build: CJS ⚡️ Build success in 1206ms
+@intelliflow/ingestion-worker:build: DTS ⚡️ Build success in 4928ms
+@intelliflow/ingestion-worker:build: DTS dist\main.d.ts  3.71 KB
+@intelliflow/ingestion-worker:build: DTS dist\main.d.mts 3.71 KB
+@intelliflow/api:build: "isLiveMembership", "liveMembershipWhere", "seatUserWhere" and "MembershipLiveness" are imported from external module "@intelliflow/db" but never used in "src/security/membership.ts".
+@intelliflow/api:build: "NODE_TYPE_IDS" is imported from external module "@intelliflow/domain" but never used in "src/modules/workflow/workflow.router.ts".
+@intelliflow/api:build: "ACTIVE_TENANT_HEADER" is imported from external module "@intelliflow/partner-sdk" but never used in "src/security/membership.ts".
+@intelliflow/api:build: DTS ⚡️ Build success in 49686ms
+@intelliflow/api:build: DTS dist\main.d.ts       13.00 B
+@intelliflow/api:build: DTS dist\ws-server.d.ts  1.70 KB
+@intelliflow/api:build: DTS dist\index.d.ts      919.75 KB
+@intelliflow/api:build: DTS dist\main.d.mts      13.00 B
+@intelliflow/api:build: DTS dist\ws-server.d.mts 1.70 KB
+@intelliflow/api:build: DTS dist\index.d.mts     919.75 KB
+@intelliflow/api-client:build: cache miss, executing 4031f3601abe200a
+@intelliflow/api-client:build: 
+@intelliflow/api-client:build: > @intelliflow/api-client@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208\packages\api-client
+@intelliflow/api-client:build: > tsup src/index.ts --format cjs,esm
+@intelliflow/api-client:build: 
+@intelliflow/api-client:build: CLI Building entry: src/index.ts
+@intelliflow/api-client:build: CLI Using tsconfig: tsconfig.json
+@intelliflow/api-client:build: CLI tsup v8.5.1
+@intelliflow/api-client:build: CLI Target: es2020
+@intelliflow/api-client:build: CJS Build start
+@intelliflow/api-client:build: ESM Build start
+@intelliflow/api-client:build: ESM dist\index.mjs 1.53 KB
+@intelliflow/api-client:build: ESM ⚡️ Build success in 40ms
+@intelliflow/api-client:build: CJS dist\index.js 2.77 KB
+@intelliflow/api-client:build: CJS ⚡️ Build success in 41ms
+
+ Tasks:    38 successful, 38 total
+Cached:    23 cached, 38 total
+  Time:    2m14.912s 
+
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> intelliflow-crm@0.1.0 lint:sonar:guard C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208
+> tsx tools/scripts/lint-sonar-guard.ts
+
+sonar-guard: no changed TS/TSX files found, skipping.

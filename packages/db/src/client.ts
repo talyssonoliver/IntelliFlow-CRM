@@ -152,7 +152,8 @@ const createPrismaClient = () => {
   }
 
   // M4 ENCRYPTION WIRING — ACTIVE via bespoke field-encryption extension.
-  // Encrypts ChainVersion.prompt, ChainVersion.systemPrompt, WebhookEndpoint.secret
+  // Encrypts ChainVersion.prompt, ChainVersion.systemPrompt, WebhookEndpoint.secret,
+  // TaskAutomationRule.webhookSecret / webhookSecretPrevious (PG-208)
   // transparently on write; decrypts on read.
   const encKey = process.env['PRISMA_FIELD_ENCRYPTION_KEY'];
   const encrypted = encKey
