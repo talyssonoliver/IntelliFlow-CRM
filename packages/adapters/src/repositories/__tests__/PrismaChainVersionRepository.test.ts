@@ -229,23 +229,37 @@ describe('PrismaChainVersionRepository', () => {
   // findById Tests
   // ======================================================================
   describe('findById', () => {
-    it('should return record when found', async () => {
-      vi.mocked(mockPrisma.chainVersion.findUnique).mockResolvedValue(createMockRow() as any);
+    // #1075 review: every id lookup is tenant-scoped, so a version id from another
+    // tenant finds nothing.
+    it('should return record when found in the tenant', async () => {
+      vi.mocked(mockPrisma.chainVersion.findFirst).mockResolvedValue(createMockRow() as any);
 
-      const result = await repository.findById(VERSION_ID_1);
+      const result = await repository.findById(VERSION_ID_1, TENANT_ID);
 
       expect(result).not.toBeNull();
       expect(result!.id).toBe(VERSION_ID_1);
       expect(result!.chainType).toBe('SCORING');
-      expect(mockPrisma.chainVersion.findUnique).toHaveBeenCalledWith({
-        where: { id: VERSION_ID_1 },
+      expect(mockPrisma.chainVersion.findFirst).toHaveBeenCalledWith({
+        where: { id: VERSION_ID_1, tenantId: TENANT_ID },
+      });
+      expect(mockPrisma.chainVersion.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('should scope the lookup to the given tenant', async () => {
+      vi.mocked(mockPrisma.chainVersion.findFirst).mockResolvedValue(null);
+
+      const result = await repository.findById(VERSION_ID_1, OTHER_TENANT_ID);
+
+      expect(result).toBeNull();
+      expect(mockPrisma.chainVersion.findFirst).toHaveBeenCalledWith({
+        where: { id: VERSION_ID_1, tenantId: OTHER_TENANT_ID },
       });
     });
 
     it('should return null when not found', async () => {
-      vi.mocked(mockPrisma.chainVersion.findUnique).mockResolvedValue(null);
+      vi.mocked(mockPrisma.chainVersion.findFirst).mockResolvedValue(null);
 
-      const result = await repository.findById(randomUUID());
+      const result = await repository.findById(randomUUID(), TENANT_ID);
 
       expect(result).toBeNull();
     });
@@ -259,9 +273,9 @@ describe('PrismaChainVersionRepository', () => {
         rolloutPercent: 50,
         experimentId: 'exp-abc',
       });
-      vi.mocked(mockPrisma.chainVersion.findUnique).mockResolvedValue(row as any);
+      vi.mocked(mockPrisma.chainVersion.findFirst).mockResolvedValue(row as any);
 
-      const result = await repository.findById(VERSION_ID_1);
+      const result = await repository.findById(VERSION_ID_1, TENANT_ID);
 
       expect(result!.additionalParams).toEqual({ topP: 0.9 });
       expect(result!.description).toBe('Test description');
@@ -503,42 +517,42 @@ describe('PrismaChainVersionRepository', () => {
   describe('field mapping', () => {
     it('should map config to additionalParams', async () => {
       const config = { topP: 0.9, stop: ['\n'] };
-      vi.mocked(mockPrisma.chainVersion.findUnique).mockResolvedValue(
+      vi.mocked(mockPrisma.chainVersion.findFirst).mockResolvedValue(
         createMockRow({ config }) as any
       );
 
-      const result = await repository.findById(VERSION_ID_1);
+      const result = await repository.findById(VERSION_ID_1, TENANT_ID);
 
       expect(result!.additionalParams).toEqual(config);
     });
 
     it('should map null config to null additionalParams', async () => {
-      vi.mocked(mockPrisma.chainVersion.findUnique).mockResolvedValue(
+      vi.mocked(mockPrisma.chainVersion.findFirst).mockResolvedValue(
         createMockRow({ config: null }) as any
       );
 
-      const result = await repository.findById(VERSION_ID_1);
+      const result = await repository.findById(VERSION_ID_1, TENANT_ID);
 
       expect(result!.additionalParams).toBeNull();
     });
 
     it('should default maxTokens to 0 when null', async () => {
-      vi.mocked(mockPrisma.chainVersion.findUnique).mockResolvedValue(
+      vi.mocked(mockPrisma.chainVersion.findFirst).mockResolvedValue(
         createMockRow({ maxTokens: null }) as any
       );
 
-      const result = await repository.findById(VERSION_ID_1);
+      const result = await repository.findById(VERSION_ID_1, TENANT_ID);
 
       expect(result!.maxTokens).toBe(0);
     });
 
     it('should preserve Date types for createdAt', async () => {
       const date = new Date('2026-01-15T10:00:00Z');
-      vi.mocked(mockPrisma.chainVersion.findUnique).mockResolvedValue(
+      vi.mocked(mockPrisma.chainVersion.findFirst).mockResolvedValue(
         createMockRow({ createdAt: date }) as any
       );
 
-      const result = await repository.findById(VERSION_ID_1);
+      const result = await repository.findById(VERSION_ID_1, TENANT_ID);
 
       expect(result!.createdAt).toEqual(date);
     });

@@ -13,6 +13,7 @@
 import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { TRPCError } from '@trpc/server';
+import { NotFoundError } from '@intelliflow/application';
 import { createTRPCRouter, protectedProcedure, tenantProcedure, adminProcedure } from '../../trpc';
 import {
   createChainVersionSchema,
@@ -37,6 +38,21 @@ function getChainVersionService(ctx: Context) {
     });
   }
   return ctx.services.chainVersion;
+}
+
+/**
+ * Every id-based call is scoped to the caller's tenant (#1075 review): the service
+ * reports another tenant's version id as not found, and so does the API.
+ */
+async function scoped<T>(call: () => Promise<T>): Promise<T> {
+  try {
+    return await call();
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: error.message });
+    }
+    throw error;
+  }
 }
 
 export const chainVersionRouter = createTRPCRouter({
@@ -73,7 +89,14 @@ export const chainVersionRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const chainVersionService = getChainVersionService(ctx);
-      return chainVersionService.updateVersion(input.versionId, input.data, typedCtx.tenant.userId);
+      return scoped(() =>
+        chainVersionService.updateVersion(
+          input.versionId,
+          typedCtx.tenant.tenantId,
+          input.data,
+          typedCtx.tenant.userId
+        )
+      );
     }),
 
   /**
@@ -84,7 +107,13 @@ export const chainVersionRouter = createTRPCRouter({
     const chainVersionService = getChainVersionService(ctx);
     const typedCtx = getTenantContext(ctx);
 
-    return chainVersionService.activateVersion(input.versionId, typedCtx.tenant.userId);
+    return scoped(() =>
+      chainVersionService.activateVersion(
+        input.versionId,
+        typedCtx.tenant.tenantId,
+        typedCtx.tenant.userId
+      )
+    );
   }),
 
   /**
@@ -97,7 +126,13 @@ export const chainVersionRouter = createTRPCRouter({
       const chainVersionService = getChainVersionService(ctx);
       const typedCtx = getTenantContext(ctx);
 
-      return chainVersionService.deprecateVersion(input.versionId, typedCtx.tenant.userId);
+      return scoped(() =>
+        chainVersionService.deprecateVersion(
+          input.versionId,
+          typedCtx.tenant.tenantId,
+          typedCtx.tenant.userId
+        )
+      );
     }),
 
   /**
@@ -110,7 +145,13 @@ export const chainVersionRouter = createTRPCRouter({
       const chainVersionService = getChainVersionService(ctx);
       const typedCtx = getTenantContext(ctx);
 
-      return chainVersionService.archiveVersion(input.versionId, typedCtx.tenant.userId);
+      return scoped(() =>
+        chainVersionService.archiveVersion(
+          input.versionId,
+          typedCtx.tenant.tenantId,
+          typedCtx.tenant.userId
+        )
+      );
     }),
 
   /**
@@ -121,10 +162,13 @@ export const chainVersionRouter = createTRPCRouter({
     const chainVersionService = getChainVersionService(ctx);
     const typedCtx = getTenantContext(ctx);
 
-    return chainVersionService.rollbackToVersion(
-      input.versionId,
-      input.reason,
-      typedCtx.tenant.userId
+    return scoped(() =>
+      chainVersionService.rollbackToVersion(
+        input.versionId,
+        typedCtx.tenant.tenantId,
+        input.reason,
+        typedCtx.tenant.userId
+      )
     );
   }),
 
@@ -140,7 +184,18 @@ export const chainVersionRouter = createTRPCRouter({
     .input(z.object({ versionId: recordIdSchema }))
     .query(async ({ ctx, input }) => {
       const chainVersionService = getChainVersionService(ctx);
-      return chainVersionService.getVersion(input.versionId);
+      const typedCtx = getTenantContext(ctx);
+      const version = await chainVersionService.getVersion(
+        input.versionId,
+        typedCtx.tenant.tenantId
+      );
+      if (!version) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Chain version not found: ${input.versionId}`,
+        });
+      }
+      return version;
     }),
 
   /**
@@ -259,7 +314,14 @@ export const chainVersionRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const chainVersionService = getChainVersionService(ctx);
-      return chainVersionService.getVersionAuditLog(input.versionId, input.limit);
+      const typedCtx = getTenantContext(ctx);
+      return scoped(() =>
+        chainVersionService.getVersionAuditLog(
+          input.versionId,
+          typedCtx.tenant.tenantId,
+          input.limit
+        )
+      );
     }),
 
   // ===========================================================================
@@ -292,7 +354,14 @@ export const chainVersionRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const chainVersionService = getChainVersionService(ctx);
-      return chainVersionService.compareVersions(input.versionIdA, input.versionIdB);
+      const typedCtx = getTenantContext(ctx);
+      return scoped(() =>
+        chainVersionService.compareVersions(
+          input.versionIdA,
+          input.versionIdB,
+          typedCtx.tenant.tenantId
+        )
+      );
     }),
 
   // ===========================================================================
