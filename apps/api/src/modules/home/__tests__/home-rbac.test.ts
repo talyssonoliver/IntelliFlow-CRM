@@ -75,6 +75,9 @@ describe('IFC-211 home router — Goal Settings RBAC', () => {
     // Sensible defaults for getDailyGoal's currentValue queries.
     prismaMock.user.findUnique.mockResolvedValue({ preferences: {} } as never);
     prismaMock.user.update.mockResolvedValue({} as never);
+    // setTeamMemberGoal reads and writes the target inside the tenant (#1075 review).
+    prismaMock.user.findFirst.mockResolvedValue({ preferences: {} } as never);
+    prismaMock.user.updateMany.mockResolvedValue({ count: 1 } as never);
     (prismaMock.opportunity as { aggregate: ReturnType<typeof vi.fn> }).aggregate.mockResolvedValue(
       {
         _sum: { value: null },
@@ -142,6 +145,22 @@ describe('IFC-211 home router — Goal Settings RBAC', () => {
 
     beforeEach(() => {
       teamSpy = vi.spyOn(RBACService.prototype, 'isUserOnManagerTeam');
+      // #1075 review: an unfiltered lookup finds any tenant's user; the scoped one
+      // honours its where clause.
+      const users = [
+        { id: target, tenantId: TEST_UUIDS.tenant, preferences: {} },
+        { id: TEST_UUIDS.otherTenantUser, tenantId: 'cmothertenant000l8086a1b2c', preferences: {} },
+      ];
+      prismaMock.user.findUnique.mockImplementation(
+        (async ({ where }: any) => users.find((u) => u.id === where.id) ?? null) as never
+      );
+      prismaMock.user.findFirst.mockImplementation(
+        (async ({ where }: any) =>
+          users.find((u) => u.id === where.id && u.tenantId === where.tenantId) ?? null) as never
+      );
+      prismaMock.user.updateMany.mockImplementation((async ({ where }: any) => ({
+        count: users.filter((u) => u.id === where.id && u.tenantId === where.tenantId).length,
+      })) as never);
     });
 
     it('MANAGER on the target team may set the goal (audit scope=team)', async () => {
@@ -149,8 +168,8 @@ describe('IFC-211 home router — Goal Settings RBAC', () => {
       const caller = homeRouter.createCaller(ctxWithRole('MANAGER'));
       const res = await caller.setTeamMemberGoal(input);
       expect(res.success).toBe(true);
-      expect(prismaMock.user.update).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: target } })
+      expect(prismaMock.user.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: target, tenantId: TEST_UUIDS.tenant } })
       );
       expect(logAction).toHaveBeenCalledWith(
         'UPDATE',
@@ -173,6 +192,7 @@ describe('IFC-211 home router — Goal Settings RBAC', () => {
         expect.objectContaining({ actorId: TEST_UUIDS.user1 })
       );
       expect(prismaMock.user.update).not.toHaveBeenCalled();
+      expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
     });
 
     it('cross-tenant target (not on any of the manager teams) is denied', async () => {
@@ -183,6 +203,7 @@ describe('IFC-211 home router — Goal Settings RBAC', () => {
         caller.setTeamMemberGoal({ ...input, targetUserId: TEST_UUIDS.otherTenantUser })
       ).rejects.toMatchObject({ code: 'FORBIDDEN' });
       expect(prismaMock.user.update).not.toHaveBeenCalled();
+      expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
     });
 
     it('SALES_REP lacks goal:manage and is denied (regardless of team)', async () => {
@@ -191,6 +212,7 @@ describe('IFC-211 home router — Goal Settings RBAC', () => {
       await expect(caller.setTeamMemberGoal(input)).rejects.toMatchObject({ code: 'FORBIDDEN' });
       expect(logPermissionDenied).toHaveBeenCalled();
       expect(prismaMock.user.update).not.toHaveBeenCalled();
+      expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
     });
 
     it('rejects setting your own goal via the team endpoint (BAD_REQUEST)', async () => {
@@ -199,6 +221,7 @@ describe('IFC-211 home router — Goal Settings RBAC', () => {
         caller.setTeamMemberGoal({ ...input, targetUserId: TEST_UUIDS.user1 })
       ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
       expect(prismaMock.user.update).not.toHaveBeenCalled();
+      expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
     });
 
     it('ADMIN bypasses the team-membership check (no team lookup) and is audited', async () => {
@@ -213,6 +236,16 @@ describe('IFC-211 home router — Goal Settings RBAC', () => {
         TEST_UUIDS.tenant,
         expect.objectContaining({ metadata: { scope: 'team' } })
       );
+    });
+
+    it("ADMIN cannot set another tenant's user goal (NOT_FOUND, nothing written)", async () => {
+      const caller = homeRouter.createCaller(ctxWithRole('ADMIN'));
+      await expect(
+        caller.setTeamMemberGoal({ ...input, targetUserId: TEST_UUIDS.otherTenantUser })
+      ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      expect(prismaMock.user.update).not.toHaveBeenCalled();
+      expect(prismaMock.user.updateMany).not.toHaveBeenCalled();
+      expect(logAction).not.toHaveBeenCalled();
     });
   });
 

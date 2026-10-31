@@ -1481,9 +1481,9 @@ export const opportunityRouter = createTRPCRouter({
   dealForecast: tenantProcedure.input(dealForecastInputSchema).query(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
 
-    // Fetch opportunity with relations
-    const opportunity = await typedCtx.prismaWithTenant.opportunity.findUnique({
-      where: { id: input.id },
+    // Fetch opportunity with relations, only in the caller's tenant (#1075 review)
+    const opportunity = await typedCtx.prismaWithTenant.opportunity.findFirst({
+      where: { id: input.id, tenantId: typedCtx.tenant.tenantId },
       include: {
         owner: { select: { id: true, name: true, email: true } },
         account: { select: { id: true, name: true } },
