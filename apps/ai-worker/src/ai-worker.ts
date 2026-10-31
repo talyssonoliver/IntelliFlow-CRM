@@ -108,6 +108,8 @@ const AI_DLQ_QUEUE = 'ai-dlq';
  * if a job was enqueued without attempts set explicitly.
  */
 const AI_JOB_DEFAULT_MAX_ATTEMPTS = 3;
+const PROVIDER_HEALTH_CACHE_TTL_MS = 60_000;
+const PROVIDER_HEALTH_TIMEOUT_MS = 2_500;
 
 // ============================================================================
 // Types
@@ -130,6 +132,12 @@ type AIJobResult =
   | SummarizeConversationJobResult
   | FeedbackAnalyticsJobResult
   | MemoryRetentionJobResult;
+
+type ProviderHealthCache = {
+  key: string;
+  checkedAt: number;
+  health: ComponentHealth;
+};
 
 /**
  * A job registered by registerScheduledJobs() (named `scheduled-*`) or a
@@ -167,6 +175,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private dlqQueue: Queue | null = null;
   /** QueueEvents instances for each AI queue (used for lifecycle listeners). */
   private queueEventListeners: QueueEvents[] = [];
+  private providerHealthCache?: ProviderHealthCache;
 
   constructor() {
     super({
@@ -1367,42 +1376,105 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     };
   }
 
-  private getOpenAIProviderHealth(lastCheck: string): ComponentHealth {
-    const hasCompatibleEndpoint = Boolean(aiConfig.openai.baseUrl);
-    const hasApiKey = Boolean(aiConfig.openai.apiKey);
+  private async getOpenAIProviderHealth(lastCheck: string): Promise<ComponentHealth> {
+    const isLiteLLM = aiConfig.provider === 'litellm';
+    const endpoint = this.getProviderEndpoint();
+    const apiKey = isLiteLLM ? aiConfig.litellm.masterKey : aiConfig.openai.apiKey;
+    const hasCompatibleEndpoint = isLiteLLM || Boolean(aiConfig.openai.baseUrl);
+    const hasApiKey = Boolean(apiKey);
     const isConfigured = hasApiKey || hasCompatibleEndpoint;
-    const endpointLabel = hasCompatibleEndpoint
-      ? `openai-compatible (${aiConfig.openai.baseUrl})`
-      : 'openai';
+    const endpointLabel = isLiteLLM
+      ? `litellm (${endpoint})`
+      : hasCompatibleEndpoint
+        ? `openai-compatible (${aiConfig.openai.baseUrl})`
+        : 'openai';
 
-    return {
-      status: isConfigured ? 'ok' : 'error',
-      latency: 0,
-      lastCheck,
-      message: isConfigured
-        ? `provider=${endpointLabel}, model=${aiConfig.openai.model}`
-        : 'OPENAI_API_KEY is missing and no OPENAI_BASE_URL is configured',
-    };
+    if (!isConfigured) {
+      return {
+        status: 'error',
+        latency: 0,
+        lastCheck,
+        message: 'OPENAI_API_KEY is missing and no OPENAI_BASE_URL is configured',
+      };
+    }
+
+    return this.checkOpenAICompatibleProviderHealth(lastCheck, endpoint, apiKey, endpointLabel);
   }
 
-  /**
-   * OpenRouter is configured through env vars read by llm-factory.ts
-   * (OPENROUTER_API_KEY, OPENROUTER_BASE_URL defaulting to openrouter.ai), not
-   * through aiConfig. Configuration check only, no network call. OpenRouter
-   * always authenticates with an API key, so a base URL alone is not enough.
-   */
-  private getOpenRouterProviderHealth(lastCheck: string): ComponentHealth {
+  /** OpenRouter uses its OpenAI-compatible models endpoint and requires an API key. */
+  private async getOpenRouterProviderHealth(lastCheck: string): Promise<ComponentHealth> {
     const baseUrl = process.env['OPENROUTER_BASE_URL'];
     const hasApiKey = Boolean(process.env['OPENROUTER_API_KEY']);
 
-    return {
-      status: hasApiKey ? 'ok' : 'error',
-      latency: 0,
+    if (!hasApiKey) {
+      return {
+        status: 'error',
+        latency: 0,
+        lastCheck,
+        message: 'OPENROUTER_API_KEY is missing',
+      };
+    }
+
+    return this.checkOpenAICompatibleProviderHealth(
       lastCheck,
-      message: hasApiKey
-        ? `provider=openrouter (${baseUrl || 'https://openrouter.ai/api/v1'})`
-        : 'OPENROUTER_API_KEY is missing',
-    };
+      baseUrl || 'https://openrouter.ai/api/v1',
+      process.env['OPENROUTER_API_KEY'],
+      `openrouter (${baseUrl || 'https://openrouter.ai/api/v1'})`
+    );
+  }
+
+  private async checkOpenAICompatibleProviderHealth(
+    lastCheck: string,
+    endpoint: string,
+    apiKey: string | undefined,
+    providerLabel: string
+  ): Promise<ComponentHealth> {
+    const cacheKey = `${providerLabel}|${endpoint}`;
+    const now = Date.now();
+    if (
+      this.providerHealthCache?.key === cacheKey &&
+      now - this.providerHealthCache.checkedAt < PROVIDER_HEALTH_CACHE_TTL_MS
+    ) {
+      return this.providerHealthCache.health;
+    }
+
+    const startedAt = Date.now();
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), PROVIDER_HEALTH_TIMEOUT_MS);
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
+    try {
+      let normalizedEndpoint = endpoint;
+      while (normalizedEndpoint.endsWith('/')) normalizedEndpoint = normalizedEndpoint.slice(0, -1);
+      const modelsUrl = `${normalizedEndpoint}/models`;
+      const response = await fetch(modelsUrl, {
+        method: 'GET',
+        headers,
+        signal: controller.signal,
+      });
+      const health: ComponentHealth = {
+        status: response.ok ? 'ok' : 'degraded',
+        latency: Date.now() - startedAt,
+        lastCheck,
+        message: response.ok
+          ? `provider=${providerLabel}`
+          : `${providerLabel} health check failed (${response.status})`,
+      };
+      this.providerHealthCache = { key: cacheKey, checkedAt: Date.now(), health };
+      return health;
+    } catch (error) {
+      const health: ComponentHealth = {
+        status: 'degraded',
+        latency: Date.now() - startedAt,
+        lastCheck,
+        message: `${providerLabel} health check failed: ${error instanceof Error ? error.message : String(error)}`,
+      };
+      this.providerHealthCache = { key: cacheKey, checkedAt: Date.now(), health };
+      return health;
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   private getConfiguredProviderHealth(
