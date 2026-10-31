@@ -19,6 +19,10 @@ describe('isRecordId', () => {
     ['a path', '../admin'],
     ['whitespace', 'not a/valid id'],
     ['an over-long id', 'a'.repeat(65)],
+    // The account, ticket and contact inputs take idSchema (uuid or cuid), so an id
+    // they would reject must not enable a query either.
+    ['a hyphenated word', 'not-a-uuid'],
+    ['a plain word', 'system'],
   ])('rejects %s', (_label, id) => {
     expect(isRecordId(id)).toBe(false);
   });
