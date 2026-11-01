@@ -68,7 +68,7 @@
   "artifact_hashes": {
     "tools/scripts/k6/lib/redact.js": "72a1ebc2f14fbcc8022c5cad11b0703650297570",
     "tools/scripts/k6/lib/redact.test.ts": "32f78c6b5eadb98bb65259e963f01d39b0a14f09",
-    "tools/scripts/k6/get-auth-token.mjs": "e5314ecc04e5df87d15ac6f7fdc89c4f550837fc",
+    "tools/scripts/k6/get-auth-token.mjs": "sha256:3981da9427d6466b0616f1decf26890f3b79871952e8938a99729a798799a223",
     "tools/scripts/k6/README.md": "4052280533a5656c449ccb0d01dbae52dd47eafc",
     "tools/scripts/k6/authenticated-load-test.js": "0c5d79c82643149dcf0976ddd5f3b2a53e665619",
     "tools/scripts/k6/comprehensive-load-test.js": "4908259b2574a02125aaddec868339cf8b704029",

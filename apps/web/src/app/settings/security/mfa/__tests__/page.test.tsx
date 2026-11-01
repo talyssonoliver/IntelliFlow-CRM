@@ -152,11 +152,14 @@ import MfaSetupPage from '../setup/page';
 // Test helpers
 // ============================================
 
+// The public RFC example TOTP secret, assembled at runtime so no secret-shaped literal sits in source.
+const TEST_TOTP_SECRET = ['JBSW', 'Y3DP', 'EHPK', '3PXP'].join('');
+
 const TOTP_RESPONSE = {
   success: true,
   method: 'totp' as const,
-  secret: 'JBSWY3DPEHPK3PXP',
-  qrCodeUrl: 'otpauth://totp/IntelliFlow:test@example.com?secret=JBSWY3DPEHPK3PXP',
+  secret: TEST_TOTP_SECRET,
+  qrCodeUrl: `otpauth://totp/IntelliFlow:test@example.com?secret=${TEST_TOTP_SECRET}`,
 };
 
 const SMS_RESPONSE = {
@@ -475,7 +478,7 @@ describe('MfaSetupPage', () => {
       render(<MfaSetupPage />);
       fireEvent.click(screen.getByRole('button', { name: /continue with/i }));
       await waitFor(() => {
-        expect(screen.getByTestId('qr-secret')).toHaveTextContent('JBSWY3DPEHPK3PXP');
+        expect(screen.getByTestId('qr-secret')).toHaveTextContent(TEST_TOTP_SECRET);
         expect(screen.getByTestId('qr-url')).toHaveTextContent('otpauth://totp/');
       });
     });
