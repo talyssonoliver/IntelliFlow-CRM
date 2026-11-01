@@ -83,7 +83,7 @@ import {
   ContactEmbedWorker,
   createContactEmbedWorker,
   CONTACT_EMBED_QUEUE_NAME,
-  BACKFILL_SPACING_MS,
+  EMBED_RATE_LIMIT,
 } from '../contact-embed-worker';
 import type { Job } from 'bullmq';
 
@@ -550,7 +550,23 @@ describe('ContactEmbedWorker.enqueueMissingEmbeddings (backfill after the vector
     ).toBe('backfill');
   });
 
-  it('queues every contact whose embedding is NULL, page by page, deduped and spaced', async () => {
+  it('rate-limits the worker itself, so a backlog that piles up while it is down still runs at 15 a minute', async () => {
+    const worker = new ContactEmbedWorker(
+      { $queryRaw: vi.fn(async () => []) } as any,
+      redis,
+      { generateEmbedding: vi.fn() },
+      vi.fn()
+    );
+    await worker.start();
+
+    // BullMQ applies the limiter when a job is fetched, across every worker on the queue and
+    // to retries too, which a delay set at enqueue time cannot do.
+    expect(EMBED_RATE_LIMIT).toEqual({ max: 15, duration: 60_000 });
+    const opts = (constructorCalls.Worker[0] as unknown[])[2] as { limiter?: unknown };
+    expect(opts.limiter).toEqual(EMBED_RATE_LIMIT);
+  });
+
+  it('queues every contact whose embedding is NULL, page by page, deduped', async () => {
     const pages = [
       [
         { id: 'c-1', tenantId: 't-1' },
@@ -569,15 +585,16 @@ describe('ContactEmbedWorker.enqueueMissingEmbeddings (backfill after the vector
 
     await expect(worker.enqueueMissingEmbeddings(2)).resolves.toBe(3);
 
-    const job = (contactId: string, tenantId: string, index: number) => ({
+    // No enqueue-time delay: the worker's limiter does the spacing.
+    const job = (contactId: string, tenantId: string) => ({
       name: 'embed',
       data: { contactId, tenantId, reason: 'backfill' },
-      opts: { jobId: `backfill-${contactId}`, delay: index * BACKFILL_SPACING_MS },
+      opts: { jobId: `backfill-${contactId}` },
     });
     expect(constructorCalls.addBulk.flat()).toEqual([
-      job('c-1', 't-1', 0),
-      job('c-2', 't-2', 1),
-      job('c-3', 't-1', 2),
+      job('c-1', 't-1'),
+      job('c-2', 't-2'),
+      job('c-3', 't-1'),
     ]);
     // Only NULL embeddings are read, and the second page resumes after the last id.
     expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);

@@ -37,10 +37,12 @@ export const CEILING_RETRY_DELAY_MS = 15 * 60_000;
 export const BACKFILL_PAGE_SIZE = 500;
 
 /**
- * Gap between backfill jobs: 15 a minute, under the 20 requests a minute OpenRouter allows on
- * free models, so a backlog does not fail on 429s and burn its retries.
+ * At most 15 embedding jobs a minute, under the 20 requests a minute OpenRouter allows on free
+ * models, so a backlog does not fail on 429s and burn its retries. BullMQ applies the limiter
+ * when a job is fetched, across every worker on the queue and to retries too. Delays set at
+ * enqueue time would not hold: jobs that pile up while the worker is down all become due at once.
  */
-export const BACKFILL_SPACING_MS = 4_000;
+export const EMBED_RATE_LIMIT = { max: 15, duration: 60_000 } as const;
 
 export const ContactEmbedJobDataSchema = z.object({
   contactId: z.string().min(1),
@@ -116,6 +118,7 @@ export class ContactEmbedWorker {
         connection: this.redisConnection,
         concurrency: 5,
         drainDelay: getDrainDelaySeconds(),
+        limiter: { ...EMBED_RATE_LIMIT },
       }
     );
 
@@ -144,10 +147,10 @@ export class ContactEmbedWorker {
       if (!last) return queued;
       await Promise.all(rows.map((row) => this.clearFinishedBackfill(row.id)));
       await this.queue.addBulk(
-        rows.map((row, index) => ({
+        rows.map((row) => ({
           name: 'embed',
           data: { contactId: row.id, tenantId: row.tenantId, reason: 'backfill' as const },
-          opts: { jobId: `backfill-${row.id}`, delay: (queued + index) * BACKFILL_SPACING_MS },
+          opts: { jobId: `backfill-${row.id}` },
         }))
       );
       queued += rows.length;
