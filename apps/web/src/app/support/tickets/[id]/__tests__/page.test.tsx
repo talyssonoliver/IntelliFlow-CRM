@@ -274,6 +274,28 @@ describe('SupportTicketDetailPage', () => {
     );
   });
 
+  it('assigns a ticket to a user whose id is a cuid (#1097)', async () => {
+    // User ids are cuids (Prisma @default(cuid())), not UUIDs.
+    const cuidUserId = 'cmhbx3k2p0000l8086a1b2c3d';
+    render(<SupportTicketDetailPage />);
+    const onAssign = capturedTicketDetailProps.onAssign as (id: string) => Promise<void>;
+    await act(() => onAssign(cuidUserId));
+    expect(mockUpdateMutation.mutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'ticket-abc-123', assigneeId: cuidUserId })
+    );
+    expect(mockToast).not.toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Invalid Assignee' })
+    );
+  });
+
+  it('still refuses an assignee id that is not a record id', async () => {
+    render(<SupportTicketDetailPage />);
+    const onAssign = capturedTicketDetailProps.onAssign as (id: string) => Promise<void>;
+    await act(() => onAssign('../admin'));
+    expect(mockUpdateMutation.mutateAsync).not.toHaveBeenCalled();
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Invalid Assignee' }));
+  });
+
   // ─── Support Context Constraints ──────────────────────────────────────────
 
   it('does not pass onDelete to TicketDetail (undefined)', () => {

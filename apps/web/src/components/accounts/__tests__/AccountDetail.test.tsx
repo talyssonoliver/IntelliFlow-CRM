@@ -313,6 +313,26 @@ describe('AccountDetail', () => {
     expect(container.querySelectorAll('.animate-pulse').length).toBeGreaterThan(0);
   });
 
+  it('loads an account whose id is a cuid (#1097)', () => {
+    // Account ids are cuids (Prisma @default(cuid())), not UUIDs.
+    const cuidAccountId = 'cmhbx3k2p0000l8086a1b2c3d';
+    render(<AccountDetail accountId={cuidAccountId} isAuthenticated />);
+    expect(getByIdMock).toHaveBeenCalledWith(
+      { id: cuidAccountId },
+      expect.objectContaining({ enabled: true })
+    );
+    expect(screen.queryByText('Account Not Found')).not.toBeInTheDocument();
+  });
+
+  it('does not query an id that is not a record id', () => {
+    render(<AccountDetail accountId="../admin" isAuthenticated />);
+    expect(getByIdMock).toHaveBeenCalledWith(
+      { id: '../admin' },
+      expect.objectContaining({ enabled: false })
+    );
+    expect(screen.getByText('Account Not Found')).toBeInTheDocument();
+  });
+
   it('shows error state when account not found', () => {
     getByIdMock.mockReturnValue({ data: null, isLoading: false, error: new Error('Not found') });
     render(<AccountDetail {...defaultProps} />);

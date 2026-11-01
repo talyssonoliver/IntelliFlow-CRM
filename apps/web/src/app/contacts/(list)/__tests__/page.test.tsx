@@ -17,6 +17,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 
 const VALID_UUID = '11111111-1111-4111-8111-111111111111';
+const CUID_ACCOUNT_ID = 'cmhbx3k2p0000l8086a1b2c3d';
 
 // All shared mock state lives in a hoisted container so vi.mock factories (hoisted to
 // the top of the module) can reference it without TDZ errors.
@@ -123,8 +124,6 @@ vi.mock('@/lib/api', () => ({
 
 vi.mock('@/hooks/use-dynamic-filters', () => ({
   useContactFilterOptions: () => h.mockFilterOptions,
-  isValidUUID: (v: string) =>
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v),
 }));
 
 // Server actions ('use server' → next/cache); must be mocked or the suite errors at load.
@@ -267,7 +266,8 @@ beforeEach(() => {
     departmentOptions: [{ value: 'sales', label: 'Sales' }],
     accountOptions: [
       { value: VALID_UUID, label: 'Acme' },
-      { value: 'not-a-uuid', label: 'Bad Co' },
+      { value: CUID_ACCOUNT_ID, label: 'Cuid Co' },
+      { value: 'not a/valid id', label: 'Bad Co' },
     ],
   };
 
@@ -392,15 +392,21 @@ describe('ContactsPageClient — filters, sort, search, pagination (T-02)', () =
     expect(lastArgs().department).toBe('sales');
   });
 
-  it('sends accountId only when the company filter is a valid UUID', () => {
+  it('sends accountId when the company filter is a seed uuid', () => {
     render(<ContactsPageClient />);
     fireEvent.change(screen.getByLabelText('Company'), { target: { value: VALID_UUID } });
     expect(lastArgs().accountId).toBe(VALID_UUID);
   });
 
-  it('omits accountId when the company filter is not a valid UUID', () => {
+  it('sends accountId when the company filter is a cuid account id (#1097)', () => {
     render(<ContactsPageClient />);
-    fireEvent.change(screen.getByLabelText('Company'), { target: { value: 'not-a-uuid' } });
+    fireEvent.change(screen.getByLabelText('Company'), { target: { value: CUID_ACCOUNT_ID } });
+    expect(lastArgs().accountId).toBe(CUID_ACCOUNT_ID);
+  });
+
+  it('omits accountId when the company filter is not a record id', () => {
+    render(<ContactsPageClient />);
+    fireEvent.change(screen.getByLabelText('Company'), { target: { value: 'not a/valid id' } });
     expect(lastArgs().accountId).toBeUndefined();
   });
 

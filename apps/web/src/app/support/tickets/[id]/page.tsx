@@ -21,8 +21,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 import { mapTicketToDetailData } from '@/lib/tickets/ticket-detail-mapper';
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import { useTicketAssign } from '@/lib/tickets/useTicketAssign';
 
 export default function SupportTicketDetailPage() {
   const params = useParams();
@@ -83,23 +82,7 @@ export default function SupportTicketDetailPage() {
     }
   };
 
-  const handleAssign = async (userId: string) => {
-    const assigneeId = userId?.trim();
-    if (!assigneeId || !UUID_RE.test(assigneeId)) {
-      toast({
-        title: 'Invalid Assignee',
-        description: 'Cannot assign ticket because user ID is invalid.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    try {
-      await updateMutation.mutateAsync({ id: ticketId, assigneeId } as never);
-      toast({ title: 'Ticket Assigned', description: 'Ticket has been reassigned.' });
-    } catch {
-      // Handled in mutation onError
-    }
-  };
+  const handleAssign = useTicketAssign(ticketId, updateMutation.mutateAsync);
 
   const handleAddResponse = async (content: string, isInternal: boolean) => {
     await addResponseMutation.mutateAsync({
