@@ -24,9 +24,9 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 import { mapTicketToDetailData } from '@/lib/tickets/ticket-detail-mapper';
+import { useTicketAssign } from '@/lib/tickets/useTicketAssign';
 import { revalidateTicketsCache } from '@/lib/tickets/revalidate-tickets-cache';
 import { isRecordId } from '@/lib/shared/record-id';
-import { INVALID_ASSIGNEE_TOAST, toAssigneeId } from '@/lib/tickets/ticket-assignee';
 
 const LEFT_META_SKELETON_KEYS = [
   'meta-0',
@@ -133,20 +133,7 @@ export default function TicketDetailPage() {
     }
   };
 
-  const handleAssign = async (userId: string) => {
-    const assigneeId = toAssigneeId(userId);
-    if (!assigneeId) {
-      toast(INVALID_ASSIGNEE_TOAST);
-      return;
-    }
-
-    try {
-      await updateMutation.mutateAsync({ id: ticketId, assigneeId } as never);
-      toast({ title: 'Ticket Assigned', description: 'Ticket has been reassigned.' });
-    } catch {
-      // Handled in mutation onError to avoid unhandled promise rejections
-    }
-  };
+  const handleAssign = useTicketAssign(ticketId, updateMutation.mutateAsync);
 
   const handleAddResponse = async (content: string, _isInternal: boolean) => {
     await addResponseMutation.mutateAsync({
