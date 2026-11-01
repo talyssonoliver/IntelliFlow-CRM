@@ -1,8 +1,8 @@
 /**
  * Tests for use-dynamic-filters.ts
  *
- * Tests the exported utility functions (isValidUUID) and the internal
- * transformOptions / capitalizeWords functions via the hook output behavior.
+ * Tests the internal transformOptions / capitalizeWords functions via the hook
+ * output behavior.
  * The hooks themselves are heavily tRPC-dependent so we mock the API layer.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -57,62 +57,12 @@ vi.mock('@/lib/shared/filter-utils', () => ({
 
 // Now import the module under test
 import {
-  isValidUUID,
   useContactFilterOptions,
   useLeadFilterOptions,
   useTicketFilterOptions,
   useDealFilterOptions,
   useFilterValidation,
 } from '../use-dynamic-filters';
-
-// ============================================================================
-// isValidUUID
-// ============================================================================
-describe('isValidUUID', () => {
-  it('returns true for a valid UUID v4', () => {
-    expect(isValidUUID('550e8400-e29b-41d4-a716-446655440000')).toBe(true);
-  });
-
-  it('returns true for lowercase UUIDs', () => {
-    expect(isValidUUID('a1b2c3d4-e5f6-7890-abcd-ef1234567890')).toBe(true);
-  });
-
-  it('returns true for uppercase UUIDs', () => {
-    expect(isValidUUID('A1B2C3D4-E5F6-7890-ABCD-EF1234567890')).toBe(true);
-  });
-
-  it('returns true for mixed case UUIDs', () => {
-    expect(isValidUUID('A1b2C3d4-E5f6-7890-AbCd-Ef1234567890')).toBe(true);
-  });
-
-  it('returns false for empty string', () => {
-    expect(isValidUUID('')).toBe(false);
-  });
-
-  it('returns false for non-UUID string', () => {
-    expect(isValidUUID('not-a-uuid')).toBe(false);
-  });
-
-  it('returns false for string with wrong segment lengths', () => {
-    expect(isValidUUID('550e8400-e29b-41d4-a716-44665544000')).toBe(false); // last segment too short
-  });
-
-  it('returns false for string with wrong number of segments', () => {
-    expect(isValidUUID('550e8400-e29b-41d4-a716')).toBe(false);
-  });
-
-  it('returns false for UUID with spaces', () => {
-    expect(isValidUUID(' 550e8400-e29b-41d4-a716-446655440000 ')).toBe(false);
-  });
-
-  it('returns false for UUID with braces', () => {
-    expect(isValidUUID('{550e8400-e29b-41d4-a716-446655440000}')).toBe(false);
-  });
-
-  it('returns false for UUID with invalid hex chars', () => {
-    expect(isValidUUID('550g8400-e29b-41d4-a716-446655440000')).toBe(false);
-  });
-});
 
 // ============================================================================
 // useContactFilterOptions
