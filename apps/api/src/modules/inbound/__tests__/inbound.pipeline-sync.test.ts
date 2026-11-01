@@ -13,11 +13,13 @@
  *  - target LOST from CONTACTED
  *  - repeat syncKey is a no-op and makes no status calls
  *  - a refused step surfaces as BAD_REQUEST
+ *  - outreachSlug: validated, stored on create, set on update only when null or
+ *    different (tenant-scoped), noted in the audit metadata, untouched when absent
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-import { inboundRouter } from '../inbound.router';
+import { inboundPipelineLeadSchema, inboundRouter } from '../inbound.router';
 import { createTestContext, prismaMock, mockServices } from '../../../test/setup';
 
 const TENANT_ID = '00000000-0000-4000-8000-000000000900';
@@ -806,6 +808,136 @@ describe('inboundRouter — syncPipelineLead', () => {
       await expect(caller.syncPipelineLead(input('QUALIFIED', 'RESPONDED'))).rejects.toMatchObject({
         code: 'BAD_REQUEST',
       });
+    });
+  });
+
+  describe('outreachSlug (COA concept-page slug)', () => {
+    const SLUG = 'bakery-ltd-london';
+    const withSlug = (slug: unknown, status = 'CONTACTED') =>
+      ({ ...(input(status) as object), outreachSlug: slug }) as never;
+    /** $queryRaw calls that write the slug. */
+    const slugWrites = () =>
+      prismaMock.$queryRaw.mock.calls.filter((c) =>
+        (c[0] as unknown as TemplateStringsArray).join('?').includes('"outreachSlug"')
+      ) as unknown as Array<[TemplateStringsArray, ...unknown[]]>;
+    const noteMeta = () =>
+      (
+        prismaMock.leadActivity.create.mock.calls[0]?.[0] as {
+          data: { metadata: Record<string, unknown> };
+        }
+      ).data.metadata;
+
+    it('accepts a slug-shaped value', () => {
+      expect(inboundPipelineLeadSchema.safeParse(withSlug(SLUG)).success).toBe(true);
+      expect(inboundPipelineLeadSchema.safeParse(withSlug('a'.repeat(120))).success).toBe(true);
+    });
+
+    it.each([
+      ['upper case', 'Bakery-Ltd'],
+      ['a space', 'bakery ltd'],
+      ['an underscore', 'bakery_ltd'],
+      ['a slash', 'bakery/ltd'],
+      ['an empty string', ''],
+      ['over 120 characters', 'a'.repeat(121)],
+      ['a non-string', 42],
+    ])('rejects a slug with %s, before any write', async (_label, slug) => {
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      await expect(caller.syncPipelineLead(withSlug(slug))).rejects.toMatchObject({
+        code: 'BAD_REQUEST',
+      });
+      expect(createLead()).not.toHaveBeenCalled();
+      expect(prismaMock.lead.findFirst).not.toHaveBeenCalled();
+      expect(slugWrites()).toHaveLength(0);
+    });
+
+    it('stores the slug on a newly created lead and notes it', async () => {
+      prismaMock.lead.findFirst.mockResolvedValueOnce(null as never);
+      createLead().mockResolvedValueOnce({ isFailure: false, value: { id: { value: LEAD_ID } } });
+      prismaMock.$queryRaw.mockResolvedValueOnce([{ previous: null }] as never);
+
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      await caller.syncPipelineLead(withSlug(SLUG));
+
+      const writes = slugWrites();
+      expect(writes).toHaveLength(1);
+      expect(writes[0]?.slice(1)).toEqual([SLUG, LEAD_ID, TENANT_ID, SLUG]);
+      expect(noteMeta()).toMatchObject({
+        outreachSlug: SLUG,
+        outreachSlugChanged: true,
+        previousOutreachSlug: null,
+      });
+    });
+
+    it('updates an existing lead only when its slug is null or different (tenant-scoped)', async () => {
+      existingLead('NEW');
+      prismaMock.$queryRaw.mockResolvedValueOnce([{ previous: 'old-slug' }] as never);
+
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      await caller.syncPipelineLead(withSlug(SLUG));
+
+      const sql = slugWrites()[0]?.[0].join('?') ?? '';
+      expect(sql).toMatch(/"id" = \? AND "tenantId" = \?/);
+      expect(sql).toMatch(/"outreachSlug" IS DISTINCT FROM \?/);
+      expect(prismaMock.lead.update).not.toHaveBeenCalled();
+      expect(noteMeta()).toMatchObject({
+        outreachSlug: SLUG,
+        outreachSlugChanged: true,
+        previousOutreachSlug: 'old-slug',
+      });
+    });
+
+    it('records an unchanged slug without claiming a change', async () => {
+      existingLead('NEW');
+      prismaMock.$queryRaw.mockResolvedValueOnce([] as never); // already equal: no row updated
+
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      await caller.syncPipelineLead(withSlug(SLUG));
+
+      expect(slugWrites()).toHaveLength(1);
+      const meta = noteMeta();
+      expect(meta).toMatchObject({ outreachSlug: SLUG, outreachSlugChanged: false });
+      expect(meta).not.toHaveProperty('previousOutreachSlug');
+    });
+
+    it('still applies the slug on a repeat syncKey (no new note)', async () => {
+      existingLead('NEW');
+      prismaMock.leadActivity.findFirst.mockResolvedValueOnce({ id: 'act_1' } as never);
+      prismaMock.$queryRaw.mockResolvedValueOnce([{ previous: null }] as never);
+
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(withSlug(SLUG));
+
+      expect(result.changed).toBe(false);
+      expect(slugWrites()).toHaveLength(1);
+      expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+    });
+
+    it('leaves the slug untouched when it is absent', async () => {
+      existingLead('NEW');
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      await caller.syncPipelineLead(input('CONTACTED'));
+
+      expect(slugWrites()).toHaveLength(0);
+      const meta = noteMeta();
+      expect(meta).not.toHaveProperty('outreachSlug');
+      expect(meta).not.toHaveProperty('outreachSlugChanged');
+    });
+
+    it('surfaces a failed slug write as a retryable INTERNAL_SERVER_ERROR', async () => {
+      existingLead('NEW');
+      prismaMock.$queryRaw.mockRejectedValueOnce(new Error('connection reset') as never);
+      const logged = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      await expect(caller.syncPipelineLead(withSlug(SLUG))).rejects.toMatchObject({
+        code: 'INTERNAL_SERVER_ERROR',
+      });
+      expect(logged).toHaveBeenCalledWith(
+        expect.stringContaining('outreach slug'),
+        expect.objectContaining({ error: 'connection reset' })
+      );
+      logged.mockRestore();
+      expect(changeStatus()).not.toHaveBeenCalled();
     });
   });
 });

@@ -227,6 +227,13 @@ export const inboundPipelineLeadSchema = z.object({
   coaStage: z.string().max(50),
   /** When COA moved the lead (ISO datetime). */
   stageChangedAt: z.string().datetime(),
+  /** COA concept-page slug (`<slug>.leangency.com`). Absent = leave the stored one alone. */
+  outreachSlug: z
+    .string()
+    .min(1)
+    .max(120)
+    .regex(/^[a-z0-9-]+$/, 'outreachSlug must be lower-case letters, digits and hyphens')
+    .optional(),
 });
 
 export type InboundPipelineLeadInput = z.infer<typeof inboundPipelineLeadSchema>;
@@ -578,6 +585,70 @@ async function appendMissingTags(
   }
 }
 
+/** What the sync did to the lead's outreach slug; null when COA sent none. */
+interface OutreachSlugChange {
+  readonly slug: string;
+  readonly changed: boolean;
+  /** The slug before this call; only meaningful when `changed`. */
+  readonly previous: string | null;
+}
+
+/**
+ * Set the lead's outreach slug when it is NULL or different, in one tenant-scoped
+ * statement that also returns the previous value (no row back = already equal).
+ * Raw SQL like the tag merge: the domain Lead does not carry the slug. A failure
+ * is a retryable 500, so COA resends rather than losing the slug.
+ */
+async function applyOutreachSlug(
+  ctx: Context,
+  input: InboundPipelineLeadInput,
+  leadId: string,
+  tenantId: string
+): Promise<OutreachSlugChange | null> {
+  const slug = input.outreachSlug;
+  if (slug === undefined) return null;
+  try {
+    const rows = await ctx.prisma.$queryRaw<Array<{ previous: string | null }>>`
+      UPDATE "leads" AS l
+      SET "outreachSlug" = ${slug}, "updatedAt" = NOW()
+      FROM (
+        SELECT "id", "outreachSlug" AS previous FROM "leads"
+        WHERE "id" = ${leadId} AND "tenantId" = ${tenantId}
+        FOR UPDATE
+      ) AS old
+      WHERE l."id" = old."id" AND l."outreachSlug" IS DISTINCT FROM ${slug}
+      RETURNING old.previous
+    `;
+    const row = rows[0];
+    return row
+      ? { slug, changed: true, previous: row.previous }
+      : { slug, changed: false, previous: slug };
+  } catch (err) {
+    console.error('[inbound.syncPipelineLead] outreach slug write failed:', {
+      leadId,
+      coaLeadId: input.coaLeadId,
+      error: err instanceof Error ? err.message : err,
+    });
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Lead outreach slug could not be saved',
+      cause: err,
+    });
+  }
+}
+
+/** Audit metadata for the slug: what was sent, whether it changed, and from what. */
+function outreachSlugMetadata(change: OutreachSlugChange | null): Prisma.InputJsonObject {
+  if (!change) return {};
+  return change.changed
+    ? {
+        outreachSlug: change.slug,
+        outreachSlugChanged: true,
+        previousOutreachSlug: change.previous,
+      }
+    : { outreachSlug: change.slug, outreachSlugChanged: false };
+}
+
 /** True when COA reported a win the CRM has not converted (the sync never does). */
 function isConversionPending(requested: PipelineLeadStatus, status: PipelineLeadStatus): boolean {
   return requested === 'CONVERTED' && status !== 'CONVERTED';
@@ -655,7 +726,8 @@ async function recordPipelineSync(
   from: PipelineLeadStatus,
   to: PipelineLeadStatus,
   syncKey: string,
-  refusal: QualificationRefusal | null
+  refusal: QualificationRefusal | null,
+  slugChange: OutreachSlugChange | null
 ): Promise<void> {
   try {
     // Existence check + insert must be atomic per syncKey: two concurrent
@@ -698,6 +770,7 @@ async function recordPipelineSync(
                     : {}),
                 }
               : {}),
+            ...outreachSlugMetadata(slugChange),
             syncKey,
           } as Prisma.InputJsonObject,
         },
@@ -1265,6 +1338,10 @@ export const inboundRouter = createTRPCRouter({
    * `coa-sync:<coaLeadId>:<coaStage>:<status>`. A repeat of that key returns early with
    * changed:false before any status call. Tags and the audit note are
    * best-effort (logged, not thrown).
+   *
+   * Outreach slug: when `outreachSlug` is sent it is written (tenant-scoped) if
+   * the stored one is NULL or different, before the idempotency check, and the
+   * audit note records it; a failed write is a retryable 500. Absent = untouched.
    */
   syncPipelineLead: publicProcedure
     .input(inboundPipelineLeadSchema)
@@ -1294,6 +1371,10 @@ export const inboundRouter = createTRPCRouter({
       if (!leadCreated) {
         currentStatus = await mergeCoaTags(ctx, leadId, tenantId, coaTags, input.coaLeadId);
       }
+
+      // Before the idempotency check, so a repeat of a known stage still carries
+      // a changed slug (no new audit note is written for a repeat).
+      const slugChange = await applyOutreachSlug(ctx, input, leadId, tenantId);
 
       // --- Step 3: idempotency ------------------------------------------------
       // coaStage is in the key: MEETING_BOOKED and a later PROPOSAL_READY both map to
@@ -1350,7 +1431,8 @@ export const inboundRouter = createTRPCRouter({
         currentStatus,
         status,
         syncKey,
-        refusal
+        refusal,
+        slugChange
       );
 
       return {
