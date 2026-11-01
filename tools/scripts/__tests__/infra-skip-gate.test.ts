@@ -542,7 +542,9 @@ describe('default wiring', () => {
     expect(['ok', 'unverifiable']).toContain(r.status);
     expect(r.declared.length).toBeGreaterThan(0);
     // The committed registry is valid, so no R3/R4/R5 violations regardless of run state.
-    expect(r.violations).toEqual([]);
+    // R1/R2 depend on whatever coverage manifests the worktree holds (a local coverage
+    // step can leave a mid-run one behind), so they are covered by the injected tests above.
+    expect(r.violations.filter((v) => !['R1', 'R2'].includes(v.rule))).toEqual([]);
   });
 
   it('writes a job summary when GITHUB_STEP_SUMMARY is set', () => {
