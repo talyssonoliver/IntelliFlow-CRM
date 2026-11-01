@@ -12,28 +12,21 @@
       "file": "tests/integration/rls-tenant-isolation.test.ts",
       "kind": "infra-gated",
       "maxSkipped": 5,
-      "reviewBy": "2026-10-31",
-      "reason": "ADR-054: #658 — needs a Supabase-style runtime (the `authenticated` role with table GRANTs and active RLS policies). A bare `prisma db push` test DB has neither, so the suite probes and skips rather than failing with 'permission denied for table accounts'."
-    },
-    {
-      "file": "tests/integration/tier-module-gating.test.ts",
-      "kind": "infra-gated",
-      "maxSkipped": 9,
-      "reviewBy": "2026-10-31",
-      "reason": "ADR-054: #658 — skips whenever createIsolatedTestPrismaClient() returns null (tests/integration/setup.ts), which happens even with DATABASE_URL set if the integration harness has no usable client. Runs where the harness resolves; the ceiling keeps it honest either way."
+      "reviewBy": "2026-11-30",
+      "reason": "ADR-054: #1114 — on 2026-11-01 it ran 5/5 against the local ephemeral DB (scripts/test-db.mjs run, which applies the migrations with migrate deploy), but CI main run 41239235781 skipped 5/5: the CI Integration Tests job builds its schema with db:push, which applies none of the migrations' RLS policies or GRANTs to `authenticated`, so the probe finds no policy and skips. Remove this entry when #1114 switches that job to migrate deploy."
     },
     {
       "file": "apps/ai-worker/src/chains/__tests__/ollama-benchmark.integration.test.ts",
       "kind": "infra-gated",
       "maxSkipped": 8,
-      "reviewBy": "2026-10-31",
+      "reviewBy": "2026-11-30",
       "reason": "ADR-054: #658 — IFC-174 accuracy benchmark. Double-gated on RUN_INTEGRATION_TESTS=true AND a live Ollama instance serving mistral at localhost:11434, neither of which exists on a dev box or in CI. Found by this gate's first full 16-project run, not by the original issue triage."
     },
     {
       "file": "apps/api/src/modules/contact/__tests__/contact-merge.bench.test.ts",
       "kind": "ci-inverse",
       "maxSkipped": 4,
-      "reviewBy": "2026-10-31",
+      "reviewBy": "2026-11-30",
       "reason": "ADR-054: IFC-310 Step 9.5 — the NF-002 merge p95 benchmark is gated behind describe.skipIf(IS_CI) because the timing loop is flaky on shared CI runners, so it executes only on a developer machine via `pnpm --filter @intelliflow/api test contact-merge.bench`. Declared rather than forced to run: making a wall-clock benchmark gate CI would reintroduce exactly the flake the skip exists to avoid. Results land in artifacts/benchmarks/IFC-310-merge.json.",
       "$comment": "Surfaced by this gate on the 2026-07-28..07-30 nightlies (runs 30327556629 / 30421163884 / 30512699969) as the only R1 violation."
     },
@@ -41,15 +34,15 @@
       "file": "tests/integration/connectors/erp.test.ts",
       "kind": "pending-deletion",
       "maxSkipped": 19,
-      "reviewBy": "2026-10-31",
-      "reason": "ADR-054: ENG-OPS-002.R17 — the SAP ERP adapter suite is scheduled for deletion under R17 and is already declared in tools/scripts/flaky-test-gate.allowlist.json for the same reason. Remove this entry together with that one when R17 lands."
+      "reviewBy": "2026-11-30",
+      "reason": "ADR-054: ENG-OPS-002.R17 — the SAP ERP adapter suite is scheduled for deletion under R17 and is already declared in tools/scripts/flaky-test-gate.allowlist.json for the same reason. R17 is still Backlog in Sprint_plan.csv on 2026-11-01, and the suite still skips 19/19 (CI main run 41239235781). Remove this entry together with that one when R17 lands."
     },
     {
       "file": "tests/integration/inherited-membership.test.ts",
       "kind": "infra-gated",
       "maxSkipped": 16,
-      "reviewBy": "2026-10-31",
-      "reason": "ADR-054: #658 — ADR-071 real-database suite (tenant memberships, pooled SET app.current_tenant_id race). Needs the local test DB (DATABASE_TEST_URL, localhost:5433) with migration 20261001120000_tenant_memberships applied; it probes and skips when that DB is absent. Ran 16/16 locally on 2026-10-01."
+      "reviewBy": "2026-11-30",
+      "reason": "ADR-054: #1114 — ADR-071 real-database suite. On 2026-11-01 it ran 16/16 against the local ephemeral DB (scripts/test-db.mjs run, migrate deploy), but CI main run 41239235781 skipped 16/16: the CI Integration Tests job uses db:push, so migration 20261001120000_tenant_memberships and its RLS objects are never applied and the probe skips. Remove this entry when #1114 switches that job to migrate deploy."
     }
   ]
 }
