@@ -8,6 +8,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { createHash } from 'node:crypto';
 import {
   HallucinationChecker,
   defaultHallucinationConfig,
@@ -17,13 +18,14 @@ import {
 } from '../hallucination-checker';
 
 // Mock pino logger
+const pinoLogger = vi.hoisted(() => ({
+  info: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn(),
+  error: vi.fn(),
+}));
 vi.mock('pino', () => ({
-  default: () => ({
-    info: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn(),
-    error: vi.fn(),
-  }),
+  default: () => pinoLogger,
 }));
 
 describe('HallucinationChecker', () => {
@@ -107,19 +109,37 @@ describe('HallucinationChecker', () => {
       expect(result.score).toBeLessThan(config.confidenceThreshold);
     });
 
-    it('should truncate long inputs and outputs', async () => {
-      const longInput = 'a'.repeat(1000);
-      const longOutput = 'b'.repeat(2000);
-
+    it('should truncate long outputs', async () => {
       const result = await checker.checkOutput({
         id: 'test-3',
         model: 'gpt-4',
-        inputContext: longInput,
-        output: longOutput,
+        inputContext: 'a'.repeat(1000),
+        output: 'b'.repeat(2000),
       });
 
-      expect(result.inputContext.length).toBeLessThanOrEqual(500);
       expect(result.output.length).toBeLessThanOrEqual(1000);
+    });
+
+    it('keeps only a SHA-256 of the input context, never its text (IFC-117)', async () => {
+      const canary = ['context', 'canary'].join('-');
+      const inputContext = `Company: ${canary} Ltd\nTitle: Owner\nSource: WEBSITE`;
+      const result = await checker.checkOutput({
+        id: 'test-ctx',
+        model: 'scoring-free',
+        inputContext,
+        output: 'The company website shows the owner has made contact through the website form.',
+      });
+
+      expect(result.inputContextHash).toBe(createHash('sha256').update(inputContext).digest('hex'));
+      expect(result).not.toHaveProperty('inputContext');
+      expect(JSON.stringify(result)).not.toContain(canary);
+      expect(JSON.stringify(checker.getRecentResults())).not.toContain(canary);
+      const logged = JSON.stringify([
+        ...pinoLogger.info.mock.calls,
+        ...pinoLogger.warn.mock.calls,
+        ...pinoLogger.debug.mock.calls,
+      ]);
+      expect(logged).not.toContain(canary);
     });
 
     it('should include ground truth sources when provided', async () => {

@@ -35,6 +35,8 @@ import { latencyMonitor } from '../latency-monitor';
 import { hallucinationChecker } from '../hallucination-checker';
 import { roiTracker } from '../roi-tracker';
 
+const CONTEXT_HASH = 'a'.repeat(64);
+
 const mockPrisma = {
   aIMonitoringEvent: {
     createMany: vi.fn().mockResolvedValue({ count: 0 }),
@@ -292,7 +294,7 @@ describe('MonitoringFlushService', () => {
         id: 'hal-1',
         timestamp: now,
         model: 'gpt-4',
-        inputContext: 'test context',
+        inputContextHash: CONTEXT_HASH,
         output: 'test output',
         hallucinated: true,
         confidence: 0.9,
@@ -313,10 +315,37 @@ describe('MonitoringFlushService', () => {
             flagged: true,
             severity: 'high',
             value: 0.8,
+            payload: expect.objectContaining({ inputContextHash: CONTEXT_HASH }),
           }),
         ]),
       })
     );
+  });
+
+  it('flushNow() persists the context hash only, never context text (IFC-117)', async () => {
+    vi.mocked(hallucinationChecker.getRecentResults).mockReturnValue([
+      {
+        id: 'hal-2',
+        timestamp: new Date(),
+        model: 'scoring-free',
+        inputContextHash: CONTEXT_HASH,
+        output: 'out',
+        hallucinated: false,
+        confidence: 0,
+        hallucinationTypes: [],
+        evidence: [],
+        groundTruthSources: [],
+        score: 0,
+        // A stale caller still carrying text must not reach the event payload.
+        ...({ inputContext: 'Company: Canary Ltd' } as object),
+      },
+    ]);
+
+    await service.flushNow();
+
+    const persisted = JSON.stringify(mockPrisma.aIMonitoringEvent.createMany.mock.calls);
+    expect(persisted).toContain(CONTEXT_HASH);
+    expect(persisted).not.toContain('Canary');
   });
 
   it('flushNow() maps AICost and AIValue to roi_cost and roi_value', async () => {
