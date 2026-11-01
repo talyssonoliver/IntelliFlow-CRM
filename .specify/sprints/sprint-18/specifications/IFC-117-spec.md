@@ -277,7 +277,7 @@ Notes on the instruments:
 | `ifc117-hallucination-rate` | detected ÷ checks ≥ 0.05 over 1h, with ≥ 20 checks (`>= bool 0.05`, operator gt 0) | high |
 | `ifc117-drift-shift` | `increase(intelliflow_ai_drift_detections_total{severity=~"high|critical"}[1d]) > 0` | medium |
 | `ifc117-drift-stalled` | `time() - max(last_check)` > 2h, for 30m, while LLM spans flow | medium |
-| `ifc117-inference-p95-latency` | p95 > 2000 ms for 10m, with ≥ 10 calls (threshold re-checked after the first measured week) | medium |
+| `ifc117-inference-p95-latency` | p95 > 45000 ms for 10m, with ≥ 10 calls (was 2000 ms; raised by owner ruling 2026-11-01 after the measured 24h baseline: p50 7.0 s, p95 27.9 s over 202 background lead_scoring calls) | medium |
 | `ifc117-inference-error-ratio` | error ÷ total > 5%, with ≥ 10 calls | high |
 | `ifc117-ai-metrics-silent` | no AI inferences for 2h while LLM spans flow | low |
 
@@ -495,7 +495,7 @@ at least the heartbeat and inference-count rules, using the N5 output as evidenc
   updates only.
 - **NF-005.** Tests leave no leaked timers or providers. Clean exit is verified with `COVERAGE_RUN=1`.
 - **NF-006.** Drift and rate math stays free of OTel imports. Instruments live in the facade.
-- **NF-007.** Thresholds (5%, drift bands, 2000 ms) live in one exported config. The rules file test
+- **NF-007.** Thresholds (5%, drift bands, 45000 ms p95; 2000 ms until the 2026-11-01 ruling) live in one exported config. The rules file test
   checks against it.
 - **NF-008.** No secret-shaped strings in code, tests or docs (`.gitleaks/shared.toml`). The staged
   secret scan runs before every commit.

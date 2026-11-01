@@ -45,16 +45,16 @@
     },
     {
       "uid": "ifc117-inference-p95-latency",
-      "title": "AI chain p95 latency above 2 seconds",
+      "title": "AI chain p95 latency above 45 seconds",
       "expr": "histogram_quantile(0.95, sum by (le) (rate(intelliflow_ai_inference_latency_milliseconds_bucket{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[10m]))) and on() (sum(increase(intelliflow_ai_inference_count_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[10m])) >= 10)",
       "selector": "intelliflow_ai_inference_latency_milliseconds_bucket{job=~\"(.*/)?(intelliflow-)?ai-worker\"}",
       "operator": "gt",
-      "threshold": 2000,
+      "threshold": 45000,
       "for": "10m",
       "noData": "OK",
       "severity": "medium",
       "requireSeries": false,
-      "summary": "The p95 latency of monitored AI chain calls has been above 2000 ms for 10 minutes (at least 10 calls). The 2000 ms target is re-checked after the first measured production week."
+      "summary": "The p95 latency of monitored AI chain calls has been above 45000 ms for 10 minutes (at least 10 calls). Lead scoring runs in the background; the measured 24h baseline (2026-11-01, 202 lead_scoring calls on the free OpenRouter model) was p50 7.0 s and p95 27.9 s."
     },
     {
       "uid": "ifc117-inference-error-ratio",
