@@ -27,6 +27,7 @@ import { emailSignaturesRouter } from '../email-signatures.router';
 import { emailAttachmentsRouter } from '../email-attachments.router';
 import { inboundEmailRouter } from '../inbound.router';
 import { __resetAccessTokenCache } from '../mailbox-transport';
+import { smtpAccountFields, smtpEndpointFields } from '@intelliflow/validators';
 
 const tenantId = TEST_UUIDS.tenant;
 // Repeated placeholder characters: secret-shaped only in length, never in form.
@@ -46,11 +47,8 @@ const row = (over: Record<string, unknown> = {}) => ({
   lastErrorCode: null,
   fromAddress: 'me@mail.example.invalid',
   fromName: null,
-  smtpHost: 'smtp.mail.example.invalid',
-  smtpPort: 587,
-  smtpSecurity: 'STARTTLS',
-  smtpUsername: 'me@mail.example.invalid',
-  smtpPassword: SMTP_SECRET,
+  ...smtpEndpointFields('smtp.mail.example.invalid', 587, 'STARTTLS'),
+  ...smtpAccountFields('me@mail.example.invalid', SMTP_SECRET),
   imapHost: 'imap.mail.example.invalid',
   imapPort: 993,
   imapUsername: 'me@mail.example.invalid',
@@ -177,11 +175,8 @@ describe('no mailbox secret ever leaves the server', () => {
           await settle(() =>
             mailbox.saveSmtp({
               scope: 'USER',
-              smtpHost: 'smtp.mail.example.invalid',
-              smtpPort: 587,
-              smtpSecurity: 'STARTTLS',
-              smtpUsername: 'me@mail.example.invalid',
-              smtpPassword: SMTP_SECRET,
+              ...smtpEndpointFields('smtp.mail.example.invalid', 587, 'STARTTLS'),
+              ...smtpAccountFields('me@mail.example.invalid', SMTP_SECRET),
               imapHost: 'imap.mail.example.invalid',
               imapPort: 993,
               imapUsername: 'me@mail.example.invalid',

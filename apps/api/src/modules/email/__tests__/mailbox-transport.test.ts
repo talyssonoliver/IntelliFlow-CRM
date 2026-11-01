@@ -9,6 +9,7 @@ import {
   sendThroughMailbox,
   type MailboxTransports,
 } from '../mailbox-transport';
+import { smtpAccountFields, smtpEndpointFields } from '@intelliflow/validators';
 
 const secret = 'x'.repeat(24);
 const NOW = new Date(Date.UTC(2026, 9, 20, 12));
@@ -48,11 +49,8 @@ const smtpMailbox = {
   id: 'mb1',
   tenantId: 't1',
   kind: 'SMTP',
-  smtpHost: 'smtp.mail.example.com',
-  smtpPort: 587,
-  smtpSecurity: 'STARTTLS',
-  smtpUsername: 'me@mail.example.com',
-  smtpPassword: secret,
+  ...smtpEndpointFields('smtp.mail.example.com', 587, 'STARTTLS'),
+  ...smtpAccountFields('me@mail.example.com', secret),
   refreshToken: null,
   tokenVersion: 0,
 };

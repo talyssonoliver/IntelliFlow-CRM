@@ -4,7 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import axe from 'axe-core';
-import type { MailboxDto } from '@intelliflow/validators';
+import { smtpAccountSummary, smtpEndpointFields, type MailboxDto } from '@intelliflow/validators';
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
@@ -29,11 +29,8 @@ const teamMailbox: MailboxDto = {
   lastErrorCode: null,
   fromAddress: 'team@mail.example.invalid',
   fromName: 'Team',
-  smtpHost: 'smtp.mail.example.invalid',
-  smtpPort: 587,
-  smtpSecurity: 'STARTTLS',
-  smtpUsername: 'team@mail.example.invalid',
-  hasSmtpPassword: true,
+  ...smtpEndpointFields('smtp.mail.example.invalid', 587, 'STARTTLS'),
+  ...smtpAccountSummary('team@mail.example.invalid', true),
   imapHost: null,
   imapPort: null,
   imapUsername: null,

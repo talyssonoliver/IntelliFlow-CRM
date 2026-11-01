@@ -16,12 +16,15 @@ import {
   type SmtpConnectionConfig,
   type SmtpEnvelope,
 } from '@intelliflow/adapters';
+import { EMAIL_LIMITS, type MailboxKind, type OAuthMailboxProvider } from '@intelliflow/domain';
 import {
-  EMAIL_LIMITS,
-  type MailboxKind,
-  type OAuthMailboxProvider,
-  type SmtpSecurityMode,
-} from '@intelliflow/domain';
+  hasSmtpAccount,
+  hasSmtpEndpoint,
+  smtpAccountConfig,
+  smtpEndpointConfig,
+  type SmtpAccountRow,
+  type SmtpEndpointRow,
+} from '@intelliflow/validators';
 import { requireEncryptionKey } from './encryption-guard';
 
 type OAuthClientLike = Pick<
@@ -78,16 +81,14 @@ export function createMailboxTransports(env: NodeJS.ProcessEnv = process.env): M
   };
 }
 
-/** The mailbox fields the transport needs (decrypted by the field-encryption client). */
-export interface TransportMailbox {
+/**
+ * The mailbox fields the transport needs (decrypted by the field-encryption client).
+ * The SMTP columns come from SmtpEndpointRow and SmtpAccountRow (#1103).
+ */
+export interface TransportMailbox extends SmtpEndpointRow, SmtpAccountRow {
   id: string;
   tenantId: string;
   kind: string;
-  smtpHost: string | null;
-  smtpPort: number | null;
-  smtpSecurity: string | null;
-  smtpUsername: string | null;
-  smtpPassword: string | null;
   refreshToken: string | null;
   tokenVersion: number;
 }
@@ -196,22 +197,10 @@ export async function getOAuthAccess(
 }
 
 function smtpConfig(mailbox: TransportMailbox): SmtpConnectionConfig {
-  if (
-    !mailbox.smtpHost ||
-    !mailbox.smtpPort ||
-    !mailbox.smtpSecurity ||
-    !mailbox.smtpUsername ||
-    !mailbox.smtpPassword
-  ) {
+  if (!hasSmtpEndpoint(mailbox) || !hasSmtpAccount(mailbox)) {
     throw new MailboxTransportError('AUTH_FAILED');
   }
-  return {
-    host: mailbox.smtpHost,
-    port: mailbox.smtpPort,
-    security: mailbox.smtpSecurity as SmtpSecurityMode,
-    username: mailbox.smtpUsername,
-    password: mailbox.smtpPassword,
-  };
+  return { ...smtpEndpointConfig(mailbox), ...smtpAccountConfig(mailbox) };
 }
 
 /** Sends one MIME message through the mailbox; failures are MailboxTransportError codes. */

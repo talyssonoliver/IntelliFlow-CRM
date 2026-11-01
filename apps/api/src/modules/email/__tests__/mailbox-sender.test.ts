@@ -13,6 +13,7 @@ vi.mock('../mailbox-transport', () => ({
 }));
 
 import { dispatchUserMail, emailSendErrorFromCause } from '../mailbox-sender';
+import { smtpAccountFields, smtpEndpointFields } from '@intelliflow/validators';
 
 const tenantId = TEST_UUIDS.tenant;
 const NOW = new Date(Date.UTC(2026, 9, 20, 12));
@@ -27,11 +28,8 @@ const ownMailbox = {
   status: 'ACTIVE',
   fromAddress: 'me@mail.example.com',
   fromName: 'Me',
-  smtpHost: 'smtp.mail.example.com',
-  smtpPort: 587,
-  smtpSecurity: 'STARTTLS',
-  smtpUsername: 'me@mail.example.com',
-  smtpPassword: secret,
+  ...smtpEndpointFields('smtp.mail.example.com', 587, 'STARTTLS'),
+  ...smtpAccountFields('me@mail.example.com', secret),
   refreshToken: null,
   tokenVersion: 0,
 };

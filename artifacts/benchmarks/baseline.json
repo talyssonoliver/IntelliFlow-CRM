@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-30T11:17:39.798Z",
+  "timestamp": "2026-11-01T21:11:49.307Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -3368,12 +3368,12 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 67,
+    "total_validators": 71,
     "total_schemas": 689,
     "by_complexity": {
       "complex": 39,
-      "moderate": 23,
-      "simple": 5
+      "moderate": 25,
+      "simple": 7
     },
     "validators": [
       {
@@ -3563,12 +3563,6 @@
         "complexity": "complex"
       },
       {
-        "name": "email-mailbox",
-        "file": "email-mailbox.ts",
-        "schemas": 8,
-        "complexity": "moderate"
-      },
-      {
         "name": "help-article",
         "file": "help-article.ts",
         "schemas": 8,
@@ -3608,6 +3602,12 @@
         "name": "module",
         "file": "module.ts",
         "schemas": 7,
+        "complexity": "moderate"
+      },
+      {
+        "name": "email-mailbox",
+        "file": "email-mailbox.ts",
+        "schemas": 6,
         "complexity": "moderate"
       },
       {
@@ -3737,6 +3737,12 @@
         "complexity": "moderate"
       },
       {
+        "name": "mailbox-fields",
+        "file": "mailbox-fields.ts",
+        "schemas": 2,
+        "complexity": "simple"
+      },
+      {
         "name": "sla-policy",
         "file": "sla-policy.ts",
         "schemas": 2,
@@ -3775,6 +3781,24 @@
       {
         "name": "required-url",
         "file": "required-url.ts",
+        "schemas": 0,
+        "complexity": "moderate"
+      },
+      {
+        "name": "smtp-account-env",
+        "file": "smtp-account-env.ts",
+        "schemas": 0,
+        "complexity": "simple"
+      },
+      {
+        "name": "smtp-account",
+        "file": "smtp-account.ts",
+        "schemas": 0,
+        "complexity": "moderate"
+      },
+      {
+        "name": "smtp-endpoint",
+        "file": "smtp-endpoint.ts",
         "schemas": 0,
         "complexity": "moderate"
       }

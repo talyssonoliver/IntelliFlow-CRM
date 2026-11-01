@@ -4,7 +4,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import axe from 'axe-core';
-import type { MailboxDto } from '@intelliflow/validators';
+import { smtpAccountSummary, smtpEndpointFields, type MailboxDto } from '@intelliflow/validators';
 
 const api = vi.hoisted(() => ({
   oauthStart: { mutateAsync: vi.fn(), isPending: false },
@@ -44,11 +44,8 @@ const mailbox = (over: Partial<MailboxDto> = {}): MailboxDto => ({
   lastErrorCode: null,
   fromAddress: 'me@mail.example.invalid',
   fromName: null,
-  smtpHost: 'smtp.mail.example.invalid',
-  smtpPort: 587,
-  smtpSecurity: 'STARTTLS',
-  smtpUsername: 'me@mail.example.invalid',
-  hasSmtpPassword: true,
+  ...smtpEndpointFields('smtp.mail.example.invalid', 587, 'STARTTLS'),
+  ...smtpAccountSummary('me@mail.example.invalid', true),
   imapHost: null,
   imapPort: null,
   imapUsername: null,

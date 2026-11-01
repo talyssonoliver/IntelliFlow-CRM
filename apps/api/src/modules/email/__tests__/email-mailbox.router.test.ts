@@ -11,6 +11,7 @@ vi.mock('../../../security/audit-logger', () => ({
 
 import { emailMailboxRouter, __resetConnectionTestLimiter } from '../email-mailbox.router';
 import { __resetAccessTokenCache } from '../mailbox-transport';
+import { smtpAccountFields, smtpEndpointFields } from '@intelliflow/validators';
 
 const tenantId = TEST_UUIDS.tenant;
 const secret = 'x'.repeat(22);
@@ -28,11 +29,8 @@ const smtpRow = (over: Record<string, unknown> = {}) => ({
   lastErrorCode: null,
   fromAddress: 'me@mail.example.com',
   fromName: null,
-  smtpHost: 'smtp.mail.example.com',
-  smtpPort: 587,
-  smtpSecurity: 'STARTTLS',
-  smtpUsername: 'me@mail.example.com',
-  smtpPassword: secret,
+  ...smtpEndpointFields('smtp.mail.example.com', 587, 'STARTTLS'),
+  ...smtpAccountFields('me@mail.example.com', secret),
   imapHost: null,
   imapPort: null,
   imapUsername: null,
@@ -92,11 +90,8 @@ const admin = () => emailMailboxRouter.createCaller(ctxWith(createAdminContext()
 
 const saveInput = {
   scope: 'USER' as const,
-  smtpHost: 'smtp.mail.example.com',
-  smtpPort: 587,
-  smtpSecurity: 'STARTTLS' as const,
-  smtpUsername: 'me@mail.example.com',
-  smtpPassword: secret,
+  ...smtpEndpointFields('smtp.mail.example.com', 587, 'STARTTLS'),
+  ...smtpAccountFields('me@mail.example.com', secret),
   fromAddress: 'me@mail.example.com',
 };
 
@@ -203,24 +198,23 @@ describe('emailMailbox.saveSmtp', () => {
         imapPassword: secret,
       })
     );
+    // An absent password means "keep the stored one".
+    const keepPassword = { ...saveInput, smtpPassword: undefined };
     await expect(
       member().saveSmtp({
-        ...saveInput,
-        smtpPassword: undefined,
-        smtpHost: 'smtp.other.example.com',
+        ...keepPassword,
+        ...smtpEndpointFields('smtp.other.example.com', saveInput.smtpPort, saveInput.smtpSecurity),
       })
     ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
     await expect(
       member().saveSmtp({
-        ...saveInput,
-        smtpPassword: undefined,
-        smtpUsername: 'other@mail.example.com',
+        ...keepPassword,
+        ...smtpAccountFields('other@mail.example.com', undefined),
       })
     ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
     await expect(
       member().saveSmtp({
-        ...saveInput,
-        smtpPassword: undefined,
+        ...keepPassword,
         imapHost: 'imap.other.example.com',
         imapPort: 993,
         imapUsername: 'u',

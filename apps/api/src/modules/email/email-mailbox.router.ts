@@ -23,10 +23,17 @@ import {
   type OAuthMailboxProvider,
 } from '@intelliflow/domain';
 import {
+  NO_SMTP_ACCOUNT,
+  NO_SMTP_ENDPOINT,
   mailboxScopeInputSchema,
   oauthCompleteInputSchema,
   oauthStartInputSchema,
+  pickSmtpEndpoint,
   saveSmtpMailboxInputSchema,
+  smtpAccountConfig,
+  smtpAccountDiffers,
+  smtpEndpointConfig,
+  smtpEndpointDiffers,
   type ConnectionTestResultDto,
   type MailboxDto,
   type OAuthProvidersAvailableDto,
@@ -191,7 +198,7 @@ function badRequest(message: string): TRPCError {
  */
 function assertStoredPasswordsReusable(input: SaveSmtpMailboxInput, existing: MailboxRow): void {
   const smtpAccountChanged =
-    existing.smtpHost !== input.smtpHost || existing.smtpUsername !== input.smtpUsername;
+    smtpEndpointDiffers(existing, input) || smtpAccountDiffers(existing, input);
   if (input.smtpPassword === undefined && smtpAccountChanged) {
     throw badRequest('Re-enter the password when you change the server or username.');
   }
@@ -232,9 +239,7 @@ function smtpMailboxData(
     lastErrorCode: null,
     fromAddress: input.fromAddress,
     fromName: input.fromName,
-    smtpHost: input.smtpHost,
-    smtpPort: input.smtpPort,
-    smtpSecurity: input.smtpSecurity,
+    ...pickSmtpEndpoint(input),
     smtpUsername: input.smtpUsername,
     imapHost: input.imapHost,
     imapPort: input.imapHost ? input.imapPort : null,
@@ -328,11 +333,8 @@ export const emailMailboxRouter = createTRPCRouter({
       try {
         if (row.kind === 'SMTP') {
           await transports.smtp.verify({
-            host: row.smtpHost ?? '',
-            port: row.smtpPort ?? 0,
-            security: (row.smtpSecurity ?? 'STARTTLS') as 'SSL' | 'STARTTLS',
-            username: row.smtpUsername ?? '',
-            password: row.smtpPassword ?? '',
+            ...smtpEndpointConfig(row),
+            ...smtpAccountConfig(row),
           });
           if (row.imapHost && row.imapPassword) {
             await transports.imap.verify({
@@ -463,11 +465,8 @@ export const emailMailboxRouter = createTRPCRouter({
         accountAddress: address,
         refreshToken: tokens.refreshToken,
         grantedScopes: tokens.scopes,
-        smtpHost: null,
-        smtpPort: null,
-        smtpSecurity: null,
-        smtpUsername: null,
-        smtpPassword: null,
+        ...NO_SMTP_ENDPOINT,
+        ...NO_SMTP_ACCOUNT,
         imapHost: null,
         imapPort: null,
         imapUsername: null,

@@ -6,6 +6,13 @@ import {
   toSignatureDto,
   toSuppressionDto,
 } from '../email-dto';
+import {
+  NO_SMTP_ACCOUNT,
+  NO_SMTP_ENDPOINT,
+  smtpAccountFields,
+  smtpAccountSummary,
+  smtpEndpointFields,
+} from '@intelliflow/validators';
 
 const secret = 'x'.repeat(30);
 const updatedAt = new Date(Date.UTC(2026, 9, 20));
@@ -20,11 +27,8 @@ const smtpRow = {
   lastErrorCode: null,
   fromAddress: 'me@mail.example.invalid',
   fromName: 'Me',
-  smtpHost: 'smtp.mail.example.invalid',
-  smtpPort: 587,
-  smtpSecurity: 'STARTTLS',
-  smtpUsername: 'me@mail.example.invalid',
-  smtpPassword: secret,
+  ...smtpEndpointFields('smtp.mail.example.invalid', 587, 'STARTTLS'),
+  ...smtpAccountFields('me@mail.example.invalid', secret),
   imapHost: 'imap.mail.example.invalid',
   imapPort: 993,
   imapUsername: 'me@mail.example.invalid',
@@ -46,11 +50,8 @@ describe('toMailboxDto', () => {
       lastErrorCode: null,
       fromAddress: 'me@mail.example.invalid',
       fromName: 'Me',
-      smtpHost: 'smtp.mail.example.invalid',
-      smtpPort: 587,
-      smtpSecurity: 'STARTTLS',
-      smtpUsername: 'me@mail.example.invalid',
-      hasSmtpPassword: true,
+      ...smtpEndpointFields('smtp.mail.example.invalid', 587, 'STARTTLS'),
+      ...smtpAccountSummary('me@mail.example.invalid', true),
       imapHost: 'imap.mail.example.invalid',
       imapPort: 993,
       imapUsername: 'me@mail.example.invalid',
@@ -64,8 +65,7 @@ describe('toMailboxDto', () => {
 
   it('hides host and username when connection details are not for this viewer', () => {
     const dto = toMailboxDto(smtpRow, { includeConnection: false });
-    expect(dto.smtpHost).toBeNull();
-    expect(dto.smtpUsername).toBeNull();
+    expect(dto).toMatchObject({ ...NO_SMTP_ENDPOINT, ...smtpAccountSummary(null, true) });
     expect(dto.imapHost).toBeNull();
     expect(dto.imapUsername).toBeNull();
     expect(dto.fromAddress).toBe('me@mail.example.invalid');
@@ -76,8 +76,8 @@ describe('toMailboxDto', () => {
       {
         ...smtpRow,
         kind: 'GMAIL',
-        smtpHost: null,
-        smtpPassword: null,
+        ...NO_SMTP_ENDPOINT,
+        ...NO_SMTP_ACCOUNT,
         imapHost: null,
         imapPassword: null,
         accountAddress: 'me@gmail.example',

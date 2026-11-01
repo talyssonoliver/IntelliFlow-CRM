@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { NODE_ENVIRONMENTS, LOG_LEVELS } from '@intelliflow/domain';
+import { smtpAccountEnvShape } from './smtp-account-env';
 
 /**
  * Environment Variable Validation
@@ -56,8 +57,7 @@ const aiConfigSchema = z.object({
 const emailConfigSchema = z.object({
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.coerce.number().int().positive().optional(),
-  SMTP_USER: z.string().optional(),
-  SMTP_PASSWORD: z.string().optional(),
+  ...smtpAccountEnvShape, // #1103: the account variables live in smtp-account-env.ts
   EMAIL_FROM: z.email().optional(),
 });
 
