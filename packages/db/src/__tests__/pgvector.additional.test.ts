@@ -41,6 +41,7 @@ vi.mock('../client', () => ({
     const result = await mockPrismaQueryRaw(sql);
     return { result, duration: 10 };
   },
+  VECTOR_COLUMN_DIMENSIONS: 2048,
 }));
 
 import {
@@ -79,7 +80,7 @@ describe('pgvector Helper Module - Additional Coverage', () => {
 
   describe('validateEmbedding()', () => {
     it('should return true for valid embedding', () => {
-      const embedding = Array(1536).fill(0.1);
+      const embedding = Array(2048).fill(0.1);
       expect(validateEmbedding(embedding)).toBe(true);
     });
 
@@ -106,13 +107,13 @@ describe('pgvector Helper Module - Additional Coverage', () => {
     });
 
     it('should return false when embedding contains NaN', () => {
-      const embedding = Array(1536).fill(0.1);
+      const embedding = Array(2048).fill(0.1);
       embedding[500] = NaN;
       expect(validateEmbedding(embedding)).toBe(false);
     });
 
     it('should return false when embedding contains non-number', () => {
-      const embedding = Array(1536).fill(0.1);
+      const embedding = Array(2048).fill(0.1);
       (embedding as any)[100] = 'string';
       expect(validateEmbedding(embedding)).toBe(false);
     });
@@ -121,8 +122,8 @@ describe('pgvector Helper Module - Additional Coverage', () => {
       expect(validateEmbedding([])).toBe(false);
     });
 
-    it('should use default dimensions (1536) when not specified', () => {
-      const embedding = Array(1536).fill(0.0);
+    it('should use the column size (2048) when no dimensions are given', () => {
+      const embedding = Array(2048).fill(0.0);
       expect(validateEmbedding(embedding)).toBe(true);
     });
   });
@@ -255,12 +256,12 @@ describe('pgvector Helper Module - Additional Coverage', () => {
     it('should throw for invalid embedding', async () => {
       const invalidEmbedding = Array(100).fill(0.1); // Wrong dimensions
       await expect(findSimilarLeads(invalidEmbedding)).rejects.toThrow(
-        'Invalid embedding: expected 1536 dimensions'
+        'Invalid embedding: expected 2048 dimensions'
       );
     });
 
     it('should query database with correct parameters', async () => {
-      const embedding = Array(1536).fill(0.1);
+      const embedding = Array(2048).fill(0.1);
       // Mock the actual query result that includes all database columns
       mockPrismaQueryRaw.mockResolvedValueOnce([
         { id: 'lead-1', email: 'lead1@test.com', company: 'Corp A', score: 85, similarity: 0.95 },
@@ -280,7 +281,7 @@ describe('pgvector Helper Module - Additional Coverage', () => {
     });
 
     it('should use default options', async () => {
-      const embedding = Array(1536).fill(0.1);
+      const embedding = Array(2048).fill(0.1);
       mockPrismaQueryRaw.mockResolvedValueOnce([]);
 
       const results = await findSimilarLeads(embedding);
@@ -290,7 +291,7 @@ describe('pgvector Helper Module - Additional Coverage', () => {
     });
 
     it('should support l2 metric', async () => {
-      const embedding = Array(1536).fill(0.1);
+      const embedding = Array(2048).fill(0.1);
       mockPrismaQueryRaw.mockResolvedValueOnce([]);
 
       await findSimilarLeads(embedding, { metric: 'l2' });
@@ -299,7 +300,7 @@ describe('pgvector Helper Module - Additional Coverage', () => {
     });
 
     it('should support inner_product metric', async () => {
-      const embedding = Array(1536).fill(0.1);
+      const embedding = Array(2048).fill(0.1);
       mockPrismaQueryRaw.mockResolvedValueOnce([]);
 
       await findSimilarLeads(embedding, { metric: 'inner_product' });
@@ -321,12 +322,12 @@ describe('pgvector Helper Module - Additional Coverage', () => {
     it('should throw for invalid embedding', async () => {
       const invalidEmbedding = [0.1, 0.2]; // Wrong dimensions
       await expect(findSimilarContacts(invalidEmbedding)).rejects.toThrow(
-        'Invalid embedding: expected 1536 dimensions'
+        'Invalid embedding: expected 2048 dimensions'
       );
     });
 
     it('should query database and map results', async () => {
-      const embedding = Array(1536).fill(0.1);
+      const embedding = Array(2048).fill(0.1);
       mockPrismaQueryRaw.mockResolvedValueOnce([
         {
           id: 'contact-1',
@@ -349,7 +350,7 @@ describe('pgvector Helper Module - Additional Coverage', () => {
     });
 
     it('should return empty array when no matches', async () => {
-      const embedding = Array(1536).fill(0.1);
+      const embedding = Array(2048).fill(0.1);
       mockPrismaQueryRaw.mockResolvedValueOnce([]);
 
       const results = await findSimilarContacts(embedding);
@@ -363,12 +364,12 @@ describe('pgvector Helper Module - Additional Coverage', () => {
     it('should throw for invalid embedding', async () => {
       const invalidEmbedding = Array(100).fill(0.1);
       await expect(updateLeadEmbedding('lead-1', invalidEmbedding)).rejects.toThrow(
-        'Invalid embedding: expected 1536 dimensions'
+        'Invalid embedding: expected 2048 dimensions'
       );
     });
 
     it('should execute raw SQL to update embedding', async () => {
-      const embedding = Array(1536).fill(0.1);
+      const embedding = Array(2048).fill(0.1);
       mockPrismaExecuteRaw.mockResolvedValueOnce(1);
 
       await updateLeadEmbedding('lead-1', embedding);
@@ -381,12 +382,12 @@ describe('pgvector Helper Module - Additional Coverage', () => {
     it('should throw for invalid embedding', async () => {
       const invalidEmbedding = Array(100).fill(0.1);
       await expect(updateContactEmbedding('contact-1', invalidEmbedding)).rejects.toThrow(
-        'Invalid embedding: expected 1536 dimensions'
+        'Invalid embedding: expected 2048 dimensions'
       );
     });
 
     it('should execute raw SQL to update embedding', async () => {
-      const embedding = Array(1536).fill(0.1);
+      const embedding = Array(2048).fill(0.1);
       mockPrismaExecuteRaw.mockResolvedValueOnce(1);
 
       await updateContactEmbedding('contact-1', embedding);

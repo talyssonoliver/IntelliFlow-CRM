@@ -433,7 +433,18 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     try {
       const { ContactEmbedWorker } = await import('./workers/contact-embed-worker.js');
       const { getEmbeddingChain } = await import('./chains/embedding.chain.js');
-      const { formatEmbeddingForPgVector, validateEmbedding } = await import('@intelliflow/db');
+      const { formatEmbeddingForPgVector, validateEmbedding, VECTOR_COLUMN_DIMENSIONS } =
+        await import('@intelliflow/db');
+      const { embeddingDimensions } = await import('./lib/embedding-dimensions.js');
+      // Every vector of another size would be refused on write, so do not consume the queue at all.
+      const dimensions = embeddingDimensions();
+      if (dimensions !== VECTOR_COLUMN_DIMENSIONS) {
+        this.logger.error(
+          { dimensions, column: VECTOR_COLUMN_DIMENSIONS },
+          'ContactEmbedWorker not started — the embedding provider returns vectors that do not fit the embedding column'
+        );
+        return;
+      }
       const redisConnection = {
         host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
@@ -461,6 +472,17 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       );
       await this.contactEmbedWorker.start();
       this.logger.info('ContactEmbedWorker started — intelliflow-contact-embed queue consumed');
+      // Re-embed contacts left without an embedding (the vector(2048) migration clears them all).
+      // Not awaited: the sweep pages through contacts and must not hold up boot.
+      this.contactEmbedWorker
+        .enqueueMissingEmbeddings()
+        .then((queued) => this.logger.info({ queued }, 'Contact embedding backfill queued'))
+        .catch((error: unknown) =>
+          this.logger.warn(
+            { error: error instanceof Error ? error.message : String(error) },
+            'Contact embedding backfill not queued'
+          )
+        );
     } catch (error) {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },
