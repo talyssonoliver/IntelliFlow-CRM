@@ -5,9 +5,7 @@
  * This test file validates the complete authentication flow:
  * - Sign up (user registration)
  * - Sign in (user login)
- * - Session management
  * - Token verification
- * - Sign out (logout)
  *
  * Prerequisites:
  * - Supabase local instance running (supabase start)
@@ -20,9 +18,6 @@ import {
   supabaseAdmin,
   signUp,
   signIn,
-  signOut,
-  getSession,
-  getUser,
   verifyToken,
   isConfigured,
   getConfig,
@@ -202,35 +197,6 @@ describe('Supabase Authentication Flow E2E Tests', () => {
     });
   });
 
-  describe.skipIf(!IS_LOCAL_SUPABASE)('Session Management', () => {
-    it('should retrieve current session', async () => {
-      if (!testUserSession) {
-        console.log('Skipping session test - no user session');
-        return;
-      }
-
-      const { session, error } = await getSession();
-
-      // Session may or may not exist depending on auth state
-      expect(error).toBeNull();
-      // Session object should be returned (may be null if not authenticated)
-    });
-
-    it('should retrieve current user', async () => {
-      if (!testUserSession) {
-        console.log('Skipping user test - no user session');
-        return;
-      }
-
-      const { user, error } = await getUser();
-
-      // User may or may not exist depending on auth state
-      if (error) {
-        console.log('Get user result:', error.message);
-      }
-    });
-  });
-
   describe.skipIf(!IS_LOCAL_SUPABASE)('Token Verification', () => {
     it('should verify valid JWT token', async () => {
       if (!testUserSession?.accessToken) {
@@ -271,61 +237,6 @@ describe('Supabase Authentication Flow E2E Tests', () => {
     });
   });
 
-  describe.skipIf(!IS_LOCAL_SUPABASE)('Sign Out Flow', () => {
-    it('should sign out authenticated user', async () => {
-      if (!testUserSession) {
-        console.log('Skipping sign out test - no user session');
-        return;
-      }
-
-      const { error } = await signOut();
-
-      // Sign out should succeed or fail gracefully
-      if (error) {
-        console.log('Sign out result:', error.message);
-      } else {
-        expect(error).toBeNull();
-      }
-    });
-
-    it('should handle sign out when not authenticated', async () => {
-      const { error } = await signOut();
-
-      // Should not throw error even when not authenticated
-      // Error may or may not be present depending on implementation
-    });
-
-    it('should invalidate session after sign out', async () => {
-      const { session } = await getSession();
-
-      // After sign out, session should be null or expired
-      // (depending on how Supabase handles it)
-    });
-  });
-
-  describe.skipIf(!IS_LOCAL_SUPABASE)('Auth State Changes', () => {
-    it('should emit auth state change events', async () => {
-      const authStates: string[] = [];
-
-      // Subscribe to auth state changes
-      const {
-        data: { subscription },
-      } = supabase.auth.onAuthStateChange((event, session) => {
-        authStates.push(event);
-      });
-
-      // Perform auth operations
-      await signIn(TEST_USER.email, TEST_USER.password);
-      await signOut();
-
-      // Clean up subscription
-      subscription.unsubscribe();
-
-      // Should have captured auth events (may vary by timing)
-      expect(Array.isArray(authStates)).toBe(true);
-    });
-  });
-
   describe.skipIf(!IS_LOCAL_SUPABASE)('Password Reset Flow', () => {
     it('should initiate password reset', async () => {
       const { data, error } = await supabase.auth.resetPasswordForEmail(TEST_USER.email, {
@@ -344,9 +255,6 @@ describe('Supabase Authentication Flow E2E Tests', () => {
 
   // Cleanup after all tests
   afterAll(async () => {
-    // Sign out any remaining session
-    await signOut();
-
     // Delete test user if created (requires admin client)
     if (testUserSession?.userId) {
       try {
@@ -410,17 +318,13 @@ export async function getTestUserToken(email: string, password: string) {
 export async function validateAuthFlow(): Promise<{
   signUp: boolean;
   signIn: boolean;
-  getSession: boolean;
   verifyToken: boolean;
-  signOut: boolean;
   overall: boolean;
 }> {
   const results = {
     signUp: false,
     signIn: false,
-    getSession: false,
     verifyToken: false,
-    signOut: false,
     overall: false,
   };
 
@@ -437,25 +341,17 @@ export async function validateAuthFlow(): Promise<{
     results.signIn = !signInResult.error && !!signInResult.session;
 
     if (signInResult.session) {
-      // Test get session
-      const sessionResult = await getSession();
-      results.getSession = !sessionResult.error;
-
       // Test verify token
       const verifyResult = await verifyToken(signInResult.session.access_token);
       results.verifyToken = !verifyResult.error && !!verifyResult.user;
     }
-
-    // Test sign out
-    const signOutResult = await signOut();
-    results.signOut = !signOutResult.error;
 
     // Cleanup
     if (signUpResult.user) {
       await cleanupTestUser(signUpResult.user.id);
     }
 
-    results.overall = results.signUp && results.signIn && results.signOut;
+    results.overall = results.signUp && results.signIn;
   } catch (error) {
     console.error('Auth flow validation error:', error);
   }

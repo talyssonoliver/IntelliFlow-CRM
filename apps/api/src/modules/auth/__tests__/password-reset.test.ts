@@ -23,9 +23,7 @@ const { mockResetPasswordForEmail, mockUpdateUserPassword, mockSupabaseAdmin } =
 
 vi.mock('../../../lib/supabase', () => ({
   signIn: vi.fn(),
-  signOut: vi.fn(),
   signOutUser: vi.fn(),
-  getSession: vi.fn(),
   verifyToken: vi.fn(),
   signInWithOAuth: vi.fn(),
   exchangeCodeForSession: vi.fn(),
