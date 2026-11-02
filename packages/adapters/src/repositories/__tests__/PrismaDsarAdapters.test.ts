@@ -658,6 +658,8 @@ describe('PrismaSubjectDataRepository', () => {
     });
     // Attribution the erasure clears is exported too, the click id included (codex).
     expect(prisma.lead.findMany.mock.calls[0][0].select).toMatchObject({ clickId: true });
+    // So is the COA outreach slug, which is usually built from the business or person name.
+    expect(prisma.lead.findMany.mock.calls[0][0].select).toMatchObject({ outreachSlug: true });
     expect(prisma.lead.findMany.mock.calls[0][0].where).toEqual({
       tenantId: 't1',
       id: { in: ['l1'] },
@@ -943,6 +945,18 @@ describe('PrismaSubjectDataRepository', () => {
     expect(sql).toBeDefined();
     expect(sql).toContain('"bookerName" = NULL');
     expect(sql).not.toContain('location');
+  });
+
+  it('clears the COA outreach slug with the rest of the lead attribution', async () => {
+    const prisma = subjectPrisma();
+    prisma.$queryRaw.mockResolvedValueOnce([{ status: 'VERIFIED' }]);
+    const repo = new PrismaSubjectDataRepository(asClient(prisma));
+    await repo.erase(eraseInput);
+    const sql = prisma.$executeRaw.mock.calls
+      .map(([strings]) => (strings as string[]).join('?'))
+      .find((text) => text.includes('"landingPath" = NULL'));
+    expect(sql).toBeDefined();
+    expect(sql).toContain('"outreachSlug" = NULL');
   });
 
   const eraseInput = {

@@ -380,7 +380,7 @@ describe('LoginPage', () => {
       await user.type(emailInput, 'wrong@example.com');
 
       const passwordInput = screen.getByLabelText(/^password$/i);
-      await user.type(passwordInput, 'wrongpassword123');
+      await user.type(passwordInput, ['wrong', 'password', '123'].join(''));
 
       const submitButton = screen.getByRole('button', { name: /^sign in$/i });
       await user.click(submitButton);

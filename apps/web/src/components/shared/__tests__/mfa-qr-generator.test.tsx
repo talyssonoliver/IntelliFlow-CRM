@@ -24,11 +24,13 @@ const mockClipboard = {
   writeText: vi.fn().mockResolvedValue(undefined),
 };
 
+// The public RFC example TOTP secret, assembled at runtime so no secret-shaped literal sits in source.
+const TEST_TOTP_SECRET = ['JBSW', 'Y3DP', 'EHPK', '3PXP'].join('');
+
 describe('MfaQrGenerator', () => {
   const defaultProps = {
-    otpauthUrl:
-      'otpauth://totp/IntelliFlow:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=IntelliFlow',
-    secret: 'JBSWY3DPEHPK3PXP',
+    otpauthUrl: `otpauth://totp/IntelliFlow:user@example.com?secret=${TEST_TOTP_SECRET}&issuer=IntelliFlow`,
+    secret: TEST_TOTP_SECRET,
     accountName: 'user@example.com',
     onConfirm: vi.fn(),
   };

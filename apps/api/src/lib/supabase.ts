@@ -19,6 +19,7 @@
 import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { leadSearchResultSchema, contactSearchResultSchema } from '@intelliflow/validators';
+import { isJwtShaped } from './jwt-shape';
 
 // ============================================
 // ENVIRONMENT CONFIGURATION
@@ -392,6 +393,24 @@ async function getJoseVerifier(): Promise<{ jwtVerify: any; jwks: any } | null> 
   }
 }
 
+/**
+ * jose errors that are a final answer about the token: Supabase would refuse it too. Any
+ * other failure means this API could not decide (a key id the JWKS does not list yet, a
+ * symmetric signature, the JWKS unreachable), and Supabase still can.
+ */
+const DEFINITIVE_REJECTIONS = new Set([
+  'ERR_JWT_EXPIRED',
+  'ERR_JWT_CLAIM_VALIDATION_FAILED',
+  'ERR_JWT_INVALID',
+  'ERR_JWS_INVALID',
+  'ERR_JWS_SIGNATURE_VERIFICATION_FAILED',
+]);
+
+function joseErrorCode(error: unknown): string | undefined {
+  const code = (error as { code?: unknown } | null)?.code;
+  return typeof code === 'string' ? code : undefined;
+}
+
 /** Fallback: verify token using the Supabase Admin HTTP endpoint. */
 async function verifyTokenViaAdmin(
   token: string,
@@ -419,8 +438,9 @@ async function verifyTokenViaAdmin(
  * Verify a JWT token locally and return the user.
  *
  * Uses jose JWKS verification (ES256) instead of a Supabase Admin HTTP call.
- * Falls back to supabaseAdmin.auth.getUser() if local verification is unavailable
- * (e.g., mock keys in test environment, or jose import failure).
+ * Falls back to supabaseAdmin.auth.getUser() only when local verification cannot decide
+ * (see DEFINITIVE_REJECTIONS) or is unavailable (jose import failure). A Bearer that is not
+ * JWT-shaped, such as the shared internal secret, is refused without any network call.
  */
 export async function verifyToken(
   token: string
@@ -432,6 +452,10 @@ export async function verifyToken(
   // of silently accepting mock-key tokens.
   if (config.usingMockKeys) {
     return { user: null, error: new Error('Mock keys cannot verify real tokens') };
+  }
+
+  if (!isJwtShaped(token)) {
+    return { user: null, error: new Error('Bearer token is not a JWT') };
   }
 
   const verifier = await getJoseVerifier();
@@ -459,8 +483,11 @@ export async function verifyToken(
 
     return { user, error: null };
   } catch (jwtError) {
-    // JWT verification failed (expired, invalid signature, etc.)
-    // Fall back to Supabase Admin for definitive answer
+    const code = joseErrorCode(jwtError);
+    if (code && DEFINITIVE_REJECTIONS.has(code)) {
+      return { user: null, error: new Error(`Token rejected: ${code}`) };
+    }
+    // Local verification could not decide, so Supabase gives the answer.
     return verifyTokenViaAdmin(token, jwtError);
   }
 }

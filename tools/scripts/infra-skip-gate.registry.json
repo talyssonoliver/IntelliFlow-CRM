@@ -16,6 +16,13 @@
       "reason": "ADR-054: #1114 — on 2026-11-01 it ran 5/5 against the local ephemeral DB (scripts/test-db.mjs run, which applies the migrations with migrate deploy), but CI main run 41239235781 skipped 5/5: the CI Integration Tests job builds its schema with db:push, which applies none of the migrations' RLS policies or GRANTs to `authenticated`, so the probe finds no policy and skips. Remove this entry when #1114 switches that job to migrate deploy."
     },
     {
+      "file": "tests/integration/tier-module-gating.test.ts",
+      "kind": "infra-gated",
+      "maxSkipped": 9,
+      "reviewBy": "2026-11-30",
+      "reason": "ADR-054: #1117 — the local pre-ship coverage step cannot resolve @intelliflow/db from tests/integration/setup.ts, so createIsolatedTestPrismaClient() returns null and the suite skips 9/9 on every full-scope push (seen on 2026-11-01 for feat/embeddings-openrouter-free at aeac17a68). It runs in the integration-tests step and in CI. #1115 removed this entry; remove it again when #1117 makes the coverage run load the client."
+    },
+    {
       "file": "apps/ai-worker/src/chains/__tests__/ollama-benchmark.integration.test.ts",
       "kind": "infra-gated",
       "maxSkipped": 8,

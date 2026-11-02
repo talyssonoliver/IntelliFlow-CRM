@@ -131,6 +131,7 @@ export {
   disconnectPrisma,
   validateEmbedding,
   formatEmbeddingForPgVector,
+  VECTOR_COLUMN_DIMENSIONS,
 } from './client';
 
 // Re-export types for pgvector operations

@@ -71,7 +71,7 @@ Full log: `PG-205-discussion.md` (lead synthesis L1-L10, resolutions R2-1..R2-6,
   `defaultDepartment VARCHAR(100)` (nullable), `defaultOwner` (default `CREATOR`), `requiredFields TEXT[]`,
   timestamps.
 - CHECKs: key `^[a-z][a-z0-9_]{0,39}$`; name trimmed and non-empty; colour in the 18 contact `TAG_COLOR_TOKENS`
-  (same list as `contact_tags_colorToken_check`, `20260414120000_contact_settings_hardening:7-13`); `defaultOwner IN
+  (same list as `contact_tags_colorToken_check`; see migration `20260414120000_contact_settings_hardening` lines 7-13); `defaultOwner IN
   ('CREATOR','ACCOUNT_OWNER')`; department NULL or non-blank; `sortOrder >= 0`; `NOT isDefault OR isActive`;
   reserved keys only for system rows (`isSystem OR key NOT IN (the six)`); `requiredFields <@
   ARRAY['phone','company','title','department','accountId']` and cardinality ≤ 5.

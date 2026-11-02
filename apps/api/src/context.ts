@@ -14,6 +14,7 @@
 import type { PrismaClient } from '@intelliflow/db';
 import { TRPCError } from '@trpc/server';
 import { container, containerReady, type Container, apiPrisma } from './container';
+import { isJwtShaped } from './lib/jwt-shape';
 import { supabaseAdmin, verifyToken } from './lib/supabase';
 import {
   ACTIVE_TENANT_HEADER,
@@ -805,9 +806,9 @@ export const createContext = async (opts?: {
   // Extract and verify token from Authorization header
   const token = extractBearerToken(opts?.req);
 
-  // Partner API keys (`pk_...`, ADR-070) are authenticated by partnerProcedure, never
-  // by Supabase — skip the JWT round-trip for them.
-  if (token && !token.startsWith('pk_')) {
+  // Partner API keys (`pk_...`, ADR-070) are authenticated by partnerProcedure, and the
+  // shared internal secret by the inbound routes, so neither is a session to resolve.
+  if (token && !token.startsWith('pk_') && isJwtShaped(token)) {
     try {
       const resolved = await resolveUserFromToken(token, readRequestedTenant(opts?.req));
       if (resolved.kind === 'ok') user = resolved.user;

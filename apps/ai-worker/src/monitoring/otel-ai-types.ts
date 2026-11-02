@@ -120,7 +120,8 @@ export interface DriftTickResult {
 export const AI_ALERT_THRESHOLDS = {
   hallucinationRate: 0.05,
   minHallucinationChecks: 20,
-  latencyP95Ms: 2000,
+  // Owner ruling 2026-11-01: scoring runs in the background; 24h baseline p50 7.0 s, p95 27.9 s.
+  latencyP95Ms: 45000,
   errorRatio: 0.05,
   minCalls: 10,
 } as const;

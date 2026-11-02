@@ -22,6 +22,7 @@ import {
   seededSeriesBound,
 } from '../otel-ai-metrics';
 import {
+  AI_ALERT_THRESHOLDS,
   CHAIN_IDS,
   HALLUCINATION_TYPES,
   URGENCIES,
@@ -138,7 +139,7 @@ describe('instrument definitions', () => {
     expect(collected).toEqual(declared);
   });
 
-  it('records latency into the explicit bucket boundaries, including 2000 ms', async () => {
+  it('records latency into the explicit bucket boundaries, from 50 ms to 120 s', async () => {
     recordInference({
       model: 'scoring-free',
       chain: 'lead_scoring',
@@ -148,9 +149,23 @@ describe('instrument definitions', () => {
     const all = await collectMetrics(reader);
     const [point] = pointsWhere(all, 'intelliflow.ai.inference.latency');
     expect(point.boundaries).toEqual([
-      50, 100, 250, 500, 1000, 1500, 2000, 3000, 5000, 10000, 30000,
+      50, 100, 250, 500, 1000, 1500, 2000, 3000, 5000, 10000, 30000, 45000, 60000, 120000,
     ]);
     expect(findMetric(all, 'intelliflow.ai.inference.latency')?.unit).toBe('ms');
+  });
+
+  it('keeps a finite bound above the p95 alert threshold, so histogram_quantile can exceed it', async () => {
+    recordInference({
+      model: 'scoring-free',
+      chain: 'lead_scoring',
+      outcome: 'success',
+      latencyMs: 50000,
+    });
+    const all = await collectMetrics(reader);
+    const [point] = pointsWhere(all, 'intelliflow.ai.inference.latency');
+    const boundaries = point.boundaries ?? [];
+    expect(boundaries.at(-1)).toBeGreaterThan(AI_ALERT_THRESHOLDS.latencyP95Ms);
+    expect(point.value).toBe(50000);
   });
 });
 
