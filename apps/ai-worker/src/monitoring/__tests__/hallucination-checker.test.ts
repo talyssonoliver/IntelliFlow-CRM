@@ -336,6 +336,32 @@ describe('HallucinationChecker', () => {
 
       expect(result.hallucinationTypes).not.toContain('unsupported_claim');
     });
+
+    it.each([
+      ['4500 employees', '4,500 employees'],
+      ['4,500 employees', '4500 employees'],
+      ['a budget of $2000000', 'a budget of $2,000,000'],
+    ])('treats "%s" in the context and "%s" in the output as the same figure', async (ctx, out) => {
+      const result = await checker.checkOutput({
+        id: 'claim-figure-format',
+        model: 'gpt-4',
+        inputContext: `The company has ${ctx} and is based in Leeds.`,
+        output: `The company has ${out} and is based in Leeds.`,
+      });
+
+      expect(result.hallucinationTypes).not.toContain('unsupported_claim');
+    });
+
+    it('still flags a figure the context never states, however it is written', async () => {
+      const result = await checker.checkOutput({
+        id: 'claim-figure-invented',
+        model: 'gpt-4',
+        inputContext: 'The company has 4500 employees and is based in Leeds.',
+        output: 'The company has 4,800 employees and is based in Leeds.',
+      });
+
+      expect(result.hallucinationTypes).toContain('unsupported_claim');
+    });
   });
 
   // ============================================

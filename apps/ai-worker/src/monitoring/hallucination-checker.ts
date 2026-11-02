@@ -15,13 +15,18 @@ const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
 });
 
+/** A thousands separator: a comma between a digit and exactly three more digits. */
+const DIGIT_GROUP_COMMA = /(?<=\d),(?=\d{3}(?!\d))/g;
+
 /**
  * Lower-case word tokens with punctuation stripped, so "Title:" and "title" match.
- * `$` and `%` stay attached so "$40m" and "15%" remain figures.
+ * `$` and `%` stay attached so "$40m" and "15%" remain figures. Thousands separators
+ * are dropped first, so "4,500" and "4500" are the same figure rather than "4" and "500".
  */
 function tokenize(text: string): string[] {
   return text
     .toLowerCase()
+    .replace(DIGIT_GROUP_COMMA, '')
     .split(/[^\p{L}\p{N}$%]+/u)
     .filter(Boolean);
 }
