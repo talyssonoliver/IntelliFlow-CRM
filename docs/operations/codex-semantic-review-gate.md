@@ -96,7 +96,7 @@ Required fields per entry:
 
 | Field         | Requirement                                                         |
 | ------------- | ------------------------------------------------------------------- |
-| `fingerprint` | SHA-256 hex of `<file>:<normalised-issue-text>`                     |
+| `fingerprint` | SHA-256 hex from the summary output, anchored on a source line      |
 | `reason`      | Non-empty. Vague reasons ("known issue") are grounds for reverting. |
 | `author`      | GitHub handle of approver                                           |
 | `date`        | ISO-8601                                                            |
@@ -108,9 +108,21 @@ To add a waiver:
    output.
 2. Add an entry to `tools/audit/codex-review-waivers.yaml` with a concrete
    reason explaining why the finding is a false-positive or an accepted risk.
-3. Run the gate again to confirm it exits 0.
+3. Run the gate again to confirm it exits 0. Read the waiver reason it prints
+   beside each waived finding: it should describe that finding.
 4. Include the waiver change in the same PR as the code it covers (co-dependent
    changes ride the feature branch).
+
+A fingerprint anchors on a line within 2 lines of the finding that has at least
+4 identifier characters and appears once in the file (`#980`). A `}` or a
+repeated line cannot be an anchor. If the window has no such line, the
+fingerprint hashes the whole window, so the waiver stops matching when the
+reported line shifts. `node scripts/codex-review.mjs --check-waivers` fails on
+an ineligible anchor; it calls no reviewer and runs as the `codex-waivers`
+pre-ship step.
+
+Two findings within a few lines of one anchor still share a fingerprint. That
+comes with tolerating a reported line that is one or two lines off.
 
 ## False-positive policy
 
