@@ -12,8 +12,8 @@ vi.mock('next/link', () => ({
   ),
 }));
 
-vi.mock('next/font/google', () => ({
-  Manrope: () => ({ variable: 'font-manrope' }),
+vi.mock('next/font/local', () => ({
+  default: () => ({ variable: 'font-manrope' }),
 }));
 
 vi.mock('../AuroraBackground', () => ({
