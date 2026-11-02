@@ -1455,3 +1455,28 @@ waivers:
     author: PG-203 lane
     date: '2026-10-27'
     expires: '2026-11-26'
+  - fingerprint: 21685ef57ed26e8960eb694cdb767591d30544e2c4362fdb854c0089de335250
+    reason: >-
+      Accepted limit: a figure worked out from figures in the context ("so 50% of employees are
+      remote") counts as unsupported, because the rule compares figures literally. It adds to
+      the average and alone stays under the threshold. Checking calculations is outside this
+      keyword heuristic. Tracked in #1129.
+    author: IFC-117 lane
+    date: '2026-11-02'
+    expires: '2026-12-02'
+  - fingerprint: 4b63590a0bd86f988200d762a7248a101f4f4ff1d26b2bc2c8db3228cdaec435
+    reason: >-
+      Accepted known limit, by the owner's choice to split IFC-117: grounding in the whole prompt
+      lets invented lead details pass, because the rubric supplies their words and numbers. The
+      PR says so plainly. The rules that catch them are tracked in #1139.
+    author: IFC-117 lane
+    date: '2026-11-02'
+    expires: '2026-12-02'
+  - fingerprint: 050ba2ea20c7bef66ec376fb01807dbbfef2023ad56f3b11f39b0e910afa023a
+    reason: >-
+      Accepted limit, a second report of the derived figure case: a figure worked out from
+      figures in the context counts as unsupported, because the rule compares figures literally.
+      Alone it stays under the threshold. Tracked in #1129.
+    author: IFC-117 lane
+    date: '2026-11-02'
+    expires: '2026-12-02'

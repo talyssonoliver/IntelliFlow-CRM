@@ -122,7 +122,7 @@ describe('withMonitoring — metrics fidelity (IFC-215)', () => {
       id: 'test-op',
       timestamp: new Date(),
       model: 'scoring-free',
-      inputContext: 'Lead from acme.com, enterprise sector',
+      inputContextHash: 'c'.repeat(64),
       output: 'The company XYZ-9999-FAKE was founded in 1234 and has 999 trillion employees.',
       hallucinated: true,
       confidence: 0.8,
