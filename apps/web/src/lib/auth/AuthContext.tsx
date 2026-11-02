@@ -310,9 +310,6 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     return () => globalThis.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
   }, [queryClient]);
 
-  // tRPC mutation for token refresh
-  const _refreshTokenMutation = trpc.auth.refreshSession.useMutation();
-
   // Track refresh timer
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
   const isRefreshingRef = useRef(false);

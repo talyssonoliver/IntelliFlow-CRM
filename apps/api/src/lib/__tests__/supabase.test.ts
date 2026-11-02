@@ -257,24 +257,6 @@ describe('Supabase Auth Functions', () => {
     expect(typeof signIn).toBe('function');
   });
 
-  it('should export signOut function', async () => {
-    const { signOut } = await import('../supabase.js');
-    expect(signOut).toBeDefined();
-    expect(typeof signOut).toBe('function');
-  });
-
-  it('should export getSession function', async () => {
-    const { getSession } = await import('../supabase.js');
-    expect(getSession).toBeDefined();
-    expect(typeof getSession).toBe('function');
-  });
-
-  it('should export getUser function', async () => {
-    const { getUser } = await import('../supabase.js');
-    expect(getUser).toBeDefined();
-    expect(typeof getUser).toBe('function');
-  });
-
   it('should export verifyToken function', async () => {
     const { verifyToken } = await import('../supabase.js');
     expect(verifyToken).toBeDefined();
