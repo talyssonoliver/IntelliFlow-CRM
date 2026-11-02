@@ -20,12 +20,8 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { deriveKey, fieldEncryptionExtension } from '../../packages/db/src/field-encryption';
 import { applySchemaSql, createIndexConcurrently } from './schema-lock';
-import {
-  NO_SMTP_ACCOUNT,
-  NO_SMTP_ENDPOINT,
-  smtpAccountFields,
-  smtpEndpointFields,
-} from '@intelliflow/validators';
+import { NO_SMTP_ACCOUNT, smtpAccountFields } from '../../packages/validators/src/smtp-account';
+import { NO_SMTP_ENDPOINT, smtpEndpointFields } from '../../packages/validators/src/smtp-endpoint';
 
 const MIGRATIONS = join(__dirname, '../../packages/db/prisma/migrations');
 const TABLE_MIGRATIONS = [
