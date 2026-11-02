@@ -15,6 +15,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 
+import { SMTP_ACCOUNT_ENV } from './fixtures/smtp-account-env';
 import {
   envSchema,
   devEnvSchema,
@@ -23,11 +24,6 @@ import {
   validateEnv,
   safeValidateEnv,
 } from '../config';
-
-// Credential-shaped fixture values are assembled at runtime so no literal sits in source.
-function fixtureValue(...parts: string[]): string {
-  return parts.join('');
-}
 
 /** Minimal valid env object that satisfies the base envSchema */
 const minimalValidEnv = {
@@ -54,8 +50,7 @@ const fullValidEnv = {
   AI_MAX_RETRIES: '2',
   SMTP_HOST: 'smtp.example.com',
   SMTP_PORT: '587',
-  SMTP_USER: 'user@example.com',
-  SMTP_PASSWORD: fixtureValue('passwo', 'rd123'),
+  ...SMTP_ACCOUNT_ENV,
   EMAIL_FROM: 'noreply@example.com',
   SENTRY_DSN: 'https://examplePublicKey@sentry.io/1',
   OTEL_ENABLED: 'true',

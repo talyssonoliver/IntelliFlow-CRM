@@ -28,6 +28,7 @@ import {
   type MailboxErrorCode,
   type OAuthMailboxProvider,
 } from '@intelliflow/domain';
+import type { SmtpAccountRow, SmtpEndpointRow } from '@intelliflow/validators';
 import { canReadBounces, settingsValues, type EmailSettingsValues } from './email-dto';
 import { prismaErrorCode } from './email-access';
 import { getOAuthAccessToken, type MailboxTransports } from './mailbox-transport';
@@ -70,7 +71,8 @@ export interface BounceScanReport {
   failures: number;
 }
 
-interface ScanMailbox {
+/** The SMTP columns come from SmtpEndpointRow and SmtpAccountRow (#1103). */
+interface ScanMailbox extends SmtpEndpointRow, SmtpAccountRow {
   id: string;
   tenantId: string;
   kind: string;
@@ -80,11 +82,6 @@ interface ScanMailbox {
   imapPort: number | null;
   imapUsername: string | null;
   imapPassword: string | null;
-  smtpHost: string | null;
-  smtpPort: number | null;
-  smtpSecurity: string | null;
-  smtpUsername: string | null;
-  smtpPassword: string | null;
   refreshToken: string | null;
   tokenVersion: number;
   imapUidValidity: bigint | null;

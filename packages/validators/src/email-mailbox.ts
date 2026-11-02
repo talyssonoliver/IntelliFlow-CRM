@@ -16,38 +16,23 @@ import {
   MAILBOX_STATUSES,
   MAILBOX_ERROR_CODES,
   OAUTH_MAILBOX_PROVIDERS,
-  SMTP_PORTS,
-  SMTP_SECURITY_MODES,
-  hasHeaderInjection,
 } from '@intelliflow/domain';
+import {
+  mailboxHostSchema,
+  mailboxUsernameSchema,
+  noHeaderInjection,
+  secretUpdateSchema,
+} from './mailbox-fields';
+import { smtpEndpointInputShape, type SmtpEndpointDto } from './smtp-endpoint';
+import { smtpAccountInputShape, type SmtpAccountDto } from './smtp-account';
+
+export { mailboxHostSchema, secretUpdateSchema, smtpSecuritySchema } from './mailbox-fields';
 
 export const mailboxKindSchema = z.enum(MAILBOX_KINDS);
 export const mailboxScopeSchema = z.enum(MAILBOX_SCOPES);
 export const mailboxStatusSchema = z.enum(MAILBOX_STATUSES);
 export const mailboxErrorCodeSchema = z.enum(MAILBOX_ERROR_CODES);
-export const smtpSecuritySchema = z.enum(SMTP_SECURITY_MODES);
 export const oauthMailboxProviderSchema = z.enum(OAUTH_MAILBOX_PROVIDERS);
-
-const BLOCKED_SUFFIXES = ['.localhost', '.local', '.internal', '.lan', '.home.arpa'];
-const LABEL = /^(?!-)[a-z0-9-]{1,63}(?<!-)$/;
-
-function isAcceptableMailHost(host: string): boolean {
-  if (host.length === 0 || host.length > 253) return false;
-  if (host === 'localhost' || BLOCKED_SUFFIXES.some((s) => host.endsWith(s))) return false;
-  const labels = host.split('.');
-  if (labels.length < 2) return false;
-  if (!labels.every((label) => LABEL.test(label))) return false;
-  // The top-level label must start with a letter: this refuses every IPv4
-  // literal and numeric shorthand (8.8.8.8, 2130706433, 0x7f.1).
-  return /^[a-z]/.test(labels[labels.length - 1] ?? '');
-}
-
-/** A public mail-server hostname (lower-cased). */
-export const mailboxHostSchema = z.string().trim().toLowerCase().refine(isAcceptableMailHost, {
-  message: 'Enter the mail server hostname (for example smtp.example.com)',
-});
-
-const noHeaderInjection = (value: string) => !hasHeaderInjection(value);
 
 /** Mailbox address: valid, lower-cased, no CR/LF. */
 export const mailboxAddressSchema = z
@@ -65,34 +50,11 @@ export const fromNameSchema = z
     message: 'The display name cannot contain line breaks, quotes or angle brackets',
   });
 
-const usernameSchema = z
-  .string()
-  .trim()
-  .min(1)
-  .max(320)
-  .refine(noHeaderInjection, { message: 'Invalid username' });
-
-/** absent = keep, null = clear, string = replace. Never echoed back by the API. */
-export const secretUpdateSchema = z
-  .string()
-  .min(1)
-  .max(EMAIL_LIMITS.maxPasswordLength)
-  .nullable()
-  .optional();
-
 export const saveSmtpMailboxInputSchema = z
   .object({
     scope: mailboxScopeSchema,
-    smtpHost: mailboxHostSchema,
-    smtpPort: z
-      .number()
-      .int()
-      .refine((p) => (SMTP_PORTS as readonly number[]).includes(p), {
-        message: `SMTP port must be one of ${SMTP_PORTS.join(', ')}`,
-      }),
-    smtpSecurity: smtpSecuritySchema,
-    smtpUsername: usernameSchema,
-    smtpPassword: secretUpdateSchema,
+    ...smtpEndpointInputShape,
+    ...smtpAccountInputShape,
     fromAddress: mailboxAddressSchema,
     fromName: fromNameSchema.nullish().transform((v) => (v ? v : null)),
     imapHost: mailboxHostSchema.nullish().transform((v) => v ?? null),
@@ -100,7 +62,7 @@ export const saveSmtpMailboxInputSchema = z
       .literal(IMAP_PORT)
       .nullish()
       .transform((v) => v ?? null),
-    imapUsername: usernameSchema.nullish().transform((v) => v ?? null),
+    imapUsername: mailboxUsernameSchema.nullish().transform((v) => v ?? null),
     imapPassword: secretUpdateSchema,
   })
   .strict();
@@ -123,8 +85,12 @@ export const oauthCompleteInputSchema = z
   .strict();
 export type OAuthCompleteInput = z.infer<typeof oauthCompleteInputSchema>;
 
-/** What the API returns about a mailbox. Secrets appear only as booleans. */
-export interface MailboxDto {
+/**
+ * What the API returns about a mailbox. Secrets appear only as booleans. The SMTP
+ * fields come from SmtpEndpointDto and SmtpAccountDto: null for OAuth mailboxes,
+ * and the endpoint and user name are hidden from non-admins for the company mailbox.
+ */
+export interface MailboxDto extends SmtpEndpointDto, SmtpAccountDto {
   id: string;
   scope: (typeof MAILBOX_SCOPES)[number];
   kind: (typeof MAILBOX_KINDS)[number];
@@ -132,12 +98,6 @@ export interface MailboxDto {
   lastErrorCode: (typeof MAILBOX_ERROR_CODES)[number] | null;
   fromAddress: string;
   fromName: string | null;
-  /** SMTP only; null for OAuth mailboxes. Hidden from non-admins for the company mailbox. */
-  smtpHost: string | null;
-  smtpPort: number | null;
-  smtpSecurity: (typeof SMTP_SECURITY_MODES)[number] | null;
-  smtpUsername: string | null;
-  hasSmtpPassword: boolean;
   imapHost: string | null;
   imapPort: number | null;
   imapUsername: string | null;

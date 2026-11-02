@@ -31,6 +31,8 @@ import {
   MAX_EMAIL_TOTAL_ATTACHMENT_BYTES,
   type SendUserEmailInput,
   type SendUserEmailResultDto,
+  type SmtpAccountRow,
+  type SmtpEndpointRow,
 } from '@intelliflow/validators';
 import { reserveQuota } from '../../shared/quota-guard';
 import { settingsValues } from './email-dto';
@@ -52,7 +54,8 @@ export interface DispatchOptions {
 
 const sendError = emailSendError;
 
-interface MailboxRow {
+/** The SMTP columns come from SmtpEndpointRow and SmtpAccountRow (#1103). */
+interface MailboxRow extends SmtpEndpointRow, SmtpAccountRow {
   id: string;
   tenantId: string;
   scope: string;
@@ -61,11 +64,6 @@ interface MailboxRow {
   status: string;
   fromAddress: string;
   fromName: string | null;
-  smtpHost: string | null;
-  smtpPort: number | null;
-  smtpSecurity: string | null;
-  smtpUsername: string | null;
-  smtpPassword: string | null;
   refreshToken: string | null;
   tokenVersion: number;
 }

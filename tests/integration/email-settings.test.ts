@@ -20,6 +20,8 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { deriveKey, fieldEncryptionExtension } from '../../packages/db/src/field-encryption';
 import { applySchemaSql, createIndexConcurrently } from './schema-lock';
+import { NO_SMTP_ACCOUNT, smtpAccountFields } from '../../packages/validators/src/smtp-account';
+import { NO_SMTP_ENDPOINT, smtpEndpointFields } from '../../packages/validators/src/smtp-endpoint';
 
 const MIGRATIONS = join(__dirname, '../../packages/db/prisma/migrations');
 const TABLE_MIGRATIONS = [
@@ -206,11 +208,8 @@ describeDb('PG-207 email tables (real DB)', () => {
     userId: USER_A1,
     kind: 'SMTP',
     fromAddress: 'me@mail.example.invalid',
-    smtpHost: 'smtp.mail.example.invalid',
-    smtpPort: 587,
-    smtpSecurity: 'STARTTLS',
-    smtpUsername: 'me@mail.example.invalid',
-    smtpPassword: SECRET,
+    ...smtpEndpointFields('smtp.mail.example.invalid', 587, 'STARTTLS'),
+    ...smtpAccountFields('me@mail.example.invalid', SECRET),
     ...extra,
   });
 
@@ -267,11 +266,8 @@ describeDb('PG-207 email tables (real DB)', () => {
         'an ACTIVE OAuth mailbox without a refresh token',
         {
           kind: 'GMAIL',
-          smtpHost: null,
-          smtpPort: null,
-          smtpSecurity: null,
-          smtpUsername: null,
-          smtpPassword: null,
+          ...NO_SMTP_ENDPOINT,
+          ...NO_SMTP_ACCOUNT,
           userId: USER_A2,
         },
       ],
@@ -285,11 +281,8 @@ describeDb('PG-207 email tables (real DB)', () => {
           userId: USER_A2,
           kind: 'MICROSOFT',
           status: 'DISCONNECTED',
-          smtpHost: null,
-          smtpPort: null,
-          smtpSecurity: null,
-          smtpUsername: null,
-          smtpPassword: null,
+          ...NO_SMTP_ENDPOINT,
+          ...NO_SMTP_ACCOUNT,
         }),
       });
       expect(row.status).toBe('DISCONNECTED');

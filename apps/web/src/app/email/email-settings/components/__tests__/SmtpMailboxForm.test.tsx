@@ -4,7 +4,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import axe from 'axe-core';
-import type { MailboxDto } from '@intelliflow/validators';
+import {
+  smtpAccountFields,
+  smtpAccountSummary,
+  smtpEndpointFields,
+  type MailboxDto,
+} from '@intelliflow/validators';
 
 const save = vi.hoisted(() => ({ mutateAsync: vi.fn(), isPending: false }));
 vi.mock('@/lib/trpc', () => ({
@@ -25,11 +30,8 @@ const smtpMailbox = (over: Partial<MailboxDto> = {}): MailboxDto => ({
   lastErrorCode: null,
   fromAddress: 'me@mail.example.invalid',
   fromName: 'Me',
-  smtpHost: HOST,
-  smtpPort: 465,
-  smtpSecurity: 'SSL',
-  smtpUsername: 'me@mail.example.invalid',
-  hasSmtpPassword: true,
+  ...smtpEndpointFields(HOST, 465, 'SSL'),
+  ...smtpAccountSummary('me@mail.example.invalid', true),
   imapHost: null,
   imapPort: null,
   imapUsername: null,
@@ -85,11 +87,8 @@ describe('SmtpMailboxForm', () => {
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
     expect(save.mutateAsync).toHaveBeenCalledWith({
       scope: 'USER',
-      smtpHost: HOST,
-      smtpPort: 587,
-      smtpSecurity: 'STARTTLS',
-      smtpUsername: 'me@mail.example.invalid',
-      smtpPassword: PASSWORD,
+      ...smtpEndpointFields(HOST, 587, 'STARTTLS'),
+      ...smtpAccountFields('me@mail.example.invalid', PASSWORD),
       fromAddress: 'me@mail.example.invalid',
       fromName: null,
       imapHost: null,

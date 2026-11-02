@@ -4,7 +4,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import axe from 'axe-core';
-import type { EmailSettingsDto, MailboxDto } from '@intelliflow/validators';
+import {
+  NO_SMTP_ENDPOINT,
+  smtpAccountSummary,
+  type EmailSettingsDto,
+  type MailboxDto,
+} from '@intelliflow/validators';
 
 type QueryState<T> = { data?: T; isLoading: boolean; error: { message: string } | null };
 
@@ -76,11 +81,8 @@ const myMailbox: MailboxDto = {
   lastErrorCode: null,
   fromAddress: 'me@gmail.example.invalid',
   fromName: null,
-  smtpHost: null,
-  smtpPort: null,
-  smtpSecurity: null,
-  smtpUsername: null,
-  hasSmtpPassword: false,
+  ...NO_SMTP_ENDPOINT,
+  ...smtpAccountSummary(null, false),
   imapHost: null,
   imapPort: null,
   imapUsername: null,

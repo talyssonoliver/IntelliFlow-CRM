@@ -16,6 +16,7 @@ import { emailMailboxRouter } from '../email-mailbox.router';
 import { dispatchUserMail } from '../mailbox-sender';
 import { emailSendErrorFromCause } from '../email-send-error';
 import { startBounceScanner, stopBounceScanner } from '../bounce-scheduler';
+import { smtpAccountFields, smtpEndpointFields } from '@intelliflow/validators';
 
 /** The environment of an API whose owner configured none of PG-207's settings. */
 const BARE_ENV: NodeJS.ProcessEnv = { NODE_ENV: 'production' };
@@ -62,11 +63,8 @@ describe('PG-207 with nothing configured', () => {
     await expect(
       member().saveSmtp({
         scope: 'USER',
-        smtpHost: 'smtp.mail.example.com',
-        smtpPort: 587,
-        smtpSecurity: 'STARTTLS',
-        smtpUsername: 'me@mail.example.com',
-        smtpPassword: 'p'.repeat(12),
+        ...smtpEndpointFields('smtp.mail.example.com', 587, 'STARTTLS'),
+        ...smtpAccountFields('me@mail.example.com', 'p'.repeat(12)),
         fromAddress: 'me@mail.example.com',
       })
     ).rejects.toMatchObject({ code: 'PRECONDITION_FAILED' });

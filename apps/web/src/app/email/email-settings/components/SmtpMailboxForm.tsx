@@ -5,7 +5,8 @@
  * custom server, the From identity, and optional IMAP details for reading
  * bounce reports. The shared Zod schema validates in the browser first (the
  * server runs the same one); stored passwords are never loaded — see
- * SecretField.
+ * SecretField. The server and account inputs are SmtpEndpointFields and
+ * SmtpAccountFields (#1103).
  */
 import { useEffect, useState, type FormEvent } from 'react';
 import {
@@ -19,35 +20,55 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@intelliflow/ui';
-import { saveSmtpMailboxInputSchema, type MailboxDto } from '@intelliflow/validators';
+import {
+  SMTP_ACCOUNT_FIELDS,
+  SMTP_ENDPOINT_FIELDS,
+  saveSmtpMailboxInputSchema,
+  type MailboxDto,
+  type SmtpAccountField,
+  type SmtpEndpointField,
+} from '@intelliflow/validators';
 import { trpc } from '@/lib/trpc';
 import { SecretField, secretInput, type SecretChange } from './SecretField';
+import type { FieldBinding, FieldErrorProps } from './field-binding';
+import {
+  SmtpEndpointFields,
+  endpointChanged,
+  endpointDraftOf,
+  endpointInput,
+  presetEndpoint,
+  type EndpointDraft,
+} from './SmtpEndpointFields';
+import {
+  ACCOUNT_REQUIRED_MESSAGE,
+  SmtpAccountFields,
+  accountChanged,
+  accountDraftOf,
+  accountInput,
+  type AccountDraft,
+} from './SmtpAccountFields';
 
 type Scope = 'USER' | 'TENANT';
 type Preset = 'gmail' | 'outlook' | 'custom';
 
+/** Each preset's SMTP and IMAP server names. */
 const PRESETS: Record<
   Exclude<Preset, 'custom'>,
-  { label: string; name: string; smtpHost: string; imapHost: string }
+  { label: string; name: string; smtp: string; imap: string }
 > = {
-  gmail: { label: 'Gmail', name: 'Gmail', smtpHost: 'smtp.gmail.com', imapHost: 'imap.gmail.com' },
+  gmail: { label: 'Gmail', name: 'Gmail', smtp: 'smtp.gmail.com', imap: 'imap.gmail.com' },
   outlook: {
     label: 'Outlook / Microsoft 365',
     name: 'Microsoft 365',
-    smtpHost: 'smtp.office365.com',
-    imapHost: 'outlook.office365.com',
+    smtp: 'smtp.office365.com',
+    imap: 'outlook.office365.com',
   },
 };
 
-const PORTS = ['465', '587', '2525'] as const;
-
 interface Draft {
   preset: Preset;
-  smtpHost: string;
-  smtpPort: string;
-  smtpSecurity: 'SSL' | 'STARTTLS';
-  smtpUsername: string;
-  password: SecretChange;
+  endpoint: EndpointDraft;
+  account: AccountDraft;
   fromAddress: string;
   fromName: string;
   readBounces: boolean;
@@ -57,11 +78,8 @@ interface Draft {
 }
 
 type Field =
-  | 'smtpHost'
-  | 'smtpPort'
-  | 'smtpSecurity'
-  | 'smtpUsername'
-  | 'smtpPassword'
+  | SmtpEndpointField
+  | SmtpAccountField
   | 'fromAddress'
   | 'fromName'
   | 'imapHost'
@@ -70,11 +88,8 @@ type Field =
 
 /** Focus order for "move to the first invalid field". */
 const FIELD_ORDER: readonly Field[] = [
-  'smtpHost',
-  'smtpPort',
-  'smtpSecurity',
-  'smtpUsername',
-  'smtpPassword',
+  ...SMTP_ENDPOINT_FIELDS,
+  ...SMTP_ACCOUNT_FIELDS,
   'fromAddress',
   'fromName',
   'imapHost',
@@ -82,33 +97,31 @@ const FIELD_ORDER: readonly Field[] = [
   'imapPassword',
 ];
 
-/** DOM id suffix of a field: its name in kebab case (smtpHost → smtp-host). */
+/** DOM id suffix of a field: its name in kebab case (imapHost → imap-host). */
 function fieldSuffix(field: Field): string {
   return field.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 }
 
 /** Used when the schema's own message is a generic "too small" / "required". */
 const REQUIRED_MESSAGE: Partial<Record<Field, string>> = {
-  smtpUsername: 'Enter the username.',
+  ...ACCOUNT_REQUIRED_MESSAGE,
   imapUsername: 'Enter the IMAP username.',
   fromAddress: 'Enter a valid email address.',
 };
 
-function presetOf(host: string | null): Preset {
-  if (host === PRESETS.gmail.smtpHost) return 'gmail';
-  if (host === PRESETS.outlook.smtpHost) return 'outlook';
+function presetOf(host: string): Preset {
+  if (host === PRESETS.gmail.smtp) return 'gmail';
+  if (host === PRESETS.outlook.smtp) return 'outlook';
   return 'custom';
 }
 
 function initialDraft(mailbox: MailboxDto | null): Draft {
   const smtp = mailbox?.kind === 'SMTP' ? mailbox : null;
+  const endpoint = endpointDraftOf(smtp);
   return {
-    preset: presetOf(smtp?.smtpHost ?? null),
-    smtpHost: smtp?.smtpHost ?? '',
-    smtpPort: String(smtp?.smtpPort ?? 587),
-    smtpSecurity: smtp?.smtpSecurity ?? 'STARTTLS',
-    smtpUsername: smtp?.smtpUsername ?? '',
-    password: smtp?.hasSmtpPassword ? { mode: 'keep' } : { mode: 'replace', value: '' },
+    preset: presetOf(endpoint.host),
+    endpoint,
+    account: accountDraftOf(smtp),
     fromAddress: smtp?.fromAddress ?? '',
     fromName: smtp?.fromName ?? '',
     readBounces: Boolean(smtp?.imapHost),
@@ -121,13 +134,13 @@ function initialDraft(mailbox: MailboxDto | null): Draft {
 /** Password checks the schema cannot see: what is stored and whether it may be reused. */
 function passwordErrors(draft: Draft, stored: MailboxDto | null): Partial<Record<Field, string>> {
   const errors: Partial<Record<Field, string>> = {};
-  const keepsSmtp = Boolean(stored?.hasSmtpPassword) && draft.password.mode === 'keep';
-  if (!keepsSmtp && secretInput(draft.password) === undefined) {
+  const keptFrom =
+    stored?.hasSmtpPassword && draft.account.password.mode === 'keep' ? stored : null;
+  if (!keptFrom && secretInput(draft.account.password) === undefined) {
     errors.smtpPassword = 'Enter the mailbox password.';
   } else if (
-    keepsSmtp &&
-    (stored?.smtpHost !== draft.smtpHost.trim().toLowerCase() ||
-      stored?.smtpUsername !== draft.smtpUsername.trim())
+    keptFrom &&
+    (endpointChanged(draft.endpoint, keptFrom) || accountChanged(draft.account, keptFrom))
   ) {
     errors.smtpPassword = 'Re-enter the password when you change the server or username.';
   }
@@ -148,11 +161,8 @@ function passwordErrors(draft: Draft, stored: MailboxDto | null): Partial<Record
 function validate(draft: Draft, scope: Scope, stored: MailboxDto | null) {
   const parsed = saveSmtpMailboxInputSchema.safeParse({
     scope,
-    smtpHost: draft.smtpHost,
-    smtpPort: Number(draft.smtpPort),
-    smtpSecurity: draft.smtpSecurity,
-    smtpUsername: draft.smtpUsername,
-    smtpPassword: secretInput(draft.password),
+    ...endpointInput(draft.endpoint),
+    ...accountInput(draft.account),
     fromAddress: draft.fromAddress,
     fromName: draft.fromName,
     imapHost: draft.readBounces ? draft.imapHost : null,
@@ -213,14 +223,7 @@ export function SmtpMailboxForm({
     setDraft((current) => {
       if (preset === 'custom') return { ...current, preset };
       const p = PRESETS[preset];
-      return {
-        ...current,
-        preset,
-        smtpHost: p.smtpHost,
-        smtpPort: '587',
-        smtpSecurity: 'STARTTLS',
-        imapHost: p.imapHost,
-      };
+      return { ...current, preset, endpoint: presetEndpoint(p.smtp), imapHost: p.imap };
     });
   };
 
@@ -231,7 +234,7 @@ export function SmtpMailboxForm({
     const first = FIELD_ORDER.find((f) => result.errors[f]);
     setErrors(result.errors);
     if (first || !result.input) {
-      setFocusField(first ?? 'smtpHost');
+      setFocusField(first ?? FIELD_ORDER[0] ?? null);
       return;
     }
     try {
@@ -243,16 +246,20 @@ export function SmtpMailboxForm({
     }
   };
 
-  const errorProps = (field: Field) =>
-    errors[field]
-      ? { 'aria-invalid': true as const, 'aria-describedby': `${fieldId(field)}-error` }
-      : {};
+  const errorProps = (field: Field): FieldErrorProps =>
+    errors[field] ? { 'aria-invalid': true, 'aria-describedby': `${fieldId(field)}-error` } : {};
   const errorText = (field: Field) =>
     errors[field] ? (
       <p id={`${fieldId(field)}-error`} className="text-xs text-red-700 dark:text-red-300">
         {errors[field]}
       </p>
     ) : null;
+  const bind: FieldBinding<Field> = {
+    id: fieldId,
+    errorProps,
+    errorText,
+    errorMessage: (field) => errors[field],
+  };
 
   const presetName = draft.preset === 'custom' ? null : PRESETS[draft.preset].name;
 
@@ -284,75 +291,17 @@ export function SmtpMailboxForm({
           )}
         </div>
 
-        <div className="space-y-1.5 sm:col-span-2">
-          <Label htmlFor={fieldId('smtpHost')}>SMTP server</Label>
-          <Input
-            id={fieldId('smtpHost')}
-            value={draft.smtpHost}
-            autoComplete="off"
-            placeholder="smtp.example.com"
-            aria-required="true"
-            onChange={(e) => set('smtpHost', e.currentTarget.value)}
-            {...errorProps('smtpHost')}
-          />
-          {errorText('smtpHost')}
-        </div>
+        <SmtpEndpointFields
+          value={draft.endpoint}
+          onChange={(v) => set('endpoint', v)}
+          bind={bind}
+        />
 
-        <div className="space-y-1.5">
-          <Label htmlFor={fieldId('smtpPort')}>Port</Label>
-          <Select value={draft.smtpPort} onValueChange={(v) => set('smtpPort', v)}>
-            <SelectTrigger id={fieldId('smtpPort')} {...errorProps('smtpPort')}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PORTS.map((port) => (
-                <SelectItem key={port} value={port}>
-                  {port}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errorText('smtpPort')}
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor={fieldId('smtpSecurity')}>Security</Label>
-          <Select
-            value={draft.smtpSecurity}
-            onValueChange={(v) => set('smtpSecurity', v as Draft['smtpSecurity'])}
-          >
-            <SelectTrigger id={fieldId('smtpSecurity')} {...errorProps('smtpSecurity')}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="SSL">SSL/TLS</SelectItem>
-              <SelectItem value="STARTTLS">STARTTLS</SelectItem>
-            </SelectContent>
-          </Select>
-          {errorText('smtpSecurity')}
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor={fieldId('smtpUsername')}>Username</Label>
-          <Input
-            id={fieldId('smtpUsername')}
-            value={draft.smtpUsername}
-            autoComplete="off"
-            aria-required="true"
-            onChange={(e) => set('smtpUsername', e.currentTarget.value)}
-            {...errorProps('smtpUsername')}
-          />
-          {errorText('smtpUsername')}
-        </div>
-
-        <SecretField
-          id={fieldId('smtpPassword')}
-          label="Password"
+        <SmtpAccountFields
+          value={draft.account}
+          onChange={(v) => set('account', v)}
+          bind={bind}
           hasStored={Boolean(stored?.hasSmtpPassword)}
-          value={draft.password}
-          onChange={(v) => set('password', v)}
-          error={errors.smtpPassword}
-          required
         />
 
         <div className="space-y-1.5">

@@ -153,5 +153,7 @@ export * from './task-automation';
 
 // PG-207 (ADR-085): user mailboxes, email settings, suppression, signatures
 export * from './email-mailbox';
+export * from './smtp-endpoint'; // #1103: the SMTP endpoint and account halves
+export * from './smtp-account';
 export * from './email-settings';
 export * from './email-signatures';

@@ -13,17 +13,21 @@ import {
   type MailboxScope,
   type MailboxStatus,
   type SignatureScope,
-  type SmtpSecurityMode,
   type SuppressionReason,
 } from '@intelliflow/domain';
-import type {
-  EmailSettingsDto,
-  EmailSignatureDto,
-  MailboxDto,
-  SuppressionDto,
+import {
+  smtpAccountDto,
+  smtpEndpointDto,
+  type EmailSettingsDto,
+  type EmailSignatureDto,
+  type MailboxDto,
+  type SmtpAccountRow,
+  type SmtpEndpointRow,
+  type SuppressionDto,
 } from '@intelliflow/validators';
 
-export interface MailboxRowLike {
+/** A mailbox row; the SMTP columns come from SmtpEndpointRow and SmtpAccountRow (#1103). */
+export interface MailboxRowLike extends SmtpEndpointRow, SmtpAccountRow {
   id: string;
   scope: string;
   kind: string;
@@ -31,11 +35,6 @@ export interface MailboxRowLike {
   lastErrorCode: string | null;
   fromAddress: string;
   fromName: string | null;
-  smtpHost: string | null;
-  smtpPort: number | null;
-  smtpSecurity: string | null;
-  smtpUsername: string | null;
-  smtpPassword: string | null;
   imapHost: string | null;
   imapPort: number | null;
   imapUsername: string | null;
@@ -66,11 +65,8 @@ export function toMailboxDto(
     lastErrorCode: row.lastErrorCode as MailboxErrorCode | null,
     fromAddress: row.fromAddress,
     fromName: row.fromName,
-    smtpHost: show ? row.smtpHost : null,
-    smtpPort: show ? row.smtpPort : null,
-    smtpSecurity: show ? (row.smtpSecurity as SmtpSecurityMode | null) : null,
-    smtpUsername: show ? row.smtpUsername : null,
-    hasSmtpPassword: Boolean(row.smtpPassword),
+    ...smtpEndpointDto(row, show),
+    ...smtpAccountDto(row, show),
     imapHost: show ? row.imapHost : null,
     imapPort: show ? row.imapPort : null,
     imapUsername: show ? row.imapUsername : null,
