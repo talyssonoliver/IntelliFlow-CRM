@@ -1026,11 +1026,6 @@ routers:
         type: mutation
         ownerFilter: false
         inputs: []
-      refreshSession:
-        procedure: publicProcedure
-        type: mutation
-        ownerFilter: false
-        inputs: [refreshToken]
       setupMfa:
         procedure: protectedProcedure
         type: mutation

@@ -102,7 +102,6 @@ apps/api/src/
 | `verifyMfa`          | mutation | Verify MFA code during login               |
 | `resendMfaCode`      | mutation | Resend MFA code to user                    |
 | `logout`             | mutation | Terminate user session                     |
-| `refreshSession`     | mutation | Refresh expired session token              |
 | `setupMfa`           | mutation | Initiate MFA setup for authenticated user  |
 | `confirmMfa`         | mutation | Confirm MFA setup with verification code   |
 | `getBackupCodes`     | query    | Get backup codes for MFA recovery          |

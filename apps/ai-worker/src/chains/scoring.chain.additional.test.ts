@@ -155,6 +155,18 @@ describe('LeadScoringChain - additional', () => {
     const r = await new LeadScoringChain().scoreLead({ email: 'f@e.com', source: 'W' });
     expect(r.factors[0].reasoning).toBe('Scoring failed (other)');
   });
+  it('grounds the hallucination check in the prompt the model saw (IFC-117)', async () => {
+    const { hallucinationChecker } = await import('../monitoring/hallucination-checker');
+    const checkOutput = vi.spyOn(hallucinationChecker, 'checkOutput');
+    try {
+      await new LeadScoringChain().scoreLead({ email: 'f@e.com', source: 'WEB' });
+      const prompt = mockStructuredInvoke.mock.calls.at(-1)?.[0];
+      expect(prompt).toBe('fp');
+      expect(checkOutput).toHaveBeenCalledWith(expect.objectContaining({ inputContext: prompt }));
+    } finally {
+      checkOutput.mockRestore();
+    }
+  });
   describe('PII and error text (IFC-117 NF-002)', () => {
     const canary = ['lead', 'canary'].join('-');
     const email = `${canary}@example.invalid`;

@@ -11,7 +11,6 @@
  * - oauthCallback: Handle OAuth callback
  * - verifyMfa: Verify MFA code
  * - logout: End session
- * - refreshSession: Refresh access token
  * - setupMfa: Initiate MFA setup
  * - confirmMfa: Confirm and enable MFA
  * - getBackupCodes: Generate backup codes
@@ -29,7 +28,6 @@ import {
   oauthInitSchema,
   oauthCallbackSchema,
   revokeSessionSchema,
-  refreshTokenSchema,
   verifyEmailCallbackSchema,
   resendVerificationSchema,
   resendMfaCodeSchema,
@@ -44,10 +42,10 @@ import {
 import {
   signIn,
   signOutUser,
-  getSession,
   signInWithOAuth,
   exchangeCodeForSession,
   supabaseAdmin,
+  createServiceAuthFlowClient,
   resetPasswordForEmail,
   updateUserPassword,
   type OAuthProvider,
@@ -359,7 +357,8 @@ export const authRouter = createTRPCRouter({
         // Create MFA challenge
         const availableMethods = await mfaService.getAvailableMfaMethods(user.id);
         const primaryMethod = availableMethods[0] || 'totp';
-        const challenge = mfaService.createChallenge(user.id, primaryMethod);
+        // The session stays on the server until the challenge succeeds.
+        const challenge = mfaService.createChallenge(user.id, primaryMethod, session);
 
         // Return partial response requiring MFA
         const response: LoginResponse = {
@@ -674,10 +673,10 @@ export const authRouter = createTRPCRouter({
       });
     }
 
-    // MFA verified - get user session from Supabase
-    const { session, error: sessionError } = await getSession();
+    // MFA verified: the session is the one this challenge's password step produced.
+    const session = result.pendingSession;
 
-    if (sessionError || !session) {
+    if (!session) {
       throw new TRPCError({
         code: 'UNAUTHORIZED',
         message: 'Session expired. Please log in again.',
@@ -789,31 +788,6 @@ export const authRouter = createTRPCRouter({
     });
 
     return { success: true, sessionsRevoked: revokedCount };
-  }),
-
-  /**
-   * Refresh session token
-   */
-  refreshSession: publicProcedure.input(refreshTokenSchema).mutation(async ({ input }) => {
-    // Supabase handles token refresh automatically
-    // This endpoint is for manual refresh if needed
-    const { session, error } = await getSession();
-
-    if (error || !session) {
-      throw new TRPCError({
-        code: 'UNAUTHORIZED',
-        message: 'Session expired. Please log in again.',
-      });
-    }
-
-    return {
-      success: true,
-      session: {
-        accessToken: session.access_token,
-        refreshToken: session.refresh_token,
-        expiresAt: new Date(session.expires_at! * 1000),
-      },
-    };
   }),
 
   /**
@@ -1237,7 +1211,7 @@ export const authRouter = createTRPCRouter({
    * Creates a user via Supabase Auth. Supabase auto-sends confirmation email.
    */
   signup: authProcedure.input(signupSchema).mutation(async ({ input }) => {
-    const { data, error } = await supabaseAdmin.auth.signUp({
+    const { data, error } = await createServiceAuthFlowClient().auth.signUp({
       email: input.email,
       password: input.password,
       options: {
@@ -1298,7 +1272,7 @@ export const authRouter = createTRPCRouter({
    * Validates the email verification token_hash from Supabase callback URL.
    */
   verifyEmail: publicProcedure.input(verifyEmailCallbackSchema).mutation(async ({ input }) => {
-    const { data, error } = await supabaseAdmin.auth.verifyOtp({
+    const { data, error } = await createServiceAuthFlowClient().auth.verifyOtp({
       token_hash: input.token_hash,
       type: input.type,
     });
