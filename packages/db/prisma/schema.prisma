@@ -664,6 +664,8 @@ model Lead {
   landingPath     String?
   // Leangency outreach funnel: COA's concept-page slug, set by inbound.syncPipelineLead
   outreachSlug    String?
+  // COA event time (stageChangedAt) that wrote outreachSlug; an older event cannot replace it
+  outreachSlugEventAt DateTime?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 

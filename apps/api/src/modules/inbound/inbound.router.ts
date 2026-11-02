@@ -594,27 +594,41 @@ interface OutreachSlugChange {
 }
 
 /**
+ * The event time that versions a slug write: COA's `stageChangedAt` as a UTC ISO
+ * string, or null when it is missing or not a valid date. A null version may only
+ * fill a NULL slug, never replace a stored one.
+ */
+export function outreachSlugEventTime(stageChangedAt: unknown): string | null {
+  if (typeof stageChangedAt !== 'string' || stageChangedAt === '') return null;
+  const time = new Date(stageChangedAt);
+  return Number.isNaN(time.getTime()) ? null : time.toISOString();
+}
+
+/**
  * Set the lead's outreach slug in one tenant-scoped statement that also returns the
- * previous value (no row back = nothing written). A new COA event sets it when it is
- * NULL or different. A repeat of an event already recorded (`repeat`) only fills a
- * NULL slug: a retry of an older event must never put back a slug a newer event
- * replaced. Raw SQL like the tag merge: the domain Lead does not carry the slug. A
- * failure is a retryable 500, so COA resends rather than losing the slug.
+ * previous value (no row back = nothing written). The write is versioned by the COA
+ * event time (`outreachSlugEventAt`), compared in the same UPDATE: it lands when the
+ * stored slug is NULL, or when this event is newer than the one that wrote the stored
+ * slug. A retry of an older event therefore never puts back a slug a newer event set,
+ * whether or not the older event's audit note was saved, and an event without a usable
+ * time only fills a NULL slug. Raw SQL like the tag merge: the domain Lead does not
+ * carry the slug. A failure is a retryable 500, so COA resends rather than losing it.
  */
 async function applyOutreachSlug(
   ctx: Context,
   input: InboundPipelineLeadInput,
   leadId: string,
-  tenantId: string,
-  repeat: boolean
+  tenantId: string
 ): Promise<OutreachSlugChange | null> {
   const slug = input.outreachSlug;
   if (slug === undefined) return null;
+  const eventAt = outreachSlugEventTime(input.stageChangedAt);
   try {
-    const mayReplace = !repeat;
     const rows = await ctx.prisma.$queryRaw<Array<{ previous: string | null }>>`
       UPDATE "leads" AS l
-      SET "outreachSlug" = ${slug}, "updatedAt" = NOW()
+      SET "outreachSlug" = ${slug},
+        "outreachSlugEventAt" = (${eventAt}::timestamptz AT TIME ZONE 'UTC'),
+        "updatedAt" = NOW()
       FROM (
         SELECT "id", "outreachSlug" AS previous FROM "leads"
         WHERE "id" = ${leadId} AND "tenantId" = ${tenantId}
@@ -622,11 +636,14 @@ async function applyOutreachSlug(
       ) AS old
       WHERE l."id" = old."id"
         AND (l."outreachSlug" IS NULL
-          OR (${mayReplace}::boolean AND l."outreachSlug" IS DISTINCT FROM ${slug}))
+          OR (${eventAt}::timestamptz IS NOT NULL
+            AND (l."outreachSlugEventAt" IS NULL
+              OR l."outreachSlugEventAt" < (${eventAt}::timestamptz AT TIME ZONE 'UTC'))))
       RETURNING old.previous
     `;
     const row = rows[0];
-    return row
+    // A newer event with the same slug moves the version on without changing the slug.
+    return row && row.previous !== slug
       ? { slug, changed: true, previous: row.previous }
       : { slug, changed: false, previous: slug };
   } catch (err) {
@@ -1346,9 +1363,9 @@ export const inboundRouter = createTRPCRouter({
    * best-effort (logged, not thrown).
    *
    * Outreach slug: when `outreachSlug` is sent it is written (tenant-scoped) if
-   * the stored one is NULL or different, and the audit note records it. A repeat
-   * of a known syncKey only fills a NULL slug, so a retry of an older event cannot
-   * revert a newer one. A failed write is a retryable 500. Absent = untouched.
+   * the stored one is NULL or was written by an older event (`outreachSlugEventAt`,
+   * from stageChangedAt), and the audit note records it. A retry of an older event
+   * cannot revert a newer slug. A failed write is a retryable 500. Absent = untouched.
    */
   syncPipelineLead: publicProcedure
     .input(inboundPipelineLeadSchema)
@@ -1395,10 +1412,10 @@ export const inboundRouter = createTRPCRouter({
         where: { leadId, tenantId, metadata: { path: ['syncKey'], equals: syncKey } },
         select: { id: true, metadata: true },
       });
-      // After the lookup, so a repeat (a retry of an event already recorded) only fills
-      // a NULL slug and can never put back one a newer event replaced. No new audit
-      // note is written for a repeat.
-      const slugChange = await applyOutreachSlug(ctx, input, leadId, tenantId, prior !== null);
+      // Versioned by the event time, so a repeat or a late retry can only fill a NULL
+      // slug and never put back one a newer event set. No new audit note is written
+      // for a repeat.
+      const slugChange = await applyOutreachSlug(ctx, input, leadId, tenantId);
       if (prior) {
         const priorMeta = prior.metadata as { qualificationPending?: unknown } | null;
         return {
