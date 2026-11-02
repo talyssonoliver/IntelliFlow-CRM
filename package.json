@@ -166,16 +166,16 @@
     "@fast-check/vitest": "0.4.1",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.60.0",
-    "@prisma/adapter-pg": "^7.8.0",
+    "@prisma/adapter-pg": "^7.10.1",
     "@testcontainers/postgresql": "^12.0.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
-    "@trpc/server": "^11.18.0",
+    "@trpc/server": "^11.22.1",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^25.9.2",
     "@types/papaparse": "^5.3.14",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@typescript-eslint/eslint-plugin": "^8.61.0",
     "@typescript-eslint/parser": "^8.61.0",
     "@vitest/coverage-istanbul": "4.1.12",
@@ -206,11 +206,11 @@
     "madge": "^8.0.0",
     "markdownlint-cli": "^0.48.0",
     "memfs": "^4.57.6",
-    "papaparse": "^5.5.4",
+    "papaparse": "^5.7.0",
     "prettier": "^3.8.3",
     "puppeteer": "^25.1.0",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
     "subset-font": "^2.5.0",
     "tsx": "^4.22.4",
     "turbo": "^2.9.16",
@@ -316,6 +316,6 @@
     }
   },
   "dependencies": {
-    "jose": "^6.2.3"
+    "jose": "^6.2.14"
   }
 }
