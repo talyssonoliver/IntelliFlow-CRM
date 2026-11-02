@@ -197,7 +197,8 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 
 **Test cases:**
 - [x] Every name, type and unit in `AI_METRIC_DEFINITIONS` matches the spec table. The latency histogram's bucket boundaries equal
-  `[50,100,250,500,1000,1500,2000,3000,5000,10000,30000]`.
+  `[50,100,250,500,1000,1500,2000,3000,5000,10000,30000]` (2026-11-01: `45000,60000,120000` added so the 45 s p95 alert
+  can fire; `histogram_quantile` never reports above the largest finite bound).
 - [x] Model normalisation:
   - every `MODEL_PRICING` key round-trips unchanged (parametrised over `Object.keys(MODEL_PRICING)`);
   - `'unknown'`, `'default'`, `undefined`, `''`, `'x:free'`, `'__proto__'`, `'constructor'`, `'toString'` all map to `other`;
@@ -564,7 +565,8 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 - `apps/ai-worker/src/monitoring/otel-ai-metrics.ts`. It imports only from `otel-ai-types.ts`, `../config/ai.config` and
   `@opentelemetry/api`. Interfaces exactly as in the spec ("Interfaces & Contracts"), plus
   `__setMeterForTests`, `__resetAiMetricsForTests`, `AI_METRIC_DEFINITIONS` and the exported thresholds config
-  (`AI_ALERT_THRESHOLDS = { hallucinationRate: 0.05, latencyP95Ms: 2000, errorRatio: 0.05 }`, NF-007).
+  (`AI_ALERT_THRESHOLDS = { hallucinationRate: 0.05, latencyP95Ms: 2000, errorRatio: 0.05 }`, NF-007; `latencyP95Ms` is 45000 since the
+  2026-11-01 owner ruling).
 
 **Validation:**
 - [x] `AIW src/monitoring/__tests__/otel-ai-metrics.test.ts src/monitoring/__tests__/otel-ai-metrics.global.test.ts` PASS.
