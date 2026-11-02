@@ -488,7 +488,13 @@ describe('Agent Tools', () => {
       const context = {
         ...createTestContext(),
         tenantId: 'tenant-tools',
-        prisma: { approvalPolicy: { findMany } } as any,
+        prisma: {
+          approvalPolicy: { findMany },
+          // PG-203: draft_message reads the recipient and its processing restriction.
+          lead: { findFirst: vi.fn().mockResolvedValue({ email: 'ada@example.invalid' }) },
+          contact: { findFirst: vi.fn().mockResolvedValue({ email: 'ada@example.invalid' }) },
+          processingRestriction: { findFirst: vi.fn().mockResolvedValue(null) },
+        } as any,
       };
       (pendingActionsStore.add as any).mockClear?.();
       const before = Date.now();

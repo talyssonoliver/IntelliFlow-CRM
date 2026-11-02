@@ -8,13 +8,18 @@ const constructorCalls: {
   Worker: unknown[];
   QueueEvents: unknown[];
   workerOn: Array<[string, unknown]>;
+  addBulk: unknown[][];
   closed: { worker: number; events: number; queue: number };
+  /** Jobs the queue still holds, by id, as BullMQ keeps them after they finish. */
+  retained: Map<string, { state: string; removed: boolean }>;
 } = {
   Queue: [],
   Worker: [],
   QueueEvents: [],
   workerOn: [],
+  addBulk: [],
   closed: { worker: 0, events: 0, queue: 0 },
+  retained: new Map(),
 };
 
 vi.mock('bullmq', () => {
@@ -27,6 +32,20 @@ vi.mock('bullmq', () => {
     }
     async add() {
       return { id: 'job-1' };
+    }
+    async addBulk(jobs: unknown[]) {
+      constructorCalls.addBulk.push(jobs);
+      return jobs;
+    }
+    async getJob(id: string) {
+      const held = constructorCalls.retained.get(id);
+      if (!held || held.removed) return undefined;
+      return {
+        getState: async () => held.state,
+        remove: async () => {
+          held.removed = true;
+        },
+      };
     }
   }
   class MockWorker {
@@ -64,6 +83,7 @@ import {
   ContactEmbedWorker,
   createContactEmbedWorker,
   CONTACT_EMBED_QUEUE_NAME,
+  EMBED_RATE_LIMIT,
 } from '../contact-embed-worker';
 import type { Job } from 'bullmq';
 
@@ -72,13 +92,34 @@ beforeEach(() => {
   constructorCalls.Worker.length = 0;
   constructorCalls.QueueEvents.length = 0;
   constructorCalls.workerOn.length = 0;
+  constructorCalls.addBulk.length = 0;
   constructorCalls.closed.worker = 0;
   constructorCalls.closed.events = 0;
   constructorCalls.closed.queue = 0;
+  constructorCalls.retained.clear();
 });
 
-function buildPrisma(overrides?: Partial<{ contact: unknown | null }>): any {
-  return {
+function buildPrisma(
+  overrides?: Partial<{
+    contact: unknown | null;
+    restriction: { id: string } | null;
+    /** The email the locked re-read sees (default: the contact's own). */
+    lockedEmail: string | null;
+  }>
+): any {
+  const contactEmail =
+    overrides && 'contact' in overrides
+      ? ((overrides.contact as { email?: string } | null)?.email ?? null)
+      : 'ada@analytical.com';
+  const lockedEmail =
+    overrides && 'lockedEmail' in overrides ? overrides.lockedEmail : contactEmail;
+  const prisma: Record<string, any> = {
+    // PG-203: the locked re-read before the embedding write (SELECT email ... FOR UPDATE).
+    $queryRaw: vi.fn(async () => (lockedEmail ? [{ email: lockedEmail }] : [])),
+    // PG-203: nobody is restricted unless a test says so.
+    processingRestriction: {
+      findFirst: vi.fn(async () => overrides?.restriction ?? null),
+    },
     contact: {
       findFirst: async () =>
         overrides && 'contact' in overrides
@@ -92,6 +133,8 @@ function buildPrisma(overrides?: Partial<{ contact: unknown | null }>): any {
             },
     },
   };
+  prisma.$transaction = vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma));
+  return prisma;
 }
 
 function buildJob(data: unknown): Job<any, any, string> {
@@ -168,6 +211,89 @@ describe('ContactEmbedWorker.process', () => {
     expect(updateEmbed).toHaveBeenCalledWith(expect.anything(), 'c-1', 't-1', [0.1, 0.2, 0.3]);
     expect(result.embedded).toBe(true);
     expect(result.contactId).toBe('c-1');
+  });
+
+  it.each([
+    ['restricted', { restriction: { id: 'r-1' } }],
+    [
+      'erased',
+      {
+        contact: {
+          id: 'c-1',
+          firstName: 'Erased',
+          lastName: 'Erased',
+          email: 'erased-c-1@erased.invalid',
+          company: null,
+        },
+      },
+    ],
+  ])(
+    'never sends a %s person to the embedding model (PG-203, owner Q18)',
+    async (_label, overrides) => {
+      const generate = vi.fn(async () => [0.1]);
+      const updateEmbed = vi.fn(async () => {});
+      const prisma = buildPrisma(overrides);
+      const worker = new ContactEmbedWorker(
+        prisma,
+        { host: 'localhost', port: 6379 },
+        { generateEmbedding: generate },
+        updateEmbed
+      );
+      const result = await worker.process(
+        buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'update' })
+      );
+      expect(result.embedded).toBe(false);
+      expect(generate).not.toHaveBeenCalled();
+      expect(updateEmbed).not.toHaveBeenCalled();
+    }
+  );
+
+  it('discards the embedding when the contact is erased during the embedding call (codex)', async () => {
+    const generate = vi.fn(async () => [0.1, 0.2]);
+    const updateEmbed = vi.fn(async () => {});
+    const prisma = buildPrisma({ lockedEmail: 'erased-c-1@erased.invalid' });
+    const worker = new ContactEmbedWorker(
+      prisma,
+      { host: 'localhost', port: 6379 },
+      { generateEmbedding: generate },
+      updateEmbed
+    );
+    const result = await worker.process(
+      buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'update' })
+    );
+    expect(generate).toHaveBeenCalled();
+    expect(updateEmbed).not.toHaveBeenCalled();
+    expect(result.embedded).toBe(false);
+    expect((prisma.$queryRaw.mock.calls[0][0] as string[]).join('?')).toContain('FOR UPDATE');
+  });
+
+  it('writes through the locked transaction, not the base client', async () => {
+    const updateEmbed = vi.fn(async () => {});
+    const prisma = buildPrisma();
+    const worker = new ContactEmbedWorker(
+      prisma,
+      { host: 'localhost', port: 6379 },
+      { generateEmbedding: vi.fn(async () => [0.1]) },
+      updateEmbed
+    );
+    await worker.process(buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'create' }));
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(updateEmbed).toHaveBeenCalledWith(prisma, 'c-1', 't-1', [0.1]);
+  });
+
+  it('checks the restriction in the job tenant by normalised email', async () => {
+    const prisma = buildPrisma();
+    const worker = new ContactEmbedWorker(
+      prisma,
+      { host: 'localhost', port: 6379 },
+      { generateEmbedding: vi.fn(async () => [0.1]) },
+      vi.fn(async () => {})
+    );
+    await worker.process(buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'create' }));
+    expect(prisma.processingRestriction.findFirst).toHaveBeenCalledWith({
+      where: { tenantId: 't-1', subjectEmail: 'ada@analytical.com', liftedAt: null },
+      select: { id: true },
+    });
   });
 
   it('returns embedded=false when contact is missing (no LLM call)', async () => {
@@ -411,5 +537,149 @@ describe('ContactEmbedWorker.process — tenant scope and rag ceiling (PG-199)',
 
     await expect(worker.process(job as never, 'lock-token')).rejects.toThrow('provider 503');
     expect(job.moveToDelayed).not.toHaveBeenCalled();
+  });
+});
+
+describe('ContactEmbedWorker.enqueueMissingEmbeddings (backfill after the vector(2048) migration)', () => {
+  const redis = { host: 'localhost', port: 6379 };
+
+  it('accepts backfill as a job reason', () => {
+    expect(
+      ContactEmbedJobDataSchema.parse({ contactId: 'c-1', tenantId: 't-1', reason: 'backfill' })
+        .reason
+    ).toBe('backfill');
+  });
+
+  it('rate-limits the worker itself, so a backlog that piles up while it is down still runs at 15 a minute', async () => {
+    const worker = new ContactEmbedWorker(
+      { $queryRaw: vi.fn(async () => []) } as any,
+      redis,
+      { generateEmbedding: vi.fn() },
+      vi.fn()
+    );
+    await worker.start();
+
+    // BullMQ applies the limiter when a job is fetched, across every worker on the queue and
+    // to retries too, which a delay set at enqueue time cannot do.
+    expect(EMBED_RATE_LIMIT).toEqual({ max: 15, duration: 60_000 });
+    const opts = (constructorCalls.Worker[0] as unknown[])[2] as { limiter?: unknown };
+    expect(opts.limiter).toEqual(EMBED_RATE_LIMIT);
+  });
+
+  it('queues every contact whose embedding is NULL, page by page, deduped', async () => {
+    const pages = [
+      [
+        { id: 'c-1', tenantId: 't-1' },
+        { id: 'c-2', tenantId: 't-2' },
+      ],
+      [{ id: 'c-3', tenantId: 't-1' }],
+    ];
+    const prisma = { $queryRaw: vi.fn(async () => pages.shift() ?? []) };
+    const worker = new ContactEmbedWorker(
+      prisma as any,
+      redis,
+      { generateEmbedding: vi.fn() },
+      vi.fn()
+    );
+    await worker.start();
+
+    await expect(worker.enqueueMissingEmbeddings(2)).resolves.toBe(3);
+
+    // No enqueue-time delay: the worker's limiter does the spacing.
+    const job = (contactId: string, tenantId: string) => ({
+      name: 'embed',
+      data: { contactId, tenantId, reason: 'backfill' },
+      opts: { jobId: `backfill-${contactId}` },
+    });
+    expect(constructorCalls.addBulk.flat()).toEqual([
+      job('c-1', 't-1'),
+      job('c-2', 't-2'),
+      job('c-3', 't-1'),
+    ]);
+    // Only NULL embeddings are read, and the second page resumes after the last id.
+    expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);
+    const [sql, ...values] = prisma.$queryRaw.mock.calls[1] as unknown as [string[], ...unknown[]];
+    expect(sql.join('?')).toMatch(/FROM contacts\s+WHERE embedding IS NULL AND id > \?/);
+    expect(values).toEqual(['c-2', 2]);
+  });
+
+  it('re-queues a contact whose earlier backfill job failed, so an outage is recovered at the next boot', async () => {
+    // A provider outage used up c-1's retries; BullMQ keeps that failed job for a week, and
+    // adding the same job id again would be deduplicated against it.
+    constructorCalls.retained.set('backfill-c-1', { state: 'failed', removed: false });
+    const prisma = { $queryRaw: vi.fn(async () => [{ id: 'c-1', tenantId: 't-1' }]) };
+    const worker = new ContactEmbedWorker(
+      prisma as any,
+      redis,
+      { generateEmbedding: vi.fn() },
+      vi.fn()
+    );
+    await worker.start();
+
+    await expect(worker.enqueueMissingEmbeddings()).resolves.toBe(1);
+
+    expect(constructorCalls.retained.get('backfill-c-1')?.removed).toBe(true);
+    expect(constructorCalls.addBulk.flat()).toHaveLength(1);
+  });
+
+  it('re-queues a contact whose earlier backfill completed but whose embedding was cleared again', async () => {
+    // The documented rollback clears the embeddings; BullMQ keeps completed jobs for a day.
+    constructorCalls.retained.set('backfill-c-1', { state: 'completed', removed: false });
+    const prisma = { $queryRaw: vi.fn(async () => [{ id: 'c-1', tenantId: 't-1' }]) };
+    const worker = new ContactEmbedWorker(
+      prisma as any,
+      redis,
+      { generateEmbedding: vi.fn() },
+      vi.fn()
+    );
+    await worker.start();
+
+    await worker.enqueueMissingEmbeddings();
+
+    expect(constructorCalls.retained.get('backfill-c-1')?.removed).toBe(true);
+  });
+
+  it.each(['waiting', 'delayed', 'active'])(
+    'leaves a backfill job that is %s in place, so the id still dedupes it',
+    async (state) => {
+      constructorCalls.retained.set('backfill-c-1', { state, removed: false });
+      const prisma = { $queryRaw: vi.fn(async () => [{ id: 'c-1', tenantId: 't-1' }]) };
+      const worker = new ContactEmbedWorker(
+        prisma as any,
+        redis,
+        { generateEmbedding: vi.fn() },
+        vi.fn()
+      );
+      await worker.start();
+
+      await worker.enqueueMissingEmbeddings();
+
+      expect(constructorCalls.retained.get('backfill-c-1')?.removed).toBe(false);
+    }
+  );
+
+  it('queues nothing when every contact already has an embedding', async () => {
+    const prisma = { $queryRaw: vi.fn(async () => []) };
+    const worker = new ContactEmbedWorker(
+      prisma as any,
+      redis,
+      { generateEmbedding: vi.fn() },
+      vi.fn()
+    );
+    await worker.start();
+
+    await expect(worker.enqueueMissingEmbeddings()).resolves.toBe(0);
+    expect(constructorCalls.addBulk).toEqual([]);
+  });
+
+  it('refuses to run before start()', async () => {
+    const worker = new ContactEmbedWorker(
+      {} as any,
+      redis,
+      { generateEmbedding: vi.fn() },
+      vi.fn()
+    );
+
+    await expect(worker.enqueueMissingEmbeddings()).rejects.toThrow(/not started/);
   });
 });

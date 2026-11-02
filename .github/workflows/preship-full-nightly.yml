@@ -44,7 +44,8 @@ env:
 jobs:
   preship-full:
     name: Pre-ship Full (standard gate + cross-browser E2E)
-    runs-on: ubuntu-latest
+    # Pinned: the locked Playwright refuses Ubuntu 26.04 (#1128). The upgrade in #1137 removes this.
+    runs-on: ubuntu-24.04
     # Standard gate (install/build/lint/typecheck/unit+integration/coverage/build)
     # PLUS the 3-browser E2E matrix — budget ~2h+. Generous ceiling so a slow but
     # healthy run is not killed mid-matrix.

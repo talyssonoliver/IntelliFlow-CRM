@@ -117,3 +117,91 @@ describe('PrismaTaskRepository.findByIds (NP-022)', () => {
     expect(result[0].description).toBe('desc');
   });
 });
+
+// PG-208: the assignee is persisted and loaded on every path (round-robin assigns at create).
+describe('PrismaTaskRepository assigneeId persistence (PG-208)', () => {
+  let prisma: Record<string, any>;
+  let repo: PrismaTaskRepository;
+  const assigned = () => makeRecord(ID_A, { assigneeId: 'assignee-9', priority: 'MEDIUM' });
+
+  beforeEach(() => {
+    prisma = {
+      task: {
+        findMany: vi.fn().mockResolvedValue([assigned()]),
+        findUnique: vi.fn().mockResolvedValue(assigned()),
+        upsert: vi.fn().mockResolvedValue(undefined),
+        delete: vi.fn(),
+        groupBy: vi.fn(),
+      },
+    };
+    repo = new PrismaTaskRepository(prisma as any);
+  });
+
+  it('writes assigneeId on create but never on an ordinary update', async () => {
+    // An edit that read the task before an automatic assignment must not wipe
+    // it with its stale assignee: only saveAssignment changes the assignee.
+    const task = await repo.findById({ value: ID_A } as any);
+    await repo.save(task!);
+    const args = prisma.task.upsert.mock.calls[0][0];
+    expect(args.create.assigneeId).toBe('assignee-9');
+    expect(args.update).not.toHaveProperty('assigneeId');
+    expect(args.update.title).toBe(args.create.title);
+  });
+
+  it('saveAssignment writes only the assignee, guarded by tenant and the updatedAt it read', async () => {
+    prisma.task.updateMany = vi.fn().mockResolvedValue({ count: 1 });
+    const task = (await repo.findById({ value: ID_A } as any))!;
+    const readAt = task.updatedAt;
+    task.assignTo('assignee-2', 'system:task-automation');
+    await expect(repo.saveAssignment(task, readAt)).resolves.toBe(true);
+    expect(prisma.task.updateMany).toHaveBeenCalledWith({
+      where: { id: ID_A, tenantId: 'tenant-1', updatedAt: readAt },
+      data: { assigneeId: 'assignee-2', updatedAt: task.updatedAt },
+    });
+    expect(prisma.task.upsert).not.toHaveBeenCalled();
+  });
+
+  it('saveAssignment reports a task edited or deleted since it was read', async () => {
+    prisma.task.updateMany = vi.fn().mockResolvedValue({ count: 0 });
+    const task = (await repo.findById({ value: ID_A } as any))!;
+    const readAt = task.updatedAt;
+    task.assignTo('assignee-2', 'system:task-automation');
+    await expect(repo.saveAssignment(task, readAt)).resolves.toBe(false);
+    expect(prisma.task.upsert).not.toHaveBeenCalled();
+  });
+
+  it('writes null for an unassigned task', async () => {
+    prisma.task.findUnique.mockResolvedValue(
+      makeRecord(ID_A, { assigneeId: null, priority: 'LOW' })
+    );
+    const task = await repo.findById({ value: ID_A } as any);
+    await repo.save(task!);
+    expect(prisma.task.upsert.mock.calls[0][0].create.assigneeId).toBeNull();
+  });
+
+  it.each([
+    ['findById', (r: PrismaTaskRepository) => r.findById({ value: ID_A } as any).then((t) => [t!])],
+    ['findByIds', (r: PrismaTaskRepository) => r.findByIds([ID_A])],
+    ['findByOwnerId', (r: PrismaTaskRepository) => r.findByOwnerId('owner-1')],
+    ['findByLeadId', (r: PrismaTaskRepository) => r.findByLeadId('lead-1')],
+    ['findByContactId', (r: PrismaTaskRepository) => r.findByContactId('contact-1')],
+    ['findByOpportunityId', (r: PrismaTaskRepository) => r.findByOpportunityId('opp-1')],
+    ['findByStatus', (r: PrismaTaskRepository) => r.findByStatus('PENDING')],
+    ['findOverdue', (r: PrismaTaskRepository) => r.findOverdue()],
+    ['findDueToday', (r: PrismaTaskRepository) => r.findDueToday()],
+    ['findByPriority', (r: PrismaTaskRepository) => r.findByPriority('MEDIUM')],
+    ['findDueSoon', (r: PrismaTaskRepository) => r.findDueSoon()],
+  ])('%s loads assigneeId', async (_name, load) => {
+    const tasks = await load(repo);
+    expect(tasks[0].assigneeId).toBe('assignee-9');
+  });
+
+  it('keeps the assignee through a load-then-save cycle (bulkComplete path)', async () => {
+    const [task] = await repo.findByIds([ID_A]);
+    await repo.save(task);
+    // The update leaves the stored assignee alone, so it is kept (never nulled).
+    const args = prisma.task.upsert.mock.calls[0][0];
+    expect(args.update).not.toHaveProperty('assigneeId');
+    expect(args.create.assigneeId).toBe('assignee-9');
+  });
+});

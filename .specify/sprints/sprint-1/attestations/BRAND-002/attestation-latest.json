@@ -17,10 +17,10 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "docs/design/token-mapping.md": "e17d7b48a7da84682d5ed031ca392ad61262c4b4554f9aca8b9c53e2119068eb",
-    "docs/design/theme-reference-spec.md": "0c87a6ee41c75148945ee9a5aeac5dd300e702aab1c8e2520bd6432f30f8e141",
-    "docs/design/token-naming.md": "4b4ef42f78e81a6d74a26bfda353e005e628dcbad1b1f275b24ebd27e0ee5102",
-    ".specify/sprints/sprint-1/attestations/BRAND-002/context_ack.json": "d83d33c64efcec04406919bdc12db5e9c948140713940a5cc328ec39eef7e025"
+    "docs/design/token-mapping.md": "sha256:e17d7b48a7da84682d5ed031ca392ad61262c4b4554f9aca8b9c53e2119068eb",
+    "docs/design/theme-reference-spec.md": "sha256:0c87a6ee41c75148945ee9a5aeac5dd300e702aab1c8e2520bd6432f30f8e141",
+    "docs/design/token-naming.md": "sha256:4b4ef42f78e81a6d74a26bfda353e005e628dcbad1b1f275b24ebd27e0ee5102",
+    ".specify/sprints/sprint-1/attestations/BRAND-002/context_ack.json": "sha256:d83d33c64efcec04406919bdc12db5e9c948140713940a5cc328ec39eef7e025"
   },
   "validation_results": [
     {

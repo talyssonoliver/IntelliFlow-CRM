@@ -1,0 +1,10 @@
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/web
+
+Not implemented: navigation to another Document
+
+ Test Files  20 passed (20)
+      Tests  355 passed (355)
+   Start at  09:53:02
+   Duration  25.17s (transform 2.28s, setup 4.74s, import 8.85s, tests 31.47s, environment 14.56s)
+

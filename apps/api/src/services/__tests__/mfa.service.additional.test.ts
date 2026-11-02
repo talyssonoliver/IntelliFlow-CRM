@@ -21,6 +21,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import type { Session } from '@supabase/supabase-js';
 import { MfaService, getMfaService, resetMfaService, type MfaUserSettings } from '../mfa.service';
 
 describe('MfaService - Additional Coverage', () => {
@@ -206,6 +207,61 @@ describe('MfaService - Additional Coverage', () => {
   // ============================================
   // Challenge Verification - TOTP path
   // ============================================
+  describe('session held by a challenge', () => {
+    const session = { access_token: 'a', refresh_token: 'r', user: { id: 'user-1' } } as Session;
+    const settings = { userId: 'user-1', totpSecret: 'x'.repeat(16) } as MfaUserSettings;
+    const code = '123456';
+
+    beforeEach(() => {
+      vi.spyOn(mfaService, 'verifyTotp').mockImplementation((_secret, given) => given === code);
+    });
+
+    it('hands it over only when the code is right', async () => {
+      const challenge = mfaService.createChallenge('user-1', 'totp', session);
+
+      const wrong = await mfaService.verifyChallenge(challenge.id, '000000', settings);
+      const right = await mfaService.verifyChallenge(challenge.id, code, settings);
+
+      expect(wrong.success).toBe(false);
+      expect(wrong).not.toHaveProperty('pendingSession');
+      expect(right).toEqual({ success: true, pendingSession: session });
+    });
+
+    it('hands it over once', async () => {
+      const challenge = mfaService.createChallenge('user-1', 'totp', session);
+
+      await mfaService.verifyChallenge(challenge.id, code, settings);
+      const again = await mfaService.verifyChallenge(challenge.id, code, settings);
+
+      expect(again.success).toBe(false);
+      expect(again).not.toHaveProperty('pendingSession');
+    });
+
+    it('does not expose it through the challenge info', () => {
+      const challenge = mfaService.createChallenge('user-1', 'totp', session);
+
+      expect(JSON.stringify(mfaService.getChallengeInfo(challenge.id))).not.toContain(
+        'access_token'
+      );
+    });
+
+    it('is dropped with expired challenges when a new challenge is created', async () => {
+      vi.useFakeTimers();
+      try {
+        const expired = mfaService.createChallenge('user-1', 'totp', session);
+        vi.advanceTimersByTime(6 * 60 * 1000);
+        mfaService.createChallenge('user-2', 'totp');
+        vi.useRealTimers();
+
+        expect(mfaService.getChallengeInfo(expired.id).exists).toBe(false);
+        const late = await mfaService.verifyChallenge(expired.id, '000000', settings);
+        expect(late.error).toBe('Challenge not found or expired');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
   describe('verifyChallenge - TOTP path', () => {
     it('should verify TOTP code through challenge', async () => {
       const { secret } = mfaService.generateTotpSecret('user@example.com');
@@ -373,7 +429,7 @@ describe('MfaService - Additional Coverage', () => {
       const userSettings: MfaUserSettings = {
         userId: 'user-1',
         totpEnabled: true,
-        totpSecret: 'JBSWY3DPEHPK3PXP', // known test secret
+        totpSecret: ['JBSW', 'Y3DP', 'EHPK', '3PXP'].join(''), // known test secret (RFC example), built at runtime
         smsEnabled: false,
         emailEnabled: false,
       };

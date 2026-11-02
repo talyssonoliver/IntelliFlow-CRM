@@ -60,6 +60,23 @@ describe('quota-guard', () => {
       expect(create).not.toHaveBeenCalled();
     });
 
+    it('reserveQuota can give back part of a reservation, never more than was reserved', async () => {
+      const quota = {
+        assertWithinQuota: vi.fn(),
+        increment: vi.fn(),
+        reserve: vi.fn().mockResolvedValue(undefined),
+        release: vi.fn().mockResolvedValue(undefined),
+      };
+      const release = await reserveQuota({ services: { quota } }, TENANT, 'emailsPerMonth', 3);
+      await release(1);
+      await release();
+      await release();
+      expect(quota.release.mock.calls).toEqual([
+        [TENANT, 'emailsPerMonth', 1],
+        [TENANT, 'emailsPerMonth', 2],
+      ]);
+    });
+
     it('passes the tenant, key and increment to the service', async () => {
       const quota = { assertWithinQuota: vi.fn().mockResolvedValue(undefined), increment: vi.fn() };
       await assertQuota({ services: { quota } }, TENANT, 'emailsPerMonth', 4);

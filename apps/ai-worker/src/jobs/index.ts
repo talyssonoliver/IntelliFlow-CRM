@@ -31,6 +31,7 @@ export {
 
 export {
   INSIGHT_QUEUE,
+  SCHEDULED_INSIGHT_JOB_NAME,
   processInsightJob,
   InsightJobDataSchema,
   InsightJobResultSchema,

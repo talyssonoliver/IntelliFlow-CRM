@@ -577,32 +577,115 @@ function looksLikeIpLiteral(host: string): boolean {
   return /^(\d{1,3}\.){3}\d{1,3}$/.test(host) || host.includes(':');
 }
 
-/** Returns true if the IPv4 a.b octets fall in a private/reserved range. */
-function isPrivateIpv4(a: number, b: number): boolean {
-  if (a === 0) return true; // 0.0.0.0/8 — "this network"
-  if (a === 10) return true; // RFC1918
-  if (a === 127) return true; // loopback
-  if (a === 169 && b === 254) return true; // link-local
-  if (a === 172 && b >= 16 && b <= 31) return true; // RFC1918
-  if (a === 192 && b === 168) return true; // RFC1918
-  if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT 100.64.0.0/10
-  if (a >= 224 && a <= 239) return true; // multicast 224.0.0.0/4
-  if (a >= 240) return true; // reserved 240.0.0.0/4 + broadcast 255.255.255.255
-  return false;
+/**
+ * Strict dotted-quad parser: four decimal octets 0-255, no leading zeros, no
+ * hex/octal/integer shorthand (those forms are how SSRF filters get bypassed).
+ */
+function parseIpv4(host: string): number[] | null {
+  const parts = host.split('.');
+  if (parts.length !== 4) return null;
+  const octets: number[] = [];
+  for (const part of parts) {
+    if (!/^(0|[1-9]\d{0,2})$/.test(part)) return null;
+    const value = Number(part);
+    if (value > 255) return null;
+    octets.push(value);
+  }
+  return octets;
 }
 
-/** Returns true if the IPv6 host literal is a private/reserved address. */
-function isPrivateIpv6(host: string): boolean {
-  if (host === '::' || host === '::1') return true;
-  if (host.startsWith('::ffff:')) {
-    // IPv4-mapped IPv6 — recurse on the embedded IPv4 portion
-    return !isPublicIpAddress(host.slice('::ffff:'.length));
+/** Parses an IPv6 literal (optionally bracketed, zone id stripped) into 16 bytes. */
+function parseIpv6(raw: string): number[] | null {
+  let host = raw.startsWith('[') && raw.endsWith(']') ? raw.slice(1, -1) : raw;
+  const zone = host.indexOf('%');
+  if (zone !== -1) host = host.slice(0, zone);
+  if (!host.includes(':')) return null;
+
+  // A trailing dotted IPv4 stands for the last two 16-bit groups.
+  const lastColon = host.lastIndexOf(':');
+  const lastPart = host.slice(lastColon + 1);
+  if (lastPart.includes('.')) {
+    const v4 = parseIpv4(lastPart);
+    if (!v4) return null;
+    const [a, b, c, d] = v4 as [number, number, number, number];
+    host = `${host.slice(0, lastColon + 1)}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
   }
-  if (/^f[cd][0-9a-f]{2}:/.test(host)) return true; // Unique-local fc00::/7
-  if (/^fe[89ab][0-9a-f]:/.test(host)) return true; // Link-local fe80::/10
-  if (/^fe[cdef][0-9a-f]:/.test(host)) return true; // Site-local (deprecated) fec0::/10
-  if (host.startsWith('ff')) return true; // Multicast ff00::/8
-  return false;
+
+  const halves = host.split('::');
+  if (halves.length > 2) return null;
+  const toGroups = (s: string): string[] => (s === '' ? [] : s.split(':'));
+  // split() always yields at least one element; halves[1] exists when length is 2.
+  const head = toGroups(halves[0] as string);
+  const rest = halves.length === 2 ? toGroups(halves[1] as string) : [];
+  const explicit = head.length + rest.length;
+  if (halves.length === 1 ? explicit !== 8 : explicit > 7) return null;
+
+  const groups = [...head, ...Array<string>(8 - explicit).fill('0'), ...rest];
+  const bytes: number[] = [];
+  for (const group of groups) {
+    if (!/^[0-9a-f]{1,4}$/.test(group)) return null;
+    const value = Number.parseInt(group, 16);
+    bytes.push(value >> 8, value & 0xff);
+  }
+  return bytes;
+}
+
+/** True when `bytes` starts with the first `bits` bits of `prefix`. */
+function inPrefix(bytes: readonly number[], prefix: readonly number[], bits: number): boolean {
+  for (let i = 0; i < bits; i++) {
+    const byte = i >> 3;
+    const mask = 0x80 >> (i & 7);
+    // Callers pass 16-byte (IPv6) or 4-byte (IPv4) arrays and bits within them.
+    if (((bytes[byte] as number) & mask) !== ((prefix[byte] as number) & mask)) return false;
+  }
+  return true;
+}
+
+/** IPv4 ranges that must never be connected to: private, loopback, link-local, shared, test, multicast, reserved. */
+const PRIVATE_IPV4_CIDRS: ReadonlyArray<readonly [number[], number]> = [
+  [[0, 0, 0, 0], 8], // "this network"
+  [[10, 0, 0, 0], 8], // RFC 1918
+  [[100, 64, 0, 0], 10], // CGNAT
+  [[127, 0, 0, 0], 8], // loopback
+  [[169, 254, 0, 0], 16], // link-local (cloud metadata)
+  [[172, 16, 0, 0], 12], // RFC 1918
+  [[192, 0, 0, 0], 24], // IETF protocol assignments
+  [[192, 0, 2, 0], 24], // TEST-NET-1
+  [[192, 168, 0, 0], 16], // RFC 1918
+  [[198, 18, 0, 0], 15], // benchmarking
+  [[198, 51, 100, 0], 24], // TEST-NET-2
+  [[203, 0, 113, 0], 24], // TEST-NET-3
+  [[224, 0, 0, 0], 4], // multicast
+  [[240, 0, 0, 0], 4], // reserved + broadcast
+];
+
+function isPrivateIpv4Bytes(octets: readonly number[]): boolean {
+  return PRIVATE_IPV4_CIDRS.some(([prefix, bits]) => inPrefix(octets, prefix, bits));
+}
+
+const V6 = (...groups: number[]): number[] =>
+  groups.flatMap((g) => [g >> 8, g & 0xff]).concat(Array<number>(16 - groups.length * 2).fill(0));
+
+/** IPv6 ranges refused outright (the embedded-IPv4 forms are unwrapped separately). */
+const PRIVATE_IPV6_CIDRS: ReadonlyArray<readonly [number[], number]> = [
+  [V6(0, 0, 0, 0, 0, 0), 96], // ::/96 — unspecified, loopback, IPv4-compatible
+  [V6(0x100), 64], // discard-only
+  [V6(0x2001, 0), 32], // Teredo (tunnels to arbitrary IPv4)
+  [V6(0x2001, 0xdb8), 32], // documentation
+  [V6(0xfc00), 7], // unique local
+  [V6(0xfe80), 10], // link-local
+  [V6(0xfec0), 10], // site-local (deprecated)
+  [V6(0xff00), 8], // multicast
+];
+
+function isPrivateIpv6Bytes(bytes: readonly number[]): boolean {
+  // IPv4-mapped ::ffff:0:0/96 and NAT64 64:ff9b::/96 carry an IPv4 in the last 4 bytes.
+  if (inPrefix(bytes, V6(0, 0, 0, 0, 0, 0xffff), 96) || inPrefix(bytes, V6(0x64, 0xff9b), 96)) {
+    return isPrivateIpv4Bytes(bytes.slice(12, 16));
+  }
+  // 6to4 2002::/16 carries an IPv4 in bytes 2-5.
+  if (inPrefix(bytes, V6(0x2002), 16)) return isPrivateIpv4Bytes(bytes.slice(2, 6));
+  return PRIVATE_IPV6_CIDRS.some(([prefix, bits]) => inPrefix(bytes, prefix, bits));
 }
 
 /**
@@ -610,15 +693,17 @@ function isPrivateIpv6(host: string): boolean {
  * the URL-level `isPublicHttpUrl` guard but operates on a resolved IP
  * (string form). Use this in the runtime dispatcher AFTER DNS resolution
  * to defend against DNS-rebinding attacks.
+ *
+ * PG-207 (CA-4): the address is parsed into canonical bytes and checked
+ * against CIDR tables, so hex/expanded/bracketed/zone-id IPv6 forms and the
+ * IPv4-mapped, NAT64 and 6to4 encodings cannot slip a private IPv4 through.
+ * Anything that does not parse as an IP address is refused.
  */
 export function isPublicIpAddress(addr: string): boolean {
-  const host = addr.toLowerCase();
-  // IPv4 dotted-quad
-  const ipv4 = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(host);
-  if (ipv4) {
-    const [a, b] = [Number(ipv4[1]), Number(ipv4[2])];
-    return !isPrivateIpv4(a, b);
-  }
-  // IPv6 literal — case-insensitive
-  return !isPrivateIpv6(host);
+  const host = addr.trim().toLowerCase();
+  const v4 = parseIpv4(host);
+  if (v4) return !isPrivateIpv4Bytes(v4);
+  const v6 = parseIpv6(host);
+  if (v6) return !isPrivateIpv6Bytes(v6);
+  return false;
 }

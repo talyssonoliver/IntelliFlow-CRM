@@ -52,8 +52,14 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
+import {
+  activeWaivers,
+  checkWaivers,
+  fingerprint,
+  readTrackedFiles,
+  waivedFindingLines,
+} from './lib/codex-fingerprint.mjs';
 
 // ── repo root ──────────────────────────────────────────────────────────
 function detectRepoRoot() {
@@ -80,6 +86,7 @@ let baseRef = 'origin/main';
 for (const a of args) {
   if (a.startsWith('--base=')) baseRef = a.slice('--base='.length);
 }
+const CHECK_WAIVERS_ONLY = args.includes('--check-waivers');
 const VERBOSE = process.env.CODEX_REVIEW_VERBOSE === '1';
 
 // ── helpers ────────────────────────────────────────────────────────────
@@ -287,164 +294,21 @@ function isInScope(file) {
   return SONAR_SOURCES.some((src) => file.startsWith(src + '/') || file.startsWith(src));
 }
 
-// ── fingerprint ────────────────────────────────────────────────────────
-/**
- * Stable fingerprint anchored to SOURCE CODE, not LLM prose.
- *
- * Formula:  sha256( normalizedFilePath + "\n" + normalizedFlaggedSource )
- *
- *   normalizedFilePath   = forward-slash path, lowercase, trimmed
- *   normalizedFlaggedSource = the actual source text of the flagged line(s)
- *                             read from disk, internal whitespace collapsed,
- *                             leading/trailing whitespace stripped.
- *
- * Using source code instead of the LLM's "issue" text makes the fingerprint
- * stable across:
- *   - LLM rephrasing (non-deterministic prose)
- *   - Minor line-number shifts (we look up the code at the reported line,
- *     not the line number itself)
- *
- * Fallback: if the file does not exist on disk or the line is out of range,
- * we fall back to the LLM's issue text (normalised) so we don't silently
- * suppress findings whose source cannot be read.
- *
- * @param {string} file       - relative file path as reported by Codex
- * @param {string|number} line - line number (or "N-M" range) as reported
- * @param {string} issue      - LLM issue text (fallback only)
- * @param {string} repoRoot   - absolute repo root path
- */
-/**
- * Line-drift tolerance for fingerprint stability.
- *
- * The LLM sometimes reports the flagged line ±1-2 positions from the actual
- * bug (e.g. pointing to the line BEFORE the bad mapping rather than the bad
- * mapping itself).  To keep the fingerprint stable across this drift we
- * compute candidate hashes for every line in [N-DRIFT .. N+DRIFT] and take
- * the MINIMUM.  Because the minimum is the same regardless of whether the
- * LLM reports N, N-1, or N+1 (all candidates include the same neighbourhood),
- * the fingerprint is stable across ±DRIFT line-number variance.
- *
- * Why minimum works:
- *   - For any two reported lines A and B where |A-B| ≤ DRIFT, the candidate
- *     sets [A-DRIFT..A+DRIFT] and [B-DRIFT..B+DRIFT] overlap; both sets
- *     include the canonical bug line, so their minimum is the same hash.
- *   - DRIFT=2 tolerates ±2 line shifts (enough for adjacent-line confusion).
- *   - If the bug is fixed (code changes), every candidate hash changes, so
- *     the minimum changes and the waiver expires automatically.
- */
-const FP_DRIFT = 2; // tolerate ±2 line-number variance from the LLM
+// ── waiver loading ─────────────────────────────────────────────────────────
+const readWaiverFile = () =>
+  fs.existsSync(WAIVERS_PATH) ? fs.readFileSync(WAIVERS_PATH, 'utf8') : '';
 
-/**
- * Compute the stable source-code fingerprint.
- *
- * Formula: minimum sha256 over lines [N-DRIFT .. N+DRIFT] of
- *           sha256( normalizedFilePath + "\n" + trimmedSourceLine )
- *
- * @param {string}        file     - relative file path as reported by Codex
- * @param {string|number} line     - line number (or "N-M" range) as reported
- * @param {string}        issue    - LLM issue text (fallback only)
- * @param {string}        repoRoot - absolute repo root path
- */
-function fingerprint(file, line, issue, repoRoot) {
-  // Normalize the file path
-  const normalizedFile = file.replace(/\\/g, '/').toLowerCase().trim();
+const todayIso = () => new Date().toISOString().slice(0, 10);
 
-  // Try to read the flagged source line(s) from disk
-  let candidateHashes = [];
-  try {
-    const absPath = path.join(repoRoot, file);
-    if (fs.existsSync(absPath)) {
-      const fileLines = fs.readFileSync(absPath, 'utf8').split('\n');
-      // Parse line spec: may be integer, string integer, or "N-M" range
-      const lineStr = String(line).trim();
-      const rangeMatch = lineStr.match(/^(\d+)\s*[-–]\s*(\d+)$/);
-      let startLine, endLine;
-      if (rangeMatch) {
-        startLine = parseInt(rangeMatch[1], 10);
-        endLine = parseInt(rangeMatch[2], 10);
-      } else {
-        const n = parseInt(lineStr, 10);
-        startLine = isNaN(n) ? null : n;
-        endLine = startLine;
-      }
+/** The waivers in force, by fingerprint. Expired ones warn and are left out. */
+const loadWaivers = () =>
+  activeWaivers(readWaiverFile(), todayIso(), (message) => process.stderr.write(message));
 
-      if (startLine !== null && startLine >= 1) {
-        // For each candidate line in [startLine-DRIFT .. endLine+DRIFT]
-        const from = Math.max(1, startLine - FP_DRIFT);
-        const to = Math.min(fileLines.length, (endLine ?? startLine) + FP_DRIFT);
-
-        for (let ln = from; ln <= to; ln++) {
-          const srcLine = (fileLines[ln - 1] || '').trim();
-          if (!srcLine) continue; // skip blank lines
-          const normalized = srcLine.replace(/\s+/g, ' ');
-          const payload = `${normalizedFile}\n${normalized}`;
-          candidateHashes.push(crypto.createHash('sha256').update(payload).digest('hex'));
-        }
-      }
-    }
-  } catch {
-    // Reading failed — fall through to prose fallback
-  }
-
-  if (candidateHashes.length > 0) {
-    // Return the lexicographically minimum hash over the drift window.
-    // The minimum is the same whether the LLM reports line N, N-1, or N+1
-    // (all candidate sets share the same minimum line in the neighbourhood).
-    candidateHashes.sort();
-    return candidateHashes[0];
-  }
-
-  // Fallback: use LLM issue prose (normalised) when source cannot be read
-  const prose =
-    'prose:' +
-    issue
-      .toLowerCase()
-      .replace(/\s+/g, ' ')
-      .replace(/['"`.]/g, '')
-      .trim();
-  return crypto.createHash('sha256').update(`${normalizedFile}\n${prose}`).digest('hex');
-}
-
-// ── waiver loading ─────────────────────────────────────────────────────
-function loadWaivers() {
-  if (!fs.existsSync(WAIVERS_PATH)) return new Set();
-  const raw = fs.readFileSync(WAIVERS_PATH, 'utf8');
-  // Minimal YAML parsing: extract fingerprint values from list entries.
-  // Format: "  - fingerprint: \"<hex>\""
-  const set = new Set();
-  const today = new Date().toISOString().slice(0, 10);
-  // We parse line-by-line (no yaml dep required)
-  // Each waiver entry starts with a "- fingerprint: <hex>" line,
-  // optionally followed by an "  expires: YYYY-MM-DD" line.
-  const lines = raw.split('\n');
-  let currentFp = null;
-  let currentExpires = null;
-  const flushEntry = () => {
-    if (!currentFp) return;
-    if (currentExpires && currentExpires < today) {
-      process.stderr.write(
-        `[codex-review] WARN: waiver ${currentFp.slice(0, 12)}... expired ${currentExpires} — treating as not waived\n`
-      );
-    } else {
-      set.add(currentFp);
-    }
-    currentFp = null;
-    currentExpires = null;
-  };
-  for (const line of lines) {
-    const fpMatch = line.match(/fingerprint\s*:\s*["']?([a-f0-9]{64})["']?/);
-    if (fpMatch) {
-      flushEntry();
-      currentFp = fpMatch[1];
-      continue;
-    }
-    const expMatch = line.match(/expires\s*:\s*["']?(\d{4}-\d{2}-\d{2})["']?/);
-    if (expMatch && currentFp) {
-      currentExpires = expMatch[1];
-    }
-  }
-  flushEntry();
-  return set;
+/** Fails on a waiver anchored on a trivial or repeated line. No reviewer is called. */
+function runWaiverCheck() {
+  const { ok, lines } = checkWaivers(readWaiverFile(), readTrackedFiles(REPO_ROOT), todayIso());
+  process.stdout.write(`${lines.join('\n')}\n`);
+  process.exit(ok ? 0 : 1);
 }
 
 // ── extract JSON from Codex output ─────────────────────────────────────
@@ -766,9 +630,7 @@ ${diffText || '(no diff output — check base ref)'}
   if (waived.length > 0) {
     lines.push('WAIVED FINDINGS (suppressed):');
     for (const f of waived) {
-      lines.push(
-        `  [${f.severity.toUpperCase()}] ${f.file}:${f.line} — ${f.rule} (fp: ${f.fingerprint.slice(0, 12)}...)`
-      );
+      lines.push(...waivedFindingLines(f, waivers.get(f.fingerprint)));
     }
     lines.push('');
   }
@@ -786,9 +648,14 @@ ${diffText || '(no diff output — check base ref)'}
   process.stderr.write(
     `[codex-review] Gate FAIL — ${unwaived.length} unwaived finding(s).\n` +
       `  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml\n` +
+      `  (check with: node scripts/codex-review.mjs --check-waivers)\n` +
       `  with a non-empty reason, author, and date.\n`
   );
   process.exit(1);
 }
 
-main();
+if (CHECK_WAIVERS_ONLY) {
+  runWaiverCheck();
+} else {
+  main();
+}

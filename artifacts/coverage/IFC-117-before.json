@@ -1,0 +1,95 @@
+{
+  "task_id": "IFC-117",
+  "phase": "before",
+  "captured_at": "2026-10-25T18:33:48.073Z",
+  "description": "Baseline for the IFC-117 touched area, captured on origin/main d8bf93c40 source (the branch so far adds only .specify and docs commits; no source change yet).",
+  "measurement_scope": [
+    "apps/ai-worker/src/monitoring/**/*.ts",
+    "apps/ai-worker/src/chains/scoring.chain.ts",
+    "apps/ai-worker/src/jobs/feedback-analytics.job.ts",
+    "apps/ai-worker/src/metrics/**/*.ts"
+  ],
+  "command": "(apps/ai-worker) npx vitest run src/monitoring src/chains src/jobs/__tests__/feedback-analytics.job.test.ts src/metrics --coverage.enabled --coverage.provider=istanbul --coverage.include=<scope> --coverage.reporter=json-summary",
+  "tests": "33 files passed, 1 skipped; 680 tests passed, 8 skipped",
+  "totals": {
+    "lines": 97.51,
+    "branches": 85,
+    "functions": 93.8,
+    "statements": 96.61,
+    "file_count": 12
+  },
+  "files": {
+    "apps/ai-worker/src/chains/scoring.chain.ts": {
+      "lines": 98.14,
+      "branches": 85.07,
+      "functions": 100,
+      "statements": 98.18
+    },
+    "apps/ai-worker/src/jobs/feedback-analytics.job.ts": {
+      "lines": 100,
+      "branches": 75,
+      "functions": 100,
+      "statements": 100
+    },
+    "apps/ai-worker/src/metrics/prometheus-exporter.ts": {
+      "lines": 81.57,
+      "branches": 66.66,
+      "functions": 81.81,
+      "statements": 82.05
+    },
+    "apps/ai-worker/src/monitoring/ai-monitoring-payload.schema.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100,
+      "statements": 100
+    },
+    "apps/ai-worker/src/monitoring/chain-monitor.ts": {
+      "lines": 98.11,
+      "branches": 89.47,
+      "functions": 90.9,
+      "statements": 98.27
+    },
+    "apps/ai-worker/src/monitoring/drift-detector.ts": {
+      "lines": 97,
+      "branches": 87.87,
+      "functions": 100,
+      "statements": 96.11
+    },
+    "apps/ai-worker/src/monitoring/hallucination-checker.ts": {
+      "lines": 97.63,
+      "branches": 87.15,
+      "functions": 97.77,
+      "statements": 97.32
+    },
+    "apps/ai-worker/src/monitoring/index.ts": {
+      "lines": 100,
+      "branches": 100,
+      "functions": 100,
+      "statements": 100
+    },
+    "apps/ai-worker/src/monitoring/latency-monitor.ts": {
+      "lines": 99.54,
+      "branches": 86.36,
+      "functions": 95.91,
+      "statements": 97.11
+    },
+    "apps/ai-worker/src/monitoring/monitoring-flush.service.ts": {
+      "lines": 88.13,
+      "branches": 67.5,
+      "functions": 54.54,
+      "statements": 85.48
+    },
+    "apps/ai-worker/src/monitoring/redis-monitoring-publisher.ts": {
+      "lines": 99.18,
+      "branches": 81.88,
+      "functions": 95.74,
+      "statements": 98.01
+    },
+    "apps/ai-worker/src/monitoring/roi-tracker.ts": {
+      "lines": 99.04,
+      "branches": 93.05,
+      "functions": 91.83,
+      "statements": 98.25
+    }
+  }
+}

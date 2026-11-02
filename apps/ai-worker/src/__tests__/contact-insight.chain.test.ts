@@ -13,6 +13,11 @@ const INSIGHT_PAYLOAD = {
   modelVersion: 'contact-insight-v1',
 };
 
+// PG-203 #1002: every person eligible here; the blocked paths have their own tests.
+vi.mock('../lib/data-request-guard', async (importOriginal) =>
+  (await import('../test/mocks/data-request-guard.mock')).passThroughGuard(await importOriginal())
+);
+
 vi.mock('../lib/llm-factory.js', () => ({ createLLMForTenant: vi.fn() }));
 vi.mock('../utils/input-sanitizer.js', () => ({
   sanitizeStringField: vi.fn((v: string) => v),

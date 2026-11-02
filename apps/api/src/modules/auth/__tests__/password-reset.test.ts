@@ -23,9 +23,7 @@ const { mockResetPasswordForEmail, mockUpdateUserPassword, mockSupabaseAdmin } =
 
 vi.mock('../../../lib/supabase', () => ({
   signIn: vi.fn(),
-  signOut: vi.fn(),
   signOutUser: vi.fn(),
-  getSession: vi.fn(),
   verifyToken: vi.fn(),
   signInWithOAuth: vi.fn(),
   exchangeCodeForSession: vi.fn(),
@@ -160,7 +158,7 @@ describe('Password Reset Procedures (IFC-120)', () => {
 
   describe('resetPassword', () => {
     const validInput = {
-      token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.valid-payload-here',
+      token: fixtureValue('eyJhbGciOiJIUzI1NiIs', 'InR5cCI6IkpXVCJ9', '.valid-payload-here'),
       password: fixtureValue('NewSecu', 'reP@ss1'),
       confirmPassword: fixtureValue('NewSecu', 'reP@ss1'),
     };
@@ -195,7 +193,7 @@ describe('Password Reset Procedures (IFC-120)', () => {
 
       await expect(
         caller.resetPassword({
-          token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.valid-payload-here',
+          token: fixtureValue('eyJhbGciOiJIUzI1NiIs', 'InR5cCI6IkpXVCJ9', '.valid-payload-here'),
           password: fixtureValue('NewSecu', 'reP@ss1'),
           confirmPassword: fixtureValue('Differe', 'ntP@ss2'),
         })

@@ -1,0 +1,37 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 100 files total
+[codex-review] in scope : 70 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T14:24:01.436Z
+Base ref  : origin/main
+Files in scope : 70
+Total findings : 2
+  Waived       : 0
+  Unwaived     : 2
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/calendar/booking-abuse.ts:76-83 — non-atomic-booking-cap
+    Issue    : Concurrent bookings can exceed the per-event-type hourly cap because successful appointments are counted before acquiring the booking lock.
+    Evidence : The cap reads `prisma.appointment.count(...)` inside the separate `booking-attempts` transaction, which inserts only a booking attempt. With 29 successful bookings, two requests can each count 29 before either creates its appointment; both subsequently acquire `booking:${tenantId}` and commit because that transaction never rechecks the hourly cap.
+    Fix      : Recheck the successful-booking cap inside the booking transaction after acquiring the booking lock and before creating the appointment.
+    Fingerprint: 2d974acfb698d6ec1ff076ba837eb0668fc65b02941e0a73351e647559ca9383
+
+  [MEDIUM] apps/api/src/modules/legal/appointment-side-effects.ts:41 — reminder-settings-lost
+    Issue    : Public bookings silently lose their configured reminders during conversion to a domain appointment.
+    Evidence : `toDomainAppointment(dbRecord)` delegates to `AppointmentDomainService.toDomainAppointments`, whose `convertSingleAppointment` constructs appointment props without `reminderMinutes` or `timezone`. Consequently, even when public booking persists a positive `defaultReminderMinutes`, `ReminderSchedulerService.handleAppointmentCreated` immediately returns at `if (!appointment.reminderMinutes)`. The booking tests mock this helper and verify its invocation without exercising reminder scheduling.
+    Fix      : Preserve `reminderMinutes` and `timezone` in the Prisma-to-domain conversion, and verify that a public booking with a configured reminder produces a scheduled notification with valid recipients.
+    Fingerprint: 131539101fe29aff695a295032a9faa5055a5df2b78079cd693476620f8c28bc
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 2 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

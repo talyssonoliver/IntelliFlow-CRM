@@ -10,9 +10,27 @@ import {
 
 describe('settings-search', () => {
   describe('SETTINGS_ITEMS', () => {
-    it('contains 14 settings items', () => {
+    it('contains 16 settings items', () => {
       // Item count tracked against SETTINGS_ITEMS source; bump when adding/removing hubs.
-      expect(SETTINGS_ITEMS).toHaveLength(14);
+      // 16: Task Automation (PG-208) and Privacy Requests (PG-203 DSAR).
+      expect(SETTINGS_ITEMS).toHaveLength(16);
+    });
+
+    it('includes Task Automation in AI & Automation (PG-208)', () => {
+      const item = SETTINGS_ITEMS.find((i) => i.id === 'task-automation');
+      expect(item?.href).toBe('/tasks/automation');
+      const category = SETTINGS_CATEGORIES.find((c) => c.id === 'ai-automation');
+      expect(category?.itemIds).toContain('task-automation');
+    });
+
+    it('includes Privacy Requests under Security & Compliance (PG-203 DSAR)', () => {
+      const item = SETTINGS_ITEMS.find((i) => i.id === 'privacy-requests');
+      expect(item?.href).toBe('/settings/privacy-requests');
+      expect(filterSettings('erasure', SETTINGS_ITEMS).map((i) => i.id)).toContain(
+        'privacy-requests'
+      );
+      const security = SETTINGS_CATEGORIES.find((c) => c.id === 'security');
+      expect(security?.itemIds).toContain('privacy-requests');
     });
 
     it('includes Model Configuration under AI & Automation (PG-199)', () => {

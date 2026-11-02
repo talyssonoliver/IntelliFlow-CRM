@@ -1,17 +1,44 @@
 # GDPR Compliance Assessment
 
 **Task:** ENV-016-AI - GDPR and Data Privacy Compliance **Generated:**
-2025-12-23 **Last Reviewed:** 2026-02-23 **Status:** Completed **Regulation:**
-EU General Data Protection Regulation (GDPR) 2016/679
+2025-12-23 **Last Reviewed:** 2026-10-24 (data subject rights) **Status:**
+Completed **Regulation:** EU General Data Protection Regulation (GDPR) 2016/679
 
 ## Executive Summary
 
 This document assesses IntelliFlow CRM's compliance with GDPR requirements. As a
-CRM system processing personal data of EU residents, GDPR compliance is
-mandatory. All 34 applicable GDPR controls are now implemented (see
-`docs/compliance-and-governance/compliance/gdpr-compliance-checklist.csv`,
-verified 2025-12-29). Remaining work covers UI settings pages (Sprint 28) — the
-underlying backend controls are in place.
+CRM system processing personal data of EU and UK residents, GDPR compliance is
+mandatory. The checklist
+(`docs/compliance-and-governance/compliance/gdpr-compliance-checklist.csv`)
+tracks 35 controls. The data subject rights controls (GDPR-005 to GDPR-010,
+GDPR-021, GDPR-023 and GDPR-031) were re-assessed on 2026-10-24 after PG-203
+built the data subject request process. Some are now **Partial**: the code
+exists and is tested, but the gaps listed in
+`docs/compliance-and-governance/data-governance/dsar-process.md` remain. The
+other rows have not been re-verified since 2025-12-29. Remaining work also
+covers UI settings pages (Sprint 28).
+
+## Controller and Processor
+
+This statement covers the personal data a firm puts into the CRM about its own
+clients, leads and contacts (Spec PG-203, Addendum A, "Roles and identity").
+
+- **The firm is the controller.** Each firm that uses the CRM (a tenant) decides
+  why and how its clients' data is processed. It answers its clients' requests,
+  and the legal duties in Articles 12 to 22 are the firm's.
+- **Aurora, the CRM provider, is the processor.** It processes that data on the
+  firm's instructions and gives the firm assistance under its data processing
+  agreement. The tools for that assistance are the data request pages and the
+  admin queue described below.
+- **Sub-processors** named to data subjects in the export are hosting and
+  database, the email provider, and the AI provider used for lead scoring.
+- **One request, one firm.** Every data subject request is addressed to a single
+  firm and reaches only that firm's data. The person is identified by the firm
+  and their exact normalised email address.
+- **Retention and transfers are the firm's.** Aurora does not state a retention
+  period for a firm. The export points to the firm's own privacy notice.
+- This document does not set out Aurora's own role for the account data of the
+  firm's users. That is outside what PG-203 decided and is not claimed here.
 
 ## Scope
 
@@ -48,15 +75,22 @@ underlying backend controls are in place.
 
 ### Chapter III - Rights of Data Subject (Articles 12-23)
 
-| Article | Right                     | Implementation                                                              | Status      |
-| ------- | ------------------------- | --------------------------------------------------------------------------- | ----------- |
-| Art. 15 | Right of access           | DSAR workflow with 30-day SLA tracking (`data_subject_requests` table)      | Implemented |
-| Art. 16 | Right to rectification    | CRUD operations with full audit trail                                       | Implemented |
-| Art. 17 | Right to erasure          | `anonymize_record()` irreversible anonymization; legal hold blocks deletion | Implemented |
-| Art. 18 | Right to restriction      | Legal hold mechanism prevents processing of restricted records              | Implemented |
-| Art. 20 | Data portability          | DSAR workflow generates JSON/CSV exports with S3 download URL               | Implemented |
-| Art. 21 | Right to object           | Consent withdrawal tracked in `consents` table                              | Implemented |
-| Art. 22 | Automated decision-making | AI scores include confidence level + human override pattern                 | Implemented |
+Rights are exercised through the data subject request process built in PG-203
+(`docs/compliance-and-governance/data-governance/dsar-process.md`). The old
+IFC-140 workflow (`dsar-workflow.ts`) was never wired and has been removed.
+
+| Article | Right                     | Implementation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Status               |
+| ------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- |
+| Art. 12 | Time to respond           | Deadline of one calendar month from confirmation, one extension of 1 or 2 months with a reason emailed to the person, deadline alert job (`packages/domain/src/legal/privacy/dsar.ts`, `apps/api/src/modules/privacy/dsar-sla-scheduler.ts`)                                                                                                                                                                                                                                                                                                                 | Implemented          |
+| Art. 15 | Right of access           | Emailed, expiring JSON export with the processing information, including deals and tasks. Free text (notes, bodies, documents, deal and task descriptions), AI-written text, staff tags and qualification text, booking answers, and calendar, notification and experiment records are withheld and counted until the firm reviews them (`PrismaSubjectDataRepository.buildExport`); completion is refused unless every withheld category has a count and a reason. The firm releases the withheld material by hand. Staff can also log and export a request | Partial              |
+| Art. 16 | Right to rectification    | The firm records the decision and edits the record in the CRM; edits are audit logged. The system does not correct data itself                                                                                                                                                                                                                                                                                                                                                                                                                               | Implemented (manual) |
+| Art. 17 | Right to erasure          | One transaction anonymises the CRM core in place (leads, contacts, notes, activities, AI scores and insights, booker fields). Emails, tickets, chats, feedback, notifications, drafts, stored files, calendar events, experiment records, deals and tasks are a counted checklist for the admin to clear by hand (#1009, #1010, #1015)                                                                                                                                                                                                                       | Partial              |
+| Art. 18 | Right to restriction      | A per-firm restriction keyed on the email stops AI scoring, embeddings, drafts, insights, predictions and the other AI paths. An admin lifts it after telling the person. It does not stop outreach or marketing                                                                                                                                                                                                                                                                                                                                             | Partial              |
+| Art. 20 | Data portability          | Same export as access, in JSON. No CSV, and no direct transfer to another controller (Art. 20(2))                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Partial              |
+| Art. 21 | Right to object           | Objection requests create a restriction. For a marketing objection the admin must confirm marketing has stopped and say how; the system does not stop marketing automatically                                                                                                                                                                                                                                                                                                                                                                                | Partial              |
+| Art. 22 | Automated decision-making | AI scores include confidence level + human override pattern. A score can set a new enquiry's status (qualified or unqualified) without a person first looking at it; the export says so and states that no decision with legal or similarly significant effect is made solely by automated means                                                                                                                                                                                                                                                             | Implemented          |
+
+Not built: Article 19 notice to recipients, and automated outreach suppression.
 
 ### Chapter IV - Controller and Processor (Articles 24-43)
 
@@ -95,45 +129,71 @@ Architecture Principles:
 
 ### Data Subject Rights Implementation
 
-All data subject rights are exercised via the DSAR (Data Subject Access Request)
-workflow implemented in IFC-140.
+All data subject rights are exercised through the data subject request process
+built in PG-203. The firm (controller) answers; Aurora provides the tools.
+
+- Public request pages at `/dsar/<booking handle>`
+  (`apps/web/src/app/(public)/dsar/`), email verification with a single-use,
+  hashed token carried in the URL fragment, and abuse limits.
+- Admin queue at `/settings/privacy-requests` (ADMIN only,
+  `apps/web/src/app/settings/privacy-requests/`).
+- API: `apps/api/src/modules/privacy/` (public and admin routers, fixed-text
+  emails, tokens, deadline alert job).
+- Rules and workflow: `packages/domain/src/legal/privacy/dsar.ts`,
+  `packages/application/src/services/DataSubjectRequestService.ts`.
+- Storage: `dsar_requests` and `processing_restrictions` in migration
+  `packages/db/prisma/migrations/20261022120000_dsar_requests/migration.sql`
+  (row level security per firm).
+- Tests: `packages/domain/src/legal/privacy/__tests__/dsar.test.ts`,
+  `packages/application/src/services/__tests__/DataSubjectRequestService.test.ts`,
+  `packages/adapters/src/repositories/__tests__/PrismaDsarAdapters.test.ts`,
+  `apps/api/src/modules/privacy/__tests__/`, `tests/integration/dsar.test.ts`
+  (real database),
+  `apps/ai-worker/src/lib/__tests__/data-request-guard.test.ts`.
 
 #### Right of Access (Art. 15)
 
 ```
-DSAR workflow → data_subject_requests table
-- Verification token required (email verification)
-- 30-day SLA auto-calculated on creation
-- JSON export of all personal data
-- S3 download URL provided to subject
+Public request → emailed confirmation link (24 h, single use)
+- Export link emailed after confirmation (72 h, at most 5 downloads)
+- JSON: processing information + the person's data, capped at 500 rows per category
+- Deals and tasks exported (descriptions withheld); notes, message bodies, documents,
+  AI-written text, staff tags and qualification text, booking answers, and calendar,
+  notification and experiment records withheld and counted until the firm reviews
+  them; the firm then completes the request with a count and reason for each
+- Deadline: one calendar month from confirmation
 ```
 
 #### Right to Erasure (Art. 17)
 
 ```
-anonymize_record() function
-- Irreversible anonymization of PII fields
-- Legal hold check prevents deletion of restricted records
-- Cascade to related records
-- Audit trail preserved (anonymized)
+Admin confirms no legal hold or retention duty applies (no hold register exists)
+- One transaction, request row locked, runs once
+- Anonymises leads, contacts, notes, activities, booker fields; deletes AI scores
+  and insights; clears embeddings and search vectors
+- Communications, stored files, calendar events, experiment records, deals and
+  tasks: counted checklist, cleared by hand
+- Audit log entries kept (legal obligation); erasure audit row holds counts only
+- Staff-logged erasure: second admin, or a 24 h cancellable pause for a single admin
 ```
 
 #### Right to Portability (Art. 20)
 
 ```
-DSAR workflow → JSON/CSV export
-- Formats: JSON, CSV
-- Includes: Contacts, leads, activities, notes
-- S3 export URL with time-limited access
+Same export as access, JSON only
+- Includes leads, contacts, activities (metadata), bookings, communications metadata
+- Not built: CSV, direct transfer to another controller (Art. 20(2))
 ```
 
-#### Right to Restriction (Art. 18)
+#### Right to Restriction and Objection (Arts. 18 and 21)
 
 ```
-legal_holds table
-- Active holds block anonymize_record()
-- Processing flags on restricted records
-- Audit logged when hold is placed/removed
+processing_restrictions table (one active row per firm + email)
+- Starts at confirmation (restriction) or completion (objection)
+- Stops every AI path that sends the person's data to a model (owner Q18, Q21, Q22)
+- Banner on the lead and contact pages
+- Lifted only by an admin, after the person is told
+- Marketing objection: admin must confirm marketing stopped; no automatic suppression
 ```
 
 #### Consent Management (Art. 7)
@@ -253,8 +313,10 @@ Contact: privacy@intelliflow-crm.com
 - [x] Data subject rights APIs
 - [x] Security measures
 - [x] Processing records
-- [x] GDPR metadata schema (`gdpr_metadata`, `consents`,
-      `data_subject_requests`, `legal_holds`)
+- [x] GDPR metadata schema (`gdpr_metadata`, `consents`) in
+      `infra/supabase/migrations/`. The earlier `data_subject_requests` and
+      `legal_holds` tables were never applied and have been replaced by
+      `dsar_requests` and `processing_restrictions` (PG-203)
 
 ### Sprint 9-11 (Completed)
 
@@ -278,6 +340,14 @@ Contact: privacy@intelliflow-crm.com
 - [ ] GDPR training tracked (not started; the earlier training record was
       fabricated and was removed)
 
+### Sprint 18 (PG-203, data subject requests)
+
+- [x] Public request pages, email verification, admin queue, deadline alerts
+- [x] Export, erasure of the CRM core, restriction and objection
+- [ ] Known gaps tracked in issues #1007, #1009, #1010, #1014, #1015 and #956
+- [ ] Outreach suppression, communications erasure, CSV export and Art. 19
+      notice (IFC-315 to IFC-318, Sprint 19)
+
 ### Sprint 28 (Backlog — UI settings pages)
 
 - [ ] Data Retention settings page (PG-118)
@@ -292,8 +362,8 @@ Contact: privacy@intelliflow-crm.com
 - C. Processing Records: `artifacts/misc/processing-records.json`
 - D. Security Baseline: `infra/monitoring/security-baseline.json`
 - E. GDPR Compliance Checklist:
-  `docs/compliance-and-governance/compliance/gdpr-compliance-checklist.csv`
-  (34/34 controls implemented)
+  `docs/compliance-and-governance/compliance/gdpr-compliance-checklist.csv` (35
+  controls; the data subject rights rows were re-assessed 2026-10-24)
 - F. Threat Model: `docs/security/threat-model.puml`
 - G. Incident Response: `docs/security/incident-response.md`
 - H. Transfer Impact Assessment:
@@ -311,6 +381,7 @@ Contact: privacy@intelliflow-crm.com
 
 ---
 
-_Originally generated as part of ENV-016-AI task completion (2025-12-23). Last
-reviewed 2026-02-23 — updated to reflect 34/34 GDPR controls implemented per
-checklist._
+_Originally generated as part of ENV-016-AI task completion (2025-12-23). The
+Controller and Processor section, Chapter III and the data subject rights
+sections were rewritten on 2026-10-24 for PG-203. Other sections were last
+reviewed 2026-02-23._

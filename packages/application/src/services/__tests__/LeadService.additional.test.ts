@@ -17,7 +17,12 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LeadService, LEAD_SCORE_THRESHOLDS } from '../LeadService';
 import { Lead, LeadId, Result, DomainError } from '@intelliflow/domain';
 import type { LeadRepository } from '@intelliflow/domain';
-import type { AIServicePort, EventBusPort, LeadScoringResult } from '../../ports';
+import type {
+  AIServiceCallOptions,
+  AIServicePort,
+  EventBusPort,
+  LeadScoringResult,
+} from '../../ports';
 import type { ContactRepository, AccountRepository } from '../../ports/repositories';
 import type { TransactionPort } from '@intelliflow/application';
 import { PersistenceError, ValidationError, NotFoundError } from '../../errors';
@@ -152,7 +157,13 @@ class TestAIService implements AIServicePort {
     this.shouldFail = fail;
   }
 
-  async scoreLead(): Promise<Result<LeadScoringResult, DomainError>> {
+  scoreCalls: Array<AIServiceCallOptions | undefined> = [];
+
+  async scoreLead(
+    _input?: unknown,
+    opts?: AIServiceCallOptions
+  ): Promise<Result<LeadScoringResult, DomainError>> {
+    this.scoreCalls.push(opts);
     if (this.shouldFail) {
       return Result.fail(new DomainError('AI service error'));
     }
@@ -307,6 +318,42 @@ describe('LeadService - Additional Coverage', () => {
 
       expect(result.isFailure).toBe(true);
       expect(result.error).toBeInstanceOf(PersistenceError);
+    });
+  });
+
+  describe('scoreLead() - actor attribution', () => {
+    it('forwards the requesting user with the lead tenant and id to the AI service', async () => {
+      const lead = createTestLead('actor@example.com');
+      leadRepository.add(lead);
+
+      await leadService.scoreLead(lead.id.value, 'user-actor-1');
+
+      expect(aiService.scoreCalls).toEqual([
+        { tenantId: lead.tenantId, leadId: lead.id.value, userId: 'user-actor-1' },
+      ]);
+    });
+
+    it('leaves the user unset for system-initiated scoring', async () => {
+      const lead = createTestLead('system-actor@example.com');
+      leadRepository.add(lead);
+
+      await leadService.scoreLead(lead.id.value);
+
+      expect(aiService.scoreCalls[0]?.userId).toBeUndefined();
+    });
+
+    it('forwards the requesting user for every lead in a bulk score', async () => {
+      const first = createTestLead('bulk-1@example.com');
+      const second = createTestLead('bulk-2@example.com');
+      leadRepository.add(first);
+      leadRepository.add(second);
+
+      await leadService.bulkScoreLeads([first.id.value, second.id.value], 'user-actor-2');
+
+      expect(aiService.scoreCalls.map((call) => call?.userId)).toEqual([
+        'user-actor-2',
+        'user-actor-2',
+      ]);
     });
   });
 

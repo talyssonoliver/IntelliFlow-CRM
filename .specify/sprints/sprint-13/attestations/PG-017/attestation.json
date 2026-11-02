@@ -6,11 +6,11 @@
   "verdict": "COMPLETE",
   "completed_at": "2026-02-20T20:35:00Z",
   "artifact_hashes": {
-    "apps/web/src/app/(public)/signup/success/page.tsx": "05429c875d501ca93d5487a108942fecdb21db2385e349be854bb5acf6828818",
-    "apps/web/src/components/shared/onboarding-flow.tsx": "5cdebdfba9c9c5ed6f399d02792092b55d521220574dd232da9cc91772465130",
-    "apps/web/src/app/(public)/signup/success/__tests__/page.test.tsx": "147e0f9a866bdece438c7f10df870ea595a688169b56cbd0f5a8932fe58da2f8",
-    "apps/web/src/components/shared/__tests__/onboarding-flow.test.tsx": "39505d18b8b82987e54b91c5275a03f7ab7f19a950bfedd2eeea94c9edc867b5",
-    "docs/design/diagrams/auth-public-pages-dependency-chain.md": "253dbe7d945230e2cd16ffc23591be12fda265c2b9d52035be0e07b6c711c038"
+    "apps/web/src/app/(public)/signup/success/page.tsx": "sha256:05429c875d501ca93d5487a108942fecdb21db2385e349be854bb5acf6828818",
+    "apps/web/src/components/shared/onboarding-flow.tsx": "sha256:5cdebdfba9c9c5ed6f399d02792092b55d521220574dd232da9cc91772465130",
+    "apps/web/src/app/(public)/signup/success/__tests__/page.test.tsx": "sha256:147e0f9a866bdece438c7f10df870ea595a688169b56cbd0f5a8932fe58da2f8",
+    "apps/web/src/components/shared/__tests__/onboarding-flow.test.tsx": "sha256:39505d18b8b82987e54b91c5275a03f7ab7f19a950bfedd2eeea94c9edc867b5",
+    "docs/design/diagrams/auth-public-pages-dependency-chain.md": "sha256:253dbe7d945230e2cd16ffc23591be12fda265c2b9d52035be0e07b6c711c038"
   },
   "dependencies_verified": [
     "PG-016:COMPLETE"

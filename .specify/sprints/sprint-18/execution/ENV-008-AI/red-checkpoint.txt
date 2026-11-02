@@ -1,0 +1,68 @@
+# RED checkpoint (plan Step 8), 2026-10-25. Summary lines only; the raw output is not kept because assertion diffs print the runtime-built fake tokens.
+     × retries a 503 on the series check through the injected sleep 5ms
+     × does not echo a token from an error response body 5ms
+     × retries a 503 through the injected sleep 5ms
+     × does not echo a token from a 400 body at the check write 5ms
+     × does not echo a token from a 400 body at the folder create 3ms
+     × does not echo a token from a 400 body at the alert-rule write 2ms
+     × retries a 503 and returns the 200 that follows, sleeping the first delay once 12ms
+     × makes 8 attempts on a persistent 503, sleeping every delay, and returns the last 503 3ms
+     × uses a real timer as the default sleep 3ms
+     × redacts a bearer header, a Grafana service-account token and long base64 runs 2ms
+     × keeps short ordinary text as it is 2ms
+     × truncates to 200 characters with a marker 2ms
+     × returns an empty string for undefined and null 2ms
+     × allows 12 minutes, so the 503 retry (up to 255 s per call) fits 5ms
+     × runs on push to main only for its own files and the shared lib 2ms
+     × has a single independent job in the Production environment with a 12-minute timeout 2ms
+     × reads only, never cancels a running apply, and uses its own concurrency group 1ms
+     × passes the token only through the step env and maps dry_run to --dry-run 1ms
+     × has no pull_request or schedule trigger 1ms
+     × runs on push to main only for its own files and the shared lib 1ms
+     × has a single independent job in the Production environment with a 12-minute timeout 1ms
+     × reads only, never cancels a running apply, and uses its own concurrency group 1ms
+     × passes the token only through the step env and maps dry_run to --dry-run 1ms
+     × has no pull_request or schedule trigger 1ms
+     × applies on push to main only when its own script or workflow changes 1ms
+     × the script is self-contained, so the sparse checkout needs only its own folder 1ms
+     × applies on push, and a manual dispatch is read-only unless apply is ticked 1ms
+     × runs in Production, reads only from the repo, and never cancels a running apply 1ms
+     × passes the token, project and api URL only through the step env 1ms
+     × has no pull_request or schedule trigger 1ms
+ FAIL  |root| tools/scripts/__tests__/apply-grafana-dashboard.test.ts [ tools/scripts/__tests__/apply-grafana-dashboard.test.ts ]
+ FAIL  |root| tools/scripts/__tests__/apply-grafana-slos.test.ts [ tools/scripts/__tests__/apply-grafana-slos.test.ts ]
+ FAIL  |root| tools/scripts/__tests__/apply-railway-self-healing.test.ts [ tools/scripts/__tests__/apply-railway-self-healing.test.ts ]
+ FAIL  |root| tools/scripts/__tests__/env008-monitoring-content.test.ts [ tools/scripts/__tests__/env008-monitoring-content.test.ts ]
+⎯⎯⎯⎯⎯⎯ Failed Tests 30 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  |root| tools/scripts/lib/grafana-provisioning.test.ts > createApiClient retry on 503 (the Grafana Cloud instance waking up) > retries a 503 and returns the 200 that follows, sleeping the first delay once
+ FAIL  |root| tools/scripts/lib/grafana-provisioning.test.ts > createApiClient retry on 503 (the Grafana Cloud instance waking up) > makes 8 attempts on a persistent 503, sleeping every delay, and returns the last 503
+ FAIL  |root| tools/scripts/lib/grafana-provisioning.test.ts > createApiClient retry on 503 (the Grafana Cloud instance waking up) > uses a real timer as the default sleep
+ FAIL  |root| tools/scripts/lib/grafana-provisioning.test.ts > redactBody > redacts a bearer header, a Grafana service-account token and long base64 runs
+ FAIL  |root| tools/scripts/lib/grafana-provisioning.test.ts > redactBody > keeps short ordinary text as it is
+ FAIL  |root| tools/scripts/lib/grafana-provisioning.test.ts > redactBody > truncates to 200 characters with a marker
+ FAIL  |root| tools/scripts/lib/grafana-provisioning.test.ts > redactBody > returns an empty string for undefined and null
+ FAIL  |root| tools/scripts/__tests__/apply-grafana-alert-rules.test.ts > run > retries a 503 on the series check through the injected sleep
+ FAIL  |root| tools/scripts/__tests__/apply-grafana-alert-rules.test.ts > run > does not echo a token from an error response body
+ FAIL  |root| tools/scripts/__tests__/apply-synthetic-monitoring.test.ts > run > retries a 503 through the injected sleep
+ FAIL  |root| tools/scripts/__tests__/apply-synthetic-monitoring.test.ts > run > does not echo a token from a 400 body at the check write
+ FAIL  |root| tools/scripts/__tests__/apply-synthetic-monitoring.test.ts > run > does not echo a token from a 400 body at the folder create
+ FAIL  |root| tools/scripts/__tests__/apply-synthetic-monitoring.test.ts > run > does not echo a token from a 400 body at the alert-rule write
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > grafana-alert-rules.yml > allows 12 minutes, so the 503 retry (up to 255 s per call) fits
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > 'grafana-slos.yml' (grafana) > runs on push to main only for its own files and the shared lib
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > 'grafana-slos.yml' (grafana) > has a single independent job in the Production environment with a 12-minute timeout
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > 'grafana-slos.yml' (grafana) > reads only, never cancels a running apply, and uses its own concurrency group
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > 'grafana-slos.yml' (grafana) > passes the token only through the step env and maps dry_run to --dry-run
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > 'grafana-slos.yml' (grafana) > has no pull_request or schedule trigger
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > 'grafana-dashboard.yml' (grafana) > runs on push to main only for its own files and the shared lib
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > 'grafana-dashboard.yml' (grafana) > has a single independent job in the Production environment with a 12-minute timeout
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > 'grafana-dashboard.yml' (grafana) > reads only, never cancels a running apply, and uses its own concurrency group
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > 'grafana-dashboard.yml' (grafana) > passes the token only through the step env and maps dry_run to --dry-run
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > 'grafana-dashboard.yml' (grafana) > has no pull_request or schedule trigger
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > railway-self-healing.yml > applies on push to main only when its own script or workflow changes
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > railway-self-healing.yml > the script is self-contained, so the sparse checkout needs only its own folder
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > railway-self-healing.yml > applies on push, and a manual dispatch is read-only unless apply is ticked
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > railway-self-healing.yml > runs in Production, reads only from the repo, and never cancels a running apply
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > railway-self-healing.yml > passes the token, project and api URL only through the step env
+ FAIL  |root| tools/scripts/__tests__/env008-workflows.test.ts > railway-self-healing.yml > has no pull_request or schedule trigger
+ Test Files  8 failed (8)
+      Tests  30 failed | 48 passed (78)

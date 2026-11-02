@@ -155,9 +155,23 @@ if [ "${ESCAPE_LINT_SILENCER:-0}" != "1" ]; then
   STAGED_TS=$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx|js|jsx|mjs|cjs)$' || true)
   if [ -n "$STAGED_TS" ]; then
     SILENCER_HITS=""
+    # In a merge commit, the diff against HEAD also contains every line the other
+    # parent brings in (already reviewed there). A silencer is only NEW when it is
+    # added relative to BOTH parents.
+    MERGE_PARENT=$(git rev-parse -q --verify MERGE_HEAD || true)
     for f in $STAGED_TS; do
       # Only inspect lines being ADDED (start with + but not +++); skip removed lines.
       ADDED=$(git diff --cached -- "$f" | grep -E '^\+[^+]' | grep -E 'eslint-disable|@ts-ignore|@ts-expect-error|@ts-nocheck' || true)
+      if [ -n "$ADDED" ] && [ -n "$MERGE_PARENT" ]; then
+        ADDED_VS_MERGED=$(git diff --cached "$MERGE_PARENT" -- "$f" | grep -E '^\+[^+]' | grep -E 'eslint-disable|@ts-ignore|@ts-expect-error|@ts-nocheck' || true)
+        if [ -n "$ADDED_VS_MERGED" ]; then
+          ADDED=$(printf '%s\n' "$ADDED" | while IFS= read -r line; do
+            printf '%s\n' "$ADDED_VS_MERGED" | grep -Fxq -- "$line" && printf '%s\n' "$line"
+          done || true)
+        else
+          ADDED=""
+        fi
+      fi
       if [ -n "$ADDED" ]; then
         SILENCER_HITS="${SILENCER_HITS}
 ${f}:

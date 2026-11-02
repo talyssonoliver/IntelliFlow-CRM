@@ -2,15 +2,77 @@
 
 **Task:** IFC-033 (PHASE-005: Load Testing with k6) · **Gates:** IFC-034 (Gate-3
 £3000 investment review) · **Refs:** ADR-018, RISK-S19-02, DDD-001/002 (#621) ·
-**Run date:** 2026-07-24
+**Run dates:** 2026-10-22 (production, current evidence) · 2026-07-24 (local
+baseline)
 
-> RISK-S19-02 requires **real** benchmark evidence (no template report). Every
-> figure below is from an actual k6 execution captured in
-> `artifacts/reports/load-test-report.html` (k6 web dashboard, real timestamps),
-> `artifacts/benchmarks/ifc-033-load-summary.json`, and
-> `artifacts/misc/grafana-load-test.png` (Grafana over Prometheus remote-write).
+> RISK-S19-02 requires **real** benchmark evidence (no template report). The
+> tracked artifacts (`artifacts/reports/load-test-report.html`,
+> `artifacts/benchmarks/ifc-033-load-summary.json`,
+> `artifacts/misc/grafana-load-test.png`) now hold the **2026-10-22 production
+> run** (§0). Sections 1–5 keep the 2026-07-24 local run as the baseline; that
+> run's own report, summary and Grafana PNG stay in `docs/evidence/ifc-033/`.
 
-## 1. Target & method
+## 0. Production run (2026-10-22): throughput PASS, p95 FAIL
+
+IFC-033 was reopened (#795) because the July run targeted `localhost:4000`, not
+a deployed environment. There is no staging API or database (`cd.yml`
+`deploy-staging` builds only the web app), so on the owner's rulings of
+2026-10-22
+(`.specify/sprints/sprint-18/context/IFC-033/IFC-033-owner-ruling.md`) the run
+targeted the **production API** inside a dedicated load-test tenant, sized down
+to cap the AI scoring cost of each `lead.create`.
+
+| Item    | Value                                                                                                                       |
+| ------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Target  | `https://api-production-e9c1.up.railway.app` (Railway `api`, Supabase `eu-central-1`)                                       |
+| Window  | 2026-10-22 23:06:36Z to 23:08:54Z                                                                                           |
+| Auth    | a dedicated tenant created through `auth.signup` (`tools/scripts/k6/prepare-ifc-033-tenant.mjs`), Bearer token, no dev-auth |
+| Profile | 2 min: ingestion 23 per 15 s (1.53 creates/s + 1 read each), conversion 1 per 6 s from a 20-lead QUALIFIED pool             |
+| Data    | before the run, the tenant held 21 leads, all `@loadtest.example.com`. Synthetic data is left in place (owner ruling)       |
+
+| Metric                        | Budget             | Achieved                                    | Verdict |
+| ----------------------------- | ------------------ | ------------------------------------------- | ------- |
+| Lead throughput               | ≥ 5,000 leads/hour | **185 leads in 122.5 s ≈ 5,435 leads/hour** | ✅      |
+| Error rate                    | < 0.1 %            | **0 %** (0 / 391 requests)                  | ✅      |
+| Atomic conversions            | exercised          | **20 / 20** lead→deal                       | ✅      |
+| p95 latency (client, k6)      | < 200 ms           | **1,137 ms**                                | ❌      |
+| p95 latency (server, Grafana) | < 200 ms           | **POST 2,024 ms, GET 701 ms** (p50 895/389) | ❌      |
+
+k6 exited 99 because the latency thresholds were crossed. The owner ruled that
+IFC-033 closes on its throughput KPI, with p95 tracked as the identified
+bottleneck (#1001, debt-ledger `PROD-API-DB-CROSS-REGION-LATENCY-001`).
+
+**Identified bottleneck: API-to-database round-trip, about 147 ms per query.**
+The median `trpc.mutation.lead.create` trace in Grafana Tempo
+(`3fe5f6d158d600bb0d26b4d41c4ae693`, 898 ms server-side) shows every Postgres
+statement costing about the same: `BEGIN` 147 ms, `SET` 147 ms, `COMMIT` 148 ms,
+each `INSERT`/`SELECT` about 150 ms. A `SET` takes microseconds on the server,
+so this is network round-trip time between Railway `api` and Supabase
+`eu-central-1`. The 898 ms request is about six such round-trips; the trace
+holds 8 `pg.query` spans totalling about 1,190 ms, so some fall outside the
+request span (they overlap it or finish after the response). The same code ran
+at 11.6 ms p95 with the DB on the same host (§2). The fix is to co-locate `api`
+with the database, not to tune code. The Railway region could not be read (the
+CLI login had expired). Secondary finding from the same trace: `lead.create`
+opens a new Redis connection per request for the fire-and-forget `score-lead`
+enqueue (17 `tcp.connect` spans per trace).
+
+The July per-user rate-limit ceiling (§3) did not bind: 391 requests in 123 s is
+far under 1,000/min.
+
+Evidence: `artifacts/benchmarks/ifc-033-deployed/k6-run-output.txt` (k6 output),
+`artifacts/benchmarks/ifc-033-deployed/server-side-telemetry.json` (Grafana
+Cloud Prometheus and Tempo numbers), and `artifacts/misc/grafana-load-test.png`,
+rendered by Grafana Cloud from dashboard `ifc033-prod-api-load` (the hosted
+backend production reports to, IFC-032). Its curves trail the k6 window by about
+a minute: the OTLP metric export interval plus the 3-minute `rate()` window.
+
+Reproduce:
+`BASE_URL=<api> K6_TEST_EMAIL=<inbox> node tools/scripts/k6/prepare-ifc-033-tenant.mjs`,
+load `.env.k6.local` (gitignored), then
+`INGEST_RPS=23 INGEST_TIME_UNIT=15s CONVERT_RPS=1 CONVERT_TIME_UNIT=6s DURATION=2m pnpm test:load`.
+
+## 1. Target & method (2026-07-24 local baseline)
 
 | Item           | Value                                                                                                                                                     |
 | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |

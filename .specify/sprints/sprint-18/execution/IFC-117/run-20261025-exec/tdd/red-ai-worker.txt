@@ -1,0 +1,430 @@
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/apps/ai-worker
+
+{"level":30,"time":1792953917784,"pid":7224,"hostname":"Talysson","name":"drift-detector","config":{"windowSizeHours":6,"slidingIntervalMinutes":30,"pValueThreshold":0.05,"minSamplesRequired":50,"driftScoreThresholds":{"low":0.1,"medium":0.25,"high":0.5,"critical":0.75}},"msg":"DriftDetector initialized"}
+ ❯ |ai-worker| src/monitoring/__tests__/drift-detector.shift.test.ts (0 test)
+ ❯ |ai-worker| src/monitoring/__tests__/otel-ai-metrics.test.ts (0 test)
+{"level":30,"time":1792953918423,"pid":16692,"hostname":"Talysson","name":"drift-detector","config":{"windowSizeHours":6,"slidingIntervalMinutes":30,"pValueThreshold":0.05,"minSamplesRequired":50,"driftScoreThresholds":{"low":0.1,"medium":0.25,"high":0.5,"critical":0.75}},"msg":"DriftDetector initialized"}
+{"level":30,"time":1792953918456,"pid":16692,"hostname":"Talysson","name":"hallucination-checker","config":{"maxHallucinationRate":0.05,"confidenceThreshold":0.3,"enableFactChecking":true,"enableLogicChecking":true,"enableEntityValidation":true,"groundTruthSources":[]},"msg":"HallucinationChecker initialized"}
+{"level":30,"time":1792953918485,"pid":16692,"hostname":"Talysson","name":"roi-tracker","config":{"valueEstimates":{"lead_scored":0.5,"lead_qualified":2,"email_generated":1,"response_automated":1.5,"insight_generated":3,"document_processed":0.75,"task_automated":2.5,"prediction_made":5,"recommendation_made":4,"feedback_positive":0.1,"feedback_negative":-0.2,"feedback_correction":0.5},"costPerToken":{"gpt-4":{"input":0.00003,"output":0.00006},"gpt-4-turbo":{"input":0.00001,"output":0.00003},"gpt-3.5-turbo":{"input":5e-7,"output":0.0000015},"claude-3-opus":{"input":0.000015,"output":0.000075},"claude-3-sonnet":{"input":0.000003,"output":0.000015},"claude-3-haiku":{"input":2.5e-7,"output":0.00000125},"llama-3":{"input":0,"output":0},"mistral":{"input":0,"output":0}},"minROITarget":2,"trackingPeriodDays":30},"msg":"ROITracker initialized"}
+{"level":30,"time":1792953918529,"pid":16692,"hostname":"Talysson","name":"latency-monitor","config":{"sloTargets":{"p95Ms":2000,"p99Ms":5000},"alertThresholds":{"p95MultiplierWarning":1.5,"p95MultiplierCritical":2},"retentionHours":72,"samplingRate":1},"msg":"LatencyMonitor initialized"}
+ ❯ |ai-worker| src/monitoring/__tests__/monitoring-flush.service.test.ts (13 tests | 1 failed) 41ms
+     × flushNow() writes the drift result model, not the metric name, into model (IFC-117) 10ms
+{"level":30,"time":1792953918616,"pid":16692,"hostname":"Talysson","name":"chain-monitor","latencyThresholdMs":2000,"msg":"ChainMonitor initialized"}
+ ❯ |ai-worker| src/monitoring/__tests__/chain-monitor.otel.test.ts (0 test)
+{"level":30,"time":1792953919359,"pid":36216,"hostname":"Talysson","name":"drift-detector","config":{"windowSizeHours":6,"slidingIntervalMinutes":30,"pValueThreshold":0.05,"minSamplesRequired":50,"driftScoreThresholds":{"low":0.1,"medium":0.25,"high":0.5,"critical":0.75}},"msg":"DriftDetector initialized"}
+{"level":30,"time":1792953919362,"pid":36216,"hostname":"Talysson","name":"hallucination-checker","config":{"maxHallucinationRate":0.05,"confidenceThreshold":0.3,"enableFactChecking":true,"enableLogicChecking":true,"enableEntityValidation":true,"groundTruthSources":[]},"msg":"HallucinationChecker initialized"}
+{"level":30,"time":1792953919364,"pid":36216,"hostname":"Talysson","name":"roi-tracker","config":{"valueEstimates":{"lead_scored":0.5,"lead_qualified":2,"email_generated":1,"response_automated":1.5,"insight_generated":3,"document_processed":0.75,"task_automated":2.5,"prediction_made":5,"recommendation_made":4,"feedback_positive":0.1,"feedback_negative":-0.2,"feedback_correction":0.5},"costPerToken":{"gpt-4":{"input":0.00003,"output":0.00006},"gpt-4-turbo":{"input":0.00001,"output":0.00003},"gpt-3.5-turbo":{"input":5e-7,"output":0.0000015},"claude-3-opus":{"input":0.000015,"output":0.000075},"claude-3-sonnet":{"input":0.000003,"output":0.000015},"claude-3-haiku":{"input":2.5e-7,"output":0.00000125},"llama-3":{"input":0,"output":0},"mistral":{"input":0,"output":0}},"minROITarget":2,"trackingPeriodDays":30},"msg":"ROITracker initialized"}
+{"level":30,"time":1792953919367,"pid":36216,"hostname":"Talysson","name":"latency-monitor","config":{"sloTargets":{"p95Ms":2000,"p99Ms":5000},"alertThresholds":{"p95MultiplierWarning":1.5,"p95MultiplierCritical":2},"retentionHours":72,"samplingRate":1},"msg":"LatencyMonitor initialized"}
+{"level":30,"time":1792953919398,"pid":36216,"hostname":"Talysson","name":"chain-monitor","latencyThresholdMs":2000,"msg":"ChainMonitor initialized"}
+{"level":30,"time":1792953919435,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","periodDays":30,"msg":"Processing feedback analytics job"}
+{"level":30,"time":1792953919436,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","recordCount":0,"msg":"Loaded feedback records from DB"}
+{"level":40,"time":1792953919436,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","urgency":"high","reasons":["High negative feedback ratio: 30.0% > threshold"],"monitoringEventId":"event-001","msg":"Retraining threshold breached — AIMonitoringEvent written"}
+{"level":30,"time":1792953919436,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","retrainingNeeded":true,"urgency":"high","feedbackCount":200,"processingTimeMs":1,"msg":"Feedback analytics job completed"}
+{"level":30,"time":1792953919440,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","periodDays":30,"msg":"Processing feedback analytics job"}
+{"level":30,"time":1792953919440,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","recordCount":0,"msg":"Loaded feedback records from DB"}
+{"level":40,"time":1792953919440,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","urgency":"high","reasons":["High negative feedback ratio: 30.0% > threshold"],"monitoringEventId":"event-001","msg":"Retraining threshold breached — AIMonitoringEvent written"}
+{"level":30,"time":1792953919440,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","retrainingNeeded":true,"urgency":"high","feedbackCount":200,"processingTimeMs":1,"msg":"Feedback analytics job completed"}
+{"level":30,"time":1792953919441,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","periodDays":30,"msg":"Processing feedback analytics job"}
+{"level":30,"time":1792953919441,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","recordCount":0,"msg":"Loaded feedback records from DB"}
+{"level":40,"time":1792953919441,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","urgency":"high","reasons":["High negative feedback ratio: 30.0% > threshold"],"monitoringEventId":"event-001","msg":"Retraining threshold breached — AIMonitoringEvent written"}
+{"level":30,"time":1792953919441,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","retrainingNeeded":true,"urgency":"high","feedbackCount":200,"processingTimeMs":0,"msg":"Feedback analytics job completed"}
+{"level":30,"time":1792953919446,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","periodDays":30,"msg":"Processing feedback analytics job"}
+{"level":30,"time":1792953919446,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","recordCount":0,"msg":"Loaded feedback records from DB"}
+{"level":40,"time":1792953919446,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","urgency":"high","reasons":["High negative feedback ratio: 30.0% > threshold"],"monitoringEventId":"event-001","msg":"Retraining threshold breached — AIMonitoringEvent written"}
+{"level":30,"time":1792953919446,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","retrainingNeeded":true,"urgency":"high","feedbackCount":200,"processingTimeMs":0,"msg":"Feedback analytics job completed"}
+{"level":30,"time":1792953919447,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","periodDays":30,"msg":"Processing feedback analytics job"}
+{"level":30,"time":1792953919447,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","recordCount":0,"msg":"Loaded feedback records from DB"}
+{"level":40,"time":1792953919447,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","urgency":"high","reasons":["High negative feedback ratio: 30.0% > threshold"],"monitoringEventId":"event-001","msg":"Retraining threshold breached — AIMonitoringEvent written"}
+{"level":30,"time":1792953919447,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","retrainingNeeded":true,"urgency":"high","feedbackCount":200,"processingTimeMs":0,"msg":"Feedback analytics job completed"}
+{"level":30,"time":1792953919449,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","periodDays":30,"msg":"Processing feedback analytics job"}
+{"level":30,"time":1792953919449,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","recordCount":0,"msg":"Loaded feedback records from DB"}
+{"level":30,"time":1792953919449,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","retrainingNeeded":false,"urgency":"none","feedbackCount":200,"processingTimeMs":1,"msg":"Feedback analytics job completed"}
+{"level":30,"time":1792953919450,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","periodDays":30,"msg":"Processing feedback analytics job"}
+{"level":30,"time":1792953919451,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","recordCount":0,"msg":"Loaded feedback records from DB"}
+{"level":30,"time":1792953919451,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","retrainingNeeded":false,"urgency":"none","feedbackCount":200,"processingTimeMs":1,"msg":"Feedback analytics job completed"}
+{"level":30,"time":1792953919453,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","periodDays":30,"msg":"Processing feedback analytics job"}
+{"level":30,"time":1792953919453,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","recordCount":0,"msg":"Loaded feedback records from DB"}
+{"level":30,"time":1792953919453,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","retrainingNeeded":false,"urgency":"none","feedbackCount":200,"processingTimeMs":0,"msg":"Feedback analytics job completed"}
+{"level":30,"time":1792953919455,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","periodDays":30,"msg":"Processing feedback analytics job"}
+{"level":30,"time":1792953919455,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","recordCount":0,"msg":"Loaded feedback records from DB"}
+{"level":50,"time":1792953919455,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","error":"DB write failed","msg":"Failed to write retraining_trigger AIMonitoringEvent"}
+{"level":30,"time":1792953919455,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","retrainingNeeded":true,"urgency":"critical","feedbackCount":200,"processingTimeMs":1,"msg":"Feedback analytics job completed"}
+{"level":30,"time":1792953919456,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","periodDays":30,"msg":"Processing feedback analytics job"}
+{"level":40,"time":1792953919457,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","error":"Connection refused","msg":"Could not load feedback records from DB — running analysis with empty dataset"}
+{"level":30,"time":1792953919457,"pid":36216,"hostname":"Talysson","name":"feedback-analytics-job","jobId":"job-test-001","retrainingNeeded":false,"urgency":"none","feedbackCount":200,"processingTimeMs":1,"msg":"Feedback analytics job completed"}
+ ❯ |ai-worker| src/jobs/__tests__/feedback-analytics.job.test.ts (12 tests | 2 failed) 29ms
+       × increments the Prometheus counter with urgency label 5ms
+       × still completes when DB monitoring event write fails 2ms
+ ❯ |ai-worker| src/__tests__/ai-worker.boot-folded-workers.test.ts (0 test)
+ ❯ |ai-worker| src/monitoring/__tests__/drift-scheduler.test.ts (0 test)
+ ❯ |ai-worker| src/monitoring/__tests__/otel-ai-metrics.global.test.ts (2 tests | 1 failed) 35ms
+     × records through the global provider when no test meter is set 8ms
+{"level":30,"time":1792953921167,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":85,"tier":"HOT","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921167,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.167Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921169,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":65,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921170,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":45,"tier":"COLD","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921171,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":15,"tier":"UNQUALIFIED","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921172,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":80,"tier":"HOT","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921173,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":60,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921173,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":30,"tier":"COLD","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921174,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":90,"tier":"HOT","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921178,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":70,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921179,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":40,"tier":"COLD","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921180,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":15,"tier":"UNQUALIFIED","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921181,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":0,"tier":"UNQUALIFIED","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921182,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"corr-123","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":75,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921184,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":75,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921186,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":75,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921186,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":75,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921187,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":75,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921188,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":75,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":40,"time":1792953921189,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","fallbackProvider":"litellm","error":"LLM API error","msg":"Fallback provider also failed — using heuristic"}
+{"level":40,"time":1792953921189,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","fallbackProvider":"litellm","error":"LLM API error","msg":"LLM scoring failed or timed out — using heuristic fallback"}
+{"level":30,"time":1792953921189,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","fallbackProvider":"litellm","error":"LLM API error","leadId":"12345678-0000-4000-8000-000012345678","score":65,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921191,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","msg":"AI scoring job skipped — feature flag disabled"}
+{"level":30,"time":1792953921191,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","msg":"AI scoring job skipped — feature flag disabled"}
+{"level":30,"time":1792953921192,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":75,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921192,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","leadId":"12345678-0000-4000-8000-000012345678","score":75,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921193,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","msg":"Scheduled scoring dispatcher — enumerating unscored leads per tenant"}
+{"level":30,"time":1792953921169,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.169Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921170,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.170Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921171,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.171Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921172,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.172Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921173,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.173Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921173,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.173Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921174,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.174Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921178,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.178Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921179,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.179Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921180,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.180Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921181,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.181Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921182,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.182Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921184,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.184Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921186,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.186Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921187,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.187Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921187,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.187Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921188,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.188Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921189,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.189Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921192,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.192Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921192,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.192Z","msg":"AI_AGENT audit entry"}
+{"level":50,"time":1792953921637,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","error":"Cannot read properties of undefined (reading 'groupBy')","msg":"Scheduled scoring dispatcher failed"}
+{"level":30,"time":1792953921641,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.641Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921639,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","msg":"Scheduled scoring dispatcher — enumerating unscored leads per tenant"}
+{"level":50,"time":1792953921640,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","error":"Cannot read properties of undefined (reading 'groupBy')","msg":"Scheduled scoring dispatcher failed"}
+{"level":40,"time":1792953921641,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","fallbackProvider":"litellm","primaryError":"primary provider down (429)","msg":"Primary LLM scoring failed — recovered via fallback provider"}
+{"level":30,"time":1792953921641,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","fallbackProvider":"litellm","primaryError":"primary provider down (429)","leadId":"12345678-0000-4000-8000-000012345678","score":75,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":40,"time":1792953921643,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","fallbackProvider":"litellm","primaryError":"primary provider down (429)","msg":"Primary LLM scoring failed — recovered via fallback provider"}
+{"level":30,"time":1792953921643,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","fallbackProvider":"litellm","primaryError":"primary provider down (429)","leadId":"12345678-0000-4000-8000-000012345678","score":75,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":40,"time":1792953921655,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","fallbackProvider":"litellm","error":"all providers down","msg":"Fallback provider also failed — using heuristic"}
+{"level":40,"time":1792953921655,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","fallbackProvider":"litellm","error":"all providers down","msg":"LLM scoring failed or timed out — using heuristic fallback"}
+{"level":30,"time":1792953921656,"pid":20576,"hostname":"Talysson","name":"scoring-job","correlationId":"test-job-id","tenantId":"99999999-0000-4000-8000-000099999999","jobId":"test-job-id","fallbackProvider":"litellm","error":"all providers down","leadId":"12345678-0000-4000-8000-000012345678","score":65,"tier":"WARM","msg":"Persisted scoring result to LeadAIInsight"}
+{"level":30,"time":1792953921643,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.643Z","msg":"AI_AGENT audit entry"}
+{"level":30,"time":1792953921656,"pid":20576,"hostname":"Talysson","name":"ai-agent-audit","audit":true,"actorType":"AI_AGENT","actorId":"scoring-job","tenantId":"99999999-0000-4000-8000-000099999999","resourceType":"LeadAIInsight","resourceId":"12345678-0000-4000-8000-000012345678","action":"UPSERT","timestamp":"2026-10-25T18:45:21.656Z","msg":"AI_AGENT audit entry"}
+ ❯ |ai-worker| src/jobs/scoring.job.test.ts (47 tests | 1 failed) 503ms
+       × builds the fallback chain with recordDrift: false so a provider switch is not read as drift (IFC-117) 13ms
+{"level":30,"time":1792953921752,"pid":66632,"hostname":"Talysson","name":"drift-detector","config":{"windowSizeHours":6,"slidingIntervalMinutes":30,"pValueThreshold":0.05,"minSamplesRequired":50,"driftScoreThresholds":{"low":0.1,"medium":0.25,"high":0.5,"critical":0.75}},"msg":"DriftDetector initialized"}
+{"level":30,"time":1792953921754,"pid":66632,"hostname":"Talysson","name":"hallucination-checker","config":{"maxHallucinationRate":0.05,"confidenceThreshold":0.3,"enableFactChecking":true,"enableLogicChecking":true,"enableEntityValidation":true,"groundTruthSources":[]},"msg":"HallucinationChecker initialized"}
+{"level":30,"time":1792953921756,"pid":66632,"hostname":"Talysson","name":"roi-tracker","config":{"valueEstimates":{"lead_scored":0.5,"lead_qualified":2,"email_generated":1,"response_automated":1.5,"insight_generated":3,"document_processed":0.75,"task_automated":2.5,"prediction_made":5,"recommendation_made":4,"feedback_positive":0.1,"feedback_negative":-0.2,"feedback_correction":0.5},"costPerToken":{"gpt-4":{"input":0.00003,"output":0.00006},"gpt-4-turbo":{"input":0.00001,"output":0.00003},"gpt-3.5-turbo":{"input":5e-7,"output":0.0000015},"claude-3-opus":{"input":0.000015,"output":0.000075},"claude-3-sonnet":{"input":0.000003,"output":0.000015},"claude-3-haiku":{"input":2.5e-7,"output":0.00000125},"llama-3":{"input":0,"output":0},"mistral":{"input":0,"output":0}},"minROITarget":2,"trackingPeriodDays":30},"msg":"ROITracker initialized"}
+{"level":30,"time":1792953921760,"pid":66632,"hostname":"Talysson","name":"latency-monitor","config":{"sloTargets":{"p95Ms":2000,"p99Ms":5000},"alertThresholds":{"p95MultiplierWarning":1.5,"p95MultiplierCritical":2},"retentionHours":72,"samplingRate":1},"msg":"LatencyMonitor initialized"}
+{"level":30,"time":1792953921760,"pid":66632,"hostname":"Talysson","name":"chain-monitor","latencyThresholdMs":2000,"msg":"ChainMonitor initialized"}
+{"level":30,"time":1792953921828,"pid":66632,"hostname":"Talysson","name":"drift-detector","config":{"windowSizeHours":6,"slidingIntervalMinutes":30,"pValueThreshold":0.05,"minSamplesRequired":50,"driftScoreThresholds":{"low":0.1,"medium":0.25,"high":0.5,"critical":0.75}},"msg":"DriftDetector initialized"}
+{"level":30,"time":1792953921829,"pid":66632,"hostname":"Talysson","name":"hallucination-checker","config":{"maxHallucinationRate":0.05,"confidenceThreshold":0.3,"enableFactChecking":true,"enableLogicChecking":true,"enableEntityValidation":true,"groundTruthSources":[]},"msg":"HallucinationChecker initialized"}
+{"level":30,"time":1792953921829,"pid":66632,"hostname":"Talysson","name":"roi-tracker","config":{"valueEstimates":{"lead_scored":0.5,"lead_qualified":2,"email_generated":1,"response_automated":1.5,"insight_generated":3,"document_processed":0.75,"task_automated":2.5,"prediction_made":5,"recommendation_made":4,"feedback_positive":0.1,"feedback_negative":-0.2,"feedback_correction":0.5},"costPerToken":{"gpt-4":{"input":0.00003,"output":0.00006},"gpt-4-turbo":{"input":0.00001,"output":0.00003},"gpt-3.5-turbo":{"input":5e-7,"output":0.0000015},"claude-3-opus":{"input":0.000015,"output":0.000075},"claude-3-sonnet":{"input":0.000003,"output":0.000015},"claude-3-haiku":{"input":2.5e-7,"output":0.00000125},"llama-3":{"input":0,"output":0},"mistral":{"input":0,"output":0}},"minROITarget":2,"trackingPeriodDays":30},"msg":"ROITracker initialized"}
+{"level":30,"time":1792953921829,"pid":66632,"hostname":"Talysson","name":"latency-monitor","config":{"sloTargets":{"p95Ms":2000,"p99Ms":5000},"alertThresholds":{"p95MultiplierWarning":1.5,"p95MultiplierCritical":2},"retentionHours":72,"samplingRate":1},"msg":"LatencyMonitor initialized"}
+{"level":30,"time":1792953921830,"pid":66632,"hostname":"Talysson","name":"chain-monitor","latencyThresholdMs":2000,"msg":"ChainMonitor initialized"}
+{"level":30,"time":1792953921864,"pid":66632,"hostname":"Talysson","name":"drift-detector","config":{"windowSizeHours":6,"slidingIntervalMinutes":30,"pValueThreshold":0.05,"minSamplesRequired":50,"driftScoreThresholds":{"low":0.1,"medium":0.25,"high":0.5,"critical":0.75}},"msg":"DriftDetector initialized"}
+{"level":30,"time":1792953921864,"pid":66632,"hostname":"Talysson","name":"hallucination-checker","config":{"maxHallucinationRate":0.05,"confidenceThreshold":0.3,"enableFactChecking":true,"enableLogicChecking":true,"enableEntityValidation":true,"groundTruthSources":[]},"msg":"HallucinationChecker initialized"}
+{"level":30,"time":1792953921865,"pid":66632,"hostname":"Talysson","name":"roi-tracker","config":{"valueEstimates":{"lead_scored":0.5,"lead_qualified":2,"email_generated":1,"response_automated":1.5,"insight_generated":3,"document_processed":0.75,"task_automated":2.5,"prediction_made":5,"recommendation_made":4,"feedback_positive":0.1,"feedback_negative":-0.2,"feedback_correction":0.5},"costPerToken":{"gpt-4":{"input":0.00003,"output":0.00006},"gpt-4-turbo":{"input":0.00001,"output":0.00003},"gpt-3.5-turbo":{"input":5e-7,"output":0.0000015},"claude-3-opus":{"input":0.000015,"output":0.000075},"claude-3-sonnet":{"input":0.000003,"output":0.000015},"claude-3-haiku":{"input":2.5e-7,"output":0.00000125},"llama-3":{"input":0,"output":0},"mistral":{"input":0,"output":0}},"minROITarget":2,"trackingPeriodDays":30},"msg":"ROITracker initialized"}
+{"level":30,"time":1792953921865,"pid":66632,"hostname":"Talysson","name":"latency-monitor","config":{"sloTargets":{"p95Ms":2000,"p99Ms":5000},"alertThresholds":{"p95MultiplierWarning":1.5,"p95MultiplierCritical":2},"retentionHours":72,"samplingRate":1},"msg":"LatencyMonitor initialized"}
+{"level":30,"time":1792953921865,"pid":66632,"hostname":"Talysson","name":"chain-monitor","latencyThresholdMs":2000,"msg":"ChainMonitor initialized"}
+{"level":30,"time":1792953921919,"pid":66632,"hostname":"Talysson","name":"drift-detector","config":{"windowSizeHours":6,"slidingIntervalMinutes":30,"pValueThreshold":0.05,"minSamplesRequired":50,"driftScoreThresholds":{"low":0.1,"medium":0.25,"high":0.5,"critical":0.75}},"msg":"DriftDetector initialized"}
+{"level":30,"time":1792953921920,"pid":66632,"hostname":"Talysson","name":"hallucination-checker","config":{"maxHallucinationRate":0.05,"confidenceThreshold":0.3,"enableFactChecking":true,"enableLogicChecking":true,"enableEntityValidation":true,"groundTruthSources":[]},"msg":"HallucinationChecker initialized"}
+{"level":30,"time":1792953921920,"pid":66632,"hostname":"Talysson","name":"roi-tracker","config":{"valueEstimates":{"lead_scored":0.5,"lead_qualified":2,"email_generated":1,"response_automated":1.5,"insight_generated":3,"document_processed":0.75,"task_automated":2.5,"prediction_made":5,"recommendation_made":4,"feedback_positive":0.1,"feedback_negative":-0.2,"feedback_correction":0.5},"costPerToken":{"gpt-4":{"input":0.00003,"output":0.00006},"gpt-4-turbo":{"input":0.00001,"output":0.00003},"gpt-3.5-turbo":{"input":5e-7,"output":0.0000015},"claude-3-opus":{"input":0.000015,"output":0.000075},"claude-3-sonnet":{"input":0.000003,"output":0.000015},"claude-3-haiku":{"input":2.5e-7,"output":0.00000125},"llama-3":{"input":0,"output":0},"mistral":{"input":0,"output":0}},"minROITarget":2,"trackingPeriodDays":30},"msg":"ROITracker initialized"}
+{"level":30,"time":1792953921920,"pid":66632,"hostname":"Talysson","name":"latency-monitor","config":{"sloTargets":{"p95Ms":2000,"p99Ms":5000},"alertThresholds":{"p95MultiplierWarning":1.5,"p95MultiplierCritical":2},"retentionHours":72,"samplingRate":1},"msg":"LatencyMonitor initialized"}
+{"level":30,"time":1792953921920,"pid":66632,"hostname":"Talysson","name":"chain-monitor","latencyThresholdMs":2000,"msg":"ChainMonitor initialized"}
+{"level":30,"time":1792953921958,"pid":66632,"hostname":"Talysson","name":"drift-detector","config":{"windowSizeHours":6,"slidingIntervalMinutes":30,"pValueThreshold":0.05,"minSamplesRequired":50,"driftScoreThresholds":{"low":0.1,"medium":0.25,"high":0.5,"critical":0.75}},"msg":"DriftDetector initialized"}
+{"level":30,"time":1792953921959,"pid":66632,"hostname":"Talysson","name":"hallucination-checker","config":{"maxHallucinationRate":0.05,"confidenceThreshold":0.3,"enableFactChecking":true,"enableLogicChecking":true,"enableEntityValidation":true,"groundTruthSources":[]},"msg":"HallucinationChecker initialized"}
+{"level":30,"time":1792953921959,"pid":66632,"hostname":"Talysson","name":"roi-tracker","config":{"valueEstimates":{"lead_scored":0.5,"lead_qualified":2,"email_generated":1,"response_automated":1.5,"insight_generated":3,"document_processed":0.75,"task_automated":2.5,"prediction_made":5,"recommendation_made":4,"feedback_positive":0.1,"feedback_negative":-0.2,"feedback_correction":0.5},"costPerToken":{"gpt-4":{"input":0.00003,"output":0.00006},"gpt-4-turbo":{"input":0.00001,"output":0.00003},"gpt-3.5-turbo":{"input":5e-7,"output":0.0000015},"claude-3-opus":{"input":0.000015,"output":0.000075},"claude-3-sonnet":{"input":0.000003,"output":0.000015},"claude-3-haiku":{"input":2.5e-7,"output":0.00000125},"llama-3":{"input":0,"output":0},"mistral":{"input":0,"output":0}},"minROITarget":2,"trackingPeriodDays":30},"msg":"ROITracker initialized"}
+{"level":30,"time":1792953921959,"pid":66632,"hostname":"Talysson","name":"latency-monitor","config":{"sloTargets":{"p95Ms":2000,"p99Ms":5000},"alertThresholds":{"p95MultiplierWarning":1.5,"p95MultiplierCritical":2},"retentionHours":72,"samplingRate":1},"msg":"LatencyMonitor initialized"}
+{"level":30,"time":1792953921959,"pid":66632,"hostname":"Talysson","name":"chain-monitor","latencyThresholdMs":2000,"msg":"ChainMonitor initialized"}
+ ❯ |ai-worker| src/chains/__tests__/scoring.chain.otel.integration.test.ts (5 tests | 5 failed) 2585ms
+     × records latency, count, cost, estimated value, confidence and a hallucination check 2386ms
+     × two concurrent calls record two latency points and exactly twice the cost 65ms
+     × records the provider error as outcome=error with no value, drift sample or hallucination check 36ms
+     × counts an error raised before withMonitoring exactly once (outer catch) 54ms
+     × a fallback-provider chain (recordDrift: false) records no drift sample but still records the inference 39ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |ai-worker| src/__tests__/ai-worker.boot-folded-workers.test.ts [ src/__tests__/ai-worker.boot-folded-workers.test.ts ]
+Error: Cannot find module '/src/monitoring/drift-scheduler' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/apps/ai-worker/src/__tests__/ai-worker.boot-folded-workers.test.ts
+ ❯ src/__tests__/ai-worker.boot-folded-workers.test.ts:252:1
+    250| // -------------------------------------------------------------------…
+    251| import { AIWorker } from '../ai-worker';
+    252| import { DriftDetectionScheduler } from '../monitoring/drift-scheduler…
+       | ^
+    253|
+    254| // -------------------------------------------------------------------…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/16]⎯
+
+ FAIL  |ai-worker| src/monitoring/__tests__/chain-monitor.otel.test.ts [ src/monitoring/__tests__/chain-monitor.otel.test.ts ]
+Error: Cannot find module '../otel-ai-metrics' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/apps/ai-worker/src/monitoring/__tests__/chain-monitor.otel.test.ts
+ ❯ src/monitoring/__tests__/chain-monitor.otel.test.ts:12:1
+     10| import { ROITracker, defaultROIConfig } from '../roi-tracker';
+     11| import { LatencyMonitor, defaultLatencyConfig } from '../latency-monit…
+     12| import { __resetAiMetricsForTests, __setMeterForTests } from '../otel-…
+       | ^
+     13| import { collectMetrics, createTestProvider, pointsWhere, total, type …
+     14|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/16]⎯
+
+ FAIL  |ai-worker| src/monitoring/__tests__/drift-detector.shift.test.ts [ src/monitoring/__tests__/drift-detector.shift.test.ts ]
+Error: Cannot find module '../drift-stats' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/apps/ai-worker/src/monitoring/__tests__/drift-detector.shift.test.ts
+ ❯ src/monitoring/__tests__/drift-detector.shift.test.ts:11:1
+      9| import { afterEach, beforeEach, describe, expect, it, vi } from 'vites…
+     10| import { DriftDetector, defaultDriftConfig, type DriftResult } from '.…
+     11| import {
+       | ^
+     12|   DRIFT_BANDS,
+     13|   excessPsi,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/16]⎯
+
+ FAIL  |ai-worker| src/monitoring/__tests__/drift-scheduler.test.ts [ src/monitoring/__tests__/drift-scheduler.test.ts ]
+Error: Cannot find module '../drift-scheduler' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/apps/ai-worker/src/monitoring/__tests__/drift-scheduler.test.ts
+ ❯ src/monitoring/__tests__/drift-scheduler.test.ts:6:1
+      4|  */
+      5| import { afterEach, beforeEach, describe, expect, it, vi } from 'vites…
+      6| import { DriftDetectionScheduler, SCHEDULED_DRIFT_METRICS } from '../d…
+       | ^
+      7| import { DriftDetector, defaultDriftConfig, type DriftResult } from '.…
+      8|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/16]⎯
+
+ FAIL  |ai-worker| src/monitoring/__tests__/otel-ai-metrics.global.test.ts [ src/monitoring/__tests__/otel-ai-metrics.global.test.ts ]
+Error: Cannot find module '/src/monitoring/otel-ai-metrics' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/apps/ai-worker/src/monitoring/__tests__/otel-ai-metrics.global.test.ts
+ ❯ src/monitoring/__tests__/otel-ai-metrics.global.test.ts:26:40
+     24|
+     25| afterAll(async () => {
+     26|   const { __resetAiMetricsForTests } = await import('../otel-ai-metric…
+       |                                        ^
+     27|   __resetAiMetricsForTests();
+     28|   await provider.shutdown();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/16]⎯
+
+ FAIL  |ai-worker| src/monitoring/__tests__/otel-ai-metrics.test.ts [ src/monitoring/__tests__/otel-ai-metrics.test.ts ]
+Error: Cannot find module '../otel-ai-metrics' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/apps/ai-worker/src/monitoring/__tests__/otel-ai-metrics.test.ts
+ ❯ src/monitoring/__tests__/otel-ai-metrics.test.ts:8:1
+      6| import type { MeterProvider } from '@opentelemetry/sdk-metrics';
+      7| import { MODEL_PRICING } from '../../config/ai.config';
+      8| import {
+       | ^
+      9|   AI_METRIC_DEFINITIONS,
+     10|   __resetAiMetricsForTests,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/16]⎯
+
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |ai-worker| src/jobs/scoring.job.test.ts > ScoringJob > provider fallback (#324) > builds the fallback chain with recordDrift: false so a provider switch is not read as drift (IFC-117)
+AssertionError: expected { …(2) } to match object { recordDrift: false }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "recordDrift": false,
++   "provider": "litellm",
++   "tenantId": "99999999-0000-4000-8000-000099999999",
+  }
+
+ ❯ src/jobs/scoring.job.test.ts:845:34
+    843|       );
+    844|       expect(fallbackOptions).toHaveLength(1);
+    845|       expect(fallbackOptions[0]).toMatchObject({ recordDrift: false });
+       |                                  ^
+    846|     });
+    847|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/16]⎯
+
+ FAIL  |ai-worker| src/jobs/__tests__/feedback-analytics.job.test.ts > processFeedbackAnalyticsJob > happy path — retraining needed > increments the Prometheus counter with urgency label
+AssertionError: expected "vi.fn()" to be called once, but got 0 times
+ ❯ src/jobs/__tests__/feedback-analytics.job.test.ts:172:43
+    170|       await processFeedbackAnalyticsJob(job);
+    171|
+    172|       expect(mockRecordRetrainingTrigger).toHaveBeenCalledOnce();
+       |                                           ^
+    173|       expect(mockRecordRetrainingTrigger).toHaveBeenCalledWith({ urgen…
+    174|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/16]⎯
+
+ FAIL  |ai-worker| src/jobs/__tests__/feedback-analytics.job.test.ts > processFeedbackAnalyticsJob > DB error resilience > still completes when DB monitoring event write fails
+AssertionError: expected "vi.fn()" to be called once, but got 0 times
+ ❯ src/jobs/__tests__/feedback-analytics.job.test.ts:232:43
+    230|       expect(result.retrainingNeeded).toBe(true);
+    231|       // Counter still increments even when DB write fails
+    232|       expect(mockRecordRetrainingTrigger).toHaveBeenCalledOnce();
+       |                                           ^
+    233|       // No monitoringEventId since create failed
+    234|       expect(result.monitoringEventId).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/16]⎯
+
+ FAIL  |ai-worker| src/chains/__tests__/scoring.chain.otel.integration.test.ts > LeadScoringChain -> OTel (real chain, fake network) > records latency, count, cost, estimated value, confidence and a hallucination check
+Error: Cannot find module '/src/monitoring/otel-ai-metrics' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/apps/ai-worker/src/chains/__tests__/scoring.chain.otel.integration.test.ts
+ ❯ loadChain src/chains/__tests__/scoring.chain.otel.integration.test.ts:102:18
+    100|   factory.__resetFactoryCache();
+    101|   const monitoring = await import('../../monitoring/chain-monitor');
+    102|   const facade = await import('../../monitoring/otel-ai-metrics');
+       |                  ^
+    103|   facade.__resetAiMetricsForTests();
+    104|   // A fresh monitor per test: the module singletons would otherwise c…
+ ❯ src/chains/__tests__/scoring.chain.otel.integration.test.ts:143:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/16]⎯
+
+ FAIL  |ai-worker| src/chains/__tests__/scoring.chain.otel.integration.test.ts > LeadScoringChain -> OTel (real chain, fake network) > two concurrent calls record two latency points and exactly twice the cost
+Error: Cannot find module '/src/monitoring/otel-ai-metrics' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/apps/ai-worker/src/chains/__tests__/scoring.chain.otel.integration.test.ts
+ ❯ loadChain src/chains/__tests__/scoring.chain.otel.integration.test.ts:102:18
+    100|   factory.__resetFactoryCache();
+    101|   const monitoring = await import('../../monitoring/chain-monitor');
+    102|   const facade = await import('../../monitoring/otel-ai-metrics');
+       |                  ^
+    103|   facade.__resetAiMetricsForTests();
+    104|   // A fresh monitor per test: the module singletons would otherwise c…
+ ❯ src/chains/__tests__/scoring.chain.otel.integration.test.ts:170:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/16]⎯
+
+ FAIL  |ai-worker| src/chains/__tests__/scoring.chain.otel.integration.test.ts > LeadScoringChain -> OTel (real chain, fake network) > records the provider error as outcome=error with no value, drift sample or hallucination check
+Error: Cannot find module '/src/monitoring/otel-ai-metrics' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/apps/ai-worker/src/chains/__tests__/scoring.chain.otel.integration.test.ts
+ ❯ loadChain src/chains/__tests__/scoring.chain.otel.integration.test.ts:102:18
+    100|   factory.__resetFactoryCache();
+    101|   const monitoring = await import('../../monitoring/chain-monitor');
+    102|   const facade = await import('../../monitoring/otel-ai-metrics');
+       |                  ^
+    103|   facade.__resetAiMetricsForTests();
+    104|   // A fresh monitor per test: the module singletons would otherwise c…
+ ❯ src/chains/__tests__/scoring.chain.otel.integration.test.ts:181:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/16]⎯
+
+ FAIL  |ai-worker| src/chains/__tests__/scoring.chain.otel.integration.test.ts > LeadScoringChain -> OTel (real chain, fake network) > counts an error raised before withMonitoring exactly once (outer catch)
+Error: Cannot find module '/src/monitoring/otel-ai-metrics' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/apps/ai-worker/src/chains/__tests__/scoring.chain.otel.integration.test.ts
+ ❯ loadChain src/chains/__tests__/scoring.chain.otel.integration.test.ts:102:18
+    100|   factory.__resetFactoryCache();
+    101|   const monitoring = await import('../../monitoring/chain-monitor');
+    102|   const facade = await import('../../monitoring/otel-ai-metrics');
+       |                  ^
+    103|   facade.__resetAiMetricsForTests();
+    104|   // A fresh monitor per test: the module singletons would otherwise c…
+ ❯ src/chains/__tests__/scoring.chain.otel.integration.test.ts:195:23
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/16]⎯
+
+ FAIL  |ai-worker| src/chains/__tests__/scoring.chain.otel.integration.test.ts > LeadScoringChain -> OTel (real chain, fake network) > a fallback-provider chain (recordDrift: false) records no drift sample but still records the inference
+Error: Cannot find module '/src/monitoring/otel-ai-metrics' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/apps/ai-worker/src/chains/__tests__/scoring.chain.otel.integration.test.ts
+ ❯ loadChain src/chains/__tests__/scoring.chain.otel.integration.test.ts:102:18
+    100|   factory.__resetFactoryCache();
+    101|   const monitoring = await import('../../monitoring/chain-monitor');
+    102|   const facade = await import('../../monitoring/otel-ai-metrics');
+       |                  ^
+    103|   facade.__resetAiMetricsForTests();
+    104|   // A fresh monitor per test: the module singletons would otherwise c…
+ ❯ src/chains/__tests__/scoring.chain.otel.integration.test.ts:208:31
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/16]⎯
+
+ FAIL  |ai-worker| src/monitoring/__tests__/monitoring-flush.service.test.ts > MonitoringFlushService > flushNow() writes the drift result model, not the metric name, into model (IFC-117)
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
+-     "data": ArrayContaining [
+-       ObjectContaining {
++   {
++     "data": [
++       {
+          "eventType": "drift",
++         "flagged": true,
+          "metric": "score_distribution",
+-         "model": "scoring-free",
++         "model": "score_distribution",
++         "payload": {
++           "baselineWindow": {
++             "distribution": [],
++             "endTime": 2026-10-25T18:45:18.527Z,
++             "max": 1,
++             "mean": 0.5,
++             "min": 0,
++             "sampleCount": 60,
++             "startTime": 2026-10-25T18:45:18.527Z,
++             "variance": 0.01,
++           },
++           "currentWindow": {
++             "distribution": [],
++             "endTime": 2026-10-25T18:45:18.527Z,
++             "max": 1,
++             "mean": 0.5,
++             "min": 0,
++             "sampleCount": 60,
++             "startTime": 2026-10-25T18:45:18.527Z,
++             "variance": 0.01,
++           },
++           "pValue": 0.001,
++           "recommendations": [],
++         },
++         "recordedAt": 2026-10-25T18:45:18.527Z,
++         "severity": "high",
++         "tenantId": null,
++         "value": 0.7,
+        },
+      ],
++     "skipDuplicates": true,
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/monitoring/__tests__/monitoring-flush.service.test.ts:138:53
+    136|     await service.flushNow();
+    137|
+    138|     expect(mockPrisma.aIMonitoringEvent.createMany).toHaveBeenCalledWi…
+       |                                                     ^
+    139|       expect.objectContaining({
+    140|         data: expect.arrayContaining([
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/16]⎯
+
+ FAIL  |ai-worker| src/monitoring/__tests__/otel-ai-metrics.global.test.ts > global meter wiring > records through the global provider when no test meter is set
+Error: Cannot find module '/src/monitoring/otel-ai-metrics' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/apps/ai-worker/src/monitoring/__tests__/otel-ai-metrics.global.test.ts
+ ❯ src/monitoring/__tests__/otel-ai-metrics.global.test.ts:34:20
+     32| describe('global meter wiring', () => {
+     33|   it('records through the global provider when no test meter is set', …
+     34|     const facade = await import('../otel-ai-metrics');
+       |                    ^
+     35|     facade.__setMeterForTests(null);
+     36|     facade.__resetAiMetricsForTests();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/16]⎯
+
+
+ Test Files  10 failed (10)
+      Tests  10 failed | 69 passed (79)
+   Start at  18:45:17
+   Duration  4.72s (transform 2.51s, setup 0ms, import 4.73s, tests 3.19s, environment 1ms)
+
+exit=1

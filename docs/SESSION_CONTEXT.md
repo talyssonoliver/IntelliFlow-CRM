@@ -1,24 +1,22 @@
 # Session Context Snapshot
-_Generated: 2026-10-19T10:01:17.145Z • Branch: chore/s18-tracker-pg205-pg202_
+_Generated: 2026-10-30T20:52:09.890Z • Branch: feat/pg-208-task-automation_
 
 > Auto-generated from `apps/project-tracker/docs/metrics/`. **Do not edit by hand** — regenerate with `npx tsx apps/project-tracker/scripts/generate-context.ts`.
 
 ## Where We Left Off
 
-Active sprint: **Sprint 0** (sprint-0) — 94% complete (32/34 tasks). 17 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 2s ago; 619 total tasks across the project.
+Active sprint: **Sprint 0** (sprint-0) — 100% complete (32/32 tasks). 18 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 2s ago; 626 total tasks across the project.
 
 ## Project Health
 
-- **Progress:** 438/619 tasks completed (70.76%) — 164 backlog, 0 blocked, 17 in progress.
-- **Focus band:** Sprints 0, 1, 6, 8 carry the earliest remaining backlog.
-- **Evidence issues:** 25 attested but CSV not updated.
+- **Progress:** 441/626 tasks completed (70.45%) — 167 backlog, 0 blocked, 18 in progress.
+- **Focus band:** Sprints 15, 18, 19, 20 carry the earliest remaining backlog.
+- **Evidence issues:** 22 attested but CSV not updated; 8 sprint path mismatches.
 - _Source: `docs/CURRENT_STATE_REPORT.md` (0s ago) — full sprint-by-sprint breakdown._
 
 ## Active Tasks (IN_PROGRESS)
 
-- **[ENV-008-AI]** Automated Observability with Predictive Monitoring — started 13d ago, Backend Dev + AI Specialist (STOA-Intelligence)
-  - artifacts: 0 created / 0 missing
-- **[EP-001-AI]** EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline) — started 13d ago, DevOps + Claude Code (STOA-Automation)
+- **[EP-001-AI]** EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline) — started 24d ago, DevOps + Claude Code (STOA-Automation)
   - artifacts: 0 created / 0 missing
 
 ## Recently Completed (last 5)
@@ -31,25 +29,25 @@ Active sprint: **Sprint 0** (sprint-0) — 94% complete (32/34 tasks). 17 task(s
 
 ## Next Up (unblocked)
 
-- **SALES-001** (sprint 1) — Commercial Narrative + Pitch Deck Outline + One-Pager
-- **IFC-056** (sprint 9) — Team Upskilling Program
+- **IFC-056** (sprint 18) — Team Upskilling Program
 - **IFC-234** (sprint 18) — Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hard
+- **PG-206** (sprint 18) — Module Settings - Storage Policies (/documents/(list)/storage-policies)
 
 ## Git Activity
 
-- **Branch:** `chore/s18-tracker-pg205-pg202` (6 dirty file(s))
-- **Dirty preview:** `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`, `apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv`, `apps/project-tracker/docs/metrics/_global/Sprint_plan_J.csv`, `artifacts/reports/current-state-report.json`, `artifacts/reports/spec-tracker.json` …
+- **Branch:** `feat/pg-208-task-automation` (127 dirty file(s))
+- **Dirty preview:** `.github/workflows/grafana-ai-alert-rules.yml`, `.specify/sprints/sprint-18/attestations/IFC-117/attestation-latest.json`, `.specify/sprints/sprint-18/attestations/IFC-117/attestation.json`, `.specify/sprints/sprint-18/attestations/IFC-117/task-tracking.json`, `.specify/sprints/sprint-18/context/IFC-117/IFC-117-agent-selection.json` …
 - **Last 10 commits:**
-  - `797904a36` feat(contacts): tenant contact types, type picker and contacts list type filter (PG-205) (#915) — Talysson Oliveira, 17 hours ago
-  - `a593ea1b5` feat(crm): firm availability settings enforced at booking (PG-202) (#916) — Talysson Oliveira, 21 hours ago
-  - `9770a5161` chore(tracker): mark pg-198, pg-201 and pg-204 completed (#907) — Talysson Oliveira, 2 days ago
-  - `28d93df47` feat(agent-approvals): tenant approval policies for ai work (pg-198) (#906) — Talysson Oliveira, 3 days ago
-  - `9ddaa23d3` feat(pg-201): scheduled reports module settings page (#895) — Talysson Oliveira, 3 days ago
-  - `b8bf98148` fix(infra): scope alert rules to live traffic, wire otlp log export (#884) — Talysson Oliveira, 3 days ago
-  - `e686b5217` fix(harness): bind executor status to the run and bound plan-reviewer idle time (#904) — Talysson Oliveira, 3 days ago
-  - `25ce7bbb3` feat(cases): case types settings applied at case creation (PG-204) (#894) — Talysson Oliveira, 3 days ago
-  - `4abdec5e6` test(infra): in-memory storage double and ephemeral test database (#901) — Talysson Oliveira, 3 days ago
-  - `f3f4cf229` refactor(workers): fold notifications-worker email consumer into ai-worker (#897) — Talysson Oliveira, 3 days ago
+  - `3b5e16703` chore(tasks): refresh the pg-208 attestation for the db push integration fix (pg-208) — Talysson Oliveira, 6 hours ago
+  - `1d765b915` test(tasks): apply the automation migration on a db push test database (pg-208) — Talysson Oliveira, 6 hours ago
+  - `cf79859ac` chore(tasks): refresh the pg-208 attestation after the pg-203 main merge (pg-208) — Talysson Oliveira, 9 hours ago
+  - `403bd097b` chore(tasks): merge main into pg-208 after the pg-203 data subject requests (pg-208) — Talysson Oliveira, 10 hours ago
+  - `e032ee9f4` feat(pg-203): data subject requests with export, erasure and processing restriction (#1056) — Talysson Oliveira, 10 hours ago
+  - `c2e62a2f8` chore(tasks): resolve the schedule timezone debt entry now fixed in the pg-208 pr (pg-208) — Talysson Oliveira, 20 hours ago
+  - `42127081a` fix(tasks): make a schedule slot claim lose when the schedule was edited after the due read (pg-208) — Talysson Oliveira, 20 hours ago
+  - `28e3c906e` fix(tasks): write automation settings under a tenant lock so a re-enable is always stamped (pg-208) — Talysson Oliveira, 20 hours ago
+  - `0bde34ef4` chore(tasks): merge main into pg-208 after the cuid record id fix (pg-208) — Talysson Oliveira, 20 hours ago
+  - `7ba4ce7e7` fix(ai-worker): accept cuid record ids in job and queue schemas (#1095) — Talysson Oliveira, 21 hours ago
 
 ## Key File References
 

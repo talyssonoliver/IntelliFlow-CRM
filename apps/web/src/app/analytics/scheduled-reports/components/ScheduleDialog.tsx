@@ -28,10 +28,10 @@ import {
   Switch,
   Textarea,
 } from '@intelliflow/ui';
+import { FieldError } from '@/components/shared/field-error';
 import {
   createScheduledReportSchema,
   describeSchedule,
-  scheduleCadenceSchema,
   scheduleDeliveryFormatSchema,
   newScheduleDeliveryFormatSchema,
   scheduleNameConflictSchema,
@@ -44,6 +44,7 @@ import {
   type UpdateScheduledReportInput,
 } from '@intelliflow/validators';
 import { TimezoneSelector } from '@/components/settings/TimezoneSelector';
+import { ScheduleCadenceFields } from '@/components/shared/schedule-cadence-fields';
 import { formatLabel, type ScheduleItem } from './ScheduleList';
 import { REPORT_SCHEDULE_COLOR_TOKENS, colorLabel, normalizeColorToken } from './schedule-colors';
 
@@ -111,17 +112,6 @@ const FIELD_ID: Record<FieldKey, string> = {
   tags: 'schedule-tags-legend',
   form: 'schedule-form-error',
 };
-
-const CADENCE_LABELS: Record<ScheduleCadence, string> = {
-  daily: 'Daily',
-  weekly: 'Weekly',
-  monthly: 'Monthly',
-  quarterly: 'Quarterly',
-  custom: 'Custom (cron)',
-};
-
-const DAYS_OF_WEEK = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-const DAYS_OF_MONTH = Array.from({ length: 28 }, (_, i) => String(i + 1));
 
 function browserTimezone(): string {
   try {
@@ -272,15 +262,6 @@ function focusFirstInvalid(errors: FieldErrors): void {
   if (first) document.getElementById(first[1])?.focus();
 }
 
-function FieldError({ id, message }: Readonly<{ id: string; message?: string }>) {
-  if (!message) return null;
-  return (
-    <p id={id} className="text-xs text-red-600 dark:text-red-400">
-      {message}
-    </p>
-  );
-}
-
 function Field({ children }: Readonly<{ children: ReactNode }>) {
   return <div className="space-y-1.5">{children}</div>;
 }
@@ -290,96 +271,6 @@ type ErrorProps = (key: FieldKey) => {
   'aria-invalid': true | undefined;
   'aria-describedby': string | undefined;
 };
-
-/** The cadence-specific inputs: day of week / day of month, then time of day or a custom cron. */
-function CadenceFields({
-  form,
-  set,
-  errors,
-  errorProps,
-}: Readonly<{ form: FormState; set: SetField; errors: FieldErrors; errorProps: ErrorProps }>) {
-  const isWeekly = form.cadence === 'weekly';
-  const needsDayOfMonth = form.cadence === 'monthly' || form.cadence === 'quarterly';
-  const isCustom = form.cadence === 'custom';
-  return (
-    <>
-      {isWeekly && (
-        <Field>
-          <Label htmlFor="schedule-day-of-week">Day of the week</Label>
-          <Select value={form.dayOfWeek} onValueChange={(v) => set('dayOfWeek', v)}>
-            <SelectTrigger id="schedule-day-of-week" {...errorProps('dayOfWeek')}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DAYS_OF_WEEK.map((day, i) => (
-                <SelectItem key={day} value={String(i)}>
-                  {day}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FieldError id="schedule-day-of-week-error" message={errors.dayOfWeek} />
-        </Field>
-      )}
-
-      {needsDayOfMonth && (
-        <Field>
-          <Label htmlFor="schedule-day-of-month">Day of the month</Label>
-          <Select value={form.dayOfMonth} onValueChange={(v) => set('dayOfMonth', v)}>
-            <SelectTrigger id="schedule-day-of-month" {...errorProps('dayOfMonth')}>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DAYS_OF_MONTH.map((d) => (
-                <SelectItem key={d} value={d}>
-                  {d}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <FieldError id="schedule-day-of-month-error" message={errors.dayOfMonth} />
-        </Field>
-      )}
-
-      {isCustom ? (
-        <div className="md:col-span-2">
-          <Field>
-            <Label htmlFor="schedule-cron">Cron expression</Label>
-            <Input
-              id="schedule-cron"
-              value={form.cronExpression}
-              maxLength={100}
-              onChange={(e) => set('cronExpression', e.target.value)}
-              placeholder="0 9 * * 1-5"
-              aria-invalid={errors.cronExpression ? true : undefined}
-              aria-describedby={
-                errors.cronExpression
-                  ? 'schedule-cron-hint schedule-cron-error'
-                  : 'schedule-cron-hint'
-              }
-            />
-            <p id="schedule-cron-hint" className="text-xs text-muted-foreground">
-              Five fields: minute, hour, day of month, month, day of week. At most once an hour.
-            </p>
-            <FieldError id="schedule-cron-error" message={errors.cronExpression} />
-          </Field>
-        </div>
-      ) : (
-        <Field>
-          <Label htmlFor="schedule-time">Time of day</Label>
-          <Input
-            id="schedule-time"
-            type="time"
-            value={form.timeOfDay}
-            onChange={(e) => set('timeOfDay', e.target.value)}
-            {...errorProps('timeOfDay')}
-          />
-          <FieldError id="schedule-time-error" message={errors.timeOfDay} />
-        </Field>
-      )}
-    </>
-  );
-}
 
 /** Plain-English preview of the cadence currently in the form. */
 function previewFor(form: FormState): string {
@@ -579,29 +470,17 @@ export function ScheduleDialog({
             </Field>
           </div>
 
-          <Field>
-            <Label htmlFor="schedule-cadence">Cadence</Label>
-            <Select
-              value={form.cadence}
-              onValueChange={(v) => {
-                const parsed = scheduleCadenceSchema.safeParse(v);
-                if (parsed.success) set('cadence', parsed.data);
-              }}
-            >
-              <SelectTrigger id="schedule-cadence">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {scheduleCadenceSchema.options.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {CADENCE_LABELS[c]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
-
-          <CadenceFields form={form} set={set} errors={errors} errorProps={errorProps} />
+          <ScheduleCadenceFields
+            idPrefix="schedule"
+            value={form}
+            onChange={(key, value) => setForm((f) => ({ ...f, [key]: value }))}
+            errors={{
+              dayOfWeek: errors.dayOfWeek,
+              dayOfMonth: errors.dayOfMonth,
+              timeOfDay: errors.timeOfDay,
+              cronExpression: errors.cronExpression,
+            }}
+          />
 
           <div className="md:col-span-2">
             <Field>

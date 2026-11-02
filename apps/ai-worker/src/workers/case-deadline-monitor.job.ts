@@ -17,11 +17,12 @@ import { Job, Worker, Queue, QueueEvents } from 'bullmq';
 import { createSerialJobWorker } from './serial-job-worker';
 import { PrismaClient } from '@intelliflow/db';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 
 export const CASE_DEADLINE_MONITOR_QUEUE_NAME = 'intelliflow-case-deadline-monitor';
 
 export const CaseDeadlineMonitorJobDataSchema = z.object({
-  tenantId: z.string().min(1).optional(),
+  tenantId: recordIdSchema.optional(),
   sweepAll: z.boolean().default(true),
   approachingThresholdMs: z
     .number()

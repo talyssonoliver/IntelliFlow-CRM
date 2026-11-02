@@ -1,0 +1,5 @@
+# collector run (final code at 82281b414) started 2026-10-22T20:40:31Z, Node v22.14.0
+wrote artifacts\reports\correlation-test.csv sha256 ae9a15d152aa51fba0ff1c7272762c81e0bb265bb15a393b492dd040ffeffe8e
+wrote artifacts\reports\mttr-baseline.json sha256 3e33b48f327192362fb4fbb3691ad9eea2d0d55825418ff0c53ac85762572f88
+correlation rows 11 (PASS 10); incidents 66, anchored 63, mean MTTD 268.739 s, KPI met false
+exit=0

@@ -1,0 +1,18 @@
+[test-slot] slot1 taken for IFC-074@feat/ifc-074-ifc074: pnpm --filter @intelliflow/observability test
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/observability@0.1.0 test C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-074\packages\observability
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-074/packages/observability
+
+{"level":"info","time":"2026-10-22T20:45:34.861Z","trace_id":"503e7b342a661a972954f4a67256d4e2","span_id":"fb8f457f318d343d","type":"trpc.early","msg":"early"}
+
+ Test Files  4 passed (4)
+      Tests  44 passed (44)
+   Start at  21:45:34
+   Duration  845ms (transform 296ms, setup 0ms, import 781ms, tests 382ms, environment 0ms)
+
+exit=0

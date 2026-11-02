@@ -1,0 +1,58 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 100 files total
+[codex-review] in scope : 70 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] WARN: Codex produced no parseable findings (exit 1) — likely the OpenAI usage/tier cap or a transient error. Raw: artifacts/codex-review/codex-raw.txt
+OpenAI Codex v0.163.0
+--------
+workdir: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 01a15dbb-1fa9-7381-b52d-c8294dfc64d6
+--------
+user
+You are an independent code auditor. Your task is to find REAL bugs in the diff below.
+
+Scope: only the following files changed in this PR (diff vs origin/main):
+  - apps/api/src/modules/calendar/__tests__/booking-abuse.test.ts
+  - apps/api/src/modules/calendar/__tests__/booking-email.test.ts
+  - apps/api/src/modules/calendar/__tests__/event-types.router.test.ts
+  - apps/api/src/modules/calendar/__tests__/public-booking.router.test.ts
+  - apps/api/src/modules/calendar/booking-abuse.ts
+  - apps/api/src/modules/calendar/booking-email.ts
+  - apps/api/src/modules/calendar/calendar.router.ts
+  - apps/api/src/modules/calendar/event-types.router.ts
+  - apps/api/src/modules/calendar/public-booking.router.ts
+  -
+[codex-review] Falling back to Claude review (claude -p, local) ...
+[codex-review] reviewer : claude
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (claude) — 2026-10-21T09:13:08.653Z
+Base ref  : origin/main
+Files in scope : 70
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [LOW] apps/api/src/modules/calendar/public-booking.router.ts:274-282 — unmapped-race-error
+    Issue    : If the booking loses the race with an in-app appointment for the same host and slot, the visitor gets a generic 500 instead of a 'slot taken' CONFLICT, so the page never reloads the free times.
+    Evidence : The header comment (lines 16-20) says in-app appointments.create does not take the 'booking:<tenant>' advisory lock and that the appointments_no_overlap_per_organizer exclusion constraint is what stops a double booking. A staff create can therefore commit between the busy read in computeSlots (line 548) and tx.appointment.create (line 556). The constraint then fails with SQLSTATE 23P01, but isRetryable only recognises `e.code === 'P2002'`, `e.meta?.code === '55P03'` or a 'lock timeout' message. So rethrowBookingError logs it and throws INTERNAL_SERVER_ERROR 'We could not complete your booking'. BookingContent.tsx only clears the chosen slot and refetches slots when the error is CONFLICT (`if (errorCode(error) === 'CONFLICT') { update('start',''); void slotsQuery.refetch(); }`). The visitor keeps the dead slot and can retry it forever. The unit tests only mock P2002 and lock-timeout errors, so this path is never exercised.
+    Fix      : Detect the exclusion violation in isRetryable or rethrowBookingError (meta.code / cause code '23P01', or the constraint name appointments_no_overlap_per_organizer in the message or meta) and map it to TRPCError CONFLICT with SLOT_TAKEN. Add a test that rejects appointment.create with that error shape.
+    Fingerprint: 1f2dba6b48b9049dbb5cb24b2666acaafc176a22533eb152b9fcef1d510ebf09
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

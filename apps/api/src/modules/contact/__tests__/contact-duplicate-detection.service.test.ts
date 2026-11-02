@@ -7,6 +7,7 @@ import {
 import type { ContactAutomationFlags } from '../contact-automation';
 
 const TENANT_A = 'tenant-A';
+const allowAll = { status: async () => ({ restricted: false }) };
 const TENANT_B = 'tenant-B';
 const USER = 'user-1';
 
@@ -211,6 +212,7 @@ describe('ContactDuplicateDetectionService — checkForCreate', () => {
         throw new Error('LiteLLM unavailable');
       },
       generateEmbedding: async () => [0.1, 0.2, 0.3],
+      restrictions: allowAll,
     });
     const ctx = buildCtx({
       rules: [
@@ -386,6 +388,7 @@ describe('ContactDuplicateDetectionService — AI branch unions', () => {
         { id: 'c-2', similarity: 0.8 },
       ],
       generateEmbedding: async () => [0.1, 0.2, 0.3],
+      restrictions: allowAll,
     });
     const ctx = buildCtx({
       rules: [
@@ -432,6 +435,7 @@ describe('ContactDuplicateDetectionService — AI branch unions', () => {
     const service = createContactDuplicateDetectionService({
       findSimilarContacts: async () => [{ id: 'c-missing', similarity: 0.9 }],
       generateEmbedding: async () => [0.1],
+      restrictions: allowAll,
     });
     const ctx = buildCtx({
       rules: [
@@ -482,5 +486,110 @@ describe('ContactDuplicateDetectionService — tenant isolation', () => {
       where: { tenantId: string };
     };
     expect(contactCall.where.tenantId).toBe(TENANT_A);
+  });
+});
+
+describe('ContactDuplicateDetectionService — data requests (PG-203 Q22)', () => {
+  const rules = [
+    { field: 'email', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+  ];
+  const flags = () => makeFlags({ aiDuplicateDetection: true, notifyOnDuplicate: true });
+
+  it.each([
+    ['restricted', { status: vi.fn(async () => ({ restricted: true })) }],
+    ['unreadable', { status: vi.fn().mockRejectedValue(new Error('db down')) }],
+    ['missing', undefined],
+  ])(
+    'never embeds the details when the restriction check is %s; deterministic checks still run',
+    async (_label, restrictions) => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const generateEmbedding = vi.fn(async () => [0.1]);
+      const service = createContactDuplicateDetectionService({
+        findSimilarContacts: async () => [],
+        generateEmbedding,
+        ...(restrictions ? { restrictions } : {}),
+      });
+      const ctx = buildCtx({
+        rules,
+        contacts: [{ id: 'c-1', email: 'a@b.com', tenantId: TENANT_A }],
+      });
+      const result = await service.checkForCreate(ctx, { email: 'a@b.com' }, flags());
+      expect(result.action).toBe('flag');
+      expect(generateEmbedding).not.toHaveBeenCalled();
+      if (restrictions) expect(restrictions.status).toHaveBeenCalledWith(TENANT_A, 'a@b.com');
+      warn.mockRestore();
+    }
+  );
+
+  it('embeds the details of a person who is not restricted', async () => {
+    const generateEmbedding = vi.fn(async () => [0.1]);
+    const service = createContactDuplicateDetectionService({
+      findSimilarContacts: async () => [],
+      generateEmbedding,
+      restrictions: allowAll,
+    });
+    const ctx = buildCtx({
+      rules,
+      contacts: [{ id: 'c-1', email: 'a@b.com', tenantId: TENANT_A }],
+    });
+    await service.checkForCreate(ctx, { email: 'a@b.com', firstName: 'Ada' }, flags());
+    expect(generateEmbedding).toHaveBeenCalledOnce();
+  });
+
+  describe('an update that does not change the email checks the stored contact (codex)', () => {
+    const nameRules = [
+      { field: 'name', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+    ];
+    const update = { firstName: 'Ada', lastName: 'Lovelace' };
+
+    function setUp(stored: { email: string | null } | null, restrictedEmail?: string) {
+      const generateEmbedding = vi.fn(async () => [0.1]);
+      const restrictions = {
+        status: vi.fn(async (_tenantId: string, email: string) => ({
+          restricted: email === restrictedEmail,
+        })),
+      };
+      const service = createContactDuplicateDetectionService({
+        findSimilarContacts: async () => [],
+        generateEmbedding,
+        restrictions,
+      });
+      const ctx = buildCtx({
+        rules: nameRules,
+        contacts: [{ id: 'c-2', firstName: 'Ada', lastName: 'Lovelace', tenantId: TENANT_A }],
+      });
+      const findFirst = vi.fn(async () => stored);
+      (ctx.prismaWithTenant as any).contact.findFirst = findFirst;
+      return { service, ctx, generateEmbedding, restrictions, findFirst };
+    }
+
+    it('never embeds a restricted contact renamed without an email in the update', async () => {
+      const { service, ctx, generateEmbedding, restrictions, findFirst } = setUp(
+        { email: 'held@b.com' },
+        'held@b.com'
+      );
+      await service.checkForUpdate(ctx, 'c-1', update, flags());
+      expect(findFirst).toHaveBeenCalledWith({
+        where: { id: 'c-1', tenantId: TENANT_A },
+        select: { email: true },
+      });
+      expect(restrictions.status).toHaveBeenCalledWith(TENANT_A, 'held@b.com');
+      expect(generateEmbedding).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['erased', { email: 'erased-c-1@erased.invalid' }],
+      ['gone', null],
+    ])('never embeds a contact that is %s', async (_label, stored) => {
+      const { service, ctx, generateEmbedding } = setUp(stored);
+      await service.checkForUpdate(ctx, 'c-1', update, flags());
+      expect(generateEmbedding).not.toHaveBeenCalled();
+    });
+
+    it('embeds a contact that is neither', async () => {
+      const { service, ctx, generateEmbedding } = setUp({ email: 'ada@b.com' }, 'held@b.com');
+      await service.checkForUpdate(ctx, 'c-1', update, flags());
+      expect(generateEmbedding).toHaveBeenCalledOnce();
+    });
   });
 });

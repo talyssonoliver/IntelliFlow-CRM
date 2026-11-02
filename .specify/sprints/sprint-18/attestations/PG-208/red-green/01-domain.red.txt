@@ -1,0 +1,472 @@
+2026-10-20T23:24:18Z
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/packages/domain
+
+ ❯ |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts (34 tests | 30 failed) 31ms
+     × substitutes known tokens and blanks unknown ones 8ms
+     × never resolves prototype keys 1ms
+     × strips control characters, keeps markup as plain text, trims and truncates 1ms
+     × keeps tokens with spaces inside the braces 1ms
+     × returns the distinct keys of one scope 3ms
+     × builds a non-empty fallback title 1ms
+     × names a lead by person, then company, never email 0ms
+     × uses the end of the UTC day N days later 1ms
+     × is never earlier than now + 15 minutes 1ms
+     × uses the rule timezone for the calendar day 0ms
+     × settles the offset across a DST change on the target day 2ms
+     × rotates in pool order with the post-increment cursor 1ms
+     × handles non-positive cursors and empty pools 0ms
+     × differs by template, pool order and filter 0ms
+     × is null for webhook rules 0ms
+     × covers exactly the nine v1 events 1ms
+     × lead.created carries a string id under its catalogue id field 0ms
+     × lead.qualified carries a string id under its catalogue id field 0ms
+     × lead.converted carries a string id under its catalogue id field 0ms
+     × contact.created carries a string id under its catalogue id field 0ms
+     × opportunity.created carries a string id under its catalogue id field 0ms
+     × opportunity.stage_changed carries a string id under its catalogue id field 0ms
+     × opportunity.won carries a string id under its catalogue id field 0ms
+     × opportunity.lost carries a string id under its catalogue id field 0ms
+     × account.created carries a string id under its catalogue id field 0ms
+     × declares postconditions, links and conversion skips 0ms
+     × maps closing stage changes to won / lost 0ms
+     × keeps managers off webhook secrets 1ms
+     × orders actions with Create Task first 0ms
+     × keeps the webhook body cap at 64 KB and the skew at 300 s 0ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 30 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > renderTaskTemplate > substitutes known tokens and blanks unknown ones
+AssertionError: expected '' to be 'Call Ada Lovelace about A-17' // Object.is equality
+
+- Expected
++ Received
+
+- Call Ada Lovelace about A-17
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:53:103
+     51|
+     52|   it('substitutes known tokens and blanks unknown ones', () => {
+     53|     expect(renderTaskTemplate('Call {{record.name}} about {{webhook.or…
+       |                                                                                                       ^
+     54|       'Call Ada Lovelace about A-17'
+     55|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > renderTaskTemplate > never resolves prototype keys
+AssertionError: expected '' to be 'xy' // Object.is equality
+
+- Expected
++ Received
+
+- xy
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:59:92
+     57|
+     58|   it('never resolves prototype keys', () => {
+     59|     expect(renderTaskTemplate('x{{webhook.constructor}}{{webhook.toStr…
+       |                                                                                            ^
+     60|   });
+     61|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > renderTaskTemplate > strips control characters, keeps markup as plain text, trims and truncates
+AssertionError: expected '' to be '<b>hi</b>' // Object.is equality
+
+- Expected
++ Received
+
+- <b>hi</b>
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:64:70
+     62|   it('strips control characters, keeps markup as plain text, trims and…
+     63|     const control = String.fromCharCode(0) + String.fromCharCode(7);
+     64|     expect(renderTaskTemplate(`  <b>hi</b>${control}  `, vars, 200)).t…
+       |                                                                      ^
+     65|     expect(renderTaskTemplate('abcdefghij', vars, 4)).toBe('abcd');
+     66|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > renderTaskTemplate > keeps tokens with spaces inside the braces
+AssertionError: expected '' to be 'Ada Lovelace' // Object.is equality
+
+- Expected
++ Received
+
+- Ada Lovelace
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:69:64
+     67|
+     68|   it('keeps tokens with spaces inside the braces', () => {
+     69|     expect(renderTaskTemplate('{{ record.name }}', vars, 200)).toBe('A…
+       |                                                                ^
+     70|   });
+     71| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > referencedTemplateKeys > returns the distinct keys of one scope
+AssertionError: expected [] to deeply equal [ 'a', 'b' ]
+
+- Expected
++ Received
+
+- [
+-   "a",
+-   "b",
+- ]
++ []
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:77:7
+     75|     expect(
+     76|       referencedTemplateKeys(['{{webhook.a}} {{webhook.b}}', '{{webhoo…
+     77|     ).toEqual(['a', 'b']);
+       |       ^
+     78|   });
+     79| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > fallbackTaskTitle / leadDisplayName > builds a non-empty fallback title
+AssertionError: expected '' to be 'Lead created – Lead' // Object.is equality
+
+- Expected
++ Received
+
+- Lead created – Lead
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:83:55
+     81| describe('fallbackTaskTitle / leadDisplayName', () => {
+     82|   it('builds a non-empty fallback title', () => {
+     83|     expect(fallbackTaskTitle('Lead created', 'Lead')).toBe('Lead creat…
+       |                                                       ^
+     84|     expect(fallbackTaskTitle('Scheduled rule')).toBe('Scheduled rule');
+     85|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > fallbackTaskTitle / leadDisplayName > names a lead by person, then company, never email
+AssertionError: expected '' to be 'Ada Lovelace' // Object.is equality
+
+- Expected
++ Received
+
+- Ada Lovelace
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:88:75
+     86|
+     87|   it('names a lead by person, then company, never email', () => {
+     88|     expect(leadDisplayName({ firstName: 'Ada', lastName: ' Lovelace ' …
+       |                                                                           ^
+     89|     expect(leadDisplayName({ firstName: null, lastName: '', company: '…
+     90|     expect(leadDisplayName({})).toBe('Lead');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > computeAutomationDueDate > uses the end of the UTC day N days later
+AssertionError: expected undefined to be '2026-10-20T23:59:59.000Z' // Object.is equality
+
+- Expected:
+"2026-10-20T23:59:59.000Z"
+
++ Received:
+undefined
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:108:68
+    106|
+    107|   it('uses the end of the UTC day N days later', () => {
+    108|     expect(computeAutomationDueDate(new Date(), 0)?.toISOString()).toB…
+       |                                                                    ^
+    109|     expect(computeAutomationDueDate(new Date(), 1)?.toISOString()).toB…
+    110|     expect(computeAutomationDueDate(new Date(), 365)?.toISOString()).t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > computeAutomationDueDate > is never earlier than now + 15 minutes
+AssertionError: expected undefined to be '2026-10-21T00:10:00.000Z' // Object.is equality
+
+- Expected:
+"2026-10-21T00:10:00.000Z"
+
++ Received:
+undefined
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:115:62
+    113|   it('is never earlier than now + 15 minutes', () => {
+    114|     const late = new Date('2026-10-20T23:55:00.000Z');
+    115|     expect(computeAutomationDueDate(late, 0)?.toISOString()).toBe('202…
+       |                                                              ^
+    116|   });
+    117|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > computeAutomationDueDate > uses the rule timezone for the calendar day
+AssertionError: expected undefined to be '2026-10-20T10:59:59.000Z' // Object.is equality
+
+- Expected:
+"2026-10-20T10:59:59.000Z"
+
++ Received:
+undefined
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:120:88
+    118|   it('uses the rule timezone for the calendar day', () => {
+    119|     // 10:00Z is 23:00 in Auckland (UTC+13 in October) → end of that l…
+    120|     expect(computeAutomationDueDate(new Date(), 0, 'Pacific/Auckland')…
+       |                                                                                        ^
+    121|       '2026-10-20T10:59:59.000Z'
+    122|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > computeAutomationDueDate > settles the offset across a DST change on the target day
+AssertionError: expected '1970-01-01T00:00:00.000Z' to be '2026-10-25T23:59:59.000Z' // Object.is equality
+
+Expected: "2026-10-25T23:59:59.000Z"
+Received: "1970-01-01T00:00:00.000Z"
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:130:71
+    128|   it('settles the offset across a DST change on the target day', () =>…
+    129|     // London leaves BST on 2026-10-25: end of that day is 23:59:59 GM…
+    130|     expect(endOfDayInTimeZone(NOW, 5, 'Europe/London').toISOString()).…
+       |                                                                       ^
+    131|   });
+    132| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > pickRoundRobinAssignee > rotates in pool order with the post-increment cursor
+AssertionError: expected [ null, null, null, null ] to deeply equal [ 'u3', 'u1', 'u2', 'u3' ]
+
+- Expected
++ Received
+
+  [
+-   "u3",
+-   "u1",
+-   "u2",
+-   "u3",
++   null,
++   null,
++   null,
++   null,
+  ]
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:138:70
+    136|
+    137|   it('rotates in pool order with the post-increment cursor', () => {
+    138|     expect([1, 2, 3, 4].map((c) => pickRoundRobinAssignee(pool, c))).t…
+       |                                                                      ^
+    139|   });
+    140|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > pickRoundRobinAssignee > handles non-positive cursors and empty pools
+AssertionError: expected null to be 'u2' // Object.is equality
+
+- Expected:
+"u2"
+
++ Received:
+null
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:142:45
+    140|
+    141|   it('handles non-positive cursors and empty pools', () => {
+    142|     expect(pickRoundRobinAssignee(pool, 0)).toBe('u2');
+       |                                             ^
+    143|     expect(pickRoundRobinAssignee(pool, -1)).toBe('u1');
+    144|     expect(pickRoundRobinAssignee([], 5)).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > canonicalRuleKey > differs by template, pool order and filter
+AssertionError: expected '' not to be '' // Object.is equality
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:177:84
+    175|   it('differs by template, pool order and filter', () => {
+    176|     const base = canonicalRuleKey(trigger, [create]);
+    177|     expect(canonicalRuleKey(trigger, [{ ...create, titleTemplate: 'Ema…
+       |                                                                                    ^
+    178|     expect(
+    179|       canonicalRuleKey(trigger, [create, { type: 'ASSIGN_ROUND_ROBIN',…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > canonicalRuleKey > is null for webhook rules
+AssertionError: expected '' to be null
+
+- Expected:
+null
+
++ Received:
+""
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:193:61
+    191|
+    192|   it('is null for webhook rules', () => {
+    193|     expect(canonicalRuleKey({ type: 'WEBHOOK' }, [create])).toBeNull();
+       |                                                             ^
+    194|   });
+    195| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > event catalogue > covers exactly the nine v1 events
+AssertionError: expected [ 'lead.created', …(8) ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "lead.created",
++   "lead.qualified",
++   "lead.converted",
++   "contact.created",
++   "opportunity.created",
++   "opportunity.stage_changed",
++   "opportunity.won",
++   "opportunity.lost",
++   "account.created",
++ ]
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:217:45
+    215|   it('covers exactly the nine v1 events', () => {
+    216|     expect(TASK_AUTOMATION_EVENTS.map((e) => e.eventType)).toEqual([..…
+    217|     expect(emitted.map((e) => e.eventType)).toEqual([...TASK_AUTOMATIO…
+       |                                             ^
+    218|   });
+    219|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > event catalogue > lead.created carries a string id under its catalogue id field
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > event catalogue > lead.qualified carries a string id under its catalogue id field
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > event catalogue > lead.converted carries a string id under its catalogue id field
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > event catalogue > contact.created carries a string id under its catalogue id field
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > event catalogue > opportunity.created carries a string id under its catalogue id field
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > event catalogue > opportunity.stage_changed carries a string id under its catalogue id field
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > event catalogue > opportunity.won carries a string id under its catalogue id field
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > event catalogue > opportunity.lost carries a string id under its catalogue id field
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > event catalogue > account.created carries a string id under its catalogue id field
+AssertionError: expected undefined to be defined
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:224:26
+    222|     (eventType, event) => {
+    223|       const definition = getTaskAutomationEvent(eventType);
+    224|       expect(definition).toBeDefined();
+       |                          ^
+    225|       const id = event.toPayload()[definition!.idField];
+    226|       expect(typeof id).toBe('string');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > event catalogue > declares postconditions, links and conversion skips
+AssertionError: expected undefined to deeply equal [ 'QUALIFIED', 'NEGOTIATING', …(1) ]
+
+- Expected:
+[
+  "QUALIFIED",
+  "NEGOTIATING",
+  "CONVERTED",
+]
+
++ Received:
+undefined
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:237:76
+    235|
+    236|   it('declares postconditions, links and conversion skips', () => {
+    237|     expect(getTaskAutomationEvent('lead.qualified')?.postcondition?.an…
+       |                                                                            ^
+    238|       'QUALIFIED',
+    239|       'NEGOTIATING',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > event catalogue > maps closing stage changes to won / lost
+AssertionError: expected null to be 'opportunity.won' // Object.is equality
+
+- Expected:
+"opportunity.won"
+
++ Received:
+null
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:251:85
+    249|
+    250|   it('maps closing stage changes to won / lost', () => {
+    251|     expect(effectiveTaskAutomationEvent('opportunity.stage_changed', '…
+       |                                                                                     ^
+    252|     expect(effectiveTaskAutomationEvent('opportunity.stage_changed', '…
+    253|     expect(effectiveTaskAutomationEvent('opportunity.stage_changed', '…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > roles, actions, outcomes, limits > keeps managers off webhook secrets
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:265:50
+    263|   it('keeps managers off webhook secrets', () => {
+    264|     expect(TASK_AUTOMATION_WEBHOOK_ADMIN_ROLES).not.toContain('MANAGER…
+    265|     expect(isTaskAutomationAdminRole('MANAGER')).toBe(true);
+       |                                                  ^
+    266|     expect(isTaskAutomationWebhookAdminRole('MANAGER')).toBe(false);
+    267|     expect(isTaskAutomationWebhookAdminRole('ADMIN')).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > roles, actions, outcomes, limits > orders actions with Create Task first
+AssertionError: expected undefined to be 'CREATE_TASK' // Object.is equality
+
+- Expected:
+"CREATE_TASK"
+
++ Received:
+undefined
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:273:45
+    271|
+    272|   it('orders actions with Create Task first', () => {
+    273|     expect(TASK_AUTOMATION_ACTION_TYPES[0]).toBe('CREATE_TASK');
+       |                                             ^
+    274|   });
+    275|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/30]⎯
+
+ FAIL  |domain| src/crm/task/automation/__tests__/task-automation-constants.test.ts > roles, actions, outcomes, limits > keeps the webhook body cap at 64 KB and the skew at 300 s
+AssertionError: expected undefined to be 65536 // Object.is equality
+
+- Expected:
+65536
+
++ Received:
+undefined
+
+ ❯ src/crm/task/automation/__tests__/task-automation-constants.test.ts:283:56
+    281|
+    282|   it('keeps the webhook body cap at 64 KB and the skew at 300 s', () =…
+    283|     expect(TASK_AUTOMATION_LIMITS.webhookBodyMaxBytes).toBe(65_536);
+       |                                                        ^
+    284|     expect(TASK_AUTOMATION_LIMITS.webhookSkewSeconds).toBe(300);
+    285|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/30]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  30 failed | 4 passed (34)
+   Start at  00:24:19
+   Duration  492ms (transform 127ms, setup 0ms, import 174ms, tests 31ms, environment 0ms)
+

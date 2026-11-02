@@ -9,7 +9,13 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { InMemoryLeadRepository } from '../InMemoryLeadRepository';
-import { Lead, Email, LeadId, LeadStatusConflictError } from '@intelliflow/domain';
+import {
+  Lead,
+  Email,
+  LeadId,
+  LeadIdentityChangedError,
+  LeadStatusConflictError,
+} from '@intelliflow/domain';
 
 describe('InMemoryLeadRepository', () => {
   let repository: InMemoryLeadRepository;
@@ -31,6 +37,20 @@ describe('InMemoryLeadRepository', () => {
   };
 
   describe('save()', () => {
+    it('writes only the score while the stored email still matches (PG-203 DSAR)', async () => {
+      const lead = createTestLead('john@example.com').value;
+      await repository.save(lead);
+      lead.updateScore(80, 0.9, 'v1');
+      lead.updateContactInfo({ title: 'Changed' });
+      await repository.save(lead, { scoreOnlyIfEmail: 'JOHN@example.com' });
+      const stored = await repository.findById(lead.id);
+      expect(stored?.score.value).toBe(80);
+      expect(stored?.title).toBeUndefined();
+      await expect(
+        repository.save(lead, { scoreOnlyIfEmail: 'someone-else@example.com' })
+      ).rejects.toBeInstanceOf(LeadIdentityChangedError);
+    });
+
     it('should save a new lead', async () => {
       const leadResult = createTestLead('john@example.com');
       const lead = leadResult.value;

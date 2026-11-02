@@ -1,0 +1,5 @@
+nodemailer@10.0.15 -> {}
+imapflow@2.2.6 -> {}
+sanitize-html@2.18.0 -> {}
+@types/nodemailer@8.0.2 -> {}
+@types/sanitize-html@2.16.2 -> {}

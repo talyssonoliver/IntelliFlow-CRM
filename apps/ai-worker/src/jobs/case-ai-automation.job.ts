@@ -11,6 +11,7 @@
 
 import type { Job } from 'bullmq';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 import { prisma } from '@intelliflow/db';
 import { generateCaseInsight } from '../case-insight.chain.js';
@@ -26,7 +27,7 @@ const logger = pino({
 export const CASE_AI_AUTOMATION_QUEUE = 'ai-case-ai-automation';
 
 export const CaseAiAutomationJobDataSchema = z.object({
-  tenantId: z.string().min(1),
+  tenantId: recordIdSchema,
   caseId: z.string().min(1),
   operation: z.enum([
     'summarization',

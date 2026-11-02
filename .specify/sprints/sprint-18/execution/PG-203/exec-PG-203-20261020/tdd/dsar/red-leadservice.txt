@@ -1,0 +1,66 @@
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203-dsar/packages/application
+
+ ❯ |application| src/services/__tests__/LeadService.restriction.test.ts (4 tests | 2 failed) 8ms
+     × refuses to score a restricted person without calling the AI service 5ms
+     × bulk scoring reports a restricted lead as failed and calls no AI for it 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |application| src/services/__tests__/LeadService.restriction.test.ts > LeadService.scoreLead and processing restrictions > refuses to score a restricted person without calling the AI service
+AssertionError: expected Error: stop after the AI call to be an instance of ProcessingRestrictedError
+ ❯ src/services/__tests__/LeadService.restriction.test.ts:60:26
+     58|     const result = await service.scoreLead(lead.id.value);
+     59|     expect(result.isFailure).toBe(true);
+     60|     expect(result.error).toBeInstanceOf(ProcessingRestrictedError);
+       |                          ^
+     61|     expect(restrictions.status).toHaveBeenCalledWith('tenant-1', 'ada@…
+     62|     expect(aiService.scoreLead).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |application| src/services/__tests__/LeadService.restriction.test.ts > LeadService.scoreLead and processing restrictions > bulk scoring reports a restricted lead as failed and calls no AI for it
+AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times
+
+Received:
+
+  1st vi.fn() call:
+
+    Array [
+      Object {
+        "company": undefined,
+        "email": "ada@example.invalid",
+        "firstName": "Ada",
+        "lastName": "Lovelace",
+        "phone": undefined,
+        "source": "WEBSITE",
+        "title": undefined,
+      },
+      Object {
+        "leadId": "0e881e74-8cf9-4937-a5a1-d8bf17e94ee0",
+        "tenantId": "tenant-1",
+      },
+    ]
+
+
+Number of calls: 1
+
+ ❯ src/services/__tests__/LeadService.restriction.test.ts:80:37
+     78|     const { service, lead, aiService } = setup(true);
+     79|     const result = await service.bulkScoreLeads([lead.id.value]);
+     80|     expect(aiService.scoreLead).not.toHaveBeenCalled();
+       |                                     ^
+     81|     expect(JSON.stringify(result)).toContain('Processing is restricted…
+     82|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  01:20:16
+   Duration  551ms (transform 250ms, setup 0ms, import 373ms, tests 8ms, environment 0ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203-dsar\packages\application:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/services/__tests__/LeadService.restriction.test.ts

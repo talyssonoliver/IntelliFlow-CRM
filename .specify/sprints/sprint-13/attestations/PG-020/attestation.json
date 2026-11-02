@@ -7,13 +7,13 @@
   "attestation_timestamp": "2026-03-01T00:15:00Z",
   "verdict": "COMPLETE",
   "artifact_hashes": {
-    "apps/web/src/app/(public)/reset-password/[token]/page.tsx": "2e5b8516a80a1e30eb98a65fc02e463672871a0ee2508b7c47ea4781a98c605a",
-    "apps/web/src/app/(public)/reset-password/[token]/ResetPasswordClient.tsx": "0fd42b33ab2b1b662d08e79481928231c01bc722e9bf0d045a5cf3778f69a0d2",
-    "apps/web/src/components/shared/password-reset.tsx": "c7acbd81e4b5e54985041a807665f9fb78aa9854ef5d2e336bbb7f3e998e35e5",
-    "apps/web/src/lib/shared/password-validation.ts": "eee777b7f28389207a0a3fd62f40cb52267a2ddfac4e4c407b8230b370346024",
-    "apps/web/src/app/(public)/reset-password/__tests__/page.test.tsx": "3d1ea5e215b789ddf139889ee54f934b162db917923868da6059c89ce89804d0",
-    "apps/web/src/app/(public)/reset-password/callback/page.tsx": "b25b4528f78c3ed45ab12c128848df921de825e01b43eba989a0b0a1b79f7012",
-    "apps/web/src/app/(public)/reset-password/callback/__tests__/page.test.tsx": "7f1e74c63f5b87c1a1c38a8c7094ef179bc30784a0c0fd5e383eba3714511d88"
+    "apps/web/src/app/(public)/reset-password/[token]/page.tsx": "sha256:2e5b8516a80a1e30eb98a65fc02e463672871a0ee2508b7c47ea4781a98c605a",
+    "apps/web/src/app/(public)/reset-password/[token]/ResetPasswordClient.tsx": "sha256:0fd42b33ab2b1b662d08e79481928231c01bc722e9bf0d045a5cf3778f69a0d2",
+    "apps/web/src/components/shared/password-reset.tsx": "sha256:c7acbd81e4b5e54985041a807665f9fb78aa9854ef5d2e336bbb7f3e998e35e5",
+    "apps/web/src/lib/shared/password-validation.ts": "sha256:eee777b7f28389207a0a3fd62f40cb52267a2ddfac4e4c407b8230b370346024",
+    "apps/web/src/app/(public)/reset-password/__tests__/page.test.tsx": "sha256:3d1ea5e215b789ddf139889ee54f934b162db917923868da6059c89ce89804d0",
+    "apps/web/src/app/(public)/reset-password/callback/page.tsx": "sha256:b25b4528f78c3ed45ab12c128848df921de825e01b43eba989a0b0a1b79f7012",
+    "apps/web/src/app/(public)/reset-password/callback/__tests__/page.test.tsx": "sha256:7f1e74c63f5b87c1a1c38a8c7094ef179bc30784a0c0fd5e383eba3714511d88"
   },
   "dependencies_verified": [
     "PG-019"

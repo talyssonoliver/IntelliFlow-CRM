@@ -1,7 +1,8 @@
 /**
  * Colour swatches for the shared 18-token allowlist (PG-197 territories, PG-198
- * approval policies). Static class strings so Tailwind keeps them; an unknown
- * stored token falls back to slate (the column is `string` in the API).
+ * approval policies, PG-201 / PG-208 settings tags). Static class strings so
+ * Tailwind keeps them; an unknown stored token falls back to slate (the column
+ * is `string` in the API).
  */
 import { ACCOUNT_TAG_COLOR_TOKENS, type AccountTagColorToken } from '@intelliflow/validators';
 
@@ -33,4 +34,10 @@ export function toColorToken(token: string): AccountTagColorToken {
 
 export function swatchClass(token: string): string {
   return COLOR_SWATCH_CLASSES[toColorToken(token)];
+}
+
+/** Display name of a token, e.g. "Teal"; unknown → "Slate". */
+export function colorLabel(token: string): string {
+  const t = toColorToken(token);
+  return t.charAt(0).toUpperCase() + t.slice(1);
 }

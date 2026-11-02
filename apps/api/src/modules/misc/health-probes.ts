@@ -11,6 +11,7 @@
 import { QUEUE_NAMES } from '@intelliflow/platform/queues';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { loadBullMQ } from '../../lib/load-bullmq';
+import { checkBackgroundJobsHeartbeat } from '../../background-jobs-heartbeat';
 import type { HealthProbes } from './health.service';
 
 /** Queues the API enqueues to, each of which needs a running consumer. */
@@ -102,7 +103,8 @@ function throttledErrorLog(label: string): (err: unknown) => void {
 
 /** Process-wide probes for the HTTP server. */
 export function getHealthProbes(): HealthProbes {
-  probes ??= buildHealthProbes({
+  if (probes) return probes;
+  const built = buildHealthProbes({
     createRedis: async (options) => {
       const IORedis = await import('ioredis');
       const RedisCtor = IORedis.default ?? IORedis;
@@ -122,5 +124,7 @@ export function getHealthProbes(): HealthProbes {
     },
     env: process.env,
   });
+  // Read on request only (never on a timer), so an idle api stays quiet.
+  probes = { ...built, backgroundJobs: () => checkBackgroundJobsHeartbeat() };
   return probes;
 }

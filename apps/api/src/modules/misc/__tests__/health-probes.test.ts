@@ -107,6 +107,52 @@ describe('getDetailedHealth with probes', () => {
   });
 });
 
+describe('getDetailedHealth background jobs heartbeat', () => {
+  it('is degraded (not an error) when no sweep has ticked, and says why', async () => {
+    const result = await getDetailedHealth({ prisma: db(true) }, undefined, {
+      backgroundJobs: async () => ({ status: 'degraded', message: 'No tick from approvalSweep' }),
+    });
+    expect(result.status).toBe('degraded');
+    expect(result.checks).toMatchObject({
+      backgroundJobs: { status: 'degraded', message: 'No tick from approvalSweep' },
+    });
+  });
+
+  it('stays healthy when the heartbeat is fresh or there is nothing to judge by', async () => {
+    for (const status of ['ok', 'unknown'] as const) {
+      const result = await getDetailedHealth({ prisma: db(true) }, undefined, {
+        backgroundJobs: async () => ({ status }),
+      });
+      expect(result.status).toBe('healthy');
+    }
+  });
+
+  it('treats a failing heartbeat read as unknown, not degraded', async () => {
+    const result = await getDetailedHealth({ prisma: db(true) }, undefined, {
+      backgroundJobs: () => Promise.reject(new Error('redis down')),
+    });
+    expect(result.status).toBe('healthy');
+    expect(result.checks).toMatchObject({
+      backgroundJobs: { status: 'unknown', message: 'redis down' },
+    });
+  });
+
+  it('treats a non-Error heartbeat failure as unknown', async () => {
+    const result = await getDetailedHealth({ prisma: db(true) }, undefined, {
+      backgroundJobs: () => Promise.reject('plain'),
+    });
+    expect(result.checks).toMatchObject({
+      backgroundJobs: { status: 'unknown', message: 'Unknown heartbeat error' },
+    });
+  });
+
+  it('is not read at all when the probe is absent (readiness never touches it)', async () => {
+    const backgroundJobs = vi.fn(async () => ({ status: 'ok' as const }));
+    await getReadinessHealth({ prisma: db(true) }, { backgroundJobs });
+    expect(backgroundJobs).not.toHaveBeenCalled();
+  });
+});
+
 describe('buildHealthProbes', () => {
   function deps(env: NodeJS.ProcessEnv) {
     const ping = vi.fn().mockResolvedValue('PONG');

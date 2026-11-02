@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203-dsar/apps/api
+
+
+ Test Files  3 passed (3)
+      Tests  88 passed (88)
+   Start at  01:03:15
+   Duration  2.36s (transform 1.82s, setup 2.11s, import 252ms, tests 1.55s, environment 0ms)
+

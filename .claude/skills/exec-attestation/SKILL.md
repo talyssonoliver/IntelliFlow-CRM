@@ -92,7 +92,7 @@ Recovery: `docs/runbooks/gate-4b-recovery.md`.
 | `gate_results` | MUST be an array of `{gate_id, passed, ...}`. NEVER an object dictionary. |
 | `context_acknowledgment.files_read[].sha256` | Use `sha256` key (NOT `hash`). Real 64-char hex. |
 | `verdict` | Must be `"COMPLETE"` to allow task completion |
-| `artifact_hashes` | Use this (NOT `files_created` or `files_modified`) |
+| `artifact_hashes` | Use this (NOT `files_created` or `files_modified`). Write each value as `sha256:<64 hex>`. A bare 64-hex value beside a path containing auth/secret/token/credential (`SecretField.tsx`, `oauth/...`) is flagged by GitGuardian and by the pre-commit secret scan. Already have bare hex? `tsx tools/scripts/format-attestation-hashes.ts <attestation.json>` rewrites it losslessly. |
 | `nav_wiring_confirmed` | REQUIRED `true` when `artifact_hashes` contains any `apps/web/src/app/**/page.tsx`. Verified at exec time by Gate 12 (`check-nav-wiring.mjs`). Guard 5 — PG-180 lesson. |
 | `lighthouse_waiver_approved_by` | REQUIRED when a Lighthouse KPI has `met: false` AND the sprint already has another such waiver. Value is the human name/email accepting the risk. Verified by Gate 13 (`check-lighthouse-waiver.mjs`). Guard 4 — PG-180/PG-189 precedent chain. |
 | provenance block (`spec_session_consensus`, `plan_reviewer_verdict`, `plan_reviewer_agent`, `plan_reviewer_marker`, `spec_path`, `plan_path`) | REQUIRED. `plan_reviewer_verdict` is an enum (`APPROVED`\|`APPROVED_WITH_CHANGES`\|`REJECTED`). `spec_path`/`plan_path` MUST be repo-relative. Verified post-write by `check-attestation-provenance.mjs` (AUTOMATION-003) which cross-checks the `plan_path` file for the `<!-- plan-reviewer: subagent -->` marker. |

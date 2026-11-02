@@ -1,0 +1,80 @@
+# PG-208 owner ruling 9 RED — 2026-10-21T14:21:41Z: tests written before the fixes (snapshot actions, off-period slot, exception failure notice)
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/apps/api
+
+ ❯ |api| src/modules/task/automation/__tests__/task-automation-engine.test.ts (54 tests | 3 failed | 51 skipped) 51ms
+     × consumes a slot that fell due while automation was off, without a run 26ms
+     × executes the actions snapshotted at admission, not a later edit of the rule 5ms
+     × notifies the rule owner when a run fails by an exception 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/modules/task/automation/__tests__/task-automation-engine.test.ts > enqueueDueSchedules > consumes a slot that fell due while automation was off, without a run
+AssertionError: expected 1 to be +0 // Object.is equality
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/modules/task/automation/__tests__/task-automation-engine.test.ts:452:46
+    450|       automationEnabledAt: new Date('2026-10-20T09:30:00.000Z'),
+    451|     });
+    452|     await expect(engine.enqueueDueSchedules()).resolves.toBe(0);
+       |                                              ^
+    453|     expect(store.runs).toHaveLength(0);
+    454|     expect(rule.nextRunAt?.toISOString()).toBe('2026-10-21T08:00:00.00…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |api| src/modules/task/automation/__tests__/task-automation-engine.test.ts > executePendingRuns > executes the actions snapshotted at admission, not a later edit of the rule
+AssertionError: expected [ 'After edit' ] to deeply equal [ 'Before edit' ]
+
+- Expected
++ Received
+
+  [
+-   "Before edit",
++   "After edit",
+  ]
+
+ ❯ src/modules/task/automation/__tests__/task-automation-engine.test.ts:683:41
+    681|     rule.actions = [createTask({ titleTemplate: 'After edit' })];
+    682|     await engine.executePendingRuns();
+    683|     expect(created.map((c) => c.title)).toEqual(['Before edit']);
+       |                                         ^
+    684|   });
+    685|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |api| src/modules/task/automation/__tests__/task-automation-engine.test.ts > executePendingRuns > notifies the rule owner when a run fails by an exception
+AssertionError: expected [] to deeply equal [ ObjectContaining{…} ]
+
+- Expected
++ Received
+
+- [
+-   ObjectContaining {
+-     "userId": "creator",
+-   },
+- ]
++ []
+
+ ❯ src/modules/task/automation/__tests__/task-automation-engine.test.ts:698:22
+    696|     const run = await fire(rule);
+    697|     expect(run).toMatchObject({ status: 'FAILED', errorCode: 'internal…
+    698|     expect(notified).toEqual([expect.objectContaining({ userId: 'creat…
+       |                      ^
+    699|   });
+    700|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 51 skipped (54)
+   Start at  15:21:43
+   Duration  1.49s (transform 639ms, setup 744ms, import 501ms, tests 51ms, environment 0ms)
+

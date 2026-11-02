@@ -1,0 +1,18 @@
+# 2026-10-20T23:31:57Z
+# 91c6477ac5cbe5f21cf81c522b36ec57bad849eb
+# node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-203 -- pnpm --filter @intelliflow/application test
+[test-slot] slot2 taken for PG-203@feat/pg-203-event-types: pnpm --filter @intelliflow/application test
+
+> @intelliflow/application@0.1.0 test C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\packages\application
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/application
+
+
+ Test Files  59 passed (59)
+      Tests  1501 passed (1501)
+   Start at  00:31:59
+   Duration  11.70s (transform 2.57s, setup 0ms, import 10.41s, tests 7.85s, environment 6ms)
+
+# exit=0

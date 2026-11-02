@@ -534,6 +534,60 @@ describe('Home Router Coverage Tests (PG-163)', () => {
       const result = await uuidCaller.getAIInsights();
       expect(result.insights.length).toBeGreaterThan(0);
     });
+
+    // #1074: real tenants and users carry cuid ids (@default(cuid())); a uuid-only
+    // guard dropped every real tenant's insight job.
+    const cuidCaller = (tenantId: string) =>
+      homeRouter.createCaller(
+        createTestContext({
+          user: {
+            userId: 'cmhbx3k2p0001l8086e4f5g6h',
+            email: 'test@example.com',
+            role: 'USER',
+            tenantId,
+            timezone: 'UTC',
+            emailVerified: true,
+          },
+          tenant: {
+            tenantId,
+            tenantType: 'user' as const,
+            userId: 'cmhbx3k2p0001l8086e4f5g6h',
+            role: 'USER',
+            canAccessAllTenantData: false,
+          },
+        })
+      );
+    const emptyInsightSources = () => {
+      (prismaMock.aIInsight as any).findMany.mockResolvedValue([]);
+      prismaMock.opportunity.findMany.mockResolvedValue([]);
+      prismaMock.lead.findMany.mockResolvedValue([]);
+      prismaMock.task.count.mockResolvedValue(2);
+      prismaMock.contact.findMany.mockResolvedValue([]);
+    };
+
+    it('enqueues insight generation for a cuid tenant (#1074)', async () => {
+      emptyInsightSources();
+      await cuidCaller('cmhbx3k2p0000l8086a1b2c3d').getAIInsights();
+      await vi.waitFor(
+        () => {
+          expect(mockQueueAdd).toHaveBeenCalledWith(
+            expect.any(String),
+            expect.objectContaining({ tenantId: 'cmhbx3k2p0000l8086a1b2c3d' }),
+            expect.anything()
+          );
+        },
+        { timeout: 5000, interval: 50 }
+      );
+    });
+
+    it('does not enqueue insight generation for an unsafe tenant id (#1074)', async () => {
+      emptyInsightSources();
+      mockQueueAdd.mockClear();
+      await cuidCaller('../tenant').getAIInsights();
+      // Give the fire-and-forget path the same window the positive case gets.
+      await new Promise((r) => setTimeout(r, 200));
+      expect(mockQueueAdd).not.toHaveBeenCalled();
+    });
   });
 
   // ===========================================================================

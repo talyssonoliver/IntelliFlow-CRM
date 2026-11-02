@@ -17,11 +17,11 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/(public)/press/page.tsx": "fab8a57606e7ba232ef82ea52f368a054e09b2584f6f72fbdc7d9ebaa2c9f097",
-    "apps/web/src/data/press-releases.json": "e3d4ad7fc3ebe4cfc47b2589855efd8e1d7f1a762335bfc854e4f333f76e4076",
-    ".specify/sprints/sprint-11/attestations/PG-007/attestation.json": "7f35e55b8b7177f9e4c36cae38bee1175a52016f427436afe9fa9f5b446f8fc6",
-    "docs/planning/adr/ADR-020-public-site-auth.md": "bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
-    "docs/planning/prd-public-site-auth.md": "a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
+    "apps/web/src/app/(public)/press/page.tsx": "sha256:fab8a57606e7ba232ef82ea52f368a054e09b2584f6f72fbdc7d9ebaa2c9f097",
+    "apps/web/src/data/press-releases.json": "sha256:e3d4ad7fc3ebe4cfc47b2589855efd8e1d7f1a762335bfc854e4f333f76e4076",
+    ".specify/sprints/sprint-11/attestations/PG-007/attestation.json": "sha256:7f35e55b8b7177f9e4c36cae38bee1175a52016f427436afe9fa9f5b446f8fc6",
+    "docs/planning/adr/ADR-020-public-site-auth.md": "sha256:bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
+    "docs/planning/prd-public-site-auth.md": "sha256:a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
   },
   "validation_results": [
     {

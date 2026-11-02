@@ -1,0 +1,29 @@
+[test-slot] slot1 taken for PG-203@feat/pg-203-event-types: pnpm run lint
+
+> intelliflow-crm@0.1.0 lint C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203
+> turbo run lint
+
+• turbo 2.9.16
+
+   • Packages in scope: @intelliflow/adapters, @intelliflow/ai, @intelliflow/ai-worker, @intelliflow/api, @intelliflow/api-client, @intelliflow/application, @intelliflow/db, @intelliflow/domain, @intelliflow/events-worker, @intelliflow/ingestion-worker, @intelliflow/observability, @intelliflow/partner-sdk, @intelliflow/plan-linter, @intelliflow/platform, @intelliflow/project-tracker, @intelliflow/sdk, @intelliflow/search, @intelliflow/test-fixtures, @intelliflow/typescript-config, @intelliflow/ui, @intelliflow/validators, @intelliflow/web, @intelliflow/webhooks, @intelliflow/worker-shared, @intelliflow/workers
+   • Running lint in 25 packages
+   • Remote caching disabled, using shared worktree cache
+
+@intelliflow/partner-sdk:build: cache hit, suppressing logs 307ba97d2562e33f
+@intelliflow/domain:build: cache hit, suppressing logs 3d60220c5db68fed
+@intelliflow/observability:build: cache hit, suppressing logs a86bb72cab403fd4
+@intelliflow/webhooks:build: cache hit, suppressing logs 562522d3f9076383
+@intelliflow/db:build: cache hit, suppressing logs da0d664d303fbbec
+@intelliflow/validators:build: cache hit, suppressing logs 8885de3adf056065
+@intelliflow/application:build: cache hit, suppressing logs 9c31064ddd5699ae
+@intelliflow/platform:build: cache hit, suppressing logs 48c1f6d013b57398
+@intelliflow/worker-shared:build: cache hit, suppressing logs 4bd6d221eda57321
+@intelliflow/adapters:build: cache hit, suppressing logs 99ac5fbead7d556d
+@intelliflow/ai-worker:build: cache hit, suppressing logs c7df9424cbb86c9e
+@intelliflow/api:build: cache hit, suppressing logs 196b5ef5f14152a4
+@intelliflow/api-client:build: cache hit, suppressing logs 740ecd920a03499e
+
+ Tasks:    36 successful, 36 total
+Cached:    18 cached, 36 total
+  Time:    26.742s 
+

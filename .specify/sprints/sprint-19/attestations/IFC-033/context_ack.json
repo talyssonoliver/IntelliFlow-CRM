@@ -1,34 +1,97 @@
 {
   "task_id": "IFC-033",
+  "run_id": "run-20261022-reopen-prod",
   "title": "PHASE-005: Load Testing with k6",
   "sprint": 19,
-  "acknowledged_by": "Claude Opus 4.8 — autonomous IFC-033 build (STOA-Quality lens)",
-  "acknowledged_at": "2026-07-24T11:25:00Z",
+  "acknowledged_by": "Claude Code /exec (IFC-033 lane, runner Aurora)",
+  "created_at": "2026-10-23T00:47:06.641Z",
+  "acknowledged_at": "2026-10-23T00:47:06.641Z",
+  "note": "Re-acknowledged for the 2026-10-22 reopen session (#795). sha256 values are of the files as read in this session; the 2026-07-24 ack listed paths only and is superseded. The 5 FILE: prerequisites of the CSV row are the first five entries.",
+  "previous_ack": {
+    "acknowledged_at": "2026-07-24T11:25:00Z",
+    "files_read_count": 16
+  },
   "files_read": [
-    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
-    "docs/planning/sprint-19-rebaseline.md",
-    "docs/planning/sprint-19-critical-path.md",
-    "docs/planning/sprint-19-risk-register.md",
-    "docs/architecture/adr/ADR-018-performance-load-testing.md",
-    "docs/operations/runbooks/load-testing-local.md",
-    "tools/scripts/k6/mvp-load-test.js",
-    "tools/scripts/k6/authenticated-load-test.js",
-    "apps/api/src/http-server.ts",
-    "apps/api/src/context.ts",
-    "apps/api/src/trpc.ts",
-    "apps/api/src/middleware/rate-limit.ts",
-    "apps/api/src/modules/lead/lead.router.ts",
-    "packages/validators/src/lead.ts",
-    "infra/monitoring/docker-compose.monitoring.yml",
-    ".github/workflows/performance-gate.yml"
+    {
+      "path": ".specify/memory/Framework.md",
+      "sha256": "62bfcd54fccbfcb5dcf3a67b4811d638371191fa1c51d11ddd8218be6f5e26ad"
+    },
+    {
+      "path": "audit-matrix.yml",
+      "sha256": "bff47a6dd151d7ee3b173d9f47367687237102f4640e49212dac9addf7e0a7ff"
+    },
+    {
+      "path": "docs/development/tdd-guidelines.md",
+      "sha256": "6cd548dae2bf569f9041c3f9743d7b4d9d93cbb29b99f70b2d5a758a179780ff"
+    },
+    {
+      "path": "infra/monitoring/routing-rules-config.yaml",
+      "sha256": "1dc03fb4c5dead1a69b6056bbd1a18b6f387af0d32675eafb75c2cc8506f2eb9"
+    },
+    {
+      "path": "artifacts/misc/otel-collector-config.yaml",
+      "sha256": "e232d011a8e6d7634538830b8f8dcdce3bf5cec296997566c192370d99218976"
+    },
+    {
+      "path": ".specify/sprints/sprint-19/specifications/IFC-033-spec.md",
+      "sha256": "2560746f293eb52ba38ed3255c69537c8b3718d0626bdde7843c40252ab5e7be"
+    },
+    {
+      "path": ".specify/sprints/sprint-19/planning/IFC-033-plan.md",
+      "sha256": "1650dc76020b65093423a0d2912db414a8fed117526d22cd9ec3ad0ae5b7f081"
+    },
+    {
+      "path": "docs/architecture/adr/ADR-017-workflow-reliability.md",
+      "sha256": "f81f8c45ef75688a9359c706ecbdfdf97d14d1b80ee836765a358c8b709e9e91"
+    },
+    {
+      "path": "docs/operations/sprint-18-orchestrator-prompt.md",
+      "sha256": "85cb2216c56bd4640d2c5bfe7fdd30b1016911c2082fce1de6f677ee254105ab"
+    },
+    {
+      "path": "tools/scripts/k6/ifc-033-critical-path.js",
+      "sha256": "aaf898558c8ac0c7f5f73f7252e25047e70e15bc926b992024a24e2237220dfd"
+    },
+    {
+      "path": "tools/scripts/k6/run-ifc-033-load-test.mjs",
+      "sha256": "a50f8fbb4ba0f2e5285cd756c1e36d8bb0b9ff951969e03f4b54016e3571a2dc"
+    },
+    {
+      "path": "tools/scripts/k6/get-auth-token.mjs",
+      "sha256": "8de6b7a85712e0226f49b6a2760b1916e6f2ecdafb5cc2cb07dc13925bab6721"
+    },
+    {
+      "path": "apps/api/src/modules/lead/lead.router.ts",
+      "sha256": "577ac757711177986d30f680619aece3b013bd82b45fcd4268e547a3083cd264"
+    },
+    {
+      "path": "apps/ai-worker/src/lib/feature-flags.ts",
+      "sha256": "ac61899ee48c9f67fa8c8a1faa99e5520639f44db9a25fdad06a749df0dcc47f"
+    },
+    {
+      "path": "apps/ai-worker/src/jobs/scoring.job.ts",
+      "sha256": "0cb498a8a7c090aad31330b8364c1ac384ad1f789d17f4623b75ae55bee1bb04"
+    },
+    {
+      "path": "apps/api/src/modules/auth/auth.router.ts",
+      "sha256": "242c2c35dd4eb149e0b0eafa5663aa613f560c32bf20f7be70507b84a0e7e5c3"
+    },
+    {
+      "path": "packages/validators/src/auth.ts",
+      "sha256": "2f4bf21cea3483971c895d20f1091642953169a9ac77e0de99cff5e5991677a8"
+    },
+    {
+      "path": "docs/shared/bottleneck-analysis.md",
+      "sha256": "87ebad9fc931477082f09b236805bedbc18e4f218b3dbc9cc6ec9f339386aa96"
+    }
   ],
   "invariants_acknowledged": [
-    "REAL EVIDENCE (RISK-S19-02): the deliverables are captured from an ACTUAL k6 run against a live target — no template report. load-test-report.html is a k6 web-dashboard export with real run timestamps; grafana-load-test.png is a Grafana screenshot over Prometheus remote-write; ifc-033-load-summary.json is emitted by the script's handleSummary. p95=11.6ms, error=0%, 1081 leads (~21,617/hour), 180 atomic conversions.",
-    "PROD-SAFE TARGET: the run hits a LOCAL apps/api (:4000) authenticated via the sanctioned dev-auth fallback (ALLOW_DEV_AUTH_FALLBACK=true → seeded Sarah Johnson, tenant Default Organization) against the LOCAL test DB (intelliflow_test, :5433). It NEVER touches prod Supabase — the runbook explicitly forbids load-testing prod infra.",
-    "DDD-001/002 ATOMIC PATH EXERCISED: the conversion scenario drives lead.convertToDeal — the transactionally-atomic lead→contact+account+opportunity write hardened in #621 — 180 real conversions, 0 failures, p95 ~8-12ms under concurrent ingestion.",
-    "BOTTLENECK IDENTIFIED (KPI): the binding constraint under single-user synthetic load is the per-user AUTHENTICATED rate-limit tier (1,000 req/60s, keyed by userId — rate-limit.ts:45). Driving one dev-auth user at ~26 req/s drew a uniform 36% HTTP 429; this is a harness artifact (all VUs share one userId), not a system ceiling. Real 5,000 leads/hour (1.4/s) is far below the cap; the canonical run stays within one user's budget and passes clean. Distributed multi-user headroom is IFC-047 (Sprint 22).",
-    "RLS VERIFIED SEPARATELY: tenant isolation is proven at the DB layer (non-superuser role rls_probe + app.current_tenant_id GUC → own=18, foreign=0) rather than in the perf run, because the local test DB connects as the postgres SUPERUSER which bypasses RLS by design. Policy tenant_isolation_leads is ENABLEd on leads.",
-    "ADR-018 BUDGET, NOT IFC-047: validated against the documented MVP budget (>=5,000 leads/hour, p95<200ms, err<0.1%). The aspirational 1,000-VU / p99<100ms target is explicitly IFC-047 (k6 Cloud), out of scope here.",
-    "DEPS SATISFIED: IFC-030 (Completed S17) and IFC-032 (Completed S18) — the critical path IFC-033→IFC-034 has no external blocker. IFC-033 gates IFC-034 (Gate-3 £3000 review), which is a HUMAN decision gate downstream of this task."
+    "Evidence must come from a real k6 execution with real timestamps; no template report (RISK-S19-02, GATE:real-benchmark-data).",
+    "ADR-017 §4 / ADR-018 budget: >= 5,000 leads/hour, p95 < 200 ms, error rate < 0.1 %; k6 thresholds enforce it in-script and the result is reported as measured, never rounded into a pass.",
+    "Production is touched only on explicit owner rulings: a dedicated tenant, all writes through the deployed API, never the database directly, synthetic data identifiable and not deleted without the owner.",
+    "No credential (real or fake-shaped) in any committed file or commit message; live tokens stay in gitignored .env.k6.local.",
+    "DATABASE_URL in .env.local is production Supabase and is never used by tests; local tests use the :5433 test DB.",
+    "Never bypass pre-ship, the git-destructive guard or the secret scan; at most one test process at a time through the slot wrapper.",
+    "Sprint_plan.csv is the single source of truth; status flips go through tools/scripts/flip-task-status.mjs, never hand edits to derived files."
   ]
 }

@@ -511,6 +511,74 @@ describe('fieldEncryptionExtension — WebhookEndpoint.secret', () => {
 });
 
 // ---------------------------------------------------------------------------
+// 7b. TaskAutomationRule webhook secrets (PG-208)
+// ---------------------------------------------------------------------------
+
+describe('fieldEncryptionExtension — TaskAutomationRule webhook secrets', () => {
+  function ops(key: Buffer): Record<string, Function> {
+    const ext = fieldEncryptionExtension({ key }) as unknown as Record<string, unknown>;
+    const query = ext['query'] as Record<string, unknown>;
+    return query['taskAutomationRule'] as Record<string, Function>;
+  }
+
+  it('encrypts both secrets on create and leaves other fields alone', async () => {
+    const key = makeKey();
+    const current = randomBytes(32).toString('hex');
+    const previous = randomBytes(32).toString('hex');
+    let captured: Record<string, unknown> = {};
+    await ops(key)['create']!({
+      model: 'TaskAutomationRule',
+      operation: 'create',
+      args: { data: { webhookSecret: current, webhookSecretPrevious: previous, name: 'Rule' } },
+      query: vi.fn(async (args: Record<string, unknown>) => {
+        captured = args;
+        return {};
+      }),
+    });
+    const data = captured['data'] as Record<string, unknown>;
+    expect(isEncrypted(data['webhookSecret'] as string)).toBe(true);
+    expect(isEncrypted(data['webhookSecretPrevious'] as string)).toBe(true);
+    expect(data['webhookSecret']).not.toContain(current);
+    expect(data['name']).toBe('Rule');
+  });
+
+  it('encrypts on update and updateMany', async () => {
+    const key = makeKey();
+    for (const operation of ['update', 'updateMany']) {
+      let captured: Record<string, unknown> = {};
+      await ops(key)[operation]!({
+        model: 'TaskAutomationRule',
+        operation,
+        args: { where: { id: 'r1' }, data: { webhookSecret: randomBytes(32).toString('hex') } },
+        query: vi.fn(async (args: Record<string, unknown>) => {
+          captured = args;
+          return {};
+        }),
+      });
+      const data = captured['data'] as Record<string, unknown>;
+      expect(isEncrypted(data['webhookSecret'] as string)).toBe(true);
+    }
+  });
+
+  it('decrypts on findUnique and passes a null previous secret through', async () => {
+    const key = makeKey();
+    const secret = randomBytes(32).toString('hex');
+    const result = (await ops(key)['findUnique']!({
+      model: 'TaskAutomationRule',
+      operation: 'findUnique',
+      args: { where: { webhookTokenHash: 'h'.repeat(64) } },
+      query: vi.fn(async () => ({
+        id: 'r1',
+        webhookSecret: encryptField(secret, key),
+        webhookSecretPrevious: null,
+      })),
+    })) as Record<string, unknown>;
+    expect(result['webhookSecret']).toBe(secret);
+    expect(result['webhookSecretPrevious']).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
 // 8. Full roundtrip via mock query layer
 //    Simulates: plaintext write → encrypted DB → plaintext read
 // ---------------------------------------------------------------------------

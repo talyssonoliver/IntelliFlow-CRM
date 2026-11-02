@@ -1,24 +1,24 @@
 {
   "task": "IFC-033",
-  "generatedAt": "2026-07-24T10:15:37.194Z",
-  "target": "http://localhost:4000",
-  "durationSeconds": 180,
+  "generatedAt": "2026-10-22T23:08:52.894Z",
+  "target": "https://api-production-e9c1.up.railway.app",
+  "durationSeconds": 123,
   "budget": {
     "throughputPerHour": 5000,
     "p95Ms": 200,
     "errorRatePct": 0.1
   },
   "achieved": {
-    "leadsCreated": 1081,
-    "leadsPerHour": 21617,
-    "dealsConverted": 180,
-    "p95Ms": 11.6,
+    "leadsCreated": 185,
+    "leadsPerHour": 5435,
+    "dealsConverted": 20,
+    "p95Ms": 1137.4,
     "errorRatePct": 0,
-    "totalRequests": 2343
+    "totalRequests": 391
   },
   "pass": {
     "throughput": true,
-    "p95": true,
+    "p95": false,
     "errorRate": true
   }
 }

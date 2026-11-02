@@ -1,0 +1,2 @@
+[nav-wiring] Checking PG-207 (sprint 18) — C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-207\.specify\sprints\sprint-18\planning\PG-207-plan.md
+[nav-wiring] OK — plan does not create any page.tsx under apps/web/src/app/.

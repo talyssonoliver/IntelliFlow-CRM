@@ -16,6 +16,7 @@
  */
 
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { BaseAgent, AgentTask, AgentResult } from './base.agent';
 import { ensurePromptBudget } from '../utils/prompt-budget.js';
 import { replayConversation } from '../utils/conversation-replay.js';
@@ -54,9 +55,9 @@ const logger = pino({
  */
 export const nbaContextSchema = z.object({
   entityType: z.enum(['lead', 'opportunity', 'contact']),
-  entityId: z.uuid(),
-  tenantId: z.uuid(),
-  userId: z.uuid(),
+  entityId: recordIdSchema,
+  tenantId: recordIdSchema,
+  userId: recordIdSchema,
 
   // Entity data
   name: z.string().optional(),

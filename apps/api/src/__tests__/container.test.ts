@@ -13,6 +13,14 @@
 import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import type { Container } from '../container.js';
 
+// PG-203: constructor arguments, to prove the real restriction adapter reaches LeadService
+// and the DSAR service gets its adapters (a missing port would fail open).
+const wiring = vi.hoisted(() => ({
+  leadServiceArgs: [] as unknown[],
+  contactServiceArgs: [] as unknown[],
+  dsarServiceDeps: null as Record<string, unknown> | null,
+}));
+
 // Mock PrismaClient as a class constructor
 const mockPrismaInstance = {
   $connect: vi.fn(),
@@ -40,6 +48,21 @@ vi.mock('@intelliflow/db', () => {
 
 // All adapter/service mocks must be constructable (source uses `new X(...)`)
 vi.mock('@intelliflow/adapters', () => ({
+  PrismaDsarRepository: class {
+    constructor() {
+      return { name: 'dsarRepo', adminEmails: async () => [] };
+    }
+  },
+  PrismaProcessingRestrictionRepository: class {
+    constructor() {
+      return { name: 'processingRestrictionRepo' };
+    }
+  },
+  PrismaSubjectDataRepository: class {
+    constructor() {
+      return { name: 'subjectDataRepo' };
+    }
+  },
   PrismaLeadRepository: class {
     constructor() {
       return { name: 'leadRepo' };
@@ -159,6 +182,22 @@ vi.mock('@intelliflow/adapters', () => ({
   NoOpAVScanner: class {
     constructor() {
       return { name: 'avScanner' };
+    }
+  },
+  // PG-207 mailbox transports (mailbox-transport.ts builds them at container init)
+  SmtpMailboxTransport: class {
+    constructor() {
+      return { name: 'smtpTransport' };
+    }
+  },
+  ImapBounceReader: class {
+    constructor() {
+      return { name: 'imapReader' };
+    }
+  },
+  OAuthMailboxClient: class {
+    constructor() {
+      return { name: 'oauthClient' };
     }
   },
   MockNotificationServiceAdapter: class {
@@ -285,12 +324,20 @@ vi.mock('@intelliflow/platform/feature-flags', () => ({
 
 vi.mock('@intelliflow/application', () => ({
   LeadService: class {
-    constructor() {
+    constructor(...args: unknown[]) {
+      wiring.leadServiceArgs = args;
       return { name: 'leadService' };
     }
   },
+  DataSubjectRequestService: class {
+    constructor(deps: Record<string, unknown>) {
+      wiring.dsarServiceDeps = deps;
+      return { name: 'dataSubjectRequestService' };
+    }
+  },
   ContactService: class {
-    constructor() {
+    constructor(...args: unknown[]) {
+      wiring.contactServiceArgs = args;
       return { name: 'contactService' };
     }
   },
@@ -538,6 +585,25 @@ describe('Container', () => {
     expect(container.adapters.avScanner).toBeDefined();
   });
 
+  it('should wire the PG-207 mailbox transports (SMTP, IMAP, OAuth) into adapters', () => {
+    const transports = container.adapters.mailboxTransports;
+    expect(transports.smtp).toEqual({ name: 'smtpTransport' });
+    expect(transports.imap).toEqual({ name: 'imapReader' });
+    expect(typeof transports.oauth).toBe('function');
+    expect(transports.oauthConfigured).toEqual({
+      GMAIL: Boolean(
+        process.env.EMAIL_OAUTH_GOOGLE_CLIENT_ID &&
+        process.env.EMAIL_OAUTH_GOOGLE_CLIENT_SECRET &&
+        process.env.EMAIL_OAUTH_REDIRECT_URI
+      ),
+      MICROSOFT: Boolean(
+        process.env.EMAIL_OAUTH_MICROSOFT_CLIENT_ID &&
+        process.env.EMAIL_OAUTH_MICROSOFT_CLIENT_SECRET &&
+        process.env.EMAIL_OAUTH_REDIRECT_URI
+      ),
+    });
+  });
+
   describe('container.get()', () => {
     it('should return a service by name', () => {
       const leadService = container.get('leadService');
@@ -625,6 +691,7 @@ describe('Container', () => {
     // Catches the class of bug found in IFC-086 (4 services never instantiated).
     const EXPECTED_TOP_LEVEL_KEYS = [
       'leadService',
+      'dataSubjectRequestService',
       'contactService',
       'accountService',
       'opportunityService',
@@ -692,6 +759,9 @@ describe('Container', () => {
         'notificationPreferenceRepository',
         'experimentRepository',
         'appointmentRepository',
+        'dsarRepository',
+        'processingRestrictionRepository',
+        'subjectDataRepository',
         'quotaRepository',
         'eventBus',
         'aiService',
@@ -709,6 +779,23 @@ describe('Container', () => {
           `container.adapters.${key} must be defined`
         ).toBeDefined();
       }
+    });
+
+    it('injects the real processing-restriction adapter into LeadService (PG-203)', () => {
+      // A LeadService built without it would never refuse to score a restricted person.
+      expect(wiring.leadServiceArgs[6]).toEqual({ name: 'processingRestrictionRepo' });
+      // ...and into ContactService, so a restriction follows an email change.
+      expect(wiring.contactServiceArgs[4]).toEqual({ name: 'processingRestrictionRepo' });
+    });
+
+    it('wires the DSAR service to its adapters, token port and email notifier (PG-203)', () => {
+      const deps = wiring.dsarServiceDeps!;
+      expect(deps.repo).toEqual(expect.objectContaining({ name: 'dsarRepo' }));
+      expect(deps.subjectData).toEqual({ name: 'subjectDataRepo' });
+      expect(deps.restrictions).toEqual({ name: 'processingRestrictionRepo' });
+      expect(typeof (deps.notifications as { send: unknown }).send).toBe('function');
+      expect(typeof (deps.tokens as { issue: unknown }).issue).toBe('function');
+      expect((deps.appUrl as () => string)()).toMatch(/^https?:\/\//);
     });
 
     it('should have all security services defined', () => {

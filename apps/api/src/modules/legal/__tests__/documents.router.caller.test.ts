@@ -356,7 +356,7 @@ describe('Documents Router - Caller Tests', () => {
 
       const result = await caller.list({ caseId: TEST_UUIDS.account1 });
 
-      expect(mockRepo.findByCaseId).toHaveBeenCalledWith(TEST_UUIDS.account1);
+      expect(mockRepo.findByCaseId).toHaveBeenCalledWith(TEST_UUIDS.account1, TEST_UUIDS.tenant);
       expect(result.data).toBeDefined();
     });
 

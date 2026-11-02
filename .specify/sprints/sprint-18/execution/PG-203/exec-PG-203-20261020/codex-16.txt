@@ -1,0 +1,31 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 98 files total
+[codex-review] in scope : 70 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T08:44:22.143Z
+Base ref  : origin/main
+Files in scope : 70
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/web/src/app/calendar/event-types/components/EventTypeDialog.tsx:245-250 — draft-reset-on-parent-render
+    Issue    : The dialog discards entered values whenever its parent rerenders, including when a save request starts or fails.
+    Evidence : The effect calls `setDraft(draftFrom(eventType, defaultHost))` and depends on `defaultHost`, while EventTypesContent recreates that object on every render with `auth.user ? { id: auth.user.id, name: auth.user.name } : null`. Mutation state changes rerender that parent, so submitting a valid draft resets it before the response arrives; a rejected save leaves the user with an empty create form or the original edit values.
+    Fix      : Depend on stable host primitives or memoize defaultHost, and initialize the draft only when opening the dialog or switching the edited record.
+    Fingerprint: 0bdc0c4b2950c7c4749852513fa6e09abb65b4158523d66e22bf95a4fc8bc6ea
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

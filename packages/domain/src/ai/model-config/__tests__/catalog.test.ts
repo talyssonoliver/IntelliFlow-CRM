@@ -31,7 +31,18 @@ describe('MODEL_CATALOG (PG-199)', () => {
       ['nomic-embed-text', 'embedding', 0, 0],
       ['text-embedding-3-small', 'embedding', 20, 0],
       ['gemini-embedding-001', 'embedding', 150, 0],
+      ['nvidia/nemotron-3-embed-1b:free', 'embedding', 0, 0],
     ]);
+  });
+
+  it('lists the free OpenRouter embedding model at its only size, 2048 (gh #1108)', () => {
+    const entry = getCatalogEntry('nvidia/nemotron-3-embed-1b:free');
+    expect(entry).toMatchObject({
+      kind: 'embedding',
+      purposes: ['rag'],
+      pricingKey: 'nvidia/nemotron-3-embed-1b:free',
+      dimensions: 2048,
+    });
   });
 
   it('has unique ids, integer non-negative prices and at least one purpose each', () => {

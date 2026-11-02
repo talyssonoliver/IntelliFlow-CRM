@@ -291,7 +291,7 @@ complete**, but several critical routers are **missing or incomplete**.
 
 ```
     ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
-    ║  AI MONITORING (Model Drift, Latency, Quality)                            ✅ COMPLETE    ║
+    ║  AI MONITORING (Model Drift, Latency, Quality)                            ⏳ NEEDS HUMAN ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
                               ┌─────────────────────────────────────────┐
@@ -304,10 +304,10 @@ complete**, but several critical routers are **missing or incomplete**.
                               │  - ROI tracking                         │
                               │                                         │
                               │  Dashboards:                            │
-                              │  - infra/monitoring/ai-grafana.json     │
+                              │  - grafana/cloud/dashboard-ai-models    │
                               │                                         │
-                              │  Status: COMPLETED ✅                   │
-                              │  Sprint: 10                             │
+                              │  Status: NEEDS HUMAN (prod unverified)  │
+                              │  Sprint: 10 → 18                        │
                               └─────────────────────────────────────────┘
 ```
 

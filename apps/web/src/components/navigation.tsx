@@ -32,6 +32,10 @@ const PUBLIC_ROUTES = [
   '/logout',
   '/mfa',
   '/sso',
+  // PG-203: the public booking page shows no app bar, even to a signed-in staff member.
+  '/book/',
+  // PG-203 DSAR: the data request pages, likewise.
+  '/dsar/',
 ];
 
 /**

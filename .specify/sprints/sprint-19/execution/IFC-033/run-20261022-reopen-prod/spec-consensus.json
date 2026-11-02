@@ -1,0 +1,32 @@
+{
+  "task_id": "IFC-033",
+  "subject": "Spec reopen amendment 2026-10-22 (AC3 and AC7 restated per owner rulings)",
+  "mode": "subagent",
+  "threshold": 0.66,
+  "note": "The July spec is a retrospective artifact with no consensus of its own. This consensus covers the 2026-10-22 amendment and the consistency of the whole spec after it. Voters read the files themselves and cited file:line (transcripts in this session).",
+  "rounds": [
+    {
+      "round": 1,
+      "votes": [
+        { "agent": "test-engineer", "vote": "REJECTED", "reason": "Unamended body contradicts the amendment (stale prod-safety constraints and evidence/verdict statements); cite the ADR-018 waiver basis; 185/123 s arithmetic." },
+        { "agent": "security-lead", "vote": "REJECTED", "reason": "Amended AC7 contradicts the unamended Prod-safety constraints; safety conditions not stated as binding a re-run (per-run approval, credentials, cleanup owner, never a real tenant)." },
+        { "agent": "devops-lead", "vote": "APPROVED", "reason": "Conditional on note-only changes: superseded notes, staging wording, inferred cross-region, bucket-interpolation footnote, remediation scope." }
+      ],
+      "approval_rate": 0.33,
+      "consensus": false
+    },
+    {
+      "round": 2,
+      "changes": "Header amended note; scope, AC7 row and Prod-safety constraints marked July-baseline/superseded; Evidence section corrected; ADR-018/ADR-017 Decision 4 waiver basis; Production-run conditions 1-6; staging reworded; AC6 inferred cross-region; p95 bucket footnote; AC2 over 122.5 s.",
+      "votes": [
+        { "agent": "test-engineer", "vote": "APPROVED", "reason": "All four required changes present; follow-up: re-record attestation with p95-under-200ms FAIL under owner waiver." },
+        { "agent": "security-lead", "vote": "APPROVED", "reason": "Contradiction resolved; conditions bind re-runs. Optional: mention tenant users beyond leads (applied)." },
+        { "agent": "devops-lead", "vote": "APPROVED", "reason": "All five conditions met. Optional: AC3 results row 'FAIL, owner waiver' (applied)." }
+      ],
+      "approval_rate": 1.0,
+      "consensus": true
+    }
+  ],
+  "result": "APPROVED",
+  "plan_reviewer": { "agent": "plan-reviewer", "first_verdict": "APPROVED_WITH_CHANGES", "re_review_verdict": "APPROVED", "marker_in_plan": true }
+}

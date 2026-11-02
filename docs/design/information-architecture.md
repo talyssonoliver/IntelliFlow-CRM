@@ -1,8 +1,8 @@
 # IntelliFlow CRM - Information Architecture
 
 > **Location**: `docs/design/information-architecture.md` **Last Updated**:
-> 2026-05-02 **Total Pages**: 214 | **Total Flows**: 48 | **API Routers**: 71
-> (372 procedures) | **Ghost Links**: 0
+> 2026-05-02 **Total Pages**: 220 | **Total Flows**: 48 | **API Routers**: 77
+> (381 procedures) | **Ghost Links**: 0
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -199,38 +199,46 @@ Each module section contains a Markdown table with 8 columns:
 | Status     | page-registry.md                 | Implemented, Hardcoded, Partial, Placeholder |
 | Ghost?     | navigation-reachability-audit.md | `YES` or `--`                                |
 
-### 3.1 Public / Marketing (25 routes)
+### 3.1 Public / Marketing (26 routes)
 
 All public routes use `PublicHeader` + `PublicFooter`. No sidebar, no user menu.
-Located in `(public)` route group.
+Located in `(public)` route group. Exceptions: `/book/[handle]/[slug]` and the
+three `/dsar/[handle]` pages (PG-203) are chrome-free and `noindex`; their nav
+layer is `EXT` (external entry: reached from the booking link shared with
+clients, the booking page footer link "Your personal data", or an emailed
+verification or export link, never from in-app navigation).
 
-| Route                      | File Path                                   | Task ID | Flow ID  | API Router | Nav Layers | Status      | Ghost? |
-| -------------------------- | ------------------------------------------- | ------- | -------- | ---------- | ---------- | ----------- | ------ |
-| `/`                        | `(public)/page.tsx`                         | PG-001  | —        | N/A        | H          | Implemented | --     |
-| `/about`                   | `(public)/about/page.tsx`                   | PG-004  | —        | N/A        | IP         | Implemented | --     |
-| `/blog`                    | `(public)/blog/page.tsx`                    | —       | —        | N/A        | H IP       | Implemented | --     |
-| `/blog/[slug]`             | `(public)/blog/[slug]/page.tsx`             | —       | —        | N/A        | IP         | Implemented | --     |
-| `/careers`                 | `(public)/careers/page.tsx`                 | —       | —        | N/A        | IP         | Implemented | --     |
-| `/careers/[id]`            | `(public)/careers/[id]/page.tsx`            | —       | —        | N/A        | IP         | Implemented | --     |
-| `/contact`                 | `(public)/contact/page.tsx`                 | —       | —        | N/A        | H IP       | Implemented | --     |
-| `/features`                | `(public)/features/page.tsx`                | PG-002  | —        | N/A        | H          | Implemented | --     |
-| `/login`                   | `(public)/login/page.tsx`                   | PG-015  | FLOW-001 | `auth.*`   | H          | Implemented | --     |
-| `/signup`                  | `(public)/signup/page.tsx`                  | PG-016  | FLOW-001 | `auth.*`   | H          | Implemented | --     |
-| `/signup/success`          | `(public)/signup/success/page.tsx`          | PG-017  | FLOW-001 | N/A        | IP         | Implemented | --     |
-| `/forgot-password`         | `(public)/forgot-password/page.tsx`         | PG-018  | FLOW-003 | `auth.*`   | IP         | Implemented | --     |
-| `/reset-password/[token]`  | `(public)/reset-password/[token]/page.tsx`  | PG-019  | FLOW-003 | `auth.*`   | IP         | Implemented | --     |
-| `/reset-password/callback` | `(public)/reset-password/callback/page.tsx` | —       | FLOW-003 | `auth.*`   | IP         | Implemented | --     |
-| `/logout`                  | `(public)/logout/page.tsx`                  | —       | —        | `auth.*`   | UM         | Implemented | --     |
-| `/auth/callback`           | `(public)/auth/callback/page.tsx`           | —       | FLOW-001 | `auth.*`   | IP         | Implemented | --     |
-| `/mfa/verify`              | `(public)/mfa/verify/page.tsx`              | PG-020  | FLOW-001 | `auth.*`   | IP         | Implemented | --     |
-| `/verify-email/[token]`    | `(public)/verify-email/[token]/page.tsx`    | —       | FLOW-001 | `auth.*`   | IP         | Implemented | --     |
-| `/verify-email/callback`   | `(public)/verify-email/callback/page.tsx`   | —       | FLOW-001 | `auth.*`   | IP         | Implemented | --     |
-| `/lp/[slug]`               | `(public)/lp/[slug]/page.tsx`               | —       | —        | N/A        | IP         | Implemented | --     |
-| `/partners`                | `(public)/partners/page.tsx`                | —       | —        | N/A        | IP         | Implemented | --     |
-| `/press`                   | `(public)/press/page.tsx`                   | —       | —        | N/A        | IP         | Implemented | --     |
-| `/pricing`                 | `(public)/pricing/page.tsx`                 | —       | FLOW-010 | N/A        | H IP       | Implemented | --     |
-| `/security`                | `(public)/security/page.tsx`                | —       | —        | N/A        | IP         | Implemented | --     |
-| `/status`                  | `(public)/status/page.tsx`                  | —       | —        | N/A        | IP         | Implemented | --     |
+| Route                      | File Path                                   | Task ID | Flow ID  | API Router        | Nav Layers | Status      | Ghost? |
+| -------------------------- | ------------------------------------------- | ------- | -------- | ----------------- | ---------- | ----------- | ------ |
+| `/`                        | `(public)/page.tsx`                         | PG-001  | —        | N/A               | H          | Implemented | --     |
+| `/about`                   | `(public)/about/page.tsx`                   | PG-004  | —        | N/A               | IP         | Implemented | --     |
+| `/blog`                    | `(public)/blog/page.tsx`                    | —       | —        | N/A               | H IP       | Implemented | --     |
+| `/blog/[slug]`             | `(public)/blog/[slug]/page.tsx`             | —       | —        | N/A               | IP         | Implemented | --     |
+| `/careers`                 | `(public)/careers/page.tsx`                 | —       | —        | N/A               | IP         | Implemented | --     |
+| `/careers/[id]`            | `(public)/careers/[id]/page.tsx`            | —       | —        | N/A               | IP         | Implemented | --     |
+| `/contact`                 | `(public)/contact/page.tsx`                 | —       | —        | N/A               | H IP       | Implemented | --     |
+| `/features`                | `(public)/features/page.tsx`                | PG-002  | —        | N/A               | H          | Implemented | --     |
+| `/login`                   | `(public)/login/page.tsx`                   | PG-015  | FLOW-001 | `auth.*`          | H          | Implemented | --     |
+| `/signup`                  | `(public)/signup/page.tsx`                  | PG-016  | FLOW-001 | `auth.*`          | H          | Implemented | --     |
+| `/signup/success`          | `(public)/signup/success/page.tsx`          | PG-017  | FLOW-001 | N/A               | IP         | Implemented | --     |
+| `/forgot-password`         | `(public)/forgot-password/page.tsx`         | PG-018  | FLOW-003 | `auth.*`          | IP         | Implemented | --     |
+| `/reset-password/[token]`  | `(public)/reset-password/[token]/page.tsx`  | PG-019  | FLOW-003 | `auth.*`          | IP         | Implemented | --     |
+| `/reset-password/callback` | `(public)/reset-password/callback/page.tsx` | —       | FLOW-003 | `auth.*`          | IP         | Implemented | --     |
+| `/logout`                  | `(public)/logout/page.tsx`                  | —       | —        | `auth.*`          | UM         | Implemented | --     |
+| `/auth/callback`           | `(public)/auth/callback/page.tsx`           | —       | FLOW-001 | `auth.*`          | IP         | Implemented | --     |
+| `/mfa/verify`              | `(public)/mfa/verify/page.tsx`              | PG-020  | FLOW-001 | `auth.*`          | IP         | Implemented | --     |
+| `/verify-email/[token]`    | `(public)/verify-email/[token]/page.tsx`    | —       | FLOW-001 | `auth.*`          | IP         | Implemented | --     |
+| `/verify-email/callback`   | `(public)/verify-email/callback/page.tsx`   | —       | FLOW-001 | `auth.*`          | IP         | Implemented | --     |
+| `/lp/[slug]`               | `(public)/lp/[slug]/page.tsx`               | —       | —        | N/A               | IP         | Implemented | --     |
+| `/partners`                | `(public)/partners/page.tsx`                | —       | —        | N/A               | IP         | Implemented | --     |
+| `/press`                   | `(public)/press/page.tsx`                   | —       | —        | N/A               | IP         | Implemented | --     |
+| `/pricing`                 | `(public)/pricing/page.tsx`                 | —       | FLOW-010 | N/A               | H IP       | Implemented | --     |
+| `/security`                | `(public)/security/page.tsx`                | —       | —        | N/A               | IP         | Implemented | --     |
+| `/status`                  | `(public)/status/page.tsx`                  | —       | —        | N/A               | IP         | Implemented | --     |
+| `/book/[handle]/[slug]`    | `(public)/book/[handle]/[slug]/page.tsx`    | PG-203  | FLOW-019 | `publicBooking.*` | EXT        | Implemented | --     |
+| `/dsar/[handle]`           | `(public)/dsar/[handle]/page.tsx`           | PG-203  | FLOW-040 | `privacy.*`       | EXT        | Implemented | --     |
+| `/dsar/[handle]/verify`    | `(public)/dsar/[handle]/verify/page.tsx`    | PG-203  | FLOW-040 | `privacy.*`       | EXT        | Implemented | --     |
+| `/dsar/[handle]/export`    | `(public)/dsar/[handle]/export/page.tsx`    | PG-203  | FLOW-040 | `privacy.*`       | EXT        | Implemented | --     |
 
 ### 3.2 Developer Portal (14 routes)
 
@@ -304,7 +312,7 @@ in `settings.ts:85`. Uses `developerSidebarConfig` from `configs/developer.ts`.
 | `/tasks`      | `tasks/(list)/page.tsx` | —       | FLOW-020 | `task.*`   | H SB       | Implemented | --     |
 | `/tasks/[id]` | `tasks/[id]/page.tsx`   | —       | FLOW-020 | `task.*`   | IP         | Implemented | --     |
 
-### 3.9 Calendar (4 routes)
+### 3.9 Calendar (5 routes)
 
 **CR-02 resolved**: Primary flow is FLOW-019 ("Agendamento de Reunioes"), not
 FLOW-020.
@@ -315,6 +323,7 @@ FLOW-020.
 | `/calendar/new`          | `calendar/new/page.tsx`          | —       | FLOW-019 | `appointments.*`          | IP         | Implemented | --     |
 | `/calendar/[id]`         | `calendar/[id]/page.tsx`         | —       | FLOW-019 | `appointments.*`          | IP         | Implemented | --     |
 | `/calendar/availability` | `calendar/availability/page.tsx` | PG-202  | FLOW-019 | `calendar.availability.*` | SB IP      | Implemented | --     |
+| `/calendar/event-types`  | `calendar/event-types/page.tsx`  | PG-203  | FLOW-019 | `calendar.eventTypes.*`   | SB IP      | Implemented | --     |
 
 ### 3.10 Email (2 routes)
 
@@ -389,19 +398,20 @@ FLOW-020.
 | `/billing/receipts`        | `billing/receipts/page.tsx`        | —       | FLOW-010 | `billing.*` | SB         | Hardcoded | --     |
 | `/billing/subscriptions`   | `billing/subscriptions/page.tsx`   | —       | FLOW-010 | `billing.*` | SB         | Hardcoded | --     |
 
-### 3.17 Settings (9 routes)
+### 3.17 Settings (10 routes)
 
-| Route                     | File Path                         | Task ID | Flow ID  | API Router         | Nav Layers | Status      | Ghost? |
-| ------------------------- | --------------------------------- | ------- | -------- | ------------------ | ---------- | ----------- | ------ |
-| `/settings`               | `settings/page.tsx`               | —       | —        | N/A                | UM         | Implemented | --     |
-| `/settings/account`       | `settings/account/page.tsx`       | —       | FLOW-035 | `auth.*`           | SB         | Implemented | --     |
-| `/settings/ai`            | `settings/ai/page.tsx`            | —       | FLOW-045 | `chainVersion.*`   | SB         | Implemented | --     |
-| `/settings/integrations`  | `settings/integrations/page.tsx`  | —       | FLOW-036 | `integrations.*`   | SB         | Partial     | --     |
-| `/settings/notifications` | `settings/notifications/page.tsx` | —       | FLOW-021 | N/A                | SB         | Hardcoded   | --     |
-| `/settings/pipeline`      | `settings/pipeline/page.tsx`      | —       | FLOW-007 | `pipelineConfig.*` | SB         | Implemented | --     |
-| `/settings/routing`       | `settings/routing/page.tsx`       | —       | —        | `routing.*`        | SB         | Hardcoded   | --     |
-| `/settings/security/mfa`  | `settings/security/mfa/page.tsx`  | —       | FLOW-001 | `auth.*`           | SB         | Implemented | --     |
-| `/settings/team`          | `settings/team/page.tsx`          | —       | FLOW-002 | `auth.*`           | SB         | Implemented | --     |
+| Route                        | File Path                            | Task ID | Flow ID  | API Router         | Nav Layers | Status      | Ghost? |
+| ---------------------------- | ------------------------------------ | ------- | -------- | ------------------ | ---------- | ----------- | ------ |
+| `/settings`                  | `settings/page.tsx`                  | —       | —        | N/A                | UM         | Implemented | --     |
+| `/settings/account`          | `settings/account/page.tsx`          | —       | FLOW-035 | `auth.*`           | SB         | Implemented | --     |
+| `/settings/ai`               | `settings/ai/page.tsx`               | —       | FLOW-045 | `chainVersion.*`   | SB         | Implemented | --     |
+| `/settings/integrations`     | `settings/integrations/page.tsx`     | —       | FLOW-036 | `integrations.*`   | SB         | Partial     | --     |
+| `/settings/notifications`    | `settings/notifications/page.tsx`    | —       | FLOW-021 | N/A                | SB         | Hardcoded   | --     |
+| `/settings/pipeline`         | `settings/pipeline/page.tsx`         | —       | FLOW-007 | `pipelineConfig.*` | SB         | Implemented | --     |
+| `/settings/privacy-requests` | `settings/privacy-requests/page.tsx` | PG-203  | FLOW-040 | `privacy.admin.*`  | SB         | Implemented | --     |
+| `/settings/routing`          | `settings/routing/page.tsx`          | —       | —        | `routing.*`        | SB         | Hardcoded   | --     |
+| `/settings/security/mfa`     | `settings/security/mfa/page.tsx`     | —       | FLOW-001 | `auth.*`           | SB         | Implemented | --     |
+| `/settings/team`             | `settings/team/page.tsx`             | —       | FLOW-002 | `auth.*`           | SB         | Implemented | --     |
 
 ### 3.18 Governance (6 routes)
 
@@ -531,10 +541,10 @@ Four distinct layout patterns used across modules.
 
 | Category        | Count |
 | --------------- | ----- |
-| **Total Pages** | 214   |
-| Public Pages    | 32    |
+| **Total Pages** | 220   |
+| Public Pages    | 36    |
 | Developer Pages | 14    |
-| Protected Pages | 168   |
+| Protected Pages | 170   |
 
 ### Flow Coverage
 

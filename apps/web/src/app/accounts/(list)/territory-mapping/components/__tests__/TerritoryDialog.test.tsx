@@ -84,7 +84,7 @@ describe('TerritoryDialog', () => {
     }
     expect(screen.getByRole('radiogroup', { name: 'Assignment strategy' })).toBeDefined();
     expect(screen.getByRole('group', { name: 'Rules' })).toBeDefined();
-    expect(screen.getByRole('button', { name: 'Members, 0 selected' })).toBeDefined();
+    expect(screen.getByRole('button', { name: 'Members: No members' })).toBeDefined();
   });
 
   it('keeps Save disabled until the draft is dirty and conflict-free', () => {

@@ -1,0 +1,28 @@
+{
+  "taskId": "PG-207",
+  "sprint": 18,
+  "session": "plan",
+  "startedAt": "2026-10-21T00:20:00Z",
+  "completedAt": "2026-10-20T23:59:12Z",
+  "spec": ".specify/sprints/sprint-18/specifications/PG-207-spec.md",
+  "plan": ".specify/sprints/sprint-18/planning/PG-207-plan.md",
+  "ownerRulingsAdded": ["Q11 attachments wired now"],
+  "steps": 31,
+  "filesToCreate": 108,
+  "filesToModify": 56,
+  "planReviewer": {
+    "agent": ".claude/agents/plan-reviewer.md",
+    "iterations": [
+      { "n": 1, "verdict": "REVISE", "errors": 8, "warnings": 10, "info": 3 },
+      { "n": 2, "verdict": "REVISE", "errors": 3, "warnings": 3, "info": 2 },
+      { "n": 3, "verdict": "APPROVE", "errors": 0 }
+    ]
+  },
+  "csvArtifactCheck": "tools/scripts/validate-artifacts.ts PG-207: all 5 CSV artifacts in plan; plan-only files to be added to Artifacts To Track at Step 31",
+  "pert": {
+    "rowEstimateMinutes": "180/360/540",
+    "pertMinutes": 360,
+    "planEstimateHours": "40-52",
+    "plannedFinish": "2026-10-28"
+  }
+}

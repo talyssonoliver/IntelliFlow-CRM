@@ -16,7 +16,7 @@ const CALENDAR_SETTINGS_ITEMS: ModuleSettingsNavItem[] = [
   {
     id: 'event-types',
     label: 'Event Types',
-    description: 'Categories & color coding',
+    description: 'Meeting types & booking links',
     icon: 'category',
     href: '/calendar/event-types',
   },

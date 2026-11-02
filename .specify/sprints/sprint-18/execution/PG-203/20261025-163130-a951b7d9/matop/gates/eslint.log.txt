@@ -1,0 +1,80 @@
+Scope: 25 of 26 workspace projects
+apps/project-tracker lint$ eslint .
+tools/plan-linter lint$ node index.js
+tools/plan-linter lint: ========================================
+tools/plan-linter lint: Plan Linter v1.0.0
+tools/plan-linter lint: ========================================
+tools/plan-linter lint: Loaded config from C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203-dsar\tools\plan-linter\config.yaml
+tools/plan-linter lint: Loaded Sprint plan from apps/project-tracker/docs/metrics/_global/Sprint_plan.csv
+tools/plan-linter lint: Loaded overrides from apps/project-tracker/docs/metrics/plan-overrides.yaml
+tools/plan-linter lint: Loaded validation rules from apps/project-tracker/docs/metrics/validation.yaml
+tools/plan-linter lint: Parsed 626 tasks from Sprint plan
+tools/plan-linter lint: Filtering to Sprint 0: 32 tasks
+tools/plan-linter lint: Running hard rules...
+tools/plan-linter lint: Running soft rules...
+tools/plan-linter lint: Generating review queue...
+tools/plan-linter lint: ========================================
+tools/plan-linter lint: RESULTS
+tools/plan-linter lint: ========================================
+tools/plan-linter lint: Total tasks (Sprint 0): 32
+tools/plan-linter lint: Tier breakdown: A=19, B=7, C=6
+tools/plan-linter lint: Validation coverage: 100%
+tools/plan-linter lint: Errors: 0
+tools/plan-linter lint: Warnings: 21
+tools/plan-linter lint: Review queue items: 22
+tools/plan-linter lint: Review queue written to apps/project-tracker/docs/metrics/review-queue.json
+tools/plan-linter lint: Lint report written to artifacts/reports/plan-lint-report.json
+tools/plan-linter lint: [PASSED] No hard rule violations
+tools/plan-linter lint: Done
+apps/project-tracker lint: (node:44772) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203-dsar/apps/project-tracker/eslint.config.js?mtime=1792626720095 is not specified and it doesn't parse as CommonJS.
+apps/project-tracker lint: Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+apps/project-tracker lint: To eliminate this warning, add "type": "module" to \\?\C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203-dsar\apps\project-tracker\package.json.
+apps/project-tracker lint: (Use `node --trace-warnings ...` to show where the warning was created)
+apps/project-tracker lint: Done
+apps/workers lint$ pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker run lint
+packages/domain lint$ eslint "src/**/*.ts"
+packages/observability lint$ eslint "src/**/*.ts"
+packages/partner-sdk lint$ eslint "src/**/*.ts" "scripts/**/*.ts"
+apps/workers lint: Scope: 2 of 26 workspace projects
+apps/workers lint: events-worker lint$ eslint src/
+apps/workers lint: ingestion-worker lint$ eslint src/
+packages/observability lint: Done
+packages/test-fixtures lint$ eslint "src/**/*.ts"
+apps/workers lint: ingestion-worker lint: Done
+packages/partner-sdk lint: Done
+packages/webhooks lint$ eslint "src/**/*.ts"
+apps/workers lint: events-worker lint: Done
+apps/workers lint: Done
+packages/test-fixtures lint: Done
+packages/webhooks lint: Done
+packages/domain lint: Done
+packages/db lint$ eslint "src/**/*.ts"
+packages/ui lint$ eslint "src/**/*.ts"
+packages/validators lint$ eslint "src/**/*.ts"
+packages/ui lint: Done
+packages/db lint: Done
+packages/validators lint: Done
+packages/application lint$ eslint "src/**/*.ts"
+packages/platform lint$ eslint "src/**/*.ts"
+packages/search lint$ eslint "src/**/*.ts"
+packages/search lint: Done
+packages/platform lint: Done
+packages/application lint: Done
+apps/workers/shared lint$ eslint src/
+packages/adapters lint$ eslint "src/**/*.ts"
+apps/workers/shared lint: Done
+packages/adapters lint: Done
+apps/ai-worker lint$ eslint "src/**/*.ts"
+apps/workers/events-worker lint$ eslint src/
+apps/workers/events-worker lint: Done
+apps/ai-worker lint: Done
+apps/api lint$ eslint "src/**/*.ts"
+apps/workers/ingestion-worker lint$ eslint src/
+apps/workers/ingestion-worker lint: Done
+apps/api lint: Done
+packages/api-client lint$ eslint "src/**/*.ts"
+packages/api-client lint: Done
+apps/web lint$ eslint "src/**/*.{ts,tsx}"
+packages/sdk lint$ eslint "src/**/*.ts"
+packages/sdk lint: Done
+apps/web lint: Done

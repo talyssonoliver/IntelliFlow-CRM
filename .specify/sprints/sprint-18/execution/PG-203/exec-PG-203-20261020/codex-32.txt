@@ -1,0 +1,31 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 118 files total
+[codex-review] in scope : 71 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T22:08:35.297Z
+Base ref  : origin/main
+Files in scope : 71
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [HIGH] apps/api/src/modules/calendar/booking-abuse.ts:60 — shared-proxy-ip-booking-cap
+    Issue    : Using the rightmost forwarded hop as the client IP makes unrelated visitors behind the same proxy share booking limits.
+    Evidence : pickTrustedForwardedIp(req?.headers.get('x-forwarded-for')) selects the rightmost hop. apps/api/src/middleware/rate-limit.ts:411-420 explicitly documents that this hop is the shared edge IP in the application's proxy topology. Consequently, assertBookingCaps counts different visitors toward the same 10-attempt hourly tenant limit, while the lookup and submit limiters also throttle them together. The new test asserts that the proxy address is selected, encoding the same incorrect client-identity assumption.
+    Fix      : Resolve the client address using the deployment's verified proxy trust chain or an edge-overwritten client-IP header, then apply IPv6 normalization and hashing to that address.
+    Fingerprint: 07766f8e6afb1bcf6ead70a1ec9e0c0881e17e96cc84dca3772c8551d3256424
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

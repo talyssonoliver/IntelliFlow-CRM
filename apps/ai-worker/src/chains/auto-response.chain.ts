@@ -110,6 +110,8 @@ export class AutoResponseChain {
   private llm: BaseChatModel;
   private readonly modelVersion: string;
   private readonly chainMonitor = createChainMonitor({ latencyThresholdMs: 1000 });
+  /** Outputs whose confidence is the placeholder 0 because the model did not report one. */
+  private readonly placeholderConfidence = new WeakSet<AutoResponseOutput>();
   private readonly tenantId?: string;
 
   // Content limits (from ResponseContent value object)
@@ -196,6 +198,7 @@ export class AutoResponseChain {
     // fragile JSON parsing. Falls back to raw invoke + parseResponse if the
     // underlying model/provider doesn't implement withStructuredOutput.
     let parsed: z.infer<typeof autoResponseLLMSchema>;
+    let confidenceReported = true;
     try {
       const structured = this.llm.withStructuredOutput(autoResponseLLMSchema, {
         name: 'auto_response',
@@ -212,6 +215,7 @@ export class AutoResponseChain {
       const content =
         typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
       const raw = this.parseResponse(content);
+      confidenceReported = typeof raw.confidence === 'number';
       parsed = autoResponseLLMSchema.parse({
         subject: raw.subject ?? 'Re: Your inquiry',
         body: raw.body ?? '',
@@ -232,6 +236,7 @@ export class AutoResponseChain {
       tone: parsed.tone,
       suggestedFollowUp: parsed.suggestedFollowUp,
     };
+    if (!confidenceReported) this.placeholderConfidence.add(output);
 
     return output;
   }
@@ -245,7 +250,11 @@ export class AutoResponseChain {
   async generateResponseWithMonitoring(
     input: AutoResponseInput
   ): Promise<MonitoredResult<AutoResponseOutput>> {
-    return withMonitoring(() => this.generateResponse(input), this.chainMonitor.getConfig());
+    return withMonitoring(() => this.generateResponse(input), this.chainMonitor.getConfig(), {
+      chain: 'auto_response',
+      // The placeholder 0 is a review flag, not a measurement (PG-198).
+      confidenceReported: (result) => !this.placeholderConfidence.has(result as AutoResponseOutput),
+    });
   }
 
   /**

@@ -1,0 +1,28 @@
+C2P child evil.victim.co.uk->victim.co.uk        {"auth":true,"id":"mx.ok","rd":["evil.victim.co.uk"]} ACT= false
+P2C parent victim.co.uk for sub.victim.co.uk (true, intended) {"auth":true,"id":"mx.ok","rd":["victim.co.uk"]} ACT= true
+sibling other.co.uk for victim.co.uk             {"auth":true,"id":"mx.ok","rd":["other.co.uk"]} ACT= false
+public suffix co.uk (H-1 shape)                  {"auth":true,"id":"mx.ok","rd":["co.uk"]} ACT= true
+sending-side subdomain x.mail.acme.com           {"auth":true,"id":"mx.ok","rd":["x.mail.acme.com"]} ACT= false
+sending-side PARENT acme.com (from=mail.acme.com) {"auth":true,"id":"mx.ok","rd":["acme.com"]} ACT= false
+sending-side exact mail.acme.com (true)          {"auth":true,"id":"mx.ok","rd":["mail.acme.com"]} ACT= true
+smtp host child a.smtp.sendgrid.net (exact required) {"auth":true,"id":"mx.ok","rd":["a.smtp.sendgrid.net"]} ACT= false
+provider subdomain bounce.google.com (true, provider owns) {"auth":true,"id":"mx.google.com","rd":["bounce.google.com"]} ACT= true
+provider lookalike evilgoogle.com                {"auth":true,"id":"mx.google.com","rd":["evilgoogle.com"]} ACT= false
+provider lookalike google.com.evil.com           {"auth":true,"id":"mx.google.com","rd":["google.com.evil.com"]} ACT= false
+gmail: googlemail.com                            {"auth":true,"id":"mx.google.com","rd":["googlemail.com"]} ACT= true
+gmail mailbox, MS provider domain outlook.com    {"auth":true,"id":"mx.google.com","rd":["outlook.com"]} ACT= false
+EX "MicrosoftExchange329e71ec88ae4615bbc36ab6ce41109e" {"auth":true,"id":"mx.ok","rd":["victim.co.uk"]} ACT= true
+EX "MicrosoftExchange"                           {"auth":true,"id":"mx.ok","rd":["victim.co.uk"]} ACT= true
+EX "microsoftexchange"                           {"auth":true,"id":"mx.ok","rd":["victim.co.uk"]} ACT= true
+EX "MicrosoftExchangeSupport"                    {"auth":false,"id":null,"rd":[]} ACT= false
+EX "microsoftexchange+tag"                       {"auth":false,"id":null,"rd":[]} ACT= false
+EX "MicrosoftExchange329e-71"                    {"auth":false,"id":null,"rd":[]} ACT= false
+EX "xMicrosoftExchange329e"                      {"auth":false,"id":null,"rd":[]} ACT= false
+EX "MicrosoftExchange329e.71"                    {"auth":false,"id":null,"rd":[]} ACT= false
+EX "MicrosoftExchange329e71ec88ae4615bbc36ab6ce41109e " {"auth":false,"id":null,"rd":[]} ACT= false
+EX "\"MicrosoftExchange329e\""                   {"auth":false,"id":null,"rd":[]} ACT= false
+EX no auth header                                {"auth":false,"id":null,"rd":[]} ACT= false
+EX auth fail (spf=fail)                          {"auth":false,"id":"mx.ok","rd":[]} ACT= false
+EX untrusted receiver                            {"auth":true,"id":"mx.evil","rd":["victim.co.uk"]} ACT= false
+EX two From headers                              {"auth":false,"id":null,"rd":[]} ACT= false
+EX reporter not entitled (other.com)             {"auth":true,"id":"mx.ok","rd":["other.com"]} ACT= false

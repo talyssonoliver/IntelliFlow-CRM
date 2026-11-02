@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-22T16:01:30.246Z",
+  "timestamp": "2026-11-02T23:14:46.147Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 73,
-    "total_endpoints": 576,
-    "total_queries": 246,
-    "total_mutations": 330,
+    "total_routers": 78,
+    "total_endpoints": 605,
+    "total_queries": 256,
+    "total_mutations": 349,
     "routers": [
       {
         "name": "contact",
@@ -1051,15 +1051,15 @@
         "mutations": 12
       },
       {
-        "name": "auth",
-        "endpoints": 18,
-        "queries": 3,
-        "mutations": 15
-      },
-      {
         "name": "documents",
         "endpoints": 18,
         "queries": 4,
+        "mutations": 14
+      },
+      {
+        "name": "auth",
+        "endpoints": 17,
+        "queries": 3,
         "mutations": 14
       },
       {
@@ -1145,6 +1145,12 @@
         "endpoints": 9,
         "queries": 5,
         "mutations": 4
+      },
+      {
+        "name": "taskAutomation",
+        "endpoints": 9,
+        "queries": 2,
+        "mutations": 7
       },
       {
         "name": "webhooks",
@@ -1255,7 +1261,25 @@
         "mutations": 4
       },
       {
+        "name": "eventTypes",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
         "name": "contactTypes",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
+        "name": "emailSettings",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
+        "name": "emailSignatures",
         "endpoints": 6,
         "queries": 2,
         "mutations": 4
@@ -1363,6 +1387,12 @@
         "mutations": 1
       },
       {
+        "name": "publicBooking",
+        "endpoints": 3,
+        "queries": 2,
+        "mutations": 1
+      },
+      {
         "name": "appointmentSettings",
         "endpoints": 3,
         "queries": 1,
@@ -1399,6 +1429,12 @@
         "mutations": 1
       },
       {
+        "name": "emailMailbox",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
         "name": "termsAcceptance",
         "endpoints": 2,
         "queries": 1,
@@ -1406,12 +1442,6 @@
       },
       {
         "name": "onboarding",
-        "endpoints": 2,
-        "queries": 1,
-        "mutations": 1
-      },
-      {
-        "name": "dsar",
         "endpoints": 2,
         "queries": 1,
         "mutations": 1
@@ -1461,32 +1491,39 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 201,
-    "total_fields": 2892,
-    "total_indexes": 906,
-    "total_relations": 284,
+    "total_tables": 215,
+    "total_fields": 3157,
+    "total_indexes": 955,
+    "total_relations": 304,
     "tables_with_embeddings": 4,
-    "enums": 78,
+    "enums": 81,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 176,
-        "indexes": 6,
+        "fields": 191,
+        "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
       },
       {
         "name": "Lead",
-        "fields": 49,
-        "indexes": 14,
+        "fields": 51,
+        "indexes": 16,
         "relations": 3,
         "hasEmbedding": true
       },
       {
         "name": "User",
-        "fields": 46,
+        "fields": 49,
         "indexes": 7,
-        "relations": 8,
+        "relations": 9,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Appointment",
+        "fields": 38,
+        "indexes": 10,
+        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -1497,9 +1534,30 @@
         "hasEmbedding": true
       },
       {
+        "name": "DsarRequest",
+        "fields": 37,
+        "indexes": 6,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TaskAutomationRule",
+        "fields": 37,
+        "indexes": 4,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "ConversationRecord",
         "fields": 36,
         "indexes": 7,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailMailbox",
+        "fields": 36,
+        "indexes": 4,
         "relations": 2,
         "hasEmbedding": false
       },
@@ -1532,10 +1590,10 @@
         "hasEmbedding": false
       },
       {
-        "name": "Appointment",
-        "fields": 30,
-        "indexes": 10,
-        "relations": 4,
+        "name": "EmailRecord",
+        "fields": 31,
+        "indexes": 9,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -1570,13 +1628,6 @@
         "name": "Notification",
         "fields": 28,
         "indexes": 10,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "EmailRecord",
-        "fields": 26,
-        "indexes": 7,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -1732,6 +1783,13 @@
         "fields": 17,
         "indexes": 3,
         "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EventType",
+        "fields": 17,
+        "indexes": 5,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -1966,6 +2024,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "EmailBounceReceipt",
+        "fields": 14,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "ChatMessage",
         "fields": 14,
         "indexes": 4,
@@ -2106,6 +2171,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "ProcessingRestriction",
+        "fields": 12,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "TicketAttachment",
         "fields": 12,
         "indexes": 3,
@@ -2130,6 +2202,13 @@
         "name": "EmailTemplate",
         "fields": 12,
         "indexes": 5,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TenantEmailSettings",
+        "fields": 12,
+        "indexes": 2,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -2197,6 +2276,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TaskAutomationRun",
+        "fields": 11,
+        "indexes": 1,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "SLANotification",
         "fields": 11,
         "indexes": 5,
@@ -2229,6 +2315,13 @@
         "fields": 11,
         "indexes": 6,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailSignature",
+        "fields": 11,
+        "indexes": 2,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -2372,6 +2465,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TaskAutomationTag",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "ReportScheduleTag",
         "fields": 10,
         "indexes": 3,
@@ -2411,6 +2511,13 @@
         "fields": 10,
         "indexes": 3,
         "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailOAuthState",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -2491,6 +2598,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TaskAutomationSetting",
+        "fields": 9,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "RBACRole",
         "fields": 9,
         "indexes": 3,
@@ -2515,6 +2629,13 @@
         "name": "PipelineSnapshot",
         "fields": 9,
         "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailSuppression",
+        "fields": 9,
+        "indexes": 2,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -2739,6 +2860,13 @@
         "name": "AvailabilityClosure",
         "fields": 7,
         "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "BookingAttempt",
+        "fields": 7,
+        "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -2974,9 +3102,15 @@
     ]
   },
   "workers_inventory": {
-    "total_workers": 3,
+    "total_workers": 4,
     "total_jobs": 3,
     "workers": [
+      {
+        "name": "combined",
+        "type": "other",
+        "jobs": [],
+        "description": "Background job processing"
+      },
       {
         "name": "events",
         "type": "events",
@@ -3240,12 +3374,12 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 60,
-    "total_schemas": 644,
+    "total_validators": 71,
+    "total_schemas": 689,
     "by_complexity": {
-      "complex": 35,
-      "moderate": 21,
-      "simple": 4
+      "complex": 39,
+      "moderate": 25,
+      "simple": 7
     },
     "validators": [
       {
@@ -3411,8 +3545,20 @@
         "complexity": "complex"
       },
       {
+        "name": "dsar",
+        "file": "dsar.ts",
+        "schemas": 10,
+        "complexity": "complex"
+      },
+      {
         "name": "common",
         "file": "common.ts",
+        "schemas": 9,
+        "complexity": "complex"
+      },
+      {
+        "name": "event-types",
+        "file": "event-types.ts",
         "schemas": 9,
         "complexity": "complex"
       },
@@ -3431,6 +3577,12 @@
       {
         "name": "lead-settings",
         "file": "lead-settings.ts",
+        "schemas": 8,
+        "complexity": "complex"
+      },
+      {
+        "name": "task-automation",
+        "file": "task-automation.ts",
         "schemas": 8,
         "complexity": "complex"
       },
@@ -3459,6 +3611,12 @@
         "complexity": "moderate"
       },
       {
+        "name": "email-mailbox",
+        "file": "email-mailbox.ts",
+        "schemas": 6,
+        "complexity": "moderate"
+      },
+      {
         "name": "report-templates",
         "file": "report-templates.ts",
         "schemas": 6,
@@ -3473,6 +3631,18 @@
       {
         "name": "case-types",
         "file": "case-types.ts",
+        "schemas": 5,
+        "complexity": "moderate"
+      },
+      {
+        "name": "email-settings",
+        "file": "email-settings.ts",
+        "schemas": 5,
+        "complexity": "complex"
+      },
+      {
+        "name": "email-signatures",
+        "file": "email-signatures.ts",
         "schemas": 5,
         "complexity": "moderate"
       },
@@ -3573,6 +3743,12 @@
         "complexity": "moderate"
       },
       {
+        "name": "mailbox-fields",
+        "file": "mailbox-fields.ts",
+        "schemas": 2,
+        "complexity": "simple"
+      },
+      {
         "name": "sla-policy",
         "file": "sla-policy.ts",
         "schemas": 2,
@@ -3603,8 +3779,32 @@
         "complexity": "moderate"
       },
       {
+        "name": "record-id",
+        "file": "record-id.ts",
+        "schemas": 0,
+        "complexity": "simple"
+      },
+      {
         "name": "required-url",
         "file": "required-url.ts",
+        "schemas": 0,
+        "complexity": "moderate"
+      },
+      {
+        "name": "smtp-account-env",
+        "file": "smtp-account-env.ts",
+        "schemas": 0,
+        "complexity": "simple"
+      },
+      {
+        "name": "smtp-account",
+        "file": "smtp-account.ts",
+        "schemas": 0,
+        "complexity": "moderate"
+      },
+      {
+        "name": "smtp-endpoint",
+        "file": "smtp-endpoint.ts",
         "schemas": 0,
         "complexity": "moderate"
       }
@@ -4290,12 +4490,6 @@
         "critical": true
       },
       {
-        "name": "auth.refreshSession",
-        "method": "POST",
-        "description": "Refresh session",
-        "critical": true
-      },
-      {
         "name": "auth.setupMfa",
         "method": "POST",
         "description": "Setup mfa"
@@ -4526,6 +4720,55 @@
         "name": "calendar.delete",
         "method": "POST",
         "description": "Delete calendar"
+      }
+    ],
+    "eventTypes": [
+      {
+        "name": "eventTypes.list",
+        "method": "GET",
+        "description": "List eventTypess with pagination"
+      },
+      {
+        "name": "eventTypes.listActive",
+        "method": "GET",
+        "description": "List active"
+      },
+      {
+        "name": "eventTypes.create",
+        "method": "POST",
+        "description": "Create new eventTypes"
+      },
+      {
+        "name": "eventTypes.update",
+        "method": "POST",
+        "description": "Update eventTypes"
+      },
+      {
+        "name": "eventTypes.delete",
+        "method": "POST",
+        "description": "Delete eventTypes"
+      },
+      {
+        "name": "eventTypes.setBookingLink",
+        "method": "POST",
+        "description": "Set booking link"
+      }
+    ],
+    "publicBooking": [
+      {
+        "name": "publicBooking.getEventType",
+        "method": "GET",
+        "description": "Get event type"
+      },
+      {
+        "name": "publicBooking.listSlots",
+        "method": "GET",
+        "description": "List slots"
+      },
+      {
+        "name": "publicBooking.book",
+        "method": "POST",
+        "description": "Book"
       }
     ],
     "chainVersion": [
@@ -4856,6 +5099,82 @@
         "name": "upload.getUploadStatus",
         "method": "GET",
         "description": "Get upload status"
+      }
+    ],
+    "emailMailbox": [
+      {
+        "name": "emailMailbox.getMine",
+        "method": "GET",
+        "description": "Get mine"
+      },
+      {
+        "name": "emailMailbox.getTenant",
+        "method": "POST",
+        "description": "Get tenant"
+      }
+    ],
+    "emailSettings": [
+      {
+        "name": "emailSettings.list",
+        "method": "GET",
+        "description": "List emailSettingss with pagination"
+      },
+      {
+        "name": "emailSettings.add",
+        "method": "POST",
+        "description": "Add"
+      },
+      {
+        "name": "emailSettings.remove",
+        "method": "POST",
+        "description": "Remove"
+      },
+      {
+        "name": "emailSettings.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "emailSettings.update",
+        "method": "POST",
+        "description": "Update emailSettings"
+      },
+      {
+        "name": "emailSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      }
+    ],
+    "emailSignatures": [
+      {
+        "name": "emailSignatures.list",
+        "method": "GET",
+        "description": "List emailSignaturess with pagination"
+      },
+      {
+        "name": "emailSignatures.create",
+        "method": "POST",
+        "description": "Create new emailSignatures"
+      },
+      {
+        "name": "emailSignatures.update",
+        "method": "POST",
+        "description": "Update emailSignatures"
+      },
+      {
+        "name": "emailSignatures.delete",
+        "method": "POST",
+        "description": "Delete emailSignatures"
+      },
+      {
+        "name": "emailSignatures.setDefault",
+        "method": "POST",
+        "description": "Set default"
+      },
+      {
+        "name": "emailSignatures.resolveDefault",
+        "method": "GET",
+        "description": "Resolve default"
       }
     ],
     "inbound": [
@@ -6178,18 +6497,6 @@
         "description": "Get stats"
       }
     ],
-    "dsar": [
-      {
-        "name": "dsar.submitDSAR",
-        "method": "POST",
-        "description": "Submit d s a r"
-      },
-      {
-        "name": "dsar.getDSARStatus",
-        "method": "GET",
-        "description": "Get d s a r status"
-      }
-    ],
     "publicFeedback": [
       {
         "name": "publicFeedback.submit",
@@ -6308,6 +6615,53 @@
         "name": "subscription.getUsage",
         "method": "POST",
         "description": "Get usage"
+      }
+    ],
+    "taskAutomation": [
+      {
+        "name": "taskAutomation.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "taskAutomation.update",
+        "method": "POST",
+        "description": "Update taskAutomation"
+      },
+      {
+        "name": "taskAutomation.list",
+        "method": "GET",
+        "description": "List taskAutomations with pagination"
+      },
+      {
+        "name": "taskAutomation.create",
+        "method": "POST",
+        "description": "Create new taskAutomation"
+      },
+      {
+        "name": "taskAutomation.delete",
+        "method": "POST",
+        "description": "Delete taskAutomation"
+      },
+      {
+        "name": "taskAutomation.listRuns",
+        "method": "POST",
+        "description": "List runs"
+      },
+      {
+        "name": "taskAutomation.setActive",
+        "method": "POST",
+        "description": "Set active"
+      },
+      {
+        "name": "taskAutomation.reorder",
+        "method": "POST",
+        "description": "Reorder"
+      },
+      {
+        "name": "taskAutomation.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
       }
     ],
     "taskSettings": [

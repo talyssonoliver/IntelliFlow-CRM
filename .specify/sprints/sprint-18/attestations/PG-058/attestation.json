@@ -17,12 +17,12 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/lib/dashboard/kpi-calculator.ts": "d9a73d635d35ac6592bd0028fabe00323a9fb95ebd782e4c3419859c02e0acaf",
-    "apps/web/src/app/dashboard/page.tsx": "3b7bdea4dcb3ec89f14edd98d53783c569f04a36c70c8123287009d3d2342a55",
-    "apps/web/src/app/dashboard/DashboardClient.tsx": "787c6b921b4d083e81c4c026407eff8c26724467cfab719a384dad71e04b7ff3",
-    "artifacts/lighthouse/PG-058/dashboard-authenticated-r1.json": "f16e672d46bcaf618de05589ac493d41e14d5d7f07048d677cf77bee4af7bbc8",
-    "artifacts/lighthouse/PG-058/dashboard-authenticated-r2.json": "929c8ab0b1c5f9f6d594432cb7c9c34f3e8c89315419c8f4601f219c595711f9",
-    "artifacts/lighthouse/PG-058/dashboard-authenticated-r3.json": "61b83d5168e7a5f0497cef08850a33009882b44fad5c0ccd9990514d13c07fea"
+    "apps/web/src/lib/dashboard/kpi-calculator.ts": "sha256:d9a73d635d35ac6592bd0028fabe00323a9fb95ebd782e4c3419859c02e0acaf",
+    "apps/web/src/app/dashboard/page.tsx": "sha256:3b7bdea4dcb3ec89f14edd98d53783c569f04a36c70c8123287009d3d2342a55",
+    "apps/web/src/app/dashboard/DashboardClient.tsx": "sha256:787c6b921b4d083e81c4c026407eff8c26724467cfab719a384dad71e04b7ff3",
+    "artifacts/lighthouse/PG-058/dashboard-authenticated-r1.json": "sha256:f16e672d46bcaf618de05589ac493d41e14d5d7f07048d677cf77bee4af7bbc8",
+    "artifacts/lighthouse/PG-058/dashboard-authenticated-r2.json": "sha256:929c8ab0b1c5f9f6d594432cb7c9c34f3e8c89315419c8f4601f219c595711f9",
+    "artifacts/lighthouse/PG-058/dashboard-authenticated-r3.json": "sha256:61b83d5168e7a5f0497cef08850a33009882b44fad5c0ccd9990514d13c07fea"
   },
   "validation_results": [
     {

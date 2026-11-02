@@ -88,10 +88,10 @@ describe('RAGContextChain', () => {
       expect(result.userRoles).toEqual([]);
     });
 
-    it('should reject invalid UUID for tenantId', () => {
+    it('should reject an unsafe tenantId', () => {
       const input = {
         query: 'test query',
-        tenantId: 'invalid-uuid',
+        tenantId: 'not a/valid id',
         userId: '550e8400-e29b-41d4-a716-446655440001',
       };
 
@@ -460,7 +460,7 @@ describe('RAGContextChain', () => {
     it('should handle validation errors gracefully', async () => {
       const input = {
         query: 'test',
-        tenantId: 'invalid', // Invalid UUID will cause validation error
+        tenantId: 'not a/valid id', // an unsafe id fails validation
         userId: '550e8400-e29b-41d4-a716-446655440001',
       };
 

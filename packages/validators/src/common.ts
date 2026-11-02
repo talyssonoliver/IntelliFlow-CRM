@@ -7,6 +7,7 @@ import { PhoneNumber, Money, WebsiteUrl, DateRange, Percentage } from '@intellif
 export const uuidSchema = z.uuid();
 export const cuidSchema = z.string().check(z.regex(/^c[a-z0-9]{8,}$/, 'Invalid CUID'));
 export const idSchema = z.union([uuidSchema, cuidSchema]);
+export { recordIdSchema, MAX_RECORD_ID_LENGTH } from './record-id';
 
 /** A user id, or a `system:<name>` actor for automated decisions (PG-198). */
 export const actorIdSchema = z.union([

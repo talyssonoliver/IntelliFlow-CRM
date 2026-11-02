@@ -1,0 +1,17 @@
+# 2026-10-20T23:40:36Z
+# dotenv -e .env.test -- prisma migrate deploy (local test DB localhost:5433/intelliflow_test only)
+[test-slot] slot2 taken for PG-203@feat/pg-203-event-types (holding group-intelliflow-db): npx dotenv -e ../../.env.test -- npx prisma migrate deploy
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+Datasource "db": PostgreSQL database "intelliflow_test", schema "public" at "localhost:5433"
+
+81 migrations found in prisma/migrations
+
+Error: P3009
+
+migrate found failed migrations in the target database, new migrations will not be applied. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve
+The `20261008000000_help_article_system_scope` migration started at 2026-10-17 20:50:29.099117 UTC failed
+
+
+# exit=1

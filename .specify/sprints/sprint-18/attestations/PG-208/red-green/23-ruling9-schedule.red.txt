@@ -1,0 +1,39 @@
+# PG-208 ruling 9 follow-up RED — 2026-10-21T14:28:26Z: findDueSchedules dropped the actions snapshot (Codex confirming round)
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/apps/api
+
+ ❯ |api| src/modules/task/automation/__tests__/task-automation-store.test.ts (23 tests | 1 failed | 22 skipped) 62ms
+     × finds due schedules (complete ones only) and claims a slot by compare-and-set 17ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/modules/task/automation/__tests__/task-automation-store.test.ts > createTaskAutomationStore (PG-208) > finds due schedules (complete ones only) and claims a slot by compare-and-set
+AssertionError: expected undefined to deeply equal [ { type: 'CREATE_TASK', …(1) } ]
+
+- Expected:
+[
+  {
+    "titleTemplate": "Snapshot",
+    "type": "CREATE_TASK",
+  },
+]
+
++ Received:
+undefined
+
+ ❯ src/modules/task/automation/__tests__/task-automation-store.test.ts:230:28
+    228|     expect(due.map((d) => d.id)).toEqual(['r1']);
+    229|     // The slot's run snapshots these actions (owner ruling 9).
+    230|     expect(due[0].actions).toEqual([{ type: 'CREATE_TASK', titleTempla…
+       |                            ^
+    231|     expect(m.taskAutomationRule.findMany.mock.calls.at(-1)[0].where).t…
+    232|       isActive: true,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 22 skipped (23)
+   Start at  15:28:28
+   Duration  1.65s (transform 858ms, setup 682ms, import 667ms, tests 62ms, environment 0ms)
+

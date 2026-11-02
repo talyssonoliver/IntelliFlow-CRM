@@ -1,0 +1,32 @@
+# 2026-10-21T00:28:50Z PG-208 Step 6 runtime RED by mutation
+# The runtime modules were written before their tests in this session, so a pre-implementation
+# RED was not captured. Instead each guard below is mutated, the tests must fail, then restored.
+## MUTATION: signature check always passes (apps/api/src/modules/task/automation/task-automation-webhook.ts)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  3 failed | 23 passed (26)
+## MUTATION: postcondition ignored (rolled-back changes fire) (apps/api/src/modules/task/automation/task-automation-engine.ts)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  3 failed | 37 passed (40)
+## MUTATION: hourly cap not enforced at insert (apps/api/src/modules/task/automation/task-automation-engine.ts)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  1 failed | 39 passed (40)
+## MUTATION: schedule claim without compare-and-set (apps/api/src/modules/task/automation/task-automation-store.ts)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  1 failed | 15 passed (16)
+## MUTATION: intake handler rethrows into the publisher (apps/api/src/modules/task/automation/task-automation-event-intake.ts)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  2 failed | 8 passed (10)
+## MUTATION: runner enabled under test (apps/api/src/modules/task/automation/task-automation-runner.ts)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  1 failed | 8 passed (9)
+## MUTATION: encryption guard disabled (apps/api/src/modules/task/automation/task-automation-runtime.ts)
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  1 failed | 4 passed (5)
+# restored: 

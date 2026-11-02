@@ -1,0 +1,66 @@
+# A1 RED, 2026-10-29T10:19:58Z, HEAD abce7dfaf
+     × checks every committed rule: transitions by state, live health and whether its condition held 8ms
+       × routes the rule to the logs datasource query_range with step 60, never to Prometheus 3ms
+       × probes the rule 120 s after the first error with a Loki range of one instant 2ms
+       × counts the 60 s steps where the rule's condition held, with the Loki lookback capped at 6 h 3ms
+       × times the condition after each first error from the Loki matrix, and gives null when empty 1ms
+       × matches a Loki series without service_name only to an episode without a service 1ms
+       × keeps Prometheus rules on the prom proxy beside a Loki rule 2ms
+       × reports a rule on an unknown datasource as not_checked and still writes 1ms
+       × anchors a Loki-rule transition labelled only service_name to its episode 1ms
+       × writes the 2.3.0 schema, whose new keys pass the output key check 1ms
+⎯⎯⎯⎯⎯⎯ Failed Tests 10 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  |root| tools/scripts/__tests__/collect-observability-evidence.test.ts > collect-observability-evidence: MTTD > checks every committed rule: transitions by state, live health and whether its condition held
+AssertionError: expected [ { …(5) } ] to deeply equal [ { …(6) } ]
+ FAIL  |root| tools/scripts/__tests__/collect-observability-evidence.test.ts > collect-observability-evidence: MTTD > a repo rule on the Loki datasource > routes the rule to the logs datasource query_range with step 60, never to Prometheus
+AssertionError: expected '/api/datasources/proxy/uid/grafanaclo…' to be '/api/datasources/proxy/uid/grafanaclo…' // Object.is equality
+ FAIL  |root| tools/scripts/__tests__/collect-observability-evidence.test.ts > collect-observability-evidence: MTTD > a repo rule on the Loki datasource > probes the rule 120 s after the first error with a Loki range of one instant
+AssertionError: expected [] to deep equally contain [ 1792663230, 1792663230 ]
+ FAIL  |root| tools/scripts/__tests__/collect-observability-evidence.test.ts > collect-observability-evidence: MTTD > a repo rule on the Loki datasource > counts the 60 s steps where the rule's condition held, with the Loki lookback capped at 6 h
+AssertionError: expected { …(5) } to match object { …(3) }
+ FAIL  |root| tools/scripts/__tests__/collect-observability-evidence.test.ts > collect-observability-evidence: MTTD > a repo rule on the Loki datasource > times the condition after each first error from the Loki matrix, and gives null when empty
+AssertionError: expected [ { …(4) } ] to deeply equal [ { …(4) } ]
+ FAIL  |root| tools/scripts/__tests__/collect-observability-evidence.test.ts > collect-observability-evidence: MTTD > a repo rule on the Loki datasource > matches a Loki series without service_name only to an episode without a service
+AssertionError: expected [ 'ifc074-error-logs-direct' ] to deeply equal []
+ FAIL  |root| tools/scripts/__tests__/collect-observability-evidence.test.ts > collect-observability-evidence: MTTD > a repo rule on the Loki datasource > keeps Prometheus rules on the prom proxy beside a Loki rule
+AssertionError: expected [ undefined, undefined ] to deeply equal [ 'loki', 'prometheus' ]
+ FAIL  |root| tools/scripts/__tests__/collect-observability-evidence.test.ts > collect-observability-evidence: MTTD > a repo rule on the Loki datasource > reports a rule on an unknown datasource as not_checked and still writes
+AssertionError: expected { uid: 'odd', …(4) } to match object { uid: 'odd', …(3) }
+ FAIL  |root| tools/scripts/__tests__/collect-observability-evidence.test.ts > collect-observability-evidence: MTTD > a repo rule on the Loki datasource > anchors a Loki-rule transition labelled only service_name to its episode
+AssertionError: expected { service: 'ai-worker', …(10) } to match object { service: 'ai-worker', …(2) }
+ FAIL  |root| tools/scripts/__tests__/collect-observability-evidence.test.ts > collect-observability-evidence: MTTD > a repo rule on the Loki datasource > writes the 2.3.0 schema, whose new keys pass the output key check
+AssertionError: expected '2.2.0' to be '2.3.0' // Object.is equality
+ Test Files  1 failed (1)
+      Tests  10 failed | 69 passed (79)
+
+# A2 RED 2026-10-29T10:20:18Z
+     × rejects datasource uid "../x" before any request, without echoing it 4ms
+     × rejects datasource uid "a/b" before any request, without echoing it 1ms
+     × rejects datasource uid "a?b" before any request, without echoing it 1ms
+     × rejects datasource uid "" before any request, without echoing it 1ms
+     × rejects datasource uid "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu" before any request, without echoing it 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  5 failed | 57 passed (62)
+
+# A3 RED 2026-10-29T10:24:33Z
+     × is valid, with a fixed uid in the production folder and six panels 7ms
+     × selects in each Loki target only the stream its datasource allows 1ms
+     × has an "MTTD per error episode (live proxy)" panel pointing at the official KPI 1ms
+     × accepts each allowed Loki stream on its own datasource 2ms
+     × rejects a target on a datasource that is not allowed 1ms
+     × rejects a Loki selector its datasource does not allow (grafanacloud-logs {service_name="api"}) 1ms
+     × rejects a Loki selector its datasource does not allow (grafanacloud-logs {from="state-history"}) 1ms
+     × rejects a Loki selector its datasource does not allow (grafanacloud-alert-state-history {service_name="ai-worker"}) 1ms
+     × rejects a Loki selector its datasource does not allow (grafanacloud-logs {service_name=~".+"}) 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 9 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  9 failed | 22 passed (31)
+
+# A4 RED 2026-10-29T10:28:38Z
+     × accepts a KPI with a string source 6ms
+     × rejects a non-string source 2ms
+     × declares an optional string source 2ms
+     × still forbids any other extra key and keeps met a boolean 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+      Tests  4 failed | 4 passed (8)

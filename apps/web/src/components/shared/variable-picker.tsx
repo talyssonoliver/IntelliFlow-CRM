@@ -38,7 +38,23 @@ export interface VariablePickerProps {
   ariaLabel?: string;
   /** Tailwind class for the input/textarea */
   className?: string;
+  /** PG-208: optional field wiring (defaults keep the workflow builder unchanged). */
+  id?: string;
+  maxLength?: number;
+  disabled?: boolean;
+  invalid?: boolean;
+  describedBy?: string;
+  /** Popover help line under "Available variables". */
+  helpText?: string;
+  /** Popover text when `variables` is empty. */
+  emptyText?: string;
+  /** Name of the insert button; give it the field name when a form has several pickers. */
+  insertLabel?: string;
 }
+
+const DEFAULT_HELP_TEXT = "Substituted at run time with the trigger entity's fields.";
+const DEFAULT_EMPTY_TEXT =
+  'No variables available — pick a trigger entity on the Start node first.';
 
 export function VariablePicker({
   value,
@@ -48,9 +64,24 @@ export function VariablePicker({
   multiline = false,
   ariaLabel,
   className,
+  id,
+  maxLength,
+  disabled,
+  invalid,
+  describedBy,
+  helpText = DEFAULT_HELP_TEXT,
+  emptyText = DEFAULT_EMPTY_TEXT,
+  insertLabel = 'Insert variable',
 }: VariablePickerProps) {
   const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const [open, setOpen] = useState(false);
+  const fieldProps = {
+    id,
+    maxLength,
+    disabled,
+    'aria-invalid': invalid ? (true as const) : undefined,
+    'aria-describedby': describedBy,
+  };
 
   const insertToken = (path: string) => {
     const token = `{{${path}}}`;
@@ -85,6 +116,7 @@ export function VariablePicker({
           onChange={(e) => onChange(e.target.value)}
           aria-label={ariaLabel}
           placeholder={placeholder}
+          {...fieldProps}
           className={
             className ??
             'w-full rounded-md border border-input px-3 py-2 text-sm min-h-[80px] resize-y'
@@ -99,6 +131,7 @@ export function VariablePicker({
           onChange={(e) => onChange(e.target.value)}
           aria-label={ariaLabel}
           placeholder={placeholder}
+          {...fieldProps}
           className={className}
         />
       )}
@@ -108,7 +141,8 @@ export function VariablePicker({
             type="button"
             variant="outline"
             size="sm"
-            aria-label="Insert variable"
+            aria-label={insertLabel}
+            disabled={disabled}
             className={multiline ? 'self-end' : ''}
           >
             <span className="material-symbols-outlined text-base" aria-hidden="true">
@@ -120,14 +154,10 @@ export function VariablePicker({
         <PopoverContent side="bottom" align="end" className="w-72 p-0">
           <div className="px-3 py-2 border-b border-border">
             <p className="text-xs font-medium">Available variables</p>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              Substituted at run time with the trigger entity's fields.
-            </p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">{helpText}</p>
           </div>
           {variables.length === 0 ? (
-            <div className="px-3 py-4 text-sm text-muted-foreground">
-              No variables available — pick a trigger entity on the Start node first.
-            </div>
+            <div className="px-3 py-4 text-sm text-muted-foreground">{emptyText}</div>
           ) : (
             <ul className="max-h-72 overflow-y-auto">
               {variables.map((v) => (

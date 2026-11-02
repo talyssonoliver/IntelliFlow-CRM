@@ -1,0 +1,25 @@
+# HEAD fccae6845 + working tree (merge of origin/main, inherited fixes tested), 2026-10-25T18:46:19Z
+[test-slot] slot2 taken for ENV-008-AI@feat/env-008-ai-env008: pnpm exec vitest run --project root --coverage.enabled --coverage.reportsDirectory=../env008-cov-post --coverage.reporter=lcov --coverage.reporter=text-summary --coverage.include=tools/scripts/lib/grafana-provisioning.mjs --coverage.include=tools/scripts/observability/*.mjs --coverage.include=tools/scripts/migrate-attestations.ts --coverage.include=tools/scripts/generate-missing-attestations.ts tools/scripts/lib/grafana-provisioning.test.ts tools/scripts/__tests__/apply-grafana-alert-rules.test.ts tools/scripts/__tests__/apply-synthetic-monitoring.test.ts tools/scripts/__tests__/apply-grafana-slos.test.ts tools/scripts/__tests__/apply-grafana-dashboard.test.ts tools/scripts/__tests__/apply-railway-self-healing.test.ts tools/scripts/__tests__/env008-workflows.test.ts tools/scripts/__tests__/env008-monitoring-content.test.ts tools/scripts/__tests__/migrate-attestations.test.ts tools/scripts/security/__tests__/workflow-secret-lint.test.ts tools/scripts/observability/__tests__/ tools/scripts/__tests__/attestation-hash-readers.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/env-008-ai
+      Coverage enabled with istanbul
+
+
+ Test Files  13 passed (13)
+      Tests  227 passed (227)
+   Start at  18:46:22
+   Duration  5.52s (transform 6.38s, setup 7.44s, import 4.68s, tests 3.19s, environment 2ms)
+
+ % Coverage report from istanbul
+
+=============================== Coverage summary ===============================
+Statements   : 70.09% ( 532/759 )
+Branches     : 67.56% ( 402/595 )
+Functions    : 60.82% ( 59/97 )
+Lines        : 71.49% ( 474/663 )
+================================================================================
+ERROR: Coverage for lines (71.49%) does not meet global threshold (90%)
+ERROR: Coverage for functions (60.82%) does not meet global threshold (90%)
+ERROR: Coverage for statements (70.09%) does not meet global threshold (90%)
+ERROR: Coverage for branches (67.56%) does not meet global threshold (80%)
+exit=1 (non-zero only from the repo-wide global threshold on this narrow include)

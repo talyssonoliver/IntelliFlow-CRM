@@ -17,10 +17,10 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/(developer)/docs/auth/page.tsx": "21e6d7d379b5128a300052a44d0901dec172ecd20d221a40e9b8c085d6d04539",
-    "apps/web/src/components/developer/auth-guides.tsx": "9a5cea34584aeb9dacc5f808e0d3a7d0491a849729b0266ece598a3d1b03066e",
-    "apps/web/src/components/developer/auth-examples.tsx": "3d7f6749d4e35014611ccd8364d61211e0a76da07fd42a250c522c87e940d84c",
-    ".specify/sprints/sprint-15/attestations/PG-038/context_ack.json": "37d15e8a922d5064713eb3b27ec79c0d66d935fe6ec308755e7912021616ce1f"
+    "apps/web/src/app/(developer)/docs/auth/page.tsx": "sha256:21e6d7d379b5128a300052a44d0901dec172ecd20d221a40e9b8c085d6d04539",
+    "apps/web/src/components/developer/auth-guides.tsx": "sha256:9a5cea34584aeb9dacc5f808e0d3a7d0491a849729b0266ece598a3d1b03066e",
+    "apps/web/src/components/developer/auth-examples.tsx": "sha256:3d7f6749d4e35014611ccd8364d61211e0a76da07fd42a250c522c87e940d84c",
+    ".specify/sprints/sprint-15/attestations/PG-038/context_ack.json": "sha256:37d15e8a922d5064713eb3b27ec79c0d66d935fe6ec308755e7912021616ce1f"
   },
   "validation_results": [
     {

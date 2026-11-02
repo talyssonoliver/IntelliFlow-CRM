@@ -62,6 +62,15 @@ export class LeadScoreBelowMinimumError extends ValidationError {
 }
 
 /**
+ * A task's record link refused because the record is gone, malformed, converted
+ * or closed. Still a ValidationError (same code and message); `reason` lets a
+ * caller tell it from a failed lookup or a failed save without parsing the message.
+ */
+export class TaskLinkRejectedError extends ValidationError {
+  readonly reason = 'TASK_LINK_REJECTED';
+}
+
+/**
  * Application layer error for not found resources
  */
 export class NotFoundError extends DomainError {

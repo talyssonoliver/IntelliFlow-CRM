@@ -7,12 +7,29 @@
  * @task IFC-117
  */
 
+import { createHash } from 'node:crypto';
 import pino from 'pino';
 
 const logger = pino({
   name: 'hallucination-checker',
   level: process.env.LOG_LEVEL || 'info',
 });
+
+/** A thousands separator: a comma between a digit and exactly three more digits. */
+const DIGIT_GROUP_COMMA = /(?<=\d),(?=\d{3}(?!\d))/g;
+
+/**
+ * Lower-case word tokens with punctuation stripped, so "Title:" and "title" match.
+ * `$` and `%` stay attached so "$40m" and "15%" remain figures. Thousands separators
+ * are dropped first, so "4,500" and "4500" are the same figure rather than "4" and "500".
+ */
+function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .replace(DIGIT_GROUP_COMMA, '')
+    .split(/[^\p{L}\p{N}$%]+/u)
+    .filter(Boolean);
+}
 
 /**
  * Types of hallucination detected
@@ -34,7 +51,8 @@ export interface HallucinationResult {
   id: string;
   timestamp: Date;
   model: string;
-  inputContext: string;
+  /** SHA-256 (hex) of the input context. The context text itself is never kept. */
+  inputContextHash: string;
   output: string;
   hallucinated: boolean;
   confidence: number;
@@ -253,7 +271,8 @@ export class HallucinationChecker {
       id: params.id,
       timestamp: new Date(),
       model: params.model,
-      inputContext: params.inputContext.slice(0, 500), // Truncate for storage
+      // The context is prompt and lead text; only its hash is stored, flushed or returned.
+      inputContextHash: createHash('sha256').update(params.inputContext).digest('hex'),
       output: params.output.slice(0, 1000),
       hallucinated,
       confidence: Math.min(1, score * 2), // Scale confidence
@@ -501,11 +520,17 @@ export class HallucinationChecker {
     const claims = this.extractClaims(output);
     const alignedClaims: string[] = [];
     const unsupportedClaims: string[] = [];
+    const contextTokens = new Set(tokenize(context));
 
     for (const claim of claims) {
-      if (this.claimSupportedBySource(claim, context)) {
+      // A figure (count, amount, year, percentage) the context never states is unsupported,
+      // however many of the claim's words the context shares.
+      const statesUnknownFigure = tokenize(claim).some(
+        (t) => /\d/.test(t) && !contextTokens.has(t)
+      );
+      if (!statesUnknownFigure && this.claimSupportedBySource(claim, context)) {
         alignedClaims.push(claim);
-      } else if (this.isFactualClaim(claim)) {
+      } else if (statesUnknownFigure || this.isFactualClaim(claim)) {
         unsupportedClaims.push(claim);
       }
     }
@@ -613,11 +638,8 @@ export class HallucinationChecker {
   private claimSupportedBySource(claim: string, source: string): boolean {
     // Simple keyword overlap check
     // In production, use semantic similarity via embeddings
-    const claimWords = claim
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((w) => w.length > 4);
-    const sourceWords = new Set(source.toLowerCase().split(/\s+/));
+    const claimWords = tokenize(claim).filter((w) => w.length > 4);
+    const sourceWords = new Set(tokenize(source));
 
     const matchCount = claimWords.filter((w) => sourceWords.has(w)).length;
     const matchRatio = claimWords.length > 0 ? matchCount / claimWords.length : 0;
@@ -680,9 +702,7 @@ export class HallucinationChecker {
    */
   private extractTopics(text: string): string[] {
     // Extract noun phrases and key terms
-    const words = text
-      .toLowerCase()
-      .split(/\s+/)
+    const words = tokenize(text)
       .filter((w) => w.length > 4)
       .filter((w) => !this.isStopWord(w));
 
@@ -789,44 +809,3 @@ export const defaultHallucinationConfig: HallucinationCheckerConfig = {
  * Global hallucination checker instance
  */
 export const hallucinationChecker = new HallucinationChecker(defaultHallucinationConfig);
-
-/**
- * Prometheus metrics format for hallucination detection
- */
-export function getHallucinationMetrics(): string {
-  const stats = hallucinationChecker.getStats();
-
-  let metrics = '';
-
-  metrics += `# HELP intelliflow_ai_hallucination_total Total hallucination checks performed\n`;
-  metrics += `# TYPE intelliflow_ai_hallucination_total counter\n`;
-  metrics += `intelliflow_ai_hallucination_total ${stats.totalChecks}\n`;
-
-  metrics += `# HELP intelliflow_ai_hallucination_detected Total hallucinations detected\n`;
-  metrics += `# TYPE intelliflow_ai_hallucination_detected counter\n`;
-  metrics += `intelliflow_ai_hallucination_detected ${stats.hallucinationsDetected}\n`;
-
-  metrics += `# HELP intelliflow_ai_hallucination_rate Current hallucination rate (0-1)\n`;
-  metrics += `# TYPE intelliflow_ai_hallucination_rate gauge\n`;
-  metrics += `intelliflow_ai_hallucination_rate ${stats.hallucinationRate.toFixed(4)}\n`;
-
-  metrics += `# HELP intelliflow_ai_hallucination_kpi_compliant Whether rate is below 5% target (1=yes, 0=no)\n`;
-  metrics += `# TYPE intelliflow_ai_hallucination_kpi_compliant gauge\n`;
-  metrics += `intelliflow_ai_hallucination_kpi_compliant ${stats.kpiCompliant ? 1 : 0}\n`;
-
-  // By type
-  metrics += `# HELP intelliflow_ai_hallucination_by_type Hallucinations by type\n`;
-  metrics += `# TYPE intelliflow_ai_hallucination_by_type counter\n`;
-  for (const [type, count] of Object.entries(stats.byType)) {
-    metrics += `intelliflow_ai_hallucination_by_type{type="${type}"} ${count}\n`;
-  }
-
-  // By model
-  metrics += `# HELP intelliflow_ai_hallucination_by_model Hallucination rate by model\n`;
-  metrics += `# TYPE intelliflow_ai_hallucination_by_model gauge\n`;
-  for (const [model, data] of Object.entries(stats.byModel)) {
-    metrics += `intelliflow_ai_hallucination_by_model{model="${model}"} ${data.rate.toFixed(4)}\n`;
-  }
-
-  return metrics;
-}

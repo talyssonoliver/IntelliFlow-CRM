@@ -1,0 +1,11 @@
+-- PG-207: validate "email_records_mailboxId_fkey" (added NOT VALID in
+-- 20261020120300).
+--
+-- Class A: VALIDATE CONSTRAINT takes SHARE UPDATE EXCLUSIVE on
+-- "email_records" (reads and writes continue) and ROW SHARE on
+-- "email_mailboxes". It is the only statement here, so it runs outside the
+-- ADD COLUMN's transaction. Every existing row has "mailboxId" NULL, so
+-- validation cannot fail.
+--
+-- Recovery plan: forward-only; a validated foreign key has no data effect.
+ALTER TABLE "email_records" VALIDATE CONSTRAINT "email_records_mailboxId_fkey";

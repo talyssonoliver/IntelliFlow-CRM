@@ -1,0 +1,26 @@
+Loaded Prisma config from prisma.config.ts.
+
+-- DropForeignKey
+ALTER TABLE "appointments" DROP CONSTRAINT "appointments_tenantId_eventTypeId_fkey";
+
+-- DropForeignKey
+ALTER TABLE "appointments" DROP CONSTRAINT "appointments_tenantId_leadId_fkey";
+
+-- DropForeignKey
+ALTER TABLE "booking_attempts" DROP CONSTRAINT "booking_attempts_tenantId_eventTypeId_fkey";
+
+-- DropForeignKey
+ALTER TABLE "cases" DROP CONSTRAINT "cases_tenantId_caseTypeId_fkey";
+
+-- DropForeignKey
+ALTER TABLE "event_types" DROP CONSTRAINT "event_types_hostUserId_fkey";
+
+-- DropIndex
+DROP INDEX "report_templates_tenantId_name_idx";
+
+-- AlterTable
+ALTER TABLE "document_type_definitions" ALTER COLUMN "updatedAt" DROP DEFAULT;
+
+-- AlterTable
+ALTER TABLE "users" ALTER COLUMN "locale" SET DEFAULT 'en-US';
+

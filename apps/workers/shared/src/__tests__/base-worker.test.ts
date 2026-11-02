@@ -191,6 +191,18 @@ describe('BaseWorker', () => {
       expect(health.testDependency.message).toBe('Test dependency healthy');
     });
   });
+
+  describe('checkHealth()', () => {
+    it('combines the Redis check with the subclass dependency checks', async () => {
+      const redis = { status: 'degraded' as const, message: 'slow' };
+      vi.spyOn(worker['queueConnector'], 'checkHealth').mockResolvedValue(redis);
+
+      const checks = await worker.checkHealth();
+
+      expect(checks.redis).toEqual(redis);
+      expect(checks.testDependency.status).toBe('ok');
+    });
+  });
 });
 
 describe('BaseWorker - Error Handling', () => {

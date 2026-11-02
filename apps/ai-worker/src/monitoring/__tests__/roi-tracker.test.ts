@@ -12,7 +12,6 @@ import {
   ROITracker,
   defaultROIConfig,
   roiTracker,
-  getROIMetrics,
   type ROITrackerConfig,
   type AICost,
   type AIValue,
@@ -1096,66 +1095,6 @@ describe('ROITracker', () => {
 
       expect(typeof result.costsRemoved).toBe('number');
       expect(typeof result.valuesRemoved).toBe('number');
-    });
-  });
-
-  // ============================================
-  // Prometheus Metrics Tests
-  // ============================================
-
-  describe('getROIMetrics', () => {
-    it('should return valid Prometheus format', () => {
-      const metrics = getROIMetrics();
-
-      expect(metrics).toContain('# HELP');
-      expect(metrics).toContain('# TYPE');
-      expect(metrics).toContain('intelliflow_ai_roi_current');
-      expect(metrics).toContain('intelliflow_ai_total_cost');
-      expect(metrics).toContain('intelliflow_ai_total_value');
-    });
-
-    it('should include cost by model metrics', () => {
-      roiTracker.recordCost({
-        id: 'prom-cost-1',
-        model: 'gpt-4',
-        operationType: 'scoring',
-        inputTokens: 1000,
-        outputTokens: 500,
-        cost: 1.0,
-      });
-
-      const metrics = getROIMetrics();
-
-      expect(metrics).toContain('intelliflow_ai_cost_by_model');
-    });
-
-    it('should include value by type metrics', () => {
-      roiTracker.recordValue({
-        id: 'prom-value-1',
-        valueType: 'lead_scored',
-        estimatedValue: 0.5,
-        confidence: 1.0,
-        relatedCostIds: [],
-      });
-
-      const metrics = getROIMetrics();
-
-      expect(metrics).toContain('intelliflow_ai_value_by_type');
-    });
-
-    it('should include operations total', () => {
-      const metrics = getROIMetrics();
-
-      expect(metrics).toContain('intelliflow_ai_operations_total');
-      expect(metrics).toContain('type="cost"');
-      expect(metrics).toContain('type="value"');
-    });
-
-    it('should format numbers correctly', () => {
-      const metrics = getROIMetrics();
-
-      expect(metrics).not.toContain('NaN');
-      expect(metrics).not.toContain('undefined');
     });
   });
 

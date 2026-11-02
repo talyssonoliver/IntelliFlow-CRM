@@ -51,6 +51,8 @@ export const NOTIFICATION_TYPES = [
   'task_overdue',
   'task_completed',
   'task_comment',
+  // PG-208 task automation (rule-created tasks, rule failures)
+  'task_automation',
   // Appointment notifications
   'appointment_scheduled',
   'appointment_reminder',
@@ -103,6 +105,8 @@ export const NOTIFICATION_TYPES = [
   'email_received',
   'email_opened',
   'email_replied',
+  // PG-207: a sent email bounced (sender notified when notifySenderOnBounce is on)
+  'email_bounced',
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

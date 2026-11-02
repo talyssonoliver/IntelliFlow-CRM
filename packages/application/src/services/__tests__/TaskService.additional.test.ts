@@ -449,6 +449,8 @@ describe('TaskService - Additional Coverage', () => {
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Contact not found');
+      expect(result.error.code).toBe('VALIDATION_ERROR');
+      expect((result.error as { reason?: string }).reason).toBe('TASK_LINK_REJECTED');
     });
   });
 
@@ -715,6 +717,8 @@ describe('TaskService - Additional Coverage', () => {
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Error validating entity assignment');
+      // A failed lookup says nothing about the record, so it is not a link rejection.
+      expect((result.error as { reason?: string }).reason).toBeUndefined();
 
       findByIdSpy.mockRestore();
     });

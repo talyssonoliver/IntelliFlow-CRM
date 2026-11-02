@@ -484,6 +484,9 @@ if (require.main === module) {
     });
 }
 
+// The configured instance, for in-process composition (apps/workers/combined-worker).
+export { worker as ingestionWorker };
+
 // Exports - IngestionWorker is already exported at class declaration
 export { TextExtractionProcessor } from './jobs/extractText.job';
 export type { TextExtractionInput, TextExtractionResult } from './jobs/extractText.job';

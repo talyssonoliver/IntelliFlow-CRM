@@ -35,7 +35,7 @@ import {
   newRuleDraft,
   type RuleDraft,
 } from './TerritoryRulesEditor';
-import { MemberMultiSelect, type MemberOption } from './MemberMultiSelect';
+import { MemberMultiSelect, type MemberOption } from '@/components/shared/member-multi-select';
 import type { TerritoryRow } from './TerritoryList';
 
 export const STRATEGY_LABELS: Record<TerritoryStrategy, { label: string; help: string }> = {
@@ -301,6 +301,7 @@ export function TerritoryDialog({
           <div className="space-y-1.5">
             <Label htmlFor="territory-members">Members</Label>
             <MemberMultiSelect
+              legend="Territory members"
               id="territory-members"
               options={members}
               selectedIds={draft.memberIds}

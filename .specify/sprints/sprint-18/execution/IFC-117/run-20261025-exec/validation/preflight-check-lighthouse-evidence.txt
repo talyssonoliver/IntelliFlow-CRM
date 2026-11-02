@@ -1,0 +1,1 @@
+[lighthouse-evidence] No attestation yet at C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-117\.specify\sprints\sprint-18\attestations\IFC-117\attestation.json — gate will re-run after write.

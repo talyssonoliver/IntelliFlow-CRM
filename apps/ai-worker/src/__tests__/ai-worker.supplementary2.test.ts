@@ -125,6 +125,7 @@ vi.mock('../services/agent-status', () => ({
   markAgentActive: vi.fn().mockResolvedValue(undefined),
   markAgentIdle: vi.fn().mockResolvedValue(undefined),
   markAgentError: vi.fn().mockResolvedValue(undefined),
+  recordToolCall: vi.fn().mockResolvedValue(undefined),
 }));
 
 // ============================================================
@@ -370,6 +371,90 @@ describe('AIWorker', () => {
       const result = await (worker as any).processJob(job);
       expect(mocks.mockProcessPredictionJob).toHaveBeenCalledWith(job);
       expect(result).toEqual({ prediction: 'high' });
+    });
+
+    // #805: scheduled dispatch jobs (the 4 h scoring and 6 h insight crons run
+    // as the seed system tenant; the nightly fan-outs as '__scheduled__') only
+    // enqueue per-tenant work. Their agent bookkeeping wrote rows for a tenant
+    // that production does not have, failing the tenant foreign key on every
+    // run. The jobs they fan out are tracked under their real tenants.
+    describe('agent bookkeeping for scheduled dispatch jobs (#805)', () => {
+      const ctx = {
+        tenantId: '00000000-0000-4000-8000-000000000001',
+        userId: '00000000-0000-4000-8000-000000000101',
+        agentType: 'scoring',
+        taskDescription: 'Scoring lead scheduled@system.internal',
+      };
+
+      async function agentStatus() {
+        const m = await import('../services/agent-status');
+        vi.mocked(m.extractJobContext).mockReturnValue(ctx);
+        return m;
+      }
+
+      it('skips all bookkeeping for a scheduled-* job and still returns its result', async () => {
+        const m = await agentStatus();
+        const worker = new AIWorker();
+        const job = {
+          queueName: 'ai-scoring',
+          name: 'scheduled-lead-scoring',
+          data: { leadId: '00000000-0000-0000-0000-000000000000', tenantId: ctx.tenantId },
+        } as any;
+
+        const result = await (worker as any).processJob(job);
+
+        expect(result).toEqual({ score: 85 });
+        expect(mocks.mockProcessScoringJob).toHaveBeenCalledWith(job);
+        expect(m.markAgentActive).not.toHaveBeenCalled();
+        expect(m.recordToolCall).not.toHaveBeenCalled();
+        expect(m.markAgentIdle).not.toHaveBeenCalled();
+      });
+
+      it("skips bookkeeping for a '__scheduled__' tenant job, whatever its name", async () => {
+        const m = await agentStatus();
+        const worker = new AIWorker();
+        const job = {
+          queueName: 'ai-scoring',
+          name: 'score',
+          data: { leadId: '123', tenantId: '__scheduled__' },
+        } as any;
+
+        await (worker as any).processJob(job);
+
+        expect(m.markAgentActive).not.toHaveBeenCalled();
+        expect(m.markAgentIdle).not.toHaveBeenCalled();
+      });
+
+      it('records no agent error when a scheduled dispatch job fails, and rethrows', async () => {
+        const m = await agentStatus();
+        mocks.mockProcessScoringJob.mockRejectedValueOnce(new Error('dispatch failed'));
+        const worker = new AIWorker();
+        const job = {
+          queueName: 'ai-scoring',
+          name: 'scheduled-lead-scoring',
+          data: { leadId: '00000000-0000-0000-0000-000000000000' },
+        } as any;
+
+        await expect((worker as any).processJob(job)).rejects.toThrow('dispatch failed');
+        expect(m.markAgentError).not.toHaveBeenCalled();
+        expect(m.recordToolCall).not.toHaveBeenCalled();
+      });
+
+      it('keeps full bookkeeping for an ordinary per-tenant job', async () => {
+        const m = await agentStatus();
+        const worker = new AIWorker();
+        const job = {
+          queueName: 'ai-scoring',
+          name: 'score',
+          data: { leadId: '123', tenantId: 'tenant-a' },
+        } as any;
+
+        await (worker as any).processJob(job);
+
+        expect(m.markAgentActive).toHaveBeenCalledWith(ctx);
+        expect(m.recordToolCall).toHaveBeenCalled();
+        expect(m.markAgentIdle).toHaveBeenCalled();
+      });
     });
 
     it('throws error for unknown queue name', async () => {

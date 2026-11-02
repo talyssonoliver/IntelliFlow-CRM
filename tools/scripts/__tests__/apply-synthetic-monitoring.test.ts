@@ -314,4 +314,52 @@ describe('run', () => {
     expect(lines.join('\n')).not.toContain(SM_TOKEN);
     expect(lines.join('\n')).not.toContain(GRAFANA_TOKEN);
   });
+
+  // ENV-008-AI AC-001: run() passes its sleep to both clients.
+  it('retries a 503 through the injected sleep', async () => {
+    const b = fakeBackends();
+    let first = true;
+    const sleeps: number[] = [];
+    const fetchImpl: typeof b.fetchImpl = async (url, init) => {
+      if (first && url.endsWith('/api/v1/probe/list')) {
+        first = false;
+        return { status: 503, text: async () => '' };
+      }
+      return b.fetchImpl(url, init);
+    };
+    const result = await run({
+      env,
+      argv: ['--dry-run'],
+      fetchImpl,
+      log: quiet,
+      sleep: async (ms: number) => {
+        sleeps.push(ms);
+      },
+    });
+    expect(result.probeIds).toEqual([11, 12, 13]);
+    expect(sleeps).toEqual([5000]);
+  });
+
+  // ENV-008-AI NF-001: an error body is never echoed raw into the CI log.
+  it.each([
+    ['the check write', (url: string) => url === `${SM_URL}/api/v1/check/add`],
+    ['the folder create', (url: string) => url === `${GRAFANA_URL}/api/folders`],
+    [
+      'the alert-rule write',
+      (url: string) => url === `${GRAFANA_URL}/api/v1/provisioning/alert-rules`,
+    ],
+  ])('does not echo a token from a 400 body at %s', async (_site, matches) => {
+    const leaked = 'gl' + 'sa_' + 'm'.repeat(32);
+    const b = fakeBackends({ folderMissing: true });
+    const fetchImpl: typeof b.fetchImpl = async (url, init) => {
+      if (init.method === 'POST' && matches(url)) {
+        return { status: 400, text: async () => `{"error":"rejected ${leaked}"}` };
+      }
+      return b.fetchImpl(url, init);
+    };
+    const err = await run({ env, argv: [], fetchImpl, log: quiet }).catch((e: Error) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toContain('HTTP 400');
+    expect((err as Error).message).not.toContain(leaked);
+  });
 });

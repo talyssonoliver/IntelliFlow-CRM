@@ -1,0 +1,32 @@
+# 2026-10-21T00:05:14Z
+# 7fd27d0a5180f3eb39cb20d0b2197563171fe92c
+# pnpm --filter @intelliflow/api exec vitest run src/modules/calendar/__tests__/booking-abuse.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/api
+
+ ❯ |api| src/modules/calendar/__tests__/booking-abuse.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/modules/calendar/__tests__/booking-abuse.test.ts [ src/modules/calendar/__tests__/booking-abuse.test.ts ]
+Error: Cannot find module '../booking-abuse' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/api/src/modules/calendar/__tests__/booking-abuse.test.ts
+ ❯ src/modules/calendar/__tests__/booking-abuse.test.ts:10:1
+      8| import { TRPCError } from '@trpc/server';
+      9| import { prismaMock } from '../../../test/setup';
+     10| import {
+       | ^
+     11|   BOOKING_LOCAL_SALT,
+     12|   assertBookingCaps,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  01:05:15
+   Duration  783ms (transform 394ms, setup 569ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\apps\api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/calendar/__tests__/booking-abuse.test.ts
+# exit=1

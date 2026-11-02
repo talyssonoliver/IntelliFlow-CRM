@@ -36,13 +36,12 @@ runtime implementation lives in `apps/ai-worker`, not here (see status below).
   `generateBatchEmbeddings`) — using these types against the real service
   breaks.
 
-## Related audit defect (NOT in this package)
+## Related audit defect (NOT in this package) — resolved by PG-203
 
-- GDPR purge is **not atomic** in production:
-  `apps/api/src/workflow/dsar-workflow.ts` `purgeSearchIndexes()` runs two
-  sequential `$executeRaw` (docs, then notes) with **no `$transaction`**,
-  despite the attestation claiming atomic purge. The correct
-  `EmbeddingPurgeService.$transaction` exists but was not wired in.
+- The non-atomic GDPR purge in `apps/api/src/workflow/dsar-workflow.ts` is gone:
+  PG-203 removed that workflow, and `PrismaSubjectDataRepository.erase` clears
+  embeddings and search vectors inside the erasure transaction.
+  `EmbeddingPurgeService` still exists with no caller.
 
 ## For the next maintainer
 

@@ -1,0 +1,29 @@
+{
+  "stoa": "Quality",
+  "task_id": "IFC-074",
+  "run_id": "20261029-addendum",
+  "verdict": "PASS",
+  "rationale": "Read-only; judged from code and recorded logs (no tests run by the STOA). AC-010, AC-011, AC-012, AC-015 and AC-016 are each proved by named tests; no skip/only/todo in the five test files; RED logs show real failures and the mutation logs 9/9 killed. The uncommitted Sonar fix is behaviour-preserving (code-unit comparator = default string sort; reduce seeded with members[0] on a never-empty array) plus a fixed-line rejection handler at the entry point. Sonar new_coverage 90.8 (>= 80); the only failing Sonar condition is new_reliability_rating from the 4 bugs that fix addresses.",
+  "checks": [
+    {"name": "AC-010 Loki-rule routing", "result": "PASS", "evidence": "collect-observability-evidence.test.ts 'routes the rule to the logs datasource query_range with step 60, never to Prometheus' (:1108), 'keeps Prometheus rules on the prom proxy beside a Loki rule' (:1215), unknown-uid case; RED in logs/a-red.txt; mutants 'Loki routed through Prometheus', 'step 60 dropped', 'unknown datasource treated as prometheus' KILLED"},
+    {"name": "AC-011 anchoring, uid validation, schema 2.3.0", "result": "PASS", "evidence": "tests at :1268, :1205, :1291 and the 2.3.0 test; grafana-provisioning.test.ts 5 uid rejection cases (A2 RED 5/62); mutants 'uid regex removed', 'service_name fallback removed', 'service not service_name' KILLED"},
+    {"name": "AC-012 KPI source schema", "result": "PASS", "evidence": "task-status-kpi-schema.test.ts (8 tests); A4 RED 4 failed / 4 passed; AC-012 narrowed to the kpis subtree (F17/F18)"},
+    {"name": "AC-015 real-pino record key set", "result": "PASS", "evidence": "packages/observability/src/logging.test.ts:231-273 asserts the exact key set both with and without log context; pin-only characterisation test, no mutation run (Q-001)"},
+    {"name": "AC-016 live-proxy panel", "result": "PASS", "evidence": "apply-grafana-dashboard.test.ts (+132 lines); A3 RED 9/31; mutants 'unknown datasource accepted', 'any Loki stream accepted', 'Loki target checked as PromQL' KILLED"},
+    {"name": "No skipped/focused/todo tests", "result": "PASS", "evidence": "grep -nE '\\.(skip|only|todo)\\(' over the five files: no matches"},
+    {"name": "TDD and mutation evidence", "result": "PASS", "evidence": "a-red.txt A1 10/79, A2 5/62, A3 9/31, A4 4/8; mutations-a1-a2.txt 6 KILLED, mutations-a3-a8.txt 3 KILLED; tests.txt 215 + 46 passed, exits 0/0"},
+    {"name": "Coverage / Sonar gate", "result": "PASS", "evidence": "SonarCloud PR 1073: new_coverage 90.8 OK, duplication 0.0, security and maintainability A, hotspots 100%; ERROR only on new_reliability_rating 4 (the bugs the review fix addresses)"},
+    {"name": "Sonar fix behaviour-preserving", "result": "PASS", "evidence": "byCodeUnit orders by UTF-16 code units like a bare .sort(); members is never empty so reduce(..., members[0]) is equivalent; entry-point handler prints a fixed line and exits 1"},
+    {"name": "Regression guards", "result": "PASS", "evidence": "Prometheus path :1215; span-rule anchoring :1291, :603, :716, :793; the only removed assertion is schema_version 2.2.0 -> 2.3.0"}
+  ],
+  "findings": [
+    {"id": "Q-001", "severity": "low", "status": "open", "scope": "packages/observability/src/logging.test.ts (AC-015)", "summary": "No RED or mutation run for the AC-015 pin test; it asserts both directions, not blocking."},
+    {"id": "Q-002", "severity": "low", "status": "resolved", "scope": "20261029-addendum/logs", "summary": "Post-fix collector run not logged at review time; the lane then saved logs/sonar-fix.txt (79/79, eslint 0)."},
+    {"id": "Q-003", "severity": "low", "status": "open", "scope": "collect-observability-evidence.mjs entry point", "summary": "The added rejection handler is main-only code with no test; named in the commit message."},
+    {"id": "Q-004", "severity": "medium", "status": "open", "scope": "PR 1073 Sonar quality gate", "summary": "Gate is ERROR until the review fix is pushed and Sonar re-analyses; re-check after push."}
+  ],
+  "toolIdsExecuted": ["git diff", "git log", "grep", "log review", "curl SonarCloud project_status"],
+  "unavailableTools": ["test runs and mutation re-runs (not run by instruction; the lane ran the collector suite)"],
+  "stored_by": "IFC-074 lane, from the stoa-quality subagent's returned verdict",
+  "stored_at": "2026-10-29T17:21:32Z"
+}

@@ -1,0 +1,11 @@
+[test-slot] slot1 taken for PG-207@feat/pg-207-email-settings (holding group-intelliflow-db): pnpm vitest run --project integration tests/integration/email-settings.test.ts
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-207
+
+
+ Test Files  1 passed (1)
+      Tests  36 passed (36)
+   Start at  09:53:32
+   Duration  2.57s (transform 310ms, setup 592ms, import 361ms, tests 1.45s, environment 0ms)
+

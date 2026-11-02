@@ -17,11 +17,11 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/(public)/security/page.tsx": "a52825d72bbc0469c9a8afc2f0aee514bc284541ac9d9fc037a4a3bf09398d3f",
-    "apps/web/src/data/security-features.json": "778229fac7baa6cb21876fc97e15f15beeac1c5ecdf5a4e446d6f2e7c611e860",
-    ".specify/sprints/sprint-11/attestations/PG-008/attestation.json": "d195c788c32b68ba26cb4d9c3fe6f82d429099dadf0ffa187037e692ec3aee48",
-    "docs/planning/adr/ADR-020-public-site-auth.md": "bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
-    "docs/planning/prd-public-site-auth.md": "a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
+    "apps/web/src/app/(public)/security/page.tsx": "sha256:a52825d72bbc0469c9a8afc2f0aee514bc284541ac9d9fc037a4a3bf09398d3f",
+    "apps/web/src/data/security-features.json": "sha256:778229fac7baa6cb21876fc97e15f15beeac1c5ecdf5a4e446d6f2e7c611e860",
+    ".specify/sprints/sprint-11/attestations/PG-008/attestation.json": "sha256:d195c788c32b68ba26cb4d9c3fe6f82d429099dadf0ffa187037e692ec3aee48",
+    "docs/planning/adr/ADR-020-public-site-auth.md": "sha256:bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
+    "docs/planning/prd-public-site-auth.md": "sha256:a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
   },
   "validation_results": [
     {

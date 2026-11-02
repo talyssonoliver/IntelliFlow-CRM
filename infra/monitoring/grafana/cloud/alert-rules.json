@@ -1,5 +1,5 @@
 {
-  "_comment": "Production alert rules for the Grafana Cloud stack (IFC-032). Applied by tools/scripts/grafana/apply-alert-rules.mjs through the Grafana provisioning API (workflow: grafana-alert-rules.yml). Metrics are the span metrics Grafana Cloud generates from our OTLP traces: traces_spanmetrics_calls_total{service, span_name, span_kind, status_code} and the traces_spanmetrics_latency histogram (seconds). Routed by the default notification policy to the owner's email contact point.",
+  "_comment": "Production alert rules for the Grafana Cloud stack (IFC-032). Applied by tools/scripts/grafana/apply-alert-rules.mjs through the Grafana provisioning API (workflow: grafana-alert-rules.yml). Metrics are the span metrics Grafana Cloud generates from our OTLP traces: traces_spanmetrics_calls_total{service, span_name, span_kind, status_code} and the traces_spanmetrics_latency histogram (seconds). A rule with its own datasourceUid queries that datasource instead: grafanacloud-logs is Loki (LogQL over our OTLP logs, labelled service_name). Routed by the default notification policy to the owner's email contact point.",
   "folder": { "uid": "intelliflow-prod", "title": "IntelliFlow production" },
   "datasourceUid": "grafanacloud-prom",
   "group": { "name": "intelliflow-prod", "intervalSeconds": 60 },
@@ -8,14 +8,16 @@
       "uid": "ifc032-telemetry-silent",
       "title": "Production telemetry stopped (ai-worker sends no spans)",
       "replaces": "ifc032-otel-collector-down (there is no collector; the hosted gateway receives directly)",
-      "expr": "sum(rate(traces_spanmetrics_calls_total{service=\"ai-worker\"}[15m]))",
-      "selector": "traces_spanmetrics_calls_total{service=\"ai-worker\"}",
+      "why": "Covers the combined worker (service intelliflow-ai-worker) as well as ai-worker. The rate is summed across both names, so while either still sends spans the rule stays quiet; a cutover from one to the other cannot raise a false 'silent'.",
+      "expr": "sum(rate(traces_spanmetrics_calls_total{service=~\"ai-worker|intelliflow-ai-worker\"}[15m]))",
+      "selector": "traces_spanmetrics_calls_total{service=~\"ai-worker|intelliflow-ai-worker\"}",
       "operator": "lt",
       "threshold": 0.001,
       "for": "15m",
       "noData": "Alerting",
       "severity": "critical",
-      "summary": "ai-worker has sent no spans for 15 minutes. Either ai-worker is down (as it was from June to October 2026) or OTLP export broke."
+      "summary": "Neither ai-worker nor the combined worker (intelliflow-ai-worker) has sent spans for 15 minutes. Either the worker is down (as ai-worker was from June to October 2026) or OTLP export broke.",
+      "liveSeriesCheck": false
     },
     {
       "uid": "ifc032-lead-routing-failures",
@@ -68,6 +70,34 @@
       "severity": "high",
       "summary": "More than 5% of api server spans ended in error over 10 minutes.",
       "requireSeries": false
+    },
+    {
+      "uid": "ifc074-error-spans-direct",
+      "title": "Error spans in ai-worker or api (direct, fast detection)",
+      "why": "IFC-074 MTTD: Grafana Asserts' ErrorRatioBreach fires 180-360 s after the first error. The first version of this rule (2m window, evaluated at now) never fired in 24 h of production (24-25 Oct 2026): span metrics land 60-120 s after the error and reach the ruler more than 60 s later, when a 2m increase is already back to 0. A 5m window read 60 s back fires on every replayed episode across 60-120 s of ingest lag, at a modelled mean of 162-203 s.",
+      "expr": "sum by (service) (increase(traces_spanmetrics_calls_total{service=~\"ai-worker|intelliflow-ai-worker|api\", status_code=\"STATUS_CODE_ERROR\"}[5m]))",
+      "selector": "traces_spanmetrics_calls_total{service=~\"ai-worker|intelliflow-ai-worker|api\", status_code=\"STATUS_CODE_ERROR\"}",
+      "queryOffsetSeconds": 60,
+      "operator": "gt",
+      "threshold": 0,
+      "for": "0s",
+      "noData": "OK",
+      "severity": "high",
+      "summary": "ai-worker, the combined worker or api recorded error spans in the 5 minutes up to 1 minute ago."
+    },
+    {
+      "uid": "ifc074-error-logs-direct",
+      "title": "Error-level logs in ai-worker (direct, fast detection)",
+      "why": "IFC-074 MTTD < 120 s. No span-metrics rule can get there: the first sample lands 60-120 s after the error and reaches the ruler more than 60 s later. Loki ingests a log line in seconds. Replayed on run 7 (24-25 Oct 2026, 13 error episodes): every episode that wrote an error-level line (9 of 13) fires, at a modelled mean of 36-61 s for 5-30 s of ingest lag; all 9 two-minute buckets with error lines fell on a real episode (0 false alarms). The other 4 wrote no error-level line and stay with the span rules. Only ai-worker ships logs to Loki: the combined worker logs as ai-worker and the api ships none, so api errors are left to the span rules. 'Latency alert generated' is excluded: it is the worker's own latency monitor, logged at warn, which older images tagged severity=critical (55 an hour on 28 Oct 2026).",
+      "datasourceUid": "grafanacloud-logs",
+      "expr": "sum by (service_name) (count_over_time({service_name=\"ai-worker\"} != \"Latency alert generated\" | detected_level=~\"(?i)error|fatal|critical\" or severity_text=~\"(?i)error|fatal|critical\" [2m]))",
+      "selector": "{service_name=\"ai-worker\"}",
+      "operator": "gt",
+      "threshold": 0,
+      "for": "0s",
+      "noData": "OK",
+      "severity": "high",
+      "summary": "ai-worker (the combined worker) logged error-level lines in the last 2 minutes."
     }
   ],
   "deliveryTest": {

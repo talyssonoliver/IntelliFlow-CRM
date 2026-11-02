@@ -1,0 +1,1 @@
+workflow-secret-lint: OK — no hardcoded credential literals in 40 workflow file(s)

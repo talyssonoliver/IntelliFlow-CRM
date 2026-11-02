@@ -12,6 +12,7 @@
  */
 
 import { z } from 'zod';
+import { recordIdSchema } from './record-id';
 
 // =============================================================================
 // Welcome Summary Schemas
@@ -221,7 +222,7 @@ export type UpdateDailyGoalInput = z.infer<typeof updateDailyGoalInputSchema>;
 // IFC-211: Manager team-goal override schema. Extends updateDailyGoal with
 // the targetUserId of the team member whose goal is being set.
 export const setTeamMemberGoalInputSchema = updateDailyGoalInputSchema.extend({
-  targetUserId: z.string().uuid(),
+  targetUserId: recordIdSchema,
 });
 export type SetTeamMemberGoalInput = z.infer<typeof setTeamMemberGoalInputSchema>;
 

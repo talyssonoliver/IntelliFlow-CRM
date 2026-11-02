@@ -29,7 +29,7 @@ import { Badge, Button, EmptyState } from '@intelliflow/ui';
 import type { TerritoryStrategy } from '@intelliflow/domain';
 import { swatchClass } from './territory-colors';
 import { STRATEGY_LABELS, TerritoryDialog, type TerritorySaveInput } from './TerritoryDialog';
-import type { MemberOption } from './MemberMultiSelect';
+import type { MemberOption } from '@/components/shared/member-multi-select';
 
 export interface TerritoryRow {
   id: string;

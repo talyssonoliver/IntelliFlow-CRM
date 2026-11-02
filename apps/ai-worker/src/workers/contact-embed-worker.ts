@@ -15,8 +15,14 @@ import { DelayedError, Job, Worker, Queue, QueueEvents } from 'bullmq';
 import { getDrainDelaySeconds } from '@intelliflow/platform/queues/connection';
 import { PrismaClient } from '@intelliflow/db';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { tenantContextStore } from '../tracing/tenant-context';
 import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
+import {
+  isRestrictedOrErased,
+  writeContactIfStillEligible,
+  type GuardPrisma,
+} from '../lib/data-request-guard';
 
 export const CONTACT_EMBED_QUEUE_NAME = 'intelliflow-contact-embed';
 
@@ -27,10 +33,21 @@ export const CONTACT_EMBED_QUEUE_NAME = 'intelliflow-contact-embed';
  */
 export const CEILING_RETRY_DELAY_MS = 15 * 60_000;
 
+/** Contacts read per page by the backfill sweep. */
+export const BACKFILL_PAGE_SIZE = 500;
+
+/**
+ * At most 15 embedding jobs a minute, under the 20 requests a minute OpenRouter allows on free
+ * models, so a backlog does not fail on 429s and burn its retries. BullMQ applies the limiter
+ * when a job is fetched, across every worker on the queue and to retries too. Delays set at
+ * enqueue time would not hold: jobs that pile up while the worker is down all become due at once.
+ */
+export const EMBED_RATE_LIMIT = { max: 15, duration: 60_000 } as const;
+
 export const ContactEmbedJobDataSchema = z.object({
   contactId: z.string().min(1),
-  tenantId: z.string().min(1),
-  reason: z.enum(['create', 'update', 'merge']),
+  tenantId: recordIdSchema,
+  reason: z.enum(['create', 'update', 'merge', 'backfill']),
 });
 
 export type ContactEmbedJobData = z.infer<typeof ContactEmbedJobDataSchema>;
@@ -47,8 +64,12 @@ export interface EmbeddingChainLike {
   generateEmbedding(text: string): Promise<number[] | null>;
 }
 
+/**
+ * Writes the embedding through the client it is given. The worker passes the transaction that
+ * holds the contact row lock (PG-203), so the write must not use any other client.
+ */
 export interface UpdateContactEmbeddingFn {
-  (prisma: PrismaClient, contactId: string, tenantId: string, embedding: number[]): Promise<void>;
+  (db: PrismaClient, contactId: string, tenantId: string, embedding: number[]): Promise<void>;
 }
 
 export function contactToEmbeddableText(c: {
@@ -97,12 +118,59 @@ export class ContactEmbedWorker {
         connection: this.redisConnection,
         concurrency: 5,
         drainDelay: getDrainDelaySeconds(),
+        limiter: { ...EMBED_RATE_LIMIT },
       }
     );
 
     this.worker.on('failed', (job, error) => {
       console.warn(`[contact-embed-worker] job ${job?.id} failed:`, error?.message);
     });
+  }
+
+  /**
+   * Queues a `backfill` job for every contact whose embedding is NULL, so contacts left without
+   * one (the vector(2048) migration clears them all) are embedded again without waiting for an
+   * edit. The job id dedupes a contact already queued, and each job still re-checks erasure and
+   * restriction before it writes. Returns the number of contacts queued.
+   */
+  async enqueueMissingEmbeddings(pageSize: number = BACKFILL_PAGE_SIZE): Promise<number> {
+    if (!this.queue) throw new Error('ContactEmbedWorker not started');
+    let after = '';
+    let queued = 0;
+    for (;;) {
+      const rows = await this.prisma.$queryRaw<Array<{ id: string; tenantId: string }>>`
+        SELECT id, "tenantId" FROM contacts
+        WHERE embedding IS NULL AND id > ${after}
+        ORDER BY id
+        LIMIT ${pageSize}`;
+      const last = rows.at(-1);
+      if (!last) return queued;
+      await Promise.all(rows.map((row) => this.clearFinishedBackfill(row.id)));
+      await this.queue.addBulk(
+        rows.map((row) => ({
+          name: 'embed',
+          data: { contactId: row.id, tenantId: row.tenantId, reason: 'backfill' as const },
+          opts: { jobId: `backfill-${row.id}` },
+        }))
+      );
+      queued += rows.length;
+      if (rows.length < pageSize) return queued;
+      after = last.id;
+    }
+  }
+
+  /**
+   * BullMQ keeps finished jobs (a failed one for a week, `removeOnFail`; a completed one for a day,
+   * `removeOnComplete`) and would dedupe the next sweep's job against them, so a contact whose
+   * backfill used up its retries, or whose embedding was cleared again after a completed backfill
+   * (the provider rollback), would never be embedded. Removing the finished job lets the sweep queue
+   * the contact again; a job still waiting, delayed or active is left alone.
+   */
+  private async clearFinishedBackfill(contactId: string): Promise<void> {
+    const existing = await this.queue?.getJob(`backfill-${contactId}`);
+    if (!existing) return;
+    const state = await existing.getState();
+    if (state === 'failed' || state === 'completed') await existing.remove();
   }
 
   async stop(): Promise<void> {
@@ -152,7 +220,17 @@ export class ContactEmbedWorker {
       },
     });
 
-    if (!contact) {
+    // PG-203 (owner Q18): an erased or restricted person is not sent to the embedding model.
+    // Checked here, not only when queued, so jobs queued before the restriction are caught.
+    if (
+      !contact ||
+      (contact.email &&
+        (await isRestrictedOrErased(
+          this.prisma as unknown as GuardPrisma,
+          data.tenantId,
+          contact.email
+        )))
+    ) {
       return {
         contactId: data.contactId,
         embedded: false,
@@ -191,11 +269,23 @@ export class ContactEmbedWorker {
       };
     }
 
-    await this.updateContactEmbedding(this.prisma, data.contactId, data.tenantId, embedding);
+    // PG-203 (codex): the person may have been erased or restricted during the embedding call.
+    // Write only under the contact row lock, after re-checking, so the erasure always wins.
+    const outcome = await writeContactIfStillEligible(
+      this.prisma as never,
+      { contactId: data.contactId, tenantId: data.tenantId, email: contact.email ?? '' },
+      (tx) =>
+        this.updateContactEmbedding(
+          tx as unknown as PrismaClient,
+          data.contactId,
+          data.tenantId,
+          embedding
+        )
+    );
 
     return {
       contactId: data.contactId,
-      embedded: true,
+      embedded: outcome.written,
       reason: data.reason,
       elapsedMs: Date.now() - start,
       completedAt: new Date().toISOString(),

@@ -1,0 +1,24 @@
+Semantic Review (claude) — 2026-10-22T20:18:32.197Z
+Base ref  : origin/main
+Files in scope : 9
+Total findings : 2
+  Waived       : 0
+  Unwaived     : 2
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/tracing/middleware.ts:167-190 — logging-on-critical-path-can-fail-request
+    Issue    : The success-path log calls are inside the request's `try`. The logger is created lazily on the first call, and nothing retries safely, so if `createLogger` (pino) throws, a procedure that already succeeded is turned into a failed request.
+    Evidence : `getApiLogger().warn(...)` / `getApiLogger().info(...)` run after `await next()` but before `span.end(); return result;`, inside `try { ... } catch (error)`. `getApiLogger()` calls `createLogger`, which uses `level = config.level || process.env.LOG_LEVEL || 'info'` (packages/observability/src/logging.ts:59). pino throws `unknown level` for a value it does not know, such as `LOG_LEVEL=INFO` or `verbose`. `apiLogger ??=` never caches a failed build, so the throw repeats on every request. The `catch` then reports a mutation that already committed as an error, and the client may retry it and write it twice. The old `console.log(JSON.stringify(...))` could not throw. The tests mock `../tracing/logger` with plain spies in src/test/setup.ts, so this path is never exercised.
+    Fix      : Move the logging out of the business `try`, or wrap each log call in its own try/catch that swallows logger failures. Also build the logger once, guarded: if `createLogger` throws, fall back to a no-op or console logger, so a bad `LOG_LEVEL` cannot affect request handling.
+    Fingerprint: 09991e166a02fa1fec7331f03c65007cb42824a3550e19c90a3b191fbf673e3b
+
+  [MEDIUM] apps/api/src/tracing/middleware.ts:207-220 — logger-throw-masks-error-and-leaks-span
+    Issue    : In the error path, `getApiLogger().error(...)` runs before `span.end()`, `captureException` and `throw error`. If the logger throws, the span is never ended, Sentry never receives the exception, and the caller gets the logger's error in place of the original TRPCError.
+    Evidence : Order in the `catch (error)` block: `span.recordException(error)` → `getApiLogger().error({...}, 'trpc error')` (line 207) → `span.end()` (line 220) → Sentry capture → `throw error`. A throw from `getApiLogger()` (for example the pino `unknown level` error from an invalid `LOG_LEVEL`, raised on every call because the lazy build never succeeds) leaves this block early. The span is never ended, Sentry capture is skipped, and the TRPCError's `code` (e.g. BAD_REQUEST or UNAUTHORIZED) becomes a generic 500. The old `console.error` call came after `span.end()` and could not throw.
+    Fix      : Guard the log call, e.g. `try { getApiLogger().error(...) } catch { /* never let logging break the request */ }`. Or make `getApiLogger()` fall back to a no-op or console logger when `createLogger` throws, so `span.end()`, Sentry capture and `throw error` always run.
+    Fingerprint: 023b81f8c7a30ce080b2b7ad1e0b5a80b0ef50328601382bd777bebe966047bd
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 2 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

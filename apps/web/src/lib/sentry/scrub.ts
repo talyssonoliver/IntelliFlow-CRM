@@ -53,6 +53,8 @@ function scrubUser(user: NonNullable<ErrorEvent['user']>): NonNullable<ErrorEven
 /** `beforeSend` hook: strips cookies, auth headers, query strings, bodies and user PII. */
 export function scrubEvent(event: ErrorEvent): ErrorEvent {
   if (event.request) scrubRequest(event.request);
+  // A transaction name built from a URL could carry a DSAR link's #r=<id>.<token> (PG-203).
+  if (event.transaction) event.transaction = stripQuery(event.transaction);
   if (event.user) event.user = scrubUser(event.user);
   if (event.breadcrumbs) event.breadcrumbs = event.breadcrumbs.map(scrubBreadcrumb);
   return event;

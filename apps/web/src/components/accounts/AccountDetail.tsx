@@ -39,6 +39,7 @@ import { useAuth } from '@/lib/auth';
 import { AccountScoreBadge } from '@/components/accounts/AccountScoreBadge';
 import { InferredFieldBadge } from '@/components/shared/InferredFieldBadge';
 import { SuggestedTagsRow } from '@/components/shared/SuggestedTagsRow';
+import { isRecordId } from '@/lib/shared/record-id';
 
 interface AccountDetailProps {
   accountId: string;
@@ -59,8 +60,6 @@ interface Tab {
   label: string;
   count?: number;
 }
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function getInitials(name: string): string {
   return name
@@ -125,7 +124,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
   const [addContactOpen, setAddContactOpen] = useState(false);
   const [assignOwnerOpen, setAssignOwnerOpen] = useState(false);
   const { user } = useAuth();
-  const isValidId = UUID_RE.test(accountId);
+  const isValidId = isRecordId(accountId);
 
   const {
     data: account,

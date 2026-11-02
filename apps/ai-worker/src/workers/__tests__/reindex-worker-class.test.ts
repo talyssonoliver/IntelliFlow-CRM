@@ -514,7 +514,7 @@ describe('ReindexJobDataSchema edge cases', () => {
 
   it('should reject invalid noteIds', () => {
     const result = ReindexJobDataSchema.safeParse({
-      noteIds: ['not-a-uuid'],
+      noteIds: ['not a/valid id'],
     });
     expect(result.success).toBe(false);
   });

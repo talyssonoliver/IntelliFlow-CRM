@@ -66,6 +66,34 @@ describe('InMemoryTaskRepository', () => {
     });
   });
 
+  describe('saveAssignment (PG-208)', () => {
+    const id = () => TaskId.create(ID1).value as TaskId;
+
+    it('saves when the task is unchanged since the read', async () => {
+      const t = makeTask({ id: ID1 });
+      await repo.save(t);
+      const readAt = t.updatedAt;
+      await expect(repo.saveAssignment(t, readAt)).resolves.toBe(true);
+      expect(await repo.findById(id())).toBe(t);
+    });
+
+    it('refuses a task saved again since the read', async () => {
+      const t = makeTask({ id: ID1 });
+      await repo.save(t);
+      const readAt = new Date(t.updatedAt.getTime() - 1000);
+      await expect(repo.saveAssignment(t, readAt)).resolves.toBe(false);
+    });
+
+    it('refuses a deleted task and does not bring it back', async () => {
+      const t = makeTask({ id: ID1 });
+      await repo.save(t);
+      const readAt = t.updatedAt;
+      await repo.delete(id());
+      await expect(repo.saveAssignment(t, readAt)).resolves.toBe(false);
+      expect(await repo.findById(id())).toBeNull();
+    });
+  });
+
   describe('findByOwnerId', () => {
     it('sorted desc', async () => {
       await repo.save(makeTask({ ownerId: 'a', createdAt: new Date('2025-01-01') }));

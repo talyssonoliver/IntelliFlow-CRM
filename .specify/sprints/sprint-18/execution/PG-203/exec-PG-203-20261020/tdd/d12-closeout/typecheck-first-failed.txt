@@ -1,0 +1,56 @@
+[test-slot] slot3 taken for PG-203@feat/pg-203-dsar: pnpm run typecheck
+
+> intelliflow-crm@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203-dsar
+> turbo run typecheck && pnpm run lint:sonar:guard
+
+• turbo 2.9.16
+
+   • Packages in scope: @intelliflow/adapters, @intelliflow/ai, @intelliflow/ai-worker, @intelliflow/api, @intelliflow/api-client, @intelliflow/application, @intelliflow/combined-worker, @intelliflow/db, @intelliflow/domain, @intelliflow/events-worker, @intelliflow/ingestion-worker, @intelliflow/observability, @intelliflow/partner-sdk, @intelliflow/plan-linter, @intelliflow/platform, @intelliflow/project-tracker, @intelliflow/sdk, @intelliflow/search, @intelliflow/test-fixtures, @intelliflow/typescript-config, @intelliflow/ui, @intelliflow/validators, @intelliflow/web, @intelliflow/webhooks, @intelliflow/worker-shared, @intelliflow/workers
+   • Running typecheck in 26 packages
+   • Remote caching disabled, using shared worktree cache
+
+@intelliflow/domain:build: cache hit, suppressing logs 4b5f03c19c267885
+@intelliflow/observability:build: cache hit, suppressing logs 4fde320cec6b208c
+@intelliflow/webhooks:build: cache hit, suppressing logs 9bf49d2874d871e0
+@intelliflow/partner-sdk:build: cache hit, suppressing logs d9f68c17b2073e6b
+@intelliflow/db:build: cache hit, suppressing logs e87fe1753d89128c
+@intelliflow/validators:build: cache hit, suppressing logs 6ed258f2ada6b045
+@intelliflow/application:build: cache hit, suppressing logs a361518026e37be1
+@intelliflow/platform:build: cache hit, suppressing logs 0ff3b8383066aca1
+@intelliflow/worker-shared:build: cache hit, suppressing logs 40519d34fb1d53c3
+@intelliflow/adapters:build: cache hit, suppressing logs b4711bb3e0a1931a
+@intelliflow/events-worker:build: cache hit, suppressing logs ff7db8961c05094e
+@intelliflow/ai-worker:build: cache hit, suppressing logs c6b725c5877563b0
+@intelliflow/ingestion-worker:build: cache hit, suppressing logs 8eaa030868ac4409
+@intelliflow/api:build: cache hit, suppressing logs f2c2385d9cb69688
+@intelliflow/combined-worker:build: cache hit, suppressing logs 7138a5ba3ebeb18b
+@intelliflow/api-client:build: cache hit, suppressing logs cd18b461bb96b1fc
+@intelliflow/web:typecheck: cache miss, executing f17e6654b0c1330a
+@intelliflow/web:typecheck: 
+@intelliflow/web:typecheck: > @intelliflow/web@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203-dsar\apps\web
+@intelliflow/web:typecheck: > pnpm run typegen && tsc --noEmit
+@intelliflow/web:typecheck: 
+@intelliflow/web:typecheck: 
+@intelliflow/web:typecheck: > @intelliflow/web@0.1.0 typegen C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203-dsar\apps\web
+@intelliflow/web:typecheck: > next typegen
+@intelliflow/web:typecheck: 
+@intelliflow/web:typecheck: [@sentry/nextjs] Importing `withSentryConfig` from `@sentry/nextjs` is deprecated and will stop working in v11. Import it from `@sentry/nextjs/config` instead:
+@intelliflow/web:typecheck:   import { withSentryConfig } from '@sentry/nextjs/config';
+@intelliflow/web:typecheck: Generating route types...
+@intelliflow/web:typecheck: ✓ Types generated successfully
+@intelliflow/web:typecheck: src/app/(public)/book/[handle]/[slug]/__tests__/BookingContent.test.tsx(129,5): error TS2741: Property 'isPending' is missing in type '{ data: { timezone: string; days: { date: string; slots: { start: string; end: string; }[]; }[]; }; isLoading: false; isError: false; error: null; }' but required in type '{ data: unknown; isLoading: boolean; isPending: boolean; isError: boolean; error: unknown; }'.
+@intelliflow/web:typecheck: src/app/(public)/book/[handle]/[slug]/__tests__/BookingContent.test.tsx(309,5): error TS2741: Property 'isPending' is missing in type '{ data: { timezone: string; days: { date: string; slots: never[]; }[]; }; isLoading: false; isError: false; error: null; }' but required in type '{ data: unknown; isLoading: boolean; isPending: boolean; isError: boolean; error: unknown; }'.
+@intelliflow/web:typecheck: src/app/(public)/book/[handle]/[slug]/__tests__/BookingContent.test.tsx(345,5): error TS2741: Property 'isPending' is missing in type '{ data: { timezone: string; days: { date: string; slots: never[]; }[]; }; isLoading: false; isError: false; error: null; }' but required in type '{ data: unknown; isLoading: boolean; isPending: boolean; isError: boolean; error: unknown; }'.
+@intelliflow/web:typecheck: src/app/(public)/book/[handle]/[slug]/__tests__/BookingContent.test.tsx(366,5): error TS2741: Property 'isPending' is missing in type '{ data: undefined; isLoading: false; isError: true; error: { message: string; data: { code: string; }; }; }' but required in type '{ data: unknown; isLoading: boolean; isPending: boolean; isError: boolean; error: unknown; }'.
+@intelliflow/web:typecheck: src/app/(public)/book/[handle]/[slug]/__tests__/BookingContent.test.tsx(385,7): error TS2741: Property 'isPending' is missing in type '{ data: undefined; isLoading: false; isError: true; error: { message: string; }; }' but required in type '{ data: unknown; isLoading: boolean; isPending: boolean; isError: boolean; error: unknown; }'.
+@intelliflow/web:typecheck: src/app/(public)/book/[handle]/[slug]/__tests__/BookingContent.test.tsx(502,5): error TS2741: Property 'isPending' is missing in type '{ data: { timezone: string; days: { date: string; slots: { start: string; end: string; }[]; }[]; }; isLoading: false; isError: false; error: null; }' but required in type '{ data: unknown; isLoading: boolean; isPending: boolean; isError: boolean; error: unknown; }'.
+@intelliflow/web:typecheck:  ELIFECYCLE  Command failed with exit code 2.
+ ERROR  @intelliflow/web#typecheck: command (C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203-dsar\apps\web) C:\Users\talys\AppData\Local\pnpm\.tools\pnpm\10.33.0\bin\pnpm.CMD run typecheck exited (2)
+
+ Tasks:    39 successful, 40 total
+Cached:    39 cached, 40 total
+  Time:    20.838s 
+Failed:    @intelliflow/web#typecheck
+
+ ERROR  run failed: command  exited (2)
+ ELIFECYCLE  Command failed with exit code 2.

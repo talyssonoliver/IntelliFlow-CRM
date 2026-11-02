@@ -16,3 +16,4 @@ export * from './StorageServicePort';
 export * from './AVScannerPort';
 export * from './SignatureProviderPort';
 export * from './PortalDeliverySyncPort';
+export * from './DsarNotificationPort'; // PG-203 DSAR

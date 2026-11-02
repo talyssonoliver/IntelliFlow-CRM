@@ -1,0 +1,1 @@
+[lighthouse-waiver] OK — no Lighthouse KPI with met:false in PG-207 attestation.

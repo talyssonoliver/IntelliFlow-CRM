@@ -46,6 +46,11 @@ const nextConfig = {
     // Reduce webpack build-time peak memory (Next 15+). The production build runs
     // `next build --webpack` in a memory-constrained Vercel container (#473).
     webpackMemoryOptimizations: true,
+    // Page-generation workers. Next defaults to one per CPU core less one; local
+    // pre-ship sets NEXT_BUILD_CPUS to cap them (#1111). Unset on Vercel and CI.
+    ...(/^\d+$/.test(process.env.NEXT_BUILD_CPUS ?? '') && Number(process.env.NEXT_BUILD_CPUS) > 0
+      ? { cpus: Number(process.env.NEXT_BUILD_CPUS) }
+      : {}),
     // Server actions configuration
     serverActions: {
       bodySizeLimit: '2mb',
@@ -136,6 +141,17 @@ const nextConfig = {
           // need either 'unsafe-inline' (defeats CSP) or it would block React's
           // RSC flight payload chunks, runtime helpers, and Suspense boundary
           // swap scripts — leaving streamed pages stuck on their fallback HTML.
+        ],
+      },
+      // PG-203 DSAR (spec sign-off D-AC-10): the confirm and download links carry a token in
+      // the URL fragment. No Referer at all leaves these pages, and nothing they return (a
+      // personal-data export included) may be stored by the browser or any cache. Listed after
+      // '/:path*' so these values win for the same keys.
+      {
+        source: '/dsar/:path*',
+        headers: [
+          { key: 'Referrer-Policy', value: 'no-referrer' },
+          { key: 'Cache-Control', value: 'no-store' },
         ],
       },
       // PERF-06: bfcache / repeat-visit caching for the two confirmed

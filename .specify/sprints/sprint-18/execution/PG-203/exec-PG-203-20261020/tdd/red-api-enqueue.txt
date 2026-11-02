@@ -1,0 +1,32 @@
+# 2026-10-21T00:02:49Z
+# 7fd27d0a5180f3eb39cb20d0b2197563171fe92c
+# pnpm --filter @intelliflow/api exec vitest run src/modules/lead/__tests__/lead-scoring-enqueue.test.ts (html-escape.ts was written together with its test: no RED for it)
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/api
+
+ ❯ |api| src/modules/lead/__tests__/lead-scoring-enqueue.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/modules/lead/__tests__/lead-scoring-enqueue.test.ts [ src/modules/lead/__tests__/lead-scoring-enqueue.test.ts ]
+Error: Cannot find module '/src/modules/lead/lead-scoring-enqueue' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/api/src/modules/lead/__tests__/lead-scoring-enqueue.test.ts
+ ❯ src/modules/lead/__tests__/lead-scoring-enqueue.test.ts:19:1
+     17| vi.mock('@intelliflow/platform/queues/types', () => ({ QUEUE_NAMES: { …
+     18|
+     19| import { enqueueLeadScoring } from '../lead-scoring-enqueue';
+       | ^
+     20| import { loadBullMQ } from '../../../lib/load-bullmq';
+     21|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  01:02:50
+   Duration  591ms (transform 296ms, setup 425ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\apps\api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/lead/__tests__/lead-scoring-enqueue.test.ts
+# exit=1

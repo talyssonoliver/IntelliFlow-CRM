@@ -27,6 +27,7 @@ import {
 import { isQuotaExceeded } from './shared/quota-guard';
 import { membershipError, reasonFromCause } from './security/membership';
 import { homeOnlyViolation } from './security/home-only';
+import { emailSendErrorFromCause } from './modules/email/email-send-error';
 
 /**
  * Initialize tRPC with context type
@@ -55,6 +56,9 @@ const t = initTRPC.context<Context>().create({
         // ADR-071: machine-readable reason (`ASSERTION_INVALID`, `NOT_A_MEMBER`, ...), copied from
         // `error.cause.reason`. The same reason is the message prefix `<REASON>: <text>`.
         reason: reasonFromCause(error.cause),
+        // PG-207: why a user-mail send was refused (NO_MAILBOX, MAILBOX_ERROR, ALL_SUPPRESSED,
+        // SEND_FAILED) plus the skipped suppressed recipients — compose shows the right message.
+        emailSendError: emailSendErrorFromCause(error.cause),
       },
     };
   },

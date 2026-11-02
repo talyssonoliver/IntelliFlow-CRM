@@ -1,0 +1,37 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 97 files total
+[codex-review] in scope : 70 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T08:34:12.467Z
+Base ref  : origin/main
+Files in scope : 70
+Total findings : 2
+  Waived       : 0
+  Unwaived     : 2
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/web/src/app/(public)/book/[handle]/[slug]/BookingContent.tsx:309 — mixed-timezone-booking-date
+    Issue    : Slot times use the visitor's timezone while their day headings use the firm's timezone, presenting some appointments on the wrong calendar date.
+    Evidence : The day selector uses `label: dayLabel(d.date)` for dates returned in the firm's timezone, but slots use `label: timeLabel(s.start)` without a timezone. For a London slot at 09:00 on 2 November, a visitor in Honolulu sees 23:00 beneath 'Mon 2 Nov', although the appointment occurs locally on Sunday 1 November. The accompanying text explicitly says times are in the visitor's timezone.
+    Fix      : Group slots by their date in the visitor's timezone and format the day headings in that same timezone, or consistently display both dates and times in the firm's timezone.
+    Fingerprint: 227c80996546a2b511db3bcf7c44a677350b4c10acfca61074cca2546493d63f
+
+  [MEDIUM] apps/api/src/modules/calendar/public-booking.router.ts:543-546 — daily-cap-lock-not-shared
+    Issue    : The public booking transaction can exceed the tenant's daily booking cap when an authenticated appointment is created concurrently.
+    Evidence : `computeSlots(tx, current, rules, date, 1, now)` checks the daily count under `booking:${tenantId}`, but authenticated `appointments.create` checks availability outside its persistence transaction and never acquires that lock. With maxDailyBookings=1 and no appointments, an authenticated request and a public request can both read zero and commit appointments at different times. The database exclusion constraint only rejects overlapping times for the same organizer, so both inserts succeed and the daily cap is exceeded.
+    Fix      : Make all appointment creation and rescheduling paths acquire the same tenant lock and check the daily cap within the transaction that persists the appointment.
+    Fingerprint: 03ea1eee86c5313c586aedb09ea94950226eb71e5309e829ff1df3795dcaa08b
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 2 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

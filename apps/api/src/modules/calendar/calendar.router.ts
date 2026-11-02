@@ -13,10 +13,14 @@ import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { createCalendarSchema, updateCalendarSchema } from '@intelliflow/validators';
 import { availabilityRouter } from './availability.router';
+import { eventTypesRouter } from './event-types.router';
 
 export const calendarRouter = createTRPCRouter({
   /** Firm availability: weekly hours, closures, daily cap (PG-202). */
   availability: availabilityRouter,
+
+  /** Event types: meeting templates + the public booking link (PG-203). */
+  eventTypes: eventTypesRouter,
 
   /**
    * List all custom calendars for the current tenant

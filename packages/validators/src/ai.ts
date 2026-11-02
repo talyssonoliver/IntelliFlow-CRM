@@ -9,6 +9,7 @@
  */
 
 import { z } from 'zod';
+import { recordIdSchema } from './record-id';
 import {
   AI_PRIORITIES,
   QUALIFICATION_LEVELS,
@@ -229,7 +230,7 @@ export type FollowupOutput = z.infer<typeof followupOutputSchema>;
  * Defines the input for lead qualification analysis
  */
 export const qualificationInputSchema = z.object({
-  leadId: z.uuid(),
+  leadId: recordIdSchema,
   email: z.email(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
@@ -259,7 +260,7 @@ export type QualificationInput = z.infer<typeof qualificationInputSchema>;
  * Defines the input for AI email generation
  */
 export const emailWriterInputSchema = z.object({
-  leadId: z.uuid(),
+  leadId: recordIdSchema,
   recipientName: z.string(),
   recipientEmail: z.email(),
   recipientCompany: z.string().optional(),
@@ -289,7 +290,7 @@ export type EmailWriterInput = z.infer<typeof emailWriterInputSchema>;
  * Defines the input for follow-up recommendations
  */
 export const followupInputSchema = z.object({
-  leadId: z.uuid(),
+  leadId: recordIdSchema,
   leadName: z.string(),
   leadEmail: z.email(),
   leadCompany: z.string().optional(),
@@ -382,8 +383,8 @@ export type ChurnRiskOutput = z.infer<typeof churnRiskOutputSchema>;
  */
 export const churnRiskInputSchema = z.object({
   entityType: z.enum(['lead', 'contact', 'opportunity', 'account']),
-  entityId: z.uuid(),
-  tenantId: z.uuid(),
+  entityId: recordIdSchema,
+  tenantId: recordIdSchema,
 
   // Engagement metrics
   daysSinceLastLogin: z.number().optional(),

@@ -1,0 +1,134 @@
+{
+  "task_id": "PG-207",
+  "provenance": {
+    "compiled_at": "2026-10-20T12:45:00Z",
+    "compiled_by": "Claude Code PG-207 lane, /spec-session Phases 0-0.77",
+    "hydration_source": ".specify/sprints/sprint-18/context/PG-207/hydrated-context.json (tools/scripts/lib/stoa/context-hydration.ts, 2026-10-20)",
+    "exploration": ".specify/sprints/sprint-18/context/PG-207/PG-207-spec-exploration.md",
+    "owner_rulings": ".specify/sprints/sprint-18/context/PG-207/PG-207-owner-ruling.md",
+    "owner_rulings_note": "Q1-Q10 (Q6-Q10 added after Rounds 1-3)"
+  },
+  "relatedPrd": ["docs/planning/prd-module-settings.md"],
+  "relatedAdrs": [
+    "docs/architecture/adr/ADR-085-tenant-smtp-and-email-settings.md",
+    "docs/architecture/adr/ADR-041-email-outbound-provider.md",
+    "docs/architecture/adr/ADR-069-rolling-wave-rebaselining-and-migration-risk-classes.md"
+  ],
+  "prd_required": true,
+  "adr_required": true,
+  "shared_component_audit": {
+    "searched_directories": [
+      "apps/web/src/components/shared/",
+      "packages/ui/src/components/",
+      "apps/web/src/components/email/",
+      "apps/web/src/app/contacts/(list)/contact-types/ (PG-205 pattern)",
+      "apps/web/src/app/cases/(list)/case-settings/ (ModuleSettingsShell consumer)"
+    ],
+    "components_found": [
+      "ModuleSettingsShell",
+      "PageHeader",
+      "SectionHeader",
+      "EmptyState",
+      "PasswordInput",
+      "VariablePicker",
+      "Card",
+      "Button",
+      "Switch",
+      "Input",
+      "Select",
+      "Textarea",
+      "Dialog",
+      "AlertDialog",
+      "ConfirmationDialog",
+      "RichTextEditor (TipTap)",
+      "TypeSettingsLoading",
+      "EmailCompose RichTextBody (contentEditable)"
+    ],
+    "reuse_decisions": [
+      {
+        "need": "email-settings page chrome (header, Save/Reset, skeleton, error, reset dialog)",
+        "existing": "ModuleSettingsShell",
+        "action": "REUSE"
+      },
+      {
+        "need": "signatures page header + breadcrumbs + New Signature CTA",
+        "existing": "PageHeader",
+        "action": "REUSE"
+      },
+      {
+        "need": "card section headers with action slot",
+        "existing": "SectionHeader",
+        "action": "REUSE"
+      },
+      {
+        "need": "empty signature list / empty suppression list",
+        "existing": "EmptyState entity=signatures / emails, phase=passive, custom title+description",
+        "action": "REUSE"
+      },
+      {
+        "need": "write-only SMTP/IMAP password field",
+        "existing": "PasswordInput (components/shared/password-input.tsx) examined",
+        "action": "NOT REUSED — dark-theme, controlled login input (Round 1 FE); new SecretField justified"
+      },
+      {
+        "need": "signature HTML editing",
+        "existing": "RichTextEditor (packages/ui, TipTap)",
+        "action": "REUSE"
+      },
+      {
+        "need": "signature create/edit dialog and delete confirm",
+        "existing": "Dialog + AlertDialog/ConfirmationDialog",
+        "action": "COMPOSE"
+      },
+      {
+        "need": "toggles, inputs, selects",
+        "existing": "Switch, Input, Select, Textarea from @intelliflow/ui",
+        "action": "REUSE"
+      },
+      {
+        "need": "signatures loading skeleton",
+        "existing": "TypeSettingsLoading (components/settings)",
+        "action": "REUSE"
+      },
+      {
+        "need": "compose prefill of default signature",
+        "existing": "EmailCompose (components/email/EmailCompose.tsx)",
+        "action": "EXTEND (initial body from emailSignatures.resolveDefault)"
+      }
+    ],
+    "new_components_justified": [
+      "SmtpConnectionCard / ImapConnectionCard / TrackingCard / ReplyToCard / BounceRulesCard / SuppressionListCard: page-local section cards under apps/web/src/app/email/email-settings/components/ (ModuleSettingsShell children; no shared component renders mail-server connection fields)",
+      "SignatureDialog under apps/web/src/app/email/signatures/components/: page-local composition of Dialog + Input + RichTextEditor + Switch",
+      "SecretField (email-settings/components): write-only keep/replace/remove secret input; PasswordInput is a dark controlled login field"
+    ]
+  },
+  "route_conflict_audit": {
+    "routes_searched": [
+      "/email/**",
+      "/settings/**",
+      "apps/web/src/app/** (grep email-settings|signature|smtp|imap)"
+    ],
+    "conflicts_found": [
+      {
+        "path": "apps/web/src/app/email/email-settings/page.tsx",
+        "data_source": "stub ('coming soon', no data)",
+        "action": "REWRITE in place as the real email-settings page"
+      },
+      {
+        "path": "apps/web/src/app/email/signatures/page.tsx",
+        "data_source": "stub ('coming soon', no data)",
+        "action": "REWRITE in place as the real signatures page (owner ruling Q2)"
+      },
+      {
+        "path": "apps/web/src/components/email/EmailSettingsPanel.tsx:12",
+        "data_source": "static description 'Defaults, sync & display' for /email/email-settings",
+        "action": "UPDATE description to match the real page"
+      },
+      {
+        "path": "apps/web/src/app/email/templates/page.tsx",
+        "data_source": "stub ('coming soon', no data)",
+        "action": "NONE — different feature, owned by PG-085 (Backlog); not an overlap with PG-207"
+      }
+    ]
+  }
+}

@@ -6,6 +6,7 @@
  */
 
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 
 // ============================================================================
 // Job Data Schemas
@@ -15,8 +16,8 @@ import { z } from 'zod';
  * AI Lead Scoring Job Data
  */
 export const aiScoringJobDataSchema = z.object({
-  leadId: z.uuid(),
-  userId: z.uuid(),
+  leadId: recordIdSchema,
+  userId: recordIdSchema,
   priority: z.enum(['low', 'normal', 'high', 'critical']).default('normal'),
   metadata: z
     .object({
@@ -33,7 +34,7 @@ export type AIScoringJobData = z.infer<typeof aiScoringJobDataSchema>;
  * AI Scoring Result
  */
 export const aiScoringResultSchema = z.object({
-  leadId: z.uuid(),
+  leadId: recordIdSchema,
   score: z.number().int().min(0).max(100),
   confidence: z.number().min(0).max(1),
   factors: z.record(z.string(), z.number()),

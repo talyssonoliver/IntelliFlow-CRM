@@ -27,6 +27,25 @@ const logger = {
 // VALIDATION SCHEMAS
 // ============================================
 
+/** The actor id the API container uses for system-initiated AI calls. */
+export const SYSTEM_ACTOR_ID = 'system';
+
+/** Upper bound for an actor id; cuid (25) and uuid (36) both fit. */
+export const MAX_ACTOR_ID_LENGTH = 64;
+
+/**
+ * Actor ids are cuid() (User), uuid (legacy and external ids) or the system
+ * actor. The check bounds the charset and length instead of requiring uuid:
+ * a uuid-only check rejected every real user and the system actor (#617).
+ */
+const ACTOR_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
+
+export const actorIdSchema = z
+  .string()
+  .min(1, 'Invalid user ID')
+  .max(MAX_ACTOR_ID_LENGTH, 'Invalid user ID')
+  .regex(ACTOR_ID_PATTERN, 'Invalid user ID');
+
 /**
  * Safe prompt input schema
  * Enforces length limits and content validation
@@ -49,7 +68,7 @@ export const safePromptSchema = z.object({
       { message: 'Prompt contains suspicious repetition' }
     ),
   context: z.record(z.string(), z.unknown()).optional(),
-  userId: z.string().uuid('Invalid user ID'),
+  userId: actorIdSchema,
   maxTokens: z.number().int().min(1).max(2000).default(500),
 });
 
@@ -129,6 +148,30 @@ const PII_PATTERNS = {
 // SANITIZATION FUNCTIONS
 // ============================================
 
+// ============================================
+// ERRORS
+// ============================================
+
+/**
+ * Sanitizer failures carry a code so callers can tell an attack (rejected
+ * prompt), a busy caller (rate limit) and a bug in our own call (invalid
+ * structure) apart, while still showing users one generic message.
+ */
+export type PromptGuardErrorCode =
+  | 'AI_PROMPT_STRUCTURE_INVALID'
+  | 'AI_PROMPT_REJECTED'
+  | 'AI_RATE_LIMITED';
+
+export class PromptGuardError extends Error {
+  constructor(
+    readonly code: PromptGuardErrorCode,
+    message: string
+  ) {
+    super(message);
+    this.name = 'PromptGuardError';
+  }
+}
+
 /**
  * Sanitize user input before sending to AI model
  */
@@ -141,7 +184,10 @@ export function sanitizePrompt(input: unknown): {
   // Validate input structure
   const validation = safePromptSchema.safeParse(input);
   if (!validation.success) {
-    throw new Error(`Invalid prompt structure: ${validation.error.message}`);
+    throw new PromptGuardError(
+      'AI_PROMPT_STRUCTURE_INVALID',
+      `Invalid prompt structure: ${validation.error.message}`
+    );
   }
 
   const prompt = validation.data;
@@ -171,7 +217,10 @@ export function sanitizePrompt(input: unknown): {
 
   // If any dangerous patterns detected, block the request
   if (issues.length > 0) {
-    throw new Error(`Prompt contains dangerous patterns: ${issues.join(', ')}`);
+    throw new PromptGuardError(
+      'AI_PROMPT_REJECTED',
+      `Prompt contains dangerous patterns: ${issues.join(', ')}`
+    );
   }
 
   // Remove control characters (C0 range 0x00-0x1F plus DEL 0x7F). Done as a
@@ -358,10 +407,16 @@ export async function sanitizationPipeline(input: {
   text: string;
   userId: string;
   context?: Record<string, unknown>;
+  /** Rate-limit bucket; defaults to userId. Shared actors (system) pass a per-tenant key. */
+  rateLimitKey?: string;
+  maxRequestsPerMinute?: number;
 }): Promise<SafePrompt> {
   // Rate limit check
-  if (!checkRateLimit(input.userId)) {
-    throw new Error('Rate limit exceeded. Please wait before making more AI requests.');
+  if (!checkRateLimit(input.rateLimitKey ?? input.userId, input.maxRequestsPerMinute)) {
+    throw new PromptGuardError(
+      'AI_RATE_LIMITED',
+      'Rate limit exceeded. Please wait before making more AI requests.'
+    );
   }
 
   // Content length validation

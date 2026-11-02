@@ -40,6 +40,12 @@ export interface AIServiceCallOptions {
   tenantId?: string;
   /** Real lead id (so worker `LeadAIInsight.upsert` resolves the FK correctly). */
   leadId?: string;
+  /**
+   * Authenticated user on whose behalf the call is made. Guardrail decorators use
+   * it for sanitization and audit attribution; when absent the caller is treated
+   * as a system actor.
+   */
+  userId?: string;
 }
 
 export interface AIServicePort {

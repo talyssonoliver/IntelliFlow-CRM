@@ -587,9 +587,9 @@ export interface CaseDocumentRepository {
   save(document: CaseDocument): Promise<void>;
 
   /**
-   * Find document by ID
+   * Find document by ID, in the given tenant only (another tenant's id finds nothing)
    */
-  findById(id: string): Promise<CaseDocument | null>;
+  findById(id: string, tenantId: string): Promise<CaseDocument | null>;
 
   /**
    * Find multiple documents by IDs in a single query.
@@ -597,7 +597,7 @@ export interface CaseDocumentRepository {
    * (ordered by DB default — callers that need original order should build
    * their own Map).  Only non-deleted documents are returned.
    */
-  findByIds(ids: string[]): Promise<CaseDocument[]>;
+  findByIds(ids: string[], tenantId: string): Promise<CaseDocument[]>;
 
   /**
    * Find latest version of a document
@@ -610,9 +610,9 @@ export interface CaseDocumentRepository {
   findAllVersions(documentId: string): Promise<CaseDocument[]>;
 
   /**
-   * Find documents by case ID
+   * Find documents by case ID, in the given tenant only
    */
-  findByCaseId(caseId: string): Promise<CaseDocument[]>;
+  findByCaseId(caseId: string, tenantId: string): Promise<CaseDocument[]>;
 
   /**
    * Find documents accessible by user

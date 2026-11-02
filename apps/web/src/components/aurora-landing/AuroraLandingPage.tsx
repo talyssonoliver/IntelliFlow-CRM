@@ -1,4 +1,4 @@
-import { Manrope } from 'next/font/google';
+import { manrope } from '@/components/aurora-site/fonts';
 // aurora-landing.css imported FIRST, before any section's own CSS: this repo's
 // bundler orders injected stylesheets by import position, so a shared base
 // rule and a section's override of it (e.g. .integrations vs the section's
@@ -23,13 +23,6 @@ import { PricingSection } from './sections/PricingSection';
 import { FaqSection } from './sections/FaqSection';
 import { FinalCta } from './sections/FinalCta';
 import { SiteFooter } from './sections/SiteFooter';
-
-const manrope = Manrope({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800'],
-  display: 'swap',
-  variable: '--font-manrope',
-});
 
 /**
  * The Aurora landing page (preview). Server-rendered markup; AuroraMotion wires the

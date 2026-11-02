@@ -19,6 +19,7 @@ tracked separately.
 | ------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `events-worker/`    | `@intelliflow/events-worker`    | Outbox dispatch + subscription bridge + scheduled maintenance jobs                                       |
 | `ingestion-worker/` | `@intelliflow/ingestion-worker` | Document/text ingestion jobs (`jobs/extractText.job.ts`)                                                 |
+| `combined-worker/`  | `@intelliflow/combined-worker`  | Runs ai-worker + events-worker + ingestion-worker in ONE process: one health endpoint, one shutdown path |
 | `shared/`           | (shared lib)                    | Cross-worker runtime: `base-worker.ts`, `graceful-shutdown.ts`, `health-server.ts`, `queue-connector.ts` |
 
 ## Entry Points
@@ -32,6 +33,27 @@ tracked separately.
 - New workers extend `shared/src/base-worker.ts` and reuse `graceful-shutdown`,
   `health-server`, and `queue-connector` rather than re-implementing lifecycle.
 - Queue transport is BullMQ (see `packages/platform` queues primitives).
+
+## Combined worker
+
+`combined-worker/` imports the existing worker instances (`AIWorker`,
+`eventsWorker`, `ingestionWorker`) and starts them in one process so production
+can run a single Railway service. Each worker still runs alone via its own
+`main`. Rules it enforces: per-worker health servers move to `HEALTH_PORT=0` and
+only the combined server (`COMBINED_HEALTH_PORT` > `HEALTH_PORT` > `PORT`,
+default 3100) listens on the real port; the workers' own SIGINT/SIGTERM handlers
+are removed after start and replaced by one that stops all three, then exits. A
+worker that fails to start aborts the process (exit 1) unless
+`COMBINED_ALLOW_PARTIAL=true`. `COMBINED_WORKERS` selects a subset.
+`COMBINED_BACKGROUND_JOBS=on` also runs the api's timer jobs (approval sweep,
+email bounce scan, DSAR deadline alerts) from `apps/api/src/background-jobs.ts`;
+pair it with `API_BACKGROUND_JOBS=off` on the api service so an idle api makes
+no outbound traffic and Railway can sleep it (running them in both is safe:
+advisory locks / mailbox lease / SKIP LOCKED). The PG-208 task-automation tick
+is NOT one of these jobs: it stays in the api (its intake is the api's
+in-process event bus), so production sets `TASK_AUTOMATION_INTERVAL_MS=0` until
+it moves to the outbox (debt-ledger PG-208-AUTOMATION-OFF-IN-PROD-001). Image:
+`combined-worker/Dockerfile`, published as `intelliflow-crm-combined-worker`.
 
 ## Pitfalls
 

@@ -76,16 +76,16 @@
   ],
   "dependencies_verified": ["PG-129"],
   "artifact_hashes": {
-    "apps/web/src/lib/analytics.ts": "feeaa473ac037d6a5df05f18ddd138107aa80b9696a57bc951f5731b8c345e4c",
-    "apps/web/src/lib/__tests__/analytics.test.ts": "9f6dd8276428bf699d06917c73f6965d989b06553af0bd974550c1b77fa8f040",
-    "apps/web/src/components/home/__tests__/AuthenticatedHomePage.analytics.test.tsx": "480926fc049c7f1b97a2ca84e269340df631d964c1778f0f2ee8a5a4e67b1901",
-    "docs/analytics/home-page-tracking-plan.md": "3da6dd68a931e6c3d3d179e80e2a7c3e0d83224a8e982a59192a6e1d2cb5a1d7",
-    "docs/analytics/event-taxonomy.md": "e3c1334285f83379c2fb41de37e58706e013d4c832c8d8f0e1edd2393684302a",
-    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "e4fc825a87087e91797642dbf84875462d8943ee3837f6d927d64038887775e1",
-    "apps/web/src/components/insights/InsightCard.tsx": "535c69c9cea2111035f875a7d07a09a5af9dcacdc98be4267628be0d173f9b58",
-    "apps/web/src/components/home/DraggablePinnedItem.tsx": "64f17d8d395fe008cfbe9396e4c25f2677b07ebf0c8447eef5b4997a761ca2c1",
-    "apps/web/src/components/home/GoalSettingsModal.tsx": "0df2aa796c837f6f2cd26d5df6f2f7ecc42570e51f258e2fc1f2f0ea11110c33",
-    "apps/web/src/components/home/PinnedItemsSheet.tsx": "34bf689e65aa14db0d3c0c66237c37e96e2266e0f3b4d4786ea193ea5dd2fb8c"
+    "apps/web/src/lib/analytics.ts": "sha256:feeaa473ac037d6a5df05f18ddd138107aa80b9696a57bc951f5731b8c345e4c",
+    "apps/web/src/lib/__tests__/analytics.test.ts": "sha256:9f6dd8276428bf699d06917c73f6965d989b06553af0bd974550c1b77fa8f040",
+    "apps/web/src/components/home/__tests__/AuthenticatedHomePage.analytics.test.tsx": "sha256:480926fc049c7f1b97a2ca84e269340df631d964c1778f0f2ee8a5a4e67b1901",
+    "docs/analytics/home-page-tracking-plan.md": "sha256:3da6dd68a931e6c3d3d179e80e2a7c3e0d83224a8e982a59192a6e1d2cb5a1d7",
+    "docs/analytics/event-taxonomy.md": "sha256:e3c1334285f83379c2fb41de37e58706e013d4c832c8d8f0e1edd2393684302a",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "sha256:e4fc825a87087e91797642dbf84875462d8943ee3837f6d927d64038887775e1",
+    "apps/web/src/components/insights/InsightCard.tsx": "sha256:535c69c9cea2111035f875a7d07a09a5af9dcacdc98be4267628be0d173f9b58",
+    "apps/web/src/components/home/DraggablePinnedItem.tsx": "sha256:64f17d8d395fe008cfbe9396e4c25f2677b07ebf0c8447eef5b4997a761ca2c1",
+    "apps/web/src/components/home/GoalSettingsModal.tsx": "sha256:0df2aa796c837f6f2cd26d5df6f2f7ecc42570e51f258e2fc1f2f0ea11110c33",
+    "apps/web/src/components/home/PinnedItemsSheet.tsx": "sha256:34bf689e65aa14db0d3c0c66237c37e96e2266e0f3b4d4786ea193ea5dd2fb8c"
   },
   "environment": {
     "os": "Windows 11 Pro",

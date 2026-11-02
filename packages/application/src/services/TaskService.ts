@@ -14,7 +14,7 @@ import {
   CreateTaskProps,
 } from '@intelliflow/domain';
 import { EventBusPort } from '../ports/external';
-import { PersistenceError, ValidationError, NotFoundError } from '../errors';
+import { PersistenceError, ValidationError, NotFoundError, TaskLinkRejectedError } from '../errors';
 
 export type TaskEntityType = 'lead' | 'contact' | 'opportunity';
 
@@ -26,6 +26,13 @@ export interface TaskAssignmentValidation {
   entityId: string;
   isValid: boolean;
   reason?: string;
+  /** The check itself failed (lookup threw), so nothing is known about the record. */
+  checkFailed?: boolean;
+}
+
+function assignmentError(validation: TaskAssignmentValidation, fallback: string): ValidationError {
+  const message = validation.reason ?? fallback;
+  return validation.checkFailed ? new ValidationError(message) : new TaskLinkRejectedError(message);
 }
 
 /**
@@ -105,14 +112,14 @@ export class TaskService {
     if (props.leadId) {
       const validation = await this.validateAssignment('lead', props.leadId);
       if (!validation.isValid) {
-        return Result.fail(new ValidationError(validation.reason ?? 'Invalid lead assignment'));
+        return Result.fail(assignmentError(validation, 'Invalid lead assignment'));
       }
     }
 
     if (props.contactId) {
       const validation = await this.validateAssignment('contact', props.contactId);
       if (!validation.isValid) {
-        return Result.fail(new ValidationError(validation.reason ?? 'Invalid contact assignment'));
+        return Result.fail(assignmentError(validation, 'Invalid contact assignment'));
       }
     }
 
@@ -123,9 +130,7 @@ export class TaskService {
         props.tenantId
       );
       if (!validation.isValid) {
-        return Result.fail(
-          new ValidationError(validation.reason ?? 'Invalid opportunity assignment')
-        );
+        return Result.fail(assignmentError(validation, 'Invalid opportunity assignment'));
       }
     }
 
@@ -693,6 +698,50 @@ export class TaskService {
   }
 
   /**
+   * Assign a task to a user (PG-208 round-robin). The repository has no tenant
+   * filter, so the loaded task's tenant is compared with the caller's; another
+   * tenant's task reads as not found. Same assignee → no change, no event.
+   */
+  async assignTask(
+    taskId: string,
+    assigneeId: string | null,
+    assignedBy: string,
+    tenantId: string
+  ): Promise<Result<Task, DomainError>> {
+    const taskIdResult = TaskId.create(taskId);
+    if (taskIdResult.isFailure) {
+      return Result.fail(taskIdResult.error);
+    }
+
+    const task = await this.taskRepository.findById(taskIdResult.value);
+    if (task?.tenantId !== tenantId) {
+      return Result.fail(new NotFoundError(`Task not found: ${taskId}`));
+    }
+    if (task.assigneeId === assigneeId) {
+      return Result.ok(task);
+    }
+
+    const readAt = task.updatedAt;
+    task.assignTo(assigneeId, assignedBy);
+
+    // Only the assignee is written, and only over the task as it was read: an
+    // edit or a deletion since then wins and nothing is published.
+    let saved: boolean;
+    try {
+      saved = await this.taskRepository.saveAssignment(task, readAt);
+    } catch {
+      return Result.fail(new PersistenceError('Failed to save task'));
+    }
+    if (!saved) {
+      return Result.fail(new PersistenceError(`Task changed before assignment: ${taskId}`));
+    }
+
+    await this.publishEvents(task);
+
+    return Result.ok(task);
+  }
+
+  /**
    * Delete task with business rules
    */
   async deleteTask(taskId: string): Promise<Result<void, DomainError>> {
@@ -793,7 +842,13 @@ export class TaskService {
   ): Promise<TaskAssignmentValidation> {
     const validationPromise = this.selectValidationPromise(entityType, entityId, tenantId);
     if (!validationPromise) {
-      return { entityType, entityId, isValid: false, reason: 'Unknown entity type' };
+      return {
+        entityType,
+        entityId,
+        isValid: false,
+        reason: 'Unknown entity type',
+        checkFailed: true,
+      };
     }
     try {
       return await validationPromise;
@@ -803,6 +858,7 @@ export class TaskService {
         entityId,
         isValid: false,
         reason: 'Error validating entity assignment',
+        checkFailed: true,
       };
     }
   }

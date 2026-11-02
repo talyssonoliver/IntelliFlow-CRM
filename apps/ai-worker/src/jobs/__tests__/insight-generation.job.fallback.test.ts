@@ -32,6 +32,13 @@ const mockContactAIInsightUpsert = vi.hoisted(() => vi.fn());
 // resolveFallbackProvider → a configured secondary provider, so the recovery
 // branches execute. The chain is fully mocked below, so the factory's other
 // exports are never exercised; stub them to keep the module surface intact.
+// PG-203 #1002: every person eligible here; the blocked paths have their own tests.
+vi.mock('../../lib/data-request-guard', async (importOriginal) =>
+  (await import('../../test/mocks/data-request-guard.mock')).passThroughGuard(
+    await importOriginal()
+  )
+);
+
 vi.mock('../../lib/llm-factory', () => ({
   resolveFallbackProvider: () => 'litellm',
   getLLMBreaker: vi.fn(),

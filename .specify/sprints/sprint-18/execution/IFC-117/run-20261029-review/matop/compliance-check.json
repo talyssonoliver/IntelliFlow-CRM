@@ -1,0 +1,36 @@
+{
+  "task_id": "IFC-117",
+  "run_id": "run-20261029-review",
+  "reviewed_at": "2026-10-29",
+  "reviewed_head": "87bbac6cc plus the uncommitted working tree that became f4d9290d3",
+  "mode": "read-only (no test, build or lint run by the reviewer; memory commit above 80%)",
+  "check": "compliance-check",
+  "agent": "general-purpose subagent following .agents/skills/compliance-check (the .claude copy is absent in this worktree)",
+  "verdict": "FAIL",
+  "verdict_after_resolution": "PASS (section 6 fixed in 65ecc91eb)",
+  "sections": {
+    "1 Design": "N/A",
+    "2 Source of truth": "PASS",
+    "3 Tests/typecheck/lint": "WARN (cited pre-ship evidence; working tree then uncommitted)",
+    "4 Plan deliverables": "PASS",
+    "5 Context ack": "N/A",
+    "6 CSV artifact completeness": "FAIL",
+    "6b Attestation forensics": "WARN (stale attestation)",
+    "7 Mock coverage": "PASS",
+    "8 Key objectives": "WARN (production KPIs are NEEDS_HUMAN by design)",
+    "9 Architecture": "PASS",
+    "10 PRD/ADR": "PASS",
+    "11 Accessibility": "N/A"
+  },
+  "preflights_run": [
+    "check-attestation-phrases.mjs IFC-117 18: exit 0",
+    "check-nav-wiring.mjs IFC-117 18: exit 0",
+    "check-lighthouse-evidence.mjs IFC-117 18: exit 0",
+    "check-attestation-provenance.mjs IFC-117 18: exit 0"
+  ],
+  "resolutions": [
+    "Section 6: Artifacts To Track gained 15 deliverables, splits regenerated (65ecc91eb).",
+    "Spec listed ADR-088 as Proposed; now Accepted (65ecc91eb).",
+    "Attestation refreshed in this round."
+  ]
+}

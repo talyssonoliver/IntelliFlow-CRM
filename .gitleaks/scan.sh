@@ -34,7 +34,21 @@ conf="$root/.gitleaks.toml"
 tmpl="$root/.gitleaks/report.tmpl"
 ignore="$root/.gitleaks"
 case "$1" in
-  staged) mode_args="--pre-commit --staged" ;;
+  staged)
+    # Inside a merge the index differs from HEAD by everything the other side
+    # brings in, which is already committed there and was scanned there. Scan only
+    # what this commit adds relative to the side being merged in: write the index
+    # as a throwaway single-parent commit on top of MERGE_HEAD and scan that diff.
+    # The commit object is unreferenced and is garbage-collected.
+    if merge_head=$(git rev-parse -q --verify MERGE_HEAD); then
+      tree=$(git write-tree) || exit 2
+      tip=$(GIT_AUTHOR_NAME=secret-scan GIT_AUTHOR_EMAIL=secret-scan@example.invalid \
+        GIT_COMMITTER_NAME=secret-scan GIT_COMMITTER_EMAIL=secret-scan@example.invalid \
+        git commit-tree "$tree" -p "$merge_head" -m "secret-scan merge diff") || exit 2
+      mode_args="--log-opts=$merge_head..$tip"
+    else
+      mode_args="--pre-commit --staged"
+    fi ;;
   tree)
     # Tracked files only, exactly as committed at HEAD. The [extend] path in
     # .gitleaks.toml is relative to the cwd, so run from a copy that has it.

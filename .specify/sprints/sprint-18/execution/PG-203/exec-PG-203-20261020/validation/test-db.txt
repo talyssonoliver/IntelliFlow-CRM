@@ -1,0 +1,14 @@
+[test-slot] slot2 taken for PG-203@feat/pg-203-event-types: pnpm --filter @intelliflow/db test
+
+> @intelliflow/db@0.1.0 test C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\packages\db
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/db
+
+
+ Test Files  15 passed | 1 skipped (16)
+      Tests  224 passed | 14 skipped (238)
+   Start at  20:51:57
+   Duration  2.78s (transform 2.05s, setup 0ms, import 3.31s, tests 417ms, environment 2ms)
+

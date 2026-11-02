@@ -1,0 +1,21 @@
+2026-10-20T23:48:49Z
+[test-slot] slot2 taken for PG-208@feat/pg-208-task-automation (holding group-intelliflow-db): pnpm exec vitest run --project integration tests/integration/task-automation.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208
+
+
+ Test Files  1 passed (1)
+      Tests  33 passed (33)
+   Start at  00:48:52
+   Duration  3.78s (transform 862ms, setup 1.07s, import 1.00s, tests 1.40s, environment 0ms)
+
+2026-10-20T23:48:56Z
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/packages/db
+
+
+ Test Files  3 passed (3)
+      Tests  47 passed | 5 skipped (52)
+   Start at  00:48:57
+   Duration  919ms (transform 657ms, setup 0ms, import 314ms, tests 608ms, environment 0ms)
+

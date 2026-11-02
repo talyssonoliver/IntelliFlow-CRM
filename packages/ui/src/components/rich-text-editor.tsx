@@ -300,6 +300,10 @@ export interface RichTextEditorProps {
   editable?: boolean;
   /** Accessible label for the editing region. */
   ariaLabel?: string;
+  /** Id(s) of the element describing the region, e.g. its validation message. */
+  ariaDescribedBy?: string;
+  /** Marks the content invalid (pair with `ariaDescribedBy` pointing at the message). */
+  ariaInvalid?: boolean;
   /** Extra class names for the wrapper element. */
   className?: string;
   /** Resolve a URL for the link button. Return null to cancel, '' to remove. */
@@ -321,6 +325,8 @@ export function RichTextEditor({
   onCreate,
   editable = true,
   ariaLabel = 'Rich text editor',
+  ariaDescribedBy,
+  ariaInvalid = false,
   className,
   promptForLink = defaultPromptForLink,
   promptForImage = defaultPromptForImage,
@@ -328,6 +334,19 @@ export function RichTextEditor({
   const ctx = React.useMemo<ToolbarContext>(
     () => ({ promptForLink, promptForImage }),
     [promptForLink, promptForImage]
+  );
+
+  const attributes = React.useMemo(
+    () => ({
+      role: 'textbox',
+      'aria-multiline': 'true',
+      'aria-label': ariaLabel,
+      ...(ariaDescribedBy ? { 'aria-describedby': ariaDescribedBy } : {}),
+      ...(ariaInvalid ? { 'aria-invalid': 'true' } : {}),
+      class:
+        'rich-text-editor__content min-h-[12rem] max-w-none px-3 py-2 focus:outline-none prose prose-sm dark:prose-invert',
+    }),
+    [ariaLabel, ariaDescribedBy, ariaInvalid]
   );
 
   const editor = useEditor({
@@ -344,15 +363,7 @@ export function RichTextEditor({
       }),
       Image.configure({ inline: false, allowBase64: false }),
     ],
-    editorProps: {
-      attributes: {
-        role: 'textbox',
-        'aria-multiline': 'true',
-        'aria-label': ariaLabel,
-        class:
-          'rich-text-editor__content min-h-[12rem] max-w-none px-3 py-2 focus:outline-none prose prose-sm dark:prose-invert',
-      },
-    },
+    editorProps: { attributes },
     onCreate: ({ editor: created }) => {
       onCreate?.(created);
     },
@@ -369,6 +380,14 @@ export function RichTextEditor({
       editor.setEditable(editable);
     }
   }, [editor, editable]);
+
+  // Tiptap reads editorProps once; push changed ARIA attributes (e.g. a new
+  // validation message) to the live view.
+  React.useEffect(() => {
+    if (editor) {
+      editor.setOptions({ editorProps: { ...editor.options.editorProps, attributes } });
+    }
+  }, [editor, attributes]);
 
   return (
     <div

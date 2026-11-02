@@ -4,7 +4,9 @@
  *
  * Thin, cross-platform wrapper around k6 that runs the Sprint-19 critical-path
  * load test (tools/scripts/k6/ifc-033-critical-path.js) against a LOCAL, prod-safe
- * target and exports the real HTML report to artifacts/reports/load-test-report.html.
+ * target by default, or a deployed BASE_URL with K6_AUTH_TOKEN from
+ * prepare-ifc-033-tenant.mjs, and exports the real HTML report to
+ * artifacts/reports/load-test-report.html.
  *
  * Prerequisites (see docs/operations/runbooks/load-testing-local.md):
  *   - k6 installed (on PATH, or set K6_BIN)

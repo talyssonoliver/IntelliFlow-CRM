@@ -1,0 +1,11 @@
+[test-slot] slot1 taken for PG-207@feat/pg-207-email-settings: pnpm vitest run tools/scripts/route-total-consistency.test.ts tools/scripts/__tests__/content-audit.test.ts tools/scripts/__tests__/docs-integrity-audit.test.ts
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-207
+
+
+ Test Files  3 passed (3)
+      Tests  78 passed (78)
+   Start at  10:29:48
+   Duration  1.05s (transform 1.04s, setup 1.60s, import 253ms, tests 374ms, environment 0ms)
+

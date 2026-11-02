@@ -1,0 +1,39 @@
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117
+
+ ❯ |root| tools/scripts/__tests__/ai-monitoring-assets.test.ts (0 test)
+ ❯ |root| tools/scripts/__tests__/apply-grafana-ai-alert-rules.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |root| tools/scripts/__tests__/ai-monitoring-assets.test.ts [ tools/scripts/__tests__/ai-monitoring-assets.test.ts ]
+Error: Cannot find module '../../../apps/ai-worker/src/monitoring/otel-ai-types' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/tools/scripts/__tests__/ai-monitoring-assets.test.ts
+ ❯ tools/scripts/__tests__/ai-monitoring-assets.test.ts:17:1
+     15| import yaml from 'js-yaml';
+     16| import { describe, expect, it } from 'vitest';
+     17| import {
+       | ^
+     18|   AI_METRIC_DEFINITIONS,
+     19|   ATTRIBUTE_KEYS,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |root| tools/scripts/__tests__/apply-grafana-ai-alert-rules.test.ts [ tools/scripts/__tests__/apply-grafana-ai-alert-rules.test.ts ]
+Error: Cannot find module '../observability/apply-grafana-ai-alert-rules.mjs' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117/tools/scripts/__tests__/apply-grafana-ai-alert-rules.test.ts
+ ❯ tools/scripts/__tests__/apply-grafana-ai-alert-rules.test.ts:11:1
+      9| import yaml from 'js-yaml';
+     10| import { afterEach, describe, expect, it } from 'vitest';
+     11| import {
+       | ^
+     12|   RULES_PATH,
+     13|   SAFE_PATH_SEGMENT,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  no tests
+   Start at  18:45:23
+   Duration  1.09s (transform 986ms, setup 1.59s, import 0ms, tests 0ms, environment 0ms)
+
+exit=1

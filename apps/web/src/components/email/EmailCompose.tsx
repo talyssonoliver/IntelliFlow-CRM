@@ -2,6 +2,8 @@
 
 import { useState, useCallback, useRef, useEffect, type ComponentPropsWithRef } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
+import { toast } from '@intelliflow/ui';
+import { MAX_EMAIL_ATTACHMENT_BYTES, type EmailAttachmentRef } from '@intelliflow/validators';
 import { trpc } from '@/lib/trpc';
 import { useDebounce } from '@/hooks/useDebounce';
 import { cn } from '@/lib/utils';
@@ -9,6 +11,8 @@ import { RecipientPicker, type Recipient } from './RecipientPicker';
 import { FormatToolbar } from './FormatToolbar';
 import { AttachmentManager } from './AttachmentManager';
 import { TemplateSelector } from './TemplateSelector';
+import { getEmailSendError, partialSendNotice, type EmailSendErrorView } from './send-errors';
+import { SendErrorAlert } from './SendErrorAlert';
 
 type ComposeMode = 'new' | 'reply' | 'replyAll' | 'forward';
 
@@ -26,6 +30,12 @@ interface EmailComposeProps {
   originalEmail?: OriginalEmail;
   /** Pre-filled recipients for new compose (e.g. from hover card "Email" action) */
   initialTo?: Recipient[];
+  /**
+   * PG-207 (owner ruling Q5): the default signature a new message starts with.
+   * Sanitised again here; it is part of the body from the first render, so
+   * nothing is injected after mount and the server appends nothing.
+   */
+  initialSignatureHtml?: string;
   onDiscard: () => void;
   onSent?: () => void;
   className?: string;
@@ -75,6 +85,21 @@ function RichTextBody(props: ComponentPropsWithRef<'div'>) {
   return <div {...TEXTBOX_ARIA} {...props} />;
 }
 
+const MAX_ATTACHMENT_MB = MAX_EMAIL_ATTACHMENT_BYTES / (1024 * 1024);
+
+/** The file as base64 (the upload payload), without the data-URL prefix. */
+function readAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = String(reader.result);
+      resolve(result.slice(result.indexOf(',') + 1));
+    };
+    reader.onerror = () => reject(reader.error ?? new Error('The file could not be read.'));
+    reader.readAsDataURL(file);
+  });
+}
+
 const TRACKED_COMMANDS = [
   'bold',
   'italic',
@@ -87,18 +112,23 @@ export function EmailCompose({
   mode,
   originalEmail,
   initialTo,
+  initialSignatureHtml,
   onDiscard,
   onSent,
   className,
 }: Readonly<EmailComposeProps>) {
-  // Forward mode: set initial body with quoted content
-  const initialBody =
-    mode === 'forward' && originalEmail?.htmlBody
-      ? `<br><br><div style="border-left:2px solid #ccc;padding-left:8px;color:#666">
+  const signatureHtml = initialSignatureHtml ? DOMPurify.sanitize(initialSignatureHtml) : '';
+  // Forward mode: set initial body with quoted content; a new message starts
+  // with the signature below an empty first line.
+  let initialBody = '';
+  if (mode === 'forward' && originalEmail?.htmlBody) {
+    initialBody = `<br><br><div style="border-left:2px solid #ccc;padding-left:8px;color:#666">
           <p><strong>Forwarded message:</strong></p>
           ${DOMPurify.sanitize(originalEmail.htmlBody)}
-        </div>`
-      : '';
+        </div>`;
+  } else if (signatureHtml) {
+    initialBody = `<br><br>${signatureHtml}`;
+  }
 
   const defaults = getDefaultRecipients(mode, originalEmail);
 
@@ -116,6 +146,13 @@ export function EmailCompose({
   const [statusMessage, setStatusMessage] = useState('');
   const [bodyHtml, setBodyHtml] = useState(initialBody);
   const [draftId, setDraftId] = useState<string | undefined>(undefined);
+  // One object for the editor's whole life: React 19 re-applies
+  // dangerouslySetInnerHTML whenever the object changes, which would wipe what
+  // the user typed (and a template insert) on every re-render.
+  const [initialBodyProp] = useState(() => (initialBody ? { __html: initialBody } : undefined));
+  const [sendError, setSendError] = useState<EmailSendErrorView | null>(null);
+  const [attachmentError, setAttachmentError] = useState<string | null>(null);
+  const [skippedNotice, setSkippedNotice] = useState<string | null>(null);
 
   const bodyRef = useRef<HTMLDivElement>(null);
   /** Saved selection range for restoring after toolbar interactions */
@@ -123,6 +160,7 @@ export function EmailCompose({
 
   const sendMutation = trpc.email.sendEmail.useMutation();
   const draftMutation = trpc.email.saveDraft.useMutation();
+  const uploadMutation = trpc.emailAttachments.upload.useMutation();
 
   // Track active formatting state on selection changes
   useEffect(() => {
@@ -187,26 +225,66 @@ export function EmailCompose({
     setStatusMessage('Failed to send email. Please try again.');
   }, []);
 
-  const handleSend = useCallback(async () => {
+  /** Stores every attachment privately before the send; null (and a visible error) on any failure. */
+  const uploadAttachments = useCallback(async (): Promise<EmailAttachmentRef[] | null> => {
+    const oversized = attachments.find((file) => file.size > MAX_EMAIL_ATTACHMENT_BYTES);
+    if (oversized) {
+      setAttachmentError(
+        `${oversized.name} is larger than ${MAX_ATTACHMENT_MB} MB, so it cannot be attached.`
+      );
+      return null;
+    }
+    const refs: EmailAttachmentRef[] = [];
+    for (const file of attachments) {
+      try {
+        refs.push(
+          await uploadMutation.mutateAsync({
+            fileName: file.name,
+            contentType: file.type || 'application/octet-stream',
+            contentBase64: await readAsBase64(file),
+          })
+        );
+      } catch (error) {
+        const reason = error instanceof Error && error.message ? error.message : 'Try again.';
+        setAttachmentError(`${file.name} could not be attached: ${reason}`);
+        return null;
+      }
+    }
+    return refs;
+  }, [attachments, uploadMutation]);
+
+  const sendNow = useCallback(async () => {
     if (!validate()) return;
+    setSendError(null);
+    setAttachmentError(null);
+    setSkippedNotice(null);
+
+    const uploaded = await uploadAttachments();
+    if (!uploaded) return;
 
     try {
-      await sendMutation.mutateAsync({
+      const result = await sendMutation.mutateAsync({
         to: toRecipients.map((r) => r.email),
         cc: ccRecipients.length > 0 ? ccRecipients.map((r) => r.email) : undefined,
         bcc: bccRecipients.length > 0 ? bccRecipients.map((r) => r.email) : undefined,
         subject,
         htmlBody: getBodyHtml(),
         threadId: originalEmail?.id,
+        attachments: uploaded.length > 0 ? uploaded : undefined,
       });
-      setStatusMessage('Email sent successfully');
+      const notice = partialSendNotice(result);
+      setSkippedNotice(notice);
+      setStatusMessage(notice ?? 'Email sent successfully');
+      if (notice) toast({ title: 'Email sent', description: notice });
       onSent?.();
-    } catch {
-      reportSendError();
+    } catch (error) {
+      // The draft stays as it is; the focused alert says what to do next (and is
+      // the only announcement: the live region is left alone).
+      setSendError(getEmailSendError(error));
     }
   }, [
     validate,
-    reportSendError,
+    uploadAttachments,
     sendMutation,
     toRecipients,
     ccRecipients,
@@ -216,6 +294,22 @@ export function EmailCompose({
     originalEmail,
     onSent,
   ]);
+
+  // One send at a time: attachments upload before the mutation is pending, so
+  // the mutation's own pending flag cannot stop a second click.
+  const sendingRef = useRef(false);
+  const [sending, setSending] = useState(false);
+  const handleSend = useCallback(async () => {
+    if (sendingRef.current) return;
+    sendingRef.current = true;
+    setSending(true);
+    try {
+      await sendNow();
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
+    }
+  }, [sendNow]);
 
   const handleSaveDraft = useCallback(async () => {
     try {
@@ -316,13 +410,15 @@ export function EmailCompose({
   const handleTemplateSelect = useCallback(
     (template: { body: string; subject: string }) => {
       if (bodyRef.current) {
-        bodyRef.current.innerHTML = DOMPurify.sanitize(resolveVariables(template.body));
+        // A template replaces the body; the signature is kept after it (CA-7).
+        const body = DOMPurify.sanitize(resolveVariables(template.body));
+        bodyRef.current.innerHTML = signatureHtml ? `${body}<br>${signatureHtml}` : body;
       }
       if (!subject) {
         setSubject(resolveVariables(template.subject));
       }
     },
-    [subject, resolveVariables]
+    [subject, resolveVariables, signatureHtml]
   );
 
   const handleBodyKeyDown = useCallback(
@@ -531,7 +627,7 @@ export function EmailCompose({
           className="min-h-[120px] text-sm focus:outline-none prose prose-sm max-w-none"
           onKeyDown={handleBodyKeyDown}
           onInput={handleBodyInput}
-          dangerouslySetInnerHTML={initialBody ? { __html: initialBody } : undefined}
+          dangerouslySetInnerHTML={initialBodyProp}
         />
       </div>
 
@@ -542,11 +638,24 @@ export function EmailCompose({
         </div>
       ) : null}
 
+      {/* Coded send refusal (PG-207, AC-EM-018) */}
+      {sendError ? <SendErrorAlert error={sendError} className="mx-4 my-2 text-sm" /> : null}
+
+      {attachmentError ? (
+        <p role="alert" className="px-4 py-1 text-xs text-red-700 dark:text-red-300">
+          {attachmentError}
+        </p>
+      ) : null}
+
+      {skippedNotice ? (
+        <p className="px-4 py-1 text-xs text-muted-foreground">{skippedNotice}</p>
+      ) : null}
+
       {/* Error messages */}
       {errors.length > 0 ? (
         <div className="px-4 py-1">
           {errors.map((err) => (
-            <p key={err} className="text-xs text-destructive">
+            <p key={err} className="text-xs text-red-700 dark:text-red-300">
               {err}
             </p>
           ))}
@@ -559,7 +668,7 @@ export function EmailCompose({
           <button
             type="submit"
             aria-label="Send"
-            disabled={sendMutation.isPending}
+            disabled={sending || sendMutation.isPending}
             className={cn(
               'inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground',
               'hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',

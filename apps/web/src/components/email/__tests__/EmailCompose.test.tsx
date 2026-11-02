@@ -2,7 +2,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
-import { createMockEmailTrpc, createMockEmail } from './email-test-utils';
+import { createMockEmailTrpc, createMockEmail, createMockTemplate } from './email-test-utils';
 
 const { trpc: mockTrpc, mocks } = createMockEmailTrpc();
 
@@ -271,6 +271,58 @@ describe('EmailCompose', () => {
     await waitFor(() => {
       expect(mutateAsync).toHaveBeenCalledTimes(2);
       expect(mutateAsync).toHaveBeenLastCalledWith(expect.objectContaining({ id: 'draft-first' }));
+    });
+  });
+
+  describe('signature prefill (PG-207, owner ruling Q5)', () => {
+    it('starts a new message with the sanitised default signature', () => {
+      render(
+        <EmailCompose
+          {...defaultProps}
+          initialSignatureHtml={
+            '<p>Kind regards</p><img src="x" onerror="alert(1)"><script>alert(2)</script>'
+          }
+        />
+      );
+      const body = screen.getByLabelText('Message body');
+      expect(body.innerHTML).toContain('Kind regards');
+      expect(body.innerHTML).not.toContain('<script');
+      expect(body.innerHTML).not.toContain('onerror');
+    });
+
+    it('keeps what the user types when the form re-renders', () => {
+      render(<EmailCompose {...defaultProps} initialSignatureHtml="<p>Kind regards</p>" />);
+      const body = screen.getByLabelText('Message body');
+      body.innerHTML = '<p>Typed by me</p><p>Kind regards</p>';
+      fireEvent.input(body);
+      fireEvent.change(screen.getByLabelText(/subject/i), {
+        target: { value: 'Re-render please' },
+      });
+      expect(body.innerHTML).toContain('Typed by me');
+    });
+
+    it('does not auto-save an untouched prefill as a draft', () => {
+      render(<EmailCompose {...defaultProps} initialSignatureHtml="<p>Kind regards</p>" />);
+      const draft = mocks.saveDraft.mock.results.at(-1)?.value.mutateAsync;
+      expect(draft).not.toHaveBeenCalled();
+    });
+
+    it('keeps the signature after a template replaces the body', async () => {
+      mocks.listTemplates.mockReturnValue({
+        data: [createMockTemplate({ body: '<p>Template text</p>' })],
+        isLoading: false,
+        isError: false,
+      });
+      const user = userEvent.setup();
+      render(<EmailCompose {...defaultProps} initialSignatureHtml="<p>Kind regards</p>" />);
+      await user.click(screen.getByRole('button', { name: /template/i }));
+      await user.click(await screen.findByRole('button', { name: /follow up/i }));
+      // The picker asks before replacing a non-empty body once it has seen the signature.
+      const replace = screen.queryByRole('button', { name: /^replace$/i });
+      if (replace) await user.click(replace);
+      const html = screen.getByLabelText('Message body').innerHTML;
+      expect(html).toContain('Template text');
+      expect(html.indexOf('Kind regards')).toBeGreaterThan(html.indexOf('Template text'));
     });
   });
 });

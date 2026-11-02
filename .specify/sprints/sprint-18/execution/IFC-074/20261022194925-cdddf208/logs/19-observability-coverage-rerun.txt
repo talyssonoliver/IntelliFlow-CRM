@@ -1,0 +1,24 @@
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-074
+      Coverage enabled with istanbul
+
+
+ Test Files  4 passed (4)
+      Tests  44 passed (44)
+   Start at  23:44:40
+   Duration  3.15s (transform 3.14s, setup 0ms, import 3.85s, tests 1.79s, environment 1ms)
+
+ % Coverage report from istanbul
+----------|---------|----------|---------|---------|-------------------
+File      | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+----------|---------|----------|---------|---------|-------------------
+All files |       0 |        0 |       0 |       0 |                   
+----------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : Unknown% ( 0/0 )
+Branches     : Unknown% ( 0/0 )
+Functions    : Unknown% ( 0/0 )
+Lines        : Unknown% ( 0/0 )
+================================================================================
+exit=0

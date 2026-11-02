@@ -27,6 +27,7 @@
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, resolve, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = resolve(process.cwd());
 const FRESHNESS_HOURS = 72;
@@ -170,14 +171,16 @@ function reportScoresMeetThresholds(report, threshold = 0.9) {
   };
 }
 
-function reportHashMatchesArtifacts(reportPath, attestation) {
+export function reportHashMatchesArtifacts(reportPath, attestation) {
   const hashes = attestation?.artifact_hashes;
   if (!hashes || typeof hashes !== 'object') return false;
   const rel = relative(REPO_ROOT, reportPath).replace(/\\/g, '/');
   const declared = hashes[rel];
   if (typeof declared !== 'string') return false;
   const actual = sha256OfFile(reportPath);
-  return actual !== null && actual === declared;
+  // artifact_hashes values are `sha256:<hex>` (bare <hex> in older attestations).
+  const digest = declared.startsWith('sha256:') ? declared.slice('sha256:'.length) : declared;
+  return actual !== null && actual === digest;
 }
 
 function main() {
@@ -324,4 +327,7 @@ function main() {
   process.exit(1);
 }
 
-main();
+// Run only as a script, so reportHashMatchesArtifacts can be imported by tests.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main();
+}

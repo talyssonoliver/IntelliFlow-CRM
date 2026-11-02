@@ -3,14 +3,21 @@
  *
  * LLM generates a structured summary (conversion probability, LTV, churn risk,
  * next-best-action, sentiment, engagement, recommendations) and upserts
- * `ContactAIInsight` with provenance fields. Always succeeds to the caller:
- * LLM errors produce a fallback insight with `source='fallback'`.
+ * `ContactAIInsight` with provenance fields. LLM errors produce a fallback insight
+ * with `source='fallback'`. An erased or restricted contact (PG-203 #1002) is never
+ * sent to the model and gets no insight.
  */
 
 import { z } from 'zod';
 import pino from 'pino';
 import { prisma } from '@intelliflow/db';
 import { createLLMForTenant } from './lib/llm-factory.js';
+import {
+  eligibleSubjectEmail,
+  SUBJECT_NOT_PROCESSABLE,
+  writeSubjectIfStillEligible,
+  type SubjectPrisma,
+} from './lib/data-request-guard.js';
 
 const logger = pino({
   name: 'contact-insight.chain',
@@ -78,6 +85,14 @@ export async function generateContactInsight(
 ): Promise<GenerateContactInsightResult> {
   const { contactId, tenantId, context } = input;
 
+  // PG-203 #1002 (owner ruling): an erased or restricted person is never sent to the model.
+  const email = await eligibleSubjectEmail(prisma as unknown as SubjectPrisma, {
+    kind: 'contact',
+    id: contactId,
+    tenantId,
+  });
+  if (email === null) return { success: false, reason: SUBJECT_NOT_PROCESSABLE };
+
   let parsed: z.infer<typeof InsightLLMSchema> | null = null;
   let source: 'llm' | 'fallback' = 'llm';
 
@@ -143,20 +158,28 @@ export async function generateContactInsight(
 
   const now = new Date();
   try {
-    await prisma.contactAIInsight.upsert({
-      where: { contactId },
-      create: {
-        ...payload,
-        tenantId,
-        contactId,
-        generatedAt: now,
-      } as any,
-      update: {
-        ...payload,
-        tenantId,
-        generatedAt: now,
-      } as any,
-    });
+    // The person may have been erased or restricted during the model call: write only under
+    // the contact row and address locks, after re-checking (#1002).
+    const outcome = await writeSubjectIfStillEligible(
+      prisma as never,
+      { kind: 'contact', id: contactId, tenantId, email },
+      (tx) =>
+        (tx as unknown as typeof prisma).contactAIInsight.upsert({
+          where: { contactId },
+          create: {
+            ...payload,
+            tenantId,
+            contactId,
+            generatedAt: now,
+          } as any,
+          update: {
+            ...payload,
+            tenantId,
+            generatedAt: now,
+          } as any,
+        })
+    );
+    if (!outcome.written) return { success: false, reason: SUBJECT_NOT_PROCESSABLE };
   } catch (err) {
     logger.warn({ err, contactId, tenantId }, 'Prisma upsert failed');
     return { success: false, reason: 'db-upsert-error' };

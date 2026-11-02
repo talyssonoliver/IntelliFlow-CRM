@@ -30,6 +30,8 @@ import {
   setOrgGoalDefaultInputSchema,
   getAllInsightsQuerySchema,
   GOAL_DEFAULTS,
+  idSchema,
+  recordIdSchema,
   type WelcomeSummary,
   type AIInsightsResponse,
   type GetAllInsightsResponse,
@@ -428,10 +430,11 @@ async function enqueueInsightGeneration(
     staleContacts: Array<{ id: string; name: string; daysSinceContact: number | null }>;
   }
 ): Promise<void> {
-  // Guard: reject non-UUID tenantIds (e.g. test fixtures like "test-tenant-id")
-  // to prevent FK violations when the worker persists insights.
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(tenantId)) return;
+  // Guard: enqueue only for a real record id, a cuid or a seed uuid, within the
+  // job's id bound (#1074: a uuid-only check dropped every real, cuid, tenant).
+  // Fixture ids such as "test-tenant-id" are still skipped, which avoids FK
+  // violations when the worker persists insights.
+  if (!idSchema.safeParse(tenantId).success || !recordIdSchema.safeParse(tenantId).success) return;
 
   try {
     const { Queue } = await loadBullMQ();
@@ -1959,16 +1962,21 @@ export const homeRouter = createTRPCRouter({
         });
       }
 
-      const target = await ctx.prismaWithTenant.user.findUnique({
-        where: { id: targetUserId },
+      // #1075 review: ADMIN skips the team check, so the target must be found and
+      // written only inside the caller's tenant.
+      const target = await ctx.prismaWithTenant.user.findFirst({
+        where: { id: targetUserId, tenantId },
         select: { preferences: true },
       });
-      const prefs = (target?.preferences as Record<string, unknown> | null) || {};
+      if (!target) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Team member not found' });
+      }
+      const prefs = (target.preferences as Record<string, unknown> | null) || {};
       const beforeState = (prefs.dailyGoal as Record<string, unknown> | undefined) ?? undefined;
       const afterState = { type, targetValue, label, customUnit };
 
-      await ctx.prismaWithTenant.user.update({
-        where: { id: targetUserId },
+      await ctx.prismaWithTenant.user.updateMany({
+        where: { id: targetUserId, tenantId },
         data: { preferences: { ...prefs, dailyGoal: afterState } },
       });
 

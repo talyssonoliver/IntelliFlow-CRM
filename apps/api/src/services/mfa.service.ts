@@ -16,6 +16,7 @@
 
 import { randomBytes, randomInt, createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { PrismaClient } from '@intelliflow/db';
+import type { Session } from '@supabase/supabase-js';
 
 // ============================================
 // TOTP Implementation (no external deps for now)
@@ -173,6 +174,11 @@ export interface MfaChallenge {
   maxAttempts: number;
   /** Challenge created at */
   createdAt: Date;
+  /**
+   * The session from the password step. Stays on the server until this challenge
+   * succeeds, and goes when the challenge goes.
+   */
+  pendingSession?: Session;
 }
 
 /**
@@ -427,7 +433,9 @@ export class MfaService {
   /**
    * Create an MFA challenge for a user
    */
-  createChallenge(userId: string, method: MfaMethod): MfaChallenge {
+  createChallenge(userId: string, method: MfaMethod, pendingSession?: Session): MfaChallenge {
+    // Expired challenges must not keep their pending session in memory.
+    this.cleanupExpiredChallenges();
     const challengeId = this.generateChallengeId();
 
     const challenge: MfaChallenge = {
@@ -438,6 +446,7 @@ export class MfaService {
       attempts: 0,
       maxAttempts: 3,
       createdAt: new Date(),
+      pendingSession,
     };
 
     challengeStore.set(challengeId, challenge);
@@ -488,7 +497,7 @@ export class MfaService {
     challengeId: string,
     code: string,
     userMfaSettings?: MfaUserSettings
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string; pendingSession?: Session }> {
     const challenge = challengeStore.get(challengeId);
 
     if (!challenge) {
@@ -522,7 +531,7 @@ export class MfaService {
 
     if (isValid) {
       challengeStore.delete(challengeId);
-      return { success: true };
+      return { success: true, pendingSession: challenge.pendingSession };
     }
 
     // Check if max attempts reached

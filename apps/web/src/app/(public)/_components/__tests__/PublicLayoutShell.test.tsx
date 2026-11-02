@@ -168,6 +168,17 @@ describe('authLoading=false & unauthenticated → overlays mounted', () => {
     expect(screen.getByTestId('tour-provider')).toBeDefined();
   });
 
+  it('renders a public booking page without the Aurora header, footer or feedback FAB (PG-203)', () => {
+    mockAuthLoading = false;
+    mockClientAuthenticated = false;
+    renderShell({ isAuthenticated: false, pathname: '/book/smith-law/initial-consultation' });
+
+    expect(screen.getByTestId('child-content')).toBeDefined();
+    expect(screen.queryByTestId('public-header')).toBeNull();
+    expect(screen.queryByTestId('site-footer')).toBeNull();
+    expect(screen.queryByTestId('public-feedback-fab')).toBeNull();
+  });
+
   it('renders PublicHeader on non-auth pages for unauthenticated visitor', () => {
     mockAuthLoading = false;
     mockClientAuthenticated = false;

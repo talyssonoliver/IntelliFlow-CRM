@@ -1,0 +1,13 @@
+# 2026-10-20T23:21:29Z
+# d4db133c9481988b96b250bd278cdbcc79b94400
+# pnpm --filter @intelliflow/api exec vitest run src/modules/legal/__tests__/appointments.router.test.ts src/modules/lead
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/api
+
+
+ Test Files  9 passed (9)
+      Tests  237 passed (237)
+   Start at  00:21:31
+   Duration  7.81s (transform 6.22s, setup 4.02s, import 19.65s, tests 1.85s, environment 1ms)
+
+# exit=0

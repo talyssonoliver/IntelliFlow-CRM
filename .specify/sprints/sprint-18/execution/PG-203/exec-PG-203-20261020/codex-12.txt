@@ -1,0 +1,34 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 61 files total
+[codex-review] in scope : 34 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T08:09:48.978Z
+Base ref  : origin/main
+Files in scope : 34
+Total findings : 2
+  Waived       : 1
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/calendar/public-booking.router.ts:587 — stale-booking-response-timezone
+    Issue    : The successful booking response returns the timezone from the initial lookup instead of the configuration used to create the appointment.
+    Evidence : `timezone: settings.defaultTimezone` references the pre-transaction lookup. Inside the transaction, resolveBookable and loadRules reload the configuration, and the appointment is stored with `timezone: rules.timezone`. If an administrator changes the firm timezone between those reads, the response reports the old timezone while the appointment and confirmation email use the new one.
+    Fix      : Return the committed appointment's timezone or outcome.bookable.settings.defaultTimezone.
+    Fingerprint: 1a4e83edb84affcb7cb26c34cef0661b55790ce5716c3e438d565b6fe3bcc2fb
+
+WAIVED FINDINGS (suppressed):
+  [MEDIUM] apps/api/src/modules/calendar/public-booking.router.ts:530 — incomplete-booking-serialization (fp: 283b28bc7d89...)
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

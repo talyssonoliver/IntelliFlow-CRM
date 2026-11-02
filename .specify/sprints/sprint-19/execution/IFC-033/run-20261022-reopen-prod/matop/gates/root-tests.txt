@@ -1,0 +1,10 @@
+[test-slot] slot2 taken for IFC-033@feat/ifc-033-ifc033: npx vitest run --project root
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-033
+
+
+ Test Files  117 passed (117)
+      Tests  2654 passed | 2 skipped (2656)
+   Start at  16:13:50
+   Duration  69.52s (transform 7.66s, setup 37.84s, import 10.16s, tests 170.14s, environment 1.80s)
+

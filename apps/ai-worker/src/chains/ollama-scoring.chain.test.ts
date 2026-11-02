@@ -183,7 +183,8 @@ describe('LeadScoringChain with Ollama Provider', () => {
 
       expect(result.score).toBe(0);
       expect(result.confidence).toBe(0);
-      expect(result.factors[0].reasoning).toContain('ECONNREFUSED');
+      // The error class only: the reasoning is persisted and shown (IFC-117 NF-002).
+      expect(result.factors[0].reasoning).toBe('Scoring failed (other)');
       expect(result.modelVersion).toBe('error:v1');
     });
   });

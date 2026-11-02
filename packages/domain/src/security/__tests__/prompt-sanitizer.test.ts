@@ -391,10 +391,12 @@ describe('Prompt Sanitizer - IFC-125', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject invalid UUID', () => {
+    // Actor ids are cuid, uuid or the system actor (prompt-sanitizer.actor-id.test.ts);
+    // the check bounds charset and length rather than requiring uuid.
+    it('should reject an unsafe user id', () => {
       const invalid = {
         text: 'Hello world',
-        userId: 'not-a-uuid',
+        userId: 'not a/safe id',
         maxTokens: 500,
       };
 

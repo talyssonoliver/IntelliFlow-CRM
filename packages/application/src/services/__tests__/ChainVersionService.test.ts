@@ -17,6 +17,9 @@ import {
   ChainVersionAuditRepositoryPort,
   FeatureFlagProviderPort,
 } from '../ChainVersionService';
+import { NotFoundError } from '../../errors';
+
+const TENANT = 'tenant-1';
 
 // ---------------------------------------------------------------------------
 // Mock factories
@@ -227,6 +230,7 @@ describe('ChainVersionService', () => {
 
       const result = await service.updateVersion(
         'ver-1',
+        TENANT,
         { prompt: 'Updated prompt' } as any,
         'user-1'
       );
@@ -239,7 +243,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(null);
 
       await expect(
-        service.updateVersion('missing', { prompt: 'test' } as any, 'user-1')
+        service.updateVersion('missing', TENANT, { prompt: 'test' } as any, 'user-1')
       ).rejects.toThrow('Chain version not found: missing');
     });
 
@@ -247,7 +251,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(makeVersion({ status: 'ACTIVE' }));
 
       await expect(
-        service.updateVersion('ver-1', { prompt: 'test' } as any, 'user-1')
+        service.updateVersion('ver-1', TENANT, { prompt: 'test' } as any, 'user-1')
       ).rejects.toThrow('Only DRAFT versions can be updated');
     });
 
@@ -256,7 +260,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(existing);
       versionRepo.update.mockImplementation((_id: string, data: any) => ({ ...existing, ...data }));
 
-      await service.updateVersion('ver-1', { prompt: 'new prompt' } as any, 'user-1');
+      await service.updateVersion('ver-1', TENANT, { prompt: 'new prompt' } as any, 'user-1');
 
       const updateCall = versionRepo.update.mock.calls[0][1];
       expect(updateCall.model).toBe('gpt-4');
@@ -268,7 +272,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(existing);
       versionRepo.update.mockImplementation((_id: string, data: any) => ({ ...existing, ...data }));
 
-      await service.updateVersion('ver-1', { experimentId: null } as any, 'user-1');
+      await service.updateVersion('ver-1', TENANT, { experimentId: null } as any, 'user-1');
 
       const updateCall = versionRepo.update.mock.calls[0][1];
       expect(updateCall.experimentId).toBeNull();
@@ -286,7 +290,7 @@ describe('ChainVersionService', () => {
       versionRepo.findActive.mockResolvedValue(null);
       versionRepo.update.mockResolvedValue({ ...draftVersion, status: 'ACTIVE' });
 
-      const result = await service.activateVersion('ver-1', 'user-1');
+      const result = await service.activateVersion('ver-1', TENANT, 'user-1');
 
       expect(result.status).toBe('ACTIVE');
       expect(versionRepo.update).toHaveBeenCalledWith('ver-1', { status: 'ACTIVE' });
@@ -303,7 +307,7 @@ describe('ChainVersionService', () => {
         ...data,
       }));
 
-      await service.activateVersion('ver-2', 'user-1');
+      await service.activateVersion('ver-2', TENANT, 'user-1');
 
       // Should deprecate old version
       expect(versionRepo.update).toHaveBeenCalledWith('ver-1', { status: 'DEPRECATED' });
@@ -326,7 +330,7 @@ describe('ChainVersionService', () => {
     it('should throw if version not found', async () => {
       versionRepo.findById.mockResolvedValue(null);
 
-      await expect(service.activateVersion('missing', 'user-1')).rejects.toThrow(
+      await expect(service.activateVersion('missing', TENANT, 'user-1')).rejects.toThrow(
         'Chain version not found: missing'
       );
     });
@@ -334,7 +338,7 @@ describe('ChainVersionService', () => {
     it('should throw if version is not DRAFT', async () => {
       versionRepo.findById.mockResolvedValue(makeVersion({ status: 'ACTIVE' }));
 
-      await expect(service.activateVersion('ver-1', 'user-1')).rejects.toThrow(
+      await expect(service.activateVersion('ver-1', TENANT, 'user-1')).rejects.toThrow(
         'Only DRAFT versions can be activated'
       );
     });
@@ -344,7 +348,7 @@ describe('ChainVersionService', () => {
       versionRepo.findActive.mockResolvedValue(null);
       versionRepo.update.mockResolvedValue(makeVersion({ status: 'ACTIVE' }));
 
-      await service.activateVersion('ver-1', 'user-1');
+      await service.activateVersion('ver-1', TENANT, 'user-1');
 
       const activatedEvent = eventBus.publish.mock.calls.find(
         (call: any[]) => call[0].eventType === 'chain_version.activated'
@@ -363,7 +367,7 @@ describe('ChainVersionService', () => {
         ...data,
       }));
 
-      await service.activateVersion('ver-new', 'user-1');
+      await service.activateVersion('ver-new', TENANT, 'user-1');
 
       const activatedEvent = eventBus.publish.mock.calls.find(
         (call: any[]) => call[0].eventType === 'chain_version.activated'
@@ -382,7 +386,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(version);
       versionRepo.update.mockResolvedValue({ ...version, status: 'DEPRECATED' });
 
-      const result = await service.deprecateVersion('ver-1', 'user-1', 'No longer needed');
+      const result = await service.deprecateVersion('ver-1', TENANT, 'user-1', 'No longer needed');
 
       expect(result.status).toBe('DEPRECATED');
       expect(auditRepo.create).toHaveBeenCalledWith(
@@ -398,7 +402,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(version);
       versionRepo.update.mockResolvedValue({ ...version, status: 'DEPRECATED' });
 
-      const result = await service.deprecateVersion('ver-1', 'user-1');
+      const result = await service.deprecateVersion('ver-1', TENANT, 'user-1');
 
       expect(result.status).toBe('DEPRECATED');
     });
@@ -406,7 +410,7 @@ describe('ChainVersionService', () => {
     it('should throw if version not found', async () => {
       versionRepo.findById.mockResolvedValue(null);
 
-      await expect(service.deprecateVersion('missing', 'user-1')).rejects.toThrow(
+      await expect(service.deprecateVersion('missing', TENANT, 'user-1')).rejects.toThrow(
         'Chain version not found: missing'
       );
     });
@@ -414,7 +418,7 @@ describe('ChainVersionService', () => {
     it('should throw if version is ARCHIVED', async () => {
       versionRepo.findById.mockResolvedValue(makeVersion({ status: 'ARCHIVED' }));
 
-      await expect(service.deprecateVersion('ver-1', 'user-1')).rejects.toThrow(
+      await expect(service.deprecateVersion('ver-1', TENANT, 'user-1')).rejects.toThrow(
         'Archived versions cannot be deprecated'
       );
     });
@@ -423,7 +427,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(makeVersion({ status: 'ACTIVE' }));
       versionRepo.update.mockResolvedValue(makeVersion({ status: 'DEPRECATED' }));
 
-      await service.deprecateVersion('ver-1', 'user-1');
+      await service.deprecateVersion('ver-1', TENANT, 'user-1');
 
       const event = eventBus.publish.mock.calls[0][0];
       expect(event.eventType).toBe('chain_version.deprecated');
@@ -433,7 +437,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(makeVersion({ status: 'ACTIVE' }));
       versionRepo.update.mockResolvedValue(makeVersion({ status: 'DEPRECATED' }));
 
-      await service.deprecateVersion('ver-1', 'user-1');
+      await service.deprecateVersion('ver-1', TENANT, 'user-1');
 
       const auditCall = auditRepo.create.mock.calls[0][0];
       expect(auditCall.reason).toBeNull();
@@ -450,7 +454,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(version);
       versionRepo.update.mockResolvedValue({ ...version, status: 'ARCHIVED' });
 
-      const result = await service.archiveVersion('ver-1', 'user-1');
+      const result = await service.archiveVersion('ver-1', TENANT, 'user-1');
 
       expect(result.status).toBe('ARCHIVED');
       expect(auditRepo.create).toHaveBeenCalledWith(
@@ -467,7 +471,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(version);
       versionRepo.update.mockResolvedValue({ ...version, status: 'ARCHIVED' });
 
-      const result = await service.archiveVersion('ver-1', 'user-1');
+      const result = await service.archiveVersion('ver-1', TENANT, 'user-1');
 
       expect(result.status).toBe('ARCHIVED');
     });
@@ -475,7 +479,7 @@ describe('ChainVersionService', () => {
     it('should throw if version not found', async () => {
       versionRepo.findById.mockResolvedValue(null);
 
-      await expect(service.archiveVersion('missing', 'user-1')).rejects.toThrow(
+      await expect(service.archiveVersion('missing', TENANT, 'user-1')).rejects.toThrow(
         'Chain version not found: missing'
       );
     });
@@ -483,7 +487,7 @@ describe('ChainVersionService', () => {
     it('should throw if version is ACTIVE', async () => {
       versionRepo.findById.mockResolvedValue(makeVersion({ status: 'ACTIVE' }));
 
-      await expect(service.archiveVersion('ver-1', 'user-1')).rejects.toThrow(
+      await expect(service.archiveVersion('ver-1', TENANT, 'user-1')).rejects.toThrow(
         'Active versions cannot be archived directly. Deprecate first.'
       );
     });
@@ -507,7 +511,12 @@ describe('ChainVersionService', () => {
         ...data,
       }));
 
-      const result = await service.rollbackToVersion('ver-old', 'Performance regression', 'user-1');
+      const result = await service.rollbackToVersion(
+        'ver-old',
+        TENANT,
+        'Performance regression',
+        'user-1'
+      );
 
       expect(result.success).toBe(true);
       expect(result.previousVersionId).toBe('ver-current');
@@ -538,7 +547,7 @@ describe('ChainVersionService', () => {
         ...data,
       }));
 
-      const result = await service.rollbackToVersion('ver-old', 'Reason', 'user-1');
+      const result = await service.rollbackToVersion('ver-old', TENANT, 'Reason', 'user-1');
 
       expect(result.success).toBe(true);
       expect(result.rolledBackVersionId).toBe('ver-old');
@@ -559,7 +568,12 @@ describe('ChainVersionService', () => {
         ...data,
       }));
 
-      const result = await service.rollbackToVersion('ver-archived', 'Need old version', 'user-1');
+      const result = await service.rollbackToVersion(
+        'ver-archived',
+        TENANT,
+        'Need old version',
+        'user-1'
+      );
 
       expect(result.success).toBe(true);
       expect(versionRepo.create).toHaveBeenCalled();
@@ -568,16 +582,16 @@ describe('ChainVersionService', () => {
     it('should throw if target version not found', async () => {
       versionRepo.findById.mockResolvedValue(null);
 
-      await expect(service.rollbackToVersion('missing', 'reason', 'user-1')).rejects.toThrow(
-        'Target version not found: missing'
-      );
+      await expect(
+        service.rollbackToVersion('missing', TENANT, 'reason', 'user-1')
+      ).rejects.toThrow('Target version not found: missing');
     });
 
     it('should throw if no active version exists', async () => {
       versionRepo.findById.mockResolvedValue(makeVersion({ status: 'DEPRECATED' }));
       versionRepo.findActive.mockResolvedValue(null);
 
-      await expect(service.rollbackToVersion('ver-1', 'reason', 'user-1')).rejects.toThrow(
+      await expect(service.rollbackToVersion('ver-1', TENANT, 'reason', 'user-1')).rejects.toThrow(
         'No active version to rollback from'
       );
     });
@@ -587,7 +601,7 @@ describe('ChainVersionService', () => {
       versionRepo.findById.mockResolvedValue(version);
       versionRepo.findActive.mockResolvedValue(version);
 
-      await expect(service.rollbackToVersion('ver-1', 'reason', 'user-1')).rejects.toThrow(
+      await expect(service.rollbackToVersion('ver-1', TENANT, 'reason', 'user-1')).rejects.toThrow(
         'Cannot rollback to the same version'
       );
     });
@@ -602,7 +616,7 @@ describe('ChainVersionService', () => {
         ...data,
       }));
 
-      await service.rollbackToVersion('ver-old', 'Performance regression', 'user-1');
+      await service.rollbackToVersion('ver-old', TENANT, 'Performance regression', 'user-1');
 
       const rollbackEvent = eventBus.publish.mock.calls.find(
         (call: any[]) => call[0].eventType === 'chain_version.rolled_back'
@@ -622,7 +636,7 @@ describe('ChainVersionService', () => {
         ...data,
       }));
 
-      await service.rollbackToVersion('ver-old', 'reason', 'user-1');
+      await service.rollbackToVersion('ver-old', TENANT, 'reason', 'user-1');
 
       const rollbackAudit = auditRepo.create.mock.calls.find(
         (call: any[]) => call[0].action === 'ROLLED_BACK'
@@ -795,7 +809,7 @@ describe('ChainVersionService', () => {
       const version = makeVersion();
       versionRepo.findById.mockResolvedValue(version);
 
-      const result = await service.getVersion('ver-1');
+      const result = await service.getVersion('ver-1', TENANT);
 
       expect(result).toEqual(version);
     });
@@ -803,7 +817,7 @@ describe('ChainVersionService', () => {
     it('should return null if not found', async () => {
       versionRepo.findById.mockResolvedValue(null);
 
-      const result = await service.getVersion('missing');
+      const result = await service.getVersion('missing', TENANT);
 
       expect(result).toBeNull();
     });
@@ -913,6 +927,50 @@ describe('ChainVersionService', () => {
   });
 
   // =========================================================================
+  // Tenant scoping (#1075 review)
+  // =========================================================================
+
+  describe('tenant scoping', () => {
+    const OTHER = 'tenant-2';
+
+    it.each([
+      ['updateVersion', () => service.updateVersion('ver-1', OTHER, { prompt: 'x' } as any, 'u')],
+      ['activateVersion', () => service.activateVersion('ver-1', OTHER, 'u')],
+      ['deprecateVersion', () => service.deprecateVersion('ver-1', OTHER, 'u')],
+      ['archiveVersion', () => service.archiveVersion('ver-1', OTHER, 'u')],
+      ['rollbackToVersion', () => service.rollbackToVersion('ver-1', OTHER, 'r', 'u')],
+      ['getVersionAuditLog', () => service.getVersionAuditLog('ver-1', OTHER)],
+      ['compareVersions', () => service.compareVersions('ver-1', 'ver-2', OTHER)],
+    ] as const)(
+      '%s looks the version up in the caller tenant and reports a miss as NotFoundError',
+      async (_name, call) => {
+        versionRepo.findById.mockResolvedValue(null);
+
+        await expect(call()).rejects.toBeInstanceOf(NotFoundError);
+        expect(versionRepo.findById).toHaveBeenCalledWith('ver-1', OTHER);
+        expect(versionRepo.update).not.toHaveBeenCalled();
+        expect(auditRepo.findByVersionId).not.toHaveBeenCalled();
+      }
+    );
+
+    it('getVersion looks the version up in the caller tenant', async () => {
+      versionRepo.findById.mockResolvedValue(null);
+
+      await expect(service.getVersion('ver-1', OTHER)).resolves.toBeNull();
+      expect(versionRepo.findById).toHaveBeenCalledWith('ver-1', OTHER);
+    });
+
+    it('compareVersions scopes both ids', async () => {
+      versionRepo.findById.mockResolvedValue(makeVersion());
+
+      await service.compareVersions('ver-1', 'ver-2', TENANT);
+
+      expect(versionRepo.findById).toHaveBeenCalledWith('ver-1', TENANT);
+      expect(versionRepo.findById).toHaveBeenCalledWith('ver-2', TENANT);
+    });
+  });
+
+  // =========================================================================
   // getVersionAuditLog
   // =========================================================================
 
@@ -920,8 +978,9 @@ describe('ChainVersionService', () => {
     it('should return audit records for a version', async () => {
       const audits = [makeAuditRecord(), makeAuditRecord({ id: 'audit-2', action: 'ACTIVATED' })];
       auditRepo.findByVersionId.mockResolvedValue(audits);
+      versionRepo.findById.mockResolvedValue(makeVersion());
 
-      const result = await service.getVersionAuditLog('ver-1');
+      const result = await service.getVersionAuditLog('ver-1', TENANT);
 
       expect(result).toEqual(audits);
       expect(auditRepo.findByVersionId).toHaveBeenCalledWith('ver-1');
@@ -930,8 +989,9 @@ describe('ChainVersionService', () => {
     it('should respect limit parameter', async () => {
       const audits = Array.from({ length: 10 }, (_, i) => makeAuditRecord({ id: `audit-${i}` }));
       auditRepo.findByVersionId.mockResolvedValue(audits);
+      versionRepo.findById.mockResolvedValue(makeVersion());
 
-      const result = await service.getVersionAuditLog('ver-1', 3);
+      const result = await service.getVersionAuditLog('ver-1', TENANT, 3);
 
       expect(result).toHaveLength(3);
     });
@@ -986,7 +1046,7 @@ describe('ChainVersionService', () => {
         return Promise.resolve(null);
       });
 
-      const result = await service.compareVersions('v-a', 'v-b');
+      const result = await service.compareVersions('v-a', 'v-b', TENANT);
 
       expect(result.versionA).toEqual(vA);
       expect(result.versionB).toEqual(vB);
@@ -1001,7 +1061,7 @@ describe('ChainVersionService', () => {
     it('should throw if version A not found', async () => {
       versionRepo.findById.mockResolvedValue(null);
 
-      await expect(service.compareVersions('missing', 'v-b')).rejects.toThrow(
+      await expect(service.compareVersions('missing', 'v-b', TENANT)).rejects.toThrow(
         'Chain version not found: missing'
       );
     });
@@ -1012,7 +1072,7 @@ describe('ChainVersionService', () => {
         return Promise.resolve(null);
       });
 
-      await expect(service.compareVersions('v-a', 'missing')).rejects.toThrow(
+      await expect(service.compareVersions('v-a', 'missing', TENANT)).rejects.toThrow(
         'Chain version not found: missing'
       );
     });
@@ -1021,7 +1081,7 @@ describe('ChainVersionService', () => {
       const version = makeVersion();
       versionRepo.findById.mockResolvedValue(version);
 
-      const result = await service.compareVersions('ver-1', 'ver-1');
+      const result = await service.compareVersions('ver-1', 'ver-1', TENANT);
 
       expect(result.differences).toHaveLength(0);
     });

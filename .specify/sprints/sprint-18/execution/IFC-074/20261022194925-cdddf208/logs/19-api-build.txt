@@ -1,0 +1,58 @@
+[test-slot] slot1 taken for IFC-074@feat/ifc-074-ifc074: pnpm --filter @intelliflow/api build
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/api@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-074\apps\api
+> tsup
+
+[34mCLI[39m Building entry: src/index.ts, src/main.ts, src/ws-server.ts
+[34mCLI[39m Using tsconfig: tsconfig.build.json
+[34mCLI[39m tsup v8.5.1
+[34mCLI[39m Using tsup config: C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-074\apps\api\tsup.config.ts
+[34mCLI[39m Target: es2022
+[34mCLI[39m Cleaning output folder
+[34mCJS[39m Build start
+[34mESM[39m Build start
+[32mESM[39m [1mdist\chunk-FH72RMLK.mjs                [22m[32m0 B[39m
+[32mESM[39m [1mdist\cases.router-VGWRJXAI.mjs         [22m[32m204.00 B[39m
+[32mESM[39m [1mdist\escalation-target-H4QBBF4Z.mjs    [22m[32m131.00 B[39m
+[32mESM[39m [1mdist\index.mjs                         [22m[32m22.54 KB[39m
+[32mESM[39m [1mdist\inbound.router-4PEY7E4T.mjs       [22m[32m350.00 B[39m
+[32mESM[39m [1mdist\main.mjs                          [22m[32m49.52 KB[39m
+[32mESM[39m [1mdist\chunk-5DX23VSP.mjs                [22m[32m4.23 KB[39m
+[32mESM[39m [1mdist\ws-server.mjs                     [22m[32m4.83 KB[39m
+[32mESM[39m [1mdist\chunk-LHN7VPC5.mjs                [22m[32m23.62 KB[39m
+[32mESM[39m [1mdist\audit-XXEDSSNO.mjs                [22m[32m865.00 B[39m
+[32mESM[39m [1mdist\chunk-7PSQG7AU.mjs                [22m[32m35.94 KB[39m
+[32mESM[39m [1mdist\notifications.router-GTUQWL27.mjs [22m[32m306.00 B[39m
+[32mESM[39m [1mdist\lead.router-WIRPJD7V.mjs          [22m[32m264.00 B[39m
+[32mESM[39m [1mdist\chunk-JFF6C52X.mjs                [22m[32m3.12 KB[39m
+[32mESM[39m [1mdist\contact.router-PME4QDWA.mjs       [22m[32m270.00 B[39m
+[32mESM[39m [1mdist\chunk-6DNTT6YC.mjs                [22m[32m54.79 KB[39m
+[32mESM[39m [1mdist\appointments.router-YVB66LU5.mjs  [22m[32m280.00 B[39m
+[32mESM[39m [1mdist\chunk-RCWQWZB6.mjs                [22m[32m5.07 KB[39m
+[32mESM[39m [1mdist\chunk-X226SBEX.mjs                [22m[32m91.44 KB[39m
+[32mESM[39m [1mdist\chunk-TFVEIYEU.mjs                [22m[32m3.36 KB[39m
+[32mESM[39m [1mdist\chunk-J6R2QKEE.mjs                [22m[32m23.02 KB[39m
+[32mESM[39m [1mdist\chunk-3LYR77JE.mjs                [22m[32m256.89 KB[39m
+[32mESM[39m [1mdist\chunk-IQ7CMIR6.mjs                [22m[32m20.79 KB[39m
+[32mESM[39m [1mdist\chunk-Y6FXYEAI.mjs                [22m[32m390.00 B[39m
+[32mESM[39m [1mdist\chunk-LV77DZIT.mjs                [22m[32m50.58 KB[39m
+[32mESM[39m [1mdist\chunk-W5R5YQZS.mjs                [22m[32m1.17 MB[39m
+[32mESM[39m ⚡️ Build success in 356ms
+[32mCJS[39m [1mdist\index.js     [22m[32m1.84 MB[39m
+[32mCJS[39m [1mdist\ws-server.js [22m[32m1.78 MB[39m
+[32mCJS[39m [1mdist\main.js      [22m[32m1.83 MB[39m
+[32mCJS[39m ⚡️ Build success in 409ms
+[34mDTS[39m Build start
+"isLiveMembership", "liveMembershipWhere", "seatUserWhere" and "MembershipLiveness" are imported from external module "@intelliflow/db" but never used in "src/security/membership.ts".
+"NODE_TYPE_IDS" is imported from external module "@intelliflow/domain" but never used in "src/modules/workflow/workflow.router.ts".
+"ACTIVE_TENANT_HEADER" is imported from external module "@intelliflow/partner-sdk" but never used in "src/security/membership.ts".
+[32mDTS[39m ⚡️ Build success in 71248ms
+[32mDTS[39m [1mdist\main.d.ts       [22m[32m13.00 B[39m
+[32mDTS[39m [1mdist\ws-server.d.ts  [22m[32m1.70 KB[39m
+[32mDTS[39m [1mdist\index.d.ts      [22m[32m910.90 KB[39m
+[32mDTS[39m [1mdist\main.d.mts      [22m[32m13.00 B[39m
+[32mDTS[39m [1mdist\ws-server.d.mts [22m[32m1.70 KB[39m
+[32mDTS[39m [1mdist\index.d.mts     [22m[32m910.90 KB[39m
+exit=0

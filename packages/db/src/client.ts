@@ -152,7 +152,8 @@ const createPrismaClient = () => {
   }
 
   // M4 ENCRYPTION WIRING — ACTIVE via bespoke field-encryption extension.
-  // Encrypts ChainVersion.prompt, ChainVersion.systemPrompt, WebhookEndpoint.secret
+  // Encrypts ChainVersion.prompt, ChainVersion.systemPrompt, WebhookEndpoint.secret,
+  // TaskAutomationRule.webhookSecret / webhookSecretPrevious (PG-208)
   // transparently on write; decrypts on read.
   const encKey = process.env['PRISMA_FIELD_ENCRYPTION_KEY'];
   const encrypted = encKey
@@ -286,14 +287,24 @@ export interface VectorSearchResult<T> {
 }
 
 /**
- * Vector embedding type (1536 dimensions for OpenAI embeddings)
+ * Size of the embedding columns (leads, lead_notes, contacts, contact_notes): vector(2048),
+ * the only size the free OpenRouter model nvidia/nemotron-3-embed-1b:free returns
+ * (migration 20261031120000_embeddings_vector_2048, gh #1108).
+ */
+export const VECTOR_COLUMN_DIMENSIONS = 2048;
+
+/**
+ * Vector embedding type
  */
 export type VectorEmbedding = number[];
 
 /**
- * Validate embedding dimensions (OpenAI uses 1536)
+ * Validate that an embedding fits the embedding columns
  */
-export function validateEmbedding(embedding: VectorEmbedding, expectedDimensions = 1536): boolean {
+export function validateEmbedding(
+  embedding: VectorEmbedding,
+  expectedDimensions: number = VECTOR_COLUMN_DIMENSIONS
+): boolean {
   return Array.isArray(embedding) && embedding.length === expectedDimensions;
 }
 

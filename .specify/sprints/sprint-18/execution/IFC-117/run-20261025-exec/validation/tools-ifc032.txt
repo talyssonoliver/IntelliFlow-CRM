@@ -1,0 +1,9 @@
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/ifc-117
+
+
+ Test Files  2 passed (2)
+      Tests  22 passed (22)
+   Start at  19:25:07
+   Duration  1.05s (transform 940ms, setup 1.49s, import 54ms, tests 77ms, environment 0ms)
+

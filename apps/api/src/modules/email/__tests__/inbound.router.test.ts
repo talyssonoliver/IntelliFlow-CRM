@@ -47,6 +47,17 @@ vi.mock('@intelliflow/adapters', async (importOriginal) => {
   };
 });
 
+// PG-207: forwards go through the single send path; stub it and the runtime deps here
+// (dispatchUserMail itself is covered by mailbox-sender.test.ts).
+const dispatch = vi.hoisted(() => vi.fn());
+const attachmentStorage = vi.hoisted(() => ({ emailAttachmentDownloadUrl: vi.fn() }));
+vi.mock('../mailbox-sender', () => ({ dispatchUserMail: dispatch }));
+vi.mock('../email-access', async (importOriginal) => ({
+  ...((await importOriginal()) as object),
+  emailRuntimeDeps: () => ({ transports: {}, storage: {} }),
+  emailAttachmentStorage: () => attachmentStorage,
+}));
+
 // Import after mock is set up
 import { inboundEmailRouter, computeInboundEmailWebhookSignature } from '../inbound.router';
 
@@ -235,6 +246,7 @@ Hello World`;
       fromEmail: 'sender@example.com',
       toEmail: 'inbox@intelliflow.com',
       subject: 'Test',
+      body: '<p>original</p>',
       textBody: 'test',
       htmlBody: null,
       status: 'received',
@@ -242,6 +254,32 @@ Hello World`;
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+
+    it.each(['archive', 'spam', 'delete', 'permanentDelete'] as const)(
+      'refuses to %s another member’s mail (NOT_FOUND, nothing changed) — #962',
+      async (action) => {
+        (prismaMock.emailRecord.findFirst as any).mockResolvedValue({
+          ...mockExistingEmail,
+          userId: 'someone-else',
+        });
+        await expect(
+          protectedCaller.processEmail({ emailId: 'test-email-123', action })
+        ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+        expect(prismaMock.emailRecord.update).not.toHaveBeenCalled();
+        expect(prismaMock.emailRecord.delete).not.toHaveBeenCalled();
+      }
+    );
+
+    it('still lets anyone in the tenant act on shared inbound mail (no owner)', async () => {
+      (prismaMock.emailRecord.findFirst as any).mockResolvedValue({
+        ...mockExistingEmail,
+        userId: null,
+      });
+      (prismaMock.emailRecord.update as any).mockResolvedValue(mockExistingEmail);
+      await expect(
+        protectedCaller.processEmail({ emailId: 'test-email-123', action: 'archive' })
+      ).resolves.toEqual({ success: true });
+    });
 
     it('should handle archive action', async () => {
       (prismaMock.emailRecord.findFirst as any).mockResolvedValue(mockExistingEmail);
@@ -308,6 +346,8 @@ Hello World`;
         metadata: { forwarded: true },
       });
 
+      dispatch.mockResolvedValue({ id: 'forward-record-id', status: 'SENT', skipped: [] });
+
       const result = await protectedCaller.processEmail({
         emailId: 'test-email-123',
         action: 'forward',
@@ -315,6 +355,47 @@ Hello World`;
       });
 
       expect(result.success).toBe(true);
+      expect(dispatch).toHaveBeenCalledTimes(1);
+      const [, sent, , options] = dispatch.mock.calls[0];
+      expect(sent).toMatchObject({
+        to: ['recipient@example.com'],
+        htmlBody: mockExistingEmail.body,
+      });
+      expect(sent.subject).toBe(`Fwd: ${mockExistingEmail.subject}`);
+      expect(options).toEqual({ metadata: { isForward: true, originalEmailId: 'test-email-123' } });
+    });
+
+    it("never forwards another member's own mail (sent mail, drafts)", async () => {
+      (prismaMock.emailRecord.findFirst as any).mockResolvedValue({
+        ...mockExistingEmail,
+        userId: TEST_UUIDS.user2,
+      });
+      await expect(
+        protectedCaller.processEmail({
+          emailId: 'test-email-123',
+          action: 'forward',
+          forwardTo: 'r@example.invalid',
+        })
+      ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      expect(dispatch).not.toHaveBeenCalled();
+    });
+
+    it('refuses a forward from an unverified sender before sending', async () => {
+      (prismaMock.emailRecord.findFirst as any).mockResolvedValue(mockExistingEmail);
+      const ctx = createTestContext();
+      const unverified = inboundEmailRouter.createCaller({
+        ...ctx,
+        user: { ...(ctx as any).user, emailVerified: false },
+      } as never);
+
+      await expect(
+        unverified.processEmail({
+          emailId: 'test-email-123',
+          action: 'forward',
+          forwardTo: 'r@example.invalid',
+        })
+      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      expect(dispatch).not.toHaveBeenCalled();
     });
   });
 
@@ -375,6 +456,31 @@ Hello World`;
 
       expect(result).not.toBeNull();
       expect(result?.filename).toBe('file.pdf');
+    });
+
+    it('serves an attachment sent from compose through a short-lived signed link (PG-207)', async () => {
+      const storagePath = `${TEST_UUIDS.tenant}/u-report.pdf`;
+      (prismaMock.emailAttachment.findFirst as any).mockResolvedValue({
+        id: 'att-2',
+        emailId: 'test-email-123',
+        fileName: 'report.pdf',
+        fileType: 'application/pdf',
+        fileSize: 10,
+        fileUrl: storagePath,
+      });
+      attachmentStorage.emailAttachmentDownloadUrl.mockResolvedValue(
+        'https://storage.example.invalid/signed/report.pdf'
+      );
+      const result = await protectedCaller.getAttachment({
+        emailId: 'test-email-123',
+        attachmentId: 'att-2',
+      });
+      expect(attachmentStorage.emailAttachmentDownloadUrl).toHaveBeenCalledWith(
+        TEST_UUIDS.tenant,
+        storagePath,
+        300
+      );
+      expect(result?.downloadUrl).toBe('https://storage.example.invalid/signed/report.pdf');
     });
   });
 });

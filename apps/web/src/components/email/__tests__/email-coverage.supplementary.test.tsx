@@ -420,11 +420,11 @@ describe('EmailCompose handler coverage', () => {
 
     fireEvent.submit(screen.getByRole('form', { name: /compose email/i }));
 
-    await waitFor(() => {
-      expect(document.querySelector('[aria-live][aria-atomic="true"]')?.textContent).toContain(
-        'Failed to send'
-      );
-    });
+    // PG-207: the failure is announced once, by the focused alert (not also by the live region).
+    expect(await screen.findByRole('alert')).toHaveTextContent('Email not sent');
+    expect(document.querySelector('[aria-live][aria-atomic="true"]')?.textContent).not.toContain(
+      'Failed to send'
+    );
   });
 
   it('shows "Draft saved" after draftMutation.mutateAsync resolves', async () => {

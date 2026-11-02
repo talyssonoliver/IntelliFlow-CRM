@@ -122,8 +122,9 @@ attestation overstate delivery:
 - `packages/search/*` is **type stubs only**; runtime is
   `RetrievalService`/`DocumentIndexer`/`ReindexWorker` in ai-worker. Not true
   duplication — divergent type contracts.
-- ❗ GDPR purge **not atomic** — `dsar-workflow.ts:purgeSearchIndexes()` runs 2
-  sequential `$executeRaw`, no `$transaction` (attestation claims atomic).
+- ✅ GDPR purge is now atomic (PG-203): `dsar-workflow.ts` was removed, and
+  `PrismaSubjectDataRepository.erase` clears note embeddings and search vectors
+  inside the erasure transaction. `EmbeddingPurgeService` has no caller.
 - ❗ `reindexAllNotes` uses `{ contact: { tenantId } }` though `ContactNote` has
   direct `tenantId` (`document-indexer.ts:496`).
 - ❗ `retrieval-service-search.test.ts` tests a local `MockRetrievalService`,

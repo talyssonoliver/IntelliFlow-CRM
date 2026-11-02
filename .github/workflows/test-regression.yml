@@ -102,7 +102,7 @@ env:
     --project=web --project=ai-worker --project=domain --project=adapters
     --project=application --project=validators --project=ui
     --project=observability --project=worker-shared
-    --project=events-worker
+    --project=events-worker --project=combined-worker
     --project=ingestion-worker --project=architecture --project=a11y
     --project=db --project=api --project=root --project=webhooks
 
@@ -523,7 +523,8 @@ jobs:
     # workflow_dispatch too, so a fix to this job can be verified on its branch
     # before merge instead of waiting for the next scheduled run on main.
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    # Pinned: the locked Playwright refuses Ubuntu 26.04 (#1128). The upgrade in #1137 removes this.
+    runs-on: ubuntu-24.04
     continue-on-error: true # E2E is chronically flaky (issue #95) — never gate
     env:
       PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=' }}

@@ -26,6 +26,7 @@ import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
 import { getDrainDelaySeconds } from '@intelliflow/platform/queues/connection';
 import pino from 'pino';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { fetchDocument, extractTextFromBuffer, createChunks } from '@intelliflow/worker-shared';
 import { OCRWorker } from './ocr-worker.js';
 
@@ -41,11 +42,11 @@ export const OCR_PROCESSING_QUEUE = 'intelliflow-ocr-processing';
 // ============================================================================
 
 export const IngestionJobDataSchema = z.object({
-  documentId: z.string().uuid(),
+  documentId: recordIdSchema,
   sourceUrl: z.string().url(),
   format: z.string(),
-  tenantId: z.string(),
-  userId: z.string().optional(),
+  tenantId: recordIdSchema,
+  userId: recordIdSchema.optional(),
   language: z.string().default('en'),
   options: z
     .object({

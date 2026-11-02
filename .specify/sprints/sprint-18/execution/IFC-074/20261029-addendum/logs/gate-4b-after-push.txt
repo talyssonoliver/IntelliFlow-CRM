@@ -1,0 +1,7 @@
+# gate 4b after push, 2026-10-29T17:21:12Z, HEAD 27ff7e70d, branch pushed at 27ff7e70d
+BLOCK: [gate-4b] Uncommitted edits present. Commit your work first. See docs/runbooks/gate-4b-recovery.md
+PASS: [gate-4b] Branch name "agent/IFC-074-observability" matches agent/<TASK_ID> pattern.
+PASS: [gate-4b] Branch is 27 commit(s) ahead of origin/main.
+PASS: [gate-4b] Branch is pushed to origin/agent/IFC-074-observability.
+  BLOCK: Gate 4b — Worktree Landed
+uncommitted at the time:  M docs/architecture/adr/ADR-086-observability-log-pipeline-and-evidence.md; M tools/scripts/observability/collect-observability-evidence.mjs;

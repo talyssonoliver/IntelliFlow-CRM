@@ -1,0 +1,91 @@
+# 2026-10-21T00:16:39Z
+# 7fd27d0a5180f3eb39cb20d0b2197563171fe92c
+# pnpm --filter @intelliflow/api exec vitest run src/modules/legal/__tests__/appointments.router.caller.test.ts -t 'event type'
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/api
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > Appointments Router - Caller Tests > event type (PG-203, AC-010) > rejects an event type of another tenant (or inactive) before scheduling
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":19,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > Appointments Router - Caller Tests > event type (PG-203, AC-010) > stores the event type on the created appointment, scoped to the tenant
+[appointments.create] Use-case scheduled in 0.38ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > Appointments Router - Caller Tests > event type (PG-203, AC-010) > stores the event type on the created appointment, scoped to the tenant
+[AppointmentIcsEventHandler] Error handling appointment created: TypeError: appointment.attendeeIds is not iterable
+    at AppointmentIcsEventHandler.getAttendeeEmails (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/application/dist/index.mjs:5227:28)
+    at AppointmentIcsEventHandler.handleAppointmentCreated (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/application/dist/index.mjs:5064:25)
+    at onAppointmentCreated (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/api/src/modules/legal/appointment-side-effects.ts:60:45)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/api/src/modules/legal/appointments.router.ts:546:5
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/api/src/modules/legal/appointments.router.ts:305:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > Appointments Router - Caller Tests > event type (PG-203, AC-010) > stores the event type on the created appointment, scoped to the tenant
+[ReminderSchedulerService] No reminder set for appointment undefined
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > Appointments Router - Caller Tests > event type (PG-203, AC-010) > stores the event type on the created appointment, scoped to the tenant
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > Appointments Router - Caller Tests > event type (PG-203, AC-010) > stores the event type on the created appointment, scoped to the tenant
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":12,"status":"success"}
+
+ ❯ |api| src/modules/legal/__tests__/appointments.router.caller.test.ts (72 tests | 2 failed | 69 skipped) 87ms
+       × rejects an event type of another tenant (or inactive) before scheduling 30ms
+       × stores the event type on the created appointment, scoped to the tenant 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > Appointments Router - Caller Tests > event type (PG-203, AC-010) > rejects an event type of another tenant (or inactive) before scheduling
+AssertionError: expected TRPCError: Cannot read properties of unde… { code: '…' } to match object { code: 'NOT_FOUND', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "code": "NOT_FOUND",
+-   "message": "Event type not found",
++ TRPCError {
++   "code": "INTERNAL_SERVER_ERROR",
+  }
+
+ ❯ src/modules/legal/__tests__/appointments.router.caller.test.ts:270:55
+    268|     it('rejects an event type of another tenant (or inactive) before s…
+    269|       prismaMock.eventType.findFirst.mockResolvedValueOnce(null);
+    270|       await expect(create({ eventTypeId: EVENT_TYPE })).rejects.toMatc…
+       |                                                       ^
+    271|         code: 'NOT_FOUND',
+    272|         message: 'Event type not found',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > Appointments Router - Caller Tests > event type (PG-203, AC-010) > stores the event type on the created appointment, scoped to the tenant
+AssertionError: expected "vi.fn()" to be called with arguments: [ { where: { …(2) }, data: { …(1) } } ]
+
+Number of calls: 0
+
+ ❯ src/modules/legal/__tests__/appointments.router.caller.test.ts:287:49
+    285|       prismaMock.appointment.findUnique.mockResolvedValue({ ...mockApp…
+    286|       const result = await create({ eventTypeId: EVENT_TYPE });
+    287|       expect(prismaMock.appointment.updateMany).toHaveBeenCalledWith({
+       |                                                 ^
+    288|         where: { id: mockAppointment.id, tenantId: TEST_UUIDS.tenant },
+    289|         data: { eventTypeId: EVENT_TYPE },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 1 passed | 69 skipped (72)
+   Start at  01:16:40
+   Duration  3.04s (transform 1.36s, setup 511ms, import 2.18s, tests 87ms, environment 0ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\apps\api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/legal/__tests__/appointments.router.caller.test.ts -t event type
+# exit=1

@@ -1,0 +1,139 @@
+{
+  "stoa": "Security",
+  "task_id": "PG-203",
+  "run_id": "20261029-d12-closeout",
+  "verdict": "PASS",
+  "produced_by": "stoa-security sub-agent",
+  "produced_at": "2026-10-29T14:24:27.046Z",
+  "head": "5c716511ad0f9e2d70c5e38887541d1a0035348d",
+  "gates": [
+    {
+      "gate": "gitleaks git origin/main..HEAD",
+      "result": "PASS (exit 0, 37 commits, no leaks)",
+      "evidence_log": "artifacts/preship/logs/gitleaks.log",
+      "notes": "Re-run by this agent: gitleaks git --log-opts=origin/main..HEAD --redact. The preship gitleaks.log is 0 bytes (no findings)."
+    },
+    {
+      "gate": "gitleaks dir artifacts/lighthouse/PG-203",
+      "result": "PASS (exit 0, no leaks)",
+      "evidence_log": "artifacts/lighthouse/PG-203",
+      "notes": "dsar-verify and dsar-export reports hold only '/dsar/e2e-firm/<verify|export>#r=<requestId>.REDACTED'. No raw token, no token= or t= query. dsar-request, book, settings and calendar reports hold none."
+    },
+    {
+      "gate": "gitleaks dir execution evidence + uncommitted edits",
+      "result": "PASS (exit 0 for .specify/sprints/sprint-18/execution/PG-203, apps/web/src, apps/api/src, the modified BookingContent.tsx and PG-203-plan.md)",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-203",
+      "notes": "A scan of the whole apps/web tree walked 3.6 GB of build output and node_modules and reported 1904 hits; that scan is not valid evidence and was discarded. Source and evidence folders scanned separately are clean."
+    },
+    {
+      "gate": "pnpm audit (advisory)",
+      "result": "ADVISORY: 10 vulnerabilities (1 low, 6 moderate, 3 high, 2 ignored); the high shown is systeminformation <5.33.16 (GHSA-3f7j-7jwc-fxfj), reached through apps/ai-worker > @opentelemetry/auto-instrumentations-node > instrumentation-host-metrics",
+      "evidence_log": "artifacts/preship/logs/audit.log",
+      "notes": "Transitive dependency of apps/ai-worker. PG-203 adds no dependency on it. Not caused by this task. Recorded for the dependency owner."
+    },
+    {
+      "gate": "osv-scan (trivy pnpm-lock.yaml)",
+      "result": "PASS (0 vulnerabilities)",
+      "evidence_log": "artifacts/preship/logs/osv-scan.log",
+      "notes": "Run 2026-10-29T01:08Z; production dependencies only."
+    },
+    {
+      "gate": "public endpoint review (privacy-public.router.ts, public-booking.router.ts)",
+      "result": "PASS",
+      "evidence_log": "apps/api/src/modules/privacy/privacy-public.router.ts",
+      "notes": "Every DSAR procedure calls bookingLookupLimiter or bookingSubmitLimiter on the IP hash before its first read. Unknown handle is one fixed NOT_FOUND 'This page is not available.'. submit honeypot returns the shared DSAR_SUBMIT_MESSAGE with no DB work. publicly() maps any non-TRPCError to a fixed message and logs only err.code. Inputs are all .strict() (dsarFirmLookupSchema, dsarSubmitSchema, dsarTokenInputSchema, publicBookingLookupSchema, publicSlotsInputSchema, publicBookInputSchema). Token format is regex-constrained. Booking router: limiter precedes resolveBookable, fixed messages, publicly(rethrow...) wraps all handlers. Booking honeypot runs one read-only lookup before returning an identically-shaped success (documented)."
+    },
+    {
+      "gate": "token design (dsar-token.ts, dsar-timing-parity.test.ts)",
+      "result": "PASS",
+      "evidence_log": "apps/api/src/modules/privacy/dsar-token.ts",
+      "notes": "32 random bytes, only HMAC-SHA256 stored under a key derived from the booking salt. matches() always performs exactly one timingSafeEqual; a null stored hash is compared with a dummy HMAC of equal length and the result is forced false. Length mismatch returns false before compare (malformed stored hash only). The structural parity test asserts identical repository reads, one compare and byte-identical wire errors for unknown id vs wrong token on verify and downloadExport. Not executed by this agent (no test runs permitted); read only."
+    },
+    {
+      "gate": "tenant isolation (admin router, repositories, RLS)",
+      "result": "PASS with LOW notes",
+      "evidence_log": "apps/api/src/modules/privacy/privacy-admin.router.ts",
+      "notes": "All privacy.admin.* procedures are adminTenantProcedure; repository reads and writes for admin go through findForTenant/list/update with tenantId in the where. The public path uses findById by id only, gated by the HMAC token (by design). Both new tables ENABLE ROW LEVEL SECURITY with USING and WITH CHECK on app.current_tenant_id (NULL denies). tests/integration/dsar.test.ts asserts the policy text; its real-session RLS check disclosed-skips when no authenticated role exists. tests/integration/rls-tenant-isolation.test.ts does not cover the two new tables (see findings)."
+    },
+    {
+      "gate": "web headers and Sentry scrub",
+      "result": "PASS",
+      "evidence_log": "apps/web/next.config.js",
+      "notes": "/dsar/:path* sets Referrer-Policy: no-referrer and Cache-Control: no-store, listed after /:path* so it wins. scrubEvent strips query and fragment from request.url, transaction and breadcrumb url/from/to; deletes cookies, query_string and request bodies."
+    },
+    {
+      "gate": "SECURITY DEFINER functions and REVOKEs (migration 20261022120000_dsar_requests)",
+      "result": "PASS with LOW notes",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-203/PG-203-dsar-sql-review.md",
+      "notes": "All 7 SECURITY DEFINER functions pin search_path = public, pg_temp. REVOKE ALL FROM PUBLIC, anon and authenticated is applied to the 9 guard/lock/carry functions. The independent SQL review verdict is APPROVED WITH NOTES (no must-fix). Remaining: dsar_normalise_email is not revoked and unpinned (pure, no table access); 4 DROP TRIGGER IF EXISTS statements still take ACCESS EXCLUSIVE briefly (availability, not security)."
+    },
+    {
+      "gate": "waivers and open issues tagged PG-203",
+      "result": "NO BLOCKER: none is an exploitable vulnerability; several are open privacy-completeness gaps",
+      "evidence_log": "tools/audit/codex-review-waivers.yaml",
+      "notes": "#1007 (fail-safe over-restriction), #1027 (inaccurate notice, restriction stays), #1014 (email delivery reliability), #1020 (export timing), #1021 (RAG recall), #1009 (UI checklist), #1019 (no legal-hold registry), #913-class cap races: no confidentiality, integrity or access-control impact. #1010, #1015, #1063: erasure and RAG do not reach AI task text, conversation/message records or unlinked insights that name an erased or restricted person. Pre-existing, waived with 30-day expiry (2026-11-22 to 2026-11-24), tracked, but still residual personal data after an erasure."
+    }
+  ],
+  "findings": [
+    {
+      "id": "SEC-1",
+      "severity": "MEDIUM",
+      "title": "Erasure and RAG do not reach some personal data (issues #1010, #1015, #1063)",
+      "detail": "AI-created tasks carry no lead/contact id, conversations/messages carry no person key, and unlinked AI insights are selected by entityId so they are never found. A named person can remain stored, or reach an AI prompt through RAG, after erasure or restriction. New writes for erased/restricted people are blocked (Q21), so the exposure is legacy data. Privacy completeness, not remote exploitation.",
+      "disposition": "ACCEPTED by owner 2026-10-29 (\"Accept as follow-ups\"), deadline before the first real customer. Recorded in PG-203-findings.md and commented on #1010, #1015, #1063 (issues stay open). Residual legacy personal data remains until then; no remote exploit."
+    },
+    {
+      "id": "SEC-2",
+      "severity": "LOW",
+      "title": "dsar_normalise_email not revoked from anon/authenticated and has no pinned search_path",
+      "detail": "Pure function (lower/regexp_replace), no table access, callable via PostgREST RPC on Supabase. Also marked IMMUTABLE while lower() is collation dependent. Raised in the SQL review item 6; optional hardening.",
+      "disposition": "ACCEPTED as documented (owner section). Verified: SECURITY INVOKER, pure lower/regexp_replace, reads no table, so the unpinned search_path and open EXECUTE expose nothing."
+    },
+    {
+      "id": "SEC-3",
+      "severity": "LOW",
+      "title": "RLS isolation of dsar_requests and processing_restrictions is not covered by rls-tenant-isolation.test.ts and the real-session check can disclosed-skip",
+      "detail": "Policies are correct by reading (USING and WITH CHECK on app.current_tenant_id). dsar.test.ts asserts the text; the behavioural check skips when the authenticated role is absent, so a CI Postgres without it proves nothing.",
+      "disposition": "RESOLVED for the new tables. dsar.test.ts ran the real-session RLS check as authenticated and passed (not skipped) on 2026-10-29T01:01Z. Residual: the check can disclosed-skip on a CI Postgres lacking the role; rls-tenant-isolation.test.ts does not list the new tables (accepted, owner section)."
+    },
+    {
+      "id": "SEC-4",
+      "severity": "LOW",
+      "title": "Migration still has 4 DROP TRIGGER IF EXISTS on hot tables (ACCESS EXCLUSIVE lock, bounded by lock_timeout 5s)",
+      "detail": "Availability only. SQL review item 2 asked for removal; 4 of the original 8 remain in the file. Deploy in a low-traffic window and attach staging migrate-deploy timing (ADR-069 gate 6).",
+      "disposition": "RESOLVED as a misread. No executable DROP TRIGGER remains in the migration; matches are rollback-header comments. The lock-timeout and staging-timing note (ADR-069 gate 6) still applies at deploy."
+    },
+    {
+      "id": "SEC-5",
+      "severity": "HIGH (advisory, out of scope)",
+      "title": "systeminformation <5.33.16 (GHSA-3f7j-7jwc-fxfj), transitive in apps/ai-worker",
+      "detail": "Windows command injection in services() through Unicode quotes. Reached via OpenTelemetry host-metrics. Not introduced or used by PG-203; pnpm audit is advisory for this run.",
+      "disposition": "Unchanged. Advisory, out of PG-203 scope: report to the ai-worker/dependency owner."
+    }
+  ],
+  "summary": "PASS. Re-verified from the files: owner acceptance for #1010/#1015/#1063 is recorded in PG-203-findings.md and on all three GitHub issues; the real-session RLS check as authenticated for dsar_requests and processing_restrictions ran and passed (vitest-result.json, 592 passed, 0 failed); no executable DROP TRIGGER remains in the migration (comments only); dsar_normalise_email is SECURITY INVOKER and reads no table. Earlier gates (gitleaks, OSV 0, endpoint/token/tenant/header review) carry forward at unchanged HEAD 5c71651. No exploitable vulnerability. Caveats: attestation.json manual_verification is not written yet; the RLS session check can disclosed-skip on hosts lacking the authenticated role; pnpm audit high (systeminformation, ai-worker) is advisory and unrelated.",
+  "rerun_of": "FAIL at 2026-10-29T11:05:00Z",
+  "rerun_notes": "Read-only re-run at the same HEAD. No source was changed since the first run, so the gitleaks, osv-scan, endpoint, token and header gates are carried forward, not re-executed. Only the four changed claims were re-verified from the files and gh.",
+  "verified_claims": [
+    {
+      "claim": "Owner acceptance recorded",
+      "result": "VERIFIED",
+      "evidence": "PG-203-findings.md section \"Owner risk acceptance (2026-10-29)\"; gh issue view shows the same owner comment on #1010 (issuecomment-6499270540), #1015 and #1063 with deadline \"before the first real customer\". Attestation manual_verification not yet written (pending, a closeout condition)."
+    },
+    {
+      "claim": "Real-session RLS check as authenticated for both new tables, passed",
+      "result": "VERIFIED",
+      "evidence": "tests/integration/dsar.test.ts runs SET LOCAL ROLE authenticated + set_config(app.current_tenant_id) and asserts only tenant A rows on dsar_requests and processing_restrictions. artifacts/coverage-parts/integration/vitest-result.json (start 2026-10-29T01:01:30Z, 592 passed, 0 failed, 50 pending): both dsar.test.ts RLS tests have status passed (not skipped). rls-session-check.txt matches. rls-tenant-isolation.test.ts is skipped on this host, as the acceptance states."
+    },
+    {
+      "claim": "No executable DROP TRIGGER in 20261022120000_dsar_requests/migration.sql",
+      "result": "VERIFIED",
+      "evidence": "Only matches are lines 24, 27, 28, 30, all inside the \"--\" rollback header comment. Count of non-comment lines with DROP TRIGGER is 0."
+    },
+    {
+      "claim": "dsar_normalise_email is SECURITY INVOKER and reads no table",
+      "result": "VERIFIED",
+      "evidence": "Line 301: CREATE OR REPLACE FUNCTION dsar_normalise_email(email TEXT) RETURNS TEXT LANGUAGE sql IMMUTABLE, body is SELECT lower(regexp_replace(email, ...)). No SECURITY DEFINER clause (default INVOKER), no FROM, no table reference. The 7 SECURITY DEFINER functions are the others and all pin search_path."
+    }
+  ]
+}

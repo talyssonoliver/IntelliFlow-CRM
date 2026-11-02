@@ -32,6 +32,10 @@ artifacts/coverage/.coverage-python
 artifacts/test-results/playwright-results.json
 artifacts/test-results/playwright-junit.xml
 
+# Vitest failure dumps from the fix-failing-tests tooling (tools/scripts/cluster-*.mjs).
+# Regenerated per run, and they copy test fixtures verbatim, so the secret scan flags them.
+artifacts/test-failures/
+
 # pre-ship gate state — per-run snapshot of which steps passed/failed,
 # regenerated on every push. No value committing it.
 artifacts/preship/

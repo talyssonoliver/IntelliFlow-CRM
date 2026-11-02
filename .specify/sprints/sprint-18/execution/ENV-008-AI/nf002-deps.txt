@@ -1,0 +1,2 @@
+## NF-002: git diff <merge-base e7ce625b2b5238a9ec3ad55c34046575fb165d15> -- package.json pnpm-lock.yaml
+(end of diff; empty means no dependency change)

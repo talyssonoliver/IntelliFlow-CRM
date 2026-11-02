@@ -1,0 +1,467 @@
+2026-10-20T23:33:09Z
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/packages/validators
+
+ ❯ |validators| src/__tests__/task-automation.test.ts (22 tests | 20 failed) 16ms
+     × accepts an entity-event rule and defaults isActive / tags 4ms
+     × accepts a stage filter only on opportunity.stage_changed, and never a closing stage 1ms
+     × rejects unknown and task event types 1ms
+     × accepts schedule cadences and requires their fields 0ms
+     × accepts a webhook trigger but never a client token or secret 0ms
+     × requires Create Task first 1ms
+     × rejects a repeated action type at the second offender ("actions N and M") 0ms
+     × rejects out-of-order actions 0ms
+     × allows 1..3 actions 0ms
+     × trims names and enforces lengths 1ms
+     × bounds due days, pool size and recipients 0ms
+     × rejects server-owned fields 0ms
+     × de-duplicates tags case-insensitively 0ms
+     × requires an id on update 0ms
+     × returns the two positions of identical active rules 0ms
+     × ignores inactive and webhook rules and different actions 0ms
+     × reorders a unique id list 0ms
+     × defaults revokePrevious to false 1ms
+     × bounds settings and exposes defaults 1ms
+     × limits tag colours to the 18-token palette 1ms
+ ❯ |validators| src/__tests__/notifications.test.ts (89 tests | 2 failed) 35ms
+       × should have 56 notification types 7ms
+       × NOTIFICATION_TYPES contains task_automation (PG-208) 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 22 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |validators| src/__tests__/notifications.test.ts > Notifications Validators > Enum arrays > should have 56 notification types
+AssertionError: expected [ 'lead_assigned', …(54) ] to have a length of 56 but got 55
+
+- Expected
++ Received
+
+- 56
++ 55
+
+ ❯ src/__tests__/notifications.test.ts:77:34
+     75|   describe('Enum arrays', () => {
+     76|     it('should have 56 notification types', () => {
+     77|       expect(NOTIFICATION_TYPES).toHaveLength(56);
+       |                                  ^
+     78|     });
+     79|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/22]⎯
+
+ FAIL  |validators| src/__tests__/notifications.test.ts > Notifications Validators > Enum arrays > NOTIFICATION_TYPES contains task_automation (PG-208)
+AssertionError: expected [ 'lead_assigned', …(54) ] to include 'task_automation'
+ ❯ src/__tests__/notifications.test.ts:81:34
+     79|
+     80|     it('NOTIFICATION_TYPES contains task_automation (PG-208)', () => {
+     81|       expect(NOTIFICATION_TYPES).toContain('task_automation');
+       |                                  ^
+     82|     });
+     83|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > createTaskAutomationRuleSchema — triggers > accepts an entity-event rule and defaults isActive / tags
+AssertionError: expected undefined to be true // Object.is equality
+
+- Expected:
+true
+
++ Received:
+undefined
+
+ ❯ src/__tests__/task-automation.test.ts:41:29
+     39|   it('accepts an entity-event rule and defaults isActive / tags', () =…
+     40|     const parsed = createTaskAutomationRuleSchema.parse(eventRule);
+     41|     expect(parsed.isActive).toBe(true);
+       |                             ^
+     42|     expect(parsed.tags).toEqual([]);
+     43|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > createTaskAutomationRuleSchema — triggers > accepts a stage filter only on opportunity.stage_changed, and never a closing stage
+AssertionError: expected undefined to deeply equal [ 'trigger', 'filter', 'toStage' ]
+
+- Expected:
+[
+  "trigger",
+  "filter",
+  "toStage",
+]
+
++ Received:
+undefined
+
+ ❯ src/__tests__/task-automation.test.ts:52:83
+     50|     expect(createTaskAutomationRuleSchema.safeParse(stage).success).to…
+     51|     const wrongEvent = { ...stage, trigger: { ...stage.trigger, eventT…
+     52|     expect(issues(createTaskAutomationRuleSchema.safeParse(wrongEvent)…
+       |                                                                                   ^
+     53|       'trigger',
+     54|       'filter',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > createTaskAutomationRuleSchema — triggers > rejects unknown and task event types
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/task-automation.test.ts:66:9
+     64|         createTaskAutomationRuleSchema.safeParse({ ...eventRule, trigg…
+     65|           .success
+     66|       ).toBe(false);
+       |         ^
+     67|     }
+     68|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > createTaskAutomationRuleSchema — triggers > accepts schedule cadences and requires their fields
+AssertionError: expected undefined to deeply equal [ 'trigger', 'dayOfWeek' ]
+
+- Expected:
+[
+  "trigger",
+  "dayOfWeek",
+]
+
++ Received:
+undefined
+
+ ❯ src/__tests__/task-automation.test.ts:77:79
+     75|     expect(createTaskAutomationRuleSchema.safeParse(daily).success).to…
+     76|     const weekly = { ...daily, trigger: { ...daily.trigger, cadence: '…
+     77|     expect(issues(createTaskAutomationRuleSchema.safeParse(weekly))[0]…
+       |                                                                               ^
+     78|     const custom = { ...daily, trigger: { type: 'SCHEDULE', cadence: '…
+     79|     expect(issues(createTaskAutomationRuleSchema.safeParse(custom))[0]…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > createTaskAutomationRuleSchema — triggers > accepts a webhook trigger but never a client token or secret
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/task-automation.test.ts:93:7
+     91|         trigger: { type: 'WEBHOOK', secret: 'x'.repeat(10) },
+     92|       }).success
+     93|     ).toBe(false);
+       |       ^
+     94|   });
+     95| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > createTaskAutomationRuleSchema — actions superRefine (DoD 9) > requires Create Task first
+AssertionError: expected undefined to match object { path: [ 'actions', +0 ] }
+
+- Expected:
+{
+  "path": [
+    "actions",
+    0,
+  ],
+}
+
++ Received:
+undefined
+
+ ❯ src/__tests__/task-automation.test.ts:106:31
+    104|   it('requires Create Task first', () => {
+    105|     const result = createTaskAutomationRuleSchema.safeParse({ ...event…
+    106|     expect(issues(result)[0]).toMatchObject({ path: ['actions', 0] });
+       |                               ^
+    107|   });
+    108|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > createTaskAutomationRuleSchema — actions superRefine (DoD 9) > rejects a repeated action type at the second offender ("actions N and M")
+AssertionError: expected undefined to deeply equal [ 'actions', 2 ]
+
+- Expected:
+[
+  "actions",
+  2,
+]
+
++ Received:
+undefined
+
+ ❯ src/__tests__/task-automation.test.ts:115:25
+    113|     });
+    114|     const issue = issues(result).find((i) => i.message.includes('actio…
+    115|     expect(issue?.path).toEqual(['actions', 2]);
+       |                         ^
+    116|     expect(issue?.message).toMatch(/actions 2 and 3/);
+    117|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > createTaskAutomationRuleSchema — actions superRefine (DoD 9) > rejects out-of-order actions
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/__tests__/task-automation.test.ts:121:74
+    119|   it('rejects out-of-order actions', () => {
+    120|     const result = createTaskAutomationRuleSchema.safeParse({ ...event…
+    121|     expect(issues(result).some((i) => i.path.join('.') === 'actions.2'…
+       |                                                                          ^
+    122|   });
+    123|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > createTaskAutomationRuleSchema — actions superRefine (DoD 9) > allows 1..3 actions
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/task-automation.test.ts:125:93
+    123|
+    124|   it('allows 1..3 actions', () => {
+    125|     expect(createTaskAutomationRuleSchema.safeParse({ ...eventRule, ac…
+       |                                                                                             ^
+    126|     expect(
+    127|       createTaskAutomationRuleSchema.safeParse({ ...eventRule, actions…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > createTaskAutomationRuleSchema — bounds and strictness > trims names and enforces lengths
+AssertionError: expected '  Rule  ' to be 'Rule' // Object.is equality
+
+Expected: "Rule"
+Received: "  Rule  "
+
+ ❯ src/__tests__/task-automation.test.ts:134:91
+    132| describe('createTaskAutomationRuleSchema — bounds and strictness', () …
+    133|   it('trims names and enforces lengths', () => {
+    134|     expect(createTaskAutomationRuleSchema.parse({ ...eventRule, name: …
+       |                                                                                           ^
+    135|     expect(createTaskAutomationRuleSchema.safeParse({ ...eventRule, na…
+    136|     expect(createTaskAutomationRuleSchema.safeParse({ ...eventRule, na…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > createTaskAutomationRuleSchema — bounds and strictness > bounds due days, pool size and recipients
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/task-automation.test.ts:155:9
+    153|       expect(
+    154|         createTaskAutomationRuleSchema.safeParse({ ...eventRule, actio…
+    155|       ).toBe(false);
+       |         ^
+    156|     }
+    157|     expect(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > createTaskAutomationRuleSchema — bounds and strictness > rejects server-owned fields
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/task-automation.test.ts:188:96
+    186|   it('rejects server-owned fields', () => {
+    187|     for (const extra of ['tenantId', 'createdBy', 'webhookSecret', 'we…
+    188|       expect(createTaskAutomationRuleSchema.safeParse({ ...eventRule, …
+       |                                                                                                ^
+    189|     }
+    190|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > createTaskAutomationRuleSchema — bounds and strictness > de-duplicates tags case-insensitively
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/task-automation.test.ts:193:102
+    191|
+    192|   it('de-duplicates tags case-insensitively', () => {
+    193|     expect(createTaskAutomationRuleSchema.safeParse({ ...eventRule, ta…
+       |                                                                                                      ^
+    194|     expect(createTaskAutomationRuleSchema.safeParse({ ...eventRule, ta…
+    195|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > createTaskAutomationRuleSchema — bounds and strictness > requires an id on update
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/task-automation.test.ts:198:73
+    196|
+    197|   it('requires an id on update', () => {
+    198|     expect(updateTaskAutomationRuleSchema.safeParse(eventRule).success…
+       |                                                                         ^
+    199|     expect(updateTaskAutomationRuleSchema.safeParse({ ...eventRule, id…
+    200|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > findDuplicateTriggerActionRules > returns the two positions of identical active rules
+AssertionError: expected undefined to deeply equal [ +0, 1 ]
+
+- Expected:
+[
+  0,
+  1,
+]
+
++ Received:
+undefined
+
+ ❯ src/__tests__/task-automation.test.ts:207:136
+    205|
+    206|   it('returns the two positions of identical active rules', () => {
+    207|     expect(findDuplicateTriggerActionRules([base, { ...base, actions: …
+       |                                                                                                                                        ^
+    208|   });
+    209|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > findDuplicateTriggerActionRules > ignores inactive and webhook rules and different actions
+AssertionError: expected undefined to be null
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ src/__tests__/task-automation.test.ts:211:83
+    209|
+    210|   it('ignores inactive and webhook rules and different actions', () =>…
+    211|     expect(findDuplicateTriggerActionRules([base, { ...base, isActive:…
+       |                                                                                   ^
+    212|     const hook = { ...base, trigger: { type: 'WEBHOOK' as const } };
+    213|     expect(findDuplicateTriggerActionRules([hook, hook])).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > other schemas > reorders a unique id list
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/task-automation.test.ts:221:85
+    219|   it('reorders a unique id list', () => {
+    220|     expect(reorderTaskAutomationRulesSchema.safeParse({ ids: ['a', 'b'…
+    221|     expect(reorderTaskAutomationRulesSchema.safeParse({ ids: ['a', 'a'…
+       |                                                                                     ^
+    222|   });
+    223|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > other schemas > defaults revokePrevious to false
+AssertionError: expected undefined to be false // Object.is equality
+
+- Expected:
+false
+
++ Received:
+undefined
+
+ ❯ src/__tests__/task-automation.test.ts:225:88
+    223|
+    224|   it('defaults revokePrevious to false', () => {
+    225|     expect(rotateTaskAutomationWebhookSecretSchema.parse({ id: 'r1' })…
+       |                                                                                        ^
+    226|   });
+    227|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > other schemas > bounds settings and exposes defaults
+AssertionError: expected {} to deeply equal { automationEnabled: true, …(2) }
+
+- Expected
++ Received
+
+- {
+-   "automationEnabled": true,
+-   "maxRunsPerRulePerHour": 60,
+-   "notifyRuleOwnerOnFailure": false,
+- }
++ {}
+
+ ❯ src/__tests__/task-automation.test.ts:229:47
+    227|
+    228|   it('bounds settings and exposes defaults', () => {
+    229|     expect(TASK_AUTOMATION_SETTINGS_DEFAULTS).toEqual({
+       |                                               ^
+    230|       automationEnabled: true,
+    231|       notifyRuleOwnerOnFailure: false,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/22]⎯
+
+ FAIL  |validators| src/__tests__/task-automation.test.ts > other schemas > limits tag colours to the 18-token palette
+AssertionError: expected [] to have a length of 18 but got +0
+
+- Expected
++ Received
+
+- 18
++ 0
+
+ ❯ src/__tests__/task-automation.test.ts:241:46
+    239|
+    240|   it('limits tag colours to the 18-token palette', () => {
+    241|     expect(TASK_AUTOMATION_TAG_COLOR_TOKENS).toHaveLength(18);
+       |                                              ^
+    242|     expect(createTaskAutomationTagSchema.safeParse({ name: 'VIP', colo…
+    243|     expect(createTaskAutomationTagSchema.safeParse({ name: 'VIP', colo…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/22]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  22 failed | 89 passed (111)
+   Start at  00:33:11
+   Duration  747ms (transform 352ms, setup 0ms, import 540ms, tests 52ms, environment 0ms)
+

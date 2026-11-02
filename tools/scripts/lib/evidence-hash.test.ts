@@ -52,7 +52,7 @@ describe('evidence-hash', () => {
       const changes: string[] = [];
       expect(fixArtifactHashes(data, changes, hashFile)).toBe(true);
       expect(data.artifact_hashes).toEqual({
-        'docs/real.md': sha('real content'),
+        'docs/real.md': `sha256:${sha('real content')}`,
         'docs/other.md': valid,
       });
       expect(changes.join('\n')).toContain('file not found, no real hash');
@@ -60,6 +60,9 @@ describe('evidence-hash', () => {
 
     it('does nothing when every hash is already valid or there are none', () => {
       expect(fixArtifactHashes({ artifact_hashes: { a: sha('a') } }, [], hashFile)).toBe(false);
+      expect(
+        fixArtifactHashes({ artifact_hashes: { a: `sha256:${sha('a')}` } }, [], hashFile)
+      ).toBe(false);
       expect(fixArtifactHashes({}, [], hashFile)).toBe(false);
     });
   });

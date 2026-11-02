@@ -1,0 +1,134 @@
+# 2026-10-21T08:20:30Z
+# 8805759121cbe03f266b64e37bdf756eabe4111d
+# pnpm --dir apps/web exec vitest run src/app/calendar/event-types
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/web
+
+ ❯ |web| src/app/calendar/event-types/__tests__/EventTypesContent.test.tsx (0 test)
+ ❯ |web| src/app/calendar/event-types/components/__tests__/BookingLinkCard.test.tsx (0 test)
+ ❯ |web| src/app/calendar/event-types/components/__tests__/EventTypeDialog.test.tsx (0 test)
+ ❯ |web| src/app/calendar/event-types/__tests__/page.test.tsx (1 test | 1 failed) 36ms
+     × renders the event types content, not the old "coming soon" stub 23ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| src/app/calendar/event-types/__tests__/EventTypesContent.test.tsx [ src/app/calendar/event-types/__tests__/EventTypesContent.test.tsx ]
+Error: Failed to resolve import "../EventTypesContent" from "src/app/calendar/event-types/__tests__/EventTypesContent.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/web/src/app/calendar/event-types/__tests__/EventTypesContent.test.tsx:58:0
+  48 |  const __vi_import_2__ = await import("axe-core");
+  49 |  const __vi_import_3__ = await import("./event-types-fixtures");
+  50 |  const __vi_import_4__ = await import("../EventTypesContent");
+     |                                       ^
+  51 |  
+  52 |  import { describe, it, expect, vi, beforeEach } from "vitest";
+ ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:29079:43
+ ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:29076:14
+ ❯ normalizeUrl ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:27199:18
+ ❯ ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:27257:32
+ ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:27225:4
+ ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:28877:14
+ ❯ loadAndTransform ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:22746:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  |web| src/app/calendar/event-types/components/__tests__/BookingLinkCard.test.tsx [ src/app/calendar/event-types/components/__tests__/BookingLinkCard.test.tsx ]
+Error: Failed to resolve import "../BookingLinkCard" from "src/app/calendar/event-types/components/__tests__/BookingLinkCard.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/web/src/app/calendar/event-types/components/__tests__/BookingLinkCard.test.tsx:10:59
+  3  |  import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+  4  |  import axe from "axe-core";
+  5  |  import { BookingLinkCard } from "../BookingLinkCard";
+     |                                   ^
+  6  |  function renderCard(overrides = {}) {
+  7  |    const onSave = vi.fn().mockResolvedValue({ ok: true });
+ ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:29079:43
+ ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:29076:14
+ ❯ normalizeUrl ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:27199:18
+ ❯ ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:27257:32
+ ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:27225:4
+ ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:28877:14
+ ❯ loadAndTransform ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:22746:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  |web| src/app/calendar/event-types/components/__tests__/EventTypeDialog.test.tsx [ src/app/calendar/event-types/components/__tests__/EventTypeDialog.test.tsx ]
+Error: Failed to resolve import "../EventTypeDialog" from "src/app/calendar/event-types/components/__tests__/EventTypeDialog.test.tsx". Does the file exist?
+  Plugin: vite:import-analysis
+  File: C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/web/src/app/calendar/event-types/components/__tests__/EventTypeDialog.test.tsx:21:0
+  14 |  const __vi_import_3__ = await import("@intelliflow/validators");
+  15 |  const __vi_import_4__ = await import("../../__tests__/event-types-fixtures");
+  16 |  const __vi_import_5__ = await import("../EventTypeDialog");
+     |                                       ^
+  17 |  
+  18 |  import { describe, it, expect, vi, beforeEach } from "vitest";
+ ❯ TransformPluginContext._formatLog ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:29079:43
+ ❯ TransformPluginContext.error ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:29076:14
+ ❯ normalizeUrl ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:27199:18
+ ❯ ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:27257:32
+ ❯ TransformPluginContext.transform ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:27225:4
+ ❯ EnvironmentPluginContainer.transform ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:28877:14
+ ❯ loadAndTransform ../../node_modules/.pnpm/vite@7.3.5_@types+node@25.9.2_jiti@2.7.0_lightningcss@1.32.0_terser@5.51.2_tsx@4.22.4_yaml@2.9.0/node_modules/vite/dist/node/chunks/config.js:22746:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| src/app/calendar/event-types/__tests__/page.test.tsx > /calendar/event-types page > renders the event types content, not the old "coming soon" stub
+TestingLibraryElementError: Unable to find an element by: [data-testid="event-types-content"]
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"space-y-6"[39m
+    [36m>[39m
+      [36m<div>[39m
+        [36m<h1[39m
+          [33mclass[39m=[32m"text-2xl font-bold text-foreground"[39m
+        [36m>[39m
+          [0mEvent Types[0m
+        [36m</h1>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-muted-foreground mt-1"[39m
+        [36m>[39m
+          [0mManage event categories and color coding.[0m
+        [36m</p>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"rounded-lg border border-border bg-card p-8 text-center text-muted-foreground"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33mclass[39m=[32m"material-symbols-outlined text-4xl mb-2 block"[39m
+        [36m>[39m
+          [0mcategory[0m
+        [36m</span>[39m
+        [36m<p>[39m
+          [0mEvent types configuration coming soon.[0m
+        [36m</p>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/calendar/event-types/__tests__/page.test.tsx:19:19
+     17|   it('renders the event types content, not the old "coming soon" stub'…
+     18|     const { container } = render(<EventTypesPage />);
+     19|     expect(screen.getByTestId('event-types-content')).toBeInTheDocumen…
+       |                   ^
+     20|     expect(container.textContent).not.toMatch(/coming soon/i);
+     21|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  4 failed (4)
+      Tests  1 failed (1)
+   Start at  09:20:31
+   Duration  1.51s (transform 208ms, setup 1.14s, import 117ms, tests 36ms, environment 3.47s)
+
+# exit=1

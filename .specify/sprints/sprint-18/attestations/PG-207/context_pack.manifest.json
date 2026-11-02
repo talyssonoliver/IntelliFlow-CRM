@@ -1,0 +1,42 @@
+{
+  "taskId": "PG-207",
+  "runId": "run-2026-10-21T00-01-45Z",
+  "createdAt": "2026-10-21T00:01:46.134Z",
+  "repoRoot": "C:\\Users\\talys\\projects\\intelliFlow-CRM-worktrees\\pg-207",
+  "files": [
+    {
+      "path": "apps/web/src/components/sidebar/configs/email.ts",
+      "sha256": "ff6d3f6320fddf5db22ef177511592d15610455cfc9d448db3dda87401622177",
+      "totalLines": 76,
+      "excerptLines": 76,
+      "truncated": false,
+      "included": true
+    },
+    {
+      "path": "apps/web/src/app/contacts/(list)/contact-settings/ContactSettingsContent.tsx",
+      "sha256": "0ea144e641da815e3e4f289c51839efdaad3bab1c84a503ca06d1c0a27a276a7",
+      "totalLines": 468,
+      "excerptLines": 120,
+      "truncated": true,
+      "included": true
+    },
+    {
+      "path": "docs/planning/module-settings-playbook.md",
+      "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3",
+      "totalLines": 252,
+      "excerptLines": 120,
+      "truncated": true,
+      "included": true
+    },
+    {
+      "path": "docs/planning/prd-module-settings.md",
+      "sha256": "88cb35d86d77f2c46c9a84b2748ae3f36b4172ee6345be7f0e6103866bda0b37",
+      "totalLines": 1127,
+      "excerptLines": 120,
+      "truncated": true,
+      "included": true
+    }
+  ],
+  "totalSizeBytes": 19761,
+  "truncatedDueToSize": false
+}

@@ -1,0 +1,35 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 205 files total
+[codex-review] in scope : 156 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] WARN: Codex produced no parseable findings (exit 1) — likely the OpenAI usage/tier cap or a transient error. Raw: artifacts/codex-review/codex-raw.txt
+OpenAI Codex v0.162.1
+--------
+workdir: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-207
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 01a15dba-3368-7222-873f-7e02b022ad2f
+--------
+user
+You are an independent code auditor. Your task is to find REAL bugs in the diff below.
+
+Scope: only the following files changed in this PR (diff vs origin/main):
+  - apps/api/src/__tests__/app-router.smoke.test.ts
+  - apps/api/src/__tests__/container.ai-provider-baseurl.lazy.test.ts
+  - apps/api/src/__tests__/container.test.ts
+  - apps/api/src/__tests__/http-server.bounce-scheduler.test.ts
+  - apps/api/src/container.ts
+  - apps/api/src/http-server.ts
+  - apps/api/src/main.ts
+  - apps/api/src/modules/email/__tests__/arch-guards.test.ts
+  - apps/api/src/modules/email/__tests__/bounce-reader.test.ts
+  - apps/api/src/modules/email/__tests__/bounce-scheduler.test.ts
+  - apps/api/src/modules/email/__tests__/d
+[codex-review] Falling back to Claude review (claude -p, local) ...
+SKIPPED_PRECONDITION: no semantic reviewer produced parseable output (codex unavailable/capped AND claude unavailable/failed). Review artifacts/codex-review/codex-raw.txt.
+exit=0

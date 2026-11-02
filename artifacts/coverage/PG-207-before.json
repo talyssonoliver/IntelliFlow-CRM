@@ -1,0 +1,384 @@
+{
+  "task_id": "PG-207",
+  "phase": "before",
+  "captured_at": "2026-10-21T00:01:35.251Z",
+  "source": "artifacts/coverage/coverage-summary.json (committed baseline @ 28d93df47, branch feat/pg-207-email-settings); no fresh coverage run (shared host, one-test-process rule); files limited to existing files PG-207 modifies",
+  "total": {
+    "lines": {
+      "total": 96052,
+      "covered": 9899,
+      "skipped": 0,
+      "pct": 10.3
+    },
+    "statements": {
+      "total": 104374,
+      "covered": 10522,
+      "skipped": 0,
+      "pct": 10.08
+    },
+    "functions": {
+      "total": 22572,
+      "covered": 2652,
+      "skipped": 0,
+      "pct": 11.74
+    },
+    "branches": {
+      "total": 66726,
+      "covered": 6156,
+      "skipped": 0,
+      "pct": 9.22
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "files": {
+    "apps/api/src/modules/email/inbound.router.ts": {
+      "lines": {
+        "total": 316,
+        "covered": 155,
+        "skipped": 0,
+        "pct": 49.05
+      },
+      "functions": {
+        "total": 45,
+        "covered": 20,
+        "skipped": 0,
+        "pct": 44.44
+      },
+      "statements": {
+        "total": 343,
+        "covered": 161,
+        "skipped": 0,
+        "pct": 46.93
+      },
+      "branches": {
+        "total": 284,
+        "covered": 88,
+        "skipped": 0,
+        "pct": 30.98
+      }
+    },
+    "packages/adapters/src/email/gmail/client.ts": {
+      "lines": {
+        "total": 266,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 60,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 297,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 287,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    },
+    "packages/adapters/src/messaging/email/inbound.ts": {
+      "lines": {
+        "total": 223,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 32,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 247,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 195,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    },
+    "packages/domain/src/workflow/node-catalog.ts": {
+      "lines": {
+        "total": 98,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 10,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 114,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 93,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    },
+    "packages/db/src/field-encryption.ts": {
+      "lines": {
+        "total": 78,
+        "covered": 3,
+        "skipped": 0,
+        "pct": 3.84
+      },
+      "functions": {
+        "total": 13,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 82,
+        "covered": 3,
+        "skipped": 0,
+        "pct": 3.65
+      },
+      "branches": {
+        "total": 34,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    },
+    "apps/web/src/components/email/EmailCompose.tsx": {
+      "lines": {
+        "total": 178,
+        "covered": 134,
+        "skipped": 0,
+        "pct": 75.28
+      },
+      "functions": {
+        "total": 41,
+        "covered": 25,
+        "skipped": 0,
+        "pct": 60.97
+      },
+      "statements": {
+        "total": 191,
+        "covered": 143,
+        "skipped": 0,
+        "pct": 74.86
+      },
+      "branches": {
+        "total": 136,
+        "covered": 79,
+        "skipped": 0,
+        "pct": 58.08
+      }
+    },
+    "apps/web/src/components/email/InlineCompose.tsx": {
+      "lines": {
+        "total": 55,
+        "covered": 29,
+        "skipped": 0,
+        "pct": 52.72
+      },
+      "functions": {
+        "total": 9,
+        "covered": 5,
+        "skipped": 0,
+        "pct": 55.55
+      },
+      "statements": {
+        "total": 59,
+        "covered": 33,
+        "skipped": 0,
+        "pct": 55.93
+      },
+      "branches": {
+        "total": 56,
+        "covered": 25,
+        "skipped": 0,
+        "pct": 44.64
+      }
+    },
+    "apps/web/src/components/email/EmailListItem.tsx": {
+      "lines": {
+        "total": 23,
+        "covered": 21,
+        "skipped": 0,
+        "pct": 91.3
+      },
+      "functions": {
+        "total": 7,
+        "covered": 5,
+        "skipped": 0,
+        "pct": 71.42
+      },
+      "statements": {
+        "total": 33,
+        "covered": 30,
+        "skipped": 0,
+        "pct": 90.9
+      },
+      "branches": {
+        "total": 37,
+        "covered": 33,
+        "skipped": 0,
+        "pct": 89.18
+      }
+    },
+    "apps/web/src/components/shared/module-settings-shell.tsx": {
+      "lines": {
+        "total": 10,
+        "covered": 10,
+        "skipped": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 3,
+        "covered": 3,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 10,
+        "covered": 10,
+        "skipped": 0,
+        "pct": 100
+      },
+      "branches": {
+        "total": 7,
+        "covered": 7,
+        "skipped": 0,
+        "pct": 100
+      }
+    },
+    "apps/web/src/app/email/compose/_compose-client.tsx": {
+      "lines": {
+        "total": 15,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 4,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 16,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 8,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    },
+    "apps/api/src/http-server.ts": {
+      "lines": {
+        "total": 204,
+        "covered": 175,
+        "skipped": 0,
+        "pct": 85.78
+      },
+      "functions": {
+        "total": 34,
+        "covered": 33,
+        "skipped": 0,
+        "pct": 97.05
+      },
+      "statements": {
+        "total": 208,
+        "covered": 178,
+        "skipped": 0,
+        "pct": 85.57
+      },
+      "branches": {
+        "total": 131,
+        "covered": 92,
+        "skipped": 0,
+        "pct": 70.22
+      }
+    },
+    "apps/api/src/container.ts": {
+      "lines": {
+        "total": 205,
+        "covered": 114,
+        "skipped": 0,
+        "pct": 55.6
+      },
+      "functions": {
+        "total": 28,
+        "covered": 9,
+        "skipped": 0,
+        "pct": 32.14
+      },
+      "statements": {
+        "total": 215,
+        "covered": 116,
+        "skipped": 0,
+        "pct": 53.95
+      },
+      "branches": {
+        "total": 118,
+        "covered": 22,
+        "skipped": 0,
+        "pct": 18.64
+      }
+    },
+    "packages/validators/src/notifications.ts": {
+      "lines": {
+        "total": 20,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      },
+      "statements": {
+        "total": 20,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 0,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 100
+      }
+    }
+  },
+  "not_in_baseline": [
+    "packages/adapters/src/email/outlook/client.ts",
+    "packages/adapters/src/storage/SupabaseStorageAdapter.ts",
+    "apps/web/src/app/email/email-settings/page.tsx",
+    "apps/web/src/app/email/signatures/page.tsx"
+  ]
+}

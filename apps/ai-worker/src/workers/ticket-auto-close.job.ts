@@ -18,11 +18,12 @@ import { Job, Worker, Queue, QueueEvents } from 'bullmq';
 import { createSerialJobWorker } from './serial-job-worker';
 import { PrismaClient } from '@intelliflow/db';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 
 export const TICKET_AUTO_CLOSE_QUEUE_NAME = 'intelliflow-ticket-auto-close';
 
 export const TicketAutoCloseJobDataSchema = z.object({
-  tenantId: z.string().min(1).optional(),
+  tenantId: recordIdSchema.optional(),
   sweepAll: z.boolean().default(true),
   dryRun: z.boolean().default(false),
 });

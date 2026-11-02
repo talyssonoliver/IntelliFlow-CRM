@@ -17,8 +17,8 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/api/src/modules/home/home.router.ts": "f807a632cb3bd1b218d6c15c05bd5d0e29dbd90e0dac95fd70770d7768dc07c0",
-    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "b2a1271d8d7b0880e19f61a840dc82ff4231e03f8d2dbf5f2a328d2b620f992a"
+    "apps/api/src/modules/home/home.router.ts": "sha256:f807a632cb3bd1b218d6c15c05bd5d0e29dbd90e0dac95fd70770d7768dc07c0",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "sha256:b2a1271d8d7b0880e19f61a840dc82ff4231e03f8d2dbf5f2a328d2b620f992a"
   },
   "validation_results": [
     {

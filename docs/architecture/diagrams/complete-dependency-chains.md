@@ -1390,7 +1390,8 @@ Dependency Chain:
                                     │    IFC-117       │
                                     │  AI Model        │
                                     │  Monitoring      │
-                                    │      ✅          │
+                                    │  ⏳ Needs Human  │
+                                    │  (prod unverif.) │
                                     └────────┬─────────┘
                                              │
               ┌──────────────────────────────┼──────────────────────────────┐
@@ -1419,7 +1420,7 @@ Dependency Chain:
                                  └──────────────────┘
 
 Dependency Chain:
-  IFC-117 (Monitoring) ✅ ──► IFC-214 (Redis Bridge) ✅ ──► IFC-215 (Payload Fidelity) ✅
+  IFC-117 (Monitoring) ⏳ Needs Human / production unverified ──► IFC-214 (Redis Bridge) ✅ ──► IFC-215 (Payload Fidelity) ✅
                             ──┬──► AUTOMATION-002 (Drift) ⬜ ──► ai-monitoring.router ⬜ ──► PG-146 (UI) ⬜
                               ├──► TRACK-004 (Metrics) ⬜ ────────────────────────────────────────────────┘
                               └──► ai-metrics.ts (Val) ⬜ ────────────────────────────────────────────────┘
@@ -1826,9 +1827,13 @@ Dependency Chain:
               └──────────────────┘              └──────────────────┘
 
 Dependency Chain:
-  ENV-008-AI (OTel) ✅ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana Dashboards ⬜ ──┬──► TRACK-001 (Status) ✅
+  ENV-008-AI (OTel) ⏳ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana Dashboards ⬜ ──┬──► TRACK-001 (Status) ✅
                          ├──► IFC-142 (Alerting) ⬜ ────────────────────────────┴──► TRACK-006 (Build) ✅
                          └──► traces.ts (Val) ⬜ ───────────────────────────────────────────────────────┘
+
+  IFC-003 (tRPC) ✅ ──► IFC-074 (Full Stack Observability) 🔶 — api request logs via pino → OTLP → Loki,
+  read-only evidence collector (correlation-test.csv, mttr-baseline.json); builds on IFC-032 ✅ (export + alert
+  delivery). In Progress until the api correlation row passes after deploy (ADR-086).
 ```
 
 ---
@@ -1946,7 +1951,7 @@ Dependency Chain:
                                             │
                                             ▼
                                  ┌──────────────────┐
-                                 │dsar.router       │
+                                 │privacy.router    │
                                  │      ⬜          │
                                  └────────┬─────────┘
                                           │
@@ -1960,7 +1965,7 @@ Dependency Chain:
               └──────────────────┘              └──────────────────┘
 
 Dependency Chain:
-  IFC-140 (Governance) ✅ ──┬──► IFC-058 (Retention) ⬜ ──► dsar.router ⬜ ──┬──► PG-122 (Export) ⬜
+  IFC-140 (Governance) ✅ ──┬──► IFC-058 (Retention) ⬜ ──► privacy.router ✅ ──┬──► PG-122 (Export) ⬜
                             ├──► dsar.ts (Val) ⬜ ─────────────────────────┴──► PG-123 (Deletion) ⬜
                             └──► Retention Engine ⬜ ────────────────────────────────────────────────┘
 ```
@@ -2150,7 +2155,7 @@ Analytics:     ANALYTICS-001 ✅ ──► IFC-200 ✅ ──► IFC-190 ✅ ─
 ```
 Ticket:           IFC-188 ✅ ──► validators ✅ ──► adapter ✅ ──► IFC-189 ✅ ──► PG-137 ✅
 NBA:              IFC-095 ✅ ──► IFC-039 ⬜ ──► nba.ts ⬜ ──► intelligence.router ──► PG-145 ⬜
-AI Monitoring:    IFC-117 ✅ ──► IFC-214 ✅ ──► IFC-215 ✅ ──► AUTOMATION-002 ⬜ ──► TRACK-004 ⬜ ──► ai-monitoring.router ⬜ ──► PG-146 ⬜
+AI Monitoring:    IFC-117 ⏳ (Needs Human / production unverified) ──► IFC-214 ✅ ──► IFC-215 ✅ ──► AUTOMATION-002 ⬜ ──► TRACK-004 ⬜ ──► ai-monitoring.router ⬜ ──► PG-146 ⬜
 Domain Events:    IFC-150 ⬜ ──► IFC-151 ⬜ ──► OutboxRepository ⬜ ──► events-worker ⬜
 Workflow Engine:  IFC-028 ✅ ──► IFC-141 ⬜ ──► workflow.router ⬜ ──► IFC-031 ✅ / PG-147 ⬜
 Security/Secrets: EXC-SEC-001 ✅ ──► IFC-113 ⬜ ──► IFC-121 ⬜ ──► IFC-143 ⬜ ──► PG-120 ⬜
@@ -2158,7 +2163,7 @@ Security Dash:    EXC-SEC-001 ✅ ──► TRACK-005 (Security Dashboard UI) �
 Release Gov:      IFC-130 ⬜ ──► IFC-132 ⬜ ──► IFC-133 ⬜ ──► IFC-134 ⬜ ──► IFC-112 ⬜
 Caching/Perf:     IFC-007 ⬜ ──► IFC-123 ⬜ ──► IFC-033 ✅ ──► Performance Dashboard ⬜
 External APIs:    IFC-099 ⬜ ──► IFC-114 ⬜ ──► IFC-036 ⬜ ──► webhooks.router ⬜ ──► PG-114/115 ⬜ | PG-171 ✅
-Observability:    ENV-008-AI ✅ ──► IFC-116 ⬜ ──► IFC-142 ⬜ ──► Grafana ⬜ ──► TRACK-001 ✅ / TRACK-006 ✅
+Observability:    ENV-008-AI ⏳ ──► IFC-116 ⬜ ──► IFC-142 ⬜ ──► Grafana ⬜ ──► TRACK-001 ✅ / TRACK-006 ✅
 ```
 
 ## Business Workflow Chains - 4 Total
@@ -2166,7 +2171,7 @@ Observability:    ENV-008-AI ✅ ──► IFC-116 ⬜ ──► IFC-142 ⬜ ─
 ```
 Lead Qualification:   IFC-004 ✅ ──► IFC-005 ✅ ──► IFC-024 ⬜ ──► IFC-030 ⏳ ──► PG-132 ✅
 Smart Routing:        IFC-030 ⏳ ──► routing-rules.ts ⬜ ──► routing.router ⬜ ──► PG-132 ✅
-DSAR:                 IFC-140 ✅ ──► IFC-058 ⬜ ──► dsar.router ⬜ ──► PG-122/123 ⬜
+DSAR:                 IFC-140 ✅ ──► IFC-058 ⬜ ──► privacy.router ✅ (PG-203) ──► PG-122/123 ⬜
 Legal Case Workflows: IFC-136 ✅ ──► IFC-147 ✅ ──► IFC-141 ⬜ ──► Status Transitions ⬜ ──► PG-138 ✅
 ```
 
@@ -2566,6 +2571,110 @@ appRouter.appointments.findNextSlot → findNextSlotWithinAvailability (configur
 /calendar/calendar-settings → links to Availability (no longer edits buffers/timezone)
 /appointments/new → AppointmentForm (firm default buffers prefill; server errors shown)
 Sidebar entry: apps/web/src/components/sidebar/configs/calendar.ts:15-17
+```
+
+---
+
+### Task Automation (PG-208 — rules executed inside the API, ADR-084)
+
+```
+PG-178 ✅ + PG-191 ✅ ──► PG-208 ✅ (Task Automation, feat/pg-208-task-automation; Lighthouse NEEDS_HUMAN)
+
+Domain:  packages/domain/src/crm/task/automation/task-automation-constants.ts
+           TASK_AUTOMATION_EVENTS (9 v1 events) · renderTaskTemplate · computeAutomationDueDate
+           pickRoundRobinAssignee · canonicalRuleKey · TASK_AUTOMATION_LIMITS · admin role sets
+Validators: packages/validators/src/task-automation.ts (trigger/action unions, superRefine on actions)
+
+Prisma models (tenant-scoped, RLS on):
+  TaskAutomationSetting  @@map "task_automation_settings"  (one row per tenant)
+  TaskAutomationRule     @@map "task_automation_rules"     (0..50 per tenant; webhookSecret* encrypted)
+  TaskAutomationRun      @@map "task_automation_runs"      (unique ruleId + idempotencyKey; 30-day retention)
+    └─ FK (tenantId, ruleId) → task_automation_rules(tenantId, id) (CASCADE)
+  TaskAutomationTag      @@map "task_automation_tags"      (colorToken CHECK, 18 tokens)
+
+Migration (Class A, manual prod apply BEFORE the API ships — L13):
+  20261020120000_task_automation/migration.sql
+
+appRouter.taskAutomation: list / listRuns / create / update / delete / setActive / reorder /
+  rotateWebhookSecret / regenerateWebhookUrl / runNow / settings.* / tags.* / resetToDefaults
+
+Runtime (apps/api/src/modules/task/automation/):
+  container eventBus (in-memory) ──► task-automation-event-intake (buffer only, never throws)
+  startApiServer ──► task-automation-runner (15 s tick):
+    drainEvents ──► task_automation_runs (PENDING)
+    enqueueDueSchedules ──► task_automation_runs (PENDING)
+    executePendingRuns ──► TaskService.createTask / assignTask ──► createNotification
+  POST /api/webhooks/task-automation/<token> (http-server.ts, raw body, signed) ──► task_automation_runs
+
+Task fixes: PrismaTaskRepository maps assigneeId on every read; task.list / task.getById show
+  owned OR assigned tasks (owner ruling 6)
+
+/tasks/(list)/automation/page.tsx → TaskAutomationContent → trpc.taskAutomation.*
+Sidebar entry: apps/web/src/components/sidebar/configs/tasks.ts:7
+Parent hub:    apps/web/src/components/tasks/TaskSettingsPanel.tsx:23-29
+```
+
+### Event Types + Public Booking (PG-203 — complete, ADR-083)
+
+```
+PG-202 ✅ (Availability) ──► PG-203 (Event Types + public booking, DSAR) ✅
+                               ├──► PG-211 (booker self-service cancel/reschedule)  [follow-up, depends on PG-203]
+                               ├──► PG-212 (per-type minimum notice and horizon)    [follow-up, depends on PG-203]
+                               └──► PG-213 (booker PII purge under PG-206 policies) [follow-up, depends on PG-203]
+
+Prisma models: EventType @@map "event_types" · BookingAttempt @@map "booking_attempts" (abuse counters)
+appRouter.calendar.eventTypes: list / listActive / create / update / delete / setBookingLink   (6 tenant procedures)
+appRouter.publicBooking: getEventType / listSlots / book                                      (3 public procedures)
+
+/calendar/event-types/page.tsx → EventTypesContent → trpc.calendar.eventTypes.*   (replaces the coming-soon stub)
+/appointments/new → AppointmentForm event type picker → calendar.eventTypes.listActive
+/book/[handle]/[slug]/page.tsx → BookingContent → trpc.publicBooking.*
+  External entry: BookingLinkCard builds <origin>/book/<handle>/<slug>; noindex, disallowed in robots.ts, no sidebar entry
+Sidebar entry: apps/web/src/components/sidebar/configs/calendar.ts:12
+```
+
+### Email Settings and User Mailboxes (PG-207 — ADR-085)
+
+```
+PG-178 ✅ + IFC-144 ✅ + PG-141 ✅ ──► PG-207 (Email Settings, user-mailbox sending) 🔄
+   absorbs PG-084's OAuth connect/send (owner ruling Q10); IFC-221 tracking broadened to every mailbox kind
+
+Domain:  packages/domain/src/email/
+           resolveSendingMailbox · partitionRecipients · classifyDsnStatus · evaluateBounce
+           resolveDefaultSignature · normalizeEmail · EMAIL_LIMITS · EMAIL_SETTINGS_ADMIN_ROLES
+         packages/domain/src/workflow/node-catalog.ts isPublicIpAddress (CIDR tables, SSRF)
+Application: ports/external/StorageServicePort.ts EmailAttachmentStoragePort
+Validators: packages/validators/src/{email-mailbox,email-settings,email-signatures}.ts
+Adapters: packages/adapters/src/messaging/email/
+           smtp-provider (SmtpMailboxTransport, pinned public host) · imap-dsn-reader (ImapBounceReader)
+           oauth-mailbox (OAuthMailboxClient: Gmail / Microsoft Graph, PKCE, revoke)
+           mime (MailComposer, X-IntelliFlow-Record + Message-ID) · dsn-parser · public-host
+         SupabaseStorageAdapter upload/downloadEmailAttachment (private email-attachments bucket)
+
+Prisma models (tenant-scoped, RLS on; secrets in ENCRYPTED_FIELDS):
+  EmailMailbox, EmailOAuthState, TenantEmailSettings, EmailSignature,
+  EmailSuppression, EmailBounceReceipt; EmailRecord + mailboxId, messageIdHeader,
+  provider, providerMessageId
+Migrations (Class A, manual prod apply BEFORE the API):
+  20261020120000_email_mailboxes · 120100_email_settings_signatures ·
+  120200_email_suppression_receipts · 120300_email_record_message_ids (NOT VALID) ·
+  120310 / 120320 VALIDATE (one statement each) ·
+  120400_email_records_message_id_idx · 120500_email_records_mailbox_id_idx (CONCURRENTLY)
+
+apps/api/src/modules/email/
+  mailbox-sender.ts dispatchUserMail ◄── email.sendEmail, email.processEmail(forward)
+  mailbox-transport.ts ◄── container.ts adapters.mailboxTransports
+  appRouter.emailMailbox / emailSettings(.suppression) / emailSignatures / emailAttachments
+  bounce-reader.ts runBounceScan ◄── bounce-scheduler.ts ◄── http-server.ts startApiServer
+  email-automation.ts notifyEmailBounced (email_bounced notification)
+  trpc.ts errorFormatter → data.emailSendError
+
+/email/email-settings → EmailSettingsContent → emailMailbox.*, emailSettings.*
+/email/oauth/callback → OAuthCallbackContent → emailMailbox.oauthComplete (redirect target)
+/email/signatures → SignaturesContent → emailSignatures.*
+/email/compose → ComposeClient → emailSignatures.resolveDefault → EmailCompose
+   (emailAttachments.upload → email.sendEmail; coded errors via send-errors.ts)
+Sidebar entries: apps/web/src/components/sidebar/configs/email.ts:10-11
 ```
 
 ---

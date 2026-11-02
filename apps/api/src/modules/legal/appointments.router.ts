@@ -26,9 +26,7 @@ import type {
 import { TRPCError } from '@trpc/server';
 import { tenantUserWhere } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure as baseTenantProcedure } from '../../trpc';
-import { AppointmentDomainService } from '../../services';
 import {
-  AppointmentCreatedEvent,
   AppointmentRescheduledEvent,
   AppointmentCancelledEvent,
   AppointmentId,
@@ -37,6 +35,7 @@ import {
 } from '@intelliflow/domain';
 import { container } from '../../container';
 import { createNotification } from '../notifications/notifications.router';
+import { onAppointmentCreated, toDomainAppointment } from './appointment-side-effects';
 import { mapDomainErrorToTRPC } from './helpers';
 import { safeTimezone } from '../../lib/timezone-utils';
 import {
@@ -123,6 +122,8 @@ const createAppointmentSchema = z.object({
   reminderMinutes: z.number().min(0).optional(),
   forceOverrideConflicts: z.boolean().optional().default(false),
   calendarId: z.string().optional().nullable(),
+  /** PG-203: the event type picked in the form (must be an active type of this tenant). */
+  eventTypeId: z.string().min(1).optional(),
 });
 
 const updateAppointmentSchema = z.object({
@@ -312,57 +313,6 @@ const tenantProcedure = baseTenantProcedure.use(async ({ ctx, next }) => {
 });
 
 /**
- * Convert a Prisma appointment record to a domain Appointment for ICS/reminder handlers.
- * Uses AppointmentDomainService.toDomainAppointments (handles TimeSlot, Buffer, etc.)
- * and returns the first result, or null if conversion fails.
- */
-function toDomainAppointment(dbRecord: any): Appointment | null {
-  const results = AppointmentDomainService.toDomainAppointments([
-    {
-      ...dbRecord,
-      bufferMinutesBefore: dbRecord.bufferMinutesBefore ?? 0,
-      bufferMinutesAfter: dbRecord.bufferMinutesAfter ?? 0,
-      attendees: dbRecord.attendees?.map((a: any) => ({ userId: a.userId ?? a })) ?? [],
-    },
-  ]);
-  return results.length > 0 ? results[0] : null;
-}
-
-/**
- * Fire-and-forget: dispatch ICS invitation, schedule reminder, and emit audit event
- * after an appointment is created. Errors are logged but do not block the response.
- */
-async function onAppointmentCreated(dbRecord: any, userId: string): Promise<void> {
-  try {
-    const appointment = toDomainAppointment(dbRecord);
-    if (!appointment) return;
-
-    const idResult = AppointmentId.create(dbRecord.id);
-    if (idResult.isFailure) return;
-
-    const timeSlotResult = TimeSlot.create(dbRecord.startTime, dbRecord.endTime);
-    if (timeSlotResult.isFailure) return;
-
-    const event = new AppointmentCreatedEvent(
-      idResult.value,
-      dbRecord.title,
-      timeSlotResult.value,
-      dbRecord.appointmentType,
-      userId
-    );
-
-    // ICS invitation
-    await container.appointmentIcsHandler.handleAppointmentCreated(event, appointment);
-    // Schedule reminder
-    await container.reminderScheduler.handleAppointmentCreated(event, appointment);
-    // Audit trail via event bus
-    await container.adapters.eventBus.publish(event);
-  } catch (error) {
-    console.error('[appointments] onAppointmentCreated side-effect error:', error);
-  }
-}
-
-/**
  * Fire-and-forget: regenerate ICS, reschedule reminders, emit audit event
  */
 async function onAppointmentRescheduled(
@@ -486,6 +436,49 @@ async function assertAppointmentRefsInTenant(
   }
 }
 
+/**
+ * PG-203: an event type picked in the New Appointment form must be an active type of the
+ * caller's tenant. Same NOT_FOUND shape as #890 — a foreign, missing or inactive type reveals
+ * nothing.
+ */
+async function assertEventTypeInTenant(
+  ctx: { prismaWithTenant: any; user: { tenantId: string } },
+  eventTypeId: string | undefined
+): Promise<void> {
+  if (!eventTypeId) return;
+  const eventType = await ctx.prismaWithTenant.eventType.findFirst({
+    where: { id: eventTypeId, tenantId: ctx.user.tenantId, isActive: true },
+    select: { id: true },
+  });
+  if (!eventType) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: 'Event type not found' });
+  }
+}
+
+/**
+ * PG-203: ScheduleAppointmentUseCase does not map eventTypeId, so the link is written after it.
+ * The appointment is already committed, so a failure (e.g. the type was deleted in between and
+ * the FK rejects it) only loses the optional link and never fails the request.
+ */
+async function linkEventType(
+  ctx: { prismaWithTenant: any; user: { tenantId: string } },
+  appointmentId: string,
+  eventTypeId: string | undefined
+): Promise<void> {
+  if (!eventTypeId) return;
+  try {
+    await ctx.prismaWithTenant.appointment.updateMany({
+      where: { id: appointmentId, tenantId: ctx.user.tenantId },
+      data: { eventTypeId },
+    });
+  } catch (error) {
+    console.warn('[appointments.create] Event type link not stored', {
+      appointmentId,
+      error: error instanceof Error ? error.message : 'unknown',
+    });
+  }
+}
+
 export const appointmentsRouter = createTRPCRouter({
   /**
    * Create a new appointment
@@ -500,6 +493,8 @@ export const appointmentsRouter = createTRPCRouter({
       attendeeIds: input.attendeeIds,
       linkedCaseIds: input.linkedCaseIds,
     });
+
+    await assertEventTypeInTenant(ctx, input.eventTypeId);
 
     // Firm availability (PG-202): hours, closures, daily cap. Tenants that never
     // saved availability keep the 07:00-19:00 rule in input.timezone.
@@ -575,6 +570,8 @@ export const appointmentsRouter = createTRPCRouter({
         },
       });
     }
+
+    await linkEventType(ctx, domainAppt.id.value, input.eventTypeId);
 
     // Re-fetch via prismaWithTenant to preserve the current Prisma row response shape.
     const appointment = await ctx.prismaWithTenant.appointment.findUnique({

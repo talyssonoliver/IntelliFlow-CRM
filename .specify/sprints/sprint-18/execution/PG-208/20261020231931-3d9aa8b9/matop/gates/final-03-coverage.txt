@@ -1,0 +1,81 @@
+# pnpm test:coverage at HEAD 743586efe, rerun after restarting intelliflow-redis-test (first run: root infra-skip-gate flagged ai-monitoring-redis-bridge as 0-executed because the container was down after the 18:11 reboot)
+      Tests  40 passed (40)
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+⚠️  INTEGRATION TESTS SKIPPED
+⚠️  INTEGRATION TESTS SKIPPED
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+⚠️  INTEGRATION TESTS SKIPPED
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+✅ Integration Test Suite Complete
+✅ Integration Test Suite Complete
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+⚠️  INTEGRATION TESTS SKIPPED
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+✅ Integration Test Suite Complete
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+⚠️  INTEGRATION TESTS SKIPPED
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+✅ Integration Test Suite Complete
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ File Ingestion E2E: Database available, running tests
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+⚠️  INTEGRATION TESTS SKIPPED
+✅ Integration Test Suite Complete
+ Test Files  29 passed | 1 skipped (30)
+      Tests  507 passed | 50 skipped (557)
+✅ Database connected with tenant: 00000000-0000-4000-8000-000000000001
+⚠️ Supabase not reachable - tests will be skipped
+ Test Files  322 passed (322)
+      Tests  8180 passed | 2 skipped (8182)
+  ⚠ api tests pass but coverage thresholds breached (debt — not a test failure)
+ Test Files  112 passed (112)
+      Tests  2571 passed | 2 skipped (2573)
+  ⚠ root tests pass but coverage thresholds breached (debt — not a test failure)
+✅ Canonical coverage written to: artifacts/coverage/
+⚠ 5 project(s) breached coverage thresholds (all tests passed — this is debt, not a regression):
+   - web
+   - ai-worker
+   - adapters
+   - api
+   - root
+✅ All 17 projects: tests passed

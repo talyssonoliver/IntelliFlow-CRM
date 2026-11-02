@@ -1,0 +1,209 @@
+📎 STOA gate linkage enabled: .specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates
+🔍 IntelliFlow CRM - Code Review Analysis
+= * 60
+
+📦 Found 26 workspace packages
+
+[1/8] 🔧 TypeScript Type Safety...
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+Scope: 25 of 26 workspace projects
+. typecheck$ turbo run typecheck && pnpm run lint:sonar:guard
+. typecheck: • turbo 2.9.16
+. typecheck:    • Packages in scope: @intelliflow/adapters, @intelliflow/ai, @intelliflow/ai-worker, @intelliflow/api, @intelliflow/api-client, @intelliflow/application, @intelliflow/db, @intelliflow/domain, @intelliflow/events-worker, @intelliflow/ingestion-worker, @intelliflow/observability, @intelliflow/partner-sdk, @intelliflow/plan-linter, @intelliflow/platform, @intelliflow/project-tracker, @intelliflow/sdk, @intelliflow/search, @intelliflow/test-fixtures, @intelliflow/typescript-config, @intelliflow/ui, @intelliflow/validators, @intelliflow/web, @intelliflow/webhooks, @intelliflow/worker-shared, @intelliflow/workers
+. typecheck:    • Running typecheck in 25 packages
+. typecheck:    • Remote caching disabled, using shared worktree cache
+. typecheck: @intelliflow/webhooks:build: cache hit, suppressing logs a4c7df6d097a0c2b
+. typecheck: @intelliflow/domain:build: cache hit, suppressing logs 1b3ea78325f22038
+. typecheck: @intelliflow/partner-sdk:build: cache hit, suppressing logs 870aa97e5c2ffa27
+. typecheck: @intelliflow/observability:build: cache hit, suppressing logs d5a92c117c110a5d
+. typecheck: @intelliflow/db:build: cache hit, suppressing logs 44c1c7e4398cfca9
+. typecheck: @intelliflow/validators:build: cache hit, suppressing logs c31ee1037fc5ecb9
+. typecheck: @intelliflow/application:build: cache hit, suppressing logs 7409bbf8a57739ed
+. typecheck: @intelliflow/platform:build: cache hit, suppressing logs 6f3109e83ae65ce5
+. typecheck: @intelliflow/worker-shared:build: cache hit, suppressing logs 02a23c126afc6e9e
+. typecheck: @intelliflow/adapters:build: cache hit, suppressing logs eaa99a8c3a92485b
+. typecheck: @intelliflow/events-worker:build: cache hit, suppressing logs 9e0c555d09c4ae97
+. typecheck: @intelliflow/ai-worker:build: cache hit, suppressing logs 2eb35ccf219ab2ab
+. typecheck: @intelliflow/ingestion-worker:build: cache hit, suppressing logs bea05d536f3a0016
+. typecheck: @intelliflow/api:build: cache hit, suppressing logs 22e7549e8c23723d
+. typecheck: @intelliflow/api-client:build: cache hit, suppressing logs 6e5cfd9a7d2ba548
+. typecheck:  Tasks:    38 successful, 38 total
+. typecheck: Cached:    38 cached, 38 total
+. typecheck:   Time:    498ms >>> FULL TURBO
+. typecheck:  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+. typecheck: > intelliflow-crm@0.1.0 lint:sonar:guard C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-207
+. typecheck: > tsx tools/scripts/lint-sonar-guard.ts
+. typecheck: sonar-guard: no changed TS/TSX files found, skipping.
+. typecheck: Done
+apps/workers typecheck$ pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker run typecheck
+packages/domain typecheck$ tsc --noEmit
+packages/observability typecheck$ tsc --noEmit
+packages/partner-sdk typecheck$ tsc --noEmit
+apps/workers typecheck: ../..                                    |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/workers typecheck: ../ai-worker                             |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/workers typecheck: Scope: 2 of 26 workspace projects
+apps/workers typecheck: events-worker typecheck$ tsc --noEmit
+apps/workers typecheck: ingestion-worker typecheck$ tsc --noEmit
+packages/partner-sdk typecheck: Done
+packages/test-fixtures typecheck$ tsc --noEmit
+packages/observability typecheck: Done
+packages/webhooks typecheck$ tsc --noEmit
+packages/test-fixtures typecheck: Done
+packages/domain typecheck: Done
+packages/webhooks typecheck: Done
+apps/workers typecheck: events-worker typecheck: Done
+apps/workers typecheck: ingestion-worker typecheck: Done
+apps/workers typecheck: Done
+packages/ui typecheck$ tsc --noEmit
+packages/db typecheck$ node -e "try{require('fs').unlinkSync('generated/prisma/package.json')}catch(e){}" && tsc --noEmit && node scripts/fix-prisma-esm.mjs
+packages/validators typecheck$ tsc --noEmit
+packages/validators typecheck: Done
+packages/ui typecheck: Done
+packages/db typecheck: [fix-prisma-esm] Created 215 .js shim files in generated/prisma/
+packages/db typecheck: Done
+packages/ai typecheck$ tsc --noEmit
+packages/application typecheck$ tsc --noEmit
+packages/platform typecheck$ tsc --noEmit
+packages/search typecheck$ tsc --noEmit
+packages/ai typecheck: Done
+packages/search typecheck: Done
+packages/platform typecheck: Done
+packages/application typecheck: Done
+apps/workers/shared typecheck$ tsc --noEmit
+packages/adapters typecheck$ tsc --noEmit
+apps/workers/shared typecheck: Done
+packages/adapters typecheck: Done
+apps/ai-worker typecheck$ tsc --noEmit
+apps/workers/events-worker typecheck$ tsc --noEmit
+apps/workers/events-worker typecheck: Done
+apps/ai-worker typecheck: Done
+apps/api typecheck$ tsc --noEmit
+apps/workers/ingestion-worker typecheck$ tsc --noEmit
+apps/workers/ingestion-worker typecheck: Done
+apps/api typecheck: Done
+packages/api-client typecheck$ tsc --noEmit
+packages/api-client typecheck: Done
+apps/web typecheck$ pnpm run typegen && tsc --noEmit
+packages/sdk typecheck$ tsc --noEmit
+apps/web typecheck: > @intelliflow/web@0.1.0 typegen C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-207\apps\web
+apps/web typecheck: > next typegen
+packages/sdk typecheck: Done
+apps/web typecheck: Generating route types...
+apps/web typecheck: ✓ Types generated successfully
+apps/web typecheck: Done
+   ✓ Completed in 164.7526256s
+
+[2/8] 📋 ESLint Code Quality...
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+Scope: 25 of 26 workspace projects
+apps/project-tracker lint$ eslint .
+tools/plan-linter lint$ node index.js
+tools/plan-linter lint: ========================================
+tools/plan-linter lint: Plan Linter v1.0.0
+tools/plan-linter lint: ========================================
+tools/plan-linter lint: Loaded config from C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-207\tools\plan-linter\config.yaml
+tools/plan-linter lint: Loaded Sprint plan from apps/project-tracker/docs/metrics/_global/Sprint_plan.csv
+tools/plan-linter lint: Loaded overrides from apps/project-tracker/docs/metrics/plan-overrides.yaml
+tools/plan-linter lint: Loaded validation rules from apps/project-tracker/docs/metrics/validation.yaml
+tools/plan-linter lint: Parsed 619 tasks from Sprint plan
+tools/plan-linter lint: Filtering to Sprint 0: 32 tasks
+tools/plan-linter lint: Running hard rules...
+tools/plan-linter lint: Running soft rules...
+tools/plan-linter lint: Generating review queue...
+tools/plan-linter lint: ========================================
+tools/plan-linter lint: RESULTS
+tools/plan-linter lint: ========================================
+tools/plan-linter lint: Total tasks (Sprint 0): 32
+tools/plan-linter lint: Tier breakdown: A=19, B=7, C=6
+tools/plan-linter lint: Validation coverage: 100%
+tools/plan-linter lint: Errors: 0
+tools/plan-linter lint: Warnings: 21
+tools/plan-linter lint: Review queue items: 22
+tools/plan-linter lint: Review queue written to apps/project-tracker/docs/metrics/review-queue.json
+tools/plan-linter lint: Lint report written to artifacts/reports/plan-lint-report.json
+tools/plan-linter lint: [PASSED] No hard rule violations
+tools/plan-linter lint: Done
+apps/project-tracker lint: (node:27992) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-207/apps/project-tracker/eslint.config.js?mtime=1792534223737 is not specified and it doesn't parse as CommonJS.
+apps/project-tracker lint: Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+apps/project-tracker lint: To eliminate this warning, add "type": "module" to C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-207\apps\project-tracker\package.json.
+apps/project-tracker lint: (Use `node --trace-warnings ...` to show where the warning was created)
+apps/project-tracker lint: Done
+apps/workers lint$ pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker run lint
+packages/domain lint$ eslint "src/**/*.ts"
+packages/observability lint$ eslint "src/**/*.ts"
+packages/partner-sdk lint$ eslint "src/**/*.ts" "scripts/**/*.ts"
+apps/workers lint: ../..                                    |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/workers lint: ../ai-worker                             |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/workers lint: Scope: 2 of 26 workspace projects
+apps/workers lint: ingestion-worker lint$ eslint src/
+apps/workers lint: events-worker lint$ eslint src/
+packages/partner-sdk lint: Done
+packages/test-fixtures lint$ eslint "src/**/*.ts"
+packages/observability lint: Done
+packages/webhooks lint$ eslint "src/**/*.ts"
+apps/workers lint: ingestion-worker lint: Done
+apps/workers lint: events-worker lint: Done
+apps/workers lint: Done
+packages/test-fixtures lint: Done
+packages/webhooks lint: Done
+packages/domain lint: Done
+packages/db lint$ eslint "src/**/*.ts"
+packages/ui lint$ eslint "src/**/*.ts"
+packages/validators lint$ eslint "src/**/*.ts"
+packages/ui lint: Done
+packages/db lint: Done
+packages/validators lint: Done
+packages/application lint$ eslint "src/**/*.ts"
+packages/platform lint$ eslint "src/**/*.ts"
+packages/search lint$ eslint "src/**/*.ts"
+packages/search lint: Done
+packages/platform lint: Done
+packages/application lint: Done
+apps/workers/shared lint$ eslint src/
+packages/adapters lint$ eslint "src/**/*.ts"
+apps/workers/shared lint: Done
+packages/adapters lint: Done
+apps/ai-worker lint$ eslint "src/**/*.ts"
+apps/workers/events-worker lint$ eslint src/
+apps/workers/events-worker lint: Done
+apps/ai-worker lint: Done
+apps/workers/ingestion-worker lint$ eslint src/
+apps/api lint$ eslint "src/**/*.ts"
+apps/workers/ingestion-worker lint: Done
+apps/api lint: Done
+packages/api-client lint$ eslint "src/**/*.ts"
+packages/api-client lint: Done
+apps/web lint$ eslint "src/**/*.{ts,tsx}"
+packages/sdk lint$ eslint "src/**/*.ts"
+packages/sdk lint: Done
+apps/web lint: Done
+   ✓ Completed in 154.3888672s
+
+ + ============================================================
+📊 ANALYSIS SUMMARY
+============================================================
+
+📎 Linking key outputs to STOA gates...
+   → Linked typecheck.txt → turbo-typecheck.log
+   → Linked lint.txt → eslint.log
+   ✓ Gate linkage complete
+
+📈 Key Metrics:
+   • Packages analyzed: 26
+   • TypeCheck duration: 164.75s
+   • Lint duration: 154.39s
+
+📁 Reports saved to: .specify/sprints/sprint-18/reports/code-review/20261021-090734-fb30029c
+   Run ID: 20261021-090734-fb30029c
+   Sprint: 18
+   Task ID: PG-207
+   Gates: .specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates
+
+Next steps:
+  1. Review .specify/sprints/sprint-18/reports/code-review/20261021-090734-fb30029c/typecheck.txt for type errors
+  2. Review .specify/sprints/sprint-18/reports/code-review/20261021-090734-fb30029c/lint.txt for code quality issues
+
+✅ Code review analysis complete!
+   Use 'node scripts/prioritize-reviews.js --sprint=18' to generate package priorities

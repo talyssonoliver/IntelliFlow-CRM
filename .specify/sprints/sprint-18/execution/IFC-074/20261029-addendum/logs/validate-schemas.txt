@@ -1,0 +1,17 @@
+# validate-schemas, 2026-10-29T17:19:51Z, HEAD 27ff7e70d
+exit 1 overall: 252 invalid / 711 valid records (pre-existing drift, F17 #1070)
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-074\attestation.json
+--
+  ✗ .\.specify\sprints\sprint-1\attestations\IFC-074\attestation.json
+--
+  ✓ .\.specify\sprints\sprint-18\attestations\IFC-074\context_ack.json
+--
+  ✗ .\apps\project-tracker\docs\metrics\sprint-18\IFC-074.json
+2056-  - status_history.4.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+2057-  - status_history.5.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+2058-  - status_history.6.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+2059-  ✓ .\apps\project-tracker\docs\metrics\sprint-18\IFC-070.json
+2060-  ✓ .\apps\project-tracker\docs\metrics\sprint-18\IFC-032.json
+2061-  ✗ .\apps\project-tracker\docs\metrics\sprint-18\ENV-008-AI.json
+2062-  - status_history.1.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+2063-  - status_history.2.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"

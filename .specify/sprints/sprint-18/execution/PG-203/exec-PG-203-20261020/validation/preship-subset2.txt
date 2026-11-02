@@ -1,0 +1,36 @@
+pre-ship: resuming from previous run at fc828ec3 (cached PASSes will be skipped).
+
+pre-ship: mode standard.
+pre-ship: test scope full — packages/db/prisma/schema.prisma changed — it can affect tests that do not import it.
+
+  required-tokens              - SKIPPED_NOT_SELECTED  (0ms)
+  commit-msg-lint              - SKIPPED_NOT_SELECTED  (0ms)
+  install                      - SKIPPED_NOT_SELECTED  (0ms)
+  library-build                - SKIPPED_NOT_SELECTED  (0ms)
+  format-check                 ✓· CACHED_PASS  (0ms)
+  terraform-fmt                - SKIPPED_NOT_SELECTED  (0ms)
+  actionlint                   - SKIPPED_NOT_SELECTED  (0ms)
+  lint                         - SKIPPED_NOT_SELECTED  (0ms)
+  lint-promises                - SKIPPED_NOT_SELECTED  (0ms)
+  typecheck                    - SKIPPED_NOT_SELECTED  (0ms)
+  governance-schema            (node:44400) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✓ PASS  (1.1s)
+  lint-artifacts               ✓ PASS  (1.8s)
+  lint-runtime-paths           ✓ PASS  (1.2s)
+  material-symbols-audit       - SKIPPED_NOT_SELECTED  (0ms)
+  a11y-routes                  ✓ PASS  (936ms)
+  docs-integrity               ✓ PASS  (1.2s)
+  flaky-test-gate              ✓ PASS  (4.7s)
+  unit-tests                   - SKIPPED_NOT_SELECTED  (0ms)
+  integration-tests            - SKIPPED_NOT_SELECTED  (0ms)
+  coverage                     ✗ FAIL  (19m12s)
+
+  ✗ Required step failed: coverage — aborting subsequent steps.
+    Log: artifacts\preship\logs\coverage.log
+    (Set PRESHIP_KEEP_GOING=1 to run remaining steps anyway.)
+
+pre-ship: FAIL in 19m23s (7/34 steps passed, 1 failed).
+  Failed required steps:
+    - coverage (see artifacts\preship\logs\coverage.log)
+  State: artifacts\preship\last-run.json

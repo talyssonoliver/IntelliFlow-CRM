@@ -7,7 +7,10 @@ import {
   type LeadSource,
   type LeadStatus,
   LeadStatusConflictError,
+  LeadIdentityChangedError,
+  type LeadSaveOptions,
   type RepositoryTransaction,
+  normalizeSubjectEmail,
 } from '@intelliflow/domain';
 import { LeadRepository } from '@intelliflow/application';
 
@@ -89,11 +92,7 @@ function recordToLeadProps(record: LeadRecord) {
 export class PrismaLeadRepository implements LeadRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async save(
-    lead: Lead,
-    opts?: { note?: { content: string; author: string }; expectedStatus?: string },
-    tx?: RepositoryTransaction
-  ): Promise<void> {
+  async save(lead: Lead, opts?: LeadSaveOptions, tx?: RepositoryTransaction): Promise<void> {
     // Join the caller's transaction when supplied (DDD-001/002), else use our
     // own client. The domain hands us an opaque RepositoryTransaction; the
     // concrete value is a Prisma TransactionClient.
@@ -130,6 +129,18 @@ export class PrismaLeadRepository implements LeadRepository {
       createdAt: lead.createdAt,
       updatedAt: lead.updatedAt,
     };
+
+    if (opts?.scoreOnlyIfEmail !== undefined) {
+      // PG-203 DSAR: a scoring result lands only on the person it was computed for. An
+      // erasure (or email change) during the AI call makes this match nothing. Compared on
+      // the normalised address, as the lead was read (codex), in one conditional write.
+      const count = await db.$executeRaw`
+        UPDATE leads SET score = ${data.score}, "updatedAt" = ${data.updatedAt}
+        WHERE id = ${data.id} AND "tenantId" = ${data.tenantId}
+          AND dsar_normalise_email(email) = ${normalizeSubjectEmail(opts.scoreOnlyIfEmail)}`;
+      if (count === 0) throw new LeadIdentityChangedError(data.id);
+      return;
+    }
 
     if (opts?.expectedStatus !== undefined) {
       // Compare-and-set: the status was read earlier and the transition validated

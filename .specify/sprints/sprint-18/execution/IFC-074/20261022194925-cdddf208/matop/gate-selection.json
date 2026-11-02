@@ -1,0 +1,12 @@
+{
+  "task_id": "IFC-074",
+  "run_id": "20261022194925-cdddf208",
+  "selected_at": "2026-10-22T23:05:17Z",
+  "stoas": ["Automation", "Foundation", "Security", "Quality"],
+  "rationale": {
+    "Automation": "Row owner STOA-Automation; evidence collector and tracking mechanics",
+    "Foundation": "Always included; typecheck, lint, build, dependency changes",
+    "Security": "Logging of request data, read-only production access with a service-account token, committed evidence",
+    "Quality": "Test completeness, regression suites, diff-coverage"
+  }
+}

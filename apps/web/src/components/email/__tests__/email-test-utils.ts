@@ -96,7 +96,7 @@ export function createGetThreadQuery() {
 export function createSendEmailMutation() {
   return vi.fn().mockReturnValue({
     mutate: vi.fn(),
-    mutateAsync: vi.fn().mockResolvedValue({ id: 'sent-1', status: 'PENDING' }),
+    mutateAsync: vi.fn().mockResolvedValue({ id: 'sent-1', status: 'SENT', skipped: [] }),
     isLoading: false,
     isError: false,
     error: null,
@@ -233,6 +233,24 @@ export function createMockEmailTrpc() {
     isError: false,
   });
 
+  // PG-207: compose prefill and attachment upload.
+  const resolveDefaultSignature = vi.fn().mockReturnValue({
+    data: null,
+    isLoading: false,
+    isError: false,
+  });
+  const uploadAttachment = vi.fn().mockReturnValue({
+    mutateAsync: vi.fn(
+      async (input: { fileName: string; contentType: string; contentBase64: string }) => ({
+        storagePath: `tenant/${input.fileName}`,
+        fileName: input.fileName,
+        contentType: input.contentType,
+        size: input.contentBase64.length,
+      })
+    ),
+    isPending: false,
+  });
+
   const invalidateListEmails = vi.fn();
   const invalidateUnreadCounts = vi.fn();
   const useUtils = vi.fn().mockReturnValue({
@@ -260,6 +278,12 @@ export function createMockEmailTrpc() {
       getStorageUsage: { useQuery: getStorageUsage },
       lookupByEmail: { useQuery: lookupByEmail },
       getRelatedMessages: { useQuery: getRelatedMessages },
+    },
+    emailSignatures: {
+      resolveDefault: { useQuery: resolveDefaultSignature },
+    },
+    emailAttachments: {
+      upload: { useMutation: uploadAttachment },
     },
     contact: {
       list: { useQuery: contactList },
@@ -293,6 +317,8 @@ export function createMockEmailTrpc() {
       getStorageUsage,
       lookupByEmail,
       getRelatedMessages,
+      resolveDefaultSignature,
+      uploadAttachment,
       invalidateListEmails,
       invalidateUnreadCounts,
       useUtils,
@@ -312,3 +338,21 @@ export const EMAIL_FOLDERS = [
   { id: 'spam', label: 'Spam', icon: 'AlertTriangle' },
   { id: 'trash', label: 'Trash', icon: 'Trash2' },
 ] as const;
+
+/**
+ * Re-arms the queries and mutations EmailCompose / InlineCompose read on
+ * render. The web Vitest config resets every mock before each test
+ * (`mockReset: true`), so suites call this from `beforeEach`.
+ */
+export function armComposeMocks(mocks: ReturnType<typeof createMockEmailTrpc>['mocks']) {
+  const idle = { isLoading: false, isError: false };
+  mocks.searchContacts.mockReturnValue({ data: [], ...idle });
+  mocks.contactSearch.mockReturnValue({ data: { contacts: [] }, ...idle });
+  mocks.leadList.mockReturnValue({ data: { leads: [] }, ...idle });
+  mocks.listTemplates.mockReturnValue({ data: [], ...idle });
+  mocks.resolveDefaultSignature.mockReturnValue({ data: null, ...idle });
+  mocks.saveDraft.mockReturnValue({
+    mutateAsync: vi.fn().mockResolvedValue({ id: 'draft-1', status: 'DRAFT' }),
+    isPending: false,
+  });
+}

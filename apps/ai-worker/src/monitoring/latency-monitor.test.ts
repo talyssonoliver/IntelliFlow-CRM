@@ -14,14 +14,15 @@ import {
   type LatencyMeasurement,
 } from './latency-monitor';
 
-// Mock pino logger
+// Mock pino logger (one shared instance, so tests can read what was logged)
+const pinoLogger = vi.hoisted(() => ({
+  info: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn(),
+  error: vi.fn(),
+}));
 vi.mock('pino', () => ({
-  default: () => ({
-    info: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn(),
-    error: vi.fn(),
-  }),
+  default: () => pinoLogger,
 }));
 
 describe('LatencyMonitor', () => {
@@ -271,6 +272,27 @@ describe('LatencyMonitor', () => {
 
       const alerts = monitor.getAlerts();
       expect(alerts.some((a) => a.severity === 'critical')).toBe(true);
+    });
+
+    // Loki reads a top-level `severity` field as the line's level, so a warn
+    // line carrying `severity: 'critical'` was indexed as detected_level=critical
+    // (55 an hour in prod, 2026-10-28) and would trip the error-log alert.
+    it('logs an alert at warn without a top-level severity field that Loki would read as the level', () => {
+      pinoLogger.warn.mockClear();
+      monitor.recordMeasurement({
+        id: 'very-slow-log',
+        model: 'gpt-4',
+        operationType: 'scoring',
+        phase: 'total',
+        durationMs: 4500,
+        success: true,
+      });
+
+      const call = pinoLogger.warn.mock.calls.find((c) => c[1] === 'Latency alert generated');
+      expect(call).toBeDefined();
+      expect(call?.[0]).not.toHaveProperty('severity');
+      expect(call?.[0]).toMatchObject({ alertSeverity: 'critical', model: 'gpt-4' });
+      expect(pinoLogger.error).not.toHaveBeenCalled();
     });
 
     it('should limit alert results', () => {

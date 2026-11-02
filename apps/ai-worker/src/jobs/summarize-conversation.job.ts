@@ -14,6 +14,7 @@
 
 import type { Job, Queue } from 'bullmq';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 import { context as otelContext, propagation } from '@opentelemetry/api';
 import { createLLMForTenant } from '../lib/llm-factory.js';
@@ -51,7 +52,7 @@ const FALLBACK_MESSAGE_COUNT = 3;
 
 /** Schema for summarize conversation job data */
 export const SummarizeConversationJobSchema = z.object({
-  tenantId: z.string().uuid('tenantId must be a valid UUID'),
+  tenantId: recordIdSchema,
   sessionId: z.string().min(1, 'sessionId is required'),
   conversationId: z.string().min(1, 'conversationId is required'),
   /** W3C traceparent carrier injected by enqueue-side for distributed trace propagation */

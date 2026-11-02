@@ -185,8 +185,13 @@ describe('tRPC Configuration', () => {
       const caller = router.createCaller({} as any);
       await caller.test();
 
-      // tracingMiddleware logs structured JSON with trpc.request type
-      expect(console.log).toHaveBeenCalledWith(expect.stringContaining('trpc.request'));
+      // tracingMiddleware logs a structured trpc.request record through the api
+      // pino logger (IFC-074; spy installed by src/test/setup.ts)
+      const { getApiLogger } = await import('../tracing/logger.js');
+      expect(getApiLogger().info).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'trpc.request', path: 'test', method: 'query' }),
+        'trpc request'
+      );
     });
 
     it('should warn for slow requests over 50ms', async () => {
@@ -202,10 +207,11 @@ describe('tRPC Configuration', () => {
       const caller = router.createCaller({} as any);
       await caller.slowEndpoint();
 
-      // tracingMiddleware warns with [Tracing] SLOW REQUEST format
-      expect(console.warn).toHaveBeenCalledWith(
-        expect.stringContaining('SLOW REQUEST'),
-        expect.anything()
+      // tracingMiddleware warns with a trpc.slow record (IFC-074)
+      const { getApiLogger } = await import('../tracing/logger.js');
+      expect(getApiLogger().warn).toHaveBeenCalledWith(
+        expect.objectContaining({ type: 'trpc.slow', path: 'slowEndpoint', targetMs: 50 }),
+        'slow trpc request'
       );
     });
   });

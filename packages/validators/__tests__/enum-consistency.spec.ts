@@ -6,6 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
 // Import domain constants
 import {
@@ -26,7 +28,19 @@ import {
   CONTACT_TYPES,
   CONTACT_TYPE_REQUIRED_FIELD_KEYS,
   CONTACT_TYPE_OWNER_DEFAULTS,
+  EVENT_LOCATION_TYPES,
+  EVENT_TYPE_LEAD_SOURCES,
+  EVENT_TYPE_REQUIRED_FIELDS,
+  DSAR_REQUEST_TYPES,
+  DSAR_STATUSES,
 } from '@intelliflow/domain';
+import { dsarRequestTypeSchema, dsarStatusSchema } from '../src/dsar';
+import {
+  EVENT_TYPE_COLOR_TOKENS,
+  eventLocationTypeSchema,
+  eventTypeLeadSourceSchema,
+  eventTypeRequiredFieldSchema,
+} from '../src/event-types';
 
 // Import validator schemas
 import { leadStatusSchema, leadSourceSchema } from '../src/lead';
@@ -163,6 +177,46 @@ describe('Enum Consistency - DRY Architecture', () => {
 
     it('should use the contact tag colour tokens for contact types', () => {
       expect([...CONTACT_TYPE_COLOR_TOKENS]).toEqual([...TAG_COLOR_TOKENS]);
+    });
+  });
+
+  describe('Event type enums (PG-203)', () => {
+    const prisma = readFileSync(resolve(__dirname, '../../db/prisma/schema.prisma'), 'utf8');
+    const prismaEnum = (name: string): string[] => {
+      const body = new RegExp(String.raw`enum ${name} \{([^}]*)\}`).exec(prisma)?.[1] ?? '';
+      return body
+        .split(/\r?\n/)
+        .map((line) => {
+          const comment = line.indexOf('//');
+          return (comment === -1 ? line : line.slice(0, comment)).trim();
+        })
+        .filter(Boolean);
+    };
+
+    it('should keep LeadSource identical in domain, validators and Prisma (BOOKING included)', () => {
+      expect(LEAD_SOURCES).toContain('BOOKING');
+      expect(prismaEnum('LeadSource')).toEqual([...LEAD_SOURCES]);
+    });
+
+    it('should keep EventLocationType identical in domain, validators and Prisma', () => {
+      expect(eventLocationTypeSchema.options).toEqual([...EVENT_LOCATION_TYPES]);
+      expect(prismaEnum('EventLocationType')).toEqual([...EVENT_LOCATION_TYPES]);
+    });
+
+    it('should derive the event-type lead source and required-field schemas from the domain', () => {
+      expect(eventTypeLeadSourceSchema.options).toEqual([...EVENT_TYPE_LEAD_SOURCES]);
+      expect(eventTypeRequiredFieldSchema.options).toEqual([...EVENT_TYPE_REQUIRED_FIELDS]);
+    });
+
+    it('should use the tag colour tokens for event types', () => {
+      expect([...EVENT_TYPE_COLOR_TOKENS]).toEqual([...TAG_COLOR_TOKENS]);
+    });
+
+    it('should keep the DSAR enums identical in domain, validators and Prisma (PG-203 DSAR)', () => {
+      expect(dsarRequestTypeSchema.options).toEqual([...DSAR_REQUEST_TYPES]);
+      expect(prismaEnum('DsarRequestType')).toEqual([...DSAR_REQUEST_TYPES]);
+      expect(dsarStatusSchema.options).toEqual([...DSAR_STATUSES]);
+      expect(prismaEnum('DsarRequestStatus')).toEqual([...DSAR_STATUSES]);
     });
   });
 

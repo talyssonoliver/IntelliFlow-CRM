@@ -20,6 +20,7 @@ import { pipelineConfigRouter } from './modules/opportunity/pipeline-config.rout
 import { dealSettingsRouter } from './modules/opportunity/deal-settings.router';
 import { taskRouter } from './modules/task/task.router';
 import { taskSettingsRouter } from './modules/task/task-settings.router';
+import { taskAutomationRouter } from './modules/task/task-automation.router';
 import { ticketRouter } from './modules/ticket/ticket.router';
 import { ticketRoutingRouter } from './modules/ticket/ticket-routing.router';
 import { ticketConfigRouter } from './modules/ticket/ticket-config.router';
@@ -50,6 +51,10 @@ import { chainVersionRouter } from './modules/chain-version';
 import { zepBudgetRouter } from './modules/zep/zep-budget.router';
 import { intelligenceRouter } from './modules/intelligence/intelligence.router';
 import { inboundEmailRouter } from './modules/email/inbound.router';
+import { emailMailboxRouter } from './modules/email/email-mailbox.router';
+import { emailSettingsRouter } from './modules/email/email-settings.router';
+import { emailSignaturesRouter } from './modules/email/email-signatures.router';
+import { emailAttachmentsRouter } from './modules/email/email-attachments.router';
 import { autoResponseRouter } from './modules/autoresponse';
 import { aiMonitoringRouter } from './modules/ai-monitoring/ai-monitoring.router';
 import { aiReviewRouter } from './modules/ai-review/ai-review.router';
@@ -65,11 +70,12 @@ import { experimentRouter } from './modules/experiment';
 import { routingRouter } from './modules/routing';
 import { feedbackSurveyRouter } from './modules/feedback/feedbackSurvey.router';
 import { publicFeedbackRouter } from './modules/public-feedback/public-feedback.router';
+import { publicBookingRouter } from './modules/calendar/public-booking.router';
 import { userRouter } from './modules/user/user.router';
 import { teamRouter } from './modules/team/team.router';
 import { calendarRouter } from './modules/calendar/calendar.router';
 import { calendarWebhooksRouter } from './modules/calendar/calendar-webhook.router';
-import { dsarRouter } from './modules/privacy/dsar.router';
+import { privacyRouter } from './modules/privacy/privacy.router';
 import { helpArticleRouter } from './modules/help-article/help-article.router';
 import { customNodeTypeRouter } from './modules/custom-node-type/custom-node-type.router';
 import { customActionHandlerRouter } from './modules/custom-action-handler/custom-action-handler.router';
@@ -157,6 +163,7 @@ export const appRouter = createTRPCRouter({
   appointmentSettings: appointmentSettingsRouter, // PG-189: Appointment/Calendar Settings (wired alongside PG-190)
   reportSettings: reportSettingsRouter, // PG-187: Report Settings (wired alongside PG-190)
   taskSettings: taskSettingsRouter, // PG-191: Task Settings Configuration
+  taskAutomation: taskAutomationRouter, // PG-208: Task Automation rules (ADR-084)
 
   // Analytics & Reporting
   analytics: analyticsRouter,
@@ -198,6 +205,11 @@ export const appRouter = createTRPCRouter({
 
   // Email Infrastructure (IFC-144)
   email: inboundEmailRouter,
+  // PG-207 (ADR-085): user mailboxes, email settings, signatures, attachments
+  emailMailbox: emailMailboxRouter,
+  emailSettings: emailSettingsRouter,
+  emailSignatures: emailSignaturesRouter,
+  emailAttachments: emailAttachmentsRouter,
 
   // Webhook Infrastructure (IFC-144)
   webhooks: webhooksRouter,
@@ -231,6 +243,7 @@ export const appRouter = createTRPCRouter({
 
   // Anonymous Public Feedback Widget (PG-126)
   publicFeedback: publicFeedbackRouter,
+  publicBooking: publicBookingRouter, // PG-203: unauthenticated booking page (ADR-083)
 
   // User Profile & Timezone (IFC-191)
   user: userRouter,
@@ -245,7 +258,7 @@ export const appRouter = createTRPCRouter({
   calendarWebhooks: calendarWebhooksRouter,
 
   // Privacy & GDPR (Fix #17 — IFC-140)
-  privacy: dsarRouter,
+  privacy: privacyRouter, // PG-203: public data requests, banner read, admin handling
 
   // Support Help Center (IFC-299)
   helpArticle: helpArticleRouter,

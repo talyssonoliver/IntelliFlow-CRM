@@ -1,0 +1,42 @@
+{
+  "taskId": "IFC-074",
+  "runId": "20261022194925-cdddf208",
+  "createdAt": "2026-10-22T19:49:27.559Z",
+  "repoRoot": "C:\\Users\\talys\\projects\\intelliFlow-CRM-worktrees\\ifc-074",
+  "files": [
+    {
+      "path": ".specify/memory/Framework.md",
+      "sha256": "62bfcd54fccbfcb5dcf3a67b4811d638371191fa1c51d11ddd8218be6f5e26ad",
+      "totalLines": 786,
+      "excerptLines": 120,
+      "truncated": true,
+      "included": true
+    },
+    {
+      "path": "audit-matrix.yml",
+      "sha256": "bff47a6dd151d7ee3b173d9f47367687237102f4640e49212dac9addf7e0a7ff",
+      "totalLines": 502,
+      "excerptLines": 120,
+      "truncated": true,
+      "included": true
+    },
+    {
+      "path": "docs/architecture/adr/ADR-001-modern-stack.md",
+      "sha256": "458b7acba09e5bfac4323c934b13c4d814885f02545271814fb01c40c33fe8a2",
+      "totalLines": 615,
+      "excerptLines": 120,
+      "truncated": true,
+      "included": true
+    },
+    {
+      "path": "apps/api/src/trpc.ts",
+      "sha256": "d751d6fa34e2ad639a9a2b19b4e5cbbfbb7cc82ffbd8904de4d76a5e2a92077c",
+      "totalLines": 620,
+      "excerptLines": 120,
+      "truncated": true,
+      "included": true
+    }
+  ],
+  "totalSizeBytes": 19817,
+  "truncatedDueToSize": false
+}

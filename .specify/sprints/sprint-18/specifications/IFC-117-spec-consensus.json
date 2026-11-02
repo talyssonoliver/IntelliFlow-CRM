@@ -1,0 +1,28 @@
+{
+  "task_id": "IFC-117",
+  "subject": "IFC-117 sprint-18 specification (OTel export of AI metrics, scheduled and corrected drift detection, CI-applied AI alert rules, dashboard as code, deletion of the dead Prometheus exporter)",
+  "mode": "subagent",
+  "threshold": 0.66,
+  "note": "This is a fresh spec. The sprint-6 PARTIAL attestations stay as history. Each agent read the code with tools and cited file:line in all four rounds: Phase 0.75 exploration plus Round 1 ANALYSIS (Explore subagents), Round 2 PROPOSAL, Round 3 CHALLENGE, and Round 4 CONSENSUS. The consensus votes come from the same agents that ran Round 3, voting on the revised design R-1 to R-7. The transcripts are in the session log, and the condensed rounds are in IFC-117-discussion.md.",
+  "rounds": [
+    {
+      "round": 1,
+      "subject": "Revised design R-1..R-7 (IFC-117-discussion.md)",
+      "votes": [
+        { "agent": "ai-specialist", "vote": "APPROVED", "reason": "R-1 resolves the drift statistics defects C1-C5 and C7-C9. C6 is acknowledged honestly. R-2 resolves E1-E6, I1-I4 and D1-D4.", "non_blocking": ["warm-up ~2 days at minimum rate", "amortised pruning", "per-key sample cap", "last_check advances on insufficient_data"] },
+        { "agent": "devops-lead", "vote": "APPROVED", "reason": "R-3 resolves C1-C8 (selectors, span gate, absence defaults, lazy counters, stalled false alarm, latency gate, expr dry-run). R-4 resolves the dashboard question (4a), and R-5 resolves the old-file and attestation-hash questions (4b and 4c).", "non_blocking": ["pre-seed drift detections for the rule's label set", "stalled rule aggregates with max()", "CSV status pre-check with fallback", "pre-seed count in the cardinality test"] },
+        { "agent": "security-lead", "vote": "APPROVED", "reason": "The sign-off conditions are met: C1 and C2 by servedPricingKey plus Object.hasOwn, E2 by the CSV Category B rebaseline, E4 by fixed-field logging, I2 and I3 by the uid prefix, folder and group isolation, datasource validation and redaction, and D1 by non-secret-shaped canaries.", "non_blocking": ["per-key cap with 8d retention", "global drift model-level only (ADR)", "null-tolerance explicit plan step", "promotion owner and date in the attestation"] },
+        { "agent": "domain-expert", "vote": "APPROVED", "reason": "The drift window (time-of-day matched, persistence, excess PSI), the CSV end status Needs Human with a pre-check, the artifact contract (Category B, old files untouched), ai-metrics.json, the test list and the N1-N7 specificity are all resolved.", "non_blocking": ["weekday/weekend note in ADR", "null check covers current_hours, status and UI NaN", "AC: no drift sample on the error path", "dashboard not 'delivered' in the CSV until N3"] },
+        { "agent": "test-engineer", "vote": "APPROVED", "reason": "All 26 Round 3 challenges are resolved or deliberately deferred. sdk-metrics 2.8.0 is verified as sdk-node 0.219's exact dependency.", "non_blocking": ["assert the api alias reaches the provider", "budget the full-suite pre-ship", "per-key cap test", "Promise.all concurrency test", "decide where the global-wiring test lives up front"] }
+      ],
+      "approval_rate": 1.0,
+      "consensus": true
+    }
+  ],
+  "result": "APPROVED",
+  "non_blocking_modifications_applied_in_spec": true,
+  "spec_path": ".specify/sprints/sprint-18/specifications/IFC-117-spec.md",
+  "discussion_path": ".specify/sprints/sprint-18/specifications/IFC-117-discussion.md",
+  "adr": "docs/architecture/adr/ADR-088-ai-model-monitoring-otel-export.md",
+  "recorded_at": "2026-10-25T16:03:11Z"
+}

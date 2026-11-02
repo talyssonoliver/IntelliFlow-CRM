@@ -1,0 +1,11 @@
+-- PG-207: validate "email_records_provider_check" (added NOT VALID in
+-- 20261020120300).
+--
+-- Class A: VALIDATE CONSTRAINT takes SHARE UPDATE EXCLUSIVE, which does not
+-- block reads or writes. It is the only statement here, so Prisma does not wrap
+-- it in a transaction with the ADD COLUMN (precedent:
+-- 20261017120100_contacts_type_idx). Every existing row has "provider" NULL, so
+-- validation cannot fail.
+--
+-- Recovery plan: forward-only; a validated CHECK has no data effect.
+ALTER TABLE "email_records" VALIDATE CONSTRAINT "email_records_provider_check";

@@ -25,16 +25,16 @@
     "acknowledged_at": "2026-02-20T20:30:00Z"
   },
   "artifact_hashes": {
-    "apps/web/src/app/(public)/auth/callback/page.tsx": "d89f2379e175fe5c7d1abf65f79758a543e3642d28a30dff56d6833157a468a2",
-    "apps/web/src/app/(public)/auth/callback/__tests__/page.test.tsx": "d7783b7f5bd302b0e24c234bed241acb0d2f9ac59759d36bc0e75767ffee5855",
-    "apps/web/src/app/(public)/auth/callback/__tests__/page.security.test.tsx": "ef2eff7ba011781ae3c2e19bc6743dce8ac01f37b393d01156f164ffb0cff2a5",
-    "apps/web/src/components/shared/oauth-callback.tsx": "0af482806b5ea3a33336eb23973ddbde00b3f9099cd359b31b3a151b98dc23fe",
-    "apps/web/src/components/shared/__tests__/oauth-callback.test.tsx": "f11695207718ecc9183c7c6a658b0ea3b7e8dabfb62cce74da7e86dff88c2a66",
-    "apps/web/src/lib/auth/AuthContext.tsx": "7b069233434e9e1dfeeaeda2cb343e3eb49adf68f43858ecb13b58d8b972ad10",
-    "apps/web/src/lib/supabase-browser.ts": "d75a50afc33a802008ab5e10f3ac905231e236581d1a25d3521dc36841844834",
-    "apps/web/src/app/(public)/layout.tsx": "aca275a2fd50f0e9d790d6ca0cf31aef42a36740cf3e70137217219787f60491",
-    "docs/design/diagrams/auth-public-pages-dependency-chain.md": "38877853b41c10b0d47abe3df2234add0ab9cf8602e8cd86fd022919098f3f3e",
-    "docs/design/diagrams/complete-dependency-chains.md": "de86b91b5538a54bc6aa6e6fd913b4c213da2e5850c02ca86ee6b0b45ab27a1b"
+    "apps/web/src/app/(public)/auth/callback/page.tsx": "sha256:d89f2379e175fe5c7d1abf65f79758a543e3642d28a30dff56d6833157a468a2",
+    "apps/web/src/app/(public)/auth/callback/__tests__/page.test.tsx": "sha256:d7783b7f5bd302b0e24c234bed241acb0d2f9ac59759d36bc0e75767ffee5855",
+    "apps/web/src/app/(public)/auth/callback/__tests__/page.security.test.tsx": "sha256:ef2eff7ba011781ae3c2e19bc6743dce8ac01f37b393d01156f164ffb0cff2a5",
+    "apps/web/src/components/shared/oauth-callback.tsx": "sha256:0af482806b5ea3a33336eb23973ddbde00b3f9099cd359b31b3a151b98dc23fe",
+    "apps/web/src/components/shared/__tests__/oauth-callback.test.tsx": "sha256:f11695207718ecc9183c7c6a658b0ea3b7e8dabfb62cce74da7e86dff88c2a66",
+    "apps/web/src/lib/auth/AuthContext.tsx": "sha256:7b069233434e9e1dfeeaeda2cb343e3eb49adf68f43858ecb13b58d8b972ad10",
+    "apps/web/src/lib/supabase-browser.ts": "sha256:d75a50afc33a802008ab5e10f3ac905231e236581d1a25d3521dc36841844834",
+    "apps/web/src/app/(public)/layout.tsx": "sha256:aca275a2fd50f0e9d790d6ca0cf31aef42a36740cf3e70137217219787f60491",
+    "docs/design/diagrams/auth-public-pages-dependency-chain.md": "sha256:38877853b41c10b0d47abe3df2234add0ab9cf8602e8cd86fd022919098f3f3e",
+    "docs/design/diagrams/complete-dependency-chains.md": "sha256:de86b91b5538a54bc6aa6e6fd913b4c213da2e5850c02ca86ee6b0b45ab27a1b"
   },
   "dependencies_verified": [
     { "task_id": "PG-015", "status": "Completed", "verified": true },

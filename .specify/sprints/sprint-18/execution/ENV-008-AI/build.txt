@@ -1,0 +1,39 @@
+# HEAD e0b478906
+[test-slot] slot2 taken for ENV-008-AI@feat/env-008-ai-env008: pnpm run build
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> intelliflow-crm@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\env-008-ai
+> turbo run build
+
+• turbo 2.9.16
+
+   • Packages in scope: @intelliflow/adapters, @intelliflow/ai, @intelliflow/ai-worker, @intelliflow/api, @intelliflow/api-client, @intelliflow/application, @intelliflow/db, @intelliflow/domain, @intelliflow/events-worker, @intelliflow/ingestion-worker, @intelliflow/observability, @intelliflow/partner-sdk, @intelliflow/plan-linter, @intelliflow/platform, @intelliflow/project-tracker, @intelliflow/sdk, @intelliflow/search, @intelliflow/test-fixtures, @intelliflow/typescript-config, @intelliflow/ui, @intelliflow/validators, @intelliflow/web, @intelliflow/webhooks, @intelliflow/worker-shared, @intelliflow/workers
+   • Running build in 25 packages
+   • Remote caching disabled, using shared worktree cache
+
+@intelliflow/webhooks:build: cache hit, suppressing logs 9017b06b98c2b3d8
+@intelliflow/observability:build: cache hit, suppressing logs ecab3d021cf44bc1
+@intelliflow/domain:build: cache hit, suppressing logs 291de95a6b90ccd3
+@intelliflow/workers:build: cache hit, suppressing logs 04238dcee47d114a
+@intelliflow/partner-sdk:build: cache hit, suppressing logs b1afe0b70f18d678
+@intelliflow/db:build: cache hit, suppressing logs fabe9bee4874e11c
+@intelliflow/validators:build: cache hit, suppressing logs f76ac1cfb70e478d
+@intelliflow/search:build: cache hit, suppressing logs e872982486d4f768
+@intelliflow/application:build: cache hit, suppressing logs 03c2a6d1de51eaec
+@intelliflow/platform:build: cache hit, suppressing logs 57bdf5ac27320e7e
+@intelliflow/adapters:build: cache hit, suppressing logs b6a221a80f68fdc0
+@intelliflow/worker-shared:build: cache hit, suppressing logs 8cc5654b47de3e95
+@intelliflow/events-worker:build: cache hit, suppressing logs 10c8afaae69fec9e
+@intelliflow/ai-worker:build: cache hit, suppressing logs 010f395576794aaa
+@intelliflow/ingestion-worker:build: cache hit, suppressing logs 75df48a1e244c8ba
+@intelliflow/api:build: cache hit, suppressing logs 438ca089942e8a02
+@intelliflow/api-client:build: cache hit, suppressing logs 162e856990f3ec03
+@intelliflow/sdk:build: cache hit, suppressing logs 90b477501062a0dd
+@intelliflow/project-tracker:build: cache hit, suppressing logs 729f20a9bd610876
+@intelliflow/web:build: cache hit, suppressing logs dbdb5226d5d9c07f
+
+ Tasks:    20 successful, 20 total
+Cached:    20 cached, 20 total
+  Time:    937ms >>> FULL TURBO
+
+build exit=0

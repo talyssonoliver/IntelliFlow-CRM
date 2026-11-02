@@ -351,20 +351,32 @@ describe('ChainMonitor', () => {
   // ============================================
 
   describe('ROI value recording', () => {
-    it('should record value when chain completes', async () => {
+    const monitorConfig = () => ({
+      driftDetector: mockDriftDetector,
+      hallucinationChecker: mockHallucinationChecker,
+      roiTracker: mockRoiTracker,
+      latencyMonitor: mockLatencyMonitor,
+      latencyThresholdMs: 2000,
+    });
+
+    it('should record the caller-supplied value type when chain completes', async () => {
       const recordValueSpy = vi.spyOn(mockRoiTracker, 'recordValueByType');
 
       const mockFn = vi.fn().mockResolvedValue({ score: 75 });
 
-      await withMonitoring(mockFn, {
-        driftDetector: mockDriftDetector,
-        hallucinationChecker: mockHallucinationChecker,
-        roiTracker: mockRoiTracker,
-        latencyMonitor: mockLatencyMonitor,
-        latencyThresholdMs: 2000,
-      });
+      await withMonitoring(mockFn, monitorConfig(), { valueType: 'lead_scored' });
 
-      expect(recordValueSpy).toHaveBeenCalled();
+      expect(recordValueSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ valueType: 'lead_scored' })
+      );
+    });
+
+    it('should book no value without a value type (IFC-117: no blanket lead_scored)', async () => {
+      const recordValueSpy = vi.spyOn(mockRoiTracker, 'recordValueByType');
+
+      await withMonitoring(vi.fn().mockResolvedValue({ score: 75 }), monitorConfig());
+
+      expect(recordValueSpy).not.toHaveBeenCalled();
     });
   });
 

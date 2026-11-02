@@ -1,0 +1,58 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 100 files total
+[codex-review] in scope : 70 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] WARN: Codex produced no parseable findings (exit 1) — likely the OpenAI usage/tier cap or a transient error. Raw: artifacts/codex-review/codex-raw.txt
+OpenAI Codex v0.163.0
+--------
+workdir: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 01a15dbd-421e-71c2-8dbd-11581076361b
+--------
+user
+You are an independent code auditor. Your task is to find REAL bugs in the diff below.
+
+Scope: only the following files changed in this PR (diff vs origin/main):
+  - apps/api/src/modules/calendar/__tests__/booking-abuse.test.ts
+  - apps/api/src/modules/calendar/__tests__/booking-email.test.ts
+  - apps/api/src/modules/calendar/__tests__/event-types.router.test.ts
+  - apps/api/src/modules/calendar/__tests__/public-booking.router.test.ts
+  - apps/api/src/modules/calendar/booking-abuse.ts
+  - apps/api/src/modules/calendar/booking-email.ts
+  - apps/api/src/modules/calendar/calendar.router.ts
+  - apps/api/src/modules/calendar/event-types.router.ts
+  - apps/api/src/modules/calendar/public-booking.router.ts
+  -
+[codex-review] Falling back to Claude review (claude -p, local) ...
+[codex-review] reviewer : claude
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (claude) — 2026-10-21T09:16:10.852Z
+Base ref  : origin/main
+Files in scope : 70
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/calendar/booking-abuse.ts:74-80 — abuse-cap-enables-booking-lockout
+    Issue    : The per-event-type cap (30 per hour) counts every anonymous attempt, failed ones included, across the whole tenant. Anyone can therefore use it up and block all real visitors from booking that event type, again every hour.
+    Evidence : `prisma.bookingAttempt.count({ where: { tenantId, eventTypeId, createdAt: { gt: lastHour } } })` is compared to `BOOKING_CAPS.perEventTypePerHour`. In public-booking.router.ts (lines 532-536) the attempt is recorded in its own committed transaction before the slot is checked (`recordBookingAttempt` runs ahead of the booking transaction, and the comment says 'committed before the booking so a failed booking still counts'). An attempt for a slot that does not exist, or one already taken, still adds a row. The email cap (3 per 24 h) and IP cap (10 per hour) are the only per-sender limits, so 3 IPs × 10 throwaway emails = 30 junk requests per hour are enough. After that, every real booker gets the same generic TOO_MANY_REQUESTS ('Too many booking attempts. Please try again later.') and the firm never sees the bookings it lost. The unit test asserts that the 30th attempt throws, which is the same assumption, so the lockout is not caught.
+    Fix      : Stop letting the shared per-event-type cap be used up by attempts that never booked. Option 1: count only attempts that reached or passed the slot check. Option 2: count successful public bookings (appointments with bookedVia='PUBLIC_LINK') per event type per hour. Option 3: keep the attempts count but record the attempt only after the honeypot, required-answer and slot-validity checks pass. Keep the per-email and per-IP caps on all attempts.
+    Fingerprint: 2d974acfb698d6ec1ff076ba837eb0668fc65b02941e0a73351e647559ca9383
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

@@ -1,0 +1,32 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 206 files total
+[codex-review] in scope : 157 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T14:39:15.338Z
+Base ref  : origin/main
+Files in scope : 157
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [HIGH] packages/adapters/src/messaging/email/dsn-parser.ts:143-150 — untrusted-authentication-results
+    Issue    : Sender-supplied Authentication-Results headers can authenticate forged bounce reports and trigger tenant-wide suppression.
+    Evidence : The code takes `topmostHeader(head, 'authentication-results')`, discards the authserv-id, and accepts any matching `dkim=pass` or `spf=pass` clause. For a supported custom IMAP server that preserves incoming headers without prepending its own Authentication-Results, a recipient can submit `From: mailer-daemon@victim.example` and `Authentication-Results: attacker.example; dkim=pass header.d=victim.example`, copying the record and Message-ID from received mail. The parser marks this authenticated; bounce-reader.ts then accepts the victim-aligned reporter and suppresses the named co-recipient. The tests assume the topmost header always belongs to the receiver. [RFC 8601](https://www.rfc-editor.org/rfc/rfc8601.html) requires establishing trust in the authentication service rather than trusting header presence or position.
+    Fix      : Establish receiver-specific authentication provenance in the mailbox adapters and pass verified results to the parser. Require a configured trusted authentication service and receiver header handling guarantees; fail closed for custom IMAP servers where that provenance cannot be established.
+    Fingerprint: 27d0f86480328d0499301f059fe7ccc6c31b8bfbc5505c614b484bd2c291faeb
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+exit=1

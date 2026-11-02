@@ -17,10 +17,10 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/(developer)/developers/apps/page.tsx": "fb468a7d91eeac67289fdd76c39e14641770cb5e4380826bacbff9fc2607bcd6",
-    "apps/web/src/components/developer/app-list.tsx": "ce5a8587153c78a7486479af8ff6c95e4f2feb46555322b2834719fde6716652",
-    "apps/web/src/lib/developer/api-key-generator.ts": "cb84ff24d437a3ea5d0de827b24e34ce6bd1bb308d7e4bc8d64143664c97ef57",
-    ".specify/sprints/sprint-15/attestations/PG-039/context_ack.json": "4f896a0aa21ab7d85a0ebcff676a14be1e454f5b3c9138d0a2df71a659a15963"
+    "apps/web/src/app/(developer)/developers/apps/page.tsx": "sha256:fb468a7d91eeac67289fdd76c39e14641770cb5e4380826bacbff9fc2607bcd6",
+    "apps/web/src/components/developer/app-list.tsx": "sha256:ce5a8587153c78a7486479af8ff6c95e4f2feb46555322b2834719fde6716652",
+    "apps/web/src/lib/developer/api-key-generator.ts": "sha256:cb84ff24d437a3ea5d0de827b24e34ce6bd1bb308d7e4bc8d64143664c97ef57",
+    ".specify/sprints/sprint-15/attestations/PG-039/context_ack.json": "sha256:4f896a0aa21ab7d85a0ebcff676a14be1e454f5b3c9138d0a2df71a659a15963"
   },
   "validation_results": [
     {

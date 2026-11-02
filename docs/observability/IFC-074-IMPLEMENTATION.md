@@ -2,8 +2,39 @@
 
 ## Overview
 
-**Task ID**: IFC-074 **Sprint**: Sprint 1 **Status**: ✅ COMPLETE **Date**:
-2025-12-21 **Dependencies**: IFC-003 (tRPC API) - COMPLETE
+**Task ID**: IFC-074 **Sprint**: Sprint 18 (re-planned from Sprint 1)
+**Status**: In Progress — not complete **Date**: 2025-12-21, corrected
+2026-10-22 **Dependencies**: IFC-003 (tRPC API) - COMPLETE
+
+> **Status correction (2026-10-22).** This report originally claimed the task
+> complete. It was reopened on 2026-10-05 because its evidence was not real: the
+> trace IDs in `artifacts/reports/correlation-test.csv` were hand-written and
+> `artifacts/reports/mttr-baseline.json` described simulated incidents. The
+> sprint-18 rebuild (spec
+> `.specify/sprints/sprint-18/specifications/IFC-074-spec.md`, ADR-086):
+>
+> - routes the api's per-request log through pino, so it reaches Loki with
+>   `trace_id`/`span_id` (`apps/api/src/tracing/logger.ts`, `middleware.ts`);
+> - regenerates both evidence files from production telemetry with the read-only
+>   collector `tools/scripts/observability/collect-observability-evidence.mjs`.
+>
+> First real run (2026-10-22): ai-worker log/trace/metric correlation 10/10
+> PASS; api NOT_OBSERVED until the change is deployed; 66 real alert incidents,
+> 63 anchored to a first error span, mean MTTD 268.7 s — the "<2 min" KPI is
+> **not met**. The task stays In Progress until a post-deploy collector run
+> proves the api row (owner ruling 2026-10-22).
+>
+> MTTD root cause (2026-10-23, read-only probe): every incident came from
+> Grafana Asserts' ErrorRatioBreach. Span metrics land about 60 s after the
+> first error, Asserts' recording rule adds a cycle, the rule reads data at
+> least 60 s old, and the stack's minimum evaluation interval is 60 s, so it
+> fires 180 s or 360 s after the first error. Owner ruling 2026-10-23: fix
+> before shipping. A direct span-metrics rule (`ifc074-error-spans-direct`)
+> ships in its own PR, and the collector now judges the KPI per error episode
+> (first alert from any rule). Before it: 74 episodes, mean 287.7 s. The task
+> ships only if the re-measure after that rule is live is under 120 s. The
+> sections below are the original 2025-12 report and are kept for history; where
+> they conflict with this note, this note is correct.
 
 ## Implementation Summary
 
@@ -475,11 +506,24 @@ open http://localhost:3001
 
 ## Definition of Done
 
-### ✅ Completed
+### Status (corrected 2026-10-22)
+
+The original list ticked every item. Corrected against evidence:
 
 - [x] OpenTelemetry SDK integrated
-- [x] Traces exported (console for dev, OTLP for production)
-- [x] Sentry errors captured with 100% rate
+- [x] Traces exported (console for dev, OTLP for production) — production export
+      to Grafana Cloud verified for api and ai-worker (IFC-032)
+- [ ] Sentry errors captured with 100% rate — not evidenced; api and web
+      initialise Sentry, ai-worker does not (see
+      `infra/monitoring/sentry-project-config.json`)
+- [ ] api logs correlate with traces in production — pending deploy of the
+      sprint-18 change, then a collector re-run
+- [ ] MTTD < 2 min — measured 268.7 s mean per incident on 2026-10-22 and 287.7
+      s mean per episode on 2026-10-23 (not met); re-measure after the direct
+      error rule is live
+
+Original items, unchanged:
+
 - [x] Health endpoints enhanced with version/environment/correlation
 - [x] Correlation IDs propagated across requests
 - [x] tRPC middleware for automatic tracing

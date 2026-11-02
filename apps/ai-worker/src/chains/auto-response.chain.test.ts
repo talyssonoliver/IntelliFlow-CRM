@@ -407,6 +407,49 @@ describe('AutoResponseChain', () => {
       );
     });
 
+    it('does not record the placeholder confidence 0 as a measurement when the model omits it', async () => {
+      (chain as any).llm.withStructuredOutput.mockImplementationOnce(() => ({
+        invoke: vi.fn().mockRejectedValue(new Error('structured unsupported')),
+      }));
+      (chain as any).llm.invoke.mockResolvedValueOnce({
+        content: JSON.stringify({ subject: 'Hello', body: 'Thanks for reaching out.' }),
+      });
+      const recordSample = vi.spyOn(
+        (chain as any).chainMonitor.getConfig().driftDetector,
+        'recordSample'
+      );
+
+      const { result } = await chain.generateResponseWithMonitoring({
+        triggerType: 'EMAIL_RECEIVED',
+        leadInfo: { id: 'lead-1', name: 'Test User', email: 'test@example.com', status: 'NEW' },
+        context: { originalMessage: 'Test' },
+        tenantSettings: { companyName: 'IntelliFlow', tone: 'professional' },
+      });
+
+      expect(result.confidence).toBe(0);
+      expect(recordSample.mock.calls.map(([s]: [{ metric: string }]) => s.metric)).not.toContain(
+        'confidence_level'
+      );
+    });
+
+    it('records a confidence the model reported as a measurement', async () => {
+      const recordSample = vi.spyOn(
+        (chain as any).chainMonitor.getConfig().driftDetector,
+        'recordSample'
+      );
+
+      await chain.generateResponseWithMonitoring({
+        triggerType: 'EMAIL_RECEIVED',
+        leadInfo: { id: 'lead-1', name: 'Test User', email: 'test@example.com', status: 'NEW' },
+        context: { originalMessage: 'Test' },
+        tenantSettings: { companyName: 'IntelliFlow', tone: 'professional' },
+      });
+
+      expect(recordSample.mock.calls.map(([s]: [{ metric: string }]) => s.metric)).toContain(
+        'confidence_level'
+      );
+    });
+
     it('should throw error for invalid LLM response format on fallback path', async () => {
       // Force structured-output path to fail so we exercise the raw-invoke + JSON.parse fallback.
       (chain as any).llm.withStructuredOutput.mockImplementationOnce(() => ({

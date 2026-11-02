@@ -49,14 +49,14 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "packages/validators/src/home.ts": "b69bc86a8168e974d34bb2ee990204b9d643e7f94dd86b664335a222c75ce15a",
-    "packages/validators/src/__tests__/home.test.ts": "ac34f61051437e5c8436a6429a8c3b8239e32dbbd3e932588819d8dc82db0c25",
-    "apps/api/src/modules/home/home.router.ts": "2b87b206cb24ce0dd4336900f5db083f1bf1e9a692955621dd23c0785606d760",
-    "apps/api/src/modules/home/__tests__/home.router.test.ts": "63443d75d4f60f820c3657bc032138821f33b8a31bca4d2ae6e6293a0dbb50dc",
-    "apps/web/src/components/home/__tests__/DraggablePinnedItem.test.tsx": "c87a83fda3a60b70f1edb84479fd17e06fc36ff2c99fc92485519fb75f5b60a6",
-    "apps/web/src/components/home/__tests__/AuthenticatedHomePage.test.tsx": "74c5b04334389b056e6c30460abd0dc0d90240713ec380c6bf7afb9361d7d60d",
-    "apps/web/src/components/home/DraggablePinnedItem.tsx": "6f69e48bc5cd9914563b660abfff9d29e3c8ddec864ffba68cb00a462a145e56",
-    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "337c781c82cfb917d7cba4174c02d339c77b1decbc98a91bdbc8447066a96f55"
+    "packages/validators/src/home.ts": "sha256:b69bc86a8168e974d34bb2ee990204b9d643e7f94dd86b664335a222c75ce15a",
+    "packages/validators/src/__tests__/home.test.ts": "sha256:ac34f61051437e5c8436a6429a8c3b8239e32dbbd3e932588819d8dc82db0c25",
+    "apps/api/src/modules/home/home.router.ts": "sha256:2b87b206cb24ce0dd4336900f5db083f1bf1e9a692955621dd23c0785606d760",
+    "apps/api/src/modules/home/__tests__/home.router.test.ts": "sha256:63443d75d4f60f820c3657bc032138821f33b8a31bca4d2ae6e6293a0dbb50dc",
+    "apps/web/src/components/home/__tests__/DraggablePinnedItem.test.tsx": "sha256:c87a83fda3a60b70f1edb84479fd17e06fc36ff2c99fc92485519fb75f5b60a6",
+    "apps/web/src/components/home/__tests__/AuthenticatedHomePage.test.tsx": "sha256:74c5b04334389b056e6c30460abd0dc0d90240713ec380c6bf7afb9361d7d60d",
+    "apps/web/src/components/home/DraggablePinnedItem.tsx": "sha256:6f69e48bc5cd9914563b660abfff9d29e3c8ddec864ffba68cb00a462a145e56",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "sha256:337c781c82cfb917d7cba4174c02d339c77b1decbc98a91bdbc8447066a96f55"
   },
   "validation_results": [
     {

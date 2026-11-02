@@ -19,9 +19,15 @@ Production layout, for reference:
 - Web on Vercel
 - Postgres on Supabase (Supabase-managed backups)
 - Errors in Sentry
-- OpenTelemetry export to a hosted Grafana Cloud stack (being set up)
-- Alerts by email to the owner from Grafana Cloud alerting (being set up, not
-  yet proven)
+- OpenTelemetry export to a hosted Grafana Cloud stack (api and ai-worker traces
+  and span metrics; ai-worker logs; api logs after the IFC-074 change is
+  deployed)
+- Alerts by email to the owner from Grafana Cloud alerting (delivery proven by
+  IFC-032 on 2026-10-06; real ai-worker error alerts fire, measured mean MTTD
+  268.7 s on 2026-10-22 — see `artifacts/reports/mttr-baseline.json`). The
+  fastest error alert is `ifc074-error-spans-direct` (error spans in ai-worker
+  or api in the last 2 minutes); Asserts' ErrorRatioBreach follows about 3-6
+  minutes after the first error.
 
 ### 1.1 Incident Definition
 
@@ -388,7 +394,7 @@ IntelliFlow CRM has a single operator. The owner does all of the following.
 
 | Tool          | Access                       | Purpose                                   |
 | ------------- | ---------------------------- | ----------------------------------------- |
-| Grafana Cloud | Hosted stack (being set up)  | Dashboards, metrics, logs, traces, alerts |
+| Grafana Cloud | Hosted stack                 | Dashboards, metrics, logs, traces, alerts |
 | Sentry        | https://sentry.io            | Error tracking                            |
 | Railway       | Dashboard and `railway logs` | Service logs and metrics for API, workers |
 | Vercel        | Dashboard                    | Web deployment logs                       |
@@ -403,9 +409,9 @@ IntelliFlow CRM has a single operator. The owner does all of the following.
 
 ### 5.3 Alerting
 
-| Tool                   | Channel            | Purpose                               |
-| ---------------------- | ------------------ | ------------------------------------- |
-| Grafana Cloud alerting | Email to the owner | Alerts (being set up, not yet proven) |
+| Tool                   | Channel            | Purpose                           |
+| ---------------------- | ------------------ | --------------------------------- |
+| Grafana Cloud alerting | Email to the owner | Alerts (delivery proven, IFC-032) |
 
 ### 5.4 Useful Commands
 
@@ -426,6 +432,25 @@ traceroute api.intelliflow.io
 # Logs
 railway logs --service api | jq 'select(.level == "error")'
 ```
+
+### 5.5 Observability Evidence (IFC-074)
+
+Correlation and MTTD evidence come only from production telemetry, through the
+read-only collector (ADR-086). Run it locally, never in CI:
+
+```bash
+# token in the environment only, never as an argument; unset it afterwards
+GRAFANA_URL=<stack url> GRAFANA_SA_TOKEN=<service account token> \
+  node tools/scripts/observability/collect-observability-evidence.mjs
+unset GRAFANA_SA_TOKEN
+```
+
+After a deploy that changes logging: make at least one real tRPC call to the
+deployed api, then re-run with `--since <deploy time, ISO-8601 UTC>` so only
+post-deploy traffic is judged. Exit 0 = evidence complete; 2 = written but
+ai-worker has no PASS row or no incident could be anchored; 1 = error, nothing
+written. It writes `artifacts/reports/correlation-test.csv` and
+`artifacts/reports/mttr-baseline.json` and prints their SHA-256.
 
 ---
 

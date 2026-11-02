@@ -12,6 +12,7 @@
 
 import type { Job, Queue } from 'bullmq';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 import { prisma } from '@intelliflow/db';
 import { generateContactInsight } from '../contact-insight.chain.js';
@@ -29,7 +30,7 @@ const PER_TENANT_CAP = 500;
 export const EntityInsightJobDataSchema = z.object({
   entityType: z.enum(['contact', 'account']),
   entityId: z.string().min(1),
-  tenantId: z.string().min(1),
+  tenantId: recordIdSchema,
   context: z.record(z.string(), z.unknown()).optional(),
   _otelCarrier: z.record(z.string(), z.string()).optional(),
 });

@@ -35,10 +35,10 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category                                        | Count |
 | ----------------------------------------------- | ----- |
-| Total Pages                                     | 214   |
-| Public Pages                                    | 32    |
+| Total Pages                                     | 220   |
+| Public Pages                                    | 36    |
 | Developer Pages                                 | 14    |
-| Protected Pages                                 | 168   |
+| Protected Pages                                 | 170   |
 | Next.js API handlers (excluded from page total) | 19    |
 | Layouts                                         | 36    |
 
@@ -206,13 +206,13 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 8. CRM Core — Tasks (5 pages)
 
-| Route                  | Page            | Description                                                |
-| ---------------------- | --------------- | ---------------------------------------------------------- |
-| `/tasks`               | Task List       | Task queue with list/calendar toggle, filters, priority    |
-| `/tasks/[id]`          | Task Detail     | Task view with assignee and status                         |
-| `/tasks/task-types`    | Task Types      | Configure custom task type labels and icons                |
-| `/tasks/task-settings` | Task Settings   | Tenant-level task defaults: due-date rules, assignee       |
-| `/tasks/automation`    | Task Automation | Automation rules triggered on task status/priority changes |
+| Route                  | Page            | Description                                                                                         |
+| ---------------------- | --------------- | --------------------------------------------------------------------------------------------------- |
+| `/tasks`               | Task List       | Task queue with list/calendar toggle, filters, priority                                             |
+| `/tasks/[id]`          | Task Detail     | Task view with assignee and status                                                                  |
+| `/tasks/task-types`    | Task Types      | Configure custom task type labels and icons                                                         |
+| `/tasks/task-settings` | Task Settings   | Tenant-level task defaults: due-date rules, assignee                                                |
+| `/tasks/automation`    | Task Automation | Rules that create, assign and announce tasks on CRM events, a schedule or a signed webhook (PG-208) |
 
 ---
 
@@ -224,7 +224,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | ----------------------------- | ----------------- | --------------------------------------------------------------------------- |
 | `/calendar`                   | Calendar View     | Appointment calendar (month/week/day views)                                 |
 | `/calendar/availability`      | Availability      | Firm hours, closures, buffers and daily limit, enforced at booking (PG-202) |
-| `/calendar/event-types`       | Event Types       | Configure reusable event type templates                                     |
+| `/calendar/event-types`       | Event Types       | Tenant event types: duration, buffers, slug and booking link (PG-203)       |
 | `/calendar/calendar-settings` | Calendar Settings | Tenant-level calendar defaults and integrations                             |
 
 **Appointments** — dedicated table view (separate from /calendar):
@@ -237,16 +237,17 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 10. CRM Core — Email (6 pages)
+### 10. CRM Core — Email (7 pages)
 
-| Route                   | Page             | Description                                  |
-| ----------------------- | ---------------- | -------------------------------------------- |
-| `/email`                | Email Inbox      | Email list and compose                       |
-| `/email/[id]`           | Email Detail     | Email thread view                            |
-| `/email/compose`        | Compose Email    | Full-screen compose window with rich editor  |
-| `/email/templates`      | Email Templates  | Manage reusable email templates              |
-| `/email/signatures`     | Email Signatures | Manage HTML email signatures per user/team   |
-| `/email/email-settings` | Email Settings   | IMAP/SMTP configuration, sync rules, aliases |
+| Route                   | Page             | Description                                                                                      |
+| ----------------------- | ---------------- | ------------------------------------------------------------------------------------------------ |
+| `/email`                | Email Inbox      | Email list and compose                                                                           |
+| `/email/[id]`           | Email Detail     | Email thread view                                                                                |
+| `/email/compose`        | Compose Email    | Full-screen compose window with rich editor                                                      |
+| `/email/templates`      | Email Templates  | Manage reusable email templates                                                                  |
+| `/email/signatures`     | Email Signatures | Personal and organisation signatures; the default prefills new messages                          |
+| `/email/email-settings` | Email Settings   | Sending mailbox (Google, Microsoft, SMTP), reply-to, tracking, bounce handling, suppression list |
+| `/email/oauth/callback` | Mailbox Sign-in  | Return page for Google / Microsoft mailbox sign-in (redirect target)                             |
 
 ---
 
@@ -366,7 +367,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 18. Settings (23 pages)
+### 18. Settings (24 pages)
 
 | Route                          | Page                  | Description                                                                                                                                                           |
 | ------------------------------ | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -392,6 +393,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/settings/reports`            | Reports Settings      | Analytics report defaults and export configuration                                                                                                                    |
 | `/settings/tasks`              | Tasks Settings        | Module-level task defaults (sidebar settingsHref)                                                                                                                     |
 | `/settings/tickets`            | Tickets Settings      | Module-level ticket defaults (sidebar settingsHref)                                                                                                                   |
+| `/settings/privacy-requests`   | Privacy Requests      | ADMIN-only handling of data subject requests: complete or erase, extend, refuse, revoke export, staff export, log an in-person request, lift restrictions (PG-203)    |
 
 ---
 
@@ -448,6 +450,25 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/settings/help-center/articles`                    | Help Article Admin List    | ADMIN/MANAGER CRUD list: status, category, search, publish/unpublish/delete (PG-180). Reachable via settings sidebar item `help-center-articles` (role-filtered). |
 | `/settings/help-center/articles/new` (PG-181)       | Help Article Editor — New  | Tiptap editor for drafting new articles (downstream, same sprint)                                                                                                 |
 | `/settings/help-center/articles/[id]/edit` (PG-181) | Help Article Editor — Edit | Tiptap editor for existing articles (downstream, same sprint)                                                                                                     |
+
+### 23. Public Booking and DSAR (4 pages — No Authentication, Not Indexed)
+
+Located in `(public)` route group but rendered chrome-free (no public header or
+footer, no sidebar). `noindex`, disallowed in `robots.ts`, absent from the
+sitemap, and not linked from any in-app navigation. These are external entry
+points. `/book/[handle]/[slug]` is reached from the booking link built by
+`BookingLinkCard.tsx` (`<origin>/book/<handle>/<slug>`) and shared with the
+firm's clients. `/dsar/[handle]` is reached from the "Your personal data" link
+in the booking page footer and from the booking confirmation email;
+`/dsar/[handle]/verify` and `/dsar/[handle]/export` are reached only from the
+emailed link (token in the URL fragment). The DSAR flow is FLOW-040 (DSAR).
+
+| Route                   | Page             | Description                                                                                                                                                     |
+| ----------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/book/[handle]/[slug]` | Public Booking   | Unauthenticated slot picker and booking form for one event type, served by the `publicBooking` tRPC router (PG-203, ADR-083)                                    |
+| `/dsar/[handle]`        | DSAR Request     | Public data subject request form (GDPR rights request) for one firm, found by its booking handle, served by `privacy.getFirm` and `privacy.submit` (PG-203)     |
+| `/dsar/[handle]/verify` | DSAR Verify      | Confirms a data subject request from the emailed link; the token is read once from the URL fragment (`#r=<id>.<token>`) and stripped, `privacy.verify` (PG-203) |
+| `/dsar/[handle]/export` | DSAR Data Export | Download of the person's data export (JSON) from the emailed link, token in the URL fragment, `privacy.downloadExport` (PG-203)                                 |
 
 ---
 

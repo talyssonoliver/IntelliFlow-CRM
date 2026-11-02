@@ -158,7 +158,7 @@ IFC-030 (Routing) ⬜ ──┬──► routing-rules.ts (Val) ⬜ ──► ro
 | Validators  | dsar.ts          | ⬜     | DSAR schemas                  |
 | Application | IFC-058          | ⬜     | Data Retention Policies       |
 | Adapters    | Retention Engine | ⬜     | Policy engine                 |
-| API         | dsar.router      | ⬜     | DSAR router                   |
+| API         | privacy.router   | ✅     | DSAR router (PG-203)          |
 | UI          | PG-122, PG-123   | ⬜     | Privacy Export, Data Deletion |
 
 ### Dependency Diagram
@@ -185,7 +185,7 @@ IFC-030 (Routing) ⬜ ──┬──► routing-rules.ts (Val) ⬜ ──► ro
                                             │
                                             ▼
                                  ┌──────────────────┐
-                                 │dsar.router       │
+                                 │privacy.router    │
                                  │      ⬜          │
                                  └────────┬─────────┘
                                           │
@@ -202,7 +202,7 @@ IFC-030 (Routing) ⬜ ──┬──► routing-rules.ts (Val) ⬜ ──► ro
 ### Dependency Chain
 
 ```
-IFC-140 (Governance) ✅ ──┬──► IFC-058 (Retention) ⬜ ──► dsar.router ⬜ ──┬──► PG-122 (Export) ⬜
+IFC-140 (Governance) ✅ ──┬──► IFC-058 (Retention) ⬜ ──► privacy.router ✅ ──┬──► PG-122 (Export) ⬜
                           ├──► dsar.ts (Val) ⬜ ─────────────────────────┴──► PG-123 (Deletion) ⬜
                           └──► Retention Engine ⬜ ────────────────────────────────────────────────┘
 ```
@@ -344,14 +344,14 @@ IFC-028 (Workflow Engine) ✅ ──► workflow.router (CRUD) ✅ ──► IFC
 
 ## Summary
 
-| Chain                | Status        | Blocking Issues                      |
-| -------------------- | ------------- | ------------------------------------ |
-| Lead Qualification   | ⬜ Partial    | IFC-024, IFC-030 need implementation |
-| Smart Lead Routing   | ⬜ All New    | IFC-030 core routing not started     |
-| DSAR Workflow        | ⬜ Mostly New | IFC-058, dsar.router needed          |
-| Legal Case Workflows | ⬜ Partial    | IFC-141, PG-138 needed               |
-| Deal Won Closure     | ✅ Complete   | IFC-065 fully implemented            |
-| Workflow Builder UI  | ✅ Complete   | IFC-031 fully implemented            |
+| Chain                | Status      | Blocking Issues                      |
+| -------------------- | ----------- | ------------------------------------ |
+| Lead Qualification   | ⬜ Partial  | IFC-024, IFC-030 need implementation |
+| Smart Lead Routing   | ⬜ All New  | IFC-030 core routing not started     |
+| DSAR Workflow        | ✅ PG-203   | privacy.router (PG-203)              |
+| Legal Case Workflows | ⬜ Partial  | IFC-141, PG-138 needed               |
+| Deal Won Closure     | ✅ Complete | IFC-065 fully implemented            |
+| Workflow Builder UI  | ✅ Complete | IFC-031 fully implemented            |
 
 ### Prerequisites for Implementation
 

@@ -28,6 +28,7 @@ import type {
   ChainConfig,
 } from '@intelliflow/validators';
 import { EventBusPort } from '../ports/external';
+import { NotFoundError } from '../errors';
 
 // =============================================================================
 // Types
@@ -88,7 +89,8 @@ export interface ChainVersionRepositoryPort {
     tenantId: string;
   }): Promise<ChainVersionRecord>;
 
-  findById(id: string): Promise<ChainVersionRecord | null>;
+  /** Tenant-scoped: returns null for a version that belongs to another tenant. */
+  findById(id: string, tenantId: string): Promise<ChainVersionRecord | null>;
   findByTenantId(tenantId: string): Promise<ChainVersionRecord[]>;
   findByChainType(chainType: ChainType, tenantId: string): Promise<ChainVersionRecord[]>;
   findActive(chainType: ChainType, tenantId: string): Promise<ChainVersionRecord | null>;
@@ -210,13 +212,11 @@ export class ChainVersionService {
    */
   async updateVersion(
     versionId: string,
+    tenantId: string,
     input: UpdateChainVersionInput,
     updatedBy: string
   ): Promise<ChainVersionRecord> {
-    const version = await this.versionRepo.findById(versionId);
-    if (!version) {
-      throw new Error(`Chain version not found: ${versionId}`);
-    }
+    const version = await this.findOwnVersion(versionId, tenantId);
 
     if (version.status !== 'DRAFT') {
       throw new Error('Only DRAFT versions can be updated');
@@ -253,11 +253,12 @@ export class ChainVersionService {
   /**
    * Activate a chain version (marks as ACTIVE, deprecates previous active)
    */
-  async activateVersion(versionId: string, activatedBy: string): Promise<ChainVersionRecord> {
-    const version = await this.versionRepo.findById(versionId);
-    if (!version) {
-      throw new Error(`Chain version not found: ${versionId}`);
-    }
+  async activateVersion(
+    versionId: string,
+    tenantId: string,
+    activatedBy: string
+  ): Promise<ChainVersionRecord> {
+    const version = await this.findOwnVersion(versionId, tenantId);
 
     if (version.status !== 'DRAFT') {
       throw new Error('Only DRAFT versions can be activated');
@@ -309,13 +310,11 @@ export class ChainVersionService {
    */
   async deprecateVersion(
     versionId: string,
+    tenantId: string,
     deprecatedBy: string,
     reason?: string
   ): Promise<ChainVersionRecord> {
-    const version = await this.versionRepo.findById(versionId);
-    if (!version) {
-      throw new Error(`Chain version not found: ${versionId}`);
-    }
+    const version = await this.findOwnVersion(versionId, tenantId);
 
     if (version.status === 'ARCHIVED') {
       throw new Error('Archived versions cannot be deprecated');
@@ -342,11 +341,12 @@ export class ChainVersionService {
   /**
    * Archive a chain version
    */
-  async archiveVersion(versionId: string, archivedBy: string): Promise<ChainVersionRecord> {
-    const version = await this.versionRepo.findById(versionId);
-    if (!version) {
-      throw new Error(`Chain version not found: ${versionId}`);
-    }
+  async archiveVersion(
+    versionId: string,
+    tenantId: string,
+    archivedBy: string
+  ): Promise<ChainVersionRecord> {
+    const version = await this.findOwnVersion(versionId, tenantId);
 
     if (version.status === 'ACTIVE') {
       throw new Error('Active versions cannot be archived directly. Deprecate first.');
@@ -371,12 +371,13 @@ export class ChainVersionService {
    */
   async rollbackToVersion(
     versionId: string,
+    tenantId: string,
     reason: string,
     rolledBackBy: string
   ): Promise<RollbackResult> {
-    const targetVersion = await this.versionRepo.findById(versionId);
+    const targetVersion = await this.versionRepo.findById(versionId, tenantId);
     if (!targetVersion) {
-      throw new Error(`Target version not found: ${versionId}`);
+      throw new NotFoundError(`Target version not found: ${versionId}`);
     }
 
     // Find current active version
@@ -530,10 +531,22 @@ export class ChainVersionService {
   }
 
   /**
+   * The caller's own version, or NotFoundError. A version id from another tenant
+   * is reported exactly like a missing one.
+   */
+  private async findOwnVersion(versionId: string, tenantId: string): Promise<ChainVersionRecord> {
+    const version = await this.versionRepo.findById(versionId, tenantId);
+    if (!version) {
+      throw new NotFoundError(`Chain version not found: ${versionId}`);
+    }
+    return version;
+  }
+
+  /**
    * Get a specific version by ID
    */
-  async getVersion(versionId: string): Promise<ChainVersionRecord | null> {
-    return this.versionRepo.findById(versionId);
+  async getVersion(versionId: string, tenantId: string): Promise<ChainVersionRecord | null> {
+    return this.versionRepo.findById(versionId, tenantId);
   }
 
   /**
@@ -585,7 +598,13 @@ export class ChainVersionService {
   /**
    * Get audit log entries for a specific version
    */
-  async getVersionAuditLog(versionId: string, limit?: number): Promise<ChainVersionAuditRecord[]> {
+  async getVersionAuditLog(
+    versionId: string,
+    tenantId: string,
+    limit?: number
+  ): Promise<ChainVersionAuditRecord[]> {
+    // Audit rows carry no tenant; the version lookup is what scopes them.
+    await this.findOwnVersion(versionId, tenantId);
     const entries = await this.auditRepo.findByVersionId(versionId);
     return limit ? entries.slice(0, limit) : entries;
   }
@@ -647,23 +666,17 @@ export class ChainVersionService {
    */
   async compareVersions(
     versionIdA: string,
-    versionIdB: string
+    versionIdB: string,
+    tenantId: string
   ): Promise<{
     versionA: ChainVersionRecord;
     versionB: ChainVersionRecord;
     differences: Array<{ field: string; valueA: unknown; valueB: unknown }>;
   }> {
     const [versionA, versionB] = await Promise.all([
-      this.versionRepo.findById(versionIdA),
-      this.versionRepo.findById(versionIdB),
+      this.findOwnVersion(versionIdA, tenantId),
+      this.findOwnVersion(versionIdB, tenantId),
     ]);
-
-    if (!versionA) {
-      throw new Error(`Chain version not found: ${versionIdA}`);
-    }
-    if (!versionB) {
-      throw new Error(`Chain version not found: ${versionIdB}`);
-    }
 
     const compareFields: Array<keyof ChainVersionRecord> = [
       'prompt',

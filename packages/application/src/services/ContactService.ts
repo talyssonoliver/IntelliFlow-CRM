@@ -17,6 +17,10 @@ import {
   ContactInteractionType,
 } from '@intelliflow/domain';
 import { EventBusPort } from '../ports/external';
+import {
+  ALLOW_ALL_RESTRICTIONS,
+  type ProcessingRestrictionPort,
+} from '../ports/repositories/ProcessingRestrictionPort';
 import { PersistenceError, ValidationError, NotFoundError } from '../errors';
 import { ContactMergedEvent } from './events/ContactMergedEvent';
 
@@ -59,7 +63,12 @@ export class ContactService {
     private readonly contactRepository: ContactRepository,
     private readonly accountRepository: AccountRepository,
     private readonly leadRepository: LeadRepository,
-    private readonly eventBus: EventBusPort
+    private readonly eventBus: EventBusPort,
+    /** PG-203 (spec R4): a data-request restriction follows the contact to a new email. */
+    private readonly processingRestrictions: Pick<
+      ProcessingRestrictionPort,
+      'followEmail'
+    > = ALLOW_ALL_RESTRICTIONS
   ) {}
 
   /**
@@ -197,9 +206,18 @@ export class ContactService {
       );
     }
 
+    const oldEmail = contact.email.value;
     const updateResult = contact.updateEmail(newEmail, updatedBy);
     if (updateResult.isFailure) {
       return Result.fail(updateResult.error);
+    }
+
+    // PG-203: the new address is covered before the record changes, so the person is never
+    // unrestricted in between; if the save then fails, the extra coverage errs safe.
+    try {
+      await this.processingRestrictions.followEmail(tenantId, oldEmail, newEmail);
+    } catch {
+      return Result.fail(new PersistenceError('Failed to carry the processing restriction'));
     }
 
     try {

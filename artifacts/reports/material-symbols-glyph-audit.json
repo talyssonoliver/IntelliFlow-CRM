@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-08T07:47:32.830Z",
+  "generated_at": "2026-10-21T08:36:43.836Z",
   "upstream_font_sha256": "b9a28e5c5328940ee287c3d7f6b626e32a9afa92f86b055295cdf6fd5d1c004b",
   "subsetter_version": "subset-font@^2.5.0",
   "variation_axes": {
@@ -119,6 +119,7 @@
     "event",
     "event_available",
     "event_busy",
+    "event_note",
     "event_upcoming",
     "expand_less",
     "expand_more",
@@ -380,8 +381,8 @@
     "zoom_in",
     "zoom_out"
   ],
-  "icons_count": 370,
-  "scanned_files_count": 1273,
+  "icons_count": 371,
+  "scanned_files_count": 1328,
   "source_scan_patterns": [
     "apps/web/src",
     "packages/ui/src"

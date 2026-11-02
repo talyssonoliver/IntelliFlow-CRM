@@ -26,6 +26,7 @@ import {
   SCORING_QUEUE,
   PREDICTION_QUEUE,
   INSIGHT_QUEUE,
+  SCHEDULED_INSIGHT_JOB_NAME,
   SUMMARIZE_QUEUE,
   FEEDBACK_ANALYTICS_QUEUE,
   MEMORY_RETENTION_QUEUE,
@@ -85,6 +86,10 @@ import { hallucinationChecker, RedisMonitoringPublisher } from './monitoring';
 import { EmbeddingModelPublisher } from './lib/embedding-model-publisher';
 import type { MonitoringRedisLike } from './monitoring';
 import { MonitoringFlushService } from './monitoring/monitoring-flush.service';
+// IFC-117: imported from their own modules (not ./monitoring) so the boot tests' barrel mock stays small.
+import { DriftDetectionScheduler } from './monitoring/drift-scheduler';
+import { driftDetector } from './monitoring/drift-detector';
+import { registerAiMetrics } from './monitoring/otel-ai-metrics';
 import { setAuditLogAdapter } from './utils/audit-log';
 import { tenantContextStore } from './tracing/tenant-context.js';
 import { runWithLogContext } from '@intelliflow/observability';
@@ -126,6 +131,16 @@ type AIJobResult =
   | FeedbackAnalyticsJobResult
   | MemoryRetentionJobResult;
 
+/**
+ * A job registered by registerScheduledJobs() (named `scheduled-*`) or a
+ * fan-out sentinel ('__scheduled__' tenant). These dispatch per-tenant work
+ * rather than doing agent work for a tenant of their own (#805).
+ */
+function isScheduledDispatchJob(job: Job<AIJobData>): boolean {
+  const tenantId = (job.data as { tenantId?: unknown } | undefined)?.tenantId;
+  return Boolean(job.name?.startsWith('scheduled-')) || tenantId === '__scheduled__';
+}
+
 // ============================================================================
 // AI Worker
 // ============================================================================
@@ -134,6 +149,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private configLoaded = false;
   private dashboardServer: Server | null = null;
   private monitoringFlushService?: MonitoringFlushService;
+  // IFC-117: scheduled drift detection (first production caller of detectAllDrift).
+  private driftScheduler?: DriftDetectionScheduler;
   // IFC-214: Redis-backed live snapshot publisher (paired with API-side store).
   private redisMonitoringPublisher?: RedisMonitoringPublisher;
   private embeddingModelPublisher?: EmbeddingModelPublisher;
@@ -186,6 +203,10 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     loadAIConfig();
     this.configLoaded = true;
 
+    // IFC-117: AI metrics and drift detection start first and on their own, so a later boot
+    // step that throws (Redis, Prisma, dashboard) can never leave them off. Neither needs the DB.
+    this.startAiMonitoring();
+
     const model = this.getProviderModel();
     const endpoint = this.getProviderEndpoint();
     this.logger.info(
@@ -218,6 +239,20 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
     // H4 + M3 + IFC-310: wire prisma-dependent services
     await this.initPrismaDependentServices();
+  }
+
+  /** IFC-117: register the OTel AI metrics and start the drift detection scheduler. */
+  private startAiMonitoring(): void {
+    try {
+      registerAiMetrics();
+      this.driftScheduler = new DriftDetectionScheduler(driftDetector);
+      this.driftScheduler.start();
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'AI monitoring (OTel metrics / drift scheduler) failed to start'
+      );
+    }
   }
 
   /** IFC-297: Boot Prisma client and start the monitoring flush service. */
@@ -398,7 +433,18 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     try {
       const { ContactEmbedWorker } = await import('./workers/contact-embed-worker.js');
       const { getEmbeddingChain } = await import('./chains/embedding.chain.js');
-      const { updateContactEmbedding } = await import('@intelliflow/db');
+      const { formatEmbeddingForPgVector, validateEmbedding, VECTOR_COLUMN_DIMENSIONS } =
+        await import('@intelliflow/db');
+      const { embeddingDimensions } = await import('./lib/embedding-dimensions.js');
+      // Every vector of another size would be refused on write, so do not consume the queue at all.
+      const dimensions = embeddingDimensions();
+      if (dimensions !== VECTOR_COLUMN_DIMENSIONS) {
+        this.logger.error(
+          { dimensions, column: VECTOR_COLUMN_DIMENSIONS },
+          'ContactEmbedWorker not started — the embedding provider returns vectors that do not fit the embedding column'
+        );
+        return;
+      }
       const redisConnection = {
         host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
@@ -413,12 +459,30 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
             return result?.vector ?? null;
           },
         },
-        async (_prisma, contactId, _tenantId, embedding) => {
-          await updateContactEmbedding(contactId, embedding);
+        // PG-203: written through the transaction the worker passes (it holds the contact row
+        // lock taken after the data-request re-check), scoped to the tenant.
+        async (db, contactId, tenantId, embedding) => {
+          if (!validateEmbedding(embedding)) {
+            throw new Error('Invalid embedding: unexpected dimensions');
+          }
+          await db.$executeRaw`
+            UPDATE contacts SET embedding = ${formatEmbeddingForPgVector(embedding)}::vector
+            WHERE id = ${contactId} AND "tenantId" = ${tenantId}`;
         }
       );
       await this.contactEmbedWorker.start();
       this.logger.info('ContactEmbedWorker started — intelliflow-contact-embed queue consumed');
+      // Re-embed contacts left without an embedding (the vector(2048) migration clears them all).
+      // Not awaited: the sweep pages through contacts and must not hold up boot.
+      this.contactEmbedWorker
+        .enqueueMissingEmbeddings()
+        .then((queued) => this.logger.info({ queued }, 'Contact embedding backfill queued'))
+        .catch((error: unknown) =>
+          this.logger.warn(
+            { error: error instanceof Error ? error.message : String(error) },
+            'Contact embedding backfill not queued'
+          )
+        );
     } catch (error) {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },
@@ -726,17 +790,19 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     const insightsCron = process.env.AI_INSIGHTS_CRON || '0 */6 * * *'; // every 6 hours
     const scoringCron = process.env.AI_SCORING_CRON || '0 */4 * * *'; // every 4 hours
 
-    // Use a real tenant ID so agent-status tracking writes ConversationRecord rows
+    // #805: these jobs only dispatch. _processJobImpl skips agent bookkeeping for
+    // `scheduled-*` jobs, and the scoring and insight handlers fan out per
+    // tenant, so nothing is written under this tenant.
     const systemTenantId = process.env.SYSTEM_TENANT_ID || '00000000-0000-4000-8000-000000000001';
     const systemUserId = process.env.SYSTEM_USER_ID || '00000000-0000-4000-8000-000000000101';
 
     try {
       const insightQueue = this.getQueue(INSIGHT_QUEUE);
       await insightQueue.upsertJobScheduler(
-        'scheduled-insight-refresh',
+        SCHEDULED_INSIGHT_JOB_NAME,
         { pattern: insightsCron },
         {
-          name: 'scheduled-insight-refresh',
+          name: SCHEDULED_INSIGHT_JOB_NAME,
           data: {
             tenantId: systemTenantId,
             userId: systemUserId,
@@ -980,6 +1046,9 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
     this.stopTenantAiSpend?.();
 
+    // IFC-117: stop drift detection before the flush, so the final flush holds the last results
+    this.driftScheduler?.stop();
+
     // IFC-297: Drain monitoring data before shutdown
     if (this.monitoringFlushService) {
       await this.monitoringFlushService.stop();
@@ -1072,7 +1141,11 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   }
 
   private async _processJobImpl(job: Job<AIJobData>): Promise<AIJobResult> {
-    const ctx = extractJobContext(job.queueName, job.data);
+    // #805: a scheduled dispatch job only fans out per-tenant work, which is
+    // tracked under its real tenant. Tracking the dispatch itself wrote agent
+    // rows for the seed system tenant (or '__scheduled__'), which production
+    // does not have, so every run failed the tenant foreign key.
+    const ctx = isScheduledDispatchJob(job) ? null : extractJobContext(job.queueName, job.data);
     const startMs = Date.now();
 
     if (ctx) {
@@ -1334,12 +1407,33 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     };
   }
 
+  /**
+   * OpenRouter is configured through env vars read by llm-factory.ts
+   * (OPENROUTER_API_KEY, OPENROUTER_BASE_URL defaulting to openrouter.ai), not
+   * through aiConfig. Configuration check only, no network call. OpenRouter
+   * always authenticates with an API key, so a base URL alone is not enough.
+   */
+  private getOpenRouterProviderHealth(lastCheck: string): ComponentHealth {
+    const baseUrl = process.env['OPENROUTER_BASE_URL'];
+    const hasApiKey = Boolean(process.env['OPENROUTER_API_KEY']);
+
+    return {
+      status: hasApiKey ? 'ok' : 'error',
+      latency: 0,
+      lastCheck,
+      message: hasApiKey
+        ? `provider=openrouter (${baseUrl || 'https://openrouter.ai/api/v1'})`
+        : 'OPENROUTER_API_KEY is missing',
+    };
+  }
+
   private getConfiguredProviderHealth(
     lastCheck: string
   ): Promise<ComponentHealth> | ComponentHealth {
     if (aiConfig.provider === 'mock') return this.getMockProviderHealth(lastCheck);
     if (aiConfig.provider === 'litellm') return this.getOpenAIProviderHealth(lastCheck); // LiteLLM uses same OpenAI-compat check
     if (aiConfig.provider === 'openai') return this.getOpenAIProviderHealth(lastCheck);
+    if (aiConfig.provider === 'openrouter') return this.getOpenRouterProviderHealth(lastCheck);
     if (aiConfig.provider === 'ollama') return this.checkOllamaHealth(lastCheck);
     return {
       status: 'error',

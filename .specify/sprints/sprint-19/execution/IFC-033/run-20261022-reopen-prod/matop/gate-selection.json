@@ -1,0 +1,16 @@
+{
+  "task_id": "IFC-033",
+  "run_id": "run-20261022-reopen-prod",
+  "selected_stoas": ["Quality", "Foundation", "Security"],
+  "lead_stoa": "Quality",
+  "rationale": {
+    "Quality": "Task row owner is STOA-Quality; deliverable is load-test evidence plus new unit tests for the tenant-prep script.",
+    "Foundation": "Always included (typecheck, lint, build, artifact validation).",
+    "Security": "The run created a production account, handled a live Supabase access token (kept in gitignored .env.k6.local) and wrote synthetic data to production through the API."
+  },
+  "not_selected": {
+    "Domain": "No domain or business-logic change; the run exercises existing procedures only.",
+    "Intelligence": "No AI code change; the AI scoring side effect is a cost finding, recorded in the owner ruling.",
+    "Automation": "No CI or workflow file changed."
+  }
+}

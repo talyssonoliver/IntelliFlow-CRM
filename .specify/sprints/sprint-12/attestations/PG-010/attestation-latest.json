@@ -17,12 +17,12 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/(public)/blog/[slug]/page.tsx": "bff704cc2ef91bc168b4e8753405bfef0690c80f77b622fc9e364c82d6eb68bc",
-    "apps/web/src/components/blog/markdown-renderer.tsx": "c39820badfcd6d7b3dcfebb53d3abea045e6dacfbe9d9f13a921534447f7be2f",
-    "apps/web/src/components/blog/comments-widget.tsx": "87eab0a32a5be94c929a90160b141483d3af97ec066ce0e852f157a97ea4885e",
-    ".specify/sprints/sprint-12/attestations/PG-010/context_ack.json": "5c41421d3c2d2196a9a067c888db8488734363ce5c6142a3642d9f62a91b8b7c",
-    "docs/planning/adr/ADR-020-public-site-auth.md": "bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
-    "docs/planning/prd-public-site-auth.md": "a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
+    "apps/web/src/app/(public)/blog/[slug]/page.tsx": "sha256:bff704cc2ef91bc168b4e8753405bfef0690c80f77b622fc9e364c82d6eb68bc",
+    "apps/web/src/components/blog/markdown-renderer.tsx": "sha256:c39820badfcd6d7b3dcfebb53d3abea045e6dacfbe9d9f13a921534447f7be2f",
+    "apps/web/src/components/blog/comments-widget.tsx": "sha256:87eab0a32a5be94c929a90160b141483d3af97ec066ce0e852f157a97ea4885e",
+    ".specify/sprints/sprint-12/attestations/PG-010/context_ack.json": "sha256:5c41421d3c2d2196a9a067c888db8488734363ce5c6142a3642d9f62a91b8b7c",
+    "docs/planning/adr/ADR-020-public-site-auth.md": "sha256:bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
+    "docs/planning/prd-public-site-auth.md": "sha256:a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
   },
   "validation_results": [
     {

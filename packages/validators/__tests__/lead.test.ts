@@ -178,6 +178,18 @@ describe('Lead Validators', () => {
   });
 
   describe('updateLeadSchema', () => {
+    // PG-203 (plan revision 2): a lead's email never changes, so a processing restriction
+    // keyed on it cannot be left behind by a lead edit. The edit drops any email it is sent.
+    it('drops an email from a lead update (lead email is immutable)', () => {
+      const result = updateLeadSchema.safeParse({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        email: 'new@example.invalid',
+        firstName: 'Ada',
+      });
+      expect(result.success).toBe(true);
+      expect(result.success && 'email' in result.data).toBe(false);
+    });
+
     it('should validate valid update data', () => {
       const validData = {
         id: '123e4567-e89b-12d3-a456-426614174000',

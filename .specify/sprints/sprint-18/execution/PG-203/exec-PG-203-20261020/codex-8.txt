@@ -1,0 +1,43 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 60 files total
+[codex-review] in scope : 34 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T07:54:10.590Z
+Base ref  : origin/main
+Files in scope : 34
+Total findings : 3
+  Waived       : 0
+  Unwaived     : 3
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/calendar/event-types.router.ts:279-285 — non-atomic-catalog-cap
+    Issue    : Concurrent event-type creations can exceed the 50-per-tenant limit.
+    Evidence : The transaction reads `tx.eventType.count({ where: { tenantId } })` before creating without acquiring a tenant lock. With 49 existing types, two concurrent requests with distinct names and slugs can both read 49 and commit, producing 51; the database migration has no constraint enforcing this count.
+    Fix      : Acquire the same per-tenant advisory lock before counting and inserting, or use serializable isolation with retries.
+    Fingerprint: 2f01a7b5495b52d5f4020284e06d2052482352d5cbacaf04d1f54b698f6aef07
+
+  [MEDIUM] apps/api/src/modules/calendar/public-booking.router.ts:508-511 — stale-required-field-validation
+    Issue    : A booking can commit without fields required by the event type's current configuration.
+    Evidence : After reloading the event type under the lock, the code checks only `current.eventType.id` and `current.eventType.durationMinutes`. Required answers are validated against the initial event type before either transaction. If an administrator adds required company or phone information between those reads, the booking still commits with that answer absent.
+    Fix      : Validate answers against `current.eventType.requiredFields` inside the booking transaction after acquiring the lock.
+    Fingerprint: 1e3760ae87f84beb1d12675f4cffbba82df19145b6bd00e1dda285efdb9f99fd
+
+  [MEDIUM] apps/api/src/modules/legal/appointments.router.ts:542-546 — post-commit-booking-failure
+    Issue    : Writing the event-type link after appointment creation can return an error for an appointment that has already been committed.
+    Evidence : `scheduleAppointmentUseCase.execute` has already persisted the appointment when the router awaits `appointment.updateMany`. If the selected event type is deleted after its initial validation, this update violates `appointments_tenantId_eventTypeId_fkey`. The request fails while leaving the appointment persisted, and execution never reaches the creation side effects.
+    Fix      : Persist the appointment and event-type link in one transaction, validating the event type within that transaction.
+    Fingerprint: 00f12f1b0cddf0be992133fdd97418c88a39f683b2e83f7a49f1c59a94a26f35
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 3 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

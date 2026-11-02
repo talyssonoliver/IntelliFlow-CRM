@@ -126,6 +126,15 @@ const TYPE_CONFIGS: Record<string, TypeConfig> = {
     label: 'Comment',
     group: 'Task',
   },
+  // PG-208: Notify action of a task automation rule
+  task_automation: {
+    icon: 'auto_awesome',
+    bgColor: 'bg-violet-50 dark:bg-violet-900/20',
+    iconColor: 'text-violet-600 dark:text-violet-400',
+    ringColor: 'ring-violet-100 dark:ring-violet-800',
+    label: 'Task Automation',
+    group: 'Task',
+  },
   // Calendar/Appointment notifications
   appointment_scheduled: {
     icon: 'event_available',
@@ -357,6 +366,15 @@ const TYPE_CONFIGS: Record<string, TypeConfig> = {
     iconColor: 'text-purple-600 dark:text-purple-400',
     ringColor: 'ring-purple-100 dark:ring-purple-800',
     label: 'Replied',
+    group: 'Email',
+  },
+  // PG-207: a sent email bounced (sent to the sender when the tenant enables it)
+  email_bounced: {
+    icon: 'error',
+    bgColor: 'bg-red-50 dark:bg-red-900/20',
+    iconColor: 'text-red-600 dark:text-red-400',
+    ringColor: 'ring-red-100 dark:ring-red-800',
+    label: 'Bounced',
     group: 'Email',
   },
 };

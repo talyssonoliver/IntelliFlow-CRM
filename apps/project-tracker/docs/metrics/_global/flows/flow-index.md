@@ -799,20 +799,28 @@ routes, UI components, and style guide patterns.
 
 **Routes (Sitemap)**:
 
-- `/privacy/dsar` → DSAR request form [IFC-162]
-- `/privacy/dsar/[requestId]` → Request status [IFC-162]
+- `/dsar/[handle]` → DSAR request form (public, per firm) [PG-203]
+- `/dsar/[handle]/verify` and `/dsar/[handle]/export` → email verification and
+  export download [PG-203]
+- `/settings/privacy-requests` → admin request queue [PG-203]
 
 **Key Artifacts**:
 
-- `apps/api/src/workflow/dsar-workflow.ts` (EXISTS - IFC-140)
-- `apps/ai-worker/src/services/embedding-purge.service.ts` (EXISTS - IFC-155)
-- `apps/api/src/modules/privacy/dsar.router.ts` [IFC-162]
-- `apps/web/src/app/privacy/dsar/page.tsx` [IFC-162]
+- `apps/api/src/modules/privacy/privacy.router.ts` (public + admin procedures)
+  [PG-203]
+- `packages/application/src/services/DataSubjectRequestService.ts` [PG-203]
+- `packages/adapters/src/repositories/PrismaSubjectDataRepository.ts` (export,
+  erasure) [PG-203]
+- `apps/web/src/app/(public)/dsar/[handle]/page.tsx` [PG-203]
+- The old `apps/api/src/workflow/dsar-workflow.ts` and `dsar.router.ts` were
+  removed in PG-203.
 
 **Backend Dependencies (IFC-140, IFC-155)**:
 
-- DSARWorkflow for erasure processing
-- EmbeddingPurgeService for search index purge
+- `PrismaSubjectDataRepository.erase` for erasure (one transaction; also clears
+  embeddings and search vectors)
+- `EmbeddingPurgeService` exists but has no caller (orphaned; the erasure above
+  replaces it)
 - Legal hold enforcement
 - Audit logging
 

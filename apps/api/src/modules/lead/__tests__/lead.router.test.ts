@@ -9,7 +9,11 @@ import { TEST_UUIDS } from '../../../test/setup';
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
+import { ProcessingRestrictedError } from '@intelliflow/domain';
+vi.mock('../lead-scoring-enqueue', () => ({ enqueueLeadScoring: vi.fn(async () => undefined) }));
+
 import { leadRouter } from '../lead.router';
+import { enqueueLeadScoring } from '../lead-scoring-enqueue';
 import {
   prismaMock,
   createTestContext,
@@ -71,6 +75,57 @@ describe('Lead Router', () => {
       expect(result.email).toBe(input.email);
       expect(result.firstName).toBe(input.firstName);
       expect(ctx.services!.lead!.createLead).toHaveBeenCalled();
+    });
+
+    it('queues AI scoring for the new lead through the shared helper (PG-203 regression)', async () => {
+      const ctx = createTestContext();
+      ctx.services!.lead!.createLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          id: { value: TEST_UUIDS.lead1 },
+          email: { value: 'scored@example.com' },
+          firstName: 'Sam',
+          lastName: 'Score',
+          company: null,
+          title: null,
+          phone: null,
+          source: 'REFERRAL',
+          status: 'NEW',
+          score: { value: 0, confidence: 0, tier: 'cold' },
+          ownerId: TEST_UUIDS.user1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
+      vi.mocked(enqueueLeadScoring).mockClear();
+
+      await leadRouter.createCaller(ctx).create({
+        email: 'scored@example.com',
+        firstName: 'Sam',
+        lastName: 'Score',
+        source: 'REFERRAL' as const,
+      });
+
+      expect(enqueueLeadScoring).toHaveBeenCalledTimes(1);
+      expect(enqueueLeadScoring).toHaveBeenCalledWith(
+        {
+          leadId: TEST_UUIDS.lead1,
+          tenantId: TEST_UUIDS.tenant,
+          lead: {
+            email: 'scored@example.com',
+            source: 'REFERRAL',
+            firstName: 'Sam',
+            lastName: 'Score',
+            company: undefined,
+            title: undefined,
+            phone: undefined,
+          },
+          correlationId: `lead-create-${TEST_UUIDS.lead1}`,
+        },
+        // PG-203: the processing-restriction reader (the container adapter in production).
+        ctx.adapters!.processingRestrictionRepository
+      );
     });
 
     it('passes the qualificationNote to the service for atomic persistence', async () => {
@@ -407,6 +462,7 @@ describe('Lead Router', () => {
         value: mockDomainLead,
       });
 
+      vi.mocked(enqueueLeadScoring).mockClear();
       const result = await callerWithService.update({
         id: TEST_UUIDS.lead1,
         firstName: 'Updated',
@@ -416,6 +472,15 @@ describe('Lead Router', () => {
       expect(ctx.services!.lead!.updateLead).toHaveBeenCalledWith(
         TEST_UUIDS.lead1,
         expect.objectContaining({ firstName: 'Updated' })
+      );
+      // PG-203 Q22: the re-score goes through the shared enqueue and its restriction gate.
+      expect(enqueueLeadScoring).toHaveBeenCalledWith(
+        expect.objectContaining({
+          leadId: TEST_UUIDS.lead1,
+          correlationId: `lead-update-${TEST_UUIDS.lead1}`,
+          lead: expect.objectContaining({ email: 'lead@example.com' }),
+        }),
+        expect.objectContaining({ status: expect.any(Function) })
       );
     });
 
@@ -800,7 +865,10 @@ describe('Lead Router', () => {
       expect(result.leadId).toBe(TEST_UUIDS.lead1);
       expect(result.score).toBe(80);
       expect(result.confidence).toBe(0.85);
-      expect(ctx.services!.lead!.scoreLead).toHaveBeenCalledWith(TEST_UUIDS.lead1);
+      expect(ctx.services!.lead!.scoreLead).toHaveBeenCalledWith(
+        TEST_UUIDS.lead1,
+        TEST_UUIDS.user1
+      );
     });
 
     it('should throw NOT_FOUND for non-existent lead', async () => {
@@ -979,10 +1047,10 @@ describe('Lead Router', () => {
 
       expect(result.successful).toEqual([TEST_UUIDS.lead1, TEST_UUIDS.lead2]);
       expect(result.failed).toEqual([]);
-      expect(ctx.services!.lead!.bulkScoreLeads).toHaveBeenCalledWith([
-        TEST_UUIDS.lead1,
-        TEST_UUIDS.lead2,
-      ]);
+      expect(ctx.services!.lead!.bulkScoreLeads).toHaveBeenCalledWith(
+        [TEST_UUIDS.lead1, TEST_UUIDS.lead2],
+        TEST_UUIDS.user1
+      );
     });
   });
 
@@ -1374,6 +1442,25 @@ describe('Lead Router', () => {
         expect.objectContaining({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'AI service unavailable',
+        })
+      );
+    });
+  });
+
+  describe('scoreWithAI and processing restrictions (PG-203, owner Q18)', () => {
+    it('answers PRECONDITION_FAILED with the data-request message when processing is restricted', async () => {
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+      ctx.services!.lead!.scoreLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: new ProcessingRestrictedError(),
+      });
+
+      await expect(callerWithService.scoreWithAI({ leadId: TEST_UUIDS.lead1 })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'PRECONDITION_FAILED',
+          message: 'Processing is restricted for this person (data request).',
         })
       );
     });

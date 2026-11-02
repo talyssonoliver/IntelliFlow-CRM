@@ -1,21 +1,21 @@
 {
   "meta": {
-    "generated_at": "2026-10-18T09:24:57.737Z",
+    "generated_at": "2026-10-21T17:04:18.973Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
   "summary": {
-    "total_tasks": 34,
+    "total_tasks": 32,
     "tier_breakdown": {
       "A": 19,
-      "B": 8,
-      "C": 7
+      "B": 7,
+      "C": 6
     },
     "error_count": 0,
-    "warning_count": 23,
-    "review_queue_size": 23,
+    "warning_count": 21,
+    "review_queue_size": 22,
     "validation_coverage": {
-      "tasks_with_validation": 34,
+      "tasks_with_validation": 32,
       "tasks_without_validation": 0,
       "coverage_percentage": 100
     }
@@ -28,15 +28,6 @@
       "message": "AI/Predictive task ENV-005-AI should have MVP criteria defined",
       "tasks": [
         "ENV-005-AI"
-      ],
-      "priority": "medium"
-    },
-    {
-      "rule": "AI_TASKS_MVP",
-      "severity": "warning",
-      "message": "AI/Predictive task ENV-008-AI should have MVP criteria defined",
-      "tasks": [
-        "ENV-008-AI"
       ],
       "priority": "medium"
     },
@@ -108,16 +99,6 @@
       ],
       "priority": "high",
       "dependentCount": 4
-    },
-    {
-      "rule": "HIGH_FANOUT",
-      "severity": "info",
-      "message": "Task ENV-008-AI has 5 direct dependents (high fan-out)",
-      "tasks": [
-        "ENV-008-AI"
-      ],
-      "priority": "high",
-      "dependentCount": 5
     },
     {
       "rule": "HIGH_FANOUT",
@@ -207,7 +188,7 @@
         "AI-SETUP-003"
       ],
       "priority": "critical",
-      "days_until_expiry": -111
+      "days_until_expiry": -114
     },
     {
       "rule": "WAIVER_USED",
@@ -227,7 +208,7 @@
         "ENV-010-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -111
+      "days_until_expiry": -114
     },
     {
       "rule": "WAIVER_USED",
@@ -247,22 +228,10 @@
         "ENV-014-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -111
+      "days_until_expiry": -114
     }
   ],
   "review_queue": [
-    {
-      "task_id": "ENV-008-AI",
-      "tier": "B",
-      "section": "Foundation Setup",
-      "status": "In Progress",
-      "owner": "DevOps Engineer",
-      "reasons": [
-        "High fan-out (5 dependents)"
-      ],
-      "dependent_count": 5,
-      "priority": "high"
-    },
     {
       "task_id": "ENV-010-AI",
       "tier": "B",
@@ -566,7 +535,6 @@
     ],
     "B": [
       "AI-SETUP-003",
-      "ENV-008-AI",
       "ENV-010-AI",
       "ENV-011-AI",
       "ENV-014-AI",
@@ -578,7 +546,6 @@
       "ENV-012-AI",
       "ENV-015-AI",
       "ENV-016-AI",
-      "EP-001-AI",
       "GTM-001",
       "PM-OPS-001",
       "ENG-OPS-001"

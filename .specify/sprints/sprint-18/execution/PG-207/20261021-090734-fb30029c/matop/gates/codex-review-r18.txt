@@ -1,0 +1,38 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 206 files total
+[codex-review] in scope : 157 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T14:51:08.208Z
+Base ref  : origin/main
+Files in scope : 157
+Total findings : 2
+  Waived       : 0
+  Unwaived     : 2
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] packages/adapters/src/messaging/email/dsn-parser.ts:162 — exchange-bounce-sender-rejected
+    Issue    : Microsoft Exchange delivery reports are rejected by the sender allowlist and never update delivery status or suppress failed recipients.
+    Evidence : `!REPORT_SENDERS.has(local)` accepts only `mailer-daemon` and `postmaster`, whereas oauth-mailbox.ts explicitly recognizes `MicrosoftExchange[0-9a-f]*` bounce senders. Reproducing with the existing DSN fixture and identical passing authentication headers returns authenticated=true for postmaster but authenticated=false for MicrosoftExchange329e71ec88ae4615bbc36ab6ce41109e. bounce-reader.ts consequently stores the latter as UNMATCHED. Microsoft confirms this system sender is used for NDRs: [Microsoft support](https://learn.microsoft.com/en-us/answers/questions/5339003/unusual-exchange-address).
+    Fix      : Recognize the Exchange system sender format while retaining the existing receiver authentication, reporter-domain entitlement, and original-message matching checks; add a fixture using that sender.
+    Fingerprint: 0ddf46f8018e33288241c5c646ee168046cad661678c3f91edc30d3ce98b8408
+
+  [MEDIUM] apps/api/src/modules/email/mailbox-sender.ts:319 — stale-credential-version-after-refresh
+    Issue    : An OAuth send that rotates its refresh token and then fails authentication leaves the mailbox ACTIVE because failure recording uses the pre-rotation credential version.
+    Evidence : `tokenVersion: mailbox.tokenVersion` passes the original snapshot to recordFailure, whose AUTH_FAILED update requires that version to match. However, sendThroughMailbox calls getOAuthAccessToken, and getOAuthAccess increments the persisted tokenVersion when storing a rotated refresh token. If Graph subsequently returns 401/403, the failure update matches zero rows despite no concurrent credential change. The connection-test handler already handles this case by retaining getOAuthAccess's returned tokenVersion.
+    Fix      : Carry the credential version returned by getOAuthAccess through the send failure path and use it for the AUTH_FAILED compare-and-set, preserving protection against concurrent reconnects.
+    Fingerprint: 07cbfc481c0ee115376ffb5ca463ffc6d10ddbf8cca310349815be7fdeb1efab
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 2 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+exit=1

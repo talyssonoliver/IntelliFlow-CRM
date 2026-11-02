@@ -68,6 +68,7 @@ import {
   formatRelativeTime,
 } from '@/lib/leads/lead-format';
 import { LeadTimeline } from '@/components/leads/lead-timeline';
+import { RestrictionBanner } from '@/components/privacy/RestrictionBanner';
 
 // Common nullable date type
 type DateStringNull = Date | string | null;
@@ -2766,6 +2767,9 @@ export default function Lead360Page() {
         onLogCall={() => setLogCallOpen(true)}
         onOpenActionSheet={() => setActionSheetOpen(true)}
       />
+
+      {/* PG-203 DSAR: a data request restricted processing of this person. */}
+      <RestrictionBanner entity="lead" id={lead.id} />
 
       <EntityActionSheet
         open={actionSheetOpen}

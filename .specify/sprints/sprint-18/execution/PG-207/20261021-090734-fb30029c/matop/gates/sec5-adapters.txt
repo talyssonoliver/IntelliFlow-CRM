@@ -1,0 +1,13 @@
+[test-slot] slot3 taken for PG-207@feat/pg-207-email-settings: pnpm --filter ./packages/adapters exec vitest run src/messaging/email/__tests__/dsn-parser.test.ts src/messaging/email/__tests__/bounce-senders.test.ts
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-207/packages/adapters
+
+
+ Test Files  2 passed (2)
+      Tests  38 passed (38)
+   Start at  00:23:24
+   Duration  704ms (transform 361ms, setup 0ms, import 535ms, tests 24ms, environment 0ms)
+
+exit=0

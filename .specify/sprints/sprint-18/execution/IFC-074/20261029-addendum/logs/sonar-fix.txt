@@ -1,0 +1,6 @@
+# sonar fix (S2871 x2, S6959, S9383): collector suite + lint + prettier, 2026-10-29T17:19:42Z, base HEAD 27ff7e70d + working-tree fix
+ Test Files  1 passed (1)
+      Tests  79 passed (79)
+vitest exit 0
+eslint exit 0
+[[33mwarn[39m] Code style issues found in the above file. Run Prettier with --write to fix.

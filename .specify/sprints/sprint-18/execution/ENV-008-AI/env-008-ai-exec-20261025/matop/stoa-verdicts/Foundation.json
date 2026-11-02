@@ -1,0 +1,22 @@
+{
+  "task_id": "ENV-008-AI",
+  "run_id": "env-008-ai-exec-20261025",
+  "stoa": "Foundation",
+  "verdict": "PASS",
+  "reviewed_at": "2026-10-25",
+  "reviewed_head": "5162ed721",
+  "agent": "stoa-foundation subagent (Agent tool)",
+  "gates": [
+    "typecheck",
+    "build",
+    "lint",
+    "lint-format",
+    "artifact-paths",
+    "workflow-secret-lint",
+    "d.mts-exports",
+    "otel-config-keys",
+    "nf002"
+  ],
+  "findings": [],
+  "source": ".specify/sprints/sprint-18/execution/ENV-008-AI/stoa-verdicts.md"
+}

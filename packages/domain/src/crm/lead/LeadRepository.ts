@@ -20,6 +20,29 @@ export class LeadStatusConflictError extends Error {
 }
 
 /**
+ * The lead's email is no longer the one a scoring run read (PG-203 DSAR: it was erased or
+ * changed while the AI call ran). The score-only write was not applied.
+ */
+export class LeadIdentityChangedError extends Error {
+  constructor(readonly leadId: string) {
+    super(`Lead ${leadId} changed while it was being scored; the result was discarded`);
+    this.name = 'LeadIdentityChangedError';
+  }
+}
+
+export interface LeadSaveOptions {
+  note?: { content: string; author: string };
+  expectedStatus?: string;
+  /**
+   * Write ONLY the score (and updatedAt), and only while the persisted email still equals
+   * this one (case-insensitive). Scoring passes the email it scored, so a result that comes
+   * back after an erasure can never rewrite the erased lead (PG-203 DSAR).
+   * `LeadIdentityChangedError` is thrown when it no longer matches.
+   */
+  scoreOnlyIfEmail?: string;
+}
+
+/**
  * Lead Repository Interface
  * Defines the contract for lead persistence
  * Implementation lives in adapters layer
@@ -41,11 +64,7 @@ export interface LeadRepository {
    * `LeadStatusConflictError` is thrown and nothing is written. Status
    * transitions MUST pass it so a stale read cannot overwrite a newer status.
    */
-  save(
-    lead: Lead,
-    opts?: { note?: { content: string; author: string }; expectedStatus?: string },
-    tx?: RepositoryTransaction
-  ): Promise<void>;
+  save(lead: Lead, opts?: LeadSaveOptions, tx?: RepositoryTransaction): Promise<void>;
 
   /**
    * Find a lead by ID

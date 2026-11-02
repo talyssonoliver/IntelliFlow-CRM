@@ -6,9 +6,9 @@
   "attestation_timestamp": "2026-02-21T00:05:00Z",
   "verdict": "COMPLETE",
   "artifact_hashes": {
-    "apps/api/src/modules/auth/auth.router.ts": "ce1f9f0b3f7a8cea7bc00510c7cf82aace92c651f7667b2b870f788878ab724d",
-    "packages/validators/src/auth.ts": "9fe1b280dc1882c2c359366388ca6231fe354a0a2eeb8dbe5bd36be18c7d4cd7",
-    "apps/api/src/lib/supabase.ts": "4cf216fc73e3223ee5676565f0b39a9e8dbfe29d162ec001dac3f274700ecb9c"
+    "apps/api/src/modules/auth/auth.router.ts": "sha256:ce1f9f0b3f7a8cea7bc00510c7cf82aace92c651f7667b2b870f788878ab724d",
+    "packages/validators/src/auth.ts": "sha256:9fe1b280dc1882c2c359366388ca6231fe354a0a2eeb8dbe5bd36be18c7d4cd7",
+    "apps/api/src/lib/supabase.ts": "sha256:4cf216fc73e3223ee5676565f0b39a9e8dbfe29d162ec001dac3f274700ecb9c"
   },
   "validation_results": [
     {

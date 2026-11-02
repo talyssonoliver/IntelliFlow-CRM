@@ -89,9 +89,10 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
     await this.syncACL(data.id, data.tenantId, data.acl);
   }
 
-  async findById(id: string): Promise<CaseDocument | null> {
-    const record = await this.prisma.caseDocument.findUnique({
-      where: { id },
+  async findById(id: string, tenantId: string): Promise<CaseDocument | null> {
+    // Tenant-scoped (#1075 review): the id alone is not a boundary.
+    const record = await this.prisma.caseDocument.findFirst({
+      where: { id, tenantId },
       include: { acl: true },
     });
 
@@ -100,14 +101,14 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
     return this.toDomain(record);
   }
 
-  async findByIds(ids: string[]): Promise<CaseDocument[]> {
+  async findByIds(ids: string[], tenantId: string): Promise<CaseDocument[]> {
     if (ids.length === 0) return [];
 
     // Deduplicate ids to avoid redundant rows in the IN clause
     const uniqueIds = [...new Set(ids)];
 
     const records = await this.prisma.caseDocument.findMany({
-      where: { id: { in: uniqueIds }, deletedAt: null },
+      where: { id: { in: uniqueIds }, tenantId, deletedAt: null },
       include: { acl: true },
     });
 
@@ -186,9 +187,10 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
     return versions;
   }
 
-  async findByCaseId(caseId: string): Promise<CaseDocument[]> {
+  async findByCaseId(caseId: string, tenantId: string): Promise<CaseDocument[]> {
     const records = await this.prisma.caseDocument.findMany({
       where: {
+        tenantId,
         relatedCaseId: caseId,
         deletedAt: null,
         isLatestVersion: true,

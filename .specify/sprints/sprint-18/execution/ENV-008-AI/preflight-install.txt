@@ -1,0 +1,51 @@
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+Scope: all 26 workspace projects
+Lockfile is up to date, resolution step is skipped
+Already up to date
+
+. postinstall$ pnpm run db:generate && tsx tools/scripts/split-sprint-plan.ts
+. postinstall:  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+. postinstall: apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+. postinstall:  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+. postinstall: > intelliflow-crm@0.1.0 db:generate C:\Users\talys\projects\intelliFlow-CRM-worktrees\env-008-ai
+. postinstall: > pnpm --filter @intelliflow/db db:generate
+. postinstall: .                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+. postinstall: apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+. postinstall: > @intelliflow/db@0.1.0 db:generate C:\Users\talys\projects\intelliFlow-CRM-worktrees\env-008-ai\packages\db
+. postinstall: > prisma generate && node scripts/fix-prisma-esm.mjs
+. postinstall: Loaded Prisma config from prisma.config.ts.
+. postinstall: Prisma schema loaded from prisma\schema.prisma.
+. postinstall: ✔ Generated Prisma Client (7.8.0) to .\generated\prisma in 1.95s
+. postinstall: [fix-prisma-esm] Created 209 .js shim files in generated/prisma/
+. postinstall: ======================================================================
+. postinstall: SPRINT PLAN SPLIT COMPLETE (Token-Based)
+. postinstall: ======================================================================
+. postinstall: Source: Sprint_plan.csv (619 rows)
+. postinstall: Token limit per file: ~18000 tokens (~72000 chars)
+. postinstall: Generated Parts:
+. postinstall:   Sprint_plan_A.csv: rows 1-69 (69 rows, ~17982 tokens, 71926 chars)
+. postinstall:   Sprint_plan_B.csv: rows 70-143 (74 rows, ~17889 tokens, 71554 chars)
+. postinstall:   Sprint_plan_C.csv: rows 144-216 (73 rows, ~17717 tokens, 70867 chars)
+. postinstall:   Sprint_plan_D.csv: rows 217-286 (70 rows, ~17923 tokens, 71689 chars)
+. postinstall:   Sprint_plan_E.csv: rows 287-350 (64 rows, ~17966 tokens, 71862 chars)
+. postinstall:   Sprint_plan_F.csv: rows 351-415 (65 rows, ~17890 tokens, 71557 chars)
+. postinstall:   Sprint_plan_G.csv: rows 416-479 (64 rows, ~17794 tokens, 71173 chars)
+. postinstall:   Sprint_plan_H.csv: rows 480-542 (63 rows, ~17764 tokens, 71056 chars)
+. postinstall:   Sprint_plan_I.csv: rows 543-586 (44 rows, ~17669 tokens, 70673 chars)
+. postinstall:   Sprint_plan_J.csv: rows 587-619 (33 rows, ~8659 tokens, 34635 chars)
+. postinstall: IMPORTANT: Sprint_plan.csv is the source of truth.
+. postinstall:            Edit ONLY Sprint_plan.csv, then run this script to regenerate parts.
+. postinstall: ======================================================================
+. postinstall: Done
+╭ Warning ─────────────────────────────────────────────────────────────────────╮
+│                                                                              │
+│   Ignored build scripts: @prisma/engines@7.8.0, @sentry/cli@2.58.6,          │
+│   core-js@3.48.0, cpu-features@0.0.10, esbuild@0.28.1, esbuild@0.28.2,       │
+│   msgpackr-extract@3.0.4, msw@2.14.6, prisma@7.8.0, puppeteer@25.1.0,        │
+│   ssh2@1.17.0, unrs-resolver@1.12.2, vue-demi@0.14.10.                       │
+│   Run "pnpm approve-builds" to pick which dependencies should be allowed     │
+│   to run scripts.                                                            │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+Done in 14.4s using pnpm v10.33.0

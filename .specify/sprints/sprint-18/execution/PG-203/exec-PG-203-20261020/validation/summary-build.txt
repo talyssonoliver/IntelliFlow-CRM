@@ -1,0 +1,3 @@
+lint exit 0
+api build exit 0
+web build exit 0

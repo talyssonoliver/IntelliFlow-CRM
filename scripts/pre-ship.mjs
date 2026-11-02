@@ -98,6 +98,7 @@ import {
 import { stepLine, advisoryNote, persistedState, finalLine } from './lib/preship-report.mjs';
 import { integrationInfraMissing } from './lib/preship-integration-infra.mjs';
 import { reusableResult } from './lib/preship-cache.mjs';
+import { testStepEnv } from './lib/preship-build.mjs';
 
 // Throwaway stub credentials for the build-time env mirror below (never a real DB).
 const STUB_DB_USER = 'stub';
@@ -369,9 +370,15 @@ const STEPS = [
     required: true,
   },
   {
+    // #1100: locally the turbo typecheck runs with --concurrency (default 3,
+    // PRESHIP_TYPECHECK_CONCURRENCY overrides it); all packages at once was the
+    // gate's memory peak. Under CI it keeps turbo's default parallelism. See
+    // scripts/lib/preship-typecheck.mjs.
     id: 'typecheck',
-    description: 'turbo run typecheck + sonar-guard',
-    cmd: ['pnpm', 'run', 'typecheck'],
+    description: IS_CI
+      ? 'turbo run typecheck + sonar-guard'
+      : 'turbo run typecheck (bounded concurrency) + sonar-guard',
+    cmd: ['node', 'scripts/run-typecheck.mjs'],
     required: true,
   },
   {
@@ -434,7 +441,7 @@ const STEPS = [
       ? `vitest related --project=!integration — ${TEST_SCOPE.scope} scope (${TEST_SCOPE.reason})`
       : 'vitest run --project=!integration — full suite',
     cmd: ['node', 'scripts/run-unit-tests-scoped.mjs'],
-    env: { [SCOPE_ENV]: SCOPE_ENV_VALUE },
+    env: { [SCOPE_ENV]: SCOPE_ENV_VALUE, ...testStepEnv({ isCI: IS_CI, env: process.env }) },
     required: true,
   },
   {
@@ -457,7 +464,11 @@ const STEPS = [
     cmd: ['pnpm', 'run', 'test:coverage'],
     // In a scoped run, run-coverage.js reads this and runs `vitest related` per
     // project, so diff-coverage still measures the changed lines locally.
-    env: SCOPED_TESTS ? { COVERAGE_RELATED_FILES: JSON.stringify(TEST_SCOPE.files) } : {},
+    // Locally, vitest's workers don't inherit a heap cap either (#1111).
+    env: {
+      ...(SCOPED_TESTS ? { COVERAGE_RELATED_FILES: JSON.stringify(TEST_SCOPE.files) } : {}),
+      ...testStepEnv({ isCI: IS_CI, env: process.env }),
+    },
     // Needs a local test DB (the merged run includes the integration project).
     // Without one, degrade to MISSING-required rather than hard-fail against a
     // possibly-wrong/prod DB.
@@ -534,8 +545,12 @@ const STEPS = [
   },
   {
     id: 'build',
-    description: 'pnpm run build (full prod build — catches Next.js page-data collection issues)',
-    cmd: ['pnpm', 'run', 'build'],
+    description: IS_CI
+      ? 'pnpm run build (full prod build — catches Next.js page-data collection issues)'
+      : 'turbo run build --concurrency=1, 2 Next page workers, 4 GB heap (full prod build; #1111)',
+    // scripts/lib/preship-build.mjs: locally the build runs one package at a time with
+    // capped Next page workers and heap; under CI it is `pnpm run build` as before.
+    cmd: ['node', 'scripts/run-build.mjs'],
     // CI's Build job sets a wall of env stubs for module-load guards
     // (Prisma encryption, AI audit signing, Supabase). Mirror locally
     // so a stub env doesn't silently fail differently from CI.
@@ -545,8 +560,12 @@ const STEPS = [
         process.env.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
       AI_AUDIT_SIGNING_KEY:
         process.env.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime',
-      DATABASE_URL: process.env.DATABASE_URL || `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
-      DIRECT_URL: process.env.DIRECT_URL || `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
+      DATABASE_URL:
+        process.env.DATABASE_URL ||
+        `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
+      DIRECT_URL:
+        process.env.DIRECT_URL ||
+        `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
       SUPABASE_URL: process.env.SUPABASE_URL || 'https://stub.supabase.co',
       SUPABASE_ANON_KEY:
         process.env.SUPABASE_ANON_KEY ||
@@ -679,6 +698,15 @@ const STEPS = [
     id: 'validate-sprint-data',
     description: 'sprint data validator',
     cmd: ['pnpm', 'run', 'validate:sprint-data'],
+    required: true,
+  },
+  {
+    // Waiver anchors (#980): a waiver on a trivial or repeated line matches nothing
+    // under the anchor rule, and the old fingerprints it came from could hide most of
+    // a file. Needs no reviewer, so it runs wherever the gate runs, CI included.
+    id: 'codex-waivers',
+    description: 'Semantic review waivers are anchored on one unique line of real code',
+    cmd: ['node', 'scripts/codex-review.mjs', '--check-waivers'],
     required: true,
   },
   {

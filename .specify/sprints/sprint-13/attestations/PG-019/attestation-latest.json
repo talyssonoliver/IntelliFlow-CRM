@@ -17,10 +17,10 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/(public)/forgot-password/page.tsx": "9640170198d39ef849c891f3d4c4f4da11d5cef75f13505726114d97f70b765e",
-    "apps/web/src/components/shared/reset-email.tsx": "889d7dcd64342b580115728a0464f58ad023fa74f2668f1c9c0c381983a3047d",
-    "apps/web/src/lib/shared/reset-token.ts": "59fa89e91e4ed805d8d899c04c33a0ed9df2724adab73bd891f648193ee43947",
-    ".specify/sprints/sprint-13/attestations/PG-019/context_ack.json": "1a70c473bfd3528187abf3f0bf25be3a0ac500c24ee70827d588fe7be2b0a7d6"
+    "apps/web/src/app/(public)/forgot-password/page.tsx": "sha256:9640170198d39ef849c891f3d4c4f4da11d5cef75f13505726114d97f70b765e",
+    "apps/web/src/components/shared/reset-email.tsx": "sha256:889d7dcd64342b580115728a0464f58ad023fa74f2668f1c9c0c381983a3047d",
+    "apps/web/src/lib/shared/reset-token.ts": "sha256:59fa89e91e4ed805d8d899c04c33a0ed9df2724adab73bd891f648193ee43947",
+    ".specify/sprints/sprint-13/attestations/PG-019/context_ack.json": "sha256:1a70c473bfd3528187abf3f0bf25be3a0ac500c24ee70827d588fe7be2b0a7d6"
   },
   "validation_results": [
     {

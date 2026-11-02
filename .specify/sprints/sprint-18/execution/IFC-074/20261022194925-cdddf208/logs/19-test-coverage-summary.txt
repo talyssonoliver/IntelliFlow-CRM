@@ -1,0 +1,83 @@
+# Summary of pnpm test:coverage (full log kept locally: 2.2 MB). Generated 2026-10-22T23:05:45Z
+9:━━━ [1/17] web ━━━
+6475: Test Files  840 passed (840)
+6476:      Tests  13193 passed (13193)
+7194:━━━ [2/17] ai-worker ━━━
+8269: Test Files  134 passed | 1 skipped (135)
+8270:      Tests  2400 passed | 10 skipped (2410)
+8392:━━━ [3/17] domain ━━━
+8629: Test Files  109 passed (109)
+8630:      Tests  3155 passed (3155)
+8732:━━━ [4/17] db ━━━
+8757: Test Files  16 passed (16)
+8758:      Tests  233 passed | 5 skipped (238)
+8788:━━━ [5/17] adapters ━━━
+9049: Test Files  111 passed (111)
+9050:      Tests  2993 passed (2993)
+9154:━━━ [6/17] application ━━━
+9399: Test Files  58 passed (58)
+9400:      Tests  1494 passed (1494)
+9459:━━━ [7/17] validators ━━━
+9527: Test Files  60 passed (60)
+9528:      Tests  2817 passed (2817)
+9558:━━━ [8/17] ui ━━━
+9977: Test Files  58 passed (58)
+9978:      Tests  1252 passed (1252)
+9998:━━━ [9/17] observability ━━━
+10380: Test Files  1 failed | 3 passed (4)
+10381:      Tests  26 failed | 18 passed (44)
+10401:━━━ [10/17] worker-shared ━━━
+10434: Test Files  5 passed (5)
+10435:      Tests  62 passed (62)
+10455:━━━ [11/17] events-worker ━━━
+10471: Test Files  8 passed (8)
+10472:      Tests  124 passed (124)
+10492:━━━ [12/17] ingestion-worker ━━━
+10501: Test Files  1 passed (1)
+10502:      Tests  19 passed (19)
+10522:━━━ [13/17] architecture ━━━
+10540: Test Files  6 passed (6)
+10541:      Tests  40 passed (40)
+10561:━━━ [14/17] a11y ━━━
+10614: Test Files  1 passed (1)
+10615:      Tests  8 passed (8)
+10635:━━━ [15/17] integration ━━━
+12307: Test Files  29 passed | 1 skipped (30)
+12308:      Tests  476 passed | 50 skipped (526)
+12328:━━━ [16/17] api ━━━
+25019: Test Files  316 passed (316)
+25020:      Tests  8012 passed | 2 skipped (8014)
+25261:━━━ [17/17] root ━━━
+26387: Test Files  117 passed (117)
+26388:      Tests  2702 passed | 2 skipped (2704)
+--- tail ---
+  ...-severity.mjs |   71.79 |    81.25 |     100 |   70.58 | 83-97             
+  ...d-js-lint.mjs |    57.3 |    46.93 |   57.14 |   56.57 | 214-284,293,298   
+  ...cret-lint.mjs |       0 |        0 |       0 |       0 | 57-278            
+ .../worktree-pool |       0 |        0 |       0 |       0 |                   
+  ...-existing.mjs |       0 |        0 |       0 |       0 | 44-488            
+ tools/stoa        |   26.71 |       27 |   28.81 |   27.35 |                   
+  matop-execute.ts |       0 |        0 |       0 |       0 | 71-743            
+  matop-sprint.ts  |       0 |        0 |       0 |       0 | 73-390            
+  run-stoa.ts      |   99.18 |    98.46 |     100 |   99.14 | 446               
+-------------------|---------|----------|---------|---------|-------------------
+
+📊 Merged coverage summary:
+   Lines:      64928/100477 (64.6%)
+   Statements: 69883/109439 (63.9%)
+   Functions:  16453/23811 (69.1%)
+   Branches:   42472/70544 (60.2%)
+
+✅ Canonical coverage written to: artifacts/coverage/
+
+⚠ 5 project(s) breached coverage thresholds (all tests passed — this is debt, not a regression):
+   - web
+   - ai-worker
+   - adapters
+   - api
+   - root
+
+❌ 1 project(s) had ACTUAL TEST FAILURES:
+   - observability: 28 test failure(s), exit 1
+ ELIFECYCLE  Command failed with exit code 1.
+exit=1

@@ -1,0 +1,13 @@
+{
+  "task_id": "IFC-117",
+  "run_id": "run-20261029-review",
+  "stoa_verdicts": {
+    "Intelligence": "WARN",
+    "Quality": "WARN",
+    "Foundation": "WARN",
+    "Security": "WARN"
+  },
+  "compliance_check": "FAIL -> resolved (65ecc91eb)",
+  "aggregate": "NEEDS_HUMAN",
+  "reason": "Every WARN and the compliance FAIL is resolved in f4d9290d3, 65ecc91eb, 5b4bc7f4e and df34ac20c, tracked as pre-existing (#1065), or filed (#1094). The task verdict stays NEEDS_HUMAN because production evidence N1-N7 needs the owner after promotion."
+}

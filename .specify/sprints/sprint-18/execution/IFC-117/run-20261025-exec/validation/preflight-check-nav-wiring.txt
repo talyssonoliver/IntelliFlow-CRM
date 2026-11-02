@@ -1,0 +1,2 @@
+[nav-wiring] Checking IFC-117 (sprint 18) — C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-117\.specify\sprints\sprint-18\planning\IFC-117-plan.md
+[nav-wiring] OK — plan does not create any page.tsx under apps/web/src/app/.

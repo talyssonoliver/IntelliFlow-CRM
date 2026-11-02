@@ -1,0 +1,13 @@
+# 2026-10-20T23:30:14Z
+# 91c6477ac5cbe5f21cf81c522b36ec57bad849eb
+# pnpm --filter @intelliflow/validators exec vitest run src/__tests__/event-types.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/validators
+
+
+ Test Files  1 passed (1)
+      Tests  28 passed (28)
+   Start at  00:30:15
+   Duration  518ms (transform 221ms, setup 0ms, import 323ms, tests 18ms, environment 0ms)
+
+# exit=0

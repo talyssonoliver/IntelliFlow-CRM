@@ -1,0 +1,30 @@
+{
+  "task_id": "IFC-117",
+  "session": "plan-session",
+  "sprint": 18,
+  "spec_path": ".specify/sprints/sprint-18/specifications/IFC-117-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/IFC-117-plan.md",
+  "steps": 28,
+  "phases": ["RED (S1-S9)", "GREEN (S10-S22)", "REFACTOR (S23)", "VALIDATION/DOCS/CSV (S24-S28)"],
+  "files": { "create": 19, "modify": 33, "delete": 3, "conditional": "S16 lifecycle tests, S22 project-tracker consumer, Preflight 11 otel config" },
+  "effort_hours": "10.5-14.5 (CSV PERT 390 min; overrun recorded)",
+  "plan_reviewer": {
+    "agent": ".claude/agents/plan-reviewer.md",
+    "iterations": [
+      { "iteration": 1, "verdict": "REVISE", "errors": 8, "warnings": 8, "info": 3 },
+      { "iteration": 2, "verdict": "REVISE", "errors": 2, "warnings": 4, "info": 2 },
+      { "iteration": 3, "verdict": "APPROVED_WITH_CHANGES", "errors": 1, "warnings": 0, "info": 3, "note": "The S25 expected-set error was fixed. The reviewer stated that no further full pass is needed." }
+    ],
+    "final": "APPROVED_WITH_CHANGES"
+  },
+  "external_inputs": [
+    "Coordinator (Aurora) GO and constraints, 2026-10-24/25",
+    "env-008-ai-c7 answers on the dashboard job, config shape and lib signatures, 2026-10-25"
+  ],
+  "csv_status_note": "The CSV stays 'In Progress', because tools/scripts/lib/workflow/config.ts does not allow In Progress -> Planning or Plan Complete. The exec Phase 5 target is 'Needs Human', subject to Preflight 4.",
+  "preflights_run": {
+    "check-plan-reviewer-subagent": "exit 0",
+    "check-page-doc-cochange": "exit 0 (no page.tsx)"
+  },
+  "completed_at": "2026-10-25T16:18:12Z"
+}

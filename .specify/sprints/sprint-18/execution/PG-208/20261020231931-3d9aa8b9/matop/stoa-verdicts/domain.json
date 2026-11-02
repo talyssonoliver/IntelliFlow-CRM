@@ -1,0 +1,88 @@
+{
+  "stoa": "domain",
+  "task_id": "PG-208",
+  "verdict": "PASS",
+  "git_commit": "e6f678441f4fbf9e4f97b06abd8e17b06727d12e",
+  "reviewed_tree": "e6f678441 plus the uncommitted link-fallback fix that the commit after it adds (TaskLinkRejectedError; engine retries unlinked only on TASK_LINK_REJECTED)",
+  "timestamp": "2026-10-29T20:30:25Z",
+  "method": "Read-only claude -p run (Read, Grep, Glob, git diff/show/log only; no builds or tests), whole branch diff origin/main...HEAD plus the working-tree diff. Raw output: session scratchpad 208-stoa-domain.out.",
+  "supersedes": {
+    "verdict": "PASS",
+    "git_commit": "5f11ac307ae54493d1a88142f0853adcde772e04",
+    "timestamp": "2026-10-22T00:00:00Z",
+    "note": "Local pre-squash commit; its full verdict is in git history of this file. Superseded because the 2026-10-29 security-relevant commits (1d5758f9d, e6f678441) and the link-fallback fix landed after it."
+  },
+  "checks": [
+    {
+      "name": "Hexagonal boundaries",
+      "passed": true,
+      "evidence": "The branch adds these imports to domain and application: domain/automation imports only domain types (LeadStatus from ../../lead/Lead, OpportunityStage, TaskPriority, ACCOUNT_OWNER_ADMIN_ROLES), so there are no infra imports. ApplicationErrors.ts:1 imports only DomainError from @intelliflow/domain. ApplicationErrors.ts:69-71 TaskLinkRejectedError extends ValidationError and only adds readonly reason='TASK_LINK_REJECTED', so code stays VALIDATION_ERROR (line 40) and the message is passed through. It is exported via errors/index.ts (export * from './ApplicationErrors'). The new port method sits on the domain TaskRepository interface (TaskRepository.ts, 228feb19a) and adapters implement it. No apps code checks error.name === 'ValidationError' (grep over apps: 0 hits), so the subclass name that DomainError sets (Result.ts:80) breaks no caller."
+    },
+    {
+      "name": "Validators derive from domain constants; every tRPC input is Zod from @intelliflow/validators",
+      "passed": true,
+      "evidence": "validators/src/task-automation.ts:7-16 imports TASK_AUTOMATION_ACTION_TYPES, EVENT_TYPES, LIMITS and OPEN_STAGES from @intelliflow/domain. The enums are z.enum(TASK_AUTOMATION_EVENT_TYPES) at :47, z.enum(TASK_AUTOMATION_OPEN_STAGES) at :49 and z.enum(TASK_PRIORITIES) at :120, and L = TASK_AUTOMATION_LIMITS at :28. In task-automation.router.ts every mutation with input calls .input(<schema>): :545, 606, 633, 669, 723, 746, 799, 848, 862, 901, 929, 965, 984. get/list (:542, 596, 695) and resetToDefaults (:1029) take no input. task.router.ts:844 assign uses assignTaskSchema."
+    },
+    {
+      "name": "Prisma schema and Class A migration",
+      "passed": true,
+      "evidence": "migration.sql creates four new tables, each with tenantId TEXT NOT NULL (:25, :40, :117, :142), tenant FKs with ON DELETE CASCADE (:190-205) and a composite (tenantId,ruleId) FK on runs (:202). RLS is enabled on all four tables (:221-224) with USING/WITH CHECK tenant policies (:227-250). The SQL has no ALTER on existing tables and no DROP; the only DROP text is the comment at :15 that labels a down-migration Class C. Task.assigneeId already exists in schema.prisma:1833 with indexes :1846/:1857. The schema diff adds models with tenantId and @@index/@@unique on tenantId."
+    },
+    {
+      "name": "TaskRepository port saveAssignment contract (updatedAt guard) and adapters",
+      "passed": true,
+      "evidence": "Port in TaskRepository.ts (228feb19a): writes only the assignee, only if id, tenant and updatedAt still match, and returns false otherwise. PrismaTaskRepository.saveAssignment is updateMany where {id, tenantId, updatedAt: expectedUpdatedAt}, data {assigneeId, updatedAt}, and returns count===1. InMemoryTaskRepository tracks savedAt per id, compares tenant and timestamp, and returns false on mismatch. ae3f0e56c drops assigneeId from the upsert update branch. That is safe for existing callers: Task.assignTo (Task.ts:355) is the only mutator of assigneeId, it is called only from TaskService.assignTask:725, and taskService has no other assigneeId writer (grep)."
+    },
+    {
+      "name": "TaskService behaviour for existing callers after the error change",
+      "passed": true,
+      "evidence": "In TaskService.ts:33-36 assignmentError returns TaskLinkRejectedError(message) unless checkFailed, keeping the same message fallbacks ('Invalid lead/contact/opportunity assignment') at :115, :122, :133. checkFailed is set only for the unknown-entity branch (:845-851) and the lookup throw (:856-862), so a failed lookup stays a plain ValidationError with no reason. Link rejections are the non-throwing isValid:false returns: format, not found, converted lead or closed opportunity (:870-921). assignToLead/Contact/Opportunity (:397, :438, :480) are unchanged. Tests check code VALIDATION_ERROR plus reason (TaskService.additional.test.ts:452-453), reason undefined on a lookup throw (:720-721), and the converted-lead reason (TaskService.test.ts:167)."
+    },
+    {
+      "name": "Engine state machine incl. narrowed link fallback",
+      "passed": true,
+      "evidence": "engine.ts:619 now retries only when created.ok is false, the request is linked and created.linkRejected is true; any other failure returns as is, and :547 maps it to FAILED/task_create_failed. A failed retry also returns FAILED, and a successful retry pushes link_fallback_unlinked (:629). runtime.ts toCreateTaskResult sets linkRejected only when error.reason === 'TASK_LINK_REJECTED'. Admission: store.ts:275-278 takes pg_advisory_xact_lock per tenant; :316-317 re-locks the rule FOR SHARE and checks isActive/stillMatches; :318-331 re-verifies webhook credentials; caps come after. engine.ts:373-378 handles inactive/capped/created. executeRun gives SKIPPED for rule_inactive or automation_disabled (:481-483), FAILED for unparseable actions (:487-489), SKIPPED for no_eligible_owner (:527) and SUCCEEDED (:562-567). A thrown error becomes internal_error (:462-465). claimPendingRuns uses a PENDING→RUNNING CAS (store.ts:612-616), and reapStaleRuns marks interrupted (:672-677). The purge backlog drains in bounded batches (456c86583)."
+    },
+    {
+      "name": "Round-robin and owner resolution",
+      "passed": true,
+      "evidence": "resolveOwner (engine.ts:188-200) tries the live record owner, then the live creator (outcome owner_fallback_creator), then null. assign (:698-733): an empty pool means no assignment; no eligible member means the owner gets it with pool_empty_fallback_owner unshifted; the cursor goes through an atomic increment (store.ts:663-670); an assignTask failure is the assign_failed outcome and does not fail the run. pickRoundRobinAssignee (task-automation-constants.ts:436-440) returns eligible[((c-1)%n+n)%n]. canOpenTask goes to the owner or assignee only (:762), and notificationLink (runtime) points other recipients to /tasks."
+    },
+    {
+      "name": "Schedule slots and due dates",
+      "passed": true,
+      "evidence": "enqueueSchedule (engine.ts:398-450): computeNextRun is strictly after now, so there is no catch-up. An InvalidCronError deactivates the rule with invalid_schedule. A slot that fell due while automation was disabled or off is consumed (:419-425). claimSlotAndAdmit claims and admits in one transaction under the idempotency key schedule:<slot>. computeAutomationDueDate (constants.ts:420-429) takes the end of day in the rule's time zone with a 15-minute floor, so TaskService's 'Due date cannot be in the past' (TaskService.ts:150) is not hit, and the narrowed fallback no longer masks it in any case."
+    },
+    {
+      "name": "tRPC type safety and DTOs",
+      "passed": true,
+      "evidence": "CreateTaskResult is a discriminated union with optional linkRejected (engine.ts:72-75). TaskServiceLike.createTask error is typed {message; reason?} (runtime.ts:66), so the real DomainError is structurally assignable. NotifyRequest is shared between engine and runtime, with no duplicated param type (e6f678441). The router uses tenantProcedure/sensitiveProcedure (task-automation.router.ts:50, :150). task.getByEntity now applies withAssigneeVisibility on top of createTenantWhereClause (task.router.ts diff, :206-213)."
+    },
+    {
+      "name": "Tests that assert the wrong thing",
+      "passed": true,
+      "evidence": "engine.test.ts:699-714 marks the link refusal linkRejected:true, expects two creates with the second unlinked, and SUCCEEDED/link_fallback_unlinked. :716-727 checks that a non-link failure makes one create, keeps leadId and ends FAILED/task_create_failed, so no orphan task. runtime.test toCreateTaskResult covers the reason mapping, a different message and a missing error. TaskService tests check code and reason, and reason undefined on a lookup throw. Each assertion matches the intended contract. The gap: no test covers a link-rejected retry that also fails (see LOW finding)."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "LOW",
+      "file": "apps/api/src/modules/task/automation/task-automation-runtime.ts:136",
+      "scenario": "The runtime compares error.reason with the string literal 'TASK_LINK_REJECTED', which duplicates the value set in ApplicationErrors.ts:70. If the reason is renamed in the application layer, every refused link fails the run instead of falling back to an unlinked task. That is safe (it creates no orphan), but it would be a silent change in behaviour.",
+      "fix": "Export the reason as a constant from @intelliflow/application (for example TASK_LINK_REJECTED_REASON) and use it in TaskLinkRejectedError and toCreateTaskResult, or check with instanceof TaskLinkRejectedError."
+    },
+    {
+      "severity": "LOW",
+      "file": "apps/api/src/modules/task/automation/__tests__/task-automation-engine.test.ts:699",
+      "scenario": "No test covers a link rejection where the unlinked retry also fails. createWithLinkFallback returns that failed retry and runActions marks the run FAILED. A regression that reported success there, or that recorded link_fallback_unlinked on a failed retry, would go uncaught.",
+      "fix": "Add a case where createResult returns linkRejected:true for the linked request and ok:false for the unlinked one. Assert created has length 2, status FAILED and errorCode task_create_failed, and that the outcome is not link_fallback_unlinked."
+    },
+    {
+      "severity": "LOW",
+      "file": "apps/api/src/modules/task/automation/task-automation-engine.ts:174",
+      "scenario": "The JSDoc for resolveOwner ('Owner (ruling 3): …') sits above notifyRecipients, giving two stacked doc comments. resolveOwner at :188 has none, so editor hovers show the wrong description.",
+      "fix": "Move the 'Owner (ruling 3)' comment down to sit directly above resolveOwner."
+    }
+  ],
+  "findings_resolution": "LOW \"no test for a refused link whose unlinked retry also fails\": added (task-automation-engine.test.ts, \"fails the run when the link is refused and the unlinked retry also fails\"). Other LOWs left as is."
+}

@@ -1,0 +1,471 @@
+[test-slot] slot3 taken for PG-203@feat/pg-203-event-types (holding group-intelliflow-db): pnpm test:db:run -- pnpm exec vitest run --project integration --reporter=verbose tests/integration/event-types.test.ts tests/integration/rls-tenant-isolation.test.ts tests/integration/availability.test.ts tests/integration/contact-types.test.ts
+
+> intelliflow-crm@0.1.0 test:db:run C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203
+> node scripts/test-db.mjs run "--" "pnpm" "exec" "vitest" "run" "--project" "integration" "--reporter=verbose" "tests/integration/event-types.test.ts" "tests/integration/rls-tenant-isolation.test.ts" "tests/integration/availability.test.ts" "tests/integration/contact-types.test.ts"
+
+
+> @intelliflow/db@0.1.0 db:migrate C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\packages\db
+> prisma migrate deploy
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+Datasource "db": PostgreSQL database "intelliflow_test_run_tna7hj_tm4_jsed", schema "public" at "localhost:5433"
+
+84 migrations found in prisma/migrations
+
+Applying migration `20260317000000_baseline`
+Applying migration `20260318000000_add_contact_avatar_url`
+Applying migration `20260319000000_add_opportunity_deleted_at`
+Applying migration `20260407000000_enable_rls_on_remaining_public_tables`
+Applying migration `20260410000000_add_workflow_deleted_at`
+Applying migration `20260412031212_add_user_profile_fields`
+Applying migration `20260412040000_add_lead_status_disqualified_archived`
+Applying migration `20260413000000_home_ai_insights_indexes`
+Applying migration `20260413150000_contact_settings`
+Applying migration `20260414000000_account_settings`
+Applying migration `20260414000001_add_custom_workflow_extensions`
+Applying migration `20260414100000_contact_ai_settings`
+Applying migration `20260414110000_contact_automation_hygiene`
+Applying migration `20260414120000_contact_settings_hardening`
+Applying migration `20260414130000_contact_ai_defaults_complete`
+Applying migration `20260414140000_account_settings_hardening`
+Applying migration `20260416000000_add_document_custom_types`
+Applying migration `20260417120000_deal_settings`
+Applying migration `20260417120100_deal_settings_hardening`
+Applying migration `20260417210000_add_task_assignee`
+Applying migration `20260418120000_ticket_settings`
+Applying migration `20260418120100_ticket_settings_hardening`
+Applying migration `20260419120000_document_settings`
+Applying migration `20260419120100_document_settings_hardening`
+Applying migration `20260419200000_case_settings`
+Applying migration `20260419200100_appointment_settings`
+Applying migration `20260419200200_report_settings`
+Applying migration `20260419210000_appointment_settings_primary_calendar_fk`
+Applying migration `20260419210000_case_settings_scope_up`
+Applying migration `20260420000000_enable_rls_for_remaining_settings_tables`
+Applying migration `20260420000100_enable_rls_for_document_type_definitions`
+Applying migration `20260420120000_case_tag_color_token_check`
+Applying migration `20260421000000_feat_agent_system_tenant_customization`
+Applying migration `20260421000000_ifc312_ai_chains`
+Applying migration `20260422000000_add_message_content_gin_index`
+Applying migration `20260422000001_add_field_encryption_annotations`
+Applying migration `20260423000000_tenant_memory_and_rate_limits`
+Applying migration `20260424000000_add_lead_is_starred`
+Applying migration `20260424100000_case_ai_insight`
+Applying migration `20260424200000_account_tags_ifc312_audit`
+Applying migration `20260424210000_public_feedback_pg126`
+Applying migration `20260426000000_add_case_ai_insight`
+Applying migration `20260426220000_public_feedback_rls`
+Applying migration `20260426230000_add_tenant_goal_default`
+Applying migration `20260427_add_account_to_lead`
+Applying migration `20260427183000_add_workflow_id_to_routing_audit`
+Applying migration `20260502000000_rename_lead_account_id_to_camel_case`
+Applying migration `20260530000000_appointment_no_overlap_exclusion`
+Applying migration `20260607000000_add_portal_delivery_sync`
+Applying migration `20260607000001_add_stripe_subscription`
+Applying migration `20260607000002_enable_rls_portal_tables`
+Applying migration `20260608000003_add_opportunity_stripe_customer`
+Applying migration `20260609000001_adr_007_data_governance`
+Applying migration `20260614000000_add_lead_bant_fields`
+Applying migration `20260621000000_add_portal_pm_deliveries`
+Applying migration `20260624000000_add_setup_instalment_hosted_invoice_url`
+Applying migration `20260629000000_add_terms_acceptance`
+Applying migration `20260629000001_add_report_templates`
+Applying migration `20260629000002_report_templates_partial_unique`
+Applying migration `20260714000000_task_settings`
+Applying migration `20260726120000_help_article_analytics`
+Applying migration `20260930000000_tenant_quotas_usage`
+Applying migration `20260930120000_tenant_provenance_partner`
+Applying migration `20261001120000_tenant_memberships`
+Applying migration `20261004120000_routing_rule_type`
+Applying migration `20261007120000_account_tiers`
+Applying migration `20261007130000_account_territories`
+Applying migration `20261008000000_help_article_system_scope`
+Applying migration `20261013000000_routing_audit_lead_id`
+Applying migration `20261013120000_case_types`
+Applying migration `20261013120000_report_schedules_pg201`
+Applying migration `20261016120000_approval_policies`
+Applying migration `20261016120100_agent_actions_pending_sweep_idx`
+Applying migration `20261017120000_contact_types`
+Applying migration `20261017120100_contacts_type_idx`
+Applying migration `20261017130000_availability`
+Applying migration `20261019120000_tenant_model_config`
+Applying migration `20261019120100_tenant_ai_config_rls`
+Applying migration `20261021120000_lead_source_booking`
+Applying migration `20261021120100_event_types`
+Applying migration `20261021120200_tenants_booking_handle_idx`
+Applying migration `20261021120300_leads_tenant_id_key`
+Applying migration `20261021120400_appointments_lead_fk`
+Applying migration `20261021120500_validate_booking_constraints`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260317000000_baseline/
+    └─ migration.sql
+  └─ 20260318000000_add_contact_avatar_url/
+    └─ migration.sql
+  └─ 20260319000000_add_opportunity_deleted_at/
+    └─ migration.sql
+  └─ 20260407000000_enable_rls_on_remaining_public_tables/
+    └─ migration.sql
+  └─ 20260410000000_add_workflow_deleted_at/
+    └─ migration.sql
+  └─ 20260412031212_add_user_profile_fields/
+    └─ migration.sql
+  └─ 20260412040000_add_lead_status_disqualified_archived/
+    └─ migration.sql
+  └─ 20260413000000_home_ai_insights_indexes/
+    └─ migration.sql
+  └─ 20260413150000_contact_settings/
+    └─ migration.sql
+  └─ 20260414000000_account_settings/
+    └─ migration.sql
+  └─ 20260414000001_add_custom_workflow_extensions/
+    └─ migration.sql
+  └─ 20260414100000_contact_ai_settings/
+    └─ migration.sql
+  └─ 20260414110000_contact_automation_hygiene/
+    └─ migration.sql
+  └─ 20260414120000_contact_settings_hardening/
+    └─ migration.sql
+  └─ 20260414130000_contact_ai_defaults_complete/
+    └─ migration.sql
+  └─ 20260414140000_account_settings_hardening/
+    └─ migration.sql
+  └─ 20260416000000_add_document_custom_types/
+    └─ migration.sql
+  └─ 20260417120000_deal_settings/
+    └─ migration.sql
+  └─ 20260417120100_deal_settings_hardening/
+    └─ migration.sql
+  └─ 20260417210000_add_task_assignee/
+    └─ migration.sql
+  └─ 20260418120000_ticket_settings/
+    └─ migration.sql
+  └─ 20260418120100_ticket_settings_hardening/
+    └─ migration.sql
+  └─ 20260419120000_document_settings/
+    └─ migration.sql
+  └─ 20260419120100_document_settings_hardening/
+    └─ migration.sql
+  └─ 20260419200000_case_settings/
+    └─ migration.sql
+  └─ 20260419200100_appointment_settings/
+    └─ migration.sql
+  └─ 20260419200200_report_settings/
+    └─ migration.sql
+  └─ 20260419210000_appointment_settings_primary_calendar_fk/
+    └─ migration.sql
+  └─ 20260419210000_case_settings_scope_up/
+    └─ migration.sql
+  └─ 20260420000000_enable_rls_for_remaining_settings_tables/
+    └─ migration.sql
+  └─ 20260420000100_enable_rls_for_document_type_definitions/
+    └─ migration.sql
+  └─ 20260420120000_case_tag_color_token_check/
+    └─ migration.sql
+  └─ 20260421000000_feat_agent_system_tenant_customization/
+    └─ migration.sql
+  └─ 20260421000000_ifc312_ai_chains/
+    └─ migration.sql
+  └─ 20260422000000_add_message_content_gin_index/
+    └─ migration.sql
+  └─ 20260422000001_add_field_encryption_annotations/
+    └─ migration.sql
+  └─ 20260423000000_tenant_memory_and_rate_limits/
+    └─ migration.sql
+  └─ 20260424000000_add_lead_is_starred/
+    └─ migration.sql
+  └─ 20260424100000_case_ai_insight/
+    └─ migration.sql
+  └─ 20260424200000_account_tags_ifc312_audit/
+    └─ migration.sql
+  └─ 20260424210000_public_feedback_pg126/
+    └─ migration.sql
+  └─ 20260426000000_add_case_ai_insight/
+    └─ migration.sql
+  └─ 20260426220000_public_feedback_rls/
+    └─ migration.sql
+  └─ 20260426230000_add_tenant_goal_default/
+    └─ migration.sql
+  └─ 20260427_add_account_to_lead/
+    └─ migration.sql
+  └─ 20260427183000_add_workflow_id_to_routing_audit/
+    └─ migration.sql
+  └─ 20260502000000_rename_lead_account_id_to_camel_case/
+    └─ migration.sql
+  └─ 20260530000000_appointment_no_overlap_exclusion/
+    └─ migration.sql
+  └─ 20260607000000_add_portal_delivery_sync/
+    └─ migration.sql
+  └─ 20260607000001_add_stripe_subscription/
+    └─ migration.sql
+  └─ 20260607000002_enable_rls_portal_tables/
+    └─ migration.sql
+  └─ 20260608000003_add_opportunity_stripe_customer/
+    └─ migration.sql
+  └─ 20260609000001_adr_007_data_governance/
+    └─ migration.sql
+  └─ 20260614000000_add_lead_bant_fields/
+    └─ migration.sql
+  └─ 20260621000000_add_portal_pm_deliveries/
+    └─ migration.sql
+  └─ 20260624000000_add_setup_instalment_hosted_invoice_url/
+    └─ migration.sql
+  └─ 20260629000000_add_terms_acceptance/
+    └─ migration.sql
+  └─ 20260629000001_add_report_templates/
+    └─ migration.sql
+  └─ 20260629000002_report_templates_partial_unique/
+    └─ migration.sql
+  └─ 20260714000000_task_settings/
+    └─ migration.sql
+  └─ 20260726120000_help_article_analytics/
+    └─ migration.sql
+  └─ 20260930000000_tenant_quotas_usage/
+    └─ migration.sql
+  └─ 20260930120000_tenant_provenance_partner/
+    └─ migration.sql
+  └─ 20261001120000_tenant_memberships/
+    └─ migration.sql
+  └─ 20261004120000_routing_rule_type/
+    └─ migration.sql
+  └─ 20261007120000_account_tiers/
+    └─ migration.sql
+  └─ 20261007130000_account_territories/
+    └─ migration.sql
+  └─ 20261008000000_help_article_system_scope/
+    └─ migration.sql
+  └─ 20261013000000_routing_audit_lead_id/
+    └─ migration.sql
+  └─ 20261013120000_case_types/
+    └─ migration.sql
+  └─ 20261013120000_report_schedules_pg201/
+    └─ migration.sql
+  └─ 20261016120000_approval_policies/
+    └─ migration.sql
+  └─ 20261016120100_agent_actions_pending_sweep_idx/
+    └─ migration.sql
+  └─ 20261017120000_contact_types/
+    └─ migration.sql
+  └─ 20261017120100_contacts_type_idx/
+    └─ migration.sql
+  └─ 20261017130000_availability/
+    └─ migration.sql
+  └─ 20261019120000_tenant_model_config/
+    └─ migration.sql
+  └─ 20261019120100_tenant_ai_config_rls/
+    └─ migration.sql
+  └─ 20261021120000_lead_source_booking/
+    └─ migration.sql
+  └─ 20261021120100_event_types/
+    └─ migration.sql
+  └─ 20261021120200_tenants_booking_handle_idx/
+    └─ migration.sql
+  └─ 20261021120300_leads_tenant_id_key/
+    └─ migration.sql
+  └─ 20261021120400_appointments_lead_fk/
+    └─ migration.sql
+  └─ 20261021120500_validate_booking_constraints/
+    └─ migration.sql
+
+All migrations have been successfully applied.
+[test-db] using ephemeral intelliflow_test_run_tna7hj_tm4_jsed on postgresql://***@localhost:5433/intelliflow_test?schema=public
+(node:38380) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203
+
+stdout | rls-tenant-isolation.test.ts
+🧪 Integration Test Suite Starting...
+📦 Using existing DATABASE_URL
+
+ ✓ |integration| rls-tenant-isolation.test.ts > RLS tenant isolation (DB-enforced policies) > a tenant-scoped query returns ONLY the active tenant rows 9ms
+ ✓ |integration| rls-tenant-isolation.test.ts > RLS tenant isolation (DB-enforced policies) > cross-tenant READ is denied — A cannot see B 6ms
+ ✓ |integration| rls-tenant-isolation.test.ts > RLS tenant isolation (DB-enforced policies) > cross-tenant WRITE is denied — A cannot update B 18ms
+ ✓ |integration| rls-tenant-isolation.test.ts > RLS tenant isolation (DB-enforced policies) > cross-tenant DELETE is denied — A cannot delete B 6ms
+ ✓ |integration| rls-tenant-isolation.test.ts > RLS tenant isolation (DB-enforced policies) > the OTHER tenant still sees its own row when scoped to itself 4ms
+ ✓ |integration| rls-tenant-isolation.test.ts > RLS tenant isolation (DB-enforced policies) > PG-203 event_types: a tenant-scoped query returns ONLY the active tenant rows 5ms
+ ✓ |integration| rls-tenant-isolation.test.ts > RLS tenant isolation (DB-enforced policies) > PG-203 booking_attempts: a tenant-scoped query returns ONLY the active tenant rows 4ms
+stdout | rls-tenant-isolation.test.ts
+✅ Integration Test Suite Complete
+
+stdout | contact-types.test.ts
+🧪 Integration Test Suite Starting...
+📦 Using existing DATABASE_URL
+
+stdout | availability.test.ts
+🧪 Integration Test Suite Starting...
+📦 Using existing DATABASE_URL
+
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > CHECK constraints > accepts a valid custom type with the column defaults 15ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > CHECK constraints > rejects an uppercase key 10ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > CHECK constraints > rejects a key starting with a digit 29ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > CHECK constraints > rejects a padded name 22ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > CHECK constraints > rejects a blank name 22ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > CHECK constraints > rejects an unknown colour 23ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > CHECK constraints > rejects an unknown owner rule 22ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > CHECK constraints > rejects an email required field 33ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > CHECK constraints > rejects a jobTitle required field 17ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > CHECK constraints > rejects a negative sort order 21ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > CHECK constraints > rejects an inactive default 35ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > CHECK constraints > rejects a blank department 40ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > has every named CHECK constraint 6ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > bounds startMinute to 0..1439 and endMinute to 1..1440 explicitly 3ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > availability_hours > accepts the 0..1440 boundaries 12ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > availability_hours > rejects weekday -1 7ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > availability_hours > rejects weekday 7 37ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > CHECK constraints > reserves the six seed keys for system rows 81ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > CHECK constraints > uses the same 18 colour tokens as contact_tags 7ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > availability_hours > rejects start -1 34ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > availability_hours > rejects end 1441 24ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > availability_hours > rejects start == end 21ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > availability_hours > rejects start > end 37ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > uniqueness > makes key and lower(name) unique per tenant, not across tenants 62ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > uniqueness > allows at most one default type per tenant 26ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > default tags > rejects a default tag of another tenant (composite FK) 12ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > default tags > deleting a tag removes its default-tag rows (and the delete succeeds) 48ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > availability_hours > rejects a duplicate (tenant, weekday, start) but allows it in another tenant 41ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > availability_hours > rejects a row for a tenant that does not exist 2ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > availability_closures > accepts equal start and end and a NULL reason 22ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > availability_closures > rejects an end before the start, a blank reason and a 201-character reason 30ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > availability_closures > rejects a duplicate range 19ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > default tags > deleting a type removes its default-tag rows 22ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > lazy seed > two concurrent first uses create exactly the six system types 49ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > contacts type index > is valid, ready and on (tenantId, contactType) 4ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > orphan keys (no FK by design, ADR-080) > a contact may hold a key whose type was deleted; the row stays readable 39ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > availability_closures > round-trips a DATE without a day shift under a far-east session zone 45ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > appointment_settings availability columns > accepts NULL, 1 and 500 for the daily cap and rejects 0 and 501 50ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > appointment_settings availability columns > creates rows with both new columns NULL (never configured) 27ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > row-level security > enables RLS with a tenant policy on both tables 5ms
+ ✓ |integration| contact-types.test.ts > PG-205 contact types (real DB) > row-level security > hides tenant B types from a tenant-A session under a non-bypass role 12ms
+stdout | contact-types.test.ts
+✅ Integration Test Suite Complete
+
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > cascades hours and closures when the tenant is deleted 78ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > row-level security > enables RLS with USING and WITH CHECK on both tables 5ms
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > row-level security > hides tenant B rows from a tenant-A session under a non-bypass role 12ms
+stdout | availability.test.ts
+✅ Integration Test Suite Complete
+
+ ✓ |integration| availability.test.ts > PG-202 availability (real DB) > loader fallback against the real adapter error (migration not applied) > returns { configured: false } and logs the real P2022 89ms
+stdout | event-types.test.ts
+🧪 Integration Test Suite Starting...
+📦 Using existing DATABASE_URL
+
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > constraints > has every named CHECK 4ms
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > constraints > rejects an event type with colorToken gold 7ms
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > constraints > rejects an event type with slug with a space 15ms
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > constraints > rejects an event type with duration 4 16ms
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > constraints > rejects an event type with duration 481 15ms
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > constraints > rejects an unknown required field and lead source EVENT 44ms
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > constraints > rejects a bad handle, an http privacy URL and oversized booking answers 84ms
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > constraints > keeps slugs and names unique per tenant (case-insensitive names) and handles global 67ms
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > foreign keys > deleting an event type clears only the link; the appointment survives 46ms
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > foreign keys > deleting a lead clears only the link 21ms
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > foreign keys > rejects another tenant's event type or lead 26ms
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > foreign keys > a tenant delete with event types and their host present succeeds (NO ACTION) 72ms
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > row-level security > enables RLS with USING and WITH CHECK on both new tables 3ms
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > row-level security > hides B's event types and booking attempts from a tenant-A session 19ms
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > books into the handle's tenant only and creates the Lead in the same transaction
+{"type":"trpc.request","correlationId":"5ee5968c-3638-48ce-b9b2-1848908a7c85","path":"book","method":"mutation","durationMs":130,"status":"success"}
+
+stderr | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > books into the handle's tenant only and creates the Lead in the same transaction
+[Tracing] SLOW REQUEST: mutation book took 130ms (target: <50ms) { correlationId: '5ee5968c-3638-48ce-b9b2-1848908a7c85' }
+
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > books into the handle's tenant only and creates the Lead in the same transaction 208ms
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > the lock serialises two bookings of one slot: one appointment, the second gets CONFLICT
+{"type":"trpc.request","correlationId":"33ba8531-f3ea-442f-8531-1ca1aad063f2","path":"book","method":"mutation","durationMs":105,"status":"success"}
+
+stderr | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > the lock serialises two bookings of one slot: one appointment, the second gets CONFLICT
+[Tracing] SLOW REQUEST: mutation book took 105ms (target: <50ms) { correlationId: '33ba8531-f3ea-442f-8531-1ca1aad063f2' }
+
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > the lock serialises two bookings of one slot: one appointment, the second gets CONFLICT 117ms
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > recognises the real organizer-overlap rejection as 'slot taken' 10ms
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+{"type":"trpc.request","correlationId":"bdb8b745-6f30-4c3e-98f6-8c78cc2284ce","path":"listSlots","method":"query","durationMs":94,"status":"success"}
+
+stderr | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+[Tracing] SLOW REQUEST: query listSlots took 94ms (target: <50ms) { correlationId: 'bdb8b745-6f30-4c3e-98f6-8c78cc2284ce' }
+
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > control: without the lock, two check-then-insert writers both pass a one-per-day check 218ms
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+{"type":"trpc.request","correlationId":"4ba5222b-9ed2-4804-98f1-522caf29a89f","path":"listSlots","method":"query","durationMs":96,"status":"success"}
+
+stderr | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+[Tracing] SLOW REQUEST: query listSlots took 96ms (target: <50ms) { correlationId: '4ba5222b-9ed2-4804-98f1-522caf29a89f' }
+
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+{"type":"trpc.request","correlationId":"217b95b5-0b64-4428-8183-79bef4244846","path":"listSlots","method":"query","durationMs":108,"status":"success"}
+
+stderr | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+[Tracing] SLOW REQUEST: query listSlots took 108ms (target: <50ms) { correlationId: '217b95b5-0b64-4428-8183-79bef4244846' }
+
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+{"type":"trpc.request","correlationId":"213fa0cb-9e62-40ec-8ca5-a0761a0adc58","path":"listSlots","method":"query","durationMs":135,"status":"success"}
+
+stderr | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+[Tracing] SLOW REQUEST: query listSlots took 135ms (target: <50ms) { correlationId: '213fa0cb-9e62-40ec-8ca5-a0761a0adc58' }
+
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+{"type":"trpc.request","correlationId":"2af943e3-f7a4-4d49-b839-6e8b70457dcf","path":"listSlots","method":"query","durationMs":90,"status":"success"}
+
+stderr | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+[Tracing] SLOW REQUEST: query listSlots took 90ms (target: <50ms) { correlationId: '2af943e3-f7a4-4d49-b839-6e8b70457dcf' }
+
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+{"type":"trpc.request","correlationId":"58a7b9ab-1e5d-4f3f-9195-9a47fbd6e570","path":"listSlots","method":"query","durationMs":86,"status":"success"}
+
+stderr | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+[Tracing] SLOW REQUEST: query listSlots took 86ms (target: <50ms) { correlationId: '58a7b9ab-1e5d-4f3f-9195-9a47fbd6e570' }
+
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+{"type":"trpc.request","correlationId":"ecd57dea-72c2-42d0-90a4-5dcbca6bd7fb","path":"listSlots","method":"query","durationMs":91,"status":"success"}
+
+stderr | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+[Tracing] SLOW REQUEST: query listSlots took 91ms (target: <50ms) { correlationId: 'ecd57dea-72c2-42d0-90a4-5dcbca6bd7fb' }
+
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+{"type":"trpc.request","correlationId":"5464f69c-305e-4d9b-83d9-9293e57049ed","path":"listSlots","method":"query","durationMs":90,"status":"success"}
+
+stderr | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+[Tracing] SLOW REQUEST: query listSlots took 90ms (target: <50ms) { correlationId: '5464f69c-305e-4d9b-83d9-9293e57049ed' }
+
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+{"type":"trpc.request","correlationId":"d112f289-d607-48a9-b27d-a0e6bfde6619","path":"listSlots","method":"query","durationMs":127,"status":"success"}
+
+stderr | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+[Tracing] SLOW REQUEST: query listSlots took 127ms (target: <50ms) { correlationId: 'd112f289-d607-48a9-b27d-a0e6bfde6619' }
+
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+{"type":"trpc.request","correlationId":"5b258f6a-43f8-4331-98c5-68c948b883e8","path":"listSlots","method":"query","durationMs":87,"status":"success"}
+
+stderr | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+[Tracing] SLOW REQUEST: query listSlots took 87ms (target: <50ms) { correlationId: '5b258f6a-43f8-4331-98c5-68c948b883e8' }
+
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms
+NF-001: listSlots 14 days, 10 runs: p95 135.6 ms, median 92.5 ms
+
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-001: listSlots for 14 days answers with p95 under 300 ms 1043ms
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-004: a lock held past lock_timeout fails fast with "Please try again." and writes nothing
+{"type":"trpc.request","correlationId":"2a375be8-2b34-4eb0-934a-a8c4a57eb8f1","path":"book","method":"mutation","durationMs":1978,"status":"success"}
+
+stderr | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-004: a lock held past lock_timeout fails fast with "Please try again." and writes nothing
+[Tracing] SLOW REQUEST: mutation book took 1978ms (target: <50ms) { correlationId: '2a375be8-2b34-4eb0-934a-a8c4a57eb8f1' }
+
+stdout | event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-004: a lock held past lock_timeout fails fast with "Please try again." and writes nothing
+NF-004: booking gave up after 1980 ms (lock_timeout 2s)
+
+stdout | event-types.test.ts
+✅ Integration Test Suite Complete
+
+ ✓ |integration| event-types.test.ts > PG-203 event types and public booking (real DB) > publicBooking.book against the real DB > NF-004: a lock held past lock_timeout fails fast with "Please try again." and writes nothing 1987ms
+
+ Test Files  4 passed (4)
+      Tests  72 passed (72)
+   Start at  00:49:04
+   Duration  8.95s (transform 3.72s, setup 5.11s, import 5.89s, tests 7.22s, environment 0ms)
+
+[test-db] dropped intelliflow_test_run_tna7hj_tm4_jsed

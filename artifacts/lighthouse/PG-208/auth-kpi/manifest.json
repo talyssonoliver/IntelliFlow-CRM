@@ -1,0 +1,32 @@
+[
+  {
+    "url": "http://localhost:3400/tasks/automation",
+    "isRepresentativeRun": false,
+    "htmlPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM-worktrees\\pg-208\\artifacts\\lighthouse\\PG-208\\auth-kpi\\localhost-tasks_automation-2026_10_22_00_07_27.report.html",
+    "jsonPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM-worktrees\\pg-208\\artifacts\\lighthouse\\PG-208\\auth-kpi\\localhost-tasks_automation-2026_10_22_00_07_27.report.json",
+    "summary": {
+      "performance": 0.93,
+      "accessibility": 0.93
+    }
+  },
+  {
+    "url": "http://localhost:3400/tasks/automation",
+    "isRepresentativeRun": false,
+    "htmlPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM-worktrees\\pg-208\\artifacts\\lighthouse\\PG-208\\auth-kpi\\localhost-tasks_automation-2026_10_22_00_08_10.report.html",
+    "jsonPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM-worktrees\\pg-208\\artifacts\\lighthouse\\PG-208\\auth-kpi\\localhost-tasks_automation-2026_10_22_00_08_10.report.json",
+    "summary": {
+      "performance": 0.95,
+      "accessibility": 0.93
+    }
+  },
+  {
+    "url": "http://localhost:3400/tasks/automation",
+    "isRepresentativeRun": true,
+    "htmlPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM-worktrees\\pg-208\\artifacts\\lighthouse\\PG-208\\auth-kpi\\localhost-tasks_automation-2026_10_22_00_07_49.report.html",
+    "jsonPath": "C:\\Users\\talys\\projects\\intelliFlow-CRM-worktrees\\pg-208\\artifacts\\lighthouse\\PG-208\\auth-kpi\\localhost-tasks_automation-2026_10_22_00_07_49.report.json",
+    "summary": {
+      "performance": 0.93,
+      "accessibility": 0.93
+    }
+  }
+]

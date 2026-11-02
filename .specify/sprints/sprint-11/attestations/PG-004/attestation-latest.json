@@ -17,12 +17,12 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/(public)/about/page.tsx": "388e7c75762591114793208ff4aee5e9d1213f5b70f7a4d01da426e55a1915b6",
-    "apps/web/src/data/team-data.json": "f8f2fbcad0735a8329642e8fc12ffbc0e55d7b6eb7b454bc7d9ca6ccab1cadb3",
-    "docs/about/about-content.md": "1d50ca785c93caa77339a2bb67e817ee416ab0e691727325829697f9c93c2959",
-    ".specify/sprints/sprint-11/attestations/PG-004/context_ack.json": "beea6bc806b22c42bf578dc839a4b7d4f4676e891155e0f4a1907dd178ed9825",
-    "docs/planning/adr/ADR-020-public-site-auth.md": "bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
-    "docs/planning/prd-public-site-auth.md": "a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
+    "apps/web/src/app/(public)/about/page.tsx": "sha256:388e7c75762591114793208ff4aee5e9d1213f5b70f7a4d01da426e55a1915b6",
+    "apps/web/src/data/team-data.json": "sha256:f8f2fbcad0735a8329642e8fc12ffbc0e55d7b6eb7b454bc7d9ca6ccab1cadb3",
+    "docs/about/about-content.md": "sha256:1d50ca785c93caa77339a2bb67e817ee416ab0e691727325829697f9c93c2959",
+    ".specify/sprints/sprint-11/attestations/PG-004/context_ack.json": "sha256:beea6bc806b22c42bf578dc839a4b7d4f4676e891155e0f4a1907dd178ed9825",
+    "docs/planning/adr/ADR-020-public-site-auth.md": "sha256:bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
+    "docs/planning/prd-public-site-auth.md": "sha256:a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
   },
   "validation_results": [
     {

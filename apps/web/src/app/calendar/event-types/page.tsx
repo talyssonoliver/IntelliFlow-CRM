@@ -1,16 +1,18 @@
-'use client';
+/**
+ * Event Types Page — PG-203 (Module Settings: Event Types, ADR-083).
+ *
+ * Server Component shell — streams the skeleton immediately, then hydrates
+ * EventTypesContent (client component) via Suspense. Matches the PG-202
+ * availability and PG-205 contact-types pattern.
+ */
+import { Suspense } from 'react';
+import EventTypesContent from './EventTypesContent';
+import { EventTypesLoading } from './EventTypesLoading';
 
 export default function EventTypesPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Event Types</h1>
-        <p className="text-muted-foreground mt-1">Manage event categories and color coding.</p>
-      </div>
-      <div className="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
-        <span className="material-symbols-outlined text-4xl mb-2 block">category</span>
-        <p>Event types configuration coming soon.</p>
-      </div>
-    </div>
+    <Suspense fallback={<EventTypesLoading />}>
+      <EventTypesContent />
+    </Suspense>
   );
 }

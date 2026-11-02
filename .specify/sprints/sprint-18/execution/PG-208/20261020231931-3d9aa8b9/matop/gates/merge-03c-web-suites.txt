@@ -1,0 +1,12 @@
+[test-slot] slot1 taken for PG-208@feat/pg-208-task-automation: pnpm --filter ./apps/web exec vitest run src/app/tasks/(list)/automation src/lib/shared/__tests__/settings-search.test.ts src/app/__tests__
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/apps/web
+
+
+ Test Files  25 passed (25)
+      Tests  312 passed (312)
+   Start at  01:01:19
+   Duration  16.63s (transform 4.07s, setup 7.88s, import 12.88s, tests 15.58s, environment 18.77s)
+

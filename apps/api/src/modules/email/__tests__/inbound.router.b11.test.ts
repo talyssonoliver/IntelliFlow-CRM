@@ -25,9 +25,6 @@ vi.mock('@intelliflow/adapters', () => ({
       return mockParseFn(rawEmail);
     }
   },
-  createOutboundEmailService: () => ({
-    sendEmail: vi.fn().mockResolvedValue({ status: 'sent', messageId: 'mock-msg-id' }),
-  }),
 }));
 
 import { inboundEmailRouter, computeInboundEmailWebhookSignature } from '../inbound.router';

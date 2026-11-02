@@ -350,11 +350,19 @@ describe('ArticleAdminList', () => {
     render(<ArticleAdminList role="ADMIN" />);
     const input = screen.getByTestId('search-input') as HTMLInputElement;
 
-    act(() => {
-      fireEvent.change(input, { target: { value: 'lead' } });
-    });
-
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    // Fake timers: a real 400ms sleep against the 300ms debounce lost the race
+    // under full-suite load.
+    vi.useFakeTimers();
+    try {
+      act(() => {
+        fireEvent.change(input, { target: { value: 'lead' } });
+      });
+      act(() => {
+        vi.advanceTimersByTime(300);
+      });
+    } finally {
+      vi.useRealTimers();
+    }
 
     const sawSearch = routerReplace.mock.calls.some(([url]) => String(url).includes('search=lead'));
     expect(sawSearch).toBe(true);

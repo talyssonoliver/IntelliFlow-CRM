@@ -984,10 +984,10 @@ describe('Home Page Validators', () => {
       targetUserId: '00000000-0000-4000-8000-000000000001',
     };
 
-    it('rejects invalid (non-uuid) targetUserId', () => {
+    it('rejects an unsafe targetUserId', () => {
       const result = setTeamMemberGoalInputSchema.safeParse({
         ...valid,
-        targetUserId: 'not-a-uuid',
+        targetUserId: 'not a/valid id',
       });
       expect(result.success).toBe(false);
     });

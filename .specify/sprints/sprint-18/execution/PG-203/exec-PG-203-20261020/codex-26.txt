@@ -1,0 +1,34 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 102 files total
+[codex-review] in scope : 72 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T14:31:07.522Z
+Base ref  : origin/main
+Files in scope : 72
+Total findings : 2
+  Waived       : 1
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/calendar/public-booking.router.ts:441 — booking-reminder-empty-recipients
+    Issue    : Public booking reminders always have an empty recipient list despite storing the firm's default reminder interval.
+    Evidence : `onAppointmentCreated(appointment, eventType.hostUserId, { sendIcs: false })` invokes the existing reminder scheduler, but public appointment creation inserts no attendees. `toDomainAppointment` consequently produces `attendeeIds: []`, and `ReminderSchedulerService.handleAppointmentCreated` sends to `to: [...appointment.attendeeIds]`. It does not use the supplied host user ID or `bookerEmail`; the real notification adapter rejects the empty recipient list.
+    Fix      : Provide an explicit reminder recipient contract for public bookings, resolve the intended recipient's stored email, and schedule the reminder using that address rather than the empty attendee list.
+    Fingerprint: 58003f60e4bcf2ef83e71a37ce67db627cfb1879dc0b20d478b49848ded6cbf2
+
+WAIVED FINDINGS (suppressed):
+  [HIGH] apps/api/src/modules/calendar/public-booking.router.ts:565-573 — host-conflict-race (fp: 03ea1eee86c5...)
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

@@ -17,12 +17,12 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/(public)/pricing/page.tsx": "e22031f7f148180345b0f23751480876c237e2b773a07b5f9ec40affa9fbad73",
-    "apps/web/src/components/pricing/pricing-calculator.tsx": "fb362ef066ec9e54203494b1ee87fba9ab43d829983647ef6dc753e50e2f1ed6",
-    "apps/web/src/lib/pricing/stripe-integration.ts": "51b93797c0040c506346545f0496d46e2f9c2ca9ae20c9476588f63c1bba3168",
-    ".specify/sprints/sprint-11/attestations/PG-003/context_ack.json": "a601e0f30aba7644e4aed865952a94a921e698328485bdf1ca7b538b9293629d",
-    "docs/planning/adr/ADR-020-public-site-auth.md": "bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
-    "docs/planning/prd-public-site-auth.md": "a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
+    "apps/web/src/app/(public)/pricing/page.tsx": "sha256:e22031f7f148180345b0f23751480876c237e2b773a07b5f9ec40affa9fbad73",
+    "apps/web/src/components/pricing/pricing-calculator.tsx": "sha256:fb362ef066ec9e54203494b1ee87fba9ab43d829983647ef6dc753e50e2f1ed6",
+    "apps/web/src/lib/pricing/stripe-integration.ts": "sha256:51b93797c0040c506346545f0496d46e2f9c2ca9ae20c9476588f63c1bba3168",
+    ".specify/sprints/sprint-11/attestations/PG-003/context_ack.json": "sha256:a601e0f30aba7644e4aed865952a94a921e698328485bdf1ca7b538b9293629d",
+    "docs/planning/adr/ADR-020-public-site-auth.md": "sha256:bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
+    "docs/planning/prd-public-site-auth.md": "sha256:a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
   },
   "validation_results": [
     {

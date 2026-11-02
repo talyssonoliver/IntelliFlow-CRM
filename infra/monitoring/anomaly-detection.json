@@ -1,62 +1,37 @@
 {
-  "schemaVersion": "1.0",
+  "schemaVersion": "2.0",
   "taskId": "ENV-008-AI",
-  "description": "Baseline anomaly detection configuration for Sprint 0 (heuristic thresholds; no external ML).",
-  "generatedAt": "2025-12-19T00:00:00Z",
-  "sources": [
-    "infra/monitoring/otel-config.yaml",
-    "infra/monitoring/performance-budgets.json",
-    "infra/monitoring/alerts/intelliflow-alerts.yaml"
-  ],
-  "mode": "heuristic",
+  "mode": "descriptive",
+  "description": "A descriptive record of the anomaly detection and predictive alerting that run in production (ADR-087). No system reads this file. It replaces the Sprint-0 heuristic rules, which no running system loaded.",
+  "engine": "grafana-asserts (plugin-managed)",
+  "engineNotes": "Grafana Asserts on the Grafana Cloud stack computes these rules from the span metrics the api and ai-worker export over OTLP. The rule set is managed by the Grafana plugin, not by this repository; the names below were read from production on 2026-10-22.",
+  "services": ["api", "ai-worker"],
   "rules": [
     {
-      "id": "latency_p99_budget",
-      "signal": "http_request_duration_seconds",
-      "aggregation": "p99",
-      "window": "5m",
-      "threshold": {
-        "operator": ">",
-        "value": 0.2,
-        "unit": "seconds"
-      },
-      "action": "raise_alert",
-      "severity": "high"
+      "name": "RequestRateAnomaly",
+      "sourceSeries": "traces_spanmetrics_calls_total",
+      "detects": "request rate outside its learned band"
     },
     {
-      "id": "error_rate_budget",
-      "signal": "http_requests_total",
-      "aggregation": "error_rate",
-      "window": "5m",
-      "threshold": {
-        "operator": ">",
-        "value": 0.02,
-        "unit": "ratio"
-      },
-      "action": "raise_alert",
-      "severity": "high"
+      "name": "ErrorRatioAnomaly",
+      "sourceSeries": "traces_spanmetrics_calls_total",
+      "detects": "error ratio outside its learned band"
     },
     {
-      "id": "ai_cost_spike",
-      "signal": "ai_cost_usd",
-      "aggregation": "rate",
-      "window": "15m",
-      "threshold": {
-        "operator": ">",
-        "value": 2.0,
-        "unit": "usd_per_minute"
-      },
-      "action": "raise_alert",
-      "severity": "medium",
-      "notes": "Requires application metric emission; placeholder for Sprint 0."
+      "name": "LatencyP95Anomaly",
+      "sourceSeries": "traces_spanmetrics_latency",
+      "detects": "p95 latency outside its learned band"
     }
   ],
-  "manualVerification": [
-    "Confirm alert rules are wired into your chosen alerting backend.",
-    "Run a synthetic load test and validate that the latency_p99_budget rule would trigger above threshold."
-  ],
-  "deferred": {
-    "predictiveModels": "Post-Sprint 0 (see artifacts/debt-ledger.* origin_task=ENV-008-AI)",
-    "automatedRemediation": "Post-Sprint 0; Sprint 0 only documents self-healing playbooks."
-  }
+  "slos": ["env008apiavail", "env008apip95", "env008llmsuccess"],
+  "predictiveAlerting": {
+    "sloBurnRate": "Fast and slow burn-rate alerts on env008apiavail warn before the 28-day error budget runs out (infra/monitoring/grafana/cloud/slos.json, applied by .github/workflows/grafana-slos.yml).",
+    "notAlerting": "env008apip95 and env008llmsuccess have no burn-rate alerts yet: their budgets are already spent in production (#1001, #1029).",
+    "thresholdRules": "The IFC-032 alert rules in infra/monitoring/grafana/cloud/alert-rules.json (applied by .github/workflows/grafana-alert-rules.yml)."
+  },
+  "notCovered": "web, ws, events-worker and ingestion-worker emit no telemetry yet (EP-001-AI), so nothing above watches them.",
+  "seeAlso": [
+    "docs/architecture/adr/ADR-087-production-slos-anomaly-detection-and-self-healing.md",
+    "docs/operations/slo-definitions.md"
+  ]
 }

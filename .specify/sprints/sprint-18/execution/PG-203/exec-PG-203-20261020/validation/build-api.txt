@@ -1,0 +1,55 @@
+[test-slot] slot1 taken for PG-203@feat/pg-203-event-types: pnpm --filter @intelliflow/api build
+
+> @intelliflow/api@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\apps\api
+> tsup
+
+[34mCLI[39m Building entry: src/index.ts, src/main.ts, src/ws-server.ts
+[34mCLI[39m Using tsconfig: tsconfig.build.json
+[34mCLI[39m tsup v8.5.1
+[34mCLI[39m Using tsup config: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\apps\api\tsup.config.ts
+[34mCLI[39m Target: es2022
+[34mCLI[39m Cleaning output folder
+[34mCJS[39m Build start
+[34mESM[39m Build start
+[32mESM[39m [1mdist\chunk-FH72RMLK.mjs                [22m[32m0 B[39m
+[32mESM[39m [1mdist\escalation-target-H4QBBF4Z.mjs    [22m[32m131.00 B[39m
+[32mESM[39m [1mdist\inbound.router-DMZF5DSS.mjs       [22m[32m350.00 B[39m
+[32mESM[39m [1mdist\index.mjs                         [22m[32m22.54 KB[39m
+[32mESM[39m [1mdist\cases.router-NG5KDFAW.mjs         [22m[32m204.00 B[39m
+[32mESM[39m [1mdist\chunk-5DX23VSP.mjs                [22m[32m4.23 KB[39m
+[32mESM[39m [1mdist\main.mjs                          [22m[32m49.52 KB[39m
+[32mESM[39m [1mdist\ws-server.mjs                     [22m[32m4.83 KB[39m
+[32mESM[39m [1mdist\chunk-R3T22MVH.mjs                [22m[32m23.62 KB[39m
+[32mESM[39m [1mdist\chunk-JFF6C52X.mjs                [22m[32m3.12 KB[39m
+[32mESM[39m [1mdist\chunk-GPRFMDF3.mjs                [22m[32m35.94 KB[39m
+[32mESM[39m [1mdist\audit-XXEDSSNO.mjs                [22m[32m865.00 B[39m
+[32mESM[39m [1mdist\notifications.router-EJWAI2JF.mjs [22m[32m306.00 B[39m
+[32mESM[39m [1mdist\contact.router-BI5FM5SL.mjs       [22m[32m270.00 B[39m
+[32mESM[39m [1mdist\lead.router-27IJRGKI.mjs          [22m[32m264.00 B[39m
+[32mESM[39m [1mdist\chunk-FH5CCCHD.mjs                [22m[32m55.26 KB[39m
+[32mESM[39m [1mdist\appointments.router-RPHRRCB7.mjs  [22m[32m280.00 B[39m
+[32mESM[39m [1mdist\chunk-RCWQWZB6.mjs                [22m[32m5.07 KB[39m
+[32mESM[39m [1mdist\chunk-JZPZUCKV.mjs                [22m[32m91.44 KB[39m
+[32mESM[39m [1mdist\chunk-TFVEIYEU.mjs                [22m[32m3.36 KB[39m
+[32mESM[39m [1mdist\chunk-J6R2QKEE.mjs                [22m[32m23.02 KB[39m
+[32mESM[39m [1mdist\chunk-CBOQTTYH.mjs                [22m[32m258.48 KB[39m
+[32mESM[39m [1mdist\chunk-Q3TMUWFZ.mjs                [22m[32m20.79 KB[39m
+[32mESM[39m [1mdist\chunk-CXLTNHON.mjs                [22m[32m49.23 KB[39m
+[32mESM[39m [1mdist\chunk-Y6FXYEAI.mjs                [22m[32m390.00 B[39m
+[32mESM[39m [1mdist\chunk-Z2QMAHCD.mjs                [22m[32m1.21 MB[39m
+[32mESM[39m ⚡️ Build success in 173ms
+[32mCJS[39m [1mdist\index.js     [22m[32m1.88 MB[39m
+[32mCJS[39m [1mdist\ws-server.js [22m[32m1.82 MB[39m
+[32mCJS[39m [1mdist\main.js      [22m[32m1.87 MB[39m
+[32mCJS[39m ⚡️ Build success in 174ms
+[34mDTS[39m Build start
+"isLiveMembership", "liveMembershipWhere", "seatUserWhere" and "MembershipLiveness" are imported from external module "@intelliflow/db" but never used in "src/security/membership.ts".
+"NODE_TYPE_IDS" is imported from external module "@intelliflow/domain" but never used in "src/modules/workflow/workflow.router.ts".
+"ACTIVE_TENANT_HEADER" is imported from external module "@intelliflow/partner-sdk" but never used in "src/security/membership.ts".
+[32mDTS[39m ⚡️ Build success in 40142ms
+[32mDTS[39m [1mdist\main.d.ts       [22m[32m13.00 B[39m
+[32mDTS[39m [1mdist\ws-server.d.ts  [22m[32m1.70 KB[39m
+[32mDTS[39m [1mdist\index.d.ts      [22m[32m921.10 KB[39m
+[32mDTS[39m [1mdist\main.d.mts      [22m[32m13.00 B[39m
+[32mDTS[39m [1mdist\ws-server.d.mts [22m[32m1.70 KB[39m
+[32mDTS[39m [1mdist\index.d.mts     [22m[32m921.10 KB[39m

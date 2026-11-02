@@ -1,0 +1,21 @@
+{
+  "task_id": "IFC-117",
+  "run_id": "run-20261029-review",
+  "selected_stoas": [
+    "Intelligence",
+    "Quality",
+    "Foundation",
+    "Security"
+  ],
+  "lead_stoa": "Intelligence",
+  "rationale": {
+    "Intelligence": "Task owner STOA: AI chain monitoring, drift statistics, hallucination checks and cost attribution in apps/ai-worker.",
+    "Quality": "New and changed test suites, coverage and regression evidence.",
+    "Foundation": "Always included; also a new GitHub workflow, Grafana-as-code files, a devDependency and CSV split changes.",
+    "Security": "Metric label cardinality and PII, a token-handling Grafana script and workflow, and an unbounded-memory finding."
+  },
+  "not_selected": {
+    "Domain": "No domain, API contract or Prisma schema change.",
+    "Automation": "The workflow is reviewed by Foundation and Security; no orchestration or registry change."
+  }
+}

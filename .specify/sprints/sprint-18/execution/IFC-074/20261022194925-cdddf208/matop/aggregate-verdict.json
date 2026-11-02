@@ -1,0 +1,9 @@
+{
+  "task_id": "IFC-074",
+  "run_id": "20261022194925-cdddf208",
+  "aggregated_at": "2026-10-22T23:05:17Z",
+  "verdicts": { "Automation": "PASS", "Foundation": "PASS", "Quality": "PASS", "Security": "FAIL" },
+  "aggregate": "FAIL",
+  "reason": "STOA-Security FAIL is solely pnpm audit --audit-level=high on main: 4 critical + 3 high advisories in apps/web and apps/project-tracker (next, @sentry/nextjs, dompurify, markdown-it), none touched by IFC-074. Tracked as #1000; owner ruling 2 (2026-10-22): fix in a separate PR first (fix/1000-audit-criticals, commit ad3b1fb35). All IFC-074-specific security checks passed (gitleaks, redaction, token handling, sentry config, semgrep).",
+  "clears_when": "The #1000 fix is merged to main and IFC-074 merges main; pnpm audit --audit-level=high then exits 0."
+}

@@ -21,6 +21,31 @@
  */
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 
+// /health, /api/health and their sub-paths, matched on the whole path so
+// routes such as /healthcare or /api/healthz are still traced.
+const HEALTH_PROBE_PATH = /^(?:\/api)?\/health(?:\/[^?#]*)?(?:[?#].*)?$/;
+
+/**
+ * #1098: health probes get no SERVER span. Our HTTP server span is named by
+ * method only ("GET"), so the api SLOs' span_name health exclusion cannot
+ * match it; without this, probes would count towards availability and latency.
+ */
+function isHealthProbe(req: { url?: string }): boolean {
+  return HEALTH_PROBE_PATH.test(req.url ?? '');
+}
+
+/**
+ * Incoming request paths whose URL itself is a credential (PG-208: the
+ * task-automation webhook token is a path segment). Such requests get no HTTP
+ * span, so the token never reaches the trace backend. apps/api's Sentry setup
+ * applies the same rule (`apps/api/src/tracing/sentry.ts`).
+ */
+export const SECRET_BEARING_PATH_MARKERS: readonly string[] = ['/webhooks/task-automation/'];
+
+export function isSecretBearingPath(url: string | undefined): boolean {
+  return url !== undefined && SECRET_BEARING_PATH_MARKERS.some((marker) => url.includes(marker));
+}
+
 /**
  * Build the Node auto-instrumentations array for a service's NodeSDK.
  *
@@ -30,7 +55,11 @@ export function getStandardNodeInstrumentations(): ReturnType<typeof getNodeAuto
   return getNodeAutoInstrumentations({
     // Disable filesystem instrumentation — too noisy
     '@opentelemetry/instrumentation-fs': { enabled: false },
-    '@opentelemetry/instrumentation-http': { enabled: true },
+    '@opentelemetry/instrumentation-http': {
+      enabled: true,
+      ignoreIncomingRequestHook: (request) =>
+        isHealthProbe(request) || isSecretBearingPath(request.url),
+    },
     '@opentelemetry/instrumentation-pino': {
       disableLogSending: false,
     },

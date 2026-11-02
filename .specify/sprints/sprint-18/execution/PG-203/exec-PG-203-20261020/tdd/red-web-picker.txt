@@ -1,0 +1,1194 @@
+# 2026-10-21T08:25:20Z
+# 8805759121cbe03f266b64e37bdf756eabe4111d + working tree
+# pnpm --dir apps/web exec vitest run src/components/appointments/__tests__/AppointmentForm.test.tsx
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/web
+
+ ❯ |web| src/components/appointments/__tests__/AppointmentForm.test.tsx (29 tests | 6 failed) 21268ms
+     × is offered in create mode only, and the Type field still has a unique label 519ms
+     × sets the type, fills empty location and description and sets the end from the start 510ms
+     × never overwrites a location or description the user already typed 754ms
+     × follows later start changes, but not once the end was edited by hand 468ms
+     × clearing the choice keeps the values and submits without an event type 644ms
+     × submits the chosen event type id 1176ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| src/components/appointments/__tests__/AppointmentForm.test.tsx > AppointmentForm — event type picker (PG-203, AC-010) > is offered in create mode only, and the Type field still has a unique label
+TestingLibraryElementError: Unable to find a label with the text of: Event type
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<form[39m
+      [33mclass[39m=[32m"space-y-4"[39m
+      [33mnovalidate[39m=[32m""[39m
+    [36m>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-title"[39m
+        [36m>[39m
+          [0mTitle [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-title"[39m
+          [33mmaxlength[39m=[32m"255"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-description"[39m
+        [36m>[39m
+          [0mDescription[0m
+        [36m</label>[39m
+        [36m<textarea[39m
+          [33mclass[39m=[32m"w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-description"[39m
+          [33mmaxlength[39m=[32m"2000"[39m
+          [33mrows[39m=[32m"3"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-type"[39m
+        [36m>[39m
+          [0mType [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-type"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"MEETING"[39m
+          [36m>[39m
+            [0mMeeting[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"CALL"[39m
+          [36m>[39m
+            [0mCall[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"HEARING"[39m
+          [36m>[39m
+            [0mHearing[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"CONSULTATION"[39m
+          [36m>[39m
+            [0mConsultation[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"DEPOSITION"[39m
+          [36m>[39m
+            [0mDeposition[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"OTHER"[39m
+          [36m>[39m
+            [0mOther[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid grid-cols-2 gap-4"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+            [33mfor[39m=[32m"appt-start"[39m
+          [36m>[39m
+            [0mStart Time [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-invalid[39m=[32m"false"[39m
+            [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+            [33mid[39m=[32m"appt-start"[39m
+            [33mtype[39m=[32m"datetime-local"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+            [33mfor[39m=[32m"appt-end"[39m
+          [36m>[39m
+            [0mEnd Time [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-invalid[39m=[32m"false"[39m
+            [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+            [33mid[39m=[32m"appt-end"[39m
+            [33mtype[39m=[32m"datetime-local"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-location"[39m
+        [36m>[39m
+          [0mLocation[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mclass[39m=[32m"w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-location"[39m
+          [33mmaxlength[39m=[32m"500"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<fieldset>[39m
+        [36m<legend[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+        [36m>[39m
+          [0mEvent Timezone[0m
+        [36m</legend>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33maria-autocomplete[39m=[32m"none"[39m
+            [33maria-describedby[39m=[32m"appt-timezone-help"[39m
+            [33maria-expanded[39m=[32m"false"[39m
+            [33maria-label[39m=[32m"Timezone"[39m
+            [33mclass[39m=[32m"flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 w-full"[39m
+            [33mdata-state[39m=[32m"closed"[39m
+            [33mdir[39m=[32m"ltr"[39m
+            [33mrole[39m=[32m"combobox"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mstyle[39m=[32m"pointer-events: none;"[39m
+            [36m>[39m
+              [0mLondon (GMT+1)[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"mate...
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/appointments/__tests__/AppointmentForm.test.tsx:269:19
+    267|   it('is offered in create mode only, and the Type field still has a u…
+    268|     const { unmount } = render(<AppointmentForm {...defaultProps} even…
+    269|     expect(screen.getByLabelText('Event type')).toBeInTheDocument();
+       |                   ^
+    270|     expect(screen.getByLabelText(/Type/)).toHaveAttribute('id', 'appt-…
+    271|     unmount();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  |web| src/components/appointments/__tests__/AppointmentForm.test.tsx > AppointmentForm — event type picker (PG-203, AC-010) > sets the type, fills empty location and description and sets the end from the start
+TestingLibraryElementError: Unable to find a label with the text of: Event type
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<form[39m
+      [33mclass[39m=[32m"space-y-4"[39m
+      [33mnovalidate[39m=[32m""[39m
+    [36m>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-title"[39m
+        [36m>[39m
+          [0mTitle [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-title"[39m
+          [33mmaxlength[39m=[32m"255"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-description"[39m
+        [36m>[39m
+          [0mDescription[0m
+        [36m</label>[39m
+        [36m<textarea[39m
+          [33mclass[39m=[32m"w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-description"[39m
+          [33mmaxlength[39m=[32m"2000"[39m
+          [33mrows[39m=[32m"3"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-type"[39m
+        [36m>[39m
+          [0mType [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-type"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"MEETING"[39m
+          [36m>[39m
+            [0mMeeting[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"CALL"[39m
+          [36m>[39m
+            [0mCall[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"HEARING"[39m
+          [36m>[39m
+            [0mHearing[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"CONSULTATION"[39m
+          [36m>[39m
+            [0mConsultation[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"DEPOSITION"[39m
+          [36m>[39m
+            [0mDeposition[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"OTHER"[39m
+          [36m>[39m
+            [0mOther[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid grid-cols-2 gap-4"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+            [33mfor[39m=[32m"appt-start"[39m
+          [36m>[39m
+            [0mStart Time [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-invalid[39m=[32m"false"[39m
+            [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+            [33mid[39m=[32m"appt-start"[39m
+            [33mtype[39m=[32m"datetime-local"[39m
+            [33mvalue[39m=[32m"2026-11-02T10:00"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+            [33mfor[39m=[32m"appt-end"[39m
+          [36m>[39m
+            [0mEnd Time [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-invalid[39m=[32m"false"[39m
+            [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+            [33mid[39m=[32m"appt-end"[39m
+            [33mtype[39m=[32m"datetime-local"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-location"[39m
+        [36m>[39m
+          [0mLocation[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mclass[39m=[32m"w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-location"[39m
+          [33mmaxlength[39m=[32m"500"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<fieldset>[39m
+        [36m<legend[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+        [36m>[39m
+          [0mEvent Timezone[0m
+        [36m</legend>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33maria-autocomplete[39m=[32m"none"[39m
+            [33maria-describedby[39m=[32m"appt-timezone-help"[39m
+            [33maria-expanded[39m=[32m"false"[39m
+            [33maria-label[39m=[32m"Timezone"[39m
+            [33mclass[39m=[32m"flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 w-full"[39m
+            [33mdata-state[39m=[32m"closed"[39m
+            [33mdir[39m=[32m"ltr"[39m
+            [33mrole[39m=[32m"combobox"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mstyle[39m=[32m"pointer-events: none;"[39m
+            [36m>[39m
+              [0mLondon (GMT+1)[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass...
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/appointments/__tests__/AppointmentForm.test.tsx:284:29
+    282|     render(<AppointmentForm {...defaultProps} eventTypes={eventTypes} …
+    283|     fireEvent.change(screen.getByLabelText(/Start Time/), { target: { …
+    284|     fireEvent.change(screen.getByLabelText('Event type'), { target: { …
+       |                             ^
+    285|     expect(screen.getByLabelText(/Type/)).toHaveValue('CONSULTATION');
+    286|     expect(screen.getByLabelText(/End Time/)).toHaveValue('2026-11-02T…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  |web| src/components/appointments/__tests__/AppointmentForm.test.tsx > AppointmentForm — event type picker (PG-203, AC-010) > never overwrites a location or description the user already typed
+TestingLibraryElementError: Unable to find a label with the text of: Event type
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<form[39m
+      [33mclass[39m=[32m"space-y-4"[39m
+      [33mnovalidate[39m=[32m""[39m
+    [36m>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-title"[39m
+        [36m>[39m
+          [0mTitle [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-title"[39m
+          [33mmaxlength[39m=[32m"255"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-description"[39m
+        [36m>[39m
+          [0mDescription[0m
+        [36m</label>[39m
+        [36m<textarea[39m
+          [33mclass[39m=[32m"w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-description"[39m
+          [33mmaxlength[39m=[32m"2000"[39m
+          [33mrows[39m=[32m"3"[39m
+        [36m>[39m
+          [0mMine[0m
+        [36m</textarea>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-type"[39m
+        [36m>[39m
+          [0mType [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-type"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"MEETING"[39m
+          [36m>[39m
+            [0mMeeting[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"CALL"[39m
+          [36m>[39m
+            [0mCall[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"HEARING"[39m
+          [36m>[39m
+            [0mHearing[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"CONSULTATION"[39m
+          [36m>[39m
+            [0mConsultation[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"DEPOSITION"[39m
+          [36m>[39m
+            [0mDeposition[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"OTHER"[39m
+          [36m>[39m
+            [0mOther[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid grid-cols-2 gap-4"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+            [33mfor[39m=[32m"appt-start"[39m
+          [36m>[39m
+            [0mStart Time [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-invalid[39m=[32m"false"[39m
+            [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+            [33mid[39m=[32m"appt-start"[39m
+            [33mtype[39m=[32m"datetime-local"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+            [33mfor[39m=[32m"appt-end"[39m
+          [36m>[39m
+            [0mEnd Time [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-invalid[39m=[32m"false"[39m
+            [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+            [33mid[39m=[32m"appt-end"[39m
+            [33mtype[39m=[32m"datetime-local"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-location"[39m
+        [36m>[39m
+          [0mLocation[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mclass[39m=[32m"w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-location"[39m
+          [33mmaxlength[39m=[32m"500"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m"Room 4"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<fieldset>[39m
+        [36m<legend[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+        [36m>[39m
+          [0mEvent Timezone[0m
+        [36m</legend>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33maria-autocomplete[39m=[32m"none"[39m
+            [33maria-describedby[39m=[32m"appt-timezone-help"[39m
+            [33maria-expanded[39m=[32m"false"[39m
+            [33maria-label[39m=[32m"Timezone"[39m
+            [33mclass[39m=[32m"flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 w-full"[39m
+            [33mdata-state[39m=[32m"closed"[39m
+            [33mdir[39m=[32m"ltr"[39m
+            [33mrole[39m=[32m"combobox"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mstyle[39m=[32m"pointer-events: none;"[39m
+            [36m>[39m
+              [0mLondon (GMT+1)[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33maria-hidden[39m...
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/appointments/__tests__/AppointmentForm.test.tsx:296:29
+    294|     fireEvent.change(screen.getByLabelText(/Location/), { target: { va…
+    295|     fireEvent.change(screen.getByLabelText(/Description/), { target: {…
+    296|     fireEvent.change(screen.getByLabelText('Event type'), { target: { …
+       |                             ^
+    297|     expect(screen.getByLabelText(/Location/)).toHaveValue('Room 4');
+    298|     expect(screen.getByLabelText(/Description/)).toHaveValue('Mine');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  |web| src/components/appointments/__tests__/AppointmentForm.test.tsx > AppointmentForm — event type picker (PG-203, AC-010) > follows later start changes, but not once the end was edited by hand
+TestingLibraryElementError: Unable to find a label with the text of: Event type
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<form[39m
+      [33mclass[39m=[32m"space-y-4"[39m
+      [33mnovalidate[39m=[32m""[39m
+    [36m>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-title"[39m
+        [36m>[39m
+          [0mTitle [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-title"[39m
+          [33mmaxlength[39m=[32m"255"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-description"[39m
+        [36m>[39m
+          [0mDescription[0m
+        [36m</label>[39m
+        [36m<textarea[39m
+          [33mclass[39m=[32m"w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-description"[39m
+          [33mmaxlength[39m=[32m"2000"[39m
+          [33mrows[39m=[32m"3"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-type"[39m
+        [36m>[39m
+          [0mType [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-type"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"MEETING"[39m
+          [36m>[39m
+            [0mMeeting[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"CALL"[39m
+          [36m>[39m
+            [0mCall[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"HEARING"[39m
+          [36m>[39m
+            [0mHearing[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"CONSULTATION"[39m
+          [36m>[39m
+            [0mConsultation[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"DEPOSITION"[39m
+          [36m>[39m
+            [0mDeposition[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"OTHER"[39m
+          [36m>[39m
+            [0mOther[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid grid-cols-2 gap-4"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+            [33mfor[39m=[32m"appt-start"[39m
+          [36m>[39m
+            [0mStart Time [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-invalid[39m=[32m"false"[39m
+            [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+            [33mid[39m=[32m"appt-start"[39m
+            [33mtype[39m=[32m"datetime-local"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+            [33mfor[39m=[32m"appt-end"[39m
+          [36m>[39m
+            [0mEnd Time [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-invalid[39m=[32m"false"[39m
+            [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+            [33mid[39m=[32m"appt-end"[39m
+            [33mtype[39m=[32m"datetime-local"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-location"[39m
+        [36m>[39m
+          [0mLocation[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mclass[39m=[32m"w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-location"[39m
+          [33mmaxlength[39m=[32m"500"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<fieldset>[39m
+        [36m<legend[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+        [36m>[39m
+          [0mEvent Timezone[0m
+        [36m</legend>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33maria-autocomplete[39m=[32m"none"[39m
+            [33maria-describedby[39m=[32m"appt-timezone-help"[39m
+            [33maria-expanded[39m=[32m"false"[39m
+            [33maria-label[39m=[32m"Timezone"[39m
+            [33mclass[39m=[32m"flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 w-full"[39m
+            [33mdata-state[39m=[32m"closed"[39m
+            [33mdir[39m=[32m"ltr"[39m
+            [33mrole[39m=[32m"combobox"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mstyle[39m=[32m"pointer-events: none;"[39m
+            [36m>[39m
+              [0mLondon (GMT+1)[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"mate...
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/appointments/__tests__/AppointmentForm.test.tsx:303:29
+    301|   it('follows later start changes, but not once the end was edited by …
+    302|     render(<AppointmentForm {...defaultProps} eventTypes={eventTypes} …
+    303|     fireEvent.change(screen.getByLabelText('Event type'), { target: { …
+       |                             ^
+    304|     expect(screen.getByLabelText(/End Time/)).toHaveValue(''); // no s…
+    305|     fireEvent.change(screen.getByLabelText(/Start Time/), { target: { …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  |web| src/components/appointments/__tests__/AppointmentForm.test.tsx > AppointmentForm — event type picker (PG-203, AC-010) > clearing the choice keeps the values and submits without an event type
+TestingLibraryElementError: Unable to find a label with the text of: Event type
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<form[39m
+      [33mclass[39m=[32m"space-y-4"[39m
+      [33mnovalidate[39m=[32m""[39m
+    [36m>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-title"[39m
+        [36m>[39m
+          [0mTitle [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-title"[39m
+          [33mmaxlength[39m=[32m"255"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m"Call"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-description"[39m
+        [36m>[39m
+          [0mDescription[0m
+        [36m</label>[39m
+        [36m<textarea[39m
+          [33mclass[39m=[32m"w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-description"[39m
+          [33mmaxlength[39m=[32m"2000"[39m
+          [33mrows[39m=[32m"3"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-type"[39m
+        [36m>[39m
+          [0mType [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-type"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"MEETING"[39m
+          [36m>[39m
+            [0mMeeting[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"CALL"[39m
+          [36m>[39m
+            [0mCall[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"HEARING"[39m
+          [36m>[39m
+            [0mHearing[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"CONSULTATION"[39m
+          [36m>[39m
+            [0mConsultation[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"DEPOSITION"[39m
+          [36m>[39m
+            [0mDeposition[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"OTHER"[39m
+          [36m>[39m
+            [0mOther[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid grid-cols-2 gap-4"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+            [33mfor[39m=[32m"appt-start"[39m
+          [36m>[39m
+            [0mStart Time [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-invalid[39m=[32m"false"[39m
+            [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+            [33mid[39m=[32m"appt-start"[39m
+            [33mtype[39m=[32m"datetime-local"[39m
+            [33mvalue[39m=[32m"2026-11-02T10:00"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+            [33mfor[39m=[32m"appt-end"[39m
+          [36m>[39m
+            [0mEnd Time [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-invalid[39m=[32m"false"[39m
+            [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+            [33mid[39m=[32m"appt-end"[39m
+            [33mtype[39m=[32m"datetime-local"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-location"[39m
+        [36m>[39m
+          [0mLocation[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mclass[39m=[32m"w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-location"[39m
+          [33mmaxlength[39m=[32m"500"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<fieldset>[39m
+        [36m<legend[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+        [36m>[39m
+          [0mEvent Timezone[0m
+        [36m</legend>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33maria-autocomplete[39m=[32m"none"[39m
+            [33maria-describedby[39m=[32m"appt-timezone-help"[39m
+            [33maria-expanded[39m=[32m"false"[39m
+            [33maria-label[39m=[32m"Timezone"[39m
+            [33mclass[39m=[32m"flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 w-full"[39m
+            [33mdata-state[39m=[32m"closed"[39m
+            [33mdir[39m=[32m"ltr"[39m
+            [33mrole[39m=[32m"combobox"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mstyle[39m=[32m"pointer-events: none;"[39m
+            [36m>[39m
+              [0mLondon (GMT+1)[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mc...
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/appointments/__tests__/AppointmentForm.test.tsx:316:29
+    314|     fireEvent.change(screen.getByLabelText(/Title/), { target: { value…
+    315|     fireEvent.change(screen.getByLabelText(/Start Time/), { target: { …
+    316|     fireEvent.change(screen.getByLabelText('Event type'), { target: { …
+       |                             ^
+    317|     fireEvent.change(screen.getByLabelText('Event type'), { target: { …
+    318|     expect(screen.getByLabelText(/End Time/)).toHaveValue('2026-11-02T…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  |web| src/components/appointments/__tests__/AppointmentForm.test.tsx > AppointmentForm — event type picker (PG-203, AC-010) > submits the chosen event type id
+TestingLibraryElementError: Unable to find a label with the text of: Event type
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<form[39m
+      [33mclass[39m=[32m"space-y-4"[39m
+      [33mnovalidate[39m=[32m""[39m
+    [36m>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-title"[39m
+        [36m>[39m
+          [0mTitle [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<input[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-title"[39m
+          [33mmaxlength[39m=[32m"255"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m"Consult"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-description"[39m
+        [36m>[39m
+          [0mDescription[0m
+        [36m</label>[39m
+        [36m<textarea[39m
+          [33mclass[39m=[32m"w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-description"[39m
+          [33mmaxlength[39m=[32m"2000"[39m
+          [33mrows[39m=[32m"3"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-type"[39m
+        [36m>[39m
+          [0mType [0m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-red-500"[39m
+          [36m>[39m
+            [0m*[0m
+          [36m</span>[39m
+        [36m</label>[39m
+        [36m<select[39m
+          [33maria-invalid[39m=[32m"false"[39m
+          [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-type"[39m
+        [36m>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"MEETING"[39m
+          [36m>[39m
+            [0mMeeting[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"CALL"[39m
+          [36m>[39m
+            [0mCall[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"HEARING"[39m
+          [36m>[39m
+            [0mHearing[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"CONSULTATION"[39m
+          [36m>[39m
+            [0mConsultation[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"DEPOSITION"[39m
+          [36m>[39m
+            [0mDeposition[0m
+          [36m</option>[39m
+          [36m<option[39m
+            [33mvalue[39m=[32m"OTHER"[39m
+          [36m>[39m
+            [0mOther[0m
+          [36m</option>[39m
+        [36m</select>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"grid grid-cols-2 gap-4"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+            [33mfor[39m=[32m"appt-start"[39m
+          [36m>[39m
+            [0mStart Time [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-invalid[39m=[32m"false"[39m
+            [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+            [33mid[39m=[32m"appt-start"[39m
+            [33mtype[39m=[32m"datetime-local"[39m
+            [33mvalue[39m=[32m"2026-11-02T10:00"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+            [33mfor[39m=[32m"appt-end"[39m
+          [36m>[39m
+            [0mEnd Time [0m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-red-500"[39m
+            [36m>[39m
+              [0m*[0m
+            [36m</span>[39m
+          [36m</label>[39m
+          [36m<input[39m
+            [33maria-invalid[39m=[32m"false"[39m
+            [33mclass[39m=[32m"w-full rounded-md border px-3 py-2 text-sm border-gray-300 disabled:opacity-50"[39m
+            [33mid[39m=[32m"appt-end"[39m
+            [33mtype[39m=[32m"datetime-local"[39m
+            [33mvalue[39m=[32m""[39m
+          [36m/>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div>[39m
+        [36m<label[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+          [33mfor[39m=[32m"appt-location"[39m
+        [36m>[39m
+          [0mLocation[0m
+        [36m</label>[39m
+        [36m<input[39m
+          [33mclass[39m=[32m"w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"[39m
+          [33mid[39m=[32m"appt-location"[39m
+          [33mmaxlength[39m=[32m"500"[39m
+          [33mtype[39m=[32m"text"[39m
+          [33mvalue[39m=[32m""[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<fieldset>[39m
+        [36m<legend[39m
+          [33mclass[39m=[32m"block text-sm font-medium text-gray-700 mb-1"[39m
+        [36m>[39m
+          [0mEvent Timezone[0m
+        [36m</legend>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"space-y-2"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33maria-autocomplete[39m=[32m"none"[39m
+            [33maria-describedby[39m=[32m"appt-timezone-help"[39m
+            [33maria-expanded[39m=[32m"false"[39m
+            [33maria-label[39m=[32m"Timezone"[39m
+            [33mclass[39m=[32m"flex h-10 items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1 w-full"[39m
+            [33mdata-state[39m=[32m"closed"[39m
+            [33mdir[39m=[32m"ltr"[39m
+            [33mrole[39m=[32m"combobox"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mstyle[39m=[32m"pointer-events: none;"[39m
+            [36m>[39m
+              [0mLondon (GMT+1)[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [3...
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/appointments/__tests__/AppointmentForm.test.tsx:328:29
+    326|     fireEvent.change(screen.getByLabelText(/Title/), { target: { value…
+    327|     fireEvent.change(screen.getByLabelText(/Start Time/), { target: { …
+    328|     fireEvent.change(screen.getByLabelText('Event type'), { target: { …
+       |                             ^
+    329|     fireEvent.click(screen.getByText('Create'));
+    330|     await waitFor(() =>
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 23 passed (29)
+   Start at  09:25:21
+   Duration  23.39s (transform 824ms, setup 235ms, import 1.37s, tests 21.27s, environment 345ms)
+
+# exit=1

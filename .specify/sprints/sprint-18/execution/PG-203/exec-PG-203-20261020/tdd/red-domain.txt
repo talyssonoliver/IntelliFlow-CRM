@@ -1,0 +1,45 @@
+# 2026-10-20T23:25:00Z
+# 91c6477ac5cbe5f21cf81c522b36ec57bad849eb
+# pnpm --filter @intelliflow/domain exec vitest run src/legal/appointments/__tests__/listOpenSlots.test.ts src/legal/appointments/__tests__/event-types.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/domain
+
+ ❯ |domain| src/legal/appointments/__tests__/event-types.test.ts (0 test)
+ ❯ |domain| src/legal/appointments/__tests__/listOpenSlots.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |domain| src/legal/appointments/__tests__/event-types.test.ts [ src/legal/appointments/__tests__/event-types.test.ts ]
+Error: Cannot find module '../event-types' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/domain/src/legal/appointments/__tests__/event-types.test.ts
+ ❯ src/legal/appointments/__tests__/event-types.test.ts:6:1
+      4| import { describe, it, expect } from 'vitest';
+      5| import { LEAD_SOURCES } from '../../../crm/lead/Lead';
+      6| import {
+       | ^
+      7|   BOOKING_CAPS,
+      8|   BOOKING_CONSENT_VERSION,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |domain| src/legal/appointments/__tests__/listOpenSlots.test.ts [ src/legal/appointments/__tests__/listOpenSlots.test.ts ]
+Error: Cannot find module '../listOpenSlots' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/domain/src/legal/appointments/__tests__/listOpenSlots.test.ts
+ ❯ src/legal/appointments/__tests__/listOpenSlots.test.ts:15:1
+     13| import { ConflictDetector } from '../ConflictDetector';
+     14| import { TimeSlot } from '../TimeSlot';
+     15| import { listOpenSlots, type BusyInterval } from '../listOpenSlots';
+       | ^
+     16|
+     17| const LONDON = 'Europe/London';
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  no tests
+   Start at  00:25:01
+   Duration  420ms (transform 289ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\packages\domain:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/legal/appointments/__tests__/listOpenSlots.test.ts src/legal/appointments/__tests__/event-types.test.ts
+# exit=1

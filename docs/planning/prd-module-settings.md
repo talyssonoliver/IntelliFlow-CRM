@@ -1,13 +1,13 @@
 # PRD: Module Settings Pages
 
-| Field         | Value                                                                  |
-| ------------- | ---------------------------------------------------------------------- |
-| Feature Name  | Module Settings Pages                                                  |
-| Status        | Active                                                                 |
-| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-199, PG-201, PG-202, PG-204 |
-| Created       | 2026-03-11                                                             |
-| Last Updated  | 2026-10-19                                                             |
-| Author        | Spec Session (PG-178)                                                  |
+| Field         | Value                                                                                          |
+| ------------- | ---------------------------------------------------------------------------------------------- |
+| Feature Name  | Module Settings Pages                                                                          |
+| Status        | Active                                                                                         |
+| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-199, PG-201, PG-202, PG-203, PG-204, PG-207, PG-208 |
+| Created       | 2026-03-11                                                                                     |
+| Last Updated  | 2026-10-21                                                                                     |
+| Author        | Spec Session (PG-178)                                                                          |
 
 ## Problem Statement
 
@@ -1113,3 +1113,289 @@ before the API is promoted.
 settings, settings search entry. Temperature uses a native range input because
 the shared Slider does not label its thumb (issue filed). Neither migration is
 applied to production.
+
+## PG-203 Addendum: Event Types and Public Booking (2026-10-21)
+
+Owner rulings (2026-10-20/21,
+`.specify/sprints/sprint-18/context/PG-203/PG-203-owner-ruling.md`):
+
+- Q1/Q3: event types are applied in the New Appointment form, and a live public
+  booking page ships in this task.
+- Q4: an unmatched booking creates a Lead. Q11 later changed the matched case:
+  existing records are flagged to the host instead of being linked.
+- Q5: a host user per event type.
+- Q6: confirmation email to the booker and notification to the host.
+- Q7: a firm booking handle, because `Tenant.slug` must not be published.
+- Q8/Q9: booking leads are always AI-scored, with no switch. The admin chooses
+  the lead source (WEBSITE or BOOKING).
+- Q10: no public booking until availability is saved.
+- Q11: existing records are never auto-linked.
+- Q12: the firm's privacy URL is optional, with `/privacy` as the fallback.
+
+Spec: `.specify/sprints/sprint-18/specifications/PG-203-spec.md`. ADR-083.
+
+### Additional User Stories
+
+- **US-ET1 (Catalogue)**: As a firm admin or manager, I want to define our
+  meeting types (duration, colour, default description, location, host, required
+  booker details), so that appointments start from a consistent template.
+- **US-ET2 (Apply)**: As a user creating an appointment, I want to pick an event
+  type that fills the end time, location and description, so that I book faster
+  and consistently.
+- **US-ET3 (Booking link)**: As a firm admin, I want a public booking link per
+  event type under our own handle, so that clients can book open times
+  themselves.
+- **US-ET4 (Book)**: As a prospective client, I want to see open times in my
+  timezone and book one with my name and email, so that I get a confirmed
+  appointment without back-and-forth.
+- **US-ET5 (Capture)**: As a host, I want each new booker captured as an
+  AI-scored lead and to be told when a booker matches an existing client, so
+  that no opportunity is lost and records stay clean.
+
+### Additional Acceptance Criteria
+
+AC-001 to AC-027 are defined in the spec. In summary:
+
+- `/calendar/event-types` follows the playbook: PageHeader, 12-column bento,
+  canonical EmptyState, a SectionHeader CTA, and a list with an `openCreate`
+  forwardRef handle. Non-admins get a read-only view.
+- Event types store name, slug (unique per tenant; superRefine plus DB),
+  duration (5..480, within the firm's min..max), one of 18 colour tokens (DB
+  CHECK), location type and details, host, AppointmentType, required fields,
+  lead source and active flag. RLS applies.
+- The public booking page `/book/<handle>/<slug>`:
+  - Slots come from PG-202 availability minus the host's busy time.
+  - The server re-checks under a per-tenant advisory lock.
+  - The not-available response is identical in every case, with no enumeration.
+  - Abuse caps are counted in the DB.
+  - Emails are escaped and the booker's email is marked unverified.
+  - Consent is stored and DSAR covers the booker's data.
+- WCAG 2.1 AA. Lighthouse ≥ 90, recorded as NEEDS_HUMAN if it cannot be
+  measured.
+
+### Boolean toggles (playbook §8)
+
+There is one persisted Boolean, `isActive`, and it is wired (category 1): it
+hides a type from the picker and the public page. There are no AI toggles.
+**Deviation from playbook §7 "AI defaults false"**: the owner overrode it
+(Q8/Q9), so booking leads are always scored. The playbook rule itself is tracked
+as gh #972.
+
+### Follow-ups
+
+- PG-211: self-service cancel and reschedule for bookers (signed token).
+- PG-212: notice and horizon settings per event type.
+- PG-213: a purge rule for booker PII under the PG-206 retention policies.
+
+**Prisma migrations** `20261021120000` to `20261021120500` (six, all Class A)
+must be applied to production before this ships.
+
+## PG-203 Addendum: DSAR delivery (2026-10-24)
+
+PG-203 also delivers data subject requests (DSAR), because AC-022 needs the
+booking fields covered and exploration found no working DSAR path. Design: spec
+Addendum A, plan Addenda A and B, ADR-007 (PG-203 addendum) and ADR-083 (Data
+subject requests). Owner rulings Q16 to Q22.
+
+- **Public page.** `/dsar/<bookingHandle>` takes a request (access,
+  rectification, erasure, restriction, portability or objection). The booking
+  page footer and the booking confirmation email link to it. The person confirms
+  from an emailed link. The deadline is one calendar month from confirmation.
+- **Automatic after confirmation.** Access and portability email an expiring
+  export link. They complete at once only when nothing is withheld. Otherwise a
+  firm admin completes them after reviewing what was withheld.
+- **Admin decision.** Erasure, rectification, restriction and objection wait for
+  a firm ADMIN on `/settings/privacy-requests`. Staff can also log a request for
+  a person, with a recorded identity check. A job emails admins before the
+  deadline.
+- **Restriction.** A restriction or objection, and an erasure, stop every AI
+  path that sends the person's data to a model (Q18, Q21, Q22). The lead and
+  contact detail pages show a banner.
+- **Pages.** Four new pages: three public (`request`, `verify`, `export`) and
+  `/settings/privacy-requests`.
+- **Out of scope.** Outreach suppression, automated erasure of communications
+  and files, a CSV export with direct transfer, and Article 19 recipient
+  notification are follow-up tasks IFC-315 to IFC-318 (Sprint 19). Open issues:
+  #1007, #1009, #1010, #1014, #1015 and #1019.
+
+**Prisma migration** `20261022120000_dsar_requests` (L13). It adds two tables,
+two enums and database triggers, and alters no existing column, so it is Class
+A. It is applied to production through the gated `prisma migrate deploy`
+workflow **before** the API is promoted. It follows the six event-type
+migrations above.
+
+## PG-207 Addendum: Email Settings and User Mailboxes (2026-10-21)
+
+Owner rulings Q1-Q11 (2026-10-20/21,
+`.specify/sprints/sprint-18/context/PG-207/PG-207-owner-ruling.md`): user mail
+leaves from the user's own mailbox (Google, Microsoft or SMTP), never from
+IntelliFlow's domain; an admin-enabled company mailbox is the fallback for users
+without one; bounces are read back from the sending mailbox and enforced through
+a suppression list (suppressed recipients are skipped, the rest sent);
+signatures live on `/email/signatures` and are prefilled in new messages;
+compose attachments are uploaded to private tenant storage and really sent
+(Q11). The fake production send (mock provider recording SENT) is fixed here.
+Spec: `.specify/sprints/sprint-18/specifications/PG-207-spec.md`. ADR-085.
+
+### Additional User Stories
+
+- **US-EM1 (My mailbox)**: As a user, I want to connect my own Google, Microsoft
+  or SMTP mailbox, so that my emails are sent from my own address.
+- **US-EM2 (Company mailbox)**: As an admin, I want to connect a company mailbox
+  and decide whether members without their own mailbox may send through it.
+- **US-EM3 (Honest sending)**: As a user, I want an email to show SENT only when
+  it actually left, and a clear prompt when I have no mailbox connected.
+- **US-EM4 (Reply-to)**: As an admin, I want to set a tenant-wide reply-to
+  address.
+- **US-EM5 (Bounces)**: As an admin, I want bounced addresses detected
+  automatically and suppressed according to our rules, so that we stop mailing
+  dead addresses.
+- **US-EM6 (Suppression list)**: As an admin, I want to see, add and remove
+  suppressed addresses.
+- **US-EM7 (Signatures)**: As a user, I want personal signatures, and as an
+  admin, organisation signatures, with a default that is prefilled in new
+  messages.
+- **US-EM8 (Tracking)**: As an admin, I want to choose whether opens and clicks
+  are tracked once tracking ships (IFC-221).
+
+### Additional Acceptance Criteria
+
+Defined as AC-EM-001..040 in the spec (finalised at spec consensus). In summary:
+
+- AC-EM-001 to 009: personal and company mailboxes; SMTP presets; encrypted,
+  write-only secrets (refused without the key); SSRF-safe test connection; OAuth
+  with PKCE and single-use state; disconnect revokes; unconfigured providers
+  shown disabled; revoked tokens move the mailbox to ERROR.
+- AC-EM-010 to 019: one send path for user mail; mailbox resolution (own, then
+  company if allowed, else refuse; no fallback from a broken own mailbox); From
+  is the mailbox address; failures are FAILED with no fallback; SENT only when
+  accepted; suppressed recipients skipped before quota; attachments really sent;
+  coded errors shown in compose.
+- AC-EM-020 to 023: admin-edited tenant settings with documented defaults; reset
+  keeps mailboxes, signatures and suppressions; tracking labelled as pending
+  IFC-221.
+- AC-EM-024 to 031: lease-based bounce reader; only delivery-status reports,
+  matched to our own sent records; hard/soft rules; per-recipient bounces;
+  idempotent; optional sender notification; audited suppression management.
+- AC-EM-032 to 036: user and org signatures, sanitised, unique names
+  (superRefine + index), one default per scope, prefill on new messages only.
+- AC-EM-037 to 040: tenant and user isolation with negative tests; playbook
+  layout; WCAG 2.1 AA and Lighthouse ≥ 90 (or NEEDS_HUMAN); registries.
+
+### Boolean toggles (playbook §8)
+
+| Toggle                       | Category | Runtime consumer                             |
+| ---------------------------- | -------- | -------------------------------------------- |
+| `allowTenantMailboxFallback` | 1        | mailbox resolution in the user-mail sender   |
+| `notifySenderOnBounce`       | 1        | bounce reader → `email_bounced` notification |
+| `trackOpens`                 | 2        | IFC-221 (broadened to every mailbox kind)    |
+| `trackClicks`                | 2        | IFC-221 (broadened to every mailbox kind)    |
+| `EmailSignature.isDefault`   | 1        | compose prefill                              |
+
+No AI toggles; no colour tokens; no tags (TagsTab N/A).
+
+### Delivery status
+
+| Item                                                                      | Status      |
+| ------------------------------------------------------------------------- | ----------- |
+| Spec (owner rulings Q1-Q11, ADR-085)                                      | Done        |
+| Plan (plan-reviewer APPROVE)                                              | Done        |
+| DB (8 Class A migrations), domain, validators, adapters                   | Done        |
+| API (single send path, mailbox/settings/signature routers, bounce reader) | Done        |
+| Web (email settings, signatures, OAuth return, compose)                   | Done        |
+| Validations, reviews, attestation                                         | In Progress |
+| Lighthouse, OAuth app registration, live DSN header spike                 | NEEDS_HUMAN |
+
+Attachments (Q11): `emailAttachments.upload` stores each file (≤ 10 MB,
+executables refused) in the private `email-attachments` bucket through
+`EmailAttachmentStoragePort`; `sendEmail` takes the storage paths and fails the
+send if any attachment cannot be read. Findings and deviations:
+`.specify/sprints/sprint-18/execution/PG-207/PG-207-findings.md`.
+
+## PG-208 Addendum: Task Automation (2026-10-21)
+
+Owner rulings (2026-10-20/21,
+`.specify/sprints/sprint-18/context/PG-208/PG-208-owner-ruling.md`): all three
+trigger types (entity event, schedule, webhook) execute in this task; rules run
+inside the API process (ADR-084); an automation task is owned by the trigger
+record's owner (schedule and webhook rules: the rule's creator); task events are
+not triggers; a converted lead links the task to the new contact and a won/lost
+deal leaves it unlinked with the deal named; assignees see tasks assigned to
+them; a lead conversion fires `lead.converted` rules only. Spec:
+`.specify/sprints/sprint-18/specifications/PG-208-spec.md`.
+
+### Additional User Stories
+
+- **US-TA1 (Event rules)**: As a tenant admin, I want a rule that creates a task
+  when a lead, contact, deal or account event happens, so that follow-up work
+  starts without anyone remembering to do it.
+- **US-TA2 (Scheduled rules)**: As a tenant admin, I want rules that run on a
+  daily, weekly, monthly or custom schedule in my timezone, so that recurring
+  work is created automatically.
+- **US-TA3 (Webhook rules)**: As a tenant admin, I want an external system to
+  create a task by sending a signed request to a per-rule URL, so that events
+  from outside the CRM become work.
+- **US-TA4 (Round-robin)**: As a tenant admin, I want a rule to hand tasks to a
+  chosen group of teammates in turn, so that workload is shared evenly.
+- **US-TA5 (Trust)**: As a sales rep, I want to be notified about automated
+  tasks and to see which rule created a task and why a rule did or did not run,
+  so that I trust automatically created work.
+
+### Additional Acceptance Criteria
+
+Defined as AC-TA-001..020 in the spec (finalised at spec consensus). In summary:
+
+- AC-TA-001: the page follows the module-settings playbook.
+- AC-TA-002: admins and managers manage rules (up to 50); only admins and owners
+  manage webhook secrets; others read only; denials audit-logged.
+- AC-TA-003: one trigger and up to three actions in a fixed order; repeated
+  actions and identical active rules refused.
+- AC-TA-004 to 006: event, schedule and webhook triggers execute (nine v1
+  events; once per schedule slot; signed, replay-safe webhook).
+- AC-TA-007 to 011: create task (templates, due date, owner, link), round-robin,
+  assignee visibility, notify, lead-conversion rule.
+- AC-TA-012 / 013: run history and guardrails (caps before any run is written).
+- AC-TA-014 / 015: settings card with Reset to Defaults; tag catalogue with
+  colour CHECK.
+- AC-TA-016 to 018: tenant isolation, secrets never exposed, transactional
+  writes.
+- AC-TA-019 / 020: WCAG 2.1 AA, Lighthouse ≥ 90 (or NEEDS_HUMAN), registries.
+
+### Boolean toggles (playbook §8)
+
+| Toggle                                           | Category | Runtime consumer                              |
+| ------------------------------------------------ | -------- | --------------------------------------------- |
+| `TaskAutomationRule.isActive`                    | 1, wired | intake, schedule claim, execution, Test Rule  |
+| `TaskAutomationSetting.automationEnabled`        | 1, wired | intake, webhook, execution, Test Rule         |
+| `TaskAutomationSetting.notifyRuleOwnerOnFailure` | 1, wired | engine notifies the rule creator on a failure |
+| `TaskAutomationTag.isActive`                     | 1, wired | inactive tags hidden from the rule picker     |
+
+No AI toggles exist on these models ("AI defaults FALSE": N/A).
+
+**Prisma migration** `20261020120000_task_automation` (Class A, additive, no
+backfill) must be applied to production before this ships.
+
+### Delivery Status (2026-10-21, branch `feat/pg-208-task-automation`)
+
+| AC        | Status    | Evidence                                                                                                                                                                                          |
+| --------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-TA-001 | Delivered | `TaskAutomationContent.tsx` (PageHeader, 8 / 4 bento, passive EmptyState `rules`, `New Rule` / `New Tag` in SectionHeaders); `matop/design-check.md`                                              |
+| AC-TA-002 | Delivered | `task-automation.router.ts` admin / webhook-admin gates with audited denials; 50-rule cap under the tenant lock; keyboard Move Up / Down                                                          |
+| AC-TA-003 | Delivered | validator superRefine ("actions N and M"); partial unique `ruleKey` among active rules (CONFLICT); canonical schedule keys                                                                        |
+| AC-TA-004 | Delivered | nine v1 events through the in-process event bus (`container.ts` `InMemoryEventBus`; independent of #966 / #889); postconditions for lead events; closing stage changes run won / lost rules       |
+| AC-TA-005 | Delivered | schedule slot claim and run admission in one transaction; one run after downtime; invalid schedules turn off only their rule                                                                      |
+| AC-TA-006 | Delivered | signed webhook route (timestamped HMAC over key and body, 64 KB cap, identical 404 / 401, replay 202 / 409, 24 h secret grace)                                                                    |
+| AC-TA-007 | Delivered | plain-text templates (control, zero-width and bidi characters stripped), due date floor, owner chain, link rules                                                                                  |
+| AC-TA-008 | Delivered | round-robin over live users with an atomic cursor; `assigneeId` persisted; `task.assigned` emitted                                                                                                |
+| AC-TA-009 | Delivered | `task.list` / `task.getById` show owned or assigned tasks (owner ruling 6); an explicit owner filter stays a filter                                                                               |
+| AC-TA-010 | Delivered | `task_automation` notifications through the orchestrator; one failed recipient never stops the others                                                                                             |
+| AC-TA-011 | Delivered | conversion-born contacts / accounts skip (ruling 7); #968 tracks the existing-account edge                                                                                                        |
+| AC-TA-012 | Delivered | run rows with plain-language outcomes, 20 recent runs, interrupted after 10 min, 30-day purge (#969 tracks purge throughput)                                                                      |
+| AC-TA-013 | Delivered | caps counted and runs inserted under one per-tenant lock on every path (owner ruling 8)                                                                                                           |
+| AC-TA-014 | Delivered | settings card (unsaved edits survive refetches); Reset to Defaults keeps rules, runs and tags; off-period events never run                                                                        |
+| AC-TA-015 | Delivered | tag catalogue (18-token CHECK) via the shared TagsTab; rename / delete rewrite rules under the rule lock                                                                                          |
+| AC-TA-016 | Delivered | tenantId on every query; cross-tenant NOT_FOUND tests; engine takes the tenant from the row                                                                                                       |
+| AC-TA-017 | Delivered | token stored as SHA-256, encrypted secrets, no secret in outputs, logs, telemetry or the query cache                                                                                              |
+| AC-TA-018 | Delivered | `$transaction` on destructive and multi-row writes; P2002 → CONFLICT, P2025 → NOT_FOUND                                                                                                           |
+| AC-TA-019 | **Open**  | WCAG: a11y-expert review PASS WITH FIXES (fixed) and axe tests. Lighthouse NEEDS_HUMAN: no test credentials or non-production Supabase locally (`artifacts/lighthouse/PG-208/waiver-evidence.md`) |
+| AC-TA-020 | Delivered | registries (Step 18), this addendum, ADR-084 Accepted, dependency chain, Sprint_plan + split; one Class A migration declared                                                                      |

@@ -2,9 +2,10 @@
  * Tests for createBodySafeFetch (prod incident 2026-06; defensive — see #334).
  *
  * These verify the WRAPPER MECHANICS (it hands the SDK a fresh, fully-readable
- * response and never touches streaming bodies). They do NOT prove the prod
- * `Body is unusable: Body has already been read` is fixed — the real second
- * reader was never reproduced; verification is tracked in #334.
+ * response and never touches streaming bodies). The second reader behind prod's
+ * `Body is unusable: Body has already been read` was reproduced on 2026-10-28:
+ * it was this wrapper's own fallback after a failed body read (see the last test
+ * here and llm-factory.openrouter-socket.test.ts, which drives a real socket).
  */
 
 import { describe, it, expect, vi } from 'vitest';
@@ -93,18 +94,34 @@ describe('createBodySafeFetch', () => {
     expect(base).toHaveBeenCalledWith('http://llm/v1/embeddings', init);
   });
 
-  it('falls back to the original response if reading the body throws (best-effort)', async () => {
-    // Simulate an upstream body already disturbed so arrayBuffer() throws.
-    const broken = {
-      headers: new Headers({ 'content-type': 'application/json' }),
-      body: {} as ReadableStream,
-      arrayBuffer() {
-        throw new TypeError('Body has already been read');
-      },
-    } as unknown as Response;
-    const safeFetch = createBodySafeFetch(async () => broken);
+  it('hands back a body something else already read, without reading it again', async () => {
+    const disturbed = new Response('{"ok":true}', {
+      headers: { 'content-type': 'application/json' },
+    });
+    await disturbed.text();
+    const safeFetch = createBodySafeFetch(async () => disturbed);
 
-    // Must not throw — degrade to handing back the original rather than failing.
-    await expect(safeFetch('http://llm')).resolves.toBe(broken);
+    await expect(safeFetch('http://llm')).resolves.toBe(disturbed);
+  });
+
+  // Prod 2026-10-27: OpenRouter sends headers at once and holds the body open
+  // while the model generates. A timeout or a dropped connection then fails the
+  // body read here. Handing back the half-read response made the SDK read it a
+  // second time ("Body is unusable: Body has already been read"), which hid the
+  // real error and stopped the SDK and the tenant fallback from retrying it.
+  it('rethrows a failure while reading the body instead of handing back a half-read response', async () => {
+    const timeout = new DOMException('This operation was aborted', 'AbortError');
+    const failing = new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode('{"id":"gen-1",'));
+          controller.error(timeout);
+        },
+      }),
+      { headers: { 'content-type': 'application/json' } }
+    );
+    const safeFetch = createBodySafeFetch(async () => failing);
+
+    await expect(safeFetch('http://llm')).rejects.toBe(timeout);
   });
 });

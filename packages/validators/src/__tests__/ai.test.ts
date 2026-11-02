@@ -560,8 +560,8 @@ describe('AI Validators', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject invalid UUID for leadId', () => {
-      const input = { ...validInput, leadId: 'not-a-uuid' };
+    it('should reject an unsafe leadId', () => {
+      const input = { ...validInput, leadId: 'not a/valid id' };
       const result = qualificationInputSchema.safeParse(input);
       expect(result.success).toBe(false);
     });
@@ -722,7 +722,7 @@ describe('AI Validators', () => {
     });
 
     it('should reject invalid leadId', () => {
-      const input = { ...validInput, leadId: 'not-uuid' };
+      const input = { ...validInput, leadId: 'not a/valid id' };
       const result = followupInputSchema.safeParse(input);
       expect(result.success).toBe(false);
     });
@@ -961,13 +961,13 @@ describe('AI Validators', () => {
     });
 
     it('should reject invalid entityId', () => {
-      const input = { ...validInput, entityId: 'bad-id' };
+      const input = { ...validInput, entityId: 'bad id' };
       const result = churnRiskInputSchema.safeParse(input);
       expect(result.success).toBe(false);
     });
 
     it('should reject invalid tenantId', () => {
-      const input = { ...validInput, tenantId: 'bad-id' };
+      const input = { ...validInput, tenantId: 'bad id' };
       const result = churnRiskInputSchema.safeParse(input);
       expect(result.success).toBe(false);
     });

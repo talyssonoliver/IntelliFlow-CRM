@@ -95,6 +95,25 @@ describe('Navigation tenant wiring', () => {
     }
   );
 
+  it('shows no app bar on a public booking page, even for a signed-in staff member (PG-203)', () => {
+    h.pathname = '/book/smith-law/initial-consultation';
+    h.listTenants = {
+      data: {
+        activeTenantId: 'tenant_home',
+        homeTenantId: 'tenant_home',
+        pinned: false,
+        tenants: [home, client],
+      },
+      isLoading: false,
+      isError: false,
+    };
+    renderNav();
+
+    expect(screen.queryByRole('button', { name: /switch workspace/i })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('pinned-tenant-banner')).not.toBeInTheDocument();
+    h.pathname = '/dashboard';
+  });
+
   it('mounts the switcher for a user with several tenants, and no banner', () => {
     h.listTenants = {
       data: {

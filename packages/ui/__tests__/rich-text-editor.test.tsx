@@ -154,6 +154,21 @@ describe('<RichTextEditor /> rendering', () => {
     expect(screen.getByText('From JSON')).toBeInTheDocument();
   });
 
+  it('links an error to the editing region and marks it invalid, then clears both', async () => {
+    const { rerender } = await renderEditor({
+      ariaLabel: 'Signature',
+      ariaDescribedBy: 'sig-error',
+      ariaInvalid: true,
+    });
+    const box = screen.getByRole('textbox', { name: 'Signature' });
+    await waitFor(() => expect(box).toHaveAttribute('aria-describedby', 'sig-error'));
+    expect(box).toHaveAttribute('aria-invalid', 'true');
+
+    rerender(<RichTextEditor ariaLabel="Signature" onCreate={() => {}} />);
+    await waitFor(() => expect(box).not.toHaveAttribute('aria-invalid'));
+    expect(box).not.toHaveAttribute('aria-describedby');
+  });
+
   it('hides the toolbar and is read-only when editable={false}, then re-enables', async () => {
     const { editor, rerender } = await renderEditor({ value: '<p>Read</p>', editable: false });
     expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();

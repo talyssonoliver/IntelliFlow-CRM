@@ -17,9 +17,7 @@ const {
   mockMfaService,
   mockSessionService,
   mockSignIn,
-  mockSignOut,
   mockSignOutUser,
-  mockGetSession,
   mockVerifyToken,
   mockSignInWithOAuth,
   mockExchangeCodeForSession,
@@ -63,9 +61,7 @@ const {
     revokeAllUserSessions: vi.fn(),
   },
   mockSignIn: vi.fn(),
-  mockSignOut: vi.fn(),
   mockSignOutUser: vi.fn(),
-  mockGetSession: vi.fn(),
   mockVerifyToken: vi.fn(),
   mockSignInWithOAuth: vi.fn(),
   mockExchangeCodeForSession: vi.fn(),
@@ -137,32 +133,28 @@ vi.mock('../../../middleware/rate-limit', async (importOriginal) => {
 // Mock Supabase
 vi.mock('../../../lib/supabase', () => ({
   signIn: (...args: unknown[]) => mockSignIn(...args),
-  signOut: (...args: unknown[]) => mockSignOut(...args),
   signOutUser: (...args: unknown[]) => mockSignOutUser(...args),
-  getSession: (...args: unknown[]) => mockGetSession(...args),
   verifyToken: (...args: unknown[]) => mockVerifyToken(...args),
   signInWithOAuth: (...args: unknown[]) => mockSignInWithOAuth(...args),
   exchangeCodeForSession: (...args: unknown[]) => mockExchangeCodeForSession(...args),
   // IFC-120: Supabase admin client for auth flows
   supabaseAdmin: {
     auth: {
-      signUp: (...args: unknown[]) => mockSupabaseSignUp(...args),
-      verifyOtp: (...args: unknown[]) => mockVerifyOtp(...args),
       resend: (...args: unknown[]) => mockSupabaseResend(...args),
     },
   },
+  createServiceAuthFlowClient: () => ({
+    auth: {
+      signUp: (...args: unknown[]) => mockSupabaseSignUp(...args),
+      verifyOtp: (...args: unknown[]) => mockVerifyOtp(...args),
+    },
+  }),
   resetPasswordForEmail: (...args: unknown[]) => mockResetPasswordForEmail(...args),
   updateUserPassword: (...args: unknown[]) => mockUpdateUserPassword(...args),
 }));
 
 // Import mocked supabase after mocking
-import {
-  signIn,
-  signOut,
-  getSession,
-  signInWithOAuth,
-  exchangeCodeForSession,
-} from '../../../lib/supabase';
+import { signIn, signInWithOAuth, exchangeCodeForSession } from '../../../lib/supabase';
 
 // Credential-shaped fixture values are assembled at runtime so no literal sits in source.
 function fixtureValue(...parts: string[]): string {
@@ -210,7 +202,10 @@ describe('authRouter', () => {
     mockMfaService.getAvailableMfaMethods.mockResolvedValue(['totp']);
     mockMfaService.createChallenge.mockReturnValue({ id: TEST_UUIDS.challenge });
     mockMfaService.getChallengeInfo.mockReturnValue({ exists: true, userId: TEST_UUIDS.user });
-    mockMfaService.verifyChallenge.mockResolvedValue({ success: true });
+    mockMfaService.verifyChallenge.mockResolvedValue({
+      success: true,
+      pendingSession: mockSupabaseSession,
+    });
     mockMfaService.generateTotpSecret.mockReturnValue({
       secret: 'ABCDEFGHIJ',
       otpauthUrl: 'otpauth://totp/IntelliFlow:test@example.com?secret=ABCDEFGHIJ',
@@ -247,12 +242,7 @@ describe('authRouter', () => {
       session: mockSupabaseSession,
       error: null,
     });
-    mockSignOut.mockResolvedValue({ error: null });
     mockSignOutUser.mockResolvedValue({ error: null });
-    mockGetSession.mockResolvedValue({
-      session: mockSupabaseSession,
-      error: null,
-    });
     mockVerifyToken.mockResolvedValue({
       user: mockSupabaseUser,
       error: null,
@@ -343,6 +333,25 @@ describe('authRouter', () => {
       expect(result.requiresMfa).toBe(true);
       expect(result.mfaChallengeId).toBe(TEST_UUIDS.challenge);
       expect(result.mfaMethods).toContain('totp');
+    });
+
+    it('returns no tokens until the MFA challenge succeeds', async () => {
+      mockMfaService.isUserMfaEnabled.mockResolvedValueOnce(true);
+      const caller = authRouter.createCaller(createMockContext());
+
+      const result = await caller.login({
+        email: 'test@example.com',
+        password: fixtureValue('passwor', 'd123!!'),
+      });
+
+      expect(result).not.toHaveProperty('session');
+      expect(JSON.stringify(result)).not.toContain(mockSupabaseSession.refresh_token);
+      expect(mockSessionService.createSession).not.toHaveBeenCalled();
+      expect(mockMfaService.createChallenge).toHaveBeenCalledWith(
+        mockSupabaseUser.id,
+        'totp',
+        mockSupabaseSession
+      );
     });
 
     it('should reject invalid credentials', async () => {
@@ -491,6 +500,41 @@ describe('authRouter', () => {
       );
     });
 
+    it('completes login with the session held by that challenge', async () => {
+      const otherSession = {
+        ...mockSupabaseSession,
+        access_token: fixtureValue('challenge-', 'access'),
+        refresh_token: fixtureValue('challenge-', 'refresh'),
+      };
+      mockMfaService.verifyChallenge.mockResolvedValueOnce({
+        success: true,
+        pendingSession: otherSession,
+      });
+      const caller = authRouter.createCaller(createMockContext());
+
+      const result = await caller.verifyMfa({
+        challengeId: TEST_UUIDS.challenge,
+        code: '123456',
+        method: 'totp',
+      });
+
+      expect(result.session.accessToken).toBe(otherSession.access_token);
+      expect(result.session.refreshToken).toBe(otherSession.refresh_token);
+      expect(mockSessionService.createSession).toHaveBeenCalledWith(
+        expect.objectContaining({ refreshToken: otherSession.refresh_token })
+      );
+    });
+
+    it('asks for a new login when the challenge holds no session', async () => {
+      mockMfaService.verifyChallenge.mockResolvedValueOnce({ success: true });
+      const caller = authRouter.createCaller(createMockContext());
+
+      await expect(
+        caller.verifyMfa({ challengeId: TEST_UUIDS.challenge, code: '123456', method: 'totp' })
+      ).rejects.toThrow(/log in again/);
+      expect(mockSessionService.createSession).not.toHaveBeenCalled();
+    });
+
     it('should reject invalid MFA code', async () => {
       mockMfaService.verifyChallenge.mockResolvedValueOnce({
         success: false,
@@ -583,34 +627,9 @@ describe('authRouter', () => {
   // Session Management Tests
   // ============================================
 
-  describe('refreshSession', () => {
-    it('should refresh session token', async () => {
-      const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext);
-
-      const result = await caller.refreshSession({
-        refreshToken: 'refresh_token_123',
-      });
-
-      expect(result.success).toBe(true);
-      expect(result.session).toBeDefined();
-      expect(result.session.accessToken).toBeDefined();
-    });
-
-    it('should throw error for expired session', async () => {
-      mockGetSession.mockResolvedValueOnce({
-        session: null,
-        error: { message: 'Session expired' } as Error,
-      });
-
-      const mockContext = createMockContext();
-      const caller = authRouter.createCaller(mockContext);
-
-      await expect(
-        caller.refreshSession({
-          refreshToken: 'expired_token',
-        })
-      ).rejects.toThrow(/Session expired/);
+  describe('removed procedures', () => {
+    it('has no refreshSession procedure', () => {
+      expect(Object.keys(authRouter._def.procedures)).not.toContain('refreshSession');
     });
   });
 

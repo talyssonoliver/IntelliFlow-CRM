@@ -1,0 +1,10 @@
+[test-slot] slot1 taken for PG-203@feat/pg-203-dsar: pnpm --filter @intelliflow/api exec vitest run src/modules/privacy
+
+ RUN  v4.1.12 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203-dsar/apps/api
+
+
+ Test Files  7 passed (7)
+      Tests  120 passed (120)
+   Start at  09:14:14
+   Duration  3.36s (transform 4.23s, setup 6.84s, import 3.30s, tests 512ms, environment 1ms)
+

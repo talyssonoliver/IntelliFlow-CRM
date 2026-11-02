@@ -2,10 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Use vi.hoisted to declare mock variables that vi.mock factories can reference
 const mocks = vi.hoisted(() => ({
-  getDriftMetrics: vi.fn().mockReturnValue('# drift\n'),
-  getHallucinationMetrics: vi.fn().mockReturnValue('# hallucination\n'),
-  getROIMetrics: vi.fn().mockReturnValue('# roi\n'),
-  getLatencyMetrics: vi.fn().mockReturnValue('# latency\n'),
   driftDetector: {
     getStatus: vi
       .fn()
@@ -58,25 +54,21 @@ vi.mock('../drift-detector', () => ({
   DriftDetector: vi.fn(),
   driftDetector: mocks.driftDetector,
   defaultDriftConfig: {},
-  getDriftMetrics: mocks.getDriftMetrics,
 }));
 vi.mock('../hallucination-checker', () => ({
   HallucinationChecker: vi.fn(),
   hallucinationChecker: mocks.hallucinationChecker,
   defaultHallucinationConfig: {},
-  getHallucinationMetrics: mocks.getHallucinationMetrics,
 }));
 vi.mock('../roi-tracker', () => ({
   ROITracker: vi.fn(),
   roiTracker: mocks.roiTracker,
   defaultROIConfig: {},
-  getROIMetrics: mocks.getROIMetrics,
 }));
 vi.mock('../latency-monitor', () => ({
   LatencyMonitor: vi.fn(),
   latencyMonitor: mocks.latencyMonitor,
   defaultLatencyConfig: {},
-  getLatencyMetrics: mocks.getLatencyMetrics,
   withLatencyTracking: vi.fn(),
 }));
 vi.mock('../chain-monitor', () => ({
@@ -92,14 +84,11 @@ vi.mock('../chain-monitor', () => ({
   ),
 }));
 
-import { getAllMetrics, getMonitoringStatus } from '../index';
+import * as monitoring from '../index';
+import { getMonitoringStatus } from '../index';
 
 describe('monitoring/index.ts', () => {
   beforeEach(() => {
-    mocks.getDriftMetrics.mockReturnValue('# drift\n');
-    mocks.getHallucinationMetrics.mockReturnValue('# hallucination\n');
-    mocks.getROIMetrics.mockReturnValue('# roi\n');
-    mocks.getLatencyMetrics.mockReturnValue('# latency\n');
     mocks.driftDetector.getStatus.mockReturnValue({
       totalWindows: 10,
       highSeverityCount: 0,
@@ -142,20 +131,12 @@ describe('monitoring/index.ts', () => {
     });
   });
 
-  describe('getAllMetrics', () => {
-    it('aggregates all sub-module metrics', () => {
-      const m = getAllMetrics();
-      expect(m).toContain('drift');
-      expect(m).toContain('hallucination');
-      expect(m).toContain('roi');
-      expect(m).toContain('latency');
-    });
-    it('calls each getMetrics function', () => {
-      getAllMetrics();
-      expect(mocks.getDriftMetrics).toHaveBeenCalled();
-      expect(mocks.getHallucinationMetrics).toHaveBeenCalled();
-      expect(mocks.getROIMetrics).toHaveBeenCalled();
-      expect(mocks.getLatencyMetrics).toHaveBeenCalled();
+  describe('metrics surface (IFC-117)', () => {
+    it('exposes the OTel facade, not the removed Prometheus text path', () => {
+      expect('getAllMetrics' in monitoring).toBe(false);
+      expect(typeof monitoring.registerAiMetrics).toBe('function');
+      expect(typeof monitoring.recordDriftTick).toBe('function');
+      expect(typeof monitoring.DriftDetectionScheduler).toBe('function');
     });
   });
 

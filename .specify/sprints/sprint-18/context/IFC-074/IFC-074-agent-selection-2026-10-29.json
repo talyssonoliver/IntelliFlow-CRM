@@ -1,0 +1,17 @@
+{
+  "taskId": "IFC-074",
+  "selectedAgents": [
+    "Backend-Architect",
+    "DevOps-Lead",
+    "Domain-Expert",
+    "Test-Engineer"
+  ],
+  "selectionRationale": {
+    "Backend-Architect": "Keyword match: \"api\"",
+    "DevOps-Lead": "Keyword match: \"Observability\"",
+    "Domain-Expert": "Always included for all tasks",
+    "Test-Engineer": "Always included for all tasks"
+  },
+  "taskDomain": "backend",
+  "selectedAt": "2026-10-29T09:51:36.066Z"
+}

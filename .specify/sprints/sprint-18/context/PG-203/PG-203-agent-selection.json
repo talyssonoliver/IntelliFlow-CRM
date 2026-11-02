@@ -1,0 +1,16 @@
+{
+  "taskId": "PG-203",
+  "selectedAgents": ["Backend-Architect", "Data-Engineer", "Frontend-Lead", "Security-Lead", "Domain-Expert", "Test-Engineer"],
+  "selectionRationale": {
+    "Backend-Architect": "Keyword match: router, endpoint (event-types.router.ts, public booking procedures)",
+    "Data-Engineer": "New Prisma model + additive migration (event_types, appointments.eventTypeId), colorToken CHECK",
+    "Frontend-Lead": "Keyword match: page (settings page, appointment form picker, public booking page)",
+    "Security-Lead": "Owner ruling adds an unauthenticated public booking endpoint that writes Leads and Appointments and sends email",
+    "Domain-Expert": "Always included for all tasks",
+    "Test-Engineer": "Always included for all tasks"
+  },
+  "note": "Six agents (one above the 3-5 guide): the owner ruling turned a settings page into settings + appointment integration + a public write surface; security and data each carry a distinct risk (public abuse, additive migration).",
+  "ownerRuling": ".specify/sprints/sprint-18/context/PG-203/PG-203-owner-ruling.md",
+  "taskDomain": "fullstack",
+  "selectedAt": "2026-10-20T23:40:00Z"
+}

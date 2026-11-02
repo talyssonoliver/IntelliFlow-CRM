@@ -145,6 +145,11 @@ describe('Lead badges', () => {
     expect(screen.getByText('Cold Call')).toBeInTheDocument();
   });
 
+  it('SourceBadge labels leads created by the public booking page (PG-203)', () => {
+    render(<SourceBadge source="BOOKING" />);
+    expect(screen.getByText('Booking')).toBeInTheDocument();
+  });
+
   it('TemperatureBadge renders the temperature label', () => {
     render(<TemperatureBadge temperature="warm" />);
     expect(screen.getByText('Warm')).toBeInTheDocument();

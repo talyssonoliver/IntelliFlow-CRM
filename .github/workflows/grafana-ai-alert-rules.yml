@@ -1,0 +1,58 @@
+name: Grafana AI Alert Rules
+
+# Applies infra/monitoring/grafana/cloud/ai-alert-rules.json (IFC-117, ADR-088) to the
+# production Grafana Cloud stack. The JSON is the source of truth; this job only pushes it.
+# A sibling of grafana-alert-rules.yml (IFC-032): own rules file, own folder and rule group,
+# own concurrency group, so neither workflow can overwrite the other's rules.
+# Runs on merge when the rules, the script, the shared provisioning lib or this workflow change,
+# or by hand. The dispatch input "dry_run" validates the rules, checks their series and
+# instant-queries every rule expression without writing anything (the post-deploy name check).
+#
+# Needs GRAFANA_SA_TOKEN (a Grafana service-account token with the Admin role: alert-rule
+# provisioning is Admin-only) as a secret of the Production environment. Without it the job
+# fails, saying so; it never prints the token.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/monitoring/grafana/cloud/ai-alert-rules.json'
+      - 'tools/scripts/observability/apply-grafana-ai-alert-rules.mjs'
+      - 'tools/scripts/lib/grafana-provisioning.mjs'
+      - '.github/workflows/grafana-ai-alert-rules.yml'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only validate the rules, check their series and test-query each expression'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: grafana-ai-alert-rules
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: Apply AI alert rules to Grafana Cloud
+    runs-on: ubuntu-latest
+    environment: Production
+    # The shared provisioning client is gaining a 503 retry (up to ~255 s); leave room for it.
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            infra/monitoring/grafana/cloud
+            tools/scripts/observability
+            tools/scripts/lib
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Apply
+        env:
+          GRAFANA_URL: https://graysushi1880.grafana.net
+          GRAFANA_SA_TOKEN: ${{ secrets.GRAFANA_SA_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: node tools/scripts/observability/apply-grafana-ai-alert-rules.mjs $DRY_RUN

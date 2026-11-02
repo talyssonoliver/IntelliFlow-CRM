@@ -54,9 +54,10 @@ describe('Job Data Schemas', () => {
       expect(result.success).toBe(true);
     });
 
-    it('rejects invalid UUID for leadId', () => {
+    it('rejects an unsafe leadId', () => {
+      // Lead ids are cuids (#1074); a malformed id is anything outside the bounded safe set.
       const invalidData = {
-        leadId: 'not-a-uuid',
+        leadId: 'not a/valid id',
         userId: '550e8400-e29b-41d4-a716-446655440001',
       };
 

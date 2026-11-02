@@ -1,0 +1,4 @@
+[lighthouse-evidence] Found 2 Lighthouse KPI(s). Verifying evidence…
+[lighthouse-evidence] ✓ "Lighthouse /email/email-settings (desktop, local next start, no session)" backed by artifacts/lighthouse/PG-207/signatures.report.json (performance:0.93 accessibility:0.9)
+[lighthouse-evidence] ✓ "Lighthouse /email/signatures (desktop, local next start, no session)" backed by artifacts/lighthouse/PG-207/signatures.report.json (performance:0.93 accessibility:0.9)
+[lighthouse-evidence] PASS — all Lighthouse KPIs backed by real evidence or legitimate approval.

@@ -156,4 +156,6 @@ export interface AppointmentFormInput {
   reminderMinutes?: number;
   forceOverrideConflicts: boolean;
   calendarId?: string | null;
+  /** PG-203: the event type picked in the form, if any. */
+  eventTypeId?: string;
 }

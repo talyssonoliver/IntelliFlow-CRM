@@ -1,0 +1,10 @@
+check-diff-coverage: new-line coverage vs origin/main (floor 80%):
+
+  ✓  91.3%  428/469  tools/scripts/observability/collect-observability-evidence.mjs
+  ✓  92.9%  13/14  apps/api/src/tracing/middleware.ts
+  ✓  95.7%  22/23  apps/api/src/tracing/logger.ts
+  ✓ 100.0%  70/70  tools/scripts/lib/grafana-provisioning.mjs
+
+  TOTAL new_coverage: 92.5%  (533/576 lines + branch conditions)
+✅ Diff coverage meets the 80% floor.
+exit=0

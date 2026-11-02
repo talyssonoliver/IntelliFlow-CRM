@@ -1,0 +1,28 @@
+{
+  "task_id": "ENV-008-AI",
+  "run_id": "env-008-ai-exec-20261025",
+  "stoa": "Security",
+  "verdict": "PASS",
+  "verdict_basis": "PASS after merging origin/main (96ab7881d): pnpm audit --prod --audit-level=critical exits 0; the 3 remaining highs are tracked in #1016",
+  "initial_verdict": "FAIL",
+  "initial_verdict_reason": "pnpm audit --prod: 17 advisories (4 critical) inherited from merge base e7ce625b2; this task changes no dependency (NF-002)",
+  "reviewed_at": "2026-10-25",
+  "reviewed_head": "5162ed721",
+  "reverified_at": "2026-10-25",
+  "reverified_head": "48ca32e25",
+  "agent": "stoa-security subagent (Agent tool); audit re-run by the lane after the merge",
+  "gates": [
+    "gitleaks",
+    "workflow-secret-lint",
+    "pnpm-audit-prod"
+  ],
+  "findings": [
+    "RESOLVED: pnpm audit --prod criticals (inherited) fixed on main by #1008; 3 highs (zod, body-parser, undici) remain in #1016",
+    "MEDIUM: account-scoped RAILWAY_TOKEN (#1031)",
+    "MEDIUM: Production environment branch policy (verified absent; #1032)",
+    "LOW: redactBody gaps, unchecked Railway error code (fixed in e0b478906)",
+    "LOW: actions pinned by tag",
+    "#1045 review P1 (Codex): the live probe trusted PRODUCTION_API_URL; it is now bound to the api service's Railway host and refuses any other (fixed with tests)"
+  ],
+  "source": ".specify/sprints/sprint-18/execution/ENV-008-AI/stoa-verdicts.md"
+}

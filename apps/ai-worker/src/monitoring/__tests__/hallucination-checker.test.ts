@@ -8,23 +8,24 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { createHash } from 'node:crypto';
 import {
   HallucinationChecker,
   defaultHallucinationConfig,
   hallucinationChecker,
-  getHallucinationMetrics,
   type HallucinationCheckerConfig,
   type HallucinationType,
 } from '../hallucination-checker';
 
 // Mock pino logger
+const pinoLogger = vi.hoisted(() => ({
+  info: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn(),
+  error: vi.fn(),
+}));
 vi.mock('pino', () => ({
-  default: () => ({
-    info: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn(),
-    error: vi.fn(),
-  }),
+  default: () => pinoLogger,
 }));
 
 describe('HallucinationChecker', () => {
@@ -108,19 +109,37 @@ describe('HallucinationChecker', () => {
       expect(result.score).toBeLessThan(config.confidenceThreshold);
     });
 
-    it('should truncate long inputs and outputs', async () => {
-      const longInput = 'a'.repeat(1000);
-      const longOutput = 'b'.repeat(2000);
-
+    it('should truncate long outputs', async () => {
       const result = await checker.checkOutput({
         id: 'test-3',
         model: 'gpt-4',
-        inputContext: longInput,
-        output: longOutput,
+        inputContext: 'a'.repeat(1000),
+        output: 'b'.repeat(2000),
       });
 
-      expect(result.inputContext.length).toBeLessThanOrEqual(500);
       expect(result.output.length).toBeLessThanOrEqual(1000);
+    });
+
+    it('keeps only a SHA-256 of the input context, never its text (IFC-117)', async () => {
+      const canary = ['context', 'canary'].join('-');
+      const inputContext = `Company: ${canary} Ltd\nTitle: Owner\nSource: WEBSITE`;
+      const result = await checker.checkOutput({
+        id: 'test-ctx',
+        model: 'scoring-free',
+        inputContext,
+        output: 'The company website shows the owner has made contact through the website form.',
+      });
+
+      expect(result.inputContextHash).toBe(createHash('sha256').update(inputContext).digest('hex'));
+      expect(result).not.toHaveProperty('inputContext');
+      expect(JSON.stringify(result)).not.toContain(canary);
+      expect(JSON.stringify(checker.getRecentResults())).not.toContain(canary);
+      const logged = JSON.stringify([
+        ...pinoLogger.info.mock.calls,
+        ...pinoLogger.warn.mock.calls,
+        ...pinoLogger.debug.mock.calls,
+      ]);
+      expect(logged).not.toContain(canary);
     });
 
     it('should include ground truth sources when provided', async () => {
@@ -316,6 +335,32 @@ describe('HallucinationChecker', () => {
       });
 
       expect(result.hallucinationTypes).not.toContain('unsupported_claim');
+    });
+
+    it.each([
+      ['4500 employees', '4,500 employees'],
+      ['4,500 employees', '4500 employees'],
+      ['a budget of $2000000', 'a budget of $2,000,000'],
+    ])('treats "%s" in the context and "%s" in the output as the same figure', async (ctx, out) => {
+      const result = await checker.checkOutput({
+        id: 'claim-figure-format',
+        model: 'gpt-4',
+        inputContext: `The company has ${ctx} and is based in Leeds.`,
+        output: `The company has ${out} and is based in Leeds.`,
+      });
+
+      expect(result.hallucinationTypes).not.toContain('unsupported_claim');
+    });
+
+    it('still flags a figure the context never states, however it is written', async () => {
+      const result = await checker.checkOutput({
+        id: 'claim-figure-invented',
+        model: 'gpt-4',
+        inputContext: 'The company has 4500 employees and is based in Leeds.',
+        output: 'The company has 4,800 employees and is based in Leeds.',
+      });
+
+      expect(result.hallucinationTypes).toContain('unsupported_claim');
     });
   });
 
@@ -754,39 +799,6 @@ describe('HallucinationChecker', () => {
 
       // With high threshold, might not be marked as hallucinated
       expect(result).toBeDefined();
-    });
-  });
-
-  // ============================================
-  // Prometheus Metrics Tests
-  // ============================================
-
-  describe('getHallucinationMetrics', () => {
-    it('should return valid Prometheus format', () => {
-      const metrics = getHallucinationMetrics();
-
-      expect(metrics).toContain('# HELP');
-      expect(metrics).toContain('# TYPE');
-      expect(metrics).toContain('intelliflow_ai_hallucination_total');
-      expect(metrics).toContain('intelliflow_ai_hallucination_detected');
-      expect(metrics).toContain('intelliflow_ai_hallucination_rate');
-      expect(metrics).toContain('intelliflow_ai_hallucination_kpi_compliant');
-    });
-
-    it('should include by_type metrics', () => {
-      const metrics = getHallucinationMetrics();
-
-      expect(metrics).toContain('intelliflow_ai_hallucination_by_type');
-      expect(metrics).toContain('type="factual_error"');
-      expect(metrics).toContain('type="fabricated_entity"');
-    });
-
-    it('should format numbers correctly', () => {
-      const metrics = getHallucinationMetrics();
-
-      // Should not contain NaN or undefined
-      expect(metrics).not.toContain('NaN');
-      expect(metrics).not.toContain('undefined');
     });
   });
 

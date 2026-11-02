@@ -1,0 +1,27 @@
+
+PIPELINE REPORT — ENV-008-AI  —  sprint-18
+══════════════════════════════════════════
+
+Preflights (deterministic gates that must exit 0):
+  ✓ Page Doc Co-Change                     exit 0
+  ✓ Plan-Reviewer Subagent                 exit 0
+  ✓ Exec Readiness (5-check bundle)        exit 0
+  ✓ Task JSON schema sweep                 exit 0
+  ✓ Attestation Provenance                 exit 0
+
+Workflow audit (every phase across spec/plan/exec + sub-skills):
+  ✓ SPEC   8 PASS / 0 WARN / 0 BLOCK+MISSING / 0 PARTIAL / 2 N/A
+  ✓ PLAN   4 PASS / 1 WARN / 0 BLOCK+MISSING / 0 PARTIAL / 1 N/A
+  ✗ EXEC   6 PASS / 2 WARN / 3 BLOCK+MISSING / 1 PARTIAL / 1 N/A
+
+Attestation:
+  verdict:      NEEDS_HUMAN
+  validations:  4/4  (all exit 0)
+  gates:        11  —  7 PASS / 4 FAIL
+
+────────────────────────────────────────────────────────────
+OVERALL: NOT READY — see blockers above
+
+
+No <promise> tag emitted. Not all gates are green.
+Fix the BLOCKers above, then re-run this script.

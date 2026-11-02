@@ -1,0 +1,75 @@
+{
+  "stoa": "foundation",
+  "task_id": "PG-208",
+  "verdict": "PASS",
+  "git_commit": "743586efe1a1545e6f96d76f7bd344ebab30b250",
+  "timestamp": "2026-10-21T20:01:40Z",
+  "checks": [
+    {
+      "name": "typecheck",
+      "passed": true,
+      "evidence": ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/final-SUMMARY.txt:2 01-typecheck rc=0 137s (HEAD 743586efe, SUMMARY:1)"
+    },
+    {
+      "name": "lint (eslint via turbo)",
+      "passed": true,
+      "evidence": "final-SUMMARY.txt:3 02-lint rc=0 44s; final-02-lint.txt tail: 36 successful, 36 total"
+    },
+    {
+      "name": "format (prettier --check on 128 changed text files, run by this STOA, read-only)",
+      "passed": true,
+      "evidence": "npx prettier --check -> All matched files use Prettier code style (rc=0). No format:check log exists in gates dir; verified on changed files only, not whole repo"
+    },
+    {
+      "name": "web build",
+      "passed": true,
+      "evidence": "final-SUMMARY.txt:6 05-web-build rc=0 157s"
+    },
+    {
+      "name": "api build",
+      "passed": true,
+      "evidence": "final-SUMMARY.txt:7 06-api-build rc=0 50s; final-06-api-build.txt:44-53 ESM/CJS/DTS Build success"
+    },
+    {
+      "name": "integration (task-automation)",
+      "passed": true,
+      "evidence": "final-SUMMARY.txt:8 07-integration rc=0 14s"
+    },
+    {
+      "name": "migration is Class A additive",
+      "passed": true,
+      "evidence": "packages/db/prisma/migrations/20261020120000_task_automation/migration.sql: only CREATE TABLE x4 (lines ~24-149), ADD CONSTRAINT FKs on the new tables (190-205), partial unique index (212), ENABLE RLS (221-224). No DROP/TRUNCATE/UPDATE/DELETE; line 15 mentions DROP only as a Class C down-migration note. All NOT NULL columns are on new tables. sql-review.md:6 APPROVED Class A; migrate-target.txt:1 db-guard OK localhost"
+    },
+    {
+      "name": "migrate-diff has no task_automation drift",
+      "passed": true,
+      "evidence": "final-08-migrate-diff.txt: 'Applying migration 20261020120000_task_automation' applied cleanly (line 91); drift section (lines ~262-274) lists only cases FK, document_type_definitions.updatedAt default, report_templates index, users.locale default. Zero task_automation objects in drift. Exit 2 = pre-existing drift (issue #953), as stated by caller"
+    },
+    {
+      "name": "no committed log/coverage/tsbuildinfo",
+      "passed": true,
+      "evidence": "git ls-files | grep -cE '.(log|coverage|tsbuildinfo)$' -> 0"
+    },
+    {
+      "name": "dependency/package changes",
+      "passed": true,
+      "evidence": "git diff --name-only origin/main...HEAD | grep package.json/lock -> empty; no dependency changes"
+    },
+    {
+      "name": "no forbidden icon libs in apps/web additions",
+      "passed": true,
+      "evidence": "added lines in apps/web matched against lucide|react-icons|heroicons|fontawesome|tabler|phosphor -> none"
+    },
+    {
+      "name": "no istanbul ignore added",
+      "passed": true,
+      "evidence": "Only added line matching is prose in a doc (diff line 5844) saying there is no istanbul-ignore directive (L2); no directive added"
+    }
+  ],
+  "findings": [
+    "final-SUMMARY.txt:4 03-coverage rc=1 (830s): caller attributes this to the down intelliflow-redis-test container (infra-skip-gate on untouched tests/integration/ai-monitoring-redis-bridge.test.ts); full re-run in progress. Not verified by this STOA; belongs to Quality STOA. diff-coverage rc=0 (SUMMARY:5), 95.6% per caller.",
+    "final-SUMMARY.txt:9 08-migrate-diff rc=1 is pre-existing main drift (#953), unrelated to PG-208 objects.",
+    "Plan-deliverable and artifact-path/depcruise gates not run by this STOA (not requested)."
+  ],
+  "notes": "Evidence-based on logs at HEAD 743586efe plus read-only git/grep and prettier --check on changed files. No tests/builds/typecheck were run by this STOA. Verdict PASS covers Foundation Tier-1 gates (typecheck, lint, format, builds) only; coverage re-run result and the single 'istanbul ignore' hit remain open."
+}

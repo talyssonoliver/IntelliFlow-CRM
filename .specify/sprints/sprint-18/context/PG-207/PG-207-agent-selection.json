@@ -1,0 +1,37 @@
+{
+  "taskId": "PG-207",
+  "lead_agent": "Frontend-Lead",
+  "agents": [
+    {
+      "name": "Frontend-Lead",
+      "file": ".claude/agents/frontend-lead.md",
+      "rationale": "Lane persona (ifc-s18-lane-a.md item 3); two pages: /email/email-settings and /email/signatures"
+    },
+    {
+      "name": "Backend-Architect",
+      "file": ".claude/agents/backend-architect.md",
+      "rationale": "New email-settings tRPC router, Prisma models, sendEmail wiring to tenant SMTP (owner ruling B)"
+    },
+    {
+      "name": "Security-Lead",
+      "file": ".claude/agents/security-lead.md",
+      "rationale": "SMTP/IMAP passwords: encrypted at rest, server-side only, never in the client bundle; outbound SMTP host is an SSRF surface"
+    },
+    {
+      "name": "Domain-Expert",
+      "file": ".claude/agents/domain-expert.md",
+      "rationale": "Always included"
+    },
+    {
+      "name": "Test-Engineer",
+      "file": ".claude/agents/test-engineer.md",
+      "rationale": "Always included; cross-tenant negative tests, superRefine, diff-coverage"
+    }
+  ],
+  "deferred_reviewers": {
+    "A11y-Expert": "WCAG 2.1 AA review pass at /exec (lane note: a11y-expert review)",
+    "Data-Engineer": "migration SQL reviewed by Backend-Architect in rounds; independent SQL review at /exec (ADR-069 Class A gate)"
+  },
+  "taskDomain": "fullstack",
+  "selectedAt": "2026-10-20T12:20:00Z"
+}

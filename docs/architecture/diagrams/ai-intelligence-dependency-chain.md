@@ -12,17 +12,17 @@ Risk, RAG/Search, Auto-Response, AI Output Review, and AI Monitoring features.
 All chains now have UI tasks assigned via the unified **AI & Agents** sidebar at
 `/agent-approvals/*`.
 
-| Feature            | AI Chain | Router     | Frontend UI                                     | Route                                        | Status                           |
-| ------------------ | -------- | ---------- | ----------------------------------------------- | -------------------------------------------- | -------------------------------- |
-| Lead Scoring       | IFC-005  | IFC-013    | IFC-023 + PG-148 ✅ + IFC-212 (queue wiring) ✅ | `/agent-approvals/lead-scoring`              | ✅ COMPLETE                      |
-| Sentiment Analysis | IFC-039  | Partial    | PG-142 ✅                                       | `/agent-approvals/sentiment`                 | ✅ COMPLETE                      |
-| Churn Risk         | IFC-095  | Partial    | PG-143 ✅                                       | `/agent-approvals/churn-risk`                | ✅ COMPLETE                      |
-| RAG/Search         | IFC-039  | IFC-156    | PG-144 ✅                                       | `/agent-approvals/ai-search`                 | ✅ COMPLETE                      |
-| Auto-Response      | IFC-029  | IFC-029    | IFC-149 ✅                                      | `/agent-approvals`                           | ✅ COMPLETE                      |
-| AI Output Review   | IFC-128  | IFC-180 ✅ | IFC-181 ✅ + PG-150 ✅                          | `/agent-approvals/ai-review`                 | ✅ COMPLETE                      |
-| AI Monitoring      | IFC-117  | IFC-197 ✅ | PG-146 ✅/152 ✅/153 ✅                         | `/agent-approvals/drift,agents,logs,latency` | 3/4 UI COMPLETE (PG-151 backlog) |
-| Ticket Routing     | IFC-067  | IFC-067    | (admin dashboard TBD)                           | N/A (backend API only)                       | ✅ COMPLETE                      |
-| Experiments        | IFC-025  | IFC-025    | PG-149 (Plan Complete 50%)                      | `/agent-approvals/experiments`               | PLAN COMPLETE (50%)              |
+| Feature            | AI Chain                                 | Router     | Frontend UI                                     | Route                                        | Status                           |
+| ------------------ | ---------------------------------------- | ---------- | ----------------------------------------------- | -------------------------------------------- | -------------------------------- |
+| Lead Scoring       | IFC-005                                  | IFC-013    | IFC-023 + PG-148 ✅ + IFC-212 (queue wiring) ✅ | `/agent-approvals/lead-scoring`              | ✅ COMPLETE                      |
+| Sentiment Analysis | IFC-039                                  | Partial    | PG-142 ✅                                       | `/agent-approvals/sentiment`                 | ✅ COMPLETE                      |
+| Churn Risk         | IFC-095                                  | Partial    | PG-143 ✅                                       | `/agent-approvals/churn-risk`                | ✅ COMPLETE                      |
+| RAG/Search         | IFC-039                                  | IFC-156    | PG-144 ✅                                       | `/agent-approvals/ai-search`                 | ✅ COMPLETE                      |
+| Auto-Response      | IFC-029                                  | IFC-029    | IFC-149 ✅                                      | `/agent-approvals`                           | ✅ COMPLETE                      |
+| AI Output Review   | IFC-128                                  | IFC-180 ✅ | IFC-181 ✅ + PG-150 ✅                          | `/agent-approvals/ai-review`                 | ✅ COMPLETE                      |
+| AI Monitoring      | IFC-117 ⏳ Needs Human (prod unverified) | IFC-197 ✅ | PG-146 ✅/152 ✅/153 ✅                         | `/agent-approvals/drift,agents,logs,latency` | 3/4 UI COMPLETE (PG-151 backlog) |
+| Ticket Routing     | IFC-067                                  | IFC-067    | (admin dashboard TBD)                           | N/A (backend API only)                       | ✅ COMPLETE                      |
+| Experiments        | IFC-025                                  | IFC-025    | PG-149 (Plan Complete 50%)                      | `/agent-approvals/experiments`               | PLAN COMPLETE (50%)              |
 
 ---
 
@@ -398,9 +398,12 @@ All chains now have UI tasks assigned via the unified **AI & Agents** sidebar at
     │  - HallucinationChecker │
     │  - ROITracker           │
     │  - ChainMonitor         │
+    │  + OTel AI metrics (18) │
+    │  + Drift scheduler (18) │
     │                         │
-    │  Status: COMPLETED ✅   │
-    │  Sprint: 11             │
+    │  Status: NEEDS HUMAN    │
+    │  (prod unverified)      │
+    │  Sprint: 11 → 18        │
     └────────────┬────────────┘
                  │
                  ▼
@@ -428,7 +431,9 @@ All chains now have UI tasks assigned via the unified **AI & Agents** sidebar at
                                         └─────────────────────────────────────────────────────┘
 
     Chain Status: ⏳ 3/4 monitoring UI tasks complete (PG-151 backlog)
-    - Monitoring Tools: IFC-117 ✅
+    - Monitoring Tools: IFC-117 ⏳ In Progress → Needs Human (sprint 18: OTel export and scheduled
+      drift detection added; production verification pending, spec N1-N7. Before sprint 18 the
+      DriftDetector had no production caller and nothing exported these metrics.)
     - tRPC Router: IFC-197 (Sprint 7) ✅
     - Drift UI: PG-146 (Sprint 8) ✅
     - Agents UI: PG-151 (Sprint 8) ⏳ BACKLOG
@@ -495,17 +500,17 @@ All chains now have UI tasks assigned via the unified **AI & Agents** sidebar at
 
 ## Orphan Status Summary (Updated 2026-02-18)
 
-| Feature       | AI Chain   | Router     | Frontend                            | Status          |
-| ------------- | ---------- | ---------- | ----------------------------------- | --------------- |
-| Lead Scoring  | IFC-005 ✅ | IFC-013 ✅ | IFC-023 ✅ + PG-148 ✅              | ✅ COMPLETE     |
-| Sentiment     | IFC-039 ✅ | Partial ⚠️ | PG-142 ✅                           | ✅ COMPLETE     |
-| Churn Risk    | IFC-095 ✅ | Partial ⚠️ | PG-143 ✅                           | ✅ COMPLETE     |
-| RAG/Search    | IFC-039 ✅ | IFC-156 ✅ | PG-144 ✅                           | ✅ COMPLETE     |
-| Auto-Response | IFC-029 ✅ | IFC-029 ✅ | IFC-149 ✅                          | ✅ COMPLETE     |
-| AI Review     | IFC-128 ✅ | IFC-180 ✅ | IFC-181 ✅ + PG-150 ✅              | ✅ COMPLETE     |
-| Versioning    | IFC-086 ✅ | IFC-086 ✅ | PG-128 ✅                           | ✅ COMPLETE     |
-| AI Monitoring | IFC-117 ✅ | IFC-197 ✅ | PG-146 ✅/152 ✅/153 ✅ (PG-151 ⏳) | 3/4 UI COMPLETE |
-| Experiments   | IFC-025 ✅ | IFC-025 ✅ | PG-149 (Plan Complete 50%)          | PLAN COMPLETE   |
+| Feature       | AI Chain               | Router     | Frontend                            | Status          |
+| ------------- | ---------------------- | ---------- | ----------------------------------- | --------------- |
+| Lead Scoring  | IFC-005 ✅             | IFC-013 ✅ | IFC-023 ✅ + PG-148 ✅              | ✅ COMPLETE     |
+| Sentiment     | IFC-039 ✅             | Partial ⚠️ | PG-142 ✅                           | ✅ COMPLETE     |
+| Churn Risk    | IFC-095 ✅             | Partial ⚠️ | PG-143 ✅                           | ✅ COMPLETE     |
+| RAG/Search    | IFC-039 ✅             | IFC-156 ✅ | PG-144 ✅                           | ✅ COMPLETE     |
+| Auto-Response | IFC-029 ✅             | IFC-029 ✅ | IFC-149 ✅                          | ✅ COMPLETE     |
+| AI Review     | IFC-128 ✅             | IFC-180 ✅ | IFC-181 ✅ + PG-150 ✅              | ✅ COMPLETE     |
+| Versioning    | IFC-086 ✅             | IFC-086 ✅ | PG-128 ✅                           | ✅ COMPLETE     |
+| AI Monitoring | IFC-117 ⏳ Needs Human | IFC-197 ✅ | PG-146 ✅/152 ✅/153 ✅ (PG-151 ⏳) | 3/4 UI COMPLETE |
+| Experiments   | IFC-025 ✅             | IFC-025 ✅ | PG-149 (Plan Complete 50%)          | PLAN COMPLETE   |
 
 **All orphans resolved.** Every AI feature now has a UI task assigned.
 
@@ -543,10 +548,12 @@ All chains now have UI tasks assigned via the unified **AI & Agents** sidebar at
     ┌────────────────────────┬─────────────┬──────────────────────────────────────────────────┐
     │ Tool                   │ IFC Task    │ Status                                           │
     ├────────────────────────┼─────────────┼──────────────────────────────────────────────────┤
-    │ DriftDetector          │ IFC-117     │ ✅ Complete, Router (IFC-197), UI (PG-146)       │
-    │ LatencyMonitor         │ IFC-117     │ ✅ Complete, Router (IFC-197), UI (PG-153)       │
-    │ HallucinationChecker   │ IFC-117     │ ✅ Complete, Router (IFC-197)                    │
-    │ ROITracker             │ IFC-117     │ ✅ Complete, Router (IFC-197)                    │
-    │ ChainMonitor           │ IFC-117     │ ✅ Complete, Router (IFC-197)                    │
+    │ DriftDetector          │ IFC-117     │ ⏳ Needs Human, Router (IFC-197), UI (PG-146)    │
+    │ LatencyMonitor         │ IFC-117     │ ⏳ Needs Human, Router (IFC-197), UI (PG-153)    │
+    │ HallucinationChecker   │ IFC-117     │ ⏳ Needs Human, Router (IFC-197)                 │
+    │ ROITracker             │ IFC-117     │ ⏳ Needs Human, Router (IFC-197)                 │
+    │ ChainMonitor           │ IFC-117     │ ⏳ Needs Human, Router (IFC-197)                 │
+    │ OTel AI metrics facade │ IFC-117     │ ⏳ Needs Human (sprint 18, prod unverified)      │
+    │ DriftDetectionScheduler│ IFC-117     │ ⏳ Needs Human (sprint 18, prod unverified)      │
     └────────────────────────┴─────────────┴──────────────────────────────────────────────────┘
 ```

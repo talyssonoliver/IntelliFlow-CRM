@@ -105,8 +105,11 @@ export interface AuditLogResult {
   eventId: string;
   /** Timestamp when event was persisted */
   persistedAt: Date;
-  /** Persistence status */
-  status: 'PERSISTED' | 'PERSISTED_PENDING_PROCESSING' | 'FAILED';
+  /**
+   * Persistence status. SKIPPED: the event carried a fallback tenant ('default'
+   * or 'system'), which has no tenants row, so nothing was written.
+   */
+  status: 'PERSISTED' | 'PERSISTED_PENDING_PROCESSING' | 'FAILED' | 'SKIPPED';
   /** Cryptographic integrity hash (HMAC-SHA256) */
   integrityHash?: string;
 }

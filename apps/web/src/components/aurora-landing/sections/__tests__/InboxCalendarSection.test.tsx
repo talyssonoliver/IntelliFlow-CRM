@@ -44,9 +44,9 @@ describe('InboxCalendarSection', () => {
 
     expect(within(calCard).getByText('Contoso renewal call')).toBeInTheDocument();
     expect(within(calCard).getAllByText('Meeting').length).toBeGreaterThan(0);
-    // /calendar/event-types is still a "coming soon" stub, and this card only
-    // shows the calendar view (firm availability, PG-202, lives on a settings
-    // page); the card must not claim either settings screen.
+    // This card only shows the calendar view; event types (PG-203) and firm
+    // availability (PG-202) live on settings pages, so the card must not claim
+    // either settings screen.
     const text = calCard.textContent!;
     expect(text).not.toMatch(/availability rules|event types configuration/i);
   });

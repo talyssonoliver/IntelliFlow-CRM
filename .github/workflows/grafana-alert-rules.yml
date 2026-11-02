@@ -10,6 +10,12 @@ name: Grafana Alert Rules
 # alert-rule provisioning is Admin-only) as a secret of the Production
 # environment (the repository secret store is full). Without it the job fails,
 # saying so; it never prints the token.
+#
+# A sleeping Grafana Cloud instance answers 503 until it wakes; the shared
+# client (tools/scripts/lib/grafana-provisioning.mjs) retries 503 for up to
+# 255 s per call, hence the 12-minute timeout (ENV-008-AI). The SLOs and the
+# service dashboard have their own workflows (grafana-slos.yml,
+# grafana-dashboard.yml), so editing them never re-applies these rules.
 on:
   push:
     branches: [main]
@@ -40,7 +46,7 @@ jobs:
     name: Apply alert rules to Grafana Cloud
     runs-on: ubuntu-latest
     environment: Production
-    timeout-minutes: 5
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v7
         with:

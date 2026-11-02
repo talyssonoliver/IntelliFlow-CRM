@@ -1,0 +1,31 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 292 files total
+[codex-review] in scope : 158 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T22:04:18.218Z
+Base ref  : origin/main
+Files in scope : 158
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [HIGH] apps/api/src/modules/calendar/public-booking.router.ts:640 — non-atomic-host-conflict-check
+    Issue    : A public booking can double-book its host when a concurrent staff appointment includes that host as an attendee.
+    Evidence : The code checks availability with `await computeSlots(tx, current, rules, date, 1, now)` before `await tx.appointment.create(...)`, protected only by the public booking advisory lock. appointments.router.ts calls scheduleAppointmentUseCase with `organizerId: ctx.user.userId` and `attendeeIds: input.attendeeIds` without acquiring that lock. If both requests check before either commits, both can succeed: the database exclusion constraint compares only tenantId, organizerId and tsrange(startTime, endTime), so it does not reject the staff appointment whose organizer differs from the public host.
+    Fix      : Serialize conflict checking and persistence across public and staff scheduling paths using shared locks for every affected user, or enforce overlapping organizer and attendee reservations atomically in the database.
+    Fingerprint: 1bc2a213fd9dc1107209362f2b7e9dd2494f7fa7d869e61c77dea644096eb126
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

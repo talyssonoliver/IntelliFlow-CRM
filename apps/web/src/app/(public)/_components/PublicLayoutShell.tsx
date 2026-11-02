@@ -38,6 +38,10 @@ const AUTH_PAGES_NO_CHROME = [
   '/mfa',
   '/auth/callback',
   '/sso',
+  // PG-203: the public booking page is a firm's own page — no Aurora marketing chrome or feedback FAB.
+  '/book/',
+  // PG-203 DSAR: a firm's data request pages, same reason.
+  '/dsar/',
 ];
 
 export function PublicLayoutShell({

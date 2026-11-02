@@ -3,7 +3,7 @@
 > **Location**: `docs/design/page-registry.md` **Purpose**: Central registry of
 > all UI pages with task IDs, KPIs, file paths, components, API routers, test
 > paths, and RACI assignments **Last Updated**: 2026-04-16 (as of Sprint 17)
-> **Total Pages**: 214
+> **Total Pages**: 220
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -61,7 +61,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 1: Public Pages (27 routes)
+## Section 1: Public Pages (28 routes)
 
 ### Home Page (`/`)
 
@@ -510,6 +510,66 @@ Each route entry uses this standard table format:
 | **KPI**        | Lighthouse >=90; Server <200ms                                            |
 | **Status**     | Implemented                                                               |
 | **RACI**       | R: Frontend / A: Security / C: Backend / I: QA                            |
+
+### Public Booking (`/book/[handle]/[slug]`)
+
+| Field          | Value                                                                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-203                                                                                                                                                        |
+| **File Path**  | `apps/web/src/app/(public)/book/[handle]/[slug]/page.tsx`                                                                                                     |
+| **Layout**     | `apps/web/src/app/(public)/layout.tsx` (chrome-free: `/book/` is excluded from the public header and footer in `PublicLayoutShell.tsx`)                       |
+| **API Router** | `apps/api/src/modules/calendar/public-booking.router.ts` (`publicBooking.getEventType`, `publicBooking.listSlots`, `publicBooking.book`, all public)          |
+| **E2E Test**   | None                                                                                                                                                          |
+| **Unit Tests** | `apps/web/src/app/(public)/book/[handle]/[slug]/__tests__/`                                                                                                   |
+| **KPI**        | Lighthouse >=90; Server <200ms                                                                                                                                |
+| **Status**     | Implemented. External entry (booking link from `BookingLinkCard.tsx`); `noindex`, disallowed in `robots.ts`, not in `sitemap.xml`, no sidebar entry (ADR-083) |
+| **RACI**       | R: Frontend / A: Security / C: Backend / I: QA                                                                                                                |
+| **Components** | Route shell, BookingContent, loading.tsx                                                                                                                      |
+
+### DSAR Request (`/dsar/[handle]`)
+
+| Field          | Value                                                                                                                                                                                                                                                                                                                                             |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-203                                                                                                                                                                                                                                                                                                                                            |
+| **File Path**  | `apps/web/src/app/(public)/dsar/[handle]/page.tsx`                                                                                                                                                                                                                                                                                                |
+| **Layout**     | `apps/web/src/app/(public)/layout.tsx` (chrome-free: `/dsar/` is excluded from the public header and footer in `PublicLayoutShell.tsx`)                                                                                                                                                                                                           |
+| **API Router** | `apps/api/src/modules/privacy/privacy.router.ts` (`privacy.getFirm`, `privacy.submit`, both public; replaces the deleted `dsar.router.ts`)                                                                                                                                                                                                        |
+| **E2E Test**   | None                                                                                                                                                                                                                                                                                                                                              |
+| **Unit Tests** | `apps/web/src/app/(public)/dsar/[handle]/__tests__/`                                                                                                                                                                                                                                                                                              |
+| **KPI**        | Lighthouse >=90; Server <200ms                                                                                                                                                                                                                                                                                                                    |
+| **Status**     | Implemented. External entry; `noindex`, disallowed in `robots.ts` (`/dsar/`), not in `sitemap.xml`, no sidebar entry; `Referrer-Policy: no-referrer` and `Cache-Control: no-store` from `next.config.js` (`/dsar/:path*`). Reached from the "Your personal data" link in `BookingContent.tsx` and the booking confirmation email (FLOW-040, DSAR) |
+| **RACI**       | R: Frontend / A: Security / C: Backend / I: QA                                                                                                                                                                                                                                                                                                    |
+| **Components** | Route shell, DsarRequestContent, loading.tsx                                                                                                                                                                                                                                                                                                      |
+
+### DSAR Verify (`/dsar/[handle]/verify`)
+
+| Field          | Value                                                                                                                                                                                                                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Task ID**    | PG-203                                                                                                                                                                                                                                                                                                                   |
+| **File Path**  | `apps/web/src/app/(public)/dsar/[handle]/verify/page.tsx`                                                                                                                                                                                                                                                                |
+| **Layout**     | `apps/web/src/app/(public)/layout.tsx` (chrome-free: `/dsar/` is excluded from the public header and footer in `PublicLayoutShell.tsx`)                                                                                                                                                                                  |
+| **API Router** | `apps/api/src/modules/privacy/privacy.router.ts` (`privacy.verify`, public)                                                                                                                                                                                                                                              |
+| **E2E Test**   | None                                                                                                                                                                                                                                                                                                                     |
+| **Unit Tests** | `apps/web/src/app/(public)/dsar/[handle]/verify/__tests__/`                                                                                                                                                                                                                                                              |
+| **KPI**        | Lighthouse >=90; Server <200ms                                                                                                                                                                                                                                                                                           |
+| **Status**     | Implemented. External entry (verification email only; token in the URL fragment `#r=<id>.<token>`, read once and stripped); `noindex`, disallowed in `robots.ts` (`/dsar/`), not in `sitemap.xml`, no sidebar entry; `Referrer-Policy: no-referrer` and `Cache-Control: no-store` from `next.config.js` (`/dsar/:path*`) |
+| **RACI**       | R: Frontend / A: Security / C: Backend / I: QA                                                                                                                                                                                                                                                                           |
+| **Components** | Route shell, DsarVerifyContent                                                                                                                                                                                                                                                                                           |
+
+### DSAR Data Export (`/dsar/[handle]/export`)
+
+| Field          | Value                                                                                                                                                                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Task ID**    | PG-203                                                                                                                                                                                                                                                                   |
+| **File Path**  | `apps/web/src/app/(public)/dsar/[handle]/export/page.tsx`                                                                                                                                                                                                                |
+| **Layout**     | `apps/web/src/app/(public)/layout.tsx` (chrome-free: `/dsar/` is excluded from the public header and footer in `PublicLayoutShell.tsx`)                                                                                                                                  |
+| **API Router** | `apps/api/src/modules/privacy/privacy.router.ts` (`privacy.downloadExport`, public)                                                                                                                                                                                      |
+| **E2E Test**   | None                                                                                                                                                                                                                                                                     |
+| **Unit Tests** | `apps/web/src/app/(public)/dsar/[handle]/export/__tests__/`                                                                                                                                                                                                              |
+| **KPI**        | Lighthouse >=90; Server <200ms                                                                                                                                                                                                                                           |
+| **Status**     | Implemented. External entry (export email only; token in the URL fragment); `noindex`, disallowed in `robots.ts` (`/dsar/`), not in `sitemap.xml`, no sidebar entry; `Referrer-Policy: no-referrer` and `Cache-Control: no-store` from `next.config.js` (`/dsar/:path*`) |
+| **RACI**       | R: Frontend / A: Security / C: Backend / I: QA                                                                                                                                                                                                                           |
+| **Components** | Route shell, DsarExportContent                                                                                                                                                                                                                                           |
 
 ---
 
@@ -1113,7 +1173,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 11: Tasks (2 routes)
+## Section 11: Tasks (3 routes)
 
 ### Tasks List (`/tasks`)
 
@@ -1145,9 +1205,24 @@ Each route entry uses this standard table format:
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                         |
 | **Components** | "use client", TaskDetail, TaskForm, PageHeader, toast, useRequireAuth |
 
+### Task Automation (`/tasks/automation`)
+
+| Field          | Value                                                                                                                                                                                                                                                                  |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-208                                                                                                                                                                                                                                                                 |
+| **File Path**  | `apps/web/src/app/tasks/(list)/automation/page.tsx`                                                                                                                                                                                                                    |
+| **Layout**     | `apps/web/src/app/tasks/(list)/layout.tsx`                                                                                                                                                                                                                             |
+| **API Router** | `apps/api/src/modules/task/task-automation.router.ts` (`taskAutomation.*`); runtime `apps/api/src/modules/task/automation/` (ADR-084)                                                                                                                                  |
+| **E2E Test**   | None                                                                                                                                                                                                                                                                   |
+| **Unit Tests** | `apps/web/src/app/tasks/(list)/automation/__tests__/`, `apps/web/src/app/tasks/(list)/automation/components/__tests__/`                                                                                                                                                |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                                                                                                                                                                                        |
+| **Status**     | Implemented                                                                                                                                                                                                                                                            |
+| **RACI**       | R: Frontend / A: Product / C: Backend, Security / I: QA                                                                                                                                                                                                                |
+| **Components** | TaskAutomationContent, AutomationRuleList (forwardRef), AutomationRuleDialog, AutomationSettingsCard, TagsTab (shared, forwardRef), WebhookSecretDialog, RecentRunsDialog, CopyField, VariablePicker, ScheduleCadenceFields, MemberMultiSelect, PageHeader, EmptyState |
+
 ---
 
-## Section 12: Calendar (4 routes)
+## Section 12: Calendar (5 routes)
 
 ### Calendar (`/calendar`)
 
@@ -1209,9 +1284,24 @@ Each route entry uses this standard table format:
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                            |
 | **Components** | AvailabilityContent, WeeklyHoursCard, TimezoneCard, ClosuresList (forwardRef), BuffersCapCard, PageHeader, EmptyState    |
 
+### Event Types (`/calendar/event-types`)
+
+| Field          | Value                                                                                                                      |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-203                                                                                                                     |
+| **File Path**  | `apps/web/src/app/calendar/event-types/page.tsx`                                                                           |
+| **Layout**     | `apps/web/src/app/calendar/layout.tsx`                                                                                     |
+| **API Router** | `apps/api/src/modules/calendar/event-types.router.ts` (`calendar.eventTypes.*`), `appointments.create` (event type picker) |
+| **E2E Test**   | None                                                                                                                       |
+| **Unit Tests** | `apps/web/src/app/calendar/event-types/__tests__/`, `apps/web/src/app/calendar/event-types/components/__tests__/`          |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                                            |
+| **Status**     | Implemented (replaces the coming-soon stub; already counted in the page total)                                             |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                              |
+| **Components** | EventTypesContent, EventTypeList, EventTypeDialog, BookingLinkCard, EventTypesLoading                                      |
+
 ---
 
-## Section 13: Email (2 routes)
+## Section 13: Email (5 routes)
 
 ### Email Inbox (`/email`)
 
@@ -1242,6 +1332,51 @@ Each route entry uses this standard table format:
 | **Status**     | Implemented                                          |
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA        |
 | **Components** | Server component, EmailPage with initialEmailId prop |
+
+### Email Settings (`/email/email-settings`)
+
+| Field          | Value                                                                                                                                                                 |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-207                                                                                                                                                                |
+| **File Path**  | `apps/web/src/app/email/email-settings/page.tsx`                                                                                                                      |
+| **Layout**     | `apps/web/src/app/email/layout.tsx`                                                                                                                                   |
+| **API Router** | `emailMailbox.*`, `emailSettings.*` (incl. `suppression.*`) — `apps/api/src/modules/email/email-mailbox.router.ts`, `email-settings.router.ts`                        |
+| **E2E Test**   | None                                                                                                                                                                  |
+| **Unit Tests** | `apps/web/src/app/email/email-settings/__tests__/`, `apps/web/src/app/email/email-settings/components/__tests__/`                                                     |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                                                                                       |
+| **Status**     | Implemented (ADR-085; OAuth providers need app registration)                                                                                                          |
+| **RACI**       | R: Frontend / A: Product / C: Backend, Security / I: QA                                                                                                               |
+| **Components** | ModuleSettingsShell (`leading`, `hideActions`), MyMailboxCard, SmtpMailboxForm (lazy), SecretField, CompanyMailboxCard, SuppressionListCard (lazy), OAuthReturnNotice |
+
+### Email Signatures (`/email/signatures`)
+
+| Field          | Value                                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-207                                                                                                           |
+| **File Path**  | `apps/web/src/app/email/signatures/page.tsx`                                                                     |
+| **Layout**     | `apps/web/src/app/email/layout.tsx`                                                                              |
+| **API Router** | `emailSignatures.*` — `apps/api/src/modules/email/email-signatures.router.ts`                                    |
+| **E2E Test**   | None                                                                                                             |
+| **Unit Tests** | `apps/web/src/app/email/signatures/__tests__/`, `apps/web/src/app/email/signatures/components/__tests__/`        |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                                  |
+| **Status**     | Implemented                                                                                                      |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                    |
+| **Components** | PageHeader, SectionHeader, EmptyState (`signatures`), SignatureDialog (lazy, RichTextEditor), ConfirmationDialog |
+
+### Mailbox Sign-in Return (`/email/oauth/callback`)
+
+| Field          | Value                                                       |
+| -------------- | ----------------------------------------------------------- |
+| **Task ID**    | PG-207                                                      |
+| **File Path**  | `apps/web/src/app/email/oauth/callback/page.tsx`            |
+| **Layout**     | `apps/web/src/app/email/layout.tsx`                         |
+| **API Router** | `emailMailbox.oauthComplete`                                |
+| **E2E Test**   | None                                                        |
+| **Unit Tests** | `apps/web/src/app/email/oauth/callback/__tests__/`          |
+| **KPI**        | n/a (redirect target, noindex)                              |
+| **Status**     | Implemented (redirect target, not a navigation destination) |
+| **RACI**       | R: Frontend / A: Product / C: Security / I: QA              |
+| **Components** | OAuthCallbackContent (StrictMode-safe single completion)    |
 
 ---
 
@@ -1705,6 +1840,21 @@ Each route entry uses this standard table format:
 | **RACI**       | R: Frontend / A: Security / C: Backend / I: QA                              |
 | **Components** | "use client", Card, PageHeader, MfaQrGenerator, BackupCodesDisplay, useAuth |
 
+### Privacy Requests (`/settings/privacy-requests`)
+
+| Field          | Value                                                                                                                                                                                                                                               |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-203                                                                                                                                                                                                                                              |
+| **File Path**  | `apps/web/src/app/settings/privacy-requests/page.tsx`                                                                                                                                                                                               |
+| **Layout**     | `apps/web/src/app/settings/layout.tsx`                                                                                                                                                                                                              |
+| **API Router** | `apps/api/src/modules/privacy/privacy.router.ts` (`privacy.admin.*`: list, restrictions, logRequest, extend, previewErasure, complete, completeAccess, reject, cancelErasure, liftRestriction, revokeExport, exportData; ADMIN only)                |
+| **E2E Test**   | None                                                                                                                                                                                                                                                |
+| **Unit Tests** | `apps/web/src/app/settings/privacy-requests/__tests__/`                                                                                                                                                                                             |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                                                                                                                                                                     |
+| **Status**     | Implemented. ADMIN-only; reachable from the Settings sidebar (`configs/settings.ts`, item `privacy-requests`) and Settings search (Security category). `privacy.restrictionFor` also feeds `RestrictionBanner.tsx` on lead and contact detail pages |
+| **RACI**       | R: Frontend / A: Security / C: Backend / I: QA                                                                                                                                                                                                      |
+| **Components** | PrivacyRequestsContent, RequestActionDialog, LogRequestDialog, PrivacyRequestsLoading                                                                                                                                                               |
+
 ---
 
 ## Section 17: Billing (7 routes)
@@ -2090,7 +2240,7 @@ Each route entry uses this standard table format:
 | 10. Cases           | 4       | 4           | 0         | 0       |
 | 11. Tasks           | 2       | 2           | 0         | 0       |
 | 12. Calendar        | 3       | 3           | 0         | 0       |
-| 13. Email           | 2       | 2           | 0         | 0       |
+| 13. Email           | 5       | 5           | 0         | 0       |
 | 14. AI & Automation | 14      | 13          | 1         | 0       |
 | 15. Analytics       | 2       | 1           | 1         | 0       |
 | 16. Settings        | 9       | 4           | 5         | 0       |
@@ -2099,7 +2249,7 @@ Each route entry uses this standard table format:
 | 19. Notifications   | 2       | 1           | 1         | 0       |
 | 20. Profile         | 1       | 0           | 1         | 0       |
 | 21. Support Portal  | 1       | 1           | 0         | 0       |
-| **Total**           | **105** | **88**      | **14**    | **3**   |
+| **Total**           | **108** | **91**      | **14**    | **3**   |
 
 ### Backend Integration Status
 

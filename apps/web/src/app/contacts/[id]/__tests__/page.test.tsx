@@ -209,6 +209,9 @@ vi.mock('@/components/shared/more-actions-button', () => ({
   MoreActionsButton: () => <button type="button">More Actions</button>,
 }));
 
+// PG-203 DSAR: the banner has its own tests and reads a router these mocks do not stub.
+vi.mock('@/components/privacy/RestrictionBanner', () => ({ RestrictionBanner: () => null }));
+
 vi.mock('@/components/home/PinButton', () => ({
   PinButton: () => <button type="button">Pin</button>,
 }));

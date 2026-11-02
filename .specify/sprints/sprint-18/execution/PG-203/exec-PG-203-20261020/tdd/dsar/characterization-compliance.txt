@@ -1,0 +1,102 @@
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203-dsar
+
+No test files found, exiting with code 1
+
+filter: tests/compliance/data-governance.spec.ts
+
+|integration| 
+
+include: **/*.test.ts, **/*.test.tsx
+exclude:  **/node_modules/**, webhook/webhook.test.ts
+
+|root| 
+
+include: apps/**/*.{test,spec}.ts, apps/**/*.{test,spec}.tsx, packages/**/*.{test,spec}.ts, packages/**/*.{test,spec}.tsx, tools/**/*.{test,spec}.ts, tools/**/*.{test,spec}.tsx, scripts/**/*.{test,spec}.ts, scripts/**/*.{test,spec}.tsx, tests/**/*.{test,spec}.ts, tests/**/*.{test,spec}.tsx
+exclude:  **/node_modules/**, **/.pnpm/**, **/dist/**, **/build/**, **/.turbo/**, **/artifacts/**, **/.next/**, tests/e2e/**, tests/a11y/**, tests/integration/**, tests/property/**, apps/api/**, apps/web/**, apps/ai-worker/**, apps/workers/**, packages/ui/**, packages/observability/**, packages/adapters/**, packages/application/**, packages/domain/**, packages/db/**, packages/validators/**, packages/webhooks/**, tests/architecture/**, tests/compliance/data-governance.spec.ts, tools/scripts/__tests__/subset-material-symbols.test.ts
+
+|api| 
+
+include: src/**/*.{test,spec}.ts, scripts/**/*.{test,spec}.ts
+exclude:  node_modules, dist, .turbo, **/*.integration.test.ts
+
+|ai-worker| 
+
+include: src/**/*.{test,spec}.ts
+exclude:  node_modules, dist, .turbo, src/tracing/__tests__/**
+
+|web| 
+
+include: src/**/*.{test,spec}.{ts,tsx}
+exclude:  node_modules, dist, .next, build
+
+|worker-shared| 
+
+include: src/**/*.{test,spec}.ts
+exclude:  node_modules, dist
+
+|events-worker| 
+
+include: src/**/*.{test,spec}.ts
+exclude:  node_modules, dist
+
+|ingestion-worker| 
+
+include: src/**/*.{test,spec}.ts
+exclude:  node_modules, dist
+
+|ui| 
+
+include: __tests__/**/*.test.{ts,tsx}
+exclude:  node_modules, dist
+
+|observability| 
+
+include: src/**/*.{test,spec}.ts
+exclude:  node_modules, dist
+
+|architecture| 
+
+include: **/*.test.ts, **/*.spec.ts
+exclude:  node_modules, dist
+
+|a11y| 
+
+include: **/*.spec.{ts,tsx}
+exclude:  node_modules, dist
+
+|adapters| 
+
+include: src/**/*.{test,spec}.ts, __tests__/**/*.{test,spec}.ts
+exclude:  node_modules, dist
+
+|application| 
+
+include: src/**/*.{test,spec}.ts
+exclude:  node_modules, dist
+
+|domain| 
+
+include: src/**/*.{test,spec}.ts
+exclude:  node_modules, dist
+
+|db| 
+
+include: src/**/*.{test,spec}.ts
+exclude:  node_modules, dist, generated
+
+|validators| 
+
+include: src/**/*.{test,spec}.ts, __tests__/**/*.{test,spec}.ts
+exclude:  node_modules, dist
+
+|webhooks| 
+
+include: src/**/*.{test,spec}.ts, __tests__/**/*.{test,spec}.ts
+exclude:  node_modules, dist
+
+|property| 
+
+include: **/*.prop.test.ts
+exclude:  node_modules, dist, support/**
+

@@ -1,0 +1,86 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "IFC-117",
+  "started_at": "2026-10-25T16:19:27Z",
+  "execution": {
+    "started_at": "2026-10-25T16:19:27Z",
+    "executor": "Claude Code /exec",
+    "agents": [
+      "stoa-intelligence",
+      "stoa-quality",
+      "stoa-foundation",
+      "stoa-security"
+    ]
+  },
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "at": "2026-10-05T23:30:00Z",
+      "note": "Reopened from Completed by the honest-status audit; see .specify/sprints/sprint-6/attestations/IFC-117/task-tracking.json (kept as history)."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-25T15:25:06Z",
+      "note": "Spec session started in a fresh sprint-18 structure (coordinator GO 2026-10-24/25). The CSV stays 'In Progress', because tools/scripts/lib/workflow/config.ts does not allow In Progress -> Specifying."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-25T16:03:11Z",
+      "note": "Spec complete. Consensus 5/5 APPROVED (IFC-117-spec-consensus.json). Spec: .specify/sprints/sprint-18/specifications/IFC-117-spec.md. ADR-088 proposed."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-25T16:18:12Z",
+      "note": "Plan complete: .specify/sprints/sprint-18/planning/IFC-117-plan.md (28 steps). Plan-reviewer subagent: REVISE, REVISE, then APPROVED_WITH_CHANGES; all fixes applied. The CSV stays In Progress (Planning is not an allowed transition)."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-25T16:19:27Z",
+      "note": "Exec session started (/exec IFC-117, sprint 18)."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-25T19:58:52Z",
+      "note": "Exec validated (typecheck, lint, build, ai-worker tests, tools tests, clean exit, coverage after). Attestation verdict NEEDS_HUMAN: production evidence N1-N7 is the owner's after promotion. The CSV stays In Progress at 90% because validate-sprint-data does not accept Needs Human yet. Not pushed yet (single push with pre-ship follows)."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-30T00:39:01Z",
+      "note": "PR #1078 review round (codex + adversarial). STOA Intelligence, Quality, Foundation and Security ran read-only as subagents, plus compliance-check; verdicts under execution/IFC-117/run-20261029-review/matop/. Fixes in f4d9290d3, 65ecc91eb and 5b4bc7f4e; main merged in df34ac20c and 19b87a762 (#1095). Verdict stays NEEDS_HUMAN."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-30T10:36:28Z",
+      "note": "PR #1078 delta review: codex confirmed fixes 1-4; the scoring job now logs error classes on all five failure paths (7b6fb1136). Verdict stays NEEDS_HUMAN."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-30T11:18:41Z",
+      "note": "Merged origin/main e032ee9f4 (#1056, PG-203 DSAR) in 8f69b2c74, no conflicts. The scoring-job canary test now mocks the PG-203 data-request guard. Full ai-worker suite re-run. Verdict stays NEEDS_HUMAN."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-30T12:19:51Z",
+      "note": "SonarCloud duplication gate: AI_METRIC_DEFINITIONS rebuilt from one row per instrument in 5a118c8d4 (exported values byte-identical, pinned by a test). Full ai-worker suite re-run. Verdict stays NEEDS_HUMAN."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Reopen evidence (2026-10-05): prometheus-exporter.ts exposes metrics that nothing scrapes, and ai-grafana-dashboard.json / ai-prometheus-rules.yaml are not loaded anywhere.",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: AI metrics reach the hosted backend from production over OTLP (IFC-032), the AI dashboard and alert rules are loaded there, and one alert is proven by a received test notification.",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "Spec finding (2026-10-25): drift detection never runs in production. detectAllDrift has no non-test caller, and its statistics cannot see a pure shift. The fix is in scope (spec R-1).",
+      "raised_at": "2026-10-25T16:03:11Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 90,
+  "updated_at": "2026-10-30T12:19:51Z"
+}

@@ -3481,6 +3481,28 @@ PG-192:
     - .specify/sprints/sprint-16/attestations/PG-192/context_ack.json
   notes: 'Fix missing /agent-approvals/logs page.tsx (PG-152 regression fix). Sprint 16. Completed.'
 
+# PG-203 is Tier A (high fan-out: its follow-ups PG-211/212/213 depend on it).
+PG-203:
+  tier: A
+  gate_profile:
+    - build
+    - typecheck
+    - lint
+    - unit
+    - integration
+    - lighthouse
+  acceptance_owner: 'Frontend Dev'
+  debt_allowed: no
+  evidence_required:
+    - apps/web/src/app/calendar/event-types/page.tsx
+    - apps/web/src/app/(public)/book/[handle]/[slug]/page.tsx
+    - apps/api/src/modules/calendar/public-booking.router.ts
+    - tests/integration/event-types.test.ts
+    - .specify/sprints/sprint-18/specifications/PG-203-spec.md
+    - .specify/sprints/sprint-18/planning/PG-203-plan.md
+    - .specify/sprints/sprint-18/attestations/PG-203/context_ack.json
+  notes: 'Event types + public booking (ADR-083), Sprint 18. Tier A once PG-211/212/213 were added as follow-ups.'
+
 # -----------------------------------------------------------------------------
 # METADATA
 # -----------------------------------------------------------------------------

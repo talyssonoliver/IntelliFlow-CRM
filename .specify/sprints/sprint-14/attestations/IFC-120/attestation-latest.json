@@ -17,14 +17,14 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/api/src/modules/auth/auth.router.ts": "201b48927236a2cdc3eb3cd8b4f943a5f13c976ef39a8cf0b9ec24cfc49fb37b",
-    "packages/validators/src/auth.ts": "7c7ae68fe65ea3f15cae06fb535574b468c2d16d61abfcbf20ed4bb2363f1147",
-    "apps/api/src/lib/supabase.ts": "4cf216fc73e3223ee5676565f0b39a9e8dbfe29d162ec001dac3f274700ecb9c",
-    "apps/web/src/app/(public)/reset-password/callback/page.tsx": "b25b4528f78c3ed45ab12c128848df921de825e01b43eba989a0b0a1b79f7012",
-    "apps/web/src/app/(public)/verify-email/callback/page.tsx": "5ea4e451787ebc3329d67e91ebe3508810c0deffc8b40cb8df6712a97bbac698",
-    "apps/web/src/components/shared/email-verification.tsx": "ad5651bee8436829f04781b8d5a1cb187ddaceb582f856cb8895847470981c20",
-    "apps/web/src/components/shared/password-reset.tsx": "e42ba8abfa2dc769b6a03545d22ffccdc2d526e43416662d54bfc2788e8c9e51",
-    ".specify/sprints/sprint-14/attestations/IFC-120/context_ack.json": "51f573c5e273844b24d3ef11eebf9a7b0597ea9ec11abac9d37776f37a3be2a2"
+    "apps/api/src/modules/auth/auth.router.ts": "sha256:201b48927236a2cdc3eb3cd8b4f943a5f13c976ef39a8cf0b9ec24cfc49fb37b",
+    "packages/validators/src/auth.ts": "sha256:7c7ae68fe65ea3f15cae06fb535574b468c2d16d61abfcbf20ed4bb2363f1147",
+    "apps/api/src/lib/supabase.ts": "sha256:4cf216fc73e3223ee5676565f0b39a9e8dbfe29d162ec001dac3f274700ecb9c",
+    "apps/web/src/app/(public)/reset-password/callback/page.tsx": "sha256:b25b4528f78c3ed45ab12c128848df921de825e01b43eba989a0b0a1b79f7012",
+    "apps/web/src/app/(public)/verify-email/callback/page.tsx": "sha256:5ea4e451787ebc3329d67e91ebe3508810c0deffc8b40cb8df6712a97bbac698",
+    "apps/web/src/components/shared/email-verification.tsx": "sha256:ad5651bee8436829f04781b8d5a1cb187ddaceb582f856cb8895847470981c20",
+    "apps/web/src/components/shared/password-reset.tsx": "sha256:e42ba8abfa2dc769b6a03545d22ffccdc2d526e43416662d54bfc2788e8c9e51",
+    ".specify/sprints/sprint-14/attestations/IFC-120/context_ack.json": "sha256:51f573c5e273844b24d3ef11eebf9a7b0597ea9ec11abac9d37776f37a3be2a2"
   },
   "validation_results": [
     {

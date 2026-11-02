@@ -102,47 +102,41 @@ interface PersistedEntry {
   timestamp: Date;
 }
 
+/**
+ * In-memory audit_log_entries store. The adapter keeps the chain fields under
+ * `metadata.audit`; each captured row also exposes them at the top level so the
+ * properties below read the same as before.
+ */
 function makeMockPrisma(): {
   prisma: AuditPrismaClient;
-  securityEvents: PersistedEntry[];
+  entries: PersistedEntry[];
 } {
-  const securityEvents: PersistedEntry[] = [];
-
-  const prisma: AuditPrismaClient = {
-    securityEvent: {
-      create: async (args: { data: any }) => {
-        securityEvents.push({ ...args.data });
-        return args.data;
-      },
-      findUnique: async (args: { where: { eventId: string } }) => {
-        return securityEvents.find((e) => e.eventId === args.where.eventId) ?? null;
-      },
-      update: async (args: { where: { eventId: string }; data: any }) => {
-        const idx = securityEvents.findIndex((e) => e.eventId === args.where.eventId);
-        if (idx >= 0) Object.assign(securityEvents[idx], args.data);
-        return securityEvents[idx] ?? null;
-      },
-    },
-    auditLogEntry: {
-      create: async (_args: { data: any }) => ({}),
-    },
-    $transaction: async <T>(callback: (tx: any) => Promise<T>): Promise<T> => {
-      // Inline transaction: forward to same in-memory store
-      return callback({
-        securityEvent: {
-          create: async (args: { data: any }) => {
-            securityEvents.push({ ...args.data });
-            return args.data;
-          },
-        },
-        auditLogEntry: {
-          create: async (_args: { data: any }) => ({}),
-        },
-      });
-    },
+  const entries: PersistedEntry[] = [];
+  const create = async (args: { data: any }) => {
+    const audit = args.data.metadata?.audit ?? {};
+    entries.push({
+      ...args.data,
+      previousHash: audit.previousHash,
+      integrityHash: audit.integrityHash,
+      signature: audit.signature,
+    });
+    return args.data;
   };
 
-  return { prisma, securityEvents };
+  const prisma: AuditPrismaClient = {
+    auditLogEntry: {
+      create,
+      findFirst: async (args: { where: { eventId: string } }) =>
+        entries.find((e) => e.eventId === args.where.eventId) ?? null,
+    },
+    // Every recorded user still exists.
+    user: { findUnique: async (args: { where: { id: string } }) => ({ id: args.where.id }) },
+    // Inline transaction: forward to the same in-memory store
+    $transaction: async <T>(callback: (tx: any) => Promise<T>): Promise<T> =>
+      callback({ auditLogEntry: { create } }),
+  };
+
+  return { prisma, entries };
 }
 
 // ---------------------------------------------------------------------------
@@ -217,7 +211,12 @@ function tenantCtx(tenantId: string): TenantContext {
 // ---------------------------------------------------------------------------
 
 function callComputeHash(adapter: DurableAuditLogAdapter, entry: Record<string, unknown>): string {
-  return (adapter as any).computeHash(entry);
+  // computeHash reads a persisted row: previousHash lives under metadata.audit.
+  const { previousHash, metadata, ...rest } = entry;
+  return (adapter as any).computeHash({
+    ...rest,
+    metadata: { ...(metadata as Record<string, unknown>), audit: { previousHash } },
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -388,7 +387,7 @@ describe('P-AUDIT-07: Chain starts from GENESIS', () => {
   test.prop([arbSigningKey, arbTenantId, arbMetadata()], propertyParams())(
     'first logged event always has previousHash GENESIS',
     async (key, tenantId, metadata) => {
-      const { prisma, securityEvents } = makeMockPrisma();
+      const { prisma, entries } = makeMockPrisma();
       const adapter = new DurableAuditLogAdapter(prisma, key);
       const event: AISecurityEventInput = {
         eventType: 'AI_GUARDRAIL_TRIGGERED',
@@ -398,8 +397,8 @@ describe('P-AUDIT-07: Chain starts from GENESIS', () => {
         metadata: { ...metadata, dataSubjectId: undefined },
       };
       await adapter.logSecurityEvent(event, tenantCtx(tenantId));
-      expect(securityEvents).toHaveLength(1);
-      expect(securityEvents[0].previousHash).toBe('GENESIS');
+      expect(entries).toHaveLength(1);
+      expect(entries[0].previousHash).toBe('GENESIS');
     }
   );
 });
@@ -412,7 +411,7 @@ describe('P-AUDIT-08: Sequential hash chain linkage', () => {
   test.prop([arbSigningKey, arbTenantId, fc.integer({ min: 2, max: 6 })], propertyParams())(
     'event[i].previousHash equals event[i-1].integrityHash for all i>=1',
     async (key, tenantId, chainLength) => {
-      const { prisma, securityEvents } = makeMockPrisma();
+      const { prisma, entries } = makeMockPrisma();
       const adapter = new DurableAuditLogAdapter(prisma, key);
 
       const baseEvent: AISecurityEventInput = {
@@ -437,14 +436,14 @@ describe('P-AUDIT-08: Sequential hash chain linkage', () => {
         );
       }
 
-      expect(securityEvents).toHaveLength(chainLength);
+      expect(entries).toHaveLength(chainLength);
 
       // First event starts from GENESIS
-      expect(securityEvents[0].previousHash).toBe('GENESIS');
+      expect(entries[0].previousHash).toBe('GENESIS');
 
       // Each subsequent event must reference the prior event's integrityHash
       for (let i = 1; i < chainLength; i++) {
-        expect(securityEvents[i].previousHash).toBe(securityEvents[i - 1].integrityHash);
+        expect(entries[i].previousHash).toBe(entries[i - 1].integrityHash);
       }
     }
   );
@@ -458,7 +457,7 @@ describe('P-AUDIT-09: Sequential chain hashes are unique', () => {
   test.prop([arbSigningKey, arbTenantId, fc.integer({ min: 2, max: 8 })], propertyParams())(
     'all integrityHash values in a sequential chain are distinct',
     async (key, tenantId, chainLength) => {
-      const { prisma, securityEvents } = makeMockPrisma();
+      const { prisma, entries } = makeMockPrisma();
       const adapter = new DurableAuditLogAdapter(prisma, key);
 
       const baseEvent: AISecurityEventInput = {
@@ -483,7 +482,7 @@ describe('P-AUDIT-09: Sequential chain hashes are unique', () => {
         );
       }
 
-      const hashes = securityEvents.map((e) => e.integrityHash);
+      const hashes = entries.map((e) => e.integrityHash);
       const uniqueHashes = new Set(hashes);
       expect(uniqueHashes.size).toBe(chainLength);
     }
@@ -498,10 +497,10 @@ describe('P-AUDIT-10: New adapter instance resets to GENESIS', () => {
   test.prop([arbSigningKey, arbTenantId], propertyParams())(
     'a fresh adapter always emits GENESIS as the first previousHash, independent of siblings',
     async (key, tenantId) => {
-      const { prisma: prismaA, securityEvents: eventsA } = makeMockPrisma();
+      const { prisma: prismaA, entries: eventsA } = makeMockPrisma();
       const adapterA = new DurableAuditLogAdapter(prismaA, key);
 
-      const { prisma: prismaB, securityEvents: eventsB } = makeMockPrisma();
+      const { prisma: prismaB, entries: eventsB } = makeMockPrisma();
       const adapterB = new DurableAuditLogAdapter(prismaB, key);
 
       const event: AISecurityEventInput = {
@@ -633,7 +632,7 @@ describe('P-AUDIT-14: PII encryption transforms dataSubjectId', () => {
   test.prop([arbSigningKey, arbTenantId, arbShortStr], propertyParams())(
     'when encryptPII=true the persisted dataSubjectId is not the plain-text original',
     async (key, tenantId, plainSubjectId) => {
-      const { prisma, securityEvents } = makeMockPrisma();
+      const { prisma, entries } = makeMockPrisma();
       const adapter = new DurableAuditLogAdapter(prisma, key, { encryptPII: true });
 
       const event: AISecurityEventInput = {
@@ -653,8 +652,8 @@ describe('P-AUDIT-14: PII encryption transforms dataSubjectId', () => {
       };
 
       await adapter.logSecurityEvent(event, tenantCtx(tenantId));
-      expect(securityEvents).toHaveLength(1);
-      const persisted = securityEvents[0];
+      expect(entries).toHaveLength(1);
+      const persisted = entries[0];
       // The stored dataSubjectId must not equal the original plain text
       expect(persisted.metadata.dataSubjectId).not.toBe(plainSubjectId);
     }
@@ -669,7 +668,7 @@ describe('P-AUDIT-15: Disabled PII encryption does not corrupt non-PII metadata'
   test.prop([arbSigningKey, arbTenantId, arbShortStr, arbShortStr], propertyParams())(
     'modelId and guardrailId survive unmodified when encryptPII=false',
     async (key, tenantId, modelId, guardrailId) => {
-      const { prisma, securityEvents } = makeMockPrisma();
+      const { prisma, entries } = makeMockPrisma();
       const adapter = new DurableAuditLogAdapter(prisma, key, { encryptPII: false });
 
       const event: AISecurityEventInput = {
@@ -688,8 +687,8 @@ describe('P-AUDIT-15: Disabled PII encryption does not corrupt non-PII metadata'
       };
 
       await adapter.logSecurityEvent(event, tenantCtx(tenantId));
-      expect(securityEvents).toHaveLength(1);
-      const persisted = securityEvents[0];
+      expect(entries).toHaveLength(1);
+      const persisted = entries[0];
       expect(persisted.metadata.modelId).toBe(modelId);
       expect(persisted.metadata.guardrailId).toBe(guardrailId);
     }

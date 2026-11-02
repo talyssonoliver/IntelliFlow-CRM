@@ -1,0 +1,252 @@
+2026-10-20T23:50:47Z
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/packages/adapters
+
+ ❯ |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts (20 tests | 14 failed) 27ms
+     × writes assigneeId on create and update 5ms
+     × writes null for an unassigned task 1ms
+     × findById loads assigneeId 1ms
+     × findByIds loads assigneeId 1ms
+     × findByOwnerId loads assigneeId 1ms
+     × findByLeadId loads assigneeId 1ms
+     × findByContactId loads assigneeId 1ms
+     × findByOpportunityId loads assigneeId 1ms
+     × findByStatus loads assigneeId 1ms
+     × findOverdue loads assigneeId 1ms
+     × findDueToday loads assigneeId 1ms
+     × findByPriority loads assigneeId 1ms
+     × findDueSoon loads assigneeId 1ms
+     × keeps the assignee through a load-then-save cycle (bulkComplete path) 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 14 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts > PrismaTaskRepository assigneeId persistence (PG-208) > writes assigneeId on create and update
+AssertionError: expected undefined to be 'assignee-9' // Object.is equality
+
+- Expected:
+"assignee-9"
+
++ Received:
+undefined
+
+ ❯ src/repositories/__tests__/PrismaTaskRepository.test.ts:144:36
+    142|     await repo.save(task!);
+    143|     const args = prisma.task.upsert.mock.calls[0][0];
+    144|     expect(args.create.assigneeId).toBe('assignee-9');
+       |                                    ^
+    145|     expect(args.update.assigneeId).toBe('assignee-9');
+    146|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/14]⎯
+
+ FAIL  |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts > PrismaTaskRepository assigneeId persistence (PG-208) > writes null for an unassigned task
+AssertionError: expected undefined to be null
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ src/repositories/__tests__/PrismaTaskRepository.test.ts:152:67
+    150|     const task = await repo.findById({ value: ID_A } as any);
+    151|     await repo.save(task!);
+    152|     expect(prisma.task.upsert.mock.calls[0][0].create.assigneeId).toBe…
+       |                                                                   ^
+    153|   });
+    154|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/14]⎯
+
+ FAIL  |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts > PrismaTaskRepository assigneeId persistence (PG-208) > findById loads assigneeId
+ FAIL  |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts > PrismaTaskRepository assigneeId persistence (PG-208) > findByIds loads assigneeId
+ FAIL  |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts > PrismaTaskRepository assigneeId persistence (PG-208) > findByOwnerId loads assigneeId
+ FAIL  |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts > PrismaTaskRepository assigneeId persistence (PG-208) > findByLeadId loads assigneeId
+ FAIL  |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts > PrismaTaskRepository assigneeId persistence (PG-208) > findByContactId loads assigneeId
+ FAIL  |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts > PrismaTaskRepository assigneeId persistence (PG-208) > findByOpportunityId loads assigneeId
+ FAIL  |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts > PrismaTaskRepository assigneeId persistence (PG-208) > findByStatus loads assigneeId
+ FAIL  |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts > PrismaTaskRepository assigneeId persistence (PG-208) > findOverdue loads assigneeId
+ FAIL  |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts > PrismaTaskRepository assigneeId persistence (PG-208) > findDueToday loads assigneeId
+ FAIL  |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts > PrismaTaskRepository assigneeId persistence (PG-208) > findByPriority loads assigneeId
+ FAIL  |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts > PrismaTaskRepository assigneeId persistence (PG-208) > findDueSoon loads assigneeId
+AssertionError: expected null to be 'assignee-9' // Object.is equality
+
+- Expected:
+"assignee-9"
+
++ Received:
+null
+
+ ❯ src/repositories/__tests__/PrismaTaskRepository.test.ts:169:33
+    167|   ])('%s loads assigneeId', async (_name, load) => {
+    168|     const tasks = await load(repo);
+    169|     expect(tasks[0].assigneeId).toBe('assignee-9');
+       |                                 ^
+    170|   });
+    171|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/14]⎯
+
+ FAIL  |adapters| src/repositories/__tests__/PrismaTaskRepository.test.ts > PrismaTaskRepository assigneeId persistence (PG-208) > keeps the assignee through a load-then-save cycle (bulkComplete path)
+AssertionError: expected undefined to be 'assignee-9' // Object.is equality
+
+- Expected:
+"assignee-9"
+
++ Received:
+undefined
+
+ ❯ src/repositories/__tests__/PrismaTaskRepository.test.ts:175:67
+    173|     const [task] = await repo.findByIds([ID_A]);
+    174|     await repo.save(task);
+    175|     expect(prisma.task.upsert.mock.calls[0][0].update.assigneeId).toBe…
+       |                                                                   ^
+    176|   });
+    177| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/14]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  14 failed | 6 passed (20)
+   Start at  00:50:49
+   Duration  773ms (transform 315ms, setup 0ms, import 464ms, tests 27ms, environment 0ms)
+
+2026-10-20T23:51:13Z
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/packages/application
+
+ ❯ |application| src/services/__tests__/TaskService.test.ts (51 tests | 4 failed) 27ms
+     × assignTask changes the assignee and publishes task.assigned 4ms
+     × assignTask to the same assignee is a no-op without an event 0ms
+     × assignTask refuses a task of another tenant (NotFound, nothing saved) 0ms
+     × assignTask rejects an invalid id 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |application| src/services/__tests__/TaskService.test.ts > TaskService assignee (PG-208) > assignTask changes the assignee and publishes task.assigned
+TypeError: service.assignTask is not a function
+ ❯ src/services/__tests__/TaskService.test.ts:816:34
+    814|     const task = await created();
+    815|     eventBus.clearPublishedEvents();
+    816|     const result = await service.assignTask(task.id.value, 'assignee-2…
+       |                                  ^
+    817|     expect(result.isSuccess).toBe(true);
+    818|     expect((await taskRepository.findById(task.id))?.assigneeId).toBe(…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  |application| src/services/__tests__/TaskService.test.ts > TaskService assignee (PG-208) > assignTask to the same assignee is a no-op without an event
+TypeError: service.assignTask is not a function
+ ❯ src/services/__tests__/TaskService.test.ts:826:34
+    824|     const task = await created();
+    825|     eventBus.clearPublishedEvents();
+    826|     const result = await service.assignTask(task.id.value, 'assignee-1…
+       |                                  ^
+    827|     expect(result.isSuccess).toBe(true);
+    828|     expect(eventBus.getPublishedEvents()).toHaveLength(0);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  |application| src/services/__tests__/TaskService.test.ts > TaskService assignee (PG-208) > assignTask refuses a task of another tenant (NotFound, nothing saved)
+TypeError: service.assignTask is not a function
+ ❯ src/services/__tests__/TaskService.test.ts:833:34
+    831|   it('assignTask refuses a task of another tenant (NotFound, nothing s…
+    832|     const task = await created('tenant-1');
+    833|     const result = await service.assignTask(task.id.value, 'assignee-2…
+       |                                  ^
+    834|     expect(result.isFailure).toBe(true);
+    835|     expect(result.error.message).toContain('Task not found');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  |application| src/services/__tests__/TaskService.test.ts > TaskService assignee (PG-208) > assignTask rejects an invalid id
+TypeError: service.assignTask is not a function
+ ❯ src/services/__tests__/TaskService.test.ts:840:34
+    838|
+    839|   it('assignTask rejects an invalid id', async () => {
+    840|     const result = await service.assignTask('not-a-uuid', 'assignee-2'…
+       |                                  ^
+    841|     expect(result.isFailure).toBe(true);
+    842|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 47 passed (51)
+   Start at  00:51:14
+   Duration  736ms (transform 348ms, setup 0ms, import 493ms, tests 27ms, environment 0ms)
+
+2026-10-20T23:51:29Z
+# TaskService with an assignTask stub returning a failure
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/packages/application
+
+ ❯ |application| src/services/__tests__/TaskService.test.ts (51 tests | 3 failed) 36ms
+     × assignTask changes the assignee and publishes task.assigned 6ms
+     × assignTask to the same assignee is a no-op without an event 1ms
+     × assignTask refuses a task of another tenant (NotFound, nothing saved) 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |application| src/services/__tests__/TaskService.test.ts > TaskService assignee (PG-208) > assignTask changes the assignee and publishes task.assigned
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/services/__tests__/TaskService.test.ts:817:30
+    815|     eventBus.clearPublishedEvents();
+    816|     const result = await service.assignTask(task.id.value, 'assignee-2…
+    817|     expect(result.isSuccess).toBe(true);
+       |                              ^
+    818|     expect((await taskRepository.findById(task.id))?.assigneeId).toBe(…
+    819|     const events = eventBus.getPublishedEvents().map((e) => e.eventTyp…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |application| src/services/__tests__/TaskService.test.ts > TaskService assignee (PG-208) > assignTask to the same assignee is a no-op without an event
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/services/__tests__/TaskService.test.ts:827:30
+    825|     eventBus.clearPublishedEvents();
+    826|     const result = await service.assignTask(task.id.value, 'assignee-1…
+    827|     expect(result.isSuccess).toBe(true);
+       |                              ^
+    828|     expect(eventBus.getPublishedEvents()).toHaveLength(0);
+    829|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |application| src/services/__tests__/TaskService.test.ts > TaskService assignee (PG-208) > assignTask refuses a task of another tenant (NotFound, nothing saved)
+AssertionError: expected 'RED stub' to contain 'Task not found'
+
+Expected: "Task not found"
+Received: "RED stub"
+
+ ❯ src/services/__tests__/TaskService.test.ts:835:34
+    833|     const result = await service.assignTask(task.id.value, 'assignee-2…
+    834|     expect(result.isFailure).toBe(true);
+    835|     expect(result.error.message).toContain('Task not found');
+       |                                  ^
+    836|     expect((await taskRepository.findById(task.id))?.assigneeId).toBe(…
+    837|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 48 passed (51)
+   Start at  00:51:31
+   Duration  948ms (transform 434ms, setup 0ms, import 612ms, tests 36ms, environment 0ms)
+

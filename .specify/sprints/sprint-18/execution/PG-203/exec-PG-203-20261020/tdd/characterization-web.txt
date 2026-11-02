@@ -1,0 +1,13 @@
+# 2026-10-20T23:21:39Z
+# d4db133c9481988b96b250bd278cdbcc79b94400
+# pnpm --dir apps/web exec vitest run src/components/appointments/__tests__/AppointmentForm.test.tsx src/app/__tests__/sitemap-reconciliation.test.ts src/app/appointments/new/__tests__/page.onsuccess.test.tsx
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/web
+
+
+ Test Files  3 passed (3)
+      Tests  34 passed (34)
+   Start at  00:21:41
+   Duration  21.94s (transform 1.58s, setup 1.45s, import 2.41s, tests 18.31s, environment 3.32s)
+
+# exit=0

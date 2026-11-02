@@ -1,0 +1,19 @@
+2026-10-20T23:51:52Z
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/packages/adapters
+
+
+ Test Files  1 passed (1)
+      Tests  20 passed (20)
+   Start at  00:51:54
+   Duration  845ms (transform 382ms, setup 0ms, import 558ms, tests 22ms, environment 0ms)
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/packages/application
+
+
+ Test Files  1 passed (1)
+      Tests  51 passed (51)
+   Start at  00:51:56
+   Duration  858ms (transform 419ms, setup 0ms, import 591ms, tests 28ms, environment 0ms)
+

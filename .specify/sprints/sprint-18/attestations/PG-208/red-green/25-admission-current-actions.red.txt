@@ -1,0 +1,227 @@
+[test-slot] slot1 taken for PG-208@feat/pg-208-task-automation: pnpm --filter ./apps/api exec vitest run src/modules/task -t at admission|after it was read|after the tick read|after the lookup|row lock|deactivated or deleted
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-208/apps/api
+
+ ❯ |api| src/modules/task/automation/__tests__/task-automation-store.test.ts (25 tests | 2 failed | 23 skipped) 69ms
+       × admits the actions the rule holds under its row lock, not the ones the caller read 25ms
+       × writes nothing for a rule deactivated or deleted after the caller read it 6ms
+ ❯ |api| src/modules/task/automation/__tests__/task-automation-engine.test.ts (56 tests | 2 failed | 53 skipped) 54ms
+     × admits an event run with the actions the rule holds at admission, not the tick’s copy 14ms
+     × admits nothing for a rule deactivated after the tick read it 3ms
+ ❯ |api| src/modules/task/automation/__tests__/task-automation-webhook.test.ts (29 tests | 2 failed | 27 skipped) 40ms
+     × admits a run with the actions the rule holds at admission, not the looked-up copy 11ms
+     × answers 404 and queues nothing for a rule deactivated after the lookup 2ms
+stdout | src/modules/task/__tests__/task-automation.router.test.ts > taskAutomationRouter (PG-208) > runNow (Test Rule) > snapshots the actions the rule holds at admission, read under its row lock
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"runNow","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/task/__tests__/task-automation.router.test.ts > taskAutomationRouter (PG-208) > runNow (Test Rule) > refuses a rule paused or deleted after it was read
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"runNow","method":"mutation","durationMs":0,"status":"success"}
+
+ ❯ |api| src/modules/task/__tests__/task-automation.router.test.ts (72 tests | 2 failed | 70 skipped) 46ms
+       × snapshots the actions the rule holds at admission, read under its row lock 15ms
+       × refuses a rule paused or deleted after it was read 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 8 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/modules/task/__tests__/task-automation.router.test.ts > taskAutomationRouter (PG-208) > runNow (Test Rule) > snapshots the actions the rule holds at admission, read under its row lock
+AssertionError: expected DbNull{ …(1) } to deeply equal [ { type: 'CREATE_TASK', …(1) } ]
+
+- Expected:
+[
+  {
+    "titleTemplate": "As saved at admission",
+    "type": "CREATE_TASK",
+  },
+]
+
++ Received:
+DbNull {
+  Symbol(prisma.objectEnumValue): true,
+}
+
+ ❯ src/modules/task/__tests__/task-automation.router.test.ts:707:76
+    705|       expect(sql.join('?')).toMatch(/FROM "task_automation_rules"[\s\S…
+    706|       expect(values).toEqual([R1, tenantId]);
+    707|       expect(m.taskAutomationRun.create.mock.calls.at(-1)[0].data.acti…
+       |                                                                            ^
+    708|     });
+    709|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/8]⎯
+
+ FAIL  |api| src/modules/task/__tests__/task-automation.router.test.ts > taskAutomationRouter (PG-208) > runNow (Test Rule) > refuses a rule paused or deleted after it was read
+AssertionError: promise resolved "{ runId: 'run-1' }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "runId": "run-1",
+  }
+
+ ❯ expectCode src/modules/task/__tests__/task-automation.router.test.ts:134:23
+    132|
+    133| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+    134|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+    135| }
+    136|
+ ❯ src/modules/task/__tests__/task-automation.router.test.ts:713:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/8]⎯
+
+ FAIL  |api| src/modules/task/automation/__tests__/task-automation-engine.test.ts > drainEvents > admits an event run with the actions the rule holds at admission, not the tick’s copy
+AssertionError: expected [ { type: 'CREATE_TASK', …(5) } ] to deeply equal [ { type: 'CREATE_TASK', …(5) } ]
+
+- Expected
++ Received
+
+@@ -2,9 +2,9 @@
+    {
+      "descriptionTemplate": "",
+      "dueInDays": 1,
+      "linkToRecord": true,
+      "priority": "HIGH",
+-     "titleTemplate": "Edited after the tick read",
++     "titleTemplate": "Call {{record.name}}",
+      "type": "CREATE_TASK",
+    },
+  ]
+
+ ❯ src/modules/task/automation/__tests__/task-automation-engine.test.ts:160:35
+    158|     await engine.drainEvents();
+    159|     expect(store.runs).toHaveLength(1);
+    160|     expect(store.runs[0].actions).toEqual(edited);
+       |                                   ^
+    161|   });
+    162|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/8]⎯
+
+ FAIL  |api| src/modules/task/automation/__tests__/task-automation-engine.test.ts > drainEvents > admits nothing for a rule deactivated after the tick read it
+AssertionError: expected [ { id: 'run-2', …(14) } ] to have a length of +0 but got 1
+
+- Expected
++ Received
+
+- 0
++ 1
+
+ ❯ src/modules/task/automation/__tests__/task-automation-engine.test.ts:171:24
+    169|     buffer.push(event());
+    170|     await engine.drainEvents();
+    171|     expect(store.runs).toHaveLength(0);
+       |                        ^
+    172|     expect(store.rules[0].suppressedCount).toBe(0);
+    173|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/8]⎯
+
+ FAIL  |api| src/modules/task/automation/__tests__/task-automation-store.test.ts > createTaskAutomationStore (PG-208) > admitRun (duplicate check, caps and insert under one tenant lock) > admits the actions the rule holds under its row lock, not the ones the caller read
+AssertionError: expected [ { type: 'CREATE_TASK', …(1) } ] to deeply equal [ { type: 'CREATE_TASK', …(1) } ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "titleTemplate": "Current",
++     "titleTemplate": "Read before admission",
+      "type": "CREATE_TASK",
+    },
+  ]
+
+ ❯ src/modules/task/automation/__tests__/task-automation-store.test.ts:447:76
+    445|       expect(sql.join('?')).toMatch(/FROM "task_automation_rules"[\s\S…
+    446|       expect(values).toEqual(['r1', 't1']);
+    447|       expect(m.taskAutomationRun.create.mock.calls.at(-1)[0].data.acti…
+       |                                                                            ^
+    448|     });
+    449|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/8]⎯
+
+ FAIL  |api| src/modules/task/automation/__tests__/task-automation-store.test.ts > createTaskAutomationStore (PG-208) > admitRun (duplicate check, caps and insert under one tenant lock) > writes nothing for a rule deactivated or deleted after the caller read it
+AssertionError: promise rejected "TypeError: Cannot read properties of unde…" instead of resolving
+ ❯ src/modules/task/automation/__tests__/task-automation-store.test.ts:455:52
+    453|         m.taskAutomationRun.findUnique.mockResolvedValueOnce(null);
+    454|         m.$queryRaw.mockResolvedValueOnce(rows);
+    455|         await expect(store.admitRun(run, caps, NOW)).resolves.toEqual(…
+       |                                                    ^
+    456|       }
+    457|       expect(m.taskAutomationRun.create).not.toHaveBeenCalled();
+
+Caused by: TypeError: Cannot read properties of undefined (reading 'id')
+ ❯ admitInTransaction src/modules/task/automation/task-automation-store.ts:298:42
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/8]⎯
+
+ FAIL  |api| src/modules/task/automation/__tests__/task-automation-webhook.test.ts > handleTaskAutomationWebhook > admits a run with the actions the rule holds at admission, not the looked-up copy
+AssertionError: expected [ { type: 'CREATE_TASK', …(5) } ] to deeply equal [ { type: 'CREATE_TASK', …(4) } ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "dueInDays": 2,
++     "descriptionTemplate": "{{webhook.constructor}}",
++     "dueInDays": null,
+      "linkToRecord": false,
+-     "priority": "HIGH",
+-     "titleTemplate": "Edited after the lookup",
++     "priority": "MEDIUM",
++     "titleTemplate": "Order {{webhook.orderId}} {{webhook.urgent}}",
+      "type": "CREATE_TASK",
+    },
+  ]
+
+ ❯ src/modules/task/automation/__tests__/task-automation-webhook.test.ts:117:35
+    115|     await expect(call(raw, signed(raw))).resolves.toMatchObject({ stat…
+    116|     expect(store.runs).toHaveLength(1);
+    117|     expect(store.runs[0].actions).toEqual(edited);
+       |                                   ^
+    118|   });
+    119|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/8]⎯
+
+ FAIL  |api| src/modules/task/automation/__tests__/task-automation-webhook.test.ts > handleTaskAutomationWebhook > answers 404 and queues nothing for a rule deactivated after the lookup
+AssertionError: expected { status: 202, body: { …(2) } } to deeply equal { status: 404, …(1) }
+
+- Expected
++ Received
+
+  {
+    "body": {
+-     "error": "not_found",
++     "accepted": true,
++     "duplicate": false,
+    },
+-   "status": 404,
++   "status": 202,
+  }
+
+ ❯ src/modules/task/automation/__tests__/task-automation-webhook.test.ts:125:40
+    123|     });
+    124|     const raw = body();
+    125|     await expect(call(raw, signed(raw))).resolves.toEqual({
+       |                                        ^
+    126|       status: 404,
+    127|       body: { error: 'not_found' },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+
+
+ Test Files  4 failed | 6 skipped (10)
+      Tests  8 failed | 1 passed | 294 skipped (303)
+   Start at  14:50:06
+   Duration  3.01s (transform 2.97s, setup 2.94s, import 6.87s, tests 209ms, environment 1ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-208\apps\api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/task -t at admission|after it was read|after the tick read|after the lookup|row lock|deactivated or deleted

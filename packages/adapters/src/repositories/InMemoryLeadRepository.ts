@@ -3,6 +3,8 @@ import {
   LeadId,
   Email,
   LeadStatusConflictError,
+  LeadIdentityChangedError,
+  type LeadSaveOptions,
   type LeadStatus,
   type RepositoryTransaction,
 } from '@intelliflow/domain';
@@ -13,7 +15,10 @@ import { LeadRepository } from '@intelliflow/application';
  * mutating a lead the caller holds never changes what is stored, and a later
  * compare-and-set sees the status that was actually persisted.
  */
-function snapshot(lead: Lead, override?: { status?: LeadStatus; updatedAt?: Date }): Lead {
+function snapshot(
+  lead: Lead,
+  override?: { status?: LeadStatus; updatedAt?: Date; score?: Lead['score'] }
+): Lead {
   return Lead.reconstitute(lead.id, {
     email: lead.email,
     firstName: lead.firstName,
@@ -23,7 +28,10 @@ function snapshot(lead: Lead, override?: { status?: LeadStatus; updatedAt?: Date
     phone: lead.phone,
     source: lead.source,
     status: override?.status ?? lead.status,
-    score: { value: lead.score.value, confidence: lead.score.confidence },
+    score: {
+      value: (override?.score ?? lead.score).value,
+      confidence: (override?.score ?? lead.score).confidence,
+    },
     ownerId: lead.ownerId,
     tenantId: lead.tenantId,
     createdAt: new Date(lead.createdAt.getTime()),
@@ -51,15 +59,22 @@ export class InMemoryLeadRepository implements LeadRepository {
   /** Initial notes captured on save (opts.note), keyed by lead id. */
   private readonly leadNotes: Map<string, Array<{ content: string; author: string }>> = new Map();
 
-  async save(
-    lead: Lead,
-    opts?: { note?: { content: string; author: string }; expectedStatus?: string },
-    tx?: RepositoryTransaction
-  ): Promise<void> {
+  async save(lead: Lead, opts?: LeadSaveOptions, tx?: RepositoryTransaction): Promise<void> {
     // Persist the lead and, per the repository contract, any initial note
     // together — atomic by construction here since both writes are synchronous
     // in-memory map mutations that cannot partially fail.
     const stored = this.leads.get(lead.id.value);
+    if (opts?.scoreOnlyIfEmail !== undefined) {
+      // Mirrors PrismaLeadRepository: the score lands only while the email is unchanged.
+      if (!stored || stored.email.value.toLowerCase() !== opts.scoreOnlyIfEmail.toLowerCase()) {
+        throw new LeadIdentityChangedError(lead.id.value);
+      }
+      this.leads.set(
+        lead.id.value,
+        snapshot(stored, { score: lead.score, updatedAt: lead.updatedAt })
+      );
+      return;
+    }
     if (opts?.expectedStatus !== undefined) {
       // Compare-and-set, mirroring PrismaLeadRepository: write ONLY status and
       // updatedAt onto the STORED lead so a concurrent non-status change survives.

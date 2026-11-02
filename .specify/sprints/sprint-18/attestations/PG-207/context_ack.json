@@ -1,0 +1,58 @@
+{
+  "task_id": "PG-207",
+  "run_id": "run-2026-10-21T00-01-45Z",
+  "files_read": [
+    {
+      "path": "apps/web/src/components/sidebar/configs/email.ts",
+      "sha256": "ff6d3f6320fddf5db22ef177511592d15610455cfc9d448db3dda87401622177",
+      "read_at": "2026-10-21T00:02:07.496Z"
+    },
+    {
+      "path": "apps/web/src/app/contacts/(list)/contact-settings/ContactSettingsContent.tsx",
+      "sha256": "0ea144e641da815e3e4f289c51839efdaad3bab1c84a503ca06d1c0a27a276a7",
+      "read_at": "2026-10-21T00:02:07.496Z"
+    },
+    {
+      "path": "docs/planning/module-settings-playbook.md",
+      "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3",
+      "read_at": "2026-10-21T00:02:07.496Z"
+    },
+    {
+      "path": "docs/planning/prd-module-settings.md",
+      "sha256": "88cb35d86d77f2c46c9a84b2748ae3f36b4172ee6345be7f0e6103866bda0b37",
+      "read_at": "2026-10-21T00:02:07.496Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/specifications/PG-207-spec.md",
+      "sha256": "02d02a0bfb55fc4c626844096715efcb685db025daa17c8196ab6a50b69fed6d",
+      "read_at": "2026-10-21T00:02:07.496Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/planning/PG-207-plan.md",
+      "sha256": "f5a0d2f955974b0931d60f9dccb4a7517e18851cbef2d6386af63333efccf5a4",
+      "read_at": "2026-10-21T00:02:07.496Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/context/PG-207/PG-207-owner-ruling.md",
+      "sha256": "d3cc3b0abf76a2cc8d8909683da84ced08e750ff7a1d07e3876faa1d8f33b602",
+      "read_at": "2026-10-21T00:02:07.496Z"
+    },
+    {
+      "path": "docs/architecture/adr/ADR-085-user-mailbox-sending-and-bounce-reading.md",
+      "sha256": "a436aa03d901b69ec9c5926c3520666e9da34656b46089c936fa76ae3ccd327a",
+      "read_at": "2026-10-21T00:02:07.496Z"
+    }
+  ],
+  "invariants_acknowledged": [
+    "User mail is sent only from the user mailbox or an admin-enabled tenant mailbox; never the platform provider and never the mock (owner Q6/Q7, ADR-085)",
+    "An email is recorded SENT only after the transport accepted it; a failed send is FAILED with a coded reason and is never retried through another mailbox or provider (Q4)",
+    "SMTP/IMAP passwords, OAuth refresh tokens and PKCE verifiers are written only through requireEncryptionKey + ENCRYPTED_FIELDS and are never returned, logged or audited (CA-2/CA-3)",
+    "Tenant-supplied SMTP/IMAP hosts connect only to the DNS-resolved public address that was checked, on ports 465/587/2525 (SMTP) or 993 (IMAP), with TLS required",
+    "A bounce report suppresses an address only if it matches a record sent from the same mailbox and tenant within 30 days by both the record header and the original Message-ID, and names one of its recipients (CA-18)",
+    "Suppressed recipients are dropped before quota is reserved; all suppressed sends nothing (Q9)",
+    "Every tenant-scoped mutation filters by tenantId and has a cross-tenant negative test; a user can never act on another user mailbox or signature",
+    "Module-settings playbook: PageHeader/ModuleSettingsShell, bento grid, canonical EmptyState phase=passive, $transaction on destructive writes, no skipDuplicates, superRefine on duplicate signature names; TagsTab and colorToken are N/A",
+    "No istanbul/v8 ignore pragmas; full package suites through the slot wrapper; Node 22 for DB writes; no secret-shaped fixtures"
+  ],
+  "created_at": "2026-10-21T00:02:07.496Z"
+}

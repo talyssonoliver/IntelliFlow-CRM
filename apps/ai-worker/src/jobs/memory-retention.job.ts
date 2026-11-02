@@ -23,6 +23,7 @@
 
 import type { Job } from 'bullmq';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 
 const logger = pino({
@@ -54,7 +55,7 @@ export const DEFAULT_MEMORY_RETENTION_JOB_OPTIONS = {
 
 export const MemoryRetentionJobDataSchema = z.object({
   /** Restrict sweep to a single tenant (omit for global sweep) */
-  tenantId: z.string().uuid().optional(),
+  tenantId: recordIdSchema.optional(),
   /** Dry-run: count rows that would be affected, without mutating the DB. */
   dryRun: z.boolean().default(false),
   correlationId: z.string().optional(),

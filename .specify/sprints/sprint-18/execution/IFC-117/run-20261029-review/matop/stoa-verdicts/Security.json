@@ -1,0 +1,41 @@
+{
+  "task_id": "IFC-117",
+  "run_id": "run-20261029-review",
+  "reviewed_at": "2026-10-29",
+  "reviewed_head": "87bbac6cc plus the uncommitted working tree that became f4d9290d3",
+  "mode": "read-only (no test, build or lint run by the reviewer; memory commit above 80%)",
+  "stoa": "Security",
+  "agent": "stoa-security subagent (Agent tool)",
+  "verdict": "WARN",
+  "gates": [
+    "gitleaks",
+    "workflow-secret-lint",
+    "codex-review",
+    "audit",
+    "osv-scan",
+    "manual secret-shape scan",
+    "grafana workflow and script review",
+    "label cardinality and PII review",
+    "drift-detector memory bound"
+  ],
+  "findings": [
+    {
+      "severity": "LOW",
+      "where": "systeminformation <5.33.16 via @opentelemetry/auto-instrumentations-node",
+      "issue": "advisory (pre-existing on main)",
+      "resolution": "tracked in #1065"
+    },
+    {
+      "severity": "LOW",
+      "where": "apps/ai-worker/src/chains/scoring.chain.ts",
+      "issue": "leadEmail logged (pre-existing on main)",
+      "resolution": "fixed (5b4bc7f4e)"
+    },
+    {
+      "severity": "INFO",
+      "where": "drift-detector.ts",
+      "issue": "memory bound verified: 64 series x 9 days x 5555 samples",
+      "resolution": "n/a"
+    }
+  ]
+}

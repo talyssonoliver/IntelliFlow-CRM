@@ -1,0 +1,167 @@
+[test-slot] slot2 taken for PG-203@feat/pg-203-dsar: pnpm --filter @intelliflow/web exec vitest run src/app/(public)/book
+
+ RUN  v4.1.12 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203-dsar/apps/web
+
+ ❯ |web| src/app/(public)/book/[handle]/[slug]/__tests__/BookingContent.test.tsx (26 tests | 1 failed) 738ms
+     × holds the details form and footer back until the first times have loaded 13ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| src/app/(public)/book/[handle]/[slug]/__tests__/BookingContent.test.tsx > BookingContent > holds the details form and footer back until the first times have loaded
+Error: [2mexpect([22m[31melement[39m[2m).not.toBeInTheDocument()[22m
+
+[31mexpected document not to contain element, found <form
+  aria-labelledby="booking-details"
+  class="mt-8 space-y-4"
+  novalidate=""
+>
+  <h2
+    class="text-lg font-semibold text-foreground"
+    id="booking-details"
+  >
+    Your details
+  </h2>
+  <p
+    class="text-xs text-muted-foreground"
+  >
+    All fields are required.
+  </p>
+  <div
+    class="space-y-1.5"
+  >
+    <label
+      class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+      for="booking-name"
+    >
+      Your name
+    </label>
+    <input
+      autocomplete="name"
+      class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      id="booking-name"
+      maxlength="200"
+      required=""
+      value=""
+    />
+  </div>
+  <div
+    class="space-y-1.5"
+  >
+    <label
+      class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+      for="booking-email"
+    >
+      Email
+    </label>
+    <input
+      autocomplete="email"
+      class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      id="booking-email"
+      maxlength="320"
+      required=""
+      type="email"
+      value=""
+    />
+  </div>
+  <div
+    class="space-y-1.5"
+  >
+    <label
+      class="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+      for="booking-phone"
+    >
+      Phone
+    </label>
+    <input
+      autocomplete="tel"
+      class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      id="booking-phone"
+      maxlength="40"
+      required=""
+      type="tel"
+      value=""
+    />
+  </div>
+  <div
+    aria-hidden="true"
+    style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;"
+  >
+    <label
+      for="booking-website"
+    >
+      Leave this field empty
+    </label>
+    <input
+      autocomplete="off"
+      id="booking-website"
+      tabindex="-1"
+      type="text"
+      value=""
+    />
+  </div>
+  <div
+    class="flex items-start gap-2"
+  >
+    <button
+      aria-checked="false"
+      class="peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+      data-state="unchecked"
+      id="booking-consent"
+      role="checkbox"
+      type="button"
+      value="on"
+    />
+    <input
+      aria-hidden="true"
+      style="position: absolute; pointer-events: none; opacity: 0; margin: 0px; transform: translateX(-100%); width: 0px; height: 0px;"
+      tabindex="-1"
+      type="checkbox"
+      value="on"
+    />
+    <label
+      class="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-normal leading-snug"
+      for="booking-consent"
+    >
+      I agree that Smith Law may use these details to arrange this appointment, as described in its 
+      <a
+        class="underline underline-offset-2"
+        href="/privacy"
+        rel="noopener noreferrer"
+        target="_blank"
+      >
+        privacy notice
+        <span
+          class="sr-only"
+        >
+           (opens in a new tab)
+        </span>
+      </a>
+      .
+    </label>
+  </div>
+  <button
+    class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2"
+    type="submit"
+  >
+    Book
+  </button>
+</form> instead[39m
+ ❯ src/app/(public)/book/[handle]/[slug]/__tests__/BookingContent.test.tsx:409:70
+    407|     const { rerender } = renderFlow();
+    408|     expect(screen.getByText('Loading available times')).toBeInTheDocum…
+    409|     expect(screen.queryByRole('form', { name: 'Your details' })).not.t…
+       |                                                                      ^
+    410|     expect(screen.queryByRole('link', { name: 'Your personal data' }))…
+    411|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 27 passed (28)
+   Start at  10:34:12
+   Duration  3.26s (transform 709ms, setup 599ms, import 1.20s, tests 775ms, environment 1.59s)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203-dsar\apps\web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/app/(public)/book

@@ -354,3 +354,27 @@ api      contactTypes.list / listActive / create / update / delete / setDefault
 web      /contacts/contact-types (ContactTypesContent), ContactTypeSelect (New + Edit),
          ContactsPageClient Type filter + sidebar ?segment= links, ContactList Type badge
 ```
+
+## PG-208: Task Automation (2026-10-21)
+
+Tenant rules that create, assign and announce tasks when a CRM event happens, on
+a schedule or from a signed webhook (ADR-084). Delivered on
+`feat/pg-208-task-automation`.
+
+```
+domain   task/automation/task-automation-constants.ts  events, outcomes, limits, templates,
+         round-robin, due dates, canonicalRuleKey · TaskService.assignTask (+ task.assigned)
+  ↓
+validators task-automation.ts      trigger / action unions, rule / settings / tag schemas
+  ↓
+db       TaskAutomationSetting / Rule / Run / Tag (1 Class A migration, RLS, CHECKs)
+  ↓
+api      taskAutomation.* router (rules, runs, settings, tags, webhook secrets, Test Rule)
+         task.list / task.getById: owner OR assignee (owner ruling 6)
+         automation/ runtime: event intake on the container event bus → locked admission
+         → 15 s runner → TaskService.createTask / assignTask → notifications
+         POST /api/webhooks/task-automation/<token> (signed, before CORS)
+  ↓
+web      /tasks/automation (TaskAutomationContent, rule dialog, settings, tags, runs,
+         webhook credentials), Tasks sidebar + TaskSettingsPanel link
+```

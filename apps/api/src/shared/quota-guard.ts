@@ -104,7 +104,7 @@ export async function reserveQuota(
   tenantId: string,
   key: QuotaKey,
   by = 1
-): Promise<() => Promise<void>> {
+): Promise<(count?: number) => Promise<void>> {
   const quota = requireQuota(ctx, tenantId, key);
   if (!quota) return async () => undefined;
 
@@ -114,17 +114,19 @@ export async function reserveQuota(
     throw toTRPCError(error, tenantId, key);
   }
 
-  let released = false;
-  return async () => {
-    if (released) return;
-    released = true;
+  // Releases `count` units (default: all that remain), never more than reserved.
+  let remaining = by;
+  return async (count = remaining) => {
+    const units = Math.min(count, remaining);
+    if (units <= 0) return;
+    remaining -= units;
     try {
-      await quota.release!(tenantId, key, by);
+      await quota.release!(tenantId, key, units);
     } catch (error) {
       console.warn('[quota] failed to release a reservation; usage is over-counted', {
         tenantId,
         key,
-        by,
+        by: units,
         error,
       });
     }

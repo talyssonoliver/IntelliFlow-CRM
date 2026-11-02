@@ -1,0 +1,16 @@
+[test-slot] slot1 taken for PG-207@feat/pg-207-email-settings (holding group-intelliflow-db): node C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-207/990e1fa9-c452-4721-9c10-8fde4b328b23/scratchpad/run-with-test-env.mjs pnpm --filter ./packages/db test
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/db@0.1.0 test C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-207\packages\db
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-207/packages/db
+
+
+ Test Files  16 passed (16)
+      Tests  235 passed | 5 skipped (240)
+   Start at  10:13:18
+   Duration  2.23s (transform 1.46s, setup 0ms, import 2.29s, tests 1.39s, environment 1ms)
+

@@ -206,9 +206,9 @@ describe('ChurnRiskChain additional', () => {
         })
       ).toThrow();
     });
-    it('rejects invalid uuid', () => {
+    it('rejects an unsafe entityId', () => {
       expect(() =>
-        churnRiskInputSchema.parse({ entityType: 'lead', entityId: 'not-a-uuid' })
+        churnRiskInputSchema.parse({ entityType: 'lead', entityId: 'not a/valid id' })
       ).toThrow();
     });
     it('rejects featureUsageScore > 100', () => {

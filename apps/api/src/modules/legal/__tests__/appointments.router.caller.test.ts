@@ -247,6 +247,79 @@ describe('Appointments Router - Caller Tests', () => {
     });
   });
 
+  describe('event type (PG-203, AC-010)', () => {
+    const EVENT_TYPE = 'clhevent00000000000';
+    const scheduleOk = () =>
+      vi.mocked(container.scheduleAppointmentUseCase.execute).mockResolvedValue(
+        Result.ok({
+          appointment: { id: { value: mockAppointment.id } } as any,
+          conflictWarnings: [],
+        })
+      );
+    const create = (extra: Record<string, unknown> = {}) =>
+      appointmentsRouter.createCaller(createTestContext()).create({
+        title: 'Test Appointment',
+        startTime: now,
+        endTime: oneHourLater,
+        appointmentType: 'MEETING',
+        ...extra,
+      } as any);
+
+    it('rejects an event type of another tenant (or inactive) before scheduling', async () => {
+      prismaMock.eventType.findFirst.mockResolvedValueOnce(null);
+      await expect(create({ eventTypeId: EVENT_TYPE })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+        message: 'Event type not found',
+      });
+      expect(prismaMock.eventType.findFirst).toHaveBeenCalledWith({
+        where: { id: EVENT_TYPE, tenantId: TEST_UUIDS.tenant, isActive: true },
+        select: { id: true },
+      });
+      expect(vi.mocked(container.scheduleAppointmentUseCase.execute)).not.toHaveBeenCalled();
+    });
+
+    it('stores the event type on the created appointment, scoped to the tenant', async () => {
+      prismaMock.eventType.findFirst.mockResolvedValueOnce({ id: EVENT_TYPE } as any);
+      prismaMock.appointment.updateMany.mockResolvedValueOnce({ count: 1 } as any);
+      scheduleOk();
+      prismaMock.appointment.findUnique.mockResolvedValue({
+        ...mockAppointment,
+        eventTypeId: EVENT_TYPE,
+      } as any);
+      const result = await create({ eventTypeId: EVENT_TYPE });
+      expect(prismaMock.appointment.updateMany).toHaveBeenCalledWith({
+        where: { id: mockAppointment.id, tenantId: TEST_UUIDS.tenant },
+        data: { eventTypeId: EVENT_TYPE },
+      });
+      expect((result as any).eventTypeId).toBe(EVENT_TYPE);
+    });
+
+    it('still returns the committed appointment when the link write fails (type deleted meanwhile)', async () => {
+      prismaMock.eventType.findFirst.mockResolvedValueOnce({ id: EVENT_TYPE } as any);
+      prismaMock.appointment.updateMany.mockRejectedValueOnce(
+        Object.assign(new Error('fk'), { code: 'P2003' })
+      );
+      scheduleOk();
+      prismaMock.appointment.findUnique.mockResolvedValue(mockAppointment as any);
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const result = await create({ eventTypeId: EVENT_TYPE });
+      expect(result.id).toBe(mockAppointment.id);
+      expect(warn).toHaveBeenCalledWith(
+        '[appointments.create] Event type link not stored',
+        expect.any(Object)
+      );
+      warn.mockRestore();
+    });
+
+    it('makes no event-type calls when none is chosen', async () => {
+      scheduleOk();
+      prismaMock.appointment.findUnique.mockResolvedValue(mockAppointment as any);
+      await create();
+      expect(prismaMock.eventType.findFirst).not.toHaveBeenCalled();
+      expect(prismaMock.appointment.updateMany).not.toHaveBeenCalled();
+    });
+  });
+
   describe('getById', () => {
     it('should return an appointment by ID', async () => {
       const ctx = createTestContext();

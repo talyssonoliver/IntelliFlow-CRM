@@ -99,6 +99,16 @@ export const SETTINGS_ITEMS: SettingItem[] = [
     keywords: ['mfa', '2fa', 'totp', 'sessions', 'password', 'authentication'],
   },
   {
+    // PG-203 DSAR (Security & Compliance)
+    id: 'privacy-requests',
+    title: 'Privacy Requests',
+    description: 'Data subject requests (access, erasure, objection) and processing restrictions',
+    href: '/settings/privacy-requests',
+    icon: 'shield_person',
+    color: 'bg-destructive',
+    keywords: ['gdpr', 'dsar', 'privacy', 'erasure', 'data request', 'restriction', 'compliance'],
+  },
+  {
     id: 'leads',
     title: 'Leads',
     description: 'Configure lead stages, scoring rules, custom fields, and automation',
@@ -184,6 +194,16 @@ export const SETTINGS_ITEMS: SettingItem[] = [
     color: 'bg-primary/62',
     keywords: ['task', 'due date', 'offset', 'reminder', 'template', 'default'],
   },
+  {
+    id: 'task-automation',
+    title: 'Task Automation',
+    description:
+      'Rules that create, assign and announce tasks on CRM events, a schedule or a webhook',
+    href: '/tasks/automation',
+    icon: 'auto_awesome',
+    color: 'bg-primary/72',
+    keywords: ['task', 'automation', 'rule', 'round-robin', 'assign', 'recurring', 'webhook'],
+  },
 ];
 
 /**
@@ -208,6 +228,7 @@ export const SETTINGS_CATEGORIES: SettingCategory[] = [
       'tickets',
       'documents',
       'tasks',
+      'task-automation',
     ],
   },
   {
@@ -218,7 +239,7 @@ export const SETTINGS_CATEGORIES: SettingCategory[] = [
   {
     id: 'security',
     title: 'Security',
-    itemIds: ['security'],
+    itemIds: ['security', 'privacy-requests'],
   },
 ];
 
