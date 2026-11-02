@@ -54,11 +54,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import {
+  activeWaivers,
   checkWaivers,
   fingerprint,
-  isExpired,
-  parseWaivers,
   readTrackedFiles,
+  waivedFindingLines,
 } from './lib/codex-fingerprint.mjs';
 
 // ── repo root ──────────────────────────────────────────────────────────
@@ -295,28 +295,18 @@ function isInScope(file) {
 }
 
 // ── waiver loading ─────────────────────────────────────────────────────────
+const readWaiverFile = () =>
+  fs.existsSync(WAIVERS_PATH) ? fs.readFileSync(WAIVERS_PATH, 'utf8') : '';
+
+const todayIso = () => new Date().toISOString().slice(0, 10);
+
 /** The waivers in force, by fingerprint. Expired ones warn and are left out. */
-function loadWaivers() {
-  const active = new Map();
-  if (!fs.existsSync(WAIVERS_PATH)) return active;
-  const today = new Date().toISOString().slice(0, 10);
-  for (const waiver of parseWaivers(fs.readFileSync(WAIVERS_PATH, 'utf8'))) {
-    if (isExpired(waiver, today)) {
-      process.stderr.write(
-        `[codex-review] WARN: waiver ${waiver.fingerprint.slice(0, 12)}... expired ${waiver.expires} — treating as not waived\n`
-      );
-    } else {
-      active.set(waiver.fingerprint, waiver);
-    }
-  }
-  return active;
-}
+const loadWaivers = () =>
+  activeWaivers(readWaiverFile(), todayIso(), (message) => process.stderr.write(message));
 
 /** Fails on a waiver anchored on a trivial or repeated line. No reviewer is called. */
 function runWaiverCheck() {
-  const raw = fs.existsSync(WAIVERS_PATH) ? fs.readFileSync(WAIVERS_PATH, 'utf8') : '';
-  const today = new Date().toISOString().slice(0, 10);
-  const { ok, lines } = checkWaivers(raw, readTrackedFiles(REPO_ROOT), today);
+  const { ok, lines } = checkWaivers(readWaiverFile(), readTrackedFiles(REPO_ROOT), todayIso());
   process.stdout.write(`${lines.join('\n')}\n`);
   process.exit(ok ? 0 : 1);
 }
@@ -640,11 +630,7 @@ ${diffText || '(no diff output — check base ref)'}
   if (waived.length > 0) {
     lines.push('WAIVED FINDINGS (suppressed):');
     for (const f of waived) {
-      lines.push(
-        `  [${f.severity.toUpperCase()}] ${f.file}:${f.line} — ${f.rule} (fp: ${f.fingerprint.slice(0, 12)}...)`
-      );
-      lines.push(`    Issue  : ${f.issue}`);
-      lines.push(`    Waiver : ${waivers.get(f.fingerprint).reason}`);
+      lines.push(...waivedFindingLines(f, waivers.get(f.fingerprint)));
     }
     lines.push('');
   }

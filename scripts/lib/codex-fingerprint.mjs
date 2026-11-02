@@ -235,3 +235,35 @@ export function checkWaivers(raw, files, today) {
   ];
   return { ok: ineligible.length === 0, lines };
 }
+
+/**
+ * The waivers in force, by fingerprint. An expired waiver is reported through
+ * `warn` and left out, so its finding blocks again.
+ *
+ * @param {string} raw
+ * @param {string} today YYYY-MM-DD
+ * @param {(message: string) => void} warn
+ * @returns {Map<string, ReturnType<typeof parseWaivers>[number]>}
+ */
+export function activeWaivers(raw, today, warn) {
+  const active = new Map();
+  for (const waiver of parseWaivers(raw)) {
+    if (isExpired(waiver, today)) {
+      warn(
+        `[codex-review] WARN: waiver ${waiver.fingerprint.slice(0, 12)}... expired ${waiver.expires} — treating as not waived\n`
+      );
+    } else {
+      active.set(waiver.fingerprint, waiver);
+    }
+  }
+  return active;
+}
+
+/** How a waived finding reads in the summary: the waiver's reason sits beside the claim. */
+export function waivedFindingLines(finding, waiver) {
+  return [
+    `  [${finding.severity.toUpperCase()}] ${finding.file}:${finding.line} — ${finding.rule} (fp: ${finding.fingerprint.slice(0, 12)}...)`,
+    `    Issue  : ${finding.issue}`,
+    `    Waiver : ${waiver.reason}`,
+  ];
+}

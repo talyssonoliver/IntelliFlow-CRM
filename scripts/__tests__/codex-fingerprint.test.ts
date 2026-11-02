@@ -3,8 +3,9 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  activeWaivers,
   checkWaivers,
   classifyWaivers,
   isSubstantialLine,
@@ -15,6 +16,7 @@ import {
   parseWaivers,
   readTrackedFiles,
   sourceFingerprint,
+  waivedFindingLines,
 } from '../lib/codex-fingerprint.mjs';
 
 const FILE = 'src/Example.ts';
@@ -282,6 +284,102 @@ describe('checkWaivers', () => {
 
   it('passes an empty file', () => {
     expect(checkWaivers('', files, TODAY).ok).toBe(true);
+  });
+});
+
+describe('activeWaivers', () => {
+  const FP = 'a'.repeat(64);
+  const OTHER = 'b'.repeat(64);
+  const raw = [
+    `  - fingerprint: ${FP}`,
+    '    reason: still true',
+    '    expires: 2026-12-31',
+    `  - fingerprint: ${OTHER}`,
+    '    reason: went stale',
+    '    expires: 2026-01-01',
+  ].join('\n');
+
+  it('keeps a live waiver with its reason, and warns about and drops an expired one', () => {
+    const warnings: string[] = [];
+
+    const active = activeWaivers(raw, '2026-06-01', (message: string) => warnings.push(message));
+
+    expect([...active.keys()]).toEqual([FP]);
+    expect(active.get(FP)?.reason).toBe('still true');
+    expect(warnings.join('')).toContain(`${OTHER.slice(0, 12)}... expired 2026-01-01`);
+  });
+
+  it('is empty for an empty file', () => {
+    expect(activeWaivers('', '2026-06-01', () => undefined).size).toBe(0);
+  });
+});
+
+describe('waivedFindingLines', () => {
+  it('puts the waiver reason beside the claim, so a mismatch can be seen', () => {
+    const finding = {
+      severity: 'high',
+      file: FILE,
+      line: 7,
+      rule: 'some-rule',
+      fingerprint: 'c'.repeat(64),
+      issue: 'the claim',
+    };
+
+    expect(waivedFindingLines(finding, { reason: 'why it is safe' })).toEqual([
+      `  [HIGH] ${FILE}:7 — some-rule (fp: ${'c'.repeat(12)}...)`,
+      '    Issue  : the claim',
+      '    Waiver : why it is safe',
+    ]);
+  });
+});
+
+describe('codex-review --check-waivers', () => {
+  const argv = process.argv;
+
+  // The script exits when done, so the stub ends the import at that point.
+  const runCli = async () => {
+    vi.resetModules();
+    process.argv = ['node', 'codex-review.mjs', '--check-waivers'];
+    const chdir = vi.spyOn(process, 'chdir').mockImplementation(() => undefined);
+    const stdout = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const exit = vi.spyOn(process, 'exit').mockImplementation((code) => {
+      throw new Error(`exit ${code}`);
+    });
+    try {
+      const failure = await import('../codex-review.mjs').then(
+        () => null,
+        (error: Error) => error
+      );
+      return { failure, output: stdout.mock.calls.map(([text]) => String(text)).join('') };
+    } finally {
+      exit.mockRestore();
+      stdout.mockRestore();
+      chdir.mockRestore();
+      process.argv = argv;
+    }
+  };
+
+  afterEach(() => {
+    vi.doUnmock('../lib/codex-fingerprint.mjs');
+  });
+
+  it('checks the committed waivers without calling a reviewer, and exits 0', async () => {
+    const { failure, output } = await runCli();
+
+    expect(failure?.message).toBe('exit 0');
+    expect(output).toMatch(/\[codex-review\] waivers: \d+ \(ok \d+, ineligible 0,/);
+  });
+
+  it('exits 1 when a waiver is on a bad anchor', async () => {
+    vi.doMock('../lib/codex-fingerprint.mjs', async (importOriginal) => ({
+      ...(await importOriginal<Record<string, unknown>>()),
+      checkWaivers: () => ({ ok: false, lines: ['  INELIGIBLE example'] }),
+    }));
+
+    const { failure, output } = await runCli();
+
+    expect(failure?.message).toBe('exit 1');
+    expect(output).toContain('INELIGIBLE example');
   });
 });
 
