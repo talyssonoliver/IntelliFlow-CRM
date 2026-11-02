@@ -583,6 +583,7 @@ export const mockLead = {
   referrer: null,
   landingPath: null,
   outreachSlug: null,
+  outreachSlugEventAt: null,
   // Lead 360 fields
   location: null,
   website: null,

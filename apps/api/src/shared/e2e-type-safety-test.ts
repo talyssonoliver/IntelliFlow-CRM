@@ -64,6 +64,7 @@ function demonstratePrismaTypes() {
     referrer: null,
     landingPath: null,
     outreachSlug: null,
+    outreachSlugEventAt: null,
     accountId: null, // IFC-227
   };
 
