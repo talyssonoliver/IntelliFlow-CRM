@@ -406,6 +406,7 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
             clickId: true,
             referrer: true,
             landingPath: true,
+            outreachSlug: true,
             lastContactedAt: true,
             createdAt: true,
             updatedAt: true,
@@ -793,8 +794,9 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
             location = NULL, website = NULL, "avatarUrl" = NULL, budget = NULL, authority = NULL,
             need = NULL, timeline = NULL, "annualRevenue" = NULL, "utmSource" = NULL,
             "utmMedium" = NULL, "utmCampaign" = NULL, "utmContent" = NULL, "utmTerm" = NULL,
-            "clickId" = NULL, referrer = NULL, "landingPath" = NULL, tags = ARRAY[]::text[],
-            embedding = NULL, score = 0, "estimatedValue" = NULL, "updatedAt" = ${input.now}
+            "clickId" = NULL, referrer = NULL, "landingPath" = NULL, "outreachSlug" = NULL,
+            tags = ARRAY[]::text[], embedding = NULL, score = 0, "estimatedValue" = NULL,
+            "updatedAt" = ${input.now}
           WHERE "tenantId" = ${tenantId} AND id = ANY(${leadIds}::text[])`;
         const contacts = await tx.$executeRaw`
           UPDATE contacts SET
