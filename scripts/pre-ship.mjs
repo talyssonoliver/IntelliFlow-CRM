@@ -701,6 +701,15 @@ const STEPS = [
     required: true,
   },
   {
+    // Waiver anchors (#980): a waiver on a trivial or repeated line matches nothing
+    // under the anchor rule, and the old fingerprints it came from could hide most of
+    // a file. Needs no reviewer, so it runs wherever the gate runs, CI included.
+    id: 'codex-waivers',
+    description: 'Semantic review waivers are anchored on one unique line of real code',
+    cmd: ['node', 'scripts/codex-review.mjs', '--check-waivers'],
+    required: true,
+  },
+  {
     // SEMANTIC REVIEW GATE (2026-06-11): drives an independent Codex review
     // of the diff vs origin/main, flagging correctness / data-integrity /
     // security bugs that pass TypeScript + tests + lint because the author's
