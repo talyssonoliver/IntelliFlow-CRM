@@ -131,7 +131,7 @@ describe('committed AI rules file', () => {
     expect(CONFIG.deliveryTest).toBeUndefined();
   });
 
-  it('uses the shared thresholds (5% hallucination, 2000 ms p95, 5% errors)', () => {
+  it('uses the shared thresholds (5% hallucination, 45000 ms p95, 5% errors)', () => {
     const byUid = Object.fromEntries(CONFIG.rules.map((r: { uid: string }) => [r.uid, r]));
     expect(byUid['ifc117-hallucination-rate'].expr).toContain(
       `>= bool ${AI_ALERT_THRESHOLDS.hallucinationRate}`

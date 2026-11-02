@@ -49,7 +49,10 @@ const logger = pino({ name: 'otel-ai-metrics', level: process.env.LOG_LEVEL || '
 
 const METER_NAME = 'intelliflow-ai-worker-monitoring';
 const OTHER = 'other';
-const LATENCY_BUCKETS_MS = [50, 100, 250, 500, 1000, 1500, 2000, 3000, 5000, 10000, 30000];
+// Bounds past the 45 s p95 alert: histogram_quantile cannot report a value above the largest finite bound.
+const LATENCY_BUCKETS_MS = [
+  50, 100, 250, 500, 1000, 1500, 2000, 3000, 5000, 10000, 30000, 45000, 60000, 120000,
+];
 const CONFIDENCE_BUCKETS = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1];
 /** Drift severities the alert rule matches; pre-seeded so the first onset is not lost to increase(). */
 const SEEDED_DRIFT_SEVERITIES = ['high', 'critical'] as const;
