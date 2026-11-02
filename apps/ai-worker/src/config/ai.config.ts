@@ -271,6 +271,8 @@ export const MODEL_PRICING = {
   // gemini-embedding-001: $0.15/M input (OpenRouter API pricing for google/gemini-embedding-001,
   // checked 2026-10-19). Without this key calculateCost priced it as gpt-3.5-turbo.
   'gemini-embedding-001': { input: 0.00015, output: 0 },
+  // Production embeddings since 2026-10-31 (EMBEDDING_PROVIDER=openrouter): free on OpenRouter.
+  'nvidia/nemotron-3-embed-1b:free': { input: 0, output: 0 },
 } as const;
 
 export type ModelName = keyof typeof MODEL_PRICING;
