@@ -97,7 +97,7 @@ describe('QueryPerformanceTracker', () => {
 
 describe('Embedding Validation', () => {
   it('should validate correct embedding dimensions', () => {
-    const embedding = new Array(1536).fill(0.1);
+    const embedding = new Array(2048).fill(0.1);
     expect(validateEmbedding(embedding)).toBe(true);
   });
 
@@ -107,7 +107,7 @@ describe('Embedding Validation', () => {
   });
 
   it('should reject non-numeric embeddings with strict validation', () => {
-    const embedding = new Array(1536).fill('not a number');
+    const embedding = new Array(2048).fill('not a number');
     // Use validatePgVectorEmbedding for strict type checking
     expect(validatePgVectorEmbedding(embedding)).toBe(false);
   });

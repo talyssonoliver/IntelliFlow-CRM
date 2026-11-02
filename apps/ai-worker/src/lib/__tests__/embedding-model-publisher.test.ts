@@ -38,10 +38,20 @@ describe('active embedding model publisher (PG-199 Q10)', () => {
   it('reports Gemini with its configured dimensions when EMBEDDING_PROVIDER=gemini', async () => {
     process.env['EMBEDDING_PROVIDER'] = 'gemini';
     const { activeEmbeddingModel } = await load();
-    expect(activeEmbeddingModel()).toEqual({ id: 'gemini-embedding-001', dimensions: 1536 });
+    expect(activeEmbeddingModel()).toEqual({ id: 'gemini-embedding-001', dimensions: 2048 });
 
     process.env['EMBEDDING_DIMENSIONS'] = '768';
     expect(activeEmbeddingModel()).toEqual({ id: 'gemini-embedding-001', dimensions: 768 });
+  });
+
+  it('reports the OpenRouter model at 2048 dimensions when EMBEDDING_PROVIDER=openrouter', async () => {
+    process.env['EMBEDDING_PROVIDER'] = 'openrouter';
+    delete process.env['OPENROUTER_EMBEDDING_MODEL'];
+    const { activeEmbeddingModel } = await load('openrouter');
+    expect(activeEmbeddingModel()).toEqual({
+      id: 'nvidia/nemotron-3-embed-1b:free',
+      dimensions: 2048,
+    });
   });
 
   it('reports the LiteLLM rag-free model otherwise', async () => {
@@ -63,7 +73,7 @@ describe('active embedding model publisher (PG-199 Q10)', () => {
     expect(set).toHaveBeenCalledTimes(3);
     const [key, value, mode, ttl] = set.mock.calls[0];
     expect(key).toBe(ACTIVE_EMBEDDING_MODEL_KEY);
-    expect(JSON.parse(value)).toEqual({ id: 'gemini-embedding-001', dimensions: 1536 });
+    expect(JSON.parse(value)).toEqual({ id: 'gemini-embedding-001', dimensions: 2048 });
     expect(mode).toBe('EX');
     expect(ttl).toBeGreaterThan(0);
   });

@@ -687,7 +687,7 @@ model Lead {
   account       Account?  @relation("LeadAccount", fields: [accountId], references: [id], onDelete: SetNull)
 
   // AI Embedding for semantic search
-  embedding     Unsupported("vector(1536)")?
+  embedding     Unsupported("vector(2048)")?
 
   @@unique([email, tenantId])
   @@index([email])
@@ -755,7 +755,7 @@ model LeadNote {
   updatedAt DateTime @updatedAt
 
   // DBA-109: Preserve DB vector columns (matching ContactNote pattern)
-  embedding    Unsupported("vector(1536)")?
+  embedding    Unsupported("vector(2048)")?
   searchVector Unsupported("tsvector")? @map("search_vector")
 
   @@index([leadId])
@@ -864,7 +864,7 @@ model Contact {
   calendarEvents CalendarEvent[]
 
   // AI Embedding
-  embedding     Unsupported("vector(1536)")?
+  embedding     Unsupported("vector(2048)")?
 
   // DBA-020: Tenant-scoped email uniqueness (replaces global @unique)
   @@unique([tenantId, email])
@@ -3702,7 +3702,7 @@ model ContactNote {
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   // Vector embeddings for semantic search
-  embedding Unsupported("vector(1536)")?
+  embedding Unsupported("vector(2048)")?
   searchVector Unsupported("tsvector")? @map("search_vector")
 
   @@index([contactId])

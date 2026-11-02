@@ -6283,6 +6283,29 @@ items:
       Grafana today. IFC-074's api request logs add no idle traffic (records only
       inside tRPC calls; the sdk-logs batch timer is armed only while records are
       buffered and is unref'd).
+  EMBEDDINGS-FREE-PROVIDER-TRAINS-001:
+    origin_task: '#1108'
+    owner: AI Lead
+    severity: high
+    description: >-
+      Switch to a non-training embedding model before the first real customer.
+      Owner ruling 2026-10-31: embeddings moved from Gemini to a free OpenRouter
+      model (EMBEDDING_PROVIDER=openrouter, default nvidia/nemotron-3-embed-1b:free,
+      apps/ai-worker/src/lib/llm-factory.ts createEmbeddings), accepted only while
+      there are no real customers. Free OpenRouter routes are served by providers
+      that may log or train on what we send, and the embedded text is CRM content
+      (lead and contact fields and notes) that holds personal data.
+    created_at: 2026-10-31
+    expiry_date: 2027-01-31
+    remediation_sprint: 20
+    remediation_plan: >-
+      Before the first real customer, choose a non-training embedding model with a
+      zero-retention provider policy, change the pgvector column dimension if it
+      differs, re-embed every row (vectors from different models are not
+      comparable), point EMBEDDING_PROVIDER / OPENROUTER_EMBEDDING_MODEL at it and
+      record the provider in the vendor DPA register.
+    status: open
+    notes: 'gh #1108.'
 summary:
   total_items: 443
   by_severity:

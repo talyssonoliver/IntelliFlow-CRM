@@ -2,6 +2,7 @@ import type { Embeddings } from '@langchain/core/embeddings';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { createEmbeddings } from '../lib/llm-factory';
+import { embeddingDimensions } from '../lib/embedding-dimensions';
 import pino from 'pino';
 
 const logger = pino({
@@ -54,10 +55,7 @@ export class EmbeddingChain {
   constructor() {
     // All embedding providers routed through createEmbeddings factory
     this.modelName = process.env.EMBEDDING_MODEL || 'rag-free';
-    this.dimensions = Number.parseInt(
-      process.env.EMBEDDING_DIMENSIONS || (aiConfig.provider === 'ollama' ? '768' : '1536'),
-      10
-    );
+    this.dimensions = embeddingDimensions();
     this.embeddings = createEmbeddings('free');
 
     logger.info(

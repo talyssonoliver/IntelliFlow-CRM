@@ -12,6 +12,7 @@ import pino from 'pino';
 import { MODEL_CATALOG } from '@intelliflow/domain';
 import { aiConfig } from '../config/ai.config.js';
 import { embeddingsPricingKey } from './llm-factory.js';
+import { embeddingDimensions } from './embedding-dimensions.js';
 
 const logger = pino({ name: 'embedding-model-publisher', level: process.env.LOG_LEVEL || 'info' });
 
@@ -36,13 +37,10 @@ export function activeEmbeddingModel(): ActiveEmbeddingModel {
   const entry = MODEL_CATALOG.find(
     (model) => model.kind === 'embedding' && model.pricingKey === pricingKey
   );
-  if (aiConfig.provider !== 'mock' && process.env['EMBEDDING_PROVIDER'] === 'gemini') {
-    // GeminiEmbeddings truncates to EMBEDDING_DIMENSIONS (default 1536), see createEmbeddings.
-    const dimensions = Number.parseInt(process.env['EMBEDDING_DIMENSIONS'] || '1536', 10);
-    return {
-      id: entry?.id ?? pricingKey,
-      dimensions: Number.isFinite(dimensions) ? dimensions : null,
-    };
+  const provider = process.env['EMBEDDING_PROVIDER'];
+  if (aiConfig.provider !== 'mock' && (provider === 'gemini' || provider === 'openrouter')) {
+    // GeminiEmbeddings truncates to EMBEDDING_DIMENSIONS; OpenRouter's free model returns 2048.
+    return { id: entry?.id ?? pricingKey, dimensions: embeddingDimensions() };
   }
   return { id: entry?.id ?? pricingKey, dimensions: entry?.dimensions ?? null };
 }

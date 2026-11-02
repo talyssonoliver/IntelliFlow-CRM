@@ -93,6 +93,13 @@ async function importFactory(provider: 'litellm' | 'openai' | 'ollama' | 'mock' 
   return mod;
 }
 
+// embeddingDimensions reads the same doMock'd config. Imported from its own module: a
+// re-export through llm-factory comes out undefined under istanbul coverage.
+async function importDimensions(provider: 'litellm' | 'ollama' | 'openrouter') {
+  await importFactory(provider);
+  return (await import('../embedding-dimensions.js')).embeddingDimensions;
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -439,6 +446,92 @@ describe('createEmbeddings()', () => {
 
     expect(OpenAIEmbeddings).not.toHaveBeenCalled();
     expect(emb.constructor.name).toBe('GeminiEmbeddings');
+  });
+
+  describe('EMBEDDING_PROVIDER=openrouter', () => {
+    const embeddingArgs = () =>
+      (OpenAIEmbeddings as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<string, unknown>;
+
+    beforeEach(() => {
+      vi.stubEnv('EMBEDDING_PROVIDER', 'openrouter');
+      vi.stubEnv('OPENROUTER_API_KEY', 'test-openrouter-key');
+      vi.stubEnv('OPENROUTER_EMBEDDING_MODEL', '');
+      vi.stubEnv('OPENROUTER_BASE_URL', '');
+    });
+
+    it('calls OpenRouter /embeddings with the default free Nemotron model', async () => {
+      const { createEmbeddings } = await importFactory('openrouter');
+      createEmbeddings('free');
+
+      expect(OpenAIEmbeddings).toHaveBeenCalledOnce();
+      const args = embeddingArgs();
+      expect(args.model).toBe('nvidia/nemotron-3-embed-1b:free');
+      expect(args.apiKey).toBe('test-openrouter-key');
+      expect((args.configuration as Record<string, unknown>).baseURL).toBe(
+        'https://openrouter.ai/api/v1'
+      );
+      // The model only accepts its native size, so no `dimensions` is sent (OpenRouter 400s).
+      expect(args.dimensions).toBeUndefined();
+    });
+
+    it('OPENROUTER_EMBEDDING_MODEL selects another :free model', async () => {
+      vi.stubEnv('OPENROUTER_EMBEDDING_MODEL', 'nvidia/nemotron-3.5-embed-1b:free');
+      const { createEmbeddings } = await importFactory('openrouter');
+      createEmbeddings('free');
+
+      expect(embeddingArgs().model).toBe('nvidia/nemotron-3.5-embed-1b:free');
+    });
+
+    it('refuses a paid model at the first embed call and never sends it', async () => {
+      vi.stubEnv('OPENROUTER_EMBEDDING_MODEL', 'openai/text-embedding-3-small');
+      const { createEmbeddings } = await importFactory('openrouter');
+      // Module-init safe: `new EmbeddingChain()` runs createEmbeddings() at import (#238).
+      const emb = createEmbeddings('free');
+
+      expect(OpenAIEmbeddings).not.toHaveBeenCalled();
+      await expect(emb.embedQuery('hello')).rejects.toThrow(/only :free models/);
+      await expect(emb.embedDocuments(['hello'])).rejects.toThrow(/only :free models/);
+    });
+
+    it('prices embeddings as the OpenRouter model id (a :free id meters at $0)', async () => {
+      const { embeddingsPricingKey } = await importFactory('openrouter');
+
+      expect(embeddingsPricingKey('free')).toBe('nvidia/nemotron-3-embed-1b:free');
+    });
+  });
+
+  describe('embeddingDimensions()', () => {
+    beforeEach(() => {
+      vi.stubEnv('EMBEDDING_DIMENSIONS', '');
+    });
+
+    it('is 2048 for OpenRouter, the only size its free Nemotron model returns', async () => {
+      vi.stubEnv('EMBEDDING_PROVIDER', 'openrouter');
+      const embeddingDimensions = await importDimensions('openrouter');
+
+      expect(embeddingDimensions()).toBe(2048);
+    });
+
+    it('is 2048 for Gemini too, so the Gemini rollback fits the vector(2048) columns', async () => {
+      vi.stubEnv('EMBEDDING_PROVIDER', 'gemini');
+      expect((await importDimensions('openrouter'))()).toBe(2048);
+    });
+
+    it('keeps 1536 for the LiteLLM path and 768 for Ollama', async () => {
+      vi.stubEnv('EMBEDDING_PROVIDER', '');
+      expect((await importDimensions('litellm'))()).toBe(1536);
+
+      vi.resetModules();
+      expect((await importDimensions('ollama'))()).toBe(768);
+    });
+
+    it('EMBEDDING_DIMENSIONS overrides the provider default', async () => {
+      vi.stubEnv('EMBEDDING_PROVIDER', 'openrouter');
+      vi.stubEnv('EMBEDDING_DIMENSIONS', '1024');
+      const embeddingDimensions = await importDimensions('openrouter');
+
+      expect(embeddingDimensions()).toBe(1024);
+    });
   });
 
   it('litellm provider → uses LITELLM_BASE_URL for embeddings', async () => {
