@@ -236,15 +236,24 @@ export interface Database {
 }
 
 /**
+ * A client instance keeps the session of any sign-in it performs and sends that
+ * user's token on its later calls. This process serves many users, so a sign-in
+ * must never run on a client that outlives its request: use the per-request
+ * clients below for it. The module-level clients stay session-free.
+ */
+const SESSION_FREE_AUTH = {
+  autoRefreshToken: false,
+  persistSession: false,
+  detectSessionInUrl: false,
+} as const;
+
+/**
  * Anonymous/public Supabase client
  * Uses anon key - respects Row Level Security (RLS) policies
+ * Never signs anyone in: see SESSION_FREE_AUTH.
  */
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-  },
+  auth: SESSION_FREE_AUTH,
   realtime: {
     params: {
       eventsPerSecond: 10,
@@ -263,6 +272,21 @@ export const supabaseAdmin = createClient<Database>(SUPABASE_URL, SUPABASE_SERVI
     persistSession: false,
   },
 });
+
+/** A new anon-key client for one request's sign-in, thrown away with the request. */
+function createAuthFlowClient(): SupabaseClient<Database> {
+  return createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: SESSION_FREE_AUTH });
+}
+
+/**
+ * A new service-role client for one request's auth call that can return a session
+ * (signUp, verifyOtp). `supabaseAdmin` must not make those calls.
+ */
+export function createServiceAuthFlowClient(): SupabaseClient<Database> {
+  return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: SESSION_FREE_AUTH,
+  });
+}
 
 /**
  * Create a Supabase client with a user's JWT token
@@ -298,7 +322,7 @@ export interface SignInResult {
  * Sign up a new user with email and password
  */
 export async function signUp(email: string, password: string): Promise<SignUpResult> {
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await createAuthFlowClient().auth.signUp({
     email,
     password,
   });
@@ -314,7 +338,7 @@ export async function signUp(email: string, password: string): Promise<SignUpRes
  * Sign in an existing user with email and password
  */
 export async function signIn(email: string, password: string): Promise<SignInResult> {
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await createAuthFlowClient().auth.signInWithPassword({
     email,
     password,
   });
@@ -324,15 +348,6 @@ export async function signIn(email: string, password: string): Promise<SignInRes
     session: data.session,
     error: error,
   };
-}
-
-/**
- * Sign out the current user (client-side only - use signOutUser for server-side)
- * @deprecated Use signOutUser(userId) for server-side logout
- */
-export async function signOut(): Promise<{ error: Error | null }> {
-  const { error } = await supabase.auth.signOut();
-  return { error };
 }
 
 /**
@@ -350,22 +365,6 @@ export async function signOutUser(userId: string): Promise<{ error: Error | null
   } catch (err) {
     return { error: err instanceof Error ? err : new Error('Failed to sign out user') };
   }
-}
-
-/**
- * Get the current session
- */
-export async function getSession(): Promise<{ session: Session | null; error: Error | null }> {
-  const { data, error } = await supabase.auth.getSession();
-  return { session: data.session, error };
-}
-
-/**
- * Get the current user
- */
-export async function getUser(): Promise<{ user: User | null; error: Error | null }> {
-  const { data, error } = await supabase.auth.getUser();
-  return { user: data.user, error };
 }
 
 // ============================================
@@ -730,7 +729,7 @@ export async function signInWithOAuth(
     queryParams?: Record<string, string>;
   }
 ): Promise<OAuthSignInResult> {
-  const { data, error } = await supabase.auth.signInWithOAuth({
+  const { data, error } = await createAuthFlowClient().auth.signInWithOAuth({
     provider,
     options: {
       redirectTo: options?.redirectTo,
@@ -749,7 +748,7 @@ export async function signInWithOAuth(
  * Exchange an OAuth authorization code for a session
  */
 export async function exchangeCodeForSession(code: string): Promise<OAuthSessionResult> {
-  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+  const { data, error } = await createAuthFlowClient().auth.exchangeCodeForSession(code);
 
   return {
     session: data.session,

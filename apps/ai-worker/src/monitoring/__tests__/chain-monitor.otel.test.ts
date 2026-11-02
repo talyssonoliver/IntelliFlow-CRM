@@ -32,7 +32,7 @@ function checkerResult(overrides: Partial<HallucinationResult>): HallucinationRe
     id: 'x',
     timestamp: new Date(),
     model: 'scoring-free',
-    inputContext: '',
+    inputContextHash: '',
     output: '',
     hallucinated: false,
     confidence: 0,

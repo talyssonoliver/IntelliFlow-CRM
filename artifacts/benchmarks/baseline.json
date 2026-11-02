@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-02T01:36:08.560Z",
+  "timestamp": "2026-11-02T19:09:37.172Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 78,
-    "total_endpoints": 606,
+    "total_endpoints": 605,
     "total_queries": 256,
-    "total_mutations": 350,
+    "total_mutations": 349,
     "routers": [
       {
         "name": "contact",
@@ -1051,15 +1051,15 @@
         "mutations": 12
       },
       {
-        "name": "auth",
-        "endpoints": 18,
-        "queries": 3,
-        "mutations": 15
-      },
-      {
         "name": "documents",
         "endpoints": 18,
         "queries": 4,
+        "mutations": 14
+      },
+      {
+        "name": "auth",
+        "endpoints": 17,
+        "queries": 3,
         "mutations": 14
       },
       {
@@ -4481,12 +4481,6 @@
         "name": "auth.logout",
         "method": "POST",
         "description": "Logout",
-        "critical": true
-      },
-      {
-        "name": "auth.refreshSession",
-        "method": "POST",
-        "description": "Refresh session",
         "critical": true
       },
       {

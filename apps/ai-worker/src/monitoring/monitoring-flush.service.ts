@@ -144,7 +144,7 @@ export class MonitoringFlushService {
           flagged: hr.hallucinated,
           severity: hr.hallucinated ? 'high' : 'none',
           payload: {
-            inputContextHash: hr.inputContext?.substring(0, 64),
+            inputContextHash: hr.inputContextHash,
             hallucinationTypes: hr.hallucinationTypes,
             evidence: hr.evidence,
             groundTruthSources: hr.groundTruthSources,

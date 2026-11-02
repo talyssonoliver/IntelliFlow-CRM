@@ -141,7 +141,7 @@ export class LeadScoringChain {
   private readonly recordDrift: boolean;
 
   /** Default prompt template used when no versioned config is available */
-  private static readonly DEFAULT_PROMPT = `You are an expert lead scoring AI for a CRM system. Analyze the provided lead information and assign a score from 0-100 based on the lead's quality and conversion potential.
+  static readonly DEFAULT_PROMPT = `You are an expert lead scoring AI for a CRM system. Analyze the provided lead information and assign a score from 0-100 based on the lead's quality and conversion potential.
 
 Consider the following factors:
 1. Contact Information Completeness (0-25 points)
@@ -276,7 +276,10 @@ Respond with a structured JSON object containing the score, confidence, factors,
         valueType: 'lead_scored',
         recordDrift: this.recordDrift,
         getUsage: () => usageHandler.getUsage(),
-        inputContext: leadInfo, // sanitized lead text — no raw PII beyond what is already logged
+        // The prompt the model saw (rubric + sanitized lead text): the reasoning is written
+        // against the rubric, so grounding it in the lead fields alone flagged correct output
+        // (IFC-117 alert, 2026-11-01). The checker keeps only a hash of it.
+        inputContext: formattedPrompt,
         extractText: (r: unknown): string | null => {
           // leadScoreSchema nests reasoning inside factors[].reasoning (not top-level)
           if (r && typeof r === 'object' && 'factors' in r) {

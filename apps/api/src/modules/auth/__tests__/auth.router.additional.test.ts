@@ -7,9 +7,7 @@ import { TRPCError } from '@trpc/server';
 
 const {
   mockSignIn,
-  mockSignOut,
   mockSignOutUser,
-  mockGetSession,
   mockSignInWithOAuth,
   mockExchangeCodeForSession,
   mockVerifyToken,
@@ -24,9 +22,7 @@ const {
   mockSessionService,
 } = vi.hoisted(() => ({
   mockSignIn: vi.fn(),
-  mockSignOut: vi.fn(),
   mockSignOutUser: vi.fn(),
-  mockGetSession: vi.fn(),
   mockSignInWithOAuth: vi.fn(),
   mockExchangeCodeForSession: vi.fn(),
   mockVerifyToken: vi.fn(),
@@ -72,20 +68,22 @@ const {
 
 vi.mock('../../../lib/supabase', () => ({
   signIn: (...args: any[]) => mockSignIn(...args),
-  signOut: (...args: any[]) => mockSignOut(...args),
   signOutUser: (...args: any[]) => mockSignOutUser(...args),
-  getSession: (...args: any[]) => mockGetSession(...args),
   signInWithOAuth: (...args: any[]) => mockSignInWithOAuth(...args),
   exchangeCodeForSession: (...args: any[]) => mockExchangeCodeForSession(...args),
   verifyToken: (...args: any[]) => mockVerifyToken(...args),
   // IFC-120: Supabase admin client for auth flows (closure pattern)
   supabaseAdmin: {
     auth: {
-      signUp: (...args: any[]) => mockSupabaseSignUp(...args),
-      verifyOtp: (...args: any[]) => mockVerifyOtp(...args),
       resend: (...args: any[]) => mockSupabaseResend(...args),
     },
   },
+  createServiceAuthFlowClient: () => ({
+    auth: {
+      signUp: (...args: any[]) => mockSupabaseSignUp(...args),
+      verifyOtp: (...args: any[]) => mockVerifyOtp(...args),
+    },
+  }),
   resetPasswordForEmail: (...args: any[]) => mockResetPasswordForEmail(...args),
   updateUserPassword: (...args: any[]) => mockUpdateUserPassword(...args),
 }));
@@ -201,10 +199,9 @@ describe('authRouter additional coverage', () => {
   });
 
   describe('verifyMfa - session failure', () => {
-    it('should throw UNAUTHORIZED when session expired after MFA', async () => {
+    it('should throw UNAUTHORIZED when the challenge holds no session', async () => {
       mockMfaService.getChallengeInfo.mockReturnValue({ exists: true });
       mockMfaService.verifyChallenge.mockResolvedValue({ success: true });
-      mockGetSession.mockResolvedValue({ session: null, error: new Error('expired') });
       const ctx = createPublicContext();
       const caller = authRouter.createCaller(ctx);
 

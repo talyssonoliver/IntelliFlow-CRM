@@ -761,7 +761,6 @@
 | `auth.verifyMfa`             | M    | pub   | `mfaVerifySchema`           | Verify MFA code                |
 | `auth.resendMfaCode`         | M    | pub   | `resendMfaCodeSchema`       | Resend MFA code                |
 | `auth.logout`                | M    | auth  | —                           | Invalidate session             |
-| `auth.refreshSession`        | M    | pub   | `refreshTokenSchema`        | Refresh access token           |
 | `auth.setupMfa`              | M    | auth  | `mfaSetupSchema`            | Begin MFA enrollment           |
 | `auth.confirmMfa`            | M    | auth  | `mfaConfirmSchema`          | Confirm MFA enrollment         |
 | `auth.getBackupCodes`        | M    | auth  | —                           | Get MFA backup codes           |
