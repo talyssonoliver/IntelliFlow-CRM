@@ -29,7 +29,8 @@ env:
 jobs:
   e2e-full:
     name: E2E Full Suite
-    runs-on: ubuntu-latest
+    # Pinned: the locked Playwright refuses Ubuntu 26.04 (#1128). The upgrade in #1137 removes this.
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     # Same module-load env guards as ci.yml's build/e2e jobs — `next start`
     # against the production .next needs them satisfied at boot.

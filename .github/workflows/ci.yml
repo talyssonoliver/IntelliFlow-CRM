@@ -504,7 +504,8 @@ jobs:
 
   e2e:
     name: E2E Tests
-    runs-on: ubuntu-latest
+    # Pinned: the locked Playwright refuses Ubuntu 26.04 (#1128). The upgrade in #1137 removes this.
+    runs-on: ubuntu-24.04
     needs: [build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     # merge_group refs are not 'refs/heads/main', so this job is naturally
