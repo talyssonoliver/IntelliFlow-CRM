@@ -82,13 +82,6 @@ interface TicketFilterState {
 // =============================================================================
 
 /**
- * Validates if a string is a valid UUID v4
- */
-export function isValidUUID(str: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
-}
-
-/**
  * Transform filter options with counts to FilterOption format
  * Appends count to label: "Status (5)"
  */

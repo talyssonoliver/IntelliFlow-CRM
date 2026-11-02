@@ -71,7 +71,6 @@ vi.mock('@/lib/api', () => ({
 }));
 vi.mock('@/hooks/use-dynamic-filters', () => ({
   useContactFilterOptions: () => ({ statusOptions: [], departmentOptions: [], accountOptions: [] }),
-  isValidUUID: () => false,
 }));
 vi.mock('../actions', () => ({ invalidateContactsCache: vi.fn() }));
 vi.mock('../../actions', () => ({ revalidateContactCaches: vi.fn() }));

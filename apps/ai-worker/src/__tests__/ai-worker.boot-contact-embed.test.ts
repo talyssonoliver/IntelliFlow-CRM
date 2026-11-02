@@ -30,6 +30,7 @@ const h = vi.hoisted(() => {
 
   let capturedGenerateEmbeddingCb: ((text: string) => Promise<number[] | null>) | null = null;
   const mockContactEmbedWorkerStart = vi.fn().mockResolvedValue(undefined);
+  const mockEnqueueMissingEmbeddings = vi.fn().mockResolvedValue(0);
   const MockContactEmbedWorkerCtor = vi.fn().mockImplementation(function (
     _prisma: unknown,
     _redisConnection: unknown,
@@ -37,14 +38,22 @@ const h = vi.hoisted(() => {
     _updateFn: unknown
   ) {
     capturedGenerateEmbeddingCb = embeddingChainLike.generateEmbedding;
-    return { start: mockContactEmbedWorkerStart };
+    return {
+      start: mockContactEmbedWorkerStart,
+      enqueueMissingEmbeddings: mockEnqueueMissingEmbeddings,
+    };
   });
 
+  // Size the configured embedding provider returns; the mocked column is 2048.
+  const dims = { provider: 2048 };
+
   return {
+    dims,
     mockGenerateEmbedding,
     mockGetEmbeddingChain,
     capturedGenerateEmbeddingCb: () => capturedGenerateEmbeddingCb,
     mockContactEmbedWorkerStart,
+    mockEnqueueMissingEmbeddings,
     MockContactEmbedWorkerCtor,
   };
 });
@@ -85,7 +94,12 @@ vi.mock('../workers/contact-embed-worker', () => ({
   ContactEmbedWorker: h.MockContactEmbedWorkerCtor,
 }));
 
+vi.mock('../lib/embedding-dimensions', () => ({
+  embeddingDimensions: () => h.dims.provider,
+}));
+
 vi.mock('@intelliflow/db', () => ({
+  VECTOR_COLUMN_DIMENSIONS: 2048,
   prisma: { $connect: vi.fn(), $disconnect: vi.fn() },
   PrismaClient: vi.fn(),
   updateContactEmbedding: vi.fn().mockResolvedValue(undefined),
@@ -252,7 +266,9 @@ describe('AIWorker.bootContactEmbedWorker — changed-line coverage (D2 PR #264)
       model: 'rag-free',
       text: 'hello',
     });
+    h.dims.provider = 2048;
     h.mockContactEmbedWorkerStart.mockResolvedValue(undefined);
+    h.mockEnqueueMissingEmbeddings.mockResolvedValue(0);
     h.MockContactEmbedWorkerCtor.mockImplementation(function (
       _prisma: unknown,
       _redisConnection: unknown,
@@ -261,7 +277,10 @@ describe('AIWorker.bootContactEmbedWorker — changed-line coverage (D2 PR #264)
     ) {
       (h as any)._cb = embeddingChainLike.generateEmbedding;
       (h as any)._update = updateFn;
-      return { start: h.mockContactEmbedWorkerStart };
+      return {
+        start: h.mockContactEmbedWorkerStart,
+        enqueueMissingEmbeddings: h.mockEnqueueMissingEmbeddings,
+      };
     });
   });
 
@@ -325,6 +344,56 @@ describe('AIWorker.bootContactEmbedWorker — changed-line coverage (D2 PR #264)
     const cb = (h as any)._cb as ((text: string) => Promise<number[] | null>) | undefined;
     const result = await cb!('text without vector');
     expect(result).toBeNull();
+  });
+
+  it('does not start when the provider returns vectors that do not fit the embedding column', async () => {
+    // e.g. the LiteLLM path (1536) against the vector(2048) columns: every write would be refused.
+    h.dims.provider = 1536;
+    const worker = new AIWorker();
+    (worker as any).prisma = { $connect: vi.fn(), $disconnect: vi.fn() };
+
+    await expect((worker as any).bootContactEmbedWorker()).resolves.toBeUndefined();
+
+    expect(h.MockContactEmbedWorkerCtor).not.toHaveBeenCalled();
+    expect(h.mockEnqueueMissingEmbeddings).not.toHaveBeenCalled();
+    expect((worker as any).logger.error).toHaveBeenCalledWith(
+      { dimensions: 1536, column: 2048 },
+      expect.stringContaining('not started')
+    );
+  });
+
+  it('queues the NULL-embedding backfill once the worker has started (vector(2048) migration)', async () => {
+    h.mockEnqueueMissingEmbeddings.mockResolvedValue(4);
+    const worker = new AIWorker();
+    (worker as any).prisma = { $connect: vi.fn(), $disconnect: vi.fn() };
+
+    await (worker as any).bootContactEmbedWorker();
+    await vi.waitFor(() => expect(h.mockEnqueueMissingEmbeddings).toHaveBeenCalledTimes(1));
+
+    expect(h.mockContactEmbedWorkerStart.mock.invocationCallOrder[0]).toBeLessThan(
+      h.mockEnqueueMissingEmbeddings.mock.invocationCallOrder[0]!
+    );
+    await vi.waitFor(() =>
+      expect((worker as any).logger.info).toHaveBeenCalledWith(
+        { queued: 4 },
+        expect.stringContaining('backfill')
+      )
+    );
+  });
+
+  it('a failed backfill only logs a warning; the worker stays up', async () => {
+    h.mockEnqueueMissingEmbeddings.mockRejectedValue(new Error('redis down'));
+    const worker = new AIWorker();
+    (worker as any).prisma = { $connect: vi.fn(), $disconnect: vi.fn() };
+
+    await expect((worker as any).bootContactEmbedWorker()).resolves.toBeUndefined();
+    await vi.waitFor(() =>
+      expect((worker as any).logger.warn).toHaveBeenCalledWith(
+        { error: 'redis down' },
+        expect.stringContaining('backfill')
+      )
+    );
+    expect((worker as any).contactEmbedWorker).toBeDefined();
   });
 
   it('bootContactEmbedWorker swallows errors and logs a warning (resilience)', async () => {

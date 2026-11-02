@@ -9,6 +9,7 @@ import {
 } from '../contact-search';
 
 const VALID_UUID = '123e4567-e89b-12d3-a456-426614174000';
+const CUID_ACCOUNT_ID = 'cmhbx3k2p0000l8086a1b2c3d';
 
 function baseState(overrides: Partial<ContactListFilterState> = {}): ContactListFilterState {
   return {
@@ -74,11 +75,15 @@ describe('buildContactListQuery', () => {
     expect(q.status).toBe('ACTIVE');
   });
 
-  it('includes accountId only when companyFilter is a valid UUID', () => {
+  it('includes accountId only when companyFilter is a record id', () => {
     expect(buildContactListQuery(baseState({ companyFilter: VALID_UUID })).accountId).toBe(
       VALID_UUID
     );
-    expect(buildContactListQuery(baseState({ companyFilter: 'not-a-uuid' })).accountId).toBe(
+    // #1097: account ids are cuids (Prisma @default(cuid())), so a cuid filter must reach the query.
+    expect(buildContactListQuery(baseState({ companyFilter: CUID_ACCOUNT_ID })).accountId).toBe(
+      CUID_ACCOUNT_ID
+    );
+    expect(buildContactListQuery(baseState({ companyFilter: 'not a/valid id' })).accountId).toBe(
       undefined
     );
     expect(buildContactListQuery(baseState({ companyFilter: '' })).accountId).toBe(undefined);
