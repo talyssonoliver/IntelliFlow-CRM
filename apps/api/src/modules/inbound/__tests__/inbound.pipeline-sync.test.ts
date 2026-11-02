@@ -860,7 +860,8 @@ describe('inboundRouter — syncPipelineLead', () => {
 
       const writes = slugWrites();
       expect(writes).toHaveLength(1);
-      expect(writes[0]?.slice(1)).toEqual([SLUG, LEAD_ID, TENANT_ID, SLUG]);
+      // slug, lead, tenant, may-replace (a new event), slug
+      expect(writes[0]?.slice(1)).toEqual([SLUG, LEAD_ID, TENANT_ID, true, SLUG]);
       expect(noteMeta()).toMatchObject({
         outreachSlug: SLUG,
         outreachSlugChanged: true,
@@ -899,7 +900,7 @@ describe('inboundRouter — syncPipelineLead', () => {
       expect(meta).not.toHaveProperty('previousOutreachSlug');
     });
 
-    it('still applies the slug on a repeat syncKey (no new note)', async () => {
+    it('on a repeat syncKey, sets the slug only when the stored one is NULL (no new note)', async () => {
       existingLead('NEW');
       prismaMock.leadActivity.findFirst.mockResolvedValueOnce({ id: 'act_1' } as never);
       prismaMock.$queryRaw.mockResolvedValueOnce([{ previous: null }] as never);
@@ -908,8 +909,93 @@ describe('inboundRouter — syncPipelineLead', () => {
       const result = await caller.syncPipelineLead(withSlug(SLUG));
 
       expect(result.changed).toBe(false);
-      expect(slugWrites()).toHaveLength(1);
+      const writes = slugWrites();
+      expect(writes).toHaveLength(1);
+      const sql = writes[0]?.[0].join('?') ?? '';
+      expect(sql).toMatch(/"id" = \? AND "tenantId" = \?/);
+      expect(sql).toMatch(
+        /l\."outreachSlug" IS NULL\s+OR \(\?::boolean AND l\."outreachSlug" IS DISTINCT FROM \?\)/
+      );
+      // A repeat may not replace a stored slug, only fill a NULL one.
+      expect(writes[0]?.slice(1)).toEqual([SLUG, LEAD_ID, TENANT_ID, false, SLUG]);
       expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+    });
+
+    /**
+     * A stand-in for the leads row and the audit notes, so a sequence of syncs sees what the
+     * earlier ones wrote: the slug write is evaluated against the stored slug the way its WHERE
+     * clause reads, and a syncKey counts as known once its note was created.
+     */
+    function simulateStore(initialSlug: string | null) {
+      const store = { slug: initialSlug };
+      const syncKeys = new Set<string>();
+      prismaMock.$queryRaw.mockImplementation(((
+        _strings: TemplateStringsArray,
+        ...values: unknown[]
+      ) => {
+        // values: slug, lead, tenant, may-replace, slug (see the SQL in applyOutreachSlug)
+        const slug = values[0] as string;
+        const mayReplace = values[3] as boolean;
+        const applies = store.slug === null || (mayReplace && store.slug !== slug);
+        if (!applies) return Promise.resolve([]);
+        const previous = store.slug;
+        store.slug = slug;
+        return Promise.resolve([{ previous }]);
+      }) as never);
+      prismaMock.leadActivity.findFirst.mockImplementation(((args: {
+        where: { metadata: { equals: string } };
+      }) =>
+        Promise.resolve(
+          syncKeys.has(args.where.metadata.equals) ? { id: 'act_1', metadata: {} } : null
+        )) as never);
+      prismaMock.leadActivity.create.mockImplementation(((args: {
+        data: { metadata: { syncKey: string } };
+      }) => {
+        syncKeys.add(args.data.metadata.syncKey);
+        return Promise.resolve({});
+      }) as never);
+      return store;
+    }
+
+    const event = (slug: string, stageChangedAt: string) =>
+      ({ ...(input('CONTACTED') as object), outreachSlug: slug, stageChangedAt }) as never;
+
+    it('a retry of an older event never puts back the slug a newer event set (A, B, retry A)', async () => {
+      const store = simulateStore(null);
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const eventA = event('old-slug', '2026-10-02T09:00:00.000Z');
+      const eventB = event('new-slug', '2026-10-03T09:00:00.000Z');
+
+      existingLead('NEW');
+      await caller.syncPipelineLead(eventA);
+      expect(store.slug).toBe('old-slug');
+
+      existingLead('CONTACTED');
+      await caller.syncPipelineLead(eventB);
+      expect(store.slug).toBe('new-slug');
+
+      existingLead('CONTACTED');
+      const retry = await caller.syncPipelineLead(eventA);
+      expect(retry.changed).toBe(false);
+      expect(store.slug).toBe('new-slug');
+      // The retry wrote no second note for A.
+      expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(2);
+    });
+
+    it('a retry still sets the slug when none is stored yet (NULL, then retry)', async () => {
+      const store = simulateStore(null);
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+
+      // The first delivery carried no slug, so the event is known but the slug is still NULL.
+      existingLead('NEW');
+      await caller.syncPipelineLead(input('CONTACTED'));
+      expect(store.slug).toBeNull();
+
+      existingLead('CONTACTED');
+      const retry = await caller.syncPipelineLead(withSlug(SLUG));
+      expect(retry.changed).toBe(false);
+      expect(store.slug).toBe(SLUG);
+      expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
     });
 
     it('leaves the slug untouched when it is absent', async () => {

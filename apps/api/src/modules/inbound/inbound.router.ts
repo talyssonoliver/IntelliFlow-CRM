@@ -594,20 +594,24 @@ interface OutreachSlugChange {
 }
 
 /**
- * Set the lead's outreach slug when it is NULL or different, in one tenant-scoped
- * statement that also returns the previous value (no row back = already equal).
- * Raw SQL like the tag merge: the domain Lead does not carry the slug. A failure
- * is a retryable 500, so COA resends rather than losing the slug.
+ * Set the lead's outreach slug in one tenant-scoped statement that also returns the
+ * previous value (no row back = nothing written). A new COA event sets it when it is
+ * NULL or different. A repeat of an event already recorded (`repeat`) only fills a
+ * NULL slug: a retry of an older event must never put back a slug a newer event
+ * replaced. Raw SQL like the tag merge: the domain Lead does not carry the slug. A
+ * failure is a retryable 500, so COA resends rather than losing the slug.
  */
 async function applyOutreachSlug(
   ctx: Context,
   input: InboundPipelineLeadInput,
   leadId: string,
-  tenantId: string
+  tenantId: string,
+  repeat: boolean
 ): Promise<OutreachSlugChange | null> {
   const slug = input.outreachSlug;
   if (slug === undefined) return null;
   try {
+    const mayReplace = !repeat;
     const rows = await ctx.prisma.$queryRaw<Array<{ previous: string | null }>>`
       UPDATE "leads" AS l
       SET "outreachSlug" = ${slug}, "updatedAt" = NOW()
@@ -616,7 +620,9 @@ async function applyOutreachSlug(
         WHERE "id" = ${leadId} AND "tenantId" = ${tenantId}
         FOR UPDATE
       ) AS old
-      WHERE l."id" = old."id" AND l."outreachSlug" IS DISTINCT FROM ${slug}
+      WHERE l."id" = old."id"
+        AND (l."outreachSlug" IS NULL
+          OR (${mayReplace}::boolean AND l."outreachSlug" IS DISTINCT FROM ${slug}))
       RETURNING old.previous
     `;
     const row = rows[0];
@@ -1340,8 +1346,9 @@ export const inboundRouter = createTRPCRouter({
    * best-effort (logged, not thrown).
    *
    * Outreach slug: when `outreachSlug` is sent it is written (tenant-scoped) if
-   * the stored one is NULL or different, before the idempotency check, and the
-   * audit note records it; a failed write is a retryable 500. Absent = untouched.
+   * the stored one is NULL or different, and the audit note records it. A repeat
+   * of a known syncKey only fills a NULL slug, so a retry of an older event cannot
+   * revert a newer one. A failed write is a retryable 500. Absent = untouched.
    */
   syncPipelineLead: publicProcedure
     .input(inboundPipelineLeadSchema)
@@ -1372,10 +1379,6 @@ export const inboundRouter = createTRPCRouter({
         currentStatus = await mergeCoaTags(ctx, leadId, tenantId, coaTags, input.coaLeadId);
       }
 
-      // Before the idempotency check, so a repeat of a known stage still carries
-      // a changed slug (no new audit note is written for a repeat).
-      const slugChange = await applyOutreachSlug(ctx, input, leadId, tenantId);
-
       // --- Step 3: idempotency ------------------------------------------------
       // coaStage is in the key: MEETING_BOOKED and a later PROPOSAL_READY both map to
       // NEGOTIATING, and the second must still get its own audit note.
@@ -1392,6 +1395,10 @@ export const inboundRouter = createTRPCRouter({
         where: { leadId, tenantId, metadata: { path: ['syncKey'], equals: syncKey } },
         select: { id: true, metadata: true },
       });
+      // After the lookup, so a repeat (a retry of an event already recorded) only fills
+      // a NULL slug and can never put back one a newer event replaced. No new audit
+      // note is written for a repeat.
+      const slugChange = await applyOutreachSlug(ctx, input, leadId, tenantId, prior !== null);
       if (prior) {
         const priorMeta = prior.metadata as { qualificationPending?: unknown } | null;
         return {
