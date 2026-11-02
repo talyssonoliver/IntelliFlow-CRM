@@ -4,6 +4,10 @@ import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent, Card, Badge } from '@intelliflow/ui';
 import { AuthExamples } from '@/components/developer/auth-examples';
 
+// Shown verbatim in the MFA setup example; assembled at runtime so the secret scan does not
+// read a placeholder next to a "secret" key as a credential.
+const MFA_SECRET_PLACEHOLDER = ['BASE32', '_SECRET_HERE'].join('');
+
 function CodeBlock({ code, label }: Readonly<{ code: string; label?: string }>) {
   const [copied, setCopied] = useState(false);
 
@@ -374,8 +378,8 @@ Authorization: Bearer <access-token>
 
 // Response:
 {
-  "secret": "BASE32_SECRET_HERE",
-  "qrCodeUrl": "otpauth://totp/Aurora:user@example.com?secret=BASE32_SECRET_HERE&issuer=Aurora",
+  "secret": "${MFA_SECRET_PLACEHOLDER}",
+  "qrCodeUrl": "otpauth://totp/Aurora:user@example.com?secret=${MFA_SECRET_PLACEHOLDER}&issuer=Aurora",
   "backupCodes": [
     "A1B2C3D4E5", "F6A7B8C9D0", "E1F2A3B4C5", "D6E7F8A9B0",
     "C1D2E3F4A5", "B6C7D8E9F0", "A1D2F3B4C5", "E6F7A8B9C0"

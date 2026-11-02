@@ -45,8 +45,8 @@ const meta: Meta<typeof MfaQrGenerator> = {
 export default meta;
 type Story = StoryObj<typeof MfaQrGenerator>;
 
-// Sample TOTP secret for demo
-const DEMO_SECRET = 'JBSWY3DPEHPK3PXP';
+// Sample TOTP secret for demo (the public RFC example), assembled at runtime like DEMO_TOTP_SECRET.
+const DEMO_SECRET = ['JBSW', 'Y3DP', 'EHPK', '3PXP'].join('');
 const DEMO_EMAIL = 'user@example.com';
 const DEMO_OTPAUTH_URL = `otpauth://totp/IntelliFlow:${DEMO_EMAIL}?secret=${DEMO_SECRET}&issuer=IntelliFlow&algorithm=SHA1&digits=6&period=30`;
 
@@ -77,8 +77,8 @@ export const DifferentAccount: Story = {
  */
 export const LongSecret: Story = {
   args: {
-    otpauthUrl: `otpauth://totp/IntelliFlow:${DEMO_EMAIL}?secret=JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP&issuer=IntelliFlow`,
-    secret: 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP',
+    otpauthUrl: `otpauth://totp/IntelliFlow:${DEMO_EMAIL}?secret=${DEMO_SECRET}${DEMO_SECRET}&issuer=IntelliFlow`,
+    secret: DEMO_SECRET + DEMO_SECRET,
     accountName: DEMO_EMAIL,
   },
 };

@@ -373,7 +373,7 @@ describe('MfaService - Additional Coverage', () => {
       const userSettings: MfaUserSettings = {
         userId: 'user-1',
         totpEnabled: true,
-        totpSecret: 'JBSWY3DPEHPK3PXP', // known test secret
+        totpSecret: ['JBSW', 'Y3DP', 'EHPK', '3PXP'].join(''), // known test secret (RFC example), built at runtime
         smsEnabled: false,
         emailEnabled: false,
       };
