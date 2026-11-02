@@ -21,13 +21,12 @@ const { mockSupabaseAdmin } = vi.hoisted(() => ({
 
 vi.mock('../../../lib/supabase', () => ({
   signIn: vi.fn(),
-  signOut: vi.fn(),
   signOutUser: vi.fn(),
-  getSession: vi.fn(),
   verifyToken: vi.fn(),
   signInWithOAuth: vi.fn(),
   exchangeCodeForSession: vi.fn(),
   supabaseAdmin: mockSupabaseAdmin,
+  createServiceAuthFlowClient: () => mockSupabaseAdmin,
   resetPasswordForEmail: vi.fn().mockResolvedValue({ error: null }),
   updateUserPassword: vi.fn().mockResolvedValue({ error: null }),
 }));

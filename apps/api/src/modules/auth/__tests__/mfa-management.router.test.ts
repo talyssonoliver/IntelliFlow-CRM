@@ -61,7 +61,6 @@ vi.mock('../../../services/session.service', () => ({
 vi.mock('../../../lib/supabase', () => ({
   signIn: (...args: unknown[]) => mockSignIn(...args),
   signOutUser: vi.fn().mockResolvedValue({ error: null }),
-  getSession: vi.fn().mockResolvedValue({ session: null, error: null }),
   signInWithOAuth: vi.fn(),
   exchangeCodeForSession: vi.fn(),
   verifyToken: vi.fn(),
