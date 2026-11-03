@@ -170,7 +170,7 @@ Aurora
   return {
     to: email,
     from: 'crm@leangency.com',
-    replyTo: 'support@leangency.com',
+    replyTo: 'hello@leangency.com',
     subject: 'Reset your Aurora password',
     htmlBody,
     textBody,
@@ -321,7 +321,7 @@ describe('reset-email - buildResetEmailPayload', () => {
 
     it('sets replyTo to support address', () => {
       const payload = buildResetEmailPayload(defaultOptions);
-      expect(payload.replyTo).toBe('support@leangency.com');
+      expect(payload.replyTo).toBe('hello@leangency.com');
     });
 
     it('sets correct subject', () => {

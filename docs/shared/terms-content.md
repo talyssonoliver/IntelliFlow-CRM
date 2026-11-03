@@ -2,7 +2,7 @@
 title: Terms of Service
 version: v2026.10
 effectiveDate: 2026-10-07
-contactEmail: legal@leangency.com
+contactEmail: hello@leangency.com
 summary:
   - You must be 18 or older and have authority to bind your organisation.
   - Aurora is provided "as-is" for lawful, professional business use.
@@ -80,5 +80,5 @@ effective date of updated terms constitutes acceptance of the revised terms.
 ## Contact Us
 
 For questions about these Terms of Service, billing, or legal matters, contact
-Leangency at legal@leangency.com. For privacy-related enquiries, see the Privacy
+Leangency at hello@leangency.com. For privacy-related enquiries, see the Privacy
 Policy.
