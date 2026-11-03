@@ -142,6 +142,7 @@ function redisConnectionOptions() {
     ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
     ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
     ...(process.env.REDIS_DB ? { db: Number.parseInt(process.env.REDIS_DB, 10) } : {}),
+    ...(process.env.REDIS_TLS === 'true' ? { tls: {} } : {}),
   };
 }
 

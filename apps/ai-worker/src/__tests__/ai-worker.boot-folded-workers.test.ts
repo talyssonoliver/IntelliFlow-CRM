@@ -316,6 +316,19 @@ describe('AIWorker — folded-worker boot methods (#230)', () => {
     expect(JSON.stringify(h.mockBootNotificationEmailWorker.mock.calls[0])).toContain('"db":3');
   });
 
+  it('connects the email consumer over TLS when the producers do', async () => {
+    process.env.EMAIL_PROVIDER = 'resend';
+    process.env.RESEND_API_KEY = 'test-resend-key';
+    vi.stubEnv('REDIS_TLS', 'true');
+
+    const worker = new AIWorker();
+    (worker as any).prisma = { $connect: vi.fn(), $disconnect: vi.fn() };
+
+    await (worker as any).bootNotificationEmailWorker();
+
+    expect(JSON.stringify(h.mockBootNotificationEmailWorker.mock.calls[0])).toContain('"tls":{}');
+  });
+
   it('boots the sendgrid adapter when EMAIL_PROVIDER=sendgrid (line 497)', async () => {
     process.env.EMAIL_PROVIDER = 'sendgrid';
     process.env.SENDGRID_API_KEY = 'test-sendgrid-key';
