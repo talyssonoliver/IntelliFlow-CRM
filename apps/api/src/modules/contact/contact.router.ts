@@ -934,6 +934,7 @@ export const contactRouter = createTRPCRouter({
           acl: {
             some: {
               principalId: viewerId,
+              principalType: 'USER',
               accessLevel: { not: 'NONE' as const },
               OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
             },
