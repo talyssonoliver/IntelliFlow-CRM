@@ -190,6 +190,9 @@ const AUTH_COOKIE_PREFIXES = [
   'sb-', // Supabase cookies
 ] as const;
 
+/** The server renders the logged-in portal from this one, so logout must remove it. */
+const AUTH_COOKIE_NAMES = ['accesstoken'] as const;
+
 const LOGOUT_CHANNEL = 'intelliflow-logout';
 
 // ============================================
@@ -211,6 +214,14 @@ export function clearLocalStorage(preservePreferences = false): string[] {
         localStorage.removeItem(key);
         clearedItems.push(key);
       }
+    }
+
+    // The Supabase client persists its own copy of the session under an sb-* key.
+    // Left behind, it holds usable tokens after logout.
+    const supabaseKeys = Object.keys(localStorage).filter((key) => key.startsWith('sb-'));
+    for (const key of supabaseKeys) {
+      localStorage.removeItem(key);
+      clearedItems.push(key);
     }
 
     // If not preserving preferences, clear all IntelliFlow-related data
@@ -322,9 +333,10 @@ export function clearAuthCookies(): string[] {
   const cookies = getAllCookies();
 
   for (const cookieName of Object.keys(cookies)) {
-    const isAuthCookie = AUTH_COOKIE_PREFIXES.some((prefix) =>
-      cookieName.toLowerCase().startsWith(prefix)
-    );
+    const lowerName = cookieName.toLowerCase();
+    const isAuthCookie =
+      AUTH_COOKIE_NAMES.some((name) => lowerName === name) ||
+      AUTH_COOKIE_PREFIXES.some((prefix) => lowerName.startsWith(prefix));
 
     if (isAuthCookie) {
       deleteCookie(cookieName);
@@ -380,6 +392,17 @@ export async function clearIndexedDB(): Promise<string[]> {
 // ============================================
 // Broadcast Channel (Multi-Tab Logout)
 // ============================================
+
+/**
+ * Ends a logout with a full page load, never a client-side navigation. The running page
+ * holds personal data in memory: Next's router cache, the server-rendered payload in the
+ * document, and the auth state. Only a new document drops all of them, and replace() also
+ * takes the logged-in page out of the history entry it was on.
+ */
+export function leaveAfterLogout(path: string = '/'): void {
+  if (typeof globalThis.window === 'undefined') return;
+  globalThis.location.replace(path);
+}
 
 /**
  * Broadcast logout event to other tabs

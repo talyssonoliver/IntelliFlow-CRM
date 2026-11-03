@@ -16,7 +16,7 @@
  * - Accessibility support
  */
 
-import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useEffect, useState, useCallback, Suspense, type MouseEvent } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@intelliflow/ui';
@@ -152,7 +152,7 @@ function LogoutContent() {
 
     const run = async () => {
       try {
-        await auth.logout();
+        await auth.logout({ navigate: false });
         const cleanupResult = await cleanupSession({
           clearLocalStorage: true,
           clearSessionStorage: true,
@@ -181,6 +181,16 @@ function LogoutContent() {
     });
   }, [status, auth]);
 
+  // Every link here leaves with a full page load: this page still holds the logged-in
+  // router cache, and a client-side navigation could show it again.
+  const leaveWithFullLoad = (event: MouseEvent<HTMLElement>) => {
+    const link = (event.target as HTMLElement).closest('a');
+    const href = link?.getAttribute('href');
+    if (!href?.startsWith('/')) return;
+    event.preventDefault();
+    globalThis.location.assign(href);
+  };
+
   // Handle redirect
   const handleRedirect = useCallback(() => {
     performLogoutRedirect({
@@ -202,7 +212,10 @@ function LogoutContent() {
 
   return (
     <AuthBackground>
-      <div className="relative z-10 w-full max-w-md mx-auto px-4">
+      <div
+        className="relative z-10 w-full max-w-md mx-auto px-4"
+        onClickCapture={leaveWithFullLoad}
+      >
         {/* Logout Card */}
         <div className="bg-slate-900/80 backdrop-blur-xl rounded-2xl border border-slate-700/50 shadow-2xl overflow-hidden">
           {/* Header */}
