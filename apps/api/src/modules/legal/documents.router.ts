@@ -780,6 +780,7 @@ export const documentsRouter = createTRPCRouter({
     const { ids } = input;
     // Batch-fetch all documents in a single query (NP-038 fix)
     const { userId, documentRepo, docMap } = await loadTenantDocuments(ctx, ids);
+    const deleteFlags = await loadDocumentAutomation(ctx);
 
     const successful: string[] = [];
     const failed: Array<{ id: string; error: string }> = [];
@@ -797,6 +798,9 @@ export const documentsRouter = createTRPCRouter({
           failed.push({ id: docId, error: 'Insufficient permissions to delete' });
           continue;
         }
+
+        // PG-186: the same automation delete guard as a single delete
+        await assertNotDeleteGuarded(ctx, docId, deleteFlags);
 
         document.delete(userId);
         await documentRepo.save(document);

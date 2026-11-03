@@ -118,7 +118,7 @@ export class InMemoryCaseDocumentRepository implements CaseDocumentRepository {
 
       // Check ACL
       const hasAccess = doc.acl.some((ace) => {
-        if (ace.principalId !== userId) return false;
+        if (ace.principalId !== userId || ace.principalType !== 'USER') return false;
         if (ace.accessLevel === AccessLevel.NONE) return false;
         if (ace.expiresAt && ace.expiresAt < now) return false;
         return true;

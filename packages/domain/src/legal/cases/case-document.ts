@@ -352,10 +352,11 @@ export class CaseDocument {
   }
 
   /**
-   * Check if a principal has at least the specified access level
+   * Check if a user has at least the specified access level. Only a USER entry
+   * counts: a ROLE or TENANT entry holding the same id gives that user nothing.
    */
-  hasAccess(principalId: string, requiredLevel: AccessLevel): boolean {
-    const ace = this.data.acl.find((a) => a.principalId === principalId);
+  hasAccess(userId: string, requiredLevel: AccessLevel): boolean {
+    const ace = this.data.acl.find((a) => a.principalId === userId && a.principalType === 'USER');
     if (!ace) return false;
 
     // Check expiration

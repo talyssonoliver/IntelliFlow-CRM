@@ -10,6 +10,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AccessLevel, CaseDocument, DocumentClassification } from '@intelliflow/domain';
 import type { InMemoryCaseDocumentRepository as Repo } from '@intelliflow/adapters';
 import { documentsRouter } from '../documents.router';
+import { assertNotDeleteGuarded, loadDocumentAutomation } from '../document-automation';
 import { createTestContext, prismaMock, TEST_UUIDS } from '../../../test/setup';
 
 const store = vi.hoisted(() => ({ repo: null as unknown as Repo }));
@@ -139,6 +140,49 @@ describe('bulkDelete needs the same access as edit, per document', () => {
     expect(await isDeleted(readOnly.id)).toBe(false);
     expect(await isDeleted(created.id)).toBe(true);
   });
+});
+
+describe('bulkDelete applies the tenant delete guard', () => {
+  it('reports a referenced document and keeps it, loading the settings once', async () => {
+    const real =
+      await vi.importActual<typeof import('../document-automation')>('../document-automation');
+    vi.mocked(loadDocumentAutomation).mockClear();
+    vi.mocked(loadDocumentAutomation).mockResolvedValueOnce({
+      preventDeleteIfReferenced: true,
+    } as never);
+    vi.mocked(assertNotDeleteGuarded).mockImplementationOnce(real.assertNotDeleteGuarded);
+    prismaMock.caseDocument.findFirst.mockResolvedValueOnce({
+      relatedCaseId: CASE_ID,
+      relatedContactId: null,
+    } as never);
+    const doc = await storedDoc(AccessLevel.EDIT);
+
+    const result = await caller().bulkDelete({ ids: [doc.id] });
+
+    expect(result.successful).toEqual([]);
+    expect(result.failed).toHaveLength(1);
+    expect(result.failed[0]?.error).toContain('referenced by a case');
+    expect(await isDeleted(doc.id)).toBe(false);
+    expect(loadDocumentAutomation).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('only a USER entry gives a user access', () => {
+  it.each(['ROLE', 'TENANT'] as const)(
+    'a %s entry holding the caller id gives them nothing',
+    async (type) => {
+      const doc = makeDoc(OWNER);
+      doc.grantAccess(CALLER, type, AccessLevel.ADMIN, OWNER);
+      await store.repo.save(doc);
+
+      await expect(caller().getById({ id: doc.id })).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      await expect(caller().delete({ documentId: doc.id })).rejects.toMatchObject({
+        code: 'FORBIDDEN',
+      });
+      expect((await caller().list({ caseId: CASE_ID })).data).toEqual([]);
+      expect((await caller().list()).data).toEqual([]);
+    }
+  );
 });
 
 describe('list by case shows what the caller can open', () => {
