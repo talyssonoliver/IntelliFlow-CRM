@@ -50,7 +50,12 @@ import {
   updateUserPassword,
   type OAuthProvider,
 } from '../../lib/supabase';
-import { ensureAppUserSession, type Context, type UserSession } from '../../context';
+import {
+  ensureAppUserSession,
+  extractBearerToken,
+  type Context,
+  type UserSession,
+} from '../../context';
 import { getLoginLimiter } from '../../security/login-limiter';
 import { getAuditLogger } from '../../security/audit-logger';
 import { reasonFromCause, ACTIVE_TENANT_HEADER } from '../../security/membership';
@@ -301,6 +306,25 @@ function buildAuthUserPayload(user: AuthenticatedAppUser) {
 // ============================================
 // Auth Router
 // ============================================
+
+/**
+ * Sign the caller out of Supabase everywhere with their own access token, and say
+ * how it went. The token and the provider's error text are never logged.
+ */
+async function revokeProviderSessions(
+  accessToken: string | null
+): Promise<'REVOKED' | 'NO_TOKEN' | 'FAILED'> {
+  if (!accessToken) {
+    console.error('[Auth] Logout without an access token: Supabase sessions not revoked');
+    return 'NO_TOKEN';
+  }
+  const { error } = await signOutUser(accessToken);
+  if (error) {
+    console.error(`[Auth] Supabase signout error: ${error.name}`);
+    return 'FAILED';
+  }
+  return 'REVOKED';
+}
 
 export const authRouter = createTRPCRouter({
   /**
@@ -763,14 +787,10 @@ export const authRouter = createTRPCRouter({
     const sessionService = getSessionService(ctx.prisma);
     const auditLogger = getAuditLogger(ctx.prisma);
 
-    // Sign out user from Supabase using admin API (invalidates all sessions)
-    // IFC-007: Use signOutUser with user ID instead of signOut (which doesn't work server-side)
-    const { error } = await signOutUser(ctx.user.userId);
-
-    if (error) {
-      console.error('[Auth] Supabase signout error:', error);
-      // Don't throw - continue with application session cleanup
-    }
+    // Sign out of Supabase everywhere. A failure doesn't stop application session
+    // cleanup, but the result says so: the user's Supabase sessions may still work.
+    const providerSignOut = await revokeProviderSessions(extractBearerToken(ctx.req));
+    const revoked = providerSignOut === 'REVOKED';
 
     // Revoke all application sessions for user
     const revokedCount = await sessionService.revokeAllUserSessions(ctx.user.userId);
@@ -780,14 +800,15 @@ export const authRouter = createTRPCRouter({
       tenantId: ctx.user.tenantId,
       eventType: 'UserLogout',
       action: 'LOGOUT',
-      actionResult: 'SUCCESS',
+      actionResult: revoked ? 'SUCCESS' : 'PARTIAL',
+      ...(revoked ? {} : { actionReason: providerSignOut }),
       resourceType: 'user',
       resourceId: ctx.user.userId,
       actorId: ctx.user.userId,
       actorEmail: ctx.user.email,
     });
 
-    return { success: true, sessionsRevoked: revokedCount };
+    return { success: revoked, providerSignOut, sessionsRevoked: revokedCount };
   }),
 
   /**
@@ -1077,7 +1098,7 @@ export const authRouter = createTRPCRouter({
     const sessionService = getSessionService(ctx.prisma);
     const auditLogger = getAuditLogger(ctx.prisma);
 
-    const revoked = await sessionService.revokeSession(input.sessionId);
+    const revoked = await sessionService.revokeUserSession(ctx.user.userId, input.sessionId);
 
     if (!revoked) {
       throw new TRPCError({

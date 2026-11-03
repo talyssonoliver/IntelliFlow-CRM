@@ -2,10 +2,10 @@
  * useLogout Hook
  *
  * Orchestrates the logout flow with proper cleanup:
- * 1. Clear client-side tokens (synchronous, security-critical)
- * 2. Clear React Query cache
- * 3. Broadcast logout to other tabs
- * 4. Attempt server notification (best effort, 3s timeout)
+ * 1. Attempt server logout (best effort, 3s timeout), which needs the access token
+ * 2. Clear client-side tokens (security-critical)
+ * 3. Clear React Query cache
+ * 4. Broadcast logout to other tabs
  * 5. Redirect to login page
  *
  * IMPLEMENTS: PG-018 (Logout Page)
@@ -87,7 +87,27 @@ export function useLogout(): UseLogoutReturn {
     setError(null);
 
     try {
-      // Step 1: Clear client-side tokens immediately (security-critical)
+      // Step 1: Server logout via tRPC (best effort, 3s timeout). This comes first
+      // because the call needs the access token, to revoke the user's sessions.
+      // IFC-007: Fixed to use tRPC instead of non-existent REST endpoint
+      try {
+        const serverResult = await Promise.race([
+          logoutMutation.mutateAsync(),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Server timeout')), SERVER_TIMEOUT_MS)
+          ),
+        ]);
+        if (!serverResult.success) {
+          console.warn(
+            `[useLogout] Sessions not revoked on the server: ${serverResult.providerSignOut}`
+          );
+        }
+      } catch (serverError) {
+        // Log but don't fail - tokens are cleared next, whatever the server said
+        console.warn('[useLogout] Server notification failed:', serverError);
+      }
+
+      // Step 2: Clear client-side tokens (security-critical)
       await cleanupSession({
         clearLocalStorage: true,
         clearSessionStorage: true,
@@ -97,26 +117,12 @@ export function useLogout(): UseLogoutReturn {
         preservePreferences: true,
       });
 
-      // Step 2: Clear React Query cache
+      // Step 3: Clear React Query cache
       queryClient.clear();
 
-      // Step 3: Broadcast logout to other tabs
+      // Step 4: Broadcast logout to other tabs
       if (authBroadcast) {
         authBroadcast.broadcast('LOGOUT_EVENT');
-      }
-
-      // Step 4: Server logout via tRPC (best effort, 3s timeout)
-      // IFC-007: Fixed to use tRPC instead of non-existent REST endpoint
-      try {
-        await Promise.race([
-          logoutMutation.mutateAsync(),
-          new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error('Server timeout')), SERVER_TIMEOUT_MS)
-          ),
-        ]);
-      } catch (serverError) {
-        // Log but don't fail - tokens are already cleared
-        console.warn('[useLogout] Server notification failed:', serverError);
       }
 
       // Step 5: Redirect to login

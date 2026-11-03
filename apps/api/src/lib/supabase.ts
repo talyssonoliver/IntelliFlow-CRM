@@ -16,7 +16,13 @@
  * - Test (NODE_ENV=test or VITEST): Allows mock keys for unit testing
  */
 
-import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-js';
+import {
+  createClient,
+  isAuthSessionMissingError,
+  SupabaseClient,
+  User,
+  Session,
+} from '@supabase/supabase-js';
 import { z } from 'zod';
 import { leadSearchResultSchema, contactSearchResultSchema } from '@intelliflow/validators';
 import { isJwtShaped } from './jwt-shape';
@@ -351,17 +357,18 @@ export async function signIn(email: string, password: string): Promise<SignInRes
 }
 
 /**
- * Sign out a specific user by ID (server-side admin operation)
+ * Sign out a user everywhere (server-side admin operation)
  * IFC-007: Added for proper server-side logout
  *
- * Uses Supabase Admin API to invalidate all sessions for a user.
- * This is the correct way to log out a user from the server side.
+ * Uses the Supabase Admin API to invalidate all of the user's sessions. It takes
+ * the user's own access token, not their id: the library sends it as the bearer.
  */
-export async function signOutUser(userId: string): Promise<{ error: Error | null }> {
+export async function signOutUser(accessToken: string): Promise<{ error: Error | null }> {
   try {
-    // Use admin API to sign out user globally
-    const { error } = await supabaseAdmin.auth.admin.signOut(userId, 'global');
-    return { error };
+    const { error } = await supabaseAdmin.auth.admin.signOut(accessToken, 'global');
+    // A session that is already gone is what signing out asks for. Other refusals
+    // stay errors: a bad service key answers 401 or 403 as well.
+    return { error: isAuthSessionMissingError(error) ? null : error };
   } catch (err) {
     return { error: err instanceof Error ? err : new Error('Failed to sign out user') };
   }

@@ -16,6 +16,8 @@ import {
   oauthCallbackSchema,
   refreshTokenSchema,
   revokeSessionSchema,
+  sessionIdSchema,
+  sessionInfoSchema,
   mfaMethodSchema,
   strongPasswordSchema,
   changePasswordSchema,
@@ -378,17 +380,25 @@ describe('Auth Validators', () => {
   // Revoke Session Schema
   // ============================================
   describe('revokeSessionSchema', () => {
-    it('validates session ID', () => {
-      const result = revokeSessionSchema.safeParse({
-        sessionId: '550e8400-e29b-41d4-a716-446655440000',
-      });
+    it('accepts the generated format, 64 lower-case hex characters', () => {
+      const result = revokeSessionSchema.safeParse({ sessionId: 'd4'.repeat(32) });
       expect(result.success).toBe(true);
     });
 
-    it('rejects invalid UUID', () => {
-      const result = revokeSessionSchema.safeParse({
-        sessionId: 'invalid-id',
-      });
+    it('uses the same id format as a listed session', () => {
+      expect(sessionIdSchema.safeParse('d4'.repeat(32)).success).toBe(true);
+      expect(sessionInfoSchema.shape.id).toBe(sessionIdSchema);
+    });
+
+    it.each([
+      ['not an id', 'invalid-id'],
+      ['a uuid', '550e8400-e29b-41d4-a716-446655440000'],
+      ['one character short', 'd'.repeat(63)],
+      ['one character long', 'd'.repeat(65)],
+      ['upper-case hex', 'D4'.repeat(32)],
+      ['non-hex characters', 'z'.repeat(64)],
+    ])('rejects %s', (_name, sessionId) => {
+      const result = revokeSessionSchema.safeParse({ sessionId });
       expect(result.success).toBe(false);
     });
   });
