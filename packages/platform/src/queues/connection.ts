@@ -20,6 +20,7 @@ import { requiredProdEnv } from '@intelliflow/validators/required-url';
 export interface RedisConnectionConfig {
   host: string;
   port: number;
+  username?: string;
   password?: string;
   db?: number;
   tls?: boolean;
@@ -36,6 +37,7 @@ export function getDefaultConnectionConfig(): RedisConnectionConfig {
   return {
     host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
     port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+    username: process.env.REDIS_USERNAME || undefined,
     password: process.env.REDIS_PASSWORD || undefined,
     db: Number.parseInt(process.env.REDIS_DB || '0', 10),
     tls: process.env.REDIS_TLS === 'true',
@@ -57,6 +59,7 @@ export function getBullMQConnectionOptions(
   return {
     host: mergedConfig.host,
     port: mergedConfig.port,
+    ...(mergedConfig.username ? { username: mergedConfig.username } : {}),
     password: mergedConfig.password,
     db: mergedConfig.db,
     maxRetriesPerRequest: null, // Required by BullMQ for blocking commands

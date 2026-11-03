@@ -17,7 +17,7 @@ import { context as otelContext, propagation } from '@opentelemetry/api';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure, adminTenantProcedure } from '../../trpc';
 import { type Context } from '../../context';
-import { loadBullMQ } from '../../lib/load-bullmq';
+import { enqueueOneShot } from '../../lib/queue-producer';
 import { RBACService } from '../../security/rbac';
 import { getAuditLogger } from '../../security/audit';
 import { type RoleName } from '../../security/types';
@@ -46,7 +46,6 @@ import {
   getHourInTimezone,
   safeTimezone,
 } from '../../lib/timezone-utils';
-import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 /**
  * Maps pinnable entity types to their Prisma model delegate names.
@@ -437,23 +436,7 @@ async function enqueueInsightGeneration(
   if (!idSchema.safeParse(tenantId).success || !recordIdSchema.safeParse(tenantId).success) return;
 
   try {
-    const { Queue } = await loadBullMQ();
     const { queueName, queueConfig } = await getAIInsightsQueueConfig();
-    const queue = new Queue(queueName, {
-      connection: {
-        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-      },
-      defaultJobOptions: {
-        attempts: queueConfig.defaultJobOptions.attempts,
-        backoff: {
-          type: queueConfig.defaultJobOptions.backoff.type,
-          delay: queueConfig.defaultJobOptions.backoff.delay,
-        },
-        removeOnComplete: queueConfig.defaultJobOptions.removeOnComplete,
-        removeOnFail: queueConfig.defaultJobOptions.removeOnFail,
-      },
-    });
 
     // Cap arrays before enqueuing — the worker also caps, but trimming here
     // avoids bloated Redis payloads when callers pass 50+ items.
@@ -476,7 +459,8 @@ async function enqueueInsightGeneration(
 
     const _otelCarrierInsight: Record<string, string> = {};
     propagation.inject(otelContext.active(), _otelCarrierInsight);
-    await queue.add(
+    await enqueueOneShot(
+      queueName,
       'generate-insights',
       {
         tenantId,
@@ -491,15 +475,21 @@ async function enqueueInsightGeneration(
         correlationId: `insight-${tenantId}-${Date.now()}`,
         _otelCarrier: _otelCarrierInsight,
       },
-      { jobId }
+      {
+        jobId,
+        attempts: queueConfig.defaultJobOptions.attempts,
+        backoff: {
+          type: queueConfig.defaultJobOptions.backoff.type,
+          delay: queueConfig.defaultJobOptions.backoff.delay,
+        },
+        removeOnComplete: queueConfig.defaultJobOptions.removeOnComplete,
+        removeOnFail: queueConfig.defaultJobOptions.removeOnFail,
+      }
     );
-
-    await queue.close();
 
     // Enqueued successfully — no log needed in normal flow
   } catch {
-    // Silent catch — insight generation is best-effort
-    // BullMQ queue errors are expected when Redis is unavailable
+    // Insight generation is best-effort, and enqueueOneShot has logged the failure
   }
 }
 

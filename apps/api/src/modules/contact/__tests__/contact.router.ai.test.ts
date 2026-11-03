@@ -19,10 +19,16 @@ const queueCloseMock = vi.fn().mockResolvedValue(undefined);
 const queueEventsCloseMock = vi.fn().mockResolvedValue(undefined);
 
 class MockQueue {
+  on() {
+    return this;
+  }
   add = queueAddMock;
   close = queueCloseMock;
 }
 class MockQueueEvents {
+  on() {
+    return this;
+  }
   close = queueEventsCloseMock;
 }
 

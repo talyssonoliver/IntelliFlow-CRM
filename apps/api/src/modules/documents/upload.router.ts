@@ -3,8 +3,7 @@ import { createTRPCRouter, protectedProcedure, tenantProcedure } from '../../trp
 import { TRPCError } from '@trpc/server';
 import { IngestionOrchestrator } from '@intelliflow/application';
 import type { CaseDocumentRepository } from '@intelliflow/domain';
-import { loadBullMQ } from '../../lib/load-bullmq';
-import { requiredProdEnv } from '@intelliflow/validators/required-url';
+import { enqueueOneShot } from '../../lib/queue-producer';
 import { loadDocumentAutomation, normalizeFilename } from '../legal/document-automation';
 import {
   assertMimeAllowed,
@@ -53,12 +52,6 @@ async function enqueueDocumentProcessing(params: {
   userId: string;
   filename: string;
 }) {
-  const { Queue } = await loadBullMQ();
-  const connection = {
-    host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-    port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-  };
-
   const isImage = IMAGE_MIME_TYPES.includes(params.mimeType);
   const queueName = isImage ? 'intelliflow-ocr-processing' : 'intelliflow-text-extraction';
 
@@ -75,9 +68,7 @@ async function enqueueDocumentProcessing(params: {
     },
   };
 
-  const queue = new Queue(queueName, { connection });
-  await queue.add(isImage ? 'ocr-process' : 'extract-text', jobData);
-  await queue.close();
+  await enqueueOneShot(queueName, isImage ? 'ocr-process' : 'extract-text', jobData);
 }
 
 /**
