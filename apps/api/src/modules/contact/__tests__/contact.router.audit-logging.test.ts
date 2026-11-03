@@ -47,12 +47,18 @@ vi.mock('../contact-reassign', () => ({
 // failure). Mock the loader so the procedures get a no-op Queue and never touch Redis.
 vi.mock('../../../lib/load-bullmq', () => {
   class MockQueue {
+    on() {
+      return this;
+    }
     add = vi.fn().mockResolvedValue({
       waitUntilFinished: vi.fn().mockResolvedValue({ suggestions: [] }),
     });
     close = vi.fn().mockResolvedValue(undefined);
   }
   class MockQueueEvents {
+    on() {
+      return this;
+    }
     close = vi.fn().mockResolvedValue(undefined);
   }
   return {

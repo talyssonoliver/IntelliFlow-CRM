@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/api-client",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "private": true,
   "description": "Type-safe tRPC API client for IntelliFlow CRM",
   "main": "./dist/index.js",

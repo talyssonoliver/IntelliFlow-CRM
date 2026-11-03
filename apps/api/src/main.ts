@@ -6,6 +6,8 @@
  * the API library without pulling runtime-only HTTP server code.
  */
 
+// Must stay the first import: refuses to start in production without a valid license key.
+import '@intelliflow/validators/enforce-license';
 import './instrument';
 import { initializeSentry } from './tracing/sentry';
 import { disconnectPrisma } from '@intelliflow/db';

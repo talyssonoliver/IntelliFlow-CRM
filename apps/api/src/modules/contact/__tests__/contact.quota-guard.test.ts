@@ -11,10 +11,16 @@ import { overQuota, quotaRejection, underQuota } from '../../../test/quota';
 vi.mock('../../../lib/load-bullmq', () => ({
   loadBullMQ: vi.fn(async () => ({
     Queue: class MockQueue {
+      on() {
+        return this;
+      }
       add = vi.fn().mockResolvedValue({ id: 'job-stub' });
       close = vi.fn().mockResolvedValue(undefined);
     },
     QueueEvents: class MockQueueEvents {
+      on() {
+        return this;
+      }
       close = vi.fn().mockResolvedValue(undefined);
     },
   })),

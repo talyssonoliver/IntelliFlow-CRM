@@ -8,6 +8,8 @@
  * @task IFC-016/IFC-150 Integration
  */
 
+// Must stay the first import: refuses to start in production without a valid license key.
+import '@intelliflow/validators/enforce-license';
 import type { IncomingMessage } from 'node:http';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';

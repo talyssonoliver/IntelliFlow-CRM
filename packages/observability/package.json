@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/observability",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "private": true,
   "description": "Observability layer for IntelliFlow CRM - OpenTelemetry, logging, and metrics",
   "main": "./dist/index.js",

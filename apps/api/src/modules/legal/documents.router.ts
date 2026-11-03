@@ -97,10 +97,9 @@ async function assertPrincipalInTenant(
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'User not found in this tenant' });
   }
 }
-import { loadBullMQ } from '../../lib/load-bullmq';
+import { enqueueOneShot } from '../../lib/queue-producer';
 import { loadDocumentAutomation, assertNotDeleteGuarded } from './document-automation';
 import { enforceDocumentPolicies } from './document-policies';
-import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { pickTrustedForwardedIp } from '../../security/client-ip';
 // PG-186 Cat-2 helpers (notifyDocumentReassignment, notifyOnDuplicate consumer)
 // are exported from document-automation.ts and will be consumed by:
@@ -252,11 +251,6 @@ export const documentsRouter = createTRPCRouter({
 
     // Fire-and-forget: enqueue text extraction / OCR (best-effort)
     (async () => {
-      const { Queue } = await loadBullMQ();
-      const connection = {
-        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-      };
       const imageMimes = ['image/jpeg', 'image/png', 'image/gif', 'image/tiff'];
       const isImage = imageMimes.includes(input.mimeType);
       const queueName = isImage ? 'intelliflow-ocr-processing' : 'intelliflow-text-extraction';
@@ -267,8 +261,7 @@ export const documentsRouter = createTRPCRouter({
         'text/plain': 'txt',
         'text/html': 'html',
       };
-      const queue = new Queue(queueName, { connection });
-      await queue.add(isImage ? 'ocr-process' : 'extract-text', {
+      await enqueueOneShot(queueName, isImage ? 'ocr-process' : 'extract-text', {
         documentId: document.id,
         sourceUrl: `storage://${storageKey}`,
         format: isImage ? input.mimeType.split('/')[1] : formatMap[input.mimeType] || 'txt',
@@ -277,7 +270,6 @@ export const documentsRouter = createTRPCRouter({
         language: 'en',
         options: { extractMetadata: true, generateEmbeddings: true },
       });
-      await queue.close();
     })().catch(() => {});
 
     return document.toJSON();

@@ -25,8 +25,7 @@ import {
   adminTenantProcedure,
   tenantProcedure,
 } from '../../trpc';
-import { loadBullMQ } from '../../lib/load-bullmq';
-import { requiredProdEnv } from '@intelliflow/validators/required-url';
+import { withQueueReader } from '../../lib/queue-producer';
 
 // ============================================================
 // Input Schemas
@@ -427,15 +426,9 @@ export const aiMonitoringRouter = createTRPCRouter({
     )
     .query(async ({ input }) => {
       try {
-        const { Queue } = await loadBullMQ();
         const queueNames = input.queue
           ? [input.queue]
           : ['ai-scoring', 'ai-prediction', 'ai-insights'];
-
-        const connection = {
-          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-        };
 
         const allFailed: Array<{
           id: string;
@@ -448,25 +441,25 @@ export const aiMonitoringRouter = createTRPCRouter({
         }> = [];
 
         for (const qName of queueNames) {
-          const q = new Queue(qName, { connection });
-          const counts = await q.getJobCounts();
-          if (counts.failed > 0) {
-            const failed = await q.getFailed(0, counts.failed);
-            for (const job of failed) {
-              allFailed.push({
-                id: job.id ?? 'unknown',
-                queue: qName,
-                name: job.name,
-                failedReason: job.failedReason || 'Unknown',
-                attemptsMade: job.attemptsMade,
-                timestamp: job.finishedOn
-                  ? new Date(job.finishedOn).toISOString()
-                  : new Date().toISOString(),
-                data: job.data as Record<string, unknown>,
-              });
+          await withQueueReader(qName, async (q) => {
+            const counts = await q.getJobCounts();
+            if (counts.failed > 0) {
+              const failed = await q.getFailed(0, counts.failed);
+              for (const job of failed) {
+                allFailed.push({
+                  id: job.id ?? 'unknown',
+                  queue: qName,
+                  name: job.name,
+                  failedReason: job.failedReason || 'Unknown',
+                  attemptsMade: job.attemptsMade,
+                  timestamp: job.finishedOn
+                    ? new Date(job.finishedOn).toISOString()
+                    : new Date().toISOString(),
+                  data: job.data as Record<string, unknown>,
+                });
+              }
             }
-          }
-          await q.close();
+          });
         }
 
         // Sort by most recent first

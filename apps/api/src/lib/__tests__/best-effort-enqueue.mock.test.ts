@@ -10,6 +10,9 @@ const closeMock = vi.fn();
 const disconnectMock = vi.fn();
 
 class MockQueue {
+  on() {
+    return this;
+  }
   constructor(
     public name: string,
     public opts: unknown

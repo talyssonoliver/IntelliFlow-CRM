@@ -12,6 +12,9 @@ const mockQueueAdd = vi.hoisted(() => vi.fn());
 
 vi.mock('bullmq', () => ({
   Queue: class MockQueue {
+    on() {
+      return this;
+    }
     add = mockQueueAdd;
     close = vi.fn().mockResolvedValue(undefined);
   },

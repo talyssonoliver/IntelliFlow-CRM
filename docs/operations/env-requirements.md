@@ -13,6 +13,25 @@ clear error message.
 
 ---
 
+## License Key
+
+In production (`NODE_ENV=production`), the API, the WebSocket server, and every
+worker refuse to start unless the SHA-256 of `IFC_LICENSE_KEY` matches the
+constant in `packages/validators/src/license-check.ts`. Development and tests
+are unaffected. The check reads the environment only: it makes no network call
+and sends no telemetry, and it never prints the key.
+
+| Variable          | Required        | Description                        |
+| ----------------- | --------------- | ---------------------------------- |
+| `IFC_LICENSE_KEY` | Production only | Set on each API and worker service |
+
+Set it on every service before deploying a build that has this check. The hash
+covers the exact bytes of the value, so a trailing newline changes it. To change
+the key, set the new value on each service and update the constant in the same
+release.
+
+---
+
 ## Core Services
 
 ### API Server (`apps/api`)

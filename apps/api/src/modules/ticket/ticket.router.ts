@@ -25,7 +25,7 @@ import {
   type CreateTicketInput,
 } from '@intelliflow/validators/ticket';
 import { type Context } from '../../context';
-import { loadBullMQ } from '../../lib/load-bullmq';
+import { enqueueOneShot } from '../../lib/queue-producer';
 import { assertTenantContext, type TenantAwareContext } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
 import {
@@ -40,7 +40,6 @@ import {
   resolveDefaultSlaPolicyId,
   trimTicketDescription,
 } from './ticket-automation';
-import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 // ADR-070: server-side SUPPORT entitlement — ticket routers
 // (a tenant on a plan without it must not reach these endpoints directly).
@@ -104,26 +103,10 @@ function notifyAssignee(
 
   // BullMQ email notification (fire-and-forget)
   (async () => {
-    const { Queue } = await loadBullMQ();
     const { QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } =
       await import('@intelliflow/platform/queues/types');
     const qConfig = DEFAULT_QUEUE_CONFIGS[QUEUE_NAMES.EMAIL_NOTIFICATIONS];
-    const queue = new Queue(QUEUE_NAMES.EMAIL_NOTIFICATIONS, {
-      connection: {
-        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-      },
-      defaultJobOptions: {
-        attempts: qConfig.defaultJobOptions.attempts,
-        backoff: {
-          type: qConfig.defaultJobOptions.backoff.type,
-          delay: qConfig.defaultJobOptions.backoff.delay,
-        },
-        removeOnComplete: qConfig.defaultJobOptions.removeOnComplete,
-        removeOnFail: qConfig.defaultJobOptions.removeOnFail,
-      },
-    });
-    await queue.add('notification:email', {
+    const jobData = {
       type: 'ticket_assigned',
       recipientUserId: params.assigneeId,
       tenantId: params.tenantId,
@@ -131,8 +114,16 @@ function notifyAssignee(
       body: `Ticket "${params.subject}" has been assigned to you. View it at /tickets/${params.ticketId}`,
       entityType: 'ticket',
       entityId: params.ticketId,
+    };
+    await enqueueOneShot(QUEUE_NAMES.EMAIL_NOTIFICATIONS, 'notification:email', jobData, {
+      attempts: qConfig.defaultJobOptions.attempts,
+      backoff: {
+        type: qConfig.defaultJobOptions.backoff.type,
+        delay: qConfig.defaultJobOptions.backoff.delay,
+      },
+      removeOnComplete: qConfig.defaultJobOptions.removeOnComplete,
+      removeOnFail: qConfig.defaultJobOptions.removeOnFail,
     });
-    await queue.close();
   })().catch(() => {});
 }
 

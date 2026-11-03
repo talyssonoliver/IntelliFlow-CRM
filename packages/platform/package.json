@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/platform",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "private": true,
   "description": "Platform utilities for IntelliFlow CRM (feature flags, rollout primitives)",
   "main": "./dist/index.js",

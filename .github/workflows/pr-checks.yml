@@ -58,6 +58,12 @@ jobs:
     # processes non-draft PRs by definition, so we allow the run unconditionally
     # when the trigger is merge_group.
     if: github.event_name == 'merge_group' || github.event.pull_request.draft == false
+    permissions:
+      # A private repo's default token can't read the PR, so the title check
+      # failed with "Resource not accessible by integration". A permissions block
+      # drops everything it doesn't name, so checkout needs contents: read here.
+      contents: read
+      pull-requests: read
     steps:
       - uses: actions/checkout@v7
         with:
