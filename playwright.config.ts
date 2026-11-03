@@ -45,6 +45,7 @@ const AUTHED_SPECS = [
  */
 const UNAUTH_SPECS = [
   '**/auth-flow.spec.ts',
+  '**/root-loading.spec.ts',
   '**/logout-privacy.spec.ts',
   '**/signup.spec.ts',
   '**/mfa.spec.ts',
