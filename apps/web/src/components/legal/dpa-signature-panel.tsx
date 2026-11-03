@@ -47,8 +47,8 @@ export function DpaSignaturePanel({ currentVersion, downloadPath }: DpaSignature
     <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
       This acknowledgment is stored locally in your browser. For a countersigned DPA for enterprise
       records, contact{' '}
-      <a href="mailto:legal@leangency.com" className="underline">
-        legal@leangency.com
+      <a href="mailto:hello@leangency.com" className="underline">
+        hello@leangency.com
       </a>{' '}
       .
     </p>

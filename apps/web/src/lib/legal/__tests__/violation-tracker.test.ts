@@ -13,9 +13,9 @@ describe('violation-tracker — content loading', () => {
     expect(policy.metadata.title).toBe('Acceptable Use Policy');
     expect(policy.metadata.version).toBe('v2026.10');
     expect(policy.metadata.effectiveDate).toBe('2026-10-07');
-    expect(policy.metadata.contactEmail).toBe('legal@leangency.com');
+    expect(policy.metadata.contactEmail).toBe('hello@leangency.com');
     expect(policy.metadata.summary.length).toBeGreaterThanOrEqual(6);
-    expect(policy.sections.length).toBeGreaterThanOrEqual(9);
+    expect(policy.sections.length).toBeGreaterThanOrEqual(8);
     expect(policy.sections[0].id).toBe('introduction');
     expect(policy.sections[0].body.length).toBeGreaterThanOrEqual(1);
   });

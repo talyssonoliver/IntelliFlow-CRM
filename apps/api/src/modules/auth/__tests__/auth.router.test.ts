@@ -58,6 +58,7 @@ const {
     createSession: vi.fn(),
     getUserSessions: vi.fn(),
     revokeSession: vi.fn(),
+    revokeUserSession: vi.fn(),
     revokeAllUserSessions: vi.fn(),
   },
   mockSignIn: vi.fn(),
@@ -234,6 +235,7 @@ describe('authRouter', () => {
     mockSessionService.createSession.mockResolvedValue({ id: TEST_UUIDS.session });
     mockSessionService.getUserSessions.mockResolvedValue([]);
     mockSessionService.revokeSession.mockResolvedValue(true);
+    mockSessionService.revokeUserSession.mockResolvedValue(true);
     mockSessionService.revokeAllUserSessions.mockResolvedValue(1);
 
     // Supabase defaults
@@ -605,14 +607,20 @@ describe('authRouter', () => {
 
   describe('logout', () => {
     it('should logout user and revoke sessions', async () => {
-      const mockContext = createMockContext({ authenticated: true });
+      const callerJwt = ['header', 'payload', 'signature'].join('.');
+      const mockContext = {
+        ...createMockContext({ authenticated: true }),
+        req: new Request('https://api.example.invalid/', {
+          headers: { authorization: `Bearer ${callerJwt}` },
+        }),
+      };
       const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.logout();
 
       expect(result.success).toBe(true);
       expect(result.sessionsRevoked).toBe(1);
-      expect(mockSignOutUser).toHaveBeenCalledWith(TEST_UUIDS.user);
+      expect(mockSignOutUser).toHaveBeenCalledWith(callerJwt);
       expect(mockSessionService.revokeAllUserSessions).toHaveBeenCalledWith(TEST_UUIDS.user);
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -651,16 +659,22 @@ describe('authRouter', () => {
   });
 
   describe('revokeSession', () => {
+    const SESSION_ID = 'd4'.repeat(32);
+
     it('should revoke specific session', async () => {
       const mockContext = createMockContext({ authenticated: true });
       const caller = authRouter.createCaller(mockContext);
 
       const result = await caller.revokeSession({
-        sessionId: TEST_UUIDS.session,
+        sessionId: SESSION_ID,
       });
 
       expect(result.success).toBe(true);
-      expect(mockSessionService.revokeSession).toHaveBeenCalledWith(TEST_UUIDS.session);
+      expect(mockSessionService.revokeUserSession).toHaveBeenCalledWith(
+        mockContext.user?.userId,
+        SESSION_ID
+      );
+      expect(mockSessionService.revokeSession).not.toHaveBeenCalled();
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
         expect.objectContaining({
           eventType: 'SessionRevoked',
@@ -670,14 +684,14 @@ describe('authRouter', () => {
     });
 
     it('should throw error for non-existent session', async () => {
-      mockSessionService.revokeSession.mockResolvedValue(false);
+      mockSessionService.revokeUserSession.mockResolvedValue(false);
 
       const mockContext = createMockContext({ authenticated: true });
       const caller = authRouter.createCaller(mockContext);
 
       await expect(
         caller.revokeSession({
-          sessionId: TEST_UUIDS.nonExistentSession,
+          sessionId: SESSION_ID,
         })
       ).rejects.toThrow(/Session not found/);
     });

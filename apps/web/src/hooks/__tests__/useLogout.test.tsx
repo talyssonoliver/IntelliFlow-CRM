@@ -168,6 +168,78 @@ describe('useLogout', () => {
       expect(mockLogoutMutateAsync).toHaveBeenCalled();
     });
 
+    it('should call the server before clearing tokens, since the call needs the token', async () => {
+      const { cleanupSession } = await import('@/lib/shared/session-cleanup');
+      const { result } = renderHook(() => useLogout(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        await result.current.logout();
+        vi.advanceTimersByTime(100);
+      });
+
+      const serverCall = mockLogoutMutateAsync.mock.invocationCallOrder[0];
+      const cleanup = vi.mocked(cleanupSession).mock.invocationCallOrder[0];
+      expect(serverCall).toBeLessThan(cleanup);
+    });
+
+    it('should still clear tokens and redirect when the server never answers', async () => {
+      const { cleanupSession } = await import('@/lib/shared/session-cleanup');
+      mockLogoutMutateAsync.mockImplementationOnce(() => new Promise(() => {}));
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { result } = renderHook(() => useLogout(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        const pending = result.current.logout();
+        await vi.advanceTimersByTimeAsync(3000);
+        await pending;
+      });
+
+      expect(cleanupSession).toHaveBeenCalled();
+      expect(mockPush).toHaveBeenCalledWith('/login?logged_out=true');
+      expect(warn).toHaveBeenCalled();
+    });
+
+    it('should still clear tokens and redirect when the server refuses', async () => {
+      const { cleanupSession } = await import('@/lib/shared/session-cleanup');
+      mockLogoutMutateAsync.mockRejectedValueOnce(new Error('refused'));
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { result } = renderHook(() => useLogout(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        await result.current.logout();
+      });
+
+      expect(cleanupSession).toHaveBeenCalled();
+      expect(mockPush).toHaveBeenCalledWith('/login?logged_out=true');
+    });
+
+    it('should warn, then finish, when the server could not revoke the sessions', async () => {
+      const { cleanupSession } = await import('@/lib/shared/session-cleanup');
+      mockLogoutMutateAsync.mockResolvedValueOnce({
+        success: false,
+        providerSignOut: 'FAILED',
+        sessionsRevoked: 0,
+      });
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const { result } = renderHook(() => useLogout(), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        await result.current.logout();
+      });
+
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('FAILED'));
+      expect(cleanupSession).toHaveBeenCalled();
+      expect(mockPush).toHaveBeenCalledWith('/login?logged_out=true');
+    });
+
     it('should redirect to /login after completion', async () => {
       const { result } = renderHook(() => useLogout(), {
         wrapper: createWrapper(),

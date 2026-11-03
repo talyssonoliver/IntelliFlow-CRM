@@ -281,11 +281,16 @@ export type SsoResolution = z.infer<typeof ssoResolutionSchema>;
 // ============================================
 
 /**
+ * A session id as SessionService generates it: 32 random bytes in hex.
+ */
+export const sessionIdSchema = z.string().check(z.regex(/^[a-f0-9]{64}$/, 'Invalid session id'));
+
+/**
  * Session info schema
  * Represents an active user session
  */
 export const sessionInfoSchema = z.object({
-  id: idSchema,
+  id: sessionIdSchema,
   userId: idSchema,
   deviceInfo: z.object({
     browser: z.string().optional(),
@@ -315,7 +320,7 @@ export type ActiveSessionsResponse = z.infer<typeof activeSessionsResponseSchema
  * Revoke session schema
  */
 export const revokeSessionSchema = z.object({
-  sessionId: idSchema,
+  sessionId: sessionIdSchema,
 });
 
 export type RevokeSessionInput = z.infer<typeof revokeSessionSchema>;

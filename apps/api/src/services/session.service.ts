@@ -479,6 +479,16 @@ export class SessionService {
   }
 
   /**
+   * Revoke a session on behalf of a user: only one that belongs to them. Another
+   * user's session returns false, the same as a missing one, and is left alone.
+   */
+  async revokeUserSession(userId: string, sessionId: string): Promise<boolean> {
+    const session = await this.getSession(sessionId);
+    if (session?.userId !== userId) return false;
+    return this.revokeSession(sessionId);
+  }
+
+  /**
    * Revoke all sessions for a user
    */
   async revokeAllUserSessions(userId: string): Promise<number> {

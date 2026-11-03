@@ -26,6 +26,6 @@ describe('pricing claims', () => {
   it('answers the refund question with what the Terms of Service say', () => {
     const refund = pricingData.faqs.find((f) => /refund/i.test(f.question));
     expect(refund?.answer).toMatch(/cancelling stops future renewals/);
-    expect(refund?.answer).toContain('legal@leangency.com');
+    expect(refund?.answer).toContain('hello@leangency.com');
   });
 });

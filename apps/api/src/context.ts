@@ -186,7 +186,7 @@ export interface Context {
 /**
  * Extract Bearer token from Authorization header
  */
-function extractBearerToken(req?: Request): string | null {
+export function extractBearerToken(req?: Request): string | null {
   if (!req) return null;
 
   const authHeader = req.headers.get('Authorization') || req.headers.get('authorization');
