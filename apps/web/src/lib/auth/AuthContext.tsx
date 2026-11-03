@@ -33,7 +33,8 @@ import type { OAuthProvider } from '@intelliflow/domain';
 import { getSupabaseProviderName } from './sso-handler';
 import { isTokenUsable } from './jwt';
 import { storeSessionTokens } from '@/lib/shared/token-exchange';
-import { AUTH_TOKEN_CHANGED_EVENT } from '@/lib/shared/session-cleanup';
+import { AUTH_TOKEN_CHANGED_EVENT, leaveAfterLogout } from '@/lib/shared/session-cleanup';
+import { watchForLogoutElsewhere, type PageSession } from './logout-sync';
 import { clearActiveTenant } from '@/lib/tenant/active-tenant';
 
 export type AuthMfaMethod = 'totp' | 'sms' | 'email' | 'backup';
@@ -117,7 +118,7 @@ export interface AuthContextType extends AuthState {
   loginWithOAuth: (provider: OAuthProvider) => Promise<void>;
   loginWithSso: (providerId: string) => Promise<void>;
   verifyMfa: (code: string, method: AuthMfaMethod) => Promise<boolean>;
-  logout: () => Promise<void>;
+  logout: (options?: { navigate?: boolean }) => Promise<void>;
   refreshSession: () => Promise<void>;
   // State methods
   clearError: () => void;
@@ -264,7 +265,6 @@ function resolveQueryStateUpdate(statusQuery: {
 // ============================================
 
 export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
-  const router = useRouter();
   const queryClient = useQueryClient();
   const [state, setState] = useState<AuthState>(initialState);
 
@@ -290,6 +290,17 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     // page navigation when React Query's gcTime evicts and re-fetches the cache.
     staleTime: Infinity,
   });
+
+  // Another tab logging out, or the browser restoring this page from its back-forward
+  // cache after logout, must take this page out of the portal too.
+  const pageSessionRef = useRef<PageSession | null>(null);
+  useEffect(() => {
+    const token = state.isAuthenticated ? localStorage.getItem('accessToken') : null;
+    pageSessionRef.current = state.isAuthenticated
+      ? { subject: (token && decodeJwtPayload(token)?.sub) || null }
+      : null;
+  }, [state.isAuthenticated]);
+  useEffect(() => watchForLogoutElsewhere(() => pageSessionRef.current), []);
 
   // Re-validate auth status whenever a token is (re)written by ANY flow — OAuth
   // callback, email login, signup verification, MFA — since `syncTokenToCookie`
@@ -808,65 +819,65 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
    * 2. Invalidate React Query cache
    * 3. Broadcast logout to other tabs
    * 4. Clear React state
-   * 5. Redirect to public home
+   * 5. Leave with a full page load to the public home page, unless the caller
+   *    (the /logout page) does that itself
    */
-  const logout = useCallback(async (): Promise<void> => {
-    setState((prev) => ({ ...prev, isLoading: true }));
+  const logout = useCallback(
+    async (options?: { navigate?: boolean }): Promise<void> => {
+      setState((prev) => ({ ...prev, isLoading: true }));
 
-    try {
-      const serverResult = await logoutMutation.mutateAsync();
-      if (!serverResult.success) {
-        console.warn(`Sessions not revoked on the server: ${serverResult.providerSignOut}`);
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      // Import and run comprehensive cleanup (PG-018)
-      if (typeof globalThis.window !== 'undefined') {
-        try {
-          const { cleanupSession, clearTokenCookie } = await import('@/lib/shared/session-cleanup');
-          const { authBroadcast } = await import('@/lib/broadcast');
+      try {
+        const serverResult = await logoutMutation.mutateAsync();
+        if (!serverResult.success) {
+          console.warn(`Sessions not revoked on the server: ${serverResult.providerSignOut}`);
+        }
+      } catch (error) {
+        console.error('Logout error:', error);
+      } finally {
+        // Import and run comprehensive cleanup (PG-018)
+        if (typeof globalThis.window !== 'undefined') {
+          try {
+            const { cleanupSession, clearTokenCookie } =
+              await import('@/lib/shared/session-cleanup');
 
-          // Clear access token cookie first (for middleware)
-          clearTokenCookie();
+            // Clear access token cookie first (for middleware)
+            clearTokenCookie();
 
-          // Clear all client-side tokens and data
-          await cleanupSession({
-            clearLocalStorage: true,
-            clearSessionStorage: true,
-            clearCookies: true,
-            clearIndexedDB: true,
-            broadcastLogout: false, // We handle broadcast separately
-            preservePreferences: true,
-          });
-
-          // Broadcast logout to other tabs
-          if (authBroadcast) {
-            authBroadcast.broadcast('LOGOUT_EVENT');
+            // Clear all client-side tokens and data, and tell other tabs. The broadcast is
+            // sent synchronously, so the page load below cannot cancel it.
+            await cleanupSession({
+              clearLocalStorage: true,
+              clearSessionStorage: true,
+              clearCookies: true,
+              clearIndexedDB: true,
+              broadcastLogout: true,
+              preservePreferences: true,
+            });
+          } catch (cleanupError) {
+            console.error('Session cleanup error:', cleanupError);
+            // Fallback: at least clear accessToken
+            localStorage.removeItem('accessToken');
+            document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
           }
-        } catch (cleanupError) {
-          console.error('Session cleanup error:', cleanupError);
-          // Fallback: at least clear accessToken
-          localStorage.removeItem('accessToken');
-          document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        }
+
+        // Clear React Query cache to prevent stale auth data
+        queryClient.removeQueries({ queryKey: [['auth', 'getStatus']] });
+        queryClient.clear();
+
+        // Clear state regardless of API result
+        setState({
+          ...initialState,
+          isLoading: false,
+        });
+
+        if (options?.navigate !== false) {
+          leaveAfterLogout('/');
         }
       }
-
-      // Clear React Query cache to prevent stale auth data
-      queryClient.removeQueries({ queryKey: [['auth', 'getStatus']] });
-      queryClient.clear();
-
-      // Clear state regardless of API result
-      setState({
-        ...initialState,
-        isLoading: false,
-      });
-
-      // Redirect to public home with flag to prevent redirect loops on
-      // `/login` / `/signup` if the user subsequently navigates there.
-      router.push('/?logged_out=true');
-    }
-  }, [logoutMutation, router, queryClient]);
+    },
+    [logoutMutation, queryClient]
+  );
 
   /**
    * Refresh session - uses Supabase to refresh tokens

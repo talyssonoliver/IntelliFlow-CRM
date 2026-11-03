@@ -10,6 +10,7 @@ import { renderHook, act } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useLogout } from '../useLogout';
+import { leaveAfterLogout } from '@/lib/shared/session-cleanup';
 
 // Mock next/navigation
 const mockPush = vi.fn();
@@ -29,6 +30,7 @@ vi.mock('next/navigation', () => ({
 
 // Mock session-cleanup
 vi.mock('@/lib/shared/session-cleanup', () => ({
+  leaveAfterLogout: vi.fn(),
   cleanupSession: vi.fn().mockResolvedValue({ success: true }),
   clearLocalStorage: vi.fn().mockReturnValue([]),
   clearSessionStorage: vi.fn().mockReturnValue([]),
@@ -150,8 +152,10 @@ describe('useLogout', () => {
         vi.advanceTimersByTime(100);
       });
 
-      const { authBroadcast } = await import('@/lib/broadcast');
-      expect(authBroadcast!.broadcast).toHaveBeenCalledWith('LOGOUT_EVENT');
+      const { cleanupSession } = await import('@/lib/shared/session-cleanup');
+      expect(cleanupSession).toHaveBeenCalledWith(
+        expect.objectContaining({ broadcastLogout: true })
+      );
     });
 
     it('should attempt server notification via tRPC', async () => {
@@ -199,7 +203,8 @@ describe('useLogout', () => {
       });
 
       expect(cleanupSession).toHaveBeenCalled();
-      expect(mockPush).toHaveBeenCalledWith('/login?logged_out=true');
+      expect(leaveAfterLogout).toHaveBeenCalledWith('/');
+      expect(mockPush).not.toHaveBeenCalled();
       expect(warn).toHaveBeenCalled();
     });
 
@@ -216,7 +221,8 @@ describe('useLogout', () => {
       });
 
       expect(cleanupSession).toHaveBeenCalled();
-      expect(mockPush).toHaveBeenCalledWith('/login?logged_out=true');
+      expect(leaveAfterLogout).toHaveBeenCalledWith('/');
+      expect(mockPush).not.toHaveBeenCalled();
     });
 
     it('should warn, then finish, when the server could not revoke the sessions', async () => {
@@ -237,7 +243,8 @@ describe('useLogout', () => {
 
       expect(warn).toHaveBeenCalledWith(expect.stringContaining('FAILED'));
       expect(cleanupSession).toHaveBeenCalled();
-      expect(mockPush).toHaveBeenCalledWith('/login?logged_out=true');
+      expect(leaveAfterLogout).toHaveBeenCalledWith('/');
+      expect(mockPush).not.toHaveBeenCalled();
     });
 
     it('should redirect to /login after completion', async () => {
@@ -250,7 +257,8 @@ describe('useLogout', () => {
         vi.advanceTimersByTime(100);
       });
 
-      expect(mockPush).toHaveBeenCalledWith('/login?logged_out=true');
+      expect(leaveAfterLogout).toHaveBeenCalledWith('/');
+      expect(mockPush).not.toHaveBeenCalled();
     });
   });
 

@@ -190,7 +190,16 @@ const AUTH_COOKIE_PREFIXES = [
   'sb-', // Supabase cookies
 ] as const;
 
+/** The server renders the logged-in portal from this one, so logout must remove it. */
+const AUTH_COOKIE_NAMES = ['accesstoken'] as const;
+
 const LOGOUT_CHANNEL = 'intelliflow-logout';
+
+/**
+ * Identifies this tab in logout broadcasts. A BroadcastChannel only skips the object that
+ * posted, so a tab's own listener would otherwise hear its own logout.
+ */
+const THIS_TAB = globalThis.crypto?.randomUUID?.() ?? String(Date.now());
 
 // ============================================
 // LocalStorage Cleanup
@@ -211,6 +220,14 @@ export function clearLocalStorage(preservePreferences = false): string[] {
         localStorage.removeItem(key);
         clearedItems.push(key);
       }
+    }
+
+    // The Supabase client persists its own copy of the session under an sb-* key.
+    // Left behind, it holds usable tokens after logout.
+    const supabaseKeys = Object.keys(localStorage).filter((key) => key.startsWith('sb-'));
+    for (const key of supabaseKeys) {
+      localStorage.removeItem(key);
+      clearedItems.push(key);
     }
 
     // If not preserving preferences, clear all IntelliFlow-related data
@@ -322,9 +339,10 @@ export function clearAuthCookies(): string[] {
   const cookies = getAllCookies();
 
   for (const cookieName of Object.keys(cookies)) {
-    const isAuthCookie = AUTH_COOKIE_PREFIXES.some((prefix) =>
-      cookieName.toLowerCase().startsWith(prefix)
-    );
+    const lowerName = cookieName.toLowerCase();
+    const isAuthCookie =
+      AUTH_COOKIE_NAMES.some((name) => lowerName === name) ||
+      AUTH_COOKIE_PREFIXES.some((prefix) => lowerName.startsWith(prefix));
 
     if (isAuthCookie) {
       deleteCookie(cookieName);
@@ -382,6 +400,17 @@ export async function clearIndexedDB(): Promise<string[]> {
 // ============================================
 
 /**
+ * Ends a logout with a full page load, never a client-side navigation. The running page
+ * holds personal data in memory: Next's router cache, the server-rendered payload in the
+ * document, and the auth state. Only a new document drops all of them, and replace() also
+ * takes the logged-in page out of the history entry it was on.
+ */
+export function leaveAfterLogout(path: string = '/'): void {
+  if (typeof globalThis.window === 'undefined') return;
+  globalThis.location.replace(path);
+}
+
+/**
  * Broadcast logout event to other tabs
  */
 export function broadcastLogout(): void {
@@ -391,7 +420,7 @@ export function broadcastLogout(): void {
     // Use BroadcastChannel if available
     if ('BroadcastChannel' in globalThis) {
       const channel = new BroadcastChannel(LOGOUT_CHANNEL);
-      channel.postMessage({ type: 'logout', timestamp: Date.now() });
+      channel.postMessage({ type: 'logout', timestamp: Date.now(), tab: THIS_TAB });
       channel.close();
     }
 
@@ -419,7 +448,7 @@ export function onLogoutBroadcast(callback: () => void): () => void {
   if ('BroadcastChannel' in globalThis) {
     const channel = new BroadcastChannel(LOGOUT_CHANNEL);
     const handler = (event: MessageEvent) => {
-      if (event.data?.type === 'logout') {
+      if (event.data?.type === 'logout' && event.data.tab !== THIS_TAB) {
         callback();
       }
     };

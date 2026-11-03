@@ -34,7 +34,7 @@ export const metadata: Metadata = {
  * Home page — Server Component
  *
  * Reads the auth cookie server-side and renders the correct experience:
- * - Authenticated users → `<AuthenticatedHomePage />` with welcome data prefetched
+ * - Users whose session the API accepts → `<AuthenticatedHomePage />` with welcome data prefetched
  *   server-side and passed as `initialWelcomeData`. The greeting and user name
  *   are in the initial HTML, so no client-side hydration flash.
  * - Unauthenticated visitors → the Aurora landing page, SSR'd directly with full
@@ -46,31 +46,33 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   const token = await getAccessToken();
 
-  if (!token) {
-    // Server didn't see a token — render the public page. But wrap it in a
-    // client component that re-checks auth and swaps to AuthenticatedHomePage
-    // if the client turns out to be authenticated (post-login cookie race).
-    return (
-      <HomePagePublicWithAuthFallback>
-        <AuroraLandingPage />
-      </HomePagePublicWithAuthFallback>
-    );
-  }
+  // No session the server can vouch for: render the public page. But wrap it in a
+  // client component that re-checks auth and swaps to AuthenticatedHomePage
+  // if the client turns out to be authenticated (post-login cookie race).
+  const publicPage = (
+    <HomePagePublicWithAuthFallback>
+      <AuroraLandingPage />
+    </HomePagePublicWithAuthFallback>
+  );
+
+  if (!token) return publicPage;
 
   // Decode userId from the JWT payload (outside 'use cache' boundary — safe here).
   const userId = decodeJwtPayload(token)?.sub ?? null;
 
-  // Prefetch welcome summary server-side — cached for 60s via 'use cache'.
-  // Errors are non-fatal: AuthenticatedHomePage's client-side React Query
-  // will fetch on its own if initialWelcomeData is null.
+  // getAccessToken only reads the cookie's expiry, so the portal waits for the API to have
+  // accepted this exact token. Any failure renders the public page, and the client wrapper
+  // still swaps in the portal for a real session if the API was only briefly unreachable.
+  // This is not a live check: 'use cache' answers from the entry for this token while it
+  // lasts, without asking the API, and the API accepts a token until it expires (#1160).
   // JSON roundtrip serialises Date → string across the RSC → client boundary
   // (matches the wire format the client's tRPC React Query cache expects).
-  let initialWelcomeData: unknown = null;
+  let initialWelcomeData: unknown;
   try {
     const raw = await fetchWelcomeSummary(token, userId);
     initialWelcomeData = serializeForClient(raw);
   } catch {
-    // Silently fall through — client-side React Query will fetch
+    return publicPage;
   }
 
   // Prefetch AI insights server-side — cached for ~60s via 'use cache'.
