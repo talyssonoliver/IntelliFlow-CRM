@@ -60,10 +60,11 @@ export default async function HomePage() {
   // Decode userId from the JWT payload (outside 'use cache' boundary — safe here).
   const userId = decodeJwtPayload(token)?.sub ?? null;
 
-  // getAccessToken only reads the cookie's expiry, so this call is what verifies the
-  // session: the API checks the token. Any failure renders the public page rather than
-  // the portal, and the client wrapper still swaps in the portal for a real session if
-  // the API was only briefly unreachable. Cached for 60s via 'use cache'.
+  // getAccessToken only reads the cookie's expiry, so the portal waits for the API to have
+  // accepted this exact token. Any failure renders the public page, and the client wrapper
+  // still swaps in the portal for a real session if the API was only briefly unreachable.
+  // This is not a live check: 'use cache' answers from the entry for this token while it
+  // lasts, without asking the API, and the API accepts a token until it expires (#1160).
   // JSON roundtrip serialises Date → string across the RSC → client boundary
   // (matches the wire format the client's tRPC React Query cache expects).
   let initialWelcomeData: unknown;
