@@ -218,6 +218,7 @@ export class PrismaCaseDocumentRepository implements CaseDocumentRepository {
             acl: {
               some: {
                 principalId: userId,
+                principalType: 'USER',
                 accessLevel: { not: 'NONE' },
                 OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
               },

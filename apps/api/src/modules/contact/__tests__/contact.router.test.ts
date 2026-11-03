@@ -365,7 +365,12 @@ describe('Contact Router', () => {
         expect.arrayContaining([
           { createdBy: TEST_UUIDS.user1 },
           expect.objectContaining({
-            acl: { some: expect.objectContaining({ principalId: TEST_UUIDS.user1 }) },
+            acl: {
+              some: expect.objectContaining({
+                principalId: TEST_UUIDS.user1,
+                principalType: 'USER',
+              }),
+            },
           }),
         ])
       );
