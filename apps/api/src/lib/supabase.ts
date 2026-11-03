@@ -16,13 +16,7 @@
  * - Test (NODE_ENV=test or VITEST): Allows mock keys for unit testing
  */
 
-import {
-  createClient,
-  isAuthSessionMissingError,
-  SupabaseClient,
-  User,
-  Session,
-} from '@supabase/supabase-js';
+import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { leadSearchResultSchema, contactSearchResultSchema } from '@intelliflow/validators';
 import { isJwtShaped } from './jwt-shape';
@@ -366,9 +360,7 @@ export async function signIn(email: string, password: string): Promise<SignInRes
 export async function signOutUser(accessToken: string): Promise<{ error: Error | null }> {
   try {
     const { error } = await supabaseAdmin.auth.admin.signOut(accessToken, 'global');
-    // A session that is already gone is what signing out asks for. Other refusals
-    // stay errors: a bad service key answers 401 or 403 as well.
-    return { error: isAuthSessionMissingError(error) ? null : error };
+    return { error };
   } catch (err) {
     return { error: err instanceof Error ? err : new Error('Failed to sign out user') };
   }

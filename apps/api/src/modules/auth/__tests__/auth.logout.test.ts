@@ -88,7 +88,7 @@ describe('auth.logout', () => {
     );
   });
 
-  it('counts a session that is already gone as revoked', async () => {
+  it('does not claim revocation when the session behind the token is already gone', async () => {
     fakeFetch.mockResolvedValue(
       new Response(JSON.stringify({ error_code: 'session_not_found', msg: 'gone' }), {
         status: 403,
@@ -98,12 +98,15 @@ describe('auth.logout', () => {
 
     const result = await logoutAs(requestWith(`Bearer ${CALLER_JWT}`));
 
-    expect(result).toEqual({ success: true, providerSignOut: 'REVOKED', sessionsRevoked: 0 });
-    expect(consoleError).not.toHaveBeenCalled();
+    expect(result).toEqual({ success: false, providerSignOut: 'SESSION_GONE', sessionsRevoked: 0 });
+    expect(consoleError).toHaveBeenCalled();
+    expect(audit.log).toHaveBeenCalledWith(
+      expect.objectContaining({ actionResult: 'PARTIAL', actionReason: 'SESSION_GONE' })
+    );
   });
 
   // A refused key answers 401 or 403 too, so those alone must not read as revoked.
-  it.each([401, 403])('does not count a plain %i as revoked', async (status) => {
+  it.each([401, 403])('reports a plain %i as failed', async (status) => {
     fakeFetch.mockResolvedValue(
       new Response(JSON.stringify({ msg: 'refused' }), {
         status,

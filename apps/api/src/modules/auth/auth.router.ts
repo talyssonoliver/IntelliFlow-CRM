@@ -18,6 +18,7 @@
  * - revokeSession: Revoke a session
  */
 
+import { isAuthSessionMissingError } from '@supabase/supabase-js';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, publicProcedure, protectedProcedure, authProcedure } from '../../trpc';
 import {
@@ -310,15 +311,21 @@ function buildAuthUserPayload(user: AuthenticatedAppUser) {
 /**
  * Sign the caller out of Supabase everywhere with their own access token, and say
  * how it went. The token and the provider's error text are never logged.
+ * SESSION_GONE: the token's own session has ended, so the provider signed nothing
+ * out, and any other sessions of the user are unchanged.
  */
 async function revokeProviderSessions(
   accessToken: string | null
-): Promise<'REVOKED' | 'NO_TOKEN' | 'FAILED'> {
+): Promise<'REVOKED' | 'NO_TOKEN' | 'SESSION_GONE' | 'FAILED'> {
   if (!accessToken) {
     console.error('[Auth] Logout without an access token: Supabase sessions not revoked');
     return 'NO_TOKEN';
   }
   const { error } = await signOutUser(accessToken);
+  if (isAuthSessionMissingError(error)) {
+    console.error('[Auth] Logout with an ended session: other Supabase sessions not revoked');
+    return 'SESSION_GONE';
+  }
   if (error) {
     console.error(`[Auth] Supabase signout error: ${error.name}`);
     return 'FAILED';
