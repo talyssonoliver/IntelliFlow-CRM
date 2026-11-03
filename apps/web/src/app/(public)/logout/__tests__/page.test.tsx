@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const h = vi.hoisted(() => ({
@@ -59,6 +59,19 @@ describe('LogoutPage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Signed Out' })).toBeInTheDocument();
     expect(console.warn).toHaveBeenCalled();
+  });
+
+  it('takes over a plain link click, and leaves a modified one to the browser', async () => {
+    h.logout.mockResolvedValue(undefined);
+    h.cleanupSession.mockResolvedValue({ success: true, errors: [] });
+    render(<LogoutPage />);
+    await screen.findByRole('heading', { name: 'Signed Out' });
+    const link = screen.getByRole('link', { name: /sign in again/i });
+    // fireEvent.click returns false when the handler called preventDefault.
+
+    expect(fireEvent.click(link, { ctrlKey: true })).toBe(true);
+    expect(fireEvent.click(link, { metaKey: true })).toBe(true);
+    expect(fireEvent.click(link)).toBe(false);
   });
 
   it('shows the error state with the failure message when auth.logout rejects', async () => {

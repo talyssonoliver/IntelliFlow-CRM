@@ -34,7 +34,7 @@ import { getSupabaseProviderName } from './sso-handler';
 import { isTokenUsable } from './jwt';
 import { storeSessionTokens } from '@/lib/shared/token-exchange';
 import { AUTH_TOKEN_CHANGED_EVENT, leaveAfterLogout } from '@/lib/shared/session-cleanup';
-import { watchForLogoutElsewhere } from './logout-sync';
+import { watchForLogoutElsewhere, type PageSession } from './logout-sync';
 import { clearActiveTenant } from '@/lib/tenant/active-tenant';
 
 export type AuthMfaMethod = 'totp' | 'sms' | 'email' | 'backup';
@@ -293,11 +293,14 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
   // Another tab logging out, or the browser restoring this page from its back-forward
   // cache after logout, must take this page out of the portal too.
-  const isAuthenticatedRef = useRef(false);
+  const pageSessionRef = useRef<PageSession | null>(null);
   useEffect(() => {
-    isAuthenticatedRef.current = state.isAuthenticated;
+    const token = state.isAuthenticated ? localStorage.getItem('accessToken') : null;
+    pageSessionRef.current = state.isAuthenticated
+      ? { subject: (token && decodeJwtPayload(token)?.sub) || null }
+      : null;
   }, [state.isAuthenticated]);
-  useEffect(() => watchForLogoutElsewhere(() => isAuthenticatedRef.current), []);
+  useEffect(() => watchForLogoutElsewhere(() => pageSessionRef.current), []);
 
   // Re-validate auth status whenever a token is (re)written by ANY flow — OAuth
   // callback, email login, signup verification, MFA — since `syncTokenToCookie`

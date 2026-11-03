@@ -195,6 +195,9 @@ test.describe('after logging out', () => {
     await page.goto('/logout');
     await page.waitForFunction(() => localStorage.getItem('accessToken') === null);
     await expectNothingPersonal(page, testInfo, 'logout-page', name);
+    // The page keeps its own countdown: it must not react to its own broadcast.
+    await expect(page.getByRole('heading', { name: 'Signed Out' })).toBeVisible();
+    expect(new URL(page.url()).pathname).toBe('/logout');
     await expectFreshRootIsPublic(page, testInfo, 'fresh-root-after-logout-page', name);
   });
 

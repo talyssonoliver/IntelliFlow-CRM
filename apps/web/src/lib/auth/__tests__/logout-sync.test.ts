@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { broadcastLogout, leaveAfterLogout } from '@/lib/shared/session-cleanup';
+import { broadcastLogout, leaveAfterLogout, onLogoutBroadcast } from '@/lib/shared/session-cleanup';
 import { watchForLogoutElsewhere } from '../logout-sync';
 
 vi.mock('@/lib/shared/session-cleanup', async (importOriginal) => ({
@@ -31,7 +31,7 @@ describe('watchForLogoutElsewhere', () => {
   });
 
   it('leaves the portal when another tab logs out', () => {
-    stop = watchForLogoutElsewhere(() => true);
+    stop = watchForLogoutElsewhere(() => ({ subject: null }));
 
     otherTabLoggedOut();
 
@@ -39,7 +39,7 @@ describe('watchForLogoutElsewhere', () => {
   });
 
   it('leaves a public page alone when another tab logs out', () => {
-    stop = watchForLogoutElsewhere(() => false);
+    stop = watchForLogoutElsewhere(() => null);
 
     otherTabLoggedOut();
 
@@ -47,7 +47,7 @@ describe('watchForLogoutElsewhere', () => {
   });
 
   it('stops listening once stopped', () => {
-    stop = watchForLogoutElsewhere(() => true);
+    stop = watchForLogoutElsewhere(() => ({ subject: null }));
     stop();
 
     otherTabLoggedOut();
@@ -56,7 +56,7 @@ describe('watchForLogoutElsewhere', () => {
   });
 
   it('leaves a logged-in page restored from the back-forward cache with no token', () => {
-    stop = watchForLogoutElsewhere(() => true);
+    stop = watchForLogoutElsewhere(() => ({ subject: null }));
 
     restoredFromBackForwardCache(true);
 
@@ -65,7 +65,28 @@ describe('watchForLogoutElsewhere', () => {
 
   it('keeps a restored page when the token is still there', () => {
     localStorage.setItem('accessToken', 'still-signed-in');
-    stop = watchForLogoutElsewhere(() => true);
+    stop = watchForLogoutElsewhere(() => ({ subject: null }));
+
+    restoredFromBackForwardCache(true);
+
+    expect(leaveAfterLogout).not.toHaveBeenCalled();
+  });
+
+  const tokenFor = (sub: string) =>
+    ['header', Buffer.from(JSON.stringify({ sub })).toString('base64url'), 'signature'].join('.');
+
+  it('leaves a restored page when a different user has signed in since', () => {
+    localStorage.setItem('accessToken', tokenFor('user-b'));
+    stop = watchForLogoutElsewhere(() => ({ subject: 'user-a' }));
+
+    restoredFromBackForwardCache(true);
+
+    expect(leaveAfterLogout).toHaveBeenCalledWith('/');
+  });
+
+  it('keeps a restored page for the same user', () => {
+    localStorage.setItem('accessToken', tokenFor('user-a'));
+    stop = watchForLogoutElsewhere(() => ({ subject: 'user-a' }));
 
     restoredFromBackForwardCache(true);
 
@@ -73,7 +94,7 @@ describe('watchForLogoutElsewhere', () => {
   });
 
   it('keeps a restored public page, so visitors keep the back-forward cache', () => {
-    stop = watchForLogoutElsewhere(() => false);
+    stop = watchForLogoutElsewhere(() => null);
 
     restoredFromBackForwardCache(true);
 
@@ -81,7 +102,7 @@ describe('watchForLogoutElsewhere', () => {
   });
 
   it('ignores an ordinary page load', () => {
-    stop = watchForLogoutElsewhere(() => true);
+    stop = watchForLogoutElsewhere(() => ({ subject: null }));
 
     restoredFromBackForwardCache(false);
 
@@ -103,5 +124,29 @@ describe('watchForLogoutElsewhere', () => {
         resolve();
       }, 20);
     });
+  });
+
+  const wait = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+  it('does not treat its own logout broadcast as another tab', async () => {
+    const heard = vi.fn();
+    stop = onLogoutBroadcast(heard);
+
+    broadcastLogout();
+    await wait();
+
+    expect(heard).not.toHaveBeenCalled();
+  });
+
+  it('hears a logout broadcast from another tab', async () => {
+    const heard = vi.fn();
+    stop = onLogoutBroadcast(heard);
+    const otherTab = new BroadcastChannel('intelliflow-logout');
+
+    otherTab.postMessage({ type: 'logout', timestamp: 1, tab: 'another-tab' });
+    await wait();
+    otherTab.close();
+
+    expect(heard).toHaveBeenCalledTimes(1);
   });
 });

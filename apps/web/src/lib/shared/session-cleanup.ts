@@ -195,6 +195,12 @@ const AUTH_COOKIE_NAMES = ['accesstoken'] as const;
 
 const LOGOUT_CHANNEL = 'intelliflow-logout';
 
+/**
+ * Identifies this tab in logout broadcasts. A BroadcastChannel only skips the object that
+ * posted, so a tab's own listener would otherwise hear its own logout.
+ */
+const THIS_TAB = globalThis.crypto?.randomUUID?.() ?? String(Date.now());
+
 // ============================================
 // LocalStorage Cleanup
 // ============================================
@@ -414,7 +420,7 @@ export function broadcastLogout(): void {
     // Use BroadcastChannel if available
     if ('BroadcastChannel' in globalThis) {
       const channel = new BroadcastChannel(LOGOUT_CHANNEL);
-      channel.postMessage({ type: 'logout', timestamp: Date.now() });
+      channel.postMessage({ type: 'logout', timestamp: Date.now(), tab: THIS_TAB });
       channel.close();
     }
 
@@ -442,7 +448,7 @@ export function onLogoutBroadcast(callback: () => void): () => void {
   if ('BroadcastChannel' in globalThis) {
     const channel = new BroadcastChannel(LOGOUT_CHANNEL);
     const handler = (event: MessageEvent) => {
-      if (event.data?.type === 'logout') {
+      if (event.data?.type === 'logout' && event.data.tab !== THIS_TAB) {
         callback();
       }
     };

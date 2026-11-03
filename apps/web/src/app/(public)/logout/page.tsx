@@ -184,9 +184,11 @@ function LogoutContent() {
   // Every link here leaves with a full page load: this page still holds the logged-in
   // router cache, and a client-side navigation could show it again.
   const leaveWithFullLoad = (event: MouseEvent<HTMLElement>) => {
+    // Opening a link in a new tab or window stays the browser's job.
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     const link = (event.target as HTMLElement).closest('a');
     const href = link?.getAttribute('href');
-    if (!href?.startsWith('/')) return;
+    if (!href?.startsWith('/') || (link?.target && link.target !== '_self')) return;
     event.preventDefault();
     globalThis.location.assign(href);
   };
