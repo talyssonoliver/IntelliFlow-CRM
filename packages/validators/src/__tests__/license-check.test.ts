@@ -91,6 +91,17 @@ describe('the configured hash', () => {
   });
 });
 
+describe('what the check loads', () => {
+  // It runs before OpenTelemetry starts, which only patches modules loaded after it.
+  it.each([
+    ['enforce-license.ts', ["import { enforceLicenseKey } from './license-check';"]],
+    ['license-check.ts', ["import { createHash, timingSafeEqual } from 'node:crypto';"]],
+  ])('%s imports nothing else', (file, expected) => {
+    const source = readFileSync(resolve(__dirname, '..', file), 'utf8');
+    expect(source.split('\n').filter((line) => /^import\s/.test(line))).toEqual(expected);
+  });
+});
+
 describe('service entries', () => {
   const root = resolve(__dirname, '../../../..');
   const importLines = (file: string) =>

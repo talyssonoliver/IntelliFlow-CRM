@@ -2,7 +2,7 @@
  * instrument.ts — OpenTelemetry bootstrap for the standalone API server.
  *
  * Auto-instrumentation only patches modules required AFTER the SDK starts, so
- * main.ts must import './instrument' before anything else.
+ * main.ts must import './instrument' before anything except the license check.
  */
 
 import { readFileSync } from 'node:fs';
@@ -37,9 +37,13 @@ describe('instrument.ts', () => {
     expect(startTracing).not.toHaveBeenCalled();
   });
 
-  it('is the first import of main.ts', () => {
+  // Only the license check may come first: it loads no module that tracing patches.
+  it('is the first import of main.ts after the license check', () => {
     const source = readFileSync(join(__dirname, '..', 'main.ts'), 'utf8');
     const imports = source.split('\n').filter((line) => line.startsWith('import '));
-    expect(imports[0]).toBe("import './instrument';");
+    expect(imports.slice(0, 2)).toEqual([
+      "import '@intelliflow/validators/enforce-license';",
+      "import './instrument';",
+    ]);
   });
 });
