@@ -82,4 +82,4 @@ pnpm run validate:sprint
 
 ## License
 
-Proprietary - IntelliFlow CRM © 2025-2026
+Proprietary, all rights reserved. See [LICENSE](LICENSE).

@@ -1,16 +1,20 @@
 # Dependabot configuration for IntelliFlow CRM
 # Docs: https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Security updates only, to limit CI minutes while the repo is private.
+# open-pull-requests-limit: 0 turns version updates off. GitHub fixes the limit on
+# security update PRs at 10 and it can't be lowered here, so the security-updates
+# groups below put each ecosystem's fixes into a single PR instead.
 version: 2
 updates:
   # npm / pnpm workspace
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
-      interval: 'weekly'
-      day: 'monday'
+      interval: 'monthly'
       time: '06:00'
       timezone: 'Etc/UTC'
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 0
     labels:
       - 'dependencies'
       - 'security'
@@ -19,6 +23,10 @@ updates:
       prefix-development: 'chore(deps-dev)'
       include: 'scope'
     groups:
+      npm-security:
+        applies-to: security-updates
+        patterns:
+          - '*'
       # Storybook MUST move as a unit — every @storybook/* and the meta
       # 'storybook' package need to be pinned to the same major or the
       # ecosystem breaks at runtime (component renderers ↔ core ↔ addon
@@ -83,11 +91,10 @@ updates:
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
-      interval: 'weekly'
-      day: 'monday'
+      interval: 'monthly'
       time: '06:00'
       timezone: 'Etc/UTC'
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 0
     labels:
       - 'dependencies'
       - 'github-actions'
@@ -95,6 +102,10 @@ updates:
       prefix: 'chore(ci)'
       include: 'scope'
     groups:
+      actions-security:
+        applies-to: security-updates
+        patterns:
+          - '*'
       # GitHub Actions bumps (incl. majors) are grouped — they're build-
       # graph changes, no runtime impact. Majors are typically just Node
       # runtime version bumps for the action itself (Node 16 → 20 → 24).

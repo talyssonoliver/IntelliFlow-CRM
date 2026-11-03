@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/events-worker",
   "version": "0.0.1",
+  "license": "UNLICENSED",
   "private": true,
   "description": "Transactional outbox poller for domain events",
   "main": "./dist/main.js",
@@ -20,6 +21,7 @@
     "@intelliflow/db": "workspace:*",
     "@intelliflow/domain": "workspace:*",
     "@intelliflow/platform": "workspace:*",
+    "@intelliflow/validators": "workspace:*",
     "@intelliflow/worker-shared": "workspace:*",
     "@prisma/adapter-pg": "^7.8.0",
     "bullmq": "^5.79.1",

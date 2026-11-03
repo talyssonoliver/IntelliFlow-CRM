@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/webhooks",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "private": true,
   "description": "Webhook framework for IntelliFlow CRM - Signature verification, idempotency, retries, and DLQ",
   "main": "./dist/index.js",

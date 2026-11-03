@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/search",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "private": true,
   "description": "Search and indexing services for IntelliFlow CRM (FTS, semantic, hybrid search)",
   "main": "./dist/index.js",

@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/workers",
   "version": "0.0.1",
+  "license": "UNLICENSED",
   "private": true,
   "description": "IntelliFlow CRM Workers - Unified worker runtime",
   "scripts": {

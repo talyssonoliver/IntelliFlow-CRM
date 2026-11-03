@@ -1,5 +1,6 @@
 /**
- * OpenTelemetry bootstrap — must be the FIRST import of main.ts.
+ * OpenTelemetry bootstrap — must be the FIRST import of main.ts, after only the
+ * license check, which loads nothing but node:crypto.
  *
  * Auto-instrumentation patches modules (http, pg, ioredis, ...) as they are
  * required. Starting the SDK after the server, Prisma and queue modules were

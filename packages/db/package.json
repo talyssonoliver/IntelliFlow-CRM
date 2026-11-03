@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/db",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "private": true,
   "description": "Prisma database client for IntelliFlow CRM",
   "main": "./dist/index.js",

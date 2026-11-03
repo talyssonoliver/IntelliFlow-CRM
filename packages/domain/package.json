@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/domain",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "private": true,
   "description": "Domain layer for IntelliFlow CRM - Pure business logic",
   "main": "./dist/index.js",

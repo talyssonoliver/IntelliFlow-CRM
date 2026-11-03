@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/adapters",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "private": true,
   "description": "Infrastructure adapters for IntelliFlow CRM - Repository implementations and external services",
   "main": "./dist/index.js",

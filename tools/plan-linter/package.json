@@ -17,7 +17,7 @@
     "governance"
   ],
   "author": "IntelliFlow CRM Team",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "dependencies": {
     "js-yaml": "^5.2.2"
   }
