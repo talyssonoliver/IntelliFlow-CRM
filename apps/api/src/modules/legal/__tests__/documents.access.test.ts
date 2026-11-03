@@ -10,7 +10,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AccessLevel, CaseDocument, DocumentClassification } from '@intelliflow/domain';
 import type { InMemoryCaseDocumentRepository as Repo } from '@intelliflow/adapters';
 import { documentsRouter } from '../documents.router';
-import { createTestContext, TEST_UUIDS } from '../../../test/setup';
+import { createTestContext, prismaMock, TEST_UUIDS } from '../../../test/setup';
 
 const store = vi.hoisted(() => ({ repo: null as unknown as Repo }));
 
@@ -31,6 +31,7 @@ vi.mock('../document-automation', () => ({
 
 vi.mock('../../../container', () => ({ container: {} }));
 
+const CASE_ID = '5ca5e1d0-0000-4000-8000-5ca5e1d00000';
 const CALLER = TEST_UUIDS.user1;
 const OWNER = TEST_UUIDS.user2;
 const caller = () => documentsRouter.createCaller(createTestContext());
@@ -43,6 +44,7 @@ function makeDoc(createdBy: string) {
       documentType: 'CONTRACT',
       classification: DocumentClassification.INTERNAL,
       tags: [],
+      relatedCaseId: CASE_ID,
     },
     storageKey: 'docs/contract.pdf',
     contentHash: 'a'.repeat(64),
@@ -136,5 +138,137 @@ describe('bulkDelete needs the same access as edit, per document', () => {
     expect(await isDeleted(editable.id)).toBe(true);
     expect(await isDeleted(readOnly.id)).toBe(false);
     expect(await isDeleted(created.id)).toBe(true);
+  });
+});
+
+describe('list by case shows what the caller can open', () => {
+  it.each([
+    ['no access entry', undefined, undefined],
+    ['NONE', AccessLevel.NONE, undefined],
+    ['an expired VIEW', AccessLevel.VIEW, YESTERDAY],
+  ])('a caller with %s does not get the document or count it', async (_n, level, exp) => {
+    const doc = await storedDoc(level, exp);
+
+    const result = await caller().list({ caseId: CASE_ID });
+
+    expect(result.data).toEqual([]);
+    expect(result.total).toBe(0);
+    await expect(caller().getById({ id: doc.id })).rejects.toMatchObject({ code: 'FORBIDDEN' });
+  });
+
+  it.each([AccessLevel.VIEW, AccessLevel.COMMENT, AccessLevel.EDIT, AccessLevel.ADMIN])(
+    'a caller with %s gets the document',
+    async (level) => {
+      const doc = await storedDoc(level);
+
+      const result = await caller().list({ caseId: CASE_ID });
+
+      expect(result.data.map((d) => d.id)).toEqual([doc.id]);
+      expect(result.total).toBe(1);
+      await expect(caller().getById({ id: doc.id })).resolves.toMatchObject({ id: doc.id });
+    }
+  );
+
+  it('the creator gets the document without an access entry', async () => {
+    const doc = makeDoc(CALLER);
+    await store.repo.save(doc);
+
+    const result = await caller().list({ caseId: CASE_ID });
+
+    expect(result.data.map((d) => d.id)).toEqual([doc.id]);
+  });
+
+  it('filters before paging, so hidden documents do not use up a page', async () => {
+    await storedDoc();
+    await storedDoc();
+    const visible = await storedDoc(AccessLevel.VIEW);
+
+    const result = await caller().list({ caseId: CASE_ID, limit: 1, offset: 0 });
+
+    expect(result.data.map((d) => d.id)).toEqual([visible.id]);
+    expect(result.total).toBe(1);
+  });
+});
+
+describe('grantAccess', () => {
+  const PRINCIPAL = TEST_UUIDS.admin1;
+  const grant = (documentId: string, principalType: 'USER' | 'ROLE' | 'TENANT' = 'USER') =>
+    caller().grantAccess({
+      documentId,
+      principalId: PRINCIPAL,
+      principalType,
+      accessLevel: 'VIEW',
+    });
+  const storedAcl = async (id: string) =>
+    (await store.repo.findById(id, TEST_UUIDS.tenant))?.acl.map((a) => a.principalId);
+
+  beforeEach(() => {
+    prismaMock.user.findFirst.mockReset();
+  });
+
+  it('adds a USER principal who is in the tenant, looked up in that tenant', async () => {
+    prismaMock.user.findFirst.mockResolvedValue({ id: PRINCIPAL } as never);
+    const doc = await storedDoc(AccessLevel.ADMIN);
+
+    await expect(grant(doc.id)).resolves.toEqual({ success: true });
+
+    expect(await storedAcl(doc.id)).toContain(PRINCIPAL);
+    const query = prismaMock.user.findFirst.mock.calls[0]?.[0];
+    expect(query?.where?.id).toBe(PRINCIPAL);
+    expect(JSON.stringify(query?.where?.OR)).toContain(TEST_UUIDS.tenant);
+  });
+
+  it('refuses a USER principal who is not in the tenant, and changes nothing', async () => {
+    prismaMock.user.findFirst.mockResolvedValue(null);
+    const doc = await storedDoc(AccessLevel.ADMIN);
+
+    await expect(grant(doc.id)).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+
+    expect(await storedAcl(doc.id)).not.toContain(PRINCIPAL);
+  });
+
+  it.each(['ROLE', 'TENANT'] as const)('does not look up a %s principal', async (type) => {
+    const doc = await storedDoc(AccessLevel.ADMIN);
+
+    await expect(grant(doc.id, type)).resolves.toEqual({ success: true });
+
+    expect(prismaMock.user.findFirst).not.toHaveBeenCalled();
+    expect(await storedAcl(doc.id)).toContain(PRINCIPAL);
+  });
+
+  it('the creator can grant without an access entry', async () => {
+    prismaMock.user.findFirst.mockResolvedValue({ id: PRINCIPAL } as never);
+    const doc = makeDoc(CALLER);
+    await store.repo.save(doc);
+
+    await expect(grant(doc.id)).resolves.toEqual({ success: true });
+  });
+
+  it.each([...BELOW_EDIT, ['EDIT', AccessLevel.EDIT, undefined] as (typeof BELOW_EDIT)[number]])(
+    'a caller with %s is FORBIDDEN, before any user lookup',
+    async (_n, level, exp) => {
+      const doc = await storedDoc(level, exp);
+
+      await expect(grant(doc.id)).rejects.toMatchObject({ code: 'FORBIDDEN' });
+
+      expect(prismaMock.user.findFirst).not.toHaveBeenCalled();
+      expect(await storedAcl(doc.id)).not.toContain(PRINCIPAL);
+    }
+  );
+
+  it('a caller with EDIT cannot raise their own access', async () => {
+    const doc = await storedDoc(AccessLevel.EDIT);
+
+    await expect(
+      caller().grantAccess({
+        documentId: doc.id,
+        principalId: CALLER,
+        principalType: 'USER',
+        accessLevel: 'ADMIN',
+      })
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+
+    const stored = await store.repo.findById(doc.id, TEST_UUIDS.tenant);
+    expect(stored?.hasAccess(CALLER, AccessLevel.ADMIN)).toBe(false);
   });
 });
