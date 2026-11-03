@@ -19,6 +19,9 @@ const mockQueueClose = vi.fn().mockResolvedValue(undefined);
 
 vi.mock('bullmq', () => ({
   Queue: class MockQueue {
+    on() {
+      return this;
+    }
     add = mockQueueAdd;
     close = mockQueueClose;
   },

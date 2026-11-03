@@ -47,7 +47,7 @@ import { type Context } from '../../context';
 import { getTenantContext, createTenantWhereClause } from '../../security/tenant-context';
 import { getAuditLogger } from '../../security/audit-logger';
 import { context as otelContext, propagation } from '@opentelemetry/api';
-import { loadBullMQ } from '../../lib/load-bullmq';
+import { enqueueOneShot, withRequestReplyQueue } from '../../lib/queue-producer';
 import {
   assertCanDeleteAccount,
   assertRequiredAccountFields,
@@ -70,7 +70,6 @@ import {
   logAccountReassignPermissionDenied,
   REASSIGN_ADMIN_ROLES,
 } from './account-reassign';
-import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import {
   createNotification,
   type CreateNotificationParams,
@@ -138,25 +137,15 @@ async function autoLinkContactsByDomain(
 /** IFC-312: Fire-and-forget AI enrichment queue job for an account entity. */
 async function enqueueAccountAIEnrichment(entityId: string, tenantId: string): Promise<void> {
   try {
-    const { Queue } = await loadBullMQ();
     const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
-    const queue = new Queue(QUEUE_NAMES.AI_ENRICHMENT, {
-      connection: {
-        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-        ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
-        ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
-      },
-    });
     const otelCarrier: Record<string, string> = {};
     propagation.inject(otelContext.active(), otelCarrier);
-    await queue.add('enrich', {
+    await enqueueOneShot(QUEUE_NAMES.AI_ENRICHMENT, 'enrich', {
       entityType: 'account',
       entityId,
       tenantId,
       _otelCarrier: otelCarrier,
     });
-    await queue.close();
   } catch {
     // Redis/BullMQ unavailable — silently skip background enrichment
   }
@@ -1573,17 +1562,8 @@ export const accountRouter = createTRPCRouter({
 
       const syncStart = Date.now(); // IFC-312 audit fix F6: sync-breach visibility
       try {
-        const { Queue, QueueEvents } = await loadBullMQ();
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
-        const connection = {
-          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-          ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
-          ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
-        };
-        const queue = new Queue(QUEUE_NAMES.AI_TAG_SUGGESTION, { connection });
-        const events = new QueueEvents(QUEUE_NAMES.AI_TAG_SUGGESTION, { connection });
-        try {
+        return await withRequestReplyQueue(QUEUE_NAMES.AI_TAG_SUGGESTION, async (queue, events) => {
           const otelCarrier: Record<string, string> = {};
           propagation.inject(otelContext.active(), otelCarrier);
           const job = await queue.add('suggest', {
@@ -1602,10 +1582,7 @@ export const accountRouter = createTRPCRouter({
             suggestions?: Array<{ label: string; confidence: number; reason: string }>;
           };
           return result.suggestions ?? [];
-        } finally {
-          await events.close().catch(() => {});
-          await queue.close().catch(() => {});
-        }
+        });
       } catch (err) {
         // IFC-312 audit fix F6: sync-chain breach visibility.
         const durationMs = Date.now() - syncStart;
@@ -1630,23 +1607,15 @@ export const accountRouter = createTRPCRouter({
       if (!flags.aiInsightGeneration) return { enqueued: false };
 
       try {
-        const { Queue } = await loadBullMQ();
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
-        const queue = new Queue(QUEUE_NAMES.AI_ENTITY_INSIGHT, {
-          connection: {
-            host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-          },
-        });
         const otelCarrier: Record<string, string> = {};
         propagation.inject(otelContext.active(), otelCarrier);
-        await queue.add('insight', {
+        await enqueueOneShot(QUEUE_NAMES.AI_ENTITY_INSIGHT, 'insight', {
           entityType: 'account',
           entityId: input.accountId,
           tenantId: typedCtx.tenant.tenantId,
           _otelCarrier: otelCarrier,
         });
-        await queue.close();
         return { enqueued: true };
       } catch {
         return { enqueued: false };
@@ -1667,22 +1636,14 @@ export const accountRouter = createTRPCRouter({
       }
 
       try {
-        const { Queue } = await loadBullMQ();
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
-        const queue = new Queue(QUEUE_NAMES.AI_ACCOUNT_SCORING, {
-          connection: {
-            host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-          },
-        });
         const otelCarrier: Record<string, string> = {};
         propagation.inject(otelContext.active(), otelCarrier);
-        await queue.add('score', {
+        await enqueueOneShot(QUEUE_NAMES.AI_ACCOUNT_SCORING, 'score', {
           accountId: input.accountId,
           tenantId: typedCtx.tenant.tenantId,
           _otelCarrier: otelCarrier,
         });
-        await queue.close();
         return { enqueued: true };
       } catch {
         return { enqueued: false };

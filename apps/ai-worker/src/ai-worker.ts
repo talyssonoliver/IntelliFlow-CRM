@@ -132,6 +132,20 @@ type AIJobResult =
   | MemoryRetentionJobResult;
 
 /**
+ * The Redis connection for this worker's own queues. It follows the same variables as the API
+ * producers' shared options, so jobs are consumed from the db they were added to.
+ */
+function redisConnectionOptions() {
+  return {
+    host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
+    port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+    ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
+    ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
+    ...(process.env.REDIS_DB ? { db: Number.parseInt(process.env.REDIS_DB, 10) } : {}),
+  };
+}
+
+/**
  * A job registered by registerScheduledJobs() (named `scheduled-*`) or a
  * fan-out sentinel ('__scheduled__' tenant). These dispatch per-tenant work
  * rather than doing agent work for a tenant of their own (#805).
@@ -445,11 +459,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         );
         return;
       }
-      const redisConnection = {
-        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-        ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
-      };
+      const redisConnection = redisConnectionOptions();
       this.contactEmbedWorker = new ContactEmbedWorker(
         this.prisma!,
         redisConnection,
@@ -506,12 +516,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     try {
       const { bootIngestionWorkers } = await import('./workers/ingestion-workers.js');
       const { getEmbeddingChain } = await import('./chains/embedding.chain.js');
-      const redisConnection = {
-        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-        ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
-        ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
-      };
+      const redisConnection = redisConnectionOptions();
       this.ingestionWorkersHandle = await bootIngestionWorkers(
         redisConnection,
         async (text: string) => {
@@ -623,12 +628,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         notificationService = new MockNotificationServiceAdapter();
       }
 
-      const redisConnection = {
-        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-        ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
-        ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
-      };
+      const redisConnection = redisConnectionOptions();
 
       this.notificationEmailWorkerHandle = await bootNotificationEmailWorker(
         redisConnection,
@@ -669,12 +669,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    * - failed    → error log; enqueue to ai-dlq when job is exhausted
    */
   private async setupDLQAndLifecycleListeners(): Promise<void> {
-    const connection = {
-      host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-      port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-      ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
-      ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
-    };
+    const connection = redisConnectionOptions();
 
     // Create the passive DLQ — no worker, only used for storage and inspection.
     this.dlqQueue = new Queue(AI_DLQ_QUEUE, {
@@ -965,12 +960,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     // and history; the actual consumption is owned by the Workers in
     // ingestion-workers.ts.
     const { Queue } = await import('bullmq');
-    const connection = {
-      host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-      port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-      ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
-      ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
-    };
+    const connection = redisConnectionOptions();
     // intelliflow-document-reindex and intelliflow-embedding-generation remain
     // external (consumed by other services or future workers).
     // intelliflow-text-extraction and intelliflow-ocr-processing are listed here

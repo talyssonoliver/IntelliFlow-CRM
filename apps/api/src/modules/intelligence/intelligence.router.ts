@@ -19,7 +19,7 @@ import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
 import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
-import { loadBullMQ } from '../../lib/load-bullmq';
+import { enqueueOneShot } from '../../lib/queue-producer';
 import {
   churnRiskLevelSchema,
   nbaActionTypeSchema,
@@ -29,7 +29,6 @@ import {
 import { getTenantContext } from '../../security/tenant-context';
 import { assertQuota } from '../../shared/quota-guard';
 import { SIGNIFICANCE_LEVELS, requiresHumanReview } from '@intelliflow/domain';
-import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 // ADR-070: server-side AI_INTELLIGENCE entitlement — intelligence router
 // (a tenant on a plan without it must not reach these endpoints directly).
@@ -964,29 +963,14 @@ export const intelligenceRouter = createTRPCRouter({
       const correlationId = `prediction-${entityType}-${entityId}-${Date.now()}`;
 
       try {
-        const { Queue } = await loadBullMQ();
         const { QUEUE_NAMES, DEFAULT_QUEUE_CONFIGS } =
           await import('@intelliflow/platform/queues/types');
         const qConfig = DEFAULT_QUEUE_CONFIGS[QUEUE_NAMES.AI_PREDICTION];
-        const queue = new Queue(QUEUE_NAMES.AI_PREDICTION, {
-          connection: {
-            host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-            port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-          },
-          defaultJobOptions: {
-            attempts: qConfig.defaultJobOptions.attempts,
-            backoff: {
-              type: qConfig.defaultJobOptions.backoff.type,
-              delay: qConfig.defaultJobOptions.backoff.delay,
-            },
-            removeOnComplete: qConfig.defaultJobOptions.removeOnComplete,
-            removeOnFail: qConfig.defaultJobOptions.removeOnFail,
-          },
-        });
 
         const _otelCarrierPredict: Record<string, string> = {};
         propagation.inject(otelContext.active(), _otelCarrierPredict);
-        const job = await queue.add(
+        const job = await enqueueOneShot(
+          QUEUE_NAMES.AI_PREDICTION,
           'predict',
           {
             entityType,
@@ -1001,11 +985,16 @@ export const intelligenceRouter = createTRPCRouter({
             _otelCarrier: _otelCarrierPredict,
           },
           {
+            attempts: qConfig.defaultJobOptions.attempts,
+            backoff: {
+              type: qConfig.defaultJobOptions.backoff.type,
+              delay: qConfig.defaultJobOptions.backoff.delay,
+            },
+            removeOnComplete: qConfig.defaultJobOptions.removeOnComplete,
+            removeOnFail: qConfig.defaultJobOptions.removeOnFail,
             priority: priorityMap[priority],
           }
         );
-
-        await queue.close();
 
         return {
           status: 'QUEUED' as const,

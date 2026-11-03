@@ -72,7 +72,7 @@ import {
 } from './contact-reassign';
 import { mapContactToResponse } from '../../shared/mappers';
 import type { Context } from '../../context';
-import { loadBullMQ } from '../../lib/load-bullmq';
+import { withRequestReplyQueue } from '../../lib/queue-producer';
 import { enqueueBestEffort } from '../../lib/best-effort-enqueue';
 import {
   getTenantContext,
@@ -80,7 +80,6 @@ import {
   type TenantAwareContext,
 } from '../../security/tenant-context';
 import { deriveContactInsights } from '../../shared/contact-insight-deriver';
-import { requiredProdEnv } from '@intelliflow/validators/required-url';
 // IFC-255: fire-and-forget audit logging for contact mutations + single-record reads
 import { getAuditLogger } from '../../security/audit-logger';
 import { assertQuota, withQuotaLock } from '../../shared/quota-guard';
@@ -2406,15 +2405,8 @@ export const contactRouter = createTRPCRouter({
 
       const syncStart = Date.now(); // IFC-312 audit fix F6: sync-breach visibility
       try {
-        const { Queue, QueueEvents } = await loadBullMQ();
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
-        const connection = {
-          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-        };
-        const queue = new Queue(QUEUE_NAMES.AI_TAG_SUGGESTION, { connection });
-        const events = new QueueEvents(QUEUE_NAMES.AI_TAG_SUGGESTION, { connection });
-        try {
+        return await withRequestReplyQueue(QUEUE_NAMES.AI_TAG_SUGGESTION, async (queue, events) => {
           const otelCarrier: Record<string, string> = {};
           propagation.inject(otelContext.active(), otelCarrier);
           const job = await queue.add('suggest', {
@@ -2434,10 +2426,7 @@ export const contactRouter = createTRPCRouter({
             suggestions?: Array<{ label: string; confidence: number; reason: string }>;
           };
           return result.suggestions ?? [];
-        } finally {
-          await events.close().catch(() => {});
-          await queue.close().catch(() => {});
-        }
+        });
       } catch (err) {
         // IFC-312 audit fix F6: surface sync-chain breach so timeouts /
         // Redis-down states are visible in logs instead of silently
@@ -2525,15 +2514,8 @@ export const contactRouter = createTRPCRouter({
       const emailThread = input.emailThread;
 
       try {
-        const { Queue, QueueEvents } = await loadBullMQ();
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
-        const connection = {
-          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-        };
-        const queue = new Queue(QUEUE_NAMES.AI_REPLY_DRAFT, { connection });
-        const events = new QueueEvents(QUEUE_NAMES.AI_REPLY_DRAFT, { connection });
-        try {
+        return await withRequestReplyQueue(QUEUE_NAMES.AI_REPLY_DRAFT, async (queue, events) => {
           const otelCarrier: Record<string, string> = {};
           propagation.inject(otelContext.active(), otelCarrier);
           const job = await queue.add('draft', {
@@ -2556,10 +2538,7 @@ export const contactRouter = createTRPCRouter({
             });
           }
           return { draftId: result.draftId, requiresReview: true };
-        } finally {
-          await events.close().catch(() => {});
-          await queue.close().catch(() => {});
-        }
+        });
       } catch (err) {
         if (err instanceof TRPCError) throw err;
         // IFC-312 audit fix F6: log draftReply infra failures (Redis down,
