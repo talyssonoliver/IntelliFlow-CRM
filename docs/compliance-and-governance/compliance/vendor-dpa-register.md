@@ -6,7 +6,8 @@ terms said when read on 2026-10-12. It does not record that any agreement has
 been signed, accepted, or countersigned on Leangency's behalf. The Railway,
 Sentry, and OpenRouter steps are deferred by the owner until the first customer,
 and Vercel stays on the Hobby plan, where its DPA does not apply (see "Owner
-rulings" below).
+rulings" below). Grafana Labs and Zoho were added on 2026-11-03 from terms read
+that day, and neither vendor's DPA has been signed.
 
 This register is internal. Unlike `docs/shared/dpa-content.md` and
 `docs/shared/aup-content.md`, which the public `/dpa` and `/aup` pages render in
@@ -33,11 +34,11 @@ vendor's own current published terms:
   restricted transfer out of the UK (UK IDTA, UK Addendum to the EU SCCs, or the
   UK Extension to the EU-U.S. Data Privacy Framework).
 
-Method: public vendor terms/docs only, read on 2026-10-12, cited by URL, quoted
-only in short phrases. No vendor account, dashboard, or billing console was
-logged into to produce this register — where a fact requires that (e.g. "has
-this DocuSign actually been signed for our account"), it is left as an owner
-action, not guessed.
+Method: public vendor terms/docs only, read on 2026-10-12 (Grafana Labs and Zoho
+on 2026-11-03), cited by URL, quoted only in short phrases. No vendor account,
+dashboard, or billing console was logged into to produce this register — where a
+fact requires that (e.g. "has this DocuSign actually been signed for our
+account"), it is left as an owner action, not guessed.
 
 ## Register
 
@@ -52,6 +53,8 @@ action, not guessed.
 | Upstash, Inc.                      | Automatic, incorporated into the Terms of Service                         | Yes — no plan restriction found                                                                               | UK Transfer Addendum (ICO template B.1.0)                                                                                                                 |
 | Google LLC (Gemini Developer API)  | Automatic in substance — see "Gemini tier finding" below                  | Yes, regardless of paid/free quota — see below                                                                | UK Extension to EU-U.S. DPF (certified since 14 Sept 2023)                                                                                                |
 | OpenRouter, Inc.                   | **Not available at all on our tier** — see "OpenRouter suitability" below | **No** — signed DPA is Exhibit A to the Enterprise Access Agreement only                                      | Self-serve: EU SCCs under GDPR Art. 46, no UK-specific instrument named. Enterprise-only Exhibit A: names a UK Addendum, but this account doesn't have it |
+| Raintank Inc. (Grafana Labs)       | **Manual** — complete, sign, and email the form to Grafana Labs           | Can't tell: no plan limit found in the DPA, and the account's plan was not checked                            | EU SCCs with UK terms, called the "UK International Data Transfer Agreement" (version B1.0)                                                               |
+| Zoho Corporation (Zoho Mail)       | **Manual** — request, then sign; no published copy found                  | Can't tell: the DPA text could not be read, and the account's plan was not checked                            | Not confirmed: public pages name Model Contractual Clauses and no UK instrument                                                                           |
 
 ## Per-vendor detail
 
@@ -161,6 +164,49 @@ action, not guessed.
   Privacy Framework" certification (original certification 14 September 2023,
   renewal due 13 September 2027).
 
+### Raintank Inc. (Grafana Labs)
+
+- DPA: https://grafana.com/legal/data-processing-agreement/ (PDF version dated
+  2026-04-02, read 2026-11-03). The counterparty is named as "Raintank Inc. dba
+  Grafana Labs".
+- Acceptance: the customer must complete and sign the information block and
+  "Submit the completed and signed DPA to Grafana Labs via email to
+  legal-ops@grafana.com." Nothing has been signed or submitted, and whether it
+  was done earlier for this account was not checked.
+- UK mechanism: the EU SCCs with UK terms it names the "UK International Data
+  Transfer Agreement", "Version B1.0, in force 21 March 2022."
+- Data: production sends logs, traces, and metrics over OTLP
+  (`infra/terraform/environments/production/terraform.tfvars`,
+  `otel_exporter_endpoint`, in force since 2026-10-06). That gateway's name
+  points to a UK region (`gb-south-1`), but the DPA allows processing "in any
+  country in which Processor or its Subprocessors operate", so the region is not
+  a transfer safeguard. Which personal data reaches the telemetry has not been
+  traced; the public DPA therefore says "any personal data that appears in
+  them".
+
+### Zoho Corporation (Zoho Mail)
+
+- DPA: no published copy found. Zoho's privacy policy
+  (https://www.zoho.com/privacy.html, last updated 22 December 2025, read
+  2026-11-03) says "You can request a DPA from Zoho by completing this form",
+  then forwards it for signature. Its GDPR page (https://www.zoho.com/gdpr.html)
+  gives legal@zohocorp.com instead, and its Zoho Books help page describes an
+  electronic route under My Account, Preferences, Privacy. Nothing has been
+  requested or signed, and whether it was done earlier for this account was not
+  checked.
+- UK mechanism: not confirmed. The policy names agreements "based on EU
+  Commission's Model Contractual Clauses" and no UK instrument. The addendum
+  itself must be read to confirm one.
+- Contracting entity: not confirmed. Zoho's help pages say "Zoho Corporation"
+  and the privacy policy mentions Zoho Corporation BV in the Netherlands. The
+  public DPA says "Zoho Corporation" until the addendum names the party.
+- Data: `hello@`, `support@`, `billing@`, and `crm@leangency.com` deliver to the
+  owner's Zoho mailbox
+  (`docs/operations/leangency-account-bootstrap-checklist.md`). The public DPA
+  sends Controller requests to `hello@`. The domain's MX records point to
+  `mx.zoho.com` rather than an EU host, read on 2026-11-03, which suggests the
+  account is not in Zoho's EU data centre; the account itself was not checked.
+
 ## OpenRouter suitability (dedicated review)
 
 **Verdict: not suitable for processing Controller personal data as currently
@@ -260,14 +306,20 @@ open — none is a question any more:
 
 **Trigger for all three deferrals (Railway, Sentry, OpenRouter): the first
 paying customer, or before this DPA is offered to anyone — whichever comes
-first.** They do not need resolving today. They do need resolving before any of
-the four pre-conditions below are satisfied.
+first.** They do not need resolving today. They do need resolving before the
+pre-conditions below are satisfied.
+
+## Added on 2026-11-03
+
+The owner chose to list Grafana Labs and Zoho in the public DPA and in this
+register, after a review of the DPA found neither named. That decision did not
+sign anything or rule on timing for either vendor's DPA.
 
 ## Pre-conditions before this DPA can be offered to any customer
 
 Next to the Vercel ruling: the full set of things that must happen first, drawn
 directly from the rulings above and the verdicts earlier in this register. None
-of these four is done today:
+of these six is done today:
 
 1. **Vercel moves to Pro** (or hosting moves elsewhere) — Hobby carries no
    Article 28 contract and Aurora is commercial use Hobby's own terms don't
@@ -282,9 +334,13 @@ of these four is done today:
    by Railway.
 4. **Sentry's DPA is accepted** — the electronic opt-in completed for this
    account.
+5. **Grafana Labs' DPA is signed** — completed, signed, and emailed to Grafana
+   Labs.
+6. **Zoho's DPA is signed** — requested and signed, and its UK safeguard and
+   contracting entity confirmed from the addendum.
 
-Until all four are true, the DPA must not be signed with any customer. The
-public DPA says so in its own status line ("Introduction and Parties") and in
+Until all six are true, the DPA must not be signed with any customer. The public
+DPA says so in its own status line ("Introduction and Parties") and in
 "International Transfers", without the account-level detail recorded here.
 
 Google's Gemini API acceptance (see "Google LLC" above) and every "automatic"
@@ -314,6 +370,11 @@ check that are kept here rather than in the public DPA:
   matches for "cloudinary" are Next.js's built-in image-loader names and
   framework documentation. No personal data reaches Cloudinary today; the DPA
   must be updated before that changes.
+- **Grafana Labs and Zoho**: not found by this check, since telemetry
+  credentials arrive through Terraform and Zoho has no environment variable.
+  Both were found on 2026-11-03 from `terraform.tfvars`, the bootstrap
+  checklist, and the domain's MX records. The platform variable names were not
+  re-checked that day.
 - **Stripe**: receives only Leangency's own billing relationship with the
   customer, so Leangency is controller for that data and Stripe is outside the
   DPA's sub-processor list.

@@ -199,6 +199,15 @@ underlying large-language-model provider for the model configured for that
 request. That onward routing is OpenRouter's own sub-processing relationship,
 not a direct relationship between Leangency and the underlying provider.
 
+Raintank Inc., trading as Grafana Labs, provides the Grafana Cloud monitoring
+service, which receives logs, traces, and metrics from Aurora's production
+services, including any personal data that appears in them. Added on 3
+November 2026.
+
+Zoho Corporation provides the mailboxes that receive email sent to Leangency's
+own addresses, including hello@leangency.com, and so holds any personal data
+sent to those addresses. Added on 3 November 2026.
+
 Twilio SendGrid Inc., OpenAI, L.L.C., Anthropic, PBC, and Amazon Web Services,
 Inc. (S3 storage) are supported by Aurora's codebase as configurable providers
 but are not enabled in production. This DPA will be updated, and the Controller
@@ -292,7 +301,7 @@ https://ico.org.uk/about-the-ico/media-centre/news-and-blogs/2026/01/updated-gui
 
 For each sub-processor listed in "Sub-processors" above, Leangency relies on the
 transfer safeguard named in that sub-processor's own published data-processing
-terms, as read on 12 October 2026.
+terms, as read on 12 October 2026 unless a later date is given below.
 
 Vercel Inc.: Data Processing Addendum, https://vercel.com/legal/dpa, which
 incorporates the UK International Data Transfer Agreement for customers on
@@ -335,6 +344,19 @@ products.
 OpenRouter, Inc.: OpenRouter offers a Data Processing Addendum, naming the EU
 Standard Contractual Clauses and the UK Addendum, as part of its Enterprise
 Access Agreement, https://openrouter.ai/terms-of-service-enterprise.
+
+Raintank Inc., trading as Grafana Labs: Data Processing Agreement,
+https://grafana.com/legal/data-processing-agreement/, version dated 2 April 2026
+and read on 3 November 2026, using the EU Standard Contractual Clauses with the
+UK transfer terms it calls the UK International Data Transfer Agreement (version
+B1.0). It takes effect once the customer completes, signs, and submits it to
+Grafana Labs.
+
+Zoho Corporation: Zoho provides its Data Processing Addendum for signature on
+request. Its privacy policy, https://www.zoho.com/privacy.html, read on 3
+November 2026, names agreements based on the EU Commission's Model Contractual
+Clauses and no UK-specific instrument, so the UK safeguard will be confirmed
+from the addendum itself before this DPA is signed with any customer.
 
 Where a sub-processor's data-processing terms take effect only after a separate
 signature or opt-in, or apply only on a particular plan, Leangency will complete
