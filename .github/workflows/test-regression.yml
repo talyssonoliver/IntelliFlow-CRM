@@ -449,6 +449,17 @@ jobs:
           pip install pyyaml click pytest pytest-cov
           node scripts/run-python-coverage.mjs
 
+      # The runner has about 7 GB, and the sensor's Node heap and the scanner's JVM
+      # run side by side. Without room to spare the runner itself goes down, and the
+      # job ends with a shutdown signal rather than a scan result.
+      - name: Add swap for the scan
+        run: |
+          sudo fallocate -l 6G /mnt/sonar.swap
+          sudo chmod 600 /mnt/sonar.swap
+          sudo mkswap /mnt/sonar.swap
+          sudo swapon /mnt/sonar.swap
+          free -m
+
       - name: SonarQube Cloud Scan
         # Official SonarQube Cloud action, SHA-pinned to v8.1.0 (supply-chain
         # safe). Replaces the deprecated `sonarcloud-github-action` whose v5 pin

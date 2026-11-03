@@ -24,6 +24,11 @@ RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
 
 WORKDIR /app
 
+# Hosted runners have about 7 GB. At that size Node's default heap limit is too low
+# for the tsup DTS worker, which then fails with ERR_WORKER_OUT_OF_MEMORY, so every
+# package build in this stage gets the limit it had on larger runners.
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 # Copy full virtual store + per-app/per-pkg symlink layer from deps stage.
 # pnpm isolated linker creates both /app/node_modules (virtual store + hoisted)
 # AND /app/{apps,packages}/<name>/node_modules (symlinks to virtual store).
@@ -58,8 +63,6 @@ RUN pnpm --filter db db:generate
 RUN pnpm --filter "@intelliflow/api^..." --workspace-concurrency=1 run build
 
 # Build the API
-# The DTS step of the api build needs more heap than Node's default worker limit.
-ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN pnpm --filter api build
 
 # NOTE: `pnpm prune --prod` was removed intentionally.

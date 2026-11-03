@@ -27,6 +27,11 @@ RUN apk add --no-cache python3 py3-pip build-base
 
 WORKDIR /app
 
+# Hosted runners have about 7 GB. At that size Node's default heap limit is too low
+# for the tsup DTS worker, which then fails with ERR_WORKER_OUT_OF_MEMORY, so every
+# package build in this stage gets the limit it had on larger runners.
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 # Copy full virtual store + per-app/per-pkg symlink layer from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps ./apps

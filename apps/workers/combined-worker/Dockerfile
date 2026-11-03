@@ -30,6 +30,11 @@ RUN apk add --no-cache python3 py3-pip build-base
 
 WORKDIR /app
 
+# Hosted runners have about 7 GB. At that size Node's default heap limit is too low
+# for the tsup DTS worker, which then fails with ERR_WORKER_OUT_OF_MEMORY, so every
+# package build in this stage gets the limit it had on larger runners.
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 # Copy full virtual store + per-app/per-pkg symlink layer from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=deps /app/apps ./apps
@@ -64,7 +69,6 @@ RUN pnpm --filter ingestion-worker build
 # scan) from apps/api/dist/background-jobs.js, so the api and every workspace
 # package it depends on must be built too (same chain as infra/docker/Dockerfile.api).
 RUN pnpm --filter "@intelliflow/api^..." --workspace-concurrency=1 run build
-ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN pnpm --filter api build
 
 # The combined entrypoint imports all three workers and the api's
