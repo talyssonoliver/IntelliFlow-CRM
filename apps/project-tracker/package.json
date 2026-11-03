@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/project-tracker",
   "version": "0.0.1",
+  "license": "UNLICENSED",
   "private": true,
   "scripts": {
     "generate:metrics": "tsx scripts/generate-metrics.ts",

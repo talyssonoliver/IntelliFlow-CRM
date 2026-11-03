@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/ingestion-worker",
   "version": "0.0.1",
+  "license": "UNLICENSED",
   "private": true,
   "description": "File processing worker for text extraction, OCR, and embeddings",
   "main": "./dist/main.js",

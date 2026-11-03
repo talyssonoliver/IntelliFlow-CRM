@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/architecture-tests",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "private": true,
   "type": "module",
   "description": "Architecture boundary tests for IntelliFlow CRM",

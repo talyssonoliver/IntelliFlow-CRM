@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/application",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "private": true,
   "description": "Application layer for IntelliFlow CRM - Use cases and ports",
   "main": "./dist/index.js",
