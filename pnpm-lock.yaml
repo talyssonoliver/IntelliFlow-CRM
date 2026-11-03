@@ -839,6 +839,9 @@ importers:
       '@intelliflow/ingestion-worker':
         specifier: workspace:*
         version: link:../ingestion-worker
+      '@intelliflow/validators':
+        specifier: workspace:*
+        version: link:../../../packages/validators
       pino:
         specifier: ^10.3.1
         version: 10.3.1
@@ -879,6 +882,9 @@ importers:
       '@intelliflow/platform':
         specifier: workspace:*
         version: link:../../../packages/platform
+      '@intelliflow/validators':
+        specifier: workspace:*
+        version: link:../../../packages/validators
       '@intelliflow/worker-shared':
         specifier: workspace:*
         version: link:../shared

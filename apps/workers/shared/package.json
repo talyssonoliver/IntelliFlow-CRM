@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/worker-shared",
   "version": "0.0.1",
+  "license": "UNLICENSED",
   "private": true,
   "description": "Shared worker infrastructure for IntelliFlow CRM",
   "main": "./dist/index.js",

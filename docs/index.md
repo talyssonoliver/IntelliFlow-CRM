@@ -130,8 +130,8 @@ We welcome contributions! See the project README and open a pull request on
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](../LICENSE)
-file for details.
+This project is proprietary, and all rights are reserved. See
+[LICENSE](../LICENSE).
 
 ---
 

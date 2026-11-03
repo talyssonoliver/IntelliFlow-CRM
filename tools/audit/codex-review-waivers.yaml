@@ -825,3 +825,10 @@ waivers:
     author: session revoke lane
     date: '2026-11-03'
     expires: '2026-12-03'
+  - fingerprint: 18019744e62645279991d1876743b0e79f9e5cd704fe4e1023964f06d143bb05
+    reason: >-
+      Accepted by the coordinator on 2026-11-03: the advisory container boot smoke needs a key
+      and will fail until it has one. It does not block. Tracked in #1151.
+    author: license guard lane
+    date: '2026-11-03'
+    expires: '2026-12-03'

@@ -9,6 +9,8 @@
  * @artifact apps/workers/ingestion-worker/src/main.ts
  */
 
+// Must stay the first import: refuses to start in production without a valid license key.
+import '@intelliflow/validators/enforce-license';
 import { Job } from 'bullmq';
 import pino from 'pino';
 import { BaseWorker, type ComponentHealth } from '@intelliflow/worker-shared';

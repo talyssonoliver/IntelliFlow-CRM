@@ -3,13 +3,17 @@
  * Entry point for AI processing services
  */
 
-// CRITICAL: env.ts MUST be the first import.
+// Must stay the first import: refuses to start in production without a valid license key.
+// It comes before ./env because the env files it loads can replace NODE_ENV.
+import '@intelliflow/validators/enforce-license';
+
+// CRITICAL: env.ts MUST come before every module that reads config.
 // ES import hoisting causes all module-level code to run before any statements.
 // This module loads .env, .env.local, .env.development into process.env
 // so that aiConfig and chain constructors see the correct values.
 import './env';
 
-// CRITICAL: OTel MUST be the second import — before LangChain, BullMQ, express.
+// CRITICAL: OTel MUST come right after env.ts — before LangChain, BullMQ, express.
 // Auto-instrumentation patches Node.js module hooks; if libraries load first
 // they will not be instrumented.
 import './tracing/otel.js';

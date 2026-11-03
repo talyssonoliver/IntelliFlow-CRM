@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/api",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "private": true,
   "description": "tRPC API server for IntelliFlow CRM",
   "main": "./dist/index.js",

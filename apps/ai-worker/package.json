@@ -1,6 +1,7 @@
 {
   "name": "@intelliflow/ai-worker",
   "version": "0.1.0",
+  "license": "UNLICENSED",
   "private": true,
   "description": "AI Worker for IntelliFlow CRM - LangChain/CrewAI processing",
   "main": "./dist/index.js",
