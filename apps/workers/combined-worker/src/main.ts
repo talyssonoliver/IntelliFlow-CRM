@@ -12,6 +12,8 @@
  * @module combined-worker/main
  */
 
+// Must stay the first import: refuses to start in production without a valid license key.
+import '@intelliflow/validators/enforce-license';
 import pino from 'pino';
 import { startCombinedWorker, type ManagedWorker, type WorkerLoaders } from './combined';
 import { createBackgroundJobsWorker, type ApiBackgroundJobsModule } from './background-jobs';
