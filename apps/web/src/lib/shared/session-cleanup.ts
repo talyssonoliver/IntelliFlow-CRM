@@ -72,7 +72,7 @@ function notifyAuthTokenChanged(hasToken: boolean): void {
 }
 
 /** Read the current `accessToken` cookie value (or null). */
-function readAccessTokenCookie(): string | null {
+export function readAccessTokenCookie(): string | null {
   if (typeof document === 'undefined') return null;
   const match = document.cookie.match(/(?:^|;\s*)accessToken=([^;]*)/);
   return match ? match[1] : null;
