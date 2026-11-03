@@ -583,6 +583,9 @@ export const documentsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { userId, documentRepo, document } = await loadTenantDocument(ctx, input.documentId);
 
+      // Deleting needs the same access as editing
+      assertDocumentAccess(document, userId, AccessLevel.EDIT);
+
       // PG-186: Check automation delete guard
       const deleteFlags = await loadDocumentAutomation(ctx);
       await assertNotDeleteGuarded(ctx, input.documentId, deleteFlags);
@@ -758,6 +761,15 @@ export const documentsRouter = createTRPCRouter({
         const document = docMap.get(docId);
         if (!document) {
           failed.push({ id: docId, error: 'Document not found' });
+          continue;
+        }
+
+        // ACL check per document, the same as a single delete
+        if (
+          !document.hasAccess(userId, AccessLevel.EDIT) &&
+          document.toJSON().createdBy !== userId
+        ) {
+          failed.push({ id: docId, error: 'Insufficient permissions to delete' });
           continue;
         }
 
