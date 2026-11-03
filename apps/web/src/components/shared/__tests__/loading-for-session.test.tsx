@@ -31,6 +31,15 @@ describe('LoadingForSession', () => {
     expect(screen.queryByTestId('portal-shape')).not.toBeInTheDocument();
   });
 
+  it('shows the Aurora logo on the splash', () => {
+    render(<LoadingForSession>{portal}</LoadingForSession>);
+
+    expect(screen.getByRole('img', { name: 'Aurora' })).toHaveAttribute(
+      'src',
+      '/brand/aurora/aurora-wordmark.webp'
+    );
+  });
+
   it('shows the neutral splash for an expired token', () => {
     setToken(tokenExpiringIn(-60));
 
@@ -54,6 +63,7 @@ describe('LoadingForSession', () => {
     const html = renderToString(<LoadingForSession>{portal}</LoadingForSession>);
 
     expect(html).toContain('neutral-loading');
+    expect(html).toContain('aurora-wordmark');
     expect(html).not.toContain('portal-shape');
   });
 });

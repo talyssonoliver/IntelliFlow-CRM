@@ -40,6 +40,7 @@ test.describe('the root loading state', () => {
 
     await expect(page.locator(PORTAL_SKELETON)).toHaveCount(0);
     await expect(page.locator(NEUTRAL_SPLASH)).toBeVisible();
+    await expect(page.locator(`${NEUTRAL_SPLASH} img[alt="Aurora"]`)).toBeVisible();
 
     release();
     await page.waitForURL((url) => url.pathname === '/');
