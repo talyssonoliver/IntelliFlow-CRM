@@ -61,6 +61,29 @@ describe('LogoutPage', () => {
     expect(console.warn).toHaveBeenCalled();
   });
 
+  it('does not leave the page until logout has finished', async () => {
+    const assign = vi.fn();
+    vi.stubGlobal('location', { ...globalThis.location, assign });
+    let finishLogout = () => {};
+    h.logout.mockReturnValue(
+      new Promise<void>((resolve) => {
+        finishLogout = resolve;
+      })
+    );
+    h.cleanupSession.mockResolvedValue({ success: true, errors: [] });
+    const { container } = render(<LogoutPage />);
+    const footerLink = () => container.querySelector('a[href="/support"]') as HTMLElement;
+
+    fireEvent.click(footerLink());
+    expect(assign).not.toHaveBeenCalled();
+
+    finishLogout();
+    await screen.findByRole('heading', { name: 'Signed Out' });
+    fireEvent.click(footerLink());
+    expect(assign).toHaveBeenCalledWith('/support');
+    vi.unstubAllGlobals();
+  });
+
   it('takes over a plain link click, and leaves a modified one to the browser', async () => {
     h.logout.mockResolvedValue(undefined);
     h.cleanupSession.mockResolvedValue({ success: true, errors: [] });

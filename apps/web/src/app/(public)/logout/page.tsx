@@ -190,6 +190,8 @@ function LogoutContent() {
     const href = link?.getAttribute('href');
     if (!href?.startsWith('/') || (link?.target && link.target !== '_self')) return;
     event.preventDefault();
+    // A page load now would abandon the logout before the tokens are cleared.
+    if (status === 'pending' || status === 'processing') return;
     globalThis.location.assign(href);
   };
 
