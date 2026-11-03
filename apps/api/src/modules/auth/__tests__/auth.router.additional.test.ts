@@ -189,11 +189,16 @@ describe('authRouter additional coverage', () => {
     it('should continue with app session cleanup even if supabase signout fails', async () => {
       mockSignOutUser.mockResolvedValue({ error: new Error('Supabase error') });
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const ctx = createTestContext();
+      const ctx = createTestContext({
+        req: new Request('https://api.example.invalid/', {
+          headers: { authorization: `Bearer ${['header', 'payload', 'signature'].join('.')}` },
+        }),
+      });
       const caller = authRouter.createCaller(ctx);
 
       const result = await caller.logout();
-      expect(result.success).toBe(true);
+      expect(result).toMatchObject({ success: false, providerSignOut: 'FAILED' });
+      expect(mockSessionService.revokeAllUserSessions).toHaveBeenCalled();
       consoleSpy.mockRestore();
     });
   });

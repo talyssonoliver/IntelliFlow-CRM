@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-02T23:14:46.147Z",
+  "timestamp": "2026-11-03T10:25:51.847Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -3102,7 +3102,7 @@
     ]
   },
   "workers_inventory": {
-    "total_workers": 4,
+    "total_workers": 3,
     "total_jobs": 3,
     "workers": [
       {
@@ -3127,12 +3127,6 @@
           "extractText"
         ],
         "description": "Document ingestion and text extraction"
-      },
-      {
-        "name": "notifications",
-        "type": "notifications",
-        "jobs": [],
-        "description": "Multi-channel notification delivery"
       }
     ]
   },
@@ -3375,7 +3369,7 @@
   },
   "validators_inventory": {
     "total_validators": 71,
-    "total_schemas": 689,
+    "total_schemas": 690,
     "by_complexity": {
       "complex": 39,
       "moderate": 25,
@@ -3401,6 +3395,12 @@
         "complexity": "complex"
       },
       {
+        "name": "auth",
+        "file": "auth.ts",
+        "schemas": 27,
+        "complexity": "complex"
+      },
+      {
         "name": "billing",
         "file": "billing.ts",
         "schemas": 27,
@@ -3410,12 +3410,6 @@
         "name": "platform-metrics",
         "file": "platform-metrics.ts",
         "schemas": 27,
-        "complexity": "complex"
-      },
-      {
-        "name": "auth",
-        "file": "auth.ts",
-        "schemas": 26,
         "complexity": "complex"
       },
       {

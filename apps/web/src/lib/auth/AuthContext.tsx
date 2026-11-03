@@ -814,7 +814,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     setState((prev) => ({ ...prev, isLoading: true }));
 
     try {
-      await logoutMutation.mutateAsync();
+      const serverResult = await logoutMutation.mutateAsync();
+      if (!serverResult.success) {
+        console.warn(`Sessions not revoked on the server: ${serverResult.providerSignOut}`);
+      }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {

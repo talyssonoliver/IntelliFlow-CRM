@@ -817,3 +817,11 @@ waivers:
     author: IFC-117 lane
     date: '2026-11-02'
     expires: '2026-12-02'
+  - fingerprint: 18fcb6418bfd6bf13c2cd4ec4940cb3199698ffa20cdda74ff099b012ae316f1
+    reason: >-
+      Accepted risk, chosen by the orchestrator: logout with an active-tenant selection the API no
+      longer accepts is refused before the handler runs, and the page can reload during the
+      redirect. It is rare and the user still ends up logged out locally. Tracked in #1156.
+    author: session revoke lane
+    date: '2026-11-03'
+    expires: '2026-12-03'
