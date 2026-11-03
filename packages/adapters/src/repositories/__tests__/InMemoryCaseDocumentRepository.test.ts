@@ -283,6 +283,19 @@ describe('InMemoryCaseDocumentRepository', () => {
       expect(docs[0].id).toBe(document.id);
     });
 
+    it.each(['ROLE', 'TENANT'] as const)(
+      'should not count a %s entry holding the user id as access',
+      async (principalType) => {
+        const document = createTestDocument({ createdBy: testUser2Id });
+        document.grantAccess(testUserId, principalType, AccessLevel.VIEW, testUser2Id);
+        await repository.save(document);
+
+        const docs = await repository.findAccessibleByUser(testUserId, testTenantId);
+
+        expect(docs).toHaveLength(0);
+      }
+    );
+
     it('should find documents with ACL access', async () => {
       const document = createTestDocument({ createdBy: testUser2Id });
       document.grantAccess(testUserId, 'USER', AccessLevel.VIEW, testUser2Id);
