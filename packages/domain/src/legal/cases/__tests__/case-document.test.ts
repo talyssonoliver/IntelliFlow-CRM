@@ -531,6 +531,15 @@ describe('CaseDocument', () => {
       expect(doc.hasAccess('unknown-id', AccessLevel.VIEW)).toBe(false);
     });
 
+    it.each(['ROLE', 'TENANT'] as const)(
+      'should not count a %s entry holding the user id as that user having access',
+      (principalType) => {
+        const doc = createDoc();
+        doc.grantAccess(VALID_UUID_3, principalType, AccessLevel.ADMIN, VALID_UUID_2);
+        expect(doc.hasAccess(VALID_UUID_3, AccessLevel.VIEW)).toBe(false);
+      }
+    );
+
     it('should return true for exact level match', () => {
       const doc = createDoc();
       doc.grantAccess(VALID_UUID_3, 'USER', AccessLevel.VIEW, VALID_UUID_2);

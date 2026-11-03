@@ -390,6 +390,10 @@ describe('Documents Router - Caller Tests', () => {
   });
 
   describe('grantAccess', () => {
+    beforeEach(() => {
+      prismaMock.user.findFirst.mockResolvedValue({ id: TEST_UUIDS.user2 } as never);
+    });
+
     it('should grant access to a user', async () => {
       const ctx = createTestContext();
       const caller = documentsRouter.createCaller(ctx);

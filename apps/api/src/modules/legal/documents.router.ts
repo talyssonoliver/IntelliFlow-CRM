@@ -12,6 +12,7 @@ import {
   bulkDeleteDocumentsSchema,
 } from '@intelliflow/validators';
 import { PrismaCaseDocumentRepository } from '@intelliflow/adapters';
+import { tenantUserWhere } from '@intelliflow/db';
 import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { TRPCError } from '@trpc/server';
@@ -69,10 +70,31 @@ async function loadTenantDocuments(ctx: DocumentContext, ids: string[]) {
   return { userId, documentRepo, docMap };
 }
 
+/** Whether the user holds `level` on the document or created it. */
+function holdsDocumentAccess(document: CaseDocument, userId: string, level: AccessLevel): boolean {
+  return document.hasAccess(userId, level) || document.toJSON().createdBy === userId;
+}
+
 /** FORBIDDEN unless the user holds `level` on the document or created it. */
 function assertDocumentAccess(document: CaseDocument, userId: string, level: AccessLevel): void {
-  if (!document.hasAccess(userId, level) && document.toJSON().createdBy !== userId) {
+  if (!holdsDocumentAccess(document, userId, level)) {
     throw new TRPCError({ code: 'FORBIDDEN', message: 'Insufficient permissions' });
+  }
+}
+
+/** BAD_REQUEST unless a USER principal is a member of this tenant. */
+async function assertPrincipalInTenant(
+  ctx: DocumentContext,
+  principalId: string,
+  principalType: string
+): Promise<void> {
+  if (principalType !== 'USER') return;
+  const user = await ctx.prismaWithTenant.user.findFirst({
+    where: { id: principalId, ...tenantUserWhere(ctx.tenant.tenantId) },
+    select: { id: true },
+  });
+  if (!user) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'User not found in this tenant' });
   }
 }
 import { loadBullMQ } from '../../lib/load-bullmq';
@@ -344,7 +366,11 @@ export const documentsRouter = createTRPCRouter({
       let documents: CaseDocument[];
 
       if (input?.caseId) {
-        documents = await documentRepo.findByCaseId(input.caseId, ctx.tenant.tenantId);
+        // The same access as opening a document: what getById would allow
+        const caseDocuments = await documentRepo.findByCaseId(input.caseId, ctx.tenant.tenantId);
+        documents = caseDocuments.filter((doc) =>
+          holdsDocumentAccess(doc, userId, AccessLevel.VIEW)
+        );
       } else {
         documents = await documentRepo.findAccessibleByUser(userId, ctx.user?.tenantId ?? userId);
       }
@@ -382,6 +408,8 @@ export const documentsRouter = createTRPCRouter({
 
     // Check if user has ADMIN access
     assertDocumentAccess(document, userId, AccessLevel.ADMIN);
+
+    await assertPrincipalInTenant(ctx, input.principalId, input.principalType);
 
     // Grant access using domain method
     document.grantAccess(
@@ -583,6 +611,9 @@ export const documentsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { userId, documentRepo, document } = await loadTenantDocument(ctx, input.documentId);
 
+      // Deleting needs the same access as editing
+      assertDocumentAccess(document, userId, AccessLevel.EDIT);
+
       // PG-186: Check automation delete guard
       const deleteFlags = await loadDocumentAutomation(ctx);
       await assertNotDeleteGuarded(ctx, input.documentId, deleteFlags);
@@ -749,6 +780,7 @@ export const documentsRouter = createTRPCRouter({
     const { ids } = input;
     // Batch-fetch all documents in a single query (NP-038 fix)
     const { userId, documentRepo, docMap } = await loadTenantDocuments(ctx, ids);
+    const deleteFlags = await loadDocumentAutomation(ctx);
 
     const successful: string[] = [];
     const failed: Array<{ id: string; error: string }> = [];
@@ -760,6 +792,15 @@ export const documentsRouter = createTRPCRouter({
           failed.push({ id: docId, error: 'Document not found' });
           continue;
         }
+
+        // ACL check per document, the same as a single delete
+        if (!holdsDocumentAccess(document, userId, AccessLevel.EDIT)) {
+          failed.push({ id: docId, error: 'Insufficient permissions to delete' });
+          continue;
+        }
+
+        // PG-186: the same automation delete guard as a single delete
+        await assertNotDeleteGuarded(ctx, docId, deleteFlags);
 
         document.delete(userId);
         await documentRepo.save(document);

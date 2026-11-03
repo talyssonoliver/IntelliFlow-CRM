@@ -639,6 +639,7 @@ describe('PrismaCaseDocumentRepository', () => {
 
       // Second OR: ACL access
       expect(call.where.OR[1].acl.some.principalId).toBe(USER_ID);
+      expect(call.where.OR[1].acl.some.principalType).toBe('USER');
       expect(call.where.OR[1].acl.some.accessLevel).toEqual({ not: 'NONE' });
     });
 
