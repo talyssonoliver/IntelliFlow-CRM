@@ -104,13 +104,11 @@ export function ComposeClient() {
 
   // Leaving by any route, the lists show what Compose saved, sent or removed.
   const utils = trpc.useUtils();
-  useEffect(
-    () => () => {
-      void utils.email.listEmails.invalidate();
-      void utils.email.getUnreadCounts.invalidate();
-    },
-    [utils]
-  );
+  const refreshLists = useCallback(() => {
+    void utils.email.listEmails.invalidate();
+    void utils.email.getUnreadCounts.invalidate();
+  }, [utils]);
+  useEffect(() => refreshLists, [refreshLists]);
 
   // Keeps Back working: this page's history entry now points at the saved draft.
   const handleDraftSaved = useCallback((id: string) => {
@@ -154,6 +152,7 @@ export function ComposeClient() {
           }
           initialDraft={initialDraft}
           onDraftSaved={handleDraftSaved}
+          onDraftChanged={refreshLists}
           onLeave={handleLeave}
           onDiscard={handleDone}
           onSent={handleDone}

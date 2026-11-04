@@ -66,6 +66,28 @@ describe('leaving Compose before the autosave', () => {
     expect(saveDraft.mock.calls[0][0]).toMatchObject({ subject: 'New subject' });
   });
 
+  it('tries again if the last save failed', async () => {
+    saveDraft.mockRejectedValueOnce(new Error('offline'));
+    const { unmount } = render(<EmailCompose {...props()} initialDraft={DRAFT} />);
+    typeBody('<p>Edited</p>');
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    await waitFor(() => expect(saveDraft).toHaveBeenCalledTimes(1));
+    await act(async () => {});
+    unmount();
+    await waitFor(() => expect(saveDraft).toHaveBeenCalledTimes(2));
+    expect(saveDraft.mock.calls[1][0]).toMatchObject({ htmlBody: '<p>Edited</p>' });
+  });
+
+  it('says when the save has landed, even after leaving', async () => {
+    const onDraftChanged = vi.fn();
+    const { unmount } = render(
+      <EmailCompose {...props()} initialDraft={DRAFT} onDraftChanged={onDraftChanged} />
+    );
+    typeBody('<p>Edited</p>');
+    unmount();
+    await waitFor(() => expect(onDraftChanged).toHaveBeenCalledTimes(1));
+  });
+
   it('saves nothing when there was no change', async () => {
     const { unmount } = render(<EmailCompose {...props()} initialDraft={DRAFT} />);
     unmount();

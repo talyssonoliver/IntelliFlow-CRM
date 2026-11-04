@@ -52,6 +52,8 @@ interface EmailComposeProps {
   initialDraft?: ComposeDraft;
   /** Told when the draft first gets an id, so the page can come back to it. */
   onDraftSaved?: (draftId: string) => void;
+  /** Told after every save, even once the page has gone, so lists can catch up. */
+  onDraftChanged?: () => void;
   /** Follows a link out of Compose once the draft is saved. Defaults to a page load. */
   onLeave?: (href: string) => void;
   onDiscard: () => void;
@@ -139,6 +141,7 @@ export function EmailCompose({
   initialSignatureHtml,
   initialDraft,
   onDraftSaved,
+  onDraftChanged,
   onLeave,
   onDiscard,
   onSent,
@@ -212,6 +215,8 @@ export function EmailCompose({
   draftMutateAsyncRef.current = draftMutation.mutateAsync;
   const onDraftSavedRef = useRef(onDraftSaved);
   onDraftSavedRef.current = onDraftSaved;
+  const onDraftChangedRef = useRef(onDraftChanged);
+  onDraftChangedRef.current = onDraftChanged;
   const mountedRef = useRef(false);
   useEffect(() => {
     mountedRef.current = true;
@@ -247,15 +252,23 @@ export function EmailCompose({
         const latest = latestDraftRef.current;
         const htmlBody = bodyRef.current?.innerHTML ?? lastBodyRef.current;
         lastBodyRef.current = htmlBody;
-        const result = await draftMutateAsyncRef.current({
-          id: draftIdRef.current,
-          to: emailsOf(latest.toRecipients),
-          cc: emailsOf(latest.ccRecipients),
-          bcc: emailsOf(latest.bccRecipients),
-          subject: latest.subject,
-          htmlBody,
-          threadId: latest.threadId,
-        });
+        let result: Awaited<ReturnType<typeof draftMutateAsyncRef.current>>;
+        try {
+          result = await draftMutateAsyncRef.current({
+            id: draftIdRef.current,
+            to: emailsOf(latest.toRecipients),
+            cc: emailsOf(latest.ccRecipients),
+            bcc: emailsOf(latest.bccRecipients),
+            subject: latest.subject,
+            htmlBody,
+            threadId: latest.threadId,
+          });
+        } catch (error) {
+          // Not saved after all: leaving must try again.
+          lastSavedRef.current = { body: '', fields: '' };
+          throw error;
+        }
+        onDraftChangedRef.current?.();
         if (result?.id && result.id !== draftIdRef.current) {
           draftIdRef.current = result.id;
           // A save that finishes after leaving has no page of its own to tell.
