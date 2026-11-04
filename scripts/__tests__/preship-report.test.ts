@@ -8,10 +8,37 @@ import {
   mergeOnlyState,
   persistedState,
   advisoryNote,
+  depScanNote,
   finalLine,
 } from '../lib/preship-report.mjs';
 
 const fmt = (ms: number) => `${ms}ms`;
+
+describe('depScanNote says what the dependency scan really did', () => {
+  const pass = { id: 'osv-scan', verdict: 'PASS', required: false };
+  const skipped = { id: 'osv-scan', verdict: 'SKIPPED_PRECONDITION', required: false };
+
+  it('says a Trivy run is narrower than the CI check, even when it passes', () => {
+    const note = depScanNote(pass, ['trivy', 'fs']);
+    expect(note).toContain('Trivy');
+    expect(note).toContain('HIGH and CRITICAL');
+    expect(note).toContain('can pass where');
+  });
+
+  it('says the scan did not run when no scanner is installed', () => {
+    expect(depScanNote(skipped, null)).toContain('did not run');
+  });
+
+  it('adds nothing for osv-scanner, which is the CI check', () => {
+    expect(depScanNote(pass, ['osv-scanner', '--lockfile=pnpm-lock.yaml'])).toBe('');
+  });
+
+  it('adds nothing for other steps or when the step was not selected', () => {
+    expect(depScanNote({ ...pass, id: 'audit' }, ['trivy', 'fs'])).toBe('');
+    expect(depScanNote({ ...pass, verdict: 'SKIPPED_NOT_SELECTED' }, ['trivy', 'fs'])).toBe('');
+    expect(depScanNote({ ...skipped, verdict: 'SKIPPED_NOT_SELECTED' }, null)).toBe('');
+  });
+});
 
 describe('printer truthfulness', () => {
   it('prints a non-required failure as a warning, never FAIL', () => {

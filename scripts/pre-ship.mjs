@@ -96,7 +96,13 @@ import {
   runForwarding,
   sharedSemaphore,
 } from './lib/test-slot.mjs';
-import { stepLine, advisoryNote, persistedState, finalLine } from './lib/preship-report.mjs';
+import {
+  stepLine,
+  advisoryNote,
+  depScanNote,
+  persistedState,
+  finalLine,
+} from './lib/preship-report.mjs';
 import { integrationInfraMissing } from './lib/preship-integration-infra.mjs';
 import { reusableResult } from './lib/preship-cache.mjs';
 import { testStepEnv } from './lib/preship-build.mjs';
@@ -1084,7 +1090,9 @@ async function main() {
     // Truthful per-step label: MISSING for an unrunnable required guard, WARN
     // (not "FAIL") for a non-blocking advisory failure, PASS (after retry) when
     // a step needed more than one attempt.
-    process.stdout.write(`${stepLine(r, { allowMissing }, fmtDuration)}\n${advisoryNote(r)}`);
+    process.stdout.write(
+      `${stepLine(r, { allowMissing }, fmtDuration)}\n${advisoryNote(r)}${depScanNote(r, DEP_SCANNER)}`
+    );
 
     if (isMissingRequired(r)) {
       if (allowMissing) {

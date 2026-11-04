@@ -118,6 +118,24 @@ export function advisoryNote(r) {
     : '';
 }
 
+/**
+ * What the dependency scan really did, printed under its step. A PASS from the
+ * Trivy fallback is not the check CI runs, and that difference should be visible.
+ * @param {{id: string, verdict: string}} r
+ * @param {string[] | null} scanner the argv that ran, or null when none is installed
+ */
+export function depScanNote(r, scanner) {
+  if (r.id !== 'osv-scan') return '';
+  if (r.verdict === 'SKIPPED_PRECONDITION') {
+    return "    Dependency scan did not run: no scanner installed. CI's OSV Scanner still runs.\n";
+  }
+  if (r.verdict.startsWith('SKIPPED') || scanner?.[0] !== 'trivy') return '';
+  return (
+    '    osv-scanner is not installed, so this ran Trivy: HIGH and CRITICAL only, without dev ' +
+    "dependencies. It can pass where CI's OSV Scanner fails.\n"
+  );
+}
+
 /** The final verdict line, carrying counts that agree with the per-step lines. */
 export function finalLine(verdict, duration, results, expected) {
   return `pre-ship: ${verdict} in ${duration} (${summaryText(summarize(results, expected))}).\n`;
