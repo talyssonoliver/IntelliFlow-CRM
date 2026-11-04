@@ -34,28 +34,25 @@ patched: <0.0.0. Same reasoning and same expiry as the entry above.
 """
 
 [[IgnoredVulns]]
-id = "GHSA-vfj7-8cjw-p6xm"
+id = "GHSA-g3hv-75wg-m249"
 ignoreUntil = 2026-12-10
 reason = """
-braces <=3.0.3 stack-exhaustion denial of service through deeply nested
-patterns (CVE-2026-93687), published 03/10/2026. No fixed version exists:
-braces@3.0.3 is the latest release (18/09/2024), so no override can satisfy
-it. Reached only through micromatch@4.0.8 — build and lint tooling, never a
-runtime dependency of a deployed app. Mirrors the pnpm.auditConfig.ignoreGhsas
-entry added the same day. Re-check on expiry — if braces has published a
-release above 3.0.3 by then, take it and delete this entry.
+minimatch denial of service through attacker-controlled glob patterns. The fix
+is 11.0.1, a major version, and the tree holds several versions, some pinned by
+overrides for lint tooling, so forcing it risks breaking those tools. Most paths
+are build and lint tooling. It also reaches @sentry/nextjs' bundler plugin and
+otel's gaxios > rimraf, but no path was found for outside input to become a glob
+pattern. Tracked in #1171. Re-check on expiry: take 11.x once the parents allow it.
 """
 
 [[IgnoredVulns]]
-id = "GHSA-hp3w-g68c-fv3c"
+id = "GHSA-3g3m-2fjr-6pw4"
 ignoreUntil = 2026-12-10
 reason = """
-sprintf-js denial of service through unbounded precision (medium), published
-24/09/2026. No fixed version exists: every release up to 1.1.3, the latest, is
-in the vulnerable range. Reached only through tsup > @microsoft/api-extractor >
-@rushstack/ts-command-line > argparse@1.0.10 > sprintf-js@1.0.3, a
-devDependency used to build type declarations, never a runtime dependency of a
-deployed app. pnpm audit already passes it (below the high threshold). Re-check
-on expiry: if sprintf-js publishes a release above 1.1.3, or argparse 1.x drops
-it, take that and delete this entry.
+glob keeps reading directories after an aborted walk (moderate). It only matters
+to a caller that passes `signal`. glob isn't imported in apps or packages source,
+and the tools/ files that import it don't pass one. The other paths are the
+@sentry/nextjs bundler plugin at build time, and otel's gaxios > rimraf, which
+gaxios' built code doesn't load. The fix is 14.0.2, a major version. Tracked in
+#1171. Re-check on expiry: take it once the parents allow it.
 """
