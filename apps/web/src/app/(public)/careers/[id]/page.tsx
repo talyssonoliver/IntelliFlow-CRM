@@ -23,12 +23,12 @@ export async function generateMetadata({
 
   if (!job) {
     return {
-      title: 'Job Not Found | Aurora Careers',
+      title: { absolute: 'Job Not Found | Aurora Careers' },
     };
   }
 
   return {
-    title: `${job.title} | Aurora Careers`,
+    title: { absolute: `${job.title} | Aurora Careers` },
     description: job.description.slice(0, 160),
     openGraph: {
       images: OG_IMAGES,

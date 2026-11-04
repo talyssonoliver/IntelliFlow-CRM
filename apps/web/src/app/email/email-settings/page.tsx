@@ -9,7 +9,7 @@ import EmailSettingsContent from './EmailSettingsContent';
 import { EmailSettingsLoading } from './EmailSettingsLoading';
 
 export const metadata = {
-  title: 'Email Settings — Aurora',
+  title: { absolute: 'Email Settings — Aurora' },
   description:
     'Connect the mailbox your email is sent from, and set the reply-to address, tracking and bounce handling.',
 };

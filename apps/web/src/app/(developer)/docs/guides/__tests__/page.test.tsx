@@ -25,7 +25,7 @@ describe('GuidesPage', () => {
   });
 
   it('exports metadata.title as "Developer Guides | Aurora" (AC-001)', () => {
-    expect(metadata.title).toBe('Developer Guides | Aurora');
+    expect(metadata.title).toEqual({ absolute: 'Developer Guides | Aurora' });
   });
 
   it('exports metadata.description containing "guides" (AC-001)', () => {

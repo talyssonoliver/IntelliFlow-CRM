@@ -17,12 +17,12 @@ export async function generateMetadata({
   const { id } = await params;
 
   if (!isValidId(id)) {
-    return { title: 'App Not Found | Aurora' };
+    return { title: { absolute: 'App Not Found | Aurora' } };
   }
 
   const app = findAppById(id);
   return {
-    title: app ? `${app.name} | Developer Apps | Aurora` : 'App Not Found | Aurora',
+    title: { absolute: app ? `${app.name} | Developer Apps | Aurora` : 'App Not Found | Aurora' },
   };
 }
 

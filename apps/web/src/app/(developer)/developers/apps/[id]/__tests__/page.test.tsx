@@ -82,7 +82,7 @@ describe('DeveloperAppDetailPage', () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ id: 'app-001' }),
     });
-    expect(metadata.title).toContain('Aurora Dashboard');
+    expect(metadata.title).toHaveProperty('absolute', expect.stringContaining('Aurora Dashboard'));
   });
 
   // P-009: generateMetadata returns "App Not Found" for unknown id
@@ -90,7 +90,7 @@ describe('DeveloperAppDetailPage', () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ id: 'unknown-id' }),
     });
-    expect(metadata.title).toContain('App Not Found');
+    expect(metadata.title).toHaveProperty('absolute', expect.stringContaining('App Not Found'));
   });
 
   // P-010: generateMetadata for invalid id returns "App Not Found"
@@ -98,7 +98,7 @@ describe('DeveloperAppDetailPage', () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ id: 'bad<id>' }),
     });
-    expect(metadata.title).toContain('App Not Found');
+    expect(metadata.title).toHaveProperty('absolute', expect.stringContaining('App Not Found'));
   });
 
   // P-011: generateMetadata for app-002 contains app name
@@ -106,7 +106,7 @@ describe('DeveloperAppDetailPage', () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ id: 'app-002' }),
     });
-    expect(metadata.title).toContain('CRM Sandbox App');
+    expect(metadata.title).toHaveProperty('absolute', expect.stringContaining('CRM Sandbox App'));
   });
 
   // P-012: generateMetadata for app-003 contains app name
@@ -114,6 +114,6 @@ describe('DeveloperAppDetailPage', () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ id: 'app-003' }),
     });
-    expect(metadata.title).toContain('Legacy Connector');
+    expect(metadata.title).toHaveProperty('absolute', expect.stringContaining('Legacy Connector'));
   });
 });

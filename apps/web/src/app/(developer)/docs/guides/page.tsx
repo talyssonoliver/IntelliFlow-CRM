@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { GuidesList } from '@/components/developer/guides-list';
 
 export const metadata: Metadata = {
-  title: 'Developer Guides | Aurora',
+  title: { absolute: 'Developer Guides | Aurora' },
   description:
     'Developer guides for Aurora — getting started, development workflows, testing strategies, AI development, deployment, and best practices',
 };

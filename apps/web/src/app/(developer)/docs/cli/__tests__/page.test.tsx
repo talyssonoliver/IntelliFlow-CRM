@@ -26,7 +26,7 @@ describe('CliDocsPage', () => {
   });
 
   it('metadata.title === "CLI Reference | Aurora"', () => {
-    expect(metadata.title).toBe('CLI Reference | Aurora');
+    expect(metadata.title).toEqual({ absolute: 'CLI Reference | Aurora' });
   });
 
   it('metadata.description contains "CLI"', () => {

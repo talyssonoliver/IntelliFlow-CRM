@@ -6,7 +6,7 @@ import ReportSettingsContent from './ReportSettingsContent';
 import ReportSettingsLoading from './loading';
 
 export const metadata = {
-  title: 'Report Settings — Aurora',
+  title: { absolute: 'Report Settings — Aurora' },
   description: 'Configure the default date range and display currency for analytics reports.',
 };
 

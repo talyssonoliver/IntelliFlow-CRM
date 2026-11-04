@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { SdkGuides } from '@/components/developer/sdk-guides';
 
 export const metadata: Metadata = {
-  title: 'SDK Guides | Aurora',
+  title: { absolute: 'SDK Guides | Aurora' },
   description:
     'SDK documentation for Aurora — TypeScript client libraries, React hooks, installation guides, and quickstart examples',
 };
