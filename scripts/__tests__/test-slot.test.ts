@@ -9,6 +9,7 @@ import path from 'node:path';
 import {
   DEFAULT_SLOTS_DIR,
   PRESHIP_GROUP,
+  preshipGroupRefusal,
   preshipNeedsSlot,
   preshipSlotArgv,
   runForwarding,
@@ -50,6 +51,54 @@ describe('preshipNeedsSlot', () => {
   it('skips CI and a run that already holds a slot', () => {
     expect(preshipNeedsSlot(full, { CI: 'true' })).toBe(false);
     expect(preshipNeedsSlot(full, { TEST_SLOT_HELD: 'slot2' })).toBe(false);
+  });
+});
+
+describe('one IntelliFlow pre-ship at a time', () => {
+  it('uses the group the database wrapper holds, so the two exclude each other', () => {
+    expect(PRESHIP_GROUP).toBe('intelliflow-db');
+  });
+
+  const ownerOf = (owner: unknown) => () => JSON.stringify(owner);
+  const nested = { TEST_SLOT_HELD: 'slot2', TEST_SLOTS_DIR: '/slots' };
+
+  it('reads the held slot from the semaphore directory', () => {
+    const paths: string[] = [];
+    preshipGroupRefusal(full, nested, (p: string) => {
+      paths.push(p);
+      return JSON.stringify({ exclusive: PRESHIP_GROUP });
+    });
+    expect(paths).toEqual([path.join('/slots', 'slot2.lock', 'owner.json')]);
+  });
+
+  it('allows a run nested in a slot that holds the group', () => {
+    expect(preshipGroupRefusal(full, nested, ownerOf({ exclusive: PRESHIP_GROUP }))).toBeNull();
+  });
+
+  it.each([
+    ['no group', { exclusive: null }],
+    ['another group', { exclusive: 'something-else' }],
+  ])('refuses a run nested in a slot that holds %s, and says what to run', (_name, owner) => {
+    const refusal = preshipGroupRefusal(full, nested, ownerOf(owner));
+    expect(refusal).toContain(`--exclusive ${PRESHIP_GROUP}`);
+  });
+
+  it('does not refuse when it is not nested, on CI or for a subset', () => {
+    const fail = () => {
+      throw new Error('should not read');
+    };
+    expect(preshipGroupRefusal(full, {}, fail)).toBeNull();
+    expect(preshipGroupRefusal(full, { ...nested, CI: 'true' }, fail)).toBeNull();
+    expect(preshipGroupRefusal({ ...full, only: ['lint'] }, nested, fail)).toBeNull();
+    expect(preshipGroupRefusal({ ...full, list: true }, nested, fail)).toBeNull();
+  });
+
+  it('does not block on an owner record it cannot read', () => {
+    const unreadable = () => {
+      throw new Error('ENOENT');
+    };
+    expect(preshipGroupRefusal(full, nested, unreadable)).toBeNull();
+    expect(preshipGroupRefusal(full, nested, () => 'not json')).toBeNull();
   });
 });
 

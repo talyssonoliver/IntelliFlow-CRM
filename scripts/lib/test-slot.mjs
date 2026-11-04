@@ -19,7 +19,12 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 
 export const DEFAULT_SLOTS_DIR = 'C:/Users/talys/ops/test-slots';
-export const PRESHIP_GROUP = 'intelliflow-pre-ship';
+/**
+ * The one lock a pre-ship runs under. It is the group for work on the local test
+ * database too, because a push wrapped in that group runs its pre-ship nested and
+ * so takes no lock of its own: two group names would let two pre-ships run at once.
+ */
+export const PRESHIP_GROUP = 'intelliflow-db';
 
 /**
  * Path of the shared semaphore, or null when this machine has none.
@@ -41,6 +46,34 @@ export function sharedSemaphore(env, exists = fs.existsSync) {
 export function preshipNeedsSlot(flags, env) {
   if (flags.help || flags.list || flags.only !== null) return false;
   return !env.TEST_SLOT_HELD && !env.CI;
+}
+
+/**
+ * Why a full pre-ship must not run in the slot it is nested in, or null when it may.
+ * The semaphore passes a nested call straight through, so a slot taken without
+ * PRESHIP_GROUP would let this run alongside another pre-ship. An owner record that
+ * can't be read doesn't block: that says nothing about who holds what.
+ * @param {{help: boolean, list: boolean, only: string[] | null}} flags
+ * @param {NodeJS.ProcessEnv} env
+ * @param {(p: string, encoding: 'utf8') => string} [read]
+ * @returns {string | null}
+ */
+export function preshipGroupRefusal(flags, env, read = fs.readFileSync) {
+  if (flags.help || flags.list || flags.only !== null) return null;
+  if (!env.TEST_SLOT_HELD || env.CI) return null;
+  const dir = env.TEST_SLOTS_DIR || DEFAULT_SLOTS_DIR;
+  let owner;
+  try {
+    owner = JSON.parse(read(path.join(dir, `${env.TEST_SLOT_HELD}.lock`, 'owner.json'), 'utf8'));
+  } catch {
+    return null;
+  }
+  if (owner?.exclusive === PRESHIP_GROUP) return null;
+  return (
+    `pre-ship: this slot does not hold the ${PRESHIP_GROUP} group, so another pre-ship could ` +
+    `run at the same time. Run it without a wrapper, or through with-slot.mjs with ` +
+    `--exclusive ${PRESHIP_GROUP}.\n`
+  );
 }
 
 /**
