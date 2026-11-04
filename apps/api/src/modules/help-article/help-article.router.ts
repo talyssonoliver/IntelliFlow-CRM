@@ -86,6 +86,27 @@ export type HelpArticleWithSectionsDto = Omit<HelpArticle, 'keywords' | 'related
 
 export const helpArticleRouter = createTRPCRouter({
   /**
+   * Published articles per category, counted the way getByCategory lists them for
+   * a reader: the tenant's own plus built-ins it has not shadowed with the same slug.
+   */
+  getCategoryCounts: tenantProcedure.query(async ({ ctx }): Promise<Record<string, number>> => {
+    const tenantId = ctx.tenant.tenantId;
+    const ownArticles = await ctx.prismaWithTenant.helpArticle.findMany({
+      where: { tenantId },
+      select: { slug: true },
+    });
+    const groups = await ctx.prismaWithTenant.helpArticle.groupBy({
+      by: ['categoryId'],
+      where: {
+        OR: [{ tenantId }, { isSystem: true, slug: { notIn: ownArticles.map((a) => a.slug) } }],
+        status: 'PUBLISHED',
+      },
+      _count: { _all: true },
+    });
+    return Object.fromEntries(groups.map((g) => [g.categoryId, g._count._all]));
+  }),
+
+  /**
    * List help articles with pagination, filtering, and search.
    * DRAFT articles are only visible to ADMIN/MANAGER users.
    */

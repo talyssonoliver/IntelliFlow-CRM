@@ -94,13 +94,25 @@ describe('searchHelpContent', () => {
   });
 
   it('sorts by articleCount desc with sortMode most-articles', () => {
-    const results = searchHelpContent('', items, {
+    const counted = items.map((item, index) => ({ ...item, articleCount: index }));
+    const results = searchHelpContent('', counted, {
       ...DEFAULT_SEARCH_FILTERS,
       sortMode: 'most-articles',
     });
     for (let i = 1; i < results.length; i++) {
-      expect(results[i - 1].item.articleCount).toBeGreaterThanOrEqual(results[i].item.articleCount);
+      expect(results[i - 1].item.articleCount ?? 0).toBeGreaterThanOrEqual(
+        results[i].item.articleCount ?? 0
+      );
     }
+  });
+
+  it('most-articles keeps working before the live counts load', () => {
+    const uncounted = items.map(({ articleCount: _count, ...item }) => item);
+    const results = searchHelpContent('', uncounted, {
+      ...DEFAULT_SEARCH_FILTERS,
+      sortMode: 'most-articles',
+    });
+    expect(results).toHaveLength(uncounted.length);
   });
 
   it('category filter + query = intersection', () => {
