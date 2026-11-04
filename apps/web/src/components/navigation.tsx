@@ -131,7 +131,12 @@ export function Navigation() {
       <div className="flex h-16 items-center px-4 lg:px-6">
         {/* Logo */}
         <div className="mr-4 shrink-0 2xl:mr-8">
-          <Logo />
+          <span className="lg:max-2xl:hidden">
+            <Logo />
+          </span>
+          <span className="hidden lg:max-2xl:inline">
+            <Logo collapsed />
+          </span>
         </div>
 
         {/* Desktop Navigation */}
@@ -152,7 +157,7 @@ export function Navigation() {
         <div className="flex-1" />
 
         {/* Search */}
-        <div className="hidden md:flex items-center mr-4 min-w-24 max-w-64 flex-[1_1_16rem]">
+        <div className="hidden md:flex items-center mr-2 min-w-24 max-w-64 flex-[1_1_16rem] 2xl:mr-4">
           <SearchBar className="w-full" />
         </div>
 

@@ -81,7 +81,7 @@ export function UserMenu({ user: propUser, className }: Readonly<UserMenuProps>)
           className="w-8 h-8"
           fallbackClassName="text-sm font-medium text-muted-foreground bg-muted"
         />
-        <span className="hidden sm:inline lg:hidden min-[1440px]:inline text-sm font-medium text-foreground whitespace-nowrap">
+        <span className="hidden sm:max-lg:inline 2xl:inline text-sm font-medium text-foreground whitespace-nowrap">
           {user.name}
         </span>
         <span className="material-symbols-outlined text-lg text-muted-foreground">
