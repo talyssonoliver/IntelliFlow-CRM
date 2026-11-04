@@ -126,6 +126,8 @@ export interface ParsedEmailResponse {
   isReply: boolean;
   isForward: boolean;
   isDraft: boolean;
+  /** Only ever set for the owner's own draft, in `getEmail`. */
+  bcc?: ReturnType<typeof parseRecipients>;
   spamScore?: number;
   receivedAt: string;
   status: string;
@@ -193,6 +195,8 @@ function applyFolderFilter(where: any, folder: string, userId: string): void {
     // PG-207: bounced and failed sends stay visible in Sent (with a status badge).
     where.status = { in: SENT_FOLDER_STATUSES };
   } else if (folderLower === 'drafts') {
+    // A draft is private to the person writing it.
+    where.userId = userId;
     where.metadata = { path: ['isDraft'], equals: true };
   } else if (folderLower === 'spam') {
     where.metadata = { path: ['isSpam'], equals: true };
@@ -357,7 +361,14 @@ export const inboundEmailRouter = createTRPCRouter({
         include: { attachments: true },
       });
       if (!record) return null;
-      return mapEmailRecord(record);
+      const email = mapEmailRecord(record);
+      if (!email.isDraft) return email;
+      // A draft is private to the person writing it, and they need all of it back.
+      if (record.userId !== (ctx as any).user.userId) return null;
+      return {
+        ...email,
+        bcc: record.bccEmails ? parseRecipients(record.bccEmails) : undefined,
+      };
     }),
 
   /**
@@ -677,7 +688,8 @@ export const inboundEmailRouter = createTRPCRouter({
         const existing = await (ctx as any).prisma.emailRecord.findFirst({
           where: { id: input.id, tenantId },
         });
-        if (!existing) {
+        // Only your own draft: never someone else's, or an email already sent.
+        if (!existing || existing.userId !== userId || !existing.metadata?.isDraft) {
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Draft not found' });
         }
 
@@ -694,7 +706,7 @@ export const inboundEmailRouter = createTRPCRouter({
               isDraft: true,
               isHtml: true,
               textBody: input.textBody,
-              threadId: input.threadId,
+              threadId: input.threadId ?? existing.metadata?.threadId,
             },
           },
         });
@@ -885,6 +897,7 @@ export const inboundEmailRouter = createTRPCRouter({
           where.userId = (ctx as any).user?.userId;
           where.status = { in: SENT_FOLDER_STATUSES };
         } else if (folderLower === 'drafts') {
+          where.userId = (ctx as any).user?.userId;
           where.metadata = { path: ['isDraft'], equals: true };
         } else if (folderLower === 'spam') {
           where.metadata = { path: ['isSpam'], equals: true };

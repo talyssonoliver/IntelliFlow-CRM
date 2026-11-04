@@ -32,15 +32,18 @@ import {
   saveSmtpMailboxInputSchema,
   smtpAccountConfig,
   smtpAccountDiffers,
+  smtpAccountFields,
   smtpEndpointConfig,
   smtpEndpointDiffers,
   type ConnectionTestResultDto,
   type MailboxDto,
   type OAuthProvidersAvailableDto,
   type SaveSmtpMailboxInput,
+  type SendingIdentityDto,
 } from '@intelliflow/validators';
 import { createTRPCRouter, tenantProcedure, verifiedTenantProcedure } from '../../trpc';
 import { assertTenantContext } from '../../security/tenant-context';
+import { resolveSender } from './mailbox-sender';
 import {
   assertEmailAdmin,
   auditEmail,
@@ -218,7 +221,9 @@ function assertStoredPasswordsReusable(input: SaveSmtpMailboxInput, existing: Ma
 function assertPasswordsAvailable(input: SaveSmtpMailboxInput, stored: MailboxRow | null): void {
   if (stored) assertStoredPasswordsReusable(input, stored);
   const smtpPassword = input.smtpPassword === undefined ? stored?.smtpPassword : input.smtpPassword;
-  if (!smtpPassword && input.smtpPassword !== null) throw badRequest('Enter the mailbox password.');
+  if (!smtpPassword && input.smtpPassword !== null) {
+    throw badRequest('Enter the password for this mailbox.');
+  }
   const imapPassword = input.imapPassword === undefined ? stored?.imapPassword : input.imapPassword;
   if (input.imapHost && !imapPassword) {
     throw badRequest('Enter the IMAP password for bounce reading.');
@@ -289,6 +294,23 @@ export const emailMailboxRouter = createTRPCRouter({
     }
   ),
 
+  /** Who a new email would go out as, by the same rules as a send (no connection details). */
+  sendingIdentity: tenantProcedure.query(async ({ ctx }): Promise<SendingIdentityDto> => {
+    assertTenantContext(ctx);
+    const { resolved } = await resolveSender(ctx as unknown as EmailRouterCtx);
+    if ('refusal' in resolved) {
+      const refusal = resolved.refusal === 'MAILBOX_ERROR' ? 'MAILBOX_ERROR' : 'NO_MAILBOX';
+      return { address: null, name: null, scope: null, refusal };
+    }
+    const { mailbox } = resolved;
+    return {
+      address: mailbox.fromAddress,
+      name: mailbox.fromName ?? null,
+      scope: mailbox.scope === 'TENANT' ? 'TENANT' : 'USER',
+      refusal: null,
+    };
+  }),
+
   getTenant: tenantProcedure.query(async ({ ctx }): Promise<MailboxDto | null> => {
     assertTenantContext(ctx);
     const c = ctx as unknown as EmailRouterCtx;
@@ -314,6 +336,44 @@ export const emailMailboxRouter = createTRPCRouter({
         imapPassword: secretAudit(input.imapHost ? input.imapPassword : null),
       });
       return toMailboxDto(row, { includeConnection: true });
+    }),
+
+  /**
+   * Tries settings before they are saved, so a mistake shows up while the form is
+   * still open. Nothing is written; a saved password is only reused under the same
+   * rule as saving it.
+   */
+  testSmtpSettings: verifiedTenantProcedure
+    .input(saveSmtpMailboxInputSchema)
+    .mutation(async ({ ctx, input }): Promise<ConnectionTestResultDto> => {
+      assertTenantContext(ctx);
+      const c = ctx as unknown as EmailRouterCtx;
+      assertScopeAllowed(c, input.scope, 'testSmtpSettings');
+      consumeConnectionTest(c.tenant.userId, Date.now());
+      const existing = await findMailbox(c, input.scope);
+      const stored = existing?.kind === 'SMTP' ? existing : null;
+      assertPasswordsAvailable(input, stored);
+      const { transports } = emailRuntimeDeps(c);
+      try {
+        await transports.smtp.verify({
+          ...smtpEndpointConfig(input),
+          ...smtpAccountConfig(
+            smtpAccountFields(input.smtpUsername, input.smtpPassword ?? stored?.smtpPassword ?? '')
+          ),
+        });
+        if (input.imapHost) {
+          await transports.imap.verify({
+            host: input.imapHost,
+            port: input.imapPort ?? 0,
+            username: input.imapUsername ?? '',
+            password: input.imapPassword ?? stored?.imapPassword ?? '',
+          });
+        }
+        return { ok: true, code: null };
+      } catch (error) {
+        const code = error instanceof MailboxTransportError ? error.code : 'CONNECT_FAILED';
+        return { ok: false, code };
+      }
     }),
 
   testConnection: verifiedTenantProcedure
