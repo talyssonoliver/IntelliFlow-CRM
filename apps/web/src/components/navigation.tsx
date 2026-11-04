@@ -130,7 +130,7 @@ export function Navigation() {
       <PinnedTenantBanner />
       <div className="flex h-16 items-center px-4 lg:px-6">
         {/* Logo */}
-        <div className="mr-8">
+        <div className="mr-4 shrink-0 2xl:mr-8">
           <Logo />
         </div>
 
@@ -142,28 +142,33 @@ export function Navigation() {
             ))}
           </nav>
         ) : (
-          <MainNav routes={routes} />
+          <MainNav
+            routes={routes}
+            className="min-w-0 shrink-[0.1] overflow-x-auto [scrollbar-width:none]"
+          />
         )}
 
         {/* Spacer */}
         <div className="flex-1" />
 
         {/* Search */}
-        <div className="hidden md:flex items-center mr-4">
-          <SearchBar className="w-64" />
+        <div className="hidden md:flex items-center mr-4 min-w-24 max-w-64 flex-[1_1_16rem]">
+          <SearchBar className="w-full" />
         </div>
 
         {/* Trial indicator — only visible when on a trial plan */}
-        <TrialBadge className="mr-2 hidden sm:inline-flex" />
+        <TrialBadge className="mr-2 hidden shrink-0 sm:inline-flex" />
 
         {/* Notifications - count is managed via RemindersContext */}
-        <Notifications />
+        <div className="shrink-0">
+          <Notifications />
+        </div>
 
         {/* ADR-071: tenant switcher (hidden with a single tenant, disabled while pinned) */}
         <TenantSwitcher className="ml-2" />
 
         {/* User Menu */}
-        <UserMenu className="ml-2" />
+        <UserMenu className="ml-2 shrink-0" />
 
         {/* Mobile Menu Button */}
         <button
