@@ -130,11 +130,11 @@ export function Navigation() {
       <PinnedTenantBanner />
       <div className="flex h-16 items-center px-4 lg:px-6">
         {/* Logo */}
-        <div className="mr-4 shrink-0 2xl:mr-8">
-          <span className="lg:max-2xl:hidden">
+        <div className="mr-4 shrink-0 min-[1700px]:mr-8">
+          <span className="lg:max-[1699px]:hidden">
             <Logo />
           </span>
-          <span className="hidden lg:max-2xl:inline">
+          <span className="hidden lg:max-[1699px]:inline">
             <Logo collapsed />
           </span>
         </div>
