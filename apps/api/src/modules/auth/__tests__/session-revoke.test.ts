@@ -34,6 +34,8 @@ async function sessionNotStartingWithC(userId: string) {
     await service().revokeSession(created.id);
     created = await session(userId);
   }
+  // Throwing away a session here isn't what the tests are checking.
+  prismaMock.session.delete.mockClear();
   return created;
 }
 
