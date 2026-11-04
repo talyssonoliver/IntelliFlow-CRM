@@ -1,11 +1,11 @@
 'use client';
 
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 import { trpc } from '@/lib/trpc';
-import { EmailCompose } from '@/components/email/EmailCompose';
+import { EmailCompose, type ComposeDraft } from '@/components/email/EmailCompose';
 
 type ComposeMode = 'new' | 'reply' | 'replyAll' | 'forward';
 
@@ -16,6 +16,41 @@ const MODE_LABELS: Record<ComposeMode, string> = {
   forward: 'Forward',
 };
 
+interface EmailAddressRow {
+  address: string;
+}
+
+/** A message read back for Compose, only when it really is a draft. */
+function draftFrom(
+  email:
+    | {
+        id: string;
+        isDraft: boolean;
+        to: EmailAddressRow[];
+        cc?: EmailAddressRow[];
+        bcc?: EmailAddressRow[];
+        subject: string;
+        htmlBody?: string;
+        textBody?: string;
+        threadId?: string;
+      }
+    | null
+    | undefined
+): ComposeDraft | undefined {
+  if (!email?.isDraft) return undefined;
+  const addresses = (rows: EmailAddressRow[] = []) =>
+    rows.map((row) => row.address).filter((address) => address.length > 0);
+  return {
+    id: email.id,
+    to: addresses(email.to),
+    cc: addresses(email.cc),
+    bcc: addresses(email.bcc),
+    subject: email.subject,
+    htmlBody: email.htmlBody ?? email.textBody ?? '',
+    threadId: email.threadId,
+  };
+}
+
 export function ComposeClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -23,6 +58,8 @@ export function ComposeClient() {
   const mode = (searchParams.get('mode') as ComposeMode) ?? 'new';
   const emailId = searchParams.get('emailId');
   const toParam = searchParams.get('to');
+  // Read once: saving a new draft adds its id to the URL, and that must not reload it.
+  const [draftId] = useState(() => searchParams.get('draftId'));
 
   // Parse the `to` query param into initial recipients
   const initialTo = useMemo(() => {
@@ -40,9 +77,16 @@ export function ComposeClient() {
     { enabled: needsOriginal }
   );
 
+  // gcTime 0: Compose reads this once, so it must never start from an older copy.
+  const draftQuery = trpc.email.getEmail.useQuery(
+    { emailId: draftId ?? '' },
+    { enabled: !!draftId, gcTime: 0 }
+  );
+  const initialDraft = draftFrom(draftQuery.data);
+
   // PG-207 (owner ruling Q5): only a new message starts with the default
   // signature; replies and forwards start without one.
-  const prefillSignature = mode === 'new' && !emailId;
+  const prefillSignature = mode === 'new' && !emailId && !draftId;
   const signatureQuery = trpc.emailSignatures.resolveDefault.useQuery(undefined, {
     enabled: prefillSignature,
   });
@@ -50,11 +94,27 @@ export function ComposeClient() {
   // Compose reads its initial body once, so it renders only after what it
   // starts from has loaded; a failed signature lookup just means no signature.
   const ready =
-    !(prefillSignature && signatureQuery.isLoading) && !(needsOriginal && emailQuery.isLoading);
+    !(prefillSignature && signatureQuery.isLoading) &&
+    !(needsOriginal && emailQuery.isLoading) &&
+    !(draftId && draftQuery.isLoading);
 
   const handleDone = useCallback(() => {
     router.push('/email');
   }, [router]);
+
+  // Keeps Back working: this page's history entry now points at the saved draft.
+  const handleDraftSaved = useCallback((id: string) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('draftId', id);
+    window.history.replaceState(window.history.state, '', url);
+  }, []);
+
+  const handleLeave = useCallback(
+    (href: string) => {
+      router.push(href);
+    },
+    [router]
+  );
 
   return (
     <div className="flex flex-col h-full">
@@ -70,7 +130,7 @@ export function ComposeClient() {
           Back to Email
         </Link>
         <div className="h-4 w-px bg-border" />
-        <h1 className="text-lg font-semibold">{MODE_LABELS[mode]}</h1>
+        <h1 className="text-lg font-semibold">{initialDraft ? 'Draft' : MODE_LABELS[mode]}</h1>
       </div>
 
       {/* Compose form */}
@@ -82,6 +142,9 @@ export function ComposeClient() {
           initialSignatureHtml={
             prefillSignature ? (signatureQuery.data?.html ?? undefined) : undefined
           }
+          initialDraft={initialDraft}
+          onDraftSaved={handleDraftSaved}
+          onLeave={handleLeave}
           onDiscard={handleDone}
           onSent={handleDone}
           className="flex-1"

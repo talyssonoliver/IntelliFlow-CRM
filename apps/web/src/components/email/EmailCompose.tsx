@@ -13,6 +13,7 @@ import { AttachmentManager } from './AttachmentManager';
 import { TemplateSelector } from './TemplateSelector';
 import { getEmailSendError, partialSendNotice, type EmailSendErrorView } from './send-errors';
 import { SendErrorAlert } from './SendErrorAlert';
+import { ComposeFrom } from './ComposeFrom';
 
 type ComposeMode = 'new' | 'reply' | 'replyAll' | 'forward';
 
@@ -23,6 +24,17 @@ interface OriginalEmail {
   textBody?: string;
   from: { address: string; name?: string };
   to: Array<{ address: string; name?: string }>;
+}
+
+/** A saved draft to carry on writing. */
+export interface ComposeDraft {
+  id: string;
+  to: string[];
+  cc: string[];
+  bcc: string[];
+  subject: string;
+  htmlBody: string;
+  threadId?: string;
 }
 
 interface EmailComposeProps {
@@ -36,6 +48,12 @@ interface EmailComposeProps {
    * nothing is injected after mount and the server appends nothing.
    */
   initialSignatureHtml?: string;
+  /** Opens a saved draft instead of starting a new message. */
+  initialDraft?: ComposeDraft;
+  /** Told when the draft first gets an id, so the page can come back to it. */
+  onDraftSaved?: (draftId: string) => void;
+  /** Follows a link out of Compose once the draft is saved. Defaults to a page load. */
+  onLeave?: (href: string) => void;
   onDiscard: () => void;
   onSent?: () => void;
   className?: string;
@@ -100,6 +118,10 @@ function readAsBase64(file: File): Promise<string> {
   });
 }
 
+const asRecipient = (email: string): Recipient => ({ name: email, email });
+const emailsOf = (recipients: readonly Recipient[]) => recipients.map((r) => r.email);
+const hasText = (html: string) => html.replaceAll(/<[^<>]*>/g, '').trim().length > 0;
+
 const TRACKED_COMMANDS = [
   'bold',
   'italic',
@@ -113,6 +135,9 @@ export function EmailCompose({
   originalEmail,
   initialTo,
   initialSignatureHtml,
+  initialDraft,
+  onDraftSaved,
+  onLeave,
   onDiscard,
   onSent,
   className,
@@ -121,7 +146,9 @@ export function EmailCompose({
   // Forward mode: set initial body with quoted content; a new message starts
   // with the signature below an empty first line.
   let initialBody = '';
-  if (mode === 'forward' && originalEmail?.htmlBody) {
+  if (initialDraft) {
+    initialBody = DOMPurify.sanitize(initialDraft.htmlBody);
+  } else if (mode === 'forward' && originalEmail?.htmlBody) {
     initialBody = `<br><br><div style="border-left:2px solid #ccc;padding-left:8px;color:#666">
           <p><strong>Forwarded message:</strong></p>
           ${DOMPurify.sanitize(originalEmail.htmlBody)}
@@ -132,20 +159,26 @@ export function EmailCompose({
 
   const defaults = getDefaultRecipients(mode, originalEmail);
 
-  const [toRecipients, setToRecipients] = useState<Recipient[]>(
-    initialTo && initialTo.length > 0 ? initialTo : defaults.to
+  const [toRecipients, setToRecipients] = useState<Recipient[]>(() => {
+    if (initialDraft) return initialDraft.to.map(asRecipient);
+    return initialTo && initialTo.length > 0 ? initialTo : defaults.to;
+  });
+  const [ccRecipients, setCcRecipients] = useState<Recipient[]>(
+    initialDraft ? initialDraft.cc.map(asRecipient) : defaults.cc
   );
-  const [ccRecipients, setCcRecipients] = useState<Recipient[]>(defaults.cc);
-  const [bccRecipients, setBccRecipients] = useState<Recipient[]>([]);
-  const [showCc, setShowCc] = useState(defaults.cc.length > 0);
-  const [showBcc, setShowBcc] = useState(false);
-  const [subject, setSubject] = useState(getDefaultSubject(mode, originalEmail?.subject));
+  const [bccRecipients, setBccRecipients] = useState<Recipient[]>(
+    initialDraft ? initialDraft.bcc.map(asRecipient) : []
+  );
+  const [showCc, setShowCc] = useState(ccRecipients.length > 0);
+  const [showBcc, setShowBcc] = useState(bccRecipients.length > 0);
+  const [subject, setSubject] = useState(
+    initialDraft ? initialDraft.subject : getDefaultSubject(mode, originalEmail?.subject)
+  );
   const [attachments, setAttachments] = useState<File[]>([]);
   const [activeFormats, setActiveFormats] = useState<string[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [statusMessage, setStatusMessage] = useState('');
   const [bodyHtml, setBodyHtml] = useState(initialBody);
-  const [draftId, setDraftId] = useState<string | undefined>(undefined);
   // One object for the editor's whole life: React 19 re-applies
   // dangerouslySetInnerHTML whenever the object changes, which would wipe what
   // the user typed (and a template insert) on every re-render.
@@ -161,6 +194,61 @@ export function EmailCompose({
   const sendMutation = trpc.email.sendEmail.useMutation();
   const draftMutation = trpc.email.saveDraft.useMutation();
   const uploadMutation = trpc.emailAttachments.upload.useMutation();
+  const removeDraftMutation = trpc.email.processEmail.useMutation();
+  const identityQuery = trpc.emailMailbox.sendingIdentity.useQuery();
+  const threadId = originalEmail?.id ?? initialDraft?.threadId;
+
+  // Saves run one at a time so two of them cannot each create a draft, and always
+  // send the latest recipients and subject. Once the message is sent, none may run,
+  // or a late autosave would bring the draft back.
+  const draftIdRef = useRef(initialDraft?.id);
+  const sentRef = useRef(false);
+  const saveChainRef = useRef<Promise<unknown>>(Promise.resolve());
+  const latestDraftRef = useRef({ toRecipients, ccRecipients, bccRecipients, subject, threadId });
+  latestDraftRef.current = { toRecipients, ccRecipients, bccRecipients, subject, threadId };
+  const draftMutateAsyncRef = useRef(draftMutation.mutateAsync);
+  draftMutateAsyncRef.current = draftMutation.mutateAsync;
+  const onDraftSavedRef = useRef(onDraftSaved);
+  onDraftSavedRef.current = onDraftSaved;
+
+  const persistDraft = useCallback((htmlBody: string) => {
+    const run = saveChainRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        if (sentRef.current) return;
+        const latest = latestDraftRef.current;
+        const result = await draftMutateAsyncRef.current({
+          id: draftIdRef.current,
+          to: emailsOf(latest.toRecipients),
+          cc: emailsOf(latest.ccRecipients),
+          bcc: emailsOf(latest.bccRecipients),
+          subject: latest.subject,
+          htmlBody,
+          threadId: latest.threadId,
+        });
+        if (result?.id && result.id !== draftIdRef.current) {
+          draftIdRef.current = result.id;
+          onDraftSavedRef.current?.(result.id);
+        }
+      });
+    saveChainRef.current = run;
+    return run;
+  }, []);
+
+  /** Sent, so the draft has done its job. A failure here must not look like a failed send. */
+  const removeSentDraft = useCallback(async () => {
+    sentRef.current = true;
+    await saveChainRef.current.catch(() => undefined);
+    if (!draftIdRef.current) return;
+    try {
+      await removeDraftMutation.mutateAsync({
+        emailId: draftIdRef.current,
+        action: 'permanentDelete',
+      });
+    } catch {
+      // It stays in Drafts, where the user can delete it.
+    }
+  }, [removeDraftMutation]);
 
   // Track active formatting state on selection changes
   useEffect(() => {
@@ -269,13 +357,14 @@ export function EmailCompose({
         bcc: bccRecipients.length > 0 ? bccRecipients.map((r) => r.email) : undefined,
         subject,
         htmlBody: getBodyHtml(),
-        threadId: originalEmail?.id,
+        threadId,
         attachments: uploaded.length > 0 ? uploaded : undefined,
       });
       const notice = partialSendNotice(result);
       setSkippedNotice(notice);
       setStatusMessage(notice ?? 'Email sent successfully');
       if (notice) toast({ title: 'Email sent', description: notice });
+      await removeSentDraft();
       onSent?.();
     } catch (error) {
       // The draft stays as it is; the focused alert says what to do next (and is
@@ -291,7 +380,8 @@ export function EmailCompose({
     bccRecipients,
     subject,
     getBodyHtml,
-    originalEmail,
+    threadId,
+    removeSentDraft,
     onSent,
   ]);
 
@@ -313,18 +403,12 @@ export function EmailCompose({
 
   const handleSaveDraft = useCallback(async () => {
     try {
-      const result = await draftMutation.mutateAsync({
-        id: draftId,
-        to: toRecipients.map((r) => r.email),
-        subject,
-        htmlBody: getBodyHtml(),
-      });
-      if (result?.id) setDraftId(result.id);
+      await persistDraft(getBodyHtml());
       setStatusMessage('Draft saved');
     } catch {
       setStatusMessage('Failed to save draft');
     }
-  }, [draftMutation, draftId, toRecipients, subject, getBodyHtml]);
+  }, [persistDraft, getBodyHtml]);
 
   /**
    * Execute a formatting command on the editor.
@@ -457,69 +541,67 @@ export function EmailCompose({
     };
   }, [saveSelection]);
 
-  // Auto-save draft after 2s debounce when body changes
+  // Auto-save a draft 2s after anything in it stops changing.
   const debouncedBody = useDebounce(bodyHtml, 2000);
-
-  // Auto-save is triggered only by debouncedBody changes. All other reads are
-  // pulled off latest-value refs so the effect does not re-register on every
-  // keystroke (which would thrash mutateAsync promises and spam the backend).
-  const autoSaveStateRef = useRef({ initialBody, toRecipients, subject, draftId });
-  autoSaveStateRef.current = { initialBody, toRecipients, subject, draftId };
-  const draftMutateAsyncRef = useRef(draftMutation.mutateAsync);
-  draftMutateAsyncRef.current = draftMutation.mutateAsync;
+  const draftFieldsKey = JSON.stringify([
+    emailsOf(toRecipients),
+    emailsOf(ccRecipients),
+    emailsOf(bccRecipients),
+    subject,
+  ]);
+  const debouncedFieldsKey = useDebounce(draftFieldsKey, 2000);
+  const lastAutoSavedRef = useRef({ body: initialBody, fields: draftFieldsKey });
 
   useEffect(() => {
-    const {
-      initialBody: initial,
-      toRecipients: to,
-      subject: subj,
-      draftId: id,
-    } = autoSaveStateRef.current;
-    if (!debouncedBody || debouncedBody === initial) return;
-    const hasContent =
-      to.length > 0 ||
-      subj.trim().length > 0 ||
-      debouncedBody.replaceAll(/<[^<>]*>/g, '').trim().length > 0;
-    if (!hasContent) return;
+    const last = lastAutoSavedRef.current;
+    if (debouncedBody === last.body && debouncedFieldsKey === last.fields) return;
+    const { toRecipients: to, subject: subj } = latestDraftRef.current;
+    if (to.length === 0 && subj.trim().length === 0 && !hasText(debouncedBody)) return;
 
-    draftMutateAsyncRef
-      .current({
-        id,
-        to: to.map((r) => r.email),
-        subject: subj,
-        htmlBody: debouncedBody,
-      })
-      .then((result) => {
-        if (result?.id) setDraftId(result.id);
-        setStatusMessage('Draft saved automatically');
-      })
+    lastAutoSavedRef.current = { body: debouncedBody, fields: debouncedFieldsKey };
+    persistDraft(debouncedBody)
+      .then(() => setStatusMessage('Draft saved automatically'))
       .catch(() => {
         // Silent fail — auto-save should not interrupt the user
       });
-  }, [debouncedBody]);
+  }, [debouncedBody, debouncedFieldsKey, persistDraft]);
+
+  /** Saves what is there, if anything; going on matters more than a failed save. */
+  const saveBeforeLeaving = useCallback(async () => {
+    const body = getBodyHtml();
+    if (toRecipients.length === 0 && subject.trim().length === 0 && !hasText(body)) return;
+    await persistDraft(body).catch(() => undefined);
+  }, [toRecipients, subject, getBodyHtml, persistDraft]);
 
   // Discard: save draft if content present, then call onDiscard
   const handleDiscard = useCallback(async () => {
-    const body = getBodyHtml();
-    const hasContent =
-      toRecipients.length > 0 ||
-      subject.trim().length > 0 ||
-      body.replaceAll(/<[^<>]*>/g, '').trim().length > 0;
-
-    if (hasContent) {
-      try {
-        await draftMutation.mutateAsync({
-          id: draftId,
-          to: toRecipients.map((r) => r.email),
-          subject,
-          htmlBody: body,
-        });
-      } catch {
-        // proceed regardless
-      }
-    }
+    await saveBeforeLeaving();
     onDiscard();
-  }, [toRecipients, subject, draftId, draftMutation, getBodyHtml, onDiscard]);
+  }, [saveBeforeLeaving, onDiscard]);
+
+  const leaveFor = useCallback(
+    (href: string) => {
+      void saveBeforeLeaving().then(() => {
+        if (onLeave) onLeave(href);
+        else window.location.assign(href);
+      });
+    },
+    [saveBeforeLeaving, onLeave]
+  );
+
+  /** The blank space around the text is part of the message: it starts typing at the end. */
+  const focusBodyFromBlank = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    const editor = bodyRef.current;
+    if (event.target !== event.currentTarget || !editor) return;
+    event.preventDefault();
+    editor.focus();
+    const range = document.createRange();
+    range.selectNodeContents(editor);
+    range.collapse(false);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  }, []);
 
   return (
     <form
@@ -532,6 +614,7 @@ export function EmailCompose({
     >
       {/* Recipients */}
       <div className="space-y-1 border-b border-border px-4 py-2">
+        <ComposeFrom identity={identityQuery.data} onLeave={leaveFor} />
         <div className="flex items-center gap-2">
           <span className="w-8 text-xs text-muted-foreground">To</span>
           <RecipientPicker
@@ -613,7 +696,11 @@ export function EmailCompose({
       <FormatToolbar onFormat={handleFormat} activeFormats={activeFormats} />
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto px-4 py-2">
+      <div
+        role="none"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-2"
+        onMouseDown={focusBodyFromBlank}
+      >
         <label className="sr-only" htmlFor="compose-body">
           Message body
         </label>
@@ -624,7 +711,7 @@ export function EmailCompose({
           aria-label="Message body"
           contentEditable
           suppressContentEditableWarning
-          className="min-h-[120px] text-sm focus:outline-none prose prose-sm max-w-none"
+          className="min-h-[200px] flex-1 text-sm focus:outline-none prose prose-sm max-w-none"
           onKeyDown={handleBodyKeyDown}
           onInput={handleBodyInput}
           dangerouslySetInnerHTML={initialBodyProp}
@@ -639,7 +726,9 @@ export function EmailCompose({
       ) : null}
 
       {/* Coded send refusal (PG-207, AC-EM-018) */}
-      {sendError ? <SendErrorAlert error={sendError} className="mx-4 my-2 text-sm" /> : null}
+      {sendError ? (
+        <SendErrorAlert error={sendError} className="mx-4 my-2 text-sm" onAction={leaveFor} />
+      ) : null}
 
       {attachmentError ? (
         <p role="alert" className="px-4 py-1 text-xs text-red-700 dark:text-red-300">
@@ -663,7 +752,7 @@ export function EmailCompose({
       ) : null}
 
       {/* Actions */}
-      <div className="flex items-center justify-between border-t border-border px-4 py-2">
+      <div className="flex flex-wrap items-center justify-between gap-y-1 border-t border-border px-4 py-2">
         <div className="flex items-center gap-1">
           <button
             type="submit"
