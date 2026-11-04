@@ -144,6 +144,7 @@ describe('a saved draft', () => {
   });
 
   it('records being cleared, so reopening it does not bring the old text back', async () => {
+    saveDraft.mockResolvedValue({ id: 'draft-9', status: 'DRAFT' });
     render(<EmailCompose {...props()} initialDraft={{ ...DRAFT, to: [], cc: [], bcc: [] }} />);
     fireEvent.change(screen.getByLabelText('Subject'), { target: { value: '' } });
     typeBody('');
@@ -200,6 +201,20 @@ describe('saving a new draft', () => {
     await waitFor(() =>
       expect(saveDraft).toHaveBeenCalledWith(expect.objectContaining({ subject: 'Only a subject' }))
     );
+  });
+
+  it('never writes older text over newer when a save was waiting', async () => {
+    let finish: (value: { id: string; status: string }) => void = () => {};
+    saveDraft.mockImplementationOnce(() => new Promise((resolve) => (finish = resolve)));
+    render(<EmailCompose {...props()} />);
+    typeBody('<p>Old</p>');
+    await act(async () => {});
+    expect(saveDraft).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+    screen.getByLabelText('Message body').innerHTML = '<p>Newer</p>';
+    await act(async () => finish({ id: 'draft-1', status: 'DRAFT' }));
+    await waitFor(() => expect(saveDraft).toHaveBeenCalledTimes(2));
+    expect(saveDraft.mock.calls[1][0]).toMatchObject({ htmlBody: '<p>Newer</p>' });
   });
 
   it('never creates two drafts when saves overlap', async () => {

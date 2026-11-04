@@ -211,12 +211,17 @@ export function EmailCompose({
   const onDraftSavedRef = useRef(onDraftSaved);
   onDraftSavedRef.current = onDraftSaved;
 
-  const persistDraft = useCallback((htmlBody: string) => {
+  // The body is read when the save runs, so a queued save never writes older text over newer.
+  // Once the page has gone there is no editor to read: the last text seen is what remains.
+  const lastBodyRef = useRef(initialBody);
+  const persistDraft = useCallback(() => {
     const run = saveChainRef.current
       .catch(() => undefined)
       .then(async () => {
         if (sentRef.current) return;
         const latest = latestDraftRef.current;
+        const htmlBody = bodyRef.current?.innerHTML ?? lastBodyRef.current;
+        lastBodyRef.current = htmlBody;
         const result = await draftMutateAsyncRef.current({
           id: draftIdRef.current,
           to: emailsOf(latest.toRecipients),
@@ -403,12 +408,12 @@ export function EmailCompose({
 
   const handleSaveDraft = useCallback(async () => {
     try {
-      await persistDraft(getBodyHtml());
+      await persistDraft();
       setStatusMessage('Draft saved');
     } catch {
       setStatusMessage('Failed to save draft');
     }
-  }, [persistDraft, getBodyHtml]);
+  }, [persistDraft]);
 
   /**
    * Execute a formatting command on the editor.
@@ -568,21 +573,20 @@ export function EmailCompose({
   useEffect(() => {
     const last = lastAutoSavedRef.current;
     if (debouncedBody === last.body && debouncedFieldsKey === last.fields) return;
-    if (nothingToSave(debouncedBody)) return;
+    if (nothingToSave(getBodyHtml())) return;
 
     lastAutoSavedRef.current = { body: debouncedBody, fields: debouncedFieldsKey };
-    persistDraft(debouncedBody)
+    persistDraft()
       .then(() => setStatusMessage('Draft saved automatically'))
       .catch(() => {
         // Silent fail — auto-save should not interrupt the user
       });
-  }, [debouncedBody, debouncedFieldsKey, nothingToSave, persistDraft]);
+  }, [debouncedBody, debouncedFieldsKey, getBodyHtml, nothingToSave, persistDraft]);
 
   /** Saves what is there, if anything; going on matters more than a failed save. */
   const saveBeforeLeaving = useCallback(async () => {
-    const body = getBodyHtml();
-    if (nothingToSave(body)) return;
-    await persistDraft(body).catch(() => undefined);
+    if (nothingToSave(getBodyHtml())) return;
+    await persistDraft().catch(() => undefined);
   }, [nothingToSave, getBodyHtml, persistDraft]);
 
   // Discard: save draft if content present, then call onDiscard
