@@ -217,6 +217,19 @@ describe('saving a new draft', () => {
     expect(saveDraft.mock.calls[1][0]).toMatchObject({ htmlBody: '<p>Newer</p>' });
   });
 
+  it('saves the latest text even if the page has gone when the save runs', async () => {
+    let finish: (value: { id: string; status: string }) => void = () => {};
+    saveDraft.mockImplementationOnce(() => new Promise((resolve) => (finish = resolve)));
+    const { unmount } = render(<EmailCompose {...props()} />);
+    typeBody('<p>Old</p>');
+    await act(async () => {});
+    typeBody('<p>Latest</p>');
+    unmount();
+    await act(async () => finish({ id: 'draft-1', status: 'DRAFT' }));
+    await waitFor(() => expect(saveDraft).toHaveBeenCalledTimes(2));
+    expect(saveDraft.mock.calls[1][0]).toMatchObject({ htmlBody: '<p>Latest</p>' });
+  });
+
   it('never creates two drafts when saves overlap', async () => {
     let finish: (value: { id: string; status: string }) => void = () => {};
     saveDraft.mockImplementationOnce(() => new Promise((resolve) => (finish = resolve)));

@@ -215,6 +215,7 @@ export function EmailCompose({
   // Once the page has gone there is no editor to read: the last text seen is what remains.
   const lastBodyRef = useRef(initialBody);
   const persistDraft = useCallback(() => {
+    lastBodyRef.current = bodyRef.current?.innerHTML ?? lastBodyRef.current;
     const run = saveChainRef.current
       .catch(() => undefined)
       .then(async () => {
@@ -531,7 +532,9 @@ export function EmailCompose({
   );
 
   const handleBodyInput = useCallback(() => {
-    setBodyHtml(bodyRef.current?.innerHTML ?? '');
+    const html = bodyRef.current?.innerHTML ?? '';
+    lastBodyRef.current = html;
+    setBodyHtml(html);
   }, []);
 
   // Save selection on mouseup/keyup in the editor for toolbar interactions
@@ -738,6 +741,10 @@ export function EmailCompose({
       {attachments.length > 0 ? (
         <div className="border-t border-border px-4 py-2">
           <AttachmentManager files={attachments} onFilesChange={setAttachments} />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Files are added when you send. They are not kept with a draft, so attach them again if
+            you leave this page.
+          </p>
         </div>
       ) : null}
 
