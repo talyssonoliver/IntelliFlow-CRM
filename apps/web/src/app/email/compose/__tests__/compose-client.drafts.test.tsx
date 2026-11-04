@@ -9,6 +9,12 @@ const nav = vi.hoisted(() => ({
 const api = vi.hoisted(() => ({
   getEmail: vi.fn(),
   resolveDefault: vi.fn(),
+  utils: {
+    email: {
+      listEmails: { invalidate: vi.fn() },
+      getUnreadCounts: { invalidate: vi.fn() },
+    },
+  },
 }));
 const compose = vi.hoisted(() => vi.fn());
 
@@ -23,6 +29,7 @@ vi.mock('next/link', () => ({
 }));
 vi.mock('@/lib/trpc', () => ({
   trpc: {
+    useUtils: () => api.utils,
     email: { getEmail: { useQuery: api.getEmail } },
     emailSignatures: { resolveDefault: { useQuery: api.resolveDefault } },
   },
@@ -110,6 +117,14 @@ describe('ComposeClient drafts', () => {
     render(<ComposeClient />);
     lastProps().onDraftSaved('draft-1');
     expect(window.location.search).toBe('?mode=new&draftId=draft-1');
+  });
+
+  it('refreshes the lists when leaving, so a sent or saved draft shows correctly', () => {
+    const { unmount } = render(<ComposeClient />);
+    expect(api.utils.email.listEmails.invalidate).not.toHaveBeenCalled();
+    unmount();
+    expect(api.utils.email.listEmails.invalidate).toHaveBeenCalled();
+    expect(api.utils.email.getUnreadCounts.invalidate).toHaveBeenCalled();
   });
 
   it('leaves through the router', () => {

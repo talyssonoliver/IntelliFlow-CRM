@@ -210,6 +210,13 @@ export function EmailCompose({
   draftMutateAsyncRef.current = draftMutation.mutateAsync;
   const onDraftSavedRef = useRef(onDraftSaved);
   onDraftSavedRef.current = onDraftSaved;
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   // The body is read when the save runs, so a queued save never writes older text over newer.
   // Once the page has gone there is no editor to read: the last text seen is what remains.
@@ -234,7 +241,8 @@ export function EmailCompose({
         });
         if (result?.id && result.id !== draftIdRef.current) {
           draftIdRef.current = result.id;
-          onDraftSavedRef.current?.(result.id);
+          // A save that finishes after leaving has no page of its own to tell.
+          if (mountedRef.current) onDraftSavedRef.current?.(result.id);
         }
       });
     saveChainRef.current = run;

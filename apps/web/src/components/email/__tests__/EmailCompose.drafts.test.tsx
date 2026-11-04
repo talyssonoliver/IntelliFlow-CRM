@@ -195,6 +195,18 @@ describe('saving a new draft', () => {
     expect(saveDraft).not.toHaveBeenCalled();
   });
 
+  it('does not report a save that finishes after leaving', async () => {
+    let finish: (value: { id: string; status: string }) => void = () => {};
+    saveDraft.mockImplementationOnce(() => new Promise((resolve) => (finish = resolve)));
+    const onDraftSaved = vi.fn();
+    const { unmount } = render(<EmailCompose {...props()} onDraftSaved={onDraftSaved} />);
+    typeBody('<p>One</p>');
+    await act(async () => {});
+    unmount();
+    await act(async () => finish({ id: 'draft-1', status: 'DRAFT' }));
+    expect(onDraftSaved).not.toHaveBeenCalled();
+  });
+
   it('autosaves when only the subject changes', async () => {
     render(<EmailCompose {...props()} />);
     fireEvent.change(screen.getByLabelText('Subject'), { target: { value: 'Only a subject' } });

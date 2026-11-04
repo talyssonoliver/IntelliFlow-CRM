@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -101,6 +101,16 @@ export function ComposeClient() {
   const handleDone = useCallback(() => {
     router.push('/email');
   }, [router]);
+
+  // Leaving by any route, the lists show what Compose saved, sent or removed.
+  const utils = trpc.useUtils();
+  useEffect(
+    () => () => {
+      void utils.email.listEmails.invalidate();
+      void utils.email.getUnreadCounts.invalidate();
+    },
+    [utils]
+  );
 
   // Keeps Back working: this page's history entry now points at the saved draft.
   const handleDraftSaved = useCallback((id: string) => {

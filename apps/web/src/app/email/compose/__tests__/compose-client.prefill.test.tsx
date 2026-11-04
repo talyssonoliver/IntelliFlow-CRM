@@ -18,6 +18,12 @@ vi.mock('next/navigation', () => ({
 const api = vi.hoisted(() => ({ getEmail: vi.fn(), resolveDefault: vi.fn() }));
 vi.mock('@/lib/trpc', () => ({
   trpc: {
+    useUtils: () => ({
+      email: {
+        listEmails: { invalidate: () => undefined },
+        getUnreadCounts: { invalidate: () => undefined },
+      },
+    }),
     email: { getEmail: { useQuery: (...a: unknown[]) => api.getEmail(...a) } },
     emailSignatures: {
       resolveDefault: { useQuery: (...a: unknown[]) => api.resolveDefault(...a) },
