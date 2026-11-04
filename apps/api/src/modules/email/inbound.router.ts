@@ -14,6 +14,7 @@
  * @artifact apps/api/src/modules/email/inbound.router.ts
  */
 
+import { Prisma } from '@intelliflow/db';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { timingSafeEqual } from 'node:crypto';
@@ -566,7 +567,15 @@ export const inboundEmailRouter = createTRPCRouter({
         const threadEmails = await (ctx as any).prisma.emailRecord.findMany({
           where: {
             tenantId,
-            metadata: { path: ['threadId'], equals: input.threadId },
+            AND: [
+              { metadata: { path: ['threadId'], equals: input.threadId } },
+              {
+                OR: [
+                  { metadata: { path: ['isDraft'], equals: Prisma.AnyNull } },
+                  { metadata: { path: ['isDraft'], equals: false } },
+                ],
+              },
+            ],
           },
           include: { attachments: true },
           orderBy: { createdAt: 'asc' },
