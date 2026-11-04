@@ -559,9 +559,11 @@ export const inboundEmailRouter = createTRPCRouter({
         participantCount: number;
       }> => {
         const tenantId = (ctx as any).tenant.tenantId;
+        const userId = (ctx as any).user?.userId;
 
-        // Query emails belonging to this thread via metadata
-        let emails = await (ctx as any).prisma.emailRecord.findMany({
+        // Query emails belonging to this thread via metadata. A reply still being written is
+        // not part of the conversation: it opens in Compose, and only for whoever is writing it.
+        const threadEmails = await (ctx as any).prisma.emailRecord.findMany({
           where: {
             tenantId,
             metadata: { path: ['threadId'], equals: input.threadId },
@@ -570,6 +572,7 @@ export const inboundEmailRouter = createTRPCRouter({
           orderBy: { createdAt: 'asc' },
           take: input.limit,
         });
+        let emails = threadEmails.filter((email: any) => !email.metadata?.isDraft);
 
         // Fallback: if no emails found by threadId, try looking up by email ID
         // This handles emails that don't have metadata.threadId set
@@ -578,7 +581,7 @@ export const inboundEmailRouter = createTRPCRouter({
             where: { id: input.threadId, tenantId },
             include: { attachments: true },
           });
-          if (single) {
+          if (single && (!single.metadata?.isDraft || single.userId === userId)) {
             emails = [single];
           }
         }

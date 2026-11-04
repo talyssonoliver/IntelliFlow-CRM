@@ -32,6 +32,49 @@ const draftRow = (over: Record<string, unknown> = {}) => ({
 
 const caller = () => inboundEmailRouter.createCaller(createTestContext());
 
+describe('a draft and its thread', () => {
+  const sent = () => draftRow({ id: 'sent-1', metadata: { threadId: 'thread-1' } });
+
+  it('is not shown as part of the conversation, to anyone', async () => {
+    (prismaMock.emailRecord.findMany as any).mockResolvedValue([
+      sent(),
+      draftRow({ userId: OTHER }),
+      draftRow({ id: 'draft-2' }),
+    ]);
+
+    const thread = await caller().getThread({ threadId: 'thread-1', limit: 20 });
+
+    expect(thread.emails.map((email) => email.id)).toEqual(['sent-1']);
+  });
+
+  it('does not count its recipients as participants', async () => {
+    (prismaMock.emailRecord.findMany as any).mockResolvedValue([
+      draftRow({ userId: OTHER, toEmail: 'private@mail.example.com', ccEmails: null }),
+    ]);
+
+    const thread = await caller().getThread({ threadId: 'thread-1', limit: 20 });
+
+    expect(thread.participantCount).toBe(0);
+    expect(thread.subject).toBe('');
+  });
+
+  it('cannot be read by another user through its own id', async () => {
+    (prismaMock.emailRecord.findFirst as any).mockResolvedValue(draftRow({ userId: OTHER }));
+
+    const thread = await caller().getThread({ threadId: 'draft-1', limit: 20 });
+
+    expect(thread.emails).toEqual([]);
+  });
+
+  it('can still be read by the person writing it through its own id', async () => {
+    (prismaMock.emailRecord.findFirst as any).mockResolvedValue(draftRow());
+
+    const thread = await caller().getThread({ threadId: 'draft-1', limit: 20 });
+
+    expect(thread.emails.map((email) => email.id)).toEqual(['draft-1']);
+  });
+});
+
 beforeEach(() => {
   (prismaMock.emailRecord.findFirst as any).mockResolvedValue(null);
   (prismaMock.emailRecord.findMany as any).mockResolvedValue([]);
