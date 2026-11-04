@@ -136,7 +136,7 @@ export function TrackingCard({
           title="Tracking"
           titleId={titleId}
           headingLevel={2}
-          description="Saved now. Opens and clicks are recorded once tracking is released."
+          description="Your choice is saved, but opens and clicks aren't recorded yet."
         />
         <SwitchRow
           id="email-settings-track-opens"
