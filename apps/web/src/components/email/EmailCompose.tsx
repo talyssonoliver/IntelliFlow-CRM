@@ -121,6 +121,8 @@ function readAsBase64(file: File): Promise<string> {
 const asRecipient = (email: string): Recipient => ({ name: email, email });
 const emailsOf = (recipients: readonly Recipient[]) => recipients.map((r) => r.email);
 const hasText = (html: string) => html.replaceAll(/<[^<>]*>/g, '').trim().length > 0;
+const fieldsKeyOf = (to: Recipient[], cc: Recipient[], bcc: Recipient[], subject: string) =>
+  JSON.stringify([emailsOf(to), emailsOf(cc), emailsOf(bcc), subject]);
 
 const TRACKED_COMMANDS = [
   'bold',
@@ -221,8 +223,23 @@ export function EmailCompose({
   // The body is read when the save runs, so a queued save never writes older text over newer.
   // Once the page has gone there is no editor to read: the last text seen is what remains.
   const lastBodyRef = useRef(initialBody);
+  // What the last save covers, so nothing is saved twice and a change is never missed.
+  const lastSavedRef = useRef({
+    body: initialBody,
+    fields: fieldsKeyOf(toRecipients, ccRecipients, bccRecipients, subject),
+  });
+  const currentFieldsKey = () => {
+    const latest = latestDraftRef.current;
+    return fieldsKeyOf(
+      latest.toRecipients,
+      latest.ccRecipients,
+      latest.bccRecipients,
+      latest.subject
+    );
+  };
   const persistDraft = useCallback(() => {
     lastBodyRef.current = bodyRef.current?.innerHTML ?? lastBodyRef.current;
+    lastSavedRef.current = { body: lastBodyRef.current, fields: currentFieldsKey() };
     const run = saveChainRef.current
       .catch(() => undefined)
       .then(async () => {
@@ -511,6 +528,7 @@ export function EmailCompose({
         // A template replaces the body; the signature is kept after it (CA-7).
         const body = DOMPurify.sanitize(resolveVariables(template.body));
         bodyRef.current.innerHTML = signatureHtml ? `${body}<br>${signatureHtml}` : body;
+        lastBodyRef.current = bodyRef.current.innerHTML;
       }
       if (!subject) {
         setSubject(resolveVariables(template.subject));
@@ -572,27 +590,33 @@ export function EmailCompose({
 
   // Auto-save a draft 2s after anything in it stops changing.
   const debouncedBody = useDebounce(bodyHtml, 2000);
-  const draftFieldsKey = JSON.stringify([
-    emailsOf(toRecipients),
-    emailsOf(ccRecipients),
-    emailsOf(bccRecipients),
-    subject,
-  ]);
-  const debouncedFieldsKey = useDebounce(draftFieldsKey, 2000);
-  const lastAutoSavedRef = useRef({ body: initialBody, fields: draftFieldsKey });
+  const debouncedFieldsKey = useDebounce(
+    fieldsKeyOf(toRecipients, ccRecipients, bccRecipients, subject),
+    2000
+  );
 
   useEffect(() => {
-    const last = lastAutoSavedRef.current;
+    const last = lastSavedRef.current;
     if (debouncedBody === last.body && debouncedFieldsKey === last.fields) return;
     if (nothingToSave(getBodyHtml())) return;
 
-    lastAutoSavedRef.current = { body: debouncedBody, fields: debouncedFieldsKey };
     persistDraft()
       .then(() => setStatusMessage('Draft saved automatically'))
       .catch(() => {
         // Silent fail — auto-save should not interrupt the user
       });
   }, [debouncedBody, debouncedFieldsKey, getBodyHtml, nothingToSave, persistDraft]);
+
+  // Leaving by any route inside the app keeps what the autosave had not reached yet.
+  const saveOnLeaveRef = useRef(() => {});
+  saveOnLeaveRef.current = () => {
+    const last = lastSavedRef.current;
+    if (sentRef.current) return;
+    if (lastBodyRef.current === last.body && currentFieldsKey() === last.fields) return;
+    if (nothingToSave(lastBodyRef.current)) return;
+    persistDraft().catch(() => undefined);
+  };
+  useEffect(() => () => saveOnLeaveRef.current(), []);
 
   /** Saves what is there, if anything; going on matters more than a failed save. */
   const saveBeforeLeaving = useCallback(async () => {
