@@ -143,6 +143,18 @@ describe('a saved draft', () => {
     });
   });
 
+  it('records being cleared, so reopening it does not bring the old text back', async () => {
+    render(<EmailCompose {...props()} initialDraft={{ ...DRAFT, to: [], cc: [], bcc: [] }} />);
+    fireEvent.change(screen.getByLabelText('Subject'), { target: { value: '' } });
+    typeBody('');
+    await waitFor(() => expect(saveDraft).toHaveBeenCalled());
+    expect(saveDraft.mock.lastCall?.[0]).toMatchObject({
+      id: 'draft-9',
+      subject: '',
+      htmlBody: '',
+    });
+  });
+
   it('is removed once sent, and the send stays on its thread', async () => {
     const props_ = props();
     render(<EmailCompose {...props_} initialDraft={DRAFT} />);
@@ -172,6 +184,14 @@ describe('saving a new draft', () => {
     await waitFor(() => expect(saveDraft).toHaveBeenCalledTimes(2));
     expect(saveDraft.mock.calls[1][0]).toMatchObject({ id: 'draft-1', htmlBody: '<p>Two</p>' });
     expect(onDraftSaved).toHaveBeenCalledTimes(1);
+  });
+
+  it('saves nothing for an untouched new message', async () => {
+    const onLeave = vi.fn();
+    render(<EmailCompose {...props()} onLeave={onLeave} initialDraft={undefined} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }));
+    await waitFor(() => expect(props().onDiscard).toBeDefined());
+    expect(saveDraft).not.toHaveBeenCalled();
   });
 
   it('autosaves when only the subject changes', async () => {

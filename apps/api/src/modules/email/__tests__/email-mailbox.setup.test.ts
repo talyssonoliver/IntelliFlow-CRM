@@ -182,6 +182,23 @@ describe('emailMailbox.testSmtpSettings', () => {
     expect(smtpVerify).not.toHaveBeenCalled();
   });
 
+  it('never reuses the saved password for an explicit empty one', async () => {
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(smtpRow());
+
+    await expect(
+      member().testSmtpSettings(
+        input({
+          ...smtpEndpointFields('smtp.other.example.com', 587, 'STARTTLS'),
+          smtpPassword: null,
+        }) as never
+      )
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+    await expect(
+      member().testSmtpSettings(input({ smtpPassword: null }) as never)
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+    expect(smtpVerify).not.toHaveBeenCalled();
+  });
+
   it('asks for a password when there is none to use', async () => {
     const { smtpPassword: _omit, ...noPassword } = input();
 

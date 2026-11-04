@@ -352,21 +352,28 @@ export const emailMailboxRouter = createTRPCRouter({
       consumeConnectionTest(c.tenant.userId, Date.now());
       const existing = await findMailbox(c, input.scope);
       const stored = existing?.kind === 'SMTP' ? existing : null;
+      // Testing needs something to sign in with. Only an absent password may reuse the saved
+      // one, and assertPasswordsAvailable has checked that it stays with its own server.
+      if (input.smtpPassword === null) throw badRequest('Enter the password for this mailbox.');
       assertPasswordsAvailable(input, stored);
+      const smtpSecret =
+        input.smtpPassword === undefined ? (stored?.smtpPassword ?? '') : input.smtpPassword;
+      const imapSecret =
+        input.imapPassword === undefined
+          ? (stored?.imapPassword ?? '')
+          : (input.imapPassword ?? '');
       const { transports } = emailRuntimeDeps(c);
       try {
         await transports.smtp.verify({
           ...smtpEndpointConfig(input),
-          ...smtpAccountConfig(
-            smtpAccountFields(input.smtpUsername, input.smtpPassword ?? stored?.smtpPassword ?? '')
-          ),
+          ...smtpAccountConfig(smtpAccountFields(input.smtpUsername, smtpSecret)),
         });
         if (input.imapHost) {
           await transports.imap.verify({
             host: input.imapHost,
             port: input.imapPort ?? 0,
             username: input.imapUsername ?? '',
-            password: input.imapPassword ?? stored?.imapPassword ?? '',
+            password: imapSecret,
           });
         }
         return { ok: true, code: null };

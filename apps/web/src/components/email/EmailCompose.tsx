@@ -541,6 +541,19 @@ export function EmailCompose({
     };
   }, [saveSelection]);
 
+  /** Empty means nothing to create; a draft that exists must still record being cleared. */
+  const nothingToSave = useCallback((body: string) => {
+    if (draftIdRef.current) return false;
+    const latest = latestDraftRef.current;
+    return (
+      latest.toRecipients.length === 0 &&
+      latest.ccRecipients.length === 0 &&
+      latest.bccRecipients.length === 0 &&
+      latest.subject.trim().length === 0 &&
+      !hasText(body)
+    );
+  }, []);
+
   // Auto-save a draft 2s after anything in it stops changing.
   const debouncedBody = useDebounce(bodyHtml, 2000);
   const draftFieldsKey = JSON.stringify([
@@ -555,8 +568,7 @@ export function EmailCompose({
   useEffect(() => {
     const last = lastAutoSavedRef.current;
     if (debouncedBody === last.body && debouncedFieldsKey === last.fields) return;
-    const { toRecipients: to, subject: subj } = latestDraftRef.current;
-    if (to.length === 0 && subj.trim().length === 0 && !hasText(debouncedBody)) return;
+    if (nothingToSave(debouncedBody)) return;
 
     lastAutoSavedRef.current = { body: debouncedBody, fields: debouncedFieldsKey };
     persistDraft(debouncedBody)
@@ -564,14 +576,14 @@ export function EmailCompose({
       .catch(() => {
         // Silent fail — auto-save should not interrupt the user
       });
-  }, [debouncedBody, debouncedFieldsKey, persistDraft]);
+  }, [debouncedBody, debouncedFieldsKey, nothingToSave, persistDraft]);
 
   /** Saves what is there, if anything; going on matters more than a failed save. */
   const saveBeforeLeaving = useCallback(async () => {
     const body = getBodyHtml();
-    if (toRecipients.length === 0 && subject.trim().length === 0 && !hasText(body)) return;
+    if (nothingToSave(body)) return;
     await persistDraft(body).catch(() => undefined);
-  }, [toRecipients, subject, getBodyHtml, persistDraft]);
+  }, [nothingToSave, getBodyHtml, persistDraft]);
 
   // Discard: save draft if content present, then call onDiscard
   const handleDiscard = useCallback(async () => {
