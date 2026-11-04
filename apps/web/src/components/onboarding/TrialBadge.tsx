@@ -57,7 +57,7 @@ export function TrialBadge({ className }: Readonly<{ className?: string }>) {
       )}
     >
       <span
-        className="material-symbols-outlined text-[14px] lg:max-[1439px]:hidden"
+        className="material-symbols-outlined text-[14px] lg:max-[1439px]:!hidden"
         aria-hidden="true"
       >
         hourglass_empty
