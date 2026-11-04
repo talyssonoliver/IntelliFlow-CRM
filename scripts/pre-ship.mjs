@@ -90,6 +90,7 @@ import { spawnSync } from 'node:child_process';
 import { createGate } from './lib/preship-gate.mjs';
 import { resolveTestScope, SCOPE_ENV } from './lib/preship-test-scope.mjs';
 import {
+  preshipGroupRefusal,
   preshipNeedsSlot,
   preshipSlotArgv,
   runForwarding,
@@ -829,6 +830,11 @@ if (preshipNeedsSlot(flags, process.env)) {
       await runForwarding(process.execPath, preshipSlotArgv(semaphore, process.argv[1], args))
     );
   }
+}
+const groupRefusal = preshipGroupRefusal(flags, process.env);
+if (groupRefusal) {
+  process.stderr.write(groupRefusal);
+  process.exit(2);
 }
 
 if (flags.help) {
