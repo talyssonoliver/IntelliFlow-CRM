@@ -22,7 +22,7 @@ const FAQ = [
   {
     question: 'What does it connect to?',
     answer:
-      'Gmail, Outlook, Slack, Microsoft Teams, Stripe, PayPal and Google or Azure sign-in today, plus webhooks, React hooks and a CLI. The TypeScript SDK is in beta.',
+      'Your own mailbox through its mail server settings, and Google or Azure sign-in. Slack, Microsoft Teams, Stripe and PayPal connections are planned. The TypeScript SDK is in beta.',
   },
   {
     question: 'Where is my data kept separate?',

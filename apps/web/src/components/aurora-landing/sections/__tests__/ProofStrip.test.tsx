@@ -16,7 +16,7 @@ describe('ProofStrip', () => {
     expect(screen.getByText(/approval queue/i)).toBeInTheDocument();
     expect(screen.getByText(/six kinds of AI work/i)).toBeInTheDocument();
     expect(screen.getByText('6')).toBeInTheDocument();
-    expect(screen.getByText(/app connectors ready today/i)).toBeInTheDocument();
+    expect(screen.getByText(/app connectors in the works/i)).toBeInTheDocument();
     expect(screen.getByText('212')).toBeInTheDocument();
     expect(screen.getByText(/product screens/i)).toBeInTheDocument();
   });

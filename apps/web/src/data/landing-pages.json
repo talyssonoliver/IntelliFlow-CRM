@@ -201,17 +201,17 @@
             {
               "icon": "bolt",
               "title": "Bring your data in",
-              "description": "Import your contacts and deals, connect Gmail or Outlook, and the agents start work."
+              "description": "Import your contacts and deals, connect your mailbox, and the agents start work."
             },
             {
               "icon": "hub",
               "title": "Connected",
-              "description": "Gmail, Outlook, Slack, Microsoft Teams, Stripe and PayPal."
+              "description": "Your own mailbox, with Slack, Microsoft Teams, Stripe and PayPal planned."
             },
             {
               "icon": "code",
               "title": "Developer friendly",
-              "description": "Webhooks, React hooks and a CLI. The TypeScript SDK is in beta."
+              "description": "The TypeScript SDK is in beta, with webhooks planned."
             }
           ],
           "columns": 3

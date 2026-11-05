@@ -50,7 +50,7 @@ const FAQS: ReadonlyArray<{ q: string; a: string }> = [
   },
   {
     q: 'Can Aurora connect to the tools we already use?',
-    a: 'Yes. Aurora connects to Gmail, Outlook, Slack, Microsoft Teams, Stripe and PayPal, and your team can sign in with Google or Microsoft. A TypeScript SDK is in beta for custom work.',
+    a: 'Aurora connects to your own mailbox through its mail server settings, and your team can sign in with Google or Microsoft. Slack, Microsoft Teams, Stripe and PayPal connections are planned. A TypeScript SDK is in beta for custom work.',
   },
   {
     q: 'Is my data secure?',

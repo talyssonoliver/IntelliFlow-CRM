@@ -1,38 +1,41 @@
 import type { CSSProperties } from 'react';
 import './integrations-section.css';
 
-/** The 6 connectors that are actually registered and ready today, plus the two
- * OAuth sign-in providers. SAP is registered in code but not ready and must
- * never appear here (see product-truth.md §3.1 / §6). */
+/** Mailbox connection through mail server settings, the connectors still planned,
+ * and the two OAuth sign-in providers. SAP is registered in code but not ready and
+ * must never appear here (see product-truth.md §3.1 / §6). */
 const CONNECTORS: ReadonlyArray<{ label: string; logo: string; status: string }> = [
-  { label: 'Gmail', logo: '/brand/aurora/logos/gmail.svg', status: 'Ready' },
-  { label: 'Outlook', logo: '/brand/aurora/logos/microsoftoutlook.svg', status: 'Ready' },
-  { label: 'Slack', logo: '/brand/aurora/logos/slack.svg', status: 'Ready' },
-  { label: 'Microsoft Teams', logo: '/brand/aurora/logos/microsoftteams.svg', status: 'Ready' },
-  { label: 'Stripe', logo: '/brand/aurora/logos/stripe.svg', status: 'Ready' },
-  { label: 'PayPal', logo: '/brand/aurora/logos/paypal.svg', status: 'Ready' },
+  { label: 'Gmail', logo: '/brand/aurora/logos/gmail.svg', status: 'Mail settings' },
+  { label: 'Outlook', logo: '/brand/aurora/logos/microsoftoutlook.svg', status: 'Mail settings' },
+  { label: 'Slack', logo: '/brand/aurora/logos/slack.svg', status: 'Planned' },
+  { label: 'Microsoft Teams', logo: '/brand/aurora/logos/microsoftteams.svg', status: 'Planned' },
+  { label: 'Stripe', logo: '/brand/aurora/logos/stripe.svg', status: 'Planned' },
+  { label: 'PayPal', logo: '/brand/aurora/logos/paypal.svg', status: 'Planned' },
   { label: 'Google sign-in', logo: '/brand/aurora/logos/google.svg', status: 'Sign-in' },
   { label: 'Azure sign-in', logo: '/brand/aurora/logos/microsoftazure.svg', status: 'Sign-in' },
 ];
 
-/** Developer surfaces: ready unless marked beta (built, not final) or soon (not built yet). */
+/** Developer surfaces: ready unless marked beta (built, not final), planned or soon (not built yet). */
 const DEV_CHIPS: ReadonlyArray<{
   label: string;
   icon?: string;
   logo?: string;
-  status?: 'beta' | 'soon';
+  status?: 'beta' | 'soon' | 'planned';
 }> = [
-  { label: 'Inbound webhooks', icon: 'call_received' },
-  { label: 'Outbound webhooks', icon: 'call_made' },
-  { label: 'React hooks', logo: '/brand/aurora/logos/react.svg' },
-  { label: 'CLI', icon: 'terminal' },
+  { label: 'Inbound webhooks', icon: 'call_received', status: 'planned' },
+  { label: 'Outbound webhooks', icon: 'call_made', status: 'planned' },
+  { label: 'React hooks', logo: '/brand/aurora/logos/react.svg', status: 'planned' },
+  { label: 'CLI', icon: 'terminal', status: 'planned' },
   { label: 'JWT', logo: '/brand/aurora/logos/jsonwebtokens.svg' },
   { label: 'MFA', icon: 'verified_user' },
   { label: 'TypeScript SDK', logo: '/brand/aurora/logos/typescript.svg', status: 'beta' },
   { label: 'API keys', icon: 'vpn_key', status: 'soon' },
 ];
 
-/** Ready integrations and developer surfaces, wired to one Aurora core rather than a flat logo grid. */
+const DEV_STATUS_LABEL = { beta: 'Beta', soon: 'Coming soon', planned: 'Planned' } as const;
+const DEV_STATUS_CLASS = { beta: 'beta', soon: 'soon', planned: 'soon' } as const;
+
+/** Integrations and developer surfaces with their true status, wired to one Aurora core rather than a flat logo grid. */
 export function IntegrationsSection() {
   return (
     <section
@@ -44,10 +47,10 @@ export function IntegrationsSection() {
       <div className="wrap">
         <div className="center reveal" data-reveal>
           <p className="eyebrow">Integrations</p>
-          <h2>Plugs into the tools your team already lives in.</h2>
+          <h2>Connect your mailbox, with more tools to come.</h2>
           <p className="section-lede">
-            Email, chat, payments and sign-in on day one. Build your own with webhooks, React hooks
-            and a CLI.
+            Connect your own mailbox and sign in with Google or Microsoft. Slack, Teams, Stripe and
+            PayPal are planned.
           </p>
         </div>
 
@@ -71,17 +74,17 @@ export function IntegrationsSection() {
         </div>
 
         <div className="dev-panel reveal" data-reveal>
-          <p className="dev-label">Build your own on the same connectors</p>
+          <p className="dev-label">Developer tools</p>
           <div className="dev-row" data-reveal-stagger>
             {DEV_CHIPS.map(({ label, icon, logo, status }) => (
-              <span key={label} className={status ? `dev ${status}` : 'dev'}>
+              <span key={label} className={status ? `dev ${DEV_STATUS_CLASS[status]}` : 'dev'}>
                 {logo ? (
                   <img src={logo} alt="" />
                 ) : (
                   <span className="material-symbols-outlined">{icon}</span>
                 )}
                 {label}
-                {status && <em>{status === 'beta' ? 'Beta' : 'Coming soon'}</em>}
+                {status && <em>{DEV_STATUS_LABEL[status]}</em>}
               </span>
             ))}
           </div>

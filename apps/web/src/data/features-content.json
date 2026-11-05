@@ -90,11 +90,11 @@
           "id": "inbox-calendar",
           "title": "Email and calendar",
           "icon": "mail",
-          "description": "Compose, reply and book meetings without leaving the record.",
+          "description": "Connect your mailbox to write and send email from the CRM, and book meetings on the record.",
           "benefits": [
-            "Gmail and Outlook",
+            "Your own mailbox",
             "Meetings on the record",
-            "No separate inbox tab"
+            "Sent from your own address"
           ],
           "learnMoreUrl": "/#platform"
         },
@@ -102,11 +102,11 @@
           "id": "workflow-automation",
           "title": "Workflow automation",
           "icon": "account_tree",
-          "description": "Build multi-step workflows, and extend the builder with your own node and action types.",
+          "description": "Planned: multi-step workflows with your own node and action types.",
           "benefits": [
-            "Multi-step workflows",
-            "Your own node types",
-            "Webhook-based actions"
+            "Multi-step workflows, planned",
+            "Your own node types, planned",
+            "Webhook actions, planned"
           ],
           "learnMoreUrl": "/#platform"
         }
@@ -120,13 +120,13 @@
       "features": [
         {
           "id": "connectors",
-          "title": "Six connectors",
+          "title": "Connectors",
           "icon": "hub",
-          "description": "Gmail, Outlook, Slack, Microsoft Teams, Stripe and PayPal, plus Google and Microsoft sign-in.",
+          "description": "Your own mailbox and Google or Microsoft sign-in. Slack, Microsoft Teams, Stripe and PayPal are planned.",
           "benefits": [
-            "Email and calendar",
-            "Chat and notifications",
-            "Payments"
+            "Your own mailbox",
+            "Google and Microsoft sign-in",
+            "More planned"
           ],
           "learnMoreUrl": "/#platform"
         },
@@ -158,11 +158,11 @@
           "id": "developers",
           "title": "Build on Aurora",
           "icon": "code",
-          "description": "Inbound and outbound webhooks, React hooks and a CLI. The TypeScript SDK is in beta and API keys are coming soon.",
+          "description": "The TypeScript SDK is in beta and API keys are coming soon. Webhooks are planned.",
           "benefits": [
-            "Webhooks",
-            "React hooks and a CLI",
-            "TypeScript SDK in beta"
+            "TypeScript SDK in beta",
+            "API keys coming soon",
+            "Webhooks planned"
           ],
           "learnMoreUrl": "/#platform"
         }

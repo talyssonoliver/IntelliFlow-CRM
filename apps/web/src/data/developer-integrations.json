@@ -11,14 +11,14 @@
         "title": "Inbound Webhooks",
         "description": "Receive events from external services into Aurora",
         "href": "/docs/webhooks",
-        "status": "available"
+        "status": "coming-soon"
       },
       {
         "id": "outbound-webhooks",
         "title": "Outbound Webhooks",
         "description": "Send real-time event notifications to your endpoints",
         "href": "/docs/webhooks",
-        "status": "available"
+        "status": "coming-soon"
       }
     ]
   },
@@ -41,14 +41,14 @@
         "title": "React Hooks",
         "description": "Pre-built React hooks for common CRM operations and data fetching",
         "href": "/docs/sdk",
-        "status": "available"
+        "status": "coming-soon"
       },
       {
         "id": "cli-tools",
         "title": "CLI Tools",
         "description": "Command-line interface for managing Aurora resources",
         "href": "/docs/cli",
-        "status": "available"
+        "status": "coming-soon"
       }
     ]
   },
@@ -101,7 +101,7 @@
         "title": "SAP ERP",
         "description": "Enterprise resource planning synchronization with SAP systems",
         "href": "https://intelliflow-crm.dev/docs/connectors/sap",
-        "status": "available",
+        "status": "coming-soon",
         "external": true
       },
       {
@@ -109,7 +109,7 @@
         "title": "Stripe",
         "description": "Payment processing and subscription management integration",
         "href": "https://intelliflow-crm.dev/docs/connectors/stripe",
-        "status": "available",
+        "status": "coming-soon",
         "external": true
       },
       {
@@ -117,13 +117,13 @@
         "title": "PayPal",
         "description": "PayPal payment gateway integration for invoicing and transactions",
         "href": "https://intelliflow-crm.dev/docs/connectors/paypal",
-        "status": "available",
+        "status": "coming-soon",
         "external": true
       },
       {
         "id": "gmail",
         "title": "Gmail",
-        "description": "Gmail integration for email tracking, logging, and campaign management",
+        "description": "Connect a Gmail mailbox through its mail server settings",
         "href": "https://intelliflow-crm.dev/docs/connectors/gmail",
         "status": "available",
         "external": true
@@ -131,7 +131,7 @@
       {
         "id": "outlook",
         "title": "Outlook",
-        "description": "Microsoft Outlook integration for email and calendar synchronization",
+        "description": "Connect an Outlook mailbox through its mail server settings",
         "href": "https://intelliflow-crm.dev/docs/connectors/outlook",
         "status": "available",
         "external": true
@@ -141,7 +141,7 @@
         "title": "Slack",
         "description": "Slack workspace integration for CRM notifications and commands",
         "href": "https://intelliflow-crm.dev/docs/connectors/slack",
-        "status": "available",
+        "status": "coming-soon",
         "external": true
       },
       {
@@ -149,7 +149,7 @@
         "title": "Microsoft Teams",
         "description": "Teams integration for collaboration, notifications, and meeting links",
         "href": "https://intelliflow-crm.dev/docs/connectors/teams",
-        "status": "available",
+        "status": "coming-soon",
         "external": true
       }
     ]

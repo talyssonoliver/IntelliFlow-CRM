@@ -11,14 +11,14 @@
       "id": "gmail",
       "name": "Gmail",
       "category": "email",
-      "description": "Email integration and sync",
+      "description": "Connect through mail server settings",
       "website": "https://gmail.com"
     },
     {
       "id": "google-calendar",
       "name": "Google Calendar",
       "category": "calendar",
-      "description": "Schedule meetings and sync events",
+      "description": "Calendar sync is planned",
       "website": "https://calendar.google.com"
     },
     {
@@ -194,14 +194,14 @@
     {
       "id": "email",
       "name": "Email",
-      "description": "Sync emails and automate outreach",
+      "description": "Connect your own mailbox. Mail sync is planned",
       "icon": "mail",
       "color": "#22c55e"
     },
     {
       "id": "calendar",
       "name": "Calendar",
-      "description": "Schedule meetings and sync events",
+      "description": "Book meetings in Aurora. Calendar sync is planned",
       "icon": "calendar_today",
       "color": "#f59e0b"
     },

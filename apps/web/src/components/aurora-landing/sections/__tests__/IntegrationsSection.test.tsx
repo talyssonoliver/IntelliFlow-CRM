@@ -6,7 +6,7 @@ import { render } from '@testing-library/react';
 import { IntegrationsSection } from '../IntegrationsSection';
 
 describe('IntegrationsSection', () => {
-  it('wires the 6 ready connectors plus sign-in to one Aurora core, not a bare grid', () => {
+  it('wires the 6 connectors plus sign-in to one Aurora core, not a bare grid', () => {
     const { container } = render(<IntegrationsSection />);
 
     expect(container.querySelector('.core-node')).toHaveTextContent('Aurora core');
@@ -36,7 +36,9 @@ describe('IntegrationsSection', () => {
   it('labels the SDK beta and API keys as coming soon, exactly', () => {
     const { container } = render(<IntegrationsSection />);
     expect(container.querySelector('.dev.beta')).toHaveTextContent(/TypeScript SDK\s*Beta/i);
-    expect(container.querySelector('.dev.soon')).toHaveTextContent(/API keys\s*Coming soon/i);
+    expect(container.querySelector('.dev.soon:last-of-type')).toHaveTextContent(
+      /API keys\s*Coming soon/i
+    );
   });
 
   it('carries the section-bridge markup for the integrator to wire up', () => {

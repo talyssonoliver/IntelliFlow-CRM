@@ -24,7 +24,7 @@
     {
       "id": "professional",
       "name": "Professional",
-      "description": "For growing teams that need advanced AI and automation",
+      "description": "For growing teams that need advanced AI",
       "price": {
         "monthly": 79,
         "annual": 65
@@ -34,7 +34,7 @@
         "Everything in Starter",
         "Advanced AI insights",
         "10,000 AI predictions/month",
-        "Workflow automation",
+        "Workflow automation (planned)",
         "AI explainability dashboard",
         "Priority support (4h response)",
         "3 years data retention",
@@ -206,23 +206,23 @@
         {
           "name": "Workflow Automation",
           "starter": false,
-          "professional": true,
-          "enterprise": "Advanced",
-          "custom": "Custom"
+          "professional": "Planned",
+          "enterprise": "Planned",
+          "custom": "Planned"
         },
         {
           "name": "Email Sequences",
           "starter": false,
-          "professional": true,
-          "enterprise": true,
-          "custom": true
+          "professional": "Planned",
+          "enterprise": "Planned",
+          "custom": "Planned"
         },
         {
           "name": "Automated Lead Routing",
           "starter": false,
-          "professional": true,
-          "enterprise": true,
-          "custom": true
+          "professional": "Planned",
+          "enterprise": "Planned",
+          "custom": "Planned"
         }
       ]
     },

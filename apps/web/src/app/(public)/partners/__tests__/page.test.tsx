@@ -84,7 +84,7 @@ describe('PartnersPage', () => {
       render(<PartnersPage />);
       const heading = screen.getByRole('heading', {
         level: 2,
-        name: /Integration Partners/i,
+        name: /Planned Integrations/i,
       });
       expect(heading).toBeDefined();
     });

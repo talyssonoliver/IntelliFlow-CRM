@@ -102,7 +102,7 @@ describe('Contact Page', () => {
 
       expect(document.body.textContent).not.toMatch(/SOC 2|ISO 27001|REST API|Google Calendar/);
       expect(
-        screen.getByText(/Gmail, Outlook, Slack, Microsoft Teams, Stripe and PayPal/)
+        screen.getByText(/your own mailbox through its mail server settings/)
       ).toBeInTheDocument();
       expect(
         screen.getByText(/multi-factor sign-in is available on every account/)

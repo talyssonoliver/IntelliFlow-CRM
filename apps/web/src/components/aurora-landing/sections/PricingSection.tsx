@@ -58,8 +58,7 @@ export function PricingSection() {
               <span className="material-symbols-outlined">check</span>Insights hub
             </li>
             <li>
-              <span className="material-symbols-outlined">check</span>Gmail, Outlook, Slack and
-              Teams
+              <span className="material-symbols-outlined">check</span>Your own mailbox
             </li>
           </ul>
         </div>

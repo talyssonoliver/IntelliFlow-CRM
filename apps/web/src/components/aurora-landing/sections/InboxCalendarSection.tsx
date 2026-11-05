@@ -49,7 +49,7 @@ const EVENTS: Array<{
   },
 ];
 
-/** Real two-pane inbox (/email) and a calendar agenda, inside the CRM. */
+/** Sample of the two-pane inbox (/email) and a calendar agenda, captioned as a sample. */
 export function InboxCalendarSection() {
   return (
     <section
@@ -59,11 +59,11 @@ export function InboxCalendarSection() {
     >
       <div className="wrap">
         <div className="center reveal" data-reveal>
-          <p className="eyebrow">Inbox &amp; calendar</p>
+          <p className="eyebrow">Email &amp; calendar</p>
           <h2>Email and your calendar, inside the CRM.</h2>
           <p className="section-lede">
-            Compose, reply and book meetings without leaving the record. No separate inbox tab, no
-            missed invite.
+            Connect your mailbox to write and send email from the CRM, and book meetings on the
+            record.
           </p>
         </div>
         <div className="ic-grid" data-reveal-stagger>
@@ -225,6 +225,9 @@ export function InboxCalendarSection() {
             </p>
           </div>
         </div>
+        <p className="ic-sample-caption">
+          Sample workspace. Reading incoming mail in Aurora is planned.
+        </p>
       </div>
     </section>
   );

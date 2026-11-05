@@ -363,3 +363,12 @@
     font-size: 12px;
   }
 }
+
+.aurora-page .ic-sample-caption {
+  margin: 24px auto 0;
+  max-width: 60ch;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2, #4a5568);
+}
