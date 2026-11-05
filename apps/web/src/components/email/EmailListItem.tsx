@@ -86,7 +86,10 @@ export function EmailListItem({ email, isSelected, onSelect }: Readonly<EmailLis
           'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1',
           isSelected && 'border-l-2 border-l-primary'
         )}
-        onClick={() => onSelect(email.id)}
+        onClick={(event) => {
+          // The sender card opens sheets in a portal; their clicks still bubble here.
+          if (event.currentTarget.contains(event.target as Node)) onSelect(email.id);
+        }}
       >
         {/* Avatar */}
         <SenderCard email={email}>
