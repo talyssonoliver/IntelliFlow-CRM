@@ -428,7 +428,7 @@
     "sections": [
       {
         "heading": "Connect your mailbox",
-        "content": "Open Email Settings, choose who provides your email, then enter your address and the password that provider asks for. Test the connection, then save.",
+        "content": "Open Email Settings, choose who provides your email, then enter your address and what that provider asks for, usually a password. Test the connection, then save.",
         "blocks": [
           {
             "type": "nav-path",
@@ -441,7 +441,7 @@
               "Choose Set Up Mailbox",
               "Choose who provides your email. If it is not listed, choose My own domain or another provider",
               "Enter your email address and your name",
-              "Enter the password your provider asks for. The form shows the steps for your provider",
+              "Enter what your provider asks for, usually a password. The form shows the steps for your provider",
               "Choose Test Connection. If it works, choose Save Mailbox"
             ]
           },
@@ -453,19 +453,19 @@
       },
       {
         "heading": "What to enter for your provider",
-        "content": "Most providers ask for an app password, a separate password made for one app, rather than your normal password.",
+        "content": "Most providers ask for an app password, made just for one app, rather than your normal password.",
         "blocks": [
           {
             "type": "paragraph",
-            "text": "Gmail or Google Workspace: turn on 2-Step Verification, then create an app password in your Google account. Yahoo, iCloud and Namecheap Private Email also need an app password. The form links to the right page for each."
+            "text": "Gmail or Google Workspace: turn on 2-Step Verification, then, in your Google account, create an app password. Yahoo, iCloud and Namecheap Private Email also need an app password. The form links to the right page for each."
           },
           {
             "type": "paragraph",
-            "text": "Microsoft 365 for business: your administrator must allow SMTP AUTH for your mailbox, and it does not work with Security defaults. Microsoft has announced it will retire this, turning it off by default for existing organisations at the end of December 2026. Sending is all that works: Microsoft no longer lets a password read incoming mail."
+            "text": "Microsoft 365 for business: your administrator must allow SMTP AUTH for your mailbox, and it does not work with Security defaults. Microsoft has announced it will retire this, turning it off by default for existing organisations at the end of December 2026. Sending is all that works: Microsoft no longer accepts passwords for reading incoming mail."
           },
           {
             "type": "paragraph",
-            "text": "Outlook, Hotmail and Live: these addresses need Microsoft sign-in, so a password will not work, and one-click sign-in is not available yet. For now, connect another address you use for work, or send from your own domain with a sending service."
+            "text": "Outlook, Hotmail and Live: these addresses need Microsoft sign-in, so passwords will not work, and one-click sign-in is not available yet. For now, connect another address you use for work, or send from your own domain with a sending service."
           },
           {
             "type": "paragraph",
@@ -477,7 +477,7 @@
           },
           {
             "type": "paragraph",
-            "text": "A business address on your own domain: ask whoever hosts your email for the SMTP server name and the password for your mailbox, or search their help pages for SMTP settings. If Google, Microsoft or Zoho runs your email, choose them instead."
+            "text": "A business address on your own domain: ask whoever hosts your email for the SMTP server name and your mailbox password, or search their help pages for SMTP settings. If Google, Microsoft or Zoho runs your email, choose them instead."
           }
         ]
       },
@@ -496,7 +496,7 @@
           },
           {
             "type": "tip",
-            "text": "Changing your provider password can cancel app passwords. If sending stops working, create a new one and enter it in Email Settings."
+            "text": "App passwords can stop working after you change your main password. If sending stops, create a new one and enter it in Email Settings."
           }
         ]
       },
@@ -510,7 +510,7 @@
           },
           {
             "type": "info",
-            "text": "A sending-only service such as Resend has no mailbox to read, and Microsoft 365 no longer lets a password read one, so this setting is not offered for them."
+            "text": "A sending-only service such as Resend has no mailbox to read, and Microsoft 365 no longer accepts passwords for reading one, so this setting is not offered for them."
           }
         ]
       }
