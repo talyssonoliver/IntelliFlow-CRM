@@ -167,7 +167,7 @@ export function Navigation() {
         <div className="flex-1" />
 
         {/* Search */}
-        <div className="hidden md:flex items-center mr-2 min-w-24 xl:max-[1365px]:min-w-16 max-w-64 flex-[1_1_16rem] 2xl:mr-4">
+        <div className="hidden md:flex items-center mr-2 min-w-24 xl:max-[1365px]:min-w-16 max-w-64 flex-[1_1_16rem] shrink-[100] 2xl:mr-4">
           <SearchBar className="w-full" />
         </div>
 
