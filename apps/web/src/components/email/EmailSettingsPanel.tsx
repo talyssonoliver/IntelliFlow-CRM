@@ -41,6 +41,7 @@ export function EmailSettingsPanel({ isOpen, onClose }: Readonly<EmailSettingsPa
       onClose={onClose}
       title="Email Settings"
       items={EMAIL_SETTINGS_ITEMS}
+      itemsAtTop
     />
   );
 }

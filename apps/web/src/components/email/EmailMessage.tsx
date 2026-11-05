@@ -65,7 +65,7 @@ export function EmailMessage({
         aria-controls={contentId}
         aria-label={isExpanded ? 'Collapse message' : 'Expand message'}
         className={cn(
-          'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors cursor-pointer',
+          'flex w-full flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 sm:flex-nowrap sm:gap-3 text-left transition-colors cursor-pointer',
           'hover:bg-accent/50',
           'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1 rounded-t-lg',
           !isExpanded && 'rounded-b-lg'
@@ -91,18 +91,21 @@ export function EmailMessage({
         </EntityHoverCard>
 
         {/* Sender + recipients info */}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1 basis-[calc(100%-5.5rem)] sm:basis-0">
           <EntityHoverCard
             email={message.from.address}
             displayName={message.from.name}
             side="bottom"
             align="start"
           >
-            <span id={headingId} className="text-sm font-medium hover:underline cursor-pointer">
+            <span
+              id={headingId}
+              className="text-sm font-medium hover:underline cursor-pointer [overflow-wrap:anywhere]"
+            >
               {message.from.name || message.from.address}
             </span>
           </EntityHoverCard>
-          <span className="ml-2 text-xs text-muted-foreground">
+          <span className="ml-2 text-xs text-muted-foreground [overflow-wrap:anywhere]">
             to{' '}
             {message.to.map((t, i) => (
               <span key={t.address}>
@@ -121,7 +124,10 @@ export function EmailMessage({
         />
 
         {/* Timestamp */}
-        <time dateTime={message.receivedAt} className="shrink-0 text-xs text-muted-foreground">
+        <time
+          dateTime={message.receivedAt}
+          className="order-last w-full shrink-0 pl-11 text-xs text-muted-foreground sm:order-none sm:w-auto sm:pl-0"
+        >
           {new Date(message.receivedAt).toLocaleString('en-GB', {
             month: 'short',
             day: 'numeric',
@@ -191,11 +197,11 @@ export function EmailMessage({
           )}
 
           {/* Action buttons */}
-          <div className="flex items-center gap-1 border-t border-border px-4 py-2">
+          <div className="flex flex-wrap items-center gap-1 border-t border-border px-4 py-2">
             <button
               type="button"
               aria-label="Reply"
-              className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+              className="inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
               onClick={() => onReply(message.id)}
             >
               <span className="material-symbols-outlined text-base" aria-hidden="true">
@@ -206,7 +212,7 @@ export function EmailMessage({
             <button
               type="button"
               aria-label="Reply all"
-              className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+              className="inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
               onClick={() => onReplyAll(message.id)}
             >
               <span className="material-symbols-outlined text-base" aria-hidden="true">
@@ -217,7 +223,7 @@ export function EmailMessage({
             <button
               type="button"
               aria-label="Forward"
-              className="inline-flex items-center gap-1 rounded-md px-2.5 py-1.5 text-xs hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
+              className="inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-1"
               onClick={() => onForward(message.id)}
             >
               <span className="material-symbols-outlined text-base" aria-hidden="true">

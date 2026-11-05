@@ -28,6 +28,9 @@ function statusLabel(status: ConnectorStatus): string {
   return 'Connected';
 }
 
+/** Email connectors are set up on the email pages, not from here. */
+const EMAIL_SETTINGS_HREF = '/email/email-settings';
+
 function getConnectorIcon(type: string): string {
   const iconMap: Record<string, string> = {
     messaging: 'chat',
@@ -190,13 +193,19 @@ export default function IntegrationsPage() {
                       )}
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => void handleIntegrationAction('disconnect')}
-                  >
-                    Disconnect
-                  </Button>
+                  {connector.type === 'email' ? (
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={EMAIL_SETTINGS_HREF}>Manage</Link>
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => void handleIntegrationAction('disconnect')}
+                    >
+                      Disconnect
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
@@ -306,9 +315,15 @@ export default function IntegrationsPage() {
                     <p className="font-medium text-foreground text-sm">{connector.name}</p>
                     <p className="text-xs text-muted-foreground">{statusLabel(connector.status)}</p>
                   </div>
-                  <Button size="sm" onClick={() => void handleIntegrationAction('connect')}>
-                    Connect
-                  </Button>
+                  {connector.type === 'email' ? (
+                    <Button size="sm" asChild>
+                      <Link href={EMAIL_SETTINGS_HREF}>Set Up</Link>
+                    </Button>
+                  ) : (
+                    <Button size="sm" onClick={() => void handleIntegrationAction('connect')}>
+                      Connect
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>

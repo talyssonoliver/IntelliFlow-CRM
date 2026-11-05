@@ -225,17 +225,12 @@ async function recordFailure(
   }
 }
 
-export async function dispatchUserMail(
-  ctx: DispatchCtx,
-  input: SendUserEmailInput,
-  deps: DispatchDeps,
-  options: DispatchOptions = {}
-): Promise<SendUserEmailResultDto> {
-  const now = deps.now ?? (() => new Date());
+/** The mailbox this user's email would leave from, by the same rules as a send. */
+export async function resolveSender(
+  ctx: Pick<DispatchCtx, 'prismaWithTenant' | 'tenant' | 'user'>
+) {
   const db = ctx.prismaWithTenant;
   const { tenantId, userId } = ctx.tenant;
-
-  // 1. Settings + the two candidate mailboxes in one query (NF-001).
   const [settingsRow, mailboxes]: [unknown, MailboxRow[]] = await Promise.all([
     db.tenantEmailSettings.findUnique({ where: { tenantId } }),
     db.emailMailbox.findMany({
@@ -253,6 +248,21 @@ export async function dispatchUserMail(
     allowFallback: settings.allowTenantMailboxFallback,
     isAdmin: isEmailSettingsAdminRole(ctx.user?.role),
   });
+  return { settings, resolved };
+}
+
+export async function dispatchUserMail(
+  ctx: DispatchCtx,
+  input: SendUserEmailInput,
+  deps: DispatchDeps,
+  options: DispatchOptions = {}
+): Promise<SendUserEmailResultDto> {
+  const now = deps.now ?? (() => new Date());
+  const db = ctx.prismaWithTenant;
+  const { tenantId, userId } = ctx.tenant;
+
+  // 1. Settings + the two candidate mailboxes in one query (NF-001).
+  const { settings, resolved } = await resolveSender(ctx);
   if ('refusal' in resolved) throw sendError(resolved.refusal);
   const mailbox = resolved.mailbox;
 
