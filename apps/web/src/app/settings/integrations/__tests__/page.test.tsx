@@ -245,4 +245,32 @@ describe('IntegrationsPage', () => {
       expect.objectContaining({ title: 'Integration management coming soon' })
     );
   });
+
+  it('sends an email connector to Email Settings, with no toast', () => {
+    mockHealthData = {
+      connectors: [makeConnector({ id: 'gmail', name: 'Gmail', type: 'email', status: 'unknown' })],
+      summary: { total: 1, healthy: 0, degraded: 0, unhealthy: 0, unknown: 1 },
+      checkedAt: NOW,
+    };
+    render(<IntegrationsPage />);
+    expect(screen.queryByRole('button', { name: /connect/i })).not.toBeInTheDocument();
+    const link = screen.getByRole('link', { name: 'Set Up' });
+    expect(link).toHaveAttribute('href', '/email/email-settings');
+    fireEvent.click(link);
+    expect(mockToast).not.toHaveBeenCalled();
+  });
+
+  it('lets a connected email connector be managed in Email Settings', () => {
+    mockHealthData = {
+      connectors: [makeConnector({ id: 'gmail', name: 'Gmail', type: 'email', status: 'healthy' })],
+      summary: { total: 1, healthy: 1, degraded: 0, unhealthy: 0, unknown: 0 },
+      checkedAt: NOW,
+    };
+    render(<IntegrationsPage />);
+    expect(screen.queryByRole('button', { name: /disconnect/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Manage' })).toHaveAttribute(
+      'href',
+      '/email/email-settings'
+    );
+  });
 });

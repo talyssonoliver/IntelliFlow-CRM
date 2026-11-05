@@ -101,14 +101,10 @@ describe('MyMailboxCard', () => {
     expect(screen.getByText('Connect your mailbox to send email.')).toBeInTheDocument();
   });
 
-  it('disables an unconfigured provider and says why in visible text', () => {
+  it('offers only what works, and says in one line what does not yet', () => {
     renderCard();
-    const microsoft = screen.getByRole('button', { name: 'Connect Microsoft' });
-    expect(microsoft).toBeDisabled();
-    expect(screen.getByText('Microsoft sign-in is not set up on this server yet.')).toBeVisible();
-    expect(microsoft).toHaveAccessibleDescription(
-      'Microsoft sign-in is not set up on this server yet.'
-    );
+    expect(screen.queryByRole('button', { name: 'Connect Microsoft' })).not.toBeInTheDocument();
+    expect(screen.getByText("One-click Microsoft sign-in isn't available yet.")).toBeVisible();
     expect(screen.getByRole('button', { name: 'Connect Google' })).toBeEnabled();
   });
 
@@ -136,8 +132,10 @@ describe('MyMailboxCard', () => {
 
   it('opens the SMTP form (loaded on demand) and closes it after saving', async () => {
     const { onChanged } = renderCard();
-    fireEvent.click(screen.getByRole('button', { name: 'Set Up SMTP' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Set Up Mailbox' }));
     expect(await screen.findByTestId('smtp-form')).toHaveTextContent('form for USER');
+    // The form's own first step is the only choice on screen.
+    expect(screen.queryByRole('button', { name: 'Connect Google' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'stub save' }));
     expect(onChanged).toHaveBeenCalled();
     expect(screen.queryByTestId('smtp-form')).not.toBeInTheDocument();
@@ -234,15 +232,15 @@ describe('MyMailboxCard', () => {
 
   it('offers SMTP setup again after an SMTP mailbox was disconnected', () => {
     renderCard({ mailbox: mailbox({ kind: 'SMTP', status: 'DISCONNECTED' }) });
-    expect(screen.getByRole('button', { name: 'Set Up SMTP' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Set Up Mailbox' })).toBeInTheDocument();
   });
 
-  it('returns focus to "Set Up SMTP" when the form is cancelled', async () => {
+  it('returns focus to "Set Up Mailbox" when the form is cancelled', async () => {
     renderCard();
-    fireEvent.click(screen.getByRole('button', { name: 'Set Up SMTP' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Set Up Mailbox' }));
     fireEvent.click(await screen.findByRole('button', { name: 'stub cancel' }));
     await waitFor(() =>
-      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Set Up SMTP' }))
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Set Up Mailbox' }))
     );
   });
 

@@ -251,6 +251,13 @@ export function createMockEmailTrpc() {
     isPending: false,
   });
 
+  // Nothing known yet: compose and the inbox say nothing until the server answers.
+  const sendingIdentity = vi.fn(() => ({
+    data: undefined as unknown,
+    isLoading: false,
+    isError: false,
+  }));
+
   const invalidateListEmails = vi.fn();
   const invalidateUnreadCounts = vi.fn();
   const useUtils = vi.fn().mockReturnValue({
@@ -261,6 +268,7 @@ export function createMockEmailTrpc() {
   });
 
   const trpc = {
+    emailMailbox: { sendingIdentity: { useQuery: sendingIdentity } },
     email: {
       listEmails: { useQuery: listEmails },
       getEmail: { useQuery: getEmail },
@@ -298,6 +306,7 @@ export function createMockEmailTrpc() {
   return {
     trpc,
     mocks: {
+      sendingIdentity,
       listEmails,
       getEmail,
       getThread,
@@ -351,6 +360,7 @@ export function armComposeMocks(mocks: ReturnType<typeof createMockEmailTrpc>['m
   mocks.leadList.mockReturnValue({ data: { leads: [] }, ...idle });
   mocks.listTemplates.mockReturnValue({ data: [], ...idle });
   mocks.resolveDefaultSignature.mockReturnValue({ data: null, ...idle });
+  mocks.sendingIdentity.mockReturnValue({ data: undefined, ...idle });
   mocks.saveDraft.mockReturnValue({
     mutateAsync: vi.fn().mockResolvedValue({ id: 'draft-1', status: 'DRAFT' }),
     isPending: false,

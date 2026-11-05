@@ -12,7 +12,13 @@ import type { EmailSendErrorView } from './send-errors';
 export function SendErrorAlert({
   error,
   className,
-}: Readonly<{ error: EmailSendErrorView; className?: string }>) {
+  onAction,
+}: Readonly<{
+  error: EmailSendErrorView;
+  className?: string;
+  /** Replaces following the link, for a page with something to save first. */
+  onAction?: (href: string) => void;
+}>) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,7 +38,15 @@ export function SendErrorAlert({
       <p className="font-medium">{error.title}</p>
       <p>{error.message}</p>
       {error.action ? (
-        <Link href={error.action.href} className="font-medium underline underline-offset-4">
+        <Link
+          href={error.action.href}
+          className="font-medium underline underline-offset-4"
+          onClick={(event) => {
+            if (!onAction || !error.action) return;
+            event.preventDefault();
+            onAction(error.action.href);
+          }}
+        >
           {error.action.label}
         </Link>
       ) : null}
