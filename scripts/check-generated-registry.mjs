@@ -155,12 +155,15 @@ const parseList = (text) =>
       .filter((line) => line && !line.startsWith('#'))
   );
 
-function git(args, input) {
-  return spawnSync('git', args, { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024, input });
+function git(root, args) {
+  return spawnSync('git', ['-C', root, ...args], {
+    encoding: 'utf8',
+    maxBuffer: 256 * 1024 * 1024,
+  });
 }
 
-function mustGit(args) {
-  const result = git(args);
+function mustGit(root, args) {
+  const result = git(root, args);
   if (result.status !== 0) {
     throw new Error(`git ${args.join(' ')} failed: ${result.stderr.trim()}`);
   }
@@ -185,16 +188,14 @@ function readOrNull(file) {
   }
 }
 
-function citedPaths(tracked) {
+const ATTESTATION = /^\.specify\/sprints\/[^/]+\/attestations\/[^/]+\/attestation(-latest)?\.json$/;
+
+function citedPaths(root, tracked) {
   const cited = new Set();
   for (const file of tracked) {
-    if (
-      !/^\.specify\/sprints\/[^/]+\/attestations\/[^/]+\/attestation(-latest)?\.json$/.test(file)
-    ) {
-      continue;
-    }
+    if (!ATTESTATION.test(file)) continue;
     try {
-      const hashes = JSON.parse(fs.readFileSync(file, 'utf8')).artifact_hashes;
+      const hashes = JSON.parse(fs.readFileSync(path.join(root, file), 'utf8')).artifact_hashes;
       for (const key of Object.keys(hashes ?? {})) cited.add(key.replaceAll('\\', '/'));
     } catch {
       // An unreadable attestation cites nothing here; its own validators report it.
@@ -203,63 +204,66 @@ function citedPaths(tracked) {
   return cited;
 }
 
-function scriptsToScan(tracked) {
+function scriptsToScan(root, tracked) {
   return [...tracked]
     .filter((file) => /^\.github\/(workflows|actions)\/.*\.ya?ml$|^\.husky\/[^_/][^/]*$/.test(file))
-    .map((file) => ({ file, text: readOrNull(file) ?? '' }));
+    .map((file) => ({ file, text: readOrNull(path.join(root, file)) ?? '' }));
 }
 
-function loadContext(args) {
+function loadContext(args, root) {
   const staged = args.includes('--staged');
   const baseAt = args.indexOf('--base');
   const baseRef = baseAt === -1 ? null : args[baseAt + 1];
   if (staged === Boolean(baseRef)) {
     throw new Error('Use exactly one of --staged or --base <ref>.');
   }
-  const base = staged ? 'HEAD' : mustGit(['merge-base', baseRef, 'HEAD']).trim();
+  const base = staged ? 'HEAD' : mustGit(root, ['merge-base', baseRef, 'HEAD']).trim();
   const changes = parseChanges(
     mustGit(
+      root,
       staged
         ? ['diff', '--cached', '--name-status', '--no-renames']
         : ['diff', '--name-status', '--no-renames', `${base}...HEAD`]
     )
   );
-  const tracked = new Set(mustGit(['ls-files']).split(/\r?\n/).filter(Boolean));
-  const before = git(['show', `${base}:${GRANDFATHER_PATH}`]);
+  const tracked = new Set(mustGit(root, ['ls-files']).split(/\r?\n/).filter(Boolean));
+  const before = git(root, ['show', `${base}:${GRANDFATHER_PATH}`]);
+  const inRepo = (file) => path.join(root, file);
   let cited = null;
   return {
     changes,
     tracked,
-    registry: YAML.parse(fs.readFileSync(REGISTRY_PATH, 'utf8')) ?? {},
-    grandfathered: parseList(fs.readFileSync(GRANDFATHER_PATH, 'utf8')),
+    registry: YAML.parse(fs.readFileSync(inRepo(REGISTRY_PATH), 'utf8')) ?? {},
+    grandfathered: parseList(fs.readFileSync(inRepo(GRANDFATHER_PATH), 'utf8')),
     baseGrandfathered: before.status === 0 ? parseList(before.stdout) : null,
-    scripts: scriptsToScan(tracked),
-    readFile: readOrNull,
-    sizeKb: (file) => (fs.existsSync(file) ? fs.statSync(file).size / 1024 : 0),
-    isIgnored: (file) => git(['check-ignore', '-q', '--no-index', file]).status === 0,
+    scripts: scriptsToScan(root, tracked),
+    readFile: (file) => readOrNull(inRepo(file)),
+    sizeKb: (file) => (fs.existsSync(inRepo(file)) ? fs.statSync(inRepo(file)).size / 1024 : 0),
+    isIgnored: (file) => git(root, ['check-ignore', '-q', '--no-index', file]).status === 0,
     isCited: (file) => {
-      cited ??= citedPaths(tracked);
+      cited ??= citedPaths(root, tracked);
       return cited.has(file);
     },
   };
 }
 
-function main() {
-  const problems = evaluate(loadContext(process.argv.slice(2)));
-  if (problems.length === 0) {
-    console.log('check-generated-registry: OK');
-    return 0;
+/** Prints the result and returns the exit code. Any failure to check counts as a failure. */
+export function run(args, root = process.cwd(), out = console) {
+  try {
+    const problems = evaluate(loadContext(args, root));
+    if (problems.length === 0) {
+      out.log('check-generated-registry: OK');
+      return 0;
+    }
+    out.error(`check-generated-registry: ${problems.length} problem(s):`);
+    for (const problem of problems) out.error(`  - ${problem}`);
+    return 1;
+  } catch (error) {
+    out.error(`check-generated-registry: ${error.message}`);
+    return 1;
   }
-  console.error(`check-generated-registry: ${problems.length} problem(s):`);
-  for (const problem of problems) console.error(`  - ${problem}`);
-  return 1;
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  try {
-    process.exit(main());
-  } catch (error) {
-    console.error(`check-generated-registry: ${error.message}`);
-    process.exit(1);
-  }
+  process.exit(run(process.argv.slice(2)));
 }

@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { evaluate, findEntry, globToRegExp, inZone } from '../check-generated-registry.mjs';
+import { spawnSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterAll, describe, expect, it } from 'vitest';
+import { evaluate, findEntry, globToRegExp, inZone, run } from '../check-generated-registry.mjs';
 
 const READER = '.github/workflows/drift.yml';
 const FILE = 'artifacts/reports/new-report.json';
@@ -222,4 +226,138 @@ describe('staging in workflows and hooks', () => {
       expect(scan(line)).toEqual([]);
     }
   );
+});
+
+// A real repository, so the git and file handling are exercised, not stood in for.
+describe('run', { timeout: 60_000 }, () => {
+  const roots: string[] = [];
+  afterAll(() => {
+    for (const root of roots) fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  const REGISTRY = [
+    'entries:',
+    '  - path: artifacts/read.json',
+    '    readers:',
+    '      - file: reader.txt',
+    '        contains: artifacts/read.json',
+    '    outcome: tracked',
+  ].join('\n');
+  const LIST = 'tools/generated-paths.grandfathered.txt';
+
+  function repo() {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'generated-registry-'));
+    roots.push(root);
+    const env = { ...process.env };
+    for (const key of Object.keys(env)) if (key.startsWith('GIT_')) delete env[key];
+    const git = (...args: string[]) => {
+      const result = spawnSync('git', ['-C', root, ...args], { encoding: 'utf8', env });
+      expect(result.status, result.stderr).toBe(0);
+    };
+    const write = (file: string, text: string) => {
+      const full = path.join(root, file);
+      fs.mkdirSync(path.dirname(full), { recursive: true });
+      fs.writeFileSync(full, text);
+    };
+    git('init', '-q', '-b', 'main');
+    git('config', 'user.email', 'test@example.invalid');
+    git('config', 'user.name', 'test');
+    write('tools/generated-paths.yml', REGISTRY);
+    write(LIST, '# list\nartifacts/old.json\n');
+    write('artifacts/old.json', '{}');
+    write('reader.txt', 'artifacts/read.json');
+    git('add', '.');
+    git('commit', '-q', '-m', 'start');
+    return { root, git, write };
+  }
+
+  function check(root: string, ...args: string[]) {
+    const logs: string[] = [];
+    const out = { log: (t: string) => logs.push(t), error: (t: string) => logs.push(t) };
+    return { code: run(args, root, out), text: logs.join('\n') };
+  }
+
+  it('passes with nothing staged', () => {
+    const { root } = repo();
+    expect(check(root, '--staged')).toEqual({ code: 0, text: 'check-generated-registry: OK' });
+  });
+
+  it('refuses a staged file nothing reads, and names it', () => {
+    const { root, git, write } = repo();
+    write('artifacts/new.json', '{}');
+    git('add', 'artifacts/new.json');
+    const result = check(root, '--staged');
+    expect(result.code).toBe(1);
+    expect(result.text).toContain('artifacts/new.json');
+  });
+
+  it('passes a staged file with a reader, and reports its size against the limit', () => {
+    const { root, git, write } = repo();
+    write('artifacts/read.json', '{}');
+    git('add', 'artifacts/read.json');
+    expect(check(root, '--staged').code).toBe(0);
+    write('artifacts/read.json', 'x'.repeat(1100 * 1024));
+    git('add', 'artifacts/read.json');
+    expect(check(root, '--staged').text).toContain('1024 KB');
+  });
+
+  it('passes a change to a grandfathered file, and a deletion', () => {
+    const { root, git, write } = repo();
+    write('artifacts/old.json', '{"a":1}');
+    git('add', 'artifacts/old.json');
+    expect(check(root, '--staged').code).toBe(0);
+    git('rm', '-q', '--cached', 'artifacts/old.json');
+    expect(check(root, '--staged').text).toContain('no longer tracked');
+  });
+
+  it('accepts evidence an attestation cites, and survives a broken attestation', () => {
+    const { root, git, write } = repo();
+    const dir = '.specify/sprints/sprint-1/attestations';
+    write(`${dir}/PG-1/attestation.json`, '{"artifact_hashes":{"artifacts\\\\cited.json":"x"}}');
+    write(`${dir}/PG-2/attestation.json`, 'not json');
+    write(`${dir}/PG-3/attestation.json`, '{}');
+    write('artifacts/cited.json', '{}');
+    git('add', '.specify', 'artifacts/cited.json');
+    expect(check(root, '--staged').code).toBe(0);
+  });
+
+  it('compares a branch with its base, and refuses growth of the list', () => {
+    const { root, git, write } = repo();
+    git('checkout', '-q', '-b', 'work');
+    write('artifacts/extra.json', '{}');
+    write(LIST, 'artifacts/old.json\nartifacts/extra.json\n');
+    git('add', '.');
+    git('commit', '-q', '-m', 'grow');
+    const result = check(root, '--base', 'main');
+    expect(result.code).toBe(1);
+    expect(result.text).toContain('can only shrink');
+  });
+
+  it('finds broad staging in a workflow and a hook', () => {
+    const { root, git, write } = repo();
+    write('.github/workflows/x.yml', 'run: git add artifacts/\n');
+    write('.husky/pre-commit', 'git add .\n');
+    git('add', '.github', '.husky');
+    const { text } = check(root, '--staged');
+    expect(text).toContain('.github/workflows/x.yml:1');
+    expect(text).toContain('.husky/pre-commit:1');
+  });
+
+  it.each([
+    ['no mode', []],
+    ['both modes', ['--staged', '--base', 'main']],
+    ['--base with no ref', ['--base']],
+    ['a base that does not exist', ['--base', 'no-such-ref']],
+  ])('fails closed with %s', (_name, args) => {
+    const { root } = repo();
+    expect(check(root, ...(args as string[])).code).toBe(1);
+  });
+
+  it('fails closed with no registry, and accepts an empty one', () => {
+    const { root, write } = repo();
+    write('tools/generated-paths.yml', '');
+    expect(check(root, '--staged').code).toBe(0);
+    fs.rmSync(path.join(root, 'tools/generated-paths.yml'));
+    expect(check(root, '--staged').code).toBe(1);
+  });
 });
