@@ -23,7 +23,7 @@ export function MainNav({ routes, className }: Readonly<MainNavProps>) {
     <nav
       aria-label="Primary navigation"
       className={cn(
-        'hidden lg:flex items-center gap-1 xl:max-[1535px]:gap-0 min-[1536px]:max-[1699px]:gap-0.5',
+        'hidden xl:flex items-center gap-1 xl:max-[1535px]:gap-0 min-[1536px]:max-[1699px]:gap-0.5',
         className
       )}
     >

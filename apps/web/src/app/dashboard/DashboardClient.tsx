@@ -153,10 +153,10 @@ export default function DashboardClient({ initialLeadStats }: Readonly<Dashboard
             <span>Live · refreshes every minute</span>
           </output>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/dashboard/customize"
-            className="group inline-flex items-center gap-2 px-4 py-2.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm rounded-lg hover:bg-slate-50 hover:border-slate-400 dark:hover:bg-slate-700 dark:hover:border-slate-500 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2"
+            className="group inline-flex items-center gap-2 whitespace-nowrap px-4 py-2.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm rounded-lg hover:bg-slate-50 hover:border-slate-400 dark:hover:bg-slate-700 dark:hover:border-slate-500 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2"
           >
             <span
               className="material-symbols-outlined text-base transition-transform group-hover:rotate-90"
@@ -168,7 +168,7 @@ export default function DashboardClient({ initialLeadStats }: Readonly<Dashboard
           </Link>
           <Link
             href="/dashboard/new"
-            className="group flex items-center justify-center gap-2 bg-ds-primary hover:bg-ds-primary-hover text-white font-bold py-2.5 px-5 rounded-lg shadow-sm shadow-ds-primary/30 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2"
+            className="group flex items-center justify-center gap-2 whitespace-nowrap bg-ds-primary hover:bg-ds-primary-hover text-white font-bold py-2.5 px-5 rounded-lg shadow-sm shadow-ds-primary/30 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2"
           >
             <span
               className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform"
