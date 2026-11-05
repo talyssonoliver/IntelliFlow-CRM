@@ -9,6 +9,12 @@
  */
 
 import { describe, it, expect } from 'vitest';
+
+vi.mock('@/lib/route-access', () => ({
+  requireOperator: vi.fn(async () => null),
+  requireSignedIn: vi.fn(async () => null),
+  refuseInProduction: vi.fn(() => null),
+}));
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

@@ -43,11 +43,13 @@ function makePrismaStub({
 // We test ensureAppUserSession which is exported from context.ts
 // ---------------------------------------------------------------------------
 // We need to mock supabaseAdmin before importing context to avoid network calls
+const getUserById = vi.hoisted(() => vi.fn());
 vi.mock('../lib/supabase', () => ({
   supabaseAdmin: {
     auth: {
       admin: {
         updateUserById: vi.fn().mockResolvedValue({ data: {}, error: null }),
+        getUserById,
       },
     },
   },
@@ -305,6 +307,63 @@ describe('ensureAppUserSession — avatar backfill from provider metadata', () =
 
     expect(session.emailVerified).toBe(true);
     expect((update.mock.calls[0][0] as any).data.emailVerified).toBe(true);
+  });
+
+  describe('SECURITY: user_metadata.email_verified is only a hint', () => {
+    const signIn = async (authUser: { data: unknown; error: unknown } | Error) => {
+      if (authUser instanceof Error) getUserById.mockRejectedValueOnce(authUser);
+      else getUserById.mockResolvedValueOnce(authUser);
+      const prisma = makePrismaStub({
+        findUnique: vi.fn().mockResolvedValue(existingUserRow(null, /* emailVerified */ false)),
+      });
+      const update = vi.fn().mockResolvedValue({});
+      (prisma.user as any).update = update;
+      const session = await ensureAppUserSession(prisma as any, {
+        id: EXISTING_USER_ID,
+        email: 'existing@example.com',
+        user_metadata: { email_verified: true }, // anyone can set this on their own account
+      });
+      return { session, written: (update.mock.calls[0][0] as any).data.emailVerified };
+    };
+
+    it('does not verify an account whose email the auth server has not confirmed', async () => {
+      const { session, written } = await signIn({
+        data: { user: { id: EXISTING_USER_ID, email_confirmed_at: null } },
+        error: null,
+      });
+      expect(session.emailVerified).toBe(false);
+      expect(written).toBeUndefined();
+    });
+
+    it('verifies the account when the auth server confirms the email', async () => {
+      const { session, written } = await signIn({
+        data: { user: { id: EXISTING_USER_ID, email_confirmed_at: '2026-06-16T00:00:00.000Z' } },
+        error: null,
+      });
+      expect(session.emailVerified).toBe(true);
+      expect(written).toBe(true);
+    });
+
+    it('stays unverified when the auth server errors or is unreachable', async () => {
+      const refused = await signIn({ data: { user: null }, error: new Error('nope') });
+      expect(refused.session.emailVerified).toBe(false);
+      const unreachable = await signIn(new Error('down'));
+      expect(unreachable.session.emailVerified).toBe(false);
+    });
+
+    it('does not ask the auth server when the metadata makes no claim', async () => {
+      getUserById.mockClear();
+      const prisma = makePrismaStub({
+        findUnique: vi.fn().mockResolvedValue(existingUserRow(null, false)),
+      });
+      (prisma.user as any).update = vi.fn().mockResolvedValue({});
+      await ensureAppUserSession(prisma as any, {
+        id: EXISTING_USER_ID,
+        email: 'existing@example.com',
+        user_metadata: {},
+      });
+      expect(getUserById).not.toHaveBeenCalled();
+    });
   });
 
   it('SECURITY: a just-verified user keeps emailVerified=true when also promoted to bootstrap admin', async () => {

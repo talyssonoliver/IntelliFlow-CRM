@@ -14,6 +14,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockCreateADR = vi.hoisted(() => vi.fn());
 
+vi.mock('@/lib/route-access', () => ({
+  requireOperator: vi.fn(async () => null),
+  requireSignedIn: vi.fn(async () => null),
+  refuseInProduction: vi.fn(() => null),
+}));
+
 vi.mock('next/server', async (importOriginal) => {
   const orig = (await importOriginal()) as any;
   return {

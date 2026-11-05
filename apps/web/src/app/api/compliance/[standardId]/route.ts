@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireSignedIn } from '@/lib/route-access';
 import type { ComplianceDetailResponse } from '../types';
 
 // Mock data for compliance standards
@@ -340,6 +341,8 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ standardId: string }> }
 ) {
+  const denied = await requireSignedIn(request);
+  if (denied) return denied;
   try {
     const { standardId } = await params;
     const standardData = COMPLIANCE_STANDARDS[standardId];

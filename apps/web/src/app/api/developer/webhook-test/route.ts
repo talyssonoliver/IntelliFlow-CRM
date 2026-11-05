@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { lookup } from 'node:dns/promises';
-import { isIP } from 'node:net';
+import http from 'node:http';
+import https from 'node:https';
+import { BlockList, isIP } from 'node:net';
+import { getVerifiedCaller } from '@/lib/route-access';
 
 interface WebhookTestRequest {
   url: string;
@@ -8,33 +11,66 @@ interface WebhookTestRequest {
   headers?: Record<string, string>;
 }
 
-/**
- * Block SSRF targets: loopback, private, link-local, unique-local, and
- * cloud-metadata endpoints. Accepts an IP literal in string form.
- */
-function isPrivateAddress(ip: string): boolean {
+interface UpstreamResult {
+  status: number;
+  body: string;
+  responseHeaders: Record<string, string>;
+}
+
+const REQUEST_TIMEOUT_MS = 10_000;
+const MAX_PAYLOAD_CHARS = 256 * 1024;
+const MAX_RESPONSE_BYTES = 64 * 1024;
+const RATE_WINDOW_MS = 60_000;
+const RATE_MAX_PER_USER = 20;
+const FORBIDDEN_HEADERS = new Set([
+  'host',
+  'connection',
+  'content-length',
+  'transfer-encoding',
+  'accept-encoding',
+]);
+
+/** Every range a webhook test must never reach, including provider metadata. */
+const BLOCKED_RANGES = new BlockList();
+for (const [network, prefix] of [
+  ['0.0.0.0', 8],
+  ['10.0.0.0', 8],
+  ['100.64.0.0', 10],
+  ['127.0.0.0', 8],
+  ['169.254.0.0', 16],
+  ['172.16.0.0', 12],
+  ['192.0.0.0', 24],
+  ['192.0.2.0', 24],
+  ['192.168.0.0', 16],
+  ['198.18.0.0', 15],
+  ['198.51.100.0', 24],
+  ['203.0.113.0', 24],
+  ['224.0.0.0', 3],
+] as const) {
+  BLOCKED_RANGES.addSubnet(network, prefix, 'ipv4');
+}
+for (const [network, prefix] of [
+  ['::', 128],
+  ['::1', 128],
+  // No ::ffff:0:0/96 rule: BlockList checks IPv4 against it, which would block every
+  // IPv4 address. A mapped address is already checked against the IPv4 rules above.
+  ['64:ff9b::', 96],
+  ['100::', 64],
+  ['2001::', 32],
+  ['2001:db8::', 32],
+  ['2002::', 16],
+  ['fc00::', 7],
+  ['fe80::', 10],
+  ['fec0::', 10],
+  ['ff00::', 8],
+] as const) {
+  BLOCKED_RANGES.addSubnet(network, prefix, 'ipv6');
+}
+
+function isBlockedAddress(ip: string): boolean {
   const family = isIP(ip);
-  if (family === 4) {
-    const parts = ip.split('.').map((p) => Number.parseInt(p, 10));
-    if (parts.length !== 4 || parts.some((p) => Number.isNaN(p))) return true;
-    const [a, b] = parts;
-    if (a === 10) return true;
-    if (a === 127) return true;
-    if (a === 169 && b === 254) return true; // link-local + AWS/GCP metadata
-    if (a === 172 && b >= 16 && b <= 31) return true;
-    if (a === 192 && b === 168) return true;
-    if (a === 0) return true;
-    if (a >= 224) return true; // multicast/reserved
-    return false;
-  }
-  if (family === 6) {
-    const lower = ip.toLowerCase();
-    if (lower === '::1' || lower === '::' || lower.startsWith('::ffff:')) return true;
-    if (lower.startsWith('fc') || lower.startsWith('fd')) return true; // unique-local
-    if (lower.startsWith('fe80')) return true; // link-local
-    return false;
-  }
-  // Non-IP string (shouldn't happen once we call this post-resolution).
+  if (family === 4) return BLOCKED_RANGES.check(ip, 'ipv4');
+  if (family === 6) return BLOCKED_RANGES.check(ip, 'ipv6');
   return true;
 }
 
@@ -58,8 +94,8 @@ async function assertPublicUrl(url: URL): Promise<string | null> {
     // `all:true` so every resolved address is vetted, not just the first.
     const results = await lookup(host, { all: true });
     if (results.length === 0) return 'Host is not allowed.';
-    for (const { address } of results) {
-      if (isPrivateAddress(address)) return 'Host resolves to a non-public address.';
+    if (results.some(({ address }) => isBlockedAddress(address))) {
+      return 'Host resolves to a non-public address.';
     }
   } catch {
     return 'Host could not be resolved.';
@@ -67,75 +103,157 @@ async function assertPublicUrl(url: URL): Promise<string | null> {
   return null;
 }
 
-export async function POST(request: Request) {
-  let body: WebhookTestRequest;
+type LookupCallback = (
+  error: NodeJS.ErrnoException | null,
+  address: string | { address: string; family: number }[],
+  family?: number
+) => void;
 
+/**
+ * Resolves again at connect time and vets what the socket will use, so a name
+ * that changes its answer after assertPublicUrl still can't reach a blocked address.
+ */
+function vettedLookup(
+  hostname: string,
+  options: { all?: boolean },
+  callback: LookupCallback
+): void {
+  lookup(hostname, { all: true })
+    .then((results) => {
+      const first = results[0];
+      if (!first || results.some(({ address }) => isBlockedAddress(address))) {
+        callback(new Error('Host resolves to a non-public address.'), '');
+      } else if (options.all) {
+        callback(null, results);
+      } else {
+        callback(null, first.address, first.family);
+      }
+    })
+    .catch((error: NodeJS.ErrnoException) => callback(error, ''));
+}
+
+function safeHeaders(headers: Record<string, string> | undefined): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(headers ?? {}).filter(([name]) => !FORBIDDEN_HEADERS.has(name.toLowerCase()))
+  );
+}
+
+function readResponseHeaders(response: http.IncomingMessage): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(response.headers).map(([name, value]) => [
+      name,
+      Array.isArray(value) ? value.join(', ') : (value ?? ''),
+    ])
+  );
+}
+
+/** Sends one POST. Redirects aren't followed, and the response is cut at the size limit. */
+function sendTestRequest(
+  url: URL,
+  body: string,
+  headers: Record<string, string>
+): Promise<UpstreamResult> {
+  const client = url.protocol === 'https:' ? https : http;
+  return new Promise((resolve, reject) => {
+    const outbound = client.request(
+      url,
+      {
+        method: 'POST',
+        // Plain responses only: the body is shown as text, and nothing is decompressed,
+        // so a small compressed reply can't expand past the size limit.
+        headers: { 'Content-Type': 'application/json', ...headers, 'Accept-Encoding': 'identity' },
+        lookup: vettedLookup as never,
+        timeout: REQUEST_TIMEOUT_MS,
+      },
+      (response) => {
+        const chunks: Buffer[] = [];
+        let received = 0;
+        const finish = () =>
+          resolve({
+            status: response.statusCode ?? 0,
+            body: Buffer.concat(chunks).toString('utf8'),
+            responseHeaders: readResponseHeaders(response),
+          });
+        response.on('data', (chunk: Buffer) => {
+          const remaining = MAX_RESPONSE_BYTES - received;
+          if (remaining > 0) chunks.push(chunk.subarray(0, remaining));
+          received += chunk.length;
+          if (received >= MAX_RESPONSE_BYTES) {
+            finish();
+            response.destroy();
+          }
+        });
+        response.on('end', finish);
+        response.on('error', reject);
+      }
+    );
+    // `timeout` above only catches an idle socket. This is the hard limit for the whole
+    // exchange, so a server sending a byte at a time can't hold the request open.
+    const deadline = setTimeout(() => {
+      const timedOut = new Error('Request timed out');
+      reject(timedOut);
+      outbound.destroy(timedOut);
+    }, REQUEST_TIMEOUT_MS);
+    outbound.on('close', () => clearTimeout(deadline));
+    outbound.on('timeout', () => outbound.destroy(new Error('Request timed out')));
+    outbound.on('error', reject);
+    outbound.end(body);
+  });
+}
+
+const recentCalls = new Map<string, number[]>();
+
+/** Per user, per server instance. A limit on abuse, not a global quota. */
+function isOverRateLimit(userId: string, now: number): boolean {
+  const recent = (recentCalls.get(userId) ?? []).filter((at) => now - at < RATE_WINDOW_MS);
+  recent.push(now);
+  recentCalls.set(userId, recent);
+  return recent.length > RATE_MAX_PER_USER;
+}
+
+function reply(status: number, body: string): NextResponse {
+  return NextResponse.json({ status: 0, latencyMs: 0, body, responseHeaders: {} }, { status });
+}
+
+export async function POST(request: Request) {
+  const caller = await getVerifiedCaller(request);
+  if (!caller) return reply(401, 'Sign in to send a test webhook.');
+  if (isOverRateLimit(caller.id, Date.now())) {
+    return reply(429, 'Too many test webhooks. Try again in a minute.');
+  }
+
+  let body: WebhookTestRequest;
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json(
-      { status: 0, latencyMs: 0, body: 'Invalid request body', responseHeaders: {} },
-      { status: 400 }
-    );
+    return reply(400, 'Invalid request body');
   }
 
   if (!body.url || typeof body.url !== 'string') {
-    return NextResponse.json(
-      { status: 0, latencyMs: 0, body: 'URL is required', responseHeaders: {} },
-      { status: 400 }
-    );
+    return reply(400, 'URL is required');
   }
 
   let parsedUrl: URL;
   try {
     parsedUrl = new URL(body.url);
   } catch {
-    return NextResponse.json(
-      { status: 0, latencyMs: 0, body: 'Invalid URL', responseHeaders: {} },
-      { status: 400 }
-    );
+    return reply(400, 'Invalid URL');
   }
 
   const ssrfError = await assertPublicUrl(parsedUrl);
-  if (ssrfError) {
-    return NextResponse.json(
-      { status: 0, latencyMs: 0, body: ssrfError, responseHeaders: {} },
-      { status: 400 }
-    );
-  }
+  if (ssrfError) return reply(400, ssrfError);
+
+  const payload = JSON.stringify(body.payload) ?? 'null';
+  if (payload.length > MAX_PAYLOAD_CHARS) return reply(413, 'Payload is too large.');
 
   const start = Date.now();
-
   try {
-    // `redirect: 'error'` prevents a compliant public host from 3xx-ing us
-    // into a private target after the SSRF check has already passed.
-    const response = await fetch(parsedUrl.toString(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...body.headers,
-      },
-      body: JSON.stringify(body.payload),
-      signal: AbortSignal.timeout(10_000),
-      redirect: 'error',
-    });
-
-    const latencyMs = Date.now() - start;
-    const responseBody = await response.text();
-    const responseHeaders = Object.fromEntries(response.headers);
-
-    return NextResponse.json({
-      status: response.status,
-      latencyMs,
-      body: responseBody,
-      responseHeaders,
-    });
+    const result = await sendTestRequest(parsedUrl, payload, safeHeaders(body.headers));
+    return NextResponse.json({ ...result, latencyMs: Date.now() - start });
   } catch (err) {
-    const latencyMs = Date.now() - start;
     const message = err instanceof Error ? err.message : 'Unknown error';
-
     return NextResponse.json(
-      { status: 0, latencyMs, body: message, responseHeaders: {} },
+      { status: 0, latencyMs: Date.now() - start, body: message, responseHeaders: {} },
       { status: 502 }
     );
   }
