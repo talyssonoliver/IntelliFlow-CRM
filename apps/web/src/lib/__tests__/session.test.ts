@@ -73,7 +73,7 @@ describe('session', () => {
     });
     it('returns session for valid token', async () => {
       mockGetUser.mockResolvedValue({
-        data: { user: { id: 'u1', email: 'a@b.com', user_metadata: { role: 'ADMIN' } } },
+        data: { user: { id: 'u1', email: 'a@b.com', app_metadata: { role: 'ADMIN' } } },
         error: null,
       });
       const s = {
@@ -86,6 +86,21 @@ describe('session', () => {
       const r = await decrypt(JSON.stringify(s));
       expect(r?.userId).toBe('u1');
       expect(r?.role).toBe('ADMIN');
+    });
+    it('ignores a role the user wrote into their own user_metadata', async () => {
+      mockGetUser.mockResolvedValue({
+        data: { user: { id: 'u1', email: 'a@b.com', user_metadata: { role: 'ADMIN' } } },
+        error: null,
+      });
+      const s = {
+        userId: 'u1',
+        email: 'a@b.com',
+        role: 'ADMIN',
+        accessToken: 'tok',
+        expiresAt: Math.floor(Date.now() / 1000) + 3600,
+      };
+      const r = await decrypt(JSON.stringify(s));
+      expect(r?.role).toBe('USER');
     });
     it('defaults role to USER', async () => {
       mockGetUser.mockResolvedValue({

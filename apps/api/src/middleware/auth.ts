@@ -120,7 +120,8 @@ export async function verifyToken(token: string): Promise<{
     return {
       userId: user.id,
       email: user.email || '',
-      role: (user.user_metadata?.role as string) || 'USER',
+      // app_metadata only: a user can write their own user_metadata.
+      role: (user.app_metadata?.role as string) || 'USER',
     };
   } catch {
     return null;

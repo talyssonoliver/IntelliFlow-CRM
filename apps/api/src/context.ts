@@ -445,13 +445,25 @@ function extractProvider(supabaseUser: {
   );
 }
 
-function extractEmailVerified(supabaseUser: {
+/**
+ * The fast-path JWT has no email_confirmed_at, only user_metadata.email_verified, and a
+ * user can write that field on their own account. So it's only a reason to ask: the auth
+ * server's email_confirmed_at decides. Fails closed if the auth server can't answer.
+ */
+async function resolveEmailVerified(supabaseUser: {
+  id: string;
   email_confirmed_at?: string | null;
   user_metadata?: Record<string, unknown>;
-}): boolean {
+}): Promise<boolean> {
   if (supabaseUser.email_confirmed_at) return true;
-  const meta = supabaseUser.user_metadata ?? {};
-  return Boolean(meta.email_verified);
+  if (!supabaseUser.user_metadata?.email_verified) return false;
+  try {
+    const { data, error } = await supabaseAdmin.auth.admin.getUserById(supabaseUser.id);
+    return !error && Boolean(data.user?.email_confirmed_at);
+  } catch (error) {
+    console.warn('[Auth] Could not confirm email verification:', error);
+    return false;
+  }
 }
 
 async function provisionNewUserWith(
@@ -472,7 +484,7 @@ async function provisionNewUserWith(
     const familyName = extractFamilyName(meta);
     const locale = extractLocale(meta);
     const provider = extractProvider(supabaseUser);
-    const emailVerified = extractEmailVerified(supabaseUser);
+    const emailVerified = await resolveEmailVerified(supabaseUser);
 
     // SECURITY — tenant isolation (incident 2026-06-16): every JIT sign-up gets its
     // OWN organization. Assigning new users to a shared/'default' tenant co-mingles
@@ -582,13 +594,13 @@ export async function ensureAppUserSession(
     // emailVerified is MONOTONIC: a token can CONFIRM verification (false -> true)
     // but must never DEMOTE a persisted true. The fast-path JWT verifier
     // (lib/supabase verifyToken) builds the user object from JWT claims WITHOUT an
-    // `email_confirmed_at` field, so extractEmailVerified falls back to
-    // user_metadata.email_verified and can return false for an already-verified user
-    // (including OAuth). Unconditionally writing that back would persist false and lock
-    // the user out of every verifiedTenantProcedure (billing, sendEmail). So we only
-    // upgrade — never overwrite the persisted value with a token-derived false.
-    const tokenSaysVerified = extractEmailVerified(supabaseUser);
-    const shouldUpgradeVerified = tokenSaysVerified && !existing.emailVerified;
+    // `email_confirmed_at` field, so resolveEmailVerified can return false for an
+    // already-verified user (including OAuth). Unconditionally writing that back would
+    // persist false and lock the user out of every verifiedTenantProcedure (billing,
+    // sendEmail). So we only upgrade — never overwrite the persisted value with a
+    // token-derived false. An account already verified needs no lookup.
+    const tokenSaysVerified = !existing.emailVerified && (await resolveEmailVerified(supabaseUser));
+    const shouldUpgradeVerified = tokenSaysVerified;
 
     // Track sign-in for existing user (fire-and-forget — no need to await)
     void prisma.user
