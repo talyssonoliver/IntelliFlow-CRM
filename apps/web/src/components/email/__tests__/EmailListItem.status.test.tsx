@@ -11,6 +11,23 @@ import { DeliveryStatusBadge, deliveryStatusOf } from '../DeliveryStatusBadge';
 import { EmailListItem } from '../EmailListItem';
 import { EmailMessage } from '../EmailMessage';
 
+describe('the sender card', () => {
+  it('opens from the sender, not from the whole row, so it cannot cover a chosen message', () => {
+    render(
+      <ul>
+        <EmailListItem
+          email={{ ...createMockEmail({}), labels: [] } as never}
+          isSelected={false}
+          onSelect={vi.fn()}
+        />
+      </ul>
+    );
+    const row = screen.getByRole('listitem');
+    expect(row).not.toHaveAttribute('data-state');
+    expect(row.querySelectorAll('[data-state]')).toHaveLength(2);
+  });
+});
+
 describe('deliveryStatusOf', () => {
   it.each([
     [

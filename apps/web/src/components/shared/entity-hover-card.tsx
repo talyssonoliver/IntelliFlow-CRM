@@ -214,7 +214,7 @@ export function EntityHoverCard({
           side={side}
           align={align}
           className={cn(
-            'w-72 p-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg rounded-lg',
+            'w-80 p-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg rounded-lg',
             className
           )}
         >
@@ -285,7 +285,7 @@ export function EntityHoverCard({
               <div className="flex items-center gap-1.5 px-4 pb-3">
                 <a
                   href={`/email/compose?to=${encodeURIComponent(cardEmail)}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white text-xs font-medium rounded hover:bg-ds-primary-hover transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-1.5 bg-primary text-white text-xs font-medium rounded hover:bg-ds-primary-hover transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                 >
                   <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
                     mail
