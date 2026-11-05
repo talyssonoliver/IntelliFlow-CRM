@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -58,8 +58,18 @@ export function ComposeClient() {
   const mode = (searchParams.get('mode') as ComposeMode) ?? 'new';
   const emailId = searchParams.get('emailId');
   const toParam = searchParams.get('to');
-  // Read once: saving a new draft adds its id to the URL, and that must not reload it.
-  const [draftId] = useState(() => searchParams.get('draftId'));
+  // One message being written. Saving a new draft adds its id to the URL, and that must not
+  // reload it; arriving at any other address, such as Compose again, starts a new message.
+  const search = searchParams.toString();
+  const expectedSearchRef = useRef(search);
+  const [session, setSession] = useState(() => ({ key: 0, draftId: searchParams.get('draftId') }));
+  useEffect(() => {
+    if (search === expectedSearchRef.current) return;
+    expectedSearchRef.current = search;
+    const next = new URLSearchParams(search).get('draftId');
+    setSession((current) => ({ key: current.key + 1, draftId: next }));
+  }, [search]);
+  const { draftId } = session;
 
   // Parse the `to` query param into initial recipients
   const initialTo = useMemo(() => {
@@ -114,6 +124,7 @@ export function ComposeClient() {
   const handleDraftSaved = useCallback((id: string) => {
     const url = new URL(window.location.href);
     url.searchParams.set('draftId', id);
+    expectedSearchRef.current = url.searchParams.toString();
     window.history.replaceState(window.history.state, '', url);
   }, []);
 
@@ -144,6 +155,7 @@ export function ComposeClient() {
       {/* Compose form */}
       {ready ? (
         <EmailCompose
+          key={session.key}
           mode={mode}
           originalEmail={emailQuery.data ?? undefined}
           initialTo={initialTo}

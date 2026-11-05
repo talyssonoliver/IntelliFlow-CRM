@@ -103,9 +103,35 @@ describe('ComposeClient drafts', () => {
     expect(lastProps().initialDraft).toBeUndefined();
   });
 
+  it('starts a new message when Compose is opened again from a draft', () => {
+    nav.params = new URLSearchParams('draftId=draft-9');
+    api.getEmail.mockImplementation((_input: unknown, options: { enabled: boolean }) =>
+      queryOf(options.enabled ? draft : undefined)
+    );
+    const { rerender } = render(<ComposeClient />);
+    expect(lastProps().initialDraft?.id).toBe('draft-9');
+    const mounts = compose.mock.calls.length;
+    nav.params = new URLSearchParams();
+    rerender(<ComposeClient />);
+    expect(compose.mock.calls.length).toBeGreaterThan(mounts);
+    expect(lastProps().initialDraft).toBeUndefined();
+    expect(api.getEmail.mock.calls.at(-1)?.[1]).toMatchObject({ enabled: false });
+  });
+
+  it('opens another draft when the address changes to it', () => {
+    nav.params = new URLSearchParams('draftId=draft-9');
+    api.getEmail.mockReturnValue(queryOf(draft));
+    const { rerender } = render(<ComposeClient />);
+    nav.params = new URLSearchParams('draftId=draft-2');
+    rerender(<ComposeClient />);
+    expect(api.getEmail.mock.calls.at(-1)?.[0]).toEqual({ emailId: 'draft-2' });
+  });
+
   it('does not reload when saving a new draft adds its id to the URL', () => {
+    window.history.replaceState(null, '', '/email/compose');
     const { rerender } = render(<ComposeClient />);
     expect(api.getEmail.mock.calls.at(-1)?.[1]).toMatchObject({ enabled: false });
+    lastProps().onDraftSaved('draft-1');
     nav.params = new URLSearchParams('draftId=draft-1');
     rerender(<ComposeClient />);
     expect(api.getEmail.mock.calls.at(-1)?.[1]).toMatchObject({ enabled: false });
