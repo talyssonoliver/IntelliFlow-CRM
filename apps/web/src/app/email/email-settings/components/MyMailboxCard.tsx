@@ -14,6 +14,8 @@ import { trpc } from '@/lib/trpc';
 import { SectionHeader } from '@/components/shared/section-header';
 import { mailboxErrorMessage } from '@/components/email/send-errors';
 import { oauthProviderKey } from '../../oauth/oauth-session';
+import { connectionFailureHelp } from './connection-help';
+import { oneClickNotYet, providerByServer } from './mailbox-providers';
 
 // Loaded on demand: most users connect with Google or Microsoft (C-FE5).
 const SmtpMailboxForm = dynamic(() => import('./SmtpMailboxForm').then((m) => m.SmtpMailboxForm), {
@@ -100,7 +102,10 @@ export function MailboxConnection({
       const outcome = await testConnection.mutateAsync({ scope });
       const message = outcome.ok
         ? 'Connection works.'
-        : mailboxErrorMessage(outcome.code ?? 'CONNECT_FAILED');
+        : connectionFailureHelp(
+            outcome.code ?? 'CONNECT_FAILED',
+            providerByServer(mailbox?.smtpHost ?? '')
+          );
       setResult({ ok: outcome.ok, message });
       announce(message);
       // Either way the server may have changed the status (ERROR <-> ACTIVE).
@@ -140,7 +145,7 @@ export function MailboxConnection({
         </Button>
         {!available && (
           <p id={reasonId} className="text-xs text-muted-foreground">
-            {PROVIDER_LABEL[provider]} sign-in is not set up on this server yet.
+            {oneClickNotYet(PROVIDER_LABEL[provider])} Use Set Up Mailbox instead.
           </p>
         )}
       </div>
@@ -172,8 +177,9 @@ export function MailboxConnection({
 
       {(!connected || broken) && (
         <div className="flex flex-wrap items-start gap-2">
-          {providerButton('GMAIL')}
-          {providerButton('MICROSOFT')}
+          {/* While setting up, the form's own first step is the only choice on screen. */}
+          {!editing && providerButton('GMAIL')}
+          {!editing && providerButton('MICROSOFT')}
           {/* A broken SMTP mailbox is edited below; a disconnected one is set up again here. */}
           {!editing && (!connected || mailbox?.kind !== 'SMTP') && (
             <Button
@@ -183,7 +189,7 @@ export function MailboxConnection({
               variant="outline"
               onClick={() => setEditing(true)}
             >
-              Set Up SMTP
+              Set Up Mailbox
             </Button>
           )}
         </div>
