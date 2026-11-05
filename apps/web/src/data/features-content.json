@@ -116,7 +116,7 @@
       "id": "connected-secure",
       "name": "Connected and secure",
       "icon": "shield_lock",
-      "description": "Works with the tools you use, with protection on from day one.",
+      "description": "Connect your mailbox, with protection on from day one.",
       "features": [
         {
           "id": "connectors",
