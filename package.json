@@ -46,6 +46,8 @@
     "lint:fix": "turbo run lint:fix",
     "lint:promises": "node scripts/lint-promises.mjs",
     "lint:artifacts": "tsx tools/lint/artifact-paths.ts",
+    "lint:artifacts:preship": "node scripts/check-generated-registry.mjs --base origin/main && pnpm run lint:artifacts",
+    "lint:artifacts:preship": "node scripts/check-generated-registry.mjs --base origin/main && pnpm run lint:artifacts",
     "lint:artifacts:fix": "tsx tools/lint/artifact-paths.ts --fix",
     "lint:artifacts:audit": "tsx tools/lint/artifact-paths.ts --audit",
     "lint:runtime-paths": "tsx tools/audit/runtime-path-linter.ts",
