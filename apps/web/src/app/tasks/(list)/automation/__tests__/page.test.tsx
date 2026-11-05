@@ -19,7 +19,7 @@ import Page, { metadata } from '../page';
 
 describe('Task Automation page.tsx', () => {
   it('exports metadata with title and description', () => {
-    expect(metadata.title).toMatch(/Task Automation/);
+    expect(metadata.title).toEqual({ absolute: 'Task Automation — Aurora' });
     expect(metadata.description).toMatch(/rules/i);
   });
 

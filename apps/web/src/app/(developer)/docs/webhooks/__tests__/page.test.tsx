@@ -26,7 +26,7 @@ describe('WebhooksPage', () => {
   });
 
   it('exports metadata.title as "Webhooks | Aurora"', () => {
-    expect(metadata.title).toBe('Webhooks | Aurora');
+    expect(metadata.title).toEqual({ absolute: 'Webhooks | Aurora' });
   });
 
   it('exports metadata.description containing "webhook"', () => {

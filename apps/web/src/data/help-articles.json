@@ -424,63 +424,112 @@
     "slug": "email-integration-setup",
     "title": "Email Integration Setup",
     "categoryId": "email-calendar",
-    "excerpt": "Connect your email provider to Aurora for seamless communication tracking.",
+    "excerpt": "Connect the email address you use for work so you can send email from Aurora.",
     "sections": [
       {
-        "heading": "Connecting Gmail or Outlook",
-        "content": "Go to Settings > Integrations > Email and click \"Connect\". Choose Gmail or Outlook and authorize Aurora to access your inbox. Only CRM-related emails are synced.",
+        "heading": "Connect your mailbox",
+        "content": "Open Email Settings, choose who provides your email, then enter your address and what that provider asks for, usually a password. Test the connection, then save.",
         "blocks": [
           {
             "type": "nav-path",
-            "path": ["Settings", "Integrations", "Email"]
+            "path": ["Email", "Email Settings"]
           },
           {
             "type": "steps",
             "items": [
-              "Navigate to the Email integration settings page",
-              "Click \"Connect\" and choose your provider (Gmail or Outlook)",
-              "Sign in with your email credentials and authorize Aurora",
-              "Choose sync preferences: all emails or only CRM-related contacts",
-              "Your inbox is now connected — emails begin syncing immediately"
+              "In Email, open Email Settings in the sidebar",
+              "Choose Set Up Mailbox",
+              "Choose who provides your email. If it is not listed, choose My own domain or another provider",
+              "Enter your email address and your name",
+              "Enter what your provider asks for, usually a password. The form shows the steps for your provider",
+              "Choose Test Connection. If it works, choose Save Mailbox"
             ]
           },
           {
-            "type": "tip",
-            "text": "You can connect multiple email accounts. Each team member should connect their own inbox for accurate per-user email tracking."
-          },
-          {
             "type": "info",
-            "text": "Aurora only reads emails from addresses that match your CRM contacts. No personal emails are accessed or stored."
+            "text": "Your email is sent from your own address, through your own provider. One-click sign-in with Google or Microsoft is not available yet."
           }
         ]
       },
       {
-        "heading": "Email Tracking",
-        "content": "Once connected, emails sent to or from CRM contacts are automatically logged on their timeline. Open and click tracking is available for emails sent through Aurora.",
+        "heading": "What to enter for your provider",
+        "content": "Most providers ask for an app password, made just for one app, rather than your normal password.",
         "blocks": [
           {
             "type": "paragraph",
-            "text": "Once your inbox is connected, Aurora automatically logs all emails sent to or from your CRM contacts on their activity timeline."
+            "text": "Gmail or Google Workspace: turn on 2-Step Verification, then, in your Google account, create an app password. Yahoo, iCloud and Namecheap Private Email also need an app password. The form links to the right page for each."
           },
+          {
+            "type": "paragraph",
+            "text": "Microsoft 365 for business: your administrator must allow SMTP AUTH for your mailbox, and it does not work with Security defaults. Microsoft turns SMTP AUTH basic authentication off by default at the end of December 2026. Administrators of existing organisations can still turn it back on. Sending is all that works: Microsoft no longer accepts passwords for reading incoming mail."
+          },
+          {
+            "type": "paragraph",
+            "text": "Outlook, Hotmail and Live: these addresses need Microsoft sign-in, so passwords will not work, and one-click sign-in is not available yet. For now, connect another address you use for work, or send from your own domain with a sending service."
+          },
+          {
+            "type": "paragraph",
+            "text": "Zoho Mail: you need a paid Zoho plan, because the free plan is limited to the Zoho website and app. Your server depends on your Zoho region, so copy it from Server Configurations Details in Zoho if you sign in anywhere other than zoho.com."
+          },
+          {
+            "type": "paragraph",
+            "text": "Resend or another sending service: verify your domain with the service, then use the API key it gives you as the password. Resend is listed in the form. For other services, choose My own domain or another provider and enter the server name and sign-in name they give you."
+          },
+          {
+            "type": "paragraph",
+            "text": "A business address on your own domain: ask whoever hosts your email for the SMTP server name and your mailbox password, or search their help pages for SMTP settings. If Google, Microsoft or Zoho runs your email, choose them instead."
+          }
+        ]
+      },
+      {
+        "heading": "If the test does not work",
+        "content": "The test tells you the likely cause. Nothing is saved until you choose Save Mailbox.",
+        "blocks": [
           {
             "type": "steps",
             "items": [
-              "Emails are matched to contacts by email address automatically",
-              "Open tracking shows when a recipient opens your email",
-              "Click tracking records when they click links in your message",
-              "Thread grouping keeps related emails together on the contact timeline"
+              "Sign-in refused: check the address and password, and whether your provider needs an app password",
+              "Server not reached: check the server name under Advanced settings for typing mistakes",
+              "Secure connection failed: under Advanced settings, port 465 goes with SSL/TLS and port 587 with STARTTLS",
+              "No answer in time: try the other port under Advanced settings, or try again shortly"
             ]
           },
           {
-            "type": "warning",
-            "text": "Email open tracking uses a tracking pixel. Some email clients block these by default, so open rates may be lower than actual opens."
+            "type": "tip",
+            "text": "App passwords can stop working after you change your main password. If sending stops, create a new one and enter it in Email Settings."
+          }
+        ]
+      },
+      {
+        "heading": "Reading bounce reports",
+        "content": "This optional setting, under Advanced settings, keeps addresses that fail off your lists.",
+        "blocks": [
+          {
+            "type": "paragraph",
+            "text": "Only bounce reports are read. No other mail is stored. Without this, your email still sends, but addresses that bounce are not taken off your lists automatically."
+          },
+          {
+            "type": "info",
+            "text": "A sending-only service such as Resend has no mailbox to read, and Microsoft 365 no longer accepts passwords for reading one, so this setting is not offered for them."
           }
         ]
       }
     ],
     "readTimeMinutes": 4,
-    "lastUpdatedAt": "2026-02-28",
-    "keywords": ["email", "gmail", "outlook", "integration", "tracking"],
+    "lastUpdatedAt": "2026-11-04",
+    "keywords": [
+      "email",
+      "mailbox",
+      "smtp",
+      "app password",
+      "gmail",
+      "outlook",
+      "microsoft 365",
+      "zoho",
+      "resend",
+      "own domain",
+      "integration"
+    ],
     "relatedArticleIds": ["ec-002"],
     "order": 0
   },
@@ -855,7 +904,7 @@
     "sections": [
       {
         "heading": "Available Integrations",
-        "content": "You can connect your own mailbox through its mail server settings, and sign in with Google or Microsoft. Other integrations are planned.",
+        "content": "You can connect your own mailbox in Email Settings, and sign in with Google or Microsoft. Other integrations are planned.",
         "blocks": [
           {
             "type": "paragraph",
@@ -864,7 +913,7 @@
           {
             "type": "steps",
             "items": [
-              "Email: available, connect your own mailbox through its mail server settings",
+              "Email: available, connect your mailbox in Email Settings to send from your own address. Mail you receive is not brought into Aurora yet",
               "Sign-in: available, with Google or Microsoft",
               "Calendar: planned, Google Calendar and Outlook Calendar",
               "Communication: planned, Slack and Microsoft Teams",
@@ -873,7 +922,7 @@
           },
           {
             "type": "tip",
-            "text": "Start by connecting your mailbox, so you can write and send email from Aurora."
+            "text": "Start with your mailbox, so the email you send from Aurora comes from your own address."
           }
         ]
       },

@@ -115,7 +115,7 @@ function HelpSearchPageContent() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="max-w-5xl">
+      <div className="w-full">
         <PageHeader
           title="Search Help Center"
           breadcrumbs={[

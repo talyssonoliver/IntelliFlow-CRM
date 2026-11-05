@@ -29,6 +29,7 @@ vi.mock('@/lib/trpc', () => ({
       emailMailbox: {
         getMine: { invalidate: api.invalidate },
         getTenant: { invalidate: api.invalidate },
+        sendingIdentity: { invalidate: api.invalidate },
       },
     }),
     emailSettings: {

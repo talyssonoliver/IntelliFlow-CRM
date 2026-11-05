@@ -47,6 +47,11 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
 
   const debouncedSearch = useDebounce(searchQuery, 300);
 
+  // An empty inbox before a mailbox is connected should say so.
+  const identityQuery = trpc.emailMailbox.sendingIdentity.useQuery();
+  const isInbox = selectedFolder === 'inbox' && !selectedLabel;
+  const mailboxRefusal = isInbox ? (identityQuery.data?.refusal ?? null) : null;
+
   // Fetch emails for current folder/label
   const emailsQuery = trpc.email.listEmails.useQuery({
     folder: selectedLabel ? undefined : selectedFolder,
@@ -171,6 +176,18 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
     return () => document.removeEventListener('keydown', handler);
   }, [router]);
 
+  // A draft is still being written, so it opens where it can be edited and sent.
+  const handleEmailSelect = useCallback(
+    (emailId: string) => {
+      if (selectedFolder === 'drafts' && !selectedLabel) {
+        router.push(`/email/compose?draftId=${encodeURIComponent(emailId)}`);
+      } else {
+        setSelectedEmailId(emailId);
+      }
+    },
+    [router, selectedFolder, selectedLabel]
+  );
+
   const handleReply = useCallback(
     (messageId: string) => {
       router.push(`/email/compose?mode=reply&emailId=${messageId}`);
@@ -243,36 +260,50 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
         selectedEmailId={selectedEmailId}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onEmailSelect={setSelectedEmailId}
+        onEmailSelect={handleEmailSelect}
         onFilterChange={setFilters}
         onRetry={() => emailsQuery.refetch()}
         filters={filters}
+        mailboxRefusal={mailboxRefusal}
+        className={selectedEmailId ? 'hidden md:flex' : 'flex'}
       />
 
-      {/* Thread view */}
-      <EmailThread
-        thread={
-          threadQuery.data
-            ? {
-                ...threadQuery.data,
-                emails: threadQuery.data.emails.map((e) => ({
-                  ...e,
-                  attachments: e.attachments.map((a) => ({ ...a, checksum: '' })),
-                })),
-              }
-            : null
-        }
-        isLoading={threadQuery.isLoading}
-        labels={selectedEmail?.labels ?? []}
-        onLabelsChange={handleSetLabels}
-        onReply={handleReply}
-        onReplyAll={handleReplyAll}
-        onForward={handleForward}
-        onArchive={handleArchive}
-        onDelete={handleDelete}
-        onMarkUnread={handleMarkUnread}
-        onInlineSent={handleInlineSent}
-      />
+      {/* Thread view: on a phone it replaces the list until Back is pressed */}
+      <div className={cn('min-w-0 flex-1 flex-col', selectedEmailId ? 'flex' : 'hidden md:flex')}>
+        <button
+          type="button"
+          onClick={() => setSelectedEmailId(null)}
+          className="inline-flex items-center gap-1.5 border-b border-border px-4 py-3 text-sm text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-ring md:hidden"
+        >
+          <span className="material-symbols-outlined text-base" aria-hidden="true">
+            arrow_back
+          </span>{' '}
+          Back to list
+        </button>
+        <EmailThread
+          thread={
+            threadQuery.data
+              ? {
+                  ...threadQuery.data,
+                  emails: threadQuery.data.emails.map((e) => ({
+                    ...e,
+                    attachments: e.attachments.map((a) => ({ ...a, checksum: '' })),
+                  })),
+                }
+              : null
+          }
+          isLoading={threadQuery.isLoading}
+          labels={selectedEmail?.labels ?? []}
+          onLabelsChange={handleSetLabels}
+          onReply={handleReply}
+          onReplyAll={handleReplyAll}
+          onForward={handleForward}
+          onArchive={handleArchive}
+          onDelete={handleDelete}
+          onMarkUnread={handleMarkUnread}
+          onInlineSent={handleInlineSent}
+        />
+      </div>
     </div>
   );
 }

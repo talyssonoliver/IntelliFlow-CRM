@@ -69,7 +69,9 @@ describe('CompanyMailboxCard', () => {
     renderCard();
     expect(screen.getByRole('region', { name: 'Company mailbox' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Connect Google' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Set Up SMTP' }));
+    expect(screen.getByText('Connect a shared address your team can send from.')).toBeVisible();
+    expect(screen.queryByText('Connect your mailbox to send email.')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Set Up Mailbox' }));
     expect(await screen.findByTestId('smtp-form')).toHaveTextContent('form for TENANT');
   });
 
@@ -96,7 +98,7 @@ describe('CompanyMailboxCard', () => {
       companyMailboxAddress: 'team@mail.example.invalid',
     });
     expect(screen.queryByRole('button', { name: 'Connect Google' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Set Up SMTP' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Set Up Mailbox' })).not.toBeInTheDocument();
     const toggle = screen.getByRole('switch', {
       name: 'Members without their own mailbox can send from it',
     });

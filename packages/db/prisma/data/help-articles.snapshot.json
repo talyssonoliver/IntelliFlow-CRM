@@ -6,24 +6,24 @@
       "slug": "quick-start-guide",
       "title": "Quick Start Guide",
       "categoryId": "getting-started",
-      "excerpt": "Get up and running with IntelliFlow CRM in minutes.",
+      "excerpt": "Get up and running with Aurora in minutes.",
       "sections": [
         {
           "heading": "Create Your Account",
-          "content": "Sign up at the IntelliFlow CRM portal with your work email. You will receive a verification email — click the link to activate your account and set your password.",
+          "content": "Sign up at the Aurora portal with your work email. You will receive a verification email — click the link to activate your account and set your password.",
           "blocks": [
             {
               "type": "steps",
               "items": [
-                "Visit the IntelliFlow CRM sign-up page and enter your work email",
+                "Visit the Aurora sign-up page and enter your work email",
                 "Check your inbox for the verification email and click the activation link",
-                "Set a strong password and complete your profile details",
+                "Set a strong password, then complete your profile details",
                 "You will be redirected to your new workspace dashboard"
               ]
             },
             {
               "type": "tip",
-              "text": "Use your company email to get automatic team discovery — IntelliFlow can suggest colleagues from the same domain."
+              "text": "Use your company email to get automatic team discovery — Aurora can suggest colleagues from the same domain."
             }
           ]
         },
@@ -52,7 +52,7 @@
         },
         {
           "heading": "Import Your Data",
-          "content": "Go to Settings > Import to upload your existing contacts and deals via CSV. IntelliFlow maps common column headers automatically and flags any duplicates for review.",
+          "content": "Go to Settings > Import to upload your existing contacts and deals via CSV. Aurora maps common column headers automatically and flags any duplicates for review.",
           "blocks": [
             {
               "type": "nav-path",
@@ -62,7 +62,7 @@
               "type": "steps",
               "items": [
                 "Prepare a CSV file with your contacts, leads, or deals",
-                "Upload the file — IntelliFlow auto-maps common headers (Name, Email, Phone, Company)",
+                "Upload the file — Aurora auto-maps common headers (Name, Email, Phone, Company)",
                 "Review the column mapping and adjust any mismatches",
                 "Resolve flagged duplicates (merge, skip, or overwrite)",
                 "Confirm and start the import — progress is shown in real time"
@@ -70,7 +70,7 @@
             },
             {
               "type": "tip",
-              "text": "For large imports (10,000+ records), schedule the import during off-peak hours. IntelliFlow processes imports in the background so you can continue working."
+              "text": "For large imports (10,000+ records), schedule the import during off-peak hours. Aurora processes imports in the background so you can continue working."
             }
           ]
         }
@@ -86,7 +86,7 @@
       "slug": "navigating-the-dashboard",
       "title": "Navigating the Dashboard",
       "categoryId": "getting-started",
-      "excerpt": "Learn how to use the IntelliFlow dashboard to monitor your sales activity.",
+      "excerpt": "Learn how to use the Aurora dashboard to monitor your sales activity.",
       "sections": [
         {
           "heading": "Dashboard Overview",
@@ -138,11 +138,11 @@
       "sections": [
         {
           "heading": "Role Types",
-          "content": "IntelliFlow has four built-in roles: Admin, Manager, Agent, and Viewer. Admins have full system access. Managers can manage their teams. Agents handle day-to-day CRM operations. Viewers have read-only access.",
+          "content": "Aurora has four built-in roles: Admin, Manager, Agent, and Viewer. Admins have full system access. Managers can manage their teams. Agents handle day-to-day CRM operations. Viewers have read-only access.",
           "blocks": [
             {
               "type": "paragraph",
-              "text": "IntelliFlow uses a role-based access control (RBAC) system with four built-in roles, each with specific permissions:"
+              "text": "Aurora uses a role-based access control (RBAC) system with four built-in roles, each with specific permissions:"
             },
             {
               "type": "steps",
@@ -194,7 +194,7 @@
       "slug": "creating-and-managing-leads",
       "title": "Creating and Managing Leads",
       "categoryId": "leads-contacts",
-      "excerpt": "Learn how to create, qualify, and convert leads in IntelliFlow.",
+      "excerpt": "Learn how to create, qualify, and convert leads in Aurora.",
       "sections": [
         {
           "heading": "Creating a Lead",
@@ -212,17 +212,17 @@
             },
             {
               "type": "tip",
-              "text": "Use the quick-create shortcut Ctrl+L from anywhere in IntelliFlow to capture a lead without leaving your current page."
+              "text": "Use the quick-create shortcut Ctrl+L from anywhere in Aurora to capture a lead without leaving your current page."
             }
           ]
         },
         {
           "heading": "Lead Qualification",
-          "content": "Use the lead scoring system to prioritize your pipeline. IntelliFlow AI automatically scores leads based on engagement, company fit, and behavioral signals. You can also manually adjust scores.",
+          "content": "Use the lead scoring system to prioritize your pipeline. Aurora AI automatically scores leads based on engagement, company fit, and behavioral signals. You can also manually adjust scores.",
           "blocks": [
             {
               "type": "paragraph",
-              "text": "IntelliFlow AI automatically scores every lead from 0–100 based on engagement signals, company fit, and behavioral patterns. Higher scores indicate higher conversion likelihood."
+              "text": "Aurora AI automatically scores every lead from 0–100 based on engagement signals, company fit, and behavioral patterns. Higher scores indicate higher conversion likelihood."
             },
             {
               "type": "info",
@@ -265,7 +265,7 @@
       "sections": [
         {
           "heading": "CSV Import",
-          "content": "Go to Contacts > Import and upload your CSV file. IntelliFlow auto-maps common headers (Name, Email, Phone, Company). Review the mapping, resolve duplicates, and confirm the import.",
+          "content": "Go to Contacts > Import and upload your CSV file. Aurora auto-maps common headers (Name, Email, Phone, Company). Review the mapping, resolve duplicates, and confirm the import.",
           "blocks": [
             {
               "type": "nav-path",
@@ -289,11 +289,11 @@
         },
         {
           "heading": "Duplicate Detection",
-          "content": "During import, IntelliFlow checks for duplicates by email address and phone number. Duplicates are flagged for review — you can merge, skip, or overwrite.",
+          "content": "During import, Aurora checks for duplicates by email address and phone number. Duplicates are flagged for review — you can merge, skip, or overwrite.",
           "blocks": [
             {
               "type": "paragraph",
-              "text": "IntelliFlow checks every imported record against your existing database using email address and phone number as matching criteria."
+              "text": "Aurora checks every imported record against your existing database using email address and phone number as matching criteria."
             },
             {
               "type": "info",
@@ -321,11 +321,11 @@
       "sections": [
         {
           "heading": "Pipeline Stages",
-          "content": "IntelliFlow comes with default stages: Prospecting, Qualification, Proposal, Negotiation, and Closed. Navigate to Settings > Pipeline to customize stages for your sales process.",
+          "content": "Aurora comes with default stages: Prospecting, Qualification, Proposal, Negotiation, and Closed. Navigate to Settings > Pipeline to customize stages for your sales process.",
           "blocks": [
             {
               "type": "paragraph",
-              "text": "IntelliFlow ships with five default pipeline stages designed for typical B2B sales workflows:"
+              "text": "Aurora ships with five default pipeline stages designed for typical B2B sales workflows:"
             },
             {
               "type": "steps",
@@ -386,7 +386,7 @@
           "blocks": [
             {
               "type": "paragraph",
-              "text": "The Forecast dashboard gives you a clear view of projected revenue, weighted by each deal's probability of closing. IntelliFlow AI continuously adjusts these probabilities based on historical conversion rates and deal velocity."
+              "text": "The Forecast dashboard gives you a clear view of projected revenue, weighted by each deal's probability of closing. Aurora AI continuously adjusts these probabilities based on historical conversion rates and deal velocity."
             },
             {
               "type": "info",
@@ -396,7 +396,7 @@
         },
         {
           "heading": "Scenario Planning",
-          "content": "Create best-case, worst-case, and most-likely scenarios. IntelliFlow calculates each based on different probability weights and close-date assumptions.",
+          "content": "Create best-case, worst-case, and most-likely scenarios. Aurora calculates each based on different probability weights and close-date assumptions.",
           "blocks": [
             {
               "type": "steps",
@@ -426,63 +426,112 @@
       "slug": "email-integration-setup",
       "title": "Email Integration Setup",
       "categoryId": "email-calendar",
-      "excerpt": "Connect your email provider to IntelliFlow for seamless communication tracking.",
+      "excerpt": "Connect the email address you use for work so you can send email from Aurora.",
       "sections": [
         {
-          "heading": "Connecting Gmail or Outlook",
-          "content": "Go to Settings > Integrations > Email and click \"Connect\". Choose Gmail or Outlook and authorize IntelliFlow to access your inbox. Only CRM-related emails are synced.",
+          "heading": "Connect your mailbox",
+          "content": "Open Email Settings, choose who provides your email, then enter your address and what that provider asks for, usually a password. Test the connection, then save.",
           "blocks": [
             {
               "type": "nav-path",
-              "path": ["Settings", "Integrations", "Email"]
+              "path": ["Email", "Email Settings"]
             },
             {
               "type": "steps",
               "items": [
-                "Navigate to the Email integration settings page",
-                "Click \"Connect\" and choose your provider (Gmail or Outlook)",
-                "Sign in with your email credentials and authorize IntelliFlow",
-                "Choose sync preferences: all emails or only CRM-related contacts",
-                "Your inbox is now connected — emails begin syncing immediately"
+                "In Email, open Email Settings in the sidebar",
+                "Choose Set Up Mailbox",
+                "Choose who provides your email. If it is not listed, choose My own domain or another provider",
+                "Enter your email address and your name",
+                "Enter what your provider asks for, usually a password. The form shows the steps for your provider",
+                "Choose Test Connection. If it works, choose Save Mailbox"
               ]
             },
             {
-              "type": "tip",
-              "text": "You can connect multiple email accounts. Each team member should connect their own inbox for accurate per-user email tracking."
-            },
-            {
               "type": "info",
-              "text": "IntelliFlow only reads emails from addresses that match your CRM contacts. No personal emails are accessed or stored."
+              "text": "Your email is sent from your own address, through your own provider. One-click sign-in with Google or Microsoft is not available yet."
             }
           ]
         },
         {
-          "heading": "Email Tracking",
-          "content": "Once connected, emails sent to or from CRM contacts are automatically logged on their timeline. Open and click tracking is available for emails sent through IntelliFlow.",
+          "heading": "What to enter for your provider",
+          "content": "Most providers ask for an app password, made just for one app, rather than your normal password.",
           "blocks": [
             {
               "type": "paragraph",
-              "text": "Once your inbox is connected, IntelliFlow automatically logs all emails sent to or from your CRM contacts on their activity timeline."
+              "text": "Gmail or Google Workspace: turn on 2-Step Verification, then, in your Google account, create an app password. Yahoo, iCloud and Namecheap Private Email also need an app password. The form links to the right page for each."
             },
+            {
+              "type": "paragraph",
+              "text": "Microsoft 365 for business: your administrator must allow SMTP AUTH for your mailbox, and it does not work with Security defaults. Microsoft turns SMTP AUTH basic authentication off by default at the end of December 2026. Administrators of existing organisations can still turn it back on. Sending is all that works: Microsoft no longer accepts passwords for reading incoming mail."
+            },
+            {
+              "type": "paragraph",
+              "text": "Outlook, Hotmail and Live: these addresses need Microsoft sign-in, so passwords will not work, and one-click sign-in is not available yet. For now, connect another address you use for work, or send from your own domain with a sending service."
+            },
+            {
+              "type": "paragraph",
+              "text": "Zoho Mail: you need a paid Zoho plan, because the free plan is limited to the Zoho website and app. Your server depends on your Zoho region, so copy it from Server Configurations Details in Zoho if you sign in anywhere other than zoho.com."
+            },
+            {
+              "type": "paragraph",
+              "text": "Resend or another sending service: verify your domain with the service, then use the API key it gives you as the password. Resend is listed in the form. For other services, choose My own domain or another provider and enter the server name and sign-in name they give you."
+            },
+            {
+              "type": "paragraph",
+              "text": "A business address on your own domain: ask whoever hosts your email for the SMTP server name and your mailbox password, or search their help pages for SMTP settings. If Google, Microsoft or Zoho runs your email, choose them instead."
+            }
+          ]
+        },
+        {
+          "heading": "If the test does not work",
+          "content": "The test tells you the likely cause. Nothing is saved until you choose Save Mailbox.",
+          "blocks": [
             {
               "type": "steps",
               "items": [
-                "Emails are matched to contacts by email address automatically",
-                "Open tracking shows when a recipient opens your email",
-                "Click tracking records when they click links in your message",
-                "Thread grouping keeps related emails together on the contact timeline"
+                "Sign-in refused: check the address and password, and whether your provider needs an app password",
+                "Server not reached: check the server name under Advanced settings for typing mistakes",
+                "Secure connection failed: under Advanced settings, port 465 goes with SSL/TLS and port 587 with STARTTLS",
+                "No answer in time: try the other port under Advanced settings, or try again shortly"
               ]
             },
             {
-              "type": "warning",
-              "text": "Email open tracking uses a tracking pixel. Some email clients block these by default, so open rates may be lower than actual opens."
+              "type": "tip",
+              "text": "App passwords can stop working after you change your main password. If sending stops, create a new one and enter it in Email Settings."
+            }
+          ]
+        },
+        {
+          "heading": "Reading bounce reports",
+          "content": "This optional setting, under Advanced settings, keeps addresses that fail off your lists.",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "Only bounce reports are read. No other mail is stored. Without this, your email still sends, but addresses that bounce are not taken off your lists automatically."
+            },
+            {
+              "type": "info",
+              "text": "A sending-only service such as Resend has no mailbox to read, and Microsoft 365 no longer accepts passwords for reading one, so this setting is not offered for them."
             }
           ]
         }
       ],
       "readTimeMinutes": 4,
-      "lastUpdatedAt": "2026-02-28",
-      "keywords": ["email", "gmail", "outlook", "integration", "tracking"],
+      "lastUpdatedAt": "2026-11-04",
+      "keywords": [
+        "email",
+        "mailbox",
+        "smtp",
+        "app password",
+        "gmail",
+        "outlook",
+        "microsoft 365",
+        "zoho",
+        "resend",
+        "own domain",
+        "integration"
+      ],
       "relatedArticleIds": ["ec-002"],
       "order": 0
     },
@@ -491,40 +540,27 @@
       "slug": "calendar-sync",
       "title": "Calendar Sync",
       "categoryId": "email-calendar",
-      "excerpt": "Sync your calendar to schedule meetings and track appointments.",
+      "excerpt": "Book meetings in Aurora. Connecting an outside calendar is planned.",
       "sections": [
         {
           "heading": "Calendar Connection",
-          "content": "Navigate to Settings > Integrations > Calendar and connect your Google or Outlook calendar. Two-way sync ensures meetings appear in both your calendar and IntelliFlow.",
+          "content": "Connecting a Google or Outlook calendar is planned. Meetings you book in Aurora stay in Aurora for now, and don't appear in an outside calendar.",
           "blocks": [
             {
-              "type": "nav-path",
-              "path": ["Settings", "Integrations", "Calendar"]
-            },
-            {
-              "type": "steps",
-              "items": [
-                "Navigate to the Calendar integration settings page",
-                "Click \"Connect\" and choose Google Calendar or Outlook Calendar",
-                "Authorize IntelliFlow to access your calendar",
-                "Enable two-way sync — meetings appear in both IntelliFlow and your calendar"
-              ]
-            },
-            {
               "type": "info",
-              "text": "Two-way sync means creating a meeting in IntelliFlow adds it to your calendar, and meetings created in your calendar with CRM contacts are logged in IntelliFlow automatically."
+              "text": "Calendar sync isn't available yet. When it is, this article will explain how to connect your calendar."
             }
           ]
         },
         {
           "heading": "Scheduling Meetings",
-          "content": "From any contact or deal page, click \"New Appointment\" to create a calendar event. IntelliFlow checks availability and sends invitations automatically.",
+          "content": "From any contact or deal page, click \"New Appointment\" to create a calendar event. Aurora checks availability and sends invitations automatically.",
           "blocks": [
             {
               "type": "steps",
               "items": [
                 "Open a contact or deal page and click \"New Appointment\"",
-                "Select a date and time — IntelliFlow shows your availability",
+                "Select a date and time — Aurora shows your availability",
                 "Add attendees (contacts are auto-suggested)",
                 "Choose a meeting type: Video Call, Phone Call, or In-Person",
                 "Send the invitation — attendees receive a calendar invite automatically"
@@ -685,15 +721,15 @@
       "slug": "ai-lead-scoring",
       "title": "AI Lead Scoring",
       "categoryId": "ai-features",
-      "excerpt": "Understand how IntelliFlow AI scores and prioritizes your leads.",
+      "excerpt": "Understand how Aurora AI scores and prioritizes your leads.",
       "sections": [
         {
           "heading": "How Scoring Works",
-          "content": "IntelliFlow AI analyzes lead engagement, company data, and behavioral patterns to assign a score from 0-100. Higher scores indicate higher likelihood of conversion.",
+          "content": "Aurora AI analyzes lead engagement, company data, and behavioral patterns to assign a score from 0-100. Higher scores indicate higher likelihood of conversion.",
           "blocks": [
             {
               "type": "paragraph",
-              "text": "IntelliFlow AI assigns every lead a score from 0–100 based on a combination of engagement signals, company fit, and behavioral patterns. This score helps you prioritize the leads most likely to convert."
+              "text": "Aurora AI assigns every lead a score from 0–100 based on a combination of engagement signals, company fit, and behavioral patterns. This score helps you prioritize the leads most likely to convert."
             },
             {
               "type": "info",
@@ -741,11 +777,11 @@
       "sections": [
         {
           "heading": "Next Best Action",
-          "content": "IntelliFlow AI analyzes deal stage, contact engagement, and historical patterns to suggest your next action — whether it is sending a follow-up, scheduling a call, or updating the deal stage.",
+          "content": "Aurora AI analyzes deal stage, contact engagement, and historical patterns to suggest your next action — whether it is sending a follow-up, scheduling a call, or updating the deal stage.",
           "blocks": [
             {
               "type": "paragraph",
-              "text": "IntelliFlow AI analyzes each deal's stage, contact engagement, and historical patterns to recommend your next best action — whether that's sending a follow-up email, scheduling a call, or updating the deal stage."
+              "text": "Aurora AI analyzes each deal's stage, contact engagement, and historical patterns to recommend your next best action — whether that's sending a follow-up email, scheduling a call, or updating the deal stage."
             },
             {
               "type": "steps",
@@ -768,7 +804,7 @@
           "blocks": [
             {
               "type": "paragraph",
-              "text": "When IntelliFlow AI recommends an automated action — like sending an email or updating a deal stage — it requires human approval before execution. This keeps you in control while benefiting from AI efficiency."
+              "text": "When Aurora AI recommends an automated action — like sending an email or updating a deal stage — it requires human approval before execution. This keeps you in control while benefiting from AI efficiency."
             },
             {
               "type": "nav-path",
@@ -801,7 +837,7 @@
       "slug": "workspace-configuration",
       "title": "Workspace Configuration",
       "categoryId": "settings-admin",
-      "excerpt": "Configure your IntelliFlow workspace settings and preferences.",
+      "excerpt": "Configure your Aurora workspace settings and preferences.",
       "sections": [
         {
           "heading": "General Settings",
@@ -876,53 +912,35 @@
       "sections": [
         {
           "heading": "Available Integrations",
-          "content": "IntelliFlow integrates with Gmail, Outlook, Slack, Zapier, and more. Navigate to Settings > Integrations to browse and connect available services.",
+          "content": "You can connect your own mailbox in Email Settings, and sign in with Google or Microsoft. Other integrations are planned.",
           "blocks": [
             {
-              "type": "nav-path",
-              "path": ["Settings", "Integrations"]
-            },
-            {
               "type": "paragraph",
-              "text": "IntelliFlow offers native integrations with popular business tools. Browse the integration marketplace to connect your tech stack:"
+              "text": "What is available, and what is planned:"
             },
             {
               "type": "steps",
               "items": [
-                "Email — Gmail, Outlook (two-way sync with contact timeline)",
-                "Calendar — Google Calendar, Outlook Calendar (meeting scheduling)",
-                "Communication — Slack (deal alerts, task notifications, team channels)",
-                "Automation — Zapier (connect 5,000+ apps with no-code workflows)",
-                "Storage — Google Drive, Dropbox (document attachment and sharing)"
+                "Email: available, connect your mailbox in Email Settings to send from your own address. Mail you receive is not brought into Aurora yet",
+                "Sign-in: available, with Google or Microsoft",
+                "Calendar: planned, Google Calendar and Outlook Calendar",
+                "Communication: planned, Slack and Microsoft Teams",
+                "Payments: planned, Stripe and PayPal"
               ]
             },
             {
               "type": "tip",
-              "text": "Start with Email and Calendar integrations — they provide the most immediate value by automatically logging communications with your CRM contacts."
+              "text": "Start with your mailbox, so the email you send from Aurora comes from your own address."
             }
           ]
         },
         {
           "heading": "API Keys",
-          "content": "Generate API keys under Settings > Developer > API Keys. Keys can be scoped with specific permissions and set with expiration dates for security.",
+          "content": "API keys are coming soon. This article will explain how to create and manage them when they are available.",
           "blocks": [
             {
-              "type": "nav-path",
-              "path": ["Settings", "Developer", "API Keys"]
-            },
-            {
-              "type": "steps",
-              "items": [
-                "Navigate to the API Keys page",
-                "Click \"Generate New Key\" and give it a descriptive name",
-                "Select permission scopes (read-only, read-write, or specific modules)",
-                "Set an expiration date — recommended: 90 days for production keys",
-                "Copy and securely store the key — it is only shown once"
-              ]
-            },
-            {
-              "type": "warning",
-              "text": "API keys grant programmatic access to your CRM data. Never share keys in public repositories, emails, or chat. Rotate keys regularly and revoke any that may be compromised."
+              "type": "info",
+              "text": "API keys aren't available yet."
             }
           ]
         }
@@ -945,11 +963,11 @@
       "slug": "subscription-plans",
       "title": "Subscription Plans",
       "categoryId": "billing",
-      "excerpt": "Compare plans and manage your IntelliFlow subscription.",
+      "excerpt": "Compare plans and manage your Aurora subscription.",
       "sections": [
         {
           "heading": "Plan Comparison",
-          "content": "IntelliFlow offers Starter, Professional, and Enterprise plans. Each includes different user limits, storage, and AI feature access. Compare plans at Settings > Billing > Plans.",
+          "content": "Aurora offers Starter, Professional, and Enterprise plans. Each includes different user limits, storage, and AI feature access. Compare plans at Settings > Billing > Plans.",
           "blocks": [
             {
               "type": "nav-path",
@@ -957,7 +975,7 @@
             },
             {
               "type": "paragraph",
-              "text": "IntelliFlow offers three plans designed for teams of every size:"
+              "text": "Aurora offers three plans designed for teams of every size:"
             },
             {
               "type": "steps",
@@ -1012,7 +1030,7 @@
       "sections": [
         {
           "heading": "Payment Methods",
-          "content": "Add or update payment methods at Settings > Billing > Payment. IntelliFlow accepts major credit cards and ACH bank transfers for annual plans.",
+          "content": "Add or update payment methods at Settings > Billing > Payment. Aurora accepts major credit cards and ACH bank transfers for annual plans.",
           "blocks": [
             {
               "type": "nav-path",
@@ -1030,7 +1048,7 @@
             },
             {
               "type": "info",
-              "text": "IntelliFlow uses Stripe for secure payment processing. Card details are encrypted and never stored on IntelliFlow servers."
+              "text": "Aurora uses Stripe for secure payment processing. Card details are encrypted and never stored on Aurora servers."
             }
           ]
         },

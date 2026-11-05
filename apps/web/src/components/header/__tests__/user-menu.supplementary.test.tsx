@@ -247,6 +247,21 @@ describe('UserMenu', () => {
     expect(screen.queryByText('Profile')).toBeNull();
   });
 
+  it('leaves Help Center out unless the plan includes it', () => {
+    render(<UserMenu user={{ name: 'Test' }} />);
+    fireEvent.click(screen.getByRole('button'));
+    expect(screen.queryByText('Help Center')).toBeNull();
+  });
+
+  it('links to the Help Center and closes the menu when it is clicked', () => {
+    render(<UserMenu user={{ name: 'Test' }} showHelpCenter />);
+    fireEvent.click(screen.getByRole('button'));
+    const link = screen.getByText('Help Center').closest('a');
+    expect(link?.getAttribute('href')).toBe('/help-center');
+    fireEvent.click(screen.getByText('Help Center'));
+    expect(screen.queryByText('Help Center')).toBeNull();
+  });
+
   it('applies custom className', () => {
     const { container } = render(
       <UserMenu user={{ name: 'Jane', email: 'jane@test.com' }} className="test-class" />

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { CliDocs } from '@/components/developer/cli-docs';
 
 export const metadata: Metadata = {
-  title: 'CLI Reference | Aurora',
+  title: { absolute: 'CLI Reference | Aurora' },
   description:
     'CLI documentation for Aurora — monorepo development commands for setup, testing, database management, and AI development',
 };

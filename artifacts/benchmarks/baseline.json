@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-03T11:57:04.722Z",
+  "timestamp": "2026-11-05T15:09:23.854Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,8 +1016,8 @@
   },
   "api_inventory": {
     "total_routers": 78,
-    "total_endpoints": 605,
-    "total_queries": 256,
+    "total_endpoints": 607,
+    "total_queries": 258,
     "total_mutations": 349,
     "routers": [
       {
@@ -1081,16 +1081,16 @@
         "mutations": 10
       },
       {
+        "name": "helpArticle",
+        "endpoints": 15,
+        "queries": 7,
+        "mutations": 8
+      },
+      {
         "name": "autoresponse",
         "endpoints": 14,
         "queries": 4,
         "mutations": 10
-      },
-      {
-        "name": "helpArticle",
-        "endpoints": 14,
-        "queries": 6,
-        "mutations": 8
       },
       {
         "name": "home",
@@ -1393,6 +1393,12 @@
         "mutations": 1
       },
       {
+        "name": "emailMailbox",
+        "endpoints": 3,
+        "queries": 2,
+        "mutations": 1
+      },
+      {
         "name": "appointmentSettings",
         "endpoints": 3,
         "queries": 1,
@@ -1424,12 +1430,6 @@
       },
       {
         "name": "upload",
-        "endpoints": 2,
-        "queries": 1,
-        "mutations": 1
-      },
-      {
-        "name": "emailMailbox",
         "endpoints": 2,
         "queries": 1,
         "mutations": 1
@@ -5114,6 +5114,11 @@
         "description": "Get mine"
       },
       {
+        "name": "emailMailbox.sendingIdentity",
+        "method": "GET",
+        "description": "Sending identity"
+      },
+      {
         "name": "emailMailbox.getTenant",
         "method": "POST",
         "description": "Get tenant"
@@ -5339,6 +5344,11 @@
       }
     ],
     "helpArticle": [
+      {
+        "name": "helpArticle.getCategoryCounts",
+        "method": "GET",
+        "description": "Get category counts"
+      },
       {
         "name": "helpArticle.list",
         "method": "GET",

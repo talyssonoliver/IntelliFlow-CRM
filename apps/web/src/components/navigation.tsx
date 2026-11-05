@@ -19,6 +19,10 @@ import { TrialBadge } from '@/components/onboarding/TrialBadge';
 
 const NAV_SKELETON_KEYS = ['nav-0', 'nav-1', 'nav-2', 'nav-3', 'nav-4', 'nav-5'] as const;
 
+// Reached from the account menu instead of the desktop bar. It stays in the module's route
+// table, so the phone menu, the search suggestions and the plan check all still know it.
+const HELP_CENTER_HREF = '/help-center';
+
 // Public routes that should not show the authenticated navigation
 // The sign-in screens: no app bar, matching the public layout's
 // AUTH_PAGES_NO_CHROME, so AuthBackground can fill the whole screen.
@@ -110,6 +114,12 @@ export function Navigation() {
       })),
     [enabledRoutes]
   );
+  const barRoutes = React.useMemo(
+    () => routes.filter((route) => route.href !== HELP_CENTER_HREF),
+    [routes]
+  );
+  // Follows the plan, as the bar did: no Support module, no link.
+  const showHelpCenter = routes.length !== barRoutes.length;
 
   // IFC-007: Don't show authenticated navigation on public routes or when not authenticated
   const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname?.startsWith(route));
@@ -128,46 +138,51 @@ export function Navigation() {
     <header ref={setHeaderEl} className="sticky top-0 z-50 w-full border-b border-border bg-card">
       {/* ADR-071: shown only for a pinned Portal-grant session */}
       <PinnedTenantBanner />
-      <div className="flex h-16 items-center px-4 lg:px-6">
+      <div className="flex h-16 items-center px-4 lg:px-6 xl:max-[1365px]:px-4">
         {/* Logo */}
-        <div className="mr-8">
+        <div className="mr-4 shrink-0 xl:max-[1365px]:mr-2 min-[1700px]:mr-8">
           <Logo />
         </div>
 
         {/* Desktop Navigation */}
         {modulesLoading && !modulesError ? (
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden xl:flex items-center gap-1">
             {NAV_SKELETON_KEYS.map((key) => (
               <div key={key} className="h-8 w-20 rounded-lg bg-muted animate-pulse" />
             ))}
           </nav>
         ) : (
-          <MainNav routes={routes} />
+          <MainNav
+            routes={barRoutes}
+            className="min-w-0 shrink-[0.1] overflow-x-auto [scrollbar-width:none]"
+          />
         )}
 
         {/* Spacer */}
         <div className="flex-1" />
 
         {/* Search */}
-        <div className="hidden md:flex items-center mr-4">
-          <SearchBar className="w-64" />
+        <div className="hidden md:flex items-center mr-2 min-w-24 xl:max-[1365px]:min-w-[6.25rem] max-w-64 flex-[1_1_16rem] shrink-[100] 2xl:mr-4">
+          <SearchBar className="w-full" />
         </div>
 
         {/* Trial indicator — only visible when on a trial plan */}
-        <TrialBadge className="mr-2 hidden sm:inline-flex" />
+        <TrialBadge className="mr-2 hidden shrink-0 sm:inline-flex" />
 
         {/* Notifications - count is managed via RemindersContext */}
-        <Notifications />
+        <div className="shrink-0">
+          <Notifications />
+        </div>
 
         {/* ADR-071: tenant switcher (hidden with a single tenant, disabled while pinned) */}
         <TenantSwitcher className="ml-2" />
 
         {/* User Menu */}
-        <UserMenu className="ml-2" />
+        <UserMenu className="ml-2 shrink-0" showHelpCenter={showHelpCenter} />
 
         {/* Mobile Menu Button */}
         <button
-          className="lg:hidden ml-4 p-2 text-muted-foreground hover:text-foreground"
+          className="xl:hidden ml-4 p-2 text-muted-foreground hover:text-foreground"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >

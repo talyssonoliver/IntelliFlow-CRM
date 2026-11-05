@@ -113,6 +113,14 @@ export interface OAuthProvidersAvailableDto {
   MICROSOFT: boolean;
 }
 
+/** Who a new email would be sent as, or why it could not be sent yet. */
+export interface SendingIdentityDto {
+  address: string | null;
+  name: string | null;
+  scope: 'USER' | 'TENANT' | null;
+  refusal: 'NO_MAILBOX' | 'MAILBOX_ERROR' | null;
+}
+
 export interface ConnectionTestResultDto {
   ok: boolean;
   code: (typeof MAILBOX_ERROR_CODES)[number] | null;

@@ -9,7 +9,7 @@ import { Suspense } from 'react';
 import OAuthCallbackContent from './OAuthCallbackContent';
 
 export const metadata = {
-  title: 'Connecting Mailbox — Aurora',
+  title: { absolute: 'Connecting Mailbox — Aurora' },
   robots: { index: false, follow: false },
 };
 

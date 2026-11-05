@@ -26,7 +26,7 @@ describe('AuthGuidesPage', () => {
   });
 
   it('exports metadata.title as "Authentication | Aurora"', () => {
-    expect(metadata.title).toBe('Authentication | Aurora');
+    expect(metadata.title).toEqual({ absolute: 'Authentication | Aurora' });
   });
 
   it('exports metadata.description containing "authentication"', () => {

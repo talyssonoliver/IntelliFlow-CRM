@@ -54,6 +54,8 @@ export interface ModuleSettingsNavProps {
    * Defaults to '#main-content'.
    */
   backdropTarget?: string;
+  /** Lists the items from the top of the panel instead of stacking them above the footer. */
+  itemsAtTop?: boolean;
 }
 
 export function ModuleSettingsNav({
@@ -62,6 +64,7 @@ export function ModuleSettingsNav({
   title,
   items,
   backdropTarget = 'main#main-content',
+  itemsAtTop = false,
 }: Readonly<ModuleSettingsNavProps>) {
   const pathname = usePathname();
   const [targetEl, setTargetEl] = useState<HTMLElement | null>(null);
@@ -142,10 +145,10 @@ export function ModuleSettingsNav({
         )}
       >
         {/* Spacer pushes items to bottom */}
-        <div className="flex-1" />
+        {!itemsAtTop && <div className="flex-1" />}
 
         {/* Navigation items — stacked above the footer */}
-        <div className="mx-3 border-t border-border" />
+        {!itemsAtTop && <div className="mx-3 border-t border-border" />}
         <nav className="p-2 space-y-0.5" aria-label={`${title} navigation`}>
           {items.map((item, index) => {
             const isActive = pathname === item.href;

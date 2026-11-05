@@ -14,6 +14,8 @@ import { trpc } from '@/lib/trpc';
 import { SectionHeader } from '@/components/shared/section-header';
 import { mailboxErrorMessage } from '@/components/email/send-errors';
 import { oauthProviderKey } from '../../oauth/oauth-session';
+import { connectionFailureHelp } from './connection-help';
+import { oneClickNotYet, providerByServer } from './mailbox-providers';
 
 // Loaded on demand: most users connect with Google or Microsoft (C-FE5).
 const SmtpMailboxForm = dynamic(() => import('./SmtpMailboxForm').then((m) => m.SmtpMailboxForm), {
@@ -100,7 +102,10 @@ export function MailboxConnection({
       const outcome = await testConnection.mutateAsync({ scope });
       const message = outcome.ok
         ? 'Connection works.'
-        : mailboxErrorMessage(outcome.code ?? 'CONNECT_FAILED');
+        : connectionFailureHelp(
+            outcome.code ?? 'CONNECT_FAILED',
+            providerByServer(mailbox?.smtpHost ?? '')
+          );
       setResult({ ok: outcome.ok, message });
       announce(message);
       // Either way the server may have changed the status (ERROR <-> ACTIVE).
@@ -123,29 +128,23 @@ export function MailboxConnection({
     }
   };
 
-  const providerButton = (provider: Provider) => {
-    const available = providersAvailable[provider];
-    const reasonId = `${prefix}-${provider.toLowerCase()}-unavailable`;
-    return (
-      <div key={provider} className="space-y-1">
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          disabled={!available || oauthStart.isPending}
-          aria-describedby={available ? undefined : reasonId}
-          onClick={() => void startOAuth(provider)}
-        >
-          Connect {PROVIDER_LABEL[provider]}
-        </Button>
-        {!available && (
-          <p id={reasonId} className="text-xs text-muted-foreground">
-            {PROVIDER_LABEL[provider]} sign-in is not set up on this server yet.
-          </p>
-        )}
-      </div>
-    );
-  };
+  // A one-click button appears once it works; until then one line says so.
+  const providerButton = (provider: Provider) =>
+    providersAvailable[provider] ? (
+      <Button
+        key={provider}
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={oauthStart.isPending}
+        onClick={() => void startOAuth(provider)}
+      >
+        Connect {PROVIDER_LABEL[provider]}
+      </Button>
+    ) : null;
+  const notYet = (['GMAIL', 'MICROSOFT'] as const)
+    .filter((provider) => !providersAvailable[provider])
+    .map((provider) => PROVIDER_LABEL[provider]);
 
   return (
     <div className="space-y-4">
@@ -162,7 +161,11 @@ export function MailboxConnection({
       </div>
 
       {!connected && (
-        <p className="text-sm text-muted-foreground">Connect your mailbox to send email.</p>
+        <p className="text-sm text-muted-foreground">
+          {scope === 'USER'
+            ? 'Connect your mailbox to send email.'
+            : 'Connect a shared address your team can send from.'}
+        </p>
       )}
       {broken && mailbox?.lastErrorCode && (
         <p className="text-sm text-red-700 dark:text-red-300">
@@ -172,8 +175,9 @@ export function MailboxConnection({
 
       {(!connected || broken) && (
         <div className="flex flex-wrap items-start gap-2">
-          {providerButton('GMAIL')}
-          {providerButton('MICROSOFT')}
+          {/* While setting up, the form's own first step is the only choice on screen. */}
+          {!editing && providerButton('GMAIL')}
+          {!editing && providerButton('MICROSOFT')}
           {/* A broken SMTP mailbox is edited below; a disconnected one is set up again here. */}
           {!editing && (!connected || mailbox?.kind !== 'SMTP') && (
             <Button
@@ -183,8 +187,13 @@ export function MailboxConnection({
               variant="outline"
               onClick={() => setEditing(true)}
             >
-              Set Up SMTP
+              Set Up Mailbox
             </Button>
+          )}
+          {!editing && notYet.length > 0 && (
+            <p className="w-full text-xs text-muted-foreground">
+              {oneClickNotYet(notYet.join(' and '))}
+            </p>
           )}
         </div>
       )}

@@ -26,7 +26,7 @@ describe('IntegrationsPage', () => {
   });
 
   it('exports metadata.title as "Integration Resources | Aurora"', () => {
-    expect(metadata.title).toBe('Integration Resources | Aurora');
+    expect(metadata.title).toEqual({ absolute: 'Integration Resources | Aurora' });
   });
 
   it('exports metadata.description containing "Webhooks" or "SDK"', () => {
