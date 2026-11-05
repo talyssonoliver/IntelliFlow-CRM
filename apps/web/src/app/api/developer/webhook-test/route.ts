@@ -22,7 +22,13 @@ const MAX_PAYLOAD_CHARS = 256 * 1024;
 const MAX_RESPONSE_BYTES = 64 * 1024;
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX_PER_USER = 20;
-const FORBIDDEN_HEADERS = new Set(['host', 'connection', 'content-length', 'transfer-encoding']);
+const FORBIDDEN_HEADERS = new Set([
+  'host',
+  'connection',
+  'content-length',
+  'transfer-encoding',
+  'accept-encoding',
+]);
 
 /** Every range a webhook test must never reach, including provider metadata. */
 const BLOCKED_RANGES = new BlockList();
@@ -153,7 +159,9 @@ function sendTestRequest(
       url,
       {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...headers },
+        // Plain responses only: the body is shown as text, and nothing is decompressed,
+        // so a small compressed reply can't expand past the size limit.
+        headers: { 'Content-Type': 'application/json', ...headers, 'Accept-Encoding': 'identity' },
         lookup: vettedLookup as never,
         timeout: REQUEST_TIMEOUT_MS,
       },

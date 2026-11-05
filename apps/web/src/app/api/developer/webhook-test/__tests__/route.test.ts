@@ -197,7 +197,12 @@ describe('sending to an allowed host', () => {
     const response = await send({
       url: `http://a.example.invalid:${port}/`,
       payload: { hello: 'world' },
-      headers: { 'X-Custom': 'kept', Host: 'evil.example.invalid', 'Content-Length': '1' },
+      headers: {
+        'X-Custom': 'kept',
+        Host: 'evil.example.invalid',
+        'Content-Length': '1',
+        'Accept-Encoding': 'gzip',
+      },
     });
     spy.mockRestore();
     const body = await response.json();
@@ -208,6 +213,8 @@ describe('sending to an allowed host', () => {
     expect(received[0]?.body).toBe('{"hello":"world"}');
     expect(received[0]?.headers['x-custom']).toBe('kept');
     expect(received[0]?.headers.host).not.toContain('evil');
+    // Only plain responses are asked for, whatever the caller sent.
+    expect(received[0]?.headers['accept-encoding']).toBe('identity');
   });
 
   it('cuts a large response at the limit', async () => {
