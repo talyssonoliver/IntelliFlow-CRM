@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { evaluate, findEntry, globToRegExp, inZone, run } from '../check-generated-registry.mjs';
 
 const READER = '.github/workflows/drift.yml';
@@ -231,7 +231,17 @@ describe('staging in workflows and hooks', () => {
 // A real repository, so the git and file handling are exercised, not stood in for.
 describe('run', { timeout: 60_000 }, () => {
   const roots: string[] = [];
+  // A git hook sets GIT_DIR and friends, which would point these tests at the real
+  // repository. run() must keep inheriting them: pre-commit needs GIT_INDEX_FILE.
+  const hookEnv: Record<string, string | undefined> = {};
+  beforeAll(() => {
+    for (const key of Object.keys(process.env).filter((k) => k.startsWith('GIT_'))) {
+      hookEnv[key] = process.env[key];
+      delete process.env[key];
+    }
+  });
   afterAll(() => {
+    Object.assign(process.env, hookEnv);
     for (const root of roots) fs.rmSync(root, { recursive: true, force: true });
   });
 
@@ -248,10 +258,8 @@ describe('run', { timeout: 60_000 }, () => {
   function repo() {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'generated-registry-'));
     roots.push(root);
-    const env = { ...process.env };
-    for (const key of Object.keys(env)) if (key.startsWith('GIT_')) delete env[key];
     const git = (...args: string[]) => {
-      const result = spawnSync('git', ['-C', root, ...args], { encoding: 'utf8', env });
+      const result = spawnSync('git', ['-C', root, ...args], { encoding: 'utf8' });
       expect(result.status, result.stderr).toBe(0);
     };
     const write = (file: string, text: string) => {
