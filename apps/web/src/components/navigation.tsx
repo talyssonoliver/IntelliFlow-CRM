@@ -19,6 +19,10 @@ import { TrialBadge } from '@/components/onboarding/TrialBadge';
 
 const NAV_SKELETON_KEYS = ['nav-0', 'nav-1', 'nav-2', 'nav-3', 'nav-4', 'nav-5'] as const;
 
+// Reached from the account menu instead of the desktop bar. It stays in the module's route
+// table, so the phone menu, the search suggestions and the plan check all still know it.
+const HELP_CENTER_HREF = '/help-center';
+
 // Public routes that should not show the authenticated navigation
 // The sign-in screens: no app bar, matching the public layout's
 // AUTH_PAGES_NO_CHROME, so AuthBackground can fill the whole screen.
@@ -110,6 +114,12 @@ export function Navigation() {
       })),
     [enabledRoutes]
   );
+  const barRoutes = React.useMemo(
+    () => routes.filter((route) => route.href !== HELP_CENTER_HREF),
+    [routes]
+  );
+  // Follows the plan, as the bar did: no Support module, no link.
+  const showHelpCenter = routes.length !== barRoutes.length;
 
   // IFC-007: Don't show authenticated navigation on public routes or when not authenticated
   const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname?.startsWith(route));
@@ -148,7 +158,7 @@ export function Navigation() {
           </nav>
         ) : (
           <MainNav
-            routes={routes}
+            routes={barRoutes}
             className="min-w-0 shrink-[0.1] overflow-x-auto [scrollbar-width:none]"
           />
         )}
@@ -173,7 +183,7 @@ export function Navigation() {
         <TenantSwitcher className="ml-2" />
 
         {/* User Menu */}
-        <UserMenu className="ml-2 shrink-0" />
+        <UserMenu className="ml-2 shrink-0" showHelpCenter={showHelpCenter} />
 
         {/* Mobile Menu Button */}
         <button

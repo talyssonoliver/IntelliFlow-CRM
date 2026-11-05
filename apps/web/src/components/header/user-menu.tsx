@@ -15,9 +15,15 @@ interface UserMenuProps {
     role?: string;
   };
   className?: string;
+  /** Off unless the workspace's plan includes the Help Center. */
+  showHelpCenter?: boolean;
 }
 
-export function UserMenu({ user: propUser, className }: Readonly<UserMenuProps>) {
+export function UserMenu({
+  user: propUser,
+  className,
+  showHelpCenter = false,
+}: Readonly<UserMenuProps>) {
   // IFC-007: Connect to auth context for real user data
   const { user: authUser } = useAuth();
   const { logout, isLoggingOut } = useLogout();
@@ -150,6 +156,19 @@ export function UserMenu({ user: propUser, className }: Readonly<UserMenuProps>)
               </span>{' '}
               Governance
             </Link>
+
+            {showHelpCenter && (
+              <Link
+                href="/help-center"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg text-muted-foreground">
+                  help_center
+                </span>{' '}
+                Help Center
+              </Link>
+            )}
           </div>
 
           {/* Divider */}
