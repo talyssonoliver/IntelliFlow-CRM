@@ -49,6 +49,18 @@ describe('RecipientPicker', () => {
     });
   });
 
+  it('fits the whole remove icon in a button big enough to press', () => {
+    render(
+      <RecipientPicker
+        {...defaultProps}
+        value={[{ name: 'Sam', email: 'sam@mail.example.invalid' }]}
+      />
+    );
+    const remove = screen.getByRole('button', { name: 'Remove Sam' });
+    expect(remove).toHaveClass('h-5', 'w-5');
+    expect(remove.querySelector('span')).toHaveStyle({ fontSize: '14px' });
+  });
+
   it('renders input field with placeholder', () => {
     render(<RecipientPicker {...defaultProps} />);
     expect(screen.getByPlaceholderText(/add recipient/i)).toBeInTheDocument();
