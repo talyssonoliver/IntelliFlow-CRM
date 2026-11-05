@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import type { SendingIdentityDto } from '@intelliflow/validators';
+import { BreakableAddress } from './BreakableAddress';
 import { EMAIL_SETTINGS_HREF } from './send-errors';
 
 /**
@@ -39,14 +40,16 @@ export function ComposeFrom({
     );
   }
   return (
-    <div className="flex items-center gap-2 text-xs">
+    <div className="flex items-baseline gap-2 text-xs">
       <span className="w-8 shrink-0 text-muted-foreground">From</span>
-      <span className="min-w-0 truncate text-foreground">
-        {identity.name ? `${identity.name} <${identity.address}>` : identity.address}
+      <span className="min-w-0 text-foreground [overflow-wrap:anywhere]">
+        {identity.name ? `${identity.name} <` : null}
+        <BreakableAddress address={identity.address ?? ''} />
+        {identity.name ? '>' : null}
+        {identity.scope === 'TENANT' ? (
+          <span className="ml-2 text-muted-foreground">(company mailbox)</span>
+        ) : null}
       </span>
-      {identity.scope === 'TENANT' ? (
-        <span className="shrink-0 text-muted-foreground">(company mailbox)</span>
-      ) : null}
     </div>
   );
 }

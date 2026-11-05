@@ -128,29 +128,23 @@ export function MailboxConnection({
     }
   };
 
-  const providerButton = (provider: Provider) => {
-    const available = providersAvailable[provider];
-    const reasonId = `${prefix}-${provider.toLowerCase()}-unavailable`;
-    return (
-      <div key={provider} className="space-y-1">
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          disabled={!available || oauthStart.isPending}
-          aria-describedby={available ? undefined : reasonId}
-          onClick={() => void startOAuth(provider)}
-        >
-          Connect {PROVIDER_LABEL[provider]}
-        </Button>
-        {!available && (
-          <p id={reasonId} className="text-xs text-muted-foreground">
-            {oneClickNotYet(PROVIDER_LABEL[provider])} Use Set Up Mailbox instead.
-          </p>
-        )}
-      </div>
-    );
-  };
+  // A one-click button appears once it works; until then one line says so.
+  const providerButton = (provider: Provider) =>
+    providersAvailable[provider] ? (
+      <Button
+        key={provider}
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={oauthStart.isPending}
+        onClick={() => void startOAuth(provider)}
+      >
+        Connect {PROVIDER_LABEL[provider]}
+      </Button>
+    ) : null;
+  const notYet = (['GMAIL', 'MICROSOFT'] as const)
+    .filter((provider) => !providersAvailable[provider])
+    .map((provider) => PROVIDER_LABEL[provider]);
 
   return (
     <div className="space-y-4">
@@ -167,7 +161,11 @@ export function MailboxConnection({
       </div>
 
       {!connected && (
-        <p className="text-sm text-muted-foreground">Connect your mailbox to send email.</p>
+        <p className="text-sm text-muted-foreground">
+          {scope === 'USER'
+            ? 'Connect your mailbox to send email.'
+            : 'Connect a shared address your team can send from.'}
+        </p>
       )}
       {broken && mailbox?.lastErrorCode && (
         <p className="text-sm text-red-700 dark:text-red-300">
@@ -191,6 +189,11 @@ export function MailboxConnection({
             >
               Set Up Mailbox
             </Button>
+          )}
+          {!editing && notYet.length > 0 && (
+            <p className="w-full text-xs text-muted-foreground">
+              {oneClickNotYet(notYet.join(' and '))}
+            </p>
           )}
         </div>
       )}

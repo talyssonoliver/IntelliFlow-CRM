@@ -9,14 +9,14 @@ const EMAIL_SETTINGS_ITEMS: ModuleSettingsNavItem[] = [
   {
     id: 'email-settings',
     label: 'Email Settings',
-    description: 'Your mailbox, replies & bounces',
+    description: 'Mailbox, replies, bounces',
     icon: 'tune',
     href: '/email/email-settings',
   },
   {
     id: 'signatures',
     label: 'Signatures',
-    description: 'Personal & organisation signatures',
+    description: 'Personal and company',
     icon: 'draw',
     href: '/email/signatures',
   },

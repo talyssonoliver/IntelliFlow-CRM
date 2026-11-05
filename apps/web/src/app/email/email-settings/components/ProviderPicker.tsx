@@ -31,6 +31,7 @@ function Option({
   name,
   label,
   hint,
+  note,
   checked,
   onSelect,
 }: Readonly<{
@@ -38,6 +39,8 @@ function Option({
   name: string;
   label: string;
   hint: string;
+  /** Marks a choice that only explains itself and cannot be set up yet. */
+  note?: string;
   checked: boolean;
   onSelect: () => void;
 }>) {
@@ -47,7 +50,8 @@ function Option({
       className={cn(
         'flex cursor-pointer items-start gap-3 rounded-md border p-3 transition-colors',
         'focus-within:ring-2 focus-within:ring-ring',
-        checked ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/50'
+        checked ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/50',
+        note && 'border-dashed'
       )}
     >
       <input
@@ -59,8 +63,20 @@ function Option({
         className="mt-0.5 h-4 w-4 shrink-0 accent-[hsl(var(--primary))]"
       />
       <span className="min-w-0">
-        <span className="block text-sm font-medium text-foreground">{label}</span>
+        <span
+          className={cn(
+            'block text-sm font-medium',
+            note ? 'text-muted-foreground' : 'text-foreground'
+          )}
+        >
+          {label}
+        </span>
         <span className="block text-xs text-muted-foreground">{hint}</span>
+        {note ? (
+          <span className="mt-1 inline-block rounded-full border border-border px-2 py-0.5 text-xs font-medium text-foreground">
+            {note}
+          </span>
+        ) : null}
       </span>
     </Label>
   );
@@ -68,13 +84,16 @@ function Option({
 
 export function ProviderPicker({ idPrefix, value, onChange }: Readonly<ProviderPickerProps>) {
   const name = `${idPrefix}-provider`;
-  const option = (p: Pick<MailboxProvider, 'label' | 'hint'> & { id: MailboxProviderId }) => (
+  const option = (
+    p: Pick<MailboxProvider, 'label' | 'hint'> & { id: MailboxProviderId; note?: string }
+  ) => (
     <Option
       key={p.id}
       id={`${name}-${p.id}`}
       name={name}
       label={p.label}
       hint={p.hint}
+      note={p.note}
       checked={value === p.id}
       onSelect={() => onChange(p.id)}
     />

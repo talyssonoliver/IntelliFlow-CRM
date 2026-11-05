@@ -4,6 +4,7 @@ import { useId } from 'react';
 
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { EntityHoverCard } from '@/components/shared';
+import { BreakableAddress } from './BreakableAddress';
 import DOMPurify from 'isomorphic-dompurify';
 import { cn } from '@/lib/utils';
 import { DeliveryStatusBadge } from './DeliveryStatusBadge';
@@ -102,7 +103,7 @@ export function EmailMessage({
               id={headingId}
               className="text-sm font-medium hover:underline cursor-pointer [overflow-wrap:anywhere]"
             >
-              {message.from.name || message.from.address}
+              <BreakableAddress address={message.from.name || message.from.address} />
             </span>
           </EntityHoverCard>
           <span className="ml-2 text-xs text-muted-foreground [overflow-wrap:anywhere]">
@@ -111,7 +112,9 @@ export function EmailMessage({
               <span key={t.address}>
                 {i > 0 && ', '}
                 <EntityHoverCard email={t.address} displayName={t.name} side="bottom" align="start">
-                  <span className="hover:underline cursor-pointer">{t.name || t.address}</span>
+                  <span className="hover:underline cursor-pointer">
+                    <BreakableAddress address={t.name || t.address} />
+                  </span>
                 </EntityHoverCard>
               </span>
             ))}

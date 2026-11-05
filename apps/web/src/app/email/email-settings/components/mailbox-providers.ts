@@ -34,7 +34,8 @@ export function oneClickNotYet(providerName: string): string {
 export const MICROSOFT_PERSONAL = {
   id: 'microsoft-personal' as const,
   label: 'Outlook, Hotmail or Live',
-  hint: 'A personal Microsoft address. Not available yet',
+  hint: 'A personal Microsoft address',
+  note: 'Not available yet',
   docsUrl:
     'https://support.microsoft.com/en-us/office/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040',
 };
@@ -103,12 +104,12 @@ const GUIDES: readonly MailboxGuide[] = [
     name: 'Microsoft 365',
     secretLabel: 'Password',
     steps: [
-      'Ask your Microsoft 365 administrator to allow SMTP AUTH for your mailbox.',
+      'Ask your Microsoft 365 administrator to allow SMTP AUTH for your mailbox, with Security defaults off.',
       'Enter your address and your Microsoft 365 password below.',
       'Use Test Connection. If it is refused, the setting is still off.',
     ],
     warning:
-      'This only sends mail: Microsoft no longer lets a password read incoming mail, so addresses that bounce will not be taken off your lists automatically. SMTP AUTH does not work with Security defaults. Microsoft turns SMTP AUTH basic authentication off by default at the end of December 2026. Administrators of existing organisations can still turn it back on.',
+      'This only sends mail, because Microsoft no longer lets a password read incoming mail, so addresses that bounce stay on your lists. Microsoft turns SMTP AUTH basic authentication off by default at the end of December 2026. An administrator can turn it back on.',
     secondLink: {
       label: 'Microsoft SMTP AUTH timeline',
       href: 'https://techcommunity.microsoft.com/blog/Exchange/updated-exchange-online-smtp-auth-basic-authentication-deprecation-timeline/4489835',

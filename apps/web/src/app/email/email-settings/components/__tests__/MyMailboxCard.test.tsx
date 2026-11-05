@@ -101,18 +101,10 @@ describe('MyMailboxCard', () => {
     expect(screen.getByText('Connect your mailbox to send email.')).toBeInTheDocument();
   });
 
-  it('disables an unconfigured provider and says why in visible text', () => {
+  it('offers only what works, and says in one line what does not yet', () => {
     renderCard();
-    const microsoft = screen.getByRole('button', { name: 'Connect Microsoft' });
-    expect(microsoft).toBeDisabled();
-    expect(
-      screen.getByText(
-        "One-click Microsoft sign-in isn't available yet. Use Set Up Mailbox instead."
-      )
-    ).toBeVisible();
-    expect(microsoft).toHaveAccessibleDescription(
-      "One-click Microsoft sign-in isn't available yet. Use Set Up Mailbox instead."
-    );
+    expect(screen.queryByRole('button', { name: 'Connect Microsoft' })).not.toBeInTheDocument();
+    expect(screen.getByText("One-click Microsoft sign-in isn't available yet.")).toBeVisible();
     expect(screen.getByRole('button', { name: 'Connect Google' })).toBeEnabled();
   });
 

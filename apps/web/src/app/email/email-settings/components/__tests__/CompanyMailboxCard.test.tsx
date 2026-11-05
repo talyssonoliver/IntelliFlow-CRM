@@ -69,6 +69,8 @@ describe('CompanyMailboxCard', () => {
     renderCard();
     expect(screen.getByRole('region', { name: 'Company mailbox' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Connect Google' })).toBeEnabled();
+    expect(screen.getByText('Connect a shared address your team can send from.')).toBeVisible();
+    expect(screen.queryByText('Connect your mailbox to send email.')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Set Up Mailbox' }));
     expect(await screen.findByTestId('smtp-form')).toHaveTextContent('form for TENANT');
   });
