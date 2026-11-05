@@ -19,7 +19,7 @@ import Page, { metadata } from '../page';
 describe('Task Settings page.tsx', () => {
   it('exports metadata with title and description', () => {
     expect(metadata).toBeDefined();
-    expect(metadata.title).toMatch(/Task Settings/i);
+    expect(metadata.title).toEqual({ absolute: 'Task Settings — Aurora' });
     expect(metadata.description).toMatch(/due-date|reminder|template/i);
   });
 

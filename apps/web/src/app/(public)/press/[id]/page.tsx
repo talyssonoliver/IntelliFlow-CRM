@@ -30,7 +30,7 @@ export async function generateMetadata({
   }
 
   return {
-    title: `${release.title} | Aurora Press`,
+    title: { absolute: `${release.title} | Aurora Press` },
     description: release.summary,
     openGraph: {
       images: OG_IMAGES,

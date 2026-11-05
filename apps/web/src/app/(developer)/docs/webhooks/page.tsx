@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { WebhookDocs } from '@/components/developer/webhook-docs';
 
 export const metadata: Metadata = {
-  title: 'Webhooks | Aurora',
+  title: { absolute: 'Webhooks | Aurora' },
   description:
     'Webhook documentation for Aurora — event types, signature verification, retry policies, and interactive endpoint testing',
 };

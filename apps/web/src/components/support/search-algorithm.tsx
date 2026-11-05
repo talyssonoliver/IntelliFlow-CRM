@@ -115,7 +115,7 @@ export function searchHelpContent(
       scored.sort((a, b) => a.item.title.localeCompare(b.item.title));
       break;
     case 'most-articles':
-      scored.sort((a, b) => b.item.articleCount - a.item.articleCount);
+      scored.sort((a, b) => (b.item.articleCount ?? 0) - (a.item.articleCount ?? 0));
       break;
     case 'relevance':
     default:

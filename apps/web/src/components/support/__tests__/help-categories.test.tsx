@@ -22,8 +22,21 @@ describe('HelpCategories', () => {
     expect(screen.getByText('Billing')).toBeInTheDocument();
   });
 
-  it('each card shows title, description, icon, article count', () => {
+  it('shows no article count until the live count is known', () => {
     render(<HelpCategories categories={[...DEFAULT_HELP_CATEGORIES]} />);
+
+    expect(document.body.textContent).not.toMatch(/\d articles?/);
+  });
+
+  it('each card shows title, description, icon, article count', () => {
+    render(
+      <HelpCategories
+        categories={DEFAULT_HELP_CATEGORIES.map((c) => ({
+          ...c,
+          articleCount: c.id === 'getting-started' ? 5 : 1,
+        }))}
+      />
+    );
 
     // Check first category has all elements
     expect(screen.getByText('Getting Started')).toBeInTheDocument();

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { EmailPage } from '@/components/email/EmailPage';
 
 export const metadata: Metadata = {
-  title: 'Email | Aurora',
+  title: { absolute: 'Email | Aurora' },
   description: 'Email compose and history',
 };
 

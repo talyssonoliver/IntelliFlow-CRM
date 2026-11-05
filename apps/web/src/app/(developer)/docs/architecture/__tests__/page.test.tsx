@@ -65,7 +65,7 @@ describe('ArchitecturePage', () => {
   });
 
   it('exports metadata.title as "Architecture | Aurora" (AC-001)', () => {
-    expect(metadata.title).toBe('Architecture | Aurora');
+    expect(metadata.title).toEqual({ absolute: 'Architecture | Aurora' });
   });
 
   it('exports metadata.description containing "Architecture Decision Records" (AC-001)', () => {

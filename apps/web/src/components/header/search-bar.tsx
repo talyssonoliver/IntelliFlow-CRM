@@ -122,7 +122,7 @@ export function SearchBar({ placeholder = 'Search...', className = '' }: Readonl
     <div ref={containerRef} className={`relative ${className}`}>
       {/* Input */}
       <span
-        className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-lg text-muted-foreground pointer-events-none z-10"
+        className="material-symbols-outlined absolute left-3 xl:max-[1365px]:left-2 top-1/2 -translate-y-1/2 text-lg text-muted-foreground pointer-events-none z-10"
         aria-hidden="true"
       >
         search
@@ -138,7 +138,7 @@ export function SearchBar({ placeholder = 'Search...', className = '' }: Readonl
           if (query.trim().length > 0) setIsOpen(true);
         }}
         onKeyDown={handleKeyDown}
-        className="w-full pl-10 pr-4 py-2 text-sm border border-input rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+        className="w-full pl-10 pr-4 xl:max-[1365px]:pl-8 xl:max-[1365px]:pr-2 py-2 text-sm border border-input rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
       />
 
       {/* Results dropdown */}

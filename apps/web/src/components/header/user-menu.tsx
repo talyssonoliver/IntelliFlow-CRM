@@ -15,9 +15,15 @@ interface UserMenuProps {
     role?: string;
   };
   className?: string;
+  /** Off unless the workspace's plan includes the Help Center. */
+  showHelpCenter?: boolean;
 }
 
-export function UserMenu({ user: propUser, className }: Readonly<UserMenuProps>) {
+export function UserMenu({
+  user: propUser,
+  className,
+  showHelpCenter = false,
+}: Readonly<UserMenuProps>) {
   // IFC-007: Connect to auth context for real user data
   const { user: authUser } = useAuth();
   const { logout, isLoggingOut } = useLogout();
@@ -81,7 +87,12 @@ export function UserMenu({ user: propUser, className }: Readonly<UserMenuProps>)
           className="w-8 h-8"
           fallbackClassName="text-sm font-medium text-muted-foreground bg-muted"
         />
-        <span className="hidden sm:inline text-sm font-medium text-foreground">{user.name}</span>
+        <span
+          title={user.name}
+          className="hidden sm:max-xl:inline xl:inline-block xl:max-[1439px]:max-w-28 min-[1440px]:max-[1699px]:max-w-40 xl:max-[1699px]:truncate xl:max-[1699px]:text-left text-sm font-medium text-foreground"
+        >
+          {user.name}
+        </span>
         <span className="material-symbols-outlined text-lg text-muted-foreground">
           {isOpen ? 'expand_less' : 'expand_more'}
         </span>
@@ -148,6 +159,19 @@ export function UserMenu({ user: propUser, className }: Readonly<UserMenuProps>)
               </span>{' '}
               Governance
             </Link>
+
+            {showHelpCenter && (
+              <Link
+                href="/help-center"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
+              >
+                <span className="material-symbols-outlined text-lg text-muted-foreground">
+                  help_center
+                </span>{' '}
+                Help Center
+              </Link>
+            )}
           </div>
 
           {/* Divider */}

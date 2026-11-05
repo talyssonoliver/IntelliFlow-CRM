@@ -152,7 +152,7 @@ function buildWelcomeMessage(stats: WelcomeStats | undefined): string {
   if (stats.newLeadsCount > 0) {
     const periodLabel = getPeriodLabel(stats.newLeadsPeriod);
     parts.push(
-      `${stats.newLeadsCount} new ${pluralize(stats.newLeadsCount, 'lead')} assigned to you ${periodLabel}`
+      `${stats.newLeadsCount} ${stats.newLeadsPeriod === 'all_time' ? '' : 'new '}${pluralize(stats.newLeadsCount, 'lead')} assigned to you ${periodLabel}`
     );
   }
 

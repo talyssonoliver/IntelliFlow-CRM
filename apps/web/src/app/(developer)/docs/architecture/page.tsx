@@ -3,7 +3,7 @@ import { AdrList } from '@/components/developer/adr-list';
 import { getAllADRs, getADRStats } from '@/lib/adr/adr-service';
 
 export const metadata: Metadata = {
-  title: 'Architecture | Aurora',
+  title: { absolute: 'Architecture | Aurora' },
   description:
     'Architecture Decision Records (ADRs) for Aurora — browse decisions on system design, data management, AI integration, and platform infrastructure',
 };

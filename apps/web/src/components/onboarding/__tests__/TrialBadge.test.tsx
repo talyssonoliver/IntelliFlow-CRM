@@ -62,6 +62,44 @@ beforeEach(() => {
 });
 
 describe('TrialBadge', () => {
+  const trial = (daysLeft: number) => ({
+    data: {
+      source: 'trial',
+      tier: 'PROFESSIONAL',
+      status: 'TRIALING',
+      daysLeft,
+      trialEndsAt: new Date().toISOString(),
+      currentPeriodEnd: null,
+    },
+    isLoading: false,
+  });
+
+  it('links to the plan comparison page', () => {
+    mockGetPlanState.mockReturnValue(trial(0));
+    render(<TrialBadge />);
+    const badge = screen.getByRole('link', { name: /0 days remaining\. compare plans/i });
+    expect(badge.getAttribute('href')).toBe('/billing/plans');
+    expect(badge.getAttribute('title')).toBe('Your trial period has ended. Compare plans');
+  });
+
+  it('fetches on pages outside the protected list, such as the Help Center', () => {
+    mockUsePathname.mockReturnValue('/help-center');
+    render(<TrialBadge />);
+    expect(mockGetPlanState).toHaveBeenLastCalledWith(
+      undefined,
+      expect.objectContaining({ enabled: true })
+    );
+  });
+
+  it('does not fetch on sign-in pages', () => {
+    mockUsePathname.mockReturnValue('/login');
+    render(<TrialBadge />);
+    expect(mockGetPlanState).toHaveBeenLastCalledWith(
+      undefined,
+      expect.objectContaining({ enabled: false })
+    );
+  });
+
   it('renders trial badge when source=trial and daysLeft is a number', () => {
     mockGetPlanState.mockReturnValue({
       data: {

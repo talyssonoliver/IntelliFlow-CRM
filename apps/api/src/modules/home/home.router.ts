@@ -1135,7 +1135,7 @@ async function buildSmartSummaries(
       type: 'opportunity',
       source: 'heuristic',
       title: `${qualifiableLeads} Lead${leadPlural} Ready for Review`,
-      description: `You have leads with scores above 50 in early stages. Qualify them to move your pipeline forward.`,
+      description: `These leads scored 50 or more and are still new or contacted. Qualify them to move your pipeline forward.`,
       suggestedAction: 'Review leads',
       entityType: null,
       entityId: null,

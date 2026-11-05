@@ -382,6 +382,22 @@ describe('helpArticleRouter', () => {
 
   // ─── getByCategory ───────────────────────────────────────────────────────
 
+  describe('getCategoryCounts', () => {
+    it('counts published articles per category, leaving out shadowed built-ins', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findMany.mockResolvedValue([{ slug: 'own-slug' }]);
+      (prismaMock.helpArticle as any).groupBy.mockResolvedValue([
+        { categoryId: 'email-calendar', _count: { _all: 2 } },
+      ]);
+
+      await expect(caller.getCategoryCounts()).resolves.toEqual({ 'email-calendar': 2 });
+
+      const args = (prismaMock.helpArticle as any).groupBy.mock.calls[0][0];
+      expect(args.where.status).toBe('PUBLISHED');
+      expect(args.where.OR[1]).toEqual({ isSystem: true, slug: { notIn: ['own-slug'] } });
+    });
+  });
+
   describe('getByCategory', () => {
     it('returns ordered articles for category', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());

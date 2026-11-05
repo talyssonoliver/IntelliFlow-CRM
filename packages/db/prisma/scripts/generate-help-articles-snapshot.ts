@@ -54,7 +54,8 @@ if (checkMode) {
     console.error(`❌ Snapshot missing at ${outPath}. Run db:snapshot:help-articles to create it.`);
     process.exit(1);
   }
-  const currentBody = readFileSync(outPath, 'utf8');
+  // Compare content, not bytes: the commit hook formats this file with prettier.
+  const currentBody = `${JSON.stringify(JSON.parse(readFileSync(outPath, 'utf8')), null, 2)}\n`;
   const currentHash = sha256(currentBody);
   if (currentHash !== nextHash) {
     console.error(

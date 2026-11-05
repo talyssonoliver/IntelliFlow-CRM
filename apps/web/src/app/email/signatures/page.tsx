@@ -9,7 +9,7 @@ import SignaturesContent from './SignaturesContent';
 import { SignaturesLoading } from './SignaturesLoading';
 
 export const metadata = {
-  title: 'Signatures — Aurora',
+  title: { absolute: 'Signatures — Aurora' },
   description: 'Personal and organisation email signatures, added when you write a new email.',
 };
 

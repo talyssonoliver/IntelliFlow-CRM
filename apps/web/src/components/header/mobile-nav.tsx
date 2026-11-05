@@ -18,7 +18,7 @@ export function MobileNav({ routes, isOpen, onClose }: Readonly<MobileNavProps>)
   if (!isOpen) return null;
 
   return (
-    <div className="lg:hidden border-t border-border">
+    <div className="xl:hidden max-h-[calc(100svh-7rem)] overflow-y-auto border-t border-border">
       <nav className="p-4 space-y-1">
         {routes.map((route) => {
           const isActive = pathname === route.href || pathname?.startsWith(route.href + '/');
