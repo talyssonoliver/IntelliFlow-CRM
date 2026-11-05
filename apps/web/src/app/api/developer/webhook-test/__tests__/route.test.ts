@@ -32,6 +32,13 @@ beforeAll(async () => {
         res.end('x'.repeat(200_000));
         return;
       }
+      if (req.url === '/drip') {
+        // One byte at a time, never idle long enough for a socket timeout.
+        res.writeHead(200);
+        const timer = setInterval(() => res.write('x'), 300);
+        res.on('close', () => clearInterval(timer));
+        return;
+      }
       if (req.url === '/redirect') {
         res.writeHead(302, { location: 'http://localhost/' });
         res.end();
@@ -209,6 +216,18 @@ describe('sending to an allowed host', () => {
     spy.mockRestore();
     expect((await response.json()).body.length).toBe(64 * 1024);
   });
+
+  it('stops a response that keeps trickling in after the 10 second deadline', async () => {
+    const spy = allowLocalConnect();
+    const started = Date.now();
+    const response = await send({ url: `http://a.example.invalid:${port}/drip`, payload: {} });
+    spy.mockRestore();
+    const elapsed = Date.now() - started;
+    expect(response.status).toBe(502);
+    expect((await response.json()).body).toBe('Request timed out');
+    expect(elapsed).toBeGreaterThanOrEqual(9_500);
+    expect(elapsed).toBeLessThan(13_000);
+  }, 20_000);
 
   it('does not follow a redirect', async () => {
     const spy = allowLocalConnect();

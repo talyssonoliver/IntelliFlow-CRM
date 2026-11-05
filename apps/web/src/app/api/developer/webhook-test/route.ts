@@ -179,6 +179,14 @@ function sendTestRequest(
         response.on('error', reject);
       }
     );
+    // `timeout` above only catches an idle socket. This is the hard limit for the whole
+    // exchange, so a server sending a byte at a time can't hold the request open.
+    const deadline = setTimeout(() => {
+      const timedOut = new Error('Request timed out');
+      reject(timedOut);
+      outbound.destroy(timedOut);
+    }, REQUEST_TIMEOUT_MS);
+    outbound.on('close', () => clearTimeout(deadline));
     outbound.on('timeout', () => outbound.destroy(new Error('Request timed out')));
     outbound.on('error', reject);
     outbound.end(body);
