@@ -15,7 +15,7 @@ import { SectionHeader } from '@/components/shared/section-header';
 import { mailboxErrorMessage } from '@/components/email/send-errors';
 import { oauthProviderKey } from '../../oauth/oauth-session';
 import { connectionFailureHelp } from './connection-help';
-import { providerByServer } from './mailbox-providers';
+import { oneClickNotYet, providerByServer } from './mailbox-providers';
 
 // Loaded on demand: most users connect with Google or Microsoft (C-FE5).
 const SmtpMailboxForm = dynamic(() => import('./SmtpMailboxForm').then((m) => m.SmtpMailboxForm), {
@@ -145,8 +145,7 @@ export function MailboxConnection({
         </Button>
         {!available && (
           <p id={reasonId} className="text-xs text-muted-foreground">
-            One-click {PROVIDER_LABEL[provider]} sign-in isn&apos;t available yet. Use Set Up
-            Mailbox instead.
+            {oneClickNotYet(PROVIDER_LABEL[provider])} Use Set Up Mailbox instead.
           </p>
         )}
       </div>

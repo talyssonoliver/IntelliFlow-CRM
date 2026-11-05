@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { MailboxErrorCode } from '@intelliflow/domain';
 import { connectionFailureHelp } from '../connection-help';
-import { MAILBOX_PROVIDERS, providerById, providerByServer } from '../mailbox-providers';
+import {
+  isPersonalMicrosoftAddress,
+  MAILBOX_PROVIDERS,
+  oneClickNotYet,
+  providerById,
+  providerByServer,
+} from '../mailbox-providers';
 
 const provider = (id: Parameters<typeof providerById>[0]) => {
   const found = providerById(id);
@@ -28,6 +34,34 @@ describe('MAILBOX_PROVIDERS', () => {
     for (const p of MAILBOX_PROVIDERS) {
       expect(p.server.security, p.id).toBe(p.server.port === '465' ? 'SSL' : 'STARTTLS');
     }
+  });
+
+  it('has no settings for personal Microsoft mail, which no password can reach', () => {
+    expect(providerById('microsoft-personal')).toBeUndefined();
+    expect(MAILBOX_PROVIDERS.some((p) => p.server.host === 'smtp-mail.outlook.com')).toBe(false);
+  });
+
+  it.each([
+    ['pat@outlook.com', true],
+    ['pat@hotmail.co.uk', true],
+    ['PAT@Live.com', true],
+    ['pat@msn.com', true],
+    ['pat@outlook.example.invalid', false],
+    ['pat@live.acme.example', false],
+    ['pat@live.co.uk', true],
+    ['pat@outlook.com.br', true],
+    ['pat@company.example.invalid', false],
+    ['pat@mylive.example.invalid', false],
+  ])('recognises %s as a personal Microsoft address: %s', (address, expected) => {
+    expect(isPersonalMicrosoftAddress(address)).toBe(expected);
+  });
+
+  it('keeps the wording for what is not offered yet in one place, with no date', () => {
+    expect(oneClickNotYet('Microsoft')).toBe("One-click Microsoft sign-in isn't available yet.");
+  });
+
+  it('does not read incoming mail through Microsoft 365 with a password', () => {
+    expect(provider('microsoft365').imapHost).toBeNull();
   });
 
   it('does not offer IMAP for a sending service', () => {

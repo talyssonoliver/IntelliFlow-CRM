@@ -7,6 +7,8 @@
 import { Label, cn } from '@intelliflow/ui';
 import {
   MAILBOX_PROVIDERS,
+  MICROSOFT_PERSONAL,
+  oneClickNotYet,
   type MailboxProvider,
   type MailboxProviderId,
 } from './mailbox-providers';
@@ -82,9 +84,40 @@ export function ProviderPicker({ idPrefix, value, onChange }: Readonly<ProviderP
       <legend className="text-sm font-medium text-foreground">Who provides your email?</legend>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {option(CUSTOM)}
-        {MAILBOX_PROVIDERS.map(option)}
+        {MAILBOX_PROVIDERS.flatMap((p) =>
+          p.id === 'microsoft365' ? [option(p), option(MICROSOFT_PERSONAL)] : [option(p)]
+        )}
       </div>
     </fieldset>
+  );
+}
+
+/** Personal Microsoft mail: nothing to fill in, because no password can work. */
+export function MicrosoftPersonalGuide() {
+  return (
+    <div className="space-y-2 rounded-md border border-border bg-muted/40 p-3 text-sm">
+      <p className="font-medium text-foreground">
+        Outlook, Hotmail and Live need Microsoft sign-in
+      </p>
+      <p className="text-muted-foreground">
+        Microsoft only accepts its own sign-in for these addresses, so a password will not work.{' '}
+        {oneClickNotYet('Microsoft')}
+      </p>
+      <p className="text-muted-foreground">
+        For now, connect another address you use for work, or send from your own domain with a
+        sending service such as Resend.
+      </p>
+      <p>
+        <a
+          href={MICROSOFT_PERSONAL.docsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline underline-offset-4"
+        >
+          Microsoft help
+        </a>
+      </p>
+    </div>
   );
 }
 

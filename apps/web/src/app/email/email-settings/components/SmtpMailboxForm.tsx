@@ -23,12 +23,19 @@ import { trpc } from '@/lib/trpc';
 import { BounceReadingFields } from './BounceReadingFields';
 import { connectionFailureHelp } from './connection-help';
 import {
+  isPersonalMicrosoftAddress,
+  MICROSOFT_PERSONAL_ADDRESS_MESSAGE,
   providerById,
   providerByServer,
   type MailboxProvider,
   type MailboxProviderId,
 } from './mailbox-providers';
-import { CustomProviderGuide, ProviderGuide, ProviderPicker } from './ProviderPicker';
+import {
+  CustomProviderGuide,
+  MicrosoftPersonalGuide,
+  ProviderGuide,
+  ProviderPicker,
+} from './ProviderPicker';
 import { secretInput, type SecretChange } from './SecretField';
 import type { FieldBinding, FieldErrorProps } from './field-binding';
 import {
@@ -230,8 +237,19 @@ function addSchemaErrors(
   }
 }
 
+/** A personal Microsoft address reached Microsoft's servers: no password there can work. */
+function isBlockedMicrosoftAddress(draft: Draft): boolean {
+  const onMicrosoft =
+    draft.provider === 'microsoft365' || /\.outlook\.com$/i.test(draft.endpoint.host.trim());
+  return onMicrosoft && isPersonalMicrosoftAddress(draft.fromAddress);
+}
+
 /** One message for the address; the sign-in names following it have nothing to follow yet. */
 function settleAddressErrors(errors: Partial<Record<Field, string>>, draft: Draft) {
+  if (isBlockedMicrosoftAddress(draft)) {
+    errors.fromAddress = MICROSOFT_PERSONAL_ADDRESS_MESSAGE;
+    return;
+  }
   if (!errors.fromAddress) return;
   errors.fromAddress = draft.fromAddress.trim() ? BAD_ADDRESS : EMPTY_ADDRESS;
   if (!draft.usernameEdited) delete errors[SMTP_ACCOUNT_FIELDS[0]];
@@ -413,7 +431,9 @@ export function SmtpMailboxForm({
     errorMessage: (field) => errors[field],
   };
 
-  const canReadBounces = provider?.imapHost !== null;
+  // A mailbox already reading bounces keeps the setting, so it can be seen and turned off.
+  const canReadBounces = provider?.imapHost !== null || draft.readBounces;
+  const noSettings = draft.provider === null || draft.provider === 'microsoft-personal';
 
   return (
     <form
@@ -424,12 +444,15 @@ export function SmtpMailboxForm({
     >
       <ProviderPicker idPrefix={prefix} value={draft.provider} onChange={chooseProvider} />
 
-      {draft.provider === null ? (
-        <div className="flex justify-end">
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-            Cancel
-          </Button>
-        </div>
+      {noSettings ? (
+        <>
+          {draft.provider === 'microsoft-personal' && <MicrosoftPersonalGuide />}
+          <div className="flex justify-end">
+            <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+              Cancel
+            </Button>
+          </div>
+        </>
       ) : (
         <>
           {provider ? <ProviderGuide provider={provider} /> : <CustomProviderGuide />}

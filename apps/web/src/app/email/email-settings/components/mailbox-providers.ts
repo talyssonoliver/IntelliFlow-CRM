@@ -12,6 +12,7 @@ export type MailboxProviderId =
   | 'custom'
   | 'google'
   | 'microsoft365'
+  | 'microsoft-personal'
   | 'zoho'
   | 'resend'
   | 'yahoo'
@@ -22,8 +23,31 @@ export type MailboxProviderId =
 
 export type SmtpSecurity = 'SSL' | 'STARTTLS';
 
+/** The one wording for sign-in Aurora does not offer yet. No dates: it changes in one place. */
+export function oneClickNotYet(providerName: string): string {
+  return `One-click ${providerName} sign-in isn't available yet.`;
+}
+
+/** Personal Microsoft mail takes only Microsoft's own sign-in, so it has no settings to fill in. */
+export const MICROSOFT_PERSONAL = {
+  id: 'microsoft-personal' as const,
+  label: 'Outlook, Hotmail or Live',
+  hint: 'A personal Microsoft address. Not available yet',
+  docsUrl:
+    'https://support.microsoft.com/en-us/office/pop-imap-and-smtp-settings-for-outlook-com-d088b986-291d-42b8-9564-9c414e2aa040',
+};
+
+export const MICROSOFT_PERSONAL_ADDRESS_MESSAGE = `Outlook, Hotmail and Live addresses need Microsoft sign-in, so a password will not work. ${oneClickNotYet('Microsoft')}`;
+
+/** outlook.com, hotmail.co.uk, live.com, msn.com and so on. */
+export function isPersonalMicrosoftAddress(address: string): boolean {
+  return /@(outlook|hotmail|live|msn)\.(com|co\.[a-z]{2}|com\.[a-z]{2}|[a-z]{2})$/i.test(
+    address.trim()
+  );
+}
+
 export interface MailboxProvider {
-  id: Exclude<MailboxProviderId, 'custom'>;
+  id: Exclude<MailboxProviderId, 'custom' | 'microsoft-personal'>;
   label: string;
   /** A short line under the name, to help people recognise their provider. */
   hint: string;
@@ -78,11 +102,11 @@ export const MAILBOX_PROVIDERS: readonly MailboxProvider[] = [
   },
   {
     id: 'microsoft365',
-    label: 'Microsoft 365 or Outlook',
+    label: 'Microsoft 365 (business)',
     hint: 'Work or school mail, or your own domain run by Microsoft',
     name: 'Microsoft 365',
     server: { host: 'smtp.office365.com', port: '587', security: 'STARTTLS' },
-    imapHost: 'outlook.office365.com',
+    imapHost: null,
     imapSignIn: 'address',
     secretLabel: 'Password',
     steps: [
@@ -91,9 +115,9 @@ export const MAILBOX_PROVIDERS: readonly MailboxProvider[] = [
       'Use Test Connection. If it is refused, the setting is still off.',
     ],
     warning:
-      'Microsoft is turning this off by default for existing organisations at the end of December 2026, and it does not work with Security defaults. Personal Outlook.com addresses need one-click sign-in, which is not available yet.',
+      'This only sends mail: Microsoft no longer lets a password read incoming mail, so addresses that bounce will not be taken off your lists automatically. SMTP AUTH does not work with Security defaults, and Microsoft has announced it will retire it, turning it off by default for existing organisations at the end of December 2026.',
     refusalHelp:
-      'Most often SMTP AUTH is off for this mailbox, or Security defaults is on. Your Microsoft 365 administrator can change both. A personal Outlook.com address cannot connect until one-click sign-in is available.',
+      'Microsoft refused the password. Your Microsoft 365 administrator must allow SMTP AUTH for this mailbox, and Security defaults must be off. Outlook, Hotmail and Live addresses cannot use a password at all.',
     docsUrl:
       'https://learn.microsoft.com/en-us/exchange/mail-flow-best-practices/how-to-set-up-a-multifunction-device-or-application-to-send-email-using-microsoft-365-or-office-365',
   },

@@ -151,12 +151,92 @@ describe('SmtpMailboxForm', () => {
     expect(save.mutateAsync).not.toHaveBeenCalled();
   });
 
-  it('says plainly that Microsoft needs SMTP AUTH and is going away', () => {
+  it('warns that Microsoft 365 needs SMTP AUTH and cannot read mail with a password', () => {
     renderForm();
     choose(/microsoft 365/i);
     expect(screen.getByText(/allow SMTP AUTH/)).toBeInTheDocument();
+    expect(screen.getByText(/This only sends mail/)).toBeInTheDocument();
     expect(screen.getByText(/end of December 2026/)).toBeInTheDocument();
-    expect(screen.getByText(/Personal Outlook.com/)).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+  });
+
+  it('never asks for a password for Outlook, Hotmail or Live', () => {
+    renderForm();
+    choose(/^Outlook, Hotmail or Live/i);
+    expect(screen.getByText(/need Microsoft sign-in/)).toBeInTheDocument();
+    expect(screen.getByText(/sign-in isn't available yet/)).toBeInTheDocument();
+    expect(screen.getByText(/connect another address/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('Password')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Email address')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Test Connection' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save Mailbox' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+  });
+
+  it.each(['pat@outlook.com', 'pat@hotmail.co.uk', 'pat@live.com'])(
+    'stops %s reaching Microsoft 365 with a password',
+    async (address) => {
+      renderForm();
+      choose(/microsoft 365/i);
+      type('Email address', address);
+      type('Password', PASSWORD);
+      testConnection();
+      await waitFor(() =>
+        expect(screen.getByLabelText('Email address')).toHaveAccessibleDescription(
+          /need Microsoft sign-in/
+        )
+      );
+      expect(test_.mutateAsync).not.toHaveBeenCalled();
+    }
+  );
+
+  it('stops a personal Microsoft address on a typed Outlook server too', async () => {
+    renderForm();
+    choose(/^My own domain/i);
+    type('Mail server', 'smtp-mail.outlook.com');
+    type('Email address', 'pat@outlook.com');
+    type('Password', PASSWORD);
+    submit();
+    await waitFor(() =>
+      expect(screen.getByLabelText('Email address')).toHaveAccessibleDescription(
+        /need Microsoft sign-in/
+      )
+    );
+    expect(save.mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('lets a sending service send from any address it has verified', async () => {
+    renderForm();
+    choose(/resend/i);
+    type('Email address', 'pat@live.example.invalid');
+    type('API key', 'k'.repeat(20));
+    testConnection();
+    await waitFor(() => expect(test_.mutateAsync).toHaveBeenCalled());
+  });
+
+  it('names the likely cause when Microsoft refuses the password', async () => {
+    test_.mutateAsync.mockResolvedValue({ ok: false, code: 'AUTH_FAILED' });
+    renderForm();
+    choose(/microsoft 365/i);
+    type('Email address', ADDRESS);
+    type('Password', PASSWORD);
+    testConnection();
+    const status = await screen.findByRole('status');
+    expect(status).toHaveTextContent(/Microsoft refused the password/);
+    expect(status).toHaveTextContent(/allow SMTP AUTH/);
+    expect(status).toHaveTextContent(/Outlook, Hotmail and Live addresses cannot use a password/);
+  });
+
+  it('keeps bounce reading visible on a saved Microsoft 365 mailbox that has it on', () => {
+    renderForm(
+      smtpMailbox({
+        ...smtpEndpointFields('smtp.office365.com', 587, 'STARTTLS'),
+        imapHost: 'imap.mail.example.invalid',
+        imapPort: 993,
+        imapUsername: ADDRESS,
+      })
+    );
+    expect(screen.getByRole('checkbox', { name: /read bounce reports/i })).toBeChecked();
   });
 
   it('says the Zoho free plan cannot connect, and what to do', async () => {

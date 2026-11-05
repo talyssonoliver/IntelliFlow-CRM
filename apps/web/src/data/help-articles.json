@@ -461,7 +461,11 @@
           },
           {
             "type": "paragraph",
-            "text": "Microsoft 365: your administrator must allow SMTP AUTH for your mailbox, and it does not work with Security defaults. Microsoft is turning this off by default for existing organisations at the end of December 2026. Personal Outlook.com addresses cannot connect until one-click sign-in is available."
+            "text": "Microsoft 365 for business: your administrator must allow SMTP AUTH for your mailbox, and it does not work with Security defaults. Microsoft has announced it will retire this, turning it off by default for existing organisations at the end of December 2026. Sending is all that works: Microsoft no longer lets a password read incoming mail."
+          },
+          {
+            "type": "paragraph",
+            "text": "Outlook, Hotmail and Live: these addresses need Microsoft sign-in, so a password will not work, and one-click sign-in is not available yet. For now, connect another address you use for work, or send from your own domain with a sending service."
           },
           {
             "type": "paragraph",
@@ -506,7 +510,7 @@
           },
           {
             "type": "info",
-            "text": "A sending-only service such as Resend has no mailbox to read, so this setting is not offered for it."
+            "text": "A sending-only service such as Resend has no mailbox to read, and Microsoft 365 no longer lets a password read one, so this setting is not offered for them."
           }
         ]
       }
