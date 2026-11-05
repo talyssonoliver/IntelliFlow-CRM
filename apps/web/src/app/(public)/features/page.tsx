@@ -4,6 +4,7 @@ import Link from 'next/link';
 import featuresData from '@/data/features-content.json';
 import { OG_IMAGES } from '@/lib/og-images';
 import './features.css';
+import { featureIcon, isPlannedFeature } from '@/lib/marketing/feature-status';
 
 /**
  * Features, in the Aurora design. Every feature and claim comes from
@@ -79,8 +80,11 @@ export default function FeaturesPage() {
                   <ul className="afe-benefits">
                     {feature.benefits.map((benefit) => (
                       <li key={benefit}>
-                        <span className="material-symbols-outlined" aria-hidden="true">
-                          check_circle
+                        <span
+                          className={`material-symbols-outlined${isPlannedFeature(benefit) ? ' afe-planned' : ''}`}
+                          aria-hidden="true"
+                        >
+                          {featureIcon(benefit)}
                         </span>
                         <span>{benefit}</span>
                       </li>
