@@ -87,7 +87,10 @@ export function UserMenu({
           className="w-8 h-8"
           fallbackClassName="text-sm font-medium text-muted-foreground bg-muted"
         />
-        <span className="hidden sm:max-xl:inline xl:inline-block xl:max-[1699px]:max-w-40 xl:max-[1699px]:text-left xl:max-[1699px]:leading-tight text-sm font-medium text-foreground">
+        <span
+          title={user.name}
+          className="hidden sm:max-xl:inline xl:inline-block xl:max-[1439px]:max-w-28 min-[1440px]:max-[1699px]:max-w-40 xl:max-[1699px]:truncate xl:max-[1699px]:text-left text-sm font-medium text-foreground"
+        >
           {user.name}
         </span>
         <span className="material-symbols-outlined text-lg text-muted-foreground">

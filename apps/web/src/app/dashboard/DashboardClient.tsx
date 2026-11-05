@@ -139,7 +139,7 @@ export default function DashboardClient({ initialLeadStats }: Readonly<Dashboard
       </nav>
 
       {/* Header with Actions */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
           {/* Single polite live region (semantic <output> = status role) for the
