@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireOperator } from '@/lib/route-access';
 import fs from 'node:fs';
 import path from 'node:path';
 import { z } from 'zod';
@@ -920,6 +921,8 @@ function handleDetailAction(reports: QualityReport[], reportId: string | null) {
 }
 
 export async function GET(request: NextRequest) {
+  const denied = await requireOperator(request);
+  if (denied) return denied;
   const { searchParams } = new URL(request.url);
   const action = searchParams.get('action') || 'summary';
   const reportId = searchParams.get('id');

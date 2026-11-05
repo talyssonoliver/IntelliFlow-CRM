@@ -745,6 +745,10 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
             type: 'web_hook',
             address: callbackUrl,
             expiration: expiration.getTime().toString(),
+            // Google sends this back on every notification, and the webhook route compares it.
+            ...(process.env.GOOGLE_CALENDAR_CHANNEL_TOKEN
+              ? { token: process.env.GOOGLE_CALENDAR_CHANNEL_TOKEN }
+              : {}),
           }),
         }
       );

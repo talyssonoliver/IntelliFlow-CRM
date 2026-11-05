@@ -7,6 +7,12 @@ const mockExistsSync = vi.hoisted(() => vi.fn());
 const mockReadFileSync = vi.hoisted(() => vi.fn());
 const mockNextResponseJson = vi.hoisted(() => vi.fn());
 
+vi.mock('@/lib/route-access', () => ({
+  requireOperator: vi.fn(async () => null),
+  requireSignedIn: vi.fn(async () => null),
+  refuseInProduction: vi.fn(() => null),
+}));
+
 vi.mock('next/server', () => ({
   NextRequest: vi.fn().mockImplementation((url: string) => ({
     url,
@@ -201,7 +207,7 @@ describe('Compliance Risks API', () => {
 
   it('returns risk data with summary', async () => {
     const { GET } = await import('../risks/route');
-    const res = await GET();
+    const res = await GET({} as never);
     const d = await res.json();
     expect(d.success).toBe(true);
     expect(d.data.risks).toBeDefined();
@@ -211,7 +217,7 @@ describe('Compliance Risks API', () => {
 
   it('calculates summary by status', async () => {
     const { GET } = await import('../risks/route');
-    const res = await GET();
+    const res = await GET({} as never);
     const d = await res.json();
     const s = d.data.summary;
     expect(s.total).toBe(3);
@@ -222,7 +228,7 @@ describe('Compliance Risks API', () => {
 
   it('calculates summary by probability', async () => {
     const { GET } = await import('../risks/route');
-    const res = await GET();
+    const res = await GET({} as never);
     const d = await res.json();
     expect(d.data.summary.byProbability.high).toBe(1);
     expect(d.data.summary.byProbability.medium).toBe(1);
@@ -231,7 +237,7 @@ describe('Compliance Risks API', () => {
 
   it('calculates summary by impact', async () => {
     const { GET } = await import('../risks/route');
-    const res = await GET();
+    const res = await GET({} as never);
     const d = await res.json();
     expect(d.data.summary.byImpact.high).toBe(1);
     expect(d.data.summary.byImpact.medium).toBe(1);
@@ -241,7 +247,7 @@ describe('Compliance Risks API', () => {
   it('handles missing risk register', async () => {
     mockExistsSync.mockReturnValue(false);
     const { GET } = await import('../risks/route');
-    const res = await GET();
+    const res = await GET({} as never);
     const d = await res.json();
     expect(d.success).toBe(true);
     expect(d.data.risks).toEqual([]);
@@ -251,7 +257,7 @@ describe('Compliance Risks API', () => {
   it('handles JSON parse errors', async () => {
     mockReadFileSync.mockReturnValue('invalid json');
     const { GET } = await import('../risks/route');
-    const res = await GET();
+    const res = await GET({} as never);
     const d = await res.json();
     expect(d.success).toBe(true);
     expect(d.data.risks).toEqual([]);
