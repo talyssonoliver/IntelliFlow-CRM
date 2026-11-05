@@ -480,6 +480,15 @@ describe('SmtpMailboxForm', () => {
     expect(screen.getByLabelText('Mail server')).toHaveAttribute('id', 'company-smtp-host');
   });
 
+  it('brings the next step into view when a provider is chosen, and not before', () => {
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    renderForm();
+    expect(scrollIntoView).not.toHaveBeenCalled();
+    choose(/gmail/i);
+    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+  });
+
   it('cancels, before and after choosing a provider', () => {
     const { onCancel } = renderForm();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));

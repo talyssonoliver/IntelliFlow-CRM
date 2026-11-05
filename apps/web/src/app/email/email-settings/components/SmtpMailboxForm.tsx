@@ -9,7 +9,7 @@
  * one); stored passwords are never loaded, see SecretField. The server and account
  * inputs are SmtpEndpointFields and SmtpAccountFields (#1103).
  */
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Button, Input, Label } from '@intelliflow/ui';
 import {
   SMTP_ACCOUNT_FIELDS,
@@ -362,6 +362,15 @@ export function SmtpMailboxForm({
 
   const provider = providerById(draft.provider);
 
+  // On a phone the explanation is below every card: choosing must bring it into view.
+  const nextStepRef = useRef<HTMLDivElement>(null);
+  const [shownProvider, setShownProvider] = useState(draft.provider);
+  useEffect(() => {
+    if (draft.provider === shownProvider) return;
+    setShownProvider(draft.provider);
+    nextStepRef.current?.scrollIntoView?.({ block: 'start' });
+  }, [draft.provider, shownProvider]);
+
   const chooseProvider = (id: MailboxProviderId) => update((current) => withProvider(current, id));
 
   const setAddress = (address: string) =>
@@ -443,6 +452,7 @@ export function SmtpMailboxForm({
       aria-label="Mailbox settings"
     >
       <ProviderPicker idPrefix={prefix} value={draft.provider} onChange={chooseProvider} />
+      <div ref={nextStepRef} aria-hidden="true" className="scroll-mt-40" />
 
       {noSettings ? (
         <>
