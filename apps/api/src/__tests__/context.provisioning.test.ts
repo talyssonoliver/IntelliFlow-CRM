@@ -62,6 +62,7 @@ vi.mock('../container', () => ({
 }));
 
 import { ensureAppUserSession } from '../context';
+import { supabaseAdmin } from '../lib/supabase';
 
 const SUPABASE_USER = {
   id: '11111111-1111-4111-8111-111111111111',
@@ -407,5 +408,10 @@ describe('ensureAppUserSession — avatar backfill from provider metadata', () =
 
     expect(session.role).toBe('ADMIN');
     expect(session.emailVerified).toBe(true);
+    // The role a check may trust goes to app_metadata, which the user can't write.
+    expect(supabaseAdmin.auth.admin.updateUserById).toHaveBeenCalledWith(
+      EXISTING_USER_ID,
+      expect.objectContaining({ app_metadata: { role: 'ADMIN' } })
+    );
   });
 });
