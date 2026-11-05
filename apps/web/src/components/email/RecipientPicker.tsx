@@ -299,10 +299,15 @@ export function RecipientPicker({
             <button
               type="button"
               aria-label={`Remove ${recipient.name || recipient.email}`}
-              className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-destructive/20 focus:outline-none focus:ring-1 focus:ring-ring"
+              className="-mr-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full hover:bg-destructive/20 focus:outline-none focus:ring-1 focus:ring-ring"
               onClick={() => removeRecipient(i)}
             >
-              <span className="material-symbols-outlined text-base" aria-hidden="true">
+              {/* The icon font sets its own size, which a text size class does not override. */}
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: 14 }}
+                aria-hidden="true"
+              >
                 close
               </span>
             </button>

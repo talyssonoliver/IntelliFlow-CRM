@@ -51,6 +51,11 @@ describe('EmailThread', () => {
     expect(screen.getByRole('heading', { name: /re: test thread/i })).toBeInTheDocument();
   });
 
+  it('wraps a long subject rather than cutting it', () => {
+    render(<EmailThread {...defaultProps} />);
+    expect(screen.getByRole('heading', { name: /re: test thread/i })).not.toHaveClass('truncate');
+  });
+
   it('renders thread header action buttons', () => {
     render(<EmailThread {...defaultProps} />);
     expect(screen.getByRole('button', { name: /archive/i })).toBeInTheDocument();
