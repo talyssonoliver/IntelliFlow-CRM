@@ -190,6 +190,54 @@ describe('SmtpMailboxForm', () => {
     }
   );
 
+  describe('once a problem is put right', () => {
+    const address = () => screen.getByLabelText('Email address');
+
+    async function stoppedOnPersonalAddress() {
+      renderForm();
+      choose(/microsoft 365/i);
+      type('Email address', 'pat@outlook.com');
+      type('Password', PASSWORD);
+      testConnection();
+      await waitFor(() => expect(address()).toHaveAccessibleDescription(/need Microsoft sign-in/));
+    }
+
+    it('drops the message when the address is corrected', async () => {
+      await stoppedOnPersonalAddress();
+      type('Email address', ADDRESS);
+      expect(screen.queryByText(/need Microsoft sign-in/)).not.toBeInTheDocument();
+      expect(address()).not.toHaveAttribute('aria-invalid');
+    });
+
+    it('drops the message when another provider is chosen', async () => {
+      await stoppedOnPersonalAddress();
+      choose(/resend/i);
+      expect(screen.queryByText(/need Microsoft sign-in/)).not.toBeInTheDocument();
+    });
+
+    it('keeps the message while the address is still wrong', async () => {
+      await stoppedOnPersonalAddress();
+      type('Email address', 'pat@live.com');
+      expect(address()).toHaveAccessibleDescription(/need Microsoft sign-in/);
+    });
+
+    it('does not mark a field that was never checked', async () => {
+      await stoppedOnPersonalAddress();
+      type('Password', '');
+      expect(screen.getByLabelText('Password')).not.toHaveAttribute('aria-invalid');
+    });
+
+    it('drops a save failure when the form is changed', async () => {
+      save.mutateAsync.mockRejectedValue(new Error('The mailbox could not be saved.'));
+      renderForm();
+      fillOwnDomain();
+      submit();
+      await screen.findByText('The mailbox could not be saved.');
+      type('Email address', ADDRESS);
+      expect(screen.queryByText('The mailbox could not be saved.')).not.toBeInTheDocument();
+    });
+  });
+
   it('stops a personal Microsoft address on a typed Outlook server too', async () => {
     renderForm();
     choose(/^My own domain/i);
@@ -481,12 +529,23 @@ describe('SmtpMailboxForm', () => {
   });
 
   it('brings the next step into view when a provider is chosen, and not before', () => {
-    const scrollIntoView = vi.fn();
-    Element.prototype.scrollIntoView = scrollIntoView;
     renderForm();
-    expect(scrollIntoView).not.toHaveBeenCalled();
+    const form = document.querySelector('form') as HTMLFormElement;
+    const panel = form.parentElement as HTMLElement;
+    const locked = panel.parentElement as HTMLElement;
+    panel.style.overflowY = 'auto';
+    locked.style.overflowY = 'hidden';
+    const rects = vi
+      .spyOn(Element.prototype, 'getBoundingClientRect')
+      .mockImplementation(function top(this: Element) {
+        const position = this === panel ? 100 : 900;
+        return { top: position } as DOMRect;
+      });
+    expect(panel.scrollTop).toBe(0);
     choose(/gmail/i);
-    expect(scrollIntoView).toHaveBeenCalledTimes(1);
+    expect(panel.scrollTop).toBe(640);
+    expect(locked.scrollTop).toBe(0);
+    rects.mockRestore();
   });
 
   it('cancels, before and after choosing a provider', () => {

@@ -267,6 +267,38 @@ function validate(draft: Draft, scope: Scope, stored: MailboxDto | null) {
   return { input: parsed.success ? parsed.data : null, errors };
 }
 
+/** Room left above the next step, so the choice just made stays in sight. */
+const NEXT_STEP_OFFSET_PX = 160;
+
+/**
+ * Moves only the panel that scrolls. scrollIntoView also moves any outer layout that hides its
+ * overflow, and nobody can scroll that back: the page keeps a blank band and loses its header.
+ */
+function scrollPanelTo(target: HTMLElement) {
+  let panel = target.parentElement;
+  while (panel && !/auto|scroll/.test(getComputedStyle(panel).overflowY)) {
+    panel = panel.parentElement;
+  }
+  const panelTop = panel ? panel.getBoundingClientRect().top : 0;
+  const scroller = panel ?? document.documentElement;
+  scroller.scrollTop += target.getBoundingClientRect().top - panelTop - NEXT_STEP_OFFSET_PX;
+}
+
+/** What the last check marked, for as long as it is still wrong: fixing a field clears it. */
+function stillWrong(
+  marked: Partial<Record<Field, string>>,
+  draft: Draft,
+  scope: Scope,
+  stored: MailboxDto | null
+) {
+  const now = validate(draft, scope, stored).errors;
+  const shown: Partial<Record<Field, string>> = {};
+  for (const field of FIELD_ORDER) {
+    if (marked[field] && now[field]) shown[field] = now[field];
+  }
+  return shown;
+}
+
 /** Sign-in names follow the address unless the user has changed them. */
 function following(current: Draft, provider: MailboxProvider | undefined, address: string) {
   return {
@@ -334,12 +366,13 @@ export function SmtpMailboxForm({
   const save = trpc.emailMailbox.saveSmtp.useMutation();
   const test = trpc.emailMailbox.testSmtpSettings.useMutation();
   const [draft, setDraft] = useState<Draft>(() => initialDraft(mailbox));
-  const [errors, setErrors] = useState<Partial<Record<Field, string>>>({});
+  const [marked, setMarked] = useState<Partial<Record<Field, string>>>({});
   const [serverError, setServerError] = useState<string | null>(null);
   const [focusField, setFocusField] = useState<Field | null>(null);
   const [testResult, setTestResult] = useState<TestResult | null>(null);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const stored = mailbox?.kind === 'SMTP' ? mailbox : null;
+  const errors = stillWrong(marked, draft, scope, stored);
 
   // Opening the form moves focus into it (the button that opened it is gone).
   const [openingProvider] = useState(draft.provider ?? 'custom');
@@ -355,6 +388,7 @@ export function SmtpMailboxForm({
 
   const update = (change: (current: Draft) => Draft) => {
     setTestResult(null);
+    setServerError(null);
     setDraft(change);
   };
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) =>
@@ -368,7 +402,7 @@ export function SmtpMailboxForm({
   useEffect(() => {
     if (draft.provider === shownProvider) return;
     setShownProvider(draft.provider);
-    nextStepRef.current?.scrollIntoView?.({ block: 'start' });
+    if (nextStepRef.current) scrollPanelTo(nextStepRef.current);
   }, [draft.provider, shownProvider]);
 
   const chooseProvider = (id: MailboxProviderId) => update((current) => withProvider(current, id));
@@ -384,7 +418,7 @@ export function SmtpMailboxForm({
   const checked = () => {
     const result = validate(draft, scope, stored);
     const first = FIELD_ORDER.find((f) => result.errors[f]);
-    setErrors(result.errors);
+    setMarked(result.errors);
     if (first && isAdvancedField(first, draft.provider)) setAdvancedOpen(true);
     if (first || !result.input) {
       setFocusField(first ?? FIELD_ORDER[0] ?? null);
@@ -452,7 +486,7 @@ export function SmtpMailboxForm({
       aria-label="Mailbox settings"
     >
       <ProviderPicker idPrefix={prefix} value={draft.provider} onChange={chooseProvider} />
-      <div ref={nextStepRef} aria-hidden="true" className="scroll-mt-40" />
+      <div ref={nextStepRef} aria-hidden="true" />
 
       {noSettings ? (
         <>
