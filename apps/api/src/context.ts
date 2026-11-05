@@ -314,8 +314,6 @@ async function syncSupabaseUserRole(
         ...userMetadata,
         role,
       },
-      // The copy a role check may read: users can't write app_metadata, unlike user_metadata.
-      app_metadata: { role },
     });
   } catch (error) {
     console.warn('[Auth] Failed to sync Supabase user role metadata:', error);

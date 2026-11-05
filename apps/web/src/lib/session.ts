@@ -85,8 +85,7 @@ export async function decrypt(sessionCookie: string | undefined): Promise<Sessio
     return {
       userId: user.id,
       email: user.email || '',
-      // app_metadata only: a user can write their own user_metadata.
-      role: (user.app_metadata?.role as string) || 'USER',
+      role: (user.user_metadata?.role as string) || 'USER',
       accessToken: session.accessToken,
       refreshToken: session.refreshToken,
       expiresAt: session.expiresAt,
