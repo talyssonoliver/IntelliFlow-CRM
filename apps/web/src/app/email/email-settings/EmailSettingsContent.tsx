@@ -181,6 +181,7 @@ export default function EmailSettingsContent() {
     for (const invalidate of [
       utils.emailMailbox.getMine.invalidate,
       utils.emailMailbox.getTenant.invalidate,
+      utils.emailMailbox.sendingIdentity.invalidate,
       utils.emailSettings.get.invalidate,
     ]) {
       invalidate().catch((error: unknown) =>
