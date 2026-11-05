@@ -11,9 +11,12 @@ const EMAIL_LIST_SKELETON_KEYS = [
 ] as const;
 
 import { EmptyState } from '@intelliflow/ui';
+import Link from 'next/link';
+import type { SendingIdentityDto } from '@intelliflow/validators';
 import { cn } from '@/lib/utils';
 import { SearchFilterBar } from '@/components/shared';
 import { EmailListItem } from './EmailListItem';
+import { EMAIL_SETTINGS_HREF } from './send-errors';
 
 const FILTER_CHIPS = [
   { id: 'all', label: 'All' },
@@ -52,7 +55,64 @@ interface EmailListProps {
   onFilterChange: (filters: EmailFilters) => void;
   onRetry: () => void;
   filters: EmailFilters;
+  /** Why this user cannot send yet, when an empty list should say what to do about it. */
+  mailboxRefusal?: SendingIdentityDto['refusal'];
   className?: string;
+}
+
+/** What an empty list says: why it is empty, and what to do about it. */
+function EmptyList({
+  filtered,
+  searching,
+  mailboxRefusal,
+  onClearFilters,
+}: Readonly<{
+  filtered: boolean;
+  searching: boolean;
+  mailboxRefusal: SendingIdentityDto['refusal'] | undefined;
+  onClearFilters: () => void;
+}>) {
+  if (filtered) {
+    return (
+      <>
+        <EmptyState entity="emails" variant="filtered" phase="passive" />
+        <button
+          type="button"
+          className="text-xs text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring rounded"
+          onClick={onClearFilters}
+        >
+          Clear filters
+        </button>
+      </>
+    );
+  }
+  if (!mailboxRefusal || searching) {
+    return (
+      <EmptyState entity="emails" variant={searching ? 'filtered' : 'folder'} phase="passive" />
+    );
+  }
+  const broken = mailboxRefusal === 'MAILBOX_ERROR';
+  return (
+    <>
+      <EmptyState
+        entity="emails"
+        variant="folder"
+        phase="passive"
+        title={broken ? 'Your mailbox needs attention' : 'Connect your mailbox'}
+        description={
+          broken
+            ? 'Your mailbox stopped working, so email cannot be sent. Check it in Email Settings.'
+            : 'Connect the email address you use for work to send email from Aurora.'
+        }
+      />
+      <Link
+        href={EMAIL_SETTINGS_HREF}
+        className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+      >
+        {broken ? 'Open Email Settings' : 'Connect your mailbox'}
+      </Link>
+    </>
+  );
 }
 
 export function EmailList({
@@ -68,6 +128,7 @@ export function EmailList({
   onFilterChange,
   onRetry,
   filters,
+  mailboxRefusal,
   className,
 }: Readonly<EmailListProps>) {
   const listRef = useRef<HTMLUListElement>(null);
@@ -107,7 +168,7 @@ export function EmailList({
   // Loading state
   if (isLoading) {
     return (
-      <div className={cn('w-80 border-r border-border', className)}>
+      <div className={cn('w-full md:w-80 border-r border-border', className)}>
         <div className="p-3">
           <div className="h-9 rounded-md bg-muted animate-pulse" />
         </div>
@@ -132,7 +193,7 @@ export function EmailList({
     return (
       <div
         className={cn(
-          'flex w-80 flex-col items-center justify-center gap-3 border-r border-border p-4',
+          'flex w-full md:w-80 flex-col items-center justify-center gap-3 border-r border-border p-4',
           className
         )}
       >
@@ -158,7 +219,7 @@ export function EmailList({
   const isFilteredEmpty = emails.length === 0 && totalUnfilteredCount > 0;
 
   return (
-    <div className={cn('flex w-80 flex-col border-r border-border', className)}>
+    <div className={cn('flex w-full md:w-80 flex-col border-r border-border', className)}>
       {/* Search & filter bar */}
       <SearchFilterBar
         searchValue={searchQuery}
@@ -176,24 +237,12 @@ export function EmailList({
       {/* Email list */}
       {emails.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-4">
-          {isFilteredEmpty ? (
-            <>
-              <EmptyState entity="emails" variant="filtered" phase="passive" />
-              <button
-                type="button"
-                className="text-xs text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring rounded"
-                onClick={() => onFilterChange({ unread: false, hasAttachments: false })}
-              >
-                Clear filters
-              </button>
-            </>
-          ) : (
-            <EmptyState
-              entity="emails"
-              variant={searchQuery ? 'filtered' : 'folder'}
-              phase="passive"
-            />
-          )}
+          <EmptyList
+            filtered={isFilteredEmpty}
+            searching={Boolean(searchQuery)}
+            mailboxRefusal={mailboxRefusal}
+            onClearFilters={() => onFilterChange({ unread: false, hasAttachments: false })}
+          />
         </div>
       ) : (
         <div role="none" onKeyDown={handleListKeyDown} className="flex-1 overflow-auto">

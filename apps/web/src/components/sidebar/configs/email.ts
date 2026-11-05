@@ -52,7 +52,21 @@ export function createEmailSidebarConfig(
     showSettings: !!onSettingsClick,
     onSettingsClick,
     footerContent: EmailStorageIndicator,
-    sections: FOLDER_SECTIONS(unreadCounts),
+    sections: [
+      ...FOLDER_SECTIONS(unreadCounts),
+      {
+        id: 'setup',
+        title: 'Setup',
+        items: [
+          {
+            id: 'email-settings-link',
+            label: 'Email Settings',
+            icon: 'tune',
+            href: '/email/email-settings',
+          },
+        ],
+      },
+    ],
   };
 }
 
