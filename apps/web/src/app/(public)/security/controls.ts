@@ -49,7 +49,7 @@ export const CONTROLS: ReadonlyArray<{
       {
         icon: 'key',
         title: 'Single sign-on',
-        body: "Sign in with Google or Microsoft, or with your organisation's own identity provider through enterprise single sign-on.",
+        body: "Sign in with Google, or with your organisation's own identity provider through enterprise single sign-on. Microsoft sign-in is planned.",
       },
       {
         icon: 'group',

@@ -81,8 +81,8 @@ function OverviewTab() {
               <div>
                 <div className="font-medium text-foreground">OAuth 2.0</div>
                 <p className="text-sm text-muted-foreground">
-                  Single sign-on with Google Workspace and Microsoft Azure AD via PKCE authorization
-                  code flow.
+                  Single sign-on with Google Workspace via PKCE authorization code flow. Microsoft
+                  Azure AD is planned.
                 </p>
               </div>
             </div>
@@ -181,9 +181,12 @@ function OAuthTab() {
             </p>
           </Card>
           <Card className="p-4">
-            <div className="font-medium text-foreground mb-1">Microsoft Azure AD</div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-medium text-foreground">Microsoft Azure AD</span>
+              <StatusBadge status="coming-soon" />
+            </div>
             <p className="text-sm text-muted-foreground">
-              SSO via Microsoft identity platform. Supports Azure Active Directory tenants and
+              Planned: SSO via Microsoft identity platform, for Azure Active Directory tenants and
               Microsoft 365 accounts.
             </p>
           </Card>

@@ -904,7 +904,7 @@
     "sections": [
       {
         "heading": "Available Integrations",
-        "content": "You can connect your own mailbox in Email Settings, and sign in with Google or Microsoft. Other integrations are planned.",
+        "content": "You can connect your own mailbox in Email Settings, and sign in with Google. Microsoft sign-in and other integrations are planned.",
         "blocks": [
           {
             "type": "paragraph",
@@ -914,7 +914,7 @@
             "type": "steps",
             "items": [
               "Email: available, connect your mailbox in Email Settings to send from your own address. Mail you receive is not brought into Aurora yet",
-              "Sign-in: available, with Google or Microsoft",
+              "Sign-in: available with Google. Microsoft sign-in is planned",
               "Calendar: planned, Google Calendar and Outlook Calendar",
               "Communication: planned, Slack and Microsoft Teams",
               "Payments: planned, Stripe and PayPal"

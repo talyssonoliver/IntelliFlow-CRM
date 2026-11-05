@@ -4,7 +4,7 @@ import { OG_IMAGES } from '@/lib/og-images';
 export const metadata: Metadata = {
   title: 'Log In',
   description:
-    'Sign in to Aurora. Access your sales pipeline, AI-powered lead scores, and team dashboard. Supports Google, Microsoft, and enterprise SSO.',
+    'Sign in to Aurora. Access your sales pipeline, AI-powered lead scores, and team dashboard. Supports Google and enterprise SSO.',
   openGraph: {
     images: OG_IMAGES,
     title: 'Sign In to Aurora',
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Sign In to Aurora',
-    description: 'Log in to your Aurora. Google SSO, Microsoft SSO, and enterprise SAML supported.',
+    description: 'Log in to your Aurora. Google SSO and enterprise SAML supported.',
   },
   alternates: {
     canonical: '/login',

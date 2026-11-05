@@ -24,7 +24,7 @@ describe('IntegrationsPage Integration', () => {
 
   it('available integrations rendered as working links with correct hrefs', () => {
     render(<IntegrationsPage />);
-    const oauthLink = screen.getByText('OAuth (Google & Azure)').closest('a');
+    const oauthLink = screen.getByText('OAuth (Google)').closest('a');
     expect(oauthLink).toBeInTheDocument();
     expect(oauthLink).toHaveAttribute('href', '/docs/auth');
   });

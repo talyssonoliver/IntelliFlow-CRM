@@ -122,12 +122,8 @@
           "id": "connectors",
           "title": "Connectors",
           "icon": "hub",
-          "description": "Your own mailbox and Google or Microsoft sign-in. Slack, Microsoft Teams, Stripe and PayPal are planned.",
-          "benefits": [
-            "Your own mailbox",
-            "Google and Microsoft sign-in",
-            "More planned"
-          ],
+          "description": "Your own mailbox and Google sign-in. Microsoft sign-in, Slack, Microsoft Teams, Stripe and PayPal are planned.",
+          "benefits": ["Your own mailbox", "Google sign-in", "More planned"],
           "learnMoreUrl": "/#platform"
         },
         {

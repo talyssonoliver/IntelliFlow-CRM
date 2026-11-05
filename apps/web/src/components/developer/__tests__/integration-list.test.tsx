@@ -16,14 +16,14 @@ describe('IntegrationList', () => {
     render(<IntegrationList />);
     expect(screen.getByText('Inbound Webhooks')).toBeInTheDocument();
     expect(screen.getByText('TypeScript SDK')).toBeInTheDocument();
-    expect(screen.getByText('OAuth (Google & Azure)')).toBeInTheDocument();
+    expect(screen.getByText('OAuth (Google)')).toBeInTheDocument();
     expect(screen.getByText('SAP ERP')).toBeInTheDocument();
     expect(screen.getByText(/Receive events from external services/)).toBeInTheDocument();
   });
 
   it('renders available items as links with correct href', () => {
     render(<IntegrationList />);
-    const oauthLink = screen.getByText('OAuth (Google & Azure)').closest('a');
+    const oauthLink = screen.getByText('OAuth (Google)').closest('a');
     expect(oauthLink).toBeInTheDocument();
     expect(oauthLink).toHaveAttribute('href', '/docs/auth');
   });
@@ -109,7 +109,7 @@ describe('IntegrationList', () => {
   it('active cards have hover:border-primary class', () => {
     render(<IntegrationList />);
     // Find a card that is NOT disabled (e.g., OAuth)
-    const card = screen.getByText('OAuth (Google & Azure)').closest('.p-4');
+    const card = screen.getByText('OAuth (Google)').closest('.p-4');
     expect(card?.className).toContain('hover:border-primary');
   });
 

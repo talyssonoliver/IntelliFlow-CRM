@@ -2,8 +2,9 @@ import type { CSSProperties } from 'react';
 import './integrations-section.css';
 
 /** Mailbox connection through mail server settings, the connectors still planned,
- * and the two OAuth sign-in providers. SAP is registered in code but not ready and
- * must never appear here (see product-truth.md §3.1 / §6). */
+ * and sign-in. Google sign-in works; Microsoft sign-in has never worked in production,
+ * so it is planned. SAP is registered in code but not ready and must never appear here
+ * (see product-truth.md §3.1 / §6). */
 const CONNECTORS: ReadonlyArray<{ label: string; logo: string; status: string }> = [
   { label: 'Gmail', logo: '/brand/aurora/logos/gmail.svg', status: 'Mail settings' },
   { label: 'Outlook', logo: '/brand/aurora/logos/microsoftoutlook.svg', status: 'Mail settings' },
@@ -12,7 +13,7 @@ const CONNECTORS: ReadonlyArray<{ label: string; logo: string; status: string }>
   { label: 'Stripe', logo: '/brand/aurora/logos/stripe.svg', status: 'Planned' },
   { label: 'PayPal', logo: '/brand/aurora/logos/paypal.svg', status: 'Planned' },
   { label: 'Google sign-in', logo: '/brand/aurora/logos/google.svg', status: 'Sign-in' },
-  { label: 'Azure sign-in', logo: '/brand/aurora/logos/microsoftazure.svg', status: 'Sign-in' },
+  { label: 'Azure sign-in', logo: '/brand/aurora/logos/microsoftazure.svg', status: 'Planned' },
 ];
 
 /** Developer surfaces: ready unless marked beta (built, not final), planned or soon (not built yet). */
@@ -49,8 +50,8 @@ export function IntegrationsSection() {
           <p className="eyebrow">Integrations</p>
           <h2>Connect your mailbox, with more tools to come.</h2>
           <p className="section-lede">
-            Connect your own mailbox and sign in with Google or Microsoft. Slack, Teams, Stripe and
-            PayPal are planned.
+            Connect your own mailbox and sign in with Google. Microsoft sign-in, Slack, Teams,
+            Stripe and PayPal are planned.
           </p>
         </div>
 

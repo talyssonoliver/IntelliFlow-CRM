@@ -134,7 +134,7 @@
             {
               "icon": "key",
               "title": "Single sign-on",
-              "description": "Google, Microsoft or your own identity provider, and multi-factor sign-in available on every account."
+              "description": "Google or your own identity provider, and multi-factor sign-in available on every account."
             }
           ],
           "columns": 4

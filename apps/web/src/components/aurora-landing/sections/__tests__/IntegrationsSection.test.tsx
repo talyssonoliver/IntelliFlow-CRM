@@ -48,4 +48,15 @@ describe('IntegrationsSection', () => {
     expect(section).toHaveAttribute('id', 'integrations');
     expect((section as HTMLElement).style.getPropertyValue('--bridge-accent')).toBe('var(--cyan)');
   });
+
+  it('claims Google sign-in only: Microsoft sign-in is planned', () => {
+    const { container } = render(<IntegrationsSection />);
+    const text = container.textContent ?? '';
+    expect(text).not.toMatch(/sign in with Google or Microsoft/i);
+    expect(text).toMatch(/sign in with Google\./);
+    const azure = [...container.querySelectorAll('.logo')].find((card) =>
+      card.textContent?.includes('Azure sign-in')
+    );
+    expect(azure?.querySelector('.wire-status')?.textContent).toBe('Planned');
+  });
 });

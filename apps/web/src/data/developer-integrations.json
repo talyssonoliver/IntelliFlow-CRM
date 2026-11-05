@@ -61,8 +61,8 @@
     "items": [
       {
         "id": "oauth",
-        "title": "OAuth (Google & Azure)",
-        "description": "Single sign-on with Google Workspace and Microsoft Azure AD",
+        "title": "OAuth (Google)",
+        "description": "Single sign-on with Google Workspace. Microsoft Azure AD is planned",
         "href": "/docs/auth",
         "status": "available"
       },
