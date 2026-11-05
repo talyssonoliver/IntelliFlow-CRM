@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { createPortal } from 'react-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { createMockEmail } from './email-test-utils';
+import { EMAIL_LABELS } from '@/components/sidebar/configs/EmailSidebarContent';
 
 // Stands in for the sheets the sender card opens: outside the row on the page, inside it for React.
 vi.mock('@/components/shared', () => ({
@@ -16,12 +17,12 @@ vi.mock('@/components/shared', () => ({
 
 const { EmailListItem } = await import('../EmailListItem');
 
-function renderRow() {
+function renderRow(over: Record<string, unknown> = {}) {
   const onSelect = vi.fn();
   render(
     <ul>
       <EmailListItem
-        email={{ ...createMockEmail({}), labels: [] } as never}
+        email={{ ...createMockEmail({}), labels: [], ...over } as never}
         isSelected={false}
         onSelect={onSelect}
       />
@@ -29,6 +30,25 @@ function renderRow() {
   );
   return onSelect;
 }
+
+describe('EmailListItem details', () => {
+  it('shows a dot for each known label and skips one it does not know', () => {
+    const label = EMAIL_LABELS[0];
+    renderRow({ labels: [label.id, 'no-such-label'] });
+    expect(screen.getByTitle(label.name)).toBeInTheDocument();
+    expect(screen.getByRole('listitem').querySelectorAll('[title]')).toHaveLength(1);
+  });
+
+  it('shows no dots without labels', () => {
+    renderRow();
+    expect(screen.getByRole('listitem').querySelectorAll('[title]')).toHaveLength(0);
+  });
+
+  it('marks an email with attachments', () => {
+    renderRow({ attachments: [{ id: 'a1' }] });
+    expect(screen.getByTestId('attachment-icon')).toBeInTheDocument();
+  });
+});
 
 describe('EmailListItem and what the sender card opens', () => {
   it('does not choose the email when something in a sheet is clicked', () => {
