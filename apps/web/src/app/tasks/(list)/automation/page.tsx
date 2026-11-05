@@ -7,7 +7,7 @@ import TaskAutomationContent from './TaskAutomationContent';
 import TaskAutomationLoading from './TaskAutomationLoading';
 
 export const metadata = {
-  title: 'Task Automation — Aurora',
+  title: { absolute: 'Task Automation — Aurora' },
   description:
     'Rules that create, assign and announce tasks when CRM events happen, on a schedule or from a signed webhook.',
 };

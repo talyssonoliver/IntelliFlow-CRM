@@ -24,7 +24,7 @@ describe('CreateNewAppPage', () => {
   });
 
   it('metadata.title contains "Create New App" (NP-004)', () => {
-    expect(metadata.title).toContain('Create New App');
+    expect(metadata.title).toHaveProperty('absolute', expect.stringContaining('Create New App'));
   });
 
   it('metadata.description is a non-empty string (NP-005)', () => {
@@ -33,11 +33,11 @@ describe('CreateNewAppPage', () => {
   });
 
   it('metadata.title contains "Developer Apps" (NP-006)', () => {
-    expect(metadata.title).toContain('Developer Apps');
+    expect(metadata.title).toHaveProperty('absolute', expect.stringContaining('Developer Apps'));
   });
 
   it('metadata.title contains "Aurora" (NP-007)', () => {
-    expect(metadata.title).toContain('Aurora');
+    expect(metadata.title).toHaveProperty('absolute', expect.stringContaining('Aurora'));
   });
 
   it('exports metadata object', () => {

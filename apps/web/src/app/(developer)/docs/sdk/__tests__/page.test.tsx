@@ -26,7 +26,7 @@ describe('SdkGuidesPage', () => {
   });
 
   it('exports metadata.title as "SDK Guides | Aurora" (AC-002)', () => {
-    expect(metadata.title).toBe('SDK Guides | Aurora');
+    expect(metadata.title).toEqual({ absolute: 'SDK Guides | Aurora' });
   });
 
   it('exports metadata.description containing "SDK" (AC-002)', () => {

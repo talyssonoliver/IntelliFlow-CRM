@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-04T20:43:00.113Z",
+  "timestamp": "2026-11-05T15:09:23.854Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,8 +1016,8 @@
   },
   "api_inventory": {
     "total_routers": 78,
-    "total_endpoints": 606,
-    "total_queries": 257,
+    "total_endpoints": 607,
+    "total_queries": 258,
     "total_mutations": 349,
     "routers": [
       {
@@ -1081,16 +1081,16 @@
         "mutations": 10
       },
       {
+        "name": "helpArticle",
+        "endpoints": 15,
+        "queries": 7,
+        "mutations": 8
+      },
+      {
         "name": "autoresponse",
         "endpoints": 14,
         "queries": 4,
         "mutations": 10
-      },
-      {
-        "name": "helpArticle",
-        "endpoints": 14,
-        "queries": 6,
-        "mutations": 8
       },
       {
         "name": "home",
@@ -5344,6 +5344,11 @@
       }
     ],
     "helpArticle": [
+      {
+        "name": "helpArticle.getCategoryCounts",
+        "method": "GET",
+        "description": "Get category counts"
+      },
       {
         "name": "helpArticle.list",
         "method": "GET",

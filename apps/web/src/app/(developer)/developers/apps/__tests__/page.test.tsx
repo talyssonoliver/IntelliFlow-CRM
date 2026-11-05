@@ -29,7 +29,7 @@ describe('DeveloperAppsPage', () => {
   });
 
   it('metadata export has title containing "Developer Apps"', () => {
-    expect(metadata.title).toContain('Developer Apps');
+    expect(metadata.title).toHaveProperty('absolute', expect.stringContaining('Developer Apps'));
   });
 
   it('metadata export has description field', () => {
@@ -71,6 +71,6 @@ describe('DeveloperAppsPage', () => {
   });
 
   it('metadata title matches expected format', () => {
-    expect(metadata.title).toBe('Developer Apps | Aurora');
+    expect(metadata.title).toEqual({ absolute: 'Developer Apps | Aurora' });
   });
 });

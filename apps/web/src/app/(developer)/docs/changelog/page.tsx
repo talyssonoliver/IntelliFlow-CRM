@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { ChangelogDisplay } from '@/components/developer/changelog-display';
 
 export const metadata: Metadata = {
-  title: 'Changelog | Aurora',
+  title: { absolute: 'Changelog | Aurora' },
   description:
     'Release notes, version history, and breaking change notifications for Aurora platform updates',
   alternates: {

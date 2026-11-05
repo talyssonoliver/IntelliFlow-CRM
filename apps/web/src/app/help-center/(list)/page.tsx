@@ -7,6 +7,7 @@ import { HelpCategories } from '@/components/support';
 import { searchHelpContent, DEFAULT_SEARCH_FILTERS } from '@/components/support/search-algorithm';
 import type { SortMode } from '@/components/support/search-algorithm';
 import { DEFAULT_HELP_CATEGORIES } from '@/lib/support/help-categories';
+import { trpc } from '@/lib/trpc';
 
 // ---------------------------------------------------------------------------
 // Filter options derived from help category data
@@ -67,9 +68,20 @@ function HelpCenterContent() {
     [categoryFilter, sortBy, popularOnly]
   );
 
+  const { data: categoryCounts } = trpc.helpArticle.getCategoryCounts.useQuery();
+
+  const categories = useMemo(
+    () =>
+      DEFAULT_HELP_CATEGORIES.map((category) => ({
+        ...category,
+        articleCount: categoryCounts ? (categoryCounts[category.id] ?? 0) : undefined,
+      })),
+    [categoryCounts]
+  );
+
   const results = useMemo(
-    () => searchHelpContent(query, DEFAULT_HELP_CATEGORIES, filters),
-    [query, filters]
+    () => searchHelpContent(query, categories, filters),
+    [query, categories, filters]
   );
 
   const updateParams = useCallback(
@@ -107,7 +119,7 @@ function HelpCenterContent() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="max-w-5xl">
+      <div className="w-full">
         <PageHeader
           title="Help Center"
           description="Find answers, guides, and documentation for Aurora"

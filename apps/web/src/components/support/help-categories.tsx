@@ -20,7 +20,7 @@ export function HelpCategories({ categories }: Readonly<HelpCategoriesProps>) {
 
   return (
     <ul
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4"
       aria-label="Help categories"
     >
       {sorted.map((category) => (
@@ -58,9 +58,11 @@ export function HelpCategories({ categories }: Readonly<HelpCategoriesProps>) {
                 <p className="text-sm text-muted-foreground dark:text-muted-foreground mb-3">
                   {category.description}
                 </p>
-                <span className="text-xs text-muted-foreground dark:text-muted-foreground">
-                  {category.articleCount} {category.articleCount === 1 ? 'article' : 'articles'}
-                </span>
+                {category.articleCount !== undefined && (
+                  <span className="text-xs text-muted-foreground dark:text-muted-foreground">
+                    {category.articleCount} {category.articleCount === 1 ? 'article' : 'articles'}
+                  </span>
+                )}
               </CardContent>
             </Card>
           </Link>

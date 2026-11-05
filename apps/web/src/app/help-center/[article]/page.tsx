@@ -40,7 +40,7 @@ function toRenderable(article: DbArticle): RenderableArticle {
 function LoadingState({ label }: Readonly<{ label: string }>) {
   return (
     <div className="flex flex-col gap-6">
-      <div className="max-w-4xl">
+      <div className="mx-auto w-full max-w-4xl">
         <output
           aria-live="polite"
           aria-label={label}
@@ -59,7 +59,7 @@ function LoadingState({ label }: Readonly<{ label: string }>) {
 function ErrorState({ onRetry }: Readonly<{ onRetry: () => void }>) {
   return (
     <div className="flex flex-col gap-6">
-      <div className="max-w-4xl">
+      <div className="mx-auto w-full max-w-4xl">
         <div
           role="alert"
           className="flex flex-col items-center justify-center gap-3 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/30 p-12 text-center"
@@ -129,7 +129,7 @@ function ArticleDetailView({ slug }: Readonly<{ slug: string }>) {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="max-w-4xl">
+      <div className="mx-auto w-full max-w-4xl">
         <PageHeader
           title={article.title}
           breadcrumbs={[
@@ -223,7 +223,7 @@ function CategoryListingView({
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="max-w-4xl">
+      <div className="mx-auto w-full max-w-4xl">
         <PageHeader
           title={categoryTitle}
           description={`Browse ${articles.length} help ${articles.length === 1 ? 'article' : 'articles'} in ${categoryTitle}`}

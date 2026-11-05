@@ -43,7 +43,7 @@ describe('ApiReferencePage', () => {
   });
 
   it('exports metadata with correct title', () => {
-    expect(metadata.title).toBe('API Reference | Aurora');
+    expect(metadata.title).toEqual({ absolute: 'API Reference | Aurora' });
   });
 
   it('exports metadata with correct description containing "Interactive tRPC API"', () => {

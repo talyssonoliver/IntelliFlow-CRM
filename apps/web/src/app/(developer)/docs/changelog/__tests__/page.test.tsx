@@ -26,7 +26,7 @@ describe('ChangelogPage', () => {
   });
 
   it('exports metadata.title as "Changelog | Aurora"', () => {
-    expect(metadata.title).toBe('Changelog | Aurora');
+    expect(metadata.title).toEqual({ absolute: 'Changelog | Aurora' });
   });
 
   it('exports metadata.description matching /changelog|release/i', () => {

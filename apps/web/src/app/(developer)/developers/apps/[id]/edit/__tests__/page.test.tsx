@@ -35,7 +35,7 @@ describe('DeveloperAppEditPage', () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ id: 'app-001' }),
     });
-    expect(metadata.title).toBe('Edit Aurora Dashboard | Developer Apps | Aurora');
+    expect(metadata.title).toEqual({ absolute: 'Edit Aurora Dashboard | Developer Apps | Aurora' });
   });
 
   // EP-004: generateMetadata returns not-found title for unknown id
@@ -43,7 +43,7 @@ describe('DeveloperAppEditPage', () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ id: 'unknown-id' }),
     });
-    expect(metadata.title).toBe('App Not Found | Aurora');
+    expect(metadata.title).toEqual({ absolute: 'App Not Found | Aurora' });
   });
 
   // EP-005: generateMetadata returns not-found title for invalid id
@@ -51,7 +51,7 @@ describe('DeveloperAppEditPage', () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ id: 'invalid<script>' }),
     });
-    expect(metadata.title).toBe('App Not Found | Aurora');
+    expect(metadata.title).toEqual({ absolute: 'App Not Found | Aurora' });
   });
 
   // EP-006: Invalid id passes empty appId to AppEditor

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { IntegrationList } from '@/components/developer/integration-list';
 
 export const metadata: Metadata = {
-  title: 'Integration Resources | Aurora',
+  title: { absolute: 'Integration Resources | Aurora' },
   description: 'Webhooks, SDK guides, authentication, and third-party connector documentation',
 };
 

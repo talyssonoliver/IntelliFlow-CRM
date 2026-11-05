@@ -1147,6 +1147,39 @@ describe('AuthenticatedHomePage', () => {
   // =========================================================================
   // Helper function edge cases
   // =========================================================================
+  describe('Lead wording in the welcome message', () => {
+    const withLeads = (newLeadsPeriod: string) =>
+      mockWelcomeQuery.mockReturnValue({
+        data: {
+          userName: 'Alice',
+          stats: {
+            highPriorityTasksCount: 0,
+            newLeadsCount: 72,
+            newLeadsPeriod,
+            dealClosingRateTrend: 0,
+          },
+        },
+        isLoading: false,
+        error: null,
+        isFetching: false,
+        refetch: vi.fn(),
+      });
+
+    it('does not call every lead the user owns new', () => {
+      withLeads('all_time');
+      render(<AuthenticatedHomePage />);
+      expect(screen.getByText(/You have 72 leads assigned to you in total\./)).toBeInTheDocument();
+    });
+
+    it('still says new for a real time window', () => {
+      withLeads('this_month');
+      render(<AuthenticatedHomePage />);
+      expect(
+        screen.getByText(/You have 72 new leads assigned to you this month\./)
+      ).toBeInTheDocument();
+    });
+  });
+
   describe('Edge cases', () => {
     it('handles missing welcomeData gracefully', () => {
       mockWelcomeQuery.mockReturnValue({

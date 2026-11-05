@@ -31,12 +31,12 @@ export async function generateMetadata({
 
   if (!post) {
     return {
-      title: 'Post Not Found | Aurora Blog',
+      title: { absolute: 'Post Not Found | Aurora Blog' },
     };
   }
 
   return {
-    title: `${post.title} | Aurora Blog`,
+    title: { absolute: `${post.title} | Aurora Blog` },
     description: post.excerpt,
     authors: [{ name: post.author.name }],
     openGraph: {

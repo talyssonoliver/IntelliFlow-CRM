@@ -12,7 +12,7 @@ import Page, { metadata } from '../page';
 
 describe('Email Settings page.tsx', () => {
   it('exports metadata', () => {
-    expect(metadata.title).toMatch(/Email Settings/);
+    expect(metadata.title).toEqual({ absolute: 'Email Settings — Aurora' });
     expect(metadata.description).toMatch(/mailbox/i);
   });
 
