@@ -131,10 +131,10 @@ export function Navigation() {
       <div className="flex h-16 items-center px-4 lg:px-6">
         {/* Logo */}
         <div className="mr-4 shrink-0 min-[1700px]:mr-8">
-          <span className="lg:max-[1699px]:hidden">
+          <span className="lg:max-xl:hidden">
             <Logo />
           </span>
-          <span className="hidden lg:max-[1699px]:inline">
+          <span className="hidden lg:max-xl:inline">
             <Logo collapsed />
           </span>
         </div>
