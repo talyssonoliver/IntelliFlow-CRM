@@ -9,7 +9,7 @@ import Page, { metadata } from '../page';
 
 describe('OAuth callback page.tsx', () => {
   it('exports metadata and keeps the page out of search indexes', () => {
-    expect(metadata.title).toMatch(/Connecting/);
+    expect(metadata.title).toEqual({ absolute: 'Connecting Mailbox — Aurora' });
     expect(metadata.robots).toEqual({ index: false, follow: false });
   });
 

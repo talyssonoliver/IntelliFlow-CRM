@@ -12,7 +12,7 @@ import Page, { metadata } from '../page';
 
 describe('Signatures page.tsx', () => {
   it('exports metadata', () => {
-    expect(metadata.title).toMatch(/Signatures/);
+    expect(metadata.title).toEqual({ absolute: 'Signatures — Aurora' });
     expect(metadata.description).toMatch(/signature/i);
   });
 
