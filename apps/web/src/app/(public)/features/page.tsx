@@ -14,12 +14,12 @@ import './features.css';
 export const metadata: Metadata = {
   title: 'Features',
   description:
-    'What Aurora does: AI agents that score leads and draft follow-ups for your approval, one approval queue, your pipeline, cases, email and calendar, six connectors and security on from day one.',
+    'What Aurora does: AI agents that score leads and draft follow-ups for your approval, one approval queue, your pipeline, cases, email and calendar, your own mailbox and security on from day one.',
   openGraph: {
     images: OG_IMAGES,
     title: 'Aurora features: agents that do the work, with you in charge',
     description:
-      'Lead scoring, drafted follow-ups, one approval queue, pipeline, cases, email and calendar, and six connectors.',
+      'Lead scoring, drafted follow-ups, one approval queue, pipeline, cases, email and calendar, and your own mailbox.',
     url: 'https://intelli-flow-crm-web.vercel.app/features',
     siteName: 'Aurora',
     type: 'website',
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Aurora features: agents that do the work, with you in charge',
     description:
-      'Lead scoring, drafted follow-ups, one approval queue, pipeline, cases and six connectors. 14-day free trial.',
+      'Lead scoring, drafted follow-ups, one approval queue, pipeline, cases and your own mailbox. 14-day free trial.',
   },
   alternates: {
     canonical: '/features',
