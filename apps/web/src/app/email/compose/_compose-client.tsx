@@ -115,8 +115,9 @@ export function ComposeClient() {
   // Leaving by any route, the lists show what Compose saved, sent or removed.
   const utils = trpc.useUtils();
   const refreshLists = useCallback(() => {
-    void utils.email.listEmails.invalidate();
-    void utils.email.getUnreadCounts.invalidate();
+    // A failed refresh only leaves a list stale until its next load.
+    utils.email.listEmails.invalidate().catch(() => undefined);
+    utils.email.getUnreadCounts.invalidate().catch(() => undefined);
   }, [utils]);
   useEffect(() => refreshLists, [refreshLists]);
 

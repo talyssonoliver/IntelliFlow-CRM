@@ -11,8 +11,8 @@ const api = vi.hoisted(() => ({
   resolveDefault: vi.fn(),
   utils: {
     email: {
-      listEmails: { invalidate: vi.fn() },
-      getUnreadCounts: { invalidate: vi.fn() },
+      listEmails: { invalidate: vi.fn(async () => undefined) },
+      getUnreadCounts: { invalidate: vi.fn(async () => undefined) },
     },
   },
 }));

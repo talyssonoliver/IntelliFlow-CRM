@@ -645,10 +645,11 @@ export function EmailCompose({
 
   const leaveFor = useCallback(
     (href: string) => {
-      void saveBeforeLeaving().then(() => {
+      const leave = () => {
         if (onLeave) onLeave(href);
         else window.location.assign(href);
-      });
+      };
+      saveBeforeLeaving().then(leave, leave);
     },
     [saveBeforeLeaving, onLeave]
   );

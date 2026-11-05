@@ -20,8 +20,8 @@ vi.mock('@/lib/trpc', () => ({
   trpc: {
     useUtils: () => ({
       email: {
-        listEmails: { invalidate: () => undefined },
-        getUnreadCounts: { invalidate: () => undefined },
+        listEmails: { invalidate: async () => undefined },
+        getUnreadCounts: { invalidate: async () => undefined },
       },
     }),
     email: { getEmail: { useQuery: (...a: unknown[]) => api.getEmail(...a) } },
