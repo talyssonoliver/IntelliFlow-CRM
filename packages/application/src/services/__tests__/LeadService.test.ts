@@ -598,6 +598,169 @@ describe('LeadService', () => {
 
       expect(result.isFailure).toBe(true);
     });
+
+    // A person's decision, or the lead's own reply, outranks the AI score.
+    function contactedLowScoreLead(email: string) {
+      const lead = Lead.create({ email, source: 'WEBSITE', ownerId: 'owner-123' }).value;
+      lead.updateScore(12, 0.8, 'test-v1');
+      lead.changeStatus('CONTACTED', 'sales-rep');
+      leadRepository.add(lead);
+      return lead;
+    }
+
+    it('qualifies a low-score lead when a person decides it, with a reason', async () => {
+      const lead = contactedLowScoreLead('human@example.com');
+
+      const result = await leadService.qualifyLead(
+        lead.id.value,
+        'sales-rep',
+        'Asked for a quote',
+        {
+          basis: 'HUMAN',
+        }
+      );
+
+      expect(result.isSuccess).toBe(true);
+      const saved = await leadRepository.findById(lead.id);
+      expect(saved?.status).toBe('QUALIFIED');
+    });
+
+    it('qualifies a low-score lead that replied', async () => {
+      const lead = contactedLowScoreLead('replied@example.com');
+
+      const result = await leadService.qualifyLead(lead.id.value, 'System (COA sync)', 'Replied', {
+        basis: 'INBOUND_REPLY',
+      });
+
+      expect(result.isSuccess).toBe(true);
+      expect((await leadRepository.findById(lead.id))?.status).toBe('QUALIFIED');
+    });
+
+    it('refuses an automatic qualification at score 0 (COA pre-contact QUALIFIED)', async () => {
+      const lead = Lead.create({
+        email: 'zero@example.com',
+        source: 'WEBSITE',
+        ownerId: 'owner-123',
+      }).value;
+      lead.changeStatus('CONTACTED', 'sales-rep');
+      leadRepository.add(lead);
+
+      const result = await leadService.qualifyLead(lead.id.value, 'System (COA sync)', 'audited', {
+        basis: 'AUTOMATIC',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toMatchObject({ reason: 'LEAD_SCORE_BELOW_MINIMUM', score: 0 });
+      expect((await leadRepository.findById(lead.id))?.status).toBe('CONTACTED');
+    });
+
+    it('keeps the minimum score for automatic qualification', async () => {
+      const lead = contactedLowScoreLead('auto@example.com');
+
+      const result = await leadService.qualifyLead(lead.id.value, 'AI', 'Scored', {
+        basis: 'AUTOMATIC',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toMatchObject({ reason: 'LEAD_SCORE_BELOW_MINIMUM', score: 12 });
+      expect((await leadRepository.findById(lead.id))?.status).toBe('CONTACTED');
+    });
+
+    it('needs a reason for a human qualification', async () => {
+      const lead = contactedLowScoreLead('noreason@example.com');
+
+      const result = await leadService.qualifyLead(lead.id.value, 'sales-rep', '   ', {
+        basis: 'HUMAN',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('reason is required');
+      expect((await leadRepository.findById(lead.id))?.status).toBe('CONTACTED');
+    });
+  });
+
+  describe('updateLead() with a status', () => {
+    function contactedLead(email: string, score = 12) {
+      const lead = Lead.create({ email, source: 'WEBSITE', ownerId: 'owner-123' }).value;
+      lead.updateScore(score, 0.8, 'test-v1');
+      lead.changeStatus('CONTACTED', 'sales-rep');
+      leadRepository.add(lead);
+      return lead;
+    }
+
+    it('applies QUALIFIED from the lead record, whatever the score', async () => {
+      const lead = contactedLead('record-qualify@example.com');
+
+      const result = await leadService.updateLead(
+        lead.id.value,
+        { status: 'QUALIFIED' },
+        'sales-rep'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.status).toBe('QUALIFIED');
+      expect((await leadRepository.findById(lead.id))?.status).toBe('QUALIFIED');
+    });
+
+    it('applies another allowed status with the contact fields in one save', async () => {
+      const lead = contactedLead('record-lost@example.com');
+
+      const result = await leadService.updateLead(
+        lead.id.value,
+        { status: 'LOST', company: 'Pitshanger Studio' },
+        'sales-rep'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      const saved = await leadRepository.findById(lead.id);
+      expect(saved?.status).toBe('LOST');
+      expect(saved?.company).toBe('Pitshanger Studio');
+    });
+
+    it('fails on a transition that is not allowed, and changes nothing', async () => {
+      const lead = contactedLead('record-bad@example.com');
+
+      const result = await leadService.updateLead(
+        lead.id.value,
+        { status: 'NEGOTIATING', company: 'Should not save' },
+        'sales-rep'
+      );
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain(
+        'Invalid status transition from CONTACTED to NEGOTIATING'
+      );
+      const saved = await leadRepository.findById(lead.id);
+      expect(saved?.status).toBe('CONTACTED');
+      expect(saved?.company).not.toBe('Should not save');
+    });
+
+    it('refuses CONVERTED: conversion goes through convert', async () => {
+      const lead = contactedLead('record-convert@example.com', 80);
+
+      const result = await leadService.updateLead(
+        lead.id.value,
+        { status: 'CONVERTED' },
+        'sales-rep'
+      );
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('convert action');
+      expect((await leadRepository.findById(lead.id))?.status).toBe('CONTACTED');
+    });
+
+    it('treats the current status as no change', async () => {
+      const lead = contactedLead('record-same@example.com');
+
+      const result = await leadService.updateLead(
+        lead.id.value,
+        { status: 'CONTACTED' },
+        'sales-rep'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      expect((await leadRepository.findById(lead.id))?.status).toBe('CONTACTED');
+    });
   });
 
   describe('convertLead()', () => {
