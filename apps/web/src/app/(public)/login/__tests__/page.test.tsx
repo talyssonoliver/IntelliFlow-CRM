@@ -56,6 +56,7 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 }));
 
 // Import after mocks
+import { EMAIL_NOT_CONFIRMED_MESSAGE } from '@intelliflow/validators';
 import LoginPage from '../page';
 
 describe('LoginPage', () => {
@@ -369,6 +370,22 @@ describe('LoginPage', () => {
       expect(await screen.findByText('Sign-out failed')).toBeInTheDocument();
       expect(screen.getByText('Please try again')).toBeInTheDocument();
       errorSpy.mockRestore();
+    });
+
+    it('offers a new link when the email is not confirmed, instead of an error toast', async () => {
+      mockAuthState = createMockAuth({ error: EMAIL_NOT_CONFIRMED_MESSAGE });
+
+      render(<LoginPage />);
+      await user.type(screen.getByLabelText(/email address/i), 'new@example.com');
+
+      const alert = await screen.findByRole('alert');
+      expect(alert).toHaveTextContent(/confirm your email address first/i);
+      expect(screen.getByRole('link', { name: /send me a new link/i })).toHaveAttribute(
+        'href',
+        '/signup/success?email=new%40example.com'
+      );
+      expect(mockClearError).toHaveBeenCalled();
+      expect(screen.queryByText('Authentication failed')).not.toBeInTheDocument();
     });
 
     it('shows error message on failed login', async () => {

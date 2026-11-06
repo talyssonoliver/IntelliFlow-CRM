@@ -38,6 +38,7 @@ import {
   ssoResolveSchema,
   disableMfaSchema,
   regenerateBackupCodesSchema,
+  EMAIL_NOT_CONFIRMED_MESSAGE,
   type LoginResponse,
 } from '@intelliflow/validators';
 import {
@@ -92,6 +93,12 @@ function getHeaderFromContext(
 interface EmailRateLimitState {
   count: number;
   windowStart: number;
+}
+
+/** Supabase's answer when the password matched but the email isn't confirmed. */
+function isEmailNotConfirmed(error: { code?: string; message?: string } | null): boolean {
+  if (!error) return false;
+  return error.code === 'email_not_confirmed' || /email not confirmed/i.test(error.message ?? '');
 }
 
 function createEmailRateLimiter(limit: number, windowMs: number) {
@@ -373,12 +380,18 @@ export const authRouter = createTRPCRouter({
           failureReason: error?.message || 'Invalid credentials',
         });
 
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: attemptResult.isLocked
-            ? `Account locked. Try again in ${Math.ceil((attemptResult.lockoutDuration || 0) / 60000)} minutes.`
-            : 'Invalid email or password',
-        });
+        if (attemptResult.isLocked) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: `Account locked. Try again in ${Math.ceil((attemptResult.lockoutDuration || 0) / 60000)} minutes.`,
+          });
+        }
+        // Supabase only says this after the password matched, so it reveals nothing
+        // to someone who doesn't know the password.
+        if (isEmailNotConfirmed(error)) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: EMAIL_NOT_CONFIRMED_MESSAGE });
+        }
+        throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Invalid email or password' });
       }
 
       // Check if MFA is enabled for this user

@@ -55,10 +55,13 @@ function VerifyCallbackContent() {
         title=""
         securityBadge="256-bit SSL encrypted verification"
       >
+        {/* Verifying confirms the address but doesn't sign the browser in, so the next
+            step is the sign-in page. */}
         <EmailVerification
           tokenHash={tokenHash}
-          type={type as 'email' | 'signup'}
-          redirectUrl="/dashboard"
+          type={type === 'signup' ? 'signup' : 'email'}
+          redirectUrl="/login"
+          continueLabel="Sign in to continue"
         />
       </AuthCard>
     </AuthBackground>

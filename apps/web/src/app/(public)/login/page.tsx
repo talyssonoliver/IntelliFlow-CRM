@@ -27,6 +27,7 @@ import {
   ToastDescription,
   ToastClose,
 } from '@intelliflow/ui';
+import { EMAIL_NOT_CONFIRMED_MESSAGE } from '@intelliflow/validators';
 import { useAuth, useRedirectIfAuthenticated } from '@/lib/auth/AuthContext';
 import { MfaChallenge, type MfaMethod } from '@/components/auth';
 import {
@@ -136,7 +137,14 @@ export default function LoginPage() {
   // Handle auth errors from context
   const authError = auth.error;
   const authClearError = auth.clearError;
+  // The password was right but the address isn't confirmed: offer a new link in the form.
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
   useEffect(() => {
+    if (authError === EMAIL_NOT_CONFIRMED_MESSAGE) {
+      setNeedsConfirmation(true);
+      authClearError();
+      return;
+    }
     if (authError) {
       setToast({
         open: true,
@@ -447,6 +455,21 @@ export default function LoginPage() {
                   lock_clock
                 </span>{' '}
                 Account temporarily locked. Try again in {rateLimitInfo.timeRemaining}s
+              </div>
+            )}
+
+            {needsConfirmation && (
+              <div
+                role="alert"
+                className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-200 text-sm"
+              >
+                <p>{EMAIL_NOT_CONFIRMED_MESSAGE}</p>
+                <Link
+                  href={`/signup/success?email=${encodeURIComponent(formData.email)}`}
+                  className="mt-2 inline-block font-medium text-[#bca8ff] underline underline-offset-2"
+                >
+                  Send me a new link
+                </Link>
               </div>
             )}
 
