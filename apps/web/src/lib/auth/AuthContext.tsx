@@ -32,6 +32,7 @@ import { getSupabaseBrowserClient } from '../supabase-browser';
 import type { OAuthProvider } from '@intelliflow/domain';
 import { getSupabaseProviderName } from './sso-handler';
 import { isTokenUsable } from './jwt';
+import { loginPathFor, safeRedirectPath } from './safe-redirect';
 import { storeSessionTokens } from '@/lib/shared/token-exchange';
 import { AUTH_TOKEN_CHANGED_EVENT, leaveAfterLogout } from '@/lib/shared/session-cleanup';
 import { watchForLogoutElsewhere, type PageSession } from './logout-sync';
@@ -1041,6 +1042,12 @@ function clearExpiredToken(): void {
   document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
 }
 
+/** The page the browser is on, as a path with its query, so sign-in can return to it. */
+function currentPagePath(): string | null {
+  if (typeof globalThis.window === 'undefined') return null;
+  return `${globalThis.location.pathname}${globalThis.location.search}`;
+}
+
 function stampRedirectTime(hasRedirectedRef: React.RefObject<boolean>): void {
   hasRedirectedRef.current = true;
   if (typeof globalThis.window !== 'undefined') {
@@ -1122,13 +1129,13 @@ export function useRequireAuth(): AuthContextType {
       clearExpiredToken();
       clearAuthSession();
       stampRedirectTime(hasRedirectedRef);
-      router.replace('/login');
+      router.replace(loginPathFor(currentPagePath()));
       return;
     }
 
     console.log('[useRequireAuth] No token in localStorage, redirecting to login...');
     stampRedirectTime(hasRedirectedRef);
-    router.replace('/login');
+    router.replace(loginPathFor(currentPagePath()));
   }, [auth.isLoading, auth.isAuthenticated, auth.user, auth.error, router, hasOAuthParam]);
 
   // Check for recent OAuth login to extend loading state
@@ -1167,9 +1174,10 @@ export function useRedirectIfAuthenticated(redirectTo: string = '/'): AuthContex
   // Check if user just logged out - don't redirect them back
   const justLoggedOut = searchParams?.get('logged_out') === 'true';
 
-  // Check for redirect parameter in URL (e.g., /login?redirect=/dashboard)
+  // Redirect parameter (e.g. /login?redirect=/dashboard). It comes from the URL,
+  // so only a path on this site is used; anything else falls back to redirectTo.
   const urlRedirect = searchParams?.get('redirect');
-  const finalRedirectTo = urlRedirect || redirectTo;
+  const finalRedirectTo = safeRedirectPath(urlRedirect) ?? redirectTo;
 
   // Track if we've already redirected to prevent loops
   const hasRedirectedRef = useRef(false);
