@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-05T15:09:23.854Z",
+  "timestamp": "2026-11-06T18:45:53.767Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 78,
-    "total_endpoints": 607,
+    "total_endpoints": 608,
     "total_queries": 258,
-    "total_mutations": 349,
+    "total_mutations": 350,
     "routers": [
       {
         "name": "contact",
@@ -1051,15 +1051,15 @@
         "mutations": 12
       },
       {
+        "name": "auth",
+        "endpoints": 18,
+        "queries": 3,
+        "mutations": 15
+      },
+      {
         "name": "documents",
         "endpoints": 18,
         "queries": 4,
-        "mutations": 14
-      },
-      {
-        "name": "auth",
-        "endpoints": 17,
-        "queries": 3,
         "mutations": 14
       },
       {
@@ -3369,7 +3369,7 @@
   },
   "validators_inventory": {
     "total_validators": 73,
-    "total_schemas": 690,
+    "total_schemas": 691,
     "by_complexity": {
       "complex": 39,
       "moderate": 25,
@@ -3397,7 +3397,7 @@
       {
         "name": "auth",
         "file": "auth.ts",
-        "schemas": 27,
+        "schemas": 28,
         "complexity": "complex"
       },
       {
@@ -4534,6 +4534,11 @@
         "name": "auth.revokeSession",
         "method": "POST",
         "description": "Revoke session"
+      },
+      {
+        "name": "auth.revokeOtherSessions",
+        "method": "POST",
+        "description": "Revoke other sessions"
       },
       {
         "name": "auth.getStatus",

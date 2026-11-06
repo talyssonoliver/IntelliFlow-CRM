@@ -63,6 +63,12 @@ import { reasonFromCause, ACTIVE_TENANT_HEADER } from '../../security/membership
 import { pickTrustedForwardedIp } from '../../security/client-ip';
 import { getMfaService } from '../../services/mfa.service';
 import { getSessionService } from '../../services/session.service';
+import {
+  endAuthSession,
+  endOtherAuthSessions,
+  listAuthSessions,
+} from '../../security/auth-sessions';
+import { invalidateUserSessions } from '../../security/session-cache';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 // ============================================
@@ -798,6 +804,9 @@ export const authRouter = createTRPCRouter({
     // cleanup, but the result says so: the user's Supabase sessions may still work.
     const providerSignOut = await revokeProviderSessions(extractBearerToken(ctx.req));
     const revoked = providerSignOut === 'REVOKED';
+    // The ended session's token is refused on this instance from the next request (the
+    // ended-session check runs on a cache miss); other instances follow within the cache TTL.
+    if (revoked) invalidateUserSessions(ctx.user.userId);
 
     // Revoke all application sessions for user
     const revokedCount = await sessionService.revokeAllUserSessions(ctx.user.userId);
@@ -1084,37 +1093,44 @@ export const authRouter = createTRPCRouter({
     }),
 
   /**
-   * Get active sessions for current user
+   * The current user's live sign-ins (Supabase Auth sessions), with the one making this request
+   * marked `isCurrent`.
    */
   getSessions: protectedProcedure.query(async ({ ctx }) => {
-    const sessionService = getSessionService(ctx.prisma);
-
-    // Get current session ID from context (would need to be passed in)
-    const sessions = await sessionService.getUserSessions(ctx.user.userId);
-
-    return {
-      sessions,
-      maxSessions: 3,
-    };
+    const sessions = await listAuthSessions(ctx.prisma, ctx.user.userId, ctx.user.sessionId);
+    return { sessions };
   }),
 
   /**
-   * Revoke a specific session
+   * End one of the current user's other sessions. Its tokens are refused from the next request
+   * on this instance and within the session cache TTL elsewhere. The current session is never
+   * ended here (that is sign-out), and another user's session id is reported as not found.
    */
   revokeSession: protectedProcedure.input(revokeSessionSchema).mutation(async ({ ctx, input }) => {
-    const sessionService = getSessionService(ctx.prisma);
     const auditLogger = getAuditLogger(ctx.prisma);
 
-    const revoked = await sessionService.revokeUserSession(ctx.user.userId, input.sessionId);
+    const result = await endAuthSession(
+      ctx.prisma,
+      ctx.user.userId,
+      input.sessionId,
+      ctx.user.sessionId
+    );
 
-    if (!revoked) {
+    if (result === 'CURRENT') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'This is the session you are using. Sign out to end it.',
+      });
+    }
+    if (result === 'NOT_FOUND') {
       throw new TRPCError({
         code: 'NOT_FOUND',
         message: 'Session not found',
       });
     }
 
-    // Log session revocation
+    invalidateUserSessions(ctx.user.userId);
+
     await auditLogger.log({
       tenantId: ctx.user.tenantId,
       eventType: 'SessionRevoked',
@@ -1127,6 +1143,37 @@ export const authRouter = createTRPCRouter({
     });
 
     return { success: true };
+  }),
+
+  /**
+   * End every session of the current user except this one ("sign out other devices").
+   */
+  revokeOtherSessions: protectedProcedure.mutation(async ({ ctx }) => {
+    const auditLogger = getAuditLogger(ctx.prisma);
+
+    if (!ctx.user.sessionId) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'This sign-in has no session to keep, so other sessions were not ended.',
+      });
+    }
+
+    const ended = await endOtherAuthSessions(ctx.prisma, ctx.user.userId, ctx.user.sessionId);
+    invalidateUserSessions(ctx.user.userId);
+
+    await auditLogger.log({
+      tenantId: ctx.user.tenantId,
+      eventType: 'SessionRevoked',
+      action: 'DELETE',
+      actionResult: 'SUCCESS',
+      actionReason: `ended ${ended} other session(s)`,
+      resourceType: 'session',
+      resourceId: ctx.user.sessionId,
+      actorId: ctx.user.userId,
+      actorEmail: ctx.user.email,
+    });
+
+    return { ended };
   }),
 
   /**

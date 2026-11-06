@@ -641,59 +641,54 @@ describe('authRouter', () => {
     });
   });
 
+  // The sessions list and revoke read Supabase Auth sessions, not the app SessionService;
+  // their full contract is in session-revoke.test.ts. These check the wiring from here.
   describe('getSessions', () => {
-    it('should return user sessions', async () => {
-      mockSessionService.getUserSessions.mockResolvedValue([
-        { id: 'session_1', deviceInfo: { browser: 'Chrome' } },
-        { id: 'session_2', deviceInfo: { browser: 'Firefox' } },
-      ]);
+    it('lists Supabase Auth sessions, not the app session table', async () => {
+      prismaMock.$queryRaw.mockResolvedValue([
+        {
+          id: '550e8400-e29b-41d4-a716-446655440000',
+          created_at: new Date('2026-11-01T10:00:00Z'),
+          updated_at: null,
+          refreshed_at: null,
+          user_agent: 'Chrome',
+          ip: null,
+          not_after: null,
+        },
+      ] as never);
 
-      const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(mockContext);
-
+      const caller = authRouter.createCaller(createMockContext({ authenticated: true }));
       const result = await caller.getSessions();
 
-      expect(result.sessions).toHaveLength(2);
-      expect(result.maxSessions).toBe(3);
+      expect(result.sessions).toHaveLength(1);
+      expect(result.sessions[0]).toMatchObject({ userAgent: 'Chrome', isCurrent: false });
+      expect(mockSessionService.getUserSessions).not.toHaveBeenCalled();
     });
   });
 
   describe('revokeSession', () => {
-    const SESSION_ID = 'd4'.repeat(32);
+    const SESSION_ID = '550e8400-e29b-41d4-a716-446655440000';
 
-    it('should revoke specific session', async () => {
-      const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(mockContext);
+    it('ends the session in auth.sessions and audits it', async () => {
+      prismaMock.$executeRaw.mockResolvedValue(1 as never);
+      const caller = authRouter.createCaller(createMockContext({ authenticated: true }));
 
-      const result = await caller.revokeSession({
-        sessionId: SESSION_ID,
+      await expect(caller.revokeSession({ sessionId: SESSION_ID })).resolves.toEqual({
+        success: true,
       });
-
-      expect(result.success).toBe(true);
-      expect(mockSessionService.revokeUserSession).toHaveBeenCalledWith(
-        mockContext.user?.userId,
-        SESSION_ID
-      );
-      expect(mockSessionService.revokeSession).not.toHaveBeenCalled();
+      expect(mockSessionService.revokeUserSession).not.toHaveBeenCalled();
       expect(mockAuditLogger.log).toHaveBeenCalledWith(
-        expect.objectContaining({
-          eventType: 'SessionRevoked',
-          action: 'DELETE',
-        })
+        expect.objectContaining({ eventType: 'SessionRevoked', action: 'DELETE' })
       );
     });
 
-    it('should throw error for non-existent session', async () => {
-      mockSessionService.revokeUserSession.mockResolvedValue(false);
+    it('answers NOT_FOUND when nothing of the user matched', async () => {
+      prismaMock.$executeRaw.mockResolvedValue(0 as never);
+      const caller = authRouter.createCaller(createMockContext({ authenticated: true }));
 
-      const mockContext = createMockContext({ authenticated: true });
-      const caller = authRouter.createCaller(mockContext);
-
-      await expect(
-        caller.revokeSession({
-          sessionId: SESSION_ID,
-        })
-      ).rejects.toThrow(/Session not found/);
+      await expect(caller.revokeSession({ sessionId: SESSION_ID })).rejects.toThrow(
+        /Session not found/
+      );
     });
   });
 
