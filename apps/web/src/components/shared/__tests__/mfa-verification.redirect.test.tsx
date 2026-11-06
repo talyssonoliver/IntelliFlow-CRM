@@ -71,6 +71,7 @@ describe('MfaVerification redirect after a successful check', () => {
     ['a protocol-relative URL', '//evil.example.invalid'],
     ['a backslash trick', '/\\evil.example.invalid'],
     ['a tab trick', '/\t/evil.example.invalid'],
+    ['dot segments that normalise off-site', '/.//evil.example.invalid'],
   ])('lands on the default for %s', async (_label, redirect) => {
     await verifyWith(`redirect=${encodeURIComponent(redirect)}`);
 

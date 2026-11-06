@@ -27,6 +27,8 @@ describe('safeRedirectPath', () => {
     ['data URL', 'data:text/html,hi'],
     ['relative path', 'dashboard'],
     ['control character', '/a\nb'],
+    ['dot segments that normalise off-site', '/.//evil.example.invalid'],
+    ['parent segments that normalise off-site', '/a/..//evil.example.invalid'],
     ['sign-in page', '/login'],
     ['sign-in page with query', '/login?redirect=/x'],
     ['sign-up page', '/signup'],

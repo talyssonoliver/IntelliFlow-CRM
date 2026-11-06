@@ -65,12 +65,14 @@ describe('logout-redirect', () => {
       expect(isValidRedirectUrl('/path\\..\\evil')).toBe(false);
     });
 
-    it.each(['/\t/evil.example.invalid', '/\n/evil.example.invalid', '/\r\n/evil.example.invalid'])(
-      'rejects a path with a control character a browser would strip (%j)',
-      (url) => {
-        expect(isValidRedirectUrl(url)).toBe(false);
-      }
-    );
+    it.each([
+      '/\t/evil.example.invalid',
+      '/\n/evil.example.invalid',
+      '/\r\n/evil.example.invalid',
+      '/.//evil.example.invalid',
+    ])('rejects a path with a control character a browser would strip (%j)', (url) => {
+      expect(isValidRedirectUrl(url)).toBe(false);
+    });
   });
 
   describe('sanitizeReturnUrl', () => {
