@@ -9,12 +9,12 @@ import { describe, it, expect } from 'vitest';
 import { TrustIndicators, type TrustIndicatorItem } from '../trust-indicators';
 
 describe('TrustIndicators', () => {
-  it('renders default trust items', () => {
-    render(<TrustIndicators />);
+  it('renders default trust items, with no certification Aurora does not hold', () => {
+    const { container } = render(<TrustIndicators />);
 
-    expect(screen.getByText('Secure')).toBeInTheDocument();
-    expect(screen.getByText('SOC 2 Type II')).toBeInTheDocument();
-    expect(screen.getByText('GDPR Ready')).toBeInTheDocument();
+    expect(screen.getByText('Encrypted connections')).toBeInTheDocument();
+    expect(screen.getByText('Workspace isolation')).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/SOC ?2|ISO ?27001|certified|GDPR/i);
   });
 
   it('renders custom items', () => {
@@ -27,7 +27,7 @@ describe('TrustIndicators', () => {
 
     expect(screen.getByText('Encrypted')).toBeInTheDocument();
     expect(screen.getByText('Verified')).toBeInTheDocument();
-    expect(screen.queryByText('Secure')).not.toBeInTheDocument();
+    expect(screen.queryByText('Encrypted connections')).not.toBeInTheDocument();
   });
 
   it('renders inline variant by default', () => {
@@ -47,9 +47,9 @@ describe('TrustIndicators', () => {
   it('renders separator dots in inline variant', () => {
     const { container } = render(<TrustIndicators />);
 
-    // Should have 2 separator dots for 3 items
+    // One separator dot between the 2 default items
     const separators = container.querySelectorAll('.rounded-full.bg-slate-600');
-    expect(separators.length).toBe(2);
+    expect(separators.length).toBe(1);
   });
 
   it('does not render separator dots in stacked variant', () => {
@@ -70,7 +70,7 @@ describe('TrustIndicators', () => {
     const { container } = render(<TrustIndicators />);
 
     const icons = container.querySelectorAll('.material-symbols-outlined');
-    expect(icons.length).toBe(3);
+    expect(icons.length).toBe(2);
   });
 
   it('hides icons from screen readers', () => {

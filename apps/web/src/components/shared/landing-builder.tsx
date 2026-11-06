@@ -332,7 +332,10 @@ export function LandingStats({ section }: Readonly<{ section: StatsSection }>) {
         {section.title && (
           <h2 className={`text-2xl font-bold text-center mb-8 ${textClass}`}>{section.title}</h2>
         )}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        {/* As many columns as stats on desktop; on phones an odd last stat spans the row. */}
+        <div
+          className={`grid grid-cols-2 ${section.stats.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'} gap-8 [&>*:last-child:nth-child(odd)]:col-span-2 md:[&>*:last-child:nth-child(odd)]:col-span-1`}
+        >
           {section.stats.map((stat) => (
             <div key={stat.label} className="text-center">
               <p

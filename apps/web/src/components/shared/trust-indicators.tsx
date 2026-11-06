@@ -19,7 +19,7 @@
  * <TrustIndicators
  *   items={[
  *     { icon: 'lock', label: 'Encrypted' },
- *     { icon: 'shield_check', label: 'Certified' },
+ *     { icon: 'shield_lock', label: 'Workspace isolation' },
  *   ]}
  * />
  * ```
@@ -52,10 +52,10 @@ export interface TrustIndicatorsProps {
 // Default Items
 // ============================================================
 
+// Only what Aurora can back today: it holds no certification, so none is shown.
 const DEFAULT_TRUST_ITEMS: TrustIndicatorItem[] = [
-  { icon: 'lock', label: 'Secure' },
-  { icon: 'shield_check', label: 'SOC 2 Type II' },
-  { icon: 'policy', label: 'GDPR Ready' },
+  { icon: 'lock', label: 'Encrypted connections' },
+  { icon: 'shield_lock', label: 'Workspace isolation' },
 ];
 
 // ============================================================

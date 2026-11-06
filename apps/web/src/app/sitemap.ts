@@ -146,7 +146,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   }));
 
   // Press release detail pages — timestamps from JSON data
-  const pressRoutes: MetadataRoute.Sitemap = pressData.releases.map((release) => ({
+  const pressRoutes: MetadataRoute.Sitemap = (
+    pressData.releases as Array<{ id: string; date: string }>
+  ).map((release) => ({
     url: `${BASE_URL}/press/${release.id}`,
     lastModified: release.date,
     changeFrequency: 'monthly' as const,

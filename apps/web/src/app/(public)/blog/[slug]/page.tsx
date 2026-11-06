@@ -13,6 +13,10 @@ import { AppAvatar } from '@/components/shared/app-avatar';
 import { blogPosts, type BlogPost } from '@/data/blog-posts';
 import { OG_IMAGES } from '@/lib/og-images';
 
+// Only published posts have pages; any other slug is a plain 404 rather than an
+// on-demand render.
+export const dynamicParams = false;
+
 // Get all slugs for static generation
 export function generateStaticParams() {
   return Object.keys(blogPosts).map((slug) => ({
