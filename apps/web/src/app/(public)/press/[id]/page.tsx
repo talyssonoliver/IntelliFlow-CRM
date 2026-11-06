@@ -11,6 +11,10 @@ for (const release of releases) {
   releaseMap[release.id] = release;
 }
 
+// Only published releases have pages; any other id is a plain 404 rather than an
+// on-demand render.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return releases.map((r) => ({ id: r.id }));
 }
@@ -61,10 +65,10 @@ export default async function PressReleasePage({
 
   const relatedReleases = releases.filter((r) => r.id !== id).slice(0, 3);
 
+  // The same public address the contact page uses; no phone line is published.
   const pressContact = {
-    name: pressData.pressContact.name,
-    email: pressData.pressContact.email,
-    phone: pressData.pressContact.phone,
+    name: 'Aurora',
+    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'crm@leangency.com',
   };
 
   return (

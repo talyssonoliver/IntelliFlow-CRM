@@ -147,8 +147,9 @@ describe('Pricing Content Data', () => {
   });
 
   describe('FAQs Structure', () => {
-    it('should have at least 8 FAQs', () => {
-      expect(pricingData.faqs.length).toBeGreaterThanOrEqual(8);
+    it('should have at least 7 FAQs', () => {
+      // 8 until the nonprofit and education discount answer was removed (owner, 2026-11-06).
+      expect(pricingData.faqs.length).toBeGreaterThanOrEqual(7);
     });
 
     it('should have question and answer for each FAQ', () => {
