@@ -19,6 +19,12 @@ const { mockExistsSync, mockReadFileSync } = vi.hoisted(() => ({
   mockReadFileSync: vi.fn(),
 }));
 
+vi.mock('@/lib/route-access', () => ({
+  requireOperator: vi.fn(async () => null),
+  requireSignedIn: vi.fn(async () => null),
+  refuseInProduction: vi.fn(() => null),
+}));
+
 vi.mock('node:fs', () => ({
   default: {
     existsSync: mockExistsSync,
@@ -119,7 +125,7 @@ describe('Compliance API Routes', () => {
       mockReadFileSync.mockReturnValue(JSON.stringify(mockRiskData));
 
       const { GET } = await import('../risks/route');
-      const response = await GET();
+      const response = await GET({} as never);
       const data = await response.json();
 
       expect(data.success).toBe(true);
@@ -133,7 +139,7 @@ describe('Compliance API Routes', () => {
       mockReadFileSync.mockReturnValue(JSON.stringify(mockRiskData));
 
       const { GET } = await import('../risks/route');
-      const response = await GET();
+      const response = await GET({} as never);
       const data = await response.json();
 
       expect(data.data.summary.byStatus.requires_action).toBe(1);
@@ -146,7 +152,7 @@ describe('Compliance API Routes', () => {
       mockReadFileSync.mockReturnValue(JSON.stringify(mockRiskData));
 
       const { GET } = await import('../risks/route');
-      const response = await GET();
+      const response = await GET({} as never);
       const data = await response.json();
 
       expect(data.data.summary.byProbability.high).toBe(1);
@@ -159,7 +165,7 @@ describe('Compliance API Routes', () => {
       mockReadFileSync.mockReturnValue(JSON.stringify(mockRiskData));
 
       const { GET } = await import('../risks/route');
-      const response = await GET();
+      const response = await GET({} as never);
       const data = await response.json();
 
       expect(data.data.summary.byImpact.high).toBe(1);
@@ -171,7 +177,7 @@ describe('Compliance API Routes', () => {
       mockExistsSync.mockReturnValue(false);
 
       const { GET } = await import('../risks/route');
-      const response = await GET();
+      const response = await GET({} as never);
       const data = await response.json();
 
       expect(data.success).toBe(true);

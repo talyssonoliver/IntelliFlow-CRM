@@ -14,6 +14,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const mockGenerateADRIndex = vi.hoisted(() => vi.fn());
 const mockWriteADRIndex = vi.hoisted(() => vi.fn());
 
+vi.mock('@/lib/route-access', () => ({
+  requireOperator: vi.fn(async () => null),
+  requireSignedIn: vi.fn(async () => null),
+  refuseInProduction: vi.fn(() => null),
+}));
+
 vi.mock('next/server', async (importOriginal) => {
   const orig = (await importOriginal()) as any;
   return {
@@ -43,7 +49,7 @@ describe('/api/adr/index route', () => {
 
   describe('GET - generate index', () => {
     it('should return generated ADR index content', async () => {
-      const res = await GET();
+      const res = await GET({} as never);
       const data = await res.json();
 
       expect(data.success).toBe(true);
@@ -57,7 +63,7 @@ describe('/api/adr/index route', () => {
       });
 
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const res = await GET();
+      const res = await GET({} as never);
       const data = await res.json();
 
       expect(res.status).toBe(500);
@@ -69,7 +75,7 @@ describe('/api/adr/index route', () => {
 
   describe('POST - write index', () => {
     it('should write ADR index and return path', async () => {
-      const res = await POST();
+      const res = await POST({} as never);
       const data = await res.json();
 
       expect(data.success).toBe(true);
@@ -83,7 +89,7 @@ describe('/api/adr/index route', () => {
         error: 'No ADRs found to index',
       });
 
-      const res = await POST();
+      const res = await POST({} as never);
       const data = await res.json();
 
       expect(res.status).toBe(400);
@@ -97,7 +103,7 @@ describe('/api/adr/index route', () => {
       });
 
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const res = await POST();
+      const res = await POST({} as never);
       const data = await res.json();
 
       expect(res.status).toBe(500);

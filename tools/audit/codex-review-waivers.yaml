@@ -832,3 +832,15 @@ waivers:
     author: license guard lane
     date: '2026-11-03'
     expires: '2026-12-03'
+  - fingerprint: a453bb5df5afd0f93979ea5fb21ae8726f1d2b81e271b97f499e8c71cb49d751
+    reason: >-
+      Accepted by the coordinator on 2026-11-05. No production Google Calendar channel exists
+      to migrate, checked 2026-11-05: production has 0 calendars and 0 calendar events, and
+      registerWebhook has no production caller outside the adapter and its port (only adapter
+      tests call it). The API's calendar-webhook router is a stub whose listRegistrations
+      returns nothing, and the web route runs with no sync service. A channel registered after
+      this change carries the token. Short expiry so a later finding on these lines can't stay
+      hidden.
+    author: route access lane
+    date: '2026-11-05'
+    expires: '2026-11-19'

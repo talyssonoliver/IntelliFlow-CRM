@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { refuseInProduction, requireOperator } from '@/lib/route-access';
 import { startTestRun, getActiveRuns } from '@/lib/test-runner';
 import type { TestRunConfig, TestScope } from '@/lib/test-runner';
+
+const SAFE_PATTERN = /^[\w./*@][\w./*@-]*$/;
+const MAX_TIMEOUT_MS = 30 * 60 * 1000;
 
 /**
  * POST /api/quality-reports/test-run
  * Start a new test run
  */
 export async function POST(request: NextRequest) {
+  const refused = refuseInProduction();
+  if (refused) return refused;
+  const denied = await requireOperator(request);
+  if (denied) return denied;
   try {
     const body = await request.json();
     const {
@@ -22,6 +30,24 @@ export async function POST(request: NextRequest) {
         { success: false, error: 'Invalid scope. Must be quick, standard, or comprehensive.' },
         { status: 400 }
       );
+    }
+
+    // Test paths only. A leading dash would be read as a vitest flag.
+    if (
+      patterns !== undefined &&
+      !(
+        Array.isArray(patterns) &&
+        patterns.every((p) => typeof p === 'string' && SAFE_PATTERN.test(p))
+      )
+    ) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid patterns. Use test file paths.' },
+        { status: 400 }
+      );
+    }
+
+    if (typeof timeout !== 'number' || timeout <= 0 || timeout > MAX_TIMEOUT_MS) {
+      return NextResponse.json({ success: false, error: 'Invalid timeout.' }, { status: 400 });
     }
 
     // Generate unique run ID
@@ -66,7 +92,9 @@ export async function POST(request: NextRequest) {
  * GET /api/quality-reports/test-run
  * List all active test runs
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await requireOperator(request);
+  if (denied) return denied;
   try {
     const activeRuns = getActiveRuns();
 

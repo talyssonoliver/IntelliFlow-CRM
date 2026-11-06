@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireOperator } from '@/lib/route-access';
 import { testRunnerEvents, type TestRunProgress } from '@/lib/test-runner';
 
 // Store for active connections
@@ -15,6 +16,8 @@ const connections = new Map<
  * Server-Sent Events endpoint for real-time test progress updates
  */
 export async function GET(request: NextRequest) {
+  const denied = await requireOperator(request);
+  if (denied) return denied;
   const { searchParams } = new URL(request.url);
   const runId = searchParams.get('runId');
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { refuseInProduction, requireOperator } from '@/lib/route-access';
 import { exec, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
@@ -744,6 +745,10 @@ function buildReportPromise(
 }
 
 export async function POST(request: NextRequest) {
+  const refused = refuseInProduction();
+  if (refused) return refused;
+  const denied = await requireOperator(request);
+  if (denied) return denied;
   try {
     const body = await request.json().catch(() => ({}));
     const reports: string[] = body.reports || ['coverage'];
@@ -788,7 +793,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await requireOperator(request);
+  if (denied) return denied;
   return NextResponse.json({
     success: true,
     data: {
