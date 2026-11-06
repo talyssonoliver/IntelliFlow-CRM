@@ -87,6 +87,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { lcovIsCurrent } from './lib/preship-coverage-freshness.mjs';
 import { createGate } from './lib/preship-gate.mjs';
 import { resolveTestScope, SCOPE_ENV } from './lib/preship-test-scope.mjs';
 import {
@@ -151,8 +152,15 @@ function dbStackUnavailable() {
 }
 // The coverage gates need the merged lcov the `coverage` step produces; if that
 // step was skipped (no DB), they have nothing to read.
+// The file is ignored and survives between runs, so being on disk isn't enough.
+let coverageVerdict = null;
+let coverageCachedPass = false;
 function lcovMissing() {
-  return !fs.existsSync(path.join(REPO_ROOT, 'artifacts/coverage/lcov.info'));
+  return !lcovIsCurrent({
+    exists: fs.existsSync(path.join(REPO_ROOT, 'artifacts/coverage/lcov.info')),
+    verdict: coverageVerdict,
+    cachedPass: coverageCachedPass,
+  });
 }
 
 function pythonReportMissing() {
@@ -396,8 +404,8 @@ const STEPS = [
   },
   {
     id: 'lint-artifacts',
-    description: 'artifact-path linter (catches misplaced reports/logs)',
-    cmd: ['pnpm', 'run', 'lint:artifacts'],
+    description: 'generated-file registry and artifact-path linter',
+    cmd: ['pnpm', 'run', 'lint:artifacts:preship'],
     required: true,
   },
   {
@@ -1031,6 +1039,8 @@ async function main() {
   // Stop the step tree on every exit path we get to run.
   gate.installExit();
   const prev = loadPreviousState(head);
+  coverageCachedPass = Boolean(reusableResult('coverage', prev));
+  coverageCachedPass = Boolean(reusableResult('coverage', prev));
   if (prev) {
     process.stdout.write(
       `pre-ship: resuming from previous run at ${head.slice(0, 8)} (cached PASSes will be skipped).\n`
@@ -1086,6 +1096,8 @@ async function main() {
     process.stdout.write(`  ${step.id.padEnd(28)} `);
     const r = await runStep(step, prev);
     results.push(r);
+    if (step.id === 'coverage') coverageVerdict = r.verdict;
+    if (step.id === 'coverage') coverageVerdict = r.verdict;
 
     // Truthful per-step label: MISSING for an unrunnable required guard, WARN
     // (not "FAIL") for a non-blocking advisory failure, PASS (after retry) when

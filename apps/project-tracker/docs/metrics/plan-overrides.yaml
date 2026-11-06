@@ -1704,7 +1704,11 @@ ENV-010-AI:
   evidence_required:
     - tests/*
     - tests/e2e/*
-    - artifacts/coverage/coverage-summary.json
+    # 2026-11-05 (#1194): artifacts/coverage/coverage-summary.json was removed from this list.
+    # Every coverage run rewrites it, so it is no longer committed. The waiver it supported
+    # expired 2026-06-30. The evidence is now: `pnpm run test:coverage` regenerates it locally,
+    # and CI keeps it in the `merged-coverage` artifact of test-regression.yml for 7 days.
+    # Every earlier version stays in git history.
   notes: 'Test automation. Waiver extended 2026-03-09: Coverage at 89.6% lines / 80.2% branches vs >95% target. Infrastructure solid (741 test files, 18 e2e specs) but gap remains.'
 
 ENV-011-AI:

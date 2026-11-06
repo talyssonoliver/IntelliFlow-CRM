@@ -10,6 +10,7 @@
 
 import { createHash } from 'node:crypto';
 import { closeSync, fstatSync, openSync, readFileSync } from 'node:fs';
+import { parse } from 'yaml';
 import { join } from 'node:path';
 import { formatArtifactHash, isArtifactHash } from './artifact-hash.js';
 
@@ -46,18 +47,23 @@ export function isSha256(value: unknown): value is string {
 
 /**
  * artifact_hashes: { path: hash }. An invalid hash is replaced by the file's
- * real hash; if the file does not exist the entry is removed.
+ * real hash; if the file does not exist the entry is removed. Entries for output
+ * registered as untracked in tools/generated-paths.yml are never touched.
  */
 export function fixArtifactHashes(
   data: Record<string, unknown>,
   changes: string[],
-  hashFile: FileHasher
+  hashFile: FileHasher,
+  isUntrackedGenerated: (path: string) => boolean = () => false
 ): boolean {
   const hashes = data.artifact_hashes as Record<string, unknown> | undefined;
   if (!hashes) return false;
   let modified = false;
   for (const [path, hash] of Object.entries(hashes)) {
     if (isArtifactHash(hash)) continue;
+    // Output that is deliberately not in git: a missing file is expected, and today's
+    // bytes aren't what the attestation saw, so its entry stays exactly as written.
+    if (isUntrackedGenerated(path)) continue;
     const real = hashFile(path);
     if (real) {
       hashes[path] = formatArtifactHash(real);
@@ -110,4 +116,14 @@ export function artifactHashOrNull(
       : `artifacts.created[${index}].sha256: null (file not found, no real hash)`
   );
   return real;
+}
+
+/** Paths tools/generated-paths.yml registers as output that stays out of git. */
+export function untrackedGeneratedPaths(registryText: string): Set<string> {
+  const registry = parse(registryText) as {
+    entries?: Array<{ path: string; outcome: string }>;
+  } | null;
+  return new Set(
+    (registry?.entries ?? []).filter((e) => e.outcome === 'untracked').map((e) => e.path)
+  );
 }

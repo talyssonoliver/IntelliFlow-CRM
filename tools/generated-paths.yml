@@ -1,0 +1,68 @@
+# Generated output the repo commits, and what reads it. Checked by
+# scripts/check-generated-registry.mjs, with no skip variable.
+#
+# path:    a file, or a glob where * stays in a folder and ** crosses folders
+# writer:  what produces it
+# readers: file and a string it must still contain. A test, a doc, the writer or an
+#          exclusion list doesn't count as a reader.
+# outcome: tracked, or untracked for output that must stay out of git
+# force:   true with a reason, when .gitignore ignores the path on purpose
+# max_kb:  size limit, 1024 by default
+#
+# Evidence cited in an attestation's artifact_hashes needs no entry.
+# Files tracked before this check are in generated-paths.grandfathered.txt, which can only shrink.
+entries:
+  - path: artifacts/benchmarks/baseline.json
+    writer: tools/scripts/sync-api-inventory.ts
+    readers:
+      - file: .github/workflows/api-inventory-drift.yml
+        contains: artifacts/benchmarks/baseline.json
+    outcome: tracked
+    approved: 2026-11-05
+
+  # MATOP verdicts and delivery reports. Raw .txt logs are committed only when cited.
+  - path: .specify/sprints/*/execution/**/*.json
+    writer: .claude/skills/exec/SKILL.md
+    readers:
+      - file: tools/scripts/audit-workflow-execution.mjs
+        contains: execution
+    outcome: tracked
+    force: true
+    reason: Execution verdicts are read by the workflow audit and the tracker's audit bundles.
+    approved: 2026-11-05
+  - path: .specify/sprints/*/execution/**/*.md
+    writer: .claude/skills/exec/SKILL.md
+    readers:
+      - file: tools/scripts/audit-workflow-execution.mjs
+        contains: execution
+    outcome: tracked
+    force: true
+    reason: Delivery reports are read by the workflow audit and the tracker's audit bundles.
+    approved: 2026-11-05
+
+  # Rewritten by every pre-ship, and read only from the run that wrote them. A few old
+  # attestations cite these: those entries stay, and each version stays in git history.
+  - path: artifacts/coverage/coverage-final.json
+    writer: scripts/run-coverage.js
+    outcome: untracked
+    approved: 2026-11-05
+  - path: artifacts/coverage/coverage-summary.json
+    writer: scripts/run-coverage.js
+    outcome: untracked
+    approved: 2026-11-05
+  - path: artifacts/coverage/lcov.info
+    writer: scripts/run-coverage.js
+    outcome: untracked
+    approved: 2026-11-05
+  - path: artifacts/reports/a11y-route-reconcile.json
+    writer: tools/scripts/a11y-route-reconcile.ts
+    outcome: untracked
+    approved: 2026-11-05
+  - path: artifacts/reports/plan-lint-report.json
+    writer: tools/plan-linter/index.js
+    outcome: untracked
+    approved: 2026-11-05
+  - path: artifacts/reports/spec-tracker.json
+    writer: tools/scripts/generate-spec-tracker.ts
+    outcome: untracked
+    approved: 2026-11-05

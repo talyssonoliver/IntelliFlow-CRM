@@ -32,6 +32,12 @@ npx tsx tools/scripts/sync-codebase-inventory.ts || {
 git add artifacts/benchmarks/baseline.json
 echo "✅ Inventories synced and staged"
 
+# Generated output needs a reader or a citation. There is no skip variable.
+node scripts/check-generated-registry.mjs --staged || exit 1
+
+# Generated output needs a reader or a citation. There is no skip variable.
+node scripts/check-generated-registry.mjs --staged || exit 1
+
 # PG-195 / ADR-046: auto-regenerate Material Symbols subset + audit when any
 # scanned source file changes. Mirrors the auto-regenerate precedent above —
 # dev edits an icon, commit just works; font + audit JSON get staged
