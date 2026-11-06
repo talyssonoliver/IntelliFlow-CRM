@@ -55,6 +55,19 @@ vi.mock('@/lib/auth/AuthContext', () => ({
   useRedirectIfAuthenticated: () => {},
 }));
 
+// The resend mutation behind "Send me a new link"
+const mockResendMutate = vi.fn();
+let mockResendState = { isPending: false, isSuccess: false, isError: false };
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    auth: {
+      resendVerification: {
+        useMutation: () => ({ mutate: mockResendMutate, ...mockResendState }),
+      },
+    },
+  },
+}));
+
 // Import after mocks
 import { EMAIL_NOT_CONFIRMED_MESSAGE } from '@intelliflow/validators';
 import LoginPage from '../page';
@@ -68,6 +81,7 @@ describe('LoginPage', () => {
 
     // Reset mock auth state to default
     mockAuthState = createMockAuth();
+    mockResendState = { isPending: false, isSuccess: false, isError: false };
 
     // Mock localStorage and sessionStorage
     const storage: Record<string, string> = {};
@@ -380,12 +394,48 @@ describe('LoginPage', () => {
 
       const alert = await screen.findByRole('alert');
       expect(alert).toHaveTextContent(/confirm your email address first/i);
-      expect(screen.getByRole('link', { name: /send me a new link/i })).toHaveAttribute(
-        'href',
-        '/signup/success?email=new%40example.com'
-      );
+      // Resent in place: no trip to the sign-up success page, which records a sign-up.
+      expect(screen.queryByRole('link', { name: /send me a new link/i })).not.toBeInTheDocument();
+      await user.click(screen.getByRole('button', { name: /send me a new link/i }));
+      expect(mockResendMutate).toHaveBeenCalledWith({ email: 'new@example.com' });
+      expect(mockPush).not.toHaveBeenCalled();
       expect(mockClearError).toHaveBeenCalled();
       expect(screen.queryByText('Authentication failed')).not.toBeInTheDocument();
+    });
+
+    it('keeps the new-link button disabled until there is an address', async () => {
+      mockAuthState = createMockAuth({ error: EMAIL_NOT_CONFIRMED_MESSAGE });
+
+      render(<LoginPage />);
+
+      expect(await screen.findByRole('button', { name: /send me a new link/i })).toBeDisabled();
+    });
+
+    it('says when the new link was sent', async () => {
+      mockAuthState = createMockAuth({ error: EMAIL_NOT_CONFIRMED_MESSAGE });
+      mockResendState = { isPending: false, isSuccess: true, isError: false };
+
+      render(<LoginPage />);
+
+      expect(await screen.findByText(/we sent a new link/i)).toBeInTheDocument();
+    });
+
+    it('says when the new link could not be sent', async () => {
+      mockAuthState = createMockAuth({ error: EMAIL_NOT_CONFIRMED_MESSAGE });
+      mockResendState = { isPending: false, isSuccess: false, isError: true };
+
+      render(<LoginPage />);
+
+      expect(await screen.findByText(/couldn.t send it/i)).toBeInTheDocument();
+    });
+
+    it('shows a sending state while the new link is on its way', async () => {
+      mockAuthState = createMockAuth({ error: EMAIL_NOT_CONFIRMED_MESSAGE });
+      mockResendState = { isPending: true, isSuccess: false, isError: false };
+
+      render(<LoginPage />);
+
+      expect(await screen.findByRole('button', { name: /sending/i })).toBeDisabled();
     });
 
     it('shows error message on failed login', async () => {
