@@ -30,6 +30,7 @@ import {
 import { EMAIL_NOT_CONFIRMED_MESSAGE } from '@intelliflow/validators';
 import { useAuth, useRedirectIfAuthenticated } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
+import { rememberPostLoginRedirect, safeRedirectPath } from '@/lib/auth/safe-redirect';
 import { MfaChallenge, type MfaMethod } from '@/components/auth';
 import {
   SocialLoginGrid,
@@ -71,6 +72,15 @@ type ValidationErrors = {
 };
 
 type LoginStep = 'credentials' | 'mfa';
+
+/** The page that sent the visitor here (`?redirect=`), checked; home otherwise. */
+function requestedRedirect(): string | null {
+  return new URLSearchParams(globalThis.location.search).get('redirect');
+}
+
+function postLoginTarget(): string {
+  return safeRedirectPath(requestedRedirect()) ?? '/';
+}
 
 // ============================================
 // Component
@@ -253,7 +263,7 @@ export default function LoginPage() {
         // home variant. router.push serves the cached RSC payload from
         // before login, producing a public-header/authed-nav mix.
         setTimeout(() => {
-          globalThis.location.href = '/';
+          globalThis.location.href = postLoginTarget();
         }, 1000);
       } else if (!auth.mfa.required) {
         // Login failed (and not MFA challenge)
@@ -291,6 +301,8 @@ export default function LoginPage() {
     console.log('[LoginPage] auth object:', auth);
     console.log('[LoginPage] auth.loginWithOAuth:', auth.loginWithOAuth);
     try {
+      // The redirect parameter doesn't survive the trip to Google; keep it for the callback.
+      rememberPostLoginRedirect(requestedRedirect());
       console.log('[LoginPage] Calling auth.loginWithOAuth("google")...');
       await auth.loginWithOAuth('google');
       console.log('[LoginPage] auth.loginWithOAuth completed');
@@ -308,6 +320,7 @@ export default function LoginPage() {
   const handleMicrosoftLogin = async () => {
     console.log('[LoginPage] handleMicrosoftLogin called');
     try {
+      rememberPostLoginRedirect(requestedRedirect());
       console.log('[LoginPage] Calling auth.loginWithOAuth("azure")...');
       await auth.loginWithOAuth('azure');
       console.log('[LoginPage] auth.loginWithOAuth completed');
@@ -364,7 +377,7 @@ export default function LoginPage() {
 
       // Hard navigation so the server re-renders with the freshly-set auth cookie.
       setTimeout(() => {
-        globalThis.location.href = '/';
+        globalThis.location.href = postLoginTarget();
       }, 1000);
     }
 

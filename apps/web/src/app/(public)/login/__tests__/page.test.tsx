@@ -460,12 +460,21 @@ describe('LoginPage', () => {
       );
     });
 
-    it('ignores search-param redirect and goes to / (current behavior)', async () => {
-      // Per commit 103b6642 the login page unconditionally hard-navigates to
-      // `/` after success; the `redirect` search param is not used here.
-      // If that policy changes, this test needs to follow the redirect param.
+    // After signing in, the page the visitor came from (`?redirect=`) is opened,
+    // but only when it is a page on this site; anything else goes home.
+    it.each([
+      [
+        'a deep link with its query',
+        '?redirect=%2Fdeals%2Fabc123%3Ftab%3Dnotes',
+        '/deals/abc123?tab=notes',
+      ],
+      ['no redirect', '', '/'],
+      ['a script URL', '?redirect=javascript%3Aalert(1)', '/'],
+      ['another site', '?redirect=https%3A%2F%2Fevil.example.invalid', '/'],
+      ['a protocol-relative URL', '?redirect=%2F%2Fevil.example.invalid', '/'],
+    ])('after sign-in goes to the right page for %s', async (_label, search, expected) => {
       const originalLocation = globalThis.location;
-      const locationStub = { href: '' } as unknown as Location;
+      const locationStub = { href: '', search } as unknown as Location;
       Object.defineProperty(globalThis, 'location', {
         value: locationStub,
         writable: true,
@@ -473,7 +482,6 @@ describe('LoginPage', () => {
       });
 
       try {
-        mockGet.mockReturnValue('/settings');
         mockLogin.mockResolvedValue(true);
 
         render(<LoginPage />);
@@ -489,7 +497,7 @@ describe('LoginPage', () => {
 
         await waitFor(
           () => {
-            expect(locationStub.href).toBe('/');
+            expect(locationStub.href).toBe(expected);
           },
           { timeout: 3000 }
         );
@@ -499,6 +507,33 @@ describe('LoginPage', () => {
           writable: true,
           configurable: true,
         });
+      }
+    });
+
+    it('keeps the requested page across Google sign-in', async () => {
+      const originalLocation = globalThis.location;
+      Object.defineProperty(globalThis, 'location', {
+        value: { href: '', search: '?redirect=%2Fdeals%2Fabc123' } as unknown as Location,
+        writable: true,
+        configurable: true,
+      });
+      sessionStorage.clear();
+
+      try {
+        mockLoginWithOAuth.mockResolvedValue(undefined);
+        render(<LoginPage />);
+
+        await user.click(screen.getByRole('button', { name: /google/i }));
+
+        await waitFor(() => expect(mockLoginWithOAuth).toHaveBeenCalledWith('google'));
+        expect(sessionStorage.getItem('post_login_redirect')).toBe('/deals/abc123');
+      } finally {
+        Object.defineProperty(globalThis, 'location', {
+          value: originalLocation,
+          writable: true,
+          configurable: true,
+        });
+        sessionStorage.clear();
       }
     });
   });
