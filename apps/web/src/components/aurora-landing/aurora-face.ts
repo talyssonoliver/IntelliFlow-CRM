@@ -112,7 +112,7 @@ export const FACES: Record<LayerId, Face> = {
     pill: ['Protected', '#0A8F8A'],
     rows: [
       { icon: 'lock', label: 'Data isolated', value: 'On', accent: '#0A8F8A' },
-      { icon: 'verified_user', label: 'MFA', value: 'Available', accent: '#0A8F8A' },
+      { icon: 'task_alt', label: 'Human approval', value: 'Required', accent: '#0A8F8A' },
       { icon: 'history', label: 'Audit log', value: 'Recording', accent: '#2A78F6' },
     ],
   },

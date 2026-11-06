@@ -114,6 +114,12 @@
   height: 37px;
   background: var(--line-2);
 }
+/* Lower rows: the wire only bridges the 14px grid gap from the card above, so it
+   never crosses that card's name or status. Only the first row reaches the bus. */
+.aurora-page .integrations.aurora-integrations .logo:nth-child(n + 5)::before {
+  top: -14px;
+  height: 14px;
+}
 .aurora-page .integrations.aurora-integrations .logo:hover::before {
   background: var(--cyan);
 }
@@ -152,6 +158,31 @@
   margin-bottom: 16px;
 }
 
+/* Four columns but narrow cards: a status pill beside the name cut names short
+   ("Outl…", "Google sig…" at 1024px). Put the status under the name, as on phones. */
+@media (min-width: 961px) and (max-width: 1279px) {
+  .aurora-page .integrations.aurora-integrations .logo {
+    flex-wrap: wrap;
+    align-content: center;
+    row-gap: 6px;
+    height: auto;
+    min-height: 88px;
+    padding: 12px 16px;
+  }
+  .aurora-page .wire-status {
+    flex: 0 0 auto;
+    margin-left: 0;
+  }
+  .aurora-page .integrations.aurora-integrations .logo span:first-of-type {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    line-height: 1.15;
+    flex: 1 1 calc(100% - 50px);
+    min-width: 0;
+  }
+}
+
 @media (max-width: 960px) {
   /* Fixes the mobile dead-gap audit found before Security (M1): .integrations
      kept a desktop 120-140px pad on a 390px screen. aurora-landing.css:619-623
@@ -166,23 +197,38 @@
     left: 26px;
   }
   .aurora-page .integrations.aurora-integrations .logo {
-    padding: 0 12px;
+    flex-wrap: wrap;
+    align-content: center;
+    row-gap: 6px;
+    height: auto;
+    min-height: 72px;
+    padding: 10px 12px;
   }
-  /* The wire-stub already reads as "connected" at this width; the pill text
-     would crowd a 14px/72px-tall card next to an 8-14 character label. */
+  /* The status stays visible on a phone, on its own line under the name: a card
+     with no status reads as a working connection. */
   .aurora-page .wire-status {
-    display: none;
+    flex: 0 0 auto;
+    margin-left: 0;
+    font-size: 10px;
+  }
+  /* Two columns here (aurora-landing.css), with a 10px gap: from the second row on,
+     the wire only bridges that gap, so it never runs through the status above it. */
+  .aurora-page .integrations.aurora-integrations .logo:nth-child(n + 3)::before {
+    top: -10px;
+    height: 10px;
   }
   /* "Microsoft Teams" (17 chars) is the only one of the 8 connector labels
      that truncates inside the 2-column mobile grid's ~155px card
      (aurora-landing.css's mobile .logos is 2 columns); wrap it onto two
-     lines instead of an ellipsis — wire-status is already hidden above, so
-     there is vertical room in the card. */
+     lines instead of an ellipsis. It takes the rest of the first row, so the
+     status always drops to the row below. */
   .aurora-page .integrations.aurora-integrations .logo span:first-of-type {
     overflow: visible;
     text-overflow: clip;
     white-space: normal;
     line-height: 1.15;
+    flex: 1 1 calc(100% - 44px);
+    min-width: 0;
   }
   .aurora-page .dev-panel {
     margin-top: 36px;

@@ -64,13 +64,14 @@ describe('StackStage', () => {
     expect(container.querySelector('.walk.walk-card')).toBeInTheDocument();
   });
 
-  it('claims only what the product can back: 15 agent types, six kinds of AI work, MFA available', () => {
+  it('claims only what the product can back: 15 agent types, six kinds of AI work, no MFA claim', () => {
     const { container } = render(<StackStage />);
     const text = container.textContent!;
 
     expect(text).toMatch(/15 agent types/i);
     expect(text).toMatch(/six kinds of AI work/i);
-    expect(text).toMatch(/multi-factor sign-in is available on every account/i);
+    expect(text).not.toMatch(/multi-factor sign-in is available/i);
+    expect(text).not.toMatch(/\bMFA\b/);
     expect(text).not.toMatch(/\bten agents\b/i);
     expect(text).not.toMatch(/\b10 agents\b/i);
     expect(text).not.toMatch(/protects every account/i);
