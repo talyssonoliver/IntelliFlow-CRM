@@ -7,6 +7,12 @@
  * the URL cannot be interpreted by a shell.
  */
 import { describe, it, expect } from 'vitest';
+
+vi.mock('@/lib/route-access', () => ({
+  requireOperator: vi.fn(async () => null),
+  requireSignedIn: vi.fn(async () => null),
+  refuseInProduction: vi.fn(() => null),
+}));
 import { buildLighthouseArgs } from '../lighthouse-args';
 
 describe('generate route module', () => {

@@ -178,15 +178,15 @@ export function StackStage() {
               <h3>Enterprise-grade tools, priced and built for growing businesses.</h3>
               <p>
                 The protections large companies pay extra for, in every workspace from day one. Each
-                workspace&apos;s data is kept apart, multi-factor sign-in is available on every
-                account, and every change is written to an audit log.
+                workspace&apos;s data is kept apart, no AI action goes out without a person&apos;s
+                approval, and every change is written to an audit log.
               </p>
               <ul className="chips">
                 <li>
                   <span className="material-symbols-outlined">lock</span>Tenant isolation
                 </li>
                 <li>
-                  <span className="material-symbols-outlined">verified_user</span>MFA
+                  <span className="material-symbols-outlined">task_alt</span>Human approval
                 </li>
                 <li>
                   <span className="material-symbols-outlined">history</span>Audit log

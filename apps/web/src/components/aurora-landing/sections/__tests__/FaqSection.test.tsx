@@ -12,7 +12,7 @@ describe('FaqSection', () => {
     // The <details> default state is closed, but the real answer text must
     // already be in the DOM for content-truth (no JS needed to read it).
     expect(
-      screen.getByText(/Gmail, Outlook, Slack, Microsoft Teams, Stripe, PayPal/)
+      screen.getByText(/Your own mailbox through its mail server settings/)
     ).toBeInTheDocument();
     expect(screen.getByText(/row-level security/i)).toBeInTheDocument();
   });

@@ -538,28 +538,15 @@
     "slug": "calendar-sync",
     "title": "Calendar Sync",
     "categoryId": "email-calendar",
-    "excerpt": "Sync your calendar to schedule meetings and track appointments.",
+    "excerpt": "Book meetings in Aurora. Connecting an outside calendar is planned.",
     "sections": [
       {
         "heading": "Calendar Connection",
-        "content": "Navigate to Settings > Integrations > Calendar and connect your Google or Outlook calendar. Two-way sync ensures meetings appear in both your calendar and Aurora.",
+        "content": "Connecting a Google or Outlook calendar is planned. Meetings you book in Aurora stay in Aurora for now, and don't appear in an outside calendar.",
         "blocks": [
           {
-            "type": "nav-path",
-            "path": ["Settings", "Integrations", "Calendar"]
-          },
-          {
-            "type": "steps",
-            "items": [
-              "Navigate to the Calendar integration settings page",
-              "Click \"Connect\" and choose Google Calendar or Outlook Calendar",
-              "Authorize Aurora to access your calendar",
-              "Enable two-way sync — meetings appear in both Aurora and your calendar"
-            ]
-          },
-          {
             "type": "info",
-            "text": "Two-way sync means creating a meeting in Aurora adds it to your calendar, and meetings created in your calendar with CRM contacts are logged in Aurora automatically."
+            "text": "Calendar sync isn't available yet. When it is, this article will explain how to connect your calendar."
           }
         ]
       },
@@ -917,24 +904,20 @@
     "sections": [
       {
         "heading": "Available Integrations",
-        "content": "Aurora integrates with Slack, Zapier, and more. Navigate to Settings > Integrations to browse and connect available services. Your email is set up separately, in Email Settings.",
+        "content": "You can connect your own mailbox in Email Settings, and sign in with Google. Microsoft sign-in and other integrations are planned.",
         "blocks": [
           {
-            "type": "nav-path",
-            "path": ["Settings", "Integrations"]
-          },
-          {
             "type": "paragraph",
-            "text": "Aurora offers native integrations with popular business tools. Browse the integration marketplace to connect your tech stack:"
+            "text": "What is available, and what is planned:"
           },
           {
             "type": "steps",
             "items": [
-              "Email — connect your mailbox in Email Settings to send from your own address. Mail you receive is not brought into Aurora yet",
-              "Calendar — Google Calendar, Outlook Calendar (meeting scheduling)",
-              "Communication — Slack (deal alerts, task notifications, team channels)",
-              "Automation — Zapier (connect 5,000+ apps with no-code workflows)",
-              "Storage — Google Drive, Dropbox (document attachment and sharing)"
+              "Email: available, connect your mailbox in Email Settings to send from your own address. Mail you receive is not brought into Aurora yet",
+              "Sign-in: available with Google. Microsoft sign-in is planned",
+              "Calendar: planned, Google Calendar and Outlook Calendar",
+              "Communication: planned, Slack and Microsoft Teams",
+              "Payments: planned, Stripe and PayPal"
             ]
           },
           {
@@ -945,25 +928,11 @@
       },
       {
         "heading": "API Keys",
-        "content": "Generate API keys under Settings > Developer > API Keys. Keys can be scoped with specific permissions and set with expiration dates for security.",
+        "content": "API keys are coming soon. This article will explain how to create and manage them when they are available.",
         "blocks": [
           {
-            "type": "nav-path",
-            "path": ["Settings", "Developer", "API Keys"]
-          },
-          {
-            "type": "steps",
-            "items": [
-              "Navigate to the API Keys page",
-              "Click \"Generate New Key\" and give it a descriptive name",
-              "Select permission scopes (read-only, read-write, or specific modules)",
-              "Set an expiration date — recommended: 90 days for production keys",
-              "Copy and securely store the key — it is only shown once"
-            ]
-          },
-          {
-            "type": "warning",
-            "text": "API keys grant programmatic access to your CRM data. Never share keys in public repositories, emails, or chat. Rotate keys regularly and revoke any that may be compromised."
+            "type": "info",
+            "text": "API keys aren't available yet."
           }
         ]
       }

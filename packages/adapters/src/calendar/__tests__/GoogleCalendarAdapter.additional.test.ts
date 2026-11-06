@@ -936,6 +936,11 @@ describe('GoogleCalendarAdapter - Additional Coverage', () => {
   });
 
   describe('registerWebhook - network error', () => {
+    beforeEach(() =>
+      vi.stubEnv('GOOGLE_CALENDAR_CHANNEL_TOKEN', ['channel', 'value', 'for', 'tests'].join('-'))
+    );
+    afterEach(() => vi.unstubAllEnvs());
+
     it('should handle network error during webhook registration', async () => {
       mockFetch.mockRejectedValueOnce(new Error('Cannot reach Google'));
 

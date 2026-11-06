@@ -86,10 +86,14 @@
     {
       "id": "sso",
       "category": "Access Control",
-      "title": "Enterprise SSO & MFA",
-      "description": "Integrate with your existing identity provider via SAML 2.0 or OIDC. Multi-factor authentication is enforced for all accounts.",
+      "title": "Sign-in",
+      "description": "Sign in with email and password, or with Google. Enterprise single sign-on and multi-factor sign-in are planned.",
       "icon": "fingerprint",
-      "highlights": ["SAML 2.0 & OIDC", "Mandatory MFA", "Passwordless options"]
+      "highlights": [
+        "Email and Google sign-in",
+        "Single sign-on planned",
+        "Multi-factor sign-in planned"
+      ]
     },
     {
       "id": "rbac",

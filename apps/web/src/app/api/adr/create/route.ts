@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { refuseInProduction, requireOperator } from '@/lib/route-access';
 import { createADR } from '@/lib/adr/adr-service';
 
 export async function POST(request: NextRequest) {
+  const refused = refuseInProduction();
+  if (refused) return refused;
+  const denied = await requireOperator(request);
+  if (denied) return denied;
   try {
     const body = await request.json();
     const { title, technicalStory } = body;

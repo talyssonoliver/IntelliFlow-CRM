@@ -727,6 +727,17 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
     callbackUrl: string,
     expirationMinutes: number = 43200 // Default 30 days (max for Google)
   ): Promise<Result<WebhookRegistration, DomainError>> {
+    // The webhook route rejects any notification without this token, so a channel made
+    // without it could never deliver anything.
+    const channelToken = process.env.GOOGLE_CALENDAR_CHANNEL_TOKEN;
+    if (!channelToken) {
+      return Result.fail(
+        new CalendarSyncError(
+          'google',
+          'GOOGLE_CALENDAR_CHANNEL_TOKEN is not set, so no channel can be verified'
+        )
+      );
+    }
     try {
       const channelId = randomUUID();
       const expiration = new Date(Date.now() + expirationMinutes * 60 * 1000);
@@ -745,6 +756,8 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
             type: 'web_hook',
             address: callbackUrl,
             expiration: expiration.getTime().toString(),
+            // Google sends this back on every notification, and the webhook route compares it.
+            token: channelToken,
           }),
         }
       );

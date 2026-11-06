@@ -612,7 +612,8 @@ describe('LoginPage', () => {
     it('should have correct SEO metadata', () => {
       expect(metadata.title).toBe('Log In');
       expect(metadata.description).toContain('Aurora');
-      expect(metadata.description).toContain('SSO');
+      expect(metadata.description).toContain('email or Google');
+      expect(metadata.description).not.toMatch(/SSO|SAML/);
     });
 
     it('should have Open Graph metadata', () => {

@@ -14,6 +14,12 @@ const mockExistsSync = vi.hoisted(() => vi.fn());
 const mockReadFileSync = vi.hoisted(() => vi.fn());
 const mockNextResponseJson = vi.hoisted(() => vi.fn());
 
+vi.mock('@/lib/route-access', () => ({
+  requireOperator: vi.fn(async () => null),
+  requireSignedIn: vi.fn(async () => null),
+  refuseInProduction: vi.fn(() => null),
+}));
+
 vi.mock('next/server', () => ({
   NextRequest: vi.fn(),
   NextResponse: {

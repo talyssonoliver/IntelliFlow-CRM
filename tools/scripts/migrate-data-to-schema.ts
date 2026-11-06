@@ -19,6 +19,7 @@ import { glob } from 'glob';
 import {
   artifactHashOrNull,
   createFileHasher,
+  untrackedGeneratedPaths,
   fixArtifactHashes as fixArtifactHashesIn,
   fixFilesRead as fixFilesReadIn,
 } from './lib/evidence-hash.js';
@@ -43,6 +44,9 @@ const results: MigrationResult[] = [];
 
 // Real file hashes only: never hash a placeholder string (see lib/evidence-hash.ts).
 const hashFile = createFileHasher(REPO_ROOT);
+const UNTRACKED_GENERATED = untrackedGeneratedPaths(
+  readFileSync(join(REPO_ROOT, 'tools/generated-paths.yml'), 'utf8')
+);
 
 // ---------------------------------------------------------------------------
 // Attestation record migration helpers
@@ -89,7 +93,9 @@ function fixAttestationVerdict(data: Record<string, unknown>, result: MigrationR
 }
 
 function fixArtifactHashes(data: Record<string, unknown>, result: MigrationResult): boolean {
-  return fixArtifactHashesIn(data, result.changes, hashFile);
+  return fixArtifactHashesIn(data, result.changes, hashFile, (path) =>
+    UNTRACKED_GENERATED.has(path)
+  );
 }
 
 function fixDependenciesVerified(data: Record<string, unknown>, result: MigrationResult): boolean {

@@ -186,10 +186,12 @@ describe('Features Content Data', () => {
       expect(agents!.features.map((f) => f.title)).toContain('One approval queue');
     });
 
-    it('should say multi-factor sign-in is available, never enforced', () => {
+    it('should mark multi-factor sign-in and single sign-on as planned', () => {
       const secure = featuresData.categories.find((c) => c.id === 'connected-secure')!;
       const text = JSON.stringify(secure);
-      expect(text).toMatch(/multi-factor sign-in is available on every account/i);
+      expect(text).toMatch(/Multi-factor sign-in planned/);
+      expect(text).toMatch(/Single sign-on planned/);
+      expect(text).not.toMatch(/multi-factor sign-in is available/i);
       expect(text).not.toMatch(/enforced/i);
     });
   });

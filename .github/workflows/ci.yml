@@ -104,6 +104,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           pnpm-version: ${{ env.PNPM_VERSION }}
 
+      # Generated output needs a reader or a citation. No skip variable.
+      - name: Generated file registry
+        run: node scripts/check-generated-registry.mjs --base origin/main
+
+      # Generated output needs a reader or a citation. No skip variable.
+      - name: Generated file registry
+        run: node scripts/check-generated-registry.mjs --base origin/main
+
       # Empty SCOPE_MODE (detection failed) falls through to the full run.
       - name: Lint
         if: needs.changes.outputs.code != 'false'

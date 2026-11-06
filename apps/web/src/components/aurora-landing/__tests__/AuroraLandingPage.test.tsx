@@ -150,10 +150,12 @@ describe('AuroraLandingPage', () => {
     expect(text).not.toMatch(/intelliflow/i);
     // The TypeScript SDK is beta and API keys are not built yet.
     expect(container.querySelector('.dev.beta')).toHaveTextContent(/TypeScript SDK\s*Beta/i);
-    expect(container.querySelector('.dev.soon')).toHaveTextContent(/API keys\s*Coming soon/i);
+    expect(container.querySelector('.dev.soon:last-of-type')).toHaveTextContent(
+      /API keys\s*Coming soon/i
+    );
   });
 
-  it('names the ready integrations', () => {
+  it('names the integrations', () => {
     const { container } = render(<AuroraLandingPage />);
     const names = [...container.querySelectorAll('.logo span')].map((s) => s.textContent);
 

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireOperator } from '@/lib/route-access';
 import { getJob, cleanupOldJobs } from '../job-storage';
 
 export async function GET(request: NextRequest) {
+  const denied = await requireOperator(request);
+  if (denied) return denied;
   const { searchParams } = new URL(request.url);
   const jobId = searchParams.get('jobId');
 

@@ -99,6 +99,9 @@
   font-size: 18px;
   color: #12a8a4;
 }
+.aurora-site .aurora-features .afe-benefits .afe-planned {
+  color: #7b8291;
+}
 .aurora-site .aurora-features .afe-more {
   display: inline-flex;
   align-items: center;

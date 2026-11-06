@@ -54,7 +54,7 @@ describe('Auth Guides Integration', () => {
     expect(authItem!.icon).toBe('lock');
   });
 
-  it('integration-list OAuth and MFA items link to /docs/auth (no external: true)', async () => {
+  it('integration-list OAuth links to /docs/auth; MFA is a planned card, not a link', async () => {
     // Dynamically import integration-list data to verify href values
     const mod = await import('@/components/developer/integration-list');
     // Render the component and check link targets
@@ -67,8 +67,12 @@ describe('Auth Guides Integration', () => {
     // Should not have target="_blank" (internal link)
     expect(oauthLink).not.toHaveAttribute('target', '_blank');
 
-    // MFA link — should also point to /docs/auth
+    // MFA is planned, so its card is Coming Soon and is not a link.
     const allAuthLinks = container.querySelectorAll('a[href="/docs/auth"]');
-    expect(allAuthLinks.length).toBeGreaterThanOrEqual(2);
+    expect(allAuthLinks.length).toBe(1);
+    expect(allAuthLinks[0]).toHaveTextContent('OAuth (Google)');
+    expect(container.textContent).toMatch(
+      /Multi-factor sign-in with an authenticator app is planned/
+    );
   });
 });

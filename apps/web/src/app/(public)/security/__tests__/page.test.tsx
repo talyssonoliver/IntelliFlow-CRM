@@ -41,8 +41,12 @@ describe('SecurityPage (Aurora)', () => {
     expect(text).not.toMatch(
       /ISO 27001|SOC 2|GDPR compliant|certif|penetration|24\/7|zero.trust|AES|HSM|bug bounty|99\.9/i
     );
-    // MFA is available, never "enforced".
-    expect(text).toMatch(/multi-factor sign-in is available on every account/i);
+    // MFA and enterprise SSO are planned, never "available" or "enforced".
+    expect(text).toMatch(/Multi-factor sign-in is planned/);
+    expect(text).toMatch(
+      /Enterprise single sign-on through your organisation's own identity provider, and Microsoft sign-in, are planned/
+    );
+    expect(text).not.toMatch(/multi-factor sign-in is available/i);
     expect(text).not.toMatch(/enforced/i);
   });
 

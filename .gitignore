@@ -59,9 +59,36 @@ artifacts/coverage/**/*.js
 artifacts/coverage/**/*.png
 artifacts/coverage/**/
 !artifacts/coverage/
-!artifacts/coverage/*.json
-!artifacts/coverage/*.info
 !artifacts/coverage/lcov-report/
+# Each run writes these. Commit a before or after snapshot only when an attestation
+# cites it (force-add); see tools/generated-paths.yml.
+artifacts/coverage/*.json
+artifacts/coverage/*.info
+
+# Rewritten by pre-ship and read only from the run that wrote them
+artifacts/reports/a11y-route-reconcile.json
+artifacts/reports/plan-lint-report.json
+artifacts/reports/spec-tracker.json
+
+# Lighthouse: the gate reads JSON named in an attestation; HTML has no reader
+artifacts/lighthouse/**/*.html
+.lighthouseci/
+
+# Old one-off output with no reader. Every version stays in git history.
+artifacts/benchmarks/home-page-lighthouse/
+artifacts/benchmarks/lighthouse-pg146.json
+artifacts/lighthouse/lighthouse-home.report.json
+artifacts/lighthouse/localhost-email-*.report.json
+artifacts/lighthouse/pg-056-500-r2.json
+artifacts/lighthouse/pg-056-500-r3.json
+artifacts/lighthouse/pg-195-post-subset-maintenance-r?.json
+artifacts/reports/build-tab.png
+artifacts/reports/tracking-view.png
+artifacts/reports/code-scanning-alerts-all.json
+packages/domain/artifacts/test-failures/
+apps/web/eslint-sonar-output.json
+docs/company/product/feature-matrix.stash-version.md
+tools/scripts/generate-feature-matrix.stash-version.ps1
 
 # next.js
 /.next/

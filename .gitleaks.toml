@@ -80,8 +80,3 @@ paths = [
 description = "Vendored SonarQube rule corpus (rule metadata and UUID rule keys), generated third-party data, not credentials."
 targetRules = ["generic-api-key"]
 paths = ['''^sonar-small-rules\.json$''']
-
-[[allowlists]]
-description = "GitHub code-scanning API export: UUID alert keys and analysis fingerprints (hex digests), not credentials."
-targetRules = ["generic-api-key"]
-paths = ['''^artifacts/reports/code-scanning-alerts-all\.json$''']

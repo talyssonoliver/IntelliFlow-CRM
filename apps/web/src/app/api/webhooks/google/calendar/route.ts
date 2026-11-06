@@ -7,8 +7,20 @@
  * Always returns 200 OK to prevent Google retry storms.
  */
 
+import { timingSafeEqual } from 'node:crypto';
 import { getGoogleAdapter, getWebhookService } from './providers';
 import { isRateLimited, checkIpAllowlist } from '../../rate-limiter';
+
+/** Fails closed: with no configured token, no notification is accepted. */
+function isValidChannelToken(received: string | null, expected: string | undefined): boolean {
+  if (!received || !expected) return false;
+  const receivedBuffer = Buffer.from(received, 'utf8');
+  const expectedBuffer = Buffer.from(expected, 'utf8');
+  return (
+    receivedBuffer.length === expectedBuffer.length &&
+    timingSafeEqual(receivedBuffer, expectedBuffer)
+  );
+}
 
 export async function POST(request: Request): Promise<Response> {
   // Rate limiting (NF-002)
@@ -33,6 +45,16 @@ export async function POST(request: Request): Promise<Response> {
       hasResourceState: !!resourceState,
     });
     return Response.json({ received: true, processed: false, error: 'missing_headers' });
+  }
+
+  if (
+    !isValidChannelToken(
+      request.headers.get('x-goog-channel-token'),
+      process.env.GOOGLE_CALENDAR_CHANNEL_TOKEN
+    )
+  ) {
+    console.warn('[GoogleWebhook] security_event_invalid_channel_token', { channelId });
+    return Response.json({ received: true, processed: false, error: 'invalid_token' });
   }
 
   // Build headers map for adapter

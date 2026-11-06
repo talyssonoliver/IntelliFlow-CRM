@@ -158,6 +158,9 @@
   font-size: 18px;
   color: #12a8a4;
 }
+.aurora-site .aurora-pricing .ap-features .ap-planned {
+  color: #7b8291;
+}
 
 /* Comparison */
 .aurora-site .aurora-pricing .ap-table-card {

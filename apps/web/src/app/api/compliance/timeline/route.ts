@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { requireSignedIn } from '@/lib/route-access';
 import fs from 'node:fs';
 import path from 'node:path';
 import type { ComplianceEvent, ComplianceTimelineResponse } from '../types';
@@ -67,6 +68,8 @@ function getUpcomingEvents(events: ComplianceEvent[]): ComplianceEvent[] {
 }
 
 export async function GET(request: NextRequest) {
+  const denied = await requireSignedIn(request);
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);
     const month = searchParams.get('month');

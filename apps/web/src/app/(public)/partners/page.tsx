@@ -101,10 +101,10 @@ export default function PartnersPage() {
         <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-              Integration Partners
+              Planned Integrations
             </h2>
             <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Aurora integrates seamlessly with the tools your team already uses.
+              Tools we plan to connect. Your own mailbox can be connected through its mail settings.
             </p>
           </div>
 
@@ -140,7 +140,7 @@ export default function PartnersPage() {
               Integration Ecosystem
             </h2>
             <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              Connect Aurora with your existing tech stack across all categories.
+              The areas we plan to cover.
             </p>
           </div>
 
@@ -323,8 +323,7 @@ export default function PartnersPage() {
         <div className="container px-4 lg:px-6 mx-auto max-w-5xl text-center space-y-6 text-white">
           <h2 className="text-3xl lg:text-4xl font-bold">Ready to Partner with Aurora?</h2>
           <p className="text-lg text-white/90 max-w-2xl mx-auto">
-            Join hundreds of technology partners, resellers, and consultants building successful
-            businesses with our platform.
+            Talk to us about building on, selling or consulting with Aurora.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
