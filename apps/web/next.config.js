@@ -135,12 +135,10 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
-          // Content-Security-Policy is set per-request in apps/web/proxy.ts so
-          // it can include a unique nonce that Next.js stamps onto every inline
-          // <script> emitted by streaming SSR. A static CSP defined here would
-          // need either 'unsafe-inline' (defeats CSP) or it would block React's
-          // RSC flight payload chunks, runtime helpers, and Suspense boundary
-          // swap scripts — leaving streamed pages stuck on their fallback HTML.
+          // The Content-Security-Policy is sent report-only by src/proxy.ts
+          // (policy in src/lib/security/csp.ts), with hosts read from the
+          // environment at runtime. Enforcing it needs a nonce or hash plan for
+          // Next.js's inline scripts first, including on prerendered pages.
         ],
       },
       // PG-203 DSAR (spec sign-off D-AC-10): the confirm and download links carry a token in
