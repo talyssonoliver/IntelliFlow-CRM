@@ -42,7 +42,12 @@ function CodeBlock({ code, label }: Readonly<{ code: string; label?: string }>) 
 
 function StatusBadge({ status }: Readonly<{ status: 'available' | 'coming-soon' }>) {
   if (status === 'coming-soon') {
-    return <Badge variant="warning">Coming Soon</Badge>;
+    // One line, even beside a long title on a phone.
+    return (
+      <Badge variant="warning" className="shrink-0 whitespace-nowrap">
+        Coming Soon
+      </Badge>
+    );
   }
   return null;
 }
@@ -81,8 +86,8 @@ function OverviewTab() {
               <div>
                 <div className="font-medium text-foreground">OAuth 2.0</div>
                 <p className="text-sm text-muted-foreground">
-                  Single sign-on with Google Workspace and Microsoft Azure AD via PKCE authorization
-                  code flow.
+                  Sign in with a Google account, including Google Workspace, via the PKCE
+                  authorization code flow. Microsoft Azure AD is planned.
                 </p>
               </div>
             </div>
@@ -105,7 +110,7 @@ function OverviewTab() {
             </div>
           </Card>
 
-          <Card className="p-4">
+          <Card className="p-4 opacity-70">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
                 <span className="material-symbols-outlined text-xl text-white" aria-hidden="true">
@@ -113,9 +118,12 @@ function OverviewTab() {
                 </span>
               </div>
               <div>
-                <div className="font-medium text-foreground">Multi-Factor Authentication</div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-foreground">Multi-Factor Authentication</span>
+                  <StatusBadge status="coming-soon" />
+                </div>
                 <p className="text-sm text-muted-foreground">
-                  TOTP-based 2FA with backup codes. SMS and Email OTP coming soon.
+                  Planned: authenticator-app codes with backup codes, then SMS and email codes.
                 </p>
               </div>
             </div>
@@ -176,14 +184,17 @@ function OAuthTab() {
           <Card className="p-4">
             <div className="font-medium text-foreground mb-1">Google Workspace</div>
             <p className="text-sm text-muted-foreground">
-              SSO via Google OAuth 2.0. Supports organizational accounts with Google Workspace
-              domains.
+              Sign in via Google OAuth 2.0, with personal Google accounts or Google Workspace
+              accounts.
             </p>
           </Card>
           <Card className="p-4">
-            <div className="font-medium text-foreground mb-1">Microsoft Azure AD</div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-medium text-foreground">Microsoft Azure AD</span>
+              <StatusBadge status="coming-soon" />
+            </div>
             <p className="text-sm text-muted-foreground">
-              SSO via Microsoft identity platform. Supports Azure Active Directory tenants and
+              Planned: SSO via Microsoft identity platform, for Azure Active Directory tenants and
               Microsoft 365 accounts.
             </p>
           </Card>
@@ -353,13 +364,20 @@ Content-Type: application/json
 function MfaTab() {
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex items-center gap-2" role="note">
+        <StatusBadge status="coming-soon" />
+        <p className="text-sm text-muted-foreground">
+          Multi-factor sign-in is not available on accounts yet. This page describes the planned
+          design.
+        </p>
+      </div>
       <section aria-labelledby="mfa-totp">
         <h2 id="mfa-totp" className="text-lg font-semibold text-foreground mb-3">
           TOTP Setup
         </h2>
         <p className="text-muted-foreground mb-3">
-          Aurora supports TOTP (Time-based One-Time Password) per RFC 6238 with the following
-          parameters: SHA1 algorithm, 6 digits, 30-second period, ±1 window tolerance.
+          The planned design uses TOTP (Time-based One-Time Password) per RFC 6238 with the
+          following parameters: SHA1 algorithm, 6 digits, 30-second period, ±1 window tolerance.
         </p>
 
         <div className="space-y-3 mb-4">

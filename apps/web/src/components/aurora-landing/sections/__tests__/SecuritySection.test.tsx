@@ -15,9 +15,12 @@ vi.mock('next/link', () => ({
 import { SecuritySection } from '../SecuritySection';
 
 describe('SecuritySection', () => {
-  it('states MFA as available, never as protecting every account', () => {
+  it('marks multi-factor sign-in as planned, never as available', () => {
     render(<SecuritySection />);
-    expect(screen.getByText(/MFA is available on every account/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Planned\. Today you sign in with email or Google\./)
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/MFA is available/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/MFA protects every account/i)).not.toBeInTheDocument();
   });
 

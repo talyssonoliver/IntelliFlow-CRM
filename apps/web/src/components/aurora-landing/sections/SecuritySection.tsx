@@ -19,8 +19,7 @@ export function SecuritySection() {
           <h2>Enterprise security, on from day one.</h2>
           <p className="section-lede">
             No AI action goes out without a person&apos;s approval. Each workspace&apos;s data is
-            kept apart, multi-factor sign-in is available on every account, and every change is
-            logged.
+            kept apart, and every change is logged.
           </p>
           <Link href="/contact" className="btn btn-onDark">
             Request the compliance roadmap
@@ -40,7 +39,7 @@ export function SecuritySection() {
           <div className="control">
             <span className="material-symbols-outlined">verified_user</span>
             <b>Multi-factor sign-in</b>
-            <p>MFA is available on every account.</p>
+            <p>Planned. Today you sign in with email or Google.</p>
           </div>
           <div className="control">
             <span className="material-symbols-outlined">history</span>

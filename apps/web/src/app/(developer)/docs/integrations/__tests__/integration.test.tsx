@@ -24,35 +24,32 @@ describe('IntegrationsPage Integration', () => {
 
   it('available integrations rendered as working links with correct hrefs', () => {
     render(<IntegrationsPage />);
-    const inboundLink = screen.getByText('Inbound Webhooks').closest('a');
-    expect(inboundLink).toBeInTheDocument();
-    expect(inboundLink).toHaveAttribute('href', '/docs/webhooks');
-
-    const reactHooksLink = screen.getByText('React Hooks').closest('a');
-    expect(reactHooksLink).toBeInTheDocument();
-    expect(reactHooksLink).toHaveAttribute('href', '/docs/sdk');
+    const oauthLink = screen.getByText('OAuth (Google)').closest('a');
+    expect(oauthLink).toBeInTheDocument();
+    expect(oauthLink).toHaveAttribute('href', '/docs/auth');
   });
 
   it('Coming Soon integrations visible but not clickable (no <a> tag)', () => {
     render(<IntegrationsPage />);
-    const apiKeysText = screen.getByText('API Keys');
-    expect(apiKeysText).toBeInTheDocument();
-    expect(apiKeysText.closest('a')).toBeNull();
+    for (const name of ['API Keys', 'Inbound Webhooks', 'Outbound Webhooks', 'React Hooks']) {
+      const text = screen.getByText(name);
+      expect(text).toBeInTheDocument();
+      expect(text.closest('a')).toBeNull();
+    }
   });
 
-  it('CLI Tools is now available and rendered as a link', () => {
+  it('CLI Tools is marked coming soon until it is proved', () => {
     render(<IntegrationsPage />);
     const cliText = screen.getByText('CLI Tools');
     expect(cliText).toBeInTheDocument();
-    const cliLink = cliText.closest('a');
-    expect(cliLink).toBeInTheDocument();
-    expect(cliLink).toHaveAttribute('href', '/docs/cli');
+    expect(cliText.closest('a')).toBeNull();
   });
 
   it('status badges visible — "Beta" on TypeScript SDK, "Coming Soon" on API Keys', () => {
     render(<IntegrationsPage />);
     expect(screen.getAllByText('Beta').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByText('Coming Soon').length).toBe(1); // API Keys only
+    // API keys, webhooks, React hooks, the CLI and the connectors not yet built.
+    expect(screen.getAllByText('Coming Soon').length).toBe(11);
   });
 
   it('accessible structure: h1 heading, multiple h2s', () => {

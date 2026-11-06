@@ -23,7 +23,7 @@ export function ProofStrip() {
         </div>
         <div className="stat">
           <b>6</b>
-          <span>app connectors ready today, including Gmail, Slack and Stripe</span>
+          <span>app connectors in the works, with your own mailbox already available</span>
         </div>
         <div className="stat">
           <b>212</b>

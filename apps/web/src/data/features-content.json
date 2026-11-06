@@ -90,11 +90,11 @@
           "id": "inbox-calendar",
           "title": "Email and calendar",
           "icon": "mail",
-          "description": "Compose, reply and book meetings without leaving the record.",
+          "description": "Connect your mailbox to write and send email from the CRM, and book meetings on the record.",
           "benefits": [
-            "Gmail and Outlook",
+            "Your own mailbox",
             "Meetings on the record",
-            "No separate inbox tab"
+            "Sent from your own address"
           ],
           "learnMoreUrl": "/#platform"
         },
@@ -102,11 +102,11 @@
           "id": "workflow-automation",
           "title": "Workflow automation",
           "icon": "account_tree",
-          "description": "Build multi-step workflows, and extend the builder with your own node and action types.",
+          "description": "Planned: multi-step workflows with your own node and action types.",
           "benefits": [
-            "Multi-step workflows",
-            "Your own node types",
-            "Webhook-based actions"
+            "Multi-step workflows, planned",
+            "Your own node types, planned",
+            "Webhook actions, planned"
           ],
           "learnMoreUrl": "/#platform"
         }
@@ -116,18 +116,14 @@
       "id": "connected-secure",
       "name": "Connected and secure",
       "icon": "shield_lock",
-      "description": "Works with the tools you use, with protection on from day one.",
+      "description": "Connect your mailbox, with protection on from day one.",
       "features": [
         {
           "id": "connectors",
-          "title": "Six connectors",
+          "title": "Connectors",
           "icon": "hub",
-          "description": "Gmail, Outlook, Slack, Microsoft Teams, Stripe and PayPal, plus Google and Microsoft sign-in.",
-          "benefits": [
-            "Email and calendar",
-            "Chat and notifications",
-            "Payments"
-          ],
+          "description": "Your own mailbox and Google sign-in. Microsoft sign-in, Slack, Microsoft Teams, Stripe and PayPal are planned.",
+          "benefits": ["Your own mailbox", "Google sign-in", "More planned"],
           "learnMoreUrl": "/#platform"
         },
         {
@@ -146,11 +142,11 @@
           "id": "isolation-mfa",
           "title": "Isolation and sign-in",
           "icon": "lock",
-          "description": "Each workspace's data is kept apart, and multi-factor sign-in is available on every account.",
+          "description": "Each workspace's data is kept apart, and you sign in with email or Google. Multi-factor sign-in and enterprise single sign-on are planned.",
           "benefits": [
             "Workspace isolation",
-            "Multi-factor sign-in available",
-            "Enterprise single sign-on"
+            "Multi-factor sign-in planned",
+            "Single sign-on planned"
           ],
           "learnMoreUrl": "/security"
         },
@@ -158,11 +154,11 @@
           "id": "developers",
           "title": "Build on Aurora",
           "icon": "code",
-          "description": "Inbound and outbound webhooks, React hooks and a CLI. The TypeScript SDK is in beta and API keys are coming soon.",
+          "description": "The TypeScript SDK is in beta and API keys are coming soon. Webhooks are planned.",
           "benefits": [
-            "Webhooks",
-            "React hooks and a CLI",
-            "TypeScript SDK in beta"
+            "TypeScript SDK in beta",
+            "API keys coming soon",
+            "Webhooks planned"
           ],
           "learnMoreUrl": "/#platform"
         }

@@ -3,6 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import pricingData from '@/data/pricing-data.json';
+import { featureIcon, isPlannedFeature } from '@/lib/marketing/feature-status';
 import './pricing.css';
 
 type Billing = 'monthly' | 'annual';
@@ -115,8 +116,11 @@ export default function PricingPage() {
                 <ul className="ap-features">
                   {tier.features.map((feature) => (
                     <li key={feature}>
-                      <span className="material-symbols-outlined" aria-hidden="true">
-                        check_circle
+                      <span
+                        className={`material-symbols-outlined${isPlannedFeature(feature) ? ' ap-planned' : ''}`}
+                        aria-hidden="true"
+                      >
+                        {featureIcon(feature)}
                       </span>
                       {feature}
                     </li>
