@@ -79,6 +79,27 @@ describe('guards', () => {
     expect(db.$executeRaw).not.toHaveBeenCalled();
   });
 
+  it('endAuthSession: an upper-case spelling of the current session id is still the current one', async () => {
+    await expect(endAuthSession(db as never, USER, CURRENT.toUpperCase(), CURRENT)).resolves.toBe(
+      'CURRENT'
+    );
+    await expect(endAuthSession(db as never, USER, CURRENT, CURRENT.toUpperCase())).resolves.toBe(
+      'CURRENT'
+    );
+    expect(db.$executeRaw).not.toHaveBeenCalled();
+  });
+
+  it('endAuthSession: the DELETE itself excludes the current session', async () => {
+    db.$executeRaw.mockResolvedValue(1);
+    await expect(endAuthSession(db as never, USER, OTHER, CURRENT)).resolves.toBe('ENDED');
+    const [strings, ...values] = db.$executeRaw.mock.calls[0] as [
+      TemplateStringsArray,
+      ...unknown[],
+    ];
+    expect(strings.join('?')).toContain('id <> ?::uuid');
+    expect(values).toEqual([OTHER, USER, CURRENT]);
+  });
+
   it('endAuthSession: a non-UUID id is not found and is not queried', async () => {
     await expect(endAuthSession(db as never, USER, 'session-1', CURRENT)).resolves.toBe(
       'NOT_FOUND'

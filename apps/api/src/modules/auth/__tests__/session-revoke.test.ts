@@ -122,7 +122,7 @@ describe('auth.revokeSession (Supabase Auth sessions)', () => {
     expect(sql).toContain('DELETE FROM auth.sessions');
     expect(sql).toContain('id = ?::uuid');
     expect(sql).toContain('user_id = ?::uuid');
-    expect(values).toEqual([OTHER_DEVICE, ME]);
+    expect(values).toEqual([OTHER_DEVICE, ME, CURRENT_SESSION]);
     expect(audit.log).toHaveBeenCalledWith(
       expect.objectContaining({
         eventType: 'SessionRevoked',
@@ -139,8 +139,15 @@ describe('auth.revokeSession (Supabase Auth sessions)', () => {
       callerOnSession().revokeSession({ sessionId: OTHER_DEVICE })
     ).rejects.toMatchObject({ code: 'NOT_FOUND', message: 'Session not found' });
 
-    expect(rawCall(prismaMock.$executeRaw).values).toEqual([OTHER_DEVICE, ME]);
+    expect(rawCall(prismaMock.$executeRaw).values).toEqual([OTHER_DEVICE, ME, CURRENT_SESSION]);
     expect(audit.log).not.toHaveBeenCalled();
+  });
+
+  it('never ends the session making the request, even spelled in upper case', async () => {
+    await expect(
+      callerOnSession().revokeSession({ sessionId: CURRENT_SESSION.toUpperCase() })
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+    expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
   });
 
   it('never ends the session making the request', async () => {

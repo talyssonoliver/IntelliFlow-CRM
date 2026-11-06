@@ -111,12 +111,23 @@ export async function endAuthSession(
   sessionId: string,
   currentSessionId: string | null | undefined
 ): Promise<EndSessionResult> {
-  if (sessionId === currentSessionId) return 'CURRENT';
+  // UUIDs compare case-insensitively (Postgres does), so the guard does too: an upper-case
+  // spelling of the current id must not slip past it.
+  if (currentSessionId && sessionId.toLowerCase() === currentSessionId.toLowerCase()) {
+    return 'CURRENT';
+  }
   if (!isUuid(userId) || !isUuid(sessionId)) return 'NOT_FOUND';
-  const deleted = await db.$executeRaw`
-    DELETE FROM auth.sessions
-    WHERE id = ${sessionId}::uuid
-      AND user_id = ${userId}::uuid`;
+  // The DELETE also excludes the current session itself, as a second layer.
+  const deleted = isUuid(currentSessionId)
+    ? await db.$executeRaw`
+        DELETE FROM auth.sessions
+        WHERE id = ${sessionId}::uuid
+          AND user_id = ${userId}::uuid
+          AND id <> ${currentSessionId}::uuid`
+    : await db.$executeRaw`
+        DELETE FROM auth.sessions
+        WHERE id = ${sessionId}::uuid
+          AND user_id = ${userId}::uuid`;
   return deleted > 0 ? 'ENDED' : 'NOT_FOUND';
 }
 
