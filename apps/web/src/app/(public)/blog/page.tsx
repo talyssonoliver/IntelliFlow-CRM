@@ -198,36 +198,7 @@ export default function BlogIndexPage() {
           </section>
         </>
       )}
-
-      {/* Newsletter CTA */}
-      <section className="py-16 bg-gradient-to-r from-[#2a78f6] to-[#1f63d4]">
-        <div className="container px-4 lg:px-6 mx-auto max-w-4xl text-center">
-          <h2 className="text-2xl lg:text-3xl font-bold text-white mb-4">
-            Stay ahead with Aurora insights
-          </h2>
-          <p className="text-white/90 mb-6">
-            Get the latest on AI-powered sales, automation best practices, and product updates
-            delivered to your inbox.
-          </p>
-          <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <label htmlFor="newsletter-email" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="newsletter-email"
-              type="email"
-              placeholder="Enter your email"
-              className="flex-1 px-4 py-3 rounded-lg text-slate-900 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-white"
-            />
-            <button
-              type="submit"
-              className="px-6 py-3 bg-white text-[#2a78f6] font-semibold rounded-lg hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#2a78f6]"
-            >
-              Subscribe
-            </button>
-          </form>
-        </div>
-      </section>
+      {/* No newsletter signup: nothing receives a submitted address yet. */}
     </div>
   );
 }

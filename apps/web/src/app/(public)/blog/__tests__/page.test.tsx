@@ -26,6 +26,13 @@ describe('Blog index page', () => {
     expect(container.querySelector('a[href^="/blog/"]')).toBeNull();
   });
 
+  it('offers no newsletter signup, since nothing receives the address', () => {
+    const { container } = render(<BlogIndexPage />);
+    expect(container.querySelector('form')).toBeNull();
+    expect(container.querySelector('input[type="email"]')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Subscribe' })).toBeNull();
+  });
+
   it('names no invented authors or customer results', () => {
     const { container } = render(<BlogIndexPage />);
     const text = container.textContent ?? '';

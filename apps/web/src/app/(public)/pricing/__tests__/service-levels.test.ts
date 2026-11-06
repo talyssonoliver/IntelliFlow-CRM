@@ -43,7 +43,9 @@ describe('pricing service levels', () => {
   it('marks regions and deployments that do not run yet as planned', () => {
     const features = pricingData.tiers.flatMap((t) => t.features);
     for (const f of features.filter((x) =>
-      /region|residency|on-premise|dedicated infrastructure|white-label|model training/i.test(x)
+      /region|residency|on-premise|dedicated infrastructure|white-label|model training|API access|explainability dashboard/i.test(
+        x
+      )
     )) {
       expect(f, f).toMatch(/\(planned\)/);
     }
