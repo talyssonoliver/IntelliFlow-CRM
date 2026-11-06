@@ -7,7 +7,12 @@ import './integrations-section.css';
  * (see product-truth.md §3.1 / §6). */
 const CONNECTORS: ReadonlyArray<{ label: string; logo: string; status: string }> = [
   { label: 'Gmail', logo: '/brand/aurora/logos/gmail.svg', status: 'Mail settings' },
-  { label: 'Outlook', logo: '/brand/aurora/logos/microsoftoutlook.svg', status: 'Mail settings' },
+  // Work mailboxes only: personal Outlook, Hotmail and Live addresses need Microsoft sign-in.
+  {
+    label: 'Microsoft 365',
+    logo: '/brand/aurora/logos/microsoftoutlook.svg',
+    status: 'Mail settings',
+  },
   { label: 'Slack', logo: '/brand/aurora/logos/slack.svg', status: 'Planned' },
   { label: 'Microsoft Teams', logo: '/brand/aurora/logos/microsoftteams.svg', status: 'Planned' },
   { label: 'Stripe', logo: '/brand/aurora/logos/stripe.svg', status: 'Planned' },

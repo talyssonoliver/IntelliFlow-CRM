@@ -16,7 +16,7 @@ describe('IntegrationsSection', () => {
     expect(names).toEqual(
       expect.arrayContaining([
         'Gmail',
-        'Outlook',
+        'Microsoft 365',
         'Slack',
         'Microsoft Teams',
         'Stripe',

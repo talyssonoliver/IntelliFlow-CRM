@@ -130,8 +130,8 @@
       },
       {
         "id": "outlook",
-        "title": "Outlook",
-        "description": "Connect an Outlook mailbox through its mail server settings",
+        "title": "Outlook (Microsoft 365)",
+        "description": "Connect a Microsoft 365 work mailbox through its mail server settings. Personal Outlook, Hotmail and Live addresses are planned",
         "href": "https://intelliflow-crm.dev/docs/connectors/outlook",
         "status": "available",
         "external": true
