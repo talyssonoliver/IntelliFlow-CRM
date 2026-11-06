@@ -16,7 +16,7 @@ describe('IntegrationsSection', () => {
     expect(names).toEqual(
       expect.arrayContaining([
         'Gmail',
-        'Microsoft 365',
+        'Outlook',
         'Slack',
         'Microsoft Teams',
         'Stripe',
@@ -26,6 +26,14 @@ describe('IntegrationsSection', () => {
       ])
     );
     expect(container.querySelectorAll('.logo').length).toBe(8);
+  });
+
+  it('says only work Outlook mailboxes connect, since personal ones need Microsoft sign-in', () => {
+    const { container } = render(<IntegrationsSection />);
+    const outlook = [...container.querySelectorAll('.logo')].find((c) =>
+      c.textContent?.includes('Outlook')
+    );
+    expect(outlook?.querySelector('.wire-status')).toHaveTextContent('Work mail');
   });
 
   it('never shows SAP as a ready or available connector', () => {

@@ -160,14 +160,7 @@ describe('AuroraLandingPage', () => {
     const names = [...container.querySelectorAll('.logo span')].map((s) => s.textContent);
 
     expect(names).toEqual(
-      expect.arrayContaining([
-        'Gmail',
-        'Microsoft 365',
-        'Slack',
-        'Microsoft Teams',
-        'Stripe',
-        'PayPal',
-      ])
+      expect.arrayContaining(['Gmail', 'Outlook', 'Slack', 'Microsoft Teams', 'Stripe', 'PayPal'])
     );
   });
 
