@@ -47,6 +47,15 @@ describe('guards', () => {
     expect(db.$queryRaw).not.toHaveBeenCalled();
   });
 
+  it('listAuthSessions: reads display columns only, with refreshed_at as UTC and ip as text', async () => {
+    await listAuthSessions(db as never, USER, null);
+    const [strings] = db.$queryRaw.mock.calls[0] as [TemplateStringsArray];
+    const sql = strings.join('?');
+    expect(sql).toContain("refreshed_at AT TIME ZONE 'UTC'");
+    expect(sql).toContain('host(ip)');
+    expect(sql).not.toMatch(/token|hmac|SELECT \*/i);
+  });
+
   it('listAuthSessions: last activity is the latest of created, updated and refreshed', async () => {
     const created = new Date('2026-11-01T00:00:00Z');
     const refreshed = new Date('2026-11-05T00:00:00Z');

@@ -70,8 +70,18 @@ export async function listAuthSessions(
   currentSessionId: string | null | undefined
 ): Promise<AuthSession[]> {
   if (!isUuid(userId)) return [];
+  // Only display columns are read: never a token column. `refreshed_at` is a timestamp
+  // without time zone that GoTrue writes in UTC, so it is converted to timestamptz here;
+  // `ip` is inet, returned as text (host() drops the /32 mask).
   const rows = await db.$queryRaw<AuthSessionRow[]>`
-    SELECT id::text AS id, created_at, updated_at, refreshed_at, user_agent, host(ip) AS ip, not_after
+    SELECT
+      id::text AS id,
+      created_at,
+      updated_at,
+      (refreshed_at AT TIME ZONE 'UTC') AS refreshed_at,
+      user_agent,
+      host(ip) AS ip,
+      not_after
     FROM auth.sessions
     WHERE user_id = ${userId}::uuid
       AND (not_after IS NULL OR not_after > now())`;
