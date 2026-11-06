@@ -505,17 +505,44 @@ export async function resetPasswordForEmail(
 }
 
 /**
- * Update a user's password using their access token
- * Creates a scoped Supabase client with the user's token
- * IFC-120: Supabase native password reset flow
+ * Update a user's password as that user, with their own access token (IFC-120 reset flow).
+ *
+ * Calls GoTrue's `PUT /auth/v1/user` directly. `auth.updateUser()` on a client that only has a
+ * global Authorization header does not work: it reads the session from the client's own storage,
+ * finds none, and fails with AuthSessionMissingError before sending any request. Acting as the
+ * user (not through the admin API) also keeps the session that made the call.
  */
 export async function updateUserPassword(
   accessToken: string,
   password: string
 ): Promise<{ error: Error | null }> {
-  const scopedClient = createAuthenticatedClient(accessToken);
-  const { error } = await scopedClient.auth.updateUser({ password });
-  return { error };
+  try {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      method: 'PUT',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ password }),
+    });
+    if (res.ok) return { error: null };
+    const body = (await res.json().catch(() => ({}))) as {
+      msg?: string;
+      message?: string;
+      error_description?: string;
+    };
+    return {
+      error: new Error(
+        body.msg ??
+          body.message ??
+          body.error_description ??
+          `Password update failed (${res.status})`
+      ),
+    };
+  } catch (err) {
+    return { error: err instanceof Error ? err : new Error('Password update failed') };
+  }
 }
 
 // ============================================
