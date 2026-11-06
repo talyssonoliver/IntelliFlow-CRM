@@ -93,7 +93,7 @@
     "enterprise": {
       "slug": "enterprise",
       "title": "Aurora for larger teams",
-      "description": "Human approval on every AI action, workspace isolation, an audit log and enterprise single sign-on, on every plan.",
+      "description": "Human approval on every AI action, workspace isolation and an audit log, on every plan. Enterprise single sign-on is planned.",
       "conversionGoal": "enterprise_demo",
       "sections": [
         {
@@ -133,8 +133,8 @@
             },
             {
               "icon": "key",
-              "title": "Single sign-on",
-              "description": "Google or your own identity provider, and multi-factor sign-in available on every account."
+              "title": "Sign-in",
+              "description": "Email or Google today. Your own identity provider and multi-factor sign-in are planned."
             }
           ],
           "columns": 4

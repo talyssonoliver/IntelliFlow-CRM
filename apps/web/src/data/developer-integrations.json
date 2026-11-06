@@ -62,7 +62,7 @@
       {
         "id": "oauth",
         "title": "OAuth (Google)",
-        "description": "Single sign-on with Google Workspace. Microsoft Azure AD is planned",
+        "description": "Sign in with a Google account, including Google Workspace. Microsoft Azure AD is planned",
         "href": "/docs/auth",
         "status": "available"
       },
@@ -83,9 +83,9 @@
       {
         "id": "mfa",
         "title": "Multi-Factor Authentication",
-        "description": "TOTP-based two-factor authentication for enhanced account security",
+        "description": "Multi-factor sign-in with an authenticator app is planned",
         "href": "/docs/auth",
-        "status": "available"
+        "status": "coming-soon"
       }
     ]
   },

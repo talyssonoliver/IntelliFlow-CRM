@@ -44,12 +44,12 @@ export const CONTROLS: ReadonlyArray<{
       {
         icon: 'phonelink_lock',
         title: 'Multi-factor sign-in',
-        body: 'Multi-factor sign-in is available on every account.',
+        body: 'Multi-factor sign-in is planned. Today you sign in with your email and password, or with Google.',
       },
       {
         icon: 'key',
         title: 'Single sign-on',
-        body: "Sign in with Google, or with your organisation's own identity provider through enterprise single sign-on. Microsoft sign-in is planned.",
+        body: "Sign in with Google. Enterprise single sign-on through your organisation's own identity provider, and Microsoft sign-in, are planned.",
       },
       {
         icon: 'group',

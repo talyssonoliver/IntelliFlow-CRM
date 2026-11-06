@@ -142,11 +142,11 @@
           "id": "isolation-mfa",
           "title": "Isolation and sign-in",
           "icon": "lock",
-          "description": "Each workspace's data is kept apart, and multi-factor sign-in is available on every account.",
+          "description": "Each workspace's data is kept apart, and you sign in with email or Google. Multi-factor sign-in and enterprise single sign-on are planned.",
           "benefits": [
             "Workspace isolation",
-            "Multi-factor sign-in available",
-            "Enterprise single sign-on"
+            "Multi-factor sign-in planned",
+            "Single sign-on planned"
           ],
           "learnMoreUrl": "/security"
         },

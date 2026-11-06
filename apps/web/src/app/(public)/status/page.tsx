@@ -28,7 +28,7 @@ export const metadata: Metadata = {
 const PENDING: ReadonlyArray<{ name: string; detail: string }> = [
   { name: 'API', detail: 'The CRM data and actions behind the app' },
   { name: 'AI agents', detail: 'Lead scoring, drafts and the approval queue' },
-  { name: 'Sign-in', detail: 'Email, Google and single sign-on' },
+  { name: 'Sign-in', detail: 'Email and Google' },
 ];
 
 export default function StatusPage() {

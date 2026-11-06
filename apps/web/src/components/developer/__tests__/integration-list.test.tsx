@@ -54,7 +54,7 @@ describe('IntegrationList', () => {
     const betaBadges = screen.getAllByText('Beta');
     expect(betaBadges.length).toBeGreaterThanOrEqual(1);
     const comingSoonBadges = screen.getAllByText('Coming Soon');
-    expect(comingSoonBadges.length).toBe(10); // Every item not yet proved to work
+    expect(comingSoonBadges.length).toBe(11); // Every item not yet proved to work
   });
 
   it('icons have aria-hidden="true" attribute', () => {
@@ -87,7 +87,7 @@ describe('IntegrationList', () => {
   it('has aria-disabled="true" on Coming Soon card containers', () => {
     render(<IntegrationList />);
     const disabledCards = document.querySelectorAll('[aria-disabled="true"]');
-    expect(disabledCards.length).toBe(10); // Every item not yet proved to work
+    expect(disabledCards.length).toBe(11); // Every item not yet proved to work
   });
 
   it('external links have target="_blank" and rel="noopener noreferrer"', () => {

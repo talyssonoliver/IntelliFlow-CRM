@@ -49,7 +49,7 @@ describe('IntegrationsPage Integration', () => {
     render(<IntegrationsPage />);
     expect(screen.getAllByText('Beta').length).toBeGreaterThanOrEqual(1);
     // API keys, webhooks, React hooks, the CLI and the connectors not yet built.
-    expect(screen.getAllByText('Coming Soon').length).toBe(10);
+    expect(screen.getAllByText('Coming Soon').length).toBe(11);
   });
 
   it('accessible structure: h1 heading, multiple h2s', () => {

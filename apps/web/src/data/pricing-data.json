@@ -60,7 +60,7 @@
         "Unlimited AI predictions",
         "Custom AI model training",
         "Multi-region deployment",
-        "SSO & advanced security",
+        "Single sign-on (planned)",
         "Dedicated account manager",
         "Unlimited data retention",
         "White-label options",
@@ -238,17 +238,17 @@
         },
         {
           "name": "MFA",
-          "starter": true,
-          "professional": true,
-          "enterprise": true,
-          "custom": true
+          "starter": "Planned",
+          "professional": "Planned",
+          "enterprise": "Planned",
+          "custom": "Planned"
         },
         {
           "name": "SSO (Single Sign-On)",
           "starter": false,
           "professional": false,
-          "enterprise": true,
-          "custom": true
+          "enterprise": "Planned",
+          "custom": "Planned"
         },
         {
           "name": "Audit Logs",

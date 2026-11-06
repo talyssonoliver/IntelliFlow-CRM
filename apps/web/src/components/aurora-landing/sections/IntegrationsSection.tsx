@@ -30,7 +30,7 @@ const DEV_CHIPS: ReadonlyArray<{
   { label: 'React hooks', logo: '/brand/aurora/logos/react.svg', status: 'planned' },
   { label: 'CLI', icon: 'terminal', status: 'planned' },
   { label: 'JWT', logo: '/brand/aurora/logos/jsonwebtokens.svg' },
-  { label: 'MFA', icon: 'verified_user' },
+  { label: 'MFA', icon: 'verified_user', status: 'planned' },
   { label: 'TypeScript SDK', logo: '/brand/aurora/logos/typescript.svg', status: 'beta' },
   { label: 'API keys', icon: 'vpn_key', status: 'soon' },
 ];

@@ -105,7 +105,7 @@ describe('Contact Page', () => {
         screen.getByText(/your own mailbox through its mail server settings/)
       ).toBeInTheDocument();
       expect(
-        screen.getByText(/multi-factor sign-in is available on every account/)
+        screen.getByText(/Multi-factor sign-in and enterprise single sign-on are planned/)
       ).toBeInTheDocument();
     });
 
