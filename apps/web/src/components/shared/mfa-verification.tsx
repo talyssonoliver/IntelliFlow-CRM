@@ -19,6 +19,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@intelliflow/ui';
 import { MfaChallenge, type MfaMethod } from '@/components/auth/mfa-challenge';
 import { trpc } from '@/lib/trpc';
+import { safeRedirectPath } from '@/lib/auth/safe-redirect';
 import { sanitizeCode, isValidTotpCode, isValidBackupCode } from '@/lib/shared/code-validator';
 
 // ============================================
@@ -128,7 +129,10 @@ export function MfaVerification({
 
   // Get challenge ID from props or URL
   const challengeId = propChallengeId || searchParams.get('challenge') || undefined;
-  const urlRedirect = searchParams.get('redirect') || redirectUrl;
+  // Where to go after verifying. The URL value is untrusted, so only a page on
+  // this site is used; otherwise the caller's redirectUrl, checked the same way.
+  const urlRedirect =
+    safeRedirectPath(searchParams.get('redirect')) ?? safeRedirectPath(redirectUrl) ?? undefined;
 
   // State
   const [error, setError] = useState<string | null>(null);

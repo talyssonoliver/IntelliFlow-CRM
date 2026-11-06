@@ -24,6 +24,7 @@ import { AuthBackground } from '@/components/shared/auth-background';
 import { OAuthCallback } from '@/components/shared/oauth-callback';
 import { useRedirectIfAuthenticated } from '@/lib/auth/AuthContext';
 import { safeNextPath } from '@/lib/shared/safe-next-path';
+import { clearPostLoginRedirect, readPostLoginRedirect } from '@/lib/auth/safe-redirect';
 
 // ============================================
 // Loading Fallback
@@ -62,15 +63,20 @@ function SSOCallbackFallback() {
 // ============================================
 
 function SSOCallbackContent() {
-  // Bounce already-authenticated users to home
-  useRedirectIfAuthenticated('/');
+  // The page the visitor was trying to reach before Google sign-in, kept by the
+  // login page; home when there is none.
+  const [target] = useState(() => readPostLoginRedirect() ?? '/');
+
+  // Bounce already-authenticated users to that page
+  useRedirectIfAuthenticated(target);
 
   // Hard navigation on success — prevents Back button replaying callback with used PKCE code
   const handleSuccess = () => {
-    globalThis.location.href = '/';
+    clearPostLoginRedirect();
+    globalThis.location.href = target;
   };
 
-  return <OAuthCallback onSuccess={handleSuccess} redirectUrl="/" />;
+  return <OAuthCallback onSuccess={handleSuccess} redirectUrl={target} />;
 }
 
 /**

@@ -95,6 +95,27 @@ describe('SSOCallbackPage', () => {
     expect(window.location.href).toBe('/');
   });
 
+  it('T-03b: returns to the page kept before Google sign-in, then forgets it', () => {
+    sessionStorage.setItem('post_login_redirect', '/deals/abc123?tab=notes');
+    render(<SSOCallbackPage />);
+
+    const call = mockOAuthCallbackProps.mock.calls[0][0];
+    expect(call.redirectUrl).toBe('/deals/abc123?tab=notes');
+    expect(mockRedirectIfAuthenticated).toHaveBeenCalledWith('/deals/abc123?tab=notes');
+
+    call.onSuccess();
+    expect(window.location.href).toBe('/deals/abc123?tab=notes');
+    expect(sessionStorage.getItem('post_login_redirect')).toBeNull();
+  });
+
+  it('T-03c: ignores a kept value that is not a page on this site', () => {
+    sessionStorage.setItem('post_login_redirect', 'https://evil.example.invalid');
+    render(<SSOCallbackPage />);
+
+    expect(mockOAuthCallbackProps.mock.calls[0][0].redirectUrl).toBe('/');
+    sessionStorage.clear();
+  });
+
   // ============================================
   // Layout Tests (T-04 through T-06)
   // ============================================

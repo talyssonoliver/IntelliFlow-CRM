@@ -1,305 +1,147 @@
 /**
- * Tests for apps/web/proxy.ts (root proxy)
- * Covers: proxy function, matchesPattern, proxyConfig, role-based access
+ * @vitest-environment node
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+/**
+ * Tests for src/proxy.ts: the sign-in redirect, the report-only CSP and the
+ * request id. Runs the real next/server request and response classes.
+ */
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { NextRequest } from 'next/server';
+import { proxy, config, CSP_REPORT_ONLY_HEADER, __resetCspCacheForTest } from '../proxy';
 
-const mockDecrypt = vi.fn();
-vi.mock('@/lib/session', () => ({
-  decrypt: (...a: any[]) => mockDecrypt(...a),
-  PUBLIC_ROUTES: ['/', '/login', '/signup', '/forgot-password'],
-  PROTECTED_ROUTES: {
-    '/dashboard': ['USER', 'MANAGER', 'ADMIN'],
-    '/admin': ['ADMIN'],
-    '/analytics': ['MANAGER', 'ADMIN'],
-  } as Record<string, string[]>,
-  hasRole: (s: any, r: string[]) => (s ? r.includes(s.role) : false),
-}));
-
-const mockCookiesGet = vi.fn();
-vi.mock('next/headers', () => ({
-  cookies: () => Promise.resolve({ get: (...a: any[]) => mockCookiesGet(...a) }),
-}));
-
-const mockRedirect = vi.fn().mockImplementation((url: any) => ({
-  type: 'redirect',
-  url: url.toString(),
-  headers: new Map(),
-  cookies: { delete: vi.fn() },
-}));
-const mockNextFn = vi.fn().mockImplementation(() => ({
-  type: 'next',
-  headers: { set: vi.fn() },
-  cookies: { delete: vi.fn() },
-}));
-
-vi.mock('next/server', () => ({
-  NextRequest: class {},
-  NextResponse: {
-    redirect: (...a: any[]) => mockRedirect(...a),
-    next: (...a: any[]) => mockNextFn(...a),
-  },
-}));
-
-import { createHash } from 'node:crypto';
-import { proxy, proxyConfig } from '../../proxy';
-import { FONTS_READY_SCRIPT } from '@/lib/fonts-ready';
-
-function createTestJwt(exp: number): string {
-  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const payload = btoa(JSON.stringify({ exp }));
-  return `${header}.${payload}.${btoa('sig')}`;
+function tokenExpiringIn(seconds: number): string {
+  const encode = (value: object) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  return [
+    encode({ alg: 'HS256', typ: 'JWT' }),
+    encode({ exp: Math.floor(Date.now() / 1000) + seconds }),
+    'signature',
+  ].join('.');
 }
 
-function mkReq(
-  path: string,
-  opts: { accessToken?: string; session?: string; searchParams?: Record<string, string> } = {}
-) {
-  const url = new URL(`http://localhost:3000${path}`);
-  if (opts.searchParams)
-    Object.entries(opts.searchParams).forEach(([k, v]) => url.searchParams.set(k, v));
-  // Configure the next/headers cookies mock to match this request
-  mockCookiesGet.mockImplementation((n: string) => {
-    if (n === 'accessToken' && opts.accessToken) return { value: opts.accessToken };
-    if (n === 'session' && opts.session) return { value: opts.session };
-    return undefined;
-  });
-  return {
-    nextUrl: { pathname: path, searchParams: url.searchParams, href: url.href },
-    url: url.href,
-    cookies: {
-      get: (n: string) => {
-        if (n === 'accessToken' && opts.accessToken) return { value: opts.accessToken };
-        if (n === 'session' && opts.session) return { value: opts.session };
-        return undefined;
-      },
-    },
-  } as any;
+function request(path: string, opts: { token?: string; requestId?: string } = {}): NextRequest {
+  const headers = new Headers();
+  if (opts.token) headers.set('cookie', `accessToken=${opts.token}`);
+  if (opts.requestId) headers.set('x-request-id', opts.requestId);
+  return new NextRequest(new URL(path, 'http://localhost:3000'), { headers });
 }
 
-describe('root proxy.ts', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.spyOn(console, 'log').mockImplementation(() => {});
-    mockDecrypt.mockResolvedValue(null);
-    mockRedirect.mockImplementation((url: any) => ({
-      type: 'redirect',
-      url: url.toString(),
-      headers: new Map(),
-      cookies: { delete: vi.fn() },
-    }));
-    mockNextFn.mockImplementation(() => ({
-      type: 'next',
-      headers: { set: vi.fn() },
-      cookies: { delete: vi.fn() },
-    }));
+const savedEnv = { ...process.env };
+
+beforeEach(() => {
+  __resetCspCacheForTest();
+});
+
+afterEach(() => {
+  process.env = { ...savedEnv };
+  __resetCspCacheForTest();
+});
+
+describe('proxy: signed-out visits to app pages', () => {
+  it('sends a deep link to sign-in and keeps the path and query to come back to', () => {
+    const res = proxy(request('/deals/abc123?tab=notes'));
+
+    expect(res.status).toBe(307);
+    const location = new URL(res.headers.get('location')!);
+    expect(location.pathname).toBe('/login');
+    expect(location.searchParams.get('redirect')).toBe('/deals/abc123?tab=notes');
   });
 
-  describe('static bypass', () => {
-    it('passes /_next', async () => {
-      await proxy(mkReq('/_next/static/c.js'));
-      expect(mockNextFn).toHaveBeenCalled();
-    });
-    it('passes /api', async () => {
-      await proxy(mkReq('/api/trpc'));
-      expect(mockNextFn).toHaveBeenCalled();
-    });
-    it('passes files with extension', async () => {
-      await proxy(mkReq('/favicon.ico'));
-      expect(mockNextFn).toHaveBeenCalled();
-    });
+  it.each(['/dashboard', '/leads/new', '/settings/profile', '/analytics'])(
+    'redirects %s',
+    (path) => {
+      expect(proxy(request(path)).status).toBe(307);
+    }
+  );
+
+  it('treats an expired token as signed out and drops the cookie', () => {
+    const res = proxy(request('/leads', { token: tokenExpiringIn(-60) }));
+
+    expect(res.status).toBe(307);
+    expect(res.headers.get('set-cookie')).toMatch(/accessToken=;/);
   });
 
-  describe('protected routes', () => {
-    it('lets an anonymous visitor reach a public booking page (PG-203, AC-021)', async () => {
-      await proxy(mkReq('/book/smith-law/initial-consultation'));
-      expect(mockRedirect).not.toHaveBeenCalled();
-      expect(mockNextFn).toHaveBeenCalled();
-    });
+  it('only matches whole path segments', () => {
+    expect(proxy(request('/dealsroom')).status).toBe(200);
+  });
+});
 
-    it('redirects to login when no auth', async () => {
-      await proxy(mkReq('/dashboard'));
-      expect(mockRedirect).toHaveBeenCalled();
-      expect(mockNextFn).not.toHaveBeenCalled();
-      const redirectUrl = mockRedirect.mock.calls[0][0].toString();
-      expect(redirectUrl).toContain('/login');
-      expect(redirectUrl).toContain('redirect=%2Fdashboard');
-    });
+describe('proxy: pages that load', () => {
+  it('lets a signed-in visit through without touching the cookie', () => {
+    const res = proxy(request('/deals/abc123', { token: tokenExpiringIn(3600) }));
 
-    it('includes redirect param with original path', async () => {
-      await proxy(mkReq('/agent-approvals/ai-review'));
-      const redirectUrl = mockRedirect.mock.calls[0][0].toString();
-      expect(redirectUrl).toContain('redirect=%2Fagent-approvals%2Fai-review');
-    });
-
-    it('redirects USER from /admin', async () => {
-      mockDecrypt.mockResolvedValue({ userId: 'u1', email: 'a@b.com', role: 'USER' });
-      await proxy(mkReq('/admin', { session: 'valid' }));
-      expect(mockRedirect).toHaveBeenCalled();
-    });
-    it('allows ADMIN to /admin', async () => {
-      mockDecrypt.mockResolvedValue({ userId: 'u1', email: 'a@b.com', role: 'ADMIN' });
-      await proxy(mkReq('/admin', { session: 'valid' }));
-      expect(mockRedirect).not.toHaveBeenCalled();
-    });
-    it('passes through with accessToken cookie', async () => {
-      const accessToken = createTestJwt(Math.floor(Date.now() / 1000) + 3600);
-      await proxy(mkReq('/dashboard', { accessToken }));
-      expect(mockNextFn).toHaveBeenCalled();
-      // Should not redirect since hasAnyAuthArtifact is true
-      // (role check may still redirect, but no login redirect)
-    });
-
-    it('redirects to login and clears expired accessToken cookie', async () => {
-      const expiredAccessToken = createTestJwt(Math.floor(Date.now() / 1000) - 60);
-      const response = await proxy(mkReq('/dashboard', { accessToken: expiredAccessToken }));
-      expect(mockRedirect).toHaveBeenCalled();
-      expect(response.cookies.delete).toHaveBeenCalledWith('accessToken');
-    });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('location')).toBeNull();
+    expect(res.headers.get('set-cookie')).toBeNull();
   });
 
-  describe('new protected patterns', () => {
-    const newPatterns = [
-      '/agent-approvals',
-      '/calendar',
-      '/billing',
-      '/governance',
-      '/notifications',
-      '/cases',
-      '/deals',
-      '/documents',
-      '/email',
-      '/profile',
-      '/tickets',
-    ];
+  it.each(['/', '/login', '/pricing', '/verify-email/callback'])(
+    'lets the public page %s through when signed out',
+    (path) => {
+      expect(proxy(request(path)).status).toBe(200);
+    }
+  );
 
-    it.each(newPatterns)('redirects unauthenticated user from %s', async (route) => {
-      await proxy(mkReq(route));
-      expect(mockRedirect).toHaveBeenCalled();
-      const redirectUrl = mockRedirect.mock.calls[0][0].toString();
-      expect(redirectUrl).toContain('/login');
-    });
+  it('drops an expired token cookie on a public page too', () => {
+    const res = proxy(request('/login', { token: tokenExpiringIn(-60) }));
 
-    it('redirects for sub-paths of new patterns', async () => {
-      await proxy(mkReq('/tickets/123'));
-      expect(mockRedirect).toHaveBeenCalled();
-    });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('set-cookie')).toMatch(/accessToken=;/);
+  });
+});
+
+describe('proxy: headers', () => {
+  it('sends the policy report-only, never as an enforced policy', () => {
+    const res = proxy(request('/'));
+
+    expect(res.headers.get(CSP_REPORT_ONLY_HEADER)).toContain("default-src 'self'");
+    expect(res.headers.get('content-security-policy')).toBeNull();
   });
 
-  describe('non-protected routes pass through', () => {
-    it('does not redirect /auth/callback', async () => {
-      await proxy(mkReq('/auth/callback'));
-      expect(mockNextFn).toHaveBeenCalled();
-      expect(mockRedirect).not.toHaveBeenCalled();
-    });
-
-    it('does not redirect /auth/mfa/verify', async () => {
-      await proxy(mkReq('/auth/mfa/verify'));
-      expect(mockNextFn).toHaveBeenCalled();
-      expect(mockRedirect).not.toHaveBeenCalled();
-    });
+  it('puts the policy on redirects as well', () => {
+    expect(proxy(request('/leads')).headers.get(CSP_REPORT_ONLY_HEADER)).toBeTruthy();
   });
 
-  describe('Content-Security-Policy', () => {
-    it('allows the root layout fonts-ready inline script by its sha256 hash', async () => {
-      const res: any = await proxy(mkReq('/pricing'));
-      const cspCall = res.headers.set.mock.calls.find(
-        ([name]: [string]) => name === 'Content-Security-Policy'
-      );
-      expect(cspCall).toBeDefined();
-      const scriptSrc = String(cspCall[1])
-        .split(';')
-        .map((d: string) => d.trim())
-        .find((d: string) => d.startsWith('script-src'));
-      const hash = createHash('sha256').update(FONTS_READY_SCRIPT).digest('base64');
-      expect(scriptSrc).toContain(`'sha256-${hash}'`);
-    });
+  it('builds the policy from the environment', () => {
+    process.env.NEXT_PUBLIC_API_URL = 'https://api.example.invalid';
+    __resetCspCacheForTest();
+
+    expect(proxy(request('/')).headers.get(CSP_REPORT_ONLY_HEADER)).toContain(
+      'https://api.example.invalid'
+    );
   });
 
-  describe('auth page redirect', () => {
-    it('redirects auth user from /login', async () => {
-      mockDecrypt.mockResolvedValue({ userId: 'u1', email: 'a@b.com', role: 'USER' });
-      await proxy(mkReq('/login', { session: 'valid' }));
-      expect(mockRedirect).toHaveBeenCalled();
-    });
-    it('redirects auth user from /signup', async () => {
-      mockDecrypt.mockResolvedValue({ userId: 'u1', email: 'a@b.com', role: 'USER' });
-      await proxy(mkReq('/signup', { session: 'valid' }));
-      expect(mockRedirect).toHaveBeenCalled();
-    });
-    it('does not redirect with logged_out', async () => {
-      mockDecrypt.mockResolvedValue({ userId: 'u1', email: 'a@b.com', role: 'USER' });
-      await proxy(mkReq('/login', { session: 'valid', searchParams: { logged_out: '1' } }));
-      expect(mockRedirect).not.toHaveBeenCalled();
-    });
-    it('clears stale token on auth page', async () => {
-      mockDecrypt.mockResolvedValue(null);
-      const r = await proxy(mkReq('/login', { accessToken: 'stale' }));
-      expect(mockNextFn).toHaveBeenCalled();
-      expect(r.cookies.delete).toBeDefined();
-    });
+  it('keeps an incoming request id and passes it on', () => {
+    const res = proxy(request('/', { requestId: 'req-from-edge' }));
+
+    expect(res.headers.get('x-request-id')).toBe('req-from-edge');
+    expect(res.headers.get('x-middleware-request-x-request-id')).toBe('req-from-edge');
   });
 
-  describe('user info headers', () => {
-    it('sets headers when session exists', async () => {
-      mockDecrypt.mockResolvedValue({ userId: 'u1', email: 'a@b.com', role: 'USER' });
-      const r = await proxy(mkReq('/some-page', { session: 'valid' }));
-      expect(r.headers.set).toHaveBeenCalledWith('x-user-id', 'u1');
-      expect(r.headers.set).toHaveBeenCalledWith('x-user-email', 'a@b.com');
-      expect(r.headers.set).toHaveBeenCalledWith('x-user-role', 'USER');
-    });
+  it('creates a request id when there is none', () => {
+    expect(proxy(request('/')).headers.get('x-request-id')).toMatch(/^[0-9a-f-]{36}$/);
   });
 
-  describe('proxyConfig', () => {
-    it('has matcher', () => {
-      expect(proxyConfig.matcher).toBeDefined();
-      expect(proxyConfig.matcher[0]).toContain('api');
-    });
+  it('sets no user or role headers', () => {
+    const res = proxy(request('/deals', { token: tokenExpiringIn(3600) }));
+
+    for (const name of ['x-user-id', 'x-user-email', 'x-user-role', 'x-nonce']) {
+      expect(res.headers.get(name)).toBeNull();
+      expect(res.headers.get(`x-middleware-request-${name}`)).toBeNull();
+    }
+  });
+});
+
+describe('config', () => {
+  it('is exported as config so Next.js runs the proxy', () => {
+    expect(config.matcher).toHaveLength(1);
   });
 
-  describe('calendar to appointments redirects (post-split migration)', () => {
-    // Direction was reversed in the Appointments/Calendar Split migration
-    // (started 2026-04-13 — memory: project_appointments_split_migration).
-    // next.config.js now redirects `/calendar/new` → `/appointments/new` and
-    // `/calendar/<id>` → `/appointments/<id>` (permanent), while settings
-    // sub-routes (availability, calendar-settings, event-types) remain under
-    // /calendar.
-    it('redirects /calendar/new to /appointments/new with permanent flag', async () => {
-      const nextConfigModule = (await import('../../next.config.js')) as {
-        default?: {
-          redirects: () => Promise<
-            Array<{ source: string; destination: string; permanent: boolean }>
-          >;
-        };
-        redirects?: () => Promise<
-          Array<{ source: string; destination: string; permanent: boolean }>
-        >;
-      };
-      const nextConfig = nextConfigModule.default ?? nextConfigModule;
-      const redirects = await nextConfig.redirects!();
-      const rule = redirects.find((r) => r.source === '/calendar/new')!;
-      expect(rule).toBeDefined();
-      expect(rule.destination).toBe('/appointments/new');
-      expect(rule.permanent).toBe(true);
-    });
+  it('skips API routes, Next.js assets and static files', () => {
+    const matcher = new RegExp(`^${config.matcher[0]}$`);
 
-    it('redirects /calendar/:id (non-settings) to /appointments/:id with permanent flag', async () => {
-      const nextConfigModule = (await import('../../next.config.js')) as {
-        default?: {
-          redirects: () => Promise<
-            Array<{ source: string; destination: string; permanent: boolean }>
-          >;
-        };
-        redirects?: () => Promise<
-          Array<{ source: string; destination: string; permanent: boolean }>
-        >;
-      };
-      const nextConfig = nextConfigModule.default ?? nextConfigModule;
-      const redirects = await nextConfig.redirects!();
-      const rule = redirects.find((r) => r.source.startsWith('/calendar/:id((?!new'))!;
-      expect(rule).toBeDefined();
-      expect(rule.destination).toBe('/appointments/:id');
-      expect(rule.permanent).toBe(true);
-    });
+    expect(matcher.test('/deals/abc123')).toBe(true);
+    expect(matcher.test('/api/trpc/auth.login')).toBe(false);
+    expect(matcher.test('/_next/static/chunk.js')).toBe(false);
+    expect(matcher.test('/brand/logo.svg')).toBe(false);
   });
 });
