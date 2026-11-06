@@ -1,20 +1,19 @@
 /**
- * Session Management Library for IntelliFlow CRM
+ * Server-side Supabase client for the web app.
  *
- * Implements session handling with Supabase Auth for Next.js 16
- * Following FLOW-001 (Login + MFA) specifications
+ * Used to check a caller's token (see `lib/route-access.ts`). Who may do what is
+ * decided by the API from database roles; nothing here reads a role. The old
+ * cookie-session helpers, which took the role from user-editable metadata and
+ * were never wired to a cookie, are gone.
  *
  * @module apps/web/src/lib/session
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { cookies } from 'next/headers';
 import { requiredProdEnv } from './required-url';
 
-// Lazy memoized accessors — calling requiredProdEnv at module-init scope would
+// Lazy memoized accessor — calling requiredProdEnv at module-init scope would
 // crash the entire process on boot if the env var is absent (defect D4).
-// Memoisation preserves the original one-evaluation-per-process semantics when
-// the var IS present.
 let _supabaseUrl: string | undefined;
 function getSupabaseUrl(): string {
   if (_supabaseUrl === undefined) {
@@ -30,19 +29,8 @@ function getSupabaseUrl(): string {
 const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 /**
- * Session data structure
- */
-export interface SessionData {
-  userId: string;
-  email: string;
-  role: string;
-  accessToken: string;
-  refreshToken?: string;
-  expiresAt: number;
-}
-
-/**
- * Create Supabase client for server-side operations
+ * Create a Supabase client for server-side token checks. It never keeps a
+ * session, so one request's sign-in can't leak into another.
  */
 export function createServerClient() {
   return createClient(getSupabaseUrl(), SUPABASE_ANON_KEY, {
@@ -52,126 +40,3 @@ export function createServerClient() {
     },
   });
 }
-
-/**
- * Decrypt and validate session from cookie
- * Used by proxy.ts for route protection
- */
-export async function decrypt(sessionCookie: string | undefined): Promise<SessionData | null> {
-  if (!sessionCookie) {
-    return null;
-  }
-
-  try {
-    // Parse the session cookie (JSON format)
-    const session = JSON.parse(sessionCookie) as SessionData;
-
-    // Check if session is expired
-    if (session.expiresAt && Date.now() > session.expiresAt * 1000) {
-      return null;
-    }
-
-    // Verify the access token with Supabase
-    const supabase = createServerClient();
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser(session.accessToken);
-
-    if (error || !user) {
-      return null;
-    }
-
-    return {
-      userId: user.id,
-      email: user.email || '',
-      role: (user.user_metadata?.role as string) || 'USER',
-      accessToken: session.accessToken,
-      refreshToken: session.refreshToken,
-      expiresAt: session.expiresAt,
-    };
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Encrypt and store session in cookie
- */
-export async function encrypt(session: SessionData): Promise<string> {
-  return JSON.stringify(session);
-}
-
-/**
- * Get current session from cookies
- */
-export async function getSession(): Promise<SessionData | null> {
-  const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get('session')?.value;
-  return decrypt(sessionCookie);
-}
-
-/**
- * Create session from Supabase auth response
- */
-export function createSessionFromAuth(
-  userId: string,
-  email: string,
-  accessToken: string,
-  refreshToken: string | undefined,
-  expiresIn: number,
-  role: string = 'USER'
-): SessionData {
-  return {
-    userId,
-    email,
-    role,
-    accessToken,
-    refreshToken,
-    expiresAt: Math.floor(Date.now() / 1000) + expiresIn,
-  };
-}
-
-/**
- * Clear session cookie
- */
-export async function clearSession(): Promise<void> {
-  const cookieStore = await cookies();
-  cookieStore.delete('session');
-}
-
-/**
- * Check if user has required role
- */
-export function hasRole(session: SessionData | null, requiredRoles: string[]): boolean {
-  if (!session) return false;
-  return requiredRoles.includes(session.role);
-}
-
-/**
- * Protected route roles
- */
-export const PROTECTED_ROUTES: Record<string, string[]> = {
-  '/dashboard': ['USER', 'MANAGER', 'ADMIN'],
-  '/leads': ['USER', 'MANAGER', 'ADMIN'],
-  '/contacts': ['USER', 'MANAGER', 'ADMIN'],
-  '/analytics': ['MANAGER', 'ADMIN'],
-  '/admin': ['ADMIN'],
-  '/settings': ['USER', 'MANAGER', 'ADMIN'],
-};
-
-/**
- * Public routes (no auth required)
- */
-export const PUBLIC_ROUTES = [
-  '/',
-  '/login',
-  '/signup',
-  '/forgot-password',
-  '/reset-password',
-  '/verify-email',
-  '/auth/verify-email',
-  '/auth/mfa/verify',
-  '/mfa/verify',
-  '/auth/callback', // OAuth callback page
-];

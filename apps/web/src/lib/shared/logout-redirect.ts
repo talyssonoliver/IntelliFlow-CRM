@@ -13,6 +13,8 @@
  * - Timeout handling
  */
 
+import { safeNextPath } from './safe-next-path';
+
 // ============================================
 // Types
 // ============================================
@@ -79,10 +81,10 @@ export function isValidRedirectUrl(url: string): boolean {
   if (!url) return false;
 
   try {
-    // Allow relative paths
-    if (url.startsWith('/') && !url.startsWith('//')) {
-      // Block paths that could be interpreted as protocol-relative URLs
-      return !url.includes('://') && !url.includes('\\');
+    // Relative paths go through the shared same-site check, which also rejects
+    // control characters a browser would strip before reading the path.
+    if (url.startsWith('/')) {
+      return safeNextPath(url, '') !== '' && !url.includes('://') && !url.includes('\\');
     }
 
     // Parse absolute URLs

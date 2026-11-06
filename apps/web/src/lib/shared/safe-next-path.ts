@@ -24,7 +24,12 @@ export function safeNextPath(raw: string | null | undefined, fallback = DEFAULT_
     const base = 'https://safe-next.invalid'; // sentinel origin only; never fetched
     const resolved = new URL(raw, base);
     if (resolved.origin !== base) return fallback;
-    return `${resolved.pathname}${resolved.search}${resolved.hash}`;
+    const path = `${resolved.pathname}${resolved.search}${resolved.hash}`;
+    // Parsing removes dot segments, so '/.//host' becomes '//host'. Check the
+    // normalised result too, and that it still resolves to this site.
+    if (path.startsWith('//') || path.startsWith('/\\')) return fallback;
+    if (new URL(path, base).origin !== base) return fallback;
+    return path;
   } catch {
     return fallback;
   }
