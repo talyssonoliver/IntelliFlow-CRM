@@ -11,6 +11,10 @@ for (const release of releases) {
   releaseMap[release.id] = release;
 }
 
+// Only published releases have pages; any other id is a plain 404 rather than an
+// on-demand render.
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return releases.map((r) => ({ id: r.id }));
 }

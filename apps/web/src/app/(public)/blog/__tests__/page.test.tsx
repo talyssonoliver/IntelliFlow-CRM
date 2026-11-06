@@ -11,6 +11,12 @@ describe('Blog index page', () => {
     expect(Object.keys(blogPosts)).toHaveLength(0);
   });
 
+  it('serves no post page for a slug outside the published list', async () => {
+    const postPage = await import('../[slug]/page');
+    expect(postPage.dynamicParams).toBe(false);
+    expect(postPage.generateStaticParams()).toEqual([]);
+  });
+
   it('shows an empty state instead of sample posts, categories or pagination', () => {
     const { container } = render(<BlogIndexPage />);
 

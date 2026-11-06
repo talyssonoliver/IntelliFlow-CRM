@@ -10,7 +10,11 @@ const notFound = vi.fn(() => {
 vi.mock('next/navigation', () => ({ notFound: () => notFound() }));
 
 import PressPage, { metadata } from '../page';
-import PressReleasePage, { generateMetadata, generateStaticParams } from '../[id]/page';
+import PressReleasePage, {
+  dynamicParams,
+  generateMetadata,
+  generateStaticParams,
+} from '../[id]/page';
 
 describe('Press page', () => {
   it('says no press releases are published yet and sends media enquiries to the contact page', () => {
@@ -42,6 +46,10 @@ describe('Press page', () => {
 describe('Press release detail page', () => {
   it('builds no release pages while none are published', () => {
     expect(generateStaticParams()).toEqual([]);
+  });
+
+  it('serves no page for an id outside the published list', () => {
+    expect(dynamicParams).toBe(false);
   });
 
   it('returns not found for a release that was removed', async () => {
