@@ -779,8 +779,18 @@ export class LeadService {
     }
 
     try {
-      // A status change is compare-and-set on the status it was validated against.
-      await this.leadRepository.save(lead, requestedStatus ? { expectedStatus } : undefined);
+      if (requestedStatus) {
+        // Two writes in one transaction. The compare-and-set save writes only the status,
+        // and only if it is still the status this change was validated against. The
+        // plain save then writes the other fields (it never writes the status). Either
+        // both land or neither does.
+        await this.transactionManager.run(async (tx) => {
+          await this.leadRepository.save(lead, { expectedStatus }, tx);
+          await this.leadRepository.save(lead, undefined, tx);
+        });
+      } else {
+        await this.leadRepository.save(lead);
+      }
     } catch (error) {
       return Result.fail(this.saveFailure(error, expectedStatus, 'Failed to save lead'));
     }

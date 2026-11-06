@@ -19,6 +19,7 @@ import {
   Result,
   DomainError,
   PhoneNumber,
+  LeadStatusConflictError,
 } from '@intelliflow/domain';
 import { LeadRepository, ContactRepository, AccountRepository } from '@intelliflow/domain';
 import { AIServicePort, EventBusPort, LeadScoringResult } from '../../ports';
@@ -715,6 +716,45 @@ describe('LeadService', () => {
       const saved = await leadRepository.findById(lead.id);
       expect(saved?.status).toBe('LOST');
       expect(saved?.company).toBe('Pitshanger Studio');
+    });
+
+    // The production repository's compare-and-set save writes ONLY the status, and its plain
+    // save never writes the status. A status with field edits therefore needs both writes, in
+    // one transaction, or the edits would be dropped silently.
+    it('writes a status with field edits as compare-and-set status + plain save, in one transaction', async () => {
+      const lead = contactedLead('record-two-writes@example.com');
+      const save = vi.spyOn(leadRepository, 'save');
+
+      const result = await leadService.updateLead(
+        lead.id.value,
+        { status: 'LOST', company: 'Pitshanger Studio' },
+        'sales-rep'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      expect(save).toHaveBeenCalledTimes(2);
+      const [first, second] = save.mock.calls;
+      expect(first?.[1]).toEqual({ expectedStatus: 'CONTACTED' });
+      expect(second?.[1]).toBeUndefined();
+      expect(first?.[2]).toBeDefined();
+      expect(second?.[2]).toBe(first?.[2]);
+    });
+
+    it('writes nothing more when the status changed concurrently', async () => {
+      const lead = contactedLead('record-conflict@example.com');
+      const save = vi
+        .spyOn(leadRepository, 'save')
+        .mockRejectedValueOnce(new LeadStatusConflictError(lead.id.value, 'CONTACTED'));
+
+      const result = await leadService.updateLead(
+        lead.id.value,
+        { status: 'LOST', company: 'Should not save' },
+        'sales-rep'
+      );
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('changed concurrently');
+      expect(save).toHaveBeenCalledTimes(1);
     });
 
     it('fails on a transition that is not allowed, and changes nothing', async () => {
