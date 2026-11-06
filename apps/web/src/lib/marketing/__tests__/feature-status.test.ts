@@ -15,7 +15,7 @@ describe('feature status', () => {
     expect(featureIcon(text)).toBe('schedule');
   });
 
-  it.each(['Your own mailbox', 'TypeScript SDK in beta', 'Priority support (4h response)'])(
+  it.each(['Your own mailbox', 'TypeScript SDK in beta', 'Priority email support'])(
     'keeps the tick on "%s"',
     (text) => {
       expect(isPlannedFeature(text)).toBe(false);
@@ -27,6 +27,8 @@ describe('feature status', () => {
     const professional = pricingData.tiers.find((tier) => tier.id === 'professional');
     expect(professional?.features.filter(isPlannedFeature)).toEqual([
       'Workflow automation (planned)',
+      'AI explainability dashboard (planned)',
+      'API access (planned)',
     ]);
     expect(JSON.stringify(featuresContent).match(/, planned"/g)?.length).toBe(3);
   });

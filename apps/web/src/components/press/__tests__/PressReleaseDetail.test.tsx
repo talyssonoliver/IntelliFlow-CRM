@@ -263,6 +263,14 @@ describe('Press Contact', () => {
     const phoneLink = screen.getByText('+1 (555) 123-4567');
     expect(phoneLink.closest('a')).toHaveAttribute('href', 'tel:+15551234567');
   });
+
+  it('shows no phone line when no number is published', () => {
+    const { container } = renderComponent({
+      pressContact: { name: 'Aurora', email: 'press@example.invalid' },
+    });
+    expect(container.querySelector('a[href^="tel:"]')).toBeNull();
+    expect(screen.getByText('press@example.invalid')).toBeInTheDocument();
+  });
 });
 
 // ─── Test Group 7: Share Buttons (AC-009) ───────────────────────────────────

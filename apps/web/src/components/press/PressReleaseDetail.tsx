@@ -26,7 +26,8 @@ export interface PressReleaseDetailProps {
   pressContact: {
     name: string;
     email: string;
-    phone: string;
+    /** Shown only when there is a real number to call. */
+    phone?: string;
   };
 }
 
@@ -155,15 +156,17 @@ export function PressReleaseDetail({
               </span>
               <span>{pressContact.email}</span>
             </a>
-            <a
-              href={`tel:${pressContact.phone.replaceAll(/[^+\d]/g, '')}`}
-              className="flex items-center gap-2 text-primary hover:text-primary-hover transition-colors"
-            >
-              <span className="material-symbols-outlined text-base" aria-hidden="true">
-                phone
-              </span>
-              <span>{pressContact.phone}</span>
-            </a>
+            {pressContact.phone ? (
+              <a
+                href={`tel:${pressContact.phone.replaceAll(/[^+\d]/g, '')}`}
+                className="flex items-center gap-2 text-primary hover:text-primary-hover transition-colors"
+              >
+                <span className="material-symbols-outlined text-base" aria-hidden="true">
+                  phone
+                </span>
+                <span>{pressContact.phone}</span>
+              </a>
+            ) : null}
           </div>
         </div>
 
