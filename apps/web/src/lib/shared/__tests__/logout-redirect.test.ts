@@ -64,6 +64,13 @@ describe('logout-redirect', () => {
     it('rejects URLs with backslashes', () => {
       expect(isValidRedirectUrl('/path\\..\\evil')).toBe(false);
     });
+
+    it.each(['/\t/evil.example.invalid', '/\n/evil.example.invalid', '/\r\n/evil.example.invalid'])(
+      'rejects a path with a control character a browser would strip (%j)',
+      (url) => {
+        expect(isValidRedirectUrl(url)).toBe(false);
+      }
+    );
   });
 
   describe('sanitizeReturnUrl', () => {
@@ -78,6 +85,10 @@ describe('logout-redirect', () => {
 
     it('decodes URL-encoded paths', () => {
       expect(sanitizeReturnUrl('%2Fdashboard')).toBe('/dashboard');
+    });
+
+    it('returns null for an encoded control character that hides another host', () => {
+      expect(sanitizeReturnUrl('/%09/evil.example.invalid')).toBeNull();
     });
 
     it('returns null for null/undefined', () => {
