@@ -152,11 +152,6 @@
     ],
     "consultant": [
       {
-        "title": "Certification Program",
-        "description": "Become a certified Aurora consultant with our training program.",
-        "icon": "workspace_premium"
-      },
-      {
         "title": "Referral Fees",
         "description": "Earn fees for every successful client referral and implementation.",
         "icon": "currency_exchange"

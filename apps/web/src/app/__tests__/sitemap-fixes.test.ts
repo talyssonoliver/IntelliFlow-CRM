@@ -88,12 +88,14 @@ describe('IFC-209: sitemap defect fixes', () => {
     }
   });
 
-  // TC-NEW-04c: Press release entries
-  it('includes all 4 press release ID entries', async () => {
+  // TC-NEW-04c: Press release entries (none published yet, so no detail pages)
+  it('includes a press release entry for every published release, and none yet', async () => {
     const pressReleasesData = await import('@/data/press-releases.json');
-    const releaseIds = pressReleasesData.releases.map((r: { id: string }) => r.id);
+    const releases = pressReleasesData.releases as Array<{ id: string; date: string }>;
+    const releaseIds = releases.map((r) => r.id);
 
-    expect(releaseIds.length).toBe(4);
+    expect(releaseIds.length).toBe(0);
+    expect(sitemapEntries.some((e) => new URL(e.url).pathname.startsWith('/press/'))).toBe(false);
     for (const id of releaseIds) {
       const entry = sitemapEntries.find((e) => new URL(e.url).pathname === `/press/${id}`);
       expect(entry, `Missing sitemap entry for press release ID: ${id}`).toBeDefined();
@@ -104,7 +106,7 @@ describe('IFC-209: sitemap defect fixes', () => {
   it('press release timestamps match date from data source', async () => {
     const pressReleasesData = await import('@/data/press-releases.json');
 
-    for (const release of pressReleasesData.releases) {
+    for (const release of pressReleasesData.releases as Array<{ id: string; date: string }>) {
       const entry = sitemapEntries.find((e) => new URL(e.url).pathname === `/press/${release.id}`);
       expect(entry, `Missing entry for /press/${release.id}`).toBeDefined();
       expect(String(entry!.lastModified)).toBe(release.date);
@@ -112,11 +114,12 @@ describe('IFC-209: sitemap defect fixes', () => {
   });
 
   // TC-NEW-05: Total entry count matches current baseline
-  it('total sitemap entry count is exactly 32', () => {
-    // Baseline grew as public routes were added (now 32 = original 29 + 3 new
-    // public routes). Keep this pinned so unintended growth triggers review;
-    // bump the constant in sync when sitemap composition deliberately changes.
-    expect(sitemapEntries.length).toBe(32);
+  it('total sitemap entry count is exactly 26', () => {
+    // Baseline grew as public routes were added (32 = original 29 + 3 new public
+    // routes), then lost the 2 blog post and 4 press release pages when that
+    // unpublished sample content was removed. Keep this pinned so unintended growth
+    // triggers review; bump the constant in sync when sitemap composition changes.
+    expect(sitemapEntries.length).toBe(26);
   });
 
   // TC-NEW-06: No dynamic/static URL overlap

@@ -66,10 +66,6 @@
               "label": "Kinds of AI work, one approval queue"
             },
             {
-              "value": "6",
-              "label": "App connectors"
-            },
-            {
               "value": "212",
               "label": "Product screens"
             }
@@ -152,10 +148,6 @@
               "label": "Kinds of AI work, one approval queue"
             },
             {
-              "value": "6",
-              "label": "App connectors"
-            },
-            {
               "value": "212",
               "label": "Product screens"
             }
@@ -227,10 +219,6 @@
             {
               "value": "6",
               "label": "Kinds of AI work, one approval queue"
-            },
-            {
-              "value": "6",
-              "label": "App connectors"
             },
             {
               "value": "212",

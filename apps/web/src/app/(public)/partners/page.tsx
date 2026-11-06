@@ -19,12 +19,12 @@ import { OG_IMAGES } from '@/lib/og-images';
 export const metadata: Metadata = {
   title: 'Partner with Aurora | Technology & Business Partners',
   description:
-    'Join our partner ecosystem. Integrate your solution, resell Aurora, or become a certified consultant. API access, co-marketing, and revenue share programs available.',
+    'Join our partner ecosystem. Integrate your solution, resell Aurora, or consult with Aurora. API access, co-marketing, and revenue share programs available.',
   openGraph: {
     images: OG_IMAGES,
     title: 'Partner with Aurora',
     description:
-      'Technology integrations, reseller programs, and consultant certifications. Build with our API, earn revenue share, and grow your business.',
+      'Technology integrations, reseller programs, and consulting. Build with our API, earn revenue share, and grow your business.',
     url: 'https://intelli-flow-crm-web.vercel.app/partners',
     siteName: 'Aurora',
     type: 'website',
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Partner with Aurora',
     description:
-      'Join our ecosystem: Technology partners, resellers, and certified consultants. API access and revenue share programs.',
+      'Join our ecosystem: Technology partners, resellers, and consultants. API access and revenue share programs.',
   },
 };
 
@@ -62,8 +62,8 @@ export default function PartnersPage() {
 
             <p className="text-lg text-slate-200 max-w-2xl mx-auto mb-8">
               Join our partner ecosystem to integrate your technology, resell our platform, or
-              become a certified consultant. We provide the tools, support, and revenue
-              opportunities you need to succeed.
+              consult with Aurora. We provide the tools, support, and revenue opportunities you need
+              to succeed.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
