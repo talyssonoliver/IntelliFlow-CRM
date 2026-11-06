@@ -42,7 +42,12 @@ function CodeBlock({ code, label }: Readonly<{ code: string; label?: string }>) 
 
 function StatusBadge({ status }: Readonly<{ status: 'available' | 'coming-soon' }>) {
   if (status === 'coming-soon') {
-    return <Badge variant="warning">Coming Soon</Badge>;
+    // One line, even beside a long title on a phone.
+    return (
+      <Badge variant="warning" className="shrink-0 whitespace-nowrap">
+        Coming Soon
+      </Badge>
+    );
   }
   return null;
 }

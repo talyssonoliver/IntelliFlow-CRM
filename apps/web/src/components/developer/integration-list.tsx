@@ -47,9 +47,18 @@ const integrationCategories: IntegrationCategory[] = parseJsonArray<IntegrationC
 function StatusBadge({ status }: Readonly<{ status: IntegrationItem['status'] }>) {
   switch (status) {
     case 'beta':
-      return <Badge variant="secondary">Beta</Badge>;
+      return (
+        <Badge variant="secondary" className="shrink-0 whitespace-nowrap">
+          Beta
+        </Badge>
+      );
     case 'coming-soon':
-      return <Badge variant="warning">Coming Soon</Badge>;
+      // One line, even beside a long title on a phone.
+      return (
+        <Badge variant="warning" className="shrink-0 whitespace-nowrap">
+          Coming Soon
+        </Badge>
+      );
     default:
       return null;
   }
