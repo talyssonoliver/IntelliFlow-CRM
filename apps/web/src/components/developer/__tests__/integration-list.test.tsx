@@ -16,16 +16,16 @@ describe('IntegrationList', () => {
     render(<IntegrationList />);
     expect(screen.getByText('Inbound Webhooks')).toBeInTheDocument();
     expect(screen.getByText('TypeScript SDK')).toBeInTheDocument();
-    expect(screen.getByText('OAuth (Google & Azure)')).toBeInTheDocument();
+    expect(screen.getByText('OAuth (Google)')).toBeInTheDocument();
     expect(screen.getByText('SAP ERP')).toBeInTheDocument();
     expect(screen.getByText(/Receive events from external services/)).toBeInTheDocument();
   });
 
   it('renders available items as links with correct href', () => {
     render(<IntegrationList />);
-    const inboundLink = screen.getByText('Inbound Webhooks').closest('a');
-    expect(inboundLink).toBeInTheDocument();
-    expect(inboundLink).toHaveAttribute('href', '/docs/webhooks');
+    const oauthLink = screen.getByText('OAuth (Google)').closest('a');
+    expect(oauthLink).toBeInTheDocument();
+    expect(oauthLink).toHaveAttribute('href', '/docs/auth');
   });
 
   it('renders Coming Soon items as divs (not links), non-clickable', () => {
@@ -54,7 +54,7 @@ describe('IntegrationList', () => {
     const betaBadges = screen.getAllByText('Beta');
     expect(betaBadges.length).toBeGreaterThanOrEqual(1);
     const comingSoonBadges = screen.getAllByText('Coming Soon');
-    expect(comingSoonBadges.length).toBe(1); // API Keys only (CLI Tools is now available)
+    expect(comingSoonBadges.length).toBe(11); // Every item not yet proved to work
   });
 
   it('icons have aria-hidden="true" attribute', () => {
@@ -87,7 +87,7 @@ describe('IntegrationList', () => {
   it('has aria-disabled="true" on Coming Soon card containers', () => {
     render(<IntegrationList />);
     const disabledCards = document.querySelectorAll('[aria-disabled="true"]');
-    expect(disabledCards.length).toBe(1); // API Keys only (CLI Tools is now available)
+    expect(disabledCards.length).toBe(11); // Every item not yet proved to work
   });
 
   it('external links have target="_blank" and rel="noopener noreferrer"', () => {
@@ -108,8 +108,8 @@ describe('IntegrationList', () => {
 
   it('active cards have hover:border-primary class', () => {
     render(<IntegrationList />);
-    // Find a card that is NOT disabled (e.g., Inbound Webhooks)
-    const card = screen.getByText('Inbound Webhooks').closest('.p-4');
+    // Find a card that is NOT disabled (e.g., OAuth)
+    const card = screen.getByText('OAuth (Google)').closest('.p-4');
     expect(card?.className).toContain('hover:border-primary');
   });
 

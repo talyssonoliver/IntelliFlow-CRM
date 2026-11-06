@@ -6,7 +6,7 @@ import { render } from '@testing-library/react';
 import { IntegrationsSection } from '../IntegrationsSection';
 
 describe('IntegrationsSection', () => {
-  it('wires the 6 ready connectors plus sign-in to one Aurora core, not a bare grid', () => {
+  it('wires the 6 connectors plus sign-in to one Aurora core, not a bare grid', () => {
     const { container } = render(<IntegrationsSection />);
 
     expect(container.querySelector('.core-node')).toHaveTextContent('Aurora core');
@@ -28,6 +28,14 @@ describe('IntegrationsSection', () => {
     expect(container.querySelectorAll('.logo').length).toBe(8);
   });
 
+  it('says only work Outlook mailboxes connect, since personal ones need Microsoft sign-in', () => {
+    const { container } = render(<IntegrationsSection />);
+    const outlook = [...container.querySelectorAll('.logo')].find((c) =>
+      c.textContent?.includes('Outlook')
+    );
+    expect(outlook?.querySelector('.wire-status')).toHaveTextContent('Work mail');
+  });
+
   it('never shows SAP as a ready or available connector', () => {
     const { container } = render(<IntegrationsSection />);
     expect(container.textContent).not.toMatch(/\bSAP\b/);
@@ -36,7 +44,9 @@ describe('IntegrationsSection', () => {
   it('labels the SDK beta and API keys as coming soon, exactly', () => {
     const { container } = render(<IntegrationsSection />);
     expect(container.querySelector('.dev.beta')).toHaveTextContent(/TypeScript SDK\s*Beta/i);
-    expect(container.querySelector('.dev.soon')).toHaveTextContent(/API keys\s*Coming soon/i);
+    expect(container.querySelector('.dev.soon:last-of-type')).toHaveTextContent(
+      /API keys\s*Coming soon/i
+    );
   });
 
   it('carries the section-bridge markup for the integrator to wire up', () => {
@@ -45,5 +55,16 @@ describe('IntegrationsSection', () => {
     expect(section).toHaveAttribute('data-bridge-section');
     expect(section).toHaveAttribute('id', 'integrations');
     expect((section as HTMLElement).style.getPropertyValue('--bridge-accent')).toBe('var(--cyan)');
+  });
+
+  it('claims Google sign-in only: Microsoft sign-in is planned', () => {
+    const { container } = render(<IntegrationsSection />);
+    const text = container.textContent ?? '';
+    expect(text).not.toMatch(/sign in with Google or Microsoft/i);
+    expect(text).toMatch(/sign in with Google\./);
+    const azure = [...container.querySelectorAll('.logo')].find((card) =>
+      card.textContent?.includes('Azure sign-in')
+    );
+    expect(azure?.querySelector('.wire-status')?.textContent).toBe('Planned');
   });
 });

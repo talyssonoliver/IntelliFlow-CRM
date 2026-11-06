@@ -6,14 +6,15 @@ import './security.css';
 
 /**
  * Security, in the Aurora design. Every control listed here is one the product
- * has today; nothing is claimed that the code does not back (no certifications,
- * no third-party audits, no figures).
+ * has today, or is marked planned; nothing is claimed that production does not back
+ * (no certifications, no third-party audits, no figures). Multi-factor sign-in and
+ * enterprise single sign-on are planned: production has no MFA factors and SSO is off.
  */
 
 export const metadata: Metadata = {
   title: 'Security',
   description:
-    "Aurora's security, on from day one: no AI action goes out without a person's approval, each workspace's data is kept apart, multi-factor sign-in is available on every account and every change is logged.",
+    "Aurora's security, on from day one: no AI action goes out without a person's approval, each workspace's data is kept apart and every change is logged.",
   openGraph: {
     images: OG_IMAGES,
     title: 'Aurora security: on from day one',
@@ -47,8 +48,7 @@ export default function SecurityPage() {
           <h1 className="as-h1 asec-h1">Enterprise security, on from day one.</h1>
           <p className="as-lede asec-lede">
             No AI action goes out without a person&apos;s approval. Each workspace&apos;s data is
-            kept apart, multi-factor sign-in is available on every account, and every change is
-            logged.
+            kept apart, and every change is logged.
           </p>
         </div>
       </section>

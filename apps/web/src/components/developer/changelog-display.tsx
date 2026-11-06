@@ -101,7 +101,10 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     date: '2025-12-16',
     title: 'Authentication & Security Foundation',
     changes: [
-      { type: 'feature', description: 'Multi-factor authentication with TOTP and backup codes' },
+      {
+        type: 'feature',
+        description: 'Groundwork for multi-factor authentication (not yet available on accounts)',
+      },
       { type: 'security', description: 'CSRF protection on all mutation endpoints' },
       { type: 'fix', description: 'Fixed session expiry not redirecting to login' },
     ],
