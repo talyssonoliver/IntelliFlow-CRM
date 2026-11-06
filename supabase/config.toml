@@ -223,7 +223,7 @@ otp_expiry = 3600
 # Brand-matched IntelliFlow CRM auth email templates (also applied to the remote
 # project via the Management API — see supabase/templates/README.md).
 [auth.email.template.confirmation]
-subject = "Confirm your IntelliFlow CRM email"
+subject = "Confirm your Aurora email"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.invite]
