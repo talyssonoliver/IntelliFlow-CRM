@@ -325,6 +325,25 @@ describe('LandingStats', () => {
     expect(screen.getByText('99.9%')).toBeDefined();
   });
 
+  it('uses three columns on desktop for three stats, and lets the odd last one span on phones', () => {
+    const three = [
+      { value: '1', label: 'One' },
+      { value: '2', label: 'Two' },
+      { value: '3', label: 'Three' },
+    ];
+    const { container } = render(<LandingStats section={{ ...statsSection, stats: three }} />);
+    const grid = container.querySelector('.grid')!;
+    expect(grid.className).toContain('md:grid-cols-3');
+    expect(grid.className).not.toContain('md:grid-cols-4');
+    expect(grid.className).toContain('[&>*:last-child:nth-child(odd)]:col-span-2');
+  });
+
+  it('keeps four columns on desktop for four stats', () => {
+    const four = ['One', 'Two', 'Three', 'Four'].map((label, i) => ({ value: String(i), label }));
+    const { container } = render(<LandingStats section={{ ...statsSection, stats: four }} />);
+    expect(container.querySelector('.grid')!.className).toContain('md:grid-cols-4');
+  });
+
   it('renders title when provided', () => {
     render(<LandingStats section={statsSection} />);
 

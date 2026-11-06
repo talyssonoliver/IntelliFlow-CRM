@@ -76,8 +76,6 @@ const howItWorks = [
   },
 ];
 
-const socialProof = ['Voltstack', 'Northbeam', 'Dataplane', 'Astera', 'Driftline', 'RelayOps'];
-
 const securityChecklist = [
   'WCAG 2.1 AA defaults: semantics, focus-visible, aria labels, dark-mode contrast',
   'Audit-matrix gates: typecheck, build, enforced coverage thresholds, lint, and security scans',
@@ -227,24 +225,6 @@ export function PublicHomePage() {
                 </div>
               </Card>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-white py-10">
-        <div className="container px-4 lg:px-6 mx-auto max-w-6xl">
-          <div className="text-xs uppercase tracking-[0.2em] text-slate-400 mb-4">
-            Trusted by teams shipping faster
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3 text-slate-500 text-sm">
-            {socialProof.map((name) => (
-              <div
-                key={name}
-                className="px-3 py-2 rounded-lg bg-slate-50 text-center border border-slate-100"
-              >
-                {name}
-              </div>
-            ))}
           </div>
         </div>
       </section>
