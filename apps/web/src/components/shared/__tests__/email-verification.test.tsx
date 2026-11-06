@@ -395,8 +395,10 @@ describe('EmailVerification', () => {
       render(<EmailVerification {...defaultProps} email={undefined} />);
 
       const input = await screen.findByLabelText(/your email address/i);
-      expect(screen.queryByRole('button', { name: /resend/i })).not.toBeInTheDocument();
+      // Visible from the start, but only usable once there is an address to send to.
+      expect(screen.getByRole('button', { name: /resend/i })).toBeDisabled();
       await user.type(input, 'me@example.com');
+      expect(screen.getByRole('button', { name: /resend/i })).toBeEnabled();
       await user.click(screen.getByRole('button', { name: /resend/i }));
 
       await waitFor(() =>

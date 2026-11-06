@@ -286,40 +286,39 @@ export function EmailVerification({
                 />
               </div>
             )}
-            {resendEmail.trim() !== '' && (
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={isResending}
-                className={cn(
-                  'inline-flex items-center gap-2 px-6 py-3 rounded-lg',
-                  'bg-[#2a78f6] text-white font-medium',
-                  'hover:bg-[#2a78f6]/90 transition-colors',
-                  'focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900',
-                  'disabled:opacity-50 disabled:cursor-not-allowed'
-                )}
-                aria-label="Resend verification email"
-              >
-                {isResending ? (
-                  <>
-                    <span
-                      className="material-symbols-outlined text-xl animate-spin"
-                      aria-hidden="true"
-                    >
-                      sync
-                    </span>{' '}
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined text-xl" aria-hidden="true">
-                      mail
-                    </span>{' '}
-                    Resend Verification Email
-                  </>
-                )}
-              </button>
-            )}
+            {/* Always visible so the next step is clear; usable once there is an address. */}
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={isResending || resendEmail.trim() === ''}
+              className={cn(
+                'inline-flex items-center gap-2 px-6 py-3 rounded-lg',
+                'bg-[#2a78f6] text-white font-medium',
+                'hover:bg-[#2a78f6]/90 transition-colors',
+                'focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900',
+                'disabled:opacity-50 disabled:cursor-not-allowed'
+              )}
+              aria-label="Resend verification email"
+            >
+              {isResending ? (
+                <>
+                  <span
+                    className="material-symbols-outlined text-xl animate-spin"
+                    aria-hidden="true"
+                  >
+                    sync
+                  </span>{' '}
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-xl" aria-hidden="true">
+                    mail
+                  </span>{' '}
+                  Resend Verification Email
+                </>
+              )}
+            </button>
             {resendMessage && (
               <output
                 className={cn(
