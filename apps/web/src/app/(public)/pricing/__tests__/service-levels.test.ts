@@ -25,6 +25,12 @@ describe('pricing service levels', () => {
     expect(faq?.answer.toLowerCase()).not.toContain('-hour');
   });
 
+  it('offers no nonprofit or education discount', () => {
+    const faqText = JSON.stringify(pricingData.faqs).toLowerCase();
+    expect(faqText).not.toContain('nonprofit');
+    expect(faqText).not.toContain('20%');
+  });
+
   it('promises no phone support, response time, SLA or account manager in plans or the table', () => {
     expect(allText).not.toMatch(/phone/i);
     expect(allText.toLowerCase()).not.toContain('hour');
