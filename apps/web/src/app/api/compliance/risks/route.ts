@@ -1,4 +1,5 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireSignedIn } from '@/lib/route-access';
 import fs from 'node:fs';
 import path from 'node:path';
 import type {
@@ -78,7 +79,9 @@ function calculateSummary(risks: Risk[]): RiskSummary {
   };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await requireSignedIn(request);
+  if (denied) return denied;
   try {
     const risks = loadRiskData();
     const summary = calculateSummary(risks);

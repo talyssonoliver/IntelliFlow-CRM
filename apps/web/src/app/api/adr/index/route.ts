@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { refuseInProduction, requireOperator } from '@/lib/route-access';
 import { generateADRIndex, writeADRIndex } from '@/lib/adr/adr-service';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await requireOperator(request);
+  if (denied) return denied;
   try {
     const content = generateADRIndex();
     return NextResponse.json({
@@ -14,7 +17,11 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const refused = refuseInProduction();
+  if (refused) return refused;
+  const denied = await requireOperator(request);
+  if (denied) return denied;
   try {
     const result = writeADRIndex();
 

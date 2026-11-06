@@ -673,6 +673,7 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
     }
     for (const lib of [
       'preship-test-scope.mjs',
+      'preship-coverage-freshness.mjs',
       'preship-report.mjs',
       'preship-gate.mjs',
       'test-slot.mjs',

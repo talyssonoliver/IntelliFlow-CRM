@@ -752,7 +752,34 @@ describe('GoogleCalendarAdapter', () => {
   });
 
   describe('Webhook Management', () => {
+    const CHANNEL_TOKEN = ['channel', 'value', 'for', 'tests'].join('-');
+    beforeEach(() => vi.stubEnv('GOOGLE_CALENDAR_CHANNEL_TOKEN', CHANNEL_TOKEN));
+    afterEach(() => vi.unstubAllEnvs());
+
     describe('registerWebhook', () => {
+      it('refuses to create a channel when no channel token is configured', async () => {
+        vi.stubEnv('GOOGLE_CALENDAR_CHANNEL_TOKEN', '');
+        mockFetch.mockClear();
+        const result = await adapter.registerWebhook(
+          mockTokens,
+          'https://api.example.com/webhooks/calendar'
+        );
+        expect(result.isFailure).toBe(true);
+        expect(result.error?.message).toContain('GOOGLE_CALENDAR_CHANNEL_TOKEN');
+        expect(mockFetch).not.toHaveBeenCalled();
+      });
+
+      it('sends the configured channel token to Google', async () => {
+        mockFetch.mockClear();
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ id: 'generated-channel-id', resourceId: 'resource-xyz' }),
+        });
+        await adapter.registerWebhook(mockTokens, 'https://api.example.com/webhooks/calendar');
+        const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+        expect(body.token).toBe(CHANNEL_TOKEN);
+      });
+
       it('should register webhook successfully', async () => {
         mockFetch.mockResolvedValueOnce({
           ok: true,

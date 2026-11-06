@@ -30,11 +30,14 @@ vi.mock('../providers', () => ({
 import { POST } from '../route';
 import { resetRateLimiter } from '../../../rate-limiter';
 
+const CHANNEL_TOKEN = ['channel', 'value', 'for', 'tests'].join('-');
+
 function createGoogleRequest(headers: Record<string, string> = {}, body: string = ''): Request {
   const defaultHeaders: Record<string, string> = {
     'x-goog-channel-id': 'channel-123',
     'x-goog-resource-id': 'resource-456',
     'x-goog-resource-state': 'exists',
+    'x-goog-channel-token': CHANNEL_TOKEN,
     ...headers,
   };
 
@@ -49,10 +52,44 @@ describe('Google Calendar Webhook Route Handler', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     resetRateLimiter();
+    vi.stubEnv('GOOGLE_CALENDAR_CHANNEL_TOKEN', CHANNEL_TOKEN);
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it.each([
+    ['a wrong token', { 'x-goog-channel-token': 'wrong-value-of-other-size' }],
+    [
+      'a wrong token of the same length',
+      { 'x-goog-channel-token': CHANNEL_TOKEN.replace('c', 'd') },
+    ],
+  ])('does not process a notification with %s', async (_name, headers) => {
+    const response = await POST(createGoogleRequest(headers));
+    expect(response.status).toBe(200);
+    expect((await response.json()).error).toBe('invalid_token');
+    expect(mockProcessNotification).not.toHaveBeenCalled();
+  });
+
+  it('does not process a notification when no token is configured', async () => {
+    vi.stubEnv('GOOGLE_CALENDAR_CHANNEL_TOKEN', '');
+    const response = await POST(createGoogleRequest());
+    expect((await response.json()).error).toBe('invalid_token');
+    expect(mockProcessNotification).not.toHaveBeenCalled();
+  });
+
+  it('does not process a notification with no token header', async () => {
+    const request = new Request('http://localhost:3000/api/webhooks/google/calendar', {
+      method: 'POST',
+      headers: {
+        'x-goog-channel-id': 'channel-123',
+        'x-goog-resource-id': 'resource-456',
+        'x-goog-resource-state': 'exists',
+      },
+    });
+    expect((await (await POST(request)).json()).error).toBe('invalid_token');
   });
 
   it('valid exists notification triggers processNotification', async () => {

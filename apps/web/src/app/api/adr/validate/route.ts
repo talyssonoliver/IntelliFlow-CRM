@@ -1,7 +1,10 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { requireOperator } from '@/lib/route-access';
 import { validateAllADRs } from '@/lib/adr/adr-service';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const denied = await requireOperator(request);
+  if (denied) return denied;
   try {
     const validations = validateAllADRs();
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { refuseInProduction, requireOperator } from '@/lib/route-access';
 import { getRunState, cancelTestRun } from '@/lib/test-runner';
 
 /**
@@ -6,9 +7,11 @@ import { getRunState, cancelTestRun } from '@/lib/test-runner';
  * Get the status of a specific test run
  */
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ runId: string }> }
 ) {
+  const denied = await requireOperator(request);
+  if (denied) return denied;
   try {
     const { runId } = await params;
     const state = getRunState(runId);
@@ -47,9 +50,13 @@ export async function GET(
  * Cancel a running test
  */
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ runId: string }> }
 ) {
+  const refused = refuseInProduction();
+  if (refused) return refused;
+  const denied = await requireOperator(request);
+  if (denied) return denied;
   try {
     const { runId } = await params;
     const cancelled = cancelTestRun(runId);
