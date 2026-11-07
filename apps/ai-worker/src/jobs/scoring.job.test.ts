@@ -19,6 +19,7 @@ import {
   processScoringJob,
   DEFAULT_SCORING_JOB_OPTIONS,
   NIL_UUID,
+  ScoringFailedError,
   type ScoringJobData,
   type ScoringJobResult,
   type LeadTier,
@@ -674,10 +675,8 @@ describe('ScoringJob', () => {
       expect(validation.success).toBe(true);
     });
 
-    it('should return heuristic fallback (not throw) when scoring chain rejects', async () => {
-      // H10: scoring errors are caught and a heuristic fallback is returned instead of propagated.
-      // #324: with a fallback provider configured (mocked in this file), the heuristic is
-      // reached only when BOTH primary and fallback fail — so reject every attempt.
+    it('fails the job, with no score, when every provider fails (#1218: no heuristic score)', async () => {
+      // With a fallback provider configured (mocked in this file), reject every attempt.
       mockScoreLead.mockReset();
       mockScoreLead.mockRejectedValue(new Error('LLM API error'));
 
@@ -689,13 +688,7 @@ describe('ScoringJob', () => {
       };
 
       const job = createMockJob(jobData);
-      const result = await processScoringJob(job);
-
-      expect(result).toBeDefined();
-      expect(result.confidence).toBe(0.3);
-      expect(result.modelVersion).toBe('fallback');
-      expect(result.score).toBeGreaterThanOrEqual(0);
-      expect(result.score).toBeLessThanOrEqual(100);
+      await expect(processScoringJob(job)).rejects.toBeInstanceOf(ScoringFailedError);
     });
   });
 
@@ -934,7 +927,7 @@ describe('ScoringJob', () => {
       expect(fallbackOptions[0]).toMatchObject({ recordDrift: false });
     });
 
-    it('falls through to the heuristic when BOTH providers fail', async () => {
+    it('reports FAILED when BOTH providers fail, and persists nothing (#1218)', async () => {
       mockScoreLead.mockReset();
       mockScoreLead.mockRejectedValue(new Error('all providers down'));
 
@@ -943,10 +936,24 @@ describe('ScoringJob', () => {
         tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
       });
-      const result = await processScoringJob(job);
+      await expect(processScoringJob(job)).rejects.toBeInstanceOf(ScoringFailedError);
+    });
 
-      expect(result.modelVersion).toBe('fallback'); // heuristic
-      expect(result.confidence).toBe(0.3);
+    it('reports FAILED when the model answers with no usable score (confidence 0)', async () => {
+      mockScoreLead.mockReset();
+      // What the real chain throws for a confidence-0 answer (the chain module is mocked here).
+      mockScoreLead.mockRejectedValue(
+        Object.assign(new Error('Model gave no usable score (ZERO_CONFIDENCE)'), {
+          name: 'ScoringInconclusiveError',
+        })
+      );
+
+      const job = createMockJob({
+        leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
+        lead: { email: 'test@example.com', source: 'WEBSITE' },
+      });
+      await expect(processScoringJob(job)).rejects.toBeInstanceOf(ScoringFailedError);
     });
   });
 });

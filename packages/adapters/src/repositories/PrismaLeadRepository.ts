@@ -92,6 +92,18 @@ function recordToLeadProps(record: LeadRecord) {
 export class PrismaLeadRepository implements LeadRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
+  /**
+   * #1218: the last scoring attempt gave no usable score. Only the scoring status changes: the
+   * previous score, scored-at time and status are kept.
+   */
+  async markScoringFailed(id: LeadId, tenantId: string, tx?: RepositoryTransaction): Promise<void> {
+    const db = (tx as TransactionClient | undefined) ?? this.prisma;
+    await db.lead.updateMany({
+      where: { id: id.value, tenantId },
+      data: { scoringStatus: 'FAILED' },
+    });
+  }
+
   async save(lead: Lead, opts?: LeadSaveOptions, tx?: RepositoryTransaction): Promise<void> {
     // Join the caller's transaction when supplied (DDD-001/002), else use our
     // own client. The domain hands us an opaque RepositoryTransaction; the
@@ -134,8 +146,11 @@ export class PrismaLeadRepository implements LeadRepository {
       // PG-203 DSAR: a scoring result lands only on the person it was computed for. An
       // erasure (or email change) during the AI call makes this match nothing. Compared on
       // the normalised address, as the lead was read (codex), in one conditional write.
+      // #1218: the same write records what the score means and when it was set.
+      const scoringStatus = opts.scoringStatus ?? 'SCORED';
       const count = await db.$executeRaw`
-        UPDATE leads SET score = ${data.score}, "updatedAt" = ${data.updatedAt}
+        UPDATE leads SET score = ${data.score}, "updatedAt" = ${data.updatedAt},
+          "scoringStatus" = ${scoringStatus}::"LeadScoringStatus", "scoredAt" = ${data.updatedAt}
         WHERE id = ${data.id} AND "tenantId" = ${data.tenantId}
           AND dsar_normalise_email(email) = ${normalizeSubjectEmail(opts.scoreOnlyIfEmail)}`;
       if (count === 0) throw new LeadIdentityChangedError(data.id);

@@ -165,6 +165,8 @@ export interface LeadProfileData {
   status: LeadStatus;
   source: LeadSource;
   score: number;
+  /** #1218: whether `score` is a real AI score (NONE / FAILED show as not scored). */
+  scoringStatus?: string | null;
   temperature: LeadTemperature;
   createdAt: string | Date;
   lastContactedAt: string | Date;

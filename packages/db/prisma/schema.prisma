@@ -639,6 +639,10 @@ model Lead {
   source          LeadSource  @default(WEBSITE)
   status          LeadStatus  @default(NEW)
   score           Int         @default(0)
+  /// #1218: whether `score` is a real AI score. NONE = never scored, FAILED = the last attempt gave no usable score.
+  scoringStatus   LeadScoringStatus @default(NONE)
+  /// #1218: when `score` was last set by a successful scoring.
+  scoredAt        DateTime?
   location        String?
   website         String?
   avatarUrl       String?
@@ -799,6 +803,14 @@ enum LeadSource {
   EVENT
   OTHER
   BOOKING // PG-203: created by the public booking page
+}
+
+/// #1218: what the lead's AI score means.
+enum LeadScoringStatus {
+  NONE // never scored: `score` 0 is the default, not a score
+  SCORED // `score` is a real AI score
+  NEEDS_REVIEW // scored with low confidence: shown, but it never changes the status
+  FAILED // the last scoring gave no usable score; `score` is the previous value
 }
 
 enum LeadStatus {

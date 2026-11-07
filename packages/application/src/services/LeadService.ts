@@ -30,6 +30,7 @@ import {
   ValidationError,
   NotFoundError,
   LeadScoreBelowMinimumError,
+  LeadScoringFailedError,
 } from '../errors';
 
 /**
@@ -231,17 +232,10 @@ export class LeadService {
     return Result.ok(undefined);
   }
 
-  /**
-   * Score a lead using AI service.
-   *
-   * @param actorUserId authenticated user requesting the score; forwarded to the
-   *   AI service so guardrails sanitize and audit under the real actor. Omit for
-   *   system-initiated scoring.
-   */
-  async scoreLead(
-    leadId: string,
-    actorUserId?: string
-  ): Promise<Result<LeadScoreUpdateResult, DomainError>> {
+  /** Load a lead that may be scored: it exists, and its person is neither erased nor restricted. */
+  private async loadScorableLead(
+    leadId: string
+  ): Promise<Result<{ lead: Lead; scoredEmail: string }, DomainError>> {
     const leadIdResult = LeadId.create(leadId);
     if (leadIdResult.isFailure) {
       return Result.fail(leadIdResult.error);
@@ -260,6 +254,23 @@ export class LeadService {
     if (restriction.restricted) {
       return Result.fail(new ProcessingRestrictedError());
     }
+    return Result.ok({ lead, scoredEmail });
+  }
+
+  /**
+   * Score a lead using AI service.
+   *
+   * @param actorUserId authenticated user requesting the score; forwarded to the
+   *   AI service so guardrails sanitize and audit under the real actor. Omit for
+   *   system-initiated scoring.
+   */
+  async scoreLead(
+    leadId: string,
+    actorUserId?: string
+  ): Promise<Result<LeadScoreUpdateResult, DomainError>> {
+    const scorable = await this.loadScorableLead(leadId);
+    if (scorable.isFailure) return Result.fail(scorable.error);
+    const { lead, scoredEmail } = scorable.value;
 
     const previousScore = lead.score.value;
     const expectedStatus = lead.status;
@@ -281,11 +292,21 @@ export class LeadService {
       { tenantId: lead.tenantId, leadId: lead.id.value, userId: actorUserId }
     );
 
+    // #1218: a failed scoring is never stored as a score. The lead keeps its previous score
+    // and status, and is marked FAILED so it reads as "not scored" rather than a real 0.
     if (scoringResult.isFailure) {
+      if (!(scoringResult.error instanceof ProcessingRestrictedError)) {
+        await this.markScoringFailed(lead);
+      }
+      // The provider's own error is returned, so callers keep telling failures apart.
       return Result.fail(scoringResult.error);
     }
 
-    const { score, confidence, modelVersion } = scoringResult.value;
+    const { score, confidence, modelVersion, requiresReview } = scoringResult.value;
+    if (!(confidence > 0)) {
+      await this.markScoringFailed(lead);
+      return Result.fail(new LeadScoringFailedError('NO_USABLE_SCORE'));
+    }
 
     // Update lead score
     const updateResult = lead.updateScore(score, confidence, modelVersion);
@@ -293,7 +314,11 @@ export class LeadService {
       return Result.fail(updateResult.error);
     }
 
-    const { autoQualified, autoDisqualified } = this.applyAutoStatus(lead, score);
+    // A low-confidence score is kept but marked for review, and it never changes the status.
+    const { autoQualified, autoDisqualified } = requiresReview
+      ? { autoQualified: false, autoDisqualified: false }
+      : this.applyAutoStatus(lead, score);
+    const scoringStatus = requiresReview ? 'NEEDS_REVIEW' : 'SCORED';
 
     // Persist changes + events atomically (DDD-002 pattern). Scoring mutates the
     // score fields; the auto-(dis)qualify above is the only status change. The
@@ -309,7 +334,7 @@ export class LeadService {
       await this.transactionManager.run(async (tx) => {
         // Score-only, and only while the email is still the one scored: a result that
         // returns after an erasure cannot restore the erased person's data (codex).
-        await this.leadRepository.save(lead, { scoreOnlyIfEmail: scoredEmail }, tx);
+        await this.leadRepository.save(lead, { scoreOnlyIfEmail: scoredEmail, scoringStatus }, tx);
         const after = await this.processingRestrictions.status(lead.tenantId, scoredEmail, tx);
         if (after.restricted) throw new ProcessingRestrictedError();
         if (lead.status !== expectedStatus) {
@@ -336,6 +361,15 @@ export class LeadService {
       autoQualified,
       autoDisqualified,
     });
+  }
+
+  /** #1218: best effort; a failure to record the failure must not hide the original one. */
+  private async markScoringFailed(lead: Lead): Promise<void> {
+    try {
+      await this.leadRepository.markScoringFailed?.(lead.id, lead.tenantId);
+    } catch {
+      // The scoring failure is still returned to the caller.
+    }
   }
 
   /** Auto-qualify or auto-disqualify a NEW lead based on its AI score. */

@@ -48,6 +48,7 @@ const ScoringJobResultMirror = z.object({
   factors: z.array(z.unknown()),
   recommendations: z.array(z.string()),
   modelVersion: z.string(),
+  requiresReview: z.boolean().optional(),
   processedAt: z.string(),
   processingTimeMs: z.number(),
 });
@@ -271,7 +272,7 @@ export class QueueAIService implements AIServicePort {
     if (!parsed.success) {
       return Result.fail(new PersistenceError('Invalid scoring result shape'));
     }
-    const { score, confidence, modelVersion } = parsed.data;
+    const { score, confidence, modelVersion, requiresReview } = parsed.data;
     if (confidence < 0 || confidence > 1) {
       return Result.fail(new PersistenceError('Invalid scoring result: confidence out of range'));
     }
@@ -280,6 +281,7 @@ export class QueueAIService implements AIServicePort {
       score,
       confidence,
       modelVersion,
+      requiresReview: requiresReview === true,
       factors: undefined,
       reasoning: undefined,
     });

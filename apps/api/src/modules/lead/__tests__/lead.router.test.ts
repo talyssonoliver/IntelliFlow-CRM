@@ -10,6 +10,7 @@ import { TEST_UUIDS } from '../../../test/setup';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { ProcessingRestrictedError } from '@intelliflow/domain';
+import { LeadScoringFailedError } from '@intelliflow/application';
 vi.mock('../lead-scoring-enqueue', () => ({ enqueueLeadScoring: vi.fn(async () => undefined) }));
 
 import { leadRouter } from '../lead.router';
@@ -1428,20 +1429,45 @@ describe('Lead Router', () => {
       );
     });
 
-    it('scoreWithAI should throw INTERNAL_SERVER_ERROR for scoring failures', async () => {
+    it('scoreWithAI reports a failed scoring honestly: an error, the previous score kept, no "Scored by AI" (#1218)', async () => {
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);
 
       ctx.services!.lead!.scoreLead = vi.fn().mockResolvedValue({
         isSuccess: false,
         isFailure: true,
-        error: { message: 'AI service unavailable' },
+        error: { name: 'PersistenceError', message: 'AI scoring job failed: provider echoed text' },
       });
 
       await expect(callerWithService.scoreWithAI({ leadId: TEST_UUIDS.lead1 })).rejects.toThrow(
         expect.objectContaining({
           code: 'INTERNAL_SERVER_ERROR',
-          message: 'AI service unavailable',
+          // A generic message: the provider's text never reaches the client.
+          message: 'AI scoring failed; the previous score was kept',
+        })
+      );
+
+      const activities = prismaMock.leadActivity.create.mock.calls.map(
+        (c) => (c[0] as { data: { title: string } }).data.title
+      );
+      expect(activities).toContain('AI scoring failed');
+      expect(activities).not.toContain('Lead Scored by AI');
+    });
+
+    it('scoreWithAI answers UNPROCESSABLE_CONTENT when the model gave no usable score (#1218)', async () => {
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+
+      ctx.services!.lead!.scoreLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: new LeadScoringFailedError(),
+      });
+
+      await expect(callerWithService.scoreWithAI({ leadId: TEST_UUIDS.lead1 })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'UNPROCESSABLE_CONTENT',
+          message: 'AI scoring gave no usable score; the previous score was kept',
         })
       );
     });

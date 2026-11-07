@@ -40,6 +40,12 @@ export interface LeadSaveOptions {
    * `LeadIdentityChangedError` is thrown when it no longer matches.
    */
   scoreOnlyIfEmail?: string;
+  /**
+   * With `scoreOnlyIfEmail`: what the written score means (#1218). SCORED is a real score;
+   * NEEDS_REVIEW is a low-confidence score that must not change the status. The write also
+   * sets the scored-at time.
+   */
+  scoringStatus?: 'SCORED' | 'NEEDS_REVIEW';
 }
 
 /**
@@ -65,6 +71,13 @@ export interface LeadRepository {
    * transitions MUST pass it so a stale read cannot overwrite a newer status.
    */
   save(lead: Lead, opts?: LeadSaveOptions, tx?: RepositoryTransaction): Promise<void>;
+
+  /**
+   * #1218: record that the last scoring attempt failed, without touching the score or the
+   * status, so the lead keeps its previous score and shows "not scored" honestly. Optional so
+   * test doubles need not implement it.
+   */
+  markScoringFailed?(id: LeadId, tenantId: string, tx?: RepositoryTransaction): Promise<void>;
 
   /**
    * Find a lead by ID

@@ -82,6 +82,8 @@ export const ScoringJobResultSchema = z.object({
   ),
   recommendations: z.array(z.string()),
   modelVersion: z.string(),
+  /** Confidence under the LEAD_SCORING review threshold: the score must not change status. */
+  requiresReview: z.boolean().optional(),
   processedAt: z.iso.datetime(),
   processingTimeMs: z.number(),
 });
@@ -177,46 +179,9 @@ export const NIL_UUID = '00000000-0000-0000-0000-000000000000';
 // ============================================================================
 
 /**
- * Heuristic fallback score when LLM is unavailable or timed out.
- * Pure logic — no LLM dependency. Survives a total LLM outage.
- */
-function computeHeuristicScore(lead: ScoringJobData['lead']): number {
-  let score = 50; // baseline
-
-  // Corporate email domain bump
-  const emailDomain = lead.email.split('@')[1] ?? '';
-  const freeDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com'];
-  if (!freeDomains.includes(emailDomain.toLowerCase())) score += 10;
-
-  // Title signals (decision-making authority)
-  const title = (lead.title ?? '').toLowerCase();
-  if (/\b(ceo|cto|cfo|vp|vice president|director|head|chief)\b/.test(title)) score += 15;
-  else if (/\b(manager|lead|senior|principal)\b/.test(title)) score += 8;
-
-  // Company present
-  if (lead.company && lead.company.length > 1) score += 5;
-
-  // Phone present
-  if (lead.phone) score += 5;
-
-  // Source quality
-  const source = (lead.source ?? '').toLowerCase();
-  if (source === 'referral') score += 10;
-  else if (source === 'website' || source === 'demo_request') score += 5;
-
-  // metadata: companySize
-  const companySize = Number(
-    (lead.metadata as Record<string, unknown> | undefined)?.companySize ?? 0
-  );
-  if (companySize > 500) score += 10;
-  else if (companySize > 100) score += 5;
-
-  return Math.min(100, Math.max(0, score));
-}
-
-/**
- * Wrap LLM scoring in a Promise.race timeout + circuit-breaker catch.
- * Returns `{ result, usedFallback }`.
+ * Wrap LLM scoring in a Promise.race timeout + circuit-breaker catch, with one try on the
+ * secondary provider. Throws ScoringFailedError when no provider produced a usable score.
+ * Returns `{ result, usedFallback }` (usedFallback stays false: a heuristic is never used).
  */
 async function generateScoringWithFallback(
   job: Job<ScoringJobData>,
@@ -273,29 +238,28 @@ async function generateScoringWithFallback(
             fallbackProvider,
             errorClass: classifyError(fallbackError),
           },
-          'Fallback provider also failed — using heuristic'
+          'Fallback provider also failed'
         );
       }
     }
 
+    // #1218 (owner ruling): when no provider produced a usable score, the scoring FAILED. A
+    // made-up heuristic number is no longer saved as if a model had scored the lead.
     logger.warn(
       { jobId: job.id, errorClass: classifyError(error) },
-      'LLM scoring failed or timed out — using heuristic fallback'
+      'Lead scoring failed on every provider — reporting FAILED, no score saved'
     );
-    const heuristicScore = computeHeuristicScore(job.data.lead);
-    const fallbackResult: ScoringResult = {
-      score: heuristicScore,
-      confidence: 0.3,
-      factors: [
-        {
-          name: 'heuristic',
-          impact: heuristicScore,
-          reasoning: 'Heuristic fallback — LLM unavailable',
-        },
-      ],
-      modelVersion: 'fallback',
-    };
-    return { result: fallbackResult, usedFallback: true };
+    throw new ScoringFailedError(classifyError(error));
+  }
+}
+
+/** No provider produced a usable score. The job fails, so nothing is persisted as a score. */
+export class ScoringFailedError extends Error {
+  readonly errorClass: string;
+  constructor(errorClass: string) {
+    super(`Lead scoring failed (${errorClass})`);
+    this.name = 'ScoringFailedError';
+    this.errorClass = errorClass;
   }
 }
 
@@ -683,6 +647,7 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
         factors: result.factors,
         recommendations,
         modelVersion: usedFallback ? 'fallback' : result.modelVersion,
+        requiresReview: result.requiresReview === true,
         processedAt: new Date().toISOString(),
         processingTimeMs,
       };
