@@ -53,6 +53,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { CLAUDE_REVIEW_ARGS, codexExecArgs } from './lib/review-commands.mjs';
 import {
   activeWaivers,
   checkWaivers,
@@ -138,7 +139,8 @@ function claudeAvailable() {
 function runClaudeReview(fullPrompt) {
   // `claude -p` reads the prompt from stdin in print/headless mode and emits a
   // single-turn result. `--output-format json` wraps it as { result: "<text>" }.
-  const r = spawnSync('claude', ['-p', '--output-format', 'json'], {
+  // No shell tools: the reviewer reads, and never starts processes (lib/review-commands.mjs).
+  const r = spawnSync('claude', [...CLAUDE_REVIEW_ARGS], {
     encoding: 'utf8',
     input: fullPrompt,
     stdio: ['pipe', 'pipe', 'pipe'],
@@ -528,7 +530,8 @@ ${diffText || '(no diff output — check base ref)'}
     // A previous run's last message must never be read as this run's verdict: when codex
     // exits without writing one (quota cap, crash), the stale file would replay old findings.
     fs.rmSync(lastMsgPath, { force: true });
-    const r = spawnSync('codex', ['exec', '-', '--ephemeral', '-o', lastMsgPath], {
+    // Read-only sandbox, whatever ~/.codex/config.toml says (lib/review-commands.mjs).
+    const r = spawnSync('codex', codexExecArgs(lastMsgPath), {
       encoding: 'utf8',
       input: fullPrompt,
       stdio: ['pipe', 'pipe', 'pipe'],
