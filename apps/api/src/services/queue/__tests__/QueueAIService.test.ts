@@ -149,6 +149,8 @@ describe('QueueAIService', () => {
     expect(observedJobName).toBe('score-lead');
     expect(observedPayload.lead.email).toBe('lead@example.com');
     expect(observedPayload.tenantId).toBe('tenant-A');
+    // #1218: LeadService writes the lead's score itself; the worker writes only the insight.
+    expect(observedPayload.leadScoreWriter).toBe('service');
   });
 
   // --------------------------------------------------------------------------

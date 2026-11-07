@@ -65,6 +65,12 @@ export const ScoringJobDataSchema = z.object({
   priority: z.number().min(1).max(10).default(5),
   /** W3C traceparent carrier injected by enqueue-side for distributed trace propagation */
   _otelCarrier: z.record(z.string(), z.string()).optional(),
+  /**
+   * #1218: 'service' when LeadService asked for the score (through QueueAIService). It then
+   * writes the lead itself, in its own transaction with the status rules, so the job must not.
+   * Absent for the automatic paths (lead creation, scheduled dispatcher): the job writes it.
+   */
+  leadScoreWriter: z.enum(['service']).optional(),
 });
 
 export type ScoringJobData = z.infer<typeof ScoringJobDataSchema>;
@@ -502,7 +508,33 @@ async function handleScheduledDispatch(
 }
 
 /**
- * Persist scoring result to LeadAIInsight table.
+ * #1218: an automatic scoring records the score on the lead too, so the lead does not read as
+ * "not scored". It runs inside the locked, eligibility-checked transaction of the insight write.
+ * Score fields only: the status is never changed here (auto-qualify stays in LeadService).
+ * updatedAt moves, so a slower manual scoring's failure mark (guarded on the updatedAt it read)
+ * cannot hide this newer score (codex).
+ */
+async function writeAutomaticLeadScore(
+  tx: unknown,
+  leadId: string,
+  tenantId: string,
+  result: ScoringResult
+): Promise<void> {
+  const scoringStatus = requiresHumanReview(result.confidence, 'LEAD_SCORING')
+    ? 'NEEDS_REVIEW'
+    : 'SCORED';
+  const now = new Date();
+  await (tx as { $executeRaw: (s: TemplateStringsArray, ...v: unknown[]) => Promise<number> })
+    .$executeRaw`
+    UPDATE leads SET score = ${Math.round(result.score)},
+      "scoringStatus" = ${scoringStatus}::"LeadScoringStatus", "scoredAt" = ${now},
+      "updatedAt" = ${now}
+    WHERE id = ${leadId} AND "tenantId" = ${tenantId}`;
+}
+
+/**
+ * Persist scoring result to LeadAIInsight table, and for an automatic scoring
+ * (`writeLeadScore`) the lead's own score fields.
  */
 async function persistScoringResult(
   leadId: string,
@@ -510,7 +542,8 @@ async function persistScoringResult(
   email: string,
   result: ScoringResult,
   tier: LeadTier,
-  recommendations: string[]
+  recommendations: string[],
+  writeLeadScore: boolean
 ): Promise<ScoringBlock | 'UNVERIFIED' | null> {
   // Defensive guard: never upsert against a placeholder / unresolved leadId.
   // The scheduled cron sentinel uses NIL_UUID, and no real Lead row exists for
@@ -535,16 +568,7 @@ async function persistScoringResult(
       prisma as never,
       { leadId, tenantId, email },
       async (tx) => {
-        // #1218: the lead row records the score too, so an automatically scored lead does not
-        // read as "not scored". Score fields only: the status is never changed here (auto-qualify
-        // stays in LeadService), and updatedAt is left as is, as for the failure mark.
-        const scoringStatus = requiresHumanReview(result.confidence, 'LEAD_SCORING')
-          ? 'NEEDS_REVIEW'
-          : 'SCORED';
-        await (tx as unknown as typeof prisma).$executeRaw`
-        UPDATE leads SET score = ${Math.round(result.score)},
-          "scoringStatus" = ${scoringStatus}::"LeadScoringStatus", "scoredAt" = ${new Date()}
-        WHERE id = ${leadId} AND "tenantId" = ${tenantId}`;
+        if (writeLeadScore) await writeAutomaticLeadScore(tx, leadId, tenantId, result);
         return (tx as unknown as typeof prisma).leadAIInsight.upsert({
           where: { leadId_tenantId: { leadId, tenantId } },
           create: {
@@ -694,7 +718,8 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
         lead.email,
         result,
         tier,
-        recommendations
+        recommendations,
+        validatedData.leadScoreWriter !== 'service'
       );
       // Erased or restricted while the model ran: the score is not returned either, since
       // BullMQ keeps completed job results in Redis (codex).

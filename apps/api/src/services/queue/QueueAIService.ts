@@ -263,6 +263,9 @@ export class QueueAIService implements AIServicePort {
       },
       correlationId: `lead-score-${input.email}-${Date.now()}`,
       _otelCarrier: carrier,
+      // #1218: the caller (LeadService) writes the lead's score itself, in its own transaction
+      // with the status rules, so the worker writes only the insight.
+      leadScoreWriter: 'service',
     };
 
     let job: Job;

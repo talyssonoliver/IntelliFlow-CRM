@@ -834,12 +834,14 @@ describe('ScoringJob', () => {
       const [strings, ...values] = leadScoreWrites().at(-1)!;
       const sql = (strings as string[]).join('?');
       expect(sql).toMatch(
-        /UPDATE leads SET score = \?,\s+"scoringStatus" = \?::"LeadScoringStatus", "scoredAt" = \?/
+        /UPDATE leads SET score = \?,\s+"scoringStatus" = \?::"LeadScoringStatus", "scoredAt" = \?,\s+"updatedAt" = \?/
       );
-      // Score fields only: no status and no updatedAt.
-      expect(sql).not.toMatch(/"status"|"updatedAt"/);
+      // Score fields only: never the status (auto-qualify stays in LeadService).
+      expect(sql).not.toMatch(/"status"/);
       expect(values.slice(0, 2)).toEqual([75, 'SCORED']);
-      expect(values.slice(3)).toEqual([TEST_UUIDS.lead1, TEST_UUIDS.tenant1]);
+      // updatedAt moves with scoredAt, so a slower manual failure mark cannot hide this score.
+      expect(values[3]).toBe(values[2]);
+      expect(values.slice(4)).toEqual([TEST_UUIDS.lead1, TEST_UUIDS.tenant1]);
     });
 
     it('records a low-confidence automatic score as NEEDS_REVIEW (#1218)', async () => {
@@ -847,6 +849,17 @@ describe('ScoringJob', () => {
       await processScoringJob(job());
       const [, score, status] = leadScoreWrites().at(-1)!;
       expect([score, status]).toEqual([15, 'NEEDS_REVIEW']);
+    });
+
+    it("leaves the lead's score to LeadService when it asked for the score (codex)", async () => {
+      const queued = job();
+      (queued.data as Record<string, unknown>).leadScoreWriter = 'service';
+      await processScoringJob(queued);
+      // The insight is still written; the lead is written by LeadService's own transaction.
+      expect(
+        (prisma as { leadAIInsight: { upsert: ReturnType<typeof vi.fn> } }).leadAIInsight.upsert
+      ).toHaveBeenCalled();
+      expect(leadScoreWrites()).toHaveLength(0);
     });
 
     it('returns no score when the locked re-check cannot run (fails closed, codex)', async () => {
