@@ -206,7 +206,7 @@ export function wrapEmbeddingsWithTracing(
     asRecord['embedQuery'] = async (text: string): Promise<number[]> => {
       const jobTenantId = tenantContextStore.getStore()?.tenantId;
       const tenantId = jobTenantId ?? 'unknown';
-      await guardEmbeddingCall(jobTenantId, meta.tier);
+      await guardEmbeddingCall(jobTenantId, meta.tier, meta.pricingKey);
 
       return tracer.startActiveSpan(
         'llm.embed',
@@ -245,7 +245,7 @@ export function wrapEmbeddingsWithTracing(
     asRecord['embedDocuments'] = async (texts: string[]): Promise<number[][]> => {
       const jobTenantId = tenantContextStore.getStore()?.tenantId;
       const tenantId = jobTenantId ?? 'unknown';
-      await guardEmbeddingCall(jobTenantId, meta.tier);
+      await guardEmbeddingCall(jobTenantId, meta.tier, meta.pricingKey);
 
       return tracer.startActiveSpan(
         'llm.embed',
