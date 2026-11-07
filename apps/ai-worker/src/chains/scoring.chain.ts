@@ -47,6 +47,8 @@ export type ScoringResult = z.infer<typeof leadScoreSchema>;
  */
 export class ScoringInconclusiveError extends Error {
   readonly reason: 'ZERO_CONFIDENCE' | 'NO_FACTORS';
+  /** An expected outcome, not a fault: monitoring logs it as a warning (chain-monitor). */
+  readonly expected = true;
   constructor(reason: 'ZERO_CONFIDENCE' | 'NO_FACTORS') {
     super(`Model gave no usable score (${reason})`);
     this.name = 'ScoringInconclusiveError';
@@ -434,10 +436,14 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
         });
       }
       // The class and shape only, never the message: an error can echo lead text (NF-002).
-      logger.error(
-        { leadId, errorClass: classifyError(error), ...scoringFailureShape(error) },
-        'Lead scoring failed'
-      );
+      // An inconclusive answer is an expected outcome (the model answered, with no usable
+      // score), so it is a warning with its reason; anything else is a fault.
+      const failure = { leadId, errorClass: classifyError(error), ...scoringFailureShape(error) };
+      if (error instanceof ScoringInconclusiveError) {
+        logger.warn(failure, 'Lead scoring inconclusive: the model gave no usable score');
+      } else {
+        logger.error(failure, 'Lead scoring failed');
+      }
 
       // #1218: a failure is never returned as a score of 0. It propagates, so the job can try
       // the fallback provider and, if that fails too, report the scoring as FAILED.

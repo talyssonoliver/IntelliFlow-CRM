@@ -7,7 +7,7 @@
  * @task IFC-168
  */
 
-import type { Job } from 'bullmq';
+import { UnrecoverableError, type Job } from 'bullmq';
 import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
@@ -329,6 +329,65 @@ export class ScoringFailedError extends Error {
     super(`Lead scoring failed (${errorClass})`);
     this.name = 'ScoringFailedError';
     this.errorClass = errorClass;
+  }
+}
+
+/**
+ * True for a queue failure reason that is an expected outcome, not a fault: an inconclusive
+ * scoring. The worker logs it as a warning and never dead-letters it.
+ */
+export function isExpectedJobFailure(failedReason: string | undefined): boolean {
+  return /\bLead scoring failed \(inconclusive\)/.test(failedReason ?? '');
+}
+
+/** True when the scoring ended because the model answered without a usable score. */
+export function isInconclusiveScoring(error: unknown): boolean {
+  return error instanceof ScoringFailedError && error.errorClass === SCORING_INCONCLUSIVE_CLASS;
+}
+
+/**
+ * The error the queue worker throws for a failed scoring job. An inconclusive answer is an
+ * expected outcome, not a fault: the same lead gives the same answer on a retry, so it fails
+ * once, without retries or the dead-letter queue (BullMQ skips both for UnrecoverableError).
+ * The message stays "Lead scoring failed (inconclusive)", which the API maps to "no usable
+ * score". Every other failure is returned as it is, and keeps its retries.
+ */
+export function toScoringJobFailure(error: unknown): unknown {
+  if (!isInconclusiveScoring(error)) return error;
+  return new UnrecoverableError((error as Error).message);
+}
+
+/**
+ * Mark a never-scored lead FAILED after an automatic scoring was inconclusive, so it reads as
+ * a failed scoring instead of an untouched one. Only a lead still at NONE is changed: a failed
+ * re-score never hides an earlier score. Runs under the same lead lock and data-request
+ * re-check as the score write, and never throws: the job's outcome is already decided.
+ */
+async function markAutomaticScoringFailed(
+  leadId: string,
+  tenantId: string,
+  email: string
+): Promise<void> {
+  try {
+    const { prisma } = await loadDb();
+    await writeIfStillEligible(
+      prisma as never,
+      { leadId, tenantId, email },
+      async (tx) =>
+        (
+          tx as unknown as {
+            $executeRaw: (s: TemplateStringsArray, ...v: unknown[]) => Promise<number>;
+          }
+        ).$executeRaw`
+        UPDATE leads SET "scoringStatus" = 'FAILED'::"LeadScoringStatus"
+        WHERE id = ${leadId} AND "tenantId" = ${tenantId}
+          AND "scoringStatus" = 'NONE'::"LeadScoringStatus"`
+    );
+  } catch (err) {
+    logger.warn(
+      { leadId, tenantId, errorClass: classifyError(err) },
+      'Could not mark the lead as failed scoring'
+    );
   }
 }
 
@@ -711,13 +770,23 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
       const breaker = getScoringBreaker();
       // Construct per-job chain with tenantId so versioned configs are resolved per-tenant
       const chainInstance = new LeadScoringChain({ tenantId: validatedData.tenantId });
-      const { result, usedFallback } = await generateScoringWithFallback(
-        job,
-        chainInstance,
-        chainInput,
-        LLM_TIMEOUT_MS,
-        breaker
-      );
+      let scoring: Awaited<ReturnType<typeof generateScoringWithFallback>>;
+      try {
+        scoring = await generateScoringWithFallback(
+          job,
+          chainInstance,
+          chainInput,
+          LLM_TIMEOUT_MS,
+          breaker
+        );
+      } catch (error) {
+        // An automatic scoring writes the lead itself; LeadService marks its own (service) jobs.
+        if (isInconclusiveScoring(error) && validatedData.leadScoreWriter !== 'service') {
+          await markAutomaticScoringFailed(leadId, validatedData.tenantId, lead.email);
+        }
+        throw error;
+      }
+      const { result, usedFallback } = scoring;
 
       await job.updateProgress(90);
 
