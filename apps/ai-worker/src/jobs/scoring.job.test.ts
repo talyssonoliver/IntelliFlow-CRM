@@ -870,6 +870,41 @@ describe('ScoringJob', () => {
       expect(result).toEqual({ skipped: true, reason: 'UNVERIFIED' });
     });
 
+    it("gives the model the lead's engagement history, read in the job tenant", async () => {
+      const db = prisma as unknown as Record<string, any>;
+      db.leadActivity = {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            type: 'EMAIL',
+            title: 'Reply received: what is the price?',
+            timestamp: new Date('2026-11-05T15:00:00Z'),
+            metadata: {},
+          },
+          {
+            type: 'EMAIL',
+            title: 'Outreach email sent',
+            timestamp: new Date('2026-11-01T09:00:00Z'),
+            metadata: {},
+          },
+        ]),
+      };
+      try {
+        await processScoringJob(job());
+        const input = mockScoreLead.mock.calls.at(-1)![0] as { activity?: string };
+        expect(input.activity).toContain(
+          'Engagement: 1 emails sent to the lead, 1 replies from the lead'
+        );
+        expect(input.activity).toContain('EMAIL inbound: Reply received: what is the price?');
+        expect(db.leadActivity.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({
+            where: { leadId: TEST_UUIDS.lead1, tenantId: TEST_UUIDS.tenant1 },
+          })
+        );
+      } finally {
+        delete db.leadActivity;
+      }
+    });
+
     it('reads the lead and the restriction inside the job tenant, by normalised email', async () => {
       await processScoringJob(job());
       expect(db.lead.findFirst).toHaveBeenCalledWith({
