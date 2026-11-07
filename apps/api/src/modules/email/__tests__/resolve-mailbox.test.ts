@@ -1,33 +1,28 @@
 /**
- * Inbound mail is routed only by an exact recipient match against an ACTIVE
- * connected mailbox. These tests pin that: no domain matching, no fallback
- * bucket, and no guessing when an address belongs to more than one place.
+ * Inbound mail is routed only by an exact recipient match against the
+ * provider-proven account address of an ACTIVE Google or Microsoft mailbox.
+ * These tests pin that: no domain matching, no fallback bucket, no typed-in
+ * SMTP address, and no guessing when an address belongs to more than one place.
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { resolveMailboxForInboundEmail } from '../inbound.router';
+import { deliveryRecipients, resolveMailboxForInboundEmail } from '../inbound.router';
 
-type Row = { id: string; tenantId: string; fromAddress: string; accountAddress: string | null };
+type Row = { id: string; tenantId: string; accountAddress: string | null };
 
 function makePrisma(rows: Row[]) {
   const findMany = vi.fn().mockResolvedValue(rows);
   return { prisma: { emailMailbox: { findMany }, user: { findMany: vi.fn() } }, findMany };
 }
 
-const box = (
-  id: string,
-  tenantId: string,
-  fromAddress: string,
-  accountAddress: string | null = null
-): Row => ({
+const box = (id: string, tenantId: string, accountAddress: string): Row => ({
   id,
   tenantId,
-  fromAddress,
   accountAddress,
 });
 
 describe('resolveMailboxForInboundEmail', () => {
-  it('routes to the tenant and mailbox whose address is a recipient', async () => {
+  it('routes to the tenant and mailbox whose account address is a recipient', async () => {
     const { prisma } = makePrisma([box('mb-1', 'tenant-a', 'sales@a.example.invalid')]);
 
     const match = await resolveMailboxForInboundEmail(['sales@a.example.invalid'], prisma);
@@ -35,7 +30,7 @@ describe('resolveMailboxForInboundEmail', () => {
     expect(match).toEqual({ kind: 'matched', tenantId: 'tenant-a', mailboxId: 'mb-1' });
   });
 
-  it('asks only for ACTIVE mailboxes, by exact address, case-insensitively, in one query', async () => {
+  it('asks only for ACTIVE OAuth mailboxes by proven address, case-insensitively, in one query', async () => {
     const { prisma, findMany } = makePrisma([]);
 
     await resolveMailboxForInboundEmail(
@@ -46,47 +41,27 @@ describe('resolveMailboxForInboundEmail', () => {
     expect(findMany).toHaveBeenCalledTimes(1);
     expect(findMany.mock.calls[0][0].where).toEqual({
       status: 'ACTIVE',
-      OR: [
-        { fromAddress: { in: ['sales@a.example.invalid'], mode: 'insensitive' } },
-        { accountAddress: { in: ['sales@a.example.invalid'], mode: 'insensitive' } },
-      ],
+      // An SMTP mailbox's address is typed in, not proven: it never routes inbound mail.
+      kind: { in: ['GMAIL', 'MICROSOFT'] },
+      accountAddress: { in: ['sales@a.example.invalid'], mode: 'insensitive' },
     });
   });
 
-  it('matches an OAuth mailbox by its account address', async () => {
-    const { prisma } = makePrisma([
-      box('mb-2', 'tenant-a', 'alias@a.example.invalid', 'Owner@A.example.invalid'),
-    ]);
+  it('matches the stored address whatever its case', async () => {
+    const { prisma } = makePrisma([box('mb-2', 'tenant-a', 'Owner@A.example.invalid')]);
 
     const match = await resolveMailboxForInboundEmail(['owner@a.example.invalid'], prisma);
 
     expect(match).toEqual({ kind: 'matched', tenantId: 'tenant-a', mailboxId: 'mb-2' });
   });
 
-  it('never routes by domain: two customers on one shared domain get nothing they were not sent', async () => {
-    // Tenant A connected ann@, tenant B connected bob@, both on the same public domain.
+  it('never routes by domain: an address no mailbox has gets nothing', async () => {
     const { prisma } = makePrisma([]);
 
     const match = await resolveMailboxForInboundEmail(['carol@mail.example.invalid'], prisma);
 
     expect(match).toEqual({ kind: 'unmatched' });
     expect(prisma.user.findMany).not.toHaveBeenCalled();
-  });
-
-  it('routes each of two shared-domain customers to their own tenant only', async () => {
-    const a = makePrisma([box('mb-a', 'tenant-a', 'ann@mail.example.invalid')]);
-    const b = makePrisma([box('mb-b', 'tenant-b', 'bob@mail.example.invalid')]);
-
-    expect(await resolveMailboxForInboundEmail(['ann@mail.example.invalid'], a.prisma)).toEqual({
-      kind: 'matched',
-      tenantId: 'tenant-a',
-      mailboxId: 'mb-a',
-    });
-    expect(await resolveMailboxForInboundEmail(['bob@mail.example.invalid'], b.prisma)).toEqual({
-      kind: 'matched',
-      tenantId: 'tenant-b',
-      mailboxId: 'mb-b',
-    });
   });
 
   it('is ambiguous when one address is connected in two tenants', async () => {
@@ -157,5 +132,41 @@ describe('resolveMailboxForInboundEmail', () => {
     await expect(
       resolveMailboxForInboundEmail(['sales@a.example.invalid'], { emailMailbox: { findMany } })
     ).rejects.toThrow('db down');
+  });
+});
+
+describe('deliveryRecipients', () => {
+  const parsed = {
+    headers: {
+      to: [{ address: 'to@a.example.invalid' }],
+      cc: [{ address: 'cc@a.example.invalid' }],
+    },
+  };
+
+  it('uses the signed delivery envelope, the only place a Bcc recipient appears', () => {
+    const envelope = JSON.stringify({ to: ['bcc@a.example.invalid'], from: 'x@b.example.invalid' });
+
+    expect(deliveryRecipients(parsed, envelope)).toEqual(['bcc@a.example.invalid']);
+  });
+
+  it('accepts an envelope whose "to" is a single address', () => {
+    expect(deliveryRecipients(parsed, JSON.stringify({ to: 'one@a.example.invalid' }))).toEqual([
+      'one@a.example.invalid',
+    ]);
+  });
+
+  it.each([
+    ['no envelope', undefined],
+    ['an envelope that is not JSON', 'not json'],
+    ['an envelope without recipients', JSON.stringify({ from: 'x@b.example.invalid' })],
+  ])('falls back to the To and Cc headers with %s', (_label, envelope) => {
+    expect(deliveryRecipients(parsed, envelope)).toEqual([
+      'to@a.example.invalid',
+      'cc@a.example.invalid',
+    ]);
+  });
+
+  it('returns nothing when there is neither an envelope nor a header recipient', () => {
+    expect(deliveryRecipients({ headers: {} }, undefined)).toEqual([]);
   });
 });

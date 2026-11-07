@@ -31,30 +31,43 @@ describeDb('inbound mail routing by mailbox', () => {
   let previousSecret: string | undefined;
   const mailboxIds: Record<string, string> = {};
 
-  // One company mailbox per tenant; the others belong to a user.
+  // One company mailbox per tenant; the others belong to a user. Google mailboxes carry the
+  // address the provider proved; an SMTP mailbox's address is only typed in.
   const addMailbox = async (
     key: string,
     tenantId: string,
     address: string,
-    { status = 'ACTIVE', userId }: { status?: string; userId?: string } = {}
+    {
+      status = 'ACTIVE',
+      userId,
+      kind = 'GMAIL',
+    }: { status?: string; userId?: string; kind?: 'GMAIL' | 'SMTP' } = {}
   ) => {
+    const connection =
+      kind === 'GMAIL'
+        ? { accountAddress: address, refreshToken: PLACEHOLDER }
+        : {
+            smtpHost: 'smtp.example.invalid',
+            smtpPort: 587,
+            smtpSecurity: 'STARTTLS',
+            ...smtpAccountFields(address, PLACEHOLDER),
+          };
     const row = await prisma.emailMailbox.create({
       data: {
         tenantId,
         scope: userId ? 'USER' : 'TENANT',
         userId: userId ?? null,
-        kind: 'SMTP',
+        kind,
         status,
         fromAddress: address,
-        // An ACTIVE SMTP mailbox needs its server settings; none are ever used here.
-        smtpHost: 'smtp.example.invalid',
-        smtpPort: 587,
-        smtpSecurity: 'STARTTLS',
-        ...smtpAccountFields(address, PLACEHOLDER),
+        ...connection,
       },
     });
     mailboxIds[key] = row.id;
   };
+
+  const addUser = (tenantId: string, id: string) =>
+    prisma.user.create({ data: { id, tenantId, email: `${id}@${shared}` } });
 
   beforeAll(async () => {
     previousSecret = process.env.INBOUND_EMAIL_WEBHOOK_SECRET;
@@ -63,23 +76,29 @@ describeDb('inbound mail routing by mailbox', () => {
     for (const id of [tenantA, tenantB]) {
       await prisma.tenant.create({ data: { id, name: id, slug: id } });
       // Users on the shared domain in both tenants: domain matching would have picked one.
-      await prisma.user.create({
-        data: { id: `${id}-user`, tenantId: id, email: `${id}-user@${shared}` },
-      });
+      await addUser(id, `${id}-user`);
+      await addUser(id, `${id}-user2`);
     }
     await addMailbox('ann', tenantA, `ann@${shared}`);
     await addMailbox('bob', tenantB, `bob@${shared}`);
-    await prisma.user.create({
-      data: { id: `${tenantA}-user2`, tenantId: tenantA, email: `${tenantA}-user2@${shared}` },
-    });
     await addMailbox('dupA', tenantA, `dup@${shared}`, { userId: `${tenantA}-user` });
     await addMailbox('dupB', tenantB, `dup@${shared}`, { userId: `${tenantB}-user` });
     await addMailbox('gone', tenantA, `gone@${shared}`, {
       status: 'DISCONNECTED',
       userId: `${tenantA}-user2`,
     });
+    // Someone in tenant B types tenant A's address into an SMTP mailbox.
+    await addMailbox('claim', tenantB, `ann@${shared}`, {
+      kind: 'SMTP',
+      userId: `${tenantB}-user2`,
+    });
+    // An address that only a typed-in SMTP mailbox has.
+    await addUser(tenantA, `${tenantA}-user3`);
+    await addMailbox('typed', tenantA, `typed@${shared}`, {
+      kind: 'SMTP',
+      userId: `${tenantA}-user3`,
+    });
   });
-
   afterAll(async () => {
     const tenants = [tenantA, tenantB];
     await prisma.emailRecord.deleteMany({ where: { tenantId: { in: tenants } } });
@@ -130,10 +149,20 @@ describeDb('inbound mail routing by mailbox', () => {
     ]);
   });
 
+  it("keeps delivering to the proven mailbox when another tenant's SMTP mailbox claims the address", async () => {
+    const result = await send(`ann@${shared}`, `claimed-${run}`);
+
+    expect(result.stored).toBe(true);
+    expect(await rowsFor(`claimed-${run}`)).toEqual([
+      { tenantId: tenantA, mailboxId: mailboxIds.ann },
+    ]);
+  });
+
   it.each([
     ['an address on the shared domain that no mailbox has', 'carol'],
     ['an address connected in both tenants', 'dup'],
     ['a disconnected mailbox', 'gone'],
+    ['an address only an SMTP mailbox claims', 'typed'],
   ])('stores nothing anywhere for %s', async (_label, local) => {
     const subject = `to-${local}-${run}`;
 

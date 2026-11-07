@@ -68,8 +68,8 @@ function signPayload(payload: Record<string, unknown>, secret: string = TEST_SEC
 const INBOX_MAILBOX = {
   id: 'mb-inbox',
   tenantId: 'tenant-inbox',
-  fromAddress: 'inbox@intelliflow.com',
-  accountAddress: null,
+  kind: 'GMAIL',
+  accountAddress: 'inbox@intelliflow.com',
 };
 
 const basePayload = {
@@ -219,6 +219,24 @@ describe('Inbound Email Webhook — SEC-004 HMAC signature verification', () => 
     // The log says why, never who: no recipient address in it.
     expect(JSON.stringify(warn.mock.calls)).not.toContain('inbox@intelliflow.com');
     warn.mockRestore();
+  });
+
+  it('routes by the signed delivery envelope, so a Bcc recipient is found', async () => {
+    const bccMailbox = { ...INBOX_MAILBOX, id: 'mb-bcc', accountAddress: 'hidden@intelliflow.com' };
+    (prismaMock.emailMailbox.findMany as any).mockResolvedValue([bccMailbox]);
+    (prismaMock.emailRecord.create as any).mockResolvedValue({ id: 'bcc-email' });
+    const payload = {
+      ...basePayload,
+      envelope: JSON.stringify({ to: ['hidden@intelliflow.com'] }),
+    };
+    const caller = callerWithHeaders({ 'x-inbound-email-signature': signPayload(payload) });
+
+    const result = await caller.webhook(payload);
+
+    expect(result).toEqual({ success: true, emailId: 'bcc-email', stored: true });
+    const where = (prismaMock.emailMailbox.findMany as any).mock.calls[0][0].where;
+    expect(where.accountAddress.in).toEqual(['hidden@intelliflow.com']);
+    expect((prismaMock.emailRecord.create as any).mock.calls[0][0].data.mailboxId).toBe('mb-bcc');
   });
 
   it('fails the call when the mailbox lookup fails, so the provider retries', async () => {

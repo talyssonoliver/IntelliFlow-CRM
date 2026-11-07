@@ -65,8 +65,8 @@ import { inboundEmailRouter, computeInboundEmailWebhookSignature } from '../inbo
 const INBOX_MAILBOX = {
   id: 'mb-inbox',
   tenantId: 'tenant-inbox',
-  fromAddress: 'inbox@intelliflow.com',
-  accountAddress: null,
+  kind: 'GMAIL',
+  accountAddress: 'inbox@intelliflow.com',
 };
 
 describe('Inbound Email Router', () => {

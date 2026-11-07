@@ -331,7 +331,7 @@ export const inboundEmailRouter = createTRPCRouter({
           }
 
           // Store email in the tenant of the mailbox it was sent to
-          const stored = await storeEmail(parsed, ctx);
+          const stored = await storeEmail(parsed, ctx, input.envelope);
 
           // Mail with no single mailbox is acknowledged, so the provider doesn't retry it, and dropped.
           if (!stored) return { success: true, emailId: parsed.id, stored: false };
@@ -1255,15 +1255,21 @@ function normaliseRecipients(toAddresses: string[]): string[] {
   return out;
 }
 
+/** Mailbox kinds whose address the provider proved at connect (OAuth sign-in). */
+const ROUTABLE_MAILBOX_KINDS = ['GMAIL', 'MICROSOFT'] as const;
+
 /**
  * Find the mailbox an inbound email was sent to.
  *
- * Only an exact recipient match against an ACTIVE connected mailbox counts. The
- * recipient's domain, other users' addresses and the sender are never used: a
- * shared domain such as gmail.com would otherwise hand one customer's mail to
- * another. When recipients match mailboxes in more than one tenant, or one
- * address is connected twice, the answer is `ambiguous` and nothing is stored.
- * A database error is thrown, so the provider retries instead of losing mail.
+ * Only an exact recipient match counts, and only against the account address of
+ * an ACTIVE mailbox whose provider proved who owns it (Google or Microsoft
+ * sign-in). An SMTP mailbox's address is typed in and not proven, so it never
+ * routes: otherwise anyone could claim another customer's address and receive,
+ * or block, their mail. The recipient's domain, other users' addresses and the
+ * sender are never used. When recipients match mailboxes in more than one
+ * tenant, or one address is connected twice, the answer is `ambiguous` and
+ * nothing is stored. A database error is thrown, so the provider retries
+ * instead of losing mail.
  */
 export async function resolveMailboxForInboundEmail(
   toAddresses: string[],
@@ -1272,32 +1278,22 @@ export async function resolveMailboxForInboundEmail(
   const recipients = normaliseRecipients(toAddresses);
   if (recipients.length === 0) return { kind: 'unmatched' };
 
-  const mailboxes: Array<{
-    id: string;
-    tenantId: string;
-    fromAddress: string;
-    accountAddress: string | null;
-  }> = await prisma.emailMailbox.findMany({
-    where: {
-      status: 'ACTIVE',
-      OR: [
-        { fromAddress: { in: recipients, mode: 'insensitive' } },
-        { accountAddress: { in: recipients, mode: 'insensitive' } },
-      ],
-    },
-    select: { id: true, tenantId: true, fromAddress: true, accountAddress: true },
-  });
+  const mailboxes: Array<{ id: string; tenantId: string; accountAddress: string | null }> =
+    await prisma.emailMailbox.findMany({
+      where: {
+        status: 'ACTIVE',
+        kind: { in: [...ROUTABLE_MAILBOX_KINDS] },
+        accountAddress: { in: recipients, mode: 'insensitive' },
+      },
+      select: { id: true, tenantId: true, accountAddress: true },
+    });
 
   if (mailboxes.length === 0) return { kind: 'unmatched' };
   if (new Set(mailboxes.map((m) => m.tenantId)).size > 1) return { kind: 'ambiguous' };
 
   // One tenant: the first recipient that is a mailbox decides which one.
   for (const recipient of recipients) {
-    const hits = mailboxes.filter(
-      (m) =>
-        m.fromAddress.toLowerCase() === recipient ||
-        (m.accountAddress ?? '').toLowerCase() === recipient
-    );
+    const hits = mailboxes.filter((m) => (m.accountAddress ?? '').toLowerCase() === recipient);
     if (hits.length > 1) return { kind: 'ambiguous' };
     if (hits.length === 1) {
       return { kind: 'matched', tenantId: hits[0].tenantId, mailboxId: hits[0].id };
@@ -1307,13 +1303,34 @@ export async function resolveMailboxForInboundEmail(
 }
 
 /**
+ * Who the mail was delivered to. The provider's delivery envelope is part of the
+ * signed payload and is the only place a Bcc recipient appears, so it decides
+ * when present. Without one (a raw submission) the To and Cc headers are used.
+ */
+export function deliveryRecipients(parsed: any, envelope: string | undefined): string[] {
+  if (envelope) {
+    try {
+      const to = (JSON.parse(envelope) as { to?: unknown }).to;
+      const list = Array.isArray(to) ? to : [to];
+      const addresses = list.filter((a): a is string => typeof a === 'string');
+      if (addresses.length > 0) return addresses;
+    } catch {
+      // Not JSON: fall back to the headers below.
+    }
+  }
+  const header = (key: 'to' | 'cc') =>
+    ((parsed.headers?.[key] ?? []) as Array<{ address?: string }>).map((r) => r.address ?? '');
+  return [...header('to'), ...header('cc')];
+}
+/**
  * Store parsed inbound email in the tenant of the mailbox it was sent to.
  * Returns the record id and tenant for the attachments, or null when the mail
  * has no single mailbox to belong to: it is then not stored at all.
  */
 async function storeEmail(
   parsed: any,
-  ctx: unknown
+  ctx: unknown,
+  envelope?: string
 ): Promise<{ emailId: string; tenantId: string } | null> {
   const prisma = (ctx as any).prisma;
   if (!prisma) {
@@ -1322,13 +1339,14 @@ async function storeEmail(
   }
 
   const toAddresses = (parsed.headers?.to ?? []).map((r: any) => r.address as string);
-  const match = await resolveMailboxForInboundEmail(toAddresses, prisma);
+  const recipients = deliveryRecipients(parsed, envelope);
+  const match = await resolveMailboxForInboundEmail(recipients, prisma);
   if (match.kind !== 'matched') {
     // No addresses in the log: the count is enough to tell a stray mail from a misconfiguration.
     console.warn('[inbound] mail not stored', {
       reason: match.kind,
       emailId: parsed.id,
-      recipients: toAddresses.length,
+      recipients: recipients.length,
     });
     return null;
   }
