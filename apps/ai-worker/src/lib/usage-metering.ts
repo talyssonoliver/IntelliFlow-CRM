@@ -192,7 +192,7 @@ export function recordEmbeddingUsage(
   const inputTokens = texts.reduce((sum, text) => sum + countTokens(text, model), 0);
   // The worker-wide monthly budget counts every paid call, whatever the tenant or the cost
   // tracking setting. Counted at once; the write itself never throws.
-  void recordMonthlySpend(model, inputTokens, 0);
+  recordMonthlySpend(model, inputTokens, 0).catch(() => undefined);
   if (!isBillableTenant(tenantId) || !costTrackingEnabled()) return;
   recordSafely(() =>
     costTracker.recordUsage({
