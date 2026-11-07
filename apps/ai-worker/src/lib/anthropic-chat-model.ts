@@ -55,6 +55,9 @@ export interface AnthropicChatModelParams extends BaseChatModelParams {
   client?: Pick<Anthropic, 'messages'>;
 }
 
+/** Stop reasons that mean the model finished its answer. */
+const COMPLETE_STOP_REASONS: ReadonlySet<string> = new Set(['end_turn', 'stop_sequence']);
+
 /** What a completed but unusable response cost: the shape recordModelUsage reads. */
 export interface BilledUsage {
   usage_metadata: { input_tokens: number; output_tokens: number; total_tokens: number };
@@ -182,16 +185,16 @@ export class AnthropicChatModel extends BaseChatModel<AnthropicChatCallOptions> 
       },
     };
 
-    if (response.stop_reason === 'refusal') {
-      const category = response.stop_details?.category;
+    // Only a finished answer is usable. Every other stop reason (refusal, max_tokens,
+    // model_context_window_exceeded, pause_turn, tool_use, or one added later) is a failure.
+    const stopReason = response.stop_reason ?? 'none';
+    if (!COMPLETE_STOP_REASONS.has(stopReason)) {
+      const category = stopReason === 'refusal' ? response.stop_details?.category : undefined;
       throw new AnthropicIncompleteResponseError(
-        'refusal',
+        stopReason,
         billed,
         category ? `category=${category}` : undefined
       );
-    }
-    if (response.stop_reason === 'max_tokens') {
-      throw new AnthropicIncompleteResponseError('max_tokens', billed);
     }
 
     // Read text blocks by type: with adaptive thinking a response can start with thinking blocks.

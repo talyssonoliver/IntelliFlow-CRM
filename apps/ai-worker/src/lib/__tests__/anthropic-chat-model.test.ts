@@ -214,9 +214,17 @@ describe('AnthropicChatModel', () => {
     await expect(call).rejects.toThrow(/refusal.*cyber/);
   });
 
-  it('throws when the answer was cut off at max_tokens', async () => {
-    const { model } = modelWith(async () => reply('{"score":', { stop_reason: 'max_tokens' }));
-    await expect(model.invoke('x')).rejects.toThrow(/max_tokens/);
+  it.each(['max_tokens', 'model_context_window_exceeded', 'pause_turn', 'tool_use', null])(
+    'throws on stop_reason %s: only a finished answer is usable',
+    async (stopReason) => {
+      const { model } = modelWith(async () => reply('{"score":', { stop_reason: stopReason }));
+      await expect(model.invoke('x')).rejects.toBeInstanceOf(AnthropicIncompleteResponseError);
+    }
+  );
+
+  it('accepts an answer that ended on a stop sequence', async () => {
+    const { model } = modelWith(async () => reply('done', { stop_reason: 'stop_sequence' }));
+    await expect(model.invoke('x')).resolves.toMatchObject({ content: 'done' });
   });
 
   it('lets a rate limit through as an error another model may fix', async () => {
