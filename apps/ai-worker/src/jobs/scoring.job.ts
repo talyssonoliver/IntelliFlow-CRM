@@ -7,7 +7,7 @@
  * @task IFC-168
  */
 
-import type { Job } from 'bullmq';
+import { UnrecoverableError, type Job } from 'bullmq';
 import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
@@ -258,11 +258,15 @@ async function generateScoringWithFallback(
     // #1218 (owner ruling): when no provider produced a usable score, the scoring FAILED. A
     // made-up heuristic number is no longer saved as if a model had scored the lead.
     const errorClass = scoringErrorClass(error, fallbackOutcome);
+    // A provider that did not answer (429, timeout, outage) may answer on a retry, even when
+    // the other one was inconclusive: such a failure keeps its retries.
+    const providerFault =
+      !isInconclusive(error) || (fallbackOutcome !== undefined && !isInconclusive(fallbackOutcome));
     logger.warn(
-      { jobId: job.id, errorClass },
+      { jobId: job.id, errorClass, providerFault },
       'Lead scoring failed on every provider — reporting FAILED, no score saved'
     );
-    throw new ScoringFailedError(errorClass);
+    throw new ScoringFailedError(errorClass, providerFault);
   }
 }
 
@@ -325,10 +329,88 @@ async function scoreThroughBreaker(
 /** No provider produced a usable score. The job fails, so nothing is persisted as a score. */
 export class ScoringFailedError extends Error {
   readonly errorClass: string;
-  constructor(errorClass: string) {
-    super(`Lead scoring failed (${errorClass})`);
+  /** A provider failed without answering, so a retry may still produce a score. */
+  readonly providerFault: boolean;
+  constructor(errorClass: string, providerFault = errorClass !== SCORING_INCONCLUSIVE_CLASS) {
+    // The API maps "Lead scoring failed (inconclusive)" (also with the suffix) to "no usable
+    // score". Only the exact message, with no provider fault, is a terminal outcome.
+    const suffix =
+      errorClass === SCORING_INCONCLUSIVE_CLASS && providerFault ? ' after a provider error' : '';
+    super(`Lead scoring failed (${errorClass})${suffix}`);
     this.name = 'ScoringFailedError';
     this.errorClass = errorClass;
+    this.providerFault = providerFault;
+  }
+}
+
+const TERMINAL_INCONCLUSIVE_MESSAGE = `Lead scoring failed (${SCORING_INCONCLUSIVE_CLASS})`;
+
+/**
+ * True for a queue failure reason that is an expected outcome, not a fault: a scoring every
+ * provider answered without a usable score. The worker logs it as a warning and never
+ * dead-letters it. A failure that also had a provider fault is not one.
+ */
+export function isExpectedJobFailure(failedReason: string | undefined): boolean {
+  return (failedReason ?? '').trim() === TERMINAL_INCONCLUSIVE_MESSAGE;
+}
+
+/**
+ * True when the scoring ended because the model answered without a usable score and no
+ * provider failed: a retry would give the same answer.
+ */
+export function isInconclusiveScoring(error: unknown): boolean {
+  return (
+    error instanceof ScoringFailedError &&
+    error.errorClass === SCORING_INCONCLUSIVE_CLASS &&
+    !error.providerFault
+  );
+}
+
+/**
+ * The error the queue worker throws for a failed scoring job. An inconclusive answer is an
+ * expected outcome, not a fault: the same lead gives the same answer on a retry, so it fails
+ * once, without retries or the dead-letter queue (BullMQ skips both for UnrecoverableError).
+ * The message stays "Lead scoring failed (inconclusive)", which the API maps to "no usable
+ * score". Every other failure is returned as it is, and keeps its retries.
+ */
+export function toScoringJobFailure(error: unknown): unknown {
+  if (!isInconclusiveScoring(error)) return error;
+  // `expected` keeps the shared worker's failure logs at warning level (worker-shared
+  // isExpectedJobOutcome).
+  return Object.assign(new UnrecoverableError((error as Error).message), { expected: true });
+}
+
+/**
+ * Mark a never-scored lead FAILED after an automatic scoring was inconclusive, so it reads as
+ * a failed scoring instead of an untouched one. Only a lead still at NONE is changed: a failed
+ * re-score never hides an earlier score. Runs under the same lead lock and data-request
+ * re-check as the score write, and never throws: the job's outcome is already decided.
+ */
+async function markAutomaticScoringFailed(
+  leadId: string,
+  tenantId: string,
+  email: string
+): Promise<void> {
+  try {
+    const { prisma } = await loadDb();
+    await writeIfStillEligible(
+      prisma as never,
+      { leadId, tenantId, email },
+      async (tx) =>
+        (
+          tx as unknown as {
+            $executeRaw: (s: TemplateStringsArray, ...v: unknown[]) => Promise<number>;
+          }
+        ).$executeRaw`
+        UPDATE leads SET "scoringStatus" = 'FAILED'::"LeadScoringStatus"
+        WHERE id = ${leadId} AND "tenantId" = ${tenantId}
+          AND "scoringStatus" = 'NONE'::"LeadScoringStatus"`
+    );
+  } catch (err) {
+    logger.warn(
+      { leadId, tenantId, errorClass: classifyError(err) },
+      'Could not mark the lead as failed scoring'
+    );
   }
 }
 
@@ -711,13 +793,23 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
       const breaker = getScoringBreaker();
       // Construct per-job chain with tenantId so versioned configs are resolved per-tenant
       const chainInstance = new LeadScoringChain({ tenantId: validatedData.tenantId });
-      const { result, usedFallback } = await generateScoringWithFallback(
-        job,
-        chainInstance,
-        chainInput,
-        LLM_TIMEOUT_MS,
-        breaker
-      );
+      let scoring: Awaited<ReturnType<typeof generateScoringWithFallback>>;
+      try {
+        scoring = await generateScoringWithFallback(
+          job,
+          chainInstance,
+          chainInput,
+          LLM_TIMEOUT_MS,
+          breaker
+        );
+      } catch (error) {
+        // An automatic scoring writes the lead itself; LeadService marks its own (service) jobs.
+        if (isInconclusiveScoring(error) && validatedData.leadScoreWriter !== 'service') {
+          await markAutomaticScoringFailed(leadId, validatedData.tenantId, lead.email);
+        }
+        throw error;
+      }
+      const { result, usedFallback } = scoring;
 
       await job.updateProgress(90);
 
