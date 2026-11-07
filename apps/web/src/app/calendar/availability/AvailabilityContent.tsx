@@ -40,7 +40,7 @@ import {
 
 const CLOSURES_TITLE_ID = 'availability-closures-title';
 const BREADCRUMBS = [
-  { label: 'Dashboard', href: '/' },
+  { label: 'Home', href: '/' },
   { label: 'Calendar', href: '/calendar' },
   { label: 'Availability' },
 ];

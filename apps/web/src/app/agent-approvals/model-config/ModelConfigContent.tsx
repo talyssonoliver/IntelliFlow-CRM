@@ -41,7 +41,7 @@ const DESCRIPTION =
   'Which model each AI feature uses, its fallbacks, parameters and a monthly cost ceiling.';
 
 const BREADCRUMBS = [
-  { label: 'Dashboard', href: '/' },
+  { label: 'Home', href: '/' },
   { label: 'AI & Agents', href: '/agent-approvals' },
   { label: 'AI Settings', href: '/agent-approvals/ai-settings' },
   { label: TITLE },

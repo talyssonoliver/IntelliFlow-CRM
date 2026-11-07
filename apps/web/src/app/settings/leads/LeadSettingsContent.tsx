@@ -314,7 +314,7 @@ export default function LeadSettingsContent() {
     <div className="w-full">
       <PageHeader
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
+          { label: 'Home', href: '/' },
           { label: 'Leads', href: '/leads' },
           { label: 'Lead Settings' },
         ]}

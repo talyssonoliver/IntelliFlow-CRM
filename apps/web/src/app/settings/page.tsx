@@ -38,7 +38,7 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        breadcrumbs={[{ label: 'Dashboard', href: '/' }, { label: 'Settings' }]}
+        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Settings' }]}
         title="Settings"
         description="Manage your account, team, and application settings"
       />

@@ -176,7 +176,7 @@ export function DocumentTypeManager() {
     <div className="space-y-6">
       <PageHeader
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
+          { label: 'Home', href: '/' },
           { label: 'Documents', href: '/documents' },
           { label: 'Document Types' },
         ]}
@@ -236,7 +236,7 @@ export function DocumentTypeManager() {
               <span className="material-symbols-outlined mr-1 text-sm" aria-hidden="true">
                 add
               </span>
-              Add Type
+              <span>Add Type</span>
             </Button>
           </div>
 
