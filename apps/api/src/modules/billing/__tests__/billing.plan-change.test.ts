@@ -54,6 +54,7 @@ const sub = (status: string, itemId: string | null = 'si_1') => ({
   status,
   priceId: 'price_starter_monthly',
   itemId: itemId ?? undefined,
+  quantity: 5,
 });
 
 describe('updateSubscription — plan change (#1239)', () => {
@@ -90,6 +91,17 @@ describe('updateSubscription — plan change (#1239)', () => {
     );
   });
 
+  it('keeps the seats a subscription has when only the plan changes', async () => {
+    await caller().updateSubscription({ planId: 'professional', billingCycle: 'monthly' });
+
+    expect(stripe.updateSubscription.mock.calls[0][1].quantity).toBe(5);
+  });
+
+  it('uses the seats a change sets, over the current ones', async () => {
+    await caller().updateSubscription({ planId: 'professional', quantity: 8 });
+
+    expect(stripe.updateSubscription.mock.calls[0][1].quantity).toBe(8);
+  });
   it('defaults to monthly when no period is given', async () => {
     await caller().updateSubscription({ planId: 'professional' });
 

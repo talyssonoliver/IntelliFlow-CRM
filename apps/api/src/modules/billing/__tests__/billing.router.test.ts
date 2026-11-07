@@ -770,7 +770,8 @@ describe('billingRouter', () => {
         // #1239: the plan item is named, so Stripe replaces it rather than adding another.
         itemId: 'si_123',
         priceId: 'price_enterprise_monthly',
-        quantity: undefined,
+        // The seats are kept across a plan change.
+        quantity: 5,
       });
     });
 

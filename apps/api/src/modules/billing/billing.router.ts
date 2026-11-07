@@ -911,7 +911,8 @@ export const billingRouter = createTRPCRouter({
       } = {
         itemId: planItemId(activeSubscription, Boolean(priceId || input.quantity)),
         priceId,
-        quantity: input.quantity,
+        // A plan change keeps the seats the customer has unless the change sets them (#1239).
+        quantity: input.quantity ?? (priceId ? activeSubscription.quantity : undefined),
       };
       if (input.cancelAtPeriodEnd !== undefined) {
         updateParams.cancel_at_period_end = input.cancelAtPeriodEnd;
