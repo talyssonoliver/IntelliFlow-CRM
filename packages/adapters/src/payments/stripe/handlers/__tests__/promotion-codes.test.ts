@@ -237,4 +237,11 @@ describe('updateSubscription names the plan item (#1239)', () => {
     expect(body.has('items[0][id]')).toBe(false);
     expect(body.get('cancel_at_period_end')).toBe('true');
   });
+
+  it('sends false to reactivate a subscription set to cancel', async () => {
+    await updateSubscription(config, 'sub_1', { cancelAtPeriodEnd: false });
+
+    const body = mockMakeRequest.mock.calls[0][3] as URLSearchParams;
+    expect(body.get('cancel_at_period_end')).toBe('false');
+  });
 });

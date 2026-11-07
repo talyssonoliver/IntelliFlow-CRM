@@ -165,9 +165,15 @@ describe('updateSubscription — plan change (#1239)', () => {
 
     await caller().updateSubscription({ cancelAtPeriodEnd: true });
 
-    expect(stripe.updateSubscription.mock.calls[0][1]).toMatchObject({
-      cancel_at_period_end: true,
-    });
+    // The adapter reads cancelAtPeriodEnd: a snake_case key would be dropped before Stripe.
+    expect(stripe.updateSubscription.mock.calls[0][1]).toMatchObject({ cancelAtPeriodEnd: true });
+    expect(stripe.updateSubscription.mock.calls[0][1]).not.toHaveProperty('cancel_at_period_end');
+  });
+
+  it('passes false through to reactivate a subscription set to cancel', async () => {
+    await caller().updateSubscription({ cancelAtPeriodEnd: false });
+
+    expect(stripe.updateSubscription.mock.calls[0][1].cancelAtPeriodEnd).toBe(false);
   });
   it('still says there is no subscription when the only one has ended', async () => {
     stripe.listSubscriptions.mockResolvedValue(ok([sub('canceled')]));

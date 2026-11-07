@@ -251,7 +251,7 @@ interface IStripeAdapter {
   ): Promise<StripeResult<StripeCustomer>>;
   updateSubscription(
     subscriptionId: string,
-    params: { itemId?: string; priceId?: string; quantity?: number }
+    params: { itemId?: string; priceId?: string; quantity?: number; cancelAtPeriodEnd?: boolean }
   ): Promise<StripeResult<StripeSubscription>>;
   cancelSubscription(
     subscriptionId: string,
@@ -907,7 +907,7 @@ export const billingRouter = createTRPCRouter({
         itemId?: string;
         priceId?: string;
         quantity?: number;
-        cancel_at_period_end?: boolean;
+        cancelAtPeriodEnd?: boolean;
       } = {
         itemId: planItemId(activeSubscription, Boolean(priceId || input.quantity)),
         priceId,
@@ -915,7 +915,8 @@ export const billingRouter = createTRPCRouter({
         quantity: input.quantity ?? (priceId ? activeSubscription.quantity : undefined),
       };
       if (input.cancelAtPeriodEnd !== undefined) {
-        updateParams.cancel_at_period_end = input.cancelAtPeriodEnd;
+        // The adapter reads cancelAtPeriodEnd; a snake_case key here was silently dropped.
+        updateParams.cancelAtPeriodEnd = input.cancelAtPeriodEnd;
       }
 
       const result = await stripe.updateSubscription(activeSubscription.id, updateParams);
