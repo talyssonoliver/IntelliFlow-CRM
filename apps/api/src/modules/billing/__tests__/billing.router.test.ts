@@ -4,7 +4,7 @@
  * @implements PG-025 (Billing Portal)
  */
 
-import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll, afterAll } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { billingRouter, clearBillingCache } from '../billing.router';
 import { createTRPCRouter } from '../../../trpc';
@@ -138,6 +138,12 @@ describe('billingRouter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearBillingCache();
+    // #1239: a raw priceId must be a configured plan price, as it is in production.
+    vi.stubEnv('STRIPE_PRICE_ENTERPRISE_MONTHLY', 'price_enterprise_monthly');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   // ============================================
@@ -870,9 +876,9 @@ describe('billingRouter', () => {
         mockContext as Parameters<typeof billingRouter.createCaller>[0]
       );
 
-      await expect(caller.updateSubscription({ priceId: 'price_invalid' })).rejects.toThrow(
-        'Invalid price ID'
-      );
+      await expect(
+        caller.updateSubscription({ priceId: 'price_enterprise_monthly' })
+      ).rejects.toThrow('Invalid price ID');
     });
 
     it('throws error when listing subscriptions fails', async () => {

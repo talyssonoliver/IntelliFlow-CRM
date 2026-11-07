@@ -33,6 +33,8 @@ import {
   pauseSubscriptionInputSchema,
   getUpcomingInvoiceInputSchema,
   updateBillingInformationInputSchema,
+  PAYMENT_ISSUE_BLOCKS_PLAN_CHANGE_MESSAGE,
+  PAYMENT_ISSUE_SUBSCRIPTION_STATUSES,
   promotionCodeSchema,
   INVALID_PROMOTION_CODE_MESSAGE,
 } from '@intelliflow/validators';
@@ -319,6 +321,41 @@ async function usablePromotionCodeId(
     if (!product.value || !promo.value.productIds.includes(product.value)) throw invalid();
   }
   return promo.value.id;
+}
+
+/**
+ * The Stripe price a plan change moves to (#1239), or undefined when the plan isn't changing.
+ * A plan and billing period resolve on the server, as checkout does. A raw price id must be
+ * one of the configured plan prices: the browser can't pick an arbitrary price.
+ */
+function planChangePriceId(input: {
+  planId?: string;
+  billingCycle?: 'monthly' | 'annual';
+  priceId?: string;
+}): string | undefined {
+  if (input.planId) return resolvePriceId(input.planId, input.billingCycle ?? 'monthly');
+  if (input.priceId === undefined) return undefined;
+  if (!planTierForPriceId(input.priceId)) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: 'That price is not one of the plans.' });
+  }
+  return input.priceId;
+}
+
+/**
+ * The subscription a change applies to: the active or trialing one. Without one, says why:
+ * a subscription whose last payment failed must have its payment fixed first (#1239).
+ */
+function changeableSubscription(subscriptions: StripeSubscription[]): StripeSubscription {
+  const live = subscriptions.find((sub) => sub.status === 'active' || sub.status === 'trialing');
+  if (live) return live;
+  const needsPayment = subscriptions.some((sub) =>
+    (PAYMENT_ISSUE_SUBSCRIPTION_STATUSES as readonly string[]).includes(sub.status)
+  );
+  throw new TRPCError(
+    needsPayment
+      ? { code: 'PRECONDITION_FAILED', message: PAYMENT_ISSUE_BLOCKS_PLAN_CHANGE_MESSAGE }
+      : { code: 'NOT_FOUND', message: 'No active subscription found.' }
+  );
 }
 
 async function getStripeAdapter(): Promise<IStripeAdapter> {
@@ -840,20 +877,12 @@ export const billingRouter = createTRPCRouter({
         });
       }
 
-      const activeSubscription = subsResult.value.find(
-        (sub) => sub.status === 'active' || sub.status === 'trialing'
-      );
+      const activeSubscription = changeableSubscription(subsResult.value);
 
-      if (!activeSubscription) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'No active subscription found.',
-        });
-      }
-
+      const priceId = planChangePriceId(input);
       const updateParams: { priceId?: string; quantity?: number; cancel_at_period_end?: boolean } =
         {
-          priceId: input.priceId,
+          priceId,
           quantity: input.quantity,
         };
       if (input.cancelAtPeriodEnd !== undefined) {
@@ -870,19 +899,19 @@ export const billingRouter = createTRPCRouter({
       }
 
       // IFC-211: Sync modules after plan change
-      if (user.tenantId && input.priceId) {
+      if (user.tenantId && priceId) {
         try {
           const moduleAccess =
             ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
           if (moduleAccess) {
             // Sync to the tier the NEW price belongs to (syncModulesToPlan also records it on
             // Tenant.plan). Re-reading the current plan here would be a no-op sync.
-            const plan = planTierForPriceId(input.priceId);
+            const plan = planTierForPriceId(priceId);
             if (plan) {
               await moduleAccess.syncModulesToPlan(user.tenantId, plan);
             } else {
               console.warn(
-                `[Billing] Price ${input.priceId} is not a configured plan price; ` +
+                `[Billing] Price ${priceId} is not a configured plan price; ` +
                   'Tenant.plan will be synced by the subscription webhook.'
               );
             }
@@ -1525,9 +1554,14 @@ export const billingRouter = createTRPCRouter({
       });
 
       if (subscriptionResult.isFailure) {
+        // Stripe applies a code's own limits (first purchase only, minimum amount) itself and
+        // refuses before charging: say the code isn't valid rather than show Stripe's text.
+        const refusedCode =
+          promotionCodeId !== undefined &&
+          /promotion|coupon|discount/i.test(subscriptionResult.error.message);
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: subscriptionResult.error.message,
+          message: refusedCode ? INVALID_PROMOTION_CODE_MESSAGE : subscriptionResult.error.message,
         });
       }
 

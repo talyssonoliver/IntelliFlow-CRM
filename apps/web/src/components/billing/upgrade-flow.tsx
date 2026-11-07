@@ -35,6 +35,10 @@ import {
   getFeatureChangeBadge,
   formatPriceDifference,
 } from '@/lib/billing/plan-changes';
+import {
+  PAYMENT_ISSUE_BLOCKS_PLAN_CHANGE_MESSAGE,
+  PAYMENT_ISSUE_SUBSCRIPTION_STATUSES,
+} from '@intelliflow/validators';
 import pricingData from '@/data/pricing-data.json';
 import { PlanCard } from './plan-card';
 import { ErrorState, CardSkeleton } from './billing-shared';
@@ -187,6 +191,8 @@ interface ConfirmViewProps {
   cycle: 'monthly' | 'annual';
   onConfirm: () => void;
   isPending: boolean;
+  /** Why the last attempt failed, shown above the buttons (#1239). */
+  errorMessage?: string | null;
 }
 
 function ConfirmView({
@@ -197,6 +203,7 @@ function ConfirmView({
   cycle,
   onConfirm,
   isPending,
+  errorMessage = null,
 }: Readonly<ConfirmViewProps>) {
   // The price for the period being bought, so an annual purchase never shows a monthly price.
   const price = getPlanPriceForInterval(targetPlan, cycle);
@@ -380,6 +387,15 @@ function ConfirmView({
         Estimated amount — final charge calculated by payment provider.
       </p>
 
+      {errorMessage && (
+        <p
+          role="alert"
+          className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
+        >
+          {errorMessage}
+        </p>
+      )}
+
       {/* Confirm buttons */}
       <div className="flex gap-3">
         <Button variant="outline" className="flex-1" asChild>
@@ -401,6 +417,33 @@ function ConfirmView({
 // =============================================
 // Main export
 // =============================================
+
+/** Shown instead of a plan change while the subscription's last payment hasn't gone through. */
+function PaymentIssueNotice() {
+  return (
+    <Card className="max-w-2xl mx-auto border border-amber-300 dark:border-amber-700">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base font-semibold">
+          {PAYMENT_ISSUE_BLOCKS_PLAN_CHANGE_MESSAGE}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Your last payment didn&apos;t go through. Once your payment method is updated and the
+          payment is made, you can change your plan here.
+        </p>
+        <div className="flex gap-3">
+          <Button variant="outline" className="flex-1" asChild>
+            <Link href="/billing/plans">Back to plans</Link>
+          </Button>
+          <Button className="flex-1" asChild>
+            <Link href="/billing/payment-methods">Update payment method</Link>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 /** Statuses after which a subscription can't be changed any more (#1220). */
 const ENDED_SUBSCRIPTION_STATUSES = new Set(['canceled', 'incomplete_expired']);
@@ -445,7 +488,8 @@ export function UpgradeFlow() {
   }
 
   // An ended subscription can't be changed, only replaced: treat it as none, so buying a plan
-  // goes to checkout (#1220). A past-due one is still live and still goes through a plan change.
+  // goes to checkout (#1220). A past-due one is still live: it can't go to checkout (that would
+  // start a second subscription), and it waits for its payment to be fixed (#1239).
   const liveSubscription =
     subscription && !ENDED_SUBSCRIPTION_STATUSES.has(subscription.status) ? subscription : null;
   const currentPlan = liveSubscription ? getPlanByPriceId(liveSubscription.priceId) : null;
@@ -470,10 +514,16 @@ export function UpgradeFlow() {
       router.push(`/billing/checkout?plan=${encodeURIComponent(planId ?? '')}&cycle=${cycle}`);
       return;
     }
-    updateMutation.mutate({
-      planId,
-      billingCycle: cycle,
-    } as Record<string, unknown>);
+    // The server resolves the plan and period to the Stripe price, as checkout does (#1239).
+    updateMutation.mutate({ planId: planId ?? undefined, billingCycle: cycle });
+  }
+
+  // A subscription whose last payment failed can't change plan until the payment is fixed.
+  if (
+    liveSubscription &&
+    (PAYMENT_ISSUE_SUBSCRIPTION_STATUSES as readonly string[]).includes(liveSubscription.status)
+  ) {
+    return <PaymentIssueNotice />;
   }
 
   return (
@@ -485,6 +535,7 @@ export function UpgradeFlow() {
       cycle={cycle}
       onConfirm={handleConfirm}
       isPending={updateMutation.isPending}
+      errorMessage={updateMutation.error?.message ?? null}
     />
   );
 }

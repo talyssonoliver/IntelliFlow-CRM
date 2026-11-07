@@ -26,6 +26,7 @@ const mockGetSubscription = vi.fn<() => MockQueryReturn<typeof mockSubscription>
 }));
 
 const mockMutate = vi.fn();
+let mockUpdateError: { message: string } | null = null;
 const mockPush = vi.fn();
 
 vi.mock('@/lib/trpc', () => ({
@@ -41,7 +42,7 @@ vi.mock('@/lib/trpc', () => ({
           },
           isPending: false,
           isSuccess: false,
-          error: null,
+          error: mockUpdateError,
         }),
       },
     },
@@ -74,6 +75,7 @@ import { UpgradeFlow } from '../upgrade-flow';
 describe('UpgradeFlow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUpdateError = null;
     mockGetSubscription.mockReturnValue({
       data: mockSubscription,
       isLoading: false,
@@ -286,26 +288,56 @@ describe('UpgradeFlow', () => {
     }
   );
 
-  it('still changes a past-due subscription instead of starting a second one', async () => {
+  it.each(['past_due', 'unpaid', 'incomplete', 'paused'])(
+    'asks a %s subscriber to update the payment method, never starting a second subscription (#1239)',
+    async (status) => {
+      const { useSearchParams } = await import('next/navigation');
+      vi.mocked(useSearchParams).mockReturnValue(
+        new URLSearchParams('plan=enterprise&cycle=monthly') as unknown as ReturnType<
+          typeof useSearchParams
+        >
+      );
+      mockGetSubscription.mockReturnValue({
+        data: { ...mockSubscription, status } as typeof mockSubscription,
+        isLoading: false,
+        error: null,
+      });
+      render(<UpgradeFlow />);
+
+      expect(
+        screen.getByText('Update your payment method before changing plans.')
+      ).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /update payment method/i })).toHaveAttribute(
+        'href',
+        '/billing/payment-methods'
+      );
+      expect(screen.queryByRole('button', { name: /confirm plan change/i })).toBeNull();
+      expect(mockMutate).not.toHaveBeenCalled();
+      expect(mockPush).not.toHaveBeenCalled();
+    }
+  );
+
+  it('sends the plan and period for the server to price (#1239)', async () => {
     const { useSearchParams } = await import('next/navigation');
     vi.mocked(useSearchParams).mockReturnValue(
-      new URLSearchParams('plan=enterprise&cycle=monthly') as unknown as ReturnType<
+      new URLSearchParams('plan=enterprise&cycle=annual') as unknown as ReturnType<
         typeof useSearchParams
       >
     );
-    mockGetSubscription.mockReturnValue({
-      data: { ...mockSubscription, status: 'past_due' } as typeof mockSubscription,
-      isLoading: false,
-      error: null,
-    });
     render(<UpgradeFlow />);
 
     fireEvent.click(screen.getByRole('button', { name: /confirm plan change/i }));
 
-    expect(mockMutate).toHaveBeenCalled();
-    expect(mockPush).not.toHaveBeenCalledWith(expect.stringContaining('/billing/checkout'));
+    expect(mockMutate).toHaveBeenCalledWith({ planId: 'enterprise', billingCycle: 'annual' });
   });
+  it('shows why a plan change was refused', () => {
+    mockUpdateError = { message: 'Update your payment method before changing plans.' };
+    render(<UpgradeFlow />);
 
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'Update your payment method before changing plans.'
+    );
+  });
   it('does not show proration for new subscriptions', () => {
     mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
     render(<UpgradeFlow />);
