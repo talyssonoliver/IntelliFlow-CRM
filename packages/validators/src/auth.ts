@@ -317,10 +317,15 @@ export const activeSessionsResponseSchema = z.object({
 export type ActiveSessionsResponse = z.infer<typeof activeSessionsResponseSchema>;
 
 /**
- * Revoke session schema
+ * A Supabase Auth session id (`auth.sessions.id`, the token's `session_id` claim): a UUID.
+ */
+export const authSessionIdSchema = z.uuid('Invalid session id');
+
+/**
+ * Revoke session schema: ends one of the caller's Supabase Auth sessions.
  */
 export const revokeSessionSchema = z.object({
-  sessionId: sessionIdSchema,
+  sessionId: authSessionIdSchema,
 });
 
 export type RevokeSessionInput = z.infer<typeof revokeSessionSchema>;
@@ -450,6 +455,13 @@ export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
  * Used when verifying email from Supabase callback URL with token_hash and type params.
  * IMPLEMENTS: IFC-120 (Email verification via Supabase native flow)
  */
+/**
+ * What sign-in says when the password is right but the email isn't confirmed yet.
+ * The login page matches it to offer a new link.
+ */
+export const EMAIL_NOT_CONFIRMED_MESSAGE =
+  'Confirm your email address first. Check your inbox for the link, or ask for a new one.';
+
 export const verifyEmailCallbackSchema = z.object({
   token_hash: z.string().min(6, 'Invalid verification token'),
   type: z.enum(['email', 'signup']),

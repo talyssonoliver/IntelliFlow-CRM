@@ -28,7 +28,7 @@ const DRY_RUN = process.argv.includes('--dry-run');
 
 // Action emails: file -> { subject }. API keys: mailer_templates_<k>_content + mailer_subjects_<k>.
 const ACTIONS = {
-  confirmation: { file: 'confirmation.html', subject: 'Confirm your IntelliFlow CRM email' },
+  confirmation: { file: 'confirmation.html', subject: 'Confirm your Aurora email' },
   invite: { file: 'invite.html', subject: "You're invited to IntelliFlow CRM" },
   magic_link: { file: 'magic_link.html', subject: 'Your IntelliFlow CRM sign-in link' },
   recovery: { file: 'recovery.html', subject: 'Reset your IntelliFlow CRM password' },
