@@ -106,7 +106,7 @@ export function RelatedTasksCard({
             {title}
           </h3>
         </div>
-        <EmptyState entity="tasks" phase="passive" className="py-2" />
+        <EmptyState entity="tasks" showCta={false} className="py-2" />
       </Card>
     );
   }

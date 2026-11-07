@@ -383,7 +383,7 @@ export default function PrivacyRequestsContent() {
         {restrictions.length === 0 ? (
           <EmptyState
             entity="rules"
-            phase="passive"
+            showCta={false}
             size="sm"
             title="No restrictions in force"
             description="A restriction or objection request that you accept appears here until it is lifted."

@@ -1425,7 +1425,7 @@ function LeadActivityTab({
             </button>
           )}
           {filteredActivities.length === 0 && (
-            <EmptyState entity="activity" variant="filtered" phase="passive" />
+            <EmptyState entity="activity" variant="filtered" showCta={false} />
           )}
         </>
       )}
@@ -1988,7 +1988,7 @@ function LeadRightSidebar({
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">Similar Leads</h3>
         </div>
-        <EmptyState entity="leads" phase="passive" className="py-2" />
+        <EmptyState entity="leads" showCta={false} className="py-2" />
       </Card>
     </aside>
   );

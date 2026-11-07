@@ -21,7 +21,7 @@ import type { NpsTrendChartProps } from '@/lib/feedback-survey/types';
 
 export default function NpsTrendChart({ trends, granularity }: Readonly<NpsTrendChartProps>) {
   if (trends.length === 0) {
-    return <EmptyState entity="insights" phase="passive" className="py-4" />;
+    return <EmptyState entity="insights" showCta={false} className="py-4" />;
   }
 
   const data = trends.map((t) => ({

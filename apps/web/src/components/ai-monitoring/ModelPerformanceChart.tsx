@@ -43,7 +43,7 @@ export default function ModelPerformanceChart({ history }: Readonly<ModelPerform
       <CardContent className="pb-4">
         {chartData.length === 0 ? (
           <div data-testid="no-chart-data">
-            <EmptyState entity="insights" phase="passive" className="py-4" />
+            <EmptyState entity="insights" showCta={false} className="py-4" />
           </div>
         ) : (
           <div className="h-[200px]" data-testid="performance-chart">

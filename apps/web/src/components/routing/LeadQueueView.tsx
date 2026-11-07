@@ -133,7 +133,22 @@ export function LeadQueueView() {
         )}
 
         {sortedLeads.length === 0 ? (
-          <EmptyState entity="leads" variant="filtered" phase="passive" />
+          <EmptyState
+            entity="leads"
+            variant="filtered"
+            showCta={false}
+            action={
+              scoreMin === undefined && source === undefined
+                ? undefined
+                : {
+                    label: 'Clear filters',
+                    onClick: () => {
+                      setScoreMin(undefined);
+                      setSource(undefined);
+                    },
+                  }
+            }
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

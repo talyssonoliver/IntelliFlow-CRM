@@ -99,7 +99,7 @@ export default function FeedbackAnalyticsPage() {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-bold">Feedback Analytics</h1>
-        <EmptyState entity="insights" phase="passive" />
+        <EmptyState entity="insights" showCta={false} />
       </div>
     );
   }

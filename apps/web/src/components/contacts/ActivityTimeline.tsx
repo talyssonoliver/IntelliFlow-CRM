@@ -315,7 +315,22 @@ export function ActivityTimeline({
           })}
         </ol>
       ) : (
-        <EmptyState entity="activity" variant="filtered" phase="passive" />
+        <EmptyState
+          entity="activity"
+          variant="filtered"
+          showCta={false}
+          action={
+            typeFilter === 'all' && !searchQuery
+              ? undefined
+              : {
+                  label: 'Clear filters',
+                  onClick: () => {
+                    setTypeFilter('all');
+                    setSearchQuery('');
+                  },
+                }
+          }
+        />
       )}
 
       {/* Infinite scroll trigger */}

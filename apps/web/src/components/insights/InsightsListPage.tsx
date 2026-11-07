@@ -51,10 +51,18 @@ function InsightsLoadingState() {
   );
 }
 
-function InsightsEmptyState({ selectedType }: Readonly<{ selectedType: string | null }>) {
+function InsightsEmptyState({
+  selectedType,
+  onClearFilter,
+}: Readonly<{ selectedType: string | null; onClearFilter: () => void }>) {
   return (
     <Card className="p-12">
-      <EmptyState entity="insights" variant={selectedType ? 'filtered' : 'empty'} phase="passive" />
+      <EmptyState
+        entity="insights"
+        variant={selectedType ? 'filtered' : 'empty'}
+        showCta={false}
+        action={selectedType ? { label: 'Clear filters', onClick: onClearFilter } : undefined}
+      />
     </Card>
   );
 }
@@ -210,7 +218,10 @@ export function InsightsListPage() {
       {isLoading && !data && <InsightsLoadingState />}
 
       {!error && !isLoading && displayInsights.length === 0 && (
-        <InsightsEmptyState selectedType={selectedType} />
+        <InsightsEmptyState
+          selectedType={selectedType}
+          onClearFilter={() => handleTypeFilter('all')}
+        />
       )}
 
       {!error && displayInsights.length > 0 && (

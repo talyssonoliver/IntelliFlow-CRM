@@ -219,7 +219,7 @@ function InsightsSection({ isLoading, insights, onInsightClick }: Readonly<Insig
   }
 
   if (!insights || insights.length === 0) {
-    return <EmptyState entity="insights" phase="passive" className="py-4" />;
+    return <EmptyState entity="insights" showCta={false} className="py-4" />;
   }
 
   return (

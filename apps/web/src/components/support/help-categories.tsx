@@ -10,7 +10,7 @@ export interface HelpCategoriesProps {
 
 export function HelpCategories({ categories }: Readonly<HelpCategoriesProps>) {
   if (categories.length === 0) {
-    return <EmptyState entity="search" phase="passive" />;
+    return <EmptyState entity="search" showCta={false} />;
   }
 
   const sorted = [...categories].sort((a, b) => {

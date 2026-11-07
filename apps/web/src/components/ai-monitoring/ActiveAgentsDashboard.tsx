@@ -465,7 +465,15 @@ export function ActiveAgentsDashboard() {
 
           {/* Agent List */}
           {filteredAgents.length === 0 ? (
-            <EmptyState entity="agents" phase="passive" />
+            <EmptyState
+              entity="agents"
+              showCta={false}
+              action={
+                filterState.isFiltered(['sort'])
+                  ? { label: 'Clear filters', onClick: () => filterState.resetFilters(['sort']) }
+                  : undefined
+              }
+            />
           ) : (
             <div className="space-y-3">
               {filteredAgents.map((agent) => (

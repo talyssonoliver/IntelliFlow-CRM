@@ -310,7 +310,7 @@ function LineItemsTable({
   currency,
 }: Readonly<{ items: InvoiceLineItem[]; currency: string }>) {
   if (items.length === 0) {
-    return <EmptyState entity="invoices" phase="passive" className="py-4" />;
+    return <EmptyState entity="invoices" showCta={false} className="py-4" />;
   }
 
   return (

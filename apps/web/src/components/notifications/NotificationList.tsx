@@ -98,7 +98,7 @@ export function NotificationList({
         <EmptyState
           entity="notifications"
           variant={hasActiveFilters ? 'filtered' : 'empty'}
-          phase="passive"
+          showCta={false}
         />
       </div>
     );

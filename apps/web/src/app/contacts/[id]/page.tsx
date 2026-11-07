@@ -1146,7 +1146,7 @@ export default function Contact360Page() {
                   )}
 
                   {filteredActivities.length === 0 && (
-                    <EmptyState entity="activity" variant="filtered" phase="passive" />
+                    <EmptyState entity="activity" variant="filtered" showCta={false} />
                   )}
                 </>
               )}
@@ -1206,7 +1206,7 @@ export default function Contact360Page() {
                       />
                     ))}
                   {recentUnifiedActivities.length === 0 && !isUnifiedLoading && (
-                    <EmptyState entity="activity" phase="passive" />
+                    <EmptyState entity="activity" showCta={false} />
                   )}
                   {isUnifiedLoading && (
                     <div className="flex items-center justify-center p-6">

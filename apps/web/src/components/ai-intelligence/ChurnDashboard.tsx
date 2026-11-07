@@ -342,7 +342,15 @@ export function ChurnDashboard() {
   } else if (filteredCustomers.length === 0) {
     customerListContent = (
       <div data-testid="empty-state">
-        <EmptyState entity="insights" phase="passive" />
+        <EmptyState
+          entity="insights"
+          showCta={false}
+          action={
+            filterState.isFiltered(['sort'])
+              ? { label: 'Clear filters', onClick: () => filterState.resetFilters(['sort']) }
+              : undefined
+          }
+        />
       </div>
     );
   } else {

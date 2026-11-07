@@ -905,7 +905,15 @@ function AgentApprovalsPreviewContent() {
         )}
         {!isLoading && filteredActions.length === 0 && (
           <Card className="p-12">
-            <EmptyState entity="agents" phase="passive" />
+            <EmptyState
+              entity="agents"
+              showCta={false}
+              action={
+                filterStatus === 'all'
+                  ? undefined
+                  : { label: 'Clear filters', onClick: () => setFilterStatus('all') }
+              }
+            />
           </Card>
         )}
         {!isLoading &&

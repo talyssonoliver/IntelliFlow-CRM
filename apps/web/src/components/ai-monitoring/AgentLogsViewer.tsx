@@ -123,7 +123,7 @@ function TranscriptView({ messages }: Readonly<TranscriptViewProps>) {
   if (messages.length === 0) {
     return (
       <div data-testid="transcript-content">
-        <EmptyState entity="agents" phase="passive" className="py-4" />
+        <EmptyState entity="agents" showCta={false} className="py-4" />
       </div>
     );
   }
@@ -416,7 +416,7 @@ function QueueFailuresContent({ jobs, hasMore, onLoadMore }: Readonly<QueueFailu
     return (
       <Card>
         <CardContent className="p-2">
-          <EmptyState entity="agents" phase="passive" className="py-4" />
+          <EmptyState entity="agents" showCta={false} className="py-4" />
         </CardContent>
       </Card>
     );
@@ -461,7 +461,7 @@ function AgentLogsContent({
   if (logs.length === 0) {
     return (
       <div data-testid="empty-state">
-        <EmptyState entity="agents" variant={hasFilters ? 'filtered' : 'empty'} phase="passive" />
+        <EmptyState entity="agents" variant={hasFilters ? 'filtered' : 'empty'} showCta={false} />
         {hasFilters && (
           <div className="flex justify-center mt-4">
             <Button variant="outline" onClick={onClearFilters}>

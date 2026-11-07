@@ -20,7 +20,7 @@ export default function SentimentDistributionChart({
   sentiment,
 }: Readonly<SentimentDistributionChartProps>) {
   if (sentiment.total === 0) {
-    return <EmptyState entity="insights" phase="passive" className="py-4" />;
+    return <EmptyState entity="insights" showCta={false} className="py-4" />;
   }
 
   const data = [

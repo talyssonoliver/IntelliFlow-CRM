@@ -115,7 +115,16 @@ export function VersionAuditLog({ auditLog, isLoading }: Readonly<VersionAuditLo
       </div>
 
       {filteredLog.length === 0 ? (
-        <EmptyState entity="insights" variant="filtered" phase="passive" />
+        <EmptyState
+          entity="insights"
+          variant="filtered"
+          showCta={false}
+          action={
+            actionFilter === 'all'
+              ? undefined
+              : { label: 'Clear filters', onClick: () => setActionFilter('all') }
+          }
+        />
       ) : (
         <>
           <Table>

@@ -195,7 +195,7 @@ export function SearchFilterBar({
 // Filter Dropdown Component
 // =============================================================================
 
-interface FilterDropdownProps extends FilterDropdownConfig {}
+type FilterDropdownProps = FilterDropdownConfig;
 
 function FilterDropdown({
   label,
@@ -444,5 +444,28 @@ export function useMultiFilterState<T extends Record<string, string>>(initialVal
     [initialValues]
   );
 
-  return { values, set, reset, resetKey };
+  /** True when any key outside `ignore` (e.g. `sort`) differs from its initial value. */
+  const isFiltered = useCallback(
+    (ignore: readonly (keyof Widened)[] = []) =>
+      (Object.keys(values) as (keyof Widened)[]).some(
+        (k) => !ignore.includes(k) && values[k] !== (initialValues as Widened)[k]
+      ),
+    [values, initialValues]
+  );
+
+  /** Reset every key outside `ignore` (keeps e.g. the sort order). */
+  const resetFilters = useCallback(
+    (ignore: readonly (keyof Widened)[] = []) => {
+      setValues((prev) => {
+        const next = { ...prev };
+        for (const k of Object.keys(prev) as (keyof Widened)[]) {
+          if (!ignore.includes(k)) next[k] = (initialValues as Widened)[k];
+        }
+        return next;
+      });
+    },
+    [initialValues]
+  );
+
+  return { values, set, reset, resetKey, isFiltered, resetFilters };
 }

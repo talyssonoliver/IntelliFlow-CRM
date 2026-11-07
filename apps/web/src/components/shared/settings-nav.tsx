@@ -22,7 +22,7 @@ export function SettingsNav({ searchQuery, className }: Readonly<SettingsNavProp
   if (categories.length === 0) {
     return (
       <output className={className} aria-live="polite">
-        <EmptyState entity="search" phase="passive" />
+        <EmptyState entity="search" showCta={false} />
       </output>
     );
   }

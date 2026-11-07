@@ -466,7 +466,7 @@ export function AppDashboard({ appId }: Readonly<AppDashboardProps>) {
             </CardHeader>
             <CardContent>
               {logs.length === 0 ? (
-                <EmptyState entity="insights" phase="passive" className="py-4" />
+                <EmptyState entity="insights" showCta={false} className="py-4" />
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">

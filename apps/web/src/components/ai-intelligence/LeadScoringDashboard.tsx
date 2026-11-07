@@ -502,7 +502,15 @@ export function LeadScoringDashboard() {
         if (filteredLeads.length === 0)
           return (
             <div data-testid="empty-state">
-              <EmptyState entity="insights" phase="passive" />
+              <EmptyState
+                entity="insights"
+                showCta={false}
+                action={
+                  filterState.isFiltered(['sort'])
+                    ? { label: 'Clear filters', onClick: () => filterState.resetFilters(['sort']) }
+                    : undefined
+                }
+              />
             </div>
           );
         return (

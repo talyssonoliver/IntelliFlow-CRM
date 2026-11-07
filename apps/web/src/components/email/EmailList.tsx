@@ -75,7 +75,7 @@ function EmptyList({
   if (filtered) {
     return (
       <>
-        <EmptyState entity="emails" variant="filtered" phase="passive" />
+        <EmptyState entity="emails" variant="filtered" showCta={false} />
         <button
           type="button"
           className="text-xs text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring rounded"
@@ -88,7 +88,7 @@ function EmptyList({
   }
   if (!mailboxRefusal || searching) {
     return (
-      <EmptyState entity="emails" variant={searching ? 'filtered' : 'folder'} phase="passive" />
+      <EmptyState entity="emails" variant={searching ? 'filtered' : 'folder'} showCta={false} />
     );
   }
   const broken = mailboxRefusal === 'MAILBOX_ERROR';

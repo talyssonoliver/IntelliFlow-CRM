@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { EmptyState } from '../src/components/empty-state';
@@ -349,5 +349,58 @@ describe('EmptyState', () => {
       await user.unhover(container.firstChild as Element);
       expect(onPhaseChange).toHaveBeenCalledWith('passive');
     });
+  });
+});
+
+describe('EmptyState CTA modes (#1222 UI-002)', () => {
+  it('read-only (showCta={false}) is static: no focus stop, no CTA, no hotkey', async () => {
+    const user = userEvent.setup();
+    const onCreate = vi.fn();
+    const { container } = render(<EmptyState entity="leads" showCta={false} onCreate={onCreate} />);
+    const root = container.querySelector('[data-empty-state="read-only"]')!;
+    expect(root).not.toHaveAttribute('tabindex');
+    expect(root).toHaveAttribute('role', 'region');
+    expect(root).toHaveAttribute('aria-label', 'leads empty state');
+    await user.hover(root);
+    expect(screen.queryByRole('button')).toBeNull();
+
+    const event = new KeyboardEvent('keydown', { key: 'n', cancelable: true });
+    document.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('read-only can still offer one action, e.g. Clear filters', async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    render(
+      <EmptyState entity="activity" showCta={false} action={{ label: 'Clear filters', onClick }} />
+    );
+    await user.click(screen.getByRole('button', { name: 'Clear filters' }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('navigable (ctaHref) shows a link CTA on hover and takes no hotkey', async () => {
+    const user = userEvent.setup();
+    render(<EmptyState entity="documents" ctaHref="/documents/new" ctaLabel="Upload a document" />);
+    await user.hover(screen.getByRole('region'));
+    const link = screen.getByRole('link', { name: /Upload a document/ });
+    expect(link).toHaveAttribute('href', '/documents/new');
+
+    const event = new KeyboardEvent('keydown', { key: 'n', cancelable: true });
+    document.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('creatable (onCtaClick) runs the real flow instead of the inline composer', () => {
+    const onCtaClick = vi.fn();
+    render(<EmptyState entity="tasks" onCtaClick={onCtaClick} ctaLabel="New task" />);
+    fireEvent.mouseEnter(screen.getByRole('region'));
+    fireEvent.click(screen.getByRole('button', { name: /New task/ }));
+    expect(onCtaClick).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('textbox')).toBeNull();
+
+    // The entity hotkey runs the same flow.
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 't', cancelable: true }));
+    expect(onCtaClick).toHaveBeenCalledTimes(2);
   });
 });

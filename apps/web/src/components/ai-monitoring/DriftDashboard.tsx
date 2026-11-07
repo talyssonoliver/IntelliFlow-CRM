@@ -287,7 +287,7 @@ export function DriftDashboard() {
               if (!isLoading && history.length === 0)
                 return (
                   <div data-testid="empty-state">
-                    <EmptyState entity="insights" phase="passive" />
+                    <EmptyState entity="insights" showCta={false} />
                   </div>
                 );
               if (isLoading)

@@ -42,7 +42,7 @@ export default function LatencyTrendChart({
         </CardHeader>
         <CardContent className="pb-4">
           <div data-testid="empty-trend">
-            <EmptyState entity="insights" phase="passive" className="py-4" />
+            <EmptyState entity="insights" showCta={false} className="py-4" />
           </div>
         </CardContent>
       </Card>

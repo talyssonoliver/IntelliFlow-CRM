@@ -27,7 +27,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export default function NpsBreakdownBar({ distribution }: Readonly<NpsBreakdownBarProps>) {
   if (distribution.total === 0) {
-    return <EmptyState entity="insights" phase="passive" className="py-4" />;
+    return <EmptyState entity="insights" showCta={false} className="py-4" />;
   }
 
   const data = [
