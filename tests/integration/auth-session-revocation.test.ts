@@ -11,7 +11,7 @@
  * the columns GoTrue defines and this module reads, inside one transaction that always rolls
  * back. Postgres DDL is transactional: no other suite ever sees the table, and nothing remains.
  */
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { createIsolatedTestPrismaClient } from './setup';
 import {
@@ -33,13 +33,19 @@ describeDb('ended sessions on a real database', () => {
     prisma = createIsolatedTestPrismaClient();
   });
 
+  // No client when the harness cannot load the database package (the local coverage run,
+  // #1117): skip, as the other real-database suites do. The silent-skip gate holds CI to
+  // running every test (tools/scripts/infra-skip-gate.registry.json).
+  beforeEach((ctx) => {
+    if (!prisma) ctx.skip();
+  });
+
   afterAll(async () => {
     await prisma?.$disconnect();
   });
 
   /** Run `fn` against a fresh auth.sessions table, then roll everything back. */
   async function withSessionsTable(fn: (tx: any) => Promise<void>): Promise<void> {
-    expect(prisma, 'the integration database is required').toBeTruthy();
     const existing = await prisma.$queryRawUnsafe(
       `SELECT to_regclass('auth.sessions') IS NOT NULL AS present`
     );

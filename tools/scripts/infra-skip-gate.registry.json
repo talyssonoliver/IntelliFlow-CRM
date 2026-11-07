@@ -9,6 +9,27 @@
       "reason": "ADR-054: #665 — only the true Supabase storage round-trip spec needs a reachable Supabase storage API with the case-documents and case-documents-quarantine buckets, so it truly executes only in preship-full-nightly. The orchestration, persistence and domain-contract specs run on every PR against local Postgres with InMemoryStorageAdapter."
     },
     {
+      "file": "tests/integration/rls-tenant-isolation.test.ts",
+      "kind": "infra-gated",
+      "maxSkipped": 5,
+      "reviewBy": "2026-11-30",
+      "reason": "ADR-054: #1117 — CI's Integration Tests job applies the migrations since #1114 and runs this suite 5/5. The local pre-ship coverage step cannot resolve @intelliflow/db from tests/integration/setup.ts, so createIsolatedTestPrismaClient() returns null and the suite skips there. Remove this entry when #1117 makes the coverage run load the client."
+    },
+    {
+      "file": "tests/integration/inherited-membership.test.ts",
+      "kind": "infra-gated",
+      "maxSkipped": 16,
+      "reviewBy": "2026-11-30",
+      "reason": "ADR-054: #1117 — CI's Integration Tests job applies the migrations since #1114 and runs this ADR-071 suite 16/16. The local pre-ship coverage step cannot resolve @intelliflow/db from tests/integration/setup.ts, so the suite skips there. Remove this entry when #1117 makes the coverage run load the client."
+    },
+    {
+      "file": "tests/integration/auth-session-revocation.test.ts",
+      "kind": "infra-gated",
+      "maxSkipped": 4,
+      "reviewBy": "2026-11-30",
+      "reason": "ADR-054: #1117 — runs 4/4 in CI's Integration Tests job and in the pre-ship integration-tests step. The local pre-ship coverage step cannot resolve @intelliflow/db from tests/integration/setup.ts, so the suite skips there. Remove this entry when #1117 makes the coverage run load the client."
+    },
+    {
       "file": "tests/integration/tier-module-gating.test.ts",
       "kind": "infra-gated",
       "maxSkipped": 9,
