@@ -659,7 +659,8 @@ describe('Lead Router - Additional Coverage', () => {
       // `undefined` via optional chaining — the exact bug this guards against.
       expect(ctx.services!.lead!.updateLead).toHaveBeenCalledWith(
         TEST_UUIDS.lead1,
-        expect.objectContaining({ phone: null })
+        expect.objectContaining({ phone: null }),
+        TEST_UUIDS.user1
       );
     });
 
@@ -678,7 +679,8 @@ describe('Lead Router - Additional Coverage', () => {
 
         expect(ctx.services!.lead!.updateLead).toHaveBeenCalledWith(
           TEST_UUIDS.lead1,
-          expect.objectContaining({ [field]: null })
+          expect.objectContaining({ [field]: null }),
+          TEST_UUIDS.user1
         );
       }
     );
@@ -696,7 +698,8 @@ describe('Lead Router - Additional Coverage', () => {
 
       expect(ctx.services!.lead!.updateLead).toHaveBeenCalledWith(
         TEST_UUIDS.lead1,
-        expect.objectContaining({ estimatedValue: null })
+        expect.objectContaining({ estimatedValue: null }),
+        TEST_UUIDS.user1
       );
     });
 
@@ -760,7 +763,8 @@ describe('Lead Router - Additional Coverage', () => {
       expect(ctx.services!.lead!.qualifyLead).toHaveBeenCalledWith(
         TEST_UUIDS.lead1,
         expect.any(String),
-        'Custom reason for qualification'
+        'Custom reason for qualification',
+        { basis: 'HUMAN' }
       );
     });
   });
