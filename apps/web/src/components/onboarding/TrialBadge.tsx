@@ -45,6 +45,9 @@ export function TrialBadge({ className }: Readonly<{ className?: string }>) {
   const dayWord = `day${days === 1 ? '' : 's'}`;
   // An ended trial says so and leads to the plan choice, never "0 days left" (#1220).
   const label = ended ? 'Trial ended: choose a plan' : `Trial: ${days}d left`;
+  // Phones have no room for the full label next to the bell, the account menu and the menu button:
+  // 390-639px get the short label, narrower phones the icon alone (the link keeps its aria-label).
+  const shortLabel = ended ? 'Trial ended' : `Trial: ${days}d`;
   const ariaLabel = ended
     ? 'Your trial has ended. Choose a plan'
     : `Trial: ${days} ${dayWord} remaining. Choose a plan`;
@@ -65,12 +68,13 @@ export function TrialBadge({ className }: Readonly<{ className?: string }>) {
       )}
     >
       <span
-        className="material-symbols-outlined text-[14px] lg:max-[1439px]:!hidden"
+        className="material-symbols-outlined text-[14px] min-[390px]:max-sm:!hidden lg:max-[1439px]:!hidden"
         aria-hidden="true"
       >
         hourglass_empty
       </span>
-      {label}
+      <span className="hidden sm:inline">{label}</span>
+      <span className="max-[389px]:hidden sm:hidden">{shortLabel}</span>
     </Link>
   );
 }

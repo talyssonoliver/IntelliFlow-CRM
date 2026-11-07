@@ -221,6 +221,21 @@ describe('UpgradeFlow', () => {
     expect(mockMutate).not.toHaveBeenCalled();
   });
 
+  it('keeps the billing period chosen on the plan cards through to checkout (#1220)', async () => {
+    const { useSearchParams } = await import('next/navigation');
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams('plan=professional&cycle=annual') as unknown as ReturnType<
+        typeof useSearchParams
+      >
+    );
+    mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
+    render(<UpgradeFlow />);
+
+    fireEvent.click(screen.getByRole('button', { name: /confirm plan change/i }));
+
+    expect(mockPush).toHaveBeenCalledWith('/billing/checkout?plan=professional&cycle=annual');
+  });
+
   it('does not show proration for new subscriptions', () => {
     mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
     render(<UpgradeFlow />);

@@ -93,6 +93,14 @@ describe('TrialBadge', () => {
     expect(badge.className).toContain('red');
   });
 
+  it('shows a short form on phones next to the full one (#1220)', () => {
+    mockGetPlanState.mockReturnValue(trial(0, 'TRIAL_ENDED'));
+    render(<TrialBadge />);
+    const short = screen.getByText('Trial ended');
+    expect(short.className).toContain('max-[389px]:hidden sm:hidden');
+    expect(screen.getByText('Trial ended: choose a plan').className).toContain('hidden sm:inline');
+  });
+
   it('says "1 day", not "1 days"', () => {
     mockGetPlanState.mockReturnValue(trial(1));
     render(<TrialBadge />);

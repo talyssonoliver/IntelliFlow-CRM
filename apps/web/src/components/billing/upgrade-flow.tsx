@@ -138,7 +138,7 @@ function PlanSelectionView({
               directionIcon={directionDisplay.icon}
               changeAllowed={changeCheck.allowed}
               changeBlockedReason={changeCheck.reason}
-              href={`/billing/upgrade?plan=${plan.id}`}
+              href={`/billing/upgrade?plan=${plan.id}&cycle=${interval}`}
             />
           );
         })}
@@ -396,6 +396,8 @@ export function UpgradeFlow() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const planId = searchParams.get('plan');
+  // The period chosen on the plan cards; links without one keep the old monthly default.
+  const cycle: 'monthly' | 'annual' = searchParams.get('cycle') === 'annual' ? 'annual' : 'monthly';
 
   const {
     data: subscription,
@@ -447,12 +449,12 @@ export function UpgradeFlow() {
     // No subscription yet (a trial, or an ended trial): buying a plan is a checkout, since
     // there is nothing to change, and updateSubscription would refuse it (#1220).
     if (!subscription) {
-      router.push(`/billing/checkout?plan=${encodeURIComponent(planId ?? '')}&cycle=monthly`);
+      router.push(`/billing/checkout?plan=${encodeURIComponent(planId ?? '')}&cycle=${cycle}`);
       return;
     }
     updateMutation.mutate({
       planId,
-      billingCycle: 'monthly',
+      billingCycle: cycle,
     } as Record<string, unknown>);
   }
 
