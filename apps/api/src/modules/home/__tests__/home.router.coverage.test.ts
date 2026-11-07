@@ -403,7 +403,7 @@ describe('Home Router Coverage Tests (PG-163)', () => {
       expect(result.insights[0].id).toBe('pipeline-summary');
     });
 
-    it('returns achievement insight when all categories empty', async () => {
+    it('says there was nothing to check when every check is empty', async () => {
       (prismaMock.aIInsight as any).findMany.mockResolvedValue([]);
 
       // User-scoped — all empty
@@ -418,12 +418,49 @@ describe('Home Router Coverage Tests (PG-163)', () => {
       prismaMock.task.count.mockResolvedValueOnce(0);
       prismaMock.contact.findMany.mockResolvedValueOnce([]);
 
+      // Nothing in the workspace either: the checks had nothing to look at.
+      (prismaMock.opportunity as any).count.mockResolvedValue(0);
+      (prismaMock.lead as any).count.mockResolvedValue(0);
+      (prismaMock.contact as any).count.mockResolvedValue(0);
+
       const result = await caller.getAIInsights();
 
       expect(result.insights).toHaveLength(1);
-      expect(result.insights[0].type).toBe('achievement');
-      expect(result.insights[0].id).toBe('all-good');
-      expect(result.insights[0].title).toContain('on track');
+      expect(result.insights[0].type).toBe('reminder');
+      expect(result.insights[0].id).toBe('checks-summary');
+      expect(result.insights[0].title).toBe('Nothing to check yet');
+      // A member's checks never widen past their own records, and the text says whose they were.
+      expect(result.insights[0].description).toContain('in your records');
+    });
+
+    it("names the workspace's records when a manager's checks widened to them", async () => {
+      const managerCaller = homeRouter.createCaller(
+        createTestContext({
+          user: {
+            userId: 'manager-1',
+            email: 'manager@example.invalid',
+            role: 'MANAGER',
+            tenantId: 'tenant-1',
+            timezone: 'UTC',
+            emailVerified: true,
+          },
+        })
+      );
+      (prismaMock.aIInsight as any).findMany.mockResolvedValue([]);
+      prismaMock.opportunity.findMany.mockResolvedValue([]);
+      prismaMock.lead.findMany.mockResolvedValue([]);
+      prismaMock.task.count.mockResolvedValue(0);
+      prismaMock.contact.findMany.mockResolvedValue([]);
+      (prismaMock.opportunity as any).count.mockResolvedValue(0);
+      (prismaMock.lead as any).count.mockResolvedValue(0);
+      (prismaMock.contact as any).count.mockResolvedValue(0);
+
+      const result = await managerCaller.getAIInsights();
+
+      expect(result.insights[0].description).toContain("your workspace's records");
+      // The counts were not limited to one owner.
+      const dealCount = (prismaMock.opportunity as any).count.mock.calls.at(-1)[0];
+      expect(dealCount.where).not.toHaveProperty('ownerId');
     });
 
     it('covers stale contact with null lastContactedAt', async () => {
@@ -448,7 +485,7 @@ describe('Home Router Coverage Tests (PG-163)', () => {
       // With staleContacts non-empty, the achievement fallback should NOT appear —
       // there ARE items needing attention (just routed to notifications).
       expect((prismaMock.notification as any).findMany).toHaveBeenCalled();
-      const allGoodInsight = result.insights.find((i) => i.id === 'all-good');
+      const allGoodInsight = result.insights.find((i) => i.id === 'checks-summary');
       expect(allGoodInsight).toBeUndefined();
     });
 

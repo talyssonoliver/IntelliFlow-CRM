@@ -209,7 +209,6 @@ ANALYSIS INSTRUCTIONS:
    - "warning": Deal/contact at risk — explain revenue impact
    - "opportunity": Hot lead — explain buying signals
    - "reminder": Overdue tasks — explain priority
-   - "achievement": Everything looks good (only if no flagged items)
 
 3. Priority levels:
    - "critical": Immediate action required (large deal, high-score lead)
@@ -219,7 +218,7 @@ ANALYSIS INSTRUCTIONS:
 
 4. suggestedActions: Provide up to 3 specific, actionable steps
 
-5. If no items are flagged, produce a single "achievement" insight
+5. If no items are flagged, return an empty insights array. Never write reassurance such as "everything looks good": an empty result is not evidence that all is well
 
 6. Every insight MUST include:
    - entityId: string or null
@@ -480,20 +479,7 @@ Respond with a structured JSON object containing an insights array.`,
       });
     });
 
-    if (insights.length === 0) {
-      insights.push({
-        entityId: null,
-        entityType: null,
-        type: 'achievement',
-        title: "You're on track!",
-        description: 'No urgent items need your attention. Keep up the great work!',
-        suggestedActions: [],
-        confidence: 0.4,
-        priority: 'low',
-        reasoning: 'Heuristic: no flagged items',
-      });
-    }
-
+    // Nothing flagged gives no insight, never a reassurance: the caller says what was checked.
     return insights;
   }
 }
