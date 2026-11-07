@@ -316,7 +316,11 @@ function ConfirmView({
               <span className="text-slate-600 dark:text-slate-400">
                 New plan ({targetPlan.name})
               </span>
-              <span className="font-medium">{price.formatted}</span>
+              {/* Monthly like the difference and proration beside it: this card is the plan-change
+                  path, which #1239 reworks with the chosen period. */}
+              <span className="font-medium">
+                {formatCurrency(targetPlan.priceMonthly, targetPlan.currency)} <span>/mo</span>
+              </span>
             </div>
             {priceDiff && (
               <div className="flex justify-between text-sm">
