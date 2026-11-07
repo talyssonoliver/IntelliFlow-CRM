@@ -344,7 +344,10 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
       .mockImplementation(async (fn: (tx: unknown) => unknown) =>
         fn({
           leadActivity: { create: vi.fn().mockResolvedValue({ id: 'act-1' }) },
-          lead: { update: vi.fn().mockResolvedValue({}) },
+          lead: {
+            update: vi.fn().mockResolvedValue({}),
+            updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+          },
         })
       );
 
