@@ -36,6 +36,7 @@ import {
   formatPriceDifference,
 } from '@/lib/billing/plan-changes';
 import {
+  PAUSED_BLOCKS_PLAN_CHANGE_MESSAGE,
   PAYMENT_ISSUE_BLOCKS_PLAN_CHANGE_MESSAGE,
   PAYMENT_ISSUE_SUBSCRIPTION_STATUSES,
 } from '@intelliflow/validators';
@@ -418,26 +419,34 @@ function ConfirmView({
 // Main export
 // =============================================
 
-/** Shown instead of a plan change while the subscription's last payment hasn't gone through. */
-function PaymentIssueNotice() {
+/**
+ * Shown instead of a plan change while the subscription can't change: its last payment
+ * hasn't gone through (fix the payment method), or Stripe paused it (support resumes it).
+ */
+function PlanChangeBlockedNotice({ paused }: Readonly<{ paused: boolean }>) {
   return (
     <Card className="max-w-2xl mx-auto border border-amber-300 dark:border-amber-700">
       <CardHeader className="pb-3">
         <CardTitle className="text-base font-semibold">
-          {PAYMENT_ISSUE_BLOCKS_PLAN_CHANGE_MESSAGE}
+          {paused ? PAUSED_BLOCKS_PLAN_CHANGE_MESSAGE : PAYMENT_ISSUE_BLOCKS_PLAN_CHANGE_MESSAGE}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Your last payment didn&apos;t go through. Once your payment method is updated and the
-          payment is made, you can change your plan here.
+          {paused
+            ? 'A paused subscription has to be resumed before its plan can change.'
+            : "Your last payment didn't go through. Once your payment method is updated and the payment is made, you can change your plan here."}
         </p>
         <div className="flex gap-3">
           <Button variant="outline" className="flex-1" asChild>
             <Link href="/billing/plans">Back to plans</Link>
           </Button>
           <Button className="flex-1" asChild>
-            <Link href="/billing/payment-methods">Update payment method</Link>
+            {paused ? (
+              <Link href="/support">Contact support</Link>
+            ) : (
+              <Link href="/billing/payment-methods">Update payment method</Link>
+            )}
           </Button>
         </div>
       </CardContent>
@@ -519,11 +528,12 @@ export function UpgradeFlow() {
   }
 
   // A subscription whose last payment failed can't change plan until the payment is fixed.
+  if (liveSubscription?.status === 'paused') return <PlanChangeBlockedNotice paused />;
   if (
     liveSubscription &&
     (PAYMENT_ISSUE_SUBSCRIPTION_STATUSES as readonly string[]).includes(liveSubscription.status)
   ) {
-    return <PaymentIssueNotice />;
+    return <PlanChangeBlockedNotice paused={false} />;
   }
 
   return (

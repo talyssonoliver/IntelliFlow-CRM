@@ -35,6 +35,7 @@ import {
   updateBillingInformationInputSchema,
   PAYMENT_ISSUE_BLOCKS_PLAN_CHANGE_MESSAGE,
   PAYMENT_ISSUE_SUBSCRIPTION_STATUSES,
+  PAUSED_BLOCKS_PLAN_CHANGE_MESSAGE,
   promotionCodeSchema,
   INVALID_PROMOTION_CODE_MESSAGE,
 } from '@intelliflow/validators';
@@ -348,6 +349,12 @@ function planChangePriceId(input: {
 function changeableSubscription(subscriptions: StripeSubscription[]): StripeSubscription {
   const live = subscriptions.find((sub) => sub.status === 'active' || sub.status === 'trialing');
   if (live) return live;
+  if (subscriptions.some((sub) => sub.status === 'paused')) {
+    throw new TRPCError({
+      code: 'PRECONDITION_FAILED',
+      message: PAUSED_BLOCKS_PLAN_CHANGE_MESSAGE,
+    });
+  }
   const needsPayment = subscriptions.some((sub) =>
     (PAYMENT_ISSUE_SUBSCRIPTION_STATUSES as readonly string[]).includes(sub.status)
   );

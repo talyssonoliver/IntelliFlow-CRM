@@ -7,6 +7,7 @@
 import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
 import {
   INVALID_PROMOTION_CODE_MESSAGE,
+  PAUSED_BLOCKS_PLAN_CHANGE_MESSAGE,
   PAYMENT_ISSUE_BLOCKS_PLAN_CHANGE_MESSAGE,
 } from '@intelliflow/validators';
 import { billingRouter, clearBillingCache } from '../billing.router';
@@ -108,7 +109,7 @@ describe('updateSubscription — plan change (#1239)', () => {
     ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
   });
 
-  it.each(['past_due', 'unpaid', 'incomplete', 'paused'])(
+  it.each(['past_due', 'unpaid', 'incomplete'])(
     'asks for the payment method first when the subscription is %s',
     async (status) => {
       stripe.listSubscriptions.mockResolvedValue(ok([sub(status)]));
@@ -123,6 +124,15 @@ describe('updateSubscription — plan change (#1239)', () => {
     }
   );
 
+  it('sends a paused subscription to support, not to the payment method', async () => {
+    stripe.listSubscriptions.mockResolvedValue(ok([sub('paused')]));
+
+    await expect(caller().updateSubscription({ planId: 'professional' })).rejects.toMatchObject({
+      code: 'PRECONDITION_FAILED',
+      message: PAUSED_BLOCKS_PLAN_CHANGE_MESSAGE,
+    });
+    expect(stripe.updateSubscription).not.toHaveBeenCalled();
+  });
   it('still says there is no subscription when the only one has ended', async () => {
     stripe.listSubscriptions.mockResolvedValue(ok([sub('canceled')]));
 

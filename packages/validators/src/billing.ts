@@ -218,12 +218,14 @@ export const PAYMENT_ISSUE_BLOCKS_PLAN_CHANGE_MESSAGE =
   'Update your payment method before changing plans.';
 
 /** Subscription statuses whose payment needs fixing before the plan can change. */
-export const PAYMENT_ISSUE_SUBSCRIPTION_STATUSES = [
-  'past_due',
-  'unpaid',
-  'incomplete',
-  'paused',
-] as const;
+export const PAYMENT_ISSUE_SUBSCRIPTION_STATUSES = ['past_due', 'unpaid', 'incomplete'] as const;
+
+/**
+ * A subscription Stripe paused (a trial that ended with no payment method). A new payment method
+ * doesn't resume it, so the answer is support, not the payment-method page.
+ */
+export const PAUSED_BLOCKS_PLAN_CHANGE_MESSAGE =
+  'Your subscription is paused. Contact support to resume it before changing plans.';
 
 export type UpdateSubscriptionInput = z.infer<typeof updateSubscriptionInputSchema>;
 

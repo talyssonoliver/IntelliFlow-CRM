@@ -288,7 +288,7 @@ describe('UpgradeFlow', () => {
     }
   );
 
-  it.each(['past_due', 'unpaid', 'incomplete', 'paused'])(
+  it.each(['past_due', 'unpaid', 'incomplete'])(
     'asks a %s subscriber to update the payment method, never starting a second subscription (#1239)',
     async (status) => {
       const { useSearchParams } = await import('next/navigation');
@@ -317,6 +317,32 @@ describe('UpgradeFlow', () => {
     }
   );
 
+  it('sends a paused subscriber to support, since a new payment method does not resume it', async () => {
+    const { useSearchParams } = await import('next/navigation');
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams('plan=enterprise&cycle=monthly') as unknown as ReturnType<
+        typeof useSearchParams
+      >
+    );
+    mockGetSubscription.mockReturnValue({
+      data: { ...mockSubscription, status: 'paused' } as typeof mockSubscription,
+      isLoading: false,
+      error: null,
+    });
+    render(<UpgradeFlow />);
+
+    expect(
+      screen.getByText(
+        'Your subscription is paused. Contact support to resume it before changing plans.'
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /contact support/i })).toHaveAttribute(
+      'href',
+      '/support'
+    );
+    expect(screen.queryByRole('link', { name: /update payment method/i })).toBeNull();
+    expect(mockMutate).not.toHaveBeenCalled();
+  });
   it('sends the plan and period for the server to price (#1239)', async () => {
     const { useSearchParams } = await import('next/navigation');
     vi.mocked(useSearchParams).mockReturnValue(
