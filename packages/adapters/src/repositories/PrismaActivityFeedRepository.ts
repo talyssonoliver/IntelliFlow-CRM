@@ -65,6 +65,23 @@ const TICKET_ACTIVITY_TYPE_MAP: Record<string, ActivityFeedType> = {
   STATUS_CHANGE: 'STATUS_CHANGE',
 };
 
+/**
+ * Lead label in the feed: person, then company, then email (#1223). Synced
+ * COA leads carry a company and no person name, so the email was shown before.
+ */
+export function leadEntityLabel(lead: {
+  firstName: string | null;
+  lastName: string | null;
+  company?: string | null;
+  email: string;
+}): string {
+  const person = [lead.firstName, lead.lastName]
+    .map((part) => part?.trim())
+    .filter(Boolean)
+    .join(' ');
+  return person || lead.company?.trim() || lead.email;
+}
+
 export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -258,7 +275,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       where,
       orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
       take: limit,
-      include: { lead: { select: { id: true, firstName: true, lastName: true, email: true } } },
+      include: {
+        lead: { select: { id: true, firstName: true, lastName: true, company: true, email: true } },
+      },
     });
 
     return rows.map((r) => ({
@@ -273,7 +292,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
         ? {
             id: r.lead.id,
             type: 'LEAD' as const,
-            name: [r.lead.firstName, r.lead.lastName].filter(Boolean).join(' ') || r.lead.email,
+            name: leadEntityLabel(r.lead),
           }
         : null,
       metadata: {
@@ -629,7 +648,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       where,
       orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
       take: limit,
-      include: { lead: { select: { id: true, firstName: true, lastName: true, email: true } } },
+      include: {
+        lead: { select: { id: true, firstName: true, lastName: true, company: true, email: true } },
+      },
     });
 
     return rows.map((r) => ({
@@ -644,7 +665,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
         ? {
             id: r.lead.id,
             type: 'LEAD' as const,
-            name: [r.lead.firstName, r.lead.lastName].filter(Boolean).join(' ') || r.lead.email,
+            name: leadEntityLabel(r.lead),
           }
         : null,
       metadata: {

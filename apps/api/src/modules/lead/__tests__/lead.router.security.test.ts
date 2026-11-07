@@ -118,6 +118,7 @@ describe('Lead Router Security — Tenant Isolation (IFC-237)', () => {
           },
           lead: {
             update: vi.fn().mockResolvedValue(mockLead),
+            updateMany: vi.fn().mockResolvedValue({ count: 1 }),
           },
         };
         return fn(tx);
@@ -162,6 +163,7 @@ describe('Lead Router Security — Tenant Isolation (IFC-237)', () => {
               capturedUpdateArgs = args;
               return Promise.resolve(mockLead);
             }),
+            updateMany: vi.fn().mockResolvedValue({ count: 1 }),
           },
         };
         return fn(tx);

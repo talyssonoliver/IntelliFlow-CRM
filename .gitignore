@@ -129,6 +129,9 @@ pnpm-debug.log*
 .env.local
 .env*.local
 .env.production
+# Backups of env files can hold real values
+.env*.bak*
+.env.bak*
 
 # Keep example/template files
 !.env.example
