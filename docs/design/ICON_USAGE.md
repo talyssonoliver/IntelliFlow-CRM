@@ -77,6 +77,10 @@ on `.material-symbols-outlined`: it would bring that problem back. Small
 decorative dots are CSS (`rounded-full bg-current`), not the
 `fiber_manual_record` glyph.
 
+One property stays unlayered on purpose: `line-height: 1`. Tailwind's text-size
+utilities also set a line-height, which would push a smaller icon off-centre
+inside its 1em box.
+
 ## The available icon set
 
 - **Authoritative list**: `artifacts/reports/material-symbols-glyph-audit.json`

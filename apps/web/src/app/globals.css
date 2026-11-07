@@ -303,6 +303,16 @@
   }
 }
 
+/*
+ * Kept unlayered on purpose: Tailwind's text-* size utilities also set a
+ * line-height (text-base is 24px). With the rule above now in base, that would
+ * put a 16px icon in a 24px line, clipped by the 1em box and pushed below the
+ * text. Icons always used line-height 1; this keeps it whatever size applies.
+ */
+.material-symbols-outlined {
+  line-height: 1;
+}
+
 /* ─── Schedule-X calendar theme bridge ─── */
 
 /* Variable bridge — maps Schedule-X tokens to IntelliFlow design system */
