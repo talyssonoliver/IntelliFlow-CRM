@@ -16,6 +16,7 @@ import { TRPCError } from '@trpc/server';
 import { container, containerReady, type Container, apiPrisma } from './container';
 import { isJwtShaped } from './lib/jwt-shape';
 import { supabaseAdmin, verifyToken } from './lib/supabase';
+import { isAuthSessionAlive } from './security/auth-sessions';
 import {
   ACTIVE_TENANT_HEADER,
   decodeSessionClaims,
@@ -670,6 +671,42 @@ function normalizeRequestedTenant(value: string | null | undefined): string | nu
   return raw && raw.length <= 64 ? raw : null;
 }
 
+let warnedMissingAuthSessions = false;
+
+/** True for the error Postgres gives when `auth.sessions` (or the `auth` schema) does not exist. */
+function isMissingAuthSessionsTable(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  return /does not exist/i.test(message) && /\bauth\b/.test(message);
+}
+
+/**
+ * Whether the token's Supabase session is still alive.
+ *
+ * - A token with no `session_id` carries nothing to check and passes (normal sign-ins always
+ *   carry one).
+ * - In production any error propagates, and `createContext` treats the request as signed out: an
+ *   unreadable sessions table must never let a token through.
+ * - Outside production, a database without the Supabase `auth` schema (the plain Postgres used
+ *   by local tests) skips the check with one warning.
+ */
+async function isSessionStillAlive(userId: string, sessionId: string | null): Promise<boolean> {
+  if (!sessionId) return true;
+  try {
+    return await isAuthSessionAlive(apiPrisma, userId, sessionId);
+  } catch (err) {
+    if (process.env.NODE_ENV !== 'production' && isMissingAuthSessionsTable(err)) {
+      if (!warnedMissingAuthSessions) {
+        warnedMissingAuthSessions = true;
+        console.warn(
+          '[Auth] auth.sessions is not present in this database; ended-session check skipped (non-production only).'
+        );
+      }
+      return true;
+    }
+    throw err;
+  }
+}
+
 /**
  * Resolve a UserSession from a raw JWT token.
  * Uses local JWT verification + in-process session caches to minimize latency, then decides the
@@ -695,6 +732,13 @@ async function resolveUserFromToken(
 
   const cachedResolved = resolvedSessionCache.get(key) as UserSession | null;
   if (cachedResolved) return { kind: 'ok', user: cachedResolved };
+
+  // A signed, unexpired token whose session has since ended (sign-out, revoked from the sessions
+  // list, ended by a password change) is refused. Checked once per cache miss, so an ended session
+  // stops working within the cache TTL everywhere, and at once on the instance that ended it.
+  if (!(await isSessionStillAlive(supabaseUser.id, claims.sessionId))) {
+    return { kind: 'none' };
+  }
 
   let home = baseSessionCache.get(supabaseUser.id) as UserSession | null;
   if (!home) {
