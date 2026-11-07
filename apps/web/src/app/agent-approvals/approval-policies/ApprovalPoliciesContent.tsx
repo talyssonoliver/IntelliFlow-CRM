@@ -230,6 +230,7 @@ export default function ApprovalPoliciesContent() {
                     <EmptyState
                       entity="rules"
                       showCta={canManage}
+                      ctaLabel="New policy"
                       onCtaClick={() => setDialog({ scope, policy: null })}
                       size="sm"
                       aria-label={`No ${meta.title.toLowerCase()} policies`}

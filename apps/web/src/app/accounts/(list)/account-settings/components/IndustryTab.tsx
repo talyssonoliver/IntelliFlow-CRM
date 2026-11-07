@@ -70,6 +70,7 @@ export const IndustryTab = forwardRef<IndustryTabHandle, IndustryTabProps>(funct
         <EmptyState
           entity="accounts"
           size="sm"
+          ctaLabel="Add industry"
           onCtaClick={openCreate}
           title="No industries yet"
           description="Add the first industry or reset to defaults."

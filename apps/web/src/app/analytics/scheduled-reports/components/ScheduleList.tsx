@@ -77,6 +77,7 @@ export function ScheduleList({
       <EmptyState
         entity="reports"
         showCta={canEdit && Boolean(onCreate)}
+        ctaLabel="Create schedule"
         onCtaClick={onCreate}
         size="sm"
         className="py-4 px-3 gap-2"

@@ -85,6 +85,7 @@ function SignatureList({
         entity="signatures"
         size="sm"
         showCta={canManage}
+        ctaLabel="New signature"
         onCtaClick={onCreate}
         title={scope === 'USER' ? 'No personal signatures yet' : 'No organisation signatures yet'}
         description={

@@ -269,6 +269,7 @@ export const TerritoryList = forwardRef<TerritoryListHandle, TerritoryListProps>
         {territories.length === 0 ? (
           <EmptyState
             entity="rules"
+            ctaLabel="Add territory"
             onCtaClick={() => open(null, document.activeElement)}
             size="sm"
             className="py-4 px-3 gap-2"

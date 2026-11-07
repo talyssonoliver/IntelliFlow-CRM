@@ -146,6 +146,7 @@ export const TicketTagsCard = forwardRef<TicketTagsCardHandle, Props>(function T
         <EmptyState
           entity="pinned"
           onCtaClick={openCreate}
+          ctaLabel="Create a tag"
           size="sm"
           className="py-4 px-3 gap-2"
           title="No tags yet"

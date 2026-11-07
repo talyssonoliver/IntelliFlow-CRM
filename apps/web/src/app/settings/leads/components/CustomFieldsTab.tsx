@@ -126,6 +126,7 @@ export const CustomFieldsTab = forwardRef<CustomFieldsTabHandle, CustomFieldsTab
         {fields.length === 0 ? (
           <EmptyState
             entity="rules"
+            ctaLabel="Add custom field"
             onCtaClick={openCreate}
             size="sm"
             className="py-4 px-3 gap-2"

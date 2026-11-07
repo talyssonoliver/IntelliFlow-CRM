@@ -404,3 +404,49 @@ describe('EmptyState CTA modes (#1222 UI-002)', () => {
     expect(onCtaClick).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('EmptyState entity mode, uncontrolled', () => {
+  it('moves through the lifecycle on its own: hover, CTA, cancel, create', () => {
+    const onCreate = vi.fn();
+    render(<EmptyState entity="tasks" onCreate={onCreate} />);
+    fireEvent.mouseEnter(screen.getByRole('region'));
+    fireEvent.click(screen.getByRole('button', { name: /Create a task/ }));
+    // The composer is open: cancel returns to the CTA.
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('textbox')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /Create a task/ }));
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Call Ada' } });
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter', ctrlKey: true });
+    expect(onCreate).toHaveBeenCalledWith('Call Ada');
+    expect(screen.queryByRole('textbox')).toBeNull();
+  });
+
+  it('forwards function and object refs', () => {
+    const fnRef = vi.fn();
+    const { unmount } = render(<EmptyState entity="tasks" ref={fnRef} />);
+    expect(fnRef).toHaveBeenCalledWith(expect.any(HTMLDivElement));
+    unmount();
+
+    const objRef = React.createRef<HTMLDivElement>();
+    render(<EmptyState entity="tasks" ref={objRef} />);
+    expect(objRef.current).toBeInstanceOf(HTMLDivElement);
+  });
+
+  it('ignores the hotkey while typing, with modifiers, or for another key', () => {
+    const onCtaClick = vi.fn();
+    render(
+      <>
+        <input aria-label="elsewhere" />
+        <EmptyState entity="tasks" onCtaClick={onCtaClick} />
+      </>
+    );
+    fireEvent.keyDown(screen.getByLabelText('elsewhere'), { key: 't' });
+    fireEvent.keyDown(document.body, { key: 't', ctrlKey: true });
+    fireEvent.keyDown(document.body, { key: 'x' });
+    expect(onCtaClick).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(document.body, { key: 't' });
+    expect(onCtaClick).toHaveBeenCalledTimes(1);
+  });
+});

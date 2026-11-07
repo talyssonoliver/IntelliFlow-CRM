@@ -178,6 +178,7 @@ export function RetentionPoliciesTab({ policies, onPoliciesChange }: Readonly<Pr
       {policies.length === 0 ? (
         <EmptyState
           entity="signatures"
+          ctaLabel="Add policy"
           onCtaClick={openCreate}
           size="sm"
           className="py-4 px-3 gap-2"

@@ -165,6 +165,7 @@ export const ContactTypeList = forwardRef<ContactTypeListHandle, ContactTypeList
           <EmptyState
             entity="contacts"
             variant="folder"
+            ctaLabel="Create contact type"
             onCtaClick={() => open(null, document.activeElement)}
             size="sm"
             title="No contact types yet"

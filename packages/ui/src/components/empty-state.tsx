@@ -376,8 +376,12 @@ function applyPhase(
   onPhaseChange?.(next);
   if (controlledPhase) return;
   if (next === 'passive') machine.reset();
-  else if (next === 'soft-cta') machine.activate();
-  else if (next === 'inline-composer') machine.openComposer();
+  // activate() only leaves passive, so step through it: Cancel in the
+  // composer must come back to the CTA.
+  else if (next === 'soft-cta') {
+    machine.reset();
+    machine.activate();
+  } else if (next === 'inline-composer') machine.openComposer();
   else if (next === 'smart-suggestions') machine.completeCreate();
 }
 

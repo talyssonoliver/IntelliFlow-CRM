@@ -129,6 +129,7 @@ export const CustomFieldsTab = forwardRef<CustomFieldsTabHandle, CustomFieldsTab
           <EmptyState
             entity="rules"
             size="sm"
+            ctaLabel="Add custom field"
             onCtaClick={openCreate}
             title="No custom fields yet"
             description="Capture extra account data with a custom field."

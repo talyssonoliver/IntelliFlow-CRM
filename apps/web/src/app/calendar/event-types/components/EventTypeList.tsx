@@ -165,6 +165,7 @@ export const EventTypeList = forwardRef<EventTypeListHandle, EventTypeListProps>
         {items.length === 0 ? (
           <EmptyState
             entity="appointments"
+            ctaLabel="Create event type"
             onCtaClick={() => open(null, document.activeElement)}
             size="sm"
             title="No event types yet"

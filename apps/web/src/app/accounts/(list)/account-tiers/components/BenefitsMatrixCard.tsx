@@ -38,6 +38,7 @@ export function BenefitsMatrixCard({
         <EmptyState
           entity="rules"
           showCta={!readOnly && Boolean(onAdd)}
+          ctaLabel="Add benefit"
           onCtaClick={onAdd}
           size="sm"
           className="py-4 px-3 gap-2"

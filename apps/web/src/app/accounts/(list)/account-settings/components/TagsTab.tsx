@@ -91,6 +91,7 @@ export const TagsTab = forwardRef<TagsTabHandle, TagsTabProps>(function TagsTab(
         <EmptyState
           entity="pinned"
           size="sm"
+          ctaLabel="Add tag"
           onCtaClick={openCreate}
           title="No tags yet"
           description="Add your first account tag."

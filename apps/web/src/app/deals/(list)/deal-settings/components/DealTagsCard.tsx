@@ -125,6 +125,7 @@ export const DealTagsCard = forwardRef<TagsTabHandle, DealTagsCardProps>(functio
         <EmptyState
           entity="pinned"
           size="sm"
+          ctaLabel="Add tag"
           onCtaClick={openCreate}
           title="No tags yet"
           description="Add your first deal tag."

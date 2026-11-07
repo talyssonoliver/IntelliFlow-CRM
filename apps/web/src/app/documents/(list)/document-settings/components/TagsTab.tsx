@@ -128,6 +128,7 @@ export const TagsTab = forwardRef<TagsTabHandle, TagsTabProps>(function TagsTab(
         <EmptyState
           entity="documents"
           size="sm"
+          ctaLabel="Add tag"
           onCtaClick={openCreate}
           className="py-4 px-3 gap-2"
         />

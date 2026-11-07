@@ -130,6 +130,7 @@ export const CaseTypeList = forwardRef<CaseTypeListHandle, CaseTypeListProps>(fu
         <EmptyState
           entity="cases"
           variant="folder"
+          ctaLabel="Create case type"
           onCtaClick={() => open(null, document.activeElement)}
           size="sm"
           title="No case types yet"

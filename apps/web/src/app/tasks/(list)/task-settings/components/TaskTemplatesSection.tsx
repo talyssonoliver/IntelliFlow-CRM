@@ -162,6 +162,7 @@ export function TaskTemplatesSection({ value, onChange }: Readonly<TaskTemplates
         <EmptyState
           entity="tasks"
           size="sm"
+          ctaLabel="Add template"
           onCtaClick={openAdd}
           title="No task templates"
           description="Add a template above to speed up task creation."
