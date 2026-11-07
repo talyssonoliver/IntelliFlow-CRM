@@ -222,10 +222,10 @@ export const PAYMENT_ISSUE_SUBSCRIPTION_STATUSES = ['past_due', 'unpaid', 'incom
 
 /**
  * A subscription Stripe paused (a trial that ended with no payment method). A new payment method
- * doesn't resume it, so the answer is support, not the payment-method page.
+ * doesn't resume it, so the answer is to contact us, not the payment-method page.
  */
 export const PAUSED_BLOCKS_PLAN_CHANGE_MESSAGE =
-  'Your subscription is paused. Contact support to resume it before changing plans.';
+  'Your subscription is paused. Contact us to resume it before changing plans.';
 
 export type UpdateSubscriptionInput = z.infer<typeof updateSubscriptionInputSchema>;
 

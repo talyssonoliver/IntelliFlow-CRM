@@ -421,7 +421,7 @@ function ConfirmView({
 
 /**
  * Shown instead of a plan change while the subscription can't change: its last payment
- * hasn't gone through (fix the payment method), or Stripe paused it (support resumes it).
+ * hasn't gone through (fix the payment method), or Stripe paused it (we resume it: contact us).
  */
 function PlanChangeBlockedNotice({ paused }: Readonly<{ paused: boolean }>) {
   return (
@@ -443,7 +443,7 @@ function PlanChangeBlockedNotice({ paused }: Readonly<{ paused: boolean }>) {
           </Button>
           <Button className="flex-1" asChild>
             {paused ? (
-              <Link href="/support/tickets/new">Contact support</Link>
+              <Link href="/contact">Contact us</Link>
             ) : (
               <Link href="/billing/payment-methods">Update payment method</Link>
             )}

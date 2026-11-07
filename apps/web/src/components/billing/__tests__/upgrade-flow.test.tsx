@@ -317,7 +317,7 @@ describe('UpgradeFlow', () => {
     }
   );
 
-  it('sends a paused subscriber to support, since a new payment method does not resume it', async () => {
+  it('sends a paused subscriber to contact us, since a new payment method does not resume it', async () => {
     const { useSearchParams } = await import('next/navigation');
     vi.mocked(useSearchParams).mockReturnValue(
       new URLSearchParams('plan=enterprise&cycle=monthly') as unknown as ReturnType<
@@ -333,13 +333,10 @@ describe('UpgradeFlow', () => {
 
     expect(
       screen.getByText(
-        'Your subscription is paused. Contact support to resume it before changing plans.'
+        'Your subscription is paused. Contact us to resume it before changing plans.'
       )
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /contact support/i })).toHaveAttribute(
-      'href',
-      '/support/tickets/new'
-    );
+    expect(screen.getByRole('link', { name: /contact us/i })).toHaveAttribute('href', '/contact');
     expect(screen.queryByRole('link', { name: /update payment method/i })).toBeNull();
     expect(mockMutate).not.toHaveBeenCalled();
   });
