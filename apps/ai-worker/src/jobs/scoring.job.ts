@@ -281,6 +281,12 @@ function isInconclusive(error: unknown): boolean {
   return (error as { name?: unknown } | null)?.name === 'ScoringInconclusiveError';
 }
 
+/** Claude declined this lead's content (stop_reason refusal): the provider itself is fine. */
+function isContentRefusal(error: unknown): boolean {
+  const e = error as { name?: unknown; stopReason?: unknown } | null;
+  return e?.name === 'AnthropicIncompleteResponseError' && e.stopReason === 'refusal';
+}
+
 /** Inconclusive when any provider that answered gave no usable score; else the primary's class. */
 function scoringErrorClass(primary: unknown, fallback?: unknown): string {
   if (isInconclusive(primary) || isInconclusive(fallback)) return SCORING_INCONCLUSIVE_CLASS;
@@ -289,9 +295,9 @@ function scoringErrorClass(primary: unknown, fallback?: unknown): string {
 
 /**
  * Run a scoring call through the provider's circuit breaker. Some failures say nothing about the
- * provider, so they are not counted as breaker failures: an inconclusive answer (the provider is
- * up and answered), a tenant's monthly budget refusal and the worker-wide monthly AI budget
- * refusal (no provider was called). The breaker is shared by every tenant, so counting them
+ * provider, so they are not counted as breaker failures: an inconclusive answer or a content
+ * refusal (the provider is up and answered about this lead), a tenant's monthly budget refusal
+ * and the worker-wide monthly AI budget refusal (no provider was called). The breaker is shared by every tenant, so counting them
  * would block scoring for everyone. All are still rethrown for this lead (codex, #1218).
  */
 async function scoreThroughBreaker(
@@ -302,7 +308,12 @@ async function scoreThroughBreaker(
     try {
       return { scored: await score() };
     } catch (error) {
-      if (isInconclusive(error) || isPurposeCeilingReached(error) || isMonthlyBudgetExceeded(error))
+      if (
+        isInconclusive(error) ||
+        isContentRefusal(error) ||
+        isPurposeCeilingReached(error) ||
+        isMonthlyBudgetExceeded(error)
+      )
         return { notCounted: error };
       throw error;
     }

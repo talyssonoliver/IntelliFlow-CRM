@@ -166,6 +166,9 @@ function meterEmbeddingRequests(embeddings: Embeddings, meta: EmbeddingsTracingM
     asRecord[method] as (arg: unknown, ...rest: unknown[]) => Promise<unknown>
   ).bind(embeddings);
   asRecord[method] = async (arg: unknown, ...rest: unknown[]): Promise<unknown> => {
+    // Checked per request, not once per batch: a queued request must not start after the
+    // monthly budget was used up by the requests before it.
+    await assertWithinMonthlyBudget(meta.pricingKey ?? `rag-${meta.tier}`, aiConfig.provider);
     const result = await original(arg, ...rest);
     recordEmbeddingUsage(tenantContextStore.getStore()?.tenantId, meta, textsOf(arg));
     return result;

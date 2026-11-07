@@ -4,6 +4,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { guardEmbeddingCall, recordEmbeddingUsage } from '../usage-metering';
+import { wrapEmbeddingsWithTracing } from '../../tracing/llm-tracer';
 import {
   MonthlyBudgetExceededError,
   _resetPendingSpend,
@@ -42,6 +43,34 @@ describe('embeddings and the monthly AI budget', () => {
     await expect(
       guardEmbeddingCall(undefined, 'free', 'nvidia/nemotron-3-embed-1b:free')
     ).resolves.toBeUndefined();
+  });
+
+  it('checks the budget before each request of a batch, so a queued request is not sent', async () => {
+    class BatchEmbeddings {
+      sent = 0;
+      async embeddingWithRetry(_request: { input: string[] }) {
+        this.sent++;
+        return { data: [] };
+      }
+      async embedDocuments(texts: string[]) {
+        for (const text of texts) await this.embeddingWithRetry({ input: [text] });
+        return texts.map(() => [0]);
+      }
+      async embedQuery(text: string) {
+        await this.embeddingWithRetry({ input: [text] });
+        return [0];
+      }
+    }
+    const fake = new BatchEmbeddings();
+    const traced = wrapEmbeddingsWithTracing(fake as never, { tier: 'free', pricingKey: PAID });
+    // One micro-dollar below the $60 default: the first request may go, the next may not.
+    values.set(monthlyBudgetKey(), 60_000_000 - 1);
+    const big = 'word '.repeat(20_000);
+
+    await expect(traced.embedDocuments([big, big, big])).rejects.toBeInstanceOf(
+      MonthlyBudgetExceededError
+    );
+    expect(fake.sent).toBe(1);
   });
 
   it('adds a paid embedding call to the month, even without a billable tenant', async () => {
