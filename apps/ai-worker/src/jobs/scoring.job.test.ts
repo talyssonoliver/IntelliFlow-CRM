@@ -1083,6 +1083,21 @@ describe('ScoringJob', () => {
         expect(failure.message).toBe('Lead scoring failed (inconclusive)');
       });
 
+      it('keeps its retries when the other provider failed without answering (codex)', async () => {
+        mockScoreLead.mockReset();
+        mockScoreLead
+          .mockRejectedValueOnce(Object.assign(new Error('rate limited'), { status: 429 }))
+          .mockRejectedValueOnce(inconclusive());
+        exec().mockClear();
+
+        const failure = (await processScoringJob(leadJob()).catch((e: unknown) => e)) as Error;
+        // Still "no usable score" for the API, but a retry may reach the provider that failed.
+        expect(failure.message).toMatch(/^Lead scoring failed \(inconclusive\)/);
+        expect(toScoringJobFailure(failure)).toBe(failure);
+        expect(isExpectedJobFailure(failure.message)).toBe(false);
+        expect(exec()).not.toHaveBeenCalled();
+      });
+
       it('is recognised from the queue failure reason, so the worker logs a warning', () => {
         expect(isExpectedJobFailure('Lead scoring failed (inconclusive)')).toBe(true);
         expect(isExpectedJobFailure('Lead scoring failed (rate_limited)')).toBe(false);

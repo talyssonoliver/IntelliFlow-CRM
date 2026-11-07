@@ -258,11 +258,15 @@ async function generateScoringWithFallback(
     // #1218 (owner ruling): when no provider produced a usable score, the scoring FAILED. A
     // made-up heuristic number is no longer saved as if a model had scored the lead.
     const errorClass = scoringErrorClass(error, fallbackOutcome);
+    // A provider that did not answer (429, timeout, outage) may answer on a retry, even when
+    // the other one was inconclusive: such a failure keeps its retries.
+    const providerFault =
+      !isInconclusive(error) || (fallbackOutcome !== undefined && !isInconclusive(fallbackOutcome));
     logger.warn(
-      { jobId: job.id, errorClass },
+      { jobId: job.id, errorClass, providerFault },
       'Lead scoring failed on every provider — reporting FAILED, no score saved'
     );
-    throw new ScoringFailedError(errorClass);
+    throw new ScoringFailedError(errorClass, providerFault);
   }
 }
 
@@ -325,24 +329,41 @@ async function scoreThroughBreaker(
 /** No provider produced a usable score. The job fails, so nothing is persisted as a score. */
 export class ScoringFailedError extends Error {
   readonly errorClass: string;
-  constructor(errorClass: string) {
-    super(`Lead scoring failed (${errorClass})`);
+  /** A provider failed without answering, so a retry may still produce a score. */
+  readonly providerFault: boolean;
+  constructor(errorClass: string, providerFault = errorClass !== SCORING_INCONCLUSIVE_CLASS) {
+    // The API maps "Lead scoring failed (inconclusive)" (also with the suffix) to "no usable
+    // score". Only the exact message, with no provider fault, is a terminal outcome.
+    const suffix =
+      errorClass === SCORING_INCONCLUSIVE_CLASS && providerFault ? ' after a provider error' : '';
+    super(`Lead scoring failed (${errorClass})${suffix}`);
     this.name = 'ScoringFailedError';
     this.errorClass = errorClass;
+    this.providerFault = providerFault;
   }
 }
 
+const TERMINAL_INCONCLUSIVE_MESSAGE = `Lead scoring failed (${SCORING_INCONCLUSIVE_CLASS})`;
+
 /**
- * True for a queue failure reason that is an expected outcome, not a fault: an inconclusive
- * scoring. The worker logs it as a warning and never dead-letters it.
+ * True for a queue failure reason that is an expected outcome, not a fault: a scoring every
+ * provider answered without a usable score. The worker logs it as a warning and never
+ * dead-letters it. A failure that also had a provider fault is not one.
  */
 export function isExpectedJobFailure(failedReason: string | undefined): boolean {
-  return /\bLead scoring failed \(inconclusive\)/.test(failedReason ?? '');
+  return (failedReason ?? '').trim() === TERMINAL_INCONCLUSIVE_MESSAGE;
 }
 
-/** True when the scoring ended because the model answered without a usable score. */
+/**
+ * True when the scoring ended because the model answered without a usable score and no
+ * provider failed: a retry would give the same answer.
+ */
 export function isInconclusiveScoring(error: unknown): boolean {
-  return error instanceof ScoringFailedError && error.errorClass === SCORING_INCONCLUSIVE_CLASS;
+  return (
+    error instanceof ScoringFailedError &&
+    error.errorClass === SCORING_INCONCLUSIVE_CLASS &&
+    !error.providerFault
+  );
 }
 
 /**
