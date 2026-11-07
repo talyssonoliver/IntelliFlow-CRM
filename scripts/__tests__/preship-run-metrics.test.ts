@@ -157,3 +157,62 @@ describe('appendRunRecord', () => {
     expect(appendRunRecord(path.join(blocker, 'runs.jsonl'), { run: 1 })).toBe(false);
   });
 });
+
+describe('edge cases (records stay usable with missing inputs)', () => {
+  it('uses the real os memory and timer by default', () => {
+    const sampler = createMemorySampler({ intervalMs: 60_000 });
+    sampler.start();
+    sampler.mark('typecheck');
+    const memory = sampler.stop();
+    expect(memory.total_mb).toBe(Math.round(os.totalmem() / MB));
+    expect(memory.min_free_mb).toBeGreaterThan(0);
+    expect(memory.per_step_min_free_mb.typecheck).toBeGreaterThan(0);
+  });
+
+  it('keeps a step minimum when a later sample is higher, and stops without a timer', () => {
+    const free = { value: 8 * GB };
+    const sampler = createMemorySampler({
+      freemem: () => free.value,
+      totalmem: () => 32 * GB,
+      setIntervalFn: (() => null) as unknown as typeof setInterval,
+      clearIntervalFn: (() => {
+        throw new Error('no timer to clear');
+      }) as unknown as typeof clearInterval,
+    });
+    sampler.start();
+    sampler.mark('lint');
+    free.value = 12 * GB;
+    sampler.mark('lint');
+    const memory = sampler.stop();
+    expect(memory.per_step_min_free_mb.lint).toBe(8 * 1024);
+    expect(memory.min_free_mb).toBe(8 * 1024);
+  });
+
+  it('builds a record from a run with no branch, scope, memory or step durations', () => {
+    const record = buildRunRecord({
+      head: 'abc1234',
+      mode: 'standard',
+      results: [{ id: 'lint', verdict: 'PASS' }],
+      startedAt: Date.UTC(2026, 10, 7),
+      durationMs: 0,
+      verdict: 'PASS',
+    } as never);
+    expect(record.branch).toBeNull();
+    expect(record.only).toBeNull();
+    expect(record.test_scope).toEqual({ scope: null, reason: null, changed_files: 0, base: null });
+    expect(record.memory).toEqual({ total_mb: null, min_free_mb: null, peak_used_mb: null });
+    expect(record.steps).toEqual([{ id: 'lint', verdict: 'PASS', duration_ms: 0 }]);
+  });
+
+  it('prints a summary with unknown scope and memory, no slow steps and no log path', () => {
+    const record = buildRunRecord({
+      head: 'abc1234',
+      mode: 'standard',
+      results: [{ id: 'lint', verdict: 'PASS', duration_ms: 0 }],
+      startedAt: Date.UTC(2026, 10, 7),
+      durationMs: 5_000,
+      verdict: 'PASS',
+    } as never);
+    expect(summaryLine(record)).toBe('pre-ship metrics: 5s, tests ?, min free RAM ? of ?\n');
+  });
+});
