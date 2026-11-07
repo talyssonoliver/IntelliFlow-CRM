@@ -959,5 +959,45 @@ describe('ScoringJob', () => {
       expect((failure as ScoringFailedError).errorClass).toBe('inconclusive');
       expect((failure as Error).message).toBe('Lead scoring failed (inconclusive)');
     });
+
+    const inconclusive = () =>
+      Object.assign(new Error('Model gave no usable score (ZERO_CONFIDENCE)'), {
+        name: 'ScoringInconclusiveError',
+      });
+
+    it('reports inconclusive when the primary failed and the fallback gave no usable score (codex)', async () => {
+      mockScoreLead.mockReset();
+      mockScoreLead
+        .mockRejectedValueOnce(new Error('primary provider down (429)'))
+        .mockRejectedValueOnce(inconclusive());
+
+      const job = createMockJob({
+        leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
+        lead: { email: 'test@example.com', source: 'WEBSITE' },
+      });
+      const failure = await processScoringJob(job).catch((e: unknown) => e);
+      expect((failure as ScoringFailedError).errorClass).toBe('inconclusive');
+    });
+
+    it('does not open the shared breaker on inconclusive answers: the provider is up (codex)', async () => {
+      mockScoreLead.mockReset();
+      mockScoreLead.mockImplementation(async () => {
+        throw inconclusive();
+      });
+
+      // Past the breaker's failure threshold (5). Each job tries the primary (through the
+      // breaker) and then the fallback, so an open breaker would skip a primary call.
+      const jobs = 7;
+      for (let i = 0; i < jobs; i++) {
+        const job = createMockJob({
+          leadId: TEST_UUIDS.lead1,
+          tenantId: TEST_UUIDS.tenant1,
+          lead: { email: 'test@example.com', source: 'WEBSITE' },
+        });
+        await expect(processScoringJob(job)).rejects.toBeInstanceOf(ScoringFailedError);
+      }
+      expect(mockScoreLead).toHaveBeenCalledTimes(jobs * 2);
+    });
   });
 });

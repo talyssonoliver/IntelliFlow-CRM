@@ -5,6 +5,35 @@ import { Card } from '@intelliflow/ui';
 import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import { AppAvatar } from '@/components/shared/app-avatar';
 import { formatEstimatedValue } from '@/lib/leads/lead-format';
+import { leadScoreDisplay } from '@/lib/leads/score-display';
+
+/** #1218: the profile card's score, or "Not scored" when no real AI score exists. */
+function ProfileScoreValue({
+  score,
+  scoringStatus,
+}: Readonly<{ score: number; scoringStatus?: string | null }>) {
+  const display = leadScoreDisplay(score, scoringStatus);
+  if (display.kind === 'not-scored') {
+    return (
+      <p className="text-lg font-bold text-slate-500 dark:text-slate-400" title={display.title}>
+        {display.label}
+      </p>
+    );
+  }
+  return (
+    <p className="text-lg font-bold text-slate-900 dark:text-white">
+      {display.score}
+      {display.needsReview && (
+        <span
+          className="ml-1 text-xs font-normal text-amber-600 dark:text-amber-400"
+          title="Low confidence: needs review"
+        >
+          needs review
+        </span>
+      )}
+    </p>
+  );
+}
 
 /**
  * Lead 360 details — identity, contact info, status/source/temperature badges,
@@ -319,7 +348,7 @@ export function LeadProfileCard({
             <p className="text-xs text-slate-500">Est. Value</p>
           </div>
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <p className="text-lg font-bold text-slate-900 dark:text-white">{lead.score}</p>
+            <ProfileScoreValue score={lead.score} scoringStatus={lead.scoringStatus} />
             <p className="text-xs text-slate-500">Lead Score</p>
           </div>
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">

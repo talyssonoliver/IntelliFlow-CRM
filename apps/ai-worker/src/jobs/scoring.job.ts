@@ -190,9 +190,11 @@ async function generateScoringWithFallback(
   timeoutMs: number,
   breaker: CircuitBreaker
 ): Promise<{ result: ScoringResult; usedFallback: boolean }> {
+  // The fallback provider's failure, if it was tried: it decides the class as well (codex).
+  let fallbackOutcome: unknown;
   try {
     const scored = await Promise.race([
-      breaker.execute(() => chain.scoreLead(input, { leadId: job.data.leadId })),
+      scoreThroughBreaker(breaker, () => chain.scoreLead(input, { leadId: job.data.leadId })),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error(`LLM scoring timed out after ${timeoutMs}ms`)), timeoutMs)
       ),
@@ -232,6 +234,7 @@ async function generateScoringWithFallback(
         );
         return { result: scored, usedFallback: false };
       } catch (fallbackError) {
+        fallbackOutcome = fallbackError;
         logger.warn(
           {
             jobId: job.id,
@@ -245,7 +248,7 @@ async function generateScoringWithFallback(
 
     // #1218 (owner ruling): when no provider produced a usable score, the scoring FAILED. A
     // made-up heuristic number is no longer saved as if a model had scored the lead.
-    const errorClass = scoringErrorClass(error);
+    const errorClass = scoringErrorClass(error, fallbackOutcome);
     logger.warn(
       { jobId: job.id, errorClass },
       'Lead scoring failed on every provider — reporting FAILED, no score saved'
@@ -260,11 +263,40 @@ async function generateScoringWithFallback(
  * error once the failure crosses the queue (codex, #1218).
  */
 export const SCORING_INCONCLUSIVE_CLASS = 'inconclusive';
-function scoringErrorClass(error: unknown): string {
-  // Matched by name (ScoringInconclusiveError in chains/scoring.chain), so it holds across
-  // module copies and test doubles.
-  const name = (error as { name?: unknown } | null)?.name;
-  return name === 'ScoringInconclusiveError' ? SCORING_INCONCLUSIVE_CLASS : classifyError(error);
+
+/**
+ * Matched by name (ScoringInconclusiveError in chains/scoring.chain), so it holds across module
+ * copies and test doubles.
+ */
+function isInconclusive(error: unknown): boolean {
+  return (error as { name?: unknown } | null)?.name === 'ScoringInconclusiveError';
+}
+
+/** Inconclusive when any provider that answered gave no usable score; else the primary's class. */
+function scoringErrorClass(primary: unknown, fallback?: unknown): string {
+  if (isInconclusive(primary) || isInconclusive(fallback)) return SCORING_INCONCLUSIVE_CLASS;
+  return classifyError(primary);
+}
+
+/**
+ * Run a scoring call through the provider's circuit breaker. An inconclusive answer means the
+ * provider is up and answered, so it is not counted as a breaker failure (it would otherwise
+ * open the shared breaker for every tenant); it is still rethrown for this lead (codex, #1218).
+ */
+async function scoreThroughBreaker(
+  breaker: CircuitBreaker,
+  score: () => Promise<ScoringResult>
+): Promise<ScoringResult> {
+  const outcome = await breaker.execute(async () => {
+    try {
+      return { scored: await score() };
+    } catch (error) {
+      if (isInconclusive(error)) return { inconclusive: error };
+      throw error;
+    }
+  });
+  if ('inconclusive' in outcome) throw outcome.inconclusive;
+  return outcome.scored;
 }
 
 /** No provider produced a usable score. The job fails, so nothing is persisted as a score. */
