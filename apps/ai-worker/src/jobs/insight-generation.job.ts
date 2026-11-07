@@ -1110,6 +1110,17 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
       // PG-203 #1002: erased and restricted people never reach the model or the tables.
       const { data: validatedData, eligible } = await processableJobData(prisma, parsedData);
 
+      // Nothing flagged: there is nothing to explain, and an empty result is not a sign that
+      // all is well, so no insight is written and the model is not called (#1219).
+      if (
+        validatedData.dealsAtRisk.length === 0 &&
+        validatedData.hotLeads.length === 0 &&
+        validatedData.staleContacts.length === 0 &&
+        validatedData.overdueTasksCount === 0
+      ) {
+        logger.info({ jobId: job.id, tenantId }, 'AI insights job skipped — nothing flagged');
+        return { skipped: true, reason: 'nothing-flagged' } as unknown as InsightJobResult;
+      }
       logger.info(
         {
           jobId: job.id,
