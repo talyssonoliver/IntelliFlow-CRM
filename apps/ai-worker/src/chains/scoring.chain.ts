@@ -212,7 +212,9 @@ Consider the following factors:
 Lead Information:
 {lead_info}
 
-Respond with a structured JSON object containing the score, confidence, factors, and modelVersion fields.`;
+Respond with a structured JSON object containing the score, confidence, factors, and modelVersion fields.
+List at least one factor, each with the points it adds or removes and the lead information behind it.
+Confidence is how sure you are that the score is right, above 0 and at most 1: near 1 when the lead information clearly supports the score, 0.5 or below when it is thin or mixed. Never answer confidence 0; when the information is thin, give your best score with a low confidence.`;
 
   constructor(options?: { tenantId?: string; provider?: AIProvider; recordDrift?: boolean }) {
     this.tenantId = options?.tenantId;
