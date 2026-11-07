@@ -96,6 +96,10 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
         } catch (err) {
           span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
           span.recordException(err as Error);
+          // A provider response that completed but was unusable (a Claude refusal or a cut-off
+          // answer) is still billed: meter it, or repeated failures would escape spend limits.
+          const billed = (err as { billedResult?: unknown } | null)?.billedResult;
+          if (billed) recordModelUsage(meta, input, billed);
           throw err;
         } finally {
           span.end();

@@ -6,9 +6,17 @@ import Anthropic from '@anthropic-ai/sdk';
 import { HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { leadScoreSchema } from '@intelliflow/validators';
 
-const { logInfo } = vi.hoisted(() => ({ logInfo: vi.fn() }));
+const { logInfo, recordModelUsage } = vi.hoisted(() => ({
+  logInfo: vi.fn(),
+  recordModelUsage: vi.fn(),
+}));
 vi.mock('../../utils/logger.js', () => ({
   createLogger: () => ({ info: logInfo, warn: vi.fn(), error: vi.fn(), debug: vi.fn() }),
+}));
+vi.mock('../usage-metering.js', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../usage-metering')>()),
+  recordModelUsage,
+  assertWithinDailyLimit: vi.fn(),
 }));
 
 import {
@@ -17,6 +25,7 @@ import {
   toAnthropicMessages,
 } from '../anthropic-chat-model';
 import { isRetryableModelError } from '../llm-factory';
+import { wrapModelWithTracing } from '../../tracing/llm-tracer';
 
 const SCORE = {
   score: 72,
@@ -62,7 +71,58 @@ function sentParams(create: ReturnType<typeof vi.fn>): Record<string, unknown> {
   return create.mock.calls[0][0] as Record<string, unknown>;
 }
 
-beforeEach(() => logInfo.mockClear());
+beforeEach(() => {
+  logInfo.mockClear();
+  recordModelUsage.mockClear();
+});
+
+describe('metering through the tracing wrapper', () => {
+  const meta = {
+    purpose: 'scoring' as const,
+    tier: 'free' as const,
+    pricingKey: 'claude-haiku-5-5',
+  };
+
+  it('meters a refused call: Anthropic bills its tokens, so spend limits must count them', async () => {
+    const { model } = modelWith(async () =>
+      reply('', {
+        stop_reason: 'refusal',
+        content: [],
+        usage: { input_tokens: 400, output_tokens: 8000 },
+      })
+    );
+    const traced = wrapModelWithTracing(model, meta) as unknown as AnthropicChatModel;
+
+    await expect(traced.withStructuredOutput(leadScoreSchema).invoke('x')).rejects.toBeInstanceOf(
+      AnthropicIncompleteResponseError
+    );
+    expect(recordModelUsage).toHaveBeenCalledTimes(1);
+    expect(recordModelUsage.mock.calls[0][2]).toMatchObject({
+      usage_metadata: { input_tokens: 400, output_tokens: 8000 },
+      response_metadata: { model_name: 'claude-haiku-5-5', stop_reason: 'refusal' },
+    });
+  });
+
+  it('meters a structured call once when it succeeds', async () => {
+    const { model } = modelWith(async () => reply(JSON.stringify(SCORE)));
+    const traced = wrapModelWithTracing(model, meta) as unknown as AnthropicChatModel;
+    await traced.withStructuredOutput(leadScoreSchema).invoke('x');
+    expect(recordModelUsage).toHaveBeenCalledTimes(1);
+    expect(recordModelUsage.mock.calls[0][2].usage_metadata).toMatchObject({
+      input_tokens: 120,
+      output_tokens: 45,
+    });
+  });
+
+  it('meters nothing for an API error, which is not billed', async () => {
+    const { model } = modelWith(async () => {
+      throw Anthropic.APIError.generate(429, undefined, 'Too many requests', new Headers());
+    });
+    const traced = wrapModelWithTracing(model, meta) as unknown as AnthropicChatModel;
+    await expect(traced.invoke('x')).rejects.toBeInstanceOf(Anthropic.RateLimitError);
+    expect(recordModelUsage).not.toHaveBeenCalled();
+  });
+});
 
 describe('AnthropicChatModel', () => {
   it('sends no sampling parameters, and sends the effort and the system prompt apart', async () => {

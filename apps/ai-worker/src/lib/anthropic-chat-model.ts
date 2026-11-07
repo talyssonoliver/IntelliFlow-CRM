@@ -55,14 +55,26 @@ export interface AnthropicChatModelParams extends BaseChatModelParams {
   client?: Pick<Anthropic, 'messages'>;
 }
 
-/** The model stopped without a usable answer (refusal, or cut off at max_tokens). */
+/** What a completed but unusable response cost: the shape recordModelUsage reads. */
+export interface BilledUsage {
+  usage_metadata: { input_tokens: number; output_tokens: number; total_tokens: number };
+  response_metadata: { model_name: string; stop_reason: string | null };
+}
+
+/**
+ * The model stopped without a usable answer (refusal, or cut off at max_tokens). Anthropic
+ * still bills those tokens, so the error carries them as `billedResult`; the tracing wrapper
+ * meters it before the error goes on, and spend limits count it like any other call.
+ */
 export class AnthropicIncompleteResponseError extends Error {
   readonly stopReason: string;
-  constructor(stopReason: string, detail?: string) {
+  readonly billedResult: BilledUsage;
+  constructor(stopReason: string, billedResult: BilledUsage, detail?: string) {
     const suffix = detail ? ', ' + detail : '';
     super(`Claude returned no usable answer (stop_reason=${stopReason}${suffix})`);
     this.name = 'AnthropicIncompleteResponseError';
     this.stopReason = stopReason;
+    this.billedResult = billedResult;
   }
 }
 
@@ -160,15 +172,26 @@ export class AnthropicChatModel extends BaseChatModel<AnthropicChatCallOptions> 
       'Claude call'
     );
 
+    const totalTokens = usage.input_tokens + usage.output_tokens;
+    const billed: BilledUsage = {
+      response_metadata: { model_name: response.model, stop_reason: response.stop_reason },
+      usage_metadata: {
+        input_tokens: usage.input_tokens,
+        output_tokens: usage.output_tokens,
+        total_tokens: totalTokens,
+      },
+    };
+
     if (response.stop_reason === 'refusal') {
       const category = response.stop_details?.category;
       throw new AnthropicIncompleteResponseError(
         'refusal',
+        billed,
         category ? `category=${category}` : undefined
       );
     }
     if (response.stop_reason === 'max_tokens') {
-      throw new AnthropicIncompleteResponseError('max_tokens');
+      throw new AnthropicIncompleteResponseError('max_tokens', billed);
     }
 
     // Read text blocks by type: with adaptive thinking a response can start with thinking blocks.
@@ -178,16 +201,7 @@ export class AnthropicChatModel extends BaseChatModel<AnthropicChatCallOptions> 
       .join('');
     await runManager?.handleLLMNewToken(text);
 
-    const totalTokens = usage.input_tokens + usage.output_tokens;
-    const message = new AIMessage({
-      content: text,
-      response_metadata: { model_name: response.model, stop_reason: response.stop_reason },
-      usage_metadata: {
-        input_tokens: usage.input_tokens,
-        output_tokens: usage.output_tokens,
-        total_tokens: totalTokens,
-      },
-    });
+    const message = new AIMessage({ content: text, ...billed });
     return {
       generations: [{ text, message }],
       llmOutput: {
