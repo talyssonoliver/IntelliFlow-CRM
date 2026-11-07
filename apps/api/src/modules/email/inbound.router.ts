@@ -231,7 +231,7 @@ function applyLabelFilter(where: any, label: string): void {
 // SEC-004 (High, unauthenticated-webhook-spoofing): `webhook` below is a
 // publicProcedure — reachable by anyone on the internet — that previously
 // persisted any caller-supplied payload as a `DELIVERED` email into whichever
-// tenant's domain matched the `to` address (see `resolveTenantForInboundEmail`
+// tenant's domain matched the `to` address (routing is now by mailbox, see `resolveMailboxForInboundEmail`
 // / `storeEmail`). That let an unauthenticated party forge inbox content for a
 // known tenant (internal-phishing / inbox-flooding). We now require every
 // inbound-webhook call to carry an HMAC-SHA256 signature computed with a
@@ -287,66 +287,71 @@ export const inboundEmailRouter = createTRPCRouter({
    */
   webhook: publicProcedure
     .input(InboundEmailWebhookSchema)
-    .mutation(async ({ input, ctx }): Promise<{ success: boolean; emailId: string }> => {
-      // SEC-004: fail-closed signature check runs BEFORE the try/catch below
-      // (which rewraps errors as INTERNAL_SERVER_ERROR) so an unauthenticated
-      // or forged request surfaces as 401 UNAUTHORIZED and is never parsed or
-      // persisted.
-      if (!verifyInboundEmailWebhookSignature(input, ctx.req)) {
-        throw new TRPCError({
-          code: 'UNAUTHORIZED',
-          message: 'Invalid or missing inbound email webhook signature',
-        });
-      }
-
-      try {
-        let rawEmail: string;
-
-        // Handle different provider formats
-        if (input.rawEmail) {
-          rawEmail = input.rawEmail;
-        } else if (input.provider === 'sendgrid' || input.headers) {
-          rawEmail = reconstructSendGridEmail(input);
-        } else if (input.provider === 'mailgun') {
-          rawEmail = input.rawEmail || '';
-        } else {
+    .mutation(
+      async ({ input, ctx }): Promise<{ success: boolean; emailId: string; stored: boolean }> => {
+        // SEC-004: fail-closed signature check runs BEFORE the try/catch below
+        // (which rewraps errors as INTERNAL_SERVER_ERROR) so an unauthenticated
+        // or forged request surfaces as 401 UNAUTHORIZED and is never parsed or
+        // persisted.
+        if (!verifyInboundEmailWebhookSignature(input, ctx.req)) {
           throw new TRPCError({
-            code: 'BAD_REQUEST',
-            message: 'Unable to parse email format',
+            code: 'UNAUTHORIZED',
+            message: 'Invalid or missing inbound email webhook signature',
           });
         }
 
-        // Parse the email
-        const parsed = parser.parse(rawEmail);
+        try {
+          let rawEmail: string;
 
-        // Check for spam
-        if (parsed.spamScore && parsed.spamScore >= 70) {
-          console.warn('Spam email detected', {
-            emailId: parsed.id,
-            spamScore: parsed.spamScore,
-            from: parsed.headers.from.address,
+          // Handle different provider formats
+          if (input.rawEmail) {
+            rawEmail = input.rawEmail;
+          } else if (input.provider === 'sendgrid' || input.headers) {
+            rawEmail = reconstructSendGridEmail(input);
+          } else if (input.provider === 'mailgun') {
+            rawEmail = input.rawEmail || '';
+          } else {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Unable to parse email format',
+            });
+          }
+
+          // Parse the email
+          const parsed = parser.parse(rawEmail);
+
+          // Check for spam
+          if (parsed.spamScore && parsed.spamScore >= 70) {
+            console.warn('Spam email detected', {
+              emailId: parsed.id,
+              spamScore: parsed.spamScore,
+              from: parsed.headers.from.address,
+            });
+            return { success: true, emailId: parsed.id, stored: false };
+          }
+
+          // Store email in the tenant of the mailbox it was sent to
+          const stored = await storeEmail(parsed, ctx, input.envelope);
+
+          // Mail with no single mailbox is acknowledged, so the provider doesn't retry it, and dropped.
+          if (!stored) return { success: true, emailId: parsed.id, stored: false };
+
+          // Process attachments
+          if (parsed.attachments.length > 0) {
+            await processAttachments(stored.emailId, stored.tenantId, parsed.attachments, ctx);
+          }
+
+          return { success: true, emailId: stored.emailId, stored: true };
+        } catch (error) {
+          console.error('Failed to process inbound email', error);
+          throw new TRPCError({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Failed to process inbound email',
+            cause: error,
           });
-          return { success: true, emailId: parsed.id };
         }
-
-        // Store email in database
-        const { emailId, tenantId } = await storeEmail(parsed, ctx);
-
-        // Process attachments
-        if (parsed.attachments.length > 0) {
-          await processAttachments(emailId, tenantId, parsed.attachments, ctx);
-        }
-
-        return { success: true, emailId };
-      } catch (error) {
-        console.error('Failed to process inbound email', error);
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to process inbound email',
-          cause: error,
-        });
       }
-    }),
+    ),
 
   /**
    * Get parsed email by ID
@@ -1232,98 +1237,120 @@ function reconstructSendGridEmail(input: z.infer<typeof InboundEmailWebhookSchem
   return lines.join('\r\n');
 }
 
+/** Where an inbound email belongs, decided only by the connected mailboxes. */
+export type InboundMailboxMatch =
+  | { kind: 'matched'; tenantId: string; mailboxId: string }
+  | { kind: 'unmatched' }
+  | { kind: 'ambiguous' };
+
+/** Recipient addresses, trimmed and lower-cased, in order, without repeats. */
+function normaliseRecipients(toAddresses: string[]): string[] {
+  const out: string[] = [];
+  for (const raw of toAddresses) {
+    const address = (raw ?? '').trim().toLowerCase();
+    const at = address.indexOf('@');
+    if (at <= 0 || at !== address.lastIndexOf('@') || at === address.length - 1) continue;
+    if (!out.includes(address)) out.push(address);
+  }
+  return out;
+}
+
+/** Mailbox kinds whose address the provider proved at connect (OAuth sign-in). */
+const ROUTABLE_MAILBOX_KINDS = ['GMAIL', 'MICROSOFT'] as const;
+
 /**
- * Resolve the tenant ID for an inbound email by matching the recipient domain
- * against the email domains of registered users.
+ * Find the mailbox an inbound email was sent to.
  *
- * Strategy:
- *  1. Extract the domain portion from the first `to` recipient address.
- *  2. Query the User table for any user whose email ends with `@<domain>` and
- *     return their tenantId (the domain therefore identifies the tenant).
- *  3. Fall back to 'system' when no matching tenant is found (e.g. catch-all
- *     inbound addresses, forwarded test emails, or misconfigured webhooks).
+ * Only an exact recipient match counts, and only against the account address of
+ * an ACTIVE mailbox whose provider proved who owns it (Google or Microsoft
+ * sign-in). An SMTP mailbox's address is typed in and not proven, so it never
+ * routes: otherwise anyone could claim another customer's address and receive,
+ * or block, their mail. The recipient's domain, other users' addresses and the
+ * sender are never used. When recipients match mailboxes in more than one
+ * tenant, or one address is connected twice, the answer is `ambiguous` and
+ * nothing is stored. A database error is thrown, so the provider retries
+ * instead of losing mail.
  */
-/** Extract recipient domains in order, deduped, keeping first-seen order. */
-function extractRecipientDomains(toAddresses: string[]): string[] {
-  const domains: string[] = [];
-  for (const address of toAddresses) {
-    const atIndex = address.indexOf('@');
-    if (atIndex === -1) continue;
-    const domain = address
-      .slice(atIndex + 1)
-      .toLowerCase()
-      .trim();
-    if (domain && !domains.includes(domain)) domains.push(domain);
-  }
-  return domains;
-}
-
-/** Index the first tenant seen per email domain (skips tenant-less users). */
-function indexTenantsByDomain(
-  users: Array<{ email: string; tenantId: string | null }>
-): Map<string, string> {
-  const tenantByDomain = new Map<string, string>();
-  for (const u of users) {
-    if (!u.tenantId) continue;
-    const at = u.email.lastIndexOf('@');
-    if (at === -1) continue;
-    const d = u.email.slice(at + 1).toLowerCase();
-    if (!tenantByDomain.has(d)) tenantByDomain.set(d, u.tenantId);
-  }
-  return tenantByDomain;
-}
-
-export async function resolveTenantForInboundEmail(
+export async function resolveMailboxForInboundEmail(
   toAddresses: string[],
   prisma: any
-): Promise<string> {
-  const domains = extractRecipientDomains(toAddresses);
-  if (domains.length === 0) return 'system';
+): Promise<InboundMailboxMatch> {
+  const recipients = normaliseRecipients(toAddresses);
+  if (recipients.length === 0) return { kind: 'unmatched' };
 
-  try {
-    // Single query for ALL candidate domains — was a `findFirst` per recipient
-    // (an N+1 over an unindexed `endsWith`, run on every inbound webhook). We then
-    // resolve in domain order so the original first-recipient-wins behaviour holds.
-    const users: Array<{ email: string; tenantId: string | null }> = await prisma.user.findMany({
-      where: { OR: domains.map((d) => ({ email: { endsWith: `@${d}` } })) },
-      select: { email: true, tenantId: true },
+  const mailboxes: Array<{ id: string; tenantId: string; accountAddress: string | null }> =
+    await prisma.emailMailbox.findMany({
+      where: {
+        status: 'ACTIVE',
+        kind: { in: [...ROUTABLE_MAILBOX_KINDS] },
+        accountAddress: { in: recipients, mode: 'insensitive' },
+      },
+      select: { id: true, tenantId: true, accountAddress: true },
     });
-    const tenantByDomain = indexTenantsByDomain(users);
-    for (const d of domains) {
-      const tenantId = tenantByDomain.get(d);
-      if (tenantId) return tenantId;
-    }
-  } catch {
-    // Non-fatal — fall through to the system/fallback bucket.
-  }
 
-  // No matching tenant found — route to the system/fallback bucket
-  return 'system';
+  if (mailboxes.length === 0) return { kind: 'unmatched' };
+  if (new Set(mailboxes.map((m) => m.tenantId)).size > 1) return { kind: 'ambiguous' };
+
+  // One tenant: the first recipient that is a mailbox decides which one.
+  for (const recipient of recipients) {
+    const hits = mailboxes.filter((m) => (m.accountAddress ?? '').toLowerCase() === recipient);
+    if (hits.length > 1) return { kind: 'ambiguous' };
+    if (hits.length === 1) {
+      return { kind: 'matched', tenantId: hits[0].tenantId, mailboxId: hits[0].id };
+    }
+  }
+  return { kind: 'unmatched' };
 }
 
 /**
- * Store parsed inbound email to the database.
- * Returns both the persisted record ID and the resolved tenantId so that
- * callers can propagate tenantId to related records (e.g. attachments).
+ * Who the mail was delivered to. The provider's delivery envelope is part of the
+ * signed payload and is the only place a Bcc recipient appears, so it decides
+ * when present. Without one (a raw submission) the To and Cc headers are used.
+ */
+export function deliveryRecipients(parsed: any, envelope: string | undefined): string[] {
+  if (envelope) {
+    try {
+      const to = (JSON.parse(envelope) as { to?: unknown }).to;
+      const list = Array.isArray(to) ? to : [to];
+      const addresses = list.filter((a): a is string => typeof a === 'string');
+      if (addresses.length > 0) return addresses;
+    } catch {
+      // Not JSON: fall back to the headers below.
+    }
+  }
+  const header = (key: 'to' | 'cc') =>
+    ((parsed.headers?.[key] ?? []) as Array<{ address?: string }>).map((r) => r.address ?? '');
+  return [...header('to'), ...header('cc')];
+}
+/**
+ * Store parsed inbound email in the tenant of the mailbox it was sent to.
+ * Returns the record id and tenant for the attachments, or null when the mail
+ * has no single mailbox to belong to: it is then not stored at all.
  */
 async function storeEmail(
   parsed: any,
-  ctx: unknown
-): Promise<{ emailId: string; tenantId: string }> {
+  ctx: unknown,
+  envelope?: string
+): Promise<{ emailId: string; tenantId: string } | null> {
   const prisma = (ctx as any).prisma;
   if (!prisma) {
-    // Fallback for webhook (public procedure) — no tenant context
-    console.warn('storeEmail: No Prisma client in context (webhook mode). Email not persisted.', {
-      id: parsed.id,
-      from: parsed.headers?.from?.address,
-      subject: parsed.headers?.subject,
-    });
-    return { emailId: parsed.id, tenantId: 'system' };
+    console.warn('[inbound] mail not stored: no database client', { emailId: parsed.id });
+    return null;
   }
 
-  // Resolve which tenant owns the recipient address domain
   const toAddresses = (parsed.headers?.to ?? []).map((r: any) => r.address as string);
-  const tenantId = await resolveTenantForInboundEmail(toAddresses, prisma);
+  const recipients = deliveryRecipients(parsed, envelope);
+  const match = await resolveMailboxForInboundEmail(recipients, prisma);
+  if (match.kind !== 'matched') {
+    // No addresses in the log: the count is enough to tell a stray mail from a misconfiguration.
+    console.warn('[inbound] mail not stored', {
+      reason: match.kind,
+      emailId: parsed.id,
+      recipients: recipients.length,
+    });
+    return null;
+  }
+  const { tenantId, mailboxId } = match;
 
   try {
     const record = await prisma.emailRecord.create({
@@ -1335,6 +1362,7 @@ async function storeEmail(
         ccEmails: (parsed.headers?.cc ?? []).map((r: any) => r.address).join(', ') || null,
         status: 'DELIVERED',
         tenantId,
+        mailboxId,
         metadata: {
           threadId: parsed.threadId,
           isReply: parsed.isReply,
@@ -1349,8 +1377,9 @@ async function storeEmail(
     });
     return { emailId: record.id, tenantId };
   } catch (error) {
+    // Fail the call: the provider retries, rather than being told the mail was kept.
     console.error('Failed to store email in database', error);
-    return { emailId: parsed.id, tenantId };
+    throw error;
   }
 }
 
