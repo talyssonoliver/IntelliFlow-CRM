@@ -999,5 +999,25 @@ describe('ScoringJob', () => {
       }
       expect(mockScoreLead).toHaveBeenCalledTimes(jobs * 2);
     });
+
+    it("does not open the shared breaker on one tenant's budget refusal: no provider was called (codex)", async () => {
+      mockScoreLead.mockReset();
+      mockScoreLead.mockImplementation(async () => {
+        throw Object.assign(new Error('monthly AI ceiling reached for scoring'), {
+          code: 'PURPOSE_CEILING_REACHED',
+        });
+      });
+
+      const jobs = 7;
+      for (let i = 0; i < jobs; i++) {
+        const job = createMockJob({
+          leadId: TEST_UUIDS.lead1,
+          tenantId: TEST_UUIDS.tenant1,
+          lead: { email: 'test@example.com', source: 'WEBSITE' },
+        });
+        await expect(processScoringJob(job)).rejects.toBeInstanceOf(ScoringFailedError);
+      }
+      expect(mockScoreLead).toHaveBeenCalledTimes(jobs * 2);
+    });
   });
 });

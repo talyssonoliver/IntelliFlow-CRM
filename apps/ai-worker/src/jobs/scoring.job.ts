@@ -16,6 +16,7 @@ import { classifyError } from '../monitoring/otel-ai-metrics';
 import type { LeadInput, ScoringResult } from '../chains/scoring.chain';
 import { logAIAgentAction } from '../utils/audit-log';
 import { getLLMBreaker, resolveFallbackProvider } from '../lib/llm-factory';
+import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
 import type { CircuitBreaker } from '../utils/circuit-breaker';
 import { runWithLogContext, getCurrentLogContext } from '@intelliflow/observability';
 import { isAiFeatureEnabled } from '../lib/feature-flags';
@@ -279,9 +280,11 @@ function scoringErrorClass(primary: unknown, fallback?: unknown): string {
 }
 
 /**
- * Run a scoring call through the provider's circuit breaker. An inconclusive answer means the
- * provider is up and answered, so it is not counted as a breaker failure (it would otherwise
- * open the shared breaker for every tenant); it is still rethrown for this lead (codex, #1218).
+ * Run a scoring call through the provider's circuit breaker. Two failures say nothing about the
+ * provider, so they are not counted as breaker failures: an inconclusive answer (the provider is
+ * up and answered) and a tenant's monthly budget refusal (no provider was called). The breaker
+ * is shared by every tenant, so counting them would block scoring for everyone. Both are still
+ * rethrown for this lead (codex, #1218).
  */
 async function scoreThroughBreaker(
   breaker: CircuitBreaker,
@@ -291,11 +294,11 @@ async function scoreThroughBreaker(
     try {
       return { scored: await score() };
     } catch (error) {
-      if (isInconclusive(error)) return { inconclusive: error };
+      if (isInconclusive(error) || isPurposeCeilingReached(error)) return { notCounted: error };
       throw error;
     }
   });
-  if ('inconclusive' in outcome) throw outcome.inconclusive;
+  if ('notCounted' in outcome) throw outcome.notCounted;
   return outcome.scored;
 }
 
