@@ -227,9 +227,9 @@ describe('LeadScoringChain -> OTel (real chain, fake network)', () => {
     );
     const { chain, config } = await loadChain();
     const recordSample = vi.spyOn(config.driftDetector, 'recordSample');
-    const result = await chain.scoreLead(LEAD);
+    // #1218: the error is rethrown, never returned as a 0/0 score.
+    await expect(chain.scoreLead(LEAD)).rejects.toThrow();
 
-    expect(result.modelVersion).toBe('error:v1');
     const all = await collectMetrics(reader);
     expect(total(all, 'intelliflow.ai.inference.count', { outcome: 'error' })).toBe(1);
     expect(total(all, 'intelliflow.ai.value.estimated.usd')).toBe(0);
@@ -245,8 +245,8 @@ describe('LeadScoringChain -> OTel (real chain, fake network)', () => {
       (chain as unknown as { prompt: { format: () => Promise<string> } }).prompt,
       'format'
     ).mockRejectedValue(new Error('prompt broke'));
-    const result = await chain.scoreLead(LEAD);
-    expect(result.modelVersion).toBe('error:v1');
+    // #1218: the error is rethrown, never returned as a 0/0 score.
+    await expect(chain.scoreLead(LEAD)).rejects.toThrow('prompt broke');
     expect(fetchMock).not.toHaveBeenCalled();
     const all = await collectMetrics(reader);
     expect(
