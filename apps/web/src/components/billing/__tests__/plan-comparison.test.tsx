@@ -117,16 +117,16 @@ describe('PlanComparison', () => {
     expect(currentBtn).toBeDisabled();
   });
 
-  it('links Upgrade to /billing/upgrade?plan=enterprise', () => {
+  it('links Upgrade to /billing/upgrade?plan=enterprise with the chosen period', () => {
     render(<PlanComparison />);
     const upgradeLink = screen.getByRole('link', { name: /upgrade/i });
-    expect(upgradeLink).toHaveAttribute('href', '/billing/upgrade?plan=enterprise');
+    expect(upgradeLink).toHaveAttribute('href', '/billing/upgrade?plan=enterprise&cycle=annual');
   });
 
-  it('links Downgrade to /billing/upgrade?plan=starter', () => {
+  it('links Downgrade to /billing/upgrade?plan=starter with the chosen period', () => {
     render(<PlanComparison />);
     const downgradeLink = screen.getByRole('link', { name: /downgrade/i });
-    expect(downgradeLink).toHaveAttribute('href', '/billing/upgrade?plan=starter');
+    expect(downgradeLink).toHaveAttribute('href', '/billing/upgrade?plan=starter&cycle=annual');
   });
 
   it('renders features in comparison table (compact cards hide features)', () => {

@@ -33,6 +33,7 @@ import type { CallbackManagerForLLMRun } from '@langchain/core/callbacks/manager
 import type { z } from 'zod';
 import { createLogger } from '../utils/logger.js';
 import type { AnthropicEffort } from './anthropic-config.js';
+import { monthToDateUsd } from './monthly-budget.js';
 
 const logger = createLogger('anthropic-chat');
 
@@ -171,6 +172,8 @@ export class AnthropicChatModel extends BaseChatModel<AnthropicChatCallOptions> 
         cacheReadInputTokens: usage.cache_read_input_tokens ?? 0,
         cacheCreationInputTokens: usage.cache_creation_input_tokens ?? 0,
         stopReason: response.stop_reason,
+        // The shared month total read just before this call (the call itself adds to it next).
+        monthToDateUsd: monthToDateUsd(),
       },
       'Claude call'
     );
