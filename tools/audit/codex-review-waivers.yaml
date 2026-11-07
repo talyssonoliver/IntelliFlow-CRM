@@ -865,3 +865,13 @@ waivers:
     author: plan state lane
     date: '2026-11-07'
     expires: '2026-11-21'
+  - fingerprint: 11ce50b48a392476453ed9d71277f10a8841f10a9eff4ae2734c85eb613e439b
+    reason: >-
+      Accepted by the coordinator on 2026-11-07. A past_due, unpaid, incomplete or paused
+      subscription goes to updateSubscription, which changes only active or trialing ones.
+      That is the plan-change path #1239 rebuilds, where these statuses get their own answer
+      ("update your payment method first"). Sending them to checkout instead would create a
+      second subscription. Short expiry.
+    author: plan state lane
+    date: '2026-11-07'
+    expires: '2026-11-21'
