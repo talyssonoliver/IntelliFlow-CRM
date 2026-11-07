@@ -67,9 +67,17 @@ describe('createLLM on AI_PROVIDER=anthropic', () => {
 });
 
 describe('Claude pricing', () => {
-  it('prices Haiku 5.5 and Sonnet 5.5 calls at their list prices', () => {
-    // USD for one million input and one million output tokens.
-    expect(calculateCost('claude-haiku-5-5', 1_000_000, 1_000_000)).toBeCloseTo(0.6);
+  it('prices a Haiku 5.5 call with a prompt up to 100K tokens at the standard rate', () => {
+    // 100,000 in x $0.10/M + 8,000 out x $0.50/M
+    expect(calculateCost('claude-haiku-5-5', 100_000, 8_000)).toBeCloseTo(0.014, 6);
+  });
+
+  it('prices a Haiku 5.5 call with a longer prompt at the long-prompt rate', () => {
+    // 120,000 in x $0.50/M + 8,000 out x $2.50/M
+    expect(calculateCost('claude-haiku-5-5', 120_000, 8_000)).toBeCloseTo(0.08, 6);
+  });
+
+  it('prices Sonnet 5.5 at its list price', () => {
     expect(calculateCost('claude-sonnet-5-5', 1_000_000, 1_000_000)).toBeCloseTo(12);
   });
 });
