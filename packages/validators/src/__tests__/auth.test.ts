@@ -16,6 +16,7 @@ import {
   oauthCallbackSchema,
   refreshTokenSchema,
   revokeSessionSchema,
+  authSessionIdSchema,
   sessionIdSchema,
   sessionInfoSchema,
   mfaMethodSchema,
@@ -380,26 +381,39 @@ describe('Auth Validators', () => {
   // Revoke Session Schema
   // ============================================
   describe('revokeSessionSchema', () => {
-    it('accepts the generated format, 64 lower-case hex characters', () => {
-      const result = revokeSessionSchema.safeParse({ sessionId: 'd4'.repeat(32) });
+    it('accepts a Supabase Auth session id (a UUID)', () => {
+      const result = revokeSessionSchema.safeParse({
+        sessionId: '550e8400-e29b-41d4-a716-446655440000',
+      });
       expect(result.success).toBe(true);
     });
 
-    it('uses the same id format as a listed session', () => {
+    it('uses the auth session id format', () => {
+      expect(revokeSessionSchema.shape.sessionId).toBe(authSessionIdSchema);
+    });
+
+    it.each([
+      ['not an id', 'invalid-id'],
+      ['an app session id (64 hex)', 'd4'.repeat(32)],
+      ['a uuid missing a group', '550e8400-e29b-41d4-a716'],
+      ['an empty string', ''],
+    ])('rejects %s', (_name, sessionId) => {
+      const result = revokeSessionSchema.safeParse({ sessionId });
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('sessionIdSchema (app session table)', () => {
+    it('accepts the generated format, 64 lower-case hex characters', () => {
       expect(sessionIdSchema.safeParse('d4'.repeat(32)).success).toBe(true);
       expect(sessionInfoSchema.shape.id).toBe(sessionIdSchema);
     });
 
     it.each([
-      ['not an id', 'invalid-id'],
-      ['a uuid', '550e8400-e29b-41d4-a716-446655440000'],
       ['one character short', 'd'.repeat(63)],
-      ['one character long', 'd'.repeat(65)],
       ['upper-case hex', 'D4'.repeat(32)],
-      ['non-hex characters', 'z'.repeat(64)],
-    ])('rejects %s', (_name, sessionId) => {
-      const result = revokeSessionSchema.safeParse({ sessionId });
-      expect(result.success).toBe(false);
+    ])('rejects %s', (_name, value) => {
+      expect(sessionIdSchema.safeParse(value).success).toBe(false);
     });
   });
 

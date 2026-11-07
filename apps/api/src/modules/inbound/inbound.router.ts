@@ -305,6 +305,28 @@ const PIPELINE_RANK: Record<string, number> = {
 const PIPELINE_LADDER: readonly PipelineLeadStatus[] = ['CONTACTED', 'QUALIFIED', 'NEGOTIATING'];
 
 /**
+ * COA stages that mean the lead has replied (COA `CrmStage`: RESPONDED is "Replied";
+ * MEETING_BOOKED and WON come only after it). Not a reply: COA's own QUALIFIED (a pre-contact
+ * audit verdict) and PROPOSAL_READY, which COA can also reach before any contact
+ * (AUDITED / QUALIFIED / CONTACT_FOUND -> PROPOSAL_READY when assets are generated).
+ */
+const COA_REPLY_STAGES: ReadonlySet<string> = new Set(['RESPONDED', 'MEETING_BOOKED', 'WON']);
+
+function isCoaReplyStage(coaStage: string): boolean {
+  return COA_REPLY_STAGES.has(coaStage.trim().toUpperCase());
+}
+
+/**
+ * The status the sync walks toward. A lead that replied is qualified here as an inbound reply,
+ * whatever the AI score, so a reply stage lifts the target to at least QUALIFIED.
+ */
+function effectivePipelineTarget(input: InboundPipelineLeadInput): PipelineLeadStatus {
+  if (!isCoaReplyStage(input.coaStage) || input.status === 'LOST') return input.status;
+  const rank = PIPELINE_RANK[input.status === 'CONVERTED' ? 'NEGOTIATING' : input.status] ?? 0;
+  return rank < (PIPELINE_RANK.QUALIFIED as number) ? 'QUALIFIED' : input.status;
+}
+
+/**
  * Decide the ordered list of statuses to move through. Empty = no change.
  * Never resurrects CONVERTED/LOST and never downgrades. A COA win (target
  * CONVERTED) is capped at NEGOTIATING: converting runs a workflow that creates
@@ -890,13 +912,24 @@ function applyPipelineStep(
   step: PipelineLeadStatus,
   input: InboundPipelineLeadInput
 ) {
-  return step === 'QUALIFIED'
-    ? leadService.qualifyLead(
-        leadId,
-        COA_SYNC_USER,
-        `COA lead ${input.coaLeadId} reached ${input.coaStage} at ${input.stageChangedAt}`
-      )
-    : leadService.changeLeadStatus(leadId, step, COA_SYNC_USER);
+  if (step !== 'QUALIFIED') return leadService.changeLeadStatus(leadId, step, COA_SYNC_USER);
+  // A reply stage is an inbound reply, which the AI score does not block. Any other COA
+  // stage (COA's own QUALIFIED is a pre-contact audit verdict) qualifies only automatically,
+  // so the minimum score applies.
+  if (isCoaReplyStage(input.coaStage)) {
+    return leadService.qualifyLead(
+      leadId,
+      COA_SYNC_USER,
+      `replied (COA stage ${input.coaStage.trim().toUpperCase()})`,
+      { basis: 'INBOUND_REPLY' }
+    );
+  }
+  return leadService.qualifyLead(
+    leadId,
+    COA_SYNC_USER,
+    `COA lead ${input.coaLeadId} reached ${input.coaStage} at ${input.stageChangedAt}`,
+    { basis: 'AUTOMATIC' }
+  );
 }
 
 /**
@@ -912,7 +945,7 @@ async function walkPipeline(
   tenantId: string,
   currentStatus: PipelineLeadStatus
 ): Promise<PipelineWalk> {
-  let pending = planPipelineSteps(currentStatus, input.status);
+  let pending = planPipelineSteps(currentStatus, effectivePipelineTarget(input));
   let status: PipelineLeadStatus = currentStatus;
   let moved = false;
   let replans = 0;
@@ -929,7 +962,7 @@ async function walkPipeline(
       if (now && now.status !== status && replans < 3) {
         replans += 1;
         status = now.status as PipelineLeadStatus;
-        pending = planPipelineSteps(now.status, input.status);
+        pending = planPipelineSteps(now.status, effectivePipelineTarget(input));
         continue;
       }
       throwStepFailure(leadId, step, result.error);

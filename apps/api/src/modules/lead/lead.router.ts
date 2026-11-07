@@ -777,14 +777,19 @@ export const leadRouter = createTRPCRouter({
     // before/after diff (not a misleading partial afterState).
     const beforeLead = await typedCtx.prismaWithTenant.lead.findUnique({ where: { id } });
 
-    const result = await leadService.updateLead(id, {
-      ...rest,
-      // IFC-412: `phone === null` is an explicit clear and must stay `null`
-      // through to the service — `phone?.value` alone would collapse it to
-      // `undefined` (optional chaining on `null` short-circuits), silently
-      // turning a clear into a no-op.
-      phone: phone === null ? null : phone?.value,
-    });
+    const result = await leadService.updateLead(
+      id,
+      {
+        ...rest,
+        // IFC-412: `phone === null` is an explicit clear and must stay `null`
+        // through to the service — `phone?.value` alone would collapse it to
+        // `undefined` (optional chaining on `null` short-circuits), silently
+        // turning a clear into a no-op.
+        phone: phone === null ? null : phone?.value,
+      },
+      // A status in the update is applied as this user's change, or the update fails.
+      typedCtx.tenant.userId
+    );
 
     if (result.isFailure) {
       const msg = result.error.message;
@@ -941,10 +946,12 @@ export const leadRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
     const leadService = getLeadService(ctx);
 
+    // A person qualifying a lead is a human decision: the AI score does not block it.
     const result = await leadService.qualifyLead(
       input.leadId,
       typedCtx.tenant.userId,
-      input.reason ?? 'Manual qualification'
+      input.reason ?? 'Manual qualification',
+      { basis: 'HUMAN' }
     );
 
     if (result.isFailure) {
