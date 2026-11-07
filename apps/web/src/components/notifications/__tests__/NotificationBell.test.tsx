@@ -94,11 +94,26 @@ vi.mock('@intelliflow/ui', async () => {
     PopoverTrigger: ({ children }: Readonly<{ children: React.ReactNode }>) => (
       <div data-testid="popover-trigger">{children}</div>
     ),
-    PopoverContent: ({ children }: Readonly<{ children: React.ReactNode }>) => (
-      <div data-testid="popover-content">{children}</div>
+    PopoverContent: ({
+      children,
+      className,
+      collisionPadding,
+    }: Readonly<{ children: React.ReactNode; className?: string; collisionPadding?: number }>) => (
+      <div
+        data-testid="popover-content"
+        className={className}
+        data-collision-padding={collisionPadding}
+      >
+        {children}
+      </div>
     ),
-    ScrollArea: ({ children }: Readonly<{ children: React.ReactNode }>) => (
-      <div data-testid="scroll-area">{children}</div>
+    ScrollArea: ({
+      children,
+      className,
+    }: Readonly<{ children: React.ReactNode; className?: string }>) => (
+      <div data-testid="scroll-area" className={className}>
+        {children}
+      </div>
     ),
   };
 });
@@ -137,6 +152,14 @@ describe('NotificationBell', () => {
       isLoading: false,
     });
     mockUseSubscription.mockImplementation(() => {});
+  });
+
+  it('sizes the panel to the phone width with a gutter and caps its height (#1225 UI-008)', () => {
+    render(<NotificationBell />);
+    const panel = screen.getByTestId('popover-content');
+    expect(panel).toHaveClass('w-[calc(100vw-2rem)]', 'sm:w-80');
+    expect(panel).toHaveAttribute('data-collision-padding', '16');
+    expect(screen.getByTestId('scroll-area')).toHaveClass('max-h-[60vh]', 'sm:max-h-80');
   });
 
   it('renders bell icon', () => {
