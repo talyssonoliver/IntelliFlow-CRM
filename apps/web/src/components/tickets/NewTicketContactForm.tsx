@@ -6,7 +6,8 @@
  *
  * The contact is read with contact.getById, which is tenant-scoped on the
  * server: an id from another tenant, or one that does not exist, comes back
- * NOT_FOUND, and the form opens empty with a note saying so.
+ * NOT_FOUND, and the form opens empty with a note saying so. A found contact's
+ * id goes with the new ticket, so it shows on that contact's Tickets tab.
  */
 
 import { api } from '@/lib/api';
@@ -20,6 +21,7 @@ export interface NewTicketContactFormProps {
 }
 
 interface PrefillContact {
+  id?: string;
   firstName?: string | null;
   lastName?: string | null;
   email?: string | null;
@@ -46,11 +48,13 @@ export function NewTicketContactForm({
     { enabled: Boolean(contactId), retry: false }
   );
 
-  const form = (initialData?: ReturnType<typeof contactPrefill>) => (
+  const form = (initialData?: ReturnType<typeof contactPrefill>, linkedContactId?: string) => (
     <TicketForm
       mode="create"
       initialData={initialData}
-      onSubmit={onSubmit}
+      onSubmit={
+        linkedContactId ? (data) => onSubmit({ ...data, contactId: linkedContactId }) : onSubmit
+      }
       onCancel={onCancel}
       isSubmitting={isSubmitting}
     />
@@ -82,5 +86,7 @@ export function NewTicketContactForm({
     );
   }
 
-  return form(contactPrefill(contactQuery.data as PrefillContact));
+  const contact = contactQuery.data as PrefillContact;
+  // The id comes from the tenant-checked lookup, not straight from the URL.
+  return form(contactPrefill(contact), contact.id);
 }

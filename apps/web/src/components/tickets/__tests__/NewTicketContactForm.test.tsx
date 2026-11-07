@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const getByIdMock = vi.fn();
@@ -63,7 +63,7 @@ describe('NewTicketContactForm', () => {
 
   it("pre-fills the contact's name and email", () => {
     getByIdMock.mockReturnValue({
-      data: { firstName: 'Ada', lastName: 'Lovelace', email: 'ada@crm.example.invalid' },
+      data: { firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.invalid' },
       isLoading: false,
       isError: false,
     });
@@ -74,7 +74,7 @@ describe('NewTicketContactForm', () => {
       expect.objectContaining({ enabled: true, retry: false })
     );
     expect(screen.getByDisplayValue('Ada Lovelace')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('ada@crm.example.invalid')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('ada@example.invalid')).toBeInTheDocument();
   });
 
   it('says so and opens an empty form when the contact is not found or in another tenant', () => {
@@ -85,5 +85,41 @@ describe('NewTicketContactForm', () => {
       "couldn't find that contact"
     );
     expect(screen.queryByDisplayValue('Ada Lovelace')).not.toBeInTheDocument();
+  });
+
+  it("sends the looked-up contact's id with the new ticket", async () => {
+    getByIdMock.mockReturnValue({
+      data: { id: 'c-1', firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.invalid' },
+      isLoading: false,
+      isError: false,
+    });
+    const onSubmit = vi.fn((_data: Record<string, unknown>) => Promise.resolve());
+    render(<NewTicketContactForm contactId="c-1" {...props} onSubmit={onSubmit} />);
+
+    fireEvent.change(screen.getByLabelText(/subject/i), { target: { value: 'Printer jam' } });
+    fireEvent.click(screen.getByRole('button', { name: /create ticket|submit/i }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
+      contactId: 'c-1',
+      contactName: 'Ada Lovelace',
+      contactEmail: 'ada@example.invalid',
+    });
+  });
+
+  it('sends no contact id when the contact was not found', async () => {
+    getByIdMock.mockReturnValue({ data: undefined, isLoading: false, isError: true });
+    const onSubmit = vi.fn((_data: Record<string, unknown>) => Promise.resolve());
+    render(<NewTicketContactForm contactId="other-tenant" {...props} onSubmit={onSubmit} />);
+
+    fireEvent.change(screen.getByLabelText(/subject/i), { target: { value: 'Printer jam' } });
+    fireEvent.change(screen.getByLabelText(/contact name/i), { target: { value: 'Grace' } });
+    fireEvent.change(screen.getByLabelText(/contact email/i), {
+      target: { value: 'grace@example.invalid' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /create ticket|submit/i }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).not.toHaveProperty('contactId');
   });
 });
