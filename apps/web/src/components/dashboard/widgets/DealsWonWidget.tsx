@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc';
 import { isEmptySeries } from '@/lib/charts/empty-series';
-import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
+import { ChartEmptyState, ChartUnavailable } from '@/components/shared/ChartEmptyState';
 import { useAuth } from '@/lib/auth/AuthContext';
 import {
   DASHBOARD_REFETCH_INTERVAL_MS,
@@ -85,7 +85,14 @@ export function DealsWonWidget(_props: Readonly<WidgetProps>) {
       </div>
 
       {/* Bar Chart */}
-      {isError && <DealsWonUnavailable onRetry={() => void refetch()} />}
+      {isError && (
+        <ChartUnavailable
+          className="h-48"
+          testId="deals-won-error"
+          message="Couldn't load deals won."
+          onRetry={() => void refetch()}
+        />
+      )}
       {!isError && empty && (
         <ChartEmptyState className="h-48" message="No deals won in this period yet" />
       )}
@@ -119,26 +126,6 @@ export function DealsWonWidget(_props: Readonly<WidgetProps>) {
           })}
         </div>
       )}
-    </div>
-  );
-}
-
-/** Shown when the deals-won request fails: says so and offers a retry. */
-function DealsWonUnavailable({ onRetry }: Readonly<{ onRetry: () => void }>) {
-  return (
-    <div
-      role="alert"
-      data-testid="deals-won-error"
-      className="flex h-48 flex-1 flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border text-center text-sm text-muted-foreground"
-    >
-      <span>Couldn&apos;t load deals won.</span>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="rounded border border-border px-3 py-1 text-sm text-foreground hover:bg-muted"
-      >
-        Retry
-      </button>
     </div>
   );
 }

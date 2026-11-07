@@ -33,3 +33,42 @@ export function ChartEmptyState({
     </output>
   );
 }
+
+export interface ChartUnavailableProps {
+  /** What failed, e.g. "Couldn't load growth trends." */
+  message: string;
+  onRetry: () => void;
+  className?: string;
+  testId?: string;
+}
+
+/**
+ * ChartUnavailable — shown in the plot area when the chart's request failed.
+ * A failed request is not an empty period, so it never reuses ChartEmptyState.
+ */
+export function ChartUnavailable({
+  message,
+  onRetry,
+  className,
+  testId = 'chart-error',
+}: Readonly<ChartUnavailableProps>) {
+  return (
+    <div
+      role="alert"
+      data-testid={testId}
+      className={cn(
+        'flex h-full min-h-[8rem] w-full flex-1 flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border text-center text-sm text-muted-foreground',
+        className
+      )}
+    >
+      <span>{message}</span>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="rounded border border-border px-3 py-1 text-sm text-foreground hover:bg-muted"
+      >
+        Retry
+      </button>
+    </div>
+  );
+}

@@ -13,7 +13,7 @@ export function ConversionRateWidget(_props: Readonly<WidgetProps>) {
     return { startDate: start.toISOString(), endDate: end.toISOString() };
   }, []);
 
-  const { data, isLoading } = trpc.analytics.getLeadMetrics.useQuery(dateRange);
+  const { data, isLoading, isError } = trpc.analytics.getLeadMetrics.useQuery(dateRange);
 
   const conversionRate = Number(data?.conversionRate ?? 0);
   const progress = Math.min(conversionRate * 10, 100);
@@ -25,6 +25,7 @@ export function ConversionRateWidget(_props: Readonly<WidgetProps>) {
       icon="bolt"
       iconClassName="bg-warning-muted text-warning"
       pending={isLoading}
+      failed={isError}
       value={`${conversionRate.toFixed(1)}%`}
       footer={
         <div className="w-full bg-muted h-1.5 rounded-full mt-2 overflow-hidden">

@@ -41,7 +41,11 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
     );
   }
 
-  if (error || !stats) {
+  if (error) {
+    return <KpiCard label="Total Leads" icon="group" value={null} failed />;
+  }
+
+  if (!stats) {
     return null;
   }
 
@@ -55,7 +59,9 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
       icon="group"
       value={total.toLocaleString('en-GB')}
       badge={
-        <KpiTrendBadge deltaPercent={computeDeltaPercent(delta, previous)} previous={previous} />
+        overview ? (
+          <KpiTrendBadge deltaPercent={computeDeltaPercent(delta, previous)} previous={previous} />
+        ) : undefined
       }
     />
   );

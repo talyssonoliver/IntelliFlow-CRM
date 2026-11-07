@@ -27,6 +27,8 @@ export interface KpiCardProps {
   value: React.ReactNode;
   /** No data yet: shows a pending mark, never a real-looking zero. */
   pending?: boolean;
+  /** The request failed: says so, and hides the badge and footer. */
+  failed?: boolean;
   /** Top-right on `default` (a trend or status pill). */
   badge?: React.ReactNode;
   /** Under the number (a comparison line, a progress bar, a warning). */
@@ -40,11 +42,18 @@ export function KpiCard({
   iconClassName = 'bg-ds-primary/10 text-ds-primary',
   value,
   pending = false,
-  badge,
-  footer,
+  failed = false,
+  badge: badgeProp,
+  footer: footerProp,
   variant = 'default',
 }: Readonly<KpiCardProps>) {
-  const figure = (
+  const badge = failed ? undefined : badgeProp;
+  const footer = failed ? undefined : footerProp;
+  const figure = failed ? (
+    <p className="text-sm text-muted-foreground truncate" data-testid="kpi-value" role="alert">
+      Couldn&apos;t load
+    </p>
+  ) : (
     <p
       className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums truncate"
       data-testid="kpi-value"

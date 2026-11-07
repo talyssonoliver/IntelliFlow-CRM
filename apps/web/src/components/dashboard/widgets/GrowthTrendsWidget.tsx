@@ -2,7 +2,7 @@
 
 import { trpc } from '@/lib/trpc';
 import { isEmptySeries } from '@/lib/charts/empty-series';
-import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
+import { ChartEmptyState, ChartUnavailable } from '@/components/shared/ChartEmptyState';
 import { useAuth } from '@/lib/auth/AuthContext';
 import type { WidgetProps } from './index';
 
@@ -14,7 +14,12 @@ interface GrowthTrendData {
 
 export function GrowthTrendsWidget(_props: Readonly<WidgetProps>) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: trendData, isLoading } = trpc.analytics.growthTrends.useQuery(
+  const {
+    data: trendData,
+    isLoading,
+    isError,
+    refetch,
+  } = trpc.analytics.growthTrends.useQuery(
     { metric: 'revenue', months: 12 },
     { enabled: isAuthenticated && !authLoading }
   );
@@ -36,7 +41,7 @@ export function GrowthTrendsWidget(_props: Readonly<WidgetProps>) {
     );
   }
 
-  if (!trendData || isEmptySeries(trendData, 'value')) {
+  if (isError || !trendData || isEmptySeries(trendData, 'value')) {
     return (
       <div className="p-5 h-full flex flex-col">
         <h3 className="font-bold text-foreground flex items-center gap-2 mb-4">
@@ -45,7 +50,11 @@ export function GrowthTrendsWidget(_props: Readonly<WidgetProps>) {
           </span>{' '}
           Growth Trends
         </h3>
-        <ChartEmptyState />
+        {isError ? (
+          <ChartUnavailable message="Couldn't load growth trends." onRetry={() => void refetch()} />
+        ) : (
+          <ChartEmptyState />
+        )}
       </div>
     );
   }

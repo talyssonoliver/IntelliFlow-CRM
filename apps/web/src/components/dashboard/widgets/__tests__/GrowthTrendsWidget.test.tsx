@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { GrowthTrendsWidget } from '../GrowthTrendsWidget';
 
@@ -49,5 +49,16 @@ describe('GrowthTrendsWidget', () => {
 
     expect(screen.getByText(/Growth Trends/)).toBeInTheDocument();
     expect(screen.getByTestId('chart-empty')).toBeInTheDocument();
+  });
+
+  it('says the request failed and retries instead of showing an empty period', () => {
+    const refetch = vi.fn();
+    useQueryMock.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch });
+    render(<GrowthTrendsWidget />);
+
+    expect(screen.queryByTestId('chart-empty')).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent("Couldn't load growth trends.");
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 });

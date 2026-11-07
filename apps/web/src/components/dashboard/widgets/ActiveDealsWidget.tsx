@@ -8,14 +8,14 @@ import type { WidgetProps } from './index';
 
 export function ActiveDealsWidget(_props: Readonly<WidgetProps>) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data, isLoading } = trpc.analytics.getOverview.useQuery(
+  const { data, isLoading, isError } = trpc.analytics.getOverview.useQuery(
     {},
     { enabled: isAuthenticated && !authLoading, refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
   );
 
   // While auth is resolving or the query is disabled/pending, `data` is
   // undefined — show a pending indicator rather than a real-looking 0.
-  const pending = authLoading || isLoading || !data;
+  const pending = !isError && (authLoading || isLoading || !data);
 
   return (
     <KpiCard
@@ -23,6 +23,7 @@ export function ActiveDealsWidget(_props: Readonly<WidgetProps>) {
       icon="handshake"
       iconClassName="bg-primary/10 text-primary"
       pending={pending}
+      failed={isError}
       value={data?.openOpportunities ?? 0}
     />
   );

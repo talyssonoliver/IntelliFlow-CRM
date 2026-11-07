@@ -18,7 +18,7 @@ interface TicketMetrics {
 }
 
 export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
-  const { data, isLoading } = api.ticket.stats.useQuery(
+  const { data, isLoading, isError } = api.ticket.stats.useQuery(
     { timeWindow: 'all' },
     { refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
   );
@@ -33,7 +33,7 @@ export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
   );
 
   // No data yet (loading or disabled/error) — show pending, never a fake 0.
-  const pending = isLoading || !data;
+  const pending = !isError && (isLoading || !data);
 
   return (
     <KpiCard
@@ -41,6 +41,7 @@ export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
       icon="confirmation_number"
       iconClassName="bg-primary/10 text-primary"
       pending={pending}
+      failed={isError}
       value={metrics.total}
       badge={
         pending ? undefined : (

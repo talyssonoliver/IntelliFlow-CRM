@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
 import { isEmptySeries } from '@/lib/charts/empty-series';
-import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
+import { ChartEmptyState, ChartUnavailable } from '@/components/shared/ChartEmptyState';
 import {
   chartMax,
   computeBarHeightPercent,
@@ -15,6 +15,12 @@ import type { WidgetProps } from './index';
 
 /** Below £100 last period a revenue percentage is noise (#1225 UI-009). */
 const REVENUE_TREND_MIN_BASELINE = 100;
+
+function revenueFigure(pending: boolean, failed: boolean, total: number): string {
+  if (failed) return 'Unavailable';
+  if (pending) return '...';
+  return formatGBP(total);
+}
 
 export function RevenueWidget({ config }: Readonly<WidgetProps>) {
   const timeRange = (config?.timeRange as string) || 'month';
@@ -30,8 +36,17 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
     return { startDate: start.toISOString(), endDate: end.toISOString() };
   }, [timeRange]);
 
-  const { data: overview, isLoading: overviewLoading } = trpc.analytics.getOverview.useQuery({});
-  const { data: timeSeries, isLoading } = trpc.analytics.getTimeSeriesData.useQuery({
+  const {
+    data: overview,
+    isLoading: overviewLoading,
+    isError: overviewError,
+  } = trpc.analytics.getOverview.useQuery({});
+  const {
+    data: timeSeries,
+    isLoading,
+    isError,
+    refetch,
+  } = trpc.analytics.getTimeSeriesData.useQuery({
     metric: 'revenue',
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
@@ -40,14 +55,15 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
 
   // The revenue figure comes from `overview`, not the time-series query — gate
   // on the overview's own state so a missing overview never shows a fake £0.
-  const revenuePending = overviewLoading || !overview;
+  // A failed overview says so instead of waiting forever on "...".
+  const revenuePending = !overviewError && (overviewLoading || !overview);
   const totalRevenue = Number(overview?.totalRevenue ?? 0);
   const revenueDelta = Number(overview?.revenueDelta ?? 0);
   const previous = totalRevenue - revenueDelta;
   const deltaPercent = computeDeltaPercent(revenueDelta, previous);
 
   const points = Array.isArray(timeSeries) ? timeSeries : [];
-  const hasPoints = !isEmptySeries(points, 'value');
+  const hasPoints = !isError && !isEmptySeries(points, 'value');
   const maxValue = chartMax(points.map((p: Record<string, unknown>) => Number(p.value || 0)));
 
   const dayLabels =
@@ -62,7 +78,7 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
           <h3 className="text-slate-900 dark:text-white font-semibold">Total Revenue</h3>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">
-              {revenuePending ? '...' : formatGBP(totalRevenue)}
+              {revenueFigure(revenuePending, overviewError, totalRevenue)}
             </span>
             <KpiTrendBadge
               deltaPercent={deltaPercent}
@@ -90,12 +106,17 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
               />
             );
           })}
-        {!hasPoints && isLoading && (
+        {!hasPoints && isLoading && !isError && (
           <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
             Loading...
           </div>
         )}
-        {!hasPoints && !isLoading && <ChartEmptyState message="No revenue in this period yet" />}
+        {isError && (
+          <ChartUnavailable message="Couldn't load revenue." onRetry={() => void refetch()} />
+        )}
+        {!hasPoints && !isLoading && !isError && (
+          <ChartEmptyState message="No revenue in this period yet" />
+        )}
       </div>
 
       {/* X-axis labels */}

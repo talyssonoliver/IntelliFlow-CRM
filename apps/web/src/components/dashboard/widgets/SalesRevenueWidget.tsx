@@ -12,7 +12,7 @@ import type { WidgetProps } from './index';
 
 export function SalesRevenueWidget(_props: Readonly<WidgetProps>) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data, isLoading } = trpc.analytics.getOverview.useQuery(
+  const { data, isLoading, isError } = trpc.analytics.getOverview.useQuery(
     {},
     { enabled: isAuthenticated && !authLoading, refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
   );
@@ -20,6 +20,10 @@ export function SalesRevenueWidget(_props: Readonly<WidgetProps>) {
   const revenue = Number(data?.totalRevenue ?? 0);
   const delta = Number(data?.revenueDelta ?? 0);
   const isOnTrack = isTrendingUp(delta);
+
+  if (isError) {
+    return <KpiCard label="Sales Revenue" icon="payments" value={null} failed />;
+  }
 
   // Show the skeleton while auth is resolving or the query is disabled/pending
   // (`data` undefined) rather than rendering a real-looking £0 / "On track".

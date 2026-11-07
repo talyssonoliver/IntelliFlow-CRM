@@ -2,7 +2,7 @@
 
 import { trpc } from '@/lib/trpc';
 import { isEmptySeries } from '@/lib/charts/empty-series';
-import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
+import { ChartEmptyState, ChartUnavailable } from '@/components/shared/ChartEmptyState';
 import { useAuth } from '@/lib/auth/AuthContext';
 import type { WidgetProps } from './index';
 
@@ -14,7 +14,12 @@ interface TrafficSourceData {
 
 export function TrafficSourcesWidget(_props: Readonly<WidgetProps>) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: sources, isLoading } = trpc.analytics.trafficSources.useQuery(undefined, {
+  const {
+    data: sources,
+    isLoading,
+    isError,
+    refetch,
+  } = trpc.analytics.trafficSources.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
   });
 
@@ -34,7 +39,7 @@ export function TrafficSourcesWidget(_props: Readonly<WidgetProps>) {
     );
   }
 
-  if (!sources || isEmptySeries(sources)) {
+  if (isError || !sources || isEmptySeries(sources)) {
     return (
       <div className="p-5 h-full flex flex-col">
         <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
@@ -43,7 +48,14 @@ export function TrafficSourcesWidget(_props: Readonly<WidgetProps>) {
           </span>{' '}
           Traffic Sources
         </h3>
-        <ChartEmptyState />
+        {isError ? (
+          <ChartUnavailable
+            message="Couldn't load traffic sources."
+            onRetry={() => void refetch()}
+          />
+        ) : (
+          <ChartEmptyState />
+        )}
       </div>
     );
   }

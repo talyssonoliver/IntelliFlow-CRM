@@ -7,6 +7,7 @@ import {
   computePipelineStagePercent,
   formatGBP,
 } from '@/lib/dashboard/kpi-calculator';
+import { ChartUnavailable } from '@/components/shared/ChartEmptyState';
 import type { WidgetProps } from './index';
 
 const STAGE_COLORS: Record<string, string> = {
@@ -19,7 +20,7 @@ const STAGE_COLORS: Record<string, string> = {
 };
 
 export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
-  const { data, isLoading } = trpc.opportunity.getPipeline.useQuery(
+  const { data, isLoading, isError, refetch } = trpc.opportunity.getPipeline.useQuery(
     { includeClosedStages: false },
     { refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
   );
@@ -47,7 +48,10 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
       </div>
 
       <div className="space-y-4 flex-1">
-        {isLoading
+        {isError && (
+          <ChartUnavailable message="Couldn't load the pipeline." onRetry={() => void refetch()} />
+        )}
+        {!isError && isLoading
           ? Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="flex items-center justify-between mb-2">
@@ -57,7 +61,8 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
                 <div className="w-full h-2 bg-muted rounded-full" />
               </div>
             ))
-          : data?.stages.map((stage) => {
+          : !isError &&
+            data?.stages.map((stage) => {
               const percentage = computePipelineStagePercent(stage.totalValue, displayedTotal);
               return (
                 <div key={stage.stageKey}>
