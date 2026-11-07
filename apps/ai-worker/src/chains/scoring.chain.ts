@@ -276,10 +276,11 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
   );
 
   /**
-   * A tenant-versioned prompt replaces DEFAULT_PROMPT, and some versions (the generated SCORING
-   * manifest among them) have no {lead_info} placeholder, so the model was sent instructions
-   * with no lead fields and no engagement history at all. Append the lead section when it is
-   * missing; a version that places {lead_info} itself is used as written.
+   * The version loader's prompt replaces DEFAULT_PROMPT whenever a tenantId is set. With no
+   * stored version, the loader returns its own fallback (DEFAULT_CONFIGS.SCORING in
+   * versioning/version-loader.ts), which has no {lead_info} placeholder, so the model was sent
+   * instructions with no lead fields and no engagement history at all. Append the lead section
+   * when it is missing; a prompt that places {lead_info} itself is used as written.
    */
   static withLeadInformation(template: string): string {
     if (template.includes('{lead_info}')) return template;
