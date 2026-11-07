@@ -263,6 +263,49 @@ describe('UpgradeFlow', () => {
     expect(screen.getByText('Billed monthly')).toBeInTheDocument();
   });
 
+  it.each(['canceled', 'incomplete_expired'])(
+    'sends a customer whose subscription is %s to checkout, since it cannot be changed',
+    async (status) => {
+      const { useSearchParams } = await import('next/navigation');
+      vi.mocked(useSearchParams).mockReturnValue(
+        new URLSearchParams('plan=professional&cycle=monthly') as unknown as ReturnType<
+          typeof useSearchParams
+        >
+      );
+      mockGetSubscription.mockReturnValue({
+        data: { ...mockSubscription, status } as typeof mockSubscription,
+        isLoading: false,
+        error: null,
+      });
+      render(<UpgradeFlow />);
+
+      fireEvent.click(screen.getByRole('button', { name: /confirm plan change/i }));
+
+      expect(mockPush).toHaveBeenCalledWith('/billing/checkout?plan=professional&cycle=monthly');
+      expect(mockMutate).not.toHaveBeenCalled();
+    }
+  );
+
+  it('still changes a past-due subscription instead of starting a second one', async () => {
+    const { useSearchParams } = await import('next/navigation');
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams('plan=enterprise&cycle=monthly') as unknown as ReturnType<
+        typeof useSearchParams
+      >
+    );
+    mockGetSubscription.mockReturnValue({
+      data: { ...mockSubscription, status: 'past_due' } as typeof mockSubscription,
+      isLoading: false,
+      error: null,
+    });
+    render(<UpgradeFlow />);
+
+    fireEvent.click(screen.getByRole('button', { name: /confirm plan change/i }));
+
+    expect(mockMutate).toHaveBeenCalled();
+    expect(mockPush).not.toHaveBeenCalledWith(expect.stringContaining('/billing/checkout'));
+  });
+
   it('does not show proration for new subscriptions', () => {
     mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
     render(<UpgradeFlow />);

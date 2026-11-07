@@ -398,6 +398,9 @@ function ConfirmView({
 // Main export
 // =============================================
 
+/** Statuses after which a subscription can't be changed any more (#1220). */
+const ENDED_SUBSCRIPTION_STATUSES = new Set(['canceled', 'incomplete_expired']);
+
 export function UpgradeFlow() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const searchParams = useSearchParams();
@@ -437,7 +440,11 @@ export function UpgradeFlow() {
     return <ErrorState message="Failed to load subscription data. Please try again later." />;
   }
 
-  const currentPlan = subscription ? getPlanByPriceId(subscription.priceId) : null;
+  // An ended subscription can't be changed, only replaced: treat it as none, so buying a plan
+  // goes to checkout (#1220). A past-due one is still live and still goes through a plan change.
+  const liveSubscription =
+    subscription && !ENDED_SUBSCRIPTION_STATUSES.has(subscription.status) ? subscription : null;
+  const currentPlan = liveSubscription ? getPlanByPriceId(liveSubscription.priceId) : null;
   const currentPlanId = currentPlan?.id ?? null;
   const targetPlan = planId ? getPlanById(planId) : null;
 
@@ -446,7 +453,7 @@ export function UpgradeFlow() {
     return (
       <PlanSelectionView
         currentPlanId={currentPlanId}
-        subscriptionQuantity={subscription?.quantity ?? 0}
+        subscriptionQuantity={liveSubscription?.quantity ?? 0}
       />
     );
   }
@@ -455,7 +462,7 @@ export function UpgradeFlow() {
   function handleConfirm() {
     // No subscription yet (a trial, or an ended trial): buying a plan is a checkout, since
     // there is nothing to change, and updateSubscription would refuse it (#1220).
-    if (!subscription) {
+    if (!liveSubscription) {
       router.push(`/billing/checkout?plan=${encodeURIComponent(planId ?? '')}&cycle=${cycle}`);
       return;
     }
@@ -470,7 +477,7 @@ export function UpgradeFlow() {
       targetPlan={targetPlan}
       currentPlan={currentPlan ?? null}
       currentPlanId={currentPlanId}
-      periodEnd={subscription ? new Date(subscription.currentPeriodEnd) : null}
+      periodEnd={liveSubscription ? new Date(liveSubscription.currentPeriodEnd) : null}
       cycle={cycle}
       onConfirm={handleConfirm}
       isPending={updateMutation.isPending}
