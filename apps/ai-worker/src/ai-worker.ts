@@ -294,10 +294,9 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           opts: Record<string, unknown>
         ) => MonitoringRedisLike;
         const client = new RedisCtor({
-          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-          password: process.env.REDIS_PASSWORD || undefined,
-          db: Number.parseInt(process.env.REDIS_DB || '0', 10),
+          // The worker's own connection settings (host, port, password, username, db, TLS):
+          // this client also holds the monthly AI budget, which must reach the same server.
+          ...redisConnectionOptions(),
           lazyConnect: true,
           // During container rollouts the TCP stream briefly drops. With
           // enableOfflineQueue:false ioredis throws "Stream isn't writeable and
