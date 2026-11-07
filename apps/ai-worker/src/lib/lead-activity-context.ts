@@ -21,8 +21,11 @@
  */
 import { sanitizeStringField } from '../utils/input-sanitizer';
 
-/** How many activities are read for the counts, and how many are listed in the prompt. */
-const COUNTED_ACTIVITIES = 200;
+/**
+ * The engagement counts cover the lead's whole history of emails, calls and meetings, up to a
+ * safety cap (named in the prompt when reached); the list shows the latest activities.
+ */
+const COUNTED_ACTIVITIES_CAP = 5000;
 const LISTED_ACTIVITIES = 15;
 const TITLE_MAX = 120;
 const COA_SYNC_SOURCE = 'coa-pipeline-sync';
@@ -53,6 +56,8 @@ export interface LeadActivityContext {
     calls: number;
     meetings: number;
   };
+  /** The counts stopped at the safety cap: they cover only the latest activities. */
+  countsCapped: boolean;
   recent: Array<{ type: string; direction: ActivityDirection | null; at: Date; title: string }>;
 }
 
@@ -117,16 +122,17 @@ function countEngagement(rows: ActivityRow[]): LeadActivityContext['counts'] {
 }
 
 /**
- * Build the context from rows already ordered newest first. `stageRows` holds the latest
- * pipeline-sync note when it was read on its own (so other activity cannot push it out);
- * without it the stage is looked for in `rows`.
+ * Build the context from `rows`, the latest activities newest first. The loader reads the
+ * counted rows and the latest pipeline-sync note on their own, so a busy recent history
+ * cannot push them out; without them both come from `rows`.
  */
 export function buildLeadActivityContext(
   lead: LeadRow,
   rows: ActivityRow[],
-  stageRows: ActivityRow[] = rows
+  sources: { stageRows?: ActivityRow[]; countRows?: ActivityRow[]; countsCapped?: boolean } = {}
 ): LeadActivityContext {
-  const counts = countEngagement(rows);
+  const counts = countEngagement(sources.countRows ?? rows);
+  const stageRows = sources.stageRows ?? rows;
   const recent = rows
     // The AI's own score updates say nothing about the lead's engagement.
     .filter((row) => row.type !== 'SCORE_UPDATE')
@@ -142,6 +148,7 @@ export function buildLeadActivityContext(
     lastContactedAt: lead.lastContactedAt,
     pipelineStage: latestPipelineStage(stageRows),
     counts,
+    countsCapped: sources.countsCapped === true,
     recent,
   };
 }
@@ -173,8 +180,11 @@ export function formatLeadActivityContext(context: LeadActivityContext, now: Dat
   const { emailsSent, replies, emailsUnknownDirection, calls, meetings } = context.counts;
   const unknown =
     emailsUnknownDirection > 0 ? `, ${emailsUnknownDirection} emails of unknown direction` : '';
+  const scope = context.countsCapped
+    ? ` (latest ${COUNTED_ACTIVITIES_CAP} emails, calls and meetings only)`
+    : '';
   lines.push(
-    `Engagement: ${emailsSent} emails sent to the lead, ${replies} replies from the lead${unknown}, ${calls} calls, ${meetings} meetings`
+    `Engagement${scope}: ${emailsSent} emails sent to the lead, ${replies} replies from the lead${unknown}, ${calls} calls, ${meetings} meetings`
   );
   if (context.recent.length === 0) {
     lines.push('Recent Activity: none recorded');
@@ -209,16 +219,23 @@ export async function loadLeadActivityContext(
 ): Promise<LeadActivityContext | undefined> {
   try {
     const select = { type: true, title: true, timestamp: true, metadata: true };
-    const [lead, rows, stage] = await Promise.all([
+    const [lead, rows, countRows, stage] = await Promise.all([
       prisma.lead.findFirst({
         where: { id: leadId, tenantId },
         select: { status: true, lastContactedAt: true },
       }),
-      // Score updates are left out before the limit, so they cannot push engagement out.
+      // The latest activities for the list. Score updates are left out before the limit.
       prisma.leadActivity.findMany({
         where: { leadId, tenantId, type: { not: 'SCORE_UPDATE' } },
         orderBy: { timestamp: 'desc' },
-        take: COUNTED_ACTIVITIES,
+        take: LISTED_ACTIVITIES,
+        select,
+      }),
+      // The counts: every email, call and meeting of the lead, however old (up to the cap).
+      prisma.leadActivity.findMany({
+        where: { leadId, tenantId, type: { in: ['EMAIL', 'CALL', 'MEETING'] } },
+        orderBy: { timestamp: 'desc' },
+        take: COUNTED_ACTIVITIES_CAP + 1,
         select,
       }),
       // The latest pipeline stage is read on its own, however much other activity came after.
@@ -234,7 +251,12 @@ export async function loadLeadActivityContext(
       }),
     ]);
     if (!lead) return undefined;
-    return buildLeadActivityContext(lead, rows, stage ? [stage] : []);
+    const countsCapped = countRows.length > COUNTED_ACTIVITIES_CAP;
+    return buildLeadActivityContext(lead, rows, {
+      stageRows: stage ? [stage] : [],
+      countRows: countsCapped ? countRows.slice(0, COUNTED_ACTIVITIES_CAP) : countRows,
+      countsCapped,
+    });
   } catch {
     return undefined;
   }

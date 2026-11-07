@@ -145,6 +145,13 @@ describe('lead activity context for scoring', () => {
     expect(lines).not.toContain('x'.repeat(121));
   });
 
+  it('names the scope when the counts stop at the safety cap', () => {
+    const context = buildLeadActivityContext(LEAD, [], { countRows: [], countsCapped: true });
+    expect(formatLeadActivityContext(context, NOW)).toContain(
+      'Engagement (latest 5000 emails, calls and meetings only):'
+    );
+  });
+
   it('says so when there is no history', () => {
     const lines = formatLeadActivityContext(
       buildLeadActivityContext({ status: 'NEW', lastContactedAt: null }, []),
@@ -162,23 +169,36 @@ describe('lead activity context for scoring', () => {
 
   it('reads only the job tenant, leaves score updates out before the limit, and reads the stage apart', async () => {
     const stageNote = ROWS.find((row) => row.type === 'NOTE')!;
+    const oldReply: ActivityRow = {
+      type: 'EMAIL',
+      title: 'Reply received: still interested',
+      timestamp: at('2025-01-10T09:00:00Z'),
+      metadata: {},
+    };
     const prisma = {
       lead: { findFirst: vi.fn().mockResolvedValue(LEAD) },
       leadActivity: {
-        // 200 newer notes would leave the stage note outside the counted window.
-        findMany: vi.fn().mockResolvedValue(
-          Array.from({ length: 200 }, () => ({
-            type: 'NOTE',
-            title: 'Note',
-            timestamp: NOW,
-            metadata: {},
-          }))
-        ),
+        findMany: vi
+          .fn()
+          // The listed window: newer notes only, so the old reply and the stage are not in it.
+          .mockResolvedValueOnce(
+            Array.from({ length: 15 }, () => ({
+              type: 'NOTE',
+              title: 'Note',
+              timestamp: NOW,
+              metadata: {},
+            }))
+          )
+          // The counted history: every email, call and meeting, however old.
+          .mockResolvedValueOnce([oldReply]),
         findFirst: vi.fn().mockResolvedValue(stageNote),
       },
     };
     const context = await loadLeadActivityContext(prisma, 'lead-1', 'tenant-1');
     expect(context?.pipelineStage?.stage).toBe('RESPONDED');
+    // The old reply still counts, though it is outside the listed window.
+    expect(context?.counts.replies).toBe(1);
+    expect(context?.countsCapped).toBe(false);
     expect(prisma.lead.findFirst).toHaveBeenCalledWith({
       where: { id: 'lead-1', tenantId: 'tenant-1' },
       select: { status: true, lastContactedAt: true },
@@ -188,6 +208,17 @@ describe('lead activity context for scoring', () => {
       expect.objectContaining({
         where: { leadId: 'lead-1', tenantId: 'tenant-1', type: { not: 'SCORE_UPDATE' } },
         orderBy: { timestamp: 'desc' },
+        take: 15,
+        select,
+      })
+    );
+    expect(prisma.leadActivity.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          leadId: 'lead-1',
+          tenantId: 'tenant-1',
+          type: { in: ['EMAIL', 'CALL', 'MEETING'] },
+        },
         select,
       })
     );
