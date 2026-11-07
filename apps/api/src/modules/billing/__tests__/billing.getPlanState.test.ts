@@ -5,8 +5,8 @@
  *
  * Coverage:
  *   A. resolvePriceId — env hit + missing-env throw
- *   B. getPlanState   — trial derivation math
- *   C. getPlanState   — active subscription passthrough
+ *   B. getPlanState   — one resolver: stored trial end, Tenant.plan tier, ended trials,
+ *                       partner plans and paid subscriptions (#1220)
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -71,89 +71,128 @@ describe('resolvePriceId', () => {
 });
 
 // ============================================================
-// B. getPlanState — trial branch
+// B. getPlanState — one resolver for plan and trial (#1220)
 // ============================================================
 
-describe('billing.getPlanState — trial branch', () => {
-  it('returns derived 14-day trial when no ACTIVE/PAST_DUE subscription exists', async () => {
-    // No active subscription
+const NOW = new Date('2026-11-07T12:00:00Z');
+const DAY = 24 * 60 * 60 * 1000;
+
+const tenantRow = (over: Record<string, unknown> = {}) =>
+  ({
+    createdAt: new Date(NOW.getTime() - 3 * DAY),
+    plan: 'STARTER',
+    trialEndsAt: null,
+    ...over,
+  }) as any;
+
+const subRow = (status: 'ACTIVE' | 'PAST_DUE', currentPeriodEnd: Date | null) =>
+  ({ status, currentPeriodEnd }) as any;
+
+async function planState() {
+  return billingRouter.createCaller(createTestContext() as any).getPlanState();
+}
+
+describe('billing.getPlanState — trial', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
     prismaMock.stripeSubscription.findFirst.mockResolvedValue(null);
+  });
+  afterEach(() => vi.useRealTimers());
 
-    const tenantCreatedAt = new Date('2026-06-10T00:00:00Z');
-    prismaMock.tenant.findUnique.mockResolvedValue({
-      createdAt: tenantCreatedAt,
-    } as any);
+  it('uses the stored trial end, not the age of the workspace', async () => {
+    // Created long ago, but the stored end is 5 days away: the badge must say 5, not 0.
+    prismaMock.tenant.findUnique.mockResolvedValue(
+      tenantRow({
+        createdAt: new Date('2026-06-16T00:00:00Z'),
+        trialEndsAt: new Date(NOW.getTime() + 5 * DAY),
+      })
+    );
 
-    const ctx = createTestContext();
-    const caller = billingRouter.createCaller(ctx as any);
-    const result = await caller.getPlanState();
+    const result = await planState();
 
-    expect(result.source).toBe('trial');
-    expect(result.tier).toBe('PROFESSIONAL');
-    expect(result.status).toBe('TRIALING');
-    expect(result.currentPeriodEnd).toBeNull();
-
-    // Trial ends 14 days after tenant creation
-    const expectedTrialEnd = new Date('2026-06-24T00:00:00Z');
-    expect(result.trialEndsAt).toBe(expectedTrialEnd.toISOString());
-
-    // daysLeft: computed from now — just verify it's a non-negative number
-    expect(typeof result.daysLeft).toBe('number');
-    expect(result.daysLeft).toBeGreaterThanOrEqual(0);
+    expect(result).toMatchObject({ source: 'trial', status: 'TRIALING', daysLeft: 5 });
+    expect(result.trialEndsAt).toBe(new Date(NOW.getTime() + 5 * DAY).toISOString());
   });
 
-  it('returns daysLeft=0 when the trial has already expired', async () => {
-    prismaMock.stripeSubscription.findFirst.mockResolvedValue(null);
+  it('falls back to created + 14 days while a row has no stored trial end', async () => {
+    prismaMock.tenant.findUnique.mockResolvedValue(
+      tenantRow({ createdAt: new Date('2026-11-01T12:00:00Z'), trialEndsAt: null })
+    );
 
-    // Tenant created 30 days ago
-    const pastDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-    prismaMock.tenant.findUnique.mockResolvedValue({ createdAt: pastDate } as any);
+    const result = await planState();
 
-    const ctx = createTestContext();
-    const caller = billingRouter.createCaller(ctx as any);
-    const result = await caller.getPlanState();
-
-    expect(result.source).toBe('trial');
-    expect(result.daysLeft).toBe(0);
+    expect(result.trialEndsAt).toBe('2026-11-15T12:00:00.000Z');
+    expect(result).toMatchObject({ status: 'TRIALING', daysLeft: 8 });
   });
 
-  it('uses now as trial start when tenant row is not found', async () => {
-    prismaMock.stripeSubscription.findFirst.mockResolvedValue(null);
+  it('reports the tier access enforcement uses (Tenant.plan), not a made-up PROFESSIONAL', async () => {
+    prismaMock.tenant.findUnique.mockResolvedValue(tenantRow({ plan: 'STARTER' }));
+
+    expect((await planState()).tier).toBe('STARTER');
+  });
+
+  it('says the trial ended, instead of "0 days left", once the end has passed', async () => {
+    prismaMock.tenant.findUnique.mockResolvedValue(
+      tenantRow({ trialEndsAt: new Date(NOW.getTime() - DAY) })
+    );
+
+    expect(await planState()).toMatchObject({
+      source: 'trial',
+      status: 'TRIAL_ENDED',
+      daysLeft: 0,
+    });
+  });
+
+  it('counts a trial ending exactly now as ended', async () => {
+    prismaMock.tenant.findUnique.mockResolvedValue(tenantRow({ trialEndsAt: NOW }));
+
+    expect((await planState()).status).toBe('TRIAL_ENDED');
+  });
+
+  it('rounds a part day up, so the last day still reads "1 day left"', async () => {
+    prismaMock.tenant.findUnique.mockResolvedValue(
+      tenantRow({ trialEndsAt: new Date(NOW.getTime() + 60 * 60 * 1000) })
+    );
+
+    expect(await planState()).toMatchObject({ status: 'TRIALING', daysLeft: 1 });
+  });
+
+  it('reads plan and trial end in the same query as the creation date', async () => {
+    prismaMock.tenant.findUnique.mockResolvedValue(tenantRow());
+
+    await planState();
+
+    expect(prismaMock.tenant.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: { createdAt: true, plan: true, trialEndsAt: true },
+      })
+    );
+  });
+
+  it('starts from now when the tenant row is missing', async () => {
     prismaMock.tenant.findUnique.mockResolvedValue(null);
 
-    const before = Date.now();
-    const ctx = createTestContext();
-    const caller = billingRouter.createCaller(ctx as any);
-    const result = await caller.getPlanState();
-    const after = Date.now();
+    const result = await planState();
 
-    expect(result.source).toBe('trial');
-    // trialEndsAt should be roughly 14 days from now
-    const trialEnd = new Date(result.trialEndsAt!).getTime();
-    const expectedMin = before + 14 * 24 * 60 * 60 * 1000 - 1000;
-    const expectedMax = after + 14 * 24 * 60 * 60 * 1000 + 1000;
-    expect(trialEnd).toBeGreaterThanOrEqual(expectedMin);
-    expect(trialEnd).toBeLessThanOrEqual(expectedMax);
+    expect(result).toMatchObject({ source: 'trial', tier: 'STARTER', daysLeft: 14 });
   });
 });
 
-// ============================================================
-// B2. getPlanState — partner-granted plan (not a trial)
-// ============================================================
-
-describe('billing.getPlanState — PARTNER_FREE branch', () => {
-  it('reports a partner plan with no trial dates for a PARTNER_FREE tenant', async () => {
+describe('billing.getPlanState — PARTNER_FREE', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
     prismaMock.stripeSubscription.findFirst.mockResolvedValue(null);
-    // Created today: the trial derivation would have said "14 days left".
-    prismaMock.tenant.findUnique.mockResolvedValue({
-      createdAt: new Date(),
-      plan: 'PARTNER_FREE',
-    } as any);
+  });
+  afterEach(() => vi.useRealTimers());
 
-    const caller = billingRouter.createCaller(createTestContext() as any);
-    const result = await caller.getPlanState();
+  it('reports a partner plan with no trial dates, whatever the stored trial end', async () => {
+    prismaMock.tenant.findUnique.mockResolvedValue(
+      tenantRow({ plan: 'PARTNER_FREE', trialEndsAt: new Date(NOW.getTime() - DAY) })
+    );
 
-    expect(result).toEqual({
+    expect(await planState()).toEqual({
       source: 'partner',
       tier: 'PARTNER_FREE',
       status: 'ACTIVE',
@@ -162,110 +201,55 @@ describe('billing.getPlanState — PARTNER_FREE branch', () => {
       daysLeft: null,
     });
   });
-
-  it('selects the tenant plan so the partner branch can see it', async () => {
-    prismaMock.stripeSubscription.findFirst.mockResolvedValue(null);
-    prismaMock.tenant.findUnique.mockResolvedValue({
-      createdAt: new Date(),
-      plan: 'STARTER',
-    } as any);
-
-    const caller = billingRouter.createCaller(createTestContext() as any);
-    const result = await caller.getPlanState();
-
-    expect(prismaMock.tenant.findUnique).toHaveBeenCalledWith(
-      expect.objectContaining({ select: expect.objectContaining({ plan: true }) })
-    );
-    // A non-partner plan with no paid subscription keeps the existing trial behaviour.
-    expect(result.source).toBe('trial');
-  });
 });
 
-// ============================================================
-// C. getPlanState — active subscription passthrough
-// ============================================================
+describe('billing.getPlanState — paid subscription', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => vi.useRealTimers());
 
-describe('billing.getPlanState — active subscription branch', () => {
-  it('returns stripe source with ACTIVE status when a subscription exists', async () => {
-    const periodEnd = new Date('2026-07-10T00:00:00Z');
-    prismaMock.stripeSubscription.findFirst.mockResolvedValue({
-      id: 'rec_123',
-      stripeSubscriptionId: 'sub_abc',
-      stripeCustomerId: 'cus_abc',
+  it('reports the purchased tier from Tenant.plan, with no trial', async () => {
+    const periodEnd = new Date('2026-12-07T00:00:00Z');
+    prismaMock.stripeSubscription.findFirst.mockResolvedValue(subRow('ACTIVE', periodEnd));
+    // The trial end has passed: it must not matter once a plan is paid for.
+    prismaMock.tenant.findUnique.mockResolvedValue(
+      tenantRow({ plan: 'PROFESSIONAL', trialEndsAt: new Date(NOW.getTime() - 30 * DAY) })
+    );
+
+    expect(await planState()).toEqual({
+      source: 'stripe',
+      tier: 'PROFESSIONAL',
       status: 'ACTIVE',
-      currentPeriodEnd: periodEnd,
-      cancelAtPeriodEnd: false,
-      tenantId: 'tenant-1',
-      tenantSlug: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as any);
-
-    const ctx = createTestContext();
-    const caller = billingRouter.createCaller(ctx as any);
-    const result = await caller.getPlanState();
-
-    expect(result.source).toBe('stripe');
-    expect(result.status).toBe('ACTIVE');
-    // Contract: the StripeSubscription row persists no price id / plan tier (no
-    // migration), so the paid tier is honestly reported as 'UNKNOWN' (tracked
-    // follow-up). The trial branch is unaffected (always PROFESSIONAL).
-    expect(result.tier).toBe('UNKNOWN');
-    expect(result.currentPeriodEnd).toBe(periodEnd.toISOString());
-    expect(result.trialEndsAt).toBeNull();
-    expect(result.daysLeft).toBeNull();
-    // Tenant query should NOT be called
-    expect(prismaMock.tenant.findUnique).not.toHaveBeenCalled();
+      currentPeriodEnd: periodEnd.toISOString(),
+      trialEndsAt: null,
+      daysLeft: null,
+    });
   });
 
-  it('returns stripe source with PAST_DUE status', async () => {
-    prismaMock.stripeSubscription.findFirst.mockResolvedValue({
-      id: 'rec_456',
-      stripeSubscriptionId: 'sub_def',
-      stripeCustomerId: 'cus_def',
-      status: 'PAST_DUE',
-      currentPeriodEnd: new Date('2026-07-01T00:00:00Z'),
-      cancelAtPeriodEnd: false,
-      tenantId: 'tenant-1',
-      tenantSlug: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as any);
+  it('keeps PAST_DUE visible', async () => {
+    prismaMock.stripeSubscription.findFirst.mockResolvedValue(subRow('PAST_DUE', null));
+    prismaMock.tenant.findUnique.mockResolvedValue(tenantRow({ plan: 'PROFESSIONAL' }));
 
-    const ctx = createTestContext();
-    const caller = billingRouter.createCaller(ctx as any);
-    const result = await caller.getPlanState();
-
-    expect(result.source).toBe('stripe');
-    expect(result.status).toBe('PAST_DUE');
+    expect(await planState()).toMatchObject({ source: 'stripe', status: 'PAST_DUE' });
   });
 
-  it('queries by tenantId from ctx.tenant', async () => {
-    prismaMock.stripeSubscription.findFirst.mockResolvedValue({
-      id: 'rec_789',
-      stripeSubscriptionId: 'sub_xyz',
-      stripeCustomerId: 'cus_xyz',
-      status: 'ACTIVE',
-      currentPeriodEnd: null,
-      cancelAtPeriodEnd: false,
-      tenantId: 'tenant-1',
-      tenantSlug: null,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    } as any);
-
+  it('queries live subscriptions by the tenant from ctx.tenant', async () => {
+    prismaMock.stripeSubscription.findFirst.mockResolvedValue(subRow('ACTIVE', null));
+    prismaMock.tenant.findUnique.mockResolvedValue(tenantRow());
     const ctx = createTestContext();
-    const caller = billingRouter.createCaller(ctx as any);
-    await caller.getPlanState();
+
+    await billingRouter.createCaller(ctx as any).getPlanState();
 
     const tenant = (ctx as any).tenant as { tenantId: string };
     expect(prismaMock.stripeSubscription.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({
-          tenantId: tenant.tenantId,
-          status: { in: ['ACTIVE', 'PAST_DUE'] },
-        }),
+        where: { tenantId: tenant.tenantId, status: { in: ['ACTIVE', 'PAST_DUE'] } },
       })
+    );
+    expect(prismaMock.tenant.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: tenant.tenantId } })
     );
   });
 });

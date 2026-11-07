@@ -138,7 +138,7 @@ function PlanSelectionView({
               directionIcon={directionDisplay.icon}
               changeAllowed={changeCheck.allowed}
               changeBlockedReason={changeCheck.reason}
-              href={`/billing/upgrade?plan=${plan.id}`}
+              href={`/billing/upgrade?plan=${plan.id}&cycle=${interval}`}
             />
           );
         })}
@@ -183,6 +183,8 @@ interface ConfirmViewProps {
   currentPlan: Plan | null;
   currentPlanId: string | null;
   periodEnd: Date | null;
+  /** The billing period chosen on the plan cards (#1220). */
+  cycle: 'monthly' | 'annual';
   onConfirm: () => void;
   isPending: boolean;
 }
@@ -192,9 +194,12 @@ function ConfirmView({
   currentPlan,
   currentPlanId,
   periodEnd,
+  cycle,
   onConfirm,
   isPending,
 }: Readonly<ConfirmViewProps>) {
+  // The price for the period being bought, so an annual purchase never shows a monthly price.
+  const price = getPlanPriceForInterval(targetPlan, cycle);
   const isSamePlan = targetPlan.id === currentPlanId;
   const isNewSubscription = !currentPlan && !periodEnd;
   const comparison =
@@ -272,10 +277,14 @@ function ConfirmView({
               <p className="font-semibold text-lg">{targetPlan.name}</p>
               <p className="text-sm text-slate-500 dark:text-slate-400">{targetPlan.description}</p>
             </div>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">
-              {formatCurrency(targetPlan.priceMonthly, targetPlan.currency)}{' '}
-              <span className="text-sm font-normal text-slate-500">/mo</span>
-            </p>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{price.formatted}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {cycle === 'annual'
+                  ? `Billed annually (${price.formattedPerMonth})`
+                  : 'Billed monthly'}
+              </p>
+            </div>
           </div>
 
           <ul className="space-y-2 pt-3 border-t border-slate-200 dark:border-slate-700">
@@ -307,6 +316,8 @@ function ConfirmView({
               <span className="text-slate-600 dark:text-slate-400">
                 New plan ({targetPlan.name})
               </span>
+              {/* Monthly like the difference and proration beside it: this card is the plan-change
+                  path, which #1239 reworks with the chosen period. */}
               <span className="font-medium">
                 {formatCurrency(targetPlan.priceMonthly, targetPlan.currency)} <span>/mo</span>
               </span>
@@ -391,11 +402,16 @@ function ConfirmView({
 // Main export
 // =============================================
 
+/** Statuses after which a subscription can't be changed any more (#1220). */
+const ENDED_SUBSCRIPTION_STATUSES = new Set(['canceled', 'incomplete_expired']);
+
 export function UpgradeFlow() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const planId = searchParams.get('plan');
+  // The period chosen on the plan cards; links without one keep the old monthly default.
+  const cycle: 'monthly' | 'annual' = searchParams.get('cycle') === 'annual' ? 'annual' : 'monthly';
 
   const {
     data: subscription,
@@ -428,7 +444,11 @@ export function UpgradeFlow() {
     return <ErrorState message="Failed to load subscription data. Please try again later." />;
   }
 
-  const currentPlan = subscription ? getPlanByPriceId(subscription.priceId) : null;
+  // An ended subscription can't be changed, only replaced: treat it as none, so buying a plan
+  // goes to checkout (#1220). A past-due one is still live and still goes through a plan change.
+  const liveSubscription =
+    subscription && !ENDED_SUBSCRIPTION_STATUSES.has(subscription.status) ? subscription : null;
+  const currentPlan = liveSubscription ? getPlanByPriceId(liveSubscription.priceId) : null;
   const currentPlanId = currentPlan?.id ?? null;
   const targetPlan = planId ? getPlanById(planId) : null;
 
@@ -437,16 +457,22 @@ export function UpgradeFlow() {
     return (
       <PlanSelectionView
         currentPlanId={currentPlanId}
-        subscriptionQuantity={subscription?.quantity ?? 0}
+        subscriptionQuantity={liveSubscription?.quantity ?? 0}
       />
     );
   }
 
   // MODE 2: ?plan=X → confirmation with proration
   function handleConfirm() {
+    // No subscription yet (a trial, or an ended trial): buying a plan is a checkout, since
+    // there is nothing to change, and updateSubscription would refuse it (#1220).
+    if (!liveSubscription) {
+      router.push(`/billing/checkout?plan=${encodeURIComponent(planId ?? '')}&cycle=${cycle}`);
+      return;
+    }
     updateMutation.mutate({
       planId,
-      billingCycle: 'monthly',
+      billingCycle: cycle,
     } as Record<string, unknown>);
   }
 
@@ -455,7 +481,8 @@ export function UpgradeFlow() {
       targetPlan={targetPlan}
       currentPlan={currentPlan ?? null}
       currentPlanId={currentPlanId}
-      periodEnd={subscription ? new Date(subscription.currentPeriodEnd) : null}
+      periodEnd={liveSubscription ? new Date(liveSubscription.currentPeriodEnd) : null}
+      cycle={cycle}
       onConfirm={handleConfirm}
       isPending={updateMutation.isPending}
     />
