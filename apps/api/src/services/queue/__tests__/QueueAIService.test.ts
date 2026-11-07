@@ -6,7 +6,11 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { Result } from '@intelliflow/domain';
-import { PersistenceError, ValidationError } from '@intelliflow/application';
+import {
+  PersistenceError,
+  ValidationError,
+  LeadScoringFailedError,
+} from '@intelliflow/application';
 
 // ============================================================================
 // BullMQ mock — minimal surface (Queue + QueueEvents + Job#waitUntilFinished)
@@ -145,6 +149,8 @@ describe('QueueAIService', () => {
     expect(observedJobName).toBe('score-lead');
     expect(observedPayload.lead.email).toBe('lead@example.com');
     expect(observedPayload.tenantId).toBe('tenant-A');
+    // #1218: LeadService writes the lead's score itself; the worker writes only the insight.
+    expect(observedPayload.leadScoreWriter).toBe('service');
   });
 
   // --------------------------------------------------------------------------
@@ -249,6 +255,31 @@ describe('QueueAIService', () => {
       expect(r.error).toBeInstanceOf(PersistenceError);
       expect(r.error.message).toContain('AI scoring job failed');
       expect(r.error.message).toContain('worker process crashed');
+    }
+  });
+
+  it('case 7b (#1218): an inconclusive job is "no usable score", not a server error (codex)', async () => {
+    // The worker's ScoringFailedError(SCORING_INCONCLUSIVE_CLASS) message, as BullMQ relays it.
+    mockState.jobWaitImpl = async () => {
+      throw new Error('Lead scoring failed (inconclusive)');
+    };
+
+    const r = await service.scoreLead(sampleInput);
+    expect(r.isFailure).toBe(true);
+    if (r.isFailure) {
+      expect(r.error).toBeInstanceOf(LeadScoringFailedError);
+    }
+  });
+
+  it('case 7c (#1218): a provider failure stays a PersistenceError', async () => {
+    mockState.jobWaitImpl = async () => {
+      throw new Error('Lead scoring failed (rate_limited)');
+    };
+
+    const r = await service.scoreLead(sampleInput);
+    expect(r.isFailure).toBe(true);
+    if (r.isFailure) {
+      expect(r.error).toBeInstanceOf(PersistenceError);
     }
   });
 
