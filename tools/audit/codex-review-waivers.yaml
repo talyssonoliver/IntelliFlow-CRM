@@ -851,8 +851,28 @@ waivers:
       LeadAIInsight, before and after this change. Before this change such a lead showed its
       untouched Lead.score (0 by default) as if it were a score. It now shows "Not scored",
       which is what that column holds. Writing the lead score from the worker is a separate
-      change, because it decides auto-qualify outside LeadService, and is tracked as a
-      follow-up on #1218. Short expiry so this cannot stay hidden.
+      change, because it decides auto-qualify outside LeadService, and is tracked in
+      #1228 (waiver accepted by the coordinator, 2026-11-07). Short expiry so this cannot stay hidden.
+    author: scoring failure lane
+    date: '2026-11-07'
+    expires: '2026-11-21'
+  - fingerprint: 0d9879ca81bdf3c00feed78a7f25328d7f886dd0a8caf9b73378212bce82210d
+    reason: >-
+      #1218. The same gap as the waiver above, reported on the display helper: the automatic
+      scoring paths (enqueueLeadScoring and the scheduled dispatcher) only upsert
+      LeadAIInsight and have never written Lead.score, scoringStatus or scoredAt. The helper
+      shows what the lead row holds. Writing the lead's score from the worker is tracked in
+      #1228 (waiver accepted by the coordinator, 2026-11-07). Short expiry so it cannot stay
+      hidden.
+    author: scoring failure lane
+    date: '2026-11-07'
+    expires: '2026-11-21'
+  - fingerprint: 6aad422766c199089f181172f130bc3b7a0dc3948b1884ecd245846efc2e8a2d
+    reason: >-
+      #1218. The same gap as the two waivers above, reported on the scoring job: its
+      persistScoringResult upserts LeadAIInsight only and has never written Lead.score,
+      scoringStatus or scoredAt. Tracked in #1228 (waiver accepted by the coordinator,
+      2026-11-07). Short expiry so it cannot stay hidden.
     author: scoring failure lane
     date: '2026-11-07'
     expires: '2026-11-21'

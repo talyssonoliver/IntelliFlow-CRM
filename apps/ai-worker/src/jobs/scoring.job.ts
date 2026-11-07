@@ -17,6 +17,7 @@ import type { LeadInput, ScoringResult } from '../chains/scoring.chain';
 import { logAIAgentAction } from '../utils/audit-log';
 import { getLLMBreaker, resolveFallbackProvider } from '../lib/llm-factory';
 import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
+import { requiresHumanReview } from '@intelliflow/domain';
 import type { CircuitBreaker } from '../utils/circuit-breaker';
 import { runWithLogContext, getCurrentLogContext } from '@intelliflow/observability';
 import { isAiFeatureEnabled } from '../lib/feature-flags';
@@ -530,31 +531,45 @@ async function persistScoringResult(
 
     // PG-203: the person may have been erased or restricted while the AI call ran. The write
     // happens only under the lead row lock, after re-checking (codex: no insight resurrection).
-    const outcome = await writeIfStillEligible(prisma as never, { leadId, tenantId, email }, (tx) =>
-      (tx as unknown as typeof prisma).leadAIInsight.upsert({
-        where: { leadId_tenantId: { leadId, tenantId } },
-        create: {
-          leadId,
-          tenantId,
-          engagementScore: Math.min(100, result.score),
-          conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
-          estimatedValue: 0,
-          churnRisk,
-          nextBestAction: recommendations[0] || 'Review lead',
-          sentiment: sentimentFromScore(result.score),
-          sentimentTrend: 'stable',
-          recommendations,
-          lastEngagementDays: 0,
-          icpMatch: icpMatchFromScore(result.score),
-        },
-        update: {
-          engagementScore: Math.min(100, result.score),
-          conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
-          churnRisk,
-          nextBestAction: recommendations[0] || 'Review lead',
-          recommendations,
-        },
-      })
+    const outcome = await writeIfStillEligible(
+      prisma as never,
+      { leadId, tenantId, email },
+      async (tx) => {
+        // #1218: the lead row records the score too, so an automatically scored lead does not
+        // read as "not scored". Score fields only: the status is never changed here (auto-qualify
+        // stays in LeadService), and updatedAt is left as is, as for the failure mark.
+        const scoringStatus = requiresHumanReview(result.confidence, 'LEAD_SCORING')
+          ? 'NEEDS_REVIEW'
+          : 'SCORED';
+        await (tx as unknown as typeof prisma).$executeRaw`
+        UPDATE leads SET score = ${Math.round(result.score)},
+          "scoringStatus" = ${scoringStatus}::"LeadScoringStatus", "scoredAt" = ${new Date()}
+        WHERE id = ${leadId} AND "tenantId" = ${tenantId}`;
+        return (tx as unknown as typeof prisma).leadAIInsight.upsert({
+          where: { leadId_tenantId: { leadId, tenantId } },
+          create: {
+            leadId,
+            tenantId,
+            engagementScore: Math.min(100, result.score),
+            conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
+            estimatedValue: 0,
+            churnRisk,
+            nextBestAction: recommendations[0] || 'Review lead',
+            sentiment: sentimentFromScore(result.score),
+            sentimentTrend: 'stable',
+            recommendations,
+            lastEngagementDays: 0,
+            icpMatch: icpMatchFromScore(result.score),
+          },
+          update: {
+            engagementScore: Math.min(100, result.score),
+            conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
+            churnRisk,
+            nextBestAction: recommendations[0] || 'Review lead',
+            recommendations,
+          },
+        });
+      }
     );
     if (!outcome.written) {
       logger.info(

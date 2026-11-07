@@ -78,6 +78,8 @@ vi.mock('@intelliflow/db', () => {
     },
     // The locked re-check before the insight write (SELECT email ... FOR UPDATE).
     $queryRaw: vi.fn(async () => (stored.leadEmail ? [{ email: stored.leadEmail }] : [])),
+    // #1218: the lead's score fields, written in the same locked transaction.
+    $executeRaw: vi.fn().mockResolvedValue(1),
   };
   prisma.$transaction = vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma));
   return { prisma };
@@ -817,6 +819,34 @@ describe('ScoringJob', () => {
         (prisma as { leadAIInsight: { upsert: ReturnType<typeof vi.fn> } }).leadAIInsight.upsert
       ).not.toHaveBeenCalled();
       expect(raw.mock.calls[0]![0].join('?')).toContain('FOR UPDATE');
+      // Nor is the lead's own score written (#1218).
+      expect(
+        (prisma as unknown as { $executeRaw: ReturnType<typeof vi.fn> }).$executeRaw
+      ).not.toHaveBeenCalled();
+    });
+
+    const leadScoreWrites = () =>
+      (prisma as unknown as { $executeRaw: ReturnType<typeof vi.fn> }).$executeRaw.mock.calls;
+
+    it('records a confident automatic score on the lead as SCORED, without touching its status (#1218)', async () => {
+      mockScoreLead.mockResolvedValueOnce({ ...mockScoringResult, score: 75, confidence: 0.9 });
+      await processScoringJob(job());
+      const [strings, ...values] = leadScoreWrites().at(-1)!;
+      const sql = (strings as string[]).join('?');
+      expect(sql).toMatch(
+        /UPDATE leads SET score = \?,\s+"scoringStatus" = \?::"LeadScoringStatus", "scoredAt" = \?/
+      );
+      // Score fields only: no status and no updatedAt.
+      expect(sql).not.toMatch(/"status"|"updatedAt"/);
+      expect(values.slice(0, 2)).toEqual([75, 'SCORED']);
+      expect(values.slice(3)).toEqual([TEST_UUIDS.lead1, TEST_UUIDS.tenant1]);
+    });
+
+    it('records a low-confidence automatic score as NEEDS_REVIEW (#1218)', async () => {
+      mockScoreLead.mockResolvedValueOnce({ ...mockScoringResult, score: 15, confidence: 0.4 });
+      await processScoringJob(job());
+      const [, score, status] = leadScoreWrites().at(-1)!;
+      expect([score, status]).toEqual([15, 'NEEDS_REVIEW']);
     });
 
     it('returns no score when the locked re-check cannot run (fails closed, codex)', async () => {
