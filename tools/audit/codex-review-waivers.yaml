@@ -855,3 +855,13 @@ waivers:
     author: plan state lane
     date: '2026-11-07'
     expires: '2026-11-21'
+  - fingerprint: 028fad5b743580a01b6073436f923ee956ebcc22b449be26c106232219822ec6
+    reason: >-
+      Accepted by the coordinator on 2026-11-07. usablePromotionCodeId checks a code's
+      customer and products but not Stripe's own limits (first purchase only, minimum
+      amount). Stripe refuses such a subscription before any charge, so no money moves and
+      checkout shows Stripe's refusal; only the message is less specific. Mapping that refusal
+      to the invalid-code message is a follow-up in the #1239 PR. Short expiry.
+    author: plan state lane
+    date: '2026-11-07'
+    expires: '2026-11-21'
