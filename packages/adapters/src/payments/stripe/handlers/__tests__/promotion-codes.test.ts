@@ -60,36 +60,71 @@ describe('findActivePromotionCode', () => {
     });
   });
   describe('when the code exists once per customer', () => {
+    // A fake Stripe that answers like the real filter: by customer, or a paged listing.
+    function stripeWith(records: Array<{ id: string; customer: string | null }>, pageSize = 100) {
+      mockMakeRequest.mockImplementation(
+        async (_config: unknown, _method: string, path: string) => {
+          const q = new URLSearchParams(path.split('?')[1]);
+          const customer = q.get('customer');
+          if (customer) return Result.ok({ data: records.filter((r) => r.customer === customer) });
+          const after = q.get('starting_after');
+          const start = after ? records.findIndex((r) => r.id === after) + 1 : 0;
+          const data = records.slice(start, start + pageSize);
+          return Result.ok({ data, has_more: start + pageSize < records.length });
+        }
+      );
+    }
+
     const records = [
       { id: 'promo_other', customer: 'cus_other' },
       { id: 'promo_open', customer: null },
       { id: 'promo_mine', customer: 'cus_1' },
     ];
 
-    it("picks the buyer's own record first", async () => {
-      mockMakeRequest.mockResolvedValue(Result.ok({ data: records }));
+    it("asks for the buyer's own record first, with Stripe's customer filter", async () => {
+      stripeWith(records);
 
       expect((await findActivePromotionCode(config, 'VIP', 'cus_1')).value?.id).toBe('promo_mine');
+      expect(
+        new URLSearchParams(mockMakeRequest.mock.calls[0][2].split('?')[1]).get('customer')
+      ).toBe('cus_1');
     });
 
     it('falls back to the record open to anyone', async () => {
-      mockMakeRequest.mockResolvedValue(Result.ok({ data: records }));
+      stripeWith(records);
 
       expect((await findActivePromotionCode(config, 'VIP', 'cus_2')).value?.id).toBe('promo_open');
     });
 
-    it("finds nothing when only other customers' records exist", async () => {
-      mockMakeRequest.mockResolvedValue(
-        Result.ok({ data: [{ id: 'promo_other', customer: 'cus_other' }] })
+    it('follows pages until the open record turns up', async () => {
+      const many = [
+        ...Array.from({ length: 5 }, (_, i) => ({ id: `promo_c${i}`, customer: `cus_${i}` })),
+        { id: 'promo_open', customer: null },
+      ];
+      stripeWith(many, 2);
+
+      expect((await findActivePromotionCode(config, 'VIP', 'cus_none')).value?.id).toBe(
+        'promo_open'
       );
+    });
+
+    it("finds nothing when only other customers' records exist", async () => {
+      stripeWith([{ id: 'promo_other', customer: 'cus_other' }]);
 
       expect((await findActivePromotionCode(config, 'VIP', 'cus_1')).value).toBeNull();
     });
 
     it('without a customer, only an unrestricted record qualifies', async () => {
-      mockMakeRequest.mockResolvedValue(Result.ok({ data: [records[0], records[2]] }));
+      stripeWith([records[0], records[2]]);
 
       expect((await findActivePromotionCode(config, 'VIP')).value).toBeNull();
+    });
+
+    it("passes a failure of the buyer's own lookup through", async () => {
+      const error = new StripeConnectionError('down');
+      mockMakeRequest.mockResolvedValue(Result.fail(error));
+
+      expect((await findActivePromotionCode(config, 'VIP', 'cus_1')).error).toBe(error);
     });
   });
   it('returns null when no active code matches', async () => {

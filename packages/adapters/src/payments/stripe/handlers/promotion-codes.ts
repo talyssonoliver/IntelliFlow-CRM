@@ -42,10 +42,61 @@ function toActivePromotionCode(
   };
 }
 
+/** At most this many pages of a code's records are read when looking for the open one. */
+const MAX_PAGES = 10;
+
+type ListPage = { data?: PromotionCodeRecord[]; has_more?: boolean };
+
+async function listPage(
+  config: StripeConfig,
+  params: URLSearchParams
+): Promise<Result<ListPage, DomainError>> {
+  params.append('expand[]', 'data.coupon.applies_to');
+  const response = await makeRequest(config, 'GET', `/promotion_codes?${params}`);
+  if (response.isFailure) return Result.fail(response.error);
+  return Result.ok(response.value as ListPage);
+}
+
+/** The copy of the code reserved to this customer, found with Stripe's customer filter. */
+async function reservedCode(
+  config: StripeConfig,
+  code: string,
+  customerId: string
+): Promise<Result<ActivePromotionCode | null, DomainError>> {
+  const page = await listPage(
+    config,
+    new URLSearchParams({ code, active: 'true', customer: customerId, limit: '1' })
+  );
+  if (page.isFailure) return Result.fail(page.error);
+  return Result.ok(toActivePromotionCode(page.value.data?.[0]));
+}
+
+/** The copy of the code open to anyone, following pages past customers' reserved copies. */
+async function openCode(
+  config: StripeConfig,
+  code: string
+): Promise<Result<ActivePromotionCode | null, DomainError>> {
+  let startingAfter: string | undefined;
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const params = new URLSearchParams({ code, active: 'true', limit: '100' });
+    if (startingAfter) params.set('starting_after', startingAfter);
+    const listed = await listPage(config, params);
+    if (listed.isFailure) return Result.fail(listed.error);
+
+    const records = (listed.value.data ?? [])
+      .map(toActivePromotionCode)
+      .filter((p): p is ActivePromotionCode => p !== null);
+    const open = records.find((p) => p.customerId === null);
+    if (open) return Result.ok(open);
+    if (!listed.value.has_more || records.length === 0) break;
+    startingAfter = records[records.length - 1].id;
+  }
+  return Result.ok(null);
+}
+
 /**
- * The active promotion code with this exact code that this customer may use: one reserved to
- * them, else one open to anyone. Null when there is none (only other customers' copies count
- * as none). Without a customer, only an unrestricted code qualifies.
+ * The active promotion code with this exact code that this customer may use: the one reserved
+ * to them, else the one open to anyone. Null when there is none.
  */
 export async function findActivePromotionCode(
   config: StripeConfig,
@@ -53,17 +104,11 @@ export async function findActivePromotionCode(
   customerId?: string
 ): Promise<Result<ActivePromotionCode | null, DomainError>> {
   try {
-    // 100 is Stripe's page maximum; one code has one record per customer it is reserved to.
-    const params = new URLSearchParams({ code, active: 'true', limit: '100' });
-    params.append('expand[]', 'data.coupon.applies_to');
-    const response = await makeRequest(config, 'GET', `/promotion_codes?${params}`);
-    if (response.isFailure) return Result.fail(response.error);
-
-    const records = ((response.value as { data?: PromotionCodeRecord[] }).data ?? [])
-      .map(toActivePromotionCode)
-      .filter((p): p is ActivePromotionCode => p !== null);
-    const own = customerId ? records.find((p) => p.customerId === customerId) : undefined;
-    return Result.ok(own ?? records.find((p) => p.customerId === null) ?? null);
+    if (customerId) {
+      const mine = await reservedCode(config, code, customerId);
+      if (mine.isFailure || mine.value) return mine;
+    }
+    return await openCode(config, code);
   } catch (error) {
     return Result.fail(
       new StripeConnectionError(error instanceof Error ? error.message : 'Unknown error')
