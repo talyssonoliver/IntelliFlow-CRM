@@ -28,7 +28,11 @@ import type {
 import { cn } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { getPaymentErrorMessage } from '@/lib/billing/payment-processor';
-import type { BillingCycle } from '@intelliflow/validators';
+import {
+  INVALID_PROMOTION_CODE_MESSAGE,
+  promotionCodeSchema,
+  type BillingCycle,
+} from '@intelliflow/validators';
 
 // ============================================
 // Types
@@ -109,6 +113,7 @@ export function CheckoutForm({
   const [formError, setFormError] = useState<string | undefined>();
   const [elementErrors, setElementErrors] = useState<ElementErrors>({});
   const [cardBrand, setCardBrand] = useState<string>('unknown');
+  const [promotionCode, setPromotionCode] = useState('');
 
   const createCheckoutMutation = trpc.billing.createCheckoutSubscription.useMutation();
 
@@ -167,6 +172,14 @@ export function CheckoutForm({
       return;
     }
 
+    // A code the server would refuse for its characters is caught here, before the card is
+    // touched, with the same message as an unknown code (#1220).
+    const code = promotionCodeSchema.safeParse(promotionCode);
+    if (!code.success) {
+      setFormError(INVALID_PROMOTION_CODE_MESSAGE);
+      return;
+    }
+
     setIsSubmitting(true);
     setFormError(undefined);
 
@@ -198,6 +211,7 @@ export function CheckoutForm({
         planId,
         billingCycle,
         paymentMethodId: paymentMethod.id,
+        promotionCode: code.data,
       });
 
       // Step 3: Handle 3D Secure if needed (Stripe returns 'incomplete' status when SCA is required)
@@ -217,10 +231,17 @@ export function CheckoutForm({
       // Step 4: Success
       onSuccess?.(result.subscriptionId);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? getPaymentErrorMessage((error as { code?: string }).code || 'PROCESSING_ERROR')
-          : 'An unexpected error occurred';
+      // A refused promotion code says so; a generic payment error would hide what to fix.
+      const isInvalidCode =
+        error instanceof Error && error.message === INVALID_PROMOTION_CODE_MESSAGE;
+      let errorMessage = 'An unexpected error occurred';
+      if (isInvalidCode) {
+        errorMessage = INVALID_PROMOTION_CODE_MESSAGE;
+      } else if (error instanceof Error) {
+        errorMessage = getPaymentErrorMessage(
+          (error as { code?: string }).code || 'PROCESSING_ERROR'
+        );
+      }
       setFormError(errorMessage);
       onError?.(errorMessage);
     } finally {
@@ -390,6 +411,30 @@ export function CheckoutForm({
             {nameError}
           </p>
         )}
+      </div>
+
+      {/* Promotion code — optional (#1220) */}
+      <div className="space-y-2">
+        <label htmlFor={`${formId}-promotion-code`} className="text-sm font-medium leading-none">
+          Promotion code <span className="font-normal text-muted-foreground">(optional)</span>
+        </label>
+        <input
+          id={`${formId}-promotion-code`}
+          type="text"
+          autoComplete="off"
+          autoCapitalize="characters"
+          spellCheck={false}
+          maxLength={64}
+          value={promotionCode}
+          onChange={(e) => setPromotionCode(e.target.value)}
+          disabled={isSubmitting}
+          className={cn(
+            'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background',
+            'placeholder:text-muted-foreground',
+            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            'disabled:cursor-not-allowed disabled:opacity-50'
+          )}
+        />
       </div>
 
       {/* Submit Button */}

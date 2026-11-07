@@ -11,6 +11,7 @@
  * IFC-007: Fixed to extract and verify JWT tokens from Authorization header
  */
 
+import { trialEndFrom } from './modules/billing/trial';
 import type { PrismaClient } from '@intelliflow/db';
 import { TRPCError } from '@trpc/server';
 import { container, containerReady, type Container, apiPrisma } from './container';
@@ -516,7 +517,13 @@ async function provisionNewUserWith(
     // it can never reuse another user's tenant (the cross-tenant guarantee holds).
     const newTenant = await prisma.tenant.upsert({
       where: { slug: tenantSlug },
-      create: { name: orgName, slug: tenantSlug, status: 'ACTIVE' },
+      // A self-service workspace starts its trial now, stored rather than derived from age (#1220).
+      create: {
+        name: orgName,
+        slug: tenantSlug,
+        status: 'ACTIVE',
+        trialEndsAt: trialEndFrom(new Date()),
+      },
       update: {},
     });
 

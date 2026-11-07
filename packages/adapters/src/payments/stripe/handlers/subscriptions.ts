@@ -20,6 +20,7 @@ export async function createSubscription(
     if (params.quantity) body.append('items[0][quantity]', params.quantity.toString());
     if (params.trialPeriodDays) body.append('trial_period_days', params.trialPeriodDays.toString());
     if (params.cancelAtPeriodEnd) body.append('cancel_at_period_end', 'true');
+    if (params.promotionCodeId) body.append('discounts[0][promotion_code]', params.promotionCodeId);
 
     if (params.metadata) {
       Object.entries(params.metadata).forEach(([key, value]) => {
