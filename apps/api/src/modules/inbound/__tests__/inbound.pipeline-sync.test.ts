@@ -187,7 +187,13 @@ describe('inboundRouter — syncPipelineLead', () => {
       data: { type: string; title: string; metadata: Record<string, unknown> };
     };
     expect(activity.data.type).toBe('NOTE');
-    expect(activity.data.title).toBe('COA pipeline: CONTACTED → CONTACTED');
+    expect(activity.data.title).toBe('Lead contacted — Sam');
+    expect((activity.data as unknown as { description: string }).description).toBe(
+      'Moved from New to Contacted by the COA sync · 2 Oct, 10:00'
+    );
+    expect((activity.data as unknown as { timestamp: Date }).timestamp).toEqual(
+      new Date('2026-10-02T09:00:00.000Z')
+    );
     expect(activity.data.metadata).toMatchObject({
       source: 'coa-pipeline-sync',
       coaLeadId: COA_LEAD_ID,
@@ -521,7 +527,7 @@ describe('inboundRouter — syncPipelineLead', () => {
     expect(data.metadata.syncKey).toBe(
       `coa-sync:${COA_LEAD_ID}:CONTACTED:CONTACTED:2026-10-02T09:00:00.000Z`
     );
-    expect(data.description).toContain('NEW → CONTACTED');
+    expect(data.description).toContain('Moved from New to Contacted');
   });
 
   it('maps a PersistenceError the re-read cannot explain to INTERNAL_SERVER_ERROR', async () => {
