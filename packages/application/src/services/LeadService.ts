@@ -44,6 +44,78 @@ export const LEAD_SCORE_THRESHOLDS = {
 } as const;
 
 /**
+ * Why a lead is being qualified.
+ *
+ * - `AUTOMATIC`: a rule or system decided it. The minimum score applies.
+ * - `HUMAN`: a person decided it, with a reason. The score does not block it.
+ * - `INBOUND_REPLY`: the lead replied. The score does not block it.
+ *
+ * The score is the AI's guess about fit. A person's decision, or the lead's own reply, is
+ * stronger evidence, so neither is refused because of the score.
+ */
+export type QualificationBasis = 'AUTOMATIC' | 'HUMAN' | 'INBOUND_REPLY';
+
+/** The status transitions a lead may make (CONVERTED goes through the convert operation). */
+const VALID_LEAD_TRANSITIONS: Record<LeadStatus, LeadStatus[]> = {
+  NEW: ['CONTACTED', 'QUALIFIED', 'UNQUALIFIED', 'LOST'],
+  CONTACTED: ['QUALIFIED', 'UNQUALIFIED', 'LOST'],
+  QUALIFIED: ['NEGOTIATING', 'CONVERTED', 'LOST'],
+  NEGOTIATING: ['CONVERTED', 'LOST'], // In negotiation phase
+  UNQUALIFIED: ['CONTACTED', 'LOST'], // Can be re-engaged
+  CONVERTED: [], // Terminal state
+  LOST: ['NEW'], // Can be reopened
+};
+
+/** Fields updateLead copies as given when the caller provides them. */
+const CONTACT_UPDATE_FIELDS = [
+  'firstName',
+  'lastName',
+  'company',
+  'title',
+  'location',
+  'website',
+  'avatarUrl',
+  'lastContactedAt',
+  'estimatedValue',
+  'tags',
+  'budget',
+  'authority',
+  'need',
+  'timeline',
+  'annualRevenue',
+] as const;
+
+type ContactUpdateProps = Parameters<Lead['updateContactInfo']>[0];
+
+/**
+ * Build the props for Lead.updateContactInfo from an update, including only the fields the
+ * caller provided. A phone is validated; `null` is an explicit clear (IFC-412).
+ */
+function buildContactUpdate(
+  updates: Partial<Record<(typeof CONTACT_UPDATE_FIELDS)[number], unknown>> & {
+    phone?: string | null;
+  }
+): Result<ContactUpdateProps, DomainError> {
+  const props: ContactUpdateProps = {};
+  for (const field of CONTACT_UPDATE_FIELDS) {
+    if (updates[field] !== undefined) {
+      (props as Record<string, unknown>)[field] = updates[field];
+    }
+  }
+  if (updates.phone === null) {
+    // IFC-412: explicit clear — nothing to validate, forward the null.
+    props.phone = null;
+  } else if (updates.phone !== undefined) {
+    const phoneResult = PhoneNumber.create(updates.phone);
+    if (phoneResult.isFailure) {
+      return Result.fail(phoneResult.error);
+    }
+    props.phone = phoneResult.value;
+  }
+  return Result.ok(props);
+}
+
+/**
  * Lead qualification criteria
  */
 export interface LeadQualificationCriteria {
@@ -359,16 +431,25 @@ export class LeadService {
   }
 
   /**
-   * Qualify a lead manually
+   * Qualify a lead.
+   *
+   * The minimum score applies only to AUTOMATIC qualification (the default). A HUMAN
+   * qualification or an INBOUND_REPLY is allowed at any score, and needs a reason.
    */
   async qualifyLead(
     leadId: string,
     qualifiedBy: string,
-    reason: string
+    reason: string,
+    options: { basis?: QualificationBasis } = {}
   ): Promise<Result<Lead, DomainError>> {
+    const basis = options.basis ?? 'AUTOMATIC';
     const leadIdResult = LeadId.create(leadId);
     if (leadIdResult.isFailure) {
       return Result.fail(leadIdResult.error);
+    }
+
+    if (basis !== 'AUTOMATIC' && !reason.trim()) {
+      return Result.fail(new ValidationError('A reason is required to qualify a lead'));
     }
 
     const lead = await this.leadRepository.findById(leadIdResult.value);
@@ -376,8 +457,8 @@ export class LeadService {
       return Result.fail(new ValidationError(`Lead not found: ${leadId}`));
     }
 
-    // Business rule: Check minimum score for qualification
-    if (lead.score.value < this.defaultQualificationCriteria.minScore) {
+    // Business rule: automatic qualification needs the minimum score
+    if (basis === 'AUTOMATIC' && lead.score.value < this.defaultQualificationCriteria.minScore) {
       return Result.fail(
         new LeadScoreBelowMinimumError(lead.score.value, this.defaultQualificationCriteria.minScore)
       );
@@ -653,7 +734,14 @@ export class LeadService {
       need?: string;
       timeline?: string;
       annualRevenue?: string;
-    }
+      /**
+       * A status set from the lead record. It is applied through the allowed transitions or
+       * the update fails: a requested status is never dropped. QUALIFIED is a human
+       * qualification, so the score does not block it. CONVERTED goes through convert.
+       */
+      status?: LeadStatus;
+    },
+    changedBy = 'system'
   ): Promise<Result<Lead, DomainError>> {
     const leadIdResult = LeadId.create(leadId);
     if (leadIdResult.isFailure) {
@@ -669,56 +757,80 @@ export class LeadService {
       return Result.fail(new ValidationError('Cannot update a converted lead'));
     }
 
-    // Build props for domain method — only include fields the caller actually provided
-    const updateProps: Parameters<Lead['updateContactInfo']>[0] = {};
-
-    const simpleFields = [
-      'firstName',
-      'lastName',
-      'company',
-      'title',
-      'location',
-      'website',
-      'avatarUrl',
-      'lastContactedAt',
-      'estimatedValue',
-      'tags',
-      'budget',
-      'authority',
-      'need',
-      'timeline',
-      'annualRevenue',
-    ] as const;
-    for (const field of simpleFields) {
-      if (updates[field] !== undefined) {
-        (updateProps as Record<string, unknown>)[field] = updates[field];
-      }
+    const expectedStatus = lead.status;
+    const requestedStatus =
+      updates.status !== undefined && updates.status !== lead.status ? updates.status : null;
+    const statusRefusal = requestedStatus ? this.recordStatusRefusal(lead, requestedStatus) : null;
+    if (statusRefusal) {
+      return Result.fail(statusRefusal);
     }
 
-    if (updates.phone !== undefined) {
-      if (updates.phone === null) {
-        // IFC-412: explicit clear — nothing to validate, forward the null.
-        updateProps.phone = null;
-      } else {
-        const phoneResult = PhoneNumber.create(updates.phone);
-        if (phoneResult.isFailure) {
-          return Result.fail(phoneResult.error);
-        }
-        updateProps.phone = phoneResult.value;
-      }
+    const updatePropsResult = buildContactUpdate(updates);
+    if (updatePropsResult.isFailure) {
+      return Result.fail(updatePropsResult.error);
     }
+    lead.updateContactInfo(updatePropsResult.value);
 
-    lead.updateContactInfo(updateProps);
+    const statusResult: Result<void, DomainError> = requestedStatus
+      ? this.applyRecordStatus(lead, requestedStatus, changedBy)
+      : Result.ok(undefined);
+    if (statusResult.isFailure) {
+      return Result.fail(statusResult.error);
+    }
 
     try {
+      if (requestedStatus) {
+        // Two writes in one transaction. The compare-and-set save writes only the status,
+        // and only if it is still the status this change was validated against. The
+        // plain save then writes the other fields (it never writes the status). Either
+        // both land or neither does.
+        // The status events (LeadQualified / LeadStatusChanged) are written in the same
+        // transaction, as qualifyLead does, so a committed status never loses its event.
+        await this.transactionManager.run(async (tx) => {
+          await this.leadRepository.save(lead, { expectedStatus }, tx);
+          await this.leadRepository.save(lead, undefined, tx);
+          await this.publishEvents(lead, tx);
+        });
+        return Result.ok(lead);
+      }
       await this.leadRepository.save(lead);
-    } catch {
-      return Result.fail(new PersistenceError('Failed to save lead'));
+    } catch (error) {
+      return Result.fail(this.saveFailure(error, expectedStatus, 'Failed to save lead'));
     }
 
     await this.publishEvents(lead);
 
     return Result.ok(lead);
+  }
+
+  /**
+   * Why a status set on the lead record cannot be applied, or null when it can. CONVERTED
+   * goes through the convert operation; anything else must be an allowed transition.
+   */
+  private recordStatusRefusal(lead: Lead, requested: LeadStatus): DomainError | null {
+    if (requested === 'CONVERTED') {
+      return new ValidationError(
+        'Use the convert action to convert a lead; the status was not changed'
+      );
+    }
+    const allowed = VALID_LEAD_TRANSITIONS[lead.status];
+    if (!allowed.includes(requested)) {
+      return new ValidationError(
+        `Invalid status transition from ${lead.status} to ${requested}. Allowed: ${allowed.join(', ')}`
+      );
+    }
+    return null;
+  }
+
+  /** Apply a status set on the lead record. QUALIFIED there is a person's qualification. */
+  private applyRecordStatus(
+    lead: Lead,
+    requested: LeadStatus,
+    changedBy: string
+  ): Result<void, DomainError> {
+    return requested === 'QUALIFIED'
+      ? lead.qualify(changedBy, 'Set to Qualified on the lead record')
+      : lead.changeStatus(requested, changedBy);
   }
 
   /**
@@ -755,17 +867,7 @@ export class LeadService {
     }
 
     // Business rules for status transitions
-    const validTransitions: Record<LeadStatus, LeadStatus[]> = {
-      NEW: ['CONTACTED', 'QUALIFIED', 'UNQUALIFIED', 'LOST'],
-      CONTACTED: ['QUALIFIED', 'UNQUALIFIED', 'LOST'],
-      QUALIFIED: ['NEGOTIATING', 'CONVERTED', 'LOST'],
-      NEGOTIATING: ['CONVERTED', 'LOST'], // In negotiation phase
-      UNQUALIFIED: ['CONTACTED', 'LOST'], // Can be re-engaged
-      CONVERTED: [], // Terminal state
-      LOST: ['NEW'], // Can be reopened
-    };
-
-    const allowedTransitions = validTransitions[lead.status];
+    const allowedTransitions = VALID_LEAD_TRANSITIONS[lead.status];
     if (!allowedTransitions.includes(newStatus)) {
       return Result.fail(
         new ValidationError(
