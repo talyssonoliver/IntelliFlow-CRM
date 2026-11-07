@@ -10,6 +10,9 @@ const mocks = vi.hoisted(() => {
     user: { findUnique: vi.fn(), update: vi.fn() },
     tenantMembership: { findMany: vi.fn() },
     partnerLoginGrant: { findFirst: vi.fn(), findMany: vi.fn() },
+    /** The ended-session check (security/auth-sessions): one row = the session is alive. */
+    $queryRaw: vi.fn(),
+    $executeRaw: vi.fn(),
   };
   return { prisma, verifyToken: vi.fn() };
 });
@@ -33,6 +36,9 @@ const HOME = 'tenant-home';
 const CLIENT = 'tenant-client';
 const OTHER = 'tenant-other';
 const USER_ID = '11111111-1111-4111-8111-111111111111';
+/** Supabase session ids are UUIDs; the ended-session check refuses anything else. */
+const SESSION_A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const SESSION_B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 
 const dbUser = {
   id: USER_ID,
@@ -51,7 +57,7 @@ const NOW = Date.now();
 function jwt(payload: Record<string, unknown>) {
   return `h.${Buffer.from(JSON.stringify(payload)).toString('base64url')}.s`;
 }
-const sessionToken = (sessionId = 'session-A', amr: unknown[] = []) =>
+const sessionToken = (sessionId = SESSION_A, amr: unknown[] = []) =>
   jwt({ sub: USER_ID, session_id: sessionId, amr });
 
 function request(token: string, activeTenant?: string) {
@@ -79,6 +85,7 @@ beforeEach(() => {
   mocks.prisma.tenantMembership.findMany.mockResolvedValue([]);
   mocks.prisma.partnerLoginGrant.findFirst.mockResolvedValue(null);
   mocks.prisma.partnerLoginGrant.findMany.mockResolvedValue([]);
+  mocks.prisma.$queryRaw.mockResolvedValue([{ alive: 1 }]);
   mocks.verifyToken.mockResolvedValue({
     user: { id: USER_ID, email: dbUser.email, user_metadata: {}, email_confirmed_at: '2026-01-01' },
     error: null,
@@ -171,10 +178,10 @@ describe('createContext: session cache', () => {
   });
 
   it('keeps two browser sessions of one user apart', async () => {
-    const s1 = await createContext({ req: request(sessionToken('session-A')) });
-    const s2 = await createContext({ req: request(sessionToken('session-B')) });
-    expect(s1.user?.sessionId).toBe('session-A');
-    expect(s2.user?.sessionId).toBe('session-B');
+    const s1 = await createContext({ req: request(sessionToken(SESSION_A)) });
+    const s2 = await createContext({ req: request(sessionToken(SESSION_B)) });
+    expect(s1.user?.sessionId).toBe(SESSION_A);
+    expect(s2.user?.sessionId).toBe(SESSION_B);
   });
 
   it('stops serving a revoked membership as soon as the user cache is evicted', async () => {
@@ -265,7 +272,7 @@ describe('createContext: pinned staff sessions', () => {
         claimedSessionId: null,
       },
     ]);
-    const token = sessionToken('session-A', [{ method: 'otp', timestamp: Math.floor(NOW / 1000) }]);
+    const token = sessionToken(SESSION_A, [{ method: 'otp', timestamp: Math.floor(NOW / 1000) }]);
 
     const ctx = await createContext({ req: request(token) });
     expect(ctx.user).toBeNull();
@@ -282,7 +289,7 @@ describe('createContext: pinned staff sessions', () => {
       claimedSessionId: null as string | null,
     };
     mocks.prisma.partnerLoginGrant.findMany.mockResolvedValue([grant]);
-    const token = sessionToken('session-A', [{ method: 'otp', timestamp: Math.floor(NOW / 1000) }]);
+    const token = sessionToken(SESSION_A, [{ method: 'otp', timestamp: Math.floor(NOW / 1000) }]);
 
     expect((await createContext({ req: request(token) })).pendingUser).toBeDefined();
 
@@ -349,7 +356,7 @@ describe('createWSContext', () => {
         claimedSessionId: null,
       },
     ]);
-    const token = sessionToken('session-A', [{ method: 'otp', timestamp: Math.floor(NOW / 1000) }]);
+    const token = sessionToken(SESSION_A, [{ method: 'otp', timestamp: Math.floor(NOW / 1000) }]);
     const ctx = await createWSContext(`Bearer ${token}`);
     expect(ctx.user).toBeNull();
   });
