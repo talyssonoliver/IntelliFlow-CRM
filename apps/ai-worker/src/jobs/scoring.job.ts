@@ -375,7 +375,9 @@ export function isInconclusiveScoring(error: unknown): boolean {
  */
 export function toScoringJobFailure(error: unknown): unknown {
   if (!isInconclusiveScoring(error)) return error;
-  return new UnrecoverableError((error as Error).message);
+  // `expected` keeps the shared worker's failure logs at warning level (worker-shared
+  // isExpectedJobOutcome).
+  return Object.assign(new UnrecoverableError((error as Error).message), { expected: true });
 }
 
 /**

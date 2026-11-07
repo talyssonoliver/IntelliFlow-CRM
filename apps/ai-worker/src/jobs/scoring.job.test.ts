@@ -1079,6 +1079,8 @@ describe('ScoringJob', () => {
         const failure = toScoringJobFailure(new ScoringFailedError('inconclusive')) as Error;
         // BullMQ neither retries nor dead-letters an error with this name.
         expect(failure.name).toBe('UnrecoverableError');
+        // And the shared worker logs it as a warning, not an error.
+        expect((failure as Error & { expected?: boolean }).expected).toBe(true);
         // The API still maps this message to "no usable score".
         expect(failure.message).toBe('Lead scoring failed (inconclusive)');
       });
