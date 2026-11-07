@@ -236,6 +236,27 @@ describe('LeadScoringChain', () => {
       expect(prompt).toMatch(/Never answer confidence 0/);
       expect(prompt).toMatch(/at least one factor/);
     });
+
+    it('counts replies from the lead as the strongest engagement signal', () => {
+      expect(LeadScoringChain.DEFAULT_PROMPT).toMatch(/Replies from the lead/);
+    });
+
+    it("puts the lead's engagement history in the prompt the model sees", async () => {
+      const { createLLM } = await import('../lib/llm-factory.js');
+      await new LeadScoringChain().scoreLead({
+        email: 'pat@northwind.example.invalid',
+        source: 'WEBSITE',
+        activity:
+          'Engagement: 5 emails sent to the lead, 2 replies from the lead, 0 calls, 0 meetings',
+      });
+      const model = vi.mocked(createLLM).mock.results.at(-1)!.value as {
+        withStructuredOutput: ReturnType<typeof vi.fn>;
+      };
+      const structured = model.withStructuredOutput.mock.results.at(-1)!.value as {
+        invoke: ReturnType<typeof vi.fn>;
+      };
+      expect(String(structured.invoke.mock.calls.at(-1)![0])).toContain('2 replies from the lead');
+    });
   });
 
   describe('formatLeadInfo', () => {

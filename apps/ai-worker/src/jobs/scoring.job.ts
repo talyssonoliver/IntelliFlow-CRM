@@ -18,6 +18,7 @@ import { logAIAgentAction } from '../utils/audit-log';
 import { getLLMBreaker, resolveFallbackProvider } from '../lib/llm-factory';
 import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
 import { isMonthlyBudgetExceeded } from '../lib/monthly-budget';
+import { formatLeadActivityContext, loadLeadActivityContext } from '../lib/lead-activity-context';
 import { requiresHumanReview } from '@intelliflow/domain';
 import type { CircuitBreaker } from '../utils/circuit-breaker';
 import { runWithLogContext, getCurrentLogContext } from '@intelliflow/observability';
@@ -414,6 +415,16 @@ async function markAutomaticScoringFailed(
   }
 }
 
+/** The lead's engagement history as prompt lines, or undefined when it cannot be read. */
+async function engagementLines(
+  prisma: unknown,
+  leadId: string,
+  tenantId: string
+): Promise<string | undefined> {
+  const context = await loadLeadActivityContext(prisma as never, leadId, tenantId);
+  return context ? formatLeadActivityContext(context, new Date()) : undefined;
+}
+
 /** Convenience accessor for the scoring circuit breaker (purpose='scoring', tier='free'). */
 function getScoringBreaker(): CircuitBreaker {
   return getLLMBreaker('scoring', 'free');
@@ -785,6 +796,9 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
         phone: lead.phone,
         source: lead.source,
         metadata: lead.metadata,
+        // The engagement history (replies, emails, stage), read in the job tenant. Without it
+        // the model judged a lead that had replied twice from its email domain alone.
+        activity: await engagementLines(guardPrisma, leadId, validatedData.tenantId),
       };
 
       await job.updateProgress(10);
