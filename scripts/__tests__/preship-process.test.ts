@@ -929,6 +929,7 @@ describe('pre-ship.mjs runs a step async, tracks it, and cleans up', () => {
     for (const lib of [
       'preship-test-scope.mjs',
       'preship-coverage-freshness.mjs',
+      'preship-run-metrics.mjs',
       'preship-report.mjs',
       'preship-gate.mjs',
       'test-slot.mjs',
