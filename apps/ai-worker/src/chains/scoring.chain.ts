@@ -164,9 +164,32 @@ export class TokenUsageCallbackHandler extends BaseCallbackHandler {
     }
   }
 
+  /**
+   * A response that completed but was unusable (a Claude refusal or cut-off answer) never
+   * reaches handleLLMEnd, yet it was billed. Its error carries the usage as `billedResult`
+   * (AnthropicIncompleteResponseError), so chain monitoring still records that spend once.
+   */
+  handleLLMError(err: unknown): void {
+    const billed = (err as { billedResult?: BilledResult } | null)?.billedResult;
+    const usage = billed?.usage_metadata;
+    if (!usage) return;
+    const served = billed.response_metadata?.model_name;
+    this.captured = {
+      inputTokens: usage.input_tokens ?? 0,
+      outputTokens: usage.output_tokens ?? 0,
+      ...this.pricingFor(typeof served === 'string' ? served : undefined),
+    };
+  }
+
   getUsage(): TokenUsage | null {
     return this.captured;
   }
+}
+
+/** The usage a provider error carries for a billed response (see handleLLMError). */
+interface BilledResult {
+  usage_metadata?: { input_tokens?: number; output_tokens?: number };
+  response_metadata?: { model_name?: unknown };
 }
 
 /**

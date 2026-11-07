@@ -45,7 +45,7 @@ vi.mock('../../config/ai.config', async (importOriginal) => {
   };
 });
 
-import { LeadScoringChain } from '../scoring.chain';
+import { LeadScoringChain, TokenUsageCallbackHandler } from '../scoring.chain';
 
 const LEAD = {
   email: 'pat@northwind.example.invalid',
@@ -97,10 +97,17 @@ describe('LeadScoringChain on Claude', () => {
     });
   });
 
-  it('fails on a refusal instead of scoring', async () => {
+  it('fails on a refusal instead of scoring, and still reports the billed tokens', async () => {
+    const getUsage = vi.spyOn(TokenUsageCallbackHandler.prototype, 'getUsage');
     create.mockResolvedValue({ ...answer({}), stop_reason: 'refusal', content: [] });
+
     await expect(new LeadScoringChain().scoreLead(LEAD as never)).rejects.toMatchObject({
       name: 'AnthropicIncompleteResponseError',
     });
+    // Chain monitoring reads the usage on the failure path too.
+    expect(getUsage.mock.results.map((r) => r.value)).toContainEqual(
+      expect.objectContaining({ inputTokens: 400, outputTokens: 90, model: 'claude-haiku-5-5' })
+    );
+    getUsage.mockRestore();
   });
 });
