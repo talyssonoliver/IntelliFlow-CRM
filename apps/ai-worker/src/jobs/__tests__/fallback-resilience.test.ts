@@ -148,7 +148,7 @@ vi.mock('@intelliflow/domain', async (importActual) => ({
 // Imports (after mocks)
 // ============================================================================
 
-import { processScoringJob } from '../scoring.job';
+import { processScoringJob, ScoringFailedError } from '../scoring.job';
 import { processPredictionJob } from '../prediction.job';
 
 // ============================================================================
@@ -243,61 +243,19 @@ describe('H10 — Scoring fallback', () => {
     });
   });
 
-  it('returns heuristic fallback with confidence=0.3 when circuit breaker is OPEN', async () => {
+  // #1218 (owner ruling): when no provider can score, the scoring FAILED. A heuristic number
+  // is no longer saved as if a model had scored the lead.
+  it('fails the job when the circuit breaker is OPEN, without calling the model', async () => {
     const job = makeScoringJob({ title: 'VP Engineering', company: 'Acme', source: 'website' });
-    const result = await processScoringJob(job);
-
-    // Must not throw — returns a valid result
-    expect(result).toBeDefined();
-    expect(result.confidence).toBe(0.3);
-    expect(result.modelVersion).toBe('fallback');
-    expect(result.score).toBeGreaterThanOrEqual(0);
-    expect(result.score).toBeLessThanOrEqual(100);
-    // LLM chain was never called (breaker is OPEN)
+    await expect(processScoringJob(job)).rejects.toBeInstanceOf(ScoringFailedError);
     expect(mockScoreLead).not.toHaveBeenCalled();
   });
 
-  it('heuristic score is higher for VP-title + corporate domain vs unknown lead', async () => {
-    const highJob = makeScoringJob({
-      email: 'jane@bigcorp.com',
-      title: 'VP Engineering',
-      company: 'BigCorp',
-      source: 'referral',
-      companySize: 600,
-    });
-    const lowJob = makeScoringJob({
-      email: 'anon@gmail.com',
-      title: '',
-      company: '',
-      source: 'unknown',
-    });
-
-    const [highResult, lowResult] = await Promise.all([
-      processScoringJob(highJob),
-      processScoringJob(lowJob),
-    ]);
-
-    expect(highResult.score).toBeGreaterThan(lowResult.score);
-    // Both are fallbacks
-    expect(highResult.modelVersion).toBe('fallback');
-    expect(lowResult.modelVersion).toBe('fallback');
-  });
-
-  it('fallback result is persisted to DB (LeadAIInsight)', async () => {
+  it('persists nothing to LeadAIInsight for a failed scoring', async () => {
     const job = makeScoringJob();
-    await processScoringJob(job);
-    expect(mockLeadAIInsightUpsert).toHaveBeenCalledOnce();
-    const upsertCall = mockLeadAIInsightUpsert.mock.calls[0][0];
-    // M2: compound unique — where is now { leadId_tenantId: { leadId, tenantId } }
-    expect(upsertCall).toHaveProperty('where.leadId_tenantId.leadId');
-    expect(upsertCall.update).toHaveProperty('engagementScore');
-  });
-
-  it('fallback tier is COLD or WARM (not HOT) for a baseline lead', async () => {
-    const job = makeScoringJob({ email: 'user@company.com', title: '', source: 'unknown' });
-    const result = await processScoringJob(job);
-    // Baseline score ~60 (corporate domain +10 = 60) → WARM
-    expect(['COLD', 'WARM', 'UNQUALIFIED']).toContain(result.tier);
+    await expect(processScoringJob(job)).rejects.toBeInstanceOf(ScoringFailedError);
+    expect(mockLeadAIInsightUpsert).not.toHaveBeenCalled();
+    expect(mockLogAIAgentAction).not.toHaveBeenCalled();
   });
 });
 

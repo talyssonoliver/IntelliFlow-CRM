@@ -119,19 +119,19 @@ describe('processScoringJob — fallback logs (IFC-117 NF-002)', () => {
     expect(logs[0][0]).toMatchObject({ primaryErrorClass: 'other' });
   });
 
-  it('logs both failures by class when the job drops to the heuristic', async () => {
+  it('logs both failures by class when every provider fails, and fails the job (#1218)', async () => {
     mockScoreLead.mockRejectedValueOnce(fail('primary')).mockRejectedValueOnce(fail('fallback'));
 
-    const result = await processScoringJob(job());
+    await expect(processScoringJob(job())).rejects.toThrow('Lead scoring failed (other)');
 
-    expect(result.modelVersion).toBe('fallback');
     const fallbackLogs = warnFor('Fallback provider also failed');
-    const heuristicLogs = warnFor('using heuristic fallback');
+    const failedLogs = warnFor('reporting FAILED, no score saved');
     expect(fallbackLogs).toHaveLength(1);
-    expect(heuristicLogs).toHaveLength(1);
+    expect(failedLogs).toHaveLength(1);
     expect(JSON.stringify(pinoLogger.warn.mock.calls)).not.toContain(canary);
     expect(fallbackLogs[0][0]).toMatchObject({ errorClass: 'other' });
-    expect(heuristicLogs[0][0]).toMatchObject({ errorClass: 'other' });
+    expect(failedLogs[0][0]).toMatchObject({ errorClass: 'other' });
+    expect(prismaMock.leadAIInsight.upsert).not.toHaveBeenCalled();
   });
 
   it('logs a failed result write by class, never the database error text', async () => {

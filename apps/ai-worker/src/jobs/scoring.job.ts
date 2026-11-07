@@ -16,6 +16,8 @@ import { classifyError } from '../monitoring/otel-ai-metrics';
 import type { LeadInput, ScoringResult } from '../chains/scoring.chain';
 import { logAIAgentAction } from '../utils/audit-log';
 import { getLLMBreaker, resolveFallbackProvider } from '../lib/llm-factory';
+import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
+import { requiresHumanReview } from '@intelliflow/domain';
 import type { CircuitBreaker } from '../utils/circuit-breaker';
 import { runWithLogContext, getCurrentLogContext } from '@intelliflow/observability';
 import { isAiFeatureEnabled } from '../lib/feature-flags';
@@ -63,6 +65,12 @@ export const ScoringJobDataSchema = z.object({
   priority: z.number().min(1).max(10).default(5),
   /** W3C traceparent carrier injected by enqueue-side for distributed trace propagation */
   _otelCarrier: z.record(z.string(), z.string()).optional(),
+  /**
+   * #1218: 'service' when LeadService asked for the score (through QueueAIService). It then
+   * writes the lead itself, in its own transaction with the status rules, so the job must not.
+   * Absent for the automatic paths (lead creation, scheduled dispatcher): the job writes it.
+   */
+  leadScoreWriter: z.enum(['service']).optional(),
 });
 
 export type ScoringJobData = z.infer<typeof ScoringJobDataSchema>;
@@ -82,6 +90,8 @@ export const ScoringJobResultSchema = z.object({
   ),
   recommendations: z.array(z.string()),
   modelVersion: z.string(),
+  /** Confidence under the LEAD_SCORING review threshold: the score must not change status. */
+  requiresReview: z.boolean().optional(),
   processedAt: z.iso.datetime(),
   processingTimeMs: z.number(),
 });
@@ -177,46 +187,9 @@ export const NIL_UUID = '00000000-0000-0000-0000-000000000000';
 // ============================================================================
 
 /**
- * Heuristic fallback score when LLM is unavailable or timed out.
- * Pure logic — no LLM dependency. Survives a total LLM outage.
- */
-function computeHeuristicScore(lead: ScoringJobData['lead']): number {
-  let score = 50; // baseline
-
-  // Corporate email domain bump
-  const emailDomain = lead.email.split('@')[1] ?? '';
-  const freeDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'aol.com'];
-  if (!freeDomains.includes(emailDomain.toLowerCase())) score += 10;
-
-  // Title signals (decision-making authority)
-  const title = (lead.title ?? '').toLowerCase();
-  if (/\b(ceo|cto|cfo|vp|vice president|director|head|chief)\b/.test(title)) score += 15;
-  else if (/\b(manager|lead|senior|principal)\b/.test(title)) score += 8;
-
-  // Company present
-  if (lead.company && lead.company.length > 1) score += 5;
-
-  // Phone present
-  if (lead.phone) score += 5;
-
-  // Source quality
-  const source = (lead.source ?? '').toLowerCase();
-  if (source === 'referral') score += 10;
-  else if (source === 'website' || source === 'demo_request') score += 5;
-
-  // metadata: companySize
-  const companySize = Number(
-    (lead.metadata as Record<string, unknown> | undefined)?.companySize ?? 0
-  );
-  if (companySize > 500) score += 10;
-  else if (companySize > 100) score += 5;
-
-  return Math.min(100, Math.max(0, score));
-}
-
-/**
- * Wrap LLM scoring in a Promise.race timeout + circuit-breaker catch.
- * Returns `{ result, usedFallback }`.
+ * Wrap LLM scoring in a Promise.race timeout + circuit-breaker catch, with one try on the
+ * secondary provider. Throws ScoringFailedError when no provider produced a usable score.
+ * Returns `{ result, usedFallback }` (usedFallback stays false: a heuristic is never used).
  */
 async function generateScoringWithFallback(
   job: Job<ScoringJobData>,
@@ -225,9 +198,11 @@ async function generateScoringWithFallback(
   timeoutMs: number,
   breaker: CircuitBreaker
 ): Promise<{ result: ScoringResult; usedFallback: boolean }> {
+  // The fallback provider's failure, if it was tried: it decides the class as well (codex).
+  let fallbackOutcome: unknown;
   try {
     const scored = await Promise.race([
-      breaker.execute(() => chain.scoreLead(input, { leadId: job.data.leadId })),
+      scoreThroughBreaker(breaker, () => chain.scoreLead(input, { leadId: job.data.leadId })),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error(`LLM scoring timed out after ${timeoutMs}ms`)), timeoutMs)
       ),
@@ -267,35 +242,80 @@ async function generateScoringWithFallback(
         );
         return { result: scored, usedFallback: false };
       } catch (fallbackError) {
+        fallbackOutcome = fallbackError;
         logger.warn(
           {
             jobId: job.id,
             fallbackProvider,
             errorClass: classifyError(fallbackError),
           },
-          'Fallback provider also failed — using heuristic'
+          'Fallback provider also failed'
         );
       }
     }
 
+    // #1218 (owner ruling): when no provider produced a usable score, the scoring FAILED. A
+    // made-up heuristic number is no longer saved as if a model had scored the lead.
+    const errorClass = scoringErrorClass(error, fallbackOutcome);
     logger.warn(
-      { jobId: job.id, errorClass: classifyError(error) },
-      'LLM scoring failed or timed out — using heuristic fallback'
+      { jobId: job.id, errorClass },
+      'Lead scoring failed on every provider — reporting FAILED, no score saved'
     );
-    const heuristicScore = computeHeuristicScore(job.data.lead);
-    const fallbackResult: ScoringResult = {
-      score: heuristicScore,
-      confidence: 0.3,
-      factors: [
-        {
-          name: 'heuristic',
-          impact: heuristicScore,
-          reasoning: 'Heuristic fallback — LLM unavailable',
-        },
-      ],
-      modelVersion: 'fallback',
-    };
-    return { result: fallbackResult, usedFallback: true };
+    throw new ScoringFailedError(errorClass);
+  }
+}
+
+/**
+ * The class a failed job reports. An inconclusive answer (confidence 0 or no factors) is told
+ * apart from a provider failure, so the API can answer "no usable score" rather than a server
+ * error once the failure crosses the queue (codex, #1218).
+ */
+export const SCORING_INCONCLUSIVE_CLASS = 'inconclusive';
+
+/**
+ * Matched by name (ScoringInconclusiveError in chains/scoring.chain), so it holds across module
+ * copies and test doubles.
+ */
+function isInconclusive(error: unknown): boolean {
+  return (error as { name?: unknown } | null)?.name === 'ScoringInconclusiveError';
+}
+
+/** Inconclusive when any provider that answered gave no usable score; else the primary's class. */
+function scoringErrorClass(primary: unknown, fallback?: unknown): string {
+  if (isInconclusive(primary) || isInconclusive(fallback)) return SCORING_INCONCLUSIVE_CLASS;
+  return classifyError(primary);
+}
+
+/**
+ * Run a scoring call through the provider's circuit breaker. Two failures say nothing about the
+ * provider, so they are not counted as breaker failures: an inconclusive answer (the provider is
+ * up and answered) and a tenant's monthly budget refusal (no provider was called). The breaker
+ * is shared by every tenant, so counting them would block scoring for everyone. Both are still
+ * rethrown for this lead (codex, #1218).
+ */
+async function scoreThroughBreaker(
+  breaker: CircuitBreaker,
+  score: () => Promise<ScoringResult>
+): Promise<ScoringResult> {
+  const outcome = await breaker.execute(async () => {
+    try {
+      return { scored: await score() };
+    } catch (error) {
+      if (isInconclusive(error) || isPurposeCeilingReached(error)) return { notCounted: error };
+      throw error;
+    }
+  });
+  if ('notCounted' in outcome) throw outcome.notCounted;
+  return outcome.scored;
+}
+
+/** No provider produced a usable score. The job fails, so nothing is persisted as a score. */
+export class ScoringFailedError extends Error {
+  readonly errorClass: string;
+  constructor(errorClass: string) {
+    super(`Lead scoring failed (${errorClass})`);
+    this.name = 'ScoringFailedError';
+    this.errorClass = errorClass;
   }
 }
 
@@ -488,7 +508,33 @@ async function handleScheduledDispatch(
 }
 
 /**
- * Persist scoring result to LeadAIInsight table.
+ * #1218: an automatic scoring records the score on the lead too, so the lead does not read as
+ * "not scored". It runs inside the locked, eligibility-checked transaction of the insight write.
+ * Score fields only: the status is never changed here (auto-qualify stays in LeadService).
+ * updatedAt moves, so a slower manual scoring's failure mark (guarded on the updatedAt it read)
+ * cannot hide this newer score (codex).
+ */
+async function writeAutomaticLeadScore(
+  tx: unknown,
+  leadId: string,
+  tenantId: string,
+  result: ScoringResult
+): Promise<void> {
+  const scoringStatus = requiresHumanReview(result.confidence, 'LEAD_SCORING')
+    ? 'NEEDS_REVIEW'
+    : 'SCORED';
+  const now = new Date();
+  await (tx as { $executeRaw: (s: TemplateStringsArray, ...v: unknown[]) => Promise<number> })
+    .$executeRaw`
+    UPDATE leads SET score = ${Math.round(result.score)},
+      "scoringStatus" = ${scoringStatus}::"LeadScoringStatus", "scoredAt" = ${now},
+      "updatedAt" = ${now}
+    WHERE id = ${leadId} AND "tenantId" = ${tenantId}`;
+}
+
+/**
+ * Persist scoring result to LeadAIInsight table, and for an automatic scoring
+ * (`writeLeadScore`) the lead's own score fields.
  */
 async function persistScoringResult(
   leadId: string,
@@ -496,7 +542,8 @@ async function persistScoringResult(
   email: string,
   result: ScoringResult,
   tier: LeadTier,
-  recommendations: string[]
+  recommendations: string[],
+  writeLeadScore: boolean
 ): Promise<ScoringBlock | 'UNVERIFIED' | null> {
   // Defensive guard: never upsert against a placeholder / unresolved leadId.
   // The scheduled cron sentinel uses NIL_UUID, and no real Lead row exists for
@@ -517,31 +564,36 @@ async function persistScoringResult(
 
     // PG-203: the person may have been erased or restricted while the AI call ran. The write
     // happens only under the lead row lock, after re-checking (codex: no insight resurrection).
-    const outcome = await writeIfStillEligible(prisma as never, { leadId, tenantId, email }, (tx) =>
-      (tx as unknown as typeof prisma).leadAIInsight.upsert({
-        where: { leadId_tenantId: { leadId, tenantId } },
-        create: {
-          leadId,
-          tenantId,
-          engagementScore: Math.min(100, result.score),
-          conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
-          estimatedValue: 0,
-          churnRisk,
-          nextBestAction: recommendations[0] || 'Review lead',
-          sentiment: sentimentFromScore(result.score),
-          sentimentTrend: 'stable',
-          recommendations,
-          lastEngagementDays: 0,
-          icpMatch: icpMatchFromScore(result.score),
-        },
-        update: {
-          engagementScore: Math.min(100, result.score),
-          conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
-          churnRisk,
-          nextBestAction: recommendations[0] || 'Review lead',
-          recommendations,
-        },
-      })
+    const outcome = await writeIfStillEligible(
+      prisma as never,
+      { leadId, tenantId, email },
+      async (tx) => {
+        if (writeLeadScore) await writeAutomaticLeadScore(tx, leadId, tenantId, result);
+        return (tx as unknown as typeof prisma).leadAIInsight.upsert({
+          where: { leadId_tenantId: { leadId, tenantId } },
+          create: {
+            leadId,
+            tenantId,
+            engagementScore: Math.min(100, result.score),
+            conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
+            estimatedValue: 0,
+            churnRisk,
+            nextBestAction: recommendations[0] || 'Review lead',
+            sentiment: sentimentFromScore(result.score),
+            sentimentTrend: 'stable',
+            recommendations,
+            lastEngagementDays: 0,
+            icpMatch: icpMatchFromScore(result.score),
+          },
+          update: {
+            engagementScore: Math.min(100, result.score),
+            conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
+            churnRisk,
+            nextBestAction: recommendations[0] || 'Review lead',
+            recommendations,
+          },
+        });
+      }
     );
     if (!outcome.written) {
       logger.info(
@@ -666,7 +718,8 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
         lead.email,
         result,
         tier,
-        recommendations
+        recommendations,
+        validatedData.leadScoreWriter !== 'service'
       );
       // Erased or restricted while the model ran: the score is not returned either, since
       // BullMQ keeps completed job results in Redis (codex).
@@ -683,6 +736,7 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
         factors: result.factors,
         recommendations,
         modelVersion: usedFallback ? 'fallback' : result.modelVersion,
+        requiresReview: result.requiresReview === true,
         processedAt: new Date().toISOString(),
         processingTimeMs,
       };

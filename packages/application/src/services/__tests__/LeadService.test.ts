@@ -24,7 +24,7 @@ import {
 import { LeadRepository, ContactRepository, AccountRepository } from '@intelliflow/domain';
 import { AIServicePort, EventBusPort, LeadScoringResult } from '../../ports';
 import type { TransactionPort } from '@intelliflow/application';
-import { ValidationError } from '../../errors';
+import { ValidationError, LeadScoringFailedError } from '../../errors';
 
 // ENG-OPS-002: LeadService now requires a TransactionPort as its final
 // constructor arg. This fake just runs the callback — behaviour-neutral for
@@ -34,6 +34,15 @@ const makeTxManager = (): TransactionPort => ({ run: (work) => work({} as never)
 // Mock implementations
 class MockLeadRepository implements LeadRepository {
   private leads = new Map<string, Lead>();
+
+  /** #1218: records a failed scoring without touching score or status. */
+  markScoringFailed = vi.fn(
+    async (
+      _id: LeadId,
+      _tenantId: string,
+      _ifUnchanged: { email: string; updatedAt: Date }
+    ): Promise<void> => undefined
+  );
 
   async save(lead: Lead): Promise<void> {
     this.leads.set(lead.id.value, lead);
@@ -174,6 +183,11 @@ class MockAIService implements AIServicePort {
     this.shouldFail = fail;
   }
 
+  private mockRequiresReview = false;
+  setRequiresReview(value: boolean): void {
+    this.mockRequiresReview = value;
+  }
+
   async scoreLead(): Promise<Result<LeadScoringResult, DomainError>> {
     if (this.shouldFail) {
       return Result.fail(new DomainError('AI service error'));
@@ -183,6 +197,7 @@ class MockAIService implements AIServicePort {
       score: this.mockScore,
       confidence: this.mockConfidence,
       modelVersion: 'mock-v1.0',
+      requiresReview: this.mockRequiresReview,
       reasoning: 'Mock scoring',
       factors: {},
     });
@@ -514,12 +529,93 @@ describe('LeadService', () => {
       }).value;
       leadRepository.add(lead);
 
-      aiService.setMockScore(15, 0.8);
+      // #1218: only a confident score (>= 0.85) changes the status.
+      aiService.setMockScore(15, 0.9);
 
       const result = await leadService.scoreLead(lead.id.value);
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.autoDisqualified).toBe(true);
+    });
+
+    // #1218: a scoring that produced no score must never be stored as a score of 0.
+    describe('a scoring that produced no usable score (#1218)', () => {
+      function scoredLead(email: string, score: number) {
+        const lead = Lead.create({ email, source: 'WEBSITE', ownerId: 'owner-123' }).value;
+        lead.updateScore(score, 0.9, 'earlier-v1');
+        leadRepository.add(lead);
+        return lead;
+      }
+
+      it('keeps the previous score and status when the model answered confidence 0', async () => {
+        const lead = scoredLead('zero-confidence@example.com', 55);
+        const markFailed = leadRepository.markScoringFailed;
+        const save = vi.spyOn(leadRepository, 'save');
+        aiService.setMockScore(0, 0);
+
+        const result = await leadService.scoreLead(lead.id.value);
+
+        expect(result.isFailure).toBe(true);
+        expect(result.error).toBeInstanceOf(LeadScoringFailedError);
+        const after = await leadRepository.findById(lead.id);
+        expect(after?.score.value).toBe(55);
+        expect(after?.status).toBe('NEW');
+        expect(save).not.toHaveBeenCalled();
+        // Guarded by the lead as read before the AI call, so a late failure cannot
+        // overwrite a newer score or a replaced identity.
+        expect(markFailed).toHaveBeenCalledWith(lead.id, lead.tenantId, {
+          email: 'zero-confidence@example.com',
+          updatedAt: lead.updatedAt,
+        });
+      });
+
+      it('keeps the previous score and status when the provider failed, and marks FAILED', async () => {
+        const lead = scoredLead('provider-failed@example.com', 55);
+        const markFailed = leadRepository.markScoringFailed;
+        aiService.setShouldFail(true);
+
+        const result = await leadService.scoreLead(lead.id.value);
+
+        expect(result.isFailure).toBe(true);
+        expect((await leadRepository.findById(lead.id))?.score.value).toBe(55);
+        expect((await leadRepository.findById(lead.id))?.status).toBe('NEW');
+        expect(markFailed).toHaveBeenCalledTimes(1);
+      });
+
+      it('never auto-disqualifies on a low-confidence score; it is kept as NEEDS_REVIEW', async () => {
+        const lead = Lead.create({
+          email: 'low-confidence@example.com',
+          source: 'WEBSITE',
+          ownerId: 'owner-123',
+        }).value;
+        leadRepository.add(lead);
+        const save = vi.spyOn(leadRepository, 'save');
+        aiService.setMockScore(10, 0.2);
+        aiService.setRequiresReview(true);
+
+        const result = await leadService.scoreLead(lead.id.value);
+
+        expect(result.isSuccess).toBe(true);
+        expect(result.value.autoDisqualified).toBe(false);
+        expect((await leadRepository.findById(lead.id))?.status).toBe('NEW');
+        expect(save.mock.calls[0]?.[1]).toMatchObject({ scoringStatus: 'NEEDS_REVIEW' });
+      });
+
+      it('saves a confident score as SCORED', async () => {
+        const lead = Lead.create({
+          email: 'confident@example.com',
+          source: 'WEBSITE',
+          ownerId: 'owner-123',
+        }).value;
+        leadRepository.add(lead);
+        const save = vi.spyOn(leadRepository, 'save');
+        aiService.setMockScore(60, 0.9);
+
+        const result = await leadService.scoreLead(lead.id.value);
+
+        expect(result.isSuccess).toBe(true);
+        expect(save.mock.calls[0]?.[1]).toMatchObject({ scoringStatus: 'SCORED' });
+      });
     });
 
     it('should fail for non-existent lead', async () => {

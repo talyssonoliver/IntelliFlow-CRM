@@ -21,6 +21,7 @@ import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { invalidateLeadsCache } from '@/app/leads/(list)/actions';
 import { revalidateLeadCaches, revalidateLeadConversionCaches } from '@/app/leads/actions';
 import type { Lead } from '@/lib/leads/lead-types';
+import { leadScoreDisplay } from '@/lib/leads/score-display';
 import { LeadStatusBadge } from '@/components/leads/lead-detail';
 import {
   LEAD_STATUS_OPTIONS,
@@ -128,7 +129,9 @@ function createColumns(
       accessorKey: 'score',
       header: 'Score',
       size: 80,
-      cell: ({ row }) => <ScoreBadge score={row.original.score} />,
+      cell: ({ row }) => (
+        <ScoreBadge score={row.original.score} scoringStatus={row.original.scoringStatus} />
+      ),
     },
     {
       accessorKey: 'status',
@@ -398,11 +401,12 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
         title: 'Lead Scored',
         description: `New score: ${result.score} (confidence: ${Math.round(result.confidence * 100)}%)`,
       });
-      return refreshLeads(revalidateLeadCaches);
     },
     onError: (err) => {
       toast({ title: 'Scoring Failed', description: err.message, variant: 'destructive' });
     },
+    // #1218: a failed scoring marks the lead FAILED, so the list is refreshed either way.
+    onSettled: () => refreshLeads(revalidateLeadCaches),
   });
 
   const setStarredMutation = api.lead.setStarred.useMutation({
@@ -765,7 +769,21 @@ function LeadAvatar({ lead }: Readonly<{ lead: Lead }>) {
   );
 }
 
-function ScoreBadge({ score }: Readonly<{ score: number }>) {
+function ScoreBadge({
+  score,
+  scoringStatus,
+}: Readonly<{ score: number; scoringStatus?: string | null }>) {
+  const display = leadScoreDisplay(score, scoringStatus);
+  if (display.kind === 'not-scored') {
+    return (
+      <span
+        title={display.title}
+        className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-600 dark:bg-slate-700/50 dark:text-slate-300 border border-slate-200 dark:border-slate-600"
+      >
+        {display.label}
+      </span>
+    );
+  }
   const getScoreConfig = (s: number) => {
     if (s >= 80) {
       return {
@@ -797,6 +815,12 @@ function ScoreBadge({ score }: Readonly<{ score: number }>) {
     >
       <span className={`size-1.5 rounded-full ${dotClass}`} aria-hidden="true" />
       {score}
+      {display.needsReview && <span className="sr-only"> (low confidence, needs review)</span>}
+      {display.needsReview && (
+        <span className="font-normal" aria-hidden="true" title="Low confidence: needs review">
+          ?
+        </span>
+      )}
     </span>
   );
 }
