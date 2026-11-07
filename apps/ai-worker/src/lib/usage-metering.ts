@@ -19,6 +19,7 @@ import { aiConfig, servedPricingKey } from '../config/ai.config.js';
 import { costTracker } from '../utils/cost-tracker';
 import { countTokens } from '../utils/token-counter.js';
 import { assertWithinCeiling } from './purpose-ceiling.js';
+import { assertWithinMonthlyBudget, recordMonthlySpend } from './monthly-budget.js';
 import { resolveEffectiveTier } from './tenant-ai-config.js';
 
 export interface ModelUsageMeta {
@@ -146,11 +147,35 @@ export function recordModelUsage(meta: ModelUsageMeta, input: unknown, result: u
   );
 }
 
-/** Block an embedding call when the tenant's rag purpose has reached its monthly ceiling. */
+/**
+ * Add one billed chat call to the worker-wide monthly AI budget (monthly-budget.ts), priced as
+ * recordModelUsage prices it. Runs whether or not cost tracking is on: the budget is a cap,
+ * not a report. A result without provider token counts adds nothing.
+ */
+export async function recordMonthlyModelSpend(
+  meta: ModelUsageMeta,
+  result: unknown
+): Promise<void> {
+  const message = result as {
+    usage_metadata?: { input_tokens?: number; output_tokens?: number };
+    response_metadata?: { model_name?: string };
+  };
+  const usage = message?.usage_metadata;
+  if (!usage) return;
+  const model = servedPricingKey(message?.response_metadata?.model_name) ?? chatPricingKey(meta);
+  await recordMonthlySpend(model, usage.input_tokens ?? 0, usage.output_tokens ?? 0);
+}
+
+/**
+ * Block an embedding call when the worker-wide monthly AI budget is used up, or when the
+ * tenant's rag purpose has reached its monthly ceiling.
+ */
 export async function guardEmbeddingCall(
   tenantId: string | undefined,
-  tier: LLMTier
+  tier: LLMTier,
+  pricingKey: string = `rag-${tier}`
 ): Promise<void> {
+  await assertWithinMonthlyBudget(pricingKey, aiConfig.provider);
   if (!isBillableTenant(tenantId)) return;
   assertWithinDailyLimit();
   const config = await resolveEffectiveTier(tenantId, 'rag', tier);
@@ -163,12 +188,16 @@ export function recordEmbeddingUsage(
   meta: EmbeddingUsageMeta,
   texts: readonly string[]
 ): void {
-  if (!isBillableTenant(tenantId) || !costTrackingEnabled()) return;
   const model = meta.pricingKey ?? `rag-${meta.tier}`;
+  const inputTokens = texts.reduce((sum, text) => sum + countTokens(text, model), 0);
+  // The worker-wide monthly budget counts every paid call, whatever the tenant or the cost
+  // tracking setting. Counted at once; the write itself never throws.
+  recordMonthlySpend(model, inputTokens, 0).catch(() => undefined);
+  if (!isBillableTenant(tenantId) || !costTrackingEnabled()) return;
   recordSafely(() =>
     costTracker.recordUsage({
       model,
-      inputTokens: texts.reduce((sum, text) => sum + countTokens(text, model), 0),
+      inputTokens,
       outputTokens: 0,
       operationType: 'llm:rag',
       metadata: { purpose: 'rag', tier: meta.tier },

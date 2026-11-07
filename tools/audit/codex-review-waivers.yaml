@@ -844,3 +844,45 @@ waivers:
     author: route access lane
     date: '2026-11-05'
     expires: '2026-11-19'
+  - fingerprint: 478f035dd7a75d8a69ab2a1a028d80b49a43548cef208a50a1f907cee07228d7
+    reason: >-
+      Accepted by the coordinator on 2026-11-07. UpgradeFlow's plan change sends planId and
+      billingCycle, which updateSubscriptionInputSchema refuses (it wants priceId), so changing
+      plans from /billing/upgrade has failed for every period since the page was added. #1220
+      only carries the chosen period into that call. Fixed in the PR that follows #1220,
+      tracked in #1239. Checkout, which the owner's founding-customer purchase uses, is not
+      affected. Short expiry so the fix can't slip.
+    author: plan state lane
+    date: '2026-11-07'
+    expires: '2026-11-21'
+  - fingerprint: 028fad5b743580a01b6073436f923ee956ebcc22b449be26c106232219822ec6
+    reason: >-
+      Accepted by the coordinator on 2026-11-07. usablePromotionCodeId checks a code's
+      customer and products but not Stripe's own limits (first purchase only, minimum
+      amount). Stripe refuses such a subscription before any charge, so no money moves and
+      checkout shows Stripe's refusal; only the message is less specific. Mapping that refusal
+      to the invalid-code message is a follow-up in the #1239 PR. Short expiry.
+    author: plan state lane
+    date: '2026-11-07'
+    expires: '2026-11-21'
+  - fingerprint: 11ce50b48a392476453ed9d71277f10a8841f10a9eff4ae2734c85eb613e439b
+    reason: >-
+      Accepted by the coordinator on 2026-11-07. A past_due, unpaid, incomplete or paused
+      subscription goes to updateSubscription, which changes only active or trialing ones.
+      That is the plan-change path #1239 rebuilds, where these statuses get their own answer
+      ("update your payment method first"). Sending them to checkout instead would create a
+      second subscription. Short expiry.
+    author: plan state lane
+    date: '2026-11-07'
+    expires: '2026-11-21'
+  - fingerprint: 11af4fddbdbd3e8a88375cbd056f699fea1789801eda8c0c0eaa56a75ec9d174
+    reason: >-
+      Accepted by the coordinator on 2026-11-07. The monthly AI budget is checked before each
+      embedding request, but a request already queued in LangChain's caller can still be sent
+      after the cap is reached: the overshoot is at most one embedDocuments batch. It applies
+      to paid embedding settings only; production embeddings are an OpenRouter :free model,
+      which the budget exempts, and Claude has no embeddings. Tracked in #1238. Short expiry
+      so it cannot stay hidden.
+    author: claude provider lane
+    date: '2026-11-07'
+    expires: '2026-11-21'

@@ -50,6 +50,7 @@ import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
 import type { Prisma } from '@intelliflow/db';
 import type { Context } from '../../context';
+import { describePipelineSyncCopy } from './pipeline-sync-copy';
 
 // ============================================================================
 // Input Schema
@@ -747,19 +748,28 @@ function describePipelineSync(
   from: PipelineLeadStatus,
   to: PipelineLeadStatus,
   refusal: QualificationRefusal | null
-): string {
-  let text = `COA lead ${input.coaLeadId} moved to ${input.coaStage} at ${input.stageChangedAt}; CRM status ${from} → ${to}`;
-  if (isConversionPending(input.status, to)) {
-    text += `. COA reported this lead as WON (${input.coaStage} at ${input.stageChangedAt}); the sync does not convert leads, so it is capped at ${to} and tagged ${COA_WON_TAG}: convert it in the CRM`;
-  }
-  if (refusal) {
-    const numbers =
-      refusal.score !== undefined && refusal.minScore !== undefined
-        ? ` (score ${refusal.score}, minimum ${refusal.minScore})`
-        : '';
-    text += `. COA reported this lead qualified, but the CRM score gate refused the qualification${numbers}; the sync stopped at ${to} and tagged ${COA_QUALIFIED_TAG}: qualify it in the CRM once it scores high enough`;
-  }
-  return text;
+): { title: string; description: string } {
+  return describePipelineSyncCopy({
+    firstName: input.firstName,
+    lastName: input.lastName,
+    company: input.company,
+    email: input.email,
+    coaStage: input.coaStage,
+    stageChangedAt: input.stageChangedAt,
+    from,
+    to,
+    conversionPending: isConversionPending(input.status, to),
+    refusal,
+    wonTag: COA_WON_TAG,
+    qualifiedTag: COA_QUALIFIED_TAG,
+  });
+}
+
+/** The note is dated when COA moved the lead, never in the future. */
+function pipelineSyncEventTime(stageChangedAt: string): Date {
+  const now = new Date();
+  const at = new Date(stageChangedAt);
+  return Number.isNaN(at.getTime()) || at > now ? now : at;
 }
 
 /** Audit NOTE + idempotency marker for a COA pipeline sync. Best-effort. */
@@ -788,12 +798,13 @@ async function recordPipelineSync(
         select: { id: true },
       });
       if (existing) return;
+      const copy = describePipelineSync(input, from, to, refusal);
       await tx.leadActivity.create({
         data: {
           type: 'NOTE',
-          title: `COA pipeline: ${input.coaStage} → ${input.status}`,
-          description: describePipelineSync(input, from, to, refusal),
-          timestamp: new Date(),
+          title: copy.title,
+          description: copy.description,
+          timestamp: pipelineSyncEventTime(input.stageChangedAt),
           userName: COA_SYNC_USER,
           leadId,
           tenantId,
@@ -803,6 +814,8 @@ async function recordPipelineSync(
             coaStage: input.coaStage,
             status: input.status,
             stageChangedAt: input.stageChangedAt,
+            fromStatus: from,
+            toStatus: to,
             ...(isConversionPending(input.status, to)
               ? { coaWon: true, conversionPending: true, appliedStatus: to }
               : {}),

@@ -47,6 +47,8 @@ export type ScoringResult = z.infer<typeof leadScoreSchema>;
  */
 export class ScoringInconclusiveError extends Error {
   readonly reason: 'ZERO_CONFIDENCE' | 'NO_FACTORS';
+  /** An expected outcome, not a fault: monitoring logs it as a warning (chain-monitor). */
+  readonly expected = true;
   constructor(reason: 'ZERO_CONFIDENCE' | 'NO_FACTORS') {
     super(`Model gave no usable score (${reason})`);
     this.name = 'ScoringInconclusiveError';
@@ -164,9 +166,32 @@ export class TokenUsageCallbackHandler extends BaseCallbackHandler {
     }
   }
 
+  /**
+   * A response that completed but was unusable (a Claude refusal or cut-off answer) never
+   * reaches handleLLMEnd, yet it was billed. Its error carries the usage as `billedResult`
+   * (AnthropicIncompleteResponseError), so chain monitoring still records that spend once.
+   */
+  handleLLMError(err: unknown): void {
+    const billed = (err as { billedResult?: BilledResult } | null)?.billedResult;
+    const usage = billed?.usage_metadata;
+    if (!usage) return;
+    const served = billed.response_metadata?.model_name;
+    this.captured = {
+      inputTokens: usage.input_tokens ?? 0,
+      outputTokens: usage.output_tokens ?? 0,
+      ...this.pricingFor(typeof served === 'string' ? served : undefined),
+    };
+  }
+
   getUsage(): TokenUsage | null {
     return this.captured;
   }
+}
+
+/** The usage a provider error carries for a billed response (see handleLLMError). */
+interface BilledResult {
+  usage_metadata?: { input_tokens?: number; output_tokens?: number };
+  response_metadata?: { model_name?: unknown };
 }
 
 /**
@@ -212,7 +237,9 @@ Consider the following factors:
 Lead Information:
 {lead_info}
 
-Respond with a structured JSON object containing the score, confidence, factors, and modelVersion fields.`;
+Respond with a structured JSON object containing the score, confidence, factors, and modelVersion fields.
+List at least one factor, each with the points it adds or removes and the lead information behind it.
+Confidence is how sure you are that the score is right, above 0 and at most 1: near 1 when the lead information clearly supports the score, 0.5 or below when it is thin or mixed. Never answer confidence 0; when the information is thin, give your best score with a low confidence.`;
 
   constructor(options?: { tenantId?: string; provider?: AIProvider; recordDrift?: boolean }) {
     this.tenantId = options?.tenantId;
@@ -409,10 +436,14 @@ Respond with a structured JSON object containing the score, confidence, factors,
         });
       }
       // The class and shape only, never the message: an error can echo lead text (NF-002).
-      logger.error(
-        { leadId, errorClass: classifyError(error), ...scoringFailureShape(error) },
-        'Lead scoring failed'
-      );
+      // An inconclusive answer is an expected outcome (the model answered, with no usable
+      // score), so it is a warning with its reason; anything else is a fault.
+      const failure = { leadId, errorClass: classifyError(error), ...scoringFailureShape(error) };
+      if (error instanceof ScoringInconclusiveError) {
+        logger.warn(failure, 'Lead scoring inconclusive: the model gave no usable score');
+      } else {
+        logger.error(failure, 'Lead scoring failed');
+      }
 
       // #1218: a failure is never returned as a score of 0. It propagates, so the job can try
       // the fallback provider and, if that fails too, report the scoring as FAILED.

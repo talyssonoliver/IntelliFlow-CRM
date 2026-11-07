@@ -62,11 +62,11 @@ beforeEach(() => {
 });
 
 describe('TrialBadge', () => {
-  const trial = (daysLeft: number) => ({
+  const trial = (daysLeft: number, status: 'TRIALING' | 'TRIAL_ENDED' = 'TRIALING') => ({
     data: {
       source: 'trial',
-      tier: 'PROFESSIONAL',
-      status: 'TRIALING',
+      tier: 'STARTER',
+      status,
       daysLeft,
       trialEndsAt: new Date().toISOString(),
       currentPeriodEnd: null,
@@ -74,12 +74,37 @@ describe('TrialBadge', () => {
     isLoading: false,
   });
 
-  it('links to the plan comparison page', () => {
-    mockGetPlanState.mockReturnValue(trial(0));
+  it('leads to choosing a plan while the trial runs', () => {
+    mockGetPlanState.mockReturnValue(trial(5));
     render(<TrialBadge />);
-    const badge = screen.getByRole('link', { name: /0 days remaining\. compare plans/i });
+    const badge = screen.getByRole('link', { name: /5 days remaining\. choose a plan/i });
     expect(badge.getAttribute('href')).toBe('/billing/plans');
-    expect(badge.getAttribute('title')).toBe('Your trial period has ended. Compare plans');
+    expect(badge).toHaveTextContent('Trial: 5d left');
+  });
+
+  it('says the trial has ended, never "0d left", and leads to choosing a plan (#1220)', () => {
+    mockGetPlanState.mockReturnValue(trial(0, 'TRIAL_ENDED'));
+    render(<TrialBadge />);
+    const badge = screen.getByRole('link', { name: /your trial has ended\. choose a plan/i });
+    expect(badge.getAttribute('href')).toBe('/billing/plans');
+    expect(badge).toHaveTextContent('Trial ended: choose a plan');
+    expect(badge).not.toHaveTextContent('0d left');
+    expect(badge.getAttribute('data-trial-status')).toBe('ended');
+    expect(badge.className).toContain('red');
+  });
+
+  it('shows a short form on phones next to the full one (#1220)', () => {
+    mockGetPlanState.mockReturnValue(trial(0, 'TRIAL_ENDED'));
+    render(<TrialBadge />);
+    const short = screen.getByText('Trial ended');
+    expect(short.className).toContain('max-[389px]:hidden sm:hidden');
+    expect(screen.getByText('Trial ended: choose a plan').className).toContain('hidden sm:inline');
+  });
+
+  it('says "1 day", not "1 days"', () => {
+    mockGetPlanState.mockReturnValue(trial(1));
+    render(<TrialBadge />);
+    expect(screen.getByRole('link', { name: /1 day remaining/i })).toBeInTheDocument();
   });
 
   it('fetches on pages outside the protected list, such as the Help Center', () => {
