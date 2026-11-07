@@ -71,6 +71,17 @@ describe('DealsWonWidget', () => {
     expect(screen.queryByText('Jan')).toBeNull();
   });
 
+  it('says the data is unavailable, not zero, when the request fails, and retries', () => {
+    const refetch = vi.fn();
+    useQueryMock.mockReturnValue({ data: undefined, isLoading: false, isError: true, refetch });
+    render(<DealsWonWidget />);
+
+    expect(screen.getByTestId('deals-won-error')).toHaveTextContent("Couldn't load deals won.");
+    expect(screen.queryByTestId('chart-empty')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
   it('polls the slow trend at 5x the shared dashboard interval', () => {
     useQueryMock.mockReturnValue({ data: [], isLoading: false });
     render(<DealsWonWidget />);

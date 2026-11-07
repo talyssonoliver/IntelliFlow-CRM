@@ -29,7 +29,12 @@ export type DealsWonMonths = (typeof DEALS_WON_RANGES)[number]['months'];
 export function DealsWonWidget(_props: Readonly<WidgetProps>) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [months, setMonths] = useState<DealsWonMonths>(6);
-  const { data: chartData, isLoading } = trpc.analytics.dealsWonTrend.useQuery(
+  const {
+    data: chartData,
+    isLoading,
+    isError,
+    refetch,
+  } = trpc.analytics.dealsWonTrend.useQuery(
     { months },
     {
       enabled: isAuthenticated && !authLoading,
@@ -56,8 +61,9 @@ export function DealsWonWidget(_props: Readonly<WidgetProps>) {
     );
   }
 
-  const empty = isEmptySeries(chartData, 'value');
-  const rows: DealsWonData[] = empty ? [] : (chartData as DealsWonData[]);
+  // A failed request is not a zero: only a successful empty answer says "no deals".
+  const empty = !isError && isEmptySeries(chartData, 'value');
+  const rows: DealsWonData[] = empty || isError ? [] : (chartData as DealsWonData[]);
   const maxValue = chartMax(rows.map((d) => d.value));
 
   return (
@@ -79,9 +85,11 @@ export function DealsWonWidget(_props: Readonly<WidgetProps>) {
       </div>
 
       {/* Bar Chart */}
-      {empty ? (
+      {isError && <DealsWonUnavailable onRetry={() => void refetch()} />}
+      {!isError && empty && (
         <ChartEmptyState className="h-48" message="No deals won in this period yet" />
-      ) : (
+      )}
+      {!isError && !empty && (
         <div
           className={`flex items-end justify-between h-48 flex-1 ${
             rows.length > 6 ? 'gap-1 sm:gap-2 px-0 sm:px-2' : 'gap-2 sm:gap-4 px-2 sm:px-4'
@@ -111,6 +119,26 @@ export function DealsWonWidget(_props: Readonly<WidgetProps>) {
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+/** Shown when the deals-won request fails: says so and offers a retry. */
+function DealsWonUnavailable({ onRetry }: Readonly<{ onRetry: () => void }>) {
+  return (
+    <div
+      role="alert"
+      data-testid="deals-won-error"
+      className="flex h-48 flex-1 flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border text-center text-sm text-muted-foreground"
+    >
+      <span>Couldn&apos;t load deals won.</span>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="rounded border border-border px-3 py-1 text-sm text-foreground hover:bg-muted"
+      >
+        Retry
+      </button>
     </div>
   );
 }
