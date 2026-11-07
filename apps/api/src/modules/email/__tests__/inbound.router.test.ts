@@ -95,6 +95,8 @@ describe('Inbound Email Router', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (prismaMock.emailMailbox.findMany as any).mockResolvedValue([INBOX_MAILBOX]);
+    // The insert succeeds unless a test says otherwise; a failed insert now fails the call.
+    (prismaMock.emailRecord.create as any).mockResolvedValue({ id: 'stored-email-id' });
     inboundSecretBackup = process.env.INBOUND_EMAIL_WEBHOOK_SECRET;
     process.env.INBOUND_EMAIL_WEBHOOK_SECRET = INBOUND_WEBHOOK_TEST_SECRET;
   });
@@ -123,7 +125,7 @@ describe('Inbound Email Router', () => {
 
         expect(result.success).toBe(true);
         expect(result.emailId).toBeDefined();
-        expect(result.emailId).toBe('parsed-email-123');
+        expect(result.emailId).toBe('stored-email-id'); // the stored record's id
       });
 
       it('should accept SendGrid payload without explicit provider', async () => {

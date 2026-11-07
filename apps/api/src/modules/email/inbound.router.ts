@@ -1377,8 +1377,9 @@ async function storeEmail(
     });
     return { emailId: record.id, tenantId };
   } catch (error) {
+    // Fail the call: the provider retries, rather than being told the mail was kept.
     console.error('Failed to store email in database', error);
-    return { emailId: parsed.id, tenantId };
+    throw error;
   }
 }
 

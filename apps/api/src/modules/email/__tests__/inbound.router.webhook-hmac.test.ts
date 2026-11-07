@@ -239,6 +239,18 @@ describe('Inbound Email Webhook — SEC-004 HMAC signature verification', () => 
     expect((prismaMock.emailRecord.create as any).mock.calls[0][0].data.mailboxId).toBe('mb-bcc');
   });
 
+  it('fails the call when the insert fails, instead of reporting the mail as stored', async () => {
+    (prismaMock.emailMailbox.findMany as any).mockResolvedValue([INBOX_MAILBOX]);
+    (prismaMock.emailRecord.create as any).mockRejectedValue(new Error('insert failed'));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const caller = callerWithHeaders({ 'x-inbound-email-signature': signPayload(basePayload) });
+
+    await expect(caller.webhook(basePayload)).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+    expect(prismaMock.emailAttachment.createMany).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
   it('fails the call when the mailbox lookup fails, so the provider retries', async () => {
     (prismaMock.emailMailbox.findMany as any).mockRejectedValue(new Error('db down'));
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
