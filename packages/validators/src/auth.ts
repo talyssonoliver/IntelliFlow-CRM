@@ -317,10 +317,15 @@ export const activeSessionsResponseSchema = z.object({
 export type ActiveSessionsResponse = z.infer<typeof activeSessionsResponseSchema>;
 
 /**
- * Revoke session schema
+ * A Supabase Auth session id (`auth.sessions.id`, the token's `session_id` claim): a UUID.
+ */
+export const authSessionIdSchema = z.uuid('Invalid session id');
+
+/**
+ * Revoke session schema: ends one of the caller's Supabase Auth sessions.
  */
 export const revokeSessionSchema = z.object({
-  sessionId: sessionIdSchema,
+  sessionId: authSessionIdSchema,
 });
 
 export type RevokeSessionInput = z.infer<typeof revokeSessionSchema>;
