@@ -424,8 +424,31 @@ function EntityCta({
 }
 
 /**
+ * Empty states listening for each hotkey, oldest first. Only the newest one
+ * acts on a key press, so two task lists on one page open one composer, not two.
+ */
+const hotkeyOwners = new Map<string, symbol[]>();
+
+function claimHotkey(key: string, owner: symbol): () => void {
+  const owners = hotkeyOwners.get(key) ?? [];
+  owners.push(owner);
+  hotkeyOwners.set(key, owners);
+  return () => {
+    const rest = (hotkeyOwners.get(key) ?? []).filter((o) => o !== owner);
+    if (rest.length) hotkeyOwners.set(key, rest);
+    else hotkeyOwners.delete(key);
+  };
+}
+
+function ownsHotkey(key: string, owner: symbol): boolean {
+  const owners = hotkeyOwners.get(key);
+  return owners?.[owners.length - 1] === owner;
+}
+
+/**
  * Listens for the entity hotkey while `enabled`. Typing in a field never
- * triggers it; the latest `onTrigger` is always used.
+ * triggers it; the latest `onTrigger` is always used. When several empty
+ * states share a hotkey, only the most recently mounted one responds.
  */
 function useEntityHotkey(enabled: boolean, hotkey: string | null, onTrigger: () => void) {
   const triggerRef = React.useRef(onTrigger);
@@ -433,17 +456,22 @@ function useEntityHotkey(enabled: boolean, hotkey: string | null, onTrigger: () 
 
   React.useEffect(() => {
     if (!enabled || !hotkey) return;
+    const key = hotkey.toUpperCase();
+    const owner = Symbol(key);
+    const release = claimHotkey(key, owner);
     const handler = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement;
       if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) return;
-      if (e.key.toUpperCase() !== hotkey.toUpperCase() || e.ctrlKey || e.metaKey || e.altKey) {
-        return;
-      }
+      if (e.key.toUpperCase() !== key || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (!ownsHotkey(key, owner)) return;
       e.preventDefault();
       triggerRef.current();
     };
     document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
+    return () => {
+      document.removeEventListener('keydown', handler);
+      release();
+    };
   }, [enabled, hotkey]);
 }
 

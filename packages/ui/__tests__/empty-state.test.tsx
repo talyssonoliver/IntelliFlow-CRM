@@ -449,4 +449,23 @@ describe('EmptyState entity mode, uncontrolled', () => {
     fireEvent.keyDown(document.body, { key: 't' });
     expect(onCtaClick).toHaveBeenCalledTimes(1);
   });
+
+  it('runs one create flow when two empty states share a hotkey, and hands it back on unmount', () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const { rerender } = render(
+      <>
+        <EmptyState entity="tasks" onCtaClick={first} />
+        <EmptyState entity="tasks" onCtaClick={second} />
+      </>
+    );
+    fireEvent.keyDown(document.body, { key: 't' });
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledTimes(1);
+
+    rerender(<EmptyState entity="tasks" onCtaClick={first} />);
+    fireEvent.keyDown(document.body, { key: 't' });
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).toHaveBeenCalledTimes(1);
+  });
 });
