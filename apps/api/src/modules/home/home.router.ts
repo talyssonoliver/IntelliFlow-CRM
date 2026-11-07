@@ -1658,7 +1658,10 @@ export const homeRouter = createTRPCRouter({
         status: { notIn: ['DISMISSED', 'EXPIRED'] },
         expiresAt: { gt: now },
         metadata: { path: ['userId'], equals: userId },
+        // Reassurance the job cached before #1219, whoever wrote it: the heuristic fallback's title, or
+        // an LLM achievement with no entity (achievements are stored as 'prediction').
         title: { not: LEGACY_ON_TRACK_TITLE },
+        NOT: { type: 'prediction', entityId: null },
       },
       take: 5,
       orderBy: { createdAt: 'desc' },
@@ -2369,7 +2372,10 @@ export const homeRouter = createTRPCRouter({
           status: { notIn: ['DISMISSED', 'EXPIRED'] },
           expiresAt: { gt: now },
           metadata: { path: ['userId'], equals: userId },
+          // Reassurance the job cached before #1219, whoever wrote it: the heuristic fallback's title, or
+          // an LLM achievement with no entity (achievements are stored as 'prediction').
           title: { not: LEGACY_ON_TRACK_TITLE },
+          NOT: { type: 'prediction', entityId: null },
           ...(typeFilter ? { type: { in: typeFilter } } : {}),
         },
         orderBy: { createdAt: 'desc' },

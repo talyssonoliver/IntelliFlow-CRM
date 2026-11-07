@@ -403,6 +403,8 @@ describe('Home Router', () => {
 
       const where = (prismaMock.aIInsight.findMany as any).mock.calls[0][0].where;
       expect(where.title).toEqual({ not: "You're on track!" });
+      // Nor an LLM-written reassurance: an achievement (stored as 'prediction') with no entity.
+      expect(where.NOT).toEqual({ type: 'prediction', entityId: null });
     });
 
     it('should limit insights to 5 max', async () => {
