@@ -25,8 +25,9 @@ export function variantTestFiles(paths) {
   return paths.filter((p) => VARIANT_TEST_FILE.test(path.posix.basename(p.replaceAll('\\', '/'))));
 }
 
-function gitLines(args) {
-  const out = execFileSync('git', args, { encoding: 'utf8' });
+/** The non-empty, trimmed lines `git <args>` prints. */
+export function gitLines(args, exec = execFileSync) {
+  const out = exec('git', args, { encoding: 'utf8' });
   return out
     .split('\n')
     .map((l) => l.trim())
@@ -34,30 +35,35 @@ function gitLines(args) {
 }
 
 /** Files added or renamed in on this branch since `base`, plus staged additions. */
-export function newFiles(base) {
+export function newFiles(base, git = gitLines) {
   return [
     ...new Set([
-      ...gitLines(['diff', '--name-only', '-M', '--diff-filter=AR', `${base}...HEAD`]),
-      ...gitLines(['diff', '--cached', '--name-only', '-M', '--diff-filter=AR']),
+      ...git(['diff', '--name-only', '-M', '--diff-filter=AR', `${base}...HEAD`]),
+      ...git(['diff', '--cached', '--name-only', '-M', '--diff-filter=AR']),
     ]),
   ];
 }
 
-function main() {
-  const at = process.argv.indexOf('--base');
-  const base = at === -1 ? 'origin/main' : process.argv[at + 1];
-  const offending = variantTestFiles(newFiles(base));
-  if (offending.length === 0) {
-    console.log('test-variant-names: no new variant test files');
-    return;
-  }
-  console.error('test-variant-names: new coverage-variant test files are not accepted (#1216):');
-  for (const file of offending) console.error(`  ${file}`);
-  console.error("  Add these tests to the unit's own test file instead.");
-  process.exitCode = 1;
+/** The ref after `--base`, origin/main when there is none. */
+export function baseFrom(argv) {
+  const at = argv.indexOf('--base');
+  return at === -1 || !argv[at + 1] ? 'origin/main' : argv[at + 1];
 }
 
-// CLI entry point guard: importing this module from a test must not run main().
+/** Runs the check; returns the exit code, 1 when a new variant test file is found. */
+export function run(argv, { git = gitLines, log = console.log, error = console.error } = {}) {
+  const offending = variantTestFiles(newFiles(baseFrom(argv), git));
+  if (offending.length === 0) {
+    log('test-variant-names: no new variant test files');
+    return 0;
+  }
+  error('test-variant-names: new coverage-variant test files are not accepted (#1216):');
+  for (const file of offending) error(`  ${file}`);
+  error("  Add these tests to the unit's own test file instead.");
+  return 1;
+}
+
+// CLI entry point guard: importing this module from a test must not run the check.
 if (process.argv[1]?.replaceAll('\\', '/').endsWith('tools/scripts/check-test-variant-names.mjs')) {
-  main();
+  process.exitCode = run(process.argv);
 }

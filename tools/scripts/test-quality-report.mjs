@@ -58,11 +58,17 @@ export function summarise(results, top = 20) {
   };
 }
 
-async function main() {
-  const at = process.argv.indexOf('--top');
-  const top = at === -1 ? 20 : Number(process.argv[at + 1]) || 20;
-  const eslint = new ESLint({
-    cwd: ROOT,
+/** The number after `--top`, 20 when it is missing or not a positive whole number. */
+export function topFrom(argv) {
+  const at = argv.indexOf('--top');
+  const n = at === -1 ? Number.NaN : Number(argv[at + 1]);
+  return Number.isInteger(n) && n > 0 ? n : 20;
+}
+
+/** ESLint with only the test-quality rules, as warnings, parsing TypeScript and TSX. */
+export function createLinter(cwd = ROOT) {
+  return new ESLint({
+    cwd,
     overrideConfigFile: true,
     overrideConfig: [
       {
@@ -83,17 +89,25 @@ async function main() {
       { ignores: ['**/node_modules/**', '**/dist/**', '**/.next/**'] },
     ],
   });
-  const results = await eslint.lintFiles(PATTERNS);
-  const summary = { generatedAt: new Date().toISOString(), ...summarise(results, top) };
-  fs.mkdirSync(path.dirname(OUT), { recursive: true });
-  fs.writeFileSync(OUT, JSON.stringify(summary, null, 2) + '\n');
+}
+
+/** Writes the summary JSON to `out`; returns the lines to print. */
+export function writeReport(results, { out = OUT, top = 20, now = new Date() } = {}) {
+  const summary = { generatedAt: now.toISOString(), ...summarise(results, top) };
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  fs.writeFileSync(out, JSON.stringify(summary, null, 2) + '\n');
   const rules = Object.entries(summary.perRule)
     .map(([r, n]) => `${r} ${n}`)
     .join(', ');
-  console.log(
-    `test-quality: ${summary.warnings} warnings in ${summary.filesWithWarnings}/${summary.filesChecked} test files (${rules})`
-  );
-  console.log(`  details: ${path.relative(ROOT, OUT).replaceAll('\\', '/')}`);
+  return [
+    `test-quality: ${summary.warnings} warnings in ${summary.filesWithWarnings}/${summary.filesChecked} test files (${rules})`,
+    `  details: ${path.relative(ROOT, out).replaceAll('\\', '/')}`,
+  ];
+}
+
+async function main() {
+  const results = await createLinter().lintFiles(PATTERNS);
+  for (const line of writeReport(results, { top: topFrom(process.argv) })) console.log(line);
 }
 
 // CLI entry point guard: importing this module from a test must not run main().
