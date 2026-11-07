@@ -875,3 +875,14 @@ waivers:
     author: plan state lane
     date: '2026-11-07'
     expires: '2026-11-21'
+  - fingerprint: 11af4fddbdbd3e8a88375cbd056f699fea1789801eda8c0c0eaa56a75ec9d174
+    reason: >-
+      Accepted by the coordinator on 2026-11-07. The monthly AI budget is checked before each
+      embedding request, but a request already queued in LangChain's caller can still be sent
+      after the cap is reached: the overshoot is at most one embedDocuments batch. It applies
+      to paid embedding settings only; production embeddings are an OpenRouter :free model,
+      which the budget exempts, and Claude has no embeddings. Tracked in #1238. Short expiry
+      so it cannot stay hidden.
+    author: claude provider lane
+    date: '2026-11-07'
+    expires: '2026-11-21'

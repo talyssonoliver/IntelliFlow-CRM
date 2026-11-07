@@ -1062,5 +1062,47 @@ describe('ScoringJob', () => {
       }
       expect(mockScoreLead).toHaveBeenCalledTimes(jobs * 2);
     });
+
+    it('does not open the shared breaker on Claude refusals: they are about the lead, not the provider', async () => {
+      mockScoreLead.mockReset();
+      mockScoreLead.mockImplementation(async () => {
+        throw Object.assign(new Error('Claude returned no usable answer (stop_reason=refusal)'), {
+          name: 'AnthropicIncompleteResponseError',
+          stopReason: 'refusal',
+        });
+      });
+
+      const jobs = 7;
+      for (let i = 0; i < jobs; i++) {
+        const job = createMockJob({
+          leadId: TEST_UUIDS.lead1,
+          tenantId: TEST_UUIDS.tenant1,
+          lead: { email: 'test@example.com', source: 'WEBSITE' },
+        });
+        await expect(processScoringJob(job)).rejects.toBeInstanceOf(ScoringFailedError);
+      }
+      expect(mockScoreLead).toHaveBeenCalledTimes(jobs * 2);
+    });
+
+    it('does not open the shared breaker when the monthly AI budget is used up: no provider was called', async () => {
+      mockScoreLead.mockReset();
+      mockScoreLead.mockImplementation(async () => {
+        throw Object.assign(new Error('Monthly AI budget reached'), {
+          code: 'AI_MONTHLY_BUDGET_EXCEEDED',
+        });
+      });
+
+      const jobs = 7;
+      for (let i = 0; i < jobs; i++) {
+        const job = createMockJob({
+          leadId: TEST_UUIDS.lead1,
+          tenantId: TEST_UUIDS.tenant1,
+          lead: { email: 'test@example.com', source: 'WEBSITE' },
+        });
+        // A failure, never a score: the lead stays "Not scored" (#1231).
+        await expect(processScoringJob(job)).rejects.toBeInstanceOf(ScoringFailedError);
+      }
+      expect(mockScoreLead).toHaveBeenCalledTimes(jobs * 2);
+    });
   });
 });
