@@ -164,9 +164,32 @@ export class TokenUsageCallbackHandler extends BaseCallbackHandler {
     }
   }
 
+  /**
+   * A response that completed but was unusable (a Claude refusal or cut-off answer) never
+   * reaches handleLLMEnd, yet it was billed. Its error carries the usage as `billedResult`
+   * (AnthropicIncompleteResponseError), so chain monitoring still records that spend once.
+   */
+  handleLLMError(err: unknown): void {
+    const billed = (err as { billedResult?: BilledResult } | null)?.billedResult;
+    const usage = billed?.usage_metadata;
+    if (!usage) return;
+    const served = billed.response_metadata?.model_name;
+    this.captured = {
+      inputTokens: usage.input_tokens ?? 0,
+      outputTokens: usage.output_tokens ?? 0,
+      ...this.pricingFor(typeof served === 'string' ? served : undefined),
+    };
+  }
+
   getUsage(): TokenUsage | null {
     return this.captured;
   }
+}
+
+/** The usage a provider error carries for a billed response (see handleLLMError). */
+interface BilledResult {
+  usage_metadata?: { input_tokens?: number; output_tokens?: number };
+  response_metadata?: { model_name?: unknown };
 }
 
 /**
@@ -212,7 +235,9 @@ Consider the following factors:
 Lead Information:
 {lead_info}
 
-Respond with a structured JSON object containing the score, confidence, factors, and modelVersion fields.`;
+Respond with a structured JSON object containing the score, confidence, factors, and modelVersion fields.
+List at least one factor, each with the points it adds or removes and the lead information behind it.
+Confidence is how sure you are that the score is right, above 0 and at most 1: near 1 when the lead information clearly supports the score, 0.5 or below when it is thin or mixed. Never answer confidence 0; when the information is thin, give your best score with a low confidence.`;
 
   constructor(options?: { tenantId?: string; provider?: AIProvider; recordDrift?: boolean }) {
     this.tenantId = options?.tenantId;
