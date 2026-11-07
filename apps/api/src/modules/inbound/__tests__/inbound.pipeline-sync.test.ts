@@ -657,9 +657,69 @@ describe('inboundRouter — syncPipelineLead', () => {
 
       expect(statusCalls()).not.toContain('QUALIFIED');
       expect(qualify()).toHaveBeenCalledTimes(1);
-      expect(qualify()).toHaveBeenCalledWith(LEAD_ID, 'System (COA sync)', expect.any(String));
+      // MEETING is not a COA reply stage, so this qualification is automatic: the score applies.
+      expect(qualify()).toHaveBeenCalledWith(LEAD_ID, 'System (COA sync)', expect.any(String), {
+        basis: 'AUTOMATIC',
+      });
       expect(statusCalls()).toEqual(['CONTACTED', 'NEGOTIATING']);
       expect(result).toMatchObject({ status: 'NEGOTIATING', qualificationPending: false });
+    });
+
+    it('a reply (COA stage RESPONDED) qualifies the lead as an inbound reply, even when COA sends CONTACTED', async () => {
+      existingLead('CONTACTED');
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('CONTACTED', 'RESPONDED'));
+
+      expect(qualify()).toHaveBeenCalledTimes(1);
+      expect(qualify()).toHaveBeenCalledWith(
+        LEAD_ID,
+        'System (COA sync)',
+        'replied (COA stage RESPONDED)',
+        { basis: 'INBOUND_REPLY' }
+      );
+      expect(statusCalls()).not.toContain('QUALIFIED');
+      expect(result).toMatchObject({ status: 'QUALIFIED', qualificationPending: false });
+    });
+
+    it('PROPOSAL_READY is not a reply (COA can reach it before contact), so it qualifies only automatically', async () => {
+      existingLead('CONTACTED');
+      qualify().mockResolvedValueOnce(scoreRefusal(0, 50));
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('QUALIFIED', 'PROPOSAL_READY'));
+
+      expect(qualify()).toHaveBeenCalledWith(LEAD_ID, 'System (COA sync)', expect.any(String), {
+        basis: 'AUTOMATIC',
+      });
+      expect(result).toMatchObject({ status: 'CONTACTED', qualificationPending: true });
+    });
+
+    it.each(['MEETING_BOOKED', 'WON'])(
+      'a later reply stage (%s) also qualifies as an inbound reply',
+      async (stage) => {
+        existingLead('CONTACTED');
+        const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+        await caller.syncPipelineLead(input('NEGOTIATING', stage));
+
+        expect(qualify()).toHaveBeenCalledWith(
+          LEAD_ID,
+          'System (COA sync)',
+          `replied (COA stage ${stage})`,
+          { basis: 'INBOUND_REPLY' }
+        );
+      }
+    );
+
+    it("COA's own QUALIFIED stage (pre-contact audit) qualifies only automatically, so a low score stays CONTACTED", async () => {
+      existingLead('CONTACTED');
+      // What LeadService answers for an AUTOMATIC qualification at score 0.
+      qualify().mockResolvedValueOnce(scoreRefusal(0, 50));
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('QUALIFIED', 'QUALIFIED'));
+
+      expect(qualify()).toHaveBeenCalledWith(LEAD_ID, 'System (COA sync)', expect.any(String), {
+        basis: 'AUTOMATIC',
+      });
+      expect(result).toMatchObject({ status: 'CONTACTED', qualificationPending: true });
     });
 
     it('a score refusal stops at CONTACTED, tags coa-qualified, notes it, never tries NEGOTIATING', async () => {

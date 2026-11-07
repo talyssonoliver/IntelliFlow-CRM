@@ -472,7 +472,8 @@ describe('Lead Router', () => {
       expect(result.firstName).toBe('Updated');
       expect(ctx.services!.lead!.updateLead).toHaveBeenCalledWith(
         TEST_UUIDS.lead1,
-        expect.objectContaining({ firstName: 'Updated' })
+        expect.objectContaining({ firstName: 'Updated' }),
+        TEST_UUIDS.user1
       );
       // PG-203 Q22: the re-score goes through the shared enqueue and its restriction gate.
       expect(enqueueLeadScoring).toHaveBeenCalledWith(
@@ -526,7 +527,8 @@ describe('Lead Router', () => {
           firstName: 'Jane',
           location: 'New York',
           website: 'https://acme.com',
-        })
+        }),
+        TEST_UUIDS.user1
       );
     });
 
@@ -1290,7 +1292,8 @@ describe('Lead Router', () => {
         expect.objectContaining({
           location: 'San Francisco',
           estimatedValue: 10000,
-        })
+        }),
+        TEST_UUIDS.user1
       );
       expect(result).toHaveProperty('id');
     });
