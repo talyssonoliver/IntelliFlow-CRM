@@ -76,8 +76,17 @@ export interface LeadRepository {
    * #1218: record that the last scoring attempt failed, without touching the score or the
    * status, so the lead keeps its previous score and shows "not scored" honestly. Optional so
    * test doubles need not implement it.
+   *
+   * `ifUnchanged` is the lead as it was read before the AI call: the mark applies only while
+   * the row still has that email and that `updatedAt`. A late failure therefore never
+   * overwrites a newer score or a changed identity (codex, #1218).
    */
-  markScoringFailed?(id: LeadId, tenantId: string, tx?: RepositoryTransaction): Promise<void>;
+  markScoringFailed?(
+    id: LeadId,
+    tenantId: string,
+    ifUnchanged: { email: string; updatedAt: Date },
+    tx?: RepositoryTransaction
+  ): Promise<void>;
 
   /**
    * Find a lead by ID

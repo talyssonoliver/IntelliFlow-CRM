@@ -94,14 +94,23 @@ export class PrismaLeadRepository implements LeadRepository {
 
   /**
    * #1218: the last scoring attempt gave no usable score. Only the scoring status changes: the
-   * previous score, scored-at time and status are kept.
+   * previous score, scored-at time and status are kept. It applies only while the row still
+   * has the email and `updatedAt` that were read before the AI call, so a late failure cannot
+   * overwrite a newer successful score or a replaced identity (codex). `updatedAt` is left as
+   * is: the mark is scoring metadata, not an edit of the lead.
    */
-  async markScoringFailed(id: LeadId, tenantId: string, tx?: RepositoryTransaction): Promise<void> {
+  async markScoringFailed(
+    id: LeadId,
+    tenantId: string,
+    ifUnchanged: { email: string; updatedAt: Date },
+    tx?: RepositoryTransaction
+  ): Promise<void> {
     const db = (tx as TransactionClient | undefined) ?? this.prisma;
-    await db.lead.updateMany({
-      where: { id: id.value, tenantId },
-      data: { scoringStatus: 'FAILED' },
-    });
+    await db.$executeRaw`
+      UPDATE leads SET "scoringStatus" = 'FAILED'::"LeadScoringStatus"
+      WHERE id = ${id.value} AND "tenantId" = ${tenantId}
+        AND dsar_normalise_email(email) = ${normalizeSubjectEmail(ifUnchanged.email)}
+        AND "updatedAt" = ${ifUnchanged.updatedAt}`;
   }
 
   async save(lead: Lead, opts?: LeadSaveOptions, tx?: RepositoryTransaction): Promise<void> {

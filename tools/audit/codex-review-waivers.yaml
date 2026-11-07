@@ -844,3 +844,15 @@ waivers:
     author: route access lane
     date: '2026-11-05'
     expires: '2026-11-19'
+  - fingerprint: 2d6fd183d978afc2b1091b3d95543a7512faf1000bb7c200f7e0fcde9aef3a91
+    reason: >-
+      #1218. The automatic scoring paths (enqueueLeadScoring on lead creation and the scheduled
+      dispatcher) have never written Lead.score: persistScoringResult only upserts
+      LeadAIInsight, before and after this change. Before this change such a lead showed its
+      untouched Lead.score (0 by default) as if it were a score. It now shows "Not scored",
+      which is what that column holds. Writing the lead score from the worker is a separate
+      change, because it decides auto-qualify outside LeadService, and is tracked as a
+      follow-up on #1218. Short expiry so this cannot stay hidden.
+    author: scoring failure lane
+    date: '2026-11-07'
+    expires: '2026-11-21'

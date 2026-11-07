@@ -363,10 +363,17 @@ export class LeadService {
     });
   }
 
-  /** #1218: best effort; a failure to record the failure must not hide the original one. */
+  /**
+   * #1218: best effort; a failure to record the failure must not hide the original one.
+   * `lead` is still as read before the AI call (nothing mutates it on the failure paths), so
+   * its email and updatedAt guard the mark against a newer write.
+   */
   private async markScoringFailed(lead: Lead): Promise<void> {
     try {
-      await this.leadRepository.markScoringFailed?.(lead.id, lead.tenantId);
+      await this.leadRepository.markScoringFailed?.(lead.id, lead.tenantId, {
+        email: lead.email.value,
+        updatedAt: lead.updatedAt,
+      });
     } catch {
       // The scoring failure is still returned to the caller.
     }

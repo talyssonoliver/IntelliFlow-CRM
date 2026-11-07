@@ -35,7 +35,13 @@ class MockLeadRepository implements LeadRepository {
   private leads = new Map<string, Lead>();
 
   /** #1218: records a failed scoring without touching score or status. */
-  markScoringFailed = vi.fn(async (_id: LeadId, _tenantId: string): Promise<void> => undefined);
+  markScoringFailed = vi.fn(
+    async (
+      _id: LeadId,
+      _tenantId: string,
+      _ifUnchanged: { email: string; updatedAt: Date }
+    ): Promise<void> => undefined
+  );
 
   async save(lead: Lead): Promise<void> {
     this.leads.set(lead.id.value, lead);
@@ -553,7 +559,12 @@ describe('LeadService', () => {
         expect(after?.score.value).toBe(55);
         expect(after?.status).toBe('NEW');
         expect(save).not.toHaveBeenCalled();
-        expect(markFailed).toHaveBeenCalledWith(lead.id, lead.tenantId);
+        // Guarded by the lead as read before the AI call, so a late failure cannot
+        // overwrite a newer score or a replaced identity.
+        expect(markFailed).toHaveBeenCalledWith(lead.id, lead.tenantId, {
+          email: 'zero-confidence@example.com',
+          updatedAt: lead.updatedAt,
+        });
       });
 
       it('keeps the previous score and status when the provider failed, and marks FAILED', async () => {
