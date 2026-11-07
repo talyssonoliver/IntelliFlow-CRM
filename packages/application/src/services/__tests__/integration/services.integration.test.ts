@@ -94,7 +94,9 @@ describe('Domain Services Integration', () => {
         firstName: 'Alice',
         lastName: 'Johnson',
         company: 'TechCorp',
-        title: 'CTO',
+        // #1218: only a confident score (>= 0.85) changes the status; the mock's confidence
+        // reaches that with a company and a CEO title.
+        title: 'CEO',
         ownerId: 'sales-rep-1',
       });
       expect(leadResult.isSuccess).toBe(true);
@@ -251,6 +253,9 @@ describe('Domain Services Integration', () => {
       // Create a lead
       const leadResult = await leadService.createLead({
         email: 'tasktest@example.com',
+        // #1218: a confident score is needed to auto-qualify before converting.
+        company: 'Task Test Corp',
+        title: 'CEO',
         ownerId: 'owner-1',
       });
       expect(leadResult.isSuccess).toBe(true);

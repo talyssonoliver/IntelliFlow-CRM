@@ -194,7 +194,7 @@ describe('LeadService - b11', () => {
       vi.mocked(aiService.scoreLead).mockResolvedValue(
         Result.ok({
           score: 15, // Below AUTO_DISQUALIFY threshold (20)
-          confidence: 0.8,
+          confidence: 0.9, // #1218: only a confident score (>= 0.85) changes the status
           modelVersion: 'v1',
         }) as any
       );
@@ -206,6 +206,32 @@ describe('LeadService - b11', () => {
         expect(result.value.autoDisqualified).toBe(true);
         expect(result.value.autoQualified).toBe(false);
       }
+    });
+
+    it('does not auto-disqualify below the review threshold when the adapter sets no flag (codex)', async () => {
+      const lead = createLead({ email: 'lowconf@example.com' });
+
+      vi.mocked(leadRepo.findById).mockResolvedValue(lead);
+      // A synchronous adapter (Ollama, LiteLLM) returns confidence without requiresReview.
+      vi.mocked(aiService.scoreLead).mockResolvedValue(
+        Result.ok({
+          score: 15,
+          confidence: 0.8,
+          modelVersion: 'v1',
+        }) as any
+      );
+
+      const result = await service.scoreLead(lead.id.value);
+
+      expect(result.isSuccess).toBe(true);
+      if (result.isSuccess) {
+        expect(result.value.autoDisqualified).toBe(false);
+        expect(result.value.autoQualified).toBe(false);
+      }
+      expect(lead.status).toBe('NEW');
+      expect(vi.mocked(leadRepo.save).mock.calls[0]?.[1]).toMatchObject({
+        scoringStatus: 'NEEDS_REVIEW',
+      });
     });
   });
 

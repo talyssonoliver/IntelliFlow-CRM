@@ -1232,6 +1232,7 @@ describe('LeadList — row actions, status gating & cell rendering (IFC-248)', (
           id: 'l-hi',
           firstName: 'Hi',
           score: 85,
+          scoringStatus: 'SCORED',
           status: 'NEW',
           createdAt: new Date(),
         },
@@ -1240,6 +1241,7 @@ describe('LeadList — row actions, status gating & cell rendering (IFC-248)', (
           id: 'l-mid',
           firstName: 'Mid',
           score: 60,
+          scoringStatus: 'SCORED',
           status: 'NEW',
           createdAt: new Date(),
         },
@@ -1248,6 +1250,7 @@ describe('LeadList — row actions, status gating & cell rendering (IFC-248)', (
           id: 'l-lo',
           firstName: 'Lo',
           score: 30,
+          scoringStatus: 'SCORED',
           status: 'NEW',
           createdAt: new Date(),
         },
@@ -1259,6 +1262,29 @@ describe('LeadList — row actions, status gating & cell rendering (IFC-248)', (
     expect(screen.getByText('85')).toBeTruthy();
     expect(screen.getByText('60')).toBeTruthy();
     expect(screen.getByText('30')).toBeTruthy();
+
+    // #1218: only a real score shows a number.
+    expect(screen.queryByText('Not scored')).toBeNull();
+  });
+
+  it('shows "Not scored" for a lead that has no real score (#1218)', () => {
+    mockListQueryState.data = {
+      data: [
+        {
+          ...baseLead,
+          id: 'l-none',
+          firstName: 'None',
+          score: 0,
+          scoringStatus: 'NONE',
+          status: 'NEW',
+          createdAt: new Date(),
+        },
+      ],
+      total: 1,
+      hasMore: false,
+    };
+    render(<LeadList />);
+    expect(screen.getAllByText('Not scored').length).toBeGreaterThan(0);
   });
 
   it('formats created dates across all relative branches (AC-24)', () => {

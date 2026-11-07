@@ -43,6 +43,32 @@ import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import { PinButton } from '@/components/home/PinButton';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
+import { leadScoreDisplay } from '@/lib/leads/score-display';
+
+/** #1218: the lead's score, or "Not scored" when no real AI score exists. */
+function LeadScoreValue({
+  score,
+  scoringStatus,
+}: Readonly<{ score: number | null | undefined; scoringStatus?: string | null }>) {
+  const display = leadScoreDisplay(score, scoringStatus);
+  if (display.kind === 'not-scored') {
+    return (
+      <span className="text-slate-500 dark:text-slate-400" title={display.title}>
+        {display.label}
+      </span>
+    );
+  }
+  return (
+    <span>
+      {display.score}/100
+      {display.needsReview && (
+        <span className="ml-1 text-xs font-normal text-amber-600 dark:text-amber-400">
+          (low confidence, needs review)
+        </span>
+      )}
+    </span>
+  );
+}
 import { UpcomingEventsCard } from '@/components/shared';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 import { ActivityFeed, ActivityFeedItemActions } from '@/components/shared/activity-feed';
@@ -255,6 +281,7 @@ interface LeadWithRelations {
   status: string;
   source: string;
   score: number;
+  scoringStatus?: string | null;
   createdAt: string | Date;
   updatedAt: string | Date;
   // New Lead 360 fields
@@ -978,7 +1005,9 @@ function LeadOverviewTab({
           </div>
           <div>
             <dt className="text-sm text-slate-500 dark:text-slate-400">Lead Score</dt>
-            <dd className="text-sm font-medium text-slate-900 dark:text-white">{lead.score}/100</dd>
+            <dd className="text-sm font-medium text-slate-900 dark:text-white">
+              <LeadScoreValue score={lead.score} scoringStatus={lead.scoringStatus} />
+            </dd>
           </div>
         </dl>
       </Card>
@@ -2173,6 +2202,7 @@ function transformLeadForUI(apiLead: LeadWithRelations) {
     status: apiLead.status as LeadStatus,
     source: apiLead.source as LeadSource,
     score: apiLead.score,
+    scoringStatus: apiLead.scoringStatus ?? null,
     temperature: getTemperature(apiLead.score),
     createdAt: apiLead.createdAt,
     lastContactedAt: apiLead.lastContactedAt || apiLead.createdAt,
@@ -2358,14 +2388,17 @@ export default function Lead360Page() {
   const scoreWithAIMutation = api.lead.scoreWithAI.useMutation({
     onSuccess: () => {
       toast({ title: 'AI analysis complete', description: 'Lead has been scored by AI.' });
-      return Promise.all([
-        user?.id ? revalidateLeadCaches(user.id).catch(reportCacheRevalidationError) : undefined,
-        utils.lead.getById.invalidate({ id: leadId }),
-      ]);
     },
     onError: (err) => {
       toast({ title: 'AI analysis failed', description: err.message, variant: 'destructive' });
     },
+    // #1218: a failed scoring also changes the lead (it is marked FAILED and gets an
+    // "AI scoring failed" activity), so the lead is refetched either way (codex).
+    onSettled: () =>
+      Promise.all([
+        user?.id ? revalidateLeadCaches(user.id).catch(reportCacheRevalidationError) : undefined,
+        utils.lead.getById.invalidate({ id: leadId }),
+      ]),
   });
 
   const addNoteMutation = api.lead.addNote.useMutation({
