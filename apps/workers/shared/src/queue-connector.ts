@@ -17,6 +17,7 @@ import { DEFAULT_QUEUE_CONFIGS } from '@intelliflow/platform/queues/types';
 import { getDrainDelaySeconds } from '@intelliflow/platform/queues/connection';
 import type { RedisConfig, QueueConfig } from './worker-config';
 import type { ComponentHealth } from './types';
+import { isExpectedJobOutcome } from './job-outcome';
 
 // ============================================================================
 // Types
@@ -224,14 +225,13 @@ export class QueueConnector {
     });
 
     worker.on('failed', (job, error) => {
-      this.logger.error(
-        {
-          jobId: job?.id,
-          queue: queueName,
-          error: error.message,
-        },
-        'Job failed'
-      );
+      const failure = { jobId: job?.id, queue: queueName, error: error.message };
+      // An expected outcome (e.g. an inconclusive AI scoring) is not a fault: no error log.
+      if (isExpectedJobOutcome(error)) {
+        this.logger.warn(failure, 'Job ended without a result (expected outcome)');
+      } else {
+        this.logger.error(failure, 'Job failed');
+      }
     });
 
     worker.on('error', (error) => {

@@ -6,7 +6,15 @@ import { requiredProdEnv } from '@intelliflow/validators/required-url';
  * Supports both OpenAI (production) and Ollama (local development)
  */
 
-export const AIProviderSchema = z.enum(['litellm', 'openai', 'ollama', 'mock', 'openrouter']);
+export const AIProviderSchema = z.enum([
+  'litellm',
+  'openai',
+  'ollama',
+  'mock',
+  'openrouter',
+  // Claude through the Anthropic SDK (lib/anthropic-chat-model.ts); key from ANTHROPIC_API_KEY.
+  'anthropic',
+]);
 export type AIProvider = z.infer<typeof AIProviderSchema>;
 
 export const AIConfigSchema = z.object({
@@ -273,9 +281,26 @@ export const MODEL_PRICING = {
   'gemini-embedding-001': { input: 0.00015, output: 0 },
   // Production embeddings since 2026-10-31 (EMBEDDING_PROVIDER=openrouter): free on OpenRouter.
   'nvidia/nemotron-3-embed-1b:free': { input: 0, output: 0 },
+
+  // AI_PROVIDER=anthropic (Anthropic first-party API list prices). Claude Haiku 5.5: $0.10 /
+  // $0.50 per M for prompts up to 100K tokens; longer prompts are priced from
+  // LONG_PROMPT_PRICING below. Claude Sonnet 5.5: $2 / $10 per M.
+  'claude-haiku-5-5': { input: 0.0001, output: 0.0005 },
+  'claude-sonnet-5-5': { input: 0.002, output: 0.01 },
 } as const;
 
 export type ModelName = keyof typeof MODEL_PRICING;
+
+/**
+ * Models whose whole call is billed at a higher rate once the prompt passes a size (USD per 1K
+ * tokens, like MODEL_PRICING). Claude Haiku 5.5: a prompt over 100K tokens is billed $0.50 /
+ * $2.50 per M instead of $0.10 / $0.50.
+ */
+export const LONG_PROMPT_PRICING: Readonly<
+  Record<string, { overInputTokens: number; input: number; output: number }>
+> = {
+  'claude-haiku-5-5': { overInputTokens: 100_000, input: 0.0005, output: 0.0025 },
+};
 
 /**
  * Calculate cost for a given number of tokens
@@ -331,7 +356,11 @@ export function calculateCost(model: string, inputTokens: number, outputTokens: 
       `[ai.config] No MODEL_PRICING entry for "${model}" — cost estimated at gpt-3.5-turbo rates`
     );
   }
-  const pricing = known || MODEL_PRICING['gpt-3.5-turbo'];
+  const longPrompt = Object.hasOwn(LONG_PROMPT_PRICING, model) ? LONG_PROMPT_PRICING[model] : null;
+  const pricing =
+    longPrompt && inputTokens > longPrompt.overInputTokens
+      ? longPrompt
+      : known || MODEL_PRICING['gpt-3.5-turbo'];
 
   const inputCost = (inputTokens / 1000) * pricing.input;
   const outputCost = (outputTokens / 1000) * pricing.output;

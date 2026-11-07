@@ -74,6 +74,9 @@ import { costTracker } from './utils/cost-tracker';
 import { createTenantAiSpendRecorder, createPurposeSpendRecorder } from './utils/tenant-ai-spend';
 import { setPurposeSpendReader } from './lib/purpose-ceiling';
 import { aiConfig, loadAIConfig } from './config/ai.config';
+import { anthropicModelForTier } from './lib/anthropic-config';
+import { setMonthlyBudgetStore, type MonthlyBudgetStore } from './lib/monthly-budget';
+import { isExpectedJobFailure, toScoringJobFailure } from './jobs/scoring.job';
 import {
   extractJobContext,
   markAgentActive,
@@ -292,10 +295,9 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           opts: Record<string, unknown>
         ) => MonitoringRedisLike;
         const client = new RedisCtor({
-          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-          password: process.env.REDIS_PASSWORD || undefined,
-          db: Number.parseInt(process.env.REDIS_DB || '0', 10),
+          // The worker's own connection settings (host, port, password, username, db, TLS):
+          // this client also holds the monthly AI budget, which must reach the same server.
+          ...redisConnectionOptions(),
           lazyConnect: true,
           // During container rollouts the TCP stream briefly drops. With
           // enableOfflineQueue:false ioredis throws "Stream isn't writeable and
@@ -314,6 +316,9 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           // Bounded exponential reconnect backoff (50ms..2s) for the publisher.
           retryStrategy: (times: number) => Math.min(times * 50, 2000),
         });
+        // The monthly AI budget's running total, shared by every worker (monthly-budget.ts).
+        // Without it, calls on the paid provider are refused: the spend cannot be checked.
+        setMonthlyBudgetStore(client as unknown as MonthlyBudgetStore);
         this.redisMonitoringPublisher = new RedisMonitoringPublisher(client, this.prisma as never);
         this.redisMonitoringPublisher.start();
         this.logger.info('RedisMonitoringPublisher started — publishing snapshots every 5s');
@@ -713,6 +718,15 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
       // failed — enqueue to DLQ when attempts are exhausted
       queueEvents.on('failed', ({ jobId, failedReason }) => {
+        // An expected outcome (the model answered without a usable score) is not a fault: a
+        // warning, no dead-letter entry. It fails once (toScoringJobFailure), never retried.
+        if (isExpectedJobFailure(failedReason)) {
+          this.logger.warn(
+            { jobId, queue: queueName, failedReason },
+            'Job ended without a result (expected outcome)'
+          );
+          return;
+        }
         this.logger.error({ jobId, queue: queueName, failedReason }, 'Job failed');
 
         // We need the full job to read attemptsMade + data; use the queue API.
@@ -1262,7 +1276,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
         await markAgentError(ctx, message, durationMs);
       }
-      throw error;
+      // An inconclusive scoring fails once: no retries, no dead-letter queue.
+      throw job.queueName === SCORING_QUEUE ? toScoringJobFailure(error) : error;
     }
   }
 
@@ -1347,6 +1362,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     if (aiConfig.provider === 'litellm') return 'litellm-proxy';
     if (aiConfig.provider === 'openai') return aiConfig.openai.model;
     if (aiConfig.provider === 'ollama') return aiConfig.ollama.model;
+    if (aiConfig.provider === 'anthropic') return anthropicModelForTier('free');
     return 'mock';
   }
 
@@ -1359,6 +1375,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       );
     if (aiConfig.provider === 'openai') return aiConfig.openai.baseUrl || 'https://api.openai.com';
     if (aiConfig.provider === 'ollama') return aiConfig.ollama.baseUrl;
+    if (aiConfig.provider === 'anthropic') return 'https://api.anthropic.com';
     return 'mock';
   }
 
@@ -1418,10 +1435,28 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     };
   }
 
+  /**
+   * Claude (AI_PROVIDER=anthropic) is configured through env vars read by llm-factory.ts
+   * (ANTHROPIC_API_KEY, ANTHROPIC_MODEL*). Configuration check only: no API call, so a health
+   * probe never spends.
+   */
+  private getAnthropicProviderHealth(lastCheck: string): ComponentHealth {
+    const hasApiKey = Boolean(process.env['ANTHROPIC_API_KEY']);
+    return {
+      status: hasApiKey ? 'ok' : 'error',
+      latency: 0,
+      lastCheck,
+      message: hasApiKey
+        ? `provider=anthropic, model=${anthropicModelForTier('free')}`
+        : 'ANTHROPIC_API_KEY is missing',
+    };
+  }
+
   private getConfiguredProviderHealth(
     lastCheck: string
   ): Promise<ComponentHealth> | ComponentHealth {
     if (aiConfig.provider === 'mock') return this.getMockProviderHealth(lastCheck);
+    if (aiConfig.provider === 'anthropic') return this.getAnthropicProviderHealth(lastCheck);
     if (aiConfig.provider === 'litellm') return this.getOpenAIProviderHealth(lastCheck); // LiteLLM uses same OpenAI-compat check
     if (aiConfig.provider === 'openai') return this.getOpenAIProviderHealth(lastCheck);
     if (aiConfig.provider === 'openrouter') return this.getOpenRouterProviderHealth(lastCheck);
