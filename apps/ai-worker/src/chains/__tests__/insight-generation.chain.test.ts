@@ -5,7 +5,7 @@
  * 1. Mock provider returns valid structured JSON
  * 2. LLM throws timeout → fallback returns insights with confidence: 0.4
  * 3. LLM returns malformed JSON → fallback kicks in
- * 4. Empty input (no flagged items) → "all clear" achievement insight
+ * 4. Empty input (no flagged items) → no insight (#1219)
  * 5. Validate Zod constraints (confidence bounds, priority enum, entityType enum)
  * 6. Production guard throws when AI_PROVIDER=mock in NODE_ENV=production
  * 7. The chain records no usage itself (PG-199: metered once by the tracing wrapper)
@@ -201,7 +201,7 @@ describe('InsightGenerationChain', () => {
       expect(result.insights[0].reasoning).toContain('AI-generated insight');
     });
 
-    it('should produce achievement insight when no items flagged', async () => {
+    it('produces no insight, never a reassurance, when no items are flagged (#1219)', async () => {
       const chain = new InsightGenerationChain();
       // Override to throw so we exercise fallback for empty input
       (chain as any).structuredModel = {
@@ -211,9 +211,7 @@ describe('InsightGenerationChain', () => {
       const input = createInput();
       const result = await chain.generateInsights(input);
 
-      expect(result.length).toBe(1);
-      expect(result[0].type).toBe('achievement');
-      expect(result[0].title).toContain('on track');
+      expect(result).toEqual([]);
     });
   });
 

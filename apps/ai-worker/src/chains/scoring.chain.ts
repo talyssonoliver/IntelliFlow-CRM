@@ -42,6 +42,51 @@ export type LeadInput = z.infer<typeof leadInputSchema>;
 export type ScoringResult = z.infer<typeof leadScoreSchema>;
 
 /**
+ * The model answered in the right shape but gave no usable score: confidence 0, or no factors.
+ * #1218: such an answer was stored as a real score of 0 and could auto-disqualify the lead.
+ */
+export class ScoringInconclusiveError extends Error {
+  readonly reason: 'ZERO_CONFIDENCE' | 'NO_FACTORS';
+  constructor(reason: 'ZERO_CONFIDENCE' | 'NO_FACTORS') {
+    super(`Model gave no usable score (${reason})`);
+    this.name = 'ScoringInconclusiveError';
+    this.reason = reason;
+  }
+}
+
+/** Throws ScoringInconclusiveError when a parsed answer carries no usable score. */
+export function assertUsableScore(result: { confidence?: unknown; factors?: unknown }): void {
+  if (typeof result.confidence !== 'number' || !(result.confidence > 0)) {
+    throw new ScoringInconclusiveError('ZERO_CONFIDENCE');
+  }
+  if (!Array.isArray(result.factors) || result.factors.length === 0) {
+    throw new ScoringInconclusiveError('NO_FACTORS');
+  }
+}
+
+/**
+ * Loggable facts about a scoring failure, without any value from the lead or the answer:
+ * the inconclusive reason, or for a schema error the paths and codes of the failing fields.
+ */
+export function scoringFailureShape(error: unknown): Record<string, unknown> {
+  if (error instanceof ScoringInconclusiveError) return { inconclusive: error.reason };
+  const issues = (error as { issues?: unknown } | null)?.issues;
+  if (Array.isArray(issues)) {
+    return {
+      schemaIssues: issues.slice(0, 10).map((issue) => {
+        const i = issue as { path?: unknown; code?: unknown };
+        return {
+          path: Array.isArray(i.path) ? i.path.join('.') : undefined,
+          code: typeof i.code === 'string' ? i.code : undefined,
+        };
+      }),
+    };
+  }
+  const llmOutput = (error as { llmOutput?: unknown } | null)?.llmOutput;
+  return typeof llmOutput === 'string' ? { rawOutputLength: llmOutput.length } : {};
+}
+
+/**
  * Captures LLM token usage from LangChain callbacks so withMonitoring() can
  * compute a real tokenCost (IFC-215). Usage metadata lives in the callback
  * because withStructuredOutput().invoke() returns only the parsed output.
@@ -119,9 +164,32 @@ export class TokenUsageCallbackHandler extends BaseCallbackHandler {
     }
   }
 
+  /**
+   * A response that completed but was unusable (a Claude refusal or cut-off answer) never
+   * reaches handleLLMEnd, yet it was billed. Its error carries the usage as `billedResult`
+   * (AnthropicIncompleteResponseError), so chain monitoring still records that spend once.
+   */
+  handleLLMError(err: unknown): void {
+    const billed = (err as { billedResult?: BilledResult } | null)?.billedResult;
+    const usage = billed?.usage_metadata;
+    if (!usage) return;
+    const served = billed.response_metadata?.model_name;
+    this.captured = {
+      inputTokens: usage.input_tokens ?? 0,
+      outputTokens: usage.output_tokens ?? 0,
+      ...this.pricingFor(typeof served === 'string' ? served : undefined),
+    };
+  }
+
   getUsage(): TokenUsage | null {
     return this.captured;
   }
+}
+
+/** The usage a provider error carries for a billed response (see handleLLMError). */
+interface BilledResult {
+  usage_metadata?: { input_tokens?: number; output_tokens?: number };
+  response_metadata?: { model_name?: unknown };
 }
 
 /**
@@ -167,7 +235,9 @@ Consider the following factors:
 Lead Information:
 {lead_info}
 
-Respond with a structured JSON object containing the score, confidence, factors, and modelVersion fields.`;
+Respond with a structured JSON object containing the score, confidence, factors, and modelVersion fields.
+List at least one factor, each with the points it adds or removes and the lead information behind it.
+Confidence is how sure you are that the score is right, above 0 and at most 1: near 1 when the lead information clearly supports the score, 0.5 or below when it is thin or mixed. Never answer confidence 0; when the information is thin, give your best score with a low confidence.`;
 
   constructor(options?: { tenantId?: string; provider?: AIProvider; recordDrift?: boolean }) {
     this.tenantId = options?.tenantId;
@@ -314,6 +384,11 @@ Respond with a structured JSON object containing the score, confidence, factors,
             callbacks: [usageHandler],
           })) as unknown as Omit<ScoringResult, 'modelVersion'>;
 
+          // #1218: a schema-valid answer can still be no score at all (the model answered
+          // confidence 0, or gave no factors). That is a failed scoring, not a score of 0, and
+          // it throws here, inside the monitored call, so no ROI value is booked for it.
+          assertUsableScore(result);
+
           // Add model version (versioned string for audit; costModelKey used for pricing above)
           return {
             ...result,
@@ -358,22 +433,15 @@ Respond with a structured JSON object containing the score, confidence, factors,
           latencyMs: Date.now() - startTime,
         });
       }
-      logger.error({ leadId, errorClass: classifyError(error) }, 'Lead scoring failed');
+      // The class and shape only, never the message: an error can echo lead text (NF-002).
+      logger.error(
+        { leadId, errorClass: classifyError(error), ...scoringFailureShape(error) },
+        'Lead scoring failed'
+      );
 
-      // Return a default low-confidence score on error
-      return {
-        score: 0,
-        confidence: 0,
-        factors: [
-          {
-            name: 'error',
-            impact: 0,
-            // The class only: the result is persisted and shown, and an error can echo lead text.
-            reasoning: `Scoring failed (${classifyError(error)})`,
-          },
-        ],
-        modelVersion: 'error:v1',
-      };
+      // #1218: a failure is never returned as a score of 0. It propagates, so the job can try
+      // the fallback provider and, if that fails too, report the scoring as FAILED.
+      throw error;
     }
   }
 

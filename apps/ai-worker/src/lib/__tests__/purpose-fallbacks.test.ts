@@ -59,8 +59,8 @@ describe('purpose at its monthly ceiling → existing non-AI fallback (PG-199)',
     h.upsert.mockClear();
   });
 
-  it('scoring: lead scoring returns the default low-confidence score', async () => {
-    const result = await new LeadScoringChain({ tenantId: TENANT }).scoreLead({
+  it('scoring: lead scoring at its ceiling fails rather than returning a 0 score (#1218)', async () => {
+    const scoring = new LeadScoringChain({ tenantId: TENANT }).scoreLead({
       email: 'john.doe@acme.com',
       firstName: 'John',
       lastName: 'Doe',
@@ -69,9 +69,9 @@ describe('purpose at its monthly ceiling → existing non-AI fallback (PG-199)',
       phone: '+1-555-0123',
       source: 'WEBSITE',
     });
+    // The job turns this into a FAILED scoring; no made-up score is saved.
+    await expect(scoring).rejects.toThrow('monthly AI ceiling reached for scoring');
     expect(createLLMForTenant).toHaveBeenCalledWith('scoring', 'free', expect.anything());
-    expect(result.score).toBe(0);
-    expect(result.confidence).toBe(0);
   });
 
   it('scoring: churn risk falls back to its heuristic', async () => {

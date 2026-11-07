@@ -109,7 +109,7 @@ describe('LeadService.scoreLead and processing restrictions', () => {
     expect(repo.save).toHaveBeenCalledTimes(1);
     expect(repo.save).toHaveBeenCalledWith(
       expect.anything(),
-      { scoreOnlyIfEmail: 'ada@example.invalid' },
+      { scoreOnlyIfEmail: 'ada@example.invalid', scoringStatus: 'SCORED' },
       tx
     );
     expect(repo.save.mock.invocationCallOrder[0]).toBeLessThan(
@@ -136,7 +136,7 @@ describe('LeadService.scoreLead and processing restrictions', () => {
     expect(result.error.message).toContain('changed while it was being scored');
     expect(repo.save).toHaveBeenCalledWith(
       expect.anything(),
-      { scoreOnlyIfEmail: 'ada@example.invalid' },
+      { scoreOnlyIfEmail: 'ada@example.invalid', scoringStatus: 'SCORED' },
       tx
     );
     // The full snapshot (names, phone, company...) is never written by scoring.
