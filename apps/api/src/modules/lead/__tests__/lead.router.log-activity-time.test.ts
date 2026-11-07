@@ -105,6 +105,39 @@ describe('lead.logActivity occurredAt', () => {
     expect(captured.contact.data.lastContactedAt).toEqual(captured.activity.timestamp);
   });
 
+  it('stores the direction of an email in its metadata, and none when not given', async () => {
+    prismaMock.lead.findUnique.mockResolvedValue(mockLead as any);
+    const captured = captureTransaction();
+
+    await leadRouter.createCaller(createTestContext()).logActivity({
+      leadId: TEST_UUIDS.lead1,
+      type: 'EMAIL',
+      title: 'Reply received: pricing',
+      direction: 'inbound',
+    });
+    expect(captured.activity.metadata).toEqual({ direction: 'inbound' });
+
+    await leadRouter.createCaller(createTestContext()).logActivity({
+      leadId: TEST_UUIDS.lead1,
+      type: 'NOTE',
+      title: 'Note',
+    });
+    expect(captured.activity).not.toHaveProperty('metadata');
+  });
+
+  it('rejects an unknown direction', async () => {
+    prismaMock.lead.findUnique.mockResolvedValue(mockLead as any);
+    captureTransaction();
+    await expect(
+      leadRouter.createCaller(createTestContext()).logActivity({
+        leadId: TEST_UUIDS.lead1,
+        type: 'EMAIL',
+        title: 'Email',
+        direction: 'sideways' as never,
+      })
+    ).rejects.toThrow();
+  });
+
   it('rejects an occurredAt in the future', async () => {
     prismaMock.lead.findUnique.mockResolvedValue(mockLead as any);
     captureTransaction();

@@ -127,8 +127,23 @@ export async function assertWithinMonthlyBudget(
     if (failsClosed(provider)) throw new MonthlyBudgetExceededError(Number.NaN, budgetUsd);
     return;
   }
+  lastKnownTotal = { key, micros: spentMicros };
   const spentUsd = (spentMicros + (pending.get(key) ?? 0)) / MICROS_PER_USD;
   if (spentUsd >= budgetUsd) throw new MonthlyBudgetExceededError(spentUsd, budgetUsd);
+}
+
+/** The shared month total last read or written by this process. */
+let lastKnownTotal: { key: string; micros: number } | null = null;
+
+/**
+ * This month's spend in USD as last seen by this process (read before the latest paid call,
+ * or written after it), with its unwritten spend; null before the first read. Logged on each
+ * Claude call so spend can be checked from the logs.
+ */
+export function monthToDateUsd(now: Date = new Date()): number | null {
+  const key = monthlyBudgetKey(now);
+  if (lastKnownTotal?.key !== key) return null;
+  return (lastKnownTotal.micros + (pending.get(key) ?? 0)) / MICROS_PER_USD;
 }
 
 /**
@@ -142,6 +157,7 @@ const pending = new Map<string, number>();
 export function _resetPendingSpend(): void {
   pending.clear();
   writeQueues.clear();
+  lastKnownTotal = null;
 }
 
 /** Writes per month key run one at a time, so two calls never write the same pending amount. */
@@ -176,7 +192,16 @@ async function writePending(key: string): Promise<boolean> {
     const left = (pending.get(key) ?? 0) - micros;
     if (left > 0) pending.set(key, left);
     else pending.delete(key);
+    lastKnownTotal = { key, micros: totalMicros };
     if (totalMicros === micros) await store.expire(key, KEY_TTL_SECONDS);
+    logger.info(
+      {
+        addedUsd: micros / MICROS_PER_USD,
+        monthToDateUsd: totalMicros / MICROS_PER_USD,
+        budgetUsd: monthlyBudgetUsd(),
+      },
+      'Monthly AI spend recorded'
+    );
     warnOnCrossing(totalMicros - micros, totalMicros);
     return left <= 0;
   } catch (err) {

@@ -14,6 +14,7 @@ import {
   assertWithinMonthlyBudget,
   isMonthlyBudgetExceeded,
   monthlyBudgetKey,
+  monthToDateUsd,
   recordMonthlySpend,
   setMonthlyBudgetStore,
   type MonthlyBudgetStore,
@@ -190,6 +191,17 @@ describe('monthly AI budget', () => {
     await expect(assertWithinMonthlyBudget('scoring-free', 'litellm', NOV)).rejects.toBeInstanceOf(
       MonthlyBudgetExceededError
     );
+  });
+
+  it('reports the month-to-date total it last read or wrote, for the Claude call log line', async () => {
+    expect(monthToDateUsd(NOV)).toBeNull();
+    await spendUsd(1.25);
+    expect(monthToDateUsd(NOV)).toBeCloseTo(1.25);
+    store.values.set(monthlyBudgetKey(NOV), 3_000_000); // another worker spent meanwhile
+    await claudeCall();
+    expect(monthToDateUsd(NOV)).toBeCloseTo(3);
+    // A new month has no total yet.
+    expect(monthToDateUsd(new Date('2026-12-01T00:00:00Z'))).toBeNull();
   });
 
   it('never throws while recording, so a paid answer is not lost', async () => {
