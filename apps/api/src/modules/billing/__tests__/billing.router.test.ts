@@ -16,6 +16,7 @@ const mockSubscription = {
   customerId: 'cus_123',
   status: 'active' as const,
   priceId: 'price_professional_monthly',
+  itemId: 'si_123',
   quantity: 5,
   currency: 'gbp',
   currentPeriodStart: new Date('2025-01-01'),
@@ -766,6 +767,8 @@ describe('billingRouter', () => {
       const result = await caller.updateSubscription({ priceId: 'price_enterprise_monthly' });
       expect(result.priceId).toBe('price_enterprise_monthly');
       expect(mockStripeAdapterMethods.updateSubscription).toHaveBeenCalledWith('sub_123', {
+        // #1239: the plan item is named, so Stripe replaces it rather than adding another.
+        itemId: 'si_123',
         priceId: 'price_enterprise_monthly',
         quantity: undefined,
       });

@@ -13,7 +13,7 @@ vi.mock('../../mappers', () => ({ mapToSubscription: vi.fn(() => ({ id: 'sub_1' 
 
 import { makeRequest } from '../../http-client';
 import { findActivePromotionCode, getPriceProductId } from '../promotion-codes';
-import { createSubscription } from '../subscriptions';
+import { createSubscription, updateSubscription } from '../subscriptions';
 
 const mockMakeRequest = makeRequest as ReturnType<typeof vi.fn>;
 // Never used to reach Stripe: makeRequest is mocked.
@@ -205,5 +205,36 @@ describe('getPriceProductId', () => {
     expect((await getPriceProductId(config, 'price_1')).error).toBeInstanceOf(
       StripeConnectionError
     );
+  });
+});
+
+describe('updateSubscription names the plan item (#1239)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockMakeRequest.mockResolvedValue(Result.ok({ id: 'sub_1' }));
+  });
+
+  it('changes the existing item, so Stripe replaces the plan instead of adding one', async () => {
+    await updateSubscription(config, 'sub_1', { itemId: 'si_1', priceId: 'price_pro' });
+
+    const body = mockMakeRequest.mock.calls[0][3] as URLSearchParams;
+    expect(body.get('items[0][id]')).toBe('si_1');
+    expect(body.get('items[0][price]')).toBe('price_pro');
+  });
+
+  it('names the item for a seat change too', async () => {
+    await updateSubscription(config, 'sub_1', { itemId: 'si_1', quantity: 4 });
+
+    const body = mockMakeRequest.mock.calls[0][3] as URLSearchParams;
+    expect(body.get('items[0][id]')).toBe('si_1');
+    expect(body.get('items[0][quantity]')).toBe('4');
+  });
+
+  it('sends no item for a change that only cancels at period end', async () => {
+    await updateSubscription(config, 'sub_1', { itemId: 'si_1', cancelAtPeriodEnd: true });
+
+    const body = mockMakeRequest.mock.calls[0][3] as URLSearchParams;
+    expect(body.has('items[0][id]')).toBe(false);
+    expect(body.get('cancel_at_period_end')).toBe('true');
   });
 });

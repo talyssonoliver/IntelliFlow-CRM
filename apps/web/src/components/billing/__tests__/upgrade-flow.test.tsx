@@ -338,7 +338,7 @@ describe('UpgradeFlow', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /contact support/i })).toHaveAttribute(
       'href',
-      '/support'
+      '/support/tickets/new'
     );
     expect(screen.queryByRole('link', { name: /update payment method/i })).toBeNull();
     expect(mockMutate).not.toHaveBeenCalled();

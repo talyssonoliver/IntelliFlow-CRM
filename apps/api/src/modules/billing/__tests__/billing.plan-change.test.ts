@@ -49,7 +49,12 @@ const caller = () =>
     prisma: { user: { update: vi.fn() } },
   } as never);
 
-const sub = (status: string) => ({ id: 'sub_1', status, priceId: 'price_starter_monthly' });
+const sub = (status: string, itemId: string | null = 'si_1') => ({
+  id: 'sub_1',
+  status,
+  priceId: 'price_starter_monthly',
+  itemId: itemId ?? undefined,
+});
 
 describe('updateSubscription — plan change (#1239)', () => {
   const originalKey = process.env.STRIPE_SECRET_KEY;
@@ -78,9 +83,10 @@ describe('updateSubscription — plan change (#1239)', () => {
   ] as const)('resolves the plan and the %s period to the Stripe price', async (cycle, price) => {
     await caller().updateSubscription({ planId: 'professional', billingCycle: cycle });
 
+    // The existing plan item is named, so Stripe replaces it instead of adding a second one.
     expect(stripe.updateSubscription).toHaveBeenCalledWith(
       'sub_1',
-      expect.objectContaining({ priceId: price })
+      expect.objectContaining({ itemId: 'si_1', priceId: price })
     );
   });
 
@@ -132,6 +138,24 @@ describe('updateSubscription — plan change (#1239)', () => {
       message: PAUSED_BLOCKS_PLAN_CHANGE_MESSAGE,
     });
     expect(stripe.updateSubscription).not.toHaveBeenCalled();
+  });
+  it('refuses a plan change when the subscription has no item to change, rather than adding one', async () => {
+    stripe.listSubscriptions.mockResolvedValue(ok([sub('active', null)]));
+
+    await expect(
+      caller().updateSubscription({ planId: 'professional', billingCycle: 'monthly' })
+    ).rejects.toMatchObject({ code: 'INTERNAL_SERVER_ERROR' });
+    expect(stripe.updateSubscription).not.toHaveBeenCalled();
+  });
+
+  it('can still cancel at period end without an item id', async () => {
+    stripe.listSubscriptions.mockResolvedValue(ok([sub('active', null)]));
+
+    await caller().updateSubscription({ cancelAtPeriodEnd: true });
+
+    expect(stripe.updateSubscription.mock.calls[0][1]).toMatchObject({
+      cancel_at_period_end: true,
+    });
   });
   it('still says there is no subscription when the only one has ended', async () => {
     stripe.listSubscriptions.mockResolvedValue(ok([sub('canceled')]));

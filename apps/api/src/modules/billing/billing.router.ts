@@ -120,6 +120,8 @@ export interface StripeSubscription {
     | 'canceled'
     | 'unpaid'
     | 'paused';
+  /** The plan item's id; a price change must name it (#1239). */
+  itemId?: string;
   priceId: string;
   quantity: number;
   currency: string;
@@ -249,7 +251,7 @@ interface IStripeAdapter {
   ): Promise<StripeResult<StripeCustomer>>;
   updateSubscription(
     subscriptionId: string,
-    params: { priceId?: string; quantity?: number }
+    params: { itemId?: string; priceId?: string; quantity?: number }
   ): Promise<StripeResult<StripeSubscription>>;
   cancelSubscription(
     subscriptionId: string,
@@ -363,6 +365,20 @@ function changeableSubscription(subscriptions: StripeSubscription[]): StripeSubs
       ? { code: 'PRECONDITION_FAILED', message: PAYMENT_ISSUE_BLOCKS_PLAN_CHANGE_MESSAGE }
       : { code: 'NOT_FOUND', message: 'No active subscription found.' }
   );
+}
+
+/**
+ * The plan item a price or seat change must name (#1239). Without its id Stripe adds a second,
+ * separately billed item, so a change that needs one and has none is refused, not sent.
+ */
+function planItemId(subscription: StripeSubscription, changesItem: boolean): string | undefined {
+  if (changesItem && !subscription.itemId) {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'The subscription has no plan item to change.',
+    });
+  }
+  return subscription.itemId;
 }
 
 async function getStripeAdapter(): Promise<IStripeAdapter> {
@@ -887,11 +903,16 @@ export const billingRouter = createTRPCRouter({
       const activeSubscription = changeableSubscription(subsResult.value);
 
       const priceId = planChangePriceId(input);
-      const updateParams: { priceId?: string; quantity?: number; cancel_at_period_end?: boolean } =
-        {
-          priceId,
-          quantity: input.quantity,
-        };
+      const updateParams: {
+        itemId?: string;
+        priceId?: string;
+        quantity?: number;
+        cancel_at_period_end?: boolean;
+      } = {
+        itemId: planItemId(activeSubscription, Boolean(priceId || input.quantity)),
+        priceId,
+        quantity: input.quantity,
+      };
       if (input.cancelAtPeriodEnd !== undefined) {
         updateParams.cancel_at_period_end = input.cancelAtPeriodEnd;
       }

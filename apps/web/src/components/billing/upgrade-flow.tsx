@@ -443,7 +443,7 @@ function PlanChangeBlockedNotice({ paused }: Readonly<{ paused: boolean }>) {
           </Button>
           <Button className="flex-1" asChild>
             {paused ? (
-              <Link href="/support">Contact support</Link>
+              <Link href="/support/tickets/new">Contact support</Link>
             ) : (
               <Link href="/billing/payment-methods">Update payment method</Link>
             )}
