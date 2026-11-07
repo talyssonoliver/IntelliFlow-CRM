@@ -724,6 +724,7 @@ describe('LeadService', () => {
     it('writes a status with field edits as compare-and-set status + plain save, in one transaction', async () => {
       const lead = contactedLead('record-two-writes@example.com');
       const save = vi.spyOn(leadRepository, 'save');
+      const publishAll = vi.spyOn(eventBus, 'publishAll');
 
       const result = await leadService.updateLead(
         lead.id.value,
@@ -738,6 +739,28 @@ describe('LeadService', () => {
       expect(second?.[1]).toBeUndefined();
       expect(first?.[2]).toBeDefined();
       expect(second?.[2]).toBe(first?.[2]);
+      // The status event is published in that same transaction.
+      expect(publishAll).toHaveBeenCalledTimes(1);
+      expect(publishAll.mock.calls[0]?.[1]).toBe(first?.[2]);
+    });
+
+    it('publishes nothing when the status write fails', async () => {
+      const lead = contactedLead('record-no-event@example.com');
+      eventBus.clear();
+      const publishAll = vi.spyOn(eventBus, 'publishAll');
+      vi.spyOn(leadRepository, 'save').mockRejectedValueOnce(
+        new LeadStatusConflictError(lead.id.value, 'CONTACTED')
+      );
+
+      const result = await leadService.updateLead(
+        lead.id.value,
+        { status: 'QUALIFIED' },
+        'sales-rep'
+      );
+
+      expect(result.isFailure).toBe(true);
+      expect(publishAll).not.toHaveBeenCalled();
+      expect(eventBus.getEvents()).toEqual([]);
     });
 
     it('writes nothing more when the status changed concurrently', async () => {

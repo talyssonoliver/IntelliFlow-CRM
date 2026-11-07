@@ -784,13 +784,16 @@ export class LeadService {
         // and only if it is still the status this change was validated against. The
         // plain save then writes the other fields (it never writes the status). Either
         // both land or neither does.
+        // The status events (LeadQualified / LeadStatusChanged) are written in the same
+        // transaction, as qualifyLead does, so a committed status never loses its event.
         await this.transactionManager.run(async (tx) => {
           await this.leadRepository.save(lead, { expectedStatus }, tx);
           await this.leadRepository.save(lead, undefined, tx);
+          await this.publishEvents(lead, tx);
         });
-      } else {
-        await this.leadRepository.save(lead);
+        return Result.ok(lead);
       }
+      await this.leadRepository.save(lead);
     } catch (error) {
       return Result.fail(this.saveFailure(error, expectedStatus, 'Failed to save lead'));
     }
