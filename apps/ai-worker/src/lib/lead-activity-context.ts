@@ -11,10 +11,11 @@
  * stage is a stage name and a date.
  *
  * Direction: `metadata.direction` when an activity was logged with one. Older rows have none,
- * so for an EMAIL it is inferred here from clear words in its title, for the prompt only and
- * never written back: "reply", "replied", "received" or "inbound" mean inbound ("Reply
- * received: ..."); "sent", "outreach" or "outbound" mean outbound ("Follow-up email sent").
- * Any other email is counted as unknown direction rather than guessed.
+ * so for an EMAIL it is inferred here from the event part of its title (before the first
+ * colon), for the prompt only and never written back: starting "Reply", "Replied", "Received"
+ * or "Inbound" means inbound ("Reply received: ..."); "sent", "outreach" or "outbound" means
+ * outbound ("Follow-up email sent"). Any other email is counted as unknown direction rather
+ * than guessed.
  *
  * TODO(#1177): once the mail bridge stores email_records for leads, count those too.
  */
@@ -61,20 +62,29 @@ function metadataOf(row: ActivityRow): Record<string, unknown> {
     : {};
 }
 
-const INBOUND_TITLE = /\b(reply|replied|received|inbound)\b/i;
-const OUTBOUND_TITLE = /\b(sent|outreach|outbound)\b/i;
+/** The event part of a title: the text before its first colon ("Reply received: ..."). */
+function titleEvent(title: string): string {
+  return title.split(':', 1)[0].trim();
+}
+
+const INBOUND_EVENT = /^(reply|replied|received|inbound)\b/i;
+const OUTBOUND_EVENT = /\b(sent|outreach|outbound)\b/i;
 
 /**
- * The direction stored on the activity, else, for an EMAIL, inferred from clear words in its
- * title. Null when neither says.
+ * The direction stored on the activity, else, for an EMAIL, inferred from the event part of
+ * its title only, never from the words after it ("Email sent: please reply" is outbound).
+ * Inbound when the event starts with reply/received/inbound, outbound when it says
+ * sent/outreach/outbound; null when it says both or neither.
  */
 export function activityDirection(row: ActivityRow): ActivityDirection | null {
   const stored = metadataOf(row)['direction'];
   if (stored === 'inbound' || stored === 'outbound') return stored;
   if (row.type !== 'EMAIL') return null;
-  if (INBOUND_TITLE.test(row.title)) return 'inbound';
-  if (OUTBOUND_TITLE.test(row.title)) return 'outbound';
-  return null;
+  const event = titleEvent(row.title);
+  const inbound = INBOUND_EVENT.test(event);
+  const outbound = OUTBOUND_EVENT.test(event);
+  if (inbound === outbound) return null;
+  return inbound ? 'inbound' : 'outbound';
 }
 
 function latestPipelineStage(rows: ActivityRow[]): LeadActivityContext['pipelineStage'] {

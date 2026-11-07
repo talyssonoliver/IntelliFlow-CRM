@@ -115,6 +115,13 @@ describe('lead activity context for scoring', () => {
     expect(activityDirection(row('EMAIL', 'Price follow-up sent'))).toBe('outbound');
     // Neither word: not guessed.
     expect(activityDirection(row('EMAIL', 'Pricing question'))).toBeNull();
+    // Only the event part counts, never the words after it.
+    expect(activityDirection(row('EMAIL', 'Email sent: please reply with your availability'))).toBe(
+      'outbound'
+    );
+    expect(activityDirection(row('EMAIL', 'Reply received: I sent you the brief'))).toBe('inbound');
+    // An event that says both is not guessed either.
+    expect(activityDirection(row('EMAIL', 'Reply sent'))).toBeNull();
   });
 
   it('counts an email whose direction is unclear apart, instead of as sent', () => {
