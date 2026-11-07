@@ -1,6 +1,8 @@
 'use client';
 
 import { trpc } from '@/lib/trpc';
+import { isEmptySeries } from '@/lib/charts/empty-series';
+import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
 import { useAuth } from '@/lib/auth/AuthContext';
 import type { WidgetProps } from './index';
 
@@ -34,8 +36,18 @@ export function GrowthTrendsWidget(_props: Readonly<WidgetProps>) {
     );
   }
 
-  if (!trendData || trendData.length === 0) {
-    return null;
+  if (!trendData || isEmptySeries(trendData, 'value')) {
+    return (
+      <div className="p-5 h-full flex flex-col">
+        <h3 className="font-bold text-foreground flex items-center gap-2 mb-4">
+          <span className="material-symbols-outlined text-muted-foreground" aria-hidden="true">
+            show_chart
+          </span>{' '}
+          Growth Trends
+        </h3>
+        <ChartEmptyState />
+      </div>
+    );
   }
 
   const dataPoints = trendData.map((d: GrowthTrendData) => d.value);

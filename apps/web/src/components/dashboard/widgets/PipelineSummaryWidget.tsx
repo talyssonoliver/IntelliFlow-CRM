@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
 import {
   DASHBOARD_REFETCH_INTERVAL_MS,
@@ -29,18 +30,20 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
   const displayedTotal = (data?.stages ?? []).reduce((sum, s) => sum + Number(s.totalValue), 0);
 
   return (
-    <div className="p-6 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <h3 className="text-lg font-semibold text-foreground">Pipeline Summary</h3>
-        <button
-          type="button"
-          aria-label="Pipeline options"
-          className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+        {/* #1225 UI-012: was an options button with no handler; it now opens the board. */}
+        <Link
+          href="/deals?view=pipeline"
+          aria-label="Open the pipeline board"
+          title="Open the pipeline board"
+          className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <span className="material-symbols-outlined" aria-hidden="true">
-            more_horiz
+            open_in_new
           </span>
-        </button>
+        </Link>
       </div>
 
       <div className="space-y-4 flex-1">

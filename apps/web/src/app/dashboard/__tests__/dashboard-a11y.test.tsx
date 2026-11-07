@@ -113,11 +113,13 @@ describe('dashboard widget accessibility', () => {
     expectAllIconsHidden(container);
   });
 
-  it('PipelineSummaryWidget icon-button has an accessible name', () => {
+  it('PipelineSummaryWidget icon link has an accessible name', () => {
     const { container } = render(<PipelineSummaryWidget />);
     expectAllIconsHidden(container);
-    // Icon-only button must have an accessible name (Lighthouse button-name).
-    expect(screen.getByRole('button', { name: 'Pipeline options' })).toBeInTheDocument();
+    // Icon-only control must have an accessible name (Lighthouse link-name).
+    // #1225 UI-012: it opens the pipeline board (it used to be a dead button).
+    const link = screen.getByRole('link', { name: 'Open the pipeline board' });
+    expect(link).toHaveAttribute('href', '/deals?view=pipeline');
   });
 
   it('DealsWonWidget <select> has an accessible name (Lighthouse label)', () => {

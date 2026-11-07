@@ -7,6 +7,7 @@
  */
 
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { isEmptySeries } from '@/lib/charts/empty-series';
 import type { SentimentTrendPoint } from '@/lib/sentiment/types';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
@@ -21,7 +22,7 @@ function formatDate(dateStr: string, timezone: string = 'Europe/London'): string
 
 export default function SentimentTrend({ trends }: Readonly<SentimentTrendProps>) {
   const { timezone } = useTimezoneContext();
-  if (!trends.length) {
+  if (isEmptySeries(trends)) {
     return (
       <div className="flex items-center justify-center h-48 text-muted-foreground text-sm">
         No trend data available

@@ -2,6 +2,8 @@
 
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { isEmptySeries } from '@/lib/charts/empty-series';
+import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
 import {
   chartMax,
   computeBarHeightPercent,
@@ -45,6 +47,7 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
   const deltaPercent = computeDeltaPercent(revenueDelta, previous);
 
   const points = Array.isArray(timeSeries) ? timeSeries : [];
+  const hasPoints = !isEmptySeries(points, 'value');
   const maxValue = chartMax(points.map((p: Record<string, unknown>) => Number(p.value || 0)));
 
   const dayLabels =
@@ -74,7 +77,7 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
 
       {/* Bar Chart */}
       <div className="flex-1 flex items-end justify-between gap-1 w-full px-2">
-        {points.length > 0 ? (
+        {hasPoints &&
           points.map((point: Record<string, unknown>, i: number) => {
             const value = Number(point.value || 0);
             const height = computeBarHeightPercent(value, maxValue);
@@ -86,16 +89,17 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
                 style={{ height: `${height}%` }}
               />
             );
-          })
-        ) : (
+          })}
+        {!hasPoints && isLoading && (
           <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
-            {isLoading ? 'Loading...' : 'No data'}
+            Loading...
           </div>
         )}
+        {!hasPoints && !isLoading && <ChartEmptyState message="No revenue in this period yet" />}
       </div>
 
       {/* X-axis labels */}
-      {points.length > 0 && (
+      {hasPoints && (
         <div className="flex justify-between mt-2 text-xs text-slate-400">
           {dayLabels.slice(0, points.length).map((label: string, i: number) => (
             <span key={i}>{label}</span>

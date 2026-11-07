@@ -15,6 +15,8 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from 'recharts';
+import { isEmptySeries } from '@/lib/charts/empty-series';
+import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
 import type { HistoryPoint, ForecastMode } from './types';
 
 // =============================================================================
@@ -47,6 +49,15 @@ interface ForecastHistoryChartProps {
 
 export default function ForecastHistoryChart({ data, mode }: Readonly<ForecastHistoryChartProps>) {
   const yLabel = mode === 'portfolio' ? 'Win Rate (%)' : 'Probability (%)';
+
+  // #1225 UI-013: no points, or all zero, is a message, not an empty plot.
+  if (isEmptySeries(data)) {
+    return (
+      <div className="h-64" data-testid="history-chart">
+        <ChartEmptyState className="h-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="h-64" data-testid="history-chart">

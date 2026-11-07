@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { DealsWonWidget } from '../DealsWonWidget';
 import { DASHBOARD_REFETCH_INTERVAL_MS } from '@/lib/dashboard/kpi-calculator';
@@ -39,9 +39,36 @@ describe('DealsWonWidget', () => {
 
     render(<DealsWonWidget />);
 
-    expect(screen.getByText('Deals Won (Last 6 Months)')).toBeInTheDocument();
+    expect(screen.getByText('Deals Won')).toBeInTheDocument();
     expect(screen.getByText('Jan')).toBeInTheDocument();
     expect(screen.getByText('Feb')).toBeInTheDocument();
+  });
+
+  it('re-queries with 12 months when the range select changes (#1225 UI-014)', () => {
+    useQueryMock.mockReturnValue({ data: [{ month: 'Jan', value: 2 }], isLoading: false });
+    render(<DealsWonWidget />);
+
+    fireEvent.change(screen.getByLabelText('Select deals-won time range'), {
+      target: { value: '12' },
+    });
+
+    expect(useQueryMock).toHaveBeenLastCalledWith({ months: 12 }, expect.anything());
+    expect(screen.getByLabelText('Select deals-won time range')).toHaveValue('12');
+  });
+
+  it('shows a message in the plot area when every month is zero (#1225 UI-013)', () => {
+    useQueryMock.mockReturnValue({
+      data: [
+        { month: 'Jan', value: 0 },
+        { month: 'Feb', value: 0 },
+      ],
+      isLoading: false,
+    });
+    render(<DealsWonWidget />);
+
+    expect(screen.getByText('Deals Won')).toBeInTheDocument();
+    expect(screen.getByTestId('chart-empty')).toHaveTextContent('No deals won in this period yet');
+    expect(screen.queryByText('Jan')).toBeNull();
   });
 
   it('polls the slow trend at 5x the shared dashboard interval', () => {

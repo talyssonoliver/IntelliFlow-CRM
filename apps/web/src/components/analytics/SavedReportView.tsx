@@ -16,6 +16,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import { isEmptySeries } from '@/lib/charts/empty-series';
 import { Card, MetricCard, EmptyState } from '@intelliflow/ui';
 import type { MetricChange } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
@@ -586,7 +587,7 @@ function RevenueBarChart({
   formatDate: (input: string | Date | number, options?: Record<string, unknown>) => string;
 }>) {
   if (loading) return <div className="h-64 animate-pulse rounded-lg bg-muted" />;
-  if (!data || data.length === 0) {
+  if (!data || isEmptySeries(data)) {
     return (
       <EmptyState
         icon="bar_chart"
@@ -641,7 +642,7 @@ function GrowthTrendChart({
   formatDate: (input: string | Date | number, options?: Record<string, unknown>) => string;
 }>) {
   if (loading) return <div className="h-64 animate-pulse rounded-lg bg-muted" />;
-  if (!data || data.length === 0) {
+  if (!data || isEmptySeries(data)) {
     return (
       <EmptyState
         icon="show_chart"
@@ -700,7 +701,7 @@ function LeadSourceChart({
   loading: boolean;
 }>) {
   if (loading) return <div className="h-64 animate-pulse rounded-lg bg-muted" />;
-  if (!data || data.length === 0) {
+  if (!data || isEmptySeries(data)) {
     return (
       <EmptyState
         icon="pie_chart"

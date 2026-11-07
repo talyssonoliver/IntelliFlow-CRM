@@ -18,6 +18,7 @@ import {
   Tooltip,
   ReferenceLine,
 } from 'recharts';
+import { isEmptySeries } from '@/lib/charts/empty-series';
 import { Card, CardContent, CardHeader, CardTitle, EmptyState } from '@intelliflow/ui';
 import type { LatencyTrendPoint } from '@/lib/ai-monitoring/types';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
@@ -34,7 +35,7 @@ export default function LatencyTrendChart({
   p99Target,
 }: Readonly<LatencyTrendChartProps>) {
   const { timezone } = useTimezoneContext();
-  if (trend.length === 0) {
+  if (isEmptySeries(trend)) {
     return (
       <Card>
         <CardHeader className="pb-2">

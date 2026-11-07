@@ -7,6 +7,7 @@
  */
 
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip, Legend } from 'recharts';
+import { isEmptySeries } from '@/lib/charts/empty-series';
 import { EmptyState } from '@intelliflow/ui';
 import type { ChurnTrendPoint } from '@/lib/churn-risk/types';
 
@@ -15,7 +16,7 @@ interface ChurnTrendChartProps {
 }
 
 function ChurnTrendChart({ trends }: Readonly<ChurnTrendChartProps>) {
-  if (trends.length === 0) {
+  if (isEmptySeries(trends)) {
     return (
       <div data-testid="no-trends">
         <EmptyState entity="insights" phase="passive" className="py-4" />

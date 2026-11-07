@@ -43,10 +43,11 @@ describe('TrafficSourcesWidget', () => {
     expect(screen.getByText('55%')).toBeInTheDocument();
   });
 
-  it('returns null when no sources', () => {
+  it('keeps its title and shows a message in the plot area when there is no data (#1225 UI-013)', () => {
     useQueryMock.mockReturnValue({ data: [], isLoading: false });
-    const { container } = render(<TrafficSourcesWidget />);
+    render(<TrafficSourcesWidget />);
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByText(/Traffic Sources/)).toBeInTheDocument();
+    expect(screen.getByTestId('chart-empty')).toBeInTheDocument();
   });
 });

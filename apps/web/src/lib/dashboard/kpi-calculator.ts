@@ -83,7 +83,9 @@ export function computePipelineStagePercent(
 /**
  * Max value for bar-chart height scaling, floored at `1` so it is always a
  * safe divisor (empty / all-zero series → `1`). Non-finite entries are coerced
- * to `0`.
+ * to `0`. A floor of 1 still draws nothing for an all-zero series: check
+ * `isEmptySeries` (`@/lib/charts/empty-series`) first and show
+ * `ChartEmptyState` instead (#1225 UI-013).
  */
 export function chartMax(values: number[]): number {
   if (!Array.isArray(values) || values.length === 0) return 1;

@@ -15,6 +15,7 @@ import {
   Tooltip,
   ReferenceLine,
 } from 'recharts';
+import { isEmptySeries } from '@/lib/charts/empty-series';
 import type { DriftHistoryItem } from '@/lib/ai-monitoring/types';
 
 interface ModelPerformanceChartProps {
@@ -41,7 +42,7 @@ export default function ModelPerformanceChart({ history }: Readonly<ModelPerform
         <CardTitle className="text-base">Model Performance</CardTitle>
       </CardHeader>
       <CardContent className="pb-4">
-        {chartData.length === 0 ? (
+        {isEmptySeries(chartData) ? (
           <div data-testid="no-chart-data">
             <EmptyState entity="insights" phase="passive" className="py-4" />
           </div>

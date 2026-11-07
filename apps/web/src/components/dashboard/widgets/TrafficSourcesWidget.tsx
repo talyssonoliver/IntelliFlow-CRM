@@ -1,6 +1,8 @@
 'use client';
 
 import { trpc } from '@/lib/trpc';
+import { isEmptySeries } from '@/lib/charts/empty-series';
+import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
 import { useAuth } from '@/lib/auth/AuthContext';
 import type { WidgetProps } from './index';
 
@@ -32,8 +34,18 @@ export function TrafficSourcesWidget(_props: Readonly<WidgetProps>) {
     );
   }
 
-  if (!sources || sources.length === 0) {
-    return null;
+  if (!sources || isEmptySeries(sources)) {
+    return (
+      <div className="p-5 h-full flex flex-col">
+        <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-slate-400" aria-hidden="true">
+            pie_chart
+          </span>{' '}
+          Traffic Sources
+        </h3>
+        <ChartEmptyState />
+      </div>
+    );
   }
 
   return (

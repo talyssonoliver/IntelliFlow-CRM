@@ -43,10 +43,11 @@ describe('GrowthTrendsWidget', () => {
     expect(screen.getByText('Jan')).toBeInTheDocument();
   });
 
-  it('returns null when no data', () => {
+  it('keeps its title and shows a message in the plot area when there is no data (#1225 UI-013)', () => {
     useQueryMock.mockReturnValue({ data: [], isLoading: false });
-    const { container } = render(<GrowthTrendsWidget />);
+    render(<GrowthTrendsWidget />);
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByText(/Growth Trends/)).toBeInTheDocument();
+    expect(screen.getByTestId('chart-empty')).toBeInTheDocument();
   });
 });
