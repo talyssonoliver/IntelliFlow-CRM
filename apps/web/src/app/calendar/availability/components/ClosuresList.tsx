@@ -55,6 +55,8 @@ export const ClosuresList = forwardRef<ClosuresListHandle, ClosuresListProps>(fu
   }, [focusTarget]);
 
   const openCreate = useCallback(() => {
+    // Read-only users see the list as text; a blank draft row would not render.
+    if (readOnly) return;
     if (closures.length >= maxClosures) {
       announce(`Maximum of ${maxClosures} closures reached.`);
       return;
@@ -63,7 +65,7 @@ export const ClosuresList = forwardRef<ClosuresListHandle, ClosuresListProps>(fu
     onChange([...closures, row]);
     announce(`Closure ${closures.length + 1} added.`);
     setFocusTarget(closureFieldId(row.key, 'start'));
-  }, [closures, onChange, announce]);
+  }, [closures, onChange, announce, readOnly]);
 
   useImperativeHandle(ref, () => ({ openCreate }), [openCreate]);
 
@@ -86,6 +88,7 @@ export const ClosuresList = forwardRef<ClosuresListHandle, ClosuresListProps>(fu
       <EmptyState
         entity="appointments"
         ctaLabel="Add a closure"
+        showCta={!readOnly}
         onCtaClick={openCreate}
         size="sm"
         className="py-4 px-3 gap-2"

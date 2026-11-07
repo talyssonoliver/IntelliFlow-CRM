@@ -220,7 +220,9 @@ export const TerritoryList = forwardRef<TerritoryListHandle, TerritoryListProps>
       setDialog({ open: true, territory });
     };
     useImperativeHandle(ref, () => ({
-      openCreate: () => open(null, document.activeElement),
+      openCreate: () => {
+        if (canEdit) open(null, document.activeElement);
+      },
     }));
 
     const close = () => {
@@ -270,6 +272,7 @@ export const TerritoryList = forwardRef<TerritoryListHandle, TerritoryListProps>
           <EmptyState
             entity="rules"
             ctaLabel="Add territory"
+            showCta={canEdit}
             onCtaClick={() => open(null, document.activeElement)}
             size="sm"
             className="py-4 px-3 gap-2"

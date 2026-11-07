@@ -160,3 +160,16 @@ describe('ClosuresList', () => {
     expect(onChange).toHaveBeenCalledWith([{ ...one, endDate: '2026-12-27' }]);
   });
 });
+
+describe('ClosuresList read-only', () => {
+  it('shows no add action when empty and ignores openCreate', () => {
+    const ref = React.createRef<ClosuresListHandle>();
+    render(<Harness initial={[]} readOnly handleRef={ref} />);
+    const empty = screen.getByRole('region', { name: 'No closures' });
+    fireEvent.mouseEnter(empty);
+    expect(screen.queryByRole('button', { name: 'Add a closure' })).not.toBeInTheDocument();
+    act(() => ref.current?.openCreate());
+    // No blank draft row: the read-only list would not be able to format it.
+    expect(screen.getByRole('region', { name: 'No closures' })).toBeInTheDocument();
+  });
+});

@@ -149,7 +149,9 @@ export const EventTypeList = forwardRef<EventTypeListHandle, EventTypeListProps>
       setDialog((current) => ({ open: true, item, session: current.session + 1 }));
     };
     useImperativeHandle(ref, () => ({
-      openCreate: () => open(null, document.activeElement),
+      openCreate: () => {
+        if (canEdit) open(null, document.activeElement);
+      },
     }));
 
     const close = () => {
@@ -166,6 +168,7 @@ export const EventTypeList = forwardRef<EventTypeListHandle, EventTypeListProps>
           <EmptyState
             entity="appointments"
             ctaLabel="Create event type"
+            showCta={canEdit}
             onCtaClick={() => open(null, document.activeElement)}
             size="sm"
             title="No event types yet"

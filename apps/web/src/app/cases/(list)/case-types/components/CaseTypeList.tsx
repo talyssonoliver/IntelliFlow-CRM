@@ -113,7 +113,9 @@ export const CaseTypeList = forwardRef<CaseTypeListHandle, CaseTypeListProps>(fu
     setDialog({ open: true, type });
   };
   useImperativeHandle(ref, () => ({
-    openCreate: () => open(null, document.activeElement),
+    openCreate: () => {
+      if (canEdit) open(null, document.activeElement);
+    },
   }));
 
   const close = () => {
@@ -131,6 +133,7 @@ export const CaseTypeList = forwardRef<CaseTypeListHandle, CaseTypeListProps>(fu
           entity="cases"
           variant="folder"
           ctaLabel="Create case type"
+          showCta={canEdit}
           onCtaClick={() => open(null, document.activeElement)}
           size="sm"
           title="No case types yet"

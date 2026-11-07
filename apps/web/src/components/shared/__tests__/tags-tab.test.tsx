@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { createRef } from 'react';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 
 vi.mock('@intelliflow/ui', async (orig) => ({
   ...(await orig()),
@@ -68,5 +68,25 @@ describe('shared TagsTab', () => {
     expect(swatchClass('teal')).toBe('bg-teal-500');
     expect(colorLabel('teal')).toBe('Teal');
     expect(colorLabel('nope')).toBe('Slate');
+  });
+});
+
+describe('shared TagsTab read-only empty state', () => {
+  it('offers no create action and ignores openCreate', () => {
+    const ref = createRef<TagsTabHandle>();
+    render(
+      <TagsTab
+        ref={ref}
+        tags={[]}
+        canEdit={false}
+        onCreate={vi.fn()}
+        onUpdate={vi.fn()}
+        onDelete={vi.fn()}
+      />
+    );
+    fireEvent.mouseEnter(screen.getByRole('region'));
+    expect(screen.queryByRole('button', { name: /tag/i })).not.toBeInTheDocument();
+    act(() => ref.current?.openCreate());
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
