@@ -26,6 +26,11 @@ import {
 } from '../anthropic-chat-model';
 import { isRetryableModelError } from '../llm-factory';
 import { wrapModelWithTracing } from '../../tracing/llm-tracer';
+import {
+  MonthlyBudgetExceededError,
+  monthlyBudgetKey,
+  setMonthlyBudgetStore,
+} from '../monthly-budget';
 
 const SCORE = {
   score: 72,
@@ -112,6 +117,32 @@ describe('metering through the tracing wrapper', () => {
       input_tokens: 120,
       output_tokens: 45,
     });
+  });
+
+  it('refuses before calling Claude once the monthly budget is used, and adds billed calls to it', async () => {
+    const totals = new Map<string, number>();
+    setMonthlyBudgetStore({
+      get: async (key) => (totals.has(key) ? String(totals.get(key)) : null),
+      incrby: async (key, by) => {
+        totals.set(key, (totals.get(key) ?? 0) + by);
+        return totals.get(key)!;
+      },
+      expire: async () => 1,
+    });
+    try {
+      const { model, create } = modelWith(async () => reply('ok'));
+      const traced = wrapModelWithTracing(model, meta) as unknown as AnthropicChatModel;
+
+      await traced.invoke('x');
+      // 120 in x $0.10/M + 45 out x $0.50/M, in micro-dollars.
+      expect(totals.get(monthlyBudgetKey())).toBe(35);
+
+      totals.set(monthlyBudgetKey(), 60_000_000);
+      await expect(traced.invoke('x')).rejects.toBeInstanceOf(MonthlyBudgetExceededError);
+      expect(create).toHaveBeenCalledTimes(1);
+    } finally {
+      setMonthlyBudgetStore(null);
+    }
   });
 
   it('meters nothing for an API error, which is not billed', async () => {

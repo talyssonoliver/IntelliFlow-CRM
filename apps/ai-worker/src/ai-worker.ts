@@ -75,6 +75,7 @@ import { createTenantAiSpendRecorder, createPurposeSpendRecorder } from './utils
 import { setPurposeSpendReader } from './lib/purpose-ceiling';
 import { aiConfig, loadAIConfig } from './config/ai.config';
 import { anthropicModelForTier } from './lib/anthropic-config';
+import { setMonthlyBudgetStore, type MonthlyBudgetStore } from './lib/monthly-budget';
 import {
   extractJobContext,
   markAgentActive,
@@ -315,6 +316,9 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
           // Bounded exponential reconnect backoff (50ms..2s) for the publisher.
           retryStrategy: (times: number) => Math.min(times * 50, 2000),
         });
+        // The monthly AI budget's running total, shared by every worker (monthly-budget.ts).
+        // Without it, calls on the paid provider are refused: the spend cannot be checked.
+        setMonthlyBudgetStore(client as unknown as MonthlyBudgetStore);
         this.redisMonitoringPublisher = new RedisMonitoringPublisher(client, this.prisma as never);
         this.redisMonitoringPublisher.start();
         this.logger.info('RedisMonitoringPublisher started — publishing snapshots every 5s');

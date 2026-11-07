@@ -17,6 +17,7 @@ import type { LeadInput, ScoringResult } from '../chains/scoring.chain';
 import { logAIAgentAction } from '../utils/audit-log';
 import { getLLMBreaker, resolveFallbackProvider } from '../lib/llm-factory';
 import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
+import { isMonthlyBudgetExceeded } from '../lib/monthly-budget';
 import { requiresHumanReview } from '@intelliflow/domain';
 import type { CircuitBreaker } from '../utils/circuit-breaker';
 import { runWithLogContext, getCurrentLogContext } from '@intelliflow/observability';
@@ -287,11 +288,11 @@ function scoringErrorClass(primary: unknown, fallback?: unknown): string {
 }
 
 /**
- * Run a scoring call through the provider's circuit breaker. Two failures say nothing about the
+ * Run a scoring call through the provider's circuit breaker. Some failures say nothing about the
  * provider, so they are not counted as breaker failures: an inconclusive answer (the provider is
- * up and answered) and a tenant's monthly budget refusal (no provider was called). The breaker
- * is shared by every tenant, so counting them would block scoring for everyone. Both are still
- * rethrown for this lead (codex, #1218).
+ * up and answered), a tenant's monthly budget refusal and the worker-wide monthly AI budget
+ * refusal (no provider was called). The breaker is shared by every tenant, so counting them
+ * would block scoring for everyone. All are still rethrown for this lead (codex, #1218).
  */
 async function scoreThroughBreaker(
   breaker: CircuitBreaker,
@@ -301,7 +302,8 @@ async function scoreThroughBreaker(
     try {
       return { scored: await score() };
     } catch (error) {
-      if (isInconclusive(error) || isPurposeCeilingReached(error)) return { notCounted: error };
+      if (isInconclusive(error) || isPurposeCeilingReached(error) || isMonthlyBudgetExceeded(error))
+        return { notCounted: error };
       throw error;
     }
   });

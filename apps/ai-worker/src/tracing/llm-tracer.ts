@@ -31,7 +31,9 @@ import {
   guardEmbeddingCall,
   recordEmbeddingUsage,
   recordModelUsage,
+  recordMonthlyModelSpend,
 } from '../lib/usage-metering.js';
+import { assertWithinMonthlyBudget } from '../lib/monthly-budget.js';
 
 const tracer = trace.getTracer('intelliflow-ai-worker', '0.1.0');
 
@@ -73,6 +75,8 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
   ) => {
     const tenantId = tenantContextStore.getStore()?.tenantId ?? 'unknown';
     assertWithinDailyLimit();
+    // The worker-wide monthly cap (owner constraint): refuse before any provider is called.
+    await assertWithinMonthlyBudget(chatPricingKey(meta));
 
     return tracer.startActiveSpan(
       'llm.invoke',
@@ -92,6 +96,7 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
           const result = await originalInvoke(input, options);
           span.setStatus({ code: SpanStatusCode.OK });
           recordModelUsage(meta, input, result);
+          await recordMonthlyModelSpend(meta, result);
           return result;
         } catch (err) {
           span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
@@ -99,7 +104,10 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
           // A provider response that completed but was unusable (a Claude refusal or a cut-off
           // answer) is still billed: meter it, or repeated failures would escape spend limits.
           const billed = (err as { billedResult?: unknown } | null)?.billedResult;
-          if (billed) recordModelUsage(meta, input, billed);
+          if (billed) {
+            recordModelUsage(meta, input, billed);
+            await recordMonthlyModelSpend(meta, billed);
+          }
           throw err;
         } finally {
           span.end();

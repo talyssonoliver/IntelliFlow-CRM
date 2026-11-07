@@ -19,6 +19,7 @@ import { aiConfig, servedPricingKey } from '../config/ai.config.js';
 import { costTracker } from '../utils/cost-tracker';
 import { countTokens } from '../utils/token-counter.js';
 import { assertWithinCeiling } from './purpose-ceiling.js';
+import { recordMonthlySpend } from './monthly-budget.js';
 import { resolveEffectiveTier } from './tenant-ai-config.js';
 
 export interface ModelUsageMeta {
@@ -144,6 +145,25 @@ export function recordModelUsage(meta: ModelUsageMeta, input: unknown, result: u
       metadata: { purpose: meta.purpose, tier: meta.tier, modelId: meta.modelId ?? null },
     })
   );
+}
+
+/**
+ * Add one billed chat call to the worker-wide monthly AI budget (monthly-budget.ts), priced as
+ * recordModelUsage prices it. Runs whether or not cost tracking is on: the budget is a cap,
+ * not a report. A result without provider token counts adds nothing.
+ */
+export async function recordMonthlyModelSpend(
+  meta: ModelUsageMeta,
+  result: unknown
+): Promise<void> {
+  const message = result as {
+    usage_metadata?: { input_tokens?: number; output_tokens?: number };
+    response_metadata?: { model_name?: string };
+  };
+  const usage = message?.usage_metadata;
+  if (!usage) return;
+  const model = servedPricingKey(message?.response_metadata?.model_name) ?? chatPricingKey(meta);
+  await recordMonthlySpend(model, usage.input_tokens ?? 0, usage.output_tokens ?? 0);
 }
 
 /** Block an embedding call when the tenant's rag purpose has reached its monthly ceiling. */
