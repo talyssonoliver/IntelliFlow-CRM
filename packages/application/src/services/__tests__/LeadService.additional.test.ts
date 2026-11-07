@@ -428,7 +428,7 @@ describe('LeadService - Additional Coverage', () => {
     it('should handle score at exact AUTO_DISQUALIFY threshold (20)', async () => {
       const lead = createTestLead('exact-disqualify@example.com');
       leadRepository.add(lead);
-      aiService.setMockScore(LEAD_SCORE_THRESHOLDS.AUTO_DISQUALIFY, 0.8);
+      aiService.setMockScore(LEAD_SCORE_THRESHOLDS.AUTO_DISQUALIFY, 0.9);
 
       const result = await leadService.scoreLead(lead.id.value);
 

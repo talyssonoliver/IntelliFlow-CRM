@@ -62,6 +62,19 @@ export class LeadScoreBelowMinimumError extends ValidationError {
 }
 
 /**
+ * #1218: AI scoring produced no usable score (the provider failed, or the model answered with
+ * no confidence). The lead keeps its previous score and status. `reason` tells a caller this
+ * apart from other validation failures without parsing the message.
+ */
+export class LeadScoringFailedError extends ValidationError {
+  readonly reason = 'LEAD_SCORING_FAILED';
+
+  constructor(readonly failure: 'NO_USABLE_SCORE' = 'NO_USABLE_SCORE') {
+    super('AI scoring gave no usable score; the previous score was kept');
+  }
+}
+
+/**
  * A task's record link refused because the record is gone, malformed, converted
  * or closed. Still a ValidationError (same code and message); `reason` lets a
  * caller tell it from a failed lookup or a failed save without parsing the message.

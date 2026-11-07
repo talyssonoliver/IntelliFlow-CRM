@@ -96,11 +96,26 @@ describe('LeadDetail', () => {
   });
 
   it('renders key metrics (est. value, score, open rate, touchpoints)', () => {
-    render(<LeadDetail lead={makeLead()} leadMetrics={metrics} />);
+    render(<LeadDetail lead={makeLead({ scoringStatus: 'SCORED' })} leadMetrics={metrics} />);
     expect(screen.getByText('$50k')).toBeInTheDocument();
     expect(screen.getByText('75')).toBeInTheDocument();
     expect(screen.getByText('50%')).toBeInTheDocument();
     expect(screen.getByText('7')).toBeInTheDocument();
+  });
+
+  it('shows "Not scored" in the profile card when no real score exists (#1218)', () => {
+    render(
+      <LeadDetail lead={makeLead({ score: 0, scoringStatus: 'NONE' })} leadMetrics={metrics} />
+    );
+    const notScored = screen.getByText('Not scored');
+    // The card shows the label in place of the stored 0.
+    expect(notScored.nextElementSibling?.textContent).toBe('Lead Score');
+  });
+
+  it('marks a low-confidence score as needing review in the profile card (#1218)', () => {
+    render(<LeadDetail lead={makeLead({ scoringStatus: 'NEEDS_REVIEW' })} leadMetrics={metrics} />);
+    const flag = screen.getByText('needs review');
+    expect(flag.parentElement?.textContent).toBe('75needs review');
   });
 
   it('links the company to its account when accountId is present (IFC-227 parity)', () => {
