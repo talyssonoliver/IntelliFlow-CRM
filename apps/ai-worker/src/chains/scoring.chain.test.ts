@@ -369,11 +369,12 @@ describe('LeadScoringChain', () => {
         expect(prompt).toContain(ENGAGEMENT);
       });
 
-      it('versioned prompt with no {lead_info} placeholder (the generated SCORING manifest)', async () => {
+      it('versioned prompt with no {lead_info} placeholder falls back to the chain prompt', async () => {
         const prompt = await promptSentToModel(
           'You are an expert B2B lead scoring assistant. Be objective and data-driven in your analysis.'
         );
-        expect(prompt.startsWith('You are an expert B2B lead scoring assistant.')).toBe(true);
+        expect(prompt.startsWith(LeadScoringChain.DEFAULT_PROMPT.slice(0, 60))).toBe(true);
+        expect(prompt).not.toContain('You are an expert B2B lead scoring assistant.');
         expect(prompt).toContain('Lead Information:');
         expect(prompt).toContain('Company: Acme');
         expect(prompt).toContain(ENGAGEMENT);

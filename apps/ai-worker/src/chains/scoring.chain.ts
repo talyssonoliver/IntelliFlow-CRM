@@ -13,6 +13,7 @@ import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { resolveRateLimit, resolveEffectiveTier } from '../lib/tenant-ai-config.js';
 import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { usableVersionedPrompt } from '../versioning/versioned-prompt';
 import pino from 'pino';
 
 const logger = pino({
@@ -270,26 +271,10 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
     });
   }
 
-  /** The part of DEFAULT_PROMPT that hands the model the lead and says how to answer. */
-  static readonly LEAD_INFORMATION_SECTION = LeadScoringChain.DEFAULT_PROMPT.slice(
-    LeadScoringChain.DEFAULT_PROMPT.indexOf('Lead Information:')
-  );
-
-  /**
-   * The version loader's prompt replaces DEFAULT_PROMPT whenever a tenantId is set. With no
-   * stored version, the loader returns its own fallback (DEFAULT_CONFIGS.SCORING in
-   * versioning/version-loader.ts), which has no {lead_info} placeholder, so the model was sent
-   * instructions with no lead fields and no engagement history at all. Append the lead section
-   * when it is missing; a prompt that places {lead_info} itself is used as written.
-   */
-  static withLeadInformation(template: string): string {
-    if (template.includes('{lead_info}')) return template;
-    return `${template.trimEnd()}\n\n${LeadScoringChain.LEAD_INFORMATION_SECTION}`;
-  }
-
   /**
    * Resolve the tenant-versioned prompt override (if any).
-   * Falls back silently to the default prompt when no active version exists.
+   * Falls back to the default prompt when no version exists, or when the loader's prompt has
+   * no {lead_info} slot (the loader's own fallback has none: the model then saw no lead).
    */
   private async resolveVersionedPrompt(): Promise<string | null> {
     if (!this.tenantId) return null;
@@ -298,7 +283,7 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
       const config = await loader.getChainConfig(CHAIN_TYPE_MAP.LEAD_SCORING, {
         tenantId: this.tenantId,
       });
-      return config.prompt ?? null;
+      return usableVersionedPrompt('LEAD_SCORING', config.prompt, ['lead_info']);
     } catch {
       logger.warn(
         {
@@ -347,10 +332,7 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
       // Resolve tenant-versioned prompt if tenantId is available; fall back to default
       const versionedPromptText = await this.resolveVersionedPrompt();
       const activePrompt = versionedPromptText
-        ? new PromptTemplate({
-            template: LeadScoringChain.withLeadInformation(versionedPromptText),
-            inputVariables: ['lead_info'],
-          })
+        ? new PromptTemplate({ template: versionedPromptText, inputVariables: ['lead_info'] })
         : this.prompt;
 
       // Generate the prompt
