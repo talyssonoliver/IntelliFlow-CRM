@@ -183,6 +183,8 @@ interface ConfirmViewProps {
   currentPlan: Plan | null;
   currentPlanId: string | null;
   periodEnd: Date | null;
+  /** The billing period chosen on the plan cards (#1220). */
+  cycle: 'monthly' | 'annual';
   onConfirm: () => void;
   isPending: boolean;
 }
@@ -192,9 +194,12 @@ function ConfirmView({
   currentPlan,
   currentPlanId,
   periodEnd,
+  cycle,
   onConfirm,
   isPending,
 }: Readonly<ConfirmViewProps>) {
+  // The price for the period being bought, so an annual purchase never shows a monthly price.
+  const price = getPlanPriceForInterval(targetPlan, cycle);
   const isSamePlan = targetPlan.id === currentPlanId;
   const isNewSubscription = !currentPlan && !periodEnd;
   const comparison =
@@ -272,10 +277,14 @@ function ConfirmView({
               <p className="font-semibold text-lg">{targetPlan.name}</p>
               <p className="text-sm text-slate-500 dark:text-slate-400">{targetPlan.description}</p>
             </div>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">
-              {formatCurrency(targetPlan.priceMonthly, targetPlan.currency)}{' '}
-              <span className="text-sm font-normal text-slate-500">/mo</span>
-            </p>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{price.formatted}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {cycle === 'annual'
+                  ? `Billed annually (${price.formattedPerMonth})`
+                  : 'Billed monthly'}
+              </p>
+            </div>
           </div>
 
           <ul className="space-y-2 pt-3 border-t border-slate-200 dark:border-slate-700">
@@ -307,9 +316,7 @@ function ConfirmView({
               <span className="text-slate-600 dark:text-slate-400">
                 New plan ({targetPlan.name})
               </span>
-              <span className="font-medium">
-                {formatCurrency(targetPlan.priceMonthly, targetPlan.currency)} <span>/mo</span>
-              </span>
+              <span className="font-medium">{price.formatted}</span>
             </div>
             {priceDiff && (
               <div className="flex justify-between text-sm">
@@ -464,6 +471,7 @@ export function UpgradeFlow() {
       currentPlan={currentPlan ?? null}
       currentPlanId={currentPlanId}
       periodEnd={subscription ? new Date(subscription.currentPeriodEnd) : null}
+      cycle={cycle}
       onConfirm={handleConfirm}
       isPending={updateMutation.isPending}
     />

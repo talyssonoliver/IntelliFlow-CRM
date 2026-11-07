@@ -236,6 +236,33 @@ describe('UpgradeFlow', () => {
     expect(mockPush).toHaveBeenCalledWith('/billing/checkout?plan=professional&cycle=annual');
   });
 
+  it('shows the annual price and billing for an annual choice, not the monthly one (#1220)', async () => {
+    const { useSearchParams } = await import('next/navigation');
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams('plan=professional&cycle=annual') as unknown as ReturnType<
+        typeof useSearchParams
+      >
+    );
+    mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
+    render(<UpgradeFlow />);
+
+    expect(screen.getByText(/\/year$/)).toBeInTheDocument();
+    expect(screen.getByText(/^Billed annually \(/)).toBeInTheDocument();
+  });
+
+  it('says a monthly choice is billed monthly', async () => {
+    const { useSearchParams } = await import('next/navigation');
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams('plan=professional&cycle=monthly') as unknown as ReturnType<
+        typeof useSearchParams
+      >
+    );
+    mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
+    render(<UpgradeFlow />);
+
+    expect(screen.getByText('Billed monthly')).toBeInTheDocument();
+  });
+
   it('does not show proration for new subscriptions', () => {
     mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
     render(<UpgradeFlow />);
