@@ -1,9 +1,10 @@
 /**
- * Revoking one session (#1145, #1146): the real router over the real SessionService.
+ * The sessions list and revoke over Supabase Auth sessions (`auth.sessions`).
  *
- * A user can revoke a session that getSessions listed, whatever its generated id
- * looks like, and only a session of their own. Another user's session is answered
- * like a missing one and stays valid.
+ * A user can end another of their own sessions, never the one making the request, and
+ * never another user's: the delete is scoped to the user, so another user's session id
+ * removes nothing and is answered like a missing one. The legacy app SessionService is
+ * still covered below until its table is removed (#1209).
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -22,22 +23,9 @@ const ME = TEST_UUIDS.user1;
 const OTHER = TEST_UUIDS.user2;
 const UNKNOWN_ID = 'ab'.repeat(32);
 
-const caller = () => authRouter.createCaller(createTestContext());
 const service = () => getSessionService(prismaMock as never);
 const session = (userId: string) =>
   service().createSession({ userId, tenantId: TEST_UUIDS.tenant });
-
-/** A real generated id that the old id format refused: most of them. */
-async function sessionNotStartingWithC(userId: string) {
-  let created = await session(userId);
-  while (created.id.startsWith('c')) {
-    await service().revokeSession(created.id);
-    created = await session(userId);
-  }
-  // Throwing away a session here isn't what the tests are checking.
-  prismaMock.session.delete.mockClear();
-  return created;
-}
 
 function dbRow(id: string, userId: string) {
   const now = new Date();
@@ -65,56 +53,141 @@ beforeEach(() => {
   prismaMock.session.delete.mockClear();
 });
 
-describe('auth.revokeSession', () => {
-  it('revokes a session that getSessions listed, for an id not starting with c', async () => {
-    const created = await sessionNotStartingWithC(ME);
+/** Supabase Auth session ids (the token's `session_id`). */
+const CURRENT_SESSION = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+const OTHER_DEVICE = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 
-    const { sessions } = await caller().getSessions();
-    const listed = sessions.find((s) => s.id === created.id);
-    expect(listed?.id.startsWith('c')).toBe(false);
+/** `null` gives a request with no Supabase session id. */
+const callerOnSession = (sessionId: string | null = CURRENT_SESSION) => {
+  const base = createTestContext();
+  return authRouter.createCaller({
+    ...base,
+    user: { ...base.user!, ...(sessionId ? { sessionId } : {}) },
+  });
+};
 
-    await expect(caller().revokeSession({ sessionId: listed!.id })).resolves.toEqual({
+/** The SQL text of a Prisma tagged-template call, with its parameters. */
+function rawCall(mock: { mock: { calls: unknown[][] } }, index = 0) {
+  const [strings, ...values] = mock.mock.calls[index] as [TemplateStringsArray, ...unknown[]];
+  return { sql: strings.join('?'), values };
+}
+
+describe('auth.getSessions (Supabase Auth sessions)', () => {
+  it('lists the live sessions, most recent first, marking the one making the request', async () => {
+    const old = new Date('2026-11-01T10:00:00Z');
+    const recent = new Date('2026-11-06T10:00:00Z');
+    prismaMock.$queryRaw.mockResolvedValue([
+      {
+        id: CURRENT_SESSION,
+        created_at: old,
+        updated_at: old,
+        refreshed_at: null,
+        user_agent: 'Mozilla/5.0',
+        ip: '203.0.113.7',
+        not_after: null,
+      },
+      {
+        id: OTHER_DEVICE,
+        created_at: old,
+        updated_at: recent,
+        refreshed_at: null,
+        user_agent: null,
+        ip: null,
+        not_after: null,
+      },
+    ] as never);
+
+    const { sessions } = await callerOnSession().getSessions();
+
+    expect(sessions.map((s) => [s.id, s.isCurrent])).toEqual([
+      [OTHER_DEVICE, false],
+      [CURRENT_SESSION, true],
+    ]);
+    const { sql, values } = rawCall(prismaMock.$queryRaw);
+    expect(sql).toContain('FROM auth.sessions');
+    expect(sql).toContain('user_id = ?::uuid');
+    expect(values).toEqual([ME]);
+  });
+});
+
+describe('auth.revokeSession (Supabase Auth sessions)', () => {
+  it("ends another of the user's sessions, scoped to the user, and audits it", async () => {
+    prismaMock.$executeRaw.mockResolvedValue(1 as never);
+
+    await expect(callerOnSession().revokeSession({ sessionId: OTHER_DEVICE })).resolves.toEqual({
       success: true,
     });
 
-    expect((await caller().getSessions()).sessions.map((s) => s.id)).not.toContain(created.id);
-    expect(prismaMock.session.delete).toHaveBeenCalledWith({ where: { id: created.id } });
+    const { sql, values } = rawCall(prismaMock.$executeRaw);
+    expect(sql).toContain('DELETE FROM auth.sessions');
+    expect(sql).toContain('id = ?::uuid');
+    expect(sql).toContain('user_id = ?::uuid');
+    expect(values).toEqual([OTHER_DEVICE, ME, CURRENT_SESSION]);
     expect(audit.log).toHaveBeenCalledWith(
       expect.objectContaining({
         eventType: 'SessionRevoked',
-        resourceId: created.id,
+        resourceId: OTHER_DEVICE,
         actorId: ME,
       })
     );
   });
 
-  it("answers another user's session NOT_FOUND, like a missing one, and leaves it", async () => {
-    const theirs = await sessionNotStartingWithC(OTHER);
+  it("answers another user's session id NOT_FOUND: the user-scoped delete removes nothing", async () => {
+    prismaMock.$executeRaw.mockResolvedValue(0 as never);
 
-    const foreign = await caller()
-      .revokeSession({ sessionId: theirs.id })
-      .catch((e: unknown) => e);
-    const missing = await caller()
-      .revokeSession({ sessionId: UNKNOWN_ID })
-      .catch((e: unknown) => e);
+    await expect(
+      callerOnSession().revokeSession({ sessionId: OTHER_DEVICE })
+    ).rejects.toMatchObject({ code: 'NOT_FOUND', message: 'Session not found' });
 
-    expect(foreign).toMatchObject({ code: 'NOT_FOUND', message: 'Session not found' });
-    expect(missing).toMatchObject({ code: 'NOT_FOUND', message: 'Session not found' });
+    expect(rawCall(prismaMock.$executeRaw).values).toEqual([OTHER_DEVICE, ME, CURRENT_SESSION]);
+    expect(audit.log).not.toHaveBeenCalled();
+  });
 
-    expect((await service().validateSession(theirs.id)).valid).toBe(true);
-    expect(prismaMock.session.delete).not.toHaveBeenCalled();
+  it('never ends the session making the request, even spelled in upper case', async () => {
+    await expect(
+      callerOnSession().revokeSession({ sessionId: CURRENT_SESSION.toUpperCase() })
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+    expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
+  });
+
+  it('never ends the session making the request', async () => {
+    await expect(
+      callerOnSession().revokeSession({ sessionId: CURRENT_SESSION })
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+
+    expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
     expect(audit.log).not.toHaveBeenCalled();
   });
 
   it.each([
-    ['a uuid', '550e8400-e29b-41d4-a716-446655440000'],
+    ['an app session id', 'ab'.repeat(32)],
     ['a cuid', 'c1234567890abcdef'],
-    ['a short hex id', 'ab'.repeat(31)],
-    ['upper-case hex', 'AB'.repeat(32)],
+    ['an empty string', ''],
   ])('refuses %s at input validation', async (_name, sessionId) => {
-    await expect(caller().revokeSession({ sessionId })).rejects.toMatchObject({
+    await expect(callerOnSession().revokeSession({ sessionId })).rejects.toMatchObject({
       code: 'BAD_REQUEST',
     });
+    expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
+  });
+});
+
+describe('auth.revokeOtherSessions', () => {
+  it('ends every other session of the user and keeps this one', async () => {
+    prismaMock.$executeRaw.mockResolvedValue(2 as never);
+
+    await expect(callerOnSession().revokeOtherSessions()).resolves.toEqual({ ended: 2 });
+
+    const { sql, values } = rawCall(prismaMock.$executeRaw);
+    expect(sql).toContain('DELETE FROM auth.sessions');
+    expect(sql).toContain('id <> ?::uuid');
+    expect(values).toEqual([ME, CURRENT_SESSION]);
+  });
+
+  it('refuses when the request has no session to keep, ending nothing', async () => {
+    await expect(callerOnSession(null).revokeOtherSessions()).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+    });
+    expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
   });
 });
 
