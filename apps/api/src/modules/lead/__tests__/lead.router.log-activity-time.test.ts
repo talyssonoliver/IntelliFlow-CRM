@@ -19,7 +19,7 @@ vi.mock('@intelliflow/adapters', () => ({
 }));
 
 function captureTransaction() {
-  const captured: { activity?: any; lead?: any } = {};
+  const captured: { activity?: any; lead?: any; contact?: any } = {};
   prismaMock.$transaction.mockImplementation(async (fn: any) => {
     const tx = {
       leadActivity: {
@@ -30,8 +30,12 @@ function captureTransaction() {
       },
       lead: {
         update: vi.fn(async (args: any) => {
-          captured.lead = args.data;
+          captured.lead = args;
           return mockLead;
+        }),
+        updateMany: vi.fn(async (args: any) => {
+          captured.contact = args;
+          return { count: 1 };
         }),
       },
     };
@@ -41,9 +45,8 @@ function captureTransaction() {
 }
 
 describe('lead.logActivity occurredAt', () => {
-  it('stamps the activity with occurredAt and keeps a later lastContactedAt', async () => {
-    const later = new Date('2026-11-01T12:00:00.000Z');
-    prismaMock.lead.findUnique.mockResolvedValue({ ...mockLead, lastContactedAt: later } as any);
+  it('stamps the activity with occurredAt', async () => {
+    prismaMock.lead.findUnique.mockResolvedValue(mockLead as any);
     const captured = captureTransaction();
 
     await leadRouter.createCaller(createTestContext()).logActivity({
@@ -54,14 +57,10 @@ describe('lead.logActivity occurredAt', () => {
     });
 
     expect(captured.activity.timestamp).toEqual(new Date('2026-09-27T09:30:00.000Z'));
-    expect(captured.lead.lastContactedAt).toEqual(later);
   });
 
-  it('moves lastContactedAt forward when occurredAt is newer', async () => {
-    prismaMock.lead.findUnique.mockResolvedValue({
-      ...mockLead,
-      lastContactedAt: new Date('2026-09-01T00:00:00.000Z'),
-    } as any);
+  it('moves lastContactedAt only forward, compared in the UPDATE itself', async () => {
+    prismaMock.lead.findUnique.mockResolvedValue(mockLead as any);
     const captured = captureTransaction();
     const at = new Date('2026-10-07T08:00:00.000Z');
 
@@ -72,12 +71,26 @@ describe('lead.logActivity occurredAt', () => {
       occurredAt: at,
     });
 
-    expect(captured.activity.timestamp).toEqual(at);
-    expect(captured.lead.lastContactedAt).toEqual(at);
+    // updatedAt only on the plain update: lastContactedAt is not set from a stale read.
+    expect(captured.lead.data).not.toHaveProperty('lastContactedAt');
+    expect(captured.lead.data.updatedAt).toBeInstanceOf(Date);
+    // The conditional update writes it only where the stored value is null or older.
+    expect(captured.contact.data).toEqual({ lastContactedAt: at });
+    expect(captured.contact.where).toMatchObject({
+      id: TEST_UUIDS.lead1,
+      OR: [{ lastContactedAt: null }, { lastContactedAt: { lt: at } }],
+    });
+    // Tenant-scoped like the plain update.
+    expect(captured.contact.where).toMatchObject(
+      Object.fromEntries(Object.entries(captured.lead.where).filter(([k]) => k !== 'id')) as Record<
+        string,
+        unknown
+      >
+    );
   });
 
   it('defaults to now when occurredAt is omitted', async () => {
-    prismaMock.lead.findUnique.mockResolvedValue({ ...mockLead, lastContactedAt: null } as any);
+    prismaMock.lead.findUnique.mockResolvedValue(mockLead as any);
     const captured = captureTransaction();
     const before = Date.now();
 
@@ -89,7 +102,7 @@ describe('lead.logActivity occurredAt', () => {
 
     const stamped = (captured.activity.timestamp as Date).getTime();
     expect(stamped).toBeGreaterThanOrEqual(before);
-    expect(captured.lead.lastContactedAt).toEqual(captured.activity.timestamp);
+    expect(captured.contact.data.lastContactedAt).toEqual(captured.activity.timestamp);
   });
 
   it('rejects an occurredAt in the future', async () => {

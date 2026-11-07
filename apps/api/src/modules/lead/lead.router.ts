@@ -1895,10 +1895,6 @@ export const leadRouter = createTRPCRouter({
 
       const now = new Date();
       const occurredAt = input.occurredAt && input.occurredAt < now ? input.occurredAt : now;
-      // A back-dated activity must not move lastContactedAt backwards.
-      const previousContact = lead.lastContactedAt ? new Date(lead.lastContactedAt) : null;
-      const lastContactedAt =
-        previousContact && previousContact > occurredAt ? previousContact : occurredAt;
 
       // Transaction: create activity + update lastContactedAt
       const activity = await typedCtx.prismaWithTenant.$transaction(async (tx) => {
@@ -1914,12 +1910,18 @@ export const leadRouter = createTRPCRouter({
           },
         });
 
-        await tx.lead.update({
-          where: { id: input.leadId, ...createTenantWhereClause(typedCtx.tenant, {}) },
-          data: {
-            lastContactedAt,
-            updatedAt: now,
+        const leadWhere = { id: input.leadId, ...createTenantWhereClause(typedCtx.tenant, {}) };
+        await tx.lead.update({ where: leadWhere, data: { updatedAt: now } });
+        // A back-dated activity must never move lastContactedAt backwards, even
+        // when another activity commits in between: compare in the UPDATE itself
+        // (Postgres re-checks the WHERE on the latest row version), not against
+        // the value read before the transaction.
+        await tx.lead.updateMany({
+          where: {
+            ...leadWhere,
+            OR: [{ lastContactedAt: null }, { lastContactedAt: { lt: occurredAt } }],
           },
+          data: { lastContactedAt: occurredAt },
         });
 
         return created;

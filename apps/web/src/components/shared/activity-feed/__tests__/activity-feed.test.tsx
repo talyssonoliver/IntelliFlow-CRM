@@ -592,6 +592,27 @@ describe('ActivityFeedItem', () => {
     );
   });
 
+  it('keeps the entity link when the title names it but opens another target', async () => {
+    const { ActivityFeedItem } = await import('../ActivityFeedItem');
+    render(
+      <ActivityFeedItem
+        id="email_1"
+        source="EMAIL"
+        type="EMAIL"
+        title="Re: quote for ana@bakery.example"
+        description={null}
+        timestamp={new Date()}
+        actor={null}
+        entity={{ id: 'c-1', type: 'contact', name: 'ana@bakery.example' }}
+        metadata={{ actionUrl: '/email/1' }}
+      />
+    );
+
+    expect(screen.getByRole('link', { name: 'ana@bakery.example' }).getAttribute('href')).toBe(
+      '/contacts/c-1'
+    );
+  });
+
   it('does not repeat the entity name when the title already carries it', async () => {
     const { ActivityFeedItem } = await import('../ActivityFeedItem');
     const { container } = render(

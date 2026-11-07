@@ -600,7 +600,7 @@ export function ActivityFeedItem({
             richDescription={richDescription}
             entity={entity}
             entityUrl={secondaryEntityUrl}
-            hideEntity={titleNamesEntity}
+            hideEntity={titleNamesEntity && !secondaryEntityUrl}
             compact={compact}
           />
 
