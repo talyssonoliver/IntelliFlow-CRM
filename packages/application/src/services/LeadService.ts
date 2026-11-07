@@ -17,6 +17,7 @@ import {
   ProcessingRestrictedError,
   isErasedEmail,
   normalizeSubjectEmail,
+  requiresHumanReview,
 } from '@intelliflow/domain';
 import { AIServicePort, EventBusPort } from '../ports/external';
 import { ContactRepository, AccountRepository } from '../ports/repositories';
@@ -302,7 +303,12 @@ export class LeadService {
       return Result.fail(scoringResult.error);
     }
 
-    const { score, confidence, modelVersion, requiresReview } = scoringResult.value;
+    const { score, confidence, modelVersion } = scoringResult.value;
+    // The review rule is applied here, not left to the adapter: only the queue adapter sets
+    // requiresReview, so the domain threshold covers the synchronous adapters too (codex).
+    const requiresReview =
+      scoringResult.value.requiresReview === true ||
+      requiresHumanReview(confidence, 'LEAD_SCORING');
     if (!(confidence > 0)) {
       await this.markScoringFailed(lead);
       return Result.fail(new LeadScoringFailedError('NO_USABLE_SCORE'));

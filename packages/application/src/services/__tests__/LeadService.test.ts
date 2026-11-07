@@ -528,7 +528,8 @@ describe('LeadService', () => {
       }).value;
       leadRepository.add(lead);
 
-      aiService.setMockScore(15, 0.8);
+      // #1218: only a confident score (>= 0.85) changes the status.
+      aiService.setMockScore(15, 0.9);
 
       const result = await leadService.scoreLead(lead.id.value);
 
