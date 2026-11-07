@@ -27,7 +27,9 @@ import {
   ToastDescription,
   ToastClose,
 } from '@intelliflow/ui';
+import { EMAIL_NOT_CONFIRMED_MESSAGE } from '@intelliflow/validators';
 import { useAuth, useRedirectIfAuthenticated } from '@/lib/auth/AuthContext';
+import { trpc } from '@/lib/trpc';
 import { rememberPostLoginRedirect, safeRedirectPath } from '@/lib/auth/safe-redirect';
 import { MfaChallenge, type MfaMethod } from '@/components/auth';
 import {
@@ -146,7 +148,15 @@ export default function LoginPage() {
   // Handle auth errors from context
   const authError = auth.error;
   const authClearError = auth.clearError;
+  // The password was right but the address isn't confirmed: offer a new link in the form.
+  const [needsConfirmation, setNeedsConfirmation] = useState(false);
+  const resendConfirmation = trpc.auth.resendVerification.useMutation();
   useEffect(() => {
+    if (authError === EMAIL_NOT_CONFIRMED_MESSAGE) {
+      setNeedsConfirmation(true);
+      authClearError();
+      return;
+    }
     if (authError) {
       setToast({
         open: true,
@@ -460,6 +470,30 @@ export default function LoginPage() {
                   lock_clock
                 </span>{' '}
                 Account temporarily locked. Try again in {rateLimitInfo.timeRemaining}s
+              </div>
+            )}
+
+            {needsConfirmation && (
+              <div
+                role="alert"
+                className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-200 text-sm"
+              >
+                <p>{EMAIL_NOT_CONFIRMED_MESSAGE}</p>
+                {/* Resend here: the sign-up success page would record a new sign-up. */}
+                <button
+                  type="button"
+                  onClick={() => resendConfirmation.mutate({ email: formData.email.trim() })}
+                  disabled={resendConfirmation.isPending || formData.email.trim() === ''}
+                  className="mt-2 inline-block font-medium text-[#bca8ff] underline underline-offset-2 disabled:opacity-50"
+                >
+                  {resendConfirmation.isPending ? 'Sending…' : 'Send me a new link'}
+                </button>
+                {resendConfirmation.isSuccess && (
+                  <p className="mt-1">We sent a new link. Check your inbox.</p>
+                )}
+                {resendConfirmation.isError && (
+                  <p className="mt-1 text-red-300">We couldn&apos;t send it. Please try again.</p>
+                )}
               </div>
             )}
 

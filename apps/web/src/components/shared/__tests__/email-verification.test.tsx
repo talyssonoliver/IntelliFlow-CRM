@@ -384,6 +384,43 @@ describe('EmailVerification', () => {
       });
     });
 
+    it('asks for the address when the link expired and the page does not know it', async () => {
+      mockVerifyMutateAsync.mockRejectedValue({
+        data: { code: 'BAD_REQUEST' },
+        message: 'Expired',
+      });
+      mockResendMutateAsync.mockResolvedValue({ success: true });
+      const user = userEvent.setup();
+
+      render(<EmailVerification {...defaultProps} email={undefined} />);
+
+      const input = await screen.findByLabelText(/your email address/i);
+      // Visible from the start, but only usable once there is an address to send to.
+      expect(screen.getByRole('button', { name: /resend/i })).toBeDisabled();
+      await user.type(input, 'me@example.com');
+      expect(screen.getByRole('button', { name: /resend/i })).toBeEnabled();
+      await user.click(screen.getByRole('button', { name: /resend/i }));
+
+      await waitFor(() =>
+        expect(mockResendMutateAsync).toHaveBeenCalledWith({ email: 'me@example.com' })
+      );
+    });
+
+    it('uses the given label for the button after success', async () => {
+      mockVerifyMutateAsync.mockResolvedValue({ success: true, email: 'a@example.com' });
+
+      render(
+        <EmailVerification
+          {...defaultProps}
+          redirectUrl="/login"
+          continueLabel="Sign in to continue"
+        />
+      );
+
+      const link = await screen.findByRole('link', { name: /sign in to continue/i });
+      expect(link).toHaveAttribute('href', '/login');
+    });
+
     it('handles null email for resend', async () => {
       mockVerifyMutateAsync.mockRejectedValue({
         data: { code: 'BAD_REQUEST' },
