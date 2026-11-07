@@ -22,7 +22,7 @@ import { trace, SpanKind, SpanStatusCode, type Span } from '@opentelemetry/api';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { Embeddings } from '@langchain/core/embeddings';
 import type { LLMPurpose, LLMTier } from '../lib/llm-factory.js';
-import { aiConfig } from '../config/ai.config.js';
+import { aiConfig, type AIProvider } from '../config/ai.config.js';
 import { tenantContextStore } from './tenant-context.js';
 import { GeminiEmbeddings } from '../lib/gemini-embeddings.js';
 import {
@@ -44,6 +44,11 @@ export interface LLMTracingMeta {
   modelId?: string;
   /** PG-199: pricing key of the model the provider actually runs, when it is not the alias. */
   pricingKey?: string;
+  /**
+   * The provider this model instance calls, which can differ from aiConfig.provider (a
+   * job-level fallback). The monthly budget fails closed per provider (monthly-budget.ts).
+   */
+  provider?: AIProvider;
 }
 
 export interface EmbeddingsTracingMeta {
@@ -76,7 +81,7 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
     const tenantId = tenantContextStore.getStore()?.tenantId ?? 'unknown';
     assertWithinDailyLimit();
     // The worker-wide monthly cap (owner constraint): refuse before any provider is called.
-    await assertWithinMonthlyBudget(chatPricingKey(meta));
+    await assertWithinMonthlyBudget(chatPricingKey(meta), meta.provider ?? aiConfig.provider);
 
     return tracer.startActiveSpan(
       'llm.invoke',

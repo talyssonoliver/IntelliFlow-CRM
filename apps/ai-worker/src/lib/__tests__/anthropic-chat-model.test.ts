@@ -145,6 +145,16 @@ describe('metering through the tracing wrapper', () => {
     }
   });
 
+  it('refuses a Claude model when the budget store is missing, whatever the global provider', async () => {
+    const { model, create } = modelWith(async () => reply('ok'));
+    const traced = wrapModelWithTracing(model, {
+      ...meta,
+      provider: 'anthropic',
+    }) as unknown as AnthropicChatModel;
+    await expect(traced.invoke('x')).rejects.toBeInstanceOf(MonthlyBudgetExceededError);
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it('meters nothing for an API error, which is not billed', async () => {
     const { model } = modelWith(async () => {
       throw Anthropic.APIError.generate(429, undefined, 'Too many requests', new Headers());

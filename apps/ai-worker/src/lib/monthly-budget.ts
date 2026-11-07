@@ -18,7 +18,7 @@
  * - Fail closed: on the paid provider, an unregistered store or an unreadable total refuses the
  *   call, because the spend cannot be checked. Free providers are not blocked by an outage.
  */
-import { aiConfig, calculateCost } from '../config/ai.config.js';
+import { calculateCost, type AIProvider } from '../config/ai.config.js';
 import { createLogger } from '../utils/logger.js';
 
 const logger = createLogger('monthly-budget');
@@ -77,9 +77,12 @@ export function monthlyBudgetKey(now: Date = new Date()): string {
   return `ai:spend:usd-micros:${month}`;
 }
 
-/** Only the paid provider fails closed when the total cannot be read. */
-function failsClosed(): boolean {
-  return aiConfig.provider === 'anthropic';
+/**
+ * Only calls to the paid provider fail closed when the total cannot be read. Decided by the
+ * provider of the model being called, not the global one: Claude can run as a fallback.
+ */
+function failsClosed(provider: AIProvider): boolean {
+  return provider === 'anthropic';
 }
 
 /** A model the price map bills nothing for (a `:free` OpenRouter model, local Ollama). */
@@ -93,12 +96,13 @@ function isFreeModel(pricingKey: string): boolean {
  */
 export async function assertWithinMonthlyBudget(
   pricingKey: string,
+  provider: AIProvider,
   now: Date = new Date()
 ): Promise<void> {
   if (isFreeModel(pricingKey)) return;
   const budgetUsd = monthlyBudgetUsd();
   if (!store) {
-    if (failsClosed()) {
+    if (failsClosed(provider)) {
       throw new MonthlyBudgetExceededError(Number.NaN, budgetUsd);
     }
     return;
@@ -111,7 +115,7 @@ export async function assertWithinMonthlyBudget(
       { err: err instanceof Error ? err.name : 'Error' },
       'Monthly AI spend could not be read'
     );
-    if (failsClosed()) throw new MonthlyBudgetExceededError(Number.NaN, budgetUsd);
+    if (failsClosed(provider)) throw new MonthlyBudgetExceededError(Number.NaN, budgetUsd);
     return;
   }
   const spentUsd = spentMicros / MICROS_PER_USD;

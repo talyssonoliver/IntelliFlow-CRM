@@ -3,23 +3,10 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
-const { logWarn, logError, config } = vi.hoisted(() => ({
-  logWarn: vi.fn(),
-  logError: vi.fn(),
-  config: { provider: 'anthropic' as string },
-}));
+const { logWarn, logError } = vi.hoisted(() => ({ logWarn: vi.fn(), logError: vi.fn() }));
 vi.mock('../../utils/logger.js', () => ({
   createLogger: () => ({ info: vi.fn(), warn: logWarn, error: logError, debug: vi.fn() }),
 }));
-vi.mock('../../config/ai.config.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../config/ai.config')>();
-  return {
-    ...actual,
-    aiConfig: new Proxy(actual.aiConfig, {
-      get: (target, prop) => (prop === 'provider' ? config.provider : Reflect.get(target, prop)),
-    }),
-  };
-});
 
 import {
   MonthlyBudgetExceededError,
@@ -33,6 +20,7 @@ import {
 
 const NOV = new Date('2026-11-07T12:00:00Z');
 const HAIKU = 'claude-haiku-5-5';
+const FREE = 'nvidia/nemotron-3-ultra-550b-a55b:free';
 
 /** A Redis double: one integer per key, shared like Redis is between workers. */
 function memoryStore(): MonthlyBudgetStore & {
@@ -62,7 +50,6 @@ let store: ReturnType<typeof memoryStore>;
 beforeEach(() => {
   store = memoryStore();
   setMonthlyBudgetStore(store);
-  config.provider = 'anthropic';
   vi.stubEnv('AI_MONTHLY_BUDGET_USD', '');
   logWarn.mockClear();
   logError.mockClear();
@@ -78,12 +65,14 @@ async function spendUsd(usd: number, now = NOV) {
   await recordMonthlySpend(HAIKU, 0, Math.round((usd / 0.5) * 1_000_000), now);
 }
 
+const claudeCall = (now = NOV) => assertWithinMonthlyBudget(HAIKU, 'anthropic', now);
+
 describe('monthly AI budget', () => {
   it('defaults to 60 USD and refuses a paid call once the month reaches it', async () => {
     await spendUsd(59.99);
-    await expect(assertWithinMonthlyBudget(HAIKU, NOV)).resolves.toBeUndefined();
+    await expect(claudeCall()).resolves.toBeUndefined();
     await spendUsd(0.01);
-    const refused = assertWithinMonthlyBudget(HAIKU, NOV);
+    const refused = claudeCall();
     await expect(refused).rejects.toBeInstanceOf(MonthlyBudgetExceededError);
     await expect(refused).rejects.toSatisfy(isMonthlyBudgetExceeded);
   });
@@ -91,9 +80,7 @@ describe('monthly AI budget', () => {
   it('reads AI_MONTHLY_BUDGET_USD', async () => {
     vi.stubEnv('AI_MONTHLY_BUDGET_USD', '5');
     await spendUsd(5);
-    await expect(assertWithinMonthlyBudget(HAIKU, NOV)).rejects.toBeInstanceOf(
-      MonthlyBudgetExceededError
-    );
+    await expect(claudeCall()).rejects.toBeInstanceOf(MonthlyBudgetExceededError);
   });
 
   it('prices each call from its tokens and the model price map', async () => {
@@ -108,27 +95,21 @@ describe('monthly AI budget', () => {
     await spendUsd(1);
     setMonthlyBudgetStore(null);
     setMonthlyBudgetStore(store); // a new process registering the same Redis
-    await expect(assertWithinMonthlyBudget(HAIKU, NOV)).rejects.toBeInstanceOf(
-      MonthlyBudgetExceededError
-    );
+    await expect(claudeCall()).rejects.toBeInstanceOf(MonthlyBudgetExceededError);
   });
 
   it('starts again each UTC month and lets the old key expire', async () => {
     vi.stubEnv('AI_MONTHLY_BUDGET_USD', '1');
     await spendUsd(1, NOV);
     expect(store.ttl.get(monthlyBudgetKey(NOV))).toBeGreaterThan(31 * 24 * 3600);
-    await expect(
-      assertWithinMonthlyBudget(HAIKU, new Date('2026-12-01T00:00:00Z'))
-    ).resolves.toBeUndefined();
+    await expect(claudeCall(new Date('2026-12-01T00:00:00Z'))).resolves.toBeUndefined();
   });
 
-  it('never refuses a free model', async () => {
+  it('never refuses a free model, and a free model adds nothing', async () => {
     vi.stubEnv('AI_MONTHLY_BUDGET_USD', '1');
     await spendUsd(2);
-    await expect(
-      assertWithinMonthlyBudget('nvidia/nemotron-3-ultra-550b-a55b:free', NOV)
-    ).resolves.toBeUndefined();
-    await recordMonthlySpend('nvidia/nemotron-3-ultra-550b-a55b:free', 9_000_000, 9_000_000, NOV);
+    await expect(assertWithinMonthlyBudget(FREE, 'openrouter', NOV)).resolves.toBeUndefined();
+    await recordMonthlySpend(FREE, 9_000_000, 9_000_000, NOV);
     expect(store.values.get(monthlyBudgetKey(NOV))).toBe(2_000_000);
   });
 
@@ -144,21 +125,22 @@ describe('monthly AI budget', () => {
     expect(marks).toEqual([50, 80]);
   });
 
-  it('fails closed on the paid provider when the total cannot be read', async () => {
+  it('fails closed for a Claude call when the total cannot be read or there is no store', async () => {
     setMonthlyBudgetStore({ ...store, get: async () => Promise.reject(new Error('down')) });
-    await expect(assertWithinMonthlyBudget(HAIKU, NOV)).rejects.toBeInstanceOf(
-      MonthlyBudgetExceededError
-    );
+    await expect(claudeCall()).rejects.toBeInstanceOf(MonthlyBudgetExceededError);
     setMonthlyBudgetStore(null);
-    await expect(assertWithinMonthlyBudget(HAIKU, NOV)).rejects.toBeInstanceOf(
-      MonthlyBudgetExceededError
-    );
+    await expect(claudeCall()).rejects.toBeInstanceOf(MonthlyBudgetExceededError);
   });
 
-  it('does not block another provider because the store is missing', async () => {
-    config.provider = 'litellm';
+  it('decides by the provider being called: a Claude fallback fails closed whatever the primary', async () => {
     setMonthlyBudgetStore(null);
-    await expect(assertWithinMonthlyBudget('scoring-free', NOV)).resolves.toBeUndefined();
+    // The caller passes the fallback model's own provider (llm-tracer, meta.provider).
+    await expect(assertWithinMonthlyBudget(HAIKU, 'anthropic', NOV)).rejects.toBeInstanceOf(
+      MonthlyBudgetExceededError
+    );
+    await expect(
+      assertWithinMonthlyBudget('scoring-free', 'litellm', NOV)
+    ).resolves.toBeUndefined();
   });
 
   it('never throws while recording, so a paid answer is not lost', async () => {

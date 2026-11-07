@@ -557,6 +557,7 @@ export function createLLM(
     tier,
     modelId: pinApplies ? pinned?.id : undefined,
     pricingKey: anthropicModel ?? runningPricingKey(provider, openRouterModel, pinApplies),
+    provider,
   });
   _factoryCache.set(cacheKey, instrumented);
   return instrumented;
