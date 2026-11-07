@@ -11,7 +11,7 @@
  */
 
 import { Suspense, useState, useEffect } from 'react';
-import Link from 'next/link';
+import { PageHeader } from '@/components/shared/page-header';
 import { Card } from '@intelliflow/ui';
 import type { Widget } from '@intelliflow/ui';
 import { widgetRegistry } from '@/components/dashboard/widgets';
@@ -119,63 +119,35 @@ export default function DashboardClient({ initialLeadStats }: Readonly<Dashboard
   }
 
   return (
-    <div className="p-6 lg:p-8 bg-background-light dark:bg-background-dark min-h-[calc(100vh-4rem)]">
-      {/* Breadcrumb */}
-      <nav
-        aria-label="Breadcrumb"
-        className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-4"
+    <div className="p-4 sm:p-6 lg:p-8 bg-background-light dark:bg-background-dark min-h-[calc(100vh-4rem)]">
+      {/* #1225 UI-010: the shared PageHeader instead of a hand-rolled one; on
+          phones the secondary action shows its icon only. */}
+      <PageHeader
+        className="mb-6"
+        breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Dashboard' }]}
+        title="Dashboard"
+        actions={[
+          {
+            label: 'Customize',
+            icon: 'tune',
+            variant: 'secondary',
+            href: '/dashboard/customize',
+            hideOnMobile: true,
+          },
+          { label: 'Add New', icon: 'add', variant: 'primary', href: '/dashboard/new' },
+        ]}
       >
-        <Link href="/" className="hover:text-ds-primary">
-          Home
-        </Link>
-        <span aria-hidden="true">&gt;</span>
-        <span aria-current="page" className="text-slate-900 dark:text-white font-medium">
-          Dashboard
-        </span>
-      </nav>
-
-      {/* Header with Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
-          {/* Single polite live region (semantic <output> = status role) for the
-              auto-refresh cadence — KPI cards themselves are NOT aria-live to
-              avoid screen-reader spam on each poll. */}
-          <output className="hidden sm:inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
-            <span
-              className="size-1.5 rounded-full bg-green-500 motion-safe:animate-pulse"
-              aria-hidden="true"
-            />
-            <span>Live · refreshes every minute</span>
-          </output>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Link
-            href="/dashboard/customize"
-            className="group inline-flex items-center gap-2 whitespace-nowrap px-4 py-2.5 border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium text-sm rounded-lg hover:bg-slate-50 hover:border-slate-400 dark:hover:bg-slate-700 dark:hover:border-slate-500 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2"
-          >
-            <span
-              className="material-symbols-outlined text-base transition-transform group-hover:rotate-90"
-              aria-hidden="true"
-            >
-              tune
-            </span>{' '}
-            Customize
-          </Link>
-          <Link
-            href="/dashboard/new"
-            className="group flex items-center justify-center gap-2 whitespace-nowrap bg-ds-primary hover:bg-ds-primary-hover text-white font-bold py-2.5 px-5 rounded-lg shadow-sm shadow-ds-primary/30 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-ds-primary focus:ring-offset-2"
-          >
-            <span
-              className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform"
-              aria-hidden="true"
-            >
-              add
-            </span>
-            <span>Add New</span>
-          </Link>
-        </div>
-      </div>
+        {/* Single polite live region (semantic <output> = status role) for the
+            auto-refresh cadence — KPI cards themselves are NOT aria-live to
+            avoid screen-reader spam on each poll. */}
+        <output className="hidden sm:inline-flex items-center gap-1 mt-1 text-xs text-slate-500 dark:text-slate-400">
+          <span
+            className="size-1.5 rounded-full bg-green-500 motion-safe:animate-pulse"
+            aria-hidden="true"
+          />
+          <span>Live · refreshes every minute</span>
+        </output>
+      </PageHeader>
 
       {/* Dashboard Widgets Grid — each widget has its own Suspense boundary */}
       <div className={`${DASHBOARD_GRID_CLASSES} auto-rows-min`}>

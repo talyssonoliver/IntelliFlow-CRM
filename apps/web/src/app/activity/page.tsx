@@ -82,6 +82,7 @@ export default function ActivityPage() {
               label: 'Clear Filter',
               icon: 'filter_alt_off',
               variant: 'secondary',
+              hideOnMobile: true,
               onClick: handleClearFilters,
               disabled: !hasActiveFilter,
             },
