@@ -844,3 +844,14 @@ waivers:
     author: route access lane
     date: '2026-11-05'
     expires: '2026-11-19'
+  - fingerprint: 478f035dd7a75d8a69ab2a1a028d80b49a43548cef208a50a1f907cee07228d7
+    reason: >-
+      Accepted by the coordinator on 2026-11-07. UpgradeFlow's plan change sends planId and
+      billingCycle, which updateSubscriptionInputSchema refuses (it wants priceId), so changing
+      plans from /billing/upgrade has failed for every period since the page was added. #1220
+      only carries the chosen period into that call. Fixed in the PR that follows #1220,
+      tracked in #1239. Checkout, which the owner's founding-customer purchase uses, is not
+      affected. Short expiry so the fix can't slip.
+    author: plan state lane
+    date: '2026-11-07'
+    expires: '2026-11-21'
