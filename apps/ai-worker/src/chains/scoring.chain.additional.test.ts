@@ -83,6 +83,7 @@ import {
   LeadInput,
   getLeadScoringChain,
   leadScoringChain,
+  ScoringInconclusiveError,
 } from './scoring.chain';
 
 const baseCfg = {
@@ -142,18 +143,56 @@ describe('LeadScoringChain - additional', () => {
       expect((e as Error).message).toContain('Unsupported AI provider');
     }
   });
-  it('returns error on LLM throw', async () => {
-    mockStructuredInvoke.mockRejectedValue(Object.assign(new Error('rate limit'), { status: 429 }));
-    const r = await new LeadScoringChain().scoreLead({ email: 'f@e.com', source: 'WEB' });
-    expect(r.score).toBe(0);
-    expect(r.confidence).toBe(0);
-    expect(r.modelVersion).toBe('error:v1');
-    expect(r.factors[0].reasoning).toBe('Scoring failed (rate_limited)');
+  // #1218: a failure is never returned as a score of 0; it propagates so the job can try the
+  // fallback provider and then report FAILED.
+  it('throws on an LLM error instead of returning a score of 0', async () => {
+    const err = Object.assign(new Error('rate limit'), { status: 429 });
+    mockStructuredInvoke.mockRejectedValue(err);
+    await expect(
+      new LeadScoringChain().scoreLead({ email: 'f@e.com', source: 'WEB' })
+    ).rejects.toBe(err);
+    expect(
+      pinoLogger.error.mock.calls.find(([, m]) => m === 'Lead scoring failed')?.[0]
+    ).toMatchObject({ errorClass: 'rate_limited' });
   });
-  it('handles non-Error thrown', async () => {
+  it('throws on a non-Error throw too', async () => {
     mockStructuredInvoke.mockRejectedValue('oops');
-    const r = await new LeadScoringChain().scoreLead({ email: 'f@e.com', source: 'W' });
-    expect(r.factors[0].reasoning).toBe('Scoring failed (other)');
+    await expect(new LeadScoringChain().scoreLead({ email: 'f@e.com', source: 'W' })).rejects.toBe(
+      'oops'
+    );
+  });
+  it('treats a schema-valid answer with confidence 0 as no score (the #1218 production case)', async () => {
+    mockStructuredInvoke.mockResolvedValue({
+      score: 0,
+      confidence: 0,
+      factors: [{ name: 'data', impact: 0, reasoning: 'not enough information' }],
+    });
+    await expect(
+      new LeadScoringChain().scoreLead({ email: 'f@e.com', source: 'WEB' })
+    ).rejects.toBeInstanceOf(ScoringInconclusiveError);
+    expect(
+      pinoLogger.error.mock.calls.find(([, m]) => m === 'Lead scoring failed')?.[0]
+    ).toMatchObject({ inconclusive: 'ZERO_CONFIDENCE' });
+    // No "Lead scoring completed" line for a run that produced no score.
+    expect(pinoLogger.info.mock.calls.some(([, m]) => m === 'Lead scoring completed')).toBe(false);
+  });
+  it('treats an answer with no factors as no score', async () => {
+    mockStructuredInvoke.mockResolvedValue({ score: 40, confidence: 0.6, factors: [] });
+    await expect(
+      new LeadScoringChain().scoreLead({ email: 'f@e.com', source: 'WEB' })
+    ).rejects.toMatchObject({ reason: 'NO_FACTORS' });
+  });
+  it('logs the paths of a schema error, never its values', async () => {
+    const schemaError = Object.assign(new Error('Failed to parse'), {
+      issues: [{ path: ['score'], code: 'invalid_type', message: 'secret-value' }],
+    });
+    mockStructuredInvoke.mockRejectedValue(schemaError);
+    await expect(
+      new LeadScoringChain().scoreLead({ email: 'f@e.com', source: 'WEB' })
+    ).rejects.toBe(schemaError);
+    const logged = pinoLogger.error.mock.calls.find(([, m]) => m === 'Lead scoring failed')?.[0];
+    expect(logged).toMatchObject({ schemaIssues: [{ path: 'score', code: 'invalid_type' }] });
+    expect(JSON.stringify(logged)).not.toContain('secret-value');
   });
   it('grounds the hallucination check in the prompt the model saw (IFC-117)', async () => {
     const { hallucinationChecker } = await import('../monitoring/hallucination-checker');
@@ -189,11 +228,12 @@ describe('LeadScoringChain - additional', () => {
       expect(logged()).toContain(leadId);
     });
 
-    it('keeps the email and error text out of the failure log and the returned reasoning', async () => {
+    it('keeps the email and error text out of the failure log', async () => {
       mockStructuredInvoke.mockRejectedValue(new Error(`provider echoed ${email}`));
-      const r = await new LeadScoringChain().scoreLead({ email, source: 'WEB' }, { leadId });
+      await expect(
+        new LeadScoringChain().scoreLead({ email, source: 'WEB' }, { leadId })
+      ).rejects.toBeInstanceOf(Error);
       expect(logged()).not.toContain(canary);
-      expect(JSON.stringify(r)).not.toContain(canary);
       expect(pinoLogger.error.mock.calls.find(([, m]) => m === 'Lead scoring failed')?.[0]).toEqual(
         {
           leadId,

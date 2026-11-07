@@ -19,6 +19,7 @@ import {
   processScoringJob,
   DEFAULT_SCORING_JOB_OPTIONS,
   NIL_UUID,
+  ScoringFailedError,
   type ScoringJobData,
   type ScoringJobResult,
   type LeadTier,
@@ -77,6 +78,8 @@ vi.mock('@intelliflow/db', () => {
     },
     // The locked re-check before the insight write (SELECT email ... FOR UPDATE).
     $queryRaw: vi.fn(async () => (stored.leadEmail ? [{ email: stored.leadEmail }] : [])),
+    // #1218: the lead's score fields, written in the same locked transaction.
+    $executeRaw: vi.fn().mockResolvedValue(1),
   };
   prisma.$transaction = vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma));
   return { prisma };
@@ -674,10 +677,8 @@ describe('ScoringJob', () => {
       expect(validation.success).toBe(true);
     });
 
-    it('should return heuristic fallback (not throw) when scoring chain rejects', async () => {
-      // H10: scoring errors are caught and a heuristic fallback is returned instead of propagated.
-      // #324: with a fallback provider configured (mocked in this file), the heuristic is
-      // reached only when BOTH primary and fallback fail — so reject every attempt.
+    it('fails the job, with no score, when every provider fails (#1218: no heuristic score)', async () => {
+      // With a fallback provider configured (mocked in this file), reject every attempt.
       mockScoreLead.mockReset();
       mockScoreLead.mockRejectedValue(new Error('LLM API error'));
 
@@ -689,13 +690,7 @@ describe('ScoringJob', () => {
       };
 
       const job = createMockJob(jobData);
-      const result = await processScoringJob(job);
-
-      expect(result).toBeDefined();
-      expect(result.confidence).toBe(0.3);
-      expect(result.modelVersion).toBe('fallback');
-      expect(result.score).toBeGreaterThanOrEqual(0);
-      expect(result.score).toBeLessThanOrEqual(100);
+      await expect(processScoringJob(job)).rejects.toBeInstanceOf(ScoringFailedError);
     });
   });
 
@@ -824,6 +819,47 @@ describe('ScoringJob', () => {
         (prisma as { leadAIInsight: { upsert: ReturnType<typeof vi.fn> } }).leadAIInsight.upsert
       ).not.toHaveBeenCalled();
       expect(raw.mock.calls[0]![0].join('?')).toContain('FOR UPDATE');
+      // Nor is the lead's own score written (#1218).
+      expect(
+        (prisma as unknown as { $executeRaw: ReturnType<typeof vi.fn> }).$executeRaw
+      ).not.toHaveBeenCalled();
+    });
+
+    const leadScoreWrites = () =>
+      (prisma as unknown as { $executeRaw: ReturnType<typeof vi.fn> }).$executeRaw.mock.calls;
+
+    it('records a confident automatic score on the lead as SCORED, without touching its status (#1218)', async () => {
+      mockScoreLead.mockResolvedValueOnce({ ...mockScoringResult, score: 75, confidence: 0.9 });
+      await processScoringJob(job());
+      const [strings, ...values] = leadScoreWrites().at(-1)!;
+      const sql = (strings as string[]).join('?');
+      expect(sql).toMatch(
+        /UPDATE leads SET score = \?,\s+"scoringStatus" = \?::"LeadScoringStatus", "scoredAt" = \?,\s+"updatedAt" = \?/
+      );
+      // Score fields only: never the status (auto-qualify stays in LeadService).
+      expect(sql).not.toMatch(/"status"/);
+      expect(values.slice(0, 2)).toEqual([75, 'SCORED']);
+      // updatedAt moves with scoredAt, so a slower manual failure mark cannot hide this score.
+      expect(values[3]).toBe(values[2]);
+      expect(values.slice(4)).toEqual([TEST_UUIDS.lead1, TEST_UUIDS.tenant1]);
+    });
+
+    it('records a low-confidence automatic score as NEEDS_REVIEW (#1218)', async () => {
+      mockScoreLead.mockResolvedValueOnce({ ...mockScoringResult, score: 15, confidence: 0.4 });
+      await processScoringJob(job());
+      const [, score, status] = leadScoreWrites().at(-1)!;
+      expect([score, status]).toEqual([15, 'NEEDS_REVIEW']);
+    });
+
+    it("leaves the lead's score to LeadService when it asked for the score (codex)", async () => {
+      const queued = job();
+      (queued.data as Record<string, unknown>).leadScoreWriter = 'service';
+      await processScoringJob(queued);
+      // The insight is still written; the lead is written by LeadService's own transaction.
+      expect(
+        (prisma as { leadAIInsight: { upsert: ReturnType<typeof vi.fn> } }).leadAIInsight.upsert
+      ).toHaveBeenCalled();
+      expect(leadScoreWrites()).toHaveLength(0);
     });
 
     it('returns no score when the locked re-check cannot run (fails closed, codex)', async () => {
@@ -934,7 +970,7 @@ describe('ScoringJob', () => {
       expect(fallbackOptions[0]).toMatchObject({ recordDrift: false });
     });
 
-    it('falls through to the heuristic when BOTH providers fail', async () => {
+    it('reports FAILED when BOTH providers fail, and persists nothing (#1218)', async () => {
       mockScoreLead.mockReset();
       mockScoreLead.mockRejectedValue(new Error('all providers down'));
 
@@ -943,10 +979,88 @@ describe('ScoringJob', () => {
         tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
       });
-      const result = await processScoringJob(job);
+      await expect(processScoringJob(job)).rejects.toBeInstanceOf(ScoringFailedError);
+    });
 
-      expect(result.modelVersion).toBe('fallback'); // heuristic
-      expect(result.confidence).toBe(0.3);
+    it('reports FAILED when the model answers with no usable score (confidence 0)', async () => {
+      mockScoreLead.mockReset();
+      // What the real chain throws for a confidence-0 answer (the chain module is mocked here).
+      mockScoreLead.mockRejectedValue(
+        Object.assign(new Error('Model gave no usable score (ZERO_CONFIDENCE)'), {
+          name: 'ScoringInconclusiveError',
+        })
+      );
+
+      const job = createMockJob({
+        leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
+        lead: { email: 'test@example.com', source: 'WEBSITE' },
+      });
+      const failure = await processScoringJob(job).catch((e: unknown) => e);
+      expect(failure).toBeInstanceOf(ScoringFailedError);
+      // The API maps exactly this message to "no usable score" across the queue (codex).
+      expect((failure as ScoringFailedError).errorClass).toBe('inconclusive');
+      expect((failure as Error).message).toBe('Lead scoring failed (inconclusive)');
+    });
+
+    const inconclusive = () =>
+      Object.assign(new Error('Model gave no usable score (ZERO_CONFIDENCE)'), {
+        name: 'ScoringInconclusiveError',
+      });
+
+    it('reports inconclusive when the primary failed and the fallback gave no usable score (codex)', async () => {
+      mockScoreLead.mockReset();
+      mockScoreLead
+        .mockRejectedValueOnce(new Error('primary provider down (429)'))
+        .mockRejectedValueOnce(inconclusive());
+
+      const job = createMockJob({
+        leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
+        lead: { email: 'test@example.com', source: 'WEBSITE' },
+      });
+      const failure = await processScoringJob(job).catch((e: unknown) => e);
+      expect((failure as ScoringFailedError).errorClass).toBe('inconclusive');
+    });
+
+    it('does not open the shared breaker on inconclusive answers: the provider is up (codex)', async () => {
+      mockScoreLead.mockReset();
+      mockScoreLead.mockImplementation(async () => {
+        throw inconclusive();
+      });
+
+      // Past the breaker's failure threshold (5). Each job tries the primary (through the
+      // breaker) and then the fallback, so an open breaker would skip a primary call.
+      const jobs = 7;
+      for (let i = 0; i < jobs; i++) {
+        const job = createMockJob({
+          leadId: TEST_UUIDS.lead1,
+          tenantId: TEST_UUIDS.tenant1,
+          lead: { email: 'test@example.com', source: 'WEBSITE' },
+        });
+        await expect(processScoringJob(job)).rejects.toBeInstanceOf(ScoringFailedError);
+      }
+      expect(mockScoreLead).toHaveBeenCalledTimes(jobs * 2);
+    });
+
+    it("does not open the shared breaker on one tenant's budget refusal: no provider was called (codex)", async () => {
+      mockScoreLead.mockReset();
+      mockScoreLead.mockImplementation(async () => {
+        throw Object.assign(new Error('monthly AI ceiling reached for scoring'), {
+          code: 'PURPOSE_CEILING_REACHED',
+        });
+      });
+
+      const jobs = 7;
+      for (let i = 0; i < jobs; i++) {
+        const job = createMockJob({
+          leadId: TEST_UUIDS.lead1,
+          tenantId: TEST_UUIDS.tenant1,
+          lead: { email: 'test@example.com', source: 'WEBSITE' },
+        });
+        await expect(processScoringJob(job)).rejects.toBeInstanceOf(ScoringFailedError);
+      }
+      expect(mockScoreLead).toHaveBeenCalledTimes(jobs * 2);
     });
   });
 });

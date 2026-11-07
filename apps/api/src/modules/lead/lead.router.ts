@@ -56,7 +56,7 @@ import {
   type LeadStatus,
   type LeadSource,
 } from '@intelliflow/domain';
-import { LEAD_SCORE_THRESHOLDS } from '@intelliflow/application';
+import { LEAD_SCORE_THRESHOLDS, LeadScoringFailedError } from '@intelliflow/application';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 /**
@@ -1202,9 +1202,28 @@ export const leadRouter = createTRPCRouter({
           throw new TRPCError({ code: 'PRECONDITION_FAILED', message: result.error.message });
         }
 
+        // #1218: the scoring did not produce a score. Say so on the lead, never "Scored by AI";
+        // the previous score and status were kept. The class only, no provider text (NF-002).
+        await writeLeadActivityLog(typedCtx, {
+          leadId: input.leadId,
+          tenantId: typedCtx.tenant.tenantId,
+          type: 'SCORE_UPDATE',
+          title: 'AI scoring failed',
+          description: 'The AI did not produce a usable score. The previous score was kept.',
+          metadata: { scoringStatus: 'FAILED', errorClass: result.error.name },
+          userId: typedCtx.tenant.userId,
+          userName: 'AI Scoring Agent',
+        });
+
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: result.error.message,
+          code:
+            result.error instanceof LeadScoringFailedError
+              ? 'UNPROCESSABLE_CONTENT'
+              : 'INTERNAL_SERVER_ERROR',
+          message:
+            result.error instanceof LeadScoringFailedError
+              ? result.error.message
+              : 'AI scoring failed; the previous score was kept',
         });
       }
 

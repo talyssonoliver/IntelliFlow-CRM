@@ -9,7 +9,14 @@ import { toast } from '@intelliflow/ui';
 
 const lane = vi.hoisted(() => ({
   // onSuccess handlers captured per mutation so cache-refresh behaviour can be asserted
-  mutationOpts: {} as Record<string, { onSuccess?: (data?: unknown) => unknown }>,
+  mutationOpts: {} as Record<
+    string,
+    {
+      onSuccess?: (data?: unknown) => unknown;
+      onError?: (err: { message: string }) => unknown;
+      onSettled?: () => unknown;
+    }
+  >,
   user: { id: 'user-1', email: 'user@example.com' } as { id: string; email: string } | null,
   revalidateLeadCaches: vi.fn(),
   revalidateLeadConversionCaches: vi.fn(),
@@ -160,7 +167,7 @@ vi.mock('@/lib/api', () => ({
         },
       },
       scoreWithAI: {
-        useMutation: (opts?: { onSuccess?: (data?: unknown) => unknown }) => {
+        useMutation: (opts?: (typeof lane.mutationOpts)[string]) => {
           lane.mutationOpts.score = opts ?? {};
           return { mutate: vi.fn(), isPending: false };
         },
@@ -1064,22 +1071,45 @@ describe('Lead360Page — cache refresh promises', () => {
     }
   );
 
-  it.each([
-    ['archive', 'Lead archived'],
-    ['score', 'AI analysis complete'],
-  ])('%s onSuccess toasts first, then returns revalidation + invalidation', async (key, title) => {
+  it('archive onSuccess toasts first, then returns revalidation + invalidation', async () => {
     render(<Lead360Page />);
-    const returned = lane.mutationOpts[key].onSuccess!();
-    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title }));
+    const returned = lane.mutationOpts.archive.onSuccess!();
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Lead archived' }));
     await returned;
     expect(lane.revalidateLeadCaches).toHaveBeenCalledWith('user-1');
     expect(mockLeadGetByIdInvalidate).toHaveBeenCalledWith({ id: 'lead-1' });
   });
 
-  it.each(['archive', 'score'])('%s onSuccess skips revalidation without a user', async (key) => {
+  it('archive onSuccess skips revalidation without a user', async () => {
     lane.user = null;
     render(<Lead360Page />);
-    await lane.mutationOpts[key].onSuccess!();
+    await lane.mutationOpts.archive.onSuccess!();
+    expect(lane.revalidateLeadCaches).not.toHaveBeenCalled();
+    expect(mockLeadGetByIdInvalidate).toHaveBeenCalled();
+  });
+
+  it('score onSuccess toasts, and onSettled returns revalidation + invalidation', async () => {
+    render(<Lead360Page />);
+    lane.mutationOpts.score.onSuccess!();
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'AI analysis complete' }));
+    await lane.mutationOpts.score.onSettled!();
+    expect(lane.revalidateLeadCaches).toHaveBeenCalledWith('user-1');
+    expect(mockLeadGetByIdInvalidate).toHaveBeenCalledWith({ id: 'lead-1' });
+  });
+
+  it('a failed scoring also refetches the lead, which is now marked FAILED (#1218)', async () => {
+    render(<Lead360Page />);
+    lane.mutationOpts.score.onError!({ message: 'AI scoring gave no usable score' });
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'AI analysis failed' }));
+    await lane.mutationOpts.score.onSettled!();
+    expect(lane.revalidateLeadCaches).toHaveBeenCalledWith('user-1');
+    expect(mockLeadGetByIdInvalidate).toHaveBeenCalledWith({ id: 'lead-1' });
+  });
+
+  it('score onSettled skips revalidation without a user', async () => {
+    lane.user = null;
+    render(<Lead360Page />);
+    await lane.mutationOpts.score.onSettled!();
     expect(lane.revalidateLeadCaches).not.toHaveBeenCalled();
     expect(mockLeadGetByIdInvalidate).toHaveBeenCalled();
   });
@@ -1091,7 +1121,7 @@ describe('Lead360Page — cache refresh promises', () => {
     lane.revalidateLeadConversionCaches.mockRejectedValue(failure);
     render(<Lead360Page />);
     await lane.mutationOpts.archive.onSuccess!();
-    await lane.mutationOpts.score.onSuccess!();
+    await lane.mutationOpts.score.onSettled!();
     lane.mutationOpts.delete.onSuccess!();
     lane.mutationOpts.convert.onSuccess!({ contactId: 'c-1' });
     await Promise.resolve();

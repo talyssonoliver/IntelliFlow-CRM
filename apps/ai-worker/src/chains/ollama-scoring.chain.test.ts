@@ -179,13 +179,8 @@ describe('LeadScoringChain with Ollama Provider', () => {
         source: 'WEBSITE',
       };
 
-      const result = await chain.scoreLead(lead);
-
-      expect(result.score).toBe(0);
-      expect(result.confidence).toBe(0);
-      // The error class only: the reasoning is persisted and shown (IFC-117 NF-002).
-      expect(result.factors[0].reasoning).toBe('Scoring failed (other)');
-      expect(result.modelVersion).toBe('error:v1');
+      // #1218: a failed scoring is rethrown, never returned as a score of 0.
+      await expect(chain.scoreLead(lead)).rejects.toThrow('ECONNREFUSED');
     });
   });
 });
