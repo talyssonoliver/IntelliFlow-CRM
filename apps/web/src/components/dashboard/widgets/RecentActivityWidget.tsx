@@ -41,7 +41,7 @@ export function RecentActivityWidget({ config }: Readonly<WidgetProps>) {
 
       {/* IFC-202: Activity stats summary */}
       <div className="px-6 py-2 border-b border-border bg-slate-50/50 dark:bg-slate-800/30">
-        <ActivityFeedStatsBar timeWindow="7d" maxTypes={3} showBreakdown />
+        <ActivityFeedStatsBar timeWindow="7d" />
       </div>
 
       <div className="flex flex-col flex-1 divide-y divide-border overflow-hidden">
@@ -58,6 +58,7 @@ export function RecentActivityWidget({ config }: Readonly<WidgetProps>) {
               actor={activity.actor}
               entity={activity.entity}
               metadata={activity.metadata}
+              variant="compact"
             />
           ))}
         {displayActivities.length === 0 && !isLoading && (

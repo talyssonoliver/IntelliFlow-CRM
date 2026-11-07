@@ -444,6 +444,9 @@ type LeadActivityLogType =
   | 'STATUS_CHANGE'
   | 'QUALIFICATION';
 
+/** Clock skew tolerated on a caller-supplied activity time. */
+const ACTIVITY_CLOCK_SKEW_MS = 60_000;
+
 /**
  * Best-effort system activity logging for lead lifecycle actions.
  * Activity write failures must not block the primary business operation.
@@ -1863,6 +1866,17 @@ export const leadRouter = createTRPCRouter({
         ]),
         title: z.string().min(1),
         description: z.string().optional(),
+        /**
+         * When the activity really happened (#1223 UI-005). An import of past
+         * emails passes the send date here instead of writing it into the title;
+         * omitted, it is the time of the call. Never more than a minute ahead.
+         */
+        occurredAt: z.coerce
+          .date()
+          .refine((d) => d.getTime() <= Date.now() + ACTIVITY_CLOCK_SKEW_MS, {
+            message: 'occurredAt cannot be in the future',
+          })
+          .optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -1880,6 +1894,11 @@ export const leadRouter = createTRPCRouter({
       }
 
       const now = new Date();
+      const occurredAt = input.occurredAt && input.occurredAt < now ? input.occurredAt : now;
+      // A back-dated activity must not move lastContactedAt backwards.
+      const previousContact = lead.lastContactedAt ? new Date(lead.lastContactedAt) : null;
+      const lastContactedAt =
+        previousContact && previousContact > occurredAt ? previousContact : occurredAt;
 
       // Transaction: create activity + update lastContactedAt
       const activity = await typedCtx.prismaWithTenant.$transaction(async (tx) => {
@@ -1888,7 +1907,7 @@ export const leadRouter = createTRPCRouter({
             type: input.type,
             title: input.title,
             description: input.description ?? '',
-            timestamp: now,
+            timestamp: occurredAt,
             userName: ctx.user?.email ?? 'Unknown',
             leadId: input.leadId,
             tenantId: typedCtx.tenant.tenantId,
@@ -1898,7 +1917,7 @@ export const leadRouter = createTRPCRouter({
         await tx.lead.update({
           where: { id: input.leadId, ...createTenantWhereClause(typedCtx.tenant, {}) },
           data: {
-            lastContactedAt: now,
+            lastContactedAt,
             updatedAt: now,
           },
         });
