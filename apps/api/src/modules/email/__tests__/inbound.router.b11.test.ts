@@ -50,6 +50,14 @@ function defaultParsedEmail(overrides: Record<string, any> = {}) {
   };
 }
 
+// Mail in these tests is addressed to a connected mailbox, so the webhook stores it.
+const INBOX_MAILBOX = {
+  id: 'mb-inbox',
+  tenantId: 'tenant-inbox',
+  kind: 'GMAIL',
+  accountAddress: 'inbox@intelliflow.com',
+};
+
 describe('Inbound Email Router b11 - uncovered branches', () => {
   // SEC-004: the webhook now requires a valid HMAC signature. Sign each call
   // with a test secret and inject it as the x-inbound-email-signature header,
@@ -74,6 +82,9 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    (prismaMock.emailMailbox.findMany as any).mockResolvedValue([INBOX_MAILBOX]);
+    // The insert succeeds unless a test says otherwise; a failed insert now fails the call.
+    (prismaMock.emailRecord.create as any).mockResolvedValue({ id: 'stored-email-id' });
     mockParseFn.mockReturnValue(defaultParsedEmail());
     inboundSecretBackup = process.env.INBOUND_EMAIL_WEBHOOK_SECRET;
     process.env.INBOUND_EMAIL_WEBHOOK_SECRET = INBOUND_WEBHOOK_TEST_SECRET;
@@ -95,7 +106,7 @@ describe('Inbound Email Router b11 - uncovered branches', () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.emailId).toBe('email-123');
+      expect(result.emailId).toBe('stored-email-id'); // the stored record's id
     });
 
     it('should handle Mailgun without rawEmail (empty string fallback)', async () => {
