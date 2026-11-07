@@ -207,6 +207,20 @@ describe('UpgradeFlow', () => {
     expect(screen.getByText(/Subscribe to Enterprise/)).toBeInTheDocument();
   });
 
+  it('sends a workspace with no subscription to checkout, not to updateSubscription (#1220)', async () => {
+    const { useSearchParams } = await import('next/navigation');
+    vi.mocked(useSearchParams).mockReturnValue(
+      new URLSearchParams('plan=professional') as unknown as ReturnType<typeof useSearchParams>
+    );
+    mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
+    render(<UpgradeFlow />);
+
+    fireEvent.click(screen.getByRole('button', { name: /confirm plan change/i }));
+
+    expect(mockPush).toHaveBeenCalledWith('/billing/checkout?plan=professional&cycle=monthly');
+    expect(mockMutate).not.toHaveBeenCalled();
+  });
+
   it('does not show proration for new subscriptions', () => {
     mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
     render(<UpgradeFlow />);

@@ -444,6 +444,12 @@ export function UpgradeFlow() {
 
   // MODE 2: ?plan=X → confirmation with proration
   function handleConfirm() {
+    // No subscription yet (a trial, or an ended trial): buying a plan is a checkout, since
+    // there is nothing to change, and updateSubscription would refuse it (#1220).
+    if (!subscription) {
+      router.push(`/billing/checkout?plan=${encodeURIComponent(planId ?? '')}&cycle=monthly`);
+      return;
+    }
     updateMutation.mutate({
       planId,
       billingCycle: 'monthly',

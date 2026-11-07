@@ -36,6 +36,8 @@ export {
 } from './invoices';
 export type { CreateInvoiceItemParams, CreateInvoiceParams } from './invoices';
 
+export { findActivePromotionCode } from './promotion-codes';
+
 export { constructWebhookEvent } from './webhooks';
 
 export { checkConnection } from './health';

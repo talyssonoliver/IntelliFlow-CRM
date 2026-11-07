@@ -3,7 +3,7 @@
 /**
  * TrialBadge
  *
- * Lightweight, unobtrusive "Trial: N days left" link to the plan comparison page,
+ * Lightweight "Trial: N days left" link to the plan choice, or "Trial ended: choose a plan"`n * once the trial has passed (#1220),
  * displayed in the navigation when the user is on a trial plan.
  *
  * Driven by `trpc.billing.getPlanState`.  Only renders when:
@@ -39,15 +39,23 @@ export function TrialBadge({ className }: Readonly<{ className?: string }>) {
     return null;
   }
 
+  const ended = planState.status === 'TRIAL_ENDED';
   const days = planState.daysLeft;
-  const isUrgent = days <= 3;
+  const isUrgent = ended || days <= 3;
+  const dayWord = `day${days === 1 ? '' : 's'}`;
+  // An ended trial says so and leads to the plan choice, never "0 days left" (#1220).
+  const label = ended ? 'Trial ended: choose a plan' : `Trial: ${days}d left`;
+  const ariaLabel = ended
+    ? 'Your trial has ended. Choose a plan'
+    : `Trial: ${days} ${dayWord} remaining. Choose a plan`;
 
   return (
     <Link
       href="/billing/plans"
-      aria-label={`Trial: ${days} day${days === 1 ? '' : 's'} remaining. Compare plans`}
-      title={days === 0 ? 'Your trial period has ended. Compare plans' : 'Compare plans'}
+      aria-label={ariaLabel}
+      title={ended ? 'Your trial has ended. Choose a plan to keep going' : 'Choose a plan'}
       data-testid="trial-badge"
+      data-trial-status={ended ? 'ended' : 'active'}
       className={cn(
         'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium whitespace-nowrap hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         isUrgent
@@ -62,7 +70,7 @@ export function TrialBadge({ className }: Readonly<{ className?: string }>) {
       >
         hourglass_empty
       </span>
-      Trial: {days}d left
+      {label}
     </Link>
   );
 }

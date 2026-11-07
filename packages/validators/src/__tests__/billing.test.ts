@@ -10,6 +10,7 @@
 import { describe, it, expect } from 'vitest';
 
 import {
+  promotionCodeSchema,
   subscriptionStatusSchema,
   invoiceStatusSchema,
   paymentMethodTypeSchema,
@@ -933,5 +934,31 @@ describe('Billing Validators', () => {
       });
       expect(result.success).toBe(false);
     });
+  });
+});
+
+describe('promotionCodeSchema (#1220)', () => {
+  it('trims a code', () => {
+    expect(promotionCodeSchema.parse('  FOUNDING100 ')).toBe('FOUNDING100');
+  });
+
+  it.each(['', '   '])('reads a blank code (%j) as no code', (raw) => {
+    expect(promotionCodeSchema.parse(raw)).toBeUndefined();
+  });
+
+  it.each(['FREE!', 'a b', 'x'.repeat(65), 'code;drop'])('refuses %j', (raw) => {
+    expect(promotionCodeSchema.safeParse(raw).success).toBe(false);
+  });
+
+  it('keeps letters, digits, hyphens and underscores', () => {
+    expect(promotionCodeSchema.parse('Found_ing-2026')).toBe('Found_ing-2026');
+  });
+
+  it('is optional in the checkout input', () => {
+    const base = { planId: 'professional', billingCycle: 'monthly', paymentMethodId: 'pm_1' };
+    expect(createCheckoutInputSchema.parse(base).promotionCode).toBeUndefined();
+    expect(createCheckoutInputSchema.parse({ ...base, promotionCode: 'ABC' }).promotionCode).toBe(
+      'ABC'
+    );
   });
 });
