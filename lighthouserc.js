@@ -9,9 +9,16 @@
  * @see https://github.com/GoogleChrome/lighthouse-ci/blob/main/docs/configuration.md
  */
 
+// Playwright's bundled Chromium with a fixed profile, never the installed Chrome (see
+// tools/lighthouse/bundled-chrome.cjs). On a Linux CI runner, the runner's own Chrome.
+const { lhciCollectBrowser } = require('./tools/lighthouse/bundled-chrome.cjs');
+
+const browser = lhciCollectBrowser();
+
 module.exports = {
   ci: {
     collect: {
+      ...(browser.chromePath ? { chromePath: browser.chromePath } : {}),
       // URLs to test — all major app routes (list pages, not dynamic [id] routes)
       // Public pages
       url: [
@@ -76,6 +83,7 @@ module.exports = {
 
       // Chromium settings
       settings: {
+        ...(browser.chromeFlags ? { chromeFlags: browser.chromeFlags } : {}),
         preset: 'desktop', // or 'mobile' for mobile testing
         throttling: {
           rttMs: 40,
