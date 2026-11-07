@@ -28,7 +28,11 @@ import type {
 import { cn } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { getPaymentErrorMessage } from '@/lib/billing/payment-processor';
-import { INVALID_PROMOTION_CODE_MESSAGE, type BillingCycle } from '@intelliflow/validators';
+import {
+  INVALID_PROMOTION_CODE_MESSAGE,
+  promotionCodeSchema,
+  type BillingCycle,
+} from '@intelliflow/validators';
 
 // ============================================
 // Types
@@ -168,6 +172,14 @@ export function CheckoutForm({
       return;
     }
 
+    // A code the server would refuse for its characters is caught here, before the card is
+    // touched, with the same message as an unknown code (#1220).
+    const code = promotionCodeSchema.safeParse(promotionCode);
+    if (!code.success) {
+      setFormError(INVALID_PROMOTION_CODE_MESSAGE);
+      return;
+    }
+
     setIsSubmitting(true);
     setFormError(undefined);
 
@@ -199,7 +211,7 @@ export function CheckoutForm({
         planId,
         billingCycle,
         paymentMethodId: paymentMethod.id,
-        promotionCode: promotionCode.trim() || undefined,
+        promotionCode: code.data,
       });
 
       // Step 3: Handle 3D Secure if needed (Stripe returns 'incomplete' status when SCA is required)

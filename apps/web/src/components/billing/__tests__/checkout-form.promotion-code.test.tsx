@@ -118,4 +118,15 @@ describe('CheckoutForm — promotion code (#1220)', () => {
       'Payment processing failed. Please try again.'
     );
   });
+
+  it.each(['FOUND ING', 'founding.100', 'café'])(
+    'says %j is not a valid code before touching the card',
+    async (code) => {
+      await submit(code);
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(INVALID_PROMOTION_CODE_MESSAGE);
+      expect(mockCreatePaymentMethod).not.toHaveBeenCalled();
+      expect(mockMutateAsync).not.toHaveBeenCalled();
+    }
+  );
 });
