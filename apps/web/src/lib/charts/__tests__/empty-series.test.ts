@@ -34,6 +34,16 @@ describe('isEmptySeries (#1225 UI-013)', () => {
     expect(isEmptySeries([{ label: 'only text' }])).toBe(true);
   });
 
+  it('with zeroIsData, keeps zero readings and only counts missing values as empty', () => {
+    const lost = [{ date: '2026-11-01', probability: 0 }];
+    expect(isEmptySeries(lost)).toBe(true);
+    expect(isEmptySeries(lost, undefined, { zeroIsData: true })).toBe(false);
+    expect(isEmptySeries([0, 0], undefined, { zeroIsData: true })).toBe(false);
+    expect(isEmptySeries([null, Number.NaN], undefined, { zeroIsData: true })).toBe(true);
+    expect(isEmptySeries([{ score: null }], 'score', { zeroIsData: true })).toBe(true);
+    expect(isEmptySeries([], undefined, { zeroIsData: true })).toBe(true);
+  });
+
   it('has a default message', () => {
     expect(EMPTY_CHART_MESSAGE).toMatch(/No data/);
   });

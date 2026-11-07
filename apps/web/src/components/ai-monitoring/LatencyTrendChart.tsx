@@ -35,7 +35,7 @@ export default function LatencyTrendChart({
   p99Target,
 }: Readonly<LatencyTrendChartProps>) {
   const { timezone } = useTimezoneContext();
-  if (isEmptySeries(trend)) {
+  if (isEmptySeries(trend, undefined, { zeroIsData: true })) {
     return (
       <Card>
         <CardHeader className="pb-2">

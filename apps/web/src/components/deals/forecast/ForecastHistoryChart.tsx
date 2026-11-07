@@ -50,8 +50,9 @@ interface ForecastHistoryChartProps {
 export default function ForecastHistoryChart({ data, mode }: Readonly<ForecastHistoryChartProps>) {
   const yLabel = mode === 'portfolio' ? 'Win Rate (%)' : 'Probability (%)';
 
-  // #1225 UI-013: no points, or all zero, is a message, not an empty plot.
-  if (isEmptySeries(data)) {
+  // #1225 UI-013: no readings is a message, not an empty plot. A 0% probability
+  // (a lost deal) is a reading, so zeros still draw.
+  if (isEmptySeries(data, undefined, { zeroIsData: true })) {
     return (
       <div className="h-64" data-testid="history-chart">
         <ChartEmptyState className="h-full" />

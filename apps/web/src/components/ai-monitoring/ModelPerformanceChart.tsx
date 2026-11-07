@@ -42,7 +42,7 @@ export default function ModelPerformanceChart({ history }: Readonly<ModelPerform
         <CardTitle className="text-base">Model Performance</CardTitle>
       </CardHeader>
       <CardContent className="pb-4">
-        {isEmptySeries(chartData) ? (
+        {isEmptySeries(chartData, undefined, { zeroIsData: true }) ? (
           <div data-testid="no-chart-data">
             <EmptyState entity="insights" phase="passive" className="py-4" />
           </div>

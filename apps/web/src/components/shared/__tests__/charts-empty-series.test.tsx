@@ -40,9 +40,18 @@ describe('charts with an empty series', () => {
     expect(screen.getAllByTestId('chart-empty')).toHaveLength(2);
   });
 
-  it('ForecastHistoryChart', () => {
-    render(<ForecastHistoryChart data={[]} mode={'portfolio' as never} />);
+  it('ForecastHistoryChart shows the message with no readings only', () => {
+    const { unmount } = render(<ForecastHistoryChart data={[]} mode={'portfolio' as never} />);
     expect(screen.getByTestId('chart-empty')).toBeInTheDocument();
+    unmount();
+    // A 0% probability (a lost deal) is a reading: the chart still draws.
+    render(
+      <ForecastHistoryChart
+        data={[{ date: '2026-11-01', probability: 0 }] as never}
+        mode={'deal' as never}
+      />
+    );
+    expect(screen.queryByTestId('chart-empty')).toBeNull();
   });
 
   it('ForecastRevenueChart keeps its title and legend', () => {
