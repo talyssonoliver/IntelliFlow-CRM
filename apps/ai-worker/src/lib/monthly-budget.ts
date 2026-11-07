@@ -136,29 +136,45 @@ const pending = new Map<string, number>();
 /** For tests: forget unwritten spend. */
 export function _resetPendingSpend(): void {
   pending.clear();
+  writeQueues.clear();
+}
+
+/** Writes per month key run one at a time, so two calls never write the same pending amount. */
+const writeQueues = new Map<string, Promise<unknown>>();
+
+function serialized<T>(key: string, write: () => Promise<T>): Promise<T> {
+  const previous = writeQueues.get(key) ?? Promise.resolve();
+  const next = previous.then(write, write);
+  writeQueues.set(
+    key,
+    next.catch(() => undefined)
+  );
+  return next;
 }
 
 /** Write this process's unwritten spend for `key`. True when nothing is left unwritten. */
 async function flushPending(key: string): Promise<boolean> {
-  const micros = pending.get(key) ?? 0;
-  if (micros <= 0) return true;
-  return addToTotal(key, micros);
+  if ((pending.get(key) ?? 0) <= 0) return true;
+  return serialized(key, () => writePending(key));
 }
 
-/** INCRBY with the month TTL and the 50%/80% warnings. On failure the amount stays pending. */
-async function addToTotal(key: string, micros: number): Promise<boolean> {
-  if (!store) {
-    pending.set(key, micros);
-    return false;
-  }
+/**
+ * INCRBY the amount pending for `key`, with the month TTL and the 50%/80% warnings. Only the
+ * amount written is removed: spend added by other calls during the write stays pending.
+ */
+async function writePending(key: string): Promise<boolean> {
+  const micros = pending.get(key) ?? 0;
+  if (micros <= 0) return true;
+  if (!store) return false;
   try {
     const totalMicros = await store.incrby(key, micros);
-    pending.delete(key);
+    const left = (pending.get(key) ?? 0) - micros;
+    if (left > 0) pending.set(key, left);
+    else pending.delete(key);
     if (totalMicros === micros) await store.expire(key, KEY_TTL_SECONDS);
     warnOnCrossing(totalMicros - micros, totalMicros);
-    return true;
+    return left <= 0;
   } catch (err) {
-    pending.set(key, micros);
     logger.error(
       { err: err instanceof Error ? err.name : 'Error', unwrittenMicros: micros },
       'Monthly AI spend could not be recorded; kept to retry'
@@ -181,7 +197,9 @@ export async function recordMonthlySpend(
   const micros = Math.round(calculateCost(pricingKey, inputTokens, outputTokens) * MICROS_PER_USD);
   if (micros <= 0) return;
   const key = monthlyBudgetKey(now);
-  await addToTotal(key, micros + (pending.get(key) ?? 0));
+  // Counted at once, before any await, so a concurrent check already sees it.
+  pending.set(key, (pending.get(key) ?? 0) + micros);
+  await serialized(key, () => writePending(key));
 }
 
 /** One warning per mark: only the increment that crosses it logs, across all workers. */

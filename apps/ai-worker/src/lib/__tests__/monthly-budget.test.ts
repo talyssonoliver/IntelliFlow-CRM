@@ -158,6 +158,21 @@ describe('monthly AI budget', () => {
     expect(store.values.get(monthlyBudgetKey(NOV))).toBe(4000);
   });
 
+  it('loses no spend when concurrent writes fail and later recover', async () => {
+    const working = store.incrby;
+    store.incrby = async () => Promise.reject(new Error('READONLY'));
+    await Promise.all([spendUsd(0.001), spendUsd(0.002)]);
+    store.incrby = working;
+    await expect(claudeCall()).resolves.toBeUndefined();
+    expect(store.values.get(monthlyBudgetKey(NOV))).toBe(3000);
+  });
+
+  it('writes concurrent spend once each, never twice', async () => {
+    await Promise.all([spendUsd(0.001), spendUsd(0.002), spendUsd(0.003)]);
+    await claudeCall();
+    expect(store.values.get(monthlyBudgetKey(NOV))).toBe(6000);
+  });
+
   it('counts unwritten spend against the budget for other providers too', async () => {
     vi.stubEnv('AI_MONTHLY_BUDGET_USD', '1');
     await spendUsd(0.9);

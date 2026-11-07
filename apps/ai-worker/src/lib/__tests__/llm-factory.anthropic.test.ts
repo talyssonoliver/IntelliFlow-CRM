@@ -40,6 +40,14 @@ describe('createLLM on AI_PROVIDER=anthropic', () => {
     expect(build('free').model).toBe('claude-haiku-5-5');
   });
 
+  it('refuses a model override with no price entry, so spend is never priced wrongly', () => {
+    vi.stubEnv('ANTHROPIC_MODEL_PREMIUM', 'claude-opus-5-5');
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    expect(build('premium').model).toBe('claude-haiku-5-5');
+    expect(error).toHaveBeenCalled();
+    error.mockRestore();
+  });
+
   it('takes ANTHROPIC_MODEL for every tier without its own override', () => {
     vi.stubEnv('ANTHROPIC_MODEL', 'claude-sonnet-5-5');
     expect(build('standard').model).toBe('claude-sonnet-5-5');
