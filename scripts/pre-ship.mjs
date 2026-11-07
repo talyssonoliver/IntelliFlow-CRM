@@ -106,6 +106,12 @@ import {
 } from './lib/preship-report.mjs';
 import { integrationInfraMissing } from './lib/preship-integration-infra.mjs';
 import { reusableResult } from './lib/preship-cache.mjs';
+import {
+  appendRunRecord,
+  buildRunRecord,
+  createMemorySampler,
+  summaryLine,
+} from './lib/preship-run-metrics.mjs';
 import { testStepEnv } from './lib/preship-build.mjs';
 
 // Throwaway stub credentials for the build-time env mirror below (never a real DB).
@@ -134,6 +140,8 @@ process.chdir(REPO_ROOT);
 const OUT_DIR = path.join(REPO_ROOT, 'artifacts/preship');
 const LOG_DIR = path.join(OUT_DIR, 'logs');
 const STATE_PATH = path.join(OUT_DIR, 'last-run.json');
+/** #1216 item 0: one JSON line per run (ignored by git). */
+const RUN_LOG_PATH = path.join(OUT_DIR, 'runs.jsonl');
 
 // Shared skip_if probes. The DB-backed steps (integration, coverage, and the
 // two coverage gates that consume the lcov) can't run without a local test DB.
@@ -902,6 +910,14 @@ function gitHead() {
   return r.status === 0 ? r.stdout.trim() : 'unknown';
 }
 
+function gitBranch() {
+  const r = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  return r.status === 0 ? r.stdout.trim() : null;
+}
+
 function loadPreviousState(head) {
   if (flags.clean) return null;
   try {
@@ -1063,6 +1079,9 @@ async function main() {
   const totalStart = Date.now();
   let aborted = false;
   let boundaryPrinted = false;
+  // #1216 item 0: measure the run (per-step time, scope, free memory).
+  const memorySampler = createMemorySampler();
+  memorySampler.start();
 
   const allowMissing = process.env.PRESHIP_ALLOW_MISSING === '1';
 
@@ -1094,7 +1113,9 @@ async function main() {
       continue;
     }
     process.stdout.write(`  ${step.id.padEnd(28)} `);
+    memorySampler.mark(step.id);
     const r = await runStep(step, prev);
+    memorySampler.mark(null);
     results.push(r);
     if (step.id === 'coverage') coverageVerdict = r.verdict;
     if (step.id === 'coverage') coverageVerdict = r.verdict;
@@ -1173,6 +1194,21 @@ async function main() {
     process.stdout.write(`pre-ship: standard gate ${stdV}.\n`);
     process.stdout.write(`pre-ship: full-matrix E2E ${fullV}.\n`);
   }
+  const runRecord = buildRunRecord({
+    head,
+    branch: gitBranch(),
+    mode: state.mode,
+    only: flags.only ?? null,
+    testScope: TEST_SCOPE,
+    results,
+    startedAt: totalStart,
+    durationMs: totalDuration,
+    verdict,
+    memory: memorySampler.stop(),
+  });
+  appendRunRecord(RUN_LOG_PATH, runRecord);
+  process.stdout.write(summaryLine(runRecord, path.relative(REPO_ROOT, RUN_LOG_PATH)));
+
   const duration = fmtDuration(totalDuration);
   process.stdout.write(finalLine(verdict, duration, results, state.expected_step_ids));
   if (fails.length > 0) {
