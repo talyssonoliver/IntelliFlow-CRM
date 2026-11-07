@@ -32,6 +32,11 @@ export const leadInputSchema = z.object({
   phone: z.string().optional(),
   source: z.string(),
   metadata: z.record(z.string(), z.unknown()).optional(),
+  /**
+   * The lead's engagement history as prompt lines (lib/lead-activity-context.ts): status, last
+   * contact, pipeline stage, counts and recent activities. Already sanitized.
+   */
+  activity: z.string().max(8000).optional(),
 });
 
 export type LeadInput = z.infer<typeof leadInputSchema>;
@@ -221,6 +226,8 @@ Consider the following factors:
    - Company information
 
 2. Engagement Indicators (0-25 points)
+   - Replies from the lead: a reply, above all one asking about price or next steps, is the strongest signal
+   - Recent activity, pipeline stage and how recently the lead was contacted
    - Source quality (direct website > referral > social > cold call)
    - Email domain (corporate email > free email)
 
@@ -510,6 +517,9 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
     }
 
     parts.push(`Source: ${sanitizeStringField(lead.source, 500)}`);
+
+    // The engagement history, built and sanitized by lib/lead-activity-context.ts.
+    if (lead.activity) parts.push(lead.activity);
 
     return parts.join('\n');
   }
