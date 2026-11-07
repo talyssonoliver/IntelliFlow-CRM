@@ -362,7 +362,7 @@ describe('ActivityFeedItem', () => {
     expect(container.textContent).toContain('AI');
   });
 
-  it('should render entity link for known entity types', async () => {
+  it('names a known entity in plain text and links the title to it (one link)', async () => {
     const { ActivityFeedItem } = await import('../ActivityFeedItem');
     render(
       <ActivityFeedItem
@@ -378,12 +378,13 @@ describe('ActivityFeedItem', () => {
       />
     );
 
-    const link = screen.getByText('Test Lead');
-    expect(link.closest('a')).toBeTruthy();
-    expect(link.closest('a')?.getAttribute('href')).toBe('/leads/lead-123');
+    expect(screen.getByText('Test Lead').closest('a')).toBeNull();
+    const links = screen.getAllByRole('link');
+    expect(links).toHaveLength(1);
+    expect(links[0].getAttribute('href')).toBe('/leads/lead-123?activityId=item-1');
   });
 
-  it('should render opportunity entity link as /deals/', async () => {
+  it('links the title of an opportunity row to /deals/', async () => {
     const { ActivityFeedItem } = await import('../ActivityFeedItem');
     render(
       <ActivityFeedItem
@@ -399,8 +400,8 @@ describe('ActivityFeedItem', () => {
       />
     );
 
-    const link = screen.getByText('Big Deal');
-    expect(link.closest('a')?.getAttribute('href')).toBe('/deals/opp-1');
+    const link = screen.getByRole('link', { name: 'Stage changed' });
+    expect(link.getAttribute('href')).toBe('/deals/opp-1?activityId=item-1');
   });
 
   it('should render title as link to entity route when entity is known', async () => {
@@ -545,7 +546,7 @@ describe('ActivityFeedItem', () => {
     expect(el.tagName).toBe('SPAN');
   });
 
-  it('should render action link from metadata', async () => {
+  it('sends the title to the action URL instead of a second action link', async () => {
     const { ActivityFeedItem } = await import('../ActivityFeedItem');
     render(
       <ActivityFeedItem
@@ -561,8 +562,154 @@ describe('ActivityFeedItem', () => {
       />
     );
 
-    const link = screen.getByText('View Report');
-    expect(link.closest('a')?.getAttribute('href')).toBe('/reports/scoring');
+    expect(screen.queryByText('View Report')).toBeNull();
+    const links = screen.getAllByRole('link');
+    expect(links).toHaveLength(1);
+    expect(links[0].getAttribute('href')).toBe('/reports/scoring?activityId=item-1');
+  });
+
+  it('keeps an entity link when the title leads to a different action URL', async () => {
+    const { ActivityFeedItem } = await import('../ActivityFeedItem');
+    render(
+      <ActivityFeedItem
+        id="item-1"
+        source="EMAIL"
+        type="EMAIL"
+        title="Proposal sent"
+        description="Opened twice"
+        timestamp={new Date()}
+        actor={null}
+        entity={{ id: 'lead-9', type: 'lead', name: 'Bakery Ltd' }}
+        metadata={{ actionUrl: '/email/abc' }}
+      />
+    );
+
+    expect(screen.getByRole('link', { name: 'Proposal sent' }).getAttribute('href')).toBe(
+      '/email/abc?activityId=item-1'
+    );
+    expect(screen.getByRole('link', { name: 'Bakery Ltd' }).getAttribute('href')).toBe(
+      '/leads/lead-9'
+    );
+  });
+
+  it('keeps the entity link when the title names it but opens another target', async () => {
+    const { ActivityFeedItem } = await import('../ActivityFeedItem');
+    render(
+      <ActivityFeedItem
+        id="email_1"
+        source="EMAIL"
+        type="EMAIL"
+        title="Re: quote for ana@bakery.example"
+        description={null}
+        timestamp={new Date()}
+        actor={null}
+        entity={{ id: 'c-1', type: 'contact', name: 'ana@bakery.example' }}
+        metadata={{ actionUrl: '/email/1' }}
+      />
+    );
+
+    expect(screen.getByRole('link', { name: 'ana@bakery.example' }).getAttribute('href')).toBe(
+      '/contacts/c-1'
+    );
+  });
+
+  it('does not repeat the entity name when the title already carries it', async () => {
+    const { ActivityFeedItem } = await import('../ActivityFeedItem');
+    const { container } = render(
+      <ActivityFeedItem
+        id="item-1"
+        source="LEAD_ACTIVITY"
+        type="NOTE"
+        title="Lead contacted — Bakery Ltd"
+        description="Moved from New to Contacted by the COA sync · 3 Nov, 10:28"
+        timestamp={new Date()}
+        actor={{ id: null, name: 'System (COA sync)' }}
+        entity={{ id: 'lead-9', type: 'lead', name: 'Bakery Ltd' }}
+        metadata={null}
+      />
+    );
+
+    expect(container.textContent?.match(/Bakery Ltd/g)).toHaveLength(1);
+    // The system actor gets the type icon, not "S(" initials
+    expect(container.textContent).not.toContain('S(');
+    expect(container.textContent).toContain('sticky_note_2');
+  });
+
+  it('shows initials for a person and ignores punctuation', async () => {
+    const { ActivityFeedItem } = await import('../ActivityFeedItem');
+    const { container } = render(
+      <ActivityFeedItem
+        id="item-1"
+        source="LEAD_ACTIVITY"
+        type="NOTE"
+        title="Note"
+        description={null}
+        timestamp={new Date()}
+        actor={{ id: 'u1', name: 'Ana (Sales) Lima' }}
+        entity={null}
+        metadata={null}
+      />
+    );
+
+    expect(container.textContent).toContain('AS');
+    expect(container.textContent).not.toContain('sticky_note_2');
+  });
+
+  it('puts the time under the title with the absolute date as a tooltip', async () => {
+    const { ActivityFeedItem } = await import('../ActivityFeedItem');
+    const when = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    const { container } = render(
+      <ActivityFeedItem
+        id="item-1"
+        source="SYSTEM"
+        type="SYSTEM"
+        title="Imported"
+        description={null}
+        timestamp={when}
+        actor={null}
+        entity={null}
+        metadata={null}
+      />
+    );
+
+    const time = container.querySelector('time')!;
+    expect(time.textContent).toBe('3h ago');
+    expect(time.getAttribute('dateTime')).toBe(when.toISOString());
+    expect(time.getAttribute('title')).toMatch(/^\d{1,2} [A-Z][a-z]{2} \d{4}, \d{2}:\d{2}$/);
+  });
+
+  it('renders the compact variant without tags or attachments', async () => {
+    const { ActivityFeedItem } = await import('../ActivityFeedItem');
+    const { container } = render(
+      <ActivityFeedItem
+        id="item-1"
+        source="EMAIL"
+        type="EMAIL"
+        title="Email sent"
+        description={null}
+        timestamp={new Date()}
+        actor={null}
+        entity={null}
+        metadata={{ status: 'opened', attachment: { filename: 'a.pdf' } }}
+        variant="compact"
+      />
+    );
+
+    expect(container.querySelector('[data-variant="compact"]')).not.toBeNull();
+    expect(screen.queryByText('opened')).toBeNull();
+    expect(screen.queryByText('a.pdf')).toBeNull();
+  });
+
+  it('joins description parts without doubling punctuation', async () => {
+    const { joinSentences } = await import('../ActivityFeedItem');
+    expect(joinSentences(['They asked for the cost.'])).toBe('They asked for the cost.');
+    expect(joinSentences(['Score increased to 85'])).toBe('Score increased to 85.');
+    expect(joinSentences(['Moved by the COA sync · 3 Nov, 10:28'])).toBe(
+      'Moved by the COA sync · 3 Nov, 10:28'
+    );
+    expect(joinSentences(['Note.', 'Duration: 2m 05s', ' '])).toBe('Note. Duration: 2m 05s.');
+    expect(joinSentences(['A', 'B'])).toBe('A. B.');
+    expect(joinSentences([])).toBe('');
   });
 
   it('should format relative time correctly', async () => {

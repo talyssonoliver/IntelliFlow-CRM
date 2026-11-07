@@ -61,6 +61,10 @@ const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
     label: 'Assigned',
     color: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400',
   },
+  SCORE_UPDATE: {
+    label: 'Scores',
+    color: 'bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-400',
+  },
   CREATION: {
     label: 'Created',
     color: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400',
@@ -68,7 +72,10 @@ const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
 };
 
 interface ActivityFeedStatsBarProps extends UseActivityFeedStatsOptions {
-  /** Show type breakdown pills. Defaults to true. */
+  /**
+   * Show type breakdown pills. Defaults to false (#1223 UI-001, owner ruling:
+   * no pills on home or the dashboard widget); /activity opts in.
+   */
   showBreakdown?: boolean;
   /** Max number of type pills to show. Defaults to 4. */
   maxTypes?: number;
@@ -77,7 +84,7 @@ interface ActivityFeedStatsBarProps extends UseActivityFeedStatsOptions {
 }
 
 export function ActivityFeedStatsBar({
-  showBreakdown = true,
+  showBreakdown = false,
   maxTypes = 4,
   className = '',
   ...queryOptions
