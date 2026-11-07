@@ -700,6 +700,18 @@ describe('ActivityFeedItem', () => {
     expect(screen.queryByText('a.pdf')).toBeNull();
   });
 
+  it('joins description parts without doubling punctuation', async () => {
+    const { joinSentences } = await import('../ActivityFeedItem');
+    expect(joinSentences(['They asked for the cost.'])).toBe('They asked for the cost.');
+    expect(joinSentences(['Score increased to 85'])).toBe('Score increased to 85.');
+    expect(joinSentences(['Moved by the COA sync · 3 Nov, 10:28'])).toBe(
+      'Moved by the COA sync · 3 Nov, 10:28'
+    );
+    expect(joinSentences(['Note.', 'Duration: 2m 05s', ' '])).toBe('Note. Duration: 2m 05s.');
+    expect(joinSentences(['A', 'B'])).toBe('A. B.');
+    expect(joinSentences([])).toBe('');
+  });
+
   it('should format relative time correctly', async () => {
     const { ActivityFeedItem } = await import('../ActivityFeedItem');
 

@@ -321,7 +321,27 @@ function buildDescription(
     parts.push(TYPE_FALLBACK_LABELS[type]);
   }
 
-  return parts.length > 0 ? parts.join('. ') + '.' : null;
+  return parts.length > 0 ? joinSentences(parts) : null;
+}
+
+const ENDS_WITH_PUNCTUATION = /[.!?…:;]$/;
+/** Ends with a clock time such as "10:28": a full stop after it reads oddly. */
+const ENDS_WITH_TIME = /\d{1,2}:\d{2}$/;
+
+/**
+ * Join description parts into sentences without doubling punctuation: a part
+ * that already ends with a full stop (or other mark) gets no extra one, and a
+ * body ending in a time ("· 3 Nov, 10:28") gets no trailing full stop.
+ */
+export function joinSentences(parts: readonly string[]): string {
+  const cleaned = parts.map((p) => p.trim()).filter(Boolean);
+  let text = '';
+  for (const part of cleaned) {
+    if (text) text += ENDS_WITH_PUNCTUATION.test(text) ? ' ' : '. ';
+    text += part;
+  }
+  if (!text || ENDS_WITH_PUNCTUATION.test(text) || ENDS_WITH_TIME.test(text)) return text;
+  return `${text}.`;
 }
 
 type TagVariant = 'green' | 'slate' | 'amber' | 'red' | 'blue';
