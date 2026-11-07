@@ -263,8 +263,14 @@ interface IStripeAdapter {
     promotionCodeId?: string;
     metadata?: Record<string, string>;
   }): Promise<StripeResult<StripeSubscription>>;
-  /** #1220: the id of the active promotion code with this exact code, or null. */
-  findActivePromotionCode(code: string): Promise<StripeResult<string | null>>;
+  /** #1220: the active promotion code with this exact code, or null. */
+  findActivePromotionCode(
+    code: string
+  ): Promise<
+    StripeResult<{ id: string; customerId: string | null; productIds: string[] | null } | null>
+  >;
+  /** #1220: the product a price belongs to. */
+  getPriceProductId(priceId: string): Promise<StripeResult<string | null>>;
 }
 
 // ============================================
@@ -285,6 +291,35 @@ async function loadStripeAdapter(): Promise<void> {
  * Get configured Stripe adapter
  * Throws if Stripe is not configured
  */
+/**
+ * The id of a promotion code this purchase can use (#1220), or a BAD_REQUEST that says the
+ * code isn't valid. A code reserved for another customer, or whose coupon covers other
+ * products only, is refused here: Stripe would otherwise accept the subscription and simply
+ * not discount it.
+ */
+async function usablePromotionCodeId(
+  stripe: IStripeAdapter,
+  code: string,
+  purchase: { customerId: string; priceId: string }
+): Promise<string> {
+  const invalid = () =>
+    new TRPCError({ code: 'BAD_REQUEST', message: INVALID_PROMOTION_CODE_MESSAGE });
+  const lookupFailed = (message: string) =>
+    new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message });
+
+  const promo = await stripe.findActivePromotionCode(code);
+  if (promo.isFailure) throw lookupFailed(promo.error.message);
+  if (!promo.value) throw invalid();
+  if (promo.value.customerId && promo.value.customerId !== purchase.customerId) throw invalid();
+
+  if (promo.value.productIds && promo.value.productIds.length > 0) {
+    const product = await stripe.getPriceProductId(purchase.priceId);
+    if (product.isFailure) throw lookupFailed(product.error.message);
+    if (!product.value || !promo.value.productIds.includes(product.value)) throw invalid();
+  }
+  return promo.value.id;
+}
+
 async function getStripeAdapter(): Promise<IStripeAdapter> {
   await loadStripeAdapter();
 
@@ -1465,18 +1500,14 @@ export const billingRouter = createTRPCRouter({
       // Map planId + billingCycle to the real Stripe price ID (env-sourced)
       const priceId = resolvePriceId(input.planId, input.billingCycle);
 
-      // A typed code must be a live one: an unknown, expired or used-up code is refused rather
-      // than silently charging full price.
+      // A typed code must be live, usable by this customer and cover this plan's product:
+      // otherwise it is refused, rather than the plan being charged at full price.
       let promotionCodeId: string | undefined;
       if (input.promotionCode) {
-        const promo = await stripe.findActivePromotionCode(input.promotionCode);
-        if (promo.isFailure) {
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: promo.error.message });
-        }
-        if (!promo.value) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: INVALID_PROMOTION_CODE_MESSAGE });
-        }
-        promotionCodeId = promo.value;
+        promotionCodeId = await usablePromotionCodeId(stripe, input.promotionCode, {
+          customerId,
+          priceId,
+        });
       }
 
       // Create real Stripe subscription

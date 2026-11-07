@@ -10,11 +10,18 @@ import type { UserSession } from '../../../context';
 
 const ok = <T>(value: T) => ({ isSuccess: true, isFailure: false, value });
 const fail = (message: string) => ({ isSuccess: false, isFailure: true, error: { message } });
+const promo = (over: Record<string, unknown> = {}) => ({
+  id: 'promo_1',
+  customerId: null,
+  productIds: null,
+  ...over,
+});
 
 const stripe = {
   attachPaymentMethod: vi.fn(),
   createSubscription: vi.fn(),
   findActivePromotionCode: vi.fn(),
+  getPriceProductId: vi.fn(),
   createCustomer: vi.fn(),
 };
 
@@ -22,6 +29,7 @@ class MockStripeAdapter {
   attachPaymentMethod = stripe.attachPaymentMethod;
   createSubscription = stripe.createSubscription;
   findActivePromotionCode = stripe.findActivePromotionCode;
+  getPriceProductId = stripe.getPriceProductId;
   createCustomer = stripe.createCustomer;
 }
 
@@ -76,7 +84,7 @@ describe('createCheckoutSubscription — promotion code (#1220)', () => {
   });
 
   it('applies a live code to the subscription by its id', async () => {
-    stripe.findActivePromotionCode.mockResolvedValue(ok('promo_1'));
+    stripe.findActivePromotionCode.mockResolvedValue(ok(promo()));
 
     await checkout('FOUNDING100');
 
@@ -90,6 +98,64 @@ describe('createCheckoutSubscription — promotion code (#1220)', () => {
     );
   });
 
+  it('refuses a code reserved for another customer', async () => {
+    stripe.findActivePromotionCode.mockResolvedValue(ok(promo({ customerId: 'cus_other' })));
+
+    await expect(checkout('VIP')).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+      message: INVALID_PROMOTION_CODE_MESSAGE,
+    });
+    expect(stripe.createSubscription).not.toHaveBeenCalled();
+  });
+
+  it('accepts a code reserved for this customer', async () => {
+    stripe.findActivePromotionCode.mockResolvedValue(ok(promo({ customerId: 'cus_1' })));
+
+    await checkout('VIP');
+
+    expect(stripe.createSubscription.mock.calls[0][0].promotionCodeId).toBe('promo_1');
+  });
+
+  it("refuses a code whose coupon doesn't cover this plan's product, instead of charging full price", async () => {
+    stripe.findActivePromotionCode.mockResolvedValue(ok(promo({ productIds: ['prod_starter'] })));
+    stripe.getPriceProductId.mockResolvedValue(ok('prod_pro'));
+
+    await expect(checkout('STARTERONLY')).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+      message: INVALID_PROMOTION_CODE_MESSAGE,
+    });
+    expect(stripe.getPriceProductId).toHaveBeenCalledWith('price_pro_monthly');
+    expect(stripe.createSubscription).not.toHaveBeenCalled();
+  });
+
+  it("accepts a code whose coupon covers this plan's product", async () => {
+    stripe.findActivePromotionCode.mockResolvedValue(
+      ok(promo({ productIds: ['prod_starter', 'prod_pro'] }))
+    );
+    stripe.getPriceProductId.mockResolvedValue(ok('prod_pro'));
+
+    await checkout('FOUNDING100');
+
+    expect(stripe.createSubscription.mock.calls[0][0].promotionCodeId).toBe('promo_1');
+  });
+
+  it('skips the product lookup when the coupon covers every product', async () => {
+    stripe.findActivePromotionCode.mockResolvedValue(ok(promo({ productIds: [] })));
+
+    await checkout('FOUNDING100');
+
+    expect(stripe.getPriceProductId).not.toHaveBeenCalled();
+  });
+
+  it('fails the checkout when the product lookup fails', async () => {
+    stripe.findActivePromotionCode.mockResolvedValue(ok(promo({ productIds: ['prod_pro'] })));
+    stripe.getPriceProductId.mockResolvedValue(fail('Stripe unavailable'));
+
+    await expect(checkout('FOUNDING100')).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+    expect(stripe.createSubscription).not.toHaveBeenCalled();
+  });
   it('refuses an unknown or used-up code and creates no subscription', async () => {
     stripe.findActivePromotionCode.mockResolvedValue(ok(null));
 

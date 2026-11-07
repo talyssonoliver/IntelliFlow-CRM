@@ -18,6 +18,7 @@ import type {
   CreatePaymentIntentParams,
   StripeCreateSubscriptionParams,
 } from './types';
+import type { ActivePromotionCode } from './handlers/promotion-codes';
 import {
   createCustomer as createCustomerHandler,
   getCustomer as getCustomerHandler,
@@ -40,6 +41,7 @@ import {
   getSubscription as getSubscriptionHandler,
   listSubscriptions as listSubscriptionsHandler,
   findActivePromotionCode as findActivePromotionCodeHandler,
+  getPriceProductId as getPriceProductIdHandler,
   getInvoice as getInvoiceHandler,
   listInvoices as listInvoicesHandler,
   payInvoice as payInvoiceHandler,
@@ -110,8 +112,10 @@ export interface PaymentServicePort {
     resumesAt: Date
   ): Promise<Result<StripeSubscription, DomainError>>;
   getSubscription(subscriptionId: string): Promise<Result<StripeSubscription | null, DomainError>>;
-  /** #1220: the id of the active promotion code with this exact code, or null. */
-  findActivePromotionCode(code: string): Promise<Result<string | null, DomainError>>;
+  /** #1220: the active promotion code with this exact code, or null. */
+  findActivePromotionCode(code: string): Promise<Result<ActivePromotionCode | null, DomainError>>;
+  /** #1220: the product a price belongs to. */
+  getPriceProductId(priceId: string): Promise<Result<string | null, DomainError>>;
   listSubscriptions(customerId: string): Promise<Result<StripeSubscription[], DomainError>>;
   getInvoice(invoiceId: string): Promise<Result<StripeInvoice | null, DomainError>>;
   listInvoices(customerId: string): Promise<Result<StripeInvoice[], DomainError>>;
@@ -209,6 +213,10 @@ export class StripeAdapter implements PaymentServicePort {
 
   findActivePromotionCode(code: string) {
     return findActivePromotionCodeHandler(this.config, code);
+  }
+
+  getPriceProductId(priceId: string) {
+    return getPriceProductIdHandler(this.config, priceId);
   }
 
   updateSubscription(subscriptionId: string, params: Partial<StripeCreateSubscriptionParams>) {
