@@ -304,15 +304,12 @@ const PIPELINE_RANK: Record<string, number> = {
 const PIPELINE_LADDER: readonly PipelineLeadStatus[] = ['CONTACTED', 'QUALIFIED', 'NEGOTIATING'];
 
 /**
- * COA stages that mean the lead has replied (COA `CrmStage`: RESPONDED is "Replied", and the
- * later stages imply it). COA's own QUALIFIED is a pre-contact audit verdict, not a reply.
+ * COA stages that mean the lead has replied (COA `CrmStage`: RESPONDED is "Replied";
+ * MEETING_BOOKED and WON come only after it). Not a reply: COA's own QUALIFIED (a pre-contact
+ * audit verdict) and PROPOSAL_READY, which COA can also reach before any contact
+ * (AUDITED / QUALIFIED / CONTACT_FOUND -> PROPOSAL_READY when assets are generated).
  */
-const COA_REPLY_STAGES: ReadonlySet<string> = new Set([
-  'RESPONDED',
-  'MEETING_BOOKED',
-  'PROPOSAL_READY',
-  'WON',
-]);
+const COA_REPLY_STAGES: ReadonlySet<string> = new Set(['RESPONDED', 'MEETING_BOOKED', 'WON']);
 
 function isCoaReplyStage(coaStage: string): boolean {
   return COA_REPLY_STAGES.has(coaStage.trim().toUpperCase());

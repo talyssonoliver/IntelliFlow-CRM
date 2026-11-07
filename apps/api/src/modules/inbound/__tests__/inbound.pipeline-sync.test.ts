@@ -681,7 +681,19 @@ describe('inboundRouter — syncPipelineLead', () => {
       expect(result).toMatchObject({ status: 'QUALIFIED', qualificationPending: false });
     });
 
-    it.each(['MEETING_BOOKED', 'PROPOSAL_READY', 'WON'])(
+    it('PROPOSAL_READY is not a reply (COA can reach it before contact), so it qualifies only automatically', async () => {
+      existingLead('CONTACTED');
+      qualify().mockResolvedValueOnce(scoreRefusal(0, 50));
+      const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
+      const result = await caller.syncPipelineLead(input('QUALIFIED', 'PROPOSAL_READY'));
+
+      expect(qualify()).toHaveBeenCalledWith(LEAD_ID, 'System (COA sync)', expect.any(String), {
+        basis: 'AUTOMATIC',
+      });
+      expect(result).toMatchObject({ status: 'CONTACTED', qualificationPending: true });
+    });
+
+    it.each(['MEETING_BOOKED', 'WON'])(
       'a later reply stage (%s) also qualifies as an inbound reply',
       async (stage) => {
         existingLead('CONTACTED');
