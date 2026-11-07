@@ -127,10 +127,21 @@ describe('VerifyEmailCallbackPage (IFC-120 AC-004)', () => {
       expect(capturedVerificationProps.tokenHash).toBe('');
     });
 
-    it('passes redirectUrl="/dashboard" to EmailVerification', () => {
+    it('sends the user to sign in after verifying, since verifying does not sign them in', () => {
       mockSearchParams = new URLSearchParams('token_hash=abc123hash&type=email');
       render(<VerifyEmailCallbackPage />);
-      expect(capturedVerificationProps.redirectUrl).toBe('/dashboard');
+      expect(capturedVerificationProps.redirectUrl).toBe('/login');
+      expect(capturedVerificationProps.continueLabel).toBe('Sign in to continue');
+    });
+
+    it.each([
+      ['signup', 'signup'],
+      ['email', 'email'],
+      ['anything else', 'email'],
+    ])('passes type %s through as %s', (given, expected) => {
+      mockSearchParams = new URLSearchParams(`token_hash=abc123hash&type=${given}`);
+      render(<VerifyEmailCallbackPage />);
+      expect(capturedVerificationProps.type).toBe(expected);
     });
   });
 });
