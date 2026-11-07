@@ -423,6 +423,37 @@ function EntityCta({
   );
 }
 
+/** Where a key press is someone else's: a field, a picker, or an open dialog. */
+const HOTKEY_EXEMPT_SELECTOR = [
+  'input',
+  'textarea',
+  'select',
+  '[contenteditable=""]',
+  '[contenteditable="true"]',
+  '[role="combobox"]',
+  '[role="listbox"]',
+  '[role="menu"]',
+  '[role="dialog"]',
+  '[role="alertdialog"]',
+  '[aria-modal="true"]',
+  'dialog',
+].join(',');
+
+/**
+ * True when the key press belongs to something else. Inside an open dialog the
+ * shortcut would reopen the create flow behind it and reset its draft.
+ */
+function isHotkeyExempt(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  if (target instanceof HTMLElement && target.isContentEditable) return true;
+  return target.closest(HOTKEY_EXEMPT_SELECTOR) !== null;
+}
+
+/** A modal is open somewhere: the page behind it does not take shortcuts. */
+function modalIsOpen(): boolean {
+  return document.querySelector('[aria-modal="true"], dialog[open]') !== null;
+}
+
 /**
  * Empty states listening for each hotkey, oldest first. Only the newest one
  * acts on a key press, so two task lists on one page open one composer, not two.
@@ -460,8 +491,7 @@ function useEntityHotkey(enabled: boolean, hotkey: string | null, onTrigger: () 
     const owner = Symbol(key);
     const release = claimHotkey(key, owner);
     const handler = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement;
-      if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) return;
+      if (e.defaultPrevented || isHotkeyExempt(e.target) || modalIsOpen()) return;
       if (e.key.toUpperCase() !== key || e.ctrlKey || e.metaKey || e.altKey) return;
       if (!ownsHotkey(key, owner)) return;
       e.preventDefault();

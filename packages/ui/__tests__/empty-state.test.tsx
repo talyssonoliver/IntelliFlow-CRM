@@ -468,4 +468,56 @@ describe('EmptyState entity mode, uncontrolled', () => {
     expect(first).toHaveBeenCalledTimes(1);
     expect(second).toHaveBeenCalledTimes(1);
   });
+
+  it('ignores the hotkey from pickers and from inside an open dialog', () => {
+    const onCtaClick = vi.fn();
+    render(
+      <>
+        <select aria-label="duration">
+          <option>30</option>
+        </select>
+        <div role="combobox" aria-label="host" tabIndex={0} />
+        <div role="dialog" aria-label="Create event type">
+          <button type="button">inside</button>
+        </div>
+        <EmptyState entity="tasks" onCtaClick={onCtaClick} />
+      </>
+    );
+    fireEvent.keyDown(screen.getByLabelText('duration'), { key: 't' });
+    fireEvent.keyDown(screen.getByLabelText('host'), { key: 't' });
+    fireEvent.keyDown(screen.getByRole('button', { name: 'inside' }), { key: 't' });
+    expect(onCtaClick).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(document.body, { key: 't' });
+    expect(onCtaClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores a key press another handler already took', () => {
+    const onCtaClick = vi.fn();
+    render(<EmptyState entity="tasks" onCtaClick={onCtaClick} />);
+    const event = new KeyboardEvent('keydown', { key: 't', cancelable: true, bubbles: true });
+    event.preventDefault();
+    document.body.dispatchEvent(event);
+    expect(onCtaClick).not.toHaveBeenCalled();
+  });
+
+  it('takes no shortcut while a modal is open, even with focus on the page', () => {
+    const onCtaClick = vi.fn();
+    const { rerender } = render(
+      <>
+        <div aria-modal="true" role="dialog" aria-label="Create" />
+        <EmptyState entity="tasks" onCtaClick={onCtaClick} />
+      </>
+    );
+    fireEvent.keyDown(document.body, { key: 't' });
+    expect(onCtaClick).not.toHaveBeenCalled();
+
+    rerender(
+      <>
+        <EmptyState entity="tasks" onCtaClick={onCtaClick} />
+      </>
+    );
+    fireEvent.keyDown(document.body, { key: 't' });
+    expect(onCtaClick).toHaveBeenCalledTimes(1);
+  });
 });
