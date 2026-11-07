@@ -125,7 +125,12 @@ export const TagsTab = forwardRef<TagsTabHandle, TagsTabProps>(function TagsTab(
   return (
     <div className="space-y-3">
       {tags.length === 0 ? (
-        <EmptyState entity="documents" size="sm" phase="passive" className="py-4 px-3 gap-2" />
+        <EmptyState
+          entity="documents"
+          size="sm"
+          onCtaClick={openCreate}
+          className="py-4 px-3 gap-2"
+        />
       ) : (
         <Card className="divide-y divide-border">
           {tags.map((tag) => (

@@ -344,7 +344,8 @@ export default function PrivacyRequestsContent() {
         {!listQuery.isLoading && !listQuery.isError && open.length === 0 && (
           <EmptyState
             entity="tickets"
-            phase="passive"
+            ctaLabel="Log a request"
+            onCtaClick={() => setLogOpen(true)}
             size="sm"
             title="No open requests"
             description="Requests from the public form and the ones you log appear here until they are closed."

@@ -46,6 +46,8 @@ export interface ContactListProps {
   onCreateTicket?: (contact: Contact) => void;
   onScheduleMeeting?: (contact: Contact) => void;
   pageSize?: number;
+  /** A search or filter is active: the empty state then offers no create link. */
+  isFiltered?: boolean;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
@@ -330,6 +332,7 @@ export function ContactList({
   onCreateTicket,
   onScheduleMeeting,
   pageSize = 10,
+  isFiltered = false,
 }: Readonly<ContactListProps>) {
   const { timezone } = useTimezoneContext();
   // Columns are built by a module-level factory to avoid S6478 (JSX-returning
@@ -394,7 +397,7 @@ export function ContactList({
   }
 
   if (contacts.length === 0) {
-    return <EmptyState entity="contacts" phase="passive" />;
+    return <EmptyState entity="contacts" showCta={!isFiltered} ctaHref="/contacts/new" />;
   }
 
   return (

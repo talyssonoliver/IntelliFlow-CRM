@@ -97,7 +97,7 @@ function EmptyList({
       <EmptyState
         entity="emails"
         variant="folder"
-        phase="passive"
+        showCta={false}
         title={broken ? 'Your mailbox needs attention' : 'Connect your mailbox'}
         description={
           broken

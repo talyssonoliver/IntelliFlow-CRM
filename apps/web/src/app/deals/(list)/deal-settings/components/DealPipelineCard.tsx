@@ -57,7 +57,8 @@ export function DealPipelineCard() {
       <EmptyState
         entity="rules"
         size="sm"
-        phase="passive"
+        ctaLabel="Reset to defaults"
+        onCtaClick={() => resetMutation.mutate()}
         title="No pipeline stages"
         description="Reset to defaults to populate the stage list."
       />

@@ -483,7 +483,7 @@ export function RoutingRulesEditor() {
       </CardHeader>
       <CardContent>
         {!rules || rules.length === 0 ? (
-          <EmptyState entity="rules" phase="passive" />
+          <EmptyState entity="rules" onCtaClick={openCreate} />
         ) : (
           <DndContext
             sensors={sensors}

@@ -1363,7 +1363,12 @@ export default function Contact360Page() {
           )}
 
           {/* Tickets & Documents tabs (IFC-256) */}
-          <ContactRelatedTabs activeTab={activeTab} contact={rawApiContact} timezone={timezone} />
+          <ContactRelatedTabs
+            activeTab={activeTab}
+            contact={rawApiContact}
+            timezone={timezone}
+            contactId={contactId}
+          />
 
           {/* Notes Tab */}
           {activeTab === 'notes' && (
@@ -1496,7 +1501,16 @@ export default function Contact360Page() {
                   </div>
                 </div>
               ))}
-              {notes.length === 0 && <EmptyState entity="notes" phase="passive" className="py-2" />}
+              {notes.length === 0 && (
+                <EmptyState
+                  entity="notes"
+                  className="py-2"
+                  onCtaClick={() => {
+                    setShowNoteInput(true);
+                    setActiveTab('notes');
+                  }}
+                />
+              )}
             </div>
             {notes.length > 2 && (
               <button

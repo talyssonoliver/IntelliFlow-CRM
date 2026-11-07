@@ -267,7 +267,12 @@ export const TerritoryList = forwardRef<TerritoryListHandle, TerritoryListProps>
           {announcement}
         </output>
         {territories.length === 0 ? (
-          <EmptyState entity="rules" phase="passive" size="sm" className="py-4 px-3 gap-2" />
+          <EmptyState
+            entity="rules"
+            onCtaClick={() => open(null, document.activeElement)}
+            size="sm"
+            className="py-4 px-3 gap-2"
+          />
         ) : (
           <DndContext
             sensors={sensors}

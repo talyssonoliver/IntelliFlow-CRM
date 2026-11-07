@@ -1504,7 +1504,7 @@ function LeadNotesTab({
             </div>
           ))
         ) : (
-          <EmptyState entity="notes" phase="passive" />
+          <EmptyState entity="notes" showCta={false} />
         )}
       </div>
     </Card>
@@ -1558,7 +1558,7 @@ function LeadEmailsTab({ emails, timezone }: LeadEmailsTabProps) {
             </div>
           ))
         ) : (
-          <EmptyState entity="emails" phase="passive" />
+          <EmptyState entity="emails" ctaHref="/email/compose" ctaLabel="Compose email" />
         )}
       </div>
     </Card>
@@ -1605,7 +1605,7 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
             </div>
           ))
         ) : (
-          <EmptyState entity="files" phase="passive" />
+          <EmptyState entity="files" ctaHref="/documents/new" ctaLabel="Upload a document" />
         )}
       </div>
     </Card>
@@ -1971,7 +1971,7 @@ function LeadRightSidebar({
               </div>
             ))
           ) : (
-            <EmptyState entity="notes" phase="passive" className="py-2" />
+            <EmptyState entity="notes" onCtaClick={onViewNotes} className="py-2" />
           )}
         </div>
         {notes.length > 2 && (

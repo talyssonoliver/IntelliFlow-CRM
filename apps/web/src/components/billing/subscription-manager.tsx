@@ -637,7 +637,7 @@ function NoSubscriptionState({ onSelectPlan }: Readonly<{ onSelectPlan: () => vo
   return (
     <Card className="border-dashed">
       <CardContent className="py-12">
-        <EmptyState entity="subscriptions" phase="passive" />
+        <EmptyState entity="subscriptions" showCta={false} />
         <div className="flex justify-center mt-4">
           <Button onClick={onSelectPlan} className="bg-[#2a78f6] hover:bg-[#1f63d4]">
             <span className="material-symbols-outlined mr-2">rocket_launch</span> View Plans

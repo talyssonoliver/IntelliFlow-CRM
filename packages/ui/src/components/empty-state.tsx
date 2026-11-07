@@ -302,6 +302,9 @@ function EntityIllustration({
 // EmptyState Component (unified)
 // ============================================
 
+/** Read-only empty states never leave the resting phase. */
+const STATIC_PHASE: EmptyStatePhase = 'passive';
+
 /** Read-only and link CTAs take no hotkey: there is nothing to open here. */
 function hotkeyEnabled(state: {
   hasEntity: boolean;
@@ -472,7 +475,7 @@ const ReadOnlyEntityEmptyState = React.forwardRef<HTMLDivElement, ReadOnlyEntity
         )}
         {...props}
       >
-        <EntityIllustration entity={entity} phase="passive" custom={illustration} />
+        <EntityIllustration entity={entity} phase={STATIC_PHASE} custom={illustration} />
         <h3 className="text-lg font-semibold text-foreground">{text.title}</h3>
         <p className="text-sm text-muted-foreground max-w-sm">{text.description}</p>
         {action && <ActionButton action={action} variant="outline" />}

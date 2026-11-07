@@ -328,6 +328,7 @@ export default function AccountTiersContent() {
             onRename={renameBenefit}
             onRemove={removeBenefit}
             onToggle={toggleBenefit}
+            onAdd={addBenefit}
           />
         </Card>
       </div>

@@ -165,7 +165,7 @@ export const EventTypeList = forwardRef<EventTypeListHandle, EventTypeListProps>
         {items.length === 0 ? (
           <EmptyState
             entity="appointments"
-            phase="passive"
+            onCtaClick={() => open(null, document.activeElement)}
             size="sm"
             title="No event types yet"
             description="Create a meeting type to pre-fill new appointments and to offer it on your booking page."

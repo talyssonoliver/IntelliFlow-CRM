@@ -39,7 +39,7 @@ function Harness(props: {
 }
 
 describe('ClosuresList', () => {
-  it('renders the canonical passive empty state with closure wording and no CTA inside', () => {
+  it('renders the canonical empty state with closure wording and an add-closure CTA on hover', () => {
     render(<Harness initial={[]} />);
     expect(screen.queryByRole('list', { name: 'Closures' })).not.toBeInTheDocument();
     const empty = screen.getByRole('region', { name: 'No closures' });
@@ -47,7 +47,8 @@ describe('ClosuresList', () => {
     expect(empty).toHaveTextContent('Add the dates the firm is closed, such as public holidays.');
     fireEvent.focus(empty);
     fireEvent.mouseEnter(empty);
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Add a closure' }));
+    expect(screen.getByRole('list', { name: 'Closures' })).toBeInTheDocument();
   });
 
   it('openCreate (forwardRef) adds a row, focuses its start date and announces it', () => {

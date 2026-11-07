@@ -162,7 +162,7 @@ export function TaskTemplatesSection({ value, onChange }: Readonly<TaskTemplates
         <EmptyState
           entity="tasks"
           size="sm"
-          phase="passive"
+          onCtaClick={openAdd}
           title="No task templates"
           description="Add a template above to speed up task creation."
           className="py-4 px-3 gap-2"

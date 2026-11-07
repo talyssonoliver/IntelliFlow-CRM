@@ -365,7 +365,12 @@ export function AppDashboard({ appId }: Readonly<AppDashboardProps>) {
               </CardHeader>
               <CardContent>
                 {keys.length === 0 ? (
-                  <EmptyState entity="insights" phase="passive" className="py-4" />
+                  <EmptyState
+                    entity="insights"
+                    ctaLabel="Generate API key"
+                    onCtaClick={handleGenerateKey}
+                    className="py-4"
+                  />
                 ) : (
                   <div className="space-y-3">
                     {keys.map((apiKey) => (

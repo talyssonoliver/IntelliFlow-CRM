@@ -539,6 +539,14 @@ export default function ContactsPageClient({
             setShowDeleteDialog(true);
           }}
           pageSize={pageSize}
+          isFiltered={Boolean(
+            debouncedSearch ||
+            departmentFilter ||
+            statusFilter ||
+            companyFilter ||
+            typeFilter ||
+            segmentFilter
+          )}
         />
       )}
 

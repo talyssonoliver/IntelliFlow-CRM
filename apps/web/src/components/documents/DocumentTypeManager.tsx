@@ -243,7 +243,7 @@ export function DocumentTypeManager() {
           {!customDocumentTypes || customDocumentTypes.length === 0 ? (
             <EmptyState
               entity="documents"
-              phase="passive"
+              showCta={false}
               title="No custom document types yet"
               description="Create tenant-specific labels like Deposition Transcript or Expert Opinion."
               action={{

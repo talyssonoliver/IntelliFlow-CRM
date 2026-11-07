@@ -8,6 +8,8 @@ export interface ContactTicketsTabProps {
   tickets: TicketViewModel[];
   /** IANA timezone used to render the relative created-time. */
   timezone: string;
+  /** Pre-fills the contact on the new-ticket form from the empty state. */
+  contactId?: string;
 }
 
 /**
@@ -15,7 +17,7 @@ export interface ContactTicketsTabProps {
  * proper empty state). Extracted from the route page so it is unit-tested and
  * counted by coverage. The "Create Ticket" action is wired separately (IFC-257).
  */
-export function ContactTicketsTab({ tickets, timezone }: ContactTicketsTabProps) {
+export function ContactTicketsTab({ tickets, timezone, contactId }: ContactTicketsTabProps) {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
@@ -30,7 +32,16 @@ export function ContactTicketsTab({ tickets, timezone }: ContactTicketsTabProps)
       <div className="space-y-3" data-testid="contact-tickets-tab">
         {tickets.length === 0 ? (
           <div data-testid="contact-tickets-empty">
-            <EmptyState entity="tickets" phase="passive" className="py-2" />
+            <EmptyState
+              entity="tickets"
+              ctaHref={
+                contactId
+                  ? `/tickets/new?contactId=${encodeURIComponent(contactId)}`
+                  : '/tickets/new'
+              }
+              ctaLabel="Create a ticket"
+              className="py-2"
+            />
           </div>
         ) : (
           tickets.map((ticket) => (

@@ -123,6 +123,13 @@ export function AppointmentList({
   onFilterChange,
 }: Readonly<AppointmentListProps>) {
   const totalPages = Math.ceil(total / pagination.limit);
+  const hasActiveFilters = Boolean(
+    filters.search ||
+    filters.status ||
+    filters.appointmentType ||
+    filters.startTimeFrom ||
+    filters.startTimeTo
+  );
 
   // Apply date-range filter to tasks so the list view mirrors the calendar view.
   // Tasks are sorted by dueDate ascending.
@@ -299,7 +306,11 @@ export function AppointmentList({
       {/* Appointments table */}
       {appointments.length === 0 && visibleTasks.length === 0 && (
         <div data-testid="list-empty">
-          <EmptyState entity="appointments" phase="passive" />
+          <EmptyState
+            entity="appointments"
+            showCta={!hasActiveFilters}
+            ctaHref="/appointments/new"
+          />
         </div>
       )}
       {appointments.length > 0 && (

@@ -141,7 +141,8 @@ export function SuppressionListCard({ announce }: Readonly<SuppressionListCardPr
           <EmptyState
             entity="emails"
             size="sm"
-            phase="passive"
+            ctaLabel="Add an address"
+            onCtaClick={() => inputRef.current?.focus()}
             title="No suppressed addresses"
             description="Addresses that hard-bounce, or that you add here, are skipped when anyone sends."
             className="py-4 px-3 gap-2"

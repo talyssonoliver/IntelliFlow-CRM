@@ -229,7 +229,8 @@ export default function ApprovalPoliciesContent() {
                   <div className="space-y-2">
                     <EmptyState
                       entity="rules"
-                      phase="passive"
+                      showCta={canManage}
+                      onCtaClick={() => setDialog({ scope, policy: null })}
                       size="sm"
                       aria-label={`No ${meta.title.toLowerCase()} policies`}
                       className="py-4 px-3 gap-2"

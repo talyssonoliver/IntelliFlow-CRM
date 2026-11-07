@@ -320,7 +320,16 @@ export function AppointmentDetail({
                         </div>
                       </div>
                     ) : (
-                      <EmptyState entity="cases" phase="passive" className="py-2" />
+                      <EmptyState
+                        entity="cases"
+                        showCta={!isTerminal}
+                        ctaLabel="Link a case"
+                        className="py-2"
+                        onCtaClick={() => {
+                          setActiveDialog('linkCase');
+                          setSearchInput('');
+                        }}
+                      />
                     )}
 
                     {!isTerminal && (
@@ -420,7 +429,16 @@ export function AppointmentDetail({
                   </div>
 
                   {appointment.linkedCases.length === 0 && (
-                    <EmptyState entity="cases" phase="passive" className="py-2" />
+                    <EmptyState
+                      entity="cases"
+                      showCta={!isTerminal}
+                      ctaLabel="Link a case"
+                      className="py-2"
+                      onCtaClick={() => {
+                        setActiveDialog('linkCase');
+                        setSearchInput('');
+                      }}
+                    />
                   )}
 
                   <div className="space-y-3">

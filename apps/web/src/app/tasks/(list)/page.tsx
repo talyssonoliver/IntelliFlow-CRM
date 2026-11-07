@@ -446,6 +446,7 @@ export default function TasksPage() {
           onBulkComplete={handleBulkComplete}
           onBulkDelete={handleBulkDelete}
           onBulkArchive={handleBulkArchive}
+          onCreate={() => setShowCreateForm(true)}
         />
       )}
 

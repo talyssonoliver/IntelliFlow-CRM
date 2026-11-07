@@ -66,6 +66,7 @@ interface SignatureListProps {
   onEdit: (signature: EmailSignatureDto) => void;
   onDelete: (signature: EmailSignatureDto) => void;
   onSetDefault: (signature: EmailSignatureDto) => void;
+  onCreate: () => void;
 }
 
 function SignatureList({
@@ -76,13 +77,15 @@ function SignatureList({
   onEdit,
   onDelete,
   onSetDefault,
+  onCreate,
 }: Readonly<SignatureListProps>) {
   if (signatures.length === 0) {
     return (
       <EmptyState
         entity="signatures"
         size="sm"
-        phase="passive"
+        showCta={canManage}
+        onCtaClick={onCreate}
         title={scope === 'USER' ? 'No personal signatures yet' : 'No organisation signatures yet'}
         description={
           scope === 'USER'
@@ -308,6 +311,7 @@ export default function SignaturesContent() {
                 onEdit={(signature) => openDialog({ kind: 'edit', signature })}
                 onDelete={setPendingDelete}
                 onSetDefault={(s) => void setDefault(s)}
+                onCreate={() => openDialog({ kind: 'create', scope: 'USER' })}
               />
             </Card>
           </section>
@@ -348,6 +352,7 @@ export default function SignaturesContent() {
                 onEdit={(signature) => openDialog({ kind: 'edit', signature })}
                 onDelete={setPendingDelete}
                 onSetDefault={(s) => void setDefault(s)}
+                onCreate={() => openDialog({ kind: 'create', scope: 'ORG' })}
               />
             </Card>
           </section>

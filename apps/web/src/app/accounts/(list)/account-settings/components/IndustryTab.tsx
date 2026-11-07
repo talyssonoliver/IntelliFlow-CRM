@@ -49,7 +49,7 @@ export const IndustryTab = forwardRef<IndustryTabHandle, IndustryTabProps>(funct
     openCreate: () => setDialog({ open: true, editing: undefined, label: '' }),
   }));
 
-  const _openCreate = () => setDialog({ open: true, editing: undefined, label: '' });
+  const openCreate = () => setDialog({ open: true, editing: undefined, label: '' });
   const openEdit = (row: IndustryRow) => setDialog({ open: true, editing: row, label: row.label });
   const close = () => setDialog({ open: false, label: '' });
 
@@ -70,7 +70,7 @@ export const IndustryTab = forwardRef<IndustryTabHandle, IndustryTabProps>(funct
         <EmptyState
           entity="accounts"
           size="sm"
-          phase="passive"
+          onCtaClick={openCreate}
           title="No industries yet"
           description="Add the first industry or reset to defaults."
           className="py-4 px-3 gap-2"

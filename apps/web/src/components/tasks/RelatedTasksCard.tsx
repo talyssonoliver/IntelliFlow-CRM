@@ -155,7 +155,12 @@ export function RelatedTasksCard({
         {error && <p className="text-sm text-destructive text-center py-2">Failed to load tasks</p>}
 
         {!isLoading && !error && displayTasks.length === 0 && (
-          <EmptyState entity="tasks" phase="passive" className="py-2" />
+          <EmptyState
+            entity="tasks"
+            showCta={showAddButton}
+            onCtaClick={() => setCreateOpen(true)}
+            className="py-2"
+          />
         )}
 
         {!isLoading && !error && displayTasks.length > 0 && (

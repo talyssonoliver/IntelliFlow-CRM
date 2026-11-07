@@ -137,7 +137,7 @@ export const TagsTab = forwardRef<TagsTabHandle, TagsTabProps>(function TagsTab(
       {tags.length === 0 ? (
         <EmptyState
           entity="pinned"
-          phase="passive"
+          onCtaClick={openCreate}
           size="sm"
           className="py-4 px-3 gap-2"
           title="No tags yet"

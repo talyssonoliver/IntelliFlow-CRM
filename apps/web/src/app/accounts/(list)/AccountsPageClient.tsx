@@ -170,7 +170,12 @@ function AccountsContent({
   }
   if (accounts.length === 0) {
     return (
-      <EmptyState entity="accounts" variant={hasFilters ? 'filtered' : 'empty'} phase="passive" />
+      <EmptyState
+        entity="accounts"
+        variant={hasFilters ? 'filtered' : 'empty'}
+        showCta={!hasFilters}
+        ctaHref="/accounts/new"
+      />
     );
   }
   return (

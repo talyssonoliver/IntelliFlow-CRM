@@ -130,7 +130,7 @@ export const CaseTypeList = forwardRef<CaseTypeListHandle, CaseTypeListProps>(fu
         <EmptyState
           entity="cases"
           variant="folder"
-          phase="passive"
+          onCtaClick={() => open(null, document.activeElement)}
           size="sm"
           title="No case types yet"
           description="Create a type to pre-fill priority, deadline and tasks on new cases."

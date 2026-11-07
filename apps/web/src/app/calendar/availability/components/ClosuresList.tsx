@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react';
 import { Button, EmptyState, Input } from '@intelliflow/ui';
 import { AVAILABILITY_LIMITS } from '@intelliflow/validators';
 import {
@@ -54,22 +54,18 @@ export const ClosuresList = forwardRef<ClosuresListHandle, ClosuresListProps>(fu
     setFocusTarget(null);
   }, [focusTarget]);
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      openCreate: () => {
-        if (closures.length >= maxClosures) {
-          announce(`Maximum of ${maxClosures} closures reached.`);
-          return;
-        }
-        const row: DraftClosure = { key: newKey('c'), startDate: '', endDate: '', reason: '' };
-        onChange([...closures, row]);
-        announce(`Closure ${closures.length + 1} added.`);
-        setFocusTarget(closureFieldId(row.key, 'start'));
-      },
-    }),
-    [closures, onChange, announce]
-  );
+  const openCreate = useCallback(() => {
+    if (closures.length >= maxClosures) {
+      announce(`Maximum of ${maxClosures} closures reached.`);
+      return;
+    }
+    const row: DraftClosure = { key: newKey('c'), startDate: '', endDate: '', reason: '' };
+    onChange([...closures, row]);
+    announce(`Closure ${closures.length + 1} added.`);
+    setFocusTarget(closureFieldId(row.key, 'start'));
+  }, [closures, onChange, announce]);
+
+  useImperativeHandle(ref, () => ({ openCreate }), [openCreate]);
 
   const update = (key: string, patch: Partial<DraftClosure>) => {
     onChange(closures.map((c) => (c.key === key ? { ...c, ...patch } : c)));
@@ -89,7 +85,8 @@ export const ClosuresList = forwardRef<ClosuresListHandle, ClosuresListProps>(fu
     return (
       <EmptyState
         entity="appointments"
-        phase="passive"
+        ctaLabel="Add a closure"
+        onCtaClick={openCreate}
         size="sm"
         className="py-4 px-3 gap-2"
         title="No closures"

@@ -318,7 +318,12 @@ export const AutomationRuleList = forwardRef<AutomationRuleListHandle, Automatio
     return (
       <>
         {rules.length === 0 ? (
-          <EmptyState entity="rules" phase="passive" size="sm" className="gap-2 px-3 py-4" />
+          <EmptyState
+            entity="rules"
+            onCtaClick={() => openDialog(null)}
+            size="sm"
+            className="gap-2 px-3 py-4"
+          />
         ) : (
           <ul className="divide-y divide-border" aria-label="Automation rules">
             {rules.map((rule, index) => (

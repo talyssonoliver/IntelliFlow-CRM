@@ -129,7 +129,7 @@ export const CustomFieldsTab = forwardRef<CustomFieldsTabHandle, CustomFieldsTab
           <EmptyState
             entity="rules"
             size="sm"
-            phase="passive"
+            onCtaClick={openCreate}
             title="No custom fields yet"
             description="Capture extra account data with a custom field."
             className="py-4 px-3 gap-2"

@@ -206,6 +206,7 @@ export default function ScheduledReportsContent() {
                 onToggle={(s, isActive) => setActiveMutation.mutate({ id: s.id, isActive })}
                 onEdit={(s) => openDialog(s)}
                 onDelete={(s) => setDeleteTarget({ kind: 'schedule', id: s.id, name: s.name })}
+                onCreate={() => openDialog(null)}
               />
             )}
           </Card>

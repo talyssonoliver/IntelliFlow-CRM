@@ -221,7 +221,7 @@ export default function ReportTemplatesContent() {
               </p>
             )}
             {!isLoading && !listError && templates.length === 0 && (
-              <EmptyState entity="reports" phase="passive" size="sm" />
+              <EmptyState entity="reports" onCtaClick={openCreate} size="sm" />
             )}
             {!isLoading && !listError && templates.length > 0 && (
               <div className="divide-y">
