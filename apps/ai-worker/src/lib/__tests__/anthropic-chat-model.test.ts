@@ -27,6 +27,7 @@ import {
 import { isRetryableModelError } from '../llm-factory';
 import { wrapModelWithTracing } from '../../tracing/llm-tracer';
 import {
+  _resetPendingSpend,
   MonthlyBudgetExceededError,
   monthlyBudgetKey,
   setMonthlyBudgetStore,
@@ -79,6 +80,7 @@ function sentParams(create: ReturnType<typeof vi.fn>): Record<string, unknown> {
 beforeEach(() => {
   logInfo.mockClear();
   recordModelUsage.mockClear();
+  _resetPendingSpend();
 });
 
 describe('metering through the tracing wrapper', () => {

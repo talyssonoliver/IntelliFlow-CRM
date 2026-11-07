@@ -101,15 +101,19 @@ export async function assertWithinMonthlyBudget(
 ): Promise<void> {
   if (isFreeModel(pricingKey)) return;
   const budgetUsd = monthlyBudgetUsd();
+  const key = monthlyBudgetKey(now);
+  // Spend this process paid for but could not write yet. While it cannot be written, the shared
+  // total is stale: a Claude call fails closed rather than spend against it.
+  if (!(await flushPending(key)) && failsClosed(provider)) {
+    throw new MonthlyBudgetExceededError(Number.NaN, budgetUsd);
+  }
   if (!store) {
-    if (failsClosed(provider)) {
-      throw new MonthlyBudgetExceededError(Number.NaN, budgetUsd);
-    }
+    if (failsClosed(provider)) throw new MonthlyBudgetExceededError(Number.NaN, budgetUsd);
     return;
   }
   let spentMicros: number;
   try {
-    spentMicros = Number.parseInt((await store.get(monthlyBudgetKey(now))) ?? '0', 10) || 0;
+    spentMicros = Number.parseInt((await store.get(key)) ?? '0', 10) || 0;
   } catch (err) {
     logger.error(
       { err: err instanceof Error ? err.name : 'Error' },
@@ -118,13 +122,55 @@ export async function assertWithinMonthlyBudget(
     if (failsClosed(provider)) throw new MonthlyBudgetExceededError(Number.NaN, budgetUsd);
     return;
   }
-  const spentUsd = spentMicros / MICROS_PER_USD;
+  const spentUsd = (spentMicros + (pending.get(key) ?? 0)) / MICROS_PER_USD;
   if (spentUsd >= budgetUsd) throw new MonthlyBudgetExceededError(spentUsd, budgetUsd);
 }
 
 /**
+ * Spend that could not be written to the store, per month key, kept until a write succeeds.
+ * An ambiguous failure (the increment applied but its reply was lost) can count a call twice:
+ * the cap then errs towards stopping early, never towards overspending.
+ */
+const pending = new Map<string, number>();
+
+/** For tests: forget unwritten spend. */
+export function _resetPendingSpend(): void {
+  pending.clear();
+}
+
+/** Write this process's unwritten spend for `key`. True when nothing is left unwritten. */
+async function flushPending(key: string): Promise<boolean> {
+  const micros = pending.get(key) ?? 0;
+  if (micros <= 0) return true;
+  return addToTotal(key, micros);
+}
+
+/** INCRBY with the month TTL and the 50%/80% warnings. On failure the amount stays pending. */
+async function addToTotal(key: string, micros: number): Promise<boolean> {
+  if (!store) {
+    pending.set(key, micros);
+    return false;
+  }
+  try {
+    const totalMicros = await store.incrby(key, micros);
+    pending.delete(key);
+    if (totalMicros === micros) await store.expire(key, KEY_TTL_SECONDS);
+    warnOnCrossing(totalMicros - micros, totalMicros);
+    return true;
+  } catch (err) {
+    pending.set(key, micros);
+    logger.error(
+      { err: err instanceof Error ? err.name : 'Error', unwrittenMicros: micros },
+      'Monthly AI spend could not be recorded; kept to retry'
+    );
+    return false;
+  }
+}
+
+/**
  * Add one billed call to this month's total, priced from its tokens. Never throws: the call
- * it measures has already been paid for, and its answer must not turn into an error.
+ * it measures has already been paid for, and its answer must not turn into an error. An
+ * amount that cannot be written is kept and retried with the next call.
  */
 export async function recordMonthlySpend(
   pricingKey: string,
@@ -134,21 +180,8 @@ export async function recordMonthlySpend(
 ): Promise<void> {
   const micros = Math.round(calculateCost(pricingKey, inputTokens, outputTokens) * MICROS_PER_USD);
   if (micros <= 0) return;
-  if (!store) {
-    logger.warn({ pricingKey, micros }, 'Monthly AI spend not recorded: no store registered');
-    return;
-  }
-  try {
-    const key = monthlyBudgetKey(now);
-    const totalMicros = await store.incrby(key, micros);
-    if (totalMicros === micros) await store.expire(key, KEY_TTL_SECONDS);
-    warnOnCrossing(totalMicros - micros, totalMicros);
-  } catch (err) {
-    logger.error(
-      { err: err instanceof Error ? err.name : 'Error', pricingKey, micros },
-      'Monthly AI spend could not be recorded'
-    );
-  }
+  const key = monthlyBudgetKey(now);
+  await addToTotal(key, micros + (pending.get(key) ?? 0));
 }
 
 /** One warning per mark: only the increment that crosses it logs, across all workers. */

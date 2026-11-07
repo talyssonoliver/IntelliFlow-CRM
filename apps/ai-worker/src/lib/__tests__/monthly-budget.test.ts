@@ -9,6 +9,7 @@ vi.mock('../../utils/logger.js', () => ({
 }));
 
 import {
+  _resetPendingSpend,
   MonthlyBudgetExceededError,
   assertWithinMonthlyBudget,
   isMonthlyBudgetExceeded,
@@ -48,6 +49,7 @@ function memoryStore(): MonthlyBudgetStore & {
 let store: ReturnType<typeof memoryStore>;
 
 beforeEach(() => {
+  _resetPendingSpend();
   store = memoryStore();
   setMonthlyBudgetStore(store);
   vi.stubEnv('AI_MONTHLY_BUDGET_USD', '');
@@ -141,6 +143,29 @@ describe('monthly AI budget', () => {
     await expect(
       assertWithinMonthlyBudget('scoring-free', 'litellm', NOV)
     ).resolves.toBeUndefined();
+  });
+
+  it('keeps a spend it could not write, refuses Claude until it is written, then writes it', async () => {
+    const working = store.incrby;
+    store.incrby = async () => Promise.reject(new Error('READONLY'));
+    await spendUsd(0.004);
+
+    // The shared total is stale while the write fails: a Claude call is refused.
+    await expect(claudeCall()).rejects.toBeInstanceOf(MonthlyBudgetExceededError);
+
+    store.incrby = working;
+    await expect(claudeCall()).resolves.toBeUndefined();
+    expect(store.values.get(monthlyBudgetKey(NOV))).toBe(4000);
+  });
+
+  it('counts unwritten spend against the budget for other providers too', async () => {
+    vi.stubEnv('AI_MONTHLY_BUDGET_USD', '1');
+    await spendUsd(0.9);
+    store.incrby = async () => Promise.reject(new Error('READONLY'));
+    await spendUsd(0.2); // not written: the shared total still says $0.90
+    await expect(assertWithinMonthlyBudget('scoring-free', 'litellm', NOV)).rejects.toBeInstanceOf(
+      MonthlyBudgetExceededError
+    );
   });
 
   it('never throws while recording, so a paid answer is not lost', async () => {
