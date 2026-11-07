@@ -90,6 +90,8 @@ export interface EmailVerificationProps {
   onVerified?: () => void;
   onError?: (error: string) => void;
   redirectUrl?: string;
+  /** Label of the button shown after a successful verification. */
+  continueLabel?: string;
   className?: string;
 }
 
@@ -158,11 +160,14 @@ export function EmailVerification({
   onVerified,
   onError,
   redirectUrl = '/dashboard',
+  continueLabel = 'Continue to Dashboard',
   className,
 }: Readonly<EmailVerificationProps>) {
   const [status, setStatus] = useState<VerificationStatus>('loading');
   const [message, setMessage] = useState('Verifying your email...');
   const [verifiedEmail, setVerifiedEmail] = useState<string | null>(null);
+  // A link from the mail carries no address, so ask for it when a new link is needed.
+  const [resendEmail, setResendEmail] = useState(email ?? '');
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
   const [showExpiryWarning] = useState(false);
@@ -199,13 +204,14 @@ export function EmailVerification({
 
   // Handle resend via tRPC
   const handleResend = useCallback(async () => {
-    if (!email || isResending) return;
+    const address = resendEmail.trim();
+    if (!address || isResending) return;
 
     setIsResending(true);
     setResendMessage(null);
 
     try {
-      await resendMutation.mutateAsync({ email });
+      await resendMutation.mutateAsync({ email: address });
       setResendMessage('A new verification link has been sent to your email.');
     } catch (err: unknown) {
       const trpcError = err as { data?: { code?: string }; message?: string };
@@ -218,7 +224,7 @@ export function EmailVerification({
     } finally {
       setIsResending(false);
     }
-  }, [email, isResending, resendMutation]);
+  }, [resendEmail, isResending, resendMutation]);
 
   // Get action content based on status
   const getActionContent = () => {
@@ -233,9 +239,9 @@ export function EmailVerification({
               'hover:bg-[#2a78f6]/90 transition-colors',
               'focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900'
             )}
-            aria-label="Continue to dashboard"
+            aria-label={continueLabel}
           >
-            Continue to Dashboard{' '}
+            {continueLabel}{' '}
             <span className="material-symbols-outlined text-xl" aria-hidden="true">
               arrow_forward
             </span>
@@ -264,40 +270,55 @@ export function EmailVerification({
       case 'expired':
         return (
           <div className="space-y-4">
-            {email && (
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={isResending}
-                className={cn(
-                  'inline-flex items-center gap-2 px-6 py-3 rounded-lg',
-                  'bg-[#2a78f6] text-white font-medium',
-                  'hover:bg-[#2a78f6]/90 transition-colors',
-                  'focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900',
-                  'disabled:opacity-50 disabled:cursor-not-allowed'
-                )}
-                aria-label="Resend verification email"
-              >
-                {isResending ? (
-                  <>
-                    <span
-                      className="material-symbols-outlined text-xl animate-spin"
-                      aria-hidden="true"
-                    >
-                      sync
-                    </span>{' '}
-                    Sending...
-                  </>
-                ) : (
-                  <>
-                    <span className="material-symbols-outlined text-xl" aria-hidden="true">
-                      mail
-                    </span>{' '}
-                    Resend Verification Email
-                  </>
-                )}
-              </button>
+            {!email && (
+              <div className="max-w-xs mx-auto text-left">
+                <label htmlFor="resend-email" className="block text-sm text-slate-300 mb-1">
+                  Your email address
+                </label>
+                <input
+                  id="resend-email"
+                  type="email"
+                  autoComplete="email"
+                  value={resendEmail}
+                  onChange={(e) => setResendEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  className="w-full px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#bca8ff]"
+                />
+              </div>
             )}
+            {/* Always visible so the next step is clear; usable once there is an address. */}
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={isResending || resendEmail.trim() === ''}
+              className={cn(
+                'inline-flex items-center gap-2 px-6 py-3 rounded-lg',
+                'bg-[#2a78f6] text-white font-medium',
+                'hover:bg-[#2a78f6]/90 transition-colors',
+                'focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900',
+                'disabled:opacity-50 disabled:cursor-not-allowed'
+              )}
+              aria-label="Resend verification email"
+            >
+              {isResending ? (
+                <>
+                  <span
+                    className="material-symbols-outlined text-xl animate-spin"
+                    aria-hidden="true"
+                  >
+                    sync
+                  </span>{' '}
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <span className="material-symbols-outlined text-xl" aria-hidden="true">
+                    mail
+                  </span>{' '}
+                  Resend Verification Email
+                </>
+              )}
+            </button>
             {resendMessage && (
               <output
                 className={cn(

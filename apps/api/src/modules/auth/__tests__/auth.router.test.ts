@@ -377,6 +377,42 @@ describe('authRouter', () => {
       expect(mockAuditLogger.logLoginFailure).toHaveBeenCalled();
     });
 
+    it.each([
+      ['its code', { code: 'email_not_confirmed', message: 'x' }],
+      ['its message', { message: 'Email not confirmed' }],
+    ])('says to confirm the email when Supabase reports it by %s', async (_name, error) => {
+      mockSignIn.mockResolvedValueOnce({ user: null, session: null, error: error as Error });
+
+      const caller = authRouter.createCaller(createMockContext());
+      const result = caller.login({
+        email: 'test@example.com',
+        password: fixtureValue('right_p', 'assword'),
+      });
+
+      await expect(result).rejects.toMatchObject({
+        code: 'FORBIDDEN',
+        message: expect.stringContaining('Confirm your email address first'),
+      });
+      expect(mockLoginLimiter.recordFailed).toHaveBeenCalled();
+    });
+
+    it('keeps the locked message ahead of the confirmation message', async () => {
+      mockLoginLimiter.recordFailed.mockReturnValueOnce({
+        isLocked: true,
+        lockoutDuration: 120000,
+      });
+      mockSignIn.mockResolvedValueOnce({
+        user: null,
+        session: null,
+        error: { code: 'email_not_confirmed', message: 'Email not confirmed' } as unknown as Error,
+      });
+
+      const caller = authRouter.createCaller(createMockContext());
+      await expect(
+        caller.login({ email: 'test@example.com', password: fixtureValue('wrong_p', 'assword') })
+      ).rejects.toMatchObject({ code: 'UNAUTHORIZED', message: expect.stringContaining('locked') });
+    });
+
     it('should lock account after too many failed attempts', async () => {
       mockSignIn.mockResolvedValueOnce({
         user: null,
