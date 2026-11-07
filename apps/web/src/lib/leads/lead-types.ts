@@ -9,6 +9,8 @@ export interface Lead {
   title: string | null;
   status: LeadStatus;
   score: number;
+  /** #1218: whether `score` is a real AI score (NONE / FAILED show as not scored). */
+  scoringStatus?: 'NONE' | 'SCORED' | 'NEEDS_REVIEW' | 'FAILED' | null;
   createdAt: Date | string;
   phone?: string | null;
   source?: string;

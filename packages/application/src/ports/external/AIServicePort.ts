@@ -20,6 +20,8 @@ export interface LeadScoringResult {
   score: number;
   confidence: number;
   modelVersion: string;
+  /** Confidence under the review threshold: keep the score, but it must not change the status. */
+  requiresReview?: boolean;
   reasoning?: string;
   factors?: {
     companySize?: number;
