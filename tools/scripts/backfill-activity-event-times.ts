@@ -109,13 +109,19 @@ export function parseTitleDate(title: string): TitleDateFix | null {
   return { title: cleaned, timestamp };
 }
 
-/** Only rows stamped AFTER the date in their title were back-dated imports. */
+/**
+ * Rows stamped AFTER the day in their title were back-dated imports: they move
+ * to that day and lose the date. Rows stamped ON that day already have the
+ * right time, so they keep it and only lose the date from the title. Rows
+ * stamped before it (e.g. "Meeting booked for 20/11/2026") are left alone.
+ */
 export function planTitleDateFix(row: { title: string; timestamp: Date }): TitleDateFix | null {
   const fix = parseTitleDate(row.title);
   if (!fix || !fix.title) return null;
   const stamped = new Date(row.timestamp);
   const sameDay = stamped.toISOString().slice(0, 10) === fix.timestamp.toISOString().slice(0, 10);
-  if (sameDay || stamped <= fix.timestamp) return null;
+  if (sameDay) return { title: fix.title, timestamp: stamped };
+  if (stamped <= fix.timestamp) return null;
   return fix;
 }
 

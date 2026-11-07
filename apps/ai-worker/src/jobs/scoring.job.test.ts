@@ -20,6 +20,8 @@ import {
   DEFAULT_SCORING_JOB_OPTIONS,
   NIL_UUID,
   ScoringFailedError,
+  isExpectedJobFailure,
+  toScoringJobFailure,
   type ScoringJobData,
   type ScoringJobResult,
   type LeadTier,
@@ -1060,6 +1062,88 @@ describe('ScoringJob', () => {
       });
       const failure = await processScoringJob(job).catch((e: unknown) => e);
       expect((failure as ScoringFailedError).errorClass).toBe('inconclusive');
+    });
+
+    describe('an inconclusive answer is an expected outcome', () => {
+      const exec = () =>
+        (prisma as unknown as { $executeRaw: ReturnType<typeof vi.fn> }).$executeRaw;
+      const leadJob = () =>
+        createMockJob({
+          leadId: TEST_UUIDS.lead1,
+          tenantId: TEST_UUIDS.tenant1,
+          lead: { email: 'test@example.com', source: 'WEBSITE' },
+        });
+
+      it('marks a never-scored lead FAILED after an inconclusive automatic scoring', async () => {
+        mockScoreLead.mockReset();
+        mockScoreLead.mockImplementation(async () => {
+          throw inconclusive();
+        });
+        exec().mockClear();
+
+        await expect(processScoringJob(leadJob())).rejects.toBeInstanceOf(ScoringFailedError);
+
+        const [strings, ...values] = exec().mock.calls.at(-1)!;
+        const sql = (strings as string[]).join('?');
+        expect(sql).toMatch(/SET "scoringStatus" = 'FAILED'::"LeadScoringStatus"/);
+        // Only a lead still at NONE: a failed re-score never hides an earlier score.
+        expect(sql).toMatch(/"scoringStatus" = 'NONE'::"LeadScoringStatus"/);
+        expect(values).toEqual([TEST_UUIDS.lead1, TEST_UUIDS.tenant1]);
+      });
+
+      it("leaves a LeadService scoring's lead to LeadService", async () => {
+        mockScoreLead.mockReset();
+        mockScoreLead.mockImplementation(async () => {
+          throw inconclusive();
+        });
+        exec().mockClear();
+        const queued = leadJob();
+        (queued.data as Record<string, unknown>).leadScoreWriter = 'service';
+
+        await expect(processScoringJob(queued)).rejects.toBeInstanceOf(ScoringFailedError);
+        expect(exec()).not.toHaveBeenCalled();
+      });
+
+      it('does not mark the lead on a provider fault, which keeps its retries', async () => {
+        mockScoreLead.mockReset();
+        mockScoreLead.mockRejectedValue(new Error('provider down (503)'));
+        exec().mockClear();
+
+        const failure = await processScoringJob(leadJob()).catch((e: unknown) => e);
+        expect(exec()).not.toHaveBeenCalled();
+        expect(toScoringJobFailure(failure)).toBe(failure);
+      });
+
+      it('fails once: the worker turns it into an UnrecoverableError with the same message', () => {
+        const failure = toScoringJobFailure(new ScoringFailedError('inconclusive')) as Error;
+        // BullMQ neither retries nor dead-letters an error with this name.
+        expect(failure.name).toBe('UnrecoverableError');
+        // And the shared worker logs it as a warning, not an error.
+        expect((failure as Error & { expected?: boolean }).expected).toBe(true);
+        // The API still maps this message to "no usable score".
+        expect(failure.message).toBe('Lead scoring failed (inconclusive)');
+      });
+
+      it('keeps its retries when the other provider failed without answering (codex)', async () => {
+        mockScoreLead.mockReset();
+        mockScoreLead
+          .mockRejectedValueOnce(Object.assign(new Error('rate limited'), { status: 429 }))
+          .mockRejectedValueOnce(inconclusive());
+        exec().mockClear();
+
+        const failure = (await processScoringJob(leadJob()).catch((e: unknown) => e)) as Error;
+        // Still "no usable score" for the API, but a retry may reach the provider that failed.
+        expect(failure.message).toMatch(/^Lead scoring failed \(inconclusive\)/);
+        expect(toScoringJobFailure(failure)).toBe(failure);
+        expect(isExpectedJobFailure(failure.message)).toBe(false);
+        expect(exec()).not.toHaveBeenCalled();
+      });
+
+      it('is recognised from the queue failure reason, so the worker logs a warning', () => {
+        expect(isExpectedJobFailure('Lead scoring failed (inconclusive)')).toBe(true);
+        expect(isExpectedJobFailure('Lead scoring failed (rate_limited)')).toBe(false);
+        expect(isExpectedJobFailure(undefined)).toBe(false);
+      });
     });
 
     it('does not open the shared breaker on inconclusive answers: the provider is up (codex)', async () => {

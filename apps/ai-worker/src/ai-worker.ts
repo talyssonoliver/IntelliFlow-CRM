@@ -76,6 +76,7 @@ import { setPurposeSpendReader } from './lib/purpose-ceiling';
 import { aiConfig, loadAIConfig } from './config/ai.config';
 import { anthropicModelForTier } from './lib/anthropic-config';
 import { setMonthlyBudgetStore, type MonthlyBudgetStore } from './lib/monthly-budget';
+import { isExpectedJobFailure, toScoringJobFailure } from './jobs/scoring.job';
 import {
   extractJobContext,
   markAgentActive,
@@ -717,6 +718,15 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
       // failed — enqueue to DLQ when attempts are exhausted
       queueEvents.on('failed', ({ jobId, failedReason }) => {
+        // An expected outcome (the model answered without a usable score) is not a fault: a
+        // warning, no dead-letter entry. It fails once (toScoringJobFailure), never retried.
+        if (isExpectedJobFailure(failedReason)) {
+          this.logger.warn(
+            { jobId, queue: queueName, failedReason },
+            'Job ended without a result (expected outcome)'
+          );
+          return;
+        }
         this.logger.error({ jobId, queue: queueName, failedReason }, 'Job failed');
 
         // We need the full job to read attemptsMade + data; use the queue API.
@@ -1266,7 +1276,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
         await markAgentError(ctx, message, durationMs);
       }
-      throw error;
+      // An inconclusive scoring fails once: no retries, no dead-letter queue.
+      throw job.queueName === SCORING_QUEUE ? toScoringJobFailure(error) : error;
     }
   }
 

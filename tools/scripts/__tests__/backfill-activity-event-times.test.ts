@@ -60,13 +60,20 @@ describe('planTitleDateFix', () => {
     ).toEqual({ title: 'Follow-up email sent', timestamp: new Date('2026-10-07T12:00:00.000Z') });
   });
 
-  it('leaves a row whose timestamp is on or before its title date', () => {
+  it('strips the date from a row stamped on its title date and keeps its time', () => {
+    const stamped = new Date('2026-11-06T09:00:00.000Z');
     expect(
       planTitleDateFix({
-        title: 'Price follow-up sent 06/11/2026',
-        timestamp: new Date('2026-11-06T09:00:00.000Z'),
+        title: 'Price follow-up sent 06/11/2026 from Zoho (founding-partner offer)',
+        timestamp: stamped,
       })
-    ).toBeNull();
+    ).toEqual({
+      title: 'Price follow-up sent from Zoho (founding-partner offer)',
+      timestamp: stamped,
+    });
+  });
+
+  it('leaves a row whose timestamp is before its title date', () => {
     expect(
       planTitleDateFix({
         title: 'Meeting booked for 20/11/2026',
