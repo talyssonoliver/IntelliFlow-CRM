@@ -2388,14 +2388,17 @@ export default function Lead360Page() {
   const scoreWithAIMutation = api.lead.scoreWithAI.useMutation({
     onSuccess: () => {
       toast({ title: 'AI analysis complete', description: 'Lead has been scored by AI.' });
-      return Promise.all([
-        user?.id ? revalidateLeadCaches(user.id).catch(reportCacheRevalidationError) : undefined,
-        utils.lead.getById.invalidate({ id: leadId }),
-      ]);
     },
     onError: (err) => {
       toast({ title: 'AI analysis failed', description: err.message, variant: 'destructive' });
     },
+    // #1218: a failed scoring also changes the lead (it is marked FAILED and gets an
+    // "AI scoring failed" activity), so the lead is refetched either way (codex).
+    onSettled: () =>
+      Promise.all([
+        user?.id ? revalidateLeadCaches(user.id).catch(reportCacheRevalidationError) : undefined,
+        utils.lead.getById.invalidate({ id: leadId }),
+      ]),
   });
 
   const addNoteMutation = api.lead.addNote.useMutation({

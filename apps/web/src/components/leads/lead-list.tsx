@@ -401,11 +401,12 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
         title: 'Lead Scored',
         description: `New score: ${result.score} (confidence: ${Math.round(result.confidence * 100)}%)`,
       });
-      return refreshLeads(revalidateLeadCaches);
     },
     onError: (err) => {
       toast({ title: 'Scoring Failed', description: err.message, variant: 'destructive' });
     },
+    // #1218: a failed scoring marks the lead FAILED, so the list is refreshed either way.
+    onSettled: () => refreshLeads(revalidateLeadCaches),
   });
 
   const setStarredMutation = api.lead.setStarred.useMutation({

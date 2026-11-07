@@ -245,12 +245,26 @@ async function generateScoringWithFallback(
 
     // #1218 (owner ruling): when no provider produced a usable score, the scoring FAILED. A
     // made-up heuristic number is no longer saved as if a model had scored the lead.
+    const errorClass = scoringErrorClass(error);
     logger.warn(
-      { jobId: job.id, errorClass: classifyError(error) },
+      { jobId: job.id, errorClass },
       'Lead scoring failed on every provider — reporting FAILED, no score saved'
     );
-    throw new ScoringFailedError(classifyError(error));
+    throw new ScoringFailedError(errorClass);
   }
+}
+
+/**
+ * The class a failed job reports. An inconclusive answer (confidence 0 or no factors) is told
+ * apart from a provider failure, so the API can answer "no usable score" rather than a server
+ * error once the failure crosses the queue (codex, #1218).
+ */
+export const SCORING_INCONCLUSIVE_CLASS = 'inconclusive';
+function scoringErrorClass(error: unknown): string {
+  // Matched by name (ScoringInconclusiveError in chains/scoring.chain), so it holds across
+  // module copies and test doubles.
+  const name = (error as { name?: unknown } | null)?.name;
+  return name === 'ScoringInconclusiveError' ? SCORING_INCONCLUSIVE_CLASS : classifyError(error);
 }
 
 /** No provider produced a usable score. The job fails, so nothing is persisted as a score. */

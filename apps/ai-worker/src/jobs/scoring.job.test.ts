@@ -953,7 +953,11 @@ describe('ScoringJob', () => {
         tenantId: TEST_UUIDS.tenant1,
         lead: { email: 'test@example.com', source: 'WEBSITE' },
       });
-      await expect(processScoringJob(job)).rejects.toBeInstanceOf(ScoringFailedError);
+      const failure = await processScoringJob(job).catch((e: unknown) => e);
+      expect(failure).toBeInstanceOf(ScoringFailedError);
+      // The API maps exactly this message to "no usable score" across the queue (codex).
+      expect((failure as ScoringFailedError).errorClass).toBe('inconclusive');
+      expect((failure as Error).message).toBe('Lead scoring failed (inconclusive)');
     });
   });
 });

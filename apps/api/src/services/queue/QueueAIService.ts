@@ -22,8 +22,28 @@ import {
   type LeadScoringResult,
   PersistenceError,
   ValidationError,
+  LeadScoringFailedError,
   LEAD_SCORE_THRESHOLDS,
 } from '@intelliflow/application';
+
+/**
+ * #1218: the worker fails an inconclusive job (confidence 0 or no factors) with
+ * "Lead scoring failed (inconclusive)" (ScoringFailedError, SCORING_INCONCLUSIVE_CLASS in
+ * apps/ai-worker). That is "no usable score", not a server error.
+ */
+const INCONCLUSIVE_JOB_FAILURE = /\bLead scoring failed \(inconclusive\)/;
+
+/** The error a failed or timed-out scoring job is reported as. */
+function jobFailureError(err: unknown): DomainError {
+  const msg = err instanceof Error ? err.message : String(err);
+  if (/timed out|timeout/i.test(msg)) {
+    return new PersistenceError(`AI scoring queue timeout: ${msg}`);
+  }
+  if (INCONCLUSIVE_JOB_FAILURE.test(msg)) {
+    return new LeadScoringFailedError('NO_USABLE_SCORE');
+  }
+  return new PersistenceError(`AI scoring job failed: ${msg}`);
+}
 import { QUEUE_NAMES, getBullMQConnectionOptions } from '@intelliflow/platform/queues';
 import type { ConnectionOptions } from '@intelliflow/platform/queues';
 import { context as otelContext, propagation } from '@opentelemetry/api';
@@ -260,11 +280,7 @@ export class QueueAIService implements AIServicePort {
     try {
       raw = await job.waitUntilFinished(this.events, this.opts.resultTimeoutMs);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (/timed out|timeout/i.test(msg)) {
-        return Result.fail(new PersistenceError(`AI scoring queue timeout: ${msg}`));
-      }
-      return Result.fail(new PersistenceError(`AI scoring job failed: ${msg}`));
+      return Result.fail(jobFailureError(err));
     }
 
     // Defensive schema validation — mirror catches structural drift before mapping.
