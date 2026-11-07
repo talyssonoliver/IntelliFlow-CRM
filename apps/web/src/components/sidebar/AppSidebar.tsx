@@ -178,6 +178,8 @@ export function AppSidebar({
         className
       )}
       aria-label={`${config.moduleTitle} navigation`}
+      // Read by `.app-footer` (globals.css) to clear the fixed sidebar (#1224).
+      data-app-sidebar={isPinned ? 'pinned' : 'rail'}
     >
       {/* Module Header */}
       <div
