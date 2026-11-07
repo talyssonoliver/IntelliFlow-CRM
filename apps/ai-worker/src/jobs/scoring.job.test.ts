@@ -887,6 +887,7 @@ describe('ScoringJob', () => {
             metadata: {},
           },
         ]),
+        findFirst: vi.fn().mockResolvedValue(null),
       };
       try {
         await processScoringJob(job());
@@ -897,7 +898,10 @@ describe('ScoringJob', () => {
         expect(input.activity).toContain('EMAIL inbound: Reply received: what is the price?');
         expect(db.leadActivity.findMany).toHaveBeenCalledWith(
           expect.objectContaining({
-            where: { leadId: TEST_UUIDS.lead1, tenantId: TEST_UUIDS.tenant1 },
+            where: expect.objectContaining({
+              leadId: TEST_UUIDS.lead1,
+              tenantId: TEST_UUIDS.tenant1,
+            }),
           })
         );
       } finally {

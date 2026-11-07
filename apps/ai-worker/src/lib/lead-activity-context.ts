@@ -11,8 +11,10 @@
  * stage is a stage name and a date.
  *
  * Direction: `metadata.direction` when an activity was logged with one. Older rows have none,
- * so for an EMAIL it is inferred here, for the prompt only and never written back: a title
- * starting "Reply received" is inbound, any other EMAIL outbound.
+ * so for an EMAIL it is inferred here from clear words in its title, for the prompt only and
+ * never written back: "reply", "replied", "received" or "inbound" mean inbound ("Reply
+ * received: ..."); "sent", "outreach" or "outbound" mean outbound ("Follow-up email sent").
+ * Any other email is counted as unknown direction rather than guessed.
  *
  * TODO(#1177): once the mail bridge stores email_records for leads, count those too.
  */
@@ -43,7 +45,13 @@ export interface LeadActivityContext {
   status: string | null;
   lastContactedAt: Date | null;
   pipelineStage: { stage: string; since: Date | null } | null;
-  counts: { emailsSent: number; replies: number; calls: number; meetings: number };
+  counts: {
+    emailsSent: number;
+    replies: number;
+    emailsUnknownDirection: number;
+    calls: number;
+    meetings: number;
+  };
   recent: Array<{ type: string; direction: ActivityDirection | null; at: Date; title: string }>;
 }
 
@@ -53,12 +61,20 @@ function metadataOf(row: ActivityRow): Record<string, unknown> {
     : {};
 }
 
-/** The direction stored on the activity, else inferred for an EMAIL from its title. */
+const INBOUND_TITLE = /\b(reply|replied|received|inbound)\b/i;
+const OUTBOUND_TITLE = /\b(sent|outreach|outbound)\b/i;
+
+/**
+ * The direction stored on the activity, else, for an EMAIL, inferred from clear words in its
+ * title. Null when neither says.
+ */
 export function activityDirection(row: ActivityRow): ActivityDirection | null {
   const stored = metadataOf(row)['direction'];
   if (stored === 'inbound' || stored === 'outbound') return stored;
   if (row.type !== 'EMAIL') return null;
-  return /^\s*reply received\b/i.test(row.title) ? 'inbound' : 'outbound';
+  if (INBOUND_TITLE.test(row.title)) return 'inbound';
+  if (OUTBOUND_TITLE.test(row.title)) return 'outbound';
+  return null;
 }
 
 function latestPipelineStage(rows: ActivityRow[]): LeadActivityContext['pipelineStage'] {
@@ -75,16 +91,32 @@ function latestPipelineStage(rows: ActivityRow[]): LeadActivityContext['pipeline
   return null;
 }
 
-/** Build the context from rows already ordered newest first. */
-export function buildLeadActivityContext(lead: LeadRow, rows: ActivityRow[]): LeadActivityContext {
-  const counts = { emailsSent: 0, replies: 0, calls: 0, meetings: 0 };
+function countEngagement(rows: ActivityRow[]): LeadActivityContext['counts'] {
+  const counts = { emailsSent: 0, replies: 0, emailsUnknownDirection: 0, calls: 0, meetings: 0 };
   for (const row of rows) {
-    const direction = activityDirection(row);
-    if (row.type === 'EMAIL' && direction === 'inbound') counts.replies++;
-    else if (row.type === 'EMAIL') counts.emailsSent++;
-    else if (row.type === 'CALL') counts.calls++;
+    if (row.type === 'CALL') counts.calls++;
     else if (row.type === 'MEETING') counts.meetings++;
+    else if (row.type === 'EMAIL') {
+      const direction = activityDirection(row);
+      if (direction === 'inbound') counts.replies++;
+      else if (direction === 'outbound') counts.emailsSent++;
+      else counts.emailsUnknownDirection++;
+    }
   }
+  return counts;
+}
+
+/**
+ * Build the context from rows already ordered newest first. `stageRows` holds the latest
+ * pipeline-sync note when it was read on its own (so other activity cannot push it out);
+ * without it the stage is looked for in `rows`.
+ */
+export function buildLeadActivityContext(
+  lead: LeadRow,
+  rows: ActivityRow[],
+  stageRows: ActivityRow[] = rows
+): LeadActivityContext {
+  const counts = countEngagement(rows);
   const recent = rows
     // The AI's own score updates say nothing about the lead's engagement.
     .filter((row) => row.type !== 'SCORE_UPDATE')
@@ -98,7 +130,7 @@ export function buildLeadActivityContext(lead: LeadRow, rows: ActivityRow[]): Le
   return {
     status: lead.status,
     lastContactedAt: lead.lastContactedAt,
-    pipelineStage: latestPipelineStage(rows),
+    pipelineStage: latestPipelineStage(stageRows),
     counts,
     recent,
   };
@@ -128,9 +160,11 @@ export function formatLeadActivityContext(context: LeadActivityContext, now: Dat
       : '';
     lines.push(`Pipeline Stage: ${context.pipelineStage.stage}${since}`);
   }
-  const { emailsSent, replies, calls, meetings } = context.counts;
+  const { emailsSent, replies, emailsUnknownDirection, calls, meetings } = context.counts;
+  const unknown =
+    emailsUnknownDirection > 0 ? `, ${emailsUnknownDirection} emails of unknown direction` : '';
   lines.push(
-    `Engagement: ${emailsSent} emails sent to the lead, ${replies} replies from the lead, ${calls} calls, ${meetings} meetings`
+    `Engagement: ${emailsSent} emails sent to the lead, ${replies} replies from the lead${unknown}, ${calls} calls, ${meetings} meetings`
   );
   if (context.recent.length === 0) {
     lines.push('Recent Activity: none recorded');
@@ -150,6 +184,7 @@ interface ActivityReader {
   };
   leadActivity: {
     findMany(args: unknown): Promise<ActivityRow[]>;
+    findFirst(args: unknown): Promise<ActivityRow | null>;
   };
 }
 
@@ -163,20 +198,33 @@ export async function loadLeadActivityContext(
   tenantId: string
 ): Promise<LeadActivityContext | undefined> {
   try {
-    const [lead, rows] = await Promise.all([
+    const select = { type: true, title: true, timestamp: true, metadata: true };
+    const [lead, rows, stage] = await Promise.all([
       prisma.lead.findFirst({
         where: { id: leadId, tenantId },
         select: { status: true, lastContactedAt: true },
       }),
+      // Score updates are left out before the limit, so they cannot push engagement out.
       prisma.leadActivity.findMany({
-        where: { leadId, tenantId },
+        where: { leadId, tenantId, type: { not: 'SCORE_UPDATE' } },
         orderBy: { timestamp: 'desc' },
         take: COUNTED_ACTIVITIES,
-        select: { type: true, title: true, timestamp: true, metadata: true },
+        select,
+      }),
+      // The latest pipeline stage is read on its own, however much other activity came after.
+      prisma.leadActivity.findFirst({
+        where: {
+          leadId,
+          tenantId,
+          type: 'NOTE',
+          metadata: { path: ['source'], equals: COA_SYNC_SOURCE },
+        },
+        orderBy: { timestamp: 'desc' },
+        select,
       }),
     ]);
     if (!lead) return undefined;
-    return buildLeadActivityContext(lead, rows);
+    return buildLeadActivityContext(lead, rows, stage ? [stage] : []);
   } catch {
     return undefined;
   }

@@ -111,6 +111,20 @@ describe('lead activity context for scoring', () => {
     expect(activityDirection(row('EMAIL', 'Reply received', { direction: 'sideways' }))).toBe(
       'inbound'
     );
+    expect(activityDirection(row('EMAIL', 'Received email: pricing please'))).toBe('inbound');
+    expect(activityDirection(row('EMAIL', 'Price follow-up sent'))).toBe('outbound');
+    // Neither word: not guessed.
+    expect(activityDirection(row('EMAIL', 'Pricing question'))).toBeNull();
+  });
+
+  it('counts an email whose direction is unclear apart, instead of as sent', () => {
+    const context = buildLeadActivityContext(LEAD, [
+      { type: 'EMAIL', title: 'Pricing question', timestamp: NOW, metadata: {} },
+      { type: 'EMAIL', title: 'Email sent', timestamp: NOW, metadata: {} },
+    ]);
+    expect(formatLeadActivityContext(context, NOW)).toContain(
+      'Engagement: 1 emails sent to the lead, 0 replies from the lead, 1 emails of unknown direction, 0 calls, 0 meetings'
+    );
   });
 
   it('never carries metadata values other than the pipeline stage, and caps titles', () => {
@@ -139,21 +153,41 @@ describe('lead activity context for scoring', () => {
     );
   });
 
-  it('reads only the job tenant, and only type, title, date and metadata', async () => {
+  it('reads only the job tenant, leaves score updates out before the limit, and reads the stage apart', async () => {
+    const stageNote = ROWS.find((row) => row.type === 'NOTE')!;
     const prisma = {
       lead: { findFirst: vi.fn().mockResolvedValue(LEAD) },
-      leadActivity: { findMany: vi.fn().mockResolvedValue(ROWS) },
+      leadActivity: {
+        // 200 newer notes would leave the stage note outside the counted window.
+        findMany: vi.fn().mockResolvedValue(
+          Array.from({ length: 200 }, () => ({
+            type: 'NOTE',
+            title: 'Note',
+            timestamp: NOW,
+            metadata: {},
+          }))
+        ),
+        findFirst: vi.fn().mockResolvedValue(stageNote),
+      },
     };
-    await loadLeadActivityContext(prisma, 'lead-1', 'tenant-1');
+    const context = await loadLeadActivityContext(prisma, 'lead-1', 'tenant-1');
+    expect(context?.pipelineStage?.stage).toBe('RESPONDED');
     expect(prisma.lead.findFirst).toHaveBeenCalledWith({
       where: { id: 'lead-1', tenantId: 'tenant-1' },
       select: { status: true, lastContactedAt: true },
     });
+    const select = { type: true, title: true, timestamp: true, metadata: true };
     expect(prisma.leadActivity.findMany).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { leadId: 'lead-1', tenantId: 'tenant-1' },
+        where: { leadId: 'lead-1', tenantId: 'tenant-1', type: { not: 'SCORE_UPDATE' } },
         orderBy: { timestamp: 'desc' },
-        select: { type: true, title: true, timestamp: true, metadata: true },
+        select,
+      })
+    );
+    expect(prisma.leadActivity.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ leadId: 'lead-1', tenantId: 'tenant-1', type: 'NOTE' }),
+        select,
       })
     );
   });
@@ -161,12 +195,12 @@ describe('lead activity context for scoring', () => {
   it('gives no context when the history cannot be read, so scoring still runs', async () => {
     const failing = {
       lead: { findFirst: vi.fn().mockRejectedValue(new Error('db down')) },
-      leadActivity: { findMany: vi.fn().mockResolvedValue([]) },
+      leadActivity: { findMany: vi.fn().mockResolvedValue([]), findFirst: vi.fn() },
     };
     await expect(loadLeadActivityContext(failing, 'l', 't')).resolves.toBeUndefined();
     const missing = {
       lead: { findFirst: vi.fn().mockResolvedValue(null) },
-      leadActivity: { findMany: vi.fn().mockResolvedValue([]) },
+      leadActivity: { findMany: vi.fn().mockResolvedValue([]), findFirst: vi.fn() },
     };
     await expect(loadLeadActivityContext(missing, 'l', 't')).resolves.toBeUndefined();
   });
