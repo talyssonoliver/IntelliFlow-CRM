@@ -8,7 +8,11 @@ import {
   computeDeltaPercent,
   formatGBP,
 } from '@/lib/dashboard/kpi-calculator';
+import { KpiTrendBadge } from '../KpiCard';
 import type { WidgetProps } from './index';
+
+/** Below £100 last period a revenue percentage is noise (#1225 UI-009). */
+const REVENUE_TREND_MIN_BASELINE = 100;
 
 export function RevenueWidget({ config }: Readonly<WidgetProps>) {
   const timeRange = (config?.timeRange as string) || 'month';
@@ -57,18 +61,13 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
             <span className="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">
               {revenuePending ? '...' : formatGBP(totalRevenue)}
             </span>
-            {deltaPercent !== 0 && (
-              <span
-                className={`text-xs font-medium flex items-center px-1.5 py-0.5 rounded ${
-                  deltaPercent >= 0
-                    ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
-                    : 'text-red-500 bg-red-50 dark:bg-red-500/10'
-                }`}
-              >
-                {deltaPercent >= 0 ? '+' : ''}
-                {deltaPercent.toFixed(1)}%
-              </span>
-            )}
+            <KpiTrendBadge
+              deltaPercent={deltaPercent}
+              previous={previous}
+              minBaseline={REVENUE_TREND_MIN_BASELINE}
+              fractionDigits={1}
+              appearance="pill"
+            />
           </div>
         </div>
       </div>

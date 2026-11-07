@@ -22,6 +22,7 @@ import {
   ListWidgetSkeleton,
   PipelineWidgetSkeleton,
 } from '@/components/dashboard/WidgetSkeleton';
+import { DASHBOARD_COL_SPAN_CLASSES, DASHBOARD_GRID_CLASSES } from '@/lib/dashboard/grid';
 
 // Default widgets matching the original dashboard layout
 const defaultWidgets: Widget[] = [
@@ -58,12 +59,7 @@ function getSkeletonFallback(widget: Widget): React.ReactNode {
   }
 }
 
-const colSpanClasses: Record<number, string> = {
-  1: 'col-span-1',
-  2: 'col-span-1 md:col-span-2',
-  3: 'col-span-1 md:col-span-2 lg:col-span-3',
-  4: 'col-span-1 md:col-span-2 lg:col-span-4',
-};
+const colSpanClasses = DASHBOARD_COL_SPAN_CLASSES;
 
 const rowSpanClasses: Record<number, string> = {
   1: '',
@@ -182,7 +178,7 @@ export default function DashboardClient({ initialLeadStats }: Readonly<Dashboard
       </div>
 
       {/* Dashboard Widgets Grid — each widget has its own Suspense boundary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 auto-rows-min">
+      <div className={`${DASHBOARD_GRID_CLASSES} auto-rows-min`}>
         {widgets.map((widget) => {
           const WidgetComponent = widgetRegistry[widget.type];
           const gridClasses = `

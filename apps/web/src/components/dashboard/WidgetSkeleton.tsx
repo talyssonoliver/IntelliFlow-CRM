@@ -8,6 +8,7 @@
  */
 
 import { Card } from '@intelliflow/ui';
+import { DASHBOARD_COL_SPAN_CLASSES } from '@/lib/dashboard/grid';
 
 interface WidgetSkeletonProps {
   /** Grid column span (mirrors Widget.colSpan) */
@@ -17,12 +18,7 @@ interface WidgetSkeletonProps {
   className?: string;
 }
 
-const colSpanClasses: Record<number, string> = {
-  1: 'col-span-1',
-  2: 'col-span-1 md:col-span-2',
-  3: 'col-span-1 md:col-span-2 lg:col-span-3',
-  4: 'col-span-1 md:col-span-2 lg:col-span-4',
-};
+const colSpanClasses = DASHBOARD_COL_SPAN_CLASSES;
 
 export function WidgetSkeleton({
   colSpan = 1,
@@ -54,9 +50,9 @@ export function StatCardSkeleton({ colSpan = 1 }: Readonly<{ colSpan?: number }>
         animate-pulse
       `}
     >
-      <div className="p-6 h-full flex flex-col">
+      <div className="p-4 sm:p-6 h-full flex flex-col">
         <div className="flex items-start justify-between">
-          <div className="w-12 h-12 rounded-lg bg-slate-200 dark:bg-slate-700" />
+          <div className="size-9 sm:size-12 rounded-lg bg-slate-200 dark:bg-slate-700" />
           <div className="w-16 h-5 rounded bg-slate-200 dark:bg-slate-700" />
         </div>
         <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-700 mt-4" />

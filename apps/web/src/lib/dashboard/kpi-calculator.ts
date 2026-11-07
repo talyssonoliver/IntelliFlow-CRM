@@ -119,3 +119,35 @@ export function formatGBP(amount: number | string, fractionDigits = 0): string {
     maximumFractionDigits: fractionDigits,
   }).format(toFiniteNumber(amount));
 }
+
+/**
+ * Baseline under which a period-over-period percentage is not shown
+ * (#1225 UI-009): growing from 1 lead to 10 is "+900%", which says nothing.
+ */
+export const TREND_MIN_BASELINE = 5;
+
+/** Largest percentage shown as a number; anything above reads ">999%". */
+export const TREND_DISPLAY_CAP = 999;
+
+/**
+ * Whether a trend badge is worth showing: a finite change that does not round
+ * to zero, measured against a baseline that is not near zero.
+ */
+export function shouldShowTrend(
+  deltaPercent: number,
+  previous: number,
+  minBaseline: number = TREND_MIN_BASELINE,
+  fractionDigits = 0
+): boolean {
+  if (!Number.isFinite(deltaPercent) || !Number.isFinite(previous)) return false;
+  if (previous < minBaseline) return false;
+  return Number(deltaPercent.toFixed(fractionDigits)) !== 0;
+}
+
+/** "+12%", "-4.5%", capped at ">999%" / "<-999%". */
+export function formatTrendPercent(deltaPercent: number, fractionDigits = 0): string {
+  if (deltaPercent > TREND_DISPLAY_CAP) return `>${TREND_DISPLAY_CAP}%`;
+  if (deltaPercent < -TREND_DISPLAY_CAP) return `<-${TREND_DISPLAY_CAP}%`;
+  const text = deltaPercent.toFixed(fractionDigits);
+  return `${deltaPercent >= 0 ? '+' : ''}${text}%`;
+}
