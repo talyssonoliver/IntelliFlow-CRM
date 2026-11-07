@@ -12,7 +12,6 @@
  * - updateConfig
  * - onNotification subscription
  * - getRecentNotifications
- * - useSLANotifications hook stub
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -26,11 +25,7 @@ vi.mock('../sla-service', () => ({
   SLATrackingService: vi.fn(),
 }));
 
-import {
-  SLANotificationManager,
-  useSLANotifications,
-  slaNotificationManager,
-} from '../sla-notifications';
+import { SLANotificationManager, slaNotificationManager } from '../sla-notifications';
 
 describe('SLANotificationManager (b11 coverage)', () => {
   let manager: SLANotificationManager;
@@ -334,20 +329,8 @@ describe('SLANotificationManager (b11 coverage)', () => {
     });
   });
 
-  describe('useSLANotifications', () => {
-    it('returns default values (placeholder)', () => {
-      const result = useSLANotifications();
-
-      expect(result.notifications).toEqual([]);
-      expect(result.unacknowledgedCount).toBe(0);
-      expect(typeof result.acknowledge).toBe('function');
-    });
-
-    it('acknowledge function does not throw', () => {
-      const result = useSLANotifications();
-      expect(() => result.acknowledge('any-id')).not.toThrow();
-    });
-  });
+  // useSLANotifications is a React hook; it is tested inside a component with renderHook in
+  // apps/web/src/lib/__tests__/sla-notifications.test.ts ('useSLANotifications').
 
   describe('slaNotificationManager singleton', () => {
     it('exports a singleton instance', () => {

@@ -6,7 +6,7 @@ export default defineConfig({
     name: 'db',
     globals: true,
     environment: 'node',
-    include: ['src/**/*.{test,spec}.ts'],
+    include: ['src/**/*.{test,spec}.ts', 'prisma/__tests__/**/*.{test,spec}.ts'],
     exclude: ['node_modules', 'dist', 'generated'],
 
     // Memory optimization (Vitest v4)
