@@ -429,3 +429,6 @@ tools/scripts/k6/.data/
 
 # Push-based executor status (ADR-077): runtime heartbeat files, never committed
 .claude/executor-status/
+
+# #1216: test-quality counts are local output, produced on demand (pnpm run test-quality:report)
+artifacts/reports/test-quality.json

@@ -128,6 +128,9 @@ if [ -n "$STAGED_TS" ] && [ "${ESCAPE_LINT_FIX:-0}" != "1" ]; then
   # xargs fail loudly if a single path were somehow too long to fit at
   # all, instead of silently doing something else. Same eslint flags,
   # same --max-warnings=0 failure behavior — just run over N batches.
+  # #1216: the test-quality rules are warnings while their counts are measured; with
+  # --max-warnings=0 they would block any commit touching a test, so they are off here.
+  export TEST_QUALITY_LINT=off
   echo "$STAGED_TS" | xargs -s 4000 -x pnpm exec eslint --fix --max-warnings=0 --no-warn-ignored || {
     echo "❌ Lint failed on staged files after autofix. Fix the remaining errors before committing."
     echo "   (Override only if necessary: ESCAPE_LINT_FIX=1 git commit ... — record reason in commit body.)"

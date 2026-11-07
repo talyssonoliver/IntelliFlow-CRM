@@ -5,6 +5,7 @@ import securityPlugin from 'eslint-plugin-security';
 import sonarjsPlugin from 'eslint-plugin-sonarjs';
 import prettierConfig from 'eslint-config-prettier';
 import { noEagerRequiredProdEnvSelectors } from './eslint-rules/no-eager-required-prod-env.mjs';
+import testQuality, { testQualityWarnings } from './eslint-rules/test-quality.mjs';
 
 // Inject tsconfigRootDir into typescript-eslint parser config.
 // The monorepo has multiple tsconfig.json files (root + apps/project-tracker)
@@ -363,7 +364,10 @@ export default [
         test: 'readonly',
       },
     },
+    // #1216: a test must fail when its behaviour breaks. Warnings first, so they can be counted.
+    plugins: { 'test-quality': testQuality },
     rules: {
+      ...testQualityWarnings,
       // Keep tests flexible.
       '@typescript-eslint/no-explicit-any': 'off',
       // Allow importing from any layer in tests for mocking
