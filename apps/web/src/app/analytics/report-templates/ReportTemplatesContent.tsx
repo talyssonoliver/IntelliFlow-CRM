@@ -221,7 +221,12 @@ export default function ReportTemplatesContent() {
               </p>
             )}
             {!isLoading && !listError && templates.length === 0 && (
-              <EmptyState entity="reports" onCtaClick={openCreate} size="sm" />
+              <EmptyState
+                entity="reports"
+                ctaLabel="New template"
+                onCtaClick={openCreate}
+                size="sm"
+              />
             )}
             {!isLoading && !listError && templates.length > 0 && (
               <div className="divide-y">
