@@ -265,7 +265,8 @@ interface IStripeAdapter {
   }): Promise<StripeResult<StripeSubscription>>;
   /** #1220: the active promotion code with this exact code, or null. */
   findActivePromotionCode(
-    code: string
+    code: string,
+    customerId?: string
   ): Promise<
     StripeResult<{ id: string; customerId: string | null; productIds: string[] | null } | null>
   >;
@@ -307,7 +308,7 @@ async function usablePromotionCodeId(
   const lookupFailed = (message: string) =>
     new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message });
 
-  const promo = await stripe.findActivePromotionCode(code);
+  const promo = await stripe.findActivePromotionCode(code, purchase.customerId);
   if (promo.isFailure) throw lookupFailed(promo.error.message);
   if (!promo.value) throw invalid();
   if (promo.value.customerId && promo.value.customerId !== purchase.customerId) throw invalid();

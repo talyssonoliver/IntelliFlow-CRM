@@ -113,7 +113,10 @@ export interface PaymentServicePort {
   ): Promise<Result<StripeSubscription, DomainError>>;
   getSubscription(subscriptionId: string): Promise<Result<StripeSubscription | null, DomainError>>;
   /** #1220: the active promotion code with this exact code, or null. */
-  findActivePromotionCode(code: string): Promise<Result<ActivePromotionCode | null, DomainError>>;
+  findActivePromotionCode(
+    code: string,
+    customerId?: string
+  ): Promise<Result<ActivePromotionCode | null, DomainError>>;
   /** #1220: the product a price belongs to. */
   getPriceProductId(priceId: string): Promise<Result<string | null, DomainError>>;
   listSubscriptions(customerId: string): Promise<Result<StripeSubscription[], DomainError>>;
@@ -211,8 +214,8 @@ export class StripeAdapter implements PaymentServicePort {
     return createSubscriptionHandler(this.config, params);
   }
 
-  findActivePromotionCode(code: string) {
-    return findActivePromotionCodeHandler(this.config, code);
+  findActivePromotionCode(code: string, customerId?: string) {
+    return findActivePromotionCodeHandler(this.config, code, customerId);
   }
 
   getPriceProductId(priceId: string) {

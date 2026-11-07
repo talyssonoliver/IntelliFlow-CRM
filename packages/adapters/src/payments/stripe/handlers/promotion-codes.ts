@@ -2,10 +2,11 @@
  * Stripe Promotion Code Operations (#1220)
  *
  * Checkout takes the code a customer types. Stripe applies a discount by the promotion
- * code's id, so the typed code is looked up first, among active codes only. Stripe keeps
- * active codes unique, so the exact code matches at most one record. The record says who
- * may use it and which products its coupon covers, so the caller can refuse a code that
- * wouldn't discount this purchase instead of charging full price.
+ * code's id, so the typed code is looked up first, among active codes only. Stripe keeps a
+ * code unique per customer, so one code can exist once for anyone and once for each customer it
+ * is reserved to: the buyer's own record wins, then the unrestricted one. The record says which
+ * products its coupon covers, so the caller can refuse a code that wouldn't discount this
+ * purchase instead of charging full price.
  */
 
 import { Result, DomainError } from '@intelliflow/domain';
@@ -41,19 +42,28 @@ function toActivePromotionCode(
   };
 }
 
-/** The active promotion code with this exact code, or null when there is none. */
+/**
+ * The active promotion code with this exact code that this customer may use: one reserved to
+ * them, else one open to anyone. Null when there is none (only other customers' copies count
+ * as none). Without a customer, only an unrestricted code qualifies.
+ */
 export async function findActivePromotionCode(
   config: StripeConfig,
-  code: string
+  code: string,
+  customerId?: string
 ): Promise<Result<ActivePromotionCode | null, DomainError>> {
   try {
-    const params = new URLSearchParams({ code, active: 'true', limit: '1' });
+    // 100 is Stripe's page maximum; one code has one record per customer it is reserved to.
+    const params = new URLSearchParams({ code, active: 'true', limit: '100' });
     params.append('expand[]', 'data.coupon.applies_to');
     const response = await makeRequest(config, 'GET', `/promotion_codes?${params}`);
     if (response.isFailure) return Result.fail(response.error);
 
-    const data = (response.value as { data?: PromotionCodeRecord[] }).data ?? [];
-    return Result.ok(toActivePromotionCode(data[0]));
+    const records = ((response.value as { data?: PromotionCodeRecord[] }).data ?? [])
+      .map(toActivePromotionCode)
+      .filter((p): p is ActivePromotionCode => p !== null);
+    const own = customerId ? records.find((p) => p.customerId === customerId) : undefined;
+    return Result.ok(own ?? records.find((p) => p.customerId === null) ?? null);
   } catch (error) {
     return Result.fail(
       new StripeConnectionError(error instanceof Error ? error.message : 'Unknown error')

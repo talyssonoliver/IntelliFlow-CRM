@@ -88,7 +88,8 @@ describe('createCheckoutSubscription — promotion code (#1220)', () => {
 
     await checkout('FOUNDING100');
 
-    expect(stripe.findActivePromotionCode).toHaveBeenCalledWith('FOUNDING100');
+    // The buyer is passed in, so a code reserved to them is found among other customers' copies.
+    expect(stripe.findActivePromotionCode).toHaveBeenCalledWith('FOUNDING100', 'cus_1');
     expect(stripe.createSubscription).toHaveBeenCalledWith(
       expect.objectContaining({
         priceId: 'price_pro_monthly',

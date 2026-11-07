@@ -35,7 +35,7 @@ describe('findActivePromotionCode', () => {
     expect(Object.fromEntries(query)).toEqual({
       code: 'FOUNDING100',
       active: 'true',
-      limit: '1',
+      limit: '100',
       'expand[]': 'data.coupon.applies_to',
     });
   });
@@ -53,10 +53,43 @@ describe('findActivePromotionCode', () => {
       })
     );
 
-    expect((await findActivePromotionCode(config, 'VIP')).value).toEqual({
+    expect((await findActivePromotionCode(config, 'VIP', 'cus_9')).value).toEqual({
       id: 'promo_2',
       customerId: 'cus_9',
       productIds: ['prod_pro'],
+    });
+  });
+  describe('when the code exists once per customer', () => {
+    const records = [
+      { id: 'promo_other', customer: 'cus_other' },
+      { id: 'promo_open', customer: null },
+      { id: 'promo_mine', customer: 'cus_1' },
+    ];
+
+    it("picks the buyer's own record first", async () => {
+      mockMakeRequest.mockResolvedValue(Result.ok({ data: records }));
+
+      expect((await findActivePromotionCode(config, 'VIP', 'cus_1')).value?.id).toBe('promo_mine');
+    });
+
+    it('falls back to the record open to anyone', async () => {
+      mockMakeRequest.mockResolvedValue(Result.ok({ data: records }));
+
+      expect((await findActivePromotionCode(config, 'VIP', 'cus_2')).value?.id).toBe('promo_open');
+    });
+
+    it("finds nothing when only other customers' records exist", async () => {
+      mockMakeRequest.mockResolvedValue(
+        Result.ok({ data: [{ id: 'promo_other', customer: 'cus_other' }] })
+      );
+
+      expect((await findActivePromotionCode(config, 'VIP', 'cus_1')).value).toBeNull();
+    });
+
+    it('without a customer, only an unrestricted record qualifies', async () => {
+      mockMakeRequest.mockResolvedValue(Result.ok({ data: [records[0], records[2]] }));
+
+      expect((await findActivePromotionCode(config, 'VIP')).value).toBeNull();
     });
   });
   it('returns null when no active code matches', async () => {
