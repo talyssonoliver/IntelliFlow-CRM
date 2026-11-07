@@ -74,6 +74,7 @@ import { costTracker } from './utils/cost-tracker';
 import { createTenantAiSpendRecorder, createPurposeSpendRecorder } from './utils/tenant-ai-spend';
 import { setPurposeSpendReader } from './lib/purpose-ceiling';
 import { aiConfig, loadAIConfig } from './config/ai.config';
+import { anthropicModelForTier } from './lib/anthropic-config';
 import {
   extractJobContext,
   markAgentActive,
@@ -1347,6 +1348,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     if (aiConfig.provider === 'litellm') return 'litellm-proxy';
     if (aiConfig.provider === 'openai') return aiConfig.openai.model;
     if (aiConfig.provider === 'ollama') return aiConfig.ollama.model;
+    if (aiConfig.provider === 'anthropic') return anthropicModelForTier('free');
     return 'mock';
   }
 
@@ -1359,6 +1361,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       );
     if (aiConfig.provider === 'openai') return aiConfig.openai.baseUrl || 'https://api.openai.com';
     if (aiConfig.provider === 'ollama') return aiConfig.ollama.baseUrl;
+    if (aiConfig.provider === 'anthropic') return 'https://api.anthropic.com';
     return 'mock';
   }
 
@@ -1418,10 +1421,28 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     };
   }
 
+  /**
+   * Claude (AI_PROVIDER=anthropic) is configured through env vars read by llm-factory.ts
+   * (ANTHROPIC_API_KEY, ANTHROPIC_MODEL*). Configuration check only: no API call, so a health
+   * probe never spends.
+   */
+  private getAnthropicProviderHealth(lastCheck: string): ComponentHealth {
+    const hasApiKey = Boolean(process.env['ANTHROPIC_API_KEY']);
+    return {
+      status: hasApiKey ? 'ok' : 'error',
+      latency: 0,
+      lastCheck,
+      message: hasApiKey
+        ? `provider=anthropic, model=${anthropicModelForTier('free')}`
+        : 'ANTHROPIC_API_KEY is missing',
+    };
+  }
+
   private getConfiguredProviderHealth(
     lastCheck: string
   ): Promise<ComponentHealth> | ComponentHealth {
     if (aiConfig.provider === 'mock') return this.getMockProviderHealth(lastCheck);
+    if (aiConfig.provider === 'anthropic') return this.getAnthropicProviderHealth(lastCheck);
     if (aiConfig.provider === 'litellm') return this.getOpenAIProviderHealth(lastCheck); // LiteLLM uses same OpenAI-compat check
     if (aiConfig.provider === 'openai') return this.getOpenAIProviderHealth(lastCheck);
     if (aiConfig.provider === 'openrouter') return this.getOpenRouterProviderHealth(lastCheck);

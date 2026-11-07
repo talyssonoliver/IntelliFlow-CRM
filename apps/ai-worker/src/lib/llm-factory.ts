@@ -10,6 +10,12 @@ import { wrapModelWithTracing, wrapEmbeddingsWithTracing } from '../tracing/llm-
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { GeminiEmbeddings } from './gemini-embeddings.js';
 import { embeddingDimensions } from './embedding-dimensions.js';
+import { AnthropicChatModel } from './anthropic-chat-model.js';
+import {
+  ANTHROPIC_MIN_MAX_TOKENS,
+  anthropicEffort,
+  anthropicModelForTier,
+} from './anthropic-config.js';
 import {
   getCatalogEntry,
   type LLMPurpose as DomainLLMPurpose,
@@ -485,6 +491,8 @@ export function createLLM(
   let model: BaseChatModel;
   // The OpenRouter model id that runs (OpenRouter does not use the LiteLLM aliases).
   let openRouterModel: string | undefined;
+  // The Claude model id that runs on AI_PROVIDER=anthropic.
+  let anthropicModel: string | undefined;
 
   // Offline escape hatch — local Ollama only (no LiteLLM dependency).
   if (provider === 'ollama') {
@@ -507,6 +515,9 @@ export function createLLM(
   } else if (provider === 'openrouter') {
     openRouterModel = openRouterModelName(tier, pinned);
     model = createOpenRouterModel(openRouterModel, pinned, { temperature, maxTokens, timeout });
+  } else if (provider === 'anthropic') {
+    anthropicModel = anthropicModelForTier(tier);
+    model = createAnthropicModel(anthropicModel, pinned, { maxTokens, timeout });
   } else {
     // Primary path — LiteLLM proxy (covers 'litellm' and legacy 'openai' provider values).
     // LITELLM_BASE_URL is set by Phase B0 infra scaffolding; falls back to local dev default.
@@ -540,13 +551,12 @@ export function createLLM(
   // Wrap with OTel tracing so every .invoke() call emits an llm.invoke span. Spend is
   // priced as the model that actually runs: a pin the provider ignores (Ollama, or no
   // OpenRouter mapping) is billed as the tier default, not as the pinned model.
-  const pinApplies =
-    provider !== 'ollama' && (provider !== 'openrouter' || !!pinned?.providers.openrouter);
+  const pinApplies = pinAppliesOn(provider, pinned);
   const instrumented = wrapModelWithTracing(model, {
     purpose,
     tier,
     modelId: pinApplies ? pinned?.id : undefined,
-    pricingKey: runningPricingKey(provider, openRouterModel, pinApplies),
+    pricingKey: anthropicModel ?? runningPricingKey(provider, openRouterModel, pinApplies),
   });
   _factoryCache.set(cacheKey, instrumented);
   return instrumented;
@@ -588,6 +598,31 @@ function createOpenRouterModel(
     },
   });
   return withFunctionCallingDefault(model);
+}
+
+/**
+ * Claude for AI_PROVIDER=anthropic. The model catalog has no Claude ids yet, so a tenant pin
+ * runs as the tier default. No temperature is passed: Claude Haiku 5.5 and Sonnet 5.5 reject
+ * non-default sampling with a 400.
+ */
+function createAnthropicModel(
+  modelName: string,
+  pinned: ModelCatalogEntry | undefined,
+  params: { maxTokens: number; timeout: number }
+): BaseChatModel {
+  if (pinned) warnPin('pin_unavailable_for_provider', pinned.id);
+  return new AnthropicChatModel({
+    model: modelName,
+    maxTokens: Math.max(params.maxTokens, ANTHROPIC_MIN_MAX_TOKENS),
+    timeout: params.timeout,
+    effort: anthropicEffort(),
+  });
+}
+
+/** Whether a tenant's model pin runs on this provider (Ollama and Claude ignore pins). */
+function pinAppliesOn(provider: AIProvider, pinned: ModelCatalogEntry | undefined): boolean {
+  if (provider === 'ollama' || provider === 'anthropic') return false;
+  return provider !== 'openrouter' || !!pinned?.providers.openrouter;
 }
 
 /**

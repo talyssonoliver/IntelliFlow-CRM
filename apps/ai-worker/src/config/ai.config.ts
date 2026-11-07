@@ -6,7 +6,15 @@ import { requiredProdEnv } from '@intelliflow/validators/required-url';
  * Supports both OpenAI (production) and Ollama (local development)
  */
 
-export const AIProviderSchema = z.enum(['litellm', 'openai', 'ollama', 'mock', 'openrouter']);
+export const AIProviderSchema = z.enum([
+  'litellm',
+  'openai',
+  'ollama',
+  'mock',
+  'openrouter',
+  // Claude through the Anthropic SDK (lib/anthropic-chat-model.ts); key from ANTHROPIC_API_KEY.
+  'anthropic',
+]);
 export type AIProvider = z.infer<typeof AIProviderSchema>;
 
 export const AIConfigSchema = z.object({
@@ -273,6 +281,12 @@ export const MODEL_PRICING = {
   'gemini-embedding-001': { input: 0.00015, output: 0 },
   // Production embeddings since 2026-10-31 (EMBEDDING_PROVIDER=openrouter): free on OpenRouter.
   'nvidia/nemotron-3-embed-1b:free': { input: 0, output: 0 },
+
+  // AI_PROVIDER=anthropic (Anthropic first-party API list prices). Claude Haiku 5.5: $0.10 /
+  // $0.50 per M for prompts up to 100K tokens ($0.50 / $2.50 above that; the chains' prompts
+  // are far smaller). Claude Sonnet 5.5: $2 / $10 per M.
+  'claude-haiku-5-5': { input: 0.0001, output: 0.0005 },
+  'claude-sonnet-5-5': { input: 0.002, output: 0.01 },
 } as const;
 
 export type ModelName = keyof typeof MODEL_PRICING;
