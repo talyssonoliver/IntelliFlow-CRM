@@ -127,6 +127,9 @@ const HOT_LEAD_SCORE = 80;
 /** IFC-192: Days threshold for stale contact warnings */
 const STALE_CONTACT_DAYS = 30;
 
+/** Reassurance the AI job used to cache when nothing was flagged; never served again (#1219). */
+const LEGACY_ON_TRACK_TITLE = "You're on track!";
+
 /** Default SLA for optional AI output reviews created from insights */
 const INSIGHT_REVIEW_SLA_HOURS = 24;
 
@@ -571,12 +574,8 @@ async function runHeuristicQueries(
     overdueTasksCount > 0 ||
     staleContacts.length > 0;
 
-  if (hasUserData) {
-    return { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts, now };
-  }
-
-  if (!allowTenantFallback) {
-    return { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts, now };
+  if (hasUserData || !allowTenantFallback) {
+    return { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts, now, scope: 'user' as const };
   }
 
   // Fallback: tenant-scoped (no ownerId filter)
@@ -587,6 +586,7 @@ async function runHeuristicQueries(
     overdueTasksCount: tasksAll,
     staleContacts: contactsAll,
     now,
+    scope: 'tenant' as const,
   };
 }
 
@@ -1087,6 +1087,86 @@ async function buildDealTrendInsight(
   };
 }
 
+/** Whose records the heuristic checks covered, and the reader's time zone for "as of". */
+type ChecksScope = { ownerId: string | undefined; scope: 'user' | 'tenant'; timezone: string };
+
+/** The checks ran on the user's own records unless they fell back to the whole workspace. */
+function checksScopeFor(scope: 'user' | 'tenant', userId: string, timezone: string): ChecksScope {
+  return { ownerId: scope === 'user' ? userId : undefined, scope, timezone };
+}
+
+const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/**
+ * The item shown when no check flagged anything. It names each check, how many records it
+ * looked at, whose records they were and when, so "nothing flagged" can't be read as "all is
+ * well" when there was simply nothing to look at (#1219).
+ */
+async function buildChecksSummary(
+  prisma: Context['prisma'],
+  tenantId: string,
+  checks: ChecksScope,
+  now: Date
+): Promise<InsightResponseItem> {
+  const owner = checks.ownerId ? { ownerId: checks.ownerId } : {};
+  const [deals, leads, tasks, contacts] = await Promise.all([
+    prisma.opportunity.count({
+      where: { tenantId, ...owner, stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } },
+    }),
+    prisma.lead.count({ where: { tenantId, ...owner, status: { notIn: ['CONVERTED', 'LOST'] } } }),
+    prisma.task.count({
+      where: { tenantId, ...owner, status: { notIn: ['COMPLETED', 'CANCELLED'] } },
+    }),
+    prisma.contact.count({
+      where: {
+        tenantId,
+        ...owner,
+        opportunities: { some: { stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } } },
+      },
+    }),
+  ]);
+  const whose = checks.scope === 'user' ? 'your records' : "your workspace's records";
+  const asOf = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: checks.timezone,
+  }).format(now);
+
+  const base = {
+    id: 'checks-summary',
+    type: 'reminder' as const,
+    source: 'heuristic' as const,
+    suggestedAction: null,
+    entityType: null,
+    entityId: null,
+    requiresApproval: false,
+    priority: 'low' as const,
+    createdAt: now,
+  };
+
+  if (deals + leads + tasks + contacts === 0) {
+    return {
+      ...base,
+      title: 'Nothing to check yet',
+      description: `There are no open deals, active leads, open tasks or contacts with open deals in ${whose}, so there was nothing to check (as of ${asOf}).`,
+      suggestedAction: 'Add a lead',
+      actionUrl: '/leads/new',
+    };
+  }
+
+  return {
+    ...base,
+    title: 'Nothing flagged in the latest checks',
+    description:
+      `Checked ${whose} at ${asOf}: ` +
+      `${plural(deals, 'open deal', 'open deals')}, none idle for ${DEAL_RISK_DAYS}+ days; ` +
+      `${plural(leads, 'active lead', 'active leads')}, none scoring ${HOT_LEAD_SCORE}+; ` +
+      `${plural(tasks, 'open task', 'open tasks')}, none overdue; ` +
+      `${plural(contacts, 'contact with an open deal', 'contacts with open deals')}, none silent for ${STALE_CONTACT_DAYS}+ days.`,
+    actionUrl: null,
+  };
+}
+
 /**
  * Build forward-looking smart summaries for the insights panel.
  * These replace threshold alerts in /insights — they are informational,
@@ -1097,7 +1177,8 @@ async function buildSmartSummaries(
   tenantId: string,
   userId: string,
   heuristicData: HeuristicData,
-  now: Date
+  now: Date,
+  checks: ChecksScope
 ): Promise<InsightResponseItem[]> {
   const summaries: InsightResponseItem[] = [];
   const weekAgo = new Date(now.getTime() - 7 * 86400000);
@@ -1161,22 +1242,10 @@ async function buildSmartSummaries(
     summaries.push(...heuristicInsights);
   }
 
-  // 5. Achievement fallback — show when nothing needs attention at all
+  // 5. Nothing flagged: say what was checked, on whose records and when (#1219). An empty result is
+  //    never reported as reassurance, since it can also mean there was nothing to look at.
   if (summaries.length === 0) {
-    summaries.push({
-      id: 'all-good',
-      type: 'achievement',
-      source: 'heuristic',
-      title: "You're on track!",
-      description: 'No urgent items need your attention. Keep up the great work!',
-      suggestedAction: null,
-      entityType: null,
-      entityId: null,
-      actionUrl: null,
-      requiresApproval: false,
-      priority: 'low',
-      createdAt: now,
-    });
+    summaries.push(await buildChecksSummary(prisma, tenantId, checks, now));
   }
 
   return summaries;
@@ -1589,6 +1658,10 @@ export const homeRouter = createTRPCRouter({
         status: { notIn: ['DISMISSED', 'EXPIRED'] },
         expiresAt: { gt: now },
         metadata: { path: ['userId'], equals: userId },
+        // Reassurance the job cached before #1219, whoever wrote it: the heuristic fallback's title, or
+        // an LLM achievement with no entity (achievements are stored as 'prediction').
+        title: { not: LEGACY_ON_TRACK_TITLE },
+        NOT: { type: 'prediction', entityId: null },
       },
       take: 5,
       orderBy: { createdAt: 'desc' },
@@ -1666,7 +1739,8 @@ export const homeRouter = createTRPCRouter({
       tenantId,
       userId,
       { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts },
-      heuristic.now
+      heuristic.now,
+      checksScopeFor(heuristic.scope, userId, userTz)
     );
 
     // Step 3: Fire-and-forget — enqueue AI insight generation for next visit
@@ -2298,6 +2372,10 @@ export const homeRouter = createTRPCRouter({
           status: { notIn: ['DISMISSED', 'EXPIRED'] },
           expiresAt: { gt: now },
           metadata: { path: ['userId'], equals: userId },
+          // Reassurance the job cached before #1219, whoever wrote it: the heuristic fallback's title, or
+          // an LLM achievement with no entity (achievements are stored as 'prediction').
+          title: { not: LEGACY_ON_TRACK_TITLE },
+          NOT: { type: 'prediction', entityId: null },
           ...(typeFilter ? { type: { in: typeFilter } } : {}),
         },
         orderBy: { createdAt: 'desc' },
@@ -2386,7 +2464,8 @@ export const homeRouter = createTRPCRouter({
         tenantId,
         userId,
         { dealsAtRisk, hotLeads, overdueTasksCount, staleContacts },
-        heuristic.now
+        heuristic.now,
+        checksScopeFor(heuristic.scope, userId, safeTimezone(ctx.user?.timezone))
       );
 
       // Apply type filter in-memory

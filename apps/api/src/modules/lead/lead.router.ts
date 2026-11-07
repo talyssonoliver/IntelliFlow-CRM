@@ -56,7 +56,7 @@ import {
   type LeadStatus,
   type LeadSource,
 } from '@intelliflow/domain';
-import { LEAD_SCORE_THRESHOLDS } from '@intelliflow/application';
+import { LEAD_SCORE_THRESHOLDS, LeadScoringFailedError } from '@intelliflow/application';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 
 /**
@@ -443,6 +443,9 @@ type LeadActivityLogType =
   | 'SCORE_UPDATE'
   | 'STATUS_CHANGE'
   | 'QUALIFICATION';
+
+/** Clock skew tolerated on a caller-supplied activity time. */
+const ACTIVITY_CLOCK_SKEW_MS = 60_000;
 
 /**
  * Best-effort system activity logging for lead lifecycle actions.
@@ -1202,9 +1205,28 @@ export const leadRouter = createTRPCRouter({
           throw new TRPCError({ code: 'PRECONDITION_FAILED', message: result.error.message });
         }
 
+        // #1218: the scoring did not produce a score. Say so on the lead, never "Scored by AI";
+        // the previous score and status were kept. The class only, no provider text (NF-002).
+        await writeLeadActivityLog(typedCtx, {
+          leadId: input.leadId,
+          tenantId: typedCtx.tenant.tenantId,
+          type: 'SCORE_UPDATE',
+          title: 'AI scoring failed',
+          description: 'The AI did not produce a usable score. The previous score was kept.',
+          metadata: { scoringStatus: 'FAILED', errorClass: result.error.name },
+          userId: typedCtx.tenant.userId,
+          userName: 'AI Scoring Agent',
+        });
+
         throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: result.error.message,
+          code:
+            result.error instanceof LeadScoringFailedError
+              ? 'UNPROCESSABLE_CONTENT'
+              : 'INTERNAL_SERVER_ERROR',
+          message:
+            result.error instanceof LeadScoringFailedError
+              ? result.error.message
+              : 'AI scoring failed; the previous score was kept',
         });
       }
 
@@ -1870,6 +1892,17 @@ export const leadRouter = createTRPCRouter({
         ]),
         title: z.string().min(1),
         description: z.string().optional(),
+        /**
+         * When the activity really happened (#1223 UI-005). An import of past
+         * emails passes the send date here instead of writing it into the title;
+         * omitted, it is the time of the call. Never more than a minute ahead.
+         */
+        occurredAt: z.coerce
+          .date()
+          .refine((d) => d.getTime() <= Date.now() + ACTIVITY_CLOCK_SKEW_MS, {
+            message: 'occurredAt cannot be in the future',
+          })
+          .optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -1887,6 +1920,7 @@ export const leadRouter = createTRPCRouter({
       }
 
       const now = new Date();
+      const occurredAt = input.occurredAt && input.occurredAt < now ? input.occurredAt : now;
 
       // Transaction: create activity + update lastContactedAt
       const activity = await typedCtx.prismaWithTenant.$transaction(async (tx) => {
@@ -1895,19 +1929,25 @@ export const leadRouter = createTRPCRouter({
             type: input.type,
             title: input.title,
             description: input.description ?? '',
-            timestamp: now,
+            timestamp: occurredAt,
             userName: ctx.user?.email ?? 'Unknown',
             leadId: input.leadId,
             tenantId: typedCtx.tenant.tenantId,
           },
         });
 
-        await tx.lead.update({
-          where: { id: input.leadId, ...createTenantWhereClause(typedCtx.tenant, {}) },
-          data: {
-            lastContactedAt: now,
-            updatedAt: now,
+        const leadWhere = { id: input.leadId, ...createTenantWhereClause(typedCtx.tenant, {}) };
+        await tx.lead.update({ where: leadWhere, data: { updatedAt: now } });
+        // A back-dated activity must never move lastContactedAt backwards, even
+        // when another activity commits in between: compare in the UPDATE itself
+        // (Postgres re-checks the WHERE on the latest row version), not against
+        // the value read before the transaction.
+        await tx.lead.updateMany({
+          where: {
+            ...leadWhere,
+            OR: [{ lastContactedAt: null }, { lastContactedAt: { lt: occurredAt } }],
           },
+          data: { lastContactedAt: occurredAt },
         });
 
         return created;

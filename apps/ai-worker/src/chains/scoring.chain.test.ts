@@ -228,6 +228,16 @@ describe('LeadScoringChain', () => {
     });
   });
 
+  describe('DEFAULT_PROMPT', () => {
+    // #1218: the prompt never said what confidence was, and the free model answered 0.
+    it('defines confidence and asks for at least one factor', () => {
+      const prompt = LeadScoringChain.DEFAULT_PROMPT;
+      expect(prompt).toMatch(/Confidence is how sure you are that the score is right/);
+      expect(prompt).toMatch(/Never answer confidence 0/);
+      expect(prompt).toMatch(/at least one factor/);
+    });
+  });
+
   describe('formatLeadInfo', () => {
     it('should format complete lead information', () => {
       const lead: LeadInput = {
