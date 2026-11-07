@@ -64,6 +64,14 @@ function signPayload(payload: Record<string, unknown>, secret: string = TEST_SEC
   return computeInboundEmailWebhookSignature(payload as never, secret);
 }
 
+/** The connected mailbox the test mail is addressed to. */
+const INBOX_MAILBOX = {
+  id: 'mb-inbox',
+  tenantId: 'tenant-inbox',
+  kind: 'GMAIL',
+  accountAddress: 'inbox@intelliflow.com',
+};
+
 const basePayload = {
   from: 'sender@example.com',
   to: 'inbox@intelliflow.com',
@@ -139,7 +147,7 @@ describe('Inbound Email Webhook — SEC-004 HMAC signature verification', () => 
   });
 
   it('accepts a correctly signed request and reaches the persistence path', async () => {
-    (prismaMock.user.findMany as any).mockResolvedValue([]);
+    (prismaMock.emailMailbox.findMany as any).mockResolvedValue([INBOX_MAILBOX]);
     (prismaMock.emailRecord.create as any).mockResolvedValue({
       id: 'sec-004-persisted-email',
     });
@@ -155,7 +163,7 @@ describe('Inbound Email Webhook — SEC-004 HMAC signature verification', () => 
   });
 
   it('signature is order-independent (canonical serialization), not raw-JSON-string dependent', async () => {
-    (prismaMock.user.findMany as any).mockResolvedValue([]);
+    (prismaMock.emailMailbox.findMany as any).mockResolvedValue([INBOX_MAILBOX]);
     (prismaMock.emailRecord.create as any).mockResolvedValue({
       id: 'sec-004-persisted-email-2',
     });
@@ -177,5 +185,81 @@ describe('Inbound Email Webhook — SEC-004 HMAC signature verification', () => 
 
     expect(result.success).toBe(true);
     expect(prismaMock.emailRecord.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('stores signed mail in the tenant and mailbox it was sent to', async () => {
+    (prismaMock.emailMailbox.findMany as any).mockResolvedValue([INBOX_MAILBOX]);
+    (prismaMock.emailRecord.create as any).mockResolvedValue({ id: 'routed-email' });
+    const caller = callerWithHeaders({ 'x-inbound-email-signature': signPayload(basePayload) });
+
+    const result = await caller.webhook(basePayload);
+
+    expect(result).toEqual({ success: true, emailId: 'routed-email', stored: true });
+    const data = (prismaMock.emailRecord.create as any).mock.calls[0][0].data;
+    expect(data.tenantId).toBe('tenant-inbox');
+    expect(data.mailboxId).toBe('mb-inbox');
+  });
+
+  it.each([
+    ['no mailbox has the address', []],
+    [
+      'the address is connected in two tenants',
+      [INBOX_MAILBOX, { ...INBOX_MAILBOX, id: 'mb-other', tenantId: 'tenant-other' }],
+    ],
+  ])('acknowledges but stores nothing when %s', async (_label, rows) => {
+    (prismaMock.emailMailbox.findMany as any).mockResolvedValue(rows);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const caller = callerWithHeaders({ 'x-inbound-email-signature': signPayload(basePayload) });
+
+    const result = await caller.webhook(basePayload);
+
+    expect(result).toEqual({ success: true, emailId: 'sec-004-parsed-email', stored: false });
+    expect(prismaMock.emailRecord.create).not.toHaveBeenCalled();
+    expect(prismaMock.emailAttachment.createMany).not.toHaveBeenCalled();
+    // The log says why, never who: no recipient address in it.
+    expect(JSON.stringify(warn.mock.calls)).not.toContain('inbox@intelliflow.com');
+    warn.mockRestore();
+  });
+
+  it('routes by the signed delivery envelope, so a Bcc recipient is found', async () => {
+    const bccMailbox = { ...INBOX_MAILBOX, id: 'mb-bcc', accountAddress: 'hidden@intelliflow.com' };
+    (prismaMock.emailMailbox.findMany as any).mockResolvedValue([bccMailbox]);
+    (prismaMock.emailRecord.create as any).mockResolvedValue({ id: 'bcc-email' });
+    const payload = {
+      ...basePayload,
+      envelope: JSON.stringify({ to: ['hidden@intelliflow.com'] }),
+    };
+    const caller = callerWithHeaders({ 'x-inbound-email-signature': signPayload(payload) });
+
+    const result = await caller.webhook(payload);
+
+    expect(result).toEqual({ success: true, emailId: 'bcc-email', stored: true });
+    const where = (prismaMock.emailMailbox.findMany as any).mock.calls[0][0].where;
+    expect(where.accountAddress.in).toEqual(['hidden@intelliflow.com']);
+    expect((prismaMock.emailRecord.create as any).mock.calls[0][0].data.mailboxId).toBe('mb-bcc');
+  });
+
+  it('fails the call when the insert fails, instead of reporting the mail as stored', async () => {
+    (prismaMock.emailMailbox.findMany as any).mockResolvedValue([INBOX_MAILBOX]);
+    (prismaMock.emailRecord.create as any).mockRejectedValue(new Error('insert failed'));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const caller = callerWithHeaders({ 'x-inbound-email-signature': signPayload(basePayload) });
+
+    await expect(caller.webhook(basePayload)).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+    expect(prismaMock.emailAttachment.createMany).not.toHaveBeenCalled();
+    error.mockRestore();
+  });
+  it('fails the call when the mailbox lookup fails, so the provider retries', async () => {
+    (prismaMock.emailMailbox.findMany as any).mockRejectedValue(new Error('db down'));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const caller = callerWithHeaders({ 'x-inbound-email-signature': signPayload(basePayload) });
+
+    await expect(caller.webhook(basePayload)).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+    expect(prismaMock.emailRecord.create).not.toHaveBeenCalled();
+    error.mockRestore();
   });
 });
