@@ -85,9 +85,14 @@ function failsClosed(provider: AIProvider): boolean {
   return provider === 'anthropic';
 }
 
-/** A model the price map bills nothing for (a `:free` OpenRouter model, local Ollama). */
-function isFreeModel(pricingKey: string): boolean {
-  return calculateCost(pricingKey, 1_000_000, 1_000_000) === 0;
+/**
+ * A model that cannot bill: an OpenRouter `:free` id (the factory sends only `:free` fallbacks
+ * with it) or local Ollama. A LiteLLM alias priced at $0 (`reasoning-free`) is not exempt: the
+ * gateway can fall back from it to a paid model.
+ */
+function isGuaranteedFree(pricingKey: string): boolean {
+  const key = pricingKey.trim().toLowerCase();
+  return key.endsWith(':free') || key === 'ollama';
 }
 
 /**
@@ -99,7 +104,7 @@ export async function assertWithinMonthlyBudget(
   provider: AIProvider,
   now: Date = new Date()
 ): Promise<void> {
-  if (isFreeModel(pricingKey)) return;
+  if (isGuaranteedFree(pricingKey)) return;
   const budgetUsd = monthlyBudgetUsd();
   const key = monthlyBudgetKey(now);
   // Spend this process paid for but could not write yet. While it cannot be written, the shared

@@ -115,6 +115,15 @@ describe('monthly AI budget', () => {
     expect(store.values.get(monthlyBudgetKey(NOV))).toBe(2_000_000);
   });
 
+  it('still refuses a $0 LiteLLM alias, which the gateway can route to a paid model', async () => {
+    vi.stubEnv('AI_MONTHLY_BUDGET_USD', '1');
+    await spendUsd(1);
+    await expect(
+      assertWithinMonthlyBudget('reasoning-free', 'litellm', NOV)
+    ).rejects.toBeInstanceOf(MonthlyBudgetExceededError);
+    await expect(assertWithinMonthlyBudget('ollama', 'ollama', NOV)).resolves.toBeUndefined();
+  });
+
   it('warns once at 50% and once at 80%', async () => {
     vi.stubEnv('AI_MONTHLY_BUDGET_USD', '10');
     await spendUsd(4);
