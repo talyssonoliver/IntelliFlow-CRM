@@ -26,7 +26,8 @@ const HELP_CENTER_HREF = '/help-center';
 // Public routes that should not show the authenticated navigation
 // The sign-in screens: no app bar, matching the public layout's
 // AUTH_PAGES_NO_CHROME, so AuthBackground can fill the whole screen.
-const PUBLIC_ROUTES = [
+/** Pages that show no signed-in chrome (header, footer), even to a signed-in user. */
+export const PUBLIC_ROUTES = [
   '/login',
   '/signup',
   '/forgot-password',
