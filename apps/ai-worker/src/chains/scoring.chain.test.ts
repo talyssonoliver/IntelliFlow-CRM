@@ -334,6 +334,60 @@ describe('LeadScoringChain', () => {
       expect(result.score).toBeGreaterThanOrEqual(0);
     });
 
+    describe('the prompt the model receives carries the lead and its engagement history', () => {
+      const ENGAGEMENT =
+        'Engagement: 1 emails sent to the lead, 1 replies from the lead\n' +
+        '- 2026-11-05 EMAIL inbound: Reply received: what is the price?';
+      const lead: LeadInput = {
+        email: 'buyer@acme.example.invalid',
+        company: 'Acme',
+        source: 'WEBSITE',
+        activity: ENGAGEMENT,
+      };
+
+      async function promptSentToModel(versionedPrompt: string | null): Promise<string> {
+        const { getVersionLoader } = await import('../versioning/chain-version-loader');
+        const { createLLMForTenant } = await import('../lib/llm-factory.js');
+        if (versionedPrompt !== null) {
+          vi.mocked(getVersionLoader).mockReturnValueOnce({
+            getChainConfig: vi.fn().mockResolvedValue({ prompt: versionedPrompt }),
+          } as any);
+        }
+        const invoke = vi.fn().mockResolvedValue(PARSED_SCORING_RESPONSE);
+        vi.mocked(createLLMForTenant).mockResolvedValueOnce({
+          withStructuredOutput: vi.fn(() => ({ invoke })),
+        } as any);
+        await new LeadScoringChain({ tenantId: 'tenant-prompt' }).scoreLead(lead);
+        expect(invoke).toHaveBeenCalledTimes(1);
+        return invoke.mock.calls[0]![0] as string;
+      }
+
+      it('default prompt (no active version)', async () => {
+        const prompt = await promptSentToModel(null);
+        expect(prompt).toContain('Lead Information:');
+        expect(prompt).toContain('Company: Acme');
+        expect(prompt).toContain(ENGAGEMENT);
+      });
+
+      it('versioned prompt with no {lead_info} placeholder (the generated SCORING manifest)', async () => {
+        const prompt = await promptSentToModel(
+          'You are an expert B2B lead scoring assistant. Be objective and data-driven in your analysis.'
+        );
+        expect(prompt.startsWith('You are an expert B2B lead scoring assistant.')).toBe(true);
+        expect(prompt).toContain('Lead Information:');
+        expect(prompt).toContain('Company: Acme');
+        expect(prompt).toContain(ENGAGEMENT);
+        expect(prompt).toContain('Never answer confidence 0');
+      });
+
+      it('versioned prompt that places {lead_info} itself is used as written', async () => {
+        const prompt = await promptSentToModel('Score this lead.\n{lead_info}\nAnswer in JSON.');
+        expect(prompt).toContain(ENGAGEMENT);
+        expect(prompt.endsWith('Answer in JSON.')).toBe(true);
+        expect(prompt).not.toContain('Lead Information:');
+      });
+    });
+
     it('falls back to default prompt when VersionLoader throws', async () => {
       // Already mocked to throw — just verify graceful fallback
       const chain = new LeadScoringChain({ tenantId: 'tenant-throw' });

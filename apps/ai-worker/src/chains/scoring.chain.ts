@@ -270,6 +270,22 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
     });
   }
 
+  /** The part of DEFAULT_PROMPT that hands the model the lead and says how to answer. */
+  static readonly LEAD_INFORMATION_SECTION = LeadScoringChain.DEFAULT_PROMPT.slice(
+    LeadScoringChain.DEFAULT_PROMPT.indexOf('Lead Information:')
+  );
+
+  /**
+   * A tenant-versioned prompt replaces DEFAULT_PROMPT, and some versions (the generated SCORING
+   * manifest among them) have no {lead_info} placeholder, so the model was sent instructions
+   * with no lead fields and no engagement history at all. Append the lead section when it is
+   * missing; a version that places {lead_info} itself is used as written.
+   */
+  static withLeadInformation(template: string): string {
+    if (template.includes('{lead_info}')) return template;
+    return `${template.trimEnd()}\n\n${LeadScoringChain.LEAD_INFORMATION_SECTION}`;
+  }
+
   /**
    * Resolve the tenant-versioned prompt override (if any).
    * Falls back silently to the default prompt when no active version exists.
@@ -330,7 +346,10 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
       // Resolve tenant-versioned prompt if tenantId is available; fall back to default
       const versionedPromptText = await this.resolveVersionedPrompt();
       const activePrompt = versionedPromptText
-        ? new PromptTemplate({ template: versionedPromptText, inputVariables: ['lead_info'] })
+        ? new PromptTemplate({
+            template: LeadScoringChain.withLeadInformation(versionedPromptText),
+            inputVariables: ['lead_info'],
+          })
         : this.prompt;
 
       // Generate the prompt
