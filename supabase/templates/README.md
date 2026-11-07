@@ -14,7 +14,7 @@ theme, `#137fec` accent, `INTELLIFLOW` gradient wordmark — same palette as
 
 | File                    | GoTrue template     | Action var                             |
 | ----------------------- | ------------------- | -------------------------------------- |
-| `confirmation.html`     | signup confirmation | `{{ .ConfirmationURL }}`               |
+| `confirmation.html`     | signup confirmation | `{{ .SiteURL }}` + `{{ .TokenHash }}`  |
 | `invite.html`           | invite              | `{{ .ConfirmationURL }}`               |
 | `magic_link.html`       | magic link sign-in  | `{{ .ConfirmationURL }}`               |
 | `recovery.html`         | password recovery   | `{{ .ConfirmationURL }}`               |
@@ -38,6 +38,12 @@ preserves GoTrue's variables.
 | `notification_mfa_unenrolled.html`    | MFA factor unenrolled | `{{ .FactorType }}` `{{ .Email }}`              |
 | `notification_identity_linked.html`   | identity linked       | `{{ .Provider }}` `{{ .Email }}`                |
 | `notification_identity_unlinked.html` | identity unlinked     | `{{ .Provider }}` `{{ .Email }}`                |
+
+The signup confirmation links to the app's own `/verify-email/callback` page
+with the token hash, not to `{{ .ConfirmationURL }}`. That page confirms the
+address, says so, and offers a new link when the old one has expired. A plain
+confirmation URL instead lands on the site root with no message.
+`{{ .SiteURL }}` must be the app's address in the project's auth settings.
 
 All templates have a hidden preheader for inbox preview text. Edit the HTML
 directly — these files are the source of truth.

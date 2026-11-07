@@ -455,6 +455,13 @@ export type VerifyEmailInput = z.infer<typeof verifyEmailSchema>;
  * Used when verifying email from Supabase callback URL with token_hash and type params.
  * IMPLEMENTS: IFC-120 (Email verification via Supabase native flow)
  */
+/**
+ * What sign-in says when the password is right but the email isn't confirmed yet.
+ * The login page matches it to offer a new link.
+ */
+export const EMAIL_NOT_CONFIRMED_MESSAGE =
+  'Confirm your email address first. Check your inbox for the link, or ask for a new one.';
+
 export const verifyEmailCallbackSchema = z.object({
   token_hash: z.string().min(6, 'Invalid verification token'),
   type: z.enum(['email', 'signup']),
