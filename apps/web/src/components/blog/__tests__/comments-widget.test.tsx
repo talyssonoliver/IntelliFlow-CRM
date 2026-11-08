@@ -212,6 +212,38 @@ describe('CommentsWidget', () => {
       // Sample comments have like counts
       expect(screen.getByText('12')).toBeInTheDocument(); // Alex Thompson's like count
     });
+
+    // Were asserted on a copy of toggleLikeOnComment in comments-widget.b11.test.ts (#1216).
+    describe('liking', () => {
+      /** The like buttons in page order: comment 1 (12), its reply 1-1 (5), comment 2 (8). */
+      const likeButtons = () =>
+        screen.getAllByRole('button').filter((b) => b.textContent?.includes('thumb_up'));
+      const counts = () => likeButtons().map((b) => b.textContent?.replace(/\D/g, ''));
+
+      it('likes a comment, and unlikes it on a second click', async () => {
+        const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+        render(<CommentsWidget postSlug="test-post" />);
+        expect(counts()).toEqual(['12', '5', '8']);
+
+        await user.click(likeButtons()[0]);
+        expect(counts()).toEqual(['13', '5', '8']);
+        expect(likeButtons()[0].textContent).toContain('thumb_up');
+        expect(likeButtons()[0].textContent).not.toContain('thumb_up_off_alt');
+
+        await user.click(likeButtons()[0]);
+        expect(counts()).toEqual(['12', '5', '8']);
+      });
+
+      it('likes a reply without touching its parent or other comments', async () => {
+        const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+        render(<CommentsWidget postSlug="test-post" />);
+
+        await user.click(likeButtons()[1]);
+        expect(counts()).toEqual(['12', '6', '8']);
+        await user.click(likeButtons()[1]);
+        expect(counts()).toEqual(['12', '5', '8']);
+      });
+    });
   });
 
   describe('Reply Functionality', () => {
@@ -344,7 +376,7 @@ describe('CommentsWidget', () => {
       render(<CommentsWidget postSlug="test-post" />);
 
       // en-GB locale: dates render as "29 Dec 2025" (day-first, no comma).
-      const datePattern = /\d+ [A-Z][a-z]+ \d{4}/;
+      const datePattern = /\d{1,2} [A-Z][a-z]{2,8} \d{4}/; // bounded (sonarjs/slow-regex)
       const dates = screen.getAllByText(datePattern).filter((el) => el.textContent);
 
       expect(dates.length).toBeGreaterThan(0);

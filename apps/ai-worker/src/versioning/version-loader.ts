@@ -147,6 +147,15 @@ Key considerations:
   },
 };
 
+/**
+ * True when `prompt` is this loader's built-in fallback for `chainType`, not a stored version.
+ * Chains that treat the loader's prompt as a tenant override use it to keep their own behaviour
+ * when no version is stored.
+ */
+export function isFallbackPrompt(chainType: ChainType, prompt: string | null | undefined): boolean {
+  return prompt != null && prompt === DEFAULT_CONFIGS[chainType]?.prompt;
+}
+
 // =============================================================================
 // Version Loader
 // =============================================================================

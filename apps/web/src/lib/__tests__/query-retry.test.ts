@@ -18,6 +18,18 @@ describe('isAuthError', () => {
     expect(isAuthError(null)).toBe(false);
     expect(isAuthError('boom')).toBe(false);
   });
+
+  // Were asserted on a copy in app/__tests__/providers.test.ts (#1216).
+  it('matches the message case-insensitively and ignores non-objects', () => {
+    expect(isAuthError({ message: 'User is UNAUTHORIZED' })).toBe(true);
+    expect(isAuthError({ data: { code: 'UNAUTHORIZED' }, message: '' })).toBe(true);
+    expect(isAuthError({ data: { code: 'NOT_FOUND' } })).toBe(false);
+    expect(isAuthError({ message: 'Something went wrong' })).toBe(false);
+    expect(isAuthError({})).toBe(false);
+    expect(isAuthError(undefined)).toBe(false);
+    expect(isAuthError(42)).toBe(false);
+    expect(isAuthError(true)).toBe(false);
+  });
 });
 
 describe('shouldRetryQuery', () => {
