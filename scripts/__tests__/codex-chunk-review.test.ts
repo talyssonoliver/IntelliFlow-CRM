@@ -9,8 +9,11 @@ import {
   failureArtifact,
   isStaleReviewArtifact,
   listChangedFiles,
+  makeCodexRunner,
   reviewChunks,
   reviewWithFallback,
+  runChunkedReview,
+  scopeChanges,
 } from '../lib/codex-chunk-review.mjs';
 import { DiffInputError } from '../lib/codex-diff.mjs';
 
@@ -214,6 +217,168 @@ describe('what the chunks add up to', () => {
     const o = chunkOutcome(2, [1, 2]);
     expect(o.kind).toBe('skip');
     expect(o.message).toMatch(/^SKIPPED_PRECONDITION/);
+  });
+});
+
+describe('scoping the change', () => {
+  it('splits changed files into the review scope', () => {
+    const spawn = (_c: string, args: string[]) =>
+      args.includes('--cached')
+        ? { status: 0, stdout: '' }
+        : { status: 0, stdout: 'apps/a.ts\ndocs/b.md\n' };
+    expect(scopeChanges('main', spawn, (f: string) => f.startsWith('apps/'))).toEqual({
+      changed: ['apps/a.ts', 'docs/b.md'],
+      scoped: ['apps/a.ts'],
+    });
+  });
+
+  it('returns a FAIL message when the base does not resolve', () => {
+    const r = scopeChanges(
+      'nope',
+      () => ({ status: 128, stderr: 'unknown revision' }),
+      () => true
+    );
+    expect(r.message).toMatch(/^DIFF_INPUT_ERROR \(base-unresolved\).*unknown revision/);
+  });
+});
+
+describe('the codex runner', () => {
+  const fakeFs = (lastMessage: string | null) => ({
+    rmSync: vi.fn(),
+    existsSync: () => lastMessage !== null,
+    readFileSync: () => lastMessage,
+  });
+
+  it('clears the last message first, then reads codex answer from it', () => {
+    const fs = fakeFs('{"findings":[]}');
+    const runCodexReviewer = vi.fn(() => ({ status: 0, stdout: 'ignored', stderr: '' }));
+    const log = quietLog();
+    const run = makeCodexRunner({
+      lastMsgPath: '/out/last.txt',
+      repoRoot: '/repo',
+      fs,
+      runCodexReviewer,
+      spawn: 'SPAWN',
+      verbose: true,
+      log,
+    });
+    expect(run('PROMPT')).toEqual({ raw: '{"findings":[]}', status: 0, stderr: '' });
+    expect(fs.rmSync).toHaveBeenCalledWith('/out/last.txt', { force: true });
+    expect(runCodexReviewer).toHaveBeenCalledWith('PROMPT', '/out/last.txt', '/repo', 'SPAWN');
+    expect(log.err).toHaveBeenCalledWith(expect.stringContaining('--- codex stdout ---'));
+  });
+
+  it('falls back to stdout, then stderr, when codex wrote no last message', () => {
+    const base = {
+      lastMsgPath: '/l',
+      repoRoot: '/r',
+      spawn: null,
+      verbose: false,
+      log: quietLog(),
+    };
+    const fromStdout = makeCodexRunner({
+      ...base,
+      fs: fakeFs(null),
+      runCodexReviewer: () => ({ status: 1, stdout: 'out', stderr: 'err' }),
+    });
+    expect(fromStdout('P').raw).toBe('out');
+    const fromStderr = makeCodexRunner({
+      ...base,
+      fs: fakeFs(null),
+      runCodexReviewer: () => ({ status: 1, stdout: '', stderr: 'cap reached' }),
+    });
+    expect(fromStderr('P').raw).toBe('cap reached');
+    const nothing = makeCodexRunner({
+      ...base,
+      fs: fakeFs(null),
+      runCodexReviewer: () => ({ status: null }),
+    });
+    expect(nothing('P').raw).toBe('');
+  });
+});
+
+describe('the whole chunked review', () => {
+  const diffFor = (files: string[]) =>
+    files
+      .map(
+        (f) =>
+          `diff --git a/${f} b/${f}\n--- a/${f}\n+++ b/${f}\n@@ -1 +1 @@\n-a\n+${'x'.repeat(30_000)}\n`
+      )
+      .join('');
+  const gitSpawn = (_c: string, args: string[]) =>
+    args.includes('--cached')
+      ? { status: 0, stdout: '' }
+      : { status: 0, stdout: diffFor(args.slice(args.indexOf('--') + 1)) };
+  const base = {
+    baseRef: 'origin/main',
+    repoRoot: '/repo',
+    spawn: gitSpawn,
+    buildPrompt: (files: string[], part: string) => `${files.join(',')}${part}`,
+    write: () => undefined,
+    log: quietLog(),
+  };
+
+  it('reviews a diff over the cap in several chunks and reports them', () => {
+    const clearStale = vi.fn();
+    const prompts: string[] = [];
+    const r = runChunkedReview({
+      ...base,
+      scopedFiles: ['a.ts', 'b.ts', 'c.ts'],
+      clearStale,
+      review: (p: string) => {
+        prompts.push(p);
+        return {
+          parsed: { findings: [finding(p.split(/[ ,]/)[0])] },
+          reviewer: 'claude',
+          raw: '{}',
+        };
+      },
+    });
+    expect(r).toMatchObject({ kind: 'reviewed', reviewerUsed: 'claude', chunkCount: 3 });
+    expect(prompts).toEqual(['a.ts (part 1 of 3)', 'b.ts (part 2 of 3)', 'c.ts (part 3 of 3)']);
+    expect(r.findings).toHaveLength(3);
+    expect(clearStale).toHaveBeenCalledTimes(1);
+  });
+
+  it('fails when one chunk got no review', () => {
+    let n = 0;
+    const r = runChunkedReview({
+      ...base,
+      scopedFiles: ['a.ts', 'b.ts'],
+      clearStale: () => undefined,
+      review: () => {
+        n += 1;
+        return n === 1
+          ? { parsed: { findings: [] }, reviewer: 'codex', raw: '{}' }
+          : { parsed: null, reviewer: null, raw: '' };
+      },
+    });
+    expect(r.kind).toBe('fail');
+    expect(r.message).toMatch(/^INCOMPLETE_REVIEW: chunk\(s\) 2 of 2/);
+  });
+
+  it('skips only when no chunk got any review', () => {
+    const r = runChunkedReview({
+      ...base,
+      scopedFiles: ['a.ts'],
+      clearStale: () => undefined,
+      review: () => ({ parsed: null, reviewer: null, raw: '' }),
+    });
+    expect(r.kind).toBe('skip');
+  });
+
+  it('fails before any review when git returns no diff', () => {
+    const review = vi.fn();
+    const r = runChunkedReview({
+      ...base,
+      spawn: () => ({ status: 0, stdout: '' }),
+      scopedFiles: ['a.ts'],
+      clearStale: () => undefined,
+      review,
+    });
+    expect(r).toMatchObject({ kind: 'fail', chunkCount: 0, findings: [] });
+    expect(r.message).toMatch(/^DIFF_INPUT_ERROR \(empty-diff\)/);
+    expect(review).not.toHaveBeenCalled();
   });
 });
 

@@ -3,7 +3,7 @@
  * the changed-file list, one review per diff chunk with the Claude fallback, and the verdict.
  * The rule it enforces (#1274): a diff that was not reviewed whole is never a PASS.
  */
-import { DiffInputError } from './codex-diff.mjs';
+import { chunkSections, collectScopedDiff, DiffInputError } from './codex-diff.mjs';
 
 const lines = (text) =>
   text
@@ -144,3 +144,85 @@ export function failureArtifact({ baseRef, scopedFiles, findings = [], message }
 
 /** Artifacts a previous run left that this run rewrites: codex-prompt*.txt and codex-raw*.txt. */
 export const isStaleReviewArtifact = (name) => /^codex-(prompt|raw)(-\d+)?\.txt$/.test(name);
+
+/**
+ * The changed files and those in review scope, or `{ message }` when the base does not resolve.
+ */
+export function scopeChanges(base, spawn, isInScope) {
+  try {
+    const changed = listChangedFiles(base, spawn);
+    return { changed, scoped: changed.filter(isInScope) };
+  } catch (err) {
+    return { message: diffInputMessage(err) };
+  }
+}
+
+/**
+ * One codex run. The previous run's last message is removed first: when codex exits without
+ * writing one (quota cap, crash), a stale file would replay old findings as this run's verdict.
+ */
+export function makeCodexRunner({
+  lastMsgPath,
+  repoRoot,
+  fs,
+  runCodexReviewer,
+  spawn,
+  verbose,
+  log,
+}) {
+  return (prompt) => {
+    fs.rmSync(lastMsgPath, { force: true });
+    const r = runCodexReviewer(prompt, lastMsgPath, repoRoot, spawn);
+    if (verbose) {
+      log.err(`--- codex stdout ---\n${r.stdout || ''}\n`);
+      log.err(`--- codex stderr ---\n${r.stderr || ''}\n`);
+    }
+    const raw =
+      (fs.existsSync(lastMsgPath) && fs.readFileSync(lastMsgPath, 'utf8')) ||
+      r.stdout ||
+      r.stderr ||
+      '';
+    return { raw, status: r.status, stderr: r.stderr };
+  };
+}
+
+/**
+ * Everything after the scope is known: collect the whole diff, split it, review each chunk and
+ * add it up. Returns { kind: 'reviewed' | 'skip' | 'fail', message?, findings, reviewerUsed,
+ * chunkCount }. A diff that cannot be collected whole, or a partly reviewed one, is 'fail'.
+ */
+export function runChunkedReview({
+  baseRef,
+  scopedFiles,
+  repoRoot,
+  spawn,
+  buildPrompt,
+  review,
+  write,
+  clearStale,
+  log,
+}) {
+  let chunks;
+  try {
+    chunks = chunkSections(collectScopedDiff({ baseRef, files: scopedFiles, repoRoot, spawn }));
+  } catch (err) {
+    return { kind: 'fail', message: diffInputMessage(err), findings: [], chunkCount: 0 };
+  }
+  const chars = chunks.reduce((n, c) => n + c.text.length, 0);
+  log.out(`[codex-review] diff     : ${chars} characters in ${chunks.length} chunk(s)\n`);
+  clearStale();
+  const { findings, reviewers, unreviewed } = reviewChunks(chunks, {
+    buildPrompt,
+    review,
+    write,
+    log,
+  });
+  const outcome = chunkOutcome(chunks.length, unreviewed);
+  return {
+    kind: outcome.kind === 'incomplete' ? 'fail' : outcome.kind,
+    message: outcome.message,
+    findings,
+    reviewerUsed: reviewers.join('+'),
+    chunkCount: chunks.length,
+  };
+}
