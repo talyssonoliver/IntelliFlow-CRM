@@ -14,34 +14,43 @@ import {
   validatePassword,
 } from '../registration-form';
 
+/**
+ * A password-shaped fixture built at runtime from what it must contain, so no literal that a
+ * secret scanner reads as a password sits in source.
+ */
+function sample(spec: { length: number; upper?: boolean; digit?: boolean; symbol?: boolean }) {
+  const parts = [spec.upper ? 'X' : '', spec.digit ? '7' : '', spec.symbol ? '#' : ''].join('');
+  return parts + 'q'.repeat(Math.max(0, spec.length - parts.length));
+}
+
 describe('calculatePasswordStrength', () => {
   it.each([
-    ['ab', 'weak', 2],
-    ['abcdefg', 'weak', 1],
-    ['Abcdefgh', 'fair', 3], // pragma: allowlist secret
-    ['Abcdefg1', 'good', 4], // pragma: allowlist secret
-    ['Abcdefghijk1', 'good', 5], // pragma: allowlist secret
-    ['Abcdefghijk1!', 'strong', 6], // pragma: allowlist secret
-  ])('scores %j as %s', (password, strength, maxScore) => {
-    const result = calculatePasswordStrength(password);
+    [{ length: 2 }, 'weak', 1],
+    [{ length: 7 }, 'weak', 1],
+    [{ length: 8, upper: true }, 'fair', 3],
+    [{ length: 8, upper: true, digit: true }, 'good', 4],
+    [{ length: 12, upper: true, digit: true }, 'good', 5],
+    [{ length: 12, upper: true, digit: true, symbol: true }, 'strong', 6],
+  ])('scores %j as %s', (spec, strength, score) => {
+    const result = calculatePasswordStrength(sample(spec));
     expect(result.strength).toBe(strength);
-    expect(result.score).toBeLessThanOrEqual(maxScore);
-    if (strength !== 'weak') expect(result.score).toBe(maxScore);
+    expect(result.score).toBe(score);
   });
 
   it('lists what is missing, and nothing for a strong password', () => {
-    expect(calculatePasswordStrength('abc').feedback).toEqual([
+    expect(calculatePasswordStrength(sample({ length: 3 })).feedback).toEqual([
       'At least 8 characters',
       'Uppercase letter',
       'Number',
       'Special character',
     ]);
-    expect(calculatePasswordStrength('Abcdefghijk1!').feedback).toEqual([]); // pragma: allowlist secret
+    const strong = sample({ length: 12, upper: true, digit: true, symbol: true });
+    expect(calculatePasswordStrength(strong).feedback).toEqual([]);
   });
 
   it('gives the 12-character bonus point without a feedback line', () => {
-    const eleven = calculatePasswordStrength('Abcdefghij1'); // pragma: allowlist secret
-    const twelve = calculatePasswordStrength('Abcdefghijk1'); // pragma: allowlist secret
+    const eleven = calculatePasswordStrength(sample({ length: 11, upper: true, digit: true }));
+    const twelve = calculatePasswordStrength(sample({ length: 12, upper: true, digit: true }));
     expect(twelve.score).toBe(eleven.score + 1);
     expect(twelve.feedback).toEqual(eleven.feedback);
   });
@@ -68,14 +77,16 @@ describe('field validators', () => {
   it('password: required, at least 8 characters', () => {
     expect(validatePassword('')).toBe('Password is required');
     expect(validatePassword(false)).toBe('Password is required');
-    expect(validatePassword('abcdefg')).toBe('Password must be at least 8 characters');
-    expect(validatePassword('abcdefgh')).toBeUndefined(); // pragma: allowlist secret
+    expect(validatePassword(sample({ length: 7 }))).toBe('Password must be at least 8 characters');
+    expect(validatePassword(sample({ length: 8 }))).toBeUndefined();
   });
 
   it('confirm password: required, and equal to the password', () => {
-    expect(validateConfirmPassword('', 'abcdefgh')).toBe('Please confirm your password');
-    expect(validateConfirmPassword('abcdefgi', 'abcdefgh')).toBe('Passwords do not match');
-    expect(validateConfirmPassword('abcdefgh', 'abcdefgh')).toBeUndefined(); // pragma: allowlist secret
+    const chosen = sample({ length: 8 });
+    const other = sample({ length: 9 });
+    expect(validateConfirmPassword('', chosen)).toBe('Please confirm your password');
+    expect(validateConfirmPassword(other, chosen)).toBe('Passwords do not match');
+    expect(validateConfirmPassword(chosen, chosen)).toBeUndefined();
   });
 
   it('terms: must be accepted', () => {
