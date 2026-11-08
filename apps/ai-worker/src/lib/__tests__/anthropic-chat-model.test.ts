@@ -243,6 +243,8 @@ describe('AnthropicChatModel', () => {
       expect.objectContaining({ model: 'claude-haiku-5-5', inputTokens: 120, outputTokens: 45 }),
       'Claude call'
     );
+    // The month-to-date total rides on every line (null until the budget store is read).
+    expect(logInfo.mock.calls.at(-1)![0]).toHaveProperty('monthToDateUsd');
 
     const plain = await model.invoke('y');
     expect(plain.usage_metadata).toMatchObject({ input_tokens: 120, output_tokens: 45 });
