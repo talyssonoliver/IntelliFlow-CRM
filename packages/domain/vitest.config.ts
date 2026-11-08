@@ -6,7 +6,7 @@ export default defineConfig({
     name: 'domain',
     globals: true,
     environment: 'node',
-    include: ['src/**/*.{test,spec}.ts'],
+    include: ['src/**/*.{test,spec}.ts', '__tests__/**/*.{test,spec}.ts'],
     exclude: ['node_modules', 'dist'],
 
     // Memory optimization (Vitest v4)
