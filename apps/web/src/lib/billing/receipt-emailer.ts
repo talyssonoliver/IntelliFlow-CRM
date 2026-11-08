@@ -6,18 +6,13 @@
  * @implements PG-031 (Receipts)
  */
 
+import { isValidEmailAddress } from '@/lib/shared/email-address';
+
 /**
- * Validate email format
+ * Validate email format: the web app's one email check (lib/shared/email-address.ts).
  */
 export function isValidEmail(email: string): boolean {
-  if (!email || /\s/.test(email)) return false;
-  // Same rule as /^[^\s@]+@[^\s@]+\.[^\s@]+$/, without a backtracking regex:
-  // exactly one @, something before it, and a dot inside the domain.
-  const at = email.indexOf('@');
-  if (at < 1 || email.includes('@', at + 1)) return false;
-  const domain = email.slice(at + 1);
-  const dot = domain.indexOf('.', 1);
-  return dot > 0 && dot < domain.length - 1;
+  return isValidEmailAddress(email);
 }
 
 /**

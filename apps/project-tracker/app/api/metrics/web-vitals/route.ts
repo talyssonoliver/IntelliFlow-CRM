@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { existsSync, readFileSync, mkdirSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { bundledChromeLaunch, type LighthouseCliLaunch } from '../../../../lib/bundled-chrome';
 
 export const dynamic = 'force-dynamic';
 
@@ -257,20 +258,32 @@ export async function POST(request: NextRequest) {
     // Ensure output directory exists
     mkdirSync(outputDir, { recursive: true });
 
+    // Playwright's bundled Chromium with a fixed profile, never the installed Chrome. Without
+    // it the scan is refused with the install command (tools/lighthouse/bundled-chrome.cjs).
+    let launch: LighthouseCliLaunch;
+    try {
+      launch = await bundledChromeLaunch(projectRoot);
+    } catch (error) {
+      return NextResponse.json(
+        {
+          source: 'error',
+          timestamp: new Date().toISOString(),
+          error: 'Lighthouse scan refused',
+          details: error instanceof Error ? error.message : String(error),
+        },
+        { status: 503 }
+      );
+    }
+
     // Try to run Lighthouse
     // S4721: use execFileSync with argument array — url is validated above, outputFile is internal.
     try {
       execFileSync(
         'npx', // NOSONAR S4036 — PATH inherited from developer environment, internal tooling only
-        [
-          'lighthouse',
-          url,
-          '--output=json',
-          `--output-path=${outputFile}`,
-          '--chrome-flags=--headless --no-sandbox',
-        ],
+        ['lighthouse', url, '--output=json', `--output-path=${outputFile}`, launch.chromeFlagsArg],
         {
           cwd: projectRoot,
+          env: launch.env,
           timeout: 120000, // 2 minutes
           encoding: 'utf8',
         }
@@ -300,7 +313,7 @@ export async function POST(request: NextRequest) {
           timestamp: new Date().toISOString(),
           error: 'Lighthouse scan failed',
           details: String(execError),
-          suggestion: 'Ensure Chrome is installed and the target URL is accessible',
+          suggestion: 'Ensure the target URL is accessible',
         },
         { status: 500 }
       );

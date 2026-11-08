@@ -20,6 +20,7 @@ import { useState, useCallback, useId, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { cn } from '@intelliflow/ui';
 import { PasswordInput } from './password-input';
+import { isValidEmailAddress } from '@/lib/shared/email-address';
 import {
   checkPasswordBreach,
   formatBreachCount,
@@ -183,7 +184,7 @@ function validateFullName(value: string | boolean): string | undefined {
 
 function validateEmail(value: string | boolean): string | undefined {
   if (!value || typeof value !== 'string') return 'Email is required';
-  if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(value)) {
+  if (!isValidEmailAddress(value)) {
     return 'Please enter a valid email address';
   }
   return undefined;

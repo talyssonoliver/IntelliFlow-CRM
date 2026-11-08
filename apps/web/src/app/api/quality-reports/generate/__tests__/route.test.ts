@@ -25,37 +25,44 @@ describe('generate route module', () => {
 
 describe('buildLighthouseArgs', () => {
   const OUT = '/tmp/artifacts/lighthouse/lighthouse-report';
+  // From bundledChromeLaunch: the bundled Chromium's flags with the fixed profile.
+  const FLAGS = '--chrome-flags=--headless=new --no-sandbox --user-data-dir=/repo/.cache/profile';
 
   it('accepts a plain http URL and returns it as a discrete argv element', () => {
-    const args = buildLighthouseArgs('http://localhost:3000', OUT);
+    const args = buildLighthouseArgs('http://localhost:3000', OUT, FLAGS);
     expect(args[0]).toBe('lighthouse');
     // The URL is its own argv element — never concatenated into a shell string.
     expect(args[1]).toBe('http://localhost:3000');
     expect(args).toContain('--output-path');
     expect(args).toContain(OUT);
-    expect(args).toContain('--chrome-flags=--headless --no-sandbox --disable-gpu');
+  });
+
+  it("passes the bundled Chromium's flags, with the fixed profile, as they are given", () => {
+    const args = buildLighthouseArgs('http://localhost:3000', OUT, FLAGS);
+    expect(args).toContain(FLAGS);
+    expect(args.filter((arg) => arg.startsWith('--chrome-flags='))).toEqual([FLAGS]);
   });
 
   it('accepts an https URL with a path and query', () => {
     const url = 'https://app.example.com/dashboard?tab=leads';
-    expect(buildLighthouseArgs(url, OUT)[1]).toBe(url);
+    expect(buildLighthouseArgs(url, OUT, FLAGS)[1]).toBe(url);
   });
 
   it('keeps a shell-metacharacter-laden URL as a single literal argv element', () => {
     // execFile passes this verbatim — no shell parses the "; rm -rf" portion.
     const malicious = 'http://localhost:3000/$(rm -rf ~)';
-    const args = buildLighthouseArgs(malicious, OUT);
+    const args = buildLighthouseArgs(malicious, OUT, FLAGS);
     expect(args[1]).toBe(malicious);
     expect(args.join(' ')).not.toMatch(/^npx /); // never assembled into a command line
   });
 
   it('rejects a non-http(s) protocol', () => {
-    expect(() => buildLighthouseArgs('file:///etc/passwd', OUT)).toThrow(/protocol/);
-    expect(() => buildLighthouseArgs('javascript:alert(1)', OUT)).toThrow(/protocol/);
+    expect(() => buildLighthouseArgs('file:///etc/passwd', OUT, FLAGS)).toThrow(/protocol/);
+    expect(() => buildLighthouseArgs('javascript:alert(1)', OUT, FLAGS)).toThrow(/protocol/);
   });
 
   it('rejects a malformed URL', () => {
-    expect(() => buildLighthouseArgs('not a url', OUT)).toThrow(/Invalid Lighthouse URL/);
-    expect(() => buildLighthouseArgs('', OUT)).toThrow(/Invalid Lighthouse URL/);
+    expect(() => buildLighthouseArgs('not a url', OUT, FLAGS)).toThrow(/Invalid Lighthouse URL/);
+    expect(() => buildLighthouseArgs('', OUT, FLAGS)).toThrow(/Invalid Lighthouse URL/);
   });
 });

@@ -14,16 +14,32 @@ const urls = process.env.LHCI_URLS
   : ['http://localhost:3000/'];
 const outputDir = process.env.LHCI_OUTPUT_DIR || './artifacts/benchmarks/home-page-lighthouse';
 
+// Playwright's bundled Chromium with a fixed profile, never the installed Chrome (see
+// tools/lighthouse/bundled-chrome.cjs), for Lighthouse and for the Puppeteer login script.
+const { lhciCollectBrowser, PROFILE_DIR } = require('./tools/lighthouse/bundled-chrome.cjs');
+
+const browser = lhciCollectBrowser();
+
 module.exports = {
   ci: {
     collect: {
       url: urls,
       numberOfRuns: 3,
+      ...(browser.chromePath
+        ? {
+            chromePath: browser.chromePath,
+            puppeteerLaunchOptions: {
+              executablePath: browser.chromePath,
+              userDataDir: PROFILE_DIR,
+            },
+          }
+        : {}),
       puppeteerScript: './tools/lighthouse/lhci-auth.js',
       startServerCommand: 'pnpm --filter @intelliflow/web start',
       startServerReadyPattern: 'Starting',
       startServerReadyTimeout: 120000,
       settings: {
+        ...(browser.chromeFlags ? { chromeFlags: browser.chromeFlags } : {}),
         preset: 'desktop',
         throttling: { rttMs: 40, throughputKbps: 10240, cpuSlowdownMultiplier: 1 },
         screenEmulation: {

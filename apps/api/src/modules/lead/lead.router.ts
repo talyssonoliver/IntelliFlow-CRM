@@ -1903,6 +1903,11 @@ export const leadRouter = createTRPCRouter({
             message: 'occurredAt cannot be in the future',
           })
           .optional(),
+        /**
+         * Who sent it, for an email or a call: `inbound` (the lead wrote or called) or
+         * `outbound`. Stored in the activity's metadata; AI scoring reads it as engagement.
+         */
+        direction: z.enum(['inbound', 'outbound']).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -1933,6 +1938,7 @@ export const leadRouter = createTRPCRouter({
             userName: ctx.user?.email ?? 'Unknown',
             leadId: input.leadId,
             tenantId: typedCtx.tenant.tenantId,
+            ...(input.direction ? { metadata: { direction: input.direction } } : {}),
           },
         });
 

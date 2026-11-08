@@ -17,6 +17,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { cn } from '@intelliflow/ui';
+import { isValidEmailAddress } from '@/lib/shared/email-address';
 
 // ============================================
 // Types
@@ -51,8 +52,6 @@ export interface EmailInputProps {
 // Email Validation
 // ============================================
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@.]+\.[^\s@.]+$/;
-
 export function validateEmail(email: string): { valid: boolean; error?: string } {
   const trimmed = email.trim();
 
@@ -60,7 +59,7 @@ export function validateEmail(email: string): { valid: boolean; error?: string }
     return { valid: false, error: 'Email address is required' };
   }
 
-  if (!EMAIL_REGEX.test(trimmed)) {
+  if (!isValidEmailAddress(trimmed)) {
     return { valid: false, error: 'Please enter a valid email address' };
   }
 
