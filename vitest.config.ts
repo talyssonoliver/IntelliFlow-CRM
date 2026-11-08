@@ -25,6 +25,24 @@ const env = loadEnv('test', monorepoRoot, '');
 // Populate process.env with loaded variables
 Object.assign(process.env, env);
 
+/**
+ * The root project's `@/` alias. Vitest 4 inline projects do not inherit the top-level `resolve`,
+ * so the root project had no `@` alias at all: project-tracker components (which import
+ * '@/lib/icons', '@/components/...') could not be imported from a test ("Cannot find package
+ * '@/lib/icons'"), and their tests copied the logic instead (#1216). `@/` resolves against the
+ * project tracker for files inside apps/project-tracker, and against apps/web/src otherwise.
+ */
+const projectTrackerRoot = path.resolve(monorepoRoot, 'apps/project-tracker');
+const rootProjectAppAlias = {
+  find: /^@\/(.*)$/,
+  replacement: '$1',
+  customResolver(this: any, source: string, importer: string | undefined, options: any) {
+    const fromTracker = (importer ?? '').replaceAll('\\', '/').includes('/apps/project-tracker/');
+    const base = fromTracker ? projectTrackerRoot : path.resolve(monorepoRoot, 'apps/web/src');
+    return this.resolve(path.join(base, source), importer, { ...options, skipSelf: true });
+  },
+};
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -157,6 +175,7 @@ export default defineConfig({
       },
       // Root project for all other tests
       {
+        resolve: { alias: [rootProjectAppAlias] },
         test: {
           name: 'root',
           root: packageRoot,

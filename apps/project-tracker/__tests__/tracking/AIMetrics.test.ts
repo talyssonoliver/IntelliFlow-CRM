@@ -1,119 +1,23 @@
 import { describe, it, expect } from 'vitest';
 
+import {
+  calculateCostUtilization,
+  computeAIHealthStatus,
+  formatCost,
+  formatPercent,
+  getAccuracyColor,
+  getCostUtilizationColor,
+  getDriftBarWidth,
+  getLatencyColor,
+  getRoiVariant,
+  getSloComplianceStatus,
+} from '../../components/tracking/AIMetrics';
+
 /**
- * Tests for AIMetrics component logic.
- *
- * Pure-function extraction pattern: replicate inline helper functions
- * from the component for testability (no DOM rendering, no React imports).
- * Follows QualityDashboard.test.ts pattern.
+ * AIMetrics' exported helpers, imported from the component. This file used to define copies of
+ * them inline, because the root test project had no `@/` alias for project-tracker code and the
+ * component could not be imported (#1216); vitest.config.ts now resolves it.
  */
-
-// --- Pure functions replicated from AIMetrics.tsx ---
-
-function getCostUtilizationColor(pct: number): string {
-  if (pct > 90) return 'text-red-600';
-  if (pct > 70) return 'text-yellow-600';
-  return 'text-green-600';
-}
-
-function calculateCostUtilization(current: number, budget: number): number {
-  if (budget === 0) return 0;
-  return Math.round((current / budget) * 100);
-}
-
-function getDriftBarWidth(score: number, threshold: number): number {
-  if (threshold === 0) return 0;
-  return Math.min((score / threshold) * 100, 100);
-}
-
-function getLatencyColor(ms: number, thresholds: { green: number; yellow: number }): string {
-  if (ms < thresholds.green) return 'text-green-600';
-  if (ms < thresholds.yellow) return 'text-yellow-600';
-  return 'text-red-600';
-}
-
-function getAccuracyColor(accuracy: number): string {
-  if (accuracy >= 0.9) return 'text-green-600';
-  if (accuracy >= 0.8) return 'text-yellow-600';
-  return 'text-red-600';
-}
-
-function getSloComplianceStatus(
-  p95: boolean | null,
-  p99: boolean | null
-): 'compliant' | 'violation' | 'pending' {
-  if (p95 === null || p99 === null) return 'pending';
-  if (p95 === false || p99 === false) return 'violation';
-  return 'compliant';
-}
-
-function getRoiVariant(roi: number | null, _target: number): string {
-  if (roi === null) return 'default';
-  if (roi >= 200) return 'success';
-  if (roi >= 100) return 'warning';
-  return 'error';
-}
-
-function formatPercent(value: number, decimals?: number): string {
-  const d = decimals ?? 0;
-  return (value * 100).toFixed(d);
-}
-
-function formatCost(value: number): string {
-  return value.toFixed(2);
-}
-
-// --- AIMetricsData interface for validation ---
-
-interface AIMetricsData {
-  models: Array<{
-    name: string;
-    latency_p50: number | null;
-    latency_p95: number | null;
-    accuracy: number | null;
-    cost_per_1k: number;
-    requests_24h: number;
-    cost_total: number;
-  }>;
-  drift: {
-    detected: boolean;
-    score: number | null;
-    lastCheck: string | null;
-    threshold: number;
-    history: Array<{ date: string; score: number; detected: boolean }>;
-    alerts: Array<{ timestamp: string; severity: string; message: string }>;
-  };
-  costs: {
-    current_month: number;
-    budget: number;
-    forecast: number;
-    trend: 'up' | 'down' | 'stable';
-    history: Array<{ date: string; amount: number }>;
-    by_model: Record<string, number>;
-  };
-  hallucination: {
-    rate: number | null;
-    threshold: number;
-    samples_checked: number;
-    history: Array<{ date: string; rate: number }>;
-  };
-  slo: {
-    p95_target_ms: number;
-    p99_target_ms: number;
-    p95_actual_ms: number | null;
-    p99_actual_ms: number | null;
-    p95_compliant: boolean | null;
-    p99_compliant: boolean | null;
-    success_rate: number | null;
-  };
-  roi: {
-    current_percentage: number | null;
-    target_percentage: number;
-    total_cost: number;
-    total_value: number;
-    trend: 'improving' | 'stable' | 'declining' | null;
-  };
-}
 
 // --- Tests ---
 
@@ -302,124 +206,60 @@ describe('AIMetrics component logic', () => {
       expect(formatCost(0.0035)).toBe('0.00');
     });
   });
+});
 
-  describe('AIMetricsData interface validation', () => {
-    it('accepts all-null metric fields without type errors', () => {
-      const data: AIMetricsData = {
-        models: [],
-        drift: {
-          detected: false,
-          score: null,
-          lastCheck: null,
-          threshold: 0.05,
-          history: [],
-          alerts: [],
-        },
-        costs: {
-          current_month: 0,
-          budget: 500,
-          forecast: 0,
-          trend: 'stable',
-          history: [],
-          by_model: {},
-        },
-        hallucination: {
-          rate: null,
-          threshold: 0.05,
-          samples_checked: 0,
-          history: [],
-        },
-        slo: {
-          p95_target_ms: 2000,
-          p99_target_ms: 5000,
-          p95_actual_ms: null,
-          p99_actual_ms: null,
-          p95_compliant: null,
-          p99_compliant: null,
-          success_rate: null,
-        },
-        roi: {
-          current_percentage: null,
-          target_percentage: 200,
-          total_cost: 0,
-          total_value: 0,
-          trend: null,
-        },
-      };
+describe('computeAIHealthStatus', () => {
+  const data = (over: Partial<Record<string, unknown>> = {}) =>
+    ({
+      drift: { score: 0.1, detected: false },
+      hallucination: { rate: 0.01, threshold: 0.05 },
+      slo: { p95_actual_ms: 800 },
+      roi: { current_percentage: 150 },
+      ...over,
+    }) as Parameters<typeof computeAIHealthStatus>[0];
 
-      expect(data).toBeDefined();
-      expect(data.drift.score).toBeNull();
-      expect(data.slo.p95_actual_ms).toBeNull();
-      expect(data.roi.current_percentage).toBeNull();
-    });
+  it('is pending with no data, or with no measurement at all', () => {
+    expect(computeAIHealthStatus(null, 'compliant')).toBe('pending');
+    expect(
+      computeAIHealthStatus(
+        data({
+          drift: { score: null, detected: false },
+          hallucination: { rate: null, threshold: 0.05 },
+          slo: { p95_actual_ms: null },
+          roi: { current_percentage: null },
+        }),
+        'pending'
+      )
+    ).toBe('pending');
+  });
 
-    it('includes slo, roi, history arrays, costs.by_model', () => {
-      const data: AIMetricsData = {
-        models: [
-          {
-            name: 'test-model',
-            latency_p50: 500,
-            latency_p95: 1000,
-            accuracy: 0.9,
-            cost_per_1k: 0.03,
-            requests_24h: 100,
-            cost_total: 3.0,
-          },
-        ],
-        drift: {
-          detected: false,
-          score: 0.02,
-          lastCheck: '2026-01-01T00:00:00Z',
-          threshold: 0.05,
-          history: [{ date: '2026-01-01', score: 0.02, detected: false }],
-          alerts: [
-            {
-              timestamp: '2026-01-01T00:00:00Z',
-              severity: 'warning',
-              message: 'Drift approaching threshold',
-            },
-          ],
-        },
-        costs: {
-          current_month: 100,
-          budget: 500,
-          forecast: 150,
-          trend: 'up',
-          history: [{ date: '2026-01-01', amount: 80 }],
-          by_model: { 'test-model': 100 },
-        },
-        hallucination: {
-          rate: 0.03,
-          threshold: 0.05,
-          samples_checked: 100,
-          history: [{ date: '2026-01-01', rate: 0.03 }],
-        },
-        slo: {
-          p95_target_ms: 2000,
-          p99_target_ms: 5000,
-          p95_actual_ms: 1500,
-          p99_actual_ms: 3000,
-          p95_compliant: true,
-          p99_compliant: true,
-          success_rate: 0.99,
-        },
-        roi: {
-          current_percentage: 250,
-          target_percentage: 200,
-          total_cost: 1000,
-          total_value: 2500,
-          trend: 'improving',
-        },
-      };
+  it('is green when every measurement is within its target and the SLO holds', () => {
+    expect(computeAIHealthStatus(data(), 'compliant')).toBe('green');
+  });
 
-      expect(data.slo).toBeDefined();
-      expect(data.roi).toBeDefined();
-      expect(data.drift.history).toHaveLength(1);
-      expect(data.drift.alerts).toHaveLength(1);
-      expect(data.hallucination.history).toHaveLength(1);
-      expect(data.costs.history).toHaveLength(1);
-      expect(data.costs.by_model).toHaveProperty('test-model');
-      expect(data.models[0].cost_total).toBe(3.0);
-    });
+  it('is yellow while the SLO is not yet known', () => {
+    expect(computeAIHealthStatus(data(), 'pending')).toBe('yellow');
+  });
+
+  it.each([
+    ['drift is detected', data({ drift: { score: 0.4, detected: true } }), 'compliant'],
+    [
+      'hallucinations exceed the threshold',
+      data({ hallucination: { rate: 0.06, threshold: 0.05 } }),
+      'compliant',
+    ],
+    ['the SLO is violated', data(), 'violation'],
+    ['ROI is below 100%', data({ roi: { current_percentage: 99 } }), 'compliant'],
+  ] as const)('is red when %s', (_case, input, slo) => {
+    expect(computeAIHealthStatus(input, slo)).toBe('red');
+  });
+
+  it('is not red at exactly the hallucination threshold or exactly 100% ROI', () => {
+    expect(
+      computeAIHealthStatus(
+        data({ hallucination: { rate: 0.05, threshold: 0.05 }, roi: { current_percentage: 100 } }),
+        'compliant'
+      )
+    ).toBe('green');
   });
 });
