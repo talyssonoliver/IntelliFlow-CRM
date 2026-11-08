@@ -88,13 +88,15 @@ describe('SLATrackingService', () => {
 
   describe('calculateSLATimer', () => {
     it('should return ON_TRACK status when plenty of time remaining', () => {
-      const dueTime = new Date(now.getTime() + 60 * 60 * 1000); // 60 minutes from now
+      // More than 25% of the estimated SLA must remain (getTotalSLAMinutes estimates it as
+      // the time to due plus 24h), as in apps/web/src/lib/__tests__/sla-service.test.ts.
+      const dueTime = new Date(now.getTime() + 6 * 60 * 60 * 1000); // 6 hours from now
       const result = service.calculateSLATimer(dueTime, DEFAULT_SLA_POLICY, 'OPEN', now);
 
       expect(result.status).toBe('ON_TRACK');
       expect(result.isBreached).toBe(false);
       expect(result.isAtRisk).toBe(false);
-      expect(result.remainingMinutes).toBe(60);
+      expect(result.remainingMinutes).toBe(360);
     });
 
     it('should return AT_RISK status when approaching breach threshold', () => {
@@ -479,7 +481,7 @@ describe('SLATrackingService', () => {
         updatedAt: now,
       };
 
-      let ticketRef = mockTicket;
+      const ticketRef = mockTicket;
       const getTickets = vi.fn().mockImplementation(() => Promise.resolve([ticketRef]));
       const breachCallback = vi.fn();
       service.onBreach(breachCallback);

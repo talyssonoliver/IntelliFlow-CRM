@@ -6,6 +6,7 @@
  * @implements AC-11 (TicketForm validates with createTicketSchema)
  */
 
+import { isValidEmailAddress } from '@/lib/shared/email-address';
 import { useState } from 'react';
 import type { TicketPriority, TicketCategory } from '@intelliflow/domain';
 import { TICKET_PRIORITIES, TICKET_CATEGORIES } from '@intelliflow/domain';
@@ -79,7 +80,7 @@ export function TicketForm({
 
     if (!formData.contactEmail.trim()) {
       newErrors.contactEmail = 'Contact email is required';
-    } else if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(formData.contactEmail)) {
+    } else if (!isValidEmailAddress(formData.contactEmail)) {
       newErrors.contactEmail = 'Invalid email format';
     }
 

@@ -1,5 +1,6 @@
 'use client';
 
+import { isValidEmailAddress } from '@/lib/shared/email-address';
 import { useState, useRef, useCallback, useId, useMemo, useEffect } from 'react';
 
 import { trpc } from '@/lib/trpc';
@@ -27,8 +28,6 @@ interface RecipientPickerProps {
   onChange: (recipients: Recipient[]) => void;
   className?: string;
 }
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@.]+\.[^\s@.]+$/;
 
 const SOURCE_CONFIG: Record<SuggestionSource, { symbol: string; label: string; color: string }> = {
   contact: { symbol: 'person', label: 'Contact', color: 'text-blue-500 bg-blue-500/10' },
@@ -234,7 +233,7 @@ export function RecipientPicker({
       return;
     }
 
-    if (EMAIL_REGEX.test(trimmed)) {
+    if (isValidEmailAddress(trimmed)) {
       addRecipient({ name: trimmed, email: trimmed });
     } else {
       setError('Invalid email address');

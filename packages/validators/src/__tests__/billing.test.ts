@@ -962,3 +962,30 @@ describe('promotionCodeSchema (#1220)', () => {
     );
   });
 });
+
+describe('updateSubscriptionInputSchema — plan changes (#1239)', () => {
+  it('accepts a plan and period for the server to price', () => {
+    expect(
+      updateSubscriptionInputSchema.safeParse({ planId: 'professional', billingCycle: 'annual' })
+        .success
+    ).toBe(true);
+  });
+
+  it('refuses a plan and a price together', () => {
+    expect(
+      updateSubscriptionInputSchema.safeParse({ planId: 'professional', priceId: 'price_x' })
+        .success
+    ).toBe(false);
+  });
+
+  it('refuses a period that is not monthly or annual', () => {
+    expect(
+      updateSubscriptionInputSchema.safeParse({ planId: 'professional', billingCycle: 'weekly' })
+        .success
+    ).toBe(false);
+  });
+
+  it('still refuses an empty change', () => {
+    expect(updateSubscriptionInputSchema.safeParse({}).success).toBe(false);
+  });
+});

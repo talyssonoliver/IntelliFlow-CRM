@@ -25,16 +25,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['src/**/*.{test,spec}.ts'],
-    exclude: [
-      'node_modules',
-      'dist',
-      '.turbo',
-      // OTel tracing integration tests require real @opentelemetry/api global
-      // singletons. Other test files mock @opentelemetry/api, and vitest's fork
-      // reuse contaminates the global state (Symbol.for('opentelemetry.js.api.1')).
-      // These pass individually: pnpm --filter @intelliflow/ai-worker exec vitest run src/tracing/__tests__/
-      'src/tracing/__tests__/**',
-    ],
+    exclude: ['node_modules', 'dist', '.turbo'],
 
     pool: 'forks',
 

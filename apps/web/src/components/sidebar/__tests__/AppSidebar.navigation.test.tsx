@@ -173,6 +173,17 @@ describe('the menu trigger and the mobile sidebar', () => {
     expect(link('/test?view=my')?.textContent).toContain('99+');
   });
 
+  it.each([
+    ['', '/test'],
+    ['foo=1', null], // an unrelated query: the drawer used to keep /test active here
+    ['view=my', '/test?view=my'],
+  ])('marks the same item active as the desktop sidebar (query %j)', (search, active) => {
+    nav.search = search;
+    renderWithTrigger();
+    expect(isActive('/test')).toBe(active === '/test');
+    expect(isActive('/test?view=my')).toBe(active === '/test?view=my');
+  });
+
   it('applies the same role filter in the drawer', () => {
     renderWithTrigger();
     expect(link('/test')).not.toBeNull();
