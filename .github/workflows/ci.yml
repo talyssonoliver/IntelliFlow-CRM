@@ -335,11 +335,17 @@ jobs:
             END
             $$;
             GRANT USAGE ON SCHEMA extensions TO postgres, anon, authenticated, service_role;
+            -- As scripts/lib/ephemeral-test-db.mjs (bootstrapStatements) sets for pre-ship.
+            ALTER DATABASE intelliflow_test SET search_path TO public, extensions;
+            ALTER DATABASE intelliflow_test SET timezone TO 'UTC';
           SQL
 
+      # Apply the migrations, as the local ephemeral DB does (#1114). `db push` built the
+      # tables from schema.prisma alone, without the RLS policies, GRANTs and membership
+      # objects in the migration SQL, so the RLS and membership suites skipped every test.
       - name: Setup database
         run: |
-          pnpm --filter @intelliflow/db db:push
+          pnpm --filter @intelliflow/db db:migrate
         env:
           DATABASE_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
 

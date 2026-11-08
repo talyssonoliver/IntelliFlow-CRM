@@ -391,6 +391,8 @@ export default [
       'scripts/**/*.js',
       'tools/**/*.js',
       'lighthouserc.js',
+      // The other Lighthouse CI configs, which load tools/lighthouse/bundled-chrome.cjs too.
+      'lighthouserc.*.js',
     ],
     rules: {
       '@typescript-eslint/no-var-requires': 'off',
