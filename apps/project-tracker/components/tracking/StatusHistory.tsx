@@ -3,16 +3,18 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Icon } from '@/lib/icons';
 import { RefreshButton } from './shared';
+import {
+  calculateTrend,
+  formatTimestamp,
+  getDeltaColorClass,
+  getTrendIcon,
+  getTrendText,
+  type HistoryDelta,
+  type TrendData,
+} from './status-history-logic';
 
 interface HistorySummary {
   total: number;
-  completed: number;
-  in_progress: number;
-  blocked: number;
-  backlog: number;
-}
-
-interface HistoryDelta {
   completed: number;
   in_progress: number;
   blocked: number;
@@ -27,26 +29,6 @@ interface HistoryEntry {
 
 interface StatusHistoryProps {
   onBack?: () => void;
-}
-
-type TrendDirection = 'up' | 'down' | 'stable';
-interface TrendData {
-  direction: TrendDirection;
-  value: number;
-}
-
-function getTrendIcon(direction: Readonly<TrendDirection>): { name: string; className: string } {
-  if (direction === 'up') return { name: 'trending_up', className: 'text-green-600' };
-  if (direction === 'down') return { name: 'trending_down', className: 'text-red-600' };
-  return { name: 'remove', className: 'text-gray-500' };
-}
-
-function getTrendText(trend: Readonly<TrendData>): { content: string; className: string } {
-  if (trend.direction === 'stable') return { content: 'No change', className: 'text-gray-700' };
-  const label = trend.direction === 'up' ? 'completed' : 'regressed';
-  const content = `${trend.value} task${trend.value === 1 ? '' : 's'} ${label}`;
-  const className = trend.direction === 'up' ? 'text-green-600' : 'text-red-600';
-  return { content, className };
 }
 
 function TrendSummary({ trend }: Readonly<{ trend: TrendData }>) {
@@ -91,44 +73,7 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
     fetchHistory().catch(handleFetchError);
   }, [fetchHistory, handleFetchError]);
 
-  const trend = useMemo(() => {
-    if (entries.length < 2) return null;
-
-    const totalCompleted = entries
-      .slice(0, Math.min(5, entries.length))
-      .reduce((sum, e) => sum + (e.delta?.completed || 0), 0);
-
-    if (totalCompleted > 0) return { direction: 'up' as const, value: totalCompleted };
-    if (totalCompleted < 0) return { direction: 'down' as const, value: Math.abs(totalCompleted) };
-    return { direction: 'stable' as const, value: 0 };
-  }, [entries]);
-
-  const formatTimestamp = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffDays > 0) {
-      return date.toLocaleDateString('en-GB', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    }
-    return date.toLocaleTimeString('en-GB', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
-  const getDeltaColorClass = (label: string, isPositive: boolean): string => {
-    if (label === 'completed') return isPositive ? 'text-green-600' : 'text-red-600';
-    if (label === 'blocked') return isPositive ? 'text-red-600' : 'text-green-600';
-    return 'text-gray-500';
-  };
+  const trend = useMemo(() => calculateTrend(entries), [entries]);
 
   const renderDelta = (value: number, label: string) => {
     if (value === 0) return null;
