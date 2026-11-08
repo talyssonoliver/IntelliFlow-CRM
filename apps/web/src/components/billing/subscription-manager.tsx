@@ -735,13 +735,9 @@ export function SubscriptionManager({
   const handleConfirmChange = useCallback(() => {
     if (!selectedPlan) return;
 
-    // Get the price ID for the selected interval
-    const priceId =
-      interval === 'annual'
-        ? `${selectedPlan.priceId.replaceAll('_monthly', '_annual')}`
-        : selectedPlan.priceId;
-
-    updateSubscription.mutate({ priceId });
+    // The server resolves plan and period to the real Stripe price (#1239). The price ids built
+    // here before were placeholders, not Stripe's.
+    updateSubscription.mutate({ planId: selectedPlan.id, billingCycle: interval });
   }, [selectedPlan, interval, updateSubscription]);
 
   const handleCancelSubscription = useCallback(

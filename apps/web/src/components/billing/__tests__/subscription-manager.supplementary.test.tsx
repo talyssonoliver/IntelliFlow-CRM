@@ -534,7 +534,7 @@ describe('SubscriptionManager', () => {
       expect(screen.getByText('Price Change')).toBeInTheDocument();
     });
 
-    it('T2: confirm plan change calls updateSubscription.mutate with priceId', async () => {
+    it('T2: confirm plan change sends the plan and period for the server to price (#1239)', async () => {
       const user = userEvent.setup();
       render(
         <SubscriptionManager
@@ -551,10 +551,13 @@ describe('SubscriptionManager', () => {
       const confirmBtn = screen.getByRole('button', { name: /confirm upgrade/i });
       await user.click(confirmBtn);
 
-      expect(mockMutateUpdate).toHaveBeenCalledWith({ priceId: 'price_ent_monthly' });
+      expect(mockMutateUpdate).toHaveBeenCalledWith({
+        planId: 'enterprise',
+        billingCycle: 'monthly',
+      });
     });
 
-    it('T3: toggle to annual then confirm sends _annual priceId', async () => {
+    it('T3: toggle to annual then confirm sends the annual period', async () => {
       const user = userEvent.setup();
       render(
         <SubscriptionManager
@@ -574,7 +577,10 @@ describe('SubscriptionManager', () => {
       const confirmBtn = screen.getByRole('button', { name: /confirm upgrade/i });
       await user.click(confirmBtn);
 
-      expect(mockMutateUpdate).toHaveBeenCalledWith({ priceId: 'price_ent_annual' });
+      expect(mockMutateUpdate).toHaveBeenCalledWith({
+        planId: 'enterprise',
+        billingCycle: 'annual',
+      });
     });
 
     it('T9: downgrade plan shows "Features You\'ll Lose" and period-end text', async () => {

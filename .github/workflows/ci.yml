@@ -168,6 +168,13 @@ jobs:
         if: needs.changes.outputs.code != 'false'
         run: pnpm run validate:flaky-test-gate
 
+      # #1216: a test file no vitest project collects never runs and reports nothing.
+      # Fails on one unless tools/scripts/test-collection.allowlist.json names it with a
+      # reason and a ref. `vitest list --filesOnly` only resolves globs; it runs no test.
+      - name: Test collection guard (#1216)
+        if: needs.changes.outputs.code != 'false'
+        run: pnpm run validate:test-collection
+
       # Proves the gate itself is correct (detection + reconciliation +
       # false-positive guardrails). Build-free via the dedicated config;
       # enforces the ≥90% AC.

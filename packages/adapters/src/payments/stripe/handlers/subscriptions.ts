@@ -3,7 +3,12 @@
  */
 
 import { Result, DomainError } from '@intelliflow/domain';
-import type { StripeConfig, StripeSubscription, StripeCreateSubscriptionParams } from '../types';
+import type {
+  StripeConfig,
+  StripeSubscription,
+  StripeCreateSubscriptionParams,
+  StripeUpdateSubscriptionParams,
+} from '../types';
 import { StripeConnectionError } from '../errors';
 import { makeRequest } from '../http-client';
 import { mapToSubscription } from '../mappers';
@@ -42,11 +47,16 @@ export async function createSubscription(
 export async function updateSubscription(
   config: StripeConfig,
   subscriptionId: string,
-  params: Partial<StripeCreateSubscriptionParams>
+  params: StripeUpdateSubscriptionParams
 ): Promise<Result<StripeSubscription, DomainError>> {
   try {
     const body = new URLSearchParams();
 
+    // Naming the existing item makes Stripe change it; without the id, items[0] is a NEW item
+    // and the customer would pay for both plans (#1239).
+    if ((params.priceId || params.quantity) && params.itemId) {
+      body.append('items[0][id]', params.itemId);
+    }
     if (params.priceId) body.append('items[0][price]', params.priceId);
     if (params.quantity) body.append('items[0][quantity]', params.quantity.toString());
     if (params.cancelAtPeriodEnd !== undefined) {
