@@ -22,7 +22,7 @@ import { trace, SpanKind, SpanStatusCode, type Span } from '@opentelemetry/api';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import type { Embeddings } from '@langchain/core/embeddings';
 import type { LLMPurpose, LLMTier } from '../lib/llm-factory.js';
-import { aiConfig } from '../config/ai.config.js';
+import { aiConfig, type AIProvider } from '../config/ai.config.js';
 import { tenantContextStore } from './tenant-context.js';
 import { GeminiEmbeddings } from '../lib/gemini-embeddings.js';
 import {
@@ -31,7 +31,9 @@ import {
   guardEmbeddingCall,
   recordEmbeddingUsage,
   recordModelUsage,
+  recordMonthlyModelSpend,
 } from '../lib/usage-metering.js';
+import { assertWithinMonthlyBudget } from '../lib/monthly-budget.js';
 
 const tracer = trace.getTracer('intelliflow-ai-worker', '0.1.0');
 
@@ -42,6 +44,11 @@ export interface LLMTracingMeta {
   modelId?: string;
   /** PG-199: pricing key of the model the provider actually runs, when it is not the alias. */
   pricingKey?: string;
+  /**
+   * The provider this model instance calls, which can differ from aiConfig.provider (a
+   * job-level fallback). The monthly budget fails closed per provider (monthly-budget.ts).
+   */
+  provider?: AIProvider;
 }
 
 export interface EmbeddingsTracingMeta {
@@ -73,6 +80,8 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
   ) => {
     const tenantId = tenantContextStore.getStore()?.tenantId ?? 'unknown';
     assertWithinDailyLimit();
+    // The worker-wide monthly cap (owner constraint): refuse before any provider is called.
+    await assertWithinMonthlyBudget(chatPricingKey(meta), meta.provider ?? aiConfig.provider);
 
     return tracer.startActiveSpan(
       'llm.invoke',
@@ -92,10 +101,18 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
           const result = await originalInvoke(input, options);
           span.setStatus({ code: SpanStatusCode.OK });
           recordModelUsage(meta, input, result);
+          await recordMonthlyModelSpend(meta, result);
           return result;
         } catch (err) {
           span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
           span.recordException(err as Error);
+          // A provider response that completed but was unusable (a Claude refusal or a cut-off
+          // answer) is still billed: meter it, or repeated failures would escape spend limits.
+          const billed = (err as { billedResult?: unknown } | null)?.billedResult;
+          if (billed) {
+            recordModelUsage(meta, input, billed);
+            await recordMonthlyModelSpend(meta, billed);
+          }
           throw err;
         } finally {
           span.end();
@@ -149,6 +166,9 @@ function meterEmbeddingRequests(embeddings: Embeddings, meta: EmbeddingsTracingM
     asRecord[method] as (arg: unknown, ...rest: unknown[]) => Promise<unknown>
   ).bind(embeddings);
   asRecord[method] = async (arg: unknown, ...rest: unknown[]): Promise<unknown> => {
+    // Checked per request, not once per batch: a queued request must not start after the
+    // monthly budget was used up by the requests before it.
+    await assertWithinMonthlyBudget(meta.pricingKey ?? `rag-${meta.tier}`, aiConfig.provider);
     const result = await original(arg, ...rest);
     recordEmbeddingUsage(tenantContextStore.getStore()?.tenantId, meta, textsOf(arg));
     return result;
@@ -189,7 +209,7 @@ export function wrapEmbeddingsWithTracing(
     asRecord['embedQuery'] = async (text: string): Promise<number[]> => {
       const jobTenantId = tenantContextStore.getStore()?.tenantId;
       const tenantId = jobTenantId ?? 'unknown';
-      await guardEmbeddingCall(jobTenantId, meta.tier);
+      await guardEmbeddingCall(jobTenantId, meta.tier, meta.pricingKey);
 
       return tracer.startActiveSpan(
         'llm.embed',
@@ -228,7 +248,7 @@ export function wrapEmbeddingsWithTracing(
     asRecord['embedDocuments'] = async (texts: string[]): Promise<number[][]> => {
       const jobTenantId = tenantContextStore.getStore()?.tenantId;
       const tenantId = jobTenantId ?? 'unknown';
-      await guardEmbeddingCall(jobTenantId, meta.tier);
+      await guardEmbeddingCall(jobTenantId, meta.tier, meta.pricingKey);
 
       return tracer.startActiveSpan(
         'llm.embed',

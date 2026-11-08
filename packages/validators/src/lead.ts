@@ -114,16 +114,46 @@ export const updateLeadSchema = baseLeadFieldsSchema
 export type UpdateLeadInput = z.infer<typeof updateLeadSchema>;
 
 // Lead Score Schema (for AI scoring)
+//
+// The descriptions and the exclusiveMinimum / minItems hints reach the model: this schema is
+// what the scoring chain sends as its structured-output format. The hints are JSON Schema
+// metadata only. Parsing still accepts confidence 0 and an empty factor list, so the scoring
+// chain's own check reports such an answer as inconclusive (#1218) rather than as a schema
+// error, which the shared circuit breaker would count against the provider.
 export const leadScoreSchema = z.object({
-  score: z.number().int().min(0).max(100),
-  confidence: z.number().min(0).max(1),
-  factors: z.array(
-    z.object({
-      name: z.string(),
-      impact: z.number(),
-      reasoning: z.string(),
-    })
-  ),
+  score: z
+    .number()
+    .int()
+    .min(0)
+    .max(100)
+    .describe(
+      'The lead score from 0 to 100: the sum of the points given for each rubric category.'
+    ),
+  confidence: z
+    .number()
+    .min(0)
+    .max(1)
+    .meta({
+      exclusiveMinimum: 0,
+      description:
+        'How sure you are that the score is right, above 0 and at most 1. Near 1 means the ' +
+        'lead information clearly supports the score; near 0.5 or below means it is thin or ' +
+        'mixed. Never 0: when the information is thin, give your best score with a low confidence.',
+    }),
+  factors: z
+    .array(
+      z.object({
+        name: z.string().describe('The rubric category or signal this factor is about.'),
+        impact: z
+          .number()
+          .describe('Points this factor adds to the score; negative when it lowers the score.'),
+        reasoning: z.string().describe('Why, citing the lead information this factor is based on.'),
+      })
+    )
+    .meta({
+      minItems: 1,
+      description: 'The factors behind the score, at least one.',
+    }),
   modelVersion: z.string(),
   /** Fix #15: human-review gate flag — set true when confidence < threshold */
   requiresReview: z.boolean().optional(),

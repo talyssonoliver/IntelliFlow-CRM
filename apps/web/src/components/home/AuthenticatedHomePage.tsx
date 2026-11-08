@@ -606,7 +606,7 @@ export function AuthenticatedHomePage({ initialWelcomeData }: AuthenticatedHomeP
               </div>
               {/* IFC-202: Activity stats summary */}
               <div className="px-5 py-2.5 border-b border-[#e2e8f0] dark:border-[#334155] bg-slate-50/50 dark:bg-slate-800/20">
-                <ActivityFeedStatsBar timeWindow="7d" enabled={queryEnabled} maxTypes={4} />
+                <ActivityFeedStatsBar timeWindow="7d" enabled={queryEnabled} />
               </div>
               <ActivityFeed types={feedTypes} limit={20} enabled={queryEnabled} height={440} />
             </div>

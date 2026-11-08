@@ -35,6 +35,9 @@ model Tenant {
   partnerId   String?
   externalRef String?
   plan        PlanTier     @default(STARTER)
+  /// #1220 — when this workspace's trial ends. NULL until set (new sign-ups) or backfilled; the API
+  /// then falls back to createdAt + 14 days. Never derived from age once set.
+  trialEndsAt DateTime?
 
   // Relations — all reverse relation fields @ignore'd to shrink generated Tenant.ts
   // (FK constraints preserved in DB; child-side relations untouched)

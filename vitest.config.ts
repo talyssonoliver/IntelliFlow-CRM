@@ -457,15 +457,10 @@ export default defineConfig({
         '**/*.stories.tsx',
         '**/*.stories.ts',
         'packages/ui/.storybook/**',
-        // ==============================================================
-        // UI COMPONENTS - shadcn/ui wrappers around Radix UI primitives
-        // These are styling wrappers, not business logic. The underlying
-        // components are tested by Radix maintainers. Our value comes from
-        // integration/E2E tests that test actual usage.
-        // ==============================================================
-        'packages/ui/src/components/**',
-        'packages/ui/src/hooks/**',
-        'packages/ui/src/lib/**',
+        // packages/ui components, hooks and lib are measured. Sonar's
+        // new_coverage and pre-ship diff-coverage both count those files, so
+        // excluding them here only hid their own tests: every changed line
+        // there read as uncovered, whatever the tests did.
         // External service clients (need integration tests, not unit testable)
         'packages/adapters/src/external/OpenAIService.ts',
         'packages/adapters/src/memory/zep/**',

@@ -33,6 +33,8 @@ import {
   pauseSubscriptionInputSchema,
   getUpcomingInvoiceInputSchema,
   updateBillingInformationInputSchema,
+  promotionCodeSchema,
+  INVALID_PROMOTION_CODE_MESSAGE,
 } from '@intelliflow/validators';
 import { callStripeAPI } from '../../shared/external-service-wrapper';
 import { mapErrorToTRPCError } from '../../shared/error-mapper';
@@ -42,6 +44,7 @@ import {
   PortalPushEnqueueError,
 } from './subscription-sync';
 import { buildReceiptEmail } from './receipt-email';
+import { resolvePlanState } from './plan-state';
 import {
   PLAN_TIERS,
   type PlanTier,
@@ -257,8 +260,18 @@ interface IStripeAdapter {
     customerId: string;
     priceId: string;
     paymentMethodId: string;
+    promotionCodeId?: string;
     metadata?: Record<string, string>;
   }): Promise<StripeResult<StripeSubscription>>;
+  /** #1220: the active promotion code with this exact code, or null. */
+  findActivePromotionCode(
+    code: string,
+    customerId?: string
+  ): Promise<
+    StripeResult<{ id: string; customerId: string | null; productIds: string[] | null } | null>
+  >;
+  /** #1220: the product a price belongs to. */
+  getPriceProductId(priceId: string): Promise<StripeResult<string | null>>;
 }
 
 // ============================================
@@ -279,6 +292,35 @@ async function loadStripeAdapter(): Promise<void> {
  * Get configured Stripe adapter
  * Throws if Stripe is not configured
  */
+/**
+ * The id of a promotion code this purchase can use (#1220), or a BAD_REQUEST that says the
+ * code isn't valid. A code reserved for another customer, or whose coupon covers other
+ * products only, is refused here: Stripe would otherwise accept the subscription and simply
+ * not discount it.
+ */
+async function usablePromotionCodeId(
+  stripe: IStripeAdapter,
+  code: string,
+  purchase: { customerId: string; priceId: string }
+): Promise<string> {
+  const invalid = () =>
+    new TRPCError({ code: 'BAD_REQUEST', message: INVALID_PROMOTION_CODE_MESSAGE });
+  const lookupFailed = (message: string) =>
+    new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message });
+
+  const promo = await stripe.findActivePromotionCode(code, purchase.customerId);
+  if (promo.isFailure) throw lookupFailed(promo.error.message);
+  if (!promo.value) throw invalid();
+  if (promo.value.customerId && promo.value.customerId !== purchase.customerId) throw invalid();
+
+  if (promo.value.productIds && promo.value.productIds.length > 0) {
+    const product = await stripe.getPriceProductId(purchase.priceId);
+    if (product.isFailure) throw lookupFailed(product.error.message);
+    if (!product.value || !promo.value.productIds.includes(product.value)) throw invalid();
+  }
+  return promo.value.id;
+}
+
 async function getStripeAdapter(): Promise<IStripeAdapter> {
   await loadStripeAdapter();
 
@@ -1403,6 +1445,8 @@ export const billingRouter = createTRPCRouter({
         planId: z.string(),
         billingCycle: z.enum(['monthly', 'annual']),
         paymentMethodId: z.string().regex(/^pm_[a-zA-Z0-9]+$/, 'Invalid payment method ID format'),
+        // #1220: a code such as a founding-customer discount, created in Stripe by the owner.
+        promotionCode: promotionCodeSchema.optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -1457,11 +1501,22 @@ export const billingRouter = createTRPCRouter({
       // Map planId + billingCycle to the real Stripe price ID (env-sourced)
       const priceId = resolvePriceId(input.planId, input.billingCycle);
 
+      // A typed code must be live, usable by this customer and cover this plan's product:
+      // otherwise it is refused, rather than the plan being charged at full price.
+      let promotionCodeId: string | undefined;
+      if (input.promotionCode) {
+        promotionCodeId = await usablePromotionCodeId(stripe, input.promotionCode, {
+          customerId,
+          priceId,
+        });
+      }
+
       // Create real Stripe subscription
       const subscriptionResult = await stripe.createSubscription({
         customerId,
         priceId,
         paymentMethodId: input.paymentMethodId,
+        promotionCodeId,
         metadata: {
           userId: user.userId,
           tenantId: user.tenantId,
@@ -1697,93 +1752,30 @@ export const billingRouter = createTRPCRouter({
     }),
 
   /**
-   * Get the current plan state for the authenticated tenant.
+   * The workspace's plan and trial, from one rule (#1220). Readable by unverified users
+   * (tenantProcedure, no email-verification gate) so onboarding can show it.
    *
-   * Readable by unverified users (tenantProcedure, no email-verification gate)
-   * so the onboarding UI can show trial state without requiring a verified email.
-   *
-   * Logic:
-   *   1. Look for an ACTIVE or PAST_DUE StripeSubscription row for this tenant.
-   *      These are the only statuses where the org has a live paid sub.
-   *   2. If found: return {tier, status, currentPeriodEnd, source:'stripe'}.
-   *      The tier is derived by reverse-matching the subscription's Stripe price ID
-   *      against the STRIPE_PRICE_<TIER>_<CYCLE> env vars. Falls back to 'UNKNOWN'
-   *      if the price ID is not in the env (e.g. manually-created sub).
-   *   3. If the tenant's plan is PARTNER_FREE (granted by a partner, ADR-070): return
-   *      {tier:'PARTNER_FREE', status:'ACTIVE', source:'partner'} with no trial dates.
-   *   4. Otherwise: derive a 14-day trial from Tenant.createdAt and return
-   *      {tier:'PROFESSIONAL', status:'TRIALING', trialEndsAt, daysLeft, source:'trial'}.
-   *
-   * No DB writes, no Stripe calls, no migration.
-   *
-   * @implements incident 2026-06-16 onboarding redesign
+   * The tier is always Tenant.plan, the value access enforcement uses, so what the badge says
+   * and what the workspace can do never disagree. The trial end is Tenant.trialEndsAt; only
+   * rows not yet backfilled fall back to created + 14 days. See resolvePlanState.
    */
   getPlanState: tenantProcedure.query(async ({ ctx }) => {
     const { tenantId } = ctx.tenant;
     const db = ctx.prismaWithTenant;
 
-    // 1. Look for a live paid subscription persisted from webhook
-    const activeSub = await db.stripeSubscription.findFirst({
-      where: {
-        tenantId,
-        status: { in: ['ACTIVE', 'PAST_DUE'] },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const [activeSub, tenant] = await Promise.all([
+      // ACTIVE and PAST_DUE are the only statuses with a live paid subscription.
+      db.stripeSubscription.findFirst({
+        where: { tenantId, status: { in: ['ACTIVE', 'PAST_DUE'] } },
+        orderBy: { createdAt: 'desc' },
+        select: { status: true, currentPeriodEnd: true },
+      }),
+      db.tenant.findUnique({
+        where: { id: tenantId },
+        select: { createdAt: true, plan: true, trialEndsAt: true },
+      }),
+    ]);
 
-    if (activeSub) {
-      // The StripeSubscription DB row persists stripeCustomerId / status / period but
-      // NOT the price id or plan tier (no migration in this change), so the paid tier
-      // cannot be derived here — report 'UNKNOWN'. (A reverse-match against the
-      // STRIPE_PRICE_* env table is impossible without the row's price id; comparing
-      // them to stripeCustomerId would never match.) The trial path below is unaffected
-      // (it always reports PROFESSIONAL). Persisting planTier on the row — the webhook
-      // already has subscription.metadata.planTier — is tracked as follow-up debt; it
-      // only affects post-payment tier display, not onboarding.
-      return {
-        source: 'stripe' as const,
-        tier: 'UNKNOWN' as const,
-        status: activeSub.status as 'ACTIVE' | 'PAST_DUE',
-        currentPeriodEnd: activeSub.currentPeriodEnd?.toISOString() ?? null,
-        trialEndsAt: null,
-        daysLeft: null,
-      };
-    }
-
-    const tenant = await db.tenant.findUnique({
-      where: { id: tenantId },
-      select: { createdAt: true, plan: true },
-    });
-
-    // 2. A PARTNER_FREE tenant is granted by a partner (ADR-070), never purchased and never on
-    //    a trial clock: report it as a partner plan so the web shows no "Trial: N days left".
-    if (tenant?.plan === 'PARTNER_FREE') {
-      return {
-        source: 'partner' as const,
-        tier: 'PARTNER_FREE' as const,
-        status: 'ACTIVE' as const,
-        currentPeriodEnd: null,
-        trialEndsAt: null,
-        daysLeft: null,
-      };
-    }
-
-    // 3. Derive trial from Tenant.createdAt (no DB write, no migration)
-
-    const TRIAL_DAYS = 14;
-    const trialStart = tenant?.createdAt ?? new Date();
-    const trialEndsAt = new Date(trialStart.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000);
-    const now = new Date();
-    const msLeft = trialEndsAt.getTime() - now.getTime();
-    const daysLeft = Math.max(0, Math.ceil(msLeft / (24 * 60 * 60 * 1000)));
-
-    return {
-      source: 'trial' as const,
-      tier: 'PROFESSIONAL' as const,
-      status: 'TRIALING' as const,
-      currentPeriodEnd: null,
-      trialEndsAt: trialEndsAt.toISOString(),
-      daysLeft,
-    };
+    return resolvePlanState({ activeSub, tenant, now: new Date() });
   }),
 });

@@ -369,10 +369,26 @@ export type BillingCycle = z.infer<typeof billingCycleSchema>;
  * Create checkout subscription input
  * Used when user submits checkout form with card details
  */
+/**
+ * A customer-facing promotion code typed at checkout (#1220). Stripe codes are letters,
+ * digits, hyphens and underscores; anything else can't be one, so it is refused before
+ * any lookup. Empty or blank means "no code".
+ */
+export const promotionCodeSchema = z
+  .string()
+  .trim()
+  .max(64, 'Promotion code is too long')
+  .regex(/^[A-Za-z0-9_-]*$/, 'Promotion codes use only letters, numbers, hyphens and underscores')
+  .transform((code) => (code === '' ? undefined : code));
+
+/** What checkout says when a promotion code doesn't exist, has expired or is used up. */
+export const INVALID_PROMOTION_CODE_MESSAGE = "That promotion code isn't valid.";
+
 export const createCheckoutInputSchema = z.object({
   planId: z.string().min(1, 'Plan ID is required'),
   billingCycle: billingCycleSchema,
   paymentMethodId: z.string().min(1, 'Payment method ID is required'),
+  promotionCode: promotionCodeSchema.optional(),
 });
 
 export type CreateCheckoutInput = z.infer<typeof createCheckoutInputSchema>;

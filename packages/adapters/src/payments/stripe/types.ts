@@ -184,6 +184,8 @@ export interface StripeCreateSubscriptionParams {
   trialPeriodDays?: number;
   metadata?: Record<string, string>;
   cancelAtPeriodEnd?: boolean;
+  /** A promotion code's id (promo_…), from findActivePromotionCode; applied as a discount. */
+  promotionCodeId?: string;
 }
 
 export interface CreateCustomerParams {
