@@ -121,14 +121,9 @@ vi.mock('@opentelemetry/sdk-trace-base', () => ({
   },
 }));
 
-// Mock Resource
+// Mock the resource factory (OpenTelemetry 2: resourceFromAttributes replaced `new Resource`)
 vi.mock('@opentelemetry/resources', () => ({
-  Resource: class MockResource {
-    attributes: Record<string, unknown>;
-    constructor(attrs: Record<string, unknown>) {
-      this.attributes = attrs;
-    }
-  },
+  resourceFromAttributes: (attrs: Record<string, unknown>) => ({ attributes: attrs }),
 }));
 
 // Import after mocks

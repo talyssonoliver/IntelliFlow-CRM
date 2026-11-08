@@ -260,6 +260,41 @@ describe('RetrievalService - Additional Coverage', () => {
   // ============================================
 
   describe('searchDocumentsFTS with ACL', () => {
+    // Was asserted only as "$queryRaw was called" in retrieval-service-search.test.ts, against a
+    // copy of the service (#1216). These read the tenant out of the SQL the real service sends.
+    /** The case_documents query: its SQL text and the values bound to it. */
+    function documentQuery() {
+      const call = mockPrisma.$queryRaw.mock.calls.find((args: unknown[]) =>
+        (args[0] as readonly string[]).join('?').includes('FROM case_documents')
+      );
+      expect(call, 'no case_documents query was sent').toBeDefined();
+      const [strings, ...values] = call as [readonly string[], ...unknown[]];
+      return { sql: strings.join('?'), values };
+    }
+
+    it.each(['fulltext', 'semantic'] as const)(
+      'scopes the %s document query, and the document fetch, to the caller tenant',
+      async (searchType) => {
+        mockPrisma.$queryRaw.mockResolvedValue([{ id: 'doc-1', title: 'T', description: 'D' }]);
+
+        await service.search({
+          ...baseConfig,
+          tenantId: 'tenant-7',
+          sources: ['documents'],
+          searchType,
+        });
+
+        const { sql, values } = documentQuery();
+        expect(sql).toMatch(/WHERE cd\.tenant_id = \?/);
+        // The first bound value after the WHERE is the tenant (FTS binds the query text first).
+        const tenantIndex = sql.slice(0, sql.indexOf('cd.tenant_id = ?')).split('?').length - 1;
+        expect(values[tenantIndex]).toBe('tenant-7');
+        expect(mockPrisma.caseDocument.findMany).toHaveBeenCalledWith(
+          expect.objectContaining({ where: expect.objectContaining({ tenantId: 'tenant-7' }) })
+        );
+      }
+    );
+
     it('should filter documents by USER ACL', async () => {
       // Setup non-admin user
       mockPrisma.userRoleAssignment.findMany.mockResolvedValue([

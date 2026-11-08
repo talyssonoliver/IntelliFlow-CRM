@@ -16,6 +16,7 @@ vi.mock('@opentelemetry/api', async (importOriginal) => importOriginal());
 vi.mock('@opentelemetry/sdk-trace-base', async (importOriginal) => importOriginal());
 
 import {
+  AlwaysOnSampler,
   BasicTracerProvider,
   InMemorySpanExporter,
   SimpleSpanProcessor,
@@ -56,6 +57,8 @@ describe('wrapEmbeddingsWithTracing', () => {
 
     exporter = new InMemorySpanExporter();
     provider = new BasicTracerProvider({
+      // .env.test sets OTEL_TRACES_SAMPLER=always_off, which a run from the repo root loads.
+      sampler: new AlwaysOnSampler(),
       spanProcessors: [new SimpleSpanProcessor(exporter)],
     });
     trace.disable();
