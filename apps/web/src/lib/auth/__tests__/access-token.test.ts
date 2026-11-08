@@ -77,4 +77,14 @@ describe('getValidAccessToken', () => {
   it('returns null when nothing is stored', () => {
     expect(getValidAccessToken()).toBeNull();
   });
+
+  it('returns null on the server, where there is no storage', () => {
+    localStorage.setItem('accessToken', tokenExpiringIn(3_600_000));
+    vi.stubGlobal('window', undefined);
+    try {
+      expect(getValidAccessToken()).toBeNull();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
