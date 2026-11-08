@@ -3,25 +3,28 @@
  * one fixed profile, and never the installed Chrome. No browser is started here.
  */
 import { describe, it, expect } from 'vitest';
-import { createRequire } from 'node:module';
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+// Imported through vitest (not createRequire) so the coverage run counts the helper's lines.
+import * as helperModule from '../bundled-chrome.cjs';
 
-const require = createRequire(import.meta.url);
-const helper = require('../bundled-chrome.cjs') as {
+const helper = ((helperModule as { default?: unknown }).default ?? helperModule) as {
   headlessShellFor(chromiumPath: string | null): string | null;
   BundledChromeMissingError: new () => Error;
   PROFILE_DIR: string;
-  isLinuxCi(env: Record<string, string | undefined>, platform: string): boolean;
+  playwrightChromiumPath(): string | null;
+  playwrightHeadlessShellPath(): string | null;
+  resolveBundledChrome(find?: () => string | null): { chromePath: string; userDataDir: string };
+  isLinuxCi(env?: Record<string, string | undefined>, platform?: string): boolean;
   lhciCollectBrowser(
-    env: Record<string, string | undefined>,
-    platform: string,
-    find: () => string | null
+    env?: Record<string, string | undefined>,
+    platform?: string,
+    find?: () => string | null
   ): { chromePath?: string; chromeFlags?: string };
   lighthouseCliLaunch(
-    env: Record<string, string | undefined>,
-    find: () => string | null
+    env?: Record<string, string | undefined>,
+    find?: () => string | null
   ): { chromeFlagsArg: string; env: Record<string, string | undefined> };
 };
 
@@ -63,6 +66,19 @@ describe("Playwright's chrome-headless-shell, located from its Chromium build", 
           'chrome-headless-shell.exe'
         )
       );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it('gives nothing when the platform folder holds no headless shell executable', () => {
+    const root = playwrightCache(false);
+    try {
+      mkdirSync(path.join(root, 'chromium_headless_shell-1248', 'chrome-headless-shell-win64'), {
+        recursive: true,
+      });
+      const chromium = path.join(root, 'chromium-1248', 'chrome-win64', 'chrome.exe');
+      expect(helper.headlessShellFor(chromium)).toBeNull();
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
@@ -113,6 +129,37 @@ describe('the headless shell for Lighthouse', () => {
       const browser = helper.lhciCollectBrowser({ ...env }, platform, found);
       expect(browser.chromePath).toBe(FAKE_CHROMIUM);
       expect(browser.chromeFlags).toContain(`--user-data-dir=${helper.PROFILE_DIR}`);
+    }
+  });
+
+  /**
+   * The defaults read this machine: Playwright's install and process.env. Only paths are looked
+   * up (Playwright's executablePath() starts nothing), so the result is either the headless
+   * shell or the refusal, never another browser.
+   */
+  it('with the defaults, finds the installed headless shell or refuses', () => {
+    const chromium = helper.playwrightChromiumPath();
+    expect(chromium === null || typeof chromium === 'string').toBe(true);
+    const shell = helper.playwrightHeadlessShellPath();
+    if (shell !== null) expect(path.basename(shell)).toMatch(/^chrome-headless-shell(\.exe)?$/);
+
+    expect(helper.isLinuxCi()).toBe(process.env.CI === 'true' && process.platform !== 'win32');
+
+    const outcomes = [
+      () => helper.resolveBundledChrome().chromePath,
+      () => helper.lighthouseCliLaunch().env.CHROME_PATH,
+      () => helper.lhciCollectBrowser().chromePath,
+    ].map((run) => {
+      try {
+        return run();
+      } catch (error) {
+        expect(error).toBeInstanceOf(helper.BundledChromeMissingError);
+        return 'refused';
+      }
+    });
+    for (const outcome of outcomes) {
+      if (outcome === 'refused' || outcome === undefined) continue; // undefined: Linux CI
+      expect(path.basename(String(outcome))).toMatch(/^chrome-headless-shell(\.exe)?$/);
     }
   });
 
