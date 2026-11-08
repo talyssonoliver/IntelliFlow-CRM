@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Icon } from '@/lib/icons';
 import { RefreshButton, MetricCard, StaleIndicator, LoadingPanel, ErrorPanel } from './shared';
+import { completionRate as toCompletionRate, sprintsToShow } from './status-tracker-logic';
 
 interface StatusSnapshot {
   summary: {
@@ -89,8 +90,7 @@ export default function StatusTracker() {
     backlog: 0,
     blocked: 0,
   };
-  const completionRate =
-    summary.total > 0 ? Math.round((summary.completed / summary.total) * 100) : 0;
+  const completionRate = toCompletionRate(summary.completed, summary.total);
 
   return (
     <div className="space-y-6">
@@ -158,23 +158,20 @@ export default function StatusTracker() {
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
           <h4 className="text-sm font-medium text-gray-700 mb-3">By Sprint</h4>
           <div className="space-y-2">
-            {Object.entries(data.by_sprint)
-              .sort(([a], [b]) => Number.parseInt(a) - Number.parseInt(b))
-              .slice(0, 6)
-              .map(([sprint, stats]) => {
-                const pct = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
-                return (
-                  <div key={sprint} className="flex items-center gap-3">
-                    <span className="text-xs text-gray-500 w-16">Sprint {sprint}</span>
-                    <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-500" style={{ width: `${pct}%` }} />
-                    </div>
-                    <span className="text-xs text-gray-500 w-12 text-right">
-                      {stats.completed}/{stats.total}
-                    </span>
+            {sprintsToShow(data.by_sprint).map(([sprint, stats]) => {
+              const pct = toCompletionRate(stats.completed, stats.total);
+              return (
+                <div key={sprint} className="flex items-center gap-3">
+                  <span className="text-xs text-gray-500 w-16">Sprint {sprint}</span>
+                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500" style={{ width: `${pct}%` }} />
                   </div>
-                );
-              })}
+                  <span className="text-xs text-gray-500 w-12 text-right">
+                    {stats.completed}/{stats.total}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
