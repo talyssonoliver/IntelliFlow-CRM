@@ -1,5 +1,6 @@
 'use client';
 
+import { isValidEmailAddress } from '@/lib/shared/email-address';
 import React, { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -41,7 +42,7 @@ function validatePersonalStep(
   if (!formData.lastName.trim()) errors.lastName = 'Last name is required';
   if (!formData.email.trim()) {
     errors.email = 'Email is required';
-  } else if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(formData.email)) {
+  } else if (!isValidEmailAddress(formData.email)) {
     errors.email = 'Please enter a valid email address';
   }
   return errors;

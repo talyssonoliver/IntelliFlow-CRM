@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { devNull } from 'node:os';
 import { createLogger, initLogger, getLogger } from '../src/logging';
 
 // Mock dependencies
@@ -100,7 +101,8 @@ describe('Logging Module', () => {
     });
 
     it('should handle destination option', () => {
-      const config: LoggerConfig = { name: 'test-service', destination: '/dev/null' };
+      // os.devNull: '/dev/null' does not exist on Windows (the write failed after the test).
+      const config: LoggerConfig = { name: 'test-service', destination: devNull };
       const pinoLogger = createLogger(config);
       expect(pinoLogger).toBeDefined();
     });

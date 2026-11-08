@@ -80,6 +80,18 @@ describe('ForgotPasswordForm', () => {
     });
   });
 
+  it('sends a reset link to an address on a multi-part domain such as .co.uk', async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<ForgotPasswordForm onSubmit={onSubmit} />);
+
+    await user.type(screen.getByLabelText('Email address'), 'name@company.co.uk');
+    await user.click(screen.getByRole('button', { name: /send reset link/i }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalledWith('name@company.co.uk');
+    });
+  });
+
   it('disables form when isLoading is true', () => {
     const onSubmit = vi.fn();
     render(<ForgotPasswordForm onSubmit={onSubmit} isLoading={true} />);
