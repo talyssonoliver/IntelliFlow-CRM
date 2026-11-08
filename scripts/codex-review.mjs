@@ -53,6 +53,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { claudeReviewText, runClaudeReviewer, runCodexReviewer } from './lib/review-commands.mjs';
 import {
   activeWaivers,
   checkWaivers,
@@ -138,30 +139,13 @@ function claudeAvailable() {
 function runClaudeReview(fullPrompt) {
   // `claude -p` reads the prompt from stdin in print/headless mode and emits a
   // single-turn result. `--output-format json` wraps it as { result: "<text>" }.
-  const r = spawnSync('claude', ['-p', '--output-format', 'json'], {
-    encoding: 'utf8',
-    input: fullPrompt,
-    stdio: ['pipe', 'pipe', 'pipe'],
-    env: { ...process.env },
-    cwd: REPO_ROOT,
-    shell: process.platform === 'win32',
-    maxBuffer: 32 * 1024 * 1024,
-    timeout: 5 * 60 * 1000, // 5-minute wall clock
-  });
+  // No shell tools: the reviewer reads, and never starts processes (lib/review-commands.mjs).
+  const r = runClaudeReviewer(fullPrompt, REPO_ROOT, spawnSync);
   if (VERBOSE) {
     process.stderr.write('--- claude stdout ---\n' + (r.stdout || '') + '\n');
     process.stderr.write('--- claude stderr ---\n' + (r.stderr || '') + '\n');
   }
-  const out = r.stdout || '';
-  // Prefer the structured envelope's `result` field; fall back to raw stdout
-  // (the findings JSON is recoverable from either by extractFindings).
-  try {
-    const env = JSON.parse(out);
-    if (env && typeof env.result === 'string') return env.result;
-  } catch {
-    // not a JSON envelope — return raw (extractFindings scans for {findings:[...]})
-  }
-  return out || r.stderr || '';
+  return claudeReviewText(r);
 }
 
 function gitDiffFiles(base) {
@@ -528,16 +512,8 @@ ${diffText || '(no diff output — check base ref)'}
     // A previous run's last message must never be read as this run's verdict: when codex
     // exits without writing one (quota cap, crash), the stale file would replay old findings.
     fs.rmSync(lastMsgPath, { force: true });
-    const r = spawnSync('codex', ['exec', '-', '--ephemeral', '-o', lastMsgPath], {
-      encoding: 'utf8',
-      input: fullPrompt,
-      stdio: ['pipe', 'pipe', 'pipe'],
-      env: { ...process.env },
-      cwd: REPO_ROOT,
-      shell: process.platform === 'win32',
-      maxBuffer: 32 * 1024 * 1024,
-      timeout: 5 * 60 * 1000, // 5-minute wall clock
-    });
+    // Read-only sandbox, whatever ~/.codex/config.toml says (lib/review-commands.mjs).
+    const r = runCodexReviewer(fullPrompt, lastMsgPath, REPO_ROOT, spawnSync);
     if (VERBOSE) {
       process.stderr.write('--- codex stdout ---\n' + (r.stdout || '') + '\n');
       process.stderr.write('--- codex stderr ---\n' + (r.stderr || '') + '\n');

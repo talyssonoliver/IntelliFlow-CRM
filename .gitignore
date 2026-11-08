@@ -429,3 +429,6 @@ tools/scripts/k6/.data/
 
 # Push-based executor status (ADR-077): runtime heartbeat files, never committed
 .claude/executor-status/
+
+# Fixed profile for Lighthouse's bundled Chromium (tools/lighthouse/bundled-chrome.cjs)
+.cache/

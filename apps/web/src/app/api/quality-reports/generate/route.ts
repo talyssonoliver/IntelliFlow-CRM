@@ -4,6 +4,7 @@ import { exec, execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import path from 'node:path';
 import { buildLighthouseArgs } from './lighthouse-args';
+import { bundledChromeLaunch, type LighthouseCliLaunch } from '@/lib/lighthouse/bundled-chrome';
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
@@ -210,7 +211,7 @@ async function generateLighthouseReport(
         scores: { performance: 0, accessibility: 0, bestPractices: 0, seo: 0 },
         passed: false,
         instructions:
-          'Install Lighthouse: npm install -g lighthouse. Ensure Chrome/Chromium is installed.',
+          "Install Lighthouse (npm install -g lighthouse) and Playwright's Chromium (pnpm exec playwright install chromium). The installed Chrome is not used.",
       };
 
       fs.writeFileSync(
@@ -243,8 +244,8 @@ async function generateLighthouseReport(
     <div class="tip">
       <strong>To enable Lighthouse reports:</strong>
       <code>npm install -g lighthouse</code>
-      <code>npm install -g chrome-launcher</code>
-      <p style="margin-top: 1rem; color: #94a3b8;">Ensure Chrome or Chromium is installed on your system.</p>
+      <code>pnpm exec playwright install chromium</code>
+      <p style="margin-top: 1rem; color: #94a3b8;">Lighthouse runs on Playwright's bundled Chromium, never the installed Chrome.</p>
     </div>
     <p style="margin-top: 1.5rem; font-size: 0.75rem; color: #64748b;">Generated: ${new Date().toISOString()}</p>
   </div>
@@ -261,13 +262,32 @@ async function generateLighthouseReport(
       };
     }
 
+    // Playwright's bundled Chromium with a fixed profile, never the installed Chrome. Without
+    // it the run is refused with the install command (tools/lighthouse/bundled-chrome.cjs).
+    let launch: LighthouseCliLaunch;
+    try {
+      launch = await bundledChromeLaunch(projectRoot);
+    } catch (error) {
+      return {
+        report: 'lighthouse',
+        success: false,
+        message: error instanceof Error ? error.message : String(error),
+        duration: Date.now() - start,
+      };
+    }
+
     // Run Lighthouse. The URL is passed as a discrete argv element via execFile
     // (no shell), so it cannot inject shell commands (CodeQL #2257).
     const { stdout: lighthouseOutput } = await execFileAsync(
       'npx',
-      buildLighthouseArgs(url, path.join(lighthouseDir, 'lighthouse-report')),
+      buildLighthouseArgs(
+        url,
+        path.join(lighthouseDir, 'lighthouse-report'),
+        launch.chromeFlagsArg
+      ),
       {
         cwd: projectRoot,
+        env: launch.env,
         timeout: 120000, // 2 minute timeout
       }
     );

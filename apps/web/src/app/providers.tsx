@@ -8,7 +8,8 @@ import { AuthProvider } from '@/lib/auth';
 import { TimezoneProvider } from '@/providers/TimezoneProvider';
 import { RemindersProvider } from '@/lib/cases/reminders-context';
 import { AUTH_TOKEN_CHANGED_EVENT, clearTokenCookie } from '@/lib/shared/session-cleanup';
-import { requiredProdEnv } from '@/lib/required-url';
+import { getValidAccessToken } from '@/lib/auth/access-token';
+import { getBaseUrl, getWsUrl } from '@/lib/api-endpoints';
 import { isAuthError, MUTATION_RETRY, shouldRetryQuery } from '@/lib/query-retry';
 import { noRealtimeLink } from '@/lib/no-realtime-link';
 import {
@@ -25,67 +26,6 @@ import {
 // - Token validation before including in headers
 
 /**
- * Decode JWT token and check if it's expired
- * Returns true if token is valid (not expired), false otherwise
- */
-function isTokenValid(token: string | null): boolean {
-  if (!token) return false;
-
-  try {
-    // JWT format: header.payload.signature
-    const parts = token.split('.');
-    if (parts.length !== 3) return false;
-
-    // Decode payload (base64url)
-    const payload = JSON.parse(atob(parts[1].replaceAll('-', '+').replaceAll('_', '/')));
-
-    // Check expiry (exp is in seconds)
-    if (!payload.exp) return false;
-
-    // Add 30 second buffer to avoid edge cases
-    const expiryTime = payload.exp * 1000;
-    const now = Date.now();
-    const isValid = now < expiryTime - 30000;
-
-    if (!isValid) {
-      console.log('[Auth] Token expired or expiring soon, clearing...');
-      // Clear expired token
-      localStorage.removeItem('accessToken');
-      clearTokenCookie();
-    }
-
-    return isValid;
-  } catch {
-    // Invalid token format
-    console.log('[Auth] Invalid token format, clearing...');
-    localStorage.removeItem('accessToken');
-    clearTokenCookie();
-    return false;
-  }
-}
-
-/**
- * Get valid access token from localStorage
- * Returns null if token is missing or expired
- */
-function getValidAccessToken(): string | null {
-  if (typeof globalThis.window === 'undefined') return null;
-
-  const token = localStorage.getItem('accessToken');
-  return isTokenValid(token) ? token : null;
-}
-
-function getBaseUrl() {
-  if (typeof globalThis.window !== 'undefined') return process.env.NEXT_PUBLIC_API_URL ?? '';
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return requiredProdEnv(
-    'NEXT_PUBLIC_APP_URL',
-    process.env.NEXT_PUBLIC_APP_URL,
-    `http://localhost:${process.env.PORT ?? 3000}`
-  );
-}
-
-/**
  * ADR-053: a per-request correlation id forwarded as `x-request-id`. The API
  * tracing middleware adopts it (and the query-budget events correlate on it).
  * Falls back to a random token if `crypto.randomUUID` is unavailable.
@@ -98,25 +38,6 @@ function generateRequestId(): string {
     /* fall through */
   }
   return `req-${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
-}
-
-function getWsUrl() {
-  if (typeof globalThis.window === 'undefined') return null;
-
-  // Production: rely on NEXT_PUBLIC_WS_URL pointing at the deployed WS server
-  // (Railway runs apps/api/src/ws-server.ts as its own service). When the env
-  // var is absent we return null so getWsClient() short-circuits and the
-  // tRPC providers fall back to HTTP-only links — no Connection-closed
-  // exception breaks React hydration on environments without a WS endpoint.
-  if (process.env.NODE_ENV === 'production') {
-    const configured = process.env.NEXT_PUBLIC_WS_URL?.trim();
-    return configured && configured.length > 0 ? configured : null;
-  }
-
-  // Dev fallback: tsx-watched ws-server.ts on localhost.
-  const protocol = globalThis.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const wsPort = process.env.NEXT_PUBLIC_WS_PORT ?? '3001';
-  return `${protocol}//localhost:${wsPort}`;
 }
 
 // Singleton WebSocket client (created once per browser session)
