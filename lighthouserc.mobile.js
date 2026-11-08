@@ -24,9 +24,16 @@
  * @see docs/operations/perf-remediation-handoff.md (PERF-01)
  */
 
+// Playwright's bundled Chromium with a fixed profile, never the installed Chrome (see
+// tools/lighthouse/bundled-chrome.cjs). On a Linux CI runner, the runner's own Chrome.
+const { lhciCollectBrowser } = require('./tools/lighthouse/bundled-chrome.cjs');
+
+const browser = lhciCollectBrowser();
+
 module.exports = {
   ci: {
     collect: {
+      ...(browser.chromePath ? { chromePath: browser.chromePath } : {}),
       // Public pages only. Authenticated routes need a puppeteerScript login and
       // are scoped to a follow-on. In CI these are overridden by the action's
       // `urls` input (bypass-enabled preview URLs); this list is for local runs.
@@ -51,6 +58,7 @@ module.exports = {
           }),
 
       settings: {
+        ...(browser.chromeFlags ? { chromeFlags: browser.chromeFlags } : {}),
         formFactor: 'mobile',
         throttling: {
           rttMs: 150,
