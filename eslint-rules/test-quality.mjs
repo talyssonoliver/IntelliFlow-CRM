@@ -291,12 +291,27 @@ export const testQualityRules = {
 
 const plugin = { meta: { name: 'test-quality' }, rules: testQualityRules };
 
+/** The number given to `--max-warnings` (as `--max-warnings=N` or `--max-warnings N`), or null. */
+export function maxWarningsFrom(argv) {
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg.startsWith('--max-warnings=')) return Number(arg.slice('--max-warnings='.length));
+    if (arg === '--max-warnings') return Number(argv[i + 1]);
+  }
+  return null;
+}
+
 /**
  * The rules at the level they start at: warnings, so the counts are measured first.
- * TEST_QUALITY_LINT=off turns them off for the pre-commit pass, which fails on any warning
- * (--max-warnings=0): a warning must not block a commit while the policy is in its warn phase.
+ * They are off in any run that fails on a warning (`--max-warnings=0`: the pre-commit pass, the
+ * system-audit lint), and when TEST_QUALITY_LINT=off: while the policy is in its warn phase, a
+ * warning must not block a commit or fail a check.
  */
-export const testQualityLevel = process.env.TEST_QUALITY_LINT === 'off' ? 'off' : 'warn';
+export function levelFor(env, argv) {
+  return env.TEST_QUALITY_LINT === 'off' || maxWarningsFrom(argv) === 0 ? 'off' : 'warn';
+}
+
+export const testQualityLevel = levelFor(process.env, process.argv);
 export const testQualityWarnings = Object.fromEntries(
   Object.keys(testQualityRules).map((name) => [`test-quality/${name}`, testQualityLevel])
 );

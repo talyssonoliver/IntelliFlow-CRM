@@ -6,6 +6,8 @@ import { afterAll, describe, it } from 'vitest';
 import { RuleTester } from 'eslint';
 import tsParser from '@typescript-eslint/parser';
 import {
+  levelFor,
+  maxWarningsFrom,
   testQualityLevel,
   testQualityRules,
   testQualityWarnings,
@@ -29,7 +31,37 @@ describe('test-quality rules', () => {
     const names = Object.keys(testQualityRules).map((n) => `test-quality/${n}`);
     expect(Object.keys(testQualityWarnings).sort()).toEqual(names.sort());
     expect(new Set(Object.values(testQualityWarnings))).toEqual(new Set([testQualityLevel]));
-    expect(testQualityLevel).toBe(process.env.TEST_QUALITY_LINT === 'off' ? 'off' : 'warn');
+    expect(testQualityLevel).toBe(levelFor(process.env, process.argv));
+  });
+});
+
+describe('maxWarningsFrom', () => {
+  it.each([
+    [['eslint', '--max-warnings=0', '.'], 0],
+    [['eslint', '--max-warnings', '0', '.'], 0],
+    [['eslint', '--max-warnings=5'], 5],
+    [['eslint', '.'], null],
+  ])('reads %j as %s', (argv, n) => {
+    expect(maxWarningsFrom(argv)).toBe(n);
+  });
+});
+
+describe('levelFor', () => {
+  it('warns in an ordinary lint run', () => {
+    expect(levelFor({}, ['eslint', '.'])).toBe('warn');
+  });
+
+  it('is off in a run that fails on any warning, such as system-audit', () => {
+    expect(levelFor({}, ['eslint', '--max-warnings=0', '.'])).toBe('off');
+    expect(levelFor({}, ['eslint', '--max-warnings', '0'])).toBe('off');
+  });
+
+  it('still warns when some warnings are allowed', () => {
+    expect(levelFor({}, ['eslint', '--max-warnings=10'])).toBe('warn');
+  });
+
+  it('is off when TEST_QUALITY_LINT=off', () => {
+    expect(levelFor({ TEST_QUALITY_LINT: 'off' }, ['eslint', '.'])).toBe('off');
   });
 });
 
