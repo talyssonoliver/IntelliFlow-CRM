@@ -31,7 +31,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { getSupabaseBrowserClient } from '../supabase-browser';
 import type { OAuthProvider } from '@intelliflow/domain';
 import { getSupabaseProviderName } from './sso-handler';
-import { isTokenUsable } from './jwt';
+import { decodeJwtPayload, getTokenExpiryMs, isTokenUsable } from './jwt';
 import { loginPathFor, safeRedirectPath } from './safe-redirect';
 import { storeSessionTokens } from '@/lib/shared/token-exchange';
 import { AUTH_TOKEN_CHANGED_EVENT, leaveAfterLogout } from '@/lib/shared/session-cleanup';
@@ -40,44 +40,8 @@ import { clearActiveTenant } from '@/lib/tenant/active-tenant';
 
 export type AuthMfaMethod = 'totp' | 'sms' | 'email' | 'backup';
 
-// ============================================
-// Token Refresh Utilities
-// ============================================
-
-/**
- * Decode JWT token payload without verifying signature
- */
-function decodeJwtPayload(token: string): { exp?: number; sub?: string } | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    return JSON.parse(atob(parts[1].replaceAll('-', '+').replaceAll('_', '/')));
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Check if token needs refresh (expires within threshold)
- * Default threshold: 5 minutes before expiry
- */
-function _tokenNeedsRefresh(token: string, thresholdMs: number = 5 * 60 * 1000): boolean {
-  const payload = decodeJwtPayload(token);
-  if (!payload?.exp) return true; // If we can't read expiry, assume needs refresh
-
-  const expiryTime = payload.exp * 1000;
-  const now = Date.now();
-  return now >= expiryTime - thresholdMs;
-}
-
-/**
- * Get token expiry time in milliseconds
- */
-function getTokenExpiryMs(token: string): number | null {
-  const payload = decodeJwtPayload(token);
-  if (!payload?.exp) return null;
-  return payload.exp * 1000;
-}
+// The JWT helpers (decodeJwtPayload, getTokenExpiryMs) live in ./jwt, tested there; this
+// file used to keep private copies, which its tests then copied again (#1216).
 
 // ============================================
 // Types

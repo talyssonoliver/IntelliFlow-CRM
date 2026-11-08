@@ -83,7 +83,7 @@ function scoreToStrength(score: number): PasswordStrength {
   return 'strong';
 }
 
-function calculatePasswordStrength(password: string): PasswordStrengthResult {
+export function calculatePasswordStrength(password: string): PasswordStrengthResult {
   const feedback: string[] = [];
   let score = 0;
 
@@ -174,14 +174,14 @@ function PasswordStrengthIndicator({
 // Field Validators
 // ============================================
 
-function validateFullName(value: string | boolean): string | undefined {
+export function validateFullName(value: string | boolean): string | undefined {
   if (!value || (typeof value === 'string' && value.trim().length < 2)) {
     return 'Full name is required (at least 2 characters)';
   }
   return undefined;
 }
 
-function validateEmail(value: string | boolean): string | undefined {
+export function validateEmail(value: string | boolean): string | undefined {
   if (!value || typeof value !== 'string') return 'Email is required';
   if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(value)) {
     return 'Please enter a valid email address';
@@ -189,19 +189,22 @@ function validateEmail(value: string | boolean): string | undefined {
   return undefined;
 }
 
-function validatePassword(value: string | boolean): string | undefined {
+export function validatePassword(value: string | boolean): string | undefined {
   if (!value || typeof value !== 'string') return 'Password is required';
   if (value.length < 8) return 'Password must be at least 8 characters';
   return undefined;
 }
 
-function validateConfirmPassword(value: string | boolean, password: string): string | undefined {
+export function validateConfirmPassword(
+  value: string | boolean,
+  password: string
+): string | undefined {
   if (!value || typeof value !== 'string') return 'Please confirm your password';
   if (value !== password) return 'Passwords do not match';
   return undefined;
 }
 
-function validateAcceptTerms(value: string | boolean): string | undefined {
+export function validateAcceptTerms(value: string | boolean): string | undefined {
   if (!value) return 'You must accept the terms and conditions';
   return undefined;
 }
