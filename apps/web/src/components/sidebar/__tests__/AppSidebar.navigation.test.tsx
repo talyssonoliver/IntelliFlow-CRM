@@ -78,7 +78,8 @@ describe('desktop sidebar: what a role sees', () => {
     expect(link('/test')).not.toBeNull();
     expect(link('/test/admin')).toBeNull();
     expect(link('/audit')).toBeNull();
-    expect(screen.queryByText('Administration')).toBeNull();
+    // The collapsed sidebar shows section titles only as the section's landmark name.
+    expect(screen.queryByRole('navigation', { name: 'Administration' })).toBeNull();
   });
 
   it('shows them to the role they name', () => {
@@ -86,6 +87,7 @@ describe('desktop sidebar: what a role sees', () => {
     renderDesktop();
     expect(link('/test/admin')).not.toBeNull();
     expect(link('/audit')).not.toBeNull();
+    expect(screen.getByRole('navigation', { name: 'Administration' })).toBeInTheDocument();
   });
 
   it('shows only unrestricted items when nobody is signed in', () => {
