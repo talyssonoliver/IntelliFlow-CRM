@@ -28,6 +28,30 @@ function itemParamsMatchCurrent(
   return true;
 }
 
+/**
+ * Whether a sidebar item is the current page. The desktop sidebar and the mobile drawer share
+ * this rule, so they always mark the same item (the drawer used to check only the view and
+ * segment params, and could mark an item the desktop did not).
+ *
+ * - The URL path must be the item's path or below it.
+ * - An item with query params is active when the URL carries all of them.
+ * - An item without params is active only on its exact path with no query at all, so /email
+ *   does not also light up on /email?folder=sent.
+ */
+export function isSidebarItemActive(
+  item: Readonly<SidebarItem>,
+  pathname: string | null,
+  searchParams: ReturnType<typeof useSearchParams>
+): boolean {
+  const itemUrl = new URL(item.href, 'http://localhost');
+  const itemPath = itemUrl.pathname;
+  const itemParams = itemUrl.searchParams;
+
+  if (pathname !== itemPath && !pathname?.startsWith(itemPath + '/')) return false;
+  if (itemParams.toString()) return itemParamsMatchCurrent(itemParams, searchParams);
+  return pathname === itemPath && !searchParams.toString();
+}
+
 interface AppSidebarProps {
   config: SidebarConfig;
   className?: string;
@@ -140,25 +164,7 @@ export function AppSidebar({
 
   // Determine active item based on URL
   const isItemActive = React.useCallback(
-    (item: Readonly<SidebarItem>): boolean => {
-      const itemUrl = new URL(item.href, 'http://localhost');
-      const itemPath = itemUrl.pathname;
-      const itemParams = itemUrl.searchParams;
-
-      // Check if paths match
-      if (pathname !== itemPath && !pathname?.startsWith(itemPath + '/')) {
-        return false;
-      }
-
-      // For items with query params, check if they all match current URL
-      if (itemParams.toString()) {
-        return itemParamsMatchCurrent(itemParams, searchParams);
-      }
-
-      // For items without params, require exact pathname match
-      // AND no query params on the current URL — otherwise /email matches /email?folder=sent
-      return pathname === itemPath && !searchParams.toString();
-    },
+    (item: Readonly<SidebarItem>): boolean => isSidebarItemActive(item, pathname, searchParams),
     [pathname, searchParams]
   );
 
@@ -579,28 +585,7 @@ export function MobileSidebar({
 
   // Determine active item based on URL
   const isItemActive = React.useCallback(
-    (item: Readonly<SidebarItem>): boolean => {
-      const itemUrl = new URL(item.href, 'http://localhost');
-      const itemPath = itemUrl.pathname;
-      const itemParams = itemUrl.searchParams;
-
-      if (pathname !== itemPath && !pathname?.startsWith(itemPath + '/')) {
-        return false;
-      }
-
-      if (itemParams.toString()) {
-        for (const [key, value] of itemParams.entries()) {
-          if (searchParams.get(key) !== value) {
-            return false;
-          }
-        }
-        return true;
-      }
-
-      const view = searchParams.get('view');
-      const segment = searchParams.get('segment');
-      return !view && !segment;
-    },
+    (item: Readonly<SidebarItem>): boolean => isSidebarItemActive(item, pathname, searchParams),
     [pathname, searchParams]
   );
 
