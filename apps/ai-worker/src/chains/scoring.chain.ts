@@ -13,6 +13,7 @@ import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { resolveRateLimit, resolveEffectiveTier } from '../lib/tenant-ai-config.js';
 import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { usableVersionedPrompt } from '../versioning/versioned-prompt';
 import pino from 'pino';
 
 const logger = pino({
@@ -272,7 +273,8 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
 
   /**
    * Resolve the tenant-versioned prompt override (if any).
-   * Falls back silently to the default prompt when no active version exists.
+   * Falls back to the default prompt when no version exists, or when the loader's prompt has
+   * no {lead_info} slot (the loader's own fallback has none: the model then saw no lead).
    */
   private async resolveVersionedPrompt(): Promise<string | null> {
     if (!this.tenantId) return null;
@@ -281,7 +283,7 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
       const config = await loader.getChainConfig(CHAIN_TYPE_MAP.LEAD_SCORING, {
         tenantId: this.tenantId,
       });
-      return config.prompt ?? null;
+      return usableVersionedPrompt('LEAD_SCORING', config.prompt, ['lead_info']);
     } catch {
       logger.warn(
         {

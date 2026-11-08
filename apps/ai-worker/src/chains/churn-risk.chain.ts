@@ -21,6 +21,7 @@ import { aiConfig } from '../config/ai.config';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { usableVersionedPrompt } from '../versioning/versioned-prompt';
 import pino from 'pino';
 
 // Import domain constants (IFC-095: DRY pattern)
@@ -285,7 +286,7 @@ Respond with a structured JSON object containing riskScore, confidence, topRiskF
       const config = await getVersionLoader().getChainConfig(CHAIN_TYPE_MAP.CHURN_RISK, {
         tenantId: this.tenantId,
       });
-      return config.prompt ?? null;
+      return usableVersionedPrompt('CHURN_RISK', config.prompt, this.prompt.inputVariables);
     } catch {
       logger.warn(
         {

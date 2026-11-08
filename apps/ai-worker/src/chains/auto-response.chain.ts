@@ -22,6 +22,7 @@ import { aiConfig } from '../config/ai.config';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { isFallbackPrompt } from '../versioning/version-loader';
 import {
   withMonitoring,
   createChainMonitor,
@@ -148,6 +149,9 @@ export class AutoResponseChain {
       const config = await getVersionLoader().getChainConfig(CHAIN_TYPE_MAP.AUTO_RESPONSE, {
         tenantId: this.tenantId,
       });
+      // With no stored version the loader returns its generic EMAIL_WRITER fallback, which
+      // would replace the tenant's own custom instructions; keep the tenant's in that case.
+      if (isFallbackPrompt(CHAIN_TYPE_MAP.AUTO_RESPONSE, config.prompt)) return null;
       return config.prompt ?? null;
     } catch {
       logger.warn(

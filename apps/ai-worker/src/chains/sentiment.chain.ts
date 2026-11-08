@@ -19,6 +19,7 @@ import { aiConfig } from '../config/ai.config';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { resolveRateLimit } from '../lib/tenant-ai-config.js';
 import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { usableVersionedPrompt } from '../versioning/versioned-prompt';
 import pino from 'pino';
 
 // Import domain constants (DRY architecture compliance)
@@ -202,7 +203,7 @@ Respond with a structured JSON object containing sentiment, sentimentScore, emot
       const config = await getVersionLoader().getChainConfig(CHAIN_TYPE_MAP.SENTIMENT_ANALYSIS, {
         tenantId: this.tenantId,
       });
-      return config.prompt ?? null;
+      return usableVersionedPrompt('SENTIMENT_ANALYSIS', config.prompt, this.prompt.inputVariables);
     } catch {
       logger.warn(
         {
