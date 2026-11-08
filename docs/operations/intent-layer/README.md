@@ -127,8 +127,11 @@ attestation overstate delivery:
   inside the erasure transaction. `EmbeddingPurgeService` has no caller.
 - ❗ `reindexAllNotes` uses `{ contact: { tenantId } }` though `ContactNote` has
   direct `tenantId` (`document-indexer.ts:496`).
-- ❗ `retrieval-service-search.test.ts` tests a local `MockRetrievalService`,
-  not the real service → ~0 behavioral coverage of search paths.
+- `retrieval-service-search.test.ts` tested a local `MockRetrievalService`, not
+  the real service; it was deleted (#1216). The real search paths are covered by
+  `retrieval-service.test.ts`, `.additional.test.ts` (including the
+  `cd.tenant_id` predicate of the full-text and semantic queries) and
+  `.b11.test.ts`.
 - `canAccess()` MANAGER role hardcoded `false` (untracked stub).
 
 Full agent transcripts are not persisted here; re-run via
