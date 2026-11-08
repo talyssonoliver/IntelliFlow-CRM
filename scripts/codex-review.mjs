@@ -59,7 +59,16 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { claudeReviewText, runClaudeReviewer, runCodexReviewer } from './lib/review-commands.mjs';
-import { chunkSections, collectScopedDiff, DiffInputError } from './lib/codex-diff.mjs';
+import { chunkSections, collectScopedDiff } from './lib/codex-diff.mjs';
+import {
+  chunkOutcome,
+  diffInputMessage,
+  failureArtifact,
+  isStaleReviewArtifact,
+  listChangedFiles,
+  reviewChunks,
+  reviewWithFallback,
+} from './lib/codex-chunk-review.mjs';
 import {
   activeWaivers,
   checkWaivers,
@@ -152,57 +161,6 @@ function runClaudeReview(fullPrompt) {
     process.stderr.write('--- claude stderr ---\n' + (r.stderr || '') + '\n');
   }
   return claudeReviewText(r);
-}
-
-function gitDiffFiles(base) {
-  // Primary: files changed between base and HEAD (committed diff). A base that does not
-  // resolve must stop the gate: an empty list here would read as "nothing to review" and PASS.
-  const r = spawnSync(
-    'git',
-    ['-c', 'core.quotePath=false', 'diff', '--name-only', `${base}...HEAD`],
-    {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true,
-    }
-  );
-  if (r.error || r.status !== 0) {
-    const reason = r.error ? r.error.message : (r.stderr || '').trim() || `exit ${r.status}`;
-    throw new DiffInputError('base-unresolved', `cannot list changes against ${base}: ${reason}`);
-  }
-  const committed = r.stdout
-    .split('\n')
-    .map((f) => f.trim())
-    .filter(Boolean);
-
-  // When base resolves to HEAD (e.g. --base=HEAD for self-test/local staging),
-  // also include staged (cached) files so the gate catches staged-but-not-yet-
-  // committed changes.  This is important for the validate-codex-gate self-test
-  // and for developers who run the gate before committing.
-  const stagedFiles = [];
-  const staged = spawnSync(
-    'git',
-    ['-c', 'core.quotePath=false', 'diff', '--cached', '--name-only'],
-    {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'pipe'],
-      windowsHide: true,
-    }
-  );
-  if (staged.status === 0) {
-    stagedFiles.push(
-      ...staged.stdout
-        .split('\n')
-        .map((f) => f.trim())
-        .filter(Boolean)
-    );
-  }
-
-  // Merge: staged files are included when there are no committed diff files
-  // (i.e. base===HEAD) OR always (union both sets, which is safe: duplicate
-  // paths are deduplicated by the Set below).
-  const merged = new Set([...committed, ...stagedFiles]);
-  return [...merged];
 }
 
 // sonar.sources paths from sonar-project.properties
@@ -401,13 +359,8 @@ function main() {
     );
   }
 
-  // 3. Collect changed files in sonar scope
-  let changedFiles;
-  try {
-    changedFiles = gitDiffFiles(baseRef);
-  } catch (err) {
-    failDiffInput(err, []);
-  }
+  // 3. Collect changed files in sonar scope (a base that does not resolve FAILS the gate)
+  const changedFiles = guardDiffInput([], () => listChangedFiles(baseRef, spawnSync));
   const scopedFiles = changedFiles.filter(isInScope);
 
   process.stdout.write(`[codex-review] base ref : ${baseRef}\n`);
@@ -428,151 +381,89 @@ function main() {
   writeSchema();
 
   // 5. Collect the whole diff of the scoped files and split it into chunks that each fit one
-  //    prompt. An empty, partial or unsplittable diff stops the gate here (lib/codex-diff.mjs):
-  //    a review of nothing must never read as a PASS.
+  //    prompt. An empty, partial or unsplittable diff FAILS the gate (lib/codex-diff.mjs).
   process.stdout.write('[codex-review] Preparing diff + review prompt ...\n');
-  let chunks;
-  try {
-    chunks = chunkSections(
+  const chunks = guardDiffInput(scopedFiles, () =>
+    chunkSections(
       collectScopedDiff({ baseRef, files: scopedFiles, repoRoot: REPO_ROOT, spawn: spawnSync })
-    );
-  } catch (err) {
-    failDiffInput(err, scopedFiles);
-  }
+    )
+  );
   const diffChars = chunks.reduce((n, c) => n + c.text.length, 0);
   process.stdout.write(
     `[codex-review] diff     : ${diffChars} characters in ${chunks.length} chunk(s)\n`
   );
 
-  // 6/7. Review every chunk. Codex first (primary), Claude as FALLBACK when codex is unusable
-  //      OR returns no parseable findings (the OpenAI usage/tier cap returns an error, not
-  //      JSON). Same prompt/schema/waivers either way.
+  // 6/7. Review every chunk: Codex first, Claude as FALLBACK (lib/codex-chunk-review.mjs).
   for (const stale of fs.readdirSync(OUT_DIR)) {
-    if (/^codex-(prompt|raw)(-\d+)?\.txt$/.test(stale)) fs.rmSync(path.join(OUT_DIR, stale));
+    if (isStaleReviewArtifact(stale)) fs.rmSync(path.join(OUT_DIR, stale));
   }
-  const allFindings = [];
-  const reviewers = new Set();
-  const unreviewed = [];
-  chunks.forEach((chunk, i) => {
-    const suffix = chunks.length === 1 ? '' : `-${i + 1}`;
-    const part = chunks.length === 1 ? '' : ` (part ${i + 1} of ${chunks.length})`;
-    if (chunks.length > 1) {
-      process.stdout.write(
-        `[codex-review] chunk ${i + 1}/${chunks.length}: ${chunk.files.length} file(s), ` +
-          `${chunk.text.length} characters\n`
-      );
-    }
-    const fullPrompt = buildPrompt(chunk.files, part, chunk.text);
-    fs.writeFileSync(path.join(OUT_DIR, `codex-prompt${suffix}.txt`), fullPrompt, 'utf8');
-    const { parsed, reviewer, raw } = reviewChunk(fullPrompt, { codexUsable, claudeUsable });
-    fs.writeFileSync(path.join(OUT_DIR, `codex-raw${suffix}.txt`), raw);
-    if (parsed) {
-      reviewers.add(reviewer);
-      allFindings.push(...parsed.findings);
-    } else {
-      unreviewed.push(i + 1);
-    }
+  const log = {
+    out: (s) => process.stdout.write(s),
+    err: (s) => process.stderr.write(s),
+  };
+  const reviewOptions = {
+    codexUsable,
+    claudeUsable,
+    runCodex,
+    runClaude: runClaudeReview,
+    extract: extractFindings,
+    log,
+  };
+  const { findings, reviewers, unreviewed } = reviewChunks(chunks, {
+    buildPrompt,
+    review: (prompt) => reviewWithFallback(prompt, reviewOptions),
+    write: (name, text) => fs.writeFileSync(path.join(OUT_DIR, name), text, 'utf8'),
+    log,
   });
 
-  if (unreviewed.length === chunks.length) {
+  const outcome = chunkOutcome(chunks.length, unreviewed);
+  if (outcome.kind === 'skip') {
     // Neither reviewer produced parseable output. This is the ONLY non-enforcing
     // path (local OAuth gate; CI never runs codex/claude). Degrade, don't block.
-    process.stdout.write(
-      'SKIPPED_PRECONDITION: no semantic reviewer produced parseable output ' +
-        '(codex unavailable/capped AND claude unavailable/failed). ' +
-        'Review artifacts/codex-review/codex-raw*.txt.\n'
-    );
+    process.stdout.write(`${outcome.message}\n`);
     process.exit(0);
   }
-  if (unreviewed.length > 0) {
-    // Part of the diff was reviewed and part was not: that is not a clean pass.
-    const message =
-      `INCOMPLETE_REVIEW: chunk(s) ${unreviewed.join(', ')} of ${chunks.length} got no ` +
-      'parseable review; the rest of the diff is unreviewed. Gate FAIL.';
-    fs.writeFileSync(
-      FINDINGS_PATH,
-      JSON.stringify(
-        {
-          base_ref: baseRef,
-          scoped_files: scopedFiles,
-          findings: allFindings,
-          verdict: 'FAIL',
-          error: message,
-        },
-        null,
-        2
-      )
-    );
-    fs.writeFileSync(SUMMARY_PATH, `${message}\n`);
-    process.stderr.write(`[codex-review] ${message}\n`);
-    process.exit(1);
-  }
+  if (outcome.kind === 'incomplete') stopGate(outcome.message, scopedFiles, findings);
 
-  const reviewerUsed = [...reviewers].join('+');
+  const reviewerUsed = reviewers.join('+');
   process.stdout.write(`[codex-review] reviewer : ${reviewerUsed}\n`);
-  finish({ scopedFiles, findings: allFindings, reviewerUsed, chunkCount: chunks.length });
+  finish({ scopedFiles, findings, reviewerUsed, chunkCount: chunks.length });
 }
 
-/** Stops the gate on a diff that cannot be reviewed whole. Never a PASS. */
-function failDiffInput(err, scopedFiles) {
-  if (!(err instanceof DiffInputError)) throw err;
-  const message = `DIFF_INPUT_ERROR (${err.code}): ${err.message}. Gate FAIL — nothing was reviewed.`;
-  fs.writeFileSync(
-    FINDINGS_PATH,
-    JSON.stringify(
-      {
-        base_ref: baseRef,
-        scoped_files: scopedFiles,
-        findings: [],
-        verdict: 'FAIL',
-        error: message,
-      },
-      null,
-      2
-    )
-  );
+/** Runs a diff-input step; a diff that cannot be reviewed whole stops the gate with FAIL. */
+function guardDiffInput(scopedFiles, step) {
+  try {
+    return step();
+  } catch (err) {
+    return stopGate(diffInputMessage(err), scopedFiles, []);
+  }
+}
+
+/** Writes the failure artifacts and exits 1. Never a PASS. */
+function stopGate(message, scopedFiles, findings) {
+  const artifact = failureArtifact({ baseRef, scopedFiles, findings, message });
+  fs.writeFileSync(FINDINGS_PATH, JSON.stringify(artifact, null, 2));
   fs.writeFileSync(SUMMARY_PATH, `${message}\n`);
   process.stdout.write(`${message}\n`);
-  process.stderr.write(`[codex-review] ${message}\n`);
   process.exit(1);
 }
 
-/** Runs one prompt through codex, then the Claude fallback when codex gave nothing parseable. */
-function reviewChunk(fullPrompt, { codexUsable, claudeUsable }) {
+/** One codex run. A previous run's last message is removed first so it can never replay. */
+function runCodex(prompt) {
   const lastMsgPath = path.join(OUT_DIR, 'codex-last-message.txt');
-  let raw = '';
-  if (codexUsable) {
-    process.stdout.write('[codex-review] Running Codex review (headless, OAuth) ...\n');
-    // A previous run's last message must never be read as this run's verdict: when codex
-    // exits without writing one (quota cap, crash), the stale file would replay old findings.
-    fs.rmSync(lastMsgPath, { force: true });
-    // Read-only sandbox, whatever ~/.codex/config.toml says (lib/review-commands.mjs).
-    const r = runCodexReviewer(fullPrompt, lastMsgPath, REPO_ROOT, spawnSync);
-    if (VERBOSE) {
-      process.stderr.write('--- codex stdout ---\n' + (r.stdout || '') + '\n');
-      process.stderr.write('--- codex stderr ---\n' + (r.stderr || '') + '\n');
-    }
-    raw =
-      (fs.existsSync(lastMsgPath) && fs.readFileSync(lastMsgPath, 'utf8')) ||
-      r.stdout ||
-      r.stderr ||
-      '';
-    const parsed = extractFindings(raw);
-    if (parsed) return { parsed, reviewer: 'codex', raw };
-    process.stderr.write(
-      `[codex-review] WARN: Codex produced no parseable findings (exit ${r.status ?? -1}) — ` +
-        `likely the OpenAI usage/tier cap or a transient error.\n`
-    );
-    if (r.stderr) process.stderr.write(r.stderr.slice(0, 1000) + '\n');
+  fs.rmSync(lastMsgPath, { force: true });
+  // Read-only sandbox, whatever ~/.codex/config.toml says (lib/review-commands.mjs).
+  const r = runCodexReviewer(prompt, lastMsgPath, REPO_ROOT, spawnSync);
+  if (VERBOSE) {
+    process.stderr.write('--- codex stdout ---\n' + (r.stdout || '') + '\n');
+    process.stderr.write('--- codex stderr ---\n' + (r.stderr || '') + '\n');
   }
-  // FALLBACK: Claude review (acts as codex would — identical prompt/schema/waivers).
-  if (claudeUsable) {
-    process.stdout.write('[codex-review] Falling back to Claude review (claude -p, local) ...\n');
-    raw = runClaudeReview(fullPrompt);
-    const parsed = extractFindings(raw);
-    if (parsed) return { parsed, reviewer: 'claude', raw };
-  }
-  return { parsed: null, reviewer: null, raw };
+  const raw =
+    (fs.existsSync(lastMsgPath) && fs.readFileSync(lastMsgPath, 'utf8')) ||
+    r.stdout ||
+    r.stderr ||
+    '';
+  return { raw, status: r.status, stderr: r.stderr };
 }
 
 function buildPrompt(files, part, diffText) {
