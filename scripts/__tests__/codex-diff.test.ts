@@ -6,7 +6,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
@@ -193,14 +193,25 @@ describe('chunking the diff for review', () => {
 
 describe('against a real git repository', () => {
   it('reviews a change with more than 8k characters of paths whole', () => {
-    const repo = mkdtempSync(path.join(tmpdir(), 'codex-diff-'));
+    const repo = realpathSync(mkdtempSync(path.join(tmpdir(), 'codex-diff-')));
+    // Inside a git hook (pre-ship runs from pre-push) git exports GIT_DIR and friends. Inherited,
+    // they point every call below at the real repository: on 2026-11-08 this test's `git init`
+    // and `git config` set core.bare=true and a test identity on the shared .git/config.
+    const env = Object.fromEntries(
+      Object.entries(process.env).filter(([key]) => !key.toUpperCase().startsWith('GIT_'))
+    );
+    const isolatedSpawn = (cmd: string, args: string[], options: Record<string, unknown>) =>
+      spawnSync(cmd, args, { ...options, env });
     const git = (...args: string[]) => {
-      const r = spawnSync('git', args, { cwd: repo, encoding: 'utf8' });
+      const r = spawnSync('git', args, { cwd: repo, encoding: 'utf8', env });
       if (r.status !== 0) throw new Error(`git ${args.join(' ')}: ${r.stderr}`);
       return r.stdout;
     };
     try {
       git('init', '-q', '-b', 'main');
+      // Refuse to go on unless git now resolves to the temp repository and nothing else.
+      const gitDir = realpathSync(path.resolve(repo, git('rev-parse', '--git-dir').trim()));
+      expect(gitDir).toBe(path.join(repo, '.git'));
       git('config', 'user.email', 'test@example.invalid');
       git('config', 'user.name', 'test');
       git('config', 'commit.gpgsign', 'false');
@@ -220,7 +231,7 @@ describe('against a real git repository', () => {
         baseRef: 'main',
         files,
         repoRoot: repo,
-        spawn: spawnSync,
+        spawn: isolatedSpawn,
       });
       expect(sections.map((s) => s.file)).toEqual(files);
       for (const s of sections) expect(s.text).toContain(`+export const v = ${s.file.length};`);
