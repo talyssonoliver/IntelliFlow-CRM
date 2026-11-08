@@ -52,6 +52,42 @@ export function isSidebarItemActive(
   return pathname === itemPath && !searchParams.toString();
 }
 
+/**
+ * What both sidebars show: the sections a role may see (items with `roles` only for those
+ * roles, and no empty section), the module's colours, and which item is active.
+ */
+function useSidebarNavigation(
+  config: Readonly<SidebarConfig>,
+  pathname: string | null,
+  searchParams: ReturnType<typeof useSearchParams>,
+  role: string | undefined
+) {
+  const filteredSections = React.useMemo(
+    () =>
+      config.sections
+        .map((section) => ({
+          ...section,
+          items: section.items.filter(
+            (item) => !item.roles || item.roles.length === 0 || (role && item.roles.includes(role))
+          ),
+        }))
+        .filter((section) => section.items.length > 0),
+    [config.sections, role]
+  );
+
+  const moduleColor = React.useMemo(
+    () => MODULE_COLORS[config.moduleId as ModuleId] || MODULE_COLORS.dashboard,
+    [config.moduleId]
+  );
+
+  const isItemActive = React.useCallback(
+    (item: Readonly<SidebarItem>): boolean => isSidebarItemActive(item, pathname, searchParams),
+    [pathname, searchParams]
+  );
+
+  return { filteredSections, moduleColor, isItemActive };
+}
+
 interface AppSidebarProps {
   config: SidebarConfig;
   className?: string;
@@ -144,28 +180,11 @@ export function AppSidebar({
     };
   }, [setHovered]);
 
-  // Filter out items that require specific roles the current user doesn't have
-  const filteredSections = React.useMemo(() => {
-    return config.sections
-      .map((section) => ({
-        ...section,
-        items: section.items.filter(
-          (item) =>
-            !item.roles || item.roles.length === 0 || (user?.role && item.roles.includes(user.role))
-        ),
-      }))
-      .filter((section) => section.items.length > 0);
-  }, [config.sections, user?.role]);
-
-  // Get module-specific color theme (only for icon colors)
-  const moduleColor = React.useMemo(() => {
-    return MODULE_COLORS[config.moduleId as ModuleId] || MODULE_COLORS.dashboard;
-  }, [config.moduleId]);
-
-  // Determine active item based on URL
-  const isItemActive = React.useCallback(
-    (item: Readonly<SidebarItem>): boolean => isSidebarItemActive(item, pathname, searchParams),
-    [pathname, searchParams]
+  const { filteredSections, moduleColor, isItemActive } = useSidebarNavigation(
+    config,
+    pathname,
+    searchParams,
+    user?.role
   );
 
   return (
@@ -565,28 +584,11 @@ export function MobileSidebar({
     setMounted(true);
   }, []);
 
-  // Filter items by role for mobile sidebar
-  const filteredSections = React.useMemo(() => {
-    return config.sections
-      .map((section) => ({
-        ...section,
-        items: section.items.filter(
-          (item) =>
-            !item.roles || item.roles.length === 0 || (user?.role && item.roles.includes(user.role))
-        ),
-      }))
-      .filter((section) => section.items.length > 0);
-  }, [config.sections, user?.role]);
-
-  // Get module-specific color theme
-  const moduleColor = React.useMemo(() => {
-    return MODULE_COLORS[config.moduleId as ModuleId] || MODULE_COLORS.dashboard;
-  }, [config.moduleId]);
-
-  // Determine active item based on URL
-  const isItemActive = React.useCallback(
-    (item: Readonly<SidebarItem>): boolean => isSidebarItemActive(item, pathname, searchParams),
-    [pathname, searchParams]
+  const { filteredSections, moduleColor, isItemActive } = useSidebarNavigation(
+    config,
+    pathname,
+    searchParams,
+    user?.role
   );
 
   // Handle click on item - close sidebar
