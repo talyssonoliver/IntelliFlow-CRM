@@ -122,6 +122,7 @@ export function mapToSubscription(data: Record<string, unknown>): StripeSubscrip
     status: ((data.status as string | null | undefined) ??
       'incomplete') as StripeSubscription['status'],
     priceId: price ? ((price.id as string | null | undefined) ?? '') : '',
+    itemId: typeof firstItem.id === 'string' ? firstItem.id : undefined,
     quantity: Number(firstItem.quantity ?? 1),
     currency: (data.currency as string | null | undefined) ?? 'GBP',
     currentPeriodStart: new Date(Number(data.current_period_start ?? 0) * 1000),

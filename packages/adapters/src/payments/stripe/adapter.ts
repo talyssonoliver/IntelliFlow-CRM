@@ -17,6 +17,7 @@ import type {
   StripeWebhookEvent,
   CreatePaymentIntentParams,
   StripeCreateSubscriptionParams,
+  StripeUpdateSubscriptionParams,
 } from './types';
 import type { ActivePromotionCode } from './handlers/promotion-codes';
 import {
@@ -101,7 +102,7 @@ export interface PaymentServicePort {
   ): Promise<Result<StripeSubscription, DomainError>>;
   updateSubscription(
     subscriptionId: string,
-    params: Partial<StripeCreateSubscriptionParams>
+    params: StripeUpdateSubscriptionParams
   ): Promise<Result<StripeSubscription, DomainError>>;
   cancelSubscription(
     subscriptionId: string,
@@ -222,7 +223,7 @@ export class StripeAdapter implements PaymentServicePort {
     return getPriceProductIdHandler(this.config, priceId);
   }
 
-  updateSubscription(subscriptionId: string, params: Partial<StripeCreateSubscriptionParams>) {
+  updateSubscription(subscriptionId: string, params: StripeUpdateSubscriptionParams) {
     return updateSubscriptionHandler(this.config, subscriptionId, params);
   }
 
