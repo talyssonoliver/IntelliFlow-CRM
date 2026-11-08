@@ -13,7 +13,8 @@
 import Link from 'next/link';
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Card, Button, EmptyState } from '@intelliflow/ui';
+import { Card, Button } from '@intelliflow/ui';
+import { NoActionsEmptyState } from '../components/NoActionsEmptyState';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import type { AgentAction, ActionStatus } from '@/lib/agent';
@@ -905,14 +906,9 @@ function AgentApprovalsPreviewContent() {
         )}
         {!isLoading && filteredActions.length === 0 && (
           <Card className="p-12">
-            <EmptyState
-              entity="agents"
-              showCta={false}
-              action={
-                filterStatus === 'all'
-                  ? undefined
-                  : { label: 'Clear filters', onClick: () => setFilterStatus('all') }
-              }
+            <NoActionsEmptyState
+              filtered={filterStatus !== 'all'}
+              onClearFilters={() => setFilterStatus('all')}
             />
           </Card>
         )}
