@@ -140,7 +140,7 @@ function runClaudeReview(fullPrompt) {
   // `claude -p` reads the prompt from stdin in print/headless mode and emits a
   // single-turn result. `--output-format json` wraps it as { result: "<text>" }.
   // No shell tools: the reviewer reads, and never starts processes (lib/review-commands.mjs).
-  const r = runClaudeReviewer(fullPrompt, REPO_ROOT);
+  const r = runClaudeReviewer(fullPrompt, REPO_ROOT, spawnSync);
   if (VERBOSE) {
     process.stderr.write('--- claude stdout ---\n' + (r.stdout || '') + '\n');
     process.stderr.write('--- claude stderr ---\n' + (r.stderr || '') + '\n');
@@ -513,7 +513,7 @@ ${diffText || '(no diff output — check base ref)'}
     // exits without writing one (quota cap, crash), the stale file would replay old findings.
     fs.rmSync(lastMsgPath, { force: true });
     // Read-only sandbox, whatever ~/.codex/config.toml says (lib/review-commands.mjs).
-    const r = runCodexReviewer(fullPrompt, lastMsgPath, REPO_ROOT);
+    const r = runCodexReviewer(fullPrompt, lastMsgPath, REPO_ROOT, spawnSync);
     if (VERBOSE) {
       process.stderr.write('--- codex stdout ---\n' + (r.stdout || '') + '\n');
       process.stderr.write('--- codex stderr ---\n' + (r.stderr || '') + '\n');

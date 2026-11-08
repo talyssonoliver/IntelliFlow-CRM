@@ -76,8 +76,8 @@ describe('starting the reviewers', () => {
 
   it('is what codex-review.mjs actually runs', () => {
     const script = readFileSync(path.join(__dirname, '..', 'codex-review.mjs'), 'utf8');
-    expect(script).toMatch(/runCodexReviewer\(fullPrompt, lastMsgPath, REPO_ROOT\)/);
-    expect(script).toMatch(/runClaudeReviewer\(fullPrompt, REPO_ROOT\)/);
+    expect(script).toMatch(/runCodexReviewer\(fullPrompt, lastMsgPath, REPO_ROOT, spawnSync\)/);
+    expect(script).toMatch(/runClaudeReviewer\(fullPrompt, REPO_ROOT, spawnSync\)/);
     // No review run starts past the helper (`codex login status` is only an auth check).
     expect(script).not.toMatch(/spawnSync\(\s*'codex',\s*\[\s*'exec'/);
     expect(script).not.toMatch(/spawnSync\(\s*'claude'/);

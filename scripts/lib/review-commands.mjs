@@ -12,7 +12,6 @@
  *
  * Kept apart from codex-review.mjs (which runs on import) so tests can check them in-process.
  */
-import { spawnSync } from 'node:child_process';
 
 /** Argv for `codex exec`: the prompt on stdin, the last message to `lastMessagePath`. */
 export function codexExecArgs(lastMessagePath) {
@@ -43,13 +42,13 @@ export function reviewerSpawnOptions(input, cwd, platform = process.platform, en
   };
 }
 
-/** Runs the codex reviewer in the read-only sandbox. */
-export function runCodexReviewer(input, lastMessagePath, cwd, spawn = spawnSync) {
+/** Runs the codex reviewer in the read-only sandbox. spawn is child_process.spawnSync. */
+export function runCodexReviewer(input, lastMessagePath, cwd, spawn) {
   return spawn('codex', codexExecArgs(lastMessagePath), reviewerSpawnOptions(input, cwd));
 }
 
-/** Runs the Claude fallback reviewer with no shell tools. */
-export function runClaudeReviewer(input, cwd, spawn = spawnSync) {
+/** Runs the Claude fallback reviewer with no shell tools. spawn is child_process.spawnSync. */
+export function runClaudeReviewer(input, cwd, spawn) {
   return spawn('claude', [...CLAUDE_REVIEW_ARGS], reviewerSpawnOptions(input, cwd));
 }
 
