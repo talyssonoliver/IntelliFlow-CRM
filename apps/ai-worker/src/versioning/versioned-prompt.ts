@@ -11,14 +11,26 @@
  * chain keeps its own prompt. Appending the data to a prompt written for another chain would
  * still ask the model the wrong question, so the chain's prompt is the safer default.
  */
+import { PromptTemplate } from '@langchain/core/prompts';
 import pino from 'pino';
 
 const logger = pino({ name: 'versioned-prompt', level: process.env.LOG_LEVEL || 'info' });
 const reported = new Set<string>();
 
-/** The input slots (`{name}`) the prompt is missing. */
+/**
+ * The input slots the prompt is missing, read the way PromptTemplate formats it: an escaped
+ * `{{name}}` is literal text, not a slot. A prompt PromptTemplate cannot parse, or one with a
+ * slot the chain does not fill (format would throw), counts as missing every slot.
+ */
 export function missingPromptSlots(prompt: string, inputVariables: readonly string[]): string[] {
-  return inputVariables.filter((name) => !prompt.includes(`{${name}}`));
+  let slots: string[];
+  try {
+    slots = PromptTemplate.fromTemplate(prompt).inputVariables;
+  } catch {
+    return [...inputVariables];
+  }
+  if (slots.some((slot) => !inputVariables.includes(slot))) return [...inputVariables];
+  return inputVariables.filter((name) => !slots.includes(name));
 }
 
 /**
