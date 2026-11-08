@@ -75,6 +75,13 @@ const PROJECT_TIMEOUT_MS = {
   default: 20 * 60 * 1000, // 20 minutes for everything else
 };
 
+// Projects whose coverage is limited to the files they test. tools-mjs is an inline project
+// without the other projects' setup: with the repo-wide include it had to instrument every
+// untested file itself, and crashed parsing apps/api/src/test/setup.ts (#1216).
+const PROJECT_COVERAGE_INCLUDE = {
+  'tools-mjs': ['tools/scripts/subset-material-symbols.mjs'],
+};
+
 const MERGE_ONLY = process.argv.includes('--merge-only');
 
 /** @type {string[] | null} null = full run; an array = related mode. */
@@ -118,6 +125,7 @@ function runVitest(project) {
       ...(RELATED_FILES ? ['related', '--run', '--passWithNoTests'] : ['run']),
       '--coverage',
       `--coverage.reportsDirectory=${outDir}`,
+      ...(PROJECT_COVERAGE_INCLUDE[project] ?? []).map((glob) => `--coverage.include=${glob}`),
       `--project=${project}`,
       '--reporter=default',
       '--reporter=json',
