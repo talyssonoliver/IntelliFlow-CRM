@@ -64,6 +64,8 @@ const PROJECTS = [
   // merged lcov had no tooling coverage and diff-coverage would score every
   // changed tooling line as "no lcov" while Sonar saw it covered.
   'root',
+  // tools/scripts/subset-material-symbols.mjs's tests (#1216): CI shards this project too.
+  'tools-mjs',
 ];
 
 // Projects that are allowed extra time (in ms). Default timeout is 20 minutes.
