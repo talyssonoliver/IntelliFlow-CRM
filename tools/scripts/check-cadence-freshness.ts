@@ -12,6 +12,7 @@ import { readFileSync, writeFileSync, statSync, mkdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse } from 'csv-parse/sync';
+import { parseArtifacts, parseCadenceThreshold } from './lib/cadence';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CSV_PATH = join(__dirname, '../../apps/project-tracker/docs/metrics/_global/Sprint_plan.csv');
@@ -57,33 +58,6 @@ interface FreshnessReport {
 // ============================================================================
 // HELPERS
 // ============================================================================
-
-/**
- * Parse cadence string like "weekly:7d" into threshold days.
- */
-function parseCadenceThreshold(cadence: string): number {
-  const match = cadence.match(/:(\d+)d$/);
-  if (!match) return 0;
-  return Number.parseInt(match[1], 10);
-}
-
-/**
- * Parse artifact paths from the "Artifacts To Track" column.
- * Only extracts ARTIFACT: prefixed paths — EVIDENCE: paths are one-time
- * attestation files that should NOT be checked for freshness.
- */
-function parseArtifacts(artifactStr: string): string[] {
-  if (!artifactStr) return [];
-
-  return artifactStr
-    .split(';')
-    .flatMap((part) => {
-      const match = part.match(/^ARTIFACT:(.+)/);
-      if (match) return [match[1].trim()];
-      return [];
-    })
-    .filter((p) => p && !p.includes('*'));
-}
 
 /**
  * Check artifact freshness against threshold.

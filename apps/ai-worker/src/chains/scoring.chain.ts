@@ -13,6 +13,7 @@ import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { resolveRateLimit, resolveEffectiveTier } from '../lib/tenant-ai-config.js';
 import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { usableVersionedPrompt } from '../versioning/versioned-prompt';
 import pino from 'pino';
 
 const logger = pino({
@@ -32,6 +33,11 @@ export const leadInputSchema = z.object({
   phone: z.string().optional(),
   source: z.string(),
   metadata: z.record(z.string(), z.unknown()).optional(),
+  /**
+   * The lead's engagement history as prompt lines (lib/lead-activity-context.ts): status, last
+   * contact, pipeline stage, counts and recent activities. Already sanitized.
+   */
+  activity: z.string().max(8000).optional(),
 });
 
 export type LeadInput = z.infer<typeof leadInputSchema>;
@@ -47,6 +53,8 @@ export type ScoringResult = z.infer<typeof leadScoreSchema>;
  */
 export class ScoringInconclusiveError extends Error {
   readonly reason: 'ZERO_CONFIDENCE' | 'NO_FACTORS';
+  /** An expected outcome, not a fault: monitoring logs it as a warning (chain-monitor). */
+  readonly expected = true;
   constructor(reason: 'ZERO_CONFIDENCE' | 'NO_FACTORS') {
     super(`Model gave no usable score (${reason})`);
     this.name = 'ScoringInconclusiveError';
@@ -219,6 +227,8 @@ Consider the following factors:
    - Company information
 
 2. Engagement Indicators (0-25 points)
+   - Replies from the lead: a reply, above all one asking about price or next steps, is the strongest signal
+   - Recent activity, pipeline stage and how recently the lead was contacted
    - Source quality (direct website > referral > social > cold call)
    - Email domain (corporate email > free email)
 
@@ -263,7 +273,8 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
 
   /**
    * Resolve the tenant-versioned prompt override (if any).
-   * Falls back silently to the default prompt when no active version exists.
+   * Falls back to the default prompt when no version exists, or when the loader's prompt has
+   * no {lead_info} slot (the loader's own fallback has none: the model then saw no lead).
    */
   private async resolveVersionedPrompt(): Promise<string | null> {
     if (!this.tenantId) return null;
@@ -272,7 +283,7 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
       const config = await loader.getChainConfig(CHAIN_TYPE_MAP.LEAD_SCORING, {
         tenantId: this.tenantId,
       });
-      return config.prompt ?? null;
+      return usableVersionedPrompt('LEAD_SCORING', config.prompt, ['lead_info']);
     } catch {
       logger.warn(
         {
@@ -434,10 +445,14 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
         });
       }
       // The class and shape only, never the message: an error can echo lead text (NF-002).
-      logger.error(
-        { leadId, errorClass: classifyError(error), ...scoringFailureShape(error) },
-        'Lead scoring failed'
-      );
+      // An inconclusive answer is an expected outcome (the model answered, with no usable
+      // score), so it is a warning with its reason; anything else is a fault.
+      const failure = { leadId, errorClass: classifyError(error), ...scoringFailureShape(error) };
+      if (error instanceof ScoringInconclusiveError) {
+        logger.warn(failure, 'Lead scoring inconclusive: the model gave no usable score');
+      } else {
+        logger.error(failure, 'Lead scoring failed');
+      }
 
       // #1218: a failure is never returned as a score of 0. It propagates, so the job can try
       // the fallback provider and, if that fails too, report the scoring as FAILED.
@@ -504,6 +519,9 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
     }
 
     parts.push(`Source: ${sanitizeStringField(lead.source, 500)}`);
+
+    // The engagement history, built and sanitized by lib/lead-activity-context.ts.
+    if (lead.activity) parts.push(lead.activity);
 
     return parts.join('\n');
   }

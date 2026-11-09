@@ -399,15 +399,19 @@ export async function withMonitoring<T>(
     });
     recordInference({ model, chain, outcome: 'error', latencyMs: Date.now() - startTime, error });
 
-    logger.error(
-      {
-        operationId,
-        errorType,
-        // The class only: a provider error can echo prompt or lead text (NF-002).
-        errorClass: classifyError(error),
-      },
-      'Chain execution failed'
-    );
+    const failure = {
+      operationId,
+      errorType,
+      // The class only: a provider error can echo prompt or lead text (NF-002).
+      errorClass: classifyError(error),
+    };
+    // An error marked `expected` (e.g. ScoringInconclusiveError: the model answered without a
+    // usable result) is an outcome, not a fault, so it does not raise an error-level log.
+    if ((error as { expected?: unknown } | null)?.expected === true) {
+      logger.warn(failure, 'Chain execution ended without a result (expected outcome)');
+    } else {
+      logger.error(failure, 'Chain execution failed');
+    }
 
     throw error;
   } finally {

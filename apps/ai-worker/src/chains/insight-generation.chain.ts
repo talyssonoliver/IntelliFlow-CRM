@@ -21,6 +21,7 @@ import { aiConfig, type AIProvider } from '../config/ai.config';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { usableVersionedPrompt } from '../versioning/versioned-prompt';
 import pino from 'pino';
 
 const logger = pino({
@@ -242,7 +243,7 @@ Respond with a structured JSON object containing an insights array.`,
       const config = await getVersionLoader().getChainConfig(CHAIN_TYPE_MAP.INSIGHT_GENERATION, {
         tenantId: this.tenantId,
       });
-      return config.prompt ?? null;
+      return usableVersionedPrompt('INSIGHT_GENERATION', config.prompt, this.prompt.inputVariables);
     } catch {
       logger.warn(
         {

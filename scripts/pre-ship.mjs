@@ -417,6 +417,14 @@ const STEPS = [
     required: true,
   },
   {
+    // #1216 item 5: no NEW coverage-variant test files (*.supplementary, *.additional, *.b11,
+    // *.batch*, *.coverage); tests go in the unit's own test file. Existing ones are untouched.
+    id: 'test-variant-names',
+    description: 'refuse new coverage-variant test files',
+    cmd: ['pnpm', 'run', 'lint:test-variants'],
+    required: true,
+  },
+  {
     id: 'lint-runtime-paths',
     description: 'runtime-path linter',
     cmd: ['pnpm', 'run', 'lint:runtime-paths'],

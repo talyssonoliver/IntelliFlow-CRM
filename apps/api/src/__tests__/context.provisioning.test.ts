@@ -130,6 +130,12 @@ describe('ensureAppUserSession — JIT provisioning failure (L5)', () => {
     const upsertArg = (prisma.tenant.upsert as any).mock.calls[0][0];
     expect(upsertArg.where.slug).toBe(upsertArg.create.slug);
     expect(upsertArg.create.slug).toContain(SUPABASE_USER.id);
+    // #1220: the new workspace stores when its trial ends, 14 days from now; nothing derives it from age.
+    const trialEndsAt = upsertArg.create.trialEndsAt as Date;
+    expect(trialEndsAt).toBeInstanceOf(Date);
+    expect(Math.round((trialEndsAt.getTime() - Date.now()) / 86_400_000)).toBe(14);
+    // A retry reuses the org and never resets an existing trial end.
+    expect(upsertArg.update).toEqual({});
     // The user is bound to THAT new tenant, and is its admin/owner.
     expect(session.tenantId).toBe('new-tenant-id');
     expect(session.userId).toBe(SUPABASE_USER.id);

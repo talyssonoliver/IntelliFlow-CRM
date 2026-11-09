@@ -100,6 +100,8 @@ export interface StripeSubscription {
     | 'unpaid'
     | 'paused';
   priceId: string;
+  /** The id of the subscription's plan item: a price change must name it, or Stripe adds an item. */
+  itemId?: string;
   quantity: number;
   currency: string;
   currentPeriodStart: Date;
@@ -184,7 +186,14 @@ export interface StripeCreateSubscriptionParams {
   trialPeriodDays?: number;
   metadata?: Record<string, string>;
   cancelAtPeriodEnd?: boolean;
+  /** A promotion code's id (promo_…), from findActivePromotionCode; applied as a discount. */
+  promotionCodeId?: string;
 }
+
+/** A subscription change: the plan item to change, by id, and what to change on it. */
+export type StripeUpdateSubscriptionParams = Partial<StripeCreateSubscriptionParams> & {
+  itemId?: string;
+};
 
 export interface CreateCustomerParams {
   email?: string;

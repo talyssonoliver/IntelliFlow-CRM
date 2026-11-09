@@ -64,6 +64,8 @@ const PROJECTS = [
   // merged lcov had no tooling coverage and diff-coverage would score every
   // changed tooling line as "no lcov" while Sonar saw it covered.
   'root',
+  // tools/scripts/subset-material-symbols.mjs's tests (#1216): CI shards this project too.
+  'tools-mjs',
 ];
 
 // Projects that are allowed extra time (in ms). Default timeout is 20 minutes.
@@ -71,6 +73,13 @@ const PROJECT_TIMEOUT_MS = {
   api: 30 * 60 * 1000, // 30 minutes for large api project
   web: 25 * 60 * 1000, // 25 minutes for web
   default: 20 * 60 * 1000, // 20 minutes for everything else
+};
+
+// Projects whose coverage is limited to the files they test. tools-mjs is an inline project
+// without the other projects' setup: with the repo-wide include it had to instrument every
+// untested file itself, and crashed parsing apps/api/src/test/setup.ts (#1216).
+const PROJECT_COVERAGE_INCLUDE = {
+  'tools-mjs': ['tools/scripts/subset-material-symbols.mjs'],
 };
 
 const MERGE_ONLY = process.argv.includes('--merge-only');
@@ -116,6 +125,7 @@ function runVitest(project) {
       ...(RELATED_FILES ? ['related', '--run', '--passWithNoTests'] : ['run']),
       '--coverage',
       `--coverage.reportsDirectory=${outDir}`,
+      ...(PROJECT_COVERAGE_INCLUDE[project] ?? []).map((glob) => `--coverage.include=${glob}`),
       `--project=${project}`,
       '--reporter=default',
       '--reporter=json',

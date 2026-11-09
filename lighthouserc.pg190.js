@@ -1,13 +1,29 @@
 // lighthouserc.pg190.js — PG-190 case-settings Lighthouse (Path C)
 // Dedicated LHCI config for auditing the authenticated /cases/case-settings page.
 // Mirrors lighthouserc.authenticated.js but targets the PG-190 URL.
+// Playwright's bundled Chromium with a fixed profile, never the installed Chrome (see
+// tools/lighthouse/bundled-chrome.cjs), for Lighthouse and for the Puppeteer login script.
+const { lhciCollectBrowser, PROFILE_DIR } = require('./tools/lighthouse/bundled-chrome.cjs');
+
+const browser = lhciCollectBrowser();
+
 module.exports = {
   ci: {
     collect: {
       url: ['http://localhost:3000/cases/case-settings'],
       numberOfRuns: 1,
+      ...(browser.chromePath
+        ? {
+            chromePath: browser.chromePath,
+            puppeteerLaunchOptions: {
+              executablePath: browser.chromePath,
+              userDataDir: PROFILE_DIR,
+            },
+          }
+        : {}),
       puppeteerScript: './tools/lighthouse/lhci-auth.js',
       settings: {
+        ...(browser.chromeFlags ? { chromeFlags: browser.chromeFlags } : {}),
         preset: 'desktop',
         onlyCategories: ['performance'],
         throttling: { rttMs: 40, throughputKbps: 10240, cpuSlowdownMultiplier: 1 },

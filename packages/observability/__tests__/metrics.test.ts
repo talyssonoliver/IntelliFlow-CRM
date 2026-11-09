@@ -63,11 +63,11 @@ vi.mock('@opentelemetry/sdk-metrics', () => ({
   },
 }));
 
+// OpenTelemetry 2: resourceFromAttributes replaced `new Resource`.
 vi.mock('@opentelemetry/resources', () => ({
-  Resource: class MockResource {
-    constructor(attrs: unknown) {
-      mockResource(attrs);
-    }
+  resourceFromAttributes: (attrs: unknown) => {
+    mockResource(attrs);
+    return { attributes: attrs };
   },
 }));
 

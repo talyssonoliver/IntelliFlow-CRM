@@ -54,6 +54,29 @@ export function buildErrorState(
   return { ...current, [type]: msg };
 }
 
+/** Green for a passed gate, red for a failed one, yellow for anything else (pending, warn). */
+export function getQualityGateColor(gate: string): string {
+  switch (gate.toLowerCase()) {
+    case 'passed':
+    case 'ok':
+      return 'text-green-600';
+    case 'failed':
+    case 'error':
+      return 'text-red-600';
+    default:
+      return 'text-yellow-600';
+  }
+}
+
+export type CoverageVariant = 'success' | 'warning' | 'error';
+
+/** Coverage from 90% is good, from 70% a warning, below that an error. */
+export function getCoverageColor(pct: number): CoverageVariant {
+  if (pct >= 90) return 'success';
+  if (pct >= 70) return 'warning';
+  return 'error';
+}
+
 export default function QualityDashboard() {
   const [data, setData] = useState<QualityMetrics | null>(null);
   const [loading, setLoading] = useState(true);
@@ -126,26 +149,6 @@ export default function QualityDashboard() {
   }
 
   const isAnyRefreshing = Object.values(refreshing).some(Boolean);
-
-  const getQualityGateColor = (gate: string) => {
-    switch (gate.toLowerCase()) {
-      case 'passed':
-      case 'ok':
-        return 'text-green-600';
-      case 'failed':
-      case 'error':
-        return 'text-red-600';
-      default:
-        return 'text-yellow-600';
-    }
-  };
-
-  type CoverageVariant = 'success' | 'warning' | 'error';
-  const getCoverageColor = (pct: number): CoverageVariant => {
-    if (pct >= 90) return 'success';
-    if (pct >= 70) return 'warning';
-    return 'error';
-  };
 
   return (
     <div className="space-y-6">
