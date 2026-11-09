@@ -392,6 +392,84 @@ describe('PayPalAdapter', () => {
     });
   });
 
+  // Was only "tested" in tests/integration/connectors/payments.test.ts, which asserted its own
+  // mocked SUCCESS without calling the adapter (#1216).
+  describe('verifyWebhookSignature', () => {
+    const headers = {
+      'paypal-auth-algo': 'SHA256withRSA',
+      'paypal-cert-url': 'https://api.example.invalid/cert.pem',
+      'paypal-transmission-id': 'tx-1',
+      'paypal-transmission-sig': 'sig-value',
+      'paypal-transmission-time': '2026-11-08T12:00:00Z',
+    };
+    const body = JSON.stringify({ id: 'WH-1', event_type: 'PAYMENT.CAPTURE.COMPLETED' });
+
+    /** The OAuth token response, then the verification response. */
+    function respond(verification: unknown, ok = true) {
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({ access_token: 'tok', token_type: 'Bearer', expires_in: 3600 }),
+        })
+        .mockResolvedValueOnce({
+          ok,
+          status: ok ? 200 : 400,
+          json: () => Promise.resolve(verification),
+        });
+    }
+
+    it('accepts a webhook PayPal verifies, and sends PayPal the transmission headers', async () => {
+      respond({ verification_status: 'SUCCESS' });
+
+      const result = await adapter.verifyWebhookSignature('webhook_test_id', headers, body);
+
+      expect(result.isSuccess && result.value).toBe(true);
+      const [url, init] = mockFetch.mock.calls[1] as [string, { method: string; body: string }];
+      expect(url).toMatch(/\/v1\/notifications\/verify-webhook-signature$/);
+      expect(init.method).toBe('POST');
+      expect(JSON.parse(init.body)).toEqual({
+        auth_algo: 'SHA256withRSA',
+        cert_url: 'https://api.example.invalid/cert.pem',
+        transmission_id: 'tx-1',
+        transmission_sig: 'sig-value',
+        transmission_time: '2026-11-08T12:00:00Z',
+        webhook_id: 'webhook_test_id',
+        webhook_event: { id: 'WH-1', event_type: 'PAYMENT.CAPTURE.COMPLETED' },
+      });
+    });
+
+    it('rejects a webhook PayPal does not verify', async () => {
+      respond({ verification_status: 'FAILURE' });
+      const result = await adapter.verifyWebhookSignature('webhook_test_id', headers, body);
+      expect(result.isSuccess && result.value).toBe(false);
+    });
+
+    it('fails, without calling PayPal, when the body is not JSON', async () => {
+      respond({ verification_status: 'SUCCESS' });
+      const result = await adapter.verifyWebhookSignature('webhook_test_id', headers, 'not json');
+      expect(result.isFailure).toBe(true);
+      expect(mockFetch).toHaveBeenCalledTimes(1); // only the token request
+    });
+
+    it('fails when PayPal rejects the verification request', async () => {
+      respond({ name: 'INVALID_REQUEST', message: 'bad' }, false);
+      const result = await adapter.verifyWebhookSignature('webhook_test_id', headers, body);
+      expect(result.isFailure).toBe(true);
+    });
+
+    it('fails before verifying when the adapter cannot authenticate', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        json: () => Promise.resolve({ error: 'invalid_client' }),
+      });
+      const result = await adapter.verifyWebhookSignature('webhook_test_id', headers, body);
+      expect(result.isFailure).toBe(true);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('parseWebhookEvent', () => {
     it('should parse a valid webhook event', () => {
       const eventPayload = JSON.stringify({
