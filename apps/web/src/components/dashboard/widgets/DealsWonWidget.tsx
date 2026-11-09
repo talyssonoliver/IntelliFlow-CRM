@@ -32,7 +32,7 @@ export function DealsWonWidget(_props: Readonly<WidgetProps>) {
   const {
     data: chartData,
     isLoading,
-    isError,
+    isError: requestFailed,
     refetch,
   } = trpc.analytics.dealsWonTrend.useQuery(
     { months },
@@ -42,6 +42,10 @@ export function DealsWonWidget(_props: Readonly<WidgetProps>) {
       refetchInterval: 5 * DASHBOARD_REFETCH_INTERVAL_MS,
     }
   );
+
+  // A failed background refresh keeps the figures already loaded (React Query keeps
+  // `data`); "Couldn't load" is only for a request that never produced any.
+  const isError = requestFailed && !chartData;
 
   if (isLoading || authLoading) {
     return (

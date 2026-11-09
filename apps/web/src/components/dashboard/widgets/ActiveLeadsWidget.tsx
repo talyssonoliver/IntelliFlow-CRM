@@ -5,7 +5,10 @@ import { KpiCard } from '../KpiCard';
 import type { WidgetProps } from './index';
 
 export function ActiveLeadsWidget(_props: Readonly<WidgetProps>) {
-  const { data: stats, isLoading: statsLoading, isError: statsError } = trpc.lead.stats.useQuery();
+  const { data: stats, isLoading: statsLoading, isError: statsFailed } = trpc.lead.stats.useQuery();
+  // A failed background refresh keeps the figures already loaded (React Query keeps
+  // `data`); "Couldn't load" is only for a request that never produced any.
+  const statsError = statsFailed && !stats;
   const { data: overview, isLoading: overviewLoading } = trpc.analytics.getOverview.useQuery({});
 
   const isLoading = !statsError && (statsLoading || overviewLoading);

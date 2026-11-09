@@ -21,7 +21,9 @@ export function SalesRevenueWidget(_props: Readonly<WidgetProps>) {
   const delta = Number(data?.revenueDelta ?? 0);
   const isOnTrack = isTrendingUp(delta);
 
-  if (isError) {
+  // A failed background refresh keeps the revenue already loaded; "Couldn't load" is
+  // only for a request that never produced any.
+  if (isError && !data) {
     return <KpiCard label="Sales Revenue" icon="payments" value={null} failed />;
   }
 

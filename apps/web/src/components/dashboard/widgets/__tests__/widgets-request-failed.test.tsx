@@ -111,3 +111,76 @@ describe('dashboard widgets when the request fails', () => {
     expect(refetch).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('dashboard widgets when a background refresh fails after a good load', () => {
+  // React Query keeps the last good `data` and sets isError when a later poll fails.
+  const staleFailure = { isLoading: false, isError: true, error: new Error('poll failed') };
+
+  beforeEach(() => {
+    overviewMock.mockReturnValue({
+      ...staleFailure,
+      data: { openOpportunities: 7, totalRevenue: 45200, revenueDelta: 100, leadDelta: 2 },
+    });
+    leadStatsMock.mockReturnValue({ ...staleFailure, data: { total: 40 } });
+    leadMetricsMock.mockReturnValue({ ...staleFailure, data: { conversionRate: 4.2 } });
+    ticketStatsMock.mockReturnValue({
+      ...staleFailure,
+      data: { total: 3, bySLAStatus: {}, slaBreached: 0 },
+    });
+    pipelineMock.mockReturnValue({
+      ...staleFailure,
+      refetch: vi.fn(),
+      data: {
+        stages: [
+          { stageKey: 'prospecting', displayName: 'Prospecting', totalValue: 1000, count: 2 },
+        ],
+      },
+    });
+  });
+
+  function expectNoFailure() {
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  }
+
+  it('Active Deals keeps its count', () => {
+    render(<ActiveDealsWidget />);
+    expect(screen.getByText('7')).toBeInTheDocument();
+    expectNoFailure();
+  });
+
+  it('Active Leads keeps its count', () => {
+    render(<ActiveLeadsWidget />);
+    expect(screen.getByText('40')).toBeInTheDocument();
+    expectNoFailure();
+  });
+
+  it('Conversion Rate keeps its rate', () => {
+    render(<ConversionRateWidget />);
+    expect(screen.getByText('4.2%')).toBeInTheDocument();
+    expectNoFailure();
+  });
+
+  it('Open Tickets keeps its count', () => {
+    render(<OpenTicketsWidget />);
+    expect(screen.getByText('3')).toBeInTheDocument();
+    expectNoFailure();
+  });
+
+  it('Sales Revenue keeps its figure', () => {
+    render(<SalesRevenueWidget />);
+    expect(screen.getByText('£45,200')).toBeInTheDocument();
+    expectNoFailure();
+  });
+
+  it('Total Leads keeps its count', () => {
+    render(<TotalLeadsWidget />);
+    expect(screen.getByText('40')).toBeInTheDocument();
+    expectNoFailure();
+  });
+
+  it('Pipeline Summary keeps its stages', () => {
+    render(<PipelineSummaryWidget />);
+    expect(screen.getByText('Prospecting')).toBeInTheDocument();
+    expectNoFailure();
+  });
+});

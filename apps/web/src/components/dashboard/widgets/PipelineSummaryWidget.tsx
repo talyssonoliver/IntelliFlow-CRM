@@ -20,10 +20,18 @@ const STAGE_COLORS: Record<string, string> = {
 };
 
 export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
-  const { data, isLoading, isError, refetch } = trpc.opportunity.getPipeline.useQuery(
+  const {
+    data,
+    isLoading,
+    isError: requestFailed,
+    refetch,
+  } = trpc.opportunity.getPipeline.useQuery(
     { includeClosedStages: false },
     { refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
   );
+  // A failed background refresh keeps the figures already loaded (React Query keeps
+  // `data`); "Couldn't load" is only for a request that never produced any.
+  const isError = requestFailed && !data;
 
   // Denominator = sum of the DISPLAYED (open) stages, not the API's
   // `totalPipelineValue` which includes closed-won/lost. Using the API total

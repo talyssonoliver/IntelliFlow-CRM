@@ -18,7 +18,11 @@ interface TicketMetrics {
 }
 
 export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
-  const { data, isLoading, isError } = api.ticket.stats.useQuery(
+  const {
+    data,
+    isLoading,
+    isError: requestFailed,
+  } = api.ticket.stats.useQuery(
     { timeWindow: 'all' },
     { refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
   );
@@ -31,6 +35,10 @@ export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
     }),
     [data]
   );
+
+  // A failed background refresh keeps the figures already loaded (React Query keeps
+  // `data`); "Couldn't load" is only for a request that never produced any.
+  const isError = requestFailed && !data;
 
   // No data yet (loading or disabled/error) — show pending, never a fake 0.
   const pending = !isError && (isLoading || !data);

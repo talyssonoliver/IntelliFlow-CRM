@@ -59,7 +59,12 @@ function getSkeletonFallback(widget: Widget): React.ReactNode {
     case 'recent-activity':
       return <ListWidgetSkeleton colSpan={widget.colSpan} />;
     default:
-      return <StatCardSkeleton colSpan={widget.colSpan} />;
+      // Match the live cell's span: a panel widget loads as a full-width panel on phones.
+      return dashboardWidgetKind(widget.type) === 'kpi' ? (
+        <StatCardSkeleton colSpan={widget.colSpan} />
+      ) : (
+        <ListWidgetSkeleton colSpan={widget.colSpan} />
+      );
   }
 }
 

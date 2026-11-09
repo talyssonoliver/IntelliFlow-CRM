@@ -8,10 +8,17 @@ import type { WidgetProps } from './index';
 
 export function ActiveDealsWidget(_props: Readonly<WidgetProps>) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data, isLoading, isError } = trpc.analytics.getOverview.useQuery(
+  const {
+    data,
+    isLoading,
+    isError: requestFailed,
+  } = trpc.analytics.getOverview.useQuery(
     {},
     { enabled: isAuthenticated && !authLoading, refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
   );
+  // A failed background refresh keeps the figures already loaded (React Query keeps
+  // `data`); "Couldn't load" is only for a request that never produced any.
+  const isError = requestFailed && !data;
 
   // While auth is resolving or the query is disabled/pending, `data` is
   // undefined — show a pending indicator rather than a real-looking 0.

@@ -17,12 +17,15 @@ export function GrowthTrendsWidget(_props: Readonly<WidgetProps>) {
   const {
     data: trendData,
     isLoading,
-    isError,
+    isError: requestFailed,
     refetch,
   } = trpc.analytics.growthTrends.useQuery(
     { metric: 'revenue', months: 12 },
     { enabled: isAuthenticated && !authLoading }
   );
+  // A failed background refresh keeps the figures already loaded (React Query keeps
+  // `data`); "Couldn't load" is only for a request that never produced any.
+  const isError = requestFailed && !trendData;
 
   if (isLoading || authLoading) {
     return (

@@ -41,7 +41,9 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
     );
   }
 
-  if (error) {
+  // A failed background refresh keeps the count already loaded; "Couldn't load" is only
+  // for a request that never produced one.
+  if (error && !stats) {
     return <KpiCard label="Total Leads" icon="group" value={null} failed />;
   }
 

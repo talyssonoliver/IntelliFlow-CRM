@@ -39,12 +39,12 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
   const {
     data: overview,
     isLoading: overviewLoading,
-    isError: overviewError,
+    isError: overviewFailed,
   } = trpc.analytics.getOverview.useQuery({});
   const {
     data: timeSeries,
     isLoading,
-    isError,
+    isError: seriesFailed,
     refetch,
   } = trpc.analytics.getTimeSeriesData.useQuery({
     metric: 'revenue',
@@ -52,6 +52,11 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
     endDate: dateRange.endDate,
     granularity: timeRange === 'week' ? 'day' : 'month',
   });
+
+  // A failed background refresh keeps the figures already loaded (React Query keeps
+  // `data`); "Couldn't load" is only for a request that never produced any.
+  const overviewError = overviewFailed && !overview;
+  const isError = seriesFailed && !timeSeries;
 
   // The revenue figure comes from `overview`, not the time-series query — gate
   // on the overview's own state so a missing overview never shows a fake £0.

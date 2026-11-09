@@ -21,7 +21,7 @@ import { EmptyState } from '@intelliflow/ui';
 import type { NpsTrendChartProps } from '@/lib/feedback-survey/types';
 
 export default function NpsTrendChart({ trends, granularity }: Readonly<NpsTrendChartProps>) {
-  if (isEmptySeries(trends, undefined, { zeroIsData: true })) {
+  if (isEmptySeries(trends, ['nps', 'csat', 'ces'], { zeroIsData: true })) {
     return <EmptyState entity="insights" phase="passive" className="py-4" />;
   }
 

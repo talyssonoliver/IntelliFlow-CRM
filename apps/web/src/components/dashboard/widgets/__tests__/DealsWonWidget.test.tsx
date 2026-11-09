@@ -92,3 +92,22 @@ describe('DealsWonWidget', () => {
     );
   });
 });
+
+describe('DealsWonWidget after a failed background refresh', () => {
+  it('keeps the chart it already loaded', () => {
+    useQueryMock.mockReturnValue({
+      data: [
+        { month: 'Jan', value: 4 },
+        { month: 'Feb', value: 10 },
+      ],
+      isLoading: false,
+      isError: true,
+      refetch: vi.fn(),
+    });
+
+    render(<DealsWonWidget />);
+
+    expect(screen.getByText('Jan')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+});

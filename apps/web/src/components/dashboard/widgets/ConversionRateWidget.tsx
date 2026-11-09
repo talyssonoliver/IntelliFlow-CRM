@@ -13,7 +13,14 @@ export function ConversionRateWidget(_props: Readonly<WidgetProps>) {
     return { startDate: start.toISOString(), endDate: end.toISOString() };
   }, []);
 
-  const { data, isLoading, isError } = trpc.analytics.getLeadMetrics.useQuery(dateRange);
+  const {
+    data,
+    isLoading,
+    isError: requestFailed,
+  } = trpc.analytics.getLeadMetrics.useQuery(dateRange);
+  // A failed background refresh keeps the figures already loaded (React Query keeps
+  // `data`); "Couldn't load" is only for a request that never produced any.
+  const isError = requestFailed && !data;
 
   const conversionRate = Number(data?.conversionRate ?? 0);
   const progress = Math.min(conversionRate * 10, 100);

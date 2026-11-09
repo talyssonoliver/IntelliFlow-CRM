@@ -17,11 +17,14 @@ export function TrafficSourcesWidget(_props: Readonly<WidgetProps>) {
   const {
     data: sources,
     isLoading,
-    isError,
+    isError: requestFailed,
     refetch,
   } = trpc.analytics.trafficSources.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
   });
+  // A failed background refresh keeps the figures already loaded (React Query keeps
+  // `data`); "Couldn't load" is only for a request that never produced any.
+  const isError = requestFailed && !sources;
 
   if (isLoading || authLoading) {
     return (
