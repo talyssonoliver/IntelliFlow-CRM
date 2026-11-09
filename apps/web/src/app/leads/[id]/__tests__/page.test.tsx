@@ -524,7 +524,7 @@ describe('LeadDetailPage - Empty State CTA', () => {
   // EmptyState migration: packages/ui/src/components/empty-state.tsx gates the
   // CTA behind `phase === 'soft-cta'` (empty-state.tsx:387), so a passive
   // EmptyState never renders the button. Its AC-001/AC-002 coverage moved
-  // into AC-003's "activity-visible" path ÔÇö see below ÔÇö which is sufficient.
+  // into AC-003's "activity-visible" path — see below — which is sufficient.
 
   it('CTA button is NOT rendered when activities array has items (AC-003)', () => {
     mockLeadQueryState.data.activities = [

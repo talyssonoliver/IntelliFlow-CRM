@@ -33,7 +33,7 @@ import { useActivityDeepLink, isDeepLinkedActivity } from '@/hooks/useActivityDe
 import { useActivityReactions } from '@/hooks/useActivityReactions';
 import { useActivityComments } from '@/hooks/useActivityComments';
 import { QuickLogComposer } from '@/components/shared/quick-log-composer';
-// IFC-312 ÔÇö AI chain UI surfaces
+// IFC-312 — AI chain UI surfaces
 import { SuggestedTagsRow } from '@/components/shared/SuggestedTagsRow';
 import { ReplyDraftsPanel } from '@/components/contacts/ReplyDraftsPanel';
 import { ContactRelatedTabs } from '@/components/contacts/ContactRelatedTabs';
@@ -328,7 +328,7 @@ export default function Contact360Page() {
       return next;
     });
     deepLinkScrolledRef.current = true;
-    // Scroll after render ÔÇö try prefixed first, then raw
+    // Scroll after render — try prefixed first, then raw
     requestAnimationFrame(() => {
       const el =
         document.querySelector(`[data-activity-id="${CSS.escape(selectedActivityId.prefixed)}"]`) ||
@@ -530,7 +530,7 @@ export default function Contact360Page() {
     }
   }, [fromInsight, insightIdParam, error, isLoading, contact, dismissInsightMutation]);
 
-  // Loading / auth-error / not-found short-circuits ÔÇö see helper above.
+  // Loading / auth-error / not-found short-circuits — see helper above.
   const loadingScreen = pickContactLoadingScreen({
     isLoading,
     error,
@@ -718,7 +718,7 @@ export default function Contact360Page() {
                   </span>
                 ))}
               </div>
-              {/* IFC-312 ÔÇö AI tag suggestions (hidden when flag off or empty). */}
+              {/* IFC-312 — AI tag suggestions (hidden when flag off or empty). */}
               <div className="mt-2">
                 <SuggestedTagsRow entity="contact" entityId={contact.id} enabled={true} />
               </div>
@@ -797,7 +797,7 @@ export default function Contact360Page() {
                   <p className="text-lg font-bold text-slate-900 dark:text-white">
                     {contact.metrics.emailsSent > 0
                       ? `${Math.round((contact.metrics.emailsOpened / contact.metrics.emailsSent) * 100)}%`
-                      : 'ÔÇö'}
+                      : '—'}
                   </p>
                   <p className="text-xs text-slate-500">Open Rate</p>
                 </div>
@@ -1001,7 +1001,7 @@ export default function Contact360Page() {
                         </div>
                         {aiInsights.quietPeriodAlert && (
                           <span className="px-2 py-1 rounded bg-yellow-100 text-yellow-700 text-xs font-medium">
-                            ÔÜá´©Å Quiet Period
+                            ⚠️ Quiet Period
                           </span>
                         )}
                       </div>
@@ -1064,7 +1064,7 @@ export default function Contact360Page() {
                                   {activity.description}
                                 </p>
                                 <p className="text-xs text-slate-500 mt-1">
-                                  {activity.user} ÔÇó{' '}
+                                  {activity.user} •{' '}
                                   {formatContactRelativeTime(activity.timestamp, timezone)}
                                 </p>
                               </div>
@@ -1117,7 +1117,7 @@ export default function Contact360Page() {
                                           {comment.text}
                                         </p>
                                         <p className="text-xs text-slate-500 mt-1">
-                                          {comment.user} ÔÇó{' '}
+                                          {comment.user} •{' '}
                                           {formatContactRelativeTime(comment.timestamp, timezone)}
                                         </p>
                                       </div>
@@ -1427,7 +1427,7 @@ export default function Contact360Page() {
                     <p className="text-sm text-slate-600 dark:text-slate-400">{note.content}</p>
                     <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                       <span>{note.author}</span>
-                      <span>ÔÇó</span>
+                      <span>•</span>
                       <span>{formatContactRelativeTime(note.createdAt, timezone)}</span>
                     </div>
                   </div>
@@ -1446,7 +1446,7 @@ export default function Contact360Page() {
                 onPendingAction={() => scoreWithAIMutation.mutate({ contactId })}
                 isPending={scoreWithAIMutation.isPending}
               />
-              {/* IFC-312 ÔÇö AI reply drafts panel (hidden when flag off or empty). */}
+              {/* IFC-312 — AI reply drafts panel (hidden when flag off or empty). */}
               <div className="mt-6">
                 <h3 className="text-sm font-semibold mb-2">AI-drafted replies</h3>
                 <ReplyDraftsPanel contactId={contactId} enabled={true} />
@@ -1496,7 +1496,7 @@ export default function Contact360Page() {
                   </p>
                   <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                     <span>{note.author}</span>
-                    <span>ÔÇó</span>
+                    <span>•</span>
                     <span>{formatContactRelativeTime(note.createdAt, timezone)}</span>
                   </div>
                 </div>
