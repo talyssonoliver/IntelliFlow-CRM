@@ -190,9 +190,6 @@ function buildNextBestActions(insight: {
   if (recs.length > 0 && recs[0] !== insight.nextBestAction) {
     actions.push({ icon: 'auto_awesome', label: recs[0], primary: false });
   }
-  if (actions.length === 0) {
-    actions.push({ icon: 'calendar_add_on', label: 'Schedule Discovery Call', primary: true });
-  }
   return actions;
 }
 
@@ -1648,7 +1645,9 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
 // ÔöÇÔöÇÔöÇ AI Insights tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface AiInsightsData {
-  qualificationScore: number;
+  /** The lead's stored score; shown only when scoringStatus says it is a real score. */
+  leadScore: number;
+  scoringStatus: string | null;
   engagementLevel: string;
   engagementScore: number;
   conversionProbability: number;
@@ -1681,6 +1680,10 @@ function LeadAIInsightsTab({
   onRunAnalysis,
   scoreWithAIMutation,
 }: LeadAIInsightsTabProps) {
+  // UI-024: scoring and full analysis are separate. The score shows whenever the lead was
+  // scored, whether or not the full analysis has run.
+  const isScored =
+    leadScoreDisplay(aiInsights.leadScore, aiInsights.scoringStatus).kind === 'score';
   return (
     <div className="space-y-6">
       {!hasAiInsight && (
@@ -1758,10 +1761,13 @@ function LeadAIInsightsTab({
             </div>
             <div>
               <p
-                className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
+                className={`text-2xl font-bold ${isScored ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
               >
-                <span data-testid={hasAiInsight ? 'lead-score-value' : 'lead-score-null-state'}>
-                  {hasAiInsight ? aiInsights.qualificationScore : '--'}
+                <span data-testid={isScored ? 'lead-score-value' : 'lead-score-null-state'}>
+                  <LeadScoreValue
+                    score={aiInsights.leadScore}
+                    scoringStatus={aiInsights.scoringStatus}
+                  />
                 </span>
               </p>
               <p className="text-xs text-slate-500">Lead Score</p>
@@ -1769,21 +1775,28 @@ function LeadAIInsightsTab({
           </div>
         </Card>
       </div>
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-          AI Recommendations
-        </h3>
-        <ul className="space-y-3">
-          {aiInsights.recommendations.map((rec, index) => (
-            <li key={`rec-${index}-${rec.slice(0, 20)}`} className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-[#2a78f6]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-xs font-medium text-[#2a78f6]">{index + 1}</span>
-              </div>
-              <p className="text-slate-600 dark:text-slate-400">{rec}</p>
-            </li>
-          ))}
-        </ul>
-      </Card>
+      {hasAiInsight && (
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+            AI Recommendations
+          </h3>
+          {aiInsights.recommendations.length === 0 && (
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              This analysis made no recommendations.
+            </p>
+          )}
+          <ul className="space-y-3">
+            {aiInsights.recommendations.map((rec, index) => (
+              <li key={`rec-${index}-${rec.slice(0, 20)}`} className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#2a78f6]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-medium text-[#2a78f6]">{index + 1}</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400">{rec}</p>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
       <Card className="p-6">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
           Engagement Analysis
@@ -1849,6 +1862,8 @@ function LeadRightSidebar({
   onViewNotes,
   onViewTasks,
 }: LeadRightSidebarProps) {
+  const isScored =
+    leadScoreDisplay(aiInsights.leadScore, aiInsights.scoringStatus).kind === 'score';
   return (
     <aside className="lg:col-span-3 flex flex-col gap-6">
       {/* Lead IQ (AI Insights) */}
@@ -1874,16 +1889,24 @@ function LeadRightSidebar({
               <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                 Lead Score
               </span>
-              <span className="text-sm font-bold text-green-600">
-                {aiInsights.qualificationScore}/100
+              <span
+                data-testid="sidebar-lead-score"
+                className={`text-sm font-bold ${isScored ? 'text-green-600' : ''}`}
+              >
+                <LeadScoreValue
+                  score={aiInsights.leadScore}
+                  scoringStatus={aiInsights.scoringStatus}
+                />
               </span>
             </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-              <div
-                className="bg-green-500 h-2 rounded-full"
-                style={{ width: `${aiInsights.qualificationScore}%` }}
-              />
-            </div>
+            {isScored && (
+              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+                <div
+                  className="bg-green-500 h-2 rounded-full"
+                  style={{ width: `${aiInsights.leadScore}%` }}
+                />
+              </div>
+            )}
             <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">{aiInsights.icpMatch}</p>
           </div>
           <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
@@ -1925,37 +1948,44 @@ function LeadRightSidebar({
               </div>
             )}
           </div>
-          <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-              Recommended Next Steps
-            </p>
-            <div className="space-y-2">
-              {aiInsights.nextBestActions.map((action) => (
-                <button
-                  key={action.label}
-                  className={`w-full text-left p-2 rounded border transition-colors group ${
-                    action.primary
-                      ? 'bg-blue-50 dark:bg-slate-800/50 border-blue-100 dark:border-slate-700 hover:border-[#2a78f6]/50'
-                      : 'bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`material-symbols-outlined !text-[18px] ${action.primary ? 'text-[#2a78f6]' : 'text-slate-500'}`}
+          {hasAiInsight && aiInsights.nextBestActions.length > 0 && (
+            <>
+              <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
+              <div data-testid="sidebar-next-steps">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Recommended Next Steps
+                </p>
+                {/* UI-022: these come from the analysis and have no action of their own, so
+                    they are a list, not buttons. */}
+                <ul className="space-y-2">
+                  {aiInsights.nextBestActions.map((action) => (
+                    <li
+                      key={action.label}
+                      className={`p-2 rounded border ${
+                        action.primary
+                          ? 'bg-blue-50 dark:bg-slate-800/50 border-blue-100 dark:border-slate-700'
+                          : 'bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700'
+                      }`}
                     >
-                      {action.icon}
-                    </span>
-                    <span
-                      className={`text-sm font-medium ${action.primary ? 'text-slate-700 dark:text-slate-200 group-hover:text-[#2a78f6]' : 'text-slate-600 dark:text-slate-300 group-hover:text-slate-900'}`}
-                    >
-                      {action.label}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          aria-hidden="true"
+                          className={`material-symbols-outlined !text-[18px] ${action.primary ? 'text-[#2a78f6]' : 'text-slate-500'}`}
+                        >
+                          {action.icon}
+                        </span>
+                        <span
+                          className={`text-sm font-medium ${action.primary ? 'text-slate-700 dark:text-slate-200' : 'text-slate-600 dark:text-slate-300'}`}
+                        >
+                          {action.label}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
         </div>
         <button
           onClick={onViewAIInsights}
@@ -2015,13 +2045,6 @@ function LeadRightSidebar({
             View all notes ({notes.length})
           </button>
         )}
-      </Card>
-      {/* Similar Leads */}
-      <Card className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-bold text-slate-900 dark:text-white">Similar Leads</h3>
-        </div>
-        <EmptyState entity="leads" phase="passive" className="py-2" />
       </Card>
     </aside>
   );
@@ -2506,7 +2529,8 @@ export default function Lead360Page() {
     const insight = apiLead?.aiInsight;
     if (!insight) {
       return {
-        qualificationScore: lead?.score || 0,
+        leadScore: lead?.score ?? 0,
+        scoringStatus: lead?.scoringStatus ?? null,
         engagementLevel: 'Not analyzed',
         engagementScore: 0,
         conversionProbability: 0,
@@ -2515,12 +2539,10 @@ export default function Lead360Page() {
         sentiment: 'Not analyzed',
         sentimentTrend: null as string | null,
         lastEngagementDays: 0,
-        nextBestAction: 'Gather more information about this lead',
-        nextBestActions: [
-          { icon: 'calendar_add_on', label: 'Schedule Discovery Call', primary: true },
-          { icon: 'mail', label: 'Send Follow-up Email', primary: false },
-        ] as { icon: string; label: string; primary: boolean }[],
-        recommendations: ['No AI recommendations available yet'],
+        // UI-022: no analysis means no next steps or recommendations, not invented ones.
+        nextBestAction: '',
+        nextBestActions: [] as { icon: string; label: string; primary: boolean }[],
+        recommendations: [] as string[],
         icpMatch: 'Not analyzed yet',
       };
     }
@@ -2529,7 +2551,8 @@ export default function Lead360Page() {
     const engagementLevel = insight.engagementScore >= 70 ? 'High' : mediumOrLow;
 
     return {
-      qualificationScore: lead?.score || insight.engagementScore,
+      leadScore: lead?.score ?? 0,
+      scoringStatus: lead?.scoringStatus ?? null,
       engagementLevel,
       engagementScore: insight.engagementScore,
       conversionProbability: insight.conversionProbability,
@@ -2543,7 +2566,7 @@ export default function Lead360Page() {
       recommendations: (insight.recommendations as string[]) || [],
       icpMatch: insight.icpMatch || 'Not analyzed',
     };
-  }, [apiLead?.aiInsight, lead?.score, lead?.estimatedValue]);
+  }, [apiLead?.aiInsight, lead?.score, lead?.scoringStatus, lead?.estimatedValue]);
 
   // IFC-226: Null-state detection for AI insight styling
   const hasAiInsight = !!apiLead?.aiInsight;

@@ -417,12 +417,12 @@ describe('LeadDetailPage - Null AI Insight UX (IFC-226)', () => {
     expect(dealValueEl).toHaveTextContent('--');
   });
 
-  it('renders "--" for lead score when aiInsight is null', () => {
+  it('renders "Not scored" for lead score when the lead was never scored', () => {
     render(<Lead360Page />);
     const aiTab = screen.getByRole('button', { name: /AI Insights/i });
     fireEvent.click(aiTab);
     const leadScoreEl = screen.getByTestId('lead-score-null-state');
-    expect(leadScoreEl).toHaveTextContent('--');
+    expect(leadScoreEl).toHaveTextContent('Not scored');
   });
 
   it('renders "Run AI Analysis" CTA in AI Insights tab', () => {
@@ -1228,5 +1228,94 @@ describe('LeadDetailPage - no stock photos (UI-018)', () => {
     for (const avatar of avatars) {
       expect(avatar.getAttribute('data-src')).toBe('');
     }
+  });
+});
+
+describe('LeadDetailPage - honest score and analysis (UI-022/023/024)', () => {
+  const analysis = {
+    engagementScore: 85,
+    conversionProbability: 72,
+    estimatedValue: 50000,
+    churnRisk: 'LOW',
+    sentiment: 'Positive',
+    sentimentTrend: 'up',
+    lastEngagementDays: 3,
+    nextBestAction: 'Schedule follow-up',
+    recommendations: ['Send proposal'],
+    icpMatch: 'Strong',
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    mockLeadQueryState.data.activities = [];
+    mockLeadQueryState.data.aiInsight = null;
+  });
+
+  afterEach(() => {
+    mockLeadQueryState.data.aiInsight = null;
+    delete (mockLeadQueryState.data as { scoringStatus?: string }).scoringStatus;
+  });
+
+  function setScored() {
+    (mockLeadQueryState.data as { scoringStatus?: string }).scoringStatus = 'SCORED';
+  }
+
+  it('shows no invented next steps or recommendations when the analysis has not run', () => {
+    render(<Lead360Page />);
+    expect(screen.queryByText('Schedule Discovery Call')).not.toBeInTheDocument();
+    expect(screen.queryByText('Send Follow-up Email')).not.toBeInTheDocument();
+    expect(screen.queryByText('Recommended Next Steps')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /AI Insights/i }));
+    expect(screen.queryByText('AI Recommendations')).not.toBeInTheDocument();
+    expect(screen.queryByText('No AI recommendations available yet')).not.toBeInTheDocument();
+  });
+
+  it('does not render the empty Similar Leads card', () => {
+    render(<Lead360Page />);
+    expect(screen.queryByText('Similar Leads')).not.toBeInTheDocument();
+  });
+
+  it('shows a real score in the sidebar and the AI tab even before the analysis runs', () => {
+    setScored();
+    render(<Lead360Page />);
+    expect(screen.getByTestId('sidebar-lead-score')).toHaveTextContent('75/100');
+    fireEvent.click(screen.getByRole('button', { name: /AI Insights/i }));
+    expect(screen.getByTestId('lead-score-value')).toHaveTextContent('75/100');
+  });
+
+  it('says "Not scored" in the sidebar for a lead that was never scored', () => {
+    render(<Lead360Page />);
+    expect(screen.getByTestId('sidebar-lead-score')).toHaveTextContent('Not scored');
+  });
+
+  it('lists the analysis next steps as text, not as buttons without a handler', () => {
+    setScored();
+    mockLeadQueryState.data.aiInsight = analysis as never;
+    render(<Lead360Page />);
+    const steps = screen.getByTestId('sidebar-next-steps');
+    expect(steps).toHaveTextContent('Schedule follow-up');
+    expect(steps).toHaveTextContent('Send proposal');
+    expect(steps.querySelector('button')).toBeNull();
+  });
+
+  it('keeps the lead score rather than substituting the engagement score', () => {
+    mockLeadQueryState.data.aiInsight = analysis as never;
+    render(<Lead360Page />);
+    expect(screen.getByTestId('sidebar-lead-score')).toHaveTextContent('Not scored');
+    expect(screen.getByTestId('sidebar-lead-score')).not.toHaveTextContent('85');
+  });
+
+  it('says so when an analysis made no recommendations', () => {
+    mockLeadQueryState.data.aiInsight = {
+      ...analysis,
+      nextBestAction: null,
+      recommendations: [],
+    } as never;
+    render(<Lead360Page />);
+    expect(screen.queryByTestId('sidebar-next-steps')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /AI Insights/i }));
+    expect(screen.getByText('This analysis made no recommendations.')).toBeInTheDocument();
   });
 });
