@@ -151,7 +151,7 @@ export const isStaleReviewArtifact = (name) => /^codex-(prompt|raw)(-\d+)?\.txt$
 export function scopeChanges(base, spawn, isInScope) {
   try {
     const changed = listChangedFiles(base, spawn);
-    return { changed, scoped: changed.filter(isInScope) };
+    return { changed, scoped: changed.filter((file) => isInScope(file)) };
   } catch (err) {
     return { message: diffInputMessage(err) };
   }

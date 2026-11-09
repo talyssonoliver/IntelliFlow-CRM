@@ -512,15 +512,16 @@ function finish({ scopedFiles, findings: rawFindings, reviewerUsed, chunkCount }
   };
   fs.writeFileSync(FINDINGS_PATH, JSON.stringify(artifactData, null, 2));
 
-  const lines = [];
-  lines.push(`Semantic Review (${reviewerUsed}) — ${new Date().toISOString()}`);
-  lines.push(`Base ref  : ${baseRef}`);
-  lines.push(`Files in scope : ${scopedFiles.length}`);
-  lines.push(`Diff chunks    : ${chunkCount} (each reviewed in full)`);
-  lines.push(`Total findings : ${findings.length}`);
-  lines.push(`  Waived       : ${waived.length}`);
-  lines.push(`  Unwaived     : ${unwaived.length}`);
-  lines.push('');
+  const lines = [
+    `Semantic Review (${reviewerUsed}) — ${new Date().toISOString()}`,
+    `Base ref  : ${baseRef}`,
+    `Files in scope : ${scopedFiles.length}`,
+    `Diff chunks    : ${chunkCount} (each reviewed in full)`,
+    `Total findings : ${findings.length}`,
+    `  Waived       : ${waived.length}`,
+    `  Unwaived     : ${unwaived.length}`,
+    '',
+  ];
 
   if (unwaived.length > 0) {
     lines.push('UNWAIVED FINDINGS (BLOCKING):');
