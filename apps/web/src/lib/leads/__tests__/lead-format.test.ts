@@ -4,6 +4,9 @@ import {
   getActivityIconBg,
   formatRelativeTime,
   formatEstimatedValue,
+  formatGBPCompact,
+  isSystemTag,
+  visibleTags,
   leadDisplayName,
   type ActivityType,
 } from '../lead-format';
@@ -81,18 +84,18 @@ describe('lead-format · formatRelativeTime', () => {
 });
 
 describe('lead-format · formatEstimatedValue', () => {
-  it('formats values >= $1,000 as compact thousands (cents in)', () => {
-    expect(formatEstimatedValue(5_000_000)).toBe('$50k');
-    expect(formatEstimatedValue(100_000_000)).toBe('$1000k');
+  it('formats values >= £1,000 as compact thousands (pence in)', () => {
+    expect(formatEstimatedValue(5_000_000)).toBe('£50k');
+    expect(formatEstimatedValue(100_000_000)).toBe('£1000k');
   });
 
-  it('formats sub-$1,000 values as whole dollars (no 100x error)', () => {
-    expect(formatEstimatedValue(50_000)).toBe('$500');
-    expect(formatEstimatedValue(99_900)).toBe('$999');
+  it('formats sub-£1,000 values as whole pounds (no 100x error)', () => {
+    expect(formatEstimatedValue(50_000)).toBe('£500');
+    expect(formatEstimatedValue(99_900)).toBe('£999');
   });
 
   it('formats zero', () => {
-    expect(formatEstimatedValue(0)).toBe('$0');
+    expect(formatEstimatedValue(0)).toBe('£0');
   });
 });
 
@@ -132,5 +135,31 @@ describe('lead-format · leadDisplayName', () => {
 
   it('never returns an empty string', () => {
     expect(leadDisplayName({})).toBe('Unnamed lead');
+  });
+});
+
+describe('lead-format · formatGBPCompact (UI-017)', () => {
+  it('uses pounds, never dollars', () => {
+    expect(formatGBPCompact(50_000)).toBe('£50k');
+    expect(formatGBPCompact(999)).toBe('£999');
+    expect(formatGBPCompact(0)).toBe('£0');
+  });
+});
+
+describe('lead-format · system tags (UI-017)', () => {
+  it('recognises the COA sync bookkeeping tags', () => {
+    expect(isSystemTag('coa-pipeline')).toBe(true);
+    expect(isSystemTag('coa-lead:abc123')).toBe(true);
+    expect(isSystemTag('vip')).toBe(false);
+    expect(isSystemTag('coa-pipeline-old')).toBe(false);
+    expect(isSystemTag('my-coa-lead:1')).toBe(false);
+  });
+
+  it('keeps only the user tags, in order', () => {
+    expect(visibleTags(['vip', 'coa-pipeline', 'coa-lead:1', 'restaurant'])).toEqual([
+      'vip',
+      'restaurant',
+    ]);
+    expect(visibleTags([])).toEqual([]);
   });
 });

@@ -68,7 +68,7 @@ function makeLead(overrides: Partial<LeadProfileData> = {}): LeadProfileData {
 }
 
 const metrics: LeadMetrics = {
-  estimatedValue: 5_000_000, // cents -> $50,000 -> "$50k"
+  estimatedValue: 5_000_000, // pence -> £50,000 -> "£50k"
   emailsSent: 10,
   emailsOpened: 5,
   meetings: 2,
@@ -87,6 +87,18 @@ describe('LeadDetail', () => {
     expect(screen.getByText('enterprise')).toBeInTheDocument();
   });
 
+  it('hides the COA sync system tags and keeps the user tags (UI-017)', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({ tags: ['enterprise', 'coa-pipeline', 'coa-lead:abc123'] })}
+        leadMetrics={metrics}
+      />
+    );
+    expect(screen.getByText('enterprise')).toBeInTheDocument();
+    expect(screen.queryByText('coa-pipeline')).not.toBeInTheDocument();
+    expect(screen.queryByText('coa-lead:abc123')).not.toBeInTheDocument();
+  });
+
   it('renders status + temperature badges and the owner card', () => {
     render(<LeadDetail lead={makeLead()} leadMetrics={metrics} />);
     expect(screen.getByText('New Lead')).toBeInTheDocument();
@@ -97,7 +109,7 @@ describe('LeadDetail', () => {
 
   it('renders key metrics (est. value, score, open rate, touchpoints)', () => {
     render(<LeadDetail lead={makeLead({ scoringStatus: 'SCORED' })} leadMetrics={metrics} />);
-    expect(screen.getByText('$50k')).toBeInTheDocument();
+    expect(screen.getByText('£50k')).toBeInTheDocument();
     expect(screen.getByText('75')).toBeInTheDocument();
     expect(screen.getByText('50%')).toBeInTheDocument();
     expect(screen.getByText('7')).toBeInTheDocument();

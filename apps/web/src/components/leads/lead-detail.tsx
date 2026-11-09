@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import { AppAvatar } from '@/components/shared/app-avatar';
-import { formatEstimatedValue, leadDisplayName } from '@/lib/leads/lead-format';
+import { formatEstimatedValue, leadDisplayName, visibleTags } from '@/lib/leads/lead-format';
 import { leadScoreDisplay } from '@/lib/leads/score-display';
 
 /** #1218: the profile card's score, or "Not scored" when no real AI score exists. */
@@ -257,7 +257,7 @@ export function LeadProfileCard({
         <div className="flex flex-wrap gap-2 mb-6">
           <LeadStatusBadge status={lead.status} />
           <TemperatureBadge temperature={lead.temperature} />
-          {lead.tags.map((tag) => (
+          {visibleTags(lead.tags).map((tag) => (
             <span
               key={tag}
               className="px-2 py-1 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-medium"
