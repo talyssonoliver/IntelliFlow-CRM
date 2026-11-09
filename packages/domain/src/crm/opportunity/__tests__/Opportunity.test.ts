@@ -1087,3 +1087,385 @@ describe('Opportunity Aggregate', () => {
     });
   });
 });
+
+describe('Opportunity (additional tests)', () => {
+  function createOpp(overrides = {}) {
+    return Opportunity.create({
+      name: 'Deal',
+      value: 10000,
+      accountId: 'acc_1',
+      ownerId: 'user_1',
+      tenantId: 'tenant_1',
+      ...overrides,
+    });
+  }
+
+  describe('create', () => {
+    it('should create with PROSPECTING stage', () => {
+      const r = createOpp();
+      expect(r.isSuccess).toBe(true);
+      expect(r.value.stage).toBe('PROSPECTING');
+      expect(r.value.probability.value).toBe(10);
+    });
+
+    it('should fail for zero value', () => {
+      expect(createOpp({ value: 0 }).isFailure).toBe(true);
+    });
+
+    it('should fail for negative value', () => {
+      expect(createOpp({ value: -100 }).isFailure).toBe(true);
+    });
+
+    it('should emit OpportunityCreatedEvent', () => {
+      const events = createOpp().value.getDomainEvents();
+      expect(events.length).toBeGreaterThanOrEqual(1);
+      expect(events[0].eventType).toBe('opportunity.created');
+    });
+
+    it('should accept custom currency', () => {
+      const r = createOpp({ value: 5000, currency: 'EUR' });
+      expect(r.value.value.currency).toBe('EUR');
+    });
+
+    it('should accept optional description and contactId', () => {
+      const r = createOpp({
+        description: 'Big deal',
+        contactId: 'c_1',
+        expectedCloseDate: new Date('2026-06-01'),
+      });
+      expect(r.value.description).toBe('Big deal');
+      expect(r.value.contactId).toBe('c_1');
+    });
+  });
+
+  describe('changeStage', () => {
+    it('should change stage and probability', () => {
+      const opp = createOpp().value;
+      opp.changeStage('QUALIFICATION', 'user_1');
+      expect(opp.stage).toBe('QUALIFICATION');
+      expect(opp.probability.value).toBe(20);
+    });
+
+    it('should fail when closed', () => {
+      const opp = createOpp().value;
+      opp.markAsWon('user_1');
+      expect(opp.changeStage('NEGOTIATION', 'user_1').isFailure).toBe(true);
+    });
+
+    it('should emit stage changed event', () => {
+      const opp = createOpp().value;
+      opp.clearDomainEvents();
+      opp.changeStage('NEEDS_ANALYSIS', 'user_1');
+      expect(opp.getDomainEvents().some((e) => e.eventType === 'opportunity.stage_changed')).toBe(
+        true
+      );
+    });
+  });
+
+  describe('updateValue', () => {
+    it('should update value', () => {
+      const opp = createOpp().value;
+      expect(opp.updateValue(20000, 'user_1').isSuccess).toBe(true);
+      expect(opp.value.amount).toBe(20000);
+    });
+
+    it('should fail for zero', () => {
+      expect(createOpp().value.updateValue(0, 'user_1').isFailure).toBe(true);
+    });
+
+    it('should fail when closed', () => {
+      const opp = createOpp().value;
+      opp.markAsWon('user_1');
+      expect(opp.updateValue(5000, 'user_1').isFailure).toBe(true);
+    });
+  });
+
+  describe('updateProbability', () => {
+    it('should update probability', () => {
+      const opp = createOpp().value;
+      expect(opp.updateProbability(50, 'user_1').isSuccess).toBe(true);
+      expect(opp.probability.value).toBe(50);
+    });
+
+    it('should fail when closed', () => {
+      const opp = createOpp().value;
+      opp.markAsWon('user_1');
+      expect(opp.updateProbability(50, 'user_1').isFailure).toBe(true);
+    });
+  });
+
+  describe('updateExpectedCloseDate', () => {
+    it('should update close date', () => {
+      const opp = createOpp().value;
+      const d = new Date('2026-12-31');
+      expect(opp.updateExpectedCloseDate(d, 'user_1').isSuccess).toBe(true);
+      expect(opp.expectedCloseDate).toEqual(d);
+    });
+
+    it('should fail when closed', () => {
+      const opp = createOpp().value;
+      opp.markAsWon('user_1');
+      expect(opp.updateExpectedCloseDate(new Date(), 'user_1').isFailure).toBe(true);
+    });
+  });
+
+  describe('markAsWon', () => {
+    it('should set 100% probability and closedAt', () => {
+      const opp = createOpp().value;
+      expect(opp.markAsWon('user_1').isSuccess).toBe(true);
+      expect(opp.isWon).toBe(true);
+      expect(opp.probability.value).toBe(100);
+      expect(opp.closedAt).toBeInstanceOf(Date);
+    });
+
+    it('should fail when already closed', () => {
+      const opp = createOpp().value;
+      opp.markAsWon('user_1');
+      expect(opp.markAsWon('user_1').isFailure).toBe(true);
+    });
+  });
+
+  describe('markAsLost', () => {
+    it('should set 0% probability', () => {
+      const opp = createOpp().value;
+      expect(opp.markAsLost('Budget', 'user_1').isSuccess).toBe(true);
+      expect(opp.isLost).toBe(true);
+      expect(opp.probability.value).toBe(0);
+    });
+
+    it('should fail when already closed', () => {
+      const opp = createOpp().value;
+      opp.markAsLost('r', 'user_1');
+      expect(opp.markAsLost('r2', 'user_1').isFailure).toBe(true);
+    });
+  });
+
+  describe('reopen', () => {
+    it('should reopen a lost opportunity', () => {
+      const opp = createOpp().value;
+      opp.markAsLost('No budget', 'user_1');
+      expect(opp.reopen('user_1').isSuccess).toBe(true);
+      expect(opp.stage).toBe('PROSPECTING');
+      expect(opp.isClosed).toBe(false);
+    });
+
+    it('should fail when not lost', () => {
+      expect(createOpp().value.reopen('user_1').isFailure).toBe(true);
+    });
+
+    it('should fail when won', () => {
+      const opp = createOpp().value;
+      opp.markAsWon('user_1');
+      expect(opp.reopen('user_1').isFailure).toBe(true);
+    });
+  });
+
+  describe('weightedValue', () => {
+    it('should calculate correctly', () => {
+      const opp = createOpp({ value: 10000 }).value;
+      expect(opp.weightedValue.amount).toBeCloseTo(1000, 0);
+    });
+  });
+
+  describe('updateDescription', () => {
+    it('should update', () => {
+      const opp = createOpp().value;
+      opp.updateDescription('New desc', 'user-123');
+      expect(opp.description).toBe('New desc');
+    });
+  });
+
+  describe('toJSON', () => {
+    it('should serialize', () => {
+      const json = createOpp().value.toJSON();
+      expect(json.name).toBe('Deal');
+      expect(json.stage).toBe('PROSPECTING');
+    });
+  });
+});
+
+describe('Opportunity (b11 tests)', () => {
+  function createOpp(overrides: Record<string, unknown> = {}) {
+    return Opportunity.create({
+      name: 'Deal',
+      value: 10000,
+      accountId: 'acc_1',
+      ownerId: 'user_1',
+      tenantId: 'tenant_1',
+      ...overrides,
+    });
+  }
+
+  describe('create with Money object', () => {
+    it('should create when Money object has valid amount', () => {
+      const money = Money.create(5000, 'GBP').value;
+      const result = Opportunity.create({
+        name: 'Deal with Money',
+        value: money,
+        accountId: 'acc_1',
+        ownerId: 'user_1',
+        tenantId: 'tenant_1',
+      });
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.value.amount).toBe(5000);
+      expect(result.value.value.currency).toBe('GBP');
+    });
+
+    it('should fail when Money object has zero amount', () => {
+      // Money.create(0) may succeed since Money itself allows 0
+      // But Opportunity checks amount <= 0
+      const money = Money.create(0, 'GBP');
+      if (money.isSuccess) {
+        const result = Opportunity.create({
+          name: 'Zero Money',
+          value: money.value,
+          accountId: 'acc_1',
+          ownerId: 'user_1',
+          tenantId: 'tenant_1',
+        });
+        expect(result.isFailure).toBe(true);
+      }
+    });
+
+    it('should fail when Money object has negative amount', () => {
+      const money = Money.create(-100, 'GBP');
+      if (money.isSuccess) {
+        const result = Opportunity.create({
+          name: 'Negative Money',
+          value: money.value,
+          accountId: 'acc_1',
+          ownerId: 'user_1',
+          tenantId: 'tenant_1',
+        });
+        expect(result.isFailure).toBe(true);
+      } else {
+        // Money itself rejected the negative value - that's fine
+        expect(money.isFailure).toBe(true);
+      }
+    });
+
+    it('should create with EUR currency Money object', () => {
+      const money = Money.create(9999, 'EUR').value;
+      const result = Opportunity.create({
+        name: 'EUR Deal',
+        value: money,
+        accountId: 'acc_1',
+        ownerId: 'user_1',
+        tenantId: 'tenant_1',
+      });
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.value.currency).toBe('EUR');
+    });
+  });
+
+  describe('updateValue with Money object', () => {
+    it('should update when Money object has valid amount', () => {
+      const opp = createOpp().value;
+      const newMoney = Money.create(25000, 'GBP').value;
+      const result = opp.updateValue(newMoney, 'user_1');
+      expect(result.isSuccess).toBe(true);
+      expect(opp.value.amount).toBe(25000);
+    });
+
+    it('should fail when Money object has zero amount', () => {
+      const opp = createOpp().value;
+      const zeroMoney = Money.create(0, 'GBP');
+      if (zeroMoney.isSuccess) {
+        const result = opp.updateValue(zeroMoney.value, 'user_1');
+        expect(result.isFailure).toBe(true);
+      }
+    });
+
+    it('should fail when Money object has negative amount', () => {
+      const opp = createOpp().value;
+      const negMoney = Money.create(-1, 'GBP');
+      if (negMoney.isSuccess) {
+        const result = opp.updateValue(negMoney.value, 'user_1');
+        expect(result.isFailure).toBe(true);
+      } else {
+        expect(negMoney.isFailure).toBe(true);
+      }
+    });
+
+    it('should not update value when closed', () => {
+      const opp = createOpp().value;
+      opp.markAsWon('user_1');
+      const money = Money.create(30000, 'GBP').value;
+      expect(opp.updateValue(money, 'user_1').isFailure).toBe(true);
+    });
+  });
+
+  describe('updateProbability with Percentage object', () => {
+    it('should update with Percentage object directly', () => {
+      const opp = createOpp().value;
+      const pct = Percentage.create(75).value;
+      const result = opp.updateProbability(pct, 'user_1');
+      expect(result.isSuccess).toBe(true);
+      expect(opp.probability.value).toBe(75);
+    });
+
+    it('should emit probability updated event', () => {
+      const opp = createOpp().value;
+      opp.clearDomainEvents();
+      const pct = Percentage.create(60).value;
+      opp.updateProbability(pct, 'user_1');
+      const events = opp.getDomainEvents();
+      expect(events.some((e) => e.eventType === 'opportunity.probability_updated')).toBe(true);
+    });
+
+    it('should not update probability when closed', () => {
+      const opp = createOpp().value;
+      opp.markAsWon('user_1');
+      const pct = Percentage.create(50).value;
+      expect(opp.updateProbability(pct, 'user_1').isFailure).toBe(true);
+    });
+  });
+
+  describe('reconstitute', () => {
+    it('should reconstitute from persistence data', () => {
+      const id = OpportunityId.generate();
+      const money = Money.create(5000, 'GBP').value;
+      const pct = Percentage.create(50).value;
+      const now = new Date();
+
+      const opp = Opportunity.reconstitute(id, {
+        name: 'Reconstituted Deal',
+        value: money,
+        stage: 'QUALIFICATION',
+        probability: pct,
+        accountId: 'acc_1',
+        ownerId: 'user_1',
+        tenantId: 'tenant_1',
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      expect(opp.id).toBe(id);
+      expect(opp.name).toBe('Reconstituted Deal');
+      expect(opp.stage).toBe('QUALIFICATION');
+      expect(opp.probability.value).toBe(50);
+      expect(opp.getDomainEvents().length).toBe(0);
+    });
+  });
+
+  describe('reopen event', () => {
+    it('should emit OpportunityReopenedEvent', () => {
+      const opp = createOpp().value;
+      opp.markAsLost('No budget', 'user_1');
+      opp.clearDomainEvents();
+      const result = opp.reopen('user_1');
+      expect(result.isSuccess).toBe(true);
+      const events = opp.getDomainEvents();
+      expect(events.some((e) => e.eventType === 'opportunity.reopened')).toBe(true);
+    });
+  });
+
+  describe('weightedValue edge cases', () => {
+    it('should calculate weighted value with non-default probability', () => {
+      const opp = createOpp({ value: 20000 }).value;
+      opp.changeStage('NEEDS_ANALYSIS', 'user_1'); // probability -> 40
+      const wv = opp.weightedValue;
+      expect(wv.amount).toBeCloseTo(8000, 0);
+    });
+  });
+});
