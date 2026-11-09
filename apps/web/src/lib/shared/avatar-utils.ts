@@ -5,7 +5,6 @@ const AVATAR_PROXY_HOST_SUFFIXES = [
   'avatars.githubusercontent.com',
   'githubusercontent.com',
   'gravatar.com',
-  'unsplash.com',
 ] as const;
 
 function isHttpUrl(value: string): boolean {

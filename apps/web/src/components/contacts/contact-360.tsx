@@ -96,14 +96,6 @@ export const mapSentiment = (
   return sentimentMap[dbSentiment];
 };
 
-// Default avatars
-
-export const defaultContactAvatar =
-  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=160&h=160&fit=crop&crop=face';
-
-export const defaultOwnerAvatar =
-  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face';
-
 // Contact status type
 
 export type ContactStatus =
@@ -702,14 +694,9 @@ export function transformFeedToActivities(
 }
 
 export function transformContactForUI(apiContact: ContactWithRelations) {
-  const normalizedContactAvatar =
-    normalizeAvatarSource(apiContact.avatarUrl) ??
-    normalizeAvatarSource(defaultContactAvatar) ??
-    defaultContactAvatar;
-  const normalizedOwnerAvatar =
-    normalizeAvatarSource(apiContact.owner?.avatarUrl) ??
-    normalizeAvatarSource(defaultOwnerAvatar) ??
-    defaultOwnerAvatar;
+  // No photo means initials (AppAvatar), never a stock photograph (UI-018).
+  const normalizedContactAvatar = normalizeAvatarSource(apiContact.avatarUrl);
+  const normalizedOwnerAvatar = normalizeAvatarSource(apiContact.owner?.avatarUrl);
 
   return {
     id: apiContact.id,
@@ -744,7 +731,7 @@ export function transformContactForUI(apiContact: ContactWithRelations) {
       : {
           name: 'Unassigned',
           title: '',
-          avatarUrl: normalizedOwnerAvatar,
+          avatarUrl: null,
         },
     account: apiContact.account
       ? {
