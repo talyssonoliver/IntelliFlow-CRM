@@ -4,6 +4,7 @@ import {
   getActivityIconBg,
   formatRelativeTime,
   formatEstimatedValue,
+  leadDisplayName,
   type ActivityType,
 } from '../lead-format';
 
@@ -92,5 +93,44 @@ describe('lead-format · formatEstimatedValue', () => {
 
   it('formats zero', () => {
     expect(formatEstimatedValue(0)).toBe('$0');
+  });
+});
+
+describe('lead-format · leadDisplayName', () => {
+  it('uses first and last name when present', () => {
+    expect(
+      leadDisplayName({
+        firstName: 'Ada',
+        lastName: 'Lovelace',
+        company: 'Acme',
+        email: 'a@example.invalid',
+      })
+    ).toBe('Ada Lovelace');
+  });
+
+  it('uses a single name part without stray spaces', () => {
+    expect(leadDisplayName({ firstName: ' Ada ', lastName: '', company: 'Acme' })).toBe('Ada');
+    expect(leadDisplayName({ firstName: null, lastName: 'Lovelace' })).toBe('Lovelace');
+  });
+
+  it('falls back to the company when there is no name', () => {
+    expect(
+      leadDisplayName({
+        firstName: '',
+        lastName: '  ',
+        company: 'Acme Ltd',
+        email: 'a@example.invalid',
+      })
+    ).toBe('Acme Ltd');
+  });
+
+  it('falls back to the email when there is no name or company', () => {
+    expect(
+      leadDisplayName({ firstName: null, lastName: null, company: '', email: 'a@example.invalid' })
+    ).toBe('a@example.invalid');
+  });
+
+  it('never returns an empty string', () => {
+    expect(leadDisplayName({})).toBe('Unnamed lead');
   });
 });
