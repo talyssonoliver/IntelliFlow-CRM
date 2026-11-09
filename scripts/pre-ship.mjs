@@ -425,6 +425,14 @@ const STEPS = [
     required: true,
   },
   {
+    // Every unscoped ctx.prisma use in API routers is listed with its reason; the tenant-scoped
+    // client filters by tenant on its own, the unscoped one only as far as each where does.
+    id: 'unscoped-prisma',
+    description: 'unscoped Prisma client uses in routers are allowlisted',
+    cmd: ['pnpm', 'run', 'lint:unscoped-prisma'],
+    required: true,
+  },
+  {
     id: 'lint-runtime-paths',
     description: 'runtime-path linter',
     cmd: ['pnpm', 'run', 'lint:runtime-paths'],

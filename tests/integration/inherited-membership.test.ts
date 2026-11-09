@@ -12,8 +12,8 @@
  *     SESSION-level `SET` once per request on a POOLED connection. Two requests that interleave
  *     on one connection can therefore run a later query under the OTHER request's tenant. The
  *     test pins the pool to ONE connection to reproduce that deterministically, proves the
- *     application-layer `tenantId` filter (which every router adds) still returns only the active
- *     tenant's rows, and documents that RLS alone is NOT the boundary.
+ *     application-layer `tenantId` filter (which the scoped client adds to every query) still
+ *     returns only the active tenant's rows, and documents that RLS alone is NOT the boundary.
  *
  * Skips (like the other DB suites) when there is no DATABASE_URL or no Supabase-style
  * `authenticated` role with the tenant policies.
@@ -468,7 +468,7 @@ describeDb('inherited membership (real database)', () => {
       expect(aRows.every((r: { tenantId: string }) => r.tenantId !== t1)).toBe(true);
     });
 
-    it('DOCUMENTS the race: after a stale SET, an unfiltered query runs under the OTHER tenant', async () => {
+    it('the race: after a stale SET, a query without a tenant filter still never sees the OTHER tenant', async () => {
       const a = realScoped(t3);
       const b = realScoped(t2);
 
@@ -476,10 +476,11 @@ describeDb('inherited membership (real database)', () => {
       await b.account.findMany({ where: { name: { startsWith: TAG } } }); // SET t2 (same connection)
 
       const stale = await a.account.findMany({ where: { name: { startsWith: TAG } } });
-      // A never asked for t2, yet RLS alone answers with t2's rows. This is why every router must
-      // keep its explicit tenantId filter, and why membership switching does not make RLS the
-      // boundary. If the primitive is ever made transaction-local, this assertion flips to t3.
-      expect(stale.map((r: { tenantId: string }) => r.tenantId)).toEqual([t2]);
+      // The session variable now says t2, so RLS alone would answer with t2's rows. The scoped
+      // client adds A's tenant (t3) to the query itself (security/tenant-filter.ts), so the
+      // stale SET yields nothing rather than another tenant's data. RLS is still not the
+      // boundary: if the SET is ever made transaction-local, this becomes [t3].
+      expect(stale).toEqual([]);
     });
 
     it('a transaction-local binding does NOT leak to the next request on the same connection', async () => {
