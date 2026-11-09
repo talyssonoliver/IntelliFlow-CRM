@@ -18,6 +18,7 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { invalidateLeadsCache } from '@/app/leads/(list)/actions';
 import { LeadEditor } from '@/components/leads/lead-editor';
 import type { LeadUpdatePayload } from '@/lib/leads/change-tracker';
+import { leadDisplayName } from '@/lib/leads/lead-format';
 
 const LEAD_EDIT_SKELETON_KEYS = [
   'le-skel-0',
@@ -155,7 +156,7 @@ export default function EditLeadPage() {
                 href={`/leads/${leadId}`}
                 className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] font-medium transition-colors"
               >
-                {lead.firstName} {lead.lastName}
+                {leadDisplayName(lead)}
               </Link>
             </li>
             <li>

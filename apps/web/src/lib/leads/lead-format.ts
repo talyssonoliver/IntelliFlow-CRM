@@ -81,3 +81,26 @@ export function formatEstimatedValue(cents: number): string {
   if (dollars >= 1000) return `$${(dollars / 1000).toFixed(0)}k`;
   return `$${dollars.toFixed(0)}`;
 }
+
+/** The parts of a lead that can name it. */
+export interface LeadNameParts {
+  firstName?: string | null;
+  lastName?: string | null;
+  company?: string | null;
+  email?: string | null;
+}
+
+/**
+ * The one name to show for a lead: first and last name, then company, then
+ * email. Leads imported without a person's name (company-only or email-only
+ * records) would otherwise render a blank title and confirm dialogs such as
+ * "permanently delete ?". Used for the page title and every action prompt so
+ * they always agree.
+ */
+export function leadDisplayName(lead: Readonly<LeadNameParts>): string {
+  const personName = [lead.firstName, lead.lastName]
+    .map((part) => part?.trim() ?? '')
+    .filter(Boolean)
+    .join(' ');
+  return personName || lead.company?.trim() || lead.email?.trim() || 'Unnamed lead';
+}

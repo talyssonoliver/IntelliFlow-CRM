@@ -22,6 +22,7 @@ import { invalidateLeadsCache } from '@/app/leads/(list)/actions';
 import { revalidateLeadCaches, revalidateLeadConversionCaches } from '@/app/leads/actions';
 import type { Lead } from '@/lib/leads/lead-types';
 import { leadScoreDisplay } from '@/lib/leads/score-display';
+import { leadDisplayName } from '@/lib/leads/lead-format';
 import { LeadStatusBadge } from '@/components/leads/lead-detail';
 import {
   LEAD_STATUS_OPTIONS,
@@ -96,7 +97,7 @@ function createColumns(
             <LeadAvatar lead={lead} />
             <div className="flex flex-col">
               <span className="text-sm font-bold text-slate-900 dark:text-white">
-                {lead.firstName} {lead.lastName}
+                {leadDisplayName(lead)}
               </span>
               <span className="text-xs text-slate-500 dark:text-slate-400">
                 {lead.title ? `${lead.title} @ ${lead.company}` : lead.company}
@@ -761,7 +762,7 @@ function LeadAvatar({ lead }: Readonly<{ lead: Lead }>) {
       className={`size-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border ${getAvatarColor(
         `${lead.firstName}${lead.lastName}`
       )}`}
-      aria-label={`Avatar for ${lead.firstName} ${lead.lastName}`}
+      aria-label={`Avatar for ${leadDisplayName(lead)}`}
     >
       {initials}
     </span>

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import { AppAvatar } from '@/components/shared/app-avatar';
-import { formatEstimatedValue } from '@/lib/leads/lead-format';
+import { formatEstimatedValue, leadDisplayName } from '@/lib/leads/lead-format';
 import { leadScoreDisplay } from '@/lib/leads/score-display';
 
 /** #1218: the profile card's score, or "Not scored" when no real AI score exists. */
@@ -230,7 +230,7 @@ export function LeadProfileCard({
       <div className="px-5 pb-6 relative">
         <div className="relative -mt-10 mb-3">
           <AppAvatar
-            name={`${lead.firstName} ${lead.lastName}`}
+            name={leadDisplayName(lead)}
             src={lead.avatarUrl}
             className="w-20 h-20 border-4 border-white dark:border-slate-900 shadow-sm"
             fallbackClassName="text-2xl font-bold text-slate-500 bg-slate-200 dark:bg-slate-700"
@@ -238,7 +238,7 @@ export function LeadProfileCard({
         </div>
         <div className="mb-4">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-            {lead.firstName} {lead.lastName}
+            {leadDisplayName(lead)}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{lead.title}</p>
           <div className="flex items-center gap-1 text-[#2a78f6] text-sm font-medium mt-1">
