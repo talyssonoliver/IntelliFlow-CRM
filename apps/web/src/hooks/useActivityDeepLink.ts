@@ -53,14 +53,12 @@ export function useActivityDeepLink(_activeTab: string, setActiveTab: (tab: 'act
     setActiveTab('activity');
 
     // The native History API syncs with useSearchParams in the App Router, without a
-    // navigation or a refetch.
+    // navigation or a refetch. The state must be null: Next's patched replaceState treats a
+    // state carrying its own __NA marker as an internal call and skips the router sync, and
+    // it copies its internal state over itself when given null.
     const url = new URL(window.location.href);
     url.searchParams.delete('activityId');
-    window.history.replaceState(
-      window.history.state,
-      '',
-      `${url.pathname}${url.search}${url.hash}`
-    );
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
   }, [rawParam, setActiveTab]);
 
   const selectedActivityId = useMemo(() => {

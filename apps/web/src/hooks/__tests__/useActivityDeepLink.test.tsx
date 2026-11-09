@@ -51,6 +51,18 @@ describe('useActivityDeepLink (UI-020)', () => {
     expect(nav.replace).toHaveBeenCalledWith(null, '', '/leads/abc?from=feed#note');
   });
 
+  it("passes null state so Next's patched replaceState syncs the router", () => {
+    // App Router history entries carry __NA; passing that state back makes Next treat the
+    // call as its own and skip the useSearchParams sync.
+    window.history.pushState({ __NA: true }, '', '/leads/abc?activityId=lead_9');
+    nav.params = new URLSearchParams('activityId=lead_9');
+    renderHook(() => usePage('overview'));
+
+    expect(nav.replace).toHaveBeenCalledTimes(1);
+    expect(nav.replace.mock.calls[0][0]).toBeNull();
+    expect(nav.replace.mock.calls[0][2]).toBe('/leads/abc');
+  });
+
   it('drops the query string entirely when activityId was the only param', () => {
     openAt('activityId=lead_123');
     renderHook(() => usePage('overview'));
