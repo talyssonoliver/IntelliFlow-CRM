@@ -235,6 +235,22 @@ export const inboundPipelineLeadSchema = z.object({
     .max(120)
     .regex(/^[a-z0-9-]+$/, 'outreachSlug must be lower-case letters, digits and hyphens')
     .optional(),
+  /**
+   * The business name as the listing (Google Maps etc.) shows it. When `company` is a
+   * corrected trading name, this is the name an earlier sync may have stored.
+   */
+  listingName: z.string().trim().max(200).optional(),
+  /** How COA chose `company`: the listing as-is, the listing checked against the domain, or derived. */
+  companySource: z.enum(['listing', 'listing+domain', 'derived']).optional(),
+  /** COA could not settle the name with confidence; a human should look. */
+  companyFlagged: z.boolean().optional(),
+  /**
+   * Opt-in for correcting an EXISTING lead's company (see planCompanyChange). Off by
+   * default: the scheduled sync never sends it, so it never rewrites a stored name.
+   */
+  applyCompany: z.boolean().optional(),
+  /** Report what this sync would change and write nothing. */
+  dryRun: z.boolean().optional(),
 });
 
 export type InboundPipelineLeadInput = z.infer<typeof inboundPipelineLeadSchema>;
@@ -269,6 +285,47 @@ export interface InboundPipelineLeadOutput {
    * tags `coa-qualified` and notes the refusal. Always present.
    */
   readonly qualificationPending: boolean;
+  /**
+   * Present only when the stored company is the untouched listing name and `company`
+   * differs from it. `applied` is false unless `applyCompany` was sent and the
+   * compare-and-set write found the listing name still in place.
+   */
+  readonly companyChange?: CompanyChangeResult;
+  /**
+   * Present (true) only on a `dryRun` answer. Nothing was written: `created` means the
+   * sync WOULD create the lead (and `leadId` is then ''), `status` is the current one,
+   * `changed` is false, and `companyChange.applied` is false.
+   */
+  readonly dryRun?: true;
+  /** Dry run only: whether a real run with this payload would write `companyChange`. */
+  readonly wouldApplyCompany?: boolean;
+}
+
+/** A company correction on an existing lead: from the listing name to the trading name. */
+export interface CompanyChange {
+  readonly from: string;
+  readonly to: string;
+}
+
+export interface CompanyChangeResult extends CompanyChange {
+  readonly applied: boolean;
+}
+
+/**
+ * Decide whether an existing lead's company is the untouched listing name that the
+ * incoming trading name should replace. A stored name that differs from the listing
+ * name was edited by someone, so it is never overwritten. No listing name, no change.
+ */
+export function planCompanyChange(
+  storedCompany: string | null | undefined,
+  input: Pick<InboundPipelineLeadInput, 'company' | 'listingName'>
+): CompanyChange | null {
+  const listingName = input.listingName;
+  const next = input.company;
+  if (!listingName || !next || storedCompany == null) return null;
+  if (storedCompany.trim() !== listingName) return null;
+  if (storedCompany === next) return null;
+  return { from: storedCompany, to: next };
 }
 
 // ============================================================================
@@ -491,7 +548,7 @@ async function upsertLeadByEmail(
     /** Source stamped on a NEWLY created lead. Defaults to 'WEBSITE'. */
     source?: 'WEBSITE' | 'EMAIL';
   }
-): Promise<{ leadId: string; leadCreated: boolean }> {
+): Promise<{ leadId: string; leadCreated: boolean; existingCompany?: string | null }> {
   const leadService = getLeadService(ctx);
   // The Email value object stores addresses trimmed and lowercased, so a
   // lookup with the caller's casing ('Sam@x.com') would miss the stored
@@ -502,10 +559,10 @@ async function upsertLeadByEmail(
   // Fast path: lead already exists?
   const existing = await ctx.prisma.lead.findFirst({
     where: { tenantId: input.tenantId, email },
-    select: { id: true },
+    select: { id: true, company: true },
   });
   if (existing) {
-    return { leadId: existing.id, leadCreated: false };
+    return { leadId: existing.id, leadCreated: false, existingCompany: existing.company };
   }
 
   const result = await leadService.createLead({
@@ -530,10 +587,14 @@ async function upsertLeadByEmail(
     // insert. Re-read before deciding what this failure means.
     const raceExisting = await ctx.prisma.lead.findFirst({
       where: { tenantId: input.tenantId, email },
-      select: { id: true },
+      select: { id: true, company: true },
     });
     if (raceExisting) {
-      return { leadId: raceExisting.id, leadCreated: false };
+      return {
+        leadId: raceExisting.id,
+        leadCreated: false,
+        existingCompany: raceExisting.company,
+      };
     }
     // No lead exists, so the failure is real. An infrastructure failure is the
     // server's, and retryable: a 4xx would make a server-to-server caller drop
@@ -695,6 +756,59 @@ function outreachSlugMetadata(change: OutreachSlugChange | null): Prisma.InputJs
     : { outreachSlug: change.slug, outreachSlugChanged: false };
 }
 
+/**
+ * Correct an existing lead's company from the listing name to the trading name, only
+ * when the caller opted in (`applyCompany`). The write is a tenant-scoped
+ * compare-and-set on the stored listing name, so a name someone edits between the
+ * read and the write is never overwritten (`applied: false`). A failure is a
+ * retryable 500, like the slug write.
+ */
+async function applyCompanyChange(
+  ctx: Context,
+  input: InboundPipelineLeadInput,
+  leadId: string,
+  tenantId: string,
+  change: CompanyChange | null
+): Promise<CompanyChangeResult | null> {
+  if (!change) return null;
+  if (input.applyCompany !== true) return { ...change, applied: false };
+  try {
+    const { count } = await ctx.prisma.lead.updateMany({
+      where: { id: leadId, tenantId, company: change.from },
+      data: { company: change.to },
+    });
+    return { ...change, applied: count === 1 };
+  } catch (err) {
+    console.error('[inbound.syncPipelineLead] company correction failed:', {
+      leadId,
+      coaLeadId: input.coaLeadId,
+      error: err instanceof Error ? err.message : err,
+    });
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Lead company could not be corrected',
+      cause: err,
+    });
+  }
+}
+
+/** Audit metadata for the company: how COA chose it, and any correction considered. */
+function companyMetadata(
+  input: InboundPipelineLeadInput,
+  change: CompanyChangeResult | null
+): Prisma.InputJsonObject {
+  return {
+    ...(input.listingName === undefined ? {} : { listingName: input.listingName }),
+    ...(input.companySource === undefined ? {} : { companySource: input.companySource }),
+    ...(input.companyFlagged === undefined ? {} : { companyFlagged: input.companyFlagged }),
+    ...(change
+      ? {
+          companyChange: { from: change.from, to: change.to, applied: change.applied },
+        }
+      : {}),
+  };
+}
+
 /** True when COA reported a win the CRM has not converted (the sync never does). */
 function isConversionPending(requested: PipelineLeadStatus, status: PipelineLeadStatus): boolean {
   return requested === 'CONVERTED' && status !== 'CONVERTED';
@@ -782,7 +896,8 @@ async function recordPipelineSync(
   to: PipelineLeadStatus,
   syncKey: string,
   refusal: QualificationRefusal | null,
-  slugChange: OutreachSlugChange | null
+  slugChange: OutreachSlugChange | null,
+  companyChange: CompanyChangeResult | null
 ): Promise<void> {
   try {
     // Existence check + insert must be atomic per syncKey: two concurrent
@@ -829,6 +944,7 @@ async function recordPipelineSync(
                 }
               : {}),
             ...outreachSlugMetadata(slugChange),
+            ...companyMetadata(input, companyChange),
             syncKey,
           } as Prisma.InputJsonObject,
         },
@@ -841,6 +957,74 @@ async function recordPipelineSync(
       error: err instanceof Error ? err.message : err,
     });
   }
+}
+
+/**
+ * A repeat sync (its audit note already exists) that corrected the company gets a
+ * note of its own, so no rename happens without a trace. Best-effort, like the
+ * sync note.
+ */
+async function recordCompanyCorrection(
+  ctx: Context,
+  input: InboundPipelineLeadInput,
+  leadId: string,
+  tenantId: string,
+  change: CompanyChangeResult
+): Promise<void> {
+  try {
+    await ctx.prisma.leadActivity.create({
+      data: {
+        type: 'NOTE',
+        title: 'Company name corrected from COA',
+        description: `Company changed from "${change.from}" (the listing name) to "${change.to}".`,
+        timestamp: new Date(),
+        userName: COA_SYNC_USER,
+        leadId,
+        tenantId,
+        metadata: {
+          source: 'coa-company-correction',
+          coaLeadId: input.coaLeadId,
+          ...companyMetadata(input, change),
+        } as Prisma.InputJsonObject,
+      },
+    });
+  } catch (err) {
+    console.warn('[inbound.syncPipelineLead] company correction note failed:', {
+      leadId,
+      error: err instanceof Error ? err.message : err,
+    });
+  }
+}
+
+/**
+ * `dryRun: true`: one tenant-scoped read, no writes. Reports whether the lead exists
+ * and the company correction a real run would consider. The status walk is not
+ * simulated (it depends on the qualification rule and concurrent writers).
+ */
+async function previewPipelineSync(
+  ctx: Context,
+  input: InboundPipelineLeadInput,
+  tenantId: string
+): Promise<InboundPipelineLeadOutput> {
+  const lead = await ctx.prisma.lead.findFirst({
+    where: { tenantId, email: input.email.trim().toLowerCase() },
+    select: { id: true, company: true, status: true },
+  });
+  const status = (lead?.status as PipelineLeadStatus | undefined) ?? 'NEW';
+  const change = lead ? planCompanyChange(lead.company, input) : null;
+  return {
+    dryRun: true,
+    leadId: lead?.id ?? '',
+    tenantId,
+    created: !lead,
+    previousStatus: status,
+    status,
+    changed: false,
+    conversionPending: false,
+    qualificationPending: false,
+    ...(change ? { companyChange: { ...change, applied: false } } : {}),
+    wouldApplyCompany: input.applyCompany === true,
+  };
 }
 
 /**
@@ -1412,18 +1596,30 @@ export const inboundRouter = createTRPCRouter({
    * the stored one is NULL or was written by an older event (`outreachSlugEventAt`,
    * from stageChangedAt), and the audit note records it. A retry of an older event
    * cannot revert a newer slug. A failed write is a retryable 500. Absent = untouched.
+   *
+   * Company (trading-name fix): `listingName`, `companySource` and `companyFlagged` go
+   * into the audit note. An EXISTING lead's company is replaced by `company` only when
+   * the request sends `applyCompany: true` AND the stored company is still exactly the
+   * listing name (a tenant-scoped compare-and-set). A name a user edited is never
+   * overwritten. `companyChange` in the answer says what was considered and whether it
+   * was applied.
+   *
+   * `dryRun: true` writes nothing: one tenant-scoped read, answered with `dryRun: true`,
+   * `created` = would create, the current status, the `companyChange` a real run would
+   * consider (applied false) and `wouldApplyCompany`. The status walk is not simulated.
    */
   syncPipelineLead: publicProcedure
     .input(inboundPipelineLeadSchema)
     .mutation(async ({ ctx, input }): Promise<InboundPipelineLeadOutput> => {
       assertAuthorised(ctx);
       const { tenantId, ownerId } = getInboundBinding();
+      if (input.dryRun === true) return previewPipelineSync(ctx, input, tenantId);
       const leadService = getLeadService(ctx);
 
       const coaTags = [COA_PIPELINE_TAG, `${COA_LEAD_TAG_PREFIX}${input.coaLeadId}`];
 
       // --- Step 1: upsert by (tenant, email) ---------------------------------
-      const { leadId, leadCreated } = await upsertLeadByEmail(ctx, {
+      const { leadId, leadCreated, existingCompany } = await upsertLeadByEmail(ctx, {
         email: input.email,
         firstName: input.firstName,
         lastName: input.lastName,
@@ -1462,7 +1658,24 @@ export const inboundRouter = createTRPCRouter({
       // slug and never put back one a newer event set. No new audit note is written
       // for a repeat.
       const slugChange = await applyOutreachSlug(ctx, input, leadId, tenantId);
+      // Like the slug, the company correction runs before the repeat check: a
+      // backfill resends payloads COA already synced, and must still correct them.
+      // A new lead was created with the trading name, so only an existing one is
+      // considered.
+      const companyChange = leadCreated
+        ? null
+        : await applyCompanyChange(
+            ctx,
+            input,
+            leadId,
+            tenantId,
+            planCompanyChange(existingCompany, input)
+          );
+      const companyField = companyChange ? { companyChange } : {};
       if (prior) {
+        if (companyChange?.applied) {
+          await recordCompanyCorrection(ctx, input, leadId, tenantId, companyChange);
+        }
         const priorMeta = prior.metadata as { qualificationPending?: unknown } | null;
         return {
           leadId,
@@ -1473,6 +1686,7 @@ export const inboundRouter = createTRPCRouter({
           changed: false,
           conversionPending: isConversionPending(input.status, currentStatus),
           qualificationPending: priorMeta?.qualificationPending === true,
+          ...companyField,
         };
       }
 
@@ -1502,7 +1716,8 @@ export const inboundRouter = createTRPCRouter({
         status,
         syncKey,
         refusal,
-        slugChange
+        slugChange,
+        companyChange
       );
 
       return {
@@ -1514,6 +1729,7 @@ export const inboundRouter = createTRPCRouter({
         changed: moved,
         conversionPending: isConversionPending(input.status, status),
         qualificationPending: refusal !== null,
+        ...companyField,
       };
     }),
 });
