@@ -10,26 +10,31 @@ export interface ContactDocumentsTabProps {
   documents: DocumentViewModel[];
   /** IANA timezone used to render the document date. */
   timezone: string;
+  /** The contact the tab belongs to; Upload opens the upload page linked to it. */
+  contactId: string;
 }
 
 /**
  * IFC-256: Contact 360 → Documents tab. Renders the contact's real documents
  * (or a proper empty state). Each row links to the document detail page, which
  * issues the signed download URL. Extracted from the route page so it is
- * unit-tested and counted by coverage. The "Upload" action is wired separately
- * (IFC-257).
+ * unit-tested and counted by coverage. Upload opens the document upload page
+ * with this contact already linked.
  */
-export function ContactDocumentsTab({ documents, timezone }: ContactDocumentsTabProps) {
+export function ContactDocumentsTab({ documents, timezone, contactId }: ContactDocumentsTabProps) {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Documents</h3>
-        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <Link
+          href={`/documents/new?contactId=${encodeURIComponent(contactId)}`}
+          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors"
+        >
+          <svg aria-hidden="true" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
             <path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" />
           </svg>{' '}
           Upload
-        </button>
+        </Link>
       </div>
       <div className="space-y-3" data-testid="contact-documents-tab">
         {documents.length === 0 ? (

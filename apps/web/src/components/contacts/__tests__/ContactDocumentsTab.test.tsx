@@ -32,7 +32,7 @@ const doc = (overrides: Partial<DocumentViewModel> = {}): DocumentViewModel => (
 
 describe('ContactDocumentsTab', () => {
   it('renders real documents with a formatted date + size and a link to the document', () => {
-    render(<ContactDocumentsTab documents={[doc()]} timezone="UTC" />);
+    render(<ContactDocumentsTab documents={[doc()]} timezone="UTC" contactId="contact-1" />);
 
     const panel = screen.getByTestId('contact-documents-tab');
     expect(panel).toHaveTextContent('Enterprise License Proposal');
@@ -49,8 +49,16 @@ describe('ContactDocumentsTab', () => {
   });
 
   it('renders an empty state when there are no documents', () => {
-    render(<ContactDocumentsTab documents={[]} timezone="UTC" />);
+    render(<ContactDocumentsTab documents={[]} timezone="UTC" contactId="contact-1" />);
     expect(screen.getByTestId('contact-documents-empty')).toBeInTheDocument();
     expect(screen.queryByText('Enterprise License Proposal')).not.toBeInTheDocument();
+  });
+
+  it('Upload opens the upload page linked to this contact (UI-1277 dead controls)', () => {
+    render(<ContactDocumentsTab documents={[]} timezone="UTC" contactId="contact 1" />);
+    expect(screen.getByRole('link', { name: 'Upload' })).toHaveAttribute(
+      'href',
+      '/documents/new?contactId=contact%201'
+    );
   });
 });
