@@ -276,10 +276,7 @@ export function LeadProfileCard({
             </span>
             <div className="flex flex-col">
               <span className="text-xs text-slate-400 uppercase font-semibold">Email</span>
-              <EntityHoverCard
-                email={lead.email}
-                displayName={`${lead.firstName} ${lead.lastName}`.trim()}
-              >
+              <EntityHoverCard email={lead.email} displayName={leadDisplayName(lead)}>
                 <Link
                   href={`/email/compose?to=${encodeURIComponent(lead.email)}`}
                   className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#2a78f6] break-all"

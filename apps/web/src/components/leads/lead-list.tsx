@@ -112,10 +112,7 @@ function createColumns(
       header: 'Email',
       size: 220,
       cell: ({ row }) => (
-        <EntityHoverCard
-          email={row.original.email}
-          displayName={`${row.original.firstName} ${row.original.lastName}`.trim()}
-        >
+        <EntityHoverCard email={row.original.email} displayName={leadDisplayName(row.original)}>
           <a
             href={`/email/compose?to=${encodeURIComponent(row.original.email)}`}
             onClick={(e) => e.stopPropagation()}
