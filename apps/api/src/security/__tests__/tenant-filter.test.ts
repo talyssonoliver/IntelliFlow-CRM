@@ -7,7 +7,19 @@ const OTHER = 'tenant-b';
 
 describe('tenantModelInfo', () => {
   it('applies to tenant-owned models from the schema', () => {
-    expect(tenantModelInfo('Opportunity')).toEqual({ nullable: false, relation: 'tenant' });
+    expect(tenantModelInfo('Opportunity')).toEqual({
+      nullable: false,
+      defaulted: false,
+      relation: 'tenant',
+    });
+  });
+
+  it('skips platform-wide models whose tenantId has a column default', () => {
+    const defaulted = Object.entries(TENANT_MODELS).filter(([, info]) => info.defaulted);
+    expect(defaulted.map(([model]) => model)).toContain('ZepEpisodeUsage');
+    for (const [model] of defaulted) expect(tenantModelInfo(model), model).toBeNull();
+    const args = { where: { tenantId: 'global' } };
+    expect(scopeTenantArgs('ZepEpisodeAudit', 'findMany', args, T)).toBe(args);
   });
 
   it('skips models without a tenantId column, excluded models and model-less calls', () => {

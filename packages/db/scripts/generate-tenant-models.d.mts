@@ -2,6 +2,7 @@
 export interface ParsedTenantModel {
   model: string;
   nullable: boolean;
+  defaulted: boolean;
   relation: string | null;
 }
 

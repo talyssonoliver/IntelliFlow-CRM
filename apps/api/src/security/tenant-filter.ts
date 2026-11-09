@@ -20,6 +20,8 @@
  *  - update / updateMany / upsert: moving a row to another tenant throws.
  *  - Models whose `tenantId` is nullable hold shared rows (`tenantId = null`) that every
  *    tenant may read. Reads include them; writes never touch them.
+ *  - Models whose `tenantId` has a column default (a sentinel such as 'global') are
+ *    platform-wide and are not filtered.
  *
  * Not covered, so still filtered by hand: raw SQL (`$queryRaw`, `$executeRaw`), nested writes
  * and relation filters inside one query, and anything that uses the unscoped `ctx.prisma`
@@ -101,7 +103,10 @@ function isPlainObject(value: unknown): value is Args {
 /** The tenant model info for `model`, or null when the filter does not apply to it. */
 export function tenantModelInfo(model: string | undefined): TenantModelInfo | null {
   if (!model || model in TENANT_FILTER_EXCLUDED_MODELS) return null;
-  return TENANT_MODELS[model] ?? null;
+  const info = TENANT_MODELS[model];
+  // A `tenantId` with a column default (a sentinel such as 'global') marks platform-wide rows,
+  // e.g. the Zep episode budget: not one tenant's data, so not filtered by tenant.
+  return info && !info.defaulted ? info : null;
 }
 
 function tenantCondition(info: TenantModelInfo, tenantId: string, read: boolean): Args {
@@ -142,7 +147,17 @@ function assertSameTenant(data: Args, info: TenantModelInfo, tenantId: string): 
   }
 }
 
-/** A create payload with the request's tenant on it. */
+/**
+ * A create payload with the request's tenant on it.
+ *
+ * Only adds the tenant when the caller gave neither `tenantId` nor the tenant relation. For a
+ * model with a required `tenantId` and no default (defaulted models are skipped above), such a
+ * create could not succeed before, so stamping cannot break one that did. For a model with a
+ * nullable `tenantId`, it would have created a row shared by every tenant, which a tenant's
+ * client must not do; the row becomes the tenant's own.
+ * Whether to stamp the column or connect the relation follows the input style Prisma requires:
+ * relation writes in `data` mean the checked input, where only the relation is accepted.
+ */
 function stampCreate(data: unknown, info: TenantModelInfo, tenantId: string): unknown {
   if (!isPlainObject(data)) return data;
   assertSameTenant(data, info, tenantId);

@@ -14,14 +14,18 @@ describe('TENANT_MODELS', () => {
   });
 
   it('lists the core tenant-owned models with their tenant relation', () => {
-    expect(TENANT_MODELS.Opportunity).toEqual({ nullable: false, relation: 'tenant' });
-    expect(TENANT_MODELS.Lead).toEqual({ nullable: false, relation: 'tenant' });
+    expect(TENANT_MODELS.Opportunity).toEqual({
+      nullable: false,
+      defaulted: false,
+      relation: 'tenant',
+    });
+    expect(TENANT_MODELS.Lead).toEqual({ nullable: false, defaulted: false, relation: 'tenant' });
     expect(TENANT_MODELS.Tenant).toBeUndefined();
   });
 });
 
 describe('parseTenantModels', () => {
-  it('reads required, optional and relation-less tenant columns and ignores comments', async () => {
+  it('reads required, optional, defaulted and relation-less tenant columns and ignores comments', async () => {
     const { parseTenantModels } = await loadGenerator();
     const schema = [
       'model A {',
@@ -32,6 +36,10 @@ describe('parseTenantModels', () => {
       'model B {',
       '  id       String  @id',
       '  tenantId String?',
+      '}',
+      'model E {',
+      '  id       String @id',
+      '  tenantId String @default("global")',
       '}',
       'model C {',
       '  id String @id',
@@ -45,9 +53,10 @@ describe('parseTenantModels', () => {
     ].join('\n');
 
     expect(parseTenantModels(schema)).toEqual([
-      { model: 'A', nullable: false, relation: 'tenant' },
-      { model: 'B', nullable: true, relation: null },
-      { model: 'D', nullable: false, relation: 'workspace' },
+      { model: 'A', nullable: false, defaulted: false, relation: 'tenant' },
+      { model: 'B', nullable: true, defaulted: false, relation: null },
+      { model: 'D', nullable: false, defaulted: false, relation: 'workspace' },
+      { model: 'E', nullable: false, defaulted: true, relation: null },
     ]);
   });
 });
