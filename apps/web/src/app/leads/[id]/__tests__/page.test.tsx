@@ -1515,3 +1515,84 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
     open.mockRestore();
   });
 });
+
+// ─── UI-021: AI scoring events ───────────────────────────────────────────────
+
+describe('LeadDetailPage - AI scoring events (UI-021)', () => {
+  const data = () => mockLeadQueryState.data as unknown as { activities: unknown[] };
+
+  const scoreActivity = (metadata: Record<string, unknown>) => ({
+    id: 'act-score-1',
+    type: 'SCORE_UPDATE',
+    title: 'Lead Scored by AI',
+    description: 'Score 38 (COLD) at 55% confidence',
+    timestamp: '2026-03-02T10:00:00.000Z',
+    userName: 'AI Scoring Agent',
+    metadata,
+    sentiment: null,
+  });
+
+  const noteActivity = {
+    id: 'act-note-1',
+    type: 'NOTE',
+    title: 'Called back',
+    description: 'Left a message',
+    timestamp: '2026-03-02T09:00:00.000Z',
+    userName: 'Alex Owner',
+    metadata: {},
+    sentiment: null,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    data().activities = [];
+  });
+
+  afterEach(() => {
+    data().activities = [];
+  });
+
+  function openFirstActivity() {
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'expand_more' })[0]);
+  }
+
+  it('says "First score" for a first score instead of an empty "from" value', () => {
+    data().activities = [scoreActivity({ previousScore: 0, newScore: 38, firstScore: true })];
+    openFirstActivity();
+    const row = screen.getByTestId('score-change');
+    expect(row).toHaveTextContent('First score');
+    expect(row).toHaveTextContent('38');
+    expect(row).not.toHaveTextContent('Score changed from');
+  });
+
+  it('shows the real from and to values of a change', () => {
+    data().activities = [scoreActivity({ previousScore: 38, newScore: 52, firstScore: false })];
+    openFirstActivity();
+    const row = screen.getByTestId('score-change');
+    expect(row).toHaveTextContent('Score changed from');
+    expect(row).toHaveTextContent('38');
+    expect(row).toHaveTextContent('52');
+  });
+
+  it('shows no score row for a failed scoring', () => {
+    data().activities = [scoreActivity({ scoringStatus: 'FAILED' })];
+    openFirstActivity();
+    expect(screen.queryByTestId('score-change')).not.toBeInTheDocument();
+  });
+
+  it('offers no reply, react, note or share actions on a scoring event', () => {
+    data().activities = [scoreActivity({ previousScore: 0, newScore: 38, firstScore: true })];
+    openFirstActivity();
+    expect(screen.queryByText('Activity Feed Item Actions')).not.toBeInTheDocument();
+  });
+
+  it('still offers them on a note', () => {
+    data().activities = [noteActivity];
+    openFirstActivity();
+    expect(screen.getByText('Activity Feed Item Actions')).toBeInTheDocument();
+  });
+});

@@ -451,6 +451,45 @@ const ACTIVITY_CLOCK_SKEW_MS = 60_000;
  * Best-effort system activity logging for lead lifecycle actions.
  * Activity write failures must not block the primary business operation.
  */
+/** A scoring status that means the lead holds a real score (not NONE or FAILED). */
+export function isRealScoringStatus(status: string | null | undefined): boolean {
+  return status === 'SCORED' || status === 'NEEDS_REVIEW';
+}
+
+/** The lead's scoring status, or null when it cannot be read (then treated as unscored). */
+async function readScoringStatus(ctx: TenantAwareContext, leadId: string): Promise<string | null> {
+  try {
+    const row = await ctx.prismaWithTenant.lead.findUnique({
+      where: { id: leadId },
+      select: { scoringStatus: true },
+    });
+    return row?.scoringStatus ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * UI-021: true when a re-score of an already-scored lead changed nothing a user sees:
+ * same score, and no automatic qualify or disqualify.
+ */
+export function isNoOpRescore(
+  wasScored: boolean,
+  result: Readonly<{
+    previousScore: number;
+    newScore: number;
+    autoQualified: boolean;
+    autoDisqualified: boolean;
+  }>
+): boolean {
+  return (
+    wasScored &&
+    result.previousScore === result.newScore &&
+    !result.autoQualified &&
+    !result.autoDisqualified
+  );
+}
+
 async function writeLeadActivityLog(
   ctx: TenantAwareContext,
   input: {
@@ -1191,6 +1230,10 @@ export const leadRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const leadService = getLeadService(ctx);
 
+      // UI-021: whether the lead already had a real score, read before scoring, so the
+      // log can call a first score a first score and skip a re-score that changed nothing.
+      const wasScored = isRealScoringStatus(await readScoringStatus(typedCtx, input.leadId));
+
       const result = await leadService.scoreLead(input.leadId, typedCtx.tenant.userId);
 
       if (result.isFailure) {
@@ -1247,23 +1290,28 @@ export const leadRouter = createTRPCRouter({
         typedCtx.services?.notificationOrchestrator
       ).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
-      await writeLeadActivityLog(typedCtx, {
-        leadId: result.value.leadId,
-        tenantId: typedCtx.tenant.tenantId,
-        type: 'SCORE_UPDATE',
-        title: 'Lead Scored by AI',
-        description: `Score ${result.value.newScore} (${result.value.tier}) at ${(result.value.confidence * 100).toFixed(0)}% confidence`,
-        metadata: {
-          previousScore: result.value.previousScore,
-          newScore: result.value.newScore,
-          confidence: result.value.confidence,
-          tier: result.value.tier,
-          autoQualified: result.value.autoQualified,
-          autoDisqualified: result.value.autoDisqualified,
-        },
-        userId: typedCtx.tenant.userId,
-        userName: 'AI Scoring Agent',
-      });
+      // UI-021: a re-score that left the score and status as they were is not a change,
+      // so it is not logged as one (the new confidence is still saved on the lead).
+      if (!isNoOpRescore(wasScored, result.value)) {
+        await writeLeadActivityLog(typedCtx, {
+          leadId: result.value.leadId,
+          tenantId: typedCtx.tenant.tenantId,
+          type: 'SCORE_UPDATE',
+          title: 'Lead Scored by AI',
+          description: `Score ${result.value.newScore} (${result.value.tier}) at ${(result.value.confidence * 100).toFixed(0)}% confidence`,
+          metadata: {
+            previousScore: result.value.previousScore,
+            newScore: result.value.newScore,
+            firstScore: !wasScored,
+            confidence: result.value.confidence,
+            tier: result.value.tier,
+            autoQualified: result.value.autoQualified,
+            autoDisqualified: result.value.autoDisqualified,
+          },
+          userId: typedCtx.tenant.userId,
+          userName: 'AI Scoring Agent',
+        });
+      }
 
       // Fire-and-forget: populate LeadAIInsight so Lead IQ sidebar shows real data
       (async () => {

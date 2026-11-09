@@ -874,6 +874,107 @@ describe('Lead Router', () => {
       );
     });
 
+    // UI-021: first scores are marked, and a re-score that changed nothing is not logged.
+    const scoreResult = (overrides: Record<string, unknown> = {}) => ({
+      leadId: TEST_UUIDS.lead1,
+      previousScore: 38,
+      newScore: 38,
+      confidence: 0.55,
+      tier: 'COLD' as const,
+      autoQualified: false,
+      autoDisqualified: false,
+      ...overrides,
+    });
+
+    const scoreActivityCalls = () =>
+      prismaMock.leadActivity.create.mock.calls
+        .map(
+          ([arg]) => (arg as { data: { type: string; metadata?: Record<string, unknown> } }).data
+        )
+        .filter((d) => d.type === 'SCORE_UPDATE');
+
+    it('does not log a re-score that left the score and status unchanged (UI-021)', async () => {
+      prismaMock.leadActivity.create.mockClear();
+      prismaMock.lead.findUnique.mockResolvedValueOnce({ scoringStatus: 'SCORED' } as never);
+      const ctx = createTestContext();
+      ctx.services!.lead!.scoreLead = vi
+        .fn()
+        .mockResolvedValue({ isSuccess: true, isFailure: false, value: scoreResult() });
+
+      const result = await leadRouter.createCaller(ctx).scoreWithAI({ leadId: TEST_UUIDS.lead1 });
+
+      expect(result.score).toBe(38);
+      expect(scoreActivityCalls()).toHaveLength(0);
+    });
+
+    it('logs a re-score that changed the score, marked as not a first score (UI-021)', async () => {
+      prismaMock.leadActivity.create.mockClear();
+      prismaMock.lead.findUnique.mockResolvedValueOnce({ scoringStatus: 'NEEDS_REVIEW' } as never);
+      const ctx = createTestContext();
+      ctx.services!.lead!.scoreLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: scoreResult({ newScore: 52 }),
+      });
+
+      await leadRouter.createCaller(ctx).scoreWithAI({ leadId: TEST_UUIDS.lead1 });
+
+      const logged = scoreActivityCalls();
+      expect(logged).toHaveLength(1);
+      expect(logged[0].metadata).toMatchObject({
+        previousScore: 38,
+        newScore: 52,
+        firstScore: false,
+      });
+    });
+
+    it('logs the first score of a never-scored lead as a first score (UI-021)', async () => {
+      prismaMock.leadActivity.create.mockClear();
+      prismaMock.lead.findUnique.mockResolvedValueOnce({ scoringStatus: 'NONE' } as never);
+      const ctx = createTestContext();
+      ctx.services!.lead!.scoreLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: scoreResult({ previousScore: 0, newScore: 0 }),
+      });
+
+      await leadRouter.createCaller(ctx).scoreWithAI({ leadId: TEST_UUIDS.lead1 });
+
+      const logged = scoreActivityCalls();
+      expect(logged).toHaveLength(1);
+      expect(logged[0].metadata).toMatchObject({ newScore: 0, firstScore: true });
+    });
+
+    it('logs an unchanged score when it auto-qualified the lead (UI-021)', async () => {
+      prismaMock.leadActivity.create.mockClear();
+      prismaMock.lead.findUnique.mockResolvedValueOnce({ scoringStatus: 'SCORED' } as never);
+      const ctx = createTestContext();
+      ctx.services!.lead!.scoreLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: scoreResult({ autoQualified: true }),
+      });
+
+      await leadRouter.createCaller(ctx).scoreWithAI({ leadId: TEST_UUIDS.lead1 });
+
+      expect(scoreActivityCalls()).toHaveLength(1);
+    });
+
+    it('treats an unreadable prior status as a first score (UI-021)', async () => {
+      prismaMock.leadActivity.create.mockClear();
+      prismaMock.lead.findUnique.mockRejectedValueOnce(new Error('read failed'));
+      const ctx = createTestContext();
+      ctx.services!.lead!.scoreLead = vi
+        .fn()
+        .mockResolvedValue({ isSuccess: true, isFailure: false, value: scoreResult() });
+
+      await leadRouter.createCaller(ctx).scoreWithAI({ leadId: TEST_UUIDS.lead1 });
+
+      const logged = scoreActivityCalls();
+      expect(logged).toHaveLength(1);
+      expect(logged[0].metadata).toMatchObject({ firstScore: true });
+    });
+
     it('should throw NOT_FOUND for non-existent lead', async () => {
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);

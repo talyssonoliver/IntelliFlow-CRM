@@ -141,3 +141,34 @@ export function httpUrlOrNull(url: string | null | undefined): string | null {
     return null;
   }
 }
+
+/**
+ * Activity types that are system records rather than something a person did or
+ * wrote: a score change and a status change. They get no reply, reaction, note or
+ * share actions (UI-021).
+ */
+export function isSystemActivity(type: ActivityType): boolean {
+  return type === 'score_update' || type === 'status_change';
+}
+
+/**
+ * The from/to of a score-change activity, or null when the row has no new score
+ * (a failed scoring). `from` is null for a first score or a row with no prior value.
+ * The scoring API writes `previousScore`; older rows used `oldScore` (UI-021).
+ */
+export function describeScoreChange(
+  meta:
+    | Readonly<{
+        oldScore?: number | null;
+        previousScore?: number | null;
+        newScore?: number | null;
+        firstScore?: boolean;
+      }>
+    | null
+    | undefined
+): { from: number | null; to: number } | null {
+  if (!meta || typeof meta.newScore !== 'number') return null;
+  const prior = meta.previousScore ?? meta.oldScore;
+  const from = meta.firstScore === true || typeof prior !== 'number' ? null : prior;
+  return { from, to: meta.newScore };
+}

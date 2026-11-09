@@ -91,9 +91,11 @@ import {
   type ActivityType,
   getActivityIcon,
   getActivityIconBg,
+  describeScoreChange,
   formatGBPCompact,
   formatRelativeTime,
   httpUrlOrNull,
+  isSystemActivity,
   leadDisplayName,
 } from '@/lib/leads/lead-format';
 import { LeadTimeline } from '@/components/leads/lead-timeline';
@@ -236,7 +238,11 @@ interface Activity {
     message?: string;
     // Score update
     oldScore?: number;
+    /** What the scoring API writes; `oldScore` is the older name. */
+    previousScore?: number;
     newScore?: number;
+    /** True when this was the lead's first real score. */
+    firstScore?: boolean;
     // Email
     subject?: string;
     preview?: string;
@@ -1042,15 +1048,28 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
     );
   }
   if (activity.type === 'score_update') {
+    // UI-021: the scoring API writes previousScore (older rows: oldScore). A first score, or
+    // a row with no prior value, says "First score" instead of an empty "from" pill; a
+    // failed scoring has no new score and shows no score row at all.
+    const change = describeScoreChange(meta);
+    if (!change) return null;
     return (
-      <div className="mt-2 flex items-center gap-2">
-        <span className="text-xs text-slate-500">Score changed from</span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
-          {meta.oldScore}
-        </span>
-        <span className="material-symbols-outlined text-slate-400 !text-sm">arrow_forward</span>
+      <div className="mt-2 flex items-center gap-2" data-testid="score-change">
+        {change.from === null ? (
+          <span className="text-xs text-slate-500">First score</span>
+        ) : (
+          <>
+            <span className="text-xs text-slate-500">Score changed from</span>
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
+              {change.from}
+            </span>
+            <span aria-hidden="true" className="material-symbols-outlined text-slate-400 !text-sm">
+              arrow_forward
+            </span>
+          </>
+        )}
         <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
-          {meta.newScore}
+          {change.to}
         </span>
       </div>
     );
@@ -2873,20 +2892,23 @@ export default function Lead360Page() {
   };
 
   // renderActivityActions closure ÔÇö depends on hook results from Lead360Page scope
-  const renderActivityActions = (activity: Activity) => (
-    <ActivityFeedItemActions
-      activityId={activity.id}
-      activityTitle={activity.title}
-      onReply={addComment}
-      onSubmitNote={(content) => addNoteMutation.mutate({ leadId, content })}
-      onToggleReaction={toggleReaction}
-      isSubmitting={addNoteMutation.isPending || isAddingComment}
-      shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/leads/${leadId}#activity-${activity.id}`}
-      reactions={reactionsMap[activity.id] ?? []}
-      currentUserId={user?.email ?? undefined}
-      comments={commentsMap[activity.id] ?? []}
-    />
-  );
+  // UI-021: reply, react, note and share belong on human activity, not on system records
+  // such as a score or status change.
+  const renderActivityActions = (activity: Activity) =>
+    isSystemActivity(activity.type) ? null : (
+      <ActivityFeedItemActions
+        activityId={activity.id}
+        activityTitle={activity.title}
+        onReply={addComment}
+        onSubmitNote={(content) => addNoteMutation.mutate({ leadId, content })}
+        onToggleReaction={toggleReaction}
+        isSubmitting={addNoteMutation.isPending || isAddingComment}
+        shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/leads/${leadId}#activity-${activity.id}`}
+        reactions={reactionsMap[activity.id] ?? []}
+        currentUserId={user?.email ?? undefined}
+        comments={commentsMap[activity.id] ?? []}
+      />
+    );
 
   return (
     <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">

@@ -3,8 +3,10 @@ import {
   getActivityIcon,
   getActivityIconBg,
   formatRelativeTime,
+  describeScoreChange,
   formatEstimatedValue,
   formatGBPCompact,
+  isSystemActivity,
   isSystemTag,
   visibleTags,
   httpUrlOrNull,
@@ -182,5 +184,44 @@ describe('lead-format · system tags (UI-017)', () => {
       'restaurant',
     ]);
     expect(visibleTags([])).toEqual([]);
+  });
+});
+
+describe('lead-format · score-change activity (UI-021)', () => {
+  it('reads the previousScore the scoring API writes', () => {
+    expect(describeScoreChange({ previousScore: 38, newScore: 52 })).toEqual({ from: 38, to: 52 });
+  });
+
+  it('falls back to the older oldScore name', () => {
+    expect(describeScoreChange({ oldScore: 10, newScore: 20 })).toEqual({ from: 10, to: 20 });
+  });
+
+  it('has no "from" for a first score or a row without a prior value', () => {
+    expect(describeScoreChange({ previousScore: 0, newScore: 38, firstScore: true })).toEqual({
+      from: null,
+      to: 38,
+    });
+    expect(describeScoreChange({ newScore: 38 })).toEqual({ from: null, to: 38 });
+  });
+
+  it('keeps a real change to or from zero', () => {
+    expect(describeScoreChange({ previousScore: 0, newScore: 38, firstScore: false })).toEqual({
+      from: 0,
+      to: 38,
+    });
+  });
+
+  it('returns null when there is no new score (a failed scoring)', () => {
+    expect(describeScoreChange({ previousScore: 38 })).toBeNull();
+    expect(describeScoreChange(null)).toBeNull();
+    expect(describeScoreChange(undefined)).toBeNull();
+  });
+
+  it('treats score and status changes as system records', () => {
+    expect(isSystemActivity('score_update')).toBe(true);
+    expect(isSystemActivity('status_change')).toBe(true);
+    expect(isSystemActivity('note')).toBe(false);
+    expect(isSystemActivity('email')).toBe(false);
+    expect(isSystemActivity('call')).toBe(false);
   });
 });
