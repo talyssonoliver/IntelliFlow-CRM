@@ -64,6 +64,29 @@ describe('withMonitoring — failure logs', () => {
     expect(logs[0][0]).toMatchObject({ errorClass: 'other' });
   });
 
+  it('logs an expected outcome (an inconclusive answer) as a warning, not an error', async () => {
+    const config = createChainMonitor().getConfig();
+    const inconclusive = Object.assign(new Error('Model gave no usable score (NO_FACTORS)'), {
+      name: 'ScoringInconclusiveError',
+      expected: true,
+    });
+
+    await expect(
+      withMonitoring(
+        async () => {
+          throw inconclusive;
+        },
+        config,
+        { chain: 'lead_scoring', modelName: 'scoring-free' }
+      )
+    ).rejects.toBe(inconclusive);
+
+    expect(pinoLogger.error).not.toHaveBeenCalled();
+    expect(
+      pinoLogger.warn.mock.calls.filter(([, msg]) => String(msg).includes('expected outcome'))
+    ).toHaveLength(1);
+  });
+
   it('logs a failed hallucination check by error class, never the error message', async () => {
     const config = createChainMonitor().getConfig();
     vi.spyOn(config.hallucinationChecker, 'checkOutput').mockRejectedValue(

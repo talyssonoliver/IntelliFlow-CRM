@@ -192,15 +192,40 @@ export type UpdatePaymentMethodInput = z.infer<typeof updatePaymentMethodInputSc
 /**
  * Update subscription (change plan or quantity)
  */
+/**
+ * A subscription change. A plan change names the plan and billing period, and the server
+ * resolves the Stripe price itself, as checkout does (#1239). A raw priceId is still accepted,
+ * but only when it is one of the configured plan prices.
+ */
 export const updateSubscriptionInputSchema = z
   .object({
+    planId: z.string().min(1).optional(),
+    billingCycle: z.enum(['monthly', 'annual']).optional(),
     priceId: z.string().optional(),
     quantity: z.number().int().min(1).optional(),
     cancelAtPeriodEnd: z.boolean().optional(),
   })
-  .refine((data) => data.priceId || data.quantity || data.cancelAtPeriodEnd !== undefined, {
-    message: 'Either priceId, quantity, or cancelAtPeriodEnd must be provided',
+  .refine(
+    (data) => data.planId || data.priceId || data.quantity || data.cancelAtPeriodEnd !== undefined,
+    { message: 'Either planId, priceId, quantity, or cancelAtPeriodEnd must be provided' }
+  )
+  .refine((data) => !(data.planId && data.priceId), {
+    message: 'Give either planId or priceId, not both',
   });
+
+/** Why a plan can't change while the subscription's last payment hasn't gone through (#1239). */
+export const PAYMENT_ISSUE_BLOCKS_PLAN_CHANGE_MESSAGE =
+  'Update your payment method before changing plans.';
+
+/** Subscription statuses whose payment needs fixing before the plan can change. */
+export const PAYMENT_ISSUE_SUBSCRIPTION_STATUSES = ['past_due', 'unpaid', 'incomplete'] as const;
+
+/**
+ * A subscription Stripe paused (a trial that ended with no payment method). A new payment method
+ * doesn't resume it, so the answer is to contact us, not the payment-method page.
+ */
+export const PAUSED_BLOCKS_PLAN_CHANGE_MESSAGE =
+  'Your subscription is paused. Contact us to resume it before changing plans.';
 
 export type UpdateSubscriptionInput = z.infer<typeof updateSubscriptionInputSchema>;
 
@@ -369,10 +394,26 @@ export type BillingCycle = z.infer<typeof billingCycleSchema>;
  * Create checkout subscription input
  * Used when user submits checkout form with card details
  */
+/**
+ * A customer-facing promotion code typed at checkout (#1220). Stripe codes are letters,
+ * digits, hyphens and underscores; anything else can't be one, so it is refused before
+ * any lookup. Empty or blank means "no code".
+ */
+export const promotionCodeSchema = z
+  .string()
+  .trim()
+  .max(64, 'Promotion code is too long')
+  .regex(/^[A-Za-z0-9_-]*$/, 'Promotion codes use only letters, numbers, hyphens and underscores')
+  .transform((code) => (code === '' ? undefined : code));
+
+/** What checkout says when a promotion code doesn't exist, has expired or is used up. */
+export const INVALID_PROMOTION_CODE_MESSAGE = "That promotion code isn't valid.";
+
 export const createCheckoutInputSchema = z.object({
   planId: z.string().min(1, 'Plan ID is required'),
   billingCycle: billingCycleSchema,
   paymentMethodId: z.string().min(1, 'Payment method ID is required'),
+  promotionCode: promotionCodeSchema.optional(),
 });
 
 export type CreateCheckoutInput = z.infer<typeof createCheckoutInputSchema>;

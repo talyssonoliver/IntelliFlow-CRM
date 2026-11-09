@@ -228,6 +228,37 @@ describe('LeadScoringChain', () => {
     });
   });
 
+  describe('DEFAULT_PROMPT', () => {
+    // #1218: the prompt never said what confidence was, and the free model answered 0.
+    it('defines confidence and asks for at least one factor', () => {
+      const prompt = LeadScoringChain.DEFAULT_PROMPT;
+      expect(prompt).toMatch(/Confidence is how sure you are that the score is right/);
+      expect(prompt).toMatch(/Never answer confidence 0/);
+      expect(prompt).toMatch(/at least one factor/);
+    });
+
+    it('counts replies from the lead as the strongest engagement signal', () => {
+      expect(LeadScoringChain.DEFAULT_PROMPT).toMatch(/Replies from the lead/);
+    });
+
+    it("puts the lead's engagement history in the prompt the model sees", async () => {
+      const { createLLM } = await import('../lib/llm-factory.js');
+      await new LeadScoringChain().scoreLead({
+        email: 'pat@northwind.example.invalid',
+        source: 'WEBSITE',
+        activity:
+          'Engagement: 5 emails sent to the lead, 2 replies from the lead, 0 calls, 0 meetings',
+      });
+      const model = vi.mocked(createLLM).mock.results.at(-1)!.value as {
+        withStructuredOutput: ReturnType<typeof vi.fn>;
+      };
+      const structured = model.withStructuredOutput.mock.results.at(-1)!.value as {
+        invoke: ReturnType<typeof vi.fn>;
+      };
+      expect(String(structured.invoke.mock.calls.at(-1)![0])).toContain('2 replies from the lead');
+    });
+  });
+
   describe('formatLeadInfo', () => {
     it('should format complete lead information', () => {
       const lead: LeadInput = {
@@ -301,6 +332,61 @@ describe('LeadScoringChain', () => {
       // Chain should complete successfully with versioned prompt applied
       expect(result).toBeDefined();
       expect(result.score).toBeGreaterThanOrEqual(0);
+    });
+
+    describe('the prompt the model receives carries the lead and its engagement history', () => {
+      const ENGAGEMENT =
+        'Engagement: 1 emails sent to the lead, 1 replies from the lead\n' +
+        '- 2026-11-05 EMAIL inbound: Reply received: what is the price?';
+      const lead: LeadInput = {
+        email: 'buyer@acme.example.invalid',
+        company: 'Acme',
+        source: 'WEBSITE',
+        activity: ENGAGEMENT,
+      };
+
+      async function promptSentToModel(versionedPrompt: string | null): Promise<string> {
+        const { getVersionLoader } = await import('../versioning/chain-version-loader');
+        const { createLLMForTenant } = await import('../lib/llm-factory.js');
+        if (versionedPrompt !== null) {
+          vi.mocked(getVersionLoader).mockReturnValueOnce({
+            getChainConfig: vi.fn().mockResolvedValue({ prompt: versionedPrompt }),
+          } as any);
+        }
+        const invoke = vi.fn().mockResolvedValue(PARSED_SCORING_RESPONSE);
+        vi.mocked(createLLMForTenant).mockResolvedValueOnce({
+          withStructuredOutput: vi.fn(() => ({ invoke })),
+        } as any);
+        await new LeadScoringChain({ tenantId: 'tenant-prompt' }).scoreLead(lead);
+        expect(invoke).toHaveBeenCalledTimes(1);
+        return invoke.mock.calls[0]![0] as string;
+      }
+
+      it('default prompt (no active version)', async () => {
+        const prompt = await promptSentToModel(null);
+        expect(prompt).toContain('Lead Information:');
+        expect(prompt).toContain('Company: Acme');
+        expect(prompt).toContain(ENGAGEMENT);
+      });
+
+      it('versioned prompt with no {lead_info} placeholder falls back to the chain prompt', async () => {
+        const prompt = await promptSentToModel(
+          'You are an expert B2B lead scoring assistant. Be objective and data-driven in your analysis.'
+        );
+        expect(prompt.startsWith(LeadScoringChain.DEFAULT_PROMPT.slice(0, 60))).toBe(true);
+        expect(prompt).not.toContain('You are an expert B2B lead scoring assistant.');
+        expect(prompt).toContain('Lead Information:');
+        expect(prompt).toContain('Company: Acme');
+        expect(prompt).toContain(ENGAGEMENT);
+        expect(prompt).toContain('Never answer confidence 0');
+      });
+
+      it('versioned prompt that places {lead_info} itself is used as written', async () => {
+        const prompt = await promptSentToModel('Score this lead.\n{lead_info}\nAnswer in JSON.');
+        expect(prompt).toContain(ENGAGEMENT);
+        expect(prompt.endsWith('Answer in JSON.')).toBe(true);
+        expect(prompt).not.toContain('Lead Information:');
+      });
     });
 
     it('falls back to default prompt when VersionLoader throws', async () => {

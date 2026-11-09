@@ -14,6 +14,7 @@ import { beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { resolveTestDatabaseUrl } from './db-url-guard';
 
 const execAsync = promisify(exec);
 
@@ -171,8 +172,9 @@ export async function setupTestDatabase(): Promise<string> {
     throw new Error(infrastructureUnavailableReason || 'Infrastructure not available');
   }
 
-  // Check if DATABASE_URL is already provided (CI environment)
-  const existingUrl = process.env.DATABASE_URL || process.env.TEST_DATABASE_URL;
+  // Check if DATABASE_URL is already provided (CI environment). Refuses anything that is not a
+  // local test database (db-url-guard.ts).
+  const existingUrl = resolveTestDatabaseUrl(null);
 
   if (existingUrl) {
     console.log('📦 Using existing DATABASE_URL');
@@ -276,7 +278,7 @@ export function getTestPrismaClient(): any {
   if (!testPrismaClient) {
     // Prisma 7: construct with the pg driver adapter (NOT datasources.db.url).
     const adapter = new PrismaPg({
-      connectionString: databaseUrl || process.env.DATABASE_URL || process.env.TEST_DATABASE_URL,
+      connectionString: resolveTestDatabaseUrl(databaseUrl) ?? undefined,
     });
     testPrismaClient = new PrismaClient({ adapter });
   }
@@ -293,7 +295,7 @@ export function createIsolatedTestPrismaClient(): any {
   if (!isInfrastructureAvailable || !PrismaClient) {
     return null;
   }
-  const url = databaseUrl || process.env.DATABASE_URL || process.env.TEST_DATABASE_URL;
+  const url = resolveTestDatabaseUrl(databaseUrl);
   if (!url) return null;
   const adapter = new PrismaPg({ connectionString: url });
   return new PrismaClient({ adapter });

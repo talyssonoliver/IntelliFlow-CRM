@@ -1,5 +1,6 @@
 'use client';
 
+import { isValidEmailAddress } from '@/lib/shared/email-address';
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { Card } from '@intelliflow/ui';
 import { EntitySearchField } from '@/components/tasks/EntitySearchField';
@@ -142,7 +143,7 @@ export function ContactForm({
       if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
       if (!formData.email.trim()) {
         newErrors.email = 'Email is required';
-      } else if (!/^[^\s@]+@[^\s@.]+\.[^\s@.]+$/.test(formData.email)) {
+      } else if (!isValidEmailAddress(formData.email)) {
         newErrors.email = 'Please enter a valid email address';
       }
       if (formData.phone && !/^\+?[\d\s()-]+$/.test(formData.phone)) {

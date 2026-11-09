@@ -332,6 +332,21 @@ describe('InsightJobDataSchema', () => {
   });
 });
 
+describe('processInsightJob — nothing flagged (#1219)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    delete process.env['ENABLE_AI_INSIGHTS_JOB'];
+  });
+
+  it('writes no insight and never calls the model when nothing is flagged', async () => {
+    const result = (await processInsightJob(createMockJob({}))) as any;
+
+    expect(result).toMatchObject({ skipped: true, reason: 'nothing-flagged' });
+    expect(mockGenerateInsightsWithMeta).not.toHaveBeenCalled();
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+});
+
 describe('processInsightJob — feature flag ai.insights.enabled', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -361,7 +376,8 @@ describe('processInsightJob — feature flag ai.insights.enabled', () => {
       source: 'llm',
       executionTimeMs: 10,
     });
-    const job = createMockJob({});
+    // Something must be flagged: a job with nothing to explain is skipped on purpose (#1219).
+    const job = createMockJob({ overdueTasksCount: 1 });
     const result = (await processInsightJob(job)) as any;
     expect(result.skipped).toBeUndefined();
   });
@@ -373,7 +389,8 @@ describe('processInsightJob — feature flag ai.insights.enabled', () => {
       source: 'llm',
       executionTimeMs: 10,
     });
-    const job = createMockJob({});
+    // Something must be flagged: a job with nothing to explain is skipped on purpose (#1219).
+    const job = createMockJob({ overdueTasksCount: 1 });
     const result = (await processInsightJob(job)) as any;
     expect(result.skipped).toBeUndefined();
   });
@@ -603,7 +620,9 @@ describe('scheduled insight refresh with the system tenant (#805)', () => {
   });
 
   it('still processes a system-tenant job under any other name as a tenant job', async () => {
-    await processInsightJob(createCronJob('generate-insights'));
+    const job = createCronJob('generate-insights');
+    job.data.overdueTasksCount = 1; // something to explain, or the job skips (#1219)
+    await processInsightJob(job);
 
     expect(mockLeadGroupBy).not.toHaveBeenCalled();
     expect(mockGenerateInsightsWithMeta).toHaveBeenCalledTimes(1);

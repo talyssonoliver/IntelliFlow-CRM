@@ -167,8 +167,8 @@ export function Navigation() {
           <SearchBar className="w-full" />
         </div>
 
-        {/* Trial indicator — only visible when on a trial plan */}
-        <TrialBadge className="mr-2 hidden shrink-0 sm:inline-flex" />
+        {/* Trial indicator — only visible when on a trial plan; a short form on phones (#1220) */}
+        <TrialBadge className="mr-2 inline-flex shrink-0" />
 
         {/* Notifications - count is managed via RemindersContext */}
         <div className="shrink-0">

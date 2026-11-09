@@ -121,7 +121,7 @@ export function PlanComparison() {
               directionIcon={directionDisplay.icon}
               changeAllowed={changeCheck.allowed}
               changeBlockedReason={changeCheck.reason}
-              href={`/billing/upgrade?plan=${plan.id}`}
+              href={`/billing/upgrade?plan=${plan.id}&cycle=${interval}`}
               compact
             />
           );

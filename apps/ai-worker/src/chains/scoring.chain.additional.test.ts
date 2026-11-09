@@ -170,9 +170,13 @@ describe('LeadScoringChain - additional', () => {
     await expect(
       new LeadScoringChain().scoreLead({ email: 'f@e.com', source: 'WEB' })
     ).rejects.toBeInstanceOf(ScoringInconclusiveError);
+    // An expected outcome: a warning with its reason, never an error-level log (alerting).
     expect(
-      pinoLogger.error.mock.calls.find(([, m]) => m === 'Lead scoring failed')?.[0]
+      pinoLogger.warn.mock.calls.find(([, m]) =>
+        String(m).startsWith('Lead scoring inconclusive')
+      )?.[0]
     ).toMatchObject({ inconclusive: 'ZERO_CONFIDENCE' });
+    expect(pinoLogger.error.mock.calls.some(([, m]) => m === 'Lead scoring failed')).toBe(false);
     // No "Lead scoring completed" line for a run that produced no score.
     expect(pinoLogger.info.mock.calls.some(([, m]) => m === 'Lead scoring completed')).toBe(false);
   });

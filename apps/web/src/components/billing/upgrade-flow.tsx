@@ -35,6 +35,11 @@ import {
   getFeatureChangeBadge,
   formatPriceDifference,
 } from '@/lib/billing/plan-changes';
+import {
+  PAUSED_BLOCKS_PLAN_CHANGE_MESSAGE,
+  PAYMENT_ISSUE_BLOCKS_PLAN_CHANGE_MESSAGE,
+  PAYMENT_ISSUE_SUBSCRIPTION_STATUSES,
+} from '@intelliflow/validators';
 import pricingData from '@/data/pricing-data.json';
 import { PlanCard } from './plan-card';
 import { ErrorState, CardSkeleton } from './billing-shared';
@@ -138,7 +143,7 @@ function PlanSelectionView({
               directionIcon={directionDisplay.icon}
               changeAllowed={changeCheck.allowed}
               changeBlockedReason={changeCheck.reason}
-              href={`/billing/upgrade?plan=${plan.id}`}
+              href={`/billing/upgrade?plan=${plan.id}&cycle=${interval}`}
             />
           );
         })}
@@ -183,8 +188,12 @@ interface ConfirmViewProps {
   currentPlan: Plan | null;
   currentPlanId: string | null;
   periodEnd: Date | null;
+  /** The billing period chosen on the plan cards (#1220). */
+  cycle: 'monthly' | 'annual';
   onConfirm: () => void;
   isPending: boolean;
+  /** Why the last attempt failed, shown above the buttons (#1239). */
+  errorMessage?: string | null;
 }
 
 function ConfirmView({
@@ -192,9 +201,13 @@ function ConfirmView({
   currentPlan,
   currentPlanId,
   periodEnd,
+  cycle,
   onConfirm,
   isPending,
+  errorMessage = null,
 }: Readonly<ConfirmViewProps>) {
+  // The price for the period being bought, so an annual purchase never shows a monthly price.
+  const price = getPlanPriceForInterval(targetPlan, cycle);
   const isSamePlan = targetPlan.id === currentPlanId;
   const isNewSubscription = !currentPlan && !periodEnd;
   const comparison =
@@ -272,10 +285,14 @@ function ConfirmView({
               <p className="font-semibold text-lg">{targetPlan.name}</p>
               <p className="text-sm text-slate-500 dark:text-slate-400">{targetPlan.description}</p>
             </div>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">
-              {formatCurrency(targetPlan.priceMonthly, targetPlan.currency)}{' '}
-              <span className="text-sm font-normal text-slate-500">/mo</span>
-            </p>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-slate-900 dark:text-white">{price.formatted}</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                {cycle === 'annual'
+                  ? `Billed annually (${price.formattedPerMonth})`
+                  : 'Billed monthly'}
+              </p>
+            </div>
           </div>
 
           <ul className="space-y-2 pt-3 border-t border-slate-200 dark:border-slate-700">
@@ -307,6 +324,8 @@ function ConfirmView({
               <span className="text-slate-600 dark:text-slate-400">
                 New plan ({targetPlan.name})
               </span>
+              {/* Monthly like the difference and proration beside it: this card is the plan-change
+                  path, which #1239 reworks with the chosen period. */}
               <span className="font-medium">
                 {formatCurrency(targetPlan.priceMonthly, targetPlan.currency)} <span>/mo</span>
               </span>
@@ -369,6 +388,15 @@ function ConfirmView({
         Estimated amount — final charge calculated by payment provider.
       </p>
 
+      {errorMessage && (
+        <p
+          role="alert"
+          className="rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive"
+        >
+          {errorMessage}
+        </p>
+      )}
+
       {/* Confirm buttons */}
       <div className="flex gap-3">
         <Button variant="outline" className="flex-1" asChild>
@@ -391,11 +419,51 @@ function ConfirmView({
 // Main export
 // =============================================
 
+/**
+ * Shown instead of a plan change while the subscription can't change: its last payment
+ * hasn't gone through (fix the payment method), or Stripe paused it (we resume it: contact us).
+ */
+function PlanChangeBlockedNotice({ paused }: Readonly<{ paused: boolean }>) {
+  return (
+    <Card className="max-w-2xl mx-auto border border-amber-300 dark:border-amber-700">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base font-semibold">
+          {paused ? PAUSED_BLOCKS_PLAN_CHANGE_MESSAGE : PAYMENT_ISSUE_BLOCKS_PLAN_CHANGE_MESSAGE}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          {paused
+            ? 'A paused subscription has to be resumed before its plan can change.'
+            : "Your last payment didn't go through. Once your payment method is updated and the payment is made, you can change your plan here."}
+        </p>
+        <div className="flex gap-3">
+          <Button variant="outline" className="flex-1" asChild>
+            <Link href="/billing/plans">Back to plans</Link>
+          </Button>
+          <Button className="flex-1" asChild>
+            {paused ? (
+              <Link href="/contact">Contact us</Link>
+            ) : (
+              <Link href="/billing/payment-methods">Update payment method</Link>
+            )}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/** Statuses after which a subscription can't be changed any more (#1220). */
+const ENDED_SUBSCRIPTION_STATUSES = new Set(['canceled', 'incomplete_expired']);
+
 export function UpgradeFlow() {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const searchParams = useSearchParams();
   const router = useRouter();
   const planId = searchParams.get('plan');
+  // The period chosen on the plan cards; links without one keep the old monthly default.
+  const cycle: 'monthly' | 'annual' = searchParams.get('cycle') === 'annual' ? 'annual' : 'monthly';
 
   const {
     data: subscription,
@@ -428,7 +496,12 @@ export function UpgradeFlow() {
     return <ErrorState message="Failed to load subscription data. Please try again later." />;
   }
 
-  const currentPlan = subscription ? getPlanByPriceId(subscription.priceId) : null;
+  // An ended subscription can't be changed, only replaced: treat it as none, so buying a plan
+  // goes to checkout (#1220). A past-due one is still live: it can't go to checkout (that would
+  // start a second subscription), and it waits for its payment to be fixed (#1239).
+  const liveSubscription =
+    subscription && !ENDED_SUBSCRIPTION_STATUSES.has(subscription.status) ? subscription : null;
+  const currentPlan = liveSubscription ? getPlanByPriceId(liveSubscription.priceId) : null;
   const currentPlanId = currentPlan?.id ?? null;
   const targetPlan = planId ? getPlanById(planId) : null;
 
@@ -437,17 +510,30 @@ export function UpgradeFlow() {
     return (
       <PlanSelectionView
         currentPlanId={currentPlanId}
-        subscriptionQuantity={subscription?.quantity ?? 0}
+        subscriptionQuantity={liveSubscription?.quantity ?? 0}
       />
     );
   }
 
   // MODE 2: ?plan=X → confirmation with proration
   function handleConfirm() {
-    updateMutation.mutate({
-      planId,
-      billingCycle: 'monthly',
-    } as Record<string, unknown>);
+    // No subscription yet (a trial, or an ended trial): buying a plan is a checkout, since
+    // there is nothing to change, and updateSubscription would refuse it (#1220).
+    if (!liveSubscription) {
+      router.push(`/billing/checkout?plan=${encodeURIComponent(planId ?? '')}&cycle=${cycle}`);
+      return;
+    }
+    // The server resolves the plan and period to the Stripe price, as checkout does (#1239).
+    updateMutation.mutate({ planId: planId ?? undefined, billingCycle: cycle });
+  }
+
+  // A subscription whose last payment failed can't change plan until the payment is fixed.
+  if (liveSubscription?.status === 'paused') return <PlanChangeBlockedNotice paused />;
+  if (
+    liveSubscription &&
+    (PAYMENT_ISSUE_SUBSCRIPTION_STATUSES as readonly string[]).includes(liveSubscription.status)
+  ) {
+    return <PlanChangeBlockedNotice paused={false} />;
   }
 
   return (
@@ -455,9 +541,11 @@ export function UpgradeFlow() {
       targetPlan={targetPlan}
       currentPlan={currentPlan ?? null}
       currentPlanId={currentPlanId}
-      periodEnd={subscription ? new Date(subscription.currentPeriodEnd) : null}
+      periodEnd={liveSubscription ? new Date(liveSubscription.currentPeriodEnd) : null}
+      cycle={cycle}
       onConfirm={handleConfirm}
       isPending={updateMutation.isPending}
+      errorMessage={updateMutation.error?.message ?? null}
     />
   );
 }

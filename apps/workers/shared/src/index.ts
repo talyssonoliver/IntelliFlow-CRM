@@ -39,6 +39,7 @@ export { fetchDocument, extractTextFromBuffer, htmlToText, createChunks } from '
 
 // Queue Connector
 export { QueueConnector } from './queue-connector';
+export { isExpectedJobOutcome, markExpectedJobOutcome } from './job-outcome';
 export type { QueueConnectionOptions, QueueStats, JobProcessor } from './queue-connector';
 
 // Health Server

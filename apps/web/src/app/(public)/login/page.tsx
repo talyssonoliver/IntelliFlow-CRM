@@ -16,6 +16,7 @@
  * - Client-side security utilities
  */
 
+import { isValidEmailAddress } from '@/lib/shared/email-address';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -181,8 +182,7 @@ export default function LoginPage() {
 
   const validateEmail = (email: string): string | undefined => {
     if (!email) return 'Email is required';
-    const emailRegex = /^[^\s@]+@[^\s@.]+\.[^\s@.]+$/;
-    if (!emailRegex.test(email)) return 'Please enter a valid email address';
+    if (!isValidEmailAddress(email)) return 'Please enter a valid email address';
     return undefined;
   };
 

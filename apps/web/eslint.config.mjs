@@ -1,3 +1,4 @@
+import testQuality, { testQualityWarnings } from '../../eslint-rules/test-quality.mjs';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import jsxA11y from 'eslint-plugin-jsx-a11y';
@@ -142,10 +143,13 @@ export default [
   // Test files — allow `any` for mock flexibility (consistent with root config)
   {
     files: ['src/**/*.test.ts', 'src/**/*.test.tsx', 'src/**/*.spec.ts', 'src/**/*.spec.tsx'],
+    // #1216: a test must fail when its behaviour breaks. Warnings first, so they can be counted.
+    plugins: { 'test-quality': testQuality },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       // Timezone/eager rules intentionally off in test files — see root config rationale.
       'no-restricted-syntax': 'off',
+      ...testQualityWarnings,
     },
   },
   {

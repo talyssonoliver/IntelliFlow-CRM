@@ -16,6 +16,7 @@
  * - ARIA attributes for screen reader support
  */
 
+import { isValidEmailAddress } from '@/lib/shared/email-address';
 import { useState, type SyntheticEvent } from 'react';
 import Link from 'next/link';
 import { Input, Button } from '@intelliflow/ui';
@@ -46,8 +47,7 @@ export function SsoEntryForm({ onResolve, isLoading = false }: Readonly<SsoEntry
   const isDisabled = isLoading || isResolving;
 
   const validateEmail = (value: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@.]+\.[^\s@.]+$/;
-    return emailRegex.test(value);
+    return isValidEmailAddress(value);
   };
 
   const handleSubmit = async (e: SyntheticEvent) => {
