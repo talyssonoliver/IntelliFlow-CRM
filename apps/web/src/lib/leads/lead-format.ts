@@ -104,3 +104,18 @@ export function leadDisplayName(lead: Readonly<LeadNameParts>): string {
     .join(' ');
   return personName || lead.company?.trim() || lead.email?.trim() || 'Unnamed lead';
 }
+
+/**
+ * Returns the URL when it is an absolute http(s) address, otherwise null. Stored
+ * recording and file addresses are rendered as links only through this, so a
+ * missing, relative or javascript: value never becomes a clickable control.
+ */
+export function httpUrlOrNull(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}

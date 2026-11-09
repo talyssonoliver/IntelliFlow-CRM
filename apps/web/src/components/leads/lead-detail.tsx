@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import { AppAvatar } from '@/components/shared/app-avatar';
+import { ContactMapPreview } from '@/components/contacts/ContactMapPreview';
 import { formatEstimatedValue, leadDisplayName } from '@/lib/leads/lead-format';
 import { leadScoreDisplay } from '@/lib/leads/score-display';
 
@@ -365,25 +366,8 @@ export function LeadProfileCard({
           </div>
         </div>
       </div>
-      {/* Map placeholder */}
-      <div className="h-32 w-full bg-cover bg-center border-t border-slate-200 dark:border-slate-800 relative">
-        <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
-          <div className="text-center">
-            <span
-              aria-hidden="true"
-              className="material-symbols-outlined text-[#2a78f6] !text-3xl mb-1"
-            >
-              location_on
-            </span>
-            <button
-              type="button"
-              className="bg-white/90 text-slate-900 text-xs font-bold px-3 py-1.5 rounded shadow-sm hover:bg-white transition"
-            >
-              View Map
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* UI-026: the same map preview as Contact 360; disabled when there is no location. */}
+      <ContactMapPreview location={lead.location} />
     </Card>
   );
 }

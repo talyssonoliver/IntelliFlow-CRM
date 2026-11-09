@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, toast } from '@intelliflow/ui';
@@ -8,6 +8,7 @@ import { DOCUMENT_TYPES, type DocumentType } from '@intelliflow/domain';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { SYSTEM_DOCUMENT_TYPE_LABELS } from '@/components/documents/document-type-utils';
+import { contactIdFromSearch } from '@/lib/documents/upload-prefill';
 type DocumentClassification = 'PUBLIC' | 'INTERNAL' | 'CONFIDENTIAL' | 'PRIVILEGED';
 type DocumentTypeField = DocumentType | `custom:${string}` | '';
 
@@ -125,6 +126,17 @@ export default function UploadDocumentPage() {
   const utils = trpc.useUtils();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState<DocumentFormData>(initialFormData);
+  // Opened from a contact's Documents tab (/documents/new?contactId=…): link the
+  // document to that contact unless the field already has a value. Read once on
+  // mount from window.location, so the page needs no Suspense boundary.
+  useEffect(() => {
+    const contactId = contactIdFromSearch(window.location.search);
+    if (contactId) {
+      setFormData((prev) =>
+        prev.relatedContactId ? prev : { ...prev, relatedContactId: contactId }
+      );
+    }
+  }, []);
   const [errors, setErrors] = useState<Partial<Record<keyof DocumentFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);

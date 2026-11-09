@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { Card, EmptyState } from '@intelliflow/ui';
 
 import { formatContactRelativeTime } from './contact-date-format';
@@ -13,19 +15,22 @@ export interface ContactTicketsTabProps {
 /**
  * IFC-256: Contact 360 → Tickets tab. Renders the contact's real tickets (or a
  * proper empty state). Extracted from the route page so it is unit-tested and
- * counted by coverage. The "Create Ticket" action is wired separately (IFC-257).
+ * counted by coverage. Create Ticket opens the new-ticket page.
  */
 export function ContactTicketsTab({ tickets, timezone }: ContactTicketsTabProps) {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Tickets</h3>
-        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
-          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+        <Link
+          href="/tickets/new"
+          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors"
+        >
+          <svg aria-hidden="true" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
             <path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" />
           </svg>{' '}
           Create Ticket
-        </button>
+        </Link>
       </div>
       <div className="space-y-3" data-testid="contact-tickets-tab">
         {tickets.length === 0 ? (

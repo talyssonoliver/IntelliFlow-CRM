@@ -4,6 +4,7 @@ import {
   getActivityIconBg,
   formatRelativeTime,
   formatEstimatedValue,
+  httpUrlOrNull,
   leadDisplayName,
   type ActivityType,
 } from '../lead-format';
@@ -132,5 +133,25 @@ describe('lead-format · leadDisplayName', () => {
 
   it('never returns an empty string', () => {
     expect(leadDisplayName({})).toBe('Unnamed lead');
+  });
+});
+
+describe('httpUrlOrNull', () => {
+  it('keeps absolute http and https addresses', () => {
+    expect(httpUrlOrNull('https://files.example.invalid/a.pdf')).toBe(
+      'https://files.example.invalid/a.pdf'
+    );
+    expect(httpUrlOrNull('http://files.example.invalid/a.pdf')).toBe(
+      'http://files.example.invalid/a.pdf'
+    );
+  });
+
+  it('rejects missing, relative and non-http addresses', () => {
+    expect(httpUrlOrNull(undefined)).toBeNull();
+    expect(httpUrlOrNull(null)).toBeNull();
+    expect(httpUrlOrNull('')).toBeNull();
+    expect(httpUrlOrNull('/files/a.pdf')).toBeNull();
+    expect(httpUrlOrNull('javascript:alert(1)')).toBeNull();
+    expect(httpUrlOrNull('data:text/html,hi')).toBeNull();
   });
 });

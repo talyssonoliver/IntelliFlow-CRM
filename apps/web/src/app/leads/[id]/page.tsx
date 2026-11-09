@@ -92,6 +92,7 @@ import {
   getActivityIcon,
   getActivityIconBg,
   formatRelativeTime,
+  httpUrlOrNull,
   leadDisplayName,
 } from '@/lib/leads/lead-format';
 import { LeadTimeline } from '@/components/leads/lead-timeline';
@@ -312,6 +313,8 @@ interface LeadWithRelations {
     name: string;
     size: string;
     uploadedAt: string | Date;
+    /** Stored address of the file (LeadFile.url), when there is one. */
+    url?: string | null;
   }>;
   tasks?: Array<{
     id: string;
@@ -1089,11 +1092,18 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
             </span>
             {meta.duration && <span className="text-sm text-slate-500">{meta.duration}</span>}
           </div>
-          {meta.recordingUrl && (
-            <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded transition-colors">
-              <span className="material-symbols-outlined !text-[16px]">play_arrow</span> Play
-              Recording
-            </button>
+          {httpUrlOrNull(meta.recordingUrl) && (
+            <a
+              href={httpUrlOrNull(meta.recordingUrl) ?? undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded transition-colors"
+            >
+              <span aria-hidden="true" className="material-symbols-outlined !text-[16px]">
+                play_arrow
+              </span>{' '}
+              Play Recording
+            </a>
           )}
         </div>
       </div>
@@ -1546,23 +1556,35 @@ function LeadNotesTab({
 interface LeadEmailsTabProps {
   emails: { id: string; subject: string; status: string; sentAt: string; openCount: number }[];
   timezone: string;
+  leadId: string;
+  /** The lead's email address; Compose is offered only when there is one. */
+  leadEmail: string | null | undefined;
 }
 
-function LeadEmailsTab({ emails, timezone }: LeadEmailsTabProps) {
+function LeadEmailsTab({ emails, timezone, leadId, leadEmail }: LeadEmailsTabProps) {
+  const to = leadEmail?.trim();
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Emails</h3>
-        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
-          <span className="material-symbols-outlined !text-[18px]">send</span> Compose
-        </button>
+        {to && (
+          <Link
+            href={`/email/compose?to=${encodeURIComponent(to)}`}
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors"
+          >
+            <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
+              send
+            </span>{' '}
+            Compose
+          </Link>
+        )}
       </div>
       <div className="space-y-3">
         {emails.length > 0 ? (
           emails.map((email) => (
             <div
               key={email.id}
-              className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors"
+              className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
             >
               <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
                 <span className="material-symbols-outlined !text-[20px] text-orange-600">mail</span>
@@ -1582,9 +1604,15 @@ function LeadEmailsTab({ emails, timezone }: LeadEmailsTabProps) {
                   </span>
                 </div>
               </div>
-              <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg">
-                <span className="material-symbols-outlined !text-[18px]">open_in_new</span>
-              </button>
+              <Link
+                href={`/leads/${encodeURIComponent(leadId)}?activityId=${encodeURIComponent(email.id)}`}
+                aria-label={`Open "${email.subject}" in the activity timeline`}
+                className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg"
+              >
+                <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
+                  open_in_new
+                </span>
+              </Link>
             </div>
           ))
         ) : (
@@ -1598,18 +1626,17 @@ function LeadEmailsTab({ emails, timezone }: LeadEmailsTabProps) {
 // ÔöÇÔöÇÔöÇ Files tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface LeadFilesTabProps {
-  files: { id: string; name: string; size: string; uploadedAt: string }[];
+  files: { id: string; name: string; size: string; uploadedAt: string; url: string | null }[];
   timezone: string;
 }
 
+// Nothing in the app stores lead files yet, so the tab has no Upload action; it lists
+// what exists, with a download link when the file has a stored address.
 function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Files</h3>
-        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
-          <span className="material-symbols-outlined !text-[18px]">upload</span> Upload
-        </button>
       </div>
       <div className="space-y-3">
         {files.length > 0 ? (
@@ -1629,9 +1656,20 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
                   {file.size} ÔÇó {formatRelativeTime(file.uploadedAt, timezone)}
                 </p>
               </div>
-              <button className="p-2 text-slate-500 hover:text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
-                <span className="material-symbols-outlined !text-[18px]">download</span>
-              </button>
+              {httpUrlOrNull(file.url) && (
+                <a
+                  href={httpUrlOrNull(file.url) ?? undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                  aria-label={`Download ${file.name}`}
+                  className="p-2 text-slate-500 hover:text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors"
+                >
+                  <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
+                    download
+                  </span>
+                </a>
+              )}
             </div>
           ))
         ) : (
@@ -2503,6 +2541,7 @@ export default function Lead360Page() {
       id: file.id,
       name: file.name,
       size: file.size,
+      url: file.url ?? null,
       uploadedAt:
         typeof file.uploadedAt === 'string' ? file.uploadedAt : file.uploadedAt.toISOString(),
     }));
@@ -2957,7 +2996,14 @@ export default function Lead360Page() {
             />
           )}
 
-          {activeTab === 'emails' && <LeadEmailsTab emails={emails} timezone={timezone} />}
+          {activeTab === 'emails' && (
+            <LeadEmailsTab
+              emails={emails}
+              timezone={timezone}
+              leadId={leadId}
+              leadEmail={lead?.email}
+            />
+          )}
 
           {activeTab === 'files' && <LeadFilesTab files={files} timezone={timezone} />}
 
