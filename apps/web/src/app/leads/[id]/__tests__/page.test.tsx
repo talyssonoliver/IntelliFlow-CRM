@@ -1151,3 +1151,59 @@ describe('Lead360Page — cache refresh promises', () => {
     consoleError.mockRestore();
   });
 });
+
+describe('LeadDetailPage - display name fallback (UI-016)', () => {
+  const original = {
+    firstName: mockLeadQueryState.data.firstName,
+    lastName: mockLeadQueryState.data.lastName,
+    company: mockLeadQueryState.data.company,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    mockLeadQueryState.data.activities = [];
+    mockLeadQueryState.data.aiInsight = null;
+  });
+
+  afterEach(() => {
+    Object.assign(mockLeadQueryState.data, original);
+  });
+
+  function setName(parts: {
+    firstName: string | null;
+    lastName: string | null;
+    company: string | null;
+  }) {
+    Object.assign(mockLeadQueryState.data, parts);
+  }
+
+  it('titles a lead without a person name by its company, in the heading and every prompt', () => {
+    setName({ firstName: null, lastName: null, company: 'Acme Corp' });
+    render(<Lead360Page />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Acme Corp');
+    expect(screen.getByText(/permanently delete Acme Corp\?/)).toBeInTheDocument();
+    expect(screen.getByText(/archive Acme Corp\?/)).toBeInTheDocument();
+    expect(screen.getByText(/Convert Acme Corp to a contact record\?/)).toBeInTheDocument();
+  });
+
+  it('falls back to the email when the lead has no name and no company', () => {
+    setName({ firstName: null, lastName: null, company: null });
+    render(<Lead360Page />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('john@example.com');
+    expect(screen.getByText(/permanently delete john@example\.com\?/)).toBeInTheDocument();
+    expect(screen.queryByText(/permanently delete\s+\?/)).not.toBeInTheDocument();
+  });
+
+  it('keeps the person name when there is one', () => {
+    render(<Lead360Page />);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('John Doe');
+  });
+
+  it('gives the icon-only header actions accessible names', () => {
+    render(<Lead360Page />);
+    expect(screen.getByRole('button', { name: 'Edit lead' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Convert lead' })).toBeInTheDocument();
+  });
+});
