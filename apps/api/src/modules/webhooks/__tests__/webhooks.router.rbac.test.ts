@@ -7,9 +7,37 @@
  * `platformAdminProcedure`: a verified email listed in PLATFORM_ADMIN_EMAILS (ADR-070).
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { TRPCError } from '@trpc/server';
 import { webhooksRouter } from '../webhooks.router';
 import { createAdminContext, createTestContext } from '../../../test/setup';
+
+// The router loads WebhookService from @intelliflow/adapters at call time; a fake one lets the
+// operator cases run each route to its result.
+vi.mock('@intelliflow/adapters', () => ({
+  WebhookService: class {
+    registerSource() {}
+    unregisterSource(name: string) {
+      return name === 'ci-source';
+    }
+    getSources() {
+      return [{ name: 'ci-source' }];
+    }
+    getMetrics() {
+      return { received: 3 };
+    }
+    async processRetries() {
+      return { processed: 2, succeeded: 1, failed: 1 };
+    }
+    getDeadLetterEntries() {
+      return [{ eventId: 'evt-1' }];
+    }
+    async reprocessDeadLetter(eventId: string) {
+      return eventId === 'evt-1';
+    }
+    cleanup() {
+      return { idempotencyRemoved: 4 };
+    }
+  },
+}));
 
 const OPERATOR = 'ops@example.invalid';
 
@@ -55,13 +83,49 @@ describe('webhooks router: platform webhook operations are platform-operator onl
     await expect(OPERATIONS[name](caller)).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 
-  it.each(Object.keys(OPERATIONS))('%s passes the guard for a platform operator', async (name) => {
-    const caller = webhooksRouter.createCaller(withEmail(createAdminContext(), OPERATOR));
-    // Any downstream error (unknown source, empty queue) must not be the auth guard.
-    const outcome = await OPERATIONS[name](caller).then(
-      () => 'OK',
-      (err: unknown) => (err instanceof TRPCError ? err.code : 'NON_TRPC_ERROR')
-    );
-    expect(['FORBIDDEN', 'UNAUTHORIZED', 'NON_TRPC_ERROR']).not.toContain(outcome);
+  describe('a platform operator', () => {
+    const operator = () => webhooksRouter.createCaller(withEmail(createAdminContext(), OPERATOR));
+
+    it('registers and unregisters a source', async () => {
+      await expect(OPERATIONS.registerSource(operator())).resolves.toMatchObject({
+        success: true,
+        sourceName: 'ci-source',
+      });
+      await expect(OPERATIONS.unregisterSource(operator())).resolves.toMatchObject({
+        success: true,
+      });
+      await expect(operator().unregisterSource({ name: 'missing' })).rejects.toThrow(/not found/);
+    });
+
+    it('reads sources and metrics', async () => {
+      await expect(operator().getSources()).resolves.toEqual({
+        sources: [{ name: 'ci-source' }],
+        count: 1,
+      });
+      await expect(operator().getMetrics()).resolves.toEqual({ received: 3 });
+    });
+
+    it('processes retries and dead letters, and cleans up', async () => {
+      await expect(operator().processRetries()).resolves.toEqual({
+        success: true,
+        processed: 2,
+        succeeded: 1,
+        failed: 1,
+      });
+      await expect(operator().getDeadLetterEntries()).resolves.toEqual({
+        entries: [{ eventId: 'evt-1' }],
+        count: 1,
+      });
+      await expect(OPERATIONS.reprocessDeadLetter(operator())).resolves.toMatchObject({
+        success: true,
+      });
+      await expect(operator().reprocessDeadLetter({ eventId: 'gone' })).rejects.toThrow(
+        /not found/
+      );
+      await expect(operator().cleanup()).resolves.toEqual({
+        success: true,
+        idempotencyRemoved: 4,
+      });
+    });
   });
 });
