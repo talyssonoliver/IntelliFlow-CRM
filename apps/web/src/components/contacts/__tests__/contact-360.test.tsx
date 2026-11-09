@@ -255,6 +255,23 @@ describe('contact-360 — transforms', () => {
     expect(ui.hasActiveDeal).toBe(false);
   });
 
+  it('transformContactForUI leaves photo-less contacts and owners without an image (UI-018)', () => {
+    const ui = transformContactForUI(
+      apiContact({
+        avatarUrl: null,
+        owner: { id: 'o1', name: 'Rep', email: 'rep@example.com', avatarUrl: null },
+      })
+    );
+    expect(ui.avatarUrl).toBeNull();
+    expect(ui.owner.avatarUrl).toBeNull();
+    expect(transformContactForUI(apiContact({ owner: null })).owner.avatarUrl).toBeNull();
+  });
+
+  it('transformContactForUI keeps a real photo', () => {
+    const ui = transformContactForUI(apiContact({ avatarUrl: '/uploads/ada.png' }));
+    expect(ui.avatarUrl).toBe('/uploads/ada.png');
+  });
+
   it('filterContactActivities filters by type, person, and search query', () => {
     const acts: Activity[] = [
       baseActivity({ id: '1', type: 'email', title: 'Quarterly report', user: 'Alice' }),
