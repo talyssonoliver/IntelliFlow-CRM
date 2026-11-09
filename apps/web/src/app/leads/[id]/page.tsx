@@ -91,6 +91,7 @@ import {
   type ActivityType,
   getActivityIcon,
   getActivityIconBg,
+  formatGBPCompact,
   formatRelativeTime,
   httpUrlOrNull,
   leadDisplayName,
@@ -1789,7 +1790,7 @@ function LeadAIInsightsTab({
                 className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
               >
                 <span data-testid={hasAiInsight ? 'deal-value' : 'deal-value-null-state'}>
-                  {hasAiInsight ? `$${(aiInsights.estimatedValue / 1000).toFixed(0)}k` : '--'}
+                  {hasAiInsight ? formatGBPCompact(aiInsights.estimatedValue) : '--'}
                 </span>
               </p>
               <p className="text-xs text-slate-500">Est. Deal Value</p>
