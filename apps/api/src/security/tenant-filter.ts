@@ -140,7 +140,7 @@ function assertSameTenant(data: Args, info: TenantModelInfo, tenantId: string): 
     const target = isPlainObject(value) && 'set' in value ? value.set : value;
     if (target !== undefined && target !== tenantId) throw violation();
   }
-  if (info.relation && info.relation in data) {
+  if (info.relation && data[info.relation] !== undefined) {
     const rel = data[info.relation];
     const connectId = isPlainObject(rel) && isPlainObject(rel.connect) ? rel.connect.id : undefined;
     if (connectId !== tenantId) throw violation();
@@ -161,7 +161,8 @@ function assertSameTenant(data: Args, info: TenantModelInfo, tenantId: string): 
 function stampCreate(data: unknown, info: TenantModelInfo, tenantId: string): unknown {
   if (!isPlainObject(data)) return data;
   assertSameTenant(data, info, tenantId);
-  if (data.tenantId !== undefined || (info.relation && info.relation in data)) return data;
+  if (data.tenantId !== undefined || (info.relation && data[info.relation] !== undefined))
+    return data;
   if (info.relation && usesRelationWrites(data)) {
     return { ...data, [info.relation]: { connect: { id: tenantId } } };
   }

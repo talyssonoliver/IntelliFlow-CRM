@@ -125,6 +125,23 @@ describe('scopeTenantArgs: writes', () => {
     });
   });
 
+  it('create treats tenant fields set to undefined as absent, as Prisma does', () => {
+    expect(
+      scopeTenantArgs('Opportunity', 'create', { data: { name: 'n', tenant: undefined } }, T)
+    ).toEqual({ data: { name: 'n', tenant: undefined, tenantId: T } });
+    expect(
+      scopeTenantArgs('Opportunity', 'create', { data: { name: 'n', tenantId: undefined } }, T)
+    ).toEqual({ data: { name: 'n', tenantId: T } });
+    expect(
+      scopeTenantArgs(
+        'Opportunity',
+        'update',
+        { where: { id: 'o1' }, data: { tenant: undefined } },
+        T
+      )
+    ).toMatchObject({ data: { tenant: undefined } });
+  });
+
   it('create accepts the same tenant, as a column or a relation', () => {
     expect(scopeTenantArgs('Opportunity', 'create', { data: { tenantId: T } }, T)).toEqual({
       data: { tenantId: T },
