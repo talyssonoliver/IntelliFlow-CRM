@@ -6,7 +6,7 @@ import {
   formatTrendPercent,
   shouldShowTrend,
 } from '../kpi-calculator';
-import { DASHBOARD_COL_SPAN_CLASSES, dashboardColSpanClass } from '../grid';
+import { DASHBOARD_COL_SPAN_CLASSES, dashboardColSpanClass, dashboardWidgetKind } from '../grid';
 
 describe('shouldShowTrend (#1225 UI-009)', () => {
   it('hides the badge when the baseline is near zero', () => {
@@ -50,5 +50,32 @@ describe('dashboard grid spans', () => {
     for (const [span, cls] of Object.entries(DASHBOARD_COL_SPAN_CLASSES)) {
       if (Number(span) > 1) expect(cls.startsWith('col-span-2')).toBe(true);
     }
+  });
+});
+
+describe('dashboard grid: panels take the full phone row (#1249 visual check)', () => {
+  it('keeps KPI tiles two per phone row', () => {
+    expect(dashboardColSpanClass(1, 'kpi')).toBe('col-span-1');
+  });
+
+  it('gives a 1-span panel the full phone row and half a row from md', () => {
+    expect(dashboardColSpanClass(1, 'panel')).toBe('col-span-2 md:col-span-1');
+    expect(dashboardColSpanClass(undefined, 'panel')).toBe('col-span-2 md:col-span-1');
+    expect(dashboardColSpanClass(9, 'panel')).toBe('col-span-2 md:col-span-1');
+  });
+
+  it('keeps wider panels as before', () => {
+    expect(dashboardColSpanClass(2, 'panel')).toBe('col-span-2');
+    expect(dashboardColSpanClass(3, 'panel')).toBe('col-span-2 lg:col-span-3');
+  });
+
+  it('treats only KPI tiles as KPI', () => {
+    for (const type of ['total-leads', 'sales-revenue', 'active-deals', 'open-tickets']) {
+      expect(dashboardWidgetKind(type)).toBe('kpi');
+    }
+    for (const type of ['upcoming-tasks', 'recent-activity', 'pipeline-summary', 'deals-won']) {
+      expect(dashboardWidgetKind(type)).toBe('panel');
+    }
+    expect(dashboardWidgetKind('unknown-widget')).toBe('panel');
   });
 });

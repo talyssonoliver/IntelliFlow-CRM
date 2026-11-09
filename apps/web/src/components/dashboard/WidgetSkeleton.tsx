@@ -8,7 +8,7 @@
  */
 
 import { Card } from '@intelliflow/ui';
-import { DASHBOARD_COL_SPAN_CLASSES } from '@/lib/dashboard/grid';
+import { dashboardColSpanClass } from '@/lib/dashboard/grid';
 
 interface WidgetSkeletonProps {
   /** Grid column span (mirrors Widget.colSpan) */
@@ -17,8 +17,6 @@ interface WidgetSkeletonProps {
   heightClass?: string;
   className?: string;
 }
-
-const colSpanClasses = DASHBOARD_COL_SPAN_CLASSES;
 
 export function WidgetSkeleton({
   colSpan = 1,
@@ -30,7 +28,7 @@ export function WidgetSkeleton({
       aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
-        ${colSpanClasses[colSpan] ?? 'col-span-1'}
+        ${dashboardColSpanClass(colSpan, 'kpi')}
         ${heightClass}
         ${className}
         animate-pulse
@@ -46,7 +44,7 @@ export function StatCardSkeleton({ colSpan = 1 }: Readonly<{ colSpan?: number }>
       aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
-        ${colSpanClasses[colSpan] ?? 'col-span-1'}
+        ${dashboardColSpanClass(colSpan, 'kpi')}
         animate-pulse
       `}
     >
@@ -69,7 +67,7 @@ export function ChartWidgetSkeleton({ colSpan = 3 }: Readonly<{ colSpan?: number
       aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
-        ${colSpanClasses[colSpan] ?? 'col-span-1'}
+        ${dashboardColSpanClass(colSpan, 'panel')}
         animate-pulse
       `}
     >
@@ -97,7 +95,7 @@ export function ListWidgetSkeleton({ colSpan = 1 }: Readonly<{ colSpan?: number 
       aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
-        ${colSpanClasses[colSpan] ?? 'col-span-1'}
+        ${dashboardColSpanClass(colSpan, 'panel')}
         animate-pulse
       `}
     >
@@ -123,7 +121,7 @@ export function PipelineWidgetSkeleton({ colSpan = 3 }: Readonly<{ colSpan?: num
       aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
-        ${colSpanClasses[colSpan] ?? 'col-span-1'}
+        ${dashboardColSpanClass(colSpan, 'panel')}
         animate-pulse
       `}
     >

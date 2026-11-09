@@ -45,16 +45,19 @@ export function SalesRevenueWidget(_props: Readonly<WidgetProps>) {
       label="Sales Revenue"
       icon="payments"
       value={formatGBP(revenue)}
+      // No revenue is neither on track nor behind: show no verdict at £0.
       badge={
-        <span
-          className={`px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap ${
-            isOnTrack
-              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-          }`}
-        >
-          {isOnTrack ? 'On track' : 'Behind'}
-        </span>
+        revenue === 0 ? undefined : (
+          <span
+            className={`px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap ${
+              isOnTrack
+                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+            }`}
+          >
+            {isOnTrack ? 'On track' : 'Behind'}
+          </span>
+        )
       }
     />
   );

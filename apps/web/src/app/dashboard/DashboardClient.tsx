@@ -22,7 +22,11 @@ import {
   ListWidgetSkeleton,
   PipelineWidgetSkeleton,
 } from '@/components/dashboard/WidgetSkeleton';
-import { DASHBOARD_COL_SPAN_CLASSES, DASHBOARD_GRID_CLASSES } from '@/lib/dashboard/grid';
+import {
+  DASHBOARD_GRID_CLASSES,
+  dashboardColSpanClass,
+  dashboardWidgetKind,
+} from '@/lib/dashboard/grid';
 
 // Default widgets matching the original dashboard layout
 const defaultWidgets: Widget[] = [
@@ -58,8 +62,6 @@ function getSkeletonFallback(widget: Widget): React.ReactNode {
       return <StatCardSkeleton colSpan={widget.colSpan} />;
   }
 }
-
-const colSpanClasses = DASHBOARD_COL_SPAN_CLASSES;
 
 const rowSpanClasses: Record<number, string> = {
   1: '',
@@ -154,7 +156,7 @@ export default function DashboardClient({ initialLeadStats }: Readonly<Dashboard
         {widgets.map((widget) => {
           const WidgetComponent = widgetRegistry[widget.type];
           const gridClasses = `
-            ${colSpanClasses[widget.colSpan] || 'col-span-1'}
+            ${dashboardColSpanClass(widget.colSpan, dashboardWidgetKind(widget.type))}
             ${rowSpanClasses[widget.rowSpan] || ''}
           `;
 

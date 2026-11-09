@@ -43,8 +43,9 @@ export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
       pending={pending}
       failed={isError}
       value={metrics.total}
+      // Nothing urgent is not an alarm: the red pill shows only for 1 or more.
       badge={
-        pending ? undefined : (
+        pending || metrics.urgent === 0 ? undefined : (
           <span className="px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap bg-destructive-muted text-destructive">
             {metrics.urgent} Urgent
           </span>
