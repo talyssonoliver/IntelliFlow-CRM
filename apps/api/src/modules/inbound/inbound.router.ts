@@ -886,7 +886,11 @@ function pipelineSyncEventTime(stageChangedAt: string): Date {
   return Number.isNaN(at.getTime()) || at > now ? now : at;
 }
 
-/** Audit NOTE + idempotency marker for a COA pipeline sync. Best-effort. */
+/**
+ * Audit NOTE + idempotency marker for a COA pipeline sync. Best-effort. Returns true
+ * only when THIS call wrote the note: a concurrent copy of the same sync may have
+ * written it first, without this call's company correction in it.
+ */
 async function recordPipelineSync(
   ctx: Context,
   input: InboundPipelineLeadInput,
@@ -898,7 +902,7 @@ async function recordPipelineSync(
   refusal: QualificationRefusal | null,
   slugChange: OutreachSlugChange | null,
   companyChange: CompanyChangeResult | null
-): Promise<void> {
+): Promise<boolean> {
   try {
     // Existence check + insert must be atomic per syncKey: two concurrent
     // requests both pass the early `prior` lookup, so serialise them on a
@@ -906,13 +910,13 @@ async function recordPipelineSync(
     // `tx`. Only the marker is locked (short, no external calls); the status
     // walk stays outside because its compare-and-set writes refuse stale
     // moves, so a duplicated walk is a harmless no-op.
-    await ctx.prisma.$transaction(async (tx) => {
+    return await ctx.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${syncKey}, 0))`;
       const existing = await tx.leadActivity.findFirst({
         where: { leadId, tenantId, metadata: { path: ['syncKey'], equals: syncKey } },
         select: { id: true },
       });
-      if (existing) return;
+      if (existing) return false;
       const copy = describePipelineSync(input, from, to, refusal);
       await tx.leadActivity.create({
         data: {
@@ -949,6 +953,7 @@ async function recordPipelineSync(
           } as Prisma.InputJsonObject,
         },
       });
+      return true;
     });
   } catch (err) {
     console.warn('[inbound.syncPipelineLead] audit note failed:', {
@@ -956,6 +961,7 @@ async function recordPipelineSync(
       syncKey,
       error: err instanceof Error ? err.message : err,
     });
+    return false;
   }
 }
 
@@ -1707,7 +1713,7 @@ export const inboundRouter = createTRPCRouter({
       // the same key short-circuits, even when another writer did the moving or
       // the qualification was refused; recordPipelineSync is idempotent per
       // syncKey because the early `prior` lookup above skips a repeat.
-      await recordPipelineSync(
+      const noted = await recordPipelineSync(
         ctx,
         input,
         leadId,
@@ -1719,6 +1725,11 @@ export const inboundRouter = createTRPCRouter({
         slugChange,
         companyChange
       );
+      // A concurrent copy of this sync may have written the note first (or the note
+      // failed): this request's rename must still leave a trace.
+      if (!noted && companyChange?.applied) {
+        await recordCompanyCorrection(ctx, input, leadId, tenantId, companyChange);
+      }
 
       return {
         leadId,

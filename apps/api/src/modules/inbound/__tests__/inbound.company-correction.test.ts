@@ -195,6 +195,54 @@ describe('inboundRouter.syncPipelineLead — company correction', () => {
     });
   });
 
+  it('writes one note, the sync note, when this request records it', async () => {
+    existingLead(LISTING);
+
+    await caller().syncPipelineLead(payload({ applyCompany: true }));
+
+    expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
+    expect(noteMetadata()).toMatchObject({ source: 'coa-pipeline-sync' });
+  });
+
+  it('notes its own rename when a concurrent copy of the sync wrote the note first', async () => {
+    existingLead(LISTING);
+    // Early repeat check: no note yet. Inside the locked transaction: the other copy's note.
+    prismaMock.leadActivity.findFirst
+      .mockResolvedValueOnce(null as never)
+      .mockResolvedValueOnce({ id: 'act_other_copy' } as never);
+
+    const result = await caller().syncPipelineLead(payload({ applyCompany: true }));
+
+    expect(result.companyChange?.applied).toBe(true);
+    expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
+    expect(noteMetadata()).toMatchObject({
+      source: 'coa-company-correction',
+      companyChange: { from: LISTING, to: TRADING, applied: true },
+    });
+  });
+
+  it('notes the rename when the sync note itself could not be written', async () => {
+    existingLead(LISTING);
+    prismaMock.$transaction.mockRejectedValueOnce(new Error('lock timeout'));
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+
+    await caller().syncPipelineLead(payload({ applyCompany: true }));
+
+    expect(noteMetadata()).toMatchObject({ source: 'coa-company-correction' });
+    warn.mockRestore();
+  });
+
+  it('adds no correction note when a concurrent copy noted a sync that renamed nothing', async () => {
+    existingLead(LISTING);
+    prismaMock.leadActivity.findFirst
+      .mockResolvedValueOnce(null as never)
+      .mockResolvedValueOnce({ id: 'act_other_copy' } as never);
+
+    await caller().syncPipelineLead(payload());
+
+    expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+  });
+
   it('writes no correction note on a repeat sync that changed nothing', async () => {
     existingLead(LISTING);
     prismaMock.leadActivity.findFirst.mockResolvedValueOnce({
