@@ -7,11 +7,15 @@
  *
  * CRITICAL: This router is P0 priority - episode budget visibility
  * prevents exceeding the 1,000 episode free tier limit.
+ *
+ * Tenant scoping: a tenant user always reads their own tenant's budget, taken from the
+ * session; naming another tenant is refused. The platform-wide budget ('global') and other
+ * tenants are read, and any budget reset, only through platformAdminProcedure (ADR-070).
  */
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, protectedProcedure, tenantProcedure } from '../../trpc';
+import { createTRPCRouter, platformAdminProcedure, tenantProcedure } from '../../trpc';
 import type { Context } from '../../context';
 
 /**
@@ -58,69 +62,111 @@ function getPrisma(ctx: Context) {
   return client;
 }
 
+type Db = ReturnType<typeof getPrisma>;
+
+const DEFAULT_MAX_EPISODES = 1000;
+const DEFAULT_WARNING_PERCENT = 80;
+const DEFAULT_HARD_LIMIT_PERCENT = 95;
+
+/** The budget status of `tenantId` ('global' for the platform-wide budget). */
+async function readStatus(
+  prisma: Db,
+  tenantId: string
+): Promise<z.infer<typeof budgetStatusSchema>> {
+  const usage = await prisma.zepEpisodeUsage.findUnique({ where: { tenantId } });
+
+  if (!usage) {
+    return {
+      used: 0,
+      remaining: DEFAULT_MAX_EPISODES,
+      maxEpisodes: DEFAULT_MAX_EPISODES,
+      warningThreshold: Math.floor((DEFAULT_MAX_EPISODES * DEFAULT_WARNING_PERCENT) / 100),
+      limitThreshold: Math.floor((DEFAULT_MAX_EPISODES * DEFAULT_HARD_LIMIT_PERCENT) / 100),
+      isWarning: false,
+      isLimited: false,
+      isPersisted: false,
+      lastSyncedAt: null,
+      lastSyncSuccess: false,
+    };
+  }
+
+  const warningThreshold = Math.floor((usage.maxEpisodes * usage.warningPercent) / 100);
+  const limitThreshold = Math.floor((usage.maxEpisodes * usage.hardLimitPercent) / 100);
+
+  return {
+    used: usage.episodesUsed,
+    remaining: usage.maxEpisodes - usage.episodesUsed,
+    maxEpisodes: usage.maxEpisodes,
+    warningThreshold,
+    limitThreshold,
+    isWarning: usage.episodesUsed >= warningThreshold,
+    isLimited: usage.episodesUsed >= limitThreshold,
+    isPersisted: true,
+    lastSyncedAt: usage.lastSyncedAt,
+    lastSyncSuccess: usage.lastSyncSuccess,
+  };
+}
+
+/** The newest audit entries of `tenantId`. */
+async function readAudit(
+  prisma: Db,
+  tenantId: string,
+  limit: number
+): Promise<z.infer<typeof auditEntrySchema>[]> {
+  const audits = await prisma.zepEpisodeAudit.findMany({
+    where: { tenantId },
+    orderBy: { createdAt: 'desc' },
+    take: limit,
+  });
+
+  return audits.map((audit) => ({
+    id: audit.id,
+    tenantId: audit.tenantId,
+    previousCount: audit.previousCount,
+    newCount: audit.newCount,
+    delta: audit.delta,
+    operation: audit.operation,
+    sessionId: audit.sessionId,
+    createdAt: audit.createdAt,
+  }));
+}
+
+/**
+ * The caller's own tenant. A `tenantId` in the input is accepted only when it is that same
+ * tenant (older clients send it); any other value is refused.
+ */
+function ownTenant(ctx: Context, requested: string | undefined): string {
+  const tenantId = ctx.user?.tenantId;
+  if (!tenantId) {
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Tenant context required' });
+  }
+  if (requested !== undefined && requested !== tenantId) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: "Only your own tenant's budget can be read here",
+    });
+  }
+  return tenantId;
+}
+
+const platformTenantInput = z
+  .object({
+    /** Defaults to the platform-wide budget. */
+    tenantId: z.string().min(1).default('global'),
+  })
+  .default({ tenantId: 'global' });
+
 export const zepBudgetRouter = createTRPCRouter({
   /**
-   * Get current episode budget status
-   * SECURITY: Uses protectedProcedure (authenticated users)
+   * The caller's tenant episode budget.
    */
-  getStatus: protectedProcedure
-    .input(
-      z
-        .object({
-          tenantId: z.string().optional(),
-        })
-        .optional()
-    )
+  getStatus: tenantProcedure
+    .input(z.object({ tenantId: z.string().optional() }).optional())
     .output(budgetStatusSchema)
-    .query(async ({ ctx, input }) => {
-      const prisma = getPrisma(ctx);
-      const tenantId = input?.tenantId ?? 'global';
-
-      // Try to find existing usage record
-      const usage = await prisma.zepEpisodeUsage.findUnique({
-        where: { tenantId },
-      });
-
-      if (!usage) {
-        // No record exists - return default values
-        const maxEpisodes = 1000;
-        const warningPercent = 80;
-        const hardLimitPercent = 95;
-
-        return {
-          used: 0,
-          remaining: maxEpisodes,
-          maxEpisodes,
-          warningThreshold: Math.floor((maxEpisodes * warningPercent) / 100),
-          limitThreshold: Math.floor((maxEpisodes * hardLimitPercent) / 100),
-          isWarning: false,
-          isLimited: false,
-          isPersisted: false,
-          lastSyncedAt: null,
-          lastSyncSuccess: false,
-        };
-      }
-
-      const warningThreshold = Math.floor((usage.maxEpisodes * usage.warningPercent) / 100);
-      const limitThreshold = Math.floor((usage.maxEpisodes * usage.hardLimitPercent) / 100);
-
-      return {
-        used: usage.episodesUsed,
-        remaining: usage.maxEpisodes - usage.episodesUsed,
-        maxEpisodes: usage.maxEpisodes,
-        warningThreshold,
-        limitThreshold,
-        isWarning: usage.episodesUsed >= warningThreshold,
-        isLimited: usage.episodesUsed >= limitThreshold,
-        isPersisted: true,
-        lastSyncedAt: usage.lastSyncedAt,
-        lastSyncSuccess: usage.lastSyncSuccess,
-      };
-    }),
+    .query(async ({ ctx, input }) => readStatus(getPrisma(ctx), ownTenant(ctx, input?.tenantId))),
 
   /**
-   * Get episode audit history
-   * SECURITY: Uses tenantProcedure for tenant isolation
+   * The caller's tenant episode audit history.
    */
   getAuditHistory: tenantProcedure
     .input(
@@ -130,67 +176,67 @@ export const zepBudgetRouter = createTRPCRouter({
       })
     )
     .output(z.array(auditEntrySchema))
-    .query(async ({ ctx, input }) => {
-      const prisma = getPrisma(ctx);
-      const tenantId = input.tenantId ?? 'global';
-
-      const audits = await prisma.zepEpisodeAudit.findMany({
-        where: { tenantId },
-        orderBy: { createdAt: 'desc' },
-        take: input.limit,
-      });
-
-      return audits.map((audit) => ({
-        id: audit.id,
-        tenantId: audit.tenantId,
-        previousCount: audit.previousCount,
-        newCount: audit.newCount,
-        delta: audit.delta,
-        operation: audit.operation,
-        sessionId: audit.sessionId,
-        createdAt: audit.createdAt,
-      }));
-    }),
+    .query(async ({ ctx, input }) =>
+      readAudit(getPrisma(ctx), ownTenant(ctx, input.tenantId), input.limit)
+    ),
 
   /**
-   * Reset episode count (admin only - for testing/emergency)
-   * SECURITY: Uses protectedProcedure with admin check
+   * Platform operators: the budget of the platform ('global', the default) or of any tenant.
    */
-  reset: protectedProcedure
+  getPlatformStatus: platformAdminProcedure
+    .input(platformTenantInput)
+    .output(budgetStatusSchema)
+    .query(async ({ ctx, input }) => readStatus(getPrisma(ctx), input.tenantId)),
+
+  /**
+   * Platform operators: the audit history of the platform ('global', the default) or of any tenant.
+   */
+  getPlatformAuditHistory: platformAdminProcedure
     .input(
       z.object({
-        tenantId: z.string().optional(),
+        tenantId: z.string().min(1).default('global'),
+        limit: z.number().int().min(1).max(100).default(50),
+      })
+    )
+    .output(z.array(auditEntrySchema))
+    .query(async ({ ctx, input }) => readAudit(getPrisma(ctx), input.tenantId, input.limit)),
+
+  /**
+   * Reset an episode count (testing / emergency). Platform operators only: the budget it
+   * changes is the platform's ('global', the default) or any tenant's.
+   */
+  reset: platformAdminProcedure
+    .input(
+      z.object({
+        tenantId: z.string().min(1).default('global'),
         newCount: z.number().int().min(0).default(0),
         reason: z.string().min(1).max(500),
       })
     )
     .mutation(async ({ ctx, input }) => {
       const prisma = getPrisma(ctx);
-      const tenantId = input.tenantId ?? 'global';
+      const tenantId = input.tenantId;
 
-      // Get current usage
       const current = await prisma.zepEpisodeUsage.findUnique({
         where: { tenantId },
       });
 
       const previousCount = current?.episodesUsed ?? 0;
 
-      // Update or create usage record
       const updated = await prisma.zepEpisodeUsage.upsert({
         where: { tenantId },
         create: {
           tenantId,
           episodesUsed: input.newCount,
-          maxEpisodes: 1000,
-          warningPercent: 80,
-          hardLimitPercent: 95,
+          maxEpisodes: DEFAULT_MAX_EPISODES,
+          warningPercent: DEFAULT_WARNING_PERCENT,
+          hardLimitPercent: DEFAULT_HARD_LIMIT_PERCENT,
         },
         update: {
           episodesUsed: input.newCount,
         },
       });
 
-      // Create audit entry
       await prisma.zepEpisodeAudit.create({
         data: {
           tenantId,
