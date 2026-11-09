@@ -205,7 +205,7 @@ export function tenantFilterExtension(tenantId: string) {
     name: 'tenant-filter',
     query: {
       $allModels: {
-        async $allOperations({ model, operation, args, query }) {
+        $allOperations({ model, operation, args, query }) {
           return query(scopeTenantArgs(model, operation, args, tenantId) as typeof args);
         },
       },

@@ -110,7 +110,7 @@ export function run(argv, { root = repoRoot, log = console.log, error = console.
   const { failures, slack } = evaluate(usesByFile, allowlist);
 
   if (argv.includes('--list')) {
-    for (const [file, uses] of Object.entries(usesByFile).sort()) {
+    for (const [file, uses] of Object.entries(usesByFile).sort(([a], [b]) => a.localeCompare(b))) {
       const direct = uses.filter((u) => u.kind === 'direct');
       const service = uses.length - direct.length;
       log(`${file}: ${direct.length} direct, ${service} service`);
