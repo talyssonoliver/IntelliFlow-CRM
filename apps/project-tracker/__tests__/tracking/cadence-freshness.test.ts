@@ -1,36 +1,8 @@
 import { describe, it, expect } from 'vitest';
+import { parseArtifacts, parseCadenceThreshold } from '../../../../tools/scripts/lib/cadence';
 
-// ============================================================================
-// Test the pure helper logic extracted from check-cadence-freshness.ts
-// These are inline implementations matching the script's functions
-// ============================================================================
-
-/**
- * Parse cadence string like "weekly:7d" into threshold days.
- */
-function parseCadenceThreshold(cadence: string): number {
-  const match = cadence.match(/:(\d+)d$/);
-  if (!match) return 0;
-  return parseInt(match[1], 10);
-}
-
-/**
- * Parse artifact paths from the "Artifacts To Track" column.
- * Only extracts ARTIFACT: prefixed paths — EVIDENCE: paths are one-time
- * attestation files that should NOT be checked for freshness.
- */
-function parseArtifacts(artifactStr: string): string[] {
-  if (!artifactStr) return [];
-
-  return artifactStr
-    .split(';')
-    .flatMap((part) => {
-      const match = part.match(/^ARTIFACT:(.+)/);
-      if (match) return [match[1].trim()];
-      return [];
-    })
-    .filter((p) => p && !p.includes('*'));
-}
+// The parsing used by tools/scripts/check-cadence-freshness.ts, imported from its lib module.
+// This file used to copy the two functions, because the script runs main() on import (#1216).
 
 describe('Cadence Freshness Checker', () => {
   describe('parseCadenceThreshold', () => {

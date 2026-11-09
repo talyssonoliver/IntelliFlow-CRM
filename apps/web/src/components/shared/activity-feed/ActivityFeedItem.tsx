@@ -5,9 +5,11 @@
  * IFC-069: Unified Activity Feed Service
  *
  * Renders a single activity item matching the home-authenticated.html mockup:
- * - size-10 avatars with initials or type-specific icons
- * - p-5 padding, divide-y separation (handled by parent)
- * - Rich content: attachment previews, status tags, action buttons
+ * - size-10 avatars (size-8 on phones and in the compact variant) with
+ *   initials, or the type icon for system actors
+ * - p-5 padding (tighter on phones), divide-y separation (handled by parent)
+ * - One link per card: the title (#1223 UI-004)
+ * - Rich content: attachment previews, status tags
  * - Actor name, entity links, relative timestamps
  */
 
@@ -26,6 +28,11 @@ export interface ActivityFeedItemProps {
   metadata?: Record<string, unknown> | null;
   /** When true, this item is the currently deep-linked / selected item */
   isSelected?: boolean;
+  /**
+   * `compact` (#1223 UI-004): smaller avatar and padding, description on one
+   * line, no tags or attachment. Used where the feed is a short preview.
+   */
+  variant?: 'default' | 'compact';
 }
 
 interface IconStyle {
@@ -152,15 +159,22 @@ function appendActivityId(url: string, activityId: string): string {
   return `${url}${separator}activityId=${encodeURIComponent(activityId)}`;
 }
 
-function formatRelativeTime(date: Date | string, timezone: string = 'Europe/London'): string {
-  const diffMs = Date.now() - new Date(date).getTime();
+/** Relative time switches to an absolute date after this many days (#1223 UI-005). */
+const RELATIVE_TIME_MAX_DAYS = 7;
+
+export function formatRelativeTime(
+  date: Date | string,
+  timezone: string = 'Europe/London',
+  now: number = Date.now()
+): string {
+  const diffMs = now - new Date(date).getTime();
   const diffMins = Math.floor(diffMs / 60000);
   if (diffMins < 1) return 'just now';
   if (diffMins < 60) return `${diffMins}m ago`;
   const diffHours = Math.floor(diffMins / 60);
   if (diffHours < 24) return `${diffHours}h ago`;
   const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < RELATIVE_TIME_MAX_DAYS) return `${diffDays}d ago`;
   return new Date(date).toLocaleDateString('en-GB', {
     month: 'short',
     day: 'numeric',
@@ -169,12 +183,49 @@ function formatRelativeTime(date: Date | string, timezone: string = 'Europe/Lond
   });
 }
 
+/** Full date and time for the tooltip, e.g. "3 Nov 2026, 10:28". */
+export function formatAbsoluteTime(
+  date: Date | string,
+  timezone: string = 'Europe/London'
+): string {
+  const d = new Date(date);
+  if (Number.isNaN(d.getTime())) return '';
+  const day = d.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: timezone,
+  });
+  const time = d.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: timezone,
+  });
+  return `${day}, ${time}`;
+}
+
+/**
+ * Rows written by the system (sync jobs, schedulers) carry an actor name like
+ * "System (COA sync)". Its initials read "S(", so these rows use the type icon.
+ */
+export function isSystemActor(actor: ActivityFeedItemProps['actor']): boolean {
+  if (!actor) return true;
+  return /^\s*(system|automation|bot)\b/i.test(actor.name);
+}
+
 function getInitials(name: string): string {
   return name
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((w) => w[0].toUpperCase())
+    .map((w) =>
+      w
+        .replace(/[^\p{L}\p{N}]/gu, '')
+        .charAt(0)
+        .toUpperCase()
+    )
+    .filter(Boolean)
     .join('');
 }
 
@@ -270,7 +321,27 @@ function buildDescription(
     parts.push(TYPE_FALLBACK_LABELS[type]);
   }
 
-  return parts.length > 0 ? parts.join('. ') + '.' : null;
+  return parts.length > 0 ? joinSentences(parts) : null;
+}
+
+const ENDS_WITH_PUNCTUATION = /[.!?…:;]$/;
+/** Ends with a clock time such as "10:28": a full stop after it reads oddly. */
+const ENDS_WITH_TIME = /\d{1,2}:\d{2}$/;
+
+/**
+ * Join description parts into sentences without doubling punctuation: a part
+ * that already ends with a full stop (or other mark) gets no extra one, and a
+ * body ending in a time ("· 3 Nov, 10:28") gets no trailing full stop.
+ */
+export function joinSentences(parts: readonly string[]): string {
+  const cleaned = parts.map((p) => p.trim()).filter(Boolean);
+  let text = '';
+  for (const part of cleaned) {
+    if (text) text += ENDS_WITH_PUNCTUATION.test(text) ? ' ' : '. ';
+    text += part;
+  }
+  if (!text || ENDS_WITH_PUNCTUATION.test(text) || ENDS_WITH_TIME.test(text)) return text;
+  return `${text}.`;
 }
 
 type TagVariant = 'green' | 'slate' | 'amber' | 'red' | 'blue';
@@ -351,20 +422,31 @@ const TAG_STYLES: Record<string, string> = {
 interface ActivityFeedAvatarProps {
   style: IconStyle;
   actorInitials: string | null;
+  compact: boolean;
 }
 
-function ActivityFeedAvatar({ style, actorInitials }: Readonly<ActivityFeedAvatarProps>) {
-  const baseClass = `shrink-0 size-10 rounded-full ${style.bg} flex items-center justify-center ${style.color}`;
+function ActivityFeedAvatar({ style, actorInitials, compact }: Readonly<ActivityFeedAvatarProps>) {
+  const size = compact ? 'size-8 text-xs' : 'size-8 text-xs sm:size-10 sm:text-sm';
+  const iconSize = compact ? 'text-[18px]' : 'text-[18px] sm:text-[24px]';
+  const baseClass = `shrink-0 ${size} rounded-full ${style.bg} flex items-center justify-center ${style.color}`;
 
   if (actorInitials && !style.initials) {
-    return <div className={`${baseClass} font-bold`}>{actorInitials}</div>;
+    return (
+      <div className={`${baseClass} font-bold`} aria-hidden="true">
+        {actorInitials}
+      </div>
+    );
   }
   if (style.initials) {
-    return <div className={`${baseClass} font-bold`}>{style.initials}</div>;
+    return (
+      <div className={`${baseClass} font-bold`} aria-hidden="true">
+        {style.initials}
+      </div>
+    );
   }
   return (
-    <div className={baseClass}>
-      <span className="material-symbols-outlined">{style.icon}</span>
+    <div className={baseClass} aria-hidden="true">
+      <span className={`material-symbols-outlined ${iconSize}`}>{style.icon}</span>
     </div>
   );
 }
@@ -376,20 +458,29 @@ function ActivityFeedAvatar({ style, actorInitials }: Readonly<ActivityFeedAvata
 interface EntityDescriptionProps {
   richDescription: string | null;
   entity: ActivityFeedItemProps['entity'];
+  /** Set only when the title does not already lead to the entity. */
   entityUrl: string | null;
+  /** Leave the entity name out (the title already names it). */
+  hideEntity: boolean;
+  compact: boolean;
 }
 
 function EntityDescription({
   richDescription,
   entity,
   entityUrl,
+  hideEntity,
+  compact,
 }: Readonly<EntityDescriptionProps>) {
-  if (!richDescription && !entity) return null;
+  const showEntity = Boolean(entity) && !hideEntity;
+  if (!richDescription && !showEntity) return null;
 
   return (
-    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+    <p
+      className={`text-sm text-slate-600 dark:text-slate-400 mt-1 ${compact ? 'line-clamp-1' : 'line-clamp-3 sm:line-clamp-none'}`}
+    >
       {richDescription}
-      {entity && entityUrl && (
+      {showEntity && entity && entityUrl && (
         <>
           {richDescription ? ' ' : ''}
           <Link
@@ -400,7 +491,7 @@ function EntityDescription({
           </Link>
         </>
       )}
-      {entity && !entityUrl && (
+      {showEntity && entity && !entityUrl && (
         <>
           {richDescription ? ' — ' : ''}
           <span className="font-semibold text-slate-800 dark:text-slate-200">{entity.name}</span>
@@ -414,6 +505,44 @@ function EntityDescription({
 // ActivityFeedItem
 // ---------------------------------------------------------------------------
 
+function actorInitialsFor(actor: ActivityFeedItemProps['actor']): string | null {
+  if (!actor || isSystemActor(actor)) return null;
+  return getInitials(actor.name) || null;
+}
+
+function toIsoOrUndefined(timestamp: Date | string): string | undefined {
+  const parsed = new Date(timestamp);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+}
+
+interface CardLinks {
+  primaryUrl: string | null;
+  secondaryEntityUrl: string | null;
+  titleNamesEntity: boolean;
+}
+
+/**
+ * One link per card (#1223 UI-004): the title. It opens the action target when
+ * there is one, else the entity. The entity name gets its own link only when
+ * the title leads somewhere else.
+ */
+function resolveCardLinks(
+  id: string,
+  title: string,
+  entity: ActivityFeedItemProps['entity'],
+  metadata: ActivityFeedItemProps['metadata']
+): CardLinks {
+  const entityUrl = entity ? getEntityRoute(entity.type, entity.id) : null;
+  const rawActionUrl = metadata?.actionUrl as string | undefined;
+  const actionUrl = rawActionUrl?.trim() ? rawActionUrl : null;
+  const basePrimaryUrl = actionUrl ?? entityUrl;
+  return {
+    primaryUrl: basePrimaryUrl ? appendActivityId(basePrimaryUrl, id) : null,
+    secondaryEntityUrl: actionUrl && actionUrl !== entityUrl ? entityUrl : null,
+    titleNamesEntity: Boolean(entity?.name && title.includes(entity.name)),
+  };
+}
+
 export function ActivityFeedItem({
   id,
   source,
@@ -425,63 +554,74 @@ export function ActivityFeedItem({
   entity,
   metadata,
   isSelected = false,
+  variant = 'default',
 }: Readonly<ActivityFeedItemProps>) {
   const { timezone } = useTimezoneContext();
+  const compact = variant === 'compact';
   const style = TYPE_ICON_STYLES[type] || DEFAULT_ICON_STYLE;
-  const actorInitials = actor ? getInitials(actor.name) : null;
-  const entityUrl = entity ? getEntityRoute(entity.type, entity.id) : null;
+  const actorInitials = actorInitialsFor(actor);
 
   // Build rich description with entity context
   const richDescription = buildDescription(description, entity, metadata, type, source);
 
   // Build auto-tags from metadata
-  const tags = buildAutoTags(metadata, source, type);
+  const tags = compact ? [] : buildAutoTags(metadata, source, type);
 
   // Extract attachment from metadata (if provided)
-  const attachment = metadata?.attachment as { filename: string; url?: string } | undefined;
+  const attachment = compact
+    ? undefined
+    : (metadata?.attachment as { filename: string; url?: string } | undefined);
 
-  // Extract action link from metadata
-  const actionUrl = metadata?.actionUrl as string | undefined;
-  const actionLabel = metadata?.actionLabel as string | undefined;
-  const basePrimaryUrl = actionUrl?.trim() ? actionUrl : entityUrl;
-  const primaryUrl = basePrimaryUrl ? appendActivityId(basePrimaryUrl, id) : null;
+  const { primaryUrl, secondaryEntityUrl, titleNamesEntity } = resolveCardLinks(
+    id,
+    title,
+    entity,
+    metadata
+  );
+
+  const iso = toIsoOrUndefined(timestamp);
+  const absolute = formatAbsoluteTime(timestamp, timezone);
+  const titleClass = `text-sm font-medium text-slate-900 dark:text-slate-100 break-words ${compact ? 'line-clamp-1' : ''}`;
 
   return (
     <div
       data-activity-id={id}
-      className={`p-5 transition-colors ${
+      data-variant={variant}
+      className={`${compact ? 'px-4 py-3' : 'px-4 py-3 sm:p-5'} transition-colors ${
         isSelected
           ? 'bg-primary/5 ring-2 ring-primary/30 ring-inset rounded-lg'
           : 'hover:bg-slate-50 dark:hover:bg-slate-800/30'
       }`}
     >
       <div className="flex gap-3">
-        {/* Avatar / Icon — size-10 matching mockup */}
-        <ActivityFeedAvatar style={style} actorInitials={actorInitials} />
+        <ActivityFeedAvatar style={style} actorInitials={actorInitials} compact={compact} />
 
-        {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex justify-between items-start">
-            {primaryUrl ? (
-              <Link
-                href={primaryUrl}
-                className="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-[#2a78f6] hover:underline"
-              >
-                {title}
-              </Link>
-            ) : (
-              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{title}</p>
-            )}
-            <span className="text-xs text-slate-400 whitespace-nowrap">
-              {formatRelativeTime(timestamp, timezone)}
-            </span>
-          </div>
+          {primaryUrl ? (
+            <Link
+              href={primaryUrl}
+              className={`${titleClass} block hover:text-[#2a78f6] hover:underline`}
+            >
+              {title}
+            </Link>
+          ) : (
+            <p className={titleClass}>{title}</p>
+          )}
+          <time
+            dateTime={iso}
+            title={absolute}
+            className="block text-xs text-slate-400 mt-0.5 whitespace-nowrap"
+          >
+            {formatRelativeTime(timestamp, timezone)}
+          </time>
 
-          {/* Description with inline entity link */}
+          {/* Description; the entity name is plain text unless the title leads elsewhere */}
           <EntityDescription
             richDescription={richDescription}
             entity={entity}
-            entityUrl={entityUrl}
+            entityUrl={secondaryEntityUrl}
+            hideEntity={titleNamesEntity && !secondaryEntityUrl}
+            compact={compact}
           />
 
           {/* Attachment preview (matches mockup PDF card) */}
@@ -523,26 +663,6 @@ export function ActivityFeedItem({
                 </span>
               ))}
             </div>
-          )}
-
-          {/* Action link (e.g., "View Report") */}
-          {actionUrl && actionLabel && (
-            <Link
-              href={actionUrl}
-              className="mt-2 inline-block text-sm text-[#2a78f6] font-medium hover:underline"
-            >
-              {actionLabel}
-            </Link>
-          )}
-
-          {/* Entity link when not already shown inline */}
-          {entity && entityUrl && !richDescription && !description && (
-            <Link
-              href={entityUrl}
-              className="mt-2 inline-block text-sm text-[#2a78f6] font-medium hover:underline"
-            >
-              View {entity.type.charAt(0) + entity.type.slice(1).toLowerCase()}
-            </Link>
           )}
         </div>
       </div>

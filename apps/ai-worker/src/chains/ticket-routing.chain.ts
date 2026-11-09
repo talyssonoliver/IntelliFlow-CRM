@@ -21,6 +21,7 @@ import { aiConfig } from '../config/ai.config';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { usableVersionedPrompt } from '../versioning/versioned-prompt';
 import pino from 'pino';
 
 import {
@@ -152,7 +153,7 @@ Respond with a structured JSON object containing inferredCategory, assigneeId, r
       const config = await getVersionLoader().getChainConfig(CHAIN_TYPE_MAP.TICKET_ROUTING, {
         tenantId: this.tenantId,
       });
-      return config.prompt ?? null;
+      return usableVersionedPrompt('TICKET_ROUTING', config.prompt, this.prompt.inputVariables);
     } catch {
       logger.warn(
         {

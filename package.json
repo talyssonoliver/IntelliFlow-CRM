@@ -57,6 +57,8 @@
     "check:dockerfile-node": "node tools/scripts/check-dockerfile-node-version.mjs",
     "typecheck": "turbo run typecheck && pnpm run lint:sonar:guard",
     "lint:sonar:guard": "tsx tools/scripts/lint-sonar-guard.ts",
+    "lint:test-variants": "node tools/scripts/check-test-variant-names.mjs",
+    "test-quality:report": "node tools/scripts/test-quality-report.mjs",
     "lighthouse": "lhci autorun",
     "lighthouse:ci": "lhci autorun --upload.target=filesystem --upload.outputDir=./artifacts/lighthouse",
     "format": "prettier --write \"**/*.{ts,tsx,md,json,yml,yaml}\"",
@@ -159,6 +161,7 @@
     "validate:flaky-test-gate": "tsx tools/scripts/flaky-test-skip-gate.ts",
     "test:flaky-test-gate": "vitest run --config tools/scripts/__tests__/flaky-test-skip-gate.vitest.config.ts",
     "validate:infra-skip-gate": "tsx tools/scripts/infra-skip-gate.ts",
+    "validate:test-collection": "node scripts/check-test-collection.mjs",
     "test:infra-skip-gate": "vitest run --config tools/scripts/__tests__/infra-skip-gate.vitest.config.ts",
     "migrate:data": "tsx tools/scripts/migrate-data-to-schema.ts",
     "check:queue-consumers": "node tools/scripts/check-queue-consumers.mjs"

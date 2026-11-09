@@ -22,6 +22,7 @@ import { getCurrentLogContext } from '@intelliflow/observability';
 import type { WorkerConfig } from './worker-config';
 import { loadWorkerConfig } from './worker-config';
 import { QueueConnector } from './queue-connector';
+import { isExpectedJobOutcome } from './job-outcome';
 import { HealthServer, createDefaultHealthProvider, type HealthProvider } from './health-server';
 import {
   setupGracefulShutdown,
@@ -302,14 +303,17 @@ export abstract class BaseWorker<TJobData = unknown, TJobResult = unknown> {
       this.failedJobs++;
       const duration = Date.now() - startTime;
 
-      jobLogger.error(
-        {
-          error: error instanceof Error ? error.message : String(error),
-          duration,
-          attempt: job.attemptsMade + 1,
-        },
-        'Job failed'
-      );
+      const failure = {
+        error: error instanceof Error ? error.message : String(error),
+        duration,
+        attempt: job.attemptsMade + 1,
+      };
+      // An expected outcome (e.g. an inconclusive AI scoring) is not a fault: no error log.
+      if (isExpectedJobOutcome(error)) {
+        jobLogger.warn(failure, 'Job ended without a result (expected outcome)');
+      } else {
+        jobLogger.error(failure, 'Job failed');
+      }
 
       throw error;
     } finally {

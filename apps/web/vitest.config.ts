@@ -35,7 +35,7 @@ export default defineConfig({
     globals: true,
     environment: 'happy-dom',
     setupFiles: ['./vitest.setup.ts'],
-    include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}', 'lib/**/*.{test,spec}.{ts,tsx}'],
     exclude: ['node_modules', 'dist', '.next', 'build'],
 
     // Memory optimization

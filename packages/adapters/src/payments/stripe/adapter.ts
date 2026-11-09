@@ -17,7 +17,9 @@ import type {
   StripeWebhookEvent,
   CreatePaymentIntentParams,
   StripeCreateSubscriptionParams,
+  StripeUpdateSubscriptionParams,
 } from './types';
+import type { ActivePromotionCode } from './handlers/promotion-codes';
 import {
   createCustomer as createCustomerHandler,
   getCustomer as getCustomerHandler,
@@ -39,6 +41,8 @@ import {
   pauseSubscription as pauseSubscriptionHandler,
   getSubscription as getSubscriptionHandler,
   listSubscriptions as listSubscriptionsHandler,
+  findActivePromotionCode as findActivePromotionCodeHandler,
+  getPriceProductId as getPriceProductIdHandler,
   getInvoice as getInvoiceHandler,
   listInvoices as listInvoicesHandler,
   payInvoice as payInvoiceHandler,
@@ -98,7 +102,7 @@ export interface PaymentServicePort {
   ): Promise<Result<StripeSubscription, DomainError>>;
   updateSubscription(
     subscriptionId: string,
-    params: Partial<StripeCreateSubscriptionParams>
+    params: StripeUpdateSubscriptionParams
   ): Promise<Result<StripeSubscription, DomainError>>;
   cancelSubscription(
     subscriptionId: string,
@@ -109,6 +113,13 @@ export interface PaymentServicePort {
     resumesAt: Date
   ): Promise<Result<StripeSubscription, DomainError>>;
   getSubscription(subscriptionId: string): Promise<Result<StripeSubscription | null, DomainError>>;
+  /** #1220: the active promotion code with this exact code, or null. */
+  findActivePromotionCode(
+    code: string,
+    customerId?: string
+  ): Promise<Result<ActivePromotionCode | null, DomainError>>;
+  /** #1220: the product a price belongs to. */
+  getPriceProductId(priceId: string): Promise<Result<string | null, DomainError>>;
   listSubscriptions(customerId: string): Promise<Result<StripeSubscription[], DomainError>>;
   getInvoice(invoiceId: string): Promise<Result<StripeInvoice | null, DomainError>>;
   listInvoices(customerId: string): Promise<Result<StripeInvoice[], DomainError>>;
@@ -204,7 +215,15 @@ export class StripeAdapter implements PaymentServicePort {
     return createSubscriptionHandler(this.config, params);
   }
 
-  updateSubscription(subscriptionId: string, params: Partial<StripeCreateSubscriptionParams>) {
+  findActivePromotionCode(code: string, customerId?: string) {
+    return findActivePromotionCodeHandler(this.config, code, customerId);
+  }
+
+  getPriceProductId(priceId: string) {
+    return getPriceProductIdHandler(this.config, priceId);
+  }
+
+  updateSubscription(subscriptionId: string, params: StripeUpdateSubscriptionParams) {
     return updateSubscriptionHandler(this.config, subscriptionId, params);
   }
 

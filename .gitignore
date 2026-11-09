@@ -129,6 +129,9 @@ pnpm-debug.log*
 .env.local
 .env*.local
 .env.production
+# Backups of env files can hold real values
+.env*.bak*
+.env.bak*
 
 # Keep example/template files
 !.env.example
@@ -426,3 +429,9 @@ tools/scripts/k6/.data/
 
 # Push-based executor status (ADR-077): runtime heartbeat files, never committed
 .claude/executor-status/
+
+# #1216: test-quality counts are local output, produced on demand (pnpm run test-quality:report)
+artifacts/reports/test-quality.json
+
+# Fixed profile for Lighthouse's bundled Chromium (tools/lighthouse/bundled-chrome.cjs)
+.cache/

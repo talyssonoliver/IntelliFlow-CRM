@@ -1,164 +1,24 @@
 import { describe, it, expect } from 'vitest';
 
+import {
+  STALE_THRESHOLD_MINUTES,
+  getBaselineDelta,
+  getComplianceIcon,
+  getHistoryItemColor,
+  getLoadingState,
+  getRemediationSummary,
+  getScanButtonState,
+  getScanHistorySlice,
+  getScanProgressDisplay,
+  getSecurityStatus,
+  getVulnerabilityDefaults,
+} from '../../components/tracking/SecurityDashboard';
+
 /**
- * Tests for SecurityDashboard component logic.
- *
- * Since the project-tracker uses Node environment (not jsdom),
- * these tests focus on pure functions extracted from SecurityDashboard.tsx.
- * Functions are defined inline to avoid importing the component (which has
- * React/Next.js dependencies that cannot resolve in Node).
+ * SecurityDashboard's exported helpers, imported from the component. This file used to define
+ * copies of them inline, because the root test project had no `@/` alias for project-tracker
+ * code and the component could not be imported (#1216); vitest.config.ts now resolves it.
  */
-
-// --- Types (mirrored from SecurityDashboard.tsx) ---
-
-interface VulnerabilityCounts {
-  critical: number;
-  high: number;
-  moderate: number;
-  low: number;
-  total: number;
-}
-
-interface RemediationItem {
-  id: string;
-  module: string;
-  severity: string;
-  status: 'open' | 'fixed' | 'waived';
-  fixApplied?: string;
-}
-
-interface RemediationSummary {
-  fixedCount: number;
-  openCount: number;
-  waiverCount: number;
-  mttrHours: number | null;
-  items: RemediationItem[];
-}
-
-interface ScanProgress {
-  dependency_check: string;
-  outdated_check: string;
-  secret_scan: string;
-  sast_scan: string;
-}
-
-interface ScanState {
-  status: 'idle' | 'running' | 'completed' | 'failed';
-  startedAt: string | null;
-  completedAt: string | null;
-  currentStep: string | null;
-  progress: ScanProgress;
-  errors: string[];
-  scanId: string | null;
-}
-
-// --- Helper functions extracted from SecurityDashboard.tsx ---
-
-const STALE_THRESHOLD_MINUTES = 10080; // 7 * 24 * 60
-
-function getSecurityStatus(vulns: VulnerabilityCounts) {
-  const hasCritical = vulns.critical > 0;
-  const hasVulnerabilities = vulns.total > 0;
-  return {
-    hasCritical,
-    hasVulnerabilities,
-    bannerClass: hasCritical
-      ? 'bg-red-50 border-red-200'
-      : hasVulnerabilities
-        ? 'bg-yellow-50 border-yellow-200'
-        : 'bg-green-50 border-green-200',
-    iconName: hasCritical ? 'gpp_maybe' : hasVulnerabilities ? 'shield' : 'verified_user',
-    statusText: hasCritical
-      ? `${vulns.critical} Critical Vulnerabilities Found`
-      : hasVulnerabilities
-        ? `${vulns.total} Vulnerabilities Found`
-        : 'No Vulnerabilities Detected',
-  };
-}
-
-function getComplianceIcon(value: boolean) {
-  return {
-    icon: value ? 'check_circle' : 'cancel',
-    colorClass: value ? 'text-green-600' : 'text-red-500',
-  };
-}
-
-function getBaselineDelta(current: number, baseline: number | null) {
-  if (baseline === null || current === baseline) {
-    return { value: '0', colorClass: '', show: false };
-  }
-  const diff = current - baseline;
-  return {
-    value: diff > 0 ? `+${diff}` : `${diff}`,
-    colorClass: diff > 0 ? 'text-red-600' : 'text-green-600',
-    show: true,
-  };
-}
-
-function getScanHistorySlice(
-  history: Array<{ date: string; total: number; critical: number }>,
-  max: number
-) {
-  return history.slice(0, max);
-}
-
-function getHistoryItemColor(critical: number) {
-  return critical > 0 ? 'text-red-600' : 'text-green-600';
-}
-
-function getVulnerabilityDefaults(data: VulnerabilityCounts | null): VulnerabilityCounts {
-  return data ?? { critical: 0, high: 0, moderate: 0, low: 0, total: 0 };
-}
-
-function getScanButtonState(scanning: boolean) {
-  return {
-    label: scanning ? 'Scanning...' : 'Run Scan',
-    disabled: scanning,
-  };
-}
-
-function getRemediationSummary(remediation: RemediationSummary) {
-  const isEmpty = remediation.items.length === 0;
-  return {
-    isEmpty,
-    emptyMessage: isEmpty ? 'No vulnerabilities to track' : null,
-    fixedCount: remediation.fixedCount,
-    openCount: remediation.openCount,
-    waiverCount: remediation.waiverCount,
-    mttrDisplay: remediation.mttrHours !== null ? `${remediation.mttrHours}h` : 'N/A',
-  };
-}
-
-function getScanProgressDisplay(scanState: ScanState | null) {
-  if (!scanState || scanState.status !== 'running') {
-    return { showBanner: false, currentStep: null, isRunning: false };
-  }
-  return {
-    showBanner: true,
-    currentStep: scanState.currentStep,
-    isRunning: true,
-  };
-}
-
-function getLoadingState(
-  loading: boolean,
-  data: unknown | null,
-  errors: Record<string, string | null>
-) {
-  const generalError = errors.general || null;
-  if (generalError) {
-    return { showLoading: false, showError: true, showEmpty: false, errorMessage: generalError };
-  }
-  if (loading && !data) {
-    return { showLoading: true, showError: false, showEmpty: false, errorMessage: null };
-  }
-  if (!loading && !data) {
-    return { showLoading: false, showError: false, showEmpty: true, errorMessage: null };
-  }
-  return { showLoading: false, showError: false, showEmpty: false, errorMessage: null };
-}
-
-// --- Group 1: getSecurityStatus — banner state logic (3 tests) ---
 
 describe('getSecurityStatus', () => {
   it('returns red banner when critical vulnerabilities present', () => {

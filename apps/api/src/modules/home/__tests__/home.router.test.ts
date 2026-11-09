@@ -338,17 +338,73 @@ describe('Home Router', () => {
       expect(taskCountCall.where).toHaveProperty('ownerId');
     });
 
-    it('should return achievement when no urgent items', async () => {
+    it('says there was nothing to check, never "on track", when the user has no records (#1219)', async () => {
       prismaMock.opportunity.findMany.mockResolvedValue([]);
       prismaMock.lead.findMany.mockResolvedValue([]);
       prismaMock.task.count.mockResolvedValue(0);
       prismaMock.contact.findMany.mockResolvedValue([]); // IFC-192
+      (prismaMock.opportunity as any).count.mockResolvedValue(0);
+      (prismaMock.lead as any).count.mockResolvedValue(0);
+      (prismaMock.contact as any).count.mockResolvedValue(0);
 
       const result = await caller.getAIInsights();
 
       expect(result.insights).toHaveLength(1);
-      expect(result.insights[0].type).toBe('achievement');
-      expect(result.insights[0].title).toBe("You're on track!");
+      expect(result.insights[0]).toMatchObject({
+        id: 'checks-summary',
+        type: 'reminder',
+        title: 'Nothing to check yet',
+      });
+      expect(result.insights[0].description).toContain('your records');
+      expect(JSON.stringify(result.insights)).not.toMatch(/on track/i);
+    });
+
+    it('says what each check looked at, on whose records and when, when nothing is flagged (#1219)', async () => {
+      prismaMock.opportunity.findMany.mockResolvedValue([]);
+      prismaMock.lead.findMany.mockResolvedValue([]);
+      prismaMock.task.count.mockResolvedValue(0);
+      prismaMock.contact.findMany.mockResolvedValue([]);
+      // No smart summary fires (no pipeline, no trend, no qualifiable leads)...
+      (prismaMock.opportunity as any).count
+        .mockResolvedValueOnce(0)
+        .mockResolvedValueOnce(0)
+        .mockResolvedValueOnce(0)
+        // ...but the checks themselves looked at real records.
+        .mockResolvedValueOnce(2);
+      (prismaMock.lead as any).count.mockResolvedValueOnce(0).mockResolvedValueOnce(1);
+      (prismaMock.contact as any).count.mockResolvedValue(3);
+      prismaMock.task.count.mockResolvedValueOnce(0).mockResolvedValueOnce(5);
+
+      const result = await caller.getAIInsights();
+      const item = result.insights.find((i) => i.id === 'checks-summary');
+
+      expect(item?.title).toBe('Nothing flagged in the latest checks');
+      expect(item?.description).toMatch(/^Checked your records at \d\d:\d\d: /);
+      expect(item?.description).toContain('2 open deals, none idle for 14+ days');
+      expect(item?.description).toContain('1 active lead, none scoring 80+');
+      expect(item?.description).toContain('5 open tasks, none overdue');
+      expect(item?.description).toContain('3 contacts with open deals, none silent for 30+ days');
+      // The counts cover only the user's own records.
+      const dealCount = (prismaMock.opportunity as any).count.mock.calls.at(-1)[0];
+      expect(dealCount.where).toMatchObject({
+        tenantId: expect.any(String),
+        ownerId: expect.any(String),
+      });
+    });
+
+    it('never serves a cached "on track" insight from before #1219', async () => {
+      (prismaMock.aIInsight.findMany as any).mockResolvedValue([]);
+      prismaMock.opportunity.findMany.mockResolvedValue([]);
+      prismaMock.lead.findMany.mockResolvedValue([]);
+      prismaMock.task.count.mockResolvedValue(0);
+      prismaMock.contact.findMany.mockResolvedValue([]);
+
+      await caller.getAIInsights();
+
+      const where = (prismaMock.aIInsight.findMany as any).mock.calls[0][0].where;
+      expect(where.title).toEqual({ not: "You're on track!" });
+      // Nor an LLM-written reassurance: an achievement (stored as 'prediction') with no entity.
+      expect(where.NOT).toEqual({ type: 'prediction', entityId: null });
     });
 
     it('should limit insights to 5 max', async () => {
@@ -1418,9 +1474,10 @@ describe('Home Router', () => {
 
         const result = await caller.getAIInsights();
 
-        // Only achievement summary, no stale contact notifications
+        // Only the checks summary, no stale contact notifications
         expect(result.insights).toHaveLength(1);
-        expect(result.insights[0].type).toBe('achievement');
+        expect(result.insights[0].id).toBe('checks-summary');
+        expect(prismaMock.notification.createMany).not.toHaveBeenCalled();
       });
 
       it('should deduplicate notifications within same day', async () => {
@@ -1781,7 +1838,7 @@ describe('Home Router', () => {
       expect(result.insights[0].title).toBe('Pipeline Overview');
     });
 
-    it('should return achievement when no urgent items and no pipeline data', async () => {
+    it('reports the checks, not an achievement, when no urgent items and no pipeline data', async () => {
       (prismaMock.aIInsight.findMany as any).mockResolvedValue([]);
 
       prismaMock.opportunity.findMany.mockResolvedValue([]);
@@ -1792,8 +1849,9 @@ describe('Home Router', () => {
       const result = await caller.getAIInsights();
 
       expect(result.insights.length).toBe(1);
-      expect(result.insights[0].type).toBe('achievement');
-      expect(result.insights[0].title).toBe("You're on track!");
+      expect(result.insights[0].id).toBe('checks-summary');
+      expect(result.insights[0].type).toBe('reminder');
+      expect(result.insights[0].title).not.toMatch(/on track/i);
       expect(result.insights[0].priority).toBe('low');
     });
 
@@ -1811,7 +1869,7 @@ describe('Home Router', () => {
       const result = await caller.getAIInsights();
 
       // Achievement fallback should NOT appear because hotLeads is non-empty
-      const achievement = result.insights.find((i) => i.id === 'all-good');
+      const achievement = result.insights.find((i) => i.id === 'checks-summary');
       expect(achievement).toBeUndefined();
     });
 
@@ -1832,7 +1890,7 @@ describe('Home Router', () => {
 
       const result = await caller.getAIInsights();
 
-      const achievement = result.insights.find((i) => i.id === 'all-good');
+      const achievement = result.insights.find((i) => i.id === 'checks-summary');
       expect(achievement).toBeUndefined();
     });
 

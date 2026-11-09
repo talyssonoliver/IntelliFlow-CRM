@@ -211,10 +211,9 @@ describe('home.getAllInsights', () => {
   });
 
   it('returns empty array when no insights match filter', async () => {
-    // With all zeros and no pipeline data, the achievement fallback ('all-good') fires.
-    // Filtering for a type that does not appear in smart summaries returns empty.
+    // No smart summary is an achievement, and nothing flagged never becomes one (#1219).
     setupMockQueries({ dealsAtRisk: 0, hotLeads: 0, overdueTasks: 0, staleContacts: 0 });
-    const result = await caller.getAllInsights({ types: ['reminder'] });
+    const result = await caller.getAllInsights({ types: ['achievement'] });
 
     expect(result.insights).toHaveLength(0);
   });
@@ -273,15 +272,16 @@ describe('home.getAllInsights', () => {
     expect(contactCall?.take).toBe(50);
   });
 
-  it('includes achievement fallback when no alerts and no pipeline data', async () => {
-    // When no summaries fire AND dealsAtRisk=0 AND overdueTasksCount=0,
-    // the 'all-good' achievement insight is included as a positive fallback.
+  it('says what was checked when no alerts and no pipeline data (#1219)', async () => {
+    // When no summaries fire and nothing is flagged, the checks summary says what was looked at.
     setupMockQueries({ dealsAtRisk: 0, hotLeads: 0, overdueTasks: 0, staleContacts: 0 });
     // opportunity.count and lead.count default to 0 from beforeEach → no summaries
     const result = await caller.getAllInsights({});
 
-    const achievements = result.insights.filter((i) => i.id === 'all-good');
-    expect(achievements).toHaveLength(1);
+    const checks = result.insights.filter((i) => i.id === 'checks-summary');
+    expect(checks).toHaveLength(1);
+    expect(checks[0].type).toBe('reminder');
+    expect(result.insights.some((i) => /on track/i.test(i.title))).toBe(false);
   });
 
   // =========================================================================
