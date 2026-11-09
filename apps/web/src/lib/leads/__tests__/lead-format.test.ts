@@ -5,6 +5,7 @@ import {
   formatRelativeTime,
   formatEstimatedValue,
   formatGBPCompact,
+  httpUrlOrNull,
   insightRecommendations,
   isSystemTag,
   leadWebsite,
@@ -292,5 +293,25 @@ describe('lead-format · insightRecommendations', () => {
     expect(insightRecommendations(null)).toEqual([]);
     expect(insightRecommendations(undefined)).toEqual([]);
     expect(insightRecommendations('text')).toEqual([]);
+  });
+});
+
+describe('httpUrlOrNull', () => {
+  it('keeps absolute http and https addresses', () => {
+    expect(httpUrlOrNull('https://files.example.invalid/a.pdf')).toBe(
+      'https://files.example.invalid/a.pdf'
+    );
+    expect(httpUrlOrNull('http://files.example.invalid/a.pdf')).toBe(
+      'http://files.example.invalid/a.pdf'
+    );
+  });
+
+  it('rejects missing, relative and non-http addresses', () => {
+    expect(httpUrlOrNull(undefined)).toBeNull();
+    expect(httpUrlOrNull(null)).toBeNull();
+    expect(httpUrlOrNull('')).toBeNull();
+    expect(httpUrlOrNull('/files/a.pdf')).toBeNull();
+    expect(httpUrlOrNull('javascript:alert(1)')).toBeNull();
+    expect(httpUrlOrNull('data:text/html,hi')).toBeNull();
   });
 });

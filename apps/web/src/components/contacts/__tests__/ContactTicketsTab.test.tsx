@@ -55,4 +55,12 @@ describe('ContactTicketsTab', () => {
     expect(screen.getByTestId('contact-tickets-empty')).toBeInTheDocument();
     expect(screen.queryByText('Integration API question')).not.toBeInTheDocument();
   });
+
+  it('Create Ticket opens the new-ticket page (UI-1277 dead controls)', () => {
+    render(<ContactTicketsTab tickets={[]} timezone="UTC" />);
+    expect(screen.getByRole('link', { name: 'Create Ticket' })).toHaveAttribute(
+      'href',
+      '/tickets/new'
+    );
+  });
 });

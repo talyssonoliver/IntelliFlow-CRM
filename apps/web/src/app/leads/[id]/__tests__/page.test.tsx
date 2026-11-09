@@ -1539,3 +1539,156 @@ describe('LeadDetailPage - object-shaped recommendations (#1277 review)', () => 
     expect(screen.getAllByText('Follow up this week').length).toBeGreaterThan(0);
   });
 });
+
+// ─── #1277 dead controls: every control does something real, or is not shown ──
+
+describe('LeadDetailPage - dead controls (#1277)', () => {
+  // Read fresh each time: earlier suites replace mockLeadQueryState.data.
+  const data = () =>
+    mockLeadQueryState.data as unknown as {
+      email: string | null;
+      activities: unknown[];
+      files: unknown[];
+      location?: string;
+    };
+
+  const emailActivity = {
+    id: 'act-email-1',
+    type: 'EMAIL',
+    title: 'Proposal sent',
+    description: '',
+    timestamp: '2026-03-02T10:00:00.000Z',
+    userName: 'Alex Owner',
+    metadata: { subject: 'Your proposal', opened: true, openCount: 2 },
+    sentiment: null,
+  };
+
+  const callActivity = (recordingUrl: string) => ({
+    id: 'act-call-1',
+    type: 'CALL',
+    title: 'Discovery call',
+    description: '',
+    timestamp: '2026-03-02T11:00:00.000Z',
+    userName: 'Alex Owner',
+    metadata: { outcome: 'connected', duration: '12m', recordingUrl },
+    sentiment: null,
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    data().email = 'john@example.com';
+    data().activities = [];
+    data().files = [];
+    delete data().location;
+  });
+
+  afterEach(() => {
+    data().email = 'john@example.com';
+    data().activities = [];
+    data().files = [];
+    delete data().location;
+  });
+
+  it('Compose opens the email composer addressed to the lead', () => {
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
+    expect(screen.getByRole('link', { name: 'Compose' })).toHaveAttribute(
+      'href',
+      '/email/compose?to=john%40example.com'
+    );
+  });
+
+  it('offers no Compose when the lead has no email address', () => {
+    data().email = null;
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
+    expect(screen.queryByRole('link', { name: 'Compose' })).not.toBeInTheDocument();
+  });
+
+  it('Open takes an email to its activity in the timeline', () => {
+    data().activities = [emailActivity];
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
+    expect(
+      screen.getByRole('link', { name: 'Open "Your proposal" in the activity timeline' })
+    ).toHaveAttribute('href', '/leads/lead-1?activityId=act-email-1');
+  });
+
+  it('Files has no Upload, and offers Download only for files with a stored address', () => {
+    data().files = [
+      {
+        id: 'f1',
+        name: 'brief.pdf',
+        size: '1 MB',
+        uploadedAt: '2026-03-01T00:00:00.000Z',
+        url: 'https://files.example.invalid/brief.pdf',
+      },
+      {
+        id: 'f2',
+        name: 'notes.txt',
+        size: '2 KB',
+        uploadedAt: '2026-03-01T00:00:00.000Z',
+        url: null,
+      },
+      {
+        id: 'f3',
+        name: 'bad.html',
+        size: '2 KB',
+        uploadedAt: '2026-03-01T00:00:00.000Z',
+        url: 'javascript:alert(1)',
+      },
+    ];
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Files/i }));
+
+    expect(screen.queryByText('Upload')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Download brief.pdf' })).toHaveAttribute(
+      'href',
+      'https://files.example.invalid/brief.pdf'
+    );
+    expect(screen.queryByRole('link', { name: 'Download notes.txt' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Download bad.html' })).not.toBeInTheDocument();
+  });
+
+  it('Play Recording opens the stored recording', () => {
+    data().activities = [callActivity('https://calls.example.invalid/rec-1.mp3')];
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'expand_more' }));
+    const link = screen.getByRole('link', { name: /Play Recording/i });
+    expect(link).toHaveAttribute('href', 'https://calls.example.invalid/rec-1.mp3');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  it('shows no Play Recording for an unsafe recording address', () => {
+    data().activities = [callActivity('javascript:alert(1)')];
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+    fireEvent.click(screen.getByRole('button', { name: 'expand_more' }));
+    expect(screen.getByText('Discovery call')).toBeInTheDocument();
+    expect(screen.queryByText(/Play Recording/i)).not.toBeInTheDocument();
+  });
+
+  it('View Map is disabled without a location and opens Google Maps with one (UI-026)', () => {
+    const withLocation = data();
+    const { unmount } = render(<Lead360Page />);
+    expect(screen.getByRole('button', { name: 'View Map' })).toBeDisabled();
+    unmount();
+
+    withLocation.location = '10 Downing Street, London';
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    render(<Lead360Page />);
+    const button = screen.getByRole('button', { name: 'View Map' });
+    expect(button).toBeEnabled();
+    fireEvent.click(button);
+    expect(open).toHaveBeenCalledWith(
+      'https://www.google.com/maps/search/?api=1&query=10%20Downing%20Street%2C%20London',
+      '_blank',
+      'noopener,noreferrer'
+    );
+    delete withLocation.location;
+    open.mockRestore();
+  });
+});

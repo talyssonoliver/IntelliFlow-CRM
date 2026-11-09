@@ -240,3 +240,18 @@ export function insightRecommendations(raw: unknown): string[] {
   if (raw && typeof raw === 'object') return strings((raw as { texts?: unknown }).texts);
   return [];
 }
+
+/**
+ * Returns the URL when it is an absolute http(s) address, otherwise null. Stored
+ * recording and file addresses are rendered as links only through this, so a
+ * missing, relative or javascript: value never becomes a clickable control.
+ */
+export function httpUrlOrNull(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}
