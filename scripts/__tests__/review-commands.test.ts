@@ -76,10 +76,20 @@ describe('starting the reviewers', () => {
 
   it('is what codex-review.mjs actually runs', () => {
     const script = readFileSync(path.join(__dirname, '..', 'codex-review.mjs'), 'utf8');
-    expect(script).toMatch(/runCodexReviewer\(fullPrompt, lastMsgPath, REPO_ROOT, spawnSync\)/);
+    // The chunked review loop (#1274) runs codex through the runner it is handed.
+    const loop = readFileSync(path.join(__dirname, '..', 'lib', 'codex-chunk-review.mjs'), 'utf8');
+    expect(script).toMatch(
+      /import \{[^}]*\brunCodexReviewer\b[^}]*\} from '\.\/lib\/review-commands\.mjs'/
+    );
+    expect(script).toMatch(/makeCodexRunner\(\{[^}]*\brunCodexReviewer,[^}]*spawn: spawnSync/);
+    expect(loop).toMatch(/runCodexReviewer\(prompt, lastMsgPath, repoRoot, spawn\)/);
     expect(script).toMatch(/runClaudeReviewer\(fullPrompt, REPO_ROOT, spawnSync\)/);
     // No review run starts past the helper (`codex login status` is only an auth check).
-    expect(script).not.toMatch(/spawnSync\(\s*'codex',\s*\[\s*'exec'/);
-    expect(script).not.toMatch(/spawnSync\(\s*'claude'/);
+    for (const source of [script, loop]) {
+      expect(source).not.toMatch(/spawn(Sync)?\(\s*'codex',\s*\[\s*'exec'/);
+      expect(source).not.toMatch(/spawn(Sync)?\(\s*'claude'/);
+    }
+    // The loop starts nothing but git itself.
+    expect(loop.match(/\bspawn\(\s*'(\w+)'/g)).toEqual(["spawn('git'", "spawn('git'"]);
   });
 });
