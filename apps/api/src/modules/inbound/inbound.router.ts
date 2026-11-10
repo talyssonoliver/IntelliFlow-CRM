@@ -778,11 +778,20 @@ async function applyCompanyChange(
   if (!change) return null;
   if (input.applyCompany !== true) return { ...change, applied: false };
   try {
-    const { count } = await ctx.prisma.lead.updateMany({
-      where: { id: leadId, tenantId, company: change.from },
-      data: { company: change.to },
+    // The rename and its note commit together: neither can exist without the other,
+    // so a later failure in the sync can never leave an untraced rename.
+    const applied = await ctx.prisma.$transaction(async (tx) => {
+      const { count } = await tx.lead.updateMany({
+        where: { id: leadId, tenantId, company: change.from },
+        data: { company: change.to },
+      });
+      if (count !== 1) return false;
+      await tx.leadActivity.create({
+        data: companyCorrectionNote(input, leadId, tenantId, { ...change, applied: true }),
+      });
+      return true;
     });
-    return { ...change, applied: count === 1 };
+    return { ...change, applied };
   } catch (err) {
     console.error('[inbound.syncPipelineLead] company correction failed:', {
       leadId,
@@ -891,11 +900,7 @@ function pipelineSyncEventTime(stageChangedAt: string): Date {
   return Number.isNaN(at.getTime()) || at > now ? now : at;
 }
 
-/**
- * Audit NOTE + idempotency marker for a COA pipeline sync. Best-effort. Returns true
- * only when THIS call wrote the note: a concurrent copy of the same sync may have
- * written it first, without this call's company correction in it.
- */
+/** Audit NOTE + idempotency marker for a COA pipeline sync. Best-effort. */
 async function recordPipelineSync(
   ctx: Context,
   input: InboundPipelineLeadInput,
@@ -907,7 +912,7 @@ async function recordPipelineSync(
   refusal: QualificationRefusal | null,
   slugChange: OutreachSlugChange | null,
   companyChange: CompanyChangeResult | null
-): Promise<boolean> {
+): Promise<void> {
   try {
     // Existence check + insert must be atomic per syncKey: two concurrent
     // requests both pass the early `prior` lookup, so serialise them on a
@@ -915,13 +920,13 @@ async function recordPipelineSync(
     // `tx`. Only the marker is locked (short, no external calls); the status
     // walk stays outside because its compare-and-set writes refuse stale
     // moves, so a duplicated walk is a harmless no-op.
-    return await ctx.prisma.$transaction(async (tx) => {
+    await ctx.prisma.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${syncKey}, 0))`;
       const existing = await tx.leadActivity.findFirst({
         where: { leadId, tenantId, metadata: { path: ['syncKey'], equals: syncKey } },
         select: { id: true },
       });
-      if (existing) return false;
+      if (existing) return;
       const copy = describePipelineSync(input, from, to, refusal);
       await tx.leadActivity.create({
         data: {
@@ -958,7 +963,6 @@ async function recordPipelineSync(
           } as Prisma.InputJsonObject,
         },
       });
-      return true;
     });
   } catch (err) {
     console.warn('[inbound.syncPipelineLead] audit note failed:', {
@@ -966,45 +970,34 @@ async function recordPipelineSync(
       syncKey,
       error: err instanceof Error ? err.message : err,
     });
-    return false;
   }
 }
 
 /**
- * A repeat sync (its audit note already exists) that corrected the company gets a
- * note of its own, so no rename happens without a trace. Best-effort, like the
- * sync note.
+ * The NOTE written in the same transaction as a company rename, so every rename has
+ * its own trace whatever happens to the rest of the sync (repeat, concurrent copy,
+ * a later retryable failure).
  */
-async function recordCompanyCorrection(
-  ctx: Context,
+function companyCorrectionNote(
   input: InboundPipelineLeadInput,
   leadId: string,
   tenantId: string,
   change: CompanyChangeResult
-): Promise<void> {
-  try {
-    await ctx.prisma.leadActivity.create({
-      data: {
-        type: 'NOTE',
-        title: 'Company name corrected from COA',
-        description: `Company changed from "${change.from}" (the listing name) to "${change.to}".`,
-        timestamp: new Date(),
-        userName: COA_SYNC_USER,
-        leadId,
-        tenantId,
-        metadata: {
-          source: 'coa-company-correction',
-          coaLeadId: input.coaLeadId,
-          ...companyMetadata(input, change),
-        } as Prisma.InputJsonObject,
-      },
-    });
-  } catch (err) {
-    console.warn('[inbound.syncPipelineLead] company correction note failed:', {
-      leadId,
-      error: err instanceof Error ? err.message : err,
-    });
-  }
+): Prisma.LeadActivityUncheckedCreateInput {
+  return {
+    type: 'NOTE',
+    title: 'Company name corrected from COA',
+    description: `Company changed from "${change.from}" (the listing name) to "${change.to}".`,
+    timestamp: new Date(),
+    userName: COA_SYNC_USER,
+    leadId,
+    tenantId,
+    metadata: {
+      source: 'coa-company-correction',
+      coaLeadId: input.coaLeadId,
+      ...companyMetadata(input, change),
+    } as Prisma.InputJsonObject,
+  };
 }
 
 /**
@@ -1683,11 +1676,11 @@ export const inboundRouter = createTRPCRouter({
             tenantId,
             planCompanyChange(existingCompany, input)
           );
+      // A rename lands together with its own note (applyCompanyChange): a later step
+      // (status walk, tagging) can still fail with a retryable 500, and the retry then
+      // plans nothing, because the stored name is no longer the listing name.
       const companyField = companyChange ? { companyChange } : {};
       if (prior) {
-        if (companyChange?.applied) {
-          await recordCompanyCorrection(ctx, input, leadId, tenantId, companyChange);
-        }
         const priorMeta = prior.metadata as { qualificationPending?: unknown } | null;
         return {
           leadId,
@@ -1719,7 +1712,7 @@ export const inboundRouter = createTRPCRouter({
       // the same key short-circuits, even when another writer did the moving or
       // the qualification was refused; recordPipelineSync is idempotent per
       // syncKey because the early `prior` lookup above skips a repeat.
-      const noted = await recordPipelineSync(
+      await recordPipelineSync(
         ctx,
         input,
         leadId,
@@ -1731,11 +1724,6 @@ export const inboundRouter = createTRPCRouter({
         slugChange,
         companyChange
       );
-      // A concurrent copy of this sync may have written the note first (or the note
-      // failed): this request's rename must still leave a trace.
-      if (!noted && companyChange?.applied) {
-        await recordCompanyCorrection(ctx, input, leadId, tenantId, companyChange);
-      }
 
       return {
         leadId,

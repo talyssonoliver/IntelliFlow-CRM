@@ -127,13 +127,68 @@ describe('inboundRouter.syncPipelineLead — company correction', () => {
       data: { company: TRADING },
     });
     expect(result.companyChange).toEqual({ from: LISTING, to: TRADING, applied: true });
-    expect(noteMetadata()).toMatchObject({
+    // The rename's own note first (same transaction), then the sync note.
+    expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(2);
+    expect(noteMetadata(0)).toMatchObject({
+      source: 'coa-company-correction',
+      companyChange: { from: LISTING, to: TRADING, applied: true },
+    });
+    expect(noteMetadata(1)).toMatchObject({
       source: 'coa-pipeline-sync',
       listingName: LISTING,
       companySource: 'listing+domain',
       companyFlagged: false,
       companyChange: { from: LISTING, to: TRADING, applied: true },
     });
+  });
+
+  it('renames and writes its note in one transaction', async () => {
+    existingLead(LISTING);
+    const order: string[] = [];
+    prismaMock.$transaction.mockImplementationOnce((async (fn: (tx: unknown) => unknown) => {
+      order.push('begin');
+      const out = await fn(prismaMock);
+      order.push('commit');
+      return out;
+    }) as never);
+    prismaMock.lead.updateMany.mockImplementationOnce((async () => {
+      order.push('rename');
+      return { count: 1 };
+    }) as never);
+    prismaMock.leadActivity.create.mockImplementationOnce((async () => {
+      order.push('note');
+      return {};
+    }) as never);
+
+    await caller().syncPipelineLead(payload({ applyCompany: true }));
+
+    expect(order).toEqual(['begin', 'rename', 'note', 'commit']);
+  });
+
+  it('keeps the note when a later step fails after the rename, and the retry plans nothing', async () => {
+    existingLead(LISTING, 'NEW');
+    changeStatus().mockResolvedValueOnce({
+      isFailure: true,
+      error: { code: 'PERSISTENCE_ERROR', message: 'Failed to save lead' },
+    });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    await expect(caller().syncPipelineLead(payload({ applyCompany: true }))).rejects.toBeDefined();
+
+    expect(prismaMock.lead.updateMany).toHaveBeenCalledTimes(1);
+    expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
+    expect(noteMetadata(0)).toMatchObject({
+      source: 'coa-company-correction',
+      companyChange: { from: LISTING, to: TRADING, applied: true },
+    });
+
+    // COA retries: the stored name is now the trading name, so nothing is planned.
+    existingLead(TRADING, 'NEW');
+    const retry = await caller().syncPipelineLead(payload({ applyCompany: true }));
+
+    expect(retry.companyChange).toBeUndefined();
+    expect(prismaMock.lead.updateMany).toHaveBeenCalledTimes(1);
+    error.mockRestore();
   });
 
   it('leaves the company untouched when the same payload has no applyCompany', async () => {
@@ -200,15 +255,6 @@ describe('inboundRouter.syncPipelineLead — company correction', () => {
     });
   });
 
-  it('writes one note, the sync note, when this request records it', async () => {
-    existingLead(LISTING);
-
-    await caller().syncPipelineLead(payload({ applyCompany: true }));
-
-    expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
-    expect(noteMetadata()).toMatchObject({ source: 'coa-pipeline-sync' });
-  });
-
   it('notes its own rename when a concurrent copy of the sync wrote the note first', async () => {
     existingLead(LISTING);
     // Early repeat check: no note yet. Inside the locked transaction: the other copy's note.
@@ -228,11 +274,16 @@ describe('inboundRouter.syncPipelineLead — company correction', () => {
 
   it('notes the rename when the sync note itself could not be written', async () => {
     existingLead(LISTING);
-    prismaMock.$transaction.mockRejectedValueOnce(new Error('lock timeout'));
+    // First transaction: the rename and its note. Second: the sync note, which fails.
+    prismaMock.$transaction
+      .mockImplementationOnce((async (fn: (tx: unknown) => unknown) => fn(prismaMock)) as never)
+      .mockRejectedValueOnce(new Error('lock timeout'));
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
 
-    await caller().syncPipelineLead(payload({ applyCompany: true }));
+    const result = await caller().syncPipelineLead(payload({ applyCompany: true }));
 
+    expect(result.companyChange?.applied).toBe(true);
+    expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
     expect(noteMetadata()).toMatchObject({ source: 'coa-company-correction' });
     warn.mockRestore();
   });
@@ -260,23 +311,21 @@ describe('inboundRouter.syncPipelineLead — company correction', () => {
     expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
   });
 
-  it('keeps the sync going when the correction note fails', async () => {
+  it('fails the request (retryable) when the correction note cannot be written', async () => {
+    // The note shares the rename's transaction, so a failed note rolls the rename back:
+    // never a rename without its trace.
     existingLead(LISTING);
-    prismaMock.leadActivity.findFirst.mockResolvedValueOnce({
-      id: 'act_prior',
-      metadata: {},
-    } as never);
     prismaMock.leadActivity.create.mockRejectedValueOnce(new Error('db down'));
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
-    const result = await caller().syncPipelineLead(payload({ applyCompany: true }));
-
-    expect(result.companyChange?.applied).toBe(true);
-    expect(warn).toHaveBeenCalledWith(
-      expect.stringContaining('company correction note failed'),
+    await expect(caller().syncPipelineLead(payload({ applyCompany: true }))).rejects.toMatchObject({
+      code: 'INTERNAL_SERVER_ERROR',
+    });
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining('company correction failed'),
       expect.objectContaining({ leadId: LEAD_ID })
     );
-    warn.mockRestore();
+    error.mockRestore();
   });
 
   it('surfaces a failed correction write as a retryable 500', async () => {
