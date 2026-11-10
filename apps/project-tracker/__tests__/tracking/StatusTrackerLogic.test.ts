@@ -1,93 +1,16 @@
 import { describe, it, expect } from 'vitest';
+import {
+  completionRate as computeCompletionRate,
+  sprintsToShow as sortedSprintEntries,
+} from '../../components/tracking/status-tracker-logic';
+import { computeStaleState } from '../../components/tracking/shared/StaleIndicator';
 
 /**
- * Pure-function logic tests for StatusTracker, StaleIndicator, and RefreshButton.
- * Follows the pure-function extraction pattern (established by QualityDashboard.test.ts).
- * No RTL or component imports needed.
+ * StatusTracker's and StaleIndicator's calculations, imported from the product. This file used
+ * to copy them, and its sprint sort was right where the component's was not (the component used
+ * parseInt(a) - parseInt(b), NaN for "backlog" and "Continuous") (#1216).
+ * The refresh guard is tested by rendering RefreshButton (RefreshButton.test.tsx).
  */
-
-// --- Pure functions extracted from components ---
-
-/**
- * Computes completion rate percentage.
- * Mirrors StatusTracker.tsx line ~104-105 logic.
- */
-function computeCompletionRate(completed: number, total: number): number {
-  if (total === 0) return 0;
-  return Math.round((completed / total) * 100);
-}
-
-/**
- * Sorts sprint entries numerically and slices to max 6.
- * Mirrors StatusTracker.tsx lines ~173-175 logic.
- */
-function sortedSprintEntries(
-  bySprint: Record<string, { total: number; completed: number }>
-): Array<[string, { total: number; completed: number }]> {
-  return Object.entries(bySprint)
-    .sort(([a], [b]) => {
-      const numA = parseInt(a, 10);
-      const numB = parseInt(b, 10);
-      if (isNaN(numA) && isNaN(numB)) return a.localeCompare(b);
-      if (isNaN(numA)) return 1;
-      if (isNaN(numB)) return -1;
-      return numA - numB;
-    })
-    .slice(0, 6);
-}
-
-/**
- * Computes stale state from a lastUpdated timestamp.
- * Mirrors StaleIndicator.tsx lines ~17-41 logic.
- */
-function computeStaleState(
-  lastUpdated: Date | string,
-  thresholdMinutes: number = 60
-): { isStale: boolean; timeAgo: string; formattedTime: string } {
-  const date = typeof lastUpdated === 'string' ? new Date(lastUpdated) : lastUpdated;
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMinutes = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMinutes / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  let timeAgo: string;
-  if (diffMinutes < 1) {
-    timeAgo = 'Just now';
-  } else if (diffMinutes < 60) {
-    timeAgo = `${diffMinutes}m ago`;
-  } else if (diffHours < 24) {
-    timeAgo = `${diffHours}h ago`;
-  } else {
-    timeAgo = `${diffDays}d ago`;
-  }
-
-  return {
-    isStale: diffMinutes >= thresholdMinutes,
-    timeAgo,
-    formattedTime: date.toLocaleString(),
-  };
-}
-
-/**
- * Parses lastUpdated input to Date or null.
- * Mirrors null/undefined guard in StaleIndicator usage.
- */
-function parsedLastUpdated(input: Date | string | null | undefined): Date | null {
-  if (input === null || input === undefined) return null;
-  if (input instanceof Date) return input;
-  return new Date(input);
-}
-
-/**
- * Determines if refresh should be allowed.
- * Mirrors RefreshButton.tsx line ~26 guard logic.
- */
-function shouldAllowRefresh(isRefreshing: boolean, disabled: boolean): boolean {
-  return !isRefreshing && !disabled;
-}
-
-// --- Tests ---
 
 describe('StatusTrackerLogic', () => {
   describe('computeCompletionRate', () => {
@@ -123,6 +46,16 @@ describe('StatusTrackerLogic', () => {
 
       const result = sortedSprintEntries(bySprint);
       expect(result.map(([key]) => key)).toEqual(['0', '1', '2', '12']);
+    });
+
+    it('puts named sprints after numbered ones, in alphabetical order', () => {
+      const result = sortedSprintEntries({
+        Continuous: { total: 1, completed: 0 },
+        '3': { total: 1, completed: 0 },
+        backlog: { total: 1, completed: 0 },
+        '1': { total: 1, completed: 0 },
+      });
+      expect(result.map(([key]) => key)).toEqual(['1', '3', 'backlog', 'Continuous']);
     });
 
     it('slices result to max 6 entries', () => {
@@ -207,42 +140,6 @@ describe('StatusTrackerLogic', () => {
       const result = computeStaleState(isoString, 60);
       expect(result.isStale).toBe(false);
       expect(result.timeAgo).toBe('5m ago');
-    });
-  });
-
-  describe('parsedLastUpdated', () => {
-    it('returns null for null input', () => {
-      expect(parsedLastUpdated(null)).toBeNull();
-    });
-
-    it('returns null for undefined input', () => {
-      expect(parsedLastUpdated(undefined)).toBeNull();
-    });
-
-    it('returns Date for valid ISO string', () => {
-      const result = parsedLastUpdated('2025-01-05T10:00:00Z');
-      expect(result).toBeInstanceOf(Date);
-      expect(result!.toISOString()).toBe('2025-01-05T10:00:00.000Z');
-    });
-
-    it('returns Date passthrough for Date input', () => {
-      const date = new Date('2025-01-05T10:00:00Z');
-      const result = parsedLastUpdated(date);
-      expect(result).toBe(date); // Same reference
-    });
-  });
-
-  describe('shouldAllowRefresh', () => {
-    it('returns true when both false', () => {
-      expect(shouldAllowRefresh(false, false)).toBe(true);
-    });
-
-    it('returns false when isRefreshing is true', () => {
-      expect(shouldAllowRefresh(true, false)).toBe(false);
-    });
-
-    it('returns false when disabled is true', () => {
-      expect(shouldAllowRefresh(false, true)).toBe(false);
     });
   });
 });

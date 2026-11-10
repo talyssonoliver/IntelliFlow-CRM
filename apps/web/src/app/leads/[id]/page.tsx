@@ -92,6 +92,7 @@ import {
   getActivityIcon,
   getActivityIconBg,
   formatRelativeTime,
+  leadDisplayName,
 } from '@/lib/leads/lead-format';
 import { LeadTimeline } from '@/components/leads/lead-timeline';
 import { RestrictionBanner } from '@/components/privacy/RestrictionBanner';
@@ -573,7 +574,13 @@ function LeadErrorView({
 
 // ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
-type LeadDialogsLead = { id: string; firstName: string; lastName: string; company: string };
+type LeadDialogsLead = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  company: string;
+  email: string;
+};
 
 function LeadConvertButton({
   lead,
@@ -607,10 +614,15 @@ function LeadConvertButton({
             <button
               onClick={onOpenConvert}
               disabled={!isConvertible || convertMutation.isPending}
-              className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+              aria-label={convertMutation.isPending ? 'Converting lead' : 'Convert lead'}
+              className="flex items-center gap-2 px-3 sm:px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
             >
-              <span className="material-symbols-outlined !text-[18px]">transform</span>{' '}
-              {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
+              <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
+                transform
+              </span>{' '}
+              <span className="hidden sm:inline">
+                {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
+              </span>
             </button>
           </span>
         </TooltipTrigger>
@@ -709,8 +721,8 @@ function LeadDialogs({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Lead</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to permanently delete {lead.firstName} {lead.lastName}? This
-              action cannot be undone.
+              Are you sure you want to permanently delete {leadDisplayName(lead)}? This action
+              cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -731,8 +743,8 @@ function LeadDialogs({
           <AlertDialogHeader>
             <AlertDialogTitle>Archive Lead</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to archive {lead.firstName} {lead.lastName}? The lead will be
-              moved to Lost status.
+              Are you sure you want to archive {leadDisplayName(lead)}? The lead will be moved to
+              Lost status.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -761,8 +773,8 @@ function LeadDialogs({
           <AlertDialogHeader>
             <AlertDialogTitle>Convert Lead to Contact</AlertDialogTitle>
             <AlertDialogDescription>
-              Convert {lead.firstName} {lead.lastName} to a contact record? This action will change
-              the lead status to CONVERTED and cannot be undone.
+              Convert {leadDisplayName(lead)} to a contact record? This action will change the lead
+              status to CONVERTED and cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex flex-col gap-3 py-2">
@@ -825,9 +837,7 @@ function LeadDialogs({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Log Call</DialogTitle>
-            <DialogDescription>
-              Record a call with {lead.firstName} {lead.lastName}.
-            </DialogDescription>
+            <DialogDescription>Record a call with {leadDisplayName(lead)}.</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-4 py-2">
             <div className="flex flex-col gap-1.5">
@@ -2109,14 +2119,14 @@ function LeadPageHeader({
           </Link>
           <span className="material-symbols-outlined !text-sm">chevron_right</span>
           <span className="font-medium text-slate-900 dark:text-white">
-            {lead.firstName} {lead.lastName}
+            {leadDisplayName(lead)}
           </span>
         </div>
         <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-          {lead.firstName} {lead.lastName}
+          {leadDisplayName(lead)}
         </h1>
       </div>
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-2 sm:gap-3">
         <LeadConvertButton
           lead={lead}
           convertMutation={convertMutation}
@@ -2124,20 +2134,27 @@ function LeadPageHeader({
         />
         <button
           onClick={onEdit}
-          className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+          aria-label="Edit lead"
+          className="flex items-center gap-2 px-3 sm:px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
         >
-          <span className="material-symbols-outlined !text-[18px]">edit</span> Edit
+          <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
+            edit
+          </span>{' '}
+          <span className="hidden sm:inline">Edit</span>
         </button>
         <button
           onClick={onLogCall}
           className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#2a78f6] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
         >
-          <span className="material-symbols-outlined !text-[18px]">call</span> Log Call
+          <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
+            call
+          </span>{' '}
+          Log Call
         </button>
         <PinButton
           entityType="lead"
           entityId={lead.id}
-          title={`${lead.firstName} ${lead.lastName}`}
+          title={leadDisplayName(lead)}
           subtitle={lead.company || undefined}
           icon="person"
           url={`/leads/${lead.id}`}
@@ -2810,7 +2827,7 @@ export default function Lead360Page() {
         entity={{
           type: 'lead',
           id: lead.id,
-          title: `${lead.firstName} ${lead.lastName}`,
+          title: leadDisplayName(lead),
           subtitle: lead.company || undefined,
           icon: 'person',
           url: `/leads/${lead.id}`,
