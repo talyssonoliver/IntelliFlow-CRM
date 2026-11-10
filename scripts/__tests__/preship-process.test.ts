@@ -24,7 +24,9 @@ import {
   gateStatePath,
   installExitHandlers,
   isAlive,
+  descendantsOf,
   killTree,
+  windowsProcesses,
   readGateState,
   reapGate,
   sameProcess,
@@ -552,12 +554,44 @@ describe('killTree with an injected platform', () => {
     expect(kill).not.toHaveBeenCalled();
   });
 
-  it('Windows: taskkill /T /F by pid, no signals', () => {
+  it('Windows: taskkill /F each descendant on its own, children first, never /T', () => {
     const run = vi.fn();
     const kill = vi.fn();
-    killTree(77, { platform: 'win32', alive: () => true, run, kill });
-    expect(run).toHaveBeenCalledWith('taskkill', ['/PID', '77', '/T', '/F'], expect.any(Object));
+    const procs = new Map([
+      [77, { ppid: 1, t: 100 }],
+      [78, { ppid: 77, t: 110 }],
+      [79, { ppid: 78, t: 120 }],
+      // 90 names 77 as its parent but is OLDER than 77: an earlier owner of pid 77
+      // started it. taskkill /T would kill it; the walk must not.
+      [90, { ppid: 77, t: 50 }],
+      [91, { ppid: 2, t: 130 }],
+    ]);
+    killTree(77, { platform: 'win32', alive: () => true, run, kill, processes: () => procs });
+    expect(run.mock.calls.map((c) => c[1])).toEqual([
+      ['/F', '/PID', '79'],
+      ['/F', '/PID', '78'],
+      ['/F', '/PID', '77'],
+    ]);
+    expect(run.mock.calls.every((c) => c[0] === 'taskkill' && !c[1].includes('/T'))).toBe(true);
     expect(kill).not.toHaveBeenCalled();
+  });
+
+  it('Windows: stops only the pid itself when the process list cannot be read', () => {
+    const run = vi.fn();
+    killTree(77, { platform: 'win32', alive: () => true, run, processes: () => new Map() });
+    expect(run.mock.calls.map((c) => c[1])).toEqual([['/F', '/PID', '77']]);
+  });
+
+  it('Windows: lists processes through Win32_Process by default', () => {
+    const run = vi.fn((bin: string) =>
+      bin === 'powershell' ? { stdout: '77 1 100\r\n78 77 110\r\n' } : { status: 0 }
+    );
+    killTree(77, { platform: 'win32', alive: () => true, run });
+    expect(run.mock.calls[0][0]).toBe('powershell');
+    expect(run.mock.calls.slice(1).map((c) => c[1])).toEqual([
+      ['/F', '/PID', '78'],
+      ['/F', '/PID', '77'],
+    ]);
   });
 
   it('POSIX: kills the whole process group', () => {
@@ -997,5 +1031,44 @@ describe('pre-ship.mjs runs a step async, tracks it, and cleans up', () => {
     });
     expect(r.status, r.stdout + r.stderr).toBe(0);
     expect(exists(stateDir)).toBe(false);
+  });
+});
+
+describe('descendantsOf and windowsProcesses', () => {
+  it('follows a child only if it was created at or after its parent', () => {
+    const procs = new Map([
+      [10, { ppid: 1, t: 100 }],
+      [11, { ppid: 10, t: 100 }], // same tick as its parent: followed
+      [12, { ppid: 11, t: 150 }],
+      [13, { ppid: 10, t: 99 }], // older than its parent: a reused pid, skipped
+      [14, { ppid: 13, t: 200 }], // so its children are never reached either
+    ]);
+    expect(descendantsOf(10, procs)).toEqual([10, 11, 12]);
+  });
+
+  it('is empty for a pid that is not running', () => {
+    expect(descendantsOf(5, new Map([[6, { ppid: 5, t: 1 }]]))).toEqual([]);
+  });
+
+  it('does not loop on a parent cycle', () => {
+    const procs = new Map([
+      [20, { ppid: 21, t: 1 }],
+      [21, { ppid: 20, t: 1 }],
+    ]);
+    expect(descendantsOf(20, procs)).toEqual([20, 21]);
+  });
+
+  it('parses the Win32_Process listing and drops junk lines', () => {
+    const run = vi.fn(() => ({ stdout: '4 0 1000\r\n\r\nnot a line\r\n88 4 2000\r\n' }));
+    expect(windowsProcesses(run)).toEqual(
+      new Map([
+        [4, { ppid: 0, t: 1000 }],
+        [88, { ppid: 4, t: 2000 }],
+      ])
+    );
+  });
+
+  it('is empty when the listing fails', () => {
+    expect(windowsProcesses(() => ({ stdout: null, status: 1 }))).toEqual(new Map());
   });
 });
