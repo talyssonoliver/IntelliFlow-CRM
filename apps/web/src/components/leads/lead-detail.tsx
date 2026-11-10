@@ -199,10 +199,10 @@ export interface LeadProfileData {
   temperature: LeadTemperature;
   createdAt: string | Date;
   lastContactedAt: string | Date;
-  avatarUrl: string;
+  avatarUrl: string | null;
   estimatedValue: number;
   tags: string[];
-  owner: { name: string; title: string; avatarUrl: string };
+  owner: { name: string; title: string; avatarUrl: string | null };
   accountId?: string | null;
   account?: { id: string; name: string } | null;
 }
@@ -391,7 +391,7 @@ export function LeadProfileCard({
 export function LeadOwnerCard({
   owner,
 }: {
-  owner: { name: string; title: string; avatarUrl: string };
+  owner: { name: string; title: string; avatarUrl: string | null };
 }) {
   return (
     <Card className="p-5">
