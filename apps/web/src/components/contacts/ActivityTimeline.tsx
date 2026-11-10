@@ -326,7 +326,8 @@ export function ActivityTimeline({
                   label: 'Clear filters',
                   onClick: () => {
                     setTypeFilter('all');
-                    setSearchQuery('');
+                    // Through handleSearch, so the parent's onSearch hears the search clear.
+                    handleSearch('');
                   },
                 }
           }
