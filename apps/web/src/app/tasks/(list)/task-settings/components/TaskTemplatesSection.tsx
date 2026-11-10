@@ -159,8 +159,9 @@ export function TaskTemplatesSection({ value, onChange }: Readonly<TaskTemplates
       </div>
 
       {value.length === 0 ? (
+        // "rules" carries no hotkey: "tasks" would bind T on this page to Add template.
         <EmptyState
-          entity="tasks"
+          entity="rules"
           size="sm"
           ctaLabel="Add template"
           onCtaClick={openAdd}

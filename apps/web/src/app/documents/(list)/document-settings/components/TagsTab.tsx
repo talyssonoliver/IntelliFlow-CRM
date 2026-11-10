@@ -125,11 +125,16 @@ export const TagsTab = forwardRef<TagsTabHandle, TagsTabProps>(function TagsTab(
   return (
     <div className="space-y-3">
       {tags.length === 0 ? (
+        // "pinned" carries no hotkey: "documents" would bind D on this page to Add tag.
         <EmptyState
-          entity="documents"
+          entity="pinned"
           size="sm"
           ctaLabel="Add tag"
-          onCtaClick={openCreate}
+          onCtaClick={() => {
+            if (!isBusy) openCreate();
+          }}
+          title="No tags yet"
+          description="Add your first document tag."
           className="py-4 px-3 gap-2"
         />
       ) : (

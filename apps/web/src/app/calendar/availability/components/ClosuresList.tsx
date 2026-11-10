@@ -85,8 +85,9 @@ export const ClosuresList = forwardRef<ClosuresListHandle, ClosuresListProps>(fu
 
   if (closures.length === 0) {
     return (
+      // "rules" carries no hotkey: "appointments" would bind A on this page to Add a closure.
       <EmptyState
-        entity="appointments"
+        entity="rules"
         ctaLabel="Add a closure"
         showCta={!readOnly}
         onCtaClick={openCreate}
