@@ -167,6 +167,12 @@ describe('lead-format · formatGBPCompact (UI-017)', () => {
     expect(formatGBPCompact(999)).toBe('£999');
     expect(formatGBPCompact(0)).toBe('£0');
   });
+
+  it('rounds before choosing the compact form', () => {
+    expect(formatGBPCompact(999.5)).toBe('£1k');
+    expect(formatGBPCompact(999.4)).toBe('£999');
+    expect(formatEstimatedValue(99_950)).toBe('£1k');
+  });
 });
 
 describe('lead-format · system tags (UI-017)', () => {

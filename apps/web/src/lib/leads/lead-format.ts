@@ -76,8 +76,10 @@ export function formatRelativeTime(dateString: string, timezone: string = 'Europ
  * `50_000` -> `"£50k"`, `500` -> `"£500"`. The CRM works in GBP (UI-017).
  */
 export function formatGBPCompact(amount: number): string {
-  if (amount >= 1000) return `£${(amount / 1000).toFixed(0)}k`;
-  return `£${amount.toFixed(0)}`;
+  // Round first, so 999.5 reads "£1k" rather than "£1000".
+  const whole = Math.round(amount);
+  if (whole >= 1000) return `£${Math.round(whole / 1000)}k`;
+  return `£${whole}`;
 }
 
 /**

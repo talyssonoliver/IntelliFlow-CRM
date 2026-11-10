@@ -2427,6 +2427,7 @@ export default function Lead360Page() {
   // expanded and scrolled to once the Activity tab has painted. Each Open scrolls again.
   const [pendingScrollId, setPendingScrollId] = useState<string | null>(null);
   const openActivityInTimeline = (activityId: string) => {
+    setActivityView('timeline');
     setActivityTypeFilter('all');
     setPersonFilter('all');
     setSearchQuery('');

@@ -1423,6 +1423,28 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
     raf.mockRestore();
   });
 
+  it('Open returns to the timeline view when "All Sources" was picked', () => {
+    data().activities = [emailActivity];
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      cb(0);
+      return 0;
+    });
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+    fireEvent.click(screen.getByRole('button', { name: /All Sources/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Open "Your proposal" in the activity timeline' })
+    );
+
+    expect(screen.getByText('Proposal sent')).toBeInTheDocument();
+    expect(scrollIntoView).toHaveBeenCalled();
+    raf.mockRestore();
+  });
+
   it('a second Open scrolls again and the user can still change tab', () => {
     data().activities = [emailActivity];
     const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {

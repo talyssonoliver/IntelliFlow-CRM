@@ -1009,12 +1009,13 @@ describe('Lead Router', () => {
       expect(scoreActivityCalls()).toHaveLength(1);
     });
 
-    it('treats an unreadable prior state as a first score (UI-021)', async () => {
+    it('makes no first-score claim when the prior state cannot be read (UI-021)', async () => {
       scoringStates(new Error('read failed'), { scoringStatus: 'SCORED', scoredAt: SCORED_AT });
-      await score();
+      await score({ newScore: 52 });
       const logged = scoreActivityCalls();
       expect(logged).toHaveLength(1);
-      expect(logged[0].metadata).toMatchObject({ firstScore: true });
+      expect(logged[0].metadata).toMatchObject({ previousScore: 38, newScore: 52 });
+      expect(logged[0].metadata).not.toHaveProperty('firstScore');
     });
 
     it('should throw NOT_FOUND for non-existent lead', async () => {

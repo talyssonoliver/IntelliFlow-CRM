@@ -1327,7 +1327,8 @@ export const leadRouter = createTRPCRouter({
           metadata: {
             previousScore: result.value.previousScore,
             newScore: result.value.newScore,
-            firstScore: !hadRealScore(before),
+            // Unknown prior state (the read failed) makes no first-score claim either way.
+            ...(before ? { firstScore: !hadRealScore(before) } : {}),
             confidence: result.value.confidence,
             tier: result.value.tier,
             autoQualified: result.value.autoQualified,
