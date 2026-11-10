@@ -6,6 +6,7 @@ import {
   formatEstimatedValue,
   formatGBPCompact,
   isSystemTag,
+  leadWebsite,
   visibleTags,
   leadDisplayName,
   type ActivityType,
@@ -161,5 +162,42 @@ describe('lead-format · system tags (UI-017)', () => {
       'restaurant',
     ]);
     expect(visibleTags([])).toEqual([]);
+  });
+});
+
+describe('lead-format · formatGBPCompact rounding', () => {
+  it('rounds before choosing the compact form', () => {
+    expect(formatGBPCompact(999.5)).toBe('£1k');
+    expect(formatGBPCompact(999.4)).toBe('£999');
+    expect(formatEstimatedValue(99_950)).toBe('£1k');
+  });
+});
+
+describe('lead-format · leadWebsite (#1277)', () => {
+  it('shows the bare host for an ad-tracking URL and drops the tracking parameters', () => {
+    expect(
+      leadWebsite('http://www.energym.co.uk/?utm_source=google&utm_medium=wix_google&gclid=abc')
+    ).toEqual({ href: 'http://www.energym.co.uk/', label: 'energym.co.uk' });
+  });
+
+  it('adds https to a bare domain and keeps a real path and real parameters', () => {
+    expect(leadWebsite('example.invalid')).toEqual({
+      href: 'https://example.invalid/',
+      label: 'example.invalid',
+    });
+    expect(leadWebsite('https://www.example.invalid/shop/?page=2&utm_campaign=x')).toEqual({
+      href: 'https://www.example.invalid/shop/?page=2',
+      label: 'example.invalid/shop',
+    });
+  });
+
+  it('returns null when there is no usable http(s) address', () => {
+    expect(leadWebsite('')).toBeNull();
+    expect(leadWebsite('   ')).toBeNull();
+    expect(leadWebsite(null)).toBeNull();
+    expect(leadWebsite(undefined)).toBeNull();
+    expect(leadWebsite('javascript:alert(1)')).toBeNull();
+    expect(leadWebsite('ftp://files.example.invalid')).toBeNull();
+    expect(leadWebsite('http://')).toBeNull();
   });
 });

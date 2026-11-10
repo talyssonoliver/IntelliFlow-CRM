@@ -76,8 +76,39 @@ export function formatRelativeTime(dateString: string, timezone: string = 'Europ
  * `50_000` -> `"£50k"`, `500` -> `"£500"`. The CRM works in GBP (UI-017).
  */
 export function formatGBPCompact(amount: number): string {
-  if (amount >= 1000) return `£${(amount / 1000).toFixed(0)}k`;
-  return `£${amount.toFixed(0)}`;
+  // Round first, so 999.5 reads "£1k" rather than "£1000".
+  const whole = Math.round(amount);
+  if (whole >= 1000) return `£${Math.round(whole / 1000)}k`;
+  return `£${whole}`;
+}
+
+/** Ad and campaign tracking parameters, dropped from a lead's website. */
+const TRACKING_PARAM = /^(utm_.*|gclid|fbclid|msclkid|dclid|gbraid|wbraid)$/i;
+
+/**
+ * A lead's website as a clean link: the href without tracking parameters, and a short
+ * label (the host without "www.", plus a path when there is one), e.g.
+ * "http://www.energym.co.uk/?utm_source=google" -> { label: "energym.co.uk" }.
+ * Null when there is no usable http(s) address, so the row is not shown.
+ */
+export function leadWebsite(
+  raw: string | null | undefined
+): { href: string; label: string } | null {
+  const text = raw?.trim();
+  if (!text) return null;
+  let url: URL;
+  try {
+    url = new URL(/^[a-z][a-z\d+.-]*:\/\//i.test(text) ? text : `https://${text}`);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+  for (const key of [...url.searchParams.keys()]) {
+    if (TRACKING_PARAM.test(key)) url.searchParams.delete(key);
+  }
+  const host = url.hostname.replace(/^www\./i, '');
+  const path = url.pathname === '/' ? '' : url.pathname.replace(/\/$/, '');
+  return { href: url.toString(), label: host + path };
 }
 
 /**

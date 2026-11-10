@@ -87,6 +87,23 @@ describe('LeadDetail', () => {
     expect(screen.getByText('enterprise')).toBeInTheDocument();
   });
 
+  it('shows a tracking-URL website as its clean host, linked without tracking (#1277)', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({ website: 'http://www.energym.co.uk/?utm_source=google&utm_medium=wix' })}
+        leadMetrics={metrics}
+      />
+    );
+    const link = screen.getByRole('link', { name: 'energym.co.uk (opens in new tab)' });
+    expect(link).toHaveTextContent('energym.co.uk');
+    expect(link).toHaveAttribute('href', 'http://www.energym.co.uk/');
+  });
+
+  it('shows no website row when the lead has none (#1277)', () => {
+    render(<LeadDetail lead={makeLead({ website: '' })} leadMetrics={metrics} />);
+    expect(screen.queryByText('Website')).not.toBeInTheDocument();
+  });
+
   it('hides the COA sync system tags and keeps the user tags (UI-017)', () => {
     render(
       <LeadDetail

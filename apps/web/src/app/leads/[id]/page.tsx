@@ -91,7 +91,7 @@ import {
   type ActivityType,
   getActivityIcon,
   getActivityIconBg,
-  formatGBPCompact,
+  formatEstimatedValue,
   formatRelativeTime,
   leadDisplayName,
 } from '@/lib/leads/lead-format';
@@ -1749,7 +1749,7 @@ function LeadAIInsightsTab({
                 className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
               >
                 <span data-testid={hasAiInsight ? 'deal-value' : 'deal-value-null-state'}>
-                  {hasAiInsight ? formatGBPCompact(aiInsights.estimatedValue) : '--'}
+                  {hasAiInsight ? formatEstimatedValue(aiInsights.estimatedValue) : '--'}
                 </span>
               </p>
               <p className="text-xs text-slate-500">Est. Deal Value</p>
@@ -1875,9 +1875,6 @@ function LeadRightSidebar({
             <span className="material-symbols-outlined text-[#2a78f6]">auto_awesome</span>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Lead IQ</h3>
           </div>
-          <span className="text-[10px] bg-[#2a78f6]/10 text-[#2a78f6] px-1.5 py-0.5 rounded font-bold">
-            BETA
-          </span>
         </div>
         {!hasAiInsight && (
           <p className="text-xs text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-1">

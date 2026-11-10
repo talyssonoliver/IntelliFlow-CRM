@@ -1380,3 +1380,14 @@ describe('LeadDetailPage - Lead IQ source (#1277 visual check)', () => {
     expect(screen.getByText(/AI analysis not run yet/i)).toBeInTheDocument();
   });
 });
+
+describe('LeadDetailPage - Lead IQ card (#1277)', () => {
+  it('has no BETA badge', () => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    render(<Lead360Page />);
+    expect(screen.getByText('Lead IQ')).toBeInTheDocument();
+    expect(screen.queryByText('BETA')).not.toBeInTheDocument();
+  });
+});
