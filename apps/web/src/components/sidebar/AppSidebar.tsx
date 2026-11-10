@@ -383,12 +383,7 @@ function SidebarItemComponent({
       {/* Regular items: gray background + module-colored icon */}
       {/* Segment items: just the colored dot, no background */}
       {isSegment ? (
-        <span
-          className={cn('material-symbols-outlined text-xl transition-colors', item.color)}
-          aria-hidden="true"
-        >
-          fiber_manual_record
-        </span>
+        <SegmentDot className={cn('transition-colors', item.color)} />
       ) : (
         <div
           className={cn(
@@ -456,6 +451,21 @@ export function SidebarTrigger({ className }: Readonly<{ className?: string }>) 
         {isMobileOpen || isPinned ? 'close' : 'menu'}
       </span>
     </button>
+  );
+}
+
+/**
+ * Segment colour dot (#1222 UI-006): a CSS dot in a 20px box, so it lines up
+ * with the icons beside it whatever the icon font's size rules do.
+ */
+function SegmentDot({ className }: Readonly<{ className?: string }>) {
+  return (
+    <span
+      className={cn('flex size-5 shrink-0 items-center justify-center', className)}
+      aria-hidden="true"
+    >
+      <span className="block size-2.5 rounded-full bg-current" />
+    </span>
   );
 }
 
@@ -816,9 +826,7 @@ function MobileSidebarItem({
       )}
     >
       {isSegment ? (
-        <span className={cn('material-symbols-outlined text-xl', item.color)} aria-hidden="true">
-          fiber_manual_record
-        </span>
+        <SegmentDot className={item.color} />
       ) : (
         <div
           className={cn(
