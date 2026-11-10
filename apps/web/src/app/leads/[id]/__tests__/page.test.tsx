@@ -485,6 +485,15 @@ describe('LeadDetailPage - Real AI Insight Rendering (IFC-226)', () => {
     expect(screen.getByTestId('engagement-value')).toHaveTextContent('High');
   });
 
+  it('shows the estimated deal value in pounds from a value stored in pence (UI-017)', () => {
+    (mockLeadQueryState.data.aiInsight as unknown as { estimatedValue: number }).estimatedValue =
+      5_000_000;
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /AI Insights/i }));
+    expect(screen.getByText('£50k')).toBeInTheDocument();
+    expect(screen.queryByText('£5000k')).not.toBeInTheDocument();
+  });
+
   it('renders sentiment with green styling when real data exists', () => {
     render(<Lead360Page />);
     const aiTab = screen.getByRole('button', { name: /AI Insights/i });
@@ -524,7 +533,7 @@ describe('LeadDetailPage - Empty State CTA', () => {
   // EmptyState migration: packages/ui/src/components/empty-state.tsx gates the
   // CTA behind `phase === 'soft-cta'` (empty-state.tsx:387), so a passive
   // EmptyState never renders the button. Its AC-001/AC-002 coverage moved
-  // into AC-003's "activity-visible" path ÔÇö see below ÔÇö which is sufficient.
+  // into AC-003's "activity-visible" path — see below — which is sufficient.
 
   it('CTA button is NOT rendered when activities array has items (AC-003)', () => {
     mockLeadQueryState.data.activities = [
@@ -1414,6 +1423,28 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
     raf.mockRestore();
   });
 
+  it('Open returns to the timeline view when "All Sources" was picked', () => {
+    data().activities = [emailActivity];
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      cb(0);
+      return 0;
+    });
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+    fireEvent.click(screen.getByRole('button', { name: /All Sources/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Open "Your proposal" in the activity timeline' })
+    );
+
+    expect(screen.getByText('Proposal sent')).toBeInTheDocument();
+    expect(scrollIntoView).toHaveBeenCalled();
+    raf.mockRestore();
+  });
+
   it('a second Open scrolls again and the user can still change tab', () => {
     data().activities = [emailActivity];
     const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
@@ -1513,5 +1544,86 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
     );
     delete withLocation.location;
     open.mockRestore();
+  });
+});
+
+// ─── UI-021: AI scoring events ───────────────────────────────────────────────
+
+describe('LeadDetailPage - AI scoring events (UI-021)', () => {
+  const data = () => mockLeadQueryState.data as unknown as { activities: unknown[] };
+
+  const scoreActivity = (metadata: Record<string, unknown>) => ({
+    id: 'act-score-1',
+    type: 'SCORE_UPDATE',
+    title: 'Lead Scored by AI',
+    description: 'Score 38 (COLD) at 55% confidence',
+    timestamp: '2026-03-02T10:00:00.000Z',
+    userName: 'AI Scoring Agent',
+    metadata,
+    sentiment: null,
+  });
+
+  const noteActivity = {
+    id: 'act-note-1',
+    type: 'NOTE',
+    title: 'Called back',
+    description: 'Left a message',
+    timestamp: '2026-03-02T09:00:00.000Z',
+    userName: 'Alex Owner',
+    metadata: {},
+    sentiment: null,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    data().activities = [];
+  });
+
+  afterEach(() => {
+    data().activities = [];
+  });
+
+  function openFirstActivity() {
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'expand_more' })[0]);
+  }
+
+  it('says "First score" for a first score instead of an empty "from" value', () => {
+    data().activities = [scoreActivity({ previousScore: 0, newScore: 38, firstScore: true })];
+    openFirstActivity();
+    const row = screen.getByTestId('score-change');
+    expect(row).toHaveTextContent('First score');
+    expect(row).toHaveTextContent('38');
+    expect(row).not.toHaveTextContent('Score changed from');
+  });
+
+  it('shows the real from and to values of a change', () => {
+    data().activities = [scoreActivity({ previousScore: 38, newScore: 52, firstScore: false })];
+    openFirstActivity();
+    const row = screen.getByTestId('score-change');
+    expect(row).toHaveTextContent('Score changed from');
+    expect(row).toHaveTextContent('38');
+    expect(row).toHaveTextContent('52');
+  });
+
+  it('shows no score row for a failed scoring', () => {
+    data().activities = [scoreActivity({ scoringStatus: 'FAILED' })];
+    openFirstActivity();
+    expect(screen.queryByTestId('score-change')).not.toBeInTheDocument();
+  });
+
+  it('offers no reply, react, note or share actions on a scoring event', () => {
+    data().activities = [scoreActivity({ previousScore: 0, newScore: 38, firstScore: true })];
+    openFirstActivity();
+    expect(screen.queryByText('Activity Feed Item Actions')).not.toBeInTheDocument();
+  });
+
+  it('still offers them on a note', () => {
+    data().activities = [noteActivity];
+    openFirstActivity();
+    expect(screen.getByText('Activity Feed Item Actions')).toBeInTheDocument();
   });
 });

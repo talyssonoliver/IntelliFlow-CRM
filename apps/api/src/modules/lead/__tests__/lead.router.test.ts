@@ -874,6 +874,150 @@ describe('Lead Router', () => {
       );
     });
 
+    // UI-021: first scores are marked, and a re-score that changed nothing is not logged.
+    const scoreResult = (overrides: Record<string, unknown> = {}) => ({
+      leadId: TEST_UUIDS.lead1,
+      previousScore: 38,
+      newScore: 38,
+      confidence: 0.55,
+      tier: 'COLD' as const,
+      autoQualified: false,
+      autoDisqualified: false,
+      ...overrides,
+    });
+
+    const scoreActivityCalls = () =>
+      prismaMock.leadActivity.create.mock.calls
+        .map(
+          ([arg]) => (arg as { data: { type: string; metadata?: Record<string, unknown> } }).data
+        )
+        .filter((d) => d.type === 'SCORE_UPDATE');
+
+    const SCORED_AT = new Date('2026-11-01T10:00:00.000Z');
+
+    /** The lead's scoring state read before and after the run (two findUnique calls). */
+    function scoringStates(
+      before: { scoringStatus: string; scoredAt: Date | null } | Error,
+      after: { scoringStatus: string; scoredAt: Date | null }
+    ) {
+      if (before instanceof Error) prismaMock.lead.findUnique.mockRejectedValueOnce(before);
+      else prismaMock.lead.findUnique.mockResolvedValueOnce(before as never);
+      prismaMock.lead.findUnique.mockResolvedValueOnce(after as never);
+    }
+
+    async function score(overrides: Record<string, unknown> = {}) {
+      const ctx = createTestContext();
+      ctx.services!.lead!.scoreLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: scoreResult(overrides),
+      });
+      return leadRouter.createCaller(ctx).scoreWithAI({ leadId: TEST_UUIDS.lead1 });
+    }
+
+    beforeEach(() => {
+      prismaMock.leadActivity.create.mockClear();
+      prismaMock.lead.findUnique.mockReset();
+    });
+
+    it('does not log a re-score that left the score and status unchanged (UI-021)', async () => {
+      scoringStates(
+        { scoringStatus: 'SCORED', scoredAt: SCORED_AT },
+        { scoringStatus: 'SCORED', scoredAt: SCORED_AT }
+      );
+      const result = await score();
+      expect(result.score).toBe(38);
+      expect(scoreActivityCalls()).toHaveLength(0);
+    });
+
+    it('logs an unchanged score whose status moved to NEEDS_REVIEW (UI-021)', async () => {
+      scoringStates(
+        { scoringStatus: 'SCORED', scoredAt: SCORED_AT },
+        { scoringStatus: 'NEEDS_REVIEW', scoredAt: SCORED_AT }
+      );
+      await score();
+      const logged = scoreActivityCalls();
+      expect(logged).toHaveLength(1);
+      expect(logged[0].metadata).toMatchObject({ firstScore: false });
+    });
+
+    it('logs a re-score that changed the score, marked as not a first score (UI-021)', async () => {
+      scoringStates(
+        { scoringStatus: 'NEEDS_REVIEW', scoredAt: SCORED_AT },
+        { scoringStatus: 'SCORED', scoredAt: SCORED_AT }
+      );
+      await score({ newScore: 52 });
+      const logged = scoreActivityCalls();
+      expect(logged).toHaveLength(1);
+      expect(logged[0].metadata).toMatchObject({
+        previousScore: 38,
+        newScore: 52,
+        firstScore: false,
+      });
+    });
+
+    it('treats a FAILED lead that kept an earlier real score as already scored (UI-021)', async () => {
+      scoringStates(
+        { scoringStatus: 'FAILED', scoredAt: SCORED_AT },
+        { scoringStatus: 'SCORED', scoredAt: SCORED_AT }
+      );
+      await score({ newScore: 52 });
+      const logged = scoreActivityCalls();
+      expect(logged).toHaveLength(1);
+      expect(logged[0].metadata).toMatchObject({
+        previousScore: 38,
+        newScore: 52,
+        firstScore: false,
+      });
+    });
+
+    it('logs a same-score recovery from FAILED, since the status changed (UI-021)', async () => {
+      scoringStates(
+        { scoringStatus: 'FAILED', scoredAt: SCORED_AT },
+        { scoringStatus: 'SCORED', scoredAt: SCORED_AT }
+      );
+      await score();
+      expect(scoreActivityCalls()).toHaveLength(1);
+    });
+
+    it('logs the first score of a never-scored lead as a first score (UI-021)', async () => {
+      scoringStates(
+        { scoringStatus: 'NONE', scoredAt: null },
+        { scoringStatus: 'SCORED', scoredAt: SCORED_AT }
+      );
+      await score({ previousScore: 0, newScore: 0 });
+      const logged = scoreActivityCalls();
+      expect(logged).toHaveLength(1);
+      expect(logged[0].metadata).toMatchObject({ newScore: 0, firstScore: true });
+    });
+
+    it('treats a FAILED lead that was never scored as a first score (UI-021)', async () => {
+      scoringStates(
+        { scoringStatus: 'FAILED', scoredAt: null },
+        { scoringStatus: 'SCORED', scoredAt: SCORED_AT }
+      );
+      await score({ previousScore: 0, newScore: 41 });
+      expect(scoreActivityCalls()[0].metadata).toMatchObject({ firstScore: true });
+    });
+
+    it('logs an unchanged score when it auto-qualified the lead (UI-021)', async () => {
+      scoringStates(
+        { scoringStatus: 'SCORED', scoredAt: SCORED_AT },
+        { scoringStatus: 'SCORED', scoredAt: SCORED_AT }
+      );
+      await score({ autoQualified: true });
+      expect(scoreActivityCalls()).toHaveLength(1);
+    });
+
+    it('makes no first-score claim when the prior state cannot be read (UI-021)', async () => {
+      scoringStates(new Error('read failed'), { scoringStatus: 'SCORED', scoredAt: SCORED_AT });
+      await score({ newScore: 52 });
+      const logged = scoreActivityCalls();
+      expect(logged).toHaveLength(1);
+      expect(logged[0].metadata).toMatchObject({ previousScore: 38, newScore: 52 });
+      expect(logged[0].metadata).not.toHaveProperty('firstScore');
+    });
+
     it('should throw NOT_FOUND for non-existent lead', async () => {
       const ctx = createTestContext();
       const callerWithService = leadRouter.createCaller(ctx);

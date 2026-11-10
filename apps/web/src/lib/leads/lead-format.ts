@@ -72,14 +72,38 @@ export function formatRelativeTime(dateString: string, timezone: string = 'Europ
 }
 
 /**
+ * A compact pound label for an amount in whole currency units:
+ * `50_000` -> `"£50k"`, `500` -> `"£500"`. The CRM works in GBP (UI-017).
+ */
+export function formatGBPCompact(amount: number): string {
+  // Round first, so 999.5 reads "£1k" rather than "£1000".
+  const whole = Math.round(amount);
+  if (whole >= 1000) return `£${Math.round(whole / 1000)}k`;
+  return `£${whole}`;
+}
+
+/**
  * Format a lead's estimated value — stored in CENTS per the domain contract
  * (packages/validators/src/lead.ts:36, packages/domain/src/crm/lead/Lead.ts:73) —
- * as a compact currency label: `5_000_000` cents -> `"$50k"`, `50_000` -> `"$500"`.
+ * as a compact pound label: `5_000_000` (pence) -> `"£50k"`, `50_000` -> `"£500"`.
  */
 export function formatEstimatedValue(cents: number): string {
-  const dollars = cents / 100;
-  if (dollars >= 1000) return `$${(dollars / 1000).toFixed(0)}k`;
-  return `$${dollars.toFixed(0)}`;
+  return formatGBPCompact(cents / 100);
+}
+
+/**
+ * Tags the COA pipeline sync writes for its own bookkeeping
+ * (`apps/api/src/modules/inbound/inbound.router.ts`): `coa-pipeline` and
+ * `coa-lead:<id>`. They stay on the lead (the sync matches on them) but are not
+ * the user's tags, so they are hidden wherever tags are shown (UI-017).
+ */
+export function isSystemTag(tag: string): boolean {
+  return tag === 'coa-pipeline' || tag.startsWith('coa-lead:');
+}
+
+/** The tags to show a user: everything except the system tags. */
+export function visibleTags(tags: readonly string[]): string[] {
+  return tags.filter((tag) => !isSystemTag(tag));
 }
 
 /** The parts of a lead that can name it. */
@@ -118,4 +142,35 @@ export function httpUrlOrNull(url: string | null | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Activity types that are system records rather than something a person did or
+ * wrote: a score change and a status change. They get no reply, reaction, note or
+ * share actions (UI-021).
+ */
+export function isSystemActivity(type: ActivityType): boolean {
+  return type === 'score_update' || type === 'status_change';
+}
+
+/**
+ * The from/to of a score-change activity, or null when the row has no new score
+ * (a failed scoring). `from` is null for a first score or a row with no prior value.
+ * The scoring API writes `previousScore`; older rows used `oldScore` (UI-021).
+ */
+export function describeScoreChange(
+  meta:
+    | Readonly<{
+        oldScore?: number | null;
+        previousScore?: number | null;
+        newScore?: number | null;
+        firstScore?: boolean;
+      }>
+    | null
+    | undefined
+): { from: number | null; to: number } | null {
+  if (!meta || typeof meta.newScore !== 'number') return null;
+  const prior = meta.previousScore ?? meta.oldScore;
+  const from = meta.firstScore === true || typeof prior !== 'number' ? null : prior;
+  return { from, to: meta.newScore };
 }

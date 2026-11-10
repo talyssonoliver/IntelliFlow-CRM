@@ -3,7 +3,12 @@ import {
   getActivityIcon,
   getActivityIconBg,
   formatRelativeTime,
+  describeScoreChange,
   formatEstimatedValue,
+  formatGBPCompact,
+  isSystemActivity,
+  isSystemTag,
+  visibleTags,
   httpUrlOrNull,
   leadDisplayName,
   type ActivityType,
@@ -82,18 +87,18 @@ describe('lead-format · formatRelativeTime', () => {
 });
 
 describe('lead-format · formatEstimatedValue', () => {
-  it('formats values >= $1,000 as compact thousands (cents in)', () => {
-    expect(formatEstimatedValue(5_000_000)).toBe('$50k');
-    expect(formatEstimatedValue(100_000_000)).toBe('$1000k');
+  it('formats values >= £1,000 as compact thousands (pence in)', () => {
+    expect(formatEstimatedValue(5_000_000)).toBe('£50k');
+    expect(formatEstimatedValue(100_000_000)).toBe('£1000k');
   });
 
-  it('formats sub-$1,000 values as whole dollars (no 100x error)', () => {
-    expect(formatEstimatedValue(50_000)).toBe('$500');
-    expect(formatEstimatedValue(99_900)).toBe('$999');
+  it('formats sub-£1,000 values as whole pounds (no 100x error)', () => {
+    expect(formatEstimatedValue(50_000)).toBe('£500');
+    expect(formatEstimatedValue(99_900)).toBe('£999');
   });
 
   it('formats zero', () => {
-    expect(formatEstimatedValue(0)).toBe('$0');
+    expect(formatEstimatedValue(0)).toBe('£0');
   });
 });
 
@@ -153,5 +158,76 @@ describe('httpUrlOrNull', () => {
     expect(httpUrlOrNull('/files/a.pdf')).toBeNull();
     expect(httpUrlOrNull('javascript:alert(1)')).toBeNull();
     expect(httpUrlOrNull('data:text/html,hi')).toBeNull();
+  });
+});
+
+describe('lead-format · formatGBPCompact (UI-017)', () => {
+  it('uses pounds, never dollars', () => {
+    expect(formatGBPCompact(50_000)).toBe('£50k');
+    expect(formatGBPCompact(999)).toBe('£999');
+    expect(formatGBPCompact(0)).toBe('£0');
+  });
+
+  it('rounds before choosing the compact form', () => {
+    expect(formatGBPCompact(999.5)).toBe('£1k');
+    expect(formatGBPCompact(999.4)).toBe('£999');
+    expect(formatEstimatedValue(99_950)).toBe('£1k');
+  });
+});
+
+describe('lead-format · system tags (UI-017)', () => {
+  it('recognises the COA sync bookkeeping tags', () => {
+    expect(isSystemTag('coa-pipeline')).toBe(true);
+    expect(isSystemTag('coa-lead:abc123')).toBe(true);
+    expect(isSystemTag('vip')).toBe(false);
+    expect(isSystemTag('coa-pipeline-old')).toBe(false);
+    expect(isSystemTag('my-coa-lead:1')).toBe(false);
+  });
+
+  it('keeps only the user tags, in order', () => {
+    expect(visibleTags(['vip', 'coa-pipeline', 'coa-lead:1', 'restaurant'])).toEqual([
+      'vip',
+      'restaurant',
+    ]);
+    expect(visibleTags([])).toEqual([]);
+  });
+});
+
+describe('lead-format · score-change activity (UI-021)', () => {
+  it('reads the previousScore the scoring API writes', () => {
+    expect(describeScoreChange({ previousScore: 38, newScore: 52 })).toEqual({ from: 38, to: 52 });
+  });
+
+  it('falls back to the older oldScore name', () => {
+    expect(describeScoreChange({ oldScore: 10, newScore: 20 })).toEqual({ from: 10, to: 20 });
+  });
+
+  it('has no "from" for a first score or a row without a prior value', () => {
+    expect(describeScoreChange({ previousScore: 0, newScore: 38, firstScore: true })).toEqual({
+      from: null,
+      to: 38,
+    });
+    expect(describeScoreChange({ newScore: 38 })).toEqual({ from: null, to: 38 });
+  });
+
+  it('keeps a real change to or from zero', () => {
+    expect(describeScoreChange({ previousScore: 0, newScore: 38, firstScore: false })).toEqual({
+      from: 0,
+      to: 38,
+    });
+  });
+
+  it('returns null when there is no new score (a failed scoring)', () => {
+    expect(describeScoreChange({ previousScore: 38 })).toBeNull();
+    expect(describeScoreChange(null)).toBeNull();
+    expect(describeScoreChange(undefined)).toBeNull();
+  });
+
+  it('treats score and status changes as system records', () => {
+    expect(isSystemActivity('score_update')).toBe(true);
+    expect(isSystemActivity('status_change')).toBe(true);
+    expect(isSystemActivity('note')).toBe(false);
+    expect(isSystemActivity('email')).toBe(false);
+    expect(isSystemActivity('call')).toBe(false);
   });
 });
