@@ -2,7 +2,8 @@
  * Tests for scripts/lib/preship-affected.mjs — which packages the local pre-ship
  * library-build, typecheck and build steps cover.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import path from 'node:path';
 
 import {
   AFFECTED_ENV,
@@ -13,6 +14,7 @@ import {
   isTestOrDoc,
   libraryBuildFilters,
   resolveAffected,
+  runLibraryBuild,
   typecheckFilters,
 } from '../lib/preship-affected.mjs';
 
@@ -211,5 +213,110 @@ describe('affectedFromEnvOrResolve', () => {
   it('resolves afresh (full under CI) when the hand-off is malformed', () => {
     const r = affectedFromEnvOrResolve({ cwd: '.', env: { [AFFECTED_ENV]: '{', CI: 'true' } });
     expect(r.mode).toBe('full');
+  });
+});
+
+describe('runLibraryBuild', () => {
+  const scope = (over = {}) => ({
+    mode: 'affected',
+    reason: 'r',
+    packages: ['@intelliflow/web', '@intelliflow/ui'],
+    testsOrDocsOnly: false,
+    outsidePackages: false,
+    ...over,
+  });
+
+  it('builds the affected libraries and the dependencies of affected apps', () => {
+    const spawn = vi.fn(() => ({ status: 0 }));
+    const code = runLibraryBuild({
+      scope: scope(),
+      root: 'repo',
+      spawn,
+      execPath: 'node-bin',
+      log: () => {},
+    });
+    expect(code).toBe(0);
+    expect(spawn).toHaveBeenCalledWith(
+      'node-bin',
+      [
+        path.join('repo', 'node_modules', 'turbo', 'bin', 'turbo'),
+        'run',
+        'build',
+        '--filter=@intelliflow/ui',
+        '--filter=@intelliflow/web^...',
+      ],
+      { cwd: 'repo', stdio: 'inherit' }
+    );
+  });
+
+  it('builds every library on a full scope, as before', () => {
+    const spawn = vi.fn(() => ({ status: 0 }));
+    runLibraryBuild({
+      scope: scope({ mode: 'full', packages: [] }),
+      root: 'repo',
+      spawn,
+      log: () => {},
+    });
+    expect(spawn.mock.calls[0][1].slice(1)).toEqual([
+      'run',
+      'build',
+      '--filter=!@intelliflow/web',
+      '--filter=!@intelliflow/api',
+      '--filter=!@intelliflow/project-tracker',
+      '--filter=!@intelliflow/workers',
+    ]);
+  });
+
+  it('spawns nothing when nothing is affected', () => {
+    const spawn = vi.fn();
+    const code = runLibraryBuild({
+      scope: scope({ mode: 'none', packages: [] }),
+      root: 'r',
+      spawn,
+      log: () => {},
+    });
+    expect(code).toBe(0);
+    expect(spawn).not.toHaveBeenCalled();
+  });
+
+  it('fails when turbo cannot start or exits non-zero', () => {
+    const log = vi.fn();
+    const failed = vi.fn(() => ({ error: new Error('ENOENT'), status: null }));
+    expect(runLibraryBuild({ scope: scope(), root: 'r', spawn: failed, log })).toBe(1);
+    expect(log.mock.calls.at(-1)[0]).toContain('could not start turbo: ENOENT');
+    expect(runLibraryBuild({ scope: scope(), root: 'r', spawn: () => ({ status: 3 }), log })).toBe(
+      3
+    );
+  });
+});
+
+describe('resolveAffected against this checkout', () => {
+  it('reads the real diff and workspace, ignoring a git hook GIT_DIR', () => {
+    const r = resolveAffected({ cwd: process.cwd(), env: { GIT_DIR: '/nowhere/.git' } });
+    expect(['full', 'affected', 'none']).toContain(r.mode);
+  });
+
+  it('is full against a base ref that does not exist', () => {
+    expect(
+      resolveAffected({ cwd: process.cwd(), env: {}, baseRef: 'refs/heads/no-such-base' }).mode
+    ).toBe('full');
+  });
+
+  it('defaults to the process env', () => {
+    expect(['full', 'affected', 'none']).toContain(resolveAffected({ cwd: process.cwd() }).mode);
+  });
+
+  it('is none when nothing changed', () => {
+    const r = resolveAffected({
+      cwd: '.',
+      env: {},
+      packages,
+      git: fakeGit({ 'merge-base': 'abc\n', diff: '', 'ls-files': '' }),
+    });
+    expect(r).toMatchObject({ mode: 'none', testsOrDocsOnly: true, outsidePackages: false });
+  });
+
+  it('resolves afresh when no scope was handed down', () => {
+    expect(affectedFromEnvOrResolve({ cwd: '.', env: { CI: 'true' } }).mode).toBe('full');
   });
 });

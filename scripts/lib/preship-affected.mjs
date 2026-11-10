@@ -20,6 +20,7 @@
  * production `build` step has nothing new to compile and is skipped.
  */
 
+import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { classify, readWorkspacePackages } from '../ci/affected.mjs';
 
@@ -197,4 +198,30 @@ export function describeScope(scope, filters) {
   if (filters === null) return `all packages (${scope.mode}: ${scope.reason})`;
   if (filters.length === 0) return `nothing to do (${scope.mode}: ${scope.reason})`;
   return `${filters.join(' ')} (${scope.reason})`;
+}
+
+/**
+ * Pre-ship's library-build step for a resolved scope. Turbo is spawned through
+ * node (no shell); `spawn` is spawnSync-shaped. Returns the exit status.
+ * @param {{scope: object, root: string, spawn: Function, execPath?: string,
+ *          log?: (s: string) => void}} opts
+ */
+export function runLibraryBuild({
+  scope,
+  root,
+  spawn,
+  execPath = process.execPath,
+  log = console.log,
+}) {
+  const filters = libraryBuildFilters(scope);
+  log(`library-build: scope ${describeScope(scope, filters)}`);
+  if (Array.isArray(filters) && filters.length === 0) return 0;
+  const args = ['run', 'build', ...(filters ?? APP_PACKAGES.map((p) => `--filter=!${p}`))];
+  log(`library-build: turbo ${args.join(' ')}`);
+  const r = spawn(execPath, [path.join(root, 'node_modules', 'turbo', 'bin', 'turbo'), ...args], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+  if (r.error) log(`library-build: could not start turbo: ${r.error.message}`);
+  return r.status ?? 1;
 }
