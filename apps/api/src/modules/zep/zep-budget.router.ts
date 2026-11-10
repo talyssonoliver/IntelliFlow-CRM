@@ -17,6 +17,7 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, platformAdminProcedure, tenantProcedure } from '../../trpc';
 import type { Context } from '../../context';
+import { getTenantContext } from '../../security/tenant-context';
 
 /**
  * Budget status response schema
@@ -136,10 +137,7 @@ async function readAudit(
  * tenant (older clients send it); any other value is refused.
  */
 function ownTenant(ctx: Context, requested: string | undefined): string {
-  const tenantId = ctx.user?.tenantId;
-  if (!tenantId) {
-    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Tenant context required' });
-  }
+  const { tenantId } = getTenantContext(ctx).tenant;
   if (requested !== undefined && requested !== tenantId) {
     throw new TRPCError({
       code: 'FORBIDDEN',
