@@ -1,13 +1,33 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 
 // Mock tRPC — RevenueWidget reads analytics.getOverview for the total and
 // analytics.getTimeSeriesData for the bar chart (RevenueWidget.tsx:21-27).
 const overviewQueryMock = vi.fn<
-  () => { data?: { totalRevenue: number; revenueDelta: number }; isLoading: boolean }
+  () => {
+    data?: { totalRevenue: number; revenueDelta: number };
+    isLoading: boolean;
+    isError?: boolean;
+  }
 >(() => ({
   data: { totalRevenue: 124500, revenueDelta: 0 },
+  isLoading: false,
+}));
+
+const timeSeriesQueryMock = vi.fn<
+  () => {
+    data?: Array<{ date: string; value: number }>;
+    isLoading: boolean;
+    isError?: boolean;
+    refetch?: () => void;
+  }
+>(() => ({
+  data: [
+    { date: '2026-04-09', value: 10000 },
+    { date: '2026-04-10', value: 15000 },
+    { date: '2026-04-11', value: 20000 },
+  ],
   isLoading: false,
 }));
 
@@ -18,14 +38,7 @@ vi.mock('@/lib/trpc', () => ({
         useQuery: () => overviewQueryMock(),
       },
       getTimeSeriesData: {
-        useQuery: () => ({
-          data: [
-            { date: '2026-04-09', value: 10000 },
-            { date: '2026-04-10', value: 15000 },
-            { date: '2026-04-11', value: 20000 },
-          ],
-          isLoading: false,
-        }),
+        useQuery: () => timeSeriesQueryMock(),
       },
     },
   },
@@ -52,5 +65,29 @@ describe('RevenueWidget', () => {
 
     expect(screen.getByText('...')).toBeInTheDocument();
     expect(screen.queryByText('£0')).not.toBeInTheDocument();
+  });
+
+  it('says the chart request failed and retries instead of showing an empty period', () => {
+    const refetch = vi.fn();
+    timeSeriesQueryMock.mockReturnValueOnce({
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      refetch,
+    });
+    render(<RevenueWidget config={{ timeRange: 'week' }} />);
+
+    expect(screen.queryByTestId('chart-empty')).not.toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent("Couldn't load revenue.");
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('says the total is unavailable when the overview request fails', () => {
+    overviewQueryMock.mockReturnValueOnce({ data: undefined, isLoading: false, isError: true });
+    render(<RevenueWidget config={{ timeRange: 'week' }} />);
+
+    expect(screen.getByText('Unavailable')).toBeInTheDocument();
+    expect(screen.queryByText('...')).not.toBeInTheDocument();
   });
 });
