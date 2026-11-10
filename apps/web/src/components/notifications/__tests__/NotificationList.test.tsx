@@ -148,6 +148,34 @@ describe('NotificationList', () => {
     expect(screen.getByText('No notifications match your filters.')).toBeInTheDocument();
   });
 
+  it('offers Clear filters on a filtered empty list (a tab counts) and calls the handler', () => {
+    mockHookReturn.items = [];
+    const onClearFilters = vi.fn();
+    render(
+      <NotificationList
+        filters={{ searchQuery: '', typeFilter: '', priorityFilter: '', activeTab: 'unread' }}
+        onMarkAsRead={vi.fn()}
+        onDismiss={vi.fn()}
+        onClearFilters={onClearFilters}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    expect(onClearFilters).toHaveBeenCalledTimes(1);
+  });
+
+  it('offers no Clear filters when nothing is filtered', () => {
+    mockHookReturn.items = [];
+    render(
+      <NotificationList
+        filters={{ searchQuery: '', typeFilter: '', priorityFilter: '', activeTab: 'all' }}
+        onMarkAsRead={vi.fn()}
+        onDismiss={vi.fn()}
+        onClearFilters={vi.fn()}
+      />
+    );
+    expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
+  });
+
   it('shows error message with retry button on error', () => {
     mockHookReturn.isError = true;
     mockHookReturn.error = new Error('Network error');

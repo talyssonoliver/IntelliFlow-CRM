@@ -308,8 +308,24 @@ export function AppointmentList({
         <div data-testid="list-empty">
           <EmptyState
             entity="appointments"
+            variant={hasActiveFilters ? 'filtered' : 'empty'}
             showCta={!hasActiveFilters}
             ctaHref="/appointments/new"
+            action={
+              hasActiveFilters
+                ? {
+                    label: 'Clear filters',
+                    onClick: () =>
+                      onFilterChange({
+                        search: '',
+                        status: '',
+                        appointmentType: '',
+                        startTimeFrom: undefined,
+                        startTimeTo: undefined,
+                      }),
+                  }
+                : undefined
+            }
           />
         </div>
       )}

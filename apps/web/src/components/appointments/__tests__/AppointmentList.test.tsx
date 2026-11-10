@@ -32,6 +32,34 @@ describe('AppointmentList', () => {
     expect(screen.getByTestId('appointment-list')).toBeInTheDocument();
   });
 
+  it('a filtered empty list offers Clear filters, which resets every filter but the sort', () => {
+    const onFilterChange = vi.fn();
+    render(
+      <AppointmentList
+        {...defaultProps}
+        appointments={[]}
+        total={0}
+        filters={{ ...defaultFilters, search: 'hearing', status: 'SCHEDULED' as never }}
+        onFilterChange={onFilterChange}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+
+    expect(onFilterChange).toHaveBeenCalledWith({
+      search: '',
+      status: '',
+      appointmentType: '',
+      startTimeFrom: undefined,
+      startTimeTo: undefined,
+    });
+  });
+
+  it('an unfiltered empty list offers no Clear filters', () => {
+    render(<AppointmentList {...defaultProps} appointments={[]} total={0} />);
+    expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
+  });
+
   it('renders loading skeleton', () => {
     render(<AppointmentList {...defaultProps} isLoading />);
     expect(screen.getByTestId('list-skeleton')).toBeInTheDocument();

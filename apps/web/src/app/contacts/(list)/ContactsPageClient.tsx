@@ -142,6 +142,19 @@ export default function ContactsPageClient({
     if (label?.htmlFor) document.getElementById(label.htmlFor)?.focus();
   };
 
+  // The filtered empty state's "Clear filters": every search and filter, back to page 1.
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setDepartmentFilter('');
+    setStatusFilter('');
+    setCompanyFilter('');
+    setTypeFilter('');
+    setSegmentFilter('');
+    setCurrentPage(1);
+    clearSegmentFromUrl();
+    setFilterAnnouncement('Filters cleared');
+  };
+
   // Dynamic filter options - updates based on current filter state
   const { statusOptions, departmentOptions, accountOptions } = useContactFilterOptions({
     search: debouncedSearch || undefined,
@@ -547,6 +560,7 @@ export default function ContactsPageClient({
             typeFilter ||
             segmentFilter
           )}
+          onClearFilters={clearAllFilters}
         />
       )}
 

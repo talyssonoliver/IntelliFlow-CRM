@@ -146,6 +146,8 @@ interface AccountsContentProps {
   totalItems: number;
   onPageChange: (page: number) => void;
   hasFilters: boolean;
+  /** Clears every search and filter; offered by the filtered empty state. */
+  onClearFilters: () => void;
 }
 
 function AccountsContent({
@@ -158,6 +160,7 @@ function AccountsContent({
   totalItems,
   onPageChange,
   hasFilters,
+  onClearFilters,
 }: Readonly<AccountsContentProps>) {
   if (isLoading) {
     return (
@@ -175,6 +178,7 @@ function AccountsContent({
         variant={hasFilters ? 'filtered' : 'empty'}
         showCta={!hasFilters}
         ctaHref="/accounts/new"
+        action={hasFilters ? { label: 'Clear filters', onClick: onClearFilters } : undefined}
       />
     );
   }
@@ -478,6 +482,13 @@ export default function AccountsPageClient({
           totalItems={totalItems}
           onPageChange={setCurrentPage}
           hasFilters={!!(searchQuery || industryFilter || ownerFilter || tierFilter.active)}
+          onClearFilters={() => {
+            setSearchQuery('');
+            setIndustryFilter('');
+            setOwnerFilter('');
+            tierFilter.clear();
+            setCurrentPage(1);
+          }}
         />
       )}
     </div>

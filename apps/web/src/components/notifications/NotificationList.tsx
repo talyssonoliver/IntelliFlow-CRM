@@ -10,12 +10,15 @@ interface NotificationListProps {
   filters: NotificationFiltersState;
   onMarkAsRead: (id: string) => void;
   onDismiss: (id: string) => void;
+  /** Clears the search, type, priority and tab; offered by the filtered empty state. */
+  onClearFilters?: () => void;
 }
 
 export function NotificationList({
   filters,
   onMarkAsRead,
   onDismiss,
+  onClearFilters,
 }: Readonly<NotificationListProps>) {
   const {
     items,
@@ -99,6 +102,11 @@ export function NotificationList({
           entity="notifications"
           variant={hasActiveFilters ? 'filtered' : 'empty'}
           showCta={false}
+          action={
+            hasActiveFilters && onClearFilters
+              ? { label: 'Clear filters', onClick: onClearFilters }
+              : undefined
+          }
         />
       </div>
     );
