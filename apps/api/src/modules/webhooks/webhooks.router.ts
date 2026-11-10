@@ -8,6 +8,10 @@
  * - Monitor webhook metrics
  *
  * Uses WebhookServicePort from application layer.
+ *
+ * Everything except handleWebhook acts on the platform-wide source registry, retry queue
+ * and dead-letter queue, which hold every tenant's deliveries, so it is limited to platform
+ * operators (platformAdminProcedure, ADR-070), not tenant admins.
  * Handles DuplicateWebhookError and other webhook-specific errors.
  *
  * @implements IFC-144: Webhook Infrastructure with Idempotency and Retries
@@ -15,7 +19,7 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
-import { createTRPCRouter, publicProcedure, protectedProcedure, adminProcedure } from '../../trpc';
+import { createTRPCRouter, publicProcedure, platformAdminProcedure } from '../../trpc';
 import { mapErrorToTRPCError } from '../../shared/error-mapper';
 import type { Context } from '../../context';
 
@@ -111,40 +115,40 @@ export const webhooksRouter = createTRPCRouter({
 
   /**
    * Register a new webhook source
-   * Admin only (SEC-003): registering a webhook source configures how the
-   * platform trusts inbound callers, so it must be gated by adminProcedure
-   * (isAuthed + isAdmin), not merely protectedProcedure (any authed user).
+   * Platform operators only: registering a webhook source configures how the
+   * whole platform trusts inbound callers, which no single tenant's admin owns.
    */
-  registerSource: adminProcedure.input(registerSourceSchema).mutation(async ({ ctx, input }) => {
-    const service = await getWebhookService(ctx);
+  registerSource: platformAdminProcedure
+    .input(registerSourceSchema)
+    .mutation(async ({ ctx, input }) => {
+      const service = await getWebhookService(ctx);
 
-    try {
-      service.registerSource({
-        name: input.name,
-        secret: input.secret,
-        signatureHeader: input.signatureHeader,
-        signatureVerifier: input.signatureVerifier,
-        enabled: input.enabled,
-        allowedEvents: input.allowedEvents,
-        metadata: input.metadata,
-      });
+      try {
+        service.registerSource({
+          name: input.name,
+          secret: input.secret,
+          signatureHeader: input.signatureHeader,
+          signatureVerifier: input.signatureVerifier,
+          enabled: input.enabled,
+          allowedEvents: input.allowedEvents,
+          metadata: input.metadata,
+        });
 
-      return {
-        success: true,
-        sourceName: input.name,
-        message: 'Webhook source registered successfully',
-      };
-    } catch (error) {
-      throw mapErrorToTRPCError(error);
-    }
-  }),
+        return {
+          success: true,
+          sourceName: input.name,
+          message: 'Webhook source registered successfully',
+        };
+      } catch (error) {
+        throw mapErrorToTRPCError(error);
+      }
+    }),
 
   /**
    * Unregister a webhook source
-   * Admin only (SEC-003): mirrors registerSource — mutating the trusted webhook
-   * source registry is an admin operation, gated by adminProcedure.
+   * Platform operators only: mirrors registerSource.
    */
-  unregisterSource: adminProcedure
+  unregisterSource: platformAdminProcedure
     .input(z.object({ name: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
       const service = await getWebhookService(ctx);
@@ -171,7 +175,7 @@ export const webhooksRouter = createTRPCRouter({
   /**
    * Get registered webhook sources
    */
-  getSources: protectedProcedure.query(async ({ ctx }) => {
+  getSources: platformAdminProcedure.query(async ({ ctx }) => {
     const service = await getWebhookService(ctx);
 
     try {
@@ -188,7 +192,7 @@ export const webhooksRouter = createTRPCRouter({
   /**
    * Get webhook metrics
    */
-  getMetrics: protectedProcedure.query(async ({ ctx }) => {
+  getMetrics: platformAdminProcedure.query(async ({ ctx }) => {
     const service = await getWebhookService(ctx);
 
     try {
@@ -203,7 +207,7 @@ export const webhooksRouter = createTRPCRouter({
    * Process pending webhook retries
    * Manual trigger for retry processing
    */
-  processRetries: protectedProcedure.mutation(async ({ ctx }) => {
+  processRetries: platformAdminProcedure.mutation(async ({ ctx }) => {
     const service = await getWebhookService(ctx);
 
     try {
@@ -223,7 +227,7 @@ export const webhooksRouter = createTRPCRouter({
    * Get dead letter entries
    * Returns failed webhooks that exceeded retry limit
    */
-  getDeadLetterEntries: protectedProcedure.query(async ({ ctx }) => {
+  getDeadLetterEntries: platformAdminProcedure.query(async ({ ctx }) => {
     const service = await getWebhookService(ctx);
 
     try {
@@ -241,7 +245,7 @@ export const webhooksRouter = createTRPCRouter({
    * Reprocess a dead letter entry
    * Allows manual retry of failed webhooks
    */
-  reprocessDeadLetter: protectedProcedure
+  reprocessDeadLetter: platformAdminProcedure
     .input(reprocessDeadLetterSchema)
     .mutation(async ({ ctx, input }) => {
       const service = await getWebhookService(ctx);
@@ -269,7 +273,7 @@ export const webhooksRouter = createTRPCRouter({
    * Cleanup expired idempotency entries
    * Should be called periodically via cron job
    */
-  cleanup: protectedProcedure.mutation(async ({ ctx }) => {
+  cleanup: platformAdminProcedure.mutation(async ({ ctx }) => {
     const service = await getWebhookService(ctx);
 
     try {
