@@ -1,0 +1,228 @@
+/**
+ * Changed-files scope for the local pre-ship format-check, lint and lint-promises
+ * steps.
+ *
+ * Those three steps used to run over the whole monorepo on every push, so a
+ * four-file UI change spent about four and a half minutes re-checking thousands
+ * of files nobody touched. Locally they now check only the files that differ
+ * from the merge-base with origin/main. CI keeps its own scope (scripts/ci/
+ * affected.mjs) and is the safety net for anything a file-level check cannot see.
+ *
+ * Scopes:
+ *   full    — check everything. Always under CI, on PRESHIP_FULL_LINT=1, when
+ *             the base ref cannot be resolved, when git fails, or when a changed
+ *             file configures the checks themselves (eslint, prettier, tsconfig,
+ *             any package.json, the lockfile, the in-repo eslint rules).
+ *   changed — check only `files`.
+ *
+ * "Changed" is the same set the test scope uses (scripts/lib/preship-test-scope.mjs):
+ * committed, staged, unstaged and untracked files against the merge-base, minus
+ * deletions. A dirty tree can only widen the set, never narrow it.
+ */
+
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+
+export const DEFAULT_BASE_REF = 'origin/main';
+
+/** Env var that forces the repo-wide checks locally. */
+export const FULL_LINT_ENV = 'PRESHIP_FULL_LINT';
+
+/**
+ * Files that change how OTHER files are formatted or linted. Any one of them in
+ * the diff sends all three steps back to their repo-wide form.
+ */
+export const LINT_CONFIG_PATTERNS = [
+  /(^|\/)package\.json$/,
+  /^pnpm-lock\.yaml$/,
+  /^pnpm-workspace\.yaml$/,
+  /(^|\/)\.npmrc$/,
+  /(^|\/)tsconfig[^/]*\.json$/,
+  /(^|\/)eslint\.[^/]*config\.[cm]?[jt]s$/,
+  /(^|\/)\.eslintignore$/,
+  /(^|\/)\.eslintrc[^/]*$/,
+  /(^|\/)\.prettierrc[^/]*$/,
+  /(^|\/)\.prettierignore$/,
+  /(^|\/)prettier\.config\.[cm]?js$/,
+  /^\.editorconfig$/,
+  /^eslint-rules\//,
+  /^tools\/eslint\//,
+  /^tools\/lint\//,
+  /^packages\/typescript-config\//,
+  /^scripts\/lint-promises\.mjs$/,
+  /^scripts\/run-scoped-lint\.mjs$/,
+  /^scripts\/lib\/preship-lint-scope\.mjs$/,
+];
+
+/** The globs `format:check` passes to prettier, as one test. */
+export const FORMAT_EXTENSION = /\.(ts|tsx|md|json|yml|yaml)$/;
+
+const LINT_EXTENSION = /\.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$/;
+
+/**
+ * Pure classification of a changed-file list. Exported for tests.
+ * @param {string[]} changedFiles repo-relative, forward-slash paths
+ * @returns {{scope: 'full'|'changed', reason: string, files: string[]}}
+ */
+export function classifyLintFiles(changedFiles) {
+  const unique = [
+    ...new Set(changedFiles.map((f) => f.replace(/\\/g, '/')).filter(Boolean)),
+  ].sort();
+  const configHit = unique.find((f) => LINT_CONFIG_PATTERNS.some((re) => re.test(f)));
+  if (configHit) {
+    return {
+      scope: 'full',
+      reason: `${configHit} changed — it can change how unchanged files are checked`,
+      files: [],
+    };
+  }
+  return { scope: 'changed', reason: `${unique.length} changed file(s)`, files: unique };
+}
+
+/** process.env without the GIT_* variables a git hook exports (see preship-test-scope). */
+function gitEnv(env) {
+  const out = { ...env };
+  for (const k of Object.keys(out)) if (k.startsWith('GIT_')) delete out[k];
+  return out;
+}
+
+function defaultGit(args, cwd, env) {
+  const r = spawnSync('git', args, {
+    cwd,
+    env: gitEnv(env),
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    maxBuffer: 64 * 1024 * 1024,
+  });
+  return r.status === 0 ? r.stdout : null;
+}
+
+function lines(out) {
+  return (out || '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Resolve the lint scope for this checkout.
+ * @param {{cwd: string, env?: NodeJS.ProcessEnv, baseRef?: string, git?: Function}} opts
+ */
+export function resolveLintScope({
+  cwd,
+  env = process.env,
+  baseRef = DEFAULT_BASE_REF,
+  git = defaultGit,
+}) {
+  if (env.CI === 'true' || env.CI === '1') {
+    return { scope: 'full', reason: 'CI checks the whole repo', files: [] };
+  }
+  if (env[FULL_LINT_ENV] === '1') {
+    return { scope: 'full', reason: `${FULL_LINT_ENV}=1`, files: [] };
+  }
+  const base = (git(['merge-base', 'HEAD', baseRef], cwd, env) || '').trim();
+  if (!base) {
+    return { scope: 'full', reason: `cannot resolve merge-base with ${baseRef}`, files: [] };
+  }
+  const tracked = git(['diff', '--name-only', '--diff-filter=ACMR', base], cwd, env);
+  const untracked = git(['ls-files', '--others', '--exclude-standard'], cwd, env);
+  if (tracked === null || untracked === null) {
+    return { scope: 'full', reason: 'git diff failed', files: [] };
+  }
+  return classifyLintFiles([...lines(tracked), ...lines(untracked)]);
+}
+
+/** The changed files prettier's `format:check` globs would have covered. */
+export function formatTargets(files) {
+  return files.filter((f) => FORMAT_EXTENSION.test(f));
+}
+
+/**
+ * The eslint globs a package's `lint` script passes, or null when the script is
+ * not a plain `eslint <globs...>` call (the caller then runs that package's own
+ * lint script whole). Exported for tests.
+ * @param {string|undefined} script
+ * @returns {string[]|null}
+ */
+export function eslintGlobs(script) {
+  if (typeof script !== 'string') return null;
+  const m = /^eslint((?:\s+(?:"[^"]+"|'[^']+'|[^\s-][^\s]*))+)\s*$/.exec(script.trim());
+  if (!m) return null;
+  const globs = [...m[1].matchAll(/"([^"]+)"|'([^']+)'|(\S+)/g)].map((x) => x[1] ?? x[2] ?? x[3]);
+  return globs.map((g) => (g === '.' ? '**/*' : g.replace(/^\.\//, '').replace(/\/$/, '/**/*')));
+}
+
+/**
+ * Group changed files by the workspace package whose `lint` script would have
+ * linted them. Files no package lints (root scripts, docs) are left out, exactly
+ * as `turbo run lint` leaves them out.
+ *
+ * @param {string[]} files repo-relative changed files
+ * @param {{name: string, dir: string, lint?: string}[]} packages
+ * @param {(file: string, glob: string) => boolean} matches
+ * @returns {{eslint: {name: string, dir: string, files: string[]}[], whole: string[]}}
+ *   `eslint`: per-package files to lint in that package's directory;
+ *   `whole`: packages whose lint script is not plain eslint, to run as-is.
+ */
+export function lintPlan(files, packages, matches = path.posix.matchesGlob) {
+  const deepestFirst = [...packages].sort((a, b) => b.dir.length - a.dir.length);
+  const perPackage = new Map();
+  const whole = new Set();
+  for (const f of files) {
+    if (!LINT_EXTENSION.test(f)) continue;
+    const pkg = deepestFirst.find((p) => f.startsWith(p.dir + '/'));
+    if (!pkg || typeof pkg.lint !== 'string') continue;
+    const globs = eslintGlobs(pkg.lint);
+    if (globs === null) {
+      whole.add(pkg.name);
+      continue;
+    }
+    const rel = f.slice(pkg.dir.length + 1);
+    if (!globs.some((g) => matches(rel, g))) continue;
+    if (!perPackage.has(pkg.name))
+      perPackage.set(pkg.name, { name: pkg.name, dir: pkg.dir, files: [] });
+    perPackage.get(pkg.name).files.push(rel);
+  }
+  return {
+    eslint: [...perPackage.values()].sort((a, b) => a.name.localeCompare(b.name)),
+    whole: [...whole].sort(),
+  };
+}
+
+/**
+ * Group changed files under the type-aware lint's source roots
+ * (eslint.promises.config.mjs). One eslint run per root keeps each TypeScript
+ * program small, as scripts/lint-promises.mjs does.
+ * @param {string[]} files
+ * @param {string[]} roots
+ * @returns {{root: string, files: string[]}[]}
+ */
+export function promisesPlan(files, roots) {
+  const out = [];
+  for (const root of roots) {
+    const inRoot = files.filter((f) => f.startsWith(root + '/') && /\.(ts|tsx)$/.test(f));
+    if (inRoot.length) out.push({ root, files: inRoot });
+  }
+  return out;
+}
+
+/**
+ * Split an argv list into chunks whose joined length stays well under the
+ * Windows 32K command-line ceiling.
+ */
+export function chunkArgs(items, maxChars = 6000) {
+  const chunks = [];
+  let cur = [];
+  let len = 0;
+  for (const it of items) {
+    if (cur.length && len + it.length + 1 > maxChars) {
+      chunks.push(cur);
+      cur = [];
+      len = 0;
+    }
+    cur.push(it);
+    len += it.length + 1;
+  }
+  if (cur.length) chunks.push(cur);
+  return chunks;
+}
