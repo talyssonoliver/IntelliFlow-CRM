@@ -1391,3 +1391,39 @@ describe('LeadDetailPage - Lead IQ card (#1277)', () => {
     expect(screen.queryByText('BETA')).not.toBeInTheDocument();
   });
 });
+
+describe('LeadDetailPage - object-shaped recommendations (#1277 review)', () => {
+  afterEach(() => {
+    (mockLeadQueryState.data as unknown as { aiInsights: unknown[] }).aiInsights = [];
+  });
+
+  it('renders the AI tab, with the texts, when recommendations are stored as an object', () => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    (mockLeadQueryState.data as unknown as { aiInsights: unknown[] }).aiInsights = [
+      {
+        id: 'insight-1',
+        engagementScore: 60,
+        conversionProbability: 48,
+        estimatedValue: 0,
+        churnRisk: 'LOW',
+        sentiment: 'POSITIVE',
+        sentimentTrend: 'stable',
+        lastEngagementDays: 2,
+        nextBestAction: null,
+        recommendations: {
+          texts: ['Follow up this week'],
+          emotions: ['joy'],
+          keyPhrases: ['pricing'],
+          primaryEmotion: 'joy',
+        },
+        icpMatch: 'Good Match',
+      },
+    ];
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /AI Insights/i }));
+
+    expect(screen.getAllByText('Follow up this week').length).toBeGreaterThan(0);
+  });
+});

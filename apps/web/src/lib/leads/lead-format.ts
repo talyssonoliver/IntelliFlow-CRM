@@ -157,3 +157,17 @@ export function leadDisplayName(lead: Readonly<LeadNameParts>): string {
     .join(' ');
   return personName || lead.company?.trim() || lead.email?.trim() || 'Unnamed lead';
 }
+
+/**
+ * The recommendation texts of a stored LeadAIInsight. The column is JSON with two shapes
+ * in production: a plain string[] (scoring) and, when sentiment data exists, an object
+ * `{ texts, emotions, keyPhrases, primaryEmotion }` (intelligence router). Anything else
+ * reads as no recommendations, never as a crash.
+ */
+export function insightRecommendations(raw: unknown): string[] {
+  const strings = (value: unknown): string[] =>
+    Array.isArray(value) ? value.filter((r): r is string => typeof r === 'string') : [];
+  if (Array.isArray(raw)) return strings(raw);
+  if (raw && typeof raw === 'object') return strings((raw as { texts?: unknown }).texts);
+  return [];
+}

@@ -93,6 +93,7 @@ import {
   getActivityIconBg,
   formatEstimatedValue,
   formatRelativeTime,
+  insightRecommendations,
   leadDisplayName,
 } from '@/lib/leads/lead-format';
 import { LeadTimeline } from '@/components/leads/lead-timeline';
@@ -187,7 +188,7 @@ function buildNextBestActions(insight: {
     const icon = resolveActionIcon(insight.nextBestAction.toUpperCase());
     actions.push({ icon, label: insight.nextBestAction, primary: true });
   }
-  const recs = (insight.recommendations as string[]) || [];
+  const recs = insightRecommendations(insight.recommendations);
   if (recs.length > 0 && recs[0] !== insight.nextBestAction) {
     actions.push({ icon: 'auto_awesome', label: recs[0], primary: false });
   }
@@ -2567,7 +2568,7 @@ export default function Lead360Page() {
       lastEngagementDays: insight.lastEngagementDays,
       nextBestAction: insight.nextBestAction || 'No action recommended',
       nextBestActions: buildNextBestActions(insight),
-      recommendations: (insight.recommendations as string[]) || [],
+      recommendations: insightRecommendations(insight.recommendations),
       icpMatch: insight.icpMatch || 'Not analyzed',
     };
   }, [apiInsight, lead?.score, lead?.scoringStatus, lead?.estimatedValue]);

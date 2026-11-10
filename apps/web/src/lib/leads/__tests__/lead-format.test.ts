@@ -5,6 +5,7 @@ import {
   formatRelativeTime,
   formatEstimatedValue,
   formatGBPCompact,
+  insightRecommendations,
   isSystemTag,
   leadWebsite,
   visibleTags,
@@ -199,5 +200,33 @@ describe('lead-format · leadWebsite (#1277)', () => {
     expect(leadWebsite('javascript:alert(1)')).toBeNull();
     expect(leadWebsite('ftp://files.example.invalid')).toBeNull();
     expect(leadWebsite('http://')).toBeNull();
+  });
+});
+
+describe('lead-format · insightRecommendations', () => {
+  it('reads a plain list of texts', () => {
+    expect(insightRecommendations(['Call back', 'Send proposal'])).toEqual([
+      'Call back',
+      'Send proposal',
+    ]);
+  });
+
+  it('reads the texts of the object shape the intelligence router writes', () => {
+    expect(
+      insightRecommendations({
+        texts: ['Follow up this week'],
+        emotions: ['joy'],
+        keyPhrases: ['pricing'],
+        primaryEmotion: 'joy',
+      })
+    ).toEqual(['Follow up this week']);
+  });
+
+  it('drops non-text entries and reads anything else as none', () => {
+    expect(insightRecommendations(['ok', 3, null, { a: 1 }])).toEqual(['ok']);
+    expect(insightRecommendations({ texts: 'not a list' })).toEqual([]);
+    expect(insightRecommendations(null)).toEqual([]);
+    expect(insightRecommendations(undefined)).toEqual([]);
+    expect(insightRecommendations('text')).toEqual([]);
   });
 });
