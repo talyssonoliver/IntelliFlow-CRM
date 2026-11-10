@@ -238,10 +238,15 @@ export function EmailList({
       {emails.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-4">
           <EmptyList
-            filtered={isFilteredEmpty}
+            // A search with no matches is a filtered list too: Clear resets the chips and
+            // the search together.
+            filtered={isFilteredEmpty || Boolean(searchQuery)}
             searching={Boolean(searchQuery)}
             mailboxRefusal={mailboxRefusal}
-            onClearFilters={() => onFilterChange({ unread: false, hasAttachments: false })}
+            onClearFilters={() => {
+              onFilterChange({ unread: false, hasAttachments: false });
+              onSearchChange('');
+            }}
           />
         </div>
       ) : (

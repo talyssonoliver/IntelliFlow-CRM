@@ -317,7 +317,7 @@ export function ActivityTimeline({
       ) : (
         <EmptyState
           entity="activity"
-          variant="filtered"
+          variant={typeFilter === 'all' && !searchQuery ? 'empty' : 'filtered'}
           showCta={false}
           action={
             typeFilter === 'all' && !searchQuery

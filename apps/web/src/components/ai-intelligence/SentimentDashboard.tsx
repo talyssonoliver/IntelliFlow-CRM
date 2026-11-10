@@ -277,6 +277,13 @@ export function SentimentDashboard() {
     search: '',
   });
 
+  // The quick chip filters on its own state, so it counts as a filter and is cleared with
+  // the rest. The date range is the analysis period, not a filter: Clear keeps it.
+  const clearAction = clearFiltersAction(filterState, {
+    value: activeChip,
+    reset: () => setActiveChip('all'),
+  });
+
   const filters: SentimentFilters = {
     entityType: filterState.values.entityType as 'all' | 'lead' | 'contact',
     dateRange,
@@ -501,10 +508,8 @@ export function SentimentDashboard() {
               <EmptyState
                 entity="insights"
                 showCta={false}
-                action={clearFiltersAction(filterState, {
-                  value: activeChip,
-                  reset: () => setActiveChip('all'),
-                })}
+                variant={clearAction ? 'filtered' : 'empty'}
+                action={clearAction}
               />
             </div>
           );

@@ -52,16 +52,16 @@ function InsightsLoadingState() {
 }
 
 function InsightsEmptyState({
-  selectedType,
+  filtered,
   onClearFilter,
-}: Readonly<{ selectedType: string | null; onClearFilter: () => void }>) {
+}: Readonly<{ filtered: boolean; onClearFilter: () => void }>) {
   return (
     <Card className="p-12">
       <EmptyState
         entity="insights"
-        variant={selectedType ? 'filtered' : 'empty'}
+        variant={filtered ? 'filtered' : 'empty'}
         showCta={false}
-        action={selectedType ? { label: 'Clear filters', onClick: onClearFilter } : undefined}
+        action={filtered ? { label: 'Clear filters', onClick: onClearFilter } : undefined}
       />
     </Card>
   );
@@ -219,8 +219,13 @@ export function InsightsListPage() {
 
       {!error && !isLoading && displayInsights.length === 0 && (
         <InsightsEmptyState
-          selectedType={selectedType}
-          onClearFilter={() => handleTypeFilter('all')}
+          // The type (URL) and the search box both narrow the list: either one makes the
+          // empty list a filtered one, and Clear resets both.
+          filtered={Boolean(selectedType) || searchQuery.trim() !== ''}
+          onClearFilter={() => {
+            setSearchQuery('');
+            handleTypeFilter('all');
+          }}
         />
       )}
 

@@ -425,7 +425,7 @@ function AgentToolsDashboard() {
           <CardContent className="p-8">
             <EmptyState
               entity="agents"
-              variant="filtered"
+              variant={filter === 'all' ? 'empty' : 'filtered'}
               showCta={false}
               action={
                 filter === 'all'

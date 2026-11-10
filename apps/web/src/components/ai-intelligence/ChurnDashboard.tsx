@@ -240,6 +240,13 @@ export function ChurnDashboard() {
     search: '',
   });
 
+  // The quick chip filters on its own state, so it counts as a filter and is cleared with
+  // the rest. The date range is the analysis period, not a filter: Clear keeps it.
+  const clearAction = clearFiltersAction(filterState, {
+    value: activeChip,
+    reset: () => setActiveChip('all'),
+  });
+
   const filters: ChurnFilters = {
     entityType: filterState.values.entityType as 'all' | 'lead' | 'contact',
     dateRange,
@@ -345,17 +352,13 @@ export function ChurnDashboard() {
       </div>
     );
   } else if (filteredCustomers.length === 0) {
-    // The risk chip filters on its own state (e.g. "At risk" leaves riskLevel empty), so it
-    // counts as a filter and is cleared with the rest.
     customerListContent = (
       <div data-testid="empty-state">
         <EmptyState
           entity="insights"
           showCta={false}
-          action={clearFiltersAction(filterState, {
-            value: activeChip,
-            reset: () => setActiveChip('all'),
-          })}
+          variant={clearAction ? 'filtered' : 'empty'}
+          action={clearAction}
         />
       </div>
     );

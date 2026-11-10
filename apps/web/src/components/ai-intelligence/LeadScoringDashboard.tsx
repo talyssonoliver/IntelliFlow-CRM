@@ -291,6 +291,13 @@ export function LeadScoringDashboard() {
     search: '',
   });
 
+  // The quick chip filters on its own state, so it counts as a filter and is cleared with
+  // the rest. The date range is the analysis period, not a filter: Clear keeps it.
+  const clearAction = clearFiltersAction(filterState, {
+    value: activeChip,
+    reset: () => setActiveChip('all'),
+  });
+
   const filters: LeadScoringFilters = {
     dateRange,
     page,
@@ -510,10 +517,8 @@ export function LeadScoringDashboard() {
               <EmptyState
                 entity="insights"
                 showCta={false}
-                action={clearFiltersAction(filterState, {
-                  value: activeChip,
-                  reset: () => setActiveChip('all'),
-                })}
+                variant={clearAction ? 'filtered' : 'empty'}
+                action={clearAction}
               />
             </div>
           );

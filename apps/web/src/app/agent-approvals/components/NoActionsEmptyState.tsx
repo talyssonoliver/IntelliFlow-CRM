@@ -18,6 +18,7 @@ export function NoActionsEmptyState({
   return (
     <EmptyState
       entity="agents"
+      variant={filtered ? 'filtered' : 'empty'}
       showCta={false}
       action={filtered ? { label: 'Clear filters', onClick: onClearFilters } : undefined}
     />

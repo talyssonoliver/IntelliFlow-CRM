@@ -135,7 +135,7 @@ export function LeadQueueView() {
         {sortedLeads.length === 0 ? (
           <EmptyState
             entity="leads"
-            variant="filtered"
+            variant={scoreMin === undefined && source === undefined ? 'empty' : 'filtered'}
             showCta={false}
             action={
               scoreMin === undefined && source === undefined

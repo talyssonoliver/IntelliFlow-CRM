@@ -186,7 +186,7 @@ export function ChainVersionsTable({
       {versions.length === 0 ? (
         <EmptyState
           entity="insights"
-          variant="filtered"
+          variant={selectedChainType === 'all' && selectedStatus === 'all' ? 'empty' : 'filtered'}
           showCta={false}
           action={
             selectedChainType === 'all' && selectedStatus === 'all'

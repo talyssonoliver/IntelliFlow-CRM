@@ -331,6 +331,13 @@ export function ActiveAgentsDashboard() {
     sort: 'lastActive',
   });
 
+  // The quick chip filters on its own state, so it counts as a filter and is cleared with
+  // the rest.
+  const clearAction = clearFiltersAction(filterState, {
+    value: activeChip,
+    reset: () => setActiveChip('all'),
+  });
+
   const handleChipChange = useCallback(
     (chipId: string) => {
       setActiveChip(chipId);
@@ -473,10 +480,8 @@ export function ActiveAgentsDashboard() {
             <EmptyState
               entity="agents"
               showCta={false}
-              action={clearFiltersAction(filterState, {
-                value: activeChip,
-                reset: () => setActiveChip('all'),
-              })}
+              variant={clearAction ? 'filtered' : 'empty'}
+              action={clearAction}
             />
           ) : (
             <div className="space-y-3">

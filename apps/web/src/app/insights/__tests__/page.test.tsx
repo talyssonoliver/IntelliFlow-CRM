@@ -284,6 +284,21 @@ describe('Insights Page', () => {
     expect(screen.getByText('No insights yet')).toBeInTheDocument();
   });
 
+  it('a search with no matches is a filtered empty list, and Clear filters clears the search', async () => {
+    setupMockQuery();
+    await importAndRender();
+
+    fireEvent.change(screen.getByPlaceholderText('Search insights...'), {
+      target: { value: 'no insight has this text' },
+    });
+    expect(screen.getByText('No insights found')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+
+    expect(screen.getByPlaceholderText('Search insights...')).toHaveValue('');
+    expect(screen.getByText('Deal at Risk: Acme Corp')).toBeInTheDocument();
+  });
+
   it('error state displayed when query fails', async () => {
     setupMockQuery({ error: new Error('Network error') });
     await importAndRender();

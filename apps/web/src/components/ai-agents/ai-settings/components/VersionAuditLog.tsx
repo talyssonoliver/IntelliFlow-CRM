@@ -117,7 +117,7 @@ export function VersionAuditLog({ auditLog, isLoading }: Readonly<VersionAuditLo
       {filteredLog.length === 0 ? (
         <EmptyState
           entity="insights"
-          variant="filtered"
+          variant={actionFilter === 'all' ? 'empty' : 'filtered'}
           showCta={false}
           action={
             actionFilter === 'all'

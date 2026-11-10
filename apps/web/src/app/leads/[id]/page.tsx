@@ -1464,7 +1464,15 @@ function LeadActivityTab({
             </button>
           )}
           {filteredActivities.length === 0 && (
-            <EmptyState entity="activity" variant="filtered" showCta={false} />
+            <EmptyState
+              entity="activity"
+              variant={
+                activityTypeFilter !== 'all' || personFilter !== 'all' || searchQuery
+                  ? 'filtered'
+                  : 'empty'
+              }
+              showCta={false}
+            />
           )}
         </>
       )}
