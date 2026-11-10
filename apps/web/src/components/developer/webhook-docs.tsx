@@ -440,6 +440,10 @@ function OverviewTab() {
                 </code>{' '}
                 to retry individual events.
               </div>
+              <div className="text-sm text-muted-foreground mt-1">
+                Registering sources and these monitoring operations act on the whole platform, so
+                only platform administrators can call them.
+              </div>
             </div>
           </div>
         </div>
