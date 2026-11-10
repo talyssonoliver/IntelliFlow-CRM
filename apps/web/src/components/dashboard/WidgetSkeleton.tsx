@@ -8,6 +8,7 @@
  */
 
 import { Card } from '@intelliflow/ui';
+import { dashboardColSpanClass } from '@/lib/dashboard/grid';
 
 interface WidgetSkeletonProps {
   /** Grid column span (mirrors Widget.colSpan) */
@@ -16,13 +17,6 @@ interface WidgetSkeletonProps {
   heightClass?: string;
   className?: string;
 }
-
-const colSpanClasses: Record<number, string> = {
-  1: 'col-span-1',
-  2: 'col-span-1 md:col-span-2',
-  3: 'col-span-1 md:col-span-2 lg:col-span-3',
-  4: 'col-span-1 md:col-span-2 lg:col-span-4',
-};
 
 export function WidgetSkeleton({
   colSpan = 1,
@@ -34,7 +28,7 @@ export function WidgetSkeleton({
       aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
-        ${colSpanClasses[colSpan] ?? 'col-span-1'}
+        ${dashboardColSpanClass(colSpan, 'kpi')}
         ${heightClass}
         ${className}
         animate-pulse
@@ -50,13 +44,13 @@ export function StatCardSkeleton({ colSpan = 1 }: Readonly<{ colSpan?: number }>
       aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
-        ${colSpanClasses[colSpan] ?? 'col-span-1'}
+        ${dashboardColSpanClass(colSpan, 'kpi')}
         animate-pulse
       `}
     >
-      <div className="p-6 h-full flex flex-col">
+      <div className="p-4 sm:p-6 h-full flex flex-col">
         <div className="flex items-start justify-between">
-          <div className="w-12 h-12 rounded-lg bg-slate-200 dark:bg-slate-700" />
+          <div className="size-9 sm:size-12 rounded-lg bg-slate-200 dark:bg-slate-700" />
           <div className="w-16 h-5 rounded bg-slate-200 dark:bg-slate-700" />
         </div>
         <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-700 mt-4" />
@@ -73,7 +67,7 @@ export function ChartWidgetSkeleton({ colSpan = 3 }: Readonly<{ colSpan?: number
       aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
-        ${colSpanClasses[colSpan] ?? 'col-span-1'}
+        ${dashboardColSpanClass(colSpan, 'panel')}
         animate-pulse
       `}
     >
@@ -101,7 +95,7 @@ export function ListWidgetSkeleton({ colSpan = 1 }: Readonly<{ colSpan?: number 
       aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
-        ${colSpanClasses[colSpan] ?? 'col-span-1'}
+        ${dashboardColSpanClass(colSpan, 'panel')}
         animate-pulse
       `}
     >
@@ -127,7 +121,7 @@ export function PipelineWidgetSkeleton({ colSpan = 3 }: Readonly<{ colSpan?: num
       aria-hidden="true"
       className={`
         bg-surface-light dark:bg-surface-dark border-border-light dark:border-border-dark
-        ${colSpanClasses[colSpan] ?? 'col-span-1'}
+        ${dashboardColSpanClass(colSpan, 'panel')}
         animate-pulse
       `}
     >

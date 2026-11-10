@@ -7,11 +7,12 @@ import {
   formatGBP,
   isTrendingUp,
 } from '@/lib/dashboard/kpi-calculator';
+import { KpiCard } from '../KpiCard';
 import type { WidgetProps } from './index';
 
 export function SalesRevenueWidget(_props: Readonly<WidgetProps>) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data, isLoading } = trpc.analytics.getOverview.useQuery(
+  const { data, isLoading, isError } = trpc.analytics.getOverview.useQuery(
     {},
     { enabled: isAuthenticated && !authLoading, refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
   );
@@ -20,13 +21,19 @@ export function SalesRevenueWidget(_props: Readonly<WidgetProps>) {
   const delta = Number(data?.revenueDelta ?? 0);
   const isOnTrack = isTrendingUp(delta);
 
+  // A failed background refresh keeps the revenue already loaded; "Couldn't load" is
+  // only for a request that never produced any.
+  if (isError && !data) {
+    return <KpiCard label="Sales Revenue" icon="payments" value={null} failed />;
+  }
+
   // Show the skeleton while auth is resolving or the query is disabled/pending
   // (`data` undefined) rather than rendering a real-looking £0 / "On track".
   if (isLoading || authLoading || !data) {
     return (
-      <div className="p-6 h-full flex flex-col animate-pulse" aria-hidden="true">
+      <div className="p-4 sm:p-6 h-full flex flex-col animate-pulse" aria-hidden="true">
         <div className="flex items-start justify-between">
-          <div className="w-12 h-12 rounded-lg bg-muted" />
+          <div className="size-9 sm:size-12 rounded-lg bg-muted" />
           <div className="w-16 h-5 rounded bg-muted" />
         </div>
         <div className="h-4 w-24 bg-muted rounded mt-4" />
@@ -36,27 +43,24 @@ export function SalesRevenueWidget(_props: Readonly<WidgetProps>) {
   }
 
   return (
-    <div className="p-6 h-full flex flex-col">
-      <div className="flex items-start justify-between">
-        <div className="w-12 h-12 rounded-lg bg-ds-primary/10 flex items-center justify-center">
-          <span className="material-symbols-outlined text-2xl text-ds-primary" aria-hidden="true">
-            payments
+    <KpiCard
+      label="Sales Revenue"
+      icon="payments"
+      value={formatGBP(revenue)}
+      // No revenue is neither on track nor behind: show no verdict at £0.
+      badge={
+        revenue === 0 ? undefined : (
+          <span
+            className={`px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap ${
+              isOnTrack
+                ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+            }`}
+          >
+            {isOnTrack ? 'On track' : 'Behind'}
           </span>
-        </div>
-        <span
-          className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-            isOnTrack
-              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-              : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-          }`}
-        >
-          {isOnTrack ? 'On track' : 'Behind'}
-        </span>
-      </div>
-      <p className="text-sm text-slate-500 dark:text-slate-400 mt-4">Sales Revenue</p>
-      <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1 tabular-nums">
-        {formatGBP(revenue)}
-      </p>
-    </div>
+        )
+      }
+    />
   );
 }

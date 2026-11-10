@@ -1,11 +1,13 @@
 'use client';
 
+import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
 import {
   DASHBOARD_REFETCH_INTERVAL_MS,
   computePipelineStagePercent,
   formatGBP,
 } from '@/lib/dashboard/kpi-calculator';
+import { ChartUnavailable } from '@/components/shared/ChartEmptyState';
 import type { WidgetProps } from './index';
 
 const STAGE_COLORS: Record<string, string> = {
@@ -18,10 +20,18 @@ const STAGE_COLORS: Record<string, string> = {
 };
 
 export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
-  const { data, isLoading } = trpc.opportunity.getPipeline.useQuery(
+  const {
+    data,
+    isLoading,
+    isError: requestFailed,
+    refetch,
+  } = trpc.opportunity.getPipeline.useQuery(
     { includeClosedStages: false },
     { refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
   );
+  // A failed background refresh keeps the figures already loaded (React Query keeps
+  // `data`); "Couldn't load" is only for a request that never produced any.
+  const isError = requestFailed && !data;
 
   // Denominator = sum of the DISPLAYED (open) stages, not the API's
   // `totalPipelineValue` which includes closed-won/lost. Using the API total
@@ -29,22 +39,27 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
   const displayedTotal = (data?.stages ?? []).reduce((sum, s) => sum + Number(s.totalValue), 0);
 
   return (
-    <div className="p-6 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-4 sm:p-6 h-full flex flex-col">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <h3 className="text-lg font-semibold text-foreground">Pipeline Summary</h3>
-        <button
-          type="button"
-          aria-label="Pipeline options"
-          className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+        {/* #1225 UI-012: was an options button with no handler; it now opens the board. */}
+        <Link
+          href="/deals?view=pipeline"
+          aria-label="Open the pipeline board"
+          title="Open the pipeline board"
+          className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <span className="material-symbols-outlined" aria-hidden="true">
-            more_horiz
+            open_in_new
           </span>
-        </button>
+        </Link>
       </div>
 
       <div className="space-y-4 flex-1">
-        {isLoading
+        {isError && (
+          <ChartUnavailable message="Couldn't load the pipeline." onRetry={() => void refetch()} />
+        )}
+        {!isError && isLoading
           ? Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="flex items-center justify-between mb-2">
@@ -54,7 +69,8 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
                 <div className="w-full h-2 bg-muted rounded-full" />
               </div>
             ))
-          : data?.stages.map((stage) => {
+          : !isError &&
+            data?.stages.map((stage) => {
               const percentage = computePipelineStagePercent(stage.totalValue, displayedTotal);
               return (
                 <div key={stage.stageKey}>

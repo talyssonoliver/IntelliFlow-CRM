@@ -24,6 +24,7 @@ export default function BillingPage() {
             label: 'Compare Plans',
             icon: 'compare',
             variant: 'secondary',
+            hideOnMobile: true,
             href: '/upgrade',
           },
         ]}

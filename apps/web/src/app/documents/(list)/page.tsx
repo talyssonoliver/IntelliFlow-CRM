@@ -484,6 +484,7 @@ export default function DocumentsPage() {
             label: 'Document Types',
             icon: 'category',
             variant: 'secondary',
+            hideOnMobile: true,
             href: '/documents/document-types',
           },
           {
