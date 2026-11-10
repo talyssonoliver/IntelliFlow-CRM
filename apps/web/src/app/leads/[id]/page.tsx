@@ -92,7 +92,7 @@ import {
   getActivityIcon,
   getActivityIconBg,
   describeScoreChange,
-  formatGBPCompact,
+  formatEstimatedValue,
   formatRelativeTime,
   httpUrlOrNull,
   isSystemActivity,
@@ -1808,7 +1808,7 @@ function LeadAIInsightsTab({
                 className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
               >
                 <span data-testid={hasAiInsight ? 'deal-value' : 'deal-value-null-state'}>
-                  {hasAiInsight ? formatGBPCompact(aiInsights.estimatedValue) : '--'}
+                  {hasAiInsight ? formatEstimatedValue(aiInsights.estimatedValue) : '--'}
                 </span>
               </p>
               <p className="text-xs text-slate-500">Est. Deal Value</p>

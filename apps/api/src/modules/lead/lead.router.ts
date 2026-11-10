@@ -447,23 +447,39 @@ type LeadActivityLogType =
 /** Clock skew tolerated on a caller-supplied activity time. */
 const ACTIVITY_CLOCK_SKEW_MS = 60_000;
 
-/**
- * Best-effort system activity logging for lead lifecycle actions.
- * Activity write failures must not block the primary business operation.
- */
 /** A scoring status that means the lead holds a real score (not NONE or FAILED). */
 export function isRealScoringStatus(status: string | null | undefined): boolean {
   return status === 'SCORED' || status === 'NEEDS_REVIEW';
 }
 
-/** The lead's scoring status, or null when it cannot be read (then treated as unscored). */
-async function readScoringStatus(ctx: TenantAwareContext, leadId: string): Promise<string | null> {
+/** The lead's scoring state, read around a scoring run (UI-021). */
+export interface LeadScoringState {
+  status: string | null;
+  /** Set by every successful scoring (#1218); a FAILED lead keeps it from its last real score. */
+  scoredAt: Date | null;
+}
+
+/**
+ * Whether the lead held a real score before this run. A lead whose last attempt FAILED
+ * still holds its earlier real score (#1218 keeps it), which `scoredAt` records, so its
+ * next successful score is a change from that score, not a first score.
+ */
+export function hadRealScore(state: LeadScoringState | null): boolean {
+  if (!state) return false;
+  return isRealScoringStatus(state.status) || state.scoredAt !== null;
+}
+
+/** The lead's scoring status and scoredAt, or null when they cannot be read. */
+async function readScoringState(
+  ctx: TenantAwareContext,
+  leadId: string
+): Promise<LeadScoringState | null> {
   try {
     const row = await ctx.prismaWithTenant.lead.findUnique({
       where: { id: leadId },
-      select: { scoringStatus: true },
+      select: { scoringStatus: true, scoredAt: true },
     });
-    return row?.scoringStatus ?? null;
+    return row ? { status: row.scoringStatus ?? null, scoredAt: row.scoredAt ?? null } : null;
   } catch {
     return null;
   }
@@ -471,10 +487,12 @@ async function readScoringStatus(ctx: TenantAwareContext, leadId: string): Promi
 
 /**
  * UI-021: true when a re-score of an already-scored lead changed nothing a user sees:
- * same score, and no automatic qualify or disqualify.
+ * same score, same scoring status (a move between SCORED and NEEDS_REVIEW is a change),
+ * and no automatic qualify or disqualify.
  */
 export function isNoOpRescore(
-  wasScored: boolean,
+  before: LeadScoringState | null,
+  after: LeadScoringState | null,
   result: Readonly<{
     previousScore: number;
     newScore: number;
@@ -483,13 +501,19 @@ export function isNoOpRescore(
   }>
 ): boolean {
   return (
-    wasScored &&
+    hadRealScore(before) &&
+    isRealScoringStatus(before?.status) &&
+    before?.status === after?.status &&
     result.previousScore === result.newScore &&
     !result.autoQualified &&
     !result.autoDisqualified
   );
 }
 
+/**
+ * Best-effort system activity logging for lead lifecycle actions.
+ * Activity write failures must not block the primary business operation.
+ */
 async function writeLeadActivityLog(
   ctx: TenantAwareContext,
   input: {
@@ -1232,7 +1256,7 @@ export const leadRouter = createTRPCRouter({
 
       // UI-021: whether the lead already had a real score, read before scoring, so the
       // log can call a first score a first score and skip a re-score that changed nothing.
-      const wasScored = isRealScoringStatus(await readScoringStatus(typedCtx, input.leadId));
+      const before = await readScoringState(typedCtx, input.leadId);
 
       const result = await leadService.scoreLead(input.leadId, typedCtx.tenant.userId);
 
@@ -1292,7 +1316,8 @@ export const leadRouter = createTRPCRouter({
 
       // UI-021: a re-score that left the score and status as they were is not a change,
       // so it is not logged as one (the new confidence is still saved on the lead).
-      if (!isNoOpRescore(wasScored, result.value)) {
+      const after = await readScoringState(typedCtx, input.leadId);
+      if (!isNoOpRescore(before, after, result.value)) {
         await writeLeadActivityLog(typedCtx, {
           leadId: result.value.leadId,
           tenantId: typedCtx.tenant.tenantId,
@@ -1302,7 +1327,7 @@ export const leadRouter = createTRPCRouter({
           metadata: {
             previousScore: result.value.previousScore,
             newScore: result.value.newScore,
-            firstScore: !wasScored,
+            firstScore: !hadRealScore(before),
             confidence: result.value.confidence,
             tier: result.value.tier,
             autoQualified: result.value.autoQualified,

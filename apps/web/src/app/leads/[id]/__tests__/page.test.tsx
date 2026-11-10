@@ -485,6 +485,15 @@ describe('LeadDetailPage - Real AI Insight Rendering (IFC-226)', () => {
     expect(screen.getByTestId('engagement-value')).toHaveTextContent('High');
   });
 
+  it('shows the estimated deal value in pounds from a value stored in pence (UI-017)', () => {
+    (mockLeadQueryState.data.aiInsight as unknown as { estimatedValue: number }).estimatedValue =
+      5_000_000;
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /AI Insights/i }));
+    expect(screen.getByText('£50k')).toBeInTheDocument();
+    expect(screen.queryByText('£5000k')).not.toBeInTheDocument();
+  });
+
   it('renders sentiment with green styling when real data exists', () => {
     render(<Lead360Page />);
     const aiTab = screen.getByRole('button', { name: /AI Insights/i });
