@@ -761,3 +761,19 @@
 .dark .sx-calendar-container .sx__time-grid-day {
   border-left: 1px solid #1e293b !important;
 }
+
+/*
+ * Signed-in footer (#1224): the module sidebar is position: fixed on desktop,
+ * so the footer pads itself by the sidebar's width, the same offsets
+ * SidebarInset gives the page (w-14 rail, w-60 pinned).
+ */
+@layer components {
+  @media (min-width: 1024px) {
+    body:has([data-app-sidebar='rail']) .app-footer {
+      padding-left: 3.5rem;
+    }
+    body:has([data-app-sidebar='pinned']) .app-footer {
+      padding-left: 15rem;
+    }
+  }
+}

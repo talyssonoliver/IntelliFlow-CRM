@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Navigation } from '@/components/navigation';
 import { RouteAccessGate } from '@/components/auth/RouteAccessGate';
 import { VerifyEmailBanner } from '@/components/auth/VerifyEmailBanner';
+import { AppFooter } from '@/components/shared/AppFooter';
 // Client-only lazy wrapper — keeps OnboardingWelcome's @stripe/* imports out of
 // the universal layout compile graph (every route). See the wrapper's JSDoc.
 import { OnboardingWelcome } from '@/components/onboarding/OnboardingWelcomeClient';
@@ -145,6 +146,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
               <RouteAccessGate>
                 <div id="main-content">{children}</div>
               </RouteAccessGate>
+              {/* #1224: legal links on every signed-in screen; renders only with the signed-in header */}
+              <AppFooter />
             </div>
             <Toaster />
             <CookieConsentBanner
