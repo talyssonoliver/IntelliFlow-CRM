@@ -99,7 +99,7 @@ function defaultListIntegration(base, cwd, env) {
 function lines(out) {
   return (out || '')
     .split('\n')
-    .map((l) => l.trim().replace(/\\/g, '/'))
+    .map((l) => l.trim().replaceAll('\\', '/'))
     .filter(Boolean);
 }
 
