@@ -159,6 +159,7 @@ export default function NotificationsPage() {
             label: 'Settings',
             icon: 'tune',
             variant: 'secondary',
+            hideOnMobile: true,
             href: '/notifications/settings',
           },
           {

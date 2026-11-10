@@ -237,6 +237,7 @@ export default function CalendarPage() {
             label: 'Appointments List',
             icon: 'view_list',
             variant: 'secondary',
+            hideOnMobile: true,
             href: '/appointments',
           },
           {

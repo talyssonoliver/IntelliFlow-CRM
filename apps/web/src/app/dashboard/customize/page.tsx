@@ -49,7 +49,7 @@ const defaultWidgets: Widget[] = [
   { id: 'w5', type: 'pipeline-summary', title: 'Pipeline Summary', colSpan: 3, rowSpan: 1 },
   { id: 'w6', type: 'upcoming-tasks', title: 'Upcoming Tasks', colSpan: 1, rowSpan: 1 },
   // Row 3: Deals Won (3/4) + Recent Activity (1/4)
-  { id: 'w7', type: 'deals-won', title: 'Deals Won (Last 6 Months)', colSpan: 3, rowSpan: 1 },
+  { id: 'w7', type: 'deals-won', title: 'Deals Won', colSpan: 3, rowSpan: 1 },
   { id: 'w8', type: 'recent-activity', title: 'Recent Activity', colSpan: 1, rowSpan: 1 },
 ];
 
