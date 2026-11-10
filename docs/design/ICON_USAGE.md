@@ -65,6 +65,22 @@ have been dropped to minimize byte weight. Do NOT add CSS that overrides
 `font-variation-settings` or introduce multiple weights of the font; if you need
 a different look, open an ADR superseding ADR-046.
 
+## Sizing
+
+The `.material-symbols-outlined` rule in `globals.css` lives in `@layer base`
+(#1222 UI-006). It gives every icon a 24px default, and a Tailwind utility on
+the icon (`text-lg`, `text-[18px]`, `size-4`, `hidden`, `font-bold`…) overrides
+it. Before, the rule was unlayered and outranked every utility, so declared
+sizes were ignored and every icon drew at 24px. Size icons with a text utility
+on the icon itself. Don't add unlayered CSS that sets `font-size` or `display`
+on `.material-symbols-outlined`: it would bring that problem back. Small
+decorative dots are CSS (`rounded-full bg-current`), not the
+`fiber_manual_record` glyph.
+
+One property stays unlayered on purpose: `line-height: 1`. Tailwind's text-size
+utilities also set a line-height, which would push a smaller icon off-centre
+inside its 1em box.
+
 ## The available icon set
 
 - **Authoritative list**: `artifacts/reports/material-symbols-glyph-audit.json`

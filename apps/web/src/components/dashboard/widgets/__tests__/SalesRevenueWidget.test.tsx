@@ -55,3 +55,17 @@ describe('SalesRevenueWidget', () => {
     expect(screen.queryByText('On track')).not.toBeInTheDocument();
   });
 });
+
+describe('SalesRevenueWidget at zero (#1249 visual check)', () => {
+  it('shows £0 with no "On track" or "Behind" verdict', () => {
+    useQueryMock.mockReturnValueOnce({
+      data: { totalRevenue: 0, revenueDelta: 0 },
+      isLoading: false,
+    });
+    render(<SalesRevenueWidget />);
+
+    expect(screen.getByText('£0')).toBeInTheDocument();
+    expect(screen.queryByText('On track')).not.toBeInTheDocument();
+    expect(screen.queryByText('Behind')).not.toBeInTheDocument();
+  });
+});

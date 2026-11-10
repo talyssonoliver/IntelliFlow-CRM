@@ -48,11 +48,12 @@ describe('TotalLeadsWidget', () => {
     expect(screen.getByText('2,345')).toBeInTheDocument();
   });
 
-  it('returns null on error', () => {
+  it('says it could not load on error instead of leaving a blank card', () => {
     useQueryMock.mockReturnValue({ data: null, isLoading: false, error: new Error('boom') });
-    const { container } = render(<TotalLeadsWidget />);
+    render(<TotalLeadsWidget />);
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByText('Total Leads')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent("Couldn't load");
   });
 
   it('polls lead.stats on the shared dashboard refetch interval', () => {

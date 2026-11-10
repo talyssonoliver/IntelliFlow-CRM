@@ -168,6 +168,7 @@ export default function AppointmentDetailPage() {
           label: 'Back to Appointments',
           icon: 'arrow_back',
           variant: 'secondary',
+          hideOnMobile: true,
           href: '/appointments',
         },
         {

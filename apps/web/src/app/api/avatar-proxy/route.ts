@@ -23,7 +23,6 @@ const AVATAR_HOST_LITERALS = [
   'secure.gravatar.com',
   'www.gravatar.com',
   'gravatar.com',
-  'images.unsplash.com',
 ] as const;
 type AllowedAvatarHost = (typeof AVATAR_HOST_LITERALS)[number];
 
