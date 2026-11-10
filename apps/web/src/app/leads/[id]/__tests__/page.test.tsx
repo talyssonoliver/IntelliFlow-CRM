@@ -97,7 +97,7 @@ const mockLeadQueryState = {
     opportunities: [],
     accountId: null as string | null,
     account: null as { id: string; name: string } | null,
-    aiInsight: null,
+    aiInsights: [] as unknown[],
   },
   isLoading: false,
   error: null as { message?: string; data?: { code?: string } } | null,
@@ -369,7 +369,7 @@ describe('LeadDetailPage - Null AI Insight UX (IFC-226)', () => {
     mockLeadQueryState.error = null;
     mockLeadQueryState.isLoading = false;
     mockLeadQueryState.data.activities = [];
-    mockLeadQueryState.data.aiInsight = null;
+    mockLeadQueryState.data.aiInsights = [];
   });
 
   it('does not render raw "Unknown" text anywhere on the page', () => {
@@ -462,22 +462,24 @@ describe('LeadDetailPage - Real AI Insight Rendering (IFC-226)', () => {
     mockLeadQueryState.error = null;
     mockLeadQueryState.isLoading = false;
     mockLeadQueryState.data.activities = [];
-    mockLeadQueryState.data.aiInsight = {
-      engagementScore: 85,
-      conversionProbability: 72,
-      estimatedValue: 50000,
-      churnRisk: 'LOW',
-      sentiment: 'Positive',
-      sentimentTrend: 'up',
-      lastEngagementDays: 3,
-      nextBestAction: 'Schedule follow-up',
-      recommendations: ['Send proposal'],
-      icpMatch: 'Strong',
-    } as any;
+    mockLeadQueryState.data.aiInsights = [
+      {
+        engagementScore: 85,
+        conversionProbability: 72,
+        estimatedValue: 50000,
+        churnRisk: 'LOW',
+        sentiment: 'Positive',
+        sentimentTrend: 'up',
+        lastEngagementDays: 3,
+        nextBestAction: 'Schedule follow-up',
+        recommendations: ['Send proposal'],
+        icpMatch: 'Strong',
+      },
+    ] as any;
   });
 
   afterEach(() => {
-    mockLeadQueryState.data.aiInsight = null;
+    mockLeadQueryState.data.aiInsights = [];
   });
 
   it('renders actual engagement level when aiInsight is populated', () => {
@@ -561,7 +563,7 @@ describe('LeadDetailPage - Company-to-Account Link (IFC-227)', () => {
     mockLeadQueryState.error = null;
     mockLeadQueryState.isLoading = false;
     mockLeadQueryState.data.activities = [];
-    mockLeadQueryState.data.aiInsight = null;
+    mockLeadQueryState.data.aiInsights = [];
   });
 
   afterEach(() => {
@@ -607,7 +609,7 @@ describe('LeadDetailPage - Tab Navigation (IFC-247)', () => {
     mockLeadQueryState.error = null;
     mockLeadQueryState.isLoading = false;
     mockLeadQueryState.data.activities = [];
-    mockLeadQueryState.data.aiInsight = null;
+    mockLeadQueryState.data.aiInsights = [];
   });
   afterEach(() => {
     mockAddNoteState.isPending = false;
@@ -667,7 +669,7 @@ describe('LeadDetailPage - Notes Tab + addNote mutation (IFC-247)', () => {
     mockLeadQueryState.error = null;
     mockLeadQueryState.isLoading = false;
     mockLeadQueryState.data.activities = [];
-    mockLeadQueryState.data.aiInsight = null;
+    mockLeadQueryState.data.aiInsights = [];
   });
   afterEach(() => {
     mockAddNoteState.isPending = false;
@@ -761,7 +763,7 @@ describe('LeadDetailPage - logActivity mutation (IFC-247)', () => {
     mockLeadQueryState.error = null;
     mockLeadQueryState.isLoading = false;
     mockLeadQueryState.data.activities = [];
-    mockLeadQueryState.data.aiInsight = null;
+    mockLeadQueryState.data.aiInsights = [];
   });
   afterEach(() => {
     mockAddNoteState.isPending = false;
@@ -876,7 +878,7 @@ describe('LeadDetailPage - Error States (IFC-247)', () => {
       opportunities: [],
       accountId: null,
       account: null,
-      aiInsight: null,
+      aiInsights: [] as unknown[],
     } as typeof mockLeadQueryState.data;
     mockLeadQueryState.isLoading = false;
     mockLeadQueryState.error = null;
@@ -907,7 +909,7 @@ describe('LeadDetailPage - Error States (IFC-247)', () => {
       opportunities: [],
       accountId: null,
       account: null,
-      aiInsight: null,
+      aiInsights: [] as unknown[],
     } as typeof mockLeadQueryState.data;
     mockLeadQueryState.isLoading = false;
     mockLeadQueryState.error = null;
@@ -981,7 +983,7 @@ describe('LeadDetailPage - Activity Feed Toggle (IFC-247)', () => {
     vi.clearAllMocks();
     mockLeadQueryState.error = null;
     mockLeadQueryState.isLoading = false;
-    mockLeadQueryState.data.aiInsight = null;
+    mockLeadQueryState.data.aiInsights = [];
   });
   afterEach(() => {
     mockAddNoteState.isPending = false;
@@ -1168,7 +1170,7 @@ describe('LeadDetailPage - display name fallback (UI-016)', () => {
     mockLeadQueryState.error = null;
     mockLeadQueryState.isLoading = false;
     mockLeadQueryState.data.activities = [];
-    mockLeadQueryState.data.aiInsight = null;
+    mockLeadQueryState.data.aiInsights = [];
   });
 
   afterEach(() => {
@@ -1218,7 +1220,7 @@ describe('LeadDetailPage - no stock photos (UI-018)', () => {
     mockLeadQueryState.error = null;
     mockLeadQueryState.isLoading = false;
     mockLeadQueryState.data.activities = [];
-    mockLeadQueryState.data.aiInsight = null;
+    mockLeadQueryState.data.aiInsights = [];
   });
 
   it('passes no image to the avatars of a lead and owner without photos', () => {
@@ -1250,11 +1252,11 @@ describe('LeadDetailPage - honest score and analysis (UI-022/023/024)', () => {
     mockLeadQueryState.error = null;
     mockLeadQueryState.isLoading = false;
     mockLeadQueryState.data.activities = [];
-    mockLeadQueryState.data.aiInsight = null;
+    mockLeadQueryState.data.aiInsights = [];
   });
 
   afterEach(() => {
-    mockLeadQueryState.data.aiInsight = null;
+    mockLeadQueryState.data.aiInsights = [];
     delete (mockLeadQueryState.data as { scoringStatus?: string }).scoringStatus;
   });
 
@@ -1292,7 +1294,7 @@ describe('LeadDetailPage - honest score and analysis (UI-022/023/024)', () => {
 
   it('lists the analysis next steps as text, not as buttons without a handler', () => {
     setScored();
-    mockLeadQueryState.data.aiInsight = analysis as never;
+    mockLeadQueryState.data.aiInsights = [analysis] as never;
     render(<Lead360Page />);
     const steps = screen.getByTestId('sidebar-next-steps');
     expect(steps).toHaveTextContent('Schedule follow-up');
@@ -1301,21 +1303,80 @@ describe('LeadDetailPage - honest score and analysis (UI-022/023/024)', () => {
   });
 
   it('keeps the lead score rather than substituting the engagement score', () => {
-    mockLeadQueryState.data.aiInsight = analysis as never;
+    mockLeadQueryState.data.aiInsights = [analysis] as never;
     render(<Lead360Page />);
     expect(screen.getByTestId('sidebar-lead-score')).toHaveTextContent('Not scored');
     expect(screen.getByTestId('sidebar-lead-score')).not.toHaveTextContent('85');
   });
 
   it('says so when an analysis made no recommendations', () => {
-    mockLeadQueryState.data.aiInsight = {
-      ...analysis,
-      nextBestAction: null,
-      recommendations: [],
-    } as never;
+    mockLeadQueryState.data.aiInsights = [
+      {
+        ...analysis,
+        nextBestAction: null,
+        recommendations: [],
+      },
+    ] as never;
     render(<Lead360Page />);
     expect(screen.queryByTestId('sidebar-next-steps')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /AI Insights/i }));
     expect(screen.getByText('This analysis made no recommendations.')).toBeInTheDocument();
+  });
+});
+
+// ─── #1277 visual check: Lead IQ reads the stored insight ────────────────────
+
+describe('LeadDetailPage - Lead IQ source (#1277 visual check)', () => {
+  const data = () =>
+    mockLeadQueryState.data as unknown as {
+      score: number;
+      scoringStatus?: string;
+      aiInsights: unknown[];
+    };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+  });
+
+  afterEach(() => {
+    data().aiInsights = [];
+    data().score = 75;
+    delete data().scoringStatus;
+  });
+
+  it('shows the stored analysis, not "not run", for an analyzed lead', () => {
+    data().score = 28;
+    data().scoringStatus = 'SCORED';
+    data().aiInsights = [
+      {
+        id: 'insight-1',
+        engagementScore: 28,
+        conversionProbability: 22,
+        estimatedValue: 0,
+        churnRisk: 'MEDIUM',
+        sentiment: 'NEUTRAL',
+        sentimentTrend: 'stable',
+        lastEngagementDays: 0,
+        nextBestAction: 'Review lead',
+        recommendations: ['Review lead'],
+        icpMatch: 'Weak Match',
+      },
+    ];
+    render(<Lead360Page />);
+
+    expect(screen.queryByText(/AI analysis not run yet/i)).not.toBeInTheDocument();
+    expect(screen.queryByText('Not analyzed yet')).not.toBeInTheDocument();
+    expect(screen.getByText('Weak Match')).toBeInTheDocument();
+  });
+
+  it('says the analysis has not run only when there is no insight', () => {
+    data().score = 28;
+    data().scoringStatus = 'SCORED';
+    data().aiInsights = [];
+    render(<Lead360Page />);
+
+    expect(screen.getByText(/AI analysis not run yet/i)).toBeInTheDocument();
   });
 });

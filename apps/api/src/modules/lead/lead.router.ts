@@ -635,49 +635,9 @@ export const leadRouter = createTRPCRouter({
       })
       .catch(logLeadAuditFailure);
 
-    const aiInsightRow = lead.aiInsights?.[0] ?? null;
-
-    // Derive AI insights when none exist in DB (ensures entity pages always show data)
-    if (!aiInsightRow) {
-      const derived = deriveLeadInsights({
-        score: lead.score ?? 0,
-        confidence: 0.5,
-        source: lead.source ?? 'OTHER',
-        title: lead.title,
-        company: lead.company,
-        estimatedValue: lead.estimatedValue,
-        status: lead.status,
-        lastContactedAt: lead.lastContactedAt,
-        createdAt: lead.createdAt,
-      });
-
-      const syntheticInsight = {
-        id: `derived-${lead.id}`,
-        leadId: lead.id,
-        tenantId: typedCtx.tenant.tenantId,
-        ...derived,
-        recommendations: derived.recommendations as unknown,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      // Fire-and-forget: persist so future visits read from DB
-      typedCtx.prismaWithTenant.leadAIInsight
-        ?.upsert({
-          where: { leadId_tenantId: { leadId: lead.id, tenantId: typedCtx.tenant.tenantId } },
-          create: {
-            leadId: lead.id,
-            tenantId: typedCtx.tenant.tenantId,
-            ...derived,
-            recommendations: derived.recommendations,
-          },
-          update: {},
-        })
-        ?.catch(() => {}); // Best-effort persistence — silently ignore
-
-      return { ...lead, aiInsights: [syntheticInsight] };
-    }
-
+    // #1277 (UI-022): no synthetic insight. A lead without a LeadAIInsight row has had no
+    // analysis, and the page says so. getById used to derive one from heuristics and save
+    // it, which made a plain read look like an AI analysis.
     return lead;
   }),
 

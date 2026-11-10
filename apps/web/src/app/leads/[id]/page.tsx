@@ -320,7 +320,8 @@ interface LeadWithRelations {
     priority: string | null;
     status: string;
   }>;
-  aiInsight?: {
+  /** The lead's AI insight rows (LeadAIInsight; at most one per lead). */
+  aiInsights?: Array<{
     id: string;
     conversionProbability: number;
     estimatedValue: number;
@@ -332,7 +333,7 @@ interface LeadWithRelations {
     nextBestAction: string | null;
     recommendations: unknown;
     icpMatch: string | null;
-  } | null;
+  }>;
   accountId?: string | null;
   account?: { id: string; name: string } | null;
 }
@@ -2524,9 +2525,14 @@ export default function Lead360Page() {
       }));
   }, [activities]);
 
+  // The API returns the lead's insight as `aiInsights` (the LeadAIInsight rows the
+  // scoring job writes); the page used to read a singular `aiInsight` that was never
+  // set, so every lead read "AI analysis not run".
+  const apiInsight = apiLead?.aiInsights?.[0] ?? null;
+
   // Transform AI insights from API
   const aiInsights = useMemo(() => {
-    const insight = apiLead?.aiInsight;
+    const insight = apiInsight;
     if (!insight) {
       return {
         leadScore: lead?.score ?? 0,
@@ -2566,14 +2572,14 @@ export default function Lead360Page() {
       recommendations: (insight.recommendations as string[]) || [],
       icpMatch: insight.icpMatch || 'Not analyzed',
     };
-  }, [apiLead?.aiInsight, lead?.score, lead?.scoringStatus, lead?.estimatedValue]);
+  }, [apiInsight, lead?.score, lead?.scoringStatus, lead?.estimatedValue]);
 
   // IFC-226: Null-state detection for AI insight styling
-  const hasAiInsight = !!apiLead?.aiInsight;
+  const hasAiInsight = !!apiInsight;
 
   // Transform AI insights to ChurnRiskData format (IFC-095)
   const churnRiskData: ChurnRiskData | null = useMemo(() => {
-    const insight = apiLead?.aiInsight;
+    const insight = apiInsight;
     if (!insight) return null;
 
     // Map database churn risk level to component format
@@ -2636,11 +2642,11 @@ export default function Lead360Page() {
         },
       ],
     };
-  }, [apiLead?.aiInsight]);
+  }, [apiInsight]);
 
   // Transform AI insights to NextBestActionData format (IFC-095)
   const nextBestActionData: NextBestActionData | null = useMemo(() => {
-    const insight = apiLead?.aiInsight;
+    const insight = apiInsight;
     if (!insight?.nextBestAction) return null;
 
     const actionType = resolveNBAActionType(insight.nextBestAction.toUpperCase());
@@ -2654,7 +2660,7 @@ export default function Lead360Page() {
       confidence: insight.engagementScore / 100,
       successProbability: insight.conversionProbability / 100,
     };
-  }, [apiLead?.aiInsight]);
+  }, [apiInsight]);
 
   // Person filter options derived from activities
   const personFilters = useMemo(() => {
