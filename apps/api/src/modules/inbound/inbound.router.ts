@@ -297,7 +297,10 @@ export interface InboundPipelineLeadOutput {
    * `changed` is false, and `companyChange.applied` is false.
    */
   readonly dryRun?: true;
-  /** Dry run only: whether a real run with this payload would write `companyChange`. */
+  /**
+   * Dry run only: true when a real run with this payload would write `companyChange`,
+   * meaning a correction is planned AND `applyCompany` was sent.
+   */
   readonly wouldApplyCompany?: boolean;
 }
 
@@ -324,7 +327,9 @@ export function planCompanyChange(
   const next = input.company;
   if (!listingName || !next || storedCompany == null) return null;
   if (storedCompany.trim() !== listingName) return null;
-  if (storedCompany === next) return null;
+  // COA made no correction (company is the listing name), so a stored name that differs
+  // only by stray whitespace is not a rename.
+  if (storedCompany.trim() === next) return null;
   return { from: storedCompany, to: next };
 }
 
@@ -1029,7 +1034,8 @@ async function previewPipelineSync(
     conversionPending: false,
     qualificationPending: false,
     ...(change ? { companyChange: { ...change, applied: false } } : {}),
-    wouldApplyCompany: input.applyCompany === true,
+    // Only a planned correction can be written; with none, the opt-in changes nothing.
+    wouldApplyCompany: change !== null && input.applyCompany === true,
   };
 }
 

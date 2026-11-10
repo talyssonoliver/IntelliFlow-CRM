@@ -86,6 +86,11 @@ describe('planCompanyChange', () => {
     expect(planCompanyChange(undefined, { company: TRADING, listingName: LISTING })).toBeNull();
   });
 
+  it('plans no whitespace-only rename when COA made no correction', () => {
+    expect(planCompanyChange(`${TRADING} `, { company: TRADING, listingName: TRADING })).toBeNull();
+    expect(planCompanyChange(` ${TRADING}`, { company: TRADING, listingName: TRADING })).toBeNull();
+  });
+
   it('does nothing when the trading name is already stored', () => {
     expect(planCompanyChange(TRADING, { company: TRADING, listingName: TRADING })).toBeNull();
   });
@@ -378,6 +383,22 @@ describe('inboundRouter.syncPipelineLead — dryRun', () => {
     expectNothingWritten();
     expect(result).toMatchObject({ dryRun: true, created: true, leadId: '', status: 'NEW' });
     expect(result.companyChange).toBeUndefined();
+  });
+
+  it('reports wouldApplyCompany false when there is nothing to correct, even with the opt-in', async () => {
+    prismaMock.lead.findFirst.mockResolvedValueOnce(null as never);
+    const created = await caller().syncPipelineLead(payload({ dryRun: true, applyCompany: true }));
+    expect(created.wouldApplyCompany).toBe(false);
+
+    prismaMock.lead.findFirst.mockResolvedValueOnce({
+      id: LEAD_ID,
+      company: 'Rise Bakery & Cafe (owner corrected)',
+      status: 'CONTACTED',
+    } as never);
+    const edited = await caller().syncPipelineLead(payload({ dryRun: true, applyCompany: true }));
+    expect(edited.companyChange).toBeUndefined();
+    expect(edited.wouldApplyCompany).toBe(false);
+    expectNothingWritten();
   });
 
   it('still requires the bearer', async () => {
