@@ -1555,9 +1555,11 @@ function LeadNotesTab({
 interface LeadEmailsTabProps {
   emails: { id: string; subject: string; status: string; sentAt: string; openCount: number }[];
   timezone: string;
+  /** The lead's address: the empty-state "Compose email" opens compose addressed to it. */
+  leadEmail?: string | null;
 }
 
-function LeadEmailsTab({ emails, timezone }: LeadEmailsTabProps) {
+function LeadEmailsTab({ emails, timezone, leadEmail }: LeadEmailsTabProps) {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
@@ -1597,7 +1599,16 @@ function LeadEmailsTab({ emails, timezone }: LeadEmailsTabProps) {
             </div>
           ))
         ) : (
-          <EmptyState entity="emails" ctaHref="/email/compose" ctaLabel="Compose email" />
+          // Compose to this lead, never a blank recipient; no address means no button.
+          <EmptyState
+            entity="emails"
+            {...(leadEmail
+              ? {
+                  ctaHref: `/email/compose?to=${encodeURIComponent(leadEmail)}`,
+                  ctaLabel: 'Compose email',
+                }
+              : { showCta: false })}
+          />
         )}
       </div>
     </Card>
@@ -2945,7 +2956,9 @@ export default function Lead360Page() {
             />
           )}
 
-          {activeTab === 'emails' && <LeadEmailsTab emails={emails} timezone={timezone} />}
+          {activeTab === 'emails' && (
+            <LeadEmailsTab emails={emails} timezone={timezone} leadEmail={lead.email} />
+          )}
 
           {activeTab === 'files' && <LeadFilesTab files={files} timezone={timezone} />}
 
