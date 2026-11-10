@@ -19,7 +19,12 @@ import {
   Skeleton,
   cn,
 } from '@intelliflow/ui';
-import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
+import {
+  PageHeader,
+  SearchFilterBar,
+  clearFiltersAction,
+  useMultiFilterState,
+} from '@/components/shared';
 
 import { useChurnDashboard } from '@/lib/churn-risk/hooks';
 import type { ChurnFilters } from '@/lib/churn-risk/hooks';
@@ -342,17 +347,15 @@ export function ChurnDashboard() {
   } else if (filteredCustomers.length === 0) {
     // The risk chip filters on its own state (e.g. "At risk" leaves riskLevel empty), so it
     // counts as a filter and is cleared with the rest.
-    const filtered = filterState.isFiltered(['sort']) || activeChip !== 'all';
-    const clearFilters = () => {
-      filterState.resetFilters(['sort']);
-      setActiveChip('all');
-    };
     customerListContent = (
       <div data-testid="empty-state">
         <EmptyState
           entity="insights"
           showCta={false}
-          action={filtered ? { label: 'Clear filters', onClick: clearFilters } : undefined}
+          action={clearFiltersAction(filterState, {
+            value: activeChip,
+            reset: () => setActiveChip('all'),
+          })}
         />
       </div>
     );

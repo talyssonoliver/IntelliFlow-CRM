@@ -11,7 +11,12 @@
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, Button, EmptyState, Skeleton, cn } from '@intelliflow/ui';
-import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
+import {
+  PageHeader,
+  SearchFilterBar,
+  clearFiltersAction,
+  useMultiFilterState,
+} from '@/components/shared';
 import { useActiveAgentsDashboard } from '@/lib/active-agents/hooks';
 import { api } from '@/lib/api';
 import { QueueSchedulerPanel } from './QueueSchedulerPanel';
@@ -468,11 +473,10 @@ export function ActiveAgentsDashboard() {
             <EmptyState
               entity="agents"
               showCta={false}
-              action={
-                filterState.isFiltered(['sort'])
-                  ? { label: 'Clear filters', onClick: () => filterState.resetFilters(['sort']) }
-                  : undefined
-              }
+              action={clearFiltersAction(filterState, {
+                value: activeChip,
+                reset: () => setActiveChip('all'),
+              })}
             />
           ) : (
             <div className="space-y-3">

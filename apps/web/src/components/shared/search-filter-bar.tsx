@@ -469,3 +469,31 @@ export function useMultiFilterState<T extends Record<string, string>>(initialVal
 
   return { values, set, reset, resetKey, isFiltered, resetFilters };
 }
+
+/** The part of `useMultiFilterState` that `clearFiltersAction` uses. */
+interface ResettableFilters {
+  isFiltered(ignore?: readonly string[]): boolean;
+  resetFilters(ignore?: readonly string[]): void;
+}
+
+/**
+ * The empty-state "Clear filters" action for a list filtered by `useMultiFilterState`
+ * AND a quick-filter chip held in its own state (`'all'` = no chip). The chip counts as a
+ * filter and is reset with the rest, so a chip that empties the list always offers Clear,
+ * and Clear never leaves a chip selected over an unfiltered list. `ignore` keys (the sort
+ * order by default) are neither counted nor reset.
+ */
+export function clearFiltersAction(
+  filters: ResettableFilters,
+  chip: { value: string; reset: () => void },
+  ignore: readonly string[] = ['sort']
+): { label: string; onClick: () => void } | undefined {
+  if (!filters.isFiltered(ignore) && chip.value === 'all') return undefined;
+  return {
+    label: 'Clear filters',
+    onClick: () => {
+      filters.resetFilters(ignore);
+      chip.reset();
+    },
+  };
+}

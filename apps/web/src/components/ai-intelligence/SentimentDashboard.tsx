@@ -22,7 +22,12 @@ import {
   Skeleton,
   cn,
 } from '@intelliflow/ui';
-import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
+import {
+  PageHeader,
+  SearchFilterBar,
+  clearFiltersAction,
+  useMultiFilterState,
+} from '@/components/shared';
 
 import { useSentimentDashboard } from '@/lib/sentiment/hooks';
 import type { SentimentFilters } from '@/lib/sentiment/hooks';
@@ -496,11 +501,10 @@ export function SentimentDashboard() {
               <EmptyState
                 entity="insights"
                 showCta={false}
-                action={
-                  filterState.isFiltered(['sort'])
-                    ? { label: 'Clear filters', onClick: () => filterState.resetFilters(['sort']) }
-                    : undefined
-                }
+                action={clearFiltersAction(filterState, {
+                  value: activeChip,
+                  reset: () => setActiveChip('all'),
+                })}
               />
             </div>
           );
