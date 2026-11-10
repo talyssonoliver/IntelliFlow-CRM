@@ -637,8 +637,9 @@ export const leadRouter = createTRPCRouter({
 
     // #1277 (UI-022): no synthetic insight. A lead without a LeadAIInsight row has had no
     // analysis, and the page says so. getById used to derive one from heuristics and save
-    // it, which made a plain read look like an AI analysis.
-    return lead;
+    // it, which made a plain read look like an AI analysis. The response always carries an
+    // `aiInsights` array (empty when there is none), as the contract requires.
+    return { ...lead, aiInsights: lead.aiInsights ?? [] };
   }),
 
   /**
