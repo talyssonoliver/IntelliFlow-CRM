@@ -79,6 +79,7 @@
  * Env:
  *   PRESHIP_MODE=full        same as passing --full
  *   PRESHIP_FULL_TESTS=1     run the FULL test suite locally (default: related only)
+ *   PRESHIP_FULL_BUILD=1     library-build, typecheck and build over every package locally
  *   PRESHIP_KEEP_GOING=1     don't hard-stop on first required FAIL
  *   PRESHIP_ALLOW_MISSING=1  let required+SKIPPED_PRECONDITION steps pass
  *                            (infra-unrunnable steps only; NOT a full bypass)
@@ -113,6 +114,7 @@ import {
   summaryLine,
 } from './lib/preship-run-metrics.mjs';
 import { testStepEnv } from './lib/preship-build.mjs';
+import { AFFECTED_ENV, resolveAffected } from './lib/preship-affected.mjs';
 
 // Throwaway stub credentials for the build-time env mirror below (never a real DB).
 const STUB_DB_USER = 'stub';
@@ -286,6 +288,13 @@ const IS_CI = process.env.CI === 'true' || process.env.CI === '1';
 const TEST_SCOPE = resolveTestScope({ cwd: REPO_ROOT });
 const SCOPED_TESTS = TEST_SCOPE.scope !== 'full';
 const SCOPE_ENV_VALUE = JSON.stringify(TEST_SCOPE);
+// BUILD SCOPE: library-build, typecheck and build run over the packages this
+// branch changed plus their dependents, using CI's own classification
+// (scripts/ci/affected.mjs) over the local diff. Full under CI, with
+// PRESHIP_FULL_BUILD=1, or when the diff touches a path that affects every
+// package. `build` is skipped when only docs or test files changed.
+const AFFECTED = resolveAffected({ cwd: REPO_ROOT });
+const AFFECTED_ENV_VALUE = JSON.stringify(AFFECTED);
 const CI_ONLY_REMEDIATION =
   'Needs the full suite, which runs on CI. Run it locally with PRESHIP_FULL_TESTS=1.';
 
@@ -340,17 +349,10 @@ const STEPS = [
   {
     id: 'library-build',
     description: 'turbo run build for library packages (typecheck/test depend on dist/)',
-    cmd: [
-      'pnpm',
-      'exec',
-      'turbo',
-      'run',
-      'build',
-      '--filter=!@intelliflow/web',
-      '--filter=!@intelliflow/api',
-      '--filter=!@intelliflow/project-tracker',
-      '--filter=!@intelliflow/workers',
-    ],
+    // Locally: the affected libraries and the dependencies of affected apps
+    // (scripts/lib/preship-affected.mjs). CI / PRESHIP_FULL_BUILD=1: every library.
+    cmd: ['node', 'scripts/run-library-build.mjs'],
+    env: { [AFFECTED_ENV]: AFFECTED_ENV_VALUE },
     required: true,
   },
   {
@@ -402,6 +404,7 @@ const STEPS = [
       ? 'turbo run typecheck + sonar-guard'
       : 'turbo run typecheck (bounded concurrency) + sonar-guard',
     cmd: ['node', 'scripts/run-typecheck.mjs'],
+    env: { [AFFECTED_ENV]: AFFECTED_ENV_VALUE },
     required: true,
   },
   {
@@ -586,6 +589,7 @@ const STEPS = [
     // (Prisma encryption, AI audit signing, Supabase). Mirror locally
     // so a stub env doesn't silently fail differently from CI.
     env: {
+      [AFFECTED_ENV]: AFFECTED_ENV_VALUE,
       NODE_ENV: 'production',
       PRISMA_FIELD_ENCRYPTION_KEY:
         process.env.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
@@ -890,7 +894,11 @@ if (flags.help) {
       '  files changed since origin/main (vitest related). The full suite runs on CI.',
       '  PRESHIP_FULL_TESTS=1 runs the full suite locally.',
       '',
-      'Env: PRESHIP_MODE=full · PRESHIP_KEEP_GOING=1 · PRESHIP_ALLOW_MISSING=1 · PRESHIP_FULL_TESTS=1',
+      'Build scope: library-build, typecheck and build cover the changed packages and',
+      '  their dependents; build is skipped for docs/test-only diffs. PRESHIP_FULL_BUILD=1',
+      '  builds everything.',
+      '',
+      'Env: PRESHIP_MODE=full · PRESHIP_KEEP_GOING=1 · PRESHIP_ALLOW_MISSING=1 · PRESHIP_FULL_TESTS=1 · PRESHIP_FULL_BUILD=1',
       '',
     ].join('\n')
   );
@@ -1080,6 +1088,12 @@ async function main() {
   process.stdout.write(
     `pre-ship: test scope ${TEST_SCOPE.scope} — ${TEST_SCOPE.reason}` +
       (SCOPED_TESTS ? ' (the full suite runs on CI; PRESHIP_FULL_TESTS=1 runs it here)' : '') +
+      '.\n'
+  );
+  process.stdout.write(
+    `pre-ship: build scope ${AFFECTED.mode} — ${AFFECTED.reason}` +
+      (AFFECTED.mode === 'affected' ? ` [${AFFECTED.packages.join(', ')}]` : '') +
+      (AFFECTED.testsOrDocsOnly ? '; only docs/tests changed, build skipped' : '') +
       '.\n\n'
   );
 
