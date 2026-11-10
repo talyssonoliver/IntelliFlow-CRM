@@ -936,6 +936,7 @@ describe('pre-ship.mjs runs a step async, tracks it, and cleans up', () => {
       'preship-integration-infra.mjs',
       'preship-cache.mjs',
       'preship-build.mjs',
+      'preship-db-scope.mjs',
     ]) {
       fs.copyFileSync(path.join(SCRIPTS, 'lib', lib), path.join(dir, 'scripts/lib', lib));
     }
