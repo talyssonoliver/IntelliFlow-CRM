@@ -936,9 +936,16 @@ describe('pre-ship.mjs runs a step async, tracks it, and cleans up', () => {
       'preship-integration-infra.mjs',
       'preship-cache.mjs',
       'preship-build.mjs',
+      'preship-affected.mjs',
     ]) {
       fs.copyFileSync(path.join(SCRIPTS, 'lib', lib), path.join(dir, 'scripts/lib', lib));
     }
+    // preship-affected.mjs reuses CI's classifier.
+    fs.mkdirSync(path.join(dir, 'scripts/ci'), { recursive: true });
+    fs.copyFileSync(
+      path.join(SCRIPTS, 'ci', 'affected.mjs'),
+      path.join(dir, 'scripts/ci', 'affected.mjs')
+    );
     git(['add', '-A']);
     git(['commit', '-q', '-m', 'seed']);
     const bin = path.join(dir, 'bin');
@@ -968,7 +975,7 @@ describe('pre-ship.mjs runs a step async, tracks it, and cleans up', () => {
 
   it('runs the step, streams its output to the step log, and leaves no state file behind', () => {
     const { dir, seen, stateDir, env } = gateRepo();
-    const r = spawnSync(process.execPath, ['scripts/pre-ship.mjs', '--only=library-build'], {
+    const r = spawnSync(process.execPath, ['scripts/pre-ship.mjs', '--only=install'], {
       cwd: dir,
       env,
       encoding: 'utf8',
@@ -979,7 +986,7 @@ describe('pre-ship.mjs runs a step async, tracks it, and cleans up', () => {
     const logs = fs
       .readdirSync(dir, { recursive: true })
       .map(String)
-      .filter((f) => f.endsWith('library-build.log'));
+      .filter((f) => f.endsWith('install.log'));
     expect(logs.length).toBeGreaterThan(0);
     expect(fs.readFileSync(path.join(dir, logs[0]), 'utf8')).toMatch(/to-the-log/);
     expect(
