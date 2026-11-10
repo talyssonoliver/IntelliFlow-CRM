@@ -340,16 +340,19 @@ export function ChurnDashboard() {
       </div>
     );
   } else if (filteredCustomers.length === 0) {
+    // The risk chip filters on its own state (e.g. "At risk" leaves riskLevel empty), so it
+    // counts as a filter and is cleared with the rest.
+    const filtered = filterState.isFiltered(['sort']) || activeChip !== 'all';
+    const clearFilters = () => {
+      filterState.resetFilters(['sort']);
+      setActiveChip('all');
+    };
     customerListContent = (
       <div data-testid="empty-state">
         <EmptyState
           entity="insights"
           showCta={false}
-          action={
-            filterState.isFiltered(['sort'])
-              ? { label: 'Clear filters', onClick: () => filterState.resetFilters(['sort']) }
-              : undefined
-          }
+          action={filtered ? { label: 'Clear filters', onClick: clearFilters } : undefined}
         />
       </div>
     );
