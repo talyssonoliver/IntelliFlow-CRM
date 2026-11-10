@@ -2,11 +2,8 @@
 
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
-import {
-  DASHBOARD_REFETCH_INTERVAL_MS,
-  computeDeltaPercent,
-  isTrendingUp,
-} from '@/lib/dashboard/kpi-calculator';
+import { DASHBOARD_REFETCH_INTERVAL_MS, computeDeltaPercent } from '@/lib/dashboard/kpi-calculator';
+import { KpiCard, KpiTrendBadge } from '../KpiCard';
 import type { WidgetProps } from './index';
 
 export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
@@ -33,9 +30,9 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
 
   if (isLoading || authLoading) {
     return (
-      <div className="p-6 h-full flex flex-col animate-pulse">
+      <div className="p-4 sm:p-6 h-full flex flex-col animate-pulse">
         <div className="flex items-start justify-between">
-          <div className="w-12 h-12 rounded-lg bg-slate-200 dark:bg-slate-700" />
+          <div className="size-9 sm:size-12 rounded-lg bg-slate-200 dark:bg-slate-700" />
           <div className="w-16 h-5 rounded bg-slate-200 dark:bg-slate-700" />
         </div>
         <div className="h-4 w-24 rounded bg-slate-200 dark:bg-slate-700 mt-4" />
@@ -44,42 +41,30 @@ export function TotalLeadsWidget({ initialData }: Readonly<WidgetProps>) {
     );
   }
 
-  if (error || !stats) {
+  // A failed background refresh keeps the count already loaded; "Couldn't load" is only
+  // for a request that never produced one.
+  if (error && !stats) {
+    return <KpiCard label="Total Leads" icon="group" value={null} failed />;
+  }
+
+  if (!stats) {
     return null;
   }
 
   const total = stats.total;
   const delta = Number(overview?.leadDelta ?? 0);
   const previous = total - delta;
-  const deltaPercent = Math.round(computeDeltaPercent(delta, previous));
-  const isPositive = isTrendingUp(deltaPercent);
 
   return (
-    <div className="p-6 h-full flex flex-col">
-      <div className="flex items-start justify-between">
-        <div className="w-12 h-12 rounded-lg bg-ds-primary/10 flex items-center justify-center">
-          <span className="material-symbols-outlined text-2xl text-ds-primary" aria-hidden="true">
-            group
-          </span>
-        </div>
-        {deltaPercent !== 0 && (
-          <span
-            className={`inline-flex items-center gap-1 text-sm font-medium ${
-              isPositive ? 'text-green-600' : 'text-red-600'
-            }`}
-          >
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">
-              {isPositive ? 'trending_up' : 'trending_down'}
-            </span>{' '}
-            {isPositive ? '+' : ''}
-            {deltaPercent}%
-          </span>
-        )}
-      </div>
-      <p className="text-sm text-slate-500 dark:text-slate-400 mt-4">Total Leads</p>
-      <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1 tabular-nums">
-        {total.toLocaleString('en-GB')}
-      </p>
-    </div>
+    <KpiCard
+      label="Total Leads"
+      icon="group"
+      value={total.toLocaleString('en-GB')}
+      badge={
+        overview ? (
+          <KpiTrendBadge deltaPercent={computeDeltaPercent(delta, previous)} previous={previous} />
+        ) : undefined
+      }
+    />
   );
 }

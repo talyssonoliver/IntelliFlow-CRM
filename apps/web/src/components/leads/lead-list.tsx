@@ -549,6 +549,7 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
             label: 'Import',
             icon: 'upload',
             variant: 'secondary',
+            hideOnMobile: true,
             href: '/leads/import',
           },
           {

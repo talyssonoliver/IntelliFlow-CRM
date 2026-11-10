@@ -383,6 +383,7 @@ export function ActiveAgentsDashboard() {
             label: 'Refresh',
             icon: 'refresh',
             variant: 'secondary',
+            hideOnMobile: true,
             onClick: refetch,
           },
         ]}

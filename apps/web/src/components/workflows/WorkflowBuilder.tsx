@@ -46,6 +46,7 @@ export function WorkflowBuilder() {
               label: 'Back to workflows',
               icon: 'arrow_back',
               variant: 'secondary',
+              hideOnMobile: true,
               onClick: goToList,
             },
           ]}
