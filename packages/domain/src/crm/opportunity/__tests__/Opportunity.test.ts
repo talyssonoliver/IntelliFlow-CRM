@@ -1315,33 +1315,20 @@ describe('Opportunity (b11 tests)', () => {
       // Money.create(0) may succeed since Money itself allows 0
       // But Opportunity checks amount <= 0
       const money = Money.create(0, 'GBP');
-      if (money.isSuccess) {
-        const result = Opportunity.create({
-          name: 'Zero Money',
-          value: money.value,
-          accountId: 'acc_1',
-          ownerId: 'user_1',
-          tenantId: 'tenant_1',
-        });
-        expect(result.isFailure).toBe(true);
-      }
+      expect(money.isSuccess).toBe(true);
+      const result = Opportunity.create({
+        name: 'Zero Money',
+        value: money.value,
+        accountId: 'acc_1',
+        ownerId: 'user_1',
+        tenantId: 'tenant_1',
+      });
+      expect(result.isFailure).toBe(true);
     });
 
-    it('should fail when Money object has negative amount', () => {
-      const money = Money.create(-100, 'GBP');
-      if (money.isSuccess) {
-        const result = Opportunity.create({
-          name: 'Negative Money',
-          value: money.value,
-          accountId: 'acc_1',
-          ownerId: 'user_1',
-          tenantId: 'tenant_1',
-        });
-        expect(result.isFailure).toBe(true);
-      } else {
-        // Money itself rejected the negative value - that's fine
-        expect(money.isFailure).toBe(true);
-      }
+    it('rejects a negative amount before it can reach an opportunity', () => {
+      // Money refuses negative amounts, so no opportunity can be built from one.
+      expect(Money.create(-100, 'GBP').isFailure).toBe(true);
     });
 
     it('should create with EUR currency Money object', () => {
@@ -1370,21 +1357,17 @@ describe('Opportunity (b11 tests)', () => {
     it('should fail when Money object has zero amount', () => {
       const opp = createOpp().value;
       const zeroMoney = Money.create(0, 'GBP');
-      if (zeroMoney.isSuccess) {
-        const result = opp.updateValue(zeroMoney.value, 'user_1');
-        expect(result.isFailure).toBe(true);
-      }
+      expect(zeroMoney.isSuccess).toBe(true);
+      const result = opp.updateValue(zeroMoney.value, 'user_1');
+      expect(result.isFailure).toBe(true);
     });
 
-    it('should fail when Money object has negative amount', () => {
+    it('keeps the value when a negative amount is refused', () => {
       const opp = createOpp().value;
-      const negMoney = Money.create(-1, 'GBP');
-      if (negMoney.isSuccess) {
-        const result = opp.updateValue(negMoney.value, 'user_1');
-        expect(result.isFailure).toBe(true);
-      } else {
-        expect(negMoney.isFailure).toBe(true);
-      }
+      const before = opp.value.amount;
+      // Money refuses negative amounts, so updateValue never receives one.
+      expect(Money.create(-1, 'GBP').isFailure).toBe(true);
+      expect(opp.value.amount).toBe(before);
     });
 
     it('should not update value when closed', () => {

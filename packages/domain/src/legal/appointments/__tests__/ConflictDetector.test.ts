@@ -563,9 +563,8 @@ describe('ConflictDetector (b11 tests)', () => {
       const apt2 = apt2Result.value;
 
       const result = ConflictDetector.checkConflicts(apt1, [apt2]);
-      if (result.hasConflicts) {
-        expect(result.conflicts[0].conflictType).toBe('BUFFER');
-      }
+      expect(result.hasConflicts).toBe(true);
+      expect(result.conflicts[0].conflictType).toBe('BUFFER');
     });
 
     it('should detect PARTIAL conflict when core times overlap', () => {
@@ -711,11 +710,9 @@ describe('ConflictDetector (b11 tests)', () => {
       const slot = ConflictDetector.findNextAvailableSlot('user-1', saturday, 60, []);
 
       expect(slot).not.toBeNull();
-      if (slot) {
-        const day = slot.startTime.getDay();
-        expect(day).not.toBe(0);
-        expect(day).not.toBe(6);
-      }
+      const day = slot!.startTime.getDay();
+      expect(day).not.toBe(0);
+      expect(day).not.toBe(6);
     });
 
     it('should advance to next day when after working hours', () => {
@@ -726,9 +723,7 @@ describe('ConflictDetector (b11 tests)', () => {
       });
 
       expect(slot).not.toBeNull();
-      if (slot) {
-        expect(slot.startTime.getHours()).toBeGreaterThanOrEqual(9);
-      }
+      expect(slot!.startTime.getHours()).toBeGreaterThanOrEqual(9);
     });
 
     it('should adjust to working hours start when before working hours', () => {
@@ -739,9 +734,7 @@ describe('ConflictDetector (b11 tests)', () => {
       });
 
       expect(slot).not.toBeNull();
-      if (slot) {
-        expect(slot.startTime.getHours()).toBeGreaterThanOrEqual(9);
-      }
+      expect(slot!.startTime.getHours()).toBeGreaterThanOrEqual(9);
     });
 
     it('should include buffer in total required duration', () => {
@@ -755,9 +748,7 @@ describe('ConflictDetector (b11 tests)', () => {
       );
 
       expect(slot).not.toBeNull();
-      if (slot) {
-        expect(slot.durationMinutes).toBe(90);
-      }
+      expect(slot!.durationMinutes).toBe(90);
     });
   });
 });
