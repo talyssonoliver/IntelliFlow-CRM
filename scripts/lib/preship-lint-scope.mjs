@@ -226,3 +226,89 @@ export function chunkArgs(items, maxChars = 6000) {
   if (cur.length) chunks.push(cur);
   return chunks;
 }
+
+/** The repo-wide command each mode falls back to, as `pnpm` arguments. */
+export const FULL_COMMAND = {
+  format: ['run', 'format:check'],
+  lint: ['run', 'lint'],
+  promises: ['run', 'lint:promises'],
+};
+
+/**
+ * Run one scoped step. All process, filesystem and workspace access comes in
+ * through `io`, so the whole decision is tested in-process; the CLI
+ * (scripts/run-scoped-lint.mjs) only wires it in.
+ *
+ * @param {'format'|'lint'|'promises'} mode
+ * @param {{scope: 'full'|'changed', reason: string, files: string[]}} scope
+ * @param {{root: string,
+ *          run: (cmd: string, args: string[], cwd: string) => number,
+ *          exists: (repoRelativePath: string) => boolean,
+ *          packages: () => {name: string, dir: string, lint?: string}[],
+ *          promiseRoots: () => Promise<string[]> | string[],
+ *          log: (line: string) => void,
+ *          join?: (...parts: string[]) => string}} io
+ * @returns {Promise<number>} exit status: 0 clean, non-zero on any problem
+ */
+export async function runScopedLint(mode, scope, io) {
+  const { root, run, log } = io;
+  const join = io.join ?? path.join;
+  log(`[scoped-lint] ${mode}: scope ${scope.scope} — ${scope.reason}`);
+  if (scope.scope === 'full') return run('pnpm', FULL_COMMAND[mode], root);
+
+  let status = 0;
+  if (mode === 'format') {
+    const targets = formatTargets(scope.files).filter((f) => io.exists(f));
+    if (targets.length === 0) {
+      log('[scoped-lint] format: no formattable files changed');
+      return 0;
+    }
+    log(`[scoped-lint] format: prettier --check on ${targets.length} changed file(s)`);
+    // --ignore-unknown and .prettierignore apply as they do to the repo-wide glob.
+    for (const chunk of chunkArgs(targets)) {
+      status |= run('pnpm', ['exec', 'prettier', '--check', '--ignore-unknown', ...chunk], root);
+    }
+    return status;
+  }
+
+  if (mode === 'lint') {
+    const plan = lintPlan(scope.files, io.packages());
+    if (plan.eslint.length === 0 && plan.whole.length === 0) {
+      log('[scoped-lint] lint: no file a package lint script covers changed');
+      return 0;
+    }
+    for (const pkg of plan.eslint) {
+      log(`[scoped-lint] lint: ${pkg.name} — ${pkg.files.length} changed file(s)`);
+      for (const chunk of chunkArgs(pkg.files)) {
+        status |= run(
+          'pnpm',
+          ['exec', 'eslint', '--no-warn-ignored', ...chunk],
+          join(root, pkg.dir)
+        );
+      }
+    }
+    for (const name of plan.whole) {
+      log(`[scoped-lint] lint: ${name} — its lint script is not plain eslint; running it whole`);
+      status |= run('pnpm', ['--filter', name, 'run', 'lint'], root);
+    }
+    return status;
+  }
+
+  const plan = promisesPlan(scope.files, await io.promiseRoots());
+  if (plan.length === 0) {
+    log('[scoped-lint] promises: no changed file under a type-aware source root');
+    return 0;
+  }
+  for (const { root: srcRoot, files } of plan) {
+    log(`[scoped-lint] promises: ${srcRoot} — ${files.length} changed file(s)`);
+    for (const chunk of chunkArgs(files)) {
+      status |= run(
+        'pnpm',
+        ['exec', 'eslint', '-c', 'eslint.promises.config.mjs', '--no-warn-ignored', ...chunk],
+        root
+      );
+    }
+  }
+  if (status !== 0) log('[scoped-lint] promises: floating promises found');
+  return status;
+}

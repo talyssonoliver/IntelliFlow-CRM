@@ -2,7 +2,8 @@
  * Tests for scripts/lib/preship-lint-scope.mjs — which files the local pre-ship
  * format-check, lint and lint-promises steps check.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import path from 'node:path';
 
 import {
   chunkArgs,
@@ -12,6 +13,8 @@ import {
   lintPlan,
   promisesPlan,
   resolveLintScope,
+  runScopedLint,
+  FULL_COMMAND,
   FULL_LINT_ENV,
 } from '../lib/preship-lint-scope.mjs';
 
@@ -210,5 +213,151 @@ describe('chunkArgs', () => {
 
   it('is empty for no items', () => {
     expect(chunkArgs([])).toEqual([]);
+  });
+});
+
+describe('runScopedLint', () => {
+  const changed = (files: string[]) => ({ scope: 'changed' as const, reason: 'r', files });
+  function io(overrides: Record<string, unknown> = {}) {
+    const run = vi.fn(() => 0);
+    const log = vi.fn();
+    return {
+      run,
+      log,
+      io: {
+        root: '/repo',
+        run,
+        log,
+        exists: () => true,
+        packages: () => [
+          { name: '@x/web', dir: 'apps/web', lint: 'eslint "src/**/*.{ts,tsx}"' },
+          { name: '@x/workers', dir: 'apps/workers', lint: 'pnpm --filter a run lint' },
+        ],
+        promiseRoots: async () => ['apps/web/src'],
+        join: (...p: string[]) => p.join('/'),
+        ...overrides,
+      },
+    };
+  }
+
+  it.each(['format', 'lint', 'promises'] as const)(
+    '%s runs the repo-wide command on a full scope',
+    async (mode) => {
+      const t = io();
+      const status = await runScopedLint(mode, { scope: 'full', reason: 'CI', files: [] }, t.io);
+      expect(status).toBe(0);
+      expect(t.run).toHaveBeenCalledWith('pnpm', FULL_COMMAND[mode], '/repo');
+    }
+  );
+
+  it('format: prettier --check on the changed files that still exist', async () => {
+    const t = io({ exists: (f: string) => f !== 'apps/web/src/gone.ts' });
+    await runScopedLint(
+      'format',
+      changed(['apps/web/src/a.tsx', 'apps/web/src/gone.ts', 'x.css']),
+      t.io
+    );
+    expect(t.run).toHaveBeenCalledWith(
+      'pnpm',
+      ['exec', 'prettier', '--check', '--ignore-unknown', 'apps/web/src/a.tsx'],
+      '/repo'
+    );
+  });
+
+  it('format: nothing to do when no formattable file changed', async () => {
+    const t = io();
+    expect(await runScopedLint('format', changed(['a.css']), t.io)).toBe(0);
+    expect(t.run).not.toHaveBeenCalled();
+  });
+
+  it('lint: per-package eslint in the package dir, and a non-eslint script whole', async () => {
+    const t = io();
+    await runScopedLint('lint', changed(['apps/web/src/a.tsx', 'apps/workers/x.ts']), t.io);
+    expect(t.run).toHaveBeenCalledWith(
+      'pnpm',
+      ['exec', 'eslint', '--no-warn-ignored', 'src/a.tsx'],
+      '/repo/apps/web'
+    );
+    expect(t.run).toHaveBeenCalledWith('pnpm', ['--filter', '@x/workers', 'run', 'lint'], '/repo');
+  });
+
+  it('lint: nothing to do when no linted file changed', async () => {
+    const t = io();
+    expect(await runScopedLint('lint', changed(['README.md']), t.io)).toBe(0);
+    expect(t.run).not.toHaveBeenCalled();
+  });
+
+  it('promises: type-aware eslint per source root, failing on any problem', async () => {
+    const t = io();
+    t.run.mockReturnValue(1);
+    const status = await runScopedLint('promises', changed(['apps/web/src/a.tsx']), t.io);
+    expect(status).not.toBe(0);
+    expect(t.run).toHaveBeenCalledWith(
+      'pnpm',
+      [
+        'exec',
+        'eslint',
+        '-c',
+        'eslint.promises.config.mjs',
+        '--no-warn-ignored',
+        'apps/web/src/a.tsx',
+      ],
+      '/repo'
+    );
+    expect(t.log).toHaveBeenCalledWith('[scoped-lint] promises: floating promises found');
+  });
+
+  it('promises: nothing to do outside the source roots', async () => {
+    const t = io();
+    expect(await runScopedLint('promises', changed(['scripts/a.mjs']), t.io)).toBe(0);
+    expect(t.run).not.toHaveBeenCalled();
+  });
+
+  it('keeps a failure from any chunk', async () => {
+    const t = io();
+    t.run.mockReturnValueOnce(0).mockReturnValueOnce(2);
+    const files = Array.from({ length: 800 }, (_, i) => `apps/web/src/component-number-${i}.tsx`);
+    expect(await runScopedLint('format', changed(files), t.io)).not.toBe(0);
+    expect(t.run.mock.calls.length).toBeGreaterThan(1);
+  });
+});
+
+describe('resolveLintScope against this checkout', () => {
+  it('reads the real diff, ignoring a git hook GIT_DIR', () => {
+    const r = resolveLintScope({ cwd: process.cwd(), env: { GIT_DIR: '/nowhere/.git' } });
+    expect(['full', 'changed']).toContain(r.scope);
+    expect(Array.isArray(r.files)).toBe(true);
+  });
+
+  it('is full against a base ref that does not exist', () => {
+    const r = resolveLintScope({
+      cwd: process.cwd(),
+      env: {},
+      baseRef: 'refs/heads/no-such-base-ref',
+    });
+    expect(r.scope).toBe('full');
+  });
+
+  it('defaults to the process env', () => {
+    expect(['full', 'changed']).toContain(resolveLintScope({ cwd: process.cwd() }).scope);
+  });
+});
+
+describe('runScopedLint path joining', () => {
+  it('joins the package dir with node:path by default', async () => {
+    const run = vi.fn(() => 0);
+    await runScopedLint(
+      'lint',
+      { scope: 'changed', reason: 'r', files: ['apps/web/src/a.tsx'] },
+      {
+        root: 'repo',
+        run,
+        log: () => {},
+        exists: () => true,
+        packages: () => [{ name: '@x/web', dir: 'apps/web', lint: 'eslint "src/**/*.tsx"' }],
+        promiseRoots: () => [],
+      }
+    );
+    expect(run.mock.calls[0][2]).toBe(path.join('repo', 'apps/web'));
   });
 });
