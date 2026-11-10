@@ -79,6 +79,7 @@
  * Env:
  *   PRESHIP_MODE=full        same as passing --full
  *   PRESHIP_FULL_TESTS=1     run the FULL test suite locally (default: related only)
+ *   PRESHIP_FULL_DB=1        run the integration suite even when no change reaches it
  *   PRESHIP_KEEP_GOING=1     don't hard-stop on first required FAIL
  *   PRESHIP_ALLOW_MISSING=1  let required+SKIPPED_PRECONDITION steps pass
  *                            (infra-unrunnable steps only; NOT a full bypass)
@@ -105,6 +106,7 @@ import {
   finalLine,
 } from './lib/preship-report.mjs';
 import { integrationInfraMissing } from './lib/preship-integration-infra.mjs';
+import { FULL_DB_ENV, resolveDbScope } from './lib/preship-db-scope.mjs';
 import { reusableResult } from './lib/preship-cache.mjs';
 import {
   appendRunRecord,
@@ -286,6 +288,15 @@ const IS_CI = process.env.CI === 'true' || process.env.CI === '1';
 const TEST_SCOPE = resolveTestScope({ cwd: REPO_ROOT });
 const SCOPED_TESTS = TEST_SCOPE.scope !== 'full';
 const SCOPE_ENV_VALUE = JSON.stringify(TEST_SCOPE);
+// DB SCOPE: the integration suite runs locally only when the branch can reach it
+// (a change under packages/db, apps/api, apps/ai-worker or tests/integration, a
+// test/DB config file, or a file an integration test imports). Otherwise it is an
+// honest, non-required skip: CI runs the whole suite. Always needed under CI and
+// with PRESHIP_FULL_DB=1. See scripts/lib/preship-db-scope.mjs.
+const DB_SCOPE = resolveDbScope({ cwd: REPO_ROOT });
+const NOT_AFFECTED_REMEDIATION =
+  `Not affected: ${DB_SCOPE.reason}. CI runs the integration suite; ` +
+  `${FULL_DB_ENV}=1 runs it here.`;
 const CI_ONLY_REMEDIATION =
   'Needs the full suite, which runs on CI. Run it locally with PRESHIP_FULL_TESTS=1.';
 
@@ -480,12 +491,14 @@ const STEPS = [
     description:
       'vitest run --project integration (FAILS the gate if Docker postgres/redis not up — override with PRESHIP_ALLOW_MISSING=1)',
     cmd: ['pnpm', 'run', 'test:integration'],
-    // The endpoints the suite will actually use, TCP-probed (see the lib). A
-    // name match on `docker ps` was fooled by other projects' containers.
-    skip_if: dbStackUnavailable,
-    skip_remediation:
-      'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis`. Then re-run, or set PRESHIP_ALLOW_MISSING=1 to bypass for this push only.',
-    required: true,
+    // Skipped (not required) when no change reaches the suite (DB_SCOPE above).
+    // Otherwise the endpoints the suite will actually use are TCP-probed (see the
+    // lib): a name match on `docker ps` was fooled by other projects' containers.
+    skip_if: () => !DB_SCOPE.needed || dbStackUnavailable(),
+    skip_remediation: DB_SCOPE.needed
+      ? 'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis`. Then re-run, or set PRESHIP_ALLOW_MISSING=1 to bypass for this push only.'
+      : NOT_AFFECTED_REMEDIATION,
+    required: DB_SCOPE.needed,
   },
   {
     id: 'coverage',
@@ -890,7 +903,11 @@ if (flags.help) {
       '  files changed since origin/main (vitest related). The full suite runs on CI.',
       '  PRESHIP_FULL_TESTS=1 runs the full suite locally.',
       '',
-      'Env: PRESHIP_MODE=full · PRESHIP_KEEP_GOING=1 · PRESHIP_ALLOW_MISSING=1 · PRESHIP_FULL_TESTS=1',
+      'DB scope: integration tests run only when the change can reach them (db, api,',
+      '  ai-worker, tests/integration, DB/test config, or a file they import).',
+      '  PRESHIP_FULL_DB=1 always runs them.',
+      '',
+      'Env: PRESHIP_MODE=full · PRESHIP_KEEP_GOING=1 · PRESHIP_ALLOW_MISSING=1 · PRESHIP_FULL_TESTS=1 · PRESHIP_FULL_DB=1',
       '',
     ].join('\n')
   );
@@ -1080,7 +1097,10 @@ async function main() {
   process.stdout.write(
     `pre-ship: test scope ${TEST_SCOPE.scope} — ${TEST_SCOPE.reason}` +
       (SCOPED_TESTS ? ' (the full suite runs on CI; PRESHIP_FULL_TESTS=1 runs it here)' : '') +
-      '.\n\n'
+      '.\n'
+  );
+  process.stdout.write(
+    `pre-ship: integration ${DB_SCOPE.needed ? 'runs' : 'skipped'} — ${DB_SCOPE.reason}.\n\n`
   );
 
   const results = [];

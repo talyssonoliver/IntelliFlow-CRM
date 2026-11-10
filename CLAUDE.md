@@ -182,6 +182,13 @@ sharded runners' job. Typecheck, lint and all other gates stay full.
 (other than `scripts`), vitest/tsconfig, Prisma schema or test-setup changes
 widen to full on their own.
 
+**DB scope:** the integration suite runs locally only when the branch can reach
+it: a change under `packages/db`, `apps/api`, `apps/ai-worker` or
+`tests/integration`, a test or DB config file, or a file an integration test
+imports (`vitest list --changed`). Otherwise it is a non-required skip and CI
+runs it. The push gate seeds with `test-db.mjs run --seed-if-affected`, which
+seeds only in the same case. `PRESHIP_FULL_DB=1` forces the suite.
+
 **At most 3 full test runs at once, machine-wide.** Before any step the gate
 re-runs itself under the shared slot semaphore (`scripts/lib/test-slot.mjs`),
 which waits for a free slot and releases it on exit. Separately, the gate
