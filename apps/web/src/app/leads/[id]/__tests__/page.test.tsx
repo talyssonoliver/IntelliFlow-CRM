@@ -1607,13 +1607,56 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
     expect(screen.queryByRole('link', { name: 'Compose' })).not.toBeInTheDocument();
   });
 
-  it('Open takes an email to its activity in the timeline', () => {
+  it('Open shows the email in the timeline, expanded, without changing the URL', () => {
     data().activities = [emailActivity];
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      cb(0);
+      return 0;
+    });
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
     render(<Lead360Page />);
     fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
-    expect(
-      screen.getByRole('link', { name: 'Open "Your proposal" in the activity timeline' })
-    ).toHaveAttribute('href', '/leads/lead-1?activityId=act-email-1');
+
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Open "Your proposal" in the activity timeline' })
+    );
+
+    // The Activity tab is showing the email with its rich preview expanded.
+    expect(screen.getByText('Proposal sent')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'expand_more' }).querySelector('span')).toHaveClass(
+      'rotate-180'
+    );
+    expect(scrollIntoView).toHaveBeenCalled();
+    // No navigation: the deep-link param never enters the URL.
+    expect(mockPush).not.toHaveBeenCalled();
+    expect(mockReplace).not.toHaveBeenCalled();
+    raf.mockRestore();
+  });
+
+  it('a second Open scrolls again and the user can still change tab', () => {
+    data().activities = [emailActivity];
+    const raf = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((cb) => {
+      cb(0);
+      return 0;
+    });
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    render(<Lead360Page />);
+    const openEmail = () => {
+      fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Open "Your proposal" in the activity timeline' })
+      );
+    };
+
+    openEmail();
+    openEmail();
+    expect(scrollIntoView).toHaveBeenCalledTimes(2);
+
+    fireEvent.click(screen.getByRole('button', { name: /^Files/i }));
+    expect(screen.queryByText('Proposal sent')).not.toBeInTheDocument();
+    raf.mockRestore();
   });
 
   it('Files has no Upload, and offers Download only for files with a stored address', () => {

@@ -1575,12 +1575,13 @@ function LeadNotesTab({
 interface LeadEmailsTabProps {
   emails: { id: string; subject: string; status: string; sentAt: string; openCount: number }[];
   timezone: string;
-  leadId: string;
   /** The lead's email address; Compose (header and empty state) is offered only when there is one. */
   leadEmail: string | null | undefined;
+  /** Shows that email's activity in the timeline (tab, expanded, scrolled to). */
+  onOpenActivity: (activityId: string) => void;
 }
 
-function LeadEmailsTab({ emails, timezone, leadId, leadEmail }: LeadEmailsTabProps) {
+function LeadEmailsTab({ emails, timezone, leadEmail, onOpenActivity }: LeadEmailsTabProps) {
   const to = leadEmail?.trim();
   return (
     <Card className="p-6">
@@ -1623,15 +1624,18 @@ function LeadEmailsTab({ emails, timezone, leadId, leadEmail }: LeadEmailsTabPro
                   </span>
                 </div>
               </div>
-              <Link
-                href={`/leads/${encodeURIComponent(leadId)}?activityId=${encodeURIComponent(email.id)}`}
+              {/* Opens in place: no ?activityId= navigation, which would re-run the
+                  deep-link tab switch on this same page. */}
+              <button
+                type="button"
+                onClick={() => onOpenActivity(email.id)}
                 aria-label={`Open "${email.subject}" in the activity timeline`}
                 className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg"
               >
                 <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
                   open_in_new
                 </span>
-              </Link>
+              </button>
             </div>
           ))
         ) : (
@@ -2426,6 +2430,31 @@ export default function Lead360Page() {
     });
   }, [selectedActivityId, activeTab]);
 
+  // Emails tab "Open": show that activity in the timeline without changing the URL.
+  // Filters are cleared and enough rows shown so the activity is rendered, then it is
+  // expanded and scrolled to once the Activity tab has painted. Each Open scrolls again.
+  const [pendingScrollId, setPendingScrollId] = useState<string | null>(null);
+  const openActivityInTimeline = (activityId: string) => {
+    setActivityTypeFilter('all');
+    setPersonFilter('all');
+    setSearchQuery('');
+    const index = activities.findIndex((a) => a.id === activityId);
+    if (index >= 0) setVisibleCount((count) => Math.max(count, index + 1));
+    setExpandedActivities((prev) => new Set(prev).add(activityId));
+    setActiveTab('activity');
+    setPendingScrollId(activityId);
+  };
+  useEffect(() => {
+    if (!pendingScrollId || activeTab !== 'activity') return;
+    const id = pendingScrollId;
+    setPendingScrollId(null);
+    requestAnimationFrame(() => {
+      document
+        .querySelector(`[data-activity-id="${CSS.escape(id)}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }, [pendingScrollId, activeTab]);
+
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [logCallOpen, setLogCallOpen] = useState(false);
@@ -3045,8 +3074,8 @@ export default function Lead360Page() {
             <LeadEmailsTab
               emails={emails}
               timezone={timezone}
-              leadId={leadId}
               leadEmail={lead?.email}
+              onOpenActivity={openActivityInTimeline}
             />
           )}
 
