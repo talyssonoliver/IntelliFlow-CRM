@@ -24,12 +24,8 @@ const RadioGroupItem = React.forwardRef<
       {...props}
     >
       <RadioGroupPrimitive.Indicator className="flex items-center justify-center">
-        <span
-          className="material-symbols-outlined text-[10px] fill-current text-current"
-          aria-hidden="true"
-        >
-          fiber_manual_record
-        </span>
+        {/* A CSS dot, not an icon glyph: it follows the box, not the icon font (#1222 UI-006). */}
+        <span className="block h-2 w-2 rounded-full bg-current" aria-hidden="true" />
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   );

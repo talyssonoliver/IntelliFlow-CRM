@@ -75,6 +75,7 @@ const mockChainVersionService = {
   rollbackToVersion: vi.fn(),
   getVersion: vi.fn(),
   getActiveVersion: vi.fn(),
+  findActiveVersion: vi.fn(),
   getChainConfig: vi.fn(),
   listVersions: vi.fn(),
   getVersionHistory: vi.fn(),
@@ -124,6 +125,10 @@ describe('Chain Version Router', () => {
     mockChainVersionService.getActiveVersion.mockResolvedValue({
       id: TEST_VERSION_ID,
       status: 'ACTIVE',
+    });
+    mockChainVersionService.findActiveVersion.mockResolvedValue({
+      version: { id: TEST_VERSION_ID, status: 'ACTIVE' },
+      selectedBy: 'direct',
     });
     mockChainVersionService.getChainConfig.mockResolvedValue({ model: 'gpt-4', temperature: 0.7 });
     mockChainVersionService.listVersions.mockResolvedValue({ items: [], total: 0 });
@@ -326,8 +331,11 @@ describe('Chain Version Router', () => {
           chainType: 'SCORING',
         });
 
-        expect(result).toBeDefined();
-        expect(mockChainVersionService.getActiveVersion).toHaveBeenCalledWith(
+        expect(result).toEqual({
+          version: { id: TEST_VERSION_ID, status: 'ACTIVE' },
+          selectedBy: 'direct',
+        });
+        expect(mockChainVersionService.findActiveVersion).toHaveBeenCalledWith(
           'SCORING',
           expect.objectContaining({ tenantId: expect.any(String) })
         );
@@ -341,13 +349,21 @@ describe('Chain Version Router', () => {
           context: { userId: 'user-1', experimentId: 'exp-1' },
         });
 
-        expect(mockChainVersionService.getActiveVersion).toHaveBeenCalledWith(
+        expect(mockChainVersionService.findActiveVersion).toHaveBeenCalledWith(
           'SCORING',
           expect.objectContaining({
             userId: 'user-1',
             experimentId: 'exp-1',
           })
         );
+      });
+
+      it('returns null, not an error, when the tenant has no active version', async () => {
+        mockChainVersionService.findActiveVersion.mockResolvedValueOnce(null);
+        const caller = testRouter.createCaller(createTenantCtx());
+
+        await expect(caller.chainVersion.getActive({ chainType: 'FOLLOWUP' })).resolves.toBeNull();
+        expect(mockChainVersionService.getActiveVersion).not.toHaveBeenCalled();
       });
     });
 
