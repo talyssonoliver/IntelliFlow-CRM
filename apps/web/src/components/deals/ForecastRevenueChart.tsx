@@ -2,6 +2,8 @@
 
 import { Card } from '@intelliflow/ui';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { isEmptySeries } from '@/lib/charts/empty-series';
+import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
 
 interface MonthlyProjection {
   month: string;
@@ -41,32 +43,36 @@ export default function ForecastRevenueChart({
           </div>
         </div>
       </div>
-      <ResponsiveContainer width="100%" height="85%">
-        <BarChart data={chartData} barGap={0}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
-          <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-          <YAxis
-            tickFormatter={(value) => formatCurrency(value)}
-            tick={{ fontSize: 12 }}
-            axisLine={false}
-            tickLine={false}
-          />
-          <Tooltip
-            formatter={(value) => {
-              const numValue = typeof value === 'number' ? value : null;
-              return numValue ? formatFullCurrency(numValue) : 'N/A';
-            }}
-            contentStyle={{
-              backgroundColor: 'white',
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-            }}
-          />
-          <Bar dataKey="actual" fill="#2a78f6" radius={[4, 4, 0, 0]} />
-          <Bar dataKey="projected" fill="#cbd5e1" radius={[4, 4, 0, 0]} />
-        </BarChart>
-      </ResponsiveContainer>
+      {isEmptySeries(chartData, ['actual', 'projected']) ? (
+        <ChartEmptyState className="h-[85%]" />
+      ) : (
+        <ResponsiveContainer width="100%" height="85%">
+          <BarChart data={chartData} barGap={0}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+            <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+            <YAxis
+              tickFormatter={(value) => formatCurrency(value)}
+              tick={{ fontSize: 12 }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <Tooltip
+              formatter={(value) => {
+                const numValue = typeof value === 'number' ? value : null;
+                return numValue ? formatFullCurrency(numValue) : 'N/A';
+              }}
+              contentStyle={{
+                backgroundColor: 'white',
+                border: '1px solid #e2e8f0',
+                borderRadius: '8px',
+                boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+              }}
+            />
+            <Bar dataKey="actual" fill="#2a78f6" radius={[4, 4, 0, 0]} />
+            <Bar dataKey="projected" fill="#cbd5e1" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      )}
     </Card>
   );
 }

@@ -222,6 +222,7 @@ function AgentDetailContent({ agentId }: Readonly<{ agentId: string }>) {
             label: 'Refresh',
             icon: 'refresh',
             variant: 'secondary',
+            hideOnMobile: true,
             onClick: refetch,
           },
         ]}

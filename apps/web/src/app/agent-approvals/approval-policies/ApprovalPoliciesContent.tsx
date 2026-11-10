@@ -137,6 +137,7 @@ export default function ApprovalPoliciesContent() {
               label: 'Reset to Defaults',
               onClick: () => setResetOpen(true),
               variant: 'secondary' as const,
+              hideOnMobile: true,
               icon: 'restart_alt',
               disabled: isBusy || policies.length === 0,
             },

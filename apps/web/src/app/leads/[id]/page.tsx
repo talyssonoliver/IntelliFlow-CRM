@@ -264,12 +264,6 @@ interface Activity {
 // LeadStatus / LeadSource / LeadTemperature now live in
 // '@/components/leads/lead-detail' (imported above)
 
-// Default avatar for leads without one
-const defaultLeadAvatar =
-  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&h=160&fit=crop&crop=face';
-const defaultOwnerAvatar =
-  'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face';
-
 // Extended Lead type with relations (to be replaced by Prisma-generated types after regeneration)
 interface LeadWithRelations {
   id: string;
@@ -2217,14 +2211,9 @@ function transformLeadTasks(tasks: LeadWithRelations['tasks'] | undefined) {
 }
 
 function transformLeadForUI(apiLead: LeadWithRelations) {
-  const normalizedLeadAvatar =
-    normalizeAvatarSource(apiLead.avatarUrl) ??
-    normalizeAvatarSource(defaultLeadAvatar) ??
-    defaultLeadAvatar;
-  const normalizedOwnerAvatar =
-    normalizeAvatarSource(apiLead.owner?.avatarUrl) ??
-    normalizeAvatarSource(defaultOwnerAvatar) ??
-    defaultOwnerAvatar;
+  // No photo means initials (AppAvatar), never a stock photograph (UI-018).
+  const normalizedLeadAvatar = normalizeAvatarSource(apiLead.avatarUrl);
+  const normalizedOwnerAvatar = normalizeAvatarSource(apiLead.owner?.avatarUrl);
   return {
     id: apiLead.id,
     firstName: apiLead.firstName || '',
@@ -2254,7 +2243,7 @@ function transformLeadForUI(apiLead: LeadWithRelations) {
       : {
           name: 'Unassigned',
           title: '',
-          avatarUrl: normalizedOwnerAvatar,
+          avatarUrl: null,
         },
     accountId: apiLead.accountId ?? null,
     account: apiLead.account ? { id: apiLead.account.id, name: apiLead.account.name } : null,

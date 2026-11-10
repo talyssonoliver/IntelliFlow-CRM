@@ -133,6 +133,7 @@ export default function TerritoryMappingContent() {
         label: 'Reset to Defaults',
         onClick: () => setResetOpen(true),
         variant: 'secondary' as const,
+        hideOnMobile: true,
         icon: 'restart_alt',
         disabled: !canEdit || isBusy,
       },

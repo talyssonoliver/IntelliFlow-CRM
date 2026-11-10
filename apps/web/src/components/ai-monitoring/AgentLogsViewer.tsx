@@ -584,7 +584,13 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
       title="Agent Logs"
       description="View AI agent conversation transcripts and tool call records"
       actions={[
-        { label: 'Refresh', icon: 'refresh', variant: 'secondary', onClick: activeRefetch },
+        {
+          label: 'Refresh',
+          icon: 'refresh',
+          variant: 'secondary',
+          hideOnMobile: true,
+          onClick: activeRefetch,
+        },
       ]}
     />
   );

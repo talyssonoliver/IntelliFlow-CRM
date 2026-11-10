@@ -7,6 +7,7 @@
  */
 
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { isEmptySeries } from '@/lib/charts/empty-series';
 import { EmptyState } from '@intelliflow/ui';
 import type { SentimentDistributionChartProps } from '@/lib/feedback-survey/types';
 
@@ -19,15 +20,15 @@ const COLORS = {
 export default function SentimentDistributionChart({
   sentiment,
 }: Readonly<SentimentDistributionChartProps>) {
-  if (sentiment.total === 0) {
-    return <EmptyState entity="insights" showCta={false} className="py-4" />;
-  }
-
   const data = [
     { name: 'Positive', value: sentiment.positive },
     { name: 'Neutral', value: sentiment.neutral },
     { name: 'Negative', value: sentiment.negative },
   ].filter((d) => d.value > 0);
+
+  if (sentiment.total === 0 || isEmptySeries(data, 'value')) {
+    return <EmptyState entity="insights" phase="passive" className="py-4" />;
+  }
 
   return (
     <div className="rounded-lg border bg-card p-6">

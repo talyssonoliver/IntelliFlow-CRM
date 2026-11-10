@@ -49,7 +49,10 @@ describe('isProxyableAvatarHost', () => {
   it('matches allowlisted avatar hosts and subdomains', () => {
     expect(isProxyableAvatarHost('lh3.googleusercontent.com')).toBe(true);
     expect(isProxyableAvatarHost('api.dicebear.com')).toBe(true);
-    expect(isProxyableAvatarHost('images.unsplash.com')).toBe(true);
+  });
+
+  it('no longer proxies the stock photo host (UI-018)', () => {
+    expect(isProxyableAvatarHost('images.unsplash.com')).toBe(false);
   });
 
   it('rejects non-allowlisted hosts', () => {

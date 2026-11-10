@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { KpiCard } from '../KpiCard';
 import type { WidgetProps } from './index';
 
 export function ConversionRateWidget(_props: Readonly<WidgetProps>) {
@@ -12,30 +13,35 @@ export function ConversionRateWidget(_props: Readonly<WidgetProps>) {
     return { startDate: start.toISOString(), endDate: end.toISOString() };
   }, []);
 
-  const { data, isLoading } = trpc.analytics.getLeadMetrics.useQuery(dateRange);
+  const {
+    data,
+    isLoading,
+    isError: requestFailed,
+  } = trpc.analytics.getLeadMetrics.useQuery(dateRange);
+  // A failed background refresh keeps the figures already loaded (React Query keeps
+  // `data`); "Couldn't load" is only for a request that never produced any.
+  const isError = requestFailed && !data;
 
   const conversionRate = Number(data?.conversionRate ?? 0);
   const progress = Math.min(conversionRate * 10, 100);
 
   return (
-    <div className="p-5 flex flex-col justify-between h-full">
-      <div className="flex items-center gap-3">
-        <div className="size-8 rounded-full bg-warning-muted flex items-center justify-center text-warning">
-          <span className="material-symbols-outlined text-lg">bolt</span>
-        </div>
-        <h3 className="font-medium text-foreground">Conversion Rate</h3>
-      </div>
-      <div>
-        <div className="text-3xl font-bold text-foreground">
-          {isLoading ? '...' : `${conversionRate.toFixed(1)}%`}
-        </div>
+    <KpiCard
+      variant="compact"
+      label="Conversion Rate"
+      icon="bolt"
+      iconClassName="bg-warning-muted text-warning"
+      pending={isLoading}
+      failed={isError}
+      value={`${conversionRate.toFixed(1)}%`}
+      footer={
         <div className="w-full bg-muted h-1.5 rounded-full mt-2 overflow-hidden">
           <div
             className="bg-warning h-full rounded-full transition-all"
             style={{ width: `${isLoading ? 0 : progress}%` }}
           />
         </div>
-      </div>
-    </div>
+      }
+    />
   );
 }

@@ -16,12 +16,13 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
+import { isEmptySeries } from '@/lib/charts/empty-series';
 import { EmptyState } from '@intelliflow/ui';
 import type { NpsTrendChartProps } from '@/lib/feedback-survey/types';
 
 export default function NpsTrendChart({ trends, granularity }: Readonly<NpsTrendChartProps>) {
-  if (trends.length === 0) {
-    return <EmptyState entity="insights" showCta={false} className="py-4" />;
+  if (isEmptySeries(trends, ['nps', 'csat', 'ces'], { zeroIsData: true })) {
+    return <EmptyState entity="insights" phase="passive" className="py-4" />;
   }
 
   const data = trends.map((t) => ({

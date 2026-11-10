@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 /**
@@ -24,27 +24,48 @@ function stripSourcePrefix(id: string): string {
 }
 
 /**
- * Reads `?activityId=` from the URL and auto-switches to the activity tab.
+ * Reads `?activityId=` from the URL once: it switches to the activity tab, keeps
+ * the target for highlighting, and removes the param from the URL. While the
+ * param stayed in the URL, every tab change re-ran the switch and the page
+ * snapped back to Activity (UI-020).
+ *
  * Returns both the original (prefixed) ID and stripped (raw) ID so timelines
- * using either format can match.
+ * using either format can match. `_activeTab` is kept for the callers' signature.
  */
-export function useActivityDeepLink(activeTab: string, setActiveTab: (tab: 'activity') => void) {
+export function useActivityDeepLink(_activeTab: string, setActiveTab: (tab: 'activity') => void) {
   const searchParams = useSearchParams();
   const rawParam = searchParams.get('activityId') ?? null;
 
-  const selectedActivityId = useMemo(() => {
-    if (!rawParam) return null;
-    const stripped = stripSourcePrefix(rawParam);
-    // Return both forms so timeline can match either prefixed or raw ID
-    return { prefixed: rawParam, raw: stripped };
-  }, [rawParam]);
+  // The target outlives the URL param, so the highlight survives its removal.
+  const [target, setTarget] = useState<string | null>(rawParam);
+  // The param value already acted on; cleared once the URL no longer carries it,
+  // so a later link to the same activity works again.
+  const consumedRef = useRef<string | null>(null);
 
-  // Auto-switch to activity tab when deep-link param is present
   useEffect(() => {
-    if (selectedActivityId && activeTab !== 'activity') {
-      setActiveTab('activity');
+    if (!rawParam) {
+      consumedRef.current = null;
+      return;
     }
-  }, [selectedActivityId, activeTab, setActiveTab]);
+    if (consumedRef.current === rawParam) return;
+    consumedRef.current = rawParam;
+    setTarget(rawParam);
+    setActiveTab('activity');
+
+    // The native History API syncs with useSearchParams in the App Router, without a
+    // navigation or a refetch. The state must be null: Next's patched replaceState treats a
+    // state carrying its own __NA marker as an internal call and skips the router sync, and
+    // it copies its internal state over itself when given null.
+    const url = new URL(window.location.href);
+    url.searchParams.delete('activityId');
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+  }, [rawParam, setActiveTab]);
+
+  const selectedActivityId = useMemo(() => {
+    if (!target) return null;
+    // Return both forms so timeline can match either prefixed or raw ID
+    return { prefixed: target, raw: stripSourcePrefix(target) };
+  }, [target]);
 
   return { selectedActivityId };
 }

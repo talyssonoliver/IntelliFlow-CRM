@@ -638,6 +638,7 @@ export default function QualityReportsPage() {
             label: 'Run Tests',
             icon: 'play_arrow',
             variant: 'secondary',
+            hideOnMobile: true,
             onClick: () => setShowTestModal(true),
           },
           {

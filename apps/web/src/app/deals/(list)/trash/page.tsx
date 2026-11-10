@@ -28,6 +28,7 @@ export default function DealsTrashPage() {
             label: 'Back to Deals',
             icon: 'arrow_back',
             variant: 'secondary',
+            hideOnMobile: true,
             href: '/deals',
           },
         ]}

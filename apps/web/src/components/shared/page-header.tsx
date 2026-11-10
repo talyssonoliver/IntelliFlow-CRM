@@ -25,7 +25,7 @@ export interface PageAction {
   icon?: string;
   /** Button variant */
   variant?: 'primary' | 'secondary';
-  /** Hide label on small screens */
+  /** Hide the label below `sm` (icon only); the control keeps it as aria-label and tooltip */
   hideOnMobile?: boolean;
   /** Disabled state */
   disabled?: boolean;
@@ -181,16 +181,27 @@ function ActionButton({ action }: Readonly<ActionButtonProps>) {
     </>
   );
 
+  // #1225 UI-010: when the label is hidden on phones only the (aria-hidden)
+  // icon is visible, so the control carries its name itself, plus a tooltip.
+  const iconOnlyOnMobile = hideOnMobile && Boolean(icon || loading);
+  const nameProps = iconOnlyOnMobile ? { 'aria-label': label, title: label } : {};
+
   if (href && !disabled) {
     return (
-      <Link href={href} className={baseClasses}>
+      <Link href={href} className={baseClasses} {...nameProps}>
         {content}
       </Link>
     );
   }
 
   return (
-    <button type="button" onClick={onClick} disabled={disabled || loading} className={baseClasses}>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled || loading}
+      className={baseClasses}
+      {...nameProps}
+    >
       {content}
     </button>
   );

@@ -324,7 +324,11 @@ vi.mock('@/components/home/PinButton', () => ({
 }));
 
 vi.mock('@/components/shared/app-avatar', () => ({
-  AppAvatar: ({ name }: Readonly<{ name?: string }>) => <div>{name ?? 'Avatar'}</div>,
+  AppAvatar: ({ name, src }: Readonly<{ name?: string; src?: string | null }>) => (
+    <div data-testid="app-avatar" data-src={src ?? ''}>
+      {name ?? 'Avatar'}
+    </div>
+  ),
 }));
 
 vi.mock('@/components/tasks/RelatedTasksCard', () => ({
@@ -1222,5 +1226,24 @@ describe('LeadDetailPage - display name fallback (UI-016)', () => {
     render(<Lead360Page />);
     expect(screen.getByRole('button', { name: 'Edit lead' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Convert lead' })).toBeInTheDocument();
+  });
+});
+
+describe('LeadDetailPage - no stock photos (UI-018)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    mockLeadQueryState.data.activities = [];
+    mockLeadQueryState.data.aiInsight = null;
+  });
+
+  it('passes no image to the avatars of a lead and owner without photos', () => {
+    render(<Lead360Page />);
+    const avatars = screen.getAllByTestId('app-avatar');
+    expect(avatars.length).toBeGreaterThan(0);
+    for (const avatar of avatars) {
+      expect(avatar.getAttribute('data-src')).toBe('');
+    }
   });
 });
