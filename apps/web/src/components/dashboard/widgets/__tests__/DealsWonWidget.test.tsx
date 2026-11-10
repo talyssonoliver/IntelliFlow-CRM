@@ -111,3 +111,14 @@ describe('DealsWonWidget after a failed background refresh', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 });
+
+describe('DealsWonWidget before any answer', () => {
+  it('shows the skeleton, not "no deals won", while the query has not run', () => {
+    // A disabled React Query v5 query: no data, not loading, no error.
+    useQueryMock.mockReturnValue({ data: undefined, isLoading: false, isError: false });
+    const { container } = render(<DealsWonWidget />);
+
+    expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
+    expect(screen.queryByText(/No deals won/i)).not.toBeInTheDocument();
+  });
+});

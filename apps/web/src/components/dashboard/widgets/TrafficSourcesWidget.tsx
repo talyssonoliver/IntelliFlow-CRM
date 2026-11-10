@@ -26,7 +26,8 @@ export function TrafficSourcesWidget(_props: Readonly<WidgetProps>) {
   // `data`); "Couldn't load" is only for a request that never produced any.
   const isError = requestFailed && !sources;
 
-  if (isLoading || authLoading) {
+  // No answer yet (a disabled or not-yet-run query) is pending, not an empty period.
+  if (isLoading || authLoading || (sources === undefined && !isError)) {
     return (
       <div className="p-5 h-full flex flex-col animate-pulse">
         <div className="h-6 w-32 rounded bg-slate-200 dark:bg-slate-700 mb-4" />

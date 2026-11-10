@@ -62,3 +62,12 @@ describe('TrafficSourcesWidget', () => {
     expect(refetch).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('TrafficSourcesWidget before any answer', () => {
+  it('shows the skeleton, not an empty period, while the query has not run', () => {
+    useQueryMock.mockReturnValue({ data: undefined, isLoading: false, isError: false });
+    const { container } = render(<TrafficSourcesWidget />);
+
+    expect(container.querySelector('.animate-pulse')).toBeInTheDocument();
+  });
+});

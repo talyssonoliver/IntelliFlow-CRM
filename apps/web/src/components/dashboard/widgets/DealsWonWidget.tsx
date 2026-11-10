@@ -47,7 +47,8 @@ export function DealsWonWidget(_props: Readonly<WidgetProps>) {
   // `data`); "Couldn't load" is only for a request that never produced any.
   const isError = requestFailed && !chartData;
 
-  if (isLoading || authLoading) {
+  // No answer yet (a disabled or not-yet-run query) is pending, not an empty period.
+  if (isLoading || authLoading || (chartData === undefined && !isError)) {
     return (
       <div className="p-6 h-full flex flex-col animate-pulse">
         <div className="flex items-center justify-between mb-6">

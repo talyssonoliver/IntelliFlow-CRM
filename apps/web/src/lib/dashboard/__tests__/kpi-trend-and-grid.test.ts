@@ -34,6 +34,11 @@ describe('formatTrendPercent', () => {
   it('caps the display at >999%', () => {
     expect(formatTrendPercent(TREND_DISPLAY_CAP)).toBe('+999%');
     expect(formatTrendPercent(1500)).toBe('>999%');
+    // The cap applies to the shown value: these round past 999.
+    expect(formatTrendPercent(999.5)).toBe('>999%');
+    expect(formatTrendPercent(-999.5)).toBe('<-999%');
+    expect(formatTrendPercent(999.96, 1)).toBe('>999%');
+    expect(formatTrendPercent(999.4)).toBe('+999%');
     expect(formatTrendPercent(-1500)).toBe('<-999%');
   });
 });

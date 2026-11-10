@@ -587,7 +587,7 @@ function RevenueBarChart({
   formatDate: (input: string | Date | number, options?: Record<string, unknown>) => string;
 }>) {
   if (loading) return <div className="h-64 animate-pulse rounded-lg bg-muted" />;
-  if (!data || isEmptySeries(data)) {
+  if (!data || isEmptySeries(data, 'value')) {
     return (
       <EmptyState
         icon="bar_chart"
@@ -642,7 +642,7 @@ function GrowthTrendChart({
   formatDate: (input: string | Date | number, options?: Record<string, unknown>) => string;
 }>) {
   if (loading) return <div className="h-64 animate-pulse rounded-lg bg-muted" />;
-  if (!data || isEmptySeries(data)) {
+  if (!data || isEmptySeries(data, 'value')) {
     return (
       <EmptyState
         icon="show_chart"
@@ -701,7 +701,7 @@ function LeadSourceChart({
   loading: boolean;
 }>) {
   if (loading) return <div className="h-64 animate-pulse rounded-lg bg-muted" />;
-  if (!data || isEmptySeries(data)) {
+  if (!data || isEmptySeries(data, 'percentage')) {
     return (
       <EmptyState
         icon="pie_chart"

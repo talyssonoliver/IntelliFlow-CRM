@@ -148,8 +148,10 @@ export function shouldShowTrend(
 
 /** "+12%", "-4.5%", capped at ">999%" / "<-999%". */
 export function formatTrendPercent(deltaPercent: number, fractionDigits = 0): string {
-  if (deltaPercent > TREND_DISPLAY_CAP) return `>${TREND_DISPLAY_CAP}%`;
-  if (deltaPercent < -TREND_DISPLAY_CAP) return `<-${TREND_DISPLAY_CAP}%`;
+  // Cap the value that is shown, after rounding: 999.7 would otherwise read "+1000%".
   const text = deltaPercent.toFixed(fractionDigits);
+  const shown = Number(text);
+  if (shown > TREND_DISPLAY_CAP) return `>${TREND_DISPLAY_CAP}%`;
+  if (shown < -TREND_DISPLAY_CAP) return `<-${TREND_DISPLAY_CAP}%`;
   return `${deltaPercent >= 0 ? '+' : ''}${text}%`;
 }
