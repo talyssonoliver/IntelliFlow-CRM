@@ -477,17 +477,36 @@ export class ChainVersionService {
   // ===========================================================================
 
   /**
-   * Get the active version for a chain type, considering rollout strategy
+   * Get the active version for a chain type, considering rollout strategy.
+   * Throws when the tenant has no active version; use {@link findActiveVersion} where
+   * "none" is a normal state (the AI settings page, for one).
    */
   async getActiveVersion(
     chainType: ChainType,
     context: VersionContext
   ): Promise<{ version: ChainVersionRecord; selectedBy: 'direct' | 'rollout' | 'experiment' }> {
-    // Find active version
+    const found = await this.findActiveVersion(chainType, context);
+    if (!found) {
+      throw new Error(`No active version found for chain type: ${chainType}`);
+    }
+    return found;
+  }
+
+  /**
+   * The active version for a chain type, considering rollout strategy, or null when the
+   * tenant has none yet.
+   */
+  async findActiveVersion(
+    chainType: ChainType,
+    context: VersionContext
+  ): Promise<{
+    version: ChainVersionRecord;
+    selectedBy: 'direct' | 'rollout' | 'experiment';
+  } | null> {
     const activeVersion = await this.versionRepo.findActive(chainType, context.tenantId);
 
     if (!activeVersion) {
-      throw new Error(`No active version found for chain type: ${chainType}`);
+      return null;
     }
 
     // Check rollout strategy
