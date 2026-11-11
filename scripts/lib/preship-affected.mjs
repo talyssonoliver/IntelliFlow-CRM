@@ -27,6 +27,8 @@ import { classify, readWorkspacePackages } from '../ci/affected.mjs';
 export const DEFAULT_BASE_REF = 'origin/main';
 export const FULL_BUILD_ENV = 'PRESHIP_FULL_BUILD';
 
+const byText = (a, b) => a.localeCompare(b);
+
 /** Test files, test folders and docs: nothing `next build` or tsup compiles. */
 const TEST_OR_DOC = [
   /\.(test|spec)\.[cm]?[jt]sx?$/,
@@ -63,7 +65,7 @@ function defaultGit(args, cwd, env) {
 function lines(out) {
   return (out || '')
     .split('\n')
-    .map((l) => l.trim().replace(/\\/g, '/'))
+    .map((l) => l.trim().replaceAll('\\', '/'))
     .filter(Boolean);
 }
 
@@ -98,7 +100,7 @@ export function resolveAffected({
   const tracked = git(['diff', '--name-only', base], cwd, env);
   const untracked = git(['ls-files', '--others', '--exclude-standard'], cwd, env);
   if (tracked === null || untracked === null) return FULL('git diff failed');
-  const changed = [...new Set([...lines(tracked), ...lines(untracked)])].sort();
+  const changed = [...new Set([...lines(tracked), ...lines(untracked)])].sort(byText);
   if (changed.length === 0) {
     return {
       mode: 'none',
@@ -130,7 +132,7 @@ export function resolveAffected({
 
 /** `--filter=<name>` for each package, in a stable order. */
 export function turboFilters(packages) {
-  return [...packages].sort().map((p) => `--filter=${p}`);
+  return [...packages].sort(byText).map((p) => `--filter=${p}`);
 }
 
 /** Env var pre-ship uses to hand the resolved scope to its step subprocesses. */
@@ -179,7 +181,7 @@ export function libraryBuildFilters(scope) {
   if (scope.mode === 'full' || scope.outsidePackages) return null;
   if (scope.mode === 'none') return [];
   return [...scope.packages]
-    .sort()
+    .sort(byText)
     .map((p) => (APP_PACKAGES.includes(p) ? `--filter=${p}^...` : `--filter=${p}`));
 }
 

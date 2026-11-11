@@ -118,6 +118,15 @@ import { AFFECTED_ENV, resolveAffected } from './lib/preship-affected.mjs';
 
 // Throwaway stub credentials for the build-time env mirror below (never a real DB).
 const STUB_DB_USER = 'stub';
+const STUB_DB_URL = `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`;
+// turbo.json lists DATABASE_URL and DIRECT_URL in globalEnv, so they are part of
+// every task hash. The push gate runs inside `test-db.mjs run`, which points
+// DATABASE_URL at a fresh database with a new name each time: every gate missed
+// turbo's cache for every package (library-build 18/18 misses, build 21/21,
+// 2026-11-10). library-build, typecheck and build never connect to a database
+// (CI builds against a stub too), so they get the same stub on every run and the
+// shared cache hits again.
+const TURBO_STABLE_DB_ENV = { DATABASE_URL: STUB_DB_URL, DIRECT_URL: STUB_DB_URL };
 
 // Resolve REPO_ROOT from git rather than cwd so the script behaves
 // identically whether invoked from the repo root, from a subdirectory,
@@ -352,7 +361,7 @@ const STEPS = [
     // Locally: the affected libraries and the dependencies of affected apps
     // (scripts/lib/preship-affected.mjs). CI / PRESHIP_FULL_BUILD=1: every library.
     cmd: ['node', 'scripts/run-library-build.mjs'],
-    env: { [AFFECTED_ENV]: AFFECTED_ENV_VALUE },
+    env: { [AFFECTED_ENV]: AFFECTED_ENV_VALUE, ...TURBO_STABLE_DB_ENV },
     required: true,
   },
   {
@@ -404,7 +413,7 @@ const STEPS = [
       ? 'turbo run typecheck + sonar-guard'
       : 'turbo run typecheck (bounded concurrency) + sonar-guard',
     cmd: ['node', 'scripts/run-typecheck.mjs'],
-    env: { [AFFECTED_ENV]: AFFECTED_ENV_VALUE },
+    env: { [AFFECTED_ENV]: AFFECTED_ENV_VALUE, ...TURBO_STABLE_DB_ENV },
     required: true,
   },
   {
@@ -595,12 +604,7 @@ const STEPS = [
         process.env.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
       AI_AUDIT_SIGNING_KEY:
         process.env.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime',
-      DATABASE_URL:
-        process.env.DATABASE_URL ||
-        `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
-      DIRECT_URL:
-        process.env.DIRECT_URL ||
-        `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
+      ...TURBO_STABLE_DB_ENV,
       SUPABASE_URL: process.env.SUPABASE_URL || 'https://stub.supabase.co',
       SUPABASE_ANON_KEY:
         process.env.SUPABASE_ANON_KEY ||
