@@ -20,6 +20,8 @@
  *  - update / updateMany / upsert: moving a row to another tenant throws.
  *  - Models whose `tenantId` is nullable hold shared rows (`tenantId = null`) that every
  *    tenant may read. Reads include them; writes never touch them.
+ *  - Models with shared system rows (SHARED_SYSTEM_ROW_FLAGS, e.g. system help articles):
+ *    reads include rows with the system flag; writes never touch them.
  *  - Models whose `tenantId` has a column default (a sentinel such as 'global') are
  *    platform-wide and are not filtered.
  *
@@ -109,8 +111,26 @@ export function tenantModelInfo(model: string | undefined): TenantModelInfo | nu
   return info && !info.defaulted ? info : null;
 }
 
-function tenantCondition(info: TenantModelInfo, tenantId: string, read: boolean): Args {
-  return info.nullable && read ? { OR: [{ tenantId }, { tenantId: null }] } : { tenantId };
+/**
+ * Models with shared system rows: rows flagged by the given boolean belong to a non-customer
+ * tenant and every tenant may read them. Reads include them; writes stay inside the caller's
+ * tenant, so no tenant can change a system row. Listed by hand because the flag's meaning is
+ * not in the schema's types (ContactType's isSystem, for one, marks a tenant's own row).
+ */
+export const SHARED_SYSTEM_ROW_FLAGS: Readonly<Record<string, string>> = {
+  HelpArticle: 'isSystem',
+};
+
+function tenantCondition(
+  model: string,
+  info: TenantModelInfo,
+  tenantId: string,
+  read: boolean
+): Args {
+  if (!read) return { tenantId };
+  const systemFlag = SHARED_SYSTEM_ROW_FLAGS[model];
+  if (systemFlag) return { OR: [{ tenantId }, { [systemFlag]: true }] };
+  return info.nullable ? { OR: [{ tenantId }, { tenantId: null }] } : { tenantId };
 }
 
 function andWhere(where: unknown, condition: Args): Args {
@@ -182,7 +202,12 @@ export function scopeTenantArgs(
   const info = tenantModelInfo(model);
   if (!info) return args;
   const next: Args = isPlainObject(args) ? { ...args } : {};
-  const condition = tenantCondition(info, tenantId, READ_OPERATIONS.has(operation));
+  const condition = tenantCondition(
+    model as string,
+    info,
+    tenantId,
+    READ_OPERATIONS.has(operation)
+  );
 
   if (FILTER_OPERATIONS.has(operation)) {
     next.where = andWhere(next.where, condition);

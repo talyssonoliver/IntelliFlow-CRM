@@ -137,6 +137,35 @@ describeDb('tenant filter on every operation (real database)', () => {
       expect(await scopedA.account.findMany({ where: { tenantId: tB, ...tagged } })).toEqual([]);
     });
 
+    it("system help articles stay visible to every tenant; another tenant's own do not", async () => {
+      const article = (tenantId: string, slug: string, isSystem: boolean) =>
+        prisma.helpArticle.create({
+          data: {
+            tenantId,
+            slug: `${TAG}-${slug}`,
+            title: slug,
+            categoryId: 'cat',
+            excerpt: 'x',
+            readTimeMinutes: 1,
+            isSystem,
+          },
+        });
+      const system = await article(tB, 'system', true);
+      await article(tB, 'private', false);
+      try {
+        const seen = await scopedA.helpArticle.findMany({
+          where: { slug: { startsWith: TAG } },
+          select: { slug: true },
+        });
+        expect(seen.map((r: { slug: string }) => r.slug)).toEqual([`${TAG}-system`]);
+        await expect(
+          scopedA.helpArticle.update({ where: { id: system.id }, data: { title: 'changed' } })
+        ).rejects.toThrow();
+      } finally {
+        await prisma.helpArticle.deleteMany({ where: { slug: { startsWith: TAG } } });
+      }
+    });
+
     it('interactive transactions are filtered too', async () => {
       const rows = await scopedA.$transaction((tx: any) => tx.account.findMany({ where: tagged }));
       expect(rows.map((r: { tenantId: string }) => r.tenantId)).toEqual([tA]);

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { TENANT_MODELS } from '@intelliflow/db';
-import { TENANT_FILTER_EXCLUDED_MODELS, scopeTenantArgs, tenantModelInfo } from '../tenant-filter';
+import {
+  SHARED_SYSTEM_ROW_FLAGS,
+  TENANT_FILTER_EXCLUDED_MODELS,
+  scopeTenantArgs,
+  tenantModelInfo,
+} from '../tenant-filter';
 
 const T = 'tenant-a';
 const OTHER = 'tenant-b';
@@ -198,6 +203,41 @@ describe('scopeTenantArgs: models with shared rows', () => {
     expect(scopeTenantArgs(shared, 'delete', { where: { id: 'x' } }, T)).toEqual({
       where: { id: 'x', AND: [{ tenantId: T }] },
     });
+  });
+});
+
+describe('scopeTenantArgs: models with shared system rows', () => {
+  it('lists only tenant-owned models that have the flag', () => {
+    for (const model of Object.keys(SHARED_SYSTEM_ROW_FLAGS)) {
+      expect(TENANT_MODELS[model], model).toMatchObject({ nullable: false });
+    }
+  });
+
+  it('reads include system rows next to the caller filter', () => {
+    const where = { OR: [{ tenantId: T }, { isSystem: true, isPublished: true }] };
+    expect(scopeTenantArgs('HelpArticle', 'findMany', { where }, T)).toEqual({
+      where: { AND: [where, { OR: [{ tenantId: T }, { isSystem: true }] }] },
+    });
+    expect(
+      scopeTenantArgs('HelpArticle', 'findFirst', { where: { slug: 's', isSystem: true } }, T)
+    ).toEqual({
+      where: {
+        AND: [{ slug: 's', isSystem: true }, { OR: [{ tenantId: T }, { isSystem: true }] }],
+      },
+    });
+  });
+
+  it('writes stay inside the tenant, so a system row cannot be changed', () => {
+    expect(
+      scopeTenantArgs('HelpArticle', 'update', { where: { id: 'a1' }, data: { title: 'x' } }, T)
+    ).toMatchObject({ where: { id: 'a1', AND: [{ tenantId: T }] } });
+    expect(scopeTenantArgs('HelpArticle', 'deleteMany', {}, T)).toEqual({
+      where: { tenantId: T },
+    });
+  });
+
+  it("does not treat ContactType's per-tenant isSystem as shared", () => {
+    expect(scopeTenantArgs('ContactType', 'findMany', {}, T)).toEqual({ where: { tenantId: T } });
   });
 });
 
