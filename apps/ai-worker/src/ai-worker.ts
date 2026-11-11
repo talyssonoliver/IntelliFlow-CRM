@@ -349,11 +349,30 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       return;
     }
     await this.wireAuditLogAdapter();
+    await this.wireChainVersionLoader();
     await this.wireTenantAiSpend();
     await this.wireRetrievalService();
     await this.bootContactEmbedWorker();
     await this.bootIngestionWorkers();
     await this.bootNotificationEmailWorker();
+  }
+
+  /**
+   * Saved chain versions take effect: the shared version loader reads each tenant's active
+   * version from the database. If this fails, chains keep their built-in prompts.
+   */
+  private async wireChainVersionLoader(): Promise<void> {
+    try {
+      const { configureVersionLoaderFromPrisma } =
+        await import('./versioning/chain-version-loader.js');
+      await configureVersionLoaderFromPrisma(this.prisma);
+      this.logger.info("Chain version loader wired: tenants' active chain versions are in use");
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Chain version loader not wired; chains use their built-in prompts'
+      );
+    }
   }
 
   /**

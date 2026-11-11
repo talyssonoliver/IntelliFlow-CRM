@@ -316,3 +316,70 @@ describe('createStandaloneVersionLoader', () => {
     expect(result.config.model).toBe('gpt-3.5-turbo');
   });
 });
+
+describe('VersionLoader with findActiveVersion', () => {
+  const active = {
+    version: {
+      id: 'v-a',
+      chainType: 'SCORING' as const,
+      status: 'ACTIVE' as ChainVersionStatus,
+      prompt: 'Tenant A prompt {lead_info}',
+      model: 'gpt-4o-mini',
+      temperature: 0.2,
+      maxTokens: 800,
+      additionalParams: null,
+    },
+    selectedBy: 'direct' as const,
+  };
+
+  it('prefers findActiveVersion and uses the version it returns', async () => {
+    const service = {
+      findActiveVersion: vi.fn().mockResolvedValue(active),
+      getActiveVersion: vi.fn(),
+    };
+    const loaded = await new VersionLoader(service).loadVersionedChain('SCORING', {
+      tenantId: 'a',
+    });
+
+    expect(loaded.versionId).toBe('v-a');
+    expect(service.getActiveVersion).not.toHaveBeenCalled();
+  });
+
+  it('falls back when the tenant has no active version, and caches that answer', async () => {
+    const service = {
+      findActiveVersion: vi.fn().mockResolvedValue(null),
+      getActiveVersion: vi.fn(),
+    };
+    const loader = new VersionLoader(service);
+
+    const first = await loader.loadVersionedChain('SCORING', { tenantId: 'a' });
+    const second = await loader.loadVersionedChain('SCORING', { tenantId: 'a' });
+
+    expect(first.versionId).toBe('fallback-scoring');
+    expect(second.versionId).toBe('fallback-scoring');
+    expect(service.findActiveVersion).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not query without a tenant', async () => {
+    const service = { findActiveVersion: vi.fn(), getActiveVersion: vi.fn() };
+    const loaded = await new VersionLoader(service).loadVersionedChain('SCORING', { tenantId: '' });
+
+    expect(loaded.versionId).toBe('fallback-scoring');
+    expect(service.findActiveVersion).not.toHaveBeenCalled();
+  });
+
+  it("keeps each tenant's version in its own cache entry", async () => {
+    const service = {
+      findActiveVersion: vi.fn(async (_type: string, ctx: { tenantId: string }) =>
+        ctx.tenantId === 'a' ? active : null
+      ),
+      getActiveVersion: vi.fn(),
+    };
+    const loader = new VersionLoader(service);
+
+    expect((await loader.loadVersionedChain('SCORING', { tenantId: 'a' })).versionId).toBe('v-a');
+    expect((await loader.loadVersionedChain('SCORING', { tenantId: 'b' })).versionId).toBe(
+      'fallback-scoring'
+    );
+  });
+});
