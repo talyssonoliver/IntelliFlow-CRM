@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { api } from '@/lib/api';
 import { DASHBOARD_REFETCH_INTERVAL_MS, computeTicketUrgent } from '@/lib/dashboard/kpi-calculator';
+import { KpiCard } from '../KpiCard';
 import type { WidgetProps } from './index';
 
 /**
@@ -17,7 +18,11 @@ interface TicketMetrics {
 }
 
 export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
-  const { data, isLoading } = api.ticket.stats.useQuery(
+  const {
+    data,
+    isLoading,
+    isError: requestFailed,
+  } = api.ticket.stats.useQuery(
     { timeWindow: 'all' },
     { refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
   );
@@ -31,32 +36,36 @@ export function OpenTicketsWidget(_props: Readonly<WidgetProps>) {
     [data]
   );
 
+  // A failed background refresh keeps the figures already loaded (React Query keeps
+  // `data`); "Couldn't load" is only for a request that never produced any.
+  const isError = requestFailed && !data;
+
   // No data yet (loading or disabled/error) — show pending, never a fake 0.
-  const pending = isLoading || !data;
+  const pending = !isError && (isLoading || !data);
 
   return (
-    <div className="p-6 h-full flex flex-col">
-      <div className="flex items-start justify-between">
-        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center">
-          <span className="material-symbols-outlined text-2xl text-primary" aria-hidden="true">
-            confirmation_number
-          </span>
-        </div>
-        {!pending && (
-          <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-destructive-muted text-destructive">
+    <KpiCard
+      label="Open Tickets"
+      icon="confirmation_number"
+      iconClassName="bg-primary/10 text-primary"
+      pending={pending}
+      failed={isError}
+      value={metrics.total}
+      // Nothing urgent is not an alarm: the red pill shows only for 1 or more.
+      badge={
+        pending || metrics.urgent === 0 ? undefined : (
+          <span className="px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap bg-destructive-muted text-destructive">
             {metrics.urgent} Urgent
           </span>
-        )}
-      </div>
-      <p className="text-sm text-muted-foreground mt-4">Open Tickets</p>
-      <p className="text-3xl font-bold text-foreground mt-1 tabular-nums">
-        {pending ? '...' : metrics.total}
-      </p>
-      {metrics.breached > 0 && (
-        <p className="text-xs text-destructive mt-2">
-          {metrics.breached} SLA breach{metrics.breached === 1 ? '' : 'es'}
-        </p>
-      )}
-    </div>
+        )
+      }
+      footer={
+        metrics.breached > 0 ? (
+          <p className="text-xs text-destructive mt-2">
+            {metrics.breached} SLA breach{metrics.breached === 1 ? '' : 'es'}
+          </p>
+        ) : undefined
+      }
+    />
   );
 }

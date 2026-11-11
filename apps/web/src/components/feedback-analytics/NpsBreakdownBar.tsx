@@ -16,6 +16,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts';
+import { isEmptySeries } from '@/lib/charts/empty-series';
 import { EmptyState } from '@intelliflow/ui';
 import type { NpsBreakdownBarProps } from '@/lib/feedback-survey/types';
 
@@ -26,15 +27,15 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function NpsBreakdownBar({ distribution }: Readonly<NpsBreakdownBarProps>) {
-  if (distribution.total === 0) {
-    return <EmptyState entity="insights" phase="passive" className="py-4" />;
-  }
-
   const data = [
     { category: 'Promoters', count: distribution.promoters },
     { category: 'Passives', count: distribution.passives },
     { category: 'Detractors', count: distribution.detractors },
   ];
+
+  if (distribution.total === 0 || isEmptySeries(data, 'count')) {
+    return <EmptyState entity="insights" phase="passive" className="py-4" />;
+  }
 
   return (
     <div className="rounded-lg border bg-card p-6">

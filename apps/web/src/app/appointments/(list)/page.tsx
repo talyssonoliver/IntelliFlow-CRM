@@ -93,6 +93,7 @@ export default function AppointmentsListPage() {
             label: 'Calendar View',
             icon: 'calendar_month',
             variant: 'secondary',
+            hideOnMobile: true,
             href: '/calendar',
           },
           {

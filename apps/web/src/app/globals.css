@@ -271,28 +271,46 @@
   }
 }
 
+/*
+ * #1222 UI-006: in @layer base, not unlayered. Unlayered, this rule outranked
+ * every Tailwind utility, so all ~1,000 icons with a declared size (text-lg,
+ * text-[18px]…) rendered at 24px. In base, a utility on the icon wins and
+ * 24px stays the default.
+ */
+@layer base {
+  .material-symbols-outlined {
+    /* Generic fallback only applies if the icon font never loads (font-display: block). */
+    font-family: 'Material Symbols Outlined', sans-serif;
+    font-weight: normal;
+    font-style: normal;
+    font-size: 24px;
+    line-height: 1;
+    letter-spacing: normal;
+    text-transform: none;
+    display: inline-block;
+    white-space: nowrap;
+    word-wrap: normal;
+    direction: ltr;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: 'liga';
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24;
+  }
+}
+
+/*
+ * Kept unlayered on purpose: Tailwind's text-* size utilities also set a
+ * line-height (text-base is 24px). With the rule above now in base, that would
+ * put a 16px icon in a 24px line, clipped by the 1em box and pushed below the
+ * text. Icons always used line-height 1; this keeps it whatever size applies.
+ */
 .material-symbols-outlined {
-  /* Generic fallback only applies if the icon font never loads (font-display: block). */
-  font-family: 'Material Symbols Outlined', sans-serif;
-  font-weight: normal;
-  font-style: normal;
-  font-size: 24px;
   line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  display: inline-block;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-  font-feature-settings: 'liga';
-  font-variation-settings:
-    'FILL' 0,
-    'wght' 400,
-    'GRAD' 0,
-    'opsz' 24;
 }
 
 /* ─── Schedule-X calendar theme bridge ─── */
@@ -742,4 +760,20 @@
 }
 .dark .sx-calendar-container .sx__time-grid-day {
   border-left: 1px solid #1e293b !important;
+}
+
+/*
+ * Signed-in footer (#1224): the module sidebar is position: fixed on desktop,
+ * so the footer pads itself by the sidebar's width, the same offsets
+ * SidebarInset gives the page (w-14 rail, w-60 pinned).
+ */
+@layer components {
+  @media (min-width: 1024px) {
+    body:has([data-app-sidebar='rail']) .app-footer {
+      padding-left: 3.5rem;
+    }
+    body:has([data-app-sidebar='pinned']) .app-footer {
+      padding-left: 15rem;
+    }
+  }
 }

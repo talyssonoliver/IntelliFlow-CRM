@@ -1,6 +1,8 @@
 'use client';
 
 import { trpc } from '@/lib/trpc';
+import { isEmptySeries } from '@/lib/charts/empty-series';
+import { ChartEmptyState, ChartUnavailable } from '@/components/shared/ChartEmptyState';
 import { useAuth } from '@/lib/auth/AuthContext';
 import type { WidgetProps } from './index';
 
@@ -12,11 +14,20 @@ interface TrafficSourceData {
 
 export function TrafficSourcesWidget(_props: Readonly<WidgetProps>) {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { data: sources, isLoading } = trpc.analytics.trafficSources.useQuery(undefined, {
+  const {
+    data: sources,
+    isLoading,
+    isError: requestFailed,
+    refetch,
+  } = trpc.analytics.trafficSources.useQuery(undefined, {
     enabled: isAuthenticated && !authLoading,
   });
+  // A failed background refresh keeps the figures already loaded (React Query keeps
+  // `data`); "Couldn't load" is only for a request that never produced any.
+  const isError = requestFailed && !sources;
 
-  if (isLoading || authLoading) {
+  // No answer yet (a disabled or not-yet-run query) is pending, not an empty period.
+  if (isLoading || authLoading || (sources === undefined && !isError)) {
     return (
       <div className="p-5 h-full flex flex-col animate-pulse">
         <div className="h-6 w-32 rounded bg-slate-200 dark:bg-slate-700 mb-4" />
@@ -32,8 +43,25 @@ export function TrafficSourcesWidget(_props: Readonly<WidgetProps>) {
     );
   }
 
-  if (!sources || sources.length === 0) {
-    return null;
+  if (isError || !sources || isEmptySeries(sources)) {
+    return (
+      <div className="p-5 h-full flex flex-col">
+        <h3 className="font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+          <span className="material-symbols-outlined text-slate-400" aria-hidden="true">
+            pie_chart
+          </span>{' '}
+          Traffic Sources
+        </h3>
+        {isError ? (
+          <ChartUnavailable
+            message="Couldn't load traffic sources."
+            onRetry={() => void refetch()}
+          />
+        ) : (
+          <ChartEmptyState />
+        )}
+      </div>
+    );
   }
 
   return (

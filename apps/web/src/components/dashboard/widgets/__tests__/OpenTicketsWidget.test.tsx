@@ -56,3 +56,13 @@ describe('OpenTicketsWidget', () => {
     expect(screen.getByText('...')).toBeInTheDocument();
   });
 });
+
+describe('OpenTicketsWidget with nothing urgent (#1249 visual check)', () => {
+  it('shows no red "0 Urgent" pill', () => {
+    useQueryMock.mockReturnValue({ data: { total: 0, bySLAStatus: {} }, isLoading: false });
+    render(<OpenTicketsWidget />);
+
+    expect(screen.getByText('0')).toBeInTheDocument();
+    expect(screen.queryByText(/Urgent/)).not.toBeInTheDocument();
+  });
+});

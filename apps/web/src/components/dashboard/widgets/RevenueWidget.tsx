@@ -2,13 +2,25 @@
 
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { isEmptySeries } from '@/lib/charts/empty-series';
+import { ChartEmptyState, ChartUnavailable } from '@/components/shared/ChartEmptyState';
 import {
   chartMax,
   computeBarHeightPercent,
   computeDeltaPercent,
   formatGBP,
 } from '@/lib/dashboard/kpi-calculator';
+import { KpiTrendBadge } from '../KpiCard';
 import type { WidgetProps } from './index';
+
+/** Below £100 last period a revenue percentage is noise (#1225 UI-009). */
+const REVENUE_TREND_MIN_BASELINE = 100;
+
+function revenueFigure(pending: boolean, failed: boolean, total: number): string {
+  if (failed) return 'Unavailable';
+  if (pending) return '...';
+  return formatGBP(total);
+}
 
 export function RevenueWidget({ config }: Readonly<WidgetProps>) {
   const timeRange = (config?.timeRange as string) || 'month';
@@ -24,23 +36,39 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
     return { startDate: start.toISOString(), endDate: end.toISOString() };
   }, [timeRange]);
 
-  const { data: overview, isLoading: overviewLoading } = trpc.analytics.getOverview.useQuery({});
-  const { data: timeSeries, isLoading } = trpc.analytics.getTimeSeriesData.useQuery({
+  const {
+    data: overview,
+    isLoading: overviewLoading,
+    isError: overviewFailed,
+  } = trpc.analytics.getOverview.useQuery({});
+  const {
+    data: timeSeries,
+    isLoading,
+    isError: seriesFailed,
+    refetch,
+  } = trpc.analytics.getTimeSeriesData.useQuery({
     metric: 'revenue',
     startDate: dateRange.startDate,
     endDate: dateRange.endDate,
     granularity: timeRange === 'week' ? 'day' : 'month',
   });
 
+  // A failed background refresh keeps the figures already loaded (React Query keeps
+  // `data`); "Couldn't load" is only for a request that never produced any.
+  const overviewError = overviewFailed && !overview;
+  const isError = seriesFailed && !timeSeries;
+
   // The revenue figure comes from `overview`, not the time-series query — gate
   // on the overview's own state so a missing overview never shows a fake £0.
-  const revenuePending = overviewLoading || !overview;
+  // A failed overview says so instead of waiting forever on "...".
+  const revenuePending = !overviewError && (overviewLoading || !overview);
   const totalRevenue = Number(overview?.totalRevenue ?? 0);
   const revenueDelta = Number(overview?.revenueDelta ?? 0);
   const previous = totalRevenue - revenueDelta;
   const deltaPercent = computeDeltaPercent(revenueDelta, previous);
 
   const points = Array.isArray(timeSeries) ? timeSeries : [];
+  const hasPoints = !isError && !isEmptySeries(points, 'value');
   const maxValue = chartMax(points.map((p: Record<string, unknown>) => Number(p.value || 0)));
 
   const dayLabels =
@@ -55,27 +83,22 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
           <h3 className="text-slate-900 dark:text-white font-semibold">Total Revenue</h3>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">
-              {revenuePending ? '...' : formatGBP(totalRevenue)}
+              {revenueFigure(revenuePending, overviewError, totalRevenue)}
             </span>
-            {deltaPercent !== 0 && (
-              <span
-                className={`text-xs font-medium flex items-center px-1.5 py-0.5 rounded ${
-                  deltaPercent >= 0
-                    ? 'text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
-                    : 'text-red-500 bg-red-50 dark:bg-red-500/10'
-                }`}
-              >
-                {deltaPercent >= 0 ? '+' : ''}
-                {deltaPercent.toFixed(1)}%
-              </span>
-            )}
+            <KpiTrendBadge
+              deltaPercent={deltaPercent}
+              previous={previous}
+              minBaseline={REVENUE_TREND_MIN_BASELINE}
+              fractionDigits={1}
+              appearance="pill"
+            />
           </div>
         </div>
       </div>
 
       {/* Bar Chart */}
       <div className="flex-1 flex items-end justify-between gap-1 w-full px-2">
-        {points.length > 0 ? (
+        {hasPoints &&
           points.map((point: Record<string, unknown>, i: number) => {
             const value = Number(point.value || 0);
             const height = computeBarHeightPercent(value, maxValue);
@@ -87,16 +110,22 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
                 style={{ height: `${height}%` }}
               />
             );
-          })
-        ) : (
+          })}
+        {!hasPoints && isLoading && !isError && (
           <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground">
-            {isLoading ? 'Loading...' : 'No data'}
+            Loading...
           </div>
+        )}
+        {isError && (
+          <ChartUnavailable message="Couldn't load revenue." onRetry={() => void refetch()} />
+        )}
+        {!hasPoints && !isLoading && !isError && (
+          <ChartEmptyState message="No revenue in this period yet" />
         )}
       </div>
 
       {/* X-axis labels */}
-      {points.length > 0 && (
+      {hasPoints && (
         <div className="flex justify-between mt-2 text-xs text-slate-400">
           {dayLabels.slice(0, points.length).map((label: string, i: number) => (
             <span key={i}>{label}</span>
