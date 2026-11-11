@@ -14,6 +14,7 @@
  */
 
 import { PromptTemplate } from '@langchain/core/prompts';
+import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
@@ -147,47 +148,7 @@ export class SentimentAnalysisChain {
 
     // Define the analysis prompt
     this.prompt = new PromptTemplate({
-      template: `You are an expert sentiment analyst for a CRM system. Analyze the following text for sentiment, emotions, and business urgency.
-
-TEXT TO ANALYZE:
-{text}
-
-CONTEXT (if provided):
-{context}
-
-SOURCE TYPE: {source}
-
-ANALYSIS INSTRUCTIONS:
-
-1. SENTIMENT CLASSIFICATION:
-   - VERY_POSITIVE: Enthusiastic, delighted, highly satisfied
-   - POSITIVE: Satisfied, pleased, agreeable
-   - NEUTRAL: Factual, informational, no clear emotion
-   - NEGATIVE: Dissatisfied, concerned, unhappy
-   - VERY_NEGATIVE: Angry, frustrated, threatening to leave
-
-2. EMOTION DETECTION:
-   - Identify 1-3 primary emotions from: JOY, TRUST, ANTICIPATION, SURPRISE, SADNESS, FEAR, ANGER, DISGUST, NEUTRAL
-   - Rate intensity from 0.0 (barely detectable) to 1.0 (very strong)
-
-3. URGENCY ASSESSMENT:
-   - CRITICAL: Immediate action required, escalation threats
-   - HIGH: Same-day response needed, significant concerns
-   - MEDIUM: Response within 2-3 days acceptable
-   - LOW: No time pressure, general inquiry
-   - NONE: Purely informational, no action required
-
-4. KEY PHRASES:
-   - Extract 2-5 phrases that strongly indicate sentiment
-   - Classify each phrase as positive, neutral, or negative
-
-5. CONFIDENCE:
-   - 0.9-1.0: Very clear sentiment signals
-   - 0.7-0.9: Clear with some ambiguity
-   - 0.5-0.7: Mixed signals
-   - Below 0.5: Highly ambiguous
-
-Respond with a structured JSON object containing sentiment, sentimentScore, emotions, primaryEmotion, urgency, urgencyScore, keyPhrases, confidence, and reasoning.`,
+      template: BUILTIN_CHAIN_TEMPLATES.SENTIMENT_ANALYSIS,
       inputVariables: ['text', 'context', 'source'],
     });
 

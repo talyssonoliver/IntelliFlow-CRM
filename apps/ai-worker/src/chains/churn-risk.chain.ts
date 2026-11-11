@@ -15,6 +15,7 @@
  */
 
 import { PromptTemplate } from '@langchain/core/prompts';
+import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
 import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { aiConfig } from '../config/ai.config';
@@ -211,58 +212,7 @@ export class ChurnRiskChain {
 
     // Define the prediction prompt
     this.prompt = new PromptTemplate({
-      template: `You are an expert customer success analyst specializing in churn prediction for a CRM system.
-Analyze the following customer data to predict their churn risk.
-
-CUSTOMER DATA:
-Entity Type: {entityType}
-Entity ID: {entityId}
-
-ENGAGEMENT METRICS:
-{engagementData}
-
-BEHAVIORAL PATTERNS:
-{behavioralData}
-
-TRANSACTION HISTORY:
-{transactionData}
-
-SUPPORT INTERACTIONS:
-{supportData}
-
-ACCOUNT ATTRIBUTES:
-{accountData}
-
-ANALYSIS INSTRUCTIONS:
-
-1. RISK SCORE (0.0 to 1.0):
-   - 0.8-1.0: Critical risk - Immediate intervention required
-   - 0.6-0.79: High risk - Urgent attention needed
-   - 0.4-0.59: Medium risk - Proactive engagement recommended
-   - 0.2-0.39: Low risk - Standard monitoring
-   - 0.0-0.19: Minimal risk - Customer is healthy
-
-2. RISK FACTORS:
-   - Identify the top 3-5 factors contributing to churn risk
-   - Classify each factor's impact as high, medium, or low
-   - Provide specific reasoning for each factor
-
-3. RECOMMENDATIONS:
-   - Provide 3-5 actionable recommendations
-   - Prioritize by impact and urgency
-   - Be specific and actionable
-
-4. PRIMARY ACTION:
-   - State the single most important action to take
-   - This should be immediately executable
-
-5. CONFIDENCE:
-   - 0.9-1.0: Very high confidence (comprehensive data)
-   - 0.7-0.89: High confidence (good data coverage)
-   - 0.5-0.69: Moderate confidence (some data gaps)
-   - Below 0.5: Low confidence (significant data missing)
-
-Respond with a structured JSON object containing riskScore, confidence, topRiskFactors, explanation, recommendations, and primaryAction.`,
+      template: BUILTIN_CHAIN_TEMPLATES.CHURN_RISK,
       inputVariables: [
         'entityType',
         'entityId',

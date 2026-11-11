@@ -2,6 +2,7 @@ import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import type { LLMResult } from '@langchain/core/outputs';
 import { PromptTemplate } from '@langchain/core/prompts';
+import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
 import { z } from 'zod';
 import { MODEL_PRICING, aiConfig, servedPricingKey, type AIProvider } from '../config/ai.config';
 import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
@@ -217,37 +218,7 @@ export class LeadScoringChain {
   private readonly recordDrift: boolean;
 
   /** Default prompt template used when no versioned config is available */
-  static readonly DEFAULT_PROMPT = `You are an expert lead scoring AI for a CRM system. Analyze the provided lead information and assign a score from 0-100 based on the lead's quality and conversion potential.
-
-Consider the following factors:
-1. Contact Information Completeness (0-25 points)
-   - Email quality and domain
-   - Phone number availability
-   - Professional title
-   - Company information
-
-2. Engagement Indicators (0-25 points)
-   - Replies from the lead: a reply, above all one asking about price or next steps, is the strongest signal
-   - Recent activity, pipeline stage and how recently the lead was contacted
-   - Source quality (direct website > referral > social > cold call)
-   - Email domain (corporate email > free email)
-
-3. Qualification Signals (0-25 points)
-   - Job title indicates decision-making authority
-   - Company size and industry indicators
-   - Professional email domain
-
-4. Data Quality (0-25 points)
-   - Completeness of profile
-   - Consistency of information
-   - Recency indicators
-
-Lead Information:
-{lead_info}
-
-Respond with a structured JSON object containing the score, confidence, factors, and modelVersion fields.
-List at least one factor, each with the points it adds or removes and the lead information behind it.
-Confidence is how sure you are that the score is right, above 0 and at most 1: near 1 when the lead information clearly supports the score, 0.5 or below when it is thin or mixed. Never answer confidence 0; when the information is thin, give your best score with a low confidence.`;
+  static readonly DEFAULT_PROMPT = BUILTIN_CHAIN_TEMPLATES.LEAD_SCORING;
 
   constructor(options?: { tenantId?: string; provider?: AIProvider; recordDrift?: boolean }) {
     this.tenantId = options?.tenantId;

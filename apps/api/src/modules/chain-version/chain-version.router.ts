@@ -13,7 +13,7 @@
 import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { TRPCError } from '@trpc/server';
-import { NotFoundError } from '@intelliflow/application';
+import { NotFoundError, describeEffectiveChains } from '@intelliflow/application';
 import { createTRPCRouter, protectedProcedure, tenantProcedure, adminProcedure } from '../../trpc';
 import {
   createChainVersionSchema,
@@ -226,6 +226,34 @@ export const chainVersionRouter = createTRPCRouter({
         ...input.context,
       });
     }),
+
+  /**
+   * The configuration every chain type actually runs with for the caller's tenant: the saved,
+   * active version, or the built-in one ("Built-in v1"). Never empty.
+   * SECURITY: Uses tenantProcedure; every lookup is by the caller's tenant.
+   */
+  getEffective: tenantProcedure.query(async ({ ctx }) => {
+    const chainVersionService = getChainVersionService(ctx);
+    const { tenantId } = getTenantContext(ctx).tenant;
+    const db = getTenantContext(ctx).prismaWithTenant;
+
+    return describeEffectiveChains({
+      savedVersion: async (chainType) => {
+        const found = await chainVersionService.findActiveVersion(chainType, { tenantId });
+        return found ? { ...found.version, maxTokens: found.version.maxTokens || null } : null;
+      },
+      purposeConfig: async (purpose) => {
+        const row = await db.tenantAIConfig
+          .findUnique({
+            where: { tenantId_purpose: { tenantId, purpose } },
+            select: { modelId: true, temperature: true, maxTokens: true },
+          })
+          .catch(() => null);
+        return row ?? null;
+      },
+      lastRunModel: async () => null,
+    });
+  }),
 
   /**
    * Get chain config for a chain type (simplified output)

@@ -17,7 +17,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { chainVersionRouter } from '../chain-version.router';
 import { createTRPCRouter } from '../../../trpc';
-import { createTestContext, createAdminContext, TEST_UUIDS } from '../../../test/setup';
+import { createTestContext, createAdminContext, prismaMock, TEST_UUIDS } from '../../../test/setup';
 
 // Mock the tenant-context module
 vi.mock('../../../security/tenant-context', async (importOriginal) => {
@@ -364,6 +364,63 @@ describe('Chain Version Router', () => {
 
         await expect(caller.chainVersion.getActive({ chainType: 'FOLLOWUP' })).resolves.toBeNull();
         expect(mockChainVersionService.getActiveVersion).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('getEffective', () => {
+      it('returns every chain type, built-in when nothing is saved, looked up by the caller tenant', async () => {
+        mockChainVersionService.findActiveVersion.mockResolvedValue(null);
+        (prismaMock.tenantAIConfig.findUnique as any).mockResolvedValue(null);
+        const ctx = createTenantCtx();
+        const caller = testRouter.createCaller(ctx);
+
+        const result = await caller.chainVersion.getEffective();
+
+        expect(Object.keys(result).sort()).toEqual([
+          'EMAIL_WRITER',
+          'FOLLOWUP',
+          'QUALIFICATION',
+          'SCORING',
+        ]);
+        expect(result.SCORING).toMatchObject({ source: 'builtin', label: 'Built-in v1' });
+        const tenantId = (ctx as any).user.tenantId;
+        for (const [, context] of mockChainVersionService.findActiveVersion.mock.calls) {
+          expect(context).toEqual({ tenantId });
+        }
+        for (const [args] of (prismaMock.tenantAIConfig.findUnique as any).mock.calls) {
+          expect(args.where.tenantId_purpose.tenantId).toBe(tenantId);
+        }
+      });
+
+      it('shows a saved version with its model', async () => {
+        mockChainVersionService.findActiveVersion.mockImplementation(async (type: string) =>
+          type === 'SCORING'
+            ? {
+                version: {
+                  id: TEST_VERSION_ID,
+                  prompt: 'Score:\n{lead_info}',
+                  model: 'claude-haiku-5-5',
+                  temperature: 0.2,
+                  maxTokens: 800,
+                  description: null,
+                },
+                selectedBy: 'direct',
+              }
+            : null
+        );
+        (prismaMock.tenantAIConfig.findUnique as any).mockResolvedValue(null);
+        const caller = testRouter.createCaller(createTenantCtx());
+
+        const result = await caller.chainVersion.getEffective();
+
+        expect(result.SCORING).toMatchObject({
+          source: 'saved',
+          label: 'Saved version',
+          savedVersionId: TEST_VERSION_ID,
+          model: 'claude-haiku-5-5',
+          modelSource: 'saved',
+        });
+        expect(result.SCORING.chains[0]).toMatchObject({ promptSource: 'saved' });
       });
     });
 

@@ -16,6 +16,7 @@
  */
 
 import { PromptTemplate } from '@langchain/core/prompts';
+import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { sanitizeStringField } from '../utils/input-sanitizer';
@@ -119,27 +120,7 @@ export class TicketRoutingChain {
     this.structuredModel = (llm as any).withStructuredOutput(llmOutputSchema);
 
     this.prompt = new PromptTemplate({
-      template: `You are a ticket routing specialist for a CRM system.
-Classify the support ticket into one of these categories: {categories}
-
-TICKET:
-Subject: {subject}
-Description: {description}
-Priority: {priority}
-
-AVAILABLE AGENTS:
-{agentList}
-
-INSTRUCTIONS:
-1. Classify the ticket into the most appropriate category.
-2. Select the best agent based on their skills and current load.
-3. Provide a confidence score (0-1) for your classification.
-4. Assess escalation risk (low/medium/high).
-5. Explain your reasoning briefly.
-
-IMPORTANT: The assigneeId MUST be one of the agent IDs listed above.
-
-Respond with a structured JSON object containing inferredCategory, assigneeId, reason, confidence, and escalationRisk.`,
+      template: BUILTIN_CHAIN_TEMPLATES.TICKET_ROUTING,
       inputVariables: ['subject', 'description', 'priority', 'categories', 'agentList'],
     });
   }

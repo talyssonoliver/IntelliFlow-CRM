@@ -22,6 +22,7 @@ import { aiConfig } from '../config/ai.config';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { renderAutoResponsePrompt } from '@intelliflow/application';
 import { isFallbackPrompt } from '../versioning/version-loader';
 import {
   withMonitoring,
@@ -360,36 +361,20 @@ export class AutoResponseChain {
         break;
     }
 
-    return `You are an AI assistant for ${tenantSettings.companyName}, generating professional email responses.
-
-LEAD INFORMATION:
-- Name: ${sanitizedLeadName}
-- Email: ${leadInfo.email}
-- Company: ${sanitizedCompany}
-- Status: ${leadInfo.status}
-
-CONTEXT:
-${contextSection}
-
-TONE: ${tenantSettings.tone}
-${sanitizedCustomInstructions ? `CUSTOM INSTRUCTIONS: ${sanitizedCustomInstructions}` : ''}
-
-Generate a response in JSON format with the following structure:
-{
-  "subject": "Email subject line (max 100 characters)",
-  "body": "Email body (max 2000 characters)",
-  "confidence": 0.0 to 1.0 confidence score,
-  "tone": "detected tone of generated response",
-  "suggestedFollowUp": "suggested follow-up timing"
-}
-
-Requirements:
-- Subject must be concise and relevant (max 100 chars)
-- Body must be professional and helpful (max 2000 chars)
-- Include a clear call to action
-- Match the specified tone
-- Be personalized to the lead's context
-${tenantSettings.signatureTemplate ? '- End with signature: ' + tenantSettings.signatureTemplate.replaceAll('{companyName}', tenantSettings.companyName) : ''}`;
+    return renderAutoResponsePrompt({
+      companyName: tenantSettings.companyName,
+      leadName: sanitizedLeadName,
+      leadEmail: leadInfo.email,
+      company: sanitizedCompany,
+      status: leadInfo.status,
+      contextSection,
+      tone: tenantSettings.tone,
+      customInstructions: sanitizedCustomInstructions,
+      signature: tenantSettings.signatureTemplate?.replaceAll(
+        '{companyName}',
+        tenantSettings.companyName
+      ),
+    });
   }
 
   /**
