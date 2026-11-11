@@ -554,9 +554,10 @@ describe('Recurrence (b11 tests)', () => {
       const monday = new Date('2026-03-09T10:00:00Z'); // Monday
       const occurrences = recurrence.generateOccurrences(monday, 10);
 
-      // Should only include Mon/Wed/Fri
+      // Should only include Mon/Wed/Fri (matchesPattern reads local dates)
+      expect(occurrences).toHaveLength(10);
       for (const occ of occurrences) {
-        const day = occ.getUTCDay();
+        const day = occ.getDay();
         expect([1, 3, 5]).toContain(day); // Mon=1, Wed=3, Fri=5
       }
     });
@@ -571,8 +572,9 @@ describe('Recurrence (b11 tests)', () => {
       const start = new Date('2026-01-01T10:00:00Z');
       const occurrences = recurrence.generateOccurrences(start, 5);
 
+      expect(occurrences).toHaveLength(5);
       for (const occ of occurrences) {
-        expect(occ.getUTCDate()).toBe(15);
+        expect(occ.getDate()).toBe(15);
       }
     });
 
@@ -586,8 +588,9 @@ describe('Recurrence (b11 tests)', () => {
       const start = new Date('2026-01-01T10:00:00Z');
       const occurrences = recurrence.generateOccurrences(start, 3);
 
+      expect(occurrences).toHaveLength(3);
       for (const occ of occurrences) {
-        expect(occ.getUTCMonth() + 1).toBe(6);
+        expect(occ.getMonth() + 1).toBe(6);
       }
     });
 
@@ -602,8 +605,9 @@ describe('Recurrence (b11 tests)', () => {
       const monday = new Date('2026-03-09T10:00:00Z');
       const occurrences = recurrence.generateOccurrences(monday, 3);
 
+      expect(occurrences).toHaveLength(3);
       for (const occ of occurrences) {
-        expect(occ.getUTCDay()).toBe(6); // Saturday
+        expect(occ.getDay()).toBe(6); // Saturday
       }
     });
 
@@ -618,10 +622,10 @@ describe('Recurrence (b11 tests)', () => {
       const start = new Date('2025-01-01T10:00:00Z');
       const occurrences = recurrence.generateOccurrences(start, 3);
 
-      for (const occ of occurrences) {
-        expect(occ.getUTCMonth() + 1).toBe(12);
-        expect(occ.getUTCDate()).toBe(25);
-      }
+      expect(occurrences).toHaveLength(1);
+      expect(occurrences[0]!.getFullYear()).toBe(2025);
+      expect(occurrences[0]!.getMonth() + 1).toBe(12);
+      expect(occurrences[0]!.getDate()).toBe(25);
     });
   });
 
