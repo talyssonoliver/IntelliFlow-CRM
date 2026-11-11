@@ -1,6 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { AppointmentList } from '../AppointmentList';
+import { getCurrentMonthRange } from '@/hooks/useAppointmentFilters';
 import { mockListItem1, mockListItem2, mockStats } from '@/test/fixtures/appointment-data';
 import type { AppointmentFilters } from '../types';
 
@@ -32,26 +33,67 @@ describe('AppointmentList', () => {
     expect(screen.getByTestId('appointment-list')).toBeInTheDocument();
   });
 
-  it('a filtered empty list offers Clear filters, which resets every filter but the sort', () => {
-    const onFilterChange = vi.fn();
-    render(
-      <AppointmentList
-        {...defaultProps}
-        appointments={[]}
-        total={0}
-        filters={{ ...defaultFilters, search: 'hearing', status: 'SCHEDULED' as never }}
-        onFilterChange={onFilterChange}
-      />
-    );
+  describe('filtered empty list (clock pinned: the default range is the current month)', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date(2026, 10, 11, 12, 0, 0));
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    // What useAppointmentFilters starts with: the current month.
+    const monthDefaults = () => {
+      const { from, to } = getCurrentMonthRange();
+      return { ...defaultFilters, startTimeFrom: from, startTimeTo: to };
+    };
 
-    expect(onFilterChange).toHaveBeenCalledWith({
-      search: '',
-      status: '',
-      appointmentType: '',
-      startTimeFrom: undefined,
-      startTimeTo: undefined,
+    it('the default month range alone is not a filter: no Clear filters', () => {
+      render(
+        <AppointmentList {...defaultProps} appointments={[]} total={0} filters={monthDefaults()} />
+      );
+      expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
+      expect(screen.getByText('No appointments yet')).toBeInTheDocument();
+    });
+
+    it('a different date range is a filter', () => {
+      render(
+        <AppointmentList
+          {...defaultProps}
+          appointments={[]}
+          total={0}
+          filters={{
+            ...monthDefaults(),
+            startTimeFrom: new Date(2026, 0, 1),
+            startTimeTo: new Date(2026, 0, 31),
+          }}
+        />
+      );
+      expect(screen.getByRole('button', { name: 'Clear filters' })).toBeInTheDocument();
+    });
+
+    it('Clear filters resets search, status and type, and puts the month range back', () => {
+      const onFilterChange = vi.fn();
+      render(
+        <AppointmentList
+          {...defaultProps}
+          appointments={[]}
+          total={0}
+          filters={{ ...monthDefaults(), search: 'hearing', status: 'SCHEDULED' as never }}
+          onFilterChange={onFilterChange}
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+
+      const { from, to } = getCurrentMonthRange();
+      expect(onFilterChange).toHaveBeenCalledWith({
+        search: '',
+        status: '',
+        appointmentType: '',
+        startTimeFrom: from,
+        startTimeTo: to,
+      });
     });
   });
 
