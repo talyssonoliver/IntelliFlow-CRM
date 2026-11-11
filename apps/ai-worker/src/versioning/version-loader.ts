@@ -294,6 +294,14 @@ export class VersionLoader {
   }
 
   /**
+   * The version already loaded for a chain type and tenant, without a lookup: null when it is not
+   * cached (or expired). Used to record which version a run used.
+   */
+  peekLoaded(chainType: ChainType, tenantId: string): LoadedVersion | null {
+    return this.getFromCache(this.getCacheKey(chainType, { tenantId }));
+  }
+
+  /**
    * Get chain config only (without version metadata)
    */
   async getChainConfig(chainType: ChainType, context: ExecutionContext): Promise<ChainConfig> {

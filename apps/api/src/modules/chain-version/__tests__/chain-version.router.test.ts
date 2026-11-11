@@ -424,6 +424,65 @@ describe('Chain Version Router', () => {
       });
     });
 
+    describe('getUsageStats', () => {
+      it("reads only the caller tenant's runs and labels derived scoring counts", async () => {
+        (prismaMock.chainRun.groupBy as any).mockResolvedValue([]);
+        (prismaMock.leadActivity.count as any).mockResolvedValue(7);
+        (prismaMock.leadActivity.findFirst as any).mockResolvedValue({
+          timestamp: new Date('2026-11-10T10:00:00Z'),
+        });
+        const ctx = createTenantCtx();
+        const caller = testRouter.createCaller(ctx);
+
+        const result = await caller.chainVersion.getUsageStats({ days: 7 });
+
+        const tenantId = (ctx as any).user.tenantId;
+        for (const [args] of (prismaMock.chainRun.groupBy as any).mock.calls) {
+          expect(args.where.tenantId).toBe(tenantId);
+        }
+        expect((prismaMock.leadActivity.count as any).mock.calls[0][0].where).toMatchObject({
+          tenantId,
+          title: 'Lead Scored by AI',
+        });
+        expect(result.SCORING).toMatchObject({
+          runs: 7,
+          source: 'derived',
+          derivedFrom: 'Lead Scored by AI activities',
+        });
+        expect(result.FOLLOWUP.source).toBe('none');
+      });
+
+      it('reports recorded runs per chain type', async () => {
+        (prismaMock.chainRun.groupBy as any).mockImplementation(async (args: any) =>
+          args.where.success
+            ? [{ chainType: 'FOLLOWUP', _count: { _all: 1 } }]
+            : [
+                {
+                  chainType: 'FOLLOWUP',
+                  _count: { _all: 2 },
+                  _min: { createdAt: new Date('2026-11-10T00:00:00Z') },
+                  _max: { createdAt: new Date('2026-11-11T00:00:00Z') },
+                  _avg: { latencyMs: 500 },
+                  _sum: { costUsd: '0.004', inputTokens: 300, outputTokens: 40 },
+                },
+              ]
+        );
+        const caller = testRouter.createCaller(createTenantCtx());
+
+        const result = await caller.chainVersion.getUsageStats();
+
+        expect(result.FOLLOWUP).toMatchObject({
+          runs: 2,
+          successRate: 0.5,
+          avgLatencyMs: 500,
+          spend: { amount: 0.004, currency: 'USD' },
+          inputTokens: 300,
+          outputTokens: 40,
+          source: 'recorded',
+        });
+      });
+    });
+
     describe('getConfig', () => {
       it('should get chain config for a chain type', async () => {
         const caller = testRouter.createCaller(createTenantCtx());

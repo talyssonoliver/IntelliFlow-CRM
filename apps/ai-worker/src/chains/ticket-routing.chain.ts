@@ -16,7 +16,9 @@
  */
 
 import { PromptTemplate } from '@langchain/core/prompts';
+import type { RunnableConfig } from '@langchain/core/runnables';
 import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
+import { recordedChainRun } from '../monitoring/chain-run-recorder.js';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { sanitizeStringField } from '../utils/input-sanitizer';
@@ -102,7 +104,7 @@ const CATEGORY_KEYWORDS: Record<TicketCategory, string[]> = {
 
 export class TicketRoutingChain {
   private readonly model: { constructor: { name: string } };
-  private structuredModel: { invoke(input: unknown): Promise<unknown> };
+  private structuredModel: { invoke(input: unknown, config?: RunnableConfig): Promise<unknown> };
   private readonly prompt: PromptTemplate;
   private readonly tenantId?: string;
 
@@ -194,7 +196,9 @@ export class TicketRoutingChain {
       });
 
       // Use structured output model — returns typed object directly (no parse step)
-      const parsed = (await this.structuredModel.invoke(formattedPrompt)) as LLMOutput;
+      const parsed = (await recordedChainRun('TICKET_ROUTING', this.tenantId, (callbacks) =>
+        this.structuredModel.invoke(formattedPrompt, { callbacks })
+      )) as LLMOutput;
 
       // Post-parse validation: ensure assigneeId is in the candidate roster
       const validCandidate = input.agentCandidates.find((a) => a.agentId === parsed.assigneeId);

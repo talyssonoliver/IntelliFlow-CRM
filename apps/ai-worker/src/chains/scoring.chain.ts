@@ -3,6 +3,7 @@ import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import type { LLMResult } from '@langchain/core/outputs';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
+import { recordedChainRun } from '../monitoring/chain-run-recorder.js';
 import { z } from 'zod';
 import { MODEL_PRICING, aiConfig, servedPricingKey, type AIProvider } from '../config/ai.config';
 import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
@@ -362,9 +363,11 @@ export class LeadScoringChain {
       const monitored: MonitoredResult<ScoringResult> = await withMonitoring(
         async () => {
           // Call the LLM with structured output; usageHandler captures token usage via callback
-          const result = (await this.structuredModel.invoke(formattedPrompt, {
-            callbacks: [usageHandler],
-          })) as unknown as Omit<ScoringResult, 'modelVersion'>;
+          const result = (await recordedChainRun('LEAD_SCORING', this.tenantId, (callbacks) =>
+            this.structuredModel.invoke(formattedPrompt, {
+              callbacks: [usageHandler, ...callbacks],
+            })
+          )) as unknown as Omit<ScoringResult, 'modelVersion'>;
 
           // #1218: a schema-valid answer can still be no score at all (the model answered
           // confidence 0, or gave no factors). That is a failed scoring, not a score of 0, and

@@ -15,7 +15,9 @@
  */
 
 import { PromptTemplate } from '@langchain/core/prompts';
+import type { RunnableConfig } from '@langchain/core/runnables';
 import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
+import { recordedChainRun } from '../monitoring/chain-run-recorder.js';
 import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { aiConfig } from '../config/ai.config';
@@ -192,7 +194,7 @@ const llmOutputSchema = z.object({
  * actionable recommendations.
  */
 export class ChurnRiskChain {
-  private structuredModel: { invoke(input: unknown): Promise<unknown> };
+  private structuredModel: { invoke(input: unknown, config?: RunnableConfig): Promise<unknown> };
   private readonly prompt: PromptTemplate;
   private readonly tenantId?: string;
 
@@ -307,7 +309,9 @@ export class ChurnRiskChain {
       });
 
       // Call the LLM with structured output — returns typed object directly
-      const parsed = (await this.structuredModel.invoke(formattedPrompt)) as {
+      const parsed = (await recordedChainRun('CHURN_RISK', this.tenantId, (callbacks) =>
+        this.structuredModel.invoke(formattedPrompt, { callbacks })
+      )) as {
         riskScore: number;
         confidence: number;
         topRiskFactors: RiskFactor[];

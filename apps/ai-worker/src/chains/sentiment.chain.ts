@@ -14,7 +14,9 @@
  */
 
 import { PromptTemplate } from '@langchain/core/prompts';
+import type { RunnableConfig } from '@langchain/core/runnables';
 import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
+import { recordedChainRun } from '../monitoring/chain-run-recorder.js';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
@@ -131,7 +133,7 @@ const llmOutputSchema = z.object({
  * Analyzes text for sentiment, emotions, and urgency with structured output.
  */
 export class SentimentAnalysisChain {
-  private structuredModel: { invoke(input: unknown): Promise<unknown> };
+  private structuredModel: { invoke(input: unknown, config?: RunnableConfig): Promise<unknown> };
   private readonly prompt: PromptTemplate;
   private readonly tenantId?: string;
 
@@ -224,7 +226,9 @@ export class SentimentAnalysisChain {
       });
 
       // Call the LLM with structured output — returns typed object directly
-      const parsed = (await this.structuredModel.invoke(formattedPrompt)) as {
+      const parsed = (await recordedChainRun('SENTIMENT_ANALYSIS', this.tenantId, (callbacks) =>
+        this.structuredModel.invoke(formattedPrompt, { callbacks })
+      )) as {
         sentiment: (typeof SENTIMENT_LABELS)[number];
         sentimentScore: number;
         emotions: Array<{ emotion: (typeof EMOTION_LABELS)[number]; intensity: number }>;

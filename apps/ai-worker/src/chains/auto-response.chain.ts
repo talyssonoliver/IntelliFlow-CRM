@@ -23,6 +23,7 @@ import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import { renderAutoResponsePrompt } from '@intelliflow/application';
+import { recordedChainRun } from '../monitoring/chain-run-recorder.js';
 import { isFallbackPrompt } from '../versioning/version-loader';
 import {
   withMonitoring,
@@ -202,35 +203,42 @@ export class AutoResponseChain {
     // Prefer structured-output binding when the model supports it — eliminates
     // fragile JSON parsing. Falls back to raw invoke + parseResponse if the
     // underlying model/provider doesn't implement withStructuredOutput.
-    let parsed: z.infer<typeof autoResponseLLMSchema>;
+    let parsed!: z.infer<typeof autoResponseLLMSchema>;
     let confidenceReported = true;
-    try {
-      const structured = this.llm.withStructuredOutput(autoResponseLLMSchema, {
-        name: 'auto_response',
-      });
-      parsed = (await structured.invoke(prompt)) as z.infer<typeof autoResponseLLMSchema>;
-    } catch (structuredErr) {
-      logger.warn(
-        {
-          err: structuredErr instanceof Error ? structuredErr.message : String(structuredErr),
-        },
-        'withStructuredOutput unavailable or failed — falling back to raw invoke + JSON parse'
-      );
-      const response = await this.llm.invoke(prompt);
-      const content =
-        typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
-      const raw = this.parseResponse(content);
-      confidenceReported = typeof raw.confidence === 'number';
-      parsed = autoResponseLLMSchema.parse({
-        subject: raw.subject ?? 'Re: Your inquiry',
-        body: raw.body ?? '',
-        // PG-198 (RF-2, #854): never invent a confidence. A missing value is 0, which
-        // validateResponse flags for human review and no auto-approval policy accepts.
-        confidence: typeof raw.confidence === 'number' ? raw.confidence : 0,
-        tone: raw.tone,
-        suggestedFollowUp: raw.suggestedFollowUp,
-      });
-    }
+    // One recorded run (AI Chains usage) covers the structured call and its raw fallback.
+    await recordedChainRun('AUTO_RESPONSE', this.tenantId, async (callbacks) => {
+      try {
+        const structured = this.llm.withStructuredOutput(autoResponseLLMSchema, {
+          name: 'auto_response',
+        });
+        parsed = (await structured.invoke(prompt, { callbacks })) as z.infer<
+          typeof autoResponseLLMSchema
+        >;
+      } catch (structuredErr) {
+        logger.warn(
+          {
+            err: structuredErr instanceof Error ? structuredErr.message : String(structuredErr),
+          },
+          'withStructuredOutput unavailable or failed — falling back to raw invoke + JSON parse'
+        );
+        const response = await this.llm.invoke(prompt, { callbacks });
+        const content =
+          typeof response.content === 'string'
+            ? response.content
+            : JSON.stringify(response.content);
+        const raw = this.parseResponse(content);
+        confidenceReported = typeof raw.confidence === 'number';
+        parsed = autoResponseLLMSchema.parse({
+          subject: raw.subject ?? 'Re: Your inquiry',
+          body: raw.body ?? '',
+          // PG-198 (RF-2, #854): never invent a confidence. A missing value is 0, which
+          // validateResponse flags for human review and no auto-approval policy accepts.
+          confidence: typeof raw.confidence === 'number' ? raw.confidence : 0,
+          tone: raw.tone,
+          suggestedFollowUp: raw.suggestedFollowUp,
+        });
+      }
+    });
 
     // Build output with length constraints; modelVersion is stamped here, not by the model
     const output: AutoResponseOutput = {

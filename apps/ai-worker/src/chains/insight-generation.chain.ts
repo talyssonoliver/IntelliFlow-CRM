@@ -16,7 +16,9 @@
  */
 
 import { PromptTemplate } from '@langchain/core/prompts';
+import type { RunnableConfig } from '@langchain/core/runnables';
 import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
+import { recordedChainRun } from '../monitoring/chain-run-recorder.js';
 import { z } from 'zod';
 import { aiConfig, type AIProvider } from '../config/ai.config';
 import { sanitizeStringField } from '../utils/input-sanitizer';
@@ -164,7 +166,7 @@ const LLMInsightOutputSchema = z.object({
  * natural language explanations and confidence scores.
  */
 export class InsightGenerationChain {
-  private structuredModel: { invoke(input: unknown): Promise<unknown> };
+  private structuredModel: { invoke(input: unknown, config?: RunnableConfig): Promise<unknown> };
   private readonly prompt: PromptTemplate;
   private readonly tenantId?: string;
   /** Optional provider override (job-level fallback, #324). */
@@ -307,9 +309,9 @@ export class InsightGenerationChain {
       });
 
       // Use structured output model — returns typed object directly
-      const parsed = (await this.structuredModel.invoke(formattedPrompt)) as z.infer<
-        typeof LLMInsightOutputSchema
-      >;
+      const parsed = (await recordedChainRun('INSIGHT_GENERATION', this.tenantId, (callbacks) =>
+        this.structuredModel.invoke(formattedPrompt, { callbacks })
+      )) as z.infer<typeof LLMInsightOutputSchema>;
 
       const executionTimeMs = Date.now() - startTime;
 

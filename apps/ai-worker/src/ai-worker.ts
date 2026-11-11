@@ -366,6 +366,10 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       const { configureVersionLoaderFromPrisma } =
         await import('./versioning/chain-version-loader.js');
       await configureVersionLoaderFromPrisma(this.prisma);
+      // AI Chains usage: each run of a versioned chain is recorded in chain_runs.
+      const { setChainRunWriter, chainRunWriterFromPrisma } =
+        await import('./monitoring/chain-run-recorder.js');
+      setChainRunWriter(chainRunWriterFromPrisma(this.prisma as never));
       this.logger.info("Chain version loader wired: tenants' active chain versions are in use");
     } catch (error) {
       this.logger.warn(

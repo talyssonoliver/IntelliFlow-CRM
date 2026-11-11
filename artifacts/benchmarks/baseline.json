@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-11T00:57:39.683Z",
+  "timestamp": "2026-11-11T01:17:59.931Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,8 +1016,8 @@
   },
   "api_inventory": {
     "total_routers": 78,
-    "total_endpoints": 601,
-    "total_queries": 256,
+    "total_endpoints": 602,
+    "total_queries": 257,
     "total_mutations": 345,
     "routers": [
       {
@@ -1064,8 +1064,8 @@
       },
       {
         "name": "chainVersion",
-        "endpoints": 16,
-        "queries": 10,
+        "endpoints": 17,
+        "queries": 11,
         "mutations": 6
       },
       {
@@ -1491,16 +1491,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 215,
-    "total_fields": 3160,
-    "total_indexes": 955,
-    "total_relations": 304,
+    "total_tables": 216,
+    "total_fields": 3175,
+    "total_indexes": 957,
+    "total_relations": 305,
     "tables_with_embeddings": 4,
     "enums": 82,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 192,
+        "fields": 193,
         "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
@@ -1992,6 +1992,13 @@
         "name": "CustomActionHandler",
         "fields": 15,
         "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ChainRun",
+        "fields": 14,
+        "indexes": 2,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -4827,6 +4834,11 @@
         "name": "chainVersion.getEffective",
         "method": "GET",
         "description": "Get effective"
+      },
+      {
+        "name": "chainVersion.getUsageStats",
+        "method": "GET",
+        "description": "Get usage stats"
       },
       {
         "name": "chainVersion.getConfig",
