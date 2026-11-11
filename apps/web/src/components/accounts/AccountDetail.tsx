@@ -113,20 +113,27 @@ interface InsightSignal {
   impact?: string;
 }
 
-/** Key signals as the insight chain stores them; anything malformed is dropped. */
-function readSignals(value: unknown): InsightSignal[] {
+/**
+ * Key signals as the insight chain stores them. Malformed items are dropped, and a
+ * label the model repeats is shown once (the first one wins), so list keys stay unique.
+ */
+export function readSignals(value: unknown): InsightSignal[] {
   if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
   return value.flatMap((item) => {
     if (!item || typeof item !== 'object') return [];
     const { label, impact } = item as { label?: unknown; impact?: unknown };
-    if (typeof label !== 'string' || !label.trim()) return [];
+    if (typeof label !== 'string' || !label.trim() || seen.has(label)) return [];
+    seen.add(label);
     return [{ label, impact: typeof impact === 'string' ? impact : undefined }];
   });
 }
 
-function readStrings(value: unknown): string[] {
+/** Non-empty strings, each once, so a repeated recommendation is not listed twice. */
+export function readStrings(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
-  return value.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+  const strings = value.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+  return [...new Set(strings)];
 }
 
 /** Says so when the account has never been scored (the score badge then shows nothing). */

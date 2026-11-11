@@ -5,7 +5,7 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AccountDetail, formatRevenueCompact } from '../AccountDetail';
+import { AccountDetail, formatRevenueCompact, readSignals, readStrings } from '../AccountDetail';
 
 const mockPush = vi.fn();
 vi.mock('next/navigation', () => ({
@@ -678,6 +678,26 @@ describe('AccountDetail', () => {
 
     it.each([null, undefined, 0, -10, 'abc'])('shows a dash for %j', (input) => {
       expect(formatRevenueCompact(input)).toBe('—');
+    });
+  });
+
+  describe('insight lists', () => {
+    it('shows a repeated key signal once, keeping the first', () => {
+      expect(
+        readSignals([
+          { label: 'Quiet for 30 days', impact: 'negative' },
+          { label: 'Quiet for 30 days', impact: 'neutral' },
+          { label: 'Two open deals' },
+        ])
+      ).toEqual([
+        { label: 'Quiet for 30 days', impact: 'negative' },
+        { label: 'Two open deals', impact: undefined },
+      ]);
+    });
+
+    it('shows a repeated recommendation once', () => {
+      expect(readStrings(['Call', 'Call', 'Email', '', 3])).toEqual(['Call', 'Email']);
+      expect(readStrings(null)).toEqual([]);
     });
   });
 
