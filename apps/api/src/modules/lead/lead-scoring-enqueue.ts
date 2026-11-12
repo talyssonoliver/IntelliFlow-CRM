@@ -27,7 +27,9 @@ import {
   STORED_LEAD_FOR_AI_SELECT,
   getDefaultConnectionConfig,
   leadAiJobFromStoredLead,
-  plannedLeadAiJobs,
+  queueLeadAiRun,
+  claimStoreFromRedis,
+  type LeadAiScriptRunner,
   type LeadAiJob,
   type LeadAiJobOptions,
   type LeadAiQueueKey,
@@ -53,6 +55,8 @@ let inFlight = 0;
 
 interface LeadQueue {
   add(name: string, data: unknown, options: LeadAiJobOptions): Promise<unknown>;
+  /** BullMQ's own Redis connection (ioredis), used for the per-lead claim. */
+  client: Promise<LeadAiScriptRunner>;
   on(event: 'error', listener: (error: Error) => void): unknown;
 }
 
@@ -167,8 +171,9 @@ export async function enqueueLeadAiById(
 }
 
 /**
- * Queue scoring, qualification and (with an owner) the next best action for one lead. Each job
- * is added on its own, so one failing add does not stop the others. Never throws.
+ * Queue scoring, qualification and (with an owner) the next best action for one lead, unless
+ * the agents already ran on exactly this data (queueLeadAiRun). Each job is added on its own, so
+ * one failing add does not stop the others. Never throws.
  */
 export async function enqueueLeadAi(
   job: LeadScoringJob,
@@ -178,17 +183,35 @@ export async function enqueueLeadAi(
     console.info('[lead-ai] Not queued: processing is restricted', { leadId: job.leadId });
     return;
   }
-  for (const planned of plannedLeadAiJobs(job)) {
-    try {
-      await addJob(planned);
-    } catch (error) {
-      // Ids only — never the lead's email or name.
-      console.warn('[lead-ai] Failed to enqueue AI job', {
-        leadId: job.leadId,
-        job: planned.options.jobId.split('.')[1],
-        correlationId: job.correlationId,
-        error: error instanceof Error ? error.message : String(error),
-      });
+  try {
+    // The claim lives in the workers' Redis, reached through the scoring queue's connection.
+    const store = await withTimeout(
+      leadQueue('AI_SCORING').then(async (queue) => claimStoreFromRedis(await queue.client)),
+      ENQUEUE_TIMEOUT_MS
+    );
+    const outcome = await queueLeadAiRun(job, {
+      store: {
+        eval: (...args) => withTimeout(store.eval(...args), ENQUEUE_TIMEOUT_MS),
+      },
+      addJob,
+      onAddError: (planned, error) => {
+        // Ids only — never the lead's email or name.
+        console.warn('[lead-ai] Failed to enqueue AI job', {
+          leadId: job.leadId,
+          job: planned.options.jobId.split('.')[1],
+          correlationId: job.correlationId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+      },
+    });
+    if (outcome === 'unchanged') {
+      console.info('[lead-ai] Not queued: unchanged since last queued', { leadId: job.leadId });
     }
+  } catch (error) {
+    console.warn('[lead-ai] Could not queue AI work', {
+      leadId: job.leadId,
+      correlationId: job.correlationId,
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }

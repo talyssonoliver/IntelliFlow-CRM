@@ -1,11 +1,13 @@
 /**
- * lead.created backstop (AI agents epic, PR 1a): queues the same jobs, with the same jobIds,
- * as the API's own enqueue, so it is a no-op when the API's enqueue went through.
+ * lead.created backstop (AI agents epic, PR 1a): queues the same jobs as the API's own enqueue,
+ * through the same per-lead claim, so it is a no-op when the API's enqueue went through.
  */
 import { describe, it, expect, vi } from 'vitest';
 import {
+  claimLeadAiRun,
   leadAiJobFromStoredLead,
   plannedLeadAiJobs,
+  type LeadAiClaimStore,
   type PlannedLeadAiJob,
   type StoredLeadForAi,
 } from '@intelliflow/platform';
@@ -35,7 +37,24 @@ function event(metadata: { tenantId?: string } = { tenantId: 'tenant-1' }, paylo
   };
 }
 
-function deps(overrides: Partial<LeadAiBackstopDeps> = {}) {
+/** Redis as the claim scripts see it: GET+SET returning "changed", and compare-and-delete. */
+function memoryStore(): LeadAiClaimStore {
+  const values = new Map<string, string>();
+  return {
+    eval: vi.fn(async (script: string, _n: number, ...args: (string | number)[]) => {
+      const [key, value] = args.map(String) as [string, string];
+      if (script.includes("'SET'")) {
+        const prev = values.get(key);
+        values.set(key, value);
+        return prev === value ? 0 : 1;
+      }
+      if (values.get(key) === value) values.delete(key);
+      return 0;
+    }),
+  };
+}
+
+function deps(overrides: Partial<LeadAiBackstopDeps> = {}, store = memoryStore()) {
   const added: PlannedLeadAiJob[] = [];
   const logger = { info: vi.fn(), warn: vi.fn() };
   const all: LeadAiBackstopDeps = {
@@ -43,14 +62,18 @@ function deps(overrides: Partial<LeadAiBackstopDeps> = {}) {
     addJob: vi.fn(async (planned: PlannedLeadAiJob) => {
       added.push(planned);
     }),
+    claimStore: vi.fn(async () => store),
     logger,
     ...overrides,
   };
-  return { all, added, logger };
+  return { all, added, logger, store };
 }
 
+/** Ids without their per-run suffix: kind, lead and data hash. */
+const withoutRun = (id: string) => id.split('.').slice(0, 4).join('.');
+
 describe('queueLeadAiForCreatedLead', () => {
-  it('queues the jobIds the API plans for the same stored lead', async () => {
+  it('queues what the API plans for the same stored lead', async () => {
     const { all, added } = deps();
 
     await expect(queueLeadAiForCreatedLead(event(), all)).resolves.toBe('queued');
@@ -59,9 +82,12 @@ describe('queueLeadAiForCreatedLead', () => {
       leadAiJobFromStoredLead(
         { leadId: 'lead-1', tenantId: 'tenant-1', correlationId: 'corr-1' },
         stored
-      )
+      ),
+      'run'
     );
-    expect(added.map((p) => p.options.jobId)).toEqual(apiPlan.map((p) => p.options.jobId));
+    expect(added.map((p) => withoutRun(p.options.jobId))).toEqual(
+      apiPlan.map((p) => withoutRun(p.options.jobId))
+    );
     expect(added.map((p) => p.data['predictionType'])).toEqual([
       undefined,
       'QUALIFICATION',
@@ -115,7 +141,7 @@ describe('queueLeadAiForCreatedLead', () => {
       }),
     });
 
-    await expect(queueLeadAiForCreatedLead(event(), all)).resolves.toBe('queued');
+    await expect(queueLeadAiForCreatedLead(event(), all)).resolves.toBe('partial');
 
     expect(added).toHaveLength(2);
     const logged = JSON.stringify(logger.warn.mock.calls);
@@ -130,5 +156,27 @@ describe('queueLeadAiForCreatedLead', () => {
     await queueLeadAiForCreatedLead(event(), all);
 
     expect(added.map((p) => p.data['predictionType'])).toEqual([undefined, 'QUALIFICATION']);
+  });
+
+  it('adds nothing when the API already queued this exact data', async () => {
+    const store = memoryStore();
+    const apiJob = leadAiJobFromStoredLead(
+      { leadId: 'lead-1', tenantId: 'tenant-1', correlationId: 'lead-create-lead-1' },
+      stored
+    );
+    await claimLeadAiRun(store, apiJob); // what the API's enqueue did
+    const { all, added } = deps({}, store);
+
+    await expect(queueLeadAiForCreatedLead(event(), all)).resolves.toBe('unchanged');
+    expect(added).toHaveLength(0);
+  });
+
+  it('adds nothing and does not throw when the claim cannot reach Redis', async () => {
+    const broken: LeadAiClaimStore = { eval: vi.fn().mockRejectedValue(new Error('down')) };
+    const { all, added, logger } = deps({}, broken);
+
+    await expect(queueLeadAiForCreatedLead(event(), all)).resolves.toBe('claim-failed');
+    expect(added).toHaveLength(0);
+    expect(JSON.stringify(logger.warn.mock.calls)).toContain('could not claim');
   });
 });

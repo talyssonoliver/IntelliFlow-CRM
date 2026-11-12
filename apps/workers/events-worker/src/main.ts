@@ -16,7 +16,7 @@ import pino from 'pino';
 import { BaseWorker, type ComponentHealth } from '@intelliflow/worker-shared';
 import { PrismaClient, disconnectPrisma } from '@intelliflow/db';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { QUEUE_NAMES, STORED_LEAD_FOR_AI_SELECT } from '@intelliflow/platform';
+import { QUEUE_NAMES, STORED_LEAD_FOR_AI_SELECT, claimStoreFromRedis } from '@intelliflow/platform';
 import { queueLeadAiForCreatedLead } from './handlers/lead-ai-backstop';
 import { OutboxPoller, InMemoryOutboxRepository, type OutboxRepository } from './outbox/pollOutbox';
 import { EventDispatcher, DOMAIN_EVENT_TYPES, type OutboxEvent } from './outbox/event-dispatcher';
@@ -410,6 +410,9 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
               planned.options
             );
           },
+          // The scoring queue's Redis: the same store the API claims runs in.
+          claimStore: async () =>
+            claimStoreFromRedis(await this.getQueue(QUEUE_NAMES.AI_SCORING).client),
           logger: this.logger,
         });
 

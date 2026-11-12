@@ -1,16 +1,25 @@
 /**
- * The lead AI job planner, shared by the API and the events-worker (AI agents epic, PR 1a).
- * Both producers must plan the same jobIds for the same lead, or the backstop double-runs.
+ * The lead AI job planner and run claim, shared by the API and the events-worker (AI agents
+ * epic, PR 1a). Both producers go through queueLeadAiRun, so a lead is queued once per change of
+ * what the agents read, and again when it changes back (A -> B -> A).
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   LEAD_AI_DEDUPE_DAYS,
   STORED_LEAD_FOR_AI_SELECT,
+  claimLeadAiRun,
+  claimStoreFromRedis,
+  leadAiClaimKey,
   leadAiFingerprint,
   leadAiJobFromStoredLead,
   leadAiJobId,
+  newLeadAiRunId,
   plannedLeadAiJobs,
+  queueLeadAiRun,
+  releaseLeadAiRun,
+  type LeadAiClaimStore,
   type LeadAiJob,
+  type PlannedLeadAiJob,
   type StoredLeadForAi,
 } from './lead-ai-jobs';
 
@@ -38,10 +47,38 @@ const job: LeadAiJob = {
   ownerId: 'user-1',
 };
 
+const RUN = 'run1';
+
 /** BullMQ 5's own rule for a custom job id (classes/job.js): no ':' unless exactly 3 parts. */
 function bullmqAcceptsJobId(jobId: string): boolean {
   if (`${Number.parseInt(jobId, 10)}` === jobId) return false;
   return !jobId.includes(':') || jobId.split(':').length === 3;
+}
+
+/**
+ * An in-memory stand-in for Redis that runs the two scripts' logic: GET+SET returning whether
+ * the value changed, and compare-and-delete. Keyed on the script text it receives.
+ */
+function memoryStore() {
+  const values = new Map<string, string>();
+  const ttls = new Map<string, number>();
+  const store: LeadAiClaimStore = {
+    eval: vi.fn(async (script: string, _numKeys: number, ...args: (string | number)[]) => {
+      const [key, value, ttl] = args.map(String);
+      if (script.includes("'SET'")) {
+        const prev = values.get(key!);
+        values.set(key!, value!);
+        ttls.set(key!, Number(ttl));
+        return prev === value ? 0 : 1;
+      }
+      if (values.get(key!) === value) {
+        values.delete(key!);
+        return 1;
+      }
+      return 0;
+    }),
+  };
+  return { store, values, ttls };
 }
 
 describe('leadAiJobFromStoredLead', () => {
@@ -53,9 +90,9 @@ describe('leadAiJobFromStoredLead', () => {
   });
 
   it('leaves the owner out when the lead has none', () => {
-    const fromRow = leadAiJobFromStoredLead(ref, { ...stored, ownerId: null });
-
-    expect(fromRow).not.toHaveProperty('ownerId');
+    expect(leadAiJobFromStoredLead(ref, { ...stored, ownerId: null })).not.toHaveProperty(
+      'ownerId'
+    );
   });
 
   it('selects exactly the stored fields the planner reads', () => {
@@ -85,7 +122,7 @@ describe('leadAiFingerprint', () => {
 
 describe('plannedLeadAiJobs', () => {
   it('plans scoring, qualification and the next best action for an owned lead', () => {
-    const planned = plannedLeadAiJobs(job);
+    const planned = plannedLeadAiJobs(job, RUN);
 
     expect(planned.map((p) => [p.queue, p.name, p.data['predictionType']])).toEqual([
       ['AI_SCORING', 'score-lead', undefined],
@@ -97,16 +134,14 @@ describe('plannedLeadAiJobs', () => {
   it('skips the next best action without an owner', () => {
     const { ownerId: _owner, ...unowned } = job;
 
-    expect(plannedLeadAiJobs(unowned).map((p) => p.data['predictionType'])).toEqual([
+    expect(plannedLeadAiJobs(unowned, RUN).map((p) => p.data['predictionType'])).toEqual([
       undefined,
       'QUALIFICATION',
     ]);
   });
 
   it('gives prediction jobs a top-level tenant and the owner as the context user', () => {
-    const nba = plannedLeadAiJobs(job)[2];
-
-    expect(nba?.data).toMatchObject({
+    expect(plannedLeadAiJobs(job, RUN)[2]?.data).toMatchObject({
       entityType: 'lead',
       entityId: 'lead-1',
       tenantId: 'tenant-1',
@@ -115,26 +150,145 @@ describe('plannedLeadAiJobs', () => {
     });
   });
 
-  it('retries predictions, not scoring, and keeps finished jobs for the dedupe window', () => {
-    const [score, qualification] = plannedLeadAiJobs(job);
+  it('retries predictions, not scoring, and keeps finished jobs for a week', () => {
+    const [score, qualification] = plannedLeadAiJobs(job, RUN);
 
     expect(score?.options.attempts).toBeUndefined();
     expect(qualification?.options).toMatchObject({
       attempts: 3,
       backoff: { type: 'exponential', delay: 30_000 },
-      removeOnComplete: { age: LEAD_AI_DEDUPE_DAYS * 24 * 60 * 60 },
+      removeOnComplete: { age: 7 * 24 * 60 * 60 },
       removeOnFail: { age: 7 * 24 * 60 * 60 },
     });
   });
 
-  it('plans the same BullMQ-safe jobIds for the same lead, from either producer', () => {
-    const ids = plannedLeadAiJobs(job).map((p) => p.options.jobId);
-    const fromRow = plannedLeadAiJobs(leadAiJobFromStoredLead(ref, stored)).map(
-      (p) => p.options.jobId
+  it('gives each run its own BullMQ-safe ids, so an earlier run never blocks a later one', () => {
+    const first = plannedLeadAiJobs(job, 'a1').map((p) => p.options.jobId);
+    const second = plannedLeadAiJobs(job, 'b2').map((p) => p.options.jobId);
+
+    expect(first[0]).toBe(leadAiJobId('SCORE', 'lead-1', leadAiFingerprint(job), 'a1'));
+    expect(second.some((id) => first.includes(id))).toBe(false);
+    expect([...first, ...second].every(bullmqAcceptsJobId)).toBe(true);
+  });
+
+  it('makes run ids from the time, in base 36', () => {
+    expect(newLeadAiRunId(new Date(36))).toBe('10');
+  });
+});
+
+describe('claimLeadAiRun / releaseLeadAiRun', () => {
+  it('claims new data, refuses the same data again, and keeps the claim for the dedupe window', async () => {
+    const { store, ttls } = memoryStore();
+
+    await expect(claimLeadAiRun(store, job)).resolves.toBe(true);
+    await expect(claimLeadAiRun(store, job)).resolves.toBe(false);
+    expect(ttls.get(leadAiClaimKey(job))).toBe(LEAD_AI_DEDUPE_DAYS * 24 * 60 * 60);
+  });
+
+  it('claims again when the lead changes back: A -> B -> A (codex)', async () => {
+    const { store } = memoryStore();
+    const b = { ...job, lead: { ...job.lead, company: 'Difference Engines' } };
+
+    await expect(claimLeadAiRun(store, job)).resolves.toBe(true);
+    await expect(claimLeadAiRun(store, b)).resolves.toBe(true);
+    await expect(claimLeadAiRun(store, job)).resolves.toBe(true);
+  });
+
+  it('keys the claim per tenant and lead, outside BullMQ job ids', () => {
+    expect(leadAiClaimKey(job)).toBe('lead-ai:last:tenant-1:lead-1');
+  });
+
+  it('releases only its own claim, and never throws', async () => {
+    const { store, values } = memoryStore();
+    const b = { ...job, lead: { ...job.lead, company: 'Difference Engines' } };
+    await claimLeadAiRun(store, b);
+
+    await releaseLeadAiRun(store, job); // not the current claim: kept
+    expect(values.get(leadAiClaimKey(job))).toBe(leadAiFingerprint(b));
+
+    await releaseLeadAiRun(store, b);
+    expect(values.has(leadAiClaimKey(job))).toBe(false);
+
+    const broken: LeadAiClaimStore = { eval: vi.fn().mockRejectedValue(new Error('down')) };
+    await expect(releaseLeadAiRun(broken, job)).resolves.toBeUndefined();
+  });
+});
+
+describe('claimStoreFromRedis', () => {
+  it('registers each script once per client and runs it by name, keys first', async () => {
+    const defineCommand = vi.fn();
+    const runCommand = vi.fn(async () => 1);
+    const store = claimStoreFromRedis({ defineCommand, runCommand });
+
+    await claimLeadAiRun(store, job);
+    await claimLeadAiRun(store, job);
+    await releaseLeadAiRun(store, job);
+
+    // Two scripts (claim, release), each defined once despite three calls.
+    expect(defineCommand).toHaveBeenCalledTimes(2);
+    const [claimName, claimDef] = defineCommand.mock.calls[0]!;
+    expect(claimDef).toMatchObject({ numberOfKeys: 1, lua: expect.stringContaining("'SET'") });
+    expect(runCommand).toHaveBeenNthCalledWith(1, claimName, [
+      leadAiClaimKey(job),
+      leadAiFingerprint(job),
+      LEAD_AI_DEDUPE_DAYS * 24 * 60 * 60,
+    ]);
+    expect(runCommand).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe('queueLeadAiRun', () => {
+  function deps(store: LeadAiClaimStore, fail?: (p: PlannedLeadAiJob) => boolean) {
+    const added: PlannedLeadAiJob[] = [];
+    const errors: PlannedLeadAiJob[] = [];
+    return {
+      added,
+      errors,
+      deps: {
+        store,
+        addJob: vi.fn(async (planned: PlannedLeadAiJob) => {
+          if (fail?.(planned)) throw new Error('redis down');
+          added.push(planned);
+        }),
+        onAddError: vi.fn((planned: PlannedLeadAiJob) => {
+          errors.push(planned);
+        }),
+      },
+    };
+  }
+
+  it('queues every job for new data, then nothing for the same data from the other producer', async () => {
+    const { store } = memoryStore();
+    const api = deps(store);
+    const worker = deps(store);
+
+    await expect(queueLeadAiRun(job, api.deps, 'r1')).resolves.toBe('queued');
+    await expect(queueLeadAiRun(leadAiJobFromStoredLead(ref, stored), worker.deps)).resolves.toBe(
+      'unchanged'
     );
 
-    expect(fromRow).toEqual(ids);
-    expect(ids[0]).toBe(leadAiJobId('SCORE', 'lead-1', leadAiFingerprint(job)));
-    expect(ids.every(bullmqAcceptsJobId)).toBe(true);
+    expect(api.added).toHaveLength(3);
+    expect(worker.added).toHaveLength(0);
+  });
+
+  it('keeps adding the other jobs when one fails, then gives the claim back for a retry', async () => {
+    const { store } = memoryStore();
+    const flaky = deps(store, (p) => p.queue === 'AI_SCORING');
+
+    await expect(queueLeadAiRun(job, flaky.deps, 'r1')).resolves.toBe('partial');
+    expect(flaky.added).toHaveLength(2);
+    expect(flaky.errors.map((p) => p.queue)).toEqual(['AI_SCORING']);
+
+    const retry = deps(store);
+    await expect(queueLeadAiRun(job, retry.deps, 'r2')).resolves.toBe('queued');
+    expect(retry.added).toHaveLength(3);
+  });
+
+  it('throws when the claim itself fails, and adds nothing', async () => {
+    const broken: LeadAiClaimStore = { eval: vi.fn().mockRejectedValue(new Error('down')) };
+    const run = deps(broken);
+
+    await expect(queueLeadAiRun(job, run.deps)).rejects.toThrow('down');
+    expect(run.added).toHaveLength(0);
   });
 });

@@ -2,17 +2,40 @@
  * enqueueLeadAi: every lead path (in-app create/update, public booking, COA sync, the portal
  * form, call booking) queues the same AI agents: scoring, qualification and, with an owner,
  * the next best action (PG-203 owner Q8/Q9; owner complaint 2026-11-12, "only the score one
- * runs"). Deterministic job ids make an unchanged re-sync a no-op.
+ * runs"). A per-lead claim of the last queued data makes an unchanged re-sync a no-op.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const add = vi.fn();
 const on = vi.fn();
+// Redis as the claim scripts see it: GET+SET returning "changed", and compare-and-delete.
+const claims = new Map<string, string>();
+const claimEval = vi.fn(async (script: string, _n: number, ...args: (string | number)[]) => {
+  const [key, value] = args.map(String) as [string, string];
+  if (script.includes("'SET'")) {
+    const prev = claims.get(key);
+    claims.set(key, value);
+    return prev === value ? 0 : 1;
+  }
+  if (claims.get(key) === value) claims.delete(key);
+  return 0;
+});
 const Queue = vi.fn(function (this: Record<string, unknown>, name: string, opts: unknown) {
   this.name = name;
   this.opts = opts;
   this.add = add;
   this.on = on;
+  // BullMQ's IRedisClient runs Lua as named commands (defineCommand + runCommand).
+  const scripts = new Map<string, { numberOfKeys: number; lua: string }>();
+  this.client = Promise.resolve({
+    defineCommand: (name: string, def: { numberOfKeys: number; lua: string }) => {
+      scripts.set(name, def);
+    },
+    runCommand: (name: string, args: (string | number)[]) => {
+      const def = scripts.get(name)!;
+      return claimEval(def.lua, def.numberOfKeys, ...args);
+    },
+  });
 });
 
 vi.mock('../../../lib/load-bullmq', () => ({ loadBullMQ: vi.fn(async () => ({ Queue })) }));
@@ -31,11 +54,7 @@ vi.mock('@intelliflow/platform/queues', async (importOriginal) => ({
 }));
 
 import { loadBullMQ } from '../../../lib/load-bullmq';
-import {
-  LEAD_AI_DEDUPE_DAYS,
-  plannedLeadAiJobs,
-  type LeadAiJob,
-} from '@intelliflow/platform/queues';
+import { plannedLeadAiJobs } from '@intelliflow/platform/queues';
 
 import type * as EnqueueModule from '../lead-scoring-enqueue';
 
@@ -70,6 +89,8 @@ const addsTo = (name: string) => add.mock.calls.filter((c) => c[0] === name);
 
 describe('enqueueLeadAi', () => {
   beforeEach(async () => {
+    claims.clear();
+    claimEval.mockClear();
     add.mockReset().mockResolvedValue(undefined);
     on.mockReset();
     Queue.mockClear();
@@ -134,26 +155,44 @@ describe('enqueueLeadAi', () => {
     });
   });
 
-  it('gives every job an id BullMQ accepts, kept long enough to dedupe a re-sync', async () => {
+  it('gives every job an id BullMQ accepts, and keeps finished jobs for a week', async () => {
     await mod.enqueueLeadAi({ ...input, ownerId: 'owner-1' }, allowAll);
     expect(add).toHaveBeenCalledTimes(3);
     for (const call of add.mock.calls) {
       const options = call[2] as { jobId: string; removeOnComplete: { age: number } };
       expect(bullmqAcceptsJobId(options.jobId)).toBe(true);
-      expect(options.removeOnComplete.age).toBe(LEAD_AI_DEDUPE_DAYS * 24 * 60 * 60);
+      expect(options.removeOnComplete.age).toBe(7 * 24 * 60 * 60);
     }
   });
 
-  it('gives the same lead the same job ids, and changed lead data new ones', () => {
-    const ids = (job: LeadAiJob) => plannedLeadAiJobs(job).map((j) => j.options.jobId);
-    expect(ids(input)).toEqual(ids({ ...input, correlationId: 'coa-sync-lead-1' }));
-    // Email case is not a change.
-    expect(ids(input)).toEqual(
-      ids({ ...input, lead: { ...input.lead, email: 'ADA@example.invalid' } })
-    );
-    const moved = ids({ ...input, lead: { ...input.lead, company: 'Analytical Engines' } });
-    expect(moved).not.toEqual(ids(input));
-    expect(moved.every((id) => !ids(input).includes(id))).toBe(true);
+  it('queues nothing for an unchanged re-sync, and again when data changes or changes back', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const moved = { ...input, lead: { ...input.lead, company: 'Analytical Engines' } };
+    const sameFromCoa = {
+      ...input,
+      correlationId: 'coa-sync-lead-1',
+      // Email case is not a change.
+      lead: { ...input.lead, email: 'ADA@example.invalid' },
+    };
+
+    await mod.enqueueLeadAi(input, allowAll); // A: queued
+    await mod.enqueueLeadAi(sameFromCoa, allowAll); // A again: nothing
+    expect(add).toHaveBeenCalledTimes(2);
+    expect(JSON.stringify(info.mock.calls)).toContain('unchanged since last queued');
+
+    await mod.enqueueLeadAi(moved, allowAll); // B: queued
+    await mod.enqueueLeadAi(input, allowAll); // back to A: queued again (codex)
+    expect(add).toHaveBeenCalledTimes(6);
+    info.mockRestore();
+  });
+
+  it('queues nothing, and says so, when the claim cannot reach Redis', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    claimEval.mockRejectedValueOnce(new Error('redis down'));
+    await expect(mod.enqueueLeadAi(input, allowAll)).resolves.toBeUndefined();
+    expect(add).not.toHaveBeenCalled();
+    expect(JSON.stringify(warn.mock.calls)).toContain('Could not queue AI work');
+    warn.mockRestore();
   });
 
   it('adds each job on its own: one failed add does not stop the others', async () => {
@@ -163,6 +202,10 @@ describe('enqueueLeadAi', () => {
     expect(add).toHaveBeenCalledTimes(3);
     expect(warn).toHaveBeenCalledTimes(1);
     expect(JSON.stringify(warn.mock.calls[0])).toContain('SCORE');
+    // The claim was given back, so the next sync of the same data tries again.
+    add.mockClear();
+    await mod.enqueueLeadAi({ ...input, ownerId: 'owner-1' }, allowAll);
+    expect(add).toHaveBeenCalledTimes(3);
     warn.mockRestore();
   });
 
@@ -190,18 +233,21 @@ describe('enqueueLeadAi', () => {
         release = resolve;
       });
       add.mockReturnValue(stuck);
-      // 25 leads x 2 jobs = 50 adds in flight.
-      const calls = Array.from({ length: 25 }, () => mod.enqueueLeadAi(input, allowAll));
+      // 25 leads x 2 jobs = 50 adds in flight (distinct leads: one lead is queued once).
+      const lead = (id: string) => ({ ...input, leadId: id });
+      const calls = Array.from({ length: 25 }, (_, i) =>
+        mod.enqueueLeadAi(lead(`l${i}`), allowAll)
+      );
       await vi.advanceTimersByTimeAsync(20_000);
       await Promise.all(calls);
       expect(add).toHaveBeenCalledTimes(50);
-      await mod.enqueueLeadAi(input, allowAll);
+      await mod.enqueueLeadAi(lead('late'), allowAll);
       expect(add).toHaveBeenCalledTimes(50);
       expect(JSON.stringify(warn.mock.calls.at(-1))).toContain('still waiting on Redis');
       release();
       await vi.advanceTimersByTimeAsync(0);
       add.mockResolvedValue(undefined);
-      await mod.enqueueLeadAi(input, allowAll);
+      await mod.enqueueLeadAi(lead('after'), allowAll);
       expect(add).toHaveBeenCalledTimes(52);
     } finally {
       warn.mockRestore();
@@ -274,6 +320,7 @@ describe('enqueueLeadAi', () => {
 
 describe('enqueueLeadAiById', () => {
   beforeEach(async () => {
+    claims.clear();
     add.mockReset().mockResolvedValue(undefined);
     Queue.mockClear();
     vi.resetModules();
@@ -302,15 +349,20 @@ describe('enqueueLeadAiById', () => {
       expect.objectContaining({ where: { id: 'lead-9', tenantId: 'tenant-9' } })
     );
     // Same hash as an in-app update of the same lead: a re-sync of unchanged data is a no-op.
-    const expected = plannedLeadAiJobs({
-      leadId: 'lead-9',
-      tenantId: 'tenant-9',
-      correlationId: 'anything',
-      ownerId: 'owner-9',
-      lead: { email: stored.email, source: stored.source, firstName: 'Grace', company: 'Navy' },
-    });
-    expect(add.mock.calls.map((c) => (c[2] as { jobId: string }).jobId)).toEqual(
-      expected.map((j) => j.options.jobId)
+    const expected = plannedLeadAiJobs(
+      {
+        leadId: 'lead-9',
+        tenantId: 'tenant-9',
+        correlationId: 'anything',
+        ownerId: 'owner-9',
+        lead: { email: stored.email, source: stored.source, firstName: 'Grace', company: 'Navy' },
+      },
+      'run'
+    );
+    // Ids without their per-run suffix: kind, lead and data hash.
+    const withoutRun = (id: string) => id.split('.').slice(0, 4).join('.');
+    expect(add.mock.calls.map((c) => withoutRun((c[2] as { jobId: string }).jobId))).toEqual(
+      expected.map((j) => withoutRun(j.options.jobId))
     );
   });
 

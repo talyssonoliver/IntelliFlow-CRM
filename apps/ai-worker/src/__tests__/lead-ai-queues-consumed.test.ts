@@ -23,7 +23,7 @@ const ownedLead = {
 };
 
 const producedQueues = [
-  ...new Set(plannedLeadAiJobs(ownedLead).map((planned) => QUEUE_NAMES[planned.queue])),
+  ...new Set(plannedLeadAiJobs(ownedLead, 'run').map((planned) => QUEUE_NAMES[planned.queue])),
 ];
 
 describe('lead AI queues have a consumer', () => {
