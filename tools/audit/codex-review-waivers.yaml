@@ -855,3 +855,13 @@ waivers:
     author: claude provider lane
     date: '2026-11-07'
     expires: '2026-11-21'
+  - fingerprint: 320fc9b18288e8247d99eb17cac83c0159d9bf5a2c134d41433051dbeb1baf83
+    reason: >-
+      LOW, deferred to #1299 under the coordinator's LOW policy (2026-11-11). A lead AI job
+      skipped for a restricted person, or a failed scoring job, keeps its deterministic id for
+      the 30-day (completed) or 7-day (failed) window, so an unchanged lead is not re-queued
+      until the window ends or a field changes. No data is exposed and nothing is processed
+      that should not be; the cost is a delayed agent run.
+    author: ai agents lane
+    date: '2026-11-12'
+    expires: '2026-11-26'
