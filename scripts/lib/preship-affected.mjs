@@ -21,6 +21,7 @@
  */
 
 import path from 'node:path';
+import { nonEmptyLines, runGit } from './preship-git.mjs';
 import { spawnSync } from 'node:child_process';
 import { classify, readWorkspacePackages } from '../ci/affected.mjs';
 
@@ -45,29 +46,10 @@ export function isTestOrDoc(file) {
   return TEST_OR_DOC.some((re) => re.test(file));
 }
 
-function gitEnv(env) {
-  const out = { ...env };
-  for (const k of Object.keys(out)) if (k.startsWith('GIT_')) delete out[k];
-  return out;
-}
+const defaultGit = runGit;
 
-function defaultGit(args, cwd, env) {
-  const r = spawnSync('git', args, {
-    cwd,
-    env: gitEnv(env),
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    maxBuffer: 64 * 1024 * 1024,
-  });
-  return r.status === 0 ? r.stdout : null;
-}
-
-function lines(out) {
-  return (out || '')
-    .split('\n')
-    .map((l) => l.trim().replaceAll('\\', '/'))
-    .filter(Boolean);
-}
+/** Changed paths from git output, with forward slashes. */
+const lines = (out) => nonEmptyLines(out).map((l) => l.replaceAll('\\', '/'));
 
 const FULL = (reason) => ({
   mode: 'full',
