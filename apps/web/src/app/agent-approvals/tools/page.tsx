@@ -423,7 +423,16 @@ function AgentToolsDashboard() {
       {filteredTools.length === 0 ? (
         <Card>
           <CardContent className="p-8">
-            <EmptyState entity="agents" variant="filtered" phase="passive" />
+            <EmptyState
+              entity="agents"
+              variant={filter === 'all' ? 'empty' : 'filtered'}
+              showCta={false}
+              action={
+                filter === 'all'
+                  ? undefined
+                  : { label: 'Clear filters', onClick: () => setFilter('all') }
+              }
+            />
           </CardContent>
         </Card>
       ) : (

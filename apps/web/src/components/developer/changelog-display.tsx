@@ -143,7 +143,7 @@ export function ChangelogDisplay({
   entries = CHANGELOG_ENTRIES,
 }: Readonly<{ entries?: ChangelogEntry[] }>) {
   if (entries.length === 0) {
-    return <EmptyState entity="insights" phase="passive" />;
+    return <EmptyState entity="insights" showCta={false} />;
   }
 
   const latestHasBreaking = hasBreakingChanges(entries[0]);

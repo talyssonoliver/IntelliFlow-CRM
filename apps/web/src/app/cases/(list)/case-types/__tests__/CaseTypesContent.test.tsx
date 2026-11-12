@@ -159,7 +159,7 @@ describe('CaseTypesContent', () => {
   it('renders the header, the bento cards and the list', () => {
     const { container } = render(<CaseTypesContent />);
     expect(screen.getByRole('heading', { level: 1, name: 'Case Types' })).toBeDefined();
-    expect(screen.getByLabelText('Breadcrumb').textContent).toBe('Dashboard / Cases / Case Types');
+    expect(screen.getByLabelText('Breadcrumb').textContent).toBe('Home / Cases / Case Types');
     expect(container.querySelector('.lg\\:grid-cols-12')).not.toBeNull();
     expect(screen.getByTestId('case-type-list').textContent).toContain('Litigation');
     expect(container.textContent).not.toMatch(/coming soon/i);

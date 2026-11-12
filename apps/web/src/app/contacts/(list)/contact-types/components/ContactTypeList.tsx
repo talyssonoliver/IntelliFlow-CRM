@@ -148,7 +148,9 @@ export const ContactTypeList = forwardRef<ContactTypeListHandle, ContactTypeList
       setDialog({ open: true, type });
     };
     useImperativeHandle(ref, () => ({
-      openCreate: () => open(null, document.activeElement),
+      openCreate: () => {
+        if (canEdit) open(null, document.activeElement);
+      },
     }));
 
     const close = () => {
@@ -165,7 +167,9 @@ export const ContactTypeList = forwardRef<ContactTypeListHandle, ContactTypeList
           <EmptyState
             entity="contacts"
             variant="folder"
-            phase="passive"
+            ctaLabel="Create contact type"
+            showCta={canEdit}
+            onCtaClick={() => open(null, document.activeElement)}
             size="sm"
             title="No contact types yet"
             description="Create a type to pre-fill status, department, owner and tags on new contacts."

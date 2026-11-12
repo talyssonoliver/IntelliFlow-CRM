@@ -385,7 +385,7 @@ export function DocumentList({
   if (documents.length === 0 && !isLoading) {
     return (
       <div data-testid="empty-state">
-        <EmptyState entity="documents" phase="passive" />
+        <EmptyState entity="documents" ctaHref="/documents/new" ctaLabel="Upload a document" />
       </div>
     );
   }

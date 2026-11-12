@@ -222,7 +222,14 @@ export function UpcomingEventsCard({
       </div>
 
       {/* Empty state */}
-      {events.length === 0 && <EmptyState entity="appointments" phase="passive" className="py-2" />}
+      {events.length === 0 && (
+        <EmptyState
+          entity="appointments"
+          showCta={showAddButton}
+          ctaHref={getAddHref(entityType, entityId)}
+          className="py-2"
+        />
+      )}
 
       {/* Event list — matches hover/spacing pattern of other widgets */}
       {events.length > 0 && (

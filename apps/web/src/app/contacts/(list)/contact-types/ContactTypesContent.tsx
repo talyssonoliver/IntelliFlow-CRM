@@ -154,7 +154,7 @@ export default function ContactTypesContent() {
     <div className="w-full">
       <PageHeader
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
+          { label: 'Home', href: '/' },
           { label: 'Contacts', href: '/contacts' },
           { label: 'Contact Types' },
         ]}

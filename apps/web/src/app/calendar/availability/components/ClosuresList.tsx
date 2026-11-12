@@ -1,6 +1,6 @@
 'use client';
 
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react';
 import { Button, EmptyState, Input } from '@intelliflow/ui';
 import { AVAILABILITY_LIMITS } from '@intelliflow/validators';
 import {
@@ -54,22 +54,20 @@ export const ClosuresList = forwardRef<ClosuresListHandle, ClosuresListProps>(fu
     setFocusTarget(null);
   }, [focusTarget]);
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      openCreate: () => {
-        if (closures.length >= maxClosures) {
-          announce(`Maximum of ${maxClosures} closures reached.`);
-          return;
-        }
-        const row: DraftClosure = { key: newKey('c'), startDate: '', endDate: '', reason: '' };
-        onChange([...closures, row]);
-        announce(`Closure ${closures.length + 1} added.`);
-        setFocusTarget(closureFieldId(row.key, 'start'));
-      },
-    }),
-    [closures, onChange, announce]
-  );
+  const openCreate = useCallback(() => {
+    // Read-only users see the list as text; a blank draft row would not render.
+    if (readOnly) return;
+    if (closures.length >= maxClosures) {
+      announce(`Maximum of ${maxClosures} closures reached.`);
+      return;
+    }
+    const row: DraftClosure = { key: newKey('c'), startDate: '', endDate: '', reason: '' };
+    onChange([...closures, row]);
+    announce(`Closure ${closures.length + 1} added.`);
+    setFocusTarget(closureFieldId(row.key, 'start'));
+  }, [closures, onChange, announce, readOnly]);
+
+  useImperativeHandle(ref, () => ({ openCreate }), [openCreate]);
 
   const update = (key: string, patch: Partial<DraftClosure>) => {
     onChange(closures.map((c) => (c.key === key ? { ...c, ...patch } : c)));
@@ -87,9 +85,12 @@ export const ClosuresList = forwardRef<ClosuresListHandle, ClosuresListProps>(fu
 
   if (closures.length === 0) {
     return (
+      // "rules" carries no hotkey: "appointments" would bind A on this page to Add a closure.
       <EmptyState
-        entity="appointments"
-        phase="passive"
+        entity="rules"
+        ctaLabel="Add a closure"
+        showCta={!readOnly}
+        onCtaClick={openCreate}
         size="sm"
         className="py-4 px-3 gap-2"
         title="No closures"

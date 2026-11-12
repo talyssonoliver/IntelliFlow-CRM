@@ -84,7 +84,7 @@ describe('AvailabilityContent — layout', () => {
     render(<AvailabilityContent />);
     expect(screen.getByRole('heading', { level: 1, name: 'Availability' })).toBeInTheDocument();
     const nav = screen.getByRole('navigation', { name: /breadcrumb/i });
-    expect(nav).toHaveTextContent('Dashboard');
+    expect(nav).toHaveTextContent('Home');
     expect(nav).toHaveTextContent('Calendar');
     const regions = ['Weekly hours', 'Timezone', 'Closures', 'Buffers & daily limit'].map((name) =>
       screen.getByRole('region', { name })

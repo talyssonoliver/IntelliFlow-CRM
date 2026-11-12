@@ -580,7 +580,7 @@ export function ReviewHistory() {
 
       {/* Timeline Groups */}
       {filteredReviews.length === 0 && !isLoading ? (
-        <EmptyState entity="insights" phase="passive" />
+        <EmptyState entity="insights" showCta={false} />
       ) : (
         dateGroups.map((group) => (
           <TimelineGroup key={group.label} label={group.label} count={group.reviews.length}>

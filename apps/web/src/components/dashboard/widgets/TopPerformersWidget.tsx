@@ -63,7 +63,7 @@ export function TopPerformersWidget(_props: Readonly<WidgetProps>) {
               );
             });
           }
-          return <EmptyState entity="deals" phase="passive" className="py-2" />;
+          return <EmptyState entity="deals" showCta={false} className="py-2" />;
         })()}
       </div>
     </div>

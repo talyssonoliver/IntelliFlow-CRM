@@ -96,7 +96,7 @@ describe('ZepBudgetGauge', () => {
   it('displays episode counts', () => {
     renderWithTooltip(<ZepBudgetGauge />);
 
-    expect(screen.getByText(/200.*\/.*1,000.*episodes/)).toBeInTheDocument();
+    expect(screen.getByText(/200[^/\d]{0,5}\/\D{0,5}1,000\D{1,20}episodes/)).toBeInTheDocument();
   });
 
   it('shows persisted storage indicator when persisted', () => {
@@ -229,12 +229,18 @@ describe('ChainVersionsTable', () => {
     expect(activateButtons.length).toBeGreaterThan(0);
   });
 
-  it('shows empty state when no versions match filter', () => {
+  it('says "no insights yet" with no Clear when nothing is filtered', () => {
     render(<ChainVersionsTable {...defaultProps} versions={[]} />);
 
-    // ChainVersionsTable uses `entity="insights" variant="filtered"`; canonical
-    // filtered title from entity-empty-state-config is 'No insights found'.
+    expect(screen.getByText('No insights yet')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
+  });
+
+  it('says "no insights found" and offers Clear when a filter empties the list', () => {
+    render(<ChainVersionsTable {...defaultProps} versions={[]} selectedStatus="ACTIVE" />);
+
     expect(screen.getByText('No insights found')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Clear filters' })).toBeInTheDocument();
   });
 });
 
@@ -356,11 +362,10 @@ describe('VersionAuditLog', () => {
     expect(screen.getByText('Initial activation')).toBeInTheDocument();
   });
 
-  it('shows empty state when no audit entries', () => {
+  it('says "no insights yet" when there are no audit entries and no filter', () => {
     render(<VersionAuditLog {...defaultProps} auditLog={[]} />);
 
-    // VersionAuditLog also uses `entity="insights" variant="filtered"`.
-    expect(screen.getByText('No insights found')).toBeInTheDocument();
+    expect(screen.getByText('No insights yet')).toBeInTheDocument();
   });
 
   it('renders filter dropdown', () => {

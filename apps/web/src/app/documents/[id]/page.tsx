@@ -534,7 +534,7 @@ function DocumentSignaturesTab({ signatures }: { signatures: DocumentPageSignatu
           ))}
         </>
       ) : (
-        <EmptyState entity="signatures" phase="passive" />
+        <EmptyState entity="signatures" showCta={false} />
       )}
     </div>
   );
@@ -622,7 +622,7 @@ function DocumentCommentsTab({
               </div>
             ))
           ) : (
-            <EmptyState entity="comments" phase="passive" />
+            <EmptyState entity="comments" showCta={false} />
           )}
         </div>
       </div>

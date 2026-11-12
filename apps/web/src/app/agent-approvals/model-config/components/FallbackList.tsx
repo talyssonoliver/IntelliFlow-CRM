@@ -140,7 +140,7 @@ export function FallbackList({
       {ids.length === 0 ? (
         <EmptyState
           entity="rules"
-          phase="passive"
+          showCta={false}
           size="sm"
           title="No fallbacks"
           description="If the model is unavailable, the feature's built-in fallback runs."

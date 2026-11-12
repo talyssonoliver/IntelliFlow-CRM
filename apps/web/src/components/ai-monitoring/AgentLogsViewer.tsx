@@ -123,7 +123,7 @@ function TranscriptView({ messages }: Readonly<TranscriptViewProps>) {
   if (messages.length === 0) {
     return (
       <div data-testid="transcript-content">
-        <EmptyState entity="agents" phase="passive" className="py-4" />
+        <EmptyState entity="agents" showCta={false} className="py-4" />
       </div>
     );
   }
@@ -409,14 +409,27 @@ interface QueueFailuresContentProps {
   jobs: FailedJob[];
   hasMore: boolean;
   onLoadMore: () => void;
+  /** The queue view is picked with the status filter, so its empty state can clear it. */
+  onClearFilters: () => void;
 }
 
-function QueueFailuresContent({ jobs, hasMore, onLoadMore }: Readonly<QueueFailuresContentProps>) {
+function QueueFailuresContent({
+  jobs,
+  hasMore,
+  onLoadMore,
+  onClearFilters,
+}: Readonly<QueueFailuresContentProps>) {
   if (jobs.length === 0) {
     return (
       <Card>
         <CardContent className="p-2">
-          <EmptyState entity="agents" phase="passive" className="py-4" />
+          <EmptyState
+            entity="agents"
+            variant="filtered"
+            showCta={false}
+            className="py-4"
+            action={{ label: 'Clear filters', onClick: onClearFilters }}
+          />
         </CardContent>
       </Card>
     );
@@ -461,7 +474,7 @@ function AgentLogsContent({
   if (logs.length === 0) {
     return (
       <div data-testid="empty-state">
-        <EmptyState entity="agents" variant={hasFilters ? 'filtered' : 'empty'} phase="passive" />
+        <EmptyState entity="agents" variant={hasFilters ? 'filtered' : 'empty'} showCta={false} />
         {hasFilters && (
           <div className="flex justify-center mt-4">
             <Button variant="outline" onClick={onClearFilters}>
@@ -561,6 +574,8 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
   const handleClearFilters = useCallback(() => {
     filterState.set('search', '');
     filterState.set('toolStatus', '');
+    // A new filter set starts from the first page; a kept offset would skip rows.
+    setOffset(0);
   }, [filterState]);
 
   const pageHeader = (
@@ -610,7 +625,10 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
       {/* Filters */}
       <SearchFilterBar
         searchValue={filterState.values.search}
-        onSearchChange={(v) => filterState.set('search', v)}
+        onSearchChange={(v) => {
+          filterState.set('search', v);
+          setOffset(0);
+        }}
         searchPlaceholder={
           isQueueFailuresView ? 'Search disabled for queue view' : 'Search logs...'
         }
@@ -659,6 +677,7 @@ export function AgentLogsViewer({ agentId }: Readonly<AgentLogsViewerProps>) {
           jobs={failedJobs.jobs}
           hasMore={activeHasMore}
           onLoadMore={handleLoadMore}
+          onClearFilters={handleClearFilters}
         />
       )}
       {!activeLoading && !isQueueFailuresView && (
