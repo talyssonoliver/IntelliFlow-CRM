@@ -87,9 +87,9 @@ export function formatAccountLocation(
 }
 
 const REVENUE_UNITS: ReadonlyArray<readonly [number, string]> = [
-  [1_000_000_000, 'B'],
-  [1_000_000, 'M'],
   [1_000, 'K'],
+  [1_000_000, 'M'],
+  [1_000_000_000, 'B'],
 ];
 
 /**
@@ -102,14 +102,17 @@ export function formatRevenueCompact(revenue: unknown): string {
   if (revenue === null || revenue === undefined || !Number.isFinite(amount) || amount <= 0) {
     return '—';
   }
+  // Units smallest first. Move up a unit only while the current one would read 1000
+  // or more once rounded, so 999_950 reads "£1M" rather than "£1000K".
+  let shown = Math.round(amount);
+  let text = `£${shown}`;
   for (const [size, unit] of REVENUE_UNITS) {
-    if (amount >= size) {
-      // One decimal, dropped when it is zero: 5_000_000 -> "5", 1_250_000 -> "1.3".
-      const scaled = Math.round((amount / size) * 10) / 10;
-      return `£${Number.isInteger(scaled) ? scaled : scaled.toFixed(1)}${unit}`;
-    }
+    if (shown < 1000) break;
+    // One decimal, dropped when it is zero: 5_000_000 -> "5", 1_250_000 -> "1.3".
+    shown = Math.round((amount / size) * 10) / 10;
+    text = `£${Number.isInteger(shown) ? shown : shown.toFixed(1)}${unit}`;
   }
-  return `£${Math.round(amount)}`;
+  return text;
 }
 
 const CHURN_RISK_LABELS: Record<string, string> = {

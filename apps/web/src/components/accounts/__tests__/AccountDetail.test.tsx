@@ -672,6 +672,9 @@ describe('AccountDetail', () => {
       [850_000, '£850K'],
       ['12000.50', '£12K'],
       [950, '£950'],
+      [999.6, '£1K'],
+      [999_950, '£1M'],
+      [999_960_000, '£1B'],
     ])('formats %j as %s', (input, expected) => {
       expect(formatRevenueCompact(input)).toBe(expected);
     });
