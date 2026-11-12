@@ -107,6 +107,27 @@ function withoutTrackingParams(search: string): string {
   return kept.length ? `?${kept.join('&')}` : '';
 }
 
+/** The host part of an address as the user typed it: no scheme, user info, port or path. */
+function typedHost(text: string): string {
+  const afterScheme = text.replace(/^[a-z][a-z\d+.-]*:\/\//i, '');
+  const authority = afterScheme.split(/[/?#]/, 1)[0];
+  const host = authority.slice(authority.lastIndexOf('@') + 1);
+  if (host.startsWith('[')) return host.slice(0, host.indexOf(']') + 1);
+  return host.replace(/:\d*$/, '');
+}
+
+/**
+ * A real address host: a bracketed IPv6 literal, a full dotted-quad IPv4 address, or
+ * a domain with a dot, no empty labels and a top-level label that has a letter.
+ */
+function isAddressHost(host: string): boolean {
+  if (/^\[[\da-f:.]+\]$/i.test(host)) return true;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return true;
+  const labels = host.split('.');
+  if (labels.length < 2 || labels.some((label) => label === '')) return false;
+  return /\p{L}/u.test(labels[labels.length - 1]);
+}
+
 /**
  * A lead's website as a clean link: the href without tracking parameters, and a short
  * label (the host without "www.", plus a path when there is one), e.g.
@@ -125,9 +146,9 @@ export function leadWebsite(
     return null;
   }
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
-  // A placeholder such as "N/A" or "none" parses as a dotless host; only a real
-  // domain (with a dot) or an IP literal counts as an address.
-  if (!url.hostname.includes('.') && !url.hostname.startsWith('[')) return null;
+  // Placeholders ("N/A", "none", "n.a.", "0") must not become links. The URL parser
+  // rewrites hosts ("0" -> "0.0.0.0"), so the check runs on the host as typed.
+  if (!isAddressHost(typedHost(text))) return null;
   url.search = withoutTrackingParams(url.search);
   const host = url.hostname.replace(/^www\./i, '');
   const path = url.pathname === '/' ? '' : url.pathname.replace(/\/$/, '');

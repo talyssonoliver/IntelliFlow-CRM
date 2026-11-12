@@ -1695,7 +1695,7 @@ function LeadAIInsightsTab({
   // scored, whether or not the full analysis has run.
   const isScored =
     leadScoreDisplay(aiInsights.leadScore, aiInsights.scoringStatus).kind === 'score';
-  const hasDealEstimate = hasAiInsight && aiInsights.estimatedValue > 0;
+  const hasDealEstimate = aiInsights.estimatedValue > 0;
   return (
     <div className="space-y-6">
       {!hasAiInsight && (
@@ -1758,8 +1758,7 @@ function LeadAIInsightsTab({
               <p
                 className={`text-2xl font-bold ${hasDealEstimate ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
               >
-                {/* The scoring job writes estimatedValue 0 as a placeholder; only a real,
-                    positive estimate is shown as one. */}
+                {/* The lead's own value, in pence; none (0) shows as "--", not "£0". */}
                 <span data-testid={hasDealEstimate ? 'deal-value' : 'deal-value-null-state'}>
                   {hasDealEstimate ? formatEstimatedValue(aiInsights.estimatedValue) : '--'}
                 </span>
@@ -2537,8 +2536,12 @@ export default function Lead360Page() {
 
   // The API returns the lead's insight as `aiInsights` (the LeadAIInsight rows the
   // scoring job writes); the page used to read a singular `aiInsight` that was never
-  // set, so every lead read "AI analysis not run".
-  const apiInsight = apiLead?.aiInsights?.[0] ?? null;
+  // set, so every lead read "AI analysis not run". Opening a lead used to save a row
+  // derived from heuristics, so a row is shown only once the scoring job has run on
+  // the lead (SCORED or NEEDS_REVIEW); a never-scored lead's row is not an analysis.
+  const scoredByJob =
+    apiLead?.scoringStatus === 'SCORED' || apiLead?.scoringStatus === 'NEEDS_REVIEW';
+  const apiInsight = scoredByJob ? (apiLead?.aiInsights?.[0] ?? null) : null;
 
   // Transform AI insights from API
   const aiInsights = useMemo(() => {
@@ -2572,7 +2575,10 @@ export default function Lead360Page() {
       engagementLevel,
       engagementScore: insight.engagementScore,
       conversionProbability: insight.conversionProbability,
-      estimatedValue: insight.estimatedValue,
+      // The insight's estimatedValue is not a real estimate (the scoring job derives it
+      // from the score, or multiplies a value already in pence by 100), so the deal
+      // value is the lead's own, in pence, until a writer stores a real one (#1289).
+      estimatedValue: lead?.estimatedValue || 0,
       churnRisk: insight.churnRisk,
       sentiment: insight.sentiment || 'Neutral',
       // Not measured by any insight writer yet: the scoring job stores the constants

@@ -208,9 +208,28 @@ describe('lead-format · leadWebsite (#1277)', () => {
     expect(leadWebsite('unknown')).toBeNull();
   });
 
+  it('returns null for placeholders the URL parser would rewrite into hosts', () => {
+    expect(leadWebsite('0')).toBeNull();
+    expect(leadWebsite('1234')).toBeNull();
+    expect(leadWebsite('n.a.')).toBeNull();
+    expect(leadWebsite('N.A.')).toBeNull();
+    expect(leadWebsite('none.')).toBeNull();
+    expect(leadWebsite('1.2')).toBeNull();
+    expect(leadWebsite('https://.example.invalid')).toBeNull();
+  });
+
   it('keeps an IP address', () => {
     expect(leadWebsite('http://192.0.2.10/')?.label).toBe('192.0.2.10');
+    expect(leadWebsite('192.0.2.10:8080')?.label).toBe('192.0.2.10');
     expect(leadWebsite('http://[2001:db8::1]/')?.label).toBe('[2001:db8::1]');
+    expect(leadWebsite('http://[2001:db8::1]:8443/x')?.label).toBe('[2001:db8::1]/x');
+  });
+
+  it('keeps a domain with a port, user info or a non-Latin top-level label', () => {
+    expect(leadWebsite('shop.example.invalid:8080/a')?.label).toBe('shop.example.invalid/a');
+    expect(leadWebsite('https://user@shop.example.invalid')?.label).toBe('shop.example.invalid');
+    expect(leadWebsite('café.example.invalid')).not.toBeNull();
+    expect(leadWebsite('例え.テスト')).not.toBeNull();
   });
 
   it('keeps the remaining parameters exactly as stored', () => {
