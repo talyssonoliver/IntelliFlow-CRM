@@ -340,7 +340,7 @@ describe('enqueueSummarizationIfNeeded', () => {
     });
   });
 
-  it('uses a per-conversation job id that BullMQ accepts', async () => {
+  it('dedupes only in-flight summaries, with no fixed job id', async () => {
     mockConversationRecordFindFirst.mockResolvedValueOnce(makeConversation({ messageCount: 25 }));
 
     const mockQueue = { add: vi.fn().mockResolvedValue(undefined) } as any;
@@ -348,9 +348,11 @@ describe('enqueueSummarizationIfNeeded', () => {
     await enqueueSummarizationIfNeeded(CONV_ID, SESSION_ID, TENANT_A, mockQueue);
 
     const [, , opts] = mockQueue.add.mock.calls[0];
-    expect(opts.jobId).toBe(`summarize.${CONV_ID}`);
-    // BullMQ throws "Custom Ids cannot contain :" for a two-part colon id.
-    expect(opts.jobId).not.toContain(':');
+    // A fixed jobId would block every later summary while the finished job is retained, and
+    // `summarize:<id>` made BullMQ throw "Custom Ids cannot contain :" on every add.
+    expect(opts.jobId).toBeUndefined();
+    expect(opts.deduplication).toEqual({ id: `summarize.${CONV_ID}` });
+    expect(opts.deduplication.id).not.toContain(':');
   });
 
   it('does not add job when below threshold', async () => {
