@@ -75,7 +75,7 @@ function EmptyList({
   if (filtered) {
     return (
       <>
-        <EmptyState entity="emails" variant="filtered" phase="passive" />
+        <EmptyState entity="emails" variant="filtered" showCta={false} />
         <button
           type="button"
           className="text-xs text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-ring rounded"
@@ -88,7 +88,7 @@ function EmptyList({
   }
   if (!mailboxRefusal || searching) {
     return (
-      <EmptyState entity="emails" variant={searching ? 'filtered' : 'folder'} phase="passive" />
+      <EmptyState entity="emails" variant={searching ? 'filtered' : 'folder'} showCta={false} />
     );
   }
   const broken = mailboxRefusal === 'MAILBOX_ERROR';
@@ -97,7 +97,7 @@ function EmptyList({
       <EmptyState
         entity="emails"
         variant="folder"
-        phase="passive"
+        showCta={false}
         title={broken ? 'Your mailbox needs attention' : 'Connect your mailbox'}
         description={
           broken
@@ -238,10 +238,15 @@ export function EmailList({
       {emails.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 p-4">
           <EmptyList
-            filtered={isFilteredEmpty}
+            // A search with no matches is a filtered list too: Clear resets the chips and
+            // the search together.
+            filtered={isFilteredEmpty || Boolean(searchQuery)}
             searching={Boolean(searchQuery)}
             mailboxRefusal={mailboxRefusal}
-            onClearFilters={() => onFilterChange({ unread: false, hasAttachments: false })}
+            onClearFilters={() => {
+              onFilterChange({ unread: false, hasAttachments: false });
+              onSearchChange('');
+            }}
           />
         </div>
       ) : (

@@ -183,7 +183,7 @@ export function ActivityFeed(props: Readonly<ActivityFeedProps>) {
     return (
       <EmptyState
         entity="activity"
-        phase="passive"
+        showCta={false}
         description={emptyMessage}
         className={className}
       />

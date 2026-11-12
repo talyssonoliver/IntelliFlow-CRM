@@ -228,7 +228,7 @@ export function ExperimentsDashboard() {
         />
         <Card className="mt-6">
           <CardContent>
-            <EmptyState entity="experiments" phase="passive" />
+            <EmptyState entity="experiments" showCta={false} />
           </CardContent>
         </Card>
       </div>

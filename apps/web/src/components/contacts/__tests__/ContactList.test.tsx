@@ -241,6 +241,48 @@ describe('ContactList', () => {
       expect(screen.getByText('No contacts yet')).toBeInTheDocument();
     });
 
+    it('a filtered empty list says "no contacts found" and offers Clear, not create', () => {
+      const onClearFilters = vi.fn();
+      render(
+        <ContactList
+          contacts={[]}
+          total={0}
+          isLoading={false}
+          onRowClick={handlers.onRowClick}
+          onDelete={handlers.onDelete}
+          onBulkDelete={handlers.onBulkDelete}
+          onBulkEmail={handlers.onBulkEmail}
+          onBulkExport={handlers.onBulkExport}
+          isFiltered
+          onClearFilters={onClearFilters}
+        />
+      );
+
+      expect(screen.getByText('No contacts found')).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /contact/i })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+      expect(onClearFilters).toHaveBeenCalledTimes(1);
+    });
+
+    it('an unfiltered empty list says "no contacts yet" and offers no Clear', () => {
+      render(
+        <ContactList
+          contacts={[]}
+          total={0}
+          isLoading={false}
+          onRowClick={handlers.onRowClick}
+          onDelete={handlers.onDelete}
+          onBulkDelete={handlers.onBulkDelete}
+          onBulkEmail={handlers.onBulkEmail}
+          onBulkExport={handlers.onBulkExport}
+        />
+      );
+
+      // The create link comes from EmptyState's own phase machine (soft-cta), not at first paint.
+      expect(screen.getByText('No contacts yet')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
+    });
+
     it('renders empty-state illustration area', () => {
       // Post-EmptyState migration, empty-states use SVG illustrations from
       // `packages/ui/src/components/empty-state-illustrations.tsx` (entity

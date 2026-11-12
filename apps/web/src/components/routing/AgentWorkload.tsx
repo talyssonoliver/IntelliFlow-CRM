@@ -85,7 +85,7 @@ export function AgentWorkload() {
     return (
       <Card>
         <CardContent className="p-6">
-          <EmptyState entity="agents" phase="passive" />
+          <EmptyState entity="agents" showCta={false} />
         </CardContent>
       </Card>
     );

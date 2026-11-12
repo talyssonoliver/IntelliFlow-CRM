@@ -103,7 +103,7 @@ export function DocumentLinks({ caseId }: Readonly<DocumentLinksProps>) {
     | undefined;
 
   if (!documents || documents.length === 0) {
-    return <EmptyState entity="documents" phase="passive" />;
+    return <EmptyState entity="documents" ctaHref="/documents/new" ctaLabel="Upload a document" />;
   }
 
   return (

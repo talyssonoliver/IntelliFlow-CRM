@@ -82,7 +82,7 @@ describe('ModelConfigContent — layout', () => {
       screen.getByRole('heading', { level: 1, name: 'Model Configuration' })
     ).toBeInTheDocument();
     const nav = screen.getByRole('navigation', { name: /breadcrumb/i });
-    for (const crumb of ['Dashboard', 'AI & Agents', 'AI Settings']) {
+    for (const crumb of ['Home', 'AI & Agents', 'AI Settings']) {
       expect(nav).toHaveTextContent(crumb);
     }
     expect(screen.getByRole('link', { name: /chain versions/i })).toHaveAttribute(

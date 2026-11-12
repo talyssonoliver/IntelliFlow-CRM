@@ -451,6 +451,26 @@ describe('Audit Router', () => {
       expect(result).toHaveLength(3);
     });
 
+    it("reads only the admin's own tenant", async () => {
+      const ctx = createAdminContext();
+      const caller = auditRouter.createCaller(ctx);
+      prismaMock.auditLogEntry.findMany.mockResolvedValue([]);
+      prismaMock.auditLogEntry.count.mockResolvedValue(0);
+      (prismaMock.auditLogEntry.groupBy as any).mockResolvedValue([]);
+
+      await caller.getSecurityEvents({});
+      await caller.getStats({});
+
+      const tenantId = ctx.user!.tenantId;
+      expect(prismaMock.auditLogEntry.findMany.mock.calls[0][0]?.where).toMatchObject({ tenantId });
+      for (const [args] of [
+        ...prismaMock.auditLogEntry.count.mock.calls,
+        ...(prismaMock.auditLogEntry.groupBy as any).mock.calls,
+      ]) {
+        expect(args.where).toMatchObject({ tenantId });
+      }
+    });
+
     it('should filter by security-related actions', async () => {
       const caller = auditRouter.createCaller(createAdminContext());
 
@@ -573,7 +593,8 @@ describe('Audit Router', () => {
     });
 
     it('should filter by date range', async () => {
-      const caller = auditRouter.createCaller(createAdminContext());
+      const ctx = createAdminContext();
+      const caller = auditRouter.createCaller(ctx);
       const startDate = new Date('2025-01-01');
       const endDate = new Date('2025-01-31');
 
@@ -584,6 +605,7 @@ describe('Audit Router', () => {
 
       expect(prismaMock.auditLogEntry.count).toHaveBeenCalledWith({
         where: {
+          tenantId: ctx.user!.tenantId,
           timestamp: {
             gte: startDate,
             lte: endDate,

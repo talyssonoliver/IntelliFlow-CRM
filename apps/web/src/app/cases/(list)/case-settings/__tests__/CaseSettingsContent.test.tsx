@@ -211,7 +211,7 @@ describe('CaseSettingsContent — PG-190 v2 scope-up', () => {
   it('renders PageHeader with Case Settings heading and Dashboard breadcrumb', () => {
     render(<CaseSettingsContent />);
     expect(screen.getByRole('heading', { name: /case settings/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /dashboard/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Home' })).toBeTruthy();
   });
 
   it('renders all 9 bento sections', () => {
@@ -481,6 +481,6 @@ describe('CaseSettingsPage', () => {
     const { default: CaseSettingsPage } = await import('../page');
     render(<CaseSettingsPage />);
     expect(screen.getByRole('heading', { name: /case settings/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /dashboard/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Home' })).toBeTruthy();
   });
 });

@@ -107,7 +107,8 @@ export function DealWinLossCard({
               <EmptyState
                 entity="rules"
                 size="sm"
-                phase="passive"
+                ctaLabel={category === 'WON' ? 'Add won reason' : 'Add lost reason'}
+                onCtaClick={() => openCreate(category)}
                 title={`No ${category.toLowerCase()} reasons`}
                 description={`Add the first ${category.toLowerCase()} reason above.`}
                 className="py-4 px-3 gap-2"

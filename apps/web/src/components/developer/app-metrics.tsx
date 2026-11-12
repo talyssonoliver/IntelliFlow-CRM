@@ -76,7 +76,7 @@ export function AppMetrics({ app }: Readonly<AppMetricsProps>) {
     return (
       <Card>
         <CardContent className="pt-6">
-          <EmptyState entity="insights" phase="passive" />
+          <EmptyState entity="insights" showCta={false} />
         </CardContent>
       </Card>
     );

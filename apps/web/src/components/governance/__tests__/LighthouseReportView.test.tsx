@@ -205,9 +205,15 @@ describe('LighthouseReportView', () => {
     render(<LighthouseReportView />);
 
     await waitFor(() => {
-      expect(screen.getByText('Lighthouse')).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Lighthouse Report' })
+      ).toBeInTheDocument();
     });
 
+    // #1222 UI-011: the trail shows ancestors only; 'Lighthouse' is the page itself.
+    expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).not.toHaveTextContent(
+      'Lighthouse'
+    );
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByText('Governance')).toBeInTheDocument();
     expect(screen.getByText('Quality Reports')).toBeInTheDocument();

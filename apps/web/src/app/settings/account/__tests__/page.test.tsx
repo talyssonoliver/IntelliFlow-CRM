@@ -242,9 +242,9 @@ describe('AccountSettingsContent', () => {
     expect(heading.textContent).toBe('Profile Settings');
   });
 
-  it('renders breadcrumbs with Dashboard and Settings', () => {
+  it('renders breadcrumbs with Home and Settings', () => {
     render(<AccountSettingsContent />);
-    expect(screen.getByText('Dashboard')).toBeTruthy();
+    expect(screen.getByText('Home')).toBeTruthy();
     expect(screen.getByText('Settings')).toBeTruthy();
   });
 

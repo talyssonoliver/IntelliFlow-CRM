@@ -367,7 +367,7 @@ export default function MfaSetupPage() {
       <PageHeader
         title="Set Up Two-Factor Authentication"
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
+          { label: 'Home', href: '/' },
           { label: 'Settings', href: '/settings' },
           { label: 'Security', href: '/settings/security/mfa' },
           { label: 'MFA Setup' },

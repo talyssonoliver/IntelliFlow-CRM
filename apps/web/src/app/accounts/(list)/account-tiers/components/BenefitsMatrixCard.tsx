@@ -13,6 +13,8 @@ export interface BenefitsMatrixCardProps {
   readonly onRename: (benefitId: string, name: string) => void;
   readonly onRemove: (benefitId: string) => void;
   readonly onToggle: (tierId: string, benefitId: string, checked: boolean) => void;
+  /** Adds a benefit row; the empty state offers it unless read-only. */
+  readonly onAdd?: () => void;
 }
 
 /** Benefits (rows) × tiers (columns); a ticked cell means the tier gets that benefit. */
@@ -25,6 +27,7 @@ export function BenefitsMatrixCard({
   onRename,
   onRemove,
   onToggle,
+  onAdd,
 }: BenefitsMatrixCardProps) {
   return (
     <div>
@@ -32,7 +35,14 @@ export function BenefitsMatrixCard({
         {announcement}
       </p>
       {benefits.length === 0 ? (
-        <EmptyState entity="rules" phase="passive" size="sm" className="py-4 px-3 gap-2" />
+        <EmptyState
+          entity="rules"
+          showCta={!readOnly && Boolean(onAdd)}
+          ctaLabel="Add benefit"
+          onCtaClick={onAdd}
+          size="sm"
+          className="py-4 px-3 gap-2"
+        />
       ) : (
         <section className="overflow-x-auto" tabIndex={0} aria-label="Benefits by tier, scrollable">
           <table className="w-full text-sm">

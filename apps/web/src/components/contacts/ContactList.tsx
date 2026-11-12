@@ -46,6 +46,10 @@ export interface ContactListProps {
   onCreateTicket?: (contact: Contact) => void;
   onScheduleMeeting?: (contact: Contact) => void;
   pageSize?: number;
+  /** A search or filter is active: the empty state then offers no create link. */
+  isFiltered?: boolean;
+  /** Clears every search and filter; offered by the filtered empty state. */
+  onClearFilters?: () => void;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
@@ -330,6 +334,8 @@ export function ContactList({
   onCreateTicket,
   onScheduleMeeting,
   pageSize = 10,
+  isFiltered = false,
+  onClearFilters,
 }: Readonly<ContactListProps>) {
   const { timezone } = useTimezoneContext();
   // Columns are built by a module-level factory to avoid S6478 (JSX-returning
@@ -394,7 +400,18 @@ export function ContactList({
   }
 
   if (contacts.length === 0) {
-    return <EmptyState entity="contacts" phase="passive" />;
+    // A filtered empty list says so and offers to clear the filters; only a truly empty
+    // list offers to create a contact.
+    return isFiltered ? (
+      <EmptyState
+        entity="contacts"
+        variant="filtered"
+        showCta={false}
+        action={onClearFilters ? { label: 'Clear filters', onClick: onClearFilters } : undefined}
+      />
+    ) : (
+      <EmptyState entity="contacts" ctaHref="/contacts/new" />
+    );
   }
 
   return (

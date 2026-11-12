@@ -285,3 +285,13 @@ describe('AutomationRuleList', () => {
     expect(onSave).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('AutomationRuleList read-only empty state', () => {
+  it('offers no create action and ignores openCreate', () => {
+    const { ref } = renderList({ rules: [], canEdit: false });
+    fireEvent.mouseEnter(screen.getByRole('region'));
+    expect(screen.queryByRole('button', { name: /Create rule/ })).not.toBeInTheDocument();
+    act(() => ref.current?.openCreate());
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});

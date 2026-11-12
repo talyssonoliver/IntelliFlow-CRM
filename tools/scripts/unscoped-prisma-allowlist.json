@@ -1,0 +1,53 @@
+{
+  "$comment": "Direct uses of the unscoped ctx.prisma in API routers, per file, with the reason. Checked by tools/scripts/check-unscoped-prisma.mjs; lower `max` when uses go away, never raise it without a reason.",
+  "files": {
+    "apps/api/src/modules/agent/agent.router.ts": {
+      "max": 6,
+      "reason": "Approval-policy and tool-registry lookups take the tenant as an argument; each call runs after requireTenantOwnedAction or with ctx.user.tenantId."
+    },
+    "apps/api/src/modules/agent/conversation.router.ts": {
+      "max": 7,
+      "reason": "Admin analytics and archiving on adminProcedure, which has no tenant-scoped client; every query filters by ctx.user.tenantId."
+    },
+    "apps/api/src/modules/auth/auth.router.ts": {
+      "max": 6,
+      "reason": "Sign-in, session and MFA records belong to the user, not to a tenant, and are looked up by the authenticated user id."
+    },
+    "apps/api/src/modules/billing/billing.router.ts": {
+      "max": 1,
+      "reason": "Usage counts for the billing period filter every query by the caller's tenantId explicitly."
+    },
+    "apps/api/src/modules/calendar/public-booking.router.ts": {
+      "max": 12,
+      "reason": "Public booking pages have no session: the event type and its tenant are resolved from the booking handle, and the writes and host lookup use that tenant and event type."
+    },
+    "apps/api/src/modules/inbound/inbound.router.ts": {
+      "max": 20,
+      "reason": "Server-to-server portal calls with no user session, authenticated by the shared internal secret; every lead, task and appointment query filters by the tenant the call is for."
+    },
+    "apps/api/src/modules/partner/partner.router.ts": {
+      "max": 3,
+      "reason": "Partner operations act on client tenants by design; loadPartnerTenant checks the partner owns the tenant first."
+    },
+    "apps/api/src/modules/privacy/privacy-admin.router.ts": {
+      "max": 1,
+      "reason": "Reads the caller's own tenant record (the Tenant model has no tenantId column)."
+    },
+    "apps/api/src/modules/privacy/privacy-public.router.ts": {
+      "max": 2,
+      "reason": "Public privacy pages have no session: a data request is read by the id in its download link (only to record the download against its own tenant), and a tenant by its public booking handle."
+    },
+    "apps/api/src/modules/security/audit.router.ts": {
+      "max": 5,
+      "reason": "Admin security views on adminProcedure, which has no tenant-scoped client; every query filters by ctx.user.tenantId."
+    },
+    "apps/api/src/modules/user/user-membership.procedures.ts": {
+      "max": 10,
+      "reason": "A user's memberships span tenants by design (ADR-071): listing and switching them reads rows outside the active tenant."
+    },
+    "apps/api/src/modules/zep/zep-budget.router.ts": {
+      "max": 1,
+      "reason": "Fallback only when no tenant-scoped client is present; the budget is keyed by the caller's tenantId."
+    }
+  }
+}

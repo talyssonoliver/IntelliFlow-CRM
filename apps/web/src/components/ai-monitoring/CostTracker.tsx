@@ -59,7 +59,7 @@ export function CostTracker({ roi, isLoading }: Readonly<CostTrackerProps>) {
           if (roi === null)
             return (
               <div data-testid="no-cost-data">
-                <EmptyState entity="insights" phase="passive" className="py-4" />
+                <EmptyState entity="insights" showCta={false} className="py-4" />
               </div>
             );
           return (

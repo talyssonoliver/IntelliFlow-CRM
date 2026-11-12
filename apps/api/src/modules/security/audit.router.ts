@@ -188,6 +188,7 @@ export const auditRouter = createTRPCRouter({
     ];
 
     const where: Record<string, unknown> = {
+      tenantId: ctx.user.tenantId,
       action: { in: securityActions },
     };
 
@@ -221,7 +222,7 @@ export const auditRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      const where: Record<string, unknown> = {};
+      const where: Record<string, unknown> = { tenantId: ctx.user.tenantId };
 
       if (input.startDate || input.endDate) {
         where.timestamp = {};
