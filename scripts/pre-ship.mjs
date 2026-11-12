@@ -86,6 +86,7 @@
  *   PRESHIP_MODE=full        same as passing --full
  *   PRESHIP_FULL_TESTS=1     run the FULL test suite locally (default: related only)
  *   PRESHIP_FULL_LINT=1      format/lint/lint-promises over the whole repo locally
+ *   PRESHIP_FULL_BUILD=1     library-build, typecheck and build over every package locally
  *   PRESHIP_KEEP_GOING=1     don't hard-stop on first required FAIL
  *   PRESHIP_ALLOW_MISSING=1  let required+SKIPPED_PRECONDITION steps pass
  *                            (infra-unrunnable steps only; NOT a full bypass)
@@ -120,9 +121,19 @@ import {
   summaryLine,
 } from './lib/preship-run-metrics.mjs';
 import { testStepEnv } from './lib/preship-build.mjs';
+import { AFFECTED_ENV, resolveAffected } from './lib/preship-affected.mjs';
 
 // Throwaway stub credentials for the build-time env mirror below (never a real DB).
 const STUB_DB_USER = 'stub';
+const STUB_DB_URL = `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`;
+// turbo.json lists DATABASE_URL and DIRECT_URL in globalEnv, so they are part of
+// every task hash. The push gate runs inside `test-db.mjs run`, which points
+// DATABASE_URL at a fresh database with a new name each time: every gate missed
+// turbo's cache for every package (library-build 18/18 misses, build 21/21,
+// 2026-11-10). library-build, typecheck and build never connect to a database
+// (CI builds against a stub too), so they get the same stub on every run and the
+// shared cache hits again.
+const TURBO_STABLE_DB_ENV = { DATABASE_URL: STUB_DB_URL, DIRECT_URL: STUB_DB_URL };
 
 // Resolve REPO_ROOT from git rather than cwd so the script behaves
 // identically whether invoked from the repo root, from a subdirectory,
@@ -294,6 +305,13 @@ const IS_CI = process.env.CI === 'true' || process.env.CI === '1';
 const TEST_SCOPE = resolveTestScope({ cwd: REPO_ROOT });
 const SCOPED_TESTS = TEST_SCOPE.scope !== 'full';
 const SCOPE_ENV_VALUE = JSON.stringify(TEST_SCOPE);
+// BUILD SCOPE: library-build, typecheck and build run over the packages this
+// branch changed plus their dependents, using CI's own classification
+// (scripts/ci/affected.mjs) over the local diff. Full under CI, with
+// PRESHIP_FULL_BUILD=1, or when the diff touches a path that affects every
+// package. `build` is skipped when only docs or test files changed.
+const AFFECTED = resolveAffected({ cwd: REPO_ROOT });
+const AFFECTED_ENV_VALUE = JSON.stringify(AFFECTED);
 const CI_ONLY_REMEDIATION =
   'Needs the full suite, which runs on CI. Run it locally with PRESHIP_FULL_TESTS=1.';
 
@@ -348,17 +366,10 @@ const STEPS = [
   {
     id: 'library-build',
     description: 'turbo run build for library packages (typecheck/test depend on dist/)',
-    cmd: [
-      'pnpm',
-      'exec',
-      'turbo',
-      'run',
-      'build',
-      '--filter=!@intelliflow/web',
-      '--filter=!@intelliflow/api',
-      '--filter=!@intelliflow/project-tracker',
-      '--filter=!@intelliflow/workers',
-    ],
+    // Locally: the affected libraries and the dependencies of affected apps
+    // (scripts/lib/preship-affected.mjs). CI / PRESHIP_FULL_BUILD=1: every library.
+    cmd: ['node', 'scripts/run-library-build.mjs'],
+    env: { [AFFECTED_ENV]: AFFECTED_ENV_VALUE, ...TURBO_STABLE_DB_ENV },
     required: true,
   },
   {
@@ -414,6 +425,7 @@ const STEPS = [
       ? 'turbo run typecheck + sonar-guard'
       : 'turbo run typecheck (bounded concurrency) + sonar-guard',
     cmd: ['node', 'scripts/run-typecheck.mjs'],
+    env: { [AFFECTED_ENV]: AFFECTED_ENV_VALUE, ...TURBO_STABLE_DB_ENV },
     required: true,
   },
   {
@@ -606,17 +618,13 @@ const STEPS = [
     // (Prisma encryption, AI audit signing, Supabase). Mirror locally
     // so a stub env doesn't silently fail differently from CI.
     env: {
+      [AFFECTED_ENV]: AFFECTED_ENV_VALUE,
       NODE_ENV: 'production',
       PRISMA_FIELD_ENCRYPTION_KEY:
         process.env.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
       AI_AUDIT_SIGNING_KEY:
         process.env.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime',
-      DATABASE_URL:
-        process.env.DATABASE_URL ||
-        `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
-      DIRECT_URL:
-        process.env.DIRECT_URL ||
-        `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
+      ...TURBO_STABLE_DB_ENV,
       SUPABASE_URL: process.env.SUPABASE_URL || 'https://stub.supabase.co',
       SUPABASE_ANON_KEY:
         process.env.SUPABASE_ANON_KEY ||
@@ -916,7 +924,12 @@ if (flags.help) {
       'Lint scope: format-check, lint and lint-promises check the changed files only,',
       '  repo-wide when lint/format config changes. PRESHIP_FULL_LINT=1 forces repo-wide.',
       '',
-      'Env: PRESHIP_MODE=full · PRESHIP_KEEP_GOING=1 · PRESHIP_ALLOW_MISSING=1 · PRESHIP_FULL_TESTS=1 · PRESHIP_FULL_LINT=1',
+      'Build scope: library-build, typecheck and build cover the changed packages and',
+      '  their dependents; build is skipped for docs/test-only diffs. PRESHIP_FULL_BUILD=1',
+      '  builds everything.',
+      '',
+      'Env: PRESHIP_MODE=full · PRESHIP_KEEP_GOING=1 · PRESHIP_ALLOW_MISSING=1 · PRESHIP_FULL_TESTS=1',
+      '     PRESHIP_FULL_LINT=1 · PRESHIP_FULL_BUILD=1',
       '',
     ].join('\n')
   );
@@ -1106,6 +1119,12 @@ async function main() {
   process.stdout.write(
     `pre-ship: test scope ${TEST_SCOPE.scope} — ${TEST_SCOPE.reason}` +
       (SCOPED_TESTS ? ' (the full suite runs on CI; PRESHIP_FULL_TESTS=1 runs it here)' : '') +
+      '.\n'
+  );
+  process.stdout.write(
+    `pre-ship: build scope ${AFFECTED.mode} — ${AFFECTED.reason}` +
+      (AFFECTED.mode === 'affected' ? ` [${AFFECTED.packages.join(', ')}]` : '') +
+      (AFFECTED.testsOrDocsOnly ? '; only docs/tests changed, build skipped' : '') +
       '.\n\n'
   );
 
