@@ -56,6 +56,13 @@ not running, no credentials, pg_dump error, check failed) and no file.
 
 ## 3. Checks
 
+The ops watch (the IntelliFlow coordinator's tick) runs
+`node C:\Users\talys\ops\intelliflow\backup-intelliflow-db.mjs --check` and puts
+the result on the ops board. It exits 1 and appends a STALE line to the log when
+the newest SUCCESS is missing or older than 36 hours, which is how a missed
+night shows (Windows Update reboots in the 02:00-08:00 window can leave the PC
+at the sign-in screen, and the task only catches up at sign-in).
+
 ```powershell
 # last run
 Get-Content C:\Users\talys\intelliflow-backups\logs\backup-intelliflow.jsonl -Tail 1

@@ -8,6 +8,8 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
   EXCLUDED_DATA,
+  backupFreshness,
+  check,
   IMAGE,
   REQUIRED_DATA,
   dumpName,
@@ -231,5 +233,53 @@ describe('run', () => {
     writeFileSync(join(root, 'archives', 'intelliflow-2026-10-01.dump'), 'old');
     const r = await run({ ...base(root), probe: f.probe, exec: f.exec, relay: f.relay });
     expect(r).toMatchObject({ result: 'SUCCESS', pruned: ['intelliflow-2026-10-01.dump'] });
+  });
+});
+
+describe('--check (ops watch)', () => {
+  const line = (o: object) => JSON.stringify(o);
+  const now = new Date('2026-11-14T09:00:00Z');
+
+  it('is fresh when the newest SUCCESS is within 36 hours, ignoring failures and STALE lines', () => {
+    const text = [
+      line({ result: 'SUCCESS', finishedAt: '2026-11-12T03:30:15Z' }),
+      line({ result: 'SUCCESS', finishedAt: '2026-11-13T03:30:15Z' }),
+      line({ result: 'FAILURE', finishedAt: '2026-11-14T03:30:02Z' }),
+      line({ check: true, result: 'STALE', at: '2026-11-14T08:00:00Z' }),
+      'not json',
+    ].join('\n');
+    const f = backupFreshness(text, now);
+    expect(f).toMatchObject({ fresh: true, lastSuccessAt: '2026-11-13T03:30:15Z' });
+    expect(f.ageHours).toBeCloseTo(29.5, 1);
+  });
+
+  it('is stale past 36 hours or with no success at all', () => {
+    expect(
+      backupFreshness(line({ result: 'SUCCESS', finishedAt: '2026-11-12T20:00:00Z' }), now).fresh
+    ).toBe(false);
+    expect(backupFreshness('', now)).toEqual({ fresh: false, lastSuccessAt: null, ageHours: null });
+  });
+
+  it('appends a STALE line and reports STALE; writes nothing when fresh', () => {
+    const root = mkdtempSync(join(tmpdir(), 'ifc142-check-'));
+    const argv = ['node', 's', '--check', '--root', root];
+    expect(check({ argv, now, log: () => {} }).result).toBe('STALE');
+    expect(lastLog(root)).toMatchObject({
+      check: true,
+      result: 'STALE',
+      lastSuccessAt: null,
+      maxHours: 36,
+    });
+
+    writeFileSync(
+      join(root, 'logs', 'backup-intelliflow.jsonl'),
+      line({ result: 'SUCCESS', finishedAt: '2026-11-14T03:30:00Z' }) + '\n'
+    );
+    expect(check({ argv, now, log: () => {} }).result).toBe('FRESH');
+    expect(
+      readFileSync(join(root, 'logs', 'backup-intelliflow.jsonl'), 'utf8')
+        .trim()
+        .split('\n')
+    ).toHaveLength(1);
   });
 });

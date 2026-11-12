@@ -33,8 +33,14 @@
  * Not covered: Storage files (only their metadata rows are in the dump) and
  * database roles. Said here so nobody assumes otherwise.
  *
+ * --check (for the ops watch): no backup is taken. Exits 1 and appends a STALE
+ * line to the log when the newest SUCCESS is missing or older than 36 hours
+ * (a missed night, e.g. a reboot left the PC at the sign-in screen); exits 0
+ * and writes nothing when the last backup is fresh.
+ *
  * Usage:
  *   node tools/scripts/backup-intelliflow-db.mjs [--root <dir>] [--retention-days <n>]
+ *   node tools/scripts/backup-intelliflow-db.mjs --check [--root <dir>]
  */
 import { spawn as spawnChild, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -125,6 +131,59 @@ export function parseArgs(argv) {
         ? Number(argv[at('--retention-days') + 1])
         : DEFAULT_RETENTION_DAYS,
   };
+}
+
+export const STALE_AFTER_HOURS = 36;
+
+/** Freshness of the last successful backup, from the JSONL log text. */
+export function backupFreshness(logText, now, maxHours = STALE_AFTER_HOURS) {
+  let last;
+  for (const line of logText.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    let entry;
+    try {
+      entry = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    if (entry.result === 'SUCCESS' && entry.finishedAt && (!last || entry.finishedAt > last)) {
+      last = entry.finishedAt;
+    }
+  }
+  const ageHours = last ? (now.getTime() - Date.parse(last)) / 3600000 : null;
+  return {
+    fresh: ageHours !== null && ageHours <= maxHours,
+    lastSuccessAt: last ?? null,
+    ageHours,
+  };
+}
+
+/** --check: append a STALE line and fail when the last SUCCESS is too old. */
+export function check({ argv = process.argv, now = new Date(), log = console.log } = {}) {
+  const { root } = parseArgs(argv);
+  const logFile = path.join(root, 'logs', 'backup-intelliflow.jsonl');
+  const text = fs.existsSync(logFile) ? fs.readFileSync(logFile, 'utf8') : '';
+  const f = backupFreshness(text, now);
+  if (f.fresh) {
+    log(
+      `[backup-intelliflow-db] FRESH: last success ${f.lastSuccessAt} (${f.ageHours.toFixed(1)} h ago)`
+    );
+    return { result: 'FRESH', ...f };
+  }
+  const entry = {
+    task: 'backup-intelliflow-db',
+    check: true,
+    result: 'STALE',
+    at: now.toISOString(),
+    lastSuccessAt: f.lastSuccessAt,
+    ageHours: f.ageHours === null ? null : Number(f.ageHours.toFixed(1)),
+    maxHours: STALE_AFTER_HOURS,
+  };
+  appendLog(logFile, entry);
+  log(
+    `[backup-intelliflow-db] STALE: ${f.lastSuccessAt ? `last success ${f.lastSuccessAt} (${entry.ageHours} h ago)` : 'no successful backup on record'}`
+  );
+  return { result: 'STALE', ...f };
 }
 
 export const dumpName = (d) => `intelliflow-${d.toISOString().slice(0, 10)}.dump`;
@@ -335,5 +394,8 @@ export async function run({
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
+  if (process.argv.includes('--check')) {
+    process.exit(check().result === 'FRESH' ? 0 : 1);
+  }
   run().then((r) => process.exit(r.result === 'SUCCESS' ? 0 : 1));
 }

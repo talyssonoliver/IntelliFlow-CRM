@@ -42,3 +42,15 @@ export function run(options?: {
   relay?: (host: string, port: string) => Promise<{ port: number; close: () => void }>;
   log?: (line: string) => void;
 }): Promise<{ result: 'SUCCESS' | 'FAILURE'; [key: string]: unknown }>;
+export const STALE_AFTER_HOURS: number;
+export function backupFreshness(
+  logText: string,
+  now: Date,
+  maxHours?: number
+): { fresh: boolean; lastSuccessAt: string | null; ageHours: number | null };
+export function check(options?: { argv?: string[]; now?: Date; log?: (line: string) => void }): {
+  result: 'FRESH' | 'STALE';
+  fresh: boolean;
+  lastSuccessAt: string | null;
+  ageHours: number | null;
+};
