@@ -37,6 +37,26 @@ export function contactPrefill(contact: PrefillContact) {
   };
 }
 
+const sameEmail = (a: unknown, b: unknown) =>
+  typeof a === 'string' &&
+  typeof b === 'string' &&
+  a.trim() !== '' &&
+  a.trim().toLowerCase() === b.trim().toLowerCase();
+
+/**
+ * Links the ticket to the looked-up contact only while the email sent is still
+ * that contact's. If the user typed someone else's email, the ticket is not
+ * linked: the server matches activity and duplicates by email, and the
+ * Tickets tab by id, so both must name the same person.
+ */
+export function withLinkedContact(
+  data: Record<string, unknown>,
+  contact: PrefillContact
+): Record<string, unknown> {
+  if (!contact.id || !sameEmail(data.contactEmail, contact.email)) return data;
+  return { ...data, contactId: contact.id };
+}
+
 export function NewTicketContactForm({
   contactId,
   onSubmit,
@@ -48,13 +68,11 @@ export function NewTicketContactForm({
     { enabled: Boolean(contactId), retry: false }
   );
 
-  const form = (initialData?: ReturnType<typeof contactPrefill>, linkedContactId?: string) => (
+  const form = (initialData?: ReturnType<typeof contactPrefill>, linked?: PrefillContact) => (
     <TicketForm
       mode="create"
       initialData={initialData}
-      onSubmit={
-        linkedContactId ? (data) => onSubmit({ ...data, contactId: linkedContactId }) : onSubmit
-      }
+      onSubmit={linked ? (data) => onSubmit(withLinkedContact(data, linked)) : onSubmit}
       onCancel={onCancel}
       isSubmitting={isSubmitting}
     />
@@ -77,7 +95,7 @@ export function NewTicketContactForm({
   if (contactQuery.data) {
     const contact = contactQuery.data as PrefillContact;
     // The id comes from the tenant-checked lookup, not straight from the URL.
-    return form(contactPrefill(contact), contact.id);
+    return form(contactPrefill(contact), contact);
   }
 
   return (

@@ -12,7 +12,7 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
-import { NewTicketContactForm, contactPrefill } from '../NewTicketContactForm';
+import { NewTicketContactForm, contactPrefill, withLinkedContact } from '../NewTicketContactForm';
 
 const props = {
   onSubmit: vi.fn(() => Promise.resolve()),
@@ -35,6 +35,33 @@ describe('contactPrefill', () => {
       contactName: 'Lovelace',
       contactEmail: '',
     });
+  });
+});
+
+describe('withLinkedContact', () => {
+  const contact = { id: 'c-1', email: 'Ada@Example.invalid' };
+
+  it('links when the email matches, ignoring case and spaces', () => {
+    expect(withLinkedContact({ contactEmail: ' ada@example.invalid ' }, contact)).toEqual({
+      contactEmail: ' ada@example.invalid ',
+      contactId: 'c-1',
+    });
+  });
+
+  it('does not link on a different, empty or missing email', () => {
+    expect(withLinkedContact({ contactEmail: 'b@example.invalid' }, contact)).not.toHaveProperty(
+      'contactId'
+    );
+    expect(withLinkedContact({ contactEmail: '' }, { id: 'c-1', email: '' })).not.toHaveProperty(
+      'contactId'
+    );
+    expect(withLinkedContact({}, contact)).not.toHaveProperty('contactId');
+  });
+
+  it('does not link without a looked-up id', () => {
+    expect(
+      withLinkedContact({ contactEmail: 'ada@example.invalid' }, { email: 'ada@example.invalid' })
+    ).not.toHaveProperty('contactId');
   });
 });
 
@@ -125,6 +152,26 @@ describe('NewTicketContactForm', () => {
       contactName: 'Ada Lovelace',
       contactEmail: 'ada@example.invalid',
     });
+  });
+
+  it('drops the link when the email is changed to someone else', async () => {
+    getByIdMock.mockReturnValue({
+      data: { id: 'c-1', firstName: 'Ada', lastName: 'Lovelace', email: 'ada@example.invalid' },
+      isLoading: false,
+      isError: false,
+    });
+    const onSubmit = vi.fn((_data: Record<string, unknown>) => Promise.resolve());
+    render(<NewTicketContactForm contactId="c-1" {...props} onSubmit={onSubmit} />);
+
+    fireEvent.change(screen.getByLabelText(/subject/i), { target: { value: 'Printer jam' } });
+    fireEvent.change(screen.getByLabelText(/contact email/i), {
+      target: { value: 'grace@example.invalid' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /create ticket|submit/i }));
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ contactEmail: 'grace@example.invalid' });
+    expect(onSubmit.mock.calls[0][0]).not.toHaveProperty('contactId');
   });
 
   it('sends no contact id when the contact was not found', async () => {
