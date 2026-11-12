@@ -46,6 +46,7 @@
     "typecheck": "node -e \"try{require('fs').unlinkSync('generated/prisma/package.json')}catch(e){}\" && tsc --noEmit && node scripts/fix-prisma-esm.mjs",
     "lint": "eslint \"src/**/*.ts\"",
     "lint:fix": "eslint \"src/**/*.ts\" --fix",
+    "generate:tenant-models": "node scripts/generate-tenant-models.mjs",
     "test": "vitest run",
     "test:unit": "vitest run",
     "test:watch": "vitest"

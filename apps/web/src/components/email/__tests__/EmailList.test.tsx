@@ -156,6 +156,24 @@ describe('EmailList', () => {
     expect(screen.getByText(/no results/i)).toBeInTheDocument();
   });
 
+  it('offers Clear filters for a search with no matches, and clears the search too', async () => {
+    const user = userEvent.setup();
+    render(<EmailList {...defaultProps} emails={[]} totalUnfilteredCount={0} searchQuery="xyz" />);
+
+    await user.click(screen.getByRole('button', { name: 'Clear filters' }));
+
+    expect(defaultProps.onSearchChange).toHaveBeenCalledWith('');
+    expect(defaultProps.onFilterChange).toHaveBeenCalledWith({
+      unread: false,
+      hasAttachments: false,
+    });
+  });
+
+  it('offers no Clear filters for an empty folder with no search or chip', () => {
+    render(<EmailList {...defaultProps} emails={[]} totalUnfilteredCount={0} />);
+    expect(screen.queryByRole('button', { name: 'Clear filters' })).not.toBeInTheDocument();
+  });
+
   it('shows loading skeleton during fetch', () => {
     render(<EmailList {...defaultProps} isLoading={true} emails={[]} totalUnfilteredCount={0} />);
     const skeletons = document.querySelectorAll('.animate-pulse');

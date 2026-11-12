@@ -90,7 +90,13 @@ export function DeadlineTracker({
 
       {/* Task List */}
       {sortedTasks.length === 0 ? (
-        <EmptyState entity="tasks" phase="passive" className="py-2" />
+        <EmptyState
+          entity="tasks"
+          showCta={!disabled}
+          ctaLabel="Add a task"
+          onCtaClick={() => setShowForm(true)}
+          className="py-2"
+        />
       ) : (
         <ul className="space-y-2 mb-4">
           {sortedTasks.map((task) => {

@@ -520,7 +520,7 @@ export default function DealSettingsContent() {
   return (
     <ModuleSettingsShell
       breadcrumbs={[
-        { label: 'Dashboard', href: '/' },
+        { label: 'Home', href: '/' },
         { label: 'Deals', href: '/deals' },
         { label: 'Deal Settings' },
       ]}

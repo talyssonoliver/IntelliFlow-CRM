@@ -99,7 +99,7 @@ export function AssignmentDashboard() {
                 </div>
               );
             if (!assignments || assignments.length === 0)
-              return <EmptyState entity="leads" phase="passive" />;
+              return <EmptyState entity="leads" showCta={false} />;
             return (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">

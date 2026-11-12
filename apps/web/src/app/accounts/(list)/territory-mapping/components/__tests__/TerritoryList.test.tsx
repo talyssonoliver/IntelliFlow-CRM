@@ -198,3 +198,13 @@ describe('TerritoryList', () => {
     ).toBe(true);
   });
 });
+
+describe('TerritoryList read-only empty state', () => {
+  it('offers no Add territory action and ignores openCreate', () => {
+    const { ref } = setup([], { canEdit: false });
+    fireEvent.mouseEnter(screen.getByRole('region'));
+    expect(screen.queryByRole('button', { name: /Add territory/ })).not.toBeInTheDocument();
+    act(() => ref.current?.openCreate());
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});

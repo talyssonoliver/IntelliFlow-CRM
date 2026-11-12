@@ -269,7 +269,7 @@ export function InvoiceList({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <EmptyState entity="invoices" phase="passive" />
+          <EmptyState entity="invoices" showCta={false} />
         </CardContent>
       </Card>
     );

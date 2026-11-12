@@ -167,7 +167,7 @@ export function LatencyMonitorDashboard() {
           </div>
         ) : (
           <div data-testid="empty-state" className="mt-6">
-            <EmptyState entity="insights" phase="passive" />
+            <EmptyState entity="insights" showCta={false} />
           </div>
         )}
       </div>

@@ -71,7 +71,7 @@ export function VersionHistory({
   if (versions.length === 0) {
     return (
       <div data-testid="version-empty-state">
-        <EmptyState entity="documents" phase="passive" />
+        <EmptyState entity="documents" showCta={false} />
       </div>
     );
   }

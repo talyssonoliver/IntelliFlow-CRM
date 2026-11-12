@@ -199,7 +199,7 @@ describe('ApprovalPoliciesContent', () => {
       screen.getByRole('heading', { level: 1, name: 'Approval Policies' })
     ).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveTextContent(
-      'Dashboard / AI & Agents / AI Settings / Approval Policies'
+      'Home / AI & Agents / AI Settings / Approval Policies'
     );
     for (const title of ['Agent tool actions', 'Email auto-responses', 'Effective rules']) {
       expect(screen.getByRole('heading', { level: 2, name: title })).toBeInTheDocument();
