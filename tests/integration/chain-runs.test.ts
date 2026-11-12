@@ -6,7 +6,7 @@
  *
  * Skips (like the other DB suites) when there is no DATABASE_URL.
  */
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { createIsolatedTestPrismaClient } from './setup';
 import { chainRunWriterFromPrisma } from '../../apps/ai-worker/src/monitoring/chain-run-recorder';
 
@@ -19,6 +19,12 @@ describeDb('chain_runs (real database)', () => {
   let prisma: any;
   let tA = '';
   let tB = '';
+
+  // createIsolatedTestPrismaClient() returns null when the harness has no real DB (the
+  // merged-coverage run), even with DATABASE_URL set: skip rather than fail on a null client.
+  beforeEach((ctx) => {
+    if (!prisma) ctx.skip();
+  });
 
   beforeAll(async () => {
     prisma = createIsolatedTestPrismaClient();
