@@ -10,7 +10,14 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
+// The lead AI enqueue (scoring, qualification, next best action) is detached and reads the
+// lead itself; it is asserted in its own tests and must not consume this file's prisma mocks.
+vi.mock('../../lead/lead-scoring-enqueue', () => ({
+  enqueueLeadAiById: vi.fn(async () => undefined),
+}));
+
 import { inboundRouter, planCompanyChange } from '../inbound.router';
+import { enqueueLeadAiById } from '../../lead/lead-scoring-enqueue';
 import { createTestContext, prismaMock, mockServices } from '../../../test/setup';
 
 const TENANT_ID = '00000000-0000-4000-8000-000000000900';
@@ -115,6 +122,35 @@ describe('inboundRouter.syncPipelineLead — company correction', () => {
       fn(prismaMock)) as never);
     changeStatus().mockResolvedValue({ isFailure: false, value: {} });
     qualify().mockResolvedValue({ isFailure: false, value: {} });
+  });
+
+  it('queues the lead AI work after a COA sync, keyed to the synced lead', async () => {
+    existingLead(LISTING);
+    vi.mocked(enqueueLeadAiById).mockClear();
+
+    await caller().syncPipelineLead(payload({ applyCompany: true }));
+
+    // COA leads were never scored or qualified before (owner complaint 2026-11-12). The
+    // enqueue reads the lead as stored, so the corrected company is what the agents see.
+    expect(enqueueLeadAiById).toHaveBeenCalledTimes(1);
+    expect(enqueueLeadAiById).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ status: expect.any(Function) }),
+      { leadId: LEAD_ID, tenantId: TENANT_ID, correlationId: `coa-sync-${LEAD_ID}` }
+    );
+  });
+
+  it('queues the lead AI work on a repeat sync too (its job ids dedupe unchanged leads)', async () => {
+    existingLead(LISTING);
+    prismaMock.leadActivity.findFirst.mockResolvedValueOnce({
+      id: 'act_prior',
+      metadata: {},
+    } as never);
+    vi.mocked(enqueueLeadAiById).mockClear();
+
+    await caller().syncPipelineLead(payload());
+
+    expect(enqueueLeadAiById).toHaveBeenCalledTimes(1);
   });
 
   it('corrects an existing lead that still has the old listing name', async () => {
@@ -365,9 +401,12 @@ describe('inboundRouter.syncPipelineLead — dryRun', () => {
     vi.stubEnv('PORTAL_INTERNAL_SECRET', SECRET);
     vi.stubEnv('LEANGENCY_TENANT_ID', TENANT_ID);
     vi.stubEnv('LEANGENCY_SYSTEM_USER_ID', SYSTEM_USER_ID);
+    vi.mocked(enqueueLeadAiById).mockClear();
   });
 
   function expectNothingWritten() {
+    // A dry run queues no AI work either.
+    expect(enqueueLeadAiById).not.toHaveBeenCalled();
     expect(createLead()).not.toHaveBeenCalled();
     expect(changeStatus()).not.toHaveBeenCalled();
     expect(qualify()).not.toHaveBeenCalled();

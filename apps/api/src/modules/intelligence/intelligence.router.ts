@@ -976,10 +976,15 @@ export const intelligenceRouter = createTRPCRouter({
             entityType,
             entityId,
             predictionType,
+            // Top level: the prediction worker's schema requires tenantId here (H5/M8). Inside
+            // `context` only, every job from this procedure failed validation and never ran.
+            // The ids live on ctx.tenant; ctx.tenantId / ctx.userId do not exist at runtime, so
+            // both were undefined before and NEXT_BEST_ACTION always failed for want of a user.
+            tenantId: typedCtx.tenant.tenantId,
             correlationId,
             context: {
-              tenantId: typedCtx.tenantId,
-              userId: typedCtx.userId,
+              tenantId: typedCtx.tenant.tenantId,
+              userId: typedCtx.tenant.userId,
             },
             priority: priorityMap[priority],
             _otelCarrier: _otelCarrierPredict,
