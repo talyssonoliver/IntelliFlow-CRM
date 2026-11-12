@@ -177,10 +177,14 @@ after a CI round.
 
 **Test scope:** locally the test steps run only the tests related to the files
 changed since `origin/main` (`vitest related`); the full 10k+ suite is CI's
-sharded runners' job. Typecheck, lint and all other gates stay full.
-`PRESHIP_FULL_TESTS=1` runs the full suite locally; lockfile, `package.json`
-(other than `scripts`), vitest/tsconfig, Prisma schema or test-setup changes
-widen to full on their own.
+sharded runners' job. `PRESHIP_FULL_TESTS=1` runs the full suite locally;
+lockfile, `package.json` (other than `scripts`), vitest/tsconfig, Prisma schema
+or test-setup changes widen to full on their own.
+
+**Lint scope:** format-check, lint and lint-promises check only the changed
+files, and go repo-wide when eslint/prettier config, tsconfig, any
+`package.json` or the lockfile changes (`PRESHIP_FULL_LINT=1` forces it). CI
+checks the whole repo. Typecheck and all other gates stay full.
 
 **DB scope:** the integration suite runs locally only when the branch can reach
 it: a change under `packages/db`, `apps/api`, `apps/ai-worker` or
