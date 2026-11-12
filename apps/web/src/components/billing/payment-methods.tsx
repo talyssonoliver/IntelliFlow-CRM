@@ -696,7 +696,7 @@ export function PaymentMethods({ className }: Readonly<PaymentMethodsProps>) {
           {/* Empty State */}
           {!isLoading && !error && sortedPaymentMethods.length === 0 && (
             <div className="flex flex-col items-center">
-              <EmptyState entity="payment-methods" phase="passive" />
+              <EmptyState entity="payment-methods" showCta={false} />
               <Button onClick={() => setIsAddDialogOpen(true)}>
                 <span className="material-symbols-outlined text-lg mr-2" aria-hidden="true">
                   add

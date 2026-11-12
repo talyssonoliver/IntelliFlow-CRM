@@ -36,7 +36,7 @@ const DESCRIPTION =
   'How long AI work may wait for review, who may approve it, and when it escalates.';
 
 const BREADCRUMBS = [
-  { label: 'Dashboard', href: '/' },
+  { label: 'Home', href: '/' },
   { label: 'AI & Agents', href: '/agent-approvals' },
   { label: 'AI Settings', href: '/agent-approvals/ai-settings' },
   { label: 'Approval Policies' },
@@ -230,7 +230,9 @@ export default function ApprovalPoliciesContent() {
                   <div className="space-y-2">
                     <EmptyState
                       entity="rules"
-                      phase="passive"
+                      showCta={canManage}
+                      ctaLabel="New policy"
+                      onCtaClick={() => setDialog({ scope, policy: null })}
                       size="sm"
                       aria-label={`No ${meta.title.toLowerCase()} policies`}
                       className="py-4 px-3 gap-2"

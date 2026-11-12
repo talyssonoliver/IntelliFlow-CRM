@@ -512,7 +512,7 @@ export function CaseDetail({
                           </p>
                         </div>
                       )}
-                      <EmptyState entity="timeline" phase="passive" />
+                      <EmptyState entity="timeline" showCta={false} />
                     </div>
                   )}
                 </div>

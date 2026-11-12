@@ -101,7 +101,7 @@ describe('ReportSettingsContent', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Report Settings' })).toBeInTheDocument();
     });
-    expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Analytics' })).toBeInTheDocument();
   });
 

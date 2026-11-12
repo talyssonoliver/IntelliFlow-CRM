@@ -35,6 +35,8 @@ export interface TaskListProps {
   readonly onBulkComplete: (ids: string[]) => void;
   readonly onBulkDelete: (ids: string[]) => void;
   readonly onBulkArchive: (ids: string[]) => void;
+  /** Opens the screen's create-task flow; the empty state offers it when given. */
+  readonly onCreate?: () => void;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -266,6 +268,7 @@ export function TaskList({
   onBulkComplete,
   onBulkDelete,
   onBulkArchive,
+  onCreate,
 }: Readonly<TaskListProps>) {
   const { timezone } = useTimezoneContext();
   const columns = useMemo(
@@ -321,7 +324,12 @@ export function TaskList({
   if (tasks.length === 0) {
     return (
       <div data-testid="task-list-empty">
-        <EmptyState entity="tasks" variant="filtered" phase="passive" />
+        <EmptyState
+          entity="tasks"
+          variant="filtered"
+          showCta={Boolean(onCreate)}
+          onCtaClick={onCreate}
+        />
       </div>
     );
   }

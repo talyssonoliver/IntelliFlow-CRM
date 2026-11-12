@@ -219,7 +219,7 @@ function InsightsSection({ isLoading, insights, onInsightClick }: Readonly<Insig
   }
 
   if (!insights || insights.length === 0) {
-    return <EmptyState entity="insights" phase="passive" className="py-4" />;
+    return <EmptyState entity="insights" showCta={false} className="py-4" />;
   }
 
   return (
@@ -583,7 +583,11 @@ export function AuthenticatedHomePage({ initialWelcomeData }: AuthenticatedHomeP
                 })}
                 {visibleQuickActions.length === 0 && (
                   <div className="col-span-2">
-                    <EmptyState entity="pinned" phase="passive" className="py-2" />
+                    <EmptyState
+                      entity="pinned"
+                      onCtaClick={() => setIsQuickActionsSheetOpen(true)}
+                      className="py-2"
+                    />
                   </div>
                 )}
               </div>

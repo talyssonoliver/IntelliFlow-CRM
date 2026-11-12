@@ -166,3 +166,13 @@ describe('ContactTypeList', () => {
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });
 });
+
+describe('ContactTypeList read-only empty state', () => {
+  it('offers no Create contact type action and ignores openCreate', () => {
+    const { ref } = renderList({ types: [], canEdit: false });
+    fireEvent.mouseEnter(screen.getByRole('region'));
+    expect(screen.queryByRole('button', { name: /Create contact type/ })).not.toBeInTheDocument();
+    act(() => ref.current?.openCreate());
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});

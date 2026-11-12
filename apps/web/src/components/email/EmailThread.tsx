@@ -166,7 +166,7 @@ export function EmailThread({
       <EmptyState
         entity="emails"
         variant="selection"
-        phase="passive"
+        showCta={false}
         className={cn('flex-1', className)}
       />
     );

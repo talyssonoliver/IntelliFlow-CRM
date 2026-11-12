@@ -62,7 +62,7 @@ export function RecentActivityWidget({ config }: Readonly<WidgetProps>) {
             />
           ))}
         {displayActivities.length === 0 && !isLoading && (
-          <EmptyState entity="activity" phase="passive" className="py-2" />
+          <EmptyState entity="activity" showCta={false} className="py-2" />
         )}
         {isLoading && (
           <div className="flex flex-1 items-center justify-center">

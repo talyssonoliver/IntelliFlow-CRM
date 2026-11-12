@@ -97,7 +97,13 @@ export function PartyManager({ parties, onUpdate, disabled }: Readonly<PartyMana
   return (
     <div>
       {parties.length === 0 ? (
-        <EmptyState entity="contacts" phase="passive" className="py-2" />
+        <EmptyState
+          entity="contacts"
+          showCta={!disabled}
+          ctaLabel="Add a party"
+          onCtaClick={() => setShowForm(true)}
+          className="py-2"
+        />
       ) : (
         <ul className="space-y-3 mb-4">
           {parties.map((party) => (

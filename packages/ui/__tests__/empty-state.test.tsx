@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import userEvent from '@testing-library/user-event';
 import { EmptyState } from '../src/components/empty-state';
@@ -349,5 +349,175 @@ describe('EmptyState', () => {
       await user.unhover(container.firstChild as Element);
       expect(onPhaseChange).toHaveBeenCalledWith('passive');
     });
+  });
+});
+
+describe('EmptyState CTA modes (#1222 UI-002)', () => {
+  it('read-only (showCta={false}) is static: no focus stop, no CTA, no hotkey', async () => {
+    const user = userEvent.setup();
+    const onCreate = vi.fn();
+    const { container } = render(<EmptyState entity="leads" showCta={false} onCreate={onCreate} />);
+    const root = container.querySelector('[data-empty-state="read-only"]')!;
+    expect(root).not.toHaveAttribute('tabindex');
+    expect(root).toHaveAttribute('role', 'region');
+    expect(root).toHaveAttribute('aria-label', 'leads empty state');
+    await user.hover(root);
+    expect(screen.queryByRole('button')).toBeNull();
+
+    const event = new KeyboardEvent('keydown', { key: 'n', cancelable: true });
+    document.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('read-only can still offer one action, e.g. Clear filters', async () => {
+    const user = userEvent.setup();
+    const onClick = vi.fn();
+    render(
+      <EmptyState entity="activity" showCta={false} action={{ label: 'Clear filters', onClick }} />
+    );
+    await user.click(screen.getByRole('button', { name: 'Clear filters' }));
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('navigable (ctaHref) shows a link CTA on hover and takes no hotkey', async () => {
+    const user = userEvent.setup();
+    render(<EmptyState entity="documents" ctaHref="/documents/new" ctaLabel="Upload a document" />);
+    await user.hover(screen.getByRole('region'));
+    const link = screen.getByRole('link', { name: /Upload a document/ });
+    expect(link).toHaveAttribute('href', '/documents/new');
+
+    const event = new KeyboardEvent('keydown', { key: 'n', cancelable: true });
+    document.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(false);
+  });
+
+  it('creatable (onCtaClick) runs the real flow instead of the inline composer', () => {
+    const onCtaClick = vi.fn();
+    render(<EmptyState entity="tasks" onCtaClick={onCtaClick} ctaLabel="New task" />);
+    fireEvent.mouseEnter(screen.getByRole('region'));
+    fireEvent.click(screen.getByRole('button', { name: /New task/ }));
+    expect(onCtaClick).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('textbox')).toBeNull();
+
+    // The entity hotkey runs the same flow.
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 't', cancelable: true }));
+    expect(onCtaClick).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('EmptyState entity mode, uncontrolled', () => {
+  it('moves through the lifecycle on its own: hover, CTA, cancel, create', () => {
+    const onCreate = vi.fn();
+    render(<EmptyState entity="tasks" onCreate={onCreate} />);
+    fireEvent.mouseEnter(screen.getByRole('region'));
+    fireEvent.click(screen.getByRole('button', { name: /Create a task/ }));
+    // The composer is open: cancel returns to the CTA.
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('textbox')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /Create a task/ }));
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'Call Ada' } });
+    fireEvent.keyDown(screen.getByRole('textbox'), { key: 'Enter', ctrlKey: true });
+    expect(onCreate).toHaveBeenCalledWith('Call Ada');
+    expect(screen.queryByRole('textbox')).toBeNull();
+  });
+
+  it('forwards function and object refs', () => {
+    const fnRef = vi.fn();
+    const { unmount } = render(<EmptyState entity="tasks" ref={fnRef} />);
+    expect(fnRef).toHaveBeenCalledWith(expect.any(HTMLDivElement));
+    unmount();
+
+    const objRef = React.createRef<HTMLDivElement>();
+    render(<EmptyState entity="tasks" ref={objRef} />);
+    expect(objRef.current).toBeInstanceOf(HTMLDivElement);
+  });
+
+  it('ignores the hotkey while typing, with modifiers, or for another key', () => {
+    const onCtaClick = vi.fn();
+    render(
+      <>
+        <input aria-label="elsewhere" />
+        <EmptyState entity="tasks" onCtaClick={onCtaClick} />
+      </>
+    );
+    fireEvent.keyDown(screen.getByLabelText('elsewhere'), { key: 't' });
+    fireEvent.keyDown(document.body, { key: 't', ctrlKey: true });
+    fireEvent.keyDown(document.body, { key: 'x' });
+    expect(onCtaClick).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(document.body, { key: 't' });
+    expect(onCtaClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('runs one create flow when two empty states share a hotkey, and hands it back on unmount', () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const { rerender } = render(
+      <>
+        <EmptyState entity="tasks" onCtaClick={first} />
+        <EmptyState entity="tasks" onCtaClick={second} />
+      </>
+    );
+    fireEvent.keyDown(document.body, { key: 't' });
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledTimes(1);
+
+    rerender(<EmptyState entity="tasks" onCtaClick={first} />);
+    fireEvent.keyDown(document.body, { key: 't' });
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores the hotkey from pickers and from inside an open dialog', () => {
+    const onCtaClick = vi.fn();
+    render(
+      <>
+        <select aria-label="duration">
+          <option>30</option>
+        </select>
+        <div role="combobox" aria-label="host" tabIndex={0} />
+        <div role="dialog" aria-label="Create event type">
+          <button type="button">inside</button>
+        </div>
+        <EmptyState entity="tasks" onCtaClick={onCtaClick} />
+      </>
+    );
+    fireEvent.keyDown(screen.getByLabelText('duration'), { key: 't' });
+    fireEvent.keyDown(screen.getByLabelText('host'), { key: 't' });
+    fireEvent.keyDown(screen.getByRole('button', { name: 'inside' }), { key: 't' });
+    expect(onCtaClick).not.toHaveBeenCalled();
+
+    fireEvent.keyDown(document.body, { key: 't' });
+    expect(onCtaClick).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores a key press another handler already took', () => {
+    const onCtaClick = vi.fn();
+    render(<EmptyState entity="tasks" onCtaClick={onCtaClick} />);
+    const event = new KeyboardEvent('keydown', { key: 't', cancelable: true, bubbles: true });
+    event.preventDefault();
+    document.body.dispatchEvent(event);
+    expect(onCtaClick).not.toHaveBeenCalled();
+  });
+
+  it('takes no shortcut while a modal is open, even with focus on the page', () => {
+    const onCtaClick = vi.fn();
+    const { rerender } = render(
+      <>
+        <div aria-modal="true" role="dialog" aria-label="Create" />
+        <EmptyState entity="tasks" onCtaClick={onCtaClick} />
+      </>
+    );
+    fireEvent.keyDown(document.body, { key: 't' });
+    expect(onCtaClick).not.toHaveBeenCalled();
+
+    rerender(
+      <>
+        <EmptyState entity="tasks" onCtaClick={onCtaClick} />
+      </>
+    );
+    fireEvent.keyDown(document.body, { key: 't' });
+    expect(onCtaClick).toHaveBeenCalledTimes(1);
   });
 });

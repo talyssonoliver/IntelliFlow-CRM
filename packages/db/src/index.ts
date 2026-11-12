@@ -5,6 +5,7 @@ export * from './client';
 
 // ADR-071: inherited-membership predicates shared by the API and the quota adapter.
 export * from './membership';
+export * from './tenant-models.generated';
 
 // ADR-053: request-scoped N+1 query-budget detector (infrastructure layer).
 // Seeded by the API tRPC tracing middleware and ai-worker job entry; a no-op

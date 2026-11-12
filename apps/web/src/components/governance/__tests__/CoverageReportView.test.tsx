@@ -192,9 +192,15 @@ describe('CoverageReportView', () => {
     render(<CoverageReportView />);
 
     await waitFor(() => {
-      expect(screen.getByText('Test Coverage')).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Test Coverage Report' })
+      ).toBeInTheDocument();
     });
 
+    // #1222 UI-011: the trail shows ancestors only; 'Test Coverage' is the page itself.
+    expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).not.toHaveTextContent(
+      'Test Coverage'
+    );
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByText('Governance')).toBeInTheDocument();
     expect(screen.getByText('Quality Reports')).toBeInTheDocument();

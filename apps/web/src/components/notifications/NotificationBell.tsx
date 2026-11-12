@@ -178,7 +178,7 @@ export function NotificationBell() {
           {(() => {
             if (isLoading) return <NotificationBellSkeleton />;
             if (recentNotifications.length === 0)
-              return <EmptyState entity="notifications" phase="passive" className="py-2" />;
+              return <EmptyState entity="notifications" showCta={false} className="py-2" />;
             return (
               <div className="divide-y divide-slate-100 dark:divide-slate-700">
                 {recentNotifications.map((n) => {
