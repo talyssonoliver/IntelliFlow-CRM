@@ -184,7 +184,14 @@ or test-setup changes widen to full on their own.
 **Lint scope:** format-check, lint and lint-promises check only the changed
 files, and go repo-wide when eslint/prettier config, tsconfig, any
 `package.json` or the lockfile changes (`PRESHIP_FULL_LINT=1` forces it). CI
-checks the whole repo. Typecheck and all other gates stay full.
+checks the whole repo.
+
+**Build scope:** locally `library-build`, `typecheck` and `build` cover the
+packages the branch changed plus their dependents (CI's
+`scripts/ci/affected.mjs` classification over the local diff, turbo's local
+cache on); `build` is skipped when only docs or test files changed. Root config,
+`.github/` or shared tsconfig changes widen to every package;
+`PRESHIP_FULL_BUILD=1` forces it. All other gates stay full.
 
 **DB scope:** the integration suite runs locally only when the branch can reach
 it: a change under `packages/db`, `apps/api`, `apps/ai-worker` or
