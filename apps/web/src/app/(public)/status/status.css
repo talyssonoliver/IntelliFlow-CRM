@@ -53,6 +53,10 @@
   background: #c43b3b;
   box-shadow: 0 0 0 6px rgba(196, 59, 59, 0.15);
 }
+.aurora-site .aurora-status .ast-degraded {
+  background: #b7791f;
+  box-shadow: 0 0 0 6px rgba(183, 121, 31, 0.15);
+}
 .aurora-site .aurora-status .ast-checking {
   background: var(--lavender);
 }

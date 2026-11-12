@@ -2,12 +2,14 @@ import type { Metadata } from 'next';
 import { OG_IMAGES } from '@/lib/og-images';
 import Link from 'next/link';
 import { LiveStatus } from './LiveStatus';
+import { StatusMonitor } from '@/components/status/status-monitor';
 import './status.css';
 
 /**
  * System status, in the Aurora design. The web app is checked live from the
- * visitor's browser; services that have no public check yet say so, instead of
- * showing a figure nobody measured (CLAUDE.md: never mock data, show pending).
+ * visitor's browser; the API, AI agents and sign-in are checked by the web
+ * server (/api/status). A check that cannot run says so, instead of showing a
+ * figure nobody measured (CLAUDE.md: never mock data, show pending).
  */
 
 export const metadata: Metadata = {
@@ -23,13 +25,6 @@ export const metadata: Metadata = {
     canonical: '/status',
   },
 };
-
-/** Services with no public health check yet. */
-const PENDING: ReadonlyArray<{ name: string; detail: string }> = [
-  { name: 'API', detail: 'The CRM data and actions behind the app' },
-  { name: 'AI agents', detail: 'Lead scoring, drafts and the approval queue' },
-  { name: 'Sign-in', detail: 'Email and Google' },
-];
 
 export default function StatusPage() {
   return (
@@ -48,18 +43,7 @@ export default function StatusPage() {
       <section className="as-wrap ast-body" aria-label="Service status">
         <LiveStatus />
 
-        <ul className="ast-pending">
-          {PENDING.map(({ name, detail }) => (
-            <li key={name} className="as-card">
-              <span className="ast-dot ast-pending-dot" aria-hidden="true" />
-              <div>
-                <h2>{name}</h2>
-                <p>{detail}</p>
-              </div>
-              <span className="ast-tag">Pending: no public check yet</span>
-            </li>
-          ))}
-        </ul>
+        <StatusMonitor />
 
         <div className="as-card ast-note">
           <h2>Incident history</h2>
