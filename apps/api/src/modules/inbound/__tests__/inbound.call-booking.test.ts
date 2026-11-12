@@ -13,6 +13,12 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
+// The lead AI enqueue (scoring, qualification, next best action) is detached and reads the
+// lead itself; it is asserted in its own tests and must not consume this file's prisma mocks.
+vi.mock('../../lead/lead-scoring-enqueue', () => ({
+  enqueueLeadAiById: vi.fn(async () => undefined),
+}));
+
 import { inboundRouter } from '../inbound.router';
 import { createTestContext, prismaMock, mockServices } from '../../../test/setup';
 

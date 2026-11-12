@@ -17,6 +17,7 @@
  */
 
 import pino from 'pino';
+import { runWorkSpan } from '@intelliflow/worker-shared';
 import type { EventDispatcher, OutboxEvent } from './event-dispatcher';
 
 // ============================================================================
@@ -210,7 +211,23 @@ export class OutboxPoller {
     return this.currentDelayMs;
   }
 
-  private async processPendingEvents(): Promise<number> {
+  /**
+   * One poll cycle, in one span: without it each of its queries was a root
+   * trace of its own (IFC-097).
+   */
+  private processPendingEvents(): Promise<number> {
+    return runWorkSpan(
+      'outbox.poll',
+      { 'outbox.batch_size': this.config.batchSize },
+      async (span) => {
+        const count = await this.processPendingBatch();
+        span.setAttribute('outbox.events', count);
+        return count;
+      }
+    );
+  }
+
+  private async processPendingBatch(): Promise<number> {
     // Fetch pending events (use FOR UPDATE SKIP LOCKED in repository)
     const events = await this.repository.fetchPendingEvents(this.config.batchSize);
 
@@ -236,11 +253,19 @@ export class OutboxPoller {
     });
 
     try {
-      // Dispatch event to handlers
-      await this.dispatcher.dispatch(event);
-
-      // Mark as published
-      await this.repository.markAsPublished(event.id);
+      // One span per event: a failed dispatch is recorded on it as an error.
+      await runWorkSpan(
+        'outbox.dispatch',
+        {
+          'outbox.event.type': event.eventType,
+          'outbox.event.id': event.id,
+          'outbox.event.attempt': event.retryCount + 1,
+        },
+        async () => {
+          await this.dispatcher.dispatch(event);
+          await this.repository.markAsPublished(event.id);
+        }
+      );
 
       this.processedCount++;
       eventLogger.debug('Event processed successfully');
