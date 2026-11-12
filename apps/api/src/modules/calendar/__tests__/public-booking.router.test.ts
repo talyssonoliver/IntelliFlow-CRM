@@ -17,10 +17,10 @@ vi.mock('../../legal/appointment-side-effects', () => ({
   onAppointmentCreated: vi.fn(async () => undefined),
 }));
 vi.mock('../../lead/lead-scoring-enqueue', () => ({
-  enqueueLeadScoring: vi.fn(async () => undefined),
+  enqueueLeadAi: vi.fn(async () => undefined),
 }));
 import { onAppointmentCreated } from '../../legal/appointment-side-effects';
-import { enqueueLeadScoring } from '../../lead/lead-scoring-enqueue';
+import { enqueueLeadAi } from '../../lead/lead-scoring-enqueue';
 
 const NOW = new Date('2026-11-01T12:00:00Z'); // Sunday; Monday 2 Nov is bookable
 const TENANT = 'clhtenant0000000000';
@@ -817,7 +817,7 @@ describe('book — the transaction (AC-012, AC-016, AC-018, AC-019, R5, R7)', ()
       const host = sendEmail.mock.calls.find(([m]) => m.to[0] === 'host@firm.example.invalid')![0];
       expect(host.textBody).toContain('A lead could not be created for this booker automatically');
       expect(prismaMock.appointment.updateMany).not.toHaveBeenCalled();
-      expect(enqueueLeadScoring).not.toHaveBeenCalled();
+      expect(enqueueLeadAi).not.toHaveBeenCalled();
       const logged = JSON.stringify(error.mock.calls);
       expect(logged).not.toContain('Invalid email format');
       expect(logged).not.toContain('ada@example.invalid');
@@ -904,7 +904,7 @@ describe('book — after commit (AC-016, AC-019)', () => {
   it('queues AI scoring for a new lead, writes its activity, runs side effects without ICS and sends two emails', async () => {
     await caller().book(bookInput);
     await vi.waitFor(() => expect(sendEmail).toHaveBeenCalledTimes(2));
-    expect(enqueueLeadScoring).toHaveBeenCalledWith(
+    expect(enqueueLeadAi).toHaveBeenCalledWith(
       {
         leadId: 'clhlead000000000000',
         tenantId: TENANT,
@@ -942,7 +942,7 @@ describe('book — after commit (AC-016, AC-019)', () => {
   });
 
   it('a scoring call that never settles (Redis down) does not hold up the emails', async () => {
-    vi.mocked(enqueueLeadScoring).mockImplementationOnce(() => new Promise<void>(() => {}));
+    vi.mocked(enqueueLeadAi).mockImplementationOnce(() => new Promise<void>(() => {}));
     await caller().book(bookInput);
     await vi.waitFor(() => expect(sendEmail).toHaveBeenCalledTimes(2));
     expect(onAppointmentCreated).toHaveBeenCalledTimes(1);
@@ -953,7 +953,7 @@ describe('book — after commit (AC-016, AC-019)', () => {
     prismaMock.appointment.count.mockResolvedValue(1 as never);
     await caller().book(bookInput);
     await vi.waitFor(() => expect(sendEmail).toHaveBeenCalledTimes(2));
-    expect(enqueueLeadScoring).not.toHaveBeenCalled();
+    expect(enqueueLeadAi).not.toHaveBeenCalled();
   });
 
   it('a failing email or side effect never fails the booking', async () => {
