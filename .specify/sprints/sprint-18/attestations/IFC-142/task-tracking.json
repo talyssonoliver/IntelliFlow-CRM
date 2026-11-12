@@ -1,0 +1,51 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "IFC-142",
+  "started_at": "2026-11-12T18:00:00Z",
+  "status_history": [
+    {
+      "status": "In Progress",
+      "at": "2026-11-12T18:00:00Z",
+      "note": "Sprint-18 record (sprint-8 attestation stays as history). The three production close conditions recorded there are now met; cost budgets remain the owner's figures."
+    }
+  ],
+  "kpis": [
+    {
+      "kpi": "RTO",
+      "target": "< 1 h",
+      "actual": "about 12 s restoring the daily backup file intelliflow-2026-11-12.dump (run 2, 2026-11-12); 36 s end to end with a fresh dump (run 1). docs/operations/restore-drill-report.md",
+      "met": true
+    },
+    {
+      "kpi": "On-call (alert to owner)",
+      "target": "< 15 min",
+      "actual": "Alert emails arrive within about 1 minute of firing: api availability burn rate Very High fired 2026-11-09 21:24Z, email 21:25Z; AI hallucination rate fired 2026-11-02 12:19Z with its email. The escalation path is the owner by email (infra/monitoring/oncall-schedule.json).",
+      "met": true
+    },
+    {
+      "kpi": "Cost under budget",
+      "target": "$3,070/mo",
+      "actual": "Not judged: docs/planning/financial/cost-budget.csv budgets an AWS/OpenAI/PagerDuty stack IntelliFlow does not run. Real spend today is on free tiers (Supabase, Grafana Cloud, OpenRouter :free models; AI cost 0.21 USD over 7 days) plus Railway under its hard usage limit. Budget figures for the real stack are the owner's decision.",
+      "met": false
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Close condition (1) from sprint-8, a real restore drill with a timed log: MET 2026-11-12. Owner chose a local Postgres 17 container (no free Supabase slot); runs 1 and 2 in docs/operations/restore-drill-report.md; run 2 restores the daily backup file (tools/scripts/backup-intelliflow-db.mjs, task IntelliFlowDB-Backup-Daily).",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": "2026-11-12T18:00:00Z"
+    },
+    {
+      "description": "Close conditions (2) and (3) from sprint-8, alert channel proven and SLO alerts loaded and received: MET. 3 SLOs live with burn-rate alerts on api availability; alert emails received 2026-11-02 and 2026-11-09; SLO-to-alert map in docs/operations/slo-definitions.md section 5.4.",
+      "raised_at": "2026-10-05T22:30:00Z",
+      "resolved_at": "2026-11-12T18:00:00Z"
+    },
+    {
+      "description": "Budgets defined and monitored: cost-budget.csv must be replaced by budgets for the real stack (Railway, Vercel, Supabase, Grafana Cloud, OpenRouter, Sentry). The amounts are the owner's; asked via the coordinator 2026-11-12.",
+      "raised_at": "2026-11-12T18:00:00Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 90,
+  "updated_at": "2026-11-12T18:00:00Z"
+}
