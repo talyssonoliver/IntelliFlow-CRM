@@ -340,6 +340,19 @@ describe('enqueueSummarizationIfNeeded', () => {
     });
   });
 
+  it('uses a per-conversation job id that BullMQ accepts', async () => {
+    mockConversationRecordFindFirst.mockResolvedValueOnce(makeConversation({ messageCount: 25 }));
+
+    const mockQueue = { add: vi.fn().mockResolvedValue(undefined) } as any;
+
+    await enqueueSummarizationIfNeeded(CONV_ID, SESSION_ID, TENANT_A, mockQueue);
+
+    const [, , opts] = mockQueue.add.mock.calls[0];
+    expect(opts.jobId).toBe(`summarize.${CONV_ID}`);
+    // BullMQ throws "Custom Ids cannot contain :" for a two-part colon id.
+    expect(opts.jobId).not.toContain(':');
+  });
+
   it('does not add job when below threshold', async () => {
     mockConversationRecordFindFirst.mockResolvedValueOnce(makeConversation({ messageCount: 3 }));
     mockMessageRecordAggregate.mockResolvedValueOnce({ _sum: { tokenCount: 50 } });

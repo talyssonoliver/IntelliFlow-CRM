@@ -161,8 +161,10 @@ export async function enqueueSummarizationIfNeeded(
         _otelCarrier: _otelCarrierSummarize,
       } satisfies SummarizeConversationJobData,
       {
-        // De-duplicate: only one pending summarization per conversation at a time.
-        jobId: `summarize:${conversationId}`,
+        // De-duplicate: only one pending summarization per conversation at a time. BullMQ rejects
+        // a custom id with ':' unless it has exactly three parts, so `summarize:<id>` threw on
+        // every add and no conversation was ever summarized (AI agents epic #1300).
+        jobId: `summarize.${conversationId}`,
         attempts: 3,
         backoff: { type: 'exponential', delay: 5000 },
         removeOnComplete: { count: 50 },
