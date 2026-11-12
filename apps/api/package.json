@@ -8,8 +8,8 @@
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "dev": "dotenv -e ../../.env.local -e ../../.env -- tsx watch src/main.ts",
-    "dev:ws": "dotenv -e ../../.env.local -e ../../.env -- tsx watch src/ws-server.ts",
+    "dev": "node ../../scripts/require-test-slot.mjs api-dev && dotenv -e ../../.env.local -e ../../.env -- tsx watch src/main.ts",
+    "dev:ws": "node ../../scripts/require-test-slot.mjs api-dev-ws && dotenv -e ../../.env.local -e ../../.env -- tsx watch src/ws-server.ts",
     "start:ws": "node dist/ws-server.js",
     "build": "tsup",
     "start": "node dist/main.js",

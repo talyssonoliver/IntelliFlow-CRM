@@ -128,6 +128,35 @@ describe('the heavy commands are guarded', () => {
     expect(scripts(file)[name].startsWith(prefix)).toBe(true);
   });
 
+  // Dev servers count as heavy jobs too (owner rule 2026-11-12).
+  it.each([
+    ['apps/web/package.json', 'dev', '../../', 'web-dev'],
+    ['apps/api/package.json', 'dev', '../../', 'api-dev'],
+    ['apps/api/package.json', 'dev:ws', '../../', 'api-dev-ws'],
+    ['apps/ai-worker/package.json', 'dev', '../../', 'ai-worker-dev'],
+    ['apps/workers/combined-worker/package.json', 'dev', '../../../', 'combined-worker-dev'],
+    ['apps/workers/events-worker/package.json', 'dev', '../../../', 'events-worker-dev'],
+    ['apps/workers/ingestion-worker/package.json', 'dev', '../../../', 'ingestion-worker-dev'],
+  ])('dev server %s %s', (file, name, up, label) => {
+    expect(
+      scripts(file)[name].startsWith(`node ${up}scripts/require-test-slot.mjs ${label} && `)
+    ).toBe(true);
+  });
+
+  it('leaves the owner project tracker (:3002) unguarded: it stays running', () => {
+    expect(scripts('apps/project-tracker/package.json').dev).toBe('next dev --port 3002');
+  });
+
+  it('every guard path reaches the real CLI', () => {
+    for (const [file, up] of [
+      ['apps/web/package.json', '../../'],
+      ['apps/workers/events-worker/package.json', '../../../'],
+    ]) {
+      const cli = path.resolve(ROOT, path.dirname(file), up, 'scripts', 'require-test-slot.mjs');
+      expect(fs.existsSync(cli)).toBe(true);
+    }
+  });
+
   it('pnpm test and test:coverage still join the queue themselves', () => {
     const root = scripts('package.json');
     expect(root.test.startsWith('node scripts/with-test-slot.mjs ')).toBe(true);

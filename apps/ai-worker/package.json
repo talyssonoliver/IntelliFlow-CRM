@@ -7,7 +7,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "node ../../scripts/require-test-slot.mjs ai-worker-dev && tsx watch src/index.ts",
     "build": "tsup src/index.ts --format cjs,esm && tsc -p tsconfig.json --emitDeclarationOnly",
     "start": "node dist/index.js",
     "clean": "rm -rf dist .turbo",

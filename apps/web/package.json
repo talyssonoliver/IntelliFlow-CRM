@@ -4,7 +4,7 @@
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node ../../scripts/require-test-slot.mjs web-dev && next dev",
     "typegen": "next typegen",
     "build": "node ../../scripts/require-test-slot.mjs web-build && next build --webpack",
     "start": "next start",

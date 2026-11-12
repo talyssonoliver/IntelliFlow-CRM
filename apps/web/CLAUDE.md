@@ -54,9 +54,9 @@
   valid excuse. Build catches import errors, missing deps, SSR issues that dev
   mode misses.
 - **ALL 4 validations are NON-NEGOTIABLE**: TypeScript, Tests, Lint, Build
-- `pnpm build` and the Lighthouse scripts run only inside the test-slot queue
-  (or under CI); outside it they exit 2 and say how to queue. See the root
-  CLAUDE.md, "Heavy commands run only in the queue".
+- `pnpm build`, `pnpm dev` and the Lighthouse scripts run only inside the
+  test-slot queue (or under CI); outside it they exit 2 and say how to queue.
+  See the root CLAUDE.md, "Heavy commands run only in the queue".
 - Coverage must be **scoped and measured**:
   `npx vitest run <test-dir> --coverage --coverage.include='<src-pattern>'`
 - Coverage thresholds: Statements >=90%, Branches >=80%, Functions >=90%,
