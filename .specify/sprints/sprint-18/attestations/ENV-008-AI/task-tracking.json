@@ -81,6 +81,11 @@
             "status": "In Progress",
             "at": "2026-10-25T19:59:25.698Z",
             "note": "CSV status set to In Progress: validate-sprint-data (required pre-ship step) rejects \"Needs Human\". Attestation verdict stays NEEDS_HUMAN (PG-199 precedent)."
+        },
+        {
+            "status": "In Progress",
+            "at": "2026-11-12T16:30:00Z",
+            "note": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. DoD amended. Met now: SLO burn-rate alerts fired and emailed the owner: \"api availability - Error Budget Burn Rate is Very High\" FIRING 2026-11-09 21:25Z, \"... is High\" FIRING 21:28Z. Grafana Cloud anomaly rules evaluate production series: RequestRateAnomaly went Pending to Alerting 11 times and LatencyP95Anomaly once between 2026-11-08 and 2026-11-12 (alert state history). SLOs and dashboards live (3 SLOs, env008-production, ifc117-ai-models). Open: (1) web on Vercel sends OTLP to Grafana as well as Sentry (owner ruling 2026-11-12; code under IFC-319 part 2, then a Vercel env change the owner approves); (2) the consumer-span change (feat/ifc-097-worker-consumer-spans) deployed, so events-worker and ingestion-worker jobs show as spans in Tempo."
         }
     ],
     "blockers": [
@@ -108,10 +113,15 @@
             "description": "NEEDS_HUMAN (2026-10-25): production proof follows merge: grafana-alert-rules.yml green again; grafana-slos.yml and grafana-dashboard.yml push runs plus dry_run dispatches report the 3 SLO uuids and env008-production present; railway-self-healing.yml push run log shows before/after (and whether the live probe let the api health check through). The runner runs pre-ship once, pushes and opens the PR; merging is the owner's.",
             "raised_at": "2026-10-25T16:54:34.773Z",
             "resolved_at": null
+        },
+        {
+            "description": "To close: web on Vercel exports OTLP to Grafana Cloud (alongside Sentry), and the combined worker shows one span per job and per outbox poll in Tempo after the consumer-span change is deployed.",
+            "raised_at": "2026-11-12T16:30:00Z",
+            "resolved_at": null
         }
     ],
-    "percent_complete": 90,
-    "updated_at": "2026-10-25T16:54:34.773Z",
+    "percent_complete": 80,
+    "updated_at": "2026-11-12T16:30:00Z",
     "execution": {
         "started_at": "2026-10-25T14:59:17.038Z",
         "executor": "Claude Code /exec",
