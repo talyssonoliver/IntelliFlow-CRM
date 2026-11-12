@@ -20,6 +20,7 @@
  */
 
 import { spawnSync } from 'node:child_process';
+import { gitEnv, nonEmptyLines, runGit } from './preship-git.mjs';
 
 export const DEFAULT_BASE_REF = 'origin/main';
 export const FULL_DB_ENV = 'PRESHIP_FULL_DB';
@@ -50,22 +51,7 @@ export const DB_CONFIG = [
   /^scripts\/lib\/preship-integration-infra\.mjs$/,
 ];
 
-function gitEnv(env) {
-  const out = { ...env };
-  for (const k of Object.keys(out)) if (k.startsWith('GIT_')) delete out[k];
-  return out;
-}
-
-function defaultGit(args, cwd, env) {
-  const r = spawnSync('git', args, {
-    cwd,
-    env: gitEnv(env),
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    maxBuffer: 64 * 1024 * 1024,
-  });
-  return r.status === 0 ? r.stdout : null;
-}
+const defaultGit = runGit;
 
 /** Integration test files from `vitest list --filesOnly` output (`[integration] path`). */
 export function parseListedTests(stdout) {
@@ -96,12 +82,8 @@ function defaultListIntegration(base, cwd, env) {
   return r.status === 0 ? parseListedTests(r.stdout) : null;
 }
 
-function lines(out) {
-  return (out || '')
-    .split('\n')
-    .map((l) => l.trim().replaceAll('\\', '/'))
-    .filter(Boolean);
-}
+/** Changed paths from git output, with forward slashes. */
+const lines = (out) => nonEmptyLines(out).map((l) => l.replaceAll('\\', '/'));
 
 const NEEDED = (reason, tests = []) => ({ needed: true, reason, tests });
 
