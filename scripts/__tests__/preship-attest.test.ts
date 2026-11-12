@@ -681,9 +681,16 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
       'preship-integration-infra.mjs',
       'preship-cache.mjs',
       'preship-build.mjs',
+      'preship-affected.mjs',
     ]) {
       fs.copyFileSync(path.join(REPO_ROOT, 'scripts/lib', lib), path.join(dir, 'scripts/lib', lib));
     }
+    // preship-affected.mjs reuses CI's classifier.
+    fs.mkdirSync(path.join(dir, 'scripts/ci'), { recursive: true });
+    fs.copyFileSync(
+      path.join(REPO_ROOT, 'scripts/ci/affected.mjs'),
+      path.join(dir, 'scripts/ci/affected.mjs')
+    );
     git(['add', '-A']);
     git(['commit', '-q', '-m', 'seed']);
 
