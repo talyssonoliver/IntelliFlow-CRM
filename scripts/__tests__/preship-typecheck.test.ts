@@ -67,6 +67,24 @@ describe('typecheckPlan', () => {
   });
 });
 
+describe('typecheckPlan with an affected scope', () => {
+  it('adds the turbo filters for the affected packages', () => {
+    const plan = typecheckPlan({ isCI: false, env: {}, filters: ['--filter=@x/web'] });
+    expect(plan[0].args).toEqual(['run', 'typecheck', '--concurrency=3', '--filter=@x/web']);
+    expect(plan[1].name).toBe('sonar guard');
+  });
+
+  it('runs only the sonar guard when no package is affected', () => {
+    const plan = typecheckPlan({ isCI: false, env: {}, filters: [] });
+    expect(plan.map((s) => s.name)).toEqual(['sonar guard']);
+  });
+
+  it('keeps every package when filters is null', () => {
+    const plan = typecheckPlan({ isCI: false, env: {}, filters: null });
+    expect(plan[0].args).toEqual(['run', 'typecheck', '--concurrency=3']);
+  });
+});
+
 describe('runTypecheck', () => {
   const root = path.join('repo', 'root');
   const turbo = path.join(root, 'node_modules', 'turbo', 'bin', 'turbo');
