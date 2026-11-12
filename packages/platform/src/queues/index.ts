@@ -46,6 +46,22 @@ export {
 } from './connection';
 export { DEFAULT_DRAIN_DELAY_SECONDS, getDrainDelaySeconds } from './drain-delay';
 
+// Lead AI fan-out planning (shared by the API and the events-worker, same jobIds)
+export {
+  LEAD_AI_DEDUPE_DAYS,
+  STORED_LEAD_FOR_AI_SELECT,
+  leadAiFingerprint,
+  leadAiJobFromStoredLead,
+  leadAiJobId,
+  plannedLeadAiJobs,
+  type LeadAiJob,
+  type LeadAiJobKind,
+  type LeadAiJobOptions,
+  type LeadAiQueueKey,
+  type PlannedLeadAiJob,
+  type StoredLeadForAi,
+} from './lead-ai-jobs';
+
 // Retry strategy
 export {
   calculateBackoffDelay,
