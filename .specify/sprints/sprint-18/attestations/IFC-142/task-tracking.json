@@ -7,6 +7,11 @@
       "status": "In Progress",
       "at": "2026-11-12T18:00:00Z",
       "note": "Sprint-18 record (sprint-8 attestation stays as history). The three production close conditions recorded there are now met; cost budgets remain the owner's figures."
+    },
+    {
+      "status": "Completed",
+      "at": "2026-11-12T19:10:00Z",
+      "note": "All DoD items met: SLOs and SLIs, alert rules (live, delivery proven), on-call escalation path, incident runbook, restore drill from the daily backup (RTO about 12 s), budgets defined and monitored."
     }
   ],
   "kpis": [
@@ -24,9 +29,9 @@
     },
     {
       "kpi": "Cost under budget",
-      "target": "$3,070/mo",
-      "actual": "Not judged: docs/planning/financial/cost-budget.csv budgets an AWS/OpenAI/PagerDuty stack IntelliFlow does not run. Real spend today is on free tiers (Supabase, Grafana Cloud, OpenRouter :free models; AI cost 0.21 USD over 7 days) plus Railway under its hard usage limit. Budget figures for the real stack are the owner's decision.",
-      "met": false
+      "target": "70 USD/month (owner budget 2026-11-12: Railway 10 per cycle, AI 60 per month, every other service 0 on free tiers)",
+      "actual": "Railway 1.13 USD so far this cycle (read 2026-11-12); AI 0.21 USD over 7 days; all other services on free plans that throttle instead of billing. docs/planning/financial/cost-budget.csv now budgets the real stack; monitored by Grafana rule ifc142-ai-budget-80pct (AI > 48 USD in 30 days), the ai-worker hard stop at AI_MONTHLY_BUDGET_USD, the Railway usage email alert (8 USD) and hard limit, and the providers quota emails.",
+      "met": true
     }
   ],
   "blockers": [
@@ -43,9 +48,11 @@
     {
       "description": "Budgets defined and monitored: cost-budget.csv must be replaced by budgets for the real stack (Railway, Vercel, Supabase, Grafana Cloud, OpenRouter, Sentry). The amounts are the owner's; asked via the coordinator 2026-11-12.",
       "raised_at": "2026-11-12T18:00:00Z",
-      "resolved_at": null
+      "resolved_at": "2026-11-12T19:10:00Z",
+      "resolution": "Owner budget 2026-11-12: Railway 10 USD per cycle, AI 60 USD per month, others 0 (free tiers). cost-budget.csv replaced; alert ifc142-ai-budget-80pct added (owner-approved, live on merge); Railway email alert set to 8 USD through the Railway API (before 9, hard limit unchanged at 20)."
     }
   ],
-  "percent_complete": 90,
-  "updated_at": "2026-11-12T18:00:00Z"
+  "percent_complete": 100,
+  "updated_at": "2026-11-12T19:10:00Z",
+  "completed_at": "2026-11-12T19:10:00Z"
 }
