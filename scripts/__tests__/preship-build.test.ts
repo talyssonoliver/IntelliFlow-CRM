@@ -76,6 +76,19 @@ describe('buildPlan', () => {
     expect(() => buildPlan({ isCI: false, env: { [name]: value } })).toThrow(name);
   });
 
+  it('adds the turbo filters for the affected packages', () => {
+    const plan = buildPlan({ isCI: false, env: {}, filters: ['--filter=@x/web'] });
+    expect(plan?.args).toEqual(['run', 'build', '--concurrency=1', '--filter=@x/web']);
+  });
+
+  it('has nothing to build when the filters are empty', () => {
+    expect(buildPlan({ isCI: false, env: {}, filters: [] })).toBeNull();
+  });
+
+  it('ignores filters under CI', () => {
+    expect(buildPlan({ isCI: true, env: {}, filters: [] })?.args).toEqual(['run', 'build']);
+  });
+
   it('leaves CI exactly as before: pnpm run build, no extra env', () => {
     const plan = buildPlan({
       isCI: true,
@@ -108,6 +121,15 @@ describe('testStepEnv', () => {
 describe('runBuild', () => {
   const root = path.join('repo', 'root');
   const ok = { status: 0 };
+
+  it('spawns nothing and passes when there is nothing to build', () => {
+    const spawn = vi.fn();
+    const log = vi.fn();
+    const code = runBuild({ isCI: false, env: {}, root, spawn, log, filters: [] });
+    expect(code).toBe(0);
+    expect(spawn).not.toHaveBeenCalled();
+    expect(log.mock.calls[0][0]).toContain('nothing to build');
+  });
 
   it('runs turbo through node locally, with the build env merged in', () => {
     const spawn = vi.fn().mockReturnValue(ok);
