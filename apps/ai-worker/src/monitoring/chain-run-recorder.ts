@@ -154,10 +154,11 @@ export async function recordedChainRun<T>(
     });
   try {
     const result = await run([usage]);
-    void finish(true);
+    // Fire and forget: the run's result never waits on, or fails with, the insert.
+    finish(true).catch(() => undefined);
     return result;
   } catch (error) {
-    void finish(false, error);
+    finish(false, error).catch(() => undefined);
     throw error;
   }
 }
