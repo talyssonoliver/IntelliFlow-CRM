@@ -1,14 +1,14 @@
 {
   "sprint": "sprint-15",
   "name": "Sprint 15",
-  "generated_at": "2026-04-11T16:48:01.958Z",
+  "generated_at": "2026-11-12T14:31:17.521Z",
   "summary_source": "specify",
   "task_summary": {
     "total": 36,
-    "completed": 36,
+    "completed": 35,
     "backlog": 0,
     "blocked": 0,
-    "attested_completed": 36
+    "attested_completed": 35
   },
   "context": "Primary focus areas: Developer Pages (14), Core CRM (9), Documentation (5).",
   "section_summary": [
@@ -57,8 +57,8 @@
     {
       "section": "Investment Gate",
       "total": 1,
-      "completed": 1,
-      "open": 0
+      "completed": 0,
+      "open": 1
     },
     {
       "section": "Platform",
@@ -238,7 +238,40 @@
       }
     }
   ],
-  "open_tasks": [],
+  "open_tasks": [
+    {
+      "taskId": "IFC-027",
+      "sprint": 15,
+      "status": "In Progress",
+      "section": "Investment Gate",
+      "title": "PHASE-001: Gate 2 Review - £2000 Investment",
+      "description": "PHASE-001: Gate 2 Review - £2000 Investment",
+      "summary": "Investment Gate task — T1 tranche approved (£500), T2/T3 pending remediation milestones; Validation scripts created for typecheck, coverage, and benchmark automated checks;... Expand/maintain decision on AI features",
+      "definitionOfDone": "Expand/maintain decision on AI features; artifacts: investment-gate-2-analysis.md, ai-roi-report.md, customer-feedback.md",
+      "definitionOfDoneSnapshot": "Expand/maintain decision on AI features",
+      "dependencies": [
+        "IFC-026"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-15/attestations/IFC-027/attestation.json",
+        "verdict": "PARTIAL",
+        "timestamp": "2026-02-17T19:20:00.000Z",
+        "sprintFolder": 15
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    }
+  ],
   "tasks": [
     {
       "taskId": "IFC-026",
@@ -276,7 +309,7 @@
     {
       "taskId": "IFC-027",
       "sprint": 15,
-      "status": "Completed",
+      "status": "In Progress",
       "section": "Investment Gate",
       "title": "PHASE-001: Gate 2 Review - £2000 Investment",
       "description": "PHASE-001: Gate 2 Review - £2000 Investment",
@@ -289,7 +322,7 @@
       "attestation": {
         "exists": true,
         "path": ".specify/sprints/sprint-15/attestations/IFC-027/attestation.json",
-        "verdict": "COMPLETE",
+        "verdict": "PARTIAL",
         "timestamp": "2026-02-17T19:20:00.000Z",
         "sprintFolder": 15
       },
@@ -847,8 +880,8 @@
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 2,
+        "met": 2,
         "missed": 0
       }
     },

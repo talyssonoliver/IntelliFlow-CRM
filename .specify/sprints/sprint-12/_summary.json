@@ -1,21 +1,21 @@
 {
   "sprint": "sprint-12",
   "name": "Public Pages & Documentation",
-  "generated_at": "2026-04-11T16:48:01.958Z",
+  "generated_at": "2026-11-12T14:31:17.521Z",
   "summary_source": "specify",
   "task_summary": {
-    "total": 13,
-    "completed": 13,
+    "total": 12,
+    "completed": 12,
     "backlog": 0,
     "blocked": 0,
-    "attested_completed": 13
+    "attested_completed": 12
   },
-  "context": "Primary focus areas: Public Pages (5), Documentation (2), Infrastructure (2).",
+  "context": "Primary focus areas: Public Pages (4), Documentation (2), Infrastructure (2).",
   "section_summary": [
     {
       "section": "Public Pages",
-      "total": 5,
-      "completed": 5,
+      "total": 4,
+      "completed": 4,
       "open": 0
     },
     {
@@ -446,40 +446,6 @@
       "kpiSummary": {
         "total": 3,
         "met": 3,
-        "missed": 0
-      }
-    },
-    {
-      "taskId": "PG-014",
-      "sprint": 12,
-      "status": "Completed",
-      "section": "Public Pages",
-      "title": "Status Page",
-      "description": "Status Page",
-      "summary": "Status page completed with 8 services monitored, 90-day uptime history, 30s refresh interval, and incident tracking. Status page created; Real-time status monitoring; Incident timeline displayed",
-      "definitionOfDone": "Response <200ms, Lighthouse ≥90, real-time updates; artifacts: page.tsx, status-monitor.tsx, incident-tracker.ts",
-      "definitionOfDoneSnapshot": "Status page created; Real-time status monitoring; Incident timeline displayed",
-      "dependencies": [
-        "PG-001",
-        "GTM-002",
-        "BRAND-001"
-      ],
-      "attestation": {
-        "exists": true,
-        "path": ".specify/sprints/sprint-12/attestations/PG-014/attestation.json",
-        "verdict": "COMPLETE",
-        "timestamp": "2025-12-31T22:30:00Z",
-        "sprintFolder": 12
-      },
-      "validationSummary": {
-        "total": 6,
-        "passed": 6,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 4,
-        "met": 4,
         "missed": 0
       }
     },

@@ -16,7 +16,7 @@ import { writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { generateCurrentStateReport } from '../lib/current-state-report';
+import { generateCurrentStateReport, writeSprintSummaries } from '../lib/current-state-report';
 import { generateContextSnapshot } from '../lib/context-snapshot';
 import { syncMetricsFromCSV } from '../lib/data-sync';
 
@@ -62,6 +62,7 @@ if (existsSync(specifySprintsDir)) {
   const stateReport = generateCurrentStateReport(metricsDir, specifySprintsDir, monorepoRoot);
   writeFileSync(stateReportMdPath, stateReport.markdown, 'utf-8');
   writeFileSync(stateReportJsonPath, `${JSON.stringify(stateReport.data, null, 2)}\n`, 'utf-8');
+  writeSprintSummaries(stateReport.data, specifySprintsDir);
   console.log(
     `  State report: ${stateReport.data.overview.completedTasks}/${stateReport.data.overview.totalTasks} tasks`
   );

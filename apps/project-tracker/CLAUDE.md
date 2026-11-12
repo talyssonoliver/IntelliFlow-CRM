@@ -38,22 +38,13 @@ Pipeline: CSV + `.specify/**` ─(`pnpm generate:metrics`)→
 
 ## Sprint Plan CSV
 
-`docs/metrics/_global/Sprint_plan.csv` (589 rows, ~316 tasks, sprints 0–29).
+`docs/metrics/_global/Sprint_plan.csv` (sprints 0–29; live counts are in
+`docs/SESSION_CONTEXT.md`, not here, so they cannot go stale).
 
 **DO NOT read `Sprint_plan.csv` directly** — exceeds the 25K token limit. Use
-the split files:
-
-```
-Sprint_plan_A.csv  (EXC-INIT-001 → IFC-042)
-Sprint_plan_B.csv  (IFC-043 → PG-015)
-Sprint_plan_C.csv  (PG-016 → SALES-002)
-Sprint_plan_D.csv  (PM-OPS-001 → IFC-123)
-Sprint_plan_E.csv  (IFC-124 → IFC-170)
-Sprint_plan_F.csv  (IFC-171 → PG-156)
-Sprint_plan_G.csv  (PG-157 → IFC-233)
-Sprint_plan_H.csv  (IFC-234 → IFC-296)
-Sprint_plan_I.csv  (IFC-297 → IFC-308)
-```
+the split files `Sprint_plan_A.csv … Sprint_plan_J.csv` (generated parts in CSV
+order; their number and row ranges change, so
+`grep -l "<TASK-ID>," Sprint_plan_*.csv` finds a task).
 
 Regenerate splits: `npx tsx tools/scripts/split-sprint-plan.ts`. Full guide:
 `docs/claude-refs/sprint-plan-guide.md`.
@@ -268,7 +259,7 @@ references `.specify/` via `execution.log_path` on task-status files).
 
 ```
 docs/metrics/
-├── _global/                    # Sprint_plan.csv/json, Sprint_plan_A..I.csv,
+├── _global/                    # Sprint_plan.csv/json, Sprint_plan_A..J.csv,
 │                               #   task-registry.json, dependency-graph.json,
 │                               #   kpi-definitions.json, phase-validations/,
 │                               #   continuous/, flows/

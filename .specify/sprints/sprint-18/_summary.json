@@ -1,58 +1,106 @@
 {
   "sprint": "sprint-18",
   "name": "Sprint 18",
-  "generated_at": "2026-04-11T16:48:01.958Z",
+  "generated_at": "2026-11-12T14:31:17.521Z",
   "summary_source": "specify",
   "task_summary": {
-    "total": 43,
-    "completed": 3,
-    "backlog": 40,
+    "total": 78,
+    "completed": 61,
+    "backlog": 5,
     "blocked": 0,
-    "attested_completed": 3
+    "attested_completed": 61
   },
-  "context": "Primary focus areas: Core CRM (25), Settings (5), AI/ML (3).",
+  "context": "Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).",
   "section_summary": [
     {
       "section": "Core CRM",
-      "total": 25,
-      "completed": 0,
-      "open": 25
+      "total": 27,
+      "completed": 26,
+      "open": 1
     },
     {
       "section": "Settings",
-      "total": 5,
-      "completed": 0,
-      "open": 5
+      "total": 19,
+      "completed": 15,
+      "open": 4
+    },
+    {
+      "section": "Infrastructure",
+      "total": 6,
+      "completed": 5,
+      "open": 1
     },
     {
       "section": "AI/ML",
       "total": 3,
-      "completed": 0,
-      "open": 3
+      "completed": 3,
+      "open": 0
     },
     {
       "section": "Automation",
       "total": 2,
-      "completed": 1,
-      "open": 1
+      "completed": 2,
+      "open": 0
     },
     {
       "section": "Documentation",
       "total": 2,
-      "completed": 0,
-      "open": 2
+      "completed": 2,
+      "open": 0
     },
     {
-      "section": "Support Pages",
+      "section": "Foundation Setup",
       "total": 2,
       "completed": 0,
       "open": 2
     },
     {
-      "section": "Infrastructure",
+      "section": "Observability",
+      "total": 2,
+      "completed": 0,
+      "open": 2
+    },
+    {
+      "section": "Platform",
+      "total": 2,
+      "completed": 1,
+      "open": 1
+    },
+    {
+      "section": "Support Pages",
+      "total": 2,
+      "completed": 2,
+      "open": 0
+    },
+    {
+      "section": "AI Foundation",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "AI Insights",
       "total": 1,
       "completed": 0,
       "open": 1
+    },
+    {
+      "section": "Commercial Assets",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Compliance",
+      "total": 1,
+      "completed": 1,
+      "open": 0
+    },
+    {
+      "section": "Integration",
+      "total": 1,
+      "completed": 1,
+      "open": 0
     },
     {
       "section": "Migration",
@@ -61,69 +109,57 @@
       "open": 0
     },
     {
-      "section": "Platform",
+      "section": "Operations",
       "total": 1,
-      "completed": 1,
-      "open": 0
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Ops & Observability",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Public Pages",
+      "total": 1,
+      "completed": 0,
+      "open": 1
+    },
+    {
+      "section": "Risk Mgmt",
+      "total": 1,
+      "completed": 0,
+      "open": 1
     },
     {
       "section": "Support",
       "total": 1,
-      "completed": 0,
-      "open": 1
+      "completed": 1,
+      "open": 0
     }
   ],
   "notable_completed": [
     {
-      "taskId": "IFC-070",
+      "taskId": "DOC-015",
       "sprint": 18,
       "status": "Completed",
-      "section": "Migration",
-      "title": "Data Migration from Legacy",
-      "description": "Data Migration from Legacy",
-      "summary": "IFC-070 Data Migration from Legacy completed via TDD. 13 steps across 4 phases (RED/GREEN/REFACTOR/VALIDATION). 66 tests, 98.88% statement coverage. All 6 completion gates PASS. Compliance check PASS. 100% data migrated, validation passed;...",
-      "definitionOfDone": "Legacy data migrated with zero loss; artifacts: data-validation-report.csv, migration-log.txt, rollback-procedure.md",
-      "definitionOfDoneSnapshot": "100% data migrated, validation passed; data-validation-report.csv generated; migration-log.txt generated",
+      "section": "Documentation",
+      "title": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
+      "description": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
+      "summary": "DOC-015 (Docs Integrity / route-total reconciliation, Issue #019 / R-023) closure. The substantive reconciliation was completed in a prior session but its uncommitted changes were stranded in the working tree on main after PR #590 merged.......",
+      "definitionOfDone": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-architecture.md, and content-audit.md; stale references (68/101/103/118 mismatches) are removed or explicitly reconciled; each updated doc includes canonical counting rule and verification timestamp; verified by: npx tsx tools/scripts/content-audit.ts && pnpm lint",
+      "definitionOfDoneSnapshot": "Reconcile conflicting route totals across all design docs to a single canonical value derived from the filesystem; Automated content-audit baseline available and passing (DOC-014 dependency);...",
       "dependencies": [
-        "IFC-017"
+        "DOC-014",
+        "IFC-209",
+        "IFC-210"
       ],
       "attestation": {
         "exists": true,
-        "path": ".specify/sprints/sprint-18/attestations/IFC-070/attestation.json",
+        "path": ".specify/sprints/sprint-18/attestations/DOC-015/attestation.json",
         "verdict": "COMPLETE",
-        "timestamp": "2026-02-20T00:05:00.000Z",
-        "sprintFolder": 18
-      },
-      "validationSummary": {
-        "total": 4,
-        "passed": 4,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 5,
-        "met": 5,
-        "missed": 0
-      }
-    },
-    {
-      "taskId": "PG-132",
-      "sprint": 18,
-      "status": "Completed",
-      "section": "Automation",
-      "title": "Smart Lead Routing UI - Rules configuration assignment dashboard SLA monitoring",
-      "description": "Smart Lead Routing UI - Rules configuration assignment dashboard SLA monitoring",
-      "summary": "PG-132 Smart Lead Routing UI — full implementation with 5 UI components, tRPC router (11 endpoints), validators, useRouting hook, and 64 passing tests. Key fix:... Routing rules CRUD with drag-to-reorder;...",
-      "definitionOfDone": "Response <500ms, Lighthouse >=90; RoutingRulesEditor, AssignmentDashboard, SLAMonitor, LeadQueueView, AgentWorkload components; drag-drop rule priority; real-time assignment view; verified by: pnpm test",
-      "definitionOfDoneSnapshot": "Routing rules CRUD with drag-to-reorder; Assignment dashboard with stats and recent assignments table; SLA monitoring with real-time tracking",
-      "dependencies": [
-        "IFC-030"
-      ],
-      "attestation": {
-        "exists": true,
-        "path": ".specify/sprints/sprint-18/attestations/PG-132/attestation.json",
-        "verdict": "COMPLETE",
-        "timestamp": "2026-02-15T12:00:00.000Z",
+        "timestamp": "2026-07-21T22:30:00Z",
         "sprintFolder": 18
       },
       "validationSummary": {
@@ -139,23 +175,23 @@
       }
     },
     {
-      "taskId": "IFC-078",
+      "taskId": "IFC-070",
       "sprint": 18,
       "status": "Completed",
-      "section": "Platform",
-      "title": "Platform Engineering Foundation",
-      "description": "Platform Engineering Foundation",
-      "summary": "Task completed and verified Internal Developer Platform basics, golden paths",
-      "definitionOfDone": "Internal Developer Platform basics, golden paths; artifacts: self-service-metrics.json, satisfaction-survey.md, context_ack.json",
-      "definitionOfDoneSnapshot": "Internal Developer Platform basics, golden paths",
+      "section": "Migration",
+      "title": "Data Migration from Legacy",
+      "description": "Data Migration from Legacy",
+      "summary": "IFC-070 Data Migration from Legacy completed via TDD. 13 steps across 4 phases (RED/GREEN/REFACTOR/VALIDATION). 66 tests, 98.88% statement coverage. All 6 completion gates PASS. Compliance check PASS. 100% data migrated, validation passed;...",
+      "definitionOfDone": "Legacy data migrated with zero loss; artifacts: data-validation-report.csv, migration-log.txt, rollback-procedure.md",
+      "definitionOfDoneSnapshot": "100% data migrated, validation passed; data-validation-report.csv generated; migration-log.txt generated",
       "dependencies": [
-        "IFC-012"
+        "IFC-017"
       ],
       "attestation": {
         "exists": true,
-        "path": ".specify/sprints/sprint-18/attestations/IFC-078/attestation.json",
+        "path": ".specify/sprints/sprint-18/attestations/IFC-070/attestation.json",
         "verdict": "COMPLETE",
-        "timestamp": "2026-02-17T19:33:21.804Z",
+        "timestamp": "2026-02-20T00:05:00.000Z",
         "sprintFolder": 18
       },
       "validationSummary": {
@@ -165,196 +201,391 @@
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-211",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Goal Settings RBAC - Role-based permissions for daily goal management (manager team goals and admin org defaults)",
+      "description": "Goal Settings RBAC - Role-based permissions for daily goal management (manager team goals and admin org defaults)",
+      "summary": "EVIDENCE BACKFILL (not a re-implementation). IFC-211 (Goal Settings RBAC) shipped via PR #597 (826eb3e68 feat(IFC-211):... Manager can set goals for team members via targetUserId; admin can define org-wide default goals; self-service respects RBAC;...",
+      "definitionOfDone": "Manager can set goals for team members via targetUserId param; admin can define org-wide default goals; self-service respects RBAC boundaries; goal resource type added to RBAC permission matrix; audit trail logs goal changes; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Manager can set goals for team members via targetUserId; admin can define org-wide default goals; self-service respects RBAC; goal resource type added to RBAC permission matrix; audit trail logs goal changes; coverage >=90%",
+      "dependencies": [
+        "IFC-195",
+        "IFC-098"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-211/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-07-24T12:00:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-215",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "AI/ML",
+      "title": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
+      "description": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
+      "summary": "IFC-215 replaces three hardcoded placeholder values in withMonitoring() (apps/ai-worker/src/monitoring/chain-monitor.ts): tokenCost:0, hallucinationFlags:[], model:'default'.... chain-monitor records actual model id (no 'default' placeholder);...",
+      "definitionOfDone": "chain-monitor records actual model id tokenCost and hallucinationFlags from runtime chain metadata (no hardcoded 'default', 0, [] placeholders); Redis/API metric schema exposes populated fields with null-safe fallback semantics; unit and integration tests cover populated and fallback scenarios; verified by: pnpm test --filter ai-worker;pnpm test --filter api",
+      "definitionOfDoneSnapshot": "chain-monitor records actual model id (no 'default' placeholder); chain-monitor records actual tokenCost (no 0 placeholder); chain-monitor records actual hallucinationFlags (no [] placeholder)",
+      "dependencies": [
+        "IFC-117",
+        "IFC-197",
+        "IFC-214"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-215/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-29T02:30:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-265",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation NEVER tested in 2878 lines of router tests (T-04). (3) logActivity missing activity type coverage in tests (T-06). (4) getById relations (activities, notes, opportunities, aiInsight) not asserted (T-07). (5) Tab content rendering not verified in component tests (T-08). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
+      "description": "Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation NEVER tested in 2878 lines of router tests (T-04). (3) logActivity missing activity type coverage in tests (T-06). (4) getById relations (activities, notes, opportunities, aiInsight) not asserted (T-07). (5) Tab content rendering not verified in component tests (T-08). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
+      "summary": "Compliance-check: PASS — test-only change; no PII/secret/data-retention/migration/auth surface. Findings L? no — test-gap findings T-01/T-04/T-06/T-07/T-08 closed (audit §19 was stale; scoped to genuine gaps).... Contact detail page test file with >=20 tests;...",
+      "definitionOfDone": "Contact detail page test file with >=20 tests; router tests for tenant isolation; logActivity type coverage; getById relation assertions; tab content verification; coverage >=90%",
+      "definitionOfDoneSnapshot": "Contact detail page test file with >=20 tests; router tests for tenant isolation; logActivity type coverage; getById relation assertions; tab content verification; coverage >=90%",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-265/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-13T15:25:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
         "missed": 0
       }
     }
   ],
   "open_tasks": [
     {
-      "taskId": "IFC-032",
+      "taskId": "ENV-008-AI",
       "sprint": 18,
-      "status": "Backlog",
-      "section": "Automation",
-      "title": "PHASE-005: OpenTelemetry Monitoring",
-      "description": "PHASE-005: OpenTelemetry Monitoring",
-      "summary": "Distributed tracing, metrics, logs unified; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
-      "definitionOfDone": "Distributed tracing, metrics, logs unified; artifacts: otel-collector-config.yaml, trace-examples.json, context_ack.json; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
-      "definitionOfDoneSnapshot": "Distributed tracing, metrics, logs unified; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
+      "status": "In Progress",
+      "section": "Foundation Setup",
+      "title": "Automated Observability with Predictive Monitoring",
+      "description": "Automated Observability with Predictive Monitoring",
+      "summary": "Verdict NEEDS_HUMAN, not COMPLETE. Everything that can be built and proven before merge is done and tested. What remains needs a merge, and merges are the owner's. Open items, each with the check that closes it:... OpenTelemetry AI-configured (ruling A:...",
+      "definitionOfDone": "OpenTelemetry AI-configured, predictive alerts set, anomaly detection active, self-healing enabled; targets: >=100%",
+      "definitionOfDoneSnapshot": "OpenTelemetry AI-configured (ruling A: api and ai-worker export OTLP to Grafana Cloud; llm.* attributes documented); Anomaly detection active (ruling A: Grafana Asserts rules on span metrics);...",
       "dependencies": [
-        "IFC-030"
+        "ENV-005-AI"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json",
+        "verdict": "NEEDS_HUMAN",
+        "timestamp": "2026-10-27T10:06:06Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 5,
+        "met": 1,
+        "missed": 4
+      }
+    },
+    {
+      "taskId": "EP-001-AI",
+      "sprint": 18,
+      "status": "In Progress",
+      "section": "Foundation Setup",
+      "title": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
+      "description": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
+      "summary": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
+      "definitionOfDone": "Week 1: OTel Collector + Prometheus + Grafana deployed behind access control; Week 2: Loki + Tempo deployed with trace-to-log correlation; Week 3: SonarQube deployed with GitHub Actions integration; All configs git-versioned and shared between local Docker and EasyPanel; targets: >=100%, <30 min, zero errors",
+      "definitionOfDoneSnapshot": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
+      "dependencies": [
+        "ENV-003-AI",
+        "ENV-008-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/EP-001-AI/attestation.json",
+        "verdict": "PARTIAL",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
         "missed": 0
       }
     },
     {
-      "taskId": "PG-058",
+      "taskId": "IFC-074",
       "sprint": 18,
-      "status": "Backlog",
-      "section": "Core CRM",
-      "title": "Dashboard",
-      "description": "Dashboard",
-      "summary": "response under 200ms, Lighthouse 90, real-time data",
-      "definitionOfDone": "Response <200ms, Lighthouse ≥90, real-time data; artifacts: page.tsx, kpi-calculator.ts, context_ack.json",
-      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, real-time data",
+      "status": "In Progress",
+      "section": "Observability",
+      "title": "PHASE-040: Full Stack Observability",
+      "description": "PHASE-040: Full Stack Observability",
+      "summary": "NEEDS_HUMAN under owner rulings 3 and 4 (ship code, gate the KPI after deploy). Code for spec AC-001, AC-003-AC-008 (2026-10-22) and AC-010-AC-012, AC-014-AC-016 (2026-10-29 addendum) is delivered and validated;... Traces, metrics, logs unified with context",
+      "definitionOfDone": "Traces, metrics, logs unified with context; artifacts: sentry-project-config.json, correlation-test.csv, mttr-baseline.json; targets: <2min",
+      "definitionOfDoneSnapshot": "Traces, metrics, logs unified with context",
       "dependencies": [
-        "IFC-089",
-        "IFC-091",
-        "IFC-095"
+        "IFC-003"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-074/attestation.json",
+        "verdict": "NEEDS_HUMAN",
+        "timestamp": "2026-10-29T17:23:28Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
+        "total": 2,
         "met": 0,
+        "missed": 2
+      }
+    },
+    {
+      "taskId": "IFC-097",
+      "sprint": 18,
+      "status": "In Progress",
+      "section": "Ops & Observability",
+      "title": "Distributed Tracing & Logging",
+      "description": "Distributed Tracing & Logging",
+      "summary": "99% of requests traced via OpenTelemetry middleware; All 34 API endpoints have distributed tracing enabled; Correlation IDs propagate across service boundaries 99% of requests traced; Dashboards available; Trace coverage report created",
+      "definitionOfDone": "99% of requests traced, dashboards available; artifacts: dashboard-catalog.md, context_ack.json; gates: coverage-gte-90",
+      "definitionOfDoneSnapshot": "99% of requests traced; Dashboards available; Trace coverage report created",
+      "dependencies": [
+        "IFC-007"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-097/attestation.json",
+        "verdict": "PARTIAL",
+        "timestamp": "2025-12-29T00:00:00.000Z",
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 9,
+        "passed": 9,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
         "missed": 0
       }
     },
     {
-      "taskId": "PG-059",
+      "taskId": "PG-014",
       "sprint": 18,
-      "status": "Backlog",
-      "section": "Core CRM",
-      "title": "Leads List",
-      "description": "Leads List",
-      "summary": "response under 200ms, Lighthouse 90, pagination working",
-      "definitionOfDone": "Response <200ms, Lighthouse ≥90, pagination working; artifacts: page.tsx, lead-list.tsx, bulk-actions.ts",
-      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, pagination working",
+      "status": "In Progress",
+      "section": "Public Pages",
+      "title": "Status Page",
+      "description": "Status Page",
+      "summary": "Status page completed with 8 services monitored, 90-day uptime history, 30s refresh interval, and incident tracking. Status page created; Real-time status monitoring; Incident timeline displayed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, real-time updates; artifacts: page.tsx, status-monitor.tsx, incident-tracker.ts",
+      "definitionOfDoneSnapshot": "Status page created; Real-time status monitoring; Incident timeline displayed",
       "dependencies": [
-        "IFC-089"
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/PG-014/attestation.json",
+        "verdict": "PARTIAL",
+        "timestamp": "2025-12-31T22:30:00Z",
+        "sprintFolder": 12
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 6,
+        "passed": 6,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
-        "missed": 0
-      }
-    },
-    {
-      "taskId": "PG-060",
-      "sprint": 18,
-      "status": "Backlog",
-      "section": "Core CRM",
-      "title": "New Lead",
-      "description": "New Lead",
-      "summary": "response under 200ms, Lighthouse 90, leads created",
-      "definitionOfDone": "Response <200ms, Lighthouse ≥90, leads created; artifacts: page.tsx, lead-enrichment.ts",
-      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, leads created",
-      "dependencies": [
-        "PG-059"
-      ],
-      "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
-      },
-      "validationSummary": {
-        "total": 0,
-        "passed": 0,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 0,
-        "met": 0,
-        "missed": 0
-      }
-    },
-    {
-      "taskId": "PG-061",
-      "sprint": 18,
-      "status": "Backlog",
-      "section": "Core CRM",
-      "title": "Lead Detail",
-      "description": "Lead Detail",
-      "summary": "response under 200ms, Lighthouse 90, details complete",
-      "definitionOfDone": "Response <200ms, Lighthouse ≥90, details complete; artifacts: page.tsx, lead-detail.tsx, lead-timeline.tsx",
-      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, details complete",
-      "dependencies": [
-        "PG-059"
-      ],
-      "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
-      },
-      "validationSummary": {
-        "total": 0,
-        "passed": 0,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 4,
+        "met": 4,
         "missed": 0
       }
     }
   ],
   "tasks": [
     {
+      "taskId": "ENV-008-AI",
+      "sprint": 18,
+      "status": "In Progress",
+      "section": "Foundation Setup",
+      "title": "Automated Observability with Predictive Monitoring",
+      "description": "Automated Observability with Predictive Monitoring",
+      "summary": "Verdict NEEDS_HUMAN, not COMPLETE. Everything that can be built and proven before merge is done and tested. What remains needs a merge, and merges are the owner's. Open items, each with the check that closes it:... OpenTelemetry AI-configured (ruling A:...",
+      "definitionOfDone": "OpenTelemetry AI-configured, predictive alerts set, anomaly detection active, self-healing enabled; targets: >=100%",
+      "definitionOfDoneSnapshot": "OpenTelemetry AI-configured (ruling A: api and ai-worker export OTLP to Grafana Cloud; llm.* attributes documented); Anomaly detection active (ruling A: Grafana Asserts rules on span metrics);...",
+      "dependencies": [
+        "ENV-005-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json",
+        "verdict": "NEEDS_HUMAN",
+        "timestamp": "2026-10-27T10:06:06Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 1,
+        "missed": 4
+      }
+    },
+    {
+      "taskId": "EP-001-AI",
+      "sprint": 18,
+      "status": "In Progress",
+      "section": "Foundation Setup",
+      "title": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
+      "description": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
+      "summary": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
+      "definitionOfDone": "Week 1: OTel Collector + Prometheus + Grafana deployed behind access control; Week 2: Loki + Tempo deployed with trace-to-log correlation; Week 3: SonarQube deployed with GitHub Actions integration; All configs git-versioned and shared between local Docker and EasyPanel; targets: >=100%, <30 min, zero errors",
+      "definitionOfDoneSnapshot": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
+      "dependencies": [
+        "ENV-003-AI",
+        "ENV-008-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/EP-001-AI/attestation.json",
+        "verdict": "PARTIAL",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
       "taskId": "IFC-032",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Automation",
       "title": "PHASE-005: OpenTelemetry Monitoring",
       "description": "PHASE-005: OpenTelemetry Monitoring",
-      "summary": "Distributed tracing, metrics, logs unified; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
+      "summary": "Production OTLP export to Grafana Cloud (stack graysushi1880, UK). Real production traces from ai-worker (see artifacts/misc/trace-examples.json; first evidence trace 6a0c4b9ddcfa0f542d63d13798efd6d2, 2026-10-06 13:13:53 BST).......",
       "definitionOfDone": "Distributed tracing, metrics, logs unified; artifacts: otel-collector-config.yaml, trace-examples.json, context_ack.json; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
       "definitionOfDoneSnapshot": "Distributed tracing, metrics, logs unified; trace-examples.json must contain real trace IDs from actual service calls, not fabricated examples",
       "dependencies": [
         "IFC-030"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-032/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-10-06T17:40:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-056",
+      "sprint": 18,
+      "status": "Backlog",
+      "section": "Risk Mgmt",
+      "title": "Team Upskilling Program",
+      "description": "Team Upskilling Program",
+      "summary": "Supersedes an earlier COMPLETE attestation whose evidence described people who do not exist (an 8-person team with named developers, skill scores and training records). This project is run by one person.... Continuous learning:...",
+      "definitionOfDone": "Continuous learning: tRPC, Next.js 16.0.10 (Turbopack FS caching, Cache Components, proxy replacing middleware), LangChain",
+      "definitionOfDoneSnapshot": "Continuous learning: tRPC, Next.js 16.0.10 (Turbopack FS caching, Cache Components, proxy replacing middleware), LangChain",
+      "dependencies": [
+        "IFC-009"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-056/attestation.json",
+        "verdict": "INCOMPLETE",
+        "timestamp": "2026-10-05T23:30:00Z",
+        "sprintFolder": 9
       },
       "validationSummary": {
         "total": 0,
@@ -401,6 +632,38 @@
       }
     },
     {
+      "taskId": "IFC-074",
+      "sprint": 18,
+      "status": "In Progress",
+      "section": "Observability",
+      "title": "PHASE-040: Full Stack Observability",
+      "description": "PHASE-040: Full Stack Observability",
+      "summary": "NEEDS_HUMAN under owner rulings 3 and 4 (ship code, gate the KPI after deploy). Code for spec AC-001, AC-003-AC-008 (2026-10-22) and AC-010-AC-012, AC-014-AC-016 (2026-10-29 addendum) is delivered and validated;... Traces, metrics, logs unified with context",
+      "definitionOfDone": "Traces, metrics, logs unified with context; artifacts: sentry-project-config.json, correlation-test.csv, mttr-baseline.json; targets: <2min",
+      "definitionOfDoneSnapshot": "Traces, metrics, logs unified with context",
+      "dependencies": [
+        "IFC-003"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-074/attestation.json",
+        "verdict": "NEEDS_HUMAN",
+        "timestamp": "2026-10-29T17:23:28Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 0,
+        "missed": 2
+      }
+    },
+    {
       "taskId": "IFC-078",
       "sprint": 18,
       "status": "Completed",
@@ -433,158 +696,321 @@
       }
     },
     {
+      "taskId": "IFC-097",
+      "sprint": 18,
+      "status": "In Progress",
+      "section": "Ops & Observability",
+      "title": "Distributed Tracing & Logging",
+      "description": "Distributed Tracing & Logging",
+      "summary": "99% of requests traced via OpenTelemetry middleware; All 34 API endpoints have distributed tracing enabled; Correlation IDs propagate across service boundaries 99% of requests traced; Dashboards available; Trace coverage report created",
+      "definitionOfDone": "99% of requests traced, dashboards available; artifacts: dashboard-catalog.md, context_ack.json; gates: coverage-gte-90",
+      "definitionOfDoneSnapshot": "99% of requests traced; Dashboards available; Trace coverage report created",
+      "dependencies": [
+        "IFC-007"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-097/attestation.json",
+        "verdict": "PARTIAL",
+        "timestamp": "2025-12-29T00:00:00.000Z",
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 9,
+        "passed": 9,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-014",
+      "sprint": 18,
+      "status": "In Progress",
+      "section": "Public Pages",
+      "title": "Status Page",
+      "description": "Status Page",
+      "summary": "Status page completed with 8 services monitored, 90-day uptime history, 30s refresh interval, and incident tracking. Status page created; Real-time status monitoring; Incident timeline displayed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, real-time updates; artifacts: page.tsx, status-monitor.tsx, incident-tracker.ts",
+      "definitionOfDoneSnapshot": "Status page created; Real-time status monitoring; Incident timeline displayed",
+      "dependencies": [
+        "PG-001",
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-12/attestations/PG-014/attestation.json",
+        "verdict": "PARTIAL",
+        "timestamp": "2025-12-31T22:30:00Z",
+        "sprintFolder": 12
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
       "taskId": "PG-058",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Dashboard",
       "description": "Dashboard",
-      "summary": "response under 200ms, Lighthouse 90, real-time data",
+      "summary": "PG-058 Dashboard — KPI calculator extraction + real-time polling + accessibility.... AC-001 — kpi-calculator.ts exists, exports the pure functions + DASHBOARD_REFETCH_INTERVAL_MS, each consumed by >=1 production widget (no dead exports); AC-002...",
       "definitionOfDone": "Response <200ms, Lighthouse ≥90, real-time data; artifacts: page.tsx, kpi-calculator.ts, context_ack.json",
-      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, real-time data",
+      "definitionOfDoneSnapshot": "AC-001 — kpi-calculator.ts exists, exports the pure functions + DASHBOARD_REFETCH_INTERVAL_MS, each consumed by >=1 production widget (no dead exports); AC-002...",
       "dependencies": [
         "IFC-089",
         "IFC-091",
         "IFC-095"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-058/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-28T16:13:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 2,
+        "met": 2,
         "missed": 0
       }
     },
     {
       "taskId": "PG-059",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Leads List",
       "description": "Leads List",
-      "summary": "response under 200ms, Lighthouse 90, pagination working",
+      "summary": "PG-059 extracts 1,105 LOC from LeadsPageClient.tsx into components/leads/lead-list.tsx (client composition) + lib/leads/bulk-actions.ts (pure factory + runners + getLeadScope sidebar helper) + lib/leads/lead-types.ts (Lead row type).......",
       "definitionOfDone": "Response <200ms, Lighthouse ≥90, pagination working; artifacts: page.tsx, lead-list.tsx, bulk-actions.ts",
       "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, pagination working",
       "dependencies": [
         "IFC-089"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-059/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-04-19T23:45:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 5,
+        "met": 5,
         "missed": 0
       }
     },
     {
       "taskId": "PG-060",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "New Lead",
       "description": "New Lead",
-      "summary": "response under 200ms, Lighthouse 90, leads created",
+      "summary": "Scope: web-layer only. lead-enrichment.ts is a new pure module imported by the New Lead page (Gate 2b import-reachability PASS). 'assignment automated' = existing ownerId=creator (no routing engine in scope).......",
       "definitionOfDone": "Response <200ms, Lighthouse ≥90, leads created; artifacts: page.tsx, lead-enrichment.ts",
-      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, leads created",
+      "definitionOfDoneSnapshot": "Artifact apps/web/src/app/leads/(list)/new/page.tsx exists and creates leads via api.lead.create; Artifact apps/web/src/lib/leads/lead-enrichment.ts exists (enrichment working — derives website/company from email domain, non-destructive);...",
       "dependencies": [
         "PG-059"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-060/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-11T20:04:21Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 4,
+        "met": 4,
         "missed": 0
       }
     },
     {
       "taskId": "PG-061",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Lead Detail",
       "description": "Lead Detail",
-      "summary": "response under 200ms, Lighthouse 90, details complete",
+      "summary": "Scope: web-layer only — behaviour-preserving extraction, no backend/domain/schema change. Strategy mirrors PG-059 (1,105 LOC extracted, byte-for-byte preserved, validated by existing regression suites + focused smoke tests).......",
       "definitionOfDone": "Response <200ms, Lighthouse ≥90, details complete; artifacts: page.tsx, lead-detail.tsx, lead-timeline.tsx",
-      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, details complete",
+      "definitionOfDoneSnapshot": "Artifact components/leads/lead-detail.tsx exists (LeadDetail — details shown); Artifact components/leads/lead-timeline.tsx exists (LeadTimeline — timeline displayed); Actions available (convert/edit/delete/archive/log)...",
       "dependencies": [
         "PG-059"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-061/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-13T00:40:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 4,
+        "met": 3,
         "missed": 0
       }
     },
     {
       "taskId": "PG-062",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Edit Lead",
       "description": "Edit Lead",
-      "summary": "response under 200ms, Lighthouse 90, updates saved",
+      "summary": "Scope: web-layer only — behaviour-preserving extraction, no backend/domain/schema change. Strategy mirrors PG-059/PG-061. Plan-reviewer subagent (adcafe3c) returned CHANGES_REQUIRED and all findings were resolved:......",
       "definitionOfDone": "Response <200ms, Lighthouse ≥90, updates saved; artifacts: page.tsx, lead-editor.tsx, change-tracker.ts",
-      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, updates saved",
+      "definitionOfDoneSnapshot": "Artifact components/leads/lead-editor.tsx exists (LeadEditor — edits working); Artifact lib/leads/change-tracker.ts exists (changes tracked — changeset + minimal patch);...",
       "dependencies": [
         "PG-061"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-062/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-13T09:30:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-063",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Import Leads",
+      "description": "Import Leads",
+      "summary": "Web-layer-only feature (greenfield, not an extraction). Plan-reviewer subagent (a941eb6ab0ae8e81e) returned CHANGES_REQUIRED with 5 ERRORs — all resolved:... Artifact lib/leads/field-mapper.ts exists (parse + sanitise + map + validate, pure);...",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports processed; artifacts: page.tsx, csv-importer.tsx, field-mapper.ts",
+      "definitionOfDoneSnapshot": "Artifact lib/leads/field-mapper.ts exists (parse + sanitise + map + validate, pure); Artifact components/leads/csv-importer.tsx exists (upload/map/preview/import UI); Artifact app/leads/(list)/import/page.tsx exists (route shell)",
+      "dependencies": [
+        "PG-059"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-063/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-13T14:30:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "SALES-001",
+      "sprint": 18,
+      "status": "Backlog",
+      "section": "Commercial Assets",
+      "title": "Commercial Narrative + Pitch Deck Outline + One-Pager",
+      "description": "Commercial Narrative + Pitch Deck Outline + One-Pager",
+      "summary": "Sales motion defined; Team enablement complete",
+      "definitionOfDone": "Deck outline (10–12 slides) with story arc, slide-by-slide content, and visual guidelines; plus one-pager (problem → solution → proof → CTA); includes a single canonical link to design source (Figma/Canva); verified by: pnpm lint",
+      "definitionOfDoneSnapshot": "Sales motion defined; Team enablement complete",
+      "dependencies": [
+        "GTM-002",
+        "BRAND-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-1/attestations/SALES-001/attestation.json",
+        "verdict": "PARTIAL",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 1
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-116",
+      "sprint": 18,
+      "status": "In Progress",
+      "section": "Observability",
+      "title": "Create OpenTelemetry config and observability documentation",
+      "description": "Instrument application with OpenTelemetry, unify logs, metrics and traces",
+      "summary": "OpenTelemetry instrumentation fully configured and documented. All services can push traces, metrics, and logs.... All services emit structured logs, traces and metrics; dashboards and alerts created; SLOs defined",
+      "definitionOfDone": "All services emit structured logs, traces and metrics; dashboards and alerts created; SLOs defined; targets: >=100%, <2min",
+      "definitionOfDoneSnapshot": "All services emit structured logs, traces and metrics; dashboards and alerts created; SLOs defined",
+      "dependencies": [
+        "IFC-074"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-9/attestations/IFC-116/attestation.json",
+        "verdict": "PARTIAL",
+        "timestamp": null,
+        "sprintFolder": 9
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
@@ -595,34 +1021,100 @@
       }
     },
     {
-      "taskId": "PG-063",
+      "taskId": "IFC-117",
       "sprint": 18,
-      "status": "Backlog",
-      "section": "Core CRM",
-      "title": "Import Leads",
-      "description": "Import Leads",
-      "summary": "response under 200ms, Lighthouse 90, imports processed",
-      "definitionOfDone": "Response <200ms, Lighthouse ≥90, imports processed; artifacts: page.tsx, csv-importer.tsx, field-mapper.ts",
-      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, imports processed",
+      "status": "In Progress",
+      "section": "AI Insights",
+      "title": "Monitor AI models for drift, latency, hallucination and ROI",
+      "description": "Monitor AI models for drift, latency, hallucination and ROI",
+      "summary": "Verdict NEEDS_HUMAN. The code path is delivered and validated; the production KPIs are the owner's after ai-worker is promoted. Open production evidence (who / query / pass): N1 Output-distribution shift detected within 1 day — owner......",
+      "definitionOfDone": "Metrics collected for AI models; dashboards show drift/hallucination; alerts configured; targets: >=5%; AI metrics must be collected by actual code paths and pushed to dashboards",
+      "definitionOfDoneSnapshot": "Metrics collected for AI models by actual code paths; Metrics pushed to dashboards; Dashboards show drift/hallucination",
       "dependencies": [
-        "PG-059"
+        "IFC-005",
+        "AUTOMATION-002"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-117/attestation.json",
+        "verdict": "NEEDS_HUMAN",
+        "timestamp": "2026-10-30T12:19:51Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 2,
+        "missed": 3
+      }
+    },
+    {
+      "taskId": "IFC-142",
+      "sprint": 18,
+      "status": "In Progress",
+      "section": "Operations",
+      "title": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
+      "description": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
+      "summary": "Task completed and verified SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored",
+      "definitionOfDone": "SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored; targets: >=10%, >=99%, <15 min",
+      "definitionOfDoneSnapshot": "SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored",
+      "dependencies": [
+        "ENV-008-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/IFC-142/attestation.json",
+        "verdict": "PARTIAL",
+        "timestamp": "2026-02-17T19:33:21.847Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
         "total": 0,
         "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-151",
+      "sprint": 18,
+      "status": "In Progress",
+      "section": "Platform",
+      "title": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
+      "description": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
+      "summary": "{\"framework\":{\"type\":\"DLQ Triage and Monitoring\",\"scope\":\"Complete operational framework for event consumer failures\",\"coverage\":[\"Real-time monitoring via Prometheus metrics\",\"Alert configuration for DLQ depth, drain success, retry success......",
+      "definitionOfDone": "Consumer SDK supports retries/backoff; DLQ storage/triage workflow; idempotent handlers; poison-message handling; metrics and alerts; chaos tests; artifacts: dlq-triage.md, context_ack.json; targets: >=95%, >=90%, <30 min",
+      "definitionOfDoneSnapshot": "Consumer SDK supports retries/backoff; DLQ storage/triage workflow; idempotent handlers; poison-message handling; metrics and alerts; chaos tests",
+      "dependencies": [
+        "IFC-150",
+        "ENV-008-AI"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-151/attestation.json",
+        "verdict": "PARTIAL",
+        "timestamp": "2025-12-29T09:15:00Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
         "missed": 0
       }
     },
@@ -661,45 +1153,45 @@
     {
       "taskId": "DOC-015",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Documentation",
       "title": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
       "description": "Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth",
-      "summary": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...",
+      "summary": "DOC-015 (Docs Integrity / route-total reconciliation, Issue #019 / R-023) closure. The substantive reconciliation was completed in a prior session but its uncommitted changes were stranded in the working tree on main after PR #590 merged.......",
       "definitionOfDone": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-architecture.md, and content-audit.md; stale references (68/101/103/118 mismatches) are removed or explicitly reconciled; each updated doc includes canonical counting rule and verification timestamp; verified by: npx tsx tools/scripts/content-audit.ts && pnpm lint",
-      "definitionOfDoneSnapshot": "All conflicting route and summary totals are regenerated from apps/web/src/app/**/page.tsx and synchronized across sitemap.md, page-registry.md, PAGE_MAP_AND_FLOWS.md, ui-flow-mapping.md, navigation-reachability-audit.md, information-archit...",
+      "definitionOfDoneSnapshot": "Reconcile conflicting route totals across all design docs to a single canonical value derived from the filesystem; Automated content-audit baseline available and passing (DOC-014 dependency);...",
       "dependencies": [
         "DOC-014",
         "IFC-209",
         "IFC-210"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/DOC-015/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-07-21T22:30:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 4,
+        "met": 4,
         "missed": 0
       }
     },
     {
       "taskId": "DOC-016",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Documentation",
       "title": "Docs Integrity CI Gate - Automated cross-document route-total drift detection and PR enforcement",
       "description": "Docs Integrity CI Gate - Automated cross-document route-total drift detection and PR enforcement",
-      "summary": "TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift;...",
+      "summary": "DOC-016 (Docs Integrity CI Gate, R-023 mitigation) is the enforcement half of DOC-014 -> DOC-015 -> DOC-016.... TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs;...",
       "definitionOfDone": "TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift; tests cover mismatch scenarios and false-positive guardrails; verified by: npx tsx tools/scripts/docs-integrity-audit.ts && pnpm test",
       "definitionOfDoneSnapshot": "TypeScript CLI docs-integrity-audit validates canonical route totals and key summary aggregates across target design docs; CI workflow runs on app route and docs changes and fails on any drift;...",
       "dependencies": [
@@ -707,217 +1199,217 @@
         "DOC-015"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/DOC-016/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-07-21T23:59:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 4,
+        "met": 4,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-211",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Goal Settings RBAC - Role-based permissions for daily goal management (manager team goals and admin org defaults)",
       "description": "Goal Settings RBAC - Role-based permissions for daily goal management (manager team goals and admin org defaults)",
-      "summary": "Manager can set goals for team members via targetUserId param; admin can define org-wide default goals; self-service respects RBAC boundaries; goal resource type added to RBAC permission matrix; audit trail logs goal changes",
+      "summary": "EVIDENCE BACKFILL (not a re-implementation). IFC-211 (Goal Settings RBAC) shipped via PR #597 (826eb3e68 feat(IFC-211):... Manager can set goals for team members via targetUserId; admin can define org-wide default goals; self-service respects RBAC;...",
       "definitionOfDone": "Manager can set goals for team members via targetUserId param; admin can define org-wide default goals; self-service respects RBAC boundaries; goal resource type added to RBAC permission matrix; audit trail logs goal changes; verified by: pnpm test",
-      "definitionOfDoneSnapshot": "Manager can set goals for team members via targetUserId param; admin can define org-wide default goals; self-service respects RBAC boundaries; goal resource type added to RBAC permission matrix; audit trail logs goal changes",
+      "definitionOfDoneSnapshot": "Manager can set goals for team members via targetUserId; admin can define org-wide default goals; self-service respects RBAC; goal resource type added to RBAC permission matrix; audit trail logs goal changes; coverage >=90%",
       "dependencies": [
         "IFC-195",
         "IFC-098"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-211/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-07-24T12:00:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 5,
+        "met": 5,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-212",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "AI/ML",
       "title": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
       "description": "Wire API container to QueueAIService for BullMQ-backed lead scoring",
-      "summary": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; lead scoring jobs are enqueued with correlation metadata and consumed by ai-scoring worker contract;...",
+      "summary": "IFC-212 exec phase complete with 5 audit findings remediated honestly (2026-04-27 audit-fix iteration): [HIGH-1 FIXED] tenantId='default' regression — extended AIServicePort.scoreLead/qualifyLead with optional `opts:......",
       "definitionOfDone": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; lead scoring jobs are enqueued with correlation metadata and consumed by ai-scoring worker contract; retry and failure handling follow BullMQ defaults; verified by: pnpm test --filter api;pnpm test --filter ai-worker",
-      "definitionOfDoneSnapshot": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; lead scoring jobs are enqueued with correlation metadata and consumed by ai-scoring worker contract;...",
+      "definitionOfDoneSnapshot": "API container resolves QueueAIService for lead scoring requests; GuardrailsAIService remains decorator over queue-backed provider; Lead scoring jobs enqueued with correlation metadata and consumed by ai-scoring worker contract",
       "dependencies": [
         "IFC-015",
         "IFC-125",
         "IFC-168"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-212/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-04-27T20:55:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
-        "missed": 0
+        "total": 4,
+        "met": 1,
+        "missed": 3
       }
     },
     {
       "taskId": "IFC-214",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "AI/ML",
       "title": "Redis-backed AI Monitoring State Bridge - Replace process-local singleton reads with shared Redis telemetry store",
       "description": "Redis-backed AI Monitoring State Bridge - Replace process-local singleton reads with shared Redis telemetry store",
-      "summary": "ai-worker publishes tenant-scoped monitoring snapshots to Redis and aiMonitoring router reads Redis-backed metrics (getStatus/getDriftMetrics/getLatencyMetrics/getHallucinationReport/getROIMetrics) instead of in-process singletons;...",
+      "summary": "IFC-214 (Redis-backed AI Monitoring State Bridge) — GENUINE exec, scoped to the one real residual gap. Phase-0 exploration established that the bridge itself was already implemented + merged under 'feat(IFC-212):......",
       "definitionOfDone": "ai-worker publishes tenant-scoped monitoring snapshots to Redis and aiMonitoring router reads Redis-backed metrics (getStatus/getDriftMetrics/getLatencyMetrics/getHallucinationReport/getROIMetrics) instead of in-process singletons; cache-poisoning mitigations enforced (key namespacing, schema validation, TTL/versioning); Redis outage fallback returns safe empty payloads; cross-process integration test verifies worker writes are visible to API; verified by: pnpm test --filter api;pnpm test --filter ai-worker",
-      "definitionOfDoneSnapshot": "ai-worker publishes tenant-scoped monitoring snapshots to Redis and aiMonitoring router reads Redis-backed metrics (getStatus/getDriftMetrics/getLatencyMetrics/getHallucinationReport/getROIMetrics) instead of in-process singletons;...",
+      "definitionOfDoneSnapshot": "ai-worker publishes tenant-scoped monitoring snapshots to Redis; aiMonitoring router reads Redis-backed metrics (5 endpoints) instead of in-process singletons; Cache-poisoning mitigations (key namespacing, schema validation, TTL/versioning)",
       "dependencies": [
         "IFC-015",
         "IFC-168",
         "IFC-197"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-214/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-28T20:45:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 4,
+        "met": 4,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-215",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "AI/ML",
       "title": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
       "description": "AI Monitoring Payload Fidelity - Replace tokenCost model and hallucination placeholders with real chain metadata",
-      "summary": "chain-monitor records actual model id tokenCost and hallucinationFlags from runtime chain metadata (no hardcoded 'default', 0, [] placeholders); Redis/API metric schema exposes populated fields with null-safe fallback semantics;...",
+      "summary": "IFC-215 replaces three hardcoded placeholder values in withMonitoring() (apps/ai-worker/src/monitoring/chain-monitor.ts): tokenCost:0, hallucinationFlags:[], model:'default'.... chain-monitor records actual model id (no 'default' placeholder);...",
       "definitionOfDone": "chain-monitor records actual model id tokenCost and hallucinationFlags from runtime chain metadata (no hardcoded 'default', 0, [] placeholders); Redis/API metric schema exposes populated fields with null-safe fallback semantics; unit and integration tests cover populated and fallback scenarios; verified by: pnpm test --filter ai-worker;pnpm test --filter api",
-      "definitionOfDoneSnapshot": "chain-monitor records actual model id tokenCost and hallucinationFlags from runtime chain metadata (no hardcoded 'default', 0, [] placeholders); Redis/API metric schema exposes populated fields with null-safe fallback semantics;...",
+      "definitionOfDoneSnapshot": "chain-monitor records actual model id (no 'default' placeholder); chain-monitor records actual tokenCost (no 0 placeholder); chain-monitor records actual hallucinationFlags (no [] placeholder)",
       "dependencies": [
         "IFC-117",
         "IFC-197",
         "IFC-214"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-215/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-29T02:30:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 4,
+        "met": 4,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-227",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Company-to-Account Navigation Link - Lead detail page shows company name as plain <span> in profile card (line 1352) and info panel (line 1656). Replace with Next.js Link component navigating to /accounts/[accountId]. Requires accountId in lead transform/query. Apply same pattern to Contact and Deal detail pages.",
       "description": "Company-to-Account Navigation Link - Lead detail page shows company name as plain <span> in profile card (line 1352) and info panel (line 1656). Replace with Next.js Link component navigating to /accounts/[accountId]. Requires accountId in lead transform/query. Apply same pattern to Contact and Deal detail pages.",
-      "summary": "Company name is clickable Link to /accounts/[accountId] on Lead, Contact, Deal detail pages; accountId included in API response; graceful fallback when no account linked; tests >=90%",
+      "summary": "(no destructive patterns, no policy violations). All validations ran against main project tree (not worktree). Prisma client regenerated after schema.prisma was updated with Lead.accountId FK + Account.leads reverse relation.......",
       "definitionOfDone": "Company name is clickable Link to /accounts/[accountId] on Lead, Contact, Deal detail pages; accountId included in API response; graceful fallback when no account linked; tests >=90%",
       "definitionOfDoneSnapshot": "Company name is clickable Link to /accounts/[accountId] on Lead, Contact, Deal detail pages; accountId included in API response; graceful fallback when no account linked; tests >=90%",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-227/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-04-27T21:30:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 2,
+        "met": 2,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-230",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Unify Lead Create/Edit Form - Create page (leads/(list)/new/page.tsx, 1029 lines) and Edit page (leads/[id]/edit/page.tsx, 464 lines) share no components. Issues: different API clients (trpc vs api), different field sets (BANT only in create but silently dropped), different styling, different validation, no auth guard on create. Fix: extract shared LeadForm component, unify API client, include all fields in both views, consistent styling.",
       "description": "Unify Lead Create/Edit Form - Create page (leads/(list)/new/page.tsx, 1029 lines) and Edit page (leads/[id]/edit/page.tsx, 464 lines) share no components. Issues: different API clients (trpc vs api), different field sets (BANT only in create but silently dropped), different styling, different validation, no auth guard on create. Fix: extract shared LeadForm component, unify API client, include all fields in both views, consistent styling.",
-      "summary": "Shared LeadForm component used by both create and edit; consistent field set (BANT fields not silently dropped); unified API client; consistent styling; auth guard on create; tests >=90%",
+      "summary": "IFC-230 unifies the lead create + edit forms on a shared data-driven LeadForm.tsx, adds BANT parity to the edit form, unifies validation/styling, and preserves the create wizard.... Shared LeadForm component; Unified API client; All fields incl....",
       "definitionOfDone": "Shared LeadForm component used by both create and edit; consistent field set (BANT fields not silently dropped); unified API client; consistent styling; auth guard on create; tests >=90%",
-      "definitionOfDoneSnapshot": "Shared LeadForm component used by both create and edit; consistent field set (BANT fields not silently dropped); unified API client; consistent styling; auth guard on create; tests >=90%",
+      "definitionOfDoneSnapshot": "Shared LeadForm component; Unified API client; All fields incl. BANT in both views",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-230/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-15T16:35:00.000Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
-        "missed": 0
+        "total": 3,
+        "met": 2,
+        "missed": 1
       }
     },
     {
@@ -927,16 +1419,16 @@
       "section": "Core CRM",
       "title": "Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.",
       "description": "Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.",
-      "summary": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
+      "summary": "user.list does not return role field — Role column dropped from team page (was hardcoded fake data) user.list default limit=5 — passed limit:50 to fetch full team roster getAllConnectorsHealth uses protectedProcedure......",
       "definitionOfDone": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
       "definitionOfDoneSnapshot": "Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-234/attestation.json",
+        "verdict": "PARTIAL",
+        "timestamp": "2026-06-29T14:20:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
         "total": 0,
@@ -945,535 +1437,535 @@
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 2,
+        "met": 2,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-240",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Lead Audit Logging. Add audit log entries to all 20 lead router procedures using SecurityAuditService. GDPR-relevant operations (delete, bulkDelete, convert, export) MUST have audit trail. Include: actor (userId), action, entityType (Lead), entityId, tenantId, timestamp, metadata (old/new values for mutations). Integrate with existing audit infrastructure at apps/api/src/security/audit/.",
       "description": "Lead Audit Logging. Add audit log entries to all 20 lead router procedures using SecurityAuditService. GDPR-relevant operations (delete, bulkDelete, convert, export) MUST have audit trail. Include: actor (userId), action, entityType (Lead), entityId, tenantId, timestamp, metadata (old/new values for mutations). Integrate with existing audit infrastructure at apps/api/src/security/audit/.",
-      "summary": "All 20 lead procedures emit audit entries; delete/convert/bulk ops have before/after snapshots; audit entries queryable via audit API; GDPR compliance verified; tests >=90%",
+      "summary": "IFC-240 Lead Router Audit Logging — instruments apps/api/src/modules/lead/lead.router.ts with the existing audit infrastructure (getAuditLogger facade), replicating the IFC-281 opportunity-router pattern to close the GDPR Art.......",
       "definitionOfDone": "All 20 lead procedures emit audit entries; delete/convert/bulk ops have before/after snapshots; audit entries queryable via audit API; GDPR compliance verified; tests >=90%",
-      "definitionOfDoneSnapshot": "All 20 lead procedures emit audit entries; delete/convert/bulk ops have before/after snapshots; audit entries queryable via audit API; GDPR compliance verified; tests >=90%",
+      "definitionOfDoneSnapshot": "All lead procedures emit audit entries; delete/convert/bulk ops have before/after snapshots; Audit entries queryable via audit API",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-240/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-21T23:17:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 3,
+        "met": 3,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-242",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Lead Create Form Fixes - BANT Drop, Revenue Mapping, Validation. Fix 3 HIGH issues: (1) BANT fields (Budget, Authority, Need, Timeline) collected in create form but silently dropped on submit - never sent to API [F3]. (2) annualRevenue mapped to estimatedValue - semantic mismatch between company annual revenue and deal estimated value [F4]. (3) Edit form uses 'as any' cast with no client-side Zod validation - no inline field errors [F9]. Fix: Send BANT to API (add to createLeadSchema if needed), map annualRevenue correctly, add Zod resolver to edit form, remove as any.",
       "description": "Lead Create Form Fixes - BANT Drop, Revenue Mapping, Validation. Fix 3 HIGH issues: (1) BANT fields (Budget, Authority, Need, Timeline) collected in create form but silently dropped on submit - never sent to API [F3]. (2) annualRevenue mapped to estimatedValue - semantic mismatch between company annual revenue and deal estimated value [F4]. (3) Edit form uses 'as any' cast with no client-side Zod validation - no inline field errors [F9]. Fix: Send BANT to API (add to createLeadSchema if needed), map annualRevenue correctly, add Zod resolver to edit form, remove as any.",
-      "summary": "BANT fields persisted on create; annualRevenue and estimatedValue are distinct fields; edit form uses zodResolver with inline errors; no 'as any' casts; sourceOther sent to API; tests >=90%",
+      "summary": "IFC-242 promotes lead BANT + annualRevenue to first-class columns (product owner authorized the migration) and fixes edit-form F9. Audit F4 (annualRevenue->estimatedValue conflation) verified non-existent in current code;... BANT fields persisted on create;...",
       "definitionOfDone": "BANT fields persisted on create; annualRevenue and estimatedValue are distinct fields; edit form uses zodResolver with inline errors; no 'as any' casts; sourceOther sent to API; tests >=90%",
-      "definitionOfDoneSnapshot": "BANT fields persisted on create; annualRevenue and estimatedValue are distinct fields; edit form uses zodResolver with inline errors; no 'as any' casts; sourceOther sent to API; tests >=90%",
+      "definitionOfDoneSnapshot": "BANT fields persisted on create; round-trip verified; annualRevenue and estimatedValue are distinct fields; edit form uses Zod validation with inline errors; no 'as any' casts",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-242/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-15T00:35:00.000Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 3,
+        "met": 3,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-247",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
       "description": "Lead Detail Page Tests. Lead detail page (2200+ lines) has ZERO component tests [T1]. Also untested: addNote procedure [T4] and logActivity procedure [T5] added 2026-03-04. Write comprehensive tests: (1) Component render tests for all tabs (Overview, Activity, AI Insights, Lead IQ, Notes, Files, Emails, Tasks). (2) Mutation tests for addNote and logActivity. (3) Error state tests (404, 500, retry). (4) AI insight null-state rendering. (5) Activity feed toggle. Must cover 2026-03-04 wiring fixes.",
-      "summary": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
+      "summary": "IFC-247 Lead Detail Page Tests — 45 tests implemented (20 existing + 25 new). Used capturedCallbacks pattern to exercise useMutation onSuccess/onError handlers. Codex converged to PASS in 4 rounds fixing:... AC-01 Tab Switching:...",
       "definitionOfDone": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
-      "definitionOfDoneSnapshot": "Lead detail page test file exists with >=20 test cases; addNote mutation tested; logActivity mutation tested; error states tested; AI insight null-state tested; coverage >=90% for tested paths",
+      "definitionOfDoneSnapshot": "AC-01 Tab Switching: 7 tab labels render + tab switching + Overview default; AC-02 Notes Tab + addNote mutation: textarea, mutate call, isPending disables button, onSuccess/onError callbacks; AC-03 logActivity mutation:...",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-247/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-29T12:00:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 3,
+        "met": 3,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-248",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Lead List & Create Page Tests. Two major pages with ZERO tests: (1) Lead list page with filtering, sorting, bulk operations, saved views [T2]. (2) Lead create page (1029 lines) with BANT fields, source handling, validation [T3]. Also test: (3) Role-based filtering (ADMIN sees all, others see own) [T7]. (4) Bulk operations UI (score, convert, archive, delete) [T8]. Write component tests covering happy path, error states, and edge cases.",
       "description": "Lead List & Create Page Tests. Two major pages with ZERO tests: (1) Lead list page with filtering, sorting, bulk operations, saved views [T2]. (2) Lead create page (1029 lines) with BANT fields, source handling, validation [T3]. Also test: (3) Role-based filtering (ADMIN sees all, others see own) [T7]. (4) Bulk operations UI (score, convert, archive, delete) [T8]. Write component tests covering happy path, error states, and edge cases.",
-      "summary": "Lead list test file with >=15 cases (filter, sort, bulk ops, role-based); Lead create test file with >=10 cases (BANT, validation, submission); coverage >=90%",
+      "summary": "Test-authoring task — NO production source modified, so Sonar new_coverage (changed production lines) has no exposure; the binding metric is whole-file coverage.... Lead list test file with >=15 cases (filter, sort, bulk ops, role-based);...",
       "definitionOfDone": "Lead list test file with >=15 cases (filter, sort, bulk ops, role-based); Lead create test file with >=10 cases (BANT, validation, submission); coverage >=90%",
       "definitionOfDoneSnapshot": "Lead list test file with >=15 cases (filter, sort, bulk ops, role-based); Lead create test file with >=10 cases (BANT, validation, submission); coverage >=90%",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-248/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-28T20:40:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 3,
+        "met": 3,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-255",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Contact Audit Logging. (1) Zero audit logging in all 14 contact router procedures — no ctx.security.auditLogger calls (R-07). (2) Audit event handler PascalCase keys (ContactCreated/Updated/Deleted) don't match domain dot-notation (contact.created/updated) — 5 event types unmapped (D-06). Violates IFC-098 audit requirement. Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
       "description": "Contact Audit Logging. (1) Zero audit logging in all 14 contact router procedures — no ctx.security.auditLogger calls (R-07). (2) Audit event handler PascalCase keys (ContactCreated/Updated/Deleted) don't match domain dot-notation (contact.created/updated) — 5 event types unmapped (D-06). Violates IFC-098 audit requirement. Audit: docs/audit/contact-detail-wiring-audit.md §15,§18.",
-      "summary": "All contact CRUD procedures emit audit events; event handler maps all 8 contact event types; audit trail for create/update/delete/bulk ops; tests >=90%",
+      "summary": "IFC-255 Contact Audit Logging — two halves. R-07: instruments apps/api/src/modules/contact/contact.router.ts with the existing audit infrastructure (getAuditLogger facade), replicating the merged IFC-240 lead-router pattern to close the GDP......",
       "definitionOfDone": "All contact CRUD procedures emit audit events; event handler maps all 8 contact event types; audit trail for create/update/delete/bulk ops; tests >=90%",
-      "definitionOfDoneSnapshot": "All contact CRUD procedures emit audit events; event handler maps all 8 contact event types; audit trail for create/update/delete/bulk ops; tests >=90%",
+      "definitionOfDoneSnapshot": "All contact CRUD procedures emit audit events; Event handler maps all contact event types; Audit trail for create/update/delete/bulk ops",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-255/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-22T18:30:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 3,
+        "met": 3,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-256",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Contact Detail Hardcoded Tabs — Tickets & Documents. (1) Tickets tab fully hardcoded with 'TKT-1234' and static timestamp (F-02, F-21). ContactWithRelations has no tickets relation. Tab badge hardcoded to 0. (2) Documents tab hardcoded with 2 static PDFs — apiContact.documents data exists in interface but is completely ignored (F-03). Need: wire tickets via TicketService query, wire documents from apiContact.documents or file infrastructure. Audit: docs/audit/contact-detail-wiring-audit.md §5,§9,§16.",
       "description": "Contact Detail Hardcoded Tabs — Tickets & Documents. (1) Tickets tab fully hardcoded with 'TKT-1234' and static timestamp (F-02, F-21). ContactWithRelations has no tickets relation. Tab badge hardcoded to 0. (2) Documents tab hardcoded with 2 static PDFs — apiContact.documents data exists in interface but is completely ignored (F-03). Need: wire tickets via TicketService query, wire documents from apiContact.documents or file infrastructure. Audit: docs/audit/contact-detail-wiring-audit.md §5,§9,§16.",
-      "summary": "Tickets tab shows real data from API (or proper empty state); Documents tab renders apiContact.documents; tab badges dynamic; no hardcoded data; tests >=90%",
+      "summary": "IFC-256 — Contact Detail hardcoded Tickets & Documents tabs replaced with real tRPC/API data (resolves audit findings F-02, F-03, F-21). Backend:... Tickets tab shows real data from API (or proper empty state);...",
       "definitionOfDone": "Tickets tab shows real data from API (or proper empty state); Documents tab renders apiContact.documents; tab badges dynamic; no hardcoded data; tests >=90%",
-      "definitionOfDoneSnapshot": "Tickets tab shows real data from API (or proper empty state); Documents tab renders apiContact.documents; tab badges dynamic; no hardcoded data; tests >=90%",
+      "definitionOfDoneSnapshot": "Tickets tab shows real data from API (or proper empty state); Documents tab renders the contact's real documents; Tab badges dynamic",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-256/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-11T18:00:00.000Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 2,
+        "met": 2,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-257",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Contact Detail Action Button Wiring. 18 buttons without onClick handlers: Email (1133), Log Call (1139), Log Activity submit (1426), Add Deal (1872), Create Ticket (1917), Upload (1958), Add Note (2007, 2214), View Map (1341), Play Recording (969), Download (1039), Reply/React/Add Note/Share activity actions (1076-1099), toolbar buttons (1410/1415/1420). Zero useMutation calls on entire page (F-04, F-05, F-06, F-23). Need: add logActivity mutation, wire compose/call to existing components, wire action buttons. Audit: docs/audit/contact-detail-wiring-audit.md §11,§16.",
       "description": "Contact Detail Action Button Wiring. 18 buttons without onClick handlers: Email (1133), Log Call (1139), Log Activity submit (1426), Add Deal (1872), Create Ticket (1917), Upload (1958), Add Note (2007, 2214), View Map (1341), Play Recording (969), Download (1039), Reply/React/Add Note/Share activity actions (1076-1099), toolbar buttons (1410/1415/1420). Zero useMutation calls on entire page (F-04, F-05, F-06, F-23). Need: add logActivity mutation, wire compose/call to existing components, wire action buttons. Audit: docs/audit/contact-detail-wiring-audit.md §11,§16.",
-      "summary": "Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation; Add Deal navigates to deals/new; activity action buttons functional or removed; tests >=90%",
+      "summary": "IFC-257 — Contact Detail action-button wiring (audit F-04/F-05/F-06/F-23). The 2026-03-05 audit was STALE:... Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation",
       "definitionOfDone": "Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation; Add Deal navigates to deals/new; activity action buttons functional or removed; tests >=90%",
-      "definitionOfDoneSnapshot": "Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation; Add Deal navigates to deals/new; activity action buttons functional or removed; tests >=90%",
+      "definitionOfDoneSnapshot": "Log Activity wired to mutation; Email opens EmailCompose sheet; Add Note wired to addNote mutation",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-257/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-13T02:01:46.000Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 2,
+        "met": 2,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-265",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation NEVER tested in 2878 lines of router tests (T-04). (3) logActivity missing activity type coverage in tests (T-06). (4) getById relations (activities, notes, opportunities, aiInsight) not asserted (T-07). (5) Tab content rendering not verified in component tests (T-08). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
       "description": "Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation NEVER tested in 2878 lines of router tests (T-04). (3) logActivity missing activity type coverage in tests (T-06). (4) getById relations (activities, notes, opportunities, aiInsight) not asserted (T-07). (5) Tab content rendering not verified in component tests (T-08). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
-      "summary": "Contact detail page test file with >=20 tests; router tests for tenant isolation; logActivity type coverage; getById relation assertions; tab content verification; coverage >=90%",
+      "summary": "Compliance-check: PASS — test-only change; no PII/secret/data-retention/migration/auth surface. Findings L? no — test-gap findings T-01/T-04/T-06/T-07/T-08 closed (audit §19 was stale; scoped to genuine gaps).... Contact detail page test file with >=20 tests;...",
       "definitionOfDone": "Contact detail page test file with >=20 tests; router tests for tenant isolation; logActivity type coverage; getById relation assertions; tab content verification; coverage >=90%",
       "definitionOfDoneSnapshot": "Contact detail page test file with >=20 tests; router tests for tenant isolation; logActivity type coverage; getById relation assertions; tab content verification; coverage >=90%",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-265/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-13T15:25:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 4,
+        "met": 4,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-266",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Contact List/Create Page Tests + E2E. (1) Contact list page has ZERO page tests (T-02). (2) Contact create page has ZERO page tests — auth guard gap F-07 would be caught (T-03). (3) Bulk selection (select all, bulk email, bulk export) untested (T-05). (4) Contract tests missing for bulkEmail, bulkExport, bulkDelete (T-09). (5) No E2E Playwright tests for contact CRUD flow (T-10). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
       "description": "Contact List/Create Page Tests + E2E. (1) Contact list page has ZERO page tests (T-02). (2) Contact create page has ZERO page tests — auth guard gap F-07 would be caught (T-03). (3) Bulk selection (select all, bulk email, bulk export) untested (T-05). (4) Contract tests missing for bulkEmail, bulkExport, bulkDelete (T-09). (5) No E2E Playwright tests for contact CRUD flow (T-10). Audit: docs/audit/contact-detail-wiring-audit.md §19.",
-      "summary": "List page test file with >=10 tests; create page test file with auth guard test; bulk operation tests; contract tests for bulk procedures; E2E create-view-edit-delete flow; coverage >=90%",
+      "summary": "Compliance-check: PASS — test-only change; no PII/secret/data-retention/migration/auth-surface change. Findings: audit §19 stale for T-03 (auth already fixed IFC-253) and T-09 (bulk contract tests already present)... List page test file with >=10 tests;...",
       "definitionOfDone": "List page test file with >=10 tests; create page test file with auth guard test; bulk operation tests; contract tests for bulk procedures; E2E create-view-edit-delete flow; coverage >=90%",
       "definitionOfDoneSnapshot": "List page test file with >=10 tests; create page test file with auth guard test; bulk operation tests; contract tests for bulk procedures; E2E create-view-edit-delete flow; coverage >=90%",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-266/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-14T00:00:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 4,
+        "met": 4,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-270",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Account Router Missing Procedures & Update Fix. (1) Update procedure silently drops revenue/employees/industry/parentAccountId fields accepted by schema (B-08). (2) accountListResponseSchema uses 'data' key but router returns 'accounts' — mismatch (B-09). (3) No updateRevenue procedure — domain Account.updateRevenue() unreachable via API (B-10). (4) No updateEmployeeCount procedure (B-11). (5) No categorizeIndustry procedure (B-12). (6) mapAccountToResponse returns raw WebsiteUrl value object instead of string (B-13). Audit: docs/audit/account-detail-wiring-audit.md section 12.",
       "description": "Account Router Missing Procedures & Update Fix. (1) Update procedure silently drops revenue/employees/industry/parentAccountId fields accepted by schema (B-08). (2) accountListResponseSchema uses 'data' key but router returns 'accounts' — mismatch (B-09). (3) No updateRevenue procedure — domain Account.updateRevenue() unreachable via API (B-10). (4) No updateEmployeeCount procedure (B-11). (5) No categorizeIndustry procedure (B-12). (6) mapAccountToResponse returns raw WebsiteUrl value object instead of string (B-13). Audit: docs/audit/account-detail-wiring-audit.md section 12.",
-      "summary": "Update procedure passes all accepted fields to service; schema key matches router response; updateRevenue/updateEmployeeCount/categorizeIndustry procedures added; WebsiteUrl serialized to string; tests >=90%",
+      "summary": "IFC-270 Account Router Missing Procedures & Update Fix — remediates docs/audit/account-detail-wiring-audit.md section 12 (B-08..B-13) on a worktree branched from origin/main@c8065198b. B-08:... Update procedure passes all accepted fields to service;...",
       "definitionOfDone": "Update procedure passes all accepted fields to service; schema key matches router response; updateRevenue/updateEmployeeCount/categorizeIndustry procedures added; WebsiteUrl serialized to string; tests >=90%",
-      "definitionOfDoneSnapshot": "Update procedure passes all accepted fields to service; schema key matches router response; updateRevenue/updateEmployeeCount/categorizeIndustry procedures added; WebsiteUrl serialized to string; tests >=90%",
+      "definitionOfDoneSnapshot": "Update procedure passes all accepted fields to service; Schema key matches router response; updateRevenue/updateEmployeeCount/categorizeIndustry procedures added",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-270/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-13T01:30:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 2,
+        "met": 2,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-271",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Account Domain Model Fixes. (1) No AccountDeletedEvent — deletions produce no domain event; audit handler has mapping but event never emitted (D-01). (2) Account.toJSON() omits tenantId (B-15). (3) updateAccountInfo return value (Result) discarded by service — silent validation failures (B-16). (4) user!.userId non-null assertion in router (B-06). Audit: docs/audit/account-detail-wiring-audit.md sections 11-13.",
       "description": "Account Domain Model Fixes. (1) No AccountDeletedEvent — deletions produce no domain event; audit handler has mapping but event never emitted (D-01). (2) Account.toJSON() omits tenantId (B-15). (3) updateAccountInfo return value (Result) discarded by service — silent validation failures (B-16). (4) user!.userId non-null assertion in router (B-06). Audit: docs/audit/account-detail-wiring-audit.md sections 11-13.",
-      "summary": "AccountDeletedEvent defined and emitted on delete; toJSON includes tenantId; updateAccountInfo Result checked and errors propagated; non-null assertion replaced with proper null check; tests >=90%",
+      "summary": "IFC-271 Account Domain Model Fixes — remediates four findings from docs/audit/account-detail-wiring-audit.md sections 11-13 (D-01, B-15, B-16, B-06) on a worktree branched from origin/main@d8d154230. D-01 (AccountDeletedEvent):......",
       "definitionOfDone": "AccountDeletedEvent defined and emitted on delete; toJSON includes tenantId; updateAccountInfo Result checked and errors propagated; non-null assertion replaced with proper null check; tests >=90%",
-      "definitionOfDoneSnapshot": "AccountDeletedEvent defined and emitted on delete; toJSON includes tenantId; updateAccountInfo Result checked and errors propagated; non-null assertion replaced with proper null check; tests >=90%",
+      "definitionOfDoneSnapshot": "AccountDeletedEvent defined and emitted on delete; toJSON includes tenantId; updateAccountInfo Result checked and errors propagated",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-271/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-10T22:30:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 4,
+        "met": 4,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-273",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Account List Page Type Safety & Filter Enums. (1) serverStats cast to any loses type safety (L-01, AccountsPageClient.tsx:154). (2) Double unsafe cast for withOpportunities stat (L-02, AccountsPageClient.tsx:206-208). (3) AccountTier type and getAccountTier() duplicated locally in AccountCard.tsx instead of using domain enum (L-04). (4) Contact status filter uses hardcoded inline option values instead of ContactStatus domain enum (F-09, AccountContactsList.tsx:81-83). (5) Opportunity stage filter uses hardcoded inline strings instead of OpportunityStage domain enum (F-12, AccountOpportunitiesList.tsx:109-114). Audit: docs/audit/account-detail-wiring-audit.md sections 4-5, 15.",
       "description": "Account List Page Type Safety & Filter Enums. (1) serverStats cast to any loses type safety (L-01, AccountsPageClient.tsx:154). (2) Double unsafe cast for withOpportunities stat (L-02, AccountsPageClient.tsx:206-208). (3) AccountTier type and getAccountTier() duplicated locally in AccountCard.tsx instead of using domain enum (L-04). (4) Contact status filter uses hardcoded inline option values instead of ContactStatus domain enum (F-09, AccountContactsList.tsx:81-83). (5) Opportunity stage filter uses hardcoded inline strings instead of OpportunityStage domain enum (F-12, AccountOpportunitiesList.tsx:109-114). Audit: docs/audit/account-detail-wiring-audit.md sections 4-5, 15.",
-      "summary": "Stats query properly typed without any cast; AccountTier uses domain enum; filter dropdowns derive options from domain enums; tests >=90%",
+      "summary": "Compliance-check: PASS — no PII/secret/data-retention surface; pure type-safety + DRY-enum + UI filter change, no schema/migration/auth touch. Work is committed (95251e308, 0eccc846a) and pushed to origin/feat/ifc-273;......",
       "definitionOfDone": "Stats query properly typed without any cast; AccountTier uses domain enum; filter dropdowns derive options from domain enums; tests >=90%",
       "definitionOfDoneSnapshot": "Stats query properly typed without any cast; AccountTier uses domain enum; filter dropdowns derive options from domain enums; tests >=90%",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-273/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-13T10:50:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 3,
+        "met": 3,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-280",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Deal Detail Action Buttons — Wire 14 No-Ops. (1) EntityHeader 6 no-ops all with onClick: () => {} (F-08): Won → moveStage CLOSED_WON with success dialog; Lost → moveStage CLOSED_LOST with LossReasonModal (reuse from list page); Edit → navigate to edit form or open inline edit; Clone → duplicate mutation; Archive → set archived status; Delete → AlertDialog confirmation + delete mutation. (2) Stakeholder/Product/File 8 no-ops (F-09): Edit stakeholders → open edit dialog; Account icons → navigate to /accounts/[id] and website; Contact icons → mailto: and tel: links; Add Product → product association dialog; File upload → upload mutation; File links → presigned URL download. Depends on IFC-278 (real data needed for mutations). Audit: docs/audit/deal-detail-wiring-audit.md section 2.",
       "description": "Deal Detail Action Buttons — Wire 14 No-Ops. (1) EntityHeader 6 no-ops all with onClick: () => {} (F-08): Won → moveStage CLOSED_WON with success dialog; Lost → moveStage CLOSED_LOST with LossReasonModal (reuse from list page); Edit → navigate to edit form or open inline edit; Clone → duplicate mutation; Archive → set archived status; Delete → AlertDialog confirmation + delete mutation. (2) Stakeholder/Product/File 8 no-ops (F-09): Edit stakeholders → open edit dialog; Account icons → navigate to /accounts/[id] and website; Contact icons → mailto: and tel: links; Add Product → product association dialog; File upload → upload mutation; File links → presigned URL download. Depends on IFC-278 (real data needed for mutations). Audit: docs/audit/deal-detail-wiring-audit.md section 2.",
-      "summary": "Won/Lost buttons trigger moveStage mutations with confirmation; Edit navigates to edit; Clone/Archive/Delete functional with confirmations; stakeholder/product/file buttons all wired; tests >=90%",
+      "summary": "IFC-280 Deal Detail Action Buttons — wires F-08/F-09 from docs/audit/deal-detail-wiring-audit.md section 2 on a worktree from origin/main@cb974e527. STALE-AUDIT CORRECTION:... Won/Lost buttons trigger moveStage mutations with confirmation;...",
       "definitionOfDone": "Won/Lost buttons trigger moveStage mutations with confirmation; Edit navigates to edit; Clone/Archive/Delete functional with confirmations; stakeholder/product/file buttons all wired; tests >=90%",
-      "definitionOfDoneSnapshot": "Won/Lost buttons trigger moveStage mutations with confirmation; Edit navigates to edit; Clone/Archive/Delete functional with confirmations; stakeholder/product/file buttons all wired; tests >=90%",
+      "definitionOfDoneSnapshot": "Won/Lost buttons trigger moveStage mutations with confirmation; Edit navigates to edit (inline dialog); Delete functional with confirmation",
       "dependencies": [
         "IFC-278"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-280/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-13T14:50:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 2,
+        "met": 2,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-282",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Deal Router Correctness Fixes. (1) Name updates silently dropped — service has TODO 'Add updateName method' (B-04, OpportunityService.ts:313). Add updateName to domain and wire in service. (2) data.probability?.value unwrapping may be undefined if percentageSchema returns plain number (B-05, router:460). Verify and fix. (3) opportunityListResponseSchema key 'data' vs router key 'opportunities' mismatch (B-07, validators:88 vs router:437). (4) throwOpportunityCreateError maps VALIDATION_ERROR to NOT_FOUND — wrong HTTP semantic (B-09, router:55). (5) validateStageDeactivation throws plain Error → 500 instead of BAD_REQUEST (B-10, validators:214). (6) mapOpportunityToResponse drops closedAt field (B-11, mappers.ts:88-108). (7) CLOSED_LOST no-reason passes Zod but fails at service (B-12, router:322). Audit: docs/audit/deal-detail-wiring-audit.md section 6.",
       "description": "Deal Router Correctness Fixes. (1) Name updates silently dropped — service has TODO 'Add updateName method' (B-04, OpportunityService.ts:313). Add updateName to domain and wire in service. (2) data.probability?.value unwrapping may be undefined if percentageSchema returns plain number (B-05, router:460). Verify and fix. (3) opportunityListResponseSchema key 'data' vs router key 'opportunities' mismatch (B-07, validators:88 vs router:437). (4) throwOpportunityCreateError maps VALIDATION_ERROR to NOT_FOUND — wrong HTTP semantic (B-09, router:55). (5) validateStageDeactivation throws plain Error → 500 instead of BAD_REQUEST (B-10, validators:214). (6) mapOpportunityToResponse drops closedAt field (B-11, mappers.ts:88-108). (7) CLOSED_LOST no-reason passes Zod but fails at service (B-12, router:322). Audit: docs/audit/deal-detail-wiring-audit.md section 6.",
-      "summary": "Name updates persisted; probability correctly unwrapped; schema key matches router; VALIDATION_ERROR → BAD_REQUEST; validateStageDeactivation throws TRPCError; closedAt included in response; CLOSED_LOST reason properly validated;...",
+      "summary": "IFC-282 Deal Router Correctness Fixes — remediates docs/audit/deal-detail-wiring-audit.md section 6 (B-04, B-05, B-07, B-09, B-10, B-11, B-12;... Name updates persisted; probability correctly unwrapped (verified); schema key matches router response",
       "definitionOfDone": "Name updates persisted; probability correctly unwrapped; schema key matches router; VALIDATION_ERROR → BAD_REQUEST; validateStageDeactivation throws TRPCError; closedAt included in response; CLOSED_LOST reason properly validated; tests >=90%",
-      "definitionOfDoneSnapshot": "Name updates persisted; probability correctly unwrapped; schema key matches router; VALIDATION_ERROR → BAD_REQUEST; validateStageDeactivation throws TRPCError; closedAt included in response; CLOSED_LOST reason properly validated;...",
+      "definitionOfDoneSnapshot": "Name updates persisted; probability correctly unwrapped (verified); schema key matches router response",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-282/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-13T10:00:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 2,
+        "met": 2,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-287",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Core CRM",
       "title": "Deal Filter Wiring & Type Safety. (1) DealFilters state (filters) captured in page but NEVER passed to trpc.opportunity.list.useQuery — ownerId and dateRange selections have no effect on kanban view data (F-10, deals/(list)/page.tsx:214,226). (2) 'More Filters' button has no onClick handler (F-11, DealFilters.tsx). (3) Owner filter only has 2 hardcoded options: 'All Deals' and 'My Deals' — no dynamic user list (F-12). (4) transformDeals uses loose Record<string,unknown> casting at API boundary instead of typed response (F-19, types.ts:102-119). Wire filters to API query params; add server-side owner filter with user list; type-safe API response handling. Audit: docs/audit/deal-detail-wiring-audit.md sections 3, 8.",
       "description": "Deal Filter Wiring & Type Safety. (1) DealFilters state (filters) captured in page but NEVER passed to trpc.opportunity.list.useQuery — ownerId and dateRange selections have no effect on kanban view data (F-10, deals/(list)/page.tsx:214,226). (2) 'More Filters' button has no onClick handler (F-11, DealFilters.tsx). (3) Owner filter only has 2 hardcoded options: 'All Deals' and 'My Deals' — no dynamic user list (F-12). (4) transformDeals uses loose Record<string,unknown> casting at API boundary instead of typed response (F-19, types.ts:102-119). Wire filters to API query params; add server-side owner filter with user list; type-safe API response handling. Audit: docs/audit/deal-detail-wiring-audit.md sections 3, 8.",
-      "summary": "DealFilters ownerId/dateRange passed to API query; More Filters opens filter panel; owner dropdown shows team members from API; transformDeals properly typed; tests >=90%",
+      "summary": "IFC-287 Deal Filter Wiring & Type Safety — wires F-10/F-11/F-12 (audit §3) + F-19 (audit §8) of docs/audit/deal-detail-wiring-audit.md on a worktree from origin/main@62e3bca6a. F-10:... F-10 — DealFilters state passed to opportunity.list query; F-11...",
       "definitionOfDone": "DealFilters ownerId/dateRange passed to API query; More Filters opens filter panel; owner dropdown shows team members from API; transformDeals properly typed; tests >=90%",
-      "definitionOfDoneSnapshot": "DealFilters ownerId/dateRange passed to API query; More Filters opens filter panel; owner dropdown shows team members from API; transformDeals properly typed; tests >=90%",
+      "definitionOfDoneSnapshot": "F-10 — DealFilters state passed to opportunity.list query; F-11 — 'More Filters' button has a handler; F-12 — Owner filter populated from real users",
       "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-287/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-14T22:30:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 2,
+        "met": 2,
         "missed": 0
       }
     },
     {
       "taskId": "PG-180",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Support Pages",
       "title": "Help Article Admin List Page",
       "description": "Help Article Admin List Page",
-      "summary": "response under 200ms, Lighthouse >=90; admin page at /settings/help-center/articles with article list, status badges, category filters, search, CRUD actions",
+      "summary": "Compliance-check invoked inline: all 4 mandatory validations PASS (typecheck, tests, lint, build), scoped Istanbul coverage 97.26/95.06/91.66/96.96 (aggregate) exceeds 90/80/90/90 thresholds, icon policy PASS (Material Symbols only, zero fo... Articles listed;...",
       "definitionOfDone": "Response <200ms, Lighthouse >=90; admin page at /settings/help-center/articles with article list, status badges, category filters, search, CRUD actions; verified by: pnpm test",
-      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse >=90; admin page at /settings/help-center/articles with article list, status badges, category filters, search, CRUD actions",
+      "definitionOfDoneSnapshot": "Articles listed; Filters working; CRUD actions functional",
       "dependencies": [
         "IFC-299"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-180/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-04-19T22:50:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
-        "missed": 0
+        "total": 5,
+        "met": 4,
+        "missed": 1
       }
     },
     {
       "taskId": "IFC-301",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Infrastructure",
       "title": "Rich Text Editor Integration — Tiptap",
       "description": "Rich Text Editor Integration — Tiptap",
-      "summary": "Tiptap editor as reusable @intelliflow/ui component; headings/bold/italic/lists/links/images/code blocks; exports structured sections; coverage >=90%",
+      "summary": "Pure UI package (STOA-Domain trivially satisfied — no backend/domain/schema/migration).... Tiptap editor as reusable @intelliflow/ui component; headings/bold/italic/lists/links/images/code blocks; exports structured sections; coverage >=90%",
       "definitionOfDone": "Tiptap editor as reusable @intelliflow/ui component; headings/bold/italic/lists/links/images/code blocks; exports structured sections; coverage >=90%; verified by: pnpm test",
       "definitionOfDoneSnapshot": "Tiptap editor as reusable @intelliflow/ui component; headings/bold/italic/lists/links/images/code blocks; exports structured sections; coverage >=90%",
       "dependencies": [
         "PG-180"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-301/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-15T14:40:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 4,
+        "met": 4,
         "missed": 0
       }
     },
     {
       "taskId": "PG-181",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Support Pages",
       "title": "Help Article Editor Page",
       "description": "Help Article Editor Page",
-      "summary": "response under 200ms, Lighthouse >=90; editor at /settings/help-center/articles/[id]/edit and /new; Tiptap editor, metadata fields, preview, save draft, publish",
+      "summary": "Help Article Editor at /settings/help-center/articles/new and /[id]/edit; shared ArticleEditor client island; pure Tiptap<->DB section mapper; tenant-scoped getById router query. nav_wiring_confirmed:... response under 200ms, Lighthouse >=90;...",
       "definitionOfDone": "Response <200ms, Lighthouse >=90; editor at /settings/help-center/articles/[id]/edit and /new; Tiptap editor, metadata fields, preview, save draft, publish; verified by: pnpm test",
       "definitionOfDoneSnapshot": "response under 200ms, Lighthouse >=90; editor at /settings/help-center/articles/[id]/edit and /new; Tiptap editor, metadata fields, preview, save draft, publish",
       "dependencies": [
@@ -1481,92 +1973,92 @@
         "IFC-301"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-181/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-26T18:00:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 4,
+        "met": 4,
         "missed": 0
       }
     },
     {
       "taskId": "IFC-302",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Support",
       "title": "Refactor Help Article Page to Use Database",
       "description": "Refactor Help Article Page to Use Database",
-      "summary": "Replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC queries; same UI, DB data source; static dependency removed; all tests passing",
+      "summary": "Pure consumer-side refactor: public [article]/page.tsx reads the DB via trpc.helpArticle.getBySlug/getByCategory/getRelated; only API change is an additive sectionCount on getByCategory.......",
       "definitionOfDone": "Replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC queries; same UI, DB data source; static dependency removed; all tests passing; verified by: pnpm test",
       "definitionOfDoneSnapshot": "Replace static DEFAULT_HELP_ARTICLES in [article]/page.tsx with tRPC queries; same UI, DB data source; static dependency removed; all tests passing",
       "dependencies": [
         "IFC-299"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-302/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-27T20:20:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 4,
+        "met": 4,
         "missed": 0
       }
     },
     {
       "taskId": "PG-187",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Settings",
       "title": "Module Settings - Reports (/analytics/report-settings)",
       "description": "Module Settings - Reports (/analytics/report-settings)",
-      "summary": "Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90",
+      "summary": "Honest record of deviations from plan: (a) Frontend test count 44 vs. plan target 54... Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90",
       "definitionOfDone": "Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
       "definitionOfDoneSnapshot": "Report settings page at /analytics/report-settings with default range, currency, scheduled delivery config; uses in-module settings sidebar pattern; Lighthouse >=90",
       "dependencies": [
         "PG-178"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-187/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-04-19T23:45:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 4,
+        "met": 4,
         "missed": 0
       }
     },
     {
       "taskId": "PG-188",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Settings",
       "title": "Module Settings - Billing (/billing/settings)",
       "description": "Module Settings - Billing (/billing/settings)",
@@ -1577,15 +2069,15 @@
         "PG-178"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-188/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-29T02:00:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 7,
+        "passed": 7,
         "failed": 0,
         "failingNames": []
       },
@@ -1598,54 +2090,650 @@
     {
       "taskId": "PG-189",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Settings",
       "title": "Module Settings - Appointments (/calendar/calendar-settings)",
       "description": "Module Settings - Appointments (/calendar/calendar-settings)",
-      "summary": "Appointment settings page at /calendar/calendar-settings with duration, buffer, calendar integration config; uses in-module settings sidebar pattern; Lighthouse >=90",
+      "summary": "Compliance check (Phase 4.6): self-compliance review executed — (1) Design-system conformance: all UI uses shadcn/@intelliflow/ui primitives, Material Symbols Outlined only, no forbidden icon imports, no inline <svg> icons; (2) Architecture:......",
       "definitionOfDone": "Appointment settings page at /calendar/calendar-settings with duration, buffer, calendar integration config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
       "definitionOfDoneSnapshot": "Appointment settings page at /calendar/calendar-settings with duration, buffer, calendar integration config; uses in-module settings sidebar pattern; Lighthouse >=90",
       "dependencies": [
         "PG-178"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-189/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-04-19T15:30:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
-        "missed": 0
+        "total": 4,
+        "met": 3,
+        "missed": 1
       }
     },
     {
       "taskId": "PG-190",
       "sprint": 18,
-      "status": "Backlog",
+      "status": "Completed",
       "section": "Settings",
       "title": "Module Settings - Cases (/cases/case-settings)",
       "description": "Module Settings - Cases (/cases/case-settings)",
-      "summary": "Case settings page at /cases/case-settings with case prefix, default priority, auto-assign config; uses in-module settings sidebar pattern; Lighthouse >=90",
+      "summary": "v2-audit-fix (2026-04-20) addresses all 9 findings from external audit. CHANGES: (1) added case-automation.ts runtime consumer, wired `restrictTagCreationToAdmins` via assertCanCreateTag — closes finding #2 (silent unenforced promise);......",
       "definitionOfDone": "Case settings page at /cases/case-settings with case prefix, default priority, auto-assign config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
       "definitionOfDoneSnapshot": "Case settings page at /cases/case-settings with case prefix, default priority, auto-assign config; uses in-module settings sidebar pattern; Lighthouse >=90",
       "dependencies": [
         "PG-178"
       ],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-190/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-04-20T20:16:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 2,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "PG-191",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Settings",
+      "title": "Module Settings - Tasks (/tasks/task-settings)",
+      "description": "Module Settings - Tasks (/tasks/task-settings)",
+      "summary": "Delta/refactor: replaced the /tasks/task-settings stub with a real per-tenant settings form (due-date offset, reminder defaults, task templates) on the PG-178 singleton module-settings pattern.......",
+      "definitionOfDone": "Task settings page at /tasks/task-settings with due-date offset, reminder, templates config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Task settings page at /tasks/task-settings with due-date offset, reminder, templates config; uses in-module settings sidebar pattern; Lighthouse >=90",
+      "dependencies": [
+        "PG-178"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-191/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-07-14T22:40:05Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-309",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Compliance",
+      "title": "Server-side terms acceptance — persist immutable TermsAcceptance audit record (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) via tRPC legal.acceptTerms mutation and legal.getAcceptance query; wire Confirm UI on /terms for authenticated users only; replaces client-only localStorage tracker removed from PG-051 as a misleading legal-compliance signal.",
+      "description": "Server-side terms acceptance — persist immutable TermsAcceptance audit record (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) via tRPC legal.acceptTerms mutation and legal.getAcceptance query; wire Confirm UI on /terms for authenticated users only; replaces client-only localStorage tracker removed from PG-051 as a misleading legal-compliance signal.",
+      "summary": "TermsAcceptance Prisma model (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) with no UPDATE/DELETE paths; tRPC legal.acceptTerms mutation idempotent per (userId, termsVersion);...",
+      "definitionOfDone": "TermsAcceptance Prisma model (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) with no UPDATE/DELETE paths; tRPC legal.acceptTerms mutation idempotent per (userId, termsVersion); legal.getAcceptance query returns latest record per user; RLS policy scoped by tenantId; Confirm UI on /terms (authenticated users only) calls mutation and hides when current version already accepted; DB migration reviewed; >=90% scoped coverage; all 4 validations pass",
+      "definitionOfDoneSnapshot": "TermsAcceptance Prisma model (tenantId, userId, termsVersion, acceptedAt, ipAddress, userAgent, route) with no UPDATE/DELETE paths; tRPC legal.acceptTerms mutation idempotent per (userId, termsVersion);...",
+      "dependencies": [
+        "PG-051",
+        "IFC-058",
+        "IFC-124"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-309/attestation.json",
+        "verdict": "COMPLETE",
         "timestamp": null,
-        "sprintFolder": null
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 12,
+        "passed": 12,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-310",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.",
+      "description": "Duplicate-detection runtime for contacts + accounts (PG-182/PG-183 follow-up) — new DuplicateDetectionService (or per-entity services sharing a rule-evaluator) that reads {Contact,Account}DuplicateRule rows at create/update time and either flags or auto-merges/auto-links records; consumes autoMergeOnExactEmail + autoLinkContactsByDomain + notifyOnDuplicate + aiDuplicateDetection + aiIndustryInference + aiEnrichment toggles from the respective AutomationSetting table; transactional merge combines rows (activities, notes, opportunities, tags, aiInsight) with conflict resolution.",
+      "summary": "IFC-310 iteration-4 — residual concerns from the second audit round fully resolved. No items deferred. R1 (AC-007 AI branch unreachable at runtime): RESOLVED.... Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time;...",
+      "definitionOfDone": "Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time; contacts respect autoMergeOnExactEmail/notifyOnDuplicate/aiDuplicateDetection; accounts respect autoLinkContactsByDomain/notifyOnDuplicate; auto-merge/auto-link operations are transactional and preserve the oldest record's id while folding in newer relations; new contact_duplicate and account_duplicate notification types added to NOTIFICATION_TYPES; aiDuplicateDetection uses pgvector similarity on the entity's embeddings; >=90% scoped coverage; all 4 validations pass",
+      "definitionOfDoneSnapshot": "Rule evaluator runs {Contact,Account}DuplicateRule checks at create+update time; contacts respect autoMergeOnExactEmail/notifyOnDuplicate/aiDuplicateDetection; accounts respect autoLinkContactsByDomain/notifyOnDuplicate;...",
+      "dependencies": [
+        "PG-182",
+        "PG-183"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-310/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-04-21T22:00:00.000Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 4,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "IFC-311",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Reassign endpoints + notifyOnOwnerChange wiring for contacts + accounts (PG-182/PG-183 follow-up) — add contact.reassign/contact.bulkReassign and account.reassign/account.bulkReassign tRPC procedures; on owner change, invoke the notifyContactReassignment or notifyAccountReassignment helper (both already shipped — PG-182 in contact-automation.ts, PG-183 in account-automation.ts) with the bound createNotification from notifications.router.ts; contact_reassigned is already in NOTIFICATION_TYPES — add account_reassigned alongside it.",
+      "description": "Reassign endpoints + notifyOnOwnerChange wiring for contacts + accounts (PG-182/PG-183 follow-up) — add contact.reassign/contact.bulkReassign and account.reassign/account.bulkReassign tRPC procedures; on owner change, invoke the notifyContactReassignment or notifyAccountReassignment helper (both already shipped — PG-182 in contact-automation.ts, PG-183 in account-automation.ts) with the bound createNotification from notifications.router.ts; contact_reassigned is already in NOTIFICATION_TYPES — add account_reassigned alongside it.",
+      "summary": "IFC-311 wires the two notifyOnOwnerChange Cat-1 toggles that PG-182 + PG-183 shipped but left dormant.... contact.reassign + contact.bulkReassign mutations; account.reassign + account.bulkReassign mutations; All validate caller permission",
+      "definitionOfDone": "contact.reassign + contact.bulkReassign and account.reassign + account.bulkReassign mutations; all validate caller permission; each reads the matching AutomationSetting.notifyOnOwnerChange flag and invokes the notify*Reassignment helper when true; emit contact_reassigned + account_reassigned notifications to both old and new owner; idempotent when new owner == current owner; >=90% scoped coverage",
+      "definitionOfDoneSnapshot": "contact.reassign + contact.bulkReassign mutations; account.reassign + account.bulkReassign mutations; All validate caller permission",
+      "dependencies": [
+        "PG-182",
+        "PG-183"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-311/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-04-20T23:55:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-196",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Settings",
+      "title": "Module Settings - Account Tiers (/accounts/(list)/account-tiers)",
+      "description": "Module Settings - Account Tiers (/accounts/(list)/account-tiers)",
+      "summary": "Implementation, tests, lint, typecheck and builds are done and committed on feat/pg-196-account-tiers. Not COMPLETE because three gates need the owner or the runner:......",
+      "definitionOfDone": "Account tiers at /accounts/(list)/account-tiers: tenant-configurable revenue-band tiers seeded from the canonical ENTERPRISE/MID_MARKET/SMB/STARTUP vocabulary (tier names, annual-revenue thresholds, colour, benefits matrix, default tier, upgrade/downgrade rules); AccountCard, the Account Settings hierarchy tab and the sidebar tier links all read that one tenant configuration, and the dead /accounts?tier= sidebar filters are wired (owner ruling A, 2026-10-07). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate tier names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in account-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Tenant-configurable revenue-band tiers at /accounts/account-tiers (names, thresholds, colour, benefits matrix, default tier, up/down rules); AccountCard, Account Settings hierarchy tab and sidebar tier links read one tenant configuration;...",
+      "dependencies": [
+        "PG-178",
+        "PG-183"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-196/attestation.json",
+        "verdict": "NEEDS_HUMAN",
+        "timestamp": "2026-10-07T08:08:11Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 10,
+        "passed": 10,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 2,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "PG-197",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Settings",
+      "title": "Module Settings - Territory Mapping (/accounts/(list)/territory-mapping)",
+      "description": "Module Settings - Territory Mapping (/accounts/(list)/territory-mapping)",
+      "summary": "Commits: dd0f8e37b (db), 5a5e47d62 (domain), e5e11db77 (validators), 0d7d54584 (application/adapters), e6c2dd8af (api), 2e0b9bb7b (web account pages), db68d3b8e (web territory page), fe8fbe482 (docs), 41ffa3253 (lighthouse harness), f687fd9......",
+      "definitionOfDone": "Territory mapping at /accounts/(list)/territory-mapping (geographic territory rules by region/country/postcode, assignment strategies round-robin/load-balance/manual, overlap resolution priority, default territory). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate (region, country) pairs; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in account-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Territory mapping at /accounts/(list)/territory-mapping (rules by region/country/postcode, round-robin/load-balance/manual, priority overlap, default territory); PageHeader + bento grid; Canonical EmptyState (entity + phase=passive)",
+      "dependencies": [
+        "PG-178",
+        "PG-183"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-197/attestation.json",
+        "verdict": "NEEDS_HUMAN",
+        "timestamp": "2026-10-07T10:33:01Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 12,
+        "passed": 12,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 1,
+        "met": 0,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "PG-198",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Settings",
+      "title": "Module Settings - Approval Policies (/agent-approvals/approval-policies)",
+      "description": "Module Settings - Approval Policies (/agent-approvals/approval-policies)",
+      "summary": "Verdict COMPLETE since 2026-10-19 (see the authenticated Lighthouse note at the end). Originally NEEDS_HUMAN: two gates were open, and neither can be closed by this lane: (1) Gates 13 and 14 Lighthouse BLOCK (rc=1):......",
+      "definitionOfDone": "Approval policies at /agent-approvals/approval-policies (policy rules: auto-approve thresholds, required reviewers, escalation paths, approval timeout SLAs, per-agent overrides). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate (agent, action) pairs; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in agent-approval automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Approval policies page at /agent-approvals/approval-policies (thresholds, reviewers, escalation, timeout SLAs, per-agent overrides); Backend: tenant-scoped approvalPolicies router, resolver, real executor, escalation sweep;...",
+      "dependencies": [
+        "PG-178",
+        "PG-152",
+        "PG-192"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-198/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-10-19T19:25:43Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-199",
+      "sprint": 18,
+      "status": "In Progress",
+      "section": "Settings",
+      "title": "Module Settings - Model Config (/agent-approvals/model-config)",
+      "description": "Module Settings - Model Config (/agent-approvals/model-config)",
+      "summary": "Verdict NEEDS_HUMAN, not COMPLETE. Open items: (1) Lighthouse authenticated run. There are no LHCI_TEST_* credentials for a non-production Supabase, and logging in to production is not allowed.... Model config at /agent-approvals/model-config:...",
+      "definitionOfDone": "Model config at /agent-approvals/model-config (per-agent model selection, temperature, max tokens, fallback chain, per-agent cost ceilings). Respect Never-Downgrade rule for model IDs (memory/feedback_never_downgrade_without_approval.md). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate agent keys; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in agent-approval automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Model config at /agent-approvals/model-config: per-agent (per-purpose, owner Q1) model selection, temperature, max tokens, fallback chain, cost ceilings; Never-Downgrade for model ids; PageHeader + bento grid",
+      "dependencies": [
+        "PG-178",
+        "PG-152",
+        "PG-192"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-199/attestation.json",
+        "verdict": "NEEDS_HUMAN",
+        "timestamp": "2026-10-21T01:41:24Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 4,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "PG-200",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Settings",
+      "title": "Module Settings - Report Templates (/analytics/report-templates)",
+      "description": "Module Settings - Report Templates (/analytics/report-templates)",
+      "summary": "PG-200 Module Settings - Report Templates. Real /analytics/report-templates page replacing the stub. ReportTemplate model with 5 tRPC procedures, Zod schemas, Prisma migration with RLS, Next.js server component + client content component.......",
+      "definitionOfDone": "Report templates at /analytics/report-templates (saveable report layouts: filter set + selected columns + chart type + default period + sharing scope). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate template names within scope; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in analytics automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Page /analytics/report-templates renders real data (no stub); 5 tRPC procedures: list, get, create, update, delete; Zod schemas in @intelliflow/validators",
+      "dependencies": [
+        "PG-178",
+        "PG-187"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-200/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-29T16:30:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 9,
+        "passed": 9,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-201",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Settings",
+      "title": "Module Settings - Scheduled Reports (/analytics/scheduled-reports)",
+      "description": "Module Settings - Scheduled Reports (/analytics/scheduled-reports)",
+      "summary": "VERDICT NEEDS_HUMAN. Open: (1) Lighthouse KPI met:false (Path A scored the error page; an authenticated run needs a non-production Supabase); no waiver approver is recorded. (2) Gate 4b:... Scheduled reports at /analytics/scheduled-reports:...",
+      "definitionOfDone": "Scheduled reports at /analytics/scheduled-reports (cron schedules, recipient lists, delivery format PDF/CSV/email-body, template ref). IFC-308 BullMQ cron READS these schedules - schema must match job expectations. MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate schedule names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in analytics automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Scheduled reports at /analytics/scheduled-reports: cron schedules, recipient lists, delivery format PDF/CSV/email-body, template ref; IFC-308 BullMQ cron READS these schedules - schema must match job expectations; PageHeader + bento grid;...",
+      "dependencies": [
+        "PG-178",
+        "PG-187"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-201/attestation.json",
+        "verdict": "NEEDS_HUMAN",
+        "timestamp": "2026-10-16T12:11:06.484Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 6,
+        "met": 5,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "PG-202",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Settings",
+      "title": "Module Settings - Availability (/calendar/availability)",
+      "description": "Module Settings - Availability (/calendar/availability)",
+      "summary": "PRISMA MIGRATION: packages/db/prisma/migrations/20261017130000_availability (Class A, additive; independent SQL review APPROVE; sha256 frozen). Merged, NOT applied:... Availability at /calendar/availability:...",
+      "definitionOfDone": "Availability at /calendar/availability (working hours per weekday, timezones, buffers before/after, max daily bookings, unavailable date ranges). TIMEZONE-REFACTOR-AWARE: store UTC in DB, display via useTimezoneContext() (memory/project_timezone_refactor.md). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for overlapping time ranges per weekday; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in calendar automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Availability at /calendar/availability: working hours per weekday, timezone, buffers before/after, max daily bookings, unavailable date ranges; TIMEZONE-REFACTOR-AWARE: instants UTC, wall-clock rules in the firm zone (ADR-081);...",
+      "dependencies": [
+        "PG-178",
+        "PG-189"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-202/attestation.json",
+        "verdict": "NEEDS_HUMAN",
+        "timestamp": "2026-10-18T11:44:36Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 8,
+        "met": 6,
+        "missed": 2
+      }
+    },
+    {
+      "taskId": "PG-203",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Settings",
+      "title": "Module Settings - Event Types (/calendar/event-types)",
+      "description": "Module Settings - Event Types (/calendar/event-types)",
+      "summary": "D12 close-out of PG-203 (PR 1 #1003 merged, PR 2 #1056). Verdict COMPLETE rests on the owner's risk acceptance of 2026-10-29 (manual_verification): Talysson accepted #1010, #1015 and #1063 as known gaps to fix before the first real customer;......",
+      "definitionOfDone": "Event types at /calendar/event-types (meeting type definitions: duration, color, default description, booking link slug, required form fields, location type). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate booking slugs; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in calendar automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Event types at /calendar/event-types: duration, color, description, booking slug, required fields, location type; Playbook:...",
+      "dependencies": [
+        "PG-178",
+        "PG-189"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-203/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-10-29T14:28:36Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 7,
+        "met": 7,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-204",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Settings",
+      "title": "Module Settings - Case Types (/cases/case-types)",
+      "description": "Module Settings - Case Types (/cases/case-types)",
+      "summary": "PRISMA MIGRATION: packages/db/prisma/migrations/20261013120000_case_types (Class A, additive: two new tables, nullable cases.caseTypeId and case_tasks.position, cases FK added NOT VALID then validated in the same transaction, RLS).......",
+      "definitionOfDone": "Case types at /cases/case-types (taxonomy: category, default priority, default SLA, required fields, resolution workflow). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in case automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Case types at /cases/case-types (category, default priority, default SLA, required fields, resolution workflow) - owner ruling Q1=A/Q2=Yes; PageHeader + bento grid; canonical EmptyState (entity + phase=passive)",
+      "dependencies": [
+        "PG-178",
+        "PG-190"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-204/attestation.json",
+        "verdict": "NEEDS_HUMAN",
+        "timestamp": "2026-10-13T14:24:16.629Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 14,
+        "passed": 14,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 3,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "PG-205",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Settings",
+      "title": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
+      "description": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
+      "summary": "PRISMA MIGRATIONS (L13, LOUD): packages/db/prisma/migrations/20261017120000_contact_types and 20261017120100_contacts_type_idx (CREATE INDEX CONCURRENTLY). Class A, additive.......",
+      "definitionOfDone": "Contact types at /contacts/(list)/contact-types (taxonomy: tenant contact types seeded from the six existing CONTACT_TYPES per owner ruling 2026-10-17 - organisations are Accounts; required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in contact-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Contact types at /contacts/(list)/contact-types (tenant types seeded from the six CONTACT_TYPES, owner ruling 1; required fields per type, default fields, default labels); PageHeader + bento grid; canonical EmptyState passive; system CTAs;...",
+      "dependencies": [
+        "PG-178",
+        "PG-182"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-205/attestation.json",
+        "verdict": "NEEDS_HUMAN",
+        "timestamp": "2026-10-18T15:49:26Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 3,
+        "missed": 1
+      }
+    },
+    {
+      "taskId": "PG-206",
+      "sprint": 18,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Module Settings - Storage Policies (/documents/(list)/storage-policies)",
+      "description": "Module Settings - Storage Policies (/documents/(list)/storage-policies)",
+      "summary": "PG-206 Module Settings - Storage Policies. Real /documents/storage-policies page replacing the coming-soon stub, wired to the existing documentSettings.retentionPolicies sub-router (getAll/updateAll/resetToDefaults) over the DocumentRetenti......",
+      "definitionOfDone": "Storage policies at /documents/(list)/storage-policies (per-tenant retention periods by doc type, archival rules, cold storage migration thresholds, legal hold exceptions). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate (docType, retentionPeriod) pairs; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in document-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "/documents/storage-policies renders real retention-policy data (no stub); Backend surface confirmed (no new router/model needed); module-settings-playbook: PageHeader + bento + canonical EmptyState + $transaction destructive writes",
+      "dependencies": [
+        "PG-178",
+        "PG-186"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-206/attestation.json",
+        "verdict": "PARTIAL",
+        "timestamp": "2026-07-24T00:00:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-207",
+      "sprint": 18,
+      "status": "In Progress",
+      "section": "Settings",
+      "title": "Module Settings - Email (/email/email-settings)",
+      "description": "Module Settings - Email (/email/email-settings)",
+      "summary": "PRISMA MIGRATIONS (LOUD, Class A, manual production apply with prisma migrate deploy BEFORE the API ships):......",
+      "definitionOfDone": "Email settings at /email/email-settings (SMTP/IMAP config per tenant, signatures per user/org, tracking pixel on/off, reply-to override, bounce handling rules). Secrets MUST go through server-side tRPC - never in client bundle. MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate signature names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in email automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Email settings at /email/email-settings (SMTP/IMAP per user + company fallback, Gmail/Microsoft OAuth, reply-to, tracking toggles, bounce rules, suppression list); Signatures per user/org at /email/signatures; Zod duplicate-name refine;...",
+      "dependencies": [
+        "PG-178",
+        "PG-182"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-207/attestation.json",
+        "verdict": "NEEDS_HUMAN",
+        "timestamp": "2026-10-22T11:56:35Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 5,
+        "met": 5,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-208",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Settings",
+      "title": "Module Settings - Task Automation (/tasks/(list)/automation)",
+      "description": "Module Settings - Task Automation (/tasks/(list)/automation)",
+      "summary": "Complete at 416b2a253 (merge of origin/main 5f11ac307 plus the rule-row layout fix and the IA router count). Merged tree: typecheck and lint pass;... Rule builder at /tasks/(list)/automation: trigger types entity event / schedule / webhook; Actions:...",
+      "definitionOfDone": "Task automation at /tasks/(list)/automation (rule builder: when X happens create/assign task; trigger types = entity event/schedule/webhook; actions = create task, assign by round-robin, notify). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate (trigger, action) pairs; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in task automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Rule builder at /tasks/(list)/automation: trigger types entity event / schedule / webhook; Actions: create task, assign by round-robin, notify; PageHeader + bento grid",
+      "dependencies": [
+        "PG-178",
+        "PG-191"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-208/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-10-22T02:30:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 6,
+        "met": 6,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "PG-209",
+      "sprint": 18,
+      "status": "Backlog",
+      "section": "Settings",
+      "title": "Module Settings - Task Types (/tasks/(list)/task-types)",
+      "description": "Module Settings - Task Types (/tasks/(list)/task-types)",
+      "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /tasks/(list)/task-types renders; Taxonomy: category, default duration, default priority, reminder defaults implemented; PageHeader+bento grid;...",
+      "definitionOfDone": "Task types at /tasks/(list)/task-types (taxonomy: category, default duration, default priority, reminder defaults). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in task automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Route /tasks/(list)/task-types renders; Taxonomy: category, default duration, default priority, reminder defaults implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate type names;...",
+      "dependencies": [
+        "PG-178",
+        "PG-191"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/PG-209/attestation.json",
+        "verdict": "INCOMPLETE",
+        "timestamp": "2026-07-25T17:18:29Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
         "total": 0,
@@ -1660,34 +2748,221 @@
       }
     },
     {
-      "taskId": "PG-191",
+      "taskId": "INFRA-TF-001",
       "sprint": 18,
-      "status": "Backlog",
-      "section": "Settings",
-      "title": "Module Settings - Tasks (/tasks/task-settings)",
-      "description": "Module Settings - Tasks (/tasks/task-settings)",
-      "summary": "Task settings page at /tasks/task-settings with due-date offset, reminder, templates config; uses in-module settings sidebar pattern; Lighthouse >=90",
-      "definitionOfDone": "Task settings page at /tasks/task-settings with due-date offset, reminder, templates config; uses in-module settings sidebar pattern; Lighthouse >=90; verified by: pnpm test",
-      "definitionOfDoneSnapshot": "Task settings page at /tasks/task-settings with due-date offset, reminder, templates config; uses in-module settings sidebar pattern; Lighthouse >=90",
-      "dependencies": [
-        "PG-178"
-      ],
+      "status": "Completed",
+      "section": "Infrastructure",
+      "title": "Fix Terraform provider-schema drift (Railway + Vercel modules) so `terraform validate` is green. Migrate railway_deployment->railway_service source_image, default_environment object, and Vercel env->vercel_project_environment_variable / vercel_webhook / edge-config to the current provider schemas.",
+      "description": "Fix Terraform provider-schema drift (Railway + Vercel modules) so `terraform validate` is green. Migrate railway_deployment->railway_service source_image, default_environment object, and Vercel env->vercel_project_environment_variable / vercel_webhook / edge-config to the current provider schemas.",
+      "summary": "EVIDENCE BACKFILL (not a re-implementation). INFRA-TF-001 shipped via the Terraform provider-schema migration PRs (#286 terraform SSOT, #315/#316/#312/#319 -> #320 prod credential modeling + worker fixes, #314 -> #354 api/ai-worker under TF......",
+      "definitionOfDone": "terraform validate exits 0 in terraform.yml; railway + vercel modules match the pinned provider schemas; fmt clean.",
+      "definitionOfDoneSnapshot": "terraform validate exits 0 in terraform.yml; railway + vercel modules match the pinned provider schemas; fmt clean",
+      "dependencies": [],
       "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/INFRA-TF-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-07-24T12:00:00Z",
+        "sprintFolder": 18
       },
       "validationSummary": {
-        "total": 0,
-        "passed": 0,
+        "total": 4,
+        "passed": 4,
         "failed": 0,
         "failingNames": []
       },
       "kpiSummary": {
-        "total": 0,
-        "met": 0,
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "INFRA-TF-002",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Infrastructure",
+      "title": "Provision the three apps/workers (events-worker, ingestion-worker, notifications-worker) as first-class Railway services in Terraform. Closes GH #230/#259/#270 (workers built/tested but never deployed).",
+      "description": "Provision the three apps/workers (events-worker, ingestion-worker, notifications-worker) as first-class Railway services in Terraform. Closes GH #230/#259/#270 (workers built/tested but never deployed).",
+      "summary": "EVIDENCE BACKFILL (not a re-implementation). INFRA-TF-002 provisioned the three workers as first-class Railway services in Terraform (depends on INFRA-TF-001) and was recorded Completed by the CSV status-flip #596 (8f8467813).......",
+      "definitionOfDone": "Workers present in variables.tf railway_services + covered by the module for_each; a reproducible Railway deploy path exists for each.",
+      "definitionOfDoneSnapshot": "Workers present in variables.tf railway_services + covered by the module for_each; a reproducible Railway deploy path exists for each",
+      "dependencies": [
+        "INFRA-TF-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/INFRA-TF-002/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-07-24T12:00:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "INFRA-TF-003",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Infrastructure",
+      "title": "Replace the Supabase null_resource + curl scaffolding with the official supabase/supabase Terraform provider so Supabase auth/storage/extensions config is genuinely drift-detected.",
+      "description": "Replace the Supabase null_resource + curl scaffolding with the official supabase/supabase Terraform provider so Supabase auth/storage/extensions config is genuinely drift-detected.",
+      "summary": "EVIDENCE BACKFILL (not a re-implementation). INFRA-TF-003 replaced the Supabase null_resource+curl scaffolding with the official provider (depends on INFRA-TF-001) and was recorded Completed by the CSV status-flip #596 (8f8467813).......",
+      "definitionOfDone": "Supabase module uses the official provider; null_resource/curl removed; terraform plan shows real Supabase resources with drift detection.",
+      "definitionOfDoneSnapshot": "Supabase module uses the official provider; null_resource/curl removed; terraform plan shows real Supabase resources with drift detection",
+      "dependencies": [
+        "INFRA-TF-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/INFRA-TF-003/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-07-24T12:00:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "INFRA-TF-004",
+      "sprint": 18,
+      "status": "In Progress",
+      "section": "Infrastructure",
+      "title": "Environment tfvars (dev/staging/prod) + remote state backend + a monitoring Terraform module (Grafana/Prometheus/Loki/Tempo as observability-as-code) + wire ai-worker OpenTelemetry (IFC-032).",
+      "description": "Environment tfvars (dev/staging/prod) + remote state backend + a monitoring Terraform module (Grafana/Prometheus/Loki/Tempo as observability-as-code) + wire ai-worker OpenTelemetry (IFC-032).",
+      "summary": "EVIDENCE BACKFILL (not a re-implementation). INFRA-TF-004 (env tfvars + remote state + monitoring module + ai-worker OTel) shipped primarily via #286 and was recorded Completed by the CSV status-flip #596 (8f8467813).... tfvars exist for all 3 envs;...",
+      "definitionOfDone": "tfvars exist for all 3 envs; remote backend bootstrapped; monitoring module provisions the stack; OTel endpoint is a TF output; ai-worker emits traces.",
+      "definitionOfDoneSnapshot": "tfvars exist for all 3 envs; remote backend bootstrapped; monitoring module provisions the stack; OTel endpoint is a TF output; ai-worker emits traces",
+      "dependencies": [
+        "INFRA-TF-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/INFRA-TF-004/attestation.json",
+        "verdict": "PARTIAL",
+        "timestamp": "2026-07-24T12:00:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 2,
+        "passed": 2,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "INFRA-TF-005",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Infrastructure",
+      "title": "CI + import + runbooks: add the three workers to build-images.yml and railway-deploy.yml; terraform import existing live Vercel/Railway/Supabase infra into state; update railway-deploy / workers / observability runbooks.",
+      "description": "CI + import + runbooks: add the three workers to build-images.yml and railway-deploy.yml; terraform import existing live Vercel/Railway/Supabase infra into state; update railway-deploy / workers / observability runbooks.",
+      "summary": "EVIDENCE BACKFILL (not a re-implementation). INFRA-TF-005 (CI worker coverage + terraform import of live infra + runbooks; depends on INFRA-TF-002/004) was recorded Completed by the CSV status-flip #596 (8f8467813).......",
+      "definitionOfDone": "build-images + railway-deploy cover the 3 workers; live infra imported into TF state (plan shows no spurious recreate); runbooks updated.",
+      "definitionOfDoneSnapshot": "build-images + railway-deploy cover the 3 workers; live infra imported into TF state (plan shows no spurious recreate); runbooks updated",
+      "dependencies": [
+        "INFRA-TF-002",
+        "INFRA-TF-004"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/INFRA-TF-005/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-07-24T12:00:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 2,
+        "met": 2,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-314",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "Integration",
+      "title": "CRM-to-portal delivery & billing sync (Leangency 14-day flow). On deal-won, provision the portal tenant + push initial delivery state, then mirror billing as it changes. Adds SetupInstalment model + DeliveryTier enum + tenantSlug on Opportunity; Stripe invoice create/finalize for the 3x GBP167 Setup fee (D0/7/14); StripeSubscription persistence on customer.subscription.* webhooks; a PortalDeliverySync service that POSTs /api/internal/tenants then /api/internal/delivery via the domain_events outbox; extends CloseDealWonUseCase; registers a deal_won_enriched handler in events-worker; adds a daily portal-delivery-sweep BullMQ job in ai-worker; and verifies the Stripe webhook signature (handleSubscriptionWebhook moved off tRPC).",
+      "description": "CRM-to-portal delivery & billing sync (Leangency 14-day flow). On deal-won, provision the portal tenant + push initial delivery state, then mirror billing as it changes. Adds SetupInstalment model + DeliveryTier enum + tenantSlug on Opportunity; Stripe invoice create/finalize for the 3x GBP167 Setup fee (D0/7/14); StripeSubscription persistence on customer.subscription.* webhooks; a PortalDeliverySync service that POSTs /api/internal/tenants then /api/internal/delivery via the domain_events outbox; extends CloseDealWonUseCase; registers a deal_won_enriched handler in events-worker; adds a daily portal-delivery-sweep BullMQ job in ai-worker; and verifies the Stripe webhook signature (handleSubscriptionWebhook moved off tRPC).",
+      "summary": "IFC-314 — N+1 Query-Budget Detector + cross-context N+1 remediation, governed by ADR-053 (Accepted). DETECTOR (packages/db/src/query-budget/): AsyncLocalStorage request-scoped store (context.ts:... All 56 findings fixed-or-documented;...",
+      "definitionOfDone": "SetupInstalment + DeliveryTier + tenantSlug on Opportunity (migration applied); Stripe adapter createInvoiceItem/createInvoice/finalizeInvoice; StripeSubscription persisted on customer.subscription.*; PortalDeliverySync POSTs provision + delivery via the domain_events outbox; CloseDealWonUseCase creates 3 instalments + finalises instalment-1 + enqueues the push; events-worker handles opportunity.deal_won_enriched; ai-worker runs a daily portal-delivery-sweep job; handleSubscriptionWebhook verifies the Stripe signature; artifacts: packages/db, packages/adapters, packages/application, apps/api, apps/workers/events-worker, apps/ai-worker; targets: >=90% scoped coverage, idempotent push; verified by: pnpm typecheck/test/lint/build + pre-ship",
+      "definitionOfDoneSnapshot": "All 56 findings fixed-or-documented; Each fixed N+1 has a query-count regression test proving non-linear growth; Detector suite passes (counter, isolation, over/under budget, background no-throw, missing-context no-crash)",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/IFC-314/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-05-31T18:00:00Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 4,
+        "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "AUTOMATION-003",
+      "sprint": 18,
+      "status": "Completed",
+      "section": "AI Foundation",
+      "title": "Standardize attestation provenance fields (exec-attestation emits; schema declares; exec-preflight gate enforces; orchestrator DoD requires)",
+      "description": "Standardize attestation provenance fields (exec-attestation emits; schema declares; exec-preflight gate enforces; orchestrator DoD requires)",
+      "summary": "Standardize attestation provenance. POST-attestation gate (check-attestation-provenance.mjs) cross-checks plan_path on disk for the plan-reviewer marker via the shared plan-reviewer-marker.mjs (one definition;......",
+      "definitionOfDone": "exec-attestation always writes a provenance block (spec_session_consensus, plan_reviewer_verdict, plan_reviewer_agent, plan_reviewer_marker, spec_path, plan_path); attestation Zod+JSON schema declares those 6 fields as OPTIONAL with zero new corpus failures; new tools/scripts/exec-preflight/check-attestation-provenance.mjs BLOCKs on missing or non-affirmative provenance and is wired into the exec preflight gate list; orchestrator.md DoD requires the fields; vitest covers the gate; ADR-068 documents the decision; verified by the gate vitest test passing and validate-schemas failure count unchanged from baseline",
+      "definitionOfDoneSnapshot": "exec-attestation always writes a provenance block (spec_session_consensus, plan_reviewer_verdict, plan_reviewer_agent, plan_reviewer_marker, spec_path, plan_path);...",
+      "dependencies": [],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-18/attestations/AUTOMATION-003/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-06-30T14:27:31Z",
+        "sprintFolder": 18
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
         "missed": 0
       }
     }

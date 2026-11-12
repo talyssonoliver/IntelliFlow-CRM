@@ -1,7 +1,7 @@
 {
   "sprint": "sprint-14",
   "name": "Sprint 14 - AI Intelligence & Dashboard",
-  "generated_at": "2026-04-11T16:48:01.958Z",
+  "generated_at": "2026-11-12T14:31:17.521Z",
   "summary_source": "specify",
   "task_summary": {
     "total": 52,
@@ -1925,8 +1925,8 @@
       "sprint": 14,
       "status": "Completed",
       "section": "Notifications",
-      "title": "Wire actual Email Outbound Adapter (Resolves R-018)",
-      "description": "Wire actual Email Outbound Adapter (Resolves R-018)",
+      "title": "Wire actual Email Outbound Adapter (Resolves R-018) [2026-06-09 audit: shipped as Completed but was MOCK in prod — container.ts had no resend branch; actually wired to Resend via #363/#360 + activated on Railway api service]",
+      "description": "Wire actual Email Outbound Adapter (Resolves R-018) [2026-06-09 audit: shipped as Completed but was MOCK in prod — container.ts had no resend branch; actually wired to Resend via #363/#360 + activated on Railway api service]",
       "summary": "IFC-223: Wired email outbound adapter. Created RealNotificationServiceAdapter bridging NotificationServicePort to EmailServiceAdapter. Hardened SendGridProvider with API key validation (SG.... Email outbound connects to real SMTP/API provider",
       "definitionOfDone": "Email outbound connects to real SMTP/API provider; verified by: pnpm test",
       "definitionOfDoneSnapshot": "Email outbound connects to real SMTP/API provider",

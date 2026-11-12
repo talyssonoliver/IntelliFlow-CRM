@@ -1,13 +1,13 @@
 # Current State Report
-_Generated: 2026-10-30T20:52:09.764Z_
+_Generated: 2026-11-12T14:31:18.046Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 6 continuous tasks.
-- Overall progress: 441/626 tasks completed (70.45%), 167 backlog, 0 blocked, 18 in progress.
-- Numbered sprint progress alone: 436/620 tasks completed or attested inside numbered sprints.
+- Overall progress: 442/627 tasks completed (70.49%), 167 backlog, 0 blocked, 18 in progress.
+- Numbered sprint progress alone: 437/621 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
 - Ready-to-start work: IFC-056 (Sprint 18), IFC-234 (Sprint 18), PG-206 (Sprint 18), PG-209 (Sprint 18), SALES-001 (Sprint 18).
 - Active focus band: Sprints 15, 18, 19, 20 carry the earliest remaining backlog.
@@ -15,7 +15,7 @@ _Generated: 2026-10-30T20:52:09.764Z_
 ## Source Health
 
 - `.specify` sprint summary coverage is complete for the numbered sprint set.
-- Attested but not completed in CSV: ENV-008-AI (In Progress), EP-001-AI (In Progress), IFC-027 (In Progress), IFC-056 (Backlog), IFC-074 (In Progress), IFC-097 (In Progress), PG-014 (In Progress), SALES-001 (Backlog), IFC-116 (In Progress), IFC-117 (In Progress), IFC-142 (In Progress), IFC-151 (In Progress), IFC-234 (Backlog), IFC-304 (In Progress), PG-199 (In Progress), PG-206 (Backlog), PG-207 (In Progress), PG-209 (Backlog), INFRA-TF-004 (In Progress), ENG-OPS-002 (In Progress), ENG-OPS-002.R03 (Backlog), ENG-OPS-002.R16 (Backlog).
+- Attested but not completed in CSV: ENV-008-AI (In Progress), EP-001-AI (In Progress), IFC-027 (In Progress), IFC-056 (Backlog), IFC-074 (In Progress), IFC-097 (In Progress), PG-014 (In Progress), SALES-001 (Backlog), IFC-116 (In Progress), IFC-117 (In Progress), IFC-142 (In Progress), IFC-151 (In Progress), IFC-234 (Backlog), IFC-304 (In Progress), PG-199 (In Progress), PG-206 (Backlog), PG-207 (In Progress), PG-209 (Backlog), INFRA-TF-004 (In Progress), ENG-OPS-002 (In Progress), ENG-OPS-002.R16 (Backlog).
 - Sprint mismatches (attestation in different sprint than CSV Target Sprint): EP-001-AI (CSV sprint 18, attested in sprint 0), IFC-056 (CSV sprint 18, attested in sprint 9), IFC-097 (CSV sprint 18, attested in sprint 9), PG-014 (CSV sprint 18, attested in sprint 12), SALES-001 (CSV sprint 18, attested in sprint 1), IFC-116 (CSV sprint 18, attested in sprint 9), IFC-142 (CSV sprint 18, attested in sprint 8), IFC-151 (CSV sprint 18, attested in sprint 6).
 
 ## Continuous Work
@@ -287,9 +287,9 @@ _Generated: 2026-10-30T20:52:09.764Z_
 
 ## Sprint 19 - Sprint 19
 
-- Status: 12/23 completed, 8 backlog, 0 blocked, 3 in progress.
+- Status: 13/24 completed, 8 backlog, 0 blocked, 3 in progress.
 - Primary focus areas: Engineering Operations (8), Compliance (5), Core CRM (4).
-- Evidence coverage: 12/12 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 13/13 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
 - **IFC-033** — PHASE-005: Load Testing with k6. Reopened by #795 (the July run targeted localhost). On owner rulings of 2026-10-22 (no staging API/DB exists) the k6 run targeted the production API in a dedicated load-test tenant, sized down to cap the per-lead AI scoring cost.......
@@ -303,7 +303,7 @@ _Generated: 2026-10-30T20:52:09.764Z_
 - **ENG-OPS-002** — Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan). Verifiable baseline of S1-18 delivered state; All required artifacts produced and reproducible; Failures registered, not suppressed
 - **AUTOMATION-004** — Task-contract JSON schema + dispatch-binding enforcement (ADR-072). 20-field JSON Schema at tools/scripts/orchestration/schemas/task-contract.schema.json; runtime validator rejecting missing/wrong-type fields + duplicate agentLeaseId; verify-dispatch-binding.ts CLI guard (4-way binding:...
 - **IFC-034** — PHASE-001: Gate 3 Review - £3000 Investment. Scale decision with modern stack validated
-- **ENG-OPS-002.R03** — Remediation R03 [Critical/STALE-001+002]: stale-doc cleanup — fix CLAUDE.md sprint/task-count anchor and regenerate/deprecate sprint-18 _summary.json. CLAUDE.md sprint/task-count anchor corrected + points to SESSION_CONTEXT.md
+- **ENG-OPS-002.R13** — Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests. Skips blocked by lint unless issue-linked; existing 21 reconciled
 
 ## Sprint 20 - Sprint 20
 

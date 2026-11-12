@@ -1,14 +1,14 @@
 {
   "sprint": "sprint-8",
   "name": "Sprint 8 - Risk Management",
-  "generated_at": "2026-04-11T16:48:01.958Z",
+  "generated_at": "2026-11-12T14:31:17.521Z",
   "summary_source": "specify",
   "task_summary": {
-    "total": 9,
-    "completed": 9,
+    "total": 8,
+    "completed": 8,
     "backlog": 0,
     "blocked": 0,
-    "attested_completed": 9
+    "attested_completed": 8
   },
   "context": "Primary focus areas: AI Intelligence (4), Risk Mgmt (2), Core CRM (1).",
   "section_summary": [
@@ -26,12 +26,6 @@
     },
     {
       "section": "Core CRM",
-      "total": 1,
-      "completed": 1,
-      "open": 0
-    },
-    {
-      "section": "Operations",
       "total": 1,
       "completed": 1,
       "open": 0
@@ -141,38 +135,6 @@
       }
     },
     {
-      "taskId": "IFC-142",
-      "sprint": 8,
-      "status": "Completed",
-      "section": "Operations",
-      "title": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
-      "description": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
-      "summary": "Task completed and verified SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored",
-      "definitionOfDone": "SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored; targets: >=10%, >=99%, <15 min",
-      "definitionOfDoneSnapshot": "SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored",
-      "dependencies": [
-        "ENV-008-AI"
-      ],
-      "attestation": {
-        "exists": true,
-        "path": ".specify/sprints/sprint-8/attestations/IFC-142/attestation.json",
-        "verdict": "COMPLETE",
-        "timestamp": "2026-02-17T19:33:21.847Z",
-        "sprintFolder": 8
-      },
-      "validationSummary": {
-        "total": 4,
-        "passed": 4,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 0,
-        "met": 0,
-        "missed": 0
-      }
-    },
-    {
       "taskId": "IFC-118",
       "sprint": 8,
       "status": "Completed",
@@ -191,6 +153,39 @@
         "path": ".specify/sprints/sprint-8/attestations/IFC-118/attestation.json",
         "verdict": "COMPLETE",
         "timestamp": "2026-02-17T19:33:21.834Z",
+        "sprintFolder": 8
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-094",
+      "sprint": 8,
+      "status": "Completed",
+      "section": "Core CRM",
+      "title": "Documents Management - Upload & Sign",
+      "description": "Documents Management - Upload & Sign",
+      "summary": "Task completed and verified Contracts signed electronically, preview inline",
+      "definitionOfDone": "Contracts signed electronically, preview inline; artifacts: e-signature-test.pdf, context_ack.json",
+      "definitionOfDoneSnapshot": "Contracts signed electronically, preview inline",
+      "dependencies": [
+        "IFC-090",
+        "IFC-106"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-8/attestations/IFC-094/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-17T19:33:21.811Z",
         "sprintFolder": 8
       },
       "validationSummary": {
@@ -322,38 +317,6 @@
         "path": ".specify/sprints/sprint-8/attestations/IFC-118/attestation.json",
         "verdict": "COMPLETE",
         "timestamp": "2026-02-17T19:33:21.834Z",
-        "sprintFolder": 8
-      },
-      "validationSummary": {
-        "total": 4,
-        "passed": 4,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 0,
-        "met": 0,
-        "missed": 0
-      }
-    },
-    {
-      "taskId": "IFC-142",
-      "sprint": 8,
-      "status": "Completed",
-      "section": "Operations",
-      "title": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
-      "description": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
-      "summary": "Task completed and verified SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored",
-      "definitionOfDone": "SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored; targets: >=10%, >=99%, <15 min",
-      "definitionOfDoneSnapshot": "SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored",
-      "dependencies": [
-        "ENV-008-AI"
-      ],
-      "attestation": {
-        "exists": true,
-        "path": ".specify/sprints/sprint-8/attestations/IFC-142/attestation.json",
-        "verdict": "COMPLETE",
-        "timestamp": "2026-02-17T19:33:21.847Z",
         "sprintFolder": 8
       },
       "validationSummary": {

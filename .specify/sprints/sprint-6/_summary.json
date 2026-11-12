@@ -1,14 +1,14 @@
 {
   "sprint": "sprint-6",
   "name": "Sprint 6",
-  "generated_at": "2026-04-11T16:48:01.958Z",
+  "generated_at": "2026-11-12T14:31:17.521Z",
   "summary_source": "specify",
   "task_summary": {
-    "total": 39,
-    "completed": 39,
+    "total": 37,
+    "completed": 37,
     "backlog": 0,
     "blocked": 0,
-    "attested_completed": 39
+    "attested_completed": 37
   },
   "context": "Primary focus areas: Core CRM (8), MVP Week 1 (7), Intelligence (5).",
   "section_summary": [
@@ -50,8 +50,8 @@
     },
     {
       "section": "AI Insights",
-      "total": 2,
-      "completed": 2,
+      "total": 1,
+      "completed": 1,
       "open": 0
     },
     {
@@ -80,12 +80,6 @@
     },
     {
       "section": "Investment Gate",
-      "total": 1,
-      "completed": 1,
-      "open": 0
-    },
-    {
-      "section": "Platform",
       "total": 1,
       "completed": 1,
       "open": 0
@@ -128,72 +122,6 @@
         "path": ".specify/sprints/sprint-6/attestations/IFC-014/attestation.json",
         "verdict": "COMPLETE",
         "timestamp": "2025-12-28T12:00:00.000Z",
-        "sprintFolder": 6
-      },
-      "validationSummary": {
-        "total": 4,
-        "passed": 4,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 5,
-        "met": 5,
-        "missed": 0
-      }
-    },
-    {
-      "taskId": "IFC-117",
-      "sprint": 6,
-      "status": "Completed",
-      "section": "AI Insights",
-      "title": "Monitor AI models for drift, latency, hallucination and ROI",
-      "description": "Monitor AI models for drift, latency, hallucination and ROI",
-      "summary": "AI model monitoring for drift, latency, hallucination, ROI; ChainMonitor wraps scoring.chain.ts via withMonitoring(); Prometheus /metrics endpoint requires Bearer token auth Metrics collected for AI models; dashboards show drift/hallucination;...",
-      "definitionOfDone": "Metrics collected for AI models; dashboards show drift/hallucination; alerts configured; targets: >=5%; AI metrics must be collected by actual code paths and pushed to dashboards",
-      "definitionOfDoneSnapshot": "Metrics collected for AI models; dashboards show drift/hallucination; alerts configured; AI metrics must be collected by actual code paths and pushed to dashboards",
-      "dependencies": [
-        "IFC-005",
-        "AUTOMATION-002"
-      ],
-      "attestation": {
-        "exists": true,
-        "path": ".specify/sprints/sprint-6/attestations/IFC-117/attestation.json",
-        "verdict": "COMPLETE",
-        "timestamp": "2026-02-19T21:23:00.000Z",
-        "sprintFolder": 6
-      },
-      "validationSummary": {
-        "total": 4,
-        "passed": 4,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 6,
-        "met": 6,
-        "missed": 0
-      }
-    },
-    {
-      "taskId": "IFC-151",
-      "sprint": 6,
-      "status": "Completed",
-      "section": "Platform",
-      "title": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
-      "description": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
-      "summary": "{\"framework\":{\"type\":\"DLQ Triage and Monitoring\",\"scope\":\"Complete operational framework for event consumer failures\",\"coverage\":[\"Real-time monitoring via Prometheus metrics\",\"Alert configuration for DLQ depth, drain success, retry success......",
-      "definitionOfDone": "Consumer SDK supports retries/backoff; DLQ storage/triage workflow; idempotent handlers; poison-message handling; metrics and alerts; chaos tests; artifacts: dlq-triage.md, context_ack.json; targets: >=95%, >=90%, <30 min",
-      "definitionOfDoneSnapshot": "Consumer SDK supports retries/backoff; DLQ storage/triage workflow; idempotent handlers; poison-message handling; metrics and alerts; chaos tests",
-      "dependencies": [
-        "IFC-150",
-        "ENV-008-AI"
-      ],
-      "attestation": {
-        "exists": true,
-        "path": ".specify/sprints/sprint-6/attestations/IFC-151/attestation.json",
-        "verdict": "COMPLETE",
-        "timestamp": "2025-12-29T09:15:00Z",
         "sprintFolder": 6
       },
       "validationSummary": {
@@ -271,6 +199,70 @@
       "kpiSummary": {
         "total": 4,
         "met": 4,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-020",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Intelligence",
+      "title": "PHASE-011: LangChain Pipeline Design",
+      "description": "PHASE-011: LangChain Pipeline Design",
+      "summary": "LangChain pipeline design completed with modular architecture supporting lead scoring, email generation, and conversation memory via Zep integration. LangChain pipeline architecture designed; Extensible chain pattern implemented; Cost tracking integrated",
+      "definitionOfDone": "Modular AI pipeline with memory (Zep), tools defined; artifacts: ai-architecture.md, langchain-flow-diagram.mermaid, context_ack.json; RetrievalService must return actual pgvector search results, not null fallback to FTS",
+      "definitionOfDoneSnapshot": "LangChain pipeline architecture designed; Extensible chain pattern implemented; Cost tracking integrated",
+      "dependencies": [
+        "IFC-019"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-020/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-31T22:30:00Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 6,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "IFC-025",
+      "sprint": 6,
+      "status": "Completed",
+      "section": "Intelligence",
+      "title": "PHASE-011: A/B Testing Framework",
+      "description": "PHASE-011: A/B Testing Framework",
+      "summary": "Hexagonal architecture: domain constants -> validators -> application service -> API router -> UI; All experiment schemas derive from domain EXPERIMENT_STATUSES/TYPES constants; Statistical methods:... AI vs manual scoring comparison; Statistical analysis;...",
+      "definitionOfDone": "AI vs manual scoring comparison, statistical analysis; artifacts: ab-test-config.json, statistical-analysis.ipynb, experiment-dashboard.png",
+      "definitionOfDoneSnapshot": "AI vs manual scoring comparison; Statistical analysis; ab-test-config.json artifact",
+      "dependencies": [
+        "IFC-022"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-6/attestations/IFC-025/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-02-22T20:26:00.000Z",
+        "sprintFolder": 6
+      },
+      "validationSummary": {
+        "total": 4,
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
         "missed": 0
       }
     }
@@ -619,7 +611,7 @@
       "title": "PHASE-011: CrewAI Agent Framework",
       "description": "PHASE-011: CrewAI Agent Framework",
       "summary": "Lead qualifier, email writer, follow-up agents",
-      "definitionOfDone": "Lead qualifier, email writer, follow-up agents; artifacts: crew-config.yaml, agent-interaction-logs.json, orchestration.test.ts; verified by: pnpm test",
+      "definitionOfDone": "Lead qualifier, email writer, follow-up agents; artifacts: crew-config.yaml, agent-interaction-logs.json, qualification/email-writer/followup agent tests; verified by: pnpm test",
       "definitionOfDoneSnapshot": "Lead qualifier, email writer, follow-up agents",
       "dependencies": [
         "IFC-020"
@@ -878,7 +870,7 @@
       "section": "Governance",
       "title": "ADR Registry & Compliance Reporting",
       "description": "ADR Registry & Compliance Reporting",
-      "summary": "ADR template already existed at docs/architecture/adr/template.md Existing ADRs were inventoried and registered in the index Compliance checklists aligned with existing GDPR checklist format ISO 42001 checklist builds on existing gap an......",
+      "summary": "ADR template already existed at docs/architecture/adr/000-template.md Existing ADRs were inventoried and registered in the index Compliance checklists aligned with existing GDPR checklist format ISO 42001 checklist builds on existing gap an......",
       "definitionOfDone": "ADR repo active, compliance docs ready; artifacts: adr-index.md, compliance-dashboard-mockup.md, context_ack.json",
       "definitionOfDoneSnapshot": "ADR repo active, compliance docs ready",
       "dependencies": [
@@ -901,39 +893,6 @@
       "kpiSummary": {
         "total": 2,
         "met": 2,
-        "missed": 0
-      }
-    },
-    {
-      "taskId": "IFC-117",
-      "sprint": 6,
-      "status": "Completed",
-      "section": "AI Insights",
-      "title": "Monitor AI models for drift, latency, hallucination and ROI",
-      "description": "Monitor AI models for drift, latency, hallucination and ROI",
-      "summary": "AI model monitoring for drift, latency, hallucination, ROI; ChainMonitor wraps scoring.chain.ts via withMonitoring(); Prometheus /metrics endpoint requires Bearer token auth Metrics collected for AI models; dashboards show drift/hallucination;...",
-      "definitionOfDone": "Metrics collected for AI models; dashboards show drift/hallucination; alerts configured; targets: >=5%; AI metrics must be collected by actual code paths and pushed to dashboards",
-      "definitionOfDoneSnapshot": "Metrics collected for AI models; dashboards show drift/hallucination; alerts configured; AI metrics must be collected by actual code paths and pushed to dashboards",
-      "dependencies": [
-        "IFC-005",
-        "AUTOMATION-002"
-      ],
-      "attestation": {
-        "exists": true,
-        "path": ".specify/sprints/sprint-6/attestations/IFC-117/attestation.json",
-        "verdict": "COMPLETE",
-        "timestamp": "2026-02-19T21:23:00.000Z",
-        "sprintFolder": 6
-      },
-      "validationSummary": {
-        "total": 4,
-        "passed": 4,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 6,
-        "met": 6,
         "missed": 0
       }
     },
@@ -1135,39 +1094,6 @@
       "kpiSummary": {
         "total": 3,
         "met": 3,
-        "missed": 0
-      }
-    },
-    {
-      "taskId": "IFC-151",
-      "sprint": 6,
-      "status": "Completed",
-      "section": "Platform",
-      "title": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
-      "description": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
-      "summary": "{\"framework\":{\"type\":\"DLQ Triage and Monitoring\",\"scope\":\"Complete operational framework for event consumer failures\",\"coverage\":[\"Real-time monitoring via Prometheus metrics\",\"Alert configuration for DLQ depth, drain success, retry success......",
-      "definitionOfDone": "Consumer SDK supports retries/backoff; DLQ storage/triage workflow; idempotent handlers; poison-message handling; metrics and alerts; chaos tests; artifacts: dlq-triage.md, context_ack.json; targets: >=95%, >=90%, <30 min",
-      "definitionOfDoneSnapshot": "Consumer SDK supports retries/backoff; DLQ storage/triage workflow; idempotent handlers; poison-message handling; metrics and alerts; chaos tests",
-      "dependencies": [
-        "IFC-150",
-        "ENV-008-AI"
-      ],
-      "attestation": {
-        "exists": true,
-        "path": ".specify/sprints/sprint-6/attestations/IFC-151/attestation.json",
-        "verdict": "COMPLETE",
-        "timestamp": "2025-12-29T09:15:00Z",
-        "sprintFolder": 6
-      },
-      "validationSummary": {
-        "total": 4,
-        "passed": 4,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 5,
-        "met": 5,
         "missed": 0
       }
     },
@@ -1394,11 +1320,9 @@
       },
       "validationSummary": {
         "total": 4,
-        "passed": 3,
-        "failed": 1,
-        "failingNames": [
-          "Build"
-        ]
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
       },
       "kpiSummary": {
         "total": 5,
@@ -1428,11 +1352,9 @@
       },
       "validationSummary": {
         "total": 4,
-        "passed": 3,
-        "failed": 1,
-        "failingNames": [
-          "Build"
-        ]
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
       },
       "kpiSummary": {
         "total": 0,

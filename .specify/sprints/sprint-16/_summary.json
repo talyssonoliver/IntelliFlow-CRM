@@ -1,7 +1,7 @@
 {
   "sprint": "sprint-16",
   "name": "Sprint 16",
-  "generated_at": "2026-04-11T16:48:01.958Z",
+  "generated_at": "2026-11-12T14:31:17.521Z",
   "summary_source": "specify",
   "task_summary": {
     "total": 43,
@@ -163,6 +163,41 @@
       }
     },
     {
+      "taskId": "PG-045",
+      "sprint": 16,
+      "status": "Completed",
+      "section": "Support Pages",
+      "title": "Help Article",
+      "description": "Help Article",
+      "summary": "PG-045 Help Article page fully implemented with TDD. TypeScript and Build validations show pre-existing failures in unrelated files (DealsCharts.tsx, SentimentDistributionChart.tsx JSX comment syntax;... response under 200ms, Lighthouse 90, articles displayed",
+      "definitionOfDone": "Response <200ms, Lighthouse ≥90, articles displayed; artifacts: page.tsx, article-renderer.tsx, feedback-widget.tsx",
+      "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, articles displayed",
+      "dependencies": [
+        "PG-043"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-16/attestations/PG-045/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-03-08T12:15:00Z",
+        "sprintFolder": 16
+      },
+      "validationSummary": {
+        "total": 6,
+        "passed": 4,
+        "failed": 2,
+        "failingNames": [
+          "TypeScript",
+          "Build"
+        ]
+      },
+      "kpiSummary": {
+        "total": 6,
+        "met": 6,
+        "missed": 0
+      }
+    },
+    {
       "taskId": "IFC-254",
       "sprint": 16,
       "status": "Completed",
@@ -221,39 +256,6 @@
       "kpiSummary": {
         "total": 4,
         "met": 4,
-        "missed": 0
-      }
-    },
-    {
-      "taskId": "PG-162",
-      "sprint": 16,
-      "status": "Completed",
-      "section": "Core CRM",
-      "title": "AI Insights from ML model - LangChain chain for generating daily insights with caching confidence scores and action recommendations Cross-entity scope: null-state UX - when AI insight is null on entity detail pages show Run AI Analysis button. Lead detail already done (2026-03-04) apply same pattern to Contact detail. Ensure fallback values visually distinct from real AI data.",
-      "description": "AI Insights from ML model - LangChain chain for generating daily insights with caching confidence scores and action recommendations Cross-entity scope: null-state UX - when AI insight is null on entity detail pages show Run AI Analysis button. Lead detail already done (2026-03-04) apply same pattern to Contact detail. Ensure fallback values visually distinct from real AI data.",
-      "summary": "PG-129 and IFC-095 dependencies verified complete; No fabricated AI data — null-state UX shows honest pending state; source: 'ai' | 'heuristic' provenance field required on all insight responses LangChain chain generates daily insights per user; cached 1h TTL;...",
-      "definitionOfDone": "LangChain chain generates daily insights per user; cached 1h TTL; confidence scores; 4 insight types; home.getAIInsights reads from cache; tests with mocked LLM; Null-state indicator on Contact detail; fallback data visually distinguished from real AI output",
-      "definitionOfDoneSnapshot": "LangChain chain generates daily insights per user; cached 1h TTL; confidence scores; 4 insight types; home.getAIInsights reads from cache; tests with mocked LLM; Null-state indicator on Contact detail;...",
-      "dependencies": [
-        "PG-129",
-        "IFC-095"
-      ],
-      "attestation": {
-        "exists": true,
-        "path": ".specify/sprints/sprint-16/attestations/PG-162/attestation.json",
-        "verdict": "COMPLETE",
-        "timestamp": "2026-03-10T21:00:00.000Z",
-        "sprintFolder": 16
-      },
-      "validationSummary": {
-        "total": 4,
-        "passed": 4,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 3,
-        "met": 3,
         "missed": 0
       }
     }
@@ -409,8 +411,8 @@
         "sprintFolder": 16
       },
       "validationSummary": {
-        "total": 4,
-        "passed": 2,
+        "total": 6,
+        "passed": 4,
         "failed": 2,
         "failingNames": [
           "TypeScript",
@@ -476,8 +478,8 @@
         "sprintFolder": 16
       },
       "validationSummary": {
-        "total": 4,
-        "passed": 2,
+        "total": 6,
+        "passed": 4,
         "failed": 2,
         "failingNames": [
           "TypeScript",
@@ -577,8 +579,8 @@
         "sprintFolder": 16
       },
       "validationSummary": {
-        "total": 4,
-        "passed": 4,
+        "total": 6,
+        "passed": 6,
         "failed": 0,
         "failingNames": []
       },
@@ -1001,8 +1003,8 @@
         "sprintFolder": 16
       },
       "validationSummary": {
-        "total": 4,
-        "passed": 4,
+        "total": 7,
+        "passed": 7,
         "failed": 0,
         "failingNames": []
       },
@@ -1093,8 +1095,8 @@
         "sprintFolder": 16
       },
       "validationSummary": {
-        "total": 4,
-        "passed": 4,
+        "total": 5,
+        "passed": 5,
         "failed": 0,
         "failingNames": []
       },
@@ -1213,8 +1215,8 @@
         "sprintFolder": 16
       },
       "validationSummary": {
-        "total": 4,
-        "passed": 2,
+        "total": 6,
+        "passed": 4,
         "failed": 2,
         "failingNames": [
           "TypeScript",
@@ -1246,8 +1248,8 @@
         "sprintFolder": 16
       },
       "validationSummary": {
-        "total": 4,
-        "passed": 4,
+        "total": 7,
+        "passed": 7,
         "failed": 0,
         "failingNames": []
       },
@@ -1306,8 +1308,8 @@
         "sprintFolder": 16
       },
       "validationSummary": {
-        "total": 4,
-        "passed": 4,
+        "total": 5,
+        "passed": 5,
         "failed": 0,
         "failingNames": []
       },
@@ -1516,8 +1518,8 @@
         "sprintFolder": 16
       },
       "validationSummary": {
-        "total": 4,
-        "passed": 3,
+        "total": 8,
+        "passed": 7,
         "failed": 1,
         "failingNames": [
           "Build"

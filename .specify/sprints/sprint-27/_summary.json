@@ -1,12 +1,12 @@
 {
   "sprint": "sprint-27",
   "name": "Sprint 27",
-  "generated_at": "2026-04-11T16:48:01.958Z",
+  "generated_at": "2026-11-12T14:31:17.521Z",
   "summary_source": "specify",
   "task_summary": {
     "total": 9,
     "completed": 0,
-    "backlog": 9,
+    "backlog": 8,
     "blocked": 0,
     "attested_completed": 0
   },
@@ -34,17 +34,18 @@
   "notable_completed": [],
   "open_tasks": [
     {
-      "taskId": "IFC-051",
+      "taskId": "IFC-052",
       "sprint": 27,
-      "status": "Backlog",
+      "status": "In Progress",
       "section": "Launch",
-      "title": "Pilot Customer Selection",
-      "description": "Pilot Customer Selection",
-      "summary": "2-3 pilot customers for beta testing",
-      "definitionOfDone": "2-3 pilot customers for beta testing; artifacts: pilot-customer-criteria.md, expectations-matrix.xlsx, context_ack.json",
-      "definitionOfDoneSnapshot": "2-3 pilot customers for beta testing",
+      "title": "Production Deployment",
+      "description": "Production Deployment",
+      "summary": "Zero-downtime deployment with feature flags",
+      "definitionOfDone": "Zero-downtime deployment with feature flags; artifacts: deployment-log.txt, feature-flags-config.json, monitoring-dashboard.url; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Zero-downtime deployment with feature flags",
       "dependencies": [
-        "IFC-049"
+        "IFC-040",
+        "IFC-050"
       ],
       "attestation": {
         "exists": false,
@@ -66,18 +67,17 @@
       }
     },
     {
-      "taskId": "IFC-052",
+      "taskId": "IFC-051",
       "sprint": 27,
       "status": "Backlog",
       "section": "Launch",
-      "title": "Production Deployment",
-      "description": "Production Deployment",
-      "summary": "Zero-downtime deployment with feature flags",
-      "definitionOfDone": "Zero-downtime deployment with feature flags; artifacts: deployment-log.txt, feature-flags-config.json, monitoring-dashboard.url; verified by: pnpm test",
-      "definitionOfDoneSnapshot": "Zero-downtime deployment with feature flags",
+      "title": "Pilot Customer Selection",
+      "description": "Pilot Customer Selection",
+      "summary": "2-3 pilot customers for beta testing",
+      "definitionOfDone": "2-3 pilot customers for beta testing; artifacts: pilot-customer-criteria.md, expectations-matrix.xlsx, context_ack.json",
+      "definitionOfDoneSnapshot": "2-3 pilot customers for beta testing",
       "dependencies": [
-        "IFC-040",
-        "IFC-050"
+        "IFC-049"
       ],
       "attestation": {
         "exists": false,
@@ -234,7 +234,7 @@
     {
       "taskId": "IFC-052",
       "sprint": 27,
-      "status": "Backlog",
+      "status": "In Progress",
       "section": "Launch",
       "title": "Production Deployment",
       "description": "Production Deployment",
