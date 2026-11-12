@@ -96,6 +96,7 @@ import {
   httpUrlOrNull,
   insightRecommendations,
   leadDisplayName,
+  leadExportFields,
 } from '@/lib/leads/lead-format';
 import { LeadTimeline } from '@/components/leads/lead-timeline';
 import { RestrictionBanner } from '@/components/privacy/RestrictionBanner';
@@ -2957,6 +2958,7 @@ export default function Lead360Page() {
           icon: 'person',
           url: `/leads/${lead.id}`,
         }}
+        exportFields={apiLead ? leadExportFields(apiLead) : undefined}
         extraActions={[
           { label: 'Archive', icon: 'archive', onClick: () => setArchiveConfirmOpen(true) },
           {

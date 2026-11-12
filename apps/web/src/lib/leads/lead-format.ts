@@ -255,3 +255,55 @@ export function httpUrlOrNull(url: string | null | undefined): string | null {
     return null;
   }
 }
+
+function isoOrEmpty(value: string | Date | null | undefined): string {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+}
+
+/** The stored lead fields the lead page's Export writes. */
+export interface LeadExportSource {
+  id: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  email: string;
+  phone?: string | null;
+  company?: string | null;
+  title?: string | null;
+  location?: string | null;
+  website?: string | null;
+  status: string;
+  source: string;
+  score: number;
+  estimatedValue?: number | null;
+  owner?: { name?: string | null } | null;
+  createdAt: string | Date;
+  lastContactedAt?: string | Date | null;
+}
+
+/**
+ * A lead's fields for the action sheet's Export, as stored: no display fallbacks (a
+ * lead never contacted has an empty last contact, not its creation date), and the
+ * estimated value in pence, as the API holds it. Tags are left out: some are internal.
+ */
+export function leadExportFields(lead: LeadExportSource): Record<string, string | number> {
+  return {
+    id: lead.id,
+    firstName: lead.firstName ?? '',
+    lastName: lead.lastName ?? '',
+    email: lead.email,
+    phone: lead.phone ?? '',
+    company: lead.company ?? '',
+    title: lead.title ?? '',
+    location: lead.location ?? '',
+    website: lead.website ?? '',
+    status: lead.status,
+    source: lead.source,
+    score: lead.score,
+    estimatedValuePence: lead.estimatedValue ?? '',
+    owner: lead.owner?.name ?? '',
+    createdAt: isoOrEmpty(lead.createdAt),
+    lastContactedAt: isoOrEmpty(lead.lastContactedAt),
+  };
+}
