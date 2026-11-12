@@ -177,16 +177,21 @@ after a CI round.
 
 **Test scope:** locally the test steps run only the tests related to the files
 changed since `origin/main` (`vitest related`); the full 10k+ suite is CI's
-sharded runners' job. Lint and all other gates stay full. `PRESHIP_FULL_TESTS=1`
-runs the full suite locally; lockfile, `package.json` (other than `scripts`),
-vitest/tsconfig, Prisma schema or test-setup changes widen to full on their own.
+sharded runners' job. `PRESHIP_FULL_TESTS=1` runs the full suite locally;
+lockfile, `package.json` (other than `scripts`), vitest/tsconfig, Prisma schema
+or test-setup changes widen to full on their own.
+
+**Lint scope:** format-check, lint and lint-promises check only the changed
+files, and go repo-wide when eslint/prettier config, tsconfig, any
+`package.json` or the lockfile changes (`PRESHIP_FULL_LINT=1` forces it). CI
+checks the whole repo.
 
 **Build scope:** locally `library-build`, `typecheck` and `build` cover the
 packages the branch changed plus their dependents (CI's
 `scripts/ci/affected.mjs` classification over the local diff, turbo's local
 cache on); `build` is skipped when only docs or test files changed. Root config,
 `.github/` or shared tsconfig changes widen to every package;
-`PRESHIP_FULL_BUILD=1` forces it.
+`PRESHIP_FULL_BUILD=1` forces it. All other gates stay full.
 
 **At most 3 full test runs at once, machine-wide.** Before any step the gate
 re-runs itself under the shared slot semaphore (`scripts/lib/test-slot.mjs`),
