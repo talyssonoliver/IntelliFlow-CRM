@@ -855,16 +855,6 @@ waivers:
     author: claude provider lane
     date: '2026-11-07'
     expires: '2026-11-21'
-  - fingerprint: 320fc9b18288e8247d99eb17cac83c0159d9bf5a2c134d41433051dbeb1baf83
-    reason: >-
-      LOW, deferred to #1299 under the coordinator's LOW policy (2026-11-11). A lead AI job
-      skipped for a restricted person, or a failed scoring job, keeps its deterministic id for
-      the 30-day (completed) or 7-day (failed) window, so an unchanged lead is not re-queued
-      until the window ends or a field changes. No data is exposed and nothing is processed
-      that should not be; the cost is a delayed agent run.
-    author: ai agents lane
-    date: '2026-11-12'
-    expires: '2026-11-26'
   - fingerprint: e7fa160ce28e4ed28ee8322e4f5d0f15f09e293fd468abd0e1113e3854e13f87
     reason: >-
       Deferred to #1294, accepted by the coordinator on 2026-11-11 (LOW findings become a
@@ -896,6 +886,16 @@ waivers:
       fails or is skipped in the worker is not re-queued for the same lead data until the
       30-day window ends or a field changes. Nothing is exposed or processed that should not be;
       the cost is a delayed agent run.
+    author: ai agents lane
+    date: '2026-11-12'
+    expires: '2026-11-26'
+  - fingerprint: 912e4f7051a8224e6c2f61e524ca596e101f135348b2d38f1a269459ef10b69a
+    reason: >-
+      LOW, deferred to #1299 under the coordinator's LOW policy (2026-11-11). The per-lead
+      claim and complete Redis calls are each bounded by the 5 s enqueue timeout but are not
+      counted in the MAX_IN_FLIGHT cap the job adds use, so during a Redis outage up to two more
+      unsettled calls per lead can wait on the shared connection. It fails fast with
+      enableOfflineQueue off; nothing is lost or exposed.
     author: ai agents lane
     date: '2026-11-12'
     expires: '2026-11-26'

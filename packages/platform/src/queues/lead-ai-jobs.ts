@@ -145,8 +145,10 @@ export function newLeadAiRunId(now: Date = new Date()): string {
 function jobOptions(jobId: string, retries: boolean): LeadAiJobOptions {
   return {
     jobId,
-    removeOnComplete: { age: 7 * DAY_SECONDS },
-    removeOnFail: { age: 7 * DAY_SECONDS },
+    // Kept as long as a run's claim can stay open (LEAD_AI_DEDUPE_DAYS, never extended), so a
+    // retry of an open run always finds its landed jobs and BullMQ dedupes them (codex).
+    removeOnComplete: { age: LEAD_AI_DEDUPE_DAYS * DAY_SECONDS },
+    removeOnFail: { age: LEAD_AI_DEDUPE_DAYS * DAY_SECONDS },
     ...(retries ? { attempts: 3, backoff: { type: 'exponential' as const, delay: 30_000 } } : {}),
   };
 }
@@ -220,7 +222,7 @@ const CLAIM_LUA = [
   "  local fp, run, state = string.match(prev, '^([^|]*)|([^|]*)|([^|]*)$')",
   '  if fp == ARGV[1] then',
   "    if state == 'done' then return '' end",
-  "    redis.call('SET', KEYS[1], prev, 'EX', tonumber(ARGV[3]))",
+  // An open run keeps its original expiry: it must not outlive the jobs it relies on.
   '    return run',
   '  end',
   'end',

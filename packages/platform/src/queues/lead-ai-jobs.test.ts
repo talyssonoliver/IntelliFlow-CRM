@@ -123,15 +123,15 @@ describe('plannedLeadAiJobs', () => {
     });
   });
 
-  it('retries predictions, not scoring, and keeps finished jobs for a week', () => {
+  it('retries predictions, not scoring, and keeps finished jobs as long as a run can stay open', () => {
     const [score, qualification] = plannedLeadAiJobs(job, RUN);
 
     expect(score?.options.attempts).toBeUndefined();
     expect(qualification?.options).toMatchObject({
       attempts: 3,
       backoff: { type: 'exponential', delay: 30_000 },
-      removeOnComplete: { age: 7 * 24 * 60 * 60 },
-      removeOnFail: { age: 7 * 24 * 60 * 60 },
+      removeOnComplete: { age: 30 * 24 * 60 * 60 },
+      removeOnFail: { age: 30 * 24 * 60 * 60 },
     });
   });
 

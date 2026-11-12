@@ -145,13 +145,13 @@ describe('enqueueLeadAi', () => {
     });
   });
 
-  it('gives every job an id BullMQ accepts, and keeps finished jobs for a week', async () => {
+  it('gives every job an id BullMQ accepts, kept as long as a run can stay open', async () => {
     await mod.enqueueLeadAi({ ...input, ownerId: 'owner-1' }, allowAll);
     expect(add).toHaveBeenCalledTimes(3);
     for (const call of add.mock.calls) {
       const options = call[2] as { jobId: string; removeOnComplete: { age: number } };
       expect(bullmqAcceptsJobId(options.jobId)).toBe(true);
-      expect(options.removeOnComplete.age).toBe(7 * 24 * 60 * 60);
+      expect(options.removeOnComplete.age).toBe(30 * 24 * 60 * 60);
     }
   });
 
