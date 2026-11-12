@@ -77,6 +77,26 @@ describe('NewTicketContactForm', () => {
     expect(screen.getByDisplayValue('ada@example.invalid')).toBeInTheDocument();
   });
 
+  it('keeps the filled-in form when a later refetch fails', () => {
+    const data = {
+      id: 'c-1',
+      firstName: 'Ada',
+      lastName: 'Lovelace',
+      email: 'ada@example.invalid',
+    };
+    getByIdMock.mockReturnValue({ data, isLoading: false, isError: false });
+    const { rerender } = render(<NewTicketContactForm contactId="c-1" {...props} />);
+    const name = screen.getByDisplayValue('Ada Lovelace');
+    fireEvent.change(name, { target: { value: 'Ada King' } });
+
+    // TanStack keeps the last good data and sets isError on a failed refetch.
+    getByIdMock.mockReturnValue({ data, isLoading: false, isError: true });
+    rerender(<NewTicketContactForm contactId="c-1" {...props} />);
+
+    expect(screen.getByDisplayValue('Ada King')).toBe(name);
+    expect(screen.queryByTestId('ticket-contact-missing')).not.toBeInTheDocument();
+  });
+
   it('says so and opens an empty form when the contact is not found or in another tenant', () => {
     getByIdMock.mockReturnValue({ data: undefined, isLoading: false, isError: true });
     render(<NewTicketContactForm contactId="other-tenant" {...props} />);

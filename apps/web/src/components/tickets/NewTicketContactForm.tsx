@@ -71,22 +71,25 @@ export function NewTicketContactForm({
     );
   }
 
-  if (contactQuery.isError || !contactQuery.data) {
-    return (
-      <div className="flex flex-col gap-4">
-        <p
-          role="alert"
-          data-testid="ticket-contact-missing"
-          className="text-sm text-muted-foreground"
-        >
-          We couldn&apos;t find that contact. Enter the contact&apos;s details below.
-        </p>
-        {form()}
-      </div>
-    );
+  // Loaded data wins over a later failed refetch (TanStack keeps the last good
+  // data and still sets isError), so the form the user is filling is never
+  // swapped for an empty one.
+  if (contactQuery.data) {
+    const contact = contactQuery.data as PrefillContact;
+    // The id comes from the tenant-checked lookup, not straight from the URL.
+    return form(contactPrefill(contact), contact.id);
   }
 
-  const contact = contactQuery.data as PrefillContact;
-  // The id comes from the tenant-checked lookup, not straight from the URL.
-  return form(contactPrefill(contact), contact.id);
+  return (
+    <div className="flex flex-col gap-4">
+      <p
+        role="alert"
+        data-testid="ticket-contact-missing"
+        className="text-sm text-muted-foreground"
+      >
+        We couldn&apos;t find that contact. Enter the contact&apos;s details below.
+      </p>
+      {form()}
+    </div>
+  );
 }
