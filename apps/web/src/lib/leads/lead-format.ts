@@ -86,6 +86,28 @@ export function formatGBPCompact(amount: number): string {
 const TRACKING_PARAM = /^(utm_.*|gclid|fbclid|msclkid|dclid|gbraid|wbraid)$/i;
 
 /**
+ * The raw query string without tracking pairs. The pairs that stay are kept byte for
+ * byte (no re-encoding of "%20" or bare flags), and the query is unchanged when there
+ * is nothing to drop.
+ */
+function withoutTrackingParams(search: string): string {
+  if (!search) return search;
+  const segments = search.slice(1).split('&');
+  const kept = segments.filter((segment) => {
+    const rawKey = segment.split('=', 1)[0].replace(/\+/g, ' ');
+    let key = rawKey;
+    try {
+      key = decodeURIComponent(rawKey);
+    } catch {
+      // Malformed escape: compare the raw key.
+    }
+    return !TRACKING_PARAM.test(key);
+  });
+  if (kept.length === segments.length) return search;
+  return kept.length ? `?${kept.join('&')}` : '';
+}
+
+/**
  * A lead's website as a clean link: the href without tracking parameters, and a short
  * label (the host without "www.", plus a path when there is one), e.g.
  * "http://www.energym.co.uk/?utm_source=google" -> { label: "energym.co.uk" }.
@@ -103,9 +125,10 @@ export function leadWebsite(
     return null;
   }
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
-  for (const key of [...url.searchParams.keys()]) {
-    if (TRACKING_PARAM.test(key)) url.searchParams.delete(key);
-  }
+  // A placeholder such as "N/A" or "none" parses as a dotless host; only a real
+  // domain (with a dot) or an IP literal counts as an address.
+  if (!url.hostname.includes('.') && !url.hostname.startsWith('[')) return null;
+  url.search = withoutTrackingParams(url.search);
   const host = url.hostname.replace(/^www\./i, '');
   const path = url.pathname === '/' ? '' : url.pathname.replace(/\/$/, '');
   return { href: url.toString(), label: host + path };

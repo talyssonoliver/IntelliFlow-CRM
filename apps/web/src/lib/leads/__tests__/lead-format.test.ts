@@ -201,6 +201,29 @@ describe('lead-format · leadWebsite (#1277)', () => {
     expect(leadWebsite('ftp://files.example.invalid')).toBeNull();
     expect(leadWebsite('http://')).toBeNull();
   });
+
+  it('returns null for placeholder words that are not addresses', () => {
+    expect(leadWebsite('N/A')).toBeNull();
+    expect(leadWebsite('none')).toBeNull();
+    expect(leadWebsite('unknown')).toBeNull();
+  });
+
+  it('keeps an IP address', () => {
+    expect(leadWebsite('http://192.0.2.10/')?.label).toBe('192.0.2.10');
+    expect(leadWebsite('http://[2001:db8::1]/')?.label).toBe('[2001:db8::1]');
+  });
+
+  it('keeps the remaining parameters exactly as stored', () => {
+    expect(leadWebsite('https://shop.example.invalid/?q=a%20b&utm_source=g')?.href).toBe(
+      'https://shop.example.invalid/?q=a%20b'
+    );
+    expect(leadWebsite('https://shop.example.invalid/?preview&gclid=1')?.href).toBe(
+      'https://shop.example.invalid/?preview'
+    );
+    expect(leadWebsite('https://shop.example.invalid/?a=b+c')?.href).toBe(
+      'https://shop.example.invalid/?a=b+c'
+    );
+  });
 });
 
 describe('lead-format · insightRecommendations', () => {
