@@ -12,7 +12,14 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
+// The lead AI enqueue (scoring, qualification, next best action) is detached and reads the
+// lead itself; it is asserted in its own tests and must not consume this file's prisma mocks.
+vi.mock('../../lead/lead-scoring-enqueue', () => ({
+  enqueueLeadAiById: vi.fn(async () => undefined),
+}));
+
 import { inboundRouter } from '../inbound.router';
+import { enqueueLeadAiById } from '../../lead/lead-scoring-enqueue';
 import { createTestContext, prismaMock, mockServices } from '../../../test/setup';
 
 const TENANT_ID = '00000000-0000-4000-8000-000000000900';
@@ -114,10 +121,17 @@ describe('inboundRouter — portal /discover intake', () => {
     expect(call.tags).toEqual(
       expect.arrayContaining(['portal-discover', `submission:${BASE_INPUT.submissionId}`])
     );
+    // A portal lead gets the same AI work as an in-app lead (it was never scored before).
+    expect(enqueueLeadAiById).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ status: expect.any(Function) }),
+      { leadId: 'lead_new_1', tenantId: TENANT_ID, correlationId: 'portal-lead-lead_new_1' }
+    );
   });
 
   it('is idempotent — second call with same submissionId returns existing lead', async () => {
     prismaMock.lead.findFirst.mockResolvedValueOnce({ id: 'lead_existing_1' } as never);
+    vi.mocked(enqueueLeadAiById).mockClear();
 
     const caller = inboundRouter.createCaller(buildCtx(`Bearer ${SECRET}`) as never);
     const result = await caller.createLead(BASE_INPUT);
@@ -129,6 +143,8 @@ describe('inboundRouter — portal /discover intake', () => {
       created: false,
     });
     expect(mockServices.lead.createLead).not.toHaveBeenCalled();
+    // A repeated submission creates nothing and queues nothing.
+    expect(enqueueLeadAiById).not.toHaveBeenCalled();
   });
 
   it('on duplicate-email failure, looks up and returns the existing lead', async () => {

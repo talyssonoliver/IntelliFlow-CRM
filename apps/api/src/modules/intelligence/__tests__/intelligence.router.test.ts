@@ -405,6 +405,27 @@ describe('intelligenceRouter', () => {
       expect(mockQueueClose).toHaveBeenCalled();
     });
 
+    it('puts tenantId at the top level of the job, where the prediction worker requires it', async () => {
+      prismaMock.lead.findFirst.mockResolvedValue({ id: TEST_UUIDS.lead1 } as any);
+
+      await caller.triggerPrediction({
+        entityType: 'lead',
+        entityId: TEST_UUIDS.lead1,
+        predictionType: 'QUALIFICATION',
+      });
+
+      // apps/ai-worker prediction.job PredictionJobDataSchema: `tenantId` is a required
+      // top-level field. Inside `context` only, every job from this procedure failed validation.
+      const payload = mockQueueAdd.mock.calls.at(-1)?.[1] as {
+        tenantId?: unknown;
+        context?: { tenantId?: unknown; userId?: unknown };
+      };
+      expect(payload.tenantId).toBe(TEST_UUIDS.tenant);
+      // NEXT_BEST_ACTION throws without context.userId; it must come from ctx.tenant.
+      expect(payload.context?.tenantId).toBe(TEST_UUIDS.tenant);
+      expect(typeof payload.context?.userId).toBe('string');
+    });
+
     it('should enqueue a contact prediction and return QUEUED status', async () => {
       prismaMock.contact.findFirst.mockResolvedValue({
         id: TEST_UUIDS.contact1,
