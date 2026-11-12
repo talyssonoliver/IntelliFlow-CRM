@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@sentry/nextjs', () => ({
   captureRequestError: mocks.captureRequestError,
   captureRouterTransitionStart: mocks.captureRouterTransitionStart,
+  httpIntegration: (options: unknown) => ({ name: 'Http', options }),
 }));
 vi.mock('../init', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../init')>()),
@@ -37,7 +38,7 @@ describe('Sentry runtime entrypoints', () => {
       runtime: 'nodejs',
       environment: 'staging',
       release: 'sha1',
-      nodeSdkStarted: false,
+      integrations: undefined,
     });
   });
 
@@ -48,7 +49,7 @@ describe('Sentry runtime entrypoints', () => {
     try {
       await import('../../../sentry.server.config');
       expect(mocks.initSentry).toHaveBeenCalledWith(
-        expect.objectContaining({ nodeSdkStarted: true })
+        expect.objectContaining({ integrations: [{ name: 'Http', options: { spans: false } }] })
       );
     } finally {
       state.setNodeSdkStarted(false);

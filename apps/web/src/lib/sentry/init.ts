@@ -20,12 +20,12 @@ export interface InitSentryInput {
   readonly environment?: string | undefined;
   readonly release?: string | undefined;
   /**
-   * True when our OpenTelemetry NodeSDK is already running (OTLP export to
-   * Grafana Cloud, IFC-319). It traces every request, so Sentry's HTTP
-   * integration keeps request isolation and breadcrumbs but adds no second
-   * server span (the api does the same, #1098). Node runtime only.
+   * Extra integrations, built by the runtime's own config file. The Node.js
+   * config passes httpIntegration({ spans: false }) when our NodeSDK already
+   * traces every request (IFC-319, the api's #1098 setup). Kept out of this
+   * file because the browser bundle shares it and has no httpIntegration.
    */
-  readonly nodeSdkStarted?: boolean;
+  readonly integrations?: NonNullable<Parameters<typeof Sentry.init>[0]>['integrations'];
 }
 
 /** Returns true when Sentry was initialised. */
@@ -34,7 +34,7 @@ export function initSentry({
   runtime,
   environment,
   release,
-  nodeSdkStarted = false,
+  integrations,
 }: InitSentryInput): boolean {
   const trimmed = dsn?.trim();
   if (!trimmed) return false;
@@ -47,7 +47,7 @@ export function initSentry({
     beforeSend: scrubEvent,
     beforeBreadcrumb: filterBreadcrumb,
     initialScope: { tags: { runtime } },
-    ...(nodeSdkStarted ? { integrations: [Sentry.httpIntegration({ spans: false })] } : {}),
+    ...(integrations ? { integrations } : {}),
   });
   return true;
 }
