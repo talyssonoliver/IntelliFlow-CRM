@@ -86,18 +86,30 @@ export function formatAccountLocation(
   return parts.length > 0 ? parts.join(', ') : null;
 }
 
-/** Revenue in pounds, compact for the small metric tile: "£1.2M", "£850K". */
+const REVENUE_UNITS: ReadonlyArray<readonly [number, string]> = [
+  [1_000_000_000, 'B'],
+  [1_000_000, 'M'],
+  [1_000, 'K'],
+];
+
+/**
+ * Revenue in pounds, compact for the small metric tile: "£1.3M", "£850K". Built by hand
+ * rather than with Intl's compact notation, whose output differs between Node/ICU
+ * versions (CI and local disagreed).
+ */
 export function formatRevenueCompact(revenue: unknown): string {
   const amount = Number(revenue);
   if (revenue === null || revenue === undefined || !Number.isFinite(amount) || amount <= 0) {
     return '—';
   }
-  return new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-    notation: 'compact',
-    maximumFractionDigits: 1,
-  }).format(amount);
+  for (const [size, unit] of REVENUE_UNITS) {
+    if (amount >= size) {
+      // One decimal, dropped when it is zero: 5_000_000 -> "5", 1_250_000 -> "1.3".
+      const scaled = Math.round((amount / size) * 10) / 10;
+      return `£${Number.isInteger(scaled) ? scaled : scaled.toFixed(1)}${unit}`;
+    }
+  }
+  return `£${Math.round(amount)}`;
 }
 
 const CHURN_RISK_LABELS: Record<string, string> = {
