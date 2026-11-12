@@ -235,7 +235,7 @@ function CategoryListingView({
         />
 
         {articles.length === 0 ? (
-          <EmptyState entity="documents" phase="passive" />
+          <EmptyState entity="documents" showCta={false} />
         ) : (
           <ul className="grid gap-4 list-none p-0">
             {articles.map((article) => (

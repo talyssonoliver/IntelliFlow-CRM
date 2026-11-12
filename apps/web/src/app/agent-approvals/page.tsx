@@ -14,7 +14,8 @@
 import Link from 'next/link';
 import { useState, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Card, Button, toast, EmptyState } from '@intelliflow/ui';
+import { Card, Button, toast } from '@intelliflow/ui';
+import { NoActionsEmptyState } from './components/NoActionsEmptyState';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { AssignSheet } from '@/components/shared/assign-sheet';
@@ -1283,7 +1284,10 @@ function AgentApprovalsContent() {
         )}
         {!isLoading && filteredActions.length === 0 && (
           <Card className="p-12">
-            <EmptyState entity="agents" phase="passive" />
+            <NoActionsEmptyState
+              filtered={filterStatus !== 'all'}
+              onClearFilters={() => setFilterStatus('all')}
+            />
           </Card>
         )}
         {!isLoading &&

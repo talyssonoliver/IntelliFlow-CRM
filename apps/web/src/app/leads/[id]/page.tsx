@@ -1458,7 +1458,15 @@ function LeadActivityTab({
             </button>
           )}
           {filteredActivities.length === 0 && (
-            <EmptyState entity="activity" variant="filtered" phase="passive" />
+            <EmptyState
+              entity="activity"
+              variant={
+                activityTypeFilter !== 'all' || personFilter !== 'all' || searchQuery
+                  ? 'filtered'
+                  : 'empty'
+              }
+              showCta={false}
+            />
           )}
         </>
       )}
@@ -1537,7 +1545,7 @@ function LeadNotesTab({
             </div>
           ))
         ) : (
-          <EmptyState entity="notes" phase="passive" />
+          <EmptyState entity="notes" showCta={false} />
         )}
       </div>
     </Card>
@@ -1549,9 +1557,11 @@ function LeadNotesTab({
 interface LeadEmailsTabProps {
   emails: { id: string; subject: string; status: string; sentAt: string; openCount: number }[];
   timezone: string;
+  /** The lead's address: the empty-state "Compose email" opens compose addressed to it. */
+  leadEmail?: string | null;
 }
 
-function LeadEmailsTab({ emails, timezone }: LeadEmailsTabProps) {
+function LeadEmailsTab({ emails, timezone, leadEmail }: LeadEmailsTabProps) {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
@@ -1591,7 +1601,16 @@ function LeadEmailsTab({ emails, timezone }: LeadEmailsTabProps) {
             </div>
           ))
         ) : (
-          <EmptyState entity="emails" phase="passive" />
+          // Compose to this lead, never a blank recipient; no address means no button.
+          <EmptyState
+            entity="emails"
+            {...(leadEmail
+              ? {
+                  ctaHref: `/email/compose?to=${encodeURIComponent(leadEmail)}`,
+                  ctaLabel: 'Compose email',
+                }
+              : { showCta: false })}
+          />
         )}
       </div>
     </Card>
@@ -1638,7 +1657,7 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
             </div>
           ))
         ) : (
-          <EmptyState entity="files" phase="passive" />
+          <EmptyState entity="files" ctaHref="/documents/new" ctaLabel="Upload a document" />
         )}
       </div>
     </Card>
@@ -2004,7 +2023,7 @@ function LeadRightSidebar({
               </div>
             ))
           ) : (
-            <EmptyState entity="notes" phase="passive" className="py-2" />
+            <EmptyState entity="notes" onCtaClick={onViewNotes} className="py-2" />
           )}
         </div>
         {notes.length > 2 && (
@@ -2021,7 +2040,7 @@ function LeadRightSidebar({
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">Similar Leads</h3>
         </div>
-        <EmptyState entity="leads" phase="passive" className="py-2" />
+        <EmptyState entity="leads" showCta={false} className="py-2" />
       </Card>
     </aside>
   );
@@ -2934,7 +2953,9 @@ export default function Lead360Page() {
             />
           )}
 
-          {activeTab === 'emails' && <LeadEmailsTab emails={emails} timezone={timezone} />}
+          {activeTab === 'emails' && (
+            <LeadEmailsTab emails={emails} timezone={timezone} leadEmail={lead.email} />
+          )}
 
           {activeTab === 'files' && <LeadFilesTab files={files} timezone={timezone} />}
 

@@ -67,7 +67,7 @@ export function AccountContactsList({
   if (contacts.length === 0 && !statusFilter) {
     return (
       <>
-        <EmptyState entity="contacts" phase="passive" className="py-4" />
+        <EmptyState entity="contacts" showCta={false} className="py-4" />
         <div className="flex justify-center">
           <Button variant="outline" size="sm" onClick={onAddContact} type="button">
             <span className="material-symbols-outlined text-base mr-1">person_add</span> Add Contact

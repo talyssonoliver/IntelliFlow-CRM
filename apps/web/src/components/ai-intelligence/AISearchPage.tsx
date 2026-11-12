@@ -464,7 +464,11 @@ export function AISearchPage() {
       {hasQuery && !isLoading && !error && results.length === 0 && (
         <Card>
           <CardContent>
-            <EmptyState entity="search" phase="passive" />
+            <EmptyState
+              entity="search"
+              showCta={false}
+              action={{ label: 'Clear search', onClick: handleClearSearch }}
+            />
           </CardContent>
         </Card>
       )}

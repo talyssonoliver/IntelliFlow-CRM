@@ -167,7 +167,7 @@ export default function ScheduledReportsContent() {
     <div className="w-full">
       <PageHeader
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
+          { label: 'Home', href: '/' },
           { label: 'Analytics', href: '/analytics' },
           { label: 'Scheduled Reports' },
         ]}
@@ -206,6 +206,7 @@ export default function ScheduledReportsContent() {
                 onToggle={(s, isActive) => setActiveMutation.mutate({ id: s.id, isActive })}
                 onEdit={(s) => openDialog(s)}
                 onDelete={(s) => setDeleteTarget({ kind: 'schedule', id: s.id, name: s.name })}
+                onCreate={() => openDialog(null)}
               />
             )}
           </Card>

@@ -442,7 +442,7 @@ export function DataTable<TData, TValue>({
                   {entity ? (
                     <EmptyState
                       entity={entity}
-                      phase="passive"
+                      showCta={false}
                       description={emptyMessage !== 'No results found.' ? emptyMessage : undefined}
                     />
                   ) : (

@@ -73,6 +73,18 @@ export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
     onCancel: () => void;
     placeholder: string;
   }) => React.ReactNode;
+  /**
+   * Whether this empty state offers a create action (entity mode). `false`
+   * marks a read-only screen (#1222 UI-002): a log, a search result, analytics
+   * output. It then renders static: not focusable, no hover lifecycle, no
+   * hotkey. `action` may still add one button, e.g. "Clear filters".
+   * Defaults to true.
+   */
+  showCta?: boolean;
+  /** Navigable empty state: the CTA links here instead of opening the composer. */
+  ctaHref?: string;
+  /** Creatable empty state: the CTA (and hotkey) run the screen's real create flow. */
+  onCtaClick?: () => void;
   /** Controlled phase (entity mode) */
   phase?: EmptyStatePhase;
   /** Phase change callback */
@@ -290,6 +302,251 @@ function EntityIllustration({
 // EmptyState Component (unified)
 // ============================================
 
+/** Read-only empty states never leave the resting phase. */
+const STATIC_PHASE: EmptyStatePhase = 'passive';
+
+/** Read-only and link CTAs take no hotkey: there is nothing to open here. */
+function hotkeyEnabled(state: {
+  hasEntity: boolean;
+  offersCta: boolean;
+  ctaHref?: string;
+  phase: EmptyStatePhase;
+}): boolean {
+  if (!state.hasEntity || !state.offersCta || state.ctaHref) return false;
+  return state.phase === 'passive' || state.phase === 'soft-cta';
+}
+
+/** Title and description: explicit props, then the variant's text, then the entity's. */
+function resolveEntityText(
+  entity: EmptyStateEntity,
+  variant: EmptyStateVariant,
+  title: string | undefined,
+  description: string | undefined
+): { title: string; description: string } {
+  const defaults = ENTITY_EMPTY_STATE_CONFIG[entity];
+  const variantText = variant === 'empty' ? undefined : defaults.variants?.[variant];
+  return {
+    title: title ?? variantText?.title ?? defaults.title,
+    description: description ?? variantText?.description ?? defaults.description,
+  };
+}
+
+/** A handler that moves `from` → `to`, and does nothing in any other phase. */
+function phaseMover(
+  phase: EmptyStatePhase,
+  from: EmptyStatePhase,
+  to: EmptyStatePhase,
+  setPhase: (next: EmptyStatePhase) => void
+): () => void {
+  return () => {
+    if (phase === from) setPhase(to);
+  };
+}
+
+/** Forward a node to the caller's ref and to the state machine's observer. */
+function mergeRefs(
+  ref: React.ForwardedRef<HTMLDivElement>,
+  observe: (node: HTMLDivElement | null) => void
+): (node: HTMLDivElement | null) => void {
+  return (node) => {
+    if (typeof ref === 'function') ref(node);
+    else if (ref) ref.current = node;
+    observe(node);
+  };
+}
+
+/** The screen's own create flow when it gave one, else the inline composer. */
+function createStarter(
+  onCtaClick: (() => void) | undefined,
+  machine: ReturnType<typeof useEmptyStateMachine>,
+  controlledPhase: EmptyStatePhase | undefined,
+  onPhaseChange: ((phase: EmptyStatePhase) => void) | undefined
+): () => void {
+  if (onCtaClick) return onCtaClick;
+  return () => applyPhase('inline-composer', machine, controlledPhase, onPhaseChange);
+}
+
+/** Report a phase change and, when uncontrolled, move the state machine. */
+function applyPhase(
+  next: EmptyStatePhase,
+  machine: ReturnType<typeof useEmptyStateMachine>,
+  controlledPhase: EmptyStatePhase | undefined,
+  onPhaseChange: ((phase: EmptyStatePhase) => void) | undefined
+) {
+  onPhaseChange?.(next);
+  if (controlledPhase) return;
+  if (next === 'passive') machine.reset();
+  // activate() only leaves passive, so step through it: Cancel in the
+  // composer must come back to the CTA.
+  else if (next === 'soft-cta') {
+    machine.reset();
+    machine.activate();
+  } else if (next === 'inline-composer') machine.openComposer();
+  else if (next === 'smart-suggestions') machine.completeCreate();
+}
+
+/** The soft-CTA: a link (navigable) or a button (create), plus the hotkey hint. */
+function EntityCta({
+  label,
+  href,
+  hotkey,
+  onClick,
+}: Readonly<{ label: string; href?: string; hotkey?: string; onClick: () => void }>) {
+  return (
+    <div className="animate-fade-in">
+      {href ? (
+        <Button size="sm" asChild>
+          <a href={href}>
+            <span className="material-symbols-outlined text-base mr-1.5" aria-hidden="true">
+              arrow_forward
+            </span>
+            {label}
+          </a>
+        </Button>
+      ) : (
+        <Button onClick={onClick} size="sm">
+          <span className="material-symbols-outlined text-base mr-1.5" aria-hidden="true">
+            add
+          </span>
+          {label}
+        </Button>
+      )}
+      {hotkey && !href && (
+        <p className="text-xs text-muted-foreground mt-2">
+          or press{' '}
+          <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono font-medium">
+            {hotkey}
+          </kbd>
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Where a key press is someone else's: a field, a picker, or an open dialog. */
+const HOTKEY_EXEMPT_SELECTOR = [
+  'input',
+  'textarea',
+  'select',
+  '[contenteditable=""]',
+  '[contenteditable="true"]',
+  '[role="combobox"]',
+  '[role="listbox"]',
+  '[role="menu"]',
+  '[role="dialog"]',
+  '[role="alertdialog"]',
+  '[aria-modal="true"]',
+  'dialog',
+].join(',');
+
+/**
+ * True when the key press belongs to something else. Inside an open dialog the
+ * shortcut would reopen the create flow behind it and reset its draft.
+ */
+function isHotkeyExempt(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  if (target instanceof HTMLElement && target.isContentEditable) return true;
+  return target.closest(HOTKEY_EXEMPT_SELECTOR) !== null;
+}
+
+/** A modal is open somewhere: the page behind it does not take shortcuts. */
+function modalIsOpen(): boolean {
+  return document.querySelector('[aria-modal="true"], dialog[open]') !== null;
+}
+
+/**
+ * Empty states listening for each hotkey, oldest first. Only the newest one
+ * acts on a key press, so two task lists on one page open one composer, not two.
+ */
+const hotkeyOwners = new Map<string, symbol[]>();
+
+function claimHotkey(key: string, owner: symbol): () => void {
+  const owners = hotkeyOwners.get(key) ?? [];
+  owners.push(owner);
+  hotkeyOwners.set(key, owners);
+  return () => {
+    const rest = (hotkeyOwners.get(key) ?? []).filter((o) => o !== owner);
+    if (rest.length) hotkeyOwners.set(key, rest);
+    else hotkeyOwners.delete(key);
+  };
+}
+
+function ownsHotkey(key: string, owner: symbol): boolean {
+  const owners = hotkeyOwners.get(key);
+  return owners?.[owners.length - 1] === owner;
+}
+
+/**
+ * Listens for the entity hotkey while `enabled`. Typing in a field never
+ * triggers it; the latest `onTrigger` is always used. When several empty
+ * states share a hotkey, only the most recently mounted one responds.
+ */
+function useEntityHotkey(enabled: boolean, hotkey: string | null, onTrigger: () => void) {
+  const triggerRef = React.useRef(onTrigger);
+  triggerRef.current = onTrigger;
+
+  React.useEffect(() => {
+    if (!enabled || !hotkey) return;
+    const key = hotkey.toUpperCase();
+    const owner = Symbol(key);
+    const release = claimHotkey(key, owner);
+    const handler = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || isHotkeyExempt(e.target) || modalIsOpen()) return;
+      if (e.key.toUpperCase() !== key || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (!ownsHotkey(key, owner)) return;
+      e.preventDefault();
+      triggerRef.current();
+    };
+    document.addEventListener('keydown', handler);
+    return () => {
+      document.removeEventListener('keydown', handler);
+      release();
+    };
+  }, [enabled, hotkey]);
+}
+
+interface ReadOnlyEntityEmptyStateProps extends Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  'title'
+> {
+  entity: EmptyStateEntity;
+  title?: string;
+  description?: string;
+  variant: EmptyStateVariant;
+  illustration?: React.ReactNode;
+  action?: EmptyStateAction;
+}
+
+/**
+ * Read-only entity empty state (#1222 UI-002): a labelled region that is not a
+ * tab stop, with no hover lifecycle; at most one action (e.g. Clear filters).
+ */
+const ReadOnlyEntityEmptyState = React.forwardRef<HTMLDivElement, ReadOnlyEntityEmptyStateProps>(
+  ({ entity, variant, title, description, illustration, action, className, ...props }, ref) => {
+    const text = resolveEntityText(entity, variant, title, description);
+    return (
+      <div
+        ref={ref}
+        role="region"
+        aria-label={`${entity} empty state`}
+        data-empty-state="read-only"
+        className={cn(
+          'flex flex-col items-center justify-center text-center',
+          'py-12 px-6 gap-4 rounded-lg',
+          className
+        )}
+        {...props}
+      >
+        <EntityIllustration entity={entity} phase={STATIC_PHASE} custom={illustration} />
+        <h3 className="text-lg font-semibold text-foreground">{text.title}</h3>
+        <p className="text-sm text-muted-foreground max-w-sm">{text.description}</p>
+        {action && <ActionButton action={action} variant="outline" />}
+      </div>
+    );
+  }
+);
+ReadOnlyEntityEmptyState.displayName = 'ReadOnlyEntityEmptyState';
+
 const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
   (
     {
@@ -305,6 +562,9 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
       renderComposer,
       phase: controlledPhase,
       onPhaseChange,
+      showCta: offersCta = true,
+      ctaHref,
+      onCtaClick,
       // Legacy/shared props
       icon = 'inbox',
       title: titleProp,
@@ -328,54 +588,49 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
     const phase = controlledPhase ?? machine.phase;
     const hotkey = defaults?.hotkey ?? null;
 
-    React.useEffect(() => {
-      if (!entity) return;
-      if (phase !== 'passive' && phase !== 'soft-cta') return;
-      if (!hotkey) return;
-      const handler = (e: KeyboardEvent) => {
-        const t = e.target as HTMLElement;
-        if (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable) return;
-        if (e.key.toUpperCase() === hotkey.toUpperCase() && !e.ctrlKey && !e.metaKey && !e.altKey) {
-          e.preventDefault();
-          if (onPhaseChange) onPhaseChange('inline-composer');
-          if (!controlledPhase) machine.openComposer();
-        }
-      };
-      document.addEventListener('keydown', handler);
-      return () => document.removeEventListener('keydown', handler);
-    }, [entity, phase, hotkey, controlledPhase, onPhaseChange, machine]);
+    // The CTA and the hotkey both start a create: the screen's own flow when it
+    // gave one, else the inline composer.
+    const startCreate = createStarter(onCtaClick, machine, controlledPhase, onPhaseChange);
+    useEntityHotkey(
+      hotkeyEnabled({ hasEntity: Boolean(entity), offersCta, ctaHref, phase }),
+      hotkey,
+      startCreate
+    );
 
     // -----------------------------------------------------------
     // ENTITY MODE — rich illustrations with lifecycle
     // -----------------------------------------------------------
-    if (entity && defaults) {
-      const setPhase = (next: EmptyStatePhase) => {
-        if (onPhaseChange) onPhaseChange(next);
-        if (!controlledPhase) {
-          if (next === 'passive') machine.reset();
-          else if (next === 'soft-cta') machine.activate();
-          else if (next === 'inline-composer') machine.openComposer();
-          else if (next === 'smart-suggestions') machine.completeCreate();
-        }
-      };
+    if (entity && !offersCta) {
+      return (
+        <ReadOnlyEntityEmptyState
+          ref={ref}
+          entity={entity}
+          variant={variant}
+          title={titleProp}
+          description={descriptionProp}
+          illustration={illustration}
+          action={action}
+          className={className}
+          {...props}
+        />
+      );
+    }
 
-      const variantText = variant !== 'empty' ? defaults.variants?.[variant] : undefined;
-      const title = titleProp ?? variantText?.title ?? defaults.title;
-      const description = descriptionProp ?? variantText?.description ?? defaults.description;
+    if (entity && defaults) {
+      const setPhase = (next: EmptyStatePhase) =>
+        applyPhase(next, machine, controlledPhase, onPhaseChange);
+
+      const { title, description } = resolveEntityText(entity, variant, titleProp, descriptionProp);
       const ctaLabel = ctaLabelProp ?? defaults.ctaLabel;
       const suggestions = suggestionsProp ?? defaults.suggestions;
       const composerPlaceholder = placeholderProp ?? defaults.composerPlaceholder;
 
-      const handleMouseEnter = () => {
-        if (phase === 'passive') setPhase('soft-cta');
-      };
-      const handleMouseLeave = () => {
-        if (phase === 'soft-cta') setPhase('passive');
-      };
-      const handleFocus = () => {
-        if (phase === 'passive') setPhase('soft-cta');
-      };
-      const handleCtaClick = () => setPhase('inline-composer');
+      const moveFrom = (from: EmptyStatePhase, to: EmptyStatePhase) =>
+        phaseMover(phase, from, to, setPhase);
+      const handleMouseEnter = moveFrom('passive', 'soft-cta');
+      const handleMouseLeave = moveFrom('soft-cta', 'passive');
+      const handleFocus = moveFrom('passive', 'soft-cta');
+      const handleCtaClick = startCreate;
       const handleComposerSubmit = (v: string) => {
         onCreate?.(v);
         setPhase('smart-suggestions');
@@ -390,11 +645,7 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
 
       return (
         <div
-          ref={(node) => {
-            if (typeof ref === 'function') ref(node);
-            else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
-            machine.observerRef(node);
-          }}
+          ref={mergeRefs(ref, machine.observerRef)}
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onFocus={handleFocus}
@@ -436,22 +687,12 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
           )}
 
           {showCta && (
-            <div className="animate-fade-in">
-              <Button onClick={handleCtaClick} size="sm">
-                <span className="material-symbols-outlined text-base mr-1.5" aria-hidden="true">
-                  add
-                </span>
-                {ctaLabel}
-              </Button>
-              {defaults.hotkey && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  or press{' '}
-                  <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono font-medium">
-                    {defaults.hotkey}
-                  </kbd>
-                </p>
-              )}
-            </div>
+            <EntityCta
+              label={ctaLabel}
+              href={ctaHref}
+              hotkey={defaults.hotkey}
+              onClick={handleCtaClick}
+            />
           )}
 
           {showComposer &&

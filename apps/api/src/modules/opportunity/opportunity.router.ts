@@ -1264,7 +1264,7 @@ export const opportunityRouter = createTRPCRouter({
         }),
         typedCtx.prismaWithTenant.opportunity.groupBy({
           by: ['stage'],
-          where: { deletedAt: null },
+          where: { tenantId: typedCtx.tenant.tenantId, deletedAt: null },
           _count: true,
           _sum: { value: true },
           _avg: { probability: true },
@@ -1307,20 +1307,21 @@ export const opportunityRouter = createTRPCRouter({
    */
   stats: tenantProcedure.query(async ({ ctx }) => {
     const typedCtx = getTenantContext(ctx);
+    const where = { tenantId: typedCtx.tenant.tenantId, deletedAt: null };
     const [total, byStage, totalValue, avgProbability] = await Promise.all([
-      typedCtx.prismaWithTenant.opportunity.count({ where: { deletedAt: null } }),
+      typedCtx.prismaWithTenant.opportunity.count({ where }),
       typedCtx.prismaWithTenant.opportunity.groupBy({
         by: ['stage'],
-        where: { deletedAt: null },
+        where,
         _count: true,
         _sum: { value: true },
       }),
       typedCtx.prismaWithTenant.opportunity.aggregate({
-        where: { deletedAt: null },
+        where,
         _sum: { value: true },
       }),
       typedCtx.prismaWithTenant.opportunity.aggregate({
-        where: { deletedAt: null },
+        where,
         _avg: { probability: true },
       }),
     ]);

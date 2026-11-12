@@ -189,7 +189,7 @@ export function AppointmentCalendar({
 
       {appointments.length === 0 && (!tasks || tasks.length === 0) && !isLoading && (
         <div data-testid="calendar-empty">
-          <EmptyState entity="appointments" phase="passive" />
+          <EmptyState entity="appointments" ctaHref="/appointments/new" />
         </div>
       )}
     </div>

@@ -181,7 +181,7 @@ describe('ScheduledReportsContent', () => {
     expect(
       screen.getByRole('heading', { level: 1, name: 'Scheduled Reports' })
     ).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Analytics' })).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: 'New Schedule' })).toHaveLength(1);
   });
