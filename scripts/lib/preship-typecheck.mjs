@@ -45,14 +45,16 @@ export function typecheckConcurrency({ isCI, env }) {
  * @param {{isCI: boolean, env: Record<string, string | undefined>}} opts
  * @returns {{name: string, bin: 'turbo' | 'pnpm', args: string[]}[]}
  */
-export function typecheckPlan({ isCI, env }) {
+export function typecheckPlan({ isCI, env, filters = null }) {
   const concurrency = typecheckConcurrency({ isCI, env });
   const turboArgs = ['run', 'typecheck'];
   if (concurrency !== null) turboArgs.push(`--concurrency=${concurrency}`);
-  return [
-    { name: 'turbo typecheck', bin: 'turbo', args: turboArgs },
-    { name: 'sonar guard', bin: 'pnpm', args: ['run', 'lint:sonar:guard'] },
-  ];
+  const guard = { name: 'sonar guard', bin: 'pnpm', args: ['run', 'lint:sonar:guard'] };
+  // filters: null = every package; [] = no package affected (the guard still runs);
+  // otherwise turbo --filter args for the affected packages (preship-affected.mjs).
+  if (Array.isArray(filters) && filters.length === 0) return [guard];
+  if (Array.isArray(filters)) turboArgs.push(...filters);
+  return [{ name: 'turbo typecheck', bin: 'turbo', args: turboArgs }, guard];
 }
 
 /**
@@ -65,6 +67,7 @@ export function runTypecheck({
   isCI,
   env,
   root,
+  filters = null,
   spawn = spawnSync,
   log = console.log,
   logError = console.error,
@@ -73,7 +76,7 @@ export function runTypecheck({
 }) {
   let plan;
   try {
-    plan = typecheckPlan({ isCI, env });
+    plan = typecheckPlan({ isCI, env, filters });
   } catch (err) {
     logError(`typecheck: ${err.message}`);
     return 1;
