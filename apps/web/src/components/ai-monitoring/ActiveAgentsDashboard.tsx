@@ -11,7 +11,12 @@
 import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, Button, EmptyState, Skeleton, cn } from '@intelliflow/ui';
-import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
+import {
+  PageHeader,
+  SearchFilterBar,
+  clearFiltersAction,
+  useMultiFilterState,
+} from '@/components/shared';
 import { useActiveAgentsDashboard } from '@/lib/active-agents/hooks';
 import { api } from '@/lib/api';
 import { QueueSchedulerPanel } from './QueueSchedulerPanel';
@@ -326,6 +331,13 @@ export function ActiveAgentsDashboard() {
     sort: 'lastActive',
   });
 
+  // The quick chip filters on its own state, so it counts as a filter and is cleared with
+  // the rest.
+  const clearAction = clearFiltersAction(filterState, {
+    value: activeChip,
+    reset: () => setActiveChip('all'),
+  });
+
   const handleChipChange = useCallback(
     (chipId: string) => {
       setActiveChip(chipId);
@@ -466,7 +478,12 @@ export function ActiveAgentsDashboard() {
 
           {/* Agent List */}
           {filteredAgents.length === 0 ? (
-            <EmptyState entity="agents" phase="passive" />
+            <EmptyState
+              entity="agents"
+              showCta={false}
+              variant={clearAction ? 'filtered' : 'empty'}
+              action={clearAction}
+            />
           ) : (
             <div className="space-y-3">
               {filteredAgents.map((agent) => (

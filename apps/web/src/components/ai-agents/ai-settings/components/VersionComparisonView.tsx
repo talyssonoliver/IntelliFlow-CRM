@@ -263,7 +263,7 @@ export function VersionComparisonView({
 
           {comparison.differences.length === 0 && (
             <Card className="p-4">
-              <EmptyState entity="insights" phase="passive" />
+              <EmptyState entity="insights" showCta={false} />
             </Card>
           )}
         </div>

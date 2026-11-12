@@ -186,9 +186,9 @@ describe('TicketSettingsContent', () => {
     expect(screen.getByRole('button', { name: /add duplicate detection rule/i })).toBeTruthy();
   });
 
-  it('shows breadcrumbs (Dashboard / Tickets / SLA Policies & Settings)', () => {
+  it('shows breadcrumbs (Home / Tickets / SLA Policies & Settings)', () => {
     render(<TicketSettingsContent />);
-    expect(screen.getByText(/dashboard/i)).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Home' })).toBeTruthy();
     // 'Tickets' also appears in a heading — assert at least one Tickets text exists
     expect(screen.getAllByText(/tickets/i).length).toBeGreaterThan(0);
   });

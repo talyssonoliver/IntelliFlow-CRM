@@ -22,7 +22,7 @@ export default function RoutingContent() {
     <div className="space-y-6 pb-10">
       <PageHeader
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
+          { label: 'Home', href: '/' },
           { label: 'Settings', href: '/settings' },
           { label: 'Lead Routing' },
         ]}

@@ -205,7 +205,7 @@ export default function PipelineSettingsContent() {
         <div className="mb-8">
           <PageHeader
             breadcrumbs={[
-              { label: 'Dashboard', href: '/' },
+              { label: 'Home', href: '/' },
               { label: 'Settings', href: '/settings' },
               { label: 'Pipeline' },
             ]}

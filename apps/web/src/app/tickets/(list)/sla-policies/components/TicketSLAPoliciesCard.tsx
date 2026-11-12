@@ -58,7 +58,7 @@ export function TicketSLAPoliciesCard({ policies, defaultSlaPolicyId, onSetDefau
       {policies.length === 0 ? (
         <EmptyState
           entity="notes"
-          phase="passive"
+          showCta={false}
           size="sm"
           className="py-4 px-3 gap-2"
           title="No SLA policies yet"

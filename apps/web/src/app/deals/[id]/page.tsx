@@ -376,7 +376,7 @@ function ProductsCard({
         </button>
       </div>
       {products.length === 0 ? (
-        <EmptyState entity="products" phase="passive" className="py-2" />
+        <EmptyState entity="products" showCta={false} className="py-2" />
       ) : (
         <>
           <div className="space-y-3">
@@ -423,7 +423,7 @@ function FilesCard({ onUpload }: Readonly<{ onUpload: () => void }>) {
           <Icon name="upload" className="text-base" />
         </button>
       </div>
-      <EmptyState entity="files" phase="passive" className="py-2" />
+      <EmptyState entity="files" showCta={false} className="py-2" />
     </Card>
   );
 }

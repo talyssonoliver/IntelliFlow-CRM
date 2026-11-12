@@ -138,10 +138,12 @@ export function SuppressionListCard({ announce }: Readonly<SuppressionListCardPr
         )}
 
         {!list.error && !list.isLoading && rows.length === 0 && (
+          // "rules" carries no hotkey: "emails" would bind E on this page to Add an address.
           <EmptyState
-            entity="emails"
+            entity="rules"
             size="sm"
-            phase="passive"
+            ctaLabel="Add an address"
+            onCtaClick={() => inputRef.current?.focus()}
             title="No suppressed addresses"
             description="Addresses that hard-bounce, or that you add here, are skipped when anyone sends."
             className="py-4 px-3 gap-2"

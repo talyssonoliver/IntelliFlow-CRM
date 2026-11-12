@@ -74,7 +74,7 @@ export function PinnedSection({
   }
 
   if (!items || items.length === 0) {
-    return <EmptyState entity="pinned" phase="passive" className="py-4" />;
+    return <EmptyState entity="pinned" showCta={false} className="py-4" />;
   }
 
   return (

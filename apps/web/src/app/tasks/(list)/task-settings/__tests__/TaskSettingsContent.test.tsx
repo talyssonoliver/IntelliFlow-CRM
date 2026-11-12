@@ -92,7 +92,7 @@ describe('TaskSettingsContent', () => {
     await waitFor(() => {
       expect(screen.getByRole('heading', { name: 'Task Settings' })).toBeInTheDocument();
     });
-    expect(screen.getByRole('link', { name: 'Dashboard' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Tasks' })).toBeInTheDocument();
   });
 

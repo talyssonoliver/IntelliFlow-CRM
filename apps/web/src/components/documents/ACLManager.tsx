@@ -74,7 +74,7 @@ export function ACLManager({
   if (currentACL.length === 0 && !isAdmin) {
     return (
       <div data-testid="acl-empty-state">
-        <EmptyState entity="documents" phase="passive" />
+        <EmptyState entity="documents" showCta={false} />
       </div>
     );
   }

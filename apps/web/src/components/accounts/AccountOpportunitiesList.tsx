@@ -75,7 +75,7 @@ export function AccountOpportunitiesList({
   if (opportunities.length === 0 && !stageFilter) {
     return (
       <>
-        <EmptyState entity="deals" phase="passive" className="py-4" />
+        <EmptyState entity="deals" showCta={false} className="py-4" />
         <div className="flex justify-center">
           <Button variant="outline" size="sm" onClick={onCreateOpportunity} type="button">
             <span className="material-symbols-outlined text-base mr-1">add</span> Create Opportunity

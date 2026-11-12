@@ -161,7 +161,7 @@ describe('AccountSettingsContent', () => {
 
   it('shows the breadcrumb trail', () => {
     render(<AccountSettingsContent />);
-    expect(screen.getByRole('link', { name: /dashboard/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Home' })).toBeTruthy();
     expect(screen.getByRole('link', { name: /^accounts$/i })).toBeTruthy();
   });
 

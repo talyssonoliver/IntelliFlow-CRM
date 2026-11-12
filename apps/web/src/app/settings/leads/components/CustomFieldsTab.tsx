@@ -124,7 +124,13 @@ export const CustomFieldsTab = forwardRef<CustomFieldsTabHandle, CustomFieldsTab
     return (
       <div>
         {fields.length === 0 ? (
-          <EmptyState entity="rules" phase="passive" size="sm" className="py-4 px-3 gap-2" />
+          <EmptyState
+            entity="rules"
+            ctaLabel="Add custom field"
+            onCtaClick={openCreate}
+            size="sm"
+            className="py-4 px-3 gap-2"
+          />
         ) : (
           <div className="border rounded-lg overflow-hidden">
             <table className="w-full">

@@ -79,7 +79,7 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
           </>
         )}
         {!isLoading && tasks.length === 0 && (
-          <EmptyState entity="tasks" phase="passive" className="py-2" />
+          <EmptyState entity="tasks" onCtaClick={() => setCreateOpen(true)} className="py-2" />
         )}
         {!isLoading &&
           tasks.map((task) => (

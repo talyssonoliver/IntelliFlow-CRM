@@ -206,7 +206,7 @@ describe('ChurnDashboard', () => {
       expect(slaElements.length).toBeGreaterThan(0);
       // At least one should show hours or days
       const texts = slaElements.map((el) => el.textContent ?? '');
-      expect(texts.some((t) => /\d+[hd]\s+(left|overdue)/.test(t))).toBe(true);
+      expect(texts.some((t) => /\d[hd]\s(?:left|overdue)/.test(t))).toBe(true);
     });
 
     it('next best action text displays', () => {
@@ -268,6 +268,45 @@ describe('ChurnDashboard', () => {
       const criticalChip = screen.getByRole('button', { name: /critical/i });
       expect(criticalChip).toBeInTheDocument();
       await userEvent.click(criticalChip);
+    });
+
+    it('offers Clear filters when only the At Risk chip empties the list, and clears the chip', async () => {
+      // Only a LOW-risk customer: "At Risk" (CRITICAL/HIGH/MEDIUM) leaves riskLevel empty
+      // yet filters everything out.
+      const low = mockAtRiskCustomers.filter((c) => c.riskLevel === 'LOW');
+      setMockHook({ atRiskCustomers: low });
+      render(<ChurnDashboard />);
+      expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument();
+
+      await userEvent.click(screen.getByRole('button', { name: /at risk/i }));
+      const empty = screen.getByTestId('empty-state');
+      await userEvent.click(within(empty).getByRole('button', { name: 'Clear filters' }));
+
+      expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument();
+      expect(screen.getAllByText(low[0]!.entityName).length).toBeGreaterThanOrEqual(1);
+    });
+
+    it('Clear filters after the Critical chip also resets the chip', async () => {
+      const low = mockAtRiskCustomers.filter((c) => c.riskLevel === 'LOW');
+      setMockHook({ atRiskCustomers: low });
+      render(<ChurnDashboard />);
+
+      await userEvent.click(screen.getByRole('button', { name: /^critical/i }));
+      await userEvent.click(
+        within(screen.getByTestId('empty-state')).getByRole('button', { name: 'Clear filters' })
+      );
+      // Back to "All": a second click on Critical must filter again (the chip was reset).
+      expect(screen.queryByTestId('empty-state')).not.toBeInTheDocument();
+      await userEvent.click(screen.getByRole('button', { name: /^critical/i }));
+      expect(screen.getByTestId('empty-state')).toBeInTheDocument();
+    });
+
+    it('offers no Clear filters when nothing is filtered', () => {
+      setMockHook({ atRiskCustomers: [] });
+      render(<ChurnDashboard />);
+      expect(
+        within(screen.getByTestId('empty-state')).queryByRole('button', { name: 'Clear filters' })
+      ).not.toBeInTheDocument();
     });
 
     it('search by entity name filters list', async () => {

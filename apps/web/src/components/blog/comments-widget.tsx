@@ -211,7 +211,13 @@ export function CommentsWidget({ postSlug: _postSlug, className }: Readonly<Comm
         ))}
       </div>
 
-      {comments.length === 0 && <EmptyState entity="comments" phase="passive" />}
+      {comments.length === 0 && (
+        <EmptyState
+          entity="comments"
+          ctaLabel="Write a comment"
+          onCtaClick={() => document.getElementById('new-comment')?.focus()}
+        />
+      )}
     </section>
   );
 }

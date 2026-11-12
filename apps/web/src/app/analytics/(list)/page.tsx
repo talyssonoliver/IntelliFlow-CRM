@@ -545,7 +545,7 @@ function PipelineFunnelContent({
     );
   }
   return (
-    <EmptyState entity="activity" phase="passive" description="No pipeline data for this period" />
+    <EmptyState entity="activity" showCta={false} description="No pipeline data for this period" />
   );
 }
 
@@ -562,7 +562,7 @@ function RevenueTrendContent({
   if (timeSeries && timeSeries.length > 0)
     return <RevenueTrendChart timeSeries={timeSeries} formatCurrency={formatCurrency} />;
   return (
-    <EmptyState entity="activity" phase="passive" description="No revenue data for this period" />
+    <EmptyState entity="activity" showCta={false} description="No revenue data for this period" />
   );
 }
 
@@ -610,5 +610,5 @@ function RecentActivityContent({
         ))}
       </div>
     );
-  return <EmptyState entity="activity" phase="passive" description="No recent activity" />;
+  return <EmptyState entity="activity" showCta={false} description="No recent activity" />;
 }

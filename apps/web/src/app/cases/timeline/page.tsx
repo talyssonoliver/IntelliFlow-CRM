@@ -789,7 +789,7 @@ function CaseTimeline({
         <CardContent>
           {filteredEvents.length === 0 ? (
             <div className="text-center">
-              <EmptyState entity="timeline" variant="filtered" phase="passive" />
+              <EmptyState entity="timeline" variant="filtered" showCta={false} />
               {(filters.eventTypes.length > 0 || filters.priorityFilter.length > 0) && (
                 <button
                   onClick={() =>

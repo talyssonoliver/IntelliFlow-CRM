@@ -163,7 +163,7 @@ export function DealScoringCard({
         <EmptyState
           entity="rules"
           size="sm"
-          phase="passive"
+          onCtaClick={openCreate}
           title="No scoring rules yet"
           description="Add a rule to start shaping deal scores."
           className="py-4 px-3 gap-2"
