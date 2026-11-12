@@ -875,3 +875,13 @@ waivers:
     author: ai agents lane
     date: '2026-11-12'
     expires: '2026-11-26'
+  - fingerprint: 50b1ec2e3bc7660792de621c56624eedb86d82a379c6e447dad4e46c8e547490
+    reason: >-
+      LOW, deferred to #1299 under the coordinator's LOW policy (2026-11-11). On a client-side
+      claim timeout the release also clears a claim that already held the same data, so an
+      unchanged lead may be queued once more (one extra run, still capped by
+      AI_MONTHLY_BUDGET_USD). The release is what prevents the MEDIUM case of a lead marked
+      queued with no jobs, so it stays.
+    author: ai agents lane
+    date: '2026-11-12'
+    expires: '2026-11-26'
