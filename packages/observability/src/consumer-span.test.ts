@@ -13,7 +13,11 @@ import {
   trace,
   type Span,
 } from '@opentelemetry/api';
-import { InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import {
+  AlwaysOnSampler,
+  InMemorySpanExporter,
+  SimpleSpanProcessor,
+} from '@opentelemetry/sdk-trace-base';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { carrierOf, runConsumerJob, runWorkSpan, WORKER_TRACER_NAME } from './consumer-span';
 
@@ -21,8 +25,17 @@ let exporter: InMemorySpanExporter;
 let provider: NodeTracerProvider;
 
 beforeEach(() => {
+  // Clear any provider, context manager or propagator another module registered
+  // first: OpenTelemetry keeps the first global registration and ignores later ones.
+  trace.disable();
+  context.disable();
+  propagation.disable();
   exporter = new InMemorySpanExporter();
-  provider = new NodeTracerProvider({ spanProcessors: [new SimpleSpanProcessor(exporter)] });
+  // Explicit sampler: .env.test sets OTEL_TRACES_SAMPLER=always_off for the root test run.
+  provider = new NodeTracerProvider({
+    sampler: new AlwaysOnSampler(),
+    spanProcessors: [new SimpleSpanProcessor(exporter)],
+  });
   provider.register();
 });
 
