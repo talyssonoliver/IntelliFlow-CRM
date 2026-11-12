@@ -12,7 +12,8 @@
  * @module ai-worker/jobs/prediction
  */
 
-import type { Job } from 'bullmq';
+import { UnrecoverableError, type Job } from 'bullmq';
+import { isMonthlyBudgetExceeded, type MonthlyBudgetExceededError } from '../lib/monthly-budget';
 import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
@@ -68,6 +69,9 @@ export const PREDICTION_QUEUE = 'ai-prediction';
 
 /** Prediction type enum */
 export const PredictionTypes = ['CHURN_RISK', 'NEXT_BEST_ACTION', 'QUALIFICATION'] as const;
+
+/** A next-best-action job needs the user it recommends for (context.userId). */
+const NBA_USER_REQUIRED = 'userId is required for prediction jobs';
 export type PredictionType = (typeof PredictionTypes)[number];
 
 /** Schema for prediction job data */
@@ -120,9 +124,44 @@ export type PredictionJobResult = z.infer<typeof PredictionJobResultSchema>;
  * @param job - BullMQ job containing prediction request
  * @returns Prediction result
  */
+/**
+ * The error the queue worker throws for a failed prediction job. Hitting the monthly AI budget,
+ * or a next-best-action job without a user, gives the same answer on every retry: such a job
+ * fails once, without retries or the dead-letter queue (BullMQ skips both for
+ * UnrecoverableError), so a budget cap or a bad payload cannot turn into a retry storm. Every
+ * other failure is returned as it is, and keeps its retries.
+ *
+ * The budget check also refuses (fail-closed) when the spend total cannot be read or flushed.
+ * That refusal carries no measured spend (spentUsd is NaN) and is a passing Redis fault, so it
+ * keeps its retries; only a measured cap is permanent (codex).
+ */
+function isMeasuredBudgetCap(error: unknown): boolean {
+  return (
+    isMonthlyBudgetExceeded(error) &&
+    Number.isFinite((error as Partial<MonthlyBudgetExceededError>).spentUsd)
+  );
+}
+
+export function toPredictionJobFailure(error: unknown): unknown {
+  const permanent =
+    isMeasuredBudgetCap(error) || (error instanceof Error && error.message === NBA_USER_REQUIRED);
+  if (!permanent) return error;
+  // `expected` keeps the shared worker's failure logs at warning level (worker-shared
+  // isExpectedJobOutcome).
+  return Object.assign(new UnrecoverableError((error as Error).message), { expected: true });
+}
+
 export async function processPredictionJob(
   job: Job<PredictionJobData>
 ): Promise<PredictionJobResult> {
+  try {
+    return await runPredictionJob(job);
+  } catch (error) {
+    throw toPredictionJobFailure(error);
+  }
+}
+
+async function runPredictionJob(job: Job<PredictionJobData>): Promise<PredictionJobResult> {
   const validatedData = PredictionJobDataSchema.parse(job.data);
   const { tenantId } = validatedData;
 
@@ -831,7 +870,7 @@ async function processNextBestAction(
   const userId = context?.userId as string;
   if (!userId) {
     logger.error({ entityId }, 'Missing userId - user context required');
-    throw new Error('userId is required for prediction jobs');
+    throw new Error(NBA_USER_REQUIRED);
   }
 
   try {
