@@ -88,6 +88,11 @@ export async function checkAiAgents(fetchFn: Fetch, apiUrl?: string): Promise<Se
     return { ...AI, state: 'not_checked', note: 'The API did not report its workers' };
   }
   const queues = body.checks?.queues;
+  // The API reports an error here when it cannot count workers (Redis or the
+  // queue is unreachable): no AI job can run then, so that is an outage.
+  if (queues?.status === 'error') {
+    return { ...AI, state: 'down', ms, note: 'The API could not reach the AI job queues' };
+  }
   if (!queues?.consumers) {
     return { ...AI, state: 'not_checked', note: 'The API did not report its workers' };
   }

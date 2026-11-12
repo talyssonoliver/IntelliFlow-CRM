@@ -65,6 +65,14 @@ describe('checkAiAgents', () => {
     expect(result).toMatchObject({ state: 'down', note: 'No AI worker is running' });
   });
 
+  it('is down when the API cannot reach the job queues', async () => {
+    const fetchFn = async () => json({ checks: { queues: { status: 'error', error: 'x' } } });
+    expect(await checkAiAgents(fetchFn, API)).toMatchObject({
+      state: 'down',
+      note: 'The API could not reach the AI job queues',
+    });
+  });
+
   it('is not checked when the API does not report queues or AI queues', async () => {
     expect((await checkAiAgents(async () => detailed(), API)).state).toBe('not_checked');
     expect(
