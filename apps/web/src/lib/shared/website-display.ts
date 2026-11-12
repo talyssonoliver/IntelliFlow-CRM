@@ -63,6 +63,24 @@ export function websiteDisplay(website: unknown): WebsiteDisplay | null {
   for (const name of [...url.searchParams.keys()]) {
     if (isTrackingParam(name)) url.searchParams.delete(name);
   }
-  const domain = url.hostname.toLowerCase().replace(/^www\./, '');
+  const domain = (hostAsTyped(trimmed) || url.hostname).toLowerCase().replace(/^www\./, '');
   return { href: url.toString(), domain };
+}
+
+/**
+ * The host as it was stored, before URL parsing. `URL.hostname` turns an
+ * international domain into punycode (`münchen.de` -> `xn--mnchen-3ya.de`),
+ * which is unreadable as a label.
+ */
+function hostAsTyped(address: string): string {
+  const schemeEnd = address.indexOf('://');
+  let host = schemeEnd === -1 ? address : address.slice(schemeEnd + 3);
+  for (const stop of ['/', '?', '#']) {
+    const at = host.indexOf(stop);
+    if (at !== -1) host = host.slice(0, at);
+  }
+  host = host.slice(host.lastIndexOf('@') + 1);
+  if (host.startsWith('[')) return host.slice(0, host.indexOf(']') + 1);
+  const port = host.lastIndexOf(':');
+  return port === -1 ? host : host.slice(0, port);
 }

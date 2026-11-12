@@ -23,6 +23,16 @@ describe('websiteDisplay', () => {
     expect(result).toEqual({ href: 'http://example.com/p?q=shoes', domain: 'example.com' });
   });
 
+  it('labels an international domain as stored, not in punycode', () => {
+    const result = websiteDisplay('https://www.münchen.de/start');
+    expect(result?.domain).toBe('münchen.de');
+    expect(result?.href).toBe('https://www.xn--mnchen-3ya.de/start');
+  });
+
+  it('drops user info and port from the label', () => {
+    expect(websiteDisplay('http://user@example.com:8080/x')?.domain).toBe('example.com');
+  });
+
   it('reads the value objects the API can return', () => {
     expect(websiteDisplay({ normalized: 'https://a.example.com' })?.domain).toBe('a.example.com');
     expect(websiteDisplay({ value: 'b.example.com' })?.domain).toBe('b.example.com');
