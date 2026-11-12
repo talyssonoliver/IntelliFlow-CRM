@@ -81,7 +81,7 @@ describe('AppointmentEvents - b11 coverage', () => {
       expect(payload.title).toBe('Meeting');
       expect(payload.appointmentType).toBe('CONSULTATION');
       expect(payload.createdBy).toBe('user-2');
-      expect(payload.timeSlot).toBeDefined();
+      expect(payload.timeSlot).toEqual(ts.toJSON());
     });
   });
 
@@ -101,8 +101,8 @@ describe('AppointmentEvents - b11 coverage', () => {
       expect(payload.appointmentId).toBe(aptId.value);
       expect(payload.rescheduledBy).toBe('user-1');
       expect(payload.reason).toBe('Conflict');
-      expect(payload.previousTimeSlot).toBeDefined();
-      expect(payload.newTimeSlot).toBeDefined();
+      expect(payload.previousTimeSlot).toEqual(prev.toJSON());
+      expect(payload.newTimeSlot).toEqual(next.toJSON());
     });
 
     it('should produce payload without reason', () => {
