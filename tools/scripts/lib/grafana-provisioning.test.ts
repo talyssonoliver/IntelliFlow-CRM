@@ -358,7 +358,7 @@ describe('buildAlertRulePayload', () => {
       ruleGroup: 'g-1',
       condition: 'C',
       noDataState: 'Alerting',
-      execErrState: 'Error',
+      execErrState: 'KeepLast',
       for: '5m',
       isPaused: false,
       labels: { severity: 'critical', team: 'owner', source: 'ifc-811' },
