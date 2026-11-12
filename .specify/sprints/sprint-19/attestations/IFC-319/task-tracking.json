@@ -1,0 +1,41 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "IFC-319",
+  "started_at": "2026-11-12T16:00:00Z",
+  "status_history": [
+    {
+      "status": "In Progress",
+      "at": "2026-11-12T18:40:00Z",
+      "note": "Migrated in two changes: chore/ifc-319-otel-sdk-3 (observability package, api, ai-worker) and chore/ifc-319-web-otlp (web, plus OTLP export alongside Sentry per the owner ruling of 2026-11-12). Dependabot OpenTelemetry ignores removed in the second."
+    }
+  ],
+  "kpis": [
+    {
+      "kpi": "Services exporting traces on SDK 3.x",
+      "target": "3/3",
+      "actual": "3/3 on a local OpenTelemetry Collector 0.115.0 (debug exporter), 2026-11-12 15:28-15:29Z, each service started through its own tracing module (apps/<svc>/src/tracing/otel.ts) on sdk-node 0.301.1: api trace 428323e4f6d88d978fe95077f340c514, ai-worker trace de7b4e34b9184ffbc112b54cf9045702, web trace fa55b8fdfb25f446d50471a808b4d24d.",
+      "met": true
+    },
+    {
+      "kpi": "imapflow sync smoke test",
+      "target": "pass",
+      "actual": "Not run: this migration does not change imapflow (packages/adapters keeps 2.2.6). Issue #1201 ties the smoke test to the Dependabot production-group bump of imapflow to 2.10.0, which has not landed; run it with that bump.",
+      "met": false
+    },
+    {
+      "kpi": "Tests",
+      "target": "pass",
+      "actual": "observability 323, api tracing 77, ai-worker 2907 (full suite), web Sentry/instrumentation 31; typecheck clean in observability, api, ai-worker.",
+      "met": true
+    }
+  ],
+  "blockers": [
+    {
+      "description": "imapflow smoke test belongs with the imapflow 2.2.6 -> 2.10.0 bump (Dependabot production group), not with this migration.",
+      "raised_at": "2026-11-12T18:40:00Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 85,
+  "updated_at": "2026-11-12T18:40:00Z"
+}
