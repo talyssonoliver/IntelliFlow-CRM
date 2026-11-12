@@ -21,7 +21,7 @@
  */
 
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { nonEmptyLines, runGit } from './preship-git.mjs';
 
 export const DEFAULT_BASE_REF = 'origin/main';
 
@@ -79,30 +79,9 @@ export function classifyLintFiles(changedFiles) {
   return { scope: 'changed', reason: `${unique.length} changed file(s)`, files: unique };
 }
 
-/** process.env without the GIT_* variables a git hook exports (see preship-test-scope). */
-function gitEnv(env) {
-  const out = { ...env };
-  for (const k of Object.keys(out)) if (k.startsWith('GIT_')) delete out[k];
-  return out;
-}
+const defaultGit = runGit;
 
-function defaultGit(args, cwd, env) {
-  const r = spawnSync('git', args, {
-    cwd,
-    env: gitEnv(env),
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    maxBuffer: 64 * 1024 * 1024,
-  });
-  return r.status === 0 ? r.stdout : null;
-}
-
-function lines(out) {
-  return (out || '')
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean);
-}
+const lines = nonEmptyLines;
 
 /**
  * Resolve the lint scope for this checkout.
