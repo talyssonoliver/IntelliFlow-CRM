@@ -75,13 +75,12 @@ export const TicketTagsCard = forwardRef<TicketTagsCardHandle, Props>(function T
   const [draftName, setDraftName] = useState('');
   const [draftColor, setDraftColor] = useState<TagColorToken>('slate');
 
-  useImperativeHandle(ref, () => ({
-    openCreate: () => {
-      setDraftName('');
-      setDraftColor('slate');
-      setIsCreateOpen(true);
-    },
-  }));
+  const openCreate = () => {
+    setDraftName('');
+    setDraftColor('slate');
+    setIsCreateOpen(true);
+  };
+  useImperativeHandle(ref, () => ({ openCreate }));
 
   const handleCreate = async () => {
     if (!draftName.trim()) return;
@@ -146,7 +145,8 @@ export const TicketTagsCard = forwardRef<TicketTagsCardHandle, Props>(function T
       {tags.length === 0 ? (
         <EmptyState
           entity="pinned"
-          phase="passive"
+          onCtaClick={openCreate}
+          ctaLabel="Create a tag"
           size="sm"
           className="py-4 px-3 gap-2"
           title="No tags yet"

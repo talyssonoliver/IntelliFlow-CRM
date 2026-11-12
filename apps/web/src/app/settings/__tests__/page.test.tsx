@@ -35,7 +35,7 @@ describe('SettingsPage', () => {
     it('renders breadcrumbs with Dashboard link', () => {
       render(<SettingsPage />);
       expect(screen.getByRole('navigation', { name: /breadcrumb/i })).toBeInTheDocument();
-      expect(screen.getByText('Dashboard')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument();
     });
 
     it('renders description text', () => {

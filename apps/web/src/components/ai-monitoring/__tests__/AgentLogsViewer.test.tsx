@@ -354,6 +354,33 @@ describe('Category 3: Interactions', () => {
     expect(lastCall[0].offset).toBeGreaterThan(0);
   });
 
+  it('a new search starts again from the first page', () => {
+    setupMock({ hasMore: true });
+    render(<AgentLogsViewer />);
+    const lastOffset = () => useAgentLogs.mock.calls[useAgentLogs.mock.calls.length - 1][0].offset;
+
+    fireEvent.click(screen.getByTestId('load-more'));
+    expect(lastOffset()).toBeGreaterThan(0);
+    fireEvent.change(screen.getByPlaceholderText(/search/i), { target: { value: 'x' } });
+    expect(lastOffset()).toBe(0);
+  });
+
+  it('Clear filters starts again from the first page', () => {
+    setupMock({ hasMore: true });
+    const { rerender } = render(<AgentLogsViewer />);
+    const lastOffset = () => useAgentLogs.mock.calls[useAgentLogs.mock.calls.length - 1][0].offset;
+
+    // Filter first, then page on, then the next page comes back empty.
+    fireEvent.change(screen.getByPlaceholderText(/search/i), { target: { value: 'x' } });
+    fireEvent.click(screen.getByTestId('load-more'));
+    expect(lastOffset()).toBeGreaterThan(0);
+    setupMock({ logs: [], total: 0, hasMore: false });
+    rerender(<AgentLogsViewer />);
+
+    fireEvent.click(screen.getByRole('button', { name: /clear filters/i }));
+    expect(lastOffset()).toBe(0);
+  });
+
   it('retry button calls refetch (AC-011)', () => {
     const { refetch } = setupMock({ error: new Error('fail'), logs: [] });
     render(<AgentLogsViewer />);
@@ -635,10 +662,10 @@ describe('Category 6: Queue Failures View', () => {
 
   it('shows empty-state fallback when queue is empty', () => {
     renderAndSwitchToQueueFailures({ jobs: [], total: 0 });
-    // Same EmptyState migration as the conversation empty path — legacy
-    // "No failed jobs in the queues" copy was removed. Asserts on canonical
-    // agents empty-state title from entity-empty-state-config.
-    expect(screen.getAllByText(/no active agents/i).length).toBeGreaterThan(0);
+    // The queue view is chosen with the status filter, so its empty state is a filtered
+    // one and can clear back to the logs.
+    expect(screen.getByText('No agents found')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Clear filters' })).toBeInTheDocument();
   });
 
   it('shows failed jobs count text', () => {

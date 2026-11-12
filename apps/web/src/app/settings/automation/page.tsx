@@ -31,7 +31,7 @@ export default function AutomationSettingsPage() {
     <div className="pb-10">
       <PageHeader
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
+          { label: 'Home', href: '/' },
           { label: 'Settings', href: '/settings' },
           { label: 'Automation' },
         ]}

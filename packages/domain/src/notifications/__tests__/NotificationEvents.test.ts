@@ -20,7 +20,7 @@ describe('NotificationEvents', () => {
       expect(event.recipientId).toBe('user_1');
       expect(event.channel).toBe('email');
       expect(event.priority).toBe('high');
-      expect(event.eventId).toBeDefined();
+      expect(event.eventId).toMatch(/\S/);
       expect(event.occurredAt).toBeInstanceOf(Date);
     });
 

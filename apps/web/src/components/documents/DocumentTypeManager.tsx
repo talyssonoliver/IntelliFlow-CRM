@@ -176,7 +176,7 @@ export function DocumentTypeManager() {
     <div className="space-y-6">
       <PageHeader
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
+          { label: 'Home', href: '/' },
           { label: 'Documents', href: '/documents' },
           { label: 'Document Types' },
         ]}
@@ -236,14 +236,14 @@ export function DocumentTypeManager() {
               <span className="material-symbols-outlined mr-1 text-sm" aria-hidden="true">
                 add
               </span>
-              Add Type
+              <span>Add Type</span>
             </Button>
           </div>
 
           {!customDocumentTypes || customDocumentTypes.length === 0 ? (
             <EmptyState
               entity="documents"
-              phase="passive"
+              showCta={false}
               title="No custom document types yet"
               description="Create tenant-specific labels like Deposition Transcript or Expert Opinion."
               action={{

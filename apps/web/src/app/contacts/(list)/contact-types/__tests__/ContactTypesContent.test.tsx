@@ -169,7 +169,7 @@ describe('ContactTypesContent', () => {
   it('renders the playbook layout: breadcrumbs, one h1, h2 sections, 12-col bento, no "coming soon" (A11Y-11)', () => {
     const { container } = render(<ContactTypesContent />);
     expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toHaveTextContent(
-      'Dashboard / Contacts / Contact Types'
+      'Home / Contacts / Contact Types'
     );
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     expect(screen.getByRole('heading', { level: 2, name: 'Contact types' })).toBeInTheDocument();

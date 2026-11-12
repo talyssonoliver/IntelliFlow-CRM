@@ -190,6 +190,7 @@ export default function NotificationsPage() {
         filters={filters}
         onMarkAsRead={handleMarkAsRead}
         onDismiss={handleDismiss}
+        onClearFilters={handleClearFilters}
       />
     </div>
   );
