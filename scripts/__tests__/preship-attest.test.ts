@@ -681,6 +681,7 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
       'preship-integration-infra.mjs',
       'preship-cache.mjs',
       'preship-build.mjs',
+      'preship-db-scope.mjs',
     ]) {
       fs.copyFileSync(path.join(REPO_ROOT, 'scripts/lib', lib), path.join(dir, 'scripts/lib', lib));
     }
