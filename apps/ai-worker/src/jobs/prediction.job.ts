@@ -13,7 +13,7 @@
  */
 
 import { UnrecoverableError, type Job } from 'bullmq';
-import { isMonthlyBudgetExceeded } from '../lib/monthly-budget';
+import { isMonthlyBudgetExceeded, type MonthlyBudgetExceededError } from '../lib/monthly-budget';
 import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
@@ -130,11 +130,21 @@ export type PredictionJobResult = z.infer<typeof PredictionJobResultSchema>;
  * fails once, without retries or the dead-letter queue (BullMQ skips both for
  * UnrecoverableError), so a budget cap or a bad payload cannot turn into a retry storm. Every
  * other failure is returned as it is, and keeps its retries.
+ *
+ * The budget check also refuses (fail-closed) when the spend total cannot be read or flushed.
+ * That refusal carries no measured spend (spentUsd is NaN) and is a passing Redis fault, so it
+ * keeps its retries; only a measured cap is permanent (codex).
  */
+function isMeasuredBudgetCap(error: unknown): boolean {
+  return (
+    isMonthlyBudgetExceeded(error) &&
+    Number.isFinite((error as Partial<MonthlyBudgetExceededError>).spentUsd)
+  );
+}
+
 export function toPredictionJobFailure(error: unknown): unknown {
   const permanent =
-    isMonthlyBudgetExceeded(error) ||
-    (error instanceof Error && error.message === NBA_USER_REQUIRED);
+    isMeasuredBudgetCap(error) || (error instanceof Error && error.message === NBA_USER_REQUIRED);
   if (!permanent) return error;
   // `expected` keeps the shared worker's failure logs at warning level (worker-shared
   // isExpectedJobOutcome).

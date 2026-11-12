@@ -791,6 +791,13 @@ describe('prediction job failures that cannot heal on retry', () => {
     expect((mapped as { expected?: boolean }).expected).toBe(true);
   });
 
+  it('keeps retries for a fail-closed budget refusal (spend unreadable), which is transient', () => {
+    // assertWithinMonthlyBudget refuses with spentUsd NaN when Redis cannot be read or flushed.
+    const refusal = new MonthlyBudgetExceededError(Number.NaN, 60);
+
+    expect(toPredictionJobFailure(refusal)).toBe(refusal);
+  });
+
   it('returns any other error unchanged, so it keeps its retries', () => {
     const transient = new Error('connect ECONNRESET');
 
