@@ -37,6 +37,7 @@ import {
   publishRefspecs,
   readAttestation,
 } from '../preship-attest.mjs';
+import { copyGateModules } from './helpers/gate-fixture';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '../..');
@@ -671,19 +672,9 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
     for (const f of ['preship-process.mjs', 'preship-watchdog.mjs']) {
       fs.copyFileSync(path.join(REPO_ROOT, 'scripts', f), path.join(dir, 'scripts', f));
     }
-    for (const lib of [
-      'preship-test-scope.mjs',
-      'preship-coverage-freshness.mjs',
-      'preship-run-metrics.mjs',
-      'preship-report.mjs',
-      'preship-gate.mjs',
-      'test-slot.mjs',
-      'preship-integration-infra.mjs',
-      'preship-cache.mjs',
-      'preship-build.mjs',
-    ]) {
-      fs.copyFileSync(path.join(REPO_ROOT, 'scripts/lib', lib), path.join(dir, 'scripts/lib', lib));
-    }
+    // Every module pre-ship can import, not a hand-kept list: each new lib used to
+    // break this fixture until someone added it.
+    copyGateModules(path.join(REPO_ROOT, 'scripts'), path.join(dir, 'scripts'));
     git(['add', '-A']);
     git(['commit', '-q', '-m', 'seed']);
 
