@@ -5,6 +5,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   claimLeadAiRun,
+  inMemoryLeadAiClaimStore,
+  leadAiClaimKey,
+  leadAiFingerprint,
   leadAiJobFromStoredLead,
   plannedLeadAiJobs,
   type LeadAiClaimStore,
@@ -37,24 +40,10 @@ function event(metadata: { tenantId?: string } = { tenantId: 'tenant-1' }, paylo
   };
 }
 
-/** Redis as the claim scripts see it: GET+SET returning "changed", and compare-and-delete. */
-function memoryStore(): LeadAiClaimStore {
-  const values = new Map<string, string>();
-  return {
-    eval: vi.fn(async (script: string, _n: number, ...args: (string | number)[]) => {
-      const [key, value] = args.map(String) as [string, string];
-      if (script.includes("'SET'")) {
-        const prev = values.get(key);
-        values.set(key, value);
-        return prev === value ? 0 : 1;
-      }
-      if (values.get(key) === value) values.delete(key);
-      return 0;
-    }),
-  };
-}
-
-function deps(overrides: Partial<LeadAiBackstopDeps> = {}, store = memoryStore()) {
+function deps(
+  overrides: Partial<LeadAiBackstopDeps> = {},
+  store: LeadAiClaimStore = inMemoryLeadAiClaimStore()
+) {
   const added: PlannedLeadAiJob[] = [];
   const logger = { info: vi.fn(), warn: vi.fn() };
   const all: LeadAiBackstopDeps = {
@@ -159,12 +148,14 @@ describe('queueLeadAiForCreatedLead', () => {
   });
 
   it('adds nothing when the API already queued this exact data', async () => {
-    const store = memoryStore();
+    const store = inMemoryLeadAiClaimStore();
     const apiJob = leadAiJobFromStoredLead(
       { leadId: 'lead-1', tenantId: 'tenant-1', correlationId: 'lead-create-lead-1' },
       stored
     );
-    await claimLeadAiRun(store, apiJob); // what the API's enqueue did
+    // What the API's enqueue did: claimed and queued this data in full.
+    const runId = await claimLeadAiRun(store, apiJob, 'api-run');
+    await store.complete(leadAiClaimKey(apiJob), leadAiFingerprint(apiJob), runId!, 60);
     const { all, added } = deps({}, store);
 
     await expect(queueLeadAiForCreatedLead(event(), all)).resolves.toBe('unchanged');
@@ -172,7 +163,10 @@ describe('queueLeadAiForCreatedLead', () => {
   });
 
   it('adds nothing and does not throw when the claim cannot reach Redis', async () => {
-    const broken: LeadAiClaimStore = { eval: vi.fn().mockRejectedValue(new Error('down')) };
+    const broken: LeadAiClaimStore = {
+      claim: vi.fn().mockRejectedValue(new Error('down')),
+      complete: vi.fn(),
+    };
     const { all, added, logger } = deps({}, broken);
 
     await expect(queueLeadAiForCreatedLead(event(), all)).resolves.toBe('claim-failed');

@@ -190,8 +190,11 @@ export async function enqueueLeadAi(
       ENQUEUE_TIMEOUT_MS
     );
     const outcome = await queueLeadAiRun(job, {
+      // Bounded like the adds. A claim that times out here but lands on the server stays
+      // `open`, and the next sync of the same data retries it under the same run id.
       store: {
-        eval: (...args) => withTimeout(store.eval(...args), ENQUEUE_TIMEOUT_MS),
+        claim: (...args) => withTimeout(store.claim(...args), ENQUEUE_TIMEOUT_MS),
+        complete: (...args) => withTimeout(store.complete(...args), ENQUEUE_TIMEOUT_MS),
       },
       addJob,
       onAddError: (planned, error) => {

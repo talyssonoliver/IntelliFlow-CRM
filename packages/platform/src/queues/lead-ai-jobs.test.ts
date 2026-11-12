@@ -5,10 +5,10 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import {
-  LEAD_AI_DEDUPE_DAYS,
   STORED_LEAD_FOR_AI_SELECT,
   claimLeadAiRun,
   claimStoreFromRedis,
+  inMemoryLeadAiClaimStore,
   leadAiClaimKey,
   leadAiFingerprint,
   leadAiJobFromStoredLead,
@@ -16,7 +16,6 @@ import {
   newLeadAiRunId,
   plannedLeadAiJobs,
   queueLeadAiRun,
-  releaseLeadAiRun,
   type LeadAiClaimStore,
   type LeadAiJob,
   type PlannedLeadAiJob,
@@ -53,32 +52,6 @@ const RUN = 'run1';
 function bullmqAcceptsJobId(jobId: string): boolean {
   if (`${Number.parseInt(jobId, 10)}` === jobId) return false;
   return !jobId.includes(':') || jobId.split(':').length === 3;
-}
-
-/**
- * An in-memory stand-in for Redis that runs the two scripts' logic: GET+SET returning whether
- * the value changed, and compare-and-delete. Keyed on the script text it receives.
- */
-function memoryStore() {
-  const values = new Map<string, string>();
-  const ttls = new Map<string, number>();
-  const store: LeadAiClaimStore = {
-    eval: vi.fn(async (script: string, _numKeys: number, ...args: (string | number)[]) => {
-      const [key, value, ttl] = args.map(String);
-      if (script.includes("'SET'")) {
-        const prev = values.get(key!);
-        values.set(key!, value!);
-        ttls.set(key!, Number(ttl));
-        return prev === value ? 0 : 1;
-      }
-      if (values.get(key!) === value) {
-        values.delete(key!);
-        return 1;
-      }
-      return 0;
-    }),
-  };
-  return { store, values, ttls };
 }
 
 describe('leadAiJobFromStoredLead', () => {
@@ -176,64 +149,78 @@ describe('plannedLeadAiJobs', () => {
   });
 });
 
-describe('claimLeadAiRun / releaseLeadAiRun', () => {
-  it('claims new data, refuses the same data again, and keeps the claim for the dedupe window', async () => {
-    const { store, ttls } = memoryStore();
+describe('claimLeadAiRun', () => {
+  it('claims new data under a fresh run id, then refuses it once the run is done', async () => {
+    const store = inMemoryLeadAiClaimStore();
 
-    await expect(claimLeadAiRun(store, job)).resolves.toBe(true);
-    await expect(claimLeadAiRun(store, job)).resolves.toBe(false);
-    expect(ttls.get(leadAiClaimKey(job))).toBe(LEAD_AI_DEDUPE_DAYS * 24 * 60 * 60);
+    await expect(claimLeadAiRun(store, job, 'r1')).resolves.toBe('r1');
+    await store.complete(leadAiClaimKey(job), leadAiFingerprint(job), 'r1', 60);
+    await expect(claimLeadAiRun(store, job, 'r2')).resolves.toBeNull();
+  });
+
+  it('hands back the same run id while that data is still open (retry, or the other producer)', async () => {
+    const store = inMemoryLeadAiClaimStore();
+
+    await expect(claimLeadAiRun(store, job, 'r1')).resolves.toBe('r1');
+    await expect(claimLeadAiRun(store, job, 'r2')).resolves.toBe('r1');
   });
 
   it('claims again when the lead changes back: A -> B -> A (codex)', async () => {
-    const { store } = memoryStore();
+    const store = inMemoryLeadAiClaimStore();
     const b = { ...job, lead: { ...job.lead, company: 'Difference Engines' } };
 
-    await expect(claimLeadAiRun(store, job)).resolves.toBe(true);
-    await expect(claimLeadAiRun(store, b)).resolves.toBe(true);
-    await expect(claimLeadAiRun(store, job)).resolves.toBe(true);
+    await claimLeadAiRun(store, job, 'r1');
+    await store.complete(leadAiClaimKey(job), leadAiFingerprint(job), 'r1', 60);
+    await expect(claimLeadAiRun(store, b, 'r2')).resolves.toBe('r2');
+    await store.complete(leadAiClaimKey(b), leadAiFingerprint(b), 'r2', 60);
+    await expect(claimLeadAiRun(store, job, 'r3')).resolves.toBe('r3');
   });
 
   it('keys the claim per tenant and lead, outside BullMQ job ids', () => {
     expect(leadAiClaimKey(job)).toBe('lead-ai:last:tenant-1:lead-1');
   });
 
-  it('releases only its own claim, and never throws', async () => {
-    const { store, values } = memoryStore();
+  it('does not let an old run complete over a newer claim', async () => {
+    const store = inMemoryLeadAiClaimStore();
     const b = { ...job, lead: { ...job.lead, company: 'Difference Engines' } };
-    await claimLeadAiRun(store, b);
+    await claimLeadAiRun(store, job, 'r1');
+    await claimLeadAiRun(store, b, 'r2');
 
-    await releaseLeadAiRun(store, job); // not the current claim: kept
-    expect(values.get(leadAiClaimKey(job))).toBe(leadAiFingerprint(b));
+    await store.complete(leadAiClaimKey(job), leadAiFingerprint(job), 'r1', 60);
 
-    await releaseLeadAiRun(store, b);
-    expect(values.has(leadAiClaimKey(job))).toBe(false);
-
-    const broken: LeadAiClaimStore = { eval: vi.fn().mockRejectedValue(new Error('down')) };
-    await expect(releaseLeadAiRun(broken, job)).resolves.toBeUndefined();
+    expect(store.peek(leadAiClaimKey(job))).toBe(`${leadAiFingerprint(b)}|r2|open`);
   });
 });
 
 describe('claimStoreFromRedis', () => {
-  it('registers each script once per client and runs it by name, keys first', async () => {
+  it('runs the claim and complete scripts as named commands, each defined once per client', async () => {
     const defineCommand = vi.fn();
-    const runCommand = vi.fn(async () => 1);
+    const runCommand = vi.fn(async (name: string) => (name === 'leadAiClaimRun' ? 'r1' : 0));
     const store = claimStoreFromRedis({ defineCommand, runCommand });
 
-    await claimLeadAiRun(store, job);
-    await claimLeadAiRun(store, job);
-    await releaseLeadAiRun(store, job);
+    await expect(store.claim('k', 'fp', 'r1', 60)).resolves.toBe('r1');
+    await store.claim('k', 'fp', 'r2', 60);
+    await store.complete('k', 'fp', 'r1', 60);
 
-    // Two scripts (claim, release), each defined once despite three calls.
-    expect(defineCommand).toHaveBeenCalledTimes(2);
-    const [claimName, claimDef] = defineCommand.mock.calls[0]!;
-    expect(claimDef).toMatchObject({ numberOfKeys: 1, lua: expect.stringContaining("'SET'") });
-    expect(runCommand).toHaveBeenNthCalledWith(1, claimName, [
-      leadAiClaimKey(job),
-      leadAiFingerprint(job),
-      LEAD_AI_DEDUPE_DAYS * 24 * 60 * 60,
+    expect(defineCommand.mock.calls.map((c) => c[0])).toEqual([
+      'leadAiClaimRun',
+      'leadAiCompleteRun',
     ]);
-    expect(runCommand).toHaveBeenCalledTimes(3);
+    expect(defineCommand.mock.calls[0]![1]).toMatchObject({
+      numberOfKeys: 1,
+      lua: expect.stringContaining("'|open'"),
+    });
+    expect(runCommand).toHaveBeenNthCalledWith(1, 'leadAiClaimRun', ['k', 'fp', 'r1', 60]);
+    expect(runCommand).toHaveBeenLastCalledWith('leadAiCompleteRun', ['k', 'fp', 'r1', 60]);
+  });
+
+  it('reads an empty script result as "already done"', async () => {
+    const store = claimStoreFromRedis({
+      defineCommand: vi.fn(),
+      runCommand: vi.fn(async () => ''),
+    });
+
+    await expect(store.claim('k', 'fp', 'r1', 60)).resolves.toBeNull();
   });
 });
 
@@ -258,21 +245,21 @@ describe('queueLeadAiRun', () => {
   }
 
   it('queues every job for new data, then nothing for the same data from the other producer', async () => {
-    const { store } = memoryStore();
+    const store = inMemoryLeadAiClaimStore();
     const api = deps(store);
     const worker = deps(store);
 
     await expect(queueLeadAiRun(job, api.deps, 'r1')).resolves.toBe('queued');
-    await expect(queueLeadAiRun(leadAiJobFromStoredLead(ref, stored), worker.deps)).resolves.toBe(
-      'unchanged'
-    );
+    await expect(
+      queueLeadAiRun(leadAiJobFromStoredLead(ref, stored), worker.deps, 'r2')
+    ).resolves.toBe('unchanged');
 
     expect(api.added).toHaveLength(3);
     expect(worker.added).toHaveLength(0);
   });
 
-  it('keeps adding the other jobs when one fails, then gives the claim back for a retry', async () => {
-    const { store } = memoryStore();
+  it('retries a partial run under the same run id, so landed jobs are deduped by their ids', async () => {
+    const store = inMemoryLeadAiClaimStore();
     const flaky = deps(store, (p) => p.queue === 'AI_SCORING');
 
     await expect(queueLeadAiRun(job, flaky.deps, 'r1')).resolves.toBe('partial');
@@ -281,33 +268,41 @@ describe('queueLeadAiRun', () => {
 
     const retry = deps(store);
     await expect(queueLeadAiRun(job, retry.deps, 'r2')).resolves.toBe('queued');
-    expect(retry.added).toHaveLength(3);
+    // Same ids as the first attempt: BullMQ ignores the two that already landed.
+    expect(retry.added.map((p) => p.options.jobId)).toEqual(
+      plannedLeadAiJobs(job, 'r1').map((p) => p.options.jobId)
+    );
+
+    const again = deps(store);
+    await expect(queueLeadAiRun(job, again.deps, 'r3')).resolves.toBe('unchanged');
+  });
+
+  it('retries, under the same run id, a claim that timed out on our side but landed (codex)', async () => {
+    const store = inMemoryLeadAiClaimStore();
+    // The claim lands on the server, but the caller's timeout rejects before the reply arrives.
+    const slow: LeadAiClaimStore = {
+      claim: vi.fn(async (...args: Parameters<LeadAiClaimStore['claim']>) => {
+        await store.claim(...args);
+        throw new Error('enqueue timed out after 5000ms');
+      }),
+      complete: store.complete,
+    };
+
+    await expect(queueLeadAiRun(job, deps(slow).deps, 'r1')).rejects.toThrow('timed out');
+
+    const retry = deps(store);
+    await expect(queueLeadAiRun(job, retry.deps, 'r2')).resolves.toBe('queued');
+    expect(retry.added[0]?.options.jobId).toBe(plannedLeadAiJobs(job, 'r1')[0]?.options.jobId);
   });
 
   it('throws when the claim itself fails, and adds nothing', async () => {
-    const broken: LeadAiClaimStore = { eval: vi.fn().mockRejectedValue(new Error('down')) };
+    const broken: LeadAiClaimStore = {
+      claim: vi.fn().mockRejectedValue(new Error('down')),
+      complete: vi.fn(),
+    };
     const run = deps(broken);
 
     await expect(queueLeadAiRun(job, run.deps)).rejects.toThrow('down');
     expect(run.added).toHaveLength(0);
-  });
-
-  it('gives back a claim that timed out on our side but still ran on the server (codex)', async () => {
-    const { store, values } = memoryStore();
-    // The swap runs on the server, but the caller's timeout rejects before the reply arrives.
-    const slow: LeadAiClaimStore = {
-      eval: vi.fn(async (script: string, n: number, ...args: (string | number)[]) => {
-        const result = await store.eval(script, n, ...args);
-        if (script.includes("'SET'")) throw new Error('enqueue timed out after 5000ms');
-        return result;
-      }),
-    };
-
-    await expect(queueLeadAiRun(job, deps(slow).deps)).rejects.toThrow('timed out');
-    expect(values.has(leadAiClaimKey(job))).toBe(false);
-
-    // So the next sync of the same data queues it.
-    const retry = deps(store);
-    await expect(queueLeadAiRun(job, retry.deps)).resolves.toBe('queued');
   });
 });

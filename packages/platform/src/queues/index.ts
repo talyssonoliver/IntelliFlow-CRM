@@ -58,7 +58,7 @@ export {
   leadAiClaimKey,
   claimLeadAiRun,
   claimStoreFromRedis,
-  releaseLeadAiRun,
+  inMemoryLeadAiClaimStore,
   queueLeadAiRun,
   type LeadAiRunDeps,
   type LeadAiRunOutcome,

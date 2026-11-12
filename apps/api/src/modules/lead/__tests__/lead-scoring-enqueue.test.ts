@@ -8,16 +8,15 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const add = vi.fn();
 const on = vi.fn();
-// Redis as the claim scripts see it: GET+SET returning "changed", and compare-and-delete.
-const claims = new Map<string, string>();
-const claimEval = vi.fn(async (script: string, _n: number, ...args: (string | number)[]) => {
-  const [key, value] = args.map(String) as [string, string];
-  if (script.includes("'SET'")) {
-    const prev = claims.get(key);
-    claims.set(key, value);
-    return prev === value ? 0 : 1;
+// The claim's named Redis commands, routed to the platform's in-memory claim store (same
+// semantics as the Lua, which is checked against a real Redis separately).
+let claimStore: ReturnType<typeof inMemoryLeadAiClaimStore>;
+const claimRun = vi.fn(async (name: string, args: (string | number)[]) => {
+  const [key, fingerprint, runId, ttl] = args.map(String) as [string, string, string, string];
+  if (name === 'leadAiClaimRun') {
+    return (await claimStore.claim(key, fingerprint, runId, Number(ttl))) ?? '';
   }
-  if (claims.get(key) === value) claims.delete(key);
+  await claimStore.complete(key, fingerprint, runId, Number(ttl));
   return 0;
 });
 const Queue = vi.fn(function (this: Record<string, unknown>, name: string, opts: unknown) {
@@ -26,16 +25,7 @@ const Queue = vi.fn(function (this: Record<string, unknown>, name: string, opts:
   this.add = add;
   this.on = on;
   // BullMQ's IRedisClient runs Lua as named commands (defineCommand + runCommand).
-  const scripts = new Map<string, { numberOfKeys: number; lua: string }>();
-  this.client = Promise.resolve({
-    defineCommand: (name: string, def: { numberOfKeys: number; lua: string }) => {
-      scripts.set(name, def);
-    },
-    runCommand: (name: string, args: (string | number)[]) => {
-      const def = scripts.get(name)!;
-      return claimEval(def.lua, def.numberOfKeys, ...args);
-    },
-  });
+  this.client = Promise.resolve({ defineCommand: vi.fn(), runCommand: claimRun });
 });
 
 vi.mock('../../../lib/load-bullmq', () => ({ loadBullMQ: vi.fn(async () => ({ Queue })) }));
@@ -54,7 +44,7 @@ vi.mock('@intelliflow/platform/queues', async (importOriginal) => ({
 }));
 
 import { loadBullMQ } from '../../../lib/load-bullmq';
-import { plannedLeadAiJobs } from '@intelliflow/platform/queues';
+import { inMemoryLeadAiClaimStore, plannedLeadAiJobs } from '@intelliflow/platform/queues';
 
 import type * as EnqueueModule from '../lead-scoring-enqueue';
 
@@ -89,8 +79,8 @@ const addsTo = (name: string) => add.mock.calls.filter((c) => c[0] === name);
 
 describe('enqueueLeadAi', () => {
   beforeEach(async () => {
-    claims.clear();
-    claimEval.mockClear();
+    claimStore = inMemoryLeadAiClaimStore();
+    claimRun.mockClear();
     add.mockReset().mockResolvedValue(undefined);
     on.mockReset();
     Queue.mockClear();
@@ -188,7 +178,7 @@ describe('enqueueLeadAi', () => {
 
   it('queues nothing, and says so, when the claim cannot reach Redis', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    claimEval.mockRejectedValueOnce(new Error('redis down'));
+    claimRun.mockRejectedValueOnce(new Error('redis down'));
     await expect(mod.enqueueLeadAi(input, allowAll)).resolves.toBeUndefined();
     expect(add).not.toHaveBeenCalled();
     expect(JSON.stringify(warn.mock.calls)).toContain('Could not queue AI work');
@@ -202,7 +192,7 @@ describe('enqueueLeadAi', () => {
     expect(add).toHaveBeenCalledTimes(3);
     expect(warn).toHaveBeenCalledTimes(1);
     expect(JSON.stringify(warn.mock.calls[0])).toContain('SCORE');
-    // The claim was given back, so the next sync of the same data tries again.
+    // The run stayed open, so the next sync of the same data retries it (same run id).
     add.mockClear();
     await mod.enqueueLeadAi({ ...input, ownerId: 'owner-1' }, allowAll);
     expect(add).toHaveBeenCalledTimes(3);
@@ -320,7 +310,7 @@ describe('enqueueLeadAi', () => {
 
 describe('enqueueLeadAiById', () => {
   beforeEach(async () => {
-    claims.clear();
+    claimStore = inMemoryLeadAiClaimStore();
     add.mockReset().mockResolvedValue(undefined);
     Queue.mockClear();
     vi.resetModules();

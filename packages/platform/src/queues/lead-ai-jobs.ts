@@ -186,12 +186,54 @@ export function plannedLeadAiJobs(job: LeadAiJob, runId: string): PlannedLeadAiJ
   return jobs;
 }
 
-// ─── Last-queued fingerprint (Redis) ────────────────────────────────────────
+// ─── Per-lead run claim (Redis) ─────────────────────────────────────────────
+//
+// One key per lead holds `<fingerprint>|<runId>|<state>`, state `open` or `done`:
+// - new data (another fingerprint, or no key): a new run is claimed `open` with a fresh runId;
+// - the same data `done`: nothing to do;
+// - the same data still `open` (an earlier run failed part-way, timed out, or is in flight in
+//   the other producer): the SAME runId is handed back, so re-adding its jobs is deduped by
+//   their stable job ids and only the ones that never landed are added.
+// Nothing is ever released, so a claim can never undo or clobber another run (codex rounds).
 
-/** The Redis client surface the claim needs (ioredis `eval`, as BullMQ's `queue.client`). */
+/** What the run flow needs from the claim store. */
 export interface LeadAiClaimStore {
-  eval(script: string, numKeys: number, ...args: (string | number)[]): Promise<unknown>;
+  /** The runId to queue under, or null when this exact data is already done. */
+  claim(
+    key: string,
+    fingerprint: string,
+    newRunId: string,
+    ttlSeconds: number
+  ): Promise<string | null>;
+  /** Mark the run done, only if the key still holds this run. */
+  complete(key: string, fingerprint: string, runId: string, ttlSeconds: number): Promise<void>;
 }
+
+/** Where a lead's run claim lives. A Redis key, not a jobId, so ':' is fine. */
+export function leadAiClaimKey(job: Pick<LeadAiJob, 'tenantId' | 'leadId'>): string {
+  return `lead-ai:last:${job.tenantId}:${job.leadId}`;
+}
+
+const CLAIM_LUA = [
+  "local prev = redis.call('GET', KEYS[1])",
+  'if prev then',
+  "  local fp, run, state = string.match(prev, '^([^|]*)|([^|]*)|([^|]*)$')",
+  '  if fp == ARGV[1] then',
+  "    if state == 'done' then return '' end",
+  "    redis.call('SET', KEYS[1], prev, 'EX', tonumber(ARGV[3]))",
+  '    return run',
+  '  end',
+  'end',
+  "redis.call('SET', KEYS[1], ARGV[1] .. '|' .. ARGV[2] .. '|open', 'EX', tonumber(ARGV[3]))",
+  'return ARGV[2]',
+].join('\n');
+
+const COMPLETE_LUA = [
+  "if redis.call('GET', KEYS[1]) == ARGV[1] .. '|' .. ARGV[2] .. '|open' then",
+  "  redis.call('SET', KEYS[1], ARGV[1] .. '|' .. ARGV[2] .. '|done', 'EX', tonumber(ARGV[3]))",
+  'end',
+  'return 0',
+].join('\n');
 
 /** The part of BullMQ's Redis client (`queue.client`, IRedisClient) the claim uses. */
 export interface LeadAiScriptRunner {
@@ -201,68 +243,84 @@ export interface LeadAiScriptRunner {
 
 const definedScripts = new WeakMap<object, Set<string>>();
 
+async function runScript(client: LeadAiScriptRunner, name: string, lua: string, args: unknown[]) {
+  const defined = definedScripts.get(client) ?? new Set<string>();
+  if (!defined.has(name)) {
+    client.defineCommand(name, { numberOfKeys: 1, lua });
+    defined.add(name);
+    definedScripts.set(client, defined);
+  }
+  return client.runCommand(name, args);
+}
+
 /**
- * Adapt BullMQ's Redis client to the claim store. BullMQ 5 exposes no raw `eval`; Lua runs as a
- * named command, so each script is registered once per client and then run by name.
+ * The claim store on BullMQ's Redis client. BullMQ 5 exposes no raw `eval`; Lua runs as a named
+ * command, so each script is registered once per client and then run by name.
  */
 export function claimStoreFromRedis(client: LeadAiScriptRunner): LeadAiClaimStore {
   return {
-    eval: async (script, numKeys, ...args) => {
-      const name = `leadAi${createHash('sha1').update(script).digest('hex').slice(0, 12)}`;
-      const defined = definedScripts.get(client) ?? new Set<string>();
-      if (!defined.has(name)) {
-        client.defineCommand(name, { numberOfKeys: numKeys, lua: script });
-        defined.add(name);
-        definedScripts.set(client, defined);
-      }
-      return client.runCommand(name, args);
+    claim: async (key, fingerprint, newRunId, ttlSeconds) => {
+      const run = await runScript(client, 'leadAiClaimRun', CLAIM_LUA, [
+        key,
+        fingerprint,
+        newRunId,
+        ttlSeconds,
+      ]);
+      return typeof run === 'string' && run !== '' ? run : null;
+    },
+    complete: async (key, fingerprint, runId, ttlSeconds) => {
+      await runScript(client, 'leadAiCompleteRun', COMPLETE_LUA, [
+        key,
+        fingerprint,
+        runId,
+        ttlSeconds,
+      ]);
     },
   };
 }
-/** Where a lead's last queued fingerprint lives. A Redis key, not a jobId, so ':' is fine. */
-export function leadAiClaimKey(job: Pick<LeadAiJob, 'tenantId' | 'leadId'>): string {
-  return `lead-ai:last:${job.tenantId}:${job.leadId}`;
-}
-
-// Atomic swap: set the new fingerprint (refreshing its TTL) and return 1 when it differs from
-// the previous one, 0 when the lead was last queued with this exact fingerprint.
-const CLAIM_SCRIPT =
-  "local prev = redis.call('GET', KEYS[1]) " +
-  "redis.call('SET', KEYS[1], ARGV[1], 'EX', tonumber(ARGV[2])) " +
-  'if prev == ARGV[1] then return 0 end return 1';
-
-// Undo a claim, only if it is still ours (a later run may have claimed since).
-const RELEASE_SCRIPT =
-  "if redis.call('GET', KEYS[1]) == ARGV[1] then return redis.call('DEL', KEYS[1]) end return 0";
 
 /**
- * Claim a run for this lead: true when what the agents read changed since it was last queued
- * (or it never was), so the caller should queue the jobs now. False means another run already
- * queued exactly this data. Throws when Redis is unreachable; the caller treats that as "not
- * queued", like a failed add.
+ * The same semantics in memory, for tests and for a single process without Redis. Not shared
+ * across processes.
  */
-export async function claimLeadAiRun(store: LeadAiClaimStore, job: LeadAiJob): Promise<boolean> {
-  const result = await store.eval(
-    CLAIM_SCRIPT,
-    1,
-    leadAiClaimKey(job),
-    leadAiFingerprint(job),
-    LEAD_AI_DEDUPE_DAYS * DAY_SECONDS
-  );
-  return Number(result) === 1;
+export function inMemoryLeadAiClaimStore(): LeadAiClaimStore & {
+  peek(key: string): string | undefined;
+} {
+  const values = new Map<string, string>();
+  return {
+    claim: async (key, fingerprint, newRunId) => {
+      const prev = values.get(key);
+      if (prev) {
+        const [fp, run, state] = prev.split('|');
+        if (fp === fingerprint) return state === 'done' ? null : (run ?? newRunId);
+      }
+      values.set(key, `${fingerprint}|${newRunId}|open`);
+      return newRunId;
+    },
+    complete: async (key, fingerprint, runId) => {
+      if (values.get(key) === `${fingerprint}|${runId}|open`) {
+        values.set(key, `${fingerprint}|${runId}|done`);
+      }
+    },
+    peek: (key) => values.get(key),
+  };
 }
 
+const CLAIM_TTL_SECONDS = LEAD_AI_DEDUPE_DAYS * DAY_SECONDS;
+
 /**
- * Give a claim back when its jobs could not all be queued, so the next sync of the same data
- * tries again instead of being treated as done. Never throws.
+ * Claim a run for this lead: the runId to queue under, or null when exactly this data was
+ * already queued in full. Throws when Redis is unreachable; nothing is left that needs undoing,
+ * because an `open` claim is simply retried by the next sync.
  */
-export async function releaseLeadAiRun(store: LeadAiClaimStore, job: LeadAiJob): Promise<void> {
-  try {
-    await store.eval(RELEASE_SCRIPT, 1, leadAiClaimKey(job), leadAiFingerprint(job));
-  } catch {
-    // The claim expires with its TTL; nothing more to do.
-  }
+export function claimLeadAiRun(
+  store: LeadAiClaimStore,
+  job: LeadAiJob,
+  newRunId: string = newLeadAiRunId()
+): Promise<string | null> {
+  return store.claim(leadAiClaimKey(job), leadAiFingerprint(job), newRunId, CLAIM_TTL_SECONDS);
 }
+
 export type LeadAiRunOutcome = 'queued' | 'unchanged' | 'partial';
 
 export interface LeadAiRunDeps {
@@ -275,26 +333,18 @@ export interface LeadAiRunDeps {
 
 /**
  * The one way a lead's AI work is queued, shared by every producer: claim the run, add each job
- * on its own (one failure does not stop the others), and give the claim back if any add failed
- * so a later sync of the same data retries. 'unchanged' means this exact data was already
- * queued. Throws only when the claim itself cannot be made (Redis unreachable).
+ * on its own (one failure does not stop the others), and mark the run done only when every add
+ * went through. A partial run stays open, so the next sync of the same data retries it under the
+ * same runId and only the missing jobs are added. 'unchanged' means this exact data was already
+ * queued in full. Throws only when the claim itself cannot be made (Redis unreachable).
  */
 export async function queueLeadAiRun(
   job: LeadAiJob,
   deps: LeadAiRunDeps,
-  runId: string = newLeadAiRunId()
+  newRunId: string = newLeadAiRunId()
 ): Promise<LeadAiRunOutcome> {
-  let claimed: boolean;
-  try {
-    claimed = await claimLeadAiRun(deps.store, job);
-  } catch (error) {
-    // A claim that failed on our side (a client timeout) may still have run on the server and
-    // stored the fingerprint with no jobs behind it. Redis runs one connection's commands in
-    // order, so this release lands after that swap and clears it (codex).
-    await releaseLeadAiRun(deps.store, job);
-    throw error;
-  }
-  if (!claimed) return 'unchanged';
+  const runId = await claimLeadAiRun(deps.store, job, newRunId);
+  if (runId === null) return 'unchanged';
   let failed = false;
   for (const planned of plannedLeadAiJobs(job, runId)) {
     try {
@@ -304,7 +354,7 @@ export async function queueLeadAiRun(
       deps.onAddError(planned, error);
     }
   }
-  if (!failed) return 'queued';
-  await releaseLeadAiRun(deps.store, job);
-  return 'partial';
+  if (failed) return 'partial';
+  await deps.store.complete(leadAiClaimKey(job), leadAiFingerprint(job), runId, CLAIM_TTL_SECONDS);
+  return 'queued';
 }
