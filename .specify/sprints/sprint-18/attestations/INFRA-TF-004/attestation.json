@@ -2,10 +2,10 @@
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "INFRA-TF-004",
-  "run_id": "attest-backfill-INFRA-TF-004-2026-07-24",
+  "run_id": "run-20261112-dod-ruling",
   "attestor": "Claude Code (claude-opus-4-8[1m]) — PM-OPS-002 residual evidence backfill (ENG-OPS-002.R16 / GOV-A-001), STOA-Foundation lens",
-  "attestation_timestamp": "2026-07-24T12:00:00Z",
-  "verdict": "PARTIAL",
+  "attestation_timestamp": "2026-11-12T16:30:00Z",
+  "verdict": "COMPLETE",
   "evidence_summary": {
     "artifacts_verified": 4,
     "validations_passed": 2,
@@ -56,9 +56,24 @@
     }
   ],
   "kpi_results": [
-    { "kpi": "env_tfvars", "target": "3", "actual": "3", "met": true },
-    { "kpi": "remote_state", "target": "active", "actual": "active", "met": true },
-    { "kpi": "ai_worker_otel", "target": "emitting", "actual": "emitting", "met": true }
+    {
+      "kpi": "env_tfvars",
+      "target": "3",
+      "actual": "3: infra/terraform/environments/{dev,staging,production}/terraform.tfvars",
+      "met": true
+    },
+    {
+      "kpi": "grafana_as_code (amended from remote_state 2026-11-12)",
+      "target": "applied",
+      "actual": "infra/monitoring/grafana/cloud holds alert-rules.json, ai-alert-rules.json, dashboard-production.json, dashboard-ai-models.json, slos.json and synthetic-monitoring.json, applied by grafana-alert-rules.yml, grafana-ai-alert-rules.yml, grafana-dashboard.yml and grafana-slos.yml. Live: 7 intelliflow-prod rules, 6 intelliflow-ai rules, 2 SLO burn-rate rules, dashboards env008-production and ifc117-ai-models, 3 SLOs.",
+      "met": true
+    },
+    {
+      "kpi": "ai_worker_otel",
+      "target": "emitting",
+      "actual": "Tempo 24h: ai-worker 73k spans; api request records in Loki carry trace_id 37,314 of 37,314 over 7 days, and 20 of 20 sampled trace ids exist in Tempo.",
+      "met": true
+    }
   ],
   "definition_of_done_items": [
     {
@@ -73,5 +88,5 @@
     "git_commit": "8f8467813",
     "branch": "chore/pm-ops-002-residuals"
   },
-  "notes": "EVIDENCE BACKFILL (not a re-implementation). INFRA-TF-004 (env tfvars + remote state + monitoring module + ai-worker OTel) shipped primarily via #286 and was recorded Completed by the CSV status-flip #596 (8f8467813). PM-OPS-002 flagged the missing attestation.json (GOV-A-001; ENG-OPS-002.R16). Governed by ADR-064."
+  "notes": "EVIDENCE BACKFILL (not a re-implementation). INFRA-TF-004 (env tfvars + remote state + monitoring module + ai-worker OTel) shipped primarily via #286 and was recorded Completed by the CSV status-flip #596 (8f8467813). PM-OPS-002 flagged the missing attestation.json (GOV-A-001; ENG-OPS-002.R16). Governed by ADR-064.\nAmended 2026-11-12: Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. \"Remote backend bootstrapped\" and \"monitoring module provisions the stack\" were replaced by \"Grafana Cloud resources provisioned as code by the repo scripts and workflows; no Terraform state\". The earlier remote_state=active result is superseded by the ruling."
 }
