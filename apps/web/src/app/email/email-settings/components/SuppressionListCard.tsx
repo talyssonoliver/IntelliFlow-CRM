@@ -138,8 +138,9 @@ export function SuppressionListCard({ announce }: Readonly<SuppressionListCardPr
         )}
 
         {!list.error && !list.isLoading && rows.length === 0 && (
+          // "rules" carries no hotkey: "emails" would bind E on this page to Add an address.
           <EmptyState
-            entity="emails"
+            entity="rules"
             size="sm"
             ctaLabel="Add an address"
             onCtaClick={() => inputRef.current?.focus()}

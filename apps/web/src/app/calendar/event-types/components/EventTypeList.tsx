@@ -165,8 +165,9 @@ export const EventTypeList = forwardRef<EventTypeListHandle, EventTypeListProps>
     return (
       <div className="space-y-3">
         {items.length === 0 ? (
+          // "rules" carries no hotkey: "appointments" would bind A on this page to Create event type.
           <EmptyState
-            entity="appointments"
+            entity="rules"
             ctaLabel="Create event type"
             showCta={canEdit}
             onCtaClick={() => open(null, document.activeElement)}

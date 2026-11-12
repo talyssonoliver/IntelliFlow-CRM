@@ -855,15 +855,6 @@ waivers:
     author: claude provider lane
     date: '2026-11-07'
     expires: '2026-11-21'
-  - fingerprint: 1576b5f965073a1fd611221d777fc227f19ea638e904caa3527c4ea4593ce0b9
-    reason: >-
-      Deferred to #1294, accepted by the coordinator on 2026-11-11 (LOW findings become a
-      follow-up issue, not a blocker). The Event Types empty state uses entity="appointments"
-      with a create handler, so the A key opens Create event type; the fix (an entity with no
-      hotkey) is tracked in #1294.
-    author: ifc-074 lane
-    date: '2026-11-11'
-    expires: '2026-11-25'
   - fingerprint: e7fa160ce28e4ed28ee8322e4f5d0f15f09e293fd468abd0e1113e3854e13f87
     reason: >-
       Deferred to #1294, accepted by the coordinator on 2026-11-11 (LOW findings become a
