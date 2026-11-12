@@ -52,6 +52,8 @@ import type { Prisma, PrismaClient } from '@intelliflow/db';
 import type { Context } from '../../context';
 import { createTenantScopedPrisma, serviceTenantContext } from '../../security/tenant-context';
 import { describePipelineSyncCopy } from './pipeline-sync-copy';
+import { enqueueLeadAiById } from '../lead/lead-scoring-enqueue';
+import { restrictionReader } from '../privacy/restriction-reader';
 
 // ============================================================================
 // Input Schema
@@ -442,6 +444,29 @@ function secretsMatch(candidate: string | undefined, secret: string): boolean {
     .digest();
   const b = createHash('sha256').update(secret).digest();
   return timingSafeEqual(a, b);
+}
+
+/**
+ * Queue a lead's AI work (scoring, qualification, next best action) without holding up the
+ * inbound call: these leads were never scored before (owner complaint 2026-11-12). Detached and
+ * best-effort; the enqueue never throws, and this catch only covers an unexpected rejection.
+ */
+function queueInboundLeadAi(
+  ctx: InboundContext,
+  tenantId: string,
+  leadId: string,
+  correlationId: string
+): void {
+  enqueueLeadAiById(ctx.prismaWithTenant, restrictionReader(ctx), {
+    leadId,
+    tenantId,
+    correlationId,
+  }).catch((error: unknown) => {
+    console.warn('[inbound] lead AI enqueue failed', {
+      leadId,
+      error: error instanceof Error ? error.name : 'unknown',
+    });
+  });
 }
 
 function getInboundBinding(): { tenantId: string; ownerId: string } {
@@ -1293,6 +1318,13 @@ export const inboundRouter = createTRPCRouter({
         throw new TRPCError({ code: 'BAD_REQUEST', message });
       }
 
+      queueInboundLeadAi(
+        ctx,
+        tenantId,
+        result.value.id.value,
+        `portal-lead-${result.value.id.value}`
+      );
+
       if (input.submissionPayload || input.attribution) {
         await recordSubmission(ctx, input, result.value.id.value, tenantId, false);
       }
@@ -1349,6 +1381,7 @@ export const inboundRouter = createTRPCRouter({
         ownerId,
         tenantId,
       });
+      if (leadCreated) queueInboundLeadAi(ctx, tenantId, leadId, `call-booking-${leadId}`);
 
       // --- Step 4: idempotency — check if appointment already exists ---------------
       const externalId = `${BOOKING_EXTERNAL_ID_PREFIX}${input.submissionId}`;
@@ -1699,6 +1732,10 @@ export const inboundRouter = createTRPCRouter({
       // (status walk, tagging) can still fail with a retryable 500, and the retry then
       // plans nothing, because the stored name is no longer the listing name.
       const companyField = companyChange ? { companyChange } : {};
+      // The lead's AI work (scoring, qualification, next best action), from the lead as now
+      // stored, so a corrected company is what the agents read. Fire-and-forget; a re-sync of
+      // a lead whose fields have not changed queues nothing (deterministic job ids).
+      queueInboundLeadAi(ctx, tenantId, leadId, `coa-sync-${leadId}`);
       if (prior) {
         const priorMeta = prior.metadata as { qualificationPending?: unknown } | null;
         return {

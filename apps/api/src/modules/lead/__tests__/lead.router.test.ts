@@ -11,10 +11,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { ProcessingRestrictedError } from '@intelliflow/domain';
 import { LeadScoringFailedError } from '@intelliflow/application';
-vi.mock('../lead-scoring-enqueue', () => ({ enqueueLeadScoring: vi.fn(async () => undefined) }));
+vi.mock('../lead-scoring-enqueue', () => ({ enqueueLeadAi: vi.fn(async () => undefined) }));
 
 import { leadRouter } from '../lead.router';
-import { enqueueLeadScoring } from '../lead-scoring-enqueue';
+import { enqueueLeadAi } from '../lead-scoring-enqueue';
 import {
   prismaMock,
   createTestContext,
@@ -99,7 +99,7 @@ describe('Lead Router', () => {
           updatedAt: new Date(),
         },
       });
-      vi.mocked(enqueueLeadScoring).mockClear();
+      vi.mocked(enqueueLeadAi).mockClear();
 
       await leadRouter.createCaller(ctx).create({
         email: 'scored@example.com',
@@ -108,8 +108,8 @@ describe('Lead Router', () => {
         source: 'REFERRAL' as const,
       });
 
-      expect(enqueueLeadScoring).toHaveBeenCalledTimes(1);
-      expect(enqueueLeadScoring).toHaveBeenCalledWith(
+      expect(enqueueLeadAi).toHaveBeenCalledTimes(1);
+      expect(enqueueLeadAi).toHaveBeenCalledWith(
         {
           leadId: TEST_UUIDS.lead1,
           tenantId: TEST_UUIDS.tenant,
@@ -123,6 +123,8 @@ describe('Lead Router', () => {
             phone: undefined,
           },
           correlationId: `lead-create-${TEST_UUIDS.lead1}`,
+          // The owner the next-best-action agent recommends for (it needs a user).
+          ownerId: TEST_UUIDS.user1,
         },
         // PG-203: the processing-restriction reader (the container adapter in production).
         ctx.adapters!.processingRestrictionRepository
@@ -463,7 +465,7 @@ describe('Lead Router', () => {
         value: mockDomainLead,
       });
 
-      vi.mocked(enqueueLeadScoring).mockClear();
+      vi.mocked(enqueueLeadAi).mockClear();
       const result = await callerWithService.update({
         id: TEST_UUIDS.lead1,
         firstName: 'Updated',
@@ -476,7 +478,7 @@ describe('Lead Router', () => {
         TEST_UUIDS.user1
       );
       // PG-203 Q22: the re-score goes through the shared enqueue and its restriction gate.
-      expect(enqueueLeadScoring).toHaveBeenCalledWith(
+      expect(enqueueLeadAi).toHaveBeenCalledWith(
         expect.objectContaining({
           leadId: TEST_UUIDS.lead1,
           correlationId: `lead-update-${TEST_UUIDS.lead1}`,

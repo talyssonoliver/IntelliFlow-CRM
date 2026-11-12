@@ -83,7 +83,7 @@ import {
 import { sendBookingEmails } from './booking-email';
 import { recurringBusyIntervals, type RecurringBusyRow } from './recurring-busy';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
-import { enqueueLeadScoring } from '../lead/lead-scoring-enqueue';
+import { enqueueLeadAi } from '../lead/lead-scoring-enqueue';
 import { restrictionReader } from '../privacy/restriction-reader';
 import { onAppointmentCreated } from '../legal/appointment-side-effects';
 
@@ -355,6 +355,8 @@ interface CreatedLead {
   company?: string | null;
   title?: string | null;
   phone?: { value: string } | null;
+  /** The event type's owner: the next-best-action agent recommends actions for them. */
+  ownerId?: string;
 }
 
 /** How the booker relates to the CRM, decided from the same three reads in every case. */
@@ -555,7 +557,7 @@ async function afterBooking(
     const created = lead.created;
     // Not awaited: scoring waits on Redis readiness and must never hold up the emails below.
     step('ai-scoring', () =>
-      enqueueLeadScoring(
+      enqueueLeadAi(
         {
           leadId: created.id.value,
           tenantId: eventType.tenantId,
@@ -569,6 +571,7 @@ async function afterBooking(
             phone: created.phone?.value,
           },
           correlationId: `lead-create-${created.id.value}`,
+          ownerId: created.ownerId,
         },
         restrictionReader(ctx)
       )
