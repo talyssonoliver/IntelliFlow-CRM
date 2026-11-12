@@ -33,6 +33,7 @@ import {
   startTimeOf,
   writeGateState,
 } from '../preship-process.mjs';
+import { copyGateModules } from './helpers/gate-fixture';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SCRIPTS = path.resolve(HERE, '..');
@@ -960,19 +961,9 @@ describe('pre-ship.mjs runs a step async, tracks it, and cleans up', () => {
     for (const f of ['pre-ship.mjs', 'preship-process.mjs', 'preship-watchdog.mjs']) {
       fs.copyFileSync(path.join(SCRIPTS, f), path.join(dir, 'scripts', f));
     }
-    for (const lib of [
-      'preship-test-scope.mjs',
-      'preship-coverage-freshness.mjs',
-      'preship-run-metrics.mjs',
-      'preship-report.mjs',
-      'preship-gate.mjs',
-      'test-slot.mjs',
-      'preship-integration-infra.mjs',
-      'preship-cache.mjs',
-      'preship-build.mjs',
-    ]) {
-      fs.copyFileSync(path.join(SCRIPTS, 'lib', lib), path.join(dir, 'scripts/lib', lib));
-    }
+    // Every module pre-ship can import, not a hand-kept list: each new lib used to
+    // break this fixture until someone added it.
+    copyGateModules(SCRIPTS, path.join(dir, 'scripts'));
     git(['add', '-A']);
     git(['commit', '-q', '-m', 'seed']);
     const bin = path.join(dir, 'bin');
@@ -1002,7 +993,7 @@ describe('pre-ship.mjs runs a step async, tracks it, and cleans up', () => {
 
   it('runs the step, streams its output to the step log, and leaves no state file behind', () => {
     const { dir, seen, stateDir, env } = gateRepo();
-    const r = spawnSync(process.execPath, ['scripts/pre-ship.mjs', '--only=library-build'], {
+    const r = spawnSync(process.execPath, ['scripts/pre-ship.mjs', '--only=install'], {
       cwd: dir,
       env,
       encoding: 'utf8',
@@ -1013,7 +1004,7 @@ describe('pre-ship.mjs runs a step async, tracks it, and cleans up', () => {
     const logs = fs
       .readdirSync(dir, { recursive: true })
       .map(String)
-      .filter((f) => f.endsWith('library-build.log'));
+      .filter((f) => f.endsWith('install.log'));
     expect(logs.length).toBeGreaterThan(0);
     expect(fs.readFileSync(path.join(dir, logs[0]), 'utf8')).toMatch(/to-the-log/);
     expect(

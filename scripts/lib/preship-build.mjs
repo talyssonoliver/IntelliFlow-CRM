@@ -56,10 +56,14 @@ function positiveInt(env, name, fallback) {
 /**
  * The build step's command and the env it adds on top of the inherited one.
  * @param {{isCI: boolean, env: Record<string, string | undefined>}} opts
- * @returns {{bin: 'turbo' | 'pnpm', args: string[], env: Record<string, string>}}
+ * @returns {{bin: 'turbo' | 'pnpm', args: string[], env: Record<string, string>} | null}
+ *   null when the affected scope leaves nothing to build
  */
-export function buildPlan({ isCI, env }) {
+export function buildPlan({ isCI, env, filters = null }) {
   if (isCI) return { bin: 'pnpm', args: ['run', 'build'], env: {} };
+  // filters: null = every package; [] = nothing to build (docs or tests only);
+  // otherwise turbo --filter args for the affected packages (preship-affected.mjs).
+  if (Array.isArray(filters) && filters.length === 0) return null;
   const cpus = positiveInt(env, NEXT_CPUS_ENV, DEFAULT_LOCAL_NEXT_CPUS);
   const heapMb = positiveInt(env, BUILD_HEAP_ENV, DEFAULT_LOCAL_BUILD_HEAP_MB);
   const nodeOptions = [stripHeapCap(env.NODE_OPTIONS), `--max-old-space-size=${heapMb}`]
@@ -67,7 +71,7 @@ export function buildPlan({ isCI, env }) {
     .join(' ');
   return {
     bin: 'turbo',
-    args: ['run', 'build', '--concurrency=1'],
+    args: ['run', 'build', '--concurrency=1', ...(filters ?? [])],
     env: { NEXT_BUILD_CPUS: String(cpus), NODE_OPTIONS: nodeOptions },
   };
 }
@@ -94,6 +98,7 @@ export function runBuild({
   isCI,
   env,
   root,
+  filters = null,
   spawn = spawnSync,
   log = console.log,
   logError = console.error,
@@ -102,10 +107,14 @@ export function runBuild({
 }) {
   let plan;
   try {
-    plan = buildPlan({ isCI, env });
+    plan = buildPlan({ isCI, env, filters });
   } catch (err) {
     logError(`build: ${err.message}`);
     return 1;
+  }
+  if (plan === null) {
+    log('build: nothing to build — only docs or test files changed');
+    return 0;
   }
   const extra = Object.entries(plan.env).map(([k, v]) => `${k}=${v}`);
   log(`build: ${[...extra, plan.bin, ...plan.args].join(' ')}`);
