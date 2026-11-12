@@ -138,7 +138,9 @@ vi.mock('@intelliflow/adapters', () => ({
   },
 }));
 
-vi.mock('@intelliflow/application', () => ({
+vi.mock('@intelliflow/application', async (importOriginal) => ({
+  // The chains import their built-in prompts from here, so keep the real exports.
+  ...(await importOriginal<typeof import('@intelliflow/application')>()),
   QuotaService: class {},
 }));
 
