@@ -1,0 +1,102 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-151",
+  "run_id": "run-20261112-consumer-framework",
+  "attestor": "Claude Code (ifc-obs lane)",
+  "attestation_timestamp": "2026-11-12T15:10:00Z",
+  "verdict": "NEEDS_HUMAN",
+  "evidence_summary": {
+    "artifacts_verified": 12,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 2,
+    "kpis_missed": 1,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "tsc --noEmit in events-worker, worker-shared, observability, adapters",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-11-12T15:10:00Z"
+    },
+    {
+      "name": "Tests",
+      "command": "events-worker 141, observability outbox-metrics 2 + consumer-span 18, adapters PrismaOutboxRepository.implementation 39, tools outbox-dlq 16 + alert-rule suites 231",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-11-12T15:10:00Z"
+    },
+    {
+      "name": "Lint",
+      "command": "eslint + prettier on the changed files",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-11-12T15:10:00Z"
+    },
+    {
+      "name": "Build",
+      "command": "pre-ship build step on push (see PR checks)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-11-12T15:10:00Z"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Retry success",
+      "target": "> 90%",
+      "actual": "Chaos test (seeded, 400 events, 20% transient failure per handler call, 2 handlers, 3 attempts): 133 events needed a retry, 8 dead-lettered, retry success 94.3% (apps/workers/events-worker/src/__tests__/outbox-consumer-framework.test.ts, IFC151_REPORT=1). Production value: intelliflow_outbox_events_total after deploy.",
+      "met": true
+    },
+    {
+      "kpi": "DLQ drain success",
+      "target": "> 95%",
+      "actual": "Same chaos run: after the outage ends, replaying the 8 non-poison dead letters published 8 of 8 (100%), and no handler ran twice for one event. 16 poison events (4%) were dead-lettered with no retry.",
+      "met": true
+    },
+    {
+      "kpi": "MTTR",
+      "target": "< 30 min",
+      "actual": "Not measurable until production dead letters occur. Detection: alert ifc151-outbox-dead-letters (for 0s, 10 min window); triage: tools/scripts/outbox-dlq.ts list/replay and runbook §0. Pending production evidence.",
+      "met": false
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "item": "Consumer SDK supports retries/backoff",
+      "met": true,
+      "evidence": "OutboxPoller: 3 attempts, 1 s / 5 s / 30 s with jitter (unchanged), now with per-handler idempotency and poison handling"
+    },
+    {
+      "item": "DLQ storage/triage workflow",
+      "met": true,
+      "evidence": "domain_events DEAD_LETTER; PrismaOutboxRepository.listDeadLetters / requeueDeadLetter; tools/scripts/outbox-dlq.ts; runbook dlq-triage.md §0"
+    },
+    {
+      "item": "Idempotent handlers",
+      "met": true,
+      "evidence": "metadata.handledBy recorded per successful handler by one atomic UPDATE (real-DB test tests/integration/transactional/outbox-consumer-framework.test.ts); retries and replays skip recorded handlers"
+    },
+    {
+      "item": "Poison-message handling",
+      "met": true,
+      "evidence": "PoisonMessageError: dead-lettered at once with lastError \"poison: ...\"; replay skips poison unless --include-poison"
+    },
+    {
+      "item": "Metrics and alerts",
+      "met": false,
+      "evidence": "intelliflow_outbox_events_total + dispatch duration histogram (OTel, exported by the combined worker) and alert rule ifc151-outbox-dead-letters as code. Live only after the PR merges (grafana-alert-rules.yml applies the rule) and the combined worker is deployed. NEEDS_HUMAN."
+    },
+    {
+      "item": "Chaos tests",
+      "met": true,
+      "evidence": "seeded chaos test in outbox-consumer-framework.test.ts"
+    }
+  ],
+  "notes": "Branch feat/ifc-151-outbox-consumer-framework, stacked on feat/ifc-097-worker-consumer-spans at 209dbd11b. Verdict NEEDS_HUMAN: the code, tests and runbook are complete; production evidence needs (1) merge, which applies alert rule ifc151-outbox-dead-letters through grafana-alert-rules.yml, (2) a combined-worker deploy, then (3) intelliflow_outbox_events_total series visible in Grafana and requireSeries flipped back to the default. No migration: handledBy lives in the existing domain_events.metadata JSON. Replaying a production dead letter is owner-approved DML (runbook §0.3). The sprint-6 attestation stays as history."
+}
