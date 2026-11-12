@@ -21,13 +21,19 @@ vi.unmock('@opentelemetry/api');
 vi.unmock('./sentry');
 
 import { SpanKind, SpanStatusCode } from '@opentelemetry/api';
-import { NodeSDK, tracing } from '@opentelemetry/sdk-node';
+import { NodeSDK } from '@opentelemetry/sdk-node';
+// SDK 3.x (IFC-319): sdk-node no longer re-exports `tracing`; the trace SDK is @opentelemetry/sdk-trace.
+import {
+  AlwaysOnSampler,
+  InMemorySpanExporter,
+  SimpleSpanProcessor,
+} from '@opentelemetry/sdk-trace';
 import { getStandardNodeInstrumentations } from '@intelliflow/observability/node-instrumentations';
 import { closeSentry, initializeSentry } from './sentry';
 import { setNodeSdkStarted } from './otel-state';
 
-const exporter = new tracing.InMemorySpanExporter();
-const processor = new tracing.SimpleSpanProcessor(exporter);
+const exporter = new InMemorySpanExporter();
+const processor = new SimpleSpanProcessor({ exporter });
 let sdk: NodeSDK;
 let server: Server;
 let baseUrl: string;
@@ -53,7 +59,7 @@ beforeAll(async () => {
   // Same order as production: NodeSDK first, then Sentry.
   // .env.test sets OTEL_TRACES_SAMPLER=always_off; sample everything here.
   sdk = new NodeSDK({
-    sampler: new tracing.AlwaysOnSampler(),
+    sampler: new AlwaysOnSampler(),
     spanProcessors: [processor],
     instrumentations: [getStandardNodeInstrumentations()],
   });

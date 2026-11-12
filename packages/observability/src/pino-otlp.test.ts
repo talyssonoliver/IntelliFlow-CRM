@@ -8,9 +8,10 @@
  * enabled is not patched — the reason `apps/api/src/tracing/logger.ts` creates
  * its logger lazily, on the first request, after `instrument.ts` started the SDK.
  *
- * `@opentelemetry/api-logs` is resolved through instrumentation-pino's own
- * dependency tree so the test registers the provider on the exact global the
- * instrumentation reads (`logs.getLogger`).
+ * The Logs API is resolved through instrumentation-pino's own dependency tree
+ * so the test registers the provider on the exact global the instrumentation
+ * reads (`logs.getLogger`). Since OTel JS SDK 3.x (IFC-319) that API is
+ * `logs` in `@opentelemetry/api` 1.10; `@opentelemetry/api-logs` is gone.
  *
  * The instrumentation patches pino through the CommonJS require hook, which is
  * how production loads it (`node dist/main.js`, tsup CJS output). Vitest's ESM
@@ -22,8 +23,8 @@
 import { createRequire } from 'node:module';
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { trace, context } from '@opentelemetry/api';
-import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
-import { InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace-base';
+import { InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-trace';
+import { NodeTracerProvider } from './test-utils/node-tracer-provider';
 import {
   LoggerProvider,
   SimpleLogRecordProcessor,
@@ -34,18 +35,18 @@ import { loadLoggingAsCommonJs } from './test-utils/load-logging-cjs';
 
 const require = createRequire(import.meta.url);
 const apiLogs = createRequire(require.resolve('@opentelemetry/instrumentation-pino'))(
-  '@opentelemetry/api-logs'
-) as typeof import('@opentelemetry/api-logs');
+  '@opentelemetry/api'
+) as typeof import('@opentelemetry/api');
 
 type CreateLogger = typeof import('./logging').createLogger;
 
 describe('pino records reach the OTel Logs SDK', () => {
   const logExporter = new InMemoryLogRecordExporter();
   const loggerProvider = new LoggerProvider({
-    processors: [new SimpleLogRecordProcessor(logExporter)],
+    processors: [new SimpleLogRecordProcessor({ exporter: logExporter })],
   });
   const tracerProvider = new NodeTracerProvider({
-    spanProcessors: [new SimpleSpanProcessor(new InMemorySpanExporter())],
+    spanProcessors: [new SimpleSpanProcessor({ exporter: new InMemorySpanExporter() })],
   });
   let instrumentation: PinoInstrumentation;
   let loggerBuiltBeforeInstrumentation: ReturnType<CreateLogger>;
