@@ -228,8 +228,15 @@ describe('lead-format · leadWebsite (#1277)', () => {
   it('keeps a domain with a port, user info or a non-Latin top-level label', () => {
     expect(leadWebsite('shop.example.invalid:8080/a')?.label).toBe('shop.example.invalid/a');
     expect(leadWebsite('https://user@shop.example.invalid')?.label).toBe('shop.example.invalid');
-    expect(leadWebsite('café.example.invalid')).not.toBeNull();
-    expect(leadWebsite('例え.テスト')).not.toBeNull();
+    expect(leadWebsite('café.example.invalid')?.label).toBe('café.example.invalid');
+    expect(leadWebsite('例え.テスト')?.label).toBe('例え.テスト');
+  });
+
+  it('shows a non-ASCII path readably and keeps the encoded href', () => {
+    const site = leadWebsite('https://WWW.Example.invalid/menú/');
+    expect(site?.label).toBe('example.invalid/menú');
+    expect(site?.href).toBe('https://www.example.invalid/men%C3%BA/');
+    expect(leadWebsite('https://example.invalid/%E0%A4%A')?.label).toBe('example.invalid/%E0%A4%A');
   });
 
   it('keeps the remaining parameters exactly as stored', () => {

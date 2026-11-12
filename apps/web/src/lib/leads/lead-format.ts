@@ -148,10 +148,18 @@ export function leadWebsite(
   if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
   // Placeholders ("N/A", "none", "n.a.", "0") must not become links. The URL parser
   // rewrites hosts ("0" -> "0.0.0.0"), so the check runs on the host as typed.
-  if (!isAddressHost(typedHost(text))) return null;
+  const typed = typedHost(text);
+  if (!isAddressHost(typed)) return null;
   url.search = withoutTrackingParams(url.search);
-  const host = url.hostname.replace(/^www\./i, '');
-  const path = url.pathname === '/' ? '' : url.pathname.replace(/\/$/, '');
+  // The label reads as typed: the parser would show "café" as punycode and "menú"
+  // percent-encoded. The href keeps the parsed, encoded form.
+  const host = typed.toLowerCase().replace(/^www\./, '');
+  let path = url.pathname === '/' ? '' : url.pathname.replace(/\/$/, '');
+  try {
+    path = decodeURIComponent(path);
+  } catch {
+    /* keep the encoded path */
+  }
   return { href: url.toString(), label: host + path };
 }
 
