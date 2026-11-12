@@ -6,12 +6,12 @@
   "scripts": {
     "dev": "next dev",
     "typegen": "next typegen",
-    "build": "next build --webpack",
+    "build": "node ../../scripts/require-test-slot.mjs web-build && next build --webpack",
     "start": "next start",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
     "test": "vitest",
     "typecheck": "pnpm run typegen && tsc --noEmit",
-    "lighthouse:auth": "lhci autorun --config=../../lighthouserc.authenticated.js && npx tsx ../../tools/lighthouse/extract-lhci-report.ts",
+    "lighthouse:auth": "node ../../scripts/require-test-slot.mjs lighthouse:auth && lhci autorun --config=../../lighthouserc.authenticated.js && npx tsx ../../tools/lighthouse/extract-lhci-report.ts",
     "audit:material-symbols": "node ../../tools/scripts/subset-material-symbols.mjs --verify"
   },
   "dependencies": {

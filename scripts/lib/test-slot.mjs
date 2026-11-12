@@ -115,6 +115,59 @@ export function shimLaunch(argv, { env, node = process.execPath, exists = fs.exi
   return { cmd: words[0], args: words.slice(1), options: {} };
 }
 
+/** The owner's escape hatch: run one heavy command outside the queue on purpose. */
+export const OUTSIDE_SLOT_ENV = 'ALLOW_OUTSIDE_SLOT';
+
+/** CI as the semaphore reads it: set, and neither "false" nor "0". */
+function ciSet(env) {
+  return Boolean(env.CI) && env.CI !== 'false' && env.CI !== '0';
+}
+
+/**
+ * Why a heavy command (the web build, Lighthouse, the full suite or coverage)
+ * must not run here, or null when it may. Owner ruling 2026-11-12, "enforce
+ * it": heavy work runs only inside the test-slot queue. It may run when a slot
+ * is held (with-slot.mjs sets TEST_SLOT_HELD for its child), under CI, with
+ * ALLOW_OUTSIDE_SLOT=1, or on a machine with no semaphore (a contributor's
+ * laptop, a Docker build), where there is no queue to join.
+ * @param {string} what the command, as the message names it
+ * @param {NodeJS.ProcessEnv} env
+ * @param {(p: string) => boolean} [exists]
+ * @returns {string | null}
+ */
+export function slotRefusal(what, env, exists = fs.existsSync) {
+  if (env.TEST_SLOT_HELD || ciSet(env) || env[OUTSIDE_SLOT_ENV] === '1') return null;
+  const semaphore = sharedSemaphore(env, exists);
+  if (!semaphore) return null;
+  const queue = semaphore.replaceAll('\\', '/');
+  return [
+    `${what} is a heavy command and runs only inside the test-slot queue.`,
+    `  Queue it:  node ${queue} --label ${what} -- <the same command>`,
+    '  `pnpm test` and `pnpm test:coverage` queue on their own, and a pre-ship gate',
+    '  already holds a slot for everything it runs.',
+    `  Owner override, for one deliberate run: ${OUTSIDE_SLOT_ENV}=1`,
+    '',
+  ].join('\n');
+}
+
+/**
+ * Stop the process with exit code 2 when slotRefusal refuses; return otherwise.
+ * @param {string} what
+ * @param {{env?: NodeJS.ProcessEnv, exists?: (p: string) => boolean, stderr?: {write: (s: string) => unknown}, exit?: (code: number) => never}} [io]
+ */
+export function requireSlot(what, io = {}) {
+  const {
+    env = process.env,
+    exists = fs.existsSync,
+    stderr = process.stderr,
+    exit = process.exit,
+  } = io;
+  const refusal = slotRefusal(what, env, exists);
+  if (refusal === null) return;
+  stderr.write(refusal);
+  exit(2);
+}
+
 /**
  * Spawn with inherited stdio, forward Ctrl-C and kill so the semaphore
  * releases its slot (and the child's own exit cleanup runs), and resolve with

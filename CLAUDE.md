@@ -204,6 +204,18 @@ anything above it (the `git push`, the hook shell). See
 `scripts/lib/preship-gate.mjs`, `scripts/preship-process.mjs` and
 `scripts/preship-watchdog.mjs`.
 
+**Heavy commands run only in the queue** (owner ruling 2026-11-12). The web
+`build`, `lighthouse`, `lighthouse:ci`, web `lighthouse:auth`, `test:unit`,
+`test:integration`, `scripts/run-tests.js` and `scripts/run-coverage.js` exit 2
+with a message unless a test slot is held (`with-slot.mjs` sets `TEST_SLOT_HELD`
+for its child) or `CI` is set. `pnpm test` and `pnpm test:coverage` join the
+queue on their own, and a gate already holds a slot. To run one by hand, queue
+it:
+`node C:/Users/talys/ops/test-slots/with-slot.mjs --label <name> -- <command>`.
+Owner override for one deliberate run: `ALLOW_OUTSIDE_SLOT=1`. A machine without
+the semaphore (a contributor laptop, a Docker build) is not checked. See
+`slotRefusal` in `scripts/lib/test-slot.mjs`.
+
 ### Sprint_plan.csv is Single Source of Truth
 
 Always edit CSV for task updates. Run sync after changes. Never edit derived
