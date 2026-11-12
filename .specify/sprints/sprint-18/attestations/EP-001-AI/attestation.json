@@ -1,0 +1,79 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "EP-001-AI",
+  "run_id": "run-20261112-dod-ruling",
+  "attestor": "Claude Code (ifc-obs lane)",
+  "attestation_timestamp": "2026-11-12T16:30:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 6,
+    "validations_passed": 0,
+    "validations_failed": 0,
+    "gates_passed": 0,
+    "gates_failed": 0,
+    "kpis_met": 5,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "kpi_results": [
+    {
+      "kpi": "100% of running Railway services push OTLP to Grafana Cloud",
+      "target": "100%",
+      "actual": "2 of 2. Railway production runs api and combined-worker only (ws and the standalone workers have no deployment). Tempo and Loki hold exactly these two service names over 7 days (api; ai-worker = the combined worker, which also carries events-worker and ingestion-worker logs: 901 and 374 lines in 7 days).",
+      "met": true
+    },
+    {
+      "kpi": "zero manual SSL config",
+      "target": "0",
+      "actual": "Grafana Cloud and Railway terminate TLS; nothing is configured by hand.",
+      "met": true
+    },
+    {
+      "kpi": "100% behind access control",
+      "target": "100%",
+      "actual": "Grafana Cloud stack graysushi1880: access by Grafana Cloud login or service-account token only; the repo holds no token (workflows read GRAFANA_SA_TOKEN from the Production environment).",
+      "met": true
+    },
+    {
+      "kpi": "retention (amended 2026-11-12)",
+      "target": "14 days, Grafana Cloud free tier",
+      "actual": "Oldest data found: Loki and Mimir hold 14 days, none at 20 days (the Grafana Cloud free tier).",
+      "met": true
+    },
+    {
+      "kpi": "OTLP push working from Railway",
+      "target": "working",
+      "actual": "Tempo 24h: ai-worker 73k spans; api request records in Loki carry trace_id 37,314 of 37,314 over 7 days, and 20 of 20 sampled trace ids exist in Tempo. The Tempo datasource links traces to Loki (jsonData.tracesToLogs -> grafanacloud-logs, +/-2 s).",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "item": "Every running Railway service pushes traces, metrics and logs to Grafana Cloud",
+      "met": true,
+      "evidence": "Railway production runs api and combined-worker only (ws and the standalone workers have no deployment). Tempo and Loki hold exactly these two service names over 7 days (api; ai-worker = the combined worker, which also carries events-worker and ingestion-worker logs: 901 and 374 lines in 7 days)."
+    },
+    {
+      "item": "Traces link to their logs",
+      "met": true,
+      "evidence": "The Tempo datasource links traces to Loki (jsonData.tracesToLogs -> grafanacloud-logs, +/-2 s). Tempo 24h: ai-worker 73k spans; api request records in Loki carry trace_id 37,314 of 37,314 over 7 days, and 20 of 20 sampled trace ids exist in Tempo."
+    },
+    {
+      "item": "Access only through Grafana Cloud accounts and tokens",
+      "met": true,
+      "evidence": "see KPI"
+    },
+    {
+      "item": "Grafana resources git-versioned and applied by workflows",
+      "met": true,
+      "evidence": "infra/monitoring/grafana/cloud holds alert-rules.json, ai-alert-rules.json, dashboard-production.json, dashboard-ai-models.json, slos.json and synthetic-monitoring.json, applied by grafana-alert-rules.yml, grafana-ai-alert-rules.yml, grafana-dashboard.yml and grafana-slos.yml. Live: 7 intelliflow-prod rules, 6 intelliflow-ai rules, 2 SLO burn-rate rules, dashboards env008-production and ifc117-ai-models, 3 SLOs."
+    },
+    {
+      "item": "SonarCloud analyses main",
+      "met": true,
+      "evidence": "SonarCloud project talyssonoliver_IntelliFlow-CRM analysed main at 9a566ce5c on 2026-11-12 12:45 UTC, quality gate OK (17 analyses on record)."
+    }
+  ],
+  "notes": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. The DoD and KPIs in Sprint_plan.csv were amended from the EasyPanel stack (collector, Prometheus, Loki, Tempo, SonarQube self-hosted) to the Grafana Cloud stack; retention amended to 14 days by the same ruling. The web app on Vercel is tracked under ENV-008-AI / IFC-116 (owner ruling: it also sends OTLP to Grafana). The sprint-0 attestation stays as history."
+}
