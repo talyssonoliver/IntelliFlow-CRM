@@ -69,11 +69,12 @@ export const EXCLUDED_DATA = [
 /** A dump is only accepted when its table of contents holds data for these. */
 export const REQUIRED_DATA = ['public.tenants', 'public.users', 'public.leads', 'auth.users'];
 
-const DEFAULT_ROOT = 'C:\\Users\\talys\\intelliflow-backups';
+const DEFAULT_ROOT = String.raw`C:\Users\talys\intelliflow-backups`;
 const DEFAULT_RETENTION_DAYS = 14;
-const OPS_ENV_FILE = 'C:\\Users\\talys\\ops\\intelliflow\\backup.env';
-const MAIN_ENV_LOCAL = 'C:\\Users\\talys\\projects\\intelliFlow-CRM\\.env.local';
+const OPS_ENV_FILE = String.raw`C:\Users\talys\ops\intelliflow\backup.env`;
+const MAIN_ENV_LOCAL = String.raw`C:\Users\talys\projects\intelliFlow-CRM\.env.local`;
 const KEY = 'INTELLIFLOW_BACKUP_DATABASE_URL';
+const DEFAULT_ENV_FILES = Object.freeze({ ops: OPS_ENV_FILE, envLocal: MAIN_ENV_LOCAL });
 
 export function parseEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return {};
@@ -92,10 +93,7 @@ export function parseEnvFile(filePath) {
 }
 
 /** The database URL and where it came from (never the URL in any message). */
-export function resolveDatabaseUrl(
-  env = process.env,
-  files = { ops: OPS_ENV_FILE, envLocal: MAIN_ENV_LOCAL }
-) {
+export function resolveDatabaseUrl(env = process.env, files = DEFAULT_ENV_FILES) {
   if (env[KEY]) return { url: env[KEY], source: `env ${KEY}` };
   const ops = parseEnvFile(files.ops);
   if (ops[KEY]) return { url: ops[KEY], source: 'ops backup.env' };
@@ -181,7 +179,10 @@ export function check({ argv = process.argv, now = new Date(), log = console.log
   };
   appendLog(logFile, entry);
   log(
-    `[backup-intelliflow-db] STALE: ${f.lastSuccessAt ? `last success ${f.lastSuccessAt} (${entry.ageHours} h ago)` : 'no successful backup on record'}`
+    '[backup-intelliflow-db] STALE: ' +
+      (f.lastSuccessAt
+        ? `last success ${f.lastSuccessAt} (${entry.ageHours} h ago)`
+        : 'no successful backup on record')
   );
   return { result: 'STALE', ...f };
 }
@@ -267,7 +268,8 @@ function describe(r) {
   if (r.error) return `spawn error: ${r.error.message}`;
   const err = (r.stderr || '').trim().split(/\r?\n/).filter(Boolean).slice(-3).join(' | ');
   // Never echo anything that could be a credential.
-  return `exit ${r.status}${err ? `: ${err.replace(/postgres(ql)?:\/\/\S+/g, '<url>')}` : ''}`;
+  const detail = err ? ': ' + err.replace(/postgres(ql)?:\/\/\S+/g, '<url>') : '';
+  return `exit ${r.status}${detail}`;
 }
 
 export async function run({
@@ -287,7 +289,8 @@ export async function run({
   const finish = (result, extra) => {
     const line = { ...entry, ...extra, result, finishedAt: new Date().toISOString() };
     appendLog(logFile, line);
-    log(`[backup-intelliflow-db] ${result}${extra.reason ? `: ${extra.reason}` : ''}`);
+    const reason = extra.reason ? ': ' + extra.reason : '';
+    log(`[backup-intelliflow-db] ${result}${reason}`);
     return { result, ...extra };
   };
 
@@ -397,5 +400,6 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   if (process.argv.includes('--check')) {
     process.exit(check().result === 'FRESH' ? 0 : 1);
   }
-  run().then((r) => process.exit(r.result === 'SUCCESS' ? 0 : 1));
+  const r = await run();
+  process.exit(r.result === 'SUCCESS' ? 0 : 1);
 }

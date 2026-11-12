@@ -5,6 +5,7 @@
 import { mkdtempSync, readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import net from 'node:net';
 import { describe, expect, it } from 'vitest';
 import {
   EXCLUDED_DATA,
@@ -19,6 +20,8 @@ import {
   pgDumpArgs,
   resolveDatabaseUrl,
   run,
+  runAsync,
+  startRelay,
   tablesWithData,
 } from '../backup-intelliflow-db.mjs';
 
@@ -281,5 +284,60 @@ describe('--check (ops watch)', () => {
         .trim()
         .split('\n')
     ).toHaveLength(1);
+  });
+});
+
+describe('runAsync and startRelay (real processes and sockets, no database)', () => {
+  it('runAsync collects stdout, stderr and the exit code', async () => {
+    const r = await runAsync(process.execPath, [
+      '-e',
+      "process.stdout.write('out');process.stderr.write('err');process.exit(3)",
+    ]);
+    expect(r).toMatchObject({ status: 3, stdout: 'out', stderr: 'err' });
+  });
+
+  it('runAsync reports a spawn error instead of throwing', async () => {
+    const r = await runAsync('definitely-not-a-command-ifc142', []);
+    expect(r.status).toBeNull();
+    expect(r.error).toBeInstanceOf(Error);
+  });
+
+  it('startRelay copies bytes both ways between 127.0.0.1 and the target, and closes', async () => {
+    const echo = net.createServer((socket) => socket.pipe(socket));
+    await new Promise<void>((resolve) => echo.listen(0, '127.0.0.1', () => resolve()));
+    const target = (echo.address() as net.AddressInfo).port;
+    const relay = await startRelay('127.0.0.1', target);
+    try {
+      expect(relay.port).not.toBe(target);
+      const reply = await new Promise<string>((resolve, reject) => {
+        const c = net.connect(relay.port, '127.0.0.1', () => c.write('ping'));
+        c.on('data', (d) => {
+          resolve(d.toString());
+          c.end();
+        });
+        c.on('error', reject);
+      });
+      expect(reply).toBe('ping');
+    } finally {
+      relay.close();
+      echo.close();
+    }
+  });
+
+  it('startRelay drops the client when the target refuses the connection', async () => {
+    const closed = net.createServer();
+    await new Promise<void>((resolve) => closed.listen(0, '127.0.0.1', () => resolve()));
+    const port = (closed.address() as net.AddressInfo).port;
+    await new Promise<void>((resolve) => closed.close(() => resolve()));
+    const relay = await startRelay('127.0.0.1', port);
+    try {
+      await new Promise<void>((resolve) => {
+        const c = net.connect(relay.port, '127.0.0.1');
+        c.on('close', () => resolve());
+        c.on('error', () => undefined);
+      });
+    } finally {
+      relay.close();
+    }
   });
 });
