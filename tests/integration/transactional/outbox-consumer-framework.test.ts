@@ -11,7 +11,6 @@
  * Skips automatically when no integration DB is available.
  */
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import pino from 'pino';
 import { createIsolatedTestPrismaClient } from '../setup';
 // Relative source imports (see lead-conversion-atomicity.test.ts for why).
 import { PrismaOutboxRepository } from '../../../packages/adapters/src/repositories/PrismaOutboxRepository';
@@ -23,6 +22,13 @@ import {
 const DB_URL = process.env.DATABASE_URL;
 const describeDb = DB_URL ? describe : describe.skip;
 const TAG = `ifc151_${Date.now()}`;
+// pino does not resolve from tests/integration; the dispatcher only calls these methods.
+const silent = (): any => {
+  const noop = () => {};
+  const log: any = { debug: noop, info: noop, warn: noop, error: noop };
+  log.child = () => log;
+  return log;
+};
 
 describeDb('IFC-151 — outbox consumer framework (real DB)', () => {
   let prisma: any;
@@ -57,7 +63,7 @@ describeDb('IFC-151 — outbox consumer framework (real DB)', () => {
   it('records each successful handler once and a retry skips it', async () => {
     if (!prisma) return;
     const created = await newEvent();
-    const dispatcher = new EventDispatcher(pino({ level: 'silent' }));
+    const dispatcher = new EventDispatcher(silent());
     let okRuns = 0;
     let flakyDown = true;
     dispatcher.register('lead.created', async () => void okRuns++, 'ok');
