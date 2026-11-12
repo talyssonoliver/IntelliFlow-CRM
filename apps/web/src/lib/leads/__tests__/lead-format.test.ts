@@ -11,6 +11,7 @@ import {
   leadWebsite,
   visibleTags,
   leadDisplayName,
+  leadExportFields,
   type ActivityType,
 } from '../lead-format';
 
@@ -313,5 +314,63 @@ describe('httpUrlOrNull', () => {
     expect(httpUrlOrNull('/files/a.pdf')).toBeNull();
     expect(httpUrlOrNull('javascript:alert(1)')).toBeNull();
     expect(httpUrlOrNull('data:text/html,hi')).toBeNull();
+  });
+});
+
+describe('lead-format · leadExportFields', () => {
+  it('writes the stored fields with no display fallbacks', () => {
+    expect(
+      leadExportFields({
+        id: 'lead-1',
+        firstName: 'Ada',
+        lastName: null,
+        email: 'ada@example.invalid',
+        phone: null,
+        company: 'Analytical Engines',
+        title: undefined,
+        location: null,
+        website: 'example.invalid',
+        status: 'NEW',
+        source: 'WEBSITE',
+        score: 0,
+        estimatedValue: 5_000_000,
+        owner: { name: 'Grace' },
+        createdAt: '2026-11-01T09:00:00.000Z',
+        lastContactedAt: null,
+      })
+    ).toEqual({
+      id: 'lead-1',
+      firstName: 'Ada',
+      lastName: '',
+      email: 'ada@example.invalid',
+      phone: '',
+      company: 'Analytical Engines',
+      title: '',
+      location: '',
+      website: 'example.invalid',
+      status: 'NEW',
+      source: 'WEBSITE',
+      score: 0,
+      estimatedValuePence: 5_000_000,
+      owner: 'Grace',
+      createdAt: '2026-11-01T09:00:00.000Z',
+      lastContactedAt: '',
+    });
+  });
+
+  it('leaves out an unreadable date and a missing owner or value', () => {
+    const fields = leadExportFields({
+      id: 'lead-2',
+      email: 'b@example.invalid',
+      status: 'NEW',
+      source: 'OTHER',
+      score: 10,
+      createdAt: 'not a date',
+      lastContactedAt: new Date('2026-11-02T10:00:00.000Z'),
+    });
+    expect(fields.createdAt).toBe('');
+    expect(fields.lastContactedAt).toBe('2026-11-02T10:00:00.000Z');
+    expect(fields.owner).toBe('');
+    expect(fields.estimatedValuePence).toBe('');
   });
 });
