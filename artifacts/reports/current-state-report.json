@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-12T14:31:18.046Z",
+  "generatedAt": "2026-11-12T20:20:28.367Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -38,6 +38,36 @@
       ".specify/sprints/sprint-7/_summary.json",
       ".specify/sprints/sprint-8/_summary.json",
       ".specify/sprints/sprint-9/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-0/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-1/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-10/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-11/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-12/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-13/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-14/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-15/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-16/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-17/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-18/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-19/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-2/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-20/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-21/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-22/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-23/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-24/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-25/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-26/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-27/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-28/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-29/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-3/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-4/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-5/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-6/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-7/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-8/_summary.json",
+      "apps/project-tracker/docs/metrics/sprint-9/_summary.json",
       ".specify/sprints/sprint-0/attestations/AI-SETUP-001/attestation.json",
       ".specify/sprints/sprint-0/attestations/AI-SETUP-002/attestation.json",
       ".specify/sprints/sprint-0/attestations/AI-SETUP-003/attestation.json",
@@ -299,6 +329,7 @@
       ".specify/sprints/sprint-18/attestations/DOC-015/attestation.json",
       ".specify/sprints/sprint-18/attestations/DOC-016/attestation.json",
       ".specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json",
+      ".specify/sprints/sprint-18/attestations/EP-001-AI/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-032/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-070/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-074/attestation.json",
@@ -519,11 +550,11 @@
     "totalTasks": 627,
     "totalNumberedSprintTasks": 621,
     "continuousTaskCount": 6,
-    "completedTasks": 442,
+    "completedTasks": 444,
     "backlogTasks": 167,
     "blockedTasks": 0,
-    "completionPercentage": 70.49,
-    "inProgressTasks": 18,
+    "completionPercentage": 70.81,
+    "inProgressTasks": 16,
     "otherTasks": 0
   },
   "inconsistencies": {
@@ -536,12 +567,6 @@
         "status": "In Progress",
         "sprint": 18,
         "attestationPath": ".specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json"
-      },
-      {
-        "taskId": "EP-001-AI",
-        "status": "In Progress",
-        "sprint": 18,
-        "attestationPath": ".specify/sprints/sprint-0/attestations/EP-001-AI/attestation.json"
       },
       {
         "taskId": "IFC-027",
@@ -640,12 +665,6 @@
         "attestationPath": ".specify/sprints/sprint-18/attestations/PG-209/attestation.json"
       },
       {
-        "taskId": "INFRA-TF-004",
-        "status": "In Progress",
-        "sprint": 18,
-        "attestationPath": ".specify/sprints/sprint-18/attestations/INFRA-TF-004/attestation.json"
-      },
-      {
         "taskId": "ENG-OPS-002",
         "status": "In Progress",
         "sprint": 19,
@@ -667,6 +686,13 @@
         ]
       },
       {
+        "taskId": "EP-001-AI",
+        "kept": ".specify/sprints/sprint-18/attestations/EP-001-AI/attestation.json",
+        "skipped": [
+          ".specify/sprints/sprint-0/attestations/EP-001-AI/attestation.json"
+        ]
+      },
+      {
         "taskId": "IFC-074",
         "kept": ".specify/sprints/sprint-18/attestations/IFC-074/attestation.json",
         "skipped": [
@@ -682,11 +708,6 @@
       }
     ],
     "sprintMismatches": [
-      {
-        "taskId": "EP-001-AI",
-        "csvSprint": 18,
-        "attestationSprint": 0
-      },
       {
         "taskId": "IFC-056",
         "csvSprint": 18,
@@ -17317,11 +17338,11 @@
       "name": "Sprint 18",
       "summarySource": "specify",
       "totalTasks": 78,
-      "completedTasks": 61,
+      "completedTasks": 63,
       "backlogTasks": 5,
       "blockedTasks": 0,
-      "inProgressTasks": 12,
-      "attestedCompletedTasks": 61,
+      "inProgressTasks": 10,
+      "attestedCompletedTasks": 63,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).",
       "notableCompleted": [
@@ -17498,7 +17519,7 @@
           "title": "Automated Observability with Predictive Monitoring",
           "description": "Automated Observability with Predictive Monitoring",
           "summary": "Verdict NEEDS_HUMAN, not COMPLETE. Everything that can be built and proven before merge is done and tested. What remains needs a merge, and merges are the owner's. Open items, each with the check that closes it:... OpenTelemetry AI-configured (ruling A:...",
-          "definitionOfDone": "OpenTelemetry AI-configured, predictive alerts set, anomaly detection active, self-healing enabled; targets: >=100%",
+          "definitionOfDone": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. OpenTelemetry configured on every running service (api and combined-worker on Railway, web on Vercel); predictive alerts = Grafana SLO burn-rate alerts; anomaly detection = Grafana Cloud anomaly rules evaluating production series; self-healing = the Railway restart policy as code; SLOs defined; dashboards live; targets: >=100%",
           "definitionOfDoneSnapshot": "OpenTelemetry AI-configured (ruling A: api and ai-worker export OTLP to Grafana Cloud; llm.* attributes documented); Anomaly detection active (ruling A: Grafana Asserts rules on span metrics);...",
           "dependencies": [
             "ENV-005-AI"
@@ -17520,39 +17541,6 @@
             "total": 5,
             "met": 1,
             "missed": 4
-          }
-        },
-        {
-          "taskId": "EP-001-AI",
-          "sprint": 18,
-          "status": "In Progress",
-          "section": "Foundation Setup",
-          "title": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
-          "description": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
-          "summary": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
-          "definitionOfDone": "Week 1: OTel Collector + Prometheus + Grafana deployed behind access control; Week 2: Loki + Tempo deployed with trace-to-log correlation; Week 3: SonarQube deployed with GitHub Actions integration; All configs git-versioned and shared between local Docker and EasyPanel; targets: >=100%, <30 min, zero errors",
-          "definitionOfDoneSnapshot": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
-          "dependencies": [
-            "ENV-003-AI",
-            "ENV-008-AI"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-0/attestations/EP-001-AI/attestation.json",
-            "verdict": "PARTIAL",
-            "timestamp": "2025-12-25T18:15:00.000Z",
-            "sprintFolder": 0
-          },
-          "validationSummary": {
-            "total": 4,
-            "passed": 4,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 5,
-            "met": 5,
-            "missed": 0
           }
         },
         {
@@ -17652,6 +17640,38 @@
             "met": 4,
             "missed": 0
           }
+        },
+        {
+          "taskId": "IFC-116",
+          "sprint": 18,
+          "status": "In Progress",
+          "section": "Observability",
+          "title": "Create OpenTelemetry config and observability documentation",
+          "description": "Instrument application with OpenTelemetry, unify logs, metrics and traces",
+          "summary": "OpenTelemetry instrumentation fully configured and documented. All services can push traces, metrics, and logs.... Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel;...",
+          "definitionOfDone": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. Every running service (api and combined-worker on Railway, web on Vercel) emits structured logs, traces and metrics to Grafana Cloud; dashboards, alert rules and SLOs are live there (applied as code from infra/monitoring/grafana/cloud); targets: >=100%, <2min",
+          "definitionOfDoneSnapshot": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel....",
+          "dependencies": [
+            "IFC-074"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-9/attestations/IFC-116/attestation.json",
+            "verdict": "PARTIAL",
+            "timestamp": null,
+            "sprintFolder": 9
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
         }
       ],
       "sectionSummary": [
@@ -17670,8 +17690,8 @@
         {
           "section": "Infrastructure",
           "total": 6,
-          "completed": 5,
-          "open": 1
+          "completed": 6,
+          "open": 0
         },
         {
           "section": "AI/ML",
@@ -17694,8 +17714,8 @@
         {
           "section": "Foundation Setup",
           "total": 2,
-          "completed": 0,
-          "open": 2
+          "completed": 1,
+          "open": 1
         },
         {
           "section": "Observability",
@@ -17791,7 +17811,7 @@
           "title": "Automated Observability with Predictive Monitoring",
           "description": "Automated Observability with Predictive Monitoring",
           "summary": "Verdict NEEDS_HUMAN, not COMPLETE. Everything that can be built and proven before merge is done and tested. What remains needs a merge, and merges are the owner's. Open items, each with the check that closes it:... OpenTelemetry AI-configured (ruling A:...",
-          "definitionOfDone": "OpenTelemetry AI-configured, predictive alerts set, anomaly detection active, self-healing enabled; targets: >=100%",
+          "definitionOfDone": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. OpenTelemetry configured on every running service (api and combined-worker on Railway, web on Vercel); predictive alerts = Grafana SLO burn-rate alerts; anomaly detection = Grafana Cloud anomaly rules evaluating production series; self-healing = the Railway restart policy as code; SLOs defined; dashboards live; targets: >=100%",
           "definitionOfDoneSnapshot": "OpenTelemetry AI-configured (ruling A: api and ai-worker export OTLP to Grafana Cloud; llm.* attributes documented); Anomaly detection active (ruling A: Grafana Asserts rules on span metrics);...",
           "dependencies": [
             "ENV-005-AI"
@@ -17818,27 +17838,27 @@
         {
           "taskId": "EP-001-AI",
           "sprint": 18,
-          "status": "In Progress",
+          "status": "Completed",
           "section": "Foundation Setup",
           "title": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
           "description": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
-          "summary": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
-          "definitionOfDone": "Week 1: OTel Collector + Prometheus + Grafana deployed behind access control; Week 2: Loki + Tempo deployed with trace-to-log correlation; Week 3: SonarQube deployed with GitHub Actions integration; All configs git-versioned and shared between local Docker and EasyPanel; targets: >=100%, <30 min, zero errors",
-          "definitionOfDoneSnapshot": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
+          "summary": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel.... Every running Railway service pushes traces, metrics and logs to Grafana Cloud;...",
+          "definitionOfDone": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. The internal tools stack is Grafana Cloud (Prometheus/Mimir, Loki, Tempo, Grafana) fed by OTLP push from the Railway services, with SonarCloud for code quality. Done when: every running Railway service pushes traces, metrics and logs to Grafana Cloud; traces link to their logs (log lines carry trace_id); access is only through Grafana Cloud accounts and service-account tokens; the Grafana resources are git-versioned under infra/monitoring/grafana/cloud and applied by workflows; SonarCloud analyses main; targets: >=100%, zero errors",
+          "definitionOfDoneSnapshot": "Every running Railway service pushes traces, metrics and logs to Grafana Cloud; Traces link to their logs; Access only through Grafana Cloud accounts and tokens",
           "dependencies": [
             "ENV-003-AI",
             "ENV-008-AI"
           ],
           "attestation": {
             "exists": true,
-            "path": ".specify/sprints/sprint-0/attestations/EP-001-AI/attestation.json",
-            "verdict": "PARTIAL",
-            "timestamp": "2025-12-25T18:15:00.000Z",
-            "sprintFolder": 0
+            "path": ".specify/sprints/sprint-18/attestations/EP-001-AI/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-11-12T16:30:00Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 4,
-            "passed": 4,
+            "total": 0,
+            "passed": 0,
             "failed": 0,
             "failingNames": []
           },
@@ -18308,9 +18328,9 @@
           "section": "Observability",
           "title": "Create OpenTelemetry config and observability documentation",
           "description": "Instrument application with OpenTelemetry, unify logs, metrics and traces",
-          "summary": "OpenTelemetry instrumentation fully configured and documented. All services can push traces, metrics, and logs.... All services emit structured logs, traces and metrics; dashboards and alerts created; SLOs defined",
-          "definitionOfDone": "All services emit structured logs, traces and metrics; dashboards and alerts created; SLOs defined; targets: >=100%, <2min",
-          "definitionOfDoneSnapshot": "All services emit structured logs, traces and metrics; dashboards and alerts created; SLOs defined",
+          "summary": "OpenTelemetry instrumentation fully configured and documented. All services can push traces, metrics, and logs.... Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel;...",
+          "definitionOfDone": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. Every running service (api and combined-worker on Railway, web on Vercel) emits structured logs, traces and metrics to Grafana Cloud; dashboards, alert rules and SLOs are live there (applied as code from infra/monitoring/grafana/cloud); targets: >=100%, <2min",
+          "definitionOfDoneSnapshot": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel....",
           "dependencies": [
             "IFC-074"
           ],
@@ -20157,12 +20177,12 @@
         {
           "taskId": "INFRA-TF-004",
           "sprint": 18,
-          "status": "In Progress",
+          "status": "Completed",
           "section": "Infrastructure",
           "title": "Environment tfvars (dev/staging/prod) + remote state backend + a monitoring Terraform module (Grafana/Prometheus/Loki/Tempo as observability-as-code) + wire ai-worker OpenTelemetry (IFC-032).",
           "description": "Environment tfvars (dev/staging/prod) + remote state backend + a monitoring Terraform module (Grafana/Prometheus/Loki/Tempo as observability-as-code) + wire ai-worker OpenTelemetry (IFC-032).",
           "summary": "EVIDENCE BACKFILL (not a re-implementation). INFRA-TF-004 (env tfvars + remote state + monitoring module + ai-worker OTel) shipped primarily via #286 and was recorded Completed by the CSV status-flip #596 (8f8467813).... tfvars exist for all 3 envs;...",
-          "definitionOfDone": "tfvars exist for all 3 envs; remote backend bootstrapped; monitoring module provisions the stack; OTel endpoint is a TF output; ai-worker emits traces.",
+          "definitionOfDone": "tfvars exist for all 3 envs; Grafana Cloud resources (alert rules, AI alert rules, dashboards, SLOs) are provisioned as code by the repo scripts and workflows, no Terraform state (owner ruling 2026-11-12: proven on Grafana Cloud + Railway + Vercel, no EasyPanel); the OTLP endpoint is the Grafana Cloud gateway set on the Railway services; ai-worker emits traces.",
           "definitionOfDoneSnapshot": "tfvars exist for all 3 envs; remote backend bootstrapped; monitoring module provisions the stack; OTel endpoint is a TF output; ai-worker emits traces",
           "dependencies": [
             "INFRA-TF-001"
@@ -20170,8 +20190,8 @@
           "attestation": {
             "exists": true,
             "path": ".specify/sprints/sprint-18/attestations/INFRA-TF-004/attestation.json",
-            "verdict": "PARTIAL",
-            "timestamp": "2026-07-24T12:00:00Z",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-11-12T16:30:00Z",
             "sprintFolder": 18
           },
           "validationSummary": {
