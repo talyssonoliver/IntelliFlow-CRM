@@ -58,7 +58,7 @@ export function AppList() {
   if (apps.length === 0) {
     return (
       <div>
-        <EmptyState entity="insights" phase="passive" />
+        <EmptyState entity="insights" showCta={false} />
         <Link
           href="/developers/apps/new"
           className="mt-4 inline-block text-primary hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded"

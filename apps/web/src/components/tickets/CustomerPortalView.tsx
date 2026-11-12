@@ -8,7 +8,7 @@
  * @implements AC-12 (CustomerPortalView filters out internal notes and admin actions)
  */
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Card, EmptyState } from '@intelliflow/ui';
 import { SLAIndicator } from './SLAIndicator';
 import { getStatusConfig } from '@/lib/tickets/ticket-utils';
@@ -32,6 +32,7 @@ export function CustomerPortalView({
   customerName,
 }: Readonly<CustomerPortalViewProps>) {
   const [replyContent, setReplyContent] = useState('');
+  const replyRef = useRef<HTMLTextAreaElement>(null);
   const [isSending, setIsSending] = useState(false);
 
   const statusConfig = getStatusConfig(ticket.status);
@@ -107,7 +108,12 @@ export function CustomerPortalView({
         </h2>
 
         {publicActivities.length === 0 ? (
-          <EmptyState entity="chats" phase="passive" className="py-2" />
+          <EmptyState
+            entity="chats"
+            ctaLabel="Write a reply"
+            onCtaClick={() => replyRef.current?.focus()}
+            className="py-2"
+          />
         ) : (
           <div className="space-y-4">
             {publicActivities.map((activity) => {
@@ -158,6 +164,7 @@ export function CustomerPortalView({
         <h2 className="text-sm font-bold text-foreground mb-3">Reply</h2>
         <div className="space-y-3">
           <textarea
+            ref={replyRef}
             value={replyContent}
             onChange={(e) => setReplyContent(e.target.value)}
             className="w-full p-3 rounded-lg border border-border bg-background text-sm min-h-[100px] focus:outline-none focus:ring-2 focus:ring-primary/50 placeholder:text-muted-foreground"

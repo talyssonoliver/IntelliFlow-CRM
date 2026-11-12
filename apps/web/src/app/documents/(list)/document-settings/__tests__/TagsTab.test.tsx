@@ -42,6 +42,18 @@ describe('TagsTab', () => {
     expect(screen.queryByText('Contract')).not.toBeInTheDocument();
   });
 
+  it('the empty state speaks about tags and binds no "D" (documents) hotkey to Add tag', () => {
+    render(<TagsTab tags={[]} onCreate={vi.fn()} onUpdate={vi.fn()} onDelete={vi.fn()} />);
+    expect(screen.getByText('No tags yet')).toBeInTheDocument();
+
+    act(() => {
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'd', bubbles: true }));
+      document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'D', bubbles: true }));
+    });
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
   it('forwardRef.openCreate() opens the create dialog', () => {
     const ref = createRef<TagsTabHandle>();
     render(

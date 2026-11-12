@@ -97,7 +97,9 @@ export const TagsTab = forwardRef<TagsTabHandle, TagsTabProps>(function TagsTab(
   const t = { ...DEFAULT_TEXTS, ...texts };
   const [dialog, setDialog] = useState<DialogState>(EMPTY_DIALOG);
 
-  const openCreate = () => setDialog({ ...EMPTY_DIALOG, open: true });
+  const openCreate = () => {
+    if (canEdit) setDialog({ ...EMPTY_DIALOG, open: true });
+  };
   useImperativeHandle(ref, () => ({ openCreate }));
 
   const openEdit = (tag: SettingsTagView) =>
@@ -137,7 +139,9 @@ export const TagsTab = forwardRef<TagsTabHandle, TagsTabProps>(function TagsTab(
       {tags.length === 0 ? (
         <EmptyState
           entity="pinned"
-          phase="passive"
+          ctaLabel="New tag"
+          showCta={canEdit}
+          onCtaClick={openCreate}
           size="sm"
           className="py-4 px-3 gap-2"
           title="No tags yet"

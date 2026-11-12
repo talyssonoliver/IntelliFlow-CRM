@@ -203,7 +203,7 @@ export function DuplicateDetectionTab({
         <EmptyState
           entity="rules"
           size="sm"
-          phase="passive"
+          onCtaClick={addRule}
           title="No duplicate rules"
           description="Add a rule to start flagging potential duplicate contacts on save."
           className="py-4 px-3 gap-2"

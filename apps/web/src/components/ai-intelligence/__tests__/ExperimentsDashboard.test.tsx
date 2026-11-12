@@ -212,10 +212,10 @@ describe('Rendering', () => {
     expect(screen.getByText('A/B Experiments')).toBeInTheDocument();
   });
 
-  it('renders breadcrumbs with "AI & Agents" and "Experiments"', () => {
+  it('renders the "AI & Agents" ancestor crumb and not the page itself (#1222 UI-011)', () => {
     render(<ExperimentsDashboard />);
-    expect(screen.getByText('AI & Agents')).toBeInTheDocument();
-    expect(screen.getByText('Experiments')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'AI & Agents' })).toBeInTheDocument();
+    expect(screen.queryByText('Experiments')).toBeNull();
   });
 
   it('renders description text', () => {

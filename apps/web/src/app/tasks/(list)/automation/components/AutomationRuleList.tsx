@@ -281,7 +281,11 @@ export const AutomationRuleList = forwardRef<AutomationRuleListHandle, Automatio
 
     const openDialog = (rule: RuleItem | null) =>
       setDialog((d) => ({ open: true, rule, key: d.key + 1, error: null }));
-    useImperativeHandle(ref, () => ({ openCreate: () => openDialog(null) }));
+    useImperativeHandle(ref, () => ({
+      openCreate: () => {
+        if (canEdit) openDialog(null);
+      },
+    }));
 
     const registerButton = (key: string, el: HTMLButtonElement | null) => {
       if (el) buttons.current.set(key, el);
@@ -318,7 +322,13 @@ export const AutomationRuleList = forwardRef<AutomationRuleListHandle, Automatio
     return (
       <>
         {rules.length === 0 ? (
-          <EmptyState entity="rules" phase="passive" size="sm" className="gap-2 px-3 py-4" />
+          <EmptyState
+            entity="rules"
+            showCta={canEdit}
+            onCtaClick={() => openDialog(null)}
+            size="sm"
+            className="gap-2 px-3 py-4"
+          />
         ) : (
           <ul className="divide-y divide-border" aria-label="Automation rules">
             {rules.map((rule, index) => (

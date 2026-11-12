@@ -89,6 +89,7 @@ export {
   SearchFilterBar,
   useFilterState,
   useMultiFilterState,
+  clearFiltersAction,
   type SearchFilterBarProps,
   type FilterOption,
   type FilterDropdownConfig,

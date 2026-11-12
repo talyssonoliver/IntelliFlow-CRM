@@ -22,7 +22,12 @@ import {
   Skeleton,
   cn,
 } from '@intelliflow/ui';
-import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
+import {
+  PageHeader,
+  SearchFilterBar,
+  clearFiltersAction,
+  useMultiFilterState,
+} from '@/components/shared';
 
 import { useSentimentDashboard } from '@/lib/sentiment/hooks';
 import type { SentimentFilters } from '@/lib/sentiment/hooks';
@@ -272,6 +277,13 @@ export function SentimentDashboard() {
     search: '',
   });
 
+  // The quick chip filters on its own state, so it counts as a filter and is cleared with
+  // the rest. The date range is the analysis period, not a filter: Clear keeps it.
+  const clearAction = clearFiltersAction(filterState, {
+    value: activeChip,
+    reset: () => setActiveChip('all'),
+  });
+
   const filters: SentimentFilters = {
     entityType: filterState.values.entityType as 'all' | 'lead' | 'contact',
     dateRange,
@@ -493,7 +505,12 @@ export function SentimentDashboard() {
         if (filteredAnalyses.length === 0)
           return (
             <div data-testid="empty-state">
-              <EmptyState entity="insights" phase="passive" />
+              <EmptyState
+                entity="insights"
+                showCta={false}
+                variant={clearAction ? 'filtered' : 'empty'}
+                action={clearAction}
+              />
             </div>
           );
         return (

@@ -215,4 +215,21 @@ describe('AppointmentDetail', () => {
     finish();
     await waitFor(() => expect(screen.queryByLabelText('New Start Time')).not.toBeInTheDocument());
   });
+
+  it('opens the link-case dialog from the empty cases state, in both tabs', () => {
+    const noCases: AppointmentDetailData = { ...mockAppointmentDetail, linkedCases: [] };
+    render(<AppointmentDetail {...defaultProps} appointment={noCases} />);
+
+    const openFromEmptyState = () => {
+      const region = screen.getAllByRole('region', { name: 'cases empty state' })[0]!;
+      fireEvent.mouseEnter(region);
+      fireEvent.click(screen.getByRole('button', { name: /Link a case/ }));
+      expect(screen.getByRole('heading', { name: 'Link Case' })).toBeInTheDocument();
+    };
+
+    openFromEmptyState();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.click(screen.getByRole('tab', { name: /cases/i }));
+    openFromEmptyState();
+  });
 });

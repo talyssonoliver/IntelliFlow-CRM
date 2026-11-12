@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { toast } from '@intelliflow/ui';
 
 const lane = vi.hoisted(() => ({
@@ -285,14 +285,21 @@ vi.mock('@intelliflow/ui', () => ({
     _phase,
     className,
     children,
+    ctaHref,
+    ctaLabel,
+    showCta,
   }: Readonly<{
     entity?: string;
     _phase?: string;
     className?: string;
     children?: React.ReactNode;
+    ctaHref?: string;
+    ctaLabel?: string;
+    showCta?: boolean;
   }>) => (
     <div data-testid={`empty-state-${entity}`} className={className}>
       {children || `No ${entity} yet`}
+      {showCta !== false && ctaHref ? <a href={ctaHref}>{ctaLabel}</a> : null}
     </div>
   ),
 }));
@@ -656,6 +663,16 @@ describe('LeadDetailPage - Tab Navigation (IFC-247)', () => {
     render(<Lead360Page />);
     fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
     expect(screen.getByTestId('empty-state-emails')).toBeInTheDocument();
+  });
+
+  it('the empty Emails tab composes to the lead, never to a blank recipient', () => {
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
+    const empty = screen.getByTestId('empty-state-emails');
+    expect(within(empty).getByRole('link', { name: 'Compose email' })).toHaveAttribute(
+      'href',
+      '/email/compose?to=john%40example.com'
+    );
   });
 });
 

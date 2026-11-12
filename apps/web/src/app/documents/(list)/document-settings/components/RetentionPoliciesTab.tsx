@@ -170,13 +170,19 @@ export function RetentionPoliciesTab({ policies, onPoliciesChange }: Readonly<Pr
             <span className="material-symbols-outlined text-[16px] mr-1" aria-hidden="true">
               add
             </span>
-            Add Policy
+            <span>Add Policy</span>
           </Button>
         }
       />
 
       {policies.length === 0 ? (
-        <EmptyState entity="signatures" phase="passive" size="sm" className="py-4 px-3 gap-2" />
+        <EmptyState
+          entity="signatures"
+          ctaLabel="Add policy"
+          onCtaClick={openCreate}
+          size="sm"
+          className="py-4 px-3 gap-2"
+        />
       ) : (
         <DataTable columns={columns} data={policies} />
       )}

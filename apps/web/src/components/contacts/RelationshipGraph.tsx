@@ -160,7 +160,7 @@ export function RelationshipGraph({
           )}
         </ul>
       ) : (
-        <EmptyState entity="contacts" phase="passive" className="py-2" />
+        <EmptyState entity="contacts" showCta={false} className="py-2" />
       )}
     </div>
   );

@@ -148,3 +148,13 @@ describe('CaseTypeList', () => {
     expect(results.violations.map((v) => v.id)).toEqual([]);
   });
 });
+
+describe('CaseTypeList read-only empty state', () => {
+  it('offers no Create case type action and ignores openCreate', () => {
+    const { ref } = renderList({ types: [], canEdit: false });
+    fireEvent.mouseEnter(screen.getByRole('region'));
+    expect(screen.queryByRole('button', { name: /Create case type/ })).not.toBeInTheDocument();
+    act(() => ref.current?.openCreate());
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+});
