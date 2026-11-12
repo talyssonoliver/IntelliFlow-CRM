@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-11T01:17:59.931Z",
+  "timestamp": "2026-11-12T09:09:01.546Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,8 +1016,8 @@
   },
   "api_inventory": {
     "total_routers": 78,
-    "total_endpoints": 602,
-    "total_queries": 257,
+    "total_endpoints": 601,
+    "total_queries": 256,
     "total_mutations": 345,
     "routers": [
       {
@@ -1411,12 +1411,6 @@
         "mutations": 2
       },
       {
-        "name": "zepBudget",
-        "endpoints": 3,
-        "queries": 2,
-        "mutations": 1
-      },
-      {
         "name": "analytics",
         "endpoints": 2,
         "queries": 2,
@@ -1436,6 +1430,12 @@
       },
       {
         "name": "onboarding",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
+        "name": "zepBudget",
         "endpoints": 2,
         "queries": 1,
         "mutations": 1
@@ -7083,13 +7083,8 @@
       },
       {
         "name": "zepBudget.getAuditHistory",
-        "method": "GET",
-        "description": "Get audit history"
-      },
-      {
-        "name": "zepBudget.reset",
         "method": "POST",
-        "description": "Reset"
+        "description": "Get audit history"
       }
     ]
   }
