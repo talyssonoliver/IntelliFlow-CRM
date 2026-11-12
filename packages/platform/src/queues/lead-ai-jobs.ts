@@ -284,7 +284,17 @@ export async function queueLeadAiRun(
   deps: LeadAiRunDeps,
   runId: string = newLeadAiRunId()
 ): Promise<LeadAiRunOutcome> {
-  if (!(await claimLeadAiRun(deps.store, job))) return 'unchanged';
+  let claimed: boolean;
+  try {
+    claimed = await claimLeadAiRun(deps.store, job);
+  } catch (error) {
+    // A claim that failed on our side (a client timeout) may still have run on the server and
+    // stored the fingerprint with no jobs behind it. Redis runs one connection's commands in
+    // order, so this release lands after that swap and clears it (codex).
+    await releaseLeadAiRun(deps.store, job);
+    throw error;
+  }
+  if (!claimed) return 'unchanged';
   let failed = false;
   for (const planned of plannedLeadAiJobs(job, runId)) {
     try {

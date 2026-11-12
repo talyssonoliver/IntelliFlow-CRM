@@ -865,3 +865,13 @@ waivers:
     author: ai agents lane
     date: '2026-11-12'
     expires: '2026-11-26'
+  - fingerprint: 062e7cb427e48b214b3dbd2a46d541f6a8d7750343263f0555d6b1666c31ec12
+    reason: >-
+      LOW, deferred to #1299 under the coordinator's LOW policy (2026-11-11). An add counted as
+      failed because the client-side enqueue timeout fired may still land in Redis; releasing the
+      lead's claim afterwards can let the same data be queued once more under a new run id, so
+      the agents may run twice on unchanged data. Nothing is lost or exposed; the cost is one
+      extra run, still capped by AI_MONTHLY_BUDGET_USD.
+    author: ai agents lane
+    date: '2026-11-12'
+    expires: '2026-11-26'

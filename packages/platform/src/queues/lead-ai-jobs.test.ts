@@ -291,4 +291,23 @@ describe('queueLeadAiRun', () => {
     await expect(queueLeadAiRun(job, run.deps)).rejects.toThrow('down');
     expect(run.added).toHaveLength(0);
   });
+
+  it('gives back a claim that timed out on our side but still ran on the server (codex)', async () => {
+    const { store, values } = memoryStore();
+    // The swap runs on the server, but the caller's timeout rejects before the reply arrives.
+    const slow: LeadAiClaimStore = {
+      eval: vi.fn(async (script: string, n: number, ...args: (string | number)[]) => {
+        const result = await store.eval(script, n, ...args);
+        if (script.includes("'SET'")) throw new Error('enqueue timed out after 5000ms');
+        return result;
+      }),
+    };
+
+    await expect(queueLeadAiRun(job, deps(slow).deps)).rejects.toThrow('timed out');
+    expect(values.has(leadAiClaimKey(job))).toBe(false);
+
+    // So the next sync of the same data queues it.
+    const retry = deps(store);
+    await expect(queueLeadAiRun(job, retry.deps)).resolves.toBe('queued');
+  });
 });
