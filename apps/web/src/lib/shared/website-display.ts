@@ -63,7 +63,7 @@ export function websiteDisplay(website: unknown): WebsiteDisplay | null {
   for (const name of [...url.searchParams.keys()]) {
     if (isTrackingParam(name)) url.searchParams.delete(name);
   }
-  const domain = (hostAsTyped(trimmed) || url.hostname).toLowerCase().replace(/^www\./, '');
+  const domain = labelFor(trimmed, url.hostname);
   return { href: url.toString(), domain };
 }
 
@@ -75,7 +75,8 @@ export function websiteDisplay(website: unknown): WebsiteDisplay | null {
 function hostAsTyped(address: string): string {
   const schemeEnd = address.indexOf('://');
   let host = schemeEnd === -1 ? address : address.slice(schemeEnd + 3);
-  for (const stop of ['/', '?', '#']) {
+  // A backslash ends the host too: the URL parser reads it as '/' for http(s).
+  for (const stop of ['/', '\\', '?', '#']) {
     const at = host.indexOf(stop);
     if (at !== -1) host = host.slice(0, at);
   }
@@ -83,4 +84,23 @@ function hostAsTyped(address: string): string {
   if (host.startsWith('[')) return host.slice(0, host.indexOf(']') + 1);
   const port = host.lastIndexOf(':');
   return port === -1 ? host : host.slice(0, port);
+}
+
+/** The bare-domain label: the host as typed when it is the link's host, else the link's host. */
+function labelFor(address: string, hostname: string): string {
+  const typed = hostAsTyped(address);
+  return (sameHost(typed, hostname) ? typed : hostname).toLowerCase().replace(/^www\./, '');
+}
+
+/**
+ * The typed host is used as the label only when it is the host the link
+ * actually opens, so a label can never name a different site from its link.
+ */
+function sameHost(typed: string, hostname: string): boolean {
+  if (!typed) return false;
+  try {
+    return new URL(`http://${typed}`).hostname === hostname;
+  } catch {
+    return false;
+  }
 }

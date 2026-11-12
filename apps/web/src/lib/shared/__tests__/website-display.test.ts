@@ -29,6 +29,12 @@ describe('websiteDisplay', () => {
     expect(result?.href).toBe('https://www.xn--mnchen-3ya.de/start');
   });
 
+  it('never labels a link with a different site from the one it opens', () => {
+    const result = websiteDisplay(String.raw`https://evil.example\@good.example`);
+    expect(result?.href).toBe('https://evil.example/@good.example');
+    expect(result?.domain).toBe('evil.example');
+  });
+
   it('drops user info and port from the label', () => {
     expect(websiteDisplay('http://user@example.com:8080/x')?.domain).toBe('example.com');
   });
