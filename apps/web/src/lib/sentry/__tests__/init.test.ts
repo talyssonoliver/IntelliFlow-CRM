@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@sentry/nextjs', () => ({ init: vi.fn() }));
+vi.mock('@sentry/nextjs', () => ({
+  init: vi.fn(),
+  httpIntegration: vi.fn((options: unknown) => ({ name: 'Http', options })),
+}));
 
 import * as Sentry from '@sentry/nextjs';
 import { initSentry, isServerSentryEnabled } from '../init';
@@ -40,6 +43,19 @@ describe('initSentry', () => {
     expect(options).not.toHaveProperty('tracesSampleRate');
     expect(options).not.toHaveProperty('replaysSessionSampleRate');
     expect(options).not.toHaveProperty('replaysOnErrorSampleRate');
+  });
+
+  it('turns off Sentry HTTP spans when our NodeSDK is already running (IFC-319)', () => {
+    initSentry({ dsn, runtime: 'nodejs', nodeSdkStarted: true });
+    const options = vi.mocked(Sentry.init).mock.calls[0]![0]!;
+    expect(Sentry.httpIntegration).toHaveBeenCalledWith({ spans: false });
+    expect(options.integrations).toEqual([{ name: 'Http', options: { spans: false } }]);
+    expect(options).not.toHaveProperty('tracesSampleRate');
+  });
+
+  it('leaves the default integrations alone when the NodeSDK is not running', () => {
+    initSentry({ dsn, runtime: 'nodejs', nodeSdkStarted: false });
+    expect(vi.mocked(Sentry.init).mock.calls[0]![0]!).not.toHaveProperty('integrations');
   });
 
   it('falls back to NODE_ENV and no release', () => {

@@ -20,6 +20,7 @@ import {
   ATTR_SERVICE_VERSION,
 } from '@opentelemetry/semantic-conventions/incubating';
 import { isProductionEnv } from '../lib/required-url';
+import { setNodeSdkStarted } from './otel-state';
 
 interface OtelConfig {
   enabled: boolean;
@@ -114,6 +115,7 @@ export function startTracing(): void {
 
   if (sdkInstance) {
     sdkInstance.start();
+    setNodeSdkStarted(true);
   }
 }
 

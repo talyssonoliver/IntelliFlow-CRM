@@ -37,7 +37,22 @@ describe('Sentry runtime entrypoints', () => {
       runtime: 'nodejs',
       environment: 'staging',
       release: 'sha1',
+      nodeSdkStarted: false,
     });
+  });
+
+  it('sentry.server.config tells Sentry when the NodeSDK is already running', async () => {
+    vi.stubEnv('SENTRY_DSN', dsn);
+    const state = await import('../../../tracing/otel-state');
+    state.setNodeSdkStarted(true);
+    try {
+      await import('../../../sentry.server.config');
+      expect(mocks.initSentry).toHaveBeenCalledWith(
+        expect.objectContaining({ nodeSdkStarted: true })
+      );
+    } finally {
+      state.setNodeSdkStarted(false);
+    }
   });
 
   it('sentry.edge.config passes server env to initSentry', async () => {
@@ -60,7 +75,7 @@ describe('Sentry runtime entrypoints', () => {
   });
 
   describe('instrumentation register()', () => {
-    it('with a DSN on nodejs, Sentry owns tracing and the OTel SDK is not started', async () => {
+    it('with a DSN and no OTLP endpoint on nodejs, Sentry runs alone and the OTel SDK is not started', async () => {
       vi.stubEnv('NEXT_RUNTIME', 'nodejs');
       vi.stubEnv('SENTRY_DSN', dsn);
       vi.stubEnv('OTEL_EXPORTER_OTLP_ENDPOINT', '');
@@ -71,13 +86,23 @@ describe('Sentry runtime entrypoints', () => {
       expect(mod.onRequestError).toBe(mocks.captureRequestError);
     });
 
-    it('warns when a DSN and an OTLP endpoint are both set', async () => {
+    it('with a DSN and an OTLP endpoint, starts the NodeSDK first and then Sentry (IFC-319)', async () => {
       vi.stubEnv('NEXT_RUNTIME', 'nodejs');
       vi.stubEnv('SENTRY_DSN', dsn);
       vi.stubEnv('OTEL_EXPORTER_OTLP_ENDPOINT', 'http://collector.example.invalid:4318');
-      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       await (await import('../../../instrumentation')).register();
-      expect(warn).toHaveBeenCalledWith(expect.stringContaining('Sentry owns the tracer provider'));
+      expect(mocks.startTracing).toHaveBeenCalledOnce();
+      expect(mocks.initSentry).toHaveBeenCalledOnce();
+      expect(mocks.startTracing.mock.invocationCallOrder[0]).toBeLessThan(
+        mocks.initSentry.mock.invocationCallOrder[0]!
+      );
+    });
+
+    it('treats a blank OTLP endpoint as unset', async () => {
+      vi.stubEnv('NEXT_RUNTIME', 'nodejs');
+      vi.stubEnv('SENTRY_DSN', dsn);
+      vi.stubEnv('OTEL_EXPORTER_OTLP_ENDPOINT', '   ');
+      await (await import('../../../instrumentation')).register();
       expect(mocks.startTracing).not.toHaveBeenCalled();
     });
 

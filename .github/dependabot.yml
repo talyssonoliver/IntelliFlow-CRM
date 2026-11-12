@@ -86,21 +86,6 @@ updates:
       # publicly red on every run.
       - dependency-name: '@vitejs/plugin-react'
         update-types: ['version-update:semver-major']
-      # OpenTelemetry 0.300 needs SDK 3.x core packages; it moves with the OTel 3 migration, not a group bump.
-      - dependency-name: '@opentelemetry/sdk-node'
-        versions: ['>=0.300.0']
-      - dependency-name: '@opentelemetry/instrumentation'
-        versions: ['>=0.300.0']
-      - dependency-name: '@opentelemetry/exporter-trace-otlp-http'
-        versions: ['>=0.300.0']
-      - dependency-name: '@opentelemetry/exporter-trace-otlp-grpc'
-        versions: ['>=0.300.0']
-      - dependency-name: '@opentelemetry/exporter-metrics-otlp-http'
-        versions: ['>=0.300.0']
-      - dependency-name: '@opentelemetry/exporter-metrics-otlp-grpc'
-        versions: ['>=0.300.0']
-      - dependency-name: '@opentelemetry/auto-instrumentations-node'
-        versions: ['>=0.82.0']
       # three 0.x minors can break the landing page scene; upgrade it on its own.
       - dependency-name: 'three'
         update-types: ['version-update:semver-minor']
