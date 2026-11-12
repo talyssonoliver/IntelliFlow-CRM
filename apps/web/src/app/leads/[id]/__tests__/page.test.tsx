@@ -1371,6 +1371,57 @@ describe('LeadDetailPage - Lead IQ source (#1277 visual check)', () => {
     expect(screen.getByText('Weak Match')).toBeInTheDocument();
   });
 
+  it('shows no placeholder values from the scoring job as findings (#1286 review)', () => {
+    data().score = 28;
+    data().scoringStatus = 'SCORED';
+    data().aiInsights = [
+      {
+        id: 'insight-1',
+        engagementScore: 28,
+        conversionProbability: 22,
+        estimatedValue: 0,
+        churnRisk: 'MEDIUM',
+        sentiment: 'NEUTRAL',
+        sentimentTrend: 'stable',
+        lastEngagementDays: 0,
+        nextBestAction: 'Review lead',
+        recommendations: ['Review lead'],
+        icpMatch: 'Weak Match',
+      },
+    ];
+    render(<Lead360Page />);
+
+    // Activity tab: no "Sentiment is stable / Last engagement: 0 days ago" from constants.
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+    expect(screen.queryByText(/Last engagement:/)).not.toBeInTheDocument();
+
+    // AI tab: a 0 estimate is not shown as "£0".
+    fireEvent.click(screen.getByRole('button', { name: /AI Insights/i }));
+    expect(screen.getByTestId('deal-value-null-state')).toHaveTextContent('--');
+    expect(screen.queryByText('£0')).not.toBeInTheDocument();
+  });
+
+  it('shows a real, positive deal estimate', () => {
+    data().aiInsights = [
+      {
+        id: 'insight-2',
+        engagementScore: 60,
+        conversionProbability: 48,
+        estimatedValue: 2_500_000,
+        churnRisk: 'LOW',
+        sentiment: 'POSITIVE',
+        sentimentTrend: null,
+        lastEngagementDays: 0,
+        nextBestAction: null,
+        recommendations: [],
+        icpMatch: 'Good Match',
+      },
+    ];
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /AI Insights/i }));
+    expect(screen.getByTestId('deal-value')).toHaveTextContent('£25k');
+  });
+
   it('says the analysis has not run only when there is no insight', () => {
     data().score = 28;
     data().scoringStatus = 'SCORED';

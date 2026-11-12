@@ -349,7 +349,10 @@ export function LeadProfileCard({
         <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
             <p className="text-lg font-bold text-slate-900 dark:text-white">
-              {formatEstimatedValue(leadMetrics.estimatedValue)}
+              {/* 0 is the unset default, not a valuation: show a dash, not "£0". */}
+              {leadMetrics.estimatedValue > 0
+                ? formatEstimatedValue(leadMetrics.estimatedValue)
+                : '—'}
             </p>
             <p className="text-xs text-slate-500">Est. Value</p>
           </div>

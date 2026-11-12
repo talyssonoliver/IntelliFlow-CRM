@@ -143,6 +143,14 @@ function engagementImpact(score: number): ImpactLevel {
 }
 
 // Resolve churn factor impact level for days since last contact
+/** Whole days since a date, or null when there is none or it is unreadable. */
+function wholeDaysSince(value: string | Date | null | undefined): number | null {
+  if (!value) return null;
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) return null;
+  return Math.max(0, Math.floor((Date.now() - time) / 86_400_000));
+}
+
 function lastContactImpact(days: number): ImpactLevel {
   if (days > 30) return 'HIGH';
   if (days > 14) return 'MEDIUM';
@@ -1687,6 +1695,7 @@ function LeadAIInsightsTab({
   // scored, whether or not the full analysis has run.
   const isScored =
     leadScoreDisplay(aiInsights.leadScore, aiInsights.scoringStatus).kind === 'score';
+  const hasDealEstimate = hasAiInsight && aiInsights.estimatedValue > 0;
   return (
     <div className="space-y-6">
       {!hasAiInsight && (
@@ -1747,10 +1756,12 @@ function LeadAIInsightsTab({
             </div>
             <div>
               <p
-                className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
+                className={`text-2xl font-bold ${hasDealEstimate ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
               >
-                <span data-testid={hasAiInsight ? 'deal-value' : 'deal-value-null-state'}>
-                  {hasAiInsight ? formatEstimatedValue(aiInsights.estimatedValue) : '--'}
+                {/* The scoring job writes estimatedValue 0 as a placeholder; only a real,
+                    positive estimate is shown as one. */}
+                <span data-testid={hasDealEstimate ? 'deal-value' : 'deal-value-null-state'}>
+                  {hasDealEstimate ? formatEstimatedValue(aiInsights.estimatedValue) : '--'}
                 </span>
               </p>
               <p className="text-xs text-slate-500">Est. Deal Value</p>
@@ -2564,8 +2575,10 @@ export default function Lead360Page() {
       estimatedValue: insight.estimatedValue,
       churnRisk: insight.churnRisk,
       sentiment: insight.sentiment || 'Neutral',
-      sentimentTrend: insight.sentimentTrend,
-      lastEngagementDays: insight.lastEngagementDays,
+      // Not measured by any insight writer yet: the scoring job stores the constants
+      // 'stable' and 0. Shown again once a writer marks them as measured (#1289).
+      sentimentTrend: null,
+      lastEngagementDays: 0,
       nextBestAction: insight.nextBestAction || 'No action recommended',
       nextBestActions: buildNextBestActions(insight),
       recommendations: insightRecommendations(insight.recommendations),
@@ -2580,6 +2593,7 @@ export default function Lead360Page() {
   const churnRiskData: ChurnRiskData | null = useMemo(() => {
     const insight = apiInsight;
     if (!insight) return null;
+    const daysSinceContact = wholeDaysSince(apiLead?.lastContactedAt);
 
     // Map database churn risk level to component format
     const levelMap: Record<string, ChurnRiskLevel> = {
@@ -2618,22 +2632,25 @@ export default function Lead360Page() {
       level,
       confidence: derivedConfidence,
       slaHours: slaMap[level],
-      trend: (() => {
-        if (insight.sentimentTrend === 'IMPROVING') return 'IMPROVING';
-        if (insight.sentimentTrend === 'DECLINING') return 'DECLINING';
-        return 'STABLE';
-      })(),
+      // The stored sentiment trend is a placeholder (see aiInsights), so no trend is claimed.
+      trend: 'STABLE',
       factors: [
         {
           factor: 'Engagement Score',
           impact: engagementImpact(insight.engagementScore),
           value: `${insight.engagementScore}%`,
         },
-        {
-          factor: 'Days Since Contact',
-          impact: lastContactImpact(insight.lastEngagementDays),
-          value: `${insight.lastEngagementDays} days`,
-        },
+        // From the lead's own lastContactedAt; the insight's lastEngagementDays is a
+        // stored constant. Left out when the lead was never contacted.
+        ...(daysSinceContact === null
+          ? []
+          : [
+              {
+                factor: 'Days Since Contact',
+                impact: lastContactImpact(daysSinceContact),
+                value: `${daysSinceContact} day${daysSinceContact === 1 ? '' : 's'}`,
+              },
+            ]),
         {
           factor: 'Conversion Probability',
           impact: conversionImpact(insight.conversionProbability),
@@ -2641,7 +2658,7 @@ export default function Lead360Page() {
         },
       ],
     };
-  }, [apiInsight]);
+  }, [apiInsight, apiLead?.lastContactedAt]);
 
   // Transform AI insights to NextBestActionData format (IFC-095)
   const nextBestActionData: NextBestActionData | null = useMemo(() => {

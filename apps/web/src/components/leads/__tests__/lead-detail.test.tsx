@@ -99,6 +99,12 @@ describe('LeadDetail', () => {
     expect(link).toHaveAttribute('href', 'http://www.energym.co.uk/');
   });
 
+  it('shows a dash, not "£0", for a lead with no estimated value (#1277)', () => {
+    render(<LeadDetail lead={makeLead()} leadMetrics={{ ...metrics, estimatedValue: 0 }} />);
+    expect(screen.queryByText('£0')).not.toBeInTheDocument();
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
   it('shows no website row when the lead has none (#1277)', () => {
     render(<LeadDetail lead={makeLead({ website: '' })} leadMetrics={metrics} />);
     expect(screen.queryByText('Website')).not.toBeInTheDocument();
