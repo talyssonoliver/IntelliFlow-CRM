@@ -33,7 +33,7 @@
     "build": "tsup src/index.ts src/external/OllamaAIService.ts src/external/LiteLLMAIService.ts --format cjs,esm --experimental-dts",
     "dev": "tsup src/index.ts src/external/OllamaAIService.ts src/external/LiteLLMAIService.ts --format cjs,esm --experimental-dts --watch",
     "clean": "rm -rf dist .turbo",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "node ../../scripts/require-test-slot.mjs adapters-typecheck && tsc --noEmit",
     "lint": "eslint \"src/**/*.ts\"",
     "test": "vitest run",
     "test:watch": "vitest",

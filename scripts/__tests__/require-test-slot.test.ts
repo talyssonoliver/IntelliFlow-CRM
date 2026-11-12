@@ -143,6 +143,41 @@ describe('the heavy commands are guarded', () => {
     ).toBe(true);
   });
 
+  // Full typechecks: web tsc alone reached 3.5 GB (2026-11-12).
+  it.each([
+    ['package.json', 'typecheck', '', 'typecheck'],
+    ['package.json', 'typecheck:all', '', 'typecheck-all'],
+    ['apps/web/package.json', 'typecheck', '../../', 'web-typecheck'],
+    ['apps/api/package.json', 'typecheck', '../../', 'api-typecheck'],
+    // Measured 2026-11-12, tsc --noEmit alone: api 3.0 GB, web 2.2 GB,
+    // adapters 1.7 GB, ai-worker 1.1 GB. Under 0.8 GB stays unguarded below.
+    ['apps/ai-worker/package.json', 'typecheck', '../../', 'ai-worker-typecheck'],
+    ['packages/adapters/package.json', 'typecheck', '../../', 'adapters-typecheck'],
+  ])('typecheck %s %s', (file, name, up, label) => {
+    expect(
+      scripts(file)[name].startsWith(`node ${up}scripts/require-test-slot.mjs ${label} && `)
+    ).toBe(true);
+  });
+
+  it.each([
+    'packages/domain/package.json',
+    'packages/validators/package.json',
+    'packages/application/package.json',
+    'apps/workers/events-worker/package.json',
+    'apps/project-tracker/package.json',
+  ])('light typecheck stays unguarded: %s (measured under 0.8 GB)', (file) => {
+    expect(scripts(file).typecheck).not.toContain('require-test-slot');
+  });
+
+  it('the pre-commit typecheck joins the queue instead of being refused', () => {
+    const hook = fs.readFileSync(path.join(ROOT, '.husky', 'pre-commit'), 'utf8');
+    expect(hook).toContain('with-slot.mjs" --label pre-commit-typecheck -- pnpm run typecheck; }');
+    // No bare call left: a bare `pnpm run typecheck` would be refused outside a slot.
+    const bare = hook.split('\n').filter((l) => l.trimStart().startsWith('pnpm run typecheck'));
+    expect(bare).toEqual([]);
+    expect(hook).toContain('else\n  typecheck_ok() { pnpm run typecheck; }');
+  });
+
   it('leaves the owner project tracker (:3002) unguarded: it stays running', () => {
     expect(scripts('apps/project-tracker/package.json').dev).toBe('next dev --port 3002');
   });
