@@ -30,7 +30,22 @@ type Fetch = (input: string, init?: RequestInit) => Promise<Response>;
 const TIMEOUT_MS = 4000;
 
 /** Queues the AI agents consume; a queue with no worker means AI jobs wait. */
-const AI_QUEUE_PREFIX = 'ai-';
+/**
+ * The queues the AI worker consumes, as the API reports them in /health/detailed
+ * (packages/platform QUEUE_NAMES ai-* plus the contact-embed queue; see
+ * apps/api/src/modules/misc/health-probes.ts API_PRODUCED_QUEUES). Listed by name,
+ * not by prefix, so a queue such as contact-embed is never left out.
+ */
+export const AI_WORKER_QUEUES: ReadonlySet<string> = new Set([
+  'ai-scoring',
+  'ai-prediction',
+  'ai-enrichment',
+  'ai-entity-insight',
+  'ai-reply-draft',
+  'ai-account-scoring',
+  'ai-tag-suggestion',
+  'intelliflow-contact-embed',
+]);
 
 interface Timed {
   ms: number;
@@ -110,7 +125,7 @@ export async function checkAiAgents(fetchFn: Fetch, apiUrl?: string): Promise<Se
   if (!queues?.consumers) {
     return { ...AI, state: 'not_checked', note: 'The API did not report its workers' };
   }
-  const ai = Object.entries(queues.consumers).filter(([name]) => name.startsWith(AI_QUEUE_PREFIX));
+  const ai = Object.entries(queues.consumers).filter(([name]) => AI_WORKER_QUEUES.has(name));
   if (ai.length === 0) {
     return { ...AI, state: 'not_checked', note: 'The API did not report its workers' };
   }

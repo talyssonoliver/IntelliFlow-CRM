@@ -71,6 +71,23 @@ describe('checkAiAgents', () => {
     });
   });
 
+  it('counts the contact-embed queue the AI worker consumes', async () => {
+    const result = await checkAiAgents(
+      async () =>
+        detailed({
+          'ai-scoring': 1,
+          'ai-reply-draft': 1,
+          'intelliflow-contact-embed': 0,
+          'email-notifications': 0,
+        }),
+      API
+    );
+    expect(result).toMatchObject({
+      state: 'degraded',
+      note: '1 of 3 AI queues have no worker',
+    });
+  });
+
   it('is down when no AI queue has a worker', async () => {
     const result = await checkAiAgents(async () => detailed({ 'ai-scoring': 0 }), API);
     expect(result).toMatchObject({ state: 'down', note: 'No AI worker is running' });
