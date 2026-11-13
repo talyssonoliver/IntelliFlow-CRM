@@ -1,0 +1,60 @@
+name: Real-repo checks (Nightly)
+
+# The load-sensitive tests were made load-independent (owner decision 2026-11-13): their
+# mechanism is proven on fixtures or a fake clock in every PR, and the real-world half
+# (real eslint over a large staged list, real-time SLOs on real code paths) stays behind
+# REAL_REPO_CHECKS=1. This job is where that half runs: on main, once a night, alone on a
+# runner, so a real budget measures the code and not a busy machine. A failure opens (or
+# comments on) one tracking issue instead of failing someone's PR.
+#
+# Without Postgres/Redis the DB- and Redis-backed real checks in tests/integration skip
+# themselves; everything else in `pnpm run test:real-repo` runs.
+
+on:
+  schedule:
+    # 04:00 UTC, an hour after the 03:00 nightlies, so it does not share their runners.
+    - cron: '0 4 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: real-repo-checks-nightly
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  NODE_VERSION: '24'
+  PNPM_VERSION: '10.33.0'
+
+jobs:
+  real-repo-checks:
+    name: Real-repo checks (REAL_REPO_CHECKS=1)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-monorepo
+        with:
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          build-libs: 'true'
+
+      - name: Run the real-repo checks
+        run: pnpm run test:real-repo
+
+      - name: Open or update the tracking issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -uo pipefail
+          title='Nightly real-repo checks failing'
+          body="The REAL_REPO_CHECKS suite (pnpm run test:real-repo) failed on main at ${GITHUB_SHA}. Run: ${RUN_URL}"
+          number=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi
