@@ -28,6 +28,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseProjectList } from './lib/preship-project-scope.mjs';
+import { COVERAGE_PROJECTS, RESULTS_FILE, scopeSignature } from './lib/preship-test-reuse.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -36,38 +37,9 @@ const FINAL_DIR = path.join(ROOT, 'artifacts', 'coverage');
 
 // All workspace project names (must match `name` in each vitest.config.ts)
 // NOTE: api is last because it's a large project that may take a long time
-const PROJECTS = [
-  'web',
-  'ai-worker',
-  'domain',
-  // `db` is in sonar.sources (so Sonar's new_coverage covers it via the CI
-  // sharded run) and its src is NOT in sonar.coverage.exclusions, but it was
-  // missing here — so pre-ship's local merged lcov had zero db coverage and
-  // diff-coverage flagged every db logic change as "no lcov". Add it to close
-  // the pre-ship↔Sonar parity gap. db tests are node-env unit tests (no live
-  // DB) and run in ~2s.
-  'db',
-  'adapters',
-  'application',
-  'validators',
-  'ui',
-  'observability',
-  'worker-shared',
-  'events-worker',
-  'ingestion-worker',
-  'combined-worker',
-  'architecture',
-  'a11y',
-  'integration',
-  'api',
-  // `root` runs the repo-tooling tests (scripts/**, tools/**). Tooling is in
-  // sonar.sources and CI shards `--project=root`, so without it here pre-ship's
-  // merged lcov had no tooling coverage and diff-coverage would score every
-  // changed tooling line as "no lcov" while Sonar saw it covered.
-  'root',
-  // tools/scripts/subset-material-symbols.mjs's tests (#1216): CI shards this project too.
-  'tools-mjs',
-];
+// The project list is shared with the unit-tests step, which reuses this run
+// (scripts/lib/preship-test-reuse.mjs).
+const PROJECTS = COVERAGE_PROJECTS;
 
 // Projects that are allowed extra time (in ms). Default timeout is 20 minutes.
 const PROJECT_TIMEOUT_MS = {
@@ -352,6 +324,31 @@ async function mergeCoverage() {
  * belong to the current HEAD before trusting them. Best-effort: a marker failure
  * must not break the coverage run — the gate simply degrades to "no verified run".
  */
+/** Each project's outcome, for the unit-tests step to reuse (lib/preship-test-reuse.mjs). */
+function writeResultsRecord(results) {
+  let headSha = null;
+  try {
+    headSha = execSync('git rev-parse HEAD', { cwd: ROOT, encoding: 'utf8' }).trim();
+  } catch {
+    // no commit to tie the record to: the unit-tests step will not reuse it
+  }
+  const record = {
+    headSha,
+    signature: scopeSignature(RELATED_FILES, FULL_PROJECTS),
+    allowTestFailures: process.env.COVERAGE_ALLOW_TEST_FAILURES === '1',
+    results: results.map((r) => ({
+      project: r.project,
+      testFailures: r.testFailures,
+      code: r.code,
+    })),
+  };
+  try {
+    fs.writeFileSync(path.join(ROOT, RESULTS_FILE), JSON.stringify(record, null, 2));
+  } catch (err) {
+    console.warn(`  ⚠ could not write ${RESULTS_FILE}: ${err.message}`);
+  }
+}
+
 function writeRunIdMarker() {
   let headSha = null;
   try {
@@ -408,18 +405,19 @@ async function main() {
     if (projectsToRun.length === 0) {
       console.log('   No changed source files — no project has related tests to run.');
     } else {
-      console.log(`🧪 Running coverage for ${PROJECTS.length} projects sequentially…`);
+      console.log(`🧪 Running coverage for ${projectsToRun.length} projects sequentially…`);
     }
 
     // Run projects one at a time to avoid .tmp race condition
     for (let i = 0; i < projectsToRun.length; i++) {
-      const project = PROJECTS[i];
-      console.log(`\n━━━ [${i + 1}/${PROJECTS.length}] ${project} ━━━`);
+      const project = projectsToRun[i];
+      console.log(`\n━━━ [${i + 1}/${projectsToRun.length}] ${project} ━━━`);
       const result = await runVitest(project);
       projectResults.push(result);
       // Force GC between projects to free memory
       if (globalThis.gc) globalThis.gc();
     }
+    writeResultsRecord(projectResults);
   }
 
   await mergeCoverage();

@@ -497,17 +497,6 @@ const STEPS = [
     required: true,
   },
   {
-    // Local: only the tests related to the changed files (vitest related).
-    // CI / PRESHIP_FULL_TESTS=1: the full `test:unit` suite.
-    id: 'unit-tests',
-    description: SCOPED_TESTS
-      ? `vitest related --project=!integration — ${TEST_SCOPE.scope} scope (${TEST_SCOPE.reason})`
-      : 'vitest run --project=!integration — full suite',
-    cmd: ['node', 'scripts/run-unit-tests-scoped.mjs'],
-    env: { [SCOPE_ENV]: SCOPE_ENV_VALUE, ...testStepEnv({ isCI: IS_CI, env: process.env }) },
-    required: true,
-  },
-  {
     id: 'integration-tests',
     description:
       'vitest run --project integration (FAILS the gate if Docker postgres/redis not up — override with PRESHIP_ALLOW_MISSING=1)',
@@ -543,6 +532,20 @@ const STEPS = [
     skip_if: dbStackUnavailable,
     skip_remediation:
       'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis` and point DATABASE_URL at the LOCAL test DB (never prod). Then re-run, or set PRESHIP_ALLOW_MISSING=1 to acknowledge the gap for this push.',
+    required: true,
+  },
+  {
+    // Local: only the tests related to the changed files (vitest related).
+    // CI / PRESHIP_FULL_TESTS=1: the full `test:unit` suite.
+    // Runs after coverage: when coverage ran these tests for this commit and
+    // scope, its per-project results are the verdict and only the projects it
+    // does not cover run here (scripts/lib/preship-test-reuse.mjs).
+    id: 'unit-tests',
+    description: SCOPED_TESTS
+      ? `vitest related --project=!integration — ${TEST_SCOPE.scope} scope (${TEST_SCOPE.reason})`
+      : 'vitest run --project=!integration — full suite',
+    cmd: ['node', 'scripts/run-unit-tests-scoped.mjs'],
+    env: { [SCOPE_ENV]: SCOPE_ENV_VALUE, ...testStepEnv({ isCI: IS_CI, env: process.env }) },
     required: true,
   },
   {

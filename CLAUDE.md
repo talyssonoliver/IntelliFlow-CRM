@@ -183,7 +183,12 @@ or test-setup changes widen to full on their own. When such a file sits inside
 one vitest project's directory (its setup, vitest config, `__mocks__`, tsconfig
 or package.json), only the projects it can reach run in full: that project, any
 project whose config names the file, and for a package.json its dependents
-(`scripts/lib/preship-project-scope.mjs`).
+(`scripts/lib/preship-project-scope.mjs`). The tests run once per gate:
+`coverage` runs them with coverage on, and `unit-tests` (after it) takes its
+verdict from that run's per-project results for the same commit and scope,
+running itself only the projects coverage does not cover
+(`scripts/lib/preship-test-reuse.mjs`); with no matching record it runs them
+all, as before.
 
 **Lint scope:** format-check, lint and lint-promises check only the changed
 files, and go repo-wide when eslint/prettier config, tsconfig, any

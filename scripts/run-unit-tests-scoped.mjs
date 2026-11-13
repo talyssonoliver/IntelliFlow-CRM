@@ -9,6 +9,10 @@
  *             (scripts/lib/preship-project-scope.mjs, unitTestRuns)
  *   none    → nothing to run; exit 0 and say so
  *
+ * When the coverage step already ran these tests for this commit and scope,
+ * its per-project results are the verdict and only the projects it does not
+ * cover run here (scripts/lib/preship-test-reuse.mjs).
+ *
  * Vitest is spawned through node directly (no shell) so a long related-file list
  * is not cut by cmd.exe's 8K command-line limit.
  *
@@ -16,11 +20,13 @@
  * Env:   PRESHIP_FULL_TESTS=1 forces the full suite.
  */
 
+import fs from 'node:fs';
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { scopeFromEnvOrResolve } from './lib/preship-test-scope.mjs';
-import { loadProjectMap, projectNames, unitTestRuns } from './lib/preship-project-scope.mjs';
+import { loadProjectMap, projectNames } from './lib/preship-project-scope.mjs';
+import { RESULTS_FILE, planUnitRuns } from './lib/preship-test-reuse.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const VITEST = path.join(ROOT, 'node_modules', 'vitest', 'vitest.mjs');
@@ -29,25 +35,31 @@ const scope = scopeFromEnvOrResolve({ cwd: ROOT });
 console.log(`unit-tests scope: ${scope.scope} (${scope.reason})`);
 for (const f of scope.scope === 'related' ? scope.files : []) console.log(`  related: ${f}`);
 
-// Projects to run in full need the other project names for the related run; if
-// the list cannot be read, fall back to the full suite rather than narrow it.
-let runScope = scope;
-let names = [];
-if (scope.projects?.length) {
-  const map = loadProjectMap(ROOT);
-  if (map) names = projectNames(map);
-  else {
-    console.error('unit-tests: cannot read the vitest project list; running the full suite.');
-    runScope = { scope: 'full', reason: 'project list unreadable', files: [] };
-  }
+const map = loadProjectMap(ROOT);
+let record = null;
+try {
+  record = JSON.parse(fs.readFileSync(path.join(ROOT, RESULTS_FILE), 'utf8'));
+} catch {
+  // no coverage record: the tests run here
 }
-const runs = unitTestRuns(runScope, names);
-if (runs.length === 0) {
-  console.log('unit-tests: no changed source files — no related tests to run.');
-  process.exit(0);
+let headSha = null;
+try {
+  headSha = execFileSync('git', ['rev-parse', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim();
+} catch {
+  // no commit: the coverage record cannot be matched
 }
 
-for (const args of runs) {
+const plan = planUnitRuns({ scope, names: map ? projectNames(map) : null, record, headSha });
+for (const line of plan.log) console.log(`unit-tests: ${line}`);
+if (plan.failed.length > 0) {
+  console.error(`unit-tests: the coverage run had failing tests in ${plan.failed.join(', ')}`);
+  process.exit(1);
+}
+if (plan.runs.length === 0) {
+  console.log('unit-tests: nothing left to run.');
+  process.exit(0);
+}
+for (const args of plan.runs) {
   console.log(
     `unit-tests: vitest ${args.filter((a) => a.startsWith('-') || !a.includes('/')).join(' ')}`
   );
