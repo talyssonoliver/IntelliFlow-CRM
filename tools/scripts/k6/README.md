@@ -18,8 +18,8 @@ All summary handlers pass their data through [`lib/redact.js`](./lib/redact.js)
 → `sanitizeSummaryData(data)`, which:
 
 - drops `setup_data` entirely, and
-- deep-redacts any secret-keyed value (`authToken`, `access_token`, `password`,
-  `apikey`, `authorization`, `service_role_key`, `anon_key`, …) and any
+- deep-redacts any secret-keyed value (`authToken`, `access_token`, `apikey`,
+  `authorization`, `service_role_key`, `anon_key`, `password` …) and any
   JWT-shaped string anywhere in the tree.
 
 The module has no k6 imports and is unit-tested at

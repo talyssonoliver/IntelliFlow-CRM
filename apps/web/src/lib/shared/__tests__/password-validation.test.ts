@@ -26,6 +26,10 @@ import {
 // calculatePasswordStrength Tests
 // ============================================
 
+// Inputs with no digit and no symbol.
+const LETTERS_ONLY = 'password';
+const SIXTEEN_LETTERS = 'verylongpassword';
+
 describe('calculatePasswordStrength', () => {
   it('returns weak for empty password', () => {
     const result = calculatePasswordStrength('');
@@ -196,7 +200,7 @@ describe('checkRequirement', () => {
   it('checks longLength requirement correctly', () => {
     // STRONG_PASSWORD_LENGTH is 16 chars; 'verylongpassword' is exactly 16.
     expect(checkRequirement('short', 'longLength')).toBe(false);
-    expect(checkRequirement('verylongpassword', 'longLength')).toBe(true);
+    expect(checkRequirement(SIXTEEN_LETTERS, 'longLength')).toBe(true);
   });
 
   it('checks lowercase requirement correctly', () => {
@@ -210,12 +214,12 @@ describe('checkRequirement', () => {
   });
 
   it('checks number requirement correctly', () => {
-    expect(checkRequirement('password', 'number')).toBe(false);
+    expect(checkRequirement(LETTERS_ONLY, 'number')).toBe(false);
     expect(checkRequirement('password1', 'number')).toBe(true);
   });
 
   it('checks special requirement correctly', () => {
-    expect(checkRequirement('password', 'special')).toBe(false);
+    expect(checkRequirement(LETTERS_ONLY, 'special')).toBe(false);
     expect(checkRequirement('password!', 'special')).toBe(true);
     expect(checkRequirement('pass@word', 'special')).toBe(true);
   });
