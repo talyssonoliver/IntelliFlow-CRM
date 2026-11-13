@@ -32,6 +32,9 @@ export type {
 
 // Base Worker
 export { BaseWorker } from './base-worker';
+
+// Spans for polled work (outbox polls, maintenance ticks); BaseWorker opens the job spans (IFC-097).
+export { runWorkSpan } from '@intelliflow/observability';
 export type { BaseWorkerOptions } from './base-worker';
 
 // Shared document text-extraction helpers

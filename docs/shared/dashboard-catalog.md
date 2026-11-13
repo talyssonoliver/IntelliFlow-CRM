@@ -1,8 +1,9 @@
 # IntelliFlow CRM - Grafana Dashboard Catalog
 
-**Document Version**: 1.0.0 **Last Updated**: 2025-12-29 **Related Task**:
-IFC-097 Distributed Tracing & Logging **Status**: Catalog (dashboards not yet
-validated on the production Grafana Cloud stack)
+**Document Version**: 1.1.0 **Last Updated**: 2026-11-12 **Related Task**:
+IFC-097 Distributed Tracing & Logging **Status**: Production dashboards listed
+and verified below (2026-11-12); the per-category entries further down are
+designs for the local development stack.
 
 ## Overview
 
@@ -18,6 +19,34 @@ dashboards are built on data collected from:
 IntelliFlow CRM is run by one person (the owner), who is the only audience for
 every dashboard below. Production telemetry goes to a hosted Grafana Cloud stack
 that is being set up. The local URLs below are the local development stack.
+
+## Production dashboards (Grafana Cloud, verified 2026-11-12)
+
+These exist on the production stack and read live data. Each one is applied from
+a file in the repo; edit the file, not the dashboard.
+
+| Dashboard                         | UID                                | Source (as code)                                           | Applied by                                        |
+| --------------------------------- | ---------------------------------- | ---------------------------------------------------------- | ------------------------------------------------- |
+| IntelliFlow production services   | `env008-production`                | `infra/monitoring/grafana/cloud/dashboard-production.json` | `grafana-dashboard.yml`                           |
+| IntelliFlow AI models             | `ifc117-ai-models`                 | `infra/monitoring/grafana/cloud/dashboard-ai-models.json`  | `grafana-dashboard.yml` (`--dashboard ai-models`) |
+| api availability (SLO)            | `grafana_slo_app-env008apiavail`   | `infra/monitoring/grafana/cloud/slos.json`                 | `grafana-slos.yml`                                |
+| api latency (SLO)                 | `grafana_slo_app-env008apip95`     | `infra/monitoring/grafana/cloud/slos.json`                 | `grafana-slos.yml`                                |
+| ai-worker LLM success (SLO)       | `grafana_slo_app-env008llmsuccess` | `infra/monitoring/grafana/cloud/slos.json`                 | `grafana-slos.yml`                                |
+| IFC-033 load test: production api | `ifc033-prod-api-load`             | IFC-033 load-test evidence                                 | by hand (IFC-033)                                 |
+
+Grafana Cloud also provides its own SLO overview and usage dashboards.
+
+Telemetry behind them (read 2026-11-12):
+
+- Services: `api` and `ai-worker` (the Railway combined worker, which also runs
+  events-worker and ingestion-worker) send traces to Tempo, logs to Loki and
+  span metrics to Mimir. The web app on Vercel reports errors to Sentry only;
+  OTLP export to Grafana is in progress (IFC-319, owner ruling 2026-11-12).
+- Request tracing: every api request record in Loki carries a `trace_id` (37,314
+  of 37,314 over 7 days), and 20 of 20 sampled ids were found in Tempo.
+- Traces link to their logs: the Tempo data source has `tracesToLogs` set to the
+  Loki data source.
+- Retention: 14 days (Grafana Cloud free tier).
 
 ## Access Information
 
