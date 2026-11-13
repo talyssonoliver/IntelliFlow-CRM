@@ -169,13 +169,15 @@ describe('the heavy commands are guarded', () => {
     expect(scripts(file).typecheck).not.toContain('require-test-slot');
   });
 
-  it('the pre-commit typecheck joins the queue instead of being refused', () => {
+  it('the pre-commit typecheck is scoped and joins the queue', () => {
     const hook = fs.readFileSync(path.join(ROOT, '.husky', 'pre-commit'), 'utf8');
-    expect(hook).toContain('with-slot.mjs" --label pre-commit-typecheck -- pnpm run typecheck; }');
-    // No bare call left: a bare `pnpm run typecheck` would be refused outside a slot.
-    const bare = hook.split('\n').filter((l) => l.trimStart().startsWith('pnpm run typecheck'));
-    expect(bare).toEqual([]);
-    expect(hook).toContain('else\n  typecheck_ok() { pnpm run typecheck; }');
+    // The changed packages only, at concurrency 3: the same runner as pre-ship.
+    expect(hook).toContain(
+      'with-slot.mjs" --label pre-commit-typecheck -- node scripts/run-typecheck.mjs; }'
+    );
+    expect(hook).toContain('else\n  typecheck_ok() { node scripts/run-typecheck.mjs; }');
+    // No repo-wide typecheck left anywhere in the hook (audit 2026-11-13, item 1).
+    expect(hook).not.toContain('pnpm run typecheck');
   });
 
   it('leaves the owner project tracker (:3002) unguarded: it stays running', () => {

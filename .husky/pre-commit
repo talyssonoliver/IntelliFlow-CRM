@@ -146,14 +146,19 @@ else
   }
 fi
 
-# Run type checking. The full typecheck is a heavy job (owner ruling
-# 2026-11-12): it joins the test-slot queue and waits for a slot instead of
-# being refused. Where the machine has no queue it runs directly.
-echo "🔧 Type checking..."
+# Run type checking on the packages this branch changed (plus their
+# dependents), at turbo concurrency 3, through the test-slot queue: the same
+# scope and command as pre-ship's typecheck step (scripts/run-typecheck.mjs,
+# scripts/lib/preship-affected.mjs). It used to run the repo-wide typecheck: every
+# package at turbo's concurrency 20, which on a cache miss started up to 20
+# tsc processes at once (owner decision on the 2026-11-13 pre-ship audit,
+# item 1). Pre-ship still type-checks at push. Where the machine has no queue
+# it runs directly.
+echo "🔧 Type checking (changed packages)..."
 if [ -f "${TEST_SLOTS_DIR:-C:/Users/talys/ops/test-slots}/with-slot.mjs" ]; then
-  typecheck_ok() { node "${TEST_SLOTS_DIR:-C:/Users/talys/ops/test-slots}/with-slot.mjs" --label pre-commit-typecheck -- pnpm run typecheck; }
+  typecheck_ok() { node "${TEST_SLOTS_DIR:-C:/Users/talys/ops/test-slots}/with-slot.mjs" --label pre-commit-typecheck -- node scripts/run-typecheck.mjs; }
 else
-  typecheck_ok() { pnpm run typecheck; }
+  typecheck_ok() { node scripts/run-typecheck.mjs; }
 fi
 typecheck_ok || {
   echo "❌ Type checking failed. Fix type errors before committing."
