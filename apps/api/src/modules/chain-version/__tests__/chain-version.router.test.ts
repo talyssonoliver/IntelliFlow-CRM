@@ -392,7 +392,7 @@ describe('Chain Version Router', () => {
         }
       });
 
-      it('shows a saved version with its model', async () => {
+      it('shows a saved version, with the model the worker runs rather than the saved one', async () => {
         mockChainVersionService.findActiveVersion.mockImplementation(async (type: string) =>
           type === 'SCORING'
             ? {
@@ -417,9 +417,10 @@ describe('Chain Version Router', () => {
           source: 'saved',
           label: 'Saved version',
           savedVersionId: TEST_VERSION_ID,
-          model: 'claude-haiku-5-5',
-          modelSource: 'saved',
+          temperature: null,
         });
+        expect(result.SCORING.modelSource).not.toBe('saved');
+        expect(result.SCORING.model).not.toBe('claude-haiku-5-5');
         expect(result.SCORING.chains[0]).toMatchObject({ promptSource: 'saved' });
       });
     });

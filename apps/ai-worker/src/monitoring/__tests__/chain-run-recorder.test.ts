@@ -122,6 +122,37 @@ describe('recordedChainRun', () => {
     ]);
   });
 
+  it('names the version the run started with, even if the cache entry goes during the call', async () => {
+    const rows = capture();
+    configureVersionLoader({
+      findActiveVersion: vi.fn(async () => ({
+        version: {
+          id: 'v-scoring',
+          chainType: 'SCORING' as const,
+          status: 'ACTIVE' as const,
+          prompt: 'Score:\n{lead_info}',
+          model: 'm',
+          temperature: 0.2,
+          maxTokens: 100,
+          additionalParams: null,
+        },
+        selectedBy: 'direct' as const,
+      })),
+      getActiveVersion: vi.fn(),
+    });
+    const { getVersionLoader } = await import('../../versioning/chain-version-loader');
+    await getVersionLoader().getChainConfig('SCORING', { tenantId: TENANT });
+
+    await recordedChainRun('LEAD_SCORING', TENANT, async () => {
+      // The entry expires (or is reloaded) while the model call runs.
+      configureVersionLoader(undefined);
+      return 'ok';
+    });
+    await flush();
+
+    expect(rows[0]).toMatchObject({ workerChain: 'LEAD_SCORING', versionId: 'v-scoring' });
+  });
+
   it('records nothing without a tenant or before a writer is set', async () => {
     const rows = capture();
     await recordedChainRun('LEAD_SCORING', undefined, async () => 'ok');

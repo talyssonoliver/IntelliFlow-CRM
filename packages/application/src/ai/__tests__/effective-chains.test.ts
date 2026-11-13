@@ -86,14 +86,16 @@ describe('describeEffectiveChains', () => {
       })
     );
 
+    // The worker takes only the saved prompt, so the saved model and temperature are not shown
+    // as what runs: the model is chosen as for a built-in type.
     expect(result.SCORING).toMatchObject({
       source: 'saved',
       label: 'Sharper scoring',
       savedVersionId: 'v-1',
-      model: 'claude-haiku-5-5',
-      modelSource: 'saved',
-      temperature: 0.2,
-      maxTokens: 800,
+      model: null,
+      modelSource: 'platform-default',
+      temperature: null,
+      maxTokens: null,
     });
     expect(result.SCORING.chains[0]).toMatchObject({
       key: 'LEAD_SCORING',
@@ -135,6 +137,44 @@ describe('describeEffectiveChains', () => {
     });
     expect(result.SCORING.chains.map((row) => row.temperature)).toEqual([0.5, 0.5]);
     expect(result.FOLLOWUP.modelSource).toBe('platform-default');
+  });
+
+  it('shows the pinned model, never the saved version’s, for a type with a saved version', async () => {
+    const result = await describeEffectiveChains(
+      sources({
+        savedVersion: async (type) =>
+          type === 'SCORING' ? saved('Score this:\n{lead_info}', { model: 'gpt-4-turbo' }) : null,
+        purposeConfig: async (purpose) =>
+          purpose === 'scoring'
+            ? { modelId: 'claude-haiku-5-5', temperature: 0.5, maxTokens: 600 }
+            : null,
+        lastRunModel: async () => 'nemotron-3-ultra',
+      })
+    );
+
+    expect(result.SCORING).toMatchObject({
+      source: 'saved',
+      model: 'claude-haiku-5-5',
+      modelSource: 'tenant-pin',
+      temperature: null,
+      maxTokens: 600,
+    });
+    expect(result.SCORING.chains.map((row) => row.temperature)).toEqual([0.5, 0.5]);
+  });
+
+  it('reports a type as built-in when its saved version fits none of its chains', async () => {
+    const result = await describeEffectiveChains(
+      sources({
+        savedVersion: async (type) => (type === 'SCORING' ? saved('No slots at all') : null),
+      })
+    );
+
+    expect(result.SCORING.chains.every((row) => row.promptSource === 'builtin')).toBe(true);
+    expect(result.SCORING).toMatchObject({
+      source: 'builtin',
+      label: `${BUILTIN_VERSION_LABEL} (the saved version fits none of these chains)`,
+      savedVersionId: 'v-1',
+    });
   });
 
   it('falls back to the model recorded on the last run', async () => {

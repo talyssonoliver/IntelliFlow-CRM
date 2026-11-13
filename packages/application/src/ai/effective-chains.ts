@@ -4,9 +4,10 @@
  * built-in configuration as "Built-in v1".
  *
  * Per worker chain, the prompt is the saved version's when it fits that chain (the same rule the
- * ai-worker applies), otherwise the chain's built-in prompt. The model is the saved version's,
- * else the tenant's pinned model for the chain's purpose, else the model recorded on the type's
- * last run, else unknown here (the worker picks it from its own provider settings).
+ * ai-worker applies), otherwise the chain's built-in prompt. The worker uses only a saved
+ * version's prompt, never its model or temperature, so the model shown is the tenant's pinned
+ * model for the chain's purpose, else the model recorded on the type's last run, else unknown
+ * here (the worker picks it from its own provider settings), with or without a saved version.
  */
 
 import { CHAIN_TYPES, type ChainType } from '@intelliflow/domain';
@@ -38,8 +39,9 @@ export interface EffectiveChain {
   label: string;
   savedVersionId: string | null;
   model: string | null;
+  /** 'saved' is never returned: the worker does not use a saved version's model (kept for the UI type). */
   modelSource: 'saved' | 'tenant-pin' | 'last-run' | 'platform-default';
-  /** The saved version's temperature, or null when the chains run at their own (see chains). */
+  /** Always null: each chain runs at its own temperature (see chains). */
   temperature: number | null;
   maxTokens: number | null;
   chains: EffectiveChainRow[];
@@ -97,21 +99,10 @@ async function describeType(
     };
   });
 
-  if (saved) {
-    return {
-      chainType,
-      source: 'saved',
-      label: saved.description?.trim() || 'Saved version',
-      savedVersionId: saved.id,
-      model: saved.model,
-      modelSource: 'saved',
-      temperature: saved.temperature,
-      maxTokens: saved.maxTokens,
-      chains: rows,
-    };
-  }
-
-  // Built-in: the first chain's purpose decides the pinned model shown for the type.
+  // The worker takes only a saved version's prompt: the model comes from the tenant's pin for the
+  // purpose, else the provider default, and each chain runs at its own temperature. So the model
+  // shown is chosen the same way with or without a saved version (the first chain's purpose
+  // decides the pinned model shown for the type).
   const primary = purposeConfigs.get(chains[0]!.purpose) ?? null;
   let model: string | null = primary?.modelId ?? null;
   let modelSource: EffectiveChain['modelSource'] = model ? 'tenant-pin' : 'platform-default';
@@ -119,17 +110,27 @@ async function describeType(
     model = await sources.lastRunModel(chainType);
     if (model) modelSource = 'last-run';
   }
-
-  return {
+  const common = {
     chainType,
-    source: 'builtin',
-    label: BUILTIN_VERSION_LABEL,
-    savedVersionId: null,
+    savedVersionId: saved?.id ?? null,
     model,
     modelSource,
     temperature: null,
     maxTokens: primary?.maxTokens ?? null,
     chains: rows,
+  };
+
+  // "Saved" only when a chain really runs the saved prompt; a saved version that fits none of the
+  // type's chains is named in the label, and its id is kept so the page can link to it.
+  if (saved && rows.some((row) => row.promptSource === 'saved')) {
+    return { ...common, source: 'saved', label: saved.description?.trim() || 'Saved version' };
+  }
+  return {
+    ...common,
+    source: 'builtin',
+    label: saved
+      ? `${BUILTIN_VERSION_LABEL} (the saved version fits none of these chains)`
+      : BUILTIN_VERSION_LABEL,
   };
 }
 

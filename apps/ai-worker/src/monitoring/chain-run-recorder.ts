@@ -138,12 +138,15 @@ export async function recordedChainRun<T>(
   if (!tenantId || !writer) return run([]);
   const usage = new RunUsageHandler();
   const started = Date.now();
+  // Read before the model call: the chain has just built its prompt from the loaded version, and a
+  // cache entry that expires or is reloaded during the call must not change the attribution.
+  const versionId = usedVersionId(key, tenantId);
   const finish = (success: boolean, error?: unknown): Promise<void> =>
     write({
       tenantId,
       chainType: BUILTIN_CHAINS[key].chainType,
       workerChain: key,
-      versionId: usedVersionId(key, tenantId),
+      versionId,
       model: usage.model,
       inputTokens: usage.inputTokens,
       outputTokens: usage.outputTokens,
