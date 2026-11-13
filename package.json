@@ -26,6 +26,7 @@
     "test": "node scripts/with-test-slot.mjs --base 2 -- node scripts/run-tests.js",
     "test:unit": "vitest run --project=!integration",
     "test:integration": "vitest run --project integration",
+    "test:perf:nf001": "dotenv -v NF001_PERF=1 -- node scripts/test-db.mjs run --seed -- vitest run --project integration tests/integration/event-types.test.ts -t \"NF-001 timing\"",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
