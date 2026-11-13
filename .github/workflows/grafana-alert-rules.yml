@@ -22,6 +22,9 @@ on:
     paths:
       - 'infra/monitoring/grafana/cloud/alert-rules.json'
       - 'tools/scripts/observability/apply-grafana-alert-rules.mjs'
+      # The shared rule builder (execErrState, query shape): a change there must
+      # re-apply these rules, as grafana-ai-alert-rules.yml already does.
+      - 'tools/scripts/lib/grafana-provisioning.mjs'
       - '.github/workflows/grafana-alert-rules.yml'
   workflow_dispatch:
     inputs:
