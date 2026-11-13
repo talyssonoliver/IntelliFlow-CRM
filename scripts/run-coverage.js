@@ -27,6 +27,7 @@ import { spawn, execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseProjectList } from './lib/preship-project-scope.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -86,6 +87,11 @@ const MERGE_ONLY = process.argv.includes('--merge-only');
 
 /** @type {string[] | null} null = full run; an array = related mode. */
 const RELATED_FILES = parseRelatedFiles(process.env.COVERAGE_RELATED_FILES);
+/**
+ * Projects a package-local config change reaches (pre-ship's test scope): they
+ * run in full even in related mode. See scripts/lib/preship-project-scope.mjs.
+ */
+const FULL_PROJECTS = parseProjectList(process.env.COVERAGE_FULL_PROJECTS);
 
 function parseRelatedFiles(raw) {
   if (raw === undefined || raw === '') return null;
@@ -118,11 +124,12 @@ function runVitest(project) {
     //   - threshold breach with all tests passing → warn, but the
     //     suite is honest. Threshold debt is tracked separately.
     const resultJsonPath = path.join(outDir, 'vitest-result.json');
+    const related = Boolean(RELATED_FILES) && !FULL_PROJECTS.includes(project);
     const args = [
       '--max-old-space-size=8192',
       '--expose-gc',
       path.join(ROOT, 'node_modules', 'vitest', 'vitest.mjs'),
-      ...(RELATED_FILES ? ['related', '--run', '--passWithNoTests'] : ['run']),
+      ...(related ? ['related', '--run', '--passWithNoTests'] : ['run']),
       '--coverage',
       `--coverage.reportsDirectory=${outDir}`,
       ...(PROJECT_COVERAGE_INCLUDE[project] ?? []).map((glob) => `--coverage.include=${glob}`),
@@ -130,7 +137,7 @@ function runVitest(project) {
       '--reporter=default',
       '--reporter=json',
       `--outputFile.json=${resultJsonPath}`,
-      ...(RELATED_FILES ?? []),
+      ...(related ? RELATED_FILES : []),
     ];
 
     console.log(`\n▶ Running coverage for project: ${project}`);
@@ -391,7 +398,13 @@ async function main() {
         `🎯 Related mode: ${RELATED_FILES.length} changed source file(s) — each project runs only the tests that import them.`
       );
     }
-    const projectsToRun = RELATED_FILES?.length === 0 ? [] : PROJECTS;
+    if (FULL_PROJECTS.length > 0) {
+      console.log(
+        `🎯 Full run for project(s) a package-local change reaches: ${FULL_PROJECTS.join(', ')}`
+      );
+    }
+    const projectsToRun =
+      RELATED_FILES?.length === 0 ? PROJECTS.filter((p) => FULL_PROJECTS.includes(p)) : PROJECTS;
     if (projectsToRun.length === 0) {
       console.log('   No changed source files — no project has related tests to run.');
     } else {

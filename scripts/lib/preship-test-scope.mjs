@@ -13,7 +13,10 @@
  *             is not imported by (lockfile, package.json beyond `scripts`,
  *             vitest/tsconfig, Prisma schema, test setup), or when the diff is too
  *             large to pass as argv.
- *   related — run `vitest related <files>` for the changed source files.
+ *   related — run `vitest related <files>` for the changed source files; when a
+ *             package-local config file changed (a project's setup, vitest
+ *             config, __mocks__, tsconfig or package.json), `projects` names the
+ *             vitest projects it can reach, and those run in full.
  *   none    — no source file changed (docs/config-only diff); nothing to run.
  *
  * "Changed" means everything that differs from the merge-base with the base ref:
@@ -24,6 +27,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { loadProjectMap, localImpact } from './preship-project-scope.mjs';
 
 export const DEFAULT_BASE_REF = 'origin/main';
 
@@ -69,16 +73,26 @@ const NON_SOURCE_PREFIXES = ['artifacts/', 'docs/', '.github/', 'infra/'];
  * @param {string[]} changedFiles repo-relative, forward-slash paths
  * @returns {{scope: 'full'|'related'|'none', reason: string, files: string[]}}
  */
-export function classifyChangedFiles(changedFiles) {
+export function classifyChangedFiles(changedFiles, projectMap = null) {
   const unique = [...new Set(changedFiles.map((f) => f.replace(/\\/g, '/')).filter(Boolean))];
 
-  const globalHit = unique.find((f) => GLOBAL_IMPACT_PATTERNS.some((re) => re.test(f)));
-  if (globalHit) {
-    return {
-      scope: 'full',
-      reason: `${globalHit} changed — it can affect tests that do not import it`,
-      files: [],
-    };
+  // A global-impact file inside one vitest project's directory (its setup,
+  // vitest config, __mocks__, tsconfig, package.json) runs only the projects it
+  // can reach in full (lib/preship-project-scope.mjs); any other one still
+  // means the full suite.
+  const projects = new Set();
+  const localHits = [];
+  for (const f of unique.filter((f) => GLOBAL_IMPACT_PATTERNS.some((re) => re.test(f)))) {
+    const names = projectMap ? localImpact(f, projectMap) : null;
+    if (!names) {
+      return {
+        scope: 'full',
+        reason: `${f} changed — it can affect tests that do not import it`,
+        files: [],
+      };
+    }
+    localHits.push(f);
+    for (const n of names) projects.add(n);
   }
 
   const sources = unique
@@ -86,7 +100,7 @@ export function classifyChangedFiles(changedFiles) {
     .filter((f) => !NON_SOURCE_PREFIXES.some((p) => f.startsWith(p)))
     .sort();
 
-  if (sources.length === 0) {
+  if (sources.length === 0 && projects.size === 0) {
     return { scope: 'none', reason: 'no source files changed', files: [] };
   }
   if (sources.length > MAX_RELATED_FILES) {
@@ -94,6 +108,19 @@ export function classifyChangedFiles(changedFiles) {
       scope: 'full',
       reason: `${sources.length} source files changed (> ${MAX_RELATED_FILES}) — too many to select`,
       files: [],
+    };
+  }
+  if (projects.size > 0) {
+    const all = [...projects].sort();
+    return {
+      scope: 'related',
+      reason:
+        `${localHits.join(', ')} changed — runs project(s) ${all.join(', ')} in full` +
+        (sources.length
+          ? `, plus the tests related to ${sources.length} changed source file(s)`
+          : ''),
+      files: sources,
+      projects: all,
     };
   }
   return {
@@ -225,7 +252,7 @@ export function resolveTestScope({ cwd, env = process.env, baseRef = DEFAULT_BAS
     return before === null || !isScriptsOnlyPackageJsonChange(before, after);
   });
 
-  return { ...classifyChangedFiles([...changed, ...lines(untracked)]), base };
+  return { ...classifyChangedFiles([...changed, ...lines(untracked)], loadProjectMap(cwd)), base };
 }
 
 /** Env var pre-ship uses to hand its resolved scope to the step subprocesses. */

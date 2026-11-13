@@ -529,7 +529,12 @@ const STEPS = [
     // project, so diff-coverage still measures the changed lines locally.
     // Locally, vitest's workers don't inherit a heap cap either (#1111).
     env: {
-      ...(SCOPED_TESTS ? { COVERAGE_RELATED_FILES: JSON.stringify(TEST_SCOPE.files) } : {}),
+      ...(SCOPED_TESTS
+        ? {
+            COVERAGE_RELATED_FILES: JSON.stringify(TEST_SCOPE.files),
+            COVERAGE_FULL_PROJECTS: JSON.stringify(TEST_SCOPE.projects ?? []),
+          }
+        : {}),
       ...testStepEnv({ isCI: IS_CI, env: process.env }),
     },
     // Needs a local test DB (the merged run includes the integration project).
