@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-12T20:20:28.367Z",
+  "generatedAt": "2026-11-13T11:36:48.336Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -550,11 +550,11 @@
     "totalTasks": 627,
     "totalNumberedSprintTasks": 621,
     "continuousTaskCount": 6,
-    "completedTasks": 444,
+    "completedTasks": 445,
     "backlogTasks": 167,
     "blockedTasks": 0,
-    "completionPercentage": 70.81,
-    "inProgressTasks": 16,
+    "completionPercentage": 70.97,
+    "inProgressTasks": 15,
     "otherTasks": 0
   },
   "inconsistencies": {
@@ -609,12 +609,6 @@
         "status": "In Progress",
         "sprint": 18,
         "attestationPath": ".specify/sprints/sprint-9/attestations/IFC-116/attestation.json"
-      },
-      {
-        "taskId": "IFC-117",
-        "status": "In Progress",
-        "sprint": 18,
-        "attestationPath": ".specify/sprints/sprint-18/attestations/IFC-117/attestation.json"
       },
       {
         "taskId": "IFC-142",
@@ -17338,11 +17332,11 @@
       "name": "Sprint 18",
       "summarySource": "specify",
       "totalTasks": 78,
-      "completedTasks": 63,
+      "completedTasks": 64,
       "backlogTasks": 5,
       "blockedTasks": 0,
-      "inProgressTasks": 10,
-      "attestedCompletedTasks": 63,
+      "inProgressTasks": 9,
+      "attestedCompletedTasks": 64,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).",
       "notableCompleted": [
@@ -17744,8 +17738,8 @@
         {
           "section": "AI Insights",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         },
         {
           "section": "Commercial Assets",
@@ -18356,7 +18350,7 @@
         {
           "taskId": "IFC-117",
           "sprint": 18,
-          "status": "In Progress",
+          "status": "Completed",
           "section": "AI Insights",
           "title": "Monitor AI models for drift, latency, hallucination and ROI",
           "description": "Monitor AI models for drift, latency, hallucination and ROI",
@@ -18370,8 +18364,8 @@
           "attestation": {
             "exists": true,
             "path": ".specify/sprints/sprint-18/attestations/IFC-117/attestation.json",
-            "verdict": "NEEDS_HUMAN",
-            "timestamp": "2026-10-30T12:19:51Z",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-11-12T14:20:00Z",
             "sprintFolder": 18
           },
           "validationSummary": {
@@ -18382,8 +18376,8 @@
           },
           "kpiSummary": {
             "total": 5,
-            "met": 2,
-            "missed": 3
+            "met": 5,
+            "missed": 0
           }
         },
         {

@@ -1,14 +1,14 @@
 {
   "sprint": "sprint-18",
   "name": "Sprint 18",
-  "generated_at": "2026-11-12T20:20:27.671Z",
+  "generated_at": "2026-11-13T11:36:48.040Z",
   "summary_source": "specify",
   "task_summary": {
     "total": 78,
-    "completed": 63,
+    "completed": 64,
     "backlog": 5,
     "blocked": 0,
-    "attested_completed": 63
+    "attested_completed": 64
   },
   "context": "Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).",
   "section_summary": [
@@ -81,8 +81,8 @@
     {
       "section": "AI Insights",
       "total": 1,
-      "completed": 0,
-      "open": 1
+      "completed": 1,
+      "open": 0
     },
     {
       "section": "Commercial Assets",
@@ -1022,7 +1022,7 @@
     {
       "taskId": "IFC-117",
       "sprint": 18,
-      "status": "In Progress",
+      "status": "Completed",
       "section": "AI Insights",
       "title": "Monitor AI models for drift, latency, hallucination and ROI",
       "description": "Monitor AI models for drift, latency, hallucination and ROI",
@@ -1036,8 +1036,8 @@
       "attestation": {
         "exists": true,
         "path": ".specify/sprints/sprint-18/attestations/IFC-117/attestation.json",
-        "verdict": "NEEDS_HUMAN",
-        "timestamp": "2026-10-30T12:19:51Z",
+        "verdict": "COMPLETE",
+        "timestamp": "2026-11-12T14:20:00Z",
         "sprintFolder": 18
       },
       "validationSummary": {
@@ -1048,8 +1048,8 @@
       },
       "kpiSummary": {
         "total": 5,
-        "met": 2,
-        "missed": 3
+        "met": 5,
+        "missed": 0
       }
     },
     {
