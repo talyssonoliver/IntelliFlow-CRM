@@ -158,7 +158,9 @@ export function buildAlertRulePayload(entry, config, source) {
     ruleGroup: config.group.name,
     condition: 'C',
     noDataState: entry.noData,
-    execErrState: 'Error',
+    // A failed query (backend down, connection refused) keeps the last state instead of
+    // raising a DatasourceError page; real outages page through the telemetry-silent rules.
+    execErrState: 'KeepLast',
     for: entry.for,
     labels: { severity: entry.severity, team: 'owner', source },
     annotations: { summary: entry.summary },

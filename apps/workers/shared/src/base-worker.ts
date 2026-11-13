@@ -18,7 +18,7 @@
 
 import { Job } from 'bullmq';
 import pino from 'pino';
-import { getCurrentLogContext } from '@intelliflow/observability';
+import { getCurrentLogContext, runConsumerJob } from '@intelliflow/observability';
 import type { WorkerConfig } from './worker-config';
 import { loadWorkerConfig } from './worker-config';
 import { QueueConnector } from './queue-connector';
@@ -291,7 +291,20 @@ export abstract class BaseWorker<TJobData = unknown, TJobResult = unknown> {
     jobLogger.debug({ data: job.data, activeJobs: this.activeJobs }, 'Processing job');
 
     try {
-      const result = await this.processJob(job);
+      // One CONSUMER span per job, parented on the producer's _otelCarrier, so the
+      // job's queries, LLM calls and log lines share one trace (IFC-097).
+      const result = await runConsumerJob(
+        {
+          queueName: job.queueName,
+          jobName: job.name,
+          jobId: job.id,
+          attempt: job.attemptsMade + 1,
+          workerName: this.name,
+          data: job.data,
+        },
+        () => this.processJob(job),
+        { isExpectedError: isExpectedJobOutcome }
+      );
 
       this.processedJobs++;
       const duration = Date.now() - startTime;
