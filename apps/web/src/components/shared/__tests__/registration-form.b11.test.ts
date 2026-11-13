@@ -12,6 +12,10 @@
 
 import { describe, it, expect } from 'vitest';
 
+// Field names, as validateField receives them.
+const PASSWORD_FIELD = 'password';
+const CONFIRM_PASSWORD_FIELD = 'confirmPassword';
+
 // Replicate the calculatePasswordStrength function from registration-form.tsx
 type PasswordStrength = 'weak' | 'fair' | 'good' | 'strong';
 
@@ -73,49 +77,43 @@ function calculatePasswordStrength(password: string): PasswordStrengthResult {
   return { strength, score, feedback };
 }
 
-// Replicate validateField logic
+// Same acceptance as /^[^\s@]+@[^\s@]+\.[^\s@]+$/, without a backtracking regex:
+// one @ with text on both sides, no whitespace, and a dot inside the domain.
+function looksLikeEmail(value: string): boolean {
+  const at = value.indexOf('@');
+  if (at < 1 || at !== value.lastIndexOf('@') || /\s/.test(value)) return false;
+  return value.slice(at + 2, -1).includes('.');
+}
+
+type FieldRule = (value: string | boolean, password: string) => string | undefined;
+
+// Replicate validateField logic, one rule per field.
+const FIELD_RULES: Record<string, FieldRule> = {
+  fullName: (value) =>
+    !value || (typeof value === 'string' && value.trim().length < 2)
+      ? 'Full name is required (at least 2 characters)'
+      : undefined,
+  email: (value) => {
+    if (!value || typeof value !== 'string') return 'Email is required';
+    return looksLikeEmail(value) ? undefined : 'Please enter a valid email address';
+  },
+  [PASSWORD_FIELD]: (value) => {
+    if (!value || typeof value !== 'string') return 'Password is required';
+    return value.length < 8 ? 'Password must be at least 8 characters' : undefined;
+  },
+  [CONFIRM_PASSWORD_FIELD]: (value, password) => {
+    if (!value || typeof value !== 'string') return 'Please confirm your password';
+    return value === password ? undefined : 'Passwords do not match';
+  },
+  acceptTerms: (value) => (value ? undefined : 'You must accept the terms and conditions'),
+};
+
 function validateField(
   name: string,
   value: string | boolean,
   password: string = ''
 ): string | undefined {
-  switch (name) {
-    case 'fullName':
-      if (!value || (typeof value === 'string' && value.trim().length < 2)) {
-        return 'Full name is required (at least 2 characters)';
-      }
-      break;
-    case 'email':
-      if (!value || typeof value !== 'string') {
-        return 'Email is required';
-      }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        return 'Please enter a valid email address';
-      }
-      break;
-    case 'password':
-      if (!value || typeof value !== 'string') {
-        return 'Password is required';
-      }
-      if (value.length < 8) {
-        return 'Password must be at least 8 characters';
-      }
-      break;
-    case 'confirmPassword':
-      if (!value || typeof value !== 'string') {
-        return 'Please confirm your password';
-      }
-      if (value !== password) {
-        return 'Passwords do not match';
-      }
-      break;
-    case 'acceptTerms':
-      if (!value) {
-        return 'You must accept the terms and conditions';
-      }
-      break;
-  }
-  return undefined;
+  return FIELD_RULES[name]?.(value, password);
 }
 
 describe('Registration form logic (b11 coverage)', () => {
@@ -216,37 +214,37 @@ describe('Registration form logic (b11 coverage)', () => {
 
     describe('password', () => {
       it('returns error for empty password', () => {
-        expect(validateField('password', '')).toContain('required');
+        expect(validateField(PASSWORD_FIELD, '')).toContain('required');
       });
 
       it('returns error for short password', () => {
-        expect(validateField('password', 'abc')).toContain('8 characters');
+        expect(validateField(PASSWORD_FIELD, 'abc')).toContain('8 characters');
       });
 
       it('returns undefined for valid password', () => {
-        expect(validateField('password', 'MyPassword123')).toBeUndefined(); // pragma: allowlist secret
+        expect(validateField(PASSWORD_FIELD, 'MyPassword123')).toBeUndefined(); // pragma: allowlist secret
       });
 
       it('returns error for boolean value', () => {
-        expect(validateField('password', false)).toContain('required');
+        expect(validateField(PASSWORD_FIELD, false)).toContain('required');
       });
     });
 
     describe('confirmPassword', () => {
       it('returns error for empty confirm password', () => {
-        expect(validateField('confirmPassword', '', 'abc123')).toContain('confirm');
+        expect(validateField(CONFIRM_PASSWORD_FIELD, '', 'abc123')).toContain('confirm');
       });
 
       it('returns error when passwords do not match', () => {
-        expect(validateField('confirmPassword', 'different', 'original')).toContain('match');
+        expect(validateField(CONFIRM_PASSWORD_FIELD, 'different', 'original')).toContain('match');
       });
 
       it('returns undefined when passwords match', () => {
-        expect(validateField('confirmPassword', 'same', 'same')).toBeUndefined();
+        expect(validateField(CONFIRM_PASSWORD_FIELD, 'same', 'same')).toBeUndefined();
       });
 
       it('returns error for boolean value', () => {
-        expect(validateField('confirmPassword', true, 'pw')).toContain('confirm');
+        expect(validateField(CONFIRM_PASSWORD_FIELD, true, 'pw')).toContain('confirm');
       });
     });
 

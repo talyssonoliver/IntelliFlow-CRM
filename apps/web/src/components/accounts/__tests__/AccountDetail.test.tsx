@@ -5,7 +5,13 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AccountDetail } from '../AccountDetail';
+import {
+  AccountDetail,
+  formatRevenueCompact,
+  modelScore,
+  readSignals,
+  readStrings,
+} from '../AccountDetail';
 
 const mockPush = vi.fn();
 vi.mock('next/navigation', () => ({
@@ -31,6 +37,7 @@ vi.mock('next/link', () => ({
 const getByIdMock = vi.fn();
 const activityMock = vi.fn();
 const oppsMock = vi.fn();
+const insightMock = vi.fn();
 const assigneesMock = vi.fn();
 const assignOwnerMutateMock = vi.fn();
 const utilsListInvalidateMock = vi.fn();
@@ -44,6 +51,7 @@ vi.mock('@/lib/api', () => ({
       getById: { useQuery: (...args: unknown[]) => getByIdMock(...args) },
       getActivity: { useQuery: (...args: unknown[]) => activityMock(...args) },
       getOpportunities: { useQuery: (...args: unknown[]) => oppsMock(...args) },
+      getAiInsight: { useQuery: (...args: unknown[]) => insightMock(...args) },
       assignees: { useQuery: (...args: unknown[]) => assigneesMock(...args) },
       assignOwner: {
         useMutation: (opts?: { onSuccess?: () => unknown }) => {
@@ -187,8 +195,20 @@ vi.mock('@/components/tasks/RelatedTasksCard', () => ({
 
 // Mock EntityActionSheet and MoreActionsButton to avoid tRPC context requirement
 vi.mock('@/components/shared/entity-action-sheet', () => ({
-  EntityActionSheet: ({ open }: Readonly<{ open: boolean }>) =>
-    open ? <div data-testid="action-sheet">Action Sheet</div> : null,
+  EntityActionSheet: ({
+    open,
+    extraActions = [],
+  }: Readonly<{ open: boolean; extraActions?: Array<{ label: string }> }>) =>
+    open ? (
+      <div data-testid="action-sheet">
+        Action Sheet
+        {extraActions.map((a) => (
+          <span key={a.label} data-testid="extra-action">
+            {a.label}
+          </span>
+        ))}
+      </div>
+    ) : null,
 }));
 vi.mock('@/components/shared/more-actions-button', () => ({
   MoreActionsButton: ({ onClick }: Readonly<{ onClick: () => void }>) => (
@@ -211,8 +231,14 @@ vi.mock('@/components/shared/SuggestedTagsRow', () => ({
 }));
 
 vi.mock('@intelliflow/ui', () => ({
-  Card: ({ children, className }: Readonly<{ children: React.ReactNode; className?: string }>) => (
-    <div className={className}>{children}</div>
+  Card: ({
+    children,
+    className,
+    ...props
+  }: Readonly<{ children: React.ReactNode; className?: string; [key: string]: unknown }>) => (
+    <div className={className} {...props}>
+      {children}
+    </div>
   ),
   Button: ({
     children,
@@ -301,6 +327,8 @@ describe('AccountDetail', () => {
     });
     activityMock.mockReturnValue({ data: null, isLoading: false, error: null });
     oppsMock.mockReturnValue({ data: null, isLoading: false, error: null });
+    insightMock.mockReset();
+    insightMock.mockReturnValue({ data: { insight: null }, isLoading: false, error: null });
     assigneesMock.mockReturnValue({
       data: [{ id: 'user-2', name: 'Bob Lee', title: 'Sales Rep', avatar: null }],
       isLoading: false,
@@ -398,7 +426,7 @@ describe('AccountDetail', () => {
     // There's a website link in both sidebar and overview tab
     const link = links.find((el) => el.closest('a'));
     expect(link).toBeInTheDocument();
-    expect(link!.closest('a')).toHaveAttribute('href', 'https://techcorp.com');
+    expect(link!.closest('a')).toHaveAttribute('href', 'https://techcorp.com/');
   });
 
   it('shows edit button and more actions', () => {
@@ -642,4 +670,213 @@ describe('AccountDetail', () => {
       expect(settled).toBe(true);
     }
   );
+
+  describe('formatRevenueCompact', () => {
+    it.each([
+      [5_000_000, '£5M'],
+      [1_250_000, '£1.3M'],
+      [850_000, '£850K'],
+      ['12000.50', '£12K'],
+      [950, '£950'],
+      [999.6, '£1K'],
+      [999_950, '£1M'],
+      [999_960_000, '£1B'],
+    ])('formats %j as %s', (input, expected) => {
+      expect(formatRevenueCompact(input)).toBe(expected);
+    });
+
+    it.each([null, undefined, 0, -10, 'abc'])('shows a dash for %j', (input) => {
+      expect(formatRevenueCompact(input)).toBe('—');
+    });
+  });
+
+  describe('insight lists', () => {
+    it('shows a repeated key signal once, keeping the first', () => {
+      expect(
+        readSignals([
+          { label: 'Quiet for 30 days', impact: 'negative' },
+          { label: 'Quiet for 30 days', impact: 'neutral' },
+          { label: 'Two open deals' },
+        ])
+      ).toEqual([
+        { label: 'Quiet for 30 days', impact: 'negative' },
+        { label: 'Two open deals', impact: undefined },
+      ]);
+    });
+
+    it('shows a repeated recommendation once', () => {
+      expect(readStrings(['Call', 'Call', 'Email', '', 3])).toEqual(['Call', 'Email']);
+      expect(readStrings(null)).toEqual([]);
+    });
+  });
+
+  describe('shows only real values', () => {
+    const openAiTab = async () => {
+      const user = userEvent.setup();
+      render(<AccountDetail {...defaultProps} />);
+      await user.click(screen.getByRole('button', { name: 'AI Insights' }));
+    };
+
+    it('shows the revenue tile in pounds, not dollars', () => {
+      render(<AccountDetail {...defaultProps} />);
+      expect(screen.getByText('£5M')).toBeInTheDocument();
+      expect(screen.queryByText('$5.0M')).toBeNull();
+    });
+
+    it('labels the website with its bare domain and links without tracking parameters', () => {
+      getByIdMock.mockReturnValue({
+        data: {
+          ...mockAccount,
+          website: 'https://www.techcorp.com/about?utm_source=mail&gclid=abc&page=2',
+        },
+        isLoading: false,
+        error: null,
+      });
+      render(<AccountDetail {...defaultProps} />);
+      const labels = screen.getAllByText('techcorp.com');
+      expect(labels).toHaveLength(2);
+      for (const label of labels) {
+        expect(label.closest('a')).toHaveAttribute('href', 'https://www.techcorp.com/about?page=2');
+      }
+    });
+
+    it('offers no merge or archive action, which do nothing', async () => {
+      const user = userEvent.setup();
+      render(<AccountDetail {...defaultProps} />);
+      await user.click(screen.getByTestId('more-actions'));
+      const labels = screen.getAllByTestId('extra-action').map((el) => el.textContent);
+      expect(labels).toEqual(['Delete']);
+    });
+
+    it('asks for the insight only when the AI tab is open', async () => {
+      render(<AccountDetail {...defaultProps} />);
+      expect(insightMock).toHaveBeenLastCalledWith(
+        { accountId: defaultProps.accountId },
+        expect.objectContaining({ enabled: false })
+      );
+      await userEvent.setup().click(screen.getByRole('button', { name: 'AI Insights' }));
+      expect(insightMock).toHaveBeenLastCalledWith(
+        { accountId: defaultProps.accountId },
+        expect.objectContaining({ enabled: true })
+      );
+    });
+
+    it('says "Not scored" and "no analysis" for an account with neither, without internal names', async () => {
+      await openAiTab();
+      expect(screen.getByTestId('account-not-scored')).toHaveTextContent('Not scored');
+      expect(screen.getByTestId('account-insight-none')).toHaveTextContent(
+        'No AI analysis for this account yet.'
+      );
+      expect(screen.queryByText(/getAiInsight|ai-worker/)).toBeNull();
+    });
+
+    it('says "Not scored" for the 0 written when the scoring model failed', async () => {
+      getByIdMock.mockReturnValue({
+        data: {
+          ...mockAccount,
+          score: 0,
+          scoreProvenance: [{ name: 'fallback', impact: 0, reasoning: 'x' }],
+        },
+        isLoading: false,
+        error: null,
+      });
+      await openAiTab();
+      expect(screen.getByTestId('account-not-scored')).toHaveTextContent('Not scored');
+    });
+
+    it('treats the fallback row written when the model failed as no analysis', async () => {
+      insightMock.mockReturnValue({
+        data: {
+          insight: {
+            healthSummary: null,
+            nextBestAction: null,
+            keySignals: null,
+            churnRisk: 'LOW',
+            sentimentTrend: null,
+            recommendations: [],
+            generatedAt: '2026-11-01T10:00:00Z',
+            source: 'fallback',
+          },
+        },
+        isLoading: false,
+      });
+      await openAiTab();
+      expect(screen.getByTestId('account-insight-none')).toBeInTheDocument();
+      expect(screen.queryByText('Churn risk')).toBeNull();
+    });
+
+    it('shows a model-written insight', async () => {
+      getByIdMock.mockReturnValue({
+        data: { ...mockAccount, score: 72 },
+        isLoading: false,
+        error: null,
+      });
+      insightMock.mockReturnValue({
+        data: {
+          insight: {
+            healthSummary: 'Steady engagement across three deals.',
+            nextBestAction: 'Book the renewal review.',
+            keySignals: [
+              { label: 'Two deals in negotiation', impact: 'positive' },
+              { label: 'Quiet for 30 days', impact: 'neutral' },
+              { impact: 'negative' },
+            ],
+            churnRisk: 'MEDIUM',
+            sentimentTrend: 'Improving',
+            recommendations: ['Introduce the new owner', 7],
+            generatedAt: '2026-11-01T10:00:00Z',
+            source: 'llm',
+          },
+        },
+        isLoading: false,
+      });
+      await openAiTab();
+      const panel = screen.getByTestId('account-insight');
+      expect(panel).toHaveTextContent('Steady engagement across three deals.');
+      expect(panel).toHaveTextContent('Medium');
+      expect(panel).toHaveTextContent('Improving');
+      expect(panel).toHaveTextContent('Book the renewal review.');
+      expect(panel).toHaveTextContent('Two deals in negotiation (positive)');
+      expect(panel).toHaveTextContent('Quiet for 30 days');
+      expect(panel).not.toHaveTextContent('(neutral)');
+      expect(panel).toHaveTextContent('Introduce the new owner');
+      expect(panel).toHaveTextContent('Analysed 1 Nov 2026');
+      expect(screen.queryByTestId('account-not-scored')).toBeNull();
+    });
+
+    it('says the analysis could not be loaded when the lookup fails, not that there is none', async () => {
+      insightMock.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: true,
+        error: new Error('x'),
+      });
+      await openAiTab();
+      expect(screen.getByTestId('account-insight-error')).toHaveTextContent(
+        'The AI analysis could not be loaded.'
+      );
+      expect(screen.queryByTestId('account-insight-none')).toBeNull();
+    });
+
+    it('shows a placeholder while the insight loads', async () => {
+      insightMock.mockReturnValue({ data: undefined, isLoading: true });
+      await openAiTab();
+      expect(screen.queryByTestId('account-insight-none')).toBeNull();
+      expect(screen.queryByTestId('account-insight')).toBeNull();
+    });
+  });
+});
+
+describe('modelScore', () => {
+  it('keeps a model-written score, including a real 0', () => {
+    expect(modelScore(72, [{ name: 'industry', impact: 5 }])).toBe(72);
+    expect(modelScore(0, [{ name: 'industry', impact: -5 }])).toBe(0);
+    expect(modelScore(40, null)).toBe(40);
+  });
+
+  it('drops the fallback 0 and a missing score', () => {
+    expect(modelScore(0, [{ name: 'fallback', impact: 0 }])).toBeNull();
+    expect(modelScore(null, null)).toBeNull();
+    expect(modelScore(undefined, [null])).toBeNull();
+  });
 });

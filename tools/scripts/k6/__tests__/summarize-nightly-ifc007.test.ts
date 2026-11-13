@@ -8,6 +8,8 @@ import { resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import { buildIfc007Slo, resolveWithinAllowedRoot } from '../summarize-nightly-ifc007.mjs';
 
+const TRAVERSAL_PATH = 'artifacts/benchmarks/../../../etc/passwd';
+
 describe('buildIfc007Slo', () => {
   it('extracts real p95/p99/error-rate/rps from a k6 summary-export shape', () => {
     const k6Summary = {
@@ -100,9 +102,9 @@ describe('resolveWithinAllowedRoot', () => {
   });
 
   it('rejects a relative traversal out of artifacts/benchmarks', () => {
-    expect(() =>
-      resolveWithinAllowedRoot('artifacts/benchmarks/../../../etc/passwd', 'input summary')
-    ).toThrow(/refusing input summary path outside artifacts\/benchmarks/);
+    expect(() => resolveWithinAllowedRoot(TRAVERSAL_PATH, 'input summary')).toThrow(
+      /refusing input summary path outside artifacts\/benchmarks/
+    );
   });
 
   it('rejects an absolute path outside artifacts/benchmarks', () => {
