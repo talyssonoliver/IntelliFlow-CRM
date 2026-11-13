@@ -1,8 +1,10 @@
 name: Grafana Dashboard
 
-# Applies infra/monitoring/grafana/cloud/dashboard-production.json (the
-# production service dashboard, uid env008-production) to the Grafana Cloud
-# stack (ENV-008-AI, ADR-087). The JSON is the source of truth; this job only
+# Applies the dashboards as code to the Grafana Cloud stack:
+#  - infra/monitoring/grafana/cloud/dashboard-production.json, the production
+#    service dashboard, uid env008-production (ENV-008-AI, ADR-087);
+#  - infra/monitoring/grafana/cloud/dashboard-ai-models.json, the AI models
+#    dashboard, uid ifc117-ai-models (IFC-117, ADR-088). The JSON is the source of truth; this job only
 # pushes it. Runs on merge when the dashboard, its script, the shared Grafana
 # client or this file change, or by hand. Its own workflow, so editing the
 # dashboard never re-applies the alert rules or the SLOs.
@@ -15,13 +17,14 @@ on:
     branches: [main]
     paths:
       - 'infra/monitoring/grafana/cloud/dashboard-production.json'
+      - 'infra/monitoring/grafana/cloud/dashboard-ai-models.json'
       - 'tools/scripts/observability/apply-grafana-dashboard.mjs'
       - 'tools/scripts/lib/grafana-provisioning.mjs'
       - '.github/workflows/grafana-dashboard.yml'
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Only validate the dashboard and report whether it exists'
+        description: 'Only validate the dashboards and report whether they exist'
         type: boolean
         default: false
 
@@ -34,7 +37,7 @@ concurrency:
 
 jobs:
   dashboard:
-    name: Apply the production dashboard to Grafana Cloud
+    name: Apply the dashboards to Grafana Cloud
     runs-on: ubuntu-latest
     environment: Production
     timeout-minutes: 12
@@ -54,4 +57,6 @@ jobs:
           GRAFANA_URL: https://graysushi1880.grafana.net
           GRAFANA_SA_TOKEN: ${{ secrets.GRAFANA_SA_TOKEN }}
           DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
-        run: node tools/scripts/observability/apply-grafana-dashboard.mjs $DRY_RUN
+        run: |
+          node tools/scripts/observability/apply-grafana-dashboard.mjs $DRY_RUN
+          node tools/scripts/observability/apply-grafana-dashboard.mjs --dashboard ai-models $DRY_RUN
