@@ -64,9 +64,13 @@ export function parseListedTests(stdout) {
 /**
  * The integration tests that import a file changed since `base`, or null when
  * vitest could not list them.
+ * @param {string} base
+ * @param {string} cwd
+ * @param {NodeJS.ProcessEnv} env
+ * @param {Function} [spawn] spawnSync-shaped, for tests
  */
-function defaultListIntegration(base, cwd, env) {
-  const r = spawnSync(
+export function listIntegrationTests(base, cwd, env, spawn = spawnSync) {
+  const r = spawn(
     'pnpm',
     ['exec', 'vitest', 'list', '--changed', base, '--project', 'integration', '--filesOnly'],
     {
@@ -98,7 +102,7 @@ export function resolveDbScope({
   env = process.env,
   baseRef = DEFAULT_BASE_REF,
   git = defaultGit,
-  listIntegration = defaultListIntegration,
+  listIntegration = listIntegrationTests,
 }) {
   if (env.CI === 'true' || env.CI === '1') return NEEDED('CI runs the integration suite');
   if (env[FULL_DB_ENV] === '1') return NEEDED(`${FULL_DB_ENV}=1`);

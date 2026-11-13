@@ -5,7 +5,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import { spawnSync } from 'node:child_process';
 
-import { FULL_DB_ENV, parseListedTests, resolveDbScope } from '../lib/preship-db-scope.mjs';
+import {
+  FULL_DB_ENV,
+  listIntegrationTests,
+  parseListedTests,
+  resolveDbScope,
+} from '../lib/preship-db-scope.mjs';
 
 const fakeGit =
   (out: Record<string, string | null>) =>
@@ -142,24 +147,36 @@ describe('resolveDbScope against this checkout', () => {
 });
 
 describe('the real integration listing', () => {
-  it('asks vitest which integration tests the diff reaches', () => {
-    const base = spawnSync('git', ['merge-base', 'HEAD', 'origin/main'], {
-      encoding: 'utf8',
-    }).stdout.trim();
-    // Only a web file "changed": the listing runs against the real merge-base.
-    const r = resolveDbScope({
-      cwd: process.cwd(),
-      env: {},
-      git: fakeGit({
-        'merge-base': `${base}\n`,
-        'cat-file': '',
-        diff: 'apps/web/src/components/ModuleGate.tsx\n',
-        'ls-files': '',
-      }),
+  describe('listIntegrationTests', () => {
+    const fakeSpawn = (status: number, stdout: string) =>
+      vi.fn(() => ({ status, stdout, stderr: '' })) as unknown as typeof spawnSync;
+
+    it('asks vitest for the integration files changed since the base', () => {
+      const spawn = fakeSpawn(0, '[integration] tests/integration/a.test.ts\nnoise\n');
+      expect(listIntegrationTests('base123', '/repo', { GIT_DIR: 'x', KEEP: '1' }, spawn)).toEqual([
+        'tests/integration/a.test.ts',
+      ]);
+      const [cmd, args, opts] = (spawn as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
+      expect(cmd).toBe('pnpm');
+      expect(args).toEqual([
+        'exec',
+        'vitest',
+        'list',
+        '--changed',
+        'base123',
+        '--project',
+        'integration',
+        '--filesOnly',
+      ]);
+      // A git hook's GIT_DIR must not redirect vitest's own git calls.
+      expect(opts).toMatchObject({ cwd: '/repo', env: { KEEP: '1' } });
+      expect(opts.env).not.toHaveProperty('GIT_DIR');
     });
-    expect(typeof r.needed).toBe('boolean');
-    expect(r.reason).toMatch(/integration test|could not list/);
-  }, 180_000);
+
+    it('is null when vitest cannot list, so the suite runs', () => {
+      expect(listIntegrationTests('base123', '/repo', {}, fakeSpawn(1, ''))).toBeNull();
+    });
+  });
 
   it('is needed when the merge-base is not a commit (vitest would list nothing)', () => {
     const listIntegration = vi.fn(() => []);
