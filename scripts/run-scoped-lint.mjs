@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
-import { resolveLintScope, runScopedLint } from './lib/preship-lint-scope.mjs';
+import { lintScopeFor, runScopedLint } from './lib/preship-lint-scope.mjs';
 import { readWorkspacePackages } from './ci/affected.mjs';
 
 const WIN = process.platform === 'win32';
@@ -30,7 +30,7 @@ const run = (cmd, args, cwd) => {
   return r.status ?? 1;
 };
 
-const status = await runScopedLint(mode, resolveLintScope({ cwd: root }), {
+const status = await runScopedLint(mode, lintScopeFor(mode, { cwd: root }), {
   root,
   run,
   log: (line) => console.log(line),
