@@ -105,3 +105,82 @@ describe('carryBlockers', () => {
     expect(carryBlockers({ prFiles, mainFiles: ['scripts/other.mjs'], graph })).toEqual([]);
   });
 });
+
+describe('carryBlockers: repo-root files by their real dependencies', () => {
+  // A small tree of root code: pre-ship spawns run-build by path and imports a
+  // lib; a tools script imports its own helper; nothing links the two worlds.
+  const tree: Record<string, string> = {
+    'scripts/pre-ship.mjs':
+      "import { plan } from './lib/plan.mjs';\nconst cmd = ['node', 'scripts/run-build.mjs'];\n",
+    'scripts/lib/plan.mjs': "export { scope } from './scope';\n",
+    'scripts/lib/scope.mjs': 'export const scope = 1;\n',
+    'scripts/run-build.mjs': "const lib = require('../tools/shared/index');\n",
+    'tools/shared/index.ts': 'export const shared = 1;\n',
+    'tools/report/make.ts': "import { helper } from './helper.js';\n",
+    'tools/report/helper.js': 'export const helper = 1;\n',
+    'tools/report/lazy.ts': "const m = await import('./helper.js');\n",
+    'scripts/__tests__/plan.test.ts': "import { plan } from '../lib/plan.mjs';\n",
+  };
+  const root = {
+    files: [...Object.keys(tree), '.github/workflows/ci.yml', 'scripts/data/table.json'],
+    read: (f: string) => tree[f] ?? null,
+  };
+  const block = (prFiles: string[], mainFiles: string[], r = root) =>
+    carryBlockers({ prFiles, mainFiles, graph, root: r });
+
+  it('carries when main changed root code the PR does not reach and that does not reach it', () => {
+    expect(block(['scripts/lib/scope.mjs'], ['tools/report/make.ts'])).toEqual([]);
+  });
+
+  it('blocks main code that depends on a PR file, through a re-export', () => {
+    expect(block(['scripts/lib/scope.mjs'], ['scripts/pre-ship.mjs'])).toEqual([
+      {
+        file: 'scripts/pre-ship.mjs',
+        why: 'depends on scripts/lib/scope.mjs, which the PR changes',
+      },
+    ]);
+  });
+
+  it('blocks main code that a PR file depends on, through a path mention and a require', () => {
+    expect(block(['scripts/pre-ship.mjs'], ['tools/shared/index.ts'])).toEqual([
+      {
+        file: 'tools/shared/index.ts',
+        why: 'scripts/pre-ship.mjs, which the PR changes, depends on it',
+      },
+    ]);
+  });
+
+  it('blocks a main test that imports the PR file, and a dynamic import', () => {
+    expect(block(['scripts/lib/plan.mjs'], ['scripts/__tests__/plan.test.ts'])).toHaveLength(1);
+    expect(block(['tools/report/helper.js'], ['tools/report/lazy.ts'])).toHaveLength(1);
+  });
+
+  it('judges other root files by directory', () => {
+    expect(block(['scripts/lib/scope.mjs'], ['.github/workflows/ci.yml'])).toEqual([]);
+    expect(block(['scripts/lib/scope.mjs'], ['scripts/data/table.json'])).toEqual([
+      {
+        file: 'scripts/data/table.json',
+        why: 'repo-root file in scripts/, which the PR also changes',
+      },
+    ]);
+    expect(block(['scripts/data/table.json'], ['scripts/lib/scope.mjs'])).toEqual([
+      { file: 'scripts/lib/scope.mjs', why: 'in scripts/, beside scripts/data/table.json' },
+    ]);
+  });
+
+  it('blocks when a file on the way cannot be read', () => {
+    const blind = {
+      files: root.files,
+      read: (f: string) => (f === 'tools/report/make.ts' ? null : (tree[f] ?? null)),
+    };
+    expect(block(['scripts/lib/scope.mjs'], ['tools/report/make.ts'], blind)).toEqual([
+      { file: 'tools/report/make.ts', why: "cannot read tools/report/make.ts's dependencies" },
+    ]);
+  });
+
+  it('still blocks global-impact files and leaves package files to the package rule', () => {
+    expect(block(['scripts/lib/scope.mjs'], ['pnpm-lock.yaml', 'apps/web/src/x.tsx'])).toEqual([
+      { file: 'pnpm-lock.yaml', why: 'global-impact file' },
+    ]);
+  });
+});

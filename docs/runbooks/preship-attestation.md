@@ -119,7 +119,13 @@ a record under that key only if all of these hold:
   - any file in a workspace package the PR touches;
   - any file in a package those depend on, or in a package that depends on them,
     transitively;
-  - repo-root files outside every package, when the PR touches the root too.
+  - repo-root code under `scripts/` or `tools/` that is connected to a root file
+    the PR changes, in either direction: through relative imports, re-exports,
+    requires, dynamic imports, or a literal mention of its repo path (pre-ship
+    spawns scripts by path), transitively;
+  - any other repo-root file (workflows, hooks, config, data) in a top-level
+    directory where the PR also changes a file;
+  - any root file whose text cannot be read.
 
   Docs, artifacts and metrics on main's side are ignored.
 

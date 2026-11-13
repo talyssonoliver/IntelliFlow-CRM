@@ -710,7 +710,15 @@ export function mainChangesInScope(sha, oldBase, newBase, gitFn = git) {
       .filter((p) => /(^|\/)package\.json$/.test(p) && !p.includes('node_modules/'))
       .map((p) => ({ path: p, json: String(gitFn(['show', `${sha}:${p}`]).stdout ?? '') }))
   );
-  return carryBlockers({ prFiles, mainFiles, graph });
+  const texts = new Map();
+  const read = (file) => {
+    if (!texts.has(file)) {
+      const r = gitFn(['show', `${sha}:${file}`]);
+      texts.set(file, r.status === 0 ? String(r.stdout ?? '') : null);
+    }
+    return texts.get(file);
+  };
+  return carryBlockers({ prFiles, mainFiles, graph, root: { files: manifests, read } });
 }
 
 function doVerify(flags, preshipFile) {
