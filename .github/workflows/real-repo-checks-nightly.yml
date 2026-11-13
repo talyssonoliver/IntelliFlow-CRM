@@ -97,20 +97,31 @@ jobs:
       - name: Setup database
         run: pnpm --filter @intelliflow/db db:migrate
 
-      # tests/integration/api.test.ts calls a running API over HTTP. Start it as
-      # preship-full-nightly.yml's E2E does (playwright.config.ts, E2E_START_API): the built
-      # @intelliflow/api on port 4000, tracing off, keys from repo secrets.
+      # tests/integration/api.test.ts calls a running API over HTTP (health, versioning,
+      # errors, headers, CORS, rate limits, request limits: no AI, email or payment call).
+      # Start the built @intelliflow/api on :4000 as preship-full-nightly.yml's E2E does, but
+      # with NO production credential and nothing that can spend credit:
+      #   - the only secret this job reads is CI_POSTGRES_PASSWORD, the password of its own
+      #     throwaway Postgres service (the same one ci.yml's Integration Tests job uses);
+      #   - the field-encryption and audit-signing keys are random per run, made below;
+      #   - AI_PROVIDER=mock (MockAIService, no network) and EMAIL_PROVIDER=mock;
+      #   - no Supabase, Stripe, Resend, SendGrid, Anthropic or OpenRouter key is passed:
+      #     Supabase falls back to its local defaults outside production, and Stripe stays
+      #     "not configured";
+      #   - DATABASE_URL and REDIS_URL (job env) point only at this job's services.
       - name: Build and start the API
         env:
           PORT: '4000'
           OTEL_ENABLED: 'false'
+          AI_PROVIDER: mock
+          EMAIL_PROVIDER: mock
           DIRECT_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
-          PRISMA_FIELD_ENCRYPTION_KEY: ${{ secrets.PRISMA_FIELD_ENCRYPTION_KEY }}
-          AI_AUDIT_SIGNING_KEY: ${{ secrets.AI_AUDIT_SIGNING_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
+          PRISMA_FIELD_ENCRYPTION_KEY="$(openssl rand -base64 32)"
+          AI_AUDIT_SIGNING_KEY="$(openssl rand -hex 32)"
+          echo "::add-mask::$PRISMA_FIELD_ENCRYPTION_KEY"
+          echo "::add-mask::$AI_AUDIT_SIGNING_KEY"
+          export PRISMA_FIELD_ENCRYPTION_KEY AI_AUDIT_SIGNING_KEY
           pnpm exec turbo run build --filter=@intelliflow/api
           nohup pnpm --filter @intelliflow/api start > api.log 2>&1 &
           for i in $(seq 1 60); do
