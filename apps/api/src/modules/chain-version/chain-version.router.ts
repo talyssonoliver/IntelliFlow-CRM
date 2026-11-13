@@ -287,7 +287,7 @@ export const chainVersionRouter = createTRPCRouter({
         {
           recorded: async (since) => {
             const where = { tenantId, createdAt: { gte: since } };
-            const [all, successes] = await Promise.all([
+            const [all, successes, firstEver] = await Promise.all([
               db.chainRun.groupBy({
                 by: ['chainType'],
                 where,
@@ -302,15 +302,23 @@ export const chainVersionRouter = createTRPCRouter({
                 where: { ...where, success: true },
                 _count: { _all: true },
               }),
+              // When recording started for each type: no window filter, so a quiet start of the
+              // window does not move countedSince.
+              db.chainRun.groupBy({
+                by: ['chainType'],
+                where: { tenantId },
+                _min: { createdAt: true },
+              }),
             ]);
             const ok = new Map(successes.map((row) => [row.chainType, row._count._all]));
+            const first = new Map(firstEver.map((row) => [row.chainType, row._min.createdAt]));
             return Object.fromEntries(
               all.map((row) => [
                 row.chainType,
                 {
                   runs: row._count._all,
                   successes: ok.get(row.chainType) ?? 0,
-                  firstRunAt: row._min.createdAt,
+                  firstRecordedAt: first.get(row.chainType) ?? row._min.createdAt,
                   lastRunAt: row._max.createdAt,
                   avgLatencyMs: row._avg.latencyMs,
                   costUsd: Number(row._sum.costUsd ?? 0),

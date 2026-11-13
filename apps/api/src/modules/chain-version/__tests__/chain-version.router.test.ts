@@ -482,6 +482,40 @@ describe('Chain Version Router', () => {
           source: 'recorded',
         });
       });
+
+      it('counts since the tenant first recorded the type, read without the window filter', async () => {
+        const firstEver = new Date('2026-01-01T00:00:00Z');
+        (prismaMock.chainRun.groupBy as any).mockImplementation(async (args: any) => {
+          if (!args.where.createdAt) {
+            return [{ chainType: 'FOLLOWUP', _min: { createdAt: firstEver } }];
+          }
+          return args.where.success
+            ? [{ chainType: 'FOLLOWUP', _count: { _all: 1 } }]
+            : [
+                {
+                  chainType: 'FOLLOWUP',
+                  _count: { _all: 1 },
+                  _min: { createdAt: new Date() },
+                  _max: { createdAt: new Date() },
+                  _avg: { latencyMs: 5 },
+                  _sum: { costUsd: '0', inputTokens: 1, outputTokens: 1 },
+                },
+              ];
+        });
+        const caller = testRouter.createCaller(createTenantCtx());
+
+        const result = await caller.chainVersion.getUsageStats({ days: 7 });
+
+        const unfiltered = (prismaMock.chainRun.groupBy as any).mock.calls.find(
+          ([args]: [any]) => !args.where.createdAt
+        );
+        expect(unfiltered[0].where).toEqual({ tenantId: expect.any(String) });
+        // Recording started long before the 7-day window, so the whole window is counted.
+        const windowStart = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        expect(
+          Math.abs(new Date(result.FOLLOWUP.countedSince).getTime() - windowStart)
+        ).toBeLessThan(60_000);
+      });
     });
 
     describe('getConfig', () => {

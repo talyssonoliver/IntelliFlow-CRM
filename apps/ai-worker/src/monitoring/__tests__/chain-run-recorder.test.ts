@@ -7,6 +7,7 @@ import {
   type ChainRunRow,
 } from '../chain-run-recorder';
 import { configureVersionLoader } from '../../versioning/chain-version-loader';
+import { calculateCost, resolvePricingKey } from '../../config/ai.config';
 
 const TENANT = '11111111-1111-4111-8111-111111111111';
 
@@ -88,6 +89,28 @@ describe('recordedChainRun', () => {
     await flush();
 
     expect(rows[0]).toMatchObject({ model: 'nvidia/nemotron-3-ultra:free', costUsd: 0 });
+  });
+
+  it('prices the served model by its own key, never at another model’s rates', async () => {
+    const rows = capture();
+    const run = (model: string) =>
+      recordedChainRun('CHURN_RISK', TENANT, async ([handler]) => {
+        (handler as RunUsageHandler).handleLLMEnd(llmEnd(model, 1000, 1000));
+      });
+
+    await run('anthropic/claude-haiku-5-5'); // vendor-prefixed MODEL_PRICING key
+    await run('gpt-4o-mini-2024-07-18'); // dated snapshot of a known deployment
+    await run('llama2'); // local Ollama model: no price here
+    await flush();
+
+    expect(rows.map((row) => row.costUsd)).toEqual([
+      calculateCost('claude-haiku-5-5', 1000, 1000),
+      calculateCost(resolvePricingKey('gpt-4o-mini-2024-07-18')!, 1000, 1000),
+      0,
+    ]);
+    expect(resolvePricingKey('gpt-4o-mini-2024-07-18')).toBeDefined();
+    expect(rows[0]!.costUsd).toBeGreaterThan(0);
+    expect(rows[1]!.costUsd).not.toBe(calculateCost('gpt-3.5-turbo', 1000, 1000));
   });
 
   it('names the saved version only when its prompt fits the chain', async () => {

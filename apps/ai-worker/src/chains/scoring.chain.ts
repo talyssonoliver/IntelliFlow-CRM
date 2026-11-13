@@ -5,7 +5,7 @@ import { PromptTemplate } from '@langchain/core/prompts';
 import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
 import { recordedChainRun } from '../monitoring/chain-run-recorder.js';
 import { z } from 'zod';
-import { MODEL_PRICING, aiConfig, servedPricingKey, type AIProvider } from '../config/ai.config';
+import { aiConfig, resolvePricingKey, type AIProvider } from '../config/ai.config';
 import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
 import type { MonitoredResult, MonitoringContext, TokenUsage } from '../monitoring/chain-monitor';
 import { classifyError, recordInference } from '../monitoring/otel-ai-metrics';
@@ -101,15 +101,6 @@ export function scoringFailureShape(error: unknown): Record<string, unknown> {
  * compute a real tokenCost (IFC-215). Usage metadata lives in the callback
  * because withStructuredOutput().invoke() returns only the parsed output.
  */
-/** A served name that is itself a MODEL_PRICING key, with or without a `vendor/` prefix. */
-function directPricingKey(served: string | undefined): string | undefined {
-  const name = served?.trim().toLowerCase();
-  if (!name) return undefined;
-  return [name, name.split('/').slice(1).join('/')].find(
-    (candidate) => candidate !== '' && Object.hasOwn(MODEL_PRICING, candidate)
-  );
-}
-
 export class TokenUsageCallbackHandler extends BaseCallbackHandler {
   name = 'TokenUsageCallbackHandler';
   private captured: TokenUsage | null = null;
@@ -149,8 +140,8 @@ export class TokenUsageCallbackHandler extends BaseCallbackHandler {
       name?.trim().toLowerCase().endsWith(':free')
     );
     if (this.provider === 'ollama' || isFreeModel) return { model: this.modelName, free: true };
-    const key = directPricingKey(served) ?? servedPricingKey(served);
-    if (key && Object.hasOwn(MODEL_PRICING, key)) return { model: key, free: false };
+    const key = resolvePricingKey(served);
+    if (key) return { model: key, free: false };
     return { model: this.modelName, free: false };
   }
 

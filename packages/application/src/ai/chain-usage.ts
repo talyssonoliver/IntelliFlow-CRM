@@ -2,7 +2,8 @@
  * Usage of each chain type for one tenant, for the AI Chains page (chainVersion.getUsageStats).
  *
  * Recorded: the ai-worker writes one chain_runs row per run since this was deployed, so
- * countedSince is the later of the window start and the tenant's first recorded run.
+ * countedSince is the later of the window start and the tenant's first recorded run of the type
+ * ever (not the first run inside the window: a quiet start of the window is still counted).
  * Derived: until a type has recorded runs, a type may show counts read from rows that already
  * exist (for SCORING, the "Lead Scored by AI" lead activities), labelled as such. Only runs and
  * lastRunAt are known then; the rest stays empty rather than estimated.
@@ -28,7 +29,8 @@ export interface ChainUsageStats {
 export interface RecordedChainUsage {
   runs: number;
   successes: number;
-  firstRunAt: Date | null;
+  /** The tenant's first recorded run of the type, ever (not limited to the window). */
+  firstRecordedAt: Date | null;
   lastRunAt: Date | null;
   avgLatencyMs: number | null;
   costUsd: number;
@@ -80,7 +82,7 @@ export async function describeChainUsage(
     CHAIN_TYPES.map(async (type): Promise<[ChainType, ChainUsageStats]> => {
       const r = recorded[type];
       if (r && r.runs > 0) {
-        const firstRunAt = r.firstRunAt ?? since;
+        const firstRecordedAt = r.firstRecordedAt ?? since;
         return [
           type,
           {
@@ -91,7 +93,7 @@ export async function describeChainUsage(
             spend: { amount: r.costUsd, currency: 'USD' },
             inputTokens: r.inputTokens,
             outputTokens: r.outputTokens,
-            countedSince: firstRunAt > since ? firstRunAt : since,
+            countedSince: firstRecordedAt > since ? firstRecordedAt : since,
             source: 'recorded',
             derivedFrom: null,
           },

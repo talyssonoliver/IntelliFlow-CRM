@@ -37,14 +37,14 @@ describe('describeChainUsage', () => {
     });
   });
 
-  it('reports recorded runs, counted since the first run when that is inside the window', async () => {
-    const firstRunAt = new Date('2026-11-10T09:00:00Z');
+  it('reports recorded runs, counted since the first recorded run when that is inside the window', async () => {
+    const firstRecordedAt = new Date('2026-11-10T09:00:00Z');
     const lastRunAt = new Date('2026-11-11T11:00:00Z');
     const recorded = vi.fn(async () => ({
       SCORING: {
         runs: 4,
         successes: 3,
-        firstRunAt,
+        firstRecordedAt,
         lastRunAt,
         avgLatencyMs: 812.4,
         costUsd: 0.0123,
@@ -64,10 +64,34 @@ describe('describeChainUsage', () => {
       spend: { amount: 0.0123, currency: 'USD' },
       inputTokens: 4000,
       outputTokens: 800,
-      countedSince: firstRunAt,
+      countedSince: firstRecordedAt,
       source: 'recorded',
       derivedFrom: null,
     });
+  });
+
+  it('counts the whole window when recording started before it, however quiet its start', async () => {
+    const result = await describeChainUsage(
+      sources({
+        recorded: async () => ({
+          SCORING: {
+            runs: 1,
+            successes: 1,
+            // Recording began months ago; the only run in the window was two days ago.
+            firstRecordedAt: new Date('2026-05-01T00:00:00Z'),
+            lastRunAt: NOW,
+            avgLatencyMs: 10,
+            costUsd: 0,
+            inputTokens: 1,
+            outputTokens: 1,
+          },
+        }),
+      }),
+      30,
+      NOW
+    );
+
+    expect(result.SCORING.countedSince).toEqual(WINDOW_START);
   });
 
   it('derives runs from existing rows only for types with no recorded runs', async () => {
@@ -99,7 +123,7 @@ describe('describeChainUsage', () => {
           SCORING: {
             runs: 1,
             successes: 1,
-            firstRunAt: NOW,
+            firstRecordedAt: NOW,
             lastRunAt: NOW,
             avgLatencyMs: 10,
             costUsd: 0,

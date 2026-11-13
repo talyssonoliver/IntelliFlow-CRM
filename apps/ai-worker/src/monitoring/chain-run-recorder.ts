@@ -19,7 +19,7 @@ import {
   savedPromptFitsChain,
   type WorkerChainKey,
 } from '@intelliflow/application';
-import { calculateCost } from '../config/ai.config.js';
+import { calculateCost, resolvePricingKey } from '../config/ai.config.js';
 import { getVersionLoader } from '../versioning/chain-version-loader.js';
 
 const logger = pino({ name: 'chain-run-recorder', level: process.env.LOG_LEVEL || 'info' });
@@ -104,11 +104,18 @@ function usedVersionId(key: WorkerChainKey, tenantId: string): string | null {
   return savedPromptFitsChain(chain, loaded.config.prompt) ? loaded.versionId : null;
 }
 
-/** Free models and local Ollama cost nothing; otherwise price the served model. */
+/**
+ * Price the served model by its own pricing key (a dated snapshot or an OpenRouter id maps to its
+ * deployment, as in the scoring chain). Free variants cost nothing, and a model with no price here
+ * (a local Ollama model, an unknown deployment) is recorded at 0 rather than at another model's
+ * rates.
+ */
 function costOf(model: string | null, inputTokens: number, outputTokens: number): number {
   if (!model || model.trim().toLowerCase().endsWith(':free')) return 0;
+  const key = resolvePricingKey(model);
+  if (!key) return 0;
   try {
-    return calculateCost(model, inputTokens, outputTokens);
+    return calculateCost(key, inputTokens, outputTokens);
   } catch {
     return 0;
   }
