@@ -464,6 +464,11 @@ describe('Observability Package Index', () => {
       try {
         const startTime = Date.now();
         const shutdown = shutdownObservability();
+        // Concurrency itself: both shutdowns have started before any time passes, i.e.
+        // before either could have resolved. Sequential code would have started one only.
+        await vi.advanceTimersByTimeAsync(0);
+        expect(mockShutdownTracing).toHaveBeenCalledTimes(1);
+        expect(mockShutdownMetrics).toHaveBeenCalledTimes(1);
         await vi.advanceTimersByTimeAsync(Math.max(tracingDelay, metricsDelay));
         await shutdown;
         const elapsed = Date.now() - startTime;
