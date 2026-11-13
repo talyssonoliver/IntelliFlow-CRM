@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-13T11:36:48.336Z",
+  "generatedAt": "2026-11-13T13:04:02.474Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -397,6 +397,7 @@
       ".specify/sprints/sprint-18/attestations/PG-208/attestation.json",
       ".specify/sprints/sprint-18/attestations/PG-209/attestation.json",
       ".specify/sprints/sprint-18/attestations/PM-OPS-002/attestation.json",
+      ".specify/sprints/sprint-19/attestations/AUTOMATION-004/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-002/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R01/attestation.json",
       ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R02/attestation.json",
@@ -550,11 +551,11 @@
     "totalTasks": 627,
     "totalNumberedSprintTasks": 621,
     "continuousTaskCount": 6,
-    "completedTasks": 445,
-    "backlogTasks": 167,
+    "completedTasks": 448,
+    "backlogTasks": 166,
     "blockedTasks": 0,
-    "completionPercentage": 70.97,
-    "inProgressTasks": 15,
+    "completionPercentage": 71.45,
+    "inProgressTasks": 13,
     "otherTasks": 0
   },
   "inconsistencies": {
@@ -657,18 +658,6 @@
         "status": "Backlog",
         "sprint": 18,
         "attestationPath": ".specify/sprints/sprint-18/attestations/PG-209/attestation.json"
-      },
-      {
-        "taskId": "ENG-OPS-002",
-        "status": "In Progress",
-        "sprint": 19,
-        "attestationPath": ".specify/sprints/sprint-19/attestations/ENG-OPS-002/attestation.json"
-      },
-      {
-        "taskId": "ENG-OPS-002.R16",
-        "status": "Backlog",
-        "sprint": 19,
-        "attestationPath": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R16/attestation.json"
       }
     ],
     "duplicateCanonicalAttestations": [
@@ -20300,11 +20289,11 @@
       "name": "Sprint 19",
       "summarySource": "specify",
       "totalTasks": 24,
-      "completedTasks": 13,
-      "backlogTasks": 8,
+      "completedTasks": 16,
+      "backlogTasks": 7,
       "blockedTasks": 0,
-      "inProgressTasks": 3,
-      "attestedCompletedTasks": 13,
+      "inProgressTasks": 1,
+      "attestedCompletedTasks": 16,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Engineering Operations (8), Compliance (5), Core CRM (4).",
       "notableCompleted": [
@@ -20440,76 +20429,9 @@
           }
         },
         {
-          "taskId": "ENG-OPS-003",
-          "sprint": 19,
-          "status": "Completed",
-          "section": "Engineering Operations",
-          "title": "Harness hardening Gaps #1-#4 + OSV PRs A/B: retroactive umbrella for the 8 untracked CI/security/E2E-harness PRs merged 2026-07-24 (#623, #625, #627, #628, #629, #630, #631, #634)",
-          "description": "Harness hardening Gaps #1-#4 + OSV PRs A/B: retroactive umbrella for the 8 untracked CI/security/E2E-harness PRs merged 2026-07-24 (#623, #625, #627, #628, #629, #630, #631, #634)",
-          "summary": "RETROSPECTIVE GOVERNANCE BACKFILL for the 2026-07-24 merge window, whose PRs skipped the documented orchestrator pipeline (docs/operations/sprint-18-orchestrator-prompt.md). Root cause: the orchestrator never read that document. Findings:......",
-          "definitionOfDone": "Every harness/security PR merged 2026-07-24 without a registered task ID is recorded in a PR -> merge-SHA -> gap ledger with its verification basis; the ledger is linked from the sprint-19 attestation; no code change is implied (all 8 PRs are already merged green on main); verified by: manual review",
-          "definitionOfDoneSnapshot": "Every harness/security PR merged 2026-07-24 without a registered task ID is recorded in a PR -> merge-SHA -> gap ledger with its verification basis; The ledger is linked from the sprint-19 attestation;...",
-          "dependencies": [
-            "ENG-OPS-002"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-003/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": "2026-07-25T00:00:00Z",
-            "sprintFolder": 19
-          },
-          "validationSummary": {
-            "total": 5,
-            "passed": 5,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        }
-      ],
-      "openTasks": [
-        {
-          "taskId": "IFC-304",
-          "sprint": 19,
-          "status": "In Progress",
-          "section": "Support",
-          "title": "Article Analytics Dashboard — PR A: analytics foundation + instrumentation",
-          "description": "Article Analytics Dashboard",
-          "summary": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
-          "definitionOfDone": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
-          "dependencies": [
-            "IFC-303",
-            "PG-180"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-19/attestations/IFC-304/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": null,
-            "sprintFolder": 19
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
           "taskId": "ENG-OPS-002",
           "sprint": 19,
-          "status": "In Progress",
+          "status": "Completed",
           "section": "Engineering Operations",
           "title": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
           "description": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
@@ -20540,24 +20462,29 @@
             "met": 5,
             "missed": 0
           }
-        },
+        }
+      ],
+      "openTasks": [
         {
-          "taskId": "AUTOMATION-004",
+          "taskId": "IFC-304",
           "sprint": 19,
           "status": "In Progress",
-          "section": "AUTOMATION",
-          "title": "Task-contract JSON schema + dispatch-binding enforcement (ADR-072)",
-          "description": "Task-contract JSON schema + dispatch-binding enforcement (ADR-072)",
-          "summary": "20-field JSON Schema at tools/scripts/orchestration/schemas/task-contract.schema.json; runtime validator rejecting missing/wrong-type fields + duplicate agentLeaseId; verify-dispatch-binding.ts CLI guard (4-way binding:...",
-          "definitionOfDone": "20-field JSON Schema at tools/scripts/orchestration/schemas/task-contract.schema.json; runtime validator rejecting missing/wrong-type fields + duplicate agentLeaseId; verify-dispatch-binding.ts CLI guard (4-way binding: taskId+sessionId+branch+worktree); tests >=90% coverage; ADR-072 decision on ledger architecture; dispatch-binding section in agent-autonomy-policy.md; one canonical CSV row (no future ORCH rows pre-registered); verified by: npx vitest run tools/scripts/orchestration/__tests__/",
-          "definitionOfDoneSnapshot": "20-field JSON Schema at tools/scripts/orchestration/schemas/task-contract.schema.json; runtime validator rejecting missing/wrong-type fields + duplicate agentLeaseId; verify-dispatch-binding.ts CLI guard (4-way binding:...",
-          "dependencies": [],
+          "section": "Support",
+          "title": "Article Analytics Dashboard — PR A: analytics foundation + instrumentation",
+          "description": "Article Analytics Dashboard",
+          "summary": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
+          "definitionOfDone": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%",
+          "dependencies": [
+            "IFC-303",
+            "PG-180"
+          ],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/IFC-304/attestation.json",
+            "verdict": "COMPLETE",
             "timestamp": null,
-            "sprintFolder": null
+            "sprintFolder": 19
           },
           "validationSummary": {
             "total": 0,
@@ -20635,14 +20562,78 @@
             "met": 0,
             "missed": 0
           }
+        },
+        {
+          "taskId": "IFC-315",
+          "sprint": 19,
+          "status": "Backlog",
+          "section": "Compliance",
+          "title": "Suppress marketing email to people with an objection (PG-203 follow-up: blocksMarketing)",
+          "description": "Suppress marketing email to people with an objection (PG-203 follow-up: blocksMarketing)",
+          "summary": "Every non-transactional send (compose marked marketing, workflow and automation emails, auto-response drafts) checks processing_restrictions.blocksMarketing for the recipient inside the tenant and refuses or skips it with an audit entry;...",
+          "definitionOfDone": "Every non-transactional send (compose marked marketing, workflow and automation emails, auto-response drafts) checks processing_restrictions.blocksMarketing for the recipient inside the tenant and refuses or skips it with an audit entry; transactional mail (booking confirmations, DSAR notices) still sends; the admin completing a marketing objection no longer has to stop sends by hand; artifacts: send-path guard + tests; targets: 0 marketing sends to an objecting address; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Every non-transactional send (compose marked marketing, workflow and automation emails, auto-response drafts) checks processing_restrictions.blocksMarketing for the recipient inside the tenant and refuses or skips it with an audit entry;...",
+          "dependencies": [
+            "PG-203"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "IFC-316",
+          "sprint": 19,
+          "status": "Backlog",
+          "section": "Compliance",
+          "title": "Automate erasure of communications left on the PG-203 erasure checklist",
+          "description": "Automate erasure of communications left on the PG-203 erasure checklist",
+          "summary": "An approved erasure also anonymises or deletes, in the same transaction or a tracked follow-up job, the records PG-203 left as a counted checklist:...",
+          "definitionOfDone": "An approved erasure also anonymises or deletes, in the same transaction or a tracked follow-up job, the records PG-203 left as a counted checklist: email records (To/CC/BCC match), tickets, chats, feedback, staff notifications about the person and their deals, auto-response and contact reply drafts, calendar events and stored lead files (object storage delete); legal holds respected once a hold registry exists; the checklist shows only what remains; artifacts: erasure extension + real-DB tests; targets: checklist empty after erasure for covered types; verified by: pnpm test:integration",
+          "definitionOfDoneSnapshot": "An approved erasure also anonymises or deletes, in the same transaction or a tracked follow-up job, the records PG-203 left as a counted checklist:...",
+          "dependencies": [
+            "PG-203"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
         }
       ],
       "sectionSummary": [
         {
           "section": "Engineering Operations",
           "total": 8,
-          "completed": 5,
-          "open": 3
+          "completed": 7,
+          "open": 1
         },
         {
           "section": "Compliance",
@@ -20671,8 +20662,8 @@
         {
           "section": "AUTOMATION",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         },
         {
           "section": "Investment Gate",
@@ -20995,7 +20986,7 @@
         {
           "taskId": "ENG-OPS-002",
           "sprint": 19,
-          "status": "In Progress",
+          "status": "Completed",
           "section": "Engineering Operations",
           "title": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
           "description": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
@@ -21191,7 +21182,7 @@
         {
           "taskId": "ENG-OPS-002.R16",
           "sprint": 19,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Engineering Operations",
           "title": "Remediation R16 [High/GOV-A-001+002]: backfill 18 missing Sprint-18 attestations + record the 177-task provenance gap in debt ledger",
           "description": "Remediation R16 [High/GOV-A-001+002]: backfill 18 missing Sprint-18 attestations + record the 177-task provenance gap in debt ledger",
@@ -21287,30 +21278,30 @@
         {
           "taskId": "AUTOMATION-004",
           "sprint": 19,
-          "status": "In Progress",
+          "status": "Completed",
           "section": "AUTOMATION",
           "title": "Task-contract JSON schema + dispatch-binding enforcement (ADR-072)",
           "description": "Task-contract JSON schema + dispatch-binding enforcement (ADR-072)",
-          "summary": "20-field JSON Schema at tools/scripts/orchestration/schemas/task-contract.schema.json; runtime validator rejecting missing/wrong-type fields + duplicate agentLeaseId; verify-dispatch-binding.ts CLI guard (4-way binding:...",
+          "summary": "Closing attestation for code that shipped in #670 (ea7a23125). The row stayed In Progress at 0% only because no Sprint-19 attestation was written;... 20-field JSON Schema at tools/scripts/orchestration/schemas/task-contract.schema.json;...",
           "definitionOfDone": "20-field JSON Schema at tools/scripts/orchestration/schemas/task-contract.schema.json; runtime validator rejecting missing/wrong-type fields + duplicate agentLeaseId; verify-dispatch-binding.ts CLI guard (4-way binding: taskId+sessionId+branch+worktree); tests >=90% coverage; ADR-072 decision on ledger architecture; dispatch-binding section in agent-autonomy-policy.md; one canonical CSV row (no future ORCH rows pre-registered); verified by: npx vitest run tools/scripts/orchestration/__tests__/",
           "definitionOfDoneSnapshot": "20-field JSON Schema at tools/scripts/orchestration/schemas/task-contract.schema.json; runtime validator rejecting missing/wrong-type fields + duplicate agentLeaseId; verify-dispatch-binding.ts CLI guard (4-way binding:...",
           "dependencies": [],
           "attestation": {
-            "exists": false,
-            "path": null,
-            "verdict": null,
-            "timestamp": null,
-            "sprintFolder": null
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/AUTOMATION-004/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-11-12T14:21:12Z",
+            "sprintFolder": 19
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 2,
+            "passed": 2,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 2,
+            "met": 2,
             "missed": 0
           }
         },
