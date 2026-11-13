@@ -376,6 +376,22 @@ Hello World`;
       expect(options).toEqual({ metadata: { isForward: true, originalEmailId: 'test-email-123' } });
     });
 
+    it('forwards as a service email, so a recipient who objected to marketing is not refused (IFC-315)', async () => {
+      (prismaMock.emailRecord.findFirst as any).mockResolvedValue(mockExistingEmail);
+      dispatch.mockResolvedValue({ id: 'forward-record-id', status: 'SENT', skipped: [] });
+
+      await protectedCaller.processEmail({
+        emailId: 'test-email-123',
+        action: 'forward',
+        forwardTo: 'objected@example.invalid',
+      });
+
+      // The forward action cannot ask the user for a purpose, so it names SERVICE itself:
+      // dispatchUserMail only refuses (PURPOSE_REQUIRED) mail that names none.
+      const [, sent] = dispatch.mock.calls[0];
+      expect(sent).toMatchObject({ to: ['objected@example.invalid'], purpose: 'SERVICE' });
+    });
+
     it("never forwards another member's own mail (sent mail, drafts)", async () => {
       (prismaMock.emailRecord.findFirst as any).mockResolvedValue({
         ...mockExistingEmail,

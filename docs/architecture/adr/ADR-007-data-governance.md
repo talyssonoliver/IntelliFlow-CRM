@@ -693,7 +693,8 @@ User email may carry a purpose: `SERVICE` or `MARKETING`, chosen in compose. An
 email that names neither is refused with `PURPOSE_REQUIRED` (nothing sent) when
 any recipient objected, and compose asks the sender whether it is a service
 email or marketing, so an objection never depends on the sender remembering to
-mark marketing. `dispatchUserMail`
+mark marketing. The inbox forward action has no way to ask, so it sends as
+`SERVICE`: forwarding an existing email is not marketing. `dispatchUserMail`
 (`apps/api/src/modules/email/mailbox-sender.ts`) is the only path that sends
 email to a lead or contact the user picks. For a MARKETING email it drops every
 recipient whose address has an active restriction with `blocksMarketing`, or is
