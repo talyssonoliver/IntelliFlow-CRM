@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import { isProtectedAppRoute, isPublicAuthRoute } from '../route-protection';
 import { FORGOT_PASSWORD_PATH, RESET_PASSWORD_PATH } from '../auth-paths';

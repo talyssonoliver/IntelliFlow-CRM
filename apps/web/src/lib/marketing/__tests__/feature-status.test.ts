@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import pricingData from '@/data/pricing-data.json';
 import featuresContent from '@/data/features-content.json';

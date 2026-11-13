@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Every internal route refuses a caller with no sign-in, and developer-only actions
  * refuse in production, before any of their own code runs.

@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * PG-204 case type display helpers (labels + colour swatches).
  */

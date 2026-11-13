@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import helpArticlesJson from '@/data/help-articles.json';
 import { DEFAULT_HELP_ARTICLES, parseHelpArticles } from '../help-articles';

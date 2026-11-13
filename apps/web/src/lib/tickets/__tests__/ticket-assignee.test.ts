@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Ticket assignee gate (#1097): both ticket detail pages assign through it.
  */

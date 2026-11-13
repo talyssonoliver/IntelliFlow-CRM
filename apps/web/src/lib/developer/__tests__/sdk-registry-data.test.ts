@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import sdkRegistryJson from '@/data/sdk-registry.json';
 import { SDK_REGISTRY, parseSdkRegistry } from '../sdk-downloads';

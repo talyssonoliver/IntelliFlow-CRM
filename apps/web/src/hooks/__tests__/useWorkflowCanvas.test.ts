@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * useWorkflowCanvas Hook Tests — IFC-031
  *

@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Deal types & filter-mapping helper tests (IFC-287 F-10, F-19).
  * Covers transformDeals (typed API boundary), dateRangeToBounds, and

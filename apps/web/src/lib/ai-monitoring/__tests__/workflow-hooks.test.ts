@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * useWorkflowProgress hook tests — PG-193
  *

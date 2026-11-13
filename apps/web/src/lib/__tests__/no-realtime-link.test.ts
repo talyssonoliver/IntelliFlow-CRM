@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * The HTTP-only tRPC client (no NEXT_PUBLIC_WS_URL) must not error on a
  * subscription: that error crashed every page with a live-update hook into the

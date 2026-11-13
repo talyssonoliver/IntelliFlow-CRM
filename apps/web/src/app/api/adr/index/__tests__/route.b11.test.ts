@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * ADR Index Route B11 Tests - covers all branches (0% coverage)
  *

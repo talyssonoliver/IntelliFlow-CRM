@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import { ACCOUNT_TAG_COLOR_TOKENS } from '@intelliflow/validators';
 import { COLOR_SWATCH_CLASSES, swatchClass, toColorToken } from '../color-tokens';

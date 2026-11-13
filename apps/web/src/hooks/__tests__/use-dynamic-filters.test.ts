@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Tests for use-dynamic-filters.ts
  *

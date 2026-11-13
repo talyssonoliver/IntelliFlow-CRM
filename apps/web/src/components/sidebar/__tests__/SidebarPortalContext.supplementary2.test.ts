@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Supplementary tests for SidebarPortalContext.tsx
  *

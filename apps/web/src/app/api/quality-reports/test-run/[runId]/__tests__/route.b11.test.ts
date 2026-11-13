@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Test Run [runId] Route - B11 coverage tests
  *

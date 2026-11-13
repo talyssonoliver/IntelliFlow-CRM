@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Tests for help-article-queries.ts
  *

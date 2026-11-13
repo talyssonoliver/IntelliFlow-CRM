@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Password Validation Utilities - Unit Tests
  *

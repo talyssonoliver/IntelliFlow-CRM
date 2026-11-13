@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import { calculatePrice, formatCurrency, getStripePriceId } from '../calculator';
 import pricingData from '@/data/pricing-data.json';

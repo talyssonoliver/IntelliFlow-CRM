@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Additional tests for compliance timeline and risks routes
  */

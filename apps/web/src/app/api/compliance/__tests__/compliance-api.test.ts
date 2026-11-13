@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Compliance API Route Tests
  *

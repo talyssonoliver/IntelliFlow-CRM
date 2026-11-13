@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Additional tests for pdf-generator.ts
  * Covers uncovered lines

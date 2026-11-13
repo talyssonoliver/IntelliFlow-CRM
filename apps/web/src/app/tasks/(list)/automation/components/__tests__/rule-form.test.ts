@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Rule form model — PG-208 (AC-TA-003): input building, round trip from a
  * stored rule, validator issue mapping, duplicate active rule detection.

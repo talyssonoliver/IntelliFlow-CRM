@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import { mapAuditEntry, readAuditMetadata, type AuditTrailRow } from '../audit-trail';
 

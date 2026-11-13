@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Compliance Calendar Seed-Data Integrity (IFC-306)
  *
