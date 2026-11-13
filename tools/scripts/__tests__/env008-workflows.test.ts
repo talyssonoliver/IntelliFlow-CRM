@@ -76,11 +76,12 @@ function expectSecretOnlyInEnv(job: Job, envKey: string, expression: string) {
 describe('grafana-alert-rules.yml', () => {
   const wf = load('grafana-alert-rules.yml');
 
-  it('keeps exactly its own three trigger paths, so SLO or dashboard edits never re-apply the alert rules', () => {
+  it('runs only for its own files and the shared rule builder, so SLO or dashboard edits never re-apply the alert rules', () => {
     expect(wf.on.push?.branches).toEqual(['main']);
     expect(wf.on.push?.paths).toEqual([
       'infra/monitoring/grafana/cloud/alert-rules.json',
       'tools/scripts/observability/apply-grafana-alert-rules.mjs',
+      'tools/scripts/lib/grafana-provisioning.mjs',
       '.github/workflows/grafana-alert-rules.yml',
     ]);
   });
