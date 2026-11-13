@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { isProtectedAppRoute, isPublicAuthRoute } from '../route-protection';
+import { FORGOT_PASSWORD_PATH, RESET_PASSWORD_PATH } from '../auth-paths';
 
 describe('isPublicAuthRoute (OnboardingWelcome gate)', () => {
   // The welcome modal must NOT interrupt the user mid auth-flow.
@@ -8,8 +9,8 @@ describe('isPublicAuthRoute (OnboardingWelcome gate)', () => {
     '/signup',
     '/signup/success',
     '/logout',
-    '/forgot-password',
-    '/reset-password',
+    FORGOT_PASSWORD_PATH,
+    RESET_PASSWORD_PATH,
     '/verify-email',
     '/verify-email/callback',
     '/mfa',

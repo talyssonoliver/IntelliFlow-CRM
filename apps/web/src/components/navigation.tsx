@@ -16,6 +16,7 @@ import {
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useEnabledModules } from '@/hooks/useEnabledModules';
 import { TrialBadge } from '@/components/onboarding/TrialBadge';
+import { FORGOT_PASSWORD_PATH, RESET_PASSWORD_PATH } from '@/lib/auth/auth-paths';
 
 const NAV_SKELETON_KEYS = ['nav-0', 'nav-1', 'nav-2', 'nav-3', 'nav-4', 'nav-5'] as const;
 
@@ -30,8 +31,8 @@ const HELP_CENTER_HREF = '/help-center';
 export const PUBLIC_ROUTES = [
   '/login',
   '/signup',
-  '/forgot-password',
-  '/reset-password',
+  FORGOT_PASSWORD_PATH,
+  RESET_PASSWORD_PATH,
   '/verify-email',
   '/auth',
   '/logout',
