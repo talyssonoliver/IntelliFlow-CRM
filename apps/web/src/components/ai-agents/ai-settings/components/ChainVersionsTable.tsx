@@ -184,7 +184,22 @@ export function ChainVersionsTable({
 
       {/* Table */}
       {versions.length === 0 ? (
-        <EmptyState entity="insights" variant="filtered" phase="passive" />
+        <EmptyState
+          entity="insights"
+          variant={selectedChainType === 'all' && selectedStatus === 'all' ? 'empty' : 'filtered'}
+          showCta={false}
+          action={
+            selectedChainType === 'all' && selectedStatus === 'all'
+              ? undefined
+              : {
+                  label: 'Clear filters',
+                  onClick: () => {
+                    onChainTypeChange('all');
+                    onStatusChange('all');
+                  },
+                }
+          }
+        />
       ) : (
         <>
           <Table>

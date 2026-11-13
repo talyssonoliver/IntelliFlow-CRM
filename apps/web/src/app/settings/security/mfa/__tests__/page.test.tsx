@@ -685,7 +685,7 @@ describe('MfaSetupPage', () => {
       render(<MfaSetupPage />);
       const nav = screen.getByRole('navigation', { name: /breadcrumb/i });
       expect(nav).toBeInTheDocument();
-      expect(screen.getByText('Dashboard')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument();
       expect(screen.getByText('Settings')).toBeInTheDocument();
       expect(screen.getByText('Security')).toBeInTheDocument();
       expect(screen.getByText('MFA Setup')).toBeInTheDocument();

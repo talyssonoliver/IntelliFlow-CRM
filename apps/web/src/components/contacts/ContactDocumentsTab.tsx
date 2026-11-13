@@ -34,7 +34,12 @@ export function ContactDocumentsTab({ documents, timezone }: ContactDocumentsTab
       <div className="space-y-3" data-testid="contact-documents-tab">
         {documents.length === 0 ? (
           <div data-testid="contact-documents-empty">
-            <EmptyState entity="documents" phase="passive" className="py-2" />
+            <EmptyState
+              entity="documents"
+              ctaHref="/documents/new"
+              ctaLabel="Upload a document"
+              className="py-2"
+            />
           </div>
         ) : (
           documents.map((doc) => (

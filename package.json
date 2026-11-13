@@ -58,6 +58,7 @@
     "typecheck": "turbo run typecheck && pnpm run lint:sonar:guard",
     "lint:sonar:guard": "tsx tools/scripts/lint-sonar-guard.ts",
     "lint:test-variants": "node tools/scripts/check-test-variant-names.mjs",
+    "lint:unscoped-prisma": "node tools/scripts/check-unscoped-prisma.mjs",
     "test-quality:report": "node tools/scripts/test-quality-report.mjs",
     "lighthouse": "lhci autorun",
     "lighthouse:ci": "lhci autorun --upload.target=filesystem --upload.outputDir=./artifacts/lighthouse",

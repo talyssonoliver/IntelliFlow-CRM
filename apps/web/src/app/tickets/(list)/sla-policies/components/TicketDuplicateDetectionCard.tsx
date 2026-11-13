@@ -75,7 +75,7 @@ export function TicketDuplicateDetectionCard({ rules, onChange }: Props) {
       {rules.length === 0 ? (
         <EmptyState
           entity="rules"
-          phase="passive"
+          onCtaClick={addRule}
           size="sm"
           className="py-4 px-3 gap-2"
           title="No duplicate rules yet"

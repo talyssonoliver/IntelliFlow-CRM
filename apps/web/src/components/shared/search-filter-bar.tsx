@@ -195,7 +195,7 @@ export function SearchFilterBar({
 // Filter Dropdown Component
 // =============================================================================
 
-interface FilterDropdownProps extends FilterDropdownConfig {}
+type FilterDropdownProps = FilterDropdownConfig;
 
 function FilterDropdown({
   label,
@@ -444,5 +444,56 @@ export function useMultiFilterState<T extends Record<string, string>>(initialVal
     [initialValues]
   );
 
-  return { values, set, reset, resetKey };
+  /** True when any key outside `ignore` (e.g. `sort`) differs from its initial value. */
+  const isFiltered = useCallback(
+    (ignore: readonly (keyof Widened)[] = []) =>
+      (Object.keys(values) as (keyof Widened)[]).some(
+        (k) => !ignore.includes(k) && values[k] !== (initialValues as Widened)[k]
+      ),
+    [values, initialValues]
+  );
+
+  /** Reset every key outside `ignore` (keeps e.g. the sort order). */
+  const resetFilters = useCallback(
+    (ignore: readonly (keyof Widened)[] = []) => {
+      setValues((prev) => {
+        const next = { ...prev };
+        for (const k of Object.keys(prev) as (keyof Widened)[]) {
+          if (!ignore.includes(k)) next[k] = (initialValues as Widened)[k];
+        }
+        return next;
+      });
+    },
+    [initialValues]
+  );
+
+  return { values, set, reset, resetKey, isFiltered, resetFilters };
+}
+
+/** The part of `useMultiFilterState` that `clearFiltersAction` uses. */
+interface ResettableFilters {
+  isFiltered(ignore?: readonly string[]): boolean;
+  resetFilters(ignore?: readonly string[]): void;
+}
+
+/**
+ * The empty-state "Clear filters" action for a list filtered by `useMultiFilterState`
+ * AND a quick-filter chip held in its own state (`'all'` = no chip). The chip counts as a
+ * filter and is reset with the rest, so a chip that empties the list always offers Clear,
+ * and Clear never leaves a chip selected over an unfiltered list. `ignore` keys (the sort
+ * order by default) are neither counted nor reset.
+ */
+export function clearFiltersAction(
+  filters: ResettableFilters,
+  chip: { value: string; reset: () => void },
+  ignore: readonly string[] = ['sort']
+): { label: string; onClick: () => void } | undefined {
+  if (!filters.isFiltered(ignore) && chip.value === 'all') return undefined;
+  return {
+    label: 'Clear filters',
+    onClick: () => {
+      filters.resetFilters(ignore);
+      chip.reset();
+    },
+  };
 }

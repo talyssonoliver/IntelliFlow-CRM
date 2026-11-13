@@ -55,9 +55,18 @@ export interface PageHeaderProps {
 interface BreadcrumbsProps {
   items: BreadcrumbItem[];
   className?: string;
+  /**
+   * The last item is the current page (default). PageHeader passes `false`:
+   * its trail holds ancestors only, so every item keeps its link.
+   */
+  endsWithCurrentPage?: boolean;
 }
 
-export function Breadcrumbs({ items, className }: Readonly<BreadcrumbsProps>) {
+export function Breadcrumbs({
+  items,
+  className,
+  endsWithCurrentPage = true,
+}: Readonly<BreadcrumbsProps>) {
   if (!items.length) return null;
 
   return (
@@ -69,7 +78,7 @@ export function Breadcrumbs({ items, className }: Readonly<BreadcrumbsProps>) {
       )}
     >
       {items.map((item, index) => {
-        const isLast = index === items.length - 1;
+        const isLast = endsWithCurrentPage && index === items.length - 1;
 
         return (
           <React.Fragment key={item.label}>
@@ -98,6 +107,21 @@ export function Breadcrumbs({ items, className }: Readonly<BreadcrumbsProps>) {
       })}
     </nav>
   );
+}
+
+/**
+ * The trail above a page title shows where the page sits, not the page again
+ * (#1222 UI-011): the h1 already names it. A last crumb with no link, or with
+ * the title's own text, is the current page and is left out.
+ */
+export function breadcrumbAncestors(
+  items: readonly BreadcrumbItem[] | undefined,
+  title: string
+): BreadcrumbItem[] {
+  if (!items?.length) return [];
+  const last = items[items.length - 1]!;
+  const isCurrentPage = !last.href || last.label.trim() === title.trim();
+  return isCurrentPage ? items.slice(0, -1) : [...items];
 }
 
 // =============================================================================
@@ -233,13 +257,14 @@ export function PageHeader({
   children,
   className,
 }: Readonly<PageHeaderProps>) {
+  const ancestors = breadcrumbAncestors(breadcrumbs, title);
   return (
     <div
       className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-4', className)}
     >
       {/* Left side: Breadcrumbs, Title, Description */}
       <div className="min-w-0 flex-1">
-        {breadcrumbs && breadcrumbs.length > 0 && <Breadcrumbs items={breadcrumbs} />}
+        {ancestors.length > 0 && <Breadcrumbs items={ancestors} endsWithCurrentPage={false} />}
 
         <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{title}</h1>
 

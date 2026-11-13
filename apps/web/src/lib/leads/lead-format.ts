@@ -110,7 +110,8 @@ function withoutTrackingParams(search: string): string {
 /** The host part of an address as the user typed it: no scheme, user info, port or path. */
 function typedHost(text: string): string {
   const afterScheme = text.replace(/^[a-z][a-z\d+.-]*:\/\//i, '');
-  const authority = afterScheme.split(/[/?#]/, 1)[0];
+  // A backslash ends an http(s) host for the URL parser too ("a.example\@b.example").
+  const authority = afterScheme.split(/[\\/?#]/, 1)[0];
   const host = authority.slice(authority.lastIndexOf('@') + 1);
   if (host.startsWith('[')) return host.slice(0, host.indexOf(']') + 1);
   return host.replace(/:\d*$/, '');
@@ -126,6 +127,25 @@ function isAddressHost(host: string): boolean {
   const labels = host.split('.');
   if (labels.length < 2 || labels.some((label) => label === '')) return false;
   return /\p{L}/u.test(labels[labels.length - 1]);
+}
+
+/** True when the typed host is the host the parsed link opens (after IDNA and IP normalising). */
+function opensTypedHost(typed: string, url: URL): boolean {
+  try {
+    return new URL(`https://${typed}`).hostname === url.hostname;
+  } catch {
+    return false;
+  }
+}
+
+/** The path as readable text, or still encoded when decoding would show control or bidi characters. */
+function readablePath(path: string): string {
+  try {
+    const decoded = decodeURIComponent(path);
+    return /[\p{Cc}\p{Cf}]/u.test(decoded) ? path : decoded;
+  } catch {
+    return path;
+  }
 }
 
 /**
@@ -150,16 +170,13 @@ export function leadWebsite(
   // rewrites hosts ("0" -> "0.0.0.0"), so the check runs on the host as typed.
   const typed = typedHost(text);
   if (!isAddressHost(typed)) return null;
+  // The label must name the host the link opens; anything else is not shown at all.
+  if (!opensTypedHost(typed, url)) return null;
   url.search = withoutTrackingParams(url.search);
   // The label reads as typed: the parser would show "café" as punycode and "menú"
   // percent-encoded. The href keeps the parsed, encoded form.
   const host = typed.toLowerCase().replace(/^www\./, '');
-  let path = url.pathname === '/' ? '' : url.pathname.replace(/\/$/, '');
-  try {
-    path = decodeURIComponent(path);
-  } catch {
-    /* keep the encoded path */
-  }
+  const path = readablePath(url.pathname === '/' ? '' : url.pathname.replace(/\/$/, ''));
   return { href: url.toString(), label: host + path };
 }
 

@@ -159,10 +159,12 @@ export function TaskTemplatesSection({ value, onChange }: Readonly<TaskTemplates
       </div>
 
       {value.length === 0 ? (
+        // "rules" carries no hotkey: "tasks" would bind T on this page to Add template.
         <EmptyState
-          entity="tasks"
+          entity="rules"
           size="sm"
-          phase="passive"
+          ctaLabel="Add template"
+          onCtaClick={openAdd}
           title="No task templates"
           description="Add a template above to speed up task creation."
           className="py-4 px-3 gap-2"

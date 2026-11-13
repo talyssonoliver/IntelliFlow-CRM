@@ -1,6 +1,7 @@
 'use client';
 
 import { EmptyState } from '@intelliflow/ui';
+import { getCurrentMonthRange } from '@/hooks/useAppointmentFilters';
 import {
   getTypeConfig,
   getStatusConfig,
@@ -123,6 +124,20 @@ export function AppointmentList({
   onFilterChange,
 }: Readonly<AppointmentListProps>) {
   const totalPages = Math.ceil(total / pagination.limit);
+  // The list opens on the current month (useAppointmentFilters), so that range is the
+  // default, not a filter the user set: only a different range counts, and Clear puts
+  // the month back rather than widening to every date.
+  const monthRange = getCurrentMonthRange();
+  const sameTime = (a: Date | undefined, b: Date) => a?.getTime() === b.getTime();
+  const dateRangeFiltered =
+    Boolean(filters.startTimeFrom || filters.startTimeTo) &&
+    !(
+      sameTime(filters.startTimeFrom, monthRange.from) &&
+      sameTime(filters.startTimeTo, monthRange.to)
+    );
+  const hasActiveFilters = Boolean(
+    filters.search || filters.status || filters.appointmentType || dateRangeFiltered
+  );
 
   // Apply date-range filter to tasks so the list view mirrors the calendar view.
   // Tasks are sorted by dueDate ascending.
@@ -299,7 +314,27 @@ export function AppointmentList({
       {/* Appointments table */}
       {appointments.length === 0 && visibleTasks.length === 0 && (
         <div data-testid="list-empty">
-          <EmptyState entity="appointments" phase="passive" />
+          <EmptyState
+            entity="appointments"
+            variant={hasActiveFilters ? 'filtered' : 'empty'}
+            showCta={!hasActiveFilters}
+            ctaHref="/appointments/new"
+            action={
+              hasActiveFilters
+                ? {
+                    label: 'Clear filters',
+                    onClick: () =>
+                      onFilterChange({
+                        search: '',
+                        status: '',
+                        appointmentType: '',
+                        startTimeFrom: monthRange.from,
+                        startTimeTo: monthRange.to,
+                      }),
+                  }
+                : undefined
+            }
+          />
         </div>
       )}
       {appointments.length > 0 && (

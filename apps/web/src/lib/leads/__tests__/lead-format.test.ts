@@ -239,6 +239,21 @@ describe('lead-format · leadWebsite (#1277)', () => {
     expect(leadWebsite('https://example.invalid/%E0%A4%A')?.label).toBe('example.invalid/%E0%A4%A');
   });
 
+  it('labels the host the link opens when a backslash comes before an @', () => {
+    const site = leadWebsite('https://a.example.invalid\\@b.example.invalid');
+    expect(site?.href).toBe('https://a.example.invalid/@b.example.invalid');
+    expect(site?.label).toBe('a.example.invalid/@b.example.invalid');
+  });
+
+  it('keeps control and bidi characters in a path encoded in the label', () => {
+    expect(leadWebsite('https://shop.example.invalid/%E2%80%AEtxt.evil')?.label).toBe(
+      'shop.example.invalid/%E2%80%AEtxt.evil'
+    );
+    expect(leadWebsite('https://shop.example.invalid/a%0Ab')?.label).toBe(
+      'shop.example.invalid/a%0Ab'
+    );
+  });
+
   it('keeps the remaining parameters exactly as stored', () => {
     expect(leadWebsite('https://shop.example.invalid/?q=a%20b&utm_source=g')?.href).toBe(
       'https://shop.example.invalid/?q=a%20b'

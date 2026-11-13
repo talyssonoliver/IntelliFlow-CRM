@@ -41,7 +41,7 @@ export interface LeadTimelineProps {
 
 export function LeadTimeline({ activities, limit, timezone }: Readonly<LeadTimelineProps>) {
   if (activities.length === 0) {
-    return <EmptyState entity="activity" phase="passive" />;
+    return <EmptyState entity="activity" showCta={false} />;
   }
 
   const visible = typeof limit === 'number' ? activities.slice(0, limit) : activities;

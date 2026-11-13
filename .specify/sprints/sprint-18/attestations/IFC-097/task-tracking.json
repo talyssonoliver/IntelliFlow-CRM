@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "IFC-097",
+  "started_at": "2026-11-12T17:30:00Z",
+  "status_history": [
+    {
+      "status": "In Progress",
+      "at": "2026-11-12T17:30:00Z",
+      "note": "Sprint-18 record (the sprint-9 attestation stays as history). dashboard-catalog.md reconciled with the production Grafana Cloud dashboards; production trace coverage measured."
+    }
+  ],
+  "kpis": [
+    {
+      "kpi": "99% of requests traced",
+      "actual": "api: 37,314 of 37,314 request records in Loki carry a trace_id over the 7 days to 2026-11-12 (100%); 20 of 20 sampled trace ids found in Tempo. web: not traced in Grafana yet (Sentry is error-only there).",
+      "met": false
+    },
+    {
+      "kpi": "dashboards available",
+      "actual": "6 IntelliFlow dashboards live on Grafana Cloud, each applied as code (catalog section \"Production dashboards\"); 20 designs documented for the local stack.",
+      "met": true
+    }
+  ],
+  "blockers": [
+    {
+      "description": "web on Vercel must export OTLP to Grafana (IFC-319 part 2 + the owner-approved Vercel env change) so its requests are traced too; worker jobs get their own spans once feat/ifc-097-worker-consumer-spans is deployed.",
+      "raised_at": "2026-11-12T17:30:00Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 85,
+  "updated_at": "2026-11-12T17:30:00Z"
+}

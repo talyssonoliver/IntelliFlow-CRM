@@ -13,7 +13,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Job } from 'bullmq';
+import { UnrecoverableError, type Job } from 'bullmq';
+import { MonthlyBudgetExceededError } from '../lib/monthly-budget';
 
 // Mock LLM factory — prediction.job.ts instantiates ChurnRiskChain,
 // LeadQualificationAgent, NextBestActionAgent, etc. whose constructors call
@@ -86,6 +87,7 @@ import {
   PredictionJobDataSchema,
   PredictionJobResultSchema,
   processPredictionJob,
+  toPredictionJobFailure,
   DEFAULT_PREDICTION_JOB_OPTIONS,
   type PredictionJobData,
   type PredictionJobResult,
@@ -755,5 +757,51 @@ describe('processPredictionJob — feature flag ai.prediction.enabled', () => {
     const job = createMockJob(flagJobData);
     const result = (await processPredictionJob(job)) as any;
     expect(result.skipped).toBeUndefined();
+  });
+});
+
+// Lead fan-out (AI agents epic, PR 1a): a failure that cannot heal on retry must not burn
+// the 3 exponential attempts the lead enqueue gives each prediction job.
+describe('prediction job failures that cannot heal on retry', () => {
+  it('fails a NEXT_BEST_ACTION job without a user once, as an expected outcome', async () => {
+    const job = createMockJob({
+      entityType: 'lead',
+      entityId: TEST_UUIDS.lead1,
+      predictionType: 'NEXT_BEST_ACTION',
+      tenantId: TEST_UUIDS.tenantId,
+      context: { tenantId: TEST_UUIDS.tenantId },
+      priority: 5,
+    });
+
+    const failure = await processPredictionJob(job).then(
+      () => null,
+      (error: unknown) => error
+    );
+
+    expect(failure).toBeInstanceOf(UnrecoverableError);
+    expect((failure as Error).message).toBe('userId is required for prediction jobs');
+    expect((failure as { expected?: boolean }).expected).toBe(true);
+  });
+
+  it('maps the monthly budget cap to an unrecoverable, expected failure', () => {
+    const mapped = toPredictionJobFailure(new MonthlyBudgetExceededError(61, 60));
+
+    expect(mapped).toBeInstanceOf(UnrecoverableError);
+    expect((mapped as Error).message).toContain('Monthly AI budget reached');
+    expect((mapped as { expected?: boolean }).expected).toBe(true);
+  });
+
+  it('keeps retries for a fail-closed budget refusal (spend unreadable), which is transient', () => {
+    // assertWithinMonthlyBudget refuses with spentUsd NaN when Redis cannot be read or flushed.
+    const refusal = new MonthlyBudgetExceededError(Number.NaN, 60);
+
+    expect(toPredictionJobFailure(refusal)).toBe(refusal);
+  });
+
+  it('returns any other error unchanged, so it keeps its retries', () => {
+    const transient = new Error('connect ECONNRESET');
+
+    expect(toPredictionJobFailure(transient)).toBe(transient);
+    expect(toPredictionJobFailure('not an error')).toBe('not an error');
   });
 });

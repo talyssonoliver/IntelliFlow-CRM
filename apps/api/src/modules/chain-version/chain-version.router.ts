@@ -220,7 +220,8 @@ export const chainVersionRouter = createTRPCRouter({
       const chainVersionService = getChainVersionService(ctx);
       const typedCtx = getTenantContext(ctx);
 
-      return chainVersionService.getActiveVersion(input.chainType, {
+      // A tenant with no active version yet is a normal empty state, not an error: null.
+      return chainVersionService.findActiveVersion(input.chainType, {
         tenantId: typedCtx.tenant.tenantId,
         ...input.context,
       });

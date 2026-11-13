@@ -855,3 +855,47 @@ waivers:
     author: claude provider lane
     date: '2026-11-07'
     expires: '2026-11-21'
+  - fingerprint: e7fa160ce28e4ed28ee8322e4f5d0f15f09e293fd468abd0e1113e3854e13f87
+    reason: >-
+      Deferred to #1294, accepted by the coordinator on 2026-11-11 (LOW findings become a
+      follow-up issue, not a blocker). The lead Files tab's "Upload a document" links to
+      /documents/new without the lead, so the upload is not linked back; tracked in #1294.
+    author: ifc-074 lane
+    date: '2026-11-11'
+    expires: '2026-11-25'
+  - fingerprint: 1724eac23cc021d74fac62a10002ae21df943dca1b8ca165991d57ae4ac0963b
+    reason: >-
+      Deferred to #1294, accepted by the coordinator on 2026-11-11 (LOW findings become a
+      follow-up issue, not a blocker). The deal win/loss empty-state CTA opens the create
+      dialog without the isBusy guard the header button has; tracked in #1294.
+    author: ifc-074 lane
+    date: '2026-11-12'
+    expires: '2026-11-26'
+  - fingerprint: 0bcb57a9be56d813013414fe9314cbe65023a314111cde4125e92e22b3b76753
+    reason: >-
+      Deferred to #1294, accepted by the coordinator on 2026-11-11 (LOW findings become a
+      follow-up issue, not a blocker). The customer portal's empty thread uses entity="chats"
+      with a focus-only CTA, so C moves focus to the reply box; tracked in #1294.
+    author: ifc-074 lane
+    date: '2026-11-12'
+    expires: '2026-11-26'
+  - fingerprint: 5df75fb6839c804dce308d661ac579e06548e4c55597f29b1ea938f752732da4
+    reason: >-
+      LOW, deferred to #1299 (its first item) under the coordinator's LOW policy (2026-11-11). A
+      lead AI run is marked done when its jobs are queued, not when they succeed, so a job that
+      fails or is skipped in the worker is not re-queued for the same lead data until the
+      30-day window ends or a field changes. Nothing is exposed or processed that should not be;
+      the cost is a delayed agent run.
+    author: ai agents lane
+    date: '2026-11-12'
+    expires: '2026-11-26'
+  - fingerprint: 912e4f7051a8224e6c2f61e524ca596e101f135348b2d38f1a269459ef10b69a
+    reason: >-
+      LOW, deferred to #1299 under the coordinator's LOW policy (2026-11-11). The per-lead
+      claim and complete Redis calls are each bounded by the 5 s enqueue timeout but are not
+      counted in the MAX_IN_FLIGHT cap the job adds use, so during a Redis outage up to two more
+      unsettled calls per lead can wait on the shared connection. It fails fast with
+      enableOfflineQueue off; nothing is lost or exposed.
+    author: ai agents lane
+    date: '2026-11-12'
+    expires: '2026-11-26'

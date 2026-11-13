@@ -220,7 +220,7 @@ export default function AccountTiersContent() {
     <div className="w-full">
       <PageHeader
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
+          { label: 'Home', href: '/' },
           { label: 'Accounts', href: '/accounts' },
           { label: 'Account Tiers' },
         ]}
@@ -328,6 +328,7 @@ export default function AccountTiersContent() {
             onRename={renameBenefit}
             onRemove={removeBenefit}
             onToggle={toggleBenefit}
+            onAdd={addBenefit}
           />
         </Card>
       </div>

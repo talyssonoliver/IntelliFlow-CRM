@@ -760,6 +760,23 @@ describe('ChainVersionService', () => {
       );
     });
 
+    it('findActiveVersion returns null, not an error, when no version is active', async () => {
+      versionRepo.findActive.mockResolvedValue(null);
+
+      await expect(service.findActiveVersion('LEAD_SCORING' as any, context)).resolves.toBeNull();
+      expect(versionRepo.findActive).toHaveBeenCalledWith('LEAD_SCORING', 'tenant-1');
+    });
+
+    it('findActiveVersion returns the same selection as getActiveVersion when one is active', async () => {
+      const activeVersion = makeVersion({ status: 'ACTIVE', rolloutStrategy: 'IMMEDIATE' });
+      versionRepo.findActive.mockResolvedValue(activeVersion);
+
+      await expect(service.findActiveVersion('LEAD_SCORING' as any, context)).resolves.toEqual({
+        version: activeVersion,
+        selectedBy: 'direct',
+      });
+    });
+
     it('should handle null feature flags gracefully', async () => {
       const serviceNoFlags = new ChainVersionService(
         versionRepo as ChainVersionRepositoryPort,

@@ -339,6 +339,46 @@ describe('AIWorker', () => {
       expect(result).toEqual({ score: 85 });
     });
 
+    // IFC-097: BaseWorker.handleJob already runs processJob inside the job's CONSUMER
+    // span (parented on _otelCarrier), so processJob keeps that span as the parent.
+    it('keeps the active consumer span and does not re-extract the carrier', async () => {
+      const otel = await import('@opentelemetry/api');
+      const getSpan = vi.spyOn(otel.trace, 'getSpan').mockReturnValue({} as never);
+      const extract = vi.spyOn(otel.propagation, 'extract');
+      try {
+        const worker = new AIWorker();
+        const job = {
+          queueName: 'ai-scoring',
+          data: { leadId: '123', _otelCarrier: { traceparent: 'x' } },
+        } as any;
+        await (worker as any).processJob(job);
+        expect(getSpan).toHaveBeenCalled();
+        expect(extract).not.toHaveBeenCalled();
+      } finally {
+        getSpan.mockRestore();
+        extract.mockRestore();
+      }
+    });
+
+    it('extracts the enqueue-side carrier when no span is active (direct call)', async () => {
+      const otel = await import('@opentelemetry/api');
+      const getSpan = vi.spyOn(otel.trace, 'getSpan').mockReturnValue(undefined);
+      const extract = vi.spyOn(otel.propagation, 'extract');
+      try {
+        const worker = new AIWorker();
+        const carrier = { traceparent: 'x' };
+        const job = {
+          queueName: 'ai-scoring',
+          data: { leadId: '123', _otelCarrier: carrier },
+        } as any;
+        await (worker as any).processJob(job);
+        expect(extract).toHaveBeenCalledWith(expect.anything(), carrier);
+      } finally {
+        getSpan.mockRestore();
+        extract.mockRestore();
+      }
+    });
+
     it('seeds a background query-budget context around the job (ADR-053, real wiring)', async () => {
       // Uses the REAL @intelliflow/db query-budget ALS (not mocked here) to
       // prove processJob wraps the handler in runWithQueryBudget({background}).

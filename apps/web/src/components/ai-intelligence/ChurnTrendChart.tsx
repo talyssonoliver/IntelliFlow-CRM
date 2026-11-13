@@ -19,7 +19,7 @@ function ChurnTrendChart({ trends }: Readonly<ChurnTrendChartProps>) {
   if (isEmptySeries(trends, undefined, { zeroIsData: true })) {
     return (
       <div data-testid="no-trends">
-        <EmptyState entity="insights" phase="passive" className="py-4" />
+        <EmptyState entity="insights" showCta={false} className="py-4" />
       </div>
     );
   }

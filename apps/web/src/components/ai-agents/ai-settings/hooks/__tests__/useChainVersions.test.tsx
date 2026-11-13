@@ -11,6 +11,8 @@ const h = vi.hoisted(() => {
     {};
   const toast = vi.fn();
   const refetch = vi.fn();
+  const queryCalls: Array<{ proc: string; input: unknown; opts: unknown }> = [];
+  const queryData: Record<string, (input: { chainType?: string }) => unknown> = {};
 
   const utils = new Proxy(
     {},
@@ -34,7 +36,11 @@ const h = vi.hoisted(() => {
     {},
     {
       get: (_t, proc) => ({
-        useQuery: () => ({ data: undefined, isLoading: false, error: null, refetch }),
+        useQuery: (input: { chainType?: string }, opts?: unknown) => {
+          queryCalls.push({ proc: String(proc), input, opts });
+          const data = queryData[String(proc)]?.(input);
+          return { data, isLoading: false, error: null, refetch };
+        },
         useMutation: (opts: { onSuccess: () => unknown; onError: (e: Error) => void }) => {
           mutationOptions[String(proc)] = opts;
           return { mutateAsync: vi.fn(), isPending: false };
@@ -43,7 +49,16 @@ const h = vi.hoisted(() => {
     }
   );
 
-  return { invalidated, mutationOptions, toast, refetch, utils, chainVersion };
+  return {
+    invalidated,
+    mutationOptions,
+    toast,
+    refetch,
+    utils,
+    chainVersion,
+    queryCalls,
+    queryData,
+  };
 });
 
 vi.mock('@/lib/api', () => ({
@@ -210,5 +225,44 @@ describe('refetch helpers', () => {
     budget.result.current.refetch();
 
     expect(h.refetch).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('useChainVersions active versions', () => {
+  beforeEach(() => {
+    h.queryCalls.length = 0;
+    for (const key of Object.keys(h.queryData)) delete h.queryData[key];
+  });
+
+  it('shows no active version, without retrying, when getActive returns null', () => {
+    h.queryData.getActive = () => null;
+
+    const { result } = renderHook(() => useChainVersions());
+
+    expect(result.current.activeVersions).toEqual({
+      SCORING: null,
+      QUALIFICATION: null,
+      EMAIL_WRITER: null,
+      FOLLOWUP: null,
+    });
+    const activeCalls = h.queryCalls.filter((c) => c.proc === 'getActive');
+    expect(activeCalls.map((c) => (c.input as { chainType: string }).chainType)).toEqual([
+      'SCORING',
+      'QUALIFICATION',
+      'EMAIL_WRITER',
+      'FOLLOWUP',
+    ]);
+    for (const call of activeCalls) expect(call.opts).toEqual({ retry: false });
+  });
+
+  it('keeps the version a chain type does have', () => {
+    const scoring = { id: 'v-1', chainType: 'SCORING', status: 'ACTIVE' };
+    h.queryData.getActive = (input) =>
+      input.chainType === 'SCORING' ? { version: scoring, selectedBy: 'direct' } : null;
+
+    const { result } = renderHook(() => useChainVersions());
+
+    expect(result.current.activeVersions.SCORING).toEqual(scoring);
+    expect(result.current.activeVersions.FOLLOWUP).toBeNull();
   });
 });

@@ -133,6 +133,24 @@ describe('ActivityTimeline', () => {
       });
     });
 
+    it('Clear filters clears the search and tells the parent through onSearch', async () => {
+      const user = userEvent.setup();
+      render(
+        <ActivityTimeline
+          contactId="contact-1"
+          activities={createMockActivityList(2)}
+          onSearch={handlers.onSearch}
+        />
+      );
+
+      await user.type(screen.getByPlaceholderText('Search activities...'), 'zzz-no-match');
+      handlers.onSearch.mockClear();
+      await user.click(screen.getByRole('button', { name: 'Clear filters' }));
+
+      expect(handlers.onSearch).toHaveBeenCalledWith('');
+      expect(screen.getByPlaceholderText('Search activities...')).toHaveValue('');
+    });
+
     it('updates result count on search', async () => {
       const user = userEvent.setup();
       const activities = createMockActivityList(5);

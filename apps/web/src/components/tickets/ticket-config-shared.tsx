@@ -24,7 +24,7 @@ export function ConfigEmptyState({
   return (
     <Card>
       <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <EmptyState entity="rules" phase="passive" title={title} description={description} />
+        <EmptyState entity="rules" showCta={false} title={title} description={description} />
         <Button onClick={onAction}>{actionLabel}</Button>
       </CardContent>
     </Card>

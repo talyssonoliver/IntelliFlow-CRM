@@ -24,7 +24,7 @@ export function EmptyState({
   message,
   entity = 'invoices',
 }: Readonly<{ icon: string; message?: string; entity?: EmptyStateEntity }>) {
-  return <SharedEmptyState entity={entity} phase="passive" description={message} />;
+  return <SharedEmptyState entity={entity} showCta={false} description={message} />;
 }
 
 /**
