@@ -773,7 +773,10 @@ const STEPS = [
     // of the diff vs origin/main, flagging correctness / data-integrity /
     // security bugs that pass TypeScript + tests + lint because the author's
     // own tests encode the same wrong assumption (e.g. revenue-band "1M-10M"
-    // mapped to 100 cents with green tests). Block on ANY unwaived finding.
+    // mapped to 100 cents with green tests). Blocks on an unwaived critical,
+    // high or medium finding; an unwaived LOW goes to the branch's follow-up
+    // issue. A review of the same head + diff (e.g. a standalone run before the
+    // push) is reused, not repeated (scripts/lib/codex-review-cache.mjs).
     //
     // LOCAL-ONLY enforcement: the codex CLI must be installed and OAuth-
     // authenticated (ChatGPT/Codex login). No API key is required or used.
