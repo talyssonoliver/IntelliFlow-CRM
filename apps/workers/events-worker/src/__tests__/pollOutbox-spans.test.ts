@@ -24,7 +24,10 @@ const { calls, runWorkSpan } = vi.hoisted(() => {
   return { calls, runWorkSpan };
 });
 
-vi.mock('@intelliflow/worker-shared', () => ({ runWorkSpan }));
+vi.mock('@intelliflow/worker-shared', () => ({
+  runWorkSpan,
+  createOutboxMetrics: () => ({ recordDispatch: () => undefined }),
+}));
 
 import { OutboxPoller, InMemoryOutboxRepository } from '../outbox/pollOutbox';
 import { EventDispatcher, type OutboxEvent } from '../outbox/event-dispatcher';

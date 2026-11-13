@@ -11,6 +11,8 @@ import {
   eslintGlobs,
   formatTargets,
   lintPlan,
+  lintScopeFor,
+  PROMISES_CONFIG_PATTERNS,
   promisesPlan,
   resolveLintScope,
   runScopedLint,
@@ -359,5 +361,46 @@ describe('runScopedLint path joining', () => {
       }
     );
     expect(run.mock.calls[0][2]).toBe(path.join('repo', 'apps/web'));
+  });
+});
+
+describe('the promise lint has its own config list', () => {
+  const promises = (files: string[]) => classifyLintFiles(files, PROMISES_CONFIG_PATTERNS);
+
+  it('stays scoped for a package.json, prettier, the default eslint config and custom rules', () => {
+    for (const f of [
+      'apps/ai-worker/package.json',
+      'package.json',
+      '.prettierrc',
+      'eslint.config.mjs',
+      'tools/lint/rules/no-x.ts',
+      'tools/lint/__tests__/x.test.ts',
+      'eslint-rules/y.js',
+    ]) {
+      expect(promises([f, 'apps/web/src/a.tsx']).scope).toBe('changed');
+    }
+  });
+
+  it('goes repo-wide for its own config, tsconfigs, the lockfile and its runners', () => {
+    for (const f of [
+      'eslint.promises.config.mjs',
+      'apps/web/tsconfig.json',
+      'pnpm-lock.yaml',
+      'packages/typescript-config/base.json',
+      'scripts/lint-promises.mjs',
+      'scripts/lib/preship-lint-scope.mjs',
+    ]) {
+      expect(promises([f]).scope).toBe('full');
+    }
+  });
+
+  it('is what lintScopeFor uses for the promises mode, and only for it', () => {
+    const git = (args: string[]) => {
+      if (args[0] === 'merge-base') return 'base\n';
+      if (args[0] === 'diff') return 'apps/ai-worker/package.json\napps/web/src/a.tsx\n';
+      return '';
+    };
+    expect(lintScopeFor('promises', { cwd: '.', env: {}, git }).scope).toBe('changed');
+    expect(lintScopeFor('lint', { cwd: '.', env: {}, git }).scope).toBe('full');
   });
 });
