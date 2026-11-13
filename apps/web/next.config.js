@@ -205,11 +205,25 @@ const nextConfig = {
   },
 
   // Webpack: resolve Prisma 7 generated .js → .ts extension imports
-  webpack: (config) => {
+  webpack: (config, { isServer, nextRuntime }) => {
     config.resolve.extensionAlias = {
       ...config.resolve.extensionAlias,
       '.js': ['.js', '.ts'],
     };
+    // @opentelemetry/api 1.10 (OTel JS SDK 3.x, IFC-319) ships an ESM build, so the
+    // serverExternalPackages entry became an async `import()` external. That made every
+    // bundled module importing it async, and Sentry's CJS require of
+    // @opentelemetry/instrumentation then got a Promise ("Class extends value undefined").
+    // Load it with a plain require instead, as it was with the CJS-only 1.9.x.
+    if (isServer && nextRuntime === 'nodejs') {
+      config.externals = [
+        ({ request }, callback) =>
+          request === '@opentelemetry/api'
+            ? callback(null, 'commonjs @opentelemetry/api')
+            : callback(),
+        ...(Array.isArray(config.externals) ? config.externals : [config.externals]),
+      ];
+    }
     return config;
   },
 
