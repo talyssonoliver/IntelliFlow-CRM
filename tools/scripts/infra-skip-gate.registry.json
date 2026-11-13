@@ -64,6 +64,13 @@
       "maxSkipped": 19,
       "reviewBy": "2026-11-30",
       "reason": "ADR-054: ENG-OPS-002.R17 — the SAP ERP adapter suite is scheduled for deletion under R17 and is already declared in tools/scripts/flaky-test-gate.allowlist.json for the same reason. R17 is still Backlog in Sprint_plan.csv on 2026-11-01, and the suite still skips 19/19 (CI main run 41239235781). Remove this entry together with that one when R17 lands."
+    },
+    {
+      "file": "tests/integration/api.test.ts",
+      "kind": "infra-gated",
+      "maxSkipped": 15,
+      "reviewBy": "2026-12-31",
+      "reason": "ADR-054: #1216 — all 15 tests call a running API server over HTTP and run only with TEST_API_AVAILABLE=true; no CI job or pre-ship step starts the API, so they skip everywhere. Until 2026-11-13 they returned early and reported PASSED with no assertion; it.skipIf makes that visible. Remove this entry when a job starts the API for them, or when they are rewritten against the in-process router."
     }
   ]
 }
