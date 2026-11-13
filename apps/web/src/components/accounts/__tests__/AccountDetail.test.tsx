@@ -5,7 +5,13 @@
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AccountDetail, formatRevenueCompact, readSignals, readStrings } from '../AccountDetail';
+import {
+  AccountDetail,
+  formatRevenueCompact,
+  modelScore,
+  readSignals,
+  readStrings,
+} from '../AccountDetail';
 
 const mockPush = vi.fn();
 vi.mock('next/navigation', () => ({
@@ -764,6 +770,20 @@ describe('AccountDetail', () => {
       expect(screen.queryByText(/getAiInsight|ai-worker/)).toBeNull();
     });
 
+    it('says "Not scored" for the 0 written when the scoring model failed', async () => {
+      getByIdMock.mockReturnValue({
+        data: {
+          ...mockAccount,
+          score: 0,
+          scoreProvenance: [{ name: 'fallback', impact: 0, reasoning: 'x' }],
+        },
+        isLoading: false,
+        error: null,
+      });
+      await openAiTab();
+      expect(screen.getByTestId('account-not-scored')).toHaveTextContent('Not scored');
+    });
+
     it('treats the fallback row written when the model failed as no analysis', async () => {
       insightMock.mockReturnValue({
         data: {
@@ -830,5 +850,19 @@ describe('AccountDetail', () => {
       expect(screen.queryByTestId('account-insight-none')).toBeNull();
       expect(screen.queryByTestId('account-insight')).toBeNull();
     });
+  });
+});
+
+describe('modelScore', () => {
+  it('keeps a model-written score, including a real 0', () => {
+    expect(modelScore(72, [{ name: 'industry', impact: 5 }])).toBe(72);
+    expect(modelScore(0, [{ name: 'industry', impact: -5 }])).toBe(0);
+    expect(modelScore(40, null)).toBe(40);
+  });
+
+  it('drops the fallback 0 and a missing score', () => {
+    expect(modelScore(0, [{ name: 'fallback', impact: 0 }])).toBeNull();
+    expect(modelScore(null, null)).toBeNull();
+    expect(modelScore(undefined, [null])).toBeNull();
   });
 });

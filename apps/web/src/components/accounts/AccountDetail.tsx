@@ -151,6 +151,30 @@ export function readStrings(value: unknown): string[] {
   return [...new Set(strings)];
 }
 
+/**
+ * The account's score as the model wrote it, or null. When the model call fails
+ * the scoring job still writes a score of 0, with a single provenance factor
+ * named `fallback`: that 0 is not a score and is shown as "Not scored".
+ */
+export function modelScore(score: unknown, provenance: unknown): number | null {
+  if (typeof score !== 'number') return null;
+  const isFallback =
+    Array.isArray(provenance) &&
+    provenance.some(
+      (f) => f && typeof f === 'object' && (f as { name?: unknown }).name === 'fallback'
+    );
+  return isFallback ? null : score;
+}
+
+/** The factors behind a model-written score; none for a missing or fallback score. */
+function scoreFactors(
+  score: number | null,
+  provenance: unknown
+): Array<{ name: string; impact: number }> | null {
+  if (score === null || !Array.isArray(provenance)) return null;
+  return provenance as Array<{ name: string; impact: number }>;
+}
+
 /** Says so when the account has never been scored (the score badge then shows nothing). */
 function NotScoredNote({ score }: Readonly<{ score: number | null | undefined }>) {
   if (typeof score === 'number') return null;
@@ -332,6 +356,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
   const tier = resolveTier(account?.revenue);
   const contactCount = account?._count?.contacts ?? 0;
   const opportunityCount = account?._count?.opportunities ?? 0;
+  const shownScore = modelScore(account?.score, account?.scoreProvenance);
   const website = useMemo(() => websiteDisplay(account?.website), [account?.website]);
   // PG-197: optional geography — "Region, POSTCODE, Country" when present.
   const location = formatAccountLocation(account);
@@ -892,20 +917,13 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
               <div className="flex items-center gap-3">
                 <h3 className="text-lg font-semibold">Account AI Insights</h3>
                 <AccountScoreBadge
-                  score={account.score ?? null}
+                  score={shownScore}
                   modelVersion={account.scoreModelVersion}
                   scoredAt={account.scoredAt}
-                  factors={
-                    Array.isArray(account.scoreProvenance)
-                      ? (account.scoreProvenance as Array<{
-                          name: string;
-                          impact: number;
-                        }>)
-                      : null
-                  }
+                  factors={scoreFactors(shownScore, account.scoreProvenance)}
                 />
               </div>
-              <NotScoredNote score={account.score} />
+              <NotScoredNote score={shownScore} />
               <AccountInsightPanel
                 isLoading={insightQuery.isLoading}
                 insight={insightQuery.data?.insight ?? null}
