@@ -101,7 +101,7 @@ describe('hookIo', () => {
     expect(io.regenerate()).toBe(true);
     expect(io.amend()).toBe(true);
     expect(spawned.map((s) => s[0])).toEqual([...REGENERATE_COMMANDS, 'git']);
-    expect(spawned[2][1]).toEqual(['commit', '-q', '--amend', '--no-edit']);
+    expect(spawned.at(-1)?.[1]).toEqual(['commit', '-q', '--amend', '--no-edit']);
   });
 
   it('stops at the first failing inventory command', () => {
@@ -176,8 +176,13 @@ describe('a real merge with the driver', () => {
 describe('wiring', () => {
   const read = (rel: string) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 
-  it('gives the generated file the driver', () => {
-    expect(read('.gitattributes')).toContain(`${BASELINE} merge=${DRIVER}`);
+  it('gives the generated files the driver, but not the source plan', () => {
+    const attrs = read('.gitattributes');
+    expect(attrs).toContain(`${BASELINE} merge=${DRIVER}`);
+    expect(attrs).toContain(
+      `apps/project-tracker/docs/metrics/_global/Sprint_plan_*.csv merge=${DRIVER}`
+    );
+    expect(attrs).not.toMatch(/Sprint_plan\.csv merge=/);
   });
 
   it('runs the regeneration from the post-merge hook', () => {

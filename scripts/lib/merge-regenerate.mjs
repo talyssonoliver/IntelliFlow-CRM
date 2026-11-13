@@ -1,5 +1,6 @@
 /**
- * Generated files that conflicted on nearly every merge of main.
+ * Generated files that conflicted on nearly every merge of main: the API and
+ * codebase inventory, and the split plan files.
  *
  * artifacts/benchmarks/baseline.json is rewritten from the router and codebase
  * inventories by the pre-commit hook, so two branches that both change the API
@@ -24,12 +25,19 @@ import { runGit } from './preship-git.mjs';
 export const DRIVER = 'ifc-regenerated';
 
 /** Files that carry the driver and are regenerated after a merge. */
-export const REGENERATED = ['artifacts/benchmarks/baseline.json'];
+export const REGENERATED = [
+  'artifacts/benchmarks/baseline.json',
+  // The split plan files, generated from Sprint_plan.csv (which still merges as
+  // text: it is the source of truth). Every PR that touches plan rows used to
+  // collide on these.
+  'apps/project-tracker/docs/metrics/_global/Sprint_plan_*.csv',
+];
 
 /** The commands that rewrite them (the same ones the pre-commit hook runs). */
 export const REGENERATE_COMMANDS = [
   'npx tsx tools/scripts/sync-api-inventory.ts',
   'npx tsx tools/scripts/sync-codebase-inventory.ts',
+  'npx tsx tools/scripts/split-sprint-plan.ts',
 ];
 
 /**
