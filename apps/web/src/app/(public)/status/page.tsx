@@ -28,7 +28,9 @@ export const metadata: Metadata = {
 
 export default function StatusPage() {
   return (
-    <div className="aurora-status">
+    // The page carries the aurora-site scope itself: signed-in visitors get the app
+    // shell, which has no .aurora-site wrapper, and every status style is scoped under it.
+    <div className="aurora-site aurora-status">
       <section className="as-hero">
         <div className="as-wrap">
           <p className="as-eyebrow">Status</p>

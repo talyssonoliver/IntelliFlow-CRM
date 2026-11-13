@@ -108,6 +108,17 @@ describe('StatusPage (Aurora)', () => {
     expect(await screen.findByText('Not responding')).toBeInTheDocument();
   });
 
+  it('carries the aurora-site scope itself, so it is styled inside the signed-in app shell', () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ status: 'ok', services: [] })))
+    );
+    const { container } = render(<StatusPage />);
+    const root = container.firstElementChild;
+    expect(root).toHaveClass('aurora-site');
+    expect(root).toHaveClass('aurora-status');
+  });
+
   it('carries Aurora metadata', () => {
     expect(metadata.title).toBe('System status');
     expect(JSON.stringify(metadata)).not.toMatch(/IntelliFlow|—/);
