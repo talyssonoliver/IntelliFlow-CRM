@@ -46,7 +46,7 @@
     "task_id": {
       "description": "Cross-reference key to Sprint_plan.csv / attestation.json (the ONLY identity field; everything else is operational content).",
       "type": "string",
-      "pattern": "^[A-Z]+-[A-Z0-9-]+$"
+      "pattern": "^[A-Z][A-Z0-9]*-[A-Z0-9-]+(\\.[A-Za-z0-9-]+)*$"
     },
     "started_at": { "$ref": "#/definitions/nullableTimestamp" },
     "completed_at": { "$ref": "#/definitions/nullableTimestamp" },
