@@ -68,7 +68,21 @@ export async function checkApi(fetchFn: Fetch, apiUrl?: string): Promise<Service
   const { ms, res } = await timedGet(fetchFn, `${base(apiUrl)}/health/ready`);
   if (!res) return { ...API, state: 'down' };
   if (res.ok) return { ...API, state: 'up', ms };
-  return { ...API, state: 'degraded', ms, note: 'Answering, but not ready' };
+  // Degraded only when the API itself said it is not ready (503 with ready: false). Any
+  // other answer (a 502/504 page from the hosting edge while the API is down) is an outage.
+  if (res.status === 503 && (await saysNotReady(res))) {
+    return { ...API, state: 'degraded', ms, note: 'Answering, but not ready' };
+  }
+  return { ...API, state: 'down', ms, note: `HTTP ${res.status}` };
+}
+
+async function saysNotReady(res: Response): Promise<boolean> {
+  try {
+    const body = (await res.json()) as { ready?: unknown } | null;
+    return body?.ready === false;
+  } catch {
+    return false;
+  }
 }
 
 interface DetailedHealth {

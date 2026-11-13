@@ -24,6 +24,17 @@ describe('checkApi', () => {
     expect(result).toMatchObject({ state: 'degraded', note: 'Answering, but not ready' });
   });
 
+  it('is down on an edge error page or any other non-ready answer', async () => {
+    const html = (status: number) => new Response('<html>Bad gateway</html>', { status });
+    expect(await checkApi(async () => html(502), API)).toMatchObject({
+      state: 'down',
+      note: 'HTTP 502',
+    });
+    expect((await checkApi(async () => html(503), API)).state).toBe('down');
+    expect((await checkApi(async () => json({ ready: true }, 503), API)).state).toBe('down');
+    expect((await checkApi(async () => json({ ready: false }, 500), API)).state).toBe('down');
+  });
+
   it('is down when the request fails', async () => {
     const result = await checkApi(async () => Promise.reject(new Error('x')), API);
     expect(result.state).toBe('down');
