@@ -637,7 +637,7 @@ function NoSubscriptionState({ onSelectPlan }: Readonly<{ onSelectPlan: () => vo
   return (
     <Card className="border-dashed">
       <CardContent className="py-12">
-        <EmptyState entity="subscriptions" phase="passive" />
+        <EmptyState entity="subscriptions" showCta={false} />
         <div className="flex justify-center mt-4">
           <Button onClick={onSelectPlan} className="bg-[#2a78f6] hover:bg-[#1f63d4]">
             <span className="material-symbols-outlined mr-2">rocket_launch</span> View Plans
@@ -735,13 +735,9 @@ export function SubscriptionManager({
   const handleConfirmChange = useCallback(() => {
     if (!selectedPlan) return;
 
-    // Get the price ID for the selected interval
-    const priceId =
-      interval === 'annual'
-        ? `${selectedPlan.priceId.replaceAll('_monthly', '_annual')}`
-        : selectedPlan.priceId;
-
-    updateSubscription.mutate({ priceId });
+    // The server resolves plan and period to the real Stripe price (#1239). The price ids built
+    // here before were placeholders, not Stripe's.
+    updateSubscription.mutate({ planId: selectedPlan.id, billingCycle: interval });
   }, [selectedPlan, interval, updateSubscription]);
 
   const handleCancelSubscription = useCallback(

@@ -98,7 +98,7 @@ export function DuplicateDetectionTab({ rules, onRulesChange, hasConflict }: Rea
             <span className="material-symbols-outlined text-[16px] mr-1" aria-hidden="true">
               add
             </span>
-            Add Rule
+            <span>Add Rule</span>
           </Button>
         }
       />
@@ -108,12 +108,14 @@ export function DuplicateDetectionTab({ rules, onRulesChange, hasConflict }: Rea
           <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
             warning
           </span>
-          Duplicate field + strategy pair detected. Please resolve conflicts before saving.
+          <span>
+            Duplicate field + strategy pair detected. Please resolve conflicts before saving.
+          </span>
         </div>
       )}
 
       {rules.length === 0 ? (
-        <EmptyState entity="rules" phase="passive" size="sm" className="py-4 px-3 gap-2" />
+        <EmptyState entity="rules" onCtaClick={addRule} size="sm" className="py-4 px-3 gap-2" />
       ) : (
         <div className="space-y-3">
           {rules.map((rule, idx) => (

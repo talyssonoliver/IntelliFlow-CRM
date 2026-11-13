@@ -88,6 +88,28 @@ describe('RegistrationForm', () => {
     });
   });
 
+  it('accepts an address on a multi-part domain such as .co.uk', async () => {
+    const user = userEvent.setup();
+    render(<RegistrationForm onSubmit={mockOnSubmit} />);
+
+    await user.type(screen.getByLabelText(/email address/i), 'name@company.co.uk');
+    await user.tab();
+
+    expect(screen.queryByText(/please enter a valid email address/i)).toBeNull();
+  });
+
+  it('still rejects an address with a double @', async () => {
+    const user = userEvent.setup();
+    render(<RegistrationForm onSubmit={mockOnSubmit} />);
+
+    await user.type(screen.getByLabelText(/email address/i), 'name@@company.co.uk');
+    await user.tab();
+
+    await waitFor(() => {
+      expect(screen.getByText(/please enter a valid email address/i)).toBeInTheDocument();
+    });
+  });
+
   it('validates password length', async () => {
     const user = userEvent.setup();
     render(<RegistrationForm onSubmit={mockOnSubmit} />);

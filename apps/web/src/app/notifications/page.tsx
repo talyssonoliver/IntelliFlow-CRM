@@ -159,6 +159,7 @@ export default function NotificationsPage() {
             label: 'Settings',
             icon: 'tune',
             variant: 'secondary',
+            hideOnMobile: true,
             href: '/notifications/settings',
           },
           {
@@ -189,6 +190,7 @@ export default function NotificationsPage() {
         filters={filters}
         onMarkAsRead={handleMarkAsRead}
         onDismiss={handleDismiss}
+        onClearFilters={handleClearFilters}
       />
     </div>
   );

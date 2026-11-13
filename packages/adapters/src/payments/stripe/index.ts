@@ -20,6 +20,7 @@ export type {
   StripeWebhookEvent,
   CreatePaymentIntentParams,
   StripeCreateSubscriptionParams,
+  StripeUpdateSubscriptionParams,
   CreateCustomerParams,
   UpdateCustomerParams,
 } from './types';

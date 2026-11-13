@@ -105,6 +105,7 @@ env:
     --project=events-worker --project=combined-worker
     --project=ingestion-worker --project=architecture --project=a11y
     --project=db --project=api --project=root --project=webhooks
+    --project=tools-mjs
 
 jobs:
   # ===========================================================================

@@ -1,0 +1,55 @@
+{
+  "$comment": "Tracked test files that no vitest project collects, on purpose or until a named fix (#1216 item 2, checked by scripts/check-test-collection.mjs). Every other *.test.* / *.spec.* file must be collected by a vitest project. Each entry needs a path (exact, or dir/** for a directory), a reason, and a ref: an issue (#123) or the repo file that runs the tests instead. An entry that no longer matches an uncollected file fails the check, so remove it when its files are collected or deleted.",
+  "entries": [
+    {
+      "path": "tests/e2e/**",
+      "reason": "Playwright end-to-end specs, run by Playwright (testDir tests/e2e), not by vitest.",
+      "ref": "playwright.config.ts"
+    },
+    {
+      "path": "apps/api/scripts/__tests__/capture-trace-examples.integration.test.ts",
+      "reason": "Needs a real database; no project runs the api integration suites yet. Fails in setup (tx.user.findFirst is not a function).",
+      "ref": "#1257"
+    },
+    {
+      "path": "apps/api/src/__tests__/contract/lead.contract.integration.test.ts",
+      "reason": "Needs a real database; no project runs the api integration suites yet. Fails in setup: table public.Lead does not exist (stale model mapping).",
+      "ref": "#1257"
+    },
+    {
+      "path": "apps/api/src/__tests__/event-flow.integration.test.ts",
+      "reason": "Needs a real database; no project runs the api integration suites yet. Passes against the local ephemeral DB.",
+      "ref": "#1257"
+    },
+    {
+      "path": "apps/api/src/modules/contact/__tests__/contact-duplicate-detection.integration.test.ts",
+      "reason": "Needs a real database; no project runs the api integration suites yet. Passes against the local ephemeral DB.",
+      "ref": "#1257"
+    },
+    {
+      "path": "apps/api/src/modules/home/__tests__/home.router.integration.test.ts",
+      "reason": "Needs a real database; no project runs the api integration suites yet. Fails in setup: table public.Lead does not exist (stale model mapping).",
+      "ref": "#1257"
+    },
+    {
+      "path": "apps/api/src/modules/lead/__tests__/lead.router.integration.test.ts",
+      "reason": "Needs a real database; no project runs the api integration suites yet. Fails in setup: table public.Lead does not exist (stale model mapping).",
+      "ref": "#1257"
+    },
+    {
+      "path": "apps/api/src/modules/opportunity/__tests__/pipeline-config.integration.test.ts",
+      "reason": "Needs a real database; no project runs the api integration suites yet. Passes against the local ephemeral DB.",
+      "ref": "#1257"
+    },
+    {
+      "path": "tests/integration/webhook/webhook.test.ts",
+      "reason": "TDD red-phase test for a webhook framework that was never built: it imports artifacts/misc/webhooks/framework, which does not exist. Rewrite against packages/webhooks or delete under item 3.",
+      "ref": "#1216"
+    },
+    {
+      "path": "packages/db/prisma/__tests__/**",
+      "reason": "These five tests mock @prisma/client and never import the seed scripts they describe, so collecting them would only test their own mocks. Rewrite or delete under item 3 (tests that assert copied logic).",
+      "ref": "#1216"
+    }
+  ]
+}

@@ -12,8 +12,8 @@
 // Each run:
 //   1. validates the rules file (path segments, uid prefix, reserved names, metric names);
 //   2. --dry-run: checks each selector's live series AND instant-queries each rule `expr`,
-//      failing on a query Grafana rejects (a PromQL typo would otherwise page the owner through
-//      execErrState=Error); writes nothing;
+//      failing on a query Grafana rejects (with execErrState=KeepLast a PromQL typo would
+//      otherwise leave the rule silently in its last state); writes nothing;
 //   3. otherwise ensures the folder exists, creates or updates each rule by uid and PUTs only the
 //      `intelliflow-ai` group. Nothing is ever deleted; there is no delivery-test rule.
 //

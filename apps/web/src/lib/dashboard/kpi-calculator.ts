@@ -83,7 +83,9 @@ export function computePipelineStagePercent(
 /**
  * Max value for bar-chart height scaling, floored at `1` so it is always a
  * safe divisor (empty / all-zero series → `1`). Non-finite entries are coerced
- * to `0`.
+ * to `0`. A floor of 1 still draws nothing for an all-zero series: check
+ * `isEmptySeries` (`@/lib/charts/empty-series`) first and show
+ * `ChartEmptyState` instead (#1225 UI-013).
  */
 export function chartMax(values: number[]): number {
   if (!Array.isArray(values) || values.length === 0) return 1;
@@ -118,4 +120,38 @@ export function formatGBP(amount: number | string, fractionDigits = 0): string {
     minimumFractionDigits: fractionDigits,
     maximumFractionDigits: fractionDigits,
   }).format(toFiniteNumber(amount));
+}
+
+/**
+ * Baseline under which a period-over-period percentage is not shown
+ * (#1225 UI-009): growing from 1 lead to 10 is "+900%", which says nothing.
+ */
+export const TREND_MIN_BASELINE = 5;
+
+/** Largest percentage shown as a number; anything above reads ">999%". */
+export const TREND_DISPLAY_CAP = 999;
+
+/**
+ * Whether a trend badge is worth showing: a finite change that does not round
+ * to zero, measured against a baseline that is not near zero.
+ */
+export function shouldShowTrend(
+  deltaPercent: number,
+  previous: number,
+  minBaseline: number = TREND_MIN_BASELINE,
+  fractionDigits = 0
+): boolean {
+  if (!Number.isFinite(deltaPercent) || !Number.isFinite(previous)) return false;
+  if (previous < minBaseline) return false;
+  return Number(deltaPercent.toFixed(fractionDigits)) !== 0;
+}
+
+/** "+12%", "-4.5%", capped at ">999%" / "<-999%". */
+export function formatTrendPercent(deltaPercent: number, fractionDigits = 0): string {
+  // Cap the value that is shown, after rounding: 999.7 would otherwise read "+1000%".
+  const text = deltaPercent.toFixed(fractionDigits);
+  const shown = Number(text);
+  if (shown > TREND_DISPLAY_CAP) return `>${TREND_DISPLAY_CAP}%`;
+  if (shown < -TREND_DISPLAY_CAP) return `<-${TREND_DISPLAY_CAP}%`;
+  return `${deltaPercent >= 0 ? '+' : ''}${text}%`;
 }

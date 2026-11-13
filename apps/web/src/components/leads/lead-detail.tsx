@@ -4,7 +4,12 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import { AppAvatar } from '@/components/shared/app-avatar';
-import { formatEstimatedValue } from '@/lib/leads/lead-format';
+import {
+  formatEstimatedValue,
+  leadDisplayName,
+  leadWebsite,
+  visibleTags,
+} from '@/lib/leads/lead-format';
 import { leadScoreDisplay } from '@/lib/leads/score-display';
 
 /** #1218: the profile card's score, or "Not scored" when no real AI score exists. */
@@ -199,10 +204,10 @@ export interface LeadProfileData {
   temperature: LeadTemperature;
   createdAt: string | Date;
   lastContactedAt: string | Date;
-  avatarUrl: string;
+  avatarUrl: string | null;
   estimatedValue: number;
   tags: string[];
-  owner: { name: string; title: string; avatarUrl: string };
+  owner: { name: string; title: string; avatarUrl: string | null };
   accountId?: string | null;
   account?: { id: string; name: string } | null;
 }
@@ -230,7 +235,7 @@ export function LeadProfileCard({
       <div className="px-5 pb-6 relative">
         <div className="relative -mt-10 mb-3">
           <AppAvatar
-            name={`${lead.firstName} ${lead.lastName}`}
+            name={leadDisplayName(lead)}
             src={lead.avatarUrl}
             className="w-20 h-20 border-4 border-white dark:border-slate-900 shadow-sm"
             fallbackClassName="text-2xl font-bold text-slate-500 bg-slate-200 dark:bg-slate-700"
@@ -238,7 +243,7 @@ export function LeadProfileCard({
         </div>
         <div className="mb-4">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-            {lead.firstName} {lead.lastName}
+            {leadDisplayName(lead)}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{lead.title}</p>
           <div className="flex items-center gap-1 text-[#2a78f6] text-sm font-medium mt-1">
@@ -257,7 +262,7 @@ export function LeadProfileCard({
         <div className="flex flex-wrap gap-2 mb-6">
           <LeadStatusBadge status={lead.status} />
           <TemperatureBadge temperature={lead.temperature} />
-          {lead.tags.map((tag) => (
+          {visibleTags(lead.tags).map((tag) => (
             <span
               key={tag}
               className="px-2 py-1 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-medium"
@@ -276,10 +281,7 @@ export function LeadProfileCard({
             </span>
             <div className="flex flex-col">
               <span className="text-xs text-slate-400 uppercase font-semibold">Email</span>
-              <EntityHoverCard
-                email={lead.email}
-                displayName={`${lead.firstName} ${lead.lastName}`.trim()}
-              >
+              <EntityHoverCard email={lead.email} displayName={leadDisplayName(lead)}>
                 <Link
                   href={`/email/compose?to=${encodeURIComponent(lead.email)}`}
                   className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#2a78f6] break-all"
@@ -318,32 +320,39 @@ export function LeadProfileCard({
               <span className="text-sm text-slate-700 dark:text-slate-300">{lead.location}</span>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <span
-              aria-hidden="true"
-              className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5"
-            >
-              language
-            </span>
-            <div className="flex flex-col">
-              <span className="text-xs text-slate-400 uppercase font-semibold">Website</span>
-              <a
-                href={`https://${lead.website}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${lead.website} (opens in new tab)`}
-                className="text-sm text-[#2a78f6] hover:underline"
+          {/* #1277: the stored address can be a full ad-tracking URL with a scheme; show the
+              clean host and link without the tracking parameters, or no row at all. */}
+          {leadWebsite(lead.website) && (
+            <div className="flex items-start gap-3">
+              <span
+                aria-hidden="true"
+                className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5"
               >
-                {lead.website}
-              </a>
+                language
+              </span>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-400 uppercase font-semibold">Website</span>
+                <a
+                  href={leadWebsite(lead.website)?.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${leadWebsite(lead.website)?.label} (opens in new tab)`}
+                  className="text-sm text-[#2a78f6] hover:underline break-all"
+                >
+                  {leadWebsite(lead.website)?.label}
+                </a>
+              </div>
             </div>
-          </div>
+          )}
         </div>
         {/* Metrics Grid */}
         <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
             <p className="text-lg font-bold text-slate-900 dark:text-white">
-              {formatEstimatedValue(leadMetrics.estimatedValue)}
+              {/* 0 is the unset default, not a valuation: show a dash, not "£0". */}
+              {leadMetrics.estimatedValue > 0
+                ? formatEstimatedValue(leadMetrics.estimatedValue)
+                : '—'}
             </p>
             <p className="text-xs text-slate-500">Est. Value</p>
           </div>
@@ -394,7 +403,7 @@ export function LeadProfileCard({
 export function LeadOwnerCard({
   owner,
 }: {
-  owner: { name: string; title: string; avatarUrl: string };
+  owner: { name: string; title: string; avatarUrl: string | null };
 }) {
   return (
     <Card className="p-5">

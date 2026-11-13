@@ -62,8 +62,14 @@
  *   changed since the merge-base with origin/main (`vitest related`); the
  *   whole-repo `coverage-floor` and `infra-skip-gate` become CI-only advisory
  *   skips. The full 10k+ suite runs on CI's sharded runners, and here under CI or
- *   PRESHIP_FULL_TESTS=1. Typecheck, lint and all other gates are unchanged.
- *   See scripts/lib/preship-test-scope.mjs.
+ *   PRESHIP_FULL_TESTS=1. See scripts/lib/preship-test-scope.mjs.
+ *
+ * Lint scope:
+ *   Locally, `format-check`, `lint` and `lint-promises` check only the files
+ *   changed since the merge-base with origin/main, and go repo-wide when a file
+ *   that configures them changes (eslint/prettier config, tsconfig, any
+ *   package.json, the lockfile) or with PRESHIP_FULL_LINT=1. CI checks the whole
+ *   repo as before. See scripts/lib/preship-lint-scope.mjs.
  *
  * Machine test slots and orphans:
  *   At most 3 full test runs at once on one machine (owner ruling 2026-10-03).
@@ -79,6 +85,9 @@
  * Env:
  *   PRESHIP_MODE=full        same as passing --full
  *   PRESHIP_FULL_TESTS=1     run the FULL test suite locally (default: related only)
+ *   PRESHIP_FULL_LINT=1      format/lint/lint-promises over the whole repo locally
+ *   PRESHIP_FULL_DB=1        run the integration suite even when no change reaches it
+ *   PRESHIP_FULL_BUILD=1     library-build, typecheck and build over every package locally
  *   PRESHIP_KEEP_GOING=1     don't hard-stop on first required FAIL
  *   PRESHIP_ALLOW_MISSING=1  let required+SKIPPED_PRECONDITION steps pass
  *                            (infra-unrunnable steps only; NOT a full bypass)
@@ -105,6 +114,7 @@ import {
   finalLine,
 } from './lib/preship-report.mjs';
 import { integrationInfraMissing } from './lib/preship-integration-infra.mjs';
+import { FULL_DB_ENV, resolveDbScope } from './lib/preship-db-scope.mjs';
 import { reusableResult } from './lib/preship-cache.mjs';
 import {
   appendRunRecord,
@@ -113,9 +123,19 @@ import {
   summaryLine,
 } from './lib/preship-run-metrics.mjs';
 import { testStepEnv } from './lib/preship-build.mjs';
+import { AFFECTED_ENV, resolveAffected } from './lib/preship-affected.mjs';
 
 // Throwaway stub credentials for the build-time env mirror below (never a real DB).
 const STUB_DB_USER = 'stub';
+const STUB_DB_URL = `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`;
+// turbo.json lists DATABASE_URL and DIRECT_URL in globalEnv, so they are part of
+// every task hash. The push gate runs inside `test-db.mjs run`, which points
+// DATABASE_URL at a fresh database with a new name each time: every gate missed
+// turbo's cache for every package (library-build 18/18 misses, build 21/21,
+// 2026-11-10). library-build, typecheck and build never connect to a database
+// (CI builds against a stub too), so they get the same stub on every run and the
+// shared cache hits again.
+const TURBO_STABLE_DB_ENV = { DATABASE_URL: STUB_DB_URL, DIRECT_URL: STUB_DB_URL };
 
 // Resolve REPO_ROOT from git rather than cwd so the script behaves
 // identically whether invoked from the repo root, from a subdirectory,
@@ -278,14 +298,31 @@ const IS_CI = process.env.CI === 'true' || process.env.CI === '1';
 // TEST SCOPE (CI post-mortem, .github/ci-pre-ship-remediation.md §4A): the full
 // 10k+ test suite is CI's job — its 20 sharded runners are the authority. On a
 // laptop the test steps run only what this branch can affect: `vitest related`
-// over the files changed since the merge-base with origin/main. Typecheck, lint
-// and every non-test gate stay full and mandatory. Always `full` under CI, and
+// over the files changed since the merge-base with origin/main. Format and lint
+// are scoped the same way (see the lint scope note above); typecheck and every
+// other gate stay full and mandatory. Always `full` under CI, and
 // locally with PRESHIP_FULL_TESTS=1; also `full` whenever the diff touches
 // something the import graph cannot see (lockfile, package.json beyond scripts, vitest/tsconfig,
 // Prisma schema, test setup). See scripts/lib/preship-test-scope.mjs.
 const TEST_SCOPE = resolveTestScope({ cwd: REPO_ROOT });
 const SCOPED_TESTS = TEST_SCOPE.scope !== 'full';
 const SCOPE_ENV_VALUE = JSON.stringify(TEST_SCOPE);
+// DB SCOPE: the integration suite runs locally only when the branch can reach it
+// (a change under packages/db, apps/api, apps/ai-worker or tests/integration, a
+// test/DB config file, or a file an integration test imports). Otherwise it is an
+// honest, non-required skip: CI runs the whole suite. Always needed under CI and
+// with PRESHIP_FULL_DB=1. See scripts/lib/preship-db-scope.mjs.
+const DB_SCOPE = resolveDbScope({ cwd: REPO_ROOT });
+const NOT_AFFECTED_REMEDIATION =
+  `Not affected: ${DB_SCOPE.reason}. CI runs the integration suite; ` +
+  `${FULL_DB_ENV}=1 runs it here.`;
+// BUILD SCOPE: library-build, typecheck and build run over the packages this
+// branch changed plus their dependents, using CI's own classification
+// (scripts/ci/affected.mjs) over the local diff. Full under CI, with
+// PRESHIP_FULL_BUILD=1, or when the diff touches a path that affects every
+// package. `build` is skipped when only docs or test files changed.
+const AFFECTED = resolveAffected({ cwd: REPO_ROOT });
+const AFFECTED_ENV_VALUE = JSON.stringify(AFFECTED);
 const CI_ONLY_REMEDIATION =
   'Needs the full suite, which runs on CI. Run it locally with PRESHIP_FULL_TESTS=1.';
 
@@ -340,23 +377,18 @@ const STEPS = [
   {
     id: 'library-build',
     description: 'turbo run build for library packages (typecheck/test depend on dist/)',
-    cmd: [
-      'pnpm',
-      'exec',
-      'turbo',
-      'run',
-      'build',
-      '--filter=!@intelliflow/web',
-      '--filter=!@intelliflow/api',
-      '--filter=!@intelliflow/project-tracker',
-      '--filter=!@intelliflow/workers',
-    ],
+    // Locally: the affected libraries and the dependencies of affected apps
+    // (scripts/lib/preship-affected.mjs). CI / PRESHIP_FULL_BUILD=1: every library.
+    cmd: ['node', 'scripts/run-library-build.mjs'],
+    env: { [AFFECTED_ENV]: AFFECTED_ENV_VALUE, ...TURBO_STABLE_DB_ENV },
     required: true,
   },
   {
+    // Locally: only the changed files, repo-wide when a format/lint config file
+    // changed or PRESHIP_FULL_LINT=1 (scripts/lib/preship-lint-scope.mjs). CI: repo-wide.
     id: 'format-check',
-    description: 'prettier --check (catches the YAML/json format drift CI hits)',
-    cmd: ['pnpm', 'run', 'format:check'],
+    description: 'prettier --check on changed files (catches the YAML/json format drift CI hits)',
+    cmd: ['node', 'scripts/run-scoped-lint.mjs', 'format'],
     required: true,
   },
   {
@@ -380,16 +412,18 @@ const STEPS = [
     required: false,
   },
   {
+    // Each package's own eslint over its changed files; repo-wide turbo lint on a
+    // config change, under CI or with PRESHIP_FULL_LINT=1.
     id: 'lint',
-    description: 'turbo run lint (full monorepo)',
-    cmd: ['pnpm', 'run', 'lint'],
+    description: 'eslint on changed files, per package (repo-wide on lint config changes)',
+    cmd: ['node', 'scripts/run-scoped-lint.mjs', 'lint'],
     required: true,
   },
   {
     id: 'lint-promises',
     description:
-      'type-aware no-floating-promises over product source (SonarCloud S9383 parity; `void` is not accepted)',
-    cmd: ['pnpm', 'run', 'lint:promises'],
+      'type-aware no-floating-promises over changed product source (SonarCloud S9383 parity; `void` is not accepted)',
+    cmd: ['node', 'scripts/run-scoped-lint.mjs', 'promises'],
     required: true,
   },
   {
@@ -402,6 +436,7 @@ const STEPS = [
       ? 'turbo run typecheck + sonar-guard'
       : 'turbo run typecheck (bounded concurrency) + sonar-guard',
     cmd: ['node', 'scripts/run-typecheck.mjs'],
+    env: { [AFFECTED_ENV]: AFFECTED_ENV_VALUE, ...TURBO_STABLE_DB_ENV },
     required: true,
   },
   {
@@ -414,6 +449,22 @@ const STEPS = [
     id: 'lint-artifacts',
     description: 'generated-file registry and artifact-path linter',
     cmd: ['pnpm', 'run', 'lint:artifacts:preship'],
+    required: true,
+  },
+  {
+    // #1216 item 5: no NEW coverage-variant test files (*.supplementary, *.additional, *.b11,
+    // *.batch*, *.coverage); tests go in the unit's own test file. Existing ones are untouched.
+    id: 'test-variant-names',
+    description: 'refuse new coverage-variant test files',
+    cmd: ['pnpm', 'run', 'lint:test-variants'],
+    required: true,
+  },
+  {
+    // Every unscoped ctx.prisma use in API routers is listed with its reason; the tenant-scoped
+    // client filters by tenant on its own, the unscoped one only as far as each where does.
+    id: 'unscoped-prisma',
+    description: 'unscoped Prisma client uses in routers are allowlisted',
+    cmd: ['pnpm', 'run', 'lint:unscoped-prisma'],
     required: true,
   },
   {
@@ -472,12 +523,14 @@ const STEPS = [
     description:
       'vitest run --project integration (FAILS the gate if Docker postgres/redis not up — override with PRESHIP_ALLOW_MISSING=1)',
     cmd: ['pnpm', 'run', 'test:integration'],
-    // The endpoints the suite will actually use, TCP-probed (see the lib). A
-    // name match on `docker ps` was fooled by other projects' containers.
-    skip_if: dbStackUnavailable,
-    skip_remediation:
-      'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis`. Then re-run, or set PRESHIP_ALLOW_MISSING=1 to bypass for this push only.',
-    required: true,
+    // Skipped (not required) when no change reaches the suite (DB_SCOPE above).
+    // Otherwise the endpoints the suite will actually use are TCP-probed (see the
+    // lib): a name match on `docker ps` was fooled by other projects' containers.
+    skip_if: () => !DB_SCOPE.needed || dbStackUnavailable(),
+    skip_remediation: DB_SCOPE.needed
+      ? 'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis`. Then re-run, or set PRESHIP_ALLOW_MISSING=1 to bypass for this push only.'
+      : NOT_AFFECTED_REMEDIATION,
+    required: DB_SCOPE.needed,
   },
   {
     id: 'coverage',
@@ -578,17 +631,13 @@ const STEPS = [
     // (Prisma encryption, AI audit signing, Supabase). Mirror locally
     // so a stub env doesn't silently fail differently from CI.
     env: {
+      [AFFECTED_ENV]: AFFECTED_ENV_VALUE,
       NODE_ENV: 'production',
       PRISMA_FIELD_ENCRYPTION_KEY:
         process.env.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
       AI_AUDIT_SIGNING_KEY:
         process.env.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime',
-      DATABASE_URL:
-        process.env.DATABASE_URL ||
-        `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
-      DIRECT_URL:
-        process.env.DIRECT_URL ||
-        `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
+      ...TURBO_STABLE_DB_ENV,
       SUPABASE_URL: process.env.SUPABASE_URL || 'https://stub.supabase.co',
       SUPABASE_ANON_KEY:
         process.env.SUPABASE_ANON_KEY ||
@@ -737,7 +786,10 @@ const STEPS = [
     // of the diff vs origin/main, flagging correctness / data-integrity /
     // security bugs that pass TypeScript + tests + lint because the author's
     // own tests encode the same wrong assumption (e.g. revenue-band "1M-10M"
-    // mapped to 100 cents with green tests). Block on ANY unwaived finding.
+    // mapped to 100 cents with green tests). Blocks on an unwaived critical,
+    // high or medium finding; an unwaived LOW goes to the branch's follow-up
+    // issue. A review of the same head + diff (e.g. a standalone run before the
+    // push) is reused, not repeated (scripts/lib/codex-review-cache.mjs).
     //
     // LOCAL-ONLY enforcement: the codex CLI must be installed and OAuth-
     // authenticated (ChatGPT/Codex login). No API key is required or used.
@@ -882,7 +934,19 @@ if (flags.help) {
       '  files changed since origin/main (vitest related). The full suite runs on CI.',
       '  PRESHIP_FULL_TESTS=1 runs the full suite locally.',
       '',
+      'Lint scope: format-check, lint and lint-promises check the changed files only,',
+      '  repo-wide when lint/format config changes. PRESHIP_FULL_LINT=1 forces repo-wide.',
+      '',
+      'Build scope: library-build, typecheck and build cover the changed packages and',
+      '  their dependents; build is skipped for docs/test-only diffs. PRESHIP_FULL_BUILD=1',
+      '  builds everything.',
+      '',
+      'DB scope: integration tests run only when the change can reach them (db, api,',
+      '  ai-worker, tests/integration, DB/test config, or a file they import).',
+      '  PRESHIP_FULL_DB=1 always runs them.',
+      '',
       'Env: PRESHIP_MODE=full · PRESHIP_KEEP_GOING=1 · PRESHIP_ALLOW_MISSING=1 · PRESHIP_FULL_TESTS=1',
+      '     PRESHIP_FULL_LINT=1 · PRESHIP_FULL_BUILD=1 · PRESHIP_FULL_DB=1',
       '',
     ].join('\n')
   );
@@ -1072,6 +1136,13 @@ async function main() {
   process.stdout.write(
     `pre-ship: test scope ${TEST_SCOPE.scope} — ${TEST_SCOPE.reason}` +
       (SCOPED_TESTS ? ' (the full suite runs on CI; PRESHIP_FULL_TESTS=1 runs it here)' : '') +
+      '.\n'
+  );
+  process.stdout.write(
+    `pre-ship: build scope ${AFFECTED.mode} — ${AFFECTED.reason}` +
+      (AFFECTED.mode === 'affected' ? ` [${AFFECTED.packages.join(', ')}]` : '') +
+      (AFFECTED.testsOrDocsOnly ? '; only docs/tests changed, build skipped' : '') +
+      `; integration ${DB_SCOPE.needed ? 'runs' : 'skipped'} — ${DB_SCOPE.reason}` +
       '.\n\n'
   );
 

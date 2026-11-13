@@ -9,6 +9,9 @@ vi.mock('@intelliflow/ui', async (orig) => {
 const pipelineMocks = vi.hoisted(() => ({
   invalidate: vi.fn(),
   resetOnSuccess: undefined as undefined | (() => Promise<unknown>),
+  resetOnError: undefined as undefined | ((err: Error) => void),
+  resetMutate: vi.fn(),
+  resetPending: false,
 }));
 
 vi.mock('@/lib/trpc', () => {
@@ -47,11 +50,15 @@ vi.mock('@/lib/trpc', () => {
       }),
     },
     resetToDefaults: {
-      useMutation: ({ onSuccess }: any) => {
+      useMutation: ({ onSuccess, onError }: any) => {
         pipelineMocks.resetOnSuccess = onSuccess;
+        pipelineMocks.resetOnError = onError;
         return {
-          mutate: vi.fn(() => onSuccess?.()),
-          isPending: false,
+          mutate: vi.fn(() => {
+            pipelineMocks.resetMutate();
+            return onSuccess?.();
+          }),
+          isPending: pipelineMocks.resetPending,
         };
       },
     },
@@ -102,6 +109,30 @@ describe('DealPipelineCard', () => {
     render(<DealPipelineCard />);
     fireEvent.click(screen.getByRole('button', { name: /reset pipeline/i }));
     expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Pipeline reset' }));
+  });
+
+  it('shows an error toast when the reset fails', () => {
+    render(<DealPipelineCard />);
+    pipelineMocks.resetOnError!(new Error('boom'));
+    expect(toast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Could not reset the pipeline',
+        description: 'boom',
+        variant: 'destructive',
+      })
+    );
+  });
+
+  it('ignores a second reset click while one is running', () => {
+    pipelineMocks.resetPending = true;
+    pipelineMocks.resetMutate.mockClear();
+    try {
+      render(<DealPipelineCard />);
+      fireEvent.click(screen.getByRole('button', { name: /reset/i }));
+      expect(pipelineMocks.resetMutate).not.toHaveBeenCalled();
+    } finally {
+      pipelineMocks.resetPending = false;
+    }
   });
 
   it('returns the pipeline invalidation from the reset success handler so the mutation waits for fresh data', async () => {

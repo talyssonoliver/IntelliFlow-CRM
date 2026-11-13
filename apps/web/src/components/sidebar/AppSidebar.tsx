@@ -28,6 +28,66 @@ function itemParamsMatchCurrent(
   return true;
 }
 
+/**
+ * Whether a sidebar item is the current page. The desktop sidebar and the mobile drawer share
+ * this rule, so they always mark the same item (the drawer used to check only the view and
+ * segment params, and could mark an item the desktop did not).
+ *
+ * - The URL path must be the item's path or below it.
+ * - An item with query params is active when the URL carries all of them.
+ * - An item without params is active only on its exact path with no query at all, so /email
+ *   does not also light up on /email?folder=sent.
+ */
+export function isSidebarItemActive(
+  item: Readonly<SidebarItem>,
+  pathname: string | null,
+  searchParams: ReturnType<typeof useSearchParams>
+): boolean {
+  const itemUrl = new URL(item.href, 'http://localhost');
+  const itemPath = itemUrl.pathname;
+  const itemParams = itemUrl.searchParams;
+
+  if (pathname !== itemPath && !pathname?.startsWith(itemPath + '/')) return false;
+  if (itemParams.toString()) return itemParamsMatchCurrent(itemParams, searchParams);
+  return pathname === itemPath && !searchParams.toString();
+}
+
+/**
+ * What both sidebars show: the sections a role may see (items with `roles` only for those
+ * roles, and no empty section), the module's colours, and which item is active.
+ */
+function useSidebarNavigation(
+  config: Readonly<SidebarConfig>,
+  pathname: string | null,
+  searchParams: ReturnType<typeof useSearchParams>,
+  role: string | undefined
+) {
+  const filteredSections = React.useMemo(
+    () =>
+      config.sections
+        .map((section) => ({
+          ...section,
+          items: section.items.filter(
+            (item) => !item.roles || item.roles.length === 0 || (role && item.roles.includes(role))
+          ),
+        }))
+        .filter((section) => section.items.length > 0),
+    [config.sections, role]
+  );
+
+  const moduleColor = React.useMemo(
+    () => MODULE_COLORS[config.moduleId as ModuleId] || MODULE_COLORS.dashboard,
+    [config.moduleId]
+  );
+
+  const isItemActive = React.useCallback(
+    (item: Readonly<SidebarItem>): boolean => isSidebarItemActive(item, pathname, searchParams),
+    [pathname, searchParams]
+  );
+
+  return { filteredSections, moduleColor, isItemActive };
+}
+
 interface AppSidebarProps {
   config: SidebarConfig;
   className?: string;
@@ -120,46 +180,11 @@ export function AppSidebar({
     };
   }, [setHovered]);
 
-  // Filter out items that require specific roles the current user doesn't have
-  const filteredSections = React.useMemo(() => {
-    return config.sections
-      .map((section) => ({
-        ...section,
-        items: section.items.filter(
-          (item) =>
-            !item.roles || item.roles.length === 0 || (user?.role && item.roles.includes(user.role))
-        ),
-      }))
-      .filter((section) => section.items.length > 0);
-  }, [config.sections, user?.role]);
-
-  // Get module-specific color theme (only for icon colors)
-  const moduleColor = React.useMemo(() => {
-    return MODULE_COLORS[config.moduleId as ModuleId] || MODULE_COLORS.dashboard;
-  }, [config.moduleId]);
-
-  // Determine active item based on URL
-  const isItemActive = React.useCallback(
-    (item: Readonly<SidebarItem>): boolean => {
-      const itemUrl = new URL(item.href, 'http://localhost');
-      const itemPath = itemUrl.pathname;
-      const itemParams = itemUrl.searchParams;
-
-      // Check if paths match
-      if (pathname !== itemPath && !pathname?.startsWith(itemPath + '/')) {
-        return false;
-      }
-
-      // For items with query params, check if they all match current URL
-      if (itemParams.toString()) {
-        return itemParamsMatchCurrent(itemParams, searchParams);
-      }
-
-      // For items without params, require exact pathname match
-      // AND no query params on the current URL — otherwise /email matches /email?folder=sent
-      return pathname === itemPath && !searchParams.toString();
-    },
-    [pathname, searchParams]
+  const { filteredSections, moduleColor, isItemActive } = useSidebarNavigation(
+    config,
+    pathname,
+    searchParams,
+    user?.role
   );
 
   return (
@@ -178,6 +203,8 @@ export function AppSidebar({
         className
       )}
       aria-label={`${config.moduleTitle} navigation`}
+      // Read by `.app-footer` (globals.css) to clear the fixed sidebar (#1224).
+      data-app-sidebar={isPinned ? 'pinned' : 'rail'}
     >
       {/* Module Header */}
       <div
@@ -356,12 +383,7 @@ function SidebarItemComponent({
       {/* Regular items: gray background + module-colored icon */}
       {/* Segment items: just the colored dot, no background */}
       {isSegment ? (
-        <span
-          className={cn('material-symbols-outlined text-xl transition-colors', item.color)}
-          aria-hidden="true"
-        >
-          fiber_manual_record
-        </span>
+        <SegmentDot className={cn('transition-colors', item.color)} />
       ) : (
         <div
           className={cn(
@@ -429,6 +451,21 @@ export function SidebarTrigger({ className }: Readonly<{ className?: string }>) 
         {isMobileOpen || isPinned ? 'close' : 'menu'}
       </span>
     </button>
+  );
+}
+
+/**
+ * Segment colour dot (#1222 UI-006): a CSS dot in a 20px box, so it lines up
+ * with the icons beside it whatever the icon font's size rules do.
+ */
+function SegmentDot({ className }: Readonly<{ className?: string }>) {
+  return (
+    <span
+      className={cn('flex size-5 shrink-0 items-center justify-center', className)}
+      aria-hidden="true"
+    >
+      <span className="block size-2.5 rounded-full bg-current" />
+    </span>
   );
 }
 
@@ -559,49 +596,11 @@ export function MobileSidebar({
     setMounted(true);
   }, []);
 
-  // Filter items by role for mobile sidebar
-  const filteredSections = React.useMemo(() => {
-    return config.sections
-      .map((section) => ({
-        ...section,
-        items: section.items.filter(
-          (item) =>
-            !item.roles || item.roles.length === 0 || (user?.role && item.roles.includes(user.role))
-        ),
-      }))
-      .filter((section) => section.items.length > 0);
-  }, [config.sections, user?.role]);
-
-  // Get module-specific color theme
-  const moduleColor = React.useMemo(() => {
-    return MODULE_COLORS[config.moduleId as ModuleId] || MODULE_COLORS.dashboard;
-  }, [config.moduleId]);
-
-  // Determine active item based on URL
-  const isItemActive = React.useCallback(
-    (item: Readonly<SidebarItem>): boolean => {
-      const itemUrl = new URL(item.href, 'http://localhost');
-      const itemPath = itemUrl.pathname;
-      const itemParams = itemUrl.searchParams;
-
-      if (pathname !== itemPath && !pathname?.startsWith(itemPath + '/')) {
-        return false;
-      }
-
-      if (itemParams.toString()) {
-        for (const [key, value] of itemParams.entries()) {
-          if (searchParams.get(key) !== value) {
-            return false;
-          }
-        }
-        return true;
-      }
-
-      const view = searchParams.get('view');
-      const segment = searchParams.get('segment');
-      return !view && !segment;
-    },
-    [pathname, searchParams]
+  const { filteredSections, moduleColor, isItemActive } = useSidebarNavigation(
+    config,
+    pathname,
+    searchParams,
+    user?.role
   );
 
   // Handle click on item - close sidebar
@@ -827,9 +826,7 @@ function MobileSidebarItem({
       )}
     >
       {isSegment ? (
-        <span className={cn('material-symbols-outlined text-xl', item.color)} aria-hidden="true">
-          fiber_manual_record
-        </span>
+        <SegmentDot className={item.color} />
       ) : (
         <div
           className={cn(

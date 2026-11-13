@@ -64,7 +64,7 @@ export function RequiredFieldsTab({ fields, onFieldsChange }: Readonly<Props>) {
           title="Required Fields"
           description="Fields that must be filled in before a document can be saved."
         />
-        <EmptyState entity="files" phase="passive" size="sm" className="py-4 px-3 gap-2" />
+        <EmptyState entity="files" showCta={false} size="sm" className="py-4 px-3 gap-2" />
       </Card>
     );
   }

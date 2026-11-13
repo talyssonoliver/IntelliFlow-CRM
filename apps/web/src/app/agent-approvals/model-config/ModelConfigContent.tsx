@@ -41,7 +41,7 @@ const DESCRIPTION =
   'Which model each AI feature uses, its fallbacks, parameters and a monthly cost ceiling.';
 
 const BREADCRUMBS = [
-  { label: 'Dashboard', href: '/' },
+  { label: 'Home', href: '/' },
   { label: 'AI & Agents', href: '/agent-approvals' },
   { label: 'AI Settings', href: '/agent-approvals/ai-settings' },
   { label: TITLE },
@@ -52,6 +52,7 @@ const CHAIN_VERSIONS_ACTION: PageAction = {
   href: '/agent-approvals/ai-settings',
   icon: 'account_tree',
   variant: 'secondary',
+  hideOnMobile: true,
 };
 
 const DOWNGRADE_PREFIX = 'DOWNGRADE_UNCONFIRMED:';
@@ -284,6 +285,7 @@ export default function ModelConfigContent() {
               lines: snapshot ? resetDowngrades(snapshot).map((d) => describeDowngrade(d)) : [],
             }),
           variant: 'secondary',
+          hideOnMobile: true,
           icon: 'restart_alt',
           disabled: isSaving || !hasOverrides,
         },

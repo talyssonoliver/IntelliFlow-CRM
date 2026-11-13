@@ -133,6 +133,7 @@ export default function TerritoryMappingContent() {
         label: 'Reset to Defaults',
         onClick: () => setResetOpen(true),
         variant: 'secondary' as const,
+        hideOnMobile: true,
         icon: 'restart_alt',
         disabled: !canEdit || isBusy,
       },
@@ -159,7 +160,7 @@ export default function TerritoryMappingContent() {
     <div className="w-full">
       <PageHeader
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
+          { label: 'Home', href: '/' },
           { label: 'Accounts', href: '/accounts' },
           { label: 'Territory Mapping' },
         ]}

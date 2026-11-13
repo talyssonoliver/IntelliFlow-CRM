@@ -30,7 +30,12 @@ export function ContactTicketsTab({ tickets, timezone }: ContactTicketsTabProps)
       <div className="space-y-3" data-testid="contact-tickets-tab">
         {tickets.length === 0 ? (
           <div data-testid="contact-tickets-empty">
-            <EmptyState entity="tickets" phase="passive" className="py-2" />
+            <EmptyState
+              entity="tickets"
+              ctaHref="/tickets/new"
+              ctaLabel="Create a ticket"
+              className="py-2"
+            />
           </div>
         ) : (
           tickets.map((ticket) => (

@@ -638,6 +638,7 @@ export default function QualityReportsPage() {
             label: 'Run Tests',
             icon: 'play_arrow',
             variant: 'secondary',
+            hideOnMobile: true,
             onClick: () => setShowTestModal(true),
           },
           {
@@ -1009,7 +1010,7 @@ export default function QualityReportsPage() {
 
       {!loading && !data?.reports?.length && (
         <Card>
-          <EmptyState entity="reports" phase="passive" />
+          <EmptyState entity="reports" showCta={false} />
           <div className="flex justify-center pb-8">
             <Button onClick={() => setShowGenerateModal(true)}>Generate Reports Now</Button>
           </div>

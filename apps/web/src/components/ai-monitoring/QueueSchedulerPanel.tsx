@@ -240,7 +240,7 @@ export function QueueSchedulerPanel({
               </p>
             );
           }
-          if (!data) return <EmptyState entity="agents" phase="passive" className="py-4" />;
+          if (!data) return <EmptyState entity="agents" showCta={false} className="py-4" />;
           return (
             <div className="space-y-2">
               {data.queues.map((queue) => (

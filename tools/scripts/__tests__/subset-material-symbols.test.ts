@@ -599,16 +599,40 @@ describe('main CLI', () => {
 });
 
 // ---------------------------------------------------------------------------
-// scanRepo (integration, read-only against real repo)
+// scanRepo (integration, read-only against a fixture tree)
 // ---------------------------------------------------------------------------
 
 describe('scanRepo', () => {
-  it('returns a non-empty icon set and files list against the real repo', async () => {
-    const { icons, files } = await scanRepo();
-    expect(files.length).toBeGreaterThan(100);
-    expect(icons.size).toBeGreaterThan(50);
-    // The `settings` gear icon is extremely common in the sidebar
-    expect(icons.has('settings')).toBe(true);
+  // A fixture tree, not the real repo: walking every file under apps/web/src
+  // took over 5 s on a loaded machine and failed whole gates (2026-11-13).
+  it('walks both scan roots, nested folders included, and collects their icons', async () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'pg195-scan-'));
+    const put = (rel: string, src: string) => {
+      const file = join(tmp, rel);
+      mkdirSync(join(file, '..'), { recursive: true });
+      writeFileSync(file, src);
+    };
+    try {
+      put(
+        'apps/web/src/app/settings/page.tsx',
+        '<span className="material-symbols-outlined">settings</span>'
+      );
+      put(
+        'apps/web/src/components/deep/nested/menu.jsx',
+        '<i className="material-symbols-outlined">menu</i>'
+      );
+      put('packages/ui/src/button.ts', '<span className="material-symbols-outlined">add</span>');
+      put('apps/web/src/styles.css', '.material-symbols-outlined { font-size: 20px; }');
+      put('apps/web/src/notes.md', '<span className="material-symbols-outlined">ignored</span>');
+      put('apps/api/src/router.ts', '<span className="material-symbols-outlined">outside</span>');
+
+      const { icons, files } = await scanRepo({ repoRoot: tmp });
+
+      expect(files).toHaveLength(3);
+      expect([...icons].sort()).toEqual(['add', 'menu', 'settings']);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
   });
 
   it('respects repoRoot override and returns empty against an empty tmp repo', async () => {

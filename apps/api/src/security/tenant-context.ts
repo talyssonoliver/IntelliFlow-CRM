@@ -16,6 +16,7 @@
 import { TRPCError } from '@trpc/server';
 import { PrismaClient } from '@intelliflow/db';
 import { Context } from '../context';
+import { scopeTenantArgs } from './tenant-filter';
 
 /**
  * Tenant context information
@@ -84,6 +85,21 @@ export function extractTenantContext(user: Context['user']): TenantContext {
 }
 
 /**
+ * The tenant context of a sessionless, server-to-server call that acts inside ONE tenant (the
+ * inbound portal routes): no user, a SERVICE role, and the tenant the call is bound to. Pass it
+ * to createTenantScopedPrisma so the call's queries carry that tenant's filter like a user's do.
+ */
+export function serviceTenantContext(tenantId: string): TenantContext {
+  return {
+    tenantId,
+    tenantType: 'organization',
+    userId: 'service',
+    role: 'SERVICE',
+    canAccessAllTenantData: true,
+  };
+}
+
+/**
  * Create a tenant-scoped Prisma extension
  *
  * This extension automatically sets the PostgreSQL session variable
@@ -130,9 +146,11 @@ export function extractTenantContext(user: Context['user']): TenantContext {
  *
  * The SET is session level and issued once per request, so A's later queries can run under B's
  * tenant. Row Level Security therefore is NOT the tenant boundary here. What holds the boundary
- * is the explicit `tenantId` filter every router adds (and the validated active-tenant
- * resolution in context.ts): with RLS reading Y and the filter asking for X, no row of Y can
- * come back to A. Never write a tenant-scoped query that relies on the SET alone.
+ * is the `tenantId` filter on every query (and the validated active-tenant resolution in
+ * context.ts): with RLS reading Y and the filter asking for X, no row of Y can come back to A.
+ * This client adds that filter to every operation on a tenant-owned model itself
+ * (./tenant-filter.ts), so it no longer depends on each router remembering it. Never write a
+ * tenant-scoped query that relies on the SET alone.
  *
  * `tests/integration/inherited-membership.test.ts` reproduces this deterministically on a
  * one-connection pool, asserts the filtered query stays inside the active tenant, and pins the
@@ -177,7 +195,7 @@ export function createTenantScopedPrisma(
   return prisma.$extends({
     query: {
       $allModels: {
-        async $allOperations({ args, query }) {
+        async $allOperations({ model, operation, args, query }) {
           // Issue SET at most once per request. Subsequent queries on the same
           // request reuse the connection's existing session variable value.
           if (!setIssuedForRequest) {
@@ -186,7 +204,10 @@ export function createTenantScopedPrisma(
               `SET app.current_tenant_id = '${tenantContext.tenantId}'`
             );
           }
-          return query(args);
+          // The tenant boundary itself: add the request's tenant to every operation on a
+          // tenant-owned model (see ./tenant-filter.ts), so no query depends on its caller
+          // remembering the filter.
+          return query(scopeTenantArgs(model, operation, args, tid) as typeof args);
         },
       },
     },

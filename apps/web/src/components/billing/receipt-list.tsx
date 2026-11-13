@@ -228,7 +228,7 @@ export function ReceiptList({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <EmptyState entity="receipts" phase="passive" />
+          <EmptyState entity="receipts" showCta={false} />
         </CardContent>
       </Card>
     );

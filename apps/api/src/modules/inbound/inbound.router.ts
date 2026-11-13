@@ -48,9 +48,12 @@ import { createHash, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
-import type { Prisma } from '@intelliflow/db';
+import type { Prisma, PrismaClient } from '@intelliflow/db';
 import type { Context } from '../../context';
+import { createTenantScopedPrisma, serviceTenantContext } from '../../security/tenant-context';
 import { describePipelineSyncCopy } from './pipeline-sync-copy';
+import { enqueueLeadAiById } from '../lead/lead-scoring-enqueue';
+import { restrictionReader } from '../privacy/restriction-reader';
 
 // ============================================================================
 // Input Schema
@@ -235,6 +238,22 @@ export const inboundPipelineLeadSchema = z.object({
     .max(120)
     .regex(/^[a-z0-9-]+$/, 'outreachSlug must be lower-case letters, digits and hyphens')
     .optional(),
+  /**
+   * The business name as the listing (Google Maps etc.) shows it. When `company` is a
+   * corrected trading name, this is the name an earlier sync may have stored.
+   */
+  listingName: z.string().trim().max(200).optional(),
+  /** How COA chose `company`: the listing as-is, the listing checked against the domain, or derived. */
+  companySource: z.enum(['listing', 'listing+domain', 'derived']).optional(),
+  /** COA could not settle the name with confidence; a human should look. */
+  companyFlagged: z.boolean().optional(),
+  /**
+   * Opt-in for correcting an EXISTING lead's company (see planCompanyChange). Off by
+   * default: the scheduled sync never sends it, so it never rewrites a stored name.
+   */
+  applyCompany: z.boolean().optional(),
+  /** Report what this sync would change and write nothing. */
+  dryRun: z.boolean().optional(),
 });
 
 export type InboundPipelineLeadInput = z.infer<typeof inboundPipelineLeadSchema>;
@@ -269,6 +288,52 @@ export interface InboundPipelineLeadOutput {
    * tags `coa-qualified` and notes the refusal. Always present.
    */
   readonly qualificationPending: boolean;
+  /**
+   * Present only when the stored company is the untouched listing name and `company`
+   * differs from it. `applied` is false unless `applyCompany` was sent and the
+   * compare-and-set write found the listing name still in place.
+   */
+  readonly companyChange?: CompanyChangeResult;
+  /**
+   * Present (true) only on a `dryRun` answer. Nothing was written: `created` means the
+   * sync WOULD create the lead (and `leadId` is then ''), `status` is the current one,
+   * `changed` is false, and `companyChange.applied` is false.
+   */
+  readonly dryRun?: true;
+  /**
+   * Dry run only: true when a real run with this payload would write `companyChange`,
+   * meaning a correction is planned AND `applyCompany` was sent.
+   */
+  readonly wouldApplyCompany?: boolean;
+}
+
+/** A company correction on an existing lead: from the listing name to the trading name. */
+export interface CompanyChange {
+  readonly from: string;
+  readonly to: string;
+}
+
+export interface CompanyChangeResult extends CompanyChange {
+  readonly applied: boolean;
+}
+
+/**
+ * Decide whether an existing lead's company is the untouched listing name that the
+ * incoming trading name should replace. A stored name that differs from the listing
+ * name was edited by someone, so it is never overwritten. No listing name, no change.
+ */
+export function planCompanyChange(
+  storedCompany: string | null | undefined,
+  input: Pick<InboundPipelineLeadInput, 'company' | 'listingName'>
+): CompanyChange | null {
+  const listingName = input.listingName;
+  const next = input.company;
+  if (!listingName || !next || storedCompany == null) return null;
+  if (storedCompany.trim() !== listingName) return null;
+  // COA made no correction (company is the listing name), so a stored name that differs
+  // only by stray whitespace is not a rename.
+  if (storedCompany.trim() === next) return null;
+  return { from: storedCompany, to: next };
 }
 
 // ============================================================================
@@ -381,6 +446,29 @@ function secretsMatch(candidate: string | undefined, secret: string): boolean {
   return timingSafeEqual(a, b);
 }
 
+/**
+ * Queue a lead's AI work (scoring, qualification, next best action) without holding up the
+ * inbound call: these leads were never scored before (owner complaint 2026-11-12). Detached and
+ * best-effort; the enqueue never throws, and this catch only covers an unexpected rejection.
+ */
+function queueInboundLeadAi(
+  ctx: InboundContext,
+  tenantId: string,
+  leadId: string,
+  correlationId: string
+): void {
+  enqueueLeadAiById(ctx.prismaWithTenant, restrictionReader(ctx), {
+    leadId,
+    tenantId,
+    correlationId,
+  }).catch((error: unknown) => {
+    console.warn('[inbound] lead AI enqueue failed', {
+      leadId,
+      error: error instanceof Error ? error.name : 'unknown',
+    });
+  });
+}
+
 function getInboundBinding(): { tenantId: string; ownerId: string } {
   const tenantId = process.env.LEANGENCY_TENANT_ID?.trim();
   const ownerId = process.env.LEANGENCY_SYSTEM_USER_ID?.trim();
@@ -392,6 +480,28 @@ function getInboundBinding(): { tenantId: string; ownerId: string } {
   }
   return { tenantId, ownerId };
 }
+
+/** An inbound call's context: the tenant it is bound to and a client scoped to that tenant. */
+type InboundContext = Context & {
+  inbound: { tenantId: string; ownerId: string };
+  prismaWithTenant: PrismaClient;
+};
+
+/**
+ * Every inbound route: check the shared bearer first, then bind the call to its tenant and give
+ * it a client scoped to that tenant with a service tenant context (no user session). Every
+ * model query of the call then carries the tenant filter and sets the RLS tenant, as a user's
+ * request does (#1302); the raw SQL below still filters by tenantId itself.
+ */
+const inboundProcedure = publicProcedure.use(({ ctx, next }) => {
+  assertAuthorised(ctx);
+  const inbound = getInboundBinding();
+  const prismaWithTenant = createTenantScopedPrisma(
+    ctx.prisma,
+    serviceTenantContext(inbound.tenantId)
+  );
+  return next({ ctx: { ...ctx, inbound, prismaWithTenant } });
+});
 
 function getLeadService(ctx: Context) {
   if (!ctx.services?.lead) {
@@ -409,14 +519,14 @@ function getLeadService(ctx: Context) {
  * failure is logged, never thrown.
  */
 async function recordSubmission(
-  ctx: Context,
+  ctx: InboundContext,
   input: InboundLeadInput,
   leadId: string,
   tenantId: string,
   repeat: boolean
 ): Promise<void> {
   try {
-    await ctx.prisma.leadActivity.create({
+    await ctx.prismaWithTenant.leadActivity.create({
       data: {
         type: 'NOTE',
         title: repeat
@@ -476,7 +586,7 @@ function parseCallDateTime(callDate: string, callTime: string): Date {
  * Returns `{ leadId, leadCreated }`.
  */
 async function upsertLeadByEmail(
-  ctx: Context,
+  ctx: InboundContext,
   input: {
     email: string;
     firstName?: string;
@@ -491,7 +601,7 @@ async function upsertLeadByEmail(
     /** Source stamped on a NEWLY created lead. Defaults to 'WEBSITE'. */
     source?: 'WEBSITE' | 'EMAIL';
   }
-): Promise<{ leadId: string; leadCreated: boolean }> {
+): Promise<{ leadId: string; leadCreated: boolean; existingCompany?: string | null }> {
   const leadService = getLeadService(ctx);
   // The Email value object stores addresses trimmed and lowercased, so a
   // lookup with the caller's casing ('Sam@x.com') would miss the stored
@@ -500,12 +610,12 @@ async function upsertLeadByEmail(
   const email = input.email.trim().toLowerCase();
 
   // Fast path: lead already exists?
-  const existing = await ctx.prisma.lead.findFirst({
+  const existing = await ctx.prismaWithTenant.lead.findFirst({
     where: { tenantId: input.tenantId, email },
-    select: { id: true },
+    select: { id: true, company: true },
   });
   if (existing) {
-    return { leadId: existing.id, leadCreated: false };
+    return { leadId: existing.id, leadCreated: false, existingCompany: existing.company };
   }
 
   const result = await leadService.createLead({
@@ -528,12 +638,16 @@ async function upsertLeadByEmail(
     // check above and createLead. That shows up as the service's duplicate
     // refusal, or as a persistence failure when the unique index rejects the
     // insert. Re-read before deciding what this failure means.
-    const raceExisting = await ctx.prisma.lead.findFirst({
+    const raceExisting = await ctx.prismaWithTenant.lead.findFirst({
       where: { tenantId: input.tenantId, email },
-      select: { id: true },
+      select: { id: true, company: true },
     });
     if (raceExisting) {
-      return { leadId: raceExisting.id, leadCreated: false };
+      return {
+        leadId: raceExisting.id,
+        leadCreated: false,
+        existingCompany: raceExisting.company,
+      };
     }
     // No lead exists, so the failure is real. An infrastructure failure is the
     // server's, and retryable: a 4xx would make a server-to-server caller drop
@@ -553,13 +667,13 @@ async function upsertLeadByEmail(
  * logged on failure). Returns the lead's current status.
  */
 async function mergeCoaTags(
-  ctx: Context,
+  ctx: InboundContext,
   leadId: string,
   tenantId: string,
   coaTags: string[],
   coaLeadId: string
 ): Promise<PipelineLeadStatus> {
-  const existing = await ctx.prisma.lead.findFirst({
+  const existing = await ctx.prismaWithTenant.lead.findFirst({
     where: { id: leadId, tenantId },
     select: { id: true, status: true, tags: true },
   });
@@ -573,7 +687,7 @@ async function mergeCoaTags(
  * tenant-scoped, de-duplicating UPDATE.
  */
 async function appendMissingTags(
-  ctx: Context,
+  ctx: InboundContext,
   leadId: string,
   tenantId: string,
   have: string[],
@@ -588,7 +702,7 @@ async function appendMissingTags(
       // never dedupes, so two syncs would store the same tag twice. Merge the
       // distinct values inside one UPDATE (order-preserving) instead. Scoped by
       // id AND tenant on the same client every other query in this router uses.
-      await ctx.prisma.$executeRaw`
+      await ctx.prismaWithTenant.$executeRaw`
         UPDATE "leads"
         SET "tags" = ARRAY(
           SELECT u.tag
@@ -638,7 +752,7 @@ export function outreachSlugEventTime(stageChangedAt: unknown): string | null {
  * carry the slug. A failure is a retryable 500, so COA resends rather than losing it.
  */
 async function applyOutreachSlug(
-  ctx: Context,
+  ctx: InboundContext,
   input: InboundPipelineLeadInput,
   leadId: string,
   tenantId: string
@@ -647,7 +761,7 @@ async function applyOutreachSlug(
   if (slug === undefined) return null;
   const eventAt = outreachSlugEventTime(input.stageChangedAt);
   try {
-    const rows = await ctx.prisma.$queryRaw<Array<{ previous: string | null }>>`
+    const rows = await ctx.prismaWithTenant.$queryRaw<Array<{ previous: string | null }>>`
       UPDATE "leads" AS l
       SET "outreachSlug" = ${slug},
         "outreachSlugEventAt" = (${eventAt}::timestamptz AT TIME ZONE 'UTC'),
@@ -695,6 +809,68 @@ function outreachSlugMetadata(change: OutreachSlugChange | null): Prisma.InputJs
     : { outreachSlug: change.slug, outreachSlugChanged: false };
 }
 
+/**
+ * Correct an existing lead's company from the listing name to the trading name, only
+ * when the caller opted in (`applyCompany`). The write is a tenant-scoped
+ * compare-and-set on the stored listing name, so a name someone edits between the
+ * read and the write is never overwritten (`applied: false`). A failure is a
+ * retryable 500, like the slug write.
+ */
+async function applyCompanyChange(
+  ctx: InboundContext,
+  input: InboundPipelineLeadInput,
+  leadId: string,
+  tenantId: string,
+  change: CompanyChange | null
+): Promise<CompanyChangeResult | null> {
+  if (!change) return null;
+  if (input.applyCompany !== true) return { ...change, applied: false };
+  try {
+    // The rename and its note commit together: neither can exist without the other,
+    // so a later failure in the sync can never leave an untraced rename.
+    const applied = await ctx.prismaWithTenant.$transaction(async (tx) => {
+      const { count } = await tx.lead.updateMany({
+        where: { id: leadId, tenantId, company: change.from },
+        data: { company: change.to },
+      });
+      if (count !== 1) return false;
+      await tx.leadActivity.create({
+        data: companyCorrectionNote(input, leadId, tenantId, { ...change, applied: true }),
+      });
+      return true;
+    });
+    return { ...change, applied };
+  } catch (err) {
+    console.error('[inbound.syncPipelineLead] company correction failed:', {
+      leadId,
+      coaLeadId: input.coaLeadId,
+      error: err instanceof Error ? err.message : err,
+    });
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Lead company could not be corrected',
+      cause: err,
+    });
+  }
+}
+
+/** Audit metadata for the company: how COA chose it, and any correction considered. */
+function companyMetadata(
+  input: InboundPipelineLeadInput,
+  change: CompanyChangeResult | null
+): Prisma.InputJsonObject {
+  return {
+    ...(input.listingName === undefined ? {} : { listingName: input.listingName }),
+    ...(input.companySource === undefined ? {} : { companySource: input.companySource }),
+    ...(input.companyFlagged === undefined ? {} : { companyFlagged: input.companyFlagged }),
+    ...(change
+      ? {
+          companyChange: { from: change.from, to: change.to, applied: change.applied },
+        }
+      : {}),
+  };
+}
+
 /** True when COA reported a win the CRM has not converted (the sync never does). */
 function isConversionPending(requested: PipelineLeadStatus, status: PipelineLeadStatus): boolean {
   return requested === 'CONVERTED' && status !== 'CONVERTED';
@@ -706,7 +882,7 @@ function isConversionPending(requested: PipelineLeadStatus, status: PipelineLead
  * tags; reads the current tags so a lead already carrying it is not rewritten.
  */
 async function tagCoaWon(
-  ctx: Context,
+  ctx: InboundContext,
   input: InboundPipelineLeadInput,
   leadId: string,
   tenantId: string,
@@ -718,7 +894,7 @@ async function tagCoaWon(
 
 /** Tag a lead COA reported qualified that the CRM score gate refused. */
 async function tagCoaQualified(
-  ctx: Context,
+  ctx: InboundContext,
   input: InboundPipelineLeadInput,
   leadId: string,
   tenantId: string,
@@ -729,13 +905,13 @@ async function tagCoaQualified(
 }
 
 async function appendCoaTag(
-  ctx: Context,
+  ctx: InboundContext,
   input: InboundPipelineLeadInput,
   leadId: string,
   tenantId: string,
   tag: string
 ): Promise<void> {
-  const lead = await ctx.prisma.lead.findFirst({
+  const lead = await ctx.prismaWithTenant.lead.findFirst({
     where: { id: leadId, tenantId },
     select: { tags: true },
   });
@@ -774,7 +950,7 @@ function pipelineSyncEventTime(stageChangedAt: string): Date {
 
 /** Audit NOTE + idempotency marker for a COA pipeline sync. Best-effort. */
 async function recordPipelineSync(
-  ctx: Context,
+  ctx: InboundContext,
   input: InboundPipelineLeadInput,
   leadId: string,
   tenantId: string,
@@ -782,7 +958,8 @@ async function recordPipelineSync(
   to: PipelineLeadStatus,
   syncKey: string,
   refusal: QualificationRefusal | null,
-  slugChange: OutreachSlugChange | null
+  slugChange: OutreachSlugChange | null,
+  companyChange: CompanyChangeResult | null
 ): Promise<void> {
   try {
     // Existence check + insert must be atomic per syncKey: two concurrent
@@ -791,7 +968,7 @@ async function recordPipelineSync(
     // `tx`. Only the marker is locked (short, no external calls); the status
     // walk stays outside because its compare-and-set writes refuse stale
     // moves, so a duplicated walk is a harmless no-op.
-    await ctx.prisma.$transaction(async (tx) => {
+    await ctx.prismaWithTenant.$transaction(async (tx) => {
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${syncKey}, 0))`;
       const existing = await tx.leadActivity.findFirst({
         where: { leadId, tenantId, metadata: { path: ['syncKey'], equals: syncKey } },
@@ -829,6 +1006,7 @@ async function recordPipelineSync(
                 }
               : {}),
             ...outreachSlugMetadata(slugChange),
+            ...companyMetadata(input, companyChange),
             syncKey,
           } as Prisma.InputJsonObject,
         },
@@ -844,19 +1022,78 @@ async function recordPipelineSync(
 }
 
 /**
+ * The NOTE written in the same transaction as a company rename, so every rename has
+ * its own trace whatever happens to the rest of the sync (repeat, concurrent copy,
+ * a later retryable failure).
+ */
+function companyCorrectionNote(
+  input: InboundPipelineLeadInput,
+  leadId: string,
+  tenantId: string,
+  change: CompanyChangeResult
+): Prisma.LeadActivityUncheckedCreateInput {
+  return {
+    type: 'NOTE',
+    title: 'Company name corrected from COA',
+    description: `Company changed from "${change.from}" (the listing name) to "${change.to}".`,
+    timestamp: new Date(),
+    userName: COA_SYNC_USER,
+    leadId,
+    tenantId,
+    metadata: {
+      source: 'coa-company-correction',
+      coaLeadId: input.coaLeadId,
+      ...companyMetadata(input, change),
+    } as Prisma.InputJsonObject,
+  };
+}
+
+/**
+ * `dryRun: true`: one tenant-scoped read, no writes. Reports whether the lead exists
+ * and the company correction a real run would consider. The status walk is not
+ * simulated (it depends on the qualification rule and concurrent writers).
+ */
+async function previewPipelineSync(
+  ctx: InboundContext,
+  input: InboundPipelineLeadInput,
+  tenantId: string
+): Promise<InboundPipelineLeadOutput> {
+  const lead = await ctx.prismaWithTenant.lead.findFirst({
+    where: { tenantId, email: input.email.trim().toLowerCase() },
+    select: { id: true, company: true, status: true },
+  });
+  const status = (lead?.status as PipelineLeadStatus | undefined) ?? 'NEW';
+  const change = lead ? planCompanyChange(lead.company, input) : null;
+  return {
+    dryRun: true,
+    leadId: lead?.id ?? '',
+    tenantId,
+    created: !lead,
+    previousStatus: status,
+    status,
+    changed: false,
+    conversionPending: false,
+    qualificationPending: false,
+    ...(change ? { companyChange: { ...change, applied: false } } : {}),
+    // Only a planned correction can be written; with none, the opt-in changes nothing.
+    wouldApplyCompany: change !== null && input.applyCompany === true,
+  };
+}
+
+/**
  * Re-read the lead's status after a refused step. A throwing re-read is an
  * infrastructure failure: log the cause and surface a retryable 500 rather
  * than letting a raw error escape.
  */
 async function rereadStatusAfterFailure(
-  ctx: Context,
+  ctx: InboundContext,
   leadId: string,
   tenantId: string,
   step: PipelineLeadStatus,
   stepError: { message: string }
 ): Promise<{ status: string } | null> {
   try {
-    return await ctx.prisma.lead.findFirst({
+    return await ctx.prismaWithTenant.lead.findFirst({
       where: { id: leadId, tenantId },
       select: { status: true },
     });
@@ -938,7 +1175,7 @@ function applyPipelineStep(
  * replans; anything else surfaces as before.
  */
 async function walkPipeline(
-  ctx: Context,
+  ctx: InboundContext,
   leadService: ReturnType<typeof getLeadService>,
   input: InboundPipelineLeadInput,
   leadId: string,
@@ -1009,11 +1246,10 @@ export const inboundRouter = createTRPCRouter({
    * The portal stores the returned `leadId` on its Supabase
    * `discover_submissions.crm_lead_id` column for downstream correlation.
    */
-  createLead: publicProcedure
+  createLead: inboundProcedure
     .input(inboundLeadSchema)
     .mutation(async ({ ctx, input }): Promise<InboundLeadOutput> => {
-      assertAuthorised(ctx);
-      const { tenantId, ownerId } = getInboundBinding();
+      const { tenantId, ownerId } = ctx.inbound;
       const leadService = getLeadService(ctx);
 
       // Idempotency: check for an existing Lead with the same email + the
@@ -1022,7 +1258,7 @@ export const inboundRouter = createTRPCRouter({
       // duplicate emails, so this guards against accidental dedupe loss.)
       const submissionTag = `${SUBMISSION_TAG_PREFIX}${input.submissionId}`;
       try {
-        const existing = await ctx.prisma.lead.findFirst({
+        const existing = await ctx.prismaWithTenant.lead.findFirst({
           where: {
             tenantId,
             email: input.email,
@@ -1065,7 +1301,7 @@ export const inboundRouter = createTRPCRouter({
         // lead (best-effort lookup). Otherwise surface as BAD_REQUEST.
         const message = result.error.message;
         if (/already exists/i.test(message)) {
-          const existing = await ctx.prisma.lead.findFirst({
+          const existing = await ctx.prismaWithTenant.lead.findFirst({
             where: { tenantId, email: input.email },
             select: { id: true },
           });
@@ -1081,6 +1317,13 @@ export const inboundRouter = createTRPCRouter({
         }
         throw new TRPCError({ code: 'BAD_REQUEST', message });
       }
+
+      queueInboundLeadAi(
+        ctx,
+        tenantId,
+        result.value.id.value,
+        `portal-lead-${result.value.id.value}`
+      );
 
       if (input.submissionPayload || input.attribution) {
         await recordSubmission(ctx, input, result.value.id.value, tenantId, false);
@@ -1112,11 +1355,10 @@ export const inboundRouter = createTRPCRouter({
    * Steps 5–7 (Appointment, Task, LeadActivity) are best-effort relative to the
    * lead upsert: creation failures are logged as warnings but do not throw.
    */
-  logCallBooking: publicProcedure
+  logCallBooking: inboundProcedure
     .input(inboundCallBookingSchema)
     .mutation(async ({ ctx, input }): Promise<InboundCallBookingOutput> => {
-      assertAuthorised(ctx);
-      const { tenantId, ownerId } = getInboundBinding();
+      const { tenantId, ownerId } = ctx.inbound;
 
       // --- Step 2: compute call start/end -----------------------------------------
       const durationMs = (input.durationMinutes ?? 30) * 60 * 1000;
@@ -1139,10 +1381,11 @@ export const inboundRouter = createTRPCRouter({
         ownerId,
         tenantId,
       });
+      if (leadCreated) queueInboundLeadAi(ctx, tenantId, leadId, `call-booking-${leadId}`);
 
       // --- Step 4: idempotency — check if appointment already exists ---------------
       const externalId = `${BOOKING_EXTERNAL_ID_PREFIX}${input.submissionId}`;
-      const existingAppointment = await ctx.prisma.appointment.findFirst({
+      const existingAppointment = await ctx.prismaWithTenant.appointment.findFirst({
         where: { tenantId, externalCalendarId: externalId },
         select: {
           id: true,
@@ -1152,7 +1395,7 @@ export const inboundRouter = createTRPCRouter({
 
       if (existingAppointment) {
         // Also look up the companion task for completeness
-        const existingTask = await ctx.prisma.task.findFirst({
+        const existingTask = await ctx.prismaWithTenant.task.findFirst({
           where: {
             tenantId,
             leadId,
@@ -1182,7 +1425,7 @@ export const inboundRouter = createTRPCRouter({
 
       // Step 5: Create Appointment
       try {
-        const appointment = await ctx.prisma.appointment.create({
+        const appointment = await ctx.prismaWithTenant.appointment.create({
           data: {
             title: `Discovery call — ${displayName}`,
             description: input.notes ?? null,
@@ -1209,7 +1452,7 @@ export const inboundRouter = createTRPCRouter({
       // Step 6: Create reminder Task
       try {
         const notesSuffix = input.notes ? `\n\n${input.notes}` : '';
-        const task = await ctx.prisma.task.create({
+        const task = await ctx.prismaWithTenant.task.create({
           data: {
             title: `Discovery call — ${displayName}`,
             description: `Scheduled discovery call with ${displayName}${notesSuffix}`,
@@ -1233,7 +1476,7 @@ export const inboundRouter = createTRPCRouter({
 
       // Step 7: Create LeadActivity
       try {
-        await ctx.prisma.leadActivity.create({
+        await ctx.prismaWithTenant.leadActivity.create({
           data: {
             type: 'MEETING',
             title: `Discovery call booked — ${displayName}`,
@@ -1284,11 +1527,10 @@ export const inboundRouter = createTRPCRouter({
    * Idempotency: the creating SYSTEM_EVENT TicketActivity stores
    * `systemEventData.requestId`; Ticket has no external-id column.
    */
-  logSupportTicket: publicProcedure
+  logSupportTicket: inboundProcedure
     .input(inboundSupportTicketSchema)
     .mutation(async ({ ctx, input }): Promise<InboundSupportTicketOutput> => {
-      assertAuthorised(ctx);
-      const { tenantId } = getInboundBinding();
+      const { tenantId } = ctx.inbound;
       const ticketService = ctx.services?.ticket;
       if (!ticketService) {
         throw new TRPCError({
@@ -1303,7 +1545,7 @@ export const inboundRouter = createTRPCRouter({
       // commit. A marker failure therefore rethrows (rolling the ticket back) instead of
       // leaving a ticket with no marker for the next retry to duplicate.
       const lockKey = `support:${input.requestId}`;
-      return ctx.prisma.$transaction(
+      return ctx.prismaWithTenant.$transaction(
         async (tx): Promise<InboundSupportTicketOutput> => {
           await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
 
@@ -1412,18 +1654,29 @@ export const inboundRouter = createTRPCRouter({
    * the stored one is NULL or was written by an older event (`outreachSlugEventAt`,
    * from stageChangedAt), and the audit note records it. A retry of an older event
    * cannot revert a newer slug. A failed write is a retryable 500. Absent = untouched.
+   *
+   * Company (trading-name fix): `listingName`, `companySource` and `companyFlagged` go
+   * into the audit note. An EXISTING lead's company is replaced by `company` only when
+   * the request sends `applyCompany: true` AND the stored company is still exactly the
+   * listing name (a tenant-scoped compare-and-set). A name a user edited is never
+   * overwritten. `companyChange` in the answer says what was considered and whether it
+   * was applied.
+   *
+   * `dryRun: true` writes nothing: one tenant-scoped read, answered with `dryRun: true`,
+   * `created` = would create, the current status, the `companyChange` a real run would
+   * consider (applied false) and `wouldApplyCompany`. The status walk is not simulated.
    */
-  syncPipelineLead: publicProcedure
+  syncPipelineLead: inboundProcedure
     .input(inboundPipelineLeadSchema)
     .mutation(async ({ ctx, input }): Promise<InboundPipelineLeadOutput> => {
-      assertAuthorised(ctx);
-      const { tenantId, ownerId } = getInboundBinding();
+      const { tenantId, ownerId } = ctx.inbound;
+      if (input.dryRun === true) return previewPipelineSync(ctx, input, tenantId);
       const leadService = getLeadService(ctx);
 
       const coaTags = [COA_PIPELINE_TAG, `${COA_LEAD_TAG_PREFIX}${input.coaLeadId}`];
 
       // --- Step 1: upsert by (tenant, email) ---------------------------------
-      const { leadId, leadCreated } = await upsertLeadByEmail(ctx, {
+      const { leadId, leadCreated, existingCompany } = await upsertLeadByEmail(ctx, {
         email: input.email,
         firstName: input.firstName,
         lastName: input.lastName,
@@ -1454,7 +1707,7 @@ export const inboundRouter = createTRPCRouter({
       // and keying on the capped value would collide a won event with a genuine
       // NEGOTIATING entry made at the same stage and time.
       const syncKey = `coa-sync:${input.coaLeadId}:${input.coaStage}:${input.status}:${input.stageChangedAt}`;
-      const prior = await ctx.prisma.leadActivity.findFirst({
+      const prior = await ctx.prismaWithTenant.leadActivity.findFirst({
         where: { leadId, tenantId, metadata: { path: ['syncKey'], equals: syncKey } },
         select: { id: true, metadata: true },
       });
@@ -1462,6 +1715,27 @@ export const inboundRouter = createTRPCRouter({
       // slug and never put back one a newer event set. No new audit note is written
       // for a repeat.
       const slugChange = await applyOutreachSlug(ctx, input, leadId, tenantId);
+      // Like the slug, the company correction runs before the repeat check: a
+      // backfill resends payloads COA already synced, and must still correct them.
+      // A new lead was created with the trading name, so only an existing one is
+      // considered.
+      const companyChange = leadCreated
+        ? null
+        : await applyCompanyChange(
+            ctx,
+            input,
+            leadId,
+            tenantId,
+            planCompanyChange(existingCompany, input)
+          );
+      // A rename lands together with its own note (applyCompanyChange): a later step
+      // (status walk, tagging) can still fail with a retryable 500, and the retry then
+      // plans nothing, because the stored name is no longer the listing name.
+      const companyField = companyChange ? { companyChange } : {};
+      // The lead's AI work (scoring, qualification, next best action), from the lead as now
+      // stored, so a corrected company is what the agents read. Fire-and-forget; a re-sync of
+      // a lead whose fields have not changed queues nothing (deterministic job ids).
+      queueInboundLeadAi(ctx, tenantId, leadId, `coa-sync-${leadId}`);
       if (prior) {
         const priorMeta = prior.metadata as { qualificationPending?: unknown } | null;
         return {
@@ -1473,6 +1747,7 @@ export const inboundRouter = createTRPCRouter({
           changed: false,
           conversionPending: isConversionPending(input.status, currentStatus),
           qualificationPending: priorMeta?.qualificationPending === true,
+          ...companyField,
         };
       }
 
@@ -1502,7 +1777,8 @@ export const inboundRouter = createTRPCRouter({
         status,
         syncKey,
         refusal,
-        slugChange
+        slugChange,
+        companyChange
       );
 
       return {
@@ -1514,6 +1790,7 @@ export const inboundRouter = createTRPCRouter({
         changed: moved,
         conversionPending: isConversionPending(input.status, status),
         qualificationPending: refusal !== null,
+        ...companyField,
       };
     }),
 });

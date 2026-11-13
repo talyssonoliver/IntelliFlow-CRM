@@ -54,7 +54,7 @@ export function RevenueChart({ stageBreakdown, opportunities }: Readonly<Revenue
   const hasMonthlyData = monthlyData.length > 0;
 
   if (!hasStageData && !hasMonthlyData) {
-    return <EmptyState entity="deals" phase="passive" />;
+    return <EmptyState entity="deals" showCta={false} />;
   }
 
   const totalValue = hasStageData

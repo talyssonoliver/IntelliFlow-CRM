@@ -405,3 +405,107 @@ describe('RemindersContext - Provider and Hooks (supplementary)', () => {
     });
   });
 });
+
+// Were asserted on copies of the provider logic in reminders-context.test.ts and
+// reminders-context.supplementary2.test.ts (#1216); these drive the real provider.
+describe('RemindersContext - recent notifications (real provider)', () => {
+  function notify(reminderId: string) {
+    act(() => {
+      for (const cb of mocks.notificationCallbacks) {
+        cb({
+          reminderId,
+          title: `Reminder ${reminderId}`,
+          message: 'Due soon',
+          priority: 'high',
+          dueDate: new Date(),
+          timeUntilDue: '30m',
+          entityLink: '/cases/1',
+        });
+      }
+    });
+  }
+
+  let ctx: ReturnType<typeof useReminders>;
+  function Capture() {
+    ctx = useReminders();
+    return (
+      <span data-testid="recent-ids">
+        {ctx.recentNotifications.map((n) => n.reminderId).join(',')}
+      </span>
+    );
+  }
+  const ids = () => screen.getByTestId('recent-ids').textContent;
+
+  function renderCapture() {
+    return render(
+      <RemindersProvider autoStart={false}>
+        <Capture />
+      </RemindersProvider>
+    );
+  }
+
+  beforeEach(() => {
+    mocks.notificationCallbacks.length = 0;
+    mocks.mockCreateFromTimelineEvents.mockClear();
+    mocks.mockOnNotification.mockImplementation((cb: (notification: any) => void) => {
+      mocks.notificationCallbacks.push(cb);
+      return () => {
+        const idx = mocks.notificationCallbacks.indexOf(cb);
+        if (idx >= 0) mocks.notificationCallbacks.splice(idx, 1);
+      };
+    });
+  });
+
+  it('keeps the 10 newest, newest first', () => {
+    renderCapture();
+    for (let i = 1; i <= 12; i++) notify(`r${i}`);
+    expect(ids()).toBe('r12,r11,r10,r9,r8,r7,r6,r5,r4,r3');
+    expect(ctx.unreadCount).toBe(10);
+  });
+
+  it('moves a repeated reminder to the front instead of adding it twice', () => {
+    renderCapture();
+    notify('r1');
+    notify('r2');
+    notify('r1');
+    expect(ids()).toBe('r1,r2');
+  });
+
+  it('removes a dismissed reminder from the recent list and the unread count', () => {
+    renderCapture();
+    notify('r1');
+    notify('r2');
+    act(() => ctx.dismissReminder('r1'));
+    expect(ids()).toBe('r2');
+    expect(ctx.unreadCount).toBe(1);
+  });
+
+  it('counts only the notifications not yet read', () => {
+    renderCapture();
+    notify('r1');
+    notify('r2');
+    notify('r3');
+    act(() => ctx.markAsRead('r2'));
+    expect(ctx.unreadCount).toBe(2);
+    act(() => ctx.markAllAsRead());
+    expect(ctx.unreadCount).toBe(0);
+  });
+
+  it('gives timeline events without a priority the medium priority', () => {
+    renderCapture();
+    const base = { type: 'deadline', title: 'File response', timestamp: new Date() };
+    act(() => {
+      ctx.createFromTimelineEvents([
+        { ...base, id: 'e1' },
+        { ...base, id: 'e2', priority: 'high' },
+      ] as never);
+    });
+    // The hoisted mock is typed with no parameters, so read its first argument as unknown.
+    const firstCall = mocks.mockCreateFromTimelineEvents.mock.calls[0] as unknown[];
+    const passed = firstCall[0] as Array<{ id: string; priority: string }>;
+    expect(passed.map((e) => [e.id, e.priority])).toEqual([
+      ['e1', 'medium'],
+      ['e2', 'high'],
+    ]);
+  });
+});

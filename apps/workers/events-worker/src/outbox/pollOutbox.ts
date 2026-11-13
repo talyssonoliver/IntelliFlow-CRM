@@ -17,7 +17,13 @@
  */
 
 import pino from 'pino';
-import type { EventDispatcher, OutboxEvent } from './event-dispatcher';
+import {
+  createOutboxMetrics,
+  runWorkSpan,
+  type OutboxMetrics,
+  type OutboxOutcome,
+} from '@intelliflow/worker-shared';
+import { isPoisonMessage, type EventDispatcher, type OutboxEvent } from './event-dispatcher';
 
 // ============================================================================
 // Types
@@ -59,6 +65,11 @@ export interface OutboxRepository {
   moveToDeadLetter(eventId: string, error: string): Promise<void>;
   /** Get event by ID */
   getEventById(eventId: string): Promise<OutboxEvent | null>;
+  /**
+   * Record that one handler succeeded for an event (metadata.handledBy), so a
+   * retry skips it (IFC-151). Optional: without it a retry re-runs every handler.
+   */
+  recordHandled?(eventId: string, handlerName: string): Promise<void>;
 }
 
 export interface OutboxPollerOptions {
@@ -66,6 +77,10 @@ export interface OutboxPollerOptions {
   repository: OutboxRepository;
   dispatcher: EventDispatcher;
   logger?: pino.Logger;
+  /** Outcome counter + duration histogram (default: OpenTelemetry, IFC-151). */
+  metrics?: OutboxMetrics;
+  /** Random source for the retry jitter (tests pass a seeded one). */
+  random?: () => number;
 }
 
 // ============================================================================
@@ -90,6 +105,8 @@ export class OutboxPoller {
   private readonly repository: OutboxRepository;
   private readonly dispatcher: EventDispatcher;
   private readonly logger: pino.Logger;
+  private readonly metrics: OutboxMetrics;
+  private readonly random: () => number;
 
   private isPolling = false;
   private pollTimer: NodeJS.Timeout | null = null;
@@ -97,12 +114,15 @@ export class OutboxPoller {
   private processedCount = 0;
   private failedCount = 0;
   private dlqCount = 0;
+  private poisonCount = 0;
 
   constructor(options: OutboxPollerOptions) {
     this.config = { ...DEFAULT_CONFIG, ...options.config };
     this.currentDelayMs = this.config.pollIntervalMs;
     this.repository = options.repository;
     this.dispatcher = options.dispatcher;
+    this.metrics = options.metrics ?? createOutboxMetrics();
+    this.random = options.random ?? Math.random;
     this.logger =
       options.logger ??
       pino({
@@ -150,6 +170,7 @@ export class OutboxPoller {
         processed: this.processedCount,
         failed: this.failedCount,
         dlq: this.dlqCount,
+        poisoned: this.poisonCount,
       },
       'Outbox poller stopped'
     );
@@ -162,6 +183,7 @@ export class OutboxPoller {
     processed: number;
     failed: number;
     dlq: number;
+    poisoned: number;
     isPolling: boolean;
     nextPollDelayMs: number;
   } {
@@ -169,6 +191,7 @@ export class OutboxPoller {
       processed: this.processedCount,
       failed: this.failedCount,
       dlq: this.dlqCount,
+      poisoned: this.poisonCount,
       isPolling: this.isPolling,
       nextPollDelayMs: this.currentDelayMs,
     };
@@ -210,7 +233,23 @@ export class OutboxPoller {
     return this.currentDelayMs;
   }
 
-  private async processPendingEvents(): Promise<number> {
+  /**
+   * One poll cycle, in one span: without it each of its queries was a root
+   * trace of its own (IFC-097).
+   */
+  private processPendingEvents(): Promise<number> {
+    return runWorkSpan(
+      'outbox.poll',
+      { 'outbox.batch_size': this.config.batchSize },
+      async (span) => {
+        const count = await this.processPendingBatch();
+        span.setAttribute('outbox.events', count);
+        return count;
+      }
+    );
+  }
+
+  private async processPendingBatch(): Promise<number> {
     // Fetch pending events (use FOR UPDATE SKIP LOCKED in repository)
     const events = await this.repository.fetchPendingEvents(this.config.batchSize);
 
@@ -235,17 +274,47 @@ export class OutboxPoller {
       aggregateId: event.aggregateId,
     });
 
+    const started = Date.now();
     try {
-      // Dispatch event to handlers
-      await this.dispatcher.dispatch(event);
-
-      // Mark as published
-      await this.repository.markAsPublished(event.id);
+      // One span per event: a failed dispatch is recorded on it as an error.
+      await runWorkSpan(
+        'outbox.dispatch',
+        {
+          'outbox.event.type': event.eventType,
+          'outbox.event.id': event.id,
+          'outbox.event.attempt': event.retryCount + 1,
+        },
+        async () => {
+          // Handlers that already succeeded on an earlier attempt are skipped.
+          const recordHandled = this.repository.recordHandled?.bind(this.repository);
+          await this.dispatcher.dispatch(event, {
+            alreadyHandled: new Set(event.metadata?.handledBy ?? []),
+            onHandled: recordHandled
+              ? (handlerName) => recordHandled(event.id, handlerName)
+              : undefined,
+          });
+          await this.repository.markAsPublished(event.id);
+        }
+      );
 
       this.processedCount++;
+      this.record('published', event, started);
       eventLogger.debug('Event processed successfully');
     } catch (error) {
-      await this.handleFailure(event, error as Error, eventLogger);
+      const outcome = await this.handleFailure(event, toError(error), eventLogger);
+      this.record(outcome, event, started);
+    }
+  }
+
+  private record(outcome: OutboxOutcome, event: OutboxEvent, started: number): void {
+    try {
+      this.metrics.recordDispatch(outcome, event.eventType, Date.now() - started);
+    } catch (error) {
+      // A metrics failure must never change what happens to the event.
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Outbox metrics failed'
+      );
     }
   }
 
@@ -253,8 +322,20 @@ export class OutboxPoller {
     event: OutboxEvent,
     error: Error,
     logger: pino.Logger
-  ): Promise<void> {
+  ): Promise<OutboxOutcome> {
     const attempts = event.retryCount + 1;
+
+    // A poison message can never succeed: dead-letter it now, no retries.
+    if (isPoisonMessage(error)) {
+      await this.repository.moveToDeadLetter(event.id, `poison: ${error.message}`);
+      this.poisonCount++;
+      this.dlqCount++;
+      logger.error(
+        { attempts, error: error.message },
+        'Poison message moved to dead letter queue without retries'
+      );
+      return 'poisoned';
+    }
 
     if (attempts >= this.config.maxRetries) {
       // Move to dead letter queue
@@ -269,12 +350,13 @@ export class OutboxPoller {
         },
         'Event moved to dead letter queue after max retries'
       );
+      return 'dead_lettered';
     } else {
       // Schedule retry with exponential backoff
       const backoffMs = this.config.retryBackoff[attempts - 1] || this.config.retryBackoff[2];
 
       // Add jitter (±10%)
-      const jitter = backoffMs * 0.1 * (Math.random() * 2 - 1);
+      const jitter = backoffMs * 0.1 * (this.random() * 2 - 1);
       const delayMs = backoffMs + jitter;
 
       const nextRetryAt = new Date(Date.now() + delayMs);
@@ -291,8 +373,13 @@ export class OutboxPoller {
         },
         'Event scheduled for retry'
       );
+      return 'retried';
     }
   }
+}
+
+function toError(error: unknown): Error {
+  return error instanceof Error ? error : new Error(String(error));
 }
 
 // ============================================================================
@@ -354,6 +441,33 @@ export class InMemoryOutboxRepository implements OutboxRepository {
 
   async getEventById(eventId: string): Promise<OutboxEvent | null> {
     return this.events.get(eventId) || null;
+  }
+
+  async recordHandled(eventId: string, handlerName: string): Promise<void> {
+    const event = this.events.get(eventId);
+    if (!event) return;
+    const handledBy = event.metadata.handledBy ?? [];
+    if (!handledBy.includes(handlerName)) event.metadata.handledBy = [...handledBy, handlerName];
+  }
+
+  /** Dead letters, oldest first, with the error that sent each there. */
+  async listDeadLetters(limit = 100): Promise<Array<{ event: OutboxEvent; error: string }>> {
+    return [...this.dlq.values()].slice(0, limit);
+  }
+
+  /** Put a dead letter back in the outbox as a fresh pending event (triage replay). */
+  async requeueDeadLetter(eventId: string): Promise<boolean> {
+    const entry = this.dlq.get(eventId);
+    if (!entry) return false;
+    this.dlq.delete(eventId);
+    this.events.set(eventId, {
+      ...entry.event,
+      status: 'pending',
+      retryCount: 0,
+      nextRetryAt: undefined,
+      lastError: `replayed after: ${entry.error}`,
+    });
+    return true;
   }
 
   // Test helpers

@@ -177,20 +177,43 @@ after a CI round.
 
 **Test scope:** locally the test steps run only the tests related to the files
 changed since `origin/main` (`vitest related`); the full 10k+ suite is CI's
-sharded runners' job. Typecheck, lint and all other gates stay full.
-`PRESHIP_FULL_TESTS=1` runs the full suite locally; lockfile, `package.json`
-(other than `scripts`), vitest/tsconfig, Prisma schema or test-setup changes
-widen to full on their own.
+sharded runners' job. `PRESHIP_FULL_TESTS=1` runs the full suite locally;
+lockfile, `package.json` (other than `scripts`), vitest/tsconfig, Prisma schema
+or test-setup changes widen to full on their own.
+
+**Lint scope:** format-check, lint and lint-promises check only the changed
+files, and go repo-wide when eslint/prettier config, tsconfig, any
+`package.json` or the lockfile changes (`PRESHIP_FULL_LINT=1` forces it). The
+type-aware lint-promises step has its own, narrower list: only its config, the
+tsconfigs, the lockfile/workspace files and its runners widen it, not a
+package.json or the default eslint/prettier config. CI checks the whole repo.
+
+**Build scope:** locally `library-build`, `typecheck` and `build` cover the
+packages the branch changed plus their dependents (CI's
+`scripts/ci/affected.mjs` classification over the local diff, turbo's local
+cache on); `build` is skipped when only docs or test files changed. Root config,
+`.github/` or shared tsconfig changes widen to every package;
+`PRESHIP_FULL_BUILD=1` forces it. All other gates stay full.
+
+**DB scope:** the integration suite runs locally only when the branch can reach
+it: a change under `packages/db`, `apps/api`, `apps/ai-worker` or
+`tests/integration`, a test or DB config file, or a file an integration test
+imports (`vitest list --changed`). Otherwise it is a non-required skip and CI
+runs it. The push gate seeds with `test-db.mjs run --seed-if-affected`, which
+seeds only in the same case. `PRESHIP_FULL_DB=1` forces the suite.
 
 **At most 3 full test runs at once, machine-wide.** Before any step the gate
 re-runs itself under the shared slot semaphore (`scripts/lib/test-slot.mjs`),
 which waits for a free slot and releases it on exit. Separately, the gate
 guarantees **no orphaned steps**: each step runs async with its PID recorded,
-and its whole process tree is stopped (`taskkill /T /F` on Windows) on success,
-failure, a signal or an uncaught exception. A detached watchdog, started from
-`os.tmpdir()` (never the repo), covers a hard kill of the gate and the death of
-anything above it (the `git push`, the hook shell). See
-`scripts/lib/preship-gate.mjs`, `scripts/preship-process.mjs` and
+and its whole process tree is stopped on success, failure, a signal or an
+uncaught exception. On Windows each descendant is found by walking
+`Win32_Process` (a child counts only if it was created at or after its parent,
+because pids are reused) and stopped by its own `taskkill /F`; never
+`taskkill /T`, which followed reused pids into agent windows on 2026-11-10. A
+detached watchdog, started from `os.tmpdir()` (never the repo), covers a hard
+kill of the gate and the death of anything above it (the `git push`, the hook
+shell). See `scripts/lib/preship-gate.mjs`, `scripts/preship-process.mjs` and
 `scripts/preship-watchdog.mjs`.
 
 ### Sprint_plan.csv is Single Source of Truth

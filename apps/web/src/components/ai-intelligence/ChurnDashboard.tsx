@@ -19,7 +19,12 @@ import {
   Skeleton,
   cn,
 } from '@intelliflow/ui';
-import { PageHeader, SearchFilterBar, useMultiFilterState } from '@/components/shared';
+import {
+  PageHeader,
+  SearchFilterBar,
+  clearFiltersAction,
+  useMultiFilterState,
+} from '@/components/shared';
 
 import { useChurnDashboard } from '@/lib/churn-risk/hooks';
 import type { ChurnFilters } from '@/lib/churn-risk/hooks';
@@ -235,6 +240,13 @@ export function ChurnDashboard() {
     search: '',
   });
 
+  // The quick chip filters on its own state, so it counts as a filter and is cleared with
+  // the rest. The date range is the analysis period, not a filter: Clear keeps it.
+  const clearAction = clearFiltersAction(filterState, {
+    value: activeChip,
+    reset: () => setActiveChip('all'),
+  });
+
   const filters: ChurnFilters = {
     entityType: filterState.values.entityType as 'all' | 'lead' | 'contact',
     dateRange,
@@ -342,7 +354,12 @@ export function ChurnDashboard() {
   } else if (filteredCustomers.length === 0) {
     customerListContent = (
       <div data-testid="empty-state">
-        <EmptyState entity="insights" phase="passive" />
+        <EmptyState
+          entity="insights"
+          showCta={false}
+          variant={clearAction ? 'filtered' : 'empty'}
+          action={clearAction}
+        />
       </div>
     );
   } else {

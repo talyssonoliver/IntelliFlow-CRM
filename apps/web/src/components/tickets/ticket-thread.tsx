@@ -7,7 +7,7 @@
  * supporting Public Reply and Internal Note modes.
  */
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { TicketActivity } from './types';
 import { cn } from '@/lib/utils';
 import { EmptyState } from '@intelliflow/ui';
@@ -27,6 +27,7 @@ export function TicketThread({ activities, onAddResponse, isLoading = false }: T
   const [viewMode, setViewMode] = useState<ViewMode>('timeline');
   const [composerMode, setComposerMode] = useState<ComposerMode>('public');
   const [replyContent, setReplyContent] = useState('');
+  const replyRef = useRef<HTMLTextAreaElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -77,7 +78,11 @@ export function TicketThread({ activities, onAddResponse, isLoading = false }: T
       {/* Activity List */}
       <div className="flex flex-col gap-3">
         {activities.length === 0 ? (
-          <EmptyState entity="activity" phase="passive" />
+          <EmptyState
+            entity="activity"
+            ctaLabel="Write a reply"
+            onCtaClick={() => replyRef.current?.focus()}
+          />
         ) : (
           activities.map((activity) => <ActivityItem key={activity.id} activity={activity} />)
         )}
@@ -116,6 +121,7 @@ export function TicketThread({ activities, onAddResponse, isLoading = false }: T
         </div>
 
         <textarea
+          ref={replyRef}
           placeholder={composerMode === 'internal' ? 'Type your note...' : 'Type your reply...'}
           aria-label={composerMode === 'internal' ? 'Internal note' : 'Reply message'}
           value={replyContent}

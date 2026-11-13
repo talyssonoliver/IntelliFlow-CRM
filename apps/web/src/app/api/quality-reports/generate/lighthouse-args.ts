@@ -12,7 +12,12 @@
  * js/indirect-command-line-injection #2257): shell metacharacters in the URL can
  * no longer be parsed by a shell.
  */
-export function buildLighthouseArgs(url: string, outputPathBase: string): string[] {
+export function buildLighthouseArgs(
+  url: string,
+  outputPathBase: string,
+  /** From bundledChromeLaunch: the bundled Chromium's flags, with the fixed profile. */
+  chromeFlagsArg: string
+): string[] {
   let protocol: string;
   try {
     protocol = new URL(url).protocol;
@@ -31,6 +36,6 @@ export function buildLighthouseArgs(url: string, outputPathBase: string): string
     'html',
     '--output-path',
     outputPathBase,
-    '--chrome-flags=--headless --no-sandbox --disable-gpu',
+    chromeFlagsArg,
   ];
 }

@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { generateOAuthCredentials, isValidWebhookUrl } from '../oauth-setup';
 
+const LOCAL_FILE_URL = 'file:///etc/passwd';
+
 describe('generateOAuthCredentials', () => {
   it('production env produces clientId with prefix cli_prod_', () => {
     const creds = generateOAuthCredentials('production');
@@ -107,7 +109,7 @@ describe('isValidWebhookUrl', () => {
   });
 
   it('file: URI returns error', () => {
-    const result = isValidWebhookUrl('file:///etc/passwd', 'production');
+    const result = isValidWebhookUrl(LOCAL_FILE_URL, 'production');
     expect(result).toBeTruthy();
   });
 });

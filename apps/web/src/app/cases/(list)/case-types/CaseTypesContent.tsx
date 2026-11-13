@@ -138,7 +138,7 @@ export default function CaseTypesContent() {
     <div className="w-full">
       <PageHeader
         breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
+          { label: 'Home', href: '/' },
           { label: 'Cases', href: '/cases' },
           { label: 'Case Types' },
         ]}

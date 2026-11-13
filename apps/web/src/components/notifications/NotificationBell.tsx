@@ -163,16 +163,22 @@ export function NotificationBell() {
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
+      {/* #1225 UI-008: full width minus a 1rem gutter on phones, w-80 from sm. */}
+      <PopoverContent
+        className="w-[calc(100vw-2rem)] sm:w-80 p-0"
+        align="end"
+        collisionPadding={16}
+        data-testid="notification-panel"
+      >
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700">
           <h3 className="text-sm font-semibold text-slate-900 dark:text-white">Notifications</h3>
           {unreadCount > 0 && <span className="text-xs text-slate-500">{unreadCount} unread</span>}
         </div>
-        <ScrollArea className="max-h-80">
+        <ScrollArea className="max-h-[60vh] sm:max-h-80">
           {(() => {
             if (isLoading) return <NotificationBellSkeleton />;
             if (recentNotifications.length === 0)
-              return <EmptyState entity="notifications" phase="passive" className="py-2" />;
+              return <EmptyState entity="notifications" showCta={false} className="py-2" />;
             return (
               <div className="divide-y divide-slate-100 dark:divide-slate-700">
                 {recentNotifications.map((n) => {

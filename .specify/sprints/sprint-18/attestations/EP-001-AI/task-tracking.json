@@ -1,0 +1,70 @@
+{
+    "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+    "actual_duration_minutes": 15,
+    "artifacts": {
+        "created": [],
+        "expected": [],
+        "missing": []
+    },
+    "completed_at": "2026-11-12T16:30:00Z",
+    "dependencies_meta": {
+        "verified_at": "2026-04-29T21:54:51.685Z"
+    },
+    "notes": "Sprint 0 task completed.",
+    "started_at": "2026-04-13T00:27:36.740Z",
+    "task_id": "EP-001-AI",
+    "validations": [
+        {
+            "command": "pnpm test",
+            "executed_at": "2025-12-14T12:00:00Z",
+            "exit_code": 0,
+            "name": "environment-setup",
+            "passed": true
+        }
+    ],
+    "status_history": [
+        {
+            "status": "IN_PROGRESS",
+            "at": "2026-10-05T22:30:00Z",
+            "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+        },
+        {
+            "status": "IN_PROGRESS",
+            "at": "2026-11-08T00:00:00Z",
+            "note": "Operational record moved to sprint 18, the Target Sprint since the 2026-10-16 re-plan (#920). The sprint-0 attestation stays as the historical record."
+        },
+        {
+            "status": "Completed",
+            "at": "2026-11-12T16:30:00Z",
+            "note": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. DoD amended; all amended KPIs met (attestation run-20261112-dod-ruling)."
+        }
+    ],
+    "blockers": [
+        {
+            "description": "Reopen evidence: Railway production, read 2026-10-05 via the Railway API: every service (api, ai-worker, events-worker, ingestion-worker, notifications-worker) has `OTEL_ENABLED=false` and no `OTEL_EXPORTER_OTLP_ENDPOINT`; `ws` has no OTel vars. `infra/terraform/environments/production/terraform.tfvars` keeps OTel off until `otel_exporter_endpoint` is set, and it is not set. Production exports no traces, metrics or logs.",
+            "raised_at": "2026-10-05T22:30:00Z",
+            "resolved_at": "2026-11-12T16:30:00Z",
+            "resolution": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. Railway production runs api and combined-worker only (ws and the standalone workers have no deployment). Tempo and Loki hold exactly these two service names over 7 days (api; ai-worker = the combined worker, which also carries events-worker and ingestion-worker logs: 901 and 374 lines in 7 days). The Tempo datasource links traces to Loki (jsonData.tracesToLogs -> grafanacloud-logs, +/-2 s)."
+        },
+        {
+            "description": "Reopen evidence: KPI \"OTLP push working from Railway\" fails: Railway pushes nothing. No EasyPanel deployment exists. The only stack that ran was a local Docker compose (deleted worktree `iflow-ifc-033`), with no access control and no SMTP. It stopped on 2026-10-02.",
+            "raised_at": "2026-10-05T22:30:00Z",
+            "resolved_at": "2026-11-12T16:30:00Z",
+            "resolution": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. Railway production runs api and combined-worker only (ws and the standalone workers have no deployment). Tempo and Loki hold exactly these two service names over 7 days (api; ai-worker = the combined worker, which also carries events-worker and ingestion-worker logs: 901 and 374 lines in 7 days). The Tempo datasource links traces to Loki (jsonData.tracesToLogs -> grafanacloud-logs, +/-2 s)."
+        },
+        {
+            "description": "To close: (1) Superseded in practice by a hosted OTLP backend (IFC-032). Close when Railway pushes OTLP to it, or re-scope with the owner. Closing requires production evidence (configured endpoint, real trace ID, received alert); local, in-memory or template artifacts do not count.",
+            "raised_at": "2026-10-05T22:30:00Z",
+            "resolved_at": "2026-11-12T16:30:00Z",
+            "resolution": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. Railway production runs api and combined-worker only (ws and the standalone workers have no deployment). Tempo and Loki hold exactly these two service names over 7 days (api; ai-worker = the combined worker, which also carries events-worker and ingestion-worker logs: 901 and 374 lines in 7 days). The Tempo datasource links traces to Loki (jsonData.tracesToLogs -> grafanacloud-logs, +/-2 s)."
+        },
+        {
+            "description": "Re-plan 2026-10-16 (owner ruling \"Fix the 15 tasks\"): not Completed, no exemption. Target Sprint moved to 18 in Sprint_plan.csv so the strict sprint gates stay honest. KPI \"OTLP push working from Railway\" is now true for api and ai-worker, but the DoD still describes an EasyPanel stack (collector, Prometheus, Loki, Tempo, SonarQube). Owner must confirm that the Railway to Grafana Cloud pipeline replaces it so the DoD can be re-scoped before closing. Verified 2026-10-16: Railway production api and ai-worker have OTEL_ENABLED=true and export to the Grafana Cloud gb-south-1 gateway; ws, events-worker and ingestion-worker do not (events-worker and ingestion-worker OTEL_ENABLED=false, ws has no OTel variables). Grafana holds span metrics for api and ai-worker and ai-worker pino log lines carrying trace_id/span_id; no api pino log line has reached Loki yet.",
+            "raised_at": "2026-10-16T14:00:00Z",
+            "resolved_at": "2026-11-12T16:30:00Z",
+            "resolution": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. Railway production runs api and combined-worker only (ws and the standalone workers have no deployment). Tempo and Loki hold exactly these two service names over 7 days (api; ai-worker = the combined worker, which also carries events-worker and ingestion-worker logs: 901 and 374 lines in 7 days). The Tempo datasource links traces to Loki (jsonData.tracesToLogs -> grafanacloud-logs, +/-2 s)."
+        }
+    ],
+    "percent_complete": 100,
+    "updated_at": "2026-11-12T16:30:00Z"
+}

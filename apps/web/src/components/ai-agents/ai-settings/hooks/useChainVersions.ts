@@ -104,19 +104,25 @@ export function useChainVersions(options: UseChainVersionsOptions = {}): UseChai
     offset,
   });
 
-  // Fetch active versions for each chain type
-  const scoringActiveQuery = api.chainVersion.getActive.useQuery({
-    chainType: 'SCORING',
-  });
-  const qualificationActiveQuery = api.chainVersion.getActive.useQuery({
-    chainType: 'QUALIFICATION',
-  });
-  const emailWriterActiveQuery = api.chainVersion.getActive.useQuery({
-    chainType: 'EMAIL_WRITER',
-  });
-  const followupActiveQuery = api.chainVersion.getActive.useQuery({
-    chainType: 'FOLLOWUP',
-  });
+  // Fetch active versions for each chain type. "No active version" comes back as null, not
+  // an error; a real failure is shown once rather than retried for every chain type.
+  const activeQueryOptions = { retry: false } as const;
+  const scoringActiveQuery = api.chainVersion.getActive.useQuery(
+    { chainType: 'SCORING' },
+    activeQueryOptions
+  );
+  const qualificationActiveQuery = api.chainVersion.getActive.useQuery(
+    { chainType: 'QUALIFICATION' },
+    activeQueryOptions
+  );
+  const emailWriterActiveQuery = api.chainVersion.getActive.useQuery(
+    { chainType: 'EMAIL_WRITER' },
+    activeQueryOptions
+  );
+  const followupActiveQuery = api.chainVersion.getActive.useQuery(
+    { chainType: 'FOLLOWUP' },
+    activeQueryOptions
+  );
 
   // Build active versions record
   const activeVersions: Record<ChainType, ChainVersionSummary | null> = {

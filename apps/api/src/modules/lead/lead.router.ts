@@ -16,7 +16,7 @@ import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { loadBullMQ } from '../../lib/load-bullmq';
-import { enqueueLeadScoring } from './lead-scoring-enqueue';
+import { enqueueLeadAi } from './lead-scoring-enqueue';
 import {
   createLeadSchema,
   updateLeadSchema,
@@ -535,9 +535,10 @@ export const leadRouter = createTRPCRouter({
       userName: ctx.user?.email ?? 'System',
     });
 
-    // Fire-and-forget: enqueue AI lead scoring (best-effort; shared with public booking, PG-203).
-    // enqueueLeadScoring logs its own failures; this handler only covers an unexpected rejection.
-    enqueueLeadScoring(
+    // Fire-and-forget: queue the lead's AI work (scoring, qualification, next best action;
+    // best-effort, shared with every lead path, PG-203). enqueueLeadAi logs its own failures;
+    // this handler only covers an unexpected rejection.
+    enqueueLeadAi(
       {
         leadId: result.value.id.value,
         tenantId: typedCtx.tenant.tenantId,
@@ -551,6 +552,7 @@ export const leadRouter = createTRPCRouter({
           phone: input.phone?.value,
         },
         correlationId: `lead-create-${result.value.id.value}`,
+        ownerId: result.value.ownerId,
       },
       restrictionReader(ctx)
     ).catch((error: unknown) => {
@@ -635,50 +637,11 @@ export const leadRouter = createTRPCRouter({
       })
       .catch(logLeadAuditFailure);
 
-    const aiInsightRow = lead.aiInsights?.[0] ?? null;
-
-    // Derive AI insights when none exist in DB (ensures entity pages always show data)
-    if (!aiInsightRow) {
-      const derived = deriveLeadInsights({
-        score: lead.score ?? 0,
-        confidence: 0.5,
-        source: lead.source ?? 'OTHER',
-        title: lead.title,
-        company: lead.company,
-        estimatedValue: lead.estimatedValue,
-        status: lead.status,
-        lastContactedAt: lead.lastContactedAt,
-        createdAt: lead.createdAt,
-      });
-
-      const syntheticInsight = {
-        id: `derived-${lead.id}`,
-        leadId: lead.id,
-        tenantId: typedCtx.tenant.tenantId,
-        ...derived,
-        recommendations: derived.recommendations as unknown,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      // Fire-and-forget: persist so future visits read from DB
-      typedCtx.prismaWithTenant.leadAIInsight
-        ?.upsert({
-          where: { leadId_tenantId: { leadId: lead.id, tenantId: typedCtx.tenant.tenantId } },
-          create: {
-            leadId: lead.id,
-            tenantId: typedCtx.tenant.tenantId,
-            ...derived,
-            recommendations: derived.recommendations,
-          },
-          update: {},
-        })
-        ?.catch(() => {}); // Best-effort persistence — silently ignore
-
-      return { ...lead, aiInsights: [syntheticInsight] };
-    }
-
-    return lead;
+    // #1277 (UI-022): no synthetic insight. A lead without a LeadAIInsight row has had no
+    // analysis, and the page says so. getById used to derive one from heuristics and save
+    // it, which made a plain read look like an AI analysis. The response always carries an
+    // `aiInsights` array (empty when there is none), as the contract requires.
+    return { ...lead, aiInsights: lead.aiInsights ?? [] };
   }),
 
   /**
@@ -802,10 +765,11 @@ export const leadRouter = createTRPCRouter({
       throw new TRPCError({ code: 'BAD_REQUEST', message: msg });
     }
 
-    // Fire-and-forget: re-score lead after update (best-effort). Through the shared enqueue,
-    // so a restricted or erased person is never queued (PG-203 Q22; the worker checks again).
+    // Fire-and-forget: re-run the lead's AI work after an update (best-effort). Through the
+    // shared enqueue, so a restricted or erased person is never queued (PG-203 Q22; the worker
+    // checks again), and an update that changes nothing the agents read queues nothing.
     const lead = result.value;
-    enqueueLeadScoring(
+    enqueueLeadAi(
       {
         leadId: id,
         tenantId: typedCtx.tenant.tenantId,
@@ -819,6 +783,7 @@ export const leadRouter = createTRPCRouter({
           phone: lead.phone?.value,
         },
         correlationId: `lead-update-${id}`,
+        ownerId: lead.ownerId,
       },
       restrictionReader(ctx)
     ).catch((error: unknown) => {

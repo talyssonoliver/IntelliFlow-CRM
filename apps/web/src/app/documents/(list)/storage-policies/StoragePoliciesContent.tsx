@@ -115,6 +115,7 @@ export default function StoragePoliciesContent() {
       label: 'Reset to defaults',
       icon: 'restart_alt',
       variant: 'secondary',
+      hideOnMobile: true,
       onClick: () => setResetOpen(true),
       disabled: isSaving || isResetting,
     },

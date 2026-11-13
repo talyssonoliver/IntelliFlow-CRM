@@ -31,7 +31,17 @@ export function DealPipelineCard() {
       toast({ title: 'Pipeline reset', description: 'Stages restored to defaults.' });
       return utils.dealSettings.pipeline.getAll.invalidate();
     },
+    onError: (err) =>
+      toast({
+        title: 'Could not reset the pipeline',
+        description: err.message,
+        variant: 'destructive',
+      }),
   });
+  // One reset at a time: repeated clicks while one is running do nothing.
+  const resetToDefaults = () => {
+    if (!resetMutation.isPending) resetMutation.mutate();
+  };
 
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
@@ -57,7 +67,8 @@ export function DealPipelineCard() {
       <EmptyState
         entity="rules"
         size="sm"
-        phase="passive"
+        ctaLabel="Reset to defaults"
+        onCtaClick={resetToDefaults}
         title="No pipeline stages"
         description="Reset to defaults to populate the stage list."
       />
@@ -186,12 +197,7 @@ export function DealPipelineCard() {
           })}
       </div>
       <div className="flex justify-end">
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => resetMutation.mutate()}
-          disabled={isBusy}
-        >
+        <Button size="sm" variant="outline" onClick={resetToDefaults} disabled={isBusy}>
           {resetMutation.isPending ? 'Resetting…' : 'Reset pipeline'}
         </Button>
       </div>

@@ -265,7 +265,7 @@ export default function CaseSettingsContent() {
   return (
     <ModuleSettingsShell
       breadcrumbs={[
-        { label: 'Dashboard', href: '/' },
+        { label: 'Home', href: '/' },
         { label: 'Cases', href: '/cases' },
         { label: 'Case Settings' },
       ]}

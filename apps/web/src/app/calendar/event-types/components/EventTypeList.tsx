@@ -149,7 +149,9 @@ export const EventTypeList = forwardRef<EventTypeListHandle, EventTypeListProps>
       setDialog((current) => ({ open: true, item, session: current.session + 1 }));
     };
     useImperativeHandle(ref, () => ({
-      openCreate: () => open(null, document.activeElement),
+      openCreate: () => {
+        if (canEdit) open(null, document.activeElement);
+      },
     }));
 
     const close = () => {
@@ -163,9 +165,12 @@ export const EventTypeList = forwardRef<EventTypeListHandle, EventTypeListProps>
     return (
       <div className="space-y-3">
         {items.length === 0 ? (
+          // "rules" carries no hotkey: "appointments" would bind A on this page to Create event type.
           <EmptyState
-            entity="appointments"
-            phase="passive"
+            entity="rules"
+            ctaLabel="Create event type"
+            showCta={canEdit}
+            onCtaClick={() => open(null, document.activeElement)}
             size="sm"
             title="No event types yet"
             description="Create a meeting type to pre-fill new appointments and to offer it on your booking page."

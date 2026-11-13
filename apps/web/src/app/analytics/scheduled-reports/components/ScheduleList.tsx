@@ -59,6 +59,8 @@ export interface ScheduleListProps {
   readonly onToggle: (schedule: ScheduleItem, isActive: boolean) => void;
   readonly onEdit: (schedule: ScheduleItem) => void;
   readonly onDelete: (schedule: ScheduleItem) => void;
+  /** Opens the create dialog; the empty state offers it when `canEdit`. */
+  readonly onCreate?: () => void;
 }
 
 export function ScheduleList({
@@ -68,12 +70,15 @@ export function ScheduleList({
   onToggle,
   onEdit,
   onDelete,
+  onCreate,
 }: ScheduleListProps) {
   if (schedules.length === 0) {
     return (
       <EmptyState
         entity="reports"
-        phase="passive"
+        showCta={canEdit && Boolean(onCreate)}
+        ctaLabel="Create schedule"
+        onCtaClick={onCreate}
         size="sm"
         className="py-4 px-3 gap-2"
         title="No scheduled reports yet"

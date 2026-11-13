@@ -157,7 +157,7 @@ export function ChainVersionsDashboard({
                 </div>
               </div>
             ) : (
-              <EmptyState entity="insights" phase="passive" className="py-2" />
+              <EmptyState entity="insights" showCta={false} className="py-2" />
             )}
           </Card>
         );
