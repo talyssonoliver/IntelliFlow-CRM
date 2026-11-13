@@ -1,7 +1,9 @@
 /**
  * The waiver anchor rules of the semantic review gate (#980).
  */
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
@@ -363,7 +365,16 @@ describe('codex-review --check-waivers', () => {
     vi.doUnmock('../lib/codex-fingerprint.mjs');
   });
 
+  // The tracked files are a fixture: reading every tracked file of the real repo took
+  // over 30 s on a loaded machine and failed whole gates (#1322). Pre-ship's own
+  // `codex-review --check-waivers` step still checks the committed waivers against the
+  // real tree; this test proves the CLI wiring around that check.
   it('checks the committed waivers without calling a reviewer, and exits 0', async () => {
+    vi.doMock('../lib/codex-fingerprint.mjs', async (importOriginal) => ({
+      ...(await importOriginal<Record<string, unknown>>()),
+      readTrackedFiles: () => [{ path: 'src/fixture.ts', text: 'export const fixture = 1;\n' }],
+    }));
+
     const { failure, output } = await runCli();
 
     expect(failure?.message).toBe('exit 0');
@@ -374,6 +385,7 @@ describe('codex-review --check-waivers', () => {
     vi.doMock('../lib/codex-fingerprint.mjs', async (importOriginal) => ({
       ...(await importOriginal<Record<string, unknown>>()),
       checkWaivers: () => ({ ok: false, lines: ['  INELIGIBLE example'] }),
+      readTrackedFiles: () => [],
     }));
 
     const { failure, output } = await runCli();
@@ -383,16 +395,46 @@ describe('codex-review --check-waivers', () => {
   });
 });
 
+// Whether every committed waiver sits on an eligible anchor in the real tree is checked by
+// pre-ship's `codex-review --check-waivers` step, not here: reading every tracked file
+// took over 30 s under load and failed whole gates (#1322).
 describe('the committed waiver file', () => {
-  it('has no waiver anchored on a trivial or repeated line', () => {
+  it('parses, and every waiver has a fingerprint and a reason', () => {
     const root = path.resolve(__dirname, '../..');
     const raw = fs.readFileSync(path.join(root, 'tools/audit/codex-review-waivers.yaml'), 'utf8');
     const waivers = parseWaivers(raw);
-    const files = readTrackedFiles(root);
 
-    const today = new Date().toISOString().slice(0, 10);
-    const bad = classifyWaivers(waivers, files, today).filter((r) => r.status === 'ineligible');
+    expect(waivers.length).toBeGreaterThan(0);
+    expect(
+      waivers.filter((w) => !/^[0-9a-f]{12,}$/.test(w.fingerprint) || !w.reason.trim())
+    ).toEqual([]);
+  });
+});
 
-    expect(bad.map((r) => `${r.waiver.fingerprint.slice(0, 12)} ${r.anchor?.file}`)).toEqual([]);
+describe('readTrackedFiles', () => {
+  it('reads tracked text files and skips untracked, binary, oversized and deleted ones', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'codex-fp-'));
+    const put = (rel: string, data: string | Buffer) => {
+      fs.mkdirSync(path.dirname(path.join(tmp, rel)), { recursive: true });
+      fs.writeFileSync(path.join(tmp, rel), data);
+    };
+    try {
+      execFileSync('git', ['init', '-q'], { cwd: tmp });
+      put('src/a.ts', 'export const a = 1;\n');
+      put('nested/deep/b.md', '# b\n');
+      put('bin/logo.png', Buffer.from([0x89, 0x50, 0x00, 0x47]));
+      put('big/huge.json', 'x'.repeat(3_000_001));
+      put('gone/c.ts', 'export const c = 3;\n');
+      execFileSync('git', ['add', '.'], { cwd: tmp });
+      fs.rmSync(path.join(tmp, 'gone/c.ts'));
+      put('untracked.ts', 'export const u = 0;\n');
+
+      const files: Array<{ path: string; text: string }> = readTrackedFiles(tmp);
+
+      expect(files.map((f) => f.path).sort()).toEqual(['nested/deep/b.md', 'src/a.ts']);
+      expect(files.find((f) => f.path === 'src/a.ts')?.text).toBe('export const a = 1;\n');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });
