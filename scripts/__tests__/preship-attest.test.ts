@@ -1155,9 +1155,7 @@ describe('branch-diff carry-forward', { timeout: 60_000 }, () => {
     const rebased = advanceMainAndRebase(g, work, 'scripts/tool.mjs', 'export const tool = 2;\n');
     const result = carriedAttestation(flagsFor(bare), rebased, PRESHIP_HASH, g) as Refused;
     expect(result.ok).toBe(false);
-    expect(result.reasons.join('\n')).toMatch(
-      /scripts\/mine\.mjs, which the PR changes, depends on it/
-    );
+    expect(result.reasons.join('\n')).toMatch(/scripts\/mine\.mjs imports the other/);
   });
 
   it('mainChangesInScope blocks without an attested base and is empty when main did not move', () => {
