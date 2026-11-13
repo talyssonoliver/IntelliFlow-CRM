@@ -203,10 +203,21 @@ interface AccountInsight {
  */
 export function AccountInsightPanel({
   isLoading,
+  isError = false,
   insight,
-}: Readonly<{ isLoading: boolean; insight: AccountInsight | null }>) {
+}: Readonly<{ isLoading: boolean; isError?: boolean; insight: AccountInsight | null }>) {
   if (isLoading) {
     return <Skeleton className="h-24 w-full" />;
+  }
+  // A failed lookup says nothing about whether an analysis exists, so it is not "none".
+  if (isError && !insight) {
+    return (
+      <Card className="p-5" data-testid="account-insight-error">
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          The AI analysis could not be loaded. Try again later.
+        </p>
+      </Card>
+    );
   }
   if (!insight || insight.source !== 'llm') {
     return (
@@ -926,6 +937,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
               <NotScoredNote score={shownScore} />
               <AccountInsightPanel
                 isLoading={insightQuery.isLoading}
+                isError={insightQuery.isError}
                 insight={insightQuery.data?.insight ?? null}
               />
             </div>

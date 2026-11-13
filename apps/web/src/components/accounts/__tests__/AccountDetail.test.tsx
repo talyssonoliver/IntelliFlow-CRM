@@ -844,6 +844,20 @@ describe('AccountDetail', () => {
       expect(screen.queryByTestId('account-not-scored')).toBeNull();
     });
 
+    it('says the analysis could not be loaded when the lookup fails, not that there is none', async () => {
+      insightMock.mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        isError: true,
+        error: new Error('x'),
+      });
+      await openAiTab();
+      expect(screen.getByTestId('account-insight-error')).toHaveTextContent(
+        'The AI analysis could not be loaded.'
+      );
+      expect(screen.queryByTestId('account-insight-none')).toBeNull();
+    });
+
     it('shows a placeholder while the insight loads', async () => {
       insightMock.mockReturnValue({ data: undefined, isLoading: true });
       await openAiTab();
