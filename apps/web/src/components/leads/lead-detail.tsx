@@ -4,7 +4,12 @@ import Link from 'next/link';
 import { Card } from '@intelliflow/ui';
 import { EntityHoverCard } from '@/components/shared/entity-hover-card';
 import { AppAvatar } from '@/components/shared/app-avatar';
-import { formatEstimatedValue, leadDisplayName } from '@/lib/leads/lead-format';
+import {
+  formatEstimatedValue,
+  leadDisplayName,
+  leadWebsite,
+  visibleTags,
+} from '@/lib/leads/lead-format';
 import { leadScoreDisplay } from '@/lib/leads/score-display';
 
 /** #1218: the profile card's score, or "Not scored" when no real AI score exists. */
@@ -257,7 +262,7 @@ export function LeadProfileCard({
         <div className="flex flex-wrap gap-2 mb-6">
           <LeadStatusBadge status={lead.status} />
           <TemperatureBadge temperature={lead.temperature} />
-          {lead.tags.map((tag) => (
+          {visibleTags(lead.tags).map((tag) => (
             <span
               key={tag}
               className="px-2 py-1 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-medium"
@@ -315,32 +320,39 @@ export function LeadProfileCard({
               <span className="text-sm text-slate-700 dark:text-slate-300">{lead.location}</span>
             </div>
           </div>
-          <div className="flex items-start gap-3">
-            <span
-              aria-hidden="true"
-              className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5"
-            >
-              language
-            </span>
-            <div className="flex flex-col">
-              <span className="text-xs text-slate-400 uppercase font-semibold">Website</span>
-              <a
-                href={`https://${lead.website}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={`${lead.website} (opens in new tab)`}
-                className="text-sm text-[#2a78f6] hover:underline"
+          {/* #1277: the stored address can be a full ad-tracking URL with a scheme; show the
+              clean host and link without the tracking parameters, or no row at all. */}
+          {leadWebsite(lead.website) && (
+            <div className="flex items-start gap-3">
+              <span
+                aria-hidden="true"
+                className="material-symbols-outlined text-slate-400 !text-[20px] mt-0.5"
               >
-                {lead.website}
-              </a>
+                language
+              </span>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-400 uppercase font-semibold">Website</span>
+                <a
+                  href={leadWebsite(lead.website)?.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`${leadWebsite(lead.website)?.label} (opens in new tab)`}
+                  className="text-sm text-[#2a78f6] hover:underline break-all"
+                >
+                  {leadWebsite(lead.website)?.label}
+                </a>
+              </div>
             </div>
-          </div>
+          )}
         </div>
         {/* Metrics Grid */}
         <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
             <p className="text-lg font-bold text-slate-900 dark:text-white">
-              {formatEstimatedValue(leadMetrics.estimatedValue)}
+              {/* 0 is the unset default, not a valuation: show a dash, not "£0". */}
+              {leadMetrics.estimatedValue > 0
+                ? formatEstimatedValue(leadMetrics.estimatedValue)
+                : '—'}
             </p>
             <p className="text-xs text-slate-500">Est. Value</p>
           </div>
