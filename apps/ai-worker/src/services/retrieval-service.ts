@@ -384,20 +384,28 @@ export class ACLService {
       return { tenantId: context.tenantId };
     }
 
-    // Check for own-data permission
-    if (context.permissions.includes(`${resourceType}:read:own`)) {
-      return {
-        tenantId: context.tenantId,
-        ownerId: context.userId,
-      };
-    }
-
-    // Default: only own resources
+    // Own-data permission and the default both mean "only own resources".
     return {
       tenantId: context.tenantId,
-      ownerId: context.userId,
+      [ownerFieldFor(resourceType)]: context.userId,
     };
   }
+}
+
+/**
+ * The column that holds a resource's owner, per searched source. Conversation records (and
+ * messages, filtered through their conversation) keep it in `userId` and tickets in
+ * `assigneeId`; a filter on `ownerId` made Prisma reject every own-scope conversation search,
+ * so the next best action agent ran without its RAG context (prod, 2026-11-12).
+ */
+const OWNER_FIELD_BY_SOURCE: Readonly<Record<string, string>> = {
+  conversations: 'userId',
+  messages: 'userId',
+  tickets: 'assigneeId',
+};
+
+export function ownerFieldFor(resourceType: string): string {
+  return OWNER_FIELD_BY_SOURCE[resourceType] ?? 'ownerId';
 }
 
 // ============================================
