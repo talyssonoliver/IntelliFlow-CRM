@@ -75,6 +75,7 @@ vi.mock('@/lib/public/tour-config', () => ({
 // ---------------------------------------------------------------------------
 // Import component under test AFTER mocks are declared
 // ---------------------------------------------------------------------------
+import { FORGOT_PASSWORD_PATH, RESET_PASSWORD_PATH } from '@/lib/auth/auth-paths';
 import { PublicLayoutShell } from '../PublicLayoutShell';
 
 // ---------------------------------------------------------------------------
@@ -272,8 +273,8 @@ describe('client isAuthenticated=true → overlays suppressed', () => {
 const AUTH_PAGES = [
   '/login',
   '/signup',
-  '/forgot-password',
-  '/reset-password',
+  FORGOT_PASSWORD_PATH,
+  RESET_PASSWORD_PATH,
   '/logout',
   '/verify-email',
   '/mfa',

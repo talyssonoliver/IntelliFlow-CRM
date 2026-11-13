@@ -1,0 +1,26 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "IFC-151",
+  "started_at": "2026-11-12T14:40:00Z",
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "at": "2026-10-05T23:30:00Z",
+      "note": "Reopened by the honest-status audit; see .specify/sprints/sprint-6/attestations/IFC-151/task-tracking.json (kept as history)."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-11-12T15:10:00Z",
+      "note": "Consumer framework delivered on feat/ifc-151-outbox-consumer-framework: poison messages, per-handler idempotency, outbox metrics and spans, DLQ triage CLI, alert rule as code, chaos tests. Verdict NEEDS_HUMAN until the metrics and alert are live in production."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Production evidence: after merge and a combined-worker deploy, intelliflow_outbox_events_total must show series in Grafana and alert rule ifc151-outbox-dead-letters must be live (grafana-alert-rules.yml applies it on merge).",
+      "raised_at": "2026-11-12T15:10:00Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 85,
+  "updated_at": "2026-11-12T15:10:00Z"
+}

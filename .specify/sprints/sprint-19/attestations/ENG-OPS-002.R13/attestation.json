@@ -1,0 +1,100 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "ENG-OPS-002.R13",
+  "run_id": "eng-ops-002-r13-close-2026-11-12",
+  "attestor": "ifc-speed lane (Sprint 19 governance) — closing ENG-OPS-002.R13 (chore/eng-ops-002-r13-close)",
+  "attestation_timestamp": "2026-11-12T14:37:34Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 5,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 3,
+    "gates_failed": 0,
+    "kpis_met": 2,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "tools/scripts/flaky-test-skip-gate.ts": "sha256:e0b0e9c6487598e5b02752c36330b8e2f91f35150e56841affc4d4a929654ffb",
+    "tools/scripts/flaky-test-gate.allowlist.json": "sha256:fee9913a26a3c512a2bdaf24c36a793c2544d899233137b8aada4b396e60ea8f",
+    "docs/architecture/adr/ADR-054-property-based-race-condition-testing.md": "sha256:a694c3342bd57896bdcbc23c85f6f7fc030f69af68978ad96b1319d0ef5035f5",
+    ".github/workflows/ci.yml": "sha256:485feb8921051e024037aaf4258e13307e532d7c3bc74ba97954543dea81149e",
+    "scripts/pre-ship.mjs": "sha256:10c23d86ddaf287bbe7cb4f02f91ff5b4c51549d22f194197a2c3501466a1769"
+  },
+  "validation_results": [
+    {
+      "name": "the skip gate over the whole repo",
+      "command": "pnpm run validate:flaky-test-gate",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-12T14:37:34Z",
+      "stdout_hash": "299576232b444849e73423f65b5aacd3b08ae90b6627906f7663c26243bf6439"
+    },
+    {
+      "name": "the gate's own tests, with coverage",
+      "command": "pnpm run test:flaky-test-gate -- --coverage.enabled --coverage.reporter=text",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-12T14:37:34Z",
+      "stdout_hash": "9f51e914d097ff66ed1846eaf9fb9e8d406413b69f1f5f3b3ccd741119310260"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "skips-blocked-unless-linked",
+      "passed": true,
+      "log_path": "tools/scripts/flaky-test-skip-gate.ts fails on any test.skip/it.skip/describe.skip/xit/xdescribe/xtest without an `// ADR-054: <reference>` annotation (finding id, task id, #issue or DEFERRED) or an allow-list entry carrying the same reference."
+    },
+    {
+      "gate_id": "enforced-in-ci-and-pre-ship",
+      "passed": true,
+      "log_path": ".github/workflows/ci.yml 'Lint & Format' job, step 'Flaky-test skip gate (ADR-054)' (pnpm run validate:flaky-test-gate), plus 'Flaky-test skip gate tests'; scripts/pre-ship.mjs step flaky-test-gate (required)."
+    },
+    {
+      "gate_id": "existing-skips-reconciled",
+      "passed": true,
+      "log_path": "Skip sites found: 15 (annotated: 14, allowlisted: 1, violations: 0). The one allow-list entry (tests/integration/connectors/erp.test.ts, QUAL-013) waits on ENG-OPS-002.R17, which is still Backlog."
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "unlinked skips",
+      "target": "0",
+      "actual": "0 of 15 skip sites",
+      "met": true
+    },
+    {
+      "kpi": "gate test coverage",
+      "target": ">=90%",
+      "actual": "lines 98.61%, statements 98.1%, branches 95.45%, functions 100% (46 tests)",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Skips blocked by lint unless issue-linked",
+      "met": true,
+      "evidence": "Implemented in #619 (b8ed885c9) as a lint-stage gate rather than an eslint rule; it runs in CI's Lint & Format job and as a required pre-ship step. The audit of 2026-11-12 looked only in eslint.config.mjs and so recorded it as not started."
+    },
+    {
+      "criterion": "existing 21 reconciled",
+      "met": true,
+      "evidence": "All skips reconciled when the gate landed; 15 skip sites remain today, all linked (14 annotated, 1 allow-listed)."
+    },
+    {
+      "criterion": "verified by: pnpm lint",
+      "met": true,
+      "evidence": "The gate is not part of `pnpm lint` (turbo lint); it runs beside it in the same CI job. The CSV's verified-by is corrected to `pnpm validate:flaky-test-gate` in the same change."
+    }
+  ],
+  "dependencies_verified": ["ENG-OPS-002"],
+  "environment": {
+    "os": "win32",
+    "node_version": "v25.2.1",
+    "git_commit": "9a566ce5c618f54bb6d053d8bae94fbf7189b941",
+    "branch": "chore/eng-ops-002-r13-close"
+  },
+  "notes": "No code change: the work shipped in #619 and has been enforced since. An eslint rule doing the same check was considered and not added, because it would duplicate an enforced gate. This change records the evidence, corrects the row's verified-by command, and closes the row."
+}

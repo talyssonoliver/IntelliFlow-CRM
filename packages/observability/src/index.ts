@@ -75,6 +75,24 @@ export {
 // Export request-scoped log context (AsyncLocalStorage-backed)
 export { runWithLogContext, getCurrentLogContext, type LogRequestContext } from './log-context';
 
+// One span per queue job or polled unit of work, continuing the producer's trace (IFC-097).
+export {
+  runConsumerJob,
+  runWorkSpan,
+  carrierOf,
+  WORKER_TRACER_NAME,
+  type ConsumerJob,
+  type SpanRunOptions,
+} from './consumer-span';
+
+// Outbox consumer outcome counter and dispatch-duration histogram (IFC-151).
+export {
+  createOutboxMetrics,
+  OUTBOX_METER_NAME,
+  type OutboxMetrics,
+  type OutboxOutcome,
+} from './outbox-metrics';
+
 // Re-export OTel SDK trace primitives needed for in-process span capture (IFC-032).
 // Used by:
 //   - Section F LeadRoutingService tests (workflow.lead.route span assertions)
