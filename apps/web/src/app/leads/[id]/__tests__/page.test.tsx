@@ -1591,6 +1591,35 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
     delete data().location;
   });
 
+  it('Open Rate reads "—" without tracked sends, and Touchpoints leaves out score changes (#1288)', () => {
+    data().activities = [
+      // A synced outreach email: no open tracking.
+      { ...emailActivity, id: 'act-sync-1', metadata: { subject: 'Outreach email sent' } },
+      {
+        id: 'act-score-1',
+        type: 'SCORE_UPDATE',
+        title: 'Lead Scored by AI',
+        description: '',
+        timestamp: '2026-03-02T12:00:00.000Z',
+        userName: 'AI Scoring Agent',
+        metadata: { previousScore: 32, newScore: 28 },
+        sentiment: null,
+      },
+      callActivity('https://calls.example.invalid/rec-1.mp3'),
+    ];
+    render(<Lead360Page />);
+    expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('—');
+    expect(screen.getByText('Touchpoints').previousElementSibling).toHaveTextContent('2');
+  });
+
+  it('Open Rate reads 0% when tracked emails went unopened (#1288)', () => {
+    data().activities = [
+      { ...emailActivity, metadata: { subject: 'Your proposal', opened: false, openCount: 0 } },
+    ];
+    render(<Lead360Page />);
+    expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('0%');
+  });
+
   it('Compose opens the email composer addressed to the lead', () => {
     render(<Lead360Page />);
     fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));

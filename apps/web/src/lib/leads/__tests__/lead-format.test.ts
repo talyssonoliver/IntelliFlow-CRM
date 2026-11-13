@@ -8,12 +8,63 @@ import {
   httpUrlOrNull,
   insightRecommendations,
   isSystemTag,
+  isTouchpoint,
+  isTrackedEmailSend,
+  leadActivityMetrics,
   leadWebsite,
+  openRateLabel,
   visibleTags,
   leadDisplayName,
   leadExportFields,
   type ActivityType,
 } from '../lead-format';
+
+describe('lead-format · profile card metrics (#1288)', () => {
+  it('counts only emails the CRM tracks opens for as sends', () => {
+    expect(isTrackedEmailSend({ type: 'email', metadata: { opened: false } })).toBe(true);
+    expect(isTrackedEmailSend({ type: 'email', metadata: { openCount: 0 } })).toBe(true);
+    // A logged or synced email (outreach send, inbound reply) has no tracking.
+    expect(isTrackedEmailSend({ type: 'email', metadata: { subject: 'Hi' } as never })).toBe(false);
+    expect(isTrackedEmailSend({ type: 'email', metadata: null })).toBe(false);
+    expect(isTrackedEmailSend({ type: 'email' })).toBe(false);
+    expect(isTrackedEmailSend({ type: 'call', metadata: { opened: true } })).toBe(false);
+  });
+
+  it('leaves score and status changes out of touchpoints', () => {
+    expect(isTouchpoint('score_update')).toBe(false);
+    expect(isTouchpoint('status_change')).toBe(false);
+    for (const type of ['email', 'call', 'note', 'meeting', 'web_form', 'qualification'] as const) {
+      expect(isTouchpoint(type)).toBe(true);
+    }
+  });
+
+  it('counts tracked sends, opens, meetings and touchpoints from activities', () => {
+    expect(
+      leadActivityMetrics([
+        { type: 'email', metadata: { opened: true } },
+        { type: 'email', metadata: { openCount: 2 } },
+        { type: 'email', metadata: { opened: false, openCount: 0 } },
+        { type: 'email', metadata: {} },
+        { type: 'meeting' },
+        { type: 'score_update' },
+        { type: 'status_change' },
+      ])
+    ).toEqual({ emailsSent: 3, emailsOpened: 2, meetings: 1, touchpoints: 5 });
+    expect(leadActivityMetrics([])).toEqual({
+      emailsSent: 0,
+      emailsOpened: 0,
+      meetings: 0,
+      touchpoints: 0,
+    });
+  });
+
+  it('shows a dash with no tracked sends, and a percentage once there are some', () => {
+    expect(openRateLabel(0, 0)).toBe('—');
+    expect(openRateLabel(3, 0)).toBe('0%');
+    expect(openRateLabel(3, 1)).toBe('33%');
+    expect(openRateLabel(4, 4)).toBe('100%');
+  });
+});
 
 const ALL_TYPES: ActivityType[] = [
   'web_form',

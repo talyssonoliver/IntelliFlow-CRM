@@ -212,6 +212,60 @@ export interface LeadNameParts {
   email?: string | null;
 }
 
+/** The part of a lead activity the profile card's metrics read. */
+export interface LeadMetricActivity {
+  type: ActivityType;
+  metadata?: { opened?: unknown; openCount?: unknown } | null;
+}
+
+/**
+ * An email the CRM tracks opens for: its activity records whether it was opened. Logged
+ * or synced emails (outreach sends, inbound replies) carry no tracking and do not count,
+ * so they cannot make an open rate of "0%".
+ */
+export function isTrackedEmailSend(activity: Readonly<LeadMetricActivity>): boolean {
+  if (activity.type !== 'email' || !activity.metadata) return false;
+  return (
+    typeof activity.metadata.opened === 'boolean' || typeof activity.metadata.openCount === 'number'
+  );
+}
+
+/**
+ * A touchpoint is something a person did with the lead. Score and status changes are
+ * system records, not touchpoints.
+ */
+export function isTouchpoint(type: ActivityType): boolean {
+  return type !== 'score_update' && type !== 'status_change';
+}
+
+/**
+ * The profile card's counts from a lead's activities: tracked email sends and how many of
+ * them were opened, meetings, and touchpoints (system records left out).
+ */
+export function leadActivityMetrics(activities: readonly Readonly<LeadMetricActivity>[]): {
+  emailsSent: number;
+  emailsOpened: number;
+  meetings: number;
+  touchpoints: number;
+} {
+  const trackedSends = activities.filter(isTrackedEmailSend);
+  const wasOpened = (act: Readonly<LeadMetricActivity>) =>
+    act.metadata?.opened === true ||
+    (typeof act.metadata?.openCount === 'number' && act.metadata.openCount > 0);
+  return {
+    emailsSent: trackedSends.length,
+    emailsOpened: trackedSends.filter(wasOpened).length,
+    meetings: activities.filter((act) => act.type === 'meeting').length,
+    touchpoints: activities.filter((act) => isTouchpoint(act.type)).length,
+  };
+}
+
+/** The open rate of tracked sends, or "—" when there are none to measure. */
+export function openRateLabel(trackedSent: number, opened: number): string {
+  if (trackedSent <= 0) return '—';
+  return `${Math.round((opened / trackedSent) * 100)}%`;
+}
+
 /**
  * The one name to show for a lead: first and last name, then company, then
  * email. Leads imported without a person's name (company-only or email-only

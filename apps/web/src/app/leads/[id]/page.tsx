@@ -95,6 +95,7 @@ import {
   formatRelativeTime,
   httpUrlOrNull,
   insightRecommendations,
+  leadActivityMetrics,
   leadDisplayName,
   leadExportFields,
 } from '@/lib/leads/lead-format';
@@ -2347,6 +2348,20 @@ function reportCacheRevalidationError(error: unknown) {
   console.error('Failed to revalidate lead caches:', error);
 }
 
+/**
+ * The lead's stored insight, shown only once the scoring job has run on the lead (SCORED
+ * or NEEDS_REVIEW). The API returns it as `aiInsights` (LeadAIInsight rows); opening a
+ * lead used to save a row derived from heuristics, so a never-scored lead's row is not an
+ * analysis.
+ */
+function scoredLeadInsight<T>(
+  scoringStatus: string | null | undefined,
+  insights: readonly T[] | undefined
+): T | null {
+  if (scoringStatus !== 'SCORED' && scoringStatus !== 'NEEDS_REVIEW') return null;
+  return insights?.[0] ?? null;
+}
+
 export default function Lead360Page() {
   // Get lead ID from URL params
   const params = useParams();
@@ -2620,14 +2635,7 @@ export default function Lead360Page() {
       }));
   }, [activities]);
 
-  // The API returns the lead's insight as `aiInsights` (the LeadAIInsight rows the
-  // scoring job writes); the page used to read a singular `aiInsight` that was never
-  // set, so every lead read "AI analysis not run". Opening a lead used to save a row
-  // derived from heuristics, so a row is shown only once the scoring job has run on
-  // the lead (SCORED or NEEDS_REVIEW); a never-scored lead's row is not an analysis.
-  const scoredByJob =
-    apiLead?.scoringStatus === 'SCORED' || apiLead?.scoringStatus === 'NEEDS_REVIEW';
-  const apiInsight = scoredByJob ? (apiLead?.aiInsights?.[0] ?? null) : null;
+  const apiInsight = scoredLeadInsight(apiLead?.scoringStatus, apiLead?.aiInsights);
 
   // Transform AI insights from API
   const aiInsights = useMemo(() => {
@@ -2887,16 +2895,11 @@ export default function Lead360Page() {
     );
   }
 
-  // Compute metrics from activities
-  const emailActivities = activities.filter((act) => act.type === 'email');
-  const meetingActivities = activities.filter((act) => act.type === 'meeting');
-  const emailsOpened = emailActivities.filter((act) => act.metadata?.opened).length;
+  // The open rate counts only emails the CRM tracks opens for, and touchpoints leave out
+  // system records (score and status changes).
   const leadMetrics = {
     estimatedValue: lead.estimatedValue,
-    emailsSent: emailActivities.length,
-    emailsOpened,
-    meetings: meetingActivities.length,
-    touchpoints: activities.length,
+    ...leadActivityMetrics(activities),
   };
 
   // Use pre-computed filtered/visible activities (hooks moved before early returns)

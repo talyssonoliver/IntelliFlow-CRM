@@ -9,6 +9,7 @@ import {
   formatEstimatedValue,
   leadDisplayName,
   leadWebsite,
+  openRateLabel,
   visibleTags,
 } from '@/lib/leads/lead-format';
 import { leadScoreDisplay } from '@/lib/leads/score-display';
@@ -362,11 +363,12 @@ export function LeadProfileCard({
             <p className="text-xs text-slate-500">Lead Score</p>
           </div>
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <p className="text-lg font-bold text-slate-900 dark:text-white">
-              {leadMetrics.emailsSent > 0
-                ? Math.round((leadMetrics.emailsOpened / leadMetrics.emailsSent) * 100)
-                : 0}
-              %
+            {/* "—" until the CRM has sent a tracked email; 0% only when sends went unopened. */}
+            <p
+              className="text-lg font-bold text-slate-900 dark:text-white"
+              data-testid="lead-open-rate"
+            >
+              {openRateLabel(leadMetrics.emailsSent, leadMetrics.emailsOpened)}
             </p>
             <p className="text-xs text-slate-500">Open Rate</p>
           </div>

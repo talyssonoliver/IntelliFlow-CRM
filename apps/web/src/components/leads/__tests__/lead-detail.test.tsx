@@ -138,6 +138,21 @@ describe('LeadDetail', () => {
     expect(screen.getByText('7')).toBeInTheDocument();
   });
 
+  it('shows a dash for the open rate when no tracked email was sent (#1288)', () => {
+    render(
+      <LeadDetail lead={makeLead()} leadMetrics={{ ...metrics, emailsSent: 0, emailsOpened: 0 }} />
+    );
+    expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('—');
+    expect(screen.queryByText('0%')).not.toBeInTheDocument();
+  });
+
+  it('shows 0% only when tracked emails were sent and none was opened (#1288)', () => {
+    render(
+      <LeadDetail lead={makeLead()} leadMetrics={{ ...metrics, emailsSent: 3, emailsOpened: 0 }} />
+    );
+    expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('0%');
+  });
+
   it('shows "Not scored" in the profile card when no real score exists (#1218)', () => {
     render(
       <LeadDetail lead={makeLead({ score: 0, scoringStatus: 'NONE' })} leadMetrics={metrics} />
