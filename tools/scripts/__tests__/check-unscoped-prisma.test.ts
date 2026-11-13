@@ -35,6 +35,17 @@ describe('findUses', () => {
     ]);
   });
 
+  it('counts building the tenant-scoped client as construction, not a query', () => {
+    const src = [
+      'const db = createTenantScopedPrisma(ctx.prisma, serviceTenantContext(tenantId));',
+      'const n = await ctx.prisma.lead.count();',
+    ].join('\n');
+    expect(findUses(src)).toEqual([
+      { line: 1, kind: 'service' },
+      { line: 2, kind: 'direct' },
+    ]);
+  });
+
   it('ignores comments', () => {
     const src = [
       '// never use ctx.prisma here',

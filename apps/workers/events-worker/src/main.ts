@@ -16,6 +16,8 @@ import pino from 'pino';
 import { BaseWorker, type ComponentHealth } from '@intelliflow/worker-shared';
 import { PrismaClient, disconnectPrisma } from '@intelliflow/db';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { QUEUE_NAMES, STORED_LEAD_FOR_AI_SELECT, claimStoreFromRedis } from '@intelliflow/platform';
+import { queueLeadAiForCreatedLead } from './handlers/lead-ai-backstop';
 import { OutboxPoller, InMemoryOutboxRepository, type OutboxRepository } from './outbox/pollOutbox';
 import { EventDispatcher, DOMAIN_EVENT_TYPES, type OutboxEvent } from './outbox/event-dispatcher';
 import { loadEventsWorkerConfig, type EventsWorkerConfig as EnvEventsWorkerConfig } from './config';
@@ -390,8 +392,29 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
           source?: string;
         };
 
-        // Trigger lead scoring by publishing to AI scoring queue
+        // Trigger lead scoring, qualification and the next best action. Backstop to the API's
+        // own enqueue: same jobIds, so a job the API already queued is not added twice.
         this.logger.info({ leadId, source }, 'Triggering AI lead scoring');
+        await queueLeadAiForCreatedLead(event, {
+          readLead: async (id, tenantId) => {
+            const { prisma } = await import('@intelliflow/db');
+            return (prisma as unknown as PrismaClient).lead.findFirst({
+              where: { id, tenantId },
+              select: STORED_LEAD_FOR_AI_SELECT,
+            });
+          },
+          addJob: async (planned) => {
+            await this.getQueue(QUEUE_NAMES[planned.queue]).add(
+              planned.name,
+              planned.data,
+              planned.options
+            );
+          },
+          // The scoring queue's Redis: the same store the API claims runs in.
+          claimStore: async () =>
+            claimStoreFromRedis(await this.getQueue(QUEUE_NAMES.AI_SCORING).client),
+          logger: this.logger,
+        });
 
         // Queue welcome notification if email is present
         if (email) {

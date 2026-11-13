@@ -37,6 +37,13 @@
       "reason": "ADR-054: #1117 — runs 4/4 in CI's Integration Tests job and in the pre-ship integration-tests step. The local pre-ship coverage step cannot resolve @intelliflow/db from tests/integration/setup.ts, so the suite skips there. Remove this entry when #1117 makes the coverage run load the client."
     },
     {
+      "file": "tests/integration/inbound-tenant-scope.test.ts",
+      "kind": "infra-gated",
+      "maxSkipped": 5,
+      "reviewBy": "2026-11-30",
+      "reason": "ADR-054: #1117 — runs 5/5 in CI's Integration Tests job and in the pre-ship integration-tests step. The local pre-ship coverage step cannot resolve @intelliflow/db from tests/integration/setup.ts, so createIsolatedTestPrismaClient() returns null and the suite skips there. Remove this entry when #1117 makes the coverage run load the client."
+    },
+    {
       "file": "tests/integration/tier-module-gating.test.ts",
       "kind": "infra-gated",
       "maxSkipped": 9,
