@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "IFC-116",
+  "started_at": "2026-11-12T16:30:00Z",
+  "status_history": [
+    {
+      "status": "In Progress",
+      "at": "2026-11-12T16:30:00Z",
+      "note": "Sprint-18 record (the sprint-9 attestation stays as history). Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel; DoD re-pointed to the Grafana Cloud artifacts."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Services emitting today (2026-11-12): api and combined-worker, logs + traces + span metrics. Tempo 24h: ai-worker 73k spans; api request records in Loki carry trace_id 37,314 of 37,314 over 7 days, and 20 of 20 sampled trace ids exist in Tempo. Open: web on Vercel sends nothing to Grafana (Sentry owns its tracer; owner ruling: add OTLP alongside Sentry), and worker jobs have no span of their own until feat/ifc-097-worker-consumer-spans is deployed. MTTD < 2 min is tracked under IFC-074.",
+      "raised_at": "2026-11-12T16:30:00Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 75,
+  "updated_at": "2026-11-12T16:30:00Z"
+}

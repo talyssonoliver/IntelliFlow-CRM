@@ -37,3 +37,9 @@ export function run(options?: {
   /** Wait between 503 retries; tests pass a no-op. */
   sleep?: (ms: number) => Promise<void>;
 }): Promise<{ applied: boolean; existed: boolean }>;
+export function validateAiConfig(config: Parameters<typeof validateConfig>[0]): string[];
+export const DASHBOARDS: Record<
+  'production' | 'ai-models',
+  { path: string; validate: (config: unknown) => string[]; message: string }
+>;
+export function selectDashboard(argv: string[]): (typeof DASHBOARDS)['production'];

@@ -20,6 +20,7 @@ beforeEach(async () => {
   const mod = await import('../sitemap');
   sitemapEntries = mod.default();
 });
+import { FORGOT_PASSWORD_PATH, RESET_PASSWORD_PATH } from '@/lib/auth/auth-paths';
 
 const VALID_CHANGE_FREQUENCIES = [
   'always',
@@ -56,9 +57,9 @@ const AUTH_PROTECTED_PREFIXES = [
 
 // Auth flow paths that must NOT appear in the sitemap
 const AUTH_FLOW_PATHS = [
-  '/forgot-password',
+  FORGOT_PASSWORD_PATH,
   '/logout',
-  '/reset-password',
+  RESET_PASSWORD_PATH,
   '/mfa',
   '/auth',
   '/verify-email',

@@ -72,6 +72,9 @@ vi.mock('@/lib/trpc', () => ({
 import { EMAIL_NOT_CONFIRMED_MESSAGE } from '@intelliflow/validators';
 import LoginPage from '../page';
 
+// What a user types when they mistype their sign-in secret.
+const WRONG_GUESS = 'wrong-guess-123';
+
 describe('LoginPage', () => {
   const user = userEvent.setup();
 
@@ -460,7 +463,7 @@ describe('LoginPage', () => {
       await user.type(emailInput, 'wrong@example.com');
 
       const passwordInput = screen.getByLabelText(/^password$/i);
-      await user.type(passwordInput, ['wrong', 'password', '123'].join(''));
+      await user.type(passwordInput, WRONG_GUESS);
 
       const submitButton = screen.getByRole('button', { name: /^sign in$/i });
       await user.click(submitButton);

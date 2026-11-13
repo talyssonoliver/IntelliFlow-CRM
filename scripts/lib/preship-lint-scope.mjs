@@ -21,7 +21,7 @@
  */
 
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { nonEmptyLines, runGit } from './preship-git.mjs';
 
 export const DEFAULT_BASE_REF = 'origin/main';
 
@@ -54,6 +54,29 @@ export const LINT_CONFIG_PATTERNS = [
   /^scripts\/lib\/preship-lint-scope\.mjs$/,
 ];
 
+/**
+ * What can change the type-aware promise lint (eslint.promises.config.mjs) for
+ * files this branch did not touch: its own config and runners, the tsconfigs it
+ * type-checks through, and the resolved TypeScript and typescript-eslint
+ * versions (the lockfile and workspace files). Not here, unlike the general
+ * list: a package.json (a dependency change always comes with a lockfile
+ * change), prettier, the default eslint config and the custom rules under
+ * tools/lint, tools/eslint and eslint-rules, none of which that config loads.
+ * A repo-wide run of this lint took 120-280 s locally against 2-65 s scoped
+ * (week to 2026-11-13), and most repo-wide runs came from a package.json.
+ */
+export const PROMISES_CONFIG_PATTERNS = [
+  /^pnpm-lock\.yaml$/,
+  /^pnpm-workspace\.yaml$/,
+  /(^|\/)\.npmrc$/,
+  /(^|\/)tsconfig[^/]*\.json$/,
+  /^eslint\.promises\.config\.[cm]?[jt]s$/,
+  /^packages\/typescript-config\//,
+  /^scripts\/lint-promises\.mjs$/,
+  /^scripts\/run-scoped-lint\.mjs$/,
+  /^scripts\/lib\/preship-lint-scope\.mjs$/,
+];
+
 /** The globs `format:check` passes to prettier, as one test. */
 export const FORMAT_EXTENSION = /\.(ts|tsx|md|json|yml|yaml)$/;
 
@@ -64,11 +87,11 @@ const LINT_EXTENSION = /\.(ts|tsx|js|jsx|mjs|cjs|mts|cts)$/;
  * @param {string[]} changedFiles repo-relative, forward-slash paths
  * @returns {{scope: 'full'|'changed', reason: string, files: string[]}}
  */
-export function classifyLintFiles(changedFiles) {
+export function classifyLintFiles(changedFiles, patterns = LINT_CONFIG_PATTERNS) {
   const unique = [
     ...new Set(changedFiles.map((f) => f.replaceAll('\\', '/')).filter(Boolean)),
   ].sort((a, b) => a.localeCompare(b));
-  const configHit = unique.find((f) => LINT_CONFIG_PATTERNS.some((re) => re.test(f)));
+  const configHit = unique.find((f) => patterns.some((re) => re.test(f)));
   if (configHit) {
     return {
       scope: 'full',
@@ -79,30 +102,9 @@ export function classifyLintFiles(changedFiles) {
   return { scope: 'changed', reason: `${unique.length} changed file(s)`, files: unique };
 }
 
-/** process.env without the GIT_* variables a git hook exports (see preship-test-scope). */
-function gitEnv(env) {
-  const out = { ...env };
-  for (const k of Object.keys(out)) if (k.startsWith('GIT_')) delete out[k];
-  return out;
-}
+const defaultGit = runGit;
 
-function defaultGit(args, cwd, env) {
-  const r = spawnSync('git', args, {
-    cwd,
-    env: gitEnv(env),
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-    maxBuffer: 64 * 1024 * 1024,
-  });
-  return r.status === 0 ? r.stdout : null;
-}
-
-function lines(out) {
-  return (out || '')
-    .split('\n')
-    .map((l) => l.trim())
-    .filter(Boolean);
-}
+const lines = nonEmptyLines;
 
 /**
  * Resolve the lint scope for this checkout.
@@ -113,6 +115,7 @@ export function resolveLintScope({
   env = process.env,
   baseRef = DEFAULT_BASE_REF,
   git = defaultGit,
+  patterns = LINT_CONFIG_PATTERNS,
 }) {
   if (env.CI === 'true' || env.CI === '1') {
     return { scope: 'full', reason: 'CI checks the whole repo', files: [] };
@@ -129,7 +132,14 @@ export function resolveLintScope({
   if (tracked === null || untracked === null) {
     return { scope: 'full', reason: 'git diff failed', files: [] };
   }
-  return classifyLintFiles([...lines(tracked), ...lines(untracked)]);
+  return classifyLintFiles([...lines(tracked), ...lines(untracked)], patterns);
+}
+
+/** The lint scope for one mode: the promise lint has its own, narrower config list. */
+export function lintScopeFor(mode, opts) {
+  return resolveLintScope(
+    mode === 'promises' ? { ...opts, patterns: PROMISES_CONFIG_PATTERNS } : opts
+  );
 }
 
 /** The changed files prettier's `format:check` globs would have covered. */
