@@ -183,8 +183,10 @@ or test-setup changes widen to full on their own.
 
 **Lint scope:** format-check, lint and lint-promises check only the changed
 files, and go repo-wide when eslint/prettier config, tsconfig, any
-`package.json` or the lockfile changes (`PRESHIP_FULL_LINT=1` forces it). CI
-checks the whole repo.
+`package.json` or the lockfile changes (`PRESHIP_FULL_LINT=1` forces it). The
+type-aware lint-promises step has its own, narrower list: only its config, the
+tsconfigs, the lockfile/workspace files and its runners widen it, not a
+package.json or the default eslint/prettier config. CI checks the whole repo.
 
 **Build scope:** locally `library-build`, `typecheck` and `build` cover the
 packages the branch changed plus their dependents (CI's
