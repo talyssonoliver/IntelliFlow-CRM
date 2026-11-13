@@ -6,7 +6,10 @@ import {
   setChainRunWriter,
   type ChainRunRow,
 } from '../chain-run-recorder';
-import { configureVersionLoader } from '../../versioning/chain-version-loader';
+import { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import { AIMessage, type BaseMessage } from '@langchain/core/messages';
+import type { ChatResult } from '@langchain/core/outputs';
+import { configureVersionLoader, loadVersionedPrompt } from '../../versioning/chain-version-loader';
 import { calculateCost, resolvePricingKey } from '../../config/ai.config';
 
 const TENANT = '11111111-1111-4111-8111-111111111111';
@@ -27,6 +30,41 @@ function capture() {
   return rows;
 }
 
+/** A chat model that reports its served model and token usage the way providers do. */
+class UsageReportingModel extends BaseChatModel {
+  _llmType(): string {
+    return 'usage-reporting-fake';
+  }
+
+  async _generate(_messages: BaseMessage[]): Promise<ChatResult> {
+    const message = new AIMessage({
+      content: 'routed',
+      response_metadata: { model_name: 'anthropic/claude-haiku-5-5' },
+      usage_metadata: { input_tokens: 120, output_tokens: 30, total_tokens: 150 },
+    });
+    return { generations: [{ text: 'routed', message }] };
+  }
+}
+
+function savedScoringVersion() {
+  configureVersionLoader({
+    findActiveVersion: vi.fn(async () => ({
+      version: {
+        id: 'v-scoring',
+        chainType: 'SCORING' as const,
+        status: 'ACTIVE' as const,
+        prompt: 'Score:\n{lead_info}',
+        model: 'm',
+        temperature: 0.2,
+        maxTokens: 100,
+        additionalParams: null,
+      },
+      selectedBy: 'direct' as const,
+    })),
+    getActiveVersion: vi.fn(),
+  });
+}
+
 const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 afterEach(() => {
@@ -38,7 +76,7 @@ describe('recordedChainRun', () => {
   it('records one row per run with the summed usage and the served model', async () => {
     const rows = capture();
 
-    const result = await recordedChainRun('TICKET_ROUTING', TENANT, async ([handler]) => {
+    const result = await recordedChainRun('TICKET_ROUTING', TENANT, null, async ([handler]) => {
       (handler as RunUsageHandler).handleLLMEnd(llmEnd('anthropic/claude-haiku-5-5', 100, 20));
       (handler as RunUsageHandler).handleLLMEnd(llmEnd('anthropic/claude-haiku-5-5', 50, 10));
       return 'routed';
@@ -66,7 +104,7 @@ describe('recordedChainRun', () => {
     const failure = new TypeError('provider down');
 
     await expect(
-      recordedChainRun('SENTIMENT_ANALYSIS', TENANT, async () => {
+      recordedChainRun('SENTIMENT_ANALYSIS', TENANT, null, async () => {
         throw failure;
       })
     ).rejects.toBe(failure);
@@ -83,7 +121,7 @@ describe('recordedChainRun', () => {
   it('prices free models at zero', async () => {
     const rows = capture();
 
-    await recordedChainRun('CHURN_RISK', TENANT, async ([handler]) => {
+    await recordedChainRun('CHURN_RISK', TENANT, null, async ([handler]) => {
       (handler as RunUsageHandler).handleLLMEnd(llmEnd('nvidia/nemotron-3-ultra:free', 900, 300));
     });
     await flush();
@@ -94,7 +132,7 @@ describe('recordedChainRun', () => {
   it('prices the served model by its own key, never at another model’s rates', async () => {
     const rows = capture();
     const run = (model: string) =>
-      recordedChainRun('CHURN_RISK', TENANT, async ([handler]) => {
+      recordedChainRun('CHURN_RISK', TENANT, null, async ([handler]) => {
         (handler as RunUsageHandler).handleLLMEnd(llmEnd(model, 1000, 1000));
       });
 
@@ -113,74 +151,50 @@ describe('recordedChainRun', () => {
     expect(rows[1]!.costUsd).not.toBe(calculateCost('gpt-3.5-turbo', 1000, 1000));
   });
 
-  it('names the saved version only when its prompt fits the chain', async () => {
+  it('records the version the chain read when it chose its prompt, whatever the cache does later', async () => {
     const rows = capture();
-    const savedPrompt = 'Score:\n{lead_info}';
-    configureVersionLoader({
-      findActiveVersion: vi.fn(async () => ({
-        version: {
-          id: 'v-scoring',
-          chainType: 'SCORING' as const,
-          status: 'ACTIVE' as const,
-          prompt: savedPrompt,
-          model: 'm',
-          temperature: 0.2,
-          maxTokens: 100,
-          additionalParams: null,
-        },
-        selectedBy: 'direct' as const,
-      })),
-      getActiveVersion: vi.fn(),
-    });
-    const { getVersionLoader } = await import('../../versioning/chain-version-loader');
-    await getVersionLoader().getChainConfig('SCORING', { tenantId: TENANT });
+    savedScoringVersion();
+    const chosen = await loadVersionedPrompt('SCORING', TENANT);
+    expect(chosen).toEqual({ prompt: 'Score:\n{lead_info}', versionId: 'v-scoring' });
 
-    await recordedChainRun('LEAD_SCORING', TENANT, async () => 'ok');
-    await recordedChainRun('CHURN_RISK', TENANT, async () => 'ok');
-    await flush();
-
-    expect(rows.map((row) => [row.workerChain, row.versionId])).toEqual([
-      ['LEAD_SCORING', 'v-scoring'],
-      ['CHURN_RISK', null],
-    ]);
-  });
-
-  it('names the version the run started with, even if the cache entry goes during the call', async () => {
-    const rows = capture();
-    configureVersionLoader({
-      findActiveVersion: vi.fn(async () => ({
-        version: {
-          id: 'v-scoring',
-          chainType: 'SCORING' as const,
-          status: 'ACTIVE' as const,
-          prompt: 'Score:\n{lead_info}',
-          model: 'm',
-          temperature: 0.2,
-          maxTokens: 100,
-          additionalParams: null,
-        },
-        selectedBy: 'direct' as const,
-      })),
-      getActiveVersion: vi.fn(),
-    });
-    const { getVersionLoader } = await import('../../versioning/chain-version-loader');
-    await getVersionLoader().getChainConfig('SCORING', { tenantId: TENANT });
-
-    await recordedChainRun('LEAD_SCORING', TENANT, async () => {
-      // The entry expires (or is reloaded) while the model call runs.
+    await recordedChainRun('LEAD_SCORING', TENANT, chosen.versionId, async () => {
+      // The cache entry expires or is replaced while the model call runs.
       configureVersionLoader(undefined);
       return 'ok';
     });
-    await flush();
 
     expect(rows[0]).toMatchObject({ workerChain: 'LEAD_SCORING', versionId: 'v-scoring' });
   });
 
+  it('reads no version id from the built-in fallback', async () => {
+    await expect(loadVersionedPrompt('SCORING', TENANT)).resolves.toMatchObject({
+      versionId: null,
+    });
+  });
+
+  it('has the model and token counts in the row as soon as a real model call resolves', async () => {
+    const rows = capture();
+    const model = new UsageReportingModel({});
+
+    await recordedChainRun('TICKET_ROUTING', TENANT, null, (callbacks) =>
+      model.invoke('route this', { callbacks })
+    );
+
+    // No flush: LangChain must have run the handler inline, before the row was built.
+    expect(new RunUsageHandler().awaitHandlers).toBe(true);
+    expect(rows[0]).toMatchObject({
+      model: 'anthropic/claude-haiku-5-5',
+      inputTokens: 120,
+      outputTokens: 30,
+    });
+    expect(rows[0]!.costUsd).toBe(calculateCost('claude-haiku-5-5', 120, 30));
+  });
+
   it('records nothing without a tenant or before a writer is set', async () => {
     const rows = capture();
-    await recordedChainRun('LEAD_SCORING', undefined, async () => 'ok');
+    await recordedChainRun('LEAD_SCORING', undefined, null, async () => 'ok');
     setChainRunWriter(null);
-    await recordedChainRun('LEAD_SCORING', TENANT, async () => 'ok');
+    await recordedChainRun('LEAD_SCORING', TENANT, null, async () => 'ok');
     await flush();
 
     expect(rows).toEqual([]);
@@ -191,7 +205,9 @@ describe('recordedChainRun', () => {
       throw new Error('db down');
     });
 
-    await expect(recordedChainRun('LEAD_SCORING', TENANT, async () => 'ok')).resolves.toBe('ok');
+    await expect(recordedChainRun('LEAD_SCORING', TENANT, null, async () => 'ok')).resolves.toBe(
+      'ok'
+    );
     await flush();
   });
 });

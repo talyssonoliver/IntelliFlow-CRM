@@ -21,7 +21,7 @@ import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { sanitizeStringField } from '../utils/input-sanitizer';
-import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { loadVersionedPrompt, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import { renderAutoResponsePrompt } from '@intelliflow/application';
 import { recordedChainRun } from '../monitoring/chain-run-recorder.js';
 import { isFallbackPrompt } from '../versioning/version-loader';
@@ -145,16 +145,19 @@ export class AutoResponseChain {
    * AutoResponseChain uses a dynamic prompt (buildPrompt), so we apply the versioned
    * config's prompt as custom instructions prefix when a tenant override exists.
    */
-  private async resolveVersionedInstructions(): Promise<string | null> {
+  private async resolveVersionedInstructions(): Promise<{
+    text: string;
+    versionId: string | null;
+  } | null> {
     if (!this.tenantId) return null;
     try {
-      const config = await getVersionLoader().getChainConfig(CHAIN_TYPE_MAP.AUTO_RESPONSE, {
-        tenantId: this.tenantId,
-      });
+      const chosen = await loadVersionedPrompt(CHAIN_TYPE_MAP.AUTO_RESPONSE, this.tenantId);
       // With no stored version the loader returns its generic EMAIL_WRITER fallback, which
       // would replace the tenant's own custom instructions; keep the tenant's in that case.
-      if (isFallbackPrompt(CHAIN_TYPE_MAP.AUTO_RESPONSE, config.prompt)) return null;
-      return config.prompt ?? null;
+      if (!chosen.prompt || isFallbackPrompt(CHAIN_TYPE_MAP.AUTO_RESPONSE, chosen.prompt))
+        return null;
+      // The version is kept with its prompt, so the recorded run names the version it sent.
+      return { text: chosen.prompt, versionId: chosen.versionId };
     } catch {
       logger.warn(
         {
@@ -188,7 +191,8 @@ export class AutoResponseChain {
     }
 
     // Resolve tenant-versioned instructions; apply as custom instructions prefix when available
-    const versionedInstructions = await this.resolveVersionedInstructions();
+    const chosen = await this.resolveVersionedInstructions();
+    const versionedInstructions = chosen?.text ?? null;
     const effectiveInput: AutoResponseInput = versionedInstructions
       ? {
           ...input,
@@ -206,39 +210,44 @@ export class AutoResponseChain {
     let parsed!: z.infer<typeof autoResponseLLMSchema>;
     let confidenceReported = true;
     // One recorded run (AI Chains usage) covers the structured call and its raw fallback.
-    await recordedChainRun('AUTO_RESPONSE', this.tenantId, async (callbacks) => {
-      try {
-        const structured = this.llm.withStructuredOutput(autoResponseLLMSchema, {
-          name: 'auto_response',
-        });
-        parsed = (await structured.invoke(prompt, { callbacks })) as z.infer<
-          typeof autoResponseLLMSchema
-        >;
-      } catch (structuredErr) {
-        logger.warn(
-          {
-            err: structuredErr instanceof Error ? structuredErr.message : String(structuredErr),
-          },
-          'withStructuredOutput unavailable or failed — falling back to raw invoke + JSON parse'
-        );
-        const response = await this.llm.invoke(prompt, { callbacks });
-        const content =
-          typeof response.content === 'string'
-            ? response.content
-            : JSON.stringify(response.content);
-        const raw = this.parseResponse(content);
-        confidenceReported = typeof raw.confidence === 'number';
-        parsed = autoResponseLLMSchema.parse({
-          subject: raw.subject ?? 'Re: Your inquiry',
-          body: raw.body ?? '',
-          // PG-198 (RF-2, #854): never invent a confidence. A missing value is 0, which
-          // validateResponse flags for human review and no auto-approval policy accepts.
-          confidence: typeof raw.confidence === 'number' ? raw.confidence : 0,
-          tone: raw.tone,
-          suggestedFollowUp: raw.suggestedFollowUp,
-        });
+    await recordedChainRun(
+      'AUTO_RESPONSE',
+      this.tenantId,
+      chosen?.versionId ?? null,
+      async (callbacks) => {
+        try {
+          const structured = this.llm.withStructuredOutput(autoResponseLLMSchema, {
+            name: 'auto_response',
+          });
+          parsed = (await structured.invoke(prompt, { callbacks })) as z.infer<
+            typeof autoResponseLLMSchema
+          >;
+        } catch (structuredErr) {
+          logger.warn(
+            {
+              err: structuredErr instanceof Error ? structuredErr.message : String(structuredErr),
+            },
+            'withStructuredOutput unavailable or failed — falling back to raw invoke + JSON parse'
+          );
+          const response = await this.llm.invoke(prompt, { callbacks });
+          const content =
+            typeof response.content === 'string'
+              ? response.content
+              : JSON.stringify(response.content);
+          const raw = this.parseResponse(content);
+          confidenceReported = typeof raw.confidence === 'number';
+          parsed = autoResponseLLMSchema.parse({
+            subject: raw.subject ?? 'Re: Your inquiry',
+            body: raw.body ?? '',
+            // PG-198 (RF-2, #854): never invent a confidence. A missing value is 0, which
+            // validateResponse flags for human review and no auto-approval policy accepts.
+            confidence: typeof raw.confidence === 'number' ? raw.confidence : 0,
+            tone: raw.tone,
+            suggestedFollowUp: raw.suggestedFollowUp,
+          });
+        }
       }
-    });
+    );
 
     // Build output with length constraints; modelVersion is stamped here, not by the model
     const output: AutoResponseOutput = {

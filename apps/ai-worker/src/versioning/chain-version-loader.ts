@@ -43,6 +43,29 @@ export function getVersionLoader(): VersionLoader {
   return _versionLoader;
 }
 
+/** A tenant's prompt for a chain type and the saved version it came from. */
+export interface VersionedPrompt {
+  prompt: string | null;
+  /** The saved version's id, or null for the loader's built-in fallback. */
+  versionId: string | null;
+}
+
+/**
+ * The prompt a chain may use for this tenant, read once when the chain chooses its prompt, with
+ * the version it came from. The chain hands that id to recordedChainRun, so a run is attributed
+ * to the version whose prompt it actually sent, even if the cache changes before it is recorded.
+ */
+export async function loadVersionedPrompt(
+  chainType: ChainType,
+  tenantId: string
+): Promise<VersionedPrompt> {
+  const loaded = await _versionLoader.loadVersionedChain(chainType, { tenantId });
+  return {
+    prompt: loaded.config.prompt ?? null,
+    versionId: loaded.versionId.startsWith('fallback-') ? null : loaded.versionId,
+  };
+}
+
 /** The loader only reads versions; nothing on this path publishes events. */
 const READ_ONLY_EVENT_BUS: EventBusPort = {
   publish: async () => {},

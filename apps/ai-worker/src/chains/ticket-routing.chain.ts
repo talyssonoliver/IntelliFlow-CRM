@@ -23,7 +23,7 @@ import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
-import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { loadVersionedPrompt, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import { usableVersionedPrompt } from '../versioning/versioned-prompt';
 import pino from 'pino';
 
@@ -133,13 +133,20 @@ export class TicketRoutingChain {
   /**
    * Resolve tenant-versioned prompt override (falls back to default on any error).
    */
-  private async resolveVersionedPrompt(): Promise<string | null> {
+  private async resolveVersionedPrompt(): Promise<{
+    text: string;
+    versionId: string | null;
+  } | null> {
     if (!this.tenantId) return null;
     try {
-      const config = await getVersionLoader().getChainConfig(CHAIN_TYPE_MAP.TICKET_ROUTING, {
-        tenantId: this.tenantId,
-      });
-      return usableVersionedPrompt('TICKET_ROUTING', config.prompt, this.prompt.inputVariables);
+      const chosen = await loadVersionedPrompt(CHAIN_TYPE_MAP.TICKET_ROUTING, this.tenantId);
+      const text = usableVersionedPrompt(
+        'TICKET_ROUTING',
+        chosen.prompt,
+        this.prompt.inputVariables
+      );
+      // The version is kept with its prompt, so the recorded run names the version it sent.
+      return text ? { text, versionId: chosen.versionId } : null;
     } catch {
       logger.warn(
         {
@@ -179,7 +186,8 @@ export class TicketRoutingChain {
         .join('\n');
 
       // Resolve tenant-versioned prompt if tenantId is available; fall back to default
-      const versionedText = await this.resolveVersionedPrompt();
+      const chosen = await this.resolveVersionedPrompt();
+      const versionedText = chosen?.text ?? null;
       const activePrompt = versionedText
         ? new PromptTemplate({
             template: versionedText,
@@ -199,8 +207,11 @@ export class TicketRoutingChain {
       });
 
       // Use structured output model — returns typed object directly (no parse step)
-      const parsed = (await recordedChainRun('TICKET_ROUTING', this.tenantId, (callbacks) =>
-        this.structuredModel.invoke(formattedPrompt, { callbacks })
+      const parsed = (await recordedChainRun(
+        'TICKET_ROUTING',
+        this.tenantId,
+        chosen?.versionId ?? null,
+        (callbacks) => this.structuredModel.invoke(formattedPrompt, { callbacks })
       )) as LLMOutput;
 
       // Post-parse validation: ensure assigneeId is in the candidate roster

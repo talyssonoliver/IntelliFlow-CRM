@@ -4,8 +4,8 @@
  *
  * A run is one call of the chain: from the model invocation to its result or failure, with every
  * model call it made (a provider fallback, a raw retry) summed into it. The row says which saved
- * version's prompt was used, or null for the built-in prompt, with the same rule the chain
- * applies (savedPromptFitsChain).
+ * version's prompt was used, or null for the built-in prompt: the chain passes the version id it
+ * read when it chose its prompt (loadVersionedPrompt).
  *
  * Recording never changes a run: it does not throw, and a failed insert is logged and dropped.
  * Until the worker wires a writer at startup (setChainRunWriter), nothing is recorded.
@@ -14,13 +14,8 @@
 import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import type { LLMResult } from '@langchain/core/outputs';
 import pino from 'pino';
-import {
-  BUILTIN_CHAINS,
-  savedPromptFitsChain,
-  type WorkerChainKey,
-} from '@intelliflow/application';
+import { BUILTIN_CHAINS, type WorkerChainKey } from '@intelliflow/application';
 import { calculateCost, resolvePricingKey } from '../config/ai.config.js';
-import { getVersionLoader } from '../versioning/chain-version-loader.js';
 
 const logger = pino({ name: 'chain-run-recorder', level: process.env.LOG_LEVEL || 'info' });
 
@@ -64,6 +59,12 @@ export class RunUsageHandler extends BaseCallbackHandler {
   model: string | null = null;
   private invokedModel: string | null = null;
 
+  constructor() {
+    // Run inline, not on LangChain's background callback queue: the row is built as soon as the
+    // chain's call resolves, and must already hold the model and token counts.
+    super({ _awaitHandler: true });
+  }
+
   handleChatModelStart(
     _llm: unknown,
     _messages: unknown,
@@ -96,14 +97,6 @@ export class RunUsageHandler extends BaseCallbackHandler {
   }
 }
 
-/** The saved version whose prompt this chain used for the tenant, or null (built-in). */
-function usedVersionId(key: WorkerChainKey, tenantId: string): string | null {
-  const chain = BUILTIN_CHAINS[key];
-  const loaded = getVersionLoader().peekLoaded(chain.chainType, tenantId);
-  if (!loaded || loaded.versionId.startsWith('fallback-')) return null;
-  return savedPromptFitsChain(chain, loaded.config.prompt) ? loaded.versionId : null;
-}
-
 /**
  * Price the served model by its own pricing key (a dated snapshot or an OpenRouter id maps to its
  * deployment, as in the scoring chain). Free variants cost nothing, and a model with no price here
@@ -134,20 +127,20 @@ async function write(row: ChainRunRow): Promise<void> {
 }
 
 /**
- * Run one chain call and record it. `run` receives the callbacks to pass to its model calls.
+ * Run one chain call and record it. `versionId` is the saved version whose prompt the chain sent
+ * (null: its built-in prompt), as the chain read it when choosing the prompt. `run` receives the
+ * callbacks to pass to its model calls.
  * The result or error of `run` is returned or rethrown unchanged.
  */
 export async function recordedChainRun<T>(
   key: WorkerChainKey,
   tenantId: string | undefined,
+  versionId: string | null,
   run: (callbacks: BaseCallbackHandler[]) => Promise<T>
 ): Promise<T> {
   if (!tenantId || !writer) return run([]);
   const usage = new RunUsageHandler();
   const started = Date.now();
-  // Read before the model call: the chain has just built its prompt from the loaded version, and a
-  // cache entry that expires or is reloaded during the call must not change the attribution.
-  const versionId = usedVersionId(key, tenantId);
   const finish = (success: boolean, error?: unknown): Promise<void> =>
     write({
       tenantId,

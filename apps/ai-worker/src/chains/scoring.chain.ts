@@ -14,7 +14,7 @@ import { requiresHumanReview } from '@intelliflow/domain';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { resolveRateLimit, resolveEffectiveTier } from '../lib/tenant-ai-config.js';
-import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { loadVersionedPrompt, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import { usableVersionedPrompt } from '../versioning/versioned-prompt';
 import pino from 'pino';
 
@@ -239,14 +239,16 @@ export class LeadScoringChain {
    * Falls back to the default prompt when no version exists, or when the loader's prompt has
    * no {lead_info} slot (the loader's own fallback has none: the model then saw no lead).
    */
-  private async resolveVersionedPrompt(): Promise<string | null> {
+  private async resolveVersionedPrompt(): Promise<{
+    text: string;
+    versionId: string | null;
+  } | null> {
     if (!this.tenantId) return null;
     try {
-      const loader = getVersionLoader();
-      const config = await loader.getChainConfig(CHAIN_TYPE_MAP.LEAD_SCORING, {
-        tenantId: this.tenantId,
-      });
-      return usableVersionedPrompt('LEAD_SCORING', config.prompt, ['lead_info']);
+      const chosen = await loadVersionedPrompt(CHAIN_TYPE_MAP.LEAD_SCORING, this.tenantId);
+      const text = usableVersionedPrompt('LEAD_SCORING', chosen.prompt, ['lead_info']);
+      // The version is kept with its prompt, so the recorded run names the version it sent.
+      return text ? { text, versionId: chosen.versionId } : null;
     } catch {
       logger.warn(
         {
@@ -293,7 +295,8 @@ export class LeadScoringChain {
       const leadInfo = this.formatLeadInfo(lead);
 
       // Resolve tenant-versioned prompt if tenantId is available; fall back to default
-      const versionedPromptText = await this.resolveVersionedPrompt();
+      const chosen = await this.resolveVersionedPrompt();
+      const versionedPromptText = chosen?.text ?? null;
       const activePrompt = versionedPromptText
         ? new PromptTemplate({ template: versionedPromptText, inputVariables: ['lead_info'] })
         : this.prompt;
@@ -354,10 +357,14 @@ export class LeadScoringChain {
       const monitored: MonitoredResult<ScoringResult> = await withMonitoring(
         async () => {
           // Call the LLM with structured output; usageHandler captures token usage via callback
-          const result = (await recordedChainRun('LEAD_SCORING', this.tenantId, (callbacks) =>
-            this.structuredModel.invoke(formattedPrompt, {
-              callbacks: [usageHandler, ...callbacks],
-            })
+          const result = (await recordedChainRun(
+            'LEAD_SCORING',
+            this.tenantId,
+            chosen?.versionId ?? null,
+            (callbacks) =>
+              this.structuredModel.invoke(formattedPrompt, {
+                callbacks: [usageHandler, ...callbacks],
+              })
           )) as unknown as Omit<ScoringResult, 'modelVersion'>;
 
           // #1218: a schema-valid answer can still be no score at all (the model answered
