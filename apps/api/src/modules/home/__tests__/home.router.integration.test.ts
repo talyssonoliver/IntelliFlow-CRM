@@ -16,6 +16,7 @@ import {
   getInfrastructureUnavailableReason,
 } from '../../../test/integration-setup';
 import { homeRouter } from '../home.router';
+import { realBudget } from '../../../test/virtual-clock';
 
 // Run integration tests only when infrastructure is available
 const describeIntegration = isInfrastructureAvailable() ? describe : describe.skip;
@@ -70,7 +71,7 @@ describeIntegration('Home Router - Integration Tests', () => {
       const duration = performance.now() - start;
 
       // Target: <200ms as per PRD
-      expect(duration).toBeLessThan(500); // Allow some slack for CI
+      expect(duration).toBeLessThan(realBudget(500)); // Allow some slack for CI
     });
   });
 
@@ -110,7 +111,7 @@ describeIntegration('Home Router - Integration Tests', () => {
       await caller.getAIInsights();
       const duration = performance.now() - start;
 
-      expect(duration).toBeLessThan(500); // Allow some slack for CI
+      expect(duration).toBeLessThan(realBudget(500)); // Allow some slack for CI
     });
   });
 
@@ -150,7 +151,7 @@ describeIntegration('Home Router - Integration Tests', () => {
       await caller.getDailyGoal();
       const duration = performance.now() - start;
 
-      expect(duration).toBeLessThan(500);
+      expect(duration).toBeLessThan(realBudget(500));
     });
   });
 
@@ -278,7 +279,7 @@ describeIntegration('Home Router - Integration Tests', () => {
       });
       const duration = performance.now() - start;
 
-      expect(duration).toBeLessThan(500);
+      expect(duration).toBeLessThan(realBudget(500));
 
       // Cleanup
       await caller.unpinItem({ entityType: 'lead', entityId: uniqueId });
@@ -301,7 +302,7 @@ describeIntegration('Home Router - Integration Tests', () => {
       await caller.unpinItem({ entityType: 'lead', entityId: uniqueId });
       const duration = performance.now() - start;
 
-      expect(duration).toBeLessThan(500);
+      expect(duration).toBeLessThan(realBudget(500));
     });
 
     it('reorderPinnedItems should respond within 200ms', async () => {
@@ -323,7 +324,7 @@ describeIntegration('Home Router - Integration Tests', () => {
       });
       const duration = performance.now() - start;
 
-      expect(duration).toBeLessThan(500);
+      expect(duration).toBeLessThan(realBudget(500));
 
       // Cleanup
       await caller.unpinItem({ entityType: 'lead', entityId: id1 });
@@ -359,7 +360,7 @@ describeIntegration('Home Router - Integration Tests', () => {
 
       // Total time should be reasonable (not 4x individual times)
       // Target: <500ms for all 4 parallel queries
-      expect(duration).toBeLessThan(1000);
+      expect(duration).toBeLessThan(realBudget(1000));
     });
   });
 });

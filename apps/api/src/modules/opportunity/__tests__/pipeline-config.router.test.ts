@@ -25,6 +25,7 @@ vi.mock('../../security/audit-logger', () => ({
 
 import { pipelineConfigRouter } from '../pipeline-config.router';
 import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
+import { virtualElapsedMs } from '../../../test/virtual-clock';
 import {
   DEFAULT_STAGE_COLORS,
   DEFAULT_STAGE_NAMES,
@@ -428,29 +429,28 @@ describe('Pipeline Config Router', () => {
   });
 
   describe('performance', () => {
-    it('should complete getAll in under 100ms', async () => {
+    // Load-independent: the fake clock proves the call waits on no timer of 100ms or more.
+    it('should complete getAll with no wait of 100ms or more (virtual clock)', async () => {
       prismaMock.pipelineStageConfig.findMany.mockResolvedValue([]);
 
-      const start = Date.now();
-      await caller.getAll();
-      const duration = Date.now() - start;
+      const waited = await virtualElapsedMs(() => caller.getAll());
 
-      expect(duration).toBeLessThan(100);
+      expect(waited).toBeLessThan(100);
     });
 
-    it('should complete updateStage in under 100ms', async () => {
+    it('should complete updateStage with no wait of 100ms or more (virtual clock)', async () => {
       const config = createMockPipelineConfig('PROPOSAL');
       prismaMock.pipelineStageConfig.findUnique.mockResolvedValue(config as any);
       prismaMock.pipelineStageConfig.update.mockResolvedValue(config as any);
 
-      const start = Date.now();
-      await caller.updateStage({
-        stage: 'PROPOSAL',
-        displayName: 'Fast Update',
-      });
-      const duration = Date.now() - start;
+      const waited = await virtualElapsedMs(() =>
+        caller.updateStage({
+          stage: 'PROPOSAL',
+          displayName: 'Fast Update',
+        })
+      );
 
-      expect(duration).toBeLessThan(100);
+      expect(waited).toBeLessThan(100);
     });
   });
 });

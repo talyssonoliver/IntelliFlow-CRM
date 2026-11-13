@@ -28,6 +28,8 @@ vi.mock('../load-bullmq', () => ({
 
 // Imported after the mock so the helper resolves the stubbed loadBullMQ.
 import { enqueueBestEffort } from '../best-effort-enqueue';
+import { REDIS_OP_TIMEOUT_MS } from '../queue-producer';
+import { virtualElapsedMs } from '../../test/virtual-clock';
 
 describe('enqueueBestEffort — branch coverage (mocked BullMQ)', () => {
   beforeEach(() => {
@@ -67,6 +69,21 @@ describe('enqueueBestEffort — branch coverage (mocked BullMQ)', () => {
     const ok = await enqueueBestEffort('q', 'job', { a: 1 });
     expect(ok).toBe(false);
     expect(closeMock).toHaveBeenCalledTimes(1);
+  });
+
+  // Load-independent form of the "returns false promptly" guarantee: a dead Redis (add refused,
+  // then close and disconnect both hang) is given up on after the bounded close, on a fake clock.
+  it('returns false within two Redis op timeouts when close and disconnect both hang (virtual clock)', async () => {
+    addMock.mockRejectedValue(new Error('refused'));
+    closeMock.mockReturnValue(new Promise<void>(() => {}));
+    disconnectMock.mockReturnValue(new Promise<void>(() => {}));
+    let ok: boolean | undefined;
+    const waited = await virtualElapsedMs(async () => {
+      ok = await enqueueBestEffort('q', 'job', { a: 1 });
+    });
+    expect(ok).toBe(false);
+    expect(waited).toBeGreaterThanOrEqual(REDIS_OP_TIMEOUT_MS);
+    expect(waited).toBeLessThanOrEqual(2 * REDIS_OP_TIMEOUT_MS + 20);
   });
 
   it('force-disconnects when close hangs past the timeout backstop', async () => {

@@ -458,13 +458,22 @@ describe('Observability Package Index', () => {
         () => new Promise((resolve) => setTimeout(resolve, metricsDelay))
       );
 
-      const startTime = Date.now();
-      await shutdownObservability();
-      const elapsed = Date.now() - startTime;
+      // Fake clock: parallel shutdown takes exactly 100 virtual ms, sequential would take 200,
+      // whatever the machine load.
+      vi.useFakeTimers();
+      try {
+        const startTime = Date.now();
+        const shutdown = shutdownObservability();
+        await vi.advanceTimersByTimeAsync(Math.max(tracingDelay, metricsDelay));
+        await shutdown;
+        const elapsed = Date.now() - startTime;
 
-      // Should take roughly 100ms (parallel), not 200ms (sequential)
-      expect(elapsed).toBeLessThan(tracingDelay + metricsDelay);
-      expect(elapsed).toBeGreaterThanOrEqual(Math.max(tracingDelay, metricsDelay) - 50);
+        // Should take exactly 100ms (parallel), not 200ms (sequential)
+        expect(elapsed).toBe(Math.max(tracingDelay, metricsDelay));
+        expect(elapsed).toBeLessThan(tracingDelay + metricsDelay);
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it('should log success message after shutdown', async () => {

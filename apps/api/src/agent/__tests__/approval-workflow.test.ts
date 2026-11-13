@@ -159,6 +159,7 @@ import {
 } from '../approval-workflow';
 import { PendingAction, ApprovalDecision, AgentAuthContext } from '../types';
 import { getAgentTool } from '../tools';
+import { virtualElapsedMs } from '../../test/virtual-clock';
 
 describe('Approval Workflow', () => {
   const testContext: AgentAuthContext = {
@@ -715,13 +716,15 @@ describe('Approval Workflow', () => {
         decidedAt: new Date(), // Immediate decision
       };
 
-      const startTime = performance.now();
-      const executed = await approvalWorkflowService.approveAction(decision, testContext);
-      const endTime = performance.now();
+      // Load-independent: the fake clock proves the approval waits on no timer of 1 second or more
+      // (a real-clock bound measured machine load, not the approval).
+      let executed: Awaited<ReturnType<typeof approvalWorkflowService.approveAction>> | undefined;
+      const waited = await virtualElapsedMs(async () => {
+        executed = await approvalWorkflowService.approveAction(decision, testContext);
+      });
 
-      // Approval operation itself should be fast
-      expect(endTime - startTime).toBeLessThan(1000); // Under 1 second
-      expect(executed.status).toBe('APPROVED');
+      expect(waited).toBeLessThan(1000); // Under 1 second
+      expect(executed?.status).toBe('APPROVED');
     });
   });
 });

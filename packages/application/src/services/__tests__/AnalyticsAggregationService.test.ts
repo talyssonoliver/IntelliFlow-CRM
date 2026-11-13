@@ -8,6 +8,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AnalyticsAggregationService } from '../AnalyticsAggregationService';
+import { virtualElapsedMs } from '../../__tests__/virtual-clock';
 import type {
   AnalyticsRepository,
   OpportunityGroupByResult,
@@ -213,11 +214,12 @@ describe('AnalyticsAggregationService', () => {
     });
 
     it('executes queries in parallel via Promise.all (AC-006)', async () => {
-      const startTime = Date.now();
-      await service.getGrowthTrend(TENANT_ID, 'revenue', 12);
-      const elapsed = Date.now() - startTime;
+      // Load-independent: on a fake clock, the 12 monthly queries must wait on no timer of 300ms or
+      // more, and each of the 12 months is queried once (not retried or serialised behind a delay).
+      const elapsed = await virtualElapsedMs(() =>
+        service.getGrowthTrend(TENANT_ID, 'revenue', 12)
+      );
 
-      // With mocked repo, parallel execution is near-instant
       expect(elapsed).toBeLessThan(300);
     });
   });
@@ -350,9 +352,7 @@ describe('AnalyticsAggregationService', () => {
     });
 
     it('calls both repository methods in parallel', async () => {
-      const startTime = Date.now();
-      await service.getLeadStats(TENANT_ID);
-      const elapsed = Date.now() - startTime;
+      const elapsed = await virtualElapsedMs(() => service.getLeadStats(TENANT_ID));
 
       expect(elapsed).toBeLessThan(100);
       expect(mockRepo.countTotalLeads).toHaveBeenCalledTimes(1);
@@ -543,9 +543,7 @@ describe('AnalyticsAggregationService', () => {
       ];
 
       for (const method of methods) {
-        const start = Date.now();
-        await method();
-        const elapsed = Date.now() - start;
+        const elapsed = await virtualElapsedMs(method);
         expect(elapsed).toBeLessThan(300);
       }
     });

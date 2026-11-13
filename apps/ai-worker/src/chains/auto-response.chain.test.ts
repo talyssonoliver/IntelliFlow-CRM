@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { AutoResponseChain, AutoResponseInput, AutoResponseOutput } from './auto-response.chain';
+import { virtualElapsedMs } from '../__tests__/virtual-clock';
 
 // Mock the VersionLoader singleton so tests never hit the DB.
 // Default: getChainConfig throws (simulates no active version → fallback to default instructions).
@@ -500,13 +501,11 @@ describe('AutoResponseChain', () => {
         },
       };
 
-      const start = Date.now();
-      await chain.generateResponse(input);
-      const duration = Date.now() - start;
+      // With a mocked LLM the chain must not wait on any timer (retry backoff, sleeps). Measured on
+      // a fake clock so the result does not depend on how busy the machine is.
+      const waited = await virtualElapsedMs(() => chain.generateResponse(input));
 
-      // With mocked LLM, should be very fast
-      // In production, this tests that chain processing overhead is minimal
-      expect(duration).toBeLessThan(1000); // Allow 1s for processing overhead
+      expect(waited).toBeLessThan(1000); // No wait of 1s or more in the chain overhead
     });
   });
 
