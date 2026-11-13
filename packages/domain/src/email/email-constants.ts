@@ -46,8 +46,9 @@ export type SignatureScope = (typeof SIGNATURE_SCOPES)[number];
 
 /**
  * What a user email is for (IFC-315). MARKETING is never sent to a person who objected to
- * direct marketing (UK GDPR Art 21(3)); SERVICE (the default) is a reply or a message the
- * person needs, and is not affected by the objection.
+ * direct marketing (UK GDPR Art 21(3)); SERVICE is a reply or a message the person needs,
+ * and is not affected by the objection. A send that names neither is refused when any
+ * recipient objected (PURPOSE_REQUIRED), so the sender has to say which it is.
  */
 export const EMAIL_SEND_PURPOSES = ['SERVICE', 'MARKETING'] as const;
 export type EmailSendPurpose = (typeof EMAIL_SEND_PURPOSES)[number];
@@ -58,6 +59,7 @@ export const EMAIL_SEND_ERROR_CODES = [
   'MAILBOX_ERROR',
   'ALL_SUPPRESSED',
   'ALL_OBJECTED',
+  'PURPOSE_REQUIRED',
   'SEND_FAILED',
 ] as const;
 export type EmailSendErrorCode = (typeof EMAIL_SEND_ERROR_CODES)[number];

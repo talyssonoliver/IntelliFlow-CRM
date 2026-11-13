@@ -9,7 +9,8 @@
  * Order: resolve the sending mailbox (own, else the admin-enabled company
  * mailbox; a broken own mailbox refuses) → drop suppressed recipients (all
  * suppressed sends nothing) → for MARKETING mail, drop recipients who objected to
- * direct marketing (IFC-315; audited) → per-mailbox hourly cap → reserve quota for the
+ * direct marketing (IFC-315; audited); mail that names no purpose is refused when
+ * any recipient objected (PURPOSE_REQUIRED) → per-mailbox hourly cap → reserve quota for the
  * recipients actually sent to → record PENDING → read attachments from the
  * tenant's storage → build the MIME (From = mailbox address, Reply-To = tenant
  * override) → send through that mailbox only → record SENT or FAILED. Quota is
@@ -125,7 +126,7 @@ function recordMetadata(
     textBody: input.textBody,
     threadId: input.threadId,
     skippedRecipients: skipped,
-    ...(input.purpose === 'MARKETING' ? { purpose: 'MARKETING' } : {}),
+    ...(input.purpose ? { purpose: input.purpose } : {}),
     ...options.metadata,
   };
 }
@@ -134,7 +135,9 @@ function recordMetadata(
  * IFC-315: a MARKETING email is never sent to a person who objected to direct marketing
  * (UK GDPR Art 21(3)) or whose record was erased. Those recipients are dropped, like
  * suppressed ones, and each refusal is audited with counts only (no addresses). SERVICE mail
- * (the default) is not affected: the person may still need replies and notices.
+ * is not affected: the person may still need replies and notices. Mail that names no purpose
+ * is refused when any recipient objected (PURPOSE_REQUIRED, nothing sent), so an objection
+ * never depends on the sender remembering to mark an email as marketing.
  */
 async function dropMarketingObjections(
   ctx: DispatchCtx,
@@ -142,7 +145,7 @@ async function dropMarketingObjections(
   deps: DispatchDeps,
   recipients: ReturnType<typeof partitionRecipients>
 ): Promise<{ recipients: ReturnType<typeof partitionRecipients>; objected: string[] }> {
-  if (input.purpose !== 'MARKETING') return { recipients, objected: [] };
+  if (input.purpose === 'SERVICE') return { recipients, objected: [] };
   const { tenantId, userId } = ctx.tenant;
   const kept = [...recipients.to, ...recipients.cc, ...recipients.bcc];
   if (kept.length === 0) return { recipients, objected: [] };
@@ -151,6 +154,9 @@ async function dropMarketingObjections(
   if (blocked.size === 0) return { recipients, objected: [] };
 
   const remaining = partitionRecipients(recipients, blocked);
+  if (input.purpose !== 'MARKETING') {
+    throw sendError('PURPOSE_REQUIRED', { skipped: remaining.skipped });
+  }
   getAuditLogger(ctx.prisma as never)
     .logAction('CREATE', 'email_message', '-', tenantId, {
       actorId: userId,

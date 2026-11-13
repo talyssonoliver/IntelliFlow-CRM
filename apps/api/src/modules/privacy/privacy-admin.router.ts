@@ -292,7 +292,9 @@ export const privacyAdminRouter = createTRPCRouter({
       }
       await audit(ctx, 'UPDATE', input.id, {
         change: 'COMPLETED',
-        marketingStopped: input.marketingStoppedConfirmed === true,
+        // IFC-315: from the request (a marketing objection), not the admin's checkbox.
+        marketingStopped: result.marketingStopped === true,
+        externalStopMethodGiven: Boolean(input.marketingStopMethod),
       });
       return { erasure: null };
     }),

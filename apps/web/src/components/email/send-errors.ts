@@ -11,6 +11,7 @@ import {
   EMAIL_SEND_ERROR_CODES,
   MAILBOX_ERROR_CODES,
   type EmailSendErrorCode,
+  type EmailSendPurpose,
   type MailboxErrorCode,
 } from '@intelliflow/domain';
 
@@ -102,6 +103,14 @@ export function getEmailSendError(error: unknown): EmailSendErrorView {
         message: `This is a marketing email, and every recipient objected to marketing or is on the suppression list, so nothing was sent: ${data.skipped.join(', ')}.`,
         action: null,
       };
+    case 'PURPOSE_REQUIRED':
+      // IFC-315: nothing was sent. SendErrorAlert offers the two purposes with this code.
+      return {
+        code: data.code,
+        title: 'Is this email about their matter?',
+        message: `Not sent. These recipients objected to marketing email: ${data.skipped.join(', ')}. Send it to them only if it is about their matter, such as a reply or a notice. If it is marketing, send it as marketing and they are left out.`,
+        action: null,
+      };
     case 'SEND_FAILED': {
       const reason = data.mailboxErrorCode ? FAILURE_REASONS[data.mailboxErrorCode] : null;
       const needsSettings =
@@ -114,6 +123,13 @@ export function getEmailSendError(error: unknown): EmailSendErrorView {
       };
     }
   }
+}
+
+/** IFC-315: the `purpose` field of a send, left out when the sender named none. */
+export function purposeField(purpose: EmailSendPurpose | undefined): {
+  purpose?: EmailSendPurpose;
+} {
+  return purpose ? { purpose } : {};
 }
 
 /** What a coded mailbox failure means, for send errors and connection tests alike. */

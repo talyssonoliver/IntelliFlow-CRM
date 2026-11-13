@@ -143,7 +143,7 @@ export function buildDsarEmail(
       return message(to, `${firm} has completed your data request`, [
         `${firm} has completed your request for ${TYPE_LABELS[notice.type]}.`,
         ...(notice.marketingStopped
-          ? ['Your objection is recorded. The firm will no longer send you marketing email.']
+          ? ['Your objection is recorded. The firm’s CRM will no longer send you marketing email.']
           : []),
         // Art 12(4), 15(4): what was withheld from the copy, and the firm's reason for each.
         ...(notice.withheld.length > 0

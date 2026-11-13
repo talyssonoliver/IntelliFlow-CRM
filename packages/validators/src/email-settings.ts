@@ -147,7 +147,10 @@ export const sendUserEmailInputSchema = z
     attachments: z.array(emailAttachmentRefSchema).max(20).optional(),
     threadId: z.string().max(200).optional(),
     templateId: z.string().max(200).optional(),
-    /** IFC-315: MARKETING skips recipients who objected to direct marketing. Absent = SERVICE. */
+    /**
+     * IFC-315: MARKETING skips recipients who objected to direct marketing; SERVICE is sent to
+     * them. Absent: refused (PURPOSE_REQUIRED) when any recipient objected.
+     */
     purpose: emailSendPurposeSchema.optional(),
   })
   .superRefine((data, ctx) => {

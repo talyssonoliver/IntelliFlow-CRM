@@ -98,15 +98,61 @@ describe('marketing objections (IFC-315, UK GDPR Art 21(3))', () => {
     objections.marketingBlocked.mockResolvedValue(new Set(['objected@example.invalid']));
   });
 
-  it('never checks objections for service mail, which still reaches the person', async () => {
+  it('never checks objections for mail marked SERVICE, which still reaches the person', async () => {
     const result = await dispatchUserMail(
       createTestContext() as never,
-      { ...marketing, purpose: undefined },
+      { ...marketing, purpose: 'SERVICE' },
       marketingDeps()
     );
     expect(objections.marketingBlocked).not.toHaveBeenCalled();
     expect(result.objected).toBeUndefined();
     expect(transport.send.mock.calls[0][3].to).toContain('Objected@example.invalid');
+    const created = (prismaMock.emailRecord.create as any).mock.calls[0][0].data;
+    expect(created.metadata.purpose).toBe('SERVICE');
+  });
+
+  it('refuses unlabelled mail to someone who objected, sending nothing (PURPOSE_REQUIRED)', async () => {
+    const error = await errorOf(
+      dispatchUserMail(
+        createTestContext() as never,
+        { ...marketing, purpose: undefined },
+        marketingDeps()
+      )
+    );
+    expect(error.code).toBe('PRECONDITION_FAILED');
+    expect(emailSendErrorFromCause(error.cause)).toEqual({
+      code: 'PURPOSE_REQUIRED',
+      mailboxErrorCode: null,
+      skipped: ['objected@example.invalid'],
+    });
+    expect(transport.send).not.toHaveBeenCalled();
+    expect(quota.reserveQuota).not.toHaveBeenCalled();
+    expect(prismaMock.emailRecord.create).not.toHaveBeenCalled();
+  });
+
+  it('sends unlabelled mail as before when nobody objected', async () => {
+    objections.marketingBlocked.mockResolvedValue(new Set());
+    const result = await dispatchUserMail(
+      createTestContext() as never,
+      { ...marketing, purpose: undefined },
+      marketingDeps()
+    );
+    expect(result).toMatchObject({ status: 'SENT' });
+    expect(objections.marketingBlocked).toHaveBeenCalledTimes(1);
+    const created = (prismaMock.emailRecord.create as any).mock.calls[0][0].data;
+    expect(created.metadata.purpose).toBeUndefined();
+  });
+
+  it('fails closed for unlabelled mail too when the objection check cannot be read', async () => {
+    objections.marketingBlocked.mockRejectedValue(new Error('db down'));
+    await expect(
+      dispatchUserMail(
+        createTestContext() as never,
+        { ...marketing, purpose: undefined },
+        marketingDeps()
+      )
+    ).rejects.toThrow('db down');
+    expect(transport.send).not.toHaveBeenCalled();
   });
 
   it('drops a recipient who objected, sends to the rest and records it', async () => {

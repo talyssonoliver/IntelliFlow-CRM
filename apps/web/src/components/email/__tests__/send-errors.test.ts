@@ -3,6 +3,7 @@ import {
   getEmailSendError,
   mailboxErrorMessage,
   partialSendNotice,
+  purposeField,
   skippedRecipientsNotice,
 } from '../send-errors';
 
@@ -52,6 +53,26 @@ describe('getEmailSendError', () => {
     expect(view.message).toMatch(/objected to marketing/i);
     expect(view.message).toMatch(/nothing was sent/i);
     expect(view.action).toBeNull();
+  });
+
+  it('asks what an unlabelled email to an objector is for (IFC-315, PURPOSE_REQUIRED)', () => {
+    const view = getEmailSendError(
+      trpcError({
+        code: 'PURPOSE_REQUIRED',
+        mailboxErrorCode: null,
+        skipped: ['a@example.invalid'],
+      })
+    );
+    expect(view.code).toBe('PURPOSE_REQUIRED');
+    expect(view.title).toBe('Is this email about their matter?');
+    expect(view.message).toMatch(/^Not sent\./);
+    expect(view.message).toContain('a@example.invalid');
+    expect(view.action).toBeNull();
+  });
+
+  it('leaves purpose out of a send unless one was named', () => {
+    expect(purposeField(undefined)).toEqual({});
+    expect(purposeField('SERVICE')).toEqual({ purpose: 'SERVICE' });
   });
 
   it.each([

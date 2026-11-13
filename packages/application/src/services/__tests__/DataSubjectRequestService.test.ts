@@ -866,7 +866,7 @@ describe('complete (D-AC-06/08)', () => {
       note: 'Recorded',
       now: NOW,
     });
-    expect(done.outcome).toBe('OK');
+    expect(done).toEqual({ outcome: 'OK', marketingStopped: true });
     expect(restrictions.rows[0]).toMatchObject({ blocksMarketing: true });
     expect(repo.rows.get(id)?.marketingStopMethod ?? null).toBeNull();
     expect(notices[0]).toMatchObject({ kind: 'COMPLETED', marketingStopped: true });

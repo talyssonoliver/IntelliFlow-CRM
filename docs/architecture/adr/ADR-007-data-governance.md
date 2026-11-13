@@ -689,16 +689,21 @@ show a "Processing restricted" banner. Plan Addendum B lists every path.
 
 ### Marketing email (IFC-315, Art 21(3))
 
-User email carries a purpose: `SERVICE` (the default) or `MARKETING`, chosen in
-compose. `dispatchUserMail` (`apps/api/src/modules/email/mailbox-sender.ts`) is
-the only path that sends email to a lead or contact the user picks. For a
-MARKETING email it drops every recipient whose address has an active restriction
-with `blocksMarketing`, or is an erased placeholder, after the suppression list
-and before quota is reserved. It reads them with one query
-(`ProcessingRestrictionPort.marketingBlocked`). It sends to the rest, refuses
-with `ALL_OBJECTED` when nobody is left, records the dropped addresses on the
-email record and audits each withheld send with counts only. A failed read fails
-the send. SERVICE email is not checked: the objection covers marketing only.
+User email may carry a purpose: `SERVICE` or `MARKETING`, chosen in compose. An
+email that names neither is refused with `PURPOSE_REQUIRED` (nothing sent) when
+any recipient objected, and compose asks the sender whether it is a service
+email or marketing, so an objection never depends on the sender remembering to
+mark marketing. `dispatchUserMail`
+(`apps/api/src/modules/email/mailbox-sender.ts`) is the only path that sends
+email to a lead or contact the user picks. For a MARKETING email it drops every
+recipient whose address has an active restriction with `blocksMarketing`, or is
+an erased placeholder, after the suppression list and before quota is reserved.
+It reads them with one query (`ProcessingRestrictionPort.marketingBlocked`). It
+sends to the rest, refuses with `ALL_OBJECTED` when nobody is left, records the
+dropped addresses on the email record and audits each withheld send with counts
+only. A failed read fails the send. Email the sender marked SERVICE is not
+checked: the objection covers marketing only. The record keeps the purpose, and
+the completion audit row records `marketingStopped` from the request itself.
 Booking emails, calendar invites, receipts and data request notices are service
 email by nature and are not marketing paths. No workflow, automation or campaign
 step sends email. Completing a marketing objection therefore no longer needs the

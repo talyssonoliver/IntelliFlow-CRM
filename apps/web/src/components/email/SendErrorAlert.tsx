@@ -3,7 +3,11 @@
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import type { EmailSendPurpose } from '@intelliflow/domain';
 import type { EmailSendErrorView } from './send-errors';
+
+const PURPOSE_BUTTON =
+  'rounded-md border border-red-300 px-2 py-1 font-medium hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-ring dark:border-red-700 dark:hover:bg-red-900/40';
 
 /**
  * A coded send refusal (PG-207, AC-EM-018). It takes focus when it appears so
@@ -13,11 +17,14 @@ export function SendErrorAlert({
   error,
   className,
   onAction,
+  onChoosePurpose,
 }: Readonly<{
   error: EmailSendErrorView;
   className?: string;
   /** Replaces following the link, for a page with something to save first. */
   onAction?: (href: string) => void;
+  /** IFC-315: resend with an explicit purpose after a PURPOSE_REQUIRED refusal. */
+  onChoosePurpose?: (purpose: EmailSendPurpose) => void;
 }>) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -49,6 +56,24 @@ export function SendErrorAlert({
         >
           {error.action.label}
         </Link>
+      ) : null}
+      {error.code === 'PURPOSE_REQUIRED' && onChoosePurpose ? (
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button
+            type="button"
+            className={PURPOSE_BUTTON}
+            onClick={() => onChoosePurpose('SERVICE')}
+          >
+            Send as a service email
+          </button>
+          <button
+            type="button"
+            className={PURPOSE_BUTTON}
+            onClick={() => onChoosePurpose('MARKETING')}
+          >
+            Send as marketing
+          </button>
+        </div>
       ) : null}
     </div>
   );

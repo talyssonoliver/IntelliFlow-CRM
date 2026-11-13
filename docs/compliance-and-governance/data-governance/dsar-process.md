@@ -287,9 +287,14 @@ restriction with `blocksMarketing`. From then on:
   nothing is sent and the sender sees why. Each withheld send is audited
   (`email_message`, `EmailMarketingObjectionApplied`) with counts only, and the
   email record lists the addresses left out.
+- An email not marked either way is not sent at all if any recipient objected.
+  Compose says who objected and asks: **Send as a service email** (it is about
+  their matter, such as a reply or a notice) or **Send as marketing** (they are
+  left out).
 - An erased record's placeholder address is treated the same way.
-- Service email (a reply, a booking confirmation, a data request notice) still
-  reaches the person: the objection is to marketing only.
+- Service email (a reply the sender marks as service, a booking confirmation, a
+  data request notice) still reaches the person: the objection is to marketing
+  only.
 - Auto-response drafts and the agent's draft tool already refuse anyone with an
   active restriction, and a marketing objection is one.
 
@@ -297,7 +302,8 @@ No workflow, automation or campaign step sends email, so there is no other send
 path to guard. The admin no longer confirms a manual stop. If the firm also
 markets outside the CRM (a newsletter tool, for example), the admin can record
 how that was stopped (optional, at least 10 characters). The person's email says
-the firm will no longer send them marketing email.
+the firm's CRM will no longer send them marketing email, which is what the CRM
+enforces.
 
 ## Completion and refusal
 

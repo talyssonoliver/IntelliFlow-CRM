@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect, type ComponentPropsWithRef } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
 import { toast } from '@intelliflow/ui';
+import type { EmailSendPurpose } from '@intelliflow/domain';
 import { MAX_EMAIL_ATTACHMENT_BYTES, type EmailAttachmentRef } from '@intelliflow/validators';
 import { trpc } from '@/lib/trpc';
 import { useDebounce } from '@/hooks/useDebounce';
@@ -11,7 +12,12 @@ import { RecipientPicker, type Recipient } from './RecipientPicker';
 import { FormatToolbar } from './FormatToolbar';
 import { AttachmentManager } from './AttachmentManager';
 import { TemplateSelector } from './TemplateSelector';
-import { getEmailSendError, partialSendNotice, type EmailSendErrorView } from './send-errors';
+import {
+  getEmailSendError,
+  partialSendNotice,
+  purposeField,
+  type EmailSendErrorView,
+} from './send-errors';
 import { SendErrorAlert } from './SendErrorAlert';
 import { ComposeFrom } from './ComposeFrom';
 
@@ -391,67 +397,83 @@ export function EmailCompose({
     return refs;
   }, [attachments, uploadMutation]);
 
-  const sendNow = useCallback(async () => {
-    if (!validate()) return;
-    setSendError(null);
-    setAttachmentError(null);
-    setSkippedNotice(null);
+  /** `chosen`: the purpose picked after a PURPOSE_REQUIRED refusal (IFC-315). */
+  const sendNow = useCallback(
+    async (chosen?: EmailSendPurpose) => {
+      if (!validate()) return;
+      setSendError(null);
+      setAttachmentError(null);
+      setSkippedNotice(null);
 
-    const uploaded = await uploadAttachments();
-    if (!uploaded) return;
+      const uploaded = await uploadAttachments();
+      if (!uploaded) return;
 
-    try {
-      const result = await sendMutation.mutateAsync({
-        to: toRecipients.map((r) => r.email),
-        cc: ccRecipients.length > 0 ? ccRecipients.map((r) => r.email) : undefined,
-        bcc: bccRecipients.length > 0 ? bccRecipients.map((r) => r.email) : undefined,
-        subject,
-        htmlBody: getBodyHtml(),
-        threadId,
-        attachments: uploaded.length > 0 ? uploaded : undefined,
-        ...(isMarketing ? { purpose: 'MARKETING' as const } : {}),
-      });
-      const notice = partialSendNotice(result);
-      setSkippedNotice(notice);
-      setStatusMessage(notice ?? 'Email sent successfully');
-      if (notice) toast({ title: 'Email sent', description: notice });
-      await removeSentDraft();
-      onSent?.();
-    } catch (error) {
-      // The draft stays as it is; the focused alert says what to do next (and is
-      // the only announcement: the live region is left alone).
-      setSendError(getEmailSendError(error));
-    }
-  }, [
-    validate,
-    uploadAttachments,
-    sendMutation,
-    toRecipients,
-    ccRecipients,
-    bccRecipients,
-    subject,
-    getBodyHtml,
-    threadId,
-    isMarketing,
-    removeSentDraft,
-    onSent,
-  ]);
+      try {
+        const result = await sendMutation.mutateAsync({
+          to: toRecipients.map((r) => r.email),
+          cc: ccRecipients.length > 0 ? ccRecipients.map((r) => r.email) : undefined,
+          bcc: bccRecipients.length > 0 ? bccRecipients.map((r) => r.email) : undefined,
+          subject,
+          htmlBody: getBodyHtml(),
+          threadId,
+          attachments: uploaded.length > 0 ? uploaded : undefined,
+          ...purposeField(isMarketing ? 'MARKETING' : chosen),
+        });
+        const notice = partialSendNotice(result);
+        setSkippedNotice(notice);
+        setStatusMessage(notice ?? 'Email sent successfully');
+        if (notice) toast({ title: 'Email sent', description: notice });
+        await removeSentDraft();
+        onSent?.();
+      } catch (error) {
+        // The draft stays as it is; the focused alert says what to do next (and is
+        // the only announcement: the live region is left alone).
+        setSendError(getEmailSendError(error));
+      }
+    },
+    [
+      validate,
+      uploadAttachments,
+      sendMutation,
+      toRecipients,
+      ccRecipients,
+      bccRecipients,
+      subject,
+      getBodyHtml,
+      threadId,
+      isMarketing,
+      removeSentDraft,
+      onSent,
+    ]
+  );
 
   // One send at a time: attachments upload before the mutation is pending, so
   // the mutation's own pending flag cannot stop a second click.
   const sendingRef = useRef(false);
   const [sending, setSending] = useState(false);
-  const handleSend = useCallback(async () => {
-    if (sendingRef.current) return;
-    sendingRef.current = true;
-    setSending(true);
-    try {
-      await sendNow();
-    } finally {
-      sendingRef.current = false;
-      setSending(false);
-    }
-  }, [sendNow]);
+  const handleSend = useCallback(
+    async (chosen?: EmailSendPurpose) => {
+      if (sendingRef.current) return;
+      sendingRef.current = true;
+      setSending(true);
+      try {
+        await sendNow(chosen);
+      } finally {
+        sendingRef.current = false;
+        setSending(false);
+      }
+    },
+    [sendNow]
+  );
+
+  // IFC-315: the sender said what the email is for after a PURPOSE_REQUIRED refusal.
+  const choosePurpose = useCallback(
+    (purpose: EmailSendPurpose) => {
+      if (purpose === 'MARKETING') setIsMarketing(true);
+      handleSend(purpose).catch(reportSendError);
+    },
+    [handleSend, reportSendError]
+  );
 
   const handleSaveDraft = useCallback(async () => {
     try {
@@ -825,7 +847,12 @@ export function EmailCompose({
 
       {/* Coded send refusal (PG-207, AC-EM-018) */}
       {sendError ? (
-        <SendErrorAlert error={sendError} className="mx-4 my-2 text-sm" onAction={leaveFor} />
+        <SendErrorAlert
+          error={sendError}
+          className="mx-4 my-2 text-sm"
+          onAction={leaveFor}
+          onChoosePurpose={choosePurpose}
+        />
       ) : null}
 
       {attachmentError ? (
