@@ -204,11 +204,14 @@ seeds only in the same case. `PRESHIP_FULL_DB=1` forces the suite.
 re-runs itself under the shared slot semaphore (`scripts/lib/test-slot.mjs`),
 which waits for a free slot and releases it on exit. Separately, the gate
 guarantees **no orphaned steps**: each step runs async with its PID recorded,
-and its whole process tree is stopped (`taskkill /T /F` on Windows) on success,
-failure, a signal or an uncaught exception. A detached watchdog, started from
-`os.tmpdir()` (never the repo), covers a hard kill of the gate and the death of
-anything above it (the `git push`, the hook shell). See
-`scripts/lib/preship-gate.mjs`, `scripts/preship-process.mjs` and
+and its whole process tree is stopped on success, failure, a signal or an
+uncaught exception. On Windows each descendant is found by walking
+`Win32_Process` (a child counts only if it was created at or after its parent,
+because pids are reused) and stopped by its own `taskkill /F`; never
+`taskkill /T`, which followed reused pids into agent windows on 2026-11-10. A
+detached watchdog, started from `os.tmpdir()` (never the repo), covers a hard
+kill of the gate and the death of anything above it (the `git push`, the hook
+shell). See `scripts/lib/preship-gate.mjs`, `scripts/preship-process.mjs` and
 `scripts/preship-watchdog.mjs`.
 
 ### Sprint_plan.csv is Single Source of Truth
