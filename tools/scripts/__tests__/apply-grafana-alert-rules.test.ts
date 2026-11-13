@@ -71,6 +71,7 @@ describe('alert rules config', () => {
       'ifc032-api-error-rate',
       'ifc074-error-spans-direct',
       'ifc074-error-logs-direct',
+      'ifc151-outbox-dead-letters',
       'ifc142-ai-budget-80pct',
     ]);
   });
@@ -99,6 +100,8 @@ describe('alert rules config', () => {
       'ifc032-api-error-rate': traffic,
       'ifc074-error-spans-direct': { requireSeries: undefined, liveSeriesCheck: undefined },
       'ifc074-error-logs-direct': { requireSeries: undefined, liveSeriesCheck: undefined },
+      // IFC-151: its metric exists only after the first deploy of the outbox metrics.
+      'ifc151-outbox-dead-letters': traffic,
       // IFC-142: the AI cost series exists only while paid calls happen.
       'ifc142-ai-budget-80pct': traffic,
     });
@@ -331,11 +334,13 @@ describe('run', () => {
   it('creates missing rules, updates existing ones, sets the group interval and removes the test rule', async () => {
     const g = fakeGrafana({ existing: ['ifc032-api-error-rate'], folder: 404 });
     const result = await run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(8);
+    expect(result.applied).toBe(CONFIG.rules.length);
     const writes = g.calls.filter((c) => c.method !== 'GET').map((c) => `${c.method} ${c.path}`);
     expect(writes).toContain('POST /api/folders');
     expect(writes).toContain('PUT /api/v1/provisioning/alert-rules/ifc032-api-error-rate');
-    expect(writes.filter((w) => w === 'POST /api/v1/provisioning/alert-rules')).toHaveLength(7);
+    expect(writes.filter((w) => w === 'POST /api/v1/provisioning/alert-rules')).toHaveLength(
+      CONFIG.rules.length - 1
+    );
     expect(writes).toContain(
       'PUT /api/v1/provisioning/folder/intelliflow-prod/rule-groups/intelliflow-prod'
     );
@@ -345,7 +350,7 @@ describe('run', () => {
   it('with --send-test also applies the always-firing delivery rule and keeps it', async () => {
     const g = fakeGrafana();
     const result = await run({ env, argv: ['--send-test'], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(9);
+    expect(result.applied).toBe(CONFIG.rules.length + 1);
     const posted = g.calls
       .filter((c) => c.method === 'POST')
       .map((c) => (c.body as { uid?: string }).uid);
@@ -441,7 +446,7 @@ describe('run', () => {
   it('does not fail the run when a requireSeries:false rule has no live series (#812)', async () => {
     const g = fakeGrafana({ series: (q) => (q.includes('latency') ? 0 : 2) });
     const result = await run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(8);
+    expect(result.applied).toBe(CONFIG.rules.length);
     expect(result.empty).toEqual([]);
   });
 

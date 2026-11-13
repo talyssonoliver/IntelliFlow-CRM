@@ -5,6 +5,8 @@
  * Part of PG-104 (Settings Home).
  */
 
+const PASSWORD_KEYWORD = 'password';
+
 export interface SettingItem {
   id: string;
   title: string;
@@ -33,7 +35,7 @@ export const SETTINGS_ITEMS: SettingItem[] = [
     href: '/settings/account',
     icon: 'person',
     color: 'bg-primary',
-    keywords: ['profile', 'password', 'email', 'name', 'avatar', '2fa', 'sessions'],
+    keywords: ['profile', PASSWORD_KEYWORD, 'email', 'name', 'avatar', '2fa', 'sessions'],
   },
   {
     id: 'team',
@@ -96,7 +98,7 @@ export const SETTINGS_ITEMS: SettingItem[] = [
     href: '/settings/security/mfa',
     icon: 'security',
     color: 'bg-destructive',
-    keywords: ['mfa', '2fa', 'totp', 'sessions', 'password', 'authentication'],
+    keywords: ['mfa', '2fa', 'totp', 'sessions', PASSWORD_KEYWORD, 'authentication'],
   },
   {
     // PG-203 DSAR (Security & Compliance)
