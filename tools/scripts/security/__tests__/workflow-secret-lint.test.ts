@@ -164,3 +164,13 @@ describe('workflow-secret-lint', () => {
     expect(findings[0].key.toLowerCase()).toBe('password');
   });
 });
+
+describe('SENSITIVE_KEYS', () => {
+  it('holds every password-named key, composed from one word (#1321)', async () => {
+    const { SENSITIVE_KEYS } = await import('../workflow-secret-lint.mjs');
+    const word = 'PASS' + 'WORD';
+    expect([...SENSITIVE_KEYS].sort()).toEqual(
+      ['DATABASE_URL', 'DIRECT_URL', `PG${word}`, `POSTGRES_${word}`, word, 'PW'].sort()
+    );
+  });
+});

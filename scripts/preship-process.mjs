@@ -354,21 +354,81 @@ export function watchTargets(gatePid, repoRoot, deps = {}) {
   };
 }
 
-/** Stop a process and everything it started (Windows: taskkill /T /F by PID). */
+/**
+ * Every process on Windows as pid → { ppid, t } (t = creation time in ticks),
+ * from Win32_Process. Empty when the listing fails.
+ */
+export function windowsProcesses(run = spawnSync) {
+  const r = run(
+    'powershell',
+    [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      'Get-CimInstance Win32_Process | ForEach-Object { "{0} {1} {2}" -f ' +
+        '$_.ProcessId, $_.ParentProcessId, $_.CreationDate.ToUniversalTime().Ticks }',
+    ],
+    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 60000, windowsHide: true }
+  );
+  const procs = new Map();
+  for (const line of (r.stdout || '').split(/\r?\n/)) {
+    const [p, pp, t] = line.trim().split(/\s+/).map(Number);
+    if (p > 0 && Number.isFinite(pp) && Number.isFinite(t)) procs.set(p, { ppid: pp, t });
+  }
+  return procs;
+}
+
+/**
+ * `root` and the processes it started, parents before children. A process whose
+ * parent pid matches is followed only if it was created at or after that parent:
+ * Windows reuses pids, so an older process can carry a parent pid that now names
+ * an unrelated new process. `taskkill /T` follows that stale link, which killed
+ * agent windows twice on 2026-11-10. Empty when `root` is not in `procs`.
+ * @param {number} root
+ * @param {Map<number, {ppid: number, t: number}>} procs
+ */
+export function descendantsOf(root, procs) {
+  if (!procs.has(root)) return [];
+  const out = [root];
+  const seen = new Set(out);
+  for (let i = 0; i < out.length; i++) {
+    const parent = out[i];
+    const born = procs.get(parent).t;
+    for (const [p, v] of procs) {
+      if (v.ppid === parent && !seen.has(p) && v.t >= born) {
+        seen.add(p);
+        out.push(p);
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Stop a process and everything it started. Windows: walk Win32_Process with
+ * descendantsOf() and `taskkill /F` each pid on its own, children first; never
+ * `taskkill /T`. When the process list cannot be read, only `pid` itself is
+ * stopped. POSIX: SIGKILL the process group.
+ */
 export function killTree(pid, deps = {}) {
   const {
     platform = process.platform,
     run = spawnSync,
     alive = isAlive,
     kill = (p, sig) => process.kill(p, sig),
+    processes = () => windowsProcesses(run),
   } = deps;
   if (!alive(pid)) return;
   if (platform === 'win32') {
-    run('taskkill', ['/PID', String(pid), '/T', '/F'], {
-      stdio: 'ignore',
-      timeout: 30000,
-      windowsHide: true,
-    });
+    const tree = descendantsOf(pid, processes());
+    const targets = tree.length > 0 ? tree.reverse() : [pid];
+    for (const p of targets) {
+      run('taskkill', ['/F', '/PID', String(p)], {
+        stdio: 'ignore',
+        timeout: 30000,
+        windowsHide: true,
+      });
+    }
     return;
   }
   // POSIX steps are spawned detached, so each is its own process group.

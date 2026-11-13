@@ -278,6 +278,45 @@ describe('Lead Router', () => {
       expect(prismaMock.lead.findUnique).toHaveBeenCalled();
     });
 
+    // #1277 (UI-022): a read never invents an AI analysis.
+    const leadWith = (aiInsights: unknown[]) => ({
+      ...mockLead,
+      owner: {
+        id: TEST_UUIDS.user1,
+        email: 'user@example.com',
+        name: 'Test User',
+        avatarUrl: null,
+      },
+      activities: [],
+      notes: [],
+      files: [],
+      aiInsights,
+      tasks: [],
+    });
+
+    it('returns no insight, and saves none, for a lead that was never analyzed', async () => {
+      prismaMock.lead.findUnique.mockResolvedValue(leadWith([]) as any);
+      prismaMock.leadAIInsight.upsert.mockClear();
+
+      const result = await leadRouter.createCaller(createTestContext()).getById({
+        id: TEST_UUIDS.lead1,
+      });
+
+      expect(result.aiInsights).toEqual([]);
+      expect(prismaMock.leadAIInsight.upsert).not.toHaveBeenCalled();
+    });
+
+    it('returns the stored insight the scoring job wrote', async () => {
+      const stored = { id: 'insight-1', engagementScore: 28, conversionProbability: 22 };
+      prismaMock.lead.findUnique.mockResolvedValue(leadWith([stored]) as any);
+
+      const result = await leadRouter.createCaller(createTestContext()).getById({
+        id: TEST_UUIDS.lead1,
+      });
+
+      expect(result.aiInsights).toEqual([stored]);
+    });
+
     it('round-trips BANT + annualRevenue distinct from estimatedValue (IFC-242)', async () => {
       const mockLeadWithBant = {
         ...mockLead,

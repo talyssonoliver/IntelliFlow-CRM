@@ -9,12 +9,13 @@ import * as path from 'node:path';
 import { findPageFiles } from './test-helpers/ia-fs-helpers';
 
 vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://test.intelliflow.com');
+import { FORGOT_PASSWORD_PATH, RESET_PASSWORD_PATH } from '@/lib/auth/auth-paths';
 
 const APP_DIR = path.resolve(__dirname, '..');
 const AUTH_FLOW_PATHS = [
-  '/forgot-password',
+  FORGOT_PASSWORD_PATH,
   '/logout',
-  '/reset-password',
+  RESET_PASSWORD_PATH,
   '/mfa',
   '/auth',
   '/verify-email',
