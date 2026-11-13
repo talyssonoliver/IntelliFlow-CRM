@@ -1,7 +1,76 @@
 # Dead Letter Queue (DLQ) Triage Runbook - IntelliFlow CRM
 
-**Document ID**: IFC-151-DLQ-TRIAGE **Version**: 1.0.0 **Last Updated**:
-2025-12-29 **Owner**: STOA-Domain (Backend Dev + SRE)
+**Document ID**: IFC-151-DLQ-TRIAGE **Version**: 1.1.0 **Last Updated**:
+2026-11-12 **Owner**: STOA-Domain (Backend Dev + SRE)
+
+---
+
+## 0. What exists today (IFC-151, 2026-11-12) — start here
+
+Sections 1-9 below were written in 2025-12 against a design that was never built
+(a `domain_event_outbox` table, `domain_events_*` Prometheus counters and HTTP
+drain endpoints). Where they disagree with this section, this section is right.
+
+### 0.1 Where dead letters live
+
+| Thing                  | Where                                                                                                                            |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Outbox and DLQ storage | `domain_events` table; a dead letter is `status = 'DEAD_LETTER'`                                                                 |
+| Consumer               | events worker (runs inside the Railway `combined-worker`), `apps/workers/events-worker/src/outbox/pollOutbox.ts`                 |
+| Retries                | 3 attempts, backoff 1 s / 5 s / 30 s with ±10% jitter, then DLQ                                                                  |
+| Poison messages        | a handler throws `PoisonMessageError` (`event-dispatcher.ts`): DLQ at once, no retry; `lastError` starts with `poison:`          |
+| Idempotent retries     | each handler that succeeded is recorded in `metadata.handledBy`; a retry or a replay runs only the handlers that never succeeded |
+
+### 0.2 Metrics and alert (Grafana Cloud)
+
+| Series                                                                          | Meaning                                                                                   |
+| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `intelliflow_outbox_events_total{outcome, event_type}`                          | one per dispatch attempt; `outcome` = `published`, `retried`, `dead_lettered`, `poisoned` |
+| `intelliflow_outbox_dispatch_duration_milliseconds_bucket{outcome, event_type}` | dispatch time of one event                                                                |
+| traces: `outbox.poll` / `outbox.dispatch` spans                                 | one span per poll and per event; a failed dispatch is an error span                       |
+
+Alert: **Outbox events dead-lettered** (uid `ifc151-outbox-dead-letters`,
+`infra/monitoring/grafana/cloud/alert-rules.json`), emails the owner when any
+event is dead-lettered or poisoned in 10 minutes.
+
+```promql
+# dead letters in the last hour, by event type
+sum by (event_type) (increase(intelliflow_outbox_events_total{outcome=~"dead_lettered|poisoned"}[1h]))
+# retry success: retried events that still got published
+sum(increase(intelliflow_outbox_events_total{outcome="published"}[1h]))
+  / sum(increase(intelliflow_outbox_events_total{outcome=~"published|dead_lettered"}[1h]))
+```
+
+### 0.3 Triage commands
+
+```bash
+# 1. List (read-only, no payloads). Oldest first; POISON marks poison messages.
+DATABASE_URL=<db> pnpm tsx tools/scripts/outbox-dlq.ts list [--type lead.created] [--tenant <id>] [--limit 50]
+
+# 2. Find the cause: the lastError column, then the trace/logs of that event
+#    (Tempo: span outbox.dispatch, attribute outbox.event.id = <id>).
+
+# 3. Replay once the cause is fixed. Dry run first: it prints what it would requeue.
+DATABASE_URL=<db> pnpm tsx tools/scripts/outbox-dlq.ts replay [--type x] [--id <eventId>]...
+DATABASE_URL=<db> pnpm tsx tools/scripts/outbox-dlq.ts replay [--type x] [--id <eventId>]... --apply
+#    Poison messages are skipped unless --include-poison: fix the handler or
+#    the data first, or they come straight back.
+```
+
+**Production:** `replay --apply` changes production rows (ADR-069 ad-hoc
+production DML is the owner's). Run the dry run, show the owner the ids, and
+apply only with the owner's yes. `list` is read-only and needs no approval.
+
+### 0.4 Writing a handler
+
+- Throw a plain error for anything that may succeed later (timeouts, a 5xx, a
+  locked row). The poller retries it.
+- Throw `PoisonMessageError` only when the event can never succeed (a missing
+  required field, an aggregate that no longer exists by design).
+- Give every handler a stable, unique name in
+  `dispatcher.register(pattern, handler, name)`: the name is the idempotency
+  key. Renaming a handler makes it run again for events that are retried after
+  the rename.
 
 ---
 
@@ -32,6 +101,8 @@ handlers:
 ---
 
 ## 2. DLQ Monitoring & Alerting
+
+> Superseded by §0.2: the metric names below were never emitted.
 
 ### 2.1 Key Metrics
 
@@ -178,6 +249,9 @@ kubectl logs -f deployment/api-server \
 ---
 
 ## 4. Resolution Strategies
+
+> The drain and API commands below describe the 2025-12 design. Use the triage
+> commands in §0.3 to list and replay dead letters.
 
 ### 4.1 External Service Failure (Temporary)
 
@@ -350,6 +424,8 @@ const CUSTOM_BACKOFF = {
 ---
 
 ## 6. DLQ Drain Procedure
+
+> Superseded by §0.3 (`tools/scripts/outbox-dlq.ts replay`).
 
 ### 6.1 Automatic Drain (Recommended)
 

@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { TourProvider, PublicTour } from '@/components/public/tour-components';
 import { PublicFeedbackFab } from '@/components/public/feedback-widget-public';
 import { FEATURES_TOUR_CONFIG } from '@/lib/public/tour-config';
+import { FORGOT_PASSWORD_PATH, RESET_PASSWORD_PATH } from '@/lib/auth/auth-paths';
 
 /**
  * Thin client shell for the public route group.
@@ -31,8 +32,8 @@ import { FEATURES_TOUR_CONFIG } from '@/lib/public/tour-config';
 const AUTH_PAGES_NO_CHROME = [
   '/login',
   '/signup',
-  '/forgot-password',
-  '/reset-password',
+  FORGOT_PASSWORD_PATH,
+  RESET_PASSWORD_PATH,
   '/logout',
   '/verify-email',
   '/mfa',

@@ -25,12 +25,14 @@ const EventStatus = {
 // Mock Prisma Client
 const createMockPrismaClient = () => ({
   $queryRaw: vi.fn(),
+  $executeRaw: vi.fn(),
   domainEvent: {
     findUnique: vi.fn(),
     findFirst: vi.fn(),
     findMany: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(),
     groupBy: vi.fn(),
   },
 });
@@ -486,6 +488,91 @@ describe('PrismaOutboxRepository', () => {
       const result = await repository.getEventById('test');
 
       expect(result!.payload).toEqual({});
+    });
+  });
+
+  // ==========================================================================
+  // IFC-151: idempotent retries and DLQ triage
+  // ==========================================================================
+
+  describe('handledBy mapping', () => {
+    it('maps metadata.handledBy, keeping only string names', async () => {
+      mockPrisma.domainEvent.findUnique.mockResolvedValue(
+        createMockDbEvent({
+          metadata: { correlationId: 'c', handledBy: ['audit-logger', 7, 'notify'] },
+        })
+      );
+      const event = await repository.getEventById('evt-001');
+      expect(event?.metadata.handledBy).toEqual(['audit-logger', 'notify']);
+    });
+
+    it('leaves handledBy out when the metadata has none', async () => {
+      mockPrisma.domainEvent.findUnique.mockResolvedValue(createMockDbEvent());
+      const event = await repository.getEventById('evt-001');
+      expect(event?.metadata).not.toHaveProperty('handledBy');
+    });
+  });
+
+  describe('recordHandled', () => {
+    it('appends the handler in one guarded UPDATE', async () => {
+      mockPrisma.$executeRaw.mockResolvedValue(1);
+      await repository.recordHandled('evt-001', 'audit-logger');
+
+      expect(mockPrisma.$executeRaw).toHaveBeenCalledTimes(1);
+      const [strings, ...values] = mockPrisma.$executeRaw.mock.calls[0]!;
+      const sql = (strings as string[]).join('?');
+      expect(sql).toContain('UPDATE domain_events');
+      expect(sql).toContain('jsonb_set(');
+      expect(sql).toContain('AND NOT (');
+      expect(values).toEqual(['audit-logger', 'evt-001', 'audit-logger']);
+    });
+  });
+
+  describe('listDeadLetters', () => {
+    it('lists dead letters oldest first, without payloads, capped at 500', async () => {
+      mockPrisma.domainEvent.findMany.mockResolvedValue([]);
+      await repository.listDeadLetters({ limit: 9999, eventType: 'lead.created', tenantId: 't-1' });
+
+      const args = mockPrisma.domainEvent.findMany.mock.calls[0]![0];
+      expect(args.where).toEqual({
+        status: EventStatus.DEAD_LETTER,
+        eventType: 'lead.created',
+        tenantId: 't-1',
+      });
+      expect(args.orderBy).toEqual({ occurredAt: 'asc' });
+      expect(args.take).toBe(500);
+      expect(args.select).not.toHaveProperty('payload');
+      expect(args.select).not.toHaveProperty('metadata');
+    });
+
+    it('defaults to 50 and no filters', async () => {
+      mockPrisma.domainEvent.findMany.mockResolvedValue([]);
+      await repository.listDeadLetters();
+      const args = mockPrisma.domainEvent.findMany.mock.calls[0]![0];
+      expect(args.where).toEqual({ status: EventStatus.DEAD_LETTER });
+      expect(args.take).toBe(50);
+    });
+
+    it('takes at least one row', async () => {
+      mockPrisma.domainEvent.findMany.mockResolvedValue([]);
+      await repository.listDeadLetters({ limit: 0 });
+      expect(mockPrisma.domainEvent.findMany.mock.calls[0]![0].take).toBe(1);
+    });
+  });
+
+  describe('requeueDeadLetter', () => {
+    it('resets only a DEAD_LETTER row to a fresh PENDING event', async () => {
+      mockPrisma.domainEvent.updateMany.mockResolvedValue({ count: 1 });
+      expect(await repository.requeueDeadLetter('evt-001')).toBe(true);
+      expect(mockPrisma.domainEvent.updateMany).toHaveBeenCalledWith({
+        where: { id: 'evt-001', status: EventStatus.DEAD_LETTER },
+        data: { status: EventStatus.PENDING, retryCount: 0, nextRetryAt: null },
+      });
+    });
+
+    it('returns false when the event is not a dead letter', async () => {
+      mockPrisma.domainEvent.updateMany.mockResolvedValue({ count: 0 });
+      expect(await repository.requeueDeadLetter('evt-404')).toBe(false);
     });
   });
 });

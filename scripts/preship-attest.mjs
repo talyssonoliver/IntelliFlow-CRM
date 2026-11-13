@@ -710,7 +710,49 @@ export function mainChangesInScope(sha, oldBase, newBase, gitFn = git) {
       .filter((p) => /(^|\/)package\.json$/.test(p) && !p.includes('node_modules/'))
       .map((p) => ({ path: p, json: String(gitFn(['show', `${sha}:${p}`]).stdout ?? '') }))
   );
-  return carryBlockers({ prFiles, mainFiles, graph });
+  // The root import graph reads every root code file; do it in one batch, and
+  // only when carryBlockers asks for a file.
+  let texts = null;
+  const read = (file) => {
+    texts ??= readTreeTexts(
+      gitFn,
+      sha,
+      manifests.filter((p) => /^(scripts|tools)\/.+\.(mjs|cjs|js|ts|mts|cts)$/.test(p))
+    );
+    return texts.get(file) ?? null;
+  };
+  return carryBlockers({ prFiles, mainFiles, graph, root: { files: manifests, read } });
+}
+
+/**
+ * The text of each path at `sha`, read with one `git cat-file --batch`. A path
+ * git reports missing, or a failed batch, is left out (the reader then sees null).
+ * @returns {Map<string, string>}
+ */
+export function readTreeTexts(gitFn, sha, paths) {
+  const out = new Map();
+  if (paths.length === 0) return out;
+  const r = gitFn(['cat-file', '--batch'], {
+    input: paths.map((p) => `${sha}:${p}`).join('\n') + '\n',
+    // latin1 maps bytes one to one, so the batch's byte sizes stay exact.
+    encoding: 'latin1',
+  });
+  if (r.status !== 0 || typeof r.stdout !== 'string') return out;
+  const buf = Buffer.from(r.stdout, 'latin1');
+  let pos = 0;
+  for (const p of paths) {
+    const nl = buf.indexOf(10, pos);
+    if (nl === -1) break;
+    const header = buf.subarray(pos, nl).toString('utf8').split(' ');
+    if (header[1] === 'missing' || header.length < 3) {
+      pos = nl + 1;
+      continue;
+    }
+    const size = Number(header[2]);
+    out.set(p, buf.subarray(nl + 1, nl + 1 + size).toString('utf8'));
+    pos = nl + 1 + size + 1;
+  }
+  return out;
 }
 
 function doVerify(flags, preshipFile) {

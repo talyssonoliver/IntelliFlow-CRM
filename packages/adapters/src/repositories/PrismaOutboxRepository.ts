@@ -33,6 +33,8 @@ export interface OutboxEvent {
     tenantId?: string;
     timestamp: string;
     version: string;
+    /** Handlers that already succeeded for this event; a retry skips them (IFC-151). */
+    handledBy?: string[];
   };
   status: OutboxEventStatus;
   retryCount: number;
@@ -61,6 +63,19 @@ export interface OutboxRepository {
   moveToDeadLetter(eventId: string, error: string): Promise<void>;
   /** Get event by ID */
   getEventById(eventId: string): Promise<OutboxEvent | null>;
+  /** Record that one handler succeeded for an event (IFC-151 idempotent retries). */
+  recordHandled?(eventId: string, handlerName: string): Promise<void>;
+}
+
+/** A dead-lettered event and why it got there (IFC-151 DLQ triage). */
+export interface DeadLetterEntry {
+  id: string;
+  eventType: string;
+  aggregateType: string;
+  tenantId: string;
+  retryCount: number;
+  lastError: string | null;
+  occurredAt: Date;
 }
 
 /**
@@ -110,6 +125,13 @@ function mapToOutboxEvent(event: {
       tenantId: metadata.tenantId as string | undefined,
       timestamp: (metadata.timestamp as string) ?? event.occurredAt.toISOString(),
       version: (metadata.version as string) ?? '1.0',
+      ...(Array.isArray(metadata.handledBy)
+        ? {
+            handledBy: (metadata.handledBy as unknown[]).filter(
+              (name): name is string => typeof name === 'string'
+            ),
+          }
+        : {}),
     },
     status: mapPrismaStatus(event.status),
     retryCount: event.retryCount,
@@ -224,6 +246,65 @@ export class PrismaOutboxRepository implements OutboxRepository {
         lastError: error,
       },
     });
+  }
+
+  /**
+   * Record that one handler succeeded for an event, in metadata.handledBy, so a
+   * retry skips it (IFC-151). One atomic UPDATE: no read-modify-write race, and
+   * recording the same handler twice is a no-op.
+   */
+  async recordHandled(eventId: string, handlerName: string): Promise<void> {
+    await this.prisma.$executeRaw`
+      UPDATE domain_events
+      SET metadata = jsonb_set(
+        COALESCE(metadata, '{}'::jsonb),
+        '{handledBy}',
+        COALESCE(metadata->'handledBy', '[]'::jsonb) || to_jsonb(${handlerName}::text)
+      )
+      WHERE id = ${eventId}
+        AND NOT (COALESCE(metadata->'handledBy', '[]'::jsonb) @> to_jsonb(ARRAY[${handlerName}::text]))
+    `;
+  }
+
+  /**
+   * Dead-lettered events, oldest first, for triage (IFC-151). Optional filters
+   * by event type and tenant. Payloads are left out: they may hold personal data.
+   */
+  async listDeadLetters(
+    options: { limit?: number; eventType?: string; tenantId?: string } = {}
+  ): Promise<DeadLetterEntry[]> {
+    return this.prisma.domainEvent.findMany({
+      where: {
+        status: EventStatus.DEAD_LETTER,
+        ...(options.eventType ? { eventType: options.eventType } : {}),
+        ...(options.tenantId ? { tenantId: options.tenantId } : {}),
+      },
+      orderBy: { occurredAt: 'asc' },
+      take: Math.min(Math.max(options.limit ?? 50, 1), 500),
+      select: {
+        id: true,
+        eventType: true,
+        aggregateType: true,
+        tenantId: true,
+        retryCount: true,
+        lastError: true,
+        occurredAt: true,
+      },
+    });
+  }
+
+  /**
+   * Put a dead letter back in the outbox as a fresh pending event (triage
+   * replay). Only a DEAD_LETTER row changes; returns whether one did. Handlers
+   * recorded in metadata.handledBy stay skipped, so a replay re-runs only the
+   * handlers that never succeeded.
+   */
+  async requeueDeadLetter(eventId: string): Promise<boolean> {
+    const result = await this.prisma.domainEvent.updateMany({
+      where: { id: eventId, status: EventStatus.DEAD_LETTER },
+      data: { status: EventStatus.PENDING, retryCount: 0, nextRetryAt: null },
+    });
+    return result.count === 1;
   }
 
   /**

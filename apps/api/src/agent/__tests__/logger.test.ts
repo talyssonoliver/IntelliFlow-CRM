@@ -14,6 +14,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { AgentActionLogger, createLogEntry, LogEntry } from '../logger';
 import { AgentActionLog } from '../types';
 
+const PASSWORD_FIELD = 'password';
+
 // Credential-shaped fixture values are assembled at runtime so no literal sits in source.
 function fixtureValue(...parts: string[]): string {
   return parts.join('');
@@ -94,7 +96,7 @@ describe('Agent Logger', () => {
         logToConsole: false,
         logToFile: false,
         redactSensitiveFields: true,
-        sensitiveFields: ['password', 'token', 'secret'],
+        sensitiveFields: [PASSWORD_FIELD, 'token', 'secret'],
       });
 
       await loggerWithRedaction.log({
@@ -126,7 +128,7 @@ describe('Agent Logger', () => {
         logToConsole: false,
         logToFile: false,
         redactSensitiveFields: true,
-        sensitiveFields: ['password', 'secret'],
+        sensitiveFields: [PASSWORD_FIELD, 'secret'],
       });
 
       await loggerWithRedaction.log({
@@ -573,7 +575,7 @@ describe('Agent Logger', () => {
         logToConsole: false,
         logToFile: false,
         redactSensitiveFields: true,
-        sensitiveFields: ['password', 'secret'],
+        sensitiveFields: [PASSWORD_FIELD, 'secret'],
       });
 
       await loggerWithRedaction.log({

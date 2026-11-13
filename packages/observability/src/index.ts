@@ -85,6 +85,14 @@ export {
   type SpanRunOptions,
 } from './consumer-span';
 
+// Outbox consumer outcome counter and dispatch-duration histogram (IFC-151).
+export {
+  createOutboxMetrics,
+  OUTBOX_METER_NAME,
+  type OutboxMetrics,
+  type OutboxOutcome,
+} from './outbox-metrics';
+
 // Re-export OTel SDK trace primitives needed for in-process span capture (IFC-032).
 // Used by:
 //   - Section F LeadRoutingService tests (workflow.lead.route span assertions)
