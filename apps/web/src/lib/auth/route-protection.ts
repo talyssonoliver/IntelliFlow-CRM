@@ -1,3 +1,5 @@
+import { FORGOT_PASSWORD_PATH, RESET_PASSWORD_PATH } from './auth-paths';
+
 /**
  * Central protected-route matcher for client and proxy auth checks.
  *
@@ -48,8 +50,8 @@ export const PUBLIC_AUTH_ROUTE_PREFIXES = [
   '/login',
   '/signup',
   '/logout',
-  '/forgot-password',
-  '/reset-password',
+  FORGOT_PASSWORD_PATH,
+  RESET_PASSWORD_PATH,
   '/verify-email',
   // MFA verification (e.g. /mfa/verify) is an auth-flow page used for login AND
   // mid-session re-verification; the onboarding modal must not interrupt it.

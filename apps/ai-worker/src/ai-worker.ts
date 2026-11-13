@@ -12,7 +12,7 @@
  * @task IFC-168
  */
 
-import { context as otelContext, propagation } from '@opentelemetry/api';
+import { context as otelContext, propagation, trace as otelTrace } from '@opentelemetry/api';
 import { Job, Queue, QueueEvents } from 'bullmq';
 import express from 'express';
 import type { Server } from 'node:http';
@@ -1107,10 +1107,16 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    */
   protected async processJob(job: Job<AIJobData>): Promise<AIJobResult> {
     // --- OTel trace context restore ---
-    // Extract the W3C traceparent carrier injected at enqueue time so all
-    // child spans (including llm.invoke) are parented to the originating trace.
-    const carrier = (job.data as { _otelCarrier?: Record<string, string> })._otelCarrier ?? {};
-    const parentContext = propagation.extract(otelContext.active(), carrier);
+    // BaseWorker.handleJob already runs this inside the job's CONSUMER span,
+    // which it parented on the enqueue-side carrier (IFC-097): keep that span as
+    // the parent so llm.invoke and the queries nest under it. Only a direct call
+    // with no active span extracts the W3C carrier here.
+    const parentContext = otelTrace.getSpan(otelContext.active())
+      ? otelContext.active()
+      : propagation.extract(
+          otelContext.active(),
+          (job.data as { _otelCarrier?: Record<string, string> })._otelCarrier ?? {}
+        );
 
     // Extract tenantId for AsyncLocalStorage so wrapModelWithTracing can stamp spans.
     const tenantIdForStore = (job.data as { tenantId?: string }).tenantId ?? 'unknown';

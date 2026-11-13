@@ -85,6 +85,21 @@ export function extractTenantContext(user: Context['user']): TenantContext {
 }
 
 /**
+ * The tenant context of a sessionless, server-to-server call that acts inside ONE tenant (the
+ * inbound portal routes): no user, a SERVICE role, and the tenant the call is bound to. Pass it
+ * to createTenantScopedPrisma so the call's queries carry that tenant's filter like a user's do.
+ */
+export function serviceTenantContext(tenantId: string): TenantContext {
+  return {
+    tenantId,
+    tenantType: 'organization',
+    userId: 'service',
+    role: 'SERVICE',
+    canAccessAllTenantData: true,
+  };
+}
+
+/**
  * Create a tenant-scoped Prisma extension
  *
  * This extension automatically sets the PostgreSQL session variable

@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { Input } from './input';
 import { Label } from './label';
 
+const PASSWORD_TYPE = 'password';
+
 const meta: Meta<typeof Input> = {
   title: 'Components/Input',
   component: Input,
@@ -9,7 +11,7 @@ const meta: Meta<typeof Input> = {
   argTypes: {
     type: {
       control: 'select',
-      options: ['text', 'email', 'password', 'number', 'search', 'tel', 'url'],
+      options: ['text', 'email', PASSWORD_TYPE, 'number', 'search', 'tel', 'url'],
     },
     disabled: {
       control: 'boolean',

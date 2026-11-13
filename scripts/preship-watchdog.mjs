@@ -8,7 +8,8 @@
  *   - something ABOVE the gate is killed (`git push`, the hook shell): the gate
  *     survives and keeps building for a push that no longer exists.
  *
- * Either way it stops the step's whole process tree (Windows: taskkill /T /F),
+ * Either way it stops the step's whole process tree (Windows: each descendant,
+ * creation-time checked, by its own `taskkill /F`; never `/T`: see killTree),
  * ends the gate if it is still alive, releases the test slot the gate held (only
  * if the slot's nonce is still the gate's own) and removes the gate's state file.
  *

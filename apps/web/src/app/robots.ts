@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next';
+import { FORGOT_PASSWORD_PATH, RESET_PASSWORD_PATH } from '@/lib/auth/auth-paths';
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://intelli-flow-crm-web.vercel.app';
 
@@ -34,8 +35,8 @@ export default function robots(): MetadataRoute.Robots {
           '/auth/',
           '/mfa/',
           '/verify-email/',
-          '/reset-password/',
-          '/forgot-password',
+          `${RESET_PASSWORD_PATH}/`,
+          FORGOT_PASSWORD_PATH,
           '/logout',
           // Redirect-only paths
           '/appointments',
