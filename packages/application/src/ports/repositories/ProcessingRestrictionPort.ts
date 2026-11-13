@@ -40,6 +40,13 @@ export interface ProcessingRestrictionPort {
     tx?: RepositoryTransaction
   ): Promise<RestrictionStatus>;
 
+  /**
+   * IFC-315: the addresses among `subjectEmails` that must get no marketing, normalised: an
+   * active restriction with `blocksMarketing` (an Art 21(3) objection), or an erased record's
+   * placeholder. One read for the whole list.
+   */
+  marketingBlocked(tenantId: string, subjectEmails: readonly string[]): Promise<Set<string>>;
+
   /** Upsert into the one active row: OR `blocksMarketing`, append the request id. */
   restrict(input: {
     tenantId: string;

@@ -278,11 +278,26 @@ under the person's row lock:
 The lead and contact pages show a banner "Processing restricted (data request)".
 A marketing objection shows "Do not send marketing (data request)".
 
-**Marketing objection (Article 21(3)).** It is absolute, but the system does not
-stop marketing by itself. To complete it the admin must tick that marketing to
-the person has been stopped and say how (at least 10 characters). The person's
-email then says the firm has confirmed that marketing has stopped. Automated
-outreach suppression is not built (see Known gaps).
+**Marketing objection (Article 21(3)).** It is absolute, and the CRM stops
+marketing email by itself (IFC-315). Completing the objection writes a
+restriction with `blocksMarketing`. From then on:
+
+- An email marked **Marketing email** in compose is not sent to that address, in
+  To, Cc or Bcc. The rest of the recipients still get it. If nobody is left,
+  nothing is sent and the sender sees why. Each withheld send is audited
+  (`email_message`, `EmailMarketingObjectionApplied`) with counts only, and the
+  email record lists the addresses left out.
+- An erased record's placeholder address is treated the same way.
+- Service email (a reply, a booking confirmation, a data request notice) still
+  reaches the person: the objection is to marketing only.
+- Auto-response drafts and the agent's draft tool already refuse anyone with an
+  active restriction, and a marketing objection is one.
+
+No workflow, automation or campaign step sends email, so there is no other send
+path to guard. The admin no longer confirms a manual stop. If the firm also
+markets outside the CRM (a newsletter tool, for example), the admin can record
+how that was stopped (optional, at least 10 characters). The person's email says
+the firm will no longer send them marketing email.
 
 ## Completion and refusal
 
@@ -376,7 +391,6 @@ track training. The previous training record was fabricated and was removed (see
 | An access request completed at verification can later withhold data added before the download, with the wrong note.                                                                                     | #1020               |
 | AI search can return too few results when many matches are restricted (filtered after the row limit; fail-safe).                                                                                        | #1021               |
 | Email suppressions and bounce receipts are not in the export or the erasure checklist.                                                                                                                  | #956                |
-| Outreach and marketing suppression is manual. The system only records a restriction that blocks marketing.                                                                                              | IFC-315 (Sprint 19) |
 | Erasure of communications (emails, tickets, chats, feedback, notifications, drafts) and stored files is manual.                                                                                         | IFC-316 (Sprint 19) |
 | No CSV export and no direct transfer to another controller (Article 20(2)).                                                                                                                             | IFC-317 (Sprint 19) |
 | No Article 19 notice to recipients of erased, corrected or restricted data.                                                                                                                             | IFC-318 (Sprint 19) |

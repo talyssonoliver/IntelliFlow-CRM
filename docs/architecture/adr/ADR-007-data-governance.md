@@ -687,6 +687,24 @@ only under the locks above, after re-checking (`writeSubjectIfStillEligible` in
 lands while the model runs therefore wins. The lead and contact detail pages
 show a "Processing restricted" banner. Plan Addendum B lists every path.
 
+### Marketing email (IFC-315, Art 21(3))
+
+User email carries a purpose: `SERVICE` (the default) or `MARKETING`, chosen in
+compose. `dispatchUserMail` (`apps/api/src/modules/email/mailbox-sender.ts`) is
+the only path that sends email to a lead or contact the user picks. For a
+MARKETING email it drops every recipient whose address has an active restriction
+with `blocksMarketing`, or is an erased placeholder, after the suppression list
+and before quota is reserved. It reads them with one query
+(`ProcessingRestrictionPort.marketingBlocked`). It sends to the rest, refuses
+with `ALL_OBJECTED` when nobody is left, records the dropped addresses on the
+email record and audits each withheld send with counts only. A failed read fails
+the send. SERVICE email is not checked: the objection covers marketing only.
+Booking emails, calendar invites, receipts and data request notices are service
+email by nature and are not marketing paths. No workflow, automation or campaign
+step sends email. Completing a marketing objection therefore no longer needs the
+admin to confirm a manual stop; a stop method is optional and records marketing
+stopped outside the CRM.
+
 ### Delivery
 
 The migration is Class A. It is applied through the gated
@@ -699,8 +717,6 @@ It takes `pg_try_advisory_xact_lock`, so one replica runs each tick.
 
 ### Out of scope (tracked)
 
-- Outreach and marketing suppression keyed on `blocksMarketing`: IFC-315. A
-  marketing objection only records the admin's manual confirmation.
 - Automated erasure of communications and stored files, a CSV export with
   Article 20(2) direct transfer, and Article 19 recipient notification: IFC-316,
   IFC-317 and IFC-318.

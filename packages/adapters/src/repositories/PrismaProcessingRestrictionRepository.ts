@@ -55,6 +55,20 @@ export class PrismaProcessingRestrictionRepository implements ProcessingRestrict
     return { restricted: true, blocksMarketing: row.blocksMarketing, since: row.createdAt };
   }
 
+  async marketingBlocked(tenantId: string, subjectEmails: readonly string[]): Promise<Set<string>> {
+    const emails = [...new Set(subjectEmails.map(normalizeSubjectEmail))];
+    // An erased record's placeholder is never contacted again, as in status().
+    const blocked = new Set(emails.filter(isErasedEmail));
+    const open = emails.filter((email) => !blocked.has(email));
+    if (open.length === 0) return blocked;
+    const rows = await this.prisma.processingRestriction.findMany({
+      where: { tenantId, subjectEmail: { in: open }, liftedAt: null, blocksMarketing: true },
+      select: { subjectEmail: true },
+    });
+    for (const row of rows) blocked.add(row.subjectEmail);
+    return blocked;
+  }
+
   async restrict(input: {
     tenantId: string;
     subjectEmail: string;

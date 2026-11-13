@@ -44,11 +44,20 @@ export type BounceKind = (typeof BOUNCE_KINDS)[number];
 export const SIGNATURE_SCOPES = ['USER', 'ORG'] as const;
 export type SignatureScope = (typeof SIGNATURE_SCOPES)[number];
 
+/**
+ * What a user email is for (IFC-315). MARKETING is never sent to a person who objected to
+ * direct marketing (UK GDPR Art 21(3)); SERVICE (the default) is a reply or a message the
+ * person needs, and is not affected by the objection.
+ */
+export const EMAIL_SEND_PURPOSES = ['SERVICE', 'MARKETING'] as const;
+export type EmailSendPurpose = (typeof EMAIL_SEND_PURPOSES)[number];
+
 /** Machine codes carried on send refusals so the web can show the right message. */
 export const EMAIL_SEND_ERROR_CODES = [
   'NO_MAILBOX',
   'MAILBOX_ERROR',
   'ALL_SUPPRESSED',
+  'ALL_OBJECTED',
   'SEND_FAILED',
 ] as const;
 export type EmailSendErrorCode = (typeof EMAIL_SEND_ERROR_CODES)[number];

@@ -43,6 +43,17 @@ describe('getEmailSendError', () => {
     expect(view.message).toMatch(/nothing was sent/i);
   });
 
+  it('explains a marketing email that reached nobody because everyone objected (IFC-315)', () => {
+    const view = getEmailSendError(
+      trpcError({ code: 'ALL_OBJECTED', mailboxErrorCode: null, skipped: ['a@example.invalid'] })
+    );
+    expect(view.code).toBe('ALL_OBJECTED');
+    expect(view.message).toContain('a@example.invalid');
+    expect(view.message).toMatch(/objected to marketing/i);
+    expect(view.message).toMatch(/nothing was sent/i);
+    expect(view.action).toBeNull();
+  });
+
   it.each([
     ['AUTH_FAILED', /sign-in|password/i],
     ['TIMEOUT', /did not respond/i],
@@ -102,6 +113,26 @@ describe('mailboxErrorMessage', () => {
     expect(mailboxErrorMessage('AUTH_FAILED')).toMatch(/refused the sign-in/);
     expect(mailboxErrorMessage('TLS_FAILED')).toMatch(/secure connection/);
     expect(mailboxErrorMessage('CONNECT_FAILED')).toMatch(/could not be reached/);
+  });
+});
+
+describe('partialSendNotice: marketing objections (IFC-315)', () => {
+  it('names recipients left out because they objected to marketing', () => {
+    expect(partialSendNotice({ skipped: [], objected: ['o@example.invalid'] })).toBe(
+      'Sent. 1 recipient was left out because they objected to marketing email: o@example.invalid.'
+    );
+  });
+
+  it('follows the suppression notice without repeating "Sent."', () => {
+    expect(
+      partialSendNotice({
+        skipped: ['s@example.invalid'],
+        objected: ['o@example.invalid', 'p@example.invalid'],
+      })
+    ).toBe(
+      'Sent. 1 recipient was skipped because they are on the suppression list: s@example.invalid. ' +
+        '2 recipients were left out because they objected to marketing email: o@example.invalid, p@example.invalid.'
+    );
   });
 });
 

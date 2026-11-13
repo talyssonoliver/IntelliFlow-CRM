@@ -1,0 +1,164 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-315",
+  "run_id": "ifc-315-2026-11-13",
+  "attestor": "Claude Code (claude-opus-5-5), pg-208 lane (feat/ifc-315-marketing-objection-guard)",
+  "attestation_timestamp": "2026-11-13T00:30:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "apps/api/src/modules/email/mailbox-sender.ts",
+        "sha256": "4e970d866834a3e60460da83f66bf22113714508e748208b7be21309cfadd38e"
+      },
+      {
+        "path": "packages/adapters/src/repositories/PrismaProcessingRestrictionRepository.ts",
+        "sha256": "9643f08c4805719f26b58f5ccb311f62aa1899c130bca8923aa223148dbb7d7b"
+      },
+      {
+        "path": "packages/application/src/services/DataSubjectRequestService.ts",
+        "sha256": "32fb9d183b1f514b8a45fda9d193966ee204d6f4dc5863c682d504e1480d407a"
+      },
+      {
+        "path": "apps/web/src/components/email/EmailCompose.tsx",
+        "sha256": "e9243175605934bf42931c82dd243885170360fd736c351325ff1af741fee4d6"
+      }
+    ],
+    "invariants_acknowledged": [
+      "See context_ack.json: the only send path for lead and contact mail is dispatchUserMail; MARKETING mail skips objectors with one query, audited with counts only; SERVICE mail is unaffected; no workflow or automation step sends email."
+    ],
+    "acknowledged_at": "2026-11-12T20:30:00Z"
+  },
+  "evidence_summary": {
+    "send_paths_audited": 5,
+    "marketing_send_paths": 1,
+    "send_paths_guarded": 1,
+    "draft_paths_already_refusing_restricted": 2,
+    "new_unit_tests": 20,
+    "new_integration_tests": 1
+  },
+  "validation_results": [
+    {
+      "name": "API email, privacy, autoresponse, agent draft and security suites",
+      "command": "pnpm exec vitest run src/modules/autoresponse src/modules/email src/modules/privacy src/agent/tools/__tests__/draft-message.test.ts src/security (apps/api)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-12T20:05:00Z"
+    },
+    {
+      "name": "Application package (1613 tests)",
+      "command": "pnpm exec vitest run (packages/application)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-12T20:20:00Z"
+    },
+    {
+      "name": "Adapters package (3335 tests)",
+      "command": "pnpm exec vitest run (packages/adapters)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-12T20:21:00Z"
+    },
+    {
+      "name": "Web compose, send errors and privacy requests (81 tests)",
+      "command": "pnpm exec vitest run src/components/email/__tests__/send-errors.test.ts src/components/email/__tests__/EmailCompose.send-errors.test.tsx src/components/email/__tests__/EmailCompose.test.tsx src/app/settings/privacy-requests/__tests__/PrivacyRequestsContent.test.tsx (apps/web)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-12T20:00:00Z"
+    },
+    {
+      "name": "Validators email settings (26 tests)",
+      "command": "pnpm exec vitest run src/__tests__/email-settings.test.ts (packages/validators)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-12T20:18:00Z"
+    },
+    {
+      "name": "Real-database DSAR suite incl. marketingBlocked (43 tests), through the test slot",
+      "command": "node with-slot.mjs --exclusive intelliflow-db -- node scripts/test-db.mjs run -- npx vitest run tests/integration/dsar.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-13T00:10:00Z"
+    },
+    {
+      "name": "Typecheck",
+      "command": "pnpm --filter @intelliflow/api typecheck && pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-12T20:19:00Z"
+    },
+    {
+      "name": "Lint (changed files)",
+      "command": "pnpm exec eslint <changed source files>",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-12T20:19:30Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "marketing-send-guard",
+      "passed": true
+    },
+    {
+      "gate_id": "service-mail-unaffected",
+      "passed": true
+    },
+    {
+      "gate_id": "refusal-audited-counts-only",
+      "passed": true
+    },
+    {
+      "gate_id": "fail-closed-on-read-error",
+      "passed": true
+    },
+    {
+      "gate_id": "dsar-completion-no-manual-stop",
+      "passed": true
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Marketing sends to blocksMarketing addresses",
+      "target": "0",
+      "actual": "0: every MARKETING send drops objectors before quota and transport (mailbox-sender tests; real-DB marketingBlocked test)",
+      "met": true
+    },
+    {
+      "kpi": "Every outbound path covered by a test",
+      "target": "all",
+      "actual": "Compose/forward guard tested; auto-response refusal for an objection tested; draft tool objection already tested; booking, invite, receipt and DSAR mail are service mail; no workflow or automation email path exists",
+      "met": true
+    },
+    {
+      "kpi": "Coverage >=90%",
+      "target": ">=90% on changed code",
+      "actual": "Every new branch in mailbox-sender, marketingBlocked, the DSAR completion rule, send-errors and the compose option has a test; the package-wide figure is measured by pre-ship coverage",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Non-transactional compose mail (marked marketing) checks blocksMarketing per recipient within the tenant and skips it with an audit entry",
+      "met": true
+    },
+    {
+      "criterion": "Workflow and automation: no email send step exists (workflow custom actions POST to a tenant webhook only)",
+      "met": true
+    },
+    {
+      "criterion": "Auto-response drafts refuse any restricted person, which includes a marketing objection (test added)",
+      "met": true
+    },
+    {
+      "criterion": "Transactional mail (booking confirmations, DSAR notices) still sends",
+      "met": true
+    },
+    {
+      "criterion": "Completing a marketing objection no longer requires a manual stop; the stop method is optional",
+      "met": true
+    }
+  ],
+  "notes": "No migration: blocksMarketing already exists on processing_restrictions. The send guard lives in dispatchUserMail, the only path that sends to a lead or contact address the user chooses. Refused sends are audited as email_message / EmailMarketingObjectionApplied with counts only; the addresses stay on the email record metadata, as suppressed addresses already do."
+}

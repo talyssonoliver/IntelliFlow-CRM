@@ -191,6 +191,8 @@ export function EmailCompose({
   const [sendError, setSendError] = useState<EmailSendErrorView | null>(null);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [skippedNotice, setSkippedNotice] = useState<string | null>(null);
+  // IFC-315: a marketing email is not sent to people who objected to direct marketing.
+  const [isMarketing, setIsMarketing] = useState(false);
 
   const bodyRef = useRef<HTMLDivElement>(null);
   /** Saved selection range for restoring after toolbar interactions */
@@ -407,6 +409,7 @@ export function EmailCompose({
         htmlBody: getBodyHtml(),
         threadId,
         attachments: uploaded.length > 0 ? uploaded : undefined,
+        ...(isMarketing ? { purpose: 'MARKETING' as const } : {}),
       });
       const notice = partialSendNotice(result);
       setSkippedNotice(notice);
@@ -429,6 +432,7 @@ export function EmailCompose({
     subject,
     getBodyHtml,
     threadId,
+    isMarketing,
     removeSentDraft,
     onSent,
   ]);
@@ -761,6 +765,24 @@ export function EmailCompose({
             onChange={(e) => setSubject(e.target.value)}
             className="w-full bg-transparent text-sm placeholder:text-muted-foreground focus:outline-none"
           />
+        </div>
+
+        {/* Purpose (IFC-315): marketing skips people who objected to it */}
+        <div className="flex items-center gap-2 border-b border-border px-4 py-2">
+          <input
+            id="compose-marketing"
+            type="checkbox"
+            checked={isMarketing}
+            onChange={(e) => setIsMarketing(e.target.checked)}
+            aria-describedby="compose-marketing-hint"
+            className="h-4 w-4 rounded border-border"
+          />
+          <label htmlFor="compose-marketing" className="text-sm">
+            Marketing email
+          </label>
+          <span id="compose-marketing-hint" className="text-xs text-muted-foreground">
+            Not sent to people who objected to marketing.
+          </span>
         </div>
 
         {/* Format toolbar */}

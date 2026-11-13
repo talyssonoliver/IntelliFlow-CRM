@@ -162,6 +162,15 @@ class FakeRestrictions implements ProcessingRestrictionPort {
       ? { restricted: true, blocksMarketing: row.blocksMarketing, since: row.createdAt }
       : { restricted: false, blocksMarketing: false, since: null };
   }
+  async marketingBlocked(tenantId: string, emails: readonly string[]) {
+    return new Set(
+      this.rows
+        .filter(
+          (r) => r.tenantId === tenantId && r.blocksMarketing && emails.includes(r.subjectEmail)
+        )
+        .map((r) => r.subjectEmail)
+    );
+  }
   async restrict(input: {
     tenantId: string;
     subjectEmail: string;
@@ -848,7 +857,22 @@ describe('complete (D-AC-06/08)', () => {
     ).toEqual({ outcome: 'CONFLICT' });
   });
 
-  it('a MARKETING objection restricts with blocksMarketing and needs the stop method (Art 21(3))', async () => {
+  it('a MARKETING objection completes without a manual stop: blocksMarketing stops CRM marketing (IFC-315)', async () => {
+    const id = await verified('OBJECTION', 'MARKETING');
+    const done = await service.complete({
+      tenantId: 'tenant-a',
+      id,
+      actorId: ADMIN,
+      note: 'Recorded',
+      now: NOW,
+    });
+    expect(done.outcome).toBe('OK');
+    expect(restrictions.rows[0]).toMatchObject({ blocksMarketing: true });
+    expect(repo.rows.get(id)?.marketingStopMethod ?? null).toBeNull();
+    expect(notices[0]).toMatchObject({ kind: 'COMPLETED', marketingStopped: true });
+  });
+
+  it('a confirmed stop outside the CRM needs its method (Art 21(3))', async () => {
     const id = await verified('OBJECTION', 'MARKETING');
     expect(
       await service.complete({
@@ -856,9 +880,14 @@ describe('complete (D-AC-06/08)', () => {
         id,
         actorId: ADMIN,
         note: 'Recorded',
+        marketingStoppedConfirmed: true,
         now: NOW,
       })
     ).toEqual({ outcome: 'INVALID', field: 'marketingStopMethod' });
+  });
+
+  it('a MARKETING objection keeps the stop method recorded for tools outside the CRM', async () => {
+    const id = await verified('OBJECTION', 'MARKETING');
     const done = await service.complete({
       tenantId: 'tenant-a',
       id,

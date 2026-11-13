@@ -1215,8 +1215,10 @@ subject requests). Owner rulings Q16 to Q22.
   `/settings/privacy-requests`.
 - **Out of scope.** Outreach suppression, automated erasure of communications
   and files, a CSV export with direct transfer, and Article 19 recipient
-  notification are follow-up tasks IFC-315 to IFC-318 (Sprint 19). Open issues:
-  #1007, #1009, #1010, #1014, #1015 and #1019.
+  notification are follow-up tasks IFC-315 to IFC-318 (Sprint 19). IFC-315 is
+  done: a compose email marked marketing skips anyone who objected to marketing
+  (see the DSAR process doc). Open issues: #1007, #1009, #1010, #1014, #1015 and
+  #1019.
 
 **Prisma migration** `20261022120000_dsar_requests` (L13). It adds two tables,
 two enums and database triggers, and alters no existing column, so it is Class

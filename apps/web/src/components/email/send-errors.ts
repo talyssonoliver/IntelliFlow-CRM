@@ -95,6 +95,13 @@ export function getEmailSendError(error: unknown): EmailSendErrorView {
         message: `Every recipient is on the suppression list, so nothing was sent: ${data.skipped.join(', ')}.`,
         action: null,
       };
+    case 'ALL_OBJECTED':
+      return {
+        code: data.code,
+        title: 'Email not sent',
+        message: `This is a marketing email, and every recipient objected to marketing or is on the suppression list, so nothing was sent: ${data.skipped.join(', ')}.`,
+        action: null,
+      };
     case 'SEND_FAILED': {
       const reason = data.mailboxErrorCode ? FAILURE_REASONS[data.mailboxErrorCode] : null;
       const needsSettings =
@@ -119,14 +126,33 @@ export function mailboxErrorMessage(code: MailboxErrorCode): string {
  * mail server refused (the rest were sent). Null when everyone was sent it.
  */
 export function partialSendNotice(
-  result: { skipped?: readonly string[]; rejected?: readonly string[] } | null | undefined
+  result:
+    | {
+        skipped?: readonly string[];
+        rejected?: readonly string[];
+        objected?: readonly string[];
+      }
+    | null
+    | undefined
 ): string | null {
   const parts = [
     skippedRecipientsNotice(result?.skipped),
+    objectedRecipientsNotice(result?.objected, (result?.skipped?.length ?? 0) > 0),
     refusedRecipientsNotice(result?.rejected),
   ];
   const notice = parts.filter(Boolean).join(' ');
   return notice || null;
+}
+
+/** IFC-315: marketing recipients left out because they objected to direct marketing. */
+function objectedRecipientsNotice(
+  objected: readonly string[] | undefined,
+  afterSkipped: boolean
+): string | null {
+  if (!objected || objected.length === 0) return null;
+  const who = objected.length === 1 ? '1 recipient was' : `${objected.length} recipients were`;
+  const lead = afterSkipped ? '' : 'Sent. ';
+  return `${lead}${who} left out because they objected to marketing email: ${objected.join(', ')}.`;
 }
 
 function refusedRecipientsNotice(rejected: readonly string[] | undefined): string | null {

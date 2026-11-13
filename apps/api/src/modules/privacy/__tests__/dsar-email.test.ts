@@ -146,7 +146,7 @@ describe('buildDsarEmail', () => {
   it('says the firm confirmed marketing stopped, never that it stopped automatically', () => {
     const email = buildDsarEmail(notices[4]!);
     expect(email.textBody).toContain(
-      'Your objection is recorded and the firm has confirmed that marketing to you has stopped.'
+      'Your objection is recorded. The firm will no longer send you marketing email.'
     );
   });
 

@@ -44,7 +44,7 @@ const INVALID_MESSAGES: Record<string, string> = {
   receivedOnReason: 'Say why the request is logged after the day it was received.',
   noHoldConfirmed:
     'Confirm that no legal hold or retention duty (SRA, anti-money-laundering, legal claims) applies.',
-  marketingStopMethod: 'Confirm marketing has stopped and say how it was stopped.',
+  marketingStopMethod: 'Say how marketing outside the CRM was stopped.',
   useCompleteAccess: 'Access and portability requests are completed with the export step.',
   resolutionNoteLength:
     'The note and the withholding reasons together are too long (2000 characters). Shorten them.',
