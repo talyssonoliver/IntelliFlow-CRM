@@ -1,1 +1,7 @@
 .gitleaks/* text eol=lf
+
+# Generated from the API and codebase inventories: keep this side on merge,
+# then the post-merge hook regenerates it from the merged code
+# (scripts/lib/merge-regenerate.mjs). The driver is installed in git config by
+# the pre-commit hook and postinstall; without it, git merges as text.
+artifacts/benchmarks/baseline.json merge=ifc-regenerated
