@@ -26,6 +26,12 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* A public page inside the signed-in app shell (PublicLayoutShell): the shell's <main>
+   already fills the screen below the app header, so the scope adds no height of its own. */
+.aurora-site.as-in-app {
+  min-height: 0;
+}
+
 .aurora-site .as-wrap {
   width: min(1152px, calc(100% - 48px));
   margin: 0 auto;
