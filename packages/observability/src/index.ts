@@ -98,11 +98,13 @@ export {
 //   - Section F LeadRoutingService tests (workflow.lead.route span assertions)
 //   - apps/api/src/modules/routing/__tests__/routing-otel-integration.test.ts (tRPC end-to-end)
 //   - tools/scripts/observability/capture-trace-examples.ts (real-trace-data gate)
+// OTel SDK 3.x (IFC-319) merged sdk-trace-base into @opentelemetry/sdk-trace; its single
+// TracerProvider keeps the BasicTracerProvider name here so callers don't change.
 export {
   InMemorySpanExporter,
-  BasicTracerProvider,
+  TracerProvider as BasicTracerProvider,
   SimpleSpanProcessor,
-} from '@opentelemetry/sdk-trace-base';
+} from '@opentelemetry/sdk-trace';
 
 /**
  * Initialize all observability systems

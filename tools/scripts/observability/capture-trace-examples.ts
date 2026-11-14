@@ -25,7 +25,7 @@ import { writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 // Use relative import to packages/observability/src so this script can run from
 // tools/scripts/ without needing @intelliflow/observability in the root
-// node_modules. The package re-exports the OTel sdk-trace-base primitives we
+// node_modules. The package re-exports the OTel sdk-trace (3.x) primitives we
 // need (added in IFC-032 Step 1.2).
 import {
   BasicTracerProvider,
@@ -195,7 +195,7 @@ function buildPrismaStub(fixtures: ReturnType<Scenario['buildFixtures']>): any {
 async function captureScenario(scenario: Scenario): Promise<CapturedExample> {
   const exporter = new InMemorySpanExporter();
   const provider = new BasicTracerProvider({
-    spanProcessors: [new SimpleSpanProcessor(exporter)],
+    spanProcessors: [new SimpleSpanProcessor({ exporter })],
   });
   const tracer = provider.getTracer('intelliflow-workflow', '1.0.0');
   setWorkflowTracer(tracer);
