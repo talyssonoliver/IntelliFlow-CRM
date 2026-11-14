@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-13T08:40:47.971Z",
+  "timestamp": "2026-11-14T08:13:07.058Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,8 +1016,8 @@
   },
   "api_inventory": {
     "total_routers": 78,
-    "total_endpoints": 613,
-    "total_queries": 265,
+    "total_endpoints": 611,
+    "total_queries": 263,
     "total_mutations": 348,
     "routers": [
       {
@@ -1063,12 +1063,6 @@
         "mutations": 14
       },
       {
-        "name": "chainVersion",
-        "endpoints": 17,
-        "queries": 11,
-        "mutations": 6
-      },
-      {
         "name": "inbound",
         "endpoints": 16,
         "queries": 9,
@@ -1079,6 +1073,12 @@
         "endpoints": 16,
         "queries": 5,
         "mutations": 11
+      },
+      {
+        "name": "chainVersion",
+        "endpoints": 15,
+        "queries": 9,
+        "mutations": 6
       },
       {
         "name": "experiment",
@@ -4829,16 +4829,6 @@
         "name": "chainVersion.getActive",
         "method": "GET",
         "description": "Get active"
-      },
-      {
-        "name": "chainVersion.getEffective",
-        "method": "GET",
-        "description": "Get effective"
-      },
-      {
-        "name": "chainVersion.getUsageStats",
-        "method": "GET",
-        "description": "Get usage stats"
       },
       {
         "name": "chainVersion.getConfig",
