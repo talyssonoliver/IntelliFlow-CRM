@@ -10,7 +10,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { DocumentIndexer, createDocumentIndexer } from '../document-indexer';
-import { realBudget } from '../../__tests__/virtual-clock';
+import { realBudget } from '../../../../../tests/utils/virtual-clock';
 
 // ============================================
 // Mock PrismaClient for integration tests

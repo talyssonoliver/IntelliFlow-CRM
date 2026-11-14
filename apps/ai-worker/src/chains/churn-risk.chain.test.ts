@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { virtualElapsedMs } from '../__tests__/virtual-clock';
+import { virtualElapsedMs } from '../../../../tests/utils/virtual-clock';
 import {
   ChurnRiskChain,
   getChurnRiskChain,

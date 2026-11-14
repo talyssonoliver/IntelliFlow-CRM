@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { virtualElapsedMs } from '../../../__tests__/virtual-clock';
+import { virtualElapsedMs } from '../../../../../../tests/utils/virtual-clock';
 import { ConvertLeadToDealUseCase, ConvertLeadToDealInput } from '../ConvertLeadToDealUseCase';
 import { Lead, Contact, Account, Opportunity } from '@intelliflow/domain';
 import {

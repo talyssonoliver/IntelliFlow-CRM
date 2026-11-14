@@ -8,7 +8,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AnalyticsAggregationService } from '../AnalyticsAggregationService';
-import { virtualElapsedMs } from '../../__tests__/virtual-clock';
+import { virtualElapsedMs } from '../../../../../tests/utils/virtual-clock';
 import type {
   AnalyticsRepository,
   OpportunityGroupByResult,

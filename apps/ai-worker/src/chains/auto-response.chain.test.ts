@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { AutoResponseChain, AutoResponseInput, AutoResponseOutput } from './auto-response.chain';
-import { virtualElapsedMs } from '../__tests__/virtual-clock';
+import { virtualElapsedMs } from '../../../../tests/utils/virtual-clock';
 
 // Mock the VersionLoader singleton so tests never hit the DB.
 // Default: getChainConfig throws (simulates no active version → fallback to default instructions).
