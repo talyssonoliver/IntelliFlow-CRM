@@ -11,6 +11,9 @@
  * - Error handling
  * - Rate limiting
  *
+ * Every test needs a running API (TEST_API_AVAILABLE=true). Without one they are reported
+ * as SKIPPED (it.skipIf) rather than passing with no assertion.
+ *
  * @module tests/integration/api.test
  */
 
@@ -26,12 +29,7 @@ describe('API Integration Tests', () => {
   });
 
   describe('Health Check', () => {
-    it('should return healthy status from health endpoint', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should return healthy status from health endpoint', async () => {
       const response = await fetch(`${apiClient.baseURL}/api/health`);
       expect(response.ok).toBe(true);
 
@@ -40,12 +38,7 @@ describe('API Integration Tests', () => {
       expect(data.status).toBe('healthy');
     });
 
-    it('should include version information', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should include version information', async () => {
       const response = await fetch(`${apiClient.baseURL}/api/health`);
       const data = await response.json();
 
@@ -53,12 +46,7 @@ describe('API Integration Tests', () => {
       expect(typeof data.version).toBe('string');
     });
 
-    it('should return uptime information', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should return uptime information', async () => {
       const response = await fetch(`${apiClient.baseURL}/api/health`);
       const data = await response.json();
 
@@ -69,12 +57,7 @@ describe('API Integration Tests', () => {
   });
 
   describe('API Versioning', () => {
-    it('should support API version header', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should support API version header', async () => {
       const response = await fetch(`${apiClient.baseURL}/api/health`, {
         headers: {
           'X-API-Version': 'v1',
@@ -84,12 +67,7 @@ describe('API Integration Tests', () => {
       expect(response.ok).toBe(true);
     });
 
-    it('should reject unsupported API versions', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should reject unsupported API versions', async () => {
       const response = await fetch(`${apiClient.baseURL}/api/health`, {
         headers: {
           'X-API-Version': 'v999',
@@ -103,22 +81,12 @@ describe('API Integration Tests', () => {
   });
 
   describe('Error Handling', () => {
-    it('should return 404 for non-existent endpoints', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should return 404 for non-existent endpoints', async () => {
       const response = await fetch(`${apiClient.baseURL}/api/nonexistent-endpoint`);
       expect(response.status).toBe(404);
     });
 
-    it('should return proper error format', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should return proper error format', async () => {
       const response = await fetch(`${apiClient.baseURL}/api/nonexistent-endpoint`);
       expect(response.status).toBe(404);
 
@@ -129,12 +97,7 @@ describe('API Integration Tests', () => {
       }
     });
 
-    it('should handle malformed JSON', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should handle malformed JSON', async () => {
       const response = await fetch(`${apiClient.baseURL}/api/test-endpoint`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -148,12 +111,7 @@ describe('API Integration Tests', () => {
   });
 
   describe('Security Headers', () => {
-    it('should include security headers in responses', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should include security headers in responses', async () => {
       const response = await fetch(`${apiClient.baseURL}/api/health`);
 
       // Check for common security headers
@@ -173,12 +131,7 @@ describe('API Integration Tests', () => {
       expect(headers.get('content-type')).toContain('application/json');
     });
 
-    it('should not expose sensitive information in headers', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should not expose sensitive information in headers', async () => {
       const response = await fetch(`${apiClient.baseURL}/api/health`);
       const headers = response.headers;
 
@@ -196,12 +149,7 @@ describe('API Integration Tests', () => {
   });
 
   describe('CORS Configuration', () => {
-    it('should handle CORS preflight requests', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should handle CORS preflight requests', async () => {
       const response = await fetch(`${apiClient.baseURL}/api/health`, {
         method: 'OPTIONS',
         headers: {
@@ -216,36 +164,21 @@ describe('API Integration Tests', () => {
   });
 
   describe('Rate Limiting', () => {
-    it('should apply rate limiting to API endpoints', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should apply rate limiting to API endpoints', async () => {
       // Make multiple rapid requests
       const requests = Array.from({ length: 10 }, () => fetch(`${apiClient.baseURL}/api/health`));
 
       const responses = await Promise.all(requests);
 
-      // All responses should be successful (rate limit should be reasonable)
-      const allSuccessful = responses.every((r) => r.ok);
-
-      // Either all should succeed (high limit) or some should be rate limited
-      if (!allSuccessful) {
-        // Check if rate-limited responses return 429
-        const rateLimited = responses.filter((r) => r.status === 429);
-        expect(rateLimited.length).toBeGreaterThan(0);
-      }
+      // Every response must either succeed or be an explicit 429 rate-limit rejection.
+      // Any other status (5xx, 4xx) fails; nothing is left unasserted.
+      const unexpected = responses.filter((r) => !r.ok && r.status !== 429);
+      expect(unexpected.map((r) => r.status)).toEqual([]);
     });
   });
 
   describe('Request Validation', () => {
-    it('should validate request content type', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should validate request content type', async () => {
       const response = await fetch(`${apiClient.baseURL}/api/test-endpoint`, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
@@ -256,12 +189,7 @@ describe('API Integration Tests', () => {
       expect(response.status).toBeLessThan(500);
     });
 
-    it('should enforce request size limits', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should enforce request size limits', async () => {
       // Create a large payload (e.g., 10MB)
       const largePayload = 'x'.repeat(10 * 1024 * 1024);
 
@@ -277,12 +205,7 @@ describe('API Integration Tests', () => {
   });
 
   describe('Performance', () => {
-    it('should respond to health check within acceptable time', async () => {
-      if (!apiAvailable) {
-        console.log('⏭️  Skipping API test - API not available');
-        return;
-      }
-
+    it.skipIf(!apiAvailable)('should respond to health check within acceptable time', async () => {
       const startTime = Date.now();
       const response = await fetch(`${apiClient.baseURL}/api/health`);
       const endTime = Date.now();

@@ -10,6 +10,8 @@ export interface ContactTicketsTabProps {
   tickets: TicketViewModel[];
   /** IANA timezone used to render the relative created-time. */
   timezone: string;
+  /** Pre-fills the contact on the new-ticket form from the empty state. */
+  contactId?: string;
 }
 
 /**
@@ -17,13 +19,17 @@ export interface ContactTicketsTabProps {
  * proper empty state). Extracted from the route page so it is unit-tested and
  * counted by coverage. Create Ticket opens the new-ticket page.
  */
-export function ContactTicketsTab({ tickets, timezone }: ContactTicketsTabProps) {
+export function ContactTicketsTab({ tickets, timezone, contactId }: ContactTicketsTabProps) {
+  // Both Create actions open the new-ticket form with this contact pre-filled (#1303).
+  const newTicketHref = contactId
+    ? `/tickets/new?contactId=${encodeURIComponent(contactId)}`
+    : '/tickets/new';
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Tickets</h3>
         <Link
-          href="/tickets/new"
+          href={newTicketHref}
           className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors"
         >
           <svg aria-hidden="true" className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -37,7 +43,7 @@ export function ContactTicketsTab({ tickets, timezone }: ContactTicketsTabProps)
           <div data-testid="contact-tickets-empty">
             <EmptyState
               entity="tickets"
-              ctaHref="/tickets/new"
+              ctaHref={newTicketHref}
               ctaLabel="Create a ticket"
               className="py-2"
             />
