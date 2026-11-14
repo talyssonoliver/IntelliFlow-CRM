@@ -1,8 +1,12 @@
 /**
- * Cross-Tenant Access Tests
+ * Cross-Tenant Access Tests (mocked Prisma)
  *
- * Integration tests for verifying cross-tenant access prevention
- * at both application and database levels.
+ * Unit tests of the application-layer tenant scoping logic (tenant-context and
+ * tenant-limiter) against a hand-built mock Prisma client. They prove the
+ * router/middleware scoping logic, NOT database isolation. Database-level
+ * cross-tenant isolation is proven against the real test DB in
+ * tests/integration/rls-tenant-isolation.test.ts, tenant-filter.test.ts and
+ * inbound-tenant-scope.test.ts.
  *
  * IMPLEMENTS: IFC-127 (Tenant Isolation)
  *
@@ -27,16 +31,11 @@ import {
   validateTenantOperation,
   TenantContext,
   TenantAwareContext,
-} from '../../apps/api/src/security/tenant-context';
-import {
-  checkResourceUsage,
-  enforceResourceLimit,
-  clearRateLimitState,
-} from '../../apps/api/src/security/tenant-limiter';
+} from '../tenant-context';
+import { checkResourceUsage, enforceResourceLimit, clearRateLimitState } from '../tenant-limiter';
 
 /**
- * Mock Prisma client for integration testing
- * In production tests, this would be replaced with a test database
+ * Hand-built mock Prisma client (no database involved).
  */
 const mockPrisma = {
   user: {
@@ -141,12 +140,13 @@ const testContacts = {
 /**
  * Helper to create tenant-aware context for testing
  */
-function createTestContext(user: typeof testUsers.userA): TenantAwareContext {
+function createTestContext(user: (typeof testUsers)[keyof typeof testUsers]): TenantAwareContext {
   const tenant = extractTenantContext({
     userId: user.id,
     email: user.email,
     role: user.role,
     tenantId: user.id, // Use user.id as tenantId for testing
+    emailVerified: true,
   });
 
   return {
@@ -155,6 +155,7 @@ function createTestContext(user: typeof testUsers.userA): TenantAwareContext {
       email: user.email,
       role: user.role,
       tenantId: user.id,
+      emailVerified: true,
     },
     tenant,
     prisma: mockPrisma,
@@ -164,7 +165,7 @@ function createTestContext(user: typeof testUsers.userA): TenantAwareContext {
   };
 }
 
-describe('Cross-Tenant Lead Access', () => {
+describe('[mocked Prisma] Cross-Tenant Lead Access', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearRateLimitState();
@@ -254,7 +255,7 @@ describe('Cross-Tenant Lead Access', () => {
   });
 });
 
-describe('Cross-Tenant Contact Access', () => {
+describe('[mocked Prisma] Cross-Tenant Contact Access', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -276,7 +277,7 @@ describe('Cross-Tenant Contact Access', () => {
   });
 });
 
-describe('Cross-Tenant Account Access', () => {
+describe('[mocked Prisma] Cross-Tenant Account Access', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -290,7 +291,7 @@ describe('Cross-Tenant Account Access', () => {
   });
 });
 
-describe('Cross-Tenant Opportunity Access', () => {
+describe('[mocked Prisma] Cross-Tenant Opportunity Access', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -304,7 +305,7 @@ describe('Cross-Tenant Opportunity Access', () => {
   });
 });
 
-describe('Cross-Tenant Task Access', () => {
+describe('[mocked Prisma] Cross-Tenant Task Access', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -318,7 +319,7 @@ describe('Cross-Tenant Task Access', () => {
   });
 });
 
-describe('Manager Cross-Tenant Access', () => {
+describe('[mocked Prisma] Manager Cross-Tenant Access', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     (mockPrisma.user.findUnique as any).mockResolvedValue({ role: 'USER' });
@@ -350,7 +351,7 @@ describe('Manager Cross-Tenant Access', () => {
   });
 });
 
-describe('Admin Cross-Tenant Access', () => {
+describe('[mocked Prisma] Admin Cross-Tenant Access', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -399,7 +400,7 @@ describe('Admin Cross-Tenant Access', () => {
   });
 });
 
-describe('Cross-Tenant Resource Limits', () => {
+describe('[mocked Prisma] Cross-Tenant Resource Limits', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearRateLimitState();
@@ -434,7 +435,7 @@ describe('Cross-Tenant Resource Limits', () => {
   });
 });
 
-describe('Parameter Manipulation Prevention', () => {
+describe('[mocked Prisma] Parameter Manipulation Prevention', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -466,7 +467,7 @@ describe('Parameter Manipulation Prevention', () => {
   });
 });
 
-describe('Privilege Escalation Prevention', () => {
+describe('[mocked Prisma] Privilege Escalation Prevention', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -500,7 +501,7 @@ describe('Privilege Escalation Prevention', () => {
   });
 });
 
-describe('Audit Trail for Cross-Tenant Attempts', () => {
+describe('[mocked Prisma] Audit Trail for Cross-Tenant Attempts', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -525,7 +526,7 @@ describe('Audit Trail for Cross-Tenant Attempts', () => {
   });
 });
 
-describe('Concurrent Multi-Tenant Requests', () => {
+describe('[mocked Prisma] Concurrent Multi-Tenant Requests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

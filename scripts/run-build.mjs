@@ -13,11 +13,18 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { runBuild } from './lib/preship-build.mjs';
-import { affectedFromEnvOrResolve, buildFilters, describeScope } from './lib/preship-affected.mjs';
+import {
+  WEB_SKIP_LINE,
+  affectedFromEnvOrResolve,
+  buildFilters,
+  describeScope,
+} from './lib/preship-affected.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const isCI = process.env.CI === 'true' || process.env.CI === '1';
 const scope = affectedFromEnvOrResolve({ cwd: root, env: process.env });
 const filters = buildFilters(scope);
 console.log(`build: scope ${describeScope(scope, filters)}`);
+if (scope.webBuild?.affected === false)
+  console.log(`build: ${WEB_SKIP_LINE} (${scope.webBuild.reason})`);
 process.exit(runBuild({ isCI, env: process.env, root, filters }));

@@ -45,14 +45,28 @@ const contact = {
 
 describe('ContactRelatedTabs', () => {
   it('renders the Tickets tab with normalised data when active', () => {
-    render(<ContactRelatedTabs activeTab="tickets" contact={contact} timezone="UTC" />);
+    render(
+      <ContactRelatedTabs
+        activeTab="tickets"
+        contact={contact}
+        timezone="UTC"
+        contactId="contact-1"
+      />
+    );
     expect(screen.getByTestId('contact-tickets-tab')).toBeInTheDocument();
     expect(screen.getByText('Integration API question')).toBeInTheDocument();
     expect(screen.queryByTestId('contact-documents-tab')).not.toBeInTheDocument();
   });
 
   it('renders the Documents tab with normalised data when active', () => {
-    render(<ContactRelatedTabs activeTab="documents" contact={contact} timezone="UTC" />);
+    render(
+      <ContactRelatedTabs
+        activeTab="documents"
+        contact={contact}
+        timezone="UTC"
+        contactId="contact-1"
+      />
+    );
     expect(screen.getByTestId('contact-documents-tab')).toBeInTheDocument();
     expect(screen.getByText('Enterprise License Proposal')).toBeInTheDocument();
     expect(screen.queryByTestId('contact-tickets-tab')).not.toBeInTheDocument();
@@ -60,13 +74,20 @@ describe('ContactRelatedTabs', () => {
 
   it('renders nothing for any other tab', () => {
     const { container } = render(
-      <ContactRelatedTabs activeTab="overview" contact={contact} timezone="UTC" />
+      <ContactRelatedTabs
+        activeTab="overview"
+        contact={contact}
+        timezone="UTC"
+        contactId="contact-1"
+      />
     );
     expect(container).toBeEmptyDOMElement();
   });
 
   it('shows the empty state when the contact has no tickets (null contact)', () => {
-    render(<ContactRelatedTabs activeTab="tickets" contact={null} timezone="UTC" />);
+    render(
+      <ContactRelatedTabs activeTab="tickets" contact={null} timezone="UTC" contactId="contact-1" />
+    );
     expect(screen.getByTestId('contact-tickets-empty')).toBeInTheDocument();
   });
 });

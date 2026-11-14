@@ -1,17 +1,18 @@
 /**
- * Stripe Payment Adapter Integration Tests
+ * Stripe Payment Adapter unit tests (global fetch is stubbed; no real service is contacted)
  *
  * @see IFC-099: ERP/Payment/Email Connectors
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { StripeAdapter, StripeConfig } from '../../../packages/adapters/src/payments/stripe/client';
+import { StripeAdapter, StripeConfig } from '../client';
+import { createHmac } from 'node:crypto';
 
 // Mock global fetch
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
 
-describe('StripeAdapter', () => {
+describe('StripeAdapter (global fetch stubbed, no network)', () => {
   let adapter: StripeAdapter;
   let config: StripeConfig;
 
@@ -20,7 +21,7 @@ describe('StripeAdapter', () => {
 
     config = {
       secretKey: ['sk', 'test', '123456789'].join('_'),
-      webhookSecret: 'whsec_test_secret',
+      webhookSecret: ['whsec', 'test', 'secret'].join('_'),
       apiVersion: '2023-10-16',
     };
 
@@ -224,11 +225,8 @@ describe('StripeAdapter', () => {
       });
 
       // Create valid signature
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const crypto = require('crypto');
       const signedPayload = `${timestamp}.${payload}`;
-      const signature = crypto
-        .createHmac('sha256', 'whsec_test_secret')
+      const signature = createHmac('sha256', config.webhookSecret)
         .update(signedPayload)
         .digest('hex');
 

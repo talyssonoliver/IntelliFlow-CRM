@@ -96,7 +96,18 @@ export function PublicLayoutShell({
     </div>
   ) : (
     <>
-      <main className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">{children}</main>
+      <main className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
+        {/* Signed in, the app shell replaces the public header and footer, but every
+            public page's styles are scoped under .aurora-site, so the page keeps that
+            scope. `/` is the signed-in home (the app itself) and stays outside it. */}
+        {pathname === '/' ? (
+          children
+        ) : (
+          <div className="aurora-site as-in-app" data-testid="public-page-scope">
+            {children}
+          </div>
+        )}
+      </main>
       {overlays}
     </>
   );

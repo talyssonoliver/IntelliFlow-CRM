@@ -2,47 +2,95 @@
   "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "ENG-OPS-002.R03",
-  "run_id": "eng-ops-002-r03-2026-07-22",
-  "attestor": "Claude Code (claude-opus-4-8) — ENG-OPS-002.R03 remediation (chore/eng-ops-002-r03)",
-  "attestation_timestamp": "2026-07-22T13:05:00Z",
-  "verdict": "PARTIAL",
+  "run_id": "eng-ops-002-r03-close-2026-11-12",
+  "attestor": "ifc-speed lane (Sprint 19 governance) — ENG-OPS-002.R03 completion (chore/eng-ops-002-r03-stale-docs)",
+  "attestation_timestamp": "2026-11-12T14:29:59Z",
+  "verdict": "COMPLETE",
   "evidence_summary": {
-    "finding": "STALE-001",
-    "severity": "Critical",
-    "artifacts_verified": 1,
-    "validations_passed": 1,
+    "artifacts_verified": 7,
+    "validations_passed": 2,
     "validations_failed": 0,
+    "gates_passed": 3,
+    "gates_failed": 0,
+    "kpis_met": 1,
+    "kpis_missed": 0,
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "CLAUDE.md": "sha256:2056de3f741094d6a403744b6c41d28a6cc74e3d8828e7af0f94850079ced8f6"
+    "CLAUDE.md": "sha256:fb10ae4ffe02c42969a6adfe6d7067b4cb59755e929e1e34dfaa66cbc39b1314",
+    "apps/project-tracker/CLAUDE.md": "sha256:b79727991b5e22e56d19f6099c7e4f72e5552a426b4e369444e6f751b3edad4d",
+    ".specify/sprints/sprint-18/_summary.json": "sha256:38bd1c40e3a5ab5021dc81d9d9a7842066c9471b5107742991f645504c4708a6",
+    "apps/project-tracker/lib/current-state-report.ts": "sha256:1f4259584d614dfe8887b272c0374b442afac63d01a75240d89b50ec5ae817ce",
+    "apps/project-tracker/scripts/generate-context.ts": "sha256:121d42de986c64cd88c7b8179595806ed9cb58f283838fe4360be7e966f90a01",
+    "apps/project-tracker/scripts/generate-current-state-report.ts": "sha256:e3a28f5e26136548aa825475d639087f21f56bc006af05038d0b503407b9ce57",
+    "apps/project-tracker/app/api/context/route.ts": "sha256:1a1daf5ae204f19b16bb5f8421c55f251c559f735338124ebdd2f239998281d3"
   },
   "validation_results": [
     {
-      "name": "docs-integrity",
+      "name": "the DoD's verification command",
       "command": "pnpm validate:docs-integrity",
-      "result": "PASS (run in pre-ship)"
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-12T14:29:59Z",
+      "stdout_hash": "b231d4ca9b2808fac5691ad6b3e21caa08deb33388db39e7da704c6038175965"
+    },
+    {
+      "name": "writeSprintSummaries tests",
+      "command": "npx vitest run apps/project-tracker/lib/__tests__/current-state-report.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-12T14:29:59Z",
+      "stdout_hash": "1c6cd4a9f563e0f5877058db658c0e09ff23be12d25032ab790b396a55309ea2"
     }
   ],
   "gate_results": [
     {
-      "gate_id": "no-stale-sprint-anchor",
+      "gate_id": "no-stale-count-in-claude-md",
       "passed": true,
-      "log_path": "CLAUDE.md no longer claims Sprint 6 / 316 tasks"
+      "log_path": "Root CLAUDE.md no longer states a task count (it said 597 against 627 in the CSV) and its split-file table no longer lists per-file row counts that stopped at Sprint_plan_I; apps/project-tracker/CLAUDE.md no longer says 589 rows / ~316 tasks. Both point to docs/SESSION_CONTEXT.md for live counts."
+    },
+    {
+      "gate_id": "sprint-18-summary-reflects-csv",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/_summary.json regenerated: 78 tasks, 61 completed, 61 attested completed (was 43 tasks, 3 completed, generated 2026-04-11). All 30 sprint summaries regenerated from the same run."
+    },
+    {
+      "gate_id": "summaries-cannot-restale",
+      "passed": true,
+      "log_path": "writeSprintSummaries() moved into lib/current-state-report.ts and called from all three report refresh paths (report:current-state CLI, generate-context.ts, POST /api/context); before this only the CLI wrote them, which is why they were stale for seven months."
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "stale sprint/task-count claims in CLAUDE.md files",
+      "target": "0",
+      "actual": "0 (root and apps/project-tracker)",
+      "met": true
     }
   ],
   "definition_of_done_items": [
     {
-      "criterion": "CLAUDE.md sprint/task-count anchor corrected + points to SESSION_CONTEXT.md",
+      "criterion": "CLAUDE.md no longer claims Sprint 6/316 tasks",
       "met": true,
-      "evidence": "CLAUDE.md:3-7"
+      "evidence": "Root CLAUDE.md lines 3-7 carry no count and point to docs/SESSION_CONTEXT.md; the newer stale count (597) and the A-I split table are also gone. apps/project-tracker/CLAUDE.md fixed the same way."
+    },
+    {
+      "criterion": "sprint-18 _summary.json reflects reality or is removed with consumers repointed",
+      "met": true,
+      "evidence": "Regenerated to match Sprint_plan.csv (78 / 61 / 61 attested), and regenerated on every report refresh from now on. Kept rather than removed: lib/current-state-report.ts loadSprintNames() reads it for sprint titles."
+    },
+    {
+      "criterion": "verified by: pnpm validate:docs-integrity",
+      "met": true,
+      "evidence": "exit 0, 'every target doc cites the canonical totals and aggregates'."
     }
   ],
+  "dependencies_verified": ["ENG-OPS-002"],
   "environment": {
     "os": "win32",
-    "node_version": "v22.14.0",
-    "git_commit": "b5d3e1f91b8103de8fd4c29b78ebb8f56e1462e4",
-    "branch": "chore/eng-ops-002-r03"
+    "node_version": "v25.2.1",
+    "git_commit": "9a566ce5c618f54bb6d053d8bae94fbf7189b941",
+    "branch": "chore/eng-ops-002-r03-stale-docs"
   },
-  "notes": "Scope delivered: STALE-001 (CLAUDE.md root anchor no longer misleads on sprint/task-count; now points to the regenerated docs/SESSION_CONTEXT.md). STALE-002 (.specify/sprints/sprint-18/_summary.json, stale 43/3 vs real 67/63) REASSIGNED to ENG-OPS-002.R16: the correct fix is wiring _summary.json regeneration into sync:metrics (a code change, not a docs edit) — verified sync:metrics and consolidate-task-artifacts do NOT regenerate it, and 15+ project-tracker consumers read it so it cannot be safely deleted. Hand-regenerating an orphaned artifact would restale. Tracked, not dropped."
+  "notes": "Supersedes the 2026-07-22 PARTIAL record. That run fixed the Sprint 6 / 316 anchor (STALE-001) and left STALE-002 open, rightly noting that hand-regenerating an orphaned _summary.json would restale and that the fix was to make regeneration part of the refresh path. This change does that: the writer is shared and every refresh path calls it. Counts had already gone stale again in CLAUDE.md (597 vs 627), so the counts were removed rather than corrected. Earlier note, kept for the record: 'STALE-002 (.specify/sprints/sprint-18/_summary.json, stale 43/3 vs real 67/63) REASSIGNED to ENG-OPS-002.R16: the correct fix is wiring _summary.json regeneration into sync:metrics (a code change, not a docs edit) ... Hand-regenerating an orphaned artifact would restale. Tracked, not dropped.'"
 }
