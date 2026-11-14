@@ -57,6 +57,7 @@ const FULL = (reason) => ({
   packages: [],
   testsOrDocsOnly: false,
   outsidePackages: true,
+  webBuild: { affected: true, reason },
 });
 
 const DOC_ONLY = [/\.md$/i, /^docs\//, /^artifacts\//];
@@ -90,6 +91,7 @@ export function resolveAffected({
       packages: [],
       testsOrDocsOnly: true,
       outsidePackages: false,
+      webBuild: { affected: false, reason: 'no file changed' },
     };
   }
   let pkgs = packages;
@@ -109,8 +111,84 @@ export function resolveAffected({
     outsidePackages: changed.some(
       (f) => !DOC_ONLY.some((re) => re.test(f)) && !pkgs.some((p) => f.startsWith(p.dir + '/'))
     ),
+    webBuild: webBuildScope(changed, pkgs),
   };
 }
+
+/** The web app, whose `next build` is the build step's heaviest part. */
+export const WEB_PACKAGE = '@intelliflow/web';
+
+/**
+ * Repo-root paths that are not inputs of the web build: tooling, CI and hook
+ * files, docs and reports, test-only configs. Any other root file (the lockfile,
+ * root package.json, a root tsconfig, turbo.json, .npmrc, an unknown path) may
+ * change the web build and counts as affecting it.
+ */
+const NOT_WEB_INPUT = [
+  /^scripts\//,
+  /^tools\//,
+  /^\.github\//,
+  /^\.husky\//,
+  /^\.claude\//,
+  /^\.specify\//,
+  /^\.gitleaks\//,
+  /^docs\//,
+  /^tests\//,
+  /^artifacts\//,
+  /^infra\//,
+  /\.md$/i,
+  /^sonar-project\.properties$/,
+  /^vitest\.config\.[^/]+$/,
+  /^playwright\.config\.[^/]+$/,
+  /^lighthouserc[^/]*\.[cm]?js$/,
+  /^\.gitleaks\.toml$/,
+  /^\.gitattributes$/,
+  /^\.gitignore$/,
+];
+
+/**
+ * Whether the web build can be affected by these changed files (owner decision
+ * on the 2026-11-13 pre-ship audit, item 3, "Only when web changes"): a
+ * non-test file in apps/web or in a workspace package it depends on,
+ * transitively, or any repo-root file not known to be outside the web build.
+ * Unknowns count as affected: no web package in the workspace, or a package
+ * list that cannot be matched.
+ * @param {string[]} changed repo-relative, forward slashes
+ * @param {{name: string, dir: string, deps: string[]}[]} pkgs
+ * @returns {{affected: boolean, reason: string}}
+ */
+export function webBuildScope(changed, pkgs) {
+  const web = pkgs.find((p) => p.name === WEB_PACKAGE);
+  if (!web) return { affected: true, reason: `${WEB_PACKAGE} is not in the workspace list` };
+  const byName = new Map(pkgs.map((p) => [p.name, p]));
+  const inputs = new Set([web.dir]);
+  const queue = [...web.deps];
+  while (queue.length) {
+    const dep = byName.get(queue.pop());
+    if (dep && !inputs.has(dep.dir)) {
+      inputs.add(dep.dir);
+      queue.push(...dep.deps);
+    }
+  }
+  for (const f of changed) {
+    if (isTestOrDoc(f)) continue;
+    const owner = pkgs.find((p) => f.startsWith(`${p.dir}/`));
+    if (owner) {
+      if (inputs.has(owner.dir)) return { affected: true, reason: `${f} is a web build input` };
+      continue;
+    }
+    if (!NOT_WEB_INPUT.some((re) => re.test(f))) {
+      return { affected: true, reason: `${f} may change the web build` };
+    }
+  }
+  return {
+    affected: false,
+    reason: 'no change in apps/web, a package it uses, or a root file it builds from',
+  };
+}
+
+/** The line the build step prints when it leaves the web app out. */
+export const WEB_SKIP_LINE = 'web build not affected; CI build check is the guard';
 
 /** `--filter=<name>` for each package, in a stable order. */
 export function turboFilters(packages) {
@@ -172,9 +250,11 @@ export function libraryBuildFilters(scope) {
  * compiles changed: docs only, or test files only.
  */
 export function buildFilters(scope) {
-  if (scope.mode === 'full') return null;
   if (scope.mode === 'none' || scope.testsOrDocsOnly) return [];
-  return turboFilters(scope.packages);
+  // A scope handed down without webBuild (an older pre-ship) keeps the web app.
+  const skipWeb = scope.webBuild?.affected === false;
+  if (scope.mode === 'full') return skipWeb ? [`--filter=!${WEB_PACKAGE}`] : null;
+  return turboFilters(skipWeb ? scope.packages.filter((p) => p !== WEB_PACKAGE) : scope.packages);
 }
 
 /** One line for the step log saying what the scope is and why. */

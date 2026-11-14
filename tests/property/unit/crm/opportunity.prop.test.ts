@@ -316,32 +316,36 @@ describe('Opportunity — value-object invariants (property, RACE-PURE-03)', () 
 
   // ADR-054: QUAL-007 (RACE-PURE-03) — confirmed float-precision bug in
   // Opportunity.weightedValue; tracked in
-  // artifacts/reports/sprint-19/baseline/quality-findings.json. Skip retained pending a
+  // artifacts/reports/sprint-19/baseline/quality-findings.json. Kept as an expected failure pending a
   // dedicated fix task (out of scope for ENG-OPS-002.R13).
-  it.skip(// BUG(RACE-PURE-03): Opportunity.weightedValue uses float arithmetic (value.amount * probability.asDecimal)
-  // then calls Money.create(weightedAmount, currency). For inputs like cents=5, prob=70, the float path
-  // computes (5/100)*(70/100)*100 = 0.034999....*100 = 3.499... which rounds DOWN to 3 cents, while the
-  // correct integer path Math.round(5 * 0.70) = Math.round(3.5) = 4 cents. One-cent discrepancy.
-  // Fix: use Money.fromCents(Math.round(value.cents * probability.asDecimal), value.currency) internally.
-  'RACE-PURE-03: weightedValue.cents strictly equals Math.round(value.cents * probability.asDecimal)', () => {
-    // Concrete reproducer from the findings document + verified via node REPL
-    const moneyResult = Money.create(0.05, 'GBP'); // cents = 5
-    expect(moneyResult.isSuccess).toBe(true);
-    const money = moneyResult.value;
-    expect(money.cents).toBe(5);
+  // Runs as .fails: it goes red the day the bug is fixed; then make it a plain test.
+  it.fails(
+    // BUG(RACE-PURE-03): Opportunity.weightedValue uses float arithmetic (value.amount * probability.asDecimal)
+    // then calls Money.create(weightedAmount, currency). For inputs like cents=5, prob=70, the float path
+    // computes (5/100)*(70/100)*100 = 0.034999....*100 = 3.499... which rounds DOWN to 3 cents, while the
+    // correct integer path Math.round(5 * 0.70) = Math.round(3.5) = 4 cents. One-cent discrepancy.
+    // Fix: use Money.fromCents(Math.round(value.cents * probability.asDecimal), value.currency) internally.
+    'RACE-PURE-03: weightedValue.cents strictly equals Math.round(value.cents * probability.asDecimal)',
+    () => {
+      // Concrete reproducer from the findings document + verified via node REPL
+      const moneyResult = Money.create(0.05, 'GBP'); // cents = 5
+      expect(moneyResult.isSuccess).toBe(true);
+      const money = moneyResult.value;
+      expect(money.cents).toBe(5);
 
-    const percentResult = Percentage.create(70); // 70%
-    expect(percentResult.isSuccess).toBe(true);
-    const pct = percentResult.value;
+      const percentResult = Percentage.create(70); // 70%
+      expect(percentResult.isSuccess).toBe(true);
+      const pct = percentResult.value;
 
-    // Float path (current implementation)
-    const floatPathCents = Math.round(money.amount * pct.asDecimal * 100);
-    // Integer-cents path (correct)
-    const intPathCents = Math.round(money.cents * pct.asDecimal);
+      // Float path (current implementation)
+      const floatPathCents = Math.round(money.amount * pct.asDecimal * 100);
+      // Integer-cents path (correct)
+      const intPathCents = Math.round(money.cents * pct.asDecimal);
 
-    // This assertion FAILS: floatPathCents === 3, intPathCents === 4
-    expect(floatPathCents).toBe(intPathCents);
-  });
+      // This assertion FAILS: floatPathCents === 3, intPathCents === 4
+      expect(floatPathCents).toBe(intPathCents);
+    }
+  );
 
   // -------------------------------------------------------------------------
   // 6. State machine: closed opportunities (WON or LOST) reject further changes

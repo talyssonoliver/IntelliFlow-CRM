@@ -118,6 +118,20 @@
       "severity": "high",
       "summary": "One or more outbox events went to the dead-letter queue in the last 10 minutes; list them with tools/scripts/outbox-dlq.ts list.",
       "requireSeries": false
+    },
+    {
+      "uid": "ifc142-ai-budget-80pct",
+      "title": "AI spend above 80% of the monthly budget",
+      "why": "IFC-142 budgets (owner 2026-11-12): AI is the only paid, usage-billed service besides Railway, whose own usage alert covers it. The ai-worker already stops paid calls at AI_MONTHLY_BUDGET_USD (60 USD, monthly-budget.ts); this warns at 80% (48 USD over 30 days). requireSeries is false: the cost series exists only while paid calls happen.",
+      "expr": "sum(increase(intelliflow_ai_cost_usd_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}[30d])) > bool 48",
+      "selector": "intelliflow_ai_cost_usd_total{job=~\"(.*/)?(intelliflow-)?ai-worker\"}",
+      "operator": "gt",
+      "threshold": 0,
+      "for": "1h",
+      "noData": "OK",
+      "severity": "high",
+      "requireSeries": false,
+      "summary": "AI spend over the last 30 days passed 48 USD, 80% of the 60 USD AI_MONTHLY_BUDGET_USD (IFC-142, owner budget 2026-11-12). The ai-worker stops paid calls at 60 USD (monthly-budget.ts)."
     }
   ],
   "deliveryTest": {
