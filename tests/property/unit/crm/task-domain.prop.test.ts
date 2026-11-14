@@ -274,13 +274,17 @@ describe('Task status state-machine invariants', () => {
   // changeStatus/complete is a held, separate fix (see the ENG-OPS-002.R10 attestation
   // notes above). Intentionally NOT implemented by ENG-OPS-002.R13 (scope boundary) —
   // this annotation only reconciles the skip against the ADR-054 gate.
-  test.skip('RACE-PURE-09: changeStatus("ARCHIVED", user) on IN_PROGRESS task must be rejected (transition table not consulted)', () => {
-    const task = Task.create({ title: 'test', ownerId: 'u1', tenantId: 't1' }).value;
-    task.start('u1');
-    const result = task.changeStatus('ARCHIVED', 'u1');
-    // This SHOULD fail — ARCHIVED is not in VALID_TASK_TRANSITIONS.IN_PROGRESS.
-    expect(result.isFailure).toBe(true);
-  });
+  // Runs as .fails: it goes red the day the bug is fixed; then make it a plain test.
+  test.fails(
+    'RACE-PURE-09: changeStatus("ARCHIVED", user) on IN_PROGRESS task must be rejected (transition table not consulted)',
+    () => {
+      const task = Task.create({ title: 'test', ownerId: 'u1', tenantId: 't1' }).value;
+      task.start('u1');
+      const result = task.changeStatus('ARCHIVED', 'u1');
+      // This SHOULD fail — ARCHIVED is not in VALID_TASK_TRANSITIONS.IN_PROGRESS.
+      expect(result.isFailure).toBe(true);
+    }
+  );
 
   // BUG(RACE-PURE-09): Task.complete() does not require IN_PROGRESS — a PENDING
   // task can be completed directly, bypassing the intent that work must start
@@ -291,12 +295,16 @@ describe('Task status state-machine invariants', () => {
   // ENG-OPS-002.R10 attestation notes). Intentionally NOT implemented by
   // ENG-OPS-002.R13 (scope boundary) — this annotation only reconciles the skip
   // against the ADR-054 gate.
-  test.skip('RACE-PURE-09: complete() on a PENDING task (not started) must be rejected per intended state machine', () => {
-    const task = Task.create({ title: 'test', ownerId: 'u1', tenantId: 't1' }).value;
-    const result = task.complete('u1');
-    // Should fail — PENDING → COMPLETED is not in VALID_TASK_TRANSITIONS.
-    expect(result.isFailure).toBe(true);
-  });
+  // Runs as .fails: it goes red the day the bug is fixed; then make it a plain test.
+  test.fails(
+    'RACE-PURE-09: complete() on a PENDING task (not started) must be rejected per intended state machine',
+    () => {
+      const task = Task.create({ title: 'test', ownerId: 'u1', tenantId: 't1' }).value;
+      const result = task.complete('u1');
+      // Should fail — PENDING → COMPLETED is not in VALID_TASK_TRANSITIONS.
+      expect(result.isFailure).toBe(true);
+    }
+  );
 });
 
 // ---------------------------------------------------------------------------
