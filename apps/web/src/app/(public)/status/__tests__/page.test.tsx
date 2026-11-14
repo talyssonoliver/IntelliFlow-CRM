@@ -114,9 +114,10 @@ describe('StatusPage (Aurora)', () => {
       vi.fn(async () => new Response(JSON.stringify({ status: 'ok', services: [] })))
     );
     const { container } = render(<StatusPage />);
+    // status.css rules are `.aurora-site .aurora-status …`: the scope must be an ancestor.
     const root = container.firstElementChild;
     expect(root).toHaveClass('aurora-site');
-    expect(root).toHaveClass('aurora-status');
+    expect(root?.querySelector(':scope > .aurora-status')).not.toBeNull();
   });
 
   it('carries Aurora metadata', () => {

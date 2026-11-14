@@ -28,36 +28,39 @@ export const metadata: Metadata = {
 
 export default function StatusPage() {
   return (
-    // The page carries the aurora-site scope itself: signed-in visitors get the app
-    // shell, which has no .aurora-site wrapper, and every status style is scoped under it.
-    <div className="aurora-site aurora-status">
-      <section className="as-hero">
-        <div className="as-wrap">
-          <p className="as-eyebrow">Status</p>
-          <h1 className="as-h1">System status</h1>
-          <p className="as-lede">
-            A live check, run from your browser when you open this page. We only show what we can
-            measure.
-          </p>
-        </div>
-      </section>
+    // status.css scopes every rule as `.aurora-site .aurora-status …`, so .aurora-status must sit
+    // inside an .aurora-site element. Signed-in visitors get the app shell, which has none, so
+    // the page brings its own (nested inside the public one when signed out, which is harmless).
+    <div className="aurora-site ast-scope">
+      <div className="aurora-status">
+        <section className="as-hero">
+          <div className="as-wrap">
+            <p className="as-eyebrow">Status</p>
+            <h1 className="as-h1">System status</h1>
+            <p className="as-lede">
+              A live check, run from your browser when you open this page. We only show what we can
+              measure.
+            </p>
+          </div>
+        </section>
 
-      <section className="as-wrap ast-body" aria-label="Service status">
-        <LiveStatus />
+        <section className="as-wrap ast-body" aria-label="Service status">
+          <LiveStatus />
 
-        <StatusMonitor />
+          <StatusMonitor />
 
-        <div className="as-card ast-note">
-          <h2>Incident history</h2>
-          <p>
-            No incident history is published yet. If something is not working for you, tell us and
-            we will look into it.
-          </p>
-          <Link href="/contact" className="as-btn as-btn-primary">
-            Report a problem
-          </Link>
-        </div>
-      </section>
+          <div className="as-card ast-note">
+            <h2>Incident history</h2>
+            <p>
+              No incident history is published yet. If something is not working for you, tell us and
+              we will look into it.
+            </p>
+            <Link href="/contact" className="as-btn as-btn-primary">
+              Report a problem
+            </Link>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

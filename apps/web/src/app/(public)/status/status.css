@@ -1,8 +1,8 @@
 /* System status, in the Aurora design. Every rule is scoped under .aurora-site .aurora-status. */
 
-/* The page root is also .aurora-site (see page.tsx), so it is styled inside the signed-in
-   app shell too. Inside the public shell it must not add a second full-screen height. */
-.aurora-site.aurora-status {
+/* The page brings its own .aurora-site wrapper (see page.tsx), so it is styled inside the
+   signed-in app shell too. It must not add a second full-screen height. */
+.aurora-site.ast-scope {
   min-height: 0;
 }
 
