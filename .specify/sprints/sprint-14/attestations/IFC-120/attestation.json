@@ -98,5 +98,5 @@
     "git_commit": "f1f8d413f93fdfe669cf006a3ddec980f3651aae",
     "branch": "sprint0/codex-run"
   },
-  "notes": "IFC-120: Implemented password reset and email verification flows using Supabase native auth. Wired existing frontend pages (forgot-password, reset-password, signup, email-verification) to tRPC backend procedures. Added callback routes for Supabase redirect flow. Deprecated in-memory token stores. 201 tests, all 4 validations pass, coverage above thresholds."
+  "notes": "IFC-120: Implemented password reset and email verification flows using Supabase native auth. Wired existing frontend pages (forgot-password, reset-password, signup, email-verification) to tRPC backend procedures. Added callback routes for Supabase redirect flow. Deprecated in-memory token stores. 201 tests, all 4 validations pass, coverage above thresholds.\nMerged PR #1213: fix(auth): send password updates with the caller's token so reset completes (named in the PR; sprint-plan reconciliation 2026-11-14)\nMerged PR #1215: fix(auth): make the sign-up confirmation step work end to end (mapped by content; sprint-plan reconciliation 2026-11-14)"
 }
