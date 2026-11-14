@@ -4,7 +4,7 @@
  * coverage. scripts/lib/test-slot.mjs decides (slotRefusal, requireSlot);
  * scripts/require-test-slot.mjs is chained in front of each heavy script.
  */
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -213,5 +213,20 @@ describe('the heavy commands are guarded', () => {
     );
     // Pass-through only: the variables never change a cache key.
     expect(turbo.globalEnv).not.toContain('TEST_SLOT_HELD');
+  });
+});
+
+describe('defaults (what the heavy scripts actually call)', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('slotRefusal checks the real filesystem when no exists() is passed', () => {
+    expect(slotRefusal('web-build', { TEST_SLOT_HELD: 'slot1' })).toBeNull();
+  });
+
+  it('requireSlot with no io reads process.env and returns quietly inside a slot', () => {
+    vi.stubEnv('TEST_SLOT_HELD', 'slot9');
+    expect(() => requireSlot('test-suite')).not.toThrow();
   });
 });
