@@ -849,7 +849,12 @@ describe('orphaned step trees', () => {
     expect(reapGate(state, file)).toEqual({ stopped: step.pid });
     expect(await waitFor(() => !isAlive(step.pid!) && !isAlive(grandchild))).toBe(true);
     expect(exists(file)).toBe(false);
-  });
+    // Real-OS cost on Windows: two PowerShell calls (start time, then a full
+    // Win32_Process scan in killTree), two taskkills and two node starts. Measured
+    // 9.9 s with several other runs active (the 30 s default has failed it on a
+    // saturated box); the logic itself is covered by the killTree and sameProcess
+    // units above, so only the wait is longer.
+  }, 90_000);
 
   it('reapGate never stops a process that only reused the recorded pid', async () => {
     const dir = tmpDir();
@@ -1010,7 +1015,10 @@ describe('pre-ship.mjs runs a step async, tracks it, and cleans up', () => {
     expect(
       exists(stateDir) ? fs.readdirSync(stateDir).filter((f) => f.endsWith('.json')) : []
     ).toEqual([]);
-  });
+    // Spawn-bound: a git fixture (5 git calls) plus a full node run of pre-ship.mjs, whose
+    // own spawnSync allows 60 s. 35 s measured with other gates running, against the 30 s
+    // default; this test alone gets 90 s so it always outlasts its inner 60 s limit.
+  }, 90_000);
 
   it('a run with no step to execute starts no watchdog and writes no state', () => {
     const { dir, stateDir, env } = gateRepo();
@@ -1022,7 +1030,8 @@ describe('pre-ship.mjs runs a step async, tracks it, and cleans up', () => {
     });
     expect(r.status, r.stdout + r.stderr).toBe(0);
     expect(exists(stateDir)).toBe(false);
-  });
+    // Same spawn-bound cost as the test above (timed out at 30 s under load).
+  }, 90_000);
 });
 
 describe('descendantsOf and windowsProcesses', () => {
