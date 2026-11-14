@@ -17,8 +17,8 @@ export interface ContactRelatedTabsProps {
     | null;
   /** IANA timezone used to render dates. */
   timezone: string;
-  /** The contact id, used to pre-fill the new-ticket form. */
-  contactId?: string;
+  /** The contact's id, for the tabs' create actions (pre-fills the new-ticket form). */
+  contactId: string;
 }
 
 /**
@@ -48,6 +48,7 @@ export function ContactRelatedTabs({
       <ContactDocumentsTab
         documents={toDocumentViewModels(contact?.documents)}
         timezone={timezone}
+        contactId={contactId}
       />
     );
   }
