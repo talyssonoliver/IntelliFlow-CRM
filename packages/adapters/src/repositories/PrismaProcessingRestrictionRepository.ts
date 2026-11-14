@@ -56,7 +56,7 @@ export class PrismaProcessingRestrictionRepository implements ProcessingRestrict
   }
 
   async marketingBlocked(tenantId: string, subjectEmails: readonly string[]): Promise<Set<string>> {
-    const emails = [...new Set(subjectEmails.map(normalizeSubjectEmail))];
+    const emails = [...new Set(subjectEmails.map((email) => normalizeSubjectEmail(email)))];
     // An erased record's placeholder is never contacted again, as in status().
     const blocked = new Set(emails.filter(isErasedEmail));
     const open = emails.filter((email) => !blocked.has(email));

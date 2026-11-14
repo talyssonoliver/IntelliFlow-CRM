@@ -150,7 +150,10 @@ async function dropMarketingObjections(
   const kept = [...recipients.to, ...recipients.cc, ...recipients.bcc];
   if (kept.length === 0) return { recipients, objected: [] };
   const reader = deps.objections ?? marketingObjectionReader(ctx as never);
-  const blocked = await reader.marketingBlocked(tenantId, kept.map(normalizeEmail));
+  const blocked = await reader.marketingBlocked(
+    tenantId,
+    kept.map((email) => normalizeEmail(email))
+  );
   if (blocked.size === 0) return { recipients, objected: [] };
 
   const remaining = partitionRecipients(recipients, blocked);
