@@ -123,5 +123,5 @@
     "git_commit": "cdb1550469fa9e7efc0280cd3f3edc5974af096e",
     "branch": "sprint0/codex-run"
   },
-  "notes": "PG-172: Created 5 billing ghost pages (usage, plans, upgrade, cancel, settings) with 6 new components, 5 page shells, 5 test files (58 tests), shared utility extraction, sidebar updates, and documentation updates. All 360 billing tests pass (58 new + 302 regression). Coverage: 95.36% stmts, 84.83% branches, 92.68% functions, 97.91% lines."
+  "notes": "PG-172: Created 5 billing ghost pages (usage, plans, upgrade, cancel, settings) with 6 new components, 5 page shells, 5 test files (58 tests), shared utility extraction, sidebar updates, and documentation updates. All 360 billing tests pass (58 new + 302 regression). Coverage: 95.36% stmts, 84.83% branches, 92.68% functions, 97.91% lines.\nMerged PR #1267: fix(billing): let a subscriber change plan, priced on the server (mapped by content; sprint-plan reconciliation 2026-11-14)"
 }

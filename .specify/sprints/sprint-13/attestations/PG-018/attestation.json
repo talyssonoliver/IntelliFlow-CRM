@@ -93,5 +93,5 @@
     "git_commit": "d11d95f4",
     "branch": "sprint0/codex-run"
   },
-  "notes": "PG-018 Logout Page repair: All plan checkboxes marked. Verified page.tsx, useUnsavedChanges.tsx, and useLogout.ts exist. Attestation created from scratch."
+  "notes": "PG-018 Logout Page repair: All plan checkboxes marked. Verified page.tsx, useUnsavedChanges.tsx, and useLogout.ts exist. Attestation created from scratch.\nMerged PR #1165: fix(auth): end every logout with a full page load and no session left behind (mapped by content; sprint-plan reconciliation 2026-11-14)"
 }
