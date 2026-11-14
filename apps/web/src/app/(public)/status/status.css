@@ -1,5 +1,11 @@
 /* System status, in the Aurora design. Every rule is scoped under .aurora-site .aurora-status. */
 
+/* The page brings its own .aurora-site wrapper (see page.tsx), so it is styled inside the
+   signed-in app shell too. It must not add a second full-screen height. */
+.aurora-site.ast-scope {
+  min-height: 0;
+}
+
 .aurora-site .aurora-status .ast-body {
   display: grid;
   gap: 16px;
@@ -52,6 +58,10 @@
 .aurora-site .aurora-status .ast-down {
   background: #c43b3b;
   box-shadow: 0 0 0 6px rgba(196, 59, 59, 0.15);
+}
+.aurora-site .aurora-status .ast-degraded {
+  background: #b7791f;
+  box-shadow: 0 0 0 6px rgba(183, 121, 31, 0.15);
 }
 .aurora-site .aurora-status .ast-checking {
   background: var(--lavender);
