@@ -132,6 +132,8 @@ export default defineConfig({
       'apps/api/vitest.config.ts',
       'apps/ai-worker/vitest.config.ts',
       'apps/web/vitest.config.ts',
+      // The DOM-free web tests (vitest.node-env-files.txt), node environment.
+      'apps/web/vitest.node.config.ts',
       'apps/workers/shared/vitest.config.ts',
       'apps/workers/events-worker/vitest.config.ts',
       'apps/workers/ingestion-worker/vitest.config.ts',
@@ -419,6 +421,7 @@ export default defineConfig({
         'apps/web/src/app/**/page.tsx',
         'apps/web/next.config.js',
         'apps/web/vitest.config.ts',
+        'apps/web/vitest.node.config.ts',
         'apps/web/vitest.setup.ts',
         'apps/web/src/lib/trpc.ts',
         'apps/web/src/lib/supabase.ts',
