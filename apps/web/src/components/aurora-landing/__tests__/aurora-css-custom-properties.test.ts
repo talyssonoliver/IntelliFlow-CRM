@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Every custom property the Aurora landing's CSS reads must exist.
  *

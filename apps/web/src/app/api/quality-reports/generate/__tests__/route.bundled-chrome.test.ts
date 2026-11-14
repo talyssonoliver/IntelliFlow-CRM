@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * POST /api/quality-reports/generate (Lighthouse) starts Lighthouse with Playwright's bundled
  * Chromium and the fixed profile, never the installed Chrome, and refuses when that Chromium

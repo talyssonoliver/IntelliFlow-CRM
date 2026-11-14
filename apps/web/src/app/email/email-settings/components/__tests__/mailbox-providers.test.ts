@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import type { MailboxErrorCode } from '@intelliflow/domain';
 import { connectionFailureHelp } from '../connection-help';

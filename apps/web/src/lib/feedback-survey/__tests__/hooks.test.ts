@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Feedback Survey Analytics Hooks Tests - IFC-068
  */

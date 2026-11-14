@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Tests for timeline-event-model.ts
  * Covers: constants, groupEventsByDate, getEventTypeIcon, getEventTypeColor

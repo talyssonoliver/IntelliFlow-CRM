@@ -8,7 +8,7 @@
  * - index.ts: Module exports
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 
 // Mock container before importing context
@@ -184,6 +184,12 @@ describe('Entry Points', () => {
   });
 
   describe('router.ts - App Router', () => {
+    // The first import of the full router is the slow part (every module); pay it once here,
+    // with its own timeout, so a loaded machine cannot time out the first test (30s budget).
+    beforeAll(async () => {
+      await import('../router.js');
+    }, 120_000);
+
     it('should export appRouter with all expected namespaces', async () => {
       // Use dynamic import to avoid circular dependency issues
       const { appRouter } = await import('../router.js');

@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * PG-199 — pure page model: draft ⇄ payload, USD ⇄ cents, dirty compare,
  * downgrade detection and server issue mapping (AC-002, AC-004, AC-010, AC-011).

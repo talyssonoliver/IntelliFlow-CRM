@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Registration Form - B11 coverage tests
  *

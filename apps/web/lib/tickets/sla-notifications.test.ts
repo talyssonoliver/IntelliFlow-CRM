@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * SLA Notification Tests - IFC-093
  *

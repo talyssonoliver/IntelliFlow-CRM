@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Guard (#1097): the web does not gate ids behind a hand-rolled UUID regex.
  *

@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Tests for apps/web/src/app/robots.ts
  * Covers: MetadataRoute.Robots generation with allow/disallow rules

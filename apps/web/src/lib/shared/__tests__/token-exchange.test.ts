@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Token Exchange Service Tests
  *

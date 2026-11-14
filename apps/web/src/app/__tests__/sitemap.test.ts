@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Tests for apps/web/src/app/sitemap.ts
  * Covers: MetadataRoute.Sitemap generation for public marketing pages

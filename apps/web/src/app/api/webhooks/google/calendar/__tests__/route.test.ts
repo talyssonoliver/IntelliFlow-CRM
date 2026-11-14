@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Google Calendar Webhook Route Handler Tests (IFC-224)
  *

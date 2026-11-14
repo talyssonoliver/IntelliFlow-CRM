@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Job Storage B11 Tests - covers all functions (0% coverage)
  *

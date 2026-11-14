@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * workflow-types utility tests — PG-193
  *

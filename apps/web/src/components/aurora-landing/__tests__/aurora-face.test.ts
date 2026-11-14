@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, vi } from 'vitest';
 
 // Every rounded rectangle the face draws, as the shared helper is asked for it.

@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * PG-203 DSAR — response headers for the public data request pages (spec D-AC-10).
  *

@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * NEXT_BUILD_CPUS (#1111): pre-ship's local build sets it to cap `next build`'s
  * page workers, which default to one per CPU core less one. Without it, the

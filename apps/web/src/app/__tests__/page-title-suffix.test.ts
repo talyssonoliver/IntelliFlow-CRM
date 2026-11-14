@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * The root layout's title template appends "| Aurora", so a page that writes its own
  * brand suffix must use `title: { absolute }` or the tab reads "Email | Aurora | Aurora".

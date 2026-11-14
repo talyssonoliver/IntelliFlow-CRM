@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Guards #1113: Manrope is self-hosted, so `next build` never fetches it from
  * Google Fonts. A bad Google answer used to fail the build (loader.js read the

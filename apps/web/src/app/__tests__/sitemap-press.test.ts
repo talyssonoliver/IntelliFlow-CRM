@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Press release pages in the sitemap: one entry per published release, dated by the
  * release. No release is published today, so a sample list is mocked here.

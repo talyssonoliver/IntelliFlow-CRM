@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * bundledChromeLaunch loads tools/lighthouse/bundled-chrome.cjs from the given repo root and
  * returns its launch settings. A stub helper in a temporary root stands in for the real one,

@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Task Automation labels — PG-208: summaries, owner and due-date wording (M5),
  * outcome labels, template variables per trigger (engine templateVars).

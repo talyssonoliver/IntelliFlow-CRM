@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Workflow Topology Validation Tests — IFC-031
  *

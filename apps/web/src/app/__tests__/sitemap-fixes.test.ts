@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Tests for IFC-209 sitemap.ts defect fixes
  * Covers: F-007 (lastModified accuracy), F-008 (blog slug coverage), F-009 (missing dynamic routes)

@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * experiment-utils unit tests (PG-149 coverage)
  */

@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * isRecordId (#1097): the web's check for an id the api will accept.
  */

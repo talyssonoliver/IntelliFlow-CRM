@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import { ACCOUNT_TIER_COLOR_TOKENS } from '@intelliflow/validators';
 import { TIER_COLOR_CLASSES, UNKNOWN_TIER_COLORS, tierColorClasses } from '../tier-colors';

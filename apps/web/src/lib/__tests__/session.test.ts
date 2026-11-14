@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Tests for session.ts: the server-side Supabase client used to check tokens.
  */

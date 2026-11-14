@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Tests for account-queries.ts
  *

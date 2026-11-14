@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, expect, it } from 'vitest';
 import type { Breadcrumb, ErrorEvent } from '@sentry/nextjs';
 import { filterBreadcrumb, scrubEvent, stripQuery } from '../scrub';

@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Unit Tests for Rollback Service (IFC-149)
  *

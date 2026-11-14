@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * contact-tab-format tests (IFC-256)
  *

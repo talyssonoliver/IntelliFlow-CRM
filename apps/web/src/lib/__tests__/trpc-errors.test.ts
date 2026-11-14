@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Shared tRPC error helpers (PG-199). One `errorCode` for every settings page that
  * degrades calmly when an older API does not have its procedures yet (NOT_FOUND).

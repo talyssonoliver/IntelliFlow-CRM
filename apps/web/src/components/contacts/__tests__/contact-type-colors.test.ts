@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * PG-205 contact type colours (A11Y-2): every token maps to fixed classes, unknown
  * tokens fall back to slate, and the contrast of the shipped classes is computed —

@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Tests for /api/quality-reports/generate — buildLighthouseArgs URL validation.
  *

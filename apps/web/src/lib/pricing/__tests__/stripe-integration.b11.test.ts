@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Stripe Integration - B11 coverage tests
  *

@@ -1,3 +1,4 @@
+// @vitest-environment node
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { sendContactEmail, buildContactEmailPayload } from '../email-handler';
 import type { ContactFormInput } from '@intelliflow/validators';

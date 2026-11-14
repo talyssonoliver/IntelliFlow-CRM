@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * Tests for sitemap reconciliation against filesystem reality
  * Covers: Route count regression guard, public route validation
