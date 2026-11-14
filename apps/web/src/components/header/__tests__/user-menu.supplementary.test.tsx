@@ -77,6 +77,13 @@ describe('UserMenu', () => {
     expect(screen.getByText('JD')).toBeDefined();
   });
 
+  // Was asserted on a copy of the initials code in user-menu.supplementary2.test.ts (#1216).
+  it('uses the first two initials of a longer name', () => {
+    render(<UserMenu user={{ name: 'alice bob charlie', email: 'abc@example.com' }} />);
+
+    expect(screen.getByText('AB')).toBeDefined();
+  });
+
   it('falls back to Guest when no user prop and no auth user', () => {
     render(<UserMenu />);
 

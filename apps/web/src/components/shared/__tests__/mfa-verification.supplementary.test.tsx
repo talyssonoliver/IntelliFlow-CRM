@@ -335,6 +335,21 @@ describe('MfaVerification (supplementary)', () => {
       });
     });
 
+    // Was asserted on a copy of the error mapping in mfa-verification.supplementary2 (#1216).
+    it('shows the invalid-code message when the server says the code is incorrect', async () => {
+      mockMutateAsync.mockRejectedValue(new Error('Code is incorrect'));
+
+      render(<MfaVerification challengeId="valid-challenge-123" onSuccess={vi.fn()} />);
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId('verify-totp'));
+      });
+
+      await waitFor(() => {
+        expect(screen.getByTestId('mfa-error').textContent).toContain('Invalid verification code');
+      });
+    });
+
     it('shows too many attempts error', async () => {
       mockMutateAsync.mockRejectedValue(new Error('Too many attempts'));
 
