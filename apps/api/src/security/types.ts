@@ -110,6 +110,7 @@ export type ResourceType =
   | 'email_settings'
   | 'email_signature'
   | 'email_suppression'
+  | 'email_message' // IFC-315: a marketing email withheld from people who objected
   | 'model_config'; // PG-199 audit trail
 
 /**

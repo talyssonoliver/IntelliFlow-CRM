@@ -199,14 +199,14 @@ function actionProblem(input: {
   if (input.isErasure && !input.confirmed) {
     return { field: 'confirm', message: 'Confirm that no legal hold or retention duty applies.' };
   }
-  if (input.isMarketing && input.stopMethod.trim().length < STOP_METHOD_MIN) {
+  // IFC-315: the CRM stops its own marketing email; the method is optional and only describes
+  // marketing sent from outside the CRM.
+  const stopLength = input.stopMethod.trim().length;
+  if (input.isMarketing && stopLength > 0 && stopLength < STOP_METHOD_MIN) {
     return {
       field: 'stop',
-      message: `Say how marketing was stopped (at least ${STOP_METHOD_MIN} characters).`,
+      message: `Say how marketing outside the CRM was stopped (at least ${STOP_METHOD_MIN} characters), or leave it empty.`,
     };
-  }
-  if (input.isMarketing && !input.confirmed) {
-    return { field: 'confirm', message: 'Confirm that marketing to this person has stopped.' };
   }
   if (input.action === 'completeAccess') {
     // Every count needs the admin's own reason: it is emailed to the person (codex).
@@ -324,7 +324,7 @@ export function RequestActionDialog({
         onSubmit({
           note: text.trim(),
           ...(isErasure ? { noHoldConfirmed: true as const } : {}),
-          ...(isMarketing
+          ...(isMarketing && stopMethod.trim()
             ? { marketingStoppedConfirmed: true as const, marketingStopMethod: stopMethod.trim() }
             : {}),
         });
@@ -473,9 +473,12 @@ export function RequestActionDialog({
 
           {isMarketing && (
             <div className="space-y-1.5">
-              <Label htmlFor="request-action-stop">How marketing was stopped</Label>
+              <p className="text-sm text-muted-foreground">
+                Completing this stops marketing email from the CRM to this person.
+              </p>
+              <Label htmlFor="request-action-stop">Marketing outside the CRM (optional)</Label>
               <p id="request-action-stop-hint" className="text-xs text-muted-foreground">
-                {`At least ${STOP_METHOD_MIN} characters`}
+                {`If you also market to this person with another tool, say how you stopped it there. At least ${STOP_METHOD_MIN} characters.`}
               </p>
               <Input
                 id="request-action-stop"
@@ -489,7 +492,7 @@ export function RequestActionDialog({
             </div>
           )}
 
-          {(isErasure || isMarketing) && (
+          {isErasure && (
             <div className="flex items-start gap-2">
               <Checkbox
                 id="request-action-confirm"
@@ -499,9 +502,8 @@ export function RequestActionDialog({
                 onCheckedChange={(checked) => setConfirmed(checked === true)}
               />
               <Label htmlFor="request-action-confirm" className="text-sm font-normal leading-snug">
-                {isErasure
-                  ? 'No legal hold or retention duty applies to this data (SRA record-keeping, anti-money-laundering checks, or a possible legal claim).'
-                  : 'Marketing to this person has stopped.'}
+                No legal hold or retention duty applies to this data (SRA record-keeping,
+                anti-money-laundering checks, or a possible legal claim).
               </Label>
             </div>
           )}

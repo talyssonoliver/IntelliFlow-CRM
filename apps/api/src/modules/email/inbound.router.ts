@@ -533,6 +533,9 @@ export const inboundEmailRouter = createTRPCRouter({
               to: [forwardTo],
               subject: `Fwd: ${existing.subject}`,
               htmlBody: existing.body,
+              // IFC-315: forwarding an existing email is a service action, not marketing, and
+              // this action has no way to ask the user, so it names its purpose explicitly.
+              purpose: 'SERVICE',
             }),
             emailRuntimeDeps(ctx as unknown as EmailRouterCtx),
             { metadata: { isForward: true, originalEmailId: emailId } }

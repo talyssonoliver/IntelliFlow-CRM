@@ -165,6 +165,8 @@ beforeEach(() => {
   // PG-203: nobody is restricted by a data request unless a test says so (the reset above
   // leaves the deep mock answering undefined, which the restriction checks treat as a failure).
   mockAdapters.processingRestrictionRepository.status.mockResolvedValue(NOT_RESTRICTED);
+  // IFC-315: nobody objected to marketing unless a test says so.
+  mockAdapters.processingRestrictionRepository.marketingBlocked.mockResolvedValue(new Set());
 });
 
 /**

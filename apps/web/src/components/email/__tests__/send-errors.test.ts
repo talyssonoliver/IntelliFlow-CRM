@@ -3,6 +3,7 @@ import {
   getEmailSendError,
   mailboxErrorMessage,
   partialSendNotice,
+  purposeField,
   skippedRecipientsNotice,
 } from '../send-errors';
 
@@ -41,6 +42,37 @@ describe('getEmailSendError', () => {
     expect(view.code).toBe('ALL_SUPPRESSED');
     expect(view.message).toContain('a@example.invalid');
     expect(view.message).toMatch(/nothing was sent/i);
+  });
+
+  it('explains a marketing email that reached nobody because everyone objected (IFC-315)', () => {
+    const view = getEmailSendError(
+      trpcError({ code: 'ALL_OBJECTED', mailboxErrorCode: null, skipped: ['a@example.invalid'] })
+    );
+    expect(view.code).toBe('ALL_OBJECTED');
+    expect(view.message).toContain('a@example.invalid');
+    expect(view.message).toMatch(/objected to marketing/i);
+    expect(view.message).toMatch(/nothing was sent/i);
+    expect(view.action).toBeNull();
+  });
+
+  it('asks what an unlabelled email to an objector is for (IFC-315, PURPOSE_REQUIRED)', () => {
+    const view = getEmailSendError(
+      trpcError({
+        code: 'PURPOSE_REQUIRED',
+        mailboxErrorCode: null,
+        skipped: ['a@example.invalid'],
+      })
+    );
+    expect(view.code).toBe('PURPOSE_REQUIRED');
+    expect(view.title).toBe('Is this email about their matter?');
+    expect(view.message).toMatch(/^Not sent\./);
+    expect(view.message).toContain('a@example.invalid');
+    expect(view.action).toBeNull();
+  });
+
+  it('leaves purpose out of a send unless one was named', () => {
+    expect(purposeField(undefined)).toEqual({});
+    expect(purposeField('SERVICE')).toEqual({ purpose: 'SERVICE' });
   });
 
   it.each([
@@ -102,6 +134,26 @@ describe('mailboxErrorMessage', () => {
     expect(mailboxErrorMessage('AUTH_FAILED')).toMatch(/refused the sign-in/);
     expect(mailboxErrorMessage('TLS_FAILED')).toMatch(/secure connection/);
     expect(mailboxErrorMessage('CONNECT_FAILED')).toMatch(/could not be reached/);
+  });
+});
+
+describe('partialSendNotice: marketing objections (IFC-315)', () => {
+  it('names recipients left out because they objected to marketing', () => {
+    expect(partialSendNotice({ skipped: [], objected: ['o@example.invalid'] })).toBe(
+      'Sent. 1 recipient was left out because they objected to marketing email: o@example.invalid.'
+    );
+  });
+
+  it('follows the suppression notice without repeating "Sent."', () => {
+    expect(
+      partialSendNotice({
+        skipped: ['s@example.invalid'],
+        objected: ['o@example.invalid', 'p@example.invalid'],
+      })
+    ).toBe(
+      'Sent. 1 recipient was skipped because they are on the suppression list: s@example.invalid. ' +
+        '2 recipients were left out because they objected to marketing email: o@example.invalid, p@example.invalid.'
+    );
   });
 });
 

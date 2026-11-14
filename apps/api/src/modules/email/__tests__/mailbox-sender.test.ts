@@ -12,6 +12,11 @@ vi.mock('../mailbox-transport', () => ({
   claimSendSlot: transport.claim,
 }));
 
+const audit = vi.hoisted(() => ({ logAction: vi.fn() }));
+vi.mock('../../../security/audit-logger', () => ({
+  getAuditLogger: () => ({ logAction: audit.logAction }),
+}));
+
 import { dispatchUserMail, emailSendErrorFromCause } from '../mailbox-sender';
 import { smtpAccountFields, smtpEndpointFields } from '@intelliflow/validators';
 
@@ -76,6 +81,180 @@ beforeEach(() => {
   (prismaMock.emailMailbox.updateMany as any).mockResolvedValue({ count: 1 });
   (prismaMock.emailAttachment.createMany as any).mockResolvedValue({ count: 1 });
   storage.downloadEmailAttachment.mockResolvedValue(Buffer.from('pdf'));
+  audit.logAction.mockResolvedValue('audit-1');
+});
+
+describe('marketing objections (IFC-315, UK GDPR Art 21(3))', () => {
+  const objections = { marketingBlocked: vi.fn() };
+  const marketingDeps = () => ({ ...deps(), objections });
+  const marketing = {
+    ...input,
+    purpose: 'MARKETING' as const,
+    to: ['ok@example.invalid', 'Objected@example.invalid'],
+    cc: ['c@example.invalid'],
+  };
+
+  beforeEach(() => {
+    objections.marketingBlocked.mockResolvedValue(new Set(['objected@example.invalid']));
+  });
+
+  it('never checks objections for mail marked SERVICE, which still reaches the person', async () => {
+    const result = await dispatchUserMail(
+      createTestContext() as never,
+      { ...marketing, purpose: 'SERVICE' },
+      marketingDeps()
+    );
+    expect(objections.marketingBlocked).not.toHaveBeenCalled();
+    expect(result.objected).toBeUndefined();
+    expect(transport.send.mock.calls[0][3].to).toContain('Objected@example.invalid');
+    const created = (prismaMock.emailRecord.create as any).mock.calls[0][0].data;
+    expect(created.metadata.purpose).toBe('SERVICE');
+  });
+
+  it('refuses unlabelled mail to someone who objected, sending nothing (PURPOSE_REQUIRED)', async () => {
+    const error = await errorOf(
+      dispatchUserMail(
+        createTestContext() as never,
+        { ...marketing, purpose: undefined },
+        marketingDeps()
+      )
+    );
+    expect(error.code).toBe('PRECONDITION_FAILED');
+    expect(emailSendErrorFromCause(error.cause)).toEqual({
+      code: 'PURPOSE_REQUIRED',
+      mailboxErrorCode: null,
+      skipped: ['objected@example.invalid'],
+    });
+    expect(transport.send).not.toHaveBeenCalled();
+    expect(quota.reserveQuota).not.toHaveBeenCalled();
+    expect(prismaMock.emailRecord.create).not.toHaveBeenCalled();
+  });
+
+  it('sends unlabelled mail as before when nobody objected', async () => {
+    objections.marketingBlocked.mockResolvedValue(new Set());
+    const result = await dispatchUserMail(
+      createTestContext() as never,
+      { ...marketing, purpose: undefined },
+      marketingDeps()
+    );
+    expect(result).toMatchObject({ status: 'SENT' });
+    expect(objections.marketingBlocked).toHaveBeenCalledTimes(1);
+    const created = (prismaMock.emailRecord.create as any).mock.calls[0][0].data;
+    expect(created.metadata.purpose).toBeUndefined();
+  });
+
+  it('fails closed for unlabelled mail too when the objection check cannot be read', async () => {
+    objections.marketingBlocked.mockRejectedValue(new Error('db down'));
+    await expect(
+      dispatchUserMail(
+        createTestContext() as never,
+        { ...marketing, purpose: undefined },
+        marketingDeps()
+      )
+    ).rejects.toThrow('db down');
+    expect(transport.send).not.toHaveBeenCalled();
+  });
+
+  it('drops a recipient who objected, sends to the rest and records it', async () => {
+    const result = await dispatchUserMail(createTestContext() as never, marketing, marketingDeps());
+
+    expect(objections.marketingBlocked).toHaveBeenCalledTimes(1);
+    expect(objections.marketingBlocked).toHaveBeenCalledWith(tenantId, [
+      'ok@example.invalid',
+      'objected@example.invalid',
+      'c@example.invalid',
+    ]);
+    expect(result).toMatchObject({
+      status: 'SENT',
+      skipped: [],
+      objected: ['objected@example.invalid'],
+    });
+    expect(transport.send.mock.calls[0][3].to).toEqual(['ok@example.invalid', 'c@example.invalid']);
+    expect(quota.reserveQuota).toHaveBeenCalledWith(
+      expect.anything(),
+      tenantId,
+      'emailsPerMonth',
+      2
+    );
+    const created = (prismaMock.emailRecord.create as any).mock.calls[0][0].data;
+    expect(created.toEmail).toBe('ok@example.invalid');
+    expect(created.metadata).toMatchObject({
+      purpose: 'MARKETING',
+      objectedRecipients: ['objected@example.invalid'],
+    });
+  });
+
+  it('audits each withheld send with counts only, never an address', async () => {
+    await dispatchUserMail(createTestContext() as never, marketing, marketingDeps());
+
+    expect(audit.logAction).toHaveBeenCalledTimes(1);
+    const [action, resource, , auditTenant, options] = audit.logAction.mock.calls[0];
+    expect([action, resource, auditTenant]).toEqual(['CREATE', 'email_message', tenantId]);
+    expect(options).toMatchObject({
+      actorId: TEST_UUIDS.user1,
+      eventType: 'EmailMarketingObjectionApplied',
+      actionReason: 'MARKETING_OBJECTION',
+      afterState: { purpose: 'MARKETING', objectedRecipients: 1, sentRecipients: 2 },
+    });
+    expect(JSON.stringify(options)).not.toMatch(/@/);
+  });
+
+  it('sends nothing (ALL_OBJECTED, no quota, no record) when everyone left objected', async () => {
+    (prismaMock.emailSuppression.findMany as any).mockResolvedValue([
+      { email: 'c@example.invalid' },
+    ]);
+    objections.marketingBlocked.mockResolvedValue(
+      new Set(['ok@example.invalid', 'objected@example.invalid'])
+    );
+    const error = await errorOf(
+      dispatchUserMail(createTestContext() as never, marketing, marketingDeps())
+    );
+    expect(error.code).toBe('PRECONDITION_FAILED');
+    expect(emailSendErrorFromCause(error.cause)).toEqual({
+      code: 'ALL_OBJECTED',
+      mailboxErrorCode: null,
+      skipped: ['c@example.invalid', 'ok@example.invalid', 'objected@example.invalid'],
+    });
+    expect(objections.marketingBlocked).toHaveBeenCalledWith(tenantId, [
+      'ok@example.invalid',
+      'objected@example.invalid',
+    ]);
+    expect(quota.reserveQuota).not.toHaveBeenCalled();
+    expect(prismaMock.emailRecord.create).not.toHaveBeenCalled();
+    expect(audit.logAction).toHaveBeenCalledTimes(1);
+  });
+
+  it('records nothing extra and audits nothing when no recipient objected', async () => {
+    objections.marketingBlocked.mockResolvedValue(new Set());
+    const result = await dispatchUserMail(createTestContext() as never, marketing, marketingDeps());
+    expect(result.objected).toBeUndefined();
+    expect(audit.logAction).not.toHaveBeenCalled();
+    const created = (prismaMock.emailRecord.create as any).mock.calls[0][0].data;
+    expect(created.metadata.purpose).toBe('MARKETING');
+    expect(created.metadata.objectedRecipients).toBeUndefined();
+  });
+
+  it('fails closed: no send when the objection check cannot be read', async () => {
+    objections.marketingBlocked.mockRejectedValue(new Error('db down'));
+    await expect(
+      dispatchUserMail(createTestContext() as never, marketing, marketingDeps())
+    ).rejects.toThrow('db down');
+    expect(transport.send).not.toHaveBeenCalled();
+    expect(quota.reserveQuota).not.toHaveBeenCalled();
+  });
+
+  it('reads the container’s restriction repository when none is injected', async () => {
+    const ctx = createTestContext() as any;
+    ctx.adapters.processingRestrictionRepository.marketingBlocked.mockResolvedValue(
+      new Set(['objected@example.invalid'])
+    );
+    const result = await dispatchUserMail(ctx, marketing, deps());
+    expect(result.objected).toEqual(['objected@example.invalid']);
+    expect(ctx.adapters.processingRestrictionRepository.marketingBlocked).toHaveBeenCalledWith(
+      tenantId,
+      ['ok@example.invalid', 'objected@example.invalid', 'c@example.invalid']
+    );
+  });
 });
 
 describe('dispatchUserMail', () => {

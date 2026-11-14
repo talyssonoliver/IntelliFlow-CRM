@@ -7,7 +7,13 @@ import { trpc } from '@/lib/trpc';
 import { toast } from '@intelliflow/ui';
 import { cn } from '@/lib/utils';
 import { mailboxAddressSchema } from '@intelliflow/validators';
-import { getEmailSendError, partialSendNotice, type EmailSendErrorView } from './send-errors';
+import type { EmailSendPurpose } from '@intelliflow/domain';
+import {
+  getEmailSendError,
+  partialSendNotice,
+  purposeField,
+  type EmailSendErrorView,
+} from './send-errors';
 import { SendErrorAlert } from './SendErrorAlert';
 
 const isEmailAddress = (value: string) => mailboxAddressSchema.safeParse(value).success;
@@ -102,46 +108,51 @@ export function InlineCompose({
 
   const canSend = validationErrors.length === 0 && !sendMutation.isPending;
 
-  const handleSend = useCallback(async () => {
-    // Re-check body from DOM in case state is stale
-    const body = bodyRef.current?.innerHTML ?? '';
-    const plainText = body.replaceAll(/<[^<>]*>/g, '').trim();
-    if (!plainText) {
-      toast({ title: 'Message body is required', variant: 'destructive' });
-      return;
-    }
+  /** `chosen`: the purpose picked after a PURPOSE_REQUIRED refusal (IFC-315). */
+  const handleSend = useCallback(
+    async (chosen?: EmailSendPurpose) => {
+      // Re-check body from DOM in case state is stale
+      const body = bodyRef.current?.innerHTML ?? '';
+      const plainText = body.replaceAll(/<[^<>]*>/g, '').trim();
+      if (!plainText) {
+        toast({ title: 'Message body is required', variant: 'destructive' });
+        return;
+      }
 
-    const to = mode === 'forward' ? [forwardTo.trim()] : recipients.to;
-    if (to.length === 0 || !to[0]) {
-      toast({ title: 'At least one recipient is required', variant: 'destructive' });
-      return;
-    }
+      const to = mode === 'forward' ? [forwardTo.trim()] : recipients.to;
+      if (to.length === 0 || !to[0]) {
+        toast({ title: 'At least one recipient is required', variant: 'destructive' });
+        return;
+      }
 
-    if (mode === 'forward' && !isEmailAddress(to[0])) {
-      toast({ title: 'Enter a valid email address', variant: 'destructive' });
-      return;
-    }
+      if (mode === 'forward' && !isEmailAddress(to[0])) {
+        toast({ title: 'Enter a valid email address', variant: 'destructive' });
+        return;
+      }
 
-    setSendError(null);
-    try {
-      const result = await sendMutation.mutateAsync({
-        to,
-        cc: recipients.cc.length > 0 ? recipients.cc : undefined,
-        subject: getSubject(mode, originalMessage.subject),
-        htmlBody: body,
-        threadId: originalMessage.id,
-      });
-      const notice = partialSendNotice(result);
-      toast({
-        title: mode === 'forward' ? 'Email forwarded' : 'Reply sent',
-        ...(notice ? { description: notice } : {}),
-      });
-      onSent();
-    } catch (error) {
-      // The reply stays as typed; the alert says what to do next.
-      setSendError(getEmailSendError(error));
-    }
-  }, [mode, forwardTo, recipients, originalMessage, sendMutation, onSent]);
+      setSendError(null);
+      try {
+        const result = await sendMutation.mutateAsync({
+          to,
+          cc: recipients.cc.length > 0 ? recipients.cc : undefined,
+          subject: getSubject(mode, originalMessage.subject),
+          htmlBody: body,
+          threadId: originalMessage.id,
+          ...purposeField(chosen),
+        });
+        const notice = partialSendNotice(result);
+        toast({
+          title: mode === 'forward' ? 'Email forwarded' : 'Reply sent',
+          ...(notice ? { description: notice } : {}),
+        });
+        onSent();
+      } catch (error) {
+        // The reply stays as typed; the alert says what to do next.
+        setSendError(getEmailSendError(error));
+      }
+    },
+    [mode, forwardTo, recipients, originalMessage, sendMutation, onSent]
+  );
 
   let modeLabel: string;
   if (mode === 'replyAll') modeLabel = 'Reply All';
@@ -204,7 +215,13 @@ export function InlineCompose({
       </div>
 
       {/* Coded send refusal (PG-207, AC-EM-018) */}
-      {sendError && <SendErrorAlert error={sendError} className="mx-3 my-1.5 text-xs" />}
+      {sendError && (
+        <SendErrorAlert
+          error={sendError}
+          className="mx-3 my-1.5 text-xs"
+          onChoosePurpose={(purpose) => void handleSend(purpose)}
+        />
+      )}
 
       {/* Validation hints */}
       {validationErrors.length > 0 && (
@@ -230,7 +247,7 @@ export function InlineCompose({
             'hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring',
             'disabled:opacity-50 disabled:cursor-not-allowed'
           )}
-          onClick={handleSend}
+          onClick={() => void handleSend()}
         >
           <span className="material-symbols-outlined text-base" aria-hidden="true">
             send

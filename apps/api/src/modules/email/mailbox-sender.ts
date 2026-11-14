@@ -8,7 +8,9 @@
  *
  * Order: resolve the sending mailbox (own, else the admin-enabled company
  * mailbox; a broken own mailbox refuses) → drop suppressed recipients (all
- * suppressed sends nothing) → per-mailbox hourly cap → reserve quota for the
+ * suppressed sends nothing) → for MARKETING mail, drop recipients who objected to
+ * direct marketing (IFC-315; audited); mail that names no purpose is refused when
+ * any recipient objected (PURPOSE_REQUIRED) → per-mailbox hourly cap → reserve quota for the
  * recipients actually sent to → record PENDING → read attachments from the
  * tenant's storage → build the MIME (From = mailbox address, Reply-To = tenant
  * override) → send through that mailbox only → record SENT or FAILED. Quota is
@@ -35,6 +37,11 @@ import {
   type SmtpEndpointRow,
 } from '@intelliflow/validators';
 import { reserveQuota } from '../../shared/quota-guard';
+import { getAuditLogger } from '../../security/audit-logger';
+import {
+  marketingObjectionReader,
+  type MarketingObjectionReader,
+} from '../privacy/restriction-reader';
 import { settingsValues } from './email-dto';
 import { emailSendError } from './email-send-error';
 
@@ -44,6 +51,8 @@ import { claimSendSlot, sendThroughMailbox, type MailboxTransports } from './mai
 export interface DispatchDeps {
   transports: MailboxTransports;
   storage: Pick<EmailAttachmentStoragePort, 'downloadEmailAttachment'>;
+  /** IFC-315: defaults to the request's restriction repository. */
+  objections?: MarketingObjectionReader;
   now?: () => Date;
 }
 
@@ -117,7 +126,52 @@ function recordMetadata(
     textBody: input.textBody,
     threadId: input.threadId,
     skippedRecipients: skipped,
+    ...(input.purpose ? { purpose: input.purpose } : {}),
     ...options.metadata,
+  };
+}
+
+/**
+ * IFC-315: a MARKETING email is never sent to a person who objected to direct marketing
+ * (UK GDPR Art 21(3)) or whose record was erased. Those recipients are dropped, like
+ * suppressed ones, and each refusal is audited with counts only (no addresses). SERVICE mail
+ * is not affected: the person may still need replies and notices. Mail that names no purpose
+ * is refused when any recipient objected (PURPOSE_REQUIRED, nothing sent), so an objection
+ * never depends on the sender remembering to mark an email as marketing.
+ */
+async function dropMarketingObjections(
+  ctx: DispatchCtx,
+  input: SendUserEmailInput,
+  deps: DispatchDeps,
+  recipients: ReturnType<typeof partitionRecipients>
+): Promise<{ recipients: ReturnType<typeof partitionRecipients>; objected: string[] }> {
+  if (input.purpose === 'SERVICE') return { recipients, objected: [] };
+  const { tenantId, userId } = ctx.tenant;
+  const kept = [...recipients.to, ...recipients.cc, ...recipients.bcc];
+  if (kept.length === 0) return { recipients, objected: [] };
+  const reader = deps.objections ?? marketingObjectionReader(ctx as never);
+  const blocked = await reader.marketingBlocked(tenantId, kept.map(normalizeEmail));
+  if (blocked.size === 0) return { recipients, objected: [] };
+
+  const remaining = partitionRecipients(recipients, blocked);
+  if (input.purpose !== 'MARKETING') {
+    throw sendError('PURPOSE_REQUIRED', { skipped: remaining.skipped });
+  }
+  getAuditLogger(ctx.prisma as never)
+    .logAction('CREATE', 'email_message', '-', tenantId, {
+      actorId: userId,
+      eventType: 'EmailMarketingObjectionApplied',
+      actionReason: 'MARKETING_OBJECTION',
+      afterState: {
+        purpose: 'MARKETING',
+        objectedRecipients: remaining.skipped.length,
+        sentRecipients: remaining.to.length + remaining.cc.length + remaining.bcc.length,
+      },
+    })
+    .catch((err: unknown) => console.error('[email] Audit log failed:', err));
+  return {
+    recipients: { ...remaining, skipped: recipients.skipped },
+    objected: remaining.skipped,
   };
 }
 
@@ -251,11 +305,52 @@ export async function resolveSender(
   return { settings, resolved };
 }
 
+/**
+ * Steps 2 and 2b: drop suppressed recipients (Q9), then, for MARKETING mail, those who objected
+ * (IFC-315). Refuses when nobody is left: ALL_OBJECTED if an objection removed anyone, else
+ * ALL_SUPPRESSED.
+ */
+async function resolveRecipients(
+  ctx: DispatchCtx,
+  input: SendUserEmailInput,
+  deps: DispatchDeps
+): Promise<{
+  recipients: ReturnType<typeof partitionRecipients>;
+  objected: string[];
+  sendTo: string[];
+}> {
+  const allRecipients = [...input.to, ...(input.cc ?? []), ...(input.bcc ?? [])].map((address) =>
+    normalizeEmail(address)
+  );
+  const suppressedRows: Array<{ email: string }> =
+    await ctx.prismaWithTenant.emailSuppression.findMany({
+      where: { tenantId: ctx.tenant.tenantId, email: { in: [...new Set(allRecipients)] } },
+      select: { email: true },
+    });
+  const unsuppressed = partitionRecipients(
+    { to: input.to, cc: input.cc, bcc: input.bcc },
+    new Set(suppressedRows.map((r) => r.email))
+  );
+  const { recipients, objected } = await dropMarketingObjections(ctx, input, deps, unsuppressed);
+  const sendTo = [...recipients.to, ...recipients.cc, ...recipients.bcc];
+  if (sendTo.length === 0 && objected.length > 0) {
+    throw sendError('ALL_OBJECTED', { skipped: [...recipients.skipped, ...objected] });
+  }
+  if (sendTo.length === 0) throw sendError('ALL_SUPPRESSED', { skipped: recipients.skipped });
+  return { recipients, objected, sendTo };
+}
+
+/** The record metadata also lists recipients left out for a marketing objection, when any. */
+function withObjectedRecipients(options: DispatchOptions, objected: string[]): DispatchOptions {
+  if (objected.length === 0) return options;
+  return { ...options, metadata: { ...options.metadata, objectedRecipients: objected } };
+}
+
 export async function dispatchUserMail(
   ctx: DispatchCtx,
   input: SendUserEmailInput,
   deps: DispatchDeps,
-  options: DispatchOptions = {}
+  dispatchOptions: DispatchOptions = {}
 ): Promise<SendUserEmailResultDto> {
   const now = deps.now ?? (() => new Date());
   const db = ctx.prismaWithTenant;
@@ -266,20 +361,9 @@ export async function dispatchUserMail(
   if ('refusal' in resolved) throw sendError(resolved.refusal);
   const mailbox = resolved.mailbox;
 
-  // 2. Suppression (Q9): drop suppressed recipients, keep the rest.
-  const allRecipients = [...input.to, ...(input.cc ?? []), ...(input.bcc ?? [])].map((address) =>
-    normalizeEmail(address)
-  );
-  const suppressedRows: Array<{ email: string }> = await db.emailSuppression.findMany({
-    where: { tenantId, email: { in: [...new Set(allRecipients)] } },
-    select: { email: true },
-  });
-  const recipients = partitionRecipients(
-    { to: input.to, cc: input.cc, bcc: input.bcc },
-    new Set(suppressedRows.map((r) => r.email))
-  );
-  const sendTo = [...recipients.to, ...recipients.cc, ...recipients.bcc];
-  if (sendTo.length === 0) throw sendError('ALL_SUPPRESSED', { skipped: recipients.skipped });
+  // 2. Suppression, then marketing objections; refuses when nobody is left.
+  const { recipients, objected, sendTo } = await resolveRecipients(ctx, input, deps);
+  const options = withObjectedRecipients(dispatchOptions, objected);
 
   // 3. Per-mailbox hourly cap, then quota for the recipients actually sent to.
   try {
@@ -370,7 +454,13 @@ export async function dispatchUserMail(
     // The accepted delivery is stored first and on its own; suppression follows.
     await db.emailRecord.update({ where: { id: recordId, tenantId }, data: sentData });
     await suppressHardRefusals(db, { tenantId, recordId }, settings, hardRefusals(refused));
-    return { id: recordId, status: 'SENT', skipped: recipients.skipped, rejected };
+    return {
+      id: recordId,
+      status: 'SENT',
+      skipped: recipients.skipped,
+      rejected,
+      ...(objected.length > 0 ? { objected } : {}),
+    };
   } catch (error) {
     // The recipients got it: keep the charge and the SENT outcome; surface the error.
     if (delivered) throw error;
