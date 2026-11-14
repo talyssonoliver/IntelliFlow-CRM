@@ -212,6 +212,60 @@ export interface LeadNameParts {
   email?: string | null;
 }
 
+/** The part of a lead activity the profile card's metrics read. */
+export interface LeadMetricActivity {
+  type: ActivityType;
+  metadata?: { opened?: unknown; openCount?: unknown } | null;
+}
+
+/**
+ * An email the CRM tracks opens for: its activity records whether it was opened. Logged
+ * or synced emails (outreach sends, inbound replies) carry no tracking and do not count,
+ * so they cannot make an open rate of "0%".
+ */
+export function isTrackedEmailSend(activity: Readonly<LeadMetricActivity>): boolean {
+  if (activity.type !== 'email' || !activity.metadata) return false;
+  return (
+    typeof activity.metadata.opened === 'boolean' || typeof activity.metadata.openCount === 'number'
+  );
+}
+
+/**
+ * A touchpoint is something a person did with the lead. Score and status changes are
+ * system records, not touchpoints.
+ */
+export function isTouchpoint(type: ActivityType): boolean {
+  return type !== 'score_update' && type !== 'status_change';
+}
+
+/**
+ * The profile card's counts from a lead's activities: tracked email sends and how many of
+ * them were opened, meetings, and touchpoints (system records left out).
+ */
+export function leadActivityMetrics(activities: readonly Readonly<LeadMetricActivity>[]): {
+  emailsSent: number;
+  emailsOpened: number;
+  meetings: number;
+  touchpoints: number;
+} {
+  const trackedSends = activities.filter(isTrackedEmailSend);
+  const wasOpened = (act: Readonly<LeadMetricActivity>) =>
+    act.metadata?.opened === true ||
+    (typeof act.metadata?.openCount === 'number' && act.metadata.openCount > 0);
+  return {
+    emailsSent: trackedSends.length,
+    emailsOpened: trackedSends.filter(wasOpened).length,
+    meetings: activities.filter((act) => act.type === 'meeting').length,
+    touchpoints: activities.filter((act) => isTouchpoint(act.type)).length,
+  };
+}
+
+/** The open rate of tracked sends, or "—" when there are none to measure. */
+export function openRateLabel(trackedSent: number, opened: number): string {
+  if (trackedSent <= 0) return '—';
+  return `${Math.round((opened / trackedSent) * 100)}%`;
+}
+
 /**
  * The one name to show for a lead: first and last name, then company, then
  * email. Leads imported without a person's name (company-only or email-only
@@ -239,4 +293,71 @@ export function insightRecommendations(raw: unknown): string[] {
   if (Array.isArray(raw)) return strings(raw);
   if (raw && typeof raw === 'object') return strings((raw as { texts?: unknown }).texts);
   return [];
+}
+
+/**
+ * Returns the URL when it is an absolute http(s) address, otherwise null. Stored
+ * recording and file addresses are rendered as links only through this, so a
+ * missing, relative or javascript: value never becomes a clickable control.
+ */
+export function httpUrlOrNull(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.href : null;
+  } catch {
+    return null;
+  }
+}
+
+function isoOrEmpty(value: string | Date | null | undefined): string {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString();
+}
+
+/** The stored lead fields the lead page's Export writes. */
+export interface LeadExportSource {
+  id: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  email: string;
+  phone?: string | null;
+  company?: string | null;
+  title?: string | null;
+  location?: string | null;
+  website?: string | null;
+  status: string;
+  source: string;
+  score: number;
+  estimatedValue?: number | null;
+  owner?: { name?: string | null } | null;
+  createdAt: string | Date;
+  lastContactedAt?: string | Date | null;
+}
+
+/**
+ * A lead's fields for the action sheet's Export, as stored: no display fallbacks (a
+ * lead never contacted has an empty last contact, not its creation date), and the
+ * estimated value in pence, as the API holds it. Tags are left out: some are internal.
+ */
+export function leadExportFields(lead: LeadExportSource): Record<string, string | number> {
+  return {
+    id: lead.id,
+    firstName: lead.firstName ?? '',
+    lastName: lead.lastName ?? '',
+    email: lead.email,
+    phone: lead.phone ?? '',
+    company: lead.company ?? '',
+    title: lead.title ?? '',
+    location: lead.location ?? '',
+    website: lead.website ?? '',
+    status: lead.status,
+    source: lead.source,
+    score: lead.score,
+    estimatedValuePence: lead.estimatedValue ?? '',
+    owner: lead.owner?.name ?? '',
+    createdAt: isoOrEmpty(lead.createdAt),
+    lastContactedAt: isoOrEmpty(lead.lastContactedAt),
+  };
 }
