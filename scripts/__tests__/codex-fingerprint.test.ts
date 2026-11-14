@@ -20,6 +20,7 @@ import {
   sourceFingerprint,
   waivedFindingLines,
 } from '../lib/codex-fingerprint.mjs';
+import { gitEnv } from '../lib/preship-git.mjs';
 
 const FILE = 'src/Example.ts';
 const hashOf = (line: string) => lineHash(normalizeFilePath(FILE), normalizeLine(line));
@@ -419,13 +420,16 @@ describe('readTrackedFiles', () => {
       fs.writeFileSync(path.join(tmp, rel), data);
     };
     try {
-      execFileSync('git', ['init', '-q'], { cwd: tmp });
+      // gitEnv: an inherited GIT_DIR from the pre-push hook made this git init write
+      // core.bare=true into the real repository (2026-11-14, the #1274 class).
+      const env = gitEnv(process.env);
+      execFileSync('git', ['init', '-q'], { cwd: tmp, env });
       put('src/a.ts', 'export const a = 1;\n');
       put('nested/deep/b.md', '# b\n');
       put('bin/logo.png', Buffer.from([0x89, 0x50, 0x00, 0x47]));
       put('big/huge.json', 'x'.repeat(3_000_001));
       put('gone/c.ts', 'export const c = 3;\n');
-      execFileSync('git', ['add', '.'], { cwd: tmp });
+      execFileSync('git', ['add', '.'], { cwd: tmp, env });
       fs.rmSync(path.join(tmp, 'gone/c.ts'));
       put('untracked.ts', 'export const u = 0;\n');
 
@@ -435,6 +439,40 @@ describe('readTrackedFiles', () => {
       expect(files.find((f) => f.path === 'src/a.ts')?.text).toBe('export const a = 1;\n');
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  // The leak this file once caused, reproduced against a decoy instead of the real repo: the
+  // pre-push hook exports GIT_DIR, and an inherited GIT_DIR sent `git init` and `ls-files` to
+  // the repository it named (it set core.bare=true on the shared .git/config, 2026-11-14).
+  it('ignores a GIT_DIR inherited from a git hook: the decoy repo is left untouched', () => {
+    const decoy = fs.mkdtempSync(path.join(os.tmpdir(), 'codex-fp-decoy-'));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'codex-fp-'));
+    const clean = gitEnv(process.env);
+    try {
+      execFileSync('git', ['init', '-q'], { cwd: decoy, env: clean });
+      fs.writeFileSync(path.join(decoy, 'decoy.ts'), 'export const decoy = 1;\n');
+      execFileSync('git', ['add', '.'], { cwd: decoy, env: clean });
+      vi.stubEnv('GIT_DIR', path.join(decoy, '.git'));
+      vi.stubEnv('GIT_WORK_TREE', decoy);
+
+      const env = gitEnv(process.env);
+      execFileSync('git', ['init', '-q'], { cwd: tmp, env });
+      fs.writeFileSync(path.join(tmp, 'real.ts'), 'export const real = 1;\n');
+      execFileSync('git', ['add', '.'], { cwd: tmp, env });
+      const files: Array<{ path: string }> = readTrackedFiles(tmp);
+
+      expect(files.map((f) => f.path)).toEqual(['real.ts']);
+      const bare = execFileSync('git', ['config', '--get', 'core.bare'], {
+        cwd: decoy,
+        env: clean,
+        encoding: 'utf8',
+      });
+      expect(bare.trim()).toBe('false');
+    } finally {
+      vi.unstubAllEnvs();
+      fs.rmSync(tmp, { recursive: true, force: true });
+      fs.rmSync(decoy, { recursive: true, force: true });
     }
   });
 });
