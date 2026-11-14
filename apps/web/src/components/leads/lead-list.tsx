@@ -23,6 +23,7 @@ import { revalidateLeadCaches, revalidateLeadConversionCaches } from '@/app/lead
 import type { Lead } from '@/lib/leads/lead-types';
 import { leadScoreDisplay } from '@/lib/leads/score-display';
 import { leadDisplayName } from '@/lib/leads/lead-format';
+import { getInitials } from '@/components/shared/app-avatar';
 import { LeadStatusBadge } from '@/components/leads/lead-detail';
 import {
   LEAD_STATUS_OPTIONS,
@@ -743,7 +744,10 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
 }
 
 function LeadAvatar({ lead }: Readonly<{ lead: Lead }>) {
-  const initials = `${lead.firstName?.[0] || ''}${lead.lastName?.[0] || ''}`.toUpperCase() || '?';
+  // Same name and initials rule as the lead page's avatar: a company-only lead shows
+  // the company's initials, not "?".
+  const displayName = leadDisplayName(lead);
+  const initials = getInitials(displayName);
   const getAvatarColor = (name: string) => {
     const colors = [
       'bg-amber-200 text-amber-800 border-amber-300',
@@ -758,9 +762,10 @@ function LeadAvatar({ lead }: Readonly<{ lead: Lead }>) {
   return (
     <span
       className={`size-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border ${getAvatarColor(
-        `${lead.firstName}${lead.lastName}`
+        // Person leads keep their colour; company-only leads no longer all share one.
+        `${lead.firstName ?? ''}${lead.lastName ?? ''}` || displayName
       )}`}
-      aria-label={`Avatar for ${leadDisplayName(lead)}`}
+      aria-label={`Avatar for ${displayName}`}
     >
       {initials}
     </span>

@@ -56,6 +56,22 @@ describe('ContactTicketsTab', () => {
     expect(screen.queryByText('Integration API question')).not.toBeInTheDocument();
   });
 
+  it('Create Ticket opens the new-ticket page (UI-1277 dead controls)', () => {
+    render(<ContactTicketsTab tickets={[]} timezone="UTC" />);
+    expect(screen.getByRole('link', { name: 'Create Ticket' })).toHaveAttribute(
+      'href',
+      '/tickets/new'
+    );
+  });
+
+  it('Create Ticket pre-fills this contact too (#1303)', () => {
+    render(<ContactTicketsTab tickets={[]} timezone="UTC" contactId="c 1" />);
+    expect(screen.getByRole('link', { name: 'Create Ticket' })).toHaveAttribute(
+      'href',
+      '/tickets/new?contactId=c%201'
+    );
+  });
+
   it('links the empty state to a new ticket for this contact', () => {
     render(<ContactTicketsTab tickets={[]} timezone="UTC" contactId="c 1" />);
     fireEvent.mouseEnter(screen.getByRole('region'));
