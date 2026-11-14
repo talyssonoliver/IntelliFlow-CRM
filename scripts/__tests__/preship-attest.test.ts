@@ -714,7 +714,10 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
 // a new head SHA. These cases pin that a CLEAN rebase reuses the attestation of
 // the same diff, and that anything else (a changed diff, whitespace included, a
 // different gate version, a forged record) still demands a fresh gate run.
-describe('branch-diff carry-forward', { timeout: 60_000 }, () => {
+// Each case runs 10-25 real git spawns on its own copy of the seed repo (rebase, push,
+// fetch, tag): nothing left to share, they mutate. Idle 0.1-5.8 s per case; 69-144 s
+// when a gate saturates the box. Budget 300 s per case.
+describe('branch-diff carry-forward', { timeout: 300_000 }, () => {
   const tmpDirs: string[] = [];
   afterAll(() => {
     for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true });

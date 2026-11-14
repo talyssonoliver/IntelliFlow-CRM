@@ -2,7 +2,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   moveTaskContextPackFiles,
   readOldContextAck,
@@ -79,6 +79,16 @@ describe('readOldContextAck', () => {
 });
 
 describe('CLI entry', () => {
+  // The dry run below spawns node --import tsx on the script; the first spawn pays the
+  // cold tsx transform (34.8 s in a loaded gate). Do it once here with its own budget.
+  beforeAll(() => {
+    spawnSync(
+      process.execPath,
+      ['--import', 'tsx', join(__dirname, '..', 'migrate-attestations.ts'), '--dry-run'],
+      { encoding: 'utf8', cwd: join(__dirname, '..', '..', '..'), timeout: 170_000 }
+    );
+  }, 180_000);
+
   it('runs main() only when executed directly, and a dry run changes nothing', () => {
     const script = join(__dirname, '..', 'migrate-attestations.ts');
     const res = spawnSync(process.execPath, ['--import', 'tsx', script, '--dry-run'], {
