@@ -1,0 +1,8 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Generated files (artifacts/benchmarks/baseline.json) merge with the
+# `ifc-regenerated` driver, which keeps this side; regenerate them from the
+# merged code and fold the change into the merge commit.
+# See scripts/lib/merge-regenerate.mjs.
+node scripts/post-merge-regenerate.mjs
