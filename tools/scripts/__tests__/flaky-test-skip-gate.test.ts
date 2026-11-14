@@ -380,10 +380,12 @@ describe('runFlakyTestSkipGate', () => {
     expect(result.filesScanned).toBeGreaterThan(0);
     expect(result.violations).toEqual([]);
     expect(result.ok).toBe(true);
-    // The 15 known reconciled skips (14 inline-annotated + 1 allowlisted for the
+    // The 5 known reconciled skips (4 inline-annotated + 1 allowlisted for the
     // R17-owned ERP suite) should still be found — a regression here means either
     // a new unannotated skip was introduced or an existing annotation was removed.
-    expect(result.sites.length).toBeGreaterThanOrEqual(15);
+    // (Was 15 until 2026-11-13: the 10 ADR-054 known-bug tests in tests/property now
+    // run as .fails instead of .skip, so they are no longer skip sites.)
+    expect(result.sites.length).toBeGreaterThanOrEqual(5);
   }, 30000);
 });
 

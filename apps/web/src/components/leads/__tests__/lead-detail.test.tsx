@@ -68,7 +68,7 @@ function makeLead(overrides: Partial<LeadProfileData> = {}): LeadProfileData {
 }
 
 const metrics: LeadMetrics = {
-  estimatedValue: 5_000_000, // cents -> $50,000 -> "$50k"
+  estimatedValue: 5_000_000, // pence -> £50,000 -> "£50k"
   emailsSent: 10,
   emailsOpened: 5,
   meetings: 2,
@@ -87,6 +87,41 @@ describe('LeadDetail', () => {
     expect(screen.getByText('enterprise')).toBeInTheDocument();
   });
 
+  it('shows a tracking-URL website as its clean host, linked without tracking (#1277)', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({ website: 'http://www.energym.co.uk/?utm_source=google&utm_medium=wix' })}
+        leadMetrics={metrics}
+      />
+    );
+    const link = screen.getByRole('link', { name: 'energym.co.uk (opens in new tab)' });
+    expect(link).toHaveTextContent('energym.co.uk');
+    expect(link).toHaveAttribute('href', 'http://www.energym.co.uk/');
+  });
+
+  it('shows a dash, not "£0", for a lead with no estimated value (#1277)', () => {
+    render(<LeadDetail lead={makeLead()} leadMetrics={{ ...metrics, estimatedValue: 0 }} />);
+    expect(screen.queryByText('£0')).not.toBeInTheDocument();
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
+  it('shows no website row when the lead has none (#1277)', () => {
+    render(<LeadDetail lead={makeLead({ website: '' })} leadMetrics={metrics} />);
+    expect(screen.queryByText('Website')).not.toBeInTheDocument();
+  });
+
+  it('hides the COA sync system tags and keeps the user tags (UI-017)', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({ tags: ['enterprise', 'coa-pipeline', 'coa-lead:abc123'] })}
+        leadMetrics={metrics}
+      />
+    );
+    expect(screen.getByText('enterprise')).toBeInTheDocument();
+    expect(screen.queryByText('coa-pipeline')).not.toBeInTheDocument();
+    expect(screen.queryByText('coa-lead:abc123')).not.toBeInTheDocument();
+  });
+
   it('renders status + temperature badges and the owner card', () => {
     render(<LeadDetail lead={makeLead()} leadMetrics={metrics} />);
     expect(screen.getByText('New Lead')).toBeInTheDocument();
@@ -97,10 +132,25 @@ describe('LeadDetail', () => {
 
   it('renders key metrics (est. value, score, open rate, touchpoints)', () => {
     render(<LeadDetail lead={makeLead({ scoringStatus: 'SCORED' })} leadMetrics={metrics} />);
-    expect(screen.getByText('$50k')).toBeInTheDocument();
+    expect(screen.getByText('£50k')).toBeInTheDocument();
     expect(screen.getByText('75')).toBeInTheDocument();
     expect(screen.getByText('50%')).toBeInTheDocument();
     expect(screen.getByText('7')).toBeInTheDocument();
+  });
+
+  it('shows a dash for the open rate when no tracked email was sent (#1288)', () => {
+    render(
+      <LeadDetail lead={makeLead()} leadMetrics={{ ...metrics, emailsSent: 0, emailsOpened: 0 }} />
+    );
+    expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('—');
+    expect(screen.queryByText('0%')).not.toBeInTheDocument();
+  });
+
+  it('shows 0% only when tracked emails were sent and none was opened (#1288)', () => {
+    render(
+      <LeadDetail lead={makeLead()} leadMetrics={{ ...metrics, emailsSent: 3, emailsOpened: 0 }} />
+    );
+    expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('0%');
   });
 
   it('shows "Not scored" in the profile card when no real score exists (#1218)', () => {

@@ -1,21 +1,17 @@
 /**
- * Gmail Email Adapter Integration Tests
+ * Gmail Email Adapter unit tests (global fetch is stubbed; no real service is contacted)
  *
  * @see IFC-099: ERP/Payment/Email Connectors
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import {
-  GmailAdapter,
-  GmailConfig,
-  GmailOAuthTokens,
-} from '../../../packages/adapters/src/email/gmail/client';
+import { GmailAdapter, GmailConfig, GmailOAuthTokens } from '../client';
 
 // Mock global fetch
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
 
-describe('GmailAdapter', () => {
+describe('GmailAdapter (global fetch stubbed, no network)', () => {
   let adapter: GmailAdapter;
   let config: GmailConfig;
   let mockTokens: GmailOAuthTokens;

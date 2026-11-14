@@ -188,7 +188,13 @@ packages the branch changed plus their dependents (CI's
 `scripts/ci/affected.mjs` classification over the local diff, turbo's local
 cache on); `build` is skipped when only docs or test files changed. Root config,
 `.github/` or shared tsconfig changes widen to every package;
-`PRESHIP_FULL_BUILD=1` forces it. All other gates stay full.
+`PRESHIP_FULL_BUILD=1` forces it. The web app's `next build` runs only when a
+web build input changed: apps/web itself, a workspace package it uses, the
+lockfile or a root file not known to be outside it (tooling, CI, hooks, docs and
+test configs are outside). Otherwise the step prints "web build not affected; CI
+build check is the guard": a non-web change no longer proves the web build
+locally, and CI's build check still does before merge (owner decision on the
+2026-11-13 pre-ship audit). All other gates stay full.
 
 **DB scope:** the integration suite runs locally only when the branch can reach
 it: a change under `packages/db`, `apps/api`, `apps/ai-worker` or
