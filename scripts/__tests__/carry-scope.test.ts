@@ -8,6 +8,7 @@ import {
   ROOT,
   affectedPackages,
   carryBlockers,
+  filesToRead,
   packageOf,
   workspaceGraph,
 } from '../lib/carry-scope.mjs';
@@ -228,5 +229,130 @@ describe('carryBlockers: repo-root files by their real dependencies', () => {
     expect(block(['scripts/lib/scope.mjs'], ['pnpm-lock.yaml', 'apps/web/src/x.tsx'])).toEqual([
       { file: 'pnpm-lock.yaml', why: 'global-impact file' },
     ]);
+  });
+});
+
+describe('carryBlockers: the web app by its import graph', () => {
+  const tree: Record<string, string> = {
+    'apps/web/tsconfig.json': JSON.stringify({
+      compilerOptions: {
+        paths: { '@/*': ['./src/*'], '@intelliflow/ui': ['../../packages/ui/src'] },
+      },
+    }),
+    'apps/web/src/app/leads/page.tsx': "import { LeadTable } from '@/components/lead-table';\n",
+    'apps/web/src/app/leads/layout.tsx': 'export default function Layout() {}\n',
+    'apps/web/src/components/lead-table.tsx':
+      "import { fmt } from '../lib/fmt';\nimport { Button } from '@intelliflow/ui';\nimport './lead-table.css';\n",
+    'apps/web/src/lib/fmt.ts': 'export const fmt = 1;\n',
+    'apps/web/src/app/deals/page.tsx': "import { DealBoard } from '@/components/deal-board';\n",
+    'apps/web/src/components/deal-board.tsx': 'export const DealBoard = 1;\n',
+    'apps/web/src/components/a.tsx': 'export const A = 1;\n',
+    'apps/web/src/components/b.tsx': 'export const B = 1;\n',
+    'apps/web/src/components/__tests__/ab.test.tsx':
+      "import { A } from '../a';\nimport { B } from '@/components/b';\n",
+    'apps/web/src/app/settings/page.tsx': 'const load = (name) => import(name);\n',
+    'apps/web/next.config.js': 'module.exports = {};\n',
+    'apps/web/src/types/global.d.ts': 'declare const x: number;\n',
+  };
+  const files = [
+    ...Object.keys(tree),
+    'apps/web/src/components/lead-table.css',
+    'apps/web/public/logo.svg',
+  ];
+  const root = { files, read: (f: string) => tree[f] ?? null };
+  const block = (prFiles: string[], mainFiles: string[], r = root) =>
+    carryBlockers({ prFiles, mainFiles, graph, root: r });
+
+  it('carries past a web file nothing links to the PR, CSS imports included', () => {
+    expect(
+      block(
+        ['apps/web/src/app/deals/page.tsx'],
+        [
+          'apps/web/src/components/lead-table.tsx',
+          'apps/web/src/components/lead-table.css',
+          'apps/web/src/lib/fmt.ts',
+        ]
+      )
+    ).toEqual([]);
+  });
+
+  it('blocks a page that reaches the PR file, through an alias and a relative import', () => {
+    expect(block(['apps/web/src/lib/fmt.ts'], ['apps/web/src/app/leads/page.tsx'])).toEqual([
+      {
+        file: 'apps/web/src/app/leads/page.tsx',
+        why: 'apps/web/src/app/leads/page.tsx imports the other (with apps/web/src/lib/fmt.ts, which the PR changes)',
+      },
+    ]);
+    expect(
+      block(['apps/web/src/components/deal-board.tsx'], ['apps/web/src/app/deals/page.tsx'])
+    ).toHaveLength(1);
+  });
+
+  it('blocks two components one test imports', () => {
+    expect(block(['apps/web/src/components/b.tsx'], ['apps/web/src/components/a.tsx'])[0].why).toBe(
+      'apps/web/src/components/__tests__/ab.test.tsx imports both (with apps/web/src/components/b.tsx, which the PR changes)'
+    );
+  });
+
+  it('blocks a route wrapper over the PR page, either way round', () => {
+    expect(
+      block(['apps/web/src/app/leads/page.tsx'], ['apps/web/src/app/leads/layout.tsx'])[0].why
+    ).toBe("apps/web/src/app/leads/layout.tsx wraps apps/web/src/app/leads/page.tsx's route");
+    expect(
+      block(['apps/web/src/app/leads/layout.tsx'], ['apps/web/src/app/leads/page.tsx'])
+    ).toHaveLength(1);
+    expect(
+      block(['apps/web/src/app/deals/page.tsx'], ['apps/web/src/app/leads/layout.tsx'])
+    ).toEqual([]);
+  });
+
+  it('blocks app-wide files and files it cannot trace', () => {
+    const pr = ['apps/web/src/app/deals/page.tsx'];
+    expect(block(pr, ['apps/web/next.config.js'])[0].why).toMatch(
+      /next\.config\.js reaches every page/
+    );
+    expect(block(pr, ['apps/web/src/types/global.d.ts'])[0].why).toMatch(/reaches every page/);
+    expect(block(pr, ['apps/web/public/logo.svg'])[0].why).toMatch(
+      /cannot trace what loads apps\/web\/public\/logo\.svg/
+    );
+    expect(block(['apps/web/next.config.js'], ['apps/web/src/lib/fmt.ts'])).toHaveLength(1);
+  });
+
+  it('blocks a page with a computed load', () => {
+    expect(
+      block(['apps/web/src/app/deals/page.tsx'], ['apps/web/src/app/settings/page.tsx'])[0].why
+    ).toMatch(/settings\/page\.tsx has an import that cannot be followed/);
+  });
+
+  it('keeps the package rule when the PR also changes a package the app depends on', () => {
+    expect(
+      block(
+        ['apps/web/src/app/deals/page.tsx', 'packages/ui/src/button.tsx'],
+        ['apps/web/src/lib/fmt.ts']
+      )
+    ).toEqual([{ file: 'apps/web/src/lib/fmt.ts', why: "in web, within the PR's affected scope" }]);
+  });
+
+  it('keeps the package rule when the app tsconfig cannot be read', () => {
+    const blind = {
+      files,
+      read: (f: string) => (f.endsWith('tsconfig.json') ? '{oops' : (tree[f] ?? null)),
+    };
+    expect(block(['apps/web/src/app/deals/page.tsx'], ['apps/web/src/lib/fmt.ts'], blind)).toEqual([
+      { file: 'apps/web/src/lib/fmt.ts', why: "in web, within the PR's affected scope" },
+    ]);
+  });
+
+  it('reads root code, web code and the web tsconfig, nothing else', () => {
+    expect(
+      filesToRead([
+        'scripts/a.mjs',
+        'apps/web/src/a.tsx',
+        'apps/web/tsconfig.json',
+        'apps/web/src/a.css',
+        'apps/api/src/b.ts',
+        'docs/x.md',
+      ])
+    ).toEqual(['scripts/a.mjs', 'apps/web/src/a.tsx', 'apps/web/tsconfig.json']);
   });
 });

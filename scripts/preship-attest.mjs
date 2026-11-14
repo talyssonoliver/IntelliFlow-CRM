@@ -50,7 +50,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { carryBlockers, workspaceGraph } from './lib/carry-scope.mjs';
+import { carryBlockers, filesToRead, workspaceGraph } from './lib/carry-scope.mjs';
 
 export const PAYLOAD_VERSION = 1;
 export const ATTEST_REF_PREFIX = 'refs/preship/';
@@ -714,11 +714,7 @@ export function mainChangesInScope(sha, oldBase, newBase, gitFn = git) {
   // only when carryBlockers asks for a file.
   let texts = null;
   const read = (file) => {
-    texts ??= readTreeTexts(
-      gitFn,
-      sha,
-      manifests.filter((p) => /^(scripts|tools)\/.+\.(mjs|cjs|js|ts|mts|cts)$/.test(p))
-    );
+    texts ??= readTreeTexts(gitFn, sha, filesToRead(manifests));
     return texts.get(file) ?? null;
   };
   return carryBlockers({ prFiles, mainFiles, graph, root: { files: manifests, read } });
