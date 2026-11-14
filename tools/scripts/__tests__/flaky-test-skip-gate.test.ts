@@ -14,7 +14,12 @@
  * @module tools/scripts/__tests__/flaky-test-skip-gate.test
  */
 
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeAll, afterAll } from 'vitest';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { gitEnv } from '../../../scripts/lib/preship-git.mjs';
 import { findRepoRoot } from '../lib/validation-utils.js';
 import {
   findSkipSitesInSource,
@@ -28,6 +33,9 @@ import {
   type SkipSite,
   type AllowlistEntry,
 } from '../flaky-test-skip-gate.js';
+
+/** The allowlist path the gate reads, relative to the repo root. */
+const ALLOWLIST_REL = 'tools/scripts/flaky-test-gate.allowlist.json';
 
 // ============================================================================
 // findSkipSitesInSource — detection
@@ -524,4 +532,82 @@ describe('main', () => {
     },
     300_000
   );
+});
+
+// ============================================================================
+// Real filesystem defaults, on a fixture repository
+// ============================================================================
+// The whole-repo tests above run only under REAL_REPO_CHECKS=1. These reach the same
+// code paths (git ls-files listing, real file reads, the allowlist on disk, main's
+// default options) on a small temp git repository, so the default run covers them.
+
+describe('real filesystem defaults (fixture repo)', () => {
+  let root = '';
+
+  const write = (rel: string, text: string) => {
+    const abs = path.join(root, rel);
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, text);
+  };
+  const git = (...args: string[]) =>
+    execFileSync('git', args, { cwd: root, env: gitEnv(process.env), stdio: 'pipe' });
+
+  beforeAll(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'flaky-gate-fixture-'));
+    git('init', '-q');
+    write('src/annotated.test.ts', "// ADR-054: QUAL-100 — reason\nit.skip('x', () => {});\n");
+    write('src/plain.test.ts', "it('x', () => {});\n");
+    write('src/notes.md', 'it.skip is not scanned outside test files\n');
+    git('add', '-A');
+  });
+
+  afterAll(() => {
+    if (root) fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  afterEach(() => {
+    fs.rmSync(path.join(root, ALLOWLIST_REL), { force: true });
+  });
+
+  it('lists tracked test files with git and reads them from disk', () => {
+    write('src/untracked.test.ts', "it.skip('untracked', () => {});\n");
+    const result = runFlakyTestSkipGate(root);
+    expect(result.filesScanned).toBe(2);
+    expect(result.sites).toHaveLength(1);
+    expect(result.annotated.map((s) => s.file)).toEqual(['src/annotated.test.ts']);
+    expect(result.ok).toBe(true);
+    fs.rmSync(path.join(root, 'src/untracked.test.ts'));
+  });
+
+  it('main() with default options passes on the fixture repo and logs the report', () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    expect(main(root)).toBe(0);
+    expect(logSpy).toHaveBeenCalled();
+  });
+
+  it('loads an allowlist written with a leading BOM', () => {
+    write(
+      ALLOWLIST_REL,
+      '﻿' +
+        JSON.stringify({
+          entries: [
+            { file: 'src/plain.test.ts', match: "it.skip('x'", reason: 'QUAL-100 tracked' },
+            { file: 'src/plain.test.ts' },
+          ],
+        })
+    );
+    expect(loadAllowlist(root)).toEqual([
+      { file: 'src/plain.test.ts', match: "it.skip('x'", reason: 'QUAL-100 tracked' },
+    ]);
+  });
+
+  it('returns an empty allowlist when the file is not valid JSON', () => {
+    write(ALLOWLIST_REL, '{ not json');
+    expect(loadAllowlist(root)).toEqual([]);
+  });
+
+  it('returns an empty allowlist when the file has no entries array', () => {
+    write(ALLOWLIST_REL, JSON.stringify({ entries: 'none' }));
+    expect(loadAllowlist(root)).toEqual([]);
+  });
 });
