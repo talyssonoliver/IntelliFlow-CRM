@@ -784,9 +784,14 @@ describe('branch-diff carry-forward', { timeout: 60_000 }, () => {
    * Move main on by changing `file` and rebase feature onto it. The default,
    * a file in the unrelated package `b`, is a clean update outside the PR's scope.
    */
-  function advanceMainAndRebase(g: Git, work: string, file = 'packages/b/other.txt'): string {
+  function advanceMainAndRebase(
+    g: Git,
+    work: string,
+    file = 'packages/b/other.txt',
+    content = `main moved ${Date.now()}\n`
+  ): string {
     g(['checkout', '-q', 'main']);
-    put(work, file, `main moved ${Date.now()}\n`);
+    put(work, file, content);
     g(['add', file]);
     g(['commit', '-q', '-m', 'main moves']);
     g(['checkout', '-q', 'feature']);
@@ -1128,17 +1133,29 @@ describe('branch-diff carry-forward', { timeout: 60_000 }, () => {
     expect(result.reasons.join('\n')).toContain('packages/b/lib.ts (in b, within the PR');
   });
 
-  it('a PR that touches the repo root is blocked by main touching the root too', () => {
+  it('a PR root script carries past an unrelated root script on main', () => {
     const { work, bare, g } = makeBranchRepo();
     put(work, 'scripts/mine.mjs', 'export {};\n');
     g(['add', 'scripts/mine.mjs']);
     g(['commit', '-q', '-m', 'root change']);
     const sha = g(['rev-parse', 'HEAD']).stdout.trim();
     expect(publish(work, bare, sha).status).toBe(0);
-    const rebased = advanceMainAndRebase(g, work, 'scripts/tool.mjs');
+    const rebased = advanceMainAndRebase(g, work, 'scripts/tool.mjs', 'export const tool = 1;\n');
+    const result = carriedAttestation(flagsFor(bare), rebased, PRESHIP_HASH, g);
+    expect(result.ok).toBe(true);
+  });
+
+  it('a PR root script is blocked by main changing a root script it imports', () => {
+    const { work, bare, g } = makeBranchRepo();
+    put(work, 'scripts/mine.mjs', "import { tool } from './tool.mjs';\nexport { tool };\n");
+    g(['add', 'scripts/mine.mjs']);
+    g(['commit', '-q', '-m', 'root change']);
+    const sha = g(['rev-parse', 'HEAD']).stdout.trim();
+    expect(publish(work, bare, sha).status).toBe(0);
+    const rebased = advanceMainAndRebase(g, work, 'scripts/tool.mjs', 'export const tool = 2;\n');
     const result = carriedAttestation(flagsFor(bare), rebased, PRESHIP_HASH, g) as Refused;
     expect(result.ok).toBe(false);
-    expect(result.reasons.join('\n')).toMatch(/repo-root file, and the PR touches the root too/);
+    expect(result.reasons.join('\n')).toMatch(/scripts\/mine\.mjs imports the other/);
   });
 
   it('mainChangesInScope blocks without an attested base and is empty when main did not move', () => {

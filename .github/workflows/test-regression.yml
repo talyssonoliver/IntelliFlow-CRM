@@ -94,9 +94,10 @@ env:
   # Explicit POSITIVE include-list of the unit projects to shard. We do NOT use
   # `--project='!integration' --project='!property'`: multiple --project NEGATIONS
   # silently fail in Vitest 4.1.7 (verified 2026-06-03 — both projects still ran),
-  # whereas positive filters are reliable. integration needs live DB services and
-  # property is stochastic/scheduled (ADR-054), so both are excluded here and run
-  # in their own jobs. The `project-guard` job below FAILS if a newly-added
+  # whereas positive filters are reliable. integration needs live DB services, so it
+  # is excluded here and runs in its own job. property (ADR-054) is sharded like the
+  # rest: no other job ever ran it, so its known-bug .fails tests never ran on a PR.
+  # The `project-guard` job below FAILS if a newly-added
   # project is missing from this list (so a new project can't silently skip CI).
   UNIT_PROJECTS: >-
     --project=web --project=ai-worker --project=domain --project=adapters
@@ -105,7 +106,7 @@ env:
     --project=events-worker --project=combined-worker
     --project=ingestion-worker --project=architecture --project=a11y
     --project=db --project=api --project=root --project=webhooks
-    --project=tools-mjs
+    --project=tools-mjs --project=property
 
 jobs:
   # ===========================================================================

@@ -69,6 +69,22 @@ function utcDayOf(d: Date): number {
   return Math.floor(d.getTime() / 86_400_000);
 }
 
+/**
+ * RACE-PURE-13 only shows where local time has a daylight-saving change: in UTC (CI)
+ * the local-time arithmetic happens to be right. Run its properties in a DST zone so
+ * the expected failure is real on every machine, then restore the caller's zone.
+ */
+function inDstZone(run: () => void): void {
+  const saved = process.env.TZ;
+  process.env.TZ = 'Europe/London';
+  try {
+    run();
+  } finally {
+    if (saved === undefined) delete process.env.TZ;
+    else process.env.TZ = saved;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Properties
 // ---------------------------------------------------------------------------
@@ -227,19 +243,26 @@ describe('PaymentTerms — value-object invariants (property, RACE-PURE-13)', ()
   // Fix: replace with UTC arithmetic (Date.UTC(y, m, d + daysUntilDue)).
   // ADR-054: QUAL-009 (RACE-PURE-13) — confirmed UTC-day-boundary bug in
   // PaymentTerms.calculateDueDate; tracked in
-  // artifacts/reports/sprint-19/baseline/quality-findings.json. Skip retained pending a
+  // artifacts/reports/sprint-19/baseline/quality-findings.json. Kept as an expected failure pending a
   // dedicated fix task (out of scope for ENG-OPS-002.R13).
-  it.skip('RACE-PURE-13: calculateDueDate returns exactly daysUntilDue UTC calendar days after issueDate', () => {
-    fc.assert(
-      fc.property(validDays, issueDate, (days, issue) => {
-        const pt = PaymentTerms.create(days, 'Test').value;
-        const due = pt.calculateDueDate(issue);
-        const utcDayDistance = utcDayOf(due) - utcDayOf(issue);
-        expect(utcDayDistance).toBe(days);
-      }),
-      propertyParams()
-    );
-  });
+  // Runs as .fails: it goes red the day the bug is fixed; then make it a plain test.
+  it.fails(
+    'RACE-PURE-13: calculateDueDate returns exactly daysUntilDue UTC calendar days after issueDate',
+    () => {
+      inDstZone(() =>
+        fc.assert(
+          fc.property(validDays, issueDate, (days, issue) => {
+            const pt = PaymentTerms.create(days, 'Test').value;
+            const due = pt.calculateDueDate(issue);
+            const utcDayDistance = utcDayOf(due) - utcDayOf(issue);
+            expect(utcDayDistance).toBe(days);
+          }),
+          // The recorded counterexample above: +227 days crosses the March clock change.
+          propertyParams({ examples: [[227, new Date('2015-01-01T00:00:00.018Z')]] })
+        )
+      );
+    }
+  );
 
   // -------------------------------------------------------------------------
   // 8. daysUntilDue = 0 ⇒ due date is the same UTC calendar day as issue date
@@ -297,27 +320,34 @@ describe('PaymentTerms — value-object invariants (property, RACE-PURE-13)', ()
   // Fix: replace setDate() with UTC arithmetic in calculateDueDate().
   // ADR-054: QUAL-009 (RACE-PURE-13) — same confirmed UTC-day-boundary bug
   // (month-boundary variant); tracked in
-  // artifacts/reports/sprint-19/baseline/quality-findings.json. Skip retained pending a
+  // artifacts/reports/sprint-19/baseline/quality-findings.json. Kept as an expected failure pending a
   // dedicated fix task (out of scope for ENG-OPS-002.R13).
-  it.skip('RACE-PURE-13 (month-boundary variant): UTC-day distance equals extraDays across month/year boundaries', () => {
-    fc.assert(
-      fc.property(
-        fc.constantFrom(28, 29, 30, 31),
-        fc.constantFrom(0, 1, 2, 3, 11),
-        fc.integer({ min: 2015, max: 2034 }),
-        fc.integer({ min: 1, max: 60 }),
-        (day, month, year, extraDays) => {
-          const candidate = new Date(Date.UTC(year, month, day));
-          fc.pre(candidate.getUTCDate() === day);
-          const pt = PaymentTerms.create(extraDays, 'Boundary').value;
-          const due = pt.calculateDueDate(candidate);
-          const utcDayDistance = utcDayOf(due) - utcDayOf(candidate);
-          expect(utcDayDistance).toBe(extraDays);
-        }
-      ),
-      propertyParams()
-    );
-  });
+  // Runs as .fails: it goes red the day the bug is fixed; then make it a plain test.
+  it.fails(
+    'RACE-PURE-13 (month-boundary variant): UTC-day distance equals extraDays across month/year boundaries',
+    () => {
+      inDstZone(() =>
+        fc.assert(
+          fc.property(
+            fc.constantFrom(28, 29, 30, 31),
+            fc.constantFrom(0, 1, 2, 3, 11),
+            fc.integer({ min: 2015, max: 2034 }),
+            fc.integer({ min: 1, max: 60 }),
+            (day, month, year, extraDays) => {
+              const candidate = new Date(Date.UTC(year, month, day));
+              fc.pre(candidate.getUTCDate() === day);
+              const pt = PaymentTerms.create(extraDays, 'Boundary').value;
+              const due = pt.calculateDueDate(candidate);
+              const utcDayDistance = utcDayOf(due) - utcDayOf(candidate);
+              expect(utcDayDistance).toBe(extraDays);
+            }
+          ),
+          // 28 March 2015 + 2 days crosses the UK clock change on 29 March.
+          propertyParams({ examples: [[28, 2, 2015, 2]] })
+        )
+      );
+    }
+  );
 
   // -------------------------------------------------------------------------
   // 10. Leap-year: Feb-28 and Feb-29 in leap years are handled correctly
@@ -440,15 +470,22 @@ describe('PaymentTerms — value-object invariants (property, RACE-PURE-13)', ()
   // crosses a DST spring-forward boundary (e.g. UK GMT→BST in late March).
   // ADR-054: QUAL-009 (RACE-PURE-13) — same confirmed UTC-day-boundary bug (net30
   // variant); tracked in artifacts/reports/sprint-19/baseline/quality-findings.json.
-  // Skip retained pending a dedicated fix task (out of scope for ENG-OPS-002.R13).
-  it.skip('RACE-PURE-13 (net30 variant): net30().calculateDueDate produces a due date exactly 30 UTC days after issueDate', () => {
-    fc.assert(
-      fc.property(issueDate, (issue) => {
-        const due = PaymentTerms.net30().calculateDueDate(issue);
-        const utcDayDistance = utcDayOf(due) - utcDayOf(issue);
-        expect(utcDayDistance).toBe(30);
-      }),
-      propertyParams()
-    );
-  });
+  // Kept as an expected failure pending a dedicated fix task (out of scope for ENG-OPS-002.R13).
+  // Runs as .fails: it goes red the day the bug is fixed; then make it a plain test.
+  it.fails(
+    'RACE-PURE-13 (net30 variant): net30().calculateDueDate produces a due date exactly 30 UTC days after issueDate',
+    () => {
+      inDstZone(() =>
+        fc.assert(
+          fc.property(issueDate, (issue) => {
+            const due = PaymentTerms.net30().calculateDueDate(issue);
+            const utcDayDistance = utcDayOf(due) - utcDayOf(issue);
+            expect(utcDayDistance).toBe(30);
+          }),
+          // 10 March 2015 + 30 days crosses the UK clock change on 29 March.
+          propertyParams({ examples: [[new Date('2015-03-10T00:00:00.018Z')]] })
+        )
+      );
+    }
+  );
 });

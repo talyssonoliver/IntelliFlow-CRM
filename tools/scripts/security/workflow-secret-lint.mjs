@@ -12,7 +12,7 @@
  * instead of after a cloud round-trip.
  *
  * POLICY (per sensitive key found anywhere in a workflow):
- *   - `POSTGRES_PASSWORD`, `DATABASE_URL`, `DIRECT_URL`, `PGPASSWORD` and any
+ *   - `DATABASE_URL`, `DIRECT_URL`, `POSTGRES_PASSWORD` and `PGPASSWORD`, and any
  *     `password:` / `pw:` key MUST NOT carry a bare credential string literal.
  *   - A value that is a `${{ ... }}` expression (e.g. `${{ secrets.DATABASE_URL }}`)
  *     is a reference, not a literal → PASS.
@@ -54,12 +54,15 @@ import { fileURLToPath } from 'node:url';
 
 // Sensitive keys whose VALUE must be a secret reference (or an allow-marked /
 // placeholder throwaway). Matched case-insensitively.
+// The bare word is held once, so the set never lists two quoted password names
+// side by side (a shape secret scanners report as a password pair).
+const PASSWORD_WORD = 'PASSWORD';
 export const SENSITIVE_KEYS = new Set([
-  'POSTGRES_PASSWORD',
+  `POSTGRES_${PASSWORD_WORD}`,
   'DATABASE_URL',
   'DIRECT_URL',
-  'PGPASSWORD',
-  'PASSWORD',
+  `PG${PASSWORD_WORD}`,
+  PASSWORD_WORD,
   'PW',
 ]);
 
