@@ -29,10 +29,17 @@ export function bareLeak(before, after) {
   );
 }
 
-export default function setup() {
-  const before = readCoreBare();
+/** Reads core.bare now; the returned teardown throws if it was turned on in between. */
+export function guard(read = readCoreBare) {
+  const before = read();
   return () => {
-    const message = bareLeak(before, readCoreBare());
+    const message = bareLeak(before, read());
     if (message) throw new Error(message);
   };
+}
+
+// vitest calls a globalSetup's default export with its own context argument, so the reader is
+// fixed here rather than taken as a parameter.
+export default function setup() {
+  return guard(readCoreBare);
 }
