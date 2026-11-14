@@ -1,12 +1,12 @@
 {
   "sprint": "sprint-25",
   "name": "Sprint 25",
-  "generated_at": "2026-04-11T16:48:01.958Z",
+  "generated_at": "2026-11-13T13:04:02.148Z",
   "summary_source": "specify",
   "task_summary": {
     "total": 14,
     "completed": 0,
-    "backlog": 14,
+    "backlog": 13,
     "blocked": 0,
     "attested_completed": 0
   },
@@ -58,6 +58,42 @@
   "notable_completed": [],
   "open_tasks": [
     {
+      "taskId": "IFC-043",
+      "sprint": 25,
+      "status": "In Progress",
+      "section": "Documentation",
+      "title": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
+      "description": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
+      "summary": "Incident response, deployment, rollback procedures",
+      "definitionOfDone": "Incident response, deployment, rollback procedures; artifacts: incident-response-flowchart.svg, deployment-checklist.md, rollback-test.log; targets: <30min; verified by: pnpm test",
+      "definitionOfDoneSnapshot": "Incident response, deployment, rollback procedures",
+      "dependencies": [
+        "ENV-008-AI",
+        "IFC-112",
+        "IFC-113",
+        "IFC-115",
+        "IFC-130"
+      ],
+      "attestation": {
+        "exists": false,
+        "path": null,
+        "verdict": null,
+        "timestamp": null,
+        "sprintFolder": null
+      },
+      "validationSummary": {
+        "total": 0,
+        "passed": 0,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 0,
+        "met": 0,
+        "missed": 0
+      }
+    },
+    {
       "taskId": "IFC-040",
       "sprint": 25,
       "status": "Backlog",
@@ -82,42 +118,6 @@
         "IFC-133",
         "IFC-134",
         "IFC-169"
-      ],
-      "attestation": {
-        "exists": false,
-        "path": null,
-        "verdict": null,
-        "timestamp": null,
-        "sprintFolder": null
-      },
-      "validationSummary": {
-        "total": 0,
-        "passed": 0,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 0,
-        "met": 0,
-        "missed": 0
-      }
-    },
-    {
-      "taskId": "IFC-043",
-      "sprint": 25,
-      "status": "Backlog",
-      "section": "Documentation",
-      "title": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
-      "description": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
-      "summary": "Incident response, deployment, rollback procedures",
-      "definitionOfDone": "Incident response, deployment, rollback procedures; artifacts: incident-response-flowchart.svg, deployment-checklist.md, rollback-test.log; targets: <30min; verified by: pnpm test",
-      "definitionOfDoneSnapshot": "Incident response, deployment, rollback procedures",
-      "dependencies": [
-        "ENV-008-AI",
-        "IFC-112",
-        "IFC-113",
-        "IFC-115",
-        "IFC-130"
       ],
       "attestation": {
         "exists": false,
@@ -284,7 +284,7 @@
     {
       "taskId": "IFC-043",
       "sprint": 25,
-      "status": "Backlog",
+      "status": "In Progress",
       "section": "Documentation",
       "title": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
       "description": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",

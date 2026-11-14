@@ -1,21 +1,21 @@
 {
   "sprint": "sprint-0",
   "name": "Foundation & AI Setup",
-  "generated_at": "2026-04-11T16:48:01.958Z",
+  "generated_at": "2026-11-13T13:04:02.148Z",
   "summary_source": "specify",
   "task_summary": {
-    "total": 34,
-    "completed": 34,
+    "total": 32,
+    "completed": 32,
     "backlog": 0,
     "blocked": 0,
-    "attested_completed": 34
+    "attested_completed": 32
   },
-  "context": "Primary focus areas: Foundation Setup (17), AI Foundation (7), Go-to-Market (2).",
+  "context": "Primary focus areas: Foundation Setup (15), AI Foundation (7), Go-to-Market (2).",
   "section_summary": [
     {
       "section": "Foundation Setup",
-      "total": 17,
-      "completed": 17,
+      "total": 15,
+      "completed": 15,
       "open": 0
     },
     {
@@ -75,39 +75,6 @@
   ],
   "notable_completed": [
     {
-      "taskId": "EP-001-AI",
-      "sprint": 0,
-      "status": "Completed",
-      "section": "Foundation Setup",
-      "title": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
-      "description": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
-      "summary": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
-      "definitionOfDone": "Week 1: OTel Collector + Prometheus + Grafana deployed behind access control; Week 2: Loki + Tempo deployed with trace-to-log correlation; Week 3: SonarQube deployed with GitHub Actions integration; All configs git-versioned and shared between local Docker and EasyPanel; targets: >=100%, <30 min, zero errors",
-      "definitionOfDoneSnapshot": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
-      "dependencies": [
-        "ENV-003-AI",
-        "ENV-008-AI"
-      ],
-      "attestation": {
-        "exists": true,
-        "path": ".specify/sprints/sprint-0/attestations/EP-001-AI/attestation.json",
-        "verdict": "COMPLETE",
-        "timestamp": "2025-12-25T18:15:00.000Z",
-        "sprintFolder": 0
-      },
-      "validationSummary": {
-        "total": 4,
-        "passed": 4,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 5,
-        "met": 5,
-        "missed": 0
-      }
-    },
-    {
       "taskId": "EXC-INIT-001",
       "sprint": 0,
       "status": "Completed",
@@ -121,6 +88,38 @@
       "attestation": {
         "exists": true,
         "path": ".specify/sprints/sprint-0/attestations/EXC-INIT-001/attestation.json",
+        "verdict": "COMPLETE",
+        "timestamp": "2025-12-25T18:15:00.000Z",
+        "sprintFolder": 0
+      },
+      "validationSummary": {
+        "total": 5,
+        "passed": 5,
+        "failed": 0,
+        "failingNames": []
+      },
+      "kpiSummary": {
+        "total": 3,
+        "met": 3,
+        "missed": 0
+      }
+    },
+    {
+      "taskId": "ENV-001-AI",
+      "sprint": 0,
+      "status": "Completed",
+      "section": "Foundation Setup",
+      "title": "Automated Monorepo Creation",
+      "description": "Automated Monorepo Creation",
+      "summary": "Monorepo generated via Claude slash command; Structure validated; AI-optimized configuration",
+      "definitionOfDone": "Monorepo generated via Claude slash command, structure validated, AI-optimized configuration; targets: >=100%, <10 min, zero errors; verified by: pnpm build",
+      "definitionOfDoneSnapshot": "Monorepo generated via Claude slash command; Structure validated; AI-optimized configuration",
+      "dependencies": [
+        "AI-SETUP-001"
+      ],
+      "attestation": {
+        "exists": true,
+        "path": ".specify/sprints/sprint-0/attestations/ENV-001-AI/attestation.json",
         "verdict": "COMPLETE",
         "timestamp": "2025-12-25T18:15:00.000Z",
         "sprintFolder": 0
@@ -589,38 +588,6 @@
       }
     },
     {
-      "taskId": "ENV-008-AI",
-      "sprint": 0,
-      "status": "Completed",
-      "section": "Foundation Setup",
-      "title": "Automated Observability with Predictive Monitoring",
-      "description": "Automated Observability with Predictive Monitoring",
-      "summary": "OpenTelemetry AI-configured; Predictive alerts set; Self-healing enabled",
-      "definitionOfDone": "OpenTelemetry AI-configured, predictive alerts set, anomaly detection active, self-healing enabled; targets: >=100%",
-      "definitionOfDoneSnapshot": "OpenTelemetry AI-configured; Predictive alerts set; Self-healing enabled",
-      "dependencies": [
-        "ENV-005-AI"
-      ],
-      "attestation": {
-        "exists": true,
-        "path": ".specify/sprints/sprint-0/attestations/ENV-008-AI/attestation.json",
-        "verdict": "COMPLETE",
-        "timestamp": "2025-12-25T18:15:00.000Z",
-        "sprintFolder": 0
-      },
-      "validationSummary": {
-        "total": 4,
-        "passed": 4,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 1,
-        "met": 1,
-        "missed": 0
-      }
-    },
-    {
       "taskId": "ENV-009-AI",
       "sprint": 0,
       "status": "Completed",
@@ -877,39 +844,6 @@
       "kpiSummary": {
         "total": 3,
         "met": 3,
-        "missed": 0
-      }
-    },
-    {
-      "taskId": "EP-001-AI",
-      "sprint": 0,
-      "status": "Completed",
-      "section": "Foundation Setup",
-      "title": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
-      "description": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
-      "summary": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
-      "definitionOfDone": "Week 1: OTel Collector + Prometheus + Grafana deployed behind access control; Week 2: Loki + Tempo deployed with trace-to-log correlation; Week 3: SonarQube deployed with GitHub Actions integration; All configs git-versioned and shared between local Docker and EasyPanel; targets: >=100%, <30 min, zero errors",
-      "definitionOfDoneSnapshot": "OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned",
-      "dependencies": [
-        "ENV-003-AI",
-        "ENV-008-AI"
-      ],
-      "attestation": {
-        "exists": true,
-        "path": ".specify/sprints/sprint-0/attestations/EP-001-AI/attestation.json",
-        "verdict": "COMPLETE",
-        "timestamp": "2025-12-25T18:15:00.000Z",
-        "sprintFolder": 0
-      },
-      "validationSummary": {
-        "total": 4,
-        "passed": 4,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 5,
-        "met": 5,
         "missed": 0
       }
     },

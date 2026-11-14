@@ -1,7 +1,7 @@
 {
   "sprint": "sprint-7",
   "name": "Sprint 7",
-  "generated_at": "2026-04-11T16:48:01.958Z",
+  "generated_at": "2026-11-13T13:04:02.148Z",
   "summary_source": "specify",
   "task_summary": {
     "total": 21,
@@ -871,11 +871,9 @@
       },
       "validationSummary": {
         "total": 4,
-        "passed": 3,
-        "failed": 1,
-        "failingNames": [
-          "Build"
-        ]
+        "passed": 4,
+        "failed": 0,
+        "failingNames": []
       },
       "kpiSummary": {
         "total": 3,
