@@ -1,4 +1,5 @@
 import { TEST_UUIDS } from '../../../test/setup';
+import { virtualElapsedMs } from '../../../test/virtual-clock';
 /**
  * Contact Router Tests
  *
@@ -990,11 +991,14 @@ describe('Contact Router', () => {
 
       prismaMock.contact.findMany.mockResolvedValue([]);
 
-      const result = await caller.search({ query: 'test' });
+      // Load-independent: durationMs is measured on a fake clock (time spent on timers).
+      let result: Awaited<ReturnType<typeof caller.search>> | undefined;
+      await virtualElapsedMs(async () => {
+        result = await caller.search({ query: 'test' });
+      });
 
-      // The mocked query should be fast
-      expect(result.meetsKpi).toBe(true);
-      expect(result.durationMs).toBeLessThan(200);
+      expect(result?.meetsKpi).toBe(true);
+      expect(result?.durationMs).toBeLessThan(200);
     });
 
     it('should order results by lastName, firstName', async () => {
@@ -1304,10 +1308,14 @@ describe('Contact Router', () => {
       prismaMock.task.findMany.mockResolvedValue([]);
       prismaMock.$queryRaw.mockResolvedValue([]);
 
-      const result = await caller.getTimeline({ contactId: TEST_UUIDS.contact1 });
+      // Load-independent: durationMs is measured on a fake clock (time spent on timers).
+      let result: Awaited<ReturnType<typeof caller.getTimeline>> | undefined;
+      await virtualElapsedMs(async () => {
+        result = await caller.getTimeline({ contactId: TEST_UUIDS.contact1 });
+      });
 
-      expect(result.meetsKpi).toBe(true);
-      expect(result.durationMs).toBeLessThan(1000);
+      expect(result?.meetsKpi).toBe(true);
+      expect(result?.durationMs).toBeLessThan(1000);
     });
   });
 

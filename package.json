@@ -42,6 +42,7 @@
     "test:property:standard": "dotenv -v FC_TIER=standard -- vitest run --project property",
     "test:property:stress": "dotenv -v FC_TIER=stress -- vitest run --project property",
     "test:concurrency": "dotenv -v FC_TIER=standard -v RUN_DB_PROPERTY_TESTS=1 -- vitest run --project property --passWithNoTests concurrency",
+    "test:real-repo": "dotenv -v REAL_REPO_CHECKS=1 -- vitest run tools/scripts/__tests__/precommit-lint-batch.test.ts apps/api/src/__tests__/event-flow.integration.test.ts apps/api/src/lib/__tests__/best-effort-enqueue.test.ts apps/api/src/modules/account/__tests__/account.reassign.test.ts apps/api/src/modules/contact/__tests__/contact-merge.bench.test.ts apps/api/src/modules/contact/__tests__/contact.reassign.test.ts apps/api/src/modules/lead/__tests__/bulk-operations.test.ts apps/api/src/modules/ticket/__tests__/routing.test.ts apps/api/src/tracing/tracing.test.ts apps/web/src/app/api/developer/webhook-test/__tests__/route.test.ts packages/adapters/src/messaging/email/__tests__/dsn-parser.test.ts packages/domain/src/crm/billing/__tests__/Invoice.test.ts packages/domain/src/legal/appointments/__tests__/ConflictDetector.test.ts tests/integration/ai-monitoring-redis-bridge.test.ts tests/integration/api.test.ts tests/security/encryption.test.ts",
     "test:load": "node tools/scripts/k6/run-ifc-033-load-test.mjs",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",

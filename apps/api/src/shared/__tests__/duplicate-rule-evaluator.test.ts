@@ -351,19 +351,27 @@ describe('evaluateDuplicateRules — null / missing fields', () => {
 });
 
 describe('evaluateDuplicateRules — scale / perf smoke', () => {
-  it('evaluates a 1000-candidate array under 50 ms', () => {
-    const existing: TestContact[] = Array.from({ length: 1000 }, (_, i) => ({
-      id: String(i),
-      email: `user${i}@example.com`,
-    }));
-    existing[999] = { id: '999', email: 'target@example.com' };
-    const start = Date.now();
+  // Load-independent: instead of a 50 ms wall-clock limit, count the work. The evaluator must read
+  // each candidate's email a bounded number of times (linear in the candidates, no pairwise
+  // comparison), so 1000 candidates cannot cost more than a small constant per candidate.
+  it('evaluates a 1000-candidate array in linear work (counted reads, no timing)', () => {
+    let emailReads = 0;
+    const existing: TestContact[] = Array.from({ length: 1000 }, (_, i) => {
+      const email = i === 999 ? 'target@example.com' : `user${i}@example.com`;
+      return {
+        id: String(i),
+        get email() {
+          emailReads += 1;
+          return email;
+        },
+      };
+    });
     const result = evaluateDuplicateRules<TestContact>({ email: 'target@example.com' }, existing, [
       EXACT_EMAIL,
     ]);
-    const elapsed = Date.now() - start;
     expect(result).toHaveLength(1);
-    expect(elapsed).toBeLessThan(50);
+    expect(emailReads).toBeGreaterThanOrEqual(1000);
+    expect(emailReads).toBeLessThanOrEqual(1000 * 4);
   });
 });
 

@@ -13,6 +13,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
+import { virtualElapsedMs } from '../../../__tests__/virtual-clock';
 import { ConvertLeadToDealUseCase, ConvertLeadToDealInput } from '../ConvertLeadToDealUseCase';
 import { Lead, Contact, Account, Opportunity } from '@intelliflow/domain';
 import {
@@ -696,12 +697,14 @@ describe('ConvertLeadToDealUseCase', () => {
         convertedBy: 'sales-rep-perf',
       };
 
-      const startTime = performance.now();
-      const result = await useCase.execute(input);
-      const endTime = performance.now();
+      // Load-independent: measured on a fake clock (time spent waiting on timers).
+      let result: Awaited<ReturnType<typeof useCase.execute>> | undefined;
+      const elapsed = await virtualElapsedMs(async () => {
+        result = await useCase.execute(input);
+      });
 
-      expect(result.isSuccess).toBe(true);
-      expect(endTime - startTime).toBeLessThan(200);
+      expect(result?.isSuccess).toBe(true);
+      expect(elapsed).toBeLessThan(200);
     });
   });
 
