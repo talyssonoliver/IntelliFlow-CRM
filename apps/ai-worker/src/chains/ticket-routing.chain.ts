@@ -16,6 +16,9 @@
  */
 
 import { PromptTemplate } from '@langchain/core/prompts';
+import type { RunnableConfig } from '@langchain/core/runnables';
+import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
+import { recordedChainRun } from '../monitoring/chain-run-recorder.js';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { sanitizeStringField } from '../utils/input-sanitizer';
@@ -104,7 +107,7 @@ const CATEGORY_KEYWORDS: Record<TicketCategory, string[]> = {
 
 export class TicketRoutingChain {
   private readonly model: { constructor: { name: string } };
-  private structuredModel: { invoke(input: unknown): Promise<unknown> };
+  private structuredModel: { invoke(input: unknown, config?: RunnableConfig): Promise<unknown> };
   private readonly prompt: PromptTemplate;
   private readonly tenantId?: string;
 
@@ -122,27 +125,7 @@ export class TicketRoutingChain {
     this.structuredModel = (llm as any).withStructuredOutput(llmOutputSchema);
 
     this.prompt = new PromptTemplate({
-      template: `You are a ticket routing specialist for a CRM system.
-Classify the support ticket into one of these categories: {categories}
-
-TICKET:
-Subject: {subject}
-Description: {description}
-Priority: {priority}
-
-AVAILABLE AGENTS:
-{agentList}
-
-INSTRUCTIONS:
-1. Classify the ticket into the most appropriate category.
-2. Select the best agent based on their skills and current load.
-3. Provide a confidence score (0-1) for your classification.
-4. Assess escalation risk (low/medium/high).
-5. Explain your reasoning briefly.
-
-IMPORTANT: The assigneeId MUST be one of the agent IDs listed above.
-
-Respond with a structured JSON object containing inferredCategory, assigneeId, reason, confidence, and escalationRisk.`,
+      template: BUILTIN_CHAIN_TEMPLATES.TICKET_ROUTING,
       inputVariables: ['subject', 'description', 'priority', 'categories', 'agentList'],
     });
   }
@@ -216,7 +199,9 @@ Respond with a structured JSON object containing inferredCategory, assigneeId, r
       });
 
       // Use structured output model — returns typed object directly (no parse step)
-      const parsed = (await this.structuredModel.invoke(formattedPrompt)) as LLMOutput;
+      const parsed = (await recordedChainRun('TICKET_ROUTING', this.tenantId, (callbacks) =>
+        this.structuredModel.invoke(formattedPrompt, { callbacks })
+      )) as LLMOutput;
 
       // Post-parse validation: ensure assigneeId is in the candidate roster
       const validCandidate = input.agentCandidates.find((a) => a.agentId === parsed.assigneeId);

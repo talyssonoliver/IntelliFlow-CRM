@@ -1,7 +1,7 @@
 /**
- * The version loader is NOT mocked here. In production nothing calls configureVersionLoader(),
- * so getChainConfig() always returns the loader's own fallback (DEFAULT_CONFIGS in
- * versioning/version-loader.ts). Those prompts have no input slots, and they replaced each
+ * The version loader is NOT mocked here, and no version service is wired, so getChainConfig()
+ * returns the loader's own fallback (DEFAULT_CONFIGS in versioning/version-loader.ts), as it does
+ * in production for a tenant with no saved version. Those prompts have no input slots, and they replaced each
  * chain's prompt whenever a tenantId was set: the model got instructions without the data.
  * Each test runs a chain with a tenantId and reads the prompt the model was handed.
  * Stubs only: the model and the tenant tier lookup are mocked; no DB, no model call.

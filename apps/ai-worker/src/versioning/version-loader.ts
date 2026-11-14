@@ -31,7 +31,20 @@ export interface LoadedVersion {
   loadedAt: Date;
 }
 
-export interface VersionCache {
+/** What the version service returns for a tenant's active version. */ interface ActiveVersionResult {
+  version: {
+    id: string;
+    chainType: ChainType;
+    status: ChainVersionStatus;
+    prompt: string;
+    model: string;
+    temperature: number;
+    maxTokens: number;
+    additionalParams: Record<string, unknown> | null;
+  };
+  selectedBy: 'direct' | 'rollout' | 'experiment';
+}
+interface VersionCache {
   version: LoadedVersion;
   expiresAt: Date;
 }
@@ -170,24 +183,18 @@ export class VersionLoader {
   private readonly cache: Map<string, VersionCache> = new Map();
   private readonly config: VersionLoaderConfig;
 
-  // ChainVersionService is injected but optional for fallback scenarios
+  // ChainVersionService is injected but optional for fallback scenarios. findActiveVersion (null
+  // when the tenant has no active version) is preferred; getActiveVersion (throws instead) is the
+  // older contract and is still accepted.
   private readonly versionService: {
+    findActiveVersion?: (
+      chainType: ChainType,
+      context: VersionContext
+    ) => Promise<ActiveVersionResult | null>;
     getActiveVersion: (
       chainType: ChainType,
       context: VersionContext
-    ) => Promise<{
-      version: {
-        id: string;
-        chainType: ChainType;
-        status: ChainVersionStatus;
-        prompt: string;
-        model: string;
-        temperature: number;
-        maxTokens: number;
-        additionalParams: Record<string, unknown> | null;
-      };
-      selectedBy: 'direct' | 'rollout' | 'experiment';
-    }>;
+    ) => Promise<ActiveVersionResult>;
   } | null = null;
 
   constructor(
@@ -216,16 +223,28 @@ export class VersionLoader {
       return cached;
     }
 
-    // Try to load from version service
-    if (this.versionService) {
+    // Try to load from version service. Without a tenant there is nothing to look up: versions
+    // belong to one tenant, so never query on an empty tenant id.
+    if (this.versionService && context.tenantId) {
       try {
-        const result = await this.versionService.getActiveVersion(chainType, {
+        const versionContext = {
           userId: context.userId,
           sessionId: context.sessionId,
           leadId: context.leadId,
           tenantId: context.tenantId,
           experimentId: context.experimentId,
-        });
+        };
+        const result = this.versionService.findActiveVersion
+          ? await this.versionService.findActiveVersion(chainType, versionContext)
+          : await this.versionService.getActiveVersion(chainType, versionContext);
+
+        if (!result) {
+          // No active version for this tenant: the built-in config, cached like a found one so
+          // the database is not asked again on every call.
+          const fallback = this.loadFallbackVersion(chainType);
+          this.setCache(cacheKey, fallback);
+          return fallback;
+        }
 
         const loadedVersion: LoadedVersion = {
           versionId: result.version.id,
@@ -272,6 +291,14 @@ export class VersionLoader {
       selectedBy: 'direct',
       loadedAt: new Date(),
     };
+  }
+
+  /**
+   * The version already loaded for a chain type and tenant, without a lookup: null when it is not
+   * cached (or expired). Used to record which version a run used.
+   */
+  peekLoaded(chainType: ChainType, tenantId: string): LoadedVersion | null {
+    return this.getFromCache(this.getCacheKey(chainType, { tenantId }));
   }
 
   /**
