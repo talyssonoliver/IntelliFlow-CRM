@@ -24,12 +24,32 @@
  *       (Captured as test.skip — production code defect, do not weaken the invariant.)
  */
 
-import { describe, expect } from 'vitest';
+import { describe, expect, vi } from 'vitest';
 import { test, fc } from '@fast-check/vitest';
 import {
   RetryBudgetTracker,
   calculateBackoffDelay,
+  globalRetryBudget,
 } from '../../../../packages/platform/src/queues/retry-strategy';
+import { enqueueAIScoring } from '../../../../packages/platform/src/queues/queue-factory';
+
+// RACE-WORKE-04 drives enqueueAIScoring; a stand-in Queue keeps it off Redis.
+vi.mock('bullmq', () => ({
+  Queue: class {
+    on() {
+      return this;
+    }
+    add(name: string, data: unknown) {
+      return Promise.resolve({ id: 'job', name, data });
+    }
+    close() {
+      return Promise.resolve();
+    }
+  },
+  Worker: class {},
+  QueueEvents: class {},
+  Job: class {},
+}));
 import type { RetryBackoffConfig } from '../../../../packages/platform/src/queues/types';
 import { propertyParams } from '../../support';
 
@@ -390,23 +410,38 @@ describe('RACE-WORKE-04 — enqueueAIScoring never calls consumeRetry (bug)', ()
    */
   // ADR-054: QUAL-010 (RACE-WORKE-04) — confirmed no-op retry-budget guard
   // (consumeRetry never called by the production caller); tracked in
-  // artifacts/reports/sprint-19/baseline/quality-findings.json. Skip retained pending a
+  // artifacts/reports/sprint-19/baseline/quality-findings.json. Kept as an expected failure pending a
   // dedicated fix task (out of scope for ENG-OPS-002.R13).
-  test.skip('RACE-WORKE-04: budget guard is a no-op — canRetry always true because consumeRetry is never called in production caller', () => {
-    // It intentionally documents that the production caller violates this contract. // This test captures the REQUIRED behaviour (budget must enforce the ceiling).
+  // The tracker itself is correct: check + consume on each enqueue enforces the ceiling.
+  // (This was the body of the skipped test below; it passes, so it runs as a plain test.)
+  test('RetryBudgetTracker refuses once every enqueue in the window has consumed the budget', () => {
     const budget = 5;
     const tracker = new RetryBudgetTracker(budget, 60_000);
     const queue = 'ai-scoring';
-
-    // Simulate correct usage: check + consume on each enqueue
     for (let i = 0; i < budget; i++) {
       expect(tracker.canRetry(queue)).toBe(true);
       tracker.consumeRetry(queue);
     }
-
-    // After `budget` correct cycles, the next canRetry must be false
     expect(tracker.canRetry(queue)).toBe(false);
-    // Production enqueueAIScoring never calls consumeRetry, so in practice
-    // canRetry remains true indefinitely — the budget guard is a no-op.
   });
+
+  // Runs as .fails: it goes red the day the bug is fixed; then make it a plain test.
+  test.fails(
+    'RACE-WORKE-04: budget guard is a no-op — canRetry always true because consumeRetry is never called in production caller',
+    async () => {
+      // The production caller, not the tracker: enqueueAIScoring checks canRetry but never
+      // consumes, so the enqueue after a full window budget (100) is still accepted.
+      globalRetryBudget.reset();
+      try {
+        for (let i = 0; i < 100; i++) {
+          await enqueueAIScoring(`lead-${i}`, 'user-1');
+        }
+        await expect(enqueueAIScoring('lead-over-budget', 'user-1')).rejects.toThrow(
+          'Retry budget exhausted'
+        );
+      } finally {
+        globalRetryBudget.reset();
+      }
+    }
+  );
 });
