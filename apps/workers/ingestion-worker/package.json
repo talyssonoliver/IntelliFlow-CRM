@@ -8,7 +8,7 @@
   "types": "./dist/main.d.ts",
   "scripts": {
     "build": "tsup src/main.ts --format cjs,esm --dts",
-    "dev": "dotenv -e ../../../.env.local -e ../../../.env -- tsx watch src/main.ts",
+    "dev": "node ../../../scripts/require-test-slot.mjs ingestion-worker-dev && dotenv -e ../../../.env.local -e ../../../.env -- tsx watch src/main.ts",
     "start": "node dist/main.js",
     "test": "vitest run",
     "test:watch": "vitest",
