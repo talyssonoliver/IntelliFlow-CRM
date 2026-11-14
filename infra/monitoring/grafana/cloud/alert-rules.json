@@ -1,8 +1,14 @@
 {
   "_comment": "Production alert rules for the Grafana Cloud stack (IFC-032). Applied by tools/scripts/grafana/apply-alert-rules.mjs through the Grafana provisioning API (workflow: grafana-alert-rules.yml). Metrics are the span metrics Grafana Cloud generates from our OTLP traces: traces_spanmetrics_calls_total{service, span_name, span_kind, status_code} and the traces_spanmetrics_latency histogram (seconds). A rule with its own datasourceUid queries that datasource instead: grafanacloud-logs is Loki (LogQL over our OTLP logs, labelled service_name). Routed by the default notification policy to the owner's email contact point.",
-  "folder": { "uid": "intelliflow-prod", "title": "IntelliFlow production" },
+  "folder": {
+    "uid": "intelliflow-prod",
+    "title": "IntelliFlow production"
+  },
   "datasourceUid": "grafanacloud-prom",
-  "group": { "name": "intelliflow-prod", "intervalSeconds": 60 },
+  "group": {
+    "name": "intelliflow-prod",
+    "intervalSeconds": 60
+  },
   "rules": [
     {
       "uid": "ifc032-telemetry-silent",
@@ -98,6 +104,20 @@
       "noData": "OK",
       "severity": "high",
       "summary": "ai-worker (the combined worker) logged error-level lines in the last 2 minutes."
+    },
+    {
+      "uid": "ifc151-outbox-dead-letters",
+      "title": "Outbox events dead-lettered",
+      "why": "IFC-151. An outbox event that reaches the dead-letter queue never runs its remaining handlers until someone replays it (tools/scripts/outbox-dlq.ts, runbook docs/operations/runbooks/dlq-triage.md), so any dead letter needs a person. Counts both outcomes the events worker records: dead_lettered (retries used up) and poisoned (a handler rejected the event, no retry). requireSeries is false only until the first production deploy of the outbox metrics (intelliflow_outbox_events_total) shows series; then it goes back to the default.",
+      "expr": "sum by (event_type) (increase(intelliflow_outbox_events_total{outcome=~\"dead_lettered|poisoned\"}[10m]))",
+      "selector": "intelliflow_outbox_events_total",
+      "operator": "gt",
+      "threshold": 0,
+      "for": "0s",
+      "noData": "OK",
+      "severity": "high",
+      "summary": "One or more outbox events went to the dead-letter queue in the last 10 minutes; list them with tools/scripts/outbox-dlq.ts list.",
+      "requireSeries": false
     }
   ],
   "deliveryTest": {
