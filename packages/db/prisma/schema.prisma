@@ -218,6 +218,7 @@ model Tenant {
   taskSettings              TaskSettings[]            @ignore
   toolEnablements           TenantToolEnablement[]    // H6: per-tenant tool on/off
   aiConfigs                 TenantAIConfig[]           // M8/M9: per-tenant LLM tier overrides
+  chainRuns                 ChainRun[]                 // AI Chains page usage stats
   memoryPolicy              TenantMemoryPolicy?        // P2.7: per-tenant memory retention
   goalDefault               TenantGoalDefault?         // IFC-211: org-wide default daily goal
   termsAcceptances          TermsAcceptance[]          @relation("TenantTermsAcceptances") @ignore // IFC-309
@@ -277,6 +278,31 @@ model TenantAIConfig {
   @@index([tenantId])
   @@map("tenant_ai_config")
 }
+/// One model call made by an ai-worker chain, for the AI Chains page usage stats.
+/// chainType is the saved-version type the chain reads; workerChain is the chain itself.
+/// versionId is the saved version whose prompt was used, or null for the built-in prompt.
+/// Counting starts at deploy (no backfill).
+model ChainRun {
+  id           String   @id @default(cuid())
+  tenantId     String
+  chainType    String   @db.VarChar(20)
+  workerChain  String   @db.VarChar(40)
+  versionId    String?
+  model        String?  @db.VarChar(200)
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  costUsd      Decimal  @default(0) @db.Decimal(12, 6)
+  latencyMs    Int
+  success      Boolean
+  errorClass   String?  @db.VarChar(60)
+  createdAt    DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, chainType, createdAt])
+  @@map("chain_runs")
+}
+
 
 // P2.7 — Per-tenant retention policy for conversation/memory artifacts.
 // Absent row = platform default. Pruning job (memory-retention.job.ts) joins
