@@ -13,7 +13,7 @@
  * in a future refactor) is caught at the smoke layer.
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { beforeAll, describe, it, expect, vi } from 'vitest';
 
 // Lightweight container mock — the module importer only needs the surface
 // tRPC router definitions touch (procedures don't execute in this test).
@@ -44,6 +44,12 @@ vi.mock('../container', () => ({
 }));
 
 describe('appRouter smoke — PG-190 module-settings registration', () => {
+  // The first import of the full router is the slow part (every module); pay it once here,
+  // with its own timeout, so a loaded machine cannot time out the first test (30s budget).
+  beforeAll(async () => {
+    await import('../router.js');
+  }, 120_000);
+
   it('registers the ADR-070 partner router with all six procedures', async () => {
     const { appRouter } = await import('../router.js');
     const partner = (appRouter._def.record as Record<string, any>).partner;

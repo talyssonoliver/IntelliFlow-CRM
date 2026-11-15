@@ -13,7 +13,7 @@
  * this script is invoked FROM .husky/pre-push, which is precisely the context
  * that exports GIT_DIR/GIT_WORK_TREE pointing at the real repo.
  */
-import { describe, it, expect, afterAll, vi } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -38,6 +38,7 @@ import {
   readAttestation,
 } from '../preship-attest.mjs';
 import { copyGateModules } from './helpers/gate-fixture';
+import { gitEnv } from '../lib/preship-git.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '../..');
@@ -713,17 +714,17 @@ describe('pre-ship.mjs persists run provenance (AC-1)', { timeout: 60_000 }, () 
 // a new head SHA. These cases pin that a CLEAN rebase reuses the attestation of
 // the same diff, and that anything else (a changed diff, whitespace included, a
 // different gate version, a forged record) still demands a fresh gate run.
-describe('branch-diff carry-forward', { timeout: 60_000 }, () => {
+// Each case runs 10-25 real git spawns on its own copy of the seed repo (rebase, push,
+// fetch, tag): nothing left to share, they mutate. Idle 0.1-5.8 s per case; 69-144 s
+// when a gate saturates the box. Budget 300 s per case.
+describe('branch-diff carry-forward', { timeout: 300_000 }, () => {
   const tmpDirs: string[] = [];
   afterAll(() => {
     for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true });
   });
 
-  const cleanEnv = (): NodeJS.ProcessEnv => {
-    const e: NodeJS.ProcessEnv = { ...process.env };
-    for (const k of Object.keys(e)) if (k.startsWith('GIT_')) delete e[k];
-    return e;
-  };
+  // No GIT_* variable may reach a fixture repo's git (the pre-push hook exports GIT_DIR).
+  const cleanEnv = (): NodeJS.ProcessEnv => gitEnv(process.env);
 
   /** The tool's git(), bound to a fixture repo instead of the process cwd. */
   const gitIn =
@@ -751,9 +752,7 @@ describe('branch-diff carry-forward', { timeout: 60_000 }, () => {
    * A three-package workspace on main (`c` depends on `a`; `b` is unrelated),
    * a feature branch with one commit in `a`, and a bare remote.
    */
-  function makeBranchRepo() {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'preship-carry-'));
-    tmpDirs.push(root);
+  function buildBranchRepo(root: string) {
     const work = path.join(root, 'work');
     const bare = path.join(root, 'origin.git');
     fs.mkdirSync(work, { recursive: true });
@@ -778,6 +777,31 @@ describe('branch-diff carry-forward', { timeout: 60_000 }, () => {
     g(['commit', '-q', '-m', 'feature']);
     const sha = g(['rev-parse', 'HEAD']).stdout.trim();
     return { work, bare, sha, g };
+  }
+
+  // The seed repo costs about a dozen git spawns, and every test below starts from
+  // the same one. Build it once and hand each test a plain file copy: a copy is
+  // a few hundred small files, not a dozen process spawns that stretch under
+  // load. The tests still mutate (push, rebase, amend) their own copy only.
+  let template: { root: string; sha: string };
+  beforeAll(() => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'preship-carry-tpl-'));
+    tmpDirs.push(root);
+    template = { root, sha: buildBranchRepo(root).sha };
+  }, 120_000);
+
+  /** A fresh copy of the seed repo: the same commits, its own work tree and remote. */
+  function makeBranchRepo() {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'preship-carry-'));
+    tmpDirs.push(root);
+    fs.cpSync(template.root, root, { recursive: true });
+    const work = path.join(root, 'work');
+    return {
+      work,
+      bare: path.join(root, 'origin.git'),
+      sha: template.sha,
+      g: gitIn(work),
+    };
   }
 
   /**
