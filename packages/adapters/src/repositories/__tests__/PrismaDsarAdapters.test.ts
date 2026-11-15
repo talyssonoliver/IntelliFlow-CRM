@@ -566,32 +566,14 @@ describe('PrismaSubjectDataRepository', () => {
       updateMany: vi.fn().mockResolvedValue({ count: 0 }),
       deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
     });
-    const names = [
-      'lead',
-      'contact',
-      'aIScore',
-      'leadActivity',
-      'contactActivity',
-      'appointment',
-      'emailRecord',
-      'ticket',
-      'chatConversation',
-      'feedbackSurvey',
-      'dsarRequest',
-      'leadNote',
-      'contactNote',
-      'leadFile',
-      'notification',
-      'autoResponseDraft',
-      'contactReplyDraft',
-      'calendarEvent',
-      'experimentAssignment',
-      'leadAIInsight',
-      'contactAIInsight',
-      'aIInsight',
-      'opportunity',
-      'task',
-    ];
+    // Every table the export and the erasure read or write.
+    const names = (
+      'lead contact aIScore leadActivity contactActivity appointment emailRecord emailAttachment ' +
+      'ticket ticketActivity ticketAttachment ticketNextStep ticketAIInsight chatConversation ' +
+      'chatMessage feedbackSurvey dsarRequest leadNote contactNote leadFile notification ' +
+      'autoResponseDraft contactReplyDraft calendarEvent experimentAssignment leadAIInsight ' +
+      'contactAIInsight aIInsight opportunity task'
+    ).split(' ');
     return mockPrisma(Object.fromEntries(names.map((n) => [n, empty()])));
   }
 
@@ -867,17 +849,17 @@ describe('PrismaSubjectDataRepository', () => {
     expect(prisma.lead.count).not.toHaveBeenCalled();
   });
 
-  it('previews counts and the manual checklist', async () => {
+  it('previews what the erasure covers, communications included, and what it leaves (IFC-316)', async () => {
     const prisma = subjectPrisma();
     prisma.$queryRaw
       .mockResolvedValueOnce([{ id: 'l1' }, { id: 'l2' }])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ id: 'a1' }]);
-    prisma.ticket.count.mockResolvedValue(2);
+    prisma.ticket.findMany.mockResolvedValue([{ id: 'k1' }, { id: 'k2' }]);
     const repo = new PrismaSubjectDataRepository(asClient(prisma));
     const preview = await repo.previewErasure('t1', 'ada@example.invalid');
-    expect(preview.counts).toEqual({ leads: 2, contacts: 0, bookings: 1 });
-    expect(preview.checklist).toMatchObject({ tickets: 2, emailRecords: 0 });
+    expect(preview.counts).toMatchObject({ leads: 2, contacts: 0, bookings: 1, tickets: 2 });
+    expect(Object.keys(preview.checklist)).not.toContain('tickets');
   });
 
   it('puts deals and tasks on the manual checklist, not in the erasure (Q23)', async () => {
