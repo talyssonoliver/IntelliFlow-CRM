@@ -7,7 +7,10 @@
  * read from any mailbox here; only the CRM's own record is linked.
  *
  * - The counterparty is the first address on the email (sender, then recipients) that belongs to
- *   a lead or contact of the tenant, the user's own addresses excluded.
+ *   a lead or contact of the tenant, the user's own addresses excluded (the mailbox's, the sender
+ *   of the user's own mail, and their login).
+ * - A contact is linked through the email's contactId (their timeline reads it); a lead gets an
+ *   EMAIL activity on its timeline (subject only), and the email keeps both in its metadata.
  * - A person with an active processing restriction is never linked (refused, nothing written).
  * - Only the email's own user (or an email admin) can link it; another tenant's email is not found.
  * - Linking an email that is already linked changes nothing.
@@ -31,6 +34,10 @@ export interface EmailLinkDto {
 interface StoredEmail {
   id: string;
   userId: string | null;
+  subject: string;
+  status: string;
+  sentAt: Date | null;
+  createdAt: Date;
   fromEmail: string;
   toEmail: string;
   ccEmails: string | null;
@@ -62,6 +69,10 @@ async function loadEmail(ctx: EmailRouterCtx, emailId: string): Promise<StoredEm
     select: {
       id: true,
       userId: true,
+      subject: true,
+      status: true,
+      sentAt: true,
+      createdAt: true,
       fromEmail: true,
       toEmail: true,
       ccEmails: true,
@@ -78,13 +89,27 @@ async function loadEmail(ctx: EmailRouterCtx, emailId: string): Promise<StoredEm
   return email;
 }
 
+/** Statuses of mail the CRM user sent (its sender is the user, never the counterparty). */
+const OUTBOUND_STATUSES = new Set(['PENDING', 'SENT', 'FAILED', 'BOUNCED', 'OPENED', 'CLICKED']);
+
+/** The user's own addresses: the email's mailbox, the sender of their own mail, their login. */
+function ownAddresses(ctx: EmailRouterCtx, email: StoredEmail): Set<string> {
+  const login = (ctx.user as { email?: string | null } | null | undefined)?.email;
+  return new Set(
+    [
+      email.mailbox?.fromAddress,
+      email.mailbox?.accountAddress,
+      OUTBOUND_STATUSES.has(email.status) ? email.fromEmail : null,
+      login,
+    ]
+      .filter((a): a is string => Boolean(a))
+      .map((a) => a.trim().toLowerCase())
+  );
+}
+
 /** The first address that is a lead or contact of the tenant, the user's own excluded. */
 async function findCounterparty(ctx: EmailRouterCtx, email: StoredEmail) {
-  const own = new Set(
-    [email.mailbox?.fromAddress, email.mailbox?.accountAddress]
-      .filter((a): a is string => Boolean(a))
-      .map((a) => a.toLowerCase())
-  );
+  const own = ownAddresses(ctx, email);
   for (const address of emailAddresses(email)) {
     if (own.has(address)) continue;
     const where = {
@@ -128,14 +153,58 @@ export const emailLogRouter = createTRPCRouter({
           message: 'This person has asked for their data not to be processed.',
         });
       }
-      const metadata = {
-        ...((email.metadata as Record<string, unknown> | null) ?? {}),
-        ...(party.leadId ? { leadId: party.leadId } : {}),
-      };
-      await c.prismaWithTenant.emailRecord.update({
-        where: { id: email.id, tenantId: c.tenant.tenantId },
-        data: { contactId: party.contactId, metadata },
-      });
-      return { logged: true, contactId: party.contactId, leadId: party.leadId };
+      if (party.contactId) return linkContact(c, email, party.contactId);
+      return linkLead(c, email, party.leadId as string);
     }),
 });
+
+/**
+ * A contact's timeline reads emails by contactId. The write only lands on a still-unlinked
+ * email, so a concurrent log never overwrites another one; the stored link is returned either way.
+ */
+async function linkContact(
+  c: EmailRouterCtx,
+  email: StoredEmail,
+  contactId: string
+): Promise<EmailLinkDto> {
+  const { count } = await c.prismaWithTenant.emailRecord.updateMany({
+    where: { id: email.id, tenantId: c.tenant.tenantId, contactId: null },
+    data: { contactId },
+  });
+  if (count > 0) return { logged: true, contactId, leadId: leadIdOf(email.metadata) };
+  return linkOf(await loadEmail(c, email.id));
+}
+
+/**
+ * A lead's timeline is its activities, so a lead gets an EMAIL activity (the subject only, and
+ * the email record's id); the email keeps the lead and the activity in its metadata.
+ */
+async function linkLead(c: EmailRouterCtx, email: StoredEmail, leadId: string) {
+  const tenantId = c.tenant.tenantId;
+  await c.prismaWithTenant.$transaction(async (tx: any) => {
+    const activity = await tx.leadActivity.create({
+      data: {
+        type: 'EMAIL',
+        title: email.subject.slice(0, 200) || '(No subject)',
+        timestamp: email.sentAt ?? email.createdAt,
+        userId: c.tenant.userId,
+        userName: 'Logged from email',
+        leadId,
+        tenantId,
+        metadata: { emailRecordId: email.id, source: 'log-to-contact' },
+      },
+      select: { id: true },
+    });
+    await tx.emailRecord.update({
+      where: { id: email.id, tenantId },
+      data: {
+        metadata: {
+          ...((email.metadata as Record<string, unknown> | null) ?? {}),
+          leadId,
+          leadActivityId: activity.id,
+        },
+      },
+    });
+  });
+  return { logged: true, contactId: null, leadId };
+}
