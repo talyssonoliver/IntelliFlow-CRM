@@ -35,16 +35,21 @@ export class InMemoryContactRepository implements ContactRepository {
     return null;
   }
 
-  async linkToAccountIfFree(
-    contactId: string,
-    tenantId: string,
-    accountId: string
-  ): Promise<boolean> {
-    const contact = this.contacts.get(contactId);
-    if (!contact || contact.tenantId !== tenantId) return false;
-    if (contact.accountId === accountId) return true;
-    if (contact.accountId !== undefined) return false;
-    return contact.associateWithAccount(accountId, 'lead-conversion').isSuccess;
+  async linkToAccountIfFree(link: {
+    contactId: string;
+    tenantId: string;
+    accountId: string;
+    expectedEmail: string;
+  }): Promise<'attached' | 'linked' | 'changed'> {
+    const contact = this.contacts.get(link.contactId);
+    if (!contact || contact.tenantId !== link.tenantId) return 'changed';
+    if (contact.email.value !== link.expectedEmail) return 'changed';
+    if (contact.accountId === link.accountId) return 'linked';
+    if (contact.accountId !== undefined) return 'changed';
+    // The caller publishes the association event inside its transaction, so this store adds none.
+    contact.associateWithAccount(link.accountId, 'lead-conversion');
+    contact.clearDomainEvents();
+    return 'attached';
   }
 
   async findByOwnerId(ownerId: string): Promise<Contact[]> {

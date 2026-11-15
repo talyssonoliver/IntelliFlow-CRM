@@ -188,19 +188,24 @@ export class PrismaContactRepository implements ContactRepository {
   }
 
   async linkToAccountIfFree(
-    contactId: string,
-    tenantId: string,
-    accountId: string,
+    link: { contactId: string; tenantId: string; accountId: string; expectedEmail: string },
     tx?: RepositoryTransaction
-  ): Promise<boolean> {
+  ): Promise<'attached' | 'linked' | 'changed'> {
     const db = (tx as TransactionClient | undefined) ?? this.prisma;
-    // Conditional on the row's current account, so a concurrent move to another account is
-    // never overwritten; only the account link (and its timestamp) is written.
-    const { count } = await db.contact.updateMany({
-      where: { id: contactId, tenantId, OR: [{ accountId: null }, { accountId }] },
+    const { contactId: id, tenantId, accountId, expectedEmail: email } = link;
+    // Each update is conditional on the row as it was read (email, and no account or this one),
+    // so a concurrent change is never overwritten; only the account link is written. The second
+    // update writes the same account back, which also locks the row for the transaction.
+    const attached = await db.contact.updateMany({
+      where: { id, tenantId, email, accountId: null },
       data: { accountId, updatedAt: new Date() },
     });
-    return count === 1;
+    if (attached.count === 1) return 'attached';
+    const linked = await db.contact.updateMany({
+      where: { id, tenantId, email, accountId },
+      data: { accountId },
+    });
+    return linked.count === 1 ? 'linked' : 'changed';
   }
 
   async findByEmailInTenant(email: Email, tenantId: string): Promise<Contact | null> {

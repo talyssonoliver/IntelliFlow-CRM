@@ -20,6 +20,7 @@ import {
   Contact,
   Account,
   Opportunity,
+  ContactAccountAssociatedEvent,
   type DomainEvent,
   type RepositoryTransaction,
 } from '@intelliflow/domain';
@@ -46,7 +47,14 @@ class ContactChangedError extends Error {}
 interface ResolvedContact {
   contactId: string | null;
   contact: Contact | null;
-  linkExisting: boolean;
+  /** The existing contact to link inside the transaction, as it was read. */
+  linkExisting: Contact | null;
+}
+
+interface ExistingContactLink {
+  contact: Contact;
+  accountId: string;
+  associatedBy: string;
 }
 
 // =============================================================================
@@ -212,7 +220,7 @@ export class ConvertLeadToDealUseCase {
       newAccount,
       contact,
       linkExisting: linkExisting
-        ? { contactId: contactId!, tenantId: lead.tenantId, accountId }
+        ? { contact: linkExisting, accountId, associatedBy: input.convertedBy }
         : null,
       opportunity,
       lead,
@@ -318,7 +326,7 @@ export class ConvertLeadToDealUseCase {
     hooks: ConvertLeadToDealHooks
   ): Promise<Result<ResolvedContact, DomainError>> {
     if (input.createContact === false) {
-      return Result.ok({ contactId: null, contact: null, linkExisting: false });
+      return Result.ok({ contactId: null, contact: null, linkExisting: null });
     }
 
     const existing = await this.contactRepository.findByEmailInTenant(lead.email, lead.tenantId);
@@ -328,7 +336,7 @@ export class ConvertLeadToDealUseCase {
       }
       // Linked (and put on the account if it has none) inside the transaction, by a
       // conditional update that fails if the contact changed since this read.
-      return Result.ok({ contactId: existing.id.value, contact: null, linkExisting: true });
+      return Result.ok({ contactId: existing.id.value, contact: null, linkExisting: existing });
     }
 
     await hooks.beforeCreateContact?.();
@@ -337,7 +345,7 @@ export class ConvertLeadToDealUseCase {
     return Result.ok({
       contactId: created.value.id.value,
       contact: created.value,
-      linkExisting: false,
+      linkExisting: null,
     });
   }
 
@@ -350,7 +358,7 @@ export class ConvertLeadToDealUseCase {
   private async persistConversion(p: {
     newAccount: Account | null;
     contact: Contact | null;
-    linkExisting: { contactId: string; tenantId: string; accountId: string } | null;
+    linkExisting: ExistingContactLink | null;
     opportunity: Opportunity;
     lead: Lead;
     expectedStatus: Lead['status'];
@@ -360,11 +368,14 @@ export class ConvertLeadToDealUseCase {
       await this.transactionManager.run(async (tx) => {
         if (p.newAccount) await this.accountRepository.save(p.newAccount, tx);
         if (p.contact) await this.contactRepository.save(p.contact, tx);
-        if (p.linkExisting) await this.linkExistingContact(p.linkExisting, tx);
+        const linkEvents = p.linkExisting ? await this.linkExistingContact(p.linkExisting, tx) : [];
         await this.opportunityRepository.save(p.opportunity, tx);
         await this.leadRepository.save(p.lead, { expectedStatus: p.expectedStatus }, tx);
 
-        const events = p.aggregates.flatMap((aggregate) => aggregate.getDomainEvents());
+        const events = [
+          ...p.aggregates.flatMap((aggregate) => aggregate.getDomainEvents()),
+          ...linkEvents,
+        ];
         if (events.length > 0) await this.eventBus.publishAll(events, tx);
       });
     } catch (error) {
@@ -378,17 +389,26 @@ export class ConvertLeadToDealUseCase {
     return Result.ok(undefined);
   }
 
+  /**
+   * Link the existing contact inside the transaction. Returns the association event to publish
+   * when the contact had no account and was attached; none when it was already on the account.
+   */
   private async linkExistingContact(
-    link: { contactId: string; tenantId: string; accountId: string },
+    link: ExistingContactLink,
     tx: RepositoryTransaction
-  ): Promise<void> {
-    const linked = await this.contactRepository.linkToAccountIfFree(
-      link.contactId,
-      link.tenantId,
-      link.accountId,
+  ): Promise<DomainEvent[]> {
+    const outcome = await this.contactRepository.linkToAccountIfFree(
+      {
+        contactId: link.contact.id.value,
+        tenantId: link.contact.tenantId,
+        accountId: link.accountId,
+        expectedEmail: link.contact.email.value,
+      },
       tx
     );
-    if (!linked) throw new ContactChangedError();
+    if (outcome === 'changed') throw new ContactChangedError();
+    if (outcome === 'linked') return [];
+    return [new ContactAccountAssociatedEvent(link.contact.id, link.accountId, link.associatedBy)];
   }
 
   private prepareContactFromLead(lead: Lead, accountId: string): Result<Contact, DomainError> {

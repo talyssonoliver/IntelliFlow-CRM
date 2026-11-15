@@ -12,7 +12,7 @@
  * - Performance target: <200ms
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { virtualElapsedMs } from '../../../../../../tests/utils/virtual-clock';
 import { ConvertLeadToDealUseCase, ConvertLeadToDealInput } from '../ConvertLeadToDealUseCase';
 import { Lead, Contact, Account, Opportunity } from '@intelliflow/domain';
@@ -78,17 +78,21 @@ class MockContactRepository implements Partial<ContactRepository> {
   /** Simulates a concurrent change: the conditional link finds the contact moved. */
   linkFails = false;
 
-  async linkToAccountIfFree(
-    contactId: string,
-    tenantId: string,
-    accountId: string
-  ): Promise<boolean> {
-    this.linkCalls.push({ contactId, accountId });
-    const contact = this.contacts.get(contactId);
-    if (this.linkFails || !contact || contact.tenantId !== tenantId) return false;
-    if (contact.accountId === accountId) return true;
-    if (contact.accountId !== undefined) return false;
-    return contact.associateWithAccount(accountId, 'test').isSuccess;
+  async linkToAccountIfFree(link: {
+    contactId: string;
+    tenantId: string;
+    accountId: string;
+    expectedEmail: string;
+  }): Promise<'attached' | 'linked' | 'changed'> {
+    this.linkCalls.push({ contactId: link.contactId, accountId: link.accountId });
+    const contact = this.contacts.get(link.contactId);
+    if (this.linkFails || !contact || contact.tenantId !== link.tenantId) return 'changed';
+    if (contact.email.value !== link.expectedEmail) return 'changed';
+    if (contact.accountId === link.accountId) return 'linked';
+    if (contact.accountId !== undefined) return 'changed';
+    contact.associateWithAccount(link.accountId, 'test');
+    contact.clearDomainEvents();
+    return 'attached';
   }
 
   /** A contact that already exists before the conversion (not a save by the use case). */
@@ -532,6 +536,15 @@ describe('ConvertLeadToDealUseCase', () => {
         expect(existing.accountId).toBe(result.value.accountId);
         expect(contactRepository.savedContact).toBeNull();
         expect(hookCalls).toBe(0);
+        // The account association is audited like any other: one event, in the same publish.
+        const associated = eventBus.publishedEvents.filter(
+          (e) => (e as { eventType?: string }).eventType === 'contact.account_associated'
+        ) as Array<{ accountId: string; associatedBy: string }>;
+        expect(associated).toHaveLength(1);
+        expect(associated[0]).toMatchObject({
+          accountId: result.value.accountId,
+          associatedBy: 'sales-rep',
+        });
       });
 
       it('aborts the conversion when the contact changed before the link', async () => {
@@ -562,6 +575,30 @@ describe('ConvertLeadToDealUseCase', () => {
         expect(result.value.accountId).toBe(account.id.value);
         expect(result.value.contactId).toBe(onAccount.id.value);
         expect(contactRepository.savedContact).toBeNull();
+        expect(
+          eventBus.publishedEvents.some(
+            (e) => (e as { eventType?: string }).eventType === 'contact.account_associated'
+          )
+        ).toBe(false);
+      });
+
+      it('passes the email it read to the conditional link, so an email change aborts', async () => {
+        const lead = knownLead();
+        const existing = seedContact();
+        const linkSpy = vi.spyOn(contactRepository, 'linkToAccountIfFree');
+
+        await convert(lead.id.value);
+
+        // The store matches on this email inside the transaction; a contact whose email
+        // changed since the read no longer matches and the link reports 'changed'.
+        expect(linkSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            contactId: existing.id.value,
+            tenantId: 'tenant-known',
+            expectedEmail: 'known@example.com',
+          }),
+          expect.anything()
+        );
       });
 
       it('refuses a contact that belongs to another account', async () => {

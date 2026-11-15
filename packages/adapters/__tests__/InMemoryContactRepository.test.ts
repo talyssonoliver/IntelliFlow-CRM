@@ -225,25 +225,47 @@ describe('InMemoryContactRepository', () => {
         ...(accountId ? { accountId } : {}),
       }).value;
 
-    it('puts a contact with no account on the account', async () => {
+    const link = (
+      contactId: string,
+      over: Partial<{ tenantId: string; accountId: string; expectedEmail: string }> = {}
+    ) => ({
+      contactId,
+      tenantId: 'tenant-1',
+      accountId: 'acc-1',
+      expectedEmail: 'link@example.com',
+      ...over,
+    });
+
+    it('attaches a contact with no account, adding no event of its own', async () => {
       const c = make();
       await repository.save(c);
-      expect(await repository.linkToAccountIfFree(c.id.value, 'tenant-1', 'acc-1')).toBe(true);
+      c.clearDomainEvents();
+      expect(await repository.linkToAccountIfFree(link(c.id.value))).toBe('attached');
       expect((await repository.findById(c.id))?.accountId).toBe('acc-1');
+      expect(c.getDomainEvents()).toHaveLength(0);
     });
 
-    it('accepts a contact already on the account', async () => {
+    it('reports a contact already on the account as linked', async () => {
       const c = make('acc-1');
       await repository.save(c);
-      expect(await repository.linkToAccountIfFree(c.id.value, 'tenant-1', 'acc-1')).toBe(true);
+      expect(await repository.linkToAccountIfFree(link(c.id.value))).toBe('linked');
     });
 
-    it('refuses a contact on another account, in another tenant, or missing', async () => {
+    it('reports changed for another account, another tenant, another email, or a missing contact', async () => {
       const c = make('acc-2');
       await repository.save(c);
-      expect(await repository.linkToAccountIfFree(c.id.value, 'tenant-1', 'acc-1')).toBe(false);
-      expect(await repository.linkToAccountIfFree(c.id.value, 'tenant-2', 'acc-2')).toBe(false);
-      expect(await repository.linkToAccountIfFree('missing', 'tenant-1', 'acc-1')).toBe(false);
+      expect(await repository.linkToAccountIfFree(link(c.id.value))).toBe('changed');
+      expect(
+        await repository.linkToAccountIfFree(
+          link(c.id.value, { tenantId: 'tenant-2', accountId: 'acc-2' })
+        )
+      ).toBe('changed');
+      expect(
+        await repository.linkToAccountIfFree(
+          link(c.id.value, { accountId: 'acc-2', expectedEmail: 'other@example.com' })
+        )
+      ).toBe('changed');
+      expect(await repository.linkToAccountIfFree(link('missing'))).toBe('changed');
     });
   });
 

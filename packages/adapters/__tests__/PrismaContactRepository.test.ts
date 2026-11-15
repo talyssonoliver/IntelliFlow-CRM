@@ -373,34 +373,47 @@ describe('PrismaContactRepository', () => {
   });
 
   describe('linkToAccountIfFree()', () => {
-    it('updates only the account link, conditional on the contact having none or this one', async () => {
-      mockPrisma.contact.updateMany.mockResolvedValue({ count: 1 });
+    const link = {
+      contactId: 'c-1',
+      tenantId: 'tenant-123',
+      accountId: 'account-9',
+      expectedEmail: 'known@example.com',
+    };
+    const base = { id: 'c-1', tenantId: 'tenant-123', email: 'known@example.com' };
 
-      const linked = await repository.linkToAccountIfFree('c-1', 'tenant-123', 'account-9');
+    it('attaches a contact that still has its email and no account, writing only the link', async () => {
+      mockPrisma.contact.updateMany.mockResolvedValueOnce({ count: 1 });
 
-      expect(linked).toBe(true);
+      expect(await repository.linkToAccountIfFree(link)).toBe('attached');
+      expect(mockPrisma.contact.updateMany).toHaveBeenCalledTimes(1);
       expect(mockPrisma.contact.updateMany).toHaveBeenCalledWith({
-        where: {
-          id: 'c-1',
-          tenantId: 'tenant-123',
-          OR: [{ accountId: null }, { accountId: 'account-9' }],
-        },
+        where: { ...base, accountId: null },
         data: { accountId: 'account-9', updatedAt: expect.any(Date) },
       });
     });
 
-    it('returns false when the contact moved to another account or is gone', async () => {
+    it('reports a contact already on the account as linked', async () => {
+      mockPrisma.contact.updateMany
+        .mockResolvedValueOnce({ count: 0 })
+        .mockResolvedValueOnce({ count: 1 });
+
+      expect(await repository.linkToAccountIfFree(link)).toBe('linked');
+      expect(mockPrisma.contact.updateMany).toHaveBeenLastCalledWith({
+        where: { ...base, accountId: 'account-9' },
+        data: { accountId: 'account-9' },
+      });
+    });
+
+    it('reports changed when the email or account moved, or the contact is gone', async () => {
       mockPrisma.contact.updateMany.mockResolvedValue({ count: 0 });
 
-      expect(await repository.linkToAccountIfFree('c-1', 'tenant-123', 'account-9')).toBe(false);
+      expect(await repository.linkToAccountIfFree(link)).toBe('changed');
     });
 
     it('writes through the transaction client when one is given', async () => {
       const tx = { contact: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) } };
 
-      expect(
-        await repository.linkToAccountIfFree('c-1', 'tenant-123', 'account-9', tx as never)
-      ).toBe(true);
+      expect(await repository.linkToAccountIfFree(link, tx as never)).toBe('attached');
       expect(tx.contact.updateMany).toHaveBeenCalledTimes(1);
       expect(mockPrisma.contact.updateMany).not.toHaveBeenCalled();
     });
