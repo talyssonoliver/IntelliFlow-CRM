@@ -382,7 +382,13 @@ export class DataSubjectRequestService {
     marketingStoppedConfirmed?: true;
     marketingStopMethod?: string;
     now: Date;
-  }): Promise<Ok<{ erasure?: ErasureOutcome }> | NotFound | Conflict | Invalid | Refused> {
+  }): Promise<
+    | Ok<{ erasure?: ErasureOutcome; marketingStopped?: boolean }>
+    | NotFound
+    | Conflict
+    | Invalid
+    | Refused
+  > {
     const record = await this.deps.repo.findForTenant(input.tenantId, input.id);
     if (!record) return { outcome: 'NOT_FOUND' };
     if (record.status !== 'VERIFIED') return { outcome: 'CONFLICT' };
@@ -390,7 +396,10 @@ export class DataSubjectRequestService {
     if (record.type === 'ERASURE') return this.completeErasure(record, input);
 
     const marketing = record.type === 'OBJECTION' && record.objectionScope === 'MARKETING';
-    if (marketing && !(input.marketingStoppedConfirmed && input.marketingStopMethod)) {
+    // IFC-315: the restriction written below (blocksMarketing) stops marketing email from the
+    // CRM by itself, so the admin no longer confirms a manual stop. A stop method is optional:
+    // it records how marketing sent from outside the CRM was stopped.
+    if (marketing && input.marketingStoppedConfirmed && !input.marketingStopMethod) {
       return { outcome: 'INVALID', field: 'marketingStopMethod' };
     }
     // An objection's restriction is written with the completion, atomically: if a rejection
@@ -405,7 +414,9 @@ export class DataSubjectRequestService {
         resolutionNote: input.note,
         completedAt: input.now,
         clockBreached: rejectionIsLate(record, input.now),
-        ...(marketing ? { marketingStopMethod: input.marketingStopMethod } : {}),
+        ...(marketing && input.marketingStopMethod
+          ? { marketingStopMethod: input.marketingStopMethod }
+          : {}),
       },
       record.type === 'OBJECTION'
         ? {
@@ -419,7 +430,8 @@ export class DataSubjectRequestService {
     );
     if (!done) return { outcome: 'CONFLICT' };
     await this.notifyCompleted(record, marketing);
-    return { outcome: 'OK' };
+    // marketingStopped: the CRM now blocks marketing email to this person (blocksMarketing).
+    return { outcome: 'OK', marketingStopped: marketing };
   }
 
   async completeAccess(input: {

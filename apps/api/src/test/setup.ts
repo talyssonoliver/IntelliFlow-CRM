@@ -17,8 +17,20 @@ process.env.QUOTA_GUARD_ALLOW_MISSING_SERVICE = '1';
 import type { PrismaClient, Prisma as PrismaNamespace } from '@intelliflow/db';
 import { Prisma } from '@intelliflow/db';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
-import { NOT_RESTRICTED } from '@intelliflow/application';
+import type { RestrictionStatus } from '@intelliflow/application';
 import type { BaseContext } from '../context';
+
+/**
+ * Same value as NOT_RESTRICTED in @intelliflow/application. Importing it from there loaded
+ * the whole application bundle into every one of the ~360 api test files (about 130 s of
+ * setup time per full run, measured 2026-11-13); a type-only import costs nothing.
+ * setup-constants.test.ts fails if the two ever differ.
+ */
+export const NOT_RESTRICTED: RestrictionStatus = {
+  restricted: false,
+  blocksMarketing: false,
+  since: null,
+};
 
 // ============================================================================
 // Global mocks for tracingMiddleware dependencies
@@ -165,6 +177,8 @@ beforeEach(() => {
   // PG-203: nobody is restricted by a data request unless a test says so (the reset above
   // leaves the deep mock answering undefined, which the restriction checks treat as a failure).
   mockAdapters.processingRestrictionRepository.status.mockResolvedValue(NOT_RESTRICTED);
+  // IFC-315: nobody objected to marketing unless a test says so.
+  mockAdapters.processingRestrictionRepository.marketingBlocked.mockResolvedValue(new Set());
 });
 
 /**

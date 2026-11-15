@@ -1,10 +1,10 @@
 # CLAUDE.md
 
-**IntelliFlow CRM** — AI-powered CRM system. 597 tasks across Sprints 0–29 (plus
-continuous tasks) tracked in `Sprint_plan.csv`; the IFC-010 Go/No-Go passed
-2025-12-27. For the **live sprint, phase, and completion status**, read
-`docs/SESSION_CONTEXT.md` (regenerated each session) — do not hardcode the
-active sprint here, or it goes stale (ENG-OPS-002 STALE-001).
+**IntelliFlow CRM** — AI-powered CRM system. Its tasks (Sprints 0–29 plus
+continuous tasks) are tracked in `Sprint_plan.csv`; the IFC-010 Go/No-Go passed
+2025-12-27. For the **live sprint, phase, task counts and completion status**,
+read `docs/SESSION_CONTEXT.md` (regenerated each session) — do not hardcode the
+active sprint or any count here, or it goes stale (ENG-OPS-002 STALE-001, R03).
 
 ## Task ID Conventions
 
@@ -34,16 +34,11 @@ files:
 ```
 apps/project-tracker/docs/metrics/_global/
 ├── Sprint_plan.csv      # Source of truth (edit here only)
-├── Sprint_plan_A.csv    # 67 rows (EXC-INIT-001 → IFC-042)
-├── Sprint_plan_B.csv    # 72 rows (IFC-043 → PG-015)
-├── Sprint_plan_C.csv    # 73 rows (PG-016 → SALES-002)
-├── Sprint_plan_D.csv    # 69 rows (PM-OPS-001 → IFC-123)
-├── Sprint_plan_E.csv    # 63 rows (IFC-124 → IFC-170)
-├── Sprint_plan_F.csv    # 64 rows (IFC-171 → PG-156)
-├── Sprint_plan_G.csv    # 64 rows (PG-157 → IFC-233)
-├── Sprint_plan_H.csv    # 62 rows (IFC-234 → IFC-296)
-└── Sprint_plan_I.csv    # 26 rows (IFC-297 → IFC-308)
+└── Sprint_plan_A.csv … Sprint_plan_J.csv   # generated parts in CSV order
 ```
+
+The parts are regenerated from the CSV, so their number and row ranges change;
+`ls` the folder or `grep -l "<TASK-ID>," Sprint_plan_*.csv` to find a task.
 
 Regenerate splits: `npx tsx tools/scripts/split-sprint-plan.ts` Full guide:
 `docs/claude-refs/sprint-plan-guide.md`
