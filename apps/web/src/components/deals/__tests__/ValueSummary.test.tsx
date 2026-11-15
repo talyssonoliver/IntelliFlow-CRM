@@ -49,21 +49,21 @@ describe('ValueSummary', () => {
     const stats = createMockPipelineStats({ totalValue: 1250000 });
     render(<ValueSummary stats={stats} />);
 
-    expect(screen.getByText('$1.3M')).toBeInTheDocument();
+    expect(screen.getByText('£1.3M')).toBeInTheDocument();
   });
 
   it('formats values in thousands as $XK', () => {
     const stats = createMockPipelineStats({ totalValue: 125000 });
     render(<ValueSummary stats={stats} />);
 
-    expect(screen.getByText('$125K')).toBeInTheDocument();
+    expect(screen.getByText('£125k')).toBeInTheDocument();
   });
 
   it('formats wonValue correctly', () => {
     const stats = createMockPipelineStats({ wonValue: 50000 });
     render(<ValueSummary stats={stats} />);
 
-    expect(screen.getByText('$50K')).toBeInTheDocument();
+    expect(screen.getByText('£50k')).toBeInTheDocument();
   });
 
   it('handles zero values for all stats', () => {
@@ -76,8 +76,8 @@ describe('ValueSummary', () => {
     render(<ValueSummary stats={stats} />);
 
     expect(screen.getByText('0')).toBeInTheDocument();
-    // $0 appears for zero values
-    const zeroValues = screen.getAllByText('$0');
+    // £0 appears for zero values
+    const zeroValues = screen.getAllByText('£0');
     expect(zeroValues.length).toBe(3); // totalValue, weightedValue, wonValue
   });
 
@@ -86,7 +86,7 @@ describe('ValueSummary', () => {
     render(<ValueSummary stats={stats} />);
 
     expect(screen.getByLabelText('Active deals: 12')).toBeInTheDocument();
-    expect(screen.getByLabelText('Pipeline value: $450K')).toBeInTheDocument();
+    expect(screen.getByLabelText('Pipeline value: £450k')).toBeInTheDocument();
   });
 
   it('renders responsive grid with correct classes', () => {

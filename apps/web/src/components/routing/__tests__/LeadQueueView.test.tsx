@@ -103,7 +103,7 @@ describe('LeadQueueView', () => {
   it('shows estimated value formatted', () => {
     render(<LeadQueueView />);
 
-    expect(screen.getByText('$5,000')).toBeInTheDocument();
+    expect(screen.getByText('£5,000')).toBeInTheDocument();
   });
 
   it('shows dash for missing estimated value', () => {
