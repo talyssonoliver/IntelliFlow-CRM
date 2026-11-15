@@ -108,7 +108,7 @@ env:
   # The `project-guard` job below FAILS if a newly-added
   # project is missing from this list (so a new project can't silently skip CI).
   UNIT_PROJECTS: >-
-    --project=web --project=ai-worker --project=domain --project=adapters
+    --project=web --project=web-node --project=ai-worker --project=domain --project=adapters
     --project=application --project=validators --project=ui
     --project=observability --project=worker-shared
     --project=events-worker --project=combined-worker
