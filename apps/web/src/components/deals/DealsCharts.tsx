@@ -15,8 +15,8 @@ import {
   Legend,
 } from 'recharts';
 import { isEmptySeries } from '@/lib/charts/empty-series';
-import { formatGBPCompact } from '@/lib/format/gbp-compact';
 import { formatGBP } from '@/lib/dashboard/kpi-calculator';
+import { revenueAxisTick, revenueTooltip } from '@/lib/deals/deals-chart-format';
 import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
 
 interface ChartEntry {
@@ -97,17 +97,12 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
               <XAxis dataKey="name" tick={{ fontSize: 10 }} className="fill-muted-foreground" />
               <YAxis
-                tickFormatter={(value) => formatGBPCompact(Number(value))}
+                tickFormatter={revenueAxisTick}
                 tick={{ fontSize: 10 }}
                 className="fill-muted-foreground"
                 width={50}
               />
-              <Tooltip
-                formatter={(value) => {
-                  const numValue = typeof value === 'number' ? value : 0;
-                  return [formatGBP(numValue), 'Revenue'];
-                }}
-              />
+              <Tooltip formatter={revenueTooltip} />
               <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
                 {barChartData.map((entry) => (
                   <Cell key={`bar-${entry.name}`} fill={entry.color} />
