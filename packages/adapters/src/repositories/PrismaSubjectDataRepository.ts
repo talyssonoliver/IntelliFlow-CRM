@@ -23,7 +23,7 @@ import {
   addressIds,
   communicationCounts,
   eraseCommunications,
-  remainingChecklist,
+  storedFiles,
   subjectDealIds,
   subjectNotificationWhere,
   subjectTaskWhere,
@@ -586,7 +586,7 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
         bookings: appointmentIds.length,
         ...(await communicationCounts(this.prisma, tenantId, subjectEmail, ids)),
       },
-      checklist: await remainingChecklist(this.prisma, tenantId, subjectEmail, ids),
+      checklist: (await storedFiles(this.prisma, tenantId, subjectEmail, ids)).checklist,
     };
   }
 
@@ -686,9 +686,9 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
             "bookingConsentAt" = NULL, "bookingConsentVersion" = NULL, "updatedAt" = ${input.now}
           WHERE "tenantId" = ${tenantId} AND id = ANY(${appointmentIds}::text[])`;
 
-        // Counted first: the stored files are found through the person's address, which the
-        // erasure removes. Their rows and locators stay, so the counts are what is left.
-        const remaining = await remainingChecklist(tx, tenantId, subjectEmail, ids);
+        // Read first: the stored files are found through the person's address, which the
+        // erasure removes. Their rows and locators stay; the ids say which rows they are.
+        const left = await storedFiles(tx, tenantId, subjectEmail, ids);
         const communications = await eraseCommunications(tx, {
           tenantId,
           email: subjectEmail,
@@ -724,7 +724,8 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
               bookings: Number(bookings),
               ...communications,
             },
-            checklist: remaining,
+            checklist: left.checklist,
+            storedFiles: left.files,
           },
         };
       },

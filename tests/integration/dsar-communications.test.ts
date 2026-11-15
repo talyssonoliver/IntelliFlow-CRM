@@ -122,7 +122,20 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         type: 'CUSTOMER_MESSAGE',
         content: 'Please call me about the divorce',
         authorName: 'Ada Lovelace',
-        authorRole: 'Customer',
+        // Any case: the role is free text.
+        authorRole: 'customer',
+        authorAvatar: 'https://avatars.example.invalid/ada.png',
+      },
+    });
+    // No role, but the ticket's contact by name: still the person's entry.
+    await prisma.ticketActivity.create({
+      data: {
+        ...t,
+        ticketId: ticket.id,
+        type: 'CUSTOMER_MESSAGE',
+        content: 'Ada again',
+        authorName: 'Ada Lovelace',
+        authorAvatar: 'https://avatars.example.invalid/ada.png',
       },
     });
     await prisma.ticketActivity.create({
@@ -133,6 +146,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         content: 'Hi Ada, we will call',
         authorName: 'Sam Staff',
         authorRole: 'Support Agent',
+        authorAvatar: 'https://avatars.example.invalid/sam.png',
       },
     });
     await prisma.ticketAttachment.create({
@@ -262,6 +276,13 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     expect(result.result.counts).toMatchObject({ emailRecords: 1, tickets: 1, chats: 1 });
     const remaining = Object.entries(result.result.checklist).filter(([, n]) => n > 0);
     expect(remaining).toEqual([['storedEmailAttachments', 1]]);
+    // The result names the attachment row, so its stored object can still be found.
+    const attachment = await prisma.emailAttachment.findFirst({ where: { emailId: seeded.mail } });
+    expect(result.result.storedFiles).toEqual({
+      emailAttachmentIds: [attachment.id],
+      chatMessageIds: [],
+      leadFileIds: [],
+    });
     await expect(
       prisma.ticketAttachment.findFirst({ where: { ticketId: seeded.ticket } })
     ).resolves.toMatchObject({ name: 'erased', url: null });
@@ -283,12 +304,15 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     expect(ticket).toMatchObject({ subject: 'Erased ticket', description: null });
     expect(ticket.contactEmail).not.toContain('ada');
     const activity = await prisma.ticketActivity.findMany({ where: { ticketId: seeded.ticket } });
-    expect(activity.map((a: any) => a.content)).toEqual([
-      '[erased under a data request]',
-      '[erased under a data request]',
+    expect(new Set(activity.map((a: any) => a.content))).toEqual(
+      new Set(['[erased under a data request]'])
+    );
+    // The staff member's name and photo stay; the person's go, whatever the role says.
+    expect(activity.map((a: any) => [a.authorName, a.authorAvatar]).sort()).toEqual([
+      ['Erased', null],
+      ['Erased', null],
+      ['Sam Staff', 'https://avatars.example.invalid/sam.png'],
     ]);
-    // The staff member's name stays; the person's goes.
-    expect(activity.map((a: any) => a.authorName).sort()).toEqual(['Erased', 'Sam Staff']);
 
     const messages = await prisma.chatMessage.findMany({ where: { conversationId: seeded.chat } });
     expect(messages[0]).toMatchObject({ senderName: 'Erased' });

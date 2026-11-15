@@ -4,7 +4,7 @@ import {
   ERASED_NOTE,
   communicationCounts,
   eraseCommunications,
-  remainingChecklist,
+  storedFiles,
 } from '../subject-communications';
 
 const TABLES = (
@@ -93,7 +93,18 @@ describe('eraseCommunications (IFC-316)', () => {
       sqlOf(c).includes('UPDATE email_records')
     )!;
     expect(mailCall).toContain(ERASED_NOTE);
-    expect(statements.some((s: string) => s.includes('UPDATE ticket_activities'))).toBe(true);
+    const activity = statements.find((s: string) => s.includes('UPDATE ticket_activities'))!;
+    // The person's photo goes with their name; the rule is read from the ticket row.
+    expect(activity).toContain('"authorAvatar"');
+    expect(activity).toContain('FROM tickets t');
+    const ticketUpdate = tx.ticket.updateMany.mock.invocationCallOrder[0]!;
+    const activityUpdate =
+      tx.$executeRaw.mock.invocationCallOrder[
+        tx.$executeRaw.mock.calls.findIndex((c: unknown[]) =>
+          sqlOf(c).includes('UPDATE ticket_activities')
+        )
+      ]!;
+    expect(activityUpdate).toBeLessThan(ticketUpdate);
     expect(statements.some((s: string) => s.includes('UPDATE chat_messages'))).toBe(true);
   });
 });
@@ -104,8 +115,23 @@ describe('what the erasure covers and leaves', () => {
     expect(counts).toMatchObject({ tickets: 2, emailRecords: 0, chats: 0 });
   });
 
+  it('names the stored-file rows it leaves, by id', async () => {
+    const { checklist, files } = await storedFiles(
+      db({ emailAttachment: ['m1', 'm2'], chatMessage: ['h1'] }) as never,
+      't1',
+      'a',
+      IDS
+    );
+    expect(files).toEqual({
+      emailAttachmentIds: ['m1', 'm2'],
+      chatMessageIds: ['h1'],
+      leadFileIds: [],
+    });
+    expect(checklist).toMatchObject({ storedEmailAttachments: 2, storedChatAttachments: 1 });
+  });
+
   it('leaves only deals, tasks and stored files on the checklist', async () => {
-    const checklist = await remainingChecklist(db() as never, 't1', 'a', IDS);
+    const { checklist } = await storedFiles(db() as never, 't1', 'a', IDS);
     expect(Object.keys(checklist).sort()).toEqual([
       'deals',
       'storedChatAttachments',

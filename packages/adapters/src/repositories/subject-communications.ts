@@ -190,29 +190,54 @@ export async function communicationCounts(
   };
 }
 
-/** What the erasure leaves for the admin: deals and tasks (Q23) and stored files. Counts only. */
-export async function remainingChecklist(
+/** The rows behind the stored files the erasure leaves, by id (ids carry no personal data). */
+export interface StoredFileIds {
+  emailAttachmentIds: string[];
+  chatMessageIds: string[];
+  leadFileIds: string[];
+}
+
+/**
+ * What the erasure leaves for the admin: deals and tasks (Q23) and stored files, as counts, with
+ * the ids of the stored-file rows. Read before the erasure: those rows are found through the
+ * person's address, which it removes; the ids keep them findable (their storage locators stay).
+ */
+export async function storedFiles(
   db: Db,
   tenantId: string,
   email: string,
   ids: SubjectIds
-): Promise<Record<string, number>> {
+): Promise<{ checklist: Record<string, number>; files: StoredFileIds }> {
   const c = await communicationIds(db, tenantId, email, ids);
-  const [deals, tasks, storedLeadFiles, emailFiles, chatFiles] = await Promise.all([
+  const idsOf = (rows: Array<{ id: string }>) => rows.map((r) => r.id);
+  const select = { id: true } as const;
+  const [deals, tasks, leadFiles, emailFiles, chatFiles] = await Promise.all([
     db.opportunity.count({ where: { tenantId, contactId: { in: ids.contactIds } } }),
     db.task.count({ where: subjectTaskWhere(tenantId, ids, c.dealIds) }),
-    db.leadFile.count({ where: { tenantId, leadId: { in: ids.leadIds }, url: { not: null } } }),
-    db.emailAttachment.count({ where: { tenantId, emailId: { in: c.emailRecords } } }),
-    db.chatMessage.count({
+    db.leadFile.findMany({
+      where: { tenantId, leadId: { in: ids.leadIds }, url: { not: null } },
+      select,
+    }),
+    db.emailAttachment.findMany({ where: { tenantId, emailId: { in: c.emailRecords } }, select }),
+    db.chatMessage.findMany({
       where: { tenantId, conversationId: { in: c.chats }, attachments: { not: Prisma.DbNull } },
+      select,
     }),
   ]);
+  const files = {
+    emailAttachmentIds: idsOf(emailFiles),
+    chatMessageIds: idsOf(chatFiles),
+    leadFileIds: idsOf(leadFiles),
+  };
   return {
-    deals,
-    tasks,
-    storedLeadFiles,
-    storedEmailAttachments: emailFiles,
-    storedChatAttachments: chatFiles,
+    checklist: {
+      deals,
+      tasks,
+      storedLeadFiles: files.leadFileIds.length,
+      storedEmailAttachments: files.emailAttachmentIds.length,
+      storedChatAttachments: files.chatMessageIds.length,
+    },
+    files,
   };
 }
 
@@ -234,7 +259,7 @@ async function eraseEmailRecords(tx: Tx, tenantId: string, email: string, ids: s
       "ccEmails" = ${withoutAddress('ccEmails', email)},
       "bccEmails" = ${withoutAddress('bccEmails', email)}
     WHERE "tenantId" = ${tenantId} AND id = ANY(${ids}::text[])`;
-  // The file's name goes; its storage locator stays for the stored-file checklist item.
+  // The file's name goes; its storage locator stays, and the erasure result names the row.
   await tx.emailAttachment.updateMany({
     where: { tenantId, emailId: { in: ids } },
     data: { fileName: 'erased' },
@@ -242,7 +267,23 @@ async function eraseEmailRecords(tx: Tx, tenantId: string, email: string, ids: s
   return Number(records);
 }
 
+/**
+ * An activity entry is the person's when its role says customer (any case), or when it has no
+ * role and its author is the ticket's contact by name. Read from the ticket row, so this runs
+ * before the ticket's own name is erased.
+ */
+const PERSON_ACTIVITY = Prisma.sql`(lower(btrim(coalesce(a."authorRole", ''))) = 'customer'
+  OR (a."authorRole" IS NULL AND btrim(a."authorName") = btrim(t."contactName")))`;
+
 async function eraseTickets(tx: Tx, tenantId: string, ids: string[], now: Date) {
+  // Staff replies quote the person too, so every entry's text goes. The person's name and
+  // avatar (their photo) go; staff names and avatars stay.
+  await tx.$executeRaw`
+    UPDATE ticket_activities a SET content = ${ERASED_NOTE}, "systemEventData" = NULL,
+      "authorName" = CASE WHEN ${PERSON_ACTIVITY} THEN ${ERASED_NAME} ELSE a."authorName" END,
+      "authorAvatar" = CASE WHEN ${PERSON_ACTIVITY} THEN NULL ELSE a."authorAvatar" END
+    FROM tickets t
+    WHERE t.id = a."ticketId" AND a."tenantId" = ${tenantId} AND a."ticketId" = ANY(${ids}::text[])`;
   const tickets = await tx.ticket.updateMany({
     where: { tenantId, id: { in: ids } },
     data: {
@@ -253,11 +294,6 @@ async function eraseTickets(tx: Tx, tenantId: string, ids: string[], now: Date) 
       updatedAt: now,
     },
   });
-  // Staff replies quote the person too, so every entry's text goes; staff names stay.
-  await tx.$executeRaw`
-    UPDATE ticket_activities SET content = ${ERASED_NOTE}, "systemEventData" = NULL,
-      "authorName" = CASE WHEN "authorRole" = 'Customer' THEN ${ERASED_NAME} ELSE "authorName" END
-    WHERE "tenantId" = ${tenantId} AND "ticketId" = ANY(${ids}::text[])`;
   await tx.ticketNextStep.updateMany({
     where: { tenantId, ticketId: { in: ids } },
     data: { title: 'Erased step' },
@@ -286,7 +322,7 @@ async function eraseChats(tx: Tx, tenantId: string, ids: string[], now: Date) {
   // Attachments keep their locators for the stored-file checklist item.
   await tx.$executeRaw`
     UPDATE chat_messages SET content = ${ERASED_NOTE}, metadata = NULL,
-      "senderName" = CASE WHEN "senderType" = 'contact' THEN ${ERASED_NAME} ELSE "senderName" END
+      "senderName" = CASE WHEN lower(btrim("senderType")) = 'contact' THEN ${ERASED_NAME} ELSE "senderName" END
     WHERE "tenantId" = ${tenantId} AND "conversationId" = ANY(${ids}::text[])`;
   return chats.count;
 }
