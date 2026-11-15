@@ -390,6 +390,55 @@ describe('PrismaProcessingRestrictionRepository', () => {
     expect(prisma.processingRestriction.findFirst).not.toHaveBeenCalled();
   });
 
+  describe('marketingBlocked (IFC-315)', () => {
+    it('reads every address in one query: active objections in the firm only', async () => {
+      const findMany = vi.fn().mockResolvedValue([{ subjectEmail: 'ada@example.invalid' }]);
+      const prisma = mockPrisma({ processingRestriction: { findMany } });
+      const repo = new PrismaProcessingRestrictionRepository(asClient(prisma));
+      const blocked = await repo.marketingBlocked('t1', [
+        ' Ada@Example.invalid ',
+        'bob@example.invalid',
+        'ada@example.invalid',
+      ]);
+      expect([...blocked]).toEqual(['ada@example.invalid']);
+      expect(findMany).toHaveBeenCalledTimes(1);
+      expect(findMany).toHaveBeenCalledWith({
+        where: {
+          tenantId: 't1',
+          subjectEmail: { in: ['ada@example.invalid', 'bob@example.invalid'] },
+          liftedAt: null,
+          blocksMarketing: true,
+        },
+        select: { subjectEmail: true },
+      });
+    });
+
+    it('blocks an erased placeholder without asking the database for it (as status does)', async () => {
+      const findMany = vi.fn().mockResolvedValue([]);
+      const prisma = mockPrisma({ processingRestriction: { findMany } });
+      const repo = new PrismaProcessingRestrictionRepository(asClient(prisma));
+      const blocked = await repo.marketingBlocked('t1', [
+        'erased-l1@erased.invalid',
+        'bob@example.invalid',
+      ]);
+      expect([...blocked]).toEqual(['erased-l1@erased.invalid']);
+      expect(findMany.mock.calls[0][0].where.subjectEmail).toEqual({
+        in: ['bob@example.invalid'],
+      });
+    });
+
+    it('makes no query when every address is erased or the list is empty', async () => {
+      const findMany = vi.fn();
+      const prisma = mockPrisma({ processingRestriction: { findMany } });
+      const repo = new PrismaProcessingRestrictionRepository(asClient(prisma));
+      expect([...(await repo.marketingBlocked('t1', []))]).toEqual([]);
+      expect([...(await repo.marketingBlocked('t1', ['erased-x@erased.invalid']))]).toEqual([
+        'erased-x@erased.invalid',
+      ]);
+      expect(findMany).not.toHaveBeenCalled();
+    });
+  });
+
   it('upserts into the active row with the normalised email and the request id', async () => {
     const prisma = mockPrisma();
     prisma.$queryRaw.mockResolvedValue([row]);

@@ -60,6 +60,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     email_settings: ['read', 'write', 'manage', 'admin'],
     email_signature: ['read', 'write', 'delete', 'manage', 'admin'],
     email_suppression: ['read', 'write', 'delete', 'manage', 'admin'],
+    email_message: ['read', 'write', 'manage', 'admin'], // IFC-315: audit of user mail
     model_config: ['read', 'write', 'delete', 'manage', 'admin'], // PG-199
     goal: ['read', 'write', 'delete', 'export', 'manage', 'admin'],
   },
@@ -83,6 +84,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     email_settings: ['read', 'write', 'manage'],
     email_signature: ['read', 'write', 'delete', 'manage'],
     email_suppression: ['read', 'write', 'delete', 'manage'],
+    email_message: ['read', 'write', 'manage'],
     model_config: ['read', 'write', 'delete', 'manage'], // PG-199: managers edit model settings
     goal: ['read', 'write', 'manage'],
   },
@@ -106,6 +108,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     email_settings: ['read'],
     email_signature: ['read', 'write', 'delete'], // own signatures only
     email_suppression: [],
+    email_message: ['read', 'write'], // own mail
     model_config: ['read'], // PG-199
     goal: ['read', 'write'],
   },
@@ -129,6 +132,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     email_settings: ['read'],
     email_signature: ['read', 'write', 'delete'], // own signatures only
     email_suppression: [],
+    email_message: ['read', 'write'], // own mail
     model_config: ['read'], // PG-199
     goal: ['read', 'write'],
   },
@@ -152,6 +156,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     email_settings: ['read'],
     email_signature: ['read', 'write', 'delete'], // own signatures only
     email_suppression: [],
+    email_message: ['read', 'write'], // own mail
     model_config: ['read'], // PG-199
     goal: ['read'],
   },

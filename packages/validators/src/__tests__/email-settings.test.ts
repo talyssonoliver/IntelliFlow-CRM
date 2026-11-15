@@ -107,6 +107,17 @@ describe('sendUserEmailInputSchema', () => {
     expect(sendUserEmailInputSchema.safeParse(base).success).toBe(true);
   });
 
+  it('takes an optional purpose, SERVICE or MARKETING only (IFC-315)', () => {
+    expect(sendUserEmailInputSchema.parse(base).purpose).toBeUndefined();
+    expect(sendUserEmailInputSchema.parse({ ...base, purpose: 'MARKETING' }).purpose).toBe(
+      'MARKETING'
+    );
+    expect(sendUserEmailInputSchema.safeParse({ ...base, purpose: 'SERVICE' }).success).toBe(true);
+    expect(sendUserEmailInputSchema.safeParse({ ...base, purpose: 'NEWSLETTER' }).success).toBe(
+      false
+    );
+  });
+
   it('rejects CR/LF in the subject and an over-long subject', () => {
     expect(
       sendUserEmailInputSchema.safeParse({ ...base, subject: 'a\r\nBcc: x@y.example' }).success

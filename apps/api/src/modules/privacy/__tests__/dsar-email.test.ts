@@ -143,10 +143,10 @@ describe('buildDsarEmail', () => {
     expect(email.textBody).not.toContain('withheld');
   });
 
-  it('says the firm confirmed marketing stopped, never that it stopped automatically', () => {
+  it('promises only what the CRM enforces: no more marketing email from it', () => {
     const email = buildDsarEmail(notices[4]!);
     expect(email.textBody).toContain(
-      'Your objection is recorded and the firm has confirmed that marketing to you has stopped.'
+      'Your objection is recorded. The firm’s CRM will no longer send you marketing email.'
     );
   });
 
