@@ -1,5 +1,6 @@
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
+import { setTimeout as realSleep } from 'node:timers/promises';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const getVerifiedCaller = vi.fn();
@@ -19,6 +20,7 @@ let server: http.Server;
 let port = 0;
 let received: { headers: http.IncomingHttpHeaders; body: string }[] = [];
 let userCounter = 0;
+let dripConnections = 0;
 
 const PUBLIC_ADDRESS = '93.184.216.34';
 
@@ -34,6 +36,7 @@ beforeAll(async () => {
       }
       if (req.url === '/drip') {
         // One byte at a time, never idle long enough for a socket timeout.
+        dripConnections += 1;
         res.writeHead(200);
         const timer = setInterval(() => res.write('x'), 300);
         res.on('close', () => clearInterval(timer));
@@ -224,17 +227,50 @@ describe('sending to an allowed host', () => {
     expect((await response.json()).body.length).toBe(64 * 1024);
   });
 
-  it('stops a response that keeps trickling in after the 10 second deadline', async () => {
+  // Load-independent: the route's 10 second hard deadline runs on a fake clock. The server really
+  // starts trickling first (we wait for that event, not for a time), then the clock is advanced
+  // 10 virtual seconds and the request must be cut at exactly that point.
+  it('stops a response that keeps trickling in after the 10 second deadline (fake clock)', async () => {
     const spy = allowLocalConnect();
-    const started = Date.now();
-    const response = await send({ url: `http://a.example.invalid:${port}/drip`, payload: {} });
-    spy.mockRestore();
-    const elapsed = Date.now() - started;
-    expect(response.status).toBe(502);
-    expect((await response.json()).body).toBe('Request timed out');
-    expect(elapsed).toBeGreaterThanOrEqual(9_500);
-    expect(elapsed).toBeLessThan(13_000);
-  }, 20_000);
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+    try {
+      const connectionsBefore = dripConnections;
+      const started = Date.now();
+      const pending = send({ url: `http://a.example.invalid:${port}/drip`, payload: {} });
+      for (let i = 0; i < 1000 && dripConnections === connectionsBefore; i++) {
+        await realSleep(5);
+      }
+      expect(dripConnections).toBe(connectionsBefore + 1);
+
+      await vi.advanceTimersByTimeAsync(10_000);
+      const response = await pending;
+
+      expect(response.status).toBe(502);
+      expect((await response.json()).body).toBe('Request timed out');
+      expect(Date.now() - started).toBe(10_000);
+    } finally {
+      vi.useRealTimers();
+      spy.mockRestore();
+    }
+  });
+
+  // The same deadline on the real clock (about 10 s of waiting, with a tolerance band that depends
+  // on machine load): runs only with REAL_REPO_CHECKS=1 (pnpm run test:real-repo).
+  it.runIf(process.env['REAL_REPO_CHECKS'] === '1')(
+    'stops a response that keeps trickling in after the 10 second deadline (real clock)',
+    async () => {
+      const spy = allowLocalConnect();
+      const started = Date.now();
+      const response = await send({ url: `http://a.example.invalid:${port}/drip`, payload: {} });
+      spy.mockRestore();
+      const elapsed = Date.now() - started;
+      expect(response.status).toBe(502);
+      expect((await response.json()).body).toBe('Request timed out');
+      expect(elapsed).toBeGreaterThanOrEqual(9_500);
+      expect(elapsed).toBeLessThan(13_000);
+    },
+    20_000
+  );
 
   it('does not follow a redirect', async () => {
     const spy = allowLocalConnect();

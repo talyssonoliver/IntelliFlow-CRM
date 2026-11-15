@@ -25,6 +25,7 @@ import { execFileSync } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { gitEnv } from './preship-git.mjs';
 
 /** Tolerated distance between the reported line and the bug. */
 export const FP_DRIFT = 2;
@@ -189,9 +190,11 @@ const MAX_SOURCE_BYTES = 3_000_000;
 
 /** The tracked text files of a repo, as `{ path, text }`. Skips binaries and huge artifacts. */
 export function readTrackedFiles(repoRoot) {
+  // gitEnv: inside a git hook GIT_DIR/GIT_INDEX_FILE would override -C and list another repo.
   const listed = execFileSync('git', ['-C', repoRoot, 'ls-files', '-z'], {
     encoding: 'utf8',
     maxBuffer: 1 << 28,
+    env: gitEnv(process.env),
   });
   return listed
     .split('\0')

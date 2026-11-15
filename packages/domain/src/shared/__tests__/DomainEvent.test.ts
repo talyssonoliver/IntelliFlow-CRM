@@ -165,12 +165,17 @@ describe('DomainEvent', () => {
     });
 
     it('should create timestamp in constructor call', () => {
-      const now = Date.now();
-      const event = new UserCreatedEvent('user-123', 'test@example.com');
+      // Frozen clock: the timestamp is exactly "now" at construction, whatever the machine load
+      // (a real-clock "within 100ms" check failed when the process was starved).
+      vi.useFakeTimers();
+      try {
+        const now = Date.now();
+        const event = new UserCreatedEvent('user-123', 'test@example.com');
 
-      // Timestamp should be very close to when constructor was called
-      const difference = Math.abs(event.occurredAt.getTime() - now);
-      expect(difference).toBeLessThan(100); // Within 100ms
+        expect(event.occurredAt.getTime()).toBe(now);
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it('should be a valid Date object', () => {

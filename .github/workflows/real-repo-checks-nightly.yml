@@ -1,0 +1,169 @@
+name: Real-repo checks (Nightly)
+
+# The load-sensitive tests were made load-independent (owner decision 2026-11-13): their
+# mechanism is proven on fixtures or a fake clock in every PR, and the real-world half
+# (real eslint over a large staged list, real-time SLOs on real code paths) stays behind
+# REAL_REPO_CHECKS=1. This job is where that half runs: on main, once a night, alone on a
+# runner, so a real budget measures the code and not a busy machine. It has the same
+# Postgres and Redis services, schema bootstrap and migrations as ci.yml's Integration
+# Tests job, plus the built API on :4000, so the DB-, Redis- and API-backed real checks run
+# too, and NF-001's 300 ms timing (PG-203) runs here. A failure opens (or comments
+# on) one tracking issue instead of failing someone's PR.
+
+on:
+  schedule:
+    # 04:00 UTC, an hour after the 03:00 nightlies, so it does not share their runners.
+    - cron: '0 4 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: real-repo-checks-nightly
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  NODE_VERSION: '24'
+  PNPM_VERSION: '10.33.0'
+
+jobs:
+  real-repo-checks:
+    name: Real-repo checks (REAL_REPO_CHECKS=1)
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    permissions:
+      contents: read
+      issues: write
+    # Same services as ci.yml's Integration Tests job.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
+          POSTGRES_DB: intelliflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-monorepo
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          build-libs: 'true'
+
+      # As ci.yml's Integration Tests job (and scripts/lib/ephemeral-test-db.mjs locally).
+      - name: Bootstrap Supabase schemas + roles
+        run: |
+          PGPASSWORD=${{ secrets.CI_POSTGRES_PASSWORD }} psql -h localhost -U postgres -d intelliflow_test -v ON_ERROR_STOP=1 <<'SQL'
+            CREATE SCHEMA IF NOT EXISTS extensions;
+            DO $$
+            BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+                CREATE ROLE anon NOLOGIN;
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+                CREATE ROLE authenticated NOLOGIN;
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+                CREATE ROLE service_role NOLOGIN BYPASSRLS;
+              END IF;
+            END
+            $$;
+            GRANT USAGE ON SCHEMA extensions TO postgres, anon, authenticated, service_role;
+            ALTER DATABASE intelliflow_test SET search_path TO public, extensions;
+            ALTER DATABASE intelliflow_test SET timezone TO 'UTC';
+          SQL
+
+      # Migrations, not `db push`, as the Integration Tests job does (#1114). The integration
+      # tests seed their own rows, as they do there.
+      - name: Setup database
+        run: pnpm --filter @intelliflow/db db:migrate
+
+      # tests/integration/api.test.ts calls a running API over HTTP (health, versioning,
+      # errors, headers, CORS, rate limits, request limits: no AI, email or payment call).
+      # Start the built @intelliflow/api on :4000 as preship-full-nightly.yml's E2E does, but
+      # with NO production credential and nothing that can spend credit:
+      #   - the only secret this job reads is CI_POSTGRES_PASSWORD, the password of its own
+      #     throwaway Postgres service (the same one ci.yml's Integration Tests job uses);
+      #   - the field-encryption and audit-signing keys are random per run, made below;
+      #   - AI_PROVIDER=mock (MockAIService, no network) and EMAIL_PROVIDER=mock;
+      #   - no Supabase, Stripe, Resend, SendGrid, Anthropic or OpenRouter key is passed:
+      #     Supabase falls back to its local defaults outside production, and Stripe stays
+      #     "not configured";
+      #   - DATABASE_URL and REDIS_URL (job env) point only at this job's services.
+      - name: Build and start the API
+        env:
+          PORT: '4000'
+          OTEL_ENABLED: 'false'
+          AI_PROVIDER: mock
+          EMAIL_PROVIDER: mock
+          DIRECT_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
+        run: |
+          PRISMA_FIELD_ENCRYPTION_KEY="$(openssl rand -base64 32)"
+          AI_AUDIT_SIGNING_KEY="$(openssl rand -hex 32)"
+          echo "::add-mask::$PRISMA_FIELD_ENCRYPTION_KEY"
+          echo "::add-mask::$AI_AUDIT_SIGNING_KEY"
+          export PRISMA_FIELD_ENCRYPTION_KEY AI_AUDIT_SIGNING_KEY
+          pnpm exec turbo run build --filter=@intelliflow/api
+          nohup pnpm --filter @intelliflow/api start > api.log 2>&1 &
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:4000/health > /dev/null; then echo "API up after $((i * 2))s"; exit 0; fi
+            sleep 2
+          done
+          echo "::error::The API did not answer /health within 120s"
+          tail -50 api.log
+          exit 1
+
+      - name: Run the real-repo checks
+        env:
+          TEST_API_AVAILABLE: 'true'
+          TEST_API_URL: http://localhost:4000
+        run: pnpm run test:real-repo
+
+      # NF-001's 300 ms p95 for listSlots over 14 days (PG-203). Locally it runs through
+      # `pnpm test:perf:nf001`, which makes its own Docker test DB; here it runs against the
+      # migrated service DB above. It runs once the NF001_PERF-gated test is on main (#1339).
+      - name: Run the NF-001 timing check
+        if: ${{ !cancelled() }}
+        env:
+          NF001_PERF: '1'
+        run: |
+          if grep -q "NF-001 timing" tests/integration/event-types.test.ts; then
+            pnpm exec vitest run --project integration tests/integration/event-types.test.ts -t "NF-001 timing"
+          else
+            echo "::notice::The NF-001 timing test is not on main yet (#1339); nothing to run."
+          fi
+
+      - name: Open or update the tracking issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -uo pipefail
+          title='Nightly real-repo checks failing'
+          body="The REAL_REPO_CHECKS suite or the NF-001 timing check failed on main at ${GITHUB_SHA}. Run: ${RUN_URL}"
+          number=$(gh issue list --state open --search "\"$title\" in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body "$body"
+          else
+            gh issue create --title "$title" --body "$body"
+          fi

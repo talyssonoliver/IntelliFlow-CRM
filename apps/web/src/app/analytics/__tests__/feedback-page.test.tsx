@@ -103,10 +103,14 @@ describe('FeedbackAnalyticsPage', () => {
 
     render(<FeedbackAnalyticsPage />);
 
-    await waitFor(() => {
-      expect(screen.getByText('Net Promoter Score')).toBeInTheDocument();
-    });
-    expect(screen.getByText('+42')).toBeInTheDocument();
+    // Wait for the dashboard to render its data (the default 1 s window elapses under load).
+    await waitFor(
+      () => {
+        expect(screen.getByText('Net Promoter Score')).toBeInTheDocument();
+      },
+      { timeout: 10_000 }
+    );
+    expect(await screen.findByText('+42', undefined, { timeout: 10_000 })).toBeInTheDocument();
   });
 
   it('renders period selector (7d/30d/90d/ytd) and is interactive', () => {

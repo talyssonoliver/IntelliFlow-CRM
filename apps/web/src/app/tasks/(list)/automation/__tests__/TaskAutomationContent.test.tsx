@@ -211,6 +211,10 @@ function rulesCard() {
   return screen.getByRole('region', { name: 'Rules' });
 }
 
+// Per-call wait for a toast that follows an async mutation: the default 1 s findBy
+// window elapses on a loaded machine. Only the wait is longer; every assertion stays.
+const LOAD_TIMEOUT_MS = 10_000;
+
 describe('TaskAutomationContent', () => {
   it('shows the skeleton while loading', () => {
     setup({ isLoading: true, data: undefined });
@@ -282,7 +286,9 @@ describe('TaskAutomationContent', () => {
     });
     await waitFor(() => expect(screen.queryByRole('dialog', { name: 'New Rule' })).toBeNull());
     expect(toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Rule created' }));
-    expect(await screen.findByText('Rule Greet created.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Rule Greet created.', undefined, { timeout: LOAD_TIMEOUT_MS })
+    ).toBeInTheDocument();
   });
 
   it('shows a CONFLICT refusal inline and keeps the dialog open', async () => {
@@ -332,7 +338,9 @@ describe('TaskAutomationContent', () => {
       expect.any(Object)
     );
     act(() => h.mutations.setActive.mutate.mock.calls[0][1].onSuccess());
-    expect(await screen.findByText('Call new leads turned off.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Call new leads turned off.', undefined, { timeout: LOAD_TIMEOUT_MS })
+    ).toBeInTheDocument();
   });
 
   it('disables the switch of the rule being toggled', () => {
@@ -352,7 +360,9 @@ describe('TaskAutomationContent', () => {
     await waitFor(() =>
       expect(h.mutations.reorder.mutateAsync).toHaveBeenCalledWith({ ids: ['r2', 'r1'] })
     );
-    expect(await screen.findByText('Moved to position 2 of 2.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Moved to position 2 of 2.', undefined, { timeout: LOAD_TIMEOUT_MS })
+    ).toBeInTheDocument();
     await waitFor(() => expect(document.activeElement).toBe(down));
     expect(screen.getByRole('button', { name: 'Move Up: Call new leads' })).toBeDisabled();
   });
@@ -397,7 +407,11 @@ describe('TaskAutomationContent', () => {
     setup();
     fireEvent.click(within(rulesCard()).getAllByRole('button', { name: 'Test Rule' })[0]);
     expect(
-      await screen.findByText(/cannot be tested on demand/, { selector: 'output' })
+      await screen.findByText(
+        /cannot be tested on demand/,
+        { selector: 'output' },
+        { timeout: LOAD_TIMEOUT_MS }
+      )
     ).toBeInTheDocument();
   });
 
@@ -431,7 +445,11 @@ describe('TaskAutomationContent', () => {
     act(() => h.mutations.delete.mutate.mock.calls[0][1].onSuccess());
     await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull());
     await waitFor(() => expect(document.activeElement?.id).toBe('automation-rules-heading'));
-    expect(await screen.findByText('Rule Call new leads deleted.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Rule Call new leads deleted.', undefined, {
+        timeout: LOAD_TIMEOUT_MS,
+      })
+    ).toBeInTheDocument();
   });
 
   it('shows webhook credentials once and drops them on close', async () => {
@@ -559,13 +577,19 @@ describe('TaskAutomationContent', () => {
         maxRunsPerRulePerHour: 30,
       })
     );
-    expect(await screen.findByText('Settings saved.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Settings saved.', undefined, { timeout: LOAD_TIMEOUT_MS })
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Reset to Defaults' }));
     const confirm = await screen.findByRole('alertdialog');
     fireEvent.click(within(confirm).getByRole('button', { name: 'Reset' }));
     await waitFor(() => expect(h.mutations.reset.mutateAsync).toHaveBeenCalled());
-    expect(await screen.findByText('Settings reset to defaults.')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Settings reset to defaults.', undefined, {
+        timeout: LOAD_TIMEOUT_MS,
+      })
+    ).toBeInTheDocument();
   });
 
   it('wires the tags card: New Tag via ref, create, update and delete', async () => {
