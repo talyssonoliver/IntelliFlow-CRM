@@ -14,6 +14,7 @@
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { isEmptySeries } from '@/lib/charts/empty-series';
+import { formatGBPCompact } from '@/lib/format/gbp-compact';
 import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
 
 export interface TimeSeriesEntry {
@@ -47,7 +48,7 @@ export function RevenueTrendChart({ timeSeries, formatCurrency }: RevenueTrendCh
               className="fill-muted-foreground"
               tickLine={false}
               axisLine={false}
-              tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+              tickFormatter={(v) => formatGBPCompact(v)}
             />
             <Tooltip
               formatter={(value) => {

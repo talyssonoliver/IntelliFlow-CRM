@@ -136,6 +136,7 @@ describe('DealForm', () => {
 
     expect(screen.getByLabelText(/deal name/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/deal value/i)).toBeInTheDocument();
+    expect(screen.getByText('Deal Value (GBP) *')).toBeInTheDocument();
     expect(screen.getByLabelText(/probability/i)).toHaveValue(10);
     expect(screen.getByText(/select an account before linking a contact/i)).toBeInTheDocument();
     expect(screen.getByTestId('entity-search-contact')).toHaveAttribute('data-disabled', 'true');
