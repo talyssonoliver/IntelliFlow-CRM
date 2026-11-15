@@ -203,6 +203,37 @@ describe('billing.getPlanState — PARTNER_FREE', () => {
   });
 });
 
+describe('billing.getPlanState — CUSTOM contract plan', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    prismaMock.stripeSubscription.findFirst.mockResolvedValue(null);
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it('reports an active contract plan with no trial, even after the stored trial end', async () => {
+    prismaMock.tenant.findUnique.mockResolvedValue(
+      tenantRow({ plan: 'CUSTOM', trialEndsAt: new Date(NOW.getTime() - DAY) })
+    );
+
+    expect(await planState()).toEqual({
+      source: 'contract',
+      tier: 'CUSTOM',
+      status: 'ACTIVE',
+      currentPeriodEnd: null,
+      trialEndsAt: null,
+      daysLeft: null,
+    });
+  });
+
+  it('lets a live subscription win over the contract plan', async () => {
+    prismaMock.stripeSubscription.findFirst.mockResolvedValue(subRow('ACTIVE', null));
+    prismaMock.tenant.findUnique.mockResolvedValue(tenantRow({ plan: 'CUSTOM' }));
+
+    expect(await planState()).toMatchObject({ source: 'stripe', tier: 'CUSTOM', status: 'ACTIVE' });
+  });
+});
+
 describe('billing.getPlanState — paid subscription', () => {
   beforeEach(() => {
     vi.useFakeTimers();
