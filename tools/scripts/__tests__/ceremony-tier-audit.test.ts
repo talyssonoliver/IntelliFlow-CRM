@@ -7,7 +7,7 @@
  * the file. Each case builds a temp repo root with a tiny Sprint_plan.csv and
  * passes it through `--repo-root`.
  */
-import { describe, it, expect, afterAll, vi } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll, vi } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { findRepoRoot } from '../lib/validation-utils';
@@ -78,6 +78,14 @@ async function runCli(args: string[]): Promise<{ code: number; out: string; err:
 }
 
 describe('ceremony-tier-audit CLI', () => {
+  // The first import of the CLI pays the cold TypeScript transform of the audit and
+  // its imports (39 s for the first test in a loaded gate). Pay it once here, with its
+  // own budget, so every case measures only the audit itself.
+  beforeAll(async () => {
+    await runCli(['--task', 'PG-182', '--json', '--repo-root', makeRepo()]);
+    vi.restoreAllMocks();
+  }, 180_000);
+
   it('--task --json prints the machine-readable tier for a template-following task', async () => {
     const root = makeRepo();
     const r = await runCli(['--task', 'pg-182', '--json', '--repo-root', root]);
