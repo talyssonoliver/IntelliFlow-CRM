@@ -98,6 +98,10 @@ const OUTBOUND_STATUSES = new Set(['PENDING', 'SENT', 'FAILED', 'BOUNCED', 'OPEN
  * there its sender IS the counterparty. A delivered email is the user's own only when it has a
  * user and was not synced from an inbox; received inbound mail has no user.
  */
+function isDraft(email: Pick<StoredEmail, 'metadata'>): boolean {
+  return (email.metadata as { isDraft?: unknown } | null)?.isDraft === true;
+}
+
 export function isOutbound(email: Pick<StoredEmail, 'status' | 'userId' | 'metadata'>): boolean {
   if (OUTBOUND_STATUSES.has(email.status)) return true;
   if (email.status !== 'DELIVERED' || !email.userId) return false;
@@ -151,6 +155,13 @@ export const emailLogRouter = createTRPCRouter({
       const c = ctx as unknown as EmailRouterCtx;
       const email = await loadEmail(c, input.emailId);
       if (linkOf(email).logged) return linkOf(email);
+      // A draft was never sent: it must not appear on a timeline as an email.
+      if (isDraft(email)) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Send the email before logging it.',
+        });
+      }
       const party = await findCounterparty(c, email);
       if (!party) {
         throw new TRPCError({

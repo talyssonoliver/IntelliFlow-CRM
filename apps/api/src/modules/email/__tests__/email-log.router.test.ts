@@ -132,6 +132,19 @@ describe('emailLog.logToContact (#1177)', () => {
     expect(prismaMock.emailRecord.update).not.toHaveBeenCalled();
   });
 
+  it('never logs a draft, which was never sent, and writes nothing', async () => {
+    (prismaMock.emailRecord.findFirst as any).mockResolvedValue(
+      stored({ status: 'PENDING', sentAt: null, metadata: { isDraft: true } })
+    );
+
+    await expect(member().logToContact({ emailId: EMAIL_ID })).rejects.toMatchObject({
+      code: 'PRECONDITION_FAILED',
+      message: 'Send the email before logging it.',
+    });
+    expect(prismaMock.emailRecord.update).not.toHaveBeenCalled();
+    expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+  });
+
   it('never links a person with an active processing restriction', async () => {
     mockAdapters.processingRestrictionRepository.status.mockResolvedValue({
       restricted: true,
