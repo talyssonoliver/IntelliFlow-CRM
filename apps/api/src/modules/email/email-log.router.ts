@@ -89,8 +89,20 @@ async function loadEmail(ctx: EmailRouterCtx, emailId: string): Promise<StoredEm
   return email;
 }
 
-/** Statuses of mail the CRM user sent (its sender is the user, never the counterparty). */
+/** Statuses only mail the CRM user sent can have. */
 const OUTBOUND_STATUSES = new Set(['PENDING', 'SENT', 'FAILED', 'BOUNCED', 'OPENED', 'CLICKED']);
+
+/**
+ * Whether the user sent this email (then its sender is the user, never the counterparty).
+ * DELIVERED is shared: received mail (inbound, or synced from an Outlook inbox) has it too, and
+ * there its sender IS the counterparty. A delivered email is the user's own only when it has a
+ * user and was not synced from an inbox; received inbound mail has no user.
+ */
+export function isOutbound(email: Pick<StoredEmail, 'status' | 'userId' | 'metadata'>): boolean {
+  if (OUTBOUND_STATUSES.has(email.status)) return true;
+  if (email.status !== 'DELIVERED' || !email.userId) return false;
+  return (email.metadata as { folder?: unknown } | null)?.folder !== 'inbox';
+}
 
 /** The user's own addresses: the email's mailbox, the sender of their own mail, their login. */
 function ownAddresses(ctx: EmailRouterCtx, email: StoredEmail): Set<string> {
@@ -99,7 +111,7 @@ function ownAddresses(ctx: EmailRouterCtx, email: StoredEmail): Set<string> {
     [
       email.mailbox?.fromAddress,
       email.mailbox?.accountAddress,
-      OUTBOUND_STATUSES.has(email.status) ? email.fromEmail : null,
+      isOutbound(email) ? email.fromEmail : null,
       login,
     ]
       .filter((a): a is string => Boolean(a))

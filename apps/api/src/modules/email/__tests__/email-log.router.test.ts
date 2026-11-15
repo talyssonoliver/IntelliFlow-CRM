@@ -9,7 +9,7 @@ import {
   mockAdapters,
   TEST_UUIDS,
 } from '../../../test/setup';
-import { emailLogRouter, emailAddresses } from '../email-log.router';
+import { emailLogRouter, emailAddresses, isOutbound } from '../email-log.router';
 
 const tenantId = TEST_UUIDS.tenant;
 const EMAIL_ID = 'clh0000000000000000000e01';
@@ -213,6 +213,41 @@ describe('emailLog.status', () => {
       leadId: 'lead-1',
     });
   });
+});
+
+describe('isOutbound', () => {
+  it('reads sent-only statuses as the user’s own mail', () => {
+    expect(isOutbound({ status: 'SENT', userId: null, metadata: null })).toBe(true);
+    expect(isOutbound({ status: 'BOUNCED', userId: 'u1', metadata: null })).toBe(true);
+  });
+
+  it("reads delivered mail as the user's own only when it has a user and was not synced from an inbox", () => {
+    expect(
+      isOutbound({ status: 'DELIVERED', userId: 'u1', metadata: { purpose: 'SERVICE' } })
+    ).toBe(true);
+    // Received mail: inbound (no user) and the Outlook inbox sync keep DELIVERED too.
+    expect(isOutbound({ status: 'DELIVERED', userId: null, metadata: null })).toBe(false);
+    expect(isOutbound({ status: 'DELIVERED', userId: 'u1', metadata: { folder: 'inbox' } })).toBe(
+      false
+    );
+  });
+});
+
+it('links received mail to its sender, the counterparty, even though it is DELIVERED', async () => {
+  (prismaMock.emailRecord.findFirst as any).mockResolvedValue(
+    stored({
+      status: 'DELIVERED',
+      fromEmail: 'ada@example.invalid',
+      toEmail: 'me@mail.example.invalid',
+      metadata: { folder: 'inbox' },
+    })
+  );
+
+  await member().logToContact({ emailId: EMAIL_ID });
+
+  expect((prismaMock.contact.findFirst as any).mock.calls[0][0].where.email.equals).toBe(
+    'ada@example.invalid'
+  );
 });
 
 describe('emailAddresses', () => {
