@@ -7,6 +7,8 @@
  * PG-059 `lib/leads/*` extraction convention.
  */
 
+import { formatGBPCompact } from '@/lib/format/gbp-compact';
+
 // Activity types matching the database enum (UI-facing variant).
 export type ActivityType =
   | 'web_form'
@@ -72,15 +74,10 @@ export function formatRelativeTime(dateString: string, timezone: string = 'Europ
 }
 
 /**
- * A compact pound label for an amount in whole currency units:
- * `50_000` -> `"£50k"`, `500` -> `"£500"`. The CRM works in GBP (UI-017).
+ * Compact pound label for an amount in whole pounds (UI-017). The one shared
+ * formatter lives in `lib/format/gbp-compact`; re-exported for the lead callers.
  */
-export function formatGBPCompact(amount: number): string {
-  // Round first, so 999.5 reads "£1k" rather than "£1000".
-  const whole = Math.round(amount);
-  if (whole >= 1000) return `£${Math.round(whole / 1000)}k`;
-  return `£${whole}`;
-}
+export { formatGBPCompact };
 
 /** Ad and campaign tracking parameters, dropped from a lead's website. */
 const TRACKING_PARAM = /^(utm_.*|gclid|fbclid|msclkid|dclid|gbraid|wbraid)$/i;
