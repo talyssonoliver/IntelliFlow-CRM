@@ -214,6 +214,39 @@ describe('InMemoryContactRepository', () => {
     });
   });
 
+  describe('linkToAccountIfFree()', () => {
+    const make = (accountId?: string) =>
+      Contact.create({
+        email: 'link@example.com',
+        firstName: 'Link',
+        lastName: 'Test',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-1',
+        ...(accountId ? { accountId } : {}),
+      }).value;
+
+    it('puts a contact with no account on the account', async () => {
+      const c = make();
+      await repository.save(c);
+      expect(await repository.linkToAccountIfFree(c.id.value, 'tenant-1', 'acc-1')).toBe(true);
+      expect((await repository.findById(c.id))?.accountId).toBe('acc-1');
+    });
+
+    it('accepts a contact already on the account', async () => {
+      const c = make('acc-1');
+      await repository.save(c);
+      expect(await repository.linkToAccountIfFree(c.id.value, 'tenant-1', 'acc-1')).toBe(true);
+    });
+
+    it('refuses a contact on another account, in another tenant, or missing', async () => {
+      const c = make('acc-2');
+      await repository.save(c);
+      expect(await repository.linkToAccountIfFree(c.id.value, 'tenant-1', 'acc-1')).toBe(false);
+      expect(await repository.linkToAccountIfFree(c.id.value, 'tenant-2', 'acc-2')).toBe(false);
+      expect(await repository.linkToAccountIfFree('missing', 'tenant-1', 'acc-1')).toBe(false);
+    });
+  });
+
   describe('findByOwnerId()', () => {
     it('should return all contacts for an owner', async () => {
       const contact2Result = Contact.create({

@@ -20,6 +20,8 @@ import {
   Contact,
   Account,
   Opportunity,
+  type DomainEvent,
+  type RepositoryTransaction,
 } from '@intelliflow/domain';
 import { ConversionSnapshot } from './ConversionSnapshot';
 import {
@@ -31,6 +33,21 @@ import {
 import { EventBusPort } from '../../ports/external';
 import { TransactionPort } from '../../ports/TransactionPort';
 import { ValidationError, NotFoundError, PersistenceError } from '../../errors';
+
+const CONTACT_ON_OTHER_ACCOUNT =
+  'A contact with this email already belongs to another account. Convert the lead into that account, or without creating a contact.';
+const CONTACT_CHANGED =
+  'The contact with this email changed during the conversion (it moved to another account or was removed). Try again.';
+
+/** Thrown inside the transaction when the existing contact no longer qualifies; rolls it back. */
+class ContactChangedError extends Error {}
+
+/** The deal's contact: a new one to save, or an existing one to link inside the transaction. */
+interface ResolvedContact {
+  contactId: string | null;
+  contact: Contact | null;
+  linkExisting: boolean;
+}
 
 // =============================================================================
 // Input/Output DTOs
@@ -54,6 +71,18 @@ export interface ConvertLeadToDealInput {
   createContact?: boolean;
   /** User performing the conversion (required for audit) */
   convertedBy: string;
+}
+
+/**
+ * Callbacks the caller can pass to `execute`.
+ */
+export interface ConvertLeadToDealHooks {
+  /**
+   * Runs once, only when the conversion is about to create a NEW contact (not when it links an
+   * existing one), before anything is written. A caller that meters contacts asserts its quota
+   * here; throwing aborts the conversion.
+   */
+  beforeCreateContact?: () => Promise<void>;
 }
 
 /**
@@ -109,7 +138,8 @@ export class ConvertLeadToDealUseCase {
   ) {}
 
   async execute(
-    input: ConvertLeadToDealInput
+    input: ConvertLeadToDealInput,
+    hooks: ConvertLeadToDealHooks = {}
   ): Promise<Result<ConvertLeadToDealOutput, DomainError>> {
     // 1. Validate input
     const validationResult = this.validateInput(input);
@@ -149,18 +179,12 @@ export class ConvertLeadToDealUseCase {
     }
     const { accountId, newAccount } = accountResult.value;
 
-    // 6. Optionally prepare a contact from lead data (NO write yet)
-    let contactId: string | null = null;
-    let contact: Contact | null = null;
-    const shouldCreateContact = input.createContact !== false; // default true
-    if (shouldCreateContact) {
-      const contactResult = this.prepareContactFromLead(lead, accountId);
-      if (contactResult.isFailure) {
-        return Result.fail(contactResult.error);
-      }
-      contact = contactResult.value;
-      contactId = contact.id.value;
+    // 6. Optionally resolve the deal's contact (NO write yet)
+    const contactResolution = await this.resolveContact(input, lead, accountId, hooks);
+    if (contactResolution.isFailure) {
+      return Result.fail(contactResolution.error);
     }
+    const { contactId, contact, linkExisting } = contactResolution.value;
 
     // 7. Create opportunity
     const opportunityResult = this.createOpportunityFromLead(lead, input, accountId, contactId);
@@ -184,26 +208,19 @@ export class ConvertLeadToDealUseCase {
     const aggregates = [newAccount, contact, opportunity, lead].filter(
       (a): a is NonNullable<typeof a> => a !== null
     );
-    try {
-      await this.transactionManager.run(async (tx) => {
-        if (newAccount) {
-          await this.accountRepository.save(newAccount, tx);
-        }
-        if (contact) {
-          await this.contactRepository.save(contact, tx);
-        }
-        await this.opportunityRepository.save(opportunity, tx);
-        await this.leadRepository.save(lead, { expectedStatus }, tx);
-
-        const events = aggregates.flatMap((aggregate) => aggregate.getDomainEvents());
-        if (events.length > 0) {
-          await this.eventBus.publishAll(events, tx);
-        }
-      });
-    } catch (error) {
-      return Result.fail(
-        new PersistenceError('Failed to save conversion: ' + (error as Error).message)
-      );
+    const persisted = await this.persistConversion({
+      newAccount,
+      contact,
+      linkExisting: linkExisting
+        ? { contactId: contactId!, tenantId: lead.tenantId, accountId }
+        : null,
+      opportunity,
+      lead,
+      expectedStatus,
+      aggregates,
+    });
+    if (persisted.isFailure) {
+      return Result.fail(persisted.error);
     }
 
     // 10. Clear domain events now the transaction has committed
@@ -286,6 +303,94 @@ export class ConvertLeadToDealUseCase {
    * Build a contact entity from lead data WITHOUT persisting.
    * Saved inside the conversion transaction by `execute` (DDD-001).
    */
+  /**
+   * The deal's contact. A contact with the lead's email may already exist in the tenant (the
+   * lead was entered for someone already known): it is linked rather than duplicated, which the
+   * unique (tenantId, email) constraint would refuse. A deal's contact must belong to the deal's
+   * account, so an existing contact on another account is refused, and one with no account is
+   * attached to the deal's account (saved inside the conversion transaction). Only a new contact
+   * runs `beforeCreateContact`.
+   */
+  private async resolveContact(
+    input: ConvertLeadToDealInput,
+    lead: Lead,
+    accountId: string,
+    hooks: ConvertLeadToDealHooks
+  ): Promise<Result<ResolvedContact, DomainError>> {
+    if (input.createContact === false) {
+      return Result.ok({ contactId: null, contact: null, linkExisting: false });
+    }
+
+    const existing = await this.contactRepository.findByEmailInTenant(lead.email, lead.tenantId);
+    if (existing) {
+      if (existing.accountId !== undefined && existing.accountId !== accountId) {
+        return Result.fail(new ValidationError(CONTACT_ON_OTHER_ACCOUNT));
+      }
+      // Linked (and put on the account if it has none) inside the transaction, by a
+      // conditional update that fails if the contact changed since this read.
+      return Result.ok({ contactId: existing.id.value, contact: null, linkExisting: true });
+    }
+
+    await hooks.beforeCreateContact?.();
+    const created = this.prepareContactFromLead(lead, accountId);
+    if (created.isFailure) return Result.fail(created.error);
+    return Result.ok({
+      contactId: created.value.id.value,
+      contact: created.value,
+      linkExisting: false,
+    });
+  }
+
+  /**
+   * Persist ALL aggregates + their domain events atomically (DDD-001). Account + Contact +
+   * Opportunity + Lead and the event outbox share ONE transaction: a failure anywhere rolls the
+   * whole conversion back, so there is never an orphaned Account/Contact/Opportunity while the
+   * source Lead stays QUALIFIED (ADR-002 aggregate boundaries, ADR-011 zero-lost-events).
+   */
+  private async persistConversion(p: {
+    newAccount: Account | null;
+    contact: Contact | null;
+    linkExisting: { contactId: string; tenantId: string; accountId: string } | null;
+    opportunity: Opportunity;
+    lead: Lead;
+    expectedStatus: Lead['status'];
+    aggregates: Array<{ getDomainEvents(): readonly DomainEvent[] }>;
+  }): Promise<Result<void, DomainError>> {
+    try {
+      await this.transactionManager.run(async (tx) => {
+        if (p.newAccount) await this.accountRepository.save(p.newAccount, tx);
+        if (p.contact) await this.contactRepository.save(p.contact, tx);
+        if (p.linkExisting) await this.linkExistingContact(p.linkExisting, tx);
+        await this.opportunityRepository.save(p.opportunity, tx);
+        await this.leadRepository.save(p.lead, { expectedStatus: p.expectedStatus }, tx);
+
+        const events = p.aggregates.flatMap((aggregate) => aggregate.getDomainEvents());
+        if (events.length > 0) await this.eventBus.publishAll(events, tx);
+      });
+    } catch (error) {
+      if (error instanceof ContactChangedError) {
+        return Result.fail(new ValidationError(CONTACT_CHANGED));
+      }
+      return Result.fail(
+        new PersistenceError('Failed to save conversion: ' + (error as Error).message)
+      );
+    }
+    return Result.ok(undefined);
+  }
+
+  private async linkExistingContact(
+    link: { contactId: string; tenantId: string; accountId: string },
+    tx: RepositoryTransaction
+  ): Promise<void> {
+    const linked = await this.contactRepository.linkToAccountIfFree(
+      link.contactId,
+      link.tenantId,
+      link.accountId,
+      tx
+    );
+    if (!linked) throw new ContactChangedError();
+  }
+
   private prepareContactFromLead(lead: Lead, accountId: string): Result<Contact, DomainError> {
     const contactResult = Contact.create({
       email: lead.email.value,

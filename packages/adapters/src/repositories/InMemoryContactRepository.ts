@@ -35,6 +35,18 @@ export class InMemoryContactRepository implements ContactRepository {
     return null;
   }
 
+  async linkToAccountIfFree(
+    contactId: string,
+    tenantId: string,
+    accountId: string
+  ): Promise<boolean> {
+    const contact = this.contacts.get(contactId);
+    if (!contact || contact.tenantId !== tenantId) return false;
+    if (contact.accountId === accountId) return true;
+    if (contact.accountId !== undefined) return false;
+    return contact.associateWithAccount(accountId, 'lead-conversion').isSuccess;
+  }
+
   async findByOwnerId(ownerId: string): Promise<Contact[]> {
     return Array.from(this.contacts.values())
       .filter((contact) => contact.ownerId === ownerId)

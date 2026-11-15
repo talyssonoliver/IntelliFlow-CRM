@@ -19,6 +19,7 @@ type ContactPrismaDelegateDouble = {
   findMany: ReturnType<typeof vi.fn>;
   delete: ReturnType<typeof vi.fn>;
   count: ReturnType<typeof vi.fn>;
+  updateMany: ReturnType<typeof vi.fn>;
 };
 
 interface ContactPrismaClientDouble {
@@ -34,6 +35,7 @@ const createMockPrismaClient = (): ContactPrismaClientDouble => {
     findMany: vi.fn(),
     delete: vi.fn(),
     count: vi.fn(),
+    updateMany: vi.fn(),
   };
 
   const partialClient = {
@@ -367,6 +369,40 @@ describe('PrismaContactRepository', () => {
         where: { tenantId: 'tenant-123', email: 'nonexistent@example.com' },
       });
       expect(result).toBeNull();
+    });
+  });
+
+  describe('linkToAccountIfFree()', () => {
+    it('updates only the account link, conditional on the contact having none or this one', async () => {
+      mockPrisma.contact.updateMany.mockResolvedValue({ count: 1 });
+
+      const linked = await repository.linkToAccountIfFree('c-1', 'tenant-123', 'account-9');
+
+      expect(linked).toBe(true);
+      expect(mockPrisma.contact.updateMany).toHaveBeenCalledWith({
+        where: {
+          id: 'c-1',
+          tenantId: 'tenant-123',
+          OR: [{ accountId: null }, { accountId: 'account-9' }],
+        },
+        data: { accountId: 'account-9', updatedAt: expect.any(Date) },
+      });
+    });
+
+    it('returns false when the contact moved to another account or is gone', async () => {
+      mockPrisma.contact.updateMany.mockResolvedValue({ count: 0 });
+
+      expect(await repository.linkToAccountIfFree('c-1', 'tenant-123', 'account-9')).toBe(false);
+    });
+
+    it('writes through the transaction client when one is given', async () => {
+      const tx = { contact: { updateMany: vi.fn().mockResolvedValue({ count: 1 }) } };
+
+      expect(
+        await repository.linkToAccountIfFree('c-1', 'tenant-123', 'account-9', tx as never)
+      ).toBe(true);
+      expect(tx.contact.updateMany).toHaveBeenCalledTimes(1);
+      expect(mockPrisma.contact.updateMany).not.toHaveBeenCalled();
     });
   });
 

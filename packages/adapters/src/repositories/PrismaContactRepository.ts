@@ -187,6 +187,22 @@ export class PrismaContactRepository implements ContactRepository {
     );
   }
 
+  async linkToAccountIfFree(
+    contactId: string,
+    tenantId: string,
+    accountId: string,
+    tx?: RepositoryTransaction
+  ): Promise<boolean> {
+    const db = (tx as TransactionClient | undefined) ?? this.prisma;
+    // Conditional on the row's current account, so a concurrent move to another account is
+    // never overwritten; only the account link (and its timestamp) is written.
+    const { count } = await db.contact.updateMany({
+      where: { id: contactId, tenantId, OR: [{ accountId: null }, { accountId }] },
+      data: { accountId, updatedAt: new Date() },
+    });
+    return count === 1;
+  }
+
   async findByEmailInTenant(email: Email, tenantId: string): Promise<Contact | null> {
     const record = await this.prisma.contact.findFirst({
       where: { tenantId, email: email.value },

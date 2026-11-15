@@ -33,6 +33,19 @@ export interface ContactRepository {
   findByEmailInTenant(email: Email, tenantId: string): Promise<Contact | null>;
 
   /**
+   * Put an existing contact on `accountId`, but only if it has no account or is already on it.
+   * One conditional update (inside `tx` when given), so a change committed since the contact was
+   * read is never overwritten; no other field is touched. Returns false when the contact no
+   * longer qualifies (moved to another account, or gone), and the caller should abort.
+   */
+  linkToAccountIfFree(
+    contactId: string,
+    tenantId: string,
+    accountId: string,
+    tx?: RepositoryTransaction
+  ): Promise<boolean>;
+
+  /**
    * Find all contacts for an owner
    */
   findByOwnerId(ownerId: string): Promise<Contact[]>;
