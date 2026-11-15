@@ -286,6 +286,11 @@ export async function sendThroughMailbox(
   }
 }
 
+/**
+ * Zoho's send API (zoho.com/mail/help/api/post-send-an-email.html) takes the From address only
+ * and has no reply-to: the display name is the one set in Zoho, and the tenant's reply-to does
+ * not apply (Email Settings says so when a Zoho mailbox is connected). The body goes as HTML.
+ */
 async function sendThroughZoho(
   prisma: MailboxWriter,
   mailbox: TransportMailbox,
