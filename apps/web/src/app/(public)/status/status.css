@@ -112,5 +112,9 @@
   }
   .aurora-site .aurora-status .ast-tag {
     margin-left: 30px;
+    /* A long state note (e.g. "Not responding: Could not reach the API to check") wraps
+       inside the card instead of running past its edge. */
+    max-width: calc(100% - 30px);
+    border-radius: 12px;
   }
 }
