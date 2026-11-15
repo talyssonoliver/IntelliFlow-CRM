@@ -9,12 +9,27 @@
  * notes, message bodies, deal and task descriptions (Q23), AI free text and staff-written
  * tags, qualification text and booking answers (Q26). Records the export only counts
  * (calendar events, notifications, experiment records) are OTHER_RECORDS, so an export is
- * never complete while leaving out something on the erasure checklist. The erasure anonymises the CRM core in ONE transaction, after re-reading
- * the request FOR UPDATE, and leaves communications as a counted manual checklist.
+ * never complete while leaving out something on the erasure checklist. The erasure anonymises the
+ * CRM core and the person's communications (subject-communications.ts, IFC-316) in ONE
+ * transaction, after re-reading the request FOR UPDATE. Deals, tasks and stored files stay on a
+ * counted checklist.
  * PublicFeedback is Aurora's own product feedback (no tenant) and is out of scope.
  */
 import { Prisma, type PrismaClient } from '@intelliflow/db';
 import { DSAR_LIMITS, ERASED_EMAIL_DOMAIN, normalizeSubjectEmail } from '@intelliflow/domain';
+import {
+  ERASED_NAME,
+  ERASED_NOTE,
+  addressIds,
+  communicationCounts,
+  eraseCommunications,
+  storedFiles,
+  subjectDealIds,
+  subjectNotificationWhere,
+  subjectTaskWhere,
+  type Db,
+  type SubjectIds,
+} from './subject-communications';
 import type {
   ErasureOutcome,
   ErasureResult,
@@ -22,18 +37,8 @@ import type {
   SubjectExport,
 } from '@intelliflow/application';
 
-const ERASED_NOTE = '[erased under a data request]';
 const ERASED_ACTIVITY = 'Erased activity';
-const ERASED_NAME = 'Erased';
 const TAKE = DSAR_LIMITS.exportRowCap;
-
-type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
-type Db = PrismaClient | Tx;
-
-interface SubjectIds {
-  leadIds: string[];
-  contactIds: string[];
-}
 
 // Every address match uses dsar_normalise_email, the SQL twin of normalizeSubjectEmail (any
 // outer whitespace, tabs and newlines included, then lower case), so a stored address with
@@ -67,16 +72,6 @@ function unionIds(a: SubjectIds, b: SubjectIds): SubjectIds {
   return { leadIds: union(a.leadIds, b.leadIds), contactIds: union(a.contactIds, b.contactIds) };
 }
 
-/** The deals whose contact is the person's: AI output about a deal is about its contact (Q22). */
-async function subjectDealIds(db: Db, tenantId: string, contactIds: string[]): Promise<string[]> {
-  if (contactIds.length === 0) return [];
-  const deals = await db.opportunity.findMany({
-    where: { tenantId, contactId: { in: contactIds } },
-    select: { id: true },
-  });
-  return deals.map((d) => d.id);
-}
-
 /**
  * The AI insights about the person: those on their leads and contacts, and those on deals
  * whose contact is theirs. Insight generation treats a deal as its contact's (PG-203 Q22: its
@@ -89,34 +84,6 @@ async function subjectInsightWhere(db: Db, tenantId: string, ids: SubjectIds) {
     OR: [
       { entityId: { in: [...ids.leadIds, ...ids.contactIds] } },
       { entityType: 'opportunity', entityId: { in: dealIds } },
-    ],
-  };
-}
-
-/** The person's tasks: linked to their leads or contacts, or to a deal of their contact (Q23). */
-function subjectTaskWhere(tenantId: string, ids: SubjectIds, dealIds: string[]) {
-  return {
-    tenantId,
-    OR: [
-      { leadId: { in: ids.leadIds } },
-      { contactId: { in: ids.contactIds } },
-      { opportunityId: { in: dealIds } },
-    ],
-  };
-}
-
-/** Sent to the person by address, or about them (AI insight and churn alerts to staff). */
-function subjectNotificationWhere(
-  tenantId: string,
-  notificationIds: string[],
-  ids: SubjectIds,
-  dealIds: string[]
-) {
-  return {
-    tenantId,
-    OR: [
-      { id: { in: notificationIds } },
-      { sourceId: { in: [...ids.leadIds, ...ids.contactIds, ...dealIds] } },
     ],
   };
 }
@@ -164,57 +131,6 @@ async function bookedAppointmentIds(
   return rows.map((r) => r.id);
 }
 
-/** Rows that name the person only by address (no lead/contact link), per table. */
-interface AddressIds {
-  emailRecords: string[];
-  tickets: string[];
-  chats: string[];
-  feedback: string[];
-  notifications: string[];
-  drafts: string[];
-}
-
-async function addressIds(db: Db, tenantId: string, email: string): Promise<AddressIds> {
-  const ids = (rows: Array<{ id: string }>) => rows.map((r) => r.id);
-  // To, CC and BCC are stored as comma-separated lists (PG-207 mailbox sender, inbound mail):
-  // each address is compared on its own, so a person among several recipients or only on
-  // CC/BCC is found, and an address that merely contains theirs is not (codex).
-  const emailRecords = await db.$queryRaw<Array<{ id: string }>>`
-    SELECT id FROM email_records WHERE "tenantId" = ${tenantId}
-      AND (
-        dsar_normalise_email("fromEmail") = ${email}
-        OR EXISTS (
-          SELECT 1
-          FROM unnest(string_to_array(concat_ws(',', "toEmail", "ccEmails", "bccEmails"), ','))
-            AS recipient(address)
-          WHERE dsar_normalise_email(recipient.address) = ${email}
-        )
-      )`;
-  const tickets = await db.$queryRaw<Array<{ id: string }>>`
-    SELECT id FROM tickets
-    WHERE "tenantId" = ${tenantId} AND dsar_normalise_email("contactEmail") = ${email}`;
-  const chats = await db.$queryRaw<Array<{ id: string }>>`
-    SELECT id FROM chat_conversations
-    WHERE "tenantId" = ${tenantId} AND dsar_normalise_email("contactEmail") = ${email}`;
-  const feedback = await db.$queryRaw<Array<{ id: string }>>`
-    SELECT id FROM feedback_surveys
-    WHERE "tenantId" = ${tenantId} AND dsar_normalise_email("contactEmail") = ${email}`;
-  const notifications = await db.$queryRaw<Array<{ id: string }>>`
-    SELECT id FROM notifications
-    WHERE "tenantId" = ${tenantId} AND dsar_normalise_email("recipientEmail") = ${email}`;
-  const drafts = await db.$queryRaw<Array<{ id: string }>>`
-    SELECT id FROM auto_response_drafts
-    WHERE "tenantId" = ${tenantId} AND dsar_normalise_email("recipientEmail") = ${email}`;
-  return {
-    emailRecords: ids(emailRecords),
-    tickets: ids(tickets),
-    chats: ids(chats),
-    feedback: ids(feedback),
-    notifications: ids(notifications),
-    drafts: ids(drafts),
-  };
-}
-
 /**
  * At most TAKE rows of a category. The query asks for one more; only when that extra row
  * exists is the category counted, so rows past the cap are reported, never silently dropped.
@@ -226,83 +142,6 @@ async function upTo<T>(
   const rows = await query;
   if (rows.length <= TAKE) return { rows, total: rows.length };
   return { rows: rows.slice(0, TAKE), total: await count() };
-}
-
-/** Communications and stored files the erasure does not touch (owner Q19): counts only. */
-async function checklist(
-  db: Db,
-  tenantId: string,
-  email: string,
-  ids: SubjectIds
-): Promise<Record<string, number>> {
-  const { leadIds, contactIds } = ids;
-  const byAddress = await addressIds(db, tenantId, email);
-  const dealIds = await subjectDealIds(db, tenantId, contactIds);
-  const [
-    emailRecords,
-    tickets,
-    chats,
-    feedbackSurveys,
-    notifications,
-    autoResponseDrafts,
-    contactReplyDrafts,
-    calendarEvents,
-    experimentAssignments,
-    storedLeadFiles,
-    deals,
-    tasks,
-  ] = await Promise.all([
-    db.emailRecord.count({
-      where: {
-        tenantId,
-        OR: [{ contactId: { in: contactIds } }, { id: { in: byAddress.emailRecords } }],
-      },
-    }),
-    db.ticket.count({
-      where: {
-        tenantId,
-        OR: [{ contactId: { in: contactIds } }, { id: { in: byAddress.tickets } }],
-      },
-    }),
-    db.chatConversation.count({
-      where: { tenantId, OR: [{ contactId: { in: contactIds } }, { id: { in: byAddress.chats } }] },
-    }),
-    db.feedbackSurvey.count({
-      where: {
-        tenantId,
-        OR: [{ contactId: { in: contactIds } }, { id: { in: byAddress.feedback } }],
-      },
-    }),
-    // AI insight and churn alerts to staff carry the lead, contact or (for their deals)
-    // opportunity id as their source (codex).
-    db.notification.count({
-      where: subjectNotificationWhere(tenantId, byAddress.notifications, ids, dealIds),
-    }),
-    db.autoResponseDraft.count({
-      where: { tenantId, OR: [{ leadId: { in: leadIds } }, { id: { in: byAddress.drafts } }] },
-    }),
-    db.contactReplyDraft.count({ where: { tenantId, contactId: { in: contactIds } } }),
-    db.calendarEvent.count({ where: { tenantId, contactId: { in: contactIds } } }),
-    db.experimentAssignment.count({ where: { leadId: { in: leadIds } } }),
-    db.leadFile.count({ where: { tenantId, leadId: { in: leadIds }, url: { not: null } } }),
-    // Deals and tasks are exported (descriptions withheld) and counted here, not erased (Q23).
-    db.opportunity.count({ where: { tenantId, contactId: { in: contactIds } } }),
-    db.task.count({ where: subjectTaskWhere(tenantId, ids, dealIds) }),
-  ]);
-  return {
-    emailRecords,
-    tickets,
-    chats,
-    feedbackSurveys,
-    notifications,
-    autoResponseDrafts,
-    contactReplyDrafts,
-    calendarEvents,
-    experimentAssignments,
-    storedLeadFiles,
-    deals,
-    tasks,
-  };
 }
 
 export class PrismaSubjectDataRepository implements SubjectDataPort {
@@ -745,8 +584,9 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
         leads: ids.leadIds.length,
         contacts: ids.contactIds.length,
         bookings: appointmentIds.length,
+        ...(await communicationCounts(this.prisma, tenantId, subjectEmail, ids)),
       },
-      checklist: await checklist(this.prisma, tenantId, subjectEmail, ids),
+      checklist: (await storedFiles(this.prisma, tenantId, subjectEmail, ids)).checklist,
     };
   }
 
@@ -784,7 +624,6 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
           firstAppointments,
           await bookedAppointmentIds(tx, tenantId, subjectEmail, true)
         );
-        const manual = await checklist(tx, tenantId, subjectEmail, ids);
 
         // Leads: a per-row placeholder keeps @@unique([email, tenantId]) satisfied.
         const leads = await tx.$executeRaw`
@@ -821,8 +660,8 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
             metadata = NULL
           WHERE "tenantId" = ${tenantId} AND "contactId" = ANY(${contactIds}::text[])`;
         // The file's name goes; its storage locator stays. The stored object itself is deleted
-        // by hand (the manual checklist's "Stored files"), and without the url nobody could
-        // find it again (codex HIGH).
+        // by hand (the checklist's "Stored files"), and without the url nobody could find it
+        // again (codex HIGH).
         const leadFiles = await tx.leadFile.updateMany({
           where: { tenantId, leadId: { in: leadIds } },
           data: { name: 'erased' },
@@ -846,6 +685,16 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
             "cancellationReason" = NULL, "bookerName" = NULL, "bookerEmail" = NULL, "bookingAnswers" = NULL,
             "bookingConsentAt" = NULL, "bookingConsentVersion" = NULL, "updatedAt" = ${input.now}
           WHERE "tenantId" = ${tenantId} AND id = ANY(${appointmentIds}::text[])`;
+
+        // Read first: the stored files are found through the person's address, which the
+        // erasure removes. Their rows and locators stay; the ids say which rows they are.
+        const left = await storedFiles(tx, tenantId, subjectEmail, ids);
+        const communications = await eraseCommunications(tx, {
+          tenantId,
+          email: subjectEmail,
+          ids,
+          now: input.now,
+        });
 
         await tx.dsarRequest.updateMany({
           where: { id: input.requestId, tenantId, status: 'VERIFIED' },
@@ -873,8 +722,10 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
               aiScores: aiScores.count,
               aiInsights: leadInsights.count + contactInsights.count + insights.count,
               bookings: Number(bookings),
+              ...communications,
             },
-            checklist: manual,
+            checklist: left.checklist,
+            storedFiles: left.files,
           },
         };
       },
