@@ -100,7 +100,7 @@ describe('StageColumn', () => {
       />
     );
 
-    expect(screen.getByText('$200K')).toBeInTheDocument();
+    expect(screen.getByText('£200k')).toBeInTheDocument();
   });
 
   it('renders DealCard for each deal in the list', () => {

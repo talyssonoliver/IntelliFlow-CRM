@@ -15,6 +15,8 @@ import {
   Legend,
 } from 'recharts';
 import { isEmptySeries } from '@/lib/charts/empty-series';
+import { formatGBPCompact } from '@/lib/format/gbp-compact';
+import { formatGBP } from '@/lib/dashboard/kpi-calculator';
 import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
 
 interface ChartEntry {
@@ -95,7 +97,7 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
               <XAxis dataKey="name" tick={{ fontSize: 10 }} className="fill-muted-foreground" />
               <YAxis
-                tickFormatter={(value) => `$${(value / 1000).toFixed(0)}K`}
+                tickFormatter={(value) => formatGBPCompact(Number(value))}
                 tick={{ fontSize: 10 }}
                 className="fill-muted-foreground"
                 width={50}
@@ -103,7 +105,7 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
               <Tooltip
                 formatter={(value) => {
                   const numValue = typeof value === 'number' ? value : 0;
-                  return [`$${numValue.toLocaleString('en-GB')}`, 'Revenue'];
+                  return [formatGBP(numValue), 'Revenue'];
                 }}
               />
               <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
@@ -126,7 +128,7 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
             {barChartData.map((entry) => (
               <tr key={`bar-sr-${entry.name}`}>
                 <td>{entry.name}</td>
-                <td>${entry.revenue.toLocaleString('en-GB')}</td>
+                <td>{formatGBP(entry.revenue)}</td>
               </tr>
             ))}
           </tbody>

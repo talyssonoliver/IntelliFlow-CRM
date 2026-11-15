@@ -9,6 +9,7 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
 import { EntityHeader } from '@/components/shared';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { formatGBPCompact } from '@/lib/format/gbp-compact';
 
 const ForecastRevenueChart = dynamic(() => import('@/components/deals/ForecastRevenueChart'), {
   ssr: false,
@@ -82,15 +83,7 @@ const STAGE_LABELS: Record<StageId, string> = {
 // Utility Functions
 // =============================================================================
 
-function formatCurrency(value: number): string {
-  if (value >= 1000000) {
-    return `$${(value / 1000000).toFixed(1)}M`;
-  }
-  if (value >= 1000) {
-    return `$${Math.round(value / 1000)}K`;
-  }
-  return `$${value.toLocaleString('en-GB')}`;
-}
+const formatCurrency = formatGBPCompact;
 
 function formatFullCurrency(value: number): string {
   return new Intl.NumberFormat('en-GB', {
@@ -690,7 +683,7 @@ export default function DealForecastPage() {
                 toast({
                   title: 'Currency conversion',
                   description:
-                    'Multi-currency display is tracked under IFC-201. All values are currently shown in USD.',
+                    'Multi-currency display is tracked under IFC-201. All values are shown in GBP.',
                 }),
             },
             {

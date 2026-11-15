@@ -24,6 +24,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { useAnalyticsDateRange, type PeriodKey } from '@/hooks/useAnalyticsDateRange';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { downloadCSV } from '@/lib/export/csv';
+import { formatGBPCompact } from '@/lib/format/gbp-compact';
 import { exportToPDF } from '@/lib/export/pdf';
 import type { ReportSection, PDFExportOptions } from '@/lib/export/pdf';
 
@@ -86,11 +87,7 @@ const CHART_COLORS = [
 // Helpers
 // ============================================
 
-function formatCurrency(value: number): string {
-  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}k`;
-  return `$${value.toLocaleString('en-GB')}`;
-}
+const formatCurrency = (value: number): string => formatGBPCompact(value, 1);
 
 function toMetricChange(delta: number, label = 'vs prev period'): MetricChange {
   let direction: 'up' | 'down' | 'neutral';
@@ -614,7 +611,7 @@ function RevenueBarChart({
             className="fill-muted-foreground"
             tickLine={false}
             axisLine={false}
-            tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+            tickFormatter={(v) => formatGBPCompact(v)}
           />
           <Tooltip
             formatter={(value) => formatCurrency(typeof value === 'number' ? value : 0)}
@@ -668,7 +665,7 @@ function GrowthTrendChart({
             className="fill-muted-foreground"
             tickLine={false}
             axisLine={false}
-            tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
+            tickFormatter={(v) => formatGBPCompact(v)}
           />
           <Tooltip
             formatter={(value) => formatCurrency(typeof value === 'number' ? value : 0)}

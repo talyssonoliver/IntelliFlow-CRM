@@ -21,6 +21,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { downloadCSV } from '@/lib/export/csv';
 import { useAnalyticsDateRange, type PeriodKey } from '@/hooks/useAnalyticsDateRange';
 import { refreshAnalyticsCache } from '@/app/analytics/actions';
+import { formatGBPCompact } from '@/lib/format/gbp-compact';
 
 export default function AnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>('30d');
@@ -325,11 +326,7 @@ const STAGE_COLORS: Record<string, string> = {
 
 // --- Helpers ---
 
-function formatCurrency(value: number): string {
-  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}k`;
-  return `$${value.toLocaleString('en-GB')}`;
-}
+const formatCurrency = (value: number): string => formatGBPCompact(value, 1);
 
 function formatRelativeTime(date: Date | string, timezone: string = 'Europe/London'): string {
   const now = new Date();
