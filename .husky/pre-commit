@@ -20,6 +20,10 @@ fi
 # Always sync both inventories — CI detects drift unconditionally so must we.
 # These are idempotent and fast (~5s). Pattern-gating caused false negatives
 # (any file change outside the patterns left baseline.json stale → CI fail).
+# Keep the merge driver for generated files installed in this clone
+# (scripts/lib/merge-regenerate.mjs).
+node scripts/install-merge-drivers.mjs
+
 echo "📦 Syncing inventories..."
 npx tsx tools/scripts/sync-api-inventory.ts || {
   echo "❌ Failed to sync API inventory"
