@@ -71,15 +71,16 @@ export const CHECKLIST_LABELS: Record<string, string> = {
   contactReplyDrafts: 'Contact reply drafts',
   calendarEvents: 'Calendar events',
   experimentAssignments: 'Experiment assignments',
-  storedLeadFiles: 'Stored files',
+  storedLeadFiles: 'Stored lead files',
+  storedEmailAttachments: 'Stored email attachments',
+  storedTicketAttachments: 'Stored ticket attachments',
+  storedChatAttachments: 'Chat messages with attachments',
   deals: 'Deals',
   tasks: 'Tasks',
 };
 
-// Lengths the server enforces (packages/validators/src/dsar.ts): reasons are at least 10
-// characters, the marketing stop method is DSAR_LIMITS.marketingStopMethodMin (10). Notes and
-// refusal reasons are at most DSAR_LIMITS.noteMax (2000); extension and erasure-cancellation
-// reasons at most 500 (codex: the dialog must not accept what the server refuses).
+// Server lengths (packages/validators/src/dsar.ts; the dialog must not accept what it refuses):
+// reasons and the stop method >= 10, notes <= 2000, extension and cancellation reasons <= 500.
 const REASON_MIN = 10;
 const STOP_METHOD_MIN = 10;
 const NOTE_MAX = 2000;
@@ -379,13 +380,11 @@ export function RequestActionDialog({
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">This erases, in one step:</p>
               {erasurePreview ? (
-                <CountList counts={erasurePreview.counts} />
+                <CountList counts={erasurePreview.counts} labels={CHECKLIST_LABELS} />
               ) : (
                 <output className="text-sm text-muted-foreground">Counting records</output>
               )}
-              <p className="text-sm font-medium text-foreground">
-                Handle these by hand afterwards (not erased automatically):
-              </p>
+              <p className="text-sm font-medium text-foreground">Left to handle by hand:</p>
               {erasurePreview && (
                 <CountList counts={erasurePreview.checklist} labels={CHECKLIST_LABELS} />
               )}

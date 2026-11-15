@@ -165,9 +165,9 @@ firm's data.
      person's own requests (identity check, late-receipt reason, extension
      reason, resolution note, marketing stop). The person's own request text is
      exported.
-   - `OTHER_RECORDS`: calendar events, notifications and experiment records.
-     They are on the erasure checklist, so the file counts them rather than
-     leaving them out silently.
+   - `OTHER_RECORDS`: calendar events, notifications and experiment records. The
+     erasure covers them, so the file counts them rather than leaving them out
+     silently.
 
    The file lists each withheld category with a count, says the firm is
    reviewing it, and never says that an exemption applies. Rows past the 500 cap
@@ -210,27 +210,24 @@ nothing changes.
 | Lead files                   | File name cleared. The storage location is kept so the stored object can be found and deleted by hand.                                                                                  |
 | AI scores and insights       | Deleted: lead scores, lead and contact insights, and insights about the person's deals.                                                                                                 |
 | Bookings made with the email | Booker name, email, answers and consent fields cleared. The slot stays in the firm's calendar.                                                                                          |
+| Email records (IFC-316)      | Subject and body replaced. The person's address is replaced in From, To, CC and BCC; other recipients stay. Attachment names cleared, storage locations kept.                           |
+| Tickets and chats            | Subject, description and every message's text replaced; the person's name and address removed. Staff names stay. Ticket AI insights deleted.                                            |
+| Feedback, notifications      | Comments, follow-up notes, notification text and the person's address and phone cleared.                                                                                                |
+| Calendar events              | Title, description, location and attendees cleared.                                                                                                                                     |
+| Drafts and experiments       | Auto-response drafts, contact reply drafts and experiment assignments deleted.                                                                                                          |
 
 Database triggers then stop AI-derived rows being written for an erased lead or
 contact, and stop an old edit from writing the erased address back.
 
 **Counted checklist** (kept, shown to the admin as counts, to be cleaned up by
-hand):
+hand). Since IFC-316 it holds only:
 
-- email records
-- tickets
-- chat conversations
-- feedback surveys
-- notifications about the person or their deals
-- auto-response drafts
-- contact reply drafts
-- calendar events linked to the contact
-- experiment assignments
 - deals of the person's contacts (exported with their descriptions withheld; not
   erased, because the firm may need them for its own records, and the admin
   decides)
 - tasks linked to the person's leads, contacts or deals (same)
-- stored lead files (the objects behind the cleared file rows)
+- stored files: lead files, and email, ticket and chat attachments (the objects
+  behind the cleared rows, deleted from storage by hand)
 
 **Kept on purpose**: audit log entries (legal obligation). The erasure audit row
 holds counts and the admin id, never erased values.

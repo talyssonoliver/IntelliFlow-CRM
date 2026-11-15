@@ -622,7 +622,7 @@ Otherwise the firm completes them after reviewing what was withheld. `ERASURE`,
 `RECTIFICATION`, `RESTRICTION` and `OBJECTION` wait for an ADMIN on
 `/settings/privacy-requests`. A `RESTRICTION` applies from verification.
 
-### Erasure model (owner Q19: CRM core automatic, communications as a checklist)
+### Erasure model (owner Q19; communications automated by IFC-316)
 
 Erasure runs in one transaction, scoped to the tenant and the exact email. It
 first re-reads the request `FOR UPDATE` and runs only if it is still `VERIFIED`,
@@ -638,9 +638,18 @@ so a double click or two admins cannot run it twice. It anonymises in place:
 - **Derived AI data** (scores and lead, contact and entity insights) is deleted.
 - **Lead file rows** lose their name. The storage locator stays so the stored
   object can be found and deleted by hand.
-- **Not automated, shown as a counted checklist.** Email records, tickets,
-  chats, feedback, notifications, auto-response and reply drafts, calendar
-  events, experiment assignments and stored lead files.
+- **Communications (IFC-316)** in the same transaction
+  (`subject-communications.ts`). Email records: subject and body replaced, and
+  the person's address replaced in From, To, CC and BCC (other addresses kept,
+  in order). Tickets, their activity and next steps, chats and their messages,
+  feedback, notifications to or about the person and calendar events lose their
+  text and the person's name and address; staff names stay. Auto-response and
+  reply drafts, ticket AI insights and experiment assignments are deleted.
+  Attachment rows lose their name and keep their storage locator.
+- **Left on a counted checklist.** Deals and tasks (Q23) and stored files: lead
+  files and email, ticket and chat attachments, whose objects are deleted from
+  storage by hand until a storage cleanup job exists. Legal holds: no hold
+  register exists yet, so the admin's no-hold confirmation is the check.
 - **Audit logs** keep counts and the admin id, never erased values. The audit
   row is awaited.
 
