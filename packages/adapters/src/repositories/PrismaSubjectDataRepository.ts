@@ -686,13 +686,15 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
             "bookingConsentAt" = NULL, "bookingConsentVersion" = NULL, "updatedAt" = ${input.now}
           WHERE "tenantId" = ${tenantId} AND id = ANY(${appointmentIds}::text[])`;
 
+        // Counted first: the stored files are found through the person's address, which the
+        // erasure removes. Their rows and locators stay, so the counts are what is left.
+        const remaining = await remainingChecklist(tx, tenantId, subjectEmail, ids);
         const communications = await eraseCommunications(tx, {
           tenantId,
           email: subjectEmail,
           ids,
           now: input.now,
         });
-        const remaining = await remainingChecklist(tx, tenantId, subjectEmail, ids);
 
         await tx.dsarRequest.updateMany({
           where: { id: input.requestId, tenantId, status: 'VERIFIED' },

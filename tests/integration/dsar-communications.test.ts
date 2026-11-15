@@ -218,7 +218,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       details: null,
       objectionScope: null,
       identityMethod: 'IN_PERSON_ID',
-      identityNote: 'Checked in person',
+      identityNote: 'Passport checked at the front desk',
       receivedAt: new Date(),
       receivedOnReason: null,
       verifiedAt: new Date(),
