@@ -14,7 +14,12 @@
  * @module tools/scripts/__tests__/flaky-test-skip-gate.test
  */
 
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, afterEach, beforeAll, afterAll } from 'vitest';
+import * as fs from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { gitEnv } from '../../../scripts/lib/preship-git.mjs';
 import { findRepoRoot } from '../lib/validation-utils.js';
 import {
   findSkipSitesInSource,
@@ -25,9 +30,13 @@ import {
   runFlakyTestSkipGate,
   formatReport,
   main,
+  gitChildEnv,
   type SkipSite,
   type AllowlistEntry,
 } from '../flaky-test-skip-gate.js';
+
+/** The allowlist path the gate reads, relative to the repo root. */
+const ALLOWLIST_REL = 'tools/scripts/flaky-test-gate.allowlist.json';
 
 // ============================================================================
 // findSkipSitesInSource — detection
@@ -374,19 +383,29 @@ describe('runFlakyTestSkipGate', () => {
     delete files['no-skips.test.ts'];
   });
 
-  it('runs against the real repository and passes (regression guard)', () => {
-    const repoRoot = findRepoRoot();
-    const result = runFlakyTestSkipGate(repoRoot);
-    expect(result.filesScanned).toBeGreaterThan(0);
-    expect(result.violations).toEqual([]);
-    expect(result.ok).toBe(true);
-    // The 5 known reconciled skips (4 inline-annotated + 1 allowlisted for the
-    // R17-owned ERP suite) should still be found — a regression here means either
-    // a new unannotated skip was introduced or an existing annotation was removed.
-    // (Was 15 until 2026-11-13: the 10 ADR-054 known-bug tests in tests/property now
-    // run as .fails instead of .skip, so they are no longer skip sites.)
-    expect(result.sites.length).toBeGreaterThanOrEqual(5);
-  }, 30000);
+  // Scans every test file in the real repository, so its duration scales with
+  // machine load (it timed out at 30 s on a loaded box). The mechanism is covered
+  // by the fixture-driven tests above; the real-repo pass runs on every ship in
+  // pre-ship's `flaky-test-gate` step and CI's lint job
+  // (tools/scripts/flaky-test-skip-gate.ts), and here under REAL_REPO_CHECKS=1.
+  it.runIf(process.env.REAL_REPO_CHECKS === '1')(
+    'runs against the real repository and passes (regression guard)',
+    () => {
+      const repoRoot = findRepoRoot();
+      const result = runFlakyTestSkipGate(repoRoot);
+      expect(result.filesScanned).toBeGreaterThan(0);
+      expect(result.violations).toEqual([]);
+      expect(result.ok).toBe(true);
+      // The 5 known reconciled skips (4 inline-annotated + 1 allowlisted for the
+      // R17-owned ERP suite) should still be found — a regression here means either
+      // a new unannotated skip was introduced or an existing annotation was removed.
+      // (Was 15 until 2026-11-13: the 10 ADR-054 known-bug tests in tests/property now
+      // run as .fails instead of .skip, so they are no longer skip sites.)
+      expect(result.sites.length).toBeGreaterThanOrEqual(5);
+    },
+    // Measured 190 s on a loaded box (REAL_REPO_CHECKS run, 2026-11-14).
+    300_000
+  );
 });
 
 // ============================================================================
@@ -503,10 +522,118 @@ describe('main', () => {
     expect(errorSpy).toHaveBeenCalled();
   });
 
-  it('defaults repoRoot to findRepoRoot() and passes against the live repo', () => {
+  // Same whole-repo scan as above (timed out at 30 s under load): nightly only.
+  it.runIf(process.env.REAL_REPO_CHECKS === '1')(
+    'defaults repoRoot to findRepoRoot() and passes against the live repo',
+    () => {
+      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const exit = main();
+      expect(exit).toBe(0);
+      expect(logSpy).toHaveBeenCalled();
+    },
+    300_000
+  );
+});
+
+// ============================================================================
+// Real filesystem defaults, on a fixture repository
+// ============================================================================
+// The whole-repo tests above run only under REAL_REPO_CHECKS=1. These reach the same
+// code paths (git ls-files listing, real file reads, the allowlist on disk, main's
+// default options) on a small temp git repository, so the default run covers them.
+
+describe('real filesystem defaults (fixture repo)', () => {
+  let root = '';
+
+  const write = (rel: string, text: string) => {
+    const abs = path.join(root, rel);
+    fs.mkdirSync(path.dirname(abs), { recursive: true });
+    fs.writeFileSync(abs, text);
+  };
+  const git = (...args: string[]) =>
+    execFileSync('git', args, { cwd: root, env: gitEnv(process.env), stdio: 'pipe' });
+
+  beforeAll(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'flaky-gate-fixture-'));
+    git('init', '-q');
+    write('src/annotated.test.ts', "// ADR-054: QUAL-100 — reason\nit.skip('x', () => {});\n");
+    write('src/plain.test.ts', "it('x', () => {});\n");
+    write('src/notes.md', 'it.skip is not scanned outside test files\n');
+    git('add', '-A');
+  });
+
+  afterAll(() => {
+    if (root) fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  afterEach(() => {
+    fs.rmSync(path.join(root, ALLOWLIST_REL), { force: true });
+  });
+
+  it('lists tracked test files with git and reads them from disk', () => {
+    write('src/untracked.test.ts', "it.skip('untracked', () => {});\n");
+    const result = runFlakyTestSkipGate(root);
+    expect(result.filesScanned).toBe(2);
+    expect(result.sites).toHaveLength(1);
+    expect(result.annotated.map((s) => s.file)).toEqual(['src/annotated.test.ts']);
+    expect(result.ok).toBe(true);
+    fs.rmSync(path.join(root, 'src/untracked.test.ts'));
+  });
+
+  it('ignores a GIT_DIR inherited from a git hook and lists only the fixture repo', () => {
+    // A pre-push hook exports GIT_DIR. Point it at a separate decoy repository (never the
+    // real one) with three tracked test files: the gate must still list the fixture's two.
+    const decoy = fs.mkdtempSync(path.join(os.tmpdir(), 'flaky-gate-decoy-'));
+    try {
+      const inDecoy = (...args: string[]) =>
+        execFileSync('git', args, { cwd: decoy, env: gitEnv(process.env), stdio: 'pipe' });
+      inDecoy('init', '-q');
+      for (const n of ['a', 'b', 'c']) fs.writeFileSync(path.join(decoy, `${n}.test.ts`), '');
+      inDecoy('add', '-A');
+      vi.stubEnv('GIT_DIR', path.join(decoy, '.git'));
+      vi.stubEnv('GIT_WORK_TREE', decoy);
+      expect(runFlakyTestSkipGate(root).filesScanned).toBe(2);
+    } finally {
+      vi.unstubAllEnvs();
+      fs.rmSync(decoy, { recursive: true, force: true });
+    }
+  });
+
+  it('gitChildEnv drops every GIT_* variable and keeps the rest', () => {
+    expect(
+      gitChildEnv({ GIT_DIR: '/x/.git', GIT_INDEX_FILE: '/x/index', PATH: '/bin', HOME: '/h' })
+    ).toEqual({ PATH: '/bin', HOME: '/h' });
+  });
+
+  it('main() with default options passes on the fixture repo and logs the report', () => {
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    const exit = main();
-    expect(exit).toBe(0);
+    expect(main(root)).toBe(0);
     expect(logSpy).toHaveBeenCalled();
-  }, 30000);
+  });
+
+  it('loads an allowlist written with a leading BOM', () => {
+    write(
+      ALLOWLIST_REL,
+      '﻿' +
+        JSON.stringify({
+          entries: [
+            { file: 'src/plain.test.ts', match: "it.skip('x'", reason: 'QUAL-100 tracked' },
+            { file: 'src/plain.test.ts' },
+          ],
+        })
+    );
+    expect(loadAllowlist(root)).toEqual([
+      { file: 'src/plain.test.ts', match: "it.skip('x'", reason: 'QUAL-100 tracked' },
+    ]);
+  });
+
+  it('returns an empty allowlist when the file is not valid JSON', () => {
+    write(ALLOWLIST_REL, '{ not json');
+    expect(loadAllowlist(root)).toEqual([]);
+  });
+
+  it('returns an empty allowlist when the file has no entries array', () => {
+    write(ALLOWLIST_REL, JSON.stringify({ entries: 'none' }));
+    expect(loadAllowlist(root)).toEqual([]);
+  });
 });
