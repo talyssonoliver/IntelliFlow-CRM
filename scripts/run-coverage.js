@@ -27,6 +27,7 @@ import { spawn, execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { classifyProjectRun, describeProjectFailure } from './lib/coverage-project-result.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
@@ -71,7 +72,12 @@ const PROJECTS = [
 // Projects that are allowed extra time (in ms). Default timeout is 20 minutes.
 const PROJECT_TIMEOUT_MS = {
   api: 30 * 60 * 1000, // 30 minutes for large api project
-  web: 25 * 60 * 1000, // 25 minutes for web
+  // web: 30 minutes. Sized from the coverage-step logs of 97 pre-ship runs (43 web
+  // durations from artifacts/preship/logs/coverage.log across the worktrees,
+  // 2026-11-14): median 6.5 min, p90 12.6 min, max 19.7 min. Cap = max x 1.5,
+  // rounded to 30 (the old 25 min left 1.27x headroom over the slowest run, and
+  // web is the project that stretches most when several gates share the box).
+  web: 30 * 60 * 1000,
   default: 20 * 60 * 1000, // 20 minutes for everything else
 };
 
@@ -147,7 +153,9 @@ function runVitest(project) {
     });
 
     const timeoutMs = PROJECT_TIMEOUT_MS[project] ?? PROJECT_TIMEOUT_MS.default;
+    let timedOut = false;
     const timer = setTimeout(() => {
+      timedOut = true;
       console.warn(`  ⚠ ${project} timed out after ${timeoutMs / 60000} min — killing`);
       child.kill('SIGTERM');
       setTimeout(() => child.kill('SIGKILL'), 5000);
@@ -157,23 +165,18 @@ function runVitest(project) {
       clearTimeout(timer);
 
       // Inspect the JSON report to classify the exit.
-      let result = { project, code: code ?? 1, testFailures: 0, thresholdBreach: false };
+      let report = null;
       if (fs.existsSync(resultJsonPath)) {
         try {
-          const r = JSON.parse(fs.readFileSync(resultJsonPath, 'utf8'));
-          result.testFailures = (r.numFailedTests || 0) + (r.numFailedTestSuites || 0);
-          // If exit was non-zero but no test failures, it's threshold breach.
-          if (code !== 0 && result.testFailures === 0) {
-            result.thresholdBreach = true;
-          }
+          report = JSON.parse(fs.readFileSync(resultJsonPath, 'utf8'));
         } catch (err) {
           console.warn(`  ⚠ ${project} could not parse vitest JSON report: ${err.message}`);
         }
-      } else if (code !== 0) {
-        // No JSON report and non-zero exit — could be early crash. Treat
-        // as test failure to be safe (NOT fake-green).
-        result.testFailures = -1; // unknown but non-zero
       }
+      // A non-zero exit with no report (early crash) and a run we killed for
+      // exceeding its cap are both treated as test failures (NOT fake-green);
+      // a non-zero exit with a clean report is a threshold breach.
+      const result = classifyProjectRun({ project, code, timedOut, timeoutMs, report });
 
       if (code === 0) {
         console.log(`  ✓ ${project} done (all tests pass, thresholds met)`);
@@ -182,9 +185,7 @@ function runVitest(project) {
           `  ⚠ ${project} tests pass but coverage thresholds breached (debt — not a test failure)`
         );
       } else {
-        console.warn(
-          `  ✗ ${project} exit ${code} — ${result.testFailures === -1 ? 'no JSON report (early crash?)' : result.testFailures + ' test failure(s)'}`
-        );
+        console.warn(`  ✗ ${project} ${describeProjectFailure(result)}`);
       }
       resolve(result);
     });
@@ -429,11 +430,7 @@ async function main() {
   if (testFailedProjects.length > 0) {
     console.error(`\n❌ ${testFailedProjects.length} project(s) had ACTUAL TEST FAILURES:`);
     for (const f of testFailedProjects) {
-      const detail =
-        f.testFailures === -1
-          ? `exit ${f.code} (no JSON report — early crash?)`
-          : `${f.testFailures} test failure(s), exit ${f.code}`;
-      console.error(`   - ${f.project}: ${detail}`);
+      console.error(`   - ${f.project}: ${describeProjectFailure(f)}`);
     }
     if (process.env.COVERAGE_ALLOW_TEST_FAILURES === '1') {
       console.warn(
