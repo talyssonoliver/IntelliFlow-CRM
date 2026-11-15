@@ -38,12 +38,15 @@ import {
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
-import { revalidateLeadCaches, revalidateLeadConversionCaches } from '../actions';
+import { revalidateLeadCaches } from '../actions';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import { PinButton } from '@/components/home/PinButton';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 import { leadScoreDisplay } from '@/lib/leads/score-display';
+import { QualifyLeadButton, QualifyLeadDialog } from '@/components/leads/QualifyLeadDialog';
+import { ConvertLeadDialog } from '@/components/leads/ConvertLeadDialog';
+import { canQualifyLead } from '@/lib/leads/lead-conversion';
 
 /** #1218: the lead's score, or "Not scored" when no real AI score exists. */
 function LeadScoreValue({
@@ -591,11 +594,9 @@ type LeadDialogsLead = {
 
 function LeadConvertButton({
   lead,
-  convertMutation,
   onOpenConvert,
 }: {
   lead: LeadDialogsLead & { status: string };
-  convertMutation: { isPending: boolean };
   onOpenConvert: () => void;
 }) {
   if (lead.status === 'CONVERTED') return null;
@@ -620,16 +621,14 @@ function LeadConvertButton({
           >
             <button
               onClick={onOpenConvert}
-              disabled={!isConvertible || convertMutation.isPending}
-              aria-label={convertMutation.isPending ? 'Converting lead' : 'Convert lead'}
+              disabled={!isConvertible}
+              aria-label="Convert lead"
               className="flex items-center gap-2 px-3 sm:px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
             >
               <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
                 transform
               </span>{' '}
-              <span className="hidden sm:inline">
-                {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
-              </span>
+              <span className="hidden sm:inline">Convert Lead</span>
             </button>
           </span>
         </TooltipTrigger>
@@ -651,13 +650,6 @@ function LeadDialogs({
   archiveConfirmOpen,
   setArchiveConfirmOpen,
   archiveMutation,
-  convertConfirmOpen,
-  setConvertConfirmOpen,
-  convertMutation,
-  convertCreateAccount,
-  setConvertCreateAccount,
-  convertAccountName,
-  setConvertAccountName,
   logCallOpen,
   setLogCallOpen,
   logCallTitle,
@@ -686,16 +678,6 @@ function LeadDialogs({
         | 'LOST';
     }) => void;
   };
-  convertConfirmOpen: boolean;
-  setConvertConfirmOpen: (v: boolean) => void;
-  convertMutation: {
-    isPending: boolean;
-    mutate: (args: { leadId: string; createAccount: boolean; accountName?: string }) => void;
-  };
-  convertCreateAccount: boolean;
-  setConvertCreateAccount: (v: boolean) => void;
-  convertAccountName: string;
-  setConvertAccountName: (v: string) => void;
   logCallOpen: boolean;
   setLogCallOpen: (v: boolean) => void;
   logCallTitle: string;
@@ -760,80 +742,6 @@ function LeadDialogs({
               onClick={() => archiveMutation.mutate({ id: lead.id, status: 'LOST' })}
             >
               {archiveMutation.isPending ? 'Archiving...' : 'Archive'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Convert Lead Confirmation Dialog */}
-      <AlertDialog
-        open={convertConfirmOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setConvertCreateAccount(true);
-            setConvertAccountName('');
-          }
-          setConvertConfirmOpen(open);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Convert Lead to Contact</AlertDialogTitle>
-            <AlertDialogDescription>
-              Convert {leadDisplayName(lead)} to a contact record? This action will change the lead
-              status to CONVERTED and cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex flex-col gap-3 py-2">
-            <label
-              htmlFor="convert-create-account"
-              className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300"
-            >
-              <input
-                type="checkbox"
-                checked={convertCreateAccount}
-                onChange={(e) => setConvertCreateAccount(e.target.checked)}
-                id="convert-create-account"
-                className="rounded border-slate-300 dark:border-slate-600 text-[#2a78f6] focus:ring-[#2a78f6]"
-              />{' '}
-              Also create an Account record
-            </label>
-            {convertCreateAccount && (
-              <div>
-                <label
-                  htmlFor="convert-account-name"
-                  className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
-                >
-                  Account name
-                </label>
-                <input
-                  id="convert-account-name"
-                  type="text"
-                  value={convertAccountName}
-                  onChange={(e) => setConvertAccountName(e.target.value)}
-                  placeholder={lead.company || 'Company name'}
-                  maxLength={200}
-                  className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent"
-                />
-              </div>
-            )}
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={convertMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                convertMutation.mutate({
-                  leadId: lead.id,
-                  createAccount: convertCreateAccount,
-                  accountName:
-                    convertCreateAccount && convertAccountName.trim()
-                      ? convertAccountName.trim()
-                      : undefined,
-                });
-              }}
-              disabled={convertMutation.isPending}
-            >
-              {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -2183,8 +2091,8 @@ function LeadTabBar({
 
 interface LeadPageHeaderProps {
   lead: LeadProfileData;
-  convertMutation: { isPending: boolean };
   onOpenConvert: () => void;
+  onOpenQualify: () => void;
   onEdit: () => void;
   onLogCall: () => void;
   onOpenActionSheet: () => void;
@@ -2192,8 +2100,8 @@ interface LeadPageHeaderProps {
 
 function LeadPageHeader({
   lead,
-  convertMutation,
   onOpenConvert,
+  onOpenQualify,
   onEdit,
   onLogCall,
   onOpenActionSheet,
@@ -2215,11 +2123,8 @@ function LeadPageHeader({
         </h1>
       </div>
       <div className="flex flex-wrap gap-2 sm:gap-3">
-        <LeadConvertButton
-          lead={lead}
-          convertMutation={convertMutation}
-          onOpenConvert={onOpenConvert}
-        />
+        {canQualifyLead(lead.status) && <QualifyLeadButton onClick={onOpenQualify} />}
+        <LeadConvertButton lead={lead} onOpenConvert={onOpenConvert} />
         <button
           onClick={onEdit}
           aria-label="Edit lead"
@@ -2323,14 +2228,6 @@ function transformLeadForUI(apiLead: LeadWithRelations) {
     accountId: apiLead.accountId ?? null,
     account: apiLead.account ? { id: apiLead.account.id, name: apiLead.account.name } : null,
   };
-}
-
-function getConvertErrorDescription(msg: string): string {
-  if (msg.includes('Only qualified')) return 'Only leads with QUALIFIED status can be converted.';
-  if (msg.includes('already converted'))
-    return 'This lead has already been converted to a contact.';
-  if (msg.includes('not found')) return 'Lead not found. It may have been deleted.';
-  return msg;
 }
 
 function isLeadAuthError(
@@ -2477,8 +2374,7 @@ export default function Lead360Page() {
   const [logCallTitle, setLogCallTitle] = useState('');
   const [logCallDescription, setLogCallDescription] = useState('');
   const [convertConfirmOpen, setConvertConfirmOpen] = useState(false);
-  const [convertCreateAccount, setConvertCreateAccount] = useState(true);
-  const [convertAccountName, setConvertAccountName] = useState('');
+  const [qualifyOpen, setQualifyOpen] = useState(false);
 
   // API utils for cache invalidation
   const utils = api.useUtils();
@@ -2505,22 +2401,6 @@ export default function Lead360Page() {
     },
     onError: (err) => {
       toast({ title: 'Archive failed', description: err.message, variant: 'destructive' });
-    },
-  });
-
-  const convertMutation = api.lead.convert.useMutation({
-    onSuccess: (data) => {
-      if (user?.id) revalidateLeadConversionCaches(user.id).catch(reportCacheRevalidationError);
-      setConvertConfirmOpen(false);
-      toast({ title: 'Lead converted', description: 'Lead has been converted to a contact.' });
-      router.push(`/contacts/${data.contactId}`);
-    },
-    onError: (err) => {
-      toast({
-        title: 'Conversion failed',
-        description: getConvertErrorDescription(err.message),
-        variant: 'destructive',
-      });
     },
   });
 
@@ -2940,8 +2820,8 @@ export default function Lead360Page() {
     <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
       <LeadPageHeader
         lead={lead}
-        convertMutation={convertMutation}
         onOpenConvert={() => setConvertConfirmOpen(true)}
+        onOpenQualify={() => setQualifyOpen(true)}
         onEdit={() => router.push(`/leads/${lead.id}/edit`)}
         onLogCall={() => setLogCallOpen(true)}
         onOpenActionSheet={() => setActionSheetOpen(true)}
@@ -2981,13 +2861,6 @@ export default function Lead360Page() {
         archiveConfirmOpen={archiveConfirmOpen}
         setArchiveConfirmOpen={setArchiveConfirmOpen}
         archiveMutation={archiveMutation}
-        convertConfirmOpen={convertConfirmOpen}
-        setConvertConfirmOpen={setConvertConfirmOpen}
-        convertMutation={convertMutation}
-        convertCreateAccount={convertCreateAccount}
-        setConvertCreateAccount={setConvertCreateAccount}
-        convertAccountName={convertAccountName}
-        setConvertAccountName={setConvertAccountName}
         logCallOpen={logCallOpen}
         setLogCallOpen={setLogCallOpen}
         logCallTitle={logCallTitle}
@@ -2995,6 +2868,19 @@ export default function Lead360Page() {
         logCallDescription={logCallDescription}
         setLogCallDescription={setLogCallDescription}
         logActivityMutation={logActivityMutation}
+      />
+
+      <QualifyLeadDialog
+        lead={lead}
+        userId={user?.id}
+        open={qualifyOpen}
+        onOpenChange={setQualifyOpen}
+      />
+      <ConvertLeadDialog
+        lead={lead}
+        userId={user?.id}
+        open={convertConfirmOpen}
+        onOpenChange={setConvertConfirmOpen}
       />
 
       {/* Main 3-column grid */}
