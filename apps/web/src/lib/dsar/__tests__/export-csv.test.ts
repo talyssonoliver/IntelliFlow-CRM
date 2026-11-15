@@ -9,7 +9,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { crc32 } from 'node:zlib';
 import Papa from 'papaparse';
 import type { DsarExportDto } from '@intelliflow/validators/dsar';
-import { CSV_ZIP_NAME, exportCsvFiles, saveExportCsv, toCsv, zipStore } from '../export-csv';
+import {
+  CSV_ZIP_NAME,
+  UTF8_BOM,
+  exportCsvFiles,
+  saveExportCsv,
+  toCsv,
+  zipStore,
+} from '../export-csv';
 
 const EXPORT = {
   generatedAt: '2026-11-15T09:00:00.000Z',
@@ -47,7 +54,8 @@ function readZip(bytes: Uint8Array): Record<string, string> {
   expect(view.getUint32(end, true)).toBe(0x06054b50);
   const entries = view.getUint16(end + 10, true);
   let at = view.getUint32(end + 16, true);
-  const decoder = new TextDecoder();
+  // ignoreBOM keeps the byte-order mark in the text, so the tests see exactly what was written.
+  const decoder = new TextDecoder('utf-8', { ignoreBOM: true });
   const files: Record<string, string> = {};
   for (let i = 0; i < entries; i++) {
     expect(view.getUint32(at, true)).toBe(0x02014b50);
@@ -67,6 +75,12 @@ function readZip(bytes: Uint8Array): Record<string, string> {
   return files;
 }
 
+/** A CSV file's text after its byte-order mark, which every file must start with. */
+function body(text: string | undefined): string {
+  expect(text?.startsWith(UTF8_BOM)).toBe(true);
+  return text!.slice(UTF8_BOM.length);
+}
+
 describe('CSV export (IFC-317)', () => {
   it('has one file per exported category, plus processing information and withheld', () => {
     const names = Object.keys(readZip(zipStore(exportCsvFiles(EXPORT)))).sort();
@@ -84,10 +98,10 @@ describe('CSV export (IFC-317)', () => {
     for (const [category, rows] of Object.entries(EXPORT.data)) {
       // An empty category is still a file, so the person sees it had no rows.
       if (rows.length === 0) {
-        expect(files[`${category}.csv`]).toBe('\r\n');
+        expect(files[`${category}.csv`]).toBe(`${UTF8_BOM}\r\n`);
         continue;
       }
-      const parsed = Papa.parse<Record<string, string>>(files[`${category}.csv`]!, {
+      const parsed = Papa.parse<Record<string, string>>(body(files[`${category}.csv`]), {
         header: true,
         skipEmptyLines: true,
       });
@@ -101,16 +115,22 @@ describe('CSV export (IFC-317)', () => {
 
   it('keeps the processing information and what was withheld', () => {
     const files = readZip(zipStore(exportCsvFiles(EXPORT)));
-    const info = Papa.parse<{ item: string; value: string }>(files['processing-information.csv']!, {
-      header: true,
-      skipEmptyLines: true,
-    }).data;
+    const info = Papa.parse<{ item: string; value: string }>(
+      body(files['processing-information.csv']),
+      {
+        header: true,
+        skipEmptyLines: true,
+      }
+    ).data;
     expect(info.find((r) => r.item === 'retention')?.value).toBe('6 years');
     expect(JSON.parse(info.find((r) => r.item === 'controller')!.value)).toEqual({
       name: 'Smith Law',
       privacyUrl: null,
     });
-    const withheld = Papa.parse(files['withheld.csv']!, { header: true, skipEmptyLines: true });
+    const withheld = Papa.parse(body(files['withheld.csv']), {
+      header: true,
+      skipEmptyLines: true,
+    });
     expect(withheld.data).toEqual([
       { category: 'NOTES', count: '2', note: 'The firm is reviewing it' },
     ]);
@@ -118,9 +138,51 @@ describe('CSV export (IFC-317)', () => {
 
   it('quotes commas, quotes and line breaks, and writes an empty category as an empty file', () => {
     expect(toCsv([{ a: 'x,y', b: 'say "hi"', c: 'l1\nl2' }])).toBe(
-      'a,b,c\r\n"x,y","say ""hi""","l1\nl2"\r\n'
+      `${UTF8_BOM}a,b,c\r\n"x,y","say ""hi""","l1\nl2"\r\n`
     );
-    expect(toCsv([])).toBe('\r\n');
+    expect(toCsv([])).toBe(`${UTF8_BOM}\r\n`);
+  });
+
+  it.each(['=', '+', '-', '@', '\t', '\r'])(
+    'puts a quote before text starting with %j, so a spreadsheet never runs it',
+    (lead) => {
+      const csv = toCsv([{ v: `${lead}SUM(A1)` }]);
+      const cell = Papa.parse<string[]>(body(csv)).data[1]![0];
+      expect(cell).toBe(`'${lead}SUM(A1)`);
+    }
+  );
+
+  it('writes numbers as they are, negative ones included, and quotes text that looks like one', () => {
+    expect(body(toCsv([{ score: -5, phone: '+440000000000', note: '-5' }]))).toBe(
+      "score,phone,note\r\n-5,'+440000000000,'-5\r\n"
+    );
+  });
+
+  it('starts every file with a UTF-8 byte-order mark, so accents survive in Excel', () => {
+    const bytes = zipStore({ 'a.csv': toCsv([{ name: 'Zoë Müller' }]) });
+    const view = new DataView(bytes.buffer);
+    const start = 30 + view.getUint16(26, true) + view.getUint16(28, true);
+    expect([...bytes.subarray(start, start + 3)]).toEqual([0xef, 0xbb, 0xbf]);
+    expect(body(readZip(bytes)['a.csv'])).toContain('Zoë Müller');
+  });
+
+  it('never lets two categories, or a category and a fixed file, share a file name', () => {
+    const names = Object.keys(
+      exportCsvFiles({
+        ...EXPORT,
+        data: { 'a b': [], a_b: [], withheld: [], 'processing-information': [] },
+      } as unknown as DsarExportDto)
+    ).sort();
+    expect(names).toEqual(
+      [
+        'a_b.csv',
+        'a_b-2.csv',
+        'processing-information.csv',
+        'processing-information-2.csv',
+        'withheld.csv',
+        'withheld-2.csv',
+      ].sort()
+    );
   });
 
   it('saves the zip from memory', () => {

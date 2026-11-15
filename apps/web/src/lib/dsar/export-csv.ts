@@ -10,10 +10,25 @@ import type { DsarExportDto } from '@intelliflow/validators/dsar';
 
 export const CSV_ZIP_NAME = 'my-personal-data-csv.zip';
 
-/** One CSV field: RFC 4180 quoting, objects as JSON, empty for null and undefined. */
+/** Excel reads a file as UTF-8 (accents included) only when it starts with this mark. */
+export const UTF8_BOM = '\uFEFF';
+
+/**
+ * Text a spreadsheet would run as a formula (OWASP CSV injection): it starts with =, +, -, @, a
+ * tab or a carriage return. Such text gets a leading single quote, so it shows as typed. Numbers
+ * are data, not text, and are written as they are (a score of -5 stays -5); a string such as a
+ * phone number "+44..." is text and gets the quote.
+ */
+const FORMULA_START = /^[=+\-@\t\r]/;
+
+/** One CSV field: formula-safe, RFC 4180 quoting, objects as JSON, empty for null and undefined. */
 function field(value: unknown): string {
   if (value === null || value === undefined) return '';
-  const text = typeof value === 'object' ? JSON.stringify(value) : String(value);
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    return String(value);
+  }
+  const raw = typeof value === 'object' ? JSON.stringify(value) : String(value);
+  const text = FORMULA_START.test(raw) ? `'${raw}` : raw;
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 
@@ -25,7 +40,17 @@ export function toCsv(rows: ReadonlyArray<Record<string, unknown>>): string {
   }
   const lines = [columns.map(field).join(',')];
   for (const row of rows) lines.push(columns.map((c) => field(row[c])).join(','));
-  return lines.join('\r\n') + '\r\n';
+  return UTF8_BOM + lines.join('\r\n') + '\r\n';
+}
+
+/**
+ * A file name not yet taken: two categories that sanitise to the same name, or one named like
+ * the two fixed files, get -2, -3... so no file overwrites another in the zip.
+ */
+function uniqueName(files: Record<string, string>, base: string): string {
+  let name = `${base}.csv`;
+  for (let n = 2; name in files; n++) name = `${base}-${n}.csv`;
+  return name;
 }
 
 /** Every file of the CSV export, by name. */
@@ -41,7 +66,7 @@ export function exportCsvFiles(data: DsarExportDto): Record<string, string> {
     'withheld.csv': toCsv(data.withheld),
   };
   for (const [category, rows] of Object.entries(data.data)) {
-    files[`${category.replaceAll(/[^A-Za-z0-9_-]/g, '_')}.csv`] = toCsv(rows);
+    files[uniqueName(files, category.replaceAll(/[^A-Za-z0-9_-]/g, '_'))] = toCsv(rows);
   }
   return files;
 }
