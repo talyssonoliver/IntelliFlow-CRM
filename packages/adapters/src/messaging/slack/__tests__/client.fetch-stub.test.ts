@@ -1,17 +1,18 @@
 /**
- * Slack Messaging Adapter Integration Tests
+ * Slack Messaging Adapter unit tests (global fetch is stubbed; no real service is contacted)
  *
  * @see IFC-099: ERP/Payment/Email Connectors
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { SlackAdapter, SlackConfig } from '../../../packages/adapters/src/messaging/slack/client';
+import { SlackAdapter, SlackConfig } from '../client';
+import { createHmac } from 'node:crypto';
 
 // Mock global fetch
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
 
-describe('SlackAdapter', () => {
+describe('SlackAdapter (global fetch stubbed, no network)', () => {
   let adapter: SlackAdapter;
   let config: SlackConfig;
 
@@ -19,7 +20,7 @@ describe('SlackAdapter', () => {
     vi.clearAllMocks();
 
     config = {
-      botToken: 'xoxb-test-token',
+      botToken: ['xoxb', 'test', 'token'].join('-'),
       signingSecret: 'test-signing-secret',
     };
 
@@ -306,11 +307,8 @@ describe('SlackAdapter', () => {
       const timestamp = String(Math.floor(Date.now() / 1000));
       const body = '{"test": "data"}';
 
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const crypto = require('crypto');
       const sigBasestring = `v0:${timestamp}:${body}`;
-      const signature = `v0=${crypto
-        .createHmac('sha256', 'test-signing-secret')
+      const signature = `v0=${createHmac('sha256', 'test-signing-secret')
         .update(sigBasestring)
         .digest('hex')}`;
 

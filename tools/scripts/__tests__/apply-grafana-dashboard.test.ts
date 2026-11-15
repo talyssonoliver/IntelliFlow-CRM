@@ -1,7 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { run, validateConfig } from '../observability/apply-grafana-dashboard.mjs';
+import {
+  run,
+  selectDashboard,
+  validateAiConfig,
+  validateConfig,
+} from '../observability/apply-grafana-dashboard.mjs';
 
 // ENV-008-AI AC-005: the production service dashboard as code, applied by
 // .github/workflows/grafana-dashboard.yml.
@@ -66,7 +71,10 @@ function fakeGrafana(
     expect(init.headers.Authorization).toBe(`Bearer ${TOKEN}`);
     if (path === '/api/folders/intelliflow-prod')
       return { status: opts.folder ?? 200, text: async () => '{}' };
-    if (path === '/api/dashboards/uid/env008-production')
+    if (
+      path === '/api/dashboards/uid/env008-production' ||
+      path === '/api/dashboards/uid/ifc117-ai-models'
+    )
       return { status: opts.existing ? 200 : 404, text: async () => '{}' };
     if (path === '/api/dashboards/db' && init.method === 'POST')
       return {
@@ -399,5 +407,137 @@ describe('run', () => {
     });
     expect(lines.length).toBeGreaterThan(0);
     expect(lines.join('\n')).not.toContain(TOKEN);
+  });
+});
+
+// IFC-117 N3: the AI models dashboard is applied by the same script with --dashboard ai-models.
+const AI_CONFIG = JSON.parse(
+  readFileSync(
+    join(__dirname, '../../../infra/monitoring/grafana/cloud/dashboard-ai-models.json'),
+    'utf8'
+  )
+);
+const AI_JOB = 'job=~"(.*/)?(intelliflow-)?ai-worker"';
+const aiConfigWith = (expr: string, uid = 'grafanacloud-prom') => ({
+  folderUid: 'intelliflow-prod',
+  dashboard: {
+    uid: 'ifc117-ai-models',
+    panels: [{ targets: [{ refId: 'A', expr, datasource: { uid } }] }],
+  },
+});
+
+describe('selectDashboard', () => {
+  it('defaults to the production dashboard', () => {
+    expect(selectDashboard([])).toMatchObject({ message: 'ENV-008-AI dashboard as code' });
+    expect(selectDashboard(['--dry-run']).path).toMatch(/dashboard-production\.json$/);
+  });
+
+  it('selects the AI models dashboard by name', () => {
+    expect(selectDashboard(['--dashboard', 'ai-models']).path).toMatch(
+      /dashboard-ai-models\.json$/
+    );
+  });
+
+  it.each([[['--dashboard']], [['--dashboard', 'nope']]])('rejects %j', (argv) => {
+    expect(() => selectDashboard(argv)).toThrow(
+      '--dashboard must be one of: production, ai-models'
+    );
+  });
+});
+
+describe('validateAiConfig', () => {
+  it('accepts the committed dashboard-ai-models.json', () => {
+    expect(validateAiConfig(AI_CONFIG)).toEqual([]);
+    expect(AI_CONFIG.dashboard.uid).toBe('ifc117-ai-models');
+  });
+
+  it('the production validator rejects the AI dashboard (each file has its own rules)', () => {
+    expect(validateConfig(AI_CONFIG).length).toBeGreaterThan(0);
+  });
+
+  it('accepts an AI metric scoped to the ai-worker job', () => {
+    expect(
+      validateAiConfig(aiConfigWith(`sum(rate(intelliflow_ai_cost_usd_total{${AI_JOB}}[1h]))`))
+    ).toEqual([]);
+  });
+
+  it('rejects a metric outside the ai-worker AI family', () => {
+    expect(
+      validateAiConfig(aiConfigWith(`sum(rate(traces_spanmetrics_calls_total{${AI_JOB}}[1h]))`))
+    ).toEqual([expect.stringContaining('traces_spanmetrics_calls_total is not an ai-worker')]);
+  });
+
+  it('rejects a selector without the job matcher, even when another selector has it', () => {
+    const expr =
+      `sum(rate(intelliflow_ai_cost_usd_total{${AI_JOB}}[1h])) / ` +
+      'sum(rate(intelliflow_ai_value_estimated_usd_total{service="api"}[1h]))';
+    expect(validateAiConfig(aiConfigWith(expr))).toEqual([
+      expect.stringContaining('every selector must match the ai-worker job'),
+    ]);
+  });
+
+  it('rejects a target with no metric', () => {
+    expect(validateAiConfig(aiConfigWith('vector(1)'))).toEqual([
+      expect.stringContaining('no metric'),
+    ]);
+  });
+
+  it('rejects a non-Prometheus datasource', () => {
+    expect(
+      validateAiConfig(aiConfigWith('{service_name="ai-worker"}', 'grafanacloud-logs'))
+    ).toEqual([expect.stringContaining('datasource grafanacloud-logs is not allowed')]);
+  });
+
+  it('rejects a wrong uid or folder', () => {
+    const bad = { folderUid: 'other', dashboard: { uid: 'other', panels: [] } };
+    expect(validateAiConfig(bad)).toEqual([
+      expect.stringContaining('dashboard.uid must be ifc117-ai-models'),
+      expect.stringContaining('folderUid must be intelliflow-prod'),
+    ]);
+  });
+});
+
+describe('run --dashboard ai-models', () => {
+  it('dry run reads the folder and the AI dashboard only', async () => {
+    const g = fakeGrafana();
+    const result = await run({
+      env,
+      argv: ['--dashboard', 'ai-models', '--dry-run'],
+      fetchImpl: g.fetchImpl,
+      log: quiet,
+      sleep: noSleep,
+    });
+    expect(g.calls.map((c) => `${c.method} ${c.path}`)).toEqual([
+      'GET /api/folders/intelliflow-prod',
+      'GET /api/dashboards/uid/ifc117-ai-models',
+    ]);
+    expect(result).toEqual({ applied: false, existed: false });
+  });
+
+  it('creates the AI dashboard in the production folder with overwrite', async () => {
+    const g = fakeGrafana();
+    const result = await run({
+      env,
+      argv: ['--dashboard', 'ai-models'],
+      fetchImpl: g.fetchImpl,
+      log: quiet,
+      sleep: noSleep,
+    });
+    const save = g.calls.find((c) => c.method === 'POST');
+    expect(save?.body).toMatchObject({
+      dashboard: { uid: 'ifc117-ai-models', title: 'IntelliFlow AI models' },
+      folderUid: 'intelliflow-prod',
+      overwrite: true,
+      message: 'IFC-117 dashboard as code',
+    });
+    expect(result).toEqual({ applied: true, existed: false });
+  });
+
+  it('rejects an unknown dashboard name before any request', async () => {
+    const g = fakeGrafana();
+    await expect(
+      run({ env, argv: ['--dashboard', 'nope'], fetchImpl: g.fetchImpl, log: quiet })
+    ).rejects.toThrow('--dashboard must be one of');
+    expect(g.calls).toEqual([]);
   });
 });

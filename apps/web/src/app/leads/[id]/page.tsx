@@ -91,8 +91,13 @@ import {
   type ActivityType,
   getActivityIcon,
   getActivityIconBg,
+  formatEstimatedValue,
   formatRelativeTime,
+  httpUrlOrNull,
+  insightRecommendations,
+  leadActivityMetrics,
   leadDisplayName,
+  leadExportFields,
 } from '@/lib/leads/lead-format';
 import { LeadTimeline } from '@/components/leads/lead-timeline';
 import { RestrictionBanner } from '@/components/privacy/RestrictionBanner';
@@ -141,6 +146,14 @@ function engagementImpact(score: number): ImpactLevel {
 }
 
 // Resolve churn factor impact level for days since last contact
+/** Whole days since a date, or null when there is none or it is unreadable. */
+function wholeDaysSince(value: string | Date | null | undefined): number | null {
+  if (!value) return null;
+  const time = new Date(value).getTime();
+  if (Number.isNaN(time)) return null;
+  return Math.max(0, Math.floor((Date.now() - time) / 86_400_000));
+}
+
 function lastContactImpact(days: number): ImpactLevel {
   if (days > 30) return 'HIGH';
   if (days > 14) return 'MEDIUM';
@@ -186,12 +199,9 @@ function buildNextBestActions(insight: {
     const icon = resolveActionIcon(insight.nextBestAction.toUpperCase());
     actions.push({ icon, label: insight.nextBestAction, primary: true });
   }
-  const recs = (insight.recommendations as string[]) || [];
+  const recs = insightRecommendations(insight.recommendations);
   if (recs.length > 0 && recs[0] !== insight.nextBestAction) {
     actions.push({ icon: 'auto_awesome', label: recs[0], primary: false });
-  }
-  if (actions.length === 0) {
-    actions.push({ icon: 'calendar_add_on', label: 'Schedule Discovery Call', primary: true });
   }
   return actions;
 }
@@ -315,6 +325,8 @@ interface LeadWithRelations {
     name: string;
     size: string;
     uploadedAt: string | Date;
+    /** Stored address of the file (LeadFile.url), when there is one. */
+    url?: string | null;
   }>;
   tasks?: Array<{
     id: string;
@@ -323,7 +335,8 @@ interface LeadWithRelations {
     priority: string | null;
     status: string;
   }>;
-  aiInsight?: {
+  /** The lead's AI insight rows (LeadAIInsight; at most one per lead). */
+  aiInsights?: Array<{
     id: string;
     conversionProbability: number;
     estimatedValue: number;
@@ -335,7 +348,7 @@ interface LeadWithRelations {
     nextBestAction: string | null;
     recommendations: unknown;
     icpMatch: string | null;
-  } | null;
+  }>;
   accountId?: string | null;
   account?: { id: string; name: string } | null;
 }
@@ -1092,11 +1105,18 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
             </span>
             {meta.duration && <span className="text-sm text-slate-500">{meta.duration}</span>}
           </div>
-          {meta.recordingUrl && (
-            <button className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded transition-colors">
-              <span className="material-symbols-outlined !text-[16px]">play_arrow</span> Play
-              Recording
-            </button>
+          {httpUrlOrNull(meta.recordingUrl) && (
+            <a
+              href={httpUrlOrNull(meta.recordingUrl) ?? undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded transition-colors"
+            >
+              <span aria-hidden="true" className="material-symbols-outlined !text-[16px]">
+                play_arrow
+              </span>{' '}
+              Play Recording
+            </a>
           )}
         </div>
       </div>
@@ -1557,25 +1577,36 @@ function LeadNotesTab({
 interface LeadEmailsTabProps {
   emails: { id: string; subject: string; status: string; sentAt: string; openCount: number }[];
   timezone: string;
-  /** The lead's address: the empty-state "Compose email" opens compose addressed to it. */
-  leadEmail?: string | null;
+  /** The lead's email address; Compose (header and empty state) is offered only when there is one. */
+  leadEmail: string | null | undefined;
+  /** Shows that email's activity in the timeline (tab, expanded, scrolled to). */
+  onOpenActivity: (activityId: string) => void;
 }
 
-function LeadEmailsTab({ emails, timezone, leadEmail }: LeadEmailsTabProps) {
+function LeadEmailsTab({ emails, timezone, leadEmail, onOpenActivity }: LeadEmailsTabProps) {
+  const to = leadEmail?.trim();
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Emails</h3>
-        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
-          <span className="material-symbols-outlined !text-[18px]">send</span> Compose
-        </button>
+        {to && (
+          <Link
+            href={`/email/compose?to=${encodeURIComponent(to)}`}
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors"
+          >
+            <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
+              send
+            </span>{' '}
+            Compose
+          </Link>
+        )}
       </div>
       <div className="space-y-3">
         {emails.length > 0 ? (
           emails.map((email) => (
             <div
               key={email.id}
-              className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-colors"
+              className="flex items-center gap-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
             >
               <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
                 <span className="material-symbols-outlined !text-[20px] text-orange-600">mail</span>
@@ -1595,8 +1626,17 @@ function LeadEmailsTab({ emails, timezone, leadEmail }: LeadEmailsTabProps) {
                   </span>
                 </div>
               </div>
-              <button className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg">
-                <span className="material-symbols-outlined !text-[18px]">open_in_new</span>
+              {/* Opens in place: no ?activityId= navigation, which would re-run the
+                  deep-link tab switch on this same page. */}
+              <button
+                type="button"
+                onClick={() => onOpenActivity(email.id)}
+                aria-label={`Open "${email.subject}" in the activity timeline`}
+                className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 rounded-lg"
+              >
+                <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
+                  open_in_new
+                </span>
               </button>
             </div>
           ))
@@ -1604,9 +1644,9 @@ function LeadEmailsTab({ emails, timezone, leadEmail }: LeadEmailsTabProps) {
           // Compose to this lead, never a blank recipient; no address means no button.
           <EmptyState
             entity="emails"
-            {...(leadEmail
+            {...(to
               ? {
-                  ctaHref: `/email/compose?to=${encodeURIComponent(leadEmail)}`,
+                  ctaHref: `/email/compose?to=${encodeURIComponent(to)}`,
                   ctaLabel: 'Compose email',
                 }
               : { showCta: false })}
@@ -1620,18 +1660,17 @@ function LeadEmailsTab({ emails, timezone, leadEmail }: LeadEmailsTabProps) {
 // ÔöÇÔöÇÔöÇ Files tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface LeadFilesTabProps {
-  files: { id: string; name: string; size: string; uploadedAt: string }[];
+  files: { id: string; name: string; size: string; uploadedAt: string; url: string | null }[];
   timezone: string;
 }
 
+// Nothing in the app stores lead files yet, so the tab has no Upload action; it lists
+// what exists, with a download link when the file has a stored address.
 function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Files</h3>
-        <button className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
-          <span className="material-symbols-outlined !text-[18px]">upload</span> Upload
-        </button>
       </div>
       <div className="space-y-3">
         {files.length > 0 ? (
@@ -1651,9 +1690,20 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
                   {file.size} ÔÇó {formatRelativeTime(file.uploadedAt, timezone)}
                 </p>
               </div>
-              <button className="p-2 text-slate-500 hover:text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors">
-                <span className="material-symbols-outlined !text-[18px]">download</span>
-              </button>
+              {httpUrlOrNull(file.url) && (
+                <a
+                  href={httpUrlOrNull(file.url) ?? undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  download
+                  aria-label={`Download ${file.name}`}
+                  className="p-2 text-slate-500 hover:text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors"
+                >
+                  <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
+                    download
+                  </span>
+                </a>
+              )}
             </div>
           ))
         ) : (
@@ -1667,7 +1717,9 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
 // ÔöÇÔöÇÔöÇ AI Insights tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
 interface AiInsightsData {
-  qualificationScore: number;
+  /** The lead's stored score; shown only when scoringStatus says it is a real score. */
+  leadScore: number;
+  scoringStatus: string | null;
   engagementLevel: string;
   engagementScore: number;
   conversionProbability: number;
@@ -1700,6 +1752,11 @@ function LeadAIInsightsTab({
   onRunAnalysis,
   scoreWithAIMutation,
 }: LeadAIInsightsTabProps) {
+  // UI-024: scoring and full analysis are separate. The score shows whenever the lead was
+  // scored, whether or not the full analysis has run.
+  const isScored =
+    leadScoreDisplay(aiInsights.leadScore, aiInsights.scoringStatus).kind === 'score';
+  const hasDealEstimate = aiInsights.estimatedValue > 0;
   return (
     <div className="space-y-6">
       {!hasAiInsight && (
@@ -1760,10 +1817,11 @@ function LeadAIInsightsTab({
             </div>
             <div>
               <p
-                className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
+                className={`text-2xl font-bold ${hasDealEstimate ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
               >
-                <span data-testid={hasAiInsight ? 'deal-value' : 'deal-value-null-state'}>
-                  {hasAiInsight ? `$${(aiInsights.estimatedValue / 1000).toFixed(0)}k` : '--'}
+                {/* The lead's own value, in pence; none (0) shows as "--", not "£0". */}
+                <span data-testid={hasDealEstimate ? 'deal-value' : 'deal-value-null-state'}>
+                  {hasDealEstimate ? formatEstimatedValue(aiInsights.estimatedValue) : '--'}
                 </span>
               </p>
               <p className="text-xs text-slate-500">Est. Deal Value</p>
@@ -1777,10 +1835,13 @@ function LeadAIInsightsTab({
             </div>
             <div>
               <p
-                className={`text-2xl font-bold ${hasAiInsight ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
+                className={`text-2xl font-bold ${isScored ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-slate-500'}`}
               >
-                <span data-testid={hasAiInsight ? 'lead-score-value' : 'lead-score-null-state'}>
-                  {hasAiInsight ? aiInsights.qualificationScore : '--'}
+                <span data-testid={isScored ? 'lead-score-value' : 'lead-score-null-state'}>
+                  <LeadScoreValue
+                    score={aiInsights.leadScore}
+                    scoringStatus={aiInsights.scoringStatus}
+                  />
                 </span>
               </p>
               <p className="text-xs text-slate-500">Lead Score</p>
@@ -1788,21 +1849,28 @@ function LeadAIInsightsTab({
           </div>
         </Card>
       </div>
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-          AI Recommendations
-        </h3>
-        <ul className="space-y-3">
-          {aiInsights.recommendations.map((rec, index) => (
-            <li key={`rec-${index}-${rec.slice(0, 20)}`} className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-[#2a78f6]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                <span className="text-xs font-medium text-[#2a78f6]">{index + 1}</span>
-              </div>
-              <p className="text-slate-600 dark:text-slate-400">{rec}</p>
-            </li>
-          ))}
-        </ul>
-      </Card>
+      {hasAiInsight && (
+        <Card className="p-6">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
+            AI Recommendations
+          </h3>
+          {aiInsights.recommendations.length === 0 && (
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              This analysis made no recommendations.
+            </p>
+          )}
+          <ul className="space-y-3">
+            {aiInsights.recommendations.map((rec, index) => (
+              <li key={`rec-${index}-${rec.slice(0, 20)}`} className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#2a78f6]/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-xs font-medium text-[#2a78f6]">{index + 1}</span>
+                </div>
+                <p className="text-slate-600 dark:text-slate-400">{rec}</p>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      )}
       <Card className="p-6">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
           Engagement Analysis
@@ -1868,6 +1936,8 @@ function LeadRightSidebar({
   onViewNotes,
   onViewTasks,
 }: LeadRightSidebarProps) {
+  const isScored =
+    leadScoreDisplay(aiInsights.leadScore, aiInsights.scoringStatus).kind === 'score';
   return (
     <aside className="lg:col-span-3 flex flex-col gap-6">
       {/* Lead IQ (AI Insights) */}
@@ -1877,9 +1947,6 @@ function LeadRightSidebar({
             <span className="material-symbols-outlined text-[#2a78f6]">auto_awesome</span>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Lead IQ</h3>
           </div>
-          <span className="text-[10px] bg-[#2a78f6]/10 text-[#2a78f6] px-1.5 py-0.5 rounded font-bold">
-            BETA
-          </span>
         </div>
         {!hasAiInsight && (
           <p className="text-xs text-amber-600 dark:text-amber-400 mb-3 flex items-center gap-1">
@@ -1893,16 +1960,24 @@ function LeadRightSidebar({
               <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                 Lead Score
               </span>
-              <span className="text-sm font-bold text-green-600">
-                {aiInsights.qualificationScore}/100
+              <span
+                data-testid="sidebar-lead-score"
+                className={`text-sm font-bold ${isScored ? 'text-green-600' : ''}`}
+              >
+                <LeadScoreValue
+                  score={aiInsights.leadScore}
+                  scoringStatus={aiInsights.scoringStatus}
+                />
               </span>
             </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-              <div
-                className="bg-green-500 h-2 rounded-full"
-                style={{ width: `${aiInsights.qualificationScore}%` }}
-              />
-            </div>
+            {isScored && (
+              <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+                <div
+                  className="bg-green-500 h-2 rounded-full"
+                  style={{ width: `${aiInsights.leadScore}%` }}
+                />
+              </div>
+            )}
             <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">{aiInsights.icpMatch}</p>
           </div>
           <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
@@ -1944,37 +2019,44 @@ function LeadRightSidebar({
               </div>
             )}
           </div>
-          <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
-          <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
-              Recommended Next Steps
-            </p>
-            <div className="space-y-2">
-              {aiInsights.nextBestActions.map((action) => (
-                <button
-                  key={action.label}
-                  className={`w-full text-left p-2 rounded border transition-colors group ${
-                    action.primary
-                      ? 'bg-blue-50 dark:bg-slate-800/50 border-blue-100 dark:border-slate-700 hover:border-[#2a78f6]/50'
-                      : 'bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700 hover:border-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`material-symbols-outlined !text-[18px] ${action.primary ? 'text-[#2a78f6]' : 'text-slate-500'}`}
+          {hasAiInsight && aiInsights.nextBestActions.length > 0 && (
+            <>
+              <div className="h-px bg-slate-100 dark:bg-slate-800 w-full" />
+              <div data-testid="sidebar-next-steps">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                  Recommended Next Steps
+                </p>
+                {/* UI-022: these come from the analysis and have no action of their own, so
+                    they are a list, not buttons. */}
+                <ul className="space-y-2">
+                  {aiInsights.nextBestActions.map((action) => (
+                    <li
+                      key={action.label}
+                      className={`p-2 rounded border ${
+                        action.primary
+                          ? 'bg-blue-50 dark:bg-slate-800/50 border-blue-100 dark:border-slate-700'
+                          : 'bg-slate-50 dark:bg-slate-800/30 border-slate-100 dark:border-slate-700'
+                      }`}
                     >
-                      {action.icon}
-                    </span>
-                    <span
-                      className={`text-sm font-medium ${action.primary ? 'text-slate-700 dark:text-slate-200 group-hover:text-[#2a78f6]' : 'text-slate-600 dark:text-slate-300 group-hover:text-slate-900'}`}
-                    >
-                      {action.label}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          aria-hidden="true"
+                          className={`material-symbols-outlined !text-[18px] ${action.primary ? 'text-[#2a78f6]' : 'text-slate-500'}`}
+                        >
+                          {action.icon}
+                        </span>
+                        <span
+                          className={`text-sm font-medium ${action.primary ? 'text-slate-700 dark:text-slate-200' : 'text-slate-600 dark:text-slate-300'}`}
+                        >
+                          {action.label}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
         </div>
         <button
           onClick={onViewAIInsights}
@@ -2034,13 +2116,6 @@ function LeadRightSidebar({
             View all notes ({notes.length})
           </button>
         )}
-      </Card>
-      {/* Similar Leads */}
-      <Card className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-bold text-slate-900 dark:text-white">Similar Leads</h3>
-        </div>
-        <EmptyState entity="leads" showCta={false} className="py-2" />
       </Card>
     </aside>
   );
@@ -2273,6 +2348,20 @@ function reportCacheRevalidationError(error: unknown) {
   console.error('Failed to revalidate lead caches:', error);
 }
 
+/**
+ * The lead's stored insight, shown only once the scoring job has run on the lead (SCORED
+ * or NEEDS_REVIEW). The API returns it as `aiInsights` (LeadAIInsight rows); opening a
+ * lead used to save a row derived from heuristics, so a never-scored lead's row is not an
+ * analysis.
+ */
+function scoredLeadInsight<T>(
+  scoringStatus: string | null | undefined,
+  insights: readonly T[] | undefined
+): T | null {
+  if (scoringStatus !== 'SCORED' && scoringStatus !== 'NEEDS_REVIEW') return null;
+  return insights?.[0] ?? null;
+}
+
 export default function Lead360Page() {
   // Get lead ID from URL params
   const params = useParams();
@@ -2356,6 +2445,31 @@ export default function Lead360Page() {
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
   }, [selectedActivityId, activeTab]);
+
+  // Emails tab "Open": show that activity in the timeline without changing the URL.
+  // Filters are cleared and enough rows shown so the activity is rendered, then it is
+  // expanded and scrolled to once the Activity tab has painted. Each Open scrolls again.
+  const [pendingScrollId, setPendingScrollId] = useState<string | null>(null);
+  const openActivityInTimeline = (activityId: string) => {
+    setActivityTypeFilter('all');
+    setPersonFilter('all');
+    setSearchQuery('');
+    const index = activities.findIndex((a) => a.id === activityId);
+    if (index >= 0) setVisibleCount((count) => Math.max(count, index + 1));
+    setExpandedActivities((prev) => new Set(prev).add(activityId));
+    setActiveTab('activity');
+    setPendingScrollId(activityId);
+  };
+  useEffect(() => {
+    if (!pendingScrollId || activeTab !== 'activity') return;
+    const id = pendingScrollId;
+    setPendingScrollId(null);
+    requestAnimationFrame(() => {
+      document
+        .querySelector(`[data-activity-id="${CSS.escape(id)}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }, [pendingScrollId, activeTab]);
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
@@ -2499,6 +2613,7 @@ export default function Lead360Page() {
       id: file.id,
       name: file.name,
       size: file.size,
+      url: file.url ?? null,
       uploadedAt:
         typeof file.uploadedAt === 'string' ? file.uploadedAt : file.uploadedAt.toISOString(),
     }));
@@ -2520,12 +2635,15 @@ export default function Lead360Page() {
       }));
   }, [activities]);
 
+  const apiInsight = scoredLeadInsight(apiLead?.scoringStatus, apiLead?.aiInsights);
+
   // Transform AI insights from API
   const aiInsights = useMemo(() => {
-    const insight = apiLead?.aiInsight;
+    const insight = apiInsight;
     if (!insight) {
       return {
-        qualificationScore: lead?.score || 0,
+        leadScore: lead?.score ?? 0,
+        scoringStatus: lead?.scoringStatus ?? null,
         engagementLevel: 'Not analyzed',
         engagementScore: 0,
         conversionProbability: 0,
@@ -2534,12 +2652,10 @@ export default function Lead360Page() {
         sentiment: 'Not analyzed',
         sentimentTrend: null as string | null,
         lastEngagementDays: 0,
-        nextBestAction: 'Gather more information about this lead',
-        nextBestActions: [
-          { icon: 'calendar_add_on', label: 'Schedule Discovery Call', primary: true },
-          { icon: 'mail', label: 'Send Follow-up Email', primary: false },
-        ] as { icon: string; label: string; primary: boolean }[],
-        recommendations: ['No AI recommendations available yet'],
+        // UI-022: no analysis means no next steps or recommendations, not invented ones.
+        nextBestAction: '',
+        nextBestActions: [] as { icon: string; label: string; primary: boolean }[],
+        recommendations: [] as string[],
         icpMatch: 'Not analyzed yet',
       };
     }
@@ -2548,29 +2664,36 @@ export default function Lead360Page() {
     const engagementLevel = insight.engagementScore >= 70 ? 'High' : mediumOrLow;
 
     return {
-      qualificationScore: lead?.score || insight.engagementScore,
+      leadScore: lead?.score ?? 0,
+      scoringStatus: lead?.scoringStatus ?? null,
       engagementLevel,
       engagementScore: insight.engagementScore,
       conversionProbability: insight.conversionProbability,
-      estimatedValue: insight.estimatedValue,
+      // The insight's estimatedValue is not a real estimate (the scoring job derives it
+      // from the score, or multiplies a value already in pence by 100), so the deal
+      // value is the lead's own, in pence, until a writer stores a real one (#1289).
+      estimatedValue: lead?.estimatedValue || 0,
       churnRisk: insight.churnRisk,
       sentiment: insight.sentiment || 'Neutral',
-      sentimentTrend: insight.sentimentTrend,
-      lastEngagementDays: insight.lastEngagementDays,
+      // Not measured by any insight writer yet: the scoring job stores the constants
+      // 'stable' and 0. Shown again once a writer marks them as measured (#1289).
+      sentimentTrend: null,
+      lastEngagementDays: 0,
       nextBestAction: insight.nextBestAction || 'No action recommended',
       nextBestActions: buildNextBestActions(insight),
-      recommendations: (insight.recommendations as string[]) || [],
+      recommendations: insightRecommendations(insight.recommendations),
       icpMatch: insight.icpMatch || 'Not analyzed',
     };
-  }, [apiLead?.aiInsight, lead?.score, lead?.estimatedValue]);
+  }, [apiInsight, lead?.score, lead?.scoringStatus, lead?.estimatedValue]);
 
   // IFC-226: Null-state detection for AI insight styling
-  const hasAiInsight = !!apiLead?.aiInsight;
+  const hasAiInsight = !!apiInsight;
 
   // Transform AI insights to ChurnRiskData format (IFC-095)
   const churnRiskData: ChurnRiskData | null = useMemo(() => {
-    const insight = apiLead?.aiInsight;
+    const insight = apiInsight;
     if (!insight) return null;
+    const daysSinceContact = wholeDaysSince(apiLead?.lastContactedAt);
 
     // Map database churn risk level to component format
     const levelMap: Record<string, ChurnRiskLevel> = {
@@ -2609,22 +2732,25 @@ export default function Lead360Page() {
       level,
       confidence: derivedConfidence,
       slaHours: slaMap[level],
-      trend: (() => {
-        if (insight.sentimentTrend === 'IMPROVING') return 'IMPROVING';
-        if (insight.sentimentTrend === 'DECLINING') return 'DECLINING';
-        return 'STABLE';
-      })(),
+      // The stored sentiment trend is a placeholder (see aiInsights), so no trend is claimed.
+      trend: 'STABLE',
       factors: [
         {
           factor: 'Engagement Score',
           impact: engagementImpact(insight.engagementScore),
           value: `${insight.engagementScore}%`,
         },
-        {
-          factor: 'Days Since Contact',
-          impact: lastContactImpact(insight.lastEngagementDays),
-          value: `${insight.lastEngagementDays} days`,
-        },
+        // From the lead's own lastContactedAt; the insight's lastEngagementDays is a
+        // stored constant. Left out when the lead was never contacted.
+        ...(daysSinceContact === null
+          ? []
+          : [
+              {
+                factor: 'Days Since Contact',
+                impact: lastContactImpact(daysSinceContact),
+                value: `${daysSinceContact} day${daysSinceContact === 1 ? '' : 's'}`,
+              },
+            ]),
         {
           factor: 'Conversion Probability',
           impact: conversionImpact(insight.conversionProbability),
@@ -2632,11 +2758,11 @@ export default function Lead360Page() {
         },
       ],
     };
-  }, [apiLead?.aiInsight]);
+  }, [apiInsight, apiLead?.lastContactedAt]);
 
   // Transform AI insights to NextBestActionData format (IFC-095)
   const nextBestActionData: NextBestActionData | null = useMemo(() => {
-    const insight = apiLead?.aiInsight;
+    const insight = apiInsight;
     if (!insight?.nextBestAction) return null;
 
     const actionType = resolveNBAActionType(insight.nextBestAction.toUpperCase());
@@ -2650,7 +2776,7 @@ export default function Lead360Page() {
       confidence: insight.engagementScore / 100,
       successProbability: insight.conversionProbability / 100,
     };
-  }, [apiLead?.aiInsight]);
+  }, [apiInsight]);
 
   // Person filter options derived from activities
   const personFilters = useMemo(() => {
@@ -2769,16 +2895,11 @@ export default function Lead360Page() {
     );
   }
 
-  // Compute metrics from activities
-  const emailActivities = activities.filter((act) => act.type === 'email');
-  const meetingActivities = activities.filter((act) => act.type === 'meeting');
-  const emailsOpened = emailActivities.filter((act) => act.metadata?.opened).length;
+  // The open rate counts only emails the CRM tracks opens for, and touchpoints leave out
+  // system records (score and status changes).
   const leadMetrics = {
     estimatedValue: lead.estimatedValue,
-    emailsSent: emailActivities.length,
-    emailsOpened,
-    meetings: meetingActivities.length,
-    touchpoints: activities.length,
+    ...leadActivityMetrics(activities),
   };
 
   // Use pre-computed filtered/visible activities (hooks moved before early returns)
@@ -2840,6 +2961,7 @@ export default function Lead360Page() {
           icon: 'person',
           url: `/leads/${lead.id}`,
         }}
+        exportFields={apiLead ? leadExportFields(apiLead) : undefined}
         extraActions={[
           { label: 'Archive', icon: 'archive', onClick: () => setArchiveConfirmOpen(true) },
           {
@@ -2954,7 +3076,12 @@ export default function Lead360Page() {
           )}
 
           {activeTab === 'emails' && (
-            <LeadEmailsTab emails={emails} timezone={timezone} leadEmail={lead.email} />
+            <LeadEmailsTab
+              emails={emails}
+              timezone={timezone}
+              leadEmail={lead?.email}
+              onOpenActivity={openActivityInTimeline}
+            />
           )}
 
           {activeTab === 'files' && <LeadFilesTab files={files} timezone={timezone} />}

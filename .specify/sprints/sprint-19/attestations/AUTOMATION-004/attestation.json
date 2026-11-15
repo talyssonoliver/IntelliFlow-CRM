@@ -1,0 +1,123 @@
+{
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "AUTOMATION-004",
+  "run_id": "automation-004-close-2026-11-12",
+  "attestor": "ifc-speed lane (Sprint 19 governance) — closing the AUTOMATION-004 row (chore/s19-flip-done-rows)",
+  "attestation_timestamp": "2026-11-12T14:21:12Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 7,
+    "validations_passed": 2,
+    "validations_failed": 0,
+    "gates_passed": 3,
+    "gates_failed": 0,
+    "kpis_met": 2,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "tools/scripts/orchestration/schemas/task-contract.schema.json": "b3a84ba928b976ae81b9b2ba593bb34af4bc6b206e4067d16f72eb252301665b",
+    "tools/scripts/orchestration/validate-task-contract.ts": "7595116c4e6ba18139952de6757e57f28f8728b7cd4cc5a115cc0064b4f9e64b",
+    "tools/scripts/orchestration/verify-dispatch-binding.ts": "ebf2826174058cc250351c27404b215438d221bc532e1e53170e81f3a1278550",
+    "tools/scripts/orchestration/__tests__/validate-task-contract.test.ts": "c4a957cd82cb9c7758ff89dbddd23a59cd96537487ad9d2aa3864c0df5687c85",
+    "docs/architecture/adr/ADR-072-task-contract-format-and-dispatch-binding.md": "743754bd8b5b971fb1f1598f53f314e5fdeb88824b3bfae8c190a1a408c373b9",
+    ".specify/sprints/sprint-19/spec/AUTOMATION-004/spec.md": "985d552b5b958a42eea775e95ea3d49ebd0303519d755afac8eac4e2beb74cfc",
+    ".specify/sprints/sprint-19/spec/AUTOMATION-004/plan.md": "e30bdf43e066009de66a73b56009ae93b1ee4efb3b34f375b3607c9de6a8c062"
+  },
+  "validation_results": [
+    {
+      "name": "the DoD's own verification command",
+      "command": "npx vitest run tools/scripts/orchestration/__tests__/",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-12T14:21:12Z",
+      "stdout_hash": "50676ca998f3a47c2d3eb2624c737cf84b817014d812aa4f98f197a54bd96efd"
+    },
+    {
+      "name": "coverage of the two modules the DoD names",
+      "command": "npx vitest run tools/scripts/orchestration/__tests__/ --coverage.enabled --coverage.provider=istanbul --coverage.include=tools/scripts/orchestration/*.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-12T14:19:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "artifacts-present",
+      "passed": true,
+      "log_path": "All 7 ARTIFACT paths in the CSV row exist on origin/main 9a566ce5c; hashes above."
+    },
+    {
+      "gate_id": "schema-field-count",
+      "passed": true,
+      "log_path": "task-contract.schema.json declares 20 properties, all 20 required."
+    },
+    {
+      "gate_id": "no-pre-registered-orch-rows",
+      "passed": true,
+      "log_path": "Sprint_plan.csv has 0 rows whose Task ID starts with ORCH-; AUTOMATION-004 is the one canonical row."
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "tests pass",
+      "target": "npx vitest run tools/scripts/orchestration/__tests__/ exits 0",
+      "actual": "1 file, 92 tests passed",
+      "met": true
+    },
+    {
+      "kpi": "coverage",
+      "target": ">=90%",
+      "actual": "lines 95.2% (validate-task-contract.ts 94.94%, verify-dispatch-binding.ts 95.58%); statements 95.48%; branches 90.07%; functions 96.42%",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "20-field JSON Schema at tools/scripts/orchestration/schemas/task-contract.schema.json",
+      "met": true,
+      "evidence": "File present; 20 properties, 20 required."
+    },
+    {
+      "criterion": "runtime validator rejecting missing/wrong-type fields + duplicate agentLeaseId",
+      "met": true,
+      "evidence": "tools/scripts/orchestration/validate-task-contract.ts; covered by validate-task-contract.test.ts (92 tests pass)."
+    },
+    {
+      "criterion": "verify-dispatch-binding.ts CLI guard (4-way binding: taskId+sessionId+branch+worktree)",
+      "met": true,
+      "evidence": "tools/scripts/orchestration/verify-dispatch-binding.ts, 95.58% line coverage; listed as the code enforcement in agent-autonomy-policy.md:176."
+    },
+    {
+      "criterion": "tests >=90% coverage",
+      "met": true,
+      "evidence": "95.2% lines across the two modules (run 2026-11-12, istanbul)."
+    },
+    {
+      "criterion": "ADR-072 decision on ledger architecture",
+      "met": true,
+      "evidence": "docs/architecture/adr/ADR-072-task-contract-format-and-dispatch-binding.md, decision 3 'Lease ledger architecture'."
+    },
+    {
+      "criterion": "dispatch-binding section in agent-autonomy-policy.md",
+      "met": true,
+      "evidence": "docs/operations/agent-autonomy-policy.md '## Dispatch-Binding Enforcement' (line 189) and the enforcement table row (line 176)."
+    },
+    {
+      "criterion": "one canonical CSV row (no future ORCH rows pre-registered)",
+      "met": true,
+      "evidence": "0 ORCH-* rows in Sprint_plan.csv."
+    }
+  ],
+  "dependencies_verified": [],
+  "environment": {
+    "os": "win32",
+    "node_version": "v25.2.1",
+    "git_commit": "9a566ce5c618f54bb6d053d8bae94fbf7189b941",
+    "branch": "chore/s19-flip-done-rows"
+  },
+  "spec_path": ".specify/sprints/sprint-19/spec/AUTOMATION-004/spec.md",
+  "plan_path": ".specify/sprints/sprint-19/spec/AUTOMATION-004/plan.md",
+  "notes": "Closing attestation for code that shipped in #670 (ea7a23125). The row stayed In Progress at 0% only because no Sprint-19 attestation was written; every DoD item was re-verified on origin/main 9a566ce5c on 2026-11-12 (artifacts present and hashed, the DoD's verification command re-run, coverage measured) rather than taken from the original PR."
+}

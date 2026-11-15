@@ -76,11 +76,12 @@ function expectSecretOnlyInEnv(job: Job, envKey: string, expression: string) {
 describe('grafana-alert-rules.yml', () => {
   const wf = load('grafana-alert-rules.yml');
 
-  it('keeps exactly its own three trigger paths, so SLO or dashboard edits never re-apply the alert rules', () => {
+  it('runs only for its own files and the shared rule builder, so SLO or dashboard edits never re-apply the alert rules', () => {
     expect(wf.on.push?.branches).toEqual(['main']);
     expect(wf.on.push?.paths).toEqual([
       'infra/monitoring/grafana/cloud/alert-rules.json',
       'tools/scripts/observability/apply-grafana-alert-rules.mjs',
+      'tools/scripts/lib/grafana-provisioning.mjs',
       '.github/workflows/grafana-alert-rules.yml',
     ]);
   });
@@ -121,8 +122,20 @@ describe.each([
     job: 'dashboard',
     config: 'infra/monitoring/grafana/cloud/dashboard-production.json',
     script: 'tools/scripts/observability/apply-grafana-dashboard.mjs',
+    // IFC-117: the same job also applies the AI models dashboard.
+    extraConfigs: ['infra/monitoring/grafana/cloud/dashboard-ai-models.json'],
+    run:
+      'node tools/scripts/observability/apply-grafana-dashboard.mjs $DRY_RUN\n' +
+      'node tools/scripts/observability/apply-grafana-dashboard.mjs --dashboard ai-models $DRY_RUN\n',
   },
-])('$file (grafana)', ({ file, job: jobName, config, script }) => {
+] as {
+  file: string;
+  job: string;
+  config: string;
+  script: string;
+  extraConfigs?: string[];
+  run?: string;
+}[])('$file (grafana)', ({ file, job: jobName, config, script, extraConfigs = [], run }) => {
   const load_ = () => load(file);
 
   it('runs on push to main only for its own files and the shared lib', () => {
@@ -130,6 +143,7 @@ describe.each([
     expect(wf.on.push?.branches).toEqual(['main']);
     expect(wf.on.push?.paths).toEqual([
       config,
+      ...extraConfigs,
       script,
       'tools/scripts/lib/grafana-provisioning.mjs',
       `.github/workflows/${file}`,
@@ -164,7 +178,7 @@ describe.each([
     const step = job.steps.find((s) => s.run);
     expect(step?.env?.GRAFANA_URL).toBe('https://graysushi1880.grafana.net');
     expect(step?.env?.DRY_RUN).toBe("${{ inputs.dry_run && '--dry-run' || '' }}");
-    expect(step?.run).toBe(`node ${script} $DRY_RUN`);
+    expect(step?.run).toBe(run ?? `node ${script} $DRY_RUN`);
     expect(wf.on.workflow_dispatch?.inputs?.dry_run).toMatchObject({
       type: 'boolean',
       default: false,

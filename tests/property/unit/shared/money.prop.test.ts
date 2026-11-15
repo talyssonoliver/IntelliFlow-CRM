@@ -141,16 +141,20 @@ describe('Money — RACE-PURE-01: currency validation and round-trip', () => {
   // The correct domain intent would be to support USD; this skip marks the gap.
   // ADR-054: QUAL-008 (RACE-PURE-01) — confirmed SUPPORTED_CURRENCIES gap (USD missing,
   // GBP duplicated) in the Money value object; tracked in
-  // artifacts/reports/sprint-19/baseline/quality-findings.json. Skip retained pending a
+  // artifacts/reports/sprint-19/baseline/quality-findings.json. Kept as an expected failure pending a
   // dedicated fix task (out of scope for ENG-OPS-002.R13).
-  it.skip(// BUG(RACE-PURE-01): SUPPORTED_CURRENCIES omits USD. Money.create(10,"USD") returns
-  // failure. The SUPPORTED_CURRENCIES array also contains "GBP" twice (duplicate entry)
-  // wasting a slot.  Both issues should be fixed in packages/domain/src/shared/Money.ts
-  // by replacing the array with: ['USD','GBP','EUR','CAD','AUD','JPY'].
-  'USD is a supported ISO-4217 currency and should be accepted by Money.create (BUG RACE-PURE-01)', () => {
-    const r = Money.create(10, 'USD');
-    expect(r.isSuccess).toBe(true);
-  });
+  // Runs as .fails: it goes red the day the bug is fixed; then make it a plain test.
+  it.fails(
+    // BUG(RACE-PURE-01): SUPPORTED_CURRENCIES omits USD. Money.create(10,"USD") returns
+    // failure. The SUPPORTED_CURRENCIES array also contains "GBP" twice (duplicate entry)
+    // wasting a slot.  Both issues should be fixed in packages/domain/src/shared/Money.ts
+    // by replacing the array with: ['USD','GBP','EUR','CAD','AUD','JPY'].
+    'USD is a supported ISO-4217 currency and should be accepted by Money.create (BUG RACE-PURE-01)',
+    () => {
+      const r = Money.create(10, 'USD');
+      expect(r.isSuccess).toBe(true);
+    }
+  );
 });
 
 // ---------------------------------------------------------------------------

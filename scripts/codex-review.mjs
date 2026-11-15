@@ -27,9 +27,9 @@
  *     passes while a reviewer is available.
  *   - SKIPPED_PRECONDITION (exit 0) only when NEITHER codex nor claude is usable.
  *
- * Policy:
- *   - Any finding whose fingerprint is NOT in the waiver list → exit 1 (BLOCK)
- *   - Zero unwaived findings → exit 0
+ * Policy and reuse (lib/codex-review-cache.mjs): an unwaived critical/high/medium
+ * finding blocks; an unwaived LOW goes to the branch's follow-up issue; a review of
+ * the same head + diff is reused, never repeated.
  *   This gate runs LOCAL-ONLY (codex OAuth / Claude CLI session); there is NO CI
  *   enforcement and NO API key is required.
  *
@@ -67,6 +67,7 @@ import {
   runChunkedReview,
   scopeChanges,
 } from './lib/codex-chunk-review.mjs';
+import { makeReviewIo } from './lib/codex-review-cache.mjs';
 import {
   activeWaivers,
   checkWaivers,
@@ -340,6 +341,16 @@ function main() {
   //      must never silently pass while a reviewer is available.
   // CODEX_REVIEW_FORCE_FALLBACK=1 forces the Claude path (skip codex) — useful
   // during a codex usage/tier outage and for testing the fallback.
+  const io = makeReviewIo({
+    repoRoot: REPO_ROOT,
+    outDir: OUT_DIR,
+    baseRef,
+    isInScope,
+    spawn: spawnSync,
+    fs,
+  });
+  const cache = io.lookup();
+  if (cache.reuse) return finish({ ...cache.reuse, io, cache: null });
   const forceFallback = process.env.CODEX_REVIEW_FORCE_FALLBACK === '1';
   const codexUsable = !forceFallback && commandAvailable('codex') && codexLoggedIn();
   const claudeUsable = claudeAvailable();
@@ -422,6 +433,8 @@ function main() {
     findings: result.findings,
     reviewerUsed: result.reviewerUsed,
     chunkCount: result.chunkCount,
+    io,
+    cache,
   });
 }
 
@@ -486,7 +499,7 @@ ${diffText}
 }
 
 /** Fingerprints, waivers, artifacts and the exit code for a fully reviewed diff. */
-function finish({ scopedFiles, findings: rawFindings, reviewerUsed, chunkCount }) {
+function finish({ scopedFiles, findings: rawFindings, reviewerUsed, chunkCount, io, cache }) {
   // 8. Stamp fingerprints (Codex computes them too, but we recompute for
   //    consistency — our normalisation is the contract, not the model's).
   //    The fingerprint is now anchored to the SOURCE CODE at the flagged
@@ -497,63 +510,25 @@ function finish({ scopedFiles, findings: rawFindings, reviewerUsed, chunkCount }
     return { ...f, fingerprint: fp };
   });
 
-  const unwaived = findings.filter((f) => !waivers.has(f.fingerprint));
-  const waived = findings.filter((f) => waivers.has(f.fingerprint));
-
-  // 9. Write artifacts
-  const artifactData = {
-    base_ref: baseRef,
-    scoped_files: scopedFiles,
-    diff_chunks: chunkCount,
+  const { summary, blocking, lowLine } = io.complete({
+    rawFindings,
     findings,
-    waived_count: waived.length,
-    unwaived_count: unwaived.length,
-    verdict: unwaived.length === 0 ? 'PASS' : 'FAIL',
-  };
-  fs.writeFileSync(FINDINGS_PATH, JSON.stringify(artifactData, null, 2));
+    waivers,
+    cache,
+    scopedFiles,
+    reviewerUsed,
+    chunkCount,
+    waivedLines: waivedFindingLines,
+  });
+  process.stdout.write(`${summary}\n${lowLine ?? ''}`);
 
-  const lines = [
-    `Semantic Review (${reviewerUsed}) — ${new Date().toISOString()}`,
-    `Base ref  : ${baseRef}`,
-    `Files in scope : ${scopedFiles.length}`,
-    `Diff chunks    : ${chunkCount} (each reviewed in full)`,
-    `Total findings : ${findings.length}`,
-    `  Waived       : ${waived.length}`,
-    `  Unwaived     : ${unwaived.length}`,
-    '',
-  ];
-
-  if (unwaived.length > 0) {
-    lines.push('UNWAIVED FINDINGS (BLOCKING):');
-    for (const f of unwaived) {
-      lines.push(`  [${f.severity.toUpperCase()}] ${f.file}:${f.line} — ${f.rule}`);
-      lines.push(`    Issue    : ${f.issue}`);
-      lines.push(`    Evidence : ${f.evidence}`);
-      lines.push(`    Fix      : ${f.fix}`);
-      lines.push(`    Fingerprint: ${f.fingerprint}`);
-      lines.push('');
-    }
-  }
-  if (waived.length > 0) {
-    lines.push('WAIVED FINDINGS (suppressed):');
-    for (const f of waived) {
-      lines.push(...waivedFindingLines(f, waivers.get(f.fingerprint)));
-    }
-    lines.push('');
-  }
-  lines.push(`Verdict: ${artifactData.verdict}`);
-  const summary = lines.join('\n');
-  fs.writeFileSync(SUMMARY_PATH, summary);
-
-  process.stdout.write(summary + '\n');
-
-  if (unwaived.length === 0) {
-    process.stdout.write('[codex-review] Gate PASS — no unwaived findings.\n');
+  if (blocking.length === 0) {
+    process.stdout.write('[codex-review] Gate PASS — no unwaived blocking findings.\n');
     process.exit(0);
   }
 
   process.stderr.write(
-    `[codex-review] Gate FAIL — ${unwaived.length} unwaived finding(s).\n` +
+    `[codex-review] Gate FAIL — ${blocking.length} unwaived blocking finding(s).\n` +
       `  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml\n` +
       `  (check with: node scripts/codex-review.mjs --check-waivers)\n` +
       `  with a non-empty reason, author, and date.\n`

@@ -119,7 +119,25 @@ a record under that key only if all of these hold:
   - any file in a workspace package the PR touches;
   - any file in a package those depend on, or in a package that depends on them,
     transitively;
-  - repo-root files outside every package, when the PR touches the root too.
+  - repo-root code under `scripts/` or `tools/` that may interact with a root
+    file the PR changes: some file imports both, transitively (each file imports
+    itself), or a file importing either of them reaches a load that cannot be
+    followed (an unreadable file, an unresolved relative path, a computed
+    `import()`/`require()` path). Imports include re-exports, requires, dynamic
+    imports, `vi.mock`/`jest.mock`, and a literal mention of a script's repo
+    path (pre-ship spawns scripts by path);
+  - any other repo-root file (workflows, hooks, config, data) in a top-level
+    directory where the PR also changes a file;
+  - in `apps/web`, when the PR reaches the app only through its own web files, a
+    main-side web file is judged by the app's import graph (relative imports and
+    the tsconfig `paths` aliases inside the app) with the same two rules as root
+    code. It also blocks when it, or the PR's web file, is app-wide
+    (`next.config.*`, `proxy`/`middleware`, instrumentation, `globals.css`,
+    Tailwind/PostCSS config, any `.d.ts`), is an App Router wrapper (`layout`,
+    `template`, `loading`, `error`, `not-found`, `default`) over the other's
+    folder, or is a non-code file no code imports. When the PR also changes a
+    package the app depends on or that depends on it, or the app's tsconfig
+    cannot be read, the whole app is one package as before.
 
   Docs, artifacts and metrics on main's side are ignored.
 

@@ -3,6 +3,8 @@
  * Ephemeral test database CLI (#271). See scripts/lib/ephemeral-test-db.mjs.
  *
  *   pnpm test:db:run [--seed] -- <command...>   create a fresh DB, run <command> against it, drop it
+ *   pnpm test:db:run --seed-if-affected -- <command...>   seed only when the branch reaches the DB
+ *                                               (the push gate; scripts/lib/preship-db-scope.mjs)
  *   pnpm test:db:up  [--seed]                   create a fresh DB, print its URL, leave it for you
  *   pnpm test:db:down <name>                    drop a DB that `up` created
  *   pnpm test:db:down --stale [--older-than-min N]   drop leaked intelliflow_test_run_* DBs (default: older than 60 min)
@@ -31,6 +33,7 @@ import {
   sweepStale,
   teardown,
 } from './lib/ephemeral-test-db.mjs';
+import { resolveDbScope } from './lib/preship-db-scope.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -84,6 +87,17 @@ function redact(url) {
 }
 
 /**
+ * `--seed-if-affected` (the push gate's flag): seed only when the branch can reach
+ * the database or the integration suite (scripts/lib/preship-db-scope.mjs).
+ */
+function seedIfAffected(flags, io) {
+  if (!flags.includes('--seed-if-affected')) return false;
+  const scope = io.dbScope();
+  io.stderr(`[test-db] seed ${scope.needed ? 'needed' : 'skipped'}: ${scope.reason}\n`);
+  return scope.needed;
+}
+
+/**
  * Runs the CLI. Every side effect goes through `io` so tests can drive it with fakes;
  * the defaults are the real thing.
  */
@@ -92,6 +106,7 @@ export async function main(argv = process.argv.slice(2), overrides = {}) {
     connect,
     pnpm,
     spawn,
+    dbScope: () => resolveDbScope({ cwd: repoRoot }),
     env: undefined,
     stderr: (t) => process.stderr.write(t),
     stdout: (t) => process.stdout.write(t),
@@ -103,7 +118,7 @@ export async function main(argv = process.argv.slice(2), overrides = {}) {
   const sep = rest.indexOf('--');
   const flags = sep === -1 ? rest : rest.slice(0, sep);
   const childArgv = sep === -1 ? [] : rest.slice(sep + 1);
-  const withSeed = flags.includes('--seed');
+  const withSeed = flags.includes('--seed') || seedIfAffected(flags, io);
   const env = io.env ?? loadEnv();
   const serverUrl = resolveServerUrl(env);
 

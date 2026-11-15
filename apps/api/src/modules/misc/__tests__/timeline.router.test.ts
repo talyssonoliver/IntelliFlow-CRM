@@ -14,6 +14,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { timelineRouter } from '../timeline.router';
 import { prismaMock, createTestContext, TEST_UUIDS, mockTask, mockUser } from '../../../test/setup';
+import { virtualElapsedMs } from '../../../test/virtual-clock';
 
 describe('Timeline Router', () => {
   const ctx = createTestContext();
@@ -397,9 +398,13 @@ describe('Timeline Router', () => {
       prismaMock.domainEvent.findMany.mockResolvedValue([]);
       prismaMock.caseDocument.findMany.mockResolvedValue([]);
 
-      const result = await caller.getEvents({});
+      // Load-independent: measured on a fake clock, so queryDurationMs is time spent on timers.
+      let result: Awaited<ReturnType<typeof caller.getEvents>> | undefined;
+      await virtualElapsedMs(async () => {
+        result = await caller.getEvents({});
+      });
 
-      expect(result.queryDurationMs).toBeLessThan(1000);
+      expect(result?.queryDurationMs).toBeLessThan(1000);
     });
   });
 

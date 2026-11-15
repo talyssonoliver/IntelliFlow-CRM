@@ -66,6 +66,11 @@ const CONFIG = {
     'artifacts/coverage-parts/**',
     'artifacts/reports/**', // generated summary/report JSON (mentions field names like "password")
     'artifacts/test-failures/**', // test output JSON contains test titles mentioning password fields
+    // Semantic-review inputs and outputs (scripts/codex-review.mjs): gitignored, local only. The
+    // prompts embed the branch's diff, so a removed line such as `password: undefined` matched
+    // the secret patterns and failed a gate (2026-11-12). The diff itself is secret-scanned by
+    // gitleaks over the commits being pushed, which is the real gate for that content.
+    'artifacts/codex-review/**',
     // Tech-debt ledger: governance text that tracks SECURITY debt — legitimately
     // contains "password"/"credential"/"secret" in prose (e.g. "leaked-password check").
     // gitleaks (a dedicated scanner) is the real secret gate for this file.

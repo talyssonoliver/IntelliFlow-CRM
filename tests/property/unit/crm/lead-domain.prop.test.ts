@@ -621,27 +621,31 @@ describe('Lead aggregate — invariants (property, RACE-PURE-08)', () => {
   // fail on e.g. LOST→NEW, so it is skipped to keep the file green.
   // ADR-054: QUAL-006 (RACE-PURE-08) — confirmed missing VALID_LEAD_TRANSITIONS table
   // in Lead.changeStatus; tracked in
-  // artifacts/reports/sprint-19/baseline/quality-findings.json. Skip retained pending a
+  // artifacts/reports/sprint-19/baseline/quality-findings.json. Kept as an expected failure pending a
   // dedicated fix task (out of scope for ENG-OPS-002.R13).
-  test.skip('BUG(RACE-PURE-08): changeStatus rejects illegal reverse transitions (e.g. LOST→NEW, UNQUALIFIED→CONVERTED)', () => {
-    const illegalPairs: Array<[LeadStatus, LeadStatus]> = [
-      ['LOST', 'NEW'],
-      ['LOST', 'CONTACTED'],
-      ['LOST', 'QUALIFIED'],
-      ['UNQUALIFIED', 'CONVERTED'],
-      ['QUALIFIED', 'NEW'],
-      ['NEGOTIATING', 'NEW'],
-      ['NEGOTIATING', 'CONTACTED'],
-    ];
+  // Runs as .fails: it goes red the day the bug is fixed; then make it a plain test.
+  test.fails(
+    'BUG(RACE-PURE-08): changeStatus rejects illegal reverse transitions (e.g. LOST→NEW, UNQUALIFIED→CONVERTED)',
+    () => {
+      const illegalPairs: Array<[LeadStatus, LeadStatus]> = [
+        ['LOST', 'NEW'],
+        ['LOST', 'CONTACTED'],
+        ['LOST', 'QUALIFIED'],
+        ['UNQUALIFIED', 'CONVERTED'],
+        ['QUALIFIED', 'NEW'],
+        ['NEGOTIATING', 'NEW'],
+        ['NEGOTIATING', 'CONTACTED'],
+      ];
 
-    for (const [from, to] of illegalPairs) {
-      const lead = makeLead('owner-1', 'tenant-1');
-      if (from !== 'NEW') {
-        // Reach the 'from' status via the unrestricted changeStatus
-        lead.changeStatus(from, 'user-1');
+      for (const [from, to] of illegalPairs) {
+        const lead = makeLead('owner-1', 'tenant-1');
+        if (from !== 'NEW') {
+          // Reach the 'from' status via the unrestricted changeStatus
+          lead.changeStatus(from, 'user-1');
+        }
+        const result = lead.changeStatus(to, 'user-1');
+        expect(result.isFailure).toBe(true); // This assertion FAILS today
       }
-      const result = lead.changeStatus(to, 'user-1');
-      expect(result.isFailure).toBe(true); // This assertion FAILS today
     }
-  });
+  );
 });

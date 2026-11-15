@@ -6,7 +6,7 @@
  * empty state, status-colour branches, and the relative-time formatter wiring.
  */
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 import { ContactTicketsTab } from '../ContactTicketsTab';
 import type { TicketViewModel } from '../contact-tab-format';
@@ -54,5 +54,39 @@ describe('ContactTicketsTab', () => {
     render(<ContactTicketsTab tickets={[]} timezone="UTC" />);
     expect(screen.getByTestId('contact-tickets-empty')).toBeInTheDocument();
     expect(screen.queryByText('Integration API question')).not.toBeInTheDocument();
+  });
+
+  it('Create Ticket opens the new-ticket page (UI-1277 dead controls)', () => {
+    render(<ContactTicketsTab tickets={[]} timezone="UTC" />);
+    expect(screen.getByRole('link', { name: 'Create Ticket' })).toHaveAttribute(
+      'href',
+      '/tickets/new'
+    );
+  });
+
+  it('Create Ticket pre-fills this contact too (#1303)', () => {
+    render(<ContactTicketsTab tickets={[]} timezone="UTC" contactId="c 1" />);
+    expect(screen.getByRole('link', { name: 'Create Ticket' })).toHaveAttribute(
+      'href',
+      '/tickets/new?contactId=c%201'
+    );
+  });
+
+  it('links the empty state to a new ticket for this contact', () => {
+    render(<ContactTicketsTab tickets={[]} timezone="UTC" contactId="c 1" />);
+    fireEvent.mouseEnter(screen.getByRole('region'));
+    expect(screen.getByRole('link', { name: /Create a ticket/ })).toHaveAttribute(
+      'href',
+      '/tickets/new?contactId=c%201'
+    );
+  });
+
+  it('links to a blank new ticket without a contact', () => {
+    render(<ContactTicketsTab tickets={[]} timezone="UTC" />);
+    fireEvent.mouseEnter(screen.getByRole('region'));
+    expect(screen.getByRole('link', { name: /Create a ticket/ })).toHaveAttribute(
+      'href',
+      '/tickets/new'
+    );
   });
 });

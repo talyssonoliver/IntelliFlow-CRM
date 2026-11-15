@@ -86,6 +86,7 @@
  *   PRESHIP_MODE=full        same as passing --full
  *   PRESHIP_FULL_TESTS=1     run the FULL test suite locally (default: related only)
  *   PRESHIP_FULL_LINT=1      format/lint/lint-promises over the whole repo locally
+ *   PRESHIP_FULL_DB=1        run the integration suite even when no change reaches it
  *   PRESHIP_FULL_BUILD=1     library-build, typecheck and build over every package locally
  *   PRESHIP_KEEP_GOING=1     don't hard-stop on first required FAIL
  *   PRESHIP_ALLOW_MISSING=1  let required+SKIPPED_PRECONDITION steps pass
@@ -113,6 +114,7 @@ import {
   finalLine,
 } from './lib/preship-report.mjs';
 import { integrationInfraMissing } from './lib/preship-integration-infra.mjs';
+import { FULL_DB_ENV, resolveDbScope } from './lib/preship-db-scope.mjs';
 import { reusableResult } from './lib/preship-cache.mjs';
 import {
   appendRunRecord,
@@ -305,6 +307,15 @@ const IS_CI = process.env.CI === 'true' || process.env.CI === '1';
 const TEST_SCOPE = resolveTestScope({ cwd: REPO_ROOT });
 const SCOPED_TESTS = TEST_SCOPE.scope !== 'full';
 const SCOPE_ENV_VALUE = JSON.stringify(TEST_SCOPE);
+// DB SCOPE: the integration suite runs locally only when the branch can reach it
+// (a change under packages/db, apps/api, apps/ai-worker or tests/integration, a
+// test/DB config file, or a file an integration test imports). Otherwise it is an
+// honest, non-required skip: CI runs the whole suite. Always needed under CI and
+// with PRESHIP_FULL_DB=1. See scripts/lib/preship-db-scope.mjs.
+const DB_SCOPE = resolveDbScope({ cwd: REPO_ROOT });
+const NOT_AFFECTED_REMEDIATION =
+  `Not affected: ${DB_SCOPE.reason}. CI runs the integration suite; ` +
+  `${FULL_DB_ENV}=1 runs it here.`;
 // BUILD SCOPE: library-build, typecheck and build run over the packages this
 // branch changed plus their dependents, using CI's own classification
 // (scripts/ci/affected.mjs) over the local diff. Full under CI, with
@@ -512,12 +523,14 @@ const STEPS = [
     description:
       'vitest run --project integration (FAILS the gate if Docker postgres/redis not up — override with PRESHIP_ALLOW_MISSING=1)',
     cmd: ['pnpm', 'run', 'test:integration'],
-    // The endpoints the suite will actually use, TCP-probed (see the lib). A
-    // name match on `docker ps` was fooled by other projects' containers.
-    skip_if: dbStackUnavailable,
-    skip_remediation:
-      'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis`. Then re-run, or set PRESHIP_ALLOW_MISSING=1 to bypass for this push only.',
-    required: true,
+    // Skipped (not required) when no change reaches the suite (DB_SCOPE above).
+    // Otherwise the endpoints the suite will actually use are TCP-probed (see the
+    // lib): a name match on `docker ps` was fooled by other projects' containers.
+    skip_if: () => !DB_SCOPE.needed || dbStackUnavailable(),
+    skip_remediation: DB_SCOPE.needed
+      ? 'Start the local stack: `docker compose -f docker-compose.yml up -d postgres redis`. Then re-run, or set PRESHIP_ALLOW_MISSING=1 to bypass for this push only.'
+      : NOT_AFFECTED_REMEDIATION,
+    required: DB_SCOPE.needed,
   },
   {
     id: 'coverage',
@@ -773,7 +786,10 @@ const STEPS = [
     // of the diff vs origin/main, flagging correctness / data-integrity /
     // security bugs that pass TypeScript + tests + lint because the author's
     // own tests encode the same wrong assumption (e.g. revenue-band "1M-10M"
-    // mapped to 100 cents with green tests). Block on ANY unwaived finding.
+    // mapped to 100 cents with green tests). Blocks on an unwaived critical,
+    // high or medium finding; an unwaived LOW goes to the branch's follow-up
+    // issue. A review of the same head + diff (e.g. a standalone run before the
+    // push) is reused, not repeated (scripts/lib/codex-review-cache.mjs).
     //
     // LOCAL-ONLY enforcement: the codex CLI must be installed and OAuth-
     // authenticated (ChatGPT/Codex login). No API key is required or used.
@@ -925,8 +941,12 @@ if (flags.help) {
       '  their dependents; build is skipped for docs/test-only diffs. PRESHIP_FULL_BUILD=1',
       '  builds everything.',
       '',
+      'DB scope: integration tests run only when the change can reach them (db, api,',
+      '  ai-worker, tests/integration, DB/test config, or a file they import).',
+      '  PRESHIP_FULL_DB=1 always runs them.',
+      '',
       'Env: PRESHIP_MODE=full · PRESHIP_KEEP_GOING=1 · PRESHIP_ALLOW_MISSING=1 · PRESHIP_FULL_TESTS=1',
-      '     PRESHIP_FULL_LINT=1 · PRESHIP_FULL_BUILD=1',
+      '     PRESHIP_FULL_LINT=1 · PRESHIP_FULL_BUILD=1 · PRESHIP_FULL_DB=1',
       '',
     ].join('\n')
   );
@@ -1122,6 +1142,7 @@ async function main() {
     `pre-ship: build scope ${AFFECTED.mode} — ${AFFECTED.reason}` +
       (AFFECTED.mode === 'affected' ? ` [${AFFECTED.packages.join(', ')}]` : '') +
       (AFFECTED.testsOrDocsOnly ? '; only docs/tests changed, build skipped' : '') +
+      `; integration ${DB_SCOPE.needed ? 'runs' : 'skipped'} — ${DB_SCOPE.reason}` +
       '.\n\n'
   );
 

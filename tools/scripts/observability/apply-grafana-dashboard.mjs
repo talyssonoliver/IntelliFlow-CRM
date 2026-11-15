@@ -1,7 +1,9 @@
 #!/usr/bin/env node
-// Apply the production service dashboard in
-// infra/monitoring/grafana/cloud/dashboard-production.json to the Grafana Cloud
-// stack (ENV-008-AI, ADR-087).
+// Apply a dashboard as code to the Grafana Cloud stack. Two are known:
+//  - production (default): infra/monitoring/grafana/cloud/dashboard-production.json,
+//    uid env008-production (ENV-008-AI, ADR-087);
+//  - ai-models: infra/monitoring/grafana/cloud/dashboard-ai-models.json,
+//    uid ifc117-ai-models (IFC-117, ADR-088).
 //
 // The committed JSON is the source of truth. The dashboard has a fixed uid and
 // is saved with overwrite, so a run always replaces it with the committed copy.
@@ -10,13 +12,13 @@
 //
 // Usage (CI: .github/workflows/grafana-dashboard.yml):
 //   GRAFANA_URL=https://<stack>.grafana.net GRAFANA_SA_TOKEN=<service account token> \
-//     node tools/scripts/observability/apply-grafana-dashboard.mjs [--dry-run]
+//     node tools/scripts/observability/apply-grafana-dashboard.mjs [--dashboard ai-models] [--dry-run]
 // The token is read from the environment only and is never printed.
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createGrafanaClient, loadValidConfig, redactBody } from '../lib/grafana-provisioning.mjs';
 
-const CONFIG_PATH = join(
+const CLOUD_DIR = join(
   dirname(fileURLToPath(import.meta.url)),
   '..',
   '..',
@@ -24,10 +26,16 @@ const CONFIG_PATH = join(
   'infra',
   'monitoring',
   'grafana',
-  'cloud',
-  'dashboard-production.json'
+  'cloud'
 );
+const CONFIG_PATH = join(CLOUD_DIR, 'dashboard-production.json');
 const DASHBOARD_UID = 'env008-production';
+const AI_CONFIG_PATH = join(CLOUD_DIR, 'dashboard-ai-models.json');
+const AI_DASHBOARD_UID = 'ifc117-ai-models';
+// ai-worker's own OTel instruments (IFC-117). tools/scripts/__tests__/ai-monitoring-assets.test.ts
+// pins every name to a registered instrument; here only the family and the job are checked.
+const AI_METRIC_PREFIX = 'intelliflow_ai_';
+const AI_JOB_MATCHER = 'job=~"(.*/)?(intelliflow-)?ai-worker"';
 const FOLDER_UID = 'intelliflow-prod';
 // The only series production has (native histograms, no _bucket), and the only
 // services that emit telemetry today. Anything else would draw an empty panel.
@@ -114,6 +122,63 @@ export function validateConfig(config) {
   return problems;
 }
 
+/** Validate the AI models dashboard: only ai-worker's own AI metrics, each scoped to its job. */
+export function validateAiConfig(config) {
+  const problems = [];
+  const panels = (config.dashboard?.panels ?? []).flatMap((panel) => [
+    panel,
+    ...(panel.panels ?? []),
+  ]);
+  panels.forEach((panel, p) => {
+    (panel.targets ?? []).forEach((target, t) => {
+      const label = `panel ${p + 1} target ${t + 1}`;
+      const uid = target.datasource?.uid ?? PROM_UID;
+      if (uid !== PROM_UID) {
+        problems.push(`${label}: datasource ${uid} is not allowed`);
+        return;
+      }
+      const expr = target.expr ?? '';
+      const metrics = metricNames(expr);
+      if (metrics.length === 0) problems.push(`${label}: no metric`);
+      for (const metric of metrics) {
+        if (!metric.startsWith(AI_METRIC_PREFIX))
+          problems.push(`${label}: metric ${metric} is not an ai-worker AI metric`);
+      }
+      // Every selector carries the ai-worker job matcher, not just the first one.
+      const selectors = streamSelectors(expr);
+      if (selectors.some((selector) => !selector.includes(AI_JOB_MATCHER)))
+        problems.push(`${label}: every selector must match the ai-worker job`);
+    });
+  });
+  if (config.dashboard?.uid !== AI_DASHBOARD_UID)
+    problems.push(`dashboard.uid must be ${AI_DASHBOARD_UID}`);
+  if (config.folderUid !== FOLDER_UID) problems.push(`folderUid must be ${FOLDER_UID}`);
+  return problems;
+}
+
+/** The dashboards this script applies, by the name given to --dashboard. */
+export const DASHBOARDS = {
+  production: {
+    path: CONFIG_PATH,
+    validate: validateConfig,
+    message: 'ENV-008-AI dashboard as code',
+  },
+  'ai-models': {
+    path: AI_CONFIG_PATH,
+    validate: validateAiConfig,
+    message: 'IFC-117 dashboard as code',
+  },
+};
+
+/** The dashboard named by --dashboard (production when absent); an unknown name throws. */
+export function selectDashboard(argv) {
+  const i = argv.indexOf('--dashboard');
+  const name = i === -1 ? 'production' : argv[i + 1];
+  if (!name || !Object.hasOwn(DASHBOARDS, name))
+    throw new Error(`--dashboard must be one of: ${Object.keys(DASHBOARDS).join(', ')}`);
+  return DASHBOARDS[name];
+}
+
 export async function run({
   env = process.env,
   argv = process.argv,
@@ -122,7 +187,8 @@ export async function run({
   sleep,
 } = {}) {
   const dryRun = argv.includes('--dry-run');
-  const config = loadValidConfig(CONFIG_PATH, validateConfig, 'dashboard file');
+  const spec = selectDashboard(argv);
+  const config = loadValidConfig(spec.path, spec.validate, 'dashboard file');
   const api = createGrafanaClient(env, fetchImpl, sleep);
 
   const folder = await api('GET', `/api/folders/${config.folderUid}`);
@@ -142,7 +208,7 @@ export async function run({
     dashboard: config.dashboard,
     folderUid: config.folderUid,
     overwrite: true,
-    message: 'ENV-008-AI dashboard as code',
+    message: spec.message,
   });
   if (res.status >= 300)
     throw new Error(`save dashboard: HTTP ${res.status} ${redactBody(res.text)}`);

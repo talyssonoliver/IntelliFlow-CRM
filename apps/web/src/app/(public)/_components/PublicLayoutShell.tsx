@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth/AuthContext';
 import { TourProvider, PublicTour } from '@/components/public/tour-components';
 import { PublicFeedbackFab } from '@/components/public/feedback-widget-public';
 import { FEATURES_TOUR_CONFIG } from '@/lib/public/tour-config';
+import { FORGOT_PASSWORD_PATH, RESET_PASSWORD_PATH } from '@/lib/auth/auth-paths';
 
 /**
  * Thin client shell for the public route group.
@@ -31,8 +32,8 @@ import { FEATURES_TOUR_CONFIG } from '@/lib/public/tour-config';
 const AUTH_PAGES_NO_CHROME = [
   '/login',
   '/signup',
-  '/forgot-password',
-  '/reset-password',
+  FORGOT_PASSWORD_PATH,
+  RESET_PASSWORD_PATH,
   '/logout',
   '/verify-email',
   '/mfa',
@@ -95,7 +96,18 @@ export function PublicLayoutShell({
     </div>
   ) : (
     <>
-      <main className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">{children}</main>
+      <main className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
+        {/* Signed in, the app shell replaces the public header and footer, but every
+            public page's styles are scoped under .aurora-site, so the page keeps that
+            scope. `/` is the signed-in home (the app itself) and stays outside it. */}
+        {pathname === '/' ? (
+          children
+        ) : (
+          <div className="aurora-site as-in-app" data-testid="public-page-scope">
+            {children}
+          </div>
+        )}
+      </main>
       {overlays}
     </>
   );

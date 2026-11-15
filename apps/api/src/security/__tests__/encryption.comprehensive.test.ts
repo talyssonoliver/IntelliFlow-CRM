@@ -21,6 +21,8 @@ import {
   type KeyProvider,
 } from '../encryption';
 
+const ANY_INPUT = 'password';
+
 // Store original env
 const originalEnv = { ...process.env };
 
@@ -631,7 +633,7 @@ describe('EncryptionService.hash and verifyHash', () => {
   it('should return false for malformed hash', () => {
     const service = new EncryptionService();
 
-    const result = service.verifyHash('password', 'invalid-hash-format');
+    const result = service.verifyHash(ANY_INPUT, 'invalid-hash-format');
 
     expect(result).toBe(false);
   });

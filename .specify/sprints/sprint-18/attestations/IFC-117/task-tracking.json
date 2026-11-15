@@ -62,25 +62,34 @@
       "status": "In Progress",
       "at": "2026-10-30T12:19:51Z",
       "note": "SonarCloud duplication gate: AI_METRIC_DEFINITIONS rebuilt from one row per instrument in 5a118c8d4 (exported values byte-identical, pinned by a test). Full ai-worker suite re-run. Verdict stays NEEDS_HUMAN."
+    },
+    {
+      "status": "Completed",
+      "at": "2026-11-12T14:20:00Z",
+      "note": "Production evidence N1-N7 all pass (attestation run-20261112-production-evidence). The AI models dashboard was created in Grafana with the owner yes of 2026-11-12, and grafana-dashboard.yml now applies it."
     }
   ],
   "blockers": [
     {
       "description": "Reopen evidence (2026-10-05): prometheus-exporter.ts exposes metrics that nothing scrapes, and ai-grafana-dashboard.json / ai-prometheus-rules.yaml are not loaded anywhere.",
       "raised_at": "2026-10-05T23:30:00Z",
-      "resolved_at": null
+      "resolved_at": "2026-11-12T14:20:00Z",
+      "resolution": "Superseded by the OTLP path (#1078): prometheus-exporter.ts was deleted; ai-worker pushes AI metrics over OTLP to Grafana Cloud, where the dashboard and rules read them (N5: every selector returns series)."
     },
     {
       "description": "To close: AI metrics reach the hosted backend from production over OTLP (IFC-032), the AI dashboard and alert rules are loaded there, and one alert is proven by a received test notification.",
       "raised_at": "2026-10-05T23:30:00Z",
-      "resolved_at": null
+      "resolved_at": "2026-11-12T14:20:00Z",
+      "resolution": "AI metrics reach Grafana Cloud from production (N5-N7), the six ifc117-* rules are live, the dashboard ifc117-ai-models was created on 2026-11-12, and alert emails were received on 2026-11-02 (hallucination rate FIRING 12:19:54Z, p95 latency FIRING 16:13:54Z)."
     },
     {
       "description": "Spec finding (2026-10-25): drift detection never runs in production. detectAllDrift has no non-test caller, and its statistics cannot see a pure shift. The fix is in scope (spec R-1).",
       "raised_at": "2026-10-25T16:03:11Z",
-      "resolved_at": null
+      "resolved_at": "2026-11-12T14:20:00Z",
+      "resolution": "Drift detection runs in production: intelliflow_ai_drift_checks_total shows 464 checks over the 7 days to 2026-11-12 (22 evaluated)."
     }
   ],
-  "percent_complete": 90,
-  "updated_at": "2026-10-30T12:19:51Z"
+  "percent_complete": 100,
+  "updated_at": "2026-11-12T14:20:00Z",
+  "completed_at": "2026-11-12T14:20:00Z"
 }

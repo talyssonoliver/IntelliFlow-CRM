@@ -1,11 +1,11 @@
 /**
- * SAP ERP Adapter Integration Tests
+ * SAP ERP Adapter unit tests (global fetch is stubbed; no real service is contacted)
  *
  * @see IFC-099: ERP/Payment/Email Connectors
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { SAPAdapter, SAPConfig } from '../../../packages/adapters/src/erp/sap/client';
+import { SAPAdapter, SAPConfig } from '../sap/client';
 
 // Credential-shaped fixture values are assembled at runtime so no literal sits in source.
 function fixtureValue(...parts: string[]): string {
@@ -16,7 +16,7 @@ function fixtureValue(...parts: string[]): string {
 const mockFetch = vi.fn();
 globalThis.fetch = mockFetch;
 
-describe('SAPAdapter', () => {
+describe('SAPAdapter (global fetch stubbed, no network)', () => {
   let adapter: SAPAdapter;
   let config: SAPConfig;
 

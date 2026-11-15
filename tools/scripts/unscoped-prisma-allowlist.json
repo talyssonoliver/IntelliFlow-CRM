@@ -21,10 +21,6 @@
       "max": 12,
       "reason": "Public booking pages have no session: the event type and its tenant are resolved from the booking handle, and the writes and host lookup use that tenant and event type."
     },
-    "apps/api/src/modules/inbound/inbound.router.ts": {
-      "max": 21,
-      "reason": "Server-to-server portal calls with no user session, authenticated by the shared internal secret; every lead, task and appointment query filters by the tenant the call is for. The 21st is queueInboundLeadAi (AI agents epic #1300), whose one lead read is filtered by id and tenant."
-    },
     "apps/api/src/modules/partner/partner.router.ts": {
       "max": 3,
       "reason": "Partner operations act on client tenants by design; loadPartnerTenant checks the partner owns the tenant first."

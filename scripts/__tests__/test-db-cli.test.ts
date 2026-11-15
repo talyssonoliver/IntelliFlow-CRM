@@ -79,6 +79,35 @@ describe('test-db run', () => {
     expect(h.pnpmCalls.map((c) => c.args.at(-1))).toEqual(['db:migrate', 'db:seed']);
   });
 
+  it.each([
+    [true, ['db:migrate', 'db:seed'], 'seed needed: apps/api/src/a.ts changed'],
+    [
+      false,
+      ['db:migrate'],
+      'seed skipped: no integration test imports any of the 1 changed file(s)',
+    ],
+  ])(
+    '--seed-if-affected seeds only when the branch needs the DB (needed=%s)',
+    async (needed, calls, line) => {
+      const h = harness();
+      const reason = needed
+        ? 'apps/api/src/a.ts changed'
+        : 'no integration test imports any of the 1 changed file(s)';
+      const dbScope = vi.fn(() => ({ needed, reason, tests: [] }));
+      await main(['run', '--seed-if-affected', '--', 'true'], { ...h.io, dbScope });
+      expect(h.pnpmCalls.map((c) => c.args.at(-1))).toEqual(calls);
+      expect(h.err.join('')).toContain(`[test-db] ${line}`);
+    }
+  );
+
+  it('--seed still seeds without asking the DB scope', async () => {
+    const h = harness();
+    const dbScope = vi.fn();
+    await main(['run', '--seed', '--', 'true'], { ...h.io, dbScope });
+    expect(dbScope).not.toHaveBeenCalled();
+    expect(h.pnpmCalls.map((c) => c.args.at(-1))).toEqual(['db:migrate', 'db:seed']);
+  });
+
   it('never prints the server credentials', async () => {
     const h = harness();
     await main(['run', '--', 'true'], h.io);

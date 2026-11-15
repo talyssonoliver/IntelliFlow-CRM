@@ -20,6 +20,9 @@ import {
 
 const VALID_ID = '123e4567-e89b-12d3-a456-426614174000';
 
+// A column that exists but must never be sortable.
+const PASSWORD_COLUMN = 'password';
+
 describe('Account Validators', () => {
   describe('createAccountSchema', () => {
     it('should validate valid account creation data', () => {
@@ -419,7 +422,7 @@ describe('Account Validators', () => {
     it('should reject invalid sortBy values', () => {
       const invalidFields = [
         '__proto__',
-        'password',
+        PASSWORD_COLUMN,
         'constructor',
         'nonexistent',
         'tenantId',

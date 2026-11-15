@@ -168,5 +168,5 @@
     "git_commit": "5f5f7756a9eca61a0e11a35fc03a8e87b149dd65",
     "branch": "sprint0/codex-run"
   },
-  "notes": "PG-129 Authenticated Home Page — re-validated 2026-02-10. Complete implementation with: Welcome Banner (dynamic greeting + stats), AI Daily Insights (4 types), Quick Actions (8 configurable with edit sheet), Unified Activity Feed (IFC-069 useActivityFeed hook with 3 WebSocket subscriptions, 8 type filters, cursor pagination), Today's Focus (SVG progress ring), Pinned Items (group filtering with edit sheet). 115 tests pass across 4 test files. All 6 CSV artifacts exist. TypeScript, lint, tests, and build all pass."
+  "notes": "PG-129 Authenticated Home Page — re-validated 2026-02-10. Complete implementation with: Welcome Banner (dynamic greeting + stats), AI Daily Insights (4 types), Quick Actions (8 configurable with edit sheet), Unified Activity Feed (IFC-069 useActivityFeed hook with 3 WebSocket subscriptions, 8 type filters, cursor pagination), Today's Focus (SVG progress ring), Pinned Items (group filtering with edit sheet). 115 tests pass across 4 test files. All 6 CSV artifacts exist. TypeScript, lint, tests, and build all pass.\nMerged PR #1236: fix(home): say what was checked instead of an unconditional on-track (follow-up fix, mapped by content (low confidence); sprint-plan reconciliation 2026-11-14)"
 }
