@@ -1,14 +1,14 @@
 {
   "sprint": "sprint-1",
   "name": "Sprint 1 - Validation & Architecture",
-  "generated_at": "2026-04-11T16:48:01.958Z",
+  "generated_at": "2026-11-13T13:04:02.148Z",
   "summary_source": "specify",
   "task_summary": {
-    "total": 13,
-    "completed": 13,
+    "total": 11,
+    "completed": 11,
     "backlog": 0,
     "blocked": 0,
-    "attested_completed": 13
+    "attested_completed": 11
   },
   "context": "Primary focus areas: Validation (3), Architecture (2), Foundation Setup (2).",
   "section_summary": [
@@ -37,12 +37,6 @@
       "open": 0
     },
     {
-      "section": "Commercial Assets",
-      "total": 1,
-      "completed": 1,
-      "open": 0
-    },
-    {
       "section": "Design System",
       "total": 1,
       "completed": 1,
@@ -50,12 +44,6 @@
     },
     {
       "section": "Infrastructure",
-      "total": 1,
-      "completed": 1,
-      "open": 0
-    },
-    {
-      "section": "Observability",
       "total": 1,
       "completed": 1,
       "open": 0
@@ -401,38 +389,6 @@
       }
     },
     {
-      "taskId": "IFC-074",
-      "sprint": 1,
-      "status": "Completed",
-      "section": "Observability",
-      "title": "PHASE-040: Full Stack Observability",
-      "description": "PHASE-040: Full Stack Observability",
-      "summary": "Traces, metrics, logs unified with context; Root cause identifiable",
-      "definitionOfDone": "Traces, metrics, logs unified with context; artifacts: sentry-project-config.json, correlation-test.csv, mttr-baseline.json; targets: <2min",
-      "definitionOfDoneSnapshot": "Traces, metrics, logs unified with context; Root cause identifiable",
-      "dependencies": [
-        "IFC-003"
-      ],
-      "attestation": {
-        "exists": true,
-        "path": ".specify/sprints/sprint-1/attestations/IFC-074/attestation.json",
-        "verdict": "COMPLETE",
-        "timestamp": "2025-12-25T18:15:00.000Z",
-        "sprintFolder": 1
-      },
-      "validationSummary": {
-        "total": 4,
-        "passed": 4,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 1,
-        "met": 1,
-        "missed": 0
-      }
-    },
-    {
       "taskId": "IFC-075",
       "sprint": 1,
       "status": "Completed",
@@ -481,39 +437,6 @@
       "attestation": {
         "exists": true,
         "path": ".specify/sprints/sprint-1/attestations/BRAND-002/attestation.json",
-        "verdict": "COMPLETE",
-        "timestamp": "2025-12-25T18:15:00.000Z",
-        "sprintFolder": 1
-      },
-      "validationSummary": {
-        "total": 4,
-        "passed": 4,
-        "failed": 0,
-        "failingNames": []
-      },
-      "kpiSummary": {
-        "total": 2,
-        "met": 2,
-        "missed": 0
-      }
-    },
-    {
-      "taskId": "SALES-001",
-      "sprint": 1,
-      "status": "Completed",
-      "section": "Commercial Assets",
-      "title": "Commercial Narrative + Pitch Deck Outline + One-Pager",
-      "description": "Commercial Narrative + Pitch Deck Outline + One-Pager",
-      "summary": "Sales motion defined; Team enablement complete",
-      "definitionOfDone": "Deck outline (10–12 slides) with story arc, slide-by-slide content, and visual guidelines; plus one-pager (problem → solution → proof → CTA); includes a single canonical link to design source (Figma/Canva); verified by: pnpm lint",
-      "definitionOfDoneSnapshot": "Sales motion defined; Team enablement complete",
-      "dependencies": [
-        "GTM-002",
-        "BRAND-001"
-      ],
-      "attestation": {
-        "exists": true,
-        "path": ".specify/sprints/sprint-1/attestations/SALES-001/attestation.json",
         "verdict": "COMPLETE",
         "timestamp": "2025-12-25T18:15:00.000Z",
         "sprintFolder": 1

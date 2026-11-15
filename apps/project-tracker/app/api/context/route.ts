@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import { generateCurrentStateReport } from '@/lib/current-state-report';
+import { generateCurrentStateReport, writeSprintSummaries } from '@/lib/current-state-report';
 import { generateContextSnapshot } from '@/lib/context-snapshot';
 
 /**
@@ -89,6 +89,7 @@ export async function POST() {
       const stateReport = generateCurrentStateReport(metricsDir, specifySprintsDir, monorepoRoot);
       writeFileSync(stateReportMdPath, stateReport.markdown, 'utf-8');
       writeFileSync(stateReportJsonPath, `${JSON.stringify(stateReport.data, null, 2)}\n`, 'utf-8');
+      writeSprintSummaries(stateReport.data, specifySprintsDir);
     }
 
     // Step 2: Generate SESSION_CONTEXT (reads fresh state-report JSON)
