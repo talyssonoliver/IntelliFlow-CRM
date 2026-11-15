@@ -73,7 +73,6 @@ export const CHECKLIST_LABELS: Record<string, string> = {
   experimentAssignments: 'Experiment assignments',
   storedLeadFiles: 'Stored lead files',
   storedEmailAttachments: 'Stored email attachments',
-  storedTicketAttachments: 'Stored ticket attachments',
   storedChatAttachments: 'Chat messages with attachments',
   deals: 'Deals',
   tasks: 'Tasks',

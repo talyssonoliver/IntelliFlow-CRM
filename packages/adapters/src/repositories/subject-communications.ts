@@ -198,14 +198,11 @@ export async function remainingChecklist(
   ids: SubjectIds
 ): Promise<Record<string, number>> {
   const c = await communicationIds(db, tenantId, email, ids);
-  const [deals, tasks, storedLeadFiles, emailFiles, ticketFiles, chatFiles] = await Promise.all([
+  const [deals, tasks, storedLeadFiles, emailFiles, chatFiles] = await Promise.all([
     db.opportunity.count({ where: { tenantId, contactId: { in: ids.contactIds } } }),
     db.task.count({ where: subjectTaskWhere(tenantId, ids, c.dealIds) }),
     db.leadFile.count({ where: { tenantId, leadId: { in: ids.leadIds }, url: { not: null } } }),
     db.emailAttachment.count({ where: { tenantId, emailId: { in: c.emailRecords } } }),
-    db.ticketAttachment.count({
-      where: { tenantId, ticketId: { in: c.tickets }, url: { not: null } },
-    }),
     db.chatMessage.count({
       where: { tenantId, conversationId: { in: c.chats }, attachments: { not: Prisma.DbNull } },
     }),
@@ -215,7 +212,6 @@ export async function remainingChecklist(
     tasks,
     storedLeadFiles,
     storedEmailAttachments: emailFiles,
-    storedTicketAttachments: ticketFiles,
     storedChatAttachments: chatFiles,
   };
 }
@@ -266,9 +262,11 @@ async function eraseTickets(tx: Tx, tenantId: string, ids: string[], now: Date) 
     where: { tenantId, ticketId: { in: ids } },
     data: { title: 'Erased step' },
   });
+  // A ticket attachment's url is an inline data: URL holding the start of the file (no stored
+  // object exists), so it goes with the name.
   await tx.ticketAttachment.updateMany({
     where: { tenantId, ticketId: { in: ids } },
-    data: { name: 'erased' },
+    data: { name: 'erased', url: null },
   });
   await tx.ticketAIInsight.deleteMany({ where: { tenantId, ticketId: { in: ids } } });
   return tickets.count;

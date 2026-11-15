@@ -242,7 +242,6 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     });
     expect(preview.checklist).toMatchObject({
       storedEmailAttachments: 1,
-      storedTicketAttachments: 1,
       deals: 0,
       tasks: 0,
     });
@@ -262,10 +261,10 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
     if (result.outcome !== 'ERASED') return;
     expect(result.result.counts).toMatchObject({ emailRecords: 1, tickets: 1, chats: 1 });
     const remaining = Object.entries(result.result.checklist).filter(([, n]) => n > 0);
-    expect(remaining).toEqual([
-      ['storedEmailAttachments', 1],
-      ['storedTicketAttachments', 1],
-    ]);
+    expect(remaining).toEqual([['storedEmailAttachments', 1]]);
+    await expect(
+      prisma.ticketAttachment.findFirst({ where: { ticketId: seeded.ticket } })
+    ).resolves.toMatchObject({ name: 'erased', url: null });
 
     const mail = await prisma.emailRecord.findUnique({ where: { id: seeded.mail } });
     expect(mail.subject).toBe('Erased email');

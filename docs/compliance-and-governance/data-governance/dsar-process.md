@@ -201,20 +201,20 @@ nothing changes.
 
 **Erased automatically** (anonymised in place, scoped to the firm and email):
 
-| Data                         | Result                                                                                                                                                                                  |
-| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Leads                        | Email becomes `erased-<row id>@erased.invalid`. Names, company, phone, location, qualification fields, UTM and referrer fields, tags and embedding are cleared, and the score is reset. |
-| Contacts                     | Same address rule. First and last name become `Erased`. Contact details, notes field, tags and embedding are cleared.                                                                   |
-| Lead and contact notes       | Text replaced with a marker. Embedding and search vector cleared.                                                                                                                       |
-| Lead and contact activities  | Title replaced, description and metadata cleared.                                                                                                                                       |
-| Lead files                   | File name cleared. The storage location is kept so the stored object can be found and deleted by hand.                                                                                  |
-| AI scores and insights       | Deleted: lead scores, lead and contact insights, and insights about the person's deals.                                                                                                 |
-| Bookings made with the email | Booker name, email, answers and consent fields cleared. The slot stays in the firm's calendar.                                                                                          |
-| Email records (IFC-316)      | Subject and body replaced. The person's address is replaced in From, To, CC and BCC; other recipients stay. Attachment names cleared, storage locations kept.                           |
-| Tickets and chats            | Subject, description and every message's text replaced; the person's name and address removed. Staff names stay. Ticket AI insights deleted.                                            |
-| Feedback, notifications      | Comments, follow-up notes, notification text and the person's address and phone cleared.                                                                                                |
-| Calendar events              | Title, description, location and attendees cleared.                                                                                                                                     |
-| Drafts and experiments       | Auto-response drafts, contact reply drafts and experiment assignments deleted.                                                                                                          |
+| Data                         | Result                                                                                                                                                                                    |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Leads                        | Email becomes `erased-<row id>@erased.invalid`. Names, company, phone, location, qualification fields, UTM and referrer fields, tags and embedding are cleared, and the score is reset.   |
+| Contacts                     | Same address rule. First and last name become `Erased`. Contact details, notes field, tags and embedding are cleared.                                                                     |
+| Lead and contact notes       | Text replaced with a marker. Embedding and search vector cleared.                                                                                                                         |
+| Lead and contact activities  | Title replaced, description and metadata cleared.                                                                                                                                         |
+| Lead files                   | File name cleared. The storage location is kept so the stored object can be found and deleted by hand.                                                                                    |
+| AI scores and insights       | Deleted: lead scores, lead and contact insights, and insights about the person's deals.                                                                                                   |
+| Bookings made with the email | Booker name, email, answers and consent fields cleared. The slot stays in the firm's calendar.                                                                                            |
+| Email records (IFC-316)      | Subject and body replaced. The person's address is replaced in From, To, CC and BCC; other recipients stay. Attachment names cleared, storage locations kept.                             |
+| Tickets and chats            | Subject, description and every message's text replaced; the person's name and address removed. Staff names stay. Ticket AI insights deleted; attachment names and inline content cleared. |
+| Feedback, notifications      | Comments, follow-up notes, notification text and the person's address and phone cleared.                                                                                                  |
+| Calendar events              | Title, description, location and attendees cleared.                                                                                                                                       |
+| Drafts and experiments       | Auto-response drafts, contact reply drafts and experiment assignments deleted.                                                                                                            |
 
 Database triggers then stop AI-derived rows being written for an erased lead or
 contact, and stop an old edit from writing the erased address back.
@@ -226,8 +226,8 @@ hand). Since IFC-316 it holds only:
   erased, because the firm may need them for its own records, and the admin
   decides)
 - tasks linked to the person's leads, contacts or deals (same)
-- stored files: lead files, and email, ticket and chat attachments (the objects
-  behind the cleared rows, deleted from storage by hand)
+- stored files: lead files, and email and chat attachments (the objects behind
+  the cleared rows, deleted from storage by hand)
 
 **Kept on purpose**: audit log entries (legal obligation). The erasure audit row
 holds counts and the admin id, never erased values.

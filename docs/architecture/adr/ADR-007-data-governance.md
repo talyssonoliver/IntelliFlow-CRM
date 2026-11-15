@@ -644,12 +644,13 @@ so a double click or two admins cannot run it twice. It anonymises in place:
   in order). Tickets, their activity and next steps, chats and their messages,
   feedback, notifications to or about the person and calendar events lose their
   text and the person's name and address; staff names stay. Auto-response and
-  reply drafts, ticket AI insights and experiment assignments are deleted.
-  Attachment rows lose their name and keep their storage locator.
+  reply drafts, ticket AI insights and experiment assignments are deleted. Email
+  attachment rows lose their name and keep their storage locator; a ticket
+  attachment's inline content URL is cleared.
 - **Left on a counted checklist.** Deals and tasks (Q23) and stored files: lead
-  files and email, ticket and chat attachments, whose objects are deleted from
-  storage by hand until a storage cleanup job exists. Legal holds: no hold
-  register exists yet, so the admin's no-hold confirmation is the check.
+  files and email and chat attachments, whose objects are deleted from storage
+  by hand until a storage cleanup job exists. Legal holds: no hold register
+  exists yet, so the admin's no-hold confirmation is the check.
 - **Audit logs** keep counts and the admin id, never erased values. The audit
   row is awaited.
 

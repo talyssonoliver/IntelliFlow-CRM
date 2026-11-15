@@ -54,8 +54,11 @@ describe('eraseCommunications (IFC-316)', () => {
       where: { tenantId: 't1', contactId: { in: ['c1'] } },
       data: { title: 'Erased event', description: null, location: null },
     });
-    // Attachment rows keep their locator: only the name goes.
-    expect(tx.ticketAttachment.updateMany.mock.calls[0][0].data).toEqual({ name: 'erased' });
+    // Its url is inline file content, not a locator, so it goes too.
+    expect(tx.ticketAttachment.updateMany.mock.calls[0][0].data).toEqual({
+      name: 'erased',
+      url: null,
+    });
     expect(tx.ticketAIInsight.deleteMany).toHaveBeenCalled();
   });
 
@@ -108,7 +111,6 @@ describe('what the erasure covers and leaves', () => {
       'storedChatAttachments',
       'storedEmailAttachments',
       'storedLeadFiles',
-      'storedTicketAttachments',
       'tasks',
     ]);
   });
