@@ -98,8 +98,8 @@ const OUTBOUND_STATUSES = new Set(['PENDING', 'SENT', 'FAILED', 'BOUNCED', 'OPEN
  * there its sender IS the counterparty. A delivered email is the user's own only when it has a
  * user and was not synced from an inbox; received inbound mail has no user.
  */
-/** Outbound statuses of mail that has not gone out (and may never). */
-const NOT_SENT_STATUSES: ReadonlySet<string> = new Set(['PENDING', 'FAILED']);
+/** Outbound statuses of mail that reached nobody: not gone out, failed, or every address bounced. */
+const NOT_SENT_STATUSES: ReadonlySet<string> = new Set(['PENDING', 'FAILED', 'BOUNCED']);
 
 function neverSent(email: Pick<StoredEmail, 'status' | 'userId' | 'metadata'>): boolean {
   if ((email.metadata as { isDraft?: unknown } | null)?.isDraft === true) return true;
@@ -127,11 +127,26 @@ function ownAddresses(ctx: EmailRouterCtx, email: StoredEmail): Set<string> {
   );
 }
 
-/** The first address that is a lead or contact of the tenant, the user's own excluded. */
+/** Addresses the mail hard-bounced at: it never reached them. */
+function bouncedAddresses(email: Pick<StoredEmail, 'metadata'>): Set<string> {
+  const list = (email.metadata as { hardBouncedRecipients?: unknown } | null)
+    ?.hardBouncedRecipients;
+  return new Set(
+    (Array.isArray(list) ? list : [])
+      .filter((a): a is string => typeof a === 'string')
+      .map((a) => a.toLowerCase())
+  );
+}
+
+/**
+ * The first address that is a lead or contact of the tenant: never the user's own, and never one
+ * the mail hard-bounced at (it did not reach them).
+ */
 async function findCounterparty(ctx: EmailRouterCtx, email: StoredEmail) {
   const own = ownAddresses(ctx, email);
+  const bounced = bouncedAddresses(email);
   for (const address of emailAddresses(email)) {
-    if (own.has(address)) continue;
+    if (own.has(address) || bounced.has(address)) continue;
     const where = {
       tenantId: ctx.tenant.tenantId,
       email: { equals: address, mode: 'insensitive' },

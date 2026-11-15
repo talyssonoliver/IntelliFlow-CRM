@@ -148,6 +148,7 @@ describe('emailLog.logToContact (#1177)', () => {
   it.each([
     ['a failed send', { status: 'FAILED', sentAt: null }],
     ['a send not gone out yet', { status: 'PENDING', sentAt: null }],
+    ['an email every address bounced', { status: 'BOUNCED' }],
   ])('never logs %s, which reached nobody', async (_label, fields) => {
     (prismaMock.emailRecord.findFirst as any).mockResolvedValue(stored(fields));
 
@@ -155,6 +156,19 @@ describe('emailLog.logToContact (#1177)', () => {
       code: 'PRECONDITION_FAILED',
     });
     expect(prismaMock.emailRecord.update).not.toHaveBeenCalled();
+  });
+
+  it('skips a recipient the mail hard-bounced at, and links the next one it reached', async () => {
+    (prismaMock.emailRecord.findFirst as any).mockResolvedValue(
+      stored({ metadata: { threadId: 't1', hardBouncedRecipients: ['Ada@example.invalid'] } })
+    );
+
+    await member().logToContact({ emailId: EMAIL_ID });
+
+    const looked = (prismaMock.contact.findFirst as any).mock.calls.map(
+      (c: any[]) => c[0].where.email.equals
+    );
+    expect(looked).toEqual(['bob@example.invalid']);
   });
 
   it('never links a person with an active processing restriction', async () => {
