@@ -7,9 +7,16 @@
 -- through the scan (PG-207 pattern, see 20261020120310).
 --
 -- Recovery plan: forward-only; a failed validation leaves the checks NOT VALID (still enforced
--- for new rows) and changes no data.
+-- for new rows) and changes no data. If this file fails, `prisma migrate deploy` stops here and
+-- refuses later deploys: fix the cause, then `prisma migrate resolve --rolled-back
+-- 20261115140100_email_mailbox_zoho_validate` and run `prisma migrate deploy` again.
+
+-- VALIDATE only waits behind autovacuum or another VALIDATE; cap that wait.
+SET lock_timeout = '30s';
 
 ALTER TABLE "email_mailboxes" VALIDATE CONSTRAINT "email_mailboxes_kind_check";
 ALTER TABLE "email_mailboxes" VALIDATE CONSTRAINT "email_mailboxes_zoho_active_check";
 ALTER TABLE "email_oauth_states" VALIDATE CONSTRAINT "email_oauth_states_provider_check";
 ALTER TABLE "email_records" VALIDATE CONSTRAINT "email_records_provider_check";
+
+RESET lock_timeout;

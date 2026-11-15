@@ -17,6 +17,8 @@
 -- (EMAIL_OAUTH_ZOHO_CLIENT_ID unset), so no ZOHO row is ever written and the wider checks and
 -- columns are simply unused. Narrowing the checks back or dropping the columns is Class C -
 -- human-only, never autonomous.
+-- If this file fails it rolls back whole (one transaction) and `prisma migrate deploy` stops:
+-- fix the cause, `prisma migrate resolve --rolled-back 20261115140000_email_mailbox_zoho`, deploy again.
 --
 -- Production applies only through the gated `prisma migrate deploy` workflow, with the
 -- owner's yes, before the API that writes ZOHO rows is promoted.
