@@ -10,7 +10,7 @@ an IntelliFlow address. Each user can have one personal mailbox, and each tenant
 one company mailbox. A mailbox is one of three kinds:
 
 - SMTP, plus IMAP for reading bounces.
-- Gmail, connected with OAuth.
+- Gmail, connected with OAuth, send-only.
 - Microsoft, connected with OAuth.
 
 The API process runs a bounce scanner that reads delivery reports back from each
@@ -37,15 +37,15 @@ Both carry only the mailbox id and an error code.
 
 ## Configuration
 
-| Variable                                                                  | Default             | Purpose                                                                                                                                                                                                       |
-| ------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PRISMA_FIELD_ENCRYPTION_KEY`                                             | (required in prod)  | Encrypts SMTP/IMAP passwords and OAuth refresh tokens at rest. Saving a secret without it returns `PRECONDITION_FAILED`. The production API already refuses to boot without it (M4).                          |
-| `EMAIL_OAUTH_REDIRECT_URI`                                                | unset               | `https://<app>/email/oauth/callback`. Needed for either OAuth provider.                                                                                                                                       |
-| `EMAIL_OAUTH_GOOGLE_CLIENT_ID` / `EMAIL_OAUTH_GOOGLE_CLIENT_SECRET`       | unset               | Google OAuth app. Unset: "Connect Google" is disabled with the reason shown. `gmail.readonly` is a restricted scope and needs Google's security assessment before public launch.                              |
-| `EMAIL_OAUTH_MICROSOFT_CLIENT_ID` / `EMAIL_OAUTH_MICROSOFT_CLIENT_SECRET` | unset               | Microsoft (multi-tenant) app registration. Unset: "Connect Microsoft" is disabled.                                                                                                                            |
-| `EMAIL_ATTACHMENTS_BUCKET`                                                | `email-attachments` | Private Supabase bucket for compose attachments. Created on first upload when it does not exist.                                                                                                              |
-| `EMAIL_BOUNCE_SCAN_INTERVAL_MS`                                           | `60000`             | Bounce scanner interval. `0` disables it. It is always off under tests and on serverless runtimes.                                                                                                            |
-| `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS`                                       | empty               | Comma-separated `imap.host=authserv-id` pairs: receivers trusted to stamp `Authentication-Results` for the custom SMTP/IMAP mailbox on that IMAP host only. Empty means fail closed. See the procedure below. |
+| Variable                                                                  | Default             | Purpose                                                                                                                                                                                                             |
+| ------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PRISMA_FIELD_ENCRYPTION_KEY`                                             | (required in prod)  | Encrypts SMTP/IMAP passwords and OAuth refresh tokens at rest. Saving a secret without it returns `PRECONDITION_FAILED`. The production API already refuses to boot without it (M4).                                |
+| `EMAIL_OAUTH_REDIRECT_URI`                                                | unset               | `https://<app>/email/oauth/callback`. Needed for either OAuth provider.                                                                                                                                             |
+| `EMAIL_OAUTH_GOOGLE_CLIENT_ID` / `EMAIL_OAUTH_GOOGLE_CLIENT_SECRET`       | unset               | Google OAuth app, `gmail.send` + identity only (owner decision 14/11). Unset: "Connect Google" is disabled with the reason shown. Nothing is read from Gmail on the server, so Gmail mailboxes have no bounce scan. |
+| `EMAIL_OAUTH_MICROSOFT_CLIENT_ID` / `EMAIL_OAUTH_MICROSOFT_CLIENT_SECRET` | unset               | Microsoft (multi-tenant) app registration. Unset: "Connect Microsoft" is disabled.                                                                                                                                  |
+| `EMAIL_ATTACHMENTS_BUCKET`                                                | `email-attachments` | Private Supabase bucket for compose attachments. Created on first upload when it does not exist.                                                                                                                    |
+| `EMAIL_BOUNCE_SCAN_INTERVAL_MS`                                           | `60000`             | Bounce scanner interval. `0` disables it. It is always off under tests and on serverless runtimes.                                                                                                                  |
+| `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS`                                       | empty               | Comma-separated `imap.host=authserv-id` pairs: receivers trusted to stamp `Authentication-Results` for the custom SMTP/IMAP mailbox on that IMAP host only. Empty means fail closed. See the procedure below.       |
 
 ## Bounce trust (#961, owner ruling Q12)
 

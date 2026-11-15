@@ -71,8 +71,8 @@ describe('toMailboxDto', () => {
     expect(dto.fromAddress).toBe('me@mail.example.invalid');
   });
 
-  it('marks an OAuth mailbox bounce-readable when it has a refresh token, never exposing it', () => {
-    const dto = toMailboxDto(
+  it('never marks a Gmail mailbox bounce-readable: it holds gmail.send only (owner decision 14/11)', () => {
+    const gmail = toMailboxDto(
       {
         ...smtpRow,
         kind: 'GMAIL',
@@ -81,6 +81,23 @@ describe('toMailboxDto', () => {
         imapHost: null,
         imapPassword: null,
         accountAddress: 'me@gmail.example',
+        refreshToken: secret,
+      },
+      { includeConnection: true }
+    );
+    expect(gmail.bounceReadingEnabled).toBe(false);
+  });
+
+  it('marks a Microsoft mailbox bounce-readable when it has a refresh token, never exposing it', () => {
+    const dto = toMailboxDto(
+      {
+        ...smtpRow,
+        kind: 'MICROSOFT',
+        ...NO_SMTP_ENDPOINT,
+        ...NO_SMTP_ACCOUNT,
+        imapHost: null,
+        imapPassword: null,
+        accountAddress: 'me@outlook.example',
         refreshToken: secret,
       },
       { includeConnection: true }

@@ -49,6 +49,8 @@ export function canReadBounces(
   row: Pick<MailboxRowLike, 'kind' | 'imapHost' | 'imapPassword' | 'refreshToken'>
 ): boolean {
   if (row.kind === 'SMTP') return Boolean(row.imapHost && row.imapPassword);
+  // Gmail holds gmail.send only (owner decision 14/11): its bounce reports are never read.
+  if (row.kind === 'GMAIL') return false;
   return Boolean(row.refreshToken);
 }
 

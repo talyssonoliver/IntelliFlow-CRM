@@ -279,7 +279,7 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
     expectNoEffect(fake);
   });
 
-  it('a Gmail mailbox trusts only mx.google.com; a Microsoft mailbox only Microsoft’s own form', async () => {
+  it('never scans a Gmail mailbox: it is send-only (owner decision 14/11), even for a trusted-looking report', async () => {
     const gmail = (authenticationResults: string[]) => async () => {
       const fake = fakeDb({ mailbox: smtpMailbox({ kind: 'GMAIL', refreshToken: secret }) });
       const listDsnSince = vi.fn(async () => ({
@@ -303,12 +303,14 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
         } as never,
       });
       await runBounceScan(d);
-      return fake;
+      return { fake, listDsnSince };
     };
     const trusted = await gmail(['mx.google.com; dkim=pass header.d=example.invalid'])();
-    expect(trusted.receipts[0]).toMatchObject({ kind: 'HARD', emailRecordId: 'crec123' });
-    const other = await gmail(['mx.example.invalid; dkim=pass header.d=example.invalid'])();
-    expectNoEffect(other);
+    expect(trusted.listDsnSince).not.toHaveBeenCalled();
+    // Not even an audit receipt: nothing is read from Gmail at all.
+    expect(trusted.fake.receipts).toHaveLength(0);
+    expect(trusted.fake.recordUpdates).toHaveLength(0);
+    expect(trusted.fake.suppressions).toHaveLength(0);
   });
 
   it('on a Microsoft mailbox an Exchange-sender report signed by a provider domain cannot act on others (N-4)', async () => {
@@ -965,7 +967,7 @@ describe('runBounceScan', () => {
     const cursor = new Date(NOW.getTime() - 2 * 3600_000);
     const fake = fakeDb({
       mailbox: smtpMailbox({
-        kind: 'GMAIL',
+        kind: 'MICROSOFT',
         imapHost: null,
         refreshToken: secret,
         scanCursorAt: cursor,
@@ -976,12 +978,11 @@ describe('runBounceScan', () => {
         smtp: {},
         imap: { read: vi.fn() },
         oauth: () => client,
-        oauthConfigured: { GMAIL: true, MICROSOFT: false },
+        oauthConfigured: { GMAIL: false, MICROSOFT: true },
       } as never,
     });
     await runBounceScan(ctx.d);
     expect(listDsnSince).toHaveBeenCalledWith('at', new Date(cursor.getTime() - 3600_000), 50);
-    expect(fake.receipts[0]).toMatchObject({ dsnKey: 'gm1', kind: 'HARD' });
     expect(fake.mailboxUpdates[0].data.scanCursorAt).toEqual(NOW);
   });
 

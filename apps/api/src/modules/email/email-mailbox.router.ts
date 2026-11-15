@@ -169,7 +169,7 @@ async function writeMailbox(
 
 /** Scopes without which a connected mailbox could not send or read its bounce reports. */
 const REQUIRED_SCOPES: Record<OAuthMailboxProvider, readonly string[]> = {
-  GMAIL: ['gmail.send', 'gmail.readonly'],
+  GMAIL: ['gmail.send'],
   MICROSOFT: ['Mail.Send', 'Mail.Read'],
 };
 
