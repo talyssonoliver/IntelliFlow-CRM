@@ -130,6 +130,31 @@ describe('marketing objections (IFC-315, UK GDPR Art 21(3))', () => {
     expect(prismaMock.emailRecord.create).not.toHaveBeenCalled();
   });
 
+  it('applies the same rule to a send-only Gmail mailbox: no purpose, nothing sent (#1177)', async () => {
+    (prismaMock.emailMailbox.findMany as any).mockResolvedValue([
+      {
+        ...ownMailbox,
+        kind: 'GMAIL',
+        smtpHost: null,
+        smtpPassword: null,
+        refreshToken: secret,
+        fromAddress: 'me@gmail.example.invalid',
+      },
+    ]);
+
+    const error = await errorOf(
+      dispatchUserMail(
+        createTestContext() as never,
+        { ...marketing, purpose: undefined },
+        marketingDeps()
+      )
+    );
+
+    expect(emailSendErrorFromCause(error.cause)?.code).toBe('PURPOSE_REQUIRED');
+    expect(transport.send).not.toHaveBeenCalled();
+    expect(prismaMock.emailRecord.create).not.toHaveBeenCalled();
+  });
+
   it('sends unlabelled mail as before when nobody objected', async () => {
     objections.marketingBlocked.mockResolvedValue(new Set());
     const result = await dispatchUserMail(
