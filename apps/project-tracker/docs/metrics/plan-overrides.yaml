@@ -3627,3 +3627,116 @@ _meta:
   cycles_fixed: 2
   cross_sprint_fixes: 25
   tier_a_definitions: 136
+
+# MVP: Leangency daily use (owner decision 2026-11-15). The owner accepts each task
+# on production; the evidence is his screenshot of the step working for Leangency.
+MVP-001:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-24/attestations/MVP-001/owner-screenshot.png
+MVP-002:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-24/attestations/MVP-002/owner-screenshot.png
+MVP-003:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-24/attestations/MVP-003/owner-screenshot.png
+MVP-004:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-24/attestations/MVP-004/owner-screenshot.png
+MVP-005:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-24/attestations/MVP-005/owner-screenshot.png
+MVP-006:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/MVP-006/owner-screenshot.png
+MVP-007:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/MVP-007/owner-screenshot.png
+MVP-008:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/MVP-008/owner-screenshot.png
+MVP-009:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/MVP-009/owner-screenshot.png
+MVP-010:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/MVP-010/owner-screenshot.png

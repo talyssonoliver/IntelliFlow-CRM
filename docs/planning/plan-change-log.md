@@ -96,3 +96,9 @@ Each entry must include:
 - `plan-overrides.yaml` changes can be made via PR with 1 reviewer
 - Emergency fixes must be documented here within 24 hours
 - This log is the source of truth for plan evolution history
+
+### 2026-11-15
+
+| Date       | Author | Task IDs           | Change Type | Reason                                                                                                                                                                                                                                                                                                                                                                                 | Link            |
+| ---------- | ------ | ------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| 2026-11-15 | Owner  | MVP-001 to MVP-010 | csv_modify  | Owner decision: the MVP is "Leangency runs its sales day in Aurora" (connect mail, add and qualify a lead, convert it to a deal, move it through the pipeline, see today's tasks and activity). The ten problems from the owner's walkthrough of his workspace are added first in line: MVP-001 to MVP-005 in sprint 24, MVP-006 to MVP-010 in sprint 25. Nothing removed or descoped. | MVP plan update |
