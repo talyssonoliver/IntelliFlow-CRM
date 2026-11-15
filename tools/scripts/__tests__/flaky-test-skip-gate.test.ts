@@ -30,6 +30,7 @@ import {
   runFlakyTestSkipGate,
   formatReport,
   main,
+  gitChildEnv,
   type SkipSite,
   type AllowlistEntry,
 } from '../flaky-test-skip-gate.js';
@@ -577,6 +578,31 @@ describe('real filesystem defaults (fixture repo)', () => {
     expect(result.annotated.map((s) => s.file)).toEqual(['src/annotated.test.ts']);
     expect(result.ok).toBe(true);
     fs.rmSync(path.join(root, 'src/untracked.test.ts'));
+  });
+
+  it('ignores a GIT_DIR inherited from a git hook and lists only the fixture repo', () => {
+    // A pre-push hook exports GIT_DIR. Point it at a separate decoy repository (never the
+    // real one) with three tracked test files: the gate must still list the fixture's two.
+    const decoy = fs.mkdtempSync(path.join(os.tmpdir(), 'flaky-gate-decoy-'));
+    try {
+      const inDecoy = (...args: string[]) =>
+        execFileSync('git', args, { cwd: decoy, env: gitEnv(process.env), stdio: 'pipe' });
+      inDecoy('init', '-q');
+      for (const n of ['a', 'b', 'c']) fs.writeFileSync(path.join(decoy, `${n}.test.ts`), '');
+      inDecoy('add', '-A');
+      vi.stubEnv('GIT_DIR', path.join(decoy, '.git'));
+      vi.stubEnv('GIT_WORK_TREE', decoy);
+      expect(runFlakyTestSkipGate(root).filesScanned).toBe(2);
+    } finally {
+      vi.unstubAllEnvs();
+      fs.rmSync(decoy, { recursive: true, force: true });
+    }
+  });
+
+  it('gitChildEnv drops every GIT_* variable and keeps the rest', () => {
+    expect(
+      gitChildEnv({ GIT_DIR: '/x/.git', GIT_INDEX_FILE: '/x/index', PATH: '/bin', HOME: '/h' })
+    ).toEqual({ PATH: '/bin', HOME: '/h' });
   });
 
   it('main() with default options passes on the fixture repo and logs the report', () => {
