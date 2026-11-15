@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-12T17:57:05.344Z",
+  "timestamp": "2026-11-15T03:14:27.358Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 78,
-    "total_endpoints": 611,
-    "total_queries": 263,
-    "total_mutations": 348,
+    "total_routers": 79,
+    "total_endpoints": 613,
+    "total_queries": 264,
+    "total_mutations": 349,
     "routers": [
       {
         "name": "contact",
@@ -1418,6 +1418,12 @@
       },
       {
         "name": "upload",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
+        "name": "emailLog",
         "endpoints": 2,
         "queries": 1,
         "mutations": 1
@@ -5110,6 +5116,18 @@
         "name": "upload.getUploadStatus",
         "method": "GET",
         "description": "Get upload status"
+      }
+    ],
+    "emailLog": [
+      {
+        "name": "emailLog.status",
+        "method": "GET",
+        "description": "Status"
+      },
+      {
+        "name": "emailLog.logToContact",
+        "method": "POST",
+        "description": "Log to contact"
       }
     ],
     "emailMailbox": [

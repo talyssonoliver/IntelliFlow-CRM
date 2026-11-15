@@ -750,6 +750,7 @@ data
 | `emailSettings`              | 6          | `/email/email-settings` (incl. `suppression.*`)                                                            | ✅ Active         |
 | `emailSignatures`            | 6          | `/email/signatures`, `/email/compose`                                                                      | ✅ Active         |
 | `emailAttachments`           | 1          | `/email/compose`                                                                                           | ✅ Active         |
+| `emailLog`                   | 2          | `/email/[id]` (Log to contact)                                                                             | ✅ Active         |
 | `webhooks`                   | 9          | `/docs/webhooks`, webhook management                                                                       | ✅ Active         |
 | `home`                       | 7          | Authenticated home page data (IFC-182)                                                                     | ✅ Active         |
 | `notifications`              | 8          | `/notifications`, `/notifications/settings`                                                                | ✅ Active         |
