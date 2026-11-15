@@ -677,7 +677,7 @@ export default function DealForecastPage() {
             },
             {
               label: 'GBP',
-              icon: 'attach_money',
+              icon: 'currency_pound',
               variant: 'secondary',
               onClick: () =>
                 toast({

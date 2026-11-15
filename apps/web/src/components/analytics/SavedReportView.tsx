@@ -427,7 +427,7 @@ function getMetricCards(
   if (!overview) {
     if (reportType === 'weekly') {
       return [
-        { title: 'Revenue', value: 0, format: 'currency', icon: 'attach_money' },
+        { title: 'Revenue', value: 0, format: 'currency', icon: 'currency_pound' },
         { title: 'Leads', value: 0, format: 'number', icon: 'people' },
         { title: 'Open Opportunities', value: 0, format: 'number', icon: 'handshake' },
         { title: 'Win Rate', value: 0, format: 'percentage', icon: 'emoji_events' },
@@ -435,14 +435,14 @@ function getMetricCards(
     }
     if (reportType === 'monthly') {
       return [
-        { title: 'Total Revenue', value: 0, format: 'currency', icon: 'attach_money' },
+        { title: 'Total Revenue', value: 0, format: 'currency', icon: 'currency_pound' },
         { title: 'Pipeline Value', value: 0, format: 'currency', icon: 'trending_up' },
         { title: 'Win Rate', value: 0, format: 'percentage', icon: 'emoji_events' },
         { title: 'Avg Deal Size', value: 0, format: 'currency', icon: 'paid' },
       ];
     }
     return [
-      { title: 'Revenue', value: 0, format: 'currency', icon: 'attach_money' },
+      { title: 'Revenue', value: 0, format: 'currency', icon: 'currency_pound' },
       { title: 'Win Rate', value: 0, format: 'percentage', icon: 'emoji_events' },
       { title: 'Pipeline Value', value: 0, format: 'currency', icon: 'trending_up' },
       { title: 'Deals Closed', value: 0, format: 'number', icon: 'handshake' },
@@ -456,7 +456,7 @@ function getMetricCards(
           title: 'Revenue',
           value: overview.totalRevenue,
           format: 'currency',
-          icon: 'attach_money',
+          icon: 'currency_pound',
           change: toMetricChange(overview.revenueDelta),
         },
         {
@@ -487,7 +487,7 @@ function getMetricCards(
           title: 'Total Revenue',
           value: salesMetrics?.totalRevenue ?? overview.totalRevenue,
           format: 'currency',
-          icon: 'attach_money',
+          icon: 'currency_pound',
           change: toMetricChange(overview.revenueDelta),
         },
         {
@@ -516,7 +516,7 @@ function getMetricCards(
           title: 'Revenue',
           value: salesMetrics?.totalRevenue ?? overview.totalRevenue,
           format: 'currency',
-          icon: 'attach_money',
+          icon: 'currency_pound',
           change: toMetricChange(overview.revenueDelta),
         },
         {

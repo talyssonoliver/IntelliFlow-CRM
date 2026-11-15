@@ -268,7 +268,7 @@ export function DealForm({
             <Label htmlFor="deal-value">Deal Value (GBP) *</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                $
+                £
               </span>
               <Input
                 id="deal-value"
