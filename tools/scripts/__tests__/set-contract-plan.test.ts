@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { setContractPlan, type ContractPlanDb } from '../set-contract-plan';
+import { main, setContractPlan, type ContractPlanDb } from '../set-contract-plan';
 
 const LOCAL = { host: 'localhost:5433', local: true };
 const REMOTE = { host: 'db.example.invalid', local: false };
@@ -80,5 +80,58 @@ describe('setContractPlan', () => {
 
     expect(result.changed).toBe(false);
     expect(raw.$transaction).not.toHaveBeenCalled();
+  });
+});
+
+describe('set-contract-plan command line', () => {
+  const LOCAL_URL = ['post', 'gres://', 'localhost:5433/test'].join('');
+
+  function deps(db: ContractPlanDb) {
+    const disconnect = vi.fn(async () => {});
+    return {
+      disconnect,
+      log: vi.fn(),
+      error: vi.fn(),
+      createDb: vi.fn(async () => Object.assign(db, { $disconnect: disconnect })),
+    };
+  }
+
+  it('prints the usage and exits 1 without a tenant or a database URL', async () => {
+    const d = deps(fakeDb().db);
+    expect(await main(['--apply'], { DATABASE_URL: LOCAL_URL }, d)).toBe(1);
+    expect(await main(['--tenant', 't1'], {}, d)).toBe(1);
+    expect(d.error).toHaveBeenCalledWith(expect.stringMatching(/^Usage:/));
+    expect(d.createDb).not.toHaveBeenCalled();
+  });
+
+  it('runs a dry run, prints each line and disconnects', async () => {
+    const { db, raw } = fakeDb();
+    const d = deps(db);
+    expect(await main(['--tenant', 't1'], { DATABASE_URL: LOCAL_URL }, d)).toBe(0);
+    expect(d.log).toHaveBeenCalledWith(expect.stringMatching(/PROFESSIONAL -> CUSTOM/));
+    expect(raw.$transaction).not.toHaveBeenCalled();
+    expect(d.disconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies with --apply on a local database', async () => {
+    const { db, raw } = fakeDb();
+    const d = deps(db);
+    expect(await main(['--tenant', 't1', '--apply'], { DATABASE_URL: LOCAL_URL }, d)).toBe(0);
+    expect(raw.$transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports a refusal, exits 1 and still disconnects', async () => {
+    const d = deps(fakeDb({ liveSubs: 1 }).db);
+    expect(await main(['--tenant', 't1'], { DATABASE_URL: LOCAL_URL }, d)).toBe(1);
+    expect(d.error).toHaveBeenCalledWith(expect.stringMatching(/live Stripe subscription/));
+    expect(d.disconnect).toHaveBeenCalledTimes(1);
+  });
+
+  it('prints a thrown value that is not an Error', async () => {
+    const { db, raw } = fakeDb();
+    raw.tenant.findUnique.mockRejectedValueOnce('connection refused');
+    const d = deps(db);
+    expect(await main(['--tenant', 't1'], { DATABASE_URL: LOCAL_URL }, d)).toBe(1);
+    expect(d.error).toHaveBeenCalledWith('connection refused');
   });
 });

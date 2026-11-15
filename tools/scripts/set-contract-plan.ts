@@ -127,34 +127,54 @@ export async function setContractPlan(
   return { changed, applied, modulesToEnable, lines };
 }
 
-async function main(argv: readonly string[]): Promise<void> {
-  const tenantId = argValue(argv, 'tenant');
-  const databaseUrl = process.env['DATABASE_URL'];
-  if (!tenantId || !databaseUrl) {
-    console.error(
-      'Usage: DATABASE_URL=<url> pnpm tsx tools/scripts/set-contract-plan.ts --tenant <tenantId> [--apply]'
-    );
-    process.exit(1);
-  }
+export interface MainDeps {
+  createDb(databaseUrl: string): Promise<ContractPlanDb & { $disconnect(): Promise<void> }>;
+  log(line: string): void;
+  error(line: string): void;
+}
 
+const USAGE =
+  'Usage: DATABASE_URL=<url> pnpm tsx tools/scripts/set-contract-plan.ts --tenant <tenantId> [--apply]';
+
+async function createPrismaDb(databaseUrl: string) {
   const { PrismaClient } = await import('../../packages/db/generated/prisma/client');
   const { PrismaPg } = await import('@prisma/adapter-pg');
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
+  return prisma as unknown as ContractPlanDb & { $disconnect(): Promise<void> };
+}
+
+/** Command-line entry. Returns the exit code instead of exiting, so it can be tested. */
+export async function main(
+  argv: readonly string[],
+  env: Readonly<Record<string, string | undefined>> = process.env,
+  deps: MainDeps = { createDb: createPrismaDb, log: console.log, error: console.error }
+): Promise<number> {
+  const tenantId = argValue(argv, 'tenant');
+  const databaseUrl = env['DATABASE_URL'];
+  if (!tenantId || !databaseUrl) {
+    deps.error(USAGE);
+    return 1;
+  }
+
+  const db = await deps.createDb(databaseUrl);
   try {
-    const result = await setContractPlan(prisma as unknown as ContractPlanDb, {
+    const result = await setContractPlan(db, {
       tenantId,
       apply: argv.includes('--apply'),
       target: describeTarget(databaseUrl),
     });
-    for (const line of result.lines) console.log(line);
+    for (const line of result.lines) deps.log(line);
+    return 0;
+  } catch (err) {
+    deps.error(err instanceof Error ? err.message : String(err));
+    return 1;
   } finally {
-    await prisma.$disconnect();
+    await db.$disconnect();
   }
 }
 
 if (/set-contract-plan\.[cm]?[jt]s$/.test(process.argv[1] ?? '')) {
-  main(process.argv.slice(2)).catch((err) => {
-    console.error(err instanceof Error ? err.message : err);
-    process.exit(1);
+  void main(process.argv.slice(2)).then((code) => {
+    process.exitCode = code;
   });
 }
