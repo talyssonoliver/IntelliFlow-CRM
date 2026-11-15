@@ -171,6 +171,12 @@ describe('emailMailbox.saveSmtp', () => {
     });
   });
 
+  it('limits the sign-ins a save makes, like the settings test (each is an outbound connection)', async () => {
+    for (let i = 0; i < 5; i++) await member().saveSmtp(saveInput);
+    await expect(member().saveSmtp(saveInput)).rejects.toMatchObject({ code: 'TOO_MANY_REQUESTS' });
+    expect(t.transports.smtp.verify).toHaveBeenCalledTimes(5);
+  });
+
   it('keeps the stored password when none is sent and updates in place', async () => {
     (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(smtpRow());
     await member().saveSmtp({ ...saveInput, smtpPassword: undefined });
