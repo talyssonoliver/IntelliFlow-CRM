@@ -11,7 +11,7 @@
  *
  * Maps spec AC-006 / NF-002: NP-1..NP-7 + happy + non-UI exemption + abs-path + usage.
  */
-import { describe, it, expect, afterAll } from 'vitest';
+import { describe, it, expect, afterAll, beforeAll } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as os from 'node:os';
@@ -239,6 +239,27 @@ describe('check-attestation-provenance: light ceremony tier (issue #579)', () =>
     ];
     return cells.map((c) => (c.includes(',') ? `"${c}"` : c)).join(',');
   }
+
+  // Every case below makes the gate spawn `node --import tsx ceremony-tier-audit.ts`,
+  // and the first spawn pays the cold tsx transform of the audit and its imports;
+  // under load that cold start alone ran past the per-test budget. Warm it once
+  // here, with its own timeout, so each case only pays the (cached) steady cost.
+  beforeAll(() => {
+    spawnSync(
+      process.execPath,
+      [
+        '--import',
+        'tsx',
+        path.join(ROOT, 'tools', 'scripts', 'ceremony-tier-audit.ts'),
+        '--task',
+        'WARMUP-000',
+        '--json',
+        '--repo-root',
+        ROOT,
+      ],
+      { encoding: 'utf8', cwd: ROOT, timeout: 110_000 }
+    );
+  }, 120_000);
 
   interface LightOpts {
     taskId: string;

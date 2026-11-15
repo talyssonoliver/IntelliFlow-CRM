@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-15T03:14:27.358Z",
+  "timestamp": "2026-11-15T15:49:14.378Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1497,16 +1497,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 215,
-    "total_fields": 3160,
-    "total_indexes": 955,
-    "total_relations": 304,
+    "total_tables": 216,
+    "total_fields": 3175,
+    "total_indexes": 957,
+    "total_relations": 305,
     "tables_with_embeddings": 4,
     "enums": 82,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 192,
+        "fields": 193,
         "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
@@ -1998,6 +1998,13 @@
         "name": "CustomActionHandler",
         "fields": 15,
         "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ChainRun",
+        "fields": 14,
+        "indexes": 2,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -3375,7 +3382,7 @@
   },
   "validators_inventory": {
     "total_validators": 73,
-    "total_schemas": 691,
+    "total_schemas": 692,
     "by_complexity": {
       "complex": 39,
       "moderate": 25,
@@ -3617,6 +3624,12 @@
         "complexity": "moderate"
       },
       {
+        "name": "email-settings",
+        "file": "email-settings.ts",
+        "schemas": 6,
+        "complexity": "complex"
+      },
+      {
         "name": "report-templates",
         "file": "report-templates.ts",
         "schemas": 6,
@@ -3633,12 +3646,6 @@
         "file": "case-types.ts",
         "schemas": 5,
         "complexity": "moderate"
-      },
-      {
-        "name": "email-settings",
-        "file": "email-settings.ts",
-        "schemas": 5,
-        "complexity": "complex"
       },
       {
         "name": "email-signatures",

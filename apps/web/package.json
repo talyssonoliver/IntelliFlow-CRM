@@ -9,7 +9,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "test": "vitest",
+    "test": "vitest --root ../.. --project web --project web-node",
     "typecheck": "pnpm run typegen && tsc --noEmit",
     "lighthouse:auth": "lhci autorun --config=../../lighthouserc.authenticated.js && npx tsx ../../tools/lighthouse/extract-lhci-report.ts",
     "audit:material-symbols": "node ../../tools/scripts/subset-material-symbols.mjs --verify"

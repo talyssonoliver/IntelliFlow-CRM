@@ -12,6 +12,12 @@ vi.mock('../../versioning/chain-version-loader', () => ({
   })),
   CHAIN_TYPE_MAP: { LEAD_SCORING: 'SCORING' },
   configureVersionLoader: vi.fn(),
+  // The chains read prompts through loadVersionedPrompt; it delegates to the mocked loader.
+  loadVersionedPrompt: vi.fn(async (type: string, tenantId: string) => {
+    const { getVersionLoader } = await import('../../versioning/chain-version-loader');
+    const config = await getVersionLoader().getChainConfig(type as never, { tenantId });
+    return { prompt: config?.prompt ?? null, versionId: null };
+  }),
 }));
 
 vi.mock('../../lib/llm-factory.js', async () => {
