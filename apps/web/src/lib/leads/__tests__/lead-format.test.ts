@@ -139,9 +139,9 @@ describe('lead-format · formatRelativeTime', () => {
 });
 
 describe('lead-format · formatEstimatedValue', () => {
-  it('formats values >= £1,000 as compact thousands (pence in)', () => {
+  it('formats values >= £1,000 as compact thousands, and millions as M (pence in)', () => {
     expect(formatEstimatedValue(5_000_000)).toBe('£50k');
-    expect(formatEstimatedValue(100_000_000)).toBe('£1000k');
+    expect(formatEstimatedValue(100_000_000)).toBe('£1.0M');
   });
 
   it('formats sub-£1,000 values as whole pounds (no 100x error)', () => {
