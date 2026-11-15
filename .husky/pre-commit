@@ -146,9 +146,16 @@ else
   }
 fi
 
-# Run type checking
+# Run type checking. The full typecheck is a heavy job (owner ruling
+# 2026-11-12): it joins the test-slot queue and waits for a slot instead of
+# being refused. Where the machine has no queue it runs directly.
 echo "🔧 Type checking..."
-pnpm run typecheck || {
+if [ -f "${TEST_SLOTS_DIR:-C:/Users/talys/ops/test-slots}/with-slot.mjs" ]; then
+  typecheck_ok() { node "${TEST_SLOTS_DIR:-C:/Users/talys/ops/test-slots}/with-slot.mjs" --label pre-commit-typecheck -- pnpm run typecheck; }
+else
+  typecheck_ok() { pnpm run typecheck; }
+fi
+typecheck_ok || {
   echo "❌ Type checking failed. Fix type errors before committing."
   exit 1
 }
