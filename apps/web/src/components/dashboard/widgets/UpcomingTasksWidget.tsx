@@ -79,7 +79,9 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
           </>
         )}
         {!isLoading && tasks.length === 0 && (
-          <EmptyState entity="tasks" onCtaClick={() => setCreateOpen(true)} className="py-2" />
+          // The card's "+ Add New Task" below is the one create action, so the empty state
+          // shows no second button for the same thing.
+          <EmptyState entity="tasks" showCta={false} className="py-2" />
         )}
         {!isLoading &&
           tasks.map((task) => (
