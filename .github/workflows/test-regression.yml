@@ -58,12 +58,12 @@ on:
         default: ''
       report_only:
         description: >-
-          'true' runs the shards and the merge coverage gate only, with no Codecov
+          true runs the shards and the merge coverage gate only, with no Codecov
           upload and no SonarCloud scan, so a caller can pass no secrets
           (main-full-suite.yml). ci.yml already scans main on every push.
-        type: string
+        type: boolean
         required: false
-        default: 'false'
+        default: false
   workflow_dispatch:
     inputs:
       playwright_args:
@@ -370,7 +370,7 @@ jobs:
   coverage-report:
     name: Coverage Report
     needs: merge
-    if: inputs.unit != 'false' && inputs.report_only != 'true'
+    if: inputs.unit != 'false' && inputs.report_only != true
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -416,7 +416,7 @@ jobs:
     # Also skipped when no unit test ran: there is no merged lcov to scan, and
     # for report_only callers, which pass no SONAR_TOKEN.
     if: >-
-      inputs.unit != 'false' && inputs.report_only != 'true' && (
+      inputs.unit != 'false' && inputs.report_only != true && (
         github.event_name != 'pull_request' || (
           github.event.pull_request.head.repo.full_name == github.repository &&
           github.event.pull_request.user.login != 'dependabot[bot]'
