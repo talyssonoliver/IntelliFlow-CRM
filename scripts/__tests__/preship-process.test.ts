@@ -819,14 +819,22 @@ console.log(g.pid);
 setInterval(() => {}, 1000);
 `;
 
-function startStep(): Promise<{ step: ChildProcess; grandchild: number }> {
+/**
+ * Starts a step that starts a grandchild. `startedMs` is taken right at spawn, as
+ * preship-gate.mjs records child_start_ms; waiting for the grandchild's first line
+ * first would put it more than sameStart's 2 s window late on a loaded machine.
+ */
+function startStep(): Promise<{ step: ChildProcess; grandchild: number; startedMs: number }> {
   return new Promise((resolve, reject) => {
     const step = spawn(process.execPath, ['-e', STEP_SOURCE], {
       stdio: ['ignore', 'pipe', 'ignore'],
       detached: !isWin,
     });
+    const startedMs = Date.now();
     spawned.push(step);
-    step.stdout!.once('data', (d) => resolve({ step, grandchild: Number.parseInt(String(d), 10) }));
+    step.stdout!.once('data', (d) =>
+      resolve({ step, grandchild: Number.parseInt(String(d), 10), startedMs })
+    );
     step.once('error', reject);
   });
 }
@@ -842,8 +850,8 @@ describe('orphaned step trees', () => {
 
   it('reapGate stops the recorded step tree and removes the gate state file', async () => {
     const dir = tmpDir();
-    const { step, grandchild } = await startStep();
-    const state = { gate_pid: deadPid(), child_pid: step.pid, child_start_ms: Date.now() };
+    const { step, grandchild, startedMs } = await startStep();
+    const state = { gate_pid: deadPid(), child_pid: step.pid, child_start_ms: startedMs };
     const file = path.join(dir, 'gate.json');
     fs.writeFileSync(file, JSON.stringify(state));
     expect(reapGate(state, file)).toEqual({ stopped: step.pid });
@@ -883,8 +891,10 @@ import { gateStatePath, writeGateState } from ${JSON.stringify(PROCESS_URL)};
 // Detached on POSIX, as the real gate spawns steps (preship-gate.mjs): the step
 // must lead its own process group for the watchdog's group kill to reach the grandchild.
 const step = spawn(process.execPath, ['-e', ${JSON.stringify(STEP_SOURCE)}], { stdio: ['ignore', 'pipe', 'ignore'], detached: process.platform !== 'win32' });
+// Recorded at spawn, as preship-gate.mjs does (not when the grandchild first prints).
+const startedMs = Date.now();
 step.stdout.once('data', (d) => {
-  const state = { gate_pid: process.pid, child_pid: step.pid, child_start_ms: Date.now() };
+  const state = { gate_pid: process.pid, child_pid: step.pid, child_start_ms: startedMs };
   writeGateState(state, process.env.STATE_DIR);
   const w = spawn(process.execPath, [${JSON.stringify(WATCHDOG)}, String(process.pid),
     gateStatePath(process.pid, process.env.STATE_DIR), process.env.ANCESTORS || ''],
