@@ -40,7 +40,7 @@ beforeEach(() => {
   (prismaMock.contact.findFirst as any).mockResolvedValue({ id: 'contact-ada' });
   (prismaMock.lead.findFirst as any).mockResolvedValue(null);
   (prismaMock.emailRecord.update as any).mockResolvedValue({});
-  (prismaMock.emailRecord.updateMany as any).mockResolvedValue({ count: 1 });
+  (prismaMock.$queryRaw as any).mockResolvedValue([]);
   (prismaMock.leadActivity.create as any).mockResolvedValue({ id: 'act-1' });
   (prismaMock.$transaction as any).mockImplementation(async (fn: any) => fn(prismaMock));
 });
@@ -59,15 +59,15 @@ describe('emailLog.logToContact (#1177)', () => {
       where: { tenantId, email: { equals: 'ada@example.invalid', mode: 'insensitive' } },
       select: { id: true },
     });
-    // Only a still-unlinked email is written: a concurrent log never overwrites another.
-    expect(prismaMock.emailRecord.updateMany).toHaveBeenCalledWith({
-      where: { id: EMAIL_ID, tenantId, contactId: null },
+    // Written under the email row's lock, after re-reading it.
+    expect((prismaMock.$queryRaw as any).mock.calls[0][0].join('?')).toContain('FOR UPDATE');
+    expect(prismaMock.emailRecord.update).toHaveBeenCalledWith({
+      where: { id: EMAIL_ID, tenantId },
       data: { contactId: 'contact-ada' },
     });
   });
 
-  it('returns the stored link when a concurrent log linked the email first', async () => {
-    (prismaMock.emailRecord.updateMany as any).mockResolvedValue({ count: 0 });
+  it('returns the stored link, writing nothing, when a concurrent log linked the email first', async () => {
     (prismaMock.emailRecord.findFirst as any)
       .mockResolvedValueOnce(stored())
       .mockResolvedValueOnce(stored({ contactId: 'contact-other' }));
@@ -77,6 +77,8 @@ describe('emailLog.logToContact (#1177)', () => {
       contactId: 'contact-other',
       leadId: null,
     });
+    expect(prismaMock.emailRecord.update).not.toHaveBeenCalled();
+    expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
   });
 
   it("skips the user's own address and puts the email on the lead's timeline", async () => {
@@ -127,7 +129,7 @@ describe('emailLog.logToContact (#1177)', () => {
     await expect(member().logToContact({ emailId: EMAIL_ID })).rejects.toMatchObject({
       code: 'NOT_FOUND',
     });
-    expect(prismaMock.emailRecord.updateMany).not.toHaveBeenCalled();
+    expect(prismaMock.emailRecord.update).not.toHaveBeenCalled();
   });
 
   it('never links a person with an active processing restriction', async () => {
@@ -144,7 +146,7 @@ describe('emailLog.logToContact (#1177)', () => {
       tenantId,
       'ada@example.invalid'
     );
-    expect(prismaMock.emailRecord.updateMany).not.toHaveBeenCalled();
+    expect(prismaMock.emailRecord.update).not.toHaveBeenCalled();
     expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
   });
 
@@ -156,7 +158,7 @@ describe('emailLog.logToContact (#1177)', () => {
       contactId: 'contact-x',
       leadId: null,
     });
-    expect(prismaMock.emailRecord.updateMany).not.toHaveBeenCalled();
+    expect(prismaMock.emailRecord.update).not.toHaveBeenCalled();
     expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
   });
 
@@ -168,7 +170,7 @@ describe('emailLog.logToContact (#1177)', () => {
     await expect(member().logToContact({ emailId: EMAIL_ID })).rejects.toMatchObject({
       code: 'NOT_FOUND',
     });
-    expect(prismaMock.emailRecord.updateMany).not.toHaveBeenCalled();
+    expect(prismaMock.emailRecord.update).not.toHaveBeenCalled();
     expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
   });
 

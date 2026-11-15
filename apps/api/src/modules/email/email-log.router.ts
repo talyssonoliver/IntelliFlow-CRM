@@ -153,35 +153,41 @@ export const emailLogRouter = createTRPCRouter({
           message: 'This person has asked for their data not to be processed.',
         });
       }
-      if (party.contactId) return linkContact(c, email, party.contactId);
-      return linkLead(c, email, party.leadId as string);
+      return linkParty(c, email, party);
     }),
 });
 
 /**
- * A contact's timeline reads emails by contactId. The write only lands on a still-unlinked
- * email, so a concurrent log never overwrites another one; the stored link is returned either way.
+ * Writes the link under the email row's lock, after re-reading it: a log that raced this one and
+ * linked first wins (its link is returned, nothing more is written), and metadata is merged into
+ * the copy read under the lock. A contact is linked through contactId (their timeline reads it);
+ * a lead's timeline is its activities, so a lead gets an EMAIL activity (the subject only) and
+ * the email keeps the lead and the activity in its metadata.
  */
-async function linkContact(
+async function linkParty(
   c: EmailRouterCtx,
   email: StoredEmail,
-  contactId: string
+  party: { contactId: string | null; leadId: string | null }
 ): Promise<EmailLinkDto> {
-  const { count } = await c.prismaWithTenant.emailRecord.updateMany({
-    where: { id: email.id, tenantId: c.tenant.tenantId, contactId: null },
-    data: { contactId },
-  });
-  if (count > 0) return { logged: true, contactId, leadId: leadIdOf(email.metadata) };
-  return linkOf(await loadEmail(c, email.id));
-}
-
-/**
- * A lead's timeline is its activities, so a lead gets an EMAIL activity (the subject only, and
- * the email record's id); the email keeps the lead and the activity in its metadata.
- */
-async function linkLead(c: EmailRouterCtx, email: StoredEmail, leadId: string) {
   const tenantId = c.tenant.tenantId;
-  await c.prismaWithTenant.$transaction(async (tx: any) => {
+  return c.prismaWithTenant.$transaction(async (tx: any) => {
+    await tx.$queryRaw`SELECT id FROM email_records WHERE id = ${email.id} AND "tenantId" = ${tenantId} FOR UPDATE`;
+    const current: Pick<StoredEmail, 'contactId' | 'metadata'> | null =
+      await tx.emailRecord.findFirst({
+        where: { id: email.id, tenantId },
+        select: { contactId: true, metadata: true },
+      });
+    if (!current) throw new TRPCError({ code: 'NOT_FOUND', message: 'Email not found.' });
+    if (linkOf(current).logged) return linkOf(current);
+    const metadata = (current.metadata as Record<string, unknown> | null) ?? {};
+    if (party.contactId) {
+      await tx.emailRecord.update({
+        where: { id: email.id, tenantId },
+        data: { contactId: party.contactId },
+      });
+      return { logged: true, contactId: party.contactId, leadId: null };
+    }
+    const leadId = party.leadId as string;
     const activity = await tx.leadActivity.create({
       data: {
         type: 'EMAIL',
@@ -197,14 +203,8 @@ async function linkLead(c: EmailRouterCtx, email: StoredEmail, leadId: string) {
     });
     await tx.emailRecord.update({
       where: { id: email.id, tenantId },
-      data: {
-        metadata: {
-          ...((email.metadata as Record<string, unknown> | null) ?? {}),
-          leadId,
-          leadActivityId: activity.id,
-        },
-      },
+      data: { metadata: { ...metadata, leadId, leadActivityId: activity.id } },
     });
+    return { logged: true, contactId: null, leadId };
   });
-  return { logged: true, contactId: null, leadId };
 }
