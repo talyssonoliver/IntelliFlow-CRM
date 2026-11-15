@@ -185,8 +185,10 @@ firm's data.
 6. A person with no data still gets an answer: an empty file with the processing
    information.
 
-Not built: CSV export, and sending the file directly to another controller
-(Article 20(2)). See Known gaps.
+The page also saves the same data as CSV (IFC-317): one spreadsheet file per
+category, plus the processing information and what was withheld, in one zip,
+built in the browser from the same download. Not built yet: sending the data
+directly to another controller (Article 20(2)). See Known gaps.
 
 ### Erasure (Article 17, owner Q19)
 
@@ -378,7 +380,7 @@ track training. The previous training record was fabricated and was removed (see
 | Email suppressions and bounce receipts are not in the export or the erasure checklist.                                                                                                                  | #956                |
 | Outreach and marketing suppression is manual. The system only records a restriction that blocks marketing.                                                                                              | IFC-315 (Sprint 19) |
 | Erasure of communications (emails, tickets, chats, feedback, notifications, drafts) and stored files is manual.                                                                                         | IFC-316 (Sprint 19) |
-| No CSV export and no direct transfer to another controller (Article 20(2)).                                                                                                                             | IFC-317 (Sprint 19) |
+| No direct transfer to another controller (Article 20(2)). CSV export is built.                                                                                                                          | IFC-317 (Sprint 19) |
 | No Article 19 notice to recipients of erased, corrected or restricted data.                                                                                                                             | IFC-318 (Sprint 19) |
 | The firm's retention period and transfer safeguards are not stated by Aurora. The export links to the firm's privacy notice, or says the firm has not published one and the person may ask it directly. | By design           |
 
