@@ -74,7 +74,7 @@ function makeTransports() {
       smtp: { send: vi.fn(), verify: vi.fn(async () => undefined) },
       imap: { read: vi.fn(), verify: vi.fn(async () => undefined) },
       oauth: vi.fn((p: string) => (p === 'GMAIL' ? oauthClient : null)),
-      oauthConfigured: { GMAIL: true, MICROSOFT: false },
+      oauthConfigured: { GMAIL: true, MICROSOFT: false, ZOHO: false },
     },
   };
 }
@@ -117,7 +117,7 @@ describe('emailMailbox.getMine / getTenant', () => {
   it('returns my mailbox (no secrets) and which OAuth providers are configured', async () => {
     (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(smtpRow());
     const result = await member().getMine();
-    expect(result.providersAvailable).toEqual({ GMAIL: true, MICROSOFT: false });
+    expect(result.providersAvailable).toEqual({ GMAIL: true, MICROSOFT: false, ZOHO: false });
     expect(result.mailbox?.hasSmtpPassword).toBe(true);
     expect(JSON.stringify(result)).not.toContain(secret);
     expect(prismaMock.emailMailbox.findFirst).toHaveBeenCalledWith({
@@ -158,6 +158,17 @@ describe('emailMailbox.saveSmtp', () => {
     expect(JSON.stringify(dto)).not.toContain(storedCiphertext);
     expect(JSON.stringify(logAction.mock.calls)).not.toContain(secret);
     expect(logAction.mock.calls[0][4].afterState).toMatchObject({ smtpPassword: 'set' });
+  });
+
+  it('signs in before saving, and saves a mailbox that cannot sign in as ERROR with its code', async () => {
+    t.transports.smtp.verify.mockRejectedValueOnce(new MailboxTransportError('TIMEOUT'));
+    await member().saveSmtp(saveInput);
+    expect(t.transports.smtp.verify).toHaveBeenCalledWith(
+      expect.objectContaining({ host: 'smtp.mail.example.com', username: 'me@mail.example.com' })
+    );
+    expect(prismaMock.emailMailbox.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ status: 'ERROR', lastErrorCode: 'TIMEOUT' }),
+    });
   });
 
   it('keeps the stored password when none is sent and updates in place', async () => {

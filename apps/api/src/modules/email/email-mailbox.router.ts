@@ -2,7 +2,7 @@
  * Email Mailbox Router — PG-207 (owner rulings Q1, Q6, Q7; ADR-085).
  *
  * A user connects their own mailbox (SMTP with Gmail/Outlook presets, or
- * Google / Microsoft OAuth); an admin connects the company mailbox. The owner
+ * Google / Microsoft / Zoho OAuth); an admin connects the company mailbox. The owner
  * of a USER mailbox always comes from ctx, never from input.
  *
  * Secrets: written only as plain strings through the field-encryption client
@@ -17,11 +17,7 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { TRPCError } from '@trpc/server';
 import { MailboxTransportError, createPkcePair } from '@intelliflow/adapters';
-import {
-  EMAIL_LIMITS,
-  type MailboxErrorCode,
-  type OAuthMailboxProvider,
-} from '@intelliflow/domain';
+import { EMAIL_LIMITS, type MailboxErrorCode } from '@intelliflow/domain';
 import {
   NO_SMTP_ACCOUNT,
   NO_SMTP_ENDPOINT,
@@ -54,7 +50,15 @@ import {
 } from './email-access';
 import { toMailboxDto, type MailboxRowLike } from './email-dto';
 import { requireEncryptionKey } from './encryption-guard';
-import { getOAuthAccess, type TransportMailbox } from './mailbox-transport';
+import { smtpFailure } from './smtp-check';
+import { type TransportMailbox } from './mailbox-transport';
+import {
+  checkOAuthMailbox,
+  connectAccount,
+  connectStartUrl,
+  hasRequiredScopes,
+  revokeGrant,
+} from './oauth-connect';
 
 const RESOURCE: EmailAuditResource = 'email_mailbox';
 
@@ -167,25 +171,6 @@ async function writeMailbox(
   }
 }
 
-/** Scopes without which a connected mailbox could not send or read its bounce reports. */
-const REQUIRED_SCOPES: Record<OAuthMailboxProvider, readonly string[]> = {
-  GMAIL: ['gmail.send'],
-  MICROSOFT: ['Mail.Send', 'Mail.Read'],
-};
-
-/**
- * Whether the user granted what the mailbox needs (Google lets users untick
- * scopes). Providers report scopes as bare names or full URIs, so a granted
- * scope matches on its last path segment. An empty list (scope not reported)
- * cannot be checked and is accepted; a missing scope then surfaces as a coded
- * send or scan failure.
- */
-function hasRequiredScopes(provider: OAuthMailboxProvider, granted: string[]): boolean {
-  if (granted.length === 0) return true;
-  const names = new Set(granted.map((scope) => scope.split('/').pop()?.toLowerCase()));
-  return REQUIRED_SCOPES[provider].every((scope) => names.has(scope.toLowerCase()));
-}
-
 function secretAudit(value: string | null | undefined): 'set' | 'cleared' | 'unchanged' {
   if (value === undefined) return 'unchanged';
   return value === null ? 'cleared' : 'set';
@@ -252,6 +237,8 @@ function smtpMailboxData(
     accountAddress: null,
     refreshToken: null,
     grantedScopes: [],
+    oauthAccountId: null,
+    oauthApiDomain: null,
   };
   if (input.smtpPassword !== undefined) data.smtpPassword = input.smtpPassword;
   if (!input.imapHost) data.imapPassword = null;
@@ -327,6 +314,13 @@ export const emailMailboxRouter = createTRPCRouter({
       assertScopeAllowed(c, input.scope, 'saveSmtp');
       const existing = await findMailbox(c, input.scope);
       const data = smtpMailboxData(input, existing);
+      if (data.status === 'ACTIVE') {
+        // MVP-001: saved as working only when it works; a failed sign-in is saved as ERROR
+        // with its code, so the mailbox never looks ready while it cannot send.
+        const secret = (data.smtpPassword as string | undefined) ?? existing?.smtpPassword ?? '';
+        const code = await smtpFailure(emailRuntimeDeps(c).transports, input, secret);
+        if (code) Object.assign(data, { status: 'ERROR', lastErrorCode: code });
+      }
 
       const row = await writeMailbox(c, existing, ownerFor(c, input.scope), data);
       auditEmail(c, existing ? 'UPDATE' : 'CREATE', RESOURCE, row.id, {
@@ -363,11 +357,9 @@ export const emailMailboxRouter = createTRPCRouter({
           ? (stored?.imapPassword ?? '')
           : (input.imapPassword ?? '');
       const { transports } = emailRuntimeDeps(c);
+      const smtpCode = await smtpFailure(transports, input, smtpSecret);
+      if (smtpCode) return { ok: false, code: smtpCode };
       try {
-        await transports.smtp.verify({
-          ...smtpEndpointConfig(input),
-          ...smtpAccountConfig(smtpAccountFields(input.smtpUsername, smtpSecret)),
-        });
         if (input.imapHost) {
           await transports.imap.verify({
             host: input.imapHost,
@@ -412,11 +404,7 @@ export const emailMailboxRouter = createTRPCRouter({
             });
           }
         } else {
-          const client = transports.oauth(row.kind as OAuthMailboxProvider);
-          if (!client) throw new MailboxTransportError('CONNECT_FAILED');
-          const access = await getOAuthAccess(c.prismaWithTenant, row, transports, new Date());
-          testedVersion = access.tokenVersion;
-          await client.accountAddress(access.accessToken);
+          testedVersion = await checkOAuthMailbox(c.prismaWithTenant, row, transports, new Date());
         }
       } catch (error) {
         code = error instanceof MailboxTransportError ? error.code : 'CONNECT_FAILED';
@@ -441,8 +429,8 @@ export const emailMailboxRouter = createTRPCRouter({
       assertTenantContext(ctx);
       const c = ctx as unknown as EmailRouterCtx;
       assertScopeAllowed(c, input.scope, 'oauthStart');
-      const client = emailRuntimeDeps(c).transports.oauth(input.provider);
-      if (!client) {
+      const { transports } = emailRuntimeDeps(c);
+      if (!transports.oauthConfigured[input.provider]) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
           message: 'Signing in with this provider is not configured on this server.',
@@ -462,7 +450,9 @@ export const emailMailboxRouter = createTRPCRouter({
           expiresAt: new Date(Date.now() + EMAIL_LIMITS.oauthStateTtlMinutes * 60_000),
         },
       });
-      return { url: client.authorizationUrl({ state, codeChallenge: challenge }) };
+      const url = connectStartUrl(transports, input.provider, { state, codeChallenge: challenge });
+      if (!url) throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Not configured.' });
+      return { url };
     }),
 
   oauthComplete: verifiedTenantProcedure
@@ -497,13 +487,16 @@ export const emailMailboxRouter = createTRPCRouter({
       if (consumed.count !== 1 || saved.expiresAt.getTime() <= Date.now()) throw invalid();
       assertScopeAllowed(c, saved.scope, 'oauthComplete');
 
-      const client = emailRuntimeDeps(c).transports.oauth(input.provider);
-      if (!client) throw invalid();
-      let tokens;
-      let address: string;
+      const { transports } = emailRuntimeDeps(c);
+      if (!transports.oauthConfigured[input.provider]) throw invalid();
+      let account;
       try {
-        tokens = await client.exchangeCode(input.code, saved.codeVerifier, new Date());
-        address = await client.accountAddress(tokens.accessToken);
+        const exchange = {
+          code: input.code,
+          verifier: saved.codeVerifier,
+          accountsServer: input.accountsServer ?? null,
+        };
+        account = await connectAccount(transports, input.provider, exchange, new Date());
       } catch (error) {
         const code = error instanceof MailboxTransportError ? error.code : 'AUTH_FAILED';
         throw new TRPCError({
@@ -512,8 +505,8 @@ export const emailMailboxRouter = createTRPCRouter({
         });
       }
 
-      if (!hasRequiredScopes(input.provider, tokens.scopes)) {
-        await client.revoke(tokens.refreshToken).catch(() => undefined);
+      if (!hasRequiredScopes(input.provider, account.scopes)) {
+        await account.giveBack().catch(() => undefined);
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message:
@@ -527,11 +520,13 @@ export const emailMailboxRouter = createTRPCRouter({
         kind: input.provider,
         status: 'ACTIVE',
         lastErrorCode: null,
-        fromAddress: address,
+        fromAddress: account.address,
         fromName: null,
-        accountAddress: address,
-        refreshToken: tokens.refreshToken,
-        grantedScopes: tokens.scopes,
+        accountAddress: account.address,
+        refreshToken: account.refreshToken,
+        grantedScopes: account.scopes,
+        oauthAccountId: account.oauthAccountId,
+        oauthApiDomain: account.oauthApiDomain,
         ...NO_SMTP_ENDPOINT,
         ...NO_SMTP_ACCOUNT,
         imapHost: null,
@@ -543,7 +538,7 @@ export const emailMailboxRouter = createTRPCRouter({
         scanCursorAt: null,
       }).catch(async (error: unknown) => {
         // Not stored (a racing connect or save): the new grant is given back.
-        await client.revoke(tokens.refreshToken).catch(() => undefined);
+        await account.giveBack().catch(() => undefined);
         throw error;
       });
       auditEmail(c, existing ? 'UPDATE' : 'CREATE', RESOURCE, row.id, {
@@ -591,10 +586,7 @@ export const emailMailboxRouter = createTRPCRouter({
           }
           throw err;
         });
-      if (row.kind !== 'SMTP' && row.refreshToken) {
-        const client = emailRuntimeDeps(c).transports.oauth(row.kind as OAuthMailboxProvider);
-        await client?.revoke(row.refreshToken).catch(() => undefined);
-      }
+      await revokeGrant(emailRuntimeDeps(c).transports, row);
       auditEmail(c, 'UPDATE', RESOURCE, row.id, { scope: input.scope, disconnected: true });
       return { disconnected: true };
     }),

@@ -118,6 +118,7 @@ export * from './messaging/email/public-host';
 export * from './messaging/email/mime';
 export * from './messaging/email/smtp-provider';
 export * from './messaging/email/oauth-mailbox';
+export * from './messaging/email/zoho-mailbox';
 export * from './messaging/email/dsn-parser';
 export * from './messaging/email/imap-dsn-reader';
 

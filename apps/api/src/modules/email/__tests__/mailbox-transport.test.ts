@@ -70,7 +70,7 @@ beforeEach(() => {
 
 describe('oauthConfigFromEnv', () => {
   it('returns a provider config only when client id, secret and redirect URI are all set', () => {
-    expect(oauthConfigFromEnv({})).toEqual({ GMAIL: null, MICROSOFT: null });
+    expect(oauthConfigFromEnv({})).toEqual({ GMAIL: null, MICROSOFT: null, ZOHO: null });
     expect(
       oauthConfigFromEnv({
         EMAIL_OAUTH_REDIRECT_URI: 'https://app.example.invalid/email/oauth/callback',
@@ -85,13 +85,14 @@ describe('oauthConfigFromEnv', () => {
         redirectUri: 'https://app.example.invalid/email/oauth/callback',
       },
       MICROSOFT: null,
+      ZOHO: null,
     });
   });
 
   it('builds transports whose oauth() is null for an unconfigured provider', () => {
     const t = createMailboxTransports({});
     expect(t.oauth('GMAIL')).toBeNull();
-    expect(t.oauthConfigured).toEqual({ GMAIL: false, MICROSOFT: false });
+    expect(t.oauthConfigured).toEqual({ GMAIL: false, MICROSOFT: false, ZOHO: false });
     expect(typeof t.smtp.send).toBe('function');
     expect(typeof t.imap.read).toBe('function');
   });

@@ -157,7 +157,7 @@ function deps(
       smtp: { send: vi.fn(), verify: vi.fn() },
       imap: { read, verify: vi.fn() },
       oauth: () => null,
-      oauthConfigured: { GMAIL: false, MICROSOFT: false },
+      oauthConfigured: { GMAIL: false, MICROSOFT: false, ZOHO: false },
     } as never,
     notify,
     now: () => NOW,
@@ -299,7 +299,7 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
               })),
               listDsnSince,
             }) as never,
-          oauthConfigured: { GMAIL: true, MICROSOFT: false },
+          oauthConfigured: { GMAIL: true, MICROSOFT: false, ZOHO: false },
         } as never,
       });
       await runBounceScan(d);
@@ -339,7 +339,7 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
               })),
               listDsnSince,
             }) as never,
-          oauthConfigured: { GMAIL: false, MICROSOFT: true },
+          oauthConfigured: { GMAIL: false, MICROSOFT: true, ZOHO: false },
         } as never,
       });
       await runBounceScan(d);
@@ -978,7 +978,7 @@ describe('runBounceScan', () => {
         smtp: {},
         imap: { read: vi.fn() },
         oauth: () => client,
-        oauthConfigured: { GMAIL: false, MICROSOFT: true },
+        oauthConfigured: { GMAIL: false, MICROSOFT: true, ZOHO: false },
       } as never,
     });
     await runBounceScan(ctx.d);
@@ -1009,7 +1009,7 @@ describe('runBounceScan', () => {
         smtp: {},
         imap: { read: vi.fn() },
         oauth: () => client,
-        oauthConfigured: { GMAIL: false, MICROSOFT: true },
+        oauthConfigured: { GMAIL: false, MICROSOFT: true, ZOHO: false },
       } as never,
     });
     await runBounceScan(ctx.d);

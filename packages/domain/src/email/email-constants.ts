@@ -8,7 +8,7 @@
 
 import { ACCOUNT_OWNER_ADMIN_ROLES } from '../crm/account/territory/territory-constants';
 
-export const MAILBOX_KINDS = ['SMTP', 'GMAIL', 'MICROSOFT'] as const;
+export const MAILBOX_KINDS = ['SMTP', 'GMAIL', 'MICROSOFT', 'ZOHO'] as const;
 export type MailboxKind = (typeof MAILBOX_KINDS)[number];
 
 /** USER = the sender's own mailbox; TENANT = the admin-managed company mailbox. */
@@ -28,7 +28,7 @@ export type SmtpPort = (typeof SMTP_PORTS)[number];
 /** IMAP is used only for reading bounce reports, over implicit TLS. */
 export const IMAP_PORT = 993;
 
-export const OAUTH_MAILBOX_PROVIDERS = ['GMAIL', 'MICROSOFT'] as const;
+export const OAUTH_MAILBOX_PROVIDERS = ['GMAIL', 'MICROSOFT', 'ZOHO'] as const;
 export type OAuthMailboxProvider = (typeof OAUTH_MAILBOX_PROVIDERS)[number];
 
 export const HARD_BOUNCE_ACTIONS = ['SUPPRESS', 'NONE'] as const;
