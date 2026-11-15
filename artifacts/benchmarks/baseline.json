@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-14T08:13:07.058Z",
+  "timestamp": "2026-11-15T13:27:57.569Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -3376,7 +3376,7 @@
   },
   "validators_inventory": {
     "total_validators": 73,
-    "total_schemas": 691,
+    "total_schemas": 692,
     "by_complexity": {
       "complex": 39,
       "moderate": 25,
@@ -3618,6 +3618,12 @@
         "complexity": "moderate"
       },
       {
+        "name": "email-settings",
+        "file": "email-settings.ts",
+        "schemas": 6,
+        "complexity": "complex"
+      },
+      {
         "name": "report-templates",
         "file": "report-templates.ts",
         "schemas": 6,
@@ -3634,12 +3640,6 @@
         "file": "case-types.ts",
         "schemas": 5,
         "complexity": "moderate"
-      },
-      {
-        "name": "email-settings",
-        "file": "email-settings.ts",
-        "schemas": 5,
-        "complexity": "complex"
       },
       {
         "name": "email-signatures",
