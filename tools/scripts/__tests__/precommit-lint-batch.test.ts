@@ -129,61 +129,90 @@ function minimalEnv(): NodeJS.ProcessEnv {
 
 const toShPath = (p: string) => p.replace(/\\/g, '/');
 
+/** Same rough shape (depth, name length) as the s9383 merge's real staged set (650 paths). */
+function stagedFiles(): string[] {
+  const files: string[] = [];
+  for (let i = 0; i < 650; i++) {
+    files.push(`apps/web/src/modules/feature-${i}/components/SomeComponent-${i}.tsx`);
+  }
+  return files;
+}
+
 describe('.husky/pre-commit — batched staged-file lint', () => {
   it('still bounds the eslint xargs call to -s <N> -x pnpm exec eslint --fix ...', () => {
     const hook = fs.readFileSync(HOOK, 'utf8');
     expect(() => readConfiguredBatchChars(hook)).not.toThrow();
   });
 
-  it(
+  // Fixture: the hook's own -s value drives xargs, but the program is a tiny node stub, not
+  // eslint. This proves the batching (several bounded calls, every path delivered exactly once)
+  // without a pnpm + eslint start-up per batch, which took 45 min on a loaded gate.
+  it("splits a large staged list into several calls, each within the hook's own -s value", () => {
+    const sh = resolveSh();
+    const batchChars = readConfiguredBatchChars(fs.readFileSync(HOOK, 'utf8'));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'precommit-lint-batch-'));
+    try {
+      const files = stagedFiles();
+      const stagedFile = path.join(tmp, 'staged.txt');
+      fs.writeFileSync(stagedFile, files.join('\n') + '\n');
+      const stub = path.join(tmp, 'stub.cjs');
+      fs.writeFileSync(
+        stub,
+        'const a = process.argv.slice(2);\n' +
+          "console.log(JSON.stringify({ n: a.length, chars: a.join(' ').length }));\n"
+      );
+      const cmd =
+        `cat ${JSON.stringify(toShPath(stagedFile))}` +
+        ` | xargs -s ${batchChars} -x node ${JSON.stringify(toShPath(stub))}`;
+      const result = spawnSync(sh, ['-c', cmd], { env: minimalEnv(), encoding: 'utf8' });
+
+      expect(result.error).toBeUndefined();
+      expect(result.status).toBe(0);
+      const calls = result.stdout
+        .split(/\r?\n/)
+        .filter(Boolean)
+        .map((l) => JSON.parse(l) as { n: number; chars: number });
+      expect(calls.length).toBeGreaterThan(1);
+      expect(calls.reduce((sum, c) => sum + c.n, 0)).toBe(files.length);
+      for (const c of calls) expect(c.chars).toBeLessThanOrEqual(batchChars);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  // Real chain: pnpm's POSIX shim -> node -> eslint's shim -> node. Only this reproduces the
+  // Windows command-line limit, and no pre-ship step or CI job runs it, so it runs on demand:
+  // `pnpm run test:real-repo` (REAL_REPO_CHECKS=1).
+  it.runIf(process.env['REAL_REPO_CHECKS'] === '1')(
     'runs the real `pnpm exec eslint` across a large staged-file list, batched at the ' +
       "hook's own -s value, without hitting the Windows command-line limit",
     () => {
       const sh = resolveSh();
       const batchChars = readConfiguredBatchChars(fs.readFileSync(HOOK, 'utf8'));
-
       const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'precommit-lint-batch-'));
-      // Same rough shape (nesting depth, filename length) as the s9383
-      // merge's real staged set (380 files, ~52 chars average path).
-      const files: string[] = [];
-      for (let i = 0; i < 650; i++) {
-        files.push(`apps/web/src/modules/feature-${i}/components/SomeComponent-${i}.tsx`);
+      try {
+        // A file + `cat`, not an env var: the real hook's STAGED_TS is never inherited by children.
+        const stagedFile = path.join(tmp, 'staged.txt');
+        fs.writeFileSync(stagedFile, stagedFiles().join('\n') + '\n');
+        // `eslint --version` exits before touching any file argument, so this is harmless.
+        const cmd =
+          `cat ${JSON.stringify(toShPath(stagedFile))}` +
+          ` | xargs -s ${batchChars} -x pnpm exec eslint --version`;
+        const result = spawnSync(sh, ['-c', cmd], {
+          cwd: ROOT,
+          env: minimalEnv(),
+          encoding: 'utf8',
+        });
+
+        expect(result.error).toBeUndefined();
+        expect(result.stdout + result.stderr).not.toMatch(/command line is too long/i);
+        expect(result.status).toBe(0);
+        const versionLines = (result.stdout.match(/^v\d+\.\d+\.\d+$/gm) ?? []).length;
+        expect(versionLines).toBeGreaterThan(1);
+      } finally {
+        fs.rmSync(tmp, { recursive: true, force: true });
       }
-      // Written to a file and `cat`, not passed through `env:` — the real
-      // hook's STAGED_TS is a plain (non-exported) shell variable, piped
-      // into `xargs` as stdin text, never inherited as an environment
-      // variable by the spawned children. Putting 650 paths into an actual
-      // env var instead would inflate every child's environment block and
-      // fail for a reason that has nothing to do with the command-line
-      // length bug being tested here ("environment is too large for exec"
-      // vs. "command line is too long").
-      const stagedFile = path.join(tmp, 'staged.txt');
-      fs.writeFileSync(stagedFile, files.join('\n') + '\n');
-
-      // `eslint --version` exits before touching any file argument (real
-      // or, as here, synthetic and nonexistent), so this is harmless and
-      // still goes through the exact chain that broke: pnpm's POSIX shim
-      // re-execs node, which re-execs node_modules/.bin/eslint's own shim.
-      const cmd =
-        `cat ${JSON.stringify(toShPath(stagedFile))}` +
-        ` | xargs -s ${batchChars} -x pnpm exec eslint --version`;
-      const result = spawnSync(sh, ['-c', cmd], {
-        cwd: ROOT,
-        env: minimalEnv(),
-        encoding: 'utf8',
-      });
-
-      expect(result.error).toBeUndefined();
-      expect(result.stdout + result.stderr).not.toMatch(/command line is too long/i);
-      expect(result.status).toBe(0);
-
-      // Batching actually happened — eslint's version banner printed more
-      // than once, meaning more than one invocation ran rather than one
-      // giant call for all 650 paths.
-      const versionLines = (result.stdout.match(/^v\d+\.\d+\.\d+$/gm) ?? []).length;
-      expect(versionLines).toBeGreaterThan(1);
-
-      fs.rmSync(tmp, { recursive: true, force: true });
-    }
+    },
+    10 * 60_000
   );
 });

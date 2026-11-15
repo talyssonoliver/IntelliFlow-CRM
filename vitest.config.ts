@@ -59,6 +59,8 @@ export default defineConfig({
     },
   },
   test: {
+    // Fails the run if a test flipped the shared .git/config to core.bare=true (#1274 class).
+    globalSetup: ['./scripts/lib/git-bare-guard.mjs'],
     // ============================================================
     // MEMORY OPTIMIZATION - Vitest v4.x
     // Per Context7: With large test suites, memory must be managed
