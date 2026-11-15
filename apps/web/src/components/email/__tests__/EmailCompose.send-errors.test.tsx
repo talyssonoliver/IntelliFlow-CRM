@@ -108,6 +108,73 @@ describe('EmailCompose coded send errors', () => {
     expect(screen.getByText(notice, { selector: 'p' })).toBeInTheDocument();
   });
 
+  it.each([
+    ['Send as a service email', 'SERVICE'],
+    ['Send as marketing', 'MARKETING'],
+  ])(
+    'asks what an email to an objector is for, then resends it: %s (IFC-315)',
+    async (button, purpose) => {
+      send.mockRejectedValueOnce(
+        refusal({
+          code: 'PURPOSE_REQUIRED',
+          mailboxErrorCode: null,
+          skipped: ['a@example.invalid'],
+        })
+      );
+      const { onSent } = renderCompose();
+      fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+      expect(await screen.findByRole('alert')).toHaveTextContent(
+        'Is this email about their matter?'
+      );
+      expect(onSent).not.toHaveBeenCalled();
+      expect(send.mock.calls[0][0]).not.toHaveProperty('purpose');
+      fireEvent.click(screen.getByRole('button', { name: button }));
+      await waitFor(() => expect(onSent).toHaveBeenCalled());
+      expect(send.mock.calls[1][0]).toMatchObject({ purpose });
+    }
+  );
+
+  it('sends with no purpose unless "Marketing email" is ticked (IFC-315)', async () => {
+    const { onSent } = renderCompose();
+    const box = screen.getByRole('checkbox', { name: 'Marketing email' });
+    expect(box).not.toBeChecked();
+    expect(box).toHaveAccessibleDescription('Not sent to people who objected to marketing.');
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await waitFor(() => expect(onSent).toHaveBeenCalled());
+    expect(send.mock.calls[0][0]).not.toHaveProperty('purpose');
+  });
+
+  it('marks a ticked email MARKETING and reports who was left out (IFC-315)', async () => {
+    send.mockResolvedValue({
+      id: 'rec-1',
+      status: 'SENT',
+      skipped: [],
+      objected: ['a@example.invalid'],
+    });
+    const { onSent } = renderCompose();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Marketing email' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await waitFor(() => expect(onSent).toHaveBeenCalled());
+    expect(send.mock.calls[0][0]).toMatchObject({ purpose: 'MARKETING' });
+    const notice =
+      'Sent. 1 recipient was left out because they objected to marketing email: a@example.invalid.';
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Email sent', description: notice })
+    );
+  });
+
+  it('explains a marketing email nobody could receive and keeps the draft (IFC-315)', async () => {
+    send.mockRejectedValue(
+      refusal({ code: 'ALL_OBJECTED', mailboxErrorCode: null, skipped: ['a@example.invalid'] })
+    );
+    const { onSent } = renderCompose();
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Marketing email' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(/objected to marketing/);
+    expect(onSent).not.toHaveBeenCalled();
+    expect(screen.getByLabelText('Message body').innerHTML).toContain('Hello there');
+  });
+
   it('has no axe violations with the alert shown', async () => {
     send.mockRejectedValue(
       refusal({ code: 'MAILBOX_ERROR', mailboxErrorCode: 'AUTH_FAILED', skipped: [] })
@@ -142,6 +209,19 @@ describe('InlineCompose coded send errors', () => {
     expect(alert.closest('[role="alert"]')).not.toBeNull();
     expect(screen.getByRole('link', { name: 'Open Email Settings' })).toBeInTheDocument();
     expect(onSent).not.toHaveBeenCalled();
+  });
+
+  it('resends a reply to an objector as a service email once the sender says so (IFC-315)', async () => {
+    send.mockRejectedValueOnce(
+      refusal({ code: 'PURPOSE_REQUIRED', mailboxErrorCode: null, skipped: ['b@example.invalid'] })
+    );
+    const { onSent } = renderInline();
+    fireEvent.click(screen.getByRole('button', { name: 'Send reply' }));
+    await screen.findByText('Is this email about their matter?');
+    expect(send.mock.calls[0][0]).not.toHaveProperty('purpose');
+    fireEvent.click(screen.getByRole('button', { name: 'Send as a service email' }));
+    await waitFor(() => expect(onSent).toHaveBeenCalled());
+    expect(send.mock.calls[1][0]).toMatchObject({ purpose: 'SERVICE' });
   });
 
   it('keeps a typed forward note when the form re-renders', () => {

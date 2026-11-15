@@ -343,6 +343,22 @@ export function servedPricingKey(served: string | undefined): string | undefined
   return matchServed(name) ?? matchServed(name.split('/').slice(1).join('/'));
 }
 
+/**
+ * The MODEL_PRICING key for a model name as a provider reports it: the name itself (with or
+ * without a `vendor/` prefix) when it is a key, else a known deployment it maps to (a dated
+ * snapshot, an OpenRouter id). Undefined when the model has no price here (a local Ollama model,
+ * an unknown deployment): callers must not price it as some other model.
+ */
+export function resolvePricingKey(served: string | undefined): string | undefined {
+  const name = served?.trim().toLowerCase();
+  if (!name) return undefined;
+  const direct = [name, name.split('/').slice(1).join('/')].find(
+    (candidate) => candidate !== '' && Object.hasOwn(MODEL_PRICING, candidate)
+  );
+  const key = direct ?? servedPricingKey(name);
+  return key && Object.hasOwn(MODEL_PRICING, key) ? key : undefined;
+}
+
 const unknownPricingWarned = new Set<string>();
 
 export function calculateCost(model: string, inputTokens: number, outputTokens: number): number {

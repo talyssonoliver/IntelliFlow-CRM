@@ -22,6 +22,7 @@ import { describe, it, expect } from 'vitest';
 import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { gitEnv } from '../../../scripts/lib/preship-git.mjs';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
 const CANONICAL_DOMAIN = 'intelli-flow-crm-web.vercel.app';
@@ -115,7 +116,7 @@ function scanRepo(): string[] {
       // source, not another file that happens to be exempt.
       ':!tools/scripts/__tests__/canonical-domain-guard.test.ts',
     ],
-    { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }
+    { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024, env: gitEnv(process.env) }
   );
   // git grep exits 1 when there are simply no matches; only a real failure
   // (status null/2+, or stderr with no output at all) should throw.
@@ -149,7 +150,10 @@ describe('canonical production domain guard (#229)', () => {
         'tools/scripts/__tests__/canonical-domain-guard.test.ts with a ' +
         `one-line reason. Offending lines:\n${offenders.join('\n')}`
     ).toEqual([]);
-  });
+    // One `git grep` over the whole tracked tree. Nothing else (pre-ship, CI) runs this
+    // guard, so it stays on every run and only its budget grows: it took 73.8 s in a
+    // full-scope gate under load.
+  }, 240_000);
 
   it('keeps the canonical domain wired into the production-critical surfaces', () => {
     const mustReferenceCanonical = [

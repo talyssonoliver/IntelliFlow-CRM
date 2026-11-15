@@ -52,6 +52,12 @@ vi.mock('../versioning/chain-version-loader', () => ({
     getChainConfig: vi.fn().mockRejectedValue(new Error('no DB in tests')),
   })),
   configureVersionLoader: vi.fn(),
+  // The chains read prompts through loadVersionedPrompt; it delegates to the mocked loader.
+  loadVersionedPrompt: vi.fn(async (type: string, tenantId: string) => {
+    const { getVersionLoader } = await import('../versioning/chain-version-loader');
+    const config = await getVersionLoader().getChainConfig(type as never, { tenantId });
+    return { prompt: config?.prompt ?? null, versionId: null };
+  }),
   CHAIN_TYPE_MAP: {
     LEAD_SCORING: 'SCORING',
     CHURN_RISK: 'SCORING',
