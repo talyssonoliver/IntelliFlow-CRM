@@ -1,0 +1,249 @@
+name: Main Full Suite
+
+# The record of what main actually is: on every push to main, the whole unit suite with
+# merged coverage, the integration and property suites and the full build, once per
+# commit, never cancelled. Merges that land while a run is in progress queue behind it
+# (one running, the latest queued), so a batch is tested together and every run's head
+# commit ends with a result. deploy.sh can then refuse a commit this workflow did not
+# pass (test-flow rollout, PR 2).
+#
+# Report-only: a red run writes the commit range (last green run's commit .. this one)
+# and the failing tests to the job summary, and opens or updates one issue labelled
+# main-red. It reverts nothing.
+#
+# No production or paid secrets. The unit suite reuses test-regression.yml with
+# report_only, so no Codecov or SonarCloud token is needed (ci.yml already scans main);
+# with no TURBO_TOKEN, turbo simply runs uncached. The only secret is
+# CI_POSTGRES_PASSWORD, for this run's own throwaway Postgres service (as ci.yml's
+# Integration Tests job). The build's module-load keys are random per run.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: main-full-suite
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  NODE_VERSION: '24'
+  PNPM_VERSION: '10.33.0'
+  NODE_OPTIONS: --max-old-space-size=4096
+
+jobs:
+  unit:
+    name: Unit suite (sharded, merged coverage)
+    uses: ./.github/workflows/test-regression.yml
+    # test-regression's Coverage Report job declares pull-requests: write, and a called
+    # workflow may not ask for more than the caller grants, even for a job it skips.
+    # With report_only that job does not run, and a push run has no PR to write to.
+    permissions:
+      contents: read
+      pull-requests: write
+    with:
+      mode: full
+      report_only: 'true'
+
+  integration:
+    name: Integration suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    # Same services, schema bootstrap and migrations as ci.yml's Integration Tests job.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ${{ secrets.CI_POSTGRES_PASSWORD }}
+          POSTGRES_DB: intelliflow_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      DATABASE_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-monorepo
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          build-libs: 'true'
+
+      - name: Bootstrap Supabase schemas + roles
+        run: |
+          PGPASSWORD=${{ secrets.CI_POSTGRES_PASSWORD }} psql -h localhost -U postgres -d intelliflow_test -v ON_ERROR_STOP=1 <<'SQL'
+            CREATE SCHEMA IF NOT EXISTS extensions;
+            DO $$
+            BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+                CREATE ROLE anon NOLOGIN;
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+                CREATE ROLE authenticated NOLOGIN;
+              END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN
+                CREATE ROLE service_role NOLOGIN BYPASSRLS;
+              END IF;
+            END
+            $$;
+            GRANT USAGE ON SCHEMA extensions TO postgres, anon, authenticated, service_role;
+            ALTER DATABASE intelliflow_test SET search_path TO public, extensions;
+            ALTER DATABASE intelliflow_test SET timezone TO 'UTC';
+          SQL
+
+      - name: Setup database
+        run: pnpm --filter @intelliflow/db db:migrate
+
+      - name: Run integration tests
+        run: |
+          mkdir -p artifacts/main-full-suite
+          pnpm exec vitest run --project integration \
+            --reporter=default --reporter=json \
+            --outputFile.json=artifacts/main-full-suite/integration.json
+
+      - name: Upload the integration report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: main-full-suite-integration
+          path: artifacts/main-full-suite/integration.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+  property:
+    name: Property suite (standard tier)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-monorepo
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+          build-libs: 'true'
+
+      - name: Run property tests
+        env:
+          FC_TIER: standard
+        run: |
+          mkdir -p artifacts/main-full-suite
+          pnpm exec vitest run --project property \
+            --reporter=default --reporter=json \
+            --outputFile.json=artifacts/main-full-suite/property.json
+
+      - name: Upload the property report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: main-full-suite-property
+          path: artifacts/main-full-suite/property.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+  build:
+    name: Full build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/setup-monorepo
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          pnpm-version: ${{ env.PNPM_VERSION }}
+
+      # The module-load guards need these to be set at build time, not real: the keys are
+      # random per run, and every URL points at a reserved, unresolvable name.
+      - name: Build
+        env:
+          NODE_ENV: production
+          DATABASE_URL: ${{ format('postgresql://{0}:{0}@localhost:5432/stub', 'stub') }}
+          DIRECT_URL: ${{ format('postgresql://{0}:{0}@localhost:5432/stub', 'stub') }}
+          SUPABASE_URL: https://supabase.example.invalid
+          NEXT_PUBLIC_SUPABASE_URL: https://supabase.example.invalid
+          SUPABASE_ANON_KEY: ci-build-stub-not-used-at-runtime
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-stub-not-used-at-runtime
+          SUPABASE_SERVICE_ROLE_KEY: ci-build-stub-not-used-at-runtime
+        run: |
+          PRISMA_FIELD_ENCRYPTION_KEY="$(openssl rand -base64 32)"
+          AI_AUDIT_SIGNING_KEY="$(openssl rand -hex 32)"
+          echo "::add-mask::$PRISMA_FIELD_ENCRYPTION_KEY"
+          echo "::add-mask::$AI_AUDIT_SIGNING_KEY"
+          export PRISMA_FIELD_ENCRYPTION_KEY AI_AUDIT_SIGNING_KEY
+          pnpm run build
+
+  report:
+    name: Report a red main
+    needs: [unit, integration, property, build]
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+
+      # Whatever the jobs managed to write. A missing report is listed as missing.
+      - name: Download the reports
+        continue-on-error: true
+        uses: actions/download-artifact@v8
+        with:
+          pattern: '{merged-coverage,main-full-suite-*}'
+          path: reports
+          digest-mismatch: warn
+
+      - name: Write the report
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          UNIT: ${{ needs.unit.result }}
+          INTEGRATION: ${{ needs.integration.result }}
+          PROPERTY: ${{ needs.property.result }}
+          BUILD: ${{ needs.build.result }}
+        run: |
+          set -uo pipefail
+          # The batch: from the last green run of this workflow on main to this commit.
+          from=$(gh run list --workflow main-full-suite.yml --branch main --status success \
+            --limit 1 --json headSha --jq '.[0].headSha // empty' || true)
+          jobs=$(printf '{"unit":"%s","integration":"%s","property":"%s","build":"%s"}' \
+            "$UNIT" "$INTEGRATION" "$PROPERTY" "$BUILD")
+          node scripts/ci/main-red-report.mjs \
+            --from "$from" --to "$GITHUB_SHA" --run-url "$RUN_URL" --jobs "$jobs" \
+            --out main-red.md \
+            reports/merged-coverage/reports/junit.xml \
+            reports/main-full-suite-integration/integration.json \
+            reports/main-full-suite-property/property.json
+
+      - name: Open or update the main-red issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          gh label create main-red --color B60205 \
+            --description 'main-full-suite failed on main' 2>/dev/null || true
+          number=$(gh issue list --state open --label main-red --limit 1 --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --body-file main-red.md
+          else
+            gh issue create --title 'main is red (main-full-suite)' --label main-red --body-file main-red.md
+          fi
