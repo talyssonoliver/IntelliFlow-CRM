@@ -56,7 +56,6 @@ function makeTransports() {
         'openid',
         'https://www.googleapis.com/auth/userinfo.email',
         'https://www.googleapis.com/auth/gmail.send',
-        'https://www.googleapis.com/auth/gmail.readonly',
       ],
     })),
     accountAddress: vi.fn(async () => 'me@gmail.example'),
@@ -577,7 +576,7 @@ describe('emailMailbox OAuth connect', () => {
     expect(t.oauthClient.exchangeCode).not.toHaveBeenCalled();
   });
 
-  it('refuses (and revokes) a grant missing the send or read permission', async () => {
+  it('refuses (and revokes) a grant missing the send permission', async () => {
     (prismaMock.emailOAuthState.findFirst as any).mockResolvedValue({
       id: 'st1',
       scope: 'USER',
@@ -589,7 +588,8 @@ describe('emailMailbox OAuth connect', () => {
       accessToken: 'at',
       refreshToken: secret,
       expiresAt: new Date(Date.UTC(2030, 0, 1)),
-      scopes: ['openid', 'https://www.googleapis.com/auth/gmail.send'],
+      // Gmail needs gmail.send only now (owner decision 14/11); without it nothing can be sent.
+      scopes: ['openid', 'email'],
     });
     await expect(
       member().oauthComplete({ provider: 'GMAIL', code: 'c'.repeat(20), state: 's'.repeat(43) })

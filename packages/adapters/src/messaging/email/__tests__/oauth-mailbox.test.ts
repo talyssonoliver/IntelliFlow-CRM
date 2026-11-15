@@ -64,13 +64,13 @@ describe.each([
 });
 
 describe('scopes', () => {
-  it('asks Google only for send + read (bounce scan) + identity', () => {
+  it('asks Google only for send + identity: never a Gmail read scope (owner decision 14/11)', () => {
     expect(GMAIL_MAILBOX_SCOPES).toEqual([
       'openid',
       'email',
       'https://www.googleapis.com/auth/gmail.send',
-      'https://www.googleapis.com/auth/gmail.readonly',
     ]);
+    expect(GMAIL_MAILBOX_SCOPES.join(' ')).not.toMatch(/gmail\.(readonly|modify|metadata)/);
   });
   it('asks Microsoft only for send + read (bounce scan) + identity + refresh', () => {
     expect(MICROSOFT_MAILBOX_SCOPES).toEqual([
@@ -270,12 +270,12 @@ describe('sendRaw', () => {
 
 describe('listDsnSince', () => {
   const since = new Date(Date.UTC(2026, 9, 19));
-  const gmailRaw = (id: string, hour: number) =>
-    respond(200, {
-      id,
-      internalDate: String(Date.UTC(2026, 9, 19, hour)),
-      raw: Buffer.from(`R-${id}`).toString('base64url'),
-    });
+  it('Gmail: reads nothing at all (the mailbox is send-only) and moves no cursor', async () => {
+    const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50);
+    expect(result).toEqual({ messages: [], resumeFrom: null });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   const graphMessage = (id: string, hour: number, bounce: boolean) => ({
     id,
     subject: bounce ? 'Undeliverable: Hello' : 'Lunch?',
@@ -283,108 +283,6 @@ describe('listDsnSince', () => {
       emailAddress: { address: bounce ? 'postmaster@contoso.example' : 'friend@contoso.example' },
     },
     receivedDateTime: new Date(Date.UTC(2026, 9, 19, hour)).toISOString(),
-  });
-
-  it('Gmail: searches bounce senders after the cursor and reads them oldest first', async () => {
-    fetchMock
-      // Gmail lists newest first.
-      .mockReturnValueOnce(respond(200, { messages: [{ id: 'm2' }, { id: 'm1' }] }))
-      .mockReturnValueOnce(gmailRaw('m1', 1))
-      .mockReturnValueOnce(gmailRaw('m2', 2));
-    const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50);
-    expect(result).toEqual({
-      messages: [
-        { key: 'm1', raw: 'R-m1', receivedAt: new Date(Date.UTC(2026, 9, 19, 1)) },
-        { key: 'm2', raw: 'R-m2', receivedAt: new Date(Date.UTC(2026, 9, 19, 2)) },
-      ],
-      resumeFrom: null,
-    });
-    const listUrl = new URL(calls()[0]![0]);
-    expect(listUrl.searchParams.get('q')).toBe(
-      `from:(mailer-daemon OR postmaster) after:${Math.floor(since.getTime() / 1000)}`
-    );
-    expect(listUrl.searchParams.get('maxResults')).toBe('100');
-    expect(new URL(calls()[1]![0]).searchParams.get('format')).toBe('raw');
-  });
-
-  it('Gmail: pages through the ids and resumes at the first report it did not take when over the limit', async () => {
-    fetchMock
-      .mockReturnValueOnce(
-        respond(200, { messages: [{ id: 'm3' }, { id: 'm2' }], nextPageToken: 'p2' })
-      )
-      .mockReturnValueOnce(respond(200, { messages: [{ id: 'm1' }] }))
-      .mockReturnValueOnce(gmailRaw('m1', 1))
-      .mockReturnValueOnce(gmailRaw('m2', 2))
-      .mockReturnValueOnce(gmailRaw('m3', 3));
-    const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 2);
-    expect(new URL(calls()[1]![0]).searchParams.get('pageToken')).toBe('p2');
-    expect(result.messages.map((m) => m.key)).toEqual(['m1', 'm2']);
-    expect(result.resumeFrom).toEqual(new Date(Date.UTC(2026, 9, 19, 3)));
-  });
-
-  it('Gmail: never splits reports received in the same second, so a full batch of them cannot repeat forever', async () => {
-    const at = (id: string, ms: number) =>
-      respond(200, {
-        id,
-        internalDate: String(ms),
-        raw: Buffer.from(`R-${id}`).toString('base64url'),
-      });
-    const second = Date.UTC(2026, 9, 19, 10);
-    const times: Record<string, number> = {
-      s0: second + 100,
-      s1: second + 500,
-      s2: second + 900,
-      later: second + 1000,
-    };
-    fetchMock.mockImplementation((url: string) => {
-      const id = /messages\/([^?]+)\?format=raw/.exec(url)?.[1];
-      if (id) return at(id, times[id]!);
-      // Newest first.
-      return respond(200, {
-        messages: [{ id: 'later' }, { id: 's2' }, { id: 's1' }, { id: 's0' }],
-      });
-    });
-    const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 2);
-    expect(result.messages.map((m) => m.key)).toEqual(['s0', 's1', 's2']);
-    // Resumes at the first second it did not finish (Gmail's after: is by the second).
-    expect(result.resumeFrom).toEqual(new Date(second + 1000));
-  });
-
-  it('Gmail: past the page cap, narrows the window so the oldest reports are read and none is skipped', async () => {
-    // 2 days after the cursor; the first narrowed window ends 1 day after it.
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date(since.getTime() + 2 * 86_400_000));
-    try {
-      const windowEnd = Math.floor((since.getTime() + 86_400_000) / 1000);
-      fetchMock.mockImplementation((url: string) => {
-        const q = new URL(url).searchParams.get('q') ?? '';
-        if (url.includes('format=raw')) return gmailRaw('old', 1);
-        // The whole interval never ends within the page cap; the narrowed window does.
-        return q.includes('before:')
-          ? respond(200, { messages: [{ id: 'old' }] })
-          : respond(200, { messages: [{ id: 'new' }], nextPageToken: 'more' });
-      });
-      const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50);
-      const narrowed = calls().find(([url]) => url.includes('before%3A'));
-      expect(new URL(narrowed![0]).searchParams.get('q')).toBe(
-        `from:(mailer-daemon OR postmaster) after:${Math.floor(since.getTime() / 1000)} before:${windowEnd}`
-      );
-      expect(result.messages.map((m) => m.key)).toEqual(['old']);
-      // Resumes just inside the window's end: everything before it was read.
-      expect(result.resumeFrom).toEqual(new Date((windowEnd - 1) * 1000));
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
-  it('Gmail: never moves past the cursor when even the narrowest window passes the page cap', async () => {
-    fetchMock.mockImplementation((url: string) =>
-      url.includes('format=raw')
-        ? gmailRaw('new', 1)
-        : respond(200, { messages: [{ id: 'new' }], nextPageToken: 'more' })
-    );
-    const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50);
-    expect(result.resumeFrom).toEqual(since);
   });
 
   it('Microsoft: filters by receivedDateTime, keeps bounce-looking messages and fetches their MIME', async () => {
@@ -519,58 +417,6 @@ describe('listDsnSince', () => {
         50
       );
       expect(result.messages.map((m) => m.raw.length)).toEqual([limit]);
-    });
-
-    it('Gmail: skips a report whose decoded MIME is over the limit and keeps the next one', async () => {
-      fetchMock
-        .mockReturnValueOnce(respond(200, { messages: [{ id: 'ok' }, { id: 'big' }] }))
-        .mockReturnValueOnce(
-          respond(200, {
-            id: 'big',
-            internalDate: String(Date.UTC(2026, 9, 19, 1)),
-            raw: Buffer.alloc(limit + 1, 0x41).toString('base64url'),
-          })
-        )
-        .mockReturnValueOnce(gmailRaw('ok', 2));
-      const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50);
-      expect(result).toEqual({
-        messages: [{ key: 'ok', raw: 'R-ok', receivedAt: new Date(Date.UTC(2026, 9, 19, 2)) }],
-        resumeFrom: null,
-      });
-    });
-
-    it('Gmail: stops reading a huge response before decoding any of it', async () => {
-      const big = streamed(50 * 1024 * 1024);
-      fetchMock
-        .mockReturnValueOnce(respond(200, { messages: [{ id: 'big' }] }))
-        .mockReturnValueOnce(big.response);
-      const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50);
-      expect(result).toEqual({ messages: [], resumeFrom: null });
-      expect(big.state.cancelled).toBe(true);
-      expect(big.state.pulled).toBeLessThan(2 * limit);
-    });
-
-    it('Gmail: keeps a report of exactly the limit', async () => {
-      fetchMock
-        .mockReturnValueOnce(respond(200, { messages: [{ id: 'edge' }] }))
-        .mockReturnValueOnce(
-          respond(200, {
-            id: 'edge',
-            internalDate: String(Date.UTC(2026, 9, 19, 1)),
-            raw: Buffer.alloc(limit, 0x41).toString('base64url'),
-          })
-        );
-      const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50);
-      expect(result.messages.map((m) => m.raw.length)).toEqual([limit]);
-    });
-
-    it('Gmail: a message whose JSON cannot be read is a refusal, not a crash', async () => {
-      fetchMock
-        .mockReturnValueOnce(respond(200, { messages: [{ id: 'bad' }] }))
-        .mockReturnValueOnce(respond(200, '{not json'));
-      await expect(
-        new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50)
-      ).rejects.toMatchObject({ code: 'REJECTED' });
     });
 
     it('a body that breaks off mid-stream is a connection failure', async () => {

@@ -4,9 +4,9 @@
  *
  * The first production use of OAuth mail in IntelliFlow (the legacy
  * GmailAdapter / OutlookAdapter only run health checks). Kept separate from
- * those adapters on purpose: it asks for explicit minimal scopes (send + read
- * for the bounce scan + identity, never the legacy modify/labels/ReadWrite
- * defaults), uses S256 PKCE, talks only to fixed provider hosts, sends the
+ * those adapters on purpose: it asks for explicit minimal scopes (send + identity, plus read
+ * for Microsoft's bounce scan and inbox sync; Gmail is send-only), never the legacy
+ * modify/labels/ReadWrite defaults, uses S256 PKCE, talks only to fixed provider hosts, sends the
  * one MIME message built by `buildMime`, revokes with the token in the body,
  * and reduces every failure to a MailboxTransportError code — provider error
  * text and tokens are never carried.
@@ -24,7 +24,6 @@ export const GMAIL_MAILBOX_SCOPES = [
   'openid',
   'email',
   'https://www.googleapis.com/auth/gmail.send',
-  'https://www.googleapis.com/auth/gmail.readonly',
 ] as const;
 
 export const MICROSOFT_MAILBOX_SCOPES = [
@@ -87,12 +86,8 @@ export interface DsnListing {
 /** Provider list pages read per scan; the rest is picked up by the next scan via `resumeFrom`. */
 const MAX_LIST_PAGES = 20;
 const LIST_PAGE_SIZE = 100;
-/** Times a Gmail window past the page cap is halved before the scan gives up moving on. */
-const MAX_GMAIL_WINDOW_SPLITS = 8;
 /** Largest bounce report read; bigger ones are skipped unread, as the IMAP reader does. */
 const MAX_REPORT_BYTES = EMAIL_LIMITS.bounceScanMaxMessageBytes;
-/** Gmail's JSON for a report at the limit: the base64url MIME plus the other fields. */
-const MAX_GMAIL_RAW_RESPONSE_BYTES = Math.ceil(MAX_REPORT_BYTES / 3) * 4 + 16 * 1024;
 
 interface TokenResponse {
   access_token?: string;
@@ -312,47 +307,10 @@ export class OAuthMailboxClient {
 
   /** Bounce-report candidates received since `since`, oldest first (the parser decides what is one). */
   async listDsnSince(accessToken: string, since: Date, limit: number): Promise<DsnListing> {
+    // Gmail mailboxes hold gmail.send only (owner decision 14/11): nothing is read from Gmail.
+    if (this.provider === 'GMAIL') return { messages: [], resumeFrom: null };
     const headers = { Authorization: `Bearer ${accessToken}` };
-    return this.provider === 'GMAIL'
-      ? this.listGmailDsns(headers, since, limit)
-      : this.listGraphDsns(headers, since, limit);
-  }
-
-  /**
-   * Gmail searches bounce senders server-side but lists newest first, so the
-   * ids are paged in full (they are cheap) and read oldest first. When the ids
-   * since the cursor pass the page cap the oldest are out of reach, so the
-   * window is halved until it fits; the next scan resumes where it ended.
-   */
-  private async listGmailDsns(
-    headers: Record<string, string>,
-    since: Date,
-    limit: number
-  ): Promise<DsnListing> {
-    let windowEnd: number | null = null;
-    let listing = await listGmailIds(headers, since, windowEnd);
-    for (let split = 0; listing.capped && split < MAX_GMAIL_WINDOW_SPLITS; split++) {
-      const end: number = windowEnd ?? Math.floor(Date.now() / 1000);
-      windowEnd = Math.floor((Math.floor(since.getTime() / 1000) + end) / 2);
-      listing = await listGmailIds(headers, since, windowEnd);
-    }
-
-    const out: RawDsnMessage[] = [];
-    let resumeAt: Date | null = null;
-    for (const id of listing.ids.reverse()) {
-      const message = await readGmailRaw(headers, id);
-      if (!message) continue;
-      // Past the limit, stop only at a new second: `after:` is by the second,
-      // so a cut inside one would list the same batch again next time.
-      const last = out.at(-1);
-      if (out.length >= limit && last && epochSecond(message) !== epochSecond(last)) {
-        resumeAt = new Date(epochSecond(message) * 1000);
-        break;
-      }
-      out.push(message);
-    }
-    const resumeFrom = gmailResumeFrom({ capped: listing.capped, resumeAt, since, windowEnd });
-    return { messages: out, resumeFrom };
+    return this.listGraphDsns(headers, since, limit);
   }
 
   /**
@@ -381,77 +339,6 @@ export class OAuthMailboxClient {
     const resumeFrom = scan.resumeAt ?? scan.lastSeen ?? since;
     return { messages: out, resumeFrom: scan.truncated ? resumeFrom : null };
   }
-}
-
-/**
- * Where a Gmail scan resumes, never past an unread report: still capped, the
- * oldest are unknown (stay); over the limit, after the last one read; a
- * narrowed window read in full, just inside its end (`before:` is by the second).
- */
-function gmailResumeFrom(scan: {
-  capped: boolean;
-  resumeAt: Date | null;
-  since: Date;
-  windowEnd: number | null;
-}): Date | null {
-  if (scan.capped) return scan.since;
-  if (scan.resumeAt) return scan.resumeAt;
-  return scan.windowEnd === null ? null : new Date((scan.windowEnd - 1) * 1000);
-}
-
-function epochSecond(message: RawDsnMessage): number {
-  return Math.floor(message.receivedAt.getTime() / 1000);
-}
-
-/** One Gmail message as raw MIME, or null when it has none or it is oversized (skipped). */
-async function readGmailRaw(
-  headers: Record<string, string>,
-  id: string
-): Promise<RawDsnMessage | null> {
-  const response = await call(`${GMAIL_API}/messages/${encodeURIComponent(id)}?format=raw`, {
-    headers,
-  });
-  if (!response.ok) throw httpError(response.status);
-  const text = await boundedText(response, MAX_GMAIL_RAW_RESPONSE_BYTES);
-  if (text === null) return null;
-  let data: { id: string; raw?: string; internalDate?: string };
-  try {
-    data = JSON.parse(text) as typeof data;
-  } catch {
-    throw new MailboxTransportError('REJECTED');
-  }
-  if (!data.raw) return null;
-  const raw = Buffer.from(data.raw, 'base64url');
-  if (raw.byteLength > MAX_REPORT_BYTES) return null;
-  return {
-    key: data.id,
-    raw: raw.toString('utf8'),
-    receivedAt: new Date(Number(data.internalDate ?? 0)),
-  };
-}
-
-/** Bounce-sender message ids since `since` (and before `windowEnd`, epoch seconds), newest first. */
-async function listGmailIds(
-  headers: Record<string, string>,
-  since: Date,
-  windowEnd: number | null
-): Promise<{ ids: string[]; capped: boolean }> {
-  let q = `from:(mailer-daemon OR postmaster) after:${Math.floor(since.getTime() / 1000)}`;
-  if (windowEnd !== null) q += ` before:${windowEnd}`;
-  const ids: string[] = [];
-  let pageToken: string | undefined;
-  let pages = 0;
-  do {
-    const params = new URLSearchParams({ q, maxResults: String(LIST_PAGE_SIZE) });
-    if (pageToken) params.set('pageToken', pageToken);
-    const list = await call(`${GMAIL_API}/messages?${params.toString()}`, { headers });
-    if (!list.ok) throw httpError(list.status);
-    const page = await json<{ messages?: Array<{ id: string }>; nextPageToken?: string }>(list);
-    ids.push(...(page.messages ?? []).map((m) => m.id));
-    pageToken = page.nextPageToken;
-    pages += 1;
-  } while (pageToken && pages < MAX_LIST_PAGES);
-  return { ids, capped: pageToken !== undefined };
 }
 
 interface GraphScan {
