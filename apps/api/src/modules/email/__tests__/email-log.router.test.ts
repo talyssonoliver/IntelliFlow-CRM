@@ -102,7 +102,7 @@ describe('emailLog.logToContact (#1177)', () => {
         userName: 'Logged from email',
         leadId: 'lead-ada',
         tenantId,
-        metadata: { emailRecordId: EMAIL_ID, source: 'log-to-contact' },
+        metadata: { emailRecordId: EMAIL_ID, source: 'log-to-contact', loggedBy: TEST_UUIDS.user1 },
       },
       select: { id: true },
     });
@@ -143,6 +143,18 @@ describe('emailLog.logToContact (#1177)', () => {
     });
     expect(prismaMock.emailRecord.update).not.toHaveBeenCalled();
     expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['a failed send', { status: 'FAILED', sentAt: null }],
+    ['a send not gone out yet', { status: 'PENDING', sentAt: null }],
+  ])('never logs %s, which reached nobody', async (_label, fields) => {
+    (prismaMock.emailRecord.findFirst as any).mockResolvedValue(stored(fields));
+
+    await expect(member().logToContact({ emailId: EMAIL_ID })).rejects.toMatchObject({
+      code: 'PRECONDITION_FAILED',
+    });
+    expect(prismaMock.emailRecord.update).not.toHaveBeenCalled();
   });
 
   it('never links a person with an active processing restriction', async () => {
@@ -195,6 +207,21 @@ describe('emailLog.logToContact (#1177)', () => {
     await expect(admin().logToContact({ emailId: EMAIL_ID })).resolves.toMatchObject({
       logged: true,
     });
+  });
+
+  it("credits a lead activity to the email's own user when an admin logs it, and notes who did", async () => {
+    (prismaMock.emailRecord.findFirst as any).mockResolvedValue(
+      stored({ userId: TEST_UUIDS.user2 })
+    );
+    (prismaMock.contact.findFirst as any).mockResolvedValue(null);
+    (prismaMock.lead.findFirst as any).mockResolvedValue({ id: 'lead-ada' });
+
+    await admin().logToContact({ emailId: EMAIL_ID });
+
+    const data = (prismaMock.leadActivity.create as any).mock.calls[0][0].data;
+    expect(data.userId).toBe(TEST_UUIDS.user2);
+    expect(data.metadata.loggedBy).toEqual(expect.any(String));
+    expect(data.metadata.loggedBy).not.toBe(TEST_UUIDS.user2);
   });
 
   it("finds nothing for another tenant's email", async () => {

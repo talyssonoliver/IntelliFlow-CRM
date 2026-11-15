@@ -98,8 +98,12 @@ const OUTBOUND_STATUSES = new Set(['PENDING', 'SENT', 'FAILED', 'BOUNCED', 'OPEN
  * there its sender IS the counterparty. A delivered email is the user's own only when it has a
  * user and was not synced from an inbox; received inbound mail has no user.
  */
-function isDraft(email: Pick<StoredEmail, 'metadata'>): boolean {
-  return (email.metadata as { isDraft?: unknown } | null)?.isDraft === true;
+/** Outbound statuses of mail that has not gone out (and may never). */
+const NOT_SENT_STATUSES: ReadonlySet<string> = new Set(['PENDING', 'FAILED']);
+
+function neverSent(email: Pick<StoredEmail, 'status' | 'userId' | 'metadata'>): boolean {
+  if ((email.metadata as { isDraft?: unknown } | null)?.isDraft === true) return true;
+  return isOutbound(email) && NOT_SENT_STATUSES.has(email.status);
 }
 
 export function isOutbound(email: Pick<StoredEmail, 'status' | 'userId' | 'metadata'>): boolean {
@@ -155,8 +159,9 @@ export const emailLogRouter = createTRPCRouter({
       const c = ctx as unknown as EmailRouterCtx;
       const email = await loadEmail(c, input.emailId);
       if (linkOf(email).logged) return linkOf(email);
-      // A draft was never sent: it must not appear on a timeline as an email.
-      if (isDraft(email)) {
+      // A draft, a failed send or one not sent yet never reached anyone: it must not appear on a
+      // timeline as an email.
+      if (neverSent(email)) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
           message: 'Send the email before logging it.',
@@ -216,11 +221,12 @@ async function linkParty(
         type: 'EMAIL',
         title: email.subject.slice(0, 200) || '(No subject)',
         timestamp: email.sentAt ?? email.createdAt,
-        userId: c.tenant.userId,
+        // The person whose email it is (an admin may log a member's email for them).
+        userId: email.userId ?? c.tenant.userId,
         userName: 'Logged from email',
         leadId,
         tenantId,
-        metadata: { emailRecordId: email.id, source: 'log-to-contact' },
+        metadata: { emailRecordId: email.id, source: 'log-to-contact', loggedBy: c.tenant.userId },
       },
       select: { id: true },
     });
