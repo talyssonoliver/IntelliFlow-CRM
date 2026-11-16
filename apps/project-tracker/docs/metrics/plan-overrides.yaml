@@ -688,6 +688,8 @@ IFC-022:
   notes: 'AI lead scoring implementation.'
 
 IFC-033:
+  override_deps_remove:
+    - IFC-030
   tier: A
   gate_profile:
     - build
@@ -869,6 +871,8 @@ IFC-099:
   notes: 'Embeddings and vector search.'
 
 IFC-127:
+  override_deps_remove:
+    - IFC-072
   tier: A
   gate_profile:
     - build
@@ -951,6 +955,7 @@ IFC-151:
 IFC-153:
   override_deps_remove:
     - IFC-151 # Re-planned to Sprint 18 (owner ruling "Fix the 15 tasks", #795); done work must not depend on a not-yet-redone task
+    - IFC-144
   tier: A
   gate_profile:
     - build
@@ -1185,6 +1190,8 @@ PG-016:
   notes: 'Main dashboard page.'
 
 PG-025:
+  override_deps_remove:
+    - IFC-099
   tier: A
   gate_profile:
     - build
@@ -1486,6 +1493,8 @@ AI-SETUP-003:
   notes: 'External tool integration. Waiver extended 2026-03-09: Codex/Jules remain config scaffolding with stub test suites, fabricated sandbox-security.json, and zero runtime integration. Debt unresolved.'
 
 ENV-001-AI:
+  override_deps_remove:
+    - AI-SETUP-001
   tier: A
   gate_profile:
     - build
@@ -1838,6 +1847,8 @@ ENV-018-AI:
 AUTOMATION-001:
   override_deps_remove:
     - ENV-008-AI # Re-planned to Sprint 18 (owner ruling "Fix the 15 tasks", #795); done work must not depend on a not-yet-redone task
+    - AI-SETUP-001
+    - AI-SETUP-002
   tier: B
   gate_profile:
     - build
@@ -2157,6 +2168,8 @@ IFC-182:
 # Section: Core CRM | Owner: CRM FE+BE
 # Validation: VALIDATE:pnpm test;GATE:lighthouse-gte-90
 PG-129:
+  override_deps_remove:
+    - IFC-182
   tier: A
   gate_profile:
     - build
@@ -2217,6 +2230,8 @@ IFC-197:
 # Section: Billing | Owner: Backend Dev + FinOps
 # Validation: VALIDATE:pnpm test;AUDIT:design-review;GATE:billing-invariants-pass
 IFC-198:
+  override_deps_remove:
+    - IFC-099
   tier: A
   gate_profile:
     - build
@@ -3758,3 +3773,87 @@ IFC-142:
     - unit
   override_deps_remove:
     - ENV-008-AI
+# 16/11/2026: IFC-144 (DKIM signer) and IFC-099 (ERP sync) are reopened as partly met. Compose on the
+# lead and contact pages sends through the connected mailbox (mailbox-transport.ts), which signs its
+# own mail, and needs no ERP sync, so PG-084 (and MVP-001 behind it) does not wait on either.
+PG-084:
+  override_deps_remove:
+    - IFC-144
+    - IFC-099
+# 16/11/2026 reopen: these finished tasks shipped against the part of a dependency that exists. The
+# dependency was reopened only for its unmet DoD line (ops/reviews/self-claimed-*-1116.md), so they
+# no longer wait on it.
+IFC-010:
+  override_deps_remove:
+    - IFC-112
+IFC-032:
+  override_deps_remove:
+    - IFC-030
+IFC-073:
+  override_deps_remove:
+    - IFC-072
+PG-010:
+  override_deps_remove:
+    - PG-009
+PG-017:
+  override_deps_remove:
+    - PG-016
+PG-023:
+  override_deps_remove:
+    - PG-016
+PG-047:
+  override_deps_remove:
+    - PG-046
+PG-048:
+  override_deps_remove:
+    - PG-046
+IFC-121:
+  override_deps_remove:
+    - IFC-113
+IFC-158:
+  override_deps_remove:
+    - IFC-138
+    - IFC-157
+IFC-159:
+  override_deps_remove:
+    - IFC-144
+TRACK-005:
+  override_deps_remove:
+    - EXC-SEC-001
+IFC-173:
+  override_deps_remove:
+    - IFC-144
+IFC-183:
+  override_deps_remove:
+    - IFC-157
+PG-132:
+  override_deps_remove:
+    - IFC-030
+PG-141:
+  override_deps_remove:
+    - IFC-144
+IFC-191:
+  override_deps_remove:
+    - IFC-182
+IFC-192:
+  override_deps_remove:
+    - IFC-182
+IFC-194:
+  override_deps_remove:
+    - IFC-182
+IFC-195:
+  override_deps_remove:
+    - IFC-182
+IFC-196:
+  override_deps_remove:
+    - IFC-182
+    - IFC-075
+PG-174:
+  override_deps_remove:
+    - IFC-157
+IFC-213:
+  override_deps_remove:
+    - IFC-099
+IFC-223:
+  override_deps_remove:
+    - IFC-157
