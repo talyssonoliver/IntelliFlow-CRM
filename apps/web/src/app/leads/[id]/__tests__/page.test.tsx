@@ -314,8 +314,15 @@ vi.mock('@intelliflow/ui', () => ({
   ),
 }));
 
+// Records the More sheet's extra actions so tests can check what lives under More.
+const mockActionSheetActions: { current: Array<{ label: string; onClick: () => void }> } = {
+  current: [],
+};
 vi.mock('@/components/shared/entity-action-sheet', () => ({
-  EntityActionSheet: () => null,
+  EntityActionSheet: (props: { extraActions?: Array<{ label: string; onClick: () => void }> }) => {
+    mockActionSheetActions.current = props.extraActions ?? [];
+    return null;
+  },
 }));
 
 vi.mock('@/components/shared/entity-hover-card', () => ({
@@ -1236,10 +1243,38 @@ describe('LeadDetailPage - display name fallback (UI-016)', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('John Doe');
   });
 
+  describe('phone header (MVP-003)', () => {
+    it('shows the name once on a phone: the page title is for screen readers only there', () => {
+      render(<Lead360Page />);
+      const title = screen.getByRole('heading', { level: 1 });
+      expect(title).toHaveTextContent('John Doe');
+      expect(title).toHaveClass('sr-only', 'sm:not-sr-only');
+    });
+
+    it('labels the actions "Convert to deal" and "Log call"', () => {
+      render(<Lead360Page />);
+      expect(screen.getByRole('button', { name: 'Convert to deal' })).toHaveTextContent(
+        'Convert to deal'
+      );
+      expect(
+        screen.getAllByRole('button', { name: /^call Log call$|^Log call$/ }).length
+      ).toBeGreaterThan(0);
+    });
+
+    it('moves Edit and Pin under More on a phone', () => {
+      render(<Lead360Page />);
+      expect(screen.getByRole('button', { name: 'Edit lead' })).toHaveClass('hidden', 'sm:flex');
+      const edit = mockActionSheetActions.current.find((a) => a.label === 'Edit');
+      expect(edit).toBeDefined();
+      edit?.onClick();
+      expect(mockPush).toHaveBeenCalledWith(expect.stringMatching(/^\/leads\/.+\/edit$/));
+    });
+  });
+
   it('gives the icon-only header actions accessible names', () => {
     render(<Lead360Page />);
     expect(screen.getByRole('button', { name: 'Edit lead' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Convert lead' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Convert to deal' })).toBeInTheDocument();
   });
 });
 
