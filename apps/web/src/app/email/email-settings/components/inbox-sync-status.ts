@@ -1,10 +1,10 @@
 /**
- * The line under a connected Microsoft mailbox about the Outlook two-way sync (#1177): what is
- * logged, and when the last round finished.
+ * The line under a connected mailbox whose replies are logged (#1177 Outlook, MVP-001 Zoho Mail):
+ * what is logged, and when the last round finished.
  */
 
 export const INBOX_SYNC_SCOPE_NOTE =
-  'Mail with your leads and contacts, received or sent from Outlook, is logged here.';
+  'Mail with your leads and contacts, received or sent from this mailbox, is logged here.';
 
 /** "Last synced …" in the reader's own locale, or the waiting note before the first round. */
 export function inboxSyncLine(syncedAt: string | null | undefined, locale?: string): string {

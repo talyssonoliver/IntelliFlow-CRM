@@ -185,11 +185,11 @@ describe('MyMailboxCard', () => {
     expect(screen.getByText('Connected')).toBeInTheDocument();
     expect(screen.getByText('me@mail.example.invalid')).toBeInTheDocument();
     expect(screen.getByText('SMTP · smtp.mail.example.invalid')).toBeInTheDocument();
-    // The Outlook two-way sync line is for Microsoft mailboxes only (#1177).
+    // The sync line is only for mailboxes whose replies are logged (#1177, MVP-001).
     expect(screen.queryByTestId('inbox-sync-status')).not.toBeInTheDocument();
   });
 
-  it('tells a connected Microsoft mailbox what the Outlook sync logs and when it last ran', () => {
+  it('tells a connected mailbox whose replies are logged what the sync logs and when it last ran', () => {
     renderCard({
       mailbox: mailbox({
         kind: 'MICROSOFT',
@@ -197,11 +197,43 @@ describe('MyMailboxCard', () => {
         accountAddress: 'me@outlook.example.invalid',
         fromAddress: 'me@outlook.example.invalid',
         inboxSyncedAt: null,
+        replySync: 'ON',
       }),
     });
     expect(screen.getByTestId('inbox-sync-status')).toHaveTextContent(
-      'Mail with your leads and contacts, received or sent from Outlook, is logged here. Waiting for the first sync.'
+      'Mail with your leads and contacts, received or sent from this mailbox, is logged here. Waiting for the first sync.'
     );
+    expect(screen.queryByTestId('reply-sync-reconnect')).not.toBeInTheDocument();
+  });
+
+  it('offers to reconnect a Zoho mailbox connected before replies could be read (MVP-001)', async () => {
+    api.oauthStart.mutateAsync.mockResolvedValue({
+      url: 'https://accounts.zoho.example.invalid/oauth/v2/auth?state=r1',
+    });
+    renderCard({
+      mailbox: mailbox({ kind: 'ZOHO', smtpHost: null, replySync: 'NEEDS_RECONNECT' }),
+      providersAvailable: { GMAIL: true, MICROSOFT: true, ZOHO: true },
+    });
+    expect(screen.getByTestId('reply-sync-reconnect')).toHaveTextContent(
+      'Replies from leads and contacts are not logged yet'
+    );
+    expect(screen.queryByTestId('inbox-sync-status')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Reconnect to log replies' }));
+    await waitFor(() =>
+      expect(api.oauthStart.mutateAsync).toHaveBeenCalledWith({ provider: 'ZOHO', scope: 'USER' })
+    );
+  });
+
+  it('shows no reconnect button when that provider is not configured here', () => {
+    renderCard({
+      mailbox: mailbox({ kind: 'ZOHO', smtpHost: null, replySync: 'NEEDS_RECONNECT' }),
+      providersAvailable: { GMAIL: true, MICROSOFT: true, ZOHO: false },
+    });
+    expect(screen.getByTestId('reply-sync-reconnect')).toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Reconnect to log replies' })
+    ).not.toBeInTheDocument();
   });
 
   it('hides the sync line while a Microsoft mailbox needs attention', () => {

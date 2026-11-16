@@ -183,10 +183,29 @@ export function MailboxConnection({
           {mailboxErrorMessage(mailbox.lastErrorCode)}
         </p>
       )}
-      {connected && !broken && mailbox?.kind === 'MICROSOFT' && (
+      {connected && !broken && mailbox?.replySync === 'ON' && (
         <p className="text-xs text-muted-foreground" data-testid="inbox-sync-status">
           {inboxSyncLine(mailbox.inboxSyncedAt)}
         </p>
+      )}
+      {connected && !broken && mailbox?.replySync === 'NEEDS_RECONNECT' && (
+        <div className="flex flex-wrap items-center gap-2" data-testid="reply-sync-reconnect">
+          <p className="text-xs text-muted-foreground">
+            Replies from leads and contacts are not logged yet: this mailbox was connected before
+            Aurora could read it.
+          </p>
+          {providersAvailable[mailbox.kind as Provider] && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={oauthStart.isPending}
+              onClick={() => void startOAuth(mailbox.kind as Provider)}
+            >
+              Reconnect to log replies
+            </Button>
+          )}
+        </div>
       )}
 
       {!connected && !editing && <SendFromHint scope={scope} onProvider={setPreferred} />}
