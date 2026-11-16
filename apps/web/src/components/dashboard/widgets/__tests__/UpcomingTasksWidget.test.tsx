@@ -51,4 +51,13 @@ describe('UpcomingTasksWidget', () => {
     expect(screen.getByText('Upcoming Tasks')).toBeInTheDocument();
     expect(screen.getByText('View All')).toHaveAttribute('href', '/tasks');
   });
+
+  it('offers one create-task action when there are no tasks', () => {
+    render(<UpcomingTasksWidget />);
+
+    // The empty state shows no button of its own; the card's "+ Add New Task" is the only one.
+    const buttons = screen.getAllByRole('button');
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0]).toHaveTextContent('+ Add New Task');
+  });
 });

@@ -81,6 +81,7 @@ vi.mock('@/lib/api', () => ({
       // "Create Task" action) and calls `api.useUtils().task.list.invalidate`.
       task: { list: { invalidate: vi.fn() } },
     }),
+    user: { list: { useQuery: () => ({ data: { users: [] } }) } },
     lead: {
       getById: {
         useQuery: () => ({

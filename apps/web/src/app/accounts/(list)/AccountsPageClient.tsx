@@ -2,8 +2,9 @@
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { DataTable, EmptyState, Pagination, Skeleton } from '@intelliflow/ui';
+import { DataTable, Pagination, Skeleton } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
+import { AccountsEmptyState } from '@/components/accounts/AccountsEmptyState';
 import {
   createAccountColumns,
   type AccountRow,
@@ -172,15 +173,7 @@ function AccountsContent({
     );
   }
   if (accounts.length === 0) {
-    return (
-      <EmptyState
-        entity="accounts"
-        variant={hasFilters ? 'filtered' : 'empty'}
-        showCta={!hasFilters}
-        ctaHref="/accounts/new"
-        action={hasFilters ? { label: 'Clear filters', onClick: onClearFilters } : undefined}
-      />
-    );
+    return <AccountsEmptyState hasFilters={hasFilters} onClearFilters={onClearFilters} />;
   }
   return (
     <>

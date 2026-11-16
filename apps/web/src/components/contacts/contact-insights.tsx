@@ -285,7 +285,7 @@ export function ContactAiSummaryCard({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Module-level pure helpers (extracted to reduce cognitive complexity of Contact360Page) ÔöÇÔöÇÔöÇ
+// ─── Module-level pure helpers (extracted to reduce cognitive complexity of Contact360Page) ───
 
 export function buildChurnRiskData(
   insight: ContactWithRelations['aiInsight'] | undefined

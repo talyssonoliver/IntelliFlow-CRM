@@ -80,6 +80,28 @@ export function buildConvertToDealPayload(
   };
 }
 
+export const ACCOUNT_NAME_MAX = 200;
+
+export interface ListConvertPayload {
+  leadId: string;
+  createAccount: boolean;
+  accountName?: string;
+}
+
+/**
+ * The lead list's quick Convert (lead.convert). The API creates an account only when it is
+ * given a name, so the lead's company is sent as the account name; a lead without a company
+ * converts to a contact with no account.
+ */
+export function buildListConvertPayload(
+  lead: Readonly<{ id: string; company?: string | null }>
+): ListConvertPayload {
+  const accountName = (lead.company ?? '').trim().slice(0, ACCOUNT_NAME_MAX).trim();
+  return accountName
+    ? { leadId: lead.id, createAccount: true, accountName }
+    : { leadId: lead.id, createAccount: false };
+}
+
 export function getConvertErrorDescription(msg: string): string {
   if (msg.includes('Only qualified')) return 'Only leads with QUALIFIED status can be converted.';
   if (msg.includes('already converted'))

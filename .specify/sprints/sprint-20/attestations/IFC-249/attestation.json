@@ -1,0 +1,85 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-249",
+  "run_id": "plan-reconcile-2026-11-16",
+  "attestor": "Claude Code (claude-opus-5-5), pg-208 lane (plan reconcile)",
+  "attestation_timestamp": "2026-11-16T00:30:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "apps/web/src/app/leads/[id]/edit/__tests__/page.test.tsx",
+        "sha256": "09f5ccec35b111d648c8f801e5cb097ce8853959c8b624cf7c7307870eaf898d"
+      },
+      {
+        "path": "tests/e2e/lead-crud.spec.ts",
+        "sha256": "e80a0c2dd9bfbc5ab75aba8fd540e7c3a8d6757264e4272769bfde97fd2f438b"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Ticked from merged PR #694 (test(leads): edit-page mutation-callback coverage + lead CRUD E2E smoke), which closes T-6 and T-9 of the lead wiring audit; the tracked artifacts exist on main."
+    ],
+    "acknowledged_at": "2026-11-16T00:30:00Z"
+  },
+  "evidence_summary": {
+    "merged_pr": 694,
+    "merged_at": "2026-10-05",
+    "edit_page_tests": 9,
+    "e2e_tests": 14
+  },
+  "validation_results": [
+    {
+      "name": "Edit page tests and lead CRUD E2E exist on main",
+      "command": "git log -1 -- tests/e2e/lead-crud.spec.ts (d4aa6ebb8, #694)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-16T00:30:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "merged-pr-evidence",
+      "passed": true
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": ">=8 edit page tests",
+      "target": ">=8",
+      "actual": "9 cases in apps/web/src/app/leads/[id]/edit/__tests__/page.test.tsx",
+      "met": true
+    },
+    {
+      "kpi": "1 E2E test with >=5 assertions",
+      "target": ">=5 assertions",
+      "actual": "tests/e2e/lead-crud.spec.ts: create, view, edit and delete steps (14 tests)",
+      "met": true
+    },
+    {
+      "kpi": "Coverage >=90%",
+      "target": ">=90%",
+      "actual": "Measured by the pre-ship coverage step of #694, which passed",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Edit page test file with >=8 cases",
+      "met": true
+    },
+    {
+      "criterion": "Playwright E2E test for lead CRUD lifecycle",
+      "met": true
+    },
+    {
+      "criterion": "Edit page mutation callbacks covered",
+      "met": true
+    },
+    {
+      "criterion": "Coverage >=90%",
+      "met": true
+    }
+  ],
+  "notes": "Recorded by the 16/11 plan reconcile from merged PR #694 (Closes T-6 and T-9). No code change."
+}

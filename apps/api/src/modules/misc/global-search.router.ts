@@ -12,6 +12,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
+import { leadSearchText, type LeadSearchRow } from './global-search-hits';
 
 // ── Input schema ────────────────────────────────────────────────────────
 
@@ -85,11 +86,10 @@ async function searchLeads(
     },
   });
 
-  return rows.map((r: any) => ({
+  return rows.map((r: LeadSearchRow) => ({
     entityType: 'LEAD' as const,
     id: r.id,
-    title: [r.firstName, r.lastName].filter(Boolean).join(' ') || r.email,
-    subtitle: r.company ?? r.email,
+    ...leadSearchText(r),
     href: `/leads/${r.id}`,
   }));
 }

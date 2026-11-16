@@ -1144,13 +1144,25 @@ describe('LeadList — row actions, status gating & cell rendering (IFC-248)', (
     expect(screen.queryByTestId('rowaction-Convert to Contact')).toBeNull();
   });
 
-  it('row Convert calls convert.mutate with createAccount true (AC-20)', () => {
+  it("row Convert sends the lead's company as the account name (AC-20, MVP-003)", () => {
     mockListQueryState.data = oneLead({ status: 'QUALIFIED' }).data;
+    render(<LeadList />);
+    fireEvent.click(screen.getByTestId('rowaction-Convert to Contact'));
+    // The API creates an account only when given a name; without one no account was made.
+    expect(mutationMocks.convert.mutate).toHaveBeenCalledWith({
+      leadId: 'lead-1',
+      createAccount: true,
+      accountName: 'Alpha',
+    });
+  });
+
+  it('row Convert of a lead without a company asks for no account', () => {
+    mockListQueryState.data = oneLead({ status: 'QUALIFIED', company: null }).data;
     render(<LeadList />);
     fireEvent.click(screen.getByTestId('rowaction-Convert to Contact'));
     expect(mutationMocks.convert.mutate).toHaveBeenCalledWith({
       leadId: 'lead-1',
-      createAccount: true,
+      createAccount: false,
     });
   });
 
