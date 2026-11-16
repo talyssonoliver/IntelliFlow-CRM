@@ -210,6 +210,17 @@ describe('zohoAddresses / zohoBodyText', () => {
     expect(zohoAddresses("'ada@example.invalid'")).toEqual(['ada@example.invalid']);
   });
 
+  it('takes the address in angle brackets, never one written in the display name', () => {
+    expect(
+      zohoAddresses('"ceo@lead.example.invalid" &lt;someone@other.example.invalid&gt;')
+    ).toEqual(['someone@other.example.invalid']);
+    expect(
+      zohoAddresses(
+        '"Lee, ceo@lead.example.invalid" &lt;lee@example.invalid&gt;, bo@example.invalid'
+      )
+    ).toEqual(['lee@example.invalid', 'bo@example.invalid']);
+  });
+
   it('turns HTML into text and cuts it', () => {
     expect(zohoBodyText('<style>x{}</style><div>Hello</div><div>world</div>', 100)).toBe(
       'Hello\nworld'

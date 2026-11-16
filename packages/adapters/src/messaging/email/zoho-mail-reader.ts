@@ -87,21 +87,56 @@ function trimQuotes(token: string): string {
   return token.slice(start, end);
 }
 
+/** An address-shaped token, lower case; an apostrophe belongs to it (o'neil@…) unless it wraps it. */
+function asAddress(token: string): string | null {
+  const value = trimQuotes(token.trim()).toLowerCase();
+  const at = value.indexOf('@');
+  const ok = at > 0 && at === value.lastIndexOf('@') && value.slice(at + 1).includes('.');
+  return ok && !/[\s<>"]/.test(value) ? value : null;
+}
+
+/** The entries of an address field: split on commas and semicolons outside double quotes. */
+function addressEntries(text: string): string[] {
+  const entries: string[] = [];
+  let current = '';
+  let quoted = false;
+  for (const char of text) {
+    if (char === '"') quoted = !quoted;
+    if (!quoted && (char === ',' || char === ';')) {
+      entries.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  entries.push(current);
+  return entries;
+}
+
+/**
+ * The addresses of one entry. With an angle-bracket part (`"Name" <a@b>`) only that part counts:
+ * an address written in the display name is never taken as the sender or a recipient.
+ */
+function entryAddresses(entry: string): string[] {
+  const open = entry.lastIndexOf('<');
+  const close = open === -1 ? -1 : entry.indexOf('>', open);
+  if (close > open) {
+    const address = asAddress(entry.slice(open + 1, close));
+    return address ? [address] : [];
+  }
+  return entry
+    .split(/[\s"]+/)
+    .map(asAddress)
+    .filter((a): a is string => a !== null);
+}
+
 /** Every address in a Zoho address field (plain, comma-separated, or "Name" <a@b>, HTML-escaped). */
 export function zohoAddresses(field: string | null | undefined): string[] {
   const text = (field ?? '')
     .replaceAll('&lt;', '<')
     .replaceAll('&gt;', '>')
     .replaceAll('&quot;', '"');
-  // An apostrophe is part of an address (o'neil@…), so it only goes when it wraps a token ('a@b').
-  const found = text
-    .split(/[\s<>,;"]+/)
-    .map((token) => trimQuotes(token).toLowerCase())
-    .filter((token) => {
-      const at = token.indexOf('@');
-      return at > 0 && at === token.lastIndexOf('@') && token.slice(at + 1).includes('.');
-    });
-  return [...new Set(found)];
+  return [...new Set(addressEntries(text).flatMap(entryAddresses))];
 }
 
 /** The display name in `"Name" <a@b>`, if any. */
