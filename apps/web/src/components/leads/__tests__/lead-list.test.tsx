@@ -286,6 +286,18 @@ vi.mock('@/components/shared/entity-hover-card', () => ({
   EntityHoverCard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+// The phone card list has its own tests (LeadCardList.test.tsx). Here it is a marker so the
+// table assertions below do not find every lead twice.
+vi.mock('@/components/leads/LeadCardList', () => ({
+  LeadCardList: ({
+    leads,
+    className,
+  }: {
+    leads: readonly { id: string }[];
+    className?: string;
+  }) => <div data-testid="lead-card-list" data-count={leads.length} className={className} />,
+}));
+
 vi.mock('@intelliflow/ui', async () => {
   const actual = await import('@intelliflow/ui');
   void actual;
@@ -575,6 +587,15 @@ describe('LeadList — rendering', () => {
     render(<LeadList />);
     expect(screen.getByText('Alice Anderson')).toBeTruthy();
     expect(screen.getByText('Bob Baker')).toBeTruthy();
+  });
+
+  it('gives the phone card list the same leads and hides it from md up (MVP-006)', () => {
+    render(<LeadList />);
+    const cards = screen.getByTestId('lead-card-list');
+    expect(cards.getAttribute('data-count')).toBe('2');
+    expect(cards.className).toContain('md:hidden');
+    const table = screen.getByText('Alice Anderson').closest('.hidden');
+    expect(table?.className).toContain('md:block');
   });
 
   it('renders page header with total count', () => {
