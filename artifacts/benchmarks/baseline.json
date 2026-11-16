@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-15T19:31:06.890Z",
+  "timestamp": "2026-11-16T14:01:05.250Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,9 +1015,9 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 78,
-    "total_endpoints": 611,
-    "total_queries": 263,
+    "total_routers": 79,
+    "total_endpoints": 612,
+    "total_queries": 264,
     "total_mutations": 348,
     "routers": [
       {
@@ -1463,6 +1463,12 @@
         "endpoints": 1,
         "queries": 0,
         "mutations": 1
+      },
+      {
+        "name": "emailProviderHint",
+        "endpoints": 1,
+        "queries": 1,
+        "mutations": 0
       },
       {
         "name": "globalSearch",
@@ -5134,6 +5140,13 @@
         "name": "emailMailbox.getTenant",
         "method": "POST",
         "description": "Get tenant"
+      }
+    ],
+    "emailProviderHint": [
+      {
+        "name": "emailProviderHint.forAddress",
+        "method": "GET",
+        "description": "For address"
       }
     ],
     "emailSettings": [

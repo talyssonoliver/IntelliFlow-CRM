@@ -306,6 +306,8 @@ describe('appRouter smoke — PG-190 module-settings registration', () => {
     const { appRouter } = await import('../router.js');
     const record = appRouter._def.record as Record<string, any>;
     const expected: Record<string, string[]> = {
+      // MVP-001: provider hint for the connect screen
+      emailProviderHint: ['forAddress'],
       emailMailbox: [
         'getMine',
         'getTenant',
