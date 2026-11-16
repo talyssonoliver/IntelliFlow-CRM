@@ -122,19 +122,23 @@ describe('readZohoFolder', () => {
         page(item('9000000000000000008', T - 1_000), item('9000000000000000007', T - 2_000))
       )
       .mockResolvedValueOnce(
-        page(item('9000000000000000007', T - 2_000), item('9000000000000000000', T - 20_000))
+        page(item('9000000000000000007', T - 2_000), item('9000000000000000006', T - 3_000))
+      )
+      .mockResolvedValueOnce(
+        page(item('9000000000000000006', T - 3_000), item('9000000000000000000', T - 20_000))
       );
 
     const round = await readZohoFolder(ACCESS, REF, cursor, options({ fetchImpl }));
 
     expect(round.messages.map((m) => m.providerMessageId)).toEqual([
+      '9000000000000000006',
       '9000000000000000007',
       '9000000000000000008',
     ]);
     const starts = (fetchImpl.mock.calls as unknown as Array<[string]>).map(([url]) =>
       new URL(url).searchParams.get('start')
     );
-    expect(starts).toEqual(['1', '2']);
+    expect(starts).toEqual(['1', '2', '3']);
   });
 
   it("takes the sender's name from `sender` when the address field is bare", async () => {

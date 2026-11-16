@@ -234,12 +234,13 @@ async function readPage(
   fetchImpl: typeof fetch,
   page: number
 ): Promise<ZohoListItem[]> {
-  // Each page after the first starts one item early: when a mail already read is removed meanwhile,
+  // Every page after the first starts on the last item of the page before: when a mail already read
+  // is removed meanwhile,
   // the list moves up one place and that overlap still returns the mail that moved onto the
   // earlier page (the duplicate it otherwise brings is dropped by id).
   const query = new URLSearchParams({
     folderId: options.folderId,
-    start: String(page * options.pageSize + (page > 0 ? 0 : 1)),
+    start: String(1 + page * Math.max(1, options.pageSize - 1)),
     limit: String(options.pageSize),
     sortBy: 'date',
     sortorder: 'false',

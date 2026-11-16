@@ -96,6 +96,11 @@ describe('mailbox sync: threads and the lead timeline (MVP-001)', () => {
 
     const data = (prisma.emailRecord.create.mock.calls[0] as unknown as [{ data: any }])[0].data;
     expect(data.metadata.threadId).toBe('sent-1');
+    // The first mail carries the thread id too, so the thread view shows it with the reply.
+    expect(prisma.emailRecord.update).toHaveBeenCalledWith({
+      where: { id: 'sent-1', tenantId: TENANT },
+      data: { metadata: { conversationId: 'conv-1', threadId: 'sent-1' } },
+    });
   });
 
   it('skips one mail whose body the provider refuses, and keeps going', async () => {

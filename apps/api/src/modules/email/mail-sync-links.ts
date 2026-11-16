@@ -63,8 +63,15 @@ export async function threadOf(
     select: { id: true, metadata: true },
   });
   if (!root) return null;
-  const threadId = metaOf(root).threadId;
-  return typeof threadId === 'string' ? threadId : root.id;
+  const meta = metaOf(root);
+  if (typeof meta.threadId === 'string') return meta.threadId;
+  // The first mail of the conversation starts the thread: it carries the thread id too, so the
+  // thread view (which reads mail by metadata.threadId) shows it with its replies.
+  await deps.prisma.emailRecord.update({
+    where: { id: root.id, tenantId: mailbox.tenantId },
+    data: { metadata: { ...meta, threadId: root.id } },
+  });
+  return root.id;
 }
 
 /** A lead's timeline is its activities: synced mail with a lead gets an EMAIL entry (subject only). */
