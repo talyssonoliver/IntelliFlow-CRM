@@ -10,6 +10,7 @@ import {
   AUTH_STATUS_CACHE_KEY,
   clearCachedAuthStatus,
   readCachedAuthStatus,
+  sameTokenSubject,
   writeCachedAuthStatus,
 } from '../auth-status-snapshot';
 
@@ -66,6 +67,17 @@ describe('auth status snapshot', () => {
     writeCachedAuthStatus(tokenFor({ sub: 'user-1', exp: 1 }), user, true);
     writeCachedAuthStatus(tokenFor({ exp: inAnHour() }), user, true);
     expect(localStorage.getItem(AUTH_STATUS_CACHE_KEY)).toBeNull();
+  });
+
+  it('tells whether two tokens belong to the same subject', () => {
+    const a = tokenFor({ sub: 'user-1', exp: inAnHour() });
+    expect(sameTokenSubject(a, tokenFor({ sub: 'user-1', exp: inAnHour() + 60 }))).toBe(true);
+    expect(sameTokenSubject(a, tokenFor({ sub: 'user-2', exp: inAnHour() }))).toBe(false);
+    expect(sameTokenSubject(a, null)).toBe(false);
+    expect(sameTokenSubject(null, a)).toBe(false);
+    expect(sameTokenSubject(tokenFor({ exp: inAnHour() }), tokenFor({ exp: inAnHour() }))).toBe(
+      false
+    );
   });
 
   it('clears the stored status', () => {

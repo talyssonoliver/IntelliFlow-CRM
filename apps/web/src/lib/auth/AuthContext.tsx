@@ -35,6 +35,7 @@ import { isTokenUsable } from './jwt';
 import {
   clearCachedAuthStatus,
   readCachedAuthStatus,
+  sameTokenSubject,
   writeCachedAuthStatus,
 } from './auth-status-snapshot';
 import { loginPathFor, safeRedirectPath } from './safe-redirect';
@@ -338,9 +339,23 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   // query can stay stuck at the pre-login `authenticated: false` snapshot it
   // cached on the /login or /auth/callback page, and useRequireAuth then bounces
   // every subsequent navigation back to /login.
+  // MVP-007: the token getStatus was asked with. Its answer is stored only under that same token's
+  // subject, and not at all if the token changed while it was in flight (a sign-in as someone else
+  // in another tab), so one user's status is never paired with another user's token.
+  const statusTokenRef = useRef<{ token: string | null; changed: boolean }>({
+    token: null,
+    changed: false,
+  });
+  useEffect(() => {
+    if (statusQuery.isFetching && typeof globalThis.window !== 'undefined') {
+      statusTokenRef.current = { token: localStorage.getItem('accessToken'), changed: false };
+    }
+  }, [statusQuery.isFetching]);
+
   useEffect(() => {
     if (typeof globalThis.window === 'undefined') return;
     const onTokenChanged = () => {
+      statusTokenRef.current = { ...statusTokenRef.current, changed: true };
       queryClient
         .invalidateQueries({ queryKey: [['auth', 'getStatus']] })
         .catch(logAuthStatusRefreshError);
@@ -552,11 +567,11 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
 
     setState((prev) => ({ ...prev, ...result.update }));
     if (result.update.isAuthenticated && result.update.user) {
-      writeCachedAuthStatus(
-        localStorage.getItem('accessToken'),
-        result.update.user,
-        result.update.emailVerified ?? null
-      );
+      const asked = statusTokenRef.current;
+      const current = localStorage.getItem('accessToken');
+      if (!asked.changed && sameTokenSubject(asked.token, current)) {
+        writeCachedAuthStatus(current, result.update.user, result.update.emailVerified ?? null);
+      }
     } else if (queryView.isSuccess) {
       clearCachedAuthStatus();
     }

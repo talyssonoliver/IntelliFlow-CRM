@@ -74,6 +74,17 @@ export function readCachedAuthStatus<U>(token: string | null): CachedAuthStatus<
   };
 }
 
+/**
+ * Whether two tokens belong to the same subject. A getStatus answer is only stored when the token
+ * the request was sent with and the token stored now are the same user's; otherwise a sign-in as
+ * someone else while the request was in flight could pair one user's status with another's token.
+ */
+export function sameTokenSubject(a: string | null, b: string | null): boolean {
+  if (!a || !b) return false;
+  const subA = decodeJwtPayload(a)?.sub;
+  return Boolean(subA) && subA === decodeJwtPayload(b)?.sub;
+}
+
 /** Forgets the stored status (sign-out, or getStatus saying nobody is signed in). */
 export function clearCachedAuthStatus(): void {
   try {

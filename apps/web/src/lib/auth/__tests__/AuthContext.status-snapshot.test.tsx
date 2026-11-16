@@ -68,6 +68,7 @@ vi.mock('@/lib/shared/session-cleanup', async (importOriginal) => ({
 }));
 
 import { AuthProvider, useAuth } from '../AuthContext';
+import { AUTH_TOKEN_CHANGED_EVENT } from '@/lib/shared/session-cleanup';
 
 /** A token-shaped string built at runtime: only its payload is read, nothing verifies it here. */
 function tokenFor(payload: Record<string, unknown>): string {
@@ -133,19 +134,23 @@ describe('AuthProvider starts from the last confirmed status (MVP-007)', () => {
     expect(localStorage.getItem(AUTH_STATUS_CACHE_KEY)).toBeNull();
   });
 
-  it('remembers the user getStatus confirms', async () => {
+  const confirmed: StatusView = {
+    data: { authenticated: true, user: { ...owner, emailVerified: false } },
+    isPending: false,
+    isFetching: false,
+    isSuccess: true,
+    isError: false,
+    error: null,
+  };
+
+  it('remembers the user getStatus confirms for the token it was asked with', async () => {
     const tok = tokenFor({ sub: 'user-1', exp: exp() });
     localStorage.setItem('accessToken', tok);
-    h.status = {
-      data: { authenticated: true, user: { ...owner, emailVerified: false } },
-      isPending: false,
-      isFetching: false,
-      isSuccess: true,
-      isError: false,
-      error: null,
-    };
-
-    const { result } = renderHook(() => useAuth(), { wrapper });
+    // A real load: getStatus is first in flight (with this token), then answers.
+    const { result, rerender } = renderHook(() => useAuth(), { wrapper });
+    await act(async () => {});
+    h.status = confirmed;
+    rerender();
 
     await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
     const stored = JSON.parse(localStorage.getItem(AUTH_STATUS_CACHE_KEY) ?? 'null');
@@ -154,6 +159,34 @@ describe('AuthProvider starts from the last confirmed status (MVP-007)', () => {
       user: { id: 'u1', email: owner.email },
       emailVerified: false,
     });
+  });
+
+  it('stores nothing when another user signed in while getStatus was in flight', async () => {
+    localStorage.setItem('accessToken', tokenFor({ sub: 'user-1', exp: exp() }));
+    const { result, rerender } = renderHook(() => useAuth(), { wrapper });
+    await act(async () => {});
+    // Another tab signs in as someone else before the answer for user-1 arrives.
+    localStorage.setItem('accessToken', tokenFor({ sub: 'user-2', exp: exp() }));
+    h.status = confirmed;
+    rerender();
+
+    await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
+    expect(localStorage.getItem(AUTH_STATUS_CACHE_KEY)).toBeNull();
+  });
+
+  it('stores nothing when the token changed during the request, even for the same user', async () => {
+    const tok = tokenFor({ sub: 'user-1', exp: exp() });
+    localStorage.setItem('accessToken', tok);
+    const { result, rerender } = renderHook(() => useAuth(), { wrapper });
+    await act(async () => {});
+    await act(async () => {
+      globalThis.dispatchEvent(new Event(AUTH_TOKEN_CHANGED_EVENT));
+    });
+    h.status = confirmed;
+    rerender();
+
+    await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
+    expect(localStorage.getItem(AUTH_STATUS_CACHE_KEY)).toBeNull();
   });
 
   it('forgets the status on sign-out', async () => {
