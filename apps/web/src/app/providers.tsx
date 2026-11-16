@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query';
 import { httpBatchLink, splitLink, createWSClient, wsLink } from '@trpc/client';
+import { setLiveConnected } from '@/lib/live-connection';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { trpc } from '@/lib/trpc';
 import { AuthProvider } from '@/lib/auth';
@@ -54,6 +55,7 @@ function closeWsClientConnection() {
 function disposeWsClient() {
   const client = wsClient;
   wsClient = null;
+  setLiveConnected(false);
 
   if (!client) return;
 
@@ -87,9 +89,11 @@ function getWsClient() {
         },
         onOpen: () => {
           console.log('[tRPC WS] Connected to WebSocket server');
+          setLiveConnected(true);
         },
         onClose: () => {
           console.log('[tRPC WS] Disconnected from WebSocket server');
+          setLiveConnected(false);
         },
       });
     }
