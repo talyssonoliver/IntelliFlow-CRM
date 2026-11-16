@@ -103,6 +103,26 @@ describe('AuthProvider starts from the last confirmed status (MVP-007)', () => {
     expect(result.current.emailVerified).toBe(true);
   });
 
+  it.each(['/forgot-password', '/reset-password/a-token', '/login', '/auth/callback'])(
+    'does not start from the snapshot on %s, where a signed-in visitor is sent away',
+    async (path) => {
+      globalThis.history.replaceState({}, '', path);
+      try {
+        const tok = tokenFor({ sub: 'user-1', exp: exp() });
+        localStorage.setItem('accessToken', tok);
+        writeCachedAuthStatus(tok, null, owner, true);
+
+        const { result } = renderHook(() => useAuth(), { wrapper });
+
+        await act(async () => {});
+        expect(result.current.isAuthenticated).toBe(false);
+        expect(result.current.isLoading).toBe(true);
+      } finally {
+        globalThis.history.replaceState({}, '', '/');
+      }
+    }
+  );
+
   it('keeps waiting for getStatus when the stored status belongs to another subject', async () => {
     localStorage.setItem('accessToken', tokenFor({ sub: 'user-2', exp: exp() }));
     writeCachedAuthStatus(tokenFor({ sub: 'user-1', exp: exp() }), null, owner, true);

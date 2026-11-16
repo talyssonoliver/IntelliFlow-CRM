@@ -32,6 +32,7 @@ import { getSupabaseBrowserClient } from '../supabase-browser';
 import type { OAuthProvider } from '@intelliflow/domain';
 import { getSupabaseProviderName } from './sso-handler';
 import { isTokenUsable } from './jwt';
+import { isPublicAuthRoute } from './route-protection';
 import {
   clearCachedAuthStatus,
   readCachedAuthStatus,
@@ -307,8 +308,12 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   // isAuthenticated, so they now start with getStatus instead of one API round trip after it.
   // Declared before the effect that resolves getStatus: if getStatus has already answered, that
   // effect runs after this one in the same commit and its state wins.
+  // Not on the sign-in, sign-up, password and verification pages: they send a signed-in visitor
+  // away (useRedirectIfAuthenticated), so there only a status the server confirmed may count. A
+  // reset-password link opened with an ended session must stay on the reset page.
   useEffect(() => {
     if (isLoggedOutPage || typeof globalThis.window === 'undefined') return;
+    if (isPublicAuthRoute(globalThis.location?.pathname ?? '')) return;
     const cached = readCachedAuthStatus<AuthUser>(
       localStorage.getItem('accessToken'),
       getActiveTenantId()
