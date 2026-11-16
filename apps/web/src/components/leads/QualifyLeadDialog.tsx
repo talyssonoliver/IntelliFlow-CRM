@@ -38,7 +38,7 @@ export function QualifyLeadButton({ onClick }: Readonly<{ onClick: () => void }>
       <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
         verified
       </span>{' '}
-      <span className="hidden sm:inline">Qualify</span>
+      Qualify
     </button>
   );
 }

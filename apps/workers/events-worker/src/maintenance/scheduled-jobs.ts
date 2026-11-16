@@ -15,6 +15,7 @@
  */
 
 import type { Logger } from 'pino';
+import { writeStaleLeadDigests } from './stale-lead-digest';
 import type { PrismaClient, EncryptedPrismaClient } from '@intelliflow/db';
 
 // ============================================================================
@@ -257,72 +258,23 @@ export class MaintenanceScheduler {
     const now = new Date();
     const staleCutoff = new Date(now.getTime() - this.config.staleLeadDays * 24 * 60 * 60_000);
 
-    // --- Stale leads: no activity in N days, not converted/disqualified ---
+    // --- Stale leads: one daily "N leads need a follow-up" line per owner (MVP-005) ---
     const staleLeads = await this.prisma.lead.findMany({
       where: {
         updatedAt: { lte: staleCutoff },
         status: { notIn: ['CONVERTED', 'DISQUALIFIED', 'ARCHIVED'] },
       },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        ownerId: true,
-        tenantId: true,
-        updatedAt: true,
-      },
-      take: 30,
+      select: { id: true, ownerId: true, tenantId: true },
+      take: 1000,
     });
-
-    const ownerLeads = staleLeads.filter((l) => l.ownerId != null);
-
-    if (ownerLeads.length > 0) {
-      // Pre-load all recent stale-lead reminders for these ids in ONE query (NP-029 fix)
-      const leadIds = ownerLeads.map((l) => l.id);
-      const recentLeadReminders = await this.prisma.notification.findMany({
-        where: {
-          sourceId: { in: leadIds },
-          sourceType: 'stale_lead_reminder',
-          createdAt: { gte: new Date(now.getTime() - 24 * 60 * 60_000) },
-        },
-        select: { sourceId: true },
-      });
-      const alreadyRemindedLeads = new Set(recentLeadReminders.map((r) => r.sourceId));
-
-      const leadNotifications = ownerLeads
-        .filter((lead) => !alreadyRemindedLeads.has(lead.id))
-        .map((lead) => {
-          const daysSinceUpdate = Math.round(
-            (now.getTime() - lead.updatedAt.getTime()) / (24 * 60 * 60_000)
-          );
-          const leadName = [lead.firstName, lead.lastName].filter(Boolean).join(' ') || lead.email;
-          return {
-            tenantId: lead.tenantId,
-            recipientId: lead.ownerId as string,
-            channel: 'IN_APP' as const,
-            subject: `Stale lead: ${leadName}`,
-            body: `Lead "${leadName}" has had no activity for ${daysSinceUpdate} days. Consider reaching out or updating their status.`,
-            priority: 'NORMAL' as const,
-            status: 'PENDING' as const,
-            category: 'REMINDERS' as const,
-            sourceType: 'stale_lead_reminder',
-            sourceId: lead.id,
-            metadata: {
-              notificationType: 'follow_up_reminder',
-              daysSinceUpdate,
-              actionUrl: `/leads/${lead.id}`,
-            },
-          };
-        });
-
-      if (leadNotifications.length > 0) {
-        await this.prisma.notification.createMany({ data: leadNotifications });
-      }
-    }
-
-    if (staleLeads.length > 0) {
-      this.logger.info({ count: staleLeads.length }, 'Stale lead reminders processed');
+    const digests = await writeStaleLeadDigests(
+      this.prisma,
+      staleLeads,
+      this.config.staleLeadDays,
+      now
+    );
+    if (digests > 0) {
+      this.logger.info({ count: staleLeads.length, digests }, 'Stale lead digests written');
     }
 
     // --- Overdue tasks ---

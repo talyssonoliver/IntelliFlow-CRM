@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -58,6 +58,13 @@ export default function EditLeadPage() {
     title: '',
     description: '',
   });
+
+  // 'Add value' on the lead links here with #estimatedValue: focus that field once the form is up.
+  useEffect(() => {
+    if (lead && globalThis.location?.hash === '#estimatedValue') {
+      document.getElementById('estimatedValue')?.focus();
+    }
+  }, [lead]);
 
   const utils = api.useUtils();
 
