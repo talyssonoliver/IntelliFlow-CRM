@@ -166,6 +166,12 @@ vi.mock('@/lib/api', () => ({
           return { mutate: vi.fn(), isPending: false };
         },
       },
+      qualify: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
+      convertToDeal: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
       scoreWithAI: {
         useMutation: (opts?: (typeof lane.mutationOpts)[string]) => {
           lane.mutationOpts.score = opts ?? {};

@@ -43,6 +43,7 @@ import {
 // IFC-240: fire-and-forget audit logging for lead mutations + single-record reads
 import { getAuditLogger } from '../../security/audit-logger';
 import { assertQuota, withQuotaLock } from '../../shared/quota-guard';
+import { convertWithContactQuota } from './convert-to-deal-quota';
 import { detectScoreBias, type LeadScoringBiasCheck } from '@intelliflow/adapters';
 import { createNotification } from '../notifications/notifications.router';
 import { restrictionReader } from '../privacy/restriction-reader';
@@ -1066,7 +1067,7 @@ export const leadRouter = createTRPCRouter({
   convertToDeal: tenantProcedure.input(convertLeadToDealSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
 
-    // The contact is optional here; only a conversion that creates one consumes contact quota.
+    // Contact quota is charged only when the conversion creates a contact (convert-to-deal-quota).
     const useCase = ctx.services?.convertLeadToDeal;
     if (!useCase) {
       throw new TRPCError({
@@ -1075,14 +1076,10 @@ export const leadRouter = createTRPCRouter({
       });
     }
 
-    const execute = () =>
-      useCase.execute({
-        ...input,
-        convertedBy: typedCtx.tenant.userId,
-      });
-    const result = input.createContact
-      ? await withQuotaLock(ctx, typedCtx.tenant.tenantId, 'contacts', 1, execute)
-      : await execute();
+    const quotaInput = { ...input, tenantId: typedCtx.tenant.tenantId };
+    const result = await convertWithContactQuota(ctx, quotaInput, (hooks) =>
+      useCase.execute({ ...input, convertedBy: typedCtx.tenant.userId }, hooks)
+    );
 
     if (result.isFailure) {
       const msg = result.error.message;
