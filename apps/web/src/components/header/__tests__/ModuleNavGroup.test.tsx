@@ -5,9 +5,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { publishModuleNav } from '@/components/sidebar/module-nav-store';
 import type { SidebarConfig } from '@/components/sidebar/sidebar-types';
 
+const nav = vi.hoisted(() => ({ path: '/leads', query: 'view=my' }));
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/leads',
-  useSearchParams: () => new URLSearchParams('view=my'),
+  usePathname: () => nav.path,
+  useSearchParams: () => new URLSearchParams(nav.query),
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
 }));
 vi.mock('@/lib/auth', () => ({ useAuth: () => ({ user: { role: 'SALES_REP' } }) }));
@@ -139,5 +140,21 @@ describe('MobileNav with a module open', () => {
     });
     render(<MobileNav routes={[routes[0]] as never} isOpen onClose={vi.fn()} />);
     expect(screen.getByRole('navigation', { name: 'Leads sections' })).toBeInTheDocument();
+  });
+
+  it('closes after any navigation, including a query-only one from module content', () => {
+    const onClose = vi.fn();
+    const { rerender } = render(<MobileNav routes={routes as never} isOpen onClose={onClose} />);
+    expect(onClose).not.toHaveBeenCalled();
+
+    nav.query = 'view=starred';
+    rerender(<MobileNav routes={routes as never} isOpen onClose={onClose} />);
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    nav.path = '/leads/lead-settings';
+    rerender(<MobileNav routes={routes as never} isOpen onClose={onClose} />);
+    expect(onClose).toHaveBeenCalledTimes(2);
+    nav.path = '/leads';
+    nav.query = 'view=my';
   });
 });

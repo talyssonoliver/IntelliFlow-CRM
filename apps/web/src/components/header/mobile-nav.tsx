@@ -1,8 +1,8 @@
 'use client';
 
-import { Fragment, Suspense } from 'react';
+import { Fragment, Suspense, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@intelliflow/ui';
 import { SearchBar } from './search-bar';
 import { ModuleNavGroup } from './ModuleNavGroup';
@@ -12,6 +12,27 @@ interface MobileNavProps {
   routes: NavRoute[];
   isOpen: boolean;
   onClose: () => void;
+}
+
+/**
+ * Closes the menu after any navigation, path or query, including one started by a module's
+ * custom content (portalled in), whose links do not know about this menu.
+ */
+function CloseOnNavigate({ onClose }: Readonly<{ onClose: () => void }>) {
+  const pathname = usePathname();
+  const query = useSearchParams()?.toString() ?? '';
+  const first = useRef(true);
+  // Kept in a ref so only a change of location (not a new onClose) closes the menu.
+  const close = useRef(onClose);
+  close.current = onClose;
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    close.current();
+  }, [pathname, query]);
+  return null;
 }
 
 export function MobileNav({ routes, isOpen, onClose }: Readonly<MobileNavProps>) {
@@ -26,6 +47,9 @@ export function MobileNav({ routes, isOpen, onClose }: Readonly<MobileNavProps>)
 
   return (
     <div className="xl:hidden max-h-[calc(100svh-7rem)] overflow-y-auto border-t border-border">
+      <Suspense fallback={null}>
+        <CloseOnNavigate onClose={onClose} />
+      </Suspense>
       <nav className="p-4 space-y-1">
         {noRouteActive && (
           <Suspense fallback={null}>
