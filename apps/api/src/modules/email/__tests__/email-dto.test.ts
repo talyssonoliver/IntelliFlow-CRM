@@ -58,9 +58,18 @@ describe('toMailboxDto', () => {
       hasImapPassword: true,
       bounceReadingEnabled: true,
       accountAddress: null,
+      inboxSyncedAt: null,
       updatedAt: updatedAt.toISOString(),
     });
     expect(JSON.stringify(dto)).not.toContain(secret);
+  });
+
+  it('carries when the Outlook inbox sync last finished (#1177)', () => {
+    const syncedAt = new Date('2026-11-15T10:30:00.000Z');
+
+    expect(toMailboxDto({ ...smtpRow, syncedAt }, { includeConnection: false }).inboxSyncedAt).toBe(
+      '2026-11-15T10:30:00.000Z'
+    );
   });
 
   it('hides host and username when connection details are not for this viewer', () => {

@@ -17,6 +17,7 @@ import { oauthProviderKey } from '../../oauth/oauth-session';
 import { connectionFailureHelp } from './connection-help';
 import { oneClickNotYet, providerByServer } from './mailbox-providers';
 import { SmtpHostingNotice } from './SmtpHostingNotice';
+import { inboxSyncLine } from './inbox-sync-status';
 
 // Loaded on demand: most users connect with Google or Microsoft (C-FE5).
 const SmtpMailboxForm = dynamic(() => import('./SmtpMailboxForm').then((m) => m.SmtpMailboxForm), {
@@ -175,6 +176,11 @@ export function MailboxConnection({
       {broken && mailbox?.lastErrorCode && (
         <p className="text-sm text-red-700 dark:text-red-300">
           {mailboxErrorMessage(mailbox.lastErrorCode)}
+        </p>
+      )}
+      {connected && !broken && mailbox?.kind === 'MICROSOFT' && (
+        <p className="text-xs text-muted-foreground" data-testid="inbox-sync-status">
+          {inboxSyncLine(mailbox.inboxSyncedAt)}
         </p>
       )}
 

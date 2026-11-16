@@ -4499,6 +4499,15 @@ model EmailMailbox {
   failureCount    Int       @default(0)
   sendWindowStart DateTime?
   sendWindowCount Int       @default(0)
+  /// #1177 Outlook two-way sync: Graph's delta link for the inbox (not a credential).
+  syncCursor       String?   @db.Text
+  /// The same for Sent Items, so mail sent from Outlook itself is logged too.
+  syncSentCursor   String?   @db.Text
+  syncedAt         DateTime?
+  /// null = due now; the sync tick claims a mailbox with syncLockedUntil as its lease.
+  nextSyncAt       DateTime?
+  syncLockedUntil  DateTime?
+  syncFailureCount Int       @default(0)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

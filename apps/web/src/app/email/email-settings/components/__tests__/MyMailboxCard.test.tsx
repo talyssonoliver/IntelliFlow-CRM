@@ -169,6 +169,36 @@ describe('MyMailboxCard', () => {
     expect(screen.getByText('Connected')).toBeInTheDocument();
     expect(screen.getByText('me@mail.example.invalid')).toBeInTheDocument();
     expect(screen.getByText('SMTP · smtp.mail.example.invalid')).toBeInTheDocument();
+    // The Outlook two-way sync line is for Microsoft mailboxes only (#1177).
+    expect(screen.queryByTestId('inbox-sync-status')).not.toBeInTheDocument();
+  });
+
+  it('tells a connected Microsoft mailbox what the Outlook sync logs and when it last ran', () => {
+    renderCard({
+      mailbox: mailbox({
+        kind: 'MICROSOFT',
+        smtpHost: null,
+        accountAddress: 'me@outlook.example.invalid',
+        fromAddress: 'me@outlook.example.invalid',
+        inboxSyncedAt: null,
+      }),
+    });
+    expect(screen.getByTestId('inbox-sync-status')).toHaveTextContent(
+      'Mail with your leads and contacts, received or sent from Outlook, is logged here. Waiting for the first sync.'
+    );
+  });
+
+  it('hides the sync line while a Microsoft mailbox needs attention', () => {
+    renderCard({
+      mailbox: mailbox({
+        kind: 'MICROSOFT',
+        smtpHost: null,
+        status: 'ERROR',
+        lastErrorCode: 'TOKEN_REVOKED',
+        inboxSyncedAt: '2026-11-15T10:00:00.000Z',
+      }),
+    });
+    expect(screen.queryByTestId('inbox-sync-status')).not.toBeInTheDocument();
   });
 
   it('shows a connected Google mailbox by its verified address', () => {

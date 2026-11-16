@@ -1,6 +1,6 @@
 /**
- * API_BACKGROUND_JOBS flag and the shared start/stop for the approval sweep and
- * bounce scanner (idle-sleep: an idle api must make no outbound traffic).
+ * API_BACKGROUND_JOBS flag and the shared start/stop for the approval sweep, the
+ * bounce scanner, the Outlook inbox sync (idle-sleep: an idle api must make no outbound traffic).
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -25,8 +25,22 @@ const m = vi.hoisted(() => ({
   dsarSlaIntervalFromEnv: vi.fn(() => 333),
   runDsarSlaSweep: vi.fn().mockResolvedValue({ alerted: 0 }),
   createDsarSlaDeps: vi.fn().mockResolvedValue({ marker: 'dsar-deps' }),
+  runInboxSync: vi.fn().mockResolvedValue({ mailboxesSynced: 0 }),
+  createInboxSyncDeps: vi.fn().mockResolvedValue({ marker: 'sync-deps' }),
+  startInboxSync: vi.fn((_options: SchedulerOptions) => true),
+  stopInboxSync: vi.fn<() => Promise<void>>(async () => undefined),
+  inboxSyncIntervalFromEnv: vi.fn(() => 444),
 }));
 
+vi.mock('../modules/email/outlook-inbox-sync', () => ({
+  runInboxSync: m.runInboxSync,
+  createInboxSyncDeps: m.createInboxSyncDeps,
+}));
+vi.mock('../modules/email/inbox-sync-scheduler', () => ({
+  startInboxSync: m.startInboxSync,
+  stopInboxSync: m.stopInboxSync,
+  inboxSyncIntervalFromEnv: m.inboxSyncIntervalFromEnv,
+}));
 vi.mock('../agent/approval-sweep-scheduler', () => ({
   startApprovalSweep: m.startApprovalSweep,
   stopApprovalSweep: m.stopApprovalSweep,
@@ -89,6 +103,11 @@ beforeEach(() => {
   m.dsarSlaIntervalFromEnv.mockReturnValue(333);
   m.runDsarSlaSweep.mockResolvedValue({ alerted: 0 });
   m.createDsarSlaDeps.mockResolvedValue({ marker: 'dsar-deps' });
+  m.runInboxSync.mockResolvedValue({ mailboxesSynced: 0 });
+  m.createInboxSyncDeps.mockResolvedValue({ marker: 'sync-deps' });
+  m.startInboxSync.mockReturnValue(true);
+  m.stopInboxSync.mockResolvedValue(undefined);
+  m.inboxSyncIntervalFromEnv.mockReturnValue(444);
 });
 
 describe('backgroundJobsFlagEnabled', () => {
@@ -121,7 +140,12 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
     const env = { MARK: 'x' } as NodeJS.ProcessEnv;
     const result = startBackgroundJobs({ env, ready: async () => undefined });
 
-    expect(result).toEqual({ approvalSweep: true, bounceScan: true, dsarSla: true });
+    expect(result).toEqual({
+      approvalSweep: true,
+      bounceScan: true,
+      inboxSync: true,
+      dsarSla: true,
+    });
     expect(m.approvalSweepIntervalFromEnv).toHaveBeenCalledWith(env);
     expect(m.bounceScanIntervalFromEnv).toHaveBeenCalledWith(env);
     expect(m.startApprovalSweep.mock.calls[0]![0]).toMatchObject({ intervalMs: 111 });
@@ -131,7 +155,12 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
   it('reports a job that its scheduler declined to start', () => {
     m.startApprovalSweep.mockReturnValueOnce(false);
     const result = startBackgroundJobs({ env: {}, ready: async () => undefined });
-    expect(result).toEqual({ approvalSweep: false, bounceScan: true, dsarSla: true });
+    expect(result).toEqual({
+      approvalSweep: false,
+      bounceScan: true,
+      inboxSync: true,
+      dsarSla: true,
+    });
   });
 
   // PG-203 D8: the DSAR deadline alerts follow the same flag, so an api with
@@ -194,6 +223,46 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
     expect(order).toEqual(['ready', 'sweep-deps', 'ready', 'bounce-deps']);
   });
 
+  describe('Outlook inbox sync on its own timer (#1177)', () => {
+    it('starts with its env interval; a run waits for readiness, then builds deps and syncs', async () => {
+      const env = { MARK: 'x' } as NodeJS.ProcessEnv;
+      const order: string[] = [];
+      const ready = vi.fn(async () => {
+        order.push('ready');
+      });
+      m.createInboxSyncDeps.mockImplementationOnce(async () => {
+        order.push('sync-deps');
+        return { marker: 'sync-deps' };
+      });
+      startBackgroundJobs({ env, ready });
+
+      expect(m.inboxSyncIntervalFromEnv).toHaveBeenCalledWith(env);
+      expect(m.startInboxSync.mock.calls[0]![0]).toMatchObject({ intervalMs: 444 });
+      await expect(m.startInboxSync.mock.calls[0]![0].run()).resolves.toEqual({
+        mailboxesSynced: 0,
+      });
+      expect(m.runInboxSync).toHaveBeenCalledWith({ marker: 'sync-deps' });
+      expect(order).toEqual(['ready', 'sync-deps']);
+    });
+
+    it('is not part of the bounce tick: a bounce tick never runs the sync', async () => {
+      startBackgroundJobs({ env: {}, ready: async () => undefined });
+
+      await expect(m.startBounceScanner.mock.calls[0]![0].run()).resolves.toEqual({
+        mailboxesScanned: 0,
+      });
+      expect(m.createInboxSyncDeps).not.toHaveBeenCalled();
+      expect(m.runInboxSync).not.toHaveBeenCalled();
+    });
+
+    it('a sync failure stays in its own tick (the scheduler logs it)', async () => {
+      m.runInboxSync.mockRejectedValueOnce(new Error('graph down'));
+      startBackgroundJobs({ env: {}, ready: async () => undefined });
+
+      await expect(m.startInboxSync.mock.calls[0]![0].run()).rejects.toThrow('graph down');
+    });
+  });
+
   it('defaults readiness to the api container', async () => {
     startBackgroundJobs({ env: {} });
     await expect(m.startApprovalSweep.mock.calls[0]![0].run()).resolves.toEqual({ locked: true });
@@ -209,6 +278,7 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
     await new Promise((resolve) => setTimeout(resolve, 10));
     expect(m.stopApprovalSweep).toHaveBeenCalledTimes(1);
     expect(m.stopBounceScanner).toHaveBeenCalledTimes(1);
+    expect(m.stopInboxSync).toHaveBeenCalledTimes(1);
     expect(m.stopDsarSlaScheduler).toHaveBeenCalledTimes(1);
     expect(done).toBe(false);
 

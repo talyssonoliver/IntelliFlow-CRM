@@ -638,6 +638,16 @@ describe('emailMailbox OAuth connect', () => {
     const data = (prismaMock.emailMailbox.update as any).mock.calls[0][0].data;
     expect(data.tokenVersion).toEqual({ increment: 1 });
     expect(data).toMatchObject({ status: 'ACTIVE', failureCount: 0 });
+    // New credentials may be another account: the Outlook sync starts it afresh (#1177).
+    expect(data).toMatchObject({
+      syncCursor: null,
+      syncSentCursor: null,
+      syncedAt: null,
+      nextSyncAt: null,
+      syncFailureCount: 0,
+    });
+    // The sync lease is left alone: a running round ends on its own (no two syncs at once).
+    expect(data).not.toHaveProperty('syncLockedUntil');
   });
 
   it('gives the new grant back when a racing save wins the reconnect (CONFLICT)', async () => {

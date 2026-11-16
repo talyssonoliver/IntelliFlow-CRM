@@ -107,6 +107,8 @@ export interface MailboxDto extends SmtpEndpointDto, SmtpAccountDto {
   /** True when this mailbox can be scanned for bounce reports. */
   bounceReadingEnabled: boolean;
   accountAddress: string | null;
+  /** #1177: when the Outlook inbox sync last finished a round (ISO); null before the first. */
+  inboxSyncedAt?: string | null;
   updatedAt: string;
 }
 

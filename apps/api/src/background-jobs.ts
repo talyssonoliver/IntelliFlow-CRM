@@ -1,6 +1,6 @@
 /**
  * Background jobs the API process can run on timers (approval sweep, email
- * bounce scan, DSAR deadline alerts).
+ * bounce scan, Outlook inbox sync, DSAR deadline alerts).
  *
  * Idle-sleep (Railway App Sleeping): a process that makes outbound traffic while
  * idle never sleeps, and these timers are the traffic. They are therefore behind
@@ -11,7 +11,7 @@
  *
  * Running the jobs in the api AND the combined worker, or in several replicas,
  * is safe: the approval sweep takes a transaction-scoped Postgres advisory lock
- * per tick, the bounce scan claims each mailbox with a lease, and the DSAR alerts
+ * per tick, the bounce scan and the inbox sync claim each mailbox with a lease, and the DSAR alerts
  * take an advisory lock and claim each request with SKIP LOCKED. All are
  * database-level, so they hold across processes.
  */
@@ -28,6 +28,12 @@ import {
   stopBounceScanner,
 } from './modules/email/bounce-scheduler';
 import { createBounceReaderDeps, runBounceScan } from './modules/email/bounce-reader';
+import { createInboxSyncDeps, runInboxSync } from './modules/email/outlook-inbox-sync';
+import {
+  inboxSyncIntervalFromEnv,
+  startInboxSync,
+  stopInboxSync,
+} from './modules/email/inbox-sync-scheduler';
 import {
   createDsarSlaDeps,
   dsarSlaIntervalFromEnv,
@@ -80,6 +86,7 @@ export interface StartBackgroundJobsOptions {
 export interface StartedBackgroundJobs {
   approvalSweep: boolean;
   bounceScan: boolean;
+  inboxSync: boolean;
   dsarSla: boolean;
 }
 
@@ -150,6 +157,16 @@ export function startBackgroundJobs({
     },
   });
 
+  // #1177: Outlook inbox sync, on its own timer so a slow Graph read never holds the bounce scan.
+  const inboxSync = startInboxSync({
+    intervalMs: inboxSyncIntervalFromEnv(env),
+    log,
+    run: async () => {
+      await ready();
+      return runInboxSync(await createInboxSyncDeps());
+    },
+  });
+
   // PG-203 D8: DSAR deadline alerts to each firm's admins, and the purge of
   // expired unconfirmed requests.
   const dsarSla = startDsarSlaScheduler({
@@ -164,7 +181,7 @@ export function startBackgroundJobs({
   });
 
   markJobsRunningHere(approvalSweep || bounceScan || dsarSla);
-  return { approvalSweep, bounceScan, dsarSla };
+  return { approvalSweep, bounceScan, inboxSync, dsarSla };
 }
 
 /**
@@ -172,7 +189,12 @@ export function startBackgroundJobs({
  * mid-flight (SIGTERM, tests). The caller's shutdown timeout still caps the wait.
  */
 export async function stopBackgroundJobs(): Promise<void> {
-  await Promise.all([stopApprovalSweep(), stopBounceScanner(), stopDsarSlaScheduler()]);
+  await Promise.all([
+    stopApprovalSweep(),
+    stopBounceScanner(),
+    stopInboxSync(),
+    stopDsarSlaScheduler(),
+  ]);
   markJobsRunningHere(false);
   // After the ticks drained, so their final heartbeat write is not cut off.
   await closeHeartbeatStore().catch(() => undefined);
