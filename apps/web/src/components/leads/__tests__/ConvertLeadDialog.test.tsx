@@ -48,8 +48,27 @@ vi.mock('@intelliflow/ui', () => {
   const Pass = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>;
   return {
     toast: mocks.toast,
-    AlertDialog: ({ children, open }: { children: React.ReactNode; open?: boolean }) =>
-      open ? <div>{children}</div> : null,
+    // A hidden close control lets tests close the dialog the way Escape or a click outside does.
+    AlertDialog: ({
+      children,
+      open,
+      onOpenChange,
+    }: {
+      children: React.ReactNode;
+      open?: boolean;
+      onOpenChange?: (open: boolean) => void;
+    }) =>
+      open ? (
+        <div>
+          {children}
+          <button
+            type="button"
+            aria-hidden="true"
+            data-testid="dialog-close"
+            onClick={() => onOpenChange?.(false)}
+          />
+        </div>
+      ) : null,
     AlertDialogContent: Pass,
     AlertDialogHeader: Pass,
     AlertDialogFooter: Pass,
@@ -145,6 +164,25 @@ describe('ConvertLeadDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Convert and create deal' }));
     expect(mocks.dealMutate).not.toHaveBeenCalled();
     expect(screen.getByRole('alert')).toHaveTextContent(message);
+  });
+
+  it('opens on the mode it is given and goes back to it each time it closes', () => {
+    render(
+      <ConvertLeadDialog
+        lead={lead}
+        userId="user-1"
+        open
+        onOpenChange={vi.fn()}
+        initialMode="deal"
+      />
+    );
+    expect(screen.getByLabelText(/Contact and deal/i)).toBeChecked();
+
+    fireEvent.click(screen.getByLabelText(/Contact only/i));
+    expect(screen.getByLabelText(/Contact only/i)).toBeChecked();
+
+    fireEvent.click(screen.getByTestId('dialog-close'));
+    expect(screen.getByLabelText(/Contact and deal/i)).toBeChecked();
   });
 
   it('on deal success toasts, closes and opens the new deal', () => {
