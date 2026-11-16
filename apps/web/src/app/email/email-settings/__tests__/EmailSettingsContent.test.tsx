@@ -49,6 +49,7 @@ vi.mock('@/lib/trpc', () => ({
 vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: () => ({ isLoading: false, isAuthenticated: true }),
 }));
+vi.mock('../components/SendFromHint', () => ({ SendFromHint: () => null }));
 vi.mock('../components/SmtpMailboxForm', () => ({
   SmtpMailboxForm: () => <div data-testid="smtp-form" />,
 }));

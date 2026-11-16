@@ -17,6 +17,7 @@ import { oauthProviderKey } from '../../oauth/oauth-session';
 import { connectionFailureHelp } from './connection-help';
 import { oneClickNotYet, providerByServer } from './mailbox-providers';
 import { SmtpHostingNotice } from './SmtpHostingNotice';
+import { SendFromHint, type HintProvider } from './SendFromHint';
 
 // Loaded on demand: most users connect with Google or Microsoft (C-FE5).
 const SmtpMailboxForm = dynamic(() => import('./SmtpMailboxForm').then((m) => m.SmtpMailboxForm), {
@@ -26,6 +27,8 @@ const SmtpMailboxForm = dynamic(() => import('./SmtpMailboxForm').then((m) => m.
 
 type Scope = 'USER' | 'TENANT';
 type Provider = 'GMAIL' | 'MICROSOFT' | 'ZOHO';
+
+const ORDER: readonly Provider[] = ['GMAIL', 'MICROSOFT', 'ZOHO'];
 
 const PROVIDER_LABEL: Record<Provider, string> = {
   GMAIL: 'Google',
@@ -69,6 +72,8 @@ export function MailboxConnection({
   const testConnection = trpc.emailMailbox.testConnection.useMutation();
   const disconnect = trpc.emailMailbox.disconnect.useMutation();
   const [editing, setEditing] = useState(false);
+  // MVP-001: the provider the send-from address's mail runs on, offered first.
+  const [preferred, setPreferred] = useState<HintProvider | null>(null);
   const [disconnectOpen, setDisconnectOpen] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -178,12 +183,15 @@ export function MailboxConnection({
         </p>
       )}
 
+      {!connected && !editing && <SendFromHint scope={scope} onProvider={setPreferred} />}
+
       {(!connected || broken) && (
         <div className="flex flex-wrap items-start gap-2">
           {/* While setting up, the form's own first step is the only choice on screen. */}
-          {!editing && providerButton('GMAIL')}
-          {!editing && providerButton('MICROSOFT')}
-          {!editing && providerButton('ZOHO')}
+          {!editing &&
+            ORDER.filter((p) => p === preferred)
+              .concat(ORDER.filter((p) => p !== preferred))
+              .map((p) => providerButton(p))}
           {/* A broken SMTP mailbox is edited below; a disconnected one is set up again here. */}
           {!editing && (!connected || mailbox?.kind !== 'SMTP') && (
             <Button
