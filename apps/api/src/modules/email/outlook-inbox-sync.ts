@@ -36,6 +36,10 @@ const MAILBOXES_PER_TICK = 10;
 export const TICK_BUDGET_MS = 2 * 60_000;
 /** Time one mailbox's reads (both folders) may take per round; each request also has a timeout. */
 const MAILBOX_READ_BUDGET_MS = 60_000;
+/** Time one mailbox's round may take in all (reads, bodies, writes): well inside LEASE_MS. */
+const MAILBOX_STORE_BUDGET_MS = 3 * 60_000;
+/** What the last store and the release may still take after storing stops (bodies time out at 30 s). */
+const LEASE_MARGIN_MS = 90_000;
 const MAX_BACKOFF_MS = 6 * 60 * 60_000;
 /** A mailbox without Mail.Read (connected before the scope, or narrowed) is checked daily. */
 const NO_SCOPE_RECHECK_MS = 24 * 60 * 60_000;
@@ -308,6 +312,8 @@ interface MailboxRun {
   now: Date;
   /** Epoch ms after which no read of this mailbox starts another page. */
   deadline: number;
+  /** Epoch ms after which no more mail of this mailbox is stored (bodies are read while storing). */
+  storeBy: number;
   report: InboxSyncReport;
 }
 
@@ -345,6 +351,9 @@ async function syncFolder(
 ): Promise<SyncRound> {
   const round = await readRound(deps, run, folder, cursor);
   for (const message of round.messages) {
+    // Out of time for this mailbox: stop well inside the lease, so no other worker takes it over
+    // mid-write. The folder keeps its old cursor and stays due; what was stored is deduped next time.
+    if (deps.now().getTime() >= run.storeBy) return { ...round, cursor, complete: false };
     const outcome = await storeSyncedMessage(deps, mailbox, message, folder, run.reader.provider);
     if (outcome === 'stored') run.report.stored += 1;
     else run.report.skipped += 1;
@@ -378,8 +387,14 @@ async function syncMailbox(
     const access = await getOAuthAccess(deps.prisma, mailbox, deps.transports, now);
     version = access.tokenVersion;
     const token = access.accessToken;
-    const deadline = deps.now().getTime() + MAILBOX_READ_BUDGET_MS;
-    const run: MailboxRun = { reader, mailbox, token, now, deadline, report };
+    const startedAt = deps.now().getTime();
+    const deadline = startedAt + MAILBOX_READ_BUDGET_MS;
+    // Counted from the claim's lease too, so a slow token refresh and the last store still fit.
+    const storeBy = Math.min(
+      startedAt + MAILBOX_STORE_BUDGET_MS,
+      claim.leaseUntil.getTime() - LEASE_MARGIN_MS
+    );
+    const run: MailboxRun = { reader, mailbox, token, now, deadline, storeBy, report };
     // Sent first: a CRM-sent mail learns its provider conversation there, so a reply read in the
     // same run (or the first run's 30 days) already finds the thread it joins.
     const sent = await syncFolder(deps, mailbox, run, 'sentitems', mailbox.syncSentCursor);
