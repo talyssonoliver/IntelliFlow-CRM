@@ -72,21 +72,24 @@ export function splitActivityFeed<T extends FeedActivity>(
 
 /**
  * The line above the activity timeline. It counts the person-written entries; when there are none
- * but the system wrote some, it says so instead of "Showing 0 of 0 activities"; with nothing at
- * all it is null and the empty state below speaks alone.
+ * but the system wrote some, it says so instead of "Showing 0 of 0 activities" (or, with a search
+ * or person filter on, that none match); with nothing at all it is null and the empty state below
+ * speaks alone.
  */
 export function activityCountLabel(
   shown: number,
   personalTotal: number,
-  systemTotal: number
+  systemTotal: number,
+  filtered = false
 ): string | null {
   if (personalTotal > 0) {
     return `Showing ${shown} of ${personalTotal} ${personalTotal === 1 ? 'activity' : 'activities'}`;
   }
-  if (systemTotal > 0) {
-    return 'No emails, calls, notes or meetings yet. Only system updates so far.';
-  }
-  return null;
+  if (systemTotal === 0) return null;
+  // A search or person filter may be what hides the person-written entries: say so, never "yet".
+  return filtered
+    ? 'No emails, calls, notes or meetings match these filters.'
+    : 'No emails, calls, notes or meetings yet. Only system updates so far.';
 }
 
 /** The "Filter by people" box is only useful when the workspace has more than one person. */

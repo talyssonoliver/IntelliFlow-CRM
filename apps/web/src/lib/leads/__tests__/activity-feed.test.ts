@@ -97,5 +97,14 @@ describe('activityCountLabel', () => {
 
   it('is null when there is no activity at all, leaving the empty state alone', () => {
     expect(activityCountLabel(0, 0, 0)).toBeNull();
+    expect(activityCountLabel(0, 0, 0, true)).toBeNull();
+  });
+
+  it('with a search or person filter on, says nothing matches rather than "yet"', () => {
+    // A lead with emails whose search matches only a score update: personal 0, system 1.
+    expect(activityCountLabel(0, 0, 1, true)).toBe(
+      'No emails, calls, notes or meetings match these filters.'
+    );
+    expect(activityCountLabel(2, 2, 1, true)).toBe('Showing 2 of 2 activities');
   });
 });

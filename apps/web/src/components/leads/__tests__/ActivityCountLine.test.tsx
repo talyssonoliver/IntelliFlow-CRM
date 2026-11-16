@@ -17,6 +17,13 @@ describe('ActivityCountLine', () => {
     expect(screen.queryByText(/Showing 0 of 0/)).toBeNull();
   });
 
+  it('with a filter on, says none match instead of claiming the lead has none', () => {
+    render(<ActivityCountLine shown={0} total={0} system={1} filtered />);
+    expect(screen.getByTestId('activity-count-line').textContent).toBe(
+      'No emails, calls, notes or meetings match these filters.'
+    );
+  });
+
   it('renders nothing when the lead has no activity', () => {
     const { container } = render(<ActivityCountLine shown={0} total={0} system={0} />);
     expect(container.firstChild).toBeNull();

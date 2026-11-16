@@ -1245,6 +1245,7 @@ function LeadActivityTab({
             shown={visibleActivities.length}
             total={filteredActivities.length}
             system={systemActivities.length}
+            filtered={personFilter !== 'all' || Boolean(searchQuery)}
           />
           <div className="relative space-y-4" style={{ paddingLeft: 40 }}>
             <div
@@ -2603,14 +2604,14 @@ export default function Lead360Page() {
   const filteredActivities = activityFeed.personal;
   const { data: workspaceMembers } = api.user.list.useQuery({ limit: 2 });
   const showPeople = showPeopleFilter(workspaceMembers?.users.length ?? 0);
-  const visibleActivitiesAll = useMemo(
+  const visibleActivities = useMemo(
     () => filteredActivities.slice(0, visibleCount),
     [filteredActivities, visibleCount]
   );
   // The folded System updates render with comments and reactions too, so load theirs.
   const activityIdsForReactions = useMemo(
-    () => [...visibleActivitiesAll, ...activityFeed.system].map((a) => a.id),
-    [visibleActivitiesAll, activityFeed.system]
+    () => [...visibleActivities, ...activityFeed.system].map((a) => a.id),
+    [visibleActivities, activityFeed.system]
   );
   const { reactions: reactionsMap, toggleReaction } = useActivityReactions(
     activityIdsForReactions,
@@ -2696,7 +2697,6 @@ export default function Lead360Page() {
   };
 
   // Use pre-computed filtered/visible activities (hooks moved before early returns)
-  const visibleActivities = visibleActivitiesAll;
   const hasMore = visibleCount < filteredActivities.length;
 
   // Toggle activity expansion
