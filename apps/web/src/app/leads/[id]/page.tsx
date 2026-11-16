@@ -36,6 +36,9 @@ import {
   EmptyState,
 } from '@intelliflow/ui';
 import { api } from '@/lib/api';
+import { showPeopleFilter, splitActivityFeed } from '@/lib/leads/activity-feed';
+import { SystemUpdatesGroup } from '@/components/leads/SystemUpdatesGroup';
+import { ActivityFilterBar } from '@/components/leads/ActivityFilterBar';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { revalidateLeadCaches } from '../actions';
@@ -356,17 +359,6 @@ interface LeadWithRelations {
   account?: { id: string; name: string } | null;
 }
 
-// Activity type filter options
-const activityTypeFilters: { value: ActivityType | 'all'; label: string; icon: string }[] = [
-  { value: 'all', label: 'All', icon: '📋' },
-  { value: 'email', label: 'Emails', icon: '📧' },
-  { value: 'call', label: 'Calls', icon: '📞' },
-  { value: 'note', label: 'Notes', icon: '📝' },
-  { value: 'meeting', label: 'Meetings', icon: '📅' },
-  { value: 'web_form', label: 'Web Forms', icon: '🌐' },
-  { value: 'score_update', label: 'Scores', icon: '📊' },
-];
-
 // LeadStatusBadge + TemperatureBadge now live in
 // '@/components/leads/lead-detail' (imported above)
 
@@ -450,17 +442,6 @@ function formatDate(dateString: string, timezone: string): string {
 
 // getActivityIcon + getActivityIconBg now live in
 // '@/lib/leads/lead-format' (imported above)
-
-function getSentimentTrendStyle(trend?: string): string {
-  switch (trend) {
-    case 'improving':
-      return 'text-green-600';
-    case 'declining':
-      return 'text-red-600';
-    default:
-      return 'text-slate-600';
-  }
-}
 
 // ─── Sub-components extracted to reduce cognitive complexity ─────────────────
 
@@ -1152,106 +1133,6 @@ function ActivityTimelineItem({
   );
 }
 
-// ─── Activity tab filter bar ──────────────────────────────────────────────────
-
-interface ActivityFilterBarProps {
-  searchQuery: string;
-  onSearchChange: (q: string) => void;
-  activityTypeFilter: ActivityType | 'all';
-  onTypeFilterChange: (f: ActivityType | 'all') => void;
-  personFilter: string;
-  onPersonFilterChange: (p: string) => void;
-  personFilters: { value: string; label: string }[];
-  aiInsightsSentimentTrend: string | null;
-  aiInsightsLastEngagementDays: number;
-  onClearFilters: () => void;
-}
-
-function ActivityFilterBar({
-  searchQuery,
-  onSearchChange,
-  activityTypeFilter,
-  onTypeFilterChange,
-  personFilter,
-  onPersonFilterChange,
-  personFilters,
-  aiInsightsSentimentTrend,
-  aiInsightsLastEngagementDays,
-  onClearFilters,
-}: ActivityFilterBarProps) {
-  return (
-    <div className="mb-6 space-y-4">
-      <div className="relative">
-        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 !text-[18px] text-slate-400">
-          search
-        </span>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search activities..."
-          className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#2a78f6] focus:ring-1 focus:ring-[#2a78f6] placeholder:text-slate-400"
-        />
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {activityTypeFilters.map((filter) => (
-          <button
-            key={filter.value}
-            onClick={() => onTypeFilterChange(filter.value)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              activityTypeFilter === filter.value
-                ? 'bg-[#2a78f6] text-white'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            <span>{filter.icon}</span> {filter.label}
-          </button>
-        ))}
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-slate-500 font-medium">Filter by:</span>
-        <select
-          value={personFilter}
-          onChange={(e) => onPersonFilterChange(e.target.value)}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#2a78f6] focus:ring-1 focus:ring-[#2a78f6]"
-        >
-          {personFilters.map((filter) => (
-            <option key={filter.value} value={filter.value}>
-              {filter.label}
-            </option>
-          ))}
-        </select>
-        {(activityTypeFilter !== 'all' || personFilter !== 'all' || searchQuery) && (
-          <button onClick={onClearFilters} className="text-xs text-[#2a78f6] hover:underline">
-            Clear filters
-          </button>
-        )}
-      </div>
-      {aiInsightsSentimentTrend && (
-        <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
-          <div className="w-8 h-8 rounded-full bg-[#2a78f6]/10 flex items-center justify-center">
-            <span className="material-symbols-outlined !text-[18px] text-[#2a78f6]">
-              auto_awesome
-            </span>
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-slate-900 dark:text-white">
-              Sentiment is{' '}
-              <span className={getSentimentTrendStyle(aiInsightsSentimentTrend)}>
-                {aiInsightsSentimentTrend}
-              </span>
-            </p>
-            <p className="text-xs text-slate-500">
-              Last engagement: {aiInsightsLastEngagementDays} day
-              {aiInsightsLastEngagementDays === 1 ? '' : 's'} ago
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Activity tab ─────────────────────────────────────────────────────────────
 
 interface LeadActivityTabProps {
@@ -1266,7 +1147,9 @@ interface LeadActivityTabProps {
   personFilter: string;
   onPersonFilterChange: (p: string) => void;
   personFilters: { value: string; label: string }[];
+  showPeople: boolean;
   filteredActivities: Activity[];
+  systemActivities: Activity[];
   visibleActivities: Activity[];
   expandedActivities: Set<string>;
   onToggleExpand: (id: string) => void;
@@ -1292,7 +1175,9 @@ function LeadActivityTab({
   personFilter,
   onPersonFilterChange,
   personFilters,
+  showPeople,
   filteredActivities,
+  systemActivities,
   visibleActivities,
   expandedActivities,
   onToggleExpand,
@@ -1350,6 +1235,7 @@ function LeadActivityTab({
             personFilter={personFilter}
             onPersonFilterChange={onPersonFilterChange}
             personFilters={personFilters}
+            showPeople={showPeople}
             aiInsightsSentimentTrend={aiInsightsSentimentTrend}
             aiInsightsLastEngagementDays={aiInsightsLastEngagementDays}
             onClearFilters={onClearFilters}
@@ -1375,6 +1261,20 @@ function LeadActivityTab({
                 renderActions={renderActions}
               />
             ))}
+            {/* COA sync, portal, score and status entries: one folded line (MVP-005). */}
+            <SystemUpdatesGroup count={systemActivities.length}>
+              {systemActivities.map((activity) => (
+                <ActivityTimelineItem
+                  key={activity.id}
+                  activity={activity}
+                  isExpanded={expandedActivities.has(activity.id)}
+                  isDeepLinked={isDeepLinkedActivity(activity.id, selectedActivityId)}
+                  timezone={timezone}
+                  onToggleExpand={onToggleExpand}
+                  renderActions={renderActions}
+                />
+              ))}
+            </SystemUpdatesGroup>
           </div>
           {hasMore && (
             <button
@@ -1384,7 +1284,7 @@ function LeadActivityTab({
               Load more activities ({filteredActivities.length - visibleCount} remaining)
             </button>
           )}
-          {filteredActivities.length === 0 && (
+          {filteredActivities.length === 0 && systemActivities.length === 0 && (
             <EmptyState
               entity="activity"
               variant={
@@ -2683,13 +2583,19 @@ export default function Lead360Page() {
   );
 
   // Activity reactions/comments — hooks must be before any early returns
-  const filteredActivitiesAll = useMemo(
+  // Person-written activity newest first; system entries folded into one group (MVP-005).
+  const activityFeed = useMemo(
     () =>
-      activities.filter((activity) =>
-        filterActivity(activity, activityTypeFilter, personFilter, searchQuery)
+      splitActivityFeed(
+        activities,
+        activityTypeFilter as Parameters<typeof splitActivityFeed>[1],
+        (a) => filterActivity(a, 'all', personFilter, searchQuery)
       ),
     [activities, activityTypeFilter, personFilter, searchQuery]
   );
+  const filteredActivitiesAll = activityFeed.personal;
+  const { data: workspaceMembers } = api.user.list.useQuery({ limit: 2 });
+  const showPeople = showPeopleFilter(workspaceMembers?.users.length ?? 0);
   const visibleActivitiesAll = useMemo(
     () => filteredActivitiesAll.slice(0, visibleCount),
     [filteredActivitiesAll, visibleCount]
@@ -2921,7 +2827,9 @@ export default function Lead360Page() {
               personFilter={personFilter}
               onPersonFilterChange={setPersonFilter}
               personFilters={personFilters}
+              showPeople={showPeople}
               filteredActivities={filteredActivities}
+              systemActivities={activityFeed.system}
               visibleActivities={visibleActivities}
               expandedActivities={expandedActivities}
               onToggleExpand={toggleExpand}
