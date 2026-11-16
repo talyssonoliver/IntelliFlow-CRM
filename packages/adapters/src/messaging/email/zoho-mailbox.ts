@@ -141,7 +141,7 @@ async function apiError(response: Response): Promise<MailboxTransportError> {
 }
 
 /** The keys whose values are Zoho ids (about 19 digits, past what a JSON number holds exactly). */
-const ID_KEYS = new Set(['accountId', 'messageId']);
+const ID_KEYS = new Set(['accountId', 'messageId', 'folderId', 'threadId']);
 
 /**
  * JSON.parse that keeps every id as the exact digits Zoho sent (each record keeps its own id),
@@ -169,6 +169,30 @@ function dataCentreFor(mailHost: string): ZohoDataCentre {
   const dc = zohoDataCentreByMailHost(mailHost);
   if (!dc) throw new MailboxTransportError('AUTH_FAILED');
   return dc;
+}
+
+/**
+ * One authenticated GET on a Zoho account's Mail API (MVP-001 reply sync): Zoho's own host only,
+ * the request timeout, a dead token read from the body, ids kept exact. `path` starts at the account
+ * (`/folders`, `/messages/view?...`).
+ */
+export async function zohoAccountGet(
+  fetchImpl: typeof fetch,
+  accessToken: string,
+  ref: ZohoAccountRef,
+  path: string
+): Promise<unknown> {
+  const base = `https://${dataCentreFor(ref.mailHost).mail}/api/accounts/${encodeURIComponent(ref.accountId)}`;
+  const response = await call(fetchImpl, base + path, {
+    headers: { Authorization: `Zoho-oauthtoken ${accessToken}` },
+  });
+  if (!response.ok) throw await apiError(response);
+  const text = await response.text().catch(() => '');
+  try {
+    return parseKeepingIds(text);
+  } catch {
+    throw new MailboxTransportError('REJECTED');
+  }
 }
 
 export class ZohoMailboxClient {
