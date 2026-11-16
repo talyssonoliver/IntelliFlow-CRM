@@ -37,6 +37,7 @@ import {
   type BulkDialogKind,
 } from '@/lib/leads/bulk-actions';
 import { useLeadRecentViews } from '@/lib/leads/use-lead-recent-views';
+import { buildListConvertPayload } from '@/lib/leads/lead-conversion';
 
 /**
  * Lead List — extracted client component (PG-059).
@@ -505,7 +506,7 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
   const rowActionHandlers: RowActionHandlers = useMemo(
     () => ({
       onEdit: (lead) => router.push(`/leads/${lead.id}/edit`),
-      onConvert: (lead) => convertMutation.mutate({ leadId: lead.id, createAccount: true }),
+      onConvert: (lead) => convertMutation.mutate(buildListConvertPayload(lead)),
       onQualify: (lead) =>
         qualifyMutation.mutate({ leadId: lead.id, reason: 'Manual qualification from list' }),
       onScore: (lead) => scoreMutation.mutate({ leadId: lead.id }),
