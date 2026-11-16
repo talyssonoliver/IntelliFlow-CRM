@@ -20,6 +20,13 @@ vi.mock('@/lib/trpc', () => ({
     },
   },
 }));
+vi.mock('../SendFromHint', () => ({
+  SendFromHint: (p: { onProvider: (provider: 'ZOHO') => void }) => (
+    <button type="button" onClick={() => p.onProvider('ZOHO')}>
+      stub hint zoho
+    </button>
+  ),
+}));
 vi.mock('../SmtpMailboxForm', () => ({
   SmtpMailboxForm: (p: { scope: string; onSaved: (d: unknown) => void; onCancel: () => void }) => (
     <div data-testid="smtp-form">
@@ -120,6 +127,15 @@ describe('MyMailboxCard', () => {
       expect(api.oauthStart.mutateAsync).toHaveBeenCalledWith({ provider: 'ZOHO', scope: 'USER' })
     );
     expect(screen.queryByText(/isn't available yet/)).not.toBeInTheDocument();
+  });
+
+  it('puts the button of the provider that runs the send-from address first', () => {
+    renderCard({ providersAvailable: { GMAIL: true, MICROSOFT: true, ZOHO: true } });
+    const before = screen.getAllByRole('button', { name: /^Connect / }).map((b) => b.textContent);
+    expect(before[0]).toBe('Connect Google');
+    fireEvent.click(screen.getByRole('button', { name: 'stub hint zoho' }));
+    const after = screen.getAllByRole('button', { name: /^Connect / }).map((b) => b.textContent);
+    expect(after[0]).toBe('Connect Zoho Mail');
   });
 
   it('says above the password form that sending with a password does not work here yet', () => {

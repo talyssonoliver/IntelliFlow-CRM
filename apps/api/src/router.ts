@@ -52,6 +52,7 @@ import { zepBudgetRouter } from './modules/zep/zep-budget.router';
 import { intelligenceRouter } from './modules/intelligence/intelligence.router';
 import { inboundEmailRouter } from './modules/email/inbound.router';
 import { emailMailboxRouter } from './modules/email/email-mailbox.router';
+import { emailProviderHintRouter } from './modules/email/email-provider-hint.router';
 import { emailSettingsRouter } from './modules/email/email-settings.router';
 import { emailSignaturesRouter } from './modules/email/email-signatures.router';
 import { emailAttachmentsRouter } from './modules/email/email-attachments.router';
@@ -208,6 +209,8 @@ export const appRouter = createTRPCRouter({
   email: inboundEmailRouter,
   // PG-207 (ADR-085): user mailboxes, email settings, signatures, attachments
   emailMailbox: emailMailboxRouter,
+  // MVP-001: which provider runs an address's mail (MX), for the connect screen
+  emailProviderHint: emailProviderHintRouter,
   emailSettings: emailSettingsRouter,
   emailSignatures: emailSignaturesRouter,
   emailAttachments: emailAttachmentsRouter,

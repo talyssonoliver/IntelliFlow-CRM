@@ -15,6 +15,7 @@ vi.mock('@/lib/trpc', () => ({
     },
   },
 }));
+vi.mock('../SendFromHint', () => ({ SendFromHint: () => null }));
 vi.mock('../SmtpMailboxForm', () => ({
   SmtpMailboxForm: (p: { scope: string }) => <div data-testid="smtp-form">form for {p.scope}</div>,
 }));
