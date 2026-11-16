@@ -109,6 +109,8 @@ export interface MailboxDto extends SmtpEndpointDto, SmtpAccountDto {
   accountAddress: string | null;
   /** #1177: when the Outlook inbox sync last finished a round (ISO); null before the first. */
   inboxSyncedAt?: string | null;
+  /** MVP-001: replies logged (ON), the connection needs the read permission (NEEDS_RECONNECT), or n/a. */
+  replySync?: 'ON' | 'NEEDS_RECONNECT' | null;
   updatedAt: string;
 }
 

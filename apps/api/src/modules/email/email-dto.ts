@@ -25,6 +25,7 @@ import {
   type SmtpEndpointRow,
   type SuppressionDto,
 } from '@intelliflow/validators';
+import { SYNC_READ_CHECKS } from './mail-sync-scopes';
 
 /** A mailbox row; the SMTP columns come from SmtpEndpointRow and SmtpAccountRow (#1103). */
 export interface MailboxRowLike extends SmtpEndpointRow, SmtpAccountRow {
@@ -43,7 +44,22 @@ export interface MailboxRowLike extends SmtpEndpointRow, SmtpAccountRow {
   refreshToken: string | null;
   /** #1177 Outlook inbox sync: the last finished round (absent on rows read without it). */
   syncedAt?: Date | null;
+  /** Scopes the provider granted (OAuth mailboxes). */
+  grantedScopes?: string[];
   updatedAt: Date;
+}
+
+/**
+ * MVP-001: whether replies are logged from this mailbox. ON when its kind has a sync reader and the
+ * read permission was granted; NEEDS_RECONNECT when the kind can sync but the connection predates
+ * the read permission; null when the kind does not sync (password mailboxes, Gmail).
+ */
+export function replySyncState(
+  row: Pick<MailboxRowLike, 'kind' | 'grantedScopes'>
+): 'ON' | 'NEEDS_RECONNECT' | null {
+  const canRead = SYNC_READ_CHECKS[row.kind];
+  if (!canRead) return null;
+  return canRead(row.grantedScopes ?? []) ? 'ON' : 'NEEDS_RECONNECT';
 }
 
 /** Whether the bounce reader can scan this mailbox. */
@@ -79,6 +95,7 @@ export function toMailboxDto(
     bounceReadingEnabled: canReadBounces(row),
     accountAddress: row.accountAddress,
     inboxSyncedAt: row.syncedAt ? row.syncedAt.toISOString() : null,
+    replySync: replySyncState(row),
     updatedAt: row.updatedAt.toISOString(),
   };
 }

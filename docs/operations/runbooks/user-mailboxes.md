@@ -49,6 +49,16 @@ Both carry only the mailbox id and an error code.
 | `EMAIL_INBOX_SYNC`                                                        | on                  | `off` stops the Outlook inbox sync (#1177) in this process. The bounce scan is a separate timer and keeps running.                                                                                                  |
 | `EMAIL_INBOX_SYNC_INTERVAL_MS`                                            | `60000`             | Inbox sync tick interval. `0` disables it. Always off under tests and on serverless runtimes.                                                                                                                       |
 
+## Zoho Mail reply sync (MVP-001)
+
+A Zoho Mail mailbox is read by the same sync once it grants
+`ZohoMail.messages.READ` and `ZohoMail.folders.READ` (asked for on Connect Zoho
+Mail since MVP-001). A mailbox connected before that shows "Replies from leads
+and contacts are not logged yet" with a **Reconnect to log replies** button on
+its Email Settings card; one reconnect grants the read permission. Replies join
+the thread of the mail they answer (Zoho's thread id), and mail with a lead also
+shows on the lead's timeline.
+
 ## Outlook / Microsoft 365 inbox sync (#1177)
 
 Its own timer (`apps/api/src/modules/email/inbox-sync-scheduler.ts`, separate

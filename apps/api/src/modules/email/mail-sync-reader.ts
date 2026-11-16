@@ -10,6 +10,9 @@ import {
   readZohoFolder,
   readZohoFolderIds,
 } from '@intelliflow/adapters';
+import { hasMailRead, hasZohoRead } from './mail-sync-scopes';
+
+export { hasMailRead, hasZohoRead } from './mail-sync-scopes';
 
 /** The folders a sync reads: received mail and mail the user sent from the provider itself. */
 export type SyncFolder = 'inbox' | 'sentitems';
@@ -61,11 +64,6 @@ export interface MailSyncReader {
   read(args: SyncReadArgs): Promise<SyncRound>;
 }
 
-/** Microsoft reports scopes bare ("Mail.Read") or as resource URIs (".../Mail.Read"). */
-export function hasMailRead(scopes: readonly string[]): boolean {
-  return scopes.some((s) => s === 'Mail.Read' || s.toLowerCase().endsWith('/mail.read'));
-}
-
 const GRAPH_DELTA = { maxPages: 10, pageSize: 50, initialDays: 30, maxBodyChars: 100_000 } as const;
 
 /** Microsoft 365 / Outlook through Graph's delta query (graph-mail-delta.ts). */
@@ -78,14 +76,6 @@ export function graphReader(
     read: ({ accessToken, folder, cursor, now, budgetMs }) =>
       readDelta(accessToken, cursor, { folder, ...GRAPH_DELTA, now, budgetMs }),
   };
-}
-
-/** Zoho needs both read scopes: messages (list, content) and folders (the Inbox and Sent ids). */
-export function hasZohoRead(scopes: readonly string[]): boolean {
-  const granted = new Set(scopes.map((s) => s.toLowerCase()));
-  const has = (area: string) =>
-    granted.has(`zohomail.${area}.read`) || granted.has(`zohomail.${area}.all`);
-  return has('messages') && has('folders');
 }
 
 const ZOHO_READ = { maxPages: 10, pageSize: 50, initialDays: 30, maxBodyChars: 100_000 } as const;
