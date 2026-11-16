@@ -13,6 +13,7 @@ import type { WidgetProps } from './index';
 
 const STAGE_COLORS: Record<string, string> = {
   QUALIFICATION: 'bg-stage-qualification',
+  NEEDS_ANALYSIS: 'bg-stage-needs-analysis',
   PROPOSAL: 'bg-stage-proposal',
   NEGOTIATION: 'bg-stage-negotiation',
   CLOSED_WON: 'bg-stage-won',
