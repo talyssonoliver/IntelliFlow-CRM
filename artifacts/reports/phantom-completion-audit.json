@@ -1,17 +1,17 @@
 {
   "audit_metadata": {
-    "generated_at": "2026-11-16T09:36:22.265Z",
+    "generated_at": "2026-11-16T13:38:26.068Z",
     "audit_type": "PHANTOM_COMPLETION_DETECTION",
     "sprint_scope": "all",
     "severity": "INFO"
   },
   "summary": {
-    "total_completed_tasks": 452,
-    "verified_completions": 452,
+    "total_completed_tasks": 455,
+    "verified_completions": 455,
     "phantom_completions": 0,
     "sprint_path_mismatches": 1,
     "untracked_by_design_artifacts": 112,
-    "dod_wording_warnings": 152,
+    "dod_wording_warnings": 153,
     "integrity_score": "100%",
     "conclusion": "1 tasks have attestations in the wrong sprint folder"
   },
@@ -1832,6 +1832,25 @@
         "apps/web/src/app/accounts/(list)/page.tsx",
         "apps/web/src/app/accounts/(list)/AccountsPageClient.tsx",
         "apps/web/src/components/accounts/AccountHierarchy.tsx"
+      ]
+    },
+    {
+      "task_id": "PG-073",
+      "description": "Opportunities List: the /deals list view (DealListView), wit",
+      "artifacts_verified": [
+        "apps/web/src/app/deals/(list)/page.tsx",
+        "apps/web/src/components/deals/DealListView.tsx",
+        ".specify/sprints/sprint-24/attestations/PG-073/attestation.json"
+      ]
+    },
+    {
+      "task_id": "PG-076",
+      "description": "Pipeline Board: the /deals?view=pipeline kanban. Deals drag ",
+      "artifacts_verified": [
+        "apps/web/src/app/deals/(list)/page.tsx",
+        "apps/web/src/components/deals/PipelineBoard.tsx",
+        "apps/web/src/components/deals/StageColumn.tsx",
+        ".specify/sprints/sprint-24/attestations/PG-076/attestation.json"
       ]
     },
     {
@@ -4942,6 +4961,13 @@
       "artifacts_verified": [
         "apps/api/src/modules/email/mailbox-sender.ts"
       ]
+    },
+    {
+      "task_id": "MVP-002",
+      "description": "No trial badge on a contracted workspace: a workspace on a c",
+      "artifacts_verified": [
+        ".specify/sprints/sprint-24/attestations/MVP-002/attestation.json"
+      ]
     }
   ],
   "phantom_completions": [],
@@ -6636,6 +6662,13 @@
       "task_id": "PM-OPS-003",
       "issues": [
         "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "MVP-002",
+      "issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
       ]
     }
   ],

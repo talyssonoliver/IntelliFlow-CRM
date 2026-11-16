@@ -3653,7 +3653,9 @@ MVP-002:
   acceptance_owner: 'Owner'
   debt_allowed: no
   evidence_required:
-    - .specify/sprints/sprint-24/attestations/MVP-002/owner-screenshot.png
+    # The production screenshots stay out of this public repository; the attestation records
+    # PR #1370, the production check and the screenshots' SHA-256 hashes.
+    - .specify/sprints/sprint-24/attestations/MVP-002/attestation.json
 MVP-003:
   tier: A
   gate_profile:
