@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   addSuppressionInputSchema,
+  listSuppressionsInputSchema,
   removeSuppressionInputSchema,
   sendUserEmailInputSchema,
   updateEmailSettingsInputSchema,
@@ -60,6 +61,22 @@ describe('suppression inputs', () => {
   it('requires an id on remove', () => {
     expect(removeSuppressionInputSchema.safeParse({ id: '' }).success).toBe(false);
     expect(removeSuppressionInputSchema.safeParse({ id: 'c' + 'x'.repeat(24) }).success).toBe(true);
+  });
+
+  // #1402: tRPC's useInfiniteQuery adds cursor (null on the first page) and direction itself.
+  it('accepts the list input exactly as useInfiniteQuery sends it', () => {
+    expect(
+      listSuppressionsInputSchema.parse({ limit: 25, cursor: null, direction: 'forward' })
+    ).toEqual({ limit: 25, cursor: null, direction: 'forward' });
+    const next = 'c' + 'x'.repeat(24);
+    expect(
+      listSuppressionsInputSchema.parse({ limit: 25, cursor: next, direction: 'forward' })?.cursor
+    ).toBe(next);
+  });
+
+  it('still refuses keys it does not know and a bad direction', () => {
+    expect(listSuppressionsInputSchema.safeParse({ limit: 25, tenantId: 't' }).success).toBe(false);
+    expect(listSuppressionsInputSchema.safeParse({ direction: 'sideways' }).success).toBe(false);
   });
 });
 
