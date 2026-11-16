@@ -61,6 +61,7 @@ export function MobileNav({ routes, isOpen, onClose }: Readonly<MobileNavProps>)
           return (
             <Fragment key={route.href}>
               <Link
+                prefetch={false}
                 href={route.href}
                 onClick={onClose}
                 className={cn(

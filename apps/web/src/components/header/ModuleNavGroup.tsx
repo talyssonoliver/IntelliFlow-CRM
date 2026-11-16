@@ -51,6 +51,7 @@ export function ModuleNavGroup({ onNavigate }: Readonly<{ onNavigate: () => void
             const active = isSidebarItemActive(item, pathname, searchParams);
             return (
               <Link
+                prefetch={false}
                 key={item.id}
                 href={item.href}
                 onClick={onNavigate}
@@ -109,7 +110,12 @@ function ModuleSettingsEntry({
     );
   }
   return (
-    <Link href={nav.settingsHref!} onClick={onNavigate} className={cn(ITEM_CLASS, IDLE_CLASS)}>
+    <Link
+      prefetch={false}
+      href={nav.settingsHref!}
+      onClick={onNavigate}
+      className={cn(ITEM_CLASS, IDLE_CLASS)}
+    >
       {content}
     </Link>
   );
