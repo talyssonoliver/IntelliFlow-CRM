@@ -56,6 +56,7 @@ import { emailProviderHintRouter } from './modules/email/email-provider-hint.rou
 import { emailSettingsRouter } from './modules/email/email-settings.router';
 import { emailSignaturesRouter } from './modules/email/email-signatures.router';
 import { emailAttachmentsRouter } from './modules/email/email-attachments.router';
+import { emailLogRouter } from './modules/email/email-log.router';
 import { autoResponseRouter } from './modules/autoresponse';
 import { aiMonitoringRouter } from './modules/ai-monitoring/ai-monitoring.router';
 import { aiReviewRouter } from './modules/ai-review/ai-review.router';
@@ -213,6 +214,8 @@ export const appRouter = createTRPCRouter({
   emailSettings: emailSettingsRouter,
   emailSignatures: emailSignaturesRouter,
   emailAttachments: emailAttachmentsRouter,
+  // #1177: one-click "Log to contact" for mail sent from the CRM
+  emailLog: emailLogRouter,
 
   // Webhook Infrastructure (IFC-144)
   webhooks: webhooksRouter,
