@@ -62,7 +62,7 @@ function renderCard(props: Partial<Parameters<typeof MyMailboxCard>[0]> = {}) {
   const utils = render(
     <MyMailboxCard
       mailbox={null}
-      providersAvailable={{ GMAIL: true, MICROSOFT: false }}
+      providersAvailable={{ GMAIL: true, MICROSOFT: false, ZOHO: false }}
       companyFallbackAddress={null}
       onChanged={onChanged}
       announce={announce}

@@ -60,7 +60,8 @@ describe('lead.convertToDeal router', () => {
       expect.objectContaining({
         leadId: TEST_UUIDS.lead1,
         dealValue: 50000,
-      })
+      }),
+      expect.anything()
     );
   });
 
@@ -153,7 +154,8 @@ describe('lead.convertToDeal router', () => {
     expect(executeMock).toHaveBeenCalledWith(
       expect.objectContaining({
         convertedBy: ctx.user!.userId,
-      })
+      }),
+      expect.anything()
     );
   });
 

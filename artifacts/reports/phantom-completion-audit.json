@@ -1,19 +1,19 @@
 {
   "audit_metadata": {
-    "generated_at": "2026-10-13T08:00:00.275Z",
+    "generated_at": "2026-11-16T09:36:22.265Z",
     "audit_type": "PHANTOM_COMPLETION_DETECTION",
     "sprint_scope": "all",
     "severity": "INFO"
   },
   "summary": {
-    "total_completed_tasks": 431,
-    "verified_completions": 431,
+    "total_completed_tasks": 452,
+    "verified_completions": 452,
     "phantom_completions": 0,
-    "sprint_path_mismatches": 0,
-    "untracked_by_design_artifacts": 101,
-    "dod_wording_warnings": 147,
+    "sprint_path_mismatches": 1,
+    "untracked_by_design_artifacts": 112,
+    "dod_wording_warnings": 152,
     "integrity_score": "100%",
-    "conclusion": "All completed tasks have been verified - no phantom completions or sprint path mismatches detected"
+    "conclusion": "1 tasks have attestations in the wrong sprint folder"
   },
   "verified_tasks": [
     {
@@ -115,7 +115,6 @@
         ".specify/sprints/sprint-0/attestations/ENV-003-AI/attestation.json",
         "apps/workers/events-worker/Dockerfile",
         "apps/workers/ingestion-worker/Dockerfile",
-        "apps/workers/notifications-worker/Dockerfile",
         "docs/setup/docker-compose-overlays.md"
       ]
     },
@@ -250,6 +249,21 @@
         "docs/compliance-and-governance/governance/risk-matrix.md",
         "docs/planning/sprint-planning-README.md",
         ".specify/sprints/sprint-1/attestations/ENV-018-AI/attestation.json"
+      ]
+    },
+    {
+      "task_id": "EP-001-AI",
+      "description": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipelin",
+      "artifacts_verified": [
+        "infra/monitoring/otel-collector.yaml",
+        "infra/monitoring/tempo-config.yml",
+        "infra/monitoring/docker-compose.monitoring.yml",
+        "infra/monitoring/prometheus.yml",
+        "infra/monitoring/loki-config.yml",
+        "artifacts/monitoring-config-hashes.txt",
+        "docs/operations/runbooks/monitoring-runbook.md",
+        ".specify/sprints/sprint-0/attestations/EP-001-AI/attestation.json",
+        "docs/operations/runbooks/easypanel-runbook.md"
       ]
     },
     {
@@ -390,7 +404,7 @@
         "apps/api/src/lib/supabase.ts",
         "apps/api/src/shared/auth-flow.test.ts",
         "apps/api/src/shared/vector-search.test.ts",
-        "apps/web/proxy.ts",
+        "apps/web/src/proxy.ts",
         "apps/web/src/lib/session.ts",
         "apps/api/src/middleware/auth.ts",
         "apps/project-tracker/docs/metrics/_global/flows/FLOW-001.md",
@@ -559,7 +573,9 @@
       "description": "PHASE-011: CrewAI Agent Framework",
       "artifacts_verified": [
         "infra/monitoring/crew-config.yaml",
-        "apps/api/src/agent/orchestration.test.ts",
+        "apps/ai-worker/src/agents/qualification.agent.test.ts",
+        "apps/ai-worker/src/agents/email-writer.agent.test.ts",
+        "apps/ai-worker/src/agents/followup.agent.test.ts",
         ".specify/sprints/sprint-6/attestations/IFC-021/attestation.json"
       ]
     },
@@ -655,6 +671,16 @@
       "artifacts_verified": [
         "artifacts/misc/otel-collector-config.yaml",
         "artifacts/misc/trace-examples.json",
+        "docs/architecture/adr/ADR-017-workflow-reliability.md"
+      ]
+    },
+    {
+      "task_id": "IFC-033",
+      "description": "PHASE-005: Load Testing with k6",
+      "artifacts_verified": [
+        "artifacts/reports/load-test-report.html",
+        "docs/shared/bottleneck-analysis.md",
+        "artifacts/misc/grafana-load-test.png",
         "docs/architecture/adr/ADR-017-workflow-reliability.md"
       ]
     },
@@ -1111,10 +1137,13 @@
         "packages/webhooks/package.json",
         ".specify/sprints/sprint-10/attestations/IFC-099/attestation.json",
         "docs/planning/prd-erp-connectors.md",
-        "tests/integration/connectors/email.test.ts",
+        "packages/adapters/src/email/gmail/__tests__/client.fetch-stub.test.ts",
+        "packages/adapters/src/email/outlook/__tests__/client.test.ts",
         "tests/integration/connectors/erp.test.ts",
-        "tests/integration/connectors/messaging.test.ts",
-        "tests/integration/connectors/payments.test.ts"
+        "packages/adapters/src/messaging/slack/__tests__/client.fetch-stub.test.ts",
+        "packages/adapters/src/messaging/teams/__tests__/client.test.ts",
+        "packages/adapters/src/payments/stripe/__tests__/client.fetch-stub.test.ts",
+        "packages/adapters/src/payments/__tests__/paypal.adapter.test.ts"
       ]
     },
     {
@@ -1218,7 +1247,7 @@
       "description": "Security Page",
       "artifacts_verified": [
         "apps/web/src/app/(public)/security/page.tsx",
-        "apps/web/src/data/security-features.json",
+        "apps/web/src/app/(public)/security/controls.ts",
         ".specify/sprints/sprint-11/attestations/PG-008/attestation.json",
         "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
@@ -2072,6 +2101,35 @@
       ]
     },
     {
+      "task_id": "IFC-117",
+      "description": "Monitor AI models for drift, latency, hallucination and ROI",
+      "artifacts_verified": [
+        "artifacts/metrics/ai-metrics.json",
+        "docs/planning/drift-dashboard.md",
+        "infra/monitoring/alerts-config.yaml",
+        "infra/monitoring/grafana/cloud/dashboard-ai-models.json",
+        "infra/monitoring/grafana/cloud/ai-alert-rules.json",
+        "apps/ai-worker/src/monitoring/otel-ai-metrics.ts",
+        "apps/ai-worker/src/monitoring/otel-ai-types.ts",
+        "apps/ai-worker/src/monitoring/drift-stats.ts",
+        "apps/ai-worker/src/monitoring/drift-scheduler.ts",
+        "apps/ai-worker/src/monitoring/drift-detector.ts",
+        "apps/ai-worker/src/monitoring/chain-monitor.ts",
+        ".github/workflows/grafana-ai-alert-rules.yml",
+        "tools/scripts/observability/apply-grafana-ai-alert-rules.mjs",
+        "docs/architecture/adr/ADR-088-ai-model-monitoring-otel-export.md",
+        "apps/ai-worker/src/monitoring/__tests__/otel-ai-metrics.test.ts",
+        "apps/ai-worker/src/monitoring/__tests__/chain-monitor.otel.test.ts",
+        "apps/ai-worker/src/monitoring/__tests__/drift-detector.shift.test.ts",
+        "apps/ai-worker/src/monitoring/__tests__/drift-scheduler.test.ts",
+        "apps/ai-worker/src/chains/__tests__/scoring.chain.otel.integration.test.ts",
+        "tools/scripts/__tests__/apply-grafana-ai-alert-rules.test.ts",
+        "tools/scripts/__tests__/ai-monitoring-assets.test.ts",
+        ".specify/sprints/sprint-6/attestations/IFC-117/attestation.json",
+        ".specify/sprints/sprint-18/attestations/IFC-117/attestation.json"
+      ]
+    },
+    {
       "task_id": "IFC-118",
       "description": "Establish and maintain a risk register with mitigation actio",
       "artifacts_verified": [
@@ -2369,7 +2427,7 @@
         "docs/compliance-and-governance/data-governance/dsar-process.md",
         "docs/compliance-and-governance/data-governance/retention-policy.md",
         "infra/monitoring/kms-key-config.json",
-        "apps/api/src/workflow/dsar-workflow.ts",
+        "packages/application/src/services/DataSubjectRequestService.ts",
         "tests/compliance/data-governance.spec.ts",
         ".specify/sprints/sprint-11/attestations/IFC-140/attestation.json"
       ]
@@ -2382,6 +2440,27 @@
         ".specify/sprints/sprint-10/attestations/IFC-141/attestation.json",
         "docs/architecture/adr/ADR-005-workflow-engine.md",
         "infra/monitoring/events-spec.yaml"
+      ]
+    },
+    {
+      "task_id": "IFC-142",
+      "description": "Define SLOs/SLIs and alerting; establish on-call and inciden",
+      "artifacts_verified": [
+        "docs/operations/slo-definitions.md",
+        "infra/monitoring/alerts-config.yaml",
+        "infra/monitoring/grafana/cloud/slos.json",
+        "infra/monitoring/grafana/cloud/alert-rules.json",
+        "infra/monitoring/oncall-schedule.json",
+        "docs/operations/incident-runbook.md",
+        "docs/operations/restore-drill-report.md",
+        "docs/planning/financial/cost-budget.csv",
+        "docs/architecture/observability/correlation-patterns.md",
+        "docs/architecture/observability/implementation-guide.md",
+        "docs/architecture/observability/instrumentation-checklist.md",
+        ".specify/sprints/sprint-8/attestations/IFC-142/attestation.json",
+        ".specify/sprints/sprint-18/attestations/IFC-142/task-tracking.json",
+        "docs/architecture/adr/ADR-021-governance-ops-release.md",
+        "docs/planning/prd-release-governance.md"
       ]
     },
     {
@@ -2577,7 +2656,6 @@
         "artifacts/reports/artifact-containment-analysis.md",
         "artifacts/reports/artifact-containment-analysis.md",
         "docs/architecture/runtime-path-linter-design.md",
-        "artifacts/reports/plan-lint-report.json",
         ".specify/sprints/sprint-0/attestations/IFC-160/attestation.json",
         "docs/architecture/adr/ADR-021-governance-ops-release.md",
         "docs/planning/prd-release-governance.md",
@@ -2771,7 +2849,6 @@
       "task_id": "IFC-170",
       "description": "Implement Twilio SMS channel - Follow-up to IFC-157",
       "artifacts_verified": [
-        "apps/workers/notifications-worker/src/channels/sms.ts",
         "packages/adapters/src/messaging/twilio/client.ts",
         ".specify/sprints/sprint-12/attestations/IFC-170/attestation.json",
         "docs/architecture/adr/ADR-023-communications-inbox.md",
@@ -2782,8 +2859,6 @@
       "task_id": "IFC-171",
       "description": "Implement webhook notification channel - Follow-up to IFC-15",
       "artifacts_verified": [
-        "apps/workers/notifications-worker/src/channels/webhook.ts",
-        "apps/workers/notifications-worker/src/__tests__/webhook.test.ts",
         "packages/adapters/src/webhooks/outbound.ts",
         ".specify/sprints/sprint-12/attestations/IFC-171/attestation.json",
         "docs/architecture/adr/ADR-023-communications-inbox.md",
@@ -3878,7 +3953,6 @@
       "task_id": "IFC-222",
       "description": "Implement real Twilio SMS SDK calls (Resolves R-006)",
       "artifacts_verified": [
-        "apps/workers/notifications-worker/src/channels/sms.ts",
         ".specify/sprints/sprint-14/attestations/IFC-222/attestation.json"
       ]
     },
@@ -4002,6 +4076,14 @@
         "apps/web/src/components/leads/__tests__/lead-list.test.tsx",
         "apps/web/src/app/leads/(list)/__tests__/LeadsPageClient.test.tsx",
         "apps/web/src/app/leads/(list)/new/__tests__/page.test.tsx"
+      ]
+    },
+    {
+      "task_id": "IFC-249",
+      "description": "Lead Edit Page Tests + E2E. Fix remaining test gaps: (1) Edi",
+      "artifacts_verified": [
+        "apps/web/src/app/leads/[id]/edit/__tests__/page.test.tsx",
+        "tests/e2e/lead-crud.spec.ts"
       ]
     },
     {
@@ -4476,6 +4558,46 @@
       ]
     },
     {
+      "task_id": "PG-196",
+      "description": "Module Settings - Account Tiers (/accounts/(list)/account-ti",
+      "artifacts_verified": [
+        "apps/web/src/app/accounts/(list)/account-tiers/page.tsx",
+        "apps/web/src/app/accounts/(list)/account-tiers/AccountTiersContent.tsx",
+        "apps/api/src/modules/account/account-tiers.router.ts",
+        "packages/validators/src/account-tiers.ts"
+      ]
+    },
+    {
+      "task_id": "PG-197",
+      "description": "Module Settings - Territory Mapping (/accounts/(list)/territ",
+      "artifacts_verified": [
+        "apps/web/src/app/accounts/(list)/territory-mapping/page.tsx",
+        "apps/web/src/app/accounts/(list)/territory-mapping/TerritoryMappingContent.tsx",
+        "apps/api/src/modules/account/account-territories.router.ts",
+        "packages/validators/src/account-territories.ts",
+        "apps/api/src/modules/account/account-territory-assignment.ts",
+        "packages/domain/src/crm/account/territory/territory-matching.ts",
+        "packages/domain/src/crm/account/territory/territory-constants.ts",
+        "packages/db/prisma/migrations/20261007130000_account_territories/migration.sql",
+        "apps/web/src/app/accounts/(list)/new/NewAccountForm.tsx",
+        "apps/web/src/app/accounts/[id]/edit/EditAccountForm.tsx",
+        "apps/web/src/components/accounts/AccountForm.tsx",
+        "apps/web/src/components/shared/country-select.tsx",
+        "docs/architecture/adr/ADR-074-territory-based-account-owner-assignment.md",
+        "tests/integration/account-territories.test.ts"
+      ]
+    },
+    {
+      "task_id": "PG-198",
+      "description": "Module Settings - Approval Policies (/agent-approvals/approv",
+      "artifacts_verified": [
+        "apps/web/src/app/agent-approvals/approval-policies/page.tsx",
+        "apps/web/src/app/agent-approvals/approval-policies/ApprovalPoliciesContent.tsx",
+        "apps/api/src/modules/agent/approval-policies.router.ts",
+        "packages/validators/src/approval-policies.ts"
+      ]
+    },
+    {
       "task_id": "PG-200",
       "description": "Module Settings - Report Templates (/analytics/report-templa",
       "artifacts_verified": [
@@ -4483,6 +4605,171 @@
         "apps/web/src/app/analytics/report-templates/ReportTemplatesContent.tsx",
         "apps/api/src/modules/analytics/report-templates.router.ts",
         "packages/validators/src/report-templates.ts"
+      ]
+    },
+    {
+      "task_id": "PG-201",
+      "description": "Module Settings - Scheduled Reports (/analytics/scheduled-re",
+      "artifacts_verified": [
+        "apps/web/src/app/analytics/(list)/scheduled-reports/page.tsx",
+        "apps/web/src/app/analytics/scheduled-reports/ScheduledReportsContent.tsx",
+        "apps/api/src/modules/analytics/scheduled-reports.router.ts",
+        "packages/validators/src/scheduled-reports.ts"
+      ]
+    },
+    {
+      "task_id": "PG-202",
+      "description": "Module Settings - Availability (/calendar/availability)",
+      "artifacts_verified": [
+        "apps/web/src/app/calendar/availability/page.tsx",
+        "apps/web/src/app/calendar/availability/AvailabilityContent.tsx",
+        "apps/api/src/modules/calendar/availability.router.ts",
+        "packages/validators/src/availability.ts",
+        "apps/web/src/app/calendar/availability/AvailabilityLoading.tsx",
+        "apps/web/src/app/calendar/availability/availability-draft.ts",
+        "apps/web/src/app/calendar/availability/components/WeeklyHoursCard.tsx",
+        "apps/web/src/app/calendar/availability/components/TimezoneCard.tsx",
+        "apps/web/src/app/calendar/availability/components/ClosuresList.tsx",
+        "apps/web/src/app/calendar/availability/components/BuffersCapCard.tsx",
+        "apps/api/src/modules/calendar/availability-enforcement.ts",
+        "packages/domain/src/legal/appointments/AvailabilityPolicy.ts",
+        "packages/domain/src/legal/appointments/availability-roles.ts",
+        "packages/db/prisma/migrations/20261017130000_availability/migration.sql",
+        "tests/integration/availability.test.ts",
+        "docs/architecture/adr/ADR-081-tenant-availability.md",
+        ".specify/sprints/sprint-18/attestations/PG-202/attestation.json"
+      ]
+    },
+    {
+      "task_id": "PG-203",
+      "description": "Module Settings - Event Types (/calendar/event-types)",
+      "artifacts_verified": [
+        "apps/web/src/app/calendar/event-types/page.tsx",
+        "apps/web/src/app/calendar/event-types/EventTypesContent.tsx",
+        "apps/api/src/modules/calendar/event-types.router.ts",
+        "packages/validators/src/event-types.ts",
+        "apps/api/src/modules/calendar/public-booking.router.ts",
+        "apps/web/src/app/(public)/book/[handle]/[slug]/page.tsx",
+        "packages/db/prisma/migrations/20261021120100_event_types/migration.sql",
+        "docs/architecture/adr/ADR-083-event-types-public-booking.md",
+        "apps/api/src/modules/privacy/privacy.router.ts",
+        "apps/web/src/app/(public)/dsar/[handle]/page.tsx",
+        "apps/web/src/app/settings/privacy-requests/page.tsx",
+        "packages/db/prisma/migrations/20261022120000_dsar_requests/migration.sql"
+      ]
+    },
+    {
+      "task_id": "PG-204",
+      "description": "Module Settings - Case Types (/cases/case-types)",
+      "artifacts_verified": [
+        "apps/web/src/app/cases/(list)/case-types/page.tsx",
+        "apps/web/src/app/cases/(list)/case-types/CaseTypesContent.tsx",
+        "apps/api/src/modules/legal/case-types.router.ts",
+        "packages/validators/src/case-types.ts",
+        "packages/domain/src/legal/cases/case-type-defaults.ts",
+        "packages/db/prisma/migrations/20261013120000_case_types/migration.sql",
+        "apps/api/src/lib/case-sla-deadline.ts",
+        "apps/api/src/lib/case-task-order.ts",
+        "apps/web/src/app/cases/(list)/case-types/CaseTypesLoading.tsx",
+        "apps/web/src/app/cases/(list)/case-types/components/CaseTypeList.tsx",
+        "apps/web/src/app/cases/(list)/case-types/components/CaseTypeDialog.tsx",
+        "apps/web/src/app/cases/(list)/case-types/components/ResolutionChecklistEditor.tsx",
+        "apps/web/src/app/cases/(list)/case-types/components/DeleteCaseTypeDialog.tsx",
+        "apps/web/src/components/cases/case-type-colors.ts",
+        "apps/web/src/components/cases/case-type-labels.ts",
+        "packages/domain/src/index.ts",
+        "packages/db/src/index.ts",
+        "packages/validators/src/case-settings.ts",
+        "packages/validators/src/case.ts",
+        "packages/validators/src/index.ts",
+        "apps/api/src/router.ts",
+        "apps/api/src/modules/legal/cases.router.ts",
+        "apps/web/src/components/cases/CaseForm.tsx",
+        "apps/web/src/app/cases/(list)/new/page.tsx",
+        "apps/web/src/components/cases/CaseDetail.tsx",
+        "apps/web/src/components/cases/types.ts",
+        "packages/domain/src/legal/cases/__tests__/case-type-defaults.test.ts",
+        "packages/validators/src/__tests__/case-types.test.ts",
+        "apps/api/src/modules/legal/__tests__/case-types.router.test.ts",
+        "apps/api/src/modules/legal/__tests__/cases.router.case-types.test.ts",
+        "apps/api/src/lib/__tests__/case-sla-deadline.test.ts",
+        "tests/integration/case-types.test.ts",
+        "apps/web/src/app/cases/(list)/case-types/__tests__/page.test.tsx",
+        "apps/web/src/app/cases/(list)/case-types/__tests__/CaseTypesContent.test.tsx",
+        "apps/web/src/app/cases/(list)/case-types/__tests__/CaseTypesLoading.test.tsx",
+        "apps/web/src/app/cases/(list)/case-types/components/__tests__/CaseTypeList.test.tsx",
+        "apps/web/src/app/cases/(list)/case-types/components/__tests__/CaseTypeDialog.test.tsx",
+        "apps/web/src/app/cases/(list)/case-types/components/__tests__/ResolutionChecklistEditor.test.tsx",
+        "apps/web/src/app/cases/(list)/case-types/components/__tests__/DeleteCaseTypeDialog.test.tsx",
+        "apps/web/src/components/cases/__tests__/case-type-helpers.test.ts",
+        "apps/web/src/components/cases/__tests__/CaseForm.test.tsx",
+        "apps/web/src/app/cases/(list)/new/__tests__/page.test.tsx",
+        "packages/validators/src/__tests__/case.test.ts",
+        "packages/validators/src/__tests__/case-settings.test.ts",
+        "packages/validators/__tests__/enum-consistency.spec.ts",
+        "apps/api/src/modules/legal/__tests__/legal-module-entitlement.test.ts",
+        "apps/api/src/__tests__/app-router.smoke.test.ts",
+        "packages/adapters/src/repositories/__tests__/PrismaCaseRepository.test.ts",
+        "apps/web/src/components/cases/__tests__/CaseDetail.test.tsx",
+        "apps/api/src/modules/legal/__tests__/cases.router.test.ts",
+        "docs/architecture/adr/ADR-076-case-types-applied-at-case-creation.md",
+        "docs/architecture/adr/README.md",
+        "docs/planning/prd-module-settings.md",
+        "docs/architecture/diagrams/complete-dependency-chains.md",
+        "docs/design/page-registry.md",
+        "docs/design/sitemap.md",
+        "docs/design/PAGE_MAP_AND_FLOWS.md",
+        "docs/design/navigation-reachability-audit.md",
+        "docs/design/ui-flow-mapping.md",
+        "docs/design/information-architecture.md",
+        "artifacts/metrics/debt-ledger.yaml",
+        ".specify/sprints/sprint-18/findings/PG-204-findings.md",
+        ".specify/sprints/sprint-18/attestations/PG-204/attestation.json",
+        ".specify/sprints/sprint-18/attestations/PG-204/task-tracking.json",
+        "apps/web/src/app/__tests__/sitemap-reconciliation.test.ts",
+        "artifacts/lighthouse/PG-204/waiver-evidence.md",
+        "artifacts/lighthouse/PG-204/cases-case-types-r2.report.json",
+        "artifacts/lighthouse/PG-204/cases-new-r2.report.json"
+      ]
+    },
+    {
+      "task_id": "PG-205",
+      "description": "Module Settings - Contact Types (/contacts/(list)/contact-ty",
+      "artifacts_verified": [
+        "apps/web/src/app/contacts/(list)/contact-types/page.tsx",
+        "apps/web/src/app/contacts/(list)/contact-types/ContactTypesContent.tsx",
+        "apps/api/src/modules/contact/contact-types.router.ts",
+        "packages/validators/src/contact-types.ts",
+        "packages/domain/src/crm/contact/contact-type-defaults.ts",
+        "apps/api/src/modules/contact/contact-type-resolver.ts",
+        "apps/web/src/components/contacts/ContactTypeSelect.tsx",
+        "packages/db/prisma/migrations/20261017120000_contact_types/migration.sql",
+        "packages/db/prisma/migrations/20261017120100_contacts_type_idx/migration.sql"
+      ]
+    },
+    {
+      "task_id": "PG-208",
+      "description": "Module Settings - Task Automation (/tasks/(list)/automation)",
+      "artifacts_verified": [
+        "apps/web/src/app/tasks/(list)/automation/page.tsx",
+        "apps/web/src/app/tasks/(list)/automation/TaskAutomationContent.tsx",
+        "apps/api/src/modules/task/task-automation.router.ts",
+        "packages/validators/src/task-automation.ts",
+        "packages/domain/src/crm/task/automation/task-automation-constants.ts",
+        "packages/db/prisma/migrations/20261020120000_task_automation/migration.sql",
+        "apps/api/src/modules/task/automation/task-automation-engine.ts",
+        "apps/api/src/modules/task/automation/task-automation-store.ts",
+        "apps/api/src/modules/task/automation/task-automation-event-intake.ts",
+        "apps/api/src/modules/task/automation/task-automation-runner.ts",
+        "apps/api/src/modules/task/automation/task-automation-webhook.ts",
+        "apps/api/src/modules/task/automation/task-automation-runtime.ts",
+        "apps/api/src/modules/task/automation/task-automation-admin.ts",
+        "apps/web/src/app/tasks/(list)/automation/components/AutomationRuleList.tsx",
+        "apps/web/src/app/tasks/(list)/automation/components/AutomationRuleDialog.tsx",
+        "apps/web/src/app/tasks/(list)/automation/components/AutomationSettingsCard.tsx",
+        "apps/web/src/app/tasks/(list)/automation/components/WebhookSecretDialog.tsx",
+        "apps/web/src/components/shared/copy-field.tsx",
+        "docs/architecture/adr/ADR-084-task-automation-engine.md"
       ]
     },
     {
@@ -4506,6 +4793,14 @@
       "description": "Replace the Supabase null_resource + curl scaffolding with t",
       "artifacts_verified": [
         "infra/terraform/modules/supabase/main.tf"
+      ]
+    },
+    {
+      "task_id": "INFRA-TF-004",
+      "description": "Environment tfvars (dev/staging/prod) + remote state backend",
+      "artifacts_verified": [
+        "infra/terraform/environments",
+        "infra/terraform/modules/monitoring/main.tf"
       ]
     },
     {
@@ -4544,6 +4839,15 @@
       ]
     },
     {
+      "task_id": "ENG-OPS-002",
+      "description": "Auditoria integral do estado técnico e arquitetural dos Spri",
+      "artifacts_verified": [
+        "docs/audit/sprints-1-18-current-state-audit.md",
+        "artifacts/reports/sprint-19/baseline/",
+        ".specify/sprints/sprint-19/attestations/ENG-OPS-002/attestation.json"
+      ]
+    },
+    {
       "task_id": "ENG-OPS-002.R01",
       "description": "Remediation R01 [Critical/SEC-001]: tenant-isolation fix — s",
       "artifacts_verified": [
@@ -4561,6 +4865,15 @@
       ]
     },
     {
+      "task_id": "ENG-OPS-002.R03",
+      "description": "Remediation R03 [Critical/STALE-001+002]: stale-doc cleanup ",
+      "artifacts_verified": [
+        "CLAUDE.md",
+        ".specify/sprints/sprint-18/_summary.json",
+        ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R03/attestation.json"
+      ]
+    },
+    {
       "task_id": "ENG-OPS-002.R10",
       "description": "Remediation R10 [High/QUAL-001+002]: ticket + task aggregate",
       "artifacts_verified": [
@@ -4568,6 +4881,22 @@
         "packages/domain/src/crm/task/Task.ts",
         "tests/property/unit/crm/ticket-domain.prop.test.ts",
         "tests/property/unit/crm/task-domain.prop.test.ts"
+      ]
+    },
+    {
+      "task_id": "ENG-OPS-002.R13",
+      "description": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-test",
+      "artifacts_verified": [
+        "eslint.config.mjs",
+        "docs/architecture/adr/ADR-054-property-based-race-condition-testing.md"
+      ]
+    },
+    {
+      "task_id": "ENG-OPS-002.R16",
+      "description": "Remediation R16 [High/GOV-A-001+002]: backfill 18 missing Sp",
+      "artifacts_verified": [
+        ".specify/sprints/sprint-18/attestations",
+        "artifacts/metrics/debt-ledger.yaml"
       ]
     },
     {
@@ -4591,6 +4920,27 @@
         "docs/planning/sprint-19-waves.md",
         "artifacts/reports/sprint-19/readiness-report.json",
         ".specify/sprints/sprint-19/attestations/PM-OPS-003/attestation.json"
+      ]
+    },
+    {
+      "task_id": "AUTOMATION-004",
+      "description": "Task-contract JSON schema + dispatch-binding enforcement (AD",
+      "artifacts_verified": [
+        ".specify/sprints/sprint-19/spec/AUTOMATION-004/spec.md",
+        ".specify/sprints/sprint-19/spec/AUTOMATION-004/plan.md",
+        "docs/architecture/adr/ADR-072-task-contract-format-and-dispatch-binding.md",
+        "tools/scripts/orchestration/schemas/task-contract.schema.json",
+        "tools/scripts/orchestration/validate-task-contract.ts",
+        "tools/scripts/orchestration/verify-dispatch-binding.ts",
+        "tools/scripts/orchestration/__tests__/validate-task-contract.test.ts",
+        ".specify/sprints/sprint-19/attestations/AUTOMATION-004/attestation.json"
+      ]
+    },
+    {
+      "task_id": "IFC-315",
+      "description": "Suppress marketing email to people with an objection (PG-203",
+      "artifacts_verified": [
+        "apps/api/src/modules/email/mailbox-sender.ts"
       ]
     }
   ],
@@ -4655,6 +5005,12 @@
       "task_id": "IFC-032",
       "paths": [
         ".specify/sprints/sprint-18/attestations/IFC-032/context_ack.json"
+      ]
+    },
+    {
+      "task_id": "IFC-033",
+      "paths": [
+        ".specify/sprints/sprint-19/attestations/IFC-033/context_ack.json"
       ]
     },
     {
@@ -5281,9 +5637,63 @@
       ]
     },
     {
+      "task_id": "PG-196",
+      "paths": [
+        ".specify/sprints/sprint-18/attestations/PG-196/context_ack.json"
+      ]
+    },
+    {
+      "task_id": "PG-197",
+      "paths": [
+        ".specify/sprints/sprint-18/attestations/PG-197/context_ack.json"
+      ]
+    },
+    {
+      "task_id": "PG-198",
+      "paths": [
+        ".specify/sprints/sprint-18/attestations/PG-198/context_ack.json"
+      ]
+    },
+    {
       "task_id": "PG-200",
       "paths": [
         ".specify/sprints/sprint-18/attestations/PG-200/context_ack.json"
+      ]
+    },
+    {
+      "task_id": "PG-201",
+      "paths": [
+        ".specify/sprints/sprint-18/attestations/PG-201/context_ack.json"
+      ]
+    },
+    {
+      "task_id": "PG-202",
+      "paths": [
+        ".specify/sprints/sprint-18/attestations/PG-202/context_ack.json"
+      ]
+    },
+    {
+      "task_id": "PG-203",
+      "paths": [
+        ".specify/sprints/sprint-18/attestations/PG-203/context_ack.json"
+      ]
+    },
+    {
+      "task_id": "PG-204",
+      "paths": [
+        ".specify/sprints/sprint-18/attestations/PG-204/context_ack.json"
+      ]
+    },
+    {
+      "task_id": "PG-205",
+      "paths": [
+        ".specify/sprints/sprint-18/attestations/PG-205/context_ack.json"
+      ]
+    },
+    {
+      "task_id": "PG-208",
+      "paths": [
+        ".specify/sprints/sprint-18/attestations/PG-208/context_ack.json"
       ]
     },
     {
@@ -5292,9 +5702,21 @@
         ".specify/sprints/sprint-18/specifications/IFC-314-spec.md",
         ".specify/sprints/sprint-18/planning/IFC-314-plan.md"
       ]
+    },
+    {
+      "task_id": "IFC-315",
+      "paths": [
+        ".specify/sprints/sprint-19/attestations/IFC-315/context_ack.json"
+      ]
     }
   ],
   "dod_wording_warnings": [
+    {
+      "task_id": "EP-001-AI",
+      "issues": [
+        "DOD has no artifact reference"
+      ]
+    },
     {
       "task_id": "IFC-010",
       "issues": [
@@ -5351,6 +5773,12 @@
     },
     {
       "task_id": "IFC-032",
+      "issues": [
+        "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
+      "task_id": "IFC-033",
       "issues": [
         "DOD has no measurable or testable criteria"
       ]
@@ -6161,10 +6589,23 @@
       ]
     },
     {
+      "task_id": "INFRA-TF-004",
+      "issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
       "task_id": "INFRA-TF-005",
       "issues": [
         "DOD has no artifact reference",
         "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
+      "task_id": "ENG-OPS-002",
+      "issues": [
+        "DOD has no artifact reference"
       ]
     },
     {
@@ -6175,6 +6616,12 @@
     },
     {
       "task_id": "ENG-OPS-002.R10",
+      "issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "ENG-OPS-002.R13",
       "issues": [
         "DOD has no artifact reference"
       ]
@@ -6192,11 +6639,19 @@
       ]
     }
   ],
-  "sprint_path_mismatches": [],
+  "sprint_path_mismatches": [
+    {
+      "task_id": "IFC-142",
+      "description": "Define SLOs/SLIs and alerting; establish on-call and inciden",
+      "expected_sprint": 18,
+      "found_dir": "sprint-8",
+      "fix": "Move attestation to sprint-18/attestations/IFC-142/ or update CSV Target Sprint to match sprint-8."
+    }
+  ],
   "recommendations": [
     {
-      "priority": "INFO",
-      "action": "All tasks verified - maintain current validation practices"
+      "priority": "HIGH",
+      "action": "Move misplaced attestations to their correct sprint folder, or update CSV Target Sprint"
     }
   ]
 }

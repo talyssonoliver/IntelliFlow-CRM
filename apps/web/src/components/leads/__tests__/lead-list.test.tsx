@@ -286,6 +286,18 @@ vi.mock('@/components/shared/entity-hover-card', () => ({
   EntityHoverCard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+// The phone card list has its own tests (LeadCardList.test.tsx). Here it is a marker so the
+// table assertions below do not find every lead twice.
+vi.mock('@/components/leads/LeadCardList', () => ({
+  LeadCardList: ({
+    leads,
+    className,
+  }: {
+    leads: readonly { id: string }[];
+    className?: string;
+  }) => <div data-testid="lead-card-list" data-count={leads.length} className={className} />,
+}));
+
 vi.mock('@intelliflow/ui', async () => {
   const actual = await import('@intelliflow/ui');
   void actual;
@@ -575,6 +587,15 @@ describe('LeadList — rendering', () => {
     render(<LeadList />);
     expect(screen.getByText('Alice Anderson')).toBeTruthy();
     expect(screen.getByText('Bob Baker')).toBeTruthy();
+  });
+
+  it('gives the phone card list the same leads and hides it from md up (MVP-006)', () => {
+    render(<LeadList />);
+    const cards = screen.getByTestId('lead-card-list');
+    expect(cards.getAttribute('data-count')).toBe('2');
+    expect(cards.className).toContain('md:hidden');
+    const table = screen.getByText('Alice Anderson').closest('.hidden');
+    expect(table?.className).toContain('md:block');
   });
 
   it('renders page header with total count', () => {
@@ -1123,13 +1144,25 @@ describe('LeadList — row actions, status gating & cell rendering (IFC-248)', (
     expect(screen.queryByTestId('rowaction-Convert to Contact')).toBeNull();
   });
 
-  it('row Convert calls convert.mutate with createAccount true (AC-20)', () => {
+  it("row Convert sends the lead's company as the account name (AC-20, MVP-003)", () => {
     mockListQueryState.data = oneLead({ status: 'QUALIFIED' }).data;
+    render(<LeadList />);
+    fireEvent.click(screen.getByTestId('rowaction-Convert to Contact'));
+    // The API creates an account only when given a name; without one no account was made.
+    expect(mutationMocks.convert.mutate).toHaveBeenCalledWith({
+      leadId: 'lead-1',
+      createAccount: true,
+      accountName: 'Alpha',
+    });
+  });
+
+  it('row Convert of a lead without a company asks for no account', () => {
+    mockListQueryState.data = oneLead({ status: 'QUALIFIED', company: null }).data;
     render(<LeadList />);
     fireEvent.click(screen.getByTestId('rowaction-Convert to Contact'));
     expect(mutationMocks.convert.mutate).toHaveBeenCalledWith({
       leadId: 'lead-1',
-      createAccount: true,
+      createAccount: false,
     });
   });
 

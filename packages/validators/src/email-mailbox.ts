@@ -81,6 +81,8 @@ export const oauthCompleteInputSchema = z
     provider: oauthMailboxProviderSchema,
     code: z.string().min(1).max(4096),
     state: z.string().min(16).max(256),
+    /** Zoho only: the redirect's `accounts-server` (the account's data centre); checked server-side. */
+    accountsServer: z.string().min(1).max(100).optional(),
   })
   .strict();
 export type OAuthCompleteInput = z.infer<typeof oauthCompleteInputSchema>;
@@ -111,6 +113,7 @@ export interface MailboxDto extends SmtpEndpointDto, SmtpAccountDto {
 export interface OAuthProvidersAvailableDto {
   GMAIL: boolean;
   MICROSOFT: boolean;
+  ZOHO: boolean;
 }
 
 /** Who a new email would be sent as, or why it could not be sent yet. */

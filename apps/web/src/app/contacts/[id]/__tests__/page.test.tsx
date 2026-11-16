@@ -354,7 +354,7 @@ describe('Contact360Page - Empty State CTA', () => {
     expect(screen.getByText('No recent activity')).toBeInTheDocument();
   });
 
-  // Note: AC-005 (click CTA ÔåÆ switch to Activity tab) was deleted when the
+  // Note: AC-005 (click CTA → switch to Activity tab) was deleted when the
   // CTA button was removed with the EmptyState migration. If the CTA returns,
   // add a fresh test targeting the new control.
 
@@ -478,7 +478,7 @@ describe('Contact360Page - Open Rate NaN fix (IFC-253 F-01)', () => {
   });
 
   it('renders em dash for Open Rate when emailsSent is 0 (AC-001)', () => {
-    // activities: [] ÔåÆ emailsSent = 0, emailsOpened = 0 ÔåÆ should show ÔÇö
+    // activities: [] → emailsSent = 0, emailsOpened = 0 → should show —
     mockContactQueryState.data = {
       ...mockContactQueryState.data,
       activities: [],
@@ -490,11 +490,11 @@ describe('Contact360Page - Open Rate NaN fix (IFC-253 F-01)', () => {
     expect(body).not.toContain('NaN');
 
     // Should render em dash for Open Rate
-    expect(screen.getByText('ÔÇö')).toBeInTheDocument();
+    expect(screen.getByText('—')).toBeInTheDocument();
   });
 
   it('renders correct percentage when emailsSent > 0 (AC-002)', () => {
-    // 5 EMAIL activities ÔåÆ emailsSent = 5, emailsOpened is hardcoded to 0 ÔåÆ 0%
+    // 5 EMAIL activities → emailsSent = 5, emailsOpened is hardcoded to 0 → 0%
     mockContactQueryState.data = {
       ...mockContactQueryState.data,
       activities: [
@@ -552,7 +552,7 @@ describe('Contact360Page - Open Rate NaN fix (IFC-253 F-01)', () => {
     };
     render(<Contact360Page />);
 
-    // emailsOpened is hardcoded to 0, emailsSent = 5 ÔåÆ 0%
+    // emailsOpened is hardcoded to 0, emailsSent = 5 → 0%
     expect(screen.getByText('0%')).toBeInTheDocument();
 
     // Should NOT render NaN anywhere
