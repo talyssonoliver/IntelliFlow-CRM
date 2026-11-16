@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ACTIVITY_TYPE_FILTERS,
+  activityCountLabel,
   isSystemActivity,
   showPeopleFilter,
   splitActivityFeed,
@@ -79,5 +80,22 @@ describe('showPeopleFilter', () => {
     expect(showPeopleFilter(0)).toBe(false);
     expect(showPeopleFilter(1)).toBe(false);
     expect(showPeopleFilter(2)).toBe(true);
+  });
+});
+
+describe('activityCountLabel', () => {
+  it('counts the person-written activity shown out of the total', () => {
+    expect(activityCountLabel(5, 8, 3)).toBe('Showing 5 of 8 activities');
+    expect(activityCountLabel(1, 1, 0)).toBe('Showing 1 of 1 activity');
+  });
+
+  it('says only system updates exist instead of "Showing 0 of 0 activities"', () => {
+    expect(activityCountLabel(0, 0, 4)).toBe(
+      'No emails, calls, notes or meetings yet. Only system updates so far.'
+    );
+  });
+
+  it('is null when there is no activity at all, leaving the empty state alone', () => {
+    expect(activityCountLabel(0, 0, 0)).toBeNull();
   });
 });

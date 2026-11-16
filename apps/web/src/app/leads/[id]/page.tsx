@@ -38,6 +38,7 @@ import {
 import { api } from '@/lib/api';
 import { showPeopleFilter, splitActivityFeed } from '@/lib/leads/activity-feed';
 import { SystemUpdatesGroup } from '@/components/leads/SystemUpdatesGroup';
+import { ActivityCountLine } from '@/components/leads/ActivityCountLine';
 import { ActivityFilterBar } from '@/components/leads/ActivityFilterBar';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
@@ -1240,11 +1241,11 @@ function LeadActivityTab({
             aiInsightsLastEngagementDays={aiInsightsLastEngagementDays}
             onClearFilters={onClearFilters}
           />
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-slate-500">
-              Showing {visibleActivities.length} of {filteredActivities.length} activities
-            </p>
-          </div>
+          <ActivityCountLine
+            shown={visibleActivities.length}
+            total={filteredActivities.length}
+            system={systemActivities.length}
+          />
           <div className="relative space-y-4" style={{ paddingLeft: 40 }}>
             <div
               className="absolute top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700"
@@ -2599,12 +2600,12 @@ export default function Lead360Page() {
       ),
     [activities, activityTypeFilter, personFilter, searchQuery]
   );
-  const filteredActivitiesAll = activityFeed.personal;
+  const filteredActivities = activityFeed.personal;
   const { data: workspaceMembers } = api.user.list.useQuery({ limit: 2 });
   const showPeople = showPeopleFilter(workspaceMembers?.users.length ?? 0);
   const visibleActivitiesAll = useMemo(
-    () => filteredActivitiesAll.slice(0, visibleCount),
-    [filteredActivitiesAll, visibleCount]
+    () => filteredActivities.slice(0, visibleCount),
+    [filteredActivities, visibleCount]
   );
   // The folded System updates render with comments and reactions too, so load theirs.
   const activityIdsForReactions = useMemo(
@@ -2695,7 +2696,6 @@ export default function Lead360Page() {
   };
 
   // Use pre-computed filtered/visible activities (hooks moved before early returns)
-  const filteredActivities = filteredActivitiesAll;
   const visibleActivities = visibleActivitiesAll;
   const hasMore = visibleCount < filteredActivities.length;
 

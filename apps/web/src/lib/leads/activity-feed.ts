@@ -70,6 +70,25 @@ export function splitActivityFeed<T extends FeedActivity>(
   return { personal: personal.sort(newestFirst), system: system.sort(newestFirst) };
 }
 
+/**
+ * The line above the activity timeline. It counts the person-written entries; when there are none
+ * but the system wrote some, it says so instead of "Showing 0 of 0 activities"; with nothing at
+ * all it is null and the empty state below speaks alone.
+ */
+export function activityCountLabel(
+  shown: number,
+  personalTotal: number,
+  systemTotal: number
+): string | null {
+  if (personalTotal > 0) {
+    return `Showing ${shown} of ${personalTotal} ${personalTotal === 1 ? 'activity' : 'activities'}`;
+  }
+  if (systemTotal > 0) {
+    return 'No emails, calls, notes or meetings yet. Only system updates so far.';
+  }
+  return null;
+}
+
 /** The "Filter by people" box is only useful when the workspace has more than one person. */
 export function showPeopleFilter(workspaceMemberCount: number): boolean {
   return workspaceMemberCount > 1;
