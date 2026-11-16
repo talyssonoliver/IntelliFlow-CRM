@@ -128,6 +128,7 @@ export function UserMenu({
           {/* Menu Items */}
           <div className="py-1">
             <Link
+              prefetch={false}
               href="/profile"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
@@ -139,6 +140,7 @@ export function UserMenu({
             </Link>
 
             <Link
+              prefetch={false}
               href="/settings"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
@@ -150,6 +152,7 @@ export function UserMenu({
             </Link>
 
             <Link
+              prefetch={false}
               href="/governance"
               onClick={() => setIsOpen(false)}
               className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"
@@ -162,6 +165,7 @@ export function UserMenu({
 
             {showHelpCenter && (
               <Link
+                prefetch={false}
                 href="/help-center"
                 onClick={() => setIsOpen(false)}
                 className="flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-accent transition-colors"

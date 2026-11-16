@@ -24,6 +24,7 @@ export function MobileNav({ routes, isOpen, onClose }: Readonly<MobileNavProps>)
           const isActive = pathname === route.href || pathname?.startsWith(route.href + '/');
           return (
             <Link
+              prefetch={false}
               key={route.href}
               href={route.href}
               onClick={onClose}

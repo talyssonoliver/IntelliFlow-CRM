@@ -31,6 +31,7 @@ export function MainNav({ routes, className }: Readonly<MainNavProps>) {
         const isActive = pathname === route.href || pathname?.startsWith(route.href + '/');
         return (
           <Link
+            prefetch={false}
             key={route.href}
             href={route.href}
             className={cn(

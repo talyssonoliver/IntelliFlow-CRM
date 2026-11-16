@@ -32,6 +32,11 @@ import { getSupabaseBrowserClient } from '../supabase-browser';
 import type { OAuthProvider } from '@intelliflow/domain';
 import { getSupabaseProviderName } from './sso-handler';
 import { isTokenUsable } from './jwt';
+import {
+  clearCachedAuthStatus,
+  readCachedAuthStatus,
+  writeCachedAuthStatus,
+} from './auth-status-snapshot';
 import { loginPathFor, safeRedirectPath } from './safe-redirect';
 import { storeSessionTokens } from '@/lib/shared/token-exchange';
 import { AUTH_TOKEN_CHANGED_EVENT, leaveAfterLogout } from '@/lib/shared/session-cleanup';
@@ -292,6 +297,28 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     staleTime: Infinity,
   });
 
+  // MVP-007: while getStatus is in flight, start from the status it last confirmed for this same
+  // token subject (./auth-status-snapshot.ts). Every layout and page query waits for
+  // isAuthenticated, so they now start with getStatus instead of one API round trip after it.
+  // Declared before the effect that resolves getStatus: if getStatus has already answered, that
+  // effect runs after this one in the same commit and its state wins.
+  useEffect(() => {
+    if (isLoggedOutPage || typeof globalThis.window === 'undefined') return;
+    const cached = readCachedAuthStatus<AuthUser>(localStorage.getItem('accessToken'));
+    if (!cached) return;
+    setState((prev) =>
+      prev.isLoading
+        ? {
+            ...prev,
+            user: cached.user,
+            isAuthenticated: true,
+            isLoading: false,
+            emailVerified: cached.emailVerified,
+          }
+        : prev
+    );
+  }, [isLoggedOutPage]);
+
   // Another tab logging out, or the browser restoring this page from its back-forward
   // cache after logout, must take this page out of the portal too.
   const pageSessionRef = useRef<PageSession | null>(null);
@@ -406,6 +433,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
           .catch(logAuthStatusRefreshError);
       } else if (event === 'SIGNED_OUT') {
         console.log('[AuthContext] Signed out via Supabase');
+        clearCachedAuthStatus();
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
         document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
@@ -523,6 +551,15 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
 
     setState((prev) => ({ ...prev, ...result.update }));
+    if (result.update.isAuthenticated && result.update.user) {
+      writeCachedAuthStatus(
+        localStorage.getItem('accessToken'),
+        result.update.user,
+        result.update.emailVerified ?? null
+      );
+    } else if (queryView.isSuccess) {
+      clearCachedAuthStatus();
+    }
   }, [
     statusQuery.isPending,
     statusQuery.isFetching,
@@ -826,6 +863,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   const logout = useCallback(
     async (options?: { navigate?: boolean }): Promise<void> => {
       setState((prev) => ({ ...prev, isLoading: true }));
+      clearCachedAuthStatus();
 
       try {
         const serverResult = await logoutMutation.mutateAsync();

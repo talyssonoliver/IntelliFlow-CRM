@@ -14,7 +14,7 @@ interface LogoProps {
  */
 export function Logo({ collapsed = false, href = '/dashboard' }: Readonly<LogoProps>) {
   return (
-    <Link href={href} className="flex items-center gap-2" aria-label="Aurora home">
+    <Link prefetch={false} href={href} className="flex items-center gap-2" aria-label="Aurora home">
       <img
         src="/brand/aurora/aurora-wave.webp"
         alt=""
