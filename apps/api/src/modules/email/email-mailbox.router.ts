@@ -314,16 +314,6 @@ export const emailMailboxRouter = createTRPCRouter({
       assertScopeAllowed(c, input.scope, 'saveSmtp');
       const existing = await findMailbox(c, input.scope);
       const data = smtpMailboxData(input, existing);
-      if (data.status === 'ACTIVE') {
-        // MVP-001: saved as working only when it works; a failed sign-in is saved as ERROR
-        // with its code, so the mailbox never looks ready while it cannot send.
-        // The same per-user limit as the settings test: every sign-in is an outbound connection.
-        consumeConnectionTest(c.tenant.userId, Date.now());
-        const secret = (data.smtpPassword as string | undefined) ?? existing?.smtpPassword ?? '';
-        const code = await smtpFailure(emailRuntimeDeps(c).transports, input, secret);
-        if (code) Object.assign(data, { status: 'ERROR', lastErrorCode: code });
-      }
-
       const row = await writeMailbox(c, existing, ownerFor(c, input.scope), data);
       auditEmail(c, existing ? 'UPDATE' : 'CREATE', RESOURCE, row.id, {
         scope: input.scope,

@@ -319,9 +319,6 @@ export default function EmailSettingsContent() {
                 value={draft.replyToAddress}
                 onChange={(v) => patch({ replyToAddress: v })}
                 error={errors.replyToAddress}
-                zohoConnected={
-                  mine.mailbox?.kind === 'ZOHO' || (canEdit && tenantQuery.data?.kind === 'ZOHO')
-                }
                 {...readOnlyProps}
               />
               <TrackingCard

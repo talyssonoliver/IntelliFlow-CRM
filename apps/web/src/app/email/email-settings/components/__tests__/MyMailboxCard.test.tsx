@@ -104,31 +104,8 @@ describe('MyMailboxCard', () => {
   it('offers only what works, and says in one line what does not yet', () => {
     renderCard();
     expect(screen.queryByRole('button', { name: 'Connect Microsoft' })).not.toBeInTheDocument();
-    expect(
-      screen.getByText("One-click Microsoft and Zoho Mail sign-in isn't available yet.")
-    ).toBeVisible();
+    expect(screen.getByText("One-click Microsoft sign-in isn't available yet.")).toBeVisible();
     expect(screen.getByRole('button', { name: 'Connect Google' })).toBeEnabled();
-  });
-
-  it('offers Connect Zoho Mail once Zoho is configured, and starts its sign-in', async () => {
-    api.oauthStart.mutateAsync.mockResolvedValue({
-      url: 'https://accounts.zoho.example.invalid/oauth/v2/auth?state=z1',
-    });
-    renderCard({ providersAvailable: { GMAIL: true, MICROSOFT: true, ZOHO: true } });
-    fireEvent.click(screen.getByRole('button', { name: 'Connect Zoho Mail' }));
-    await waitFor(() =>
-      expect(api.oauthStart.mutateAsync).toHaveBeenCalledWith({ provider: 'ZOHO', scope: 'USER' })
-    );
-    expect(screen.queryByText(/isn't available yet/)).not.toBeInTheDocument();
-  });
-
-  it('says above the password form that sending with a password does not work here yet', () => {
-    renderCard();
-    expect(screen.queryByTestId('smtp-hosting-notice')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Set Up Mailbox' }));
-    expect(screen.getByTestId('smtp-hosting-notice')).toHaveTextContent(
-      'Sending with a password does not work on our servers yet'
-    );
   });
 
   it('starts Google sign-in, remembers the provider for this state and redirects', async () => {

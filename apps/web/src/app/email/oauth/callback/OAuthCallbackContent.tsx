@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Where Google / Microsoft / Zoho send the user back after a mailbox sign-in
+ * Where Google / Microsoft send the user back after a mailbox sign-in
  * (PG-207, ADR-085, CA-10). The page only forwards `code` + `state` to the
  * authenticated `emailMailbox.oauthComplete`; the server checks the state
  * (hashed, single use, bound to this user and tenant) and the PKCE verifier.
@@ -16,12 +16,12 @@ import { trpc } from '@/lib/trpc';
 import { oauthProviderKey } from '../oauth-session';
 
 const SETTINGS_PATH = '/email/email-settings';
-const RETURN_NAME = { GMAIL: 'google', MICROSOFT: 'microsoft', ZOHO: 'zoho' } as const;
+const RETURN_NAME = { GMAIL: 'google', MICROSOFT: 'microsoft' } as const;
 
 type Provider = keyof typeof RETURN_NAME;
 
 function isProvider(value: string | null): value is Provider {
-  return value === 'GMAIL' || value === 'MICROSOFT' || value === 'ZOHO';
+  return value === 'GMAIL' || value === 'MICROSOFT';
 }
 
 export default function OAuthCallbackContent() {
@@ -52,10 +52,8 @@ export default function OAuthCallbackContent() {
       setFailure('Start the sign-in again from Email Settings.');
       return;
     }
-    // Zoho names the account's data centre; the server accepts only Zoho's own hosts.
-    const accountsServer = provider === 'ZOHO' ? params.get('accounts-server') : null;
     complete
-      .mutateAsync({ provider, code, state, ...(accountsServer ? { accountsServer } : {}) })
+      .mutateAsync({ provider, code, state })
       .then(() => {
         sessionStorage.removeItem(oauthProviderKey(state));
         router.replace(`${SETTINGS_PATH}?connected=${RETURN_NAME[provider]}`);

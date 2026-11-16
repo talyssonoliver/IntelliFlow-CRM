@@ -16,7 +16,6 @@ export const EMAIL_SETTINGS_PATH = '/email/email-settings';
 const CONNECTED: Record<string, string> = {
   google: 'Google mailbox connected. Email you send now leaves from it.',
   microsoft: 'Microsoft mailbox connected. Email you send now leaves from it.',
-  zoho: 'Zoho Mail mailbox connected. Email you send now leaves from it.',
 };
 
 const ERRORS: Record<string, string> = {

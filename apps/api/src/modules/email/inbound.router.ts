@@ -1259,13 +1259,13 @@ function normaliseRecipients(toAddresses: string[]): string[] {
 }
 
 /** Mailbox kinds whose address the provider proved at connect (OAuth sign-in). */
-const ROUTABLE_MAILBOX_KINDS = ['GMAIL', 'MICROSOFT', 'ZOHO'] as const;
+const ROUTABLE_MAILBOX_KINDS = ['GMAIL', 'MICROSOFT'] as const;
 
 /**
  * Find the mailbox an inbound email was sent to.
  *
  * Only an exact recipient match counts, and only against the account address of
- * an ACTIVE mailbox whose provider proved who owns it (Google, Microsoft or Zoho
+ * an ACTIVE mailbox whose provider proved who owns it (Google or Microsoft
  * sign-in). An SMTP mailbox's address is typed in and not proven, so it never
  * routes: otherwise anyone could claim another customer's address and receive,
  * or block, their mail. The recipient's domain, other users' addresses and the

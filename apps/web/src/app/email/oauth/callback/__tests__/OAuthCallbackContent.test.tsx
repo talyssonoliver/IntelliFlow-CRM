@@ -68,33 +68,6 @@ describe('OAuthCallbackContent', () => {
     );
   });
 
-  it("passes Zoho's accounts server on, and returns as connected=zoho", async () => {
-    sessionStorage.setItem(oauthProviderKey(STATE), 'ZOHO');
-    renderAt(
-      `code=${CODE}&state=${STATE}&location=eu&accounts-server=${encodeURIComponent('https://accounts.zoho.eu')}`
-    );
-    await waitFor(() =>
-      expect(nav.replace).toHaveBeenCalledWith('/email/email-settings?connected=zoho')
-    );
-    expect(complete.mutateAsync).toHaveBeenCalledWith({
-      provider: 'ZOHO',
-      code: CODE,
-      state: STATE,
-      accountsServer: 'https://accounts.zoho.eu',
-    });
-  });
-
-  it('never sends an accounts server for Google or Microsoft', async () => {
-    sessionStorage.setItem(oauthProviderKey(STATE), 'MICROSOFT');
-    renderAt(`code=${CODE}&state=${STATE}&accounts-server=https://accounts.example.invalid`);
-    await waitFor(() => expect(complete.mutateAsync).toHaveBeenCalled());
-    expect(complete.mutateAsync).toHaveBeenCalledWith({
-      provider: 'MICROSOFT',
-      code: CODE,
-      state: STATE,
-    });
-  });
-
   it('sends a cancelled sign-in back with error=denied and completes nothing', async () => {
     renderAt(`error=access_denied&state=${STATE}`);
     await waitFor(() =>
