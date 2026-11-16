@@ -27,7 +27,7 @@ type GuardQuotaService = Pick<
   'assertWithinQuota' | 'increment' | 'reserve' | 'release' | 'withinQuota'
 >;
 
-interface QuotaContext {
+export interface QuotaContext {
   services?: { quota?: Partial<GuardQuotaService> };
 }
 

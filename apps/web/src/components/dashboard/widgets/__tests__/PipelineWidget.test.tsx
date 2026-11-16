@@ -25,6 +25,8 @@ vi.mock('@/lib/trpc', () => ({
         }),
       },
     },
+    // The summary also reads lead counts (its funnel shows them while no deals are open).
+    lead: { stats: { useQuery: () => ({ data: { byStatus: {} }, isLoading: false }) } },
   },
 }));
 

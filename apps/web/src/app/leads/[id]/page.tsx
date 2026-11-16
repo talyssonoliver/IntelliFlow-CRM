@@ -36,14 +36,20 @@ import {
   EmptyState,
 } from '@intelliflow/ui';
 import { api } from '@/lib/api';
+import { showPeopleFilter, splitActivityFeed } from '@/lib/leads/activity-feed';
+import { SystemUpdatesGroup } from '@/components/leads/SystemUpdatesGroup';
+import { ActivityFilterBar } from '@/components/leads/ActivityFilterBar';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
-import { revalidateLeadCaches, revalidateLeadConversionCaches } from '../actions';
+import { revalidateLeadCaches } from '../actions';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import { PinButton } from '@/components/home/PinButton';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 import { leadScoreDisplay } from '@/lib/leads/score-display';
+import { QualifyLeadButton, QualifyLeadDialog } from '@/components/leads/QualifyLeadDialog';
+import { ConvertLeadDialog } from '@/components/leads/ConvertLeadDialog';
+import { canQualifyLead } from '@/lib/leads/lead-conversion';
 
 /** #1218: the lead's score, or "Not scored" when no real AI score exists. */
 function LeadScoreValue({
@@ -353,17 +359,6 @@ interface LeadWithRelations {
   account?: { id: string; name: string } | null;
 }
 
-// Activity type filter options
-const activityTypeFilters: { value: ActivityType | 'all'; label: string; icon: string }[] = [
-  { value: 'all', label: 'All', icon: '­ƒôï' },
-  { value: 'email', label: 'Emails', icon: '­ƒôº' },
-  { value: 'call', label: 'Calls', icon: '­ƒô×' },
-  { value: 'note', label: 'Notes', icon: '­ƒôØ' },
-  { value: 'meeting', label: 'Meetings', icon: '­ƒôà' },
-  { value: 'web_form', label: 'Web Forms', icon: '­ƒîÉ' },
-  { value: 'score_update', label: 'Scores', icon: '­ƒôè' },
-];
-
 // LeadStatusBadge + TemperatureBadge now live in
 // '@/components/leads/lead-detail' (imported above)
 
@@ -409,11 +404,10 @@ function filterActivity(
 }
 
 function getCallOutcomeBadge(outcome: string | undefined): { cls: string; label: string } {
-  if (outcome === 'connected')
-    return { cls: 'bg-green-100 text-green-700', label: 'Ô£ô Connected' };
+  if (outcome === 'connected') return { cls: 'bg-green-100 text-green-700', label: '✓ Connected' };
   if (outcome === 'voicemail')
-    return { cls: 'bg-yellow-100 text-yellow-700', label: '­ƒô× Voicemail' };
-  return { cls: 'bg-red-100 text-red-700', label: 'Ô£ù No Answer' };
+    return { cls: 'bg-yellow-100 text-yellow-700', label: '📞 Voicemail' };
+  return { cls: 'bg-red-100 text-red-700', label: '✗ No Answer' };
 }
 
 // formatRelativeTime → '@/lib/leads/lead-format'; SourceBadge →
@@ -449,18 +443,7 @@ function formatDate(dateString: string, timezone: string): string {
 // getActivityIcon + getActivityIconBg now live in
 // '@/lib/leads/lead-format' (imported above)
 
-function getSentimentTrendStyle(trend?: string): string {
-  switch (trend) {
-    case 'improving':
-      return 'text-green-600';
-    case 'declining':
-      return 'text-red-600';
-    default:
-      return 'text-slate-600';
-  }
-}
-
-// ÔöÇÔöÇÔöÇ Sub-components extracted to reduce cognitive complexity ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Sub-components extracted to reduce cognitive complexity ─────────────────
 
 function LeadLoadingSkeleton() {
   return (
@@ -579,7 +562,7 @@ function LeadErrorView({
   );
 }
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─────────────────────────────────────────────────────────────────────────────
 
 type LeadDialogsLead = {
   id: string;
@@ -591,11 +574,9 @@ type LeadDialogsLead = {
 
 function LeadConvertButton({
   lead,
-  convertMutation,
   onOpenConvert,
 }: {
   lead: LeadDialogsLead & { status: string };
-  convertMutation: { isPending: boolean };
   onOpenConvert: () => void;
 }) {
   if (lead.status === 'CONVERTED') return null;
@@ -620,16 +601,14 @@ function LeadConvertButton({
           >
             <button
               onClick={onOpenConvert}
-              disabled={!isConvertible || convertMutation.isPending}
-              aria-label={convertMutation.isPending ? 'Converting lead' : 'Convert lead'}
+              disabled={!isConvertible}
+              aria-label="Convert lead"
               className="flex items-center gap-2 px-3 sm:px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
             >
               <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
                 transform
               </span>{' '}
-              <span className="hidden sm:inline">
-                {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
-              </span>
+              <span className="hidden sm:inline">Convert Lead</span>
             </button>
           </span>
         </TooltipTrigger>
@@ -651,13 +630,6 @@ function LeadDialogs({
   archiveConfirmOpen,
   setArchiveConfirmOpen,
   archiveMutation,
-  convertConfirmOpen,
-  setConvertConfirmOpen,
-  convertMutation,
-  convertCreateAccount,
-  setConvertCreateAccount,
-  convertAccountName,
-  setConvertAccountName,
   logCallOpen,
   setLogCallOpen,
   logCallTitle,
@@ -686,16 +658,6 @@ function LeadDialogs({
         | 'LOST';
     }) => void;
   };
-  convertConfirmOpen: boolean;
-  setConvertConfirmOpen: (v: boolean) => void;
-  convertMutation: {
-    isPending: boolean;
-    mutate: (args: { leadId: string; createAccount: boolean; accountName?: string }) => void;
-  };
-  convertCreateAccount: boolean;
-  setConvertCreateAccount: (v: boolean) => void;
-  convertAccountName: string;
-  setConvertAccountName: (v: string) => void;
   logCallOpen: boolean;
   setLogCallOpen: (v: boolean) => void;
   logCallTitle: string;
@@ -760,80 +722,6 @@ function LeadDialogs({
               onClick={() => archiveMutation.mutate({ id: lead.id, status: 'LOST' })}
             >
               {archiveMutation.isPending ? 'Archiving...' : 'Archive'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Convert Lead Confirmation Dialog */}
-      <AlertDialog
-        open={convertConfirmOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setConvertCreateAccount(true);
-            setConvertAccountName('');
-          }
-          setConvertConfirmOpen(open);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Convert Lead to Contact</AlertDialogTitle>
-            <AlertDialogDescription>
-              Convert {leadDisplayName(lead)} to a contact record? This action will change the lead
-              status to CONVERTED and cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex flex-col gap-3 py-2">
-            <label
-              htmlFor="convert-create-account"
-              className="flex items-center gap-2 cursor-pointer text-sm text-slate-700 dark:text-slate-300"
-            >
-              <input
-                type="checkbox"
-                checked={convertCreateAccount}
-                onChange={(e) => setConvertCreateAccount(e.target.checked)}
-                id="convert-create-account"
-                className="rounded border-slate-300 dark:border-slate-600 text-[#2a78f6] focus:ring-[#2a78f6]"
-              />{' '}
-              Also create an Account record
-            </label>
-            {convertCreateAccount && (
-              <div>
-                <label
-                  htmlFor="convert-account-name"
-                  className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
-                >
-                  Account name
-                </label>
-                <input
-                  id="convert-account-name"
-                  type="text"
-                  value={convertAccountName}
-                  onChange={(e) => setConvertAccountName(e.target.value)}
-                  placeholder={lead.company || 'Company name'}
-                  maxLength={200}
-                  className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent"
-                />
-              </div>
-            )}
-          </div>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={convertMutation.isPending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                convertMutation.mutate({
-                  leadId: lead.id,
-                  createAccount: convertCreateAccount,
-                  accountName:
-                    convertCreateAccount && convertAccountName.trim()
-                      ? convertAccountName.trim()
-                      : undefined,
-                });
-              }}
-              disabled={convertMutation.isPending}
-            >
-              {convertMutation.isPending ? 'Converting...' : 'Convert Lead'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -913,9 +801,9 @@ function LeadDialogs({
   );
 }
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─────────────────────────────────────────────────────────────────────────────
 
-// ÔöÇÔöÇÔöÇ Sub-components for Lead360Page tab panels and layout sections ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Sub-components for Lead360Page tab panels and layout sections ────────────
 
 // LeadProfileData + LeadMetrics now live in
 // '@/components/leads/lead-detail' (imported above)
@@ -925,7 +813,7 @@ function LeadDialogs({
 // LeadOwnerCard + LeadLeftSidebar (now LeadDetail) live in
 // '@/components/leads/lead-detail' (imported above)
 
-// ÔöÇÔöÇÔöÇ Tab panel sub-components ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Tab panel sub-components ─────────────────────────────────────────────────
 
 interface LeadOverviewTabProps {
   lead: LeadProfileData;
@@ -1039,7 +927,7 @@ function LeadOverviewTab({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Activity rich preview (module-level to avoid inline function) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Activity rich preview (module-level to avoid inline function) ────────────
 
 function ActivityRichPreview({ activity }: { activity: Activity }) {
   if (!activity.metadata) return null;
@@ -1129,7 +1017,7 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
           <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-2">
             <span className="material-symbols-outlined !text-[16px]">location_on</span>{' '}
             {meta.location}
-            {meta.duration && <span className="text-slate-400">ÔÇó {meta.duration}</span>}
+            {meta.duration && <span className="text-slate-400">• {meta.duration}</span>}
           </div>
         )}
         {meta.attendees && meta.attendees.length > 0 && (
@@ -1144,7 +1032,7 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
   return null;
 }
 
-// ÔöÇÔöÇÔöÇ Activity timeline item ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Activity timeline item ───────────────────────────────────────────────────
 
 interface ActivityTimelineItemProps {
   activity: Activity;
@@ -1190,7 +1078,7 @@ function ActivityTimelineItem({
               {activity.description}
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              {activity.user} ÔÇó {formatRelativeTime(activity.timestamp, timezone)}
+              {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
             </p>
           </div>
           <button
@@ -1231,7 +1119,7 @@ function ActivityTimelineItem({
                   >
                     <p className="text-sm text-slate-600 dark:text-slate-400">{comment.text}</p>
                     <p className="text-xs text-slate-500 mt-1">
-                      {comment.user} ÔÇó {formatRelativeTime(comment.timestamp, timezone)}
+                      {comment.user} • {formatRelativeTime(comment.timestamp, timezone)}
                     </p>
                   </div>
                 ))}
@@ -1245,107 +1133,7 @@ function ActivityTimelineItem({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Activity tab filter bar ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
-
-interface ActivityFilterBarProps {
-  searchQuery: string;
-  onSearchChange: (q: string) => void;
-  activityTypeFilter: ActivityType | 'all';
-  onTypeFilterChange: (f: ActivityType | 'all') => void;
-  personFilter: string;
-  onPersonFilterChange: (p: string) => void;
-  personFilters: { value: string; label: string }[];
-  aiInsightsSentimentTrend: string | null;
-  aiInsightsLastEngagementDays: number;
-  onClearFilters: () => void;
-}
-
-function ActivityFilterBar({
-  searchQuery,
-  onSearchChange,
-  activityTypeFilter,
-  onTypeFilterChange,
-  personFilter,
-  onPersonFilterChange,
-  personFilters,
-  aiInsightsSentimentTrend,
-  aiInsightsLastEngagementDays,
-  onClearFilters,
-}: ActivityFilterBarProps) {
-  return (
-    <div className="mb-6 space-y-4">
-      <div className="relative">
-        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 !text-[18px] text-slate-400">
-          search
-        </span>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search activities..."
-          className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#2a78f6] focus:ring-1 focus:ring-[#2a78f6] placeholder:text-slate-400"
-        />
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {activityTypeFilters.map((filter) => (
-          <button
-            key={filter.value}
-            onClick={() => onTypeFilterChange(filter.value)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
-              activityTypeFilter === filter.value
-                ? 'bg-[#2a78f6] text-white'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            <span>{filter.icon}</span> {filter.label}
-          </button>
-        ))}
-      </div>
-      <div className="flex items-center gap-2">
-        <span className="text-xs text-slate-500 font-medium">Filter by:</span>
-        <select
-          value={personFilter}
-          onChange={(e) => onPersonFilterChange(e.target.value)}
-          className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#2a78f6] focus:ring-1 focus:ring-[#2a78f6]"
-        >
-          {personFilters.map((filter) => (
-            <option key={filter.value} value={filter.value}>
-              {filter.label}
-            </option>
-          ))}
-        </select>
-        {(activityTypeFilter !== 'all' || personFilter !== 'all' || searchQuery) && (
-          <button onClick={onClearFilters} className="text-xs text-[#2a78f6] hover:underline">
-            Clear filters
-          </button>
-        )}
-      </div>
-      {aiInsightsSentimentTrend && (
-        <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
-          <div className="w-8 h-8 rounded-full bg-[#2a78f6]/10 flex items-center justify-center">
-            <span className="material-symbols-outlined !text-[18px] text-[#2a78f6]">
-              auto_awesome
-            </span>
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-slate-900 dark:text-white">
-              Sentiment is{' '}
-              <span className={getSentimentTrendStyle(aiInsightsSentimentTrend)}>
-                {aiInsightsSentimentTrend}
-              </span>
-            </p>
-            <p className="text-xs text-slate-500">
-              Last engagement: {aiInsightsLastEngagementDays} day
-              {aiInsightsLastEngagementDays === 1 ? '' : 's'} ago
-            </p>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ÔöÇÔöÇÔöÇ Activity tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Activity tab ─────────────────────────────────────────────────────────────
 
 interface LeadActivityTabProps {
   leadId: string;
@@ -1359,7 +1147,9 @@ interface LeadActivityTabProps {
   personFilter: string;
   onPersonFilterChange: (p: string) => void;
   personFilters: { value: string; label: string }[];
+  showPeople: boolean;
   filteredActivities: Activity[];
+  systemActivities: Activity[];
   visibleActivities: Activity[];
   expandedActivities: Set<string>;
   onToggleExpand: (id: string) => void;
@@ -1385,7 +1175,9 @@ function LeadActivityTab({
   personFilter,
   onPersonFilterChange,
   personFilters,
+  showPeople,
   filteredActivities,
+  systemActivities,
   visibleActivities,
   expandedActivities,
   onToggleExpand,
@@ -1443,6 +1235,7 @@ function LeadActivityTab({
             personFilter={personFilter}
             onPersonFilterChange={onPersonFilterChange}
             personFilters={personFilters}
+            showPeople={showPeople}
             aiInsightsSentimentTrend={aiInsightsSentimentTrend}
             aiInsightsLastEngagementDays={aiInsightsLastEngagementDays}
             onClearFilters={onClearFilters}
@@ -1468,6 +1261,26 @@ function LeadActivityTab({
                 renderActions={renderActions}
               />
             ))}
+            {/* COA sync, portal, score and status entries: one folded line (MVP-005). */}
+            <SystemUpdatesGroup
+              count={systemActivities.length}
+              deepLinkedId={
+                systemActivities.find((a) => isDeepLinkedActivity(a.id, selectedActivityId))?.id ??
+                null
+              }
+            >
+              {systemActivities.map((activity) => (
+                <ActivityTimelineItem
+                  key={activity.id}
+                  activity={activity}
+                  isExpanded={expandedActivities.has(activity.id)}
+                  isDeepLinked={isDeepLinkedActivity(activity.id, selectedActivityId)}
+                  timezone={timezone}
+                  onToggleExpand={onToggleExpand}
+                  renderActions={renderActions}
+                />
+              ))}
+            </SystemUpdatesGroup>
           </div>
           {hasMore && (
             <button
@@ -1477,7 +1290,7 @@ function LeadActivityTab({
               Load more activities ({filteredActivities.length - visibleCount} remaining)
             </button>
           )}
-          {filteredActivities.length === 0 && (
+          {filteredActivities.length === 0 && systemActivities.length === 0 && (
             <EmptyState
               entity="activity"
               variant={
@@ -1494,7 +1307,7 @@ function LeadActivityTab({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Notes tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Notes tab ────────────────────────────────────────────────────────────────
 
 interface LeadNotesTabProps {
   notes: { id: string; content: string; author: string; createdAt: string }[];
@@ -1559,7 +1372,7 @@ function LeadNotesTab({
               <p className="text-sm text-slate-600 dark:text-slate-400">{note.content}</p>
               <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                 <span>{note.author}</span>
-                <span>ÔÇó</span>
+                <span>•</span>
                 <span>{formatRelativeTime(note.createdAt, timezone)}</span>
               </div>
             </div>
@@ -1572,7 +1385,7 @@ function LeadNotesTab({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Emails tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Emails tab ───────────────────────────────────────────────────────────────
 
 interface LeadEmailsTabProps {
   emails: { id: string; subject: string; status: string; sentAt: string; openCount: number }[];
@@ -1657,7 +1470,7 @@ function LeadEmailsTab({ emails, timezone, leadEmail, onOpenActivity }: LeadEmai
   );
 }
 
-// ÔöÇÔöÇÔöÇ Files tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Files tab ────────────────────────────────────────────────────────────────
 
 interface LeadFilesTabProps {
   files: { id: string; name: string; size: string; uploadedAt: string; url: string | null }[];
@@ -1687,7 +1500,7 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
               <div className="flex-1">
                 <p className="font-medium text-slate-900 dark:text-white">{file.name}</p>
                 <p className="text-sm text-slate-500">
-                  {file.size} ÔÇó {formatRelativeTime(file.uploadedAt, timezone)}
+                  {file.size} • {formatRelativeTime(file.uploadedAt, timezone)}
                 </p>
               </div>
               {httpUrlOrNull(file.url) && (
@@ -1714,7 +1527,7 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
   );
 }
 
-// ÔöÇÔöÇÔöÇ AI Insights tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── AI Insights tab ─────────────────────────────────────────────────────────
 
 interface AiInsightsData {
   /** The lead's stored score; shown only when scoringStatus says it is a real score. */
@@ -1913,7 +1726,7 @@ function LeadAIInsightsTab({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Right sidebar ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Right sidebar ────────────────────────────────────────────────────────────
 
 interface LeadRightSidebarProps {
   hasAiInsight: boolean;
@@ -2099,7 +1912,7 @@ function LeadRightSidebar({
                 </p>
                 <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                   <span>{note.author}</span>
-                  <span>ÔÇó</span>
+                  <span>•</span>
                   <span>{formatRelativeTime(note.createdAt, timezone)}</span>
                 </div>
               </div>
@@ -2121,7 +1934,7 @@ function LeadRightSidebar({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Tab bar ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Tab bar ──────────────────────────────────────────────────────────────────
 
 interface LeadTabBarProps {
   tabs: Tab[];
@@ -2179,12 +1992,12 @@ function LeadTabBar({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Page header ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Page header ──────────────────────────────────────────────────────────────
 
 interface LeadPageHeaderProps {
   lead: LeadProfileData;
-  convertMutation: { isPending: boolean };
   onOpenConvert: () => void;
+  onOpenQualify: () => void;
   onEdit: () => void;
   onLogCall: () => void;
   onOpenActionSheet: () => void;
@@ -2192,8 +2005,8 @@ interface LeadPageHeaderProps {
 
 function LeadPageHeader({
   lead,
-  convertMutation,
   onOpenConvert,
+  onOpenQualify,
   onEdit,
   onLogCall,
   onOpenActionSheet,
@@ -2215,11 +2028,8 @@ function LeadPageHeader({
         </h1>
       </div>
       <div className="flex flex-wrap gap-2 sm:gap-3">
-        <LeadConvertButton
-          lead={lead}
-          convertMutation={convertMutation}
-          onOpenConvert={onOpenConvert}
-        />
+        {canQualifyLead(lead.status) && <QualifyLeadButton onClick={onOpenQualify} />}
+        <LeadConvertButton lead={lead} onOpenConvert={onOpenConvert} />
         <button
           onClick={onEdit}
           aria-label="Edit lead"
@@ -2253,7 +2063,7 @@ function LeadPageHeader({
   );
 }
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─────────────────────────────────────────────────────────────────────────────
 
 const LEAD_VALID_TABS: TabId[] = [
   'overview',
@@ -2323,14 +2133,6 @@ function transformLeadForUI(apiLead: LeadWithRelations) {
     accountId: apiLead.accountId ?? null,
     account: apiLead.account ? { id: apiLead.account.id, name: apiLead.account.name } : null,
   };
-}
-
-function getConvertErrorDescription(msg: string): string {
-  if (msg.includes('Only qualified')) return 'Only leads with QUALIFIED status can be converted.';
-  if (msg.includes('already converted'))
-    return 'This lead has already been converted to a contact.';
-  if (msg.includes('not found')) return 'Lead not found. It may have been deleted.';
-  return msg;
 }
 
 function isLeadAuthError(
@@ -2477,8 +2279,7 @@ export default function Lead360Page() {
   const [logCallTitle, setLogCallTitle] = useState('');
   const [logCallDescription, setLogCallDescription] = useState('');
   const [convertConfirmOpen, setConvertConfirmOpen] = useState(false);
-  const [convertCreateAccount, setConvertCreateAccount] = useState(true);
-  const [convertAccountName, setConvertAccountName] = useState('');
+  const [qualifyOpen, setQualifyOpen] = useState(false);
 
   // API utils for cache invalidation
   const utils = api.useUtils();
@@ -2505,22 +2306,6 @@ export default function Lead360Page() {
     },
     onError: (err) => {
       toast({ title: 'Archive failed', description: err.message, variant: 'destructive' });
-    },
-  });
-
-  const convertMutation = api.lead.convert.useMutation({
-    onSuccess: (data) => {
-      if (user?.id) revalidateLeadConversionCaches(user.id).catch(reportCacheRevalidationError);
-      setConvertConfirmOpen(false);
-      toast({ title: 'Lead converted', description: 'Lead has been converted to a contact.' });
-      router.push(`/contacts/${data.contactId}`);
-    },
-    onError: (err) => {
-      toast({
-        title: 'Conversion failed',
-        description: getConvertErrorDescription(err.message),
-        variant: 'destructive',
-      });
     },
   });
 
@@ -2803,21 +2588,28 @@ export default function Lead360Page() {
     [activities.length, tasks, notes.length, emails.length, files.length]
   );
 
-  // Activity reactions/comments ÔÇö hooks must be before any early returns
-  const filteredActivitiesAll = useMemo(
+  // Activity reactions/comments — hooks must be before any early returns
+  // Person-written activity newest first; system entries folded into one group (MVP-005).
+  const activityFeed = useMemo(
     () =>
-      activities.filter((activity) =>
-        filterActivity(activity, activityTypeFilter, personFilter, searchQuery)
+      splitActivityFeed(
+        activities,
+        activityTypeFilter as Parameters<typeof splitActivityFeed>[1],
+        (a) => filterActivity(a, 'all', personFilter, searchQuery)
       ),
     [activities, activityTypeFilter, personFilter, searchQuery]
   );
+  const filteredActivitiesAll = activityFeed.personal;
+  const { data: workspaceMembers } = api.user.list.useQuery({ limit: 2 });
+  const showPeople = showPeopleFilter(workspaceMembers?.users.length ?? 0);
   const visibleActivitiesAll = useMemo(
     () => filteredActivitiesAll.slice(0, visibleCount),
     [filteredActivitiesAll, visibleCount]
   );
+  // The folded System updates render with comments and reactions too, so load theirs.
   const activityIdsForReactions = useMemo(
-    () => visibleActivitiesAll.map((a) => a.id),
-    [visibleActivitiesAll]
+    () => [...visibleActivitiesAll, ...activityFeed.system].map((a) => a.id),
+    [visibleActivitiesAll, activityFeed.system]
   );
   const { reactions: reactionsMap, toggleReaction } = useActivityReactions(
     activityIdsForReactions,
@@ -2920,7 +2712,7 @@ export default function Lead360Page() {
     });
   };
 
-  // renderActivityActions closure ÔÇö depends on hook results from Lead360Page scope
+  // renderActivityActions closure — depends on hook results from Lead360Page scope
   const renderActivityActions = (activity: Activity) => (
     <ActivityFeedItemActions
       activityId={activity.id}
@@ -2940,8 +2732,8 @@ export default function Lead360Page() {
     <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
       <LeadPageHeader
         lead={lead}
-        convertMutation={convertMutation}
         onOpenConvert={() => setConvertConfirmOpen(true)}
+        onOpenQualify={() => setQualifyOpen(true)}
         onEdit={() => router.push(`/leads/${lead.id}/edit`)}
         onLogCall={() => setLogCallOpen(true)}
         onOpenActionSheet={() => setActionSheetOpen(true)}
@@ -2981,13 +2773,6 @@ export default function Lead360Page() {
         archiveConfirmOpen={archiveConfirmOpen}
         setArchiveConfirmOpen={setArchiveConfirmOpen}
         archiveMutation={archiveMutation}
-        convertConfirmOpen={convertConfirmOpen}
-        setConvertConfirmOpen={setConvertConfirmOpen}
-        convertMutation={convertMutation}
-        convertCreateAccount={convertCreateAccount}
-        setConvertCreateAccount={setConvertCreateAccount}
-        convertAccountName={convertAccountName}
-        setConvertAccountName={setConvertAccountName}
         logCallOpen={logCallOpen}
         setLogCallOpen={setLogCallOpen}
         logCallTitle={logCallTitle}
@@ -2995,6 +2780,19 @@ export default function Lead360Page() {
         logCallDescription={logCallDescription}
         setLogCallDescription={setLogCallDescription}
         logActivityMutation={logActivityMutation}
+      />
+
+      <QualifyLeadDialog
+        lead={lead}
+        userId={user?.id}
+        open={qualifyOpen}
+        onOpenChange={setQualifyOpen}
+      />
+      <ConvertLeadDialog
+        lead={lead}
+        userId={user?.id}
+        open={convertConfirmOpen}
+        onOpenChange={setConvertConfirmOpen}
       />
 
       {/* Main 3-column grid */}
@@ -3036,7 +2834,9 @@ export default function Lead360Page() {
               personFilter={personFilter}
               onPersonFilterChange={setPersonFilter}
               personFilters={personFilters}
+              showPeople={showPeople}
               filteredActivities={filteredActivities}
+              systemActivities={activityFeed.system}
               visibleActivities={visibleActivities}
               expandedActivities={expandedActivities}
               onToggleExpand={toggleExpand}

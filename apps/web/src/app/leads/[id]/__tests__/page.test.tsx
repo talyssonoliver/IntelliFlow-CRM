@@ -34,6 +34,8 @@ vi.mock('@/lib/leads/use-lead-recent-views', () => ({
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
 const mockLogActivityMutate = vi.fn();
+// Two members by default so the "Filter by" people box shows; set one to test it hiding.
+let mockWorkspaceUsers: Array<{ id: string }> = [{ id: 'u1' }, { id: 'u2' }];
 const mockAddNoteMutate = vi.fn();
 
 // Mutable state refs so isPending tests can flip the flag without
@@ -140,6 +142,8 @@ vi.mock('@/lib/api', () => ({
         getEntityFeed: { invalidate: mockActivityFeedEntityInvalidate },
       },
     }),
+    // Workspace members: the people filter shows only with more than one (MVP-005).
+    user: { list: { useQuery: () => ({ data: { users: mockWorkspaceUsers } }) } },
     lead: {
       getById: {
         useQuery: () => ({
@@ -165,6 +169,12 @@ vi.mock('@/lib/api', () => ({
           lane.mutationOpts.convert = opts ?? {};
           return { mutate: vi.fn(), isPending: false };
         },
+      },
+      qualify: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
+      convertToDeal: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
       },
       scoreWithAI: {
         useMutation: (opts?: (typeof lane.mutationOpts)[string]) => {
@@ -535,7 +545,7 @@ describe('LeadDetailPage - Empty State CTA', () => {
   // EmptyState migration: packages/ui/src/components/empty-state.tsx gates the
   // CTA behind `phase === 'soft-cta'` (empty-state.tsx:387), so a passive
   // EmptyState never renders the button. Its AC-001/AC-002 coverage moved
-  // into AC-003's "activity-visible" path ÔÇö see below ÔÇö which is sufficient.
+  // into AC-003's "activity-visible" path — see below — which is sufficient.
 
   it('CTA button is NOT rendered when activities array has items (AC-003)', () => {
     mockLeadQueryState.data.activities = [
@@ -1627,6 +1637,74 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
       'href',
       '/email/compose?to=john%40example.com'
     );
+  });
+
+  describe('activity feed (MVP-005)', () => {
+    const syncNote = {
+      id: 'act-sync-note',
+      type: 'NOTE',
+      title: 'COA stage moved to Proposal',
+      description: '',
+      timestamp: '2026-03-03T09:00:00.000Z',
+      userName: 'System (COA sync)',
+      metadata: { source: 'coa-pipeline-sync' },
+      sentiment: null,
+    };
+    const scored = {
+      id: 'act-score-2',
+      type: 'SCORE_UPDATE',
+      title: 'Lead Scored by AI',
+      description: '',
+      timestamp: '2026-03-03T10:00:00.000Z',
+      userName: 'AI Scoring Agent',
+      metadata: { previousScore: 30, newScore: 40 },
+      sentiment: null,
+    };
+    const openActivity = () =>
+      fireEvent.click(screen.getAllByRole('button', { name: /^Activity/i })[0]);
+
+    afterEach(() => {
+      mockWorkspaceUsers = [{ id: 'u1' }, { id: 'u2' }];
+    });
+
+    it('offers only All, Emails, Calls, Notes and Meetings filters', () => {
+      render(<Lead360Page />);
+      openActivity();
+      for (const label of ['All', 'Emails', 'Calls', 'Notes', 'Meetings']) {
+        expect(
+          screen.getAllByRole('button', { name: new RegExp(`${label}$`) }).length
+        ).toBeGreaterThan(0);
+      }
+      expect(screen.queryByRole('button', { name: /Web Forms$/ })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Scores$/ })).not.toBeInTheDocument();
+    });
+
+    it('folds sync and score entries into one System updates line', () => {
+      data().activities = [emailActivity, syncNote, scored];
+      render(<Lead360Page />);
+      openActivity();
+
+      expect(screen.getByText('Proposal sent')).toBeInTheDocument();
+      const group = screen.getByRole('button', { name: /System updates \(2\)/ });
+      expect(group).toHaveAttribute('aria-expanded', 'false');
+      expect(screen.queryByText('COA stage moved to Proposal')).not.toBeInTheDocument();
+
+      fireEvent.click(group);
+      expect(screen.getByText('COA stage moved to Proposal')).toBeInTheDocument();
+    });
+
+    it('shows the people filter only when the workspace has more than one person', () => {
+      render(<Lead360Page />);
+      openActivity();
+      expect(screen.getByRole('combobox', { name: 'Filter by person' })).toBeInTheDocument();
+    });
+
+    it('hides the people filter for a one-person workspace', () => {
+      mockWorkspaceUsers = [{ id: 'u1' }];
+      render(<Lead360Page />);
+      openActivity();
+      expect(screen.queryByRole('combobox', { name: 'Filter by person' })).not.toBeInTheDocument();
+    });
   });
 
   it('offers no Compose when the lead has no email address', () => {
