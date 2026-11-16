@@ -99,10 +99,14 @@ describe('LeadDetail', () => {
     expect(link).toHaveAttribute('href', 'http://www.energym.co.uk/');
   });
 
-  it('shows a dash, not "£0", for a lead with no estimated value (#1277)', () => {
+  it('offers "Add value", not "£0", for a lead with no estimated value (#1277, MVP-003)', () => {
     render(<LeadDetail lead={makeLead()} leadMetrics={{ ...metrics, estimatedValue: 0 }} />);
     expect(screen.queryByText('£0')).not.toBeInTheDocument();
-    expect(screen.getByText('—')).toBeInTheDocument();
+    // The link opens the edit form, which focuses the value field from this hash.
+    expect(screen.getByRole('link', { name: 'Add value' })).toHaveAttribute(
+      'href',
+      '/leads/lead-1/edit#estimatedValue'
+    );
   });
 
   it('shows no website row when the lead has none (#1277)', () => {

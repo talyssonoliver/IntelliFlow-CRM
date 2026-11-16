@@ -441,7 +441,7 @@ function QualificationSection({ values, errors, onChange, mode }: Readonly<Secti
         {mode === 'edit' && (
           <TextField
             id="estimatedValue"
-            label="Estimated Value ($)"
+            label="Estimated Value (£)"
             type="number"
             placeholder="0.00"
             {...fieldBag}

@@ -572,6 +572,12 @@ type LeadDialogsLead = {
   email: string;
 };
 
+const CONVERT_BLOCKED_REASON: Record<string, string> = {
+  LOST: 'Lost leads cannot be converted. Reopen the lead first.',
+  UNQUALIFIED: 'Disqualified leads cannot be converted.',
+  NEGOTIATING: 'Lead is in negotiation. Qualify the lead first to convert.',
+};
+
 function LeadConvertButton({
   lead,
   onOpenConvert,
@@ -581,16 +587,8 @@ function LeadConvertButton({
 }) {
   if (lead.status === 'CONVERTED') return null;
   const isConvertible = lead.status === 'QUALIFIED';
-  let convertTooltipText: string;
-  if (lead.status === 'LOST') {
-    convertTooltipText = 'Lost leads cannot be converted. Reopen the lead first.';
-  } else if (lead.status === 'UNQUALIFIED') {
-    convertTooltipText = 'Disqualified leads cannot be converted.';
-  } else if (lead.status === 'NEGOTIATING') {
-    convertTooltipText = 'Lead is in negotiation. Qualify the lead first to convert.';
-  } else {
-    convertTooltipText = 'Lead must be qualified before conversion.';
-  }
+  const convertTooltipText =
+    CONVERT_BLOCKED_REASON[lead.status] ?? 'Lead must be qualified before conversion.';
   return (
     <TooltipProvider>
       <Tooltip>
@@ -602,13 +600,12 @@ function LeadConvertButton({
             <button
               onClick={onOpenConvert}
               disabled={!isConvertible}
-              aria-label="Convert lead"
               className="flex items-center gap-2 px-3 sm:px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
             >
               <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
                 transform
               </span>{' '}
-              <span className="hidden sm:inline">Convert Lead</span>
+              Convert to deal
             </button>
           </span>
         </TooltipTrigger>
@@ -2018,12 +2015,12 @@ function LeadPageHeader({
           <Link href="/leads" className="hover:text-[#2a78f6]">
             Leads
           </Link>
-          <span className="material-symbols-outlined !text-sm">chevron_right</span>
-          <span className="font-medium text-slate-900 dark:text-white">
+          <span className="material-symbols-outlined !text-sm hidden sm:inline">chevron_right</span>
+          <span className="font-medium text-slate-900 dark:text-white hidden sm:inline">
             {leadDisplayName(lead)}
           </span>
         </div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+        <h1 className="sr-only sm:not-sr-only text-2xl font-bold text-slate-900 dark:text-white">
           {leadDisplayName(lead)}
         </h1>
       </div>
@@ -2033,7 +2030,7 @@ function LeadPageHeader({
         <button
           onClick={onEdit}
           aria-label="Edit lead"
-          className="flex items-center gap-2 px-3 sm:px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+          className="hidden sm:flex items-center gap-2 px-3 sm:px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
         >
           <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
             edit
@@ -2047,7 +2044,7 @@ function LeadPageHeader({
           <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
             call
           </span>{' '}
-          Log Call
+          Log call
         </button>
         <PinButton
           entityType="lead"
@@ -2056,6 +2053,7 @@ function LeadPageHeader({
           subtitle={lead.company || undefined}
           icon="person"
           url={`/leads/${lead.id}`}
+          className="hidden sm:inline-flex"
         />
         <MoreActionsButton onClick={onOpenActionSheet} />
       </div>
@@ -2755,6 +2753,7 @@ export default function Lead360Page() {
         }}
         exportFields={apiLead ? leadExportFields(apiLead) : undefined}
         extraActions={[
+          { label: 'Edit', icon: 'edit', onClick: () => router.push(`/leads/${lead.id}/edit`) },
           { label: 'Archive', icon: 'archive', onClick: () => setArchiveConfirmOpen(true) },
           {
             label: 'Delete',
@@ -2793,6 +2792,7 @@ export default function Lead360Page() {
         userId={user?.id}
         open={convertConfirmOpen}
         onOpenChange={setConvertConfirmOpen}
+        initialMode="deal"
       />
 
       {/* Main 3-column grid */}

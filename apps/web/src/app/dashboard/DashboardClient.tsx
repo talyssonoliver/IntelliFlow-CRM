@@ -12,6 +12,7 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { PageHeader } from '@/components/shared/page-header';
+import { useLiveConnection } from '@/lib/live-connection';
 import { Card } from '@intelliflow/ui';
 import type { Widget } from '@intelliflow/ui';
 import { widgetRegistry } from '@/components/dashboard/widgets';
@@ -79,6 +80,8 @@ interface DashboardClientProps {
 
 export default function DashboardClient({ initialLeadStats }: Readonly<DashboardClientProps>) {
   const { isLoading: authLoading } = useRequireAuth();
+  // MVP-004: "Live" only while the live-update connection is really open.
+  const live = useLiveConnection();
   const [widgets, setWidgets] = useState<Widget[]>(defaultWidgets);
 
   // Load saved layout from localStorage on mount.
@@ -149,10 +152,14 @@ export default function DashboardClient({ initialLeadStats }: Readonly<Dashboard
             avoid screen-reader spam on each poll. */}
         <output className="hidden sm:inline-flex items-center gap-1 mt-1 text-xs text-slate-500 dark:text-slate-400">
           <span
-            className="size-1.5 rounded-full bg-green-500 motion-safe:animate-pulse"
+            className={
+              live
+                ? 'size-1.5 rounded-full bg-green-500 motion-safe:animate-pulse'
+                : 'size-1.5 rounded-full bg-slate-400'
+            }
             aria-hidden="true"
           />
-          <span>Live · refreshes every minute</span>
+          <span>{live ? 'Live · refreshes every minute' : 'Refreshes every minute'}</span>
         </output>
       </PageHeader>
 

@@ -350,12 +350,20 @@ export function LeadProfileCard({
         {/* Metrics Grid */}
         <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <p className="text-lg font-bold text-slate-900 dark:text-white">
-              {/* 0 is the unset default, not a valuation: show a dash, not "£0". */}
-              {leadMetrics.estimatedValue > 0
-                ? formatEstimatedValue(leadMetrics.estimatedValue)
-                : '—'}
-            </p>
+            {/* 0 is the unset default, not a valuation: offer to add one instead of "£0" or a dash
+                (MVP-003). The link opens the edit form focused on the value field. */}
+            {leadMetrics.estimatedValue > 0 ? (
+              <p className="text-lg font-bold text-slate-900 dark:text-white">
+                {formatEstimatedValue(leadMetrics.estimatedValue)}
+              </p>
+            ) : (
+              <Link
+                href={`/leads/${lead.id}/edit#estimatedValue`}
+                className="block text-base font-semibold text-[#2a78f6] hover:underline leading-7"
+              >
+                Add value
+              </Link>
+            )}
             <p className="text-xs text-slate-500">Est. Value</p>
           </div>
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
