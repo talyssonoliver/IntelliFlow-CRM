@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { createContext, useContext } from 'react';
+import { StrictMode, createContext, useContext } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { publishModuleNav } from '@/components/sidebar/module-nav-store';
@@ -140,6 +140,16 @@ describe('MobileNav with a module open', () => {
     });
     render(<MobileNav routes={[routes[0]] as never} isOpen onClose={vi.fn()} />);
     expect(screen.getByRole('navigation', { name: 'Leads sections' })).toBeInTheDocument();
+  });
+
+  it('stays open when opened under Strict Mode (effects run twice in development)', () => {
+    const onClose = vi.fn();
+    render(
+      <StrictMode>
+        <MobileNav routes={routes as never} isOpen onClose={onClose} />
+      </StrictMode>
+    );
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('closes after any navigation, including a query-only one from module content', () => {

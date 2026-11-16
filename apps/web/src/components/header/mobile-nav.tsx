@@ -21,17 +21,17 @@ interface MobileNavProps {
 function CloseOnNavigate({ onClose }: Readonly<{ onClose: () => void }>) {
   const pathname = usePathname();
   const query = useSearchParams()?.toString() ?? '';
-  const first = useRef(true);
-  // Kept in a ref so only a change of location (not a new onClose) closes the menu.
+  const location = `${pathname}?${query}`;
+  // Compared with the location the menu opened on, so an effect re-run (React Strict Mode runs
+  // effects twice in development) does not close it; onClose is kept in a ref for the same reason.
+  const openedAt = useRef(location);
   const close = useRef(onClose);
   close.current = onClose;
   useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
+    if (location === openedAt.current) return;
+    openedAt.current = location;
     close.current();
-  }, [pathname, query]);
+  }, [location]);
   return null;
 }
 
