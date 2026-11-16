@@ -13,7 +13,7 @@ const openStages = [
 const emptyStages = openStages.map((s) => ({ ...s, count: 0, totalValue: 0 }));
 
 let pipeline: { data?: unknown; isLoading: boolean; isError?: boolean; refetch?: () => void };
-let leads: { data?: unknown; isLoading: boolean };
+let leads: { data?: unknown; isLoading: boolean; isError?: boolean; refetch?: () => void };
 
 const pipelineQuery = vi.fn((..._args: unknown[]) => pipeline);
 const leadStatsQuery = vi.fn((..._args: unknown[]) => leads);
@@ -105,6 +105,25 @@ describe('PipelineSummaryWidget with no open deals', () => {
     render(<PipelineSummaryWidget />);
 
     expect(screen.getByText('Qualify a lead to convert it to a deal')).toBeInTheDocument();
+  });
+
+  it("shows Couldn't load, not a funnel of zeros, when the lead counts failed", () => {
+    const retry = vi.fn();
+    leads = { data: undefined, isLoading: false, isError: true, refetch: retry };
+    render(<PipelineSummaryWidget />);
+
+    expect(screen.getByText("Couldn't load your leads.")).toBeInTheDocument();
+    expect(screen.queryByText('0 leads')).not.toBeInTheDocument();
+    expect(screen.queryByText(/No open deals yet/)).not.toBeInTheDocument();
+    screen.getByRole('button', { name: /retry|try again/i }).click();
+    expect(retry).toHaveBeenCalled();
+  });
+
+  it('keeps the last lead counts when only a background refresh failed', () => {
+    leads = { data: { byStatus: { NEW: 4 } }, isLoading: false, isError: true };
+    render(<PipelineSummaryWidget />);
+
+    expect(screen.getByText('4 leads')).toBeInTheDocument();
   });
 
   it('shows loading rows while the lead counts load', () => {

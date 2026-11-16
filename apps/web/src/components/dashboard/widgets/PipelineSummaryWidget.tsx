@@ -160,7 +160,12 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
     { includeClosedStages: false },
     { refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS }
   );
-  const { data: leadStats, isLoading: leadsLoading } = trpc.lead.stats.useQuery(undefined, {
+  const {
+    data: leadStats,
+    isLoading: leadsLoading,
+    isError: leadsFailed,
+    refetch: refetchLeads,
+  } = trpc.lead.stats.useQuery(undefined, {
     refetchInterval: DASHBOARD_REFETCH_INTERVAL_MS,
   });
   // A failed background refresh keeps the figures already loaded (React Query keeps
@@ -178,6 +183,11 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
     body = <LoadingRows />;
   } else if (showDeals) {
     body = <DealStages stages={stages} />;
+  } else if (leadsFailed && !leadStats) {
+    // Never show a funnel of made-up zeros when the lead counts did not load.
+    body = (
+      <ChartUnavailable message="Couldn't load your leads." onRetry={() => void refetchLeads()} />
+    );
   } else {
     body = <LeadFunnel byStatus={leadStats?.byStatus} />;
   }
