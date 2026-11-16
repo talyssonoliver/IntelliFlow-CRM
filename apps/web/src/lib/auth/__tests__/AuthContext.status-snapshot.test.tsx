@@ -69,6 +69,7 @@ vi.mock('@/lib/shared/session-cleanup', async (importOriginal) => ({
 
 import { AuthProvider, useAuth } from '../AuthContext';
 import { AUTH_TOKEN_CHANGED_EVENT } from '@/lib/shared/session-cleanup';
+import { setActiveTenantId } from '@/lib/tenant/active-tenant';
 
 /** A token-shaped string built at runtime: only its payload is read, nothing verifies it here. */
 function tokenFor(payload: Record<string, unknown>): string {
@@ -92,7 +93,7 @@ describe('AuthProvider starts from the last confirmed status (MVP-007)', () => {
   it('is signed in at once, before getStatus answers, for the same token subject', async () => {
     const tok = tokenFor({ sub: 'user-1', exp: exp() });
     localStorage.setItem('accessToken', tok);
-    writeCachedAuthStatus(tok, owner, true);
+    writeCachedAuthStatus(tok, null, owner, true);
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -104,7 +105,7 @@ describe('AuthProvider starts from the last confirmed status (MVP-007)', () => {
 
   it('keeps waiting for getStatus when the stored status belongs to another subject', async () => {
     localStorage.setItem('accessToken', tokenFor({ sub: 'user-2', exp: exp() }));
-    writeCachedAuthStatus(tokenFor({ sub: 'user-1', exp: exp() }), owner, true);
+    writeCachedAuthStatus(tokenFor({ sub: 'user-1', exp: exp() }), null, owner, true);
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -116,7 +117,7 @@ describe('AuthProvider starts from the last confirmed status (MVP-007)', () => {
   it('lets getStatus overturn it, and forgets the status when nobody is signed in', async () => {
     const tok = tokenFor({ sub: 'user-1', exp: exp() });
     localStorage.setItem('accessToken', tok);
-    writeCachedAuthStatus(tok, owner, true);
+    writeCachedAuthStatus(tok, null, owner, true);
     const { result, rerender } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
 
@@ -189,10 +190,37 @@ describe('AuthProvider starts from the last confirmed status (MVP-007)', () => {
     expect(localStorage.getItem(AUTH_STATUS_CACHE_KEY)).toBeNull();
   });
 
+  it('keeps waiting for getStatus when the stored status is from another workspace', async () => {
+    const tok = tokenFor({ sub: 'user-1', exp: exp() });
+    localStorage.setItem('accessToken', tok);
+    writeCachedAuthStatus(tok, null, owner, true); // confirmed in the home workspace
+    setActiveTenantId('tenant_client_1'); // now acting in a client workspace
+
+    const { result } = renderHook(() => useAuth(), { wrapper });
+
+    await act(async () => {});
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.isLoading).toBe(true);
+  });
+
+  it('stores nothing when the workspace switched while getStatus was in flight', async () => {
+    localStorage.setItem('accessToken', tokenFor({ sub: 'user-1', exp: exp() }));
+    const { result, rerender } = renderHook(() => useAuth(), { wrapper });
+    await act(async () => {});
+    await act(async () => {
+      setActiveTenantId('tenant_client_1');
+    });
+    h.status = confirmed;
+    rerender();
+
+    await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
+    expect(localStorage.getItem(AUTH_STATUS_CACHE_KEY)).toBeNull();
+  });
+
   it('forgets the status on sign-out', async () => {
     const tok = tokenFor({ sub: 'user-1', exp: exp() });
     localStorage.setItem('accessToken', tok);
-    writeCachedAuthStatus(tok, owner, true);
+    writeCachedAuthStatus(tok, null, owner, true);
     const { result } = renderHook(() => useAuth(), { wrapper });
     await waitFor(() => expect(result.current.isAuthenticated).toBe(true));
 

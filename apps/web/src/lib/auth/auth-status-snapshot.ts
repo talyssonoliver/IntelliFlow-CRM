@@ -14,11 +14,18 @@
  */
 import { decodeJwtPayload, isTokenUsable } from './jwt';
 
-export const AUTH_STATUS_CACHE_KEY = 'auth.lastStatus.v1';
+// v2: entries also record the active workspace (v1 entries are ignored).
+export const AUTH_STATUS_CACHE_KEY = 'auth.lastStatus.v2';
 
 export interface CachedAuthStatus<U> {
   /** The access token subject the status was confirmed for. */
   sub: string;
+  /**
+   * The active workspace it was confirmed in (`x-active-tenant`), or null for the home workspace.
+   * getStatus's role is the role in that workspace (ADR-071), so a status from another workspace
+   * is never handed back.
+   */
+  tenant: string | null;
   user: U;
   emailVerified: boolean | null;
 }
@@ -31,9 +38,13 @@ function storage(): Storage | null {
   }
 }
 
-/** Stores a status getStatus just confirmed for this token. No-op without a usable token or subject. */
+/**
+ * Stores a status getStatus just confirmed for this token in this workspace. No-op without a usable
+ * token or subject.
+ */
 export function writeCachedAuthStatus<U>(
   token: string | null,
+  tenant: string | null,
   user: U,
   emailVerified: boolean | null
 ): void {
@@ -42,18 +53,22 @@ export function writeCachedAuthStatus<U>(
   const sub = decodeJwtPayload(token)?.sub;
   if (!sub) return;
   try {
-    store.setItem(AUTH_STATUS_CACHE_KEY, JSON.stringify({ sub, user, emailVerified }));
+    store.setItem(AUTH_STATUS_CACHE_KEY, JSON.stringify({ sub, tenant, user, emailVerified }));
   } catch {
     /* storage full or blocked: the next load simply waits for getStatus */
   }
 }
 
 /**
- * The stored status, only if this token is usable now and belongs to the subject it was confirmed
- * for. Anything else (no token, an expired one, another user, unreadable data) returns null, and
- * the provider waits for getStatus as before.
+ * The stored status, only if this token is usable now, belongs to the subject it was confirmed for,
+ * and the active workspace is the one it was confirmed in. Anything else (no token, an expired one,
+ * another user, another workspace, unreadable data) returns null, and the provider waits for
+ * getStatus as before.
  */
-export function readCachedAuthStatus<U>(token: string | null): CachedAuthStatus<U> | null {
+export function readCachedAuthStatus<U>(
+  token: string | null,
+  tenant: string | null
+): CachedAuthStatus<U> | null {
   const store = storage();
   if (!store || !isTokenUsable(token)) return null;
   const sub = decodeJwtPayload(token)?.sub;
@@ -67,8 +82,10 @@ export function readCachedAuthStatus<U>(token: string | null): CachedAuthStatus<
   if (!parsed || typeof parsed !== 'object') return null;
   const entry = parsed as Partial<CachedAuthStatus<U>>;
   if (entry.sub !== sub || !entry.user || typeof entry.user !== 'object') return null;
+  if ((entry.tenant ?? null) !== tenant) return null;
   return {
     sub,
+    tenant,
     user: entry.user,
     emailVerified: typeof entry.emailVerified === 'boolean' ? entry.emailVerified : null,
   };

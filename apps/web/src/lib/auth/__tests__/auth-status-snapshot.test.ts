@@ -29,44 +29,59 @@ describe('auth status snapshot', () => {
 
   it('hands the status back for the same subject while the token is usable', () => {
     const tok = tokenFor({ sub: 'user-1', exp: inAnHour() });
-    writeCachedAuthStatus(tok, user, true);
-    expect(readCachedAuthStatus(tok)).toEqual({ sub: 'user-1', user, emailVerified: true });
+    writeCachedAuthStatus(tok, null, user, true);
+    expect(readCachedAuthStatus(tok, null)).toEqual({
+      sub: 'user-1',
+      tenant: null,
+      user,
+      emailVerified: true,
+    });
   });
 
   it('accepts a newer token for the same subject (a refresh)', () => {
-    writeCachedAuthStatus(tokenFor({ sub: 'user-1', exp: inAnHour() }), user, null);
+    writeCachedAuthStatus(tokenFor({ sub: 'user-1', exp: inAnHour() }), null, user, null);
     const refreshed = tokenFor({ sub: 'user-1', exp: inAnHour() + 60 });
-    expect(readCachedAuthStatus(refreshed)?.user).toEqual(user);
+    expect(readCachedAuthStatus(refreshed, null)?.user).toEqual(user);
   });
 
   it('returns null for another subject, an expired token, or no token', () => {
-    writeCachedAuthStatus(tokenFor({ sub: 'user-1', exp: inAnHour() }), user, true);
-    expect(readCachedAuthStatus(tokenFor({ sub: 'user-2', exp: inAnHour() }))).toBeNull();
-    expect(readCachedAuthStatus(tokenFor({ sub: 'user-1', exp: 1 }))).toBeNull();
-    expect(readCachedAuthStatus(null)).toBeNull();
-    expect(readCachedAuthStatus(tokenFor({ exp: inAnHour() }))).toBeNull();
+    writeCachedAuthStatus(tokenFor({ sub: 'user-1', exp: inAnHour() }), null, user, true);
+    expect(readCachedAuthStatus(tokenFor({ sub: 'user-2', exp: inAnHour() }), null)).toBeNull();
+    expect(readCachedAuthStatus(tokenFor({ sub: 'user-1', exp: 1 }), null)).toBeNull();
+    expect(readCachedAuthStatus(null, null)).toBeNull();
+    expect(readCachedAuthStatus(tokenFor({ exp: inAnHour() }), null)).toBeNull();
   });
 
   it('returns null for unreadable or incomplete data, and reads a non-boolean emailVerified as null', () => {
     const tok = tokenFor({ sub: 'user-1', exp: inAnHour() });
     localStorage.setItem(AUTH_STATUS_CACHE_KEY, '{ not json');
-    expect(readCachedAuthStatus(tok)).toBeNull();
+    expect(readCachedAuthStatus(tok, null)).toBeNull();
     localStorage.setItem(AUTH_STATUS_CACHE_KEY, JSON.stringify({ sub: 'user-1' }));
-    expect(readCachedAuthStatus(tok)).toBeNull();
+    expect(readCachedAuthStatus(tok, null)).toBeNull();
     localStorage.setItem(AUTH_STATUS_CACHE_KEY, JSON.stringify(42));
-    expect(readCachedAuthStatus(tok)).toBeNull();
+    expect(readCachedAuthStatus(tok, null)).toBeNull();
     localStorage.setItem(
       AUTH_STATUS_CACHE_KEY,
       JSON.stringify({ sub: 'user-1', user, emailVerified: 'yes' })
     );
-    expect(readCachedAuthStatus(tok)?.emailVerified).toBeNull();
+    expect(readCachedAuthStatus(tok, null)?.emailVerified).toBeNull();
   });
 
   it('stores nothing without a usable token or a subject', () => {
-    writeCachedAuthStatus(null, user, true);
-    writeCachedAuthStatus(tokenFor({ sub: 'user-1', exp: 1 }), user, true);
-    writeCachedAuthStatus(tokenFor({ exp: inAnHour() }), user, true);
+    writeCachedAuthStatus(null, null, user, true);
+    writeCachedAuthStatus(tokenFor({ sub: 'user-1', exp: 1 }), null, user, true);
+    writeCachedAuthStatus(tokenFor({ exp: inAnHour() }), null, user, true);
     expect(localStorage.getItem(AUTH_STATUS_CACHE_KEY)).toBeNull();
+  });
+
+  it('hands a status back only in the workspace it was confirmed in (ADR-071 roles differ per workspace)', () => {
+    const tok = tokenFor({ sub: 'user-1', exp: inAnHour() });
+    writeCachedAuthStatus(tok, 'tenant_client_1', user, true);
+    expect(readCachedAuthStatus(tok, 'tenant_client_1')?.tenant).toBe('tenant_client_1');
+    expect(readCachedAuthStatus(tok, null)).toBeNull();
+    expect(readCachedAuthStatus(tok, 'tenant_client_2')).toBeNull();
+    writeCachedAuthStatus(tok, null, user, true);
+    expect(readCachedAuthStatus(tok, 'tenant_client_1')).toBeNull();
   });
 
   it('tells whether two tokens belong to the same subject', () => {
@@ -82,9 +97,9 @@ describe('auth status snapshot', () => {
 
   it('clears the stored status', () => {
     const tok = tokenFor({ sub: 'user-1', exp: inAnHour() });
-    writeCachedAuthStatus(tok, user, true);
+    writeCachedAuthStatus(tok, null, user, true);
     clearCachedAuthStatus();
-    expect(readCachedAuthStatus(tok)).toBeNull();
+    expect(readCachedAuthStatus(tok, null)).toBeNull();
   });
 
   it('survives storage that refuses to write or remove', () => {
@@ -92,7 +107,7 @@ describe('auth status snapshot', () => {
     vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('quota');
     });
-    expect(() => writeCachedAuthStatus(tok, user, true)).not.toThrow();
+    expect(() => writeCachedAuthStatus(tok, null, user, true)).not.toThrow();
     vi.spyOn(Storage.prototype, 'removeItem').mockImplementation(() => {
       throw new Error('blocked');
     });

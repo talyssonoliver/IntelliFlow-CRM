@@ -42,7 +42,11 @@ import { loginPathFor, safeRedirectPath } from './safe-redirect';
 import { storeSessionTokens } from '@/lib/shared/token-exchange';
 import { AUTH_TOKEN_CHANGED_EVENT, leaveAfterLogout } from '@/lib/shared/session-cleanup';
 import { watchForLogoutElsewhere, type PageSession } from './logout-sync';
-import { clearActiveTenant } from '@/lib/tenant/active-tenant';
+import {
+  ACTIVE_TENANT_CHANGED_EVENT,
+  clearActiveTenant,
+  getActiveTenantId,
+} from '@/lib/tenant/active-tenant';
 
 export type AuthMfaMethod = 'totp' | 'sms' | 'email' | 'backup';
 
@@ -305,7 +309,10 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   // effect runs after this one in the same commit and its state wins.
   useEffect(() => {
     if (isLoggedOutPage || typeof globalThis.window === 'undefined') return;
-    const cached = readCachedAuthStatus<AuthUser>(localStorage.getItem('accessToken'));
+    const cached = readCachedAuthStatus<AuthUser>(
+      localStorage.getItem('accessToken'),
+      getActiveTenantId()
+    );
     if (!cached) return;
     setState((prev) =>
       prev.isLoading
@@ -342,13 +349,19 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   // MVP-007: the token getStatus was asked with. Its answer is stored only under that same token's
   // subject, and not at all if the token changed while it was in flight (a sign-in as someone else
   // in another tab), so one user's status is never paired with another user's token.
-  const statusTokenRef = useRef<{ token: string | null; changed: boolean }>({
+  // The workspace is recorded too: getStatus answers with the role in the active workspace.
+  const statusTokenRef = useRef<{ token: string | null; tenant: string | null; changed: boolean }>({
     token: null,
+    tenant: null,
     changed: false,
   });
   useEffect(() => {
     if (statusQuery.isFetching && typeof globalThis.window !== 'undefined') {
-      statusTokenRef.current = { token: localStorage.getItem('accessToken'), changed: false };
+      statusTokenRef.current = {
+        token: localStorage.getItem('accessToken'),
+        tenant: getActiveTenantId(),
+        changed: false,
+      };
     }
   }, [statusQuery.isFetching]);
 
@@ -361,7 +374,15 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         .catch(logAuthStatusRefreshError);
     };
     globalThis.addEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
-    return () => globalThis.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
+    // A workspace switch mid-request also means the answer may be for the other workspace.
+    const onTenantChanged = () => {
+      statusTokenRef.current = { ...statusTokenRef.current, changed: true };
+    };
+    globalThis.addEventListener(ACTIVE_TENANT_CHANGED_EVENT, onTenantChanged);
+    return () => {
+      globalThis.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
+      globalThis.removeEventListener(ACTIVE_TENANT_CHANGED_EVENT, onTenantChanged);
+    };
   }, [queryClient]);
 
   // Track refresh timer
@@ -569,8 +590,14 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     if (result.update.isAuthenticated && result.update.user) {
       const asked = statusTokenRef.current;
       const current = localStorage.getItem('accessToken');
-      if (!asked.changed && sameTokenSubject(asked.token, current)) {
-        writeCachedAuthStatus(current, result.update.user, result.update.emailVerified ?? null);
+      const tenant = getActiveTenantId();
+      if (!asked.changed && asked.tenant === tenant && sameTokenSubject(asked.token, current)) {
+        writeCachedAuthStatus(
+          current,
+          tenant,
+          result.update.user,
+          result.update.emailVerified ?? null
+        );
       }
     } else if (queryView.isSuccess) {
       clearCachedAuthStatus();
