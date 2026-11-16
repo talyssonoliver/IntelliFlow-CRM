@@ -41,12 +41,16 @@ describe('isSystemActivity', () => {
     expect(isSystemActivity({ type: 'score_update', user: 'AI Scoring Agent' })).toBe(true);
     expect(isSystemActivity({ type: 'status_change', user: 'Alex Owner' })).toBe(true);
     expect(isSystemActivity({ type: 'note', user: 'System (COA sync)' })).toBe(true);
-    expect(isSystemActivity({ type: 'note', user: ' system (portal)' })).toBe(true);
+    expect(isSystemActivity({ type: 'note', user: ' System (portal)' })).toBe(true);
   });
 
   it('keeps a person-written note, call or email as personal', () => {
     expect(isSystemActivity({ type: 'note', user: 'Alex Owner' })).toBe(false);
     expect(isSystemActivity({ type: 'call', user: 'Systema Ltd rep' })).toBe(false);
+    // A person whose email starts with "system" is still a person.
+    expect(isSystemActivity({ type: 'note', user: 'system@example.com' })).toBe(false);
+    expect(isSystemActivity({ type: 'note', user: 'System admin' })).toBe(false);
+    expect(isSystemActivity({ type: 'note', user: 'System' })).toBe(true);
   });
 });
 

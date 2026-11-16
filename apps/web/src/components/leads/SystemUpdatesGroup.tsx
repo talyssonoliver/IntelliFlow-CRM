@@ -1,16 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * One collapsed line for the activity the system wrote on a lead (COA sync, portal, AI scores,
  * status changes): "System updates (n)", expanding to the entries themselves.
+ *
+ * `deepLinkedId` is the id of a system entry a link points at (`?activityId=`): the group then
+ * opens by itself and scrolls that entry into view once it has mounted.
  */
 export function SystemUpdatesGroup({
   count,
+  deepLinkedId = null,
   children,
-}: Readonly<{ count: number; children: React.ReactNode }>) {
-  const [open, setOpen] = useState(false);
+}: Readonly<{ count: number; deepLinkedId?: string | null; children: React.ReactNode }>) {
+  const [open, setOpen] = useState(deepLinkedId !== null);
+
+  useEffect(() => {
+    if (deepLinkedId === null) return;
+    setOpen(true);
+    const frame = requestAnimationFrame(() => {
+      document
+        .querySelector(`[data-activity-id="${CSS.escape(deepLinkedId)}"]`)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [deepLinkedId]);
+
   if (count === 0) return null;
   return (
     <div className="relative">

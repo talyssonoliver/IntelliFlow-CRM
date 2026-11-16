@@ -23,6 +23,12 @@ export const ACTIVITY_TYPE_FILTERS: ReadonlyArray<{
 /** Activity types that only the system writes. */
 const SYSTEM_TYPES = new Set(['score_update', 'status_change']);
 
+/**
+ * The author names the API writes for itself, matched exactly: "System" or "System (<source>)".
+ * A person's email such as system@example.com is not a system author.
+ */
+const SYSTEM_AUTHOR = /^System(?: \([^)]+\))?$/;
+
 export interface FeedActivity {
   type: string;
   user: string;
@@ -34,7 +40,7 @@ export interface FeedActivity {
  * whose author is "System (...)" (the API writes "System (COA sync)" and "System (portal)").
  */
 export function isSystemActivity(activity: Pick<FeedActivity, 'type' | 'user'>): boolean {
-  return SYSTEM_TYPES.has(activity.type) || /^system\b/i.test(activity.user.trim());
+  return SYSTEM_TYPES.has(activity.type) || SYSTEM_AUTHOR.test(activity.user.trim());
 }
 
 function newestFirst<T extends FeedActivity>(a: T, b: T): number {

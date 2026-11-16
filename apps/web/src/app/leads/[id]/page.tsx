@@ -1262,7 +1262,13 @@ function LeadActivityTab({
               />
             ))}
             {/* COA sync, portal, score and status entries: one folded line (MVP-005). */}
-            <SystemUpdatesGroup count={systemActivities.length}>
+            <SystemUpdatesGroup
+              count={systemActivities.length}
+              deepLinkedId={
+                systemActivities.find((a) => isDeepLinkedActivity(a.id, selectedActivityId))?.id ??
+                null
+              }
+            >
               {systemActivities.map((activity) => (
                 <ActivityTimelineItem
                   key={activity.id}
@@ -2600,9 +2606,10 @@ export default function Lead360Page() {
     () => filteredActivitiesAll.slice(0, visibleCount),
     [filteredActivitiesAll, visibleCount]
   );
+  // The folded System updates render with comments and reactions too, so load theirs.
   const activityIdsForReactions = useMemo(
-    () => visibleActivitiesAll.map((a) => a.id),
-    [visibleActivitiesAll]
+    () => [...visibleActivitiesAll, ...activityFeed.system].map((a) => a.id),
+    [visibleActivitiesAll, activityFeed.system]
   );
   const { reactions: reactionsMap, toggleReaction } = useActivityReactions(
     activityIdsForReactions,
