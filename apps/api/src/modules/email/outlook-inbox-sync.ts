@@ -247,6 +247,18 @@ function recordData(args: {
   };
 }
 
+/** A kept mail's body; null when the provider refuses that one message (deleted meanwhile). */
+async function bodyOf(message: SyncedMessage): Promise<string | null> {
+  if (!message.loadBody) return message.bodyText;
+  try {
+    return await message.loadBody();
+  } catch (error) {
+    // One message the provider refuses never fails the round; a dead token or an outage does.
+    if (error instanceof MailboxTransportError && error.code === 'REJECTED') return null;
+    throw error;
+  }
+}
+
 export async function storeSyncedMessage(
   deps: InboxSyncDeps,
   mailbox: SyncMailbox,
@@ -266,7 +278,8 @@ export async function storeSyncedMessage(
   const threadId = await threadOf(deps, mailbox, message);
   // Only now, for mail that is kept: the body (a reader may load it lazily, so personal mail's
   // content is never fetched).
-  const body = message.loadBody ? await message.loadBody() : message.bodyText;
+  const body = await bodyOf(message);
+  if (body === null) return 'rejected';
   const leadId = party.leadId;
   const write = async (db: any) => {
     const record: { id: string } = await db.emailRecord.create({

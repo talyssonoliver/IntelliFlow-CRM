@@ -114,7 +114,7 @@ describe('readZohoFolder', () => {
     ]);
   });
 
-  it('returns a mail once when a page shift lists it again', async () => {
+  it('starts each later page one item early, and returns the overlapping mail once', async () => {
     const cursor = JSON.stringify({ t: T - 10_000, ids: [] });
     const fetchImpl = vi
       .fn()
@@ -131,6 +131,10 @@ describe('readZohoFolder', () => {
       '9000000000000000007',
       '9000000000000000008',
     ]);
+    const starts = (fetchImpl.mock.calls as unknown as Array<[string]>).map(([url]) =>
+      new URL(url).searchParams.get('start')
+    );
+    expect(starts).toEqual(['1', '2']);
   });
 
   it("takes the sender's name from `sender` when the address field is bare", async () => {

@@ -3,6 +3,7 @@
  * the provider conversation's CRM thread, and the lead's timeline, written with the mail.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { MailboxTransportError } from '@intelliflow/adapters';
 import type { SyncedMessage } from '../mail-sync-reader';
 
 const tokens = vi.hoisted(() => ({ getOAuthAccess: vi.fn() }));
@@ -95,6 +96,42 @@ describe('mailbox sync: threads and the lead timeline (MVP-001)', () => {
 
     const data = (prisma.emailRecord.create.mock.calls[0] as unknown as [{ data: any }])[0].data;
     expect(data.metadata.threadId).toBe('sent-1');
+  });
+
+  it('skips one mail whose body the provider refuses, and keeps going', async () => {
+    const gone = vi.fn(async () => {
+      throw new MailboxTransportError('REJECTED');
+    });
+    const { prisma, deps } = setup({
+      rounds: [
+        round({
+          messages: [
+            mail({ providerMessageId: 'z-gone', loadBody: gone }),
+            mail({ providerMessageId: 'z-ok', loadBody: async () => 'Still here' }),
+          ],
+        }),
+      ],
+    });
+
+    const report = await runInboxSync(deps);
+
+    expect(report).toMatchObject({ stored: 1, skipped: 1, failures: 0 });
+    const data = (prisma.emailRecord.create.mock.calls[0] as unknown as [{ data: any }])[0].data;
+    expect(data.providerMessageId).toBe('z-ok');
+  });
+
+  it('fails the round when a body read finds the token dead, so the mailbox backs off', async () => {
+    const dead = vi.fn(async () => {
+      throw new MailboxTransportError('AUTH_FAILED');
+    });
+    const { prisma, deps } = setup({ rounds: [round({ messages: [mail({ loadBody: dead })] })] });
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const report = await runInboxSync(deps);
+
+    expect(report.failures).toBe(1);
+    expect(prisma.emailRecord.create).not.toHaveBeenCalled();
+    error.mockRestore();
   });
 
   it('reads a lazily loaded body only for mail it keeps', async () => {
