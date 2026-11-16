@@ -160,6 +160,23 @@ describe('emailMailbox.saveSmtp', () => {
     expect(logAction.mock.calls[0][4].afterState).toMatchObject({ smtpPassword: 'set' });
   });
 
+  it('signs in before saving, and saves a mailbox that cannot sign in as ERROR with its code', async () => {
+    t.transports.smtp.verify.mockRejectedValueOnce(new MailboxTransportError('TIMEOUT'));
+    await member().saveSmtp(saveInput);
+    expect(t.transports.smtp.verify).toHaveBeenCalledWith(
+      expect.objectContaining({ host: 'smtp.mail.example.com', username: 'me@mail.example.com' })
+    );
+    expect(prismaMock.emailMailbox.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ status: 'ERROR', lastErrorCode: 'TIMEOUT' }),
+    });
+  });
+
+  it('limits the sign-ins a save makes, like the settings test (each is an outbound connection)', async () => {
+    for (let i = 0; i < 5; i++) await member().saveSmtp(saveInput);
+    await expect(member().saveSmtp(saveInput)).rejects.toMatchObject({ code: 'TOO_MANY_REQUESTS' });
+    expect(t.transports.smtp.verify).toHaveBeenCalledTimes(5);
+  });
+
   it('keeps the stored password when none is sent and updates in place', async () => {
     (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(smtpRow());
     await member().saveSmtp({ ...saveInput, smtpPassword: undefined });

@@ -2,7 +2,9 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Suspense } from 'react';
+import { act } from 'react';
 import DashboardClient from '../DashboardClient';
+import { setLiveConnected } from '@/lib/live-connection';
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 vi.mock('@/lib/auth/AuthContext', () => ({
@@ -56,6 +58,19 @@ function renderDashboard(props: Parameters<typeof DashboardClient>[0] = {}) {
 describe('DashboardClient', () => {
   beforeEach(() => {
     localStorageMock.clear();
+    setLiveConnected(false);
+  });
+
+  it('says Live only while the live-update connection is open (MVP-004)', () => {
+    renderDashboard();
+    expect(screen.getByText('Refreshes every minute')).toBeInTheDocument();
+    expect(screen.queryByText(/^Live/)).not.toBeInTheDocument();
+
+    act(() => setLiveConnected(true));
+    expect(screen.getByText('Live · refreshes every minute')).toBeInTheDocument();
+
+    act(() => setLiveConnected(false));
+    expect(screen.getByText('Refreshes every minute')).toBeInTheDocument();
   });
 
   it('renders the page header', () => {

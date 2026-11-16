@@ -127,7 +127,7 @@ function SidebarSettingsFooter({
           {isExpanded && <span className="font-medium">Module Settings</span>}
         </button>
       ) : (
-        <Link href={config.settingsHref!} className={itemClass}>
+        <Link prefetch={false} href={config.settingsHref!} className={itemClass}>
           <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">
             settings
           </span>
@@ -369,6 +369,7 @@ function SidebarItemComponent({
 
   return (
     <Link
+      prefetch={false}
       href={item.href}
       aria-current={isActive ? 'page' : undefined}
       title={isExpanded ? undefined : item.label}
@@ -547,6 +548,7 @@ function AnnouncementCard({ announcement, onDismiss }: Readonly<AnnouncementCard
 
           {/* Action */}
           <Link
+            prefetch={false}
             href={announcement.actionHref}
             className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 mt-2 transition-colors"
           >
@@ -782,6 +784,7 @@ export function MobileSidebar({
               </button>
             ) : (
               <Link
+                prefetch={false}
                 href={config.settingsHref!}
                 onClick={handleItemClick}
                 className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"
@@ -815,6 +818,7 @@ function MobileSidebarItem({
 
   return (
     <Link
+      prefetch={false}
       href={item.href}
       onClick={onClick}
       aria-current={isActive ? 'page' : undefined}
