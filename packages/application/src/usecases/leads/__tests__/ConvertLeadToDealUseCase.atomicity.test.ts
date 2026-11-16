@@ -61,6 +61,7 @@ function setup(opts: { failOn?: 'account' | 'contact' | 'opportunity' | 'lead' |
 
   const contactRepository = {
     save: vi.fn(fail('contact')),
+    findByEmailInTenant: vi.fn(async () => null),
   } as unknown as ContactRepository;
 
   const opportunityRepository = {
