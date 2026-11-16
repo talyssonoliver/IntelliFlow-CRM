@@ -28,7 +28,7 @@ export interface ZohoFolderIds {
 export interface ZohoSyncedMessage {
   providerMessageId: string;
   internetMessageId: string | null;
-  /** Zoho's thread id: replies to a mail share it. */
+  /** Zoho's thread id (its first mail's id): replies to a mail share it. */
   conversationId: string | null;
   subject: string;
   fromAddress: string | null;
@@ -242,7 +242,9 @@ function toMessage(
   return {
     providerMessageId: messageId,
     internetMessageId: null,
-    conversationId: item.threadId ?? null,
+    // A mail with no reply yet has no thread id; Zoho's thread id is its first mail's id, so the
+    // mail's own id is the conversation a later reply names.
+    conversationId: item.threadId ?? messageId,
     subject: (item.subject ?? '').replaceAll('\u0000', '').trim() || '(No subject)',
     fromAddress: zohoAddresses(item.fromAddress)[0] ?? zohoAddresses(sender)[0] ?? null,
     fromName: displayName(item.fromAddress) ?? senderName,

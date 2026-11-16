@@ -154,6 +154,8 @@ describe('readZohoFolder', () => {
     expect(round.messages[0]).toMatchObject({
       fromAddress: 'rebecca@example.invalid',
       fromName: 'Rebecca',
+      // No thread yet: its own id, which a later reply's thread id names.
+      conversationId: '9000000000000000009',
     });
   });
 
