@@ -5,7 +5,12 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { cn } from '@intelliflow/ui';
 import { useAuth } from '@/lib/auth';
 import { isSidebarItemActive } from '@/components/sidebar/AppSidebar';
-import { useModuleNav, visibleSections } from '@/components/sidebar/module-nav-store';
+import {
+  afterSlotRef,
+  beforeSlotRef,
+  useModuleNav,
+  visibleSections,
+} from '@/components/sidebar/module-nav-store';
 
 const ITEM_CLASS = 'flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors';
 const IDLE_CLASS = 'text-muted-foreground hover:text-foreground hover:bg-accent';
@@ -14,6 +19,8 @@ const IDLE_CLASS = 'text-muted-foreground hover:text-foreground hover:bg-accent'
  * The open module's own menu inside the app's phone menu, listed under the module's link
  * (MVP-006). It shows what the module's phone drawer showed: its custom content, its sections
  * (role-filtered, the current one marked) and Module Settings. Renders nothing outside a module.
+ * The custom content is not rendered here: it can need providers that exist only inside the
+ * module's layout, so the module's sidebar portals it into the two slots this leaves.
  */
 export function ModuleNavGroup({ onNavigate }: Readonly<{ onNavigate: () => void }>) {
   const moduleNav = useModuleNav();
@@ -34,7 +41,7 @@ export function ModuleNavGroup({ onNavigate }: Readonly<{ onNavigate: () => void
       className="ml-6 mt-1 mb-2 space-y-3 border-l border-border pl-3"
       aria-label={`${moduleNav.moduleTitle} sections`}
     >
-      {Before && <Before isExpanded={true} />}
+      {Before && <div ref={beforeSlotRef} />}
       {sections.map((section) => (
         <div key={section.id}>
           <p className="px-2 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -65,7 +72,7 @@ export function ModuleNavGroup({ onNavigate }: Readonly<{ onNavigate: () => void
           })}
         </div>
       ))}
-      {After && <After isExpanded={true} />}
+      {After && <div ref={afterSlotRef} />}
       {hasSettings && <ModuleSettingsEntry nav={moduleNav} onNavigate={onNavigate} />}
     </nav>
   );

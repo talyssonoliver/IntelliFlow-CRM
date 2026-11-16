@@ -49,6 +49,37 @@ export function useModuleNav(): ModuleNav | null {
   return useSyncExternalStore(subscribe, read, readOnServer);
 }
 
+/**
+ * Where the app menu shows a module's custom content (beforeContent / afterContent). That content
+ * can need providers that exist only inside the module's layout (the calendar's toggles need
+ * CalendarVisibilityProvider), so the app menu does not render it: it offers these empty slots,
+ * and the module's own sidebar portals its content into them from inside its provider tree.
+ */
+export interface MenuSlots {
+  before: HTMLElement | null;
+  after: HTMLElement | null;
+}
+
+let slots: MenuSlots = { before: null, after: null };
+
+export function setMenuSlot(which: keyof MenuSlots, element: HTMLElement | null) {
+  if (slots[which] === element) return;
+  slots = { ...slots, [which]: element };
+  emit();
+}
+
+/** Stable ref callbacks for the app menu's two slots. */
+export const beforeSlotRef = (element: HTMLElement | null) => setMenuSlot('before', element);
+export const afterSlotRef = (element: HTMLElement | null) => setMenuSlot('after', element);
+
+const readSlots = () => slots;
+const emptySlots: MenuSlots = { before: null, after: null };
+const readSlotsOnServer = () => emptySlots;
+
+export function useMenuSlots(): MenuSlots {
+  return useSyncExternalStore(subscribe, readSlots, readSlotsOnServer);
+}
+
 /** Sections a role may see: items with `roles` only for those roles, and no empty section. */
 export function visibleSections(sections: readonly SidebarSection[], role: string | undefined) {
   return sections
