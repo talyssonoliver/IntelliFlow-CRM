@@ -40,7 +40,7 @@ afterEach(() => {
 describe('PG-207 with nothing configured', () => {
   it('builds the mailbox transports without OAuth apps: both providers off, no client', () => {
     const transports = createMailboxTransports(BARE_ENV);
-    expect(transports.oauthConfigured).toEqual({ GMAIL: false, MICROSOFT: false });
+    expect(transports.oauthConfigured).toEqual({ GMAIL: false, MICROSOFT: false, ZOHO: false });
     expect(transports.oauth('GMAIL')).toBeNull();
     expect(transports.oauth('MICROSOFT')).toBeNull();
   });
@@ -48,7 +48,7 @@ describe('PG-207 with nothing configured', () => {
   it('the settings page reads as "not connected, providers unavailable"', async () => {
     await expect(member().getMine()).resolves.toMatchObject({
       mailbox: null,
-      providersAvailable: { GMAIL: false, MICROSOFT: false },
+      providersAvailable: { GMAIL: false, MICROSOFT: false, ZOHO: false },
     });
   });
 

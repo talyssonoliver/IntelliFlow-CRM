@@ -349,6 +349,11 @@ function withObjectedRecipients(options: DispatchOptions, objected: string[]): D
   return { ...options, metadata: { ...options.metadata, objectedRecipients: objected } };
 }
 
+/** Zoho sends the fields, not our MIME, so our Message-ID is not on that mail: none is kept. */
+function recordedMessageId(provider: string, messageId: string): string | null {
+  return provider === 'ZOHO' ? null : messageId;
+}
+
 export async function dispatchUserMail(
   ctx: DispatchCtx,
   input: SendUserEmailInput,
@@ -418,7 +423,7 @@ export async function dispatchUserMail(
       });
     }
 
-    const mime = await buildMime({
+    const message = {
       recordId,
       from: { address: mailbox.fromAddress, name: mailbox.fromName },
       to: recipients.to,
@@ -430,14 +435,16 @@ export async function dispatchUserMail(
       text: input.textBody,
       attachments: parts,
       keepBcc: mailbox.kind !== 'SMTP',
-    });
+    };
+    const mime = await buildMime(message);
     const sent = await sendThroughMailbox(
       db,
       mailbox,
       deps.transports,
       { from: mailbox.fromAddress, to: sendTo },
       mime.raw,
-      now()
+      now(),
+      message
     );
     delivered = true;
 
@@ -449,7 +456,7 @@ export async function dispatchUserMail(
     const sentData = {
       status: 'SENT',
       sentAt: now(),
-      messageIdHeader: mime.messageId,
+      messageIdHeader: recordedMessageId(sent.provider, mime.messageId),
       provider: sent.provider,
       providerMessageId: sent.providerMessageId,
       ...rejectedMetadata(input, recipients.skipped, options, refused),

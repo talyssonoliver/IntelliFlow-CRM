@@ -74,7 +74,7 @@ function makeTransports() {
       smtp: { send: vi.fn(), verify: vi.fn(async () => undefined) },
       imap: { read: vi.fn(), verify: vi.fn(async () => undefined) },
       oauth: vi.fn((p: string) => (p === 'GMAIL' ? oauthClient : null)),
-      oauthConfigured: { GMAIL: true, MICROSOFT: false },
+      oauthConfigured: { GMAIL: true, MICROSOFT: false, ZOHO: false },
     },
   };
 }
@@ -117,7 +117,7 @@ describe('emailMailbox.getMine / getTenant', () => {
   it('returns my mailbox (no secrets) and which OAuth providers are configured', async () => {
     (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(smtpRow());
     const result = await member().getMine();
-    expect(result.providersAvailable).toEqual({ GMAIL: true, MICROSOFT: false });
+    expect(result.providersAvailable).toEqual({ GMAIL: true, MICROSOFT: false, ZOHO: false });
     expect(result.mailbox?.hasSmtpPassword).toBe(true);
     expect(JSON.stringify(result)).not.toContain(secret);
     expect(prismaMock.emailMailbox.findFirst).toHaveBeenCalledWith({

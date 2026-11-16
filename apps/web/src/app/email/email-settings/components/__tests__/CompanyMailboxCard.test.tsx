@@ -48,7 +48,7 @@ function renderCard(props: Partial<Parameters<typeof CompanyMailboxCard>[0]> = {
       <CompanyMailboxCard
         canEdit
         mailbox={null}
-        providersAvailable={{ GMAIL: true, MICROSOFT: true }}
+        providersAvailable={{ GMAIL: true, MICROSOFT: true, ZOHO: false }}
         allowFallback={false}
         onAllowFallbackChange={onAllowFallbackChange}
         companyMailboxAddress={null}
