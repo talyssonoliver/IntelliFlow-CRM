@@ -16,6 +16,7 @@ import { mailboxErrorMessage } from '@/components/email/send-errors';
 import { oauthProviderKey } from '../../oauth/oauth-session';
 import { connectionFailureHelp } from './connection-help';
 import { oneClickNotYet, providerByServer } from './mailbox-providers';
+import { SmtpHostingNotice } from './SmtpHostingNotice';
 
 // Loaded on demand: most users connect with Google or Microsoft (C-FE5).
 const SmtpMailboxForm = dynamic(() => import('./SmtpMailboxForm').then((m) => m.SmtpMailboxForm), {
@@ -24,9 +25,13 @@ const SmtpMailboxForm = dynamic(() => import('./SmtpMailboxForm').then((m) => m.
 });
 
 type Scope = 'USER' | 'TENANT';
-type Provider = 'GMAIL' | 'MICROSOFT';
+type Provider = 'GMAIL' | 'MICROSOFT' | 'ZOHO';
 
-const PROVIDER_LABEL: Record<Provider, string> = { GMAIL: 'Google', MICROSOFT: 'Microsoft' };
+const PROVIDER_LABEL: Record<Provider, string> = {
+  GMAIL: 'Google',
+  MICROSOFT: 'Microsoft',
+  ZOHO: 'Zoho Mail',
+};
 
 function errorText(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
@@ -142,7 +147,7 @@ export function MailboxConnection({
         Connect {PROVIDER_LABEL[provider]}
       </Button>
     ) : null;
-  const notYet = (['GMAIL', 'MICROSOFT'] as const)
+  const notYet = (['GMAIL', 'MICROSOFT', 'ZOHO'] as const)
     .filter((provider) => !providersAvailable[provider])
     .map((provider) => PROVIDER_LABEL[provider]);
 
@@ -178,6 +183,7 @@ export function MailboxConnection({
           {/* While setting up, the form's own first step is the only choice on screen. */}
           {!editing && providerButton('GMAIL')}
           {!editing && providerButton('MICROSOFT')}
+          {!editing && providerButton('ZOHO')}
           {/* A broken SMTP mailbox is edited below; a disconnected one is set up again here. */}
           {!editing && (!connected || mailbox?.kind !== 'SMTP') && (
             <Button
@@ -241,6 +247,7 @@ export function MailboxConnection({
         </p>
       )}
 
+      {editing && <SmtpHostingNotice />}
       {editing && (
         <SmtpMailboxForm
           scope={scope}
