@@ -1949,6 +1949,8 @@ IFC-028:
     - unit
   acceptance_owner: 'Backend Dev'
   debt_allowed: no
+  override_deps_remove:
+    - IFC-027 # Completed without it (plan reconcile 2026-11-16); IFC-027 is re-dated to sprint 24
   evidence_required:
     - apps/api/src/workflow/__tests__/state-machine.test.ts
     - .specify/sprints/sprint-16/execution/IFC-028/IFC-028-delivery.md
@@ -3740,3 +3742,17 @@ MVP-010:
   debt_allowed: no
   evidence_required:
     - .specify/sprints/sprint-25/attestations/MVP-010/owner-screenshot.png
+
+# Plan reconcile 2026-11-16: these tasks were marked Completed while ENV-008-AI was still open.
+# ENV-008-AI is re-dated to sprint 25, so the finished tasks no longer wait on it.
+EP-001-AI:
+  override_deps_remove:
+    - ENV-008-AI
+IFC-142:
+  tier: B
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+  override_deps_remove:
+    - ENV-008-AI
