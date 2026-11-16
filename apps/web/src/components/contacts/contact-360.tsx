@@ -195,15 +195,15 @@ export interface ContactWithRelations {
 // Activity type filter options
 
 export const activityTypeFilters: { value: ActivityType | 'all'; label: string; icon: string }[] = [
-  { value: 'all', label: 'All', icon: '­ƒôï' },
-  { value: 'email', label: 'Emails', icon: '­ƒôº' },
-  { value: 'call', label: 'Calls', icon: '­ƒô×' },
-  { value: 'meeting', label: 'Meetings', icon: '­ƒôà' },
-  { value: 'chat', label: 'Chats', icon: '­ƒÆ¼' },
-  { value: 'document', label: 'Documents', icon: '­ƒôä' },
-  { value: 'deal', label: 'Deals', icon: '­ƒÄ»' },
-  { value: 'ticket', label: 'Tickets', icon: '­ƒÄ½' },
-  { value: 'note', label: 'Notes', icon: '­ƒôØ' },
+  { value: 'all', label: 'All', icon: '📋' },
+  { value: 'email', label: 'Emails', icon: '📧' },
+  { value: 'call', label: 'Calls', icon: '📞' },
+  { value: 'meeting', label: 'Meetings', icon: '📅' },
+  { value: 'chat', label: 'Chats', icon: '💬' },
+  { value: 'document', label: 'Documents', icon: '📄' },
+  { value: 'deal', label: 'Deals', icon: '🎯' },
+  { value: 'ticket', label: 'Tickets', icon: '🎫' },
+  { value: 'note', label: 'Notes', icon: '📝' },
 ];
 
 // Contact Status Badge Component
@@ -382,13 +382,13 @@ export function getSentimentColor(sentiment?: string): string {
 export function getChannelIcon(channel?: string): string {
   switch (channel) {
     case 'whatsapp':
-      return '­ƒÆ¼';
+      return '💬';
     case 'teams':
-      return '­ƒæÑ';
+      return '👥';
     case 'slack':
-      return '­ƒÆ╝';
+      return '💼';
     default:
-      return '­ƒÆ¼';
+      return '💬';
   }
 }
 
@@ -406,11 +406,11 @@ export function getCallOutcomeStyle(outcome?: string): string {
 export function getCallOutcomeLabel(outcome?: string): string {
   switch (outcome) {
     case 'connected':
-      return 'Ô£ô Connected';
+      return '✓ Connected';
     case 'voicemail':
-      return '­ƒô× Voicemail';
+      return '📞 Voicemail';
     default:
-      return 'Ô£ù No Answer';
+      return '✗ No Answer';
   }
 }
 
@@ -450,11 +450,11 @@ export function getSentimentTrendStyle(trend?: string): string {
 export function getSentimentEmoji(sentiment?: string): string {
   switch (sentiment) {
     case 'positive':
-      return '­ƒÿè';
+      return '😊';
     case 'negative':
-      return '­ƒÿƒ';
+      return '😟';
     default:
-      return '­ƒÿÉ';
+      return '😐';
   }
 }
 
@@ -512,7 +512,7 @@ export function renderRichPreview(activity: Activity): React.ReactNode {
                 <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 0 1 0-5 2.5 2.5 0 0 1 0 5z" />
               </svg>
               {meta.location}
-              {meta.duration && <span className="text-slate-400">ÔÇó {meta.duration}</span>}
+              {meta.duration && <span className="text-slate-400">• {meta.duration}</span>}
             </div>
           )}
           {meta.attendees && meta.attendees.length > 0 && (
@@ -541,7 +541,7 @@ export function renderRichPreview(activity: Activity): React.ReactNode {
               {meta.channel}
             </span>
             {meta.messageCount && (
-              <span className="text-xs text-slate-500">ÔÇó {meta.messageCount} messages</span>
+              <span className="text-xs text-slate-500">• {meta.messageCount} messages</span>
             )}
           </div>
           {meta.preview && (
@@ -591,7 +591,7 @@ export function renderRichPreview(activity: Activity): React.ReactNode {
   }
 }
 
-// ÔöÇÔöÇÔöÇ Sub-components extracted to reduce cognitive complexity ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Sub-components extracted to reduce cognitive complexity ─────────────────
 
 export function ContactLoadingSkeleton() {
   return (
@@ -661,7 +661,7 @@ export function ContactNotFoundError({ fromInsight }: { fromInsight: boolean }) 
   );
 }
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─────────────────────────────────────────────────────────────────────────────
 
 /** Returns true when a stale linked insight should be auto-dismissed. */
 

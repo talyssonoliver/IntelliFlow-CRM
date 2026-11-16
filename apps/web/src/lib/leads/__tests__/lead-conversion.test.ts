@@ -1,12 +1,41 @@
 import { describe, it, expect } from 'vitest';
 import {
+  ACCOUNT_NAME_MAX,
   buildConvertToDealPayload,
+  buildListConvertPayload,
   canQualifyLead,
   getConvertErrorDescription,
   parseDealValue,
   validateDealValue,
   validateQualifyReason,
 } from '../lead-conversion';
+
+describe('buildListConvertPayload (MVP-003)', () => {
+  it("sends the lead's company as the account name", () => {
+    expect(buildListConvertPayload({ id: 'l1', company: '  Blue Fern Studio ' })).toEqual({
+      leadId: 'l1',
+      createAccount: true,
+      accountName: 'Blue Fern Studio',
+    });
+  });
+
+  it('asks for no account when the lead has no company', () => {
+    expect(buildListConvertPayload({ id: 'l1', company: null })).toEqual({
+      leadId: 'l1',
+      createAccount: false,
+    });
+    expect(buildListConvertPayload({ id: 'l1', company: '   ' })).toEqual({
+      leadId: 'l1',
+      createAccount: false,
+    });
+    expect(buildListConvertPayload({ id: 'l1' })).toEqual({ leadId: 'l1', createAccount: false });
+  });
+
+  it('keeps the account name within the API limit', () => {
+    const payload = buildListConvertPayload({ id: 'l1', company: 'x'.repeat(250) });
+    expect(payload.accountName).toHaveLength(ACCOUNT_NAME_MAX);
+  });
+});
 
 describe('canQualifyLead', () => {
   it.each(['NEW', 'CONTACTED'])('allows %s', (status) => {
