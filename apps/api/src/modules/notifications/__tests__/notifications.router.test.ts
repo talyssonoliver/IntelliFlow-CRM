@@ -564,9 +564,10 @@ describe('notificationsRouter', () => {
       expect(result.defaultChannels).toEqual(['in_app', 'email']);
       expect(result.preferences).toBeDefined();
       expect(result.preferences.length).toBeGreaterThan(0);
-      // All preferences enabled by default with in_app channel
+      // Every preference on by default with the in_app channel, except AI lead-score notices,
+      // which stay off until the user turns them on (MVP-005).
       result.preferences.forEach((pref) => {
-        expect(pref.enabled).toBe(true);
+        expect(pref.enabled).toBe(pref.type !== 'lead_scored');
         expect(pref.channels).toEqual(['in_app']);
       });
     });

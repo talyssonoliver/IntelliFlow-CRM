@@ -36,6 +36,7 @@ import {
   type Notification,
   type NotificationEvent,
   NOTIFICATION_TYPES,
+  isNotificationTypeEnabled,
 } from '@intelliflow/validators';
 
 // =============================================================================
@@ -565,7 +566,7 @@ export const notificationsRouter = createTRPCRouter({
 
     const defaultPreferences = NOTIFICATION_TYPES.map((type) => ({
       type,
-      enabled: categoryPrefs[type]?.enabled ?? true,
+      enabled: isNotificationTypeEnabled(categoryPrefs, type),
       channels: channelPrefs[type]?.channels || ['in_app'],
       frequency: categoryPrefs[type]?.frequency || 'instant',
     }));
