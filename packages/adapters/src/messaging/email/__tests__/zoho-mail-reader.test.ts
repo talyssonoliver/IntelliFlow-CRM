@@ -144,7 +144,12 @@ describe('readZohoFolder', () => {
     );
     expect(starts).toEqual(['2', '3']);
     expect(round.complete).toBe(true);
-    expect(JSON.parse(round.cursor!)).toEqual({ t: T - 10_000, ids: ['9000000000000000050'] });
+    // Caught up: the cursor moves to the newest mail of the catch-up, and the next round sweeps.
+    expect(JSON.parse(round.cursor!)).toEqual({
+      t: T - 10_000,
+      ids: ['9000000000000000050'],
+      sweep: T - 100_000,
+    });
   });
 
   it('reads on when one mail above was removed: the overlap still holds the last mail read', async () => {
@@ -175,6 +180,32 @@ describe('readZohoFolder', () => {
     expect(starts).toEqual(['1', '2']);
     expect(round.complete).toBe(true);
     expect(round.messages.map((m) => m.providerMessageId)).toContain('9000000000000000060');
+  });
+
+  it('sweeps once after a catch-up, down to where it started, for mail listed late', async () => {
+    const cursor = JSON.stringify({
+      t: T - 10_000,
+      ids: ['9000000000000000080'],
+      sweep: T - 2 * 60 * 60 * 1000,
+    });
+    // 081 was listed during the catch-up with a time well below the new cursor.
+    const fetchImpl = vi.fn(async () =>
+      page(
+        item('9000000000000000082', T - 1_000),
+        item('9000000000000000080', T - 10_000),
+        item('9000000000000000081', T - 90 * 60 * 1000),
+        item('9000000000000000079', T - 4 * 60 * 60 * 1000)
+      )
+    );
+
+    const round = await readZohoFolder(ACCESS, REF, cursor, options({ fetchImpl, pageSize: 4 }));
+
+    expect(round.messages.map((m) => m.providerMessageId)).toEqual([
+      '9000000000000000081',
+      '9000000000000000082',
+    ]);
+    // The sweep is done: it asks for no other.
+    expect(JSON.parse(round.cursor!)).toEqual({ t: T - 1_000, ids: ['9000000000000000082'] });
   });
 
   it('reads again from the top when mail above was removed between two pages', async () => {
@@ -307,7 +338,11 @@ describe('readZohoFolder', () => {
     // The older mail the first round could not reach is read now (a repeat is deduped by the sync).
     expect(second.messages.map((m) => m.providerMessageId)).toContain('9000000000000000011');
     expect(second.complete).toBe(true);
-    expect(JSON.parse(second.cursor!)).toEqual({ t: T - 1_000, ids: ['9000000000000000013'] });
+    expect(JSON.parse(second.cursor!)).toEqual({
+      t: T - 1_000,
+      ids: ['9000000000000000013'],
+      sweep: T - 100_000,
+    });
   });
 
   it('stops on the time budget the same way, keeping the cursor', async () => {

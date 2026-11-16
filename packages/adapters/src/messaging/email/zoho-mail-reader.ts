@@ -107,6 +107,12 @@ interface Mark {
 interface Cursor extends Mark {
   /** `anchor`: the mail at `start` when it was saved (see anchorState). */
   resume?: { start: number; top: Mark; anchor?: Anchor };
+  /**
+   * Set once a catch-up completes: the time it started from. The next round (and its own catch-up,
+   * if it needs one) reads down to there again, so mail listed late above the catch-up's position
+   * with an older time is still found. That sweep does not ask for another one.
+   */
+  sweep?: number;
 }
 
 /** A token without the single quotes around it. */
@@ -264,8 +270,12 @@ function parseCursor(cursor: string | null): Cursor | null {
   if (!cursor) return null;
   try {
     const value = JSON.parse(cursor) as Partial<Cursor>;
-    const mark = asMark(value);
-    if (!mark) return null;
+    const parsed = asMark(value);
+    if (!parsed) return null;
+    const mark: Cursor =
+      typeof value.sweep === 'number' && Number.isFinite(value.sweep)
+        ? { ...parsed, sweep: value.sweep }
+        : parsed;
     const top = asMark(value.resume?.top);
     const start = value.resume?.start;
     if (!top || typeof start !== 'number' || !Number.isInteger(start) || start < 1) return mark;
@@ -441,7 +451,7 @@ async function readPages(
   const clock = options.clock ?? Date.now;
   const stopAt = options.budgetMs === undefined ? Infinity : clock() + options.budgetMs;
   // Where this round stops reading: an hour below the cursor (LOOKBACK_MS), or the first round's window.
-  const readTo = from ? from.t - LOOKBACK_MS : floor;
+  const readTo = from ? Math.min(from.t, from.sweep ?? from.t) - LOOKBACK_MS : floor;
   // Every page after the first repeats the last mails of the page before (see readPage).
   const overlap = overlapOf(options.pageSize);
   const step = Math.max(1, options.pageSize - overlap);
@@ -480,7 +490,8 @@ async function readPages(
  * A round that stops before the cursor (page cap or time budget) keeps the cursor, says where to
  * carry on and is not complete: the next round reads on from there, so no mail is skipped. Once it
  * reaches the cursor, the cursor moves to the newest mail seen when the catch-up began (mail that
- * arrived meanwhile is newer still, so the round after reads it).
+ * arrived meanwhile is newer still, so the round after reads it), and that round also sweeps down
+ * to where the catch-up started, for mail listed late above the catch-up's position.
  */
 export async function readZohoFolder(
   accessToken: string,
@@ -496,13 +507,17 @@ export async function readZohoFolder(
   const fresh = run.fresh.reverse(); // oldest first, as the sync stores them
   const top = from?.resume?.top ?? nextCursor(fresh, from, floor);
   if (run.reachedCursor) {
-    return { messages: fresh, cursor: JSON.stringify(top), complete: true, expired: false };
+    const done: Cursor = { t: top.t, ids: top.ids };
+    // A catch-up that took several rounds is swept once more, down to where it started (see sweep).
+    const next = from?.resume && from.sweep === undefined ? { ...done, sweep: from.t } : done;
+    return { messages: fresh, cursor: JSON.stringify(next), complete: true, expired: false };
   }
   // Stopped early: carry on from the next page, or from the top when the list moved up under us
   // (the floor stays, so mail read again is only deduped by the sync, never skipped).
   const resume = run.shifted
     ? { start: 1, top }
     : { start: run.nextStart, top, ...(run.anchor === null ? {} : { anchor: run.anchor }) };
-  const held: Cursor = { t: from?.t ?? floor, ids: from?.ids ?? [], resume };
+  const sweep = from?.sweep === undefined ? {} : { sweep: from.sweep };
+  const held: Cursor = { t: from?.t ?? floor, ids: from?.ids ?? [], resume, ...sweep };
   return { messages: fresh, cursor: JSON.stringify(held), complete: false, expired: false };
 }

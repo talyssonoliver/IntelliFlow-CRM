@@ -38,6 +38,8 @@ export const TICK_BUDGET_MS = 2 * 60_000;
 const MAILBOX_READ_BUDGET_MS = 60_000;
 /** Time one mailbox's round may take in all (reads, bodies, writes): well inside LEASE_MS. */
 const MAILBOX_STORE_BUDGET_MS = 3 * 60_000;
+/** What the last store and the release may still take after storing stops (bodies time out at 30 s). */
+const LEASE_MARGIN_MS = 90_000;
 const MAX_BACKOFF_MS = 6 * 60 * 60_000;
 /** A mailbox without Mail.Read (connected before the scope, or narrowed) is checked daily. */
 const NO_SCOPE_RECHECK_MS = 24 * 60 * 60_000;
@@ -387,7 +389,11 @@ async function syncMailbox(
     const token = access.accessToken;
     const startedAt = deps.now().getTime();
     const deadline = startedAt + MAILBOX_READ_BUDGET_MS;
-    const storeBy = startedAt + MAILBOX_STORE_BUDGET_MS;
+    // Counted from the claim's lease too, so a slow token refresh and the last store still fit.
+    const storeBy = Math.min(
+      startedAt + MAILBOX_STORE_BUDGET_MS,
+      claim.leaseUntil.getTime() - LEASE_MARGIN_MS
+    );
     const run: MailboxRun = { reader, mailbox, token, now, deadline, storeBy, report };
     // Sent first: a CRM-sent mail learns its provider conversation there, so a reply read in the
     // same run (or the first run's 30 days) already finds the thread it joins.
