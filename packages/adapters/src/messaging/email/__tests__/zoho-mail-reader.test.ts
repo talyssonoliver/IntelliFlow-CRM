@@ -141,6 +141,24 @@ describe('readZohoFolder', () => {
     expect(starts).toEqual(['1', '2', '3']);
   });
 
+  it('keeps the cursor and is not complete when it stops before the cursor', async () => {
+    const cursor = JSON.stringify({ t: T - 100_000, ids: [] });
+    const fetchImpl = vi.fn(async () =>
+      page(item('9000000000000000013', T - 1_000), item('9000000000000000012', T - 2_000))
+    );
+
+    // The page cap stops the round after one full page, before the cursor.
+    const round = await readZohoFolder(ACCESS, REF, cursor, options({ fetchImpl, maxPages: 1 }));
+
+    expect(round.complete).toBe(false);
+    expect(round.messages).toHaveLength(2);
+    expect(JSON.parse(round.cursor!)).toEqual({ t: T - 100_000, ids: [] });
+
+    // A first round keeps the start of its window, so the next one reads the same 30 days.
+    const first = await readZohoFolder(ACCESS, REF, null, options({ fetchImpl, maxPages: 1 }));
+    expect(JSON.parse(first.cursor!)).toEqual({ t: T - 30 * 24 * 60 * 60 * 1000, ids: [] });
+  });
+
   it("takes the sender's name from `sender` when the address field is bare", async () => {
     const fetchImpl = vi.fn(async () =>
       json(

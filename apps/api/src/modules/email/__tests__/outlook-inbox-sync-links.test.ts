@@ -21,6 +21,10 @@ const sentMail = (overrides: Partial<SyncedMessage> = {}) =>
     ...overrides,
   });
 
+/** The thread lookup (by provider conversation), not the duplicate check. */
+const isThreadLookup = (where: Record<string, any>) =>
+  Array.isArray(where.OR) && 'metadata' in where.OR[0];
+
 describe('mailbox sync: threads and the lead timeline (MVP-001)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -71,7 +75,7 @@ describe('mailbox sync: threads and the lead timeline (MVP-001)', () => {
     prisma.emailRecord.findFirst.mockImplementation((async (args: {
       where: Record<string, unknown>;
     }) =>
-      'metadata' in args.where
+      isThreadLookup(args.where)
         ? { id: 'sent-1', metadata: { conversationId: 'conv-1', threadId: 'thread-9' } }
         : null) as never);
 
@@ -80,7 +84,25 @@ describe('mailbox sync: threads and the lead timeline (MVP-001)', () => {
     const data = (prisma.emailRecord.create.mock.calls[0] as unknown as [{ data: any }])[0].data;
     expect(data.metadata.threadId).toBe('thread-9');
     const lookups = prisma.emailRecord.findFirst.mock.calls as unknown as Array<[{ where: any }]>;
-    expect(lookups.some(([a]) => a.where.metadata?.equals === 'conv-1')).toBe(true);
+    expect(
+      lookups.some(([a]) => isThreadLookup(a.where) && a.where.OR[0].metadata.equals === 'conv-1')
+    ).toBe(true);
+  });
+
+  it("joins the mail whose own Zoho id names the reply's thread, whatever it was stored with", async () => {
+    const reply = mail({ providerMessageId: 'z-reply', conversationId: 'z-first' });
+    const { prisma, deps } = setup({ rounds: [round({ messages: [reply] })] });
+    prisma.emailRecord.findFirst.mockImplementation((async (args: {
+      where: Record<string, any>;
+    }) =>
+      isThreadLookup(args.where) && args.where.OR[1].providerMessageId === 'z-first'
+        ? { id: 'crm-first', metadata: { conversationId: 'z-placeholder', threadId: 'crm-first' } }
+        : null) as never);
+
+    await runInboxSync(deps);
+
+    const data = (prisma.emailRecord.create.mock.calls[0] as unknown as [{ data: any }])[0].data;
+    expect(data.metadata.threadId).toBe('crm-first');
   });
 
   it('starts the thread at the first mail of the conversation when it has no thread id', async () => {
@@ -88,7 +110,7 @@ describe('mailbox sync: threads and the lead timeline (MVP-001)', () => {
     prisma.emailRecord.findFirst.mockImplementation((async (args: {
       where: Record<string, unknown>;
     }) =>
-      'metadata' in args.where
+      isThreadLookup(args.where)
         ? { id: 'sent-1', metadata: { conversationId: 'conv-1' } }
         : null) as never);
 
@@ -183,7 +205,9 @@ describe('mailbox sync: threads and the lead timeline (MVP-001)', () => {
     prisma.emailRecord.findFirst.mockImplementation((async (args: {
       where: Record<string, unknown>;
     }) =>
-      'OR' in args.where ? { id: 'crm-sent', metadata: { threadId: 't-1' } } : null) as never);
+      !isThreadLookup(args.where)
+        ? { id: 'crm-sent', metadata: { threadId: 't-1' } }
+        : null) as never);
 
     await runInboxSync(deps);
 
@@ -205,10 +229,10 @@ describe('mailbox sync: threads and the lead timeline (MVP-001)', () => {
     prisma.emailRecord.findFirst.mockImplementation((async (args: {
       where: Record<string, any>;
     }) => {
-      if ('OR' in args.where) {
+      if (!isThreadLookup(args.where)) {
         return args.where.OR[0].providerMessageId === 'graph-sent-1' ? crmSent : null;
       }
-      return crmSent.metadata.conversationId === args.where.metadata.equals ? crmSent : null;
+      return crmSent.metadata.conversationId === args.where.OR[0].metadata.equals ? crmSent : null;
     }) as never);
     prisma.emailRecord.update.mockImplementation((async (args: {
       data: { metadata: Record<string, unknown> };

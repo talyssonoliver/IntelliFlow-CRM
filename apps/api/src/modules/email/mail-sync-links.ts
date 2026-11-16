@@ -57,7 +57,12 @@ export async function threadOf(
     where: {
       tenantId: mailbox.tenantId,
       mailboxId: mailbox.id,
-      metadata: { path: ['conversationId'], equals: message.conversationId },
+      OR: [
+        { metadata: { path: ['conversationId'], equals: message.conversationId } },
+        // Zoho names a thread after its first mail: a logged mail with that very id starts it,
+        // whatever conversation it was stored with before anyone replied.
+        { providerMessageId: message.conversationId.slice(0, 255) },
+      ],
     },
     orderBy: { createdAt: 'asc' },
     select: { id: true, metadata: true },

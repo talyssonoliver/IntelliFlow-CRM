@@ -7,9 +7,10 @@
  * first round reads the last `initialDays`.
  * - Bodies are not read here: each message carries `loadBody()`, called by the sync only for mail
  *   it keeps, so personal mail's content is never fetched.
- * - When a round hits its page cap or time budget before the cursor, the cursor still moves to the
- *   newest mail read: the older part of a backlog that large is not read (a 5-minute sync of one
- *   mailbox rarely has 500 new mails). The first round's 30-day window is capped the same way.
+ * - When a round hits its page cap or time budget before the cursor, it is not complete and the
+ *   cursor stays, so no mail is passed over. Each such round reads again from the newest end, so a
+ *   backlog deeper than one round (10 pages of 50) is reached only by the catch-up that resumes
+ *   where a round stopped (the next change, stacked on this one).
  * - Requests go through `zohoAccountGet`: Zoho's own host, a timeout, dead tokens read from the
  *   body, ids kept exact.
  */
@@ -354,6 +355,13 @@ export async function readZohoFolder(
     reachedCursor = stop !== -1 || items.length < options.pageSize;
   }
   fresh.reverse(); // oldest first, as the sync stores them
+  if (!reachedCursor) {
+    // Stopped by the page cap or the time budget before the cursor: the cursor stays (the window's
+    // start on a first round), so the older mail is not passed over; the next round, due at once,
+    // reads again from the newest end, and what is already logged is skipped by the sync's dedupe.
+    const held: Cursor = from ?? { t: floor, ids: [] };
+    return { messages: fresh, cursor: JSON.stringify(held), complete: false, expired: false };
+  }
   const next = nextCursor(fresh, from, floor);
   return { messages: fresh, cursor: JSON.stringify(next), complete: true, expired: false };
 }

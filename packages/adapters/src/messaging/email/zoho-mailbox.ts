@@ -17,8 +17,16 @@ import type { MimeAttachment } from './mime';
 import type { OAuthClientConfig, OAuthTokens, RefreshedTokens } from './oauth-mailbox';
 import type { MailboxErrorCode } from '@intelliflow/domain';
 
-/** Send mail, and read the account's id and allowed From addresses. Nothing else. */
-export const ZOHO_MAILBOX_SCOPES = ['ZohoMail.messages.CREATE', 'ZohoMail.accounts.READ'] as const;
+/**
+ * Send mail, read the account's id and allowed From addresses, and (MVP-001 reply sync) read
+ * messages and folders, so replies from leads and contacts are logged. Nothing else.
+ */
+export const ZOHO_MAILBOX_SCOPES = [
+  'ZohoMail.messages.CREATE',
+  'ZohoMail.accounts.READ',
+  'ZohoMail.messages.READ',
+  'ZohoMail.folders.READ',
+] as const;
 
 export interface ZohoDataCentre {
   location: string;

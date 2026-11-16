@@ -2,6 +2,7 @@
  * MVP-001: the Microsoft reader the sync engine uses, through Graph's delta query.
  */
 import { describe, it, expect, vi } from 'vitest';
+import { ZOHO_MAILBOX_SCOPES } from '@intelliflow/adapters';
 import {
   PRODUCTION_READERS,
   graphReader,
@@ -57,7 +58,9 @@ describe('graphReader', () => {
 
 describe('Zoho reader (MVP-001)', () => {
   it('needs both read scopes, messages and folders', () => {
+    // A connection made before the read scopes were asked for cannot read; one made now can.
     expect(hasZohoRead(['ZohoMail.messages.CREATE', 'ZohoMail.accounts.READ'])).toBe(false);
+    expect(hasZohoRead([...ZOHO_MAILBOX_SCOPES])).toBe(true);
     expect(hasZohoRead(['ZohoMail.messages.READ', 'ZohoMail.folders.READ'])).toBe(true);
     expect(hasZohoRead(['ZohoMail.messages.ALL', 'ZohoMail.folders.ALL'])).toBe(true);
     expect(hasZohoRead(['ZohoMail.messages.READ'])).toBe(false);
