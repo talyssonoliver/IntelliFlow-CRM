@@ -46,6 +46,8 @@ export interface ConvertLeadDialogProps {
   userId?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** The mode the dialog opens (and reopens) in; "Convert to deal" opens it on "deal". */
+  initialMode?: ConvertMode;
 }
 
 function ModeChoice({
@@ -231,9 +233,15 @@ const EMPTY_DEAL_FORM: DealFormState = {
 };
 
 /** Converts a qualified lead to a contact, or to a contact plus a deal in the pipeline. */
-export function ConvertLeadDialog({ lead, userId, open, onOpenChange }: ConvertLeadDialogProps) {
+export function ConvertLeadDialog({
+  lead,
+  userId,
+  open,
+  onOpenChange,
+  initialMode = 'contact',
+}: ConvertLeadDialogProps) {
   const router = useRouter();
-  const [mode, setMode] = useState<ConvertMode>('contact');
+  const [mode, setMode] = useState<ConvertMode>(initialMode);
   const [createAccount, setCreateAccount] = useState(true);
   const [accountName, setAccountName] = useState('');
   const [deal, setDeal] = useState<DealFormState>(EMPTY_DEAL_FORM);
@@ -275,7 +283,7 @@ export function ConvertLeadDialog({ lead, userId, open, onOpenChange }: ConvertL
   const valueError = submitted && mode === 'deal' ? validateDealValue(deal.dealValue) : null;
 
   const reset = () => {
-    setMode('contact');
+    setMode(initialMode);
     setCreateAccount(true);
     setAccountName('');
     setDeal(EMPTY_DEAL_FORM);

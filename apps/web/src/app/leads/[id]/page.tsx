@@ -2122,7 +2122,6 @@ function LeadPageHeader({
       <div className="flex flex-wrap gap-2 sm:gap-3">
         {canQualifyLead(lead.status) && <QualifyLeadButton onClick={onOpenQualify} />}
         <LeadConvertButton lead={lead} onOpenConvert={onOpenConvert} />
-        {/* Phone (MVP-003): the name shows once, in the profile card; Edit and Pin live under More. */}
         <button
           onClick={onEdit}
           aria-label="Edit lead"
@@ -2881,6 +2880,7 @@ export default function Lead360Page() {
         userId={user?.id}
         open={convertConfirmOpen}
         onOpenChange={setConvertConfirmOpen}
+        initialMode="deal"
       />
 
       {/* Main 3-column grid */}

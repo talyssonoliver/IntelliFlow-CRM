@@ -1223,7 +1223,8 @@ describe('LeadDetailPage - display name fallback (UI-016)', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Acme Corp');
     expect(screen.getByText(/permanently delete Acme Corp\?/)).toBeInTheDocument();
     expect(screen.getByText(/archive Acme Corp\?/)).toBeInTheDocument();
-    expect(screen.getByText(/Convert Acme Corp to a contact record\?/)).toBeInTheDocument();
+    // The header's "Convert to deal" opens the dialog on the deal form (MVP-003).
+    expect(screen.getByText(/Convert Acme Corp to a contact and open a deal/)).toBeInTheDocument();
   });
 
   it('falls back to the email when the lead has no name and no company', () => {

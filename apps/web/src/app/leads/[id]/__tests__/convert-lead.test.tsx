@@ -319,7 +319,9 @@ describe('IFC-225: Convert Lead UX Fix', () => {
     render(<Lead360Page />);
     const btn = screen.getByRole('button', { name: /Convert to deal/i });
     fireEvent.click(btn);
-    expect(screen.getByText('Convert Lead to Contact')).toBeInTheDocument();
+    // 'Convert to deal' opens on the deal form (MVP-003); contact-only stays one click away.
+    expect(screen.getByText('Convert Lead to Deal')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Contact and deal/i)).toBeChecked();
     expect(mockConvertMutate).not.toHaveBeenCalled();
   });
 
@@ -328,6 +330,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
     fireEvent.click(screen.getByRole('button', { name: /Convert to deal/i }));
+    fireEvent.click(screen.getByLabelText(/Contact only/i));
 
     const checkbox = screen.getByLabelText(/Also create an Account record/i);
     expect(checkbox).toBeInTheDocument();
@@ -350,6 +353,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
     fireEvent.click(screen.getByRole('button', { name: /Convert to deal/i }));
+    fireEvent.click(screen.getByLabelText(/Contact only/i));
     expect(screen.getByText('Convert Lead to Contact')).toBeInTheDocument();
 
     // Our mock AlertDialog renders null when open=false, but Cancel doesn't directly
@@ -364,6 +368,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
     fireEvent.click(screen.getByRole('button', { name: /Convert to deal/i }));
+    fireEvent.click(screen.getByLabelText(/Contact only/i));
 
     // Uncheck createAccount
     const checkbox = screen.getByLabelText(/Also create an Account record/i);
@@ -386,6 +391,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
     fireEvent.click(screen.getByRole('button', { name: /Convert to deal/i }));
+    fireEvent.click(screen.getByLabelText(/Contact only/i));
 
     const nameInput = screen.getByLabelText(/Account name/i);
     fireEvent.change(nameInput, { target: { value: 'Acme Corp' } });
