@@ -31,9 +31,11 @@ function makePrisma() {
     notification: {
       findMany: vi.fn().mockResolvedValue([]),
       createMany: vi.fn().mockResolvedValue({ count: 0 }),
-      // old per-row methods — must NOT be called after the fix
-      findFirst: vi.fn(),
+      // Per-row methods: SLA and task reminders must not use them (NP-029); the stale-lead
+      // digest uses them once per OWNER, never per lead (MVP-005).
+      findFirst: vi.fn().mockResolvedValue(null),
       create: vi.fn(),
+      update: vi.fn(),
     },
     lead: { findMany: vi.fn() },
     task: { findMany: vi.fn() },
@@ -212,71 +214,75 @@ describe('checkFollowUpReminders — stale leads (NP-029)', () => {
     vi.useRealTimers();
   });
 
-  it('issues ONE notification.findMany dedup check for all leads (NP-029)', async () => {
-    const leads = ['l1', 'l2', 'l3'].map(makeLead);
+  const run = () =>
+    (scheduler as unknown as { checkFollowUpReminders(): Promise<void> }).checkFollowUpReminders();
+
+  it('writes ONE "N leads need a follow-up" line per owner, not one per lead (MVP-005)', async () => {
+    const leads = ['l1', 'l2', 'l3'].map((id) => ({ ...makeLead(id), ownerId: 'owner-a' }));
     prisma.lead.findMany.mockResolvedValue(leads);
-    prisma.notification.findMany.mockResolvedValue([]); // none already reminded
 
-    await (
-      scheduler as unknown as { checkFollowUpReminders(): Promise<void> }
-    ).checkFollowUpReminders();
+    await run();
 
-    // Only 1 findMany call for lead dedup (task list is empty so no task findMany)
-    expect(prisma.notification.findMany).toHaveBeenCalledTimes(1);
-    expect(prisma.notification.findMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({
-          sourceId: { in: ['l1', 'l2', 'l3'] },
-          sourceType: 'stale_lead_reminder',
-        }),
-      })
-    );
-    // old per-row method must never fire
-    expect(prisma.notification.findFirst).not.toHaveBeenCalled();
-  });
-
-  it('issues ONE notification.createMany for all non-deduped leads (NP-029)', async () => {
-    const leads = ['l1', 'l2', 'l3'].map(makeLead);
-    prisma.lead.findMany.mockResolvedValue(leads);
-    // l2 already has a reminder
-    prisma.notification.findMany.mockResolvedValue([{ sourceId: 'l2' }]);
-
-    await (
-      scheduler as unknown as { checkFollowUpReminders(): Promise<void> }
-    ).checkFollowUpReminders();
-
-    expect(prisma.notification.createMany).toHaveBeenCalledTimes(1);
-    const call = prisma.notification.createMany.mock.calls[0][0] as {
-      data: { sourceId: string }[];
-    };
-    expect(call.data).toHaveLength(2);
-    expect(call.data.map((n) => n.sourceId)).not.toContain('l2');
-    expect(prisma.notification.create).not.toHaveBeenCalled();
-  });
-
-  it('skips createMany when all leads already reminded', async () => {
-    const leads = ['l1', 'l2'].map(makeLead);
-    prisma.lead.findMany.mockResolvedValue(leads);
-    prisma.notification.findMany.mockResolvedValue([{ sourceId: 'l1' }, { sourceId: 'l2' }]);
-
-    await (
-      scheduler as unknown as { checkFollowUpReminders(): Promise<void> }
-    ).checkFollowUpReminders();
-
+    expect(prisma.notification.create).toHaveBeenCalledTimes(1);
+    const data = prisma.notification.create.mock.calls[0][0].data as Record<string, unknown>;
+    expect(data).toMatchObject({
+      recipientId: 'owner-a',
+      subject: '3 leads need a follow-up',
+      sourceType: 'stale_leads_digest',
+      category: 'REMINDERS',
+      metadata: expect.objectContaining({
+        leadCount: 3,
+        leadIds: ['l1', 'l2', 'l3'],
+        actionUrl: '/leads?segment=followup',
+      }),
+    });
+    // The old per-lead reminders are gone.
     expect(prisma.notification.createMany).not.toHaveBeenCalled();
   });
 
-  it('N+1 regression: 10 leads → exactly 1 findMany + 1 createMany', async () => {
-    const leads = Array.from({ length: 10 }, (_, i) => makeLead(`l${i}`));
+  it("updates today's line instead of repeating it when the job runs again", async () => {
+    prisma.lead.findMany.mockResolvedValue([{ ...makeLead('l1'), ownerId: 'owner-a' }]);
+    prisma.notification.findFirst.mockResolvedValueOnce({ id: 'digest-1' });
+
+    await run();
+
+    expect(prisma.notification.create).not.toHaveBeenCalled();
+    expect(prisma.notification.update).toHaveBeenCalledWith({
+      where: { id: 'digest-1' },
+      data: expect.objectContaining({ subject: '1 lead needs a follow-up' }),
+    });
+    expect(prisma.notification.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          recipientId: 'owner-a',
+          sourceType: 'stale_leads_digest',
+          createdAt: { gte: new Date('2025-06-01T00:00:00.000Z') },
+        }),
+      })
+    );
+  });
+
+  it('skips leads with no owner and writes nothing when none is stale', async () => {
+    prisma.lead.findMany.mockResolvedValue([{ ...makeLead('l1'), ownerId: null }]);
+    await run();
+    prisma.lead.findMany.mockResolvedValue([]);
+    await run();
+
+    expect(prisma.notification.findFirst).not.toHaveBeenCalled();
+    expect(prisma.notification.create).not.toHaveBeenCalled();
+  });
+
+  it('N+1 regression: queries scale with owners, not leads (10 leads, 2 owners → 2 lookups)', async () => {
+    const leads = Array.from({ length: 10 }, (_, i) => ({
+      ...makeLead(`l${i}`),
+      ownerId: i % 2 === 0 ? 'owner-a' : 'owner-b',
+    }));
     prisma.lead.findMany.mockResolvedValue(leads);
-    prisma.notification.findMany.mockResolvedValue([]);
 
-    await (
-      scheduler as unknown as { checkFollowUpReminders(): Promise<void> }
-    ).checkFollowUpReminders();
+    await run();
 
-    expect(prisma.notification.findMany).toHaveBeenCalledTimes(1);
-    expect(prisma.notification.createMany).toHaveBeenCalledTimes(1);
+    expect(prisma.notification.findFirst).toHaveBeenCalledTimes(2);
+    expect(prisma.notification.create).toHaveBeenCalledTimes(2);
   });
 });
 

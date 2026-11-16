@@ -18,6 +18,7 @@ import { PrismaClient, disconnectPrisma } from '@intelliflow/db';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { QUEUE_NAMES, STORED_LEAD_FOR_AI_SELECT, claimStoreFromRedis } from '@intelliflow/platform';
 import { queueLeadAiForCreatedLead } from './handlers/lead-ai-backstop';
+import { sendLeadScoreNotices } from './handlers/lead-score-notices';
 import { OutboxPoller, InMemoryOutboxRepository, type OutboxRepository } from './outbox/pollOutbox';
 import { EventDispatcher, DOMAIN_EVENT_TYPES, type OutboxEvent } from './outbox/event-dispatcher';
 import { loadEventsWorkerConfig, type EventsWorkerConfig as EnvEventsWorkerConfig } from './config';
@@ -328,53 +329,15 @@ export class EventsWorker extends BaseWorker<EventJobData, EventJobResult> {
       },
     });
 
-    if (score >= 80) {
-      this.logger.info({ leadId, score }, 'High score detected - creating hot lead notification');
-      await prisma.notification.create({
-        data: {
-          tenantId: eventTenantId,
-          recipientId: eventUserId,
-          channel: 'IN_APP',
-          subject: `Hot lead detected: score ${score}`,
-          body: `Lead ${leadId} scored ${score}/100 — prioritize for immediate outreach.`,
-          priority: 'HIGH',
-          status: 'PENDING',
-          category: 'ALERTS',
-          sourceType: 'lead_scored',
-          sourceId: leadId,
-          metadata: {
-            notificationType: 'lead_scored',
-            score,
-            previousScore,
-            actionUrl: `/leads/${leadId}`,
-          },
-        },
-      });
-    }
-
-    if (score >= 50 && (previousScore === undefined || previousScore < 50)) {
-      this.logger.info({ leadId, score, previousScore }, 'Lead warming up - creating notification');
-      await prisma.notification.create({
-        data: {
-          tenantId: eventTenantId,
-          recipientId: eventUserId,
-          channel: 'IN_APP',
-          subject: `Lead warming up: score ${score}`,
-          body: `Lead ${leadId} crossed the engagement threshold (${previousScore ?? 0} → ${score}). Consider adding to active pipeline.`,
-          priority: 'NORMAL',
-          status: 'PENDING',
-          category: 'ALERTS',
-          sourceType: 'ai_recommendation',
-          sourceId: leadId,
-          metadata: {
-            notificationType: 'lead_scored',
-            score,
-            previousScore,
-            actionUrl: `/leads/${leadId}`,
-          },
-        },
-      });
-    }
+    // Hot / warming-up notices: only for users who turned "Lead Scored" on (off by default).
+    const notices = await sendLeadScoreNotices(prisma, {
+      leadId,
+      score,
+      previousScore,
+      tenantId: eventTenantId,
+      userId: eventUserId,
+    });
+    if (notices > 0) this.logger.info({ leadId, score, notices }, 'Lead score notices created');
   }
 
   /**
