@@ -284,7 +284,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
   it('Convert button is enabled for QUALIFIED status', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
-    const btn = screen.getByRole('button', { name: /Convert Lead/i });
+    const btn = screen.getByRole('button', { name: /Convert to deal/i });
     expect(btn).not.toBeDisabled();
   });
 
@@ -294,7 +294,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
     (status) => {
       mockLeadData.status = status;
       render(<Lead360Page />);
-      const btn = screen.getByRole('button', { name: /Convert Lead/i });
+      const btn = screen.getByRole('button', { name: /Convert to deal/i });
       expect(btn).toBeDisabled();
     }
   );
@@ -303,7 +303,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
   it('Convert button is hidden for CONVERTED status', () => {
     mockLeadData.status = 'CONVERTED';
     render(<Lead360Page />);
-    expect(screen.queryByRole('button', { name: /Convert Lead/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Convert to deal/i })).not.toBeInTheDocument();
   });
 
   // T4: Tooltip guidance text for disabled button (AC-001)
@@ -317,7 +317,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
   it('clicking Convert on QUALIFIED lead opens confirmation dialog', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
-    const btn = screen.getByRole('button', { name: /Convert Lead/i });
+    const btn = screen.getByRole('button', { name: /Convert to deal/i });
     fireEvent.click(btn);
     expect(screen.getByText('Convert Lead to Contact')).toBeInTheDocument();
     expect(mockConvertMutate).not.toHaveBeenCalled();
@@ -327,7 +327,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
   it('dialog contains createAccount checkbox and accountName input', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
-    fireEvent.click(screen.getByRole('button', { name: /Convert Lead/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Convert to deal/i }));
 
     const checkbox = screen.getByLabelText(/Also create an Account record/i);
     expect(checkbox).toBeInTheDocument();
@@ -349,7 +349,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
   it('cancel closes dialog without calling mutation', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
-    fireEvent.click(screen.getByRole('button', { name: /Convert Lead/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Convert to deal/i }));
     expect(screen.getByText('Convert Lead to Contact')).toBeInTheDocument();
 
     // Our mock AlertDialog renders null when open=false, but Cancel doesn't directly
@@ -363,7 +363,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
   it('confirm with createAccount=false sends correct params', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
-    fireEvent.click(screen.getByRole('button', { name: /Convert Lead/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Convert to deal/i }));
 
     // Uncheck createAccount
     const checkbox = screen.getByLabelText(/Also create an Account record/i);
@@ -385,7 +385,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
   it('confirm with createAccount=true and accountName sends correct params', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
-    fireEvent.click(screen.getByRole('button', { name: /Convert Lead/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Convert to deal/i }));
 
     const nameInput = screen.getByLabelText(/Account name/i);
     fireEvent.change(nameInput, { target: { value: 'Acme Corp' } });
