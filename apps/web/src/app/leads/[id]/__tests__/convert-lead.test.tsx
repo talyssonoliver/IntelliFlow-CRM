@@ -105,6 +105,12 @@ vi.mock('@/lib/api', () => ({
           return { mutate: mockConvertMutate, isPending: false };
         },
       },
+      qualify: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
+      convertToDeal: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
       scoreWithAI: {
         useMutation: () => ({ mutate: vi.fn(), isPending: false }),
       },
@@ -422,4 +428,23 @@ describe('IFC-225: Convert Lead UX Fix', () => {
 
     expect(mockPush).toHaveBeenCalledWith('/contacts/contact-abc');
   });
+
+  // Qualify action: the way to unlock Convert from NEW or CONTACTED
+  it.each(['NEW', 'CONTACTED'])('shows a Qualify action for %s leads', (status) => {
+    mockLeadData.status = status;
+    render(<Lead360Page />);
+    const qualify = screen.getByRole('button', { name: 'Qualify lead' });
+    expect(qualify).toBeEnabled();
+    fireEvent.click(qualify);
+    expect(screen.getByText('Qualify Lead', { selector: 'h2' })).toBeInTheDocument();
+  });
+
+  it.each(['QUALIFIED', 'NEGOTIATING', 'UNQUALIFIED', 'LOST', 'CONVERTED'])(
+    'hides the Qualify action for %s leads',
+    (status) => {
+      mockLeadData.status = status;
+      render(<Lead360Page />);
+      expect(screen.queryByRole('button', { name: 'Qualify lead' })).not.toBeInTheDocument();
+    }
+  );
 });

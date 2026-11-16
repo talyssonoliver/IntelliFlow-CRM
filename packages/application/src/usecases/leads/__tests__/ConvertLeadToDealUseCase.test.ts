@@ -12,7 +12,7 @@
  * - Performance target: <200ms
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { virtualElapsedMs } from '../../../../../../tests/utils/virtual-clock';
 import { ConvertLeadToDealUseCase, ConvertLeadToDealInput } from '../ConvertLeadToDealUseCase';
 import { Lead, Contact, Account, Opportunity } from '@intelliflow/domain';
@@ -65,6 +65,39 @@ class MockContactRepository implements Partial<ContactRepository> {
 
   async findByEmail(): Promise<Contact | null> {
     return null;
+  }
+
+  async findByEmailInTenant(email: { value: string }, tenantId: string): Promise<Contact | null> {
+    for (const contact of this.contacts.values()) {
+      if (contact.email.value === email.value && contact.tenantId === tenantId) return contact;
+    }
+    return null;
+  }
+
+  linkCalls: Array<{ contactId: string; accountId: string }> = [];
+  /** Simulates a concurrent change: the conditional link finds the contact moved. */
+  linkFails = false;
+
+  async linkToAccountIfFree(link: {
+    contactId: string;
+    tenantId: string;
+    accountId: string;
+    expectedEmail: string;
+  }): Promise<'attached' | 'linked' | 'changed'> {
+    this.linkCalls.push({ contactId: link.contactId, accountId: link.accountId });
+    const contact = this.contacts.get(link.contactId);
+    if (this.linkFails || !contact || contact.tenantId !== link.tenantId) return 'changed';
+    if (contact.email.value !== link.expectedEmail) return 'changed';
+    if (contact.accountId === link.accountId) return 'linked';
+    if (contact.accountId !== undefined) return 'changed';
+    contact.associateWithAccount(link.accountId, 'test');
+    contact.clearDomainEvents();
+    return 'attached';
+  }
+
+  /** A contact that already exists before the conversion (not a save by the use case). */
+  seed(contact: Contact): void {
+    this.contacts.set(contact.id.value, contact);
   }
 }
 
@@ -450,6 +483,157 @@ describe('ConvertLeadToDealUseCase', () => {
       expect(result.value.contactId).not.toBeNull();
       expect(contactRepository.savedContact).not.toBeNull();
       expect(contactRepository.savedContact!.email.value).toBe('withcontact@example.com');
+    });
+
+    describe('a contact with the lead email already exists', () => {
+      const knownLead = () => {
+        const lead = createQualifiedLead({
+          email: 'known@example.com',
+          firstName: 'Known',
+          lastName: 'Person',
+          company: 'Known Corp',
+          ownerId: 'owner-known',
+          tenantId: 'tenant-known',
+        });
+        leadRepository.setLead(lead);
+        return lead;
+      };
+      const seedContact = (accountId?: string) => {
+        const existing = Contact.create({
+          email: 'known@example.com',
+          firstName: 'Known',
+          lastName: 'Person',
+          ownerId: 'owner-known',
+          tenantId: 'tenant-known',
+          ...(accountId ? { accountId } : {}),
+        }).value;
+        contactRepository.seed(existing);
+        return existing;
+      };
+      const convert = (leadId: string, hooks = {}) =>
+        useCase.execute(
+          { leadId, dealValue: 4500, accountName: 'Known Corp', convertedBy: 'sales-rep' },
+          hooks
+        );
+
+      it('attaches a contact with no account to the deal account and links it', async () => {
+        const lead = knownLead();
+        const existing = seedContact();
+        let hookCalls = 0;
+
+        const result = await convert(lead.id.value, {
+          beforeCreateContact: async () => {
+            hookCalls++;
+          },
+        });
+
+        expect(result.isSuccess).toBe(true);
+        expect(result.value.contactId).toBe(existing.id.value);
+        // Linked by the conditional update in the transaction, never by a full save.
+        expect(contactRepository.linkCalls).toEqual([
+          { contactId: existing.id.value, accountId: result.value.accountId },
+        ]);
+        expect(existing.accountId).toBe(result.value.accountId);
+        expect(contactRepository.savedContact).toBeNull();
+        expect(hookCalls).toBe(0);
+        // The account association is audited like any other: one event, in the same publish.
+        const associated = eventBus.publishedEvents.filter(
+          (e) => (e as { eventType?: string }).eventType === 'contact.account_associated'
+        ) as Array<{ accountId: string; associatedBy: string }>;
+        expect(associated).toHaveLength(1);
+        expect(associated[0]).toMatchObject({
+          accountId: result.value.accountId,
+          associatedBy: 'sales-rep',
+        });
+      });
+
+      it('aborts the conversion when the contact changed before the link', async () => {
+        const lead = knownLead();
+        seedContact();
+        contactRepository.linkFails = true;
+
+        const result = await convert(lead.id.value);
+
+        expect(result.isFailure).toBe(true);
+        expect(result.error.message).toMatch(/changed during the conversion/);
+        expect(opportunityRepository.savedOpportunity ?? null).toBeNull();
+      });
+
+      it('links a contact that already belongs to the deal account without saving it', async () => {
+        const lead = knownLead();
+        const account = Account.create({
+          name: 'Known Corp',
+          ownerId: 'owner-known',
+          tenantId: 'tenant-known',
+        }).value;
+        accountRepository.setAccount(account);
+        const onAccount = seedContact(account.id.value);
+
+        const result = await convert(lead.id.value);
+
+        expect(result.isSuccess).toBe(true);
+        expect(result.value.accountId).toBe(account.id.value);
+        expect(result.value.contactId).toBe(onAccount.id.value);
+        expect(contactRepository.savedContact).toBeNull();
+        expect(
+          eventBus.publishedEvents.some(
+            (e) => (e as { eventType?: string }).eventType === 'contact.account_associated'
+          )
+        ).toBe(false);
+      });
+
+      it('passes the email it read to the conditional link, so an email change aborts', async () => {
+        const lead = knownLead();
+        const existing = seedContact();
+        const linkSpy = vi.spyOn(contactRepository, 'linkToAccountIfFree');
+
+        await convert(lead.id.value);
+
+        // The store matches on this email inside the transaction; a contact whose email
+        // changed since the read no longer matches and the link reports 'changed'.
+        expect(linkSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            contactId: existing.id.value,
+            tenantId: 'tenant-known',
+            expectedEmail: 'known@example.com',
+          }),
+          expect.anything()
+        );
+      });
+
+      it('refuses a contact that belongs to another account', async () => {
+        const lead = knownLead();
+        seedContact('account-elsewhere');
+
+        const result = await convert(lead.id.value);
+
+        expect(result.isFailure).toBe(true);
+        expect(result.error.message).toMatch(/already belongs to another account/);
+        expect(contactRepository.savedContact).toBeNull();
+      });
+    });
+
+    it('runs beforeCreateContact only when it creates a contact, and stops when it throws', async () => {
+      const lead = createQualifiedLead({
+        email: 'brand-new@example.com',
+        company: 'New Corp',
+      });
+      leadRepository.setLead(lead);
+      let hookCalls = 0;
+
+      const refused = useCase.execute(
+        { leadId: lead.id.value, dealValue: 100, convertedBy: 'sales-rep' },
+        {
+          beforeCreateContact: async () => {
+            hookCalls++;
+            throw new Error('contact limit reached');
+          },
+        }
+      );
+
+      await expect(refused).rejects.toThrow('contact limit reached');
+      expect(hookCalls).toBe(1);
+      expect(contactRepository.savedContact).toBeNull();
     });
 
     it('should not create contact when createContact = false', async () => {
