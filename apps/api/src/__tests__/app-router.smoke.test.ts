@@ -318,6 +318,8 @@ describe('appRouter smoke — PG-190 module-settings registration', () => {
       emailSettings: ['get', 'update', 'resetToDefaults'],
       emailSignatures: ['list', 'create', 'update', 'delete', 'setDefault', 'resolveDefault'],
       emailAttachments: ['upload'],
+      // #1177: one-click "Log to contact"
+      emailLog: ['status', 'logToContact'],
     };
     for (const [router, procedures] of Object.entries(expected)) {
       expect(record[router]).toBeDefined();

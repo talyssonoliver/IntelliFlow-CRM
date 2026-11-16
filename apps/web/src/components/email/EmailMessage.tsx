@@ -8,6 +8,7 @@ import { BreakableAddress } from './BreakableAddress';
 import DOMPurify from 'isomorphic-dompurify';
 import { cn } from '@/lib/utils';
 import { DeliveryStatusBadge } from './DeliveryStatusBadge';
+import { LogToContactButton } from './LogToContactButton';
 
 interface EmailMessageData {
   id: string;
@@ -234,6 +235,7 @@ export function EmailMessage({
               </span>{' '}
               Forward
             </button>
+            <LogToContactButton emailId={message.id} />
           </div>
         </section>
       )}
