@@ -1,193 +1,93 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Card } from '@intelliflow/ui';
-import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import * as React from 'react';
+import type { ServiceCheck, ServiceState } from '@/lib/status/service-checks';
 
-type ServiceStatus = 'operational' | 'degraded' | 'partial_outage' | 'major_outage';
+const STATE_TEXT: Record<ServiceState, string> = {
+  up: 'Operational',
+  degraded: 'Degraded',
+  down: 'Not responding',
+  not_checked: 'Not checked',
+};
 
-interface Service {
-  id: string;
-  name: string;
-  description: string;
-  status: ServiceStatus;
-  uptime: number;
-}
+/** Dot class per state; reuses the live card's colours. */
+const DOT: Record<ServiceState, string> = {
+  up: 'ast-up',
+  degraded: 'ast-degraded',
+  down: 'ast-down',
+  not_checked: 'ast-pending-dot',
+};
 
-interface StatusMonitorProps {
-  services: Service[];
-  refreshInterval?: number;
-}
-
-function deterministicRatio(seedInput: string): number {
-  let hash = 2166136261;
-
-  for (let i = 0; i < seedInput.length; i += 1) {
-    hash ^= seedInput.codePointAt(i)!;
-    hash = Math.imul(hash, 16777619);
+export function describeService(check: ServiceCheck): string {
+  if (check.state === 'up') {
+    return check.ms === undefined ? STATE_TEXT.up : `${STATE_TEXT.up} · answered in ${check.ms} ms`;
   }
-
-  return (hash >>> 0) / 4294967295;
+  return check.note ? `${STATE_TEXT[check.state]}: ${check.note}` : STATE_TEXT[check.state];
 }
 
-// Generate uptime bars for the last 90 days using deterministic pseudo-randomness
-function generateUptimeBars(
-  serviceId: string,
-  uptime: number
-): { day: number; status: ServiceStatus }[] {
-  const bars: { day: number; status: ServiceStatus }[] = [];
+type Load =
+  | { state: 'loading' }
+  | { state: 'loaded'; services: ServiceCheck[] }
+  | { state: 'failed' };
 
-  for (let i = 0; i < 90; i++) {
-    const random = deterministicRatio(`${serviceId}-${i}`);
-    let status: ServiceStatus = 'operational';
+/**
+ * The API, AI agents and sign-in, checked by the web server (/api/status) when
+ * the page opens. Each row shows what the check measured, or why it could not.
+ */
+export function StatusMonitor() {
+  const [load, setLoad] = React.useState<Load>({ state: 'loading' });
 
-    if (uptime < 99.9 && random > 0.95) {
-      status = 'degraded';
-    } else if (uptime < 99.5 && random > 0.98) {
-      status = 'partial_outage';
+  const run = React.useCallback(async () => {
+    setLoad({ state: 'loading' });
+    try {
+      const res = await fetch('/api/status', { cache: 'no-store' });
+      if (!res.ok) throw new Error(String(res.status));
+      const body = (await res.json()) as { services?: ServiceCheck[] };
+      setLoad(
+        Array.isArray(body.services)
+          ? { state: 'loaded', services: body.services }
+          : { state: 'failed' }
+      );
+    } catch {
+      setLoad({ state: 'failed' });
     }
+  }, []);
 
-    bars.push({ day: i, status });
+  React.useEffect(() => {
+    run().catch(() => setLoad({ state: 'failed' }));
+  }, [run]);
+
+  if (load.state === 'loading') {
+    return (
+      <output className="as-card ast-note" data-testid="service-checks-loading">
+        Checking the API, AI agents and sign-in…
+      </output>
+    );
   }
 
-  return bars;
-}
-
-function getStatusColor(status: Readonly<ServiceStatus>): string {
-  switch (status) {
-    case 'operational':
-      return 'bg-green-500';
-    case 'degraded':
-      return 'bg-yellow-500';
-    case 'partial_outage':
-      return 'bg-orange-500';
-    case 'major_outage':
-      return 'bg-red-500';
+  if (load.state === 'failed') {
+    return (
+      <div className="as-card ast-note" role="alert" data-testid="service-checks-failed">
+        <p>The service checks could not be run just now.</p>
+        <button type="button" className="as-btn as-btn-secondary" onClick={() => void run()}>
+          Try again
+        </button>
+      </div>
+    );
   }
-}
-
-export function StatusMonitor({ services, refreshInterval = 30000 }: Readonly<StatusMonitorProps>) {
-  const { timezone } = useTimezoneContext();
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  useEffect(() => {
-    setLastUpdated(new Date());
-
-    const interval = setInterval(() => {
-      setIsRefreshing(true);
-      // Simulate refresh
-      setTimeout(() => {
-        setLastUpdated(new Date());
-        setIsRefreshing(false);
-      }, 500);
-    }, refreshInterval);
-
-    return () => clearInterval(interval);
-  }, [refreshInterval]);
 
   return (
-    <div className="space-y-6">
-      {/* Uptime Overview */}
-      <Card className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-white">90-Day Uptime</h3>
-          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-            {isRefreshing && (
-              <span className="material-symbols-outlined animate-spin text-base" aria-hidden="true">
-                refresh
-              </span>
-            )}
-            <span>
-              Updated{' '}
-              {lastUpdated
-                ? lastUpdated.toLocaleTimeString('en-GB', {
-                    hour: 'numeric',
-                    minute: '2-digit',
-                    timeZone: timezone,
-                  })
-                : 'Loading...'}
-            </span>
+    <ul className="ast-pending" data-testid="service-checks">
+      {load.services.map((check) => (
+        <li key={check.id} className="as-card">
+          <span className={`ast-dot ${DOT[check.state]}`} aria-hidden="true" />
+          <div>
+            <h2>{check.name}</h2>
+            <p>{check.detail}</p>
           </div>
-        </div>
-
-        <div className="space-y-4">
-          {services.slice(0, 4).map((service) => {
-            const bars = generateUptimeBars(service.id, service.uptime);
-
-            return (
-              <div key={service.id}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                    {service.name}
-                  </span>
-                  <span className="text-sm text-slate-500 dark:text-slate-400">
-                    {service.uptime}%
-                  </span>
-                </div>
-                {}
-                {}
-                <figure
-                  className="flex gap-0.5"
-                  aria-label={`${service.name} uptime chart: ${service.uptime}% over 90 days`}
-                >
-                  {bars.map((bar) => (
-                    <div
-                      key={bar.day}
-                      className={`h-8 w-1 rounded-sm ${getStatusColor(bar.status)} opacity-80 hover:opacity-100 transition-opacity`}
-                      title={`Day ${bar.day}: ${bar.status.replaceAll('_', ' ')}`}
-                    />
-                  ))}
-                </figure>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="flex items-center justify-center gap-6 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm bg-green-500" aria-hidden="true" />
-            <span className="text-xs text-slate-600 dark:text-slate-400">Operational</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm bg-yellow-500" aria-hidden="true" />
-            <span className="text-xs text-slate-600 dark:text-slate-400">Degraded</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm bg-orange-500" aria-hidden="true" />
-            <span className="text-xs text-slate-600 dark:text-slate-400">Partial Outage</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-sm bg-red-500" aria-hidden="true" />
-            <span className="text-xs text-slate-600 dark:text-slate-400">Major Outage</span>
-          </div>
-        </div>
-      </Card>
-
-      {/* Current Status Summary */}
-      <Card className="p-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-          Current Response Times
-        </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">45ms</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">API p50</p>
-          </div>
-          <div className="text-center p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">89ms</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">API p95</p>
-          </div>
-          <div className="text-center p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">156ms</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">API p99</p>
-          </div>
-          <div className="text-center p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
-            <p className="text-2xl font-bold text-green-600 dark:text-green-400">99.99%</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Success Rate</p>
-          </div>
-        </div>
-      </Card>
-    </div>
+          <span className="ast-tag">{describeService(check)}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

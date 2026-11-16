@@ -1,0 +1,147 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-014",
+  "run_id": "20261112-live-checks",
+  "attestor": "ifc-ui-2 lane",
+  "attestation_timestamp": "2026-11-12T15:09:06Z",
+  "verdict": "PARTIAL",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "apps/web/src/app/(public)/status/page.tsx",
+        "sha256": "1360bb3cf7532737832a52215f5436622baee709cfdad300a19ff57d812f36c4"
+      },
+      {
+        "path": "apps/web/src/components/status/status-monitor.tsx",
+        "sha256": "91829396d9ac5c228002c8428e1bd752b043f2d457cdf83af4978a946477e99c"
+      },
+      {
+        "path": "apps/web/src/app/api/status/route.ts",
+        "sha256": "33fd3984f3c24b1050a11502c39d74aade806efcfbee81f72658e8629d0001a6"
+      },
+      {
+        "path": "apps/web/src/lib/status/service-checks.ts",
+        "sha256": "bcbfd09873012f87dacfeca79f3bd0f284c2143ce96c58e243a81cca4d1405dd"
+      },
+      {
+        "path": "apps/web/lib/status/incident-tracker.ts",
+        "sha256": "8a017f8de4977dffbc9b94915e7b21f8de84f5f40a5eb1aa7fa2d3d2bde6aedd"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Never mock or simulate data: a check that cannot run says so",
+      "Status page shows real-time system health"
+    ],
+    "acknowledged_at": "2026-11-12T15:09:06Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 8,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 2,
+    "gates_failed": 1,
+    "kpis_met": 3,
+    "kpis_missed": 2,
+    "placeholders_found": 0
+  },
+  "artifact_hashes": {
+    "apps/web/src/app/(public)/status/page.tsx": "1360bb3cf7532737832a52215f5436622baee709cfdad300a19ff57d812f36c4",
+    "apps/web/src/components/status/status-monitor.tsx": "91829396d9ac5c228002c8428e1bd752b043f2d457cdf83af4978a946477e99c",
+    "apps/web/src/app/api/status/route.ts": "33fd3984f3c24b1050a11502c39d74aade806efcfbee81f72658e8629d0001a6",
+    "apps/web/src/lib/status/service-checks.ts": "bcbfd09873012f87dacfeca79f3bd0f284c2143ce96c58e243a81cca4d1405dd",
+    "apps/web/lib/status/incident-tracker.ts": "8a017f8de4977dffbc9b94915e7b21f8de84f5f40a5eb1aa7fa2d3d2bde6aedd",
+    "artifacts/lighthouse/PG-014/status-r1.json": "e2be90feb7a1089d6954fe05db356a85acc123d5e8757a945fae54bb74c36741",
+    "artifacts/lighthouse/PG-014/status-r2.json": "a7f4c2370331630d6d74d670dd8e20a78ea67c1b8e034f16cdeab3e81a5d60f4",
+    "artifacts/lighthouse/PG-014/status-r3.json": "24abf4609881832ebbf752eebd625e76ae0f13d42900d3a38d70aa2bc46340df"
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "npx tsc --noEmit -p apps/web",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-11-12T15:09:06Z"
+    },
+    {
+      "name": "Tests",
+      "command": "vitest run src/app/(public)/status src/lib/status src/app/api/status src/components/status (95/95); scoped coverage on service-checks.ts, status-monitor.tsx, api/status/route.ts: lines 100, branches 100, statements 98.7, functions 93.8",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-11-12T15:09:06Z"
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint on the changed status files (0 errors)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-11-12T15:09:06Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/web build (exit 0)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-11-12T15:09:06Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "lighthouse-performance-gte-90",
+      "passed": true,
+      "score": 93,
+      "log_path": "artifacts/lighthouse/PG-014/status-r2.json"
+    },
+    {
+      "gate_id": "lighthouse-accessibility-seo-gte-90",
+      "passed": true,
+      "score": 96,
+      "log_path": "artifacts/lighthouse/PG-014/status-r2.json"
+    },
+    {
+      "gate_id": "lighthouse-best-practices-gte-90",
+      "passed": false,
+      "score": 74,
+      "log_path": "artifacts/lighthouse/PG-014/status-r2.json"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Response <200ms",
+      "target": "<200ms server response",
+      "actual": "23 ms median server response (Lighthouse server-response-time, 3 runs)",
+      "met": true
+    },
+    {
+      "kpi": "Status displayed",
+      "target": "Web app, API, AI agents and sign-in shown with their real state",
+      "actual": "Web app checked from the browser; API (/health/ready), AI agents (AI queue worker counts from /health/detailed) and sign-in (auth /health) checked by /api/status on each request",
+      "met": true
+    },
+    {
+      "kpi": "Real-time updates",
+      "target": "Live, not stored",
+      "actual": "Every page load and \"Check again\" runs fresh checks; responses are no-store",
+      "met": true
+    },
+    {
+      "kpi": "Incidents shown",
+      "target": "Incident history from a real source",
+      "actual": "Not met: incident-tracker.ts keeps incidents in process memory only, so there is no durable incident source to publish. The page says no incident history is published yet.",
+      "met": false
+    },
+    {
+      "kpi": "Lighthouse >=90 (all categories)",
+      "target": ">=90",
+      "actual": "median performance 0.93, accessibility 0.96, best-practices 0.74, seo 1",
+      "met": false
+    }
+  ],
+  "environment": {
+    "os": "win32",
+    "node_version": "v25.2.1",
+    "branch": "fix/pg-014-status-page-real-data",
+    "git_commit": "d9906dac2c890403cf298ba3c826a3e1d8671544"
+  },
+  "notes": "Lighthouse 12.6.1, desktop preset, Playwright chromium headless shell, production build on localhost:3400 with local public env (no API or Supabase running). Best-practices is below 90 because of (1) console errors from the root AuthContext calling the API, which was not running locally, and (2) a third-party cookie from m.stripe.com: Stripe.js is loaded by shared site code, not by the status page chunks. Neither comes from this change; (2) needs its own fix. Incident history needs a durable incident source before it can be shown."
+}

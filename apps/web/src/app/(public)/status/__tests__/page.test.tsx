@@ -29,10 +29,13 @@ describe('StatusPage (Aurora)', () => {
   });
 
   it('reports the web app as not responding when the check fails, and can check again', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockRejectedValueOnce(new Error('offline'))
-      .mockResolvedValueOnce(new Response(JSON.stringify({ status: 'ok' })));
+    let healthCalls = 0;
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url === '/api/status') return new Response('{}', { status: 500 });
+      healthCalls += 1;
+      if (healthCalls === 1) throw new Error('offline');
+      return new Response(JSON.stringify({ status: 'ok' }));
+    });
     vi.stubGlobal('fetch', fetchMock);
     render(<StatusPage />);
     expect(await screen.findByText('Not responding')).toBeInTheDocument();
@@ -40,20 +43,81 @@ describe('StatusPage (Aurora)', () => {
     await waitFor(() => expect(screen.getByText(/Operational/)).toBeInTheDocument());
   });
 
-  it('marks services with no public check as pending, and shows no invented figures', async () => {
+  it('shows the server checks of the API, AI agents and sign-in, and no invented figures', async () => {
+    const services = [
+      { id: 'api', name: 'API', detail: 'd', state: 'up', ms: 42 },
+      {
+        id: 'ai',
+        name: 'AI agents',
+        detail: 'd',
+        state: 'degraded',
+        ms: 50,
+        note: '1 of 7 AI queues have no worker',
+      },
+      {
+        id: 'auth',
+        name: 'Sign-in',
+        detail: 'd',
+        state: 'not_checked',
+        note: 'No address configured',
+      },
+    ];
     vi.stubGlobal(
       'fetch',
-      vi.fn(async () => new Response(JSON.stringify({ status: 'ok' })))
+      vi.fn(async (url: string) =>
+        url === '/api/status'
+          ? new Response(JSON.stringify({ services }))
+          : new Response(JSON.stringify({ status: 'ok' }))
+      )
     );
     const { container } = render(<StatusPage />);
-    await screen.findByText(/Operational/);
-    expect(screen.getAllByText('Pending: no public check yet')).toHaveLength(3);
+    expect(await screen.findByTestId('service-checks')).toBeInTheDocument();
+    expect(screen.getByText('Operational · answered in 42 ms')).toBeInTheDocument();
+    expect(screen.getByText('Degraded: 1 of 7 AI queues have no worker')).toBeInTheDocument();
+    expect(screen.getByText('Not checked: No address configured')).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/99\.\d+%|uptime|All Systems Operational/i);
     expect(screen.getByText(/No incident history is published yet/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Report a problem' })).toHaveAttribute(
       'href',
       '/contact'
     );
+  });
+
+  it('says when the server checks could not run, and can try again', async () => {
+    let statusCalls = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url !== '/api/status') return new Response(JSON.stringify({ status: 'ok' }));
+        statusCalls += 1;
+        if (statusCalls === 1) throw new Error('offline');
+        if (statusCalls === 2) return new Response(JSON.stringify({ nope: true }));
+        return new Response(
+          JSON.stringify({
+            services: [{ id: 'api', name: 'API', detail: 'd', state: 'down' }],
+          })
+        );
+      })
+    );
+    render(<StatusPage />);
+    expect(await screen.findByTestId('service-checks-failed')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    await waitFor(() => expect(statusCalls).toBe(2));
+    expect(await screen.findByTestId('service-checks-failed')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(await screen.findByText('Not responding')).toBeInTheDocument();
+  });
+
+  it('carries the aurora-site scope itself, so it is styled inside the signed-in app shell', () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ status: 'ok', services: [] })))
+    );
+    const { container } = render(<StatusPage />);
+    // status.css rules are `.aurora-site .aurora-status …`: the scope must be an ancestor.
+    const root = container.firstElementChild;
+    expect(root).toHaveClass('aurora-site');
+    expect(root?.querySelector(':scope > .aurora-status')).not.toBeNull();
   });
 
   it('carries Aurora metadata', () => {
