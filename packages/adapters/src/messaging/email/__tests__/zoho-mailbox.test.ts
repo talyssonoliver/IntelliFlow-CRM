@@ -291,6 +291,20 @@ describe('ZohoMailboxClient', () => {
     }
   );
 
+  it('takes the id of the very account it uses, when there are several', async () => {
+    const text =
+      '{"data":[{"accountId":1111111111111111111},' +
+      '{"accountId":2560636000000008002,"primaryEmailAddress":"o@b.example.invalid"}]}';
+    const identity = await client(vi.fn(async () => new Response(text, { status: 200 }))).identity(
+      ACCESS,
+      'mail.zoho.com'
+    );
+    expect(identity).toMatchObject({
+      accountId: '2560636000000008002',
+      address: 'o@b.example.invalid',
+    });
+  });
+
   it('never calls a stored mail host that is not Zoho', async () => {
     const fetchImpl = vi.fn();
     const send = client(fetchImpl).sendMessage(

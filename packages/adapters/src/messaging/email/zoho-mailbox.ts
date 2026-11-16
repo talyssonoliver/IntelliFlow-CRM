@@ -140,13 +140,21 @@ async function apiError(response: Response): Promise<MailboxTransportError> {
   return httpError(response.status);
 }
 
+/** The keys whose values are Zoho ids (about 19 digits, past what a JSON number holds exactly). */
+const ID_KEYS = new Set(['accountId', 'messageId']);
+
 /**
- * Zoho ids are about 19 digits, past what a JSON number holds exactly: an id is taken as the
- * digits from the raw text, never through a number.
+ * JSON.parse that keeps every id as the exact digits Zoho sent (each record keeps its own id),
+ * using the parser's source text. Without source access an unsafe number id is dropped, never
+ * rounded.
  */
-function idFromText(text: string, key: string): string | null {
-  const match = new RegExp(`"${key}"\\s*:\\s*"?(\\d{1,40})`).exec(text);
-  return match ? match[1]! : null;
+export function parseKeepingIds(text: string): unknown {
+  const reviver = (key: string, value: unknown, context?: { source?: string }): unknown => {
+    if (!ID_KEYS.has(key) || typeof value !== 'number') return value;
+    if (context?.source) return context.source;
+    return Number.isSafeInteger(value) ? String(value) : undefined;
+  };
+  return JSON.parse(text, reviver as (this: unknown, key: string, value: unknown) => unknown);
 }
 
 async function readJson<T>(response: Response): Promise<T> {
@@ -275,7 +283,7 @@ export class ZohoMailboxClient {
     const text = await response.text().catch(() => '');
     let body: { data?: ZohoAccount[] };
     try {
-      body = JSON.parse(text) as { data?: ZohoAccount[] };
+      body = parseKeepingIds(text) as { data?: ZohoAccount[] };
     } catch {
       throw new MailboxTransportError('REJECTED');
     }
@@ -283,10 +291,11 @@ export class ZohoMailboxClient {
     if (!account) throw new MailboxTransportError('AUTH_FAILED');
     const address = normalised(account.primaryEmailAddress);
     if (!address) throw new MailboxTransportError('AUTH_FAILED');
-    // The first account with an id is the one used; its id is read as text (see idFromText).
-    const accountId =
-      typeof account.accountId === 'string' ? account.accountId : idFromText(text, 'accountId');
-    if (!accountId) throw new MailboxTransportError('AUTH_FAILED');
+    // The id of this very record, as the exact digits Zoho sent (see parseKeepingIds).
+    const accountId = account.accountId;
+    if (typeof accountId !== 'string' || !/^\d+$/.test(accountId)) {
+      throw new MailboxTransportError('AUTH_FAILED');
+    }
     return { accountId, address, sendAs: sendAsAddresses(account) };
   }
 
@@ -317,7 +326,13 @@ export class ZohoMailboxClient {
     });
     if (!response.ok) throw await apiError(response);
     const text = await response.text().catch(() => '');
-    return { providerMessageId: idFromText(text, 'messageId') };
+    let id: unknown;
+    try {
+      id = (parseKeepingIds(text) as { data?: { messageId?: unknown } } | null)?.data?.messageId;
+    } catch {
+      id = undefined;
+    }
+    return { providerMessageId: typeof id === 'string' ? id : null };
   }
 
   private async upload(
