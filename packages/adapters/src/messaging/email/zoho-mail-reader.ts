@@ -18,6 +18,12 @@ import { MailboxTransportError } from './mailbox-errors';
 import { zohoAccountGet, type ZohoAccountRef } from './zoho-mailbox';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+/**
+ * How far below the cursor each round looks again: mail can be listed late with an older time (slow
+ * delivery, a scan, a mail moved back into the folder). What is already logged is skipped by the
+ * sync's dedupe.
+ */
+const LOOKBACK_MS = 60 * 60 * 1000;
 
 export type ZohoSyncFolder = 'inbox' | 'sentitems';
 
@@ -159,10 +165,18 @@ function tagName(html: string, start: number): string {
   return html.slice(start, end).toLowerCase();
 }
 
+/** Where the end tag `</name` starts at or after `from`, any case (-1 when there is none). */
+function endTagAt(html: string, name: string, from: number): number {
+  const pattern = new RegExp(`</${name}`, 'gi');
+  pattern.lastIndex = from;
+  return pattern.exec(html)?.index ?? -1;
+}
+
 /** Tags out in one linear pass: line-break tags become new lines, script and style are skipped. */
 function stripTags(html: string): string {
   let out = '';
   let i = 0;
+  let close = -1; // the next '>' found, reused while it is still ahead (keeps the pass linear)
   while (i < html.length) {
     const open = html.indexOf('<', i);
     if (open === -1) {
@@ -170,18 +184,31 @@ function stripTags(html: string): string {
       break;
     }
     out += html.slice(i, open);
-    const close = html.indexOf('>', open + 1);
-    if (close === -1) break; // an unclosed tag: the rest is markup
-    const name = tagName(html, open + 1);
-    if (LINE_TAGS.has(name.replace(/\/$/, ''))) out += '\n';
-    i = close + 1;
-    if (SKIP_TAGS.has(name)) {
-      const endTag = html.toLowerCase().indexOf(`</${name}`, i);
-      const after = endTag === -1 ? -1 : html.indexOf('>', endTag);
-      i = after === -1 ? html.length : after + 1;
+    if (close <= open) close = html.indexOf('>', open + 1);
+    // No '>' left: every '<' from here is text ("price < 100" in a plain-text body).
+    if (close === -1) {
+      out += html.slice(open);
+      break;
     }
+    const tag = readTag(html, open, close);
+    out += tag.text;
+    i = tag.next;
   }
   return out;
+}
+
+/**
+ * The '<' at `open` (its '>' at `close`): the text it leaves and where reading goes on. A '<' that
+ * starts no tag is text; a line-break tag leaves a new line; script and style are skipped whole.
+ */
+function readTag(html: string, open: number, close: number): { text: string; next: number } {
+  if (!/[a-z/!]/i.test(html[open + 1] ?? '')) return { text: '<', next: open + 1 };
+  const name = tagName(html, open + 1);
+  const text = LINE_TAGS.has(name.replace(/\/$/, '')) ? '\n' : '';
+  if (!SKIP_TAGS.has(name)) return { text, next: close + 1 };
+  const endTag = endTagAt(html, name, close + 1);
+  const after = endTag === -1 ? -1 : html.indexOf('>', endTag);
+  return { text, next: after === -1 ? html.length : after + 1 };
 }
 
 /** Text from Zoho's HTML body: tags out, entities for the common characters, NUL removed. */
@@ -319,7 +346,8 @@ function keepNew(
 /** Where the next round starts: the newest mail read (with the ids at that very time). */
 function nextCursor(fresh: ZohoSyncedMessage[], from: Cursor | null, floor: number): Cursor {
   const newest = fresh.at(-1)?.receivedAt.getTime();
-  if (newest === undefined) return from ?? { t: floor, ids: [] };
+  // Nothing new, or only mail found again below the cursor: the cursor never moves back.
+  if (newest === undefined || (from && newest < from.t)) return from ?? { t: floor, ids: [] };
   const atNewest = fresh
     .filter((m) => m.receivedAt.getTime() === newest)
     .map((m) => m.providerMessageId);
@@ -340,6 +368,8 @@ export async function readZohoFolder(
   const stopAt = options.budgetMs === undefined ? Infinity : clock() + options.budgetMs;
   const from = parseCursor(cursor);
   const floor = from?.t ?? options.now.getTime() - options.initialDays * DAY_MS;
+  // Where this round stops reading: an hour below the cursor (LOOKBACK_MS), or the first round's window.
+  const readTo = from ? from.t - LOOKBACK_MS : floor;
   const fresh: ZohoSyncedMessage[] = [];
   // Offset pages shift when mail arrives between two reads: the same mail can come back twice.
   const taken = new Set<string>();
@@ -350,7 +380,7 @@ export async function readZohoFolder(
     const messages = items
       .map((item) => toMessage(item, accessToken, ref, options, fetchImpl))
       .filter((m): m is ZohoSyncedMessage => m !== null);
-    const stop = messages.findIndex((m) => pastFloor(m, floor));
+    const stop = messages.findIndex((m) => pastFloor(m, readTo));
     fresh.push(...keepNew(stop === -1 ? messages : messages.slice(0, stop), from, taken));
     reachedCursor = stop !== -1 || items.length < options.pageSize;
   }

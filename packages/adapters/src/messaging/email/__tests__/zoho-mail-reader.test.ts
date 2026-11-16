@@ -27,6 +27,8 @@ const options = (overrides = {}) => ({
   ...overrides,
 });
 const T = NOW.getTime();
+// Older than the cursor by more than the hour each round looks back.
+const OLD = T - 3 * 60 * 60 * 1000;
 
 describe('readZohoFolderIds', () => {
   it('finds Inbox and Sent by folder type, ids kept exact', async () => {
@@ -53,7 +55,7 @@ describe('readZohoFolder', () => {
         page(item('9000000000000000003', T - 1_000), item('9000000000000000002', T - 5_000))
       )
       .mockResolvedValueOnce(
-        page(item('9000000000000000001', T - 10_000), item('9000000000000000000', T - 20_000))
+        page(item('9000000000000000001', T - 10_000), item('9000000000000000000', OLD))
       );
 
     const round = await readZohoFolder(ACCESS, REF, cursor, options({ fetchImpl }));
@@ -103,7 +105,7 @@ describe('readZohoFolder', () => {
         page(item('9000000000000000003', T - 1_000), item('9000000000000000001', at))
       )
       .mockResolvedValueOnce(
-        page(item('9000000000000000002', at), item('9000000000000000000', T - 20_000))
+        page(item('9000000000000000002', at), item('9000000000000000000', OLD))
       );
 
     const round = await readZohoFolder(ACCESS, REF, cursor, options({ fetchImpl }));
@@ -125,7 +127,7 @@ describe('readZohoFolder', () => {
         page(item('9000000000000000007', T - 2_000), item('9000000000000000006', T - 3_000))
       )
       .mockResolvedValueOnce(
-        page(item('9000000000000000006', T - 3_000), item('9000000000000000000', T - 20_000))
+        page(item('9000000000000000006', T - 3_000), item('9000000000000000000', OLD))
       );
 
     const round = await readZohoFolder(ACCESS, REF, cursor, options({ fetchImpl }));
@@ -139,6 +141,35 @@ describe('readZohoFolder', () => {
       new URL(url).searchParams.get('start')
     );
     expect(starts).toEqual(['1', '2', '3']);
+  });
+
+  it('looks an hour below the cursor for mail listed late, and never moves the cursor back', async () => {
+    const cursor = JSON.stringify({ t: T - 10_000, ids: ['9000000000000000070'] });
+    // 071 arrived late with an older time than the cursor; 072 is new.
+    const fetchImpl = vi.fn(async () =>
+      page(
+        item('9000000000000000072', T - 1_000),
+        item('9000000000000000070', T - 10_000),
+        item('9000000000000000071', T - 20_000),
+        item('9000000000000000069', OLD)
+      )
+    );
+
+    const round = await readZohoFolder(ACCESS, REF, cursor, options({ fetchImpl, pageSize: 4 }));
+
+    expect(round.messages.map((m) => m.providerMessageId)).toEqual([
+      '9000000000000000071',
+      '9000000000000000072',
+    ]);
+    expect(JSON.parse(round.cursor!)).toEqual({ t: T - 1_000, ids: ['9000000000000000072'] });
+
+    // Only late mail found: it is returned (the sync dedupes it) and the cursor stays.
+    const lateOnly = vi.fn(async () =>
+      page(item('9000000000000000071', T - 20_000), item('9000000000000000069', OLD))
+    );
+    const again = await readZohoFolder(ACCESS, REF, cursor, options({ fetchImpl: lateOnly }));
+    expect(again.messages.map((m) => m.providerMessageId)).toEqual(['9000000000000000071']);
+    expect(again.cursor).toBe(cursor);
   });
 
   it('keeps the cursor and is not complete when it stops before the cursor', async () => {
@@ -246,5 +277,11 @@ describe('zohoAddresses / zohoBodyText', () => {
       'Hello\nworld'
     );
     expect(zohoBodyText('<p>abcdef</p>', 3)).toBe('abc');
+  });
+
+  it('keeps a "<" that starts no tag, and skips script and style in any case', () => {
+    expect(zohoBodyText('price < 100, call me', 100)).toBe('price < 100, call me');
+    expect(zohoBodyText('<p>a < b</p><p>c</p>', 100)).toBe('a < b\nc');
+    expect(zohoBodyText('<STYLE>x{}</Style>Hi', 100)).toBe('Hi');
   });
 });
