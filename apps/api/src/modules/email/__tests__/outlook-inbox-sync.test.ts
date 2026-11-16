@@ -4,7 +4,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MailboxTransportError } from '@intelliflow/adapters';
-import type { MailSyncReader, SyncRound, SyncedMessage } from '../mail-sync-reader';
+import type { SyncedMessage } from '../mail-sync-reader';
 
 const tokens = vi.hoisted(() => ({ getOAuthAccess: vi.fn() }));
 vi.mock('../mailbox-transport', () => ({ getOAuthAccess: tokens.getOAuthAccess }));
@@ -14,104 +14,18 @@ import {
   runInboxSync,
   INBOX_SYNC_INTERVAL_MS,
   TICK_BUDGET_MS,
-  type InboxSyncDeps,
 } from '../outlook-inbox-sync';
-
-const NOW = new Date('2026-11-15T10:00:00.000Z');
-const LEASE = new Date(NOW.getTime() + 5 * 60_000);
-const TENANT = '00000000-0000-4000-a000-000000000001';
-const CURSOR = 'https://graph.microsoft.com/v1.0/me/delta-1';
-
-function mail(overrides: Partial<SyncedMessage> = {}): SyncedMessage {
-  return {
-    providerMessageId: 'graph-1',
-    internetMessageId: '<m1@mail.example.invalid>',
-    conversationId: 'conv-1',
-    subject: 'Pricing',
-    fromAddress: 'ada@example.invalid',
-    fromName: 'Ada',
-    to: ['me@example.invalid'],
-    cc: [],
-    receivedAt: new Date('2026-11-14T09:00:00.000Z'),
-    isRead: false,
-    bodyText: 'Hello',
-    ...overrides,
-  };
-}
-
-function round(overrides: Partial<SyncRound> = {}): SyncRound {
-  return {
-    messages: [mail()],
-    cursor: 'https://graph.microsoft.com/v1.0/me/delta-2',
-    complete: true,
-    expired: false,
-    ...overrides,
-  };
-}
-
-function mailbox(overrides: Record<string, unknown> = {}) {
-  return {
-    id: 'mbx-1',
-    tenantId: TENANT,
-    userId: 'user-1',
-    kind: 'MICROSOFT',
-    status: 'ACTIVE',
-    accountAddress: 'me@example.invalid',
-    fromAddress: 'me@example.invalid',
-    refreshToken: 'stored-refresh',
-    tokenVersion: 0,
-    grantedScopes: ['offline_access', 'User.Read', 'Mail.Send', 'Mail.Read'],
-    syncCursor: CURSOR,
-    syncFailureCount: 0,
-    ...overrides,
-  };
-}
-
-/**
- * A Microsoft-kind reader for the engine's tests: forwards each read to a mock with the shape
- * (token, cursor, options) the assertions below check.
- */
-function testReader(
-  read: (token: string, cursor: string | null, options: object) => Promise<SyncRound>
-): MailSyncReader {
-  return {
-    provider: 'MICROSOFT',
-    canRead: (scopes) => scopes.includes('Mail.Read'),
-    read: ({ accessToken, folder, cursor, now, budgetMs }) =>
-      read(accessToken, cursor, { folder, initialDays: 30, now, budgetMs }),
-  };
-}
-
-function setup(options: { mailbox?: Record<string, unknown>; rounds?: SyncRound[] } = {}) {
-  const claims = [{ id: 'mbx-1', syncLockedUntil: LEASE }];
-  const prisma = {
-    $queryRaw: vi.fn(async () => claims.splice(0, 1)),
-    emailMailbox: {
-      findFirst: vi.fn(async () => mailbox(options.mailbox)),
-      update: vi.fn(async () => ({})),
-    },
-    contact: { findFirst: vi.fn(async () => ({ id: 'contact-1' })) },
-    lead: { findFirst: vi.fn(async () => null) },
-    emailRecord: {
-      findFirst: vi.fn(async () => null),
-      create: vi.fn(async () => ({ id: 'rec-1' })),
-    },
-  };
-  const rounds = [...(options.rounds ?? [round()])];
-  const readDelta = vi.fn(async () => rounds.shift() ?? round({ messages: [] }));
-  const isRestricted = vi.fn(async (_tenantId: string, _email: string) => false);
-  const deps: InboxSyncDeps = {
-    prisma,
-    transports: {} as never,
-    isRestricted,
-    now: () => NOW,
-    readers: { MICROSOFT: testReader(readDelta) },
-  };
-  return { prisma, readDelta, isRestricted, deps };
-}
-
-const released = (prisma: ReturnType<typeof setup>['prisma']) =>
-  (prisma.emailMailbox.update.mock.calls.at(-1) as unknown as [{ where: unknown; data: any }])[0];
+import {
+  CURSOR,
+  LEASE,
+  NOW,
+  TENANT,
+  mail,
+  mailbox,
+  released,
+  round,
+  setup,
+} from './inbox-sync-harness';
 
 describe('runInboxSync (#1177)', () => {
   beforeEach(() => {
@@ -148,6 +62,7 @@ describe('runInboxSync (#1177)', () => {
           conversationId: 'conv-1',
         },
       }),
+      select: { id: true },
     });
     // Received mail is not the owner's: a userId would list it in their Sent folder.
     const created = prisma.emailRecord.create.mock.calls[0] as unknown as [{ data: object }];
@@ -187,6 +102,19 @@ describe('runInboxSync (#1177)', () => {
     const data = (prisma.emailRecord.create.mock.calls[0] as unknown as [{ data: any }])[0].data;
     expect(data.contactId).toBeNull();
     expect(data.metadata.leadId).toBe('lead-1');
+    // A lead's timeline is its activities: the mail shows there as an EMAIL entry.
+    expect(prisma.leadActivity.create).toHaveBeenCalledWith({
+      data: {
+        type: 'EMAIL',
+        title: 'Pricing',
+        timestamp: new Date('2026-11-14T09:00:00.000Z'),
+        userId: 'user-1',
+        userName: 'Synced from email',
+        leadId: 'lead-1',
+        tenantId: TENANT,
+        metadata: { emailRecordId: 'rec-1', source: 'mailbox-sync' },
+      },
+    });
   });
 
   it('never stores mail from someone who is not a lead or contact (personal mail, erased people)', async () => {
@@ -236,7 +164,7 @@ describe('runInboxSync (#1177)', () => {
         mailboxId: 'mbx-1',
         OR: [{ providerMessageId: 'graph-1' }, { messageIdHeader: '<m1@mail.example.invalid>' }],
       },
-      select: { id: true },
+      select: { id: true, metadata: true },
     });
     expect(prisma.emailRecord.create).not.toHaveBeenCalled();
   });
@@ -250,7 +178,7 @@ describe('runInboxSync (#1177)', () => {
 
     expect(prisma.emailRecord.findFirst).toHaveBeenCalledWith({
       where: { tenantId: TENANT, mailboxId: 'mbx-1', OR: [{ providerMessageId: 'graph-1' }] },
-      select: { id: true },
+      select: { id: true, metadata: true },
     });
     expect(prisma.emailRecord.create).toHaveBeenCalledTimes(1);
   });
@@ -262,10 +190,10 @@ describe('runInboxSync (#1177)', () => {
 
     const report = await runInboxSync(deps);
 
-    expect(readDelta.mock.calls.slice(0, 2).map((c) => (c as unknown as unknown[])[1])).toEqual([
-      CURSOR,
-      null,
-    ]);
+    const inboxReads = (
+      readDelta.mock.calls as unknown as Array<[string, string | null, { folder: string }]>
+    ).filter(([, , read]) => read.folder === 'inbox');
+    expect(inboxReads.map(([, cursor]) => cursor)).toEqual([CURSOR, null]);
     expect(report.restarts).toBe(1);
   });
 
@@ -436,7 +364,7 @@ describe('runInboxSync: Sent Items, the other way (#1177)', () => {
       ...overrides,
     });
 
-  it('reads Sent Items from its own cursor after the inbox', async () => {
+  it('reads Sent Items first, from its own cursor, then the inbox', async () => {
     const { readDelta, deps } = setup({ mailbox: { syncSentCursor: `${CURSOR}-sent` } });
 
     await runInboxSync(deps);
@@ -445,14 +373,15 @@ describe('runInboxSync: Sent Items, the other way (#1177)', () => {
       [string, string | null, { folder: string }]
     >;
     expect(calls.map(([, cursor, options]) => [options.folder, cursor])).toEqual([
-      ['inbox', CURSOR],
       ['sentitems', `${CURSOR}-sent`],
+      ['inbox', CURSOR],
     ]);
   });
 
   it('logs mail the user sent from Outlook against the recipient contact, as sent', async () => {
     const { prisma, deps } = setup({
-      rounds: [round({ messages: [] }), round({ messages: [sentMail()] })],
+      rounds: [round({ messages: [] })],
+      sent: [round({ messages: [sentMail()] })],
     });
 
     await runInboxSync(deps);
@@ -480,7 +409,7 @@ describe('runInboxSync: Sent Items, the other way (#1177)', () => {
     let clock = NOW.getTime();
     deps.now = () => new Date(clock);
     readDelta.mockImplementation(async () => {
-      clock += 40_000; // the inbox read uses 40 seconds of the budget
+      clock += 40_000; // the first folder's read uses 40 seconds of the budget
       return round({ messages: [] });
     });
 
@@ -495,8 +424,8 @@ describe('runInboxSync: Sent Items, the other way (#1177)', () => {
 
   it('skips the mailbox owner among the recipients and logs against the first lead or contact', async () => {
     const { prisma, deps } = setup({
-      rounds: [
-        round({ messages: [] }),
+      rounds: [round({ messages: [] })],
+      sent: [
         round({
           messages: [sentMail({ to: ['me@example.invalid'], cc: ['ada@example.invalid'] })],
         }),
@@ -513,7 +442,8 @@ describe('runInboxSync: Sent Items, the other way (#1177)', () => {
 
   it('does not log again a mail the CRM itself sent (same Message-ID)', async () => {
     const { prisma, deps } = setup({
-      rounds: [round({ messages: [] }), round({ messages: [sentMail()] })],
+      rounds: [round({ messages: [] })],
+      sent: [round({ messages: [sentMail()] })],
     });
     prisma.emailRecord.findFirst.mockResolvedValue({ id: 'crm-sent' } as never);
 
@@ -528,14 +458,15 @@ describe('runInboxSync: Sent Items, the other way (#1177)', () => {
           { messageIdHeader: '<s1@mail.example.invalid>' },
         ],
       },
-      select: { id: true },
+      select: { id: true, metadata: true },
     });
     expect(prisma.emailRecord.create).not.toHaveBeenCalled();
   });
 
   it('never logs sent mail to people who are not leads or contacts, or are restricted', async () => {
     const { prisma, isRestricted, deps } = setup({
-      rounds: [round({ messages: [] }), round({ messages: [sentMail()] })],
+      rounds: [round({ messages: [] })],
+      sent: [round({ messages: [sentMail()] })],
     });
     isRestricted.mockResolvedValue(true);
 
@@ -545,7 +476,7 @@ describe('runInboxSync: Sent Items, the other way (#1177)', () => {
     expect(prisma.emailRecord.create).not.toHaveBeenCalled();
   });
 
-  it('keeps the inbox cursor when Sent Items then fails, so inbox progress is never read again', async () => {
+  it('keeps the Sent cursor when the inbox then fails, so Sent progress is never read again', async () => {
     const { prisma, readDelta, deps } = setup();
     readDelta
       .mockImplementationOnce(async () => round({ messages: [] }))
@@ -556,10 +487,10 @@ describe('runInboxSync: Sent Items, the other way (#1177)', () => {
     await runInboxSync(deps);
 
     expect(released(prisma).data).toMatchObject({
-      syncCursor: 'https://graph.microsoft.com/v1.0/me/delta-2',
+      syncSentCursor: 'https://graph.microsoft.com/v1.0/me/delta-2',
       syncFailureCount: 1,
     });
-    expect(released(prisma).data).not.toHaveProperty('syncSentCursor');
+    expect(released(prisma).data).not.toHaveProperty('syncCursor');
   });
 
   it.each([
@@ -567,7 +498,8 @@ describe('runInboxSync: Sent Items, the other way (#1177)', () => {
     ['second', ['ada@example.invalid', 'zed@example.invalid']],
   ])('skips sent mail with a restricted recipient in %s place', async (_place, to) => {
     const { prisma, isRestricted, deps } = setup({
-      rounds: [round({ messages: [] }), round({ messages: [sentMail({ to })] })],
+      rounds: [round({ messages: [] })],
+      sent: [round({ messages: [sentMail({ to })] })],
     });
     isRestricted.mockImplementation(
       async (_tenant: string, email: string) => email === 'zed@example.invalid'
@@ -592,7 +524,7 @@ describe('runInboxSync: Sent Items, the other way (#1177)', () => {
   });
 
   it('stays due while either folder has more to read', async () => {
-    const { prisma, deps } = setup({ rounds: [round(), round({ complete: false })] });
+    const { prisma, deps } = setup({ rounds: [round()], sent: [round({ complete: false })] });
 
     await runInboxSync(deps);
 

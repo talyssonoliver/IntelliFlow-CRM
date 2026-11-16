@@ -27,6 +27,7 @@ import {
   type SyncRound,
   type SyncedMessage,
 } from './mail-sync-reader';
+import { learnThread, logOnLead, threadOf, type LoggedRecord } from './mail-sync-links';
 
 export const INBOX_SYNC_INTERVAL_MS = 5 * 60_000;
 const LEASE_MS = 5 * 60_000;
@@ -38,8 +39,11 @@ const MAILBOX_READ_BUDGET_MS = 60_000;
 const MAX_BACKOFF_MS = 6 * 60 * 60_000;
 /** A mailbox without Mail.Read (connected before the scope, or narrowed) is checked daily. */
 const NO_SCOPE_RECHECK_MS = 24 * 60 * 60_000;
-/** Prisma codes for a row the database refuses as data (too long, bad value): skip that mail. */
-const DATA_ERROR_CODES = new Set(['P2000', 'P2006', 'P2007', 'P2011']);
+/**
+ * Prisma codes for a row the database refuses as data (too long, bad value, or a lead or contact
+ * erased since it was matched): skip that mail.
+ */
+const DATA_ERROR_CODES = new Set(['P2000', 'P2003', 'P2006', 'P2007', 'P2011']);
 
 export interface InboxSyncDeps {
   prisma: any;
@@ -184,7 +188,7 @@ async function alreadyLogged(
   deps: InboxSyncDeps,
   mailbox: SyncMailbox,
   message: SyncedMessage
-): Promise<boolean> {
+): Promise<LoggedRecord | null> {
   // Same provider id, or the same Message-ID header already logged for this mailbox.
   const header = messageIdHeader(message);
   const existing = await deps.prisma.emailRecord.findFirst({
@@ -196,9 +200,63 @@ async function alreadyLogged(
         ...(header ? [{ messageIdHeader: header }] : []),
       ],
     },
-    select: { id: true },
+    select: { id: true, metadata: true },
   });
-  return existing !== null;
+  return existing;
+}
+
+/** The email record a kept synced mail becomes. */
+function recordData(args: {
+  mailbox: SyncMailbox;
+  message: SyncedMessage;
+  folder: SyncFolder;
+  provider: MailSyncReader['provider'];
+  party: { contactId: string | null; leadId: string | null };
+  body: string;
+  threadId: string | null;
+}): Record<string, unknown> {
+  const { mailbox, message, folder, provider, party, body, threadId } = args;
+  const sent = folder === 'sentitems';
+  return {
+    subject: message.subject,
+    body,
+    fromEmail: message.fromAddress ?? mailbox.accountAddress ?? mailbox.fromAddress,
+    toEmail: message.to.join(', '),
+    ccEmails: message.cc.join(', ') || null,
+    status: sent ? 'SENT' : 'DELIVERED',
+    ...(sent ? { sentAt: message.receivedAt } : {}),
+    isRead: sent ? true : message.isRead,
+    tenantId: mailbox.tenantId,
+    mailboxId: mailbox.id,
+    // userId is the sender on an email record: the owner for mail they sent, none for mail they
+    // received, so received mail stays out of their Sent folder (as the inbound webhook does).
+    ...(sent ? { userId: mailbox.userId } : {}),
+    contactId: party.contactId,
+    messageIdHeader: messageIdHeader(message),
+    provider,
+    providerMessageId: message.providerMessageId.slice(0, 255),
+    createdAt: message.receivedAt,
+    metadata: {
+      source: 'outlook-sync',
+      folder,
+      mailboxOwnerId: mailbox.userId,
+      conversationId: message.conversationId,
+      ...(threadId ? { threadId } : {}),
+      ...(party.leadId ? { leadId: party.leadId } : {}),
+    },
+  };
+}
+
+/** A kept mail's body; null when the provider refuses that one message (deleted meanwhile). */
+async function bodyOf(message: SyncedMessage): Promise<string | null> {
+  if (!message.loadBody) return message.bodyText;
+  try {
+    return await message.loadBody();
+  } catch (error) {
+    // One message the provider refuses never fails the round; a dead token or an outage does.
+    if (error instanceof MailboxTransportError && error.code === 'REJECTED') return null;
+    throw error;
+  }
 }
 
 export async function storeSyncedMessage(
@@ -212,38 +270,28 @@ export async function storeSyncedMessage(
   const party = await counterparty(deps, mailbox, message, folder);
   if (!party) return 'unmatched';
   if (await anyoneRestricted(deps, mailbox, message)) return 'restricted';
-  if (await alreadyLogged(deps, mailbox, message)) return 'duplicate';
-  const sent = folder === 'sentitems';
-  try {
-    await deps.prisma.emailRecord.create({
-      data: {
-        subject: message.subject,
-        body: message.bodyText,
-        fromEmail: message.fromAddress ?? mailbox.accountAddress ?? mailbox.fromAddress,
-        toEmail: message.to.join(', '),
-        ccEmails: message.cc.join(', ') || null,
-        status: sent ? 'SENT' : 'DELIVERED',
-        ...(sent ? { sentAt: message.receivedAt } : {}),
-        isRead: sent ? true : message.isRead,
-        tenantId: mailbox.tenantId,
-        mailboxId: mailbox.id,
-        // userId is the sender on an email record: the owner for mail they sent, none for mail they
-        // received, so received mail stays out of their Sent folder (as the inbound webhook does).
-        ...(sent ? { userId: mailbox.userId } : {}),
-        contactId: party.contactId,
-        messageIdHeader: messageIdHeader(message),
-        provider,
-        providerMessageId: message.providerMessageId.slice(0, 255),
-        createdAt: message.receivedAt,
-        metadata: {
-          source: 'outlook-sync',
-          folder,
-          mailboxOwnerId: mailbox.userId,
-          conversationId: message.conversationId,
-          ...(party.leadId ? { leadId: party.leadId } : {}),
-        },
-      },
+  const logged = await alreadyLogged(deps, mailbox, message);
+  if (logged) {
+    if (folder === 'sentitems') await learnThread(deps, mailbox, logged, message);
+    return 'duplicate';
+  }
+  const threadId = await threadOf(deps, mailbox, message);
+  // Only now, for mail that is kept: the body (a reader may load it lazily, so personal mail's
+  // content is never fetched).
+  const body = await bodyOf(message);
+  if (body === null) return 'rejected';
+  const leadId = party.leadId;
+  const write = async (db: any) => {
+    const record: { id: string } = await db.emailRecord.create({
+      data: recordData({ mailbox, message, folder, provider, party, body, threadId }),
+      select: { id: true },
     });
+    if (leadId) await logOnLead({ prisma: db }, mailbox, message, leadId, record.id);
+  };
+  try {
+    // A lead's mail and its timeline entry land together or not at all: a retry finds no record
+    // and writes both again, so the lead never misses the entry.
+    await (leadId ? deps.prisma.$transaction(write) : write(deps.prisma));
     return 'stored';
   } catch (error) {
     // One mail the database rejects as data never fails the round: skip it and go on.
@@ -255,6 +303,7 @@ export async function storeSyncedMessage(
 /** One mailbox's sync: its token, its clock and the deadline every read of it shares. */
 interface MailboxRun {
   reader: MailSyncReader;
+  mailbox: SyncMailbox;
   token: string;
   now: Date;
   /** Epoch ms after which no read of this mailbox starts another page. */
@@ -273,6 +322,7 @@ async function readRound(
   const read = (from: string | null) =>
     run.reader.read({
       accessToken: run.token,
+      mailbox: run.mailbox,
       folder,
       cursor: from,
       now: run.now,
@@ -329,10 +379,12 @@ async function syncMailbox(
     version = access.tokenVersion;
     const token = access.accessToken;
     const deadline = deps.now().getTime() + MAILBOX_READ_BUDGET_MS;
-    const run: MailboxRun = { reader, token, now, deadline, report };
-    const inbox = await syncFolder(deps, mailbox, run, 'inbox', mailbox.syncCursor);
-    progress.syncCursor = inbox.cursor;
+    const run: MailboxRun = { reader, mailbox, token, now, deadline, report };
+    // Sent first: a CRM-sent mail learns its provider conversation there, so a reply read in the
+    // same run (or the first run's 30 days) already finds the thread it joins.
     const sent = await syncFolder(deps, mailbox, run, 'sentitems', mailbox.syncSentCursor);
+    progress.syncSentCursor = sent.cursor;
+    const inbox = await syncFolder(deps, mailbox, run, 'inbox', mailbox.syncCursor);
     report.mailboxesSynced += 1;
     await release(deps, claim, version, {
       syncCursor: inbox.cursor,

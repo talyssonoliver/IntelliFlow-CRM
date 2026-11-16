@@ -55,8 +55,10 @@ describe('ZohoMailboxClient', () => {
     expect(url.origin).toBe('https://accounts.zoho.com');
     expect(url.pathname).toBe('/oauth/v2/auth');
     expect(url.searchParams.get('scope')).toBe(ZOHO_MAILBOX_SCOPES.join(','));
-    // Nothing that reads mail: logging comes later, with its own consent.
-    expect(url.searchParams.get('scope')).not.toContain('messages.READ');
+    // MVP-001 reply sync: reading messages and folders, so replies from leads are logged.
+    expect(url.searchParams.get('scope')).toContain('ZohoMail.messages.READ');
+    expect(url.searchParams.get('scope')).toContain('ZohoMail.folders.READ');
+    expect(url.searchParams.get('scope')).not.toContain('.ALL');
     expect(url.searchParams.get('access_type')).toBe('offline');
     expect(url.searchParams.get('prompt')).toBe('consent');
     expect(url.searchParams.get('code_challenge')).toBe('c1');

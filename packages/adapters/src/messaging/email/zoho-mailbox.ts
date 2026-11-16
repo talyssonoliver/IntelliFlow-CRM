@@ -17,8 +17,16 @@ import type { MimeAttachment } from './mime';
 import type { OAuthClientConfig, OAuthTokens, RefreshedTokens } from './oauth-mailbox';
 import type { MailboxErrorCode } from '@intelliflow/domain';
 
-/** Send mail, and read the account's id and allowed From addresses. Nothing else. */
-export const ZOHO_MAILBOX_SCOPES = ['ZohoMail.messages.CREATE', 'ZohoMail.accounts.READ'] as const;
+/**
+ * Send mail, read the account's id and allowed From addresses, and (MVP-001 reply sync) read
+ * messages and folders, so replies from leads and contacts are logged. Nothing else.
+ */
+export const ZOHO_MAILBOX_SCOPES = [
+  'ZohoMail.messages.CREATE',
+  'ZohoMail.accounts.READ',
+  'ZohoMail.messages.READ',
+  'ZohoMail.folders.READ',
+] as const;
 
 export interface ZohoDataCentre {
   location: string;
@@ -141,7 +149,7 @@ async function apiError(response: Response): Promise<MailboxTransportError> {
 }
 
 /** The keys whose values are Zoho ids (about 19 digits, past what a JSON number holds exactly). */
-const ID_KEYS = new Set(['accountId', 'messageId']);
+const ID_KEYS = new Set(['accountId', 'messageId', 'folderId', 'threadId']);
 
 /**
  * JSON.parse that keeps every id as the exact digits Zoho sent (each record keeps its own id),
@@ -169,6 +177,30 @@ function dataCentreFor(mailHost: string): ZohoDataCentre {
   const dc = zohoDataCentreByMailHost(mailHost);
   if (!dc) throw new MailboxTransportError('AUTH_FAILED');
   return dc;
+}
+
+/**
+ * One authenticated GET on a Zoho account's Mail API (MVP-001 reply sync): Zoho's own host only,
+ * the request timeout, a dead token read from the body, ids kept exact. `path` starts at the account
+ * (`/folders`, `/messages/view?...`).
+ */
+export async function zohoAccountGet(
+  fetchImpl: typeof fetch,
+  accessToken: string,
+  ref: ZohoAccountRef,
+  path: string
+): Promise<unknown> {
+  const base = `https://${dataCentreFor(ref.mailHost).mail}/api/accounts/${encodeURIComponent(ref.accountId)}`;
+  const response = await call(fetchImpl, base + path, {
+    headers: { Authorization: `Zoho-oauthtoken ${accessToken}` },
+  });
+  if (!response.ok) throw await apiError(response);
+  const text = await response.text().catch(() => '');
+  try {
+    return parseKeepingIds(text);
+  } catch {
+    throw new MailboxTransportError('REJECTED');
+  }
 }
 
 export class ZohoMailboxClient {
