@@ -358,13 +358,13 @@ interface LeadWithRelations {
 
 // Activity type filter options
 const activityTypeFilters: { value: ActivityType | 'all'; label: string; icon: string }[] = [
-  { value: 'all', label: 'All', icon: '­ƒôï' },
-  { value: 'email', label: 'Emails', icon: '­ƒôº' },
-  { value: 'call', label: 'Calls', icon: '­ƒô×' },
-  { value: 'note', label: 'Notes', icon: '­ƒôØ' },
-  { value: 'meeting', label: 'Meetings', icon: '­ƒôà' },
-  { value: 'web_form', label: 'Web Forms', icon: '­ƒîÉ' },
-  { value: 'score_update', label: 'Scores', icon: '­ƒôè' },
+  { value: 'all', label: 'All', icon: '📋' },
+  { value: 'email', label: 'Emails', icon: '📧' },
+  { value: 'call', label: 'Calls', icon: '📞' },
+  { value: 'note', label: 'Notes', icon: '📝' },
+  { value: 'meeting', label: 'Meetings', icon: '📅' },
+  { value: 'web_form', label: 'Web Forms', icon: '🌐' },
+  { value: 'score_update', label: 'Scores', icon: '📊' },
 ];
 
 // LeadStatusBadge + TemperatureBadge now live in
@@ -412,11 +412,10 @@ function filterActivity(
 }
 
 function getCallOutcomeBadge(outcome: string | undefined): { cls: string; label: string } {
-  if (outcome === 'connected')
-    return { cls: 'bg-green-100 text-green-700', label: 'Ô£ô Connected' };
+  if (outcome === 'connected') return { cls: 'bg-green-100 text-green-700', label: '✓ Connected' };
   if (outcome === 'voicemail')
-    return { cls: 'bg-yellow-100 text-yellow-700', label: '­ƒô× Voicemail' };
-  return { cls: 'bg-red-100 text-red-700', label: 'Ô£ù No Answer' };
+    return { cls: 'bg-yellow-100 text-yellow-700', label: '📞 Voicemail' };
+  return { cls: 'bg-red-100 text-red-700', label: '✗ No Answer' };
 }
 
 // formatRelativeTime → '@/lib/leads/lead-format'; SourceBadge →
@@ -463,7 +462,7 @@ function getSentimentTrendStyle(trend?: string): string {
   }
 }
 
-// ÔöÇÔöÇÔöÇ Sub-components extracted to reduce cognitive complexity ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Sub-components extracted to reduce cognitive complexity ─────────────────
 
 function LeadLoadingSkeleton() {
   return (
@@ -582,7 +581,7 @@ function LeadErrorView({
   );
 }
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─────────────────────────────────────────────────────────────────────────────
 
 type LeadDialogsLead = {
   id: string;
@@ -821,9 +820,9 @@ function LeadDialogs({
   );
 }
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─────────────────────────────────────────────────────────────────────────────
 
-// ÔöÇÔöÇÔöÇ Sub-components for Lead360Page tab panels and layout sections ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Sub-components for Lead360Page tab panels and layout sections ────────────
 
 // LeadProfileData + LeadMetrics now live in
 // '@/components/leads/lead-detail' (imported above)
@@ -833,7 +832,7 @@ function LeadDialogs({
 // LeadOwnerCard + LeadLeftSidebar (now LeadDetail) live in
 // '@/components/leads/lead-detail' (imported above)
 
-// ÔöÇÔöÇÔöÇ Tab panel sub-components ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Tab panel sub-components ─────────────────────────────────────────────────
 
 interface LeadOverviewTabProps {
   lead: LeadProfileData;
@@ -947,7 +946,7 @@ function LeadOverviewTab({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Activity rich preview (module-level to avoid inline function) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Activity rich preview (module-level to avoid inline function) ────────────
 
 function ActivityRichPreview({ activity }: { activity: Activity }) {
   if (!activity.metadata) return null;
@@ -1037,7 +1036,7 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
           <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-2">
             <span className="material-symbols-outlined !text-[16px]">location_on</span>{' '}
             {meta.location}
-            {meta.duration && <span className="text-slate-400">ÔÇó {meta.duration}</span>}
+            {meta.duration && <span className="text-slate-400">• {meta.duration}</span>}
           </div>
         )}
         {meta.attendees && meta.attendees.length > 0 && (
@@ -1052,7 +1051,7 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
   return null;
 }
 
-// ÔöÇÔöÇÔöÇ Activity timeline item ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Activity timeline item ───────────────────────────────────────────────────
 
 interface ActivityTimelineItemProps {
   activity: Activity;
@@ -1098,7 +1097,7 @@ function ActivityTimelineItem({
               {activity.description}
             </p>
             <p className="text-xs text-slate-500 mt-1">
-              {activity.user} ÔÇó {formatRelativeTime(activity.timestamp, timezone)}
+              {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
             </p>
           </div>
           <button
@@ -1139,7 +1138,7 @@ function ActivityTimelineItem({
                   >
                     <p className="text-sm text-slate-600 dark:text-slate-400">{comment.text}</p>
                     <p className="text-xs text-slate-500 mt-1">
-                      {comment.user} ÔÇó {formatRelativeTime(comment.timestamp, timezone)}
+                      {comment.user} • {formatRelativeTime(comment.timestamp, timezone)}
                     </p>
                   </div>
                 ))}
@@ -1153,7 +1152,7 @@ function ActivityTimelineItem({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Activity tab filter bar ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Activity tab filter bar ──────────────────────────────────────────────────
 
 interface ActivityFilterBarProps {
   searchQuery: string;
@@ -1253,7 +1252,7 @@ function ActivityFilterBar({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Activity tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Activity tab ─────────────────────────────────────────────────────────────
 
 interface LeadActivityTabProps {
   leadId: string;
@@ -1402,7 +1401,7 @@ function LeadActivityTab({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Notes tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Notes tab ────────────────────────────────────────────────────────────────
 
 interface LeadNotesTabProps {
   notes: { id: string; content: string; author: string; createdAt: string }[];
@@ -1467,7 +1466,7 @@ function LeadNotesTab({
               <p className="text-sm text-slate-600 dark:text-slate-400">{note.content}</p>
               <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                 <span>{note.author}</span>
-                <span>ÔÇó</span>
+                <span>•</span>
                 <span>{formatRelativeTime(note.createdAt, timezone)}</span>
               </div>
             </div>
@@ -1480,7 +1479,7 @@ function LeadNotesTab({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Emails tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Emails tab ───────────────────────────────────────────────────────────────
 
 interface LeadEmailsTabProps {
   emails: { id: string; subject: string; status: string; sentAt: string; openCount: number }[];
@@ -1565,7 +1564,7 @@ function LeadEmailsTab({ emails, timezone, leadEmail, onOpenActivity }: LeadEmai
   );
 }
 
-// ÔöÇÔöÇÔöÇ Files tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Files tab ────────────────────────────────────────────────────────────────
 
 interface LeadFilesTabProps {
   files: { id: string; name: string; size: string; uploadedAt: string; url: string | null }[];
@@ -1595,7 +1594,7 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
               <div className="flex-1">
                 <p className="font-medium text-slate-900 dark:text-white">{file.name}</p>
                 <p className="text-sm text-slate-500">
-                  {file.size} ÔÇó {formatRelativeTime(file.uploadedAt, timezone)}
+                  {file.size} • {formatRelativeTime(file.uploadedAt, timezone)}
                 </p>
               </div>
               {httpUrlOrNull(file.url) && (
@@ -1622,7 +1621,7 @@ function LeadFilesTab({ files, timezone }: LeadFilesTabProps) {
   );
 }
 
-// ÔöÇÔöÇÔöÇ AI Insights tab ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── AI Insights tab ─────────────────────────────────────────────────────────
 
 interface AiInsightsData {
   /** The lead's stored score; shown only when scoringStatus says it is a real score. */
@@ -1821,7 +1820,7 @@ function LeadAIInsightsTab({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Right sidebar ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Right sidebar ────────────────────────────────────────────────────────────
 
 interface LeadRightSidebarProps {
   hasAiInsight: boolean;
@@ -2007,7 +2006,7 @@ function LeadRightSidebar({
                 </p>
                 <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
                   <span>{note.author}</span>
-                  <span>ÔÇó</span>
+                  <span>•</span>
                   <span>{formatRelativeTime(note.createdAt, timezone)}</span>
                 </div>
               </div>
@@ -2029,7 +2028,7 @@ function LeadRightSidebar({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Tab bar ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Tab bar ──────────────────────────────────────────────────────────────────
 
 interface LeadTabBarProps {
   tabs: Tab[];
@@ -2087,7 +2086,7 @@ function LeadTabBar({
   );
 }
 
-// ÔöÇÔöÇÔöÇ Page header ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─── Page header ──────────────────────────────────────────────────────────────
 
 interface LeadPageHeaderProps {
   lead: LeadProfileData;
@@ -2158,7 +2157,7 @@ function LeadPageHeader({
   );
 }
 
-// ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+// ─────────────────────────────────────────────────────────────────────────────
 
 const LEAD_VALID_TABS: TabId[] = [
   'overview',
@@ -2683,7 +2682,7 @@ export default function Lead360Page() {
     [activities.length, tasks, notes.length, emails.length, files.length]
   );
 
-  // Activity reactions/comments ÔÇö hooks must be before any early returns
+  // Activity reactions/comments — hooks must be before any early returns
   const filteredActivitiesAll = useMemo(
     () =>
       activities.filter((activity) =>
@@ -2800,7 +2799,7 @@ export default function Lead360Page() {
     });
   };
 
-  // renderActivityActions closure ÔÇö depends on hook results from Lead360Page scope
+  // renderActivityActions closure — depends on hook results from Lead360Page scope
   const renderActivityActions = (activity: Activity) => (
     <ActivityFeedItemActions
       activityId={activity.id}
