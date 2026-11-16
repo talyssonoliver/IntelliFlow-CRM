@@ -1,19 +1,19 @@
 {
   "audit_metadata": {
-    "generated_at": "2026-11-16T00:15:29.913Z",
+    "generated_at": "2026-11-16T09:36:22.265Z",
     "audit_type": "PHANTOM_COMPLETION_DETECTION",
     "sprint_scope": "all",
-    "severity": "MEDIUM"
+    "severity": "INFO"
   },
   "summary": {
     "total_completed_tasks": 452,
-    "verified_completions": 448,
-    "phantom_completions": 4,
+    "verified_completions": 452,
+    "phantom_completions": 0,
     "sprint_path_mismatches": 1,
     "untracked_by_design_artifacts": 112,
     "dod_wording_warnings": 152,
-    "integrity_score": "99%",
-    "conclusion": "4 tasks marked as Completed but missing tracked artifacts; 1 tasks have attestations in the wrong sprint folder"
+    "integrity_score": "100%",
+    "conclusion": "1 tasks have attestations in the wrong sprint folder"
   },
   "verified_tasks": [
     {
@@ -395,6 +395,20 @@
         "apps/project-tracker/docs/metrics/_global/flows/FLOW-002.md",
         "apps/project-tracker/docs/metrics/_global/phase-validations/PHASE-002-validation.md",
         ".specify/sprints/sprint-2/attestations/IFC-005/attestation.json"
+      ]
+    },
+    {
+      "task_id": "IFC-006",
+      "description": "PHASE-002: Supabase Integration Test",
+      "artifacts_verified": [
+        "apps/api/src/lib/supabase.ts",
+        "apps/api/src/shared/auth-flow.test.ts",
+        "apps/api/src/shared/vector-search.test.ts",
+        "apps/web/src/proxy.ts",
+        "apps/web/src/lib/session.ts",
+        "apps/api/src/middleware/auth.ts",
+        "apps/project-tracker/docs/metrics/_global/flows/FLOW-001.md",
+        ".specify/sprints/sprint-3/attestations/IFC-006/attestation.json"
       ]
     },
     {
@@ -1108,6 +1122,31 @@
       ]
     },
     {
+      "task_id": "IFC-099",
+      "description": "ERP/Payment/Email Connectors",
+      "artifacts_verified": [
+        "artifacts/reports/connector-status-dashboard.json",
+        "packages/adapters/src/erp/sap/client.ts",
+        "packages/adapters/src/payments/stripe/client.ts",
+        "packages/adapters/src/payments/paypal/client.ts",
+        "packages/adapters/src/email/gmail/client.ts",
+        "packages/adapters/src/email/outlook/client.ts",
+        "packages/adapters/src/messaging/slack/client.ts",
+        "packages/adapters/src/messaging/teams/client.ts",
+        "packages/adapters/src/messaging/WebhookServiceAdapter.ts",
+        "packages/webhooks/package.json",
+        ".specify/sprints/sprint-10/attestations/IFC-099/attestation.json",
+        "docs/planning/prd-erp-connectors.md",
+        "packages/adapters/src/email/gmail/__tests__/client.fetch-stub.test.ts",
+        "packages/adapters/src/email/outlook/__tests__/client.test.ts",
+        "tests/integration/connectors/erp.test.ts",
+        "packages/adapters/src/messaging/slack/__tests__/client.fetch-stub.test.ts",
+        "packages/adapters/src/messaging/teams/__tests__/client.test.ts",
+        "packages/adapters/src/payments/stripe/__tests__/client.fetch-stub.test.ts",
+        "packages/adapters/src/payments/__tests__/paypal.adapter.test.ts"
+      ]
+    },
+    {
       "task_id": "IFC-100",
       "description": "ADR Registry & Compliance Reporting",
       "artifacts_verified": [
@@ -1199,6 +1238,17 @@
         "apps/web/src/app/(public)/press/page.tsx",
         "apps/web/src/data/press-releases.json",
         ".specify/sprints/sprint-11/attestations/PG-007/attestation.json",
+        "docs/architecture/adr/ADR-020-public-site-auth.md",
+        "docs/planning/prd-public-site-auth.md"
+      ]
+    },
+    {
+      "task_id": "PG-008",
+      "description": "Security Page",
+      "artifacts_verified": [
+        "apps/web/src/app/(public)/security/page.tsx",
+        "apps/web/src/app/(public)/security/controls.ts",
+        ".specify/sprints/sprint-11/attestations/PG-008/attestation.json",
         "docs/architecture/adr/ADR-020-public-site-auth.md",
         "docs/planning/prd-public-site-auth.md"
       ]
@@ -2368,6 +2418,18 @@
         "apps/api/src/agent/__tests__/logger.test.ts",
         "apps/api/src/agent/__tests__/tools.test.ts",
         ".specify/sprints/sprint-6/attestations/IFC-139/attestation.json"
+      ]
+    },
+    {
+      "task_id": "IFC-140",
+      "description": "Implement data governance workflows: DSAR requests; retentio",
+      "artifacts_verified": [
+        "docs/compliance-and-governance/data-governance/dsar-process.md",
+        "docs/compliance-and-governance/data-governance/retention-policy.md",
+        "infra/monitoring/kms-key-config.json",
+        "packages/application/src/services/DataSubjectRequestService.ts",
+        "tests/compliance/data-governance.spec.ts",
+        ".specify/sprints/sprint-11/attestations/IFC-140/attestation.json"
       ]
     },
     {
@@ -4882,54 +4944,7 @@
       ]
     }
   ],
-  "phantom_completions": [
-    {
-      "task_id": "IFC-006",
-      "description": "PHASE-002: Supabase Integration Test",
-      "status_claimed": "Completed",
-      "issues": [
-        "Missing 1 artifact(s)"
-      ],
-      "missing_artifacts": [
-        "apps/web/proxy.ts"
-      ]
-    },
-    {
-      "task_id": "IFC-099",
-      "description": "ERP/Payment/Email Connectors",
-      "status_claimed": "Completed",
-      "issues": [
-        "Missing 3 artifact(s)"
-      ],
-      "missing_artifacts": [
-        "tests/integration/connectors/email-gmail.test.ts",
-        "tests/integration/connectors/messaging-slack.test.ts",
-        "tests/integration/connectors/payment-stripe.test.ts"
-      ]
-    },
-    {
-      "task_id": "PG-008",
-      "description": "Security Page",
-      "status_claimed": "Completed",
-      "issues": [
-        "Missing 1 artifact(s)"
-      ],
-      "missing_artifacts": [
-        "apps/web/src/data/security-features.json"
-      ]
-    },
-    {
-      "task_id": "IFC-140",
-      "description": "Implement data governance workflows: DSAR requests; retentio",
-      "status_claimed": "Completed",
-      "issues": [
-        "Missing 1 artifact(s)"
-      ],
-      "missing_artifacts": [
-        "apps/api/src/workflow/dsar-workflow.ts"
-      ]
-    }
-  ],
+  "phantom_completions": [],
   "untracked_by_design": [
     {
       "task_id": "IFC-001",
@@ -6634,14 +6649,6 @@
     }
   ],
   "recommendations": [
-    {
-      "priority": "HIGH",
-      "action": "Create missing artifacts for phantom completions"
-    },
-    {
-      "priority": "LOW",
-      "action": "Consider reverting status to \"In Progress\" until artifacts exist"
-    },
     {
       "priority": "HIGH",
       "action": "Move misplaced attestations to their correct sprint folder, or update CSV Target Sprint"

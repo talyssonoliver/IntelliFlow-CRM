@@ -42,6 +42,14 @@
   --color-popover-foreground: hsl(var(--popover-foreground));
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
+  /* Pipeline stage colours: the --stage-* variables below had no theme tokens, so bg-stage-*
+     classes compiled to nothing and the dashboard's stage bars were invisible. */
+  --color-stage-qualification: hsl(var(--stage-qualification));
+  --color-stage-needs-analysis: hsl(var(--stage-needs-analysis));
+  --color-stage-proposal: hsl(var(--stage-proposal));
+  --color-stage-negotiation: hsl(var(--stage-negotiation));
+  --color-stage-won: hsl(var(--stage-won));
+  --color-stage-lost: hsl(var(--stage-lost));
 
   /* Border radius */
   --radius-lg: var(--radius);
