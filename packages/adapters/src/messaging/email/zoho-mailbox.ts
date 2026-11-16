@@ -122,6 +122,33 @@ async function call(fetchImpl: typeof fetch, url: string, init: RequestInit): Pr
   }
 }
 
+/** Zoho Mail's error codes for a token it no longer accepts (any HTTP status). */
+const DEAD_TOKEN_CODES = new Set(['INVALID_OAUTHTOKEN', 'INVALID_TICKET', 'OAUTH_TOKEN_EXPIRED']);
+
+/** A failed Mail API call as a code: a dead token by its body's errorCode, else by status. */
+async function apiError(response: Response): Promise<MailboxTransportError> {
+  const body = await response.text().catch(() => '');
+  let errorCode: unknown;
+  try {
+    errorCode = (JSON.parse(body) as { data?: { errorCode?: unknown } }).data?.errorCode;
+  } catch {
+    errorCode = undefined;
+  }
+  if (typeof errorCode === 'string' && DEAD_TOKEN_CODES.has(errorCode)) {
+    return new MailboxTransportError('AUTH_FAILED');
+  }
+  return httpError(response.status);
+}
+
+/**
+ * Zoho ids are about 19 digits, past what a JSON number holds exactly: an id is taken as the
+ * digits from the raw text, never through a number.
+ */
+function idFromText(text: string, key: string): string | null {
+  const match = new RegExp(`"${key}"\\s*:\\s*"?(\\d{1,40})`).exec(text);
+  return match ? match[1]! : null;
+}
+
 async function readJson<T>(response: Response): Promise<T> {
   try {
     return (await response.json()) as T;
@@ -244,13 +271,23 @@ export class ZohoMailboxClient {
     const response = await call(this.fetchImpl, `https://${dc.mail}/api/accounts`, {
       headers: this.headers(accessToken),
     });
-    if (!response.ok) throw httpError(response.status);
-    const body = await readJson<{ data?: ZohoAccount[] }>(response);
+    if (!response.ok) throw await apiError(response);
+    const text = await response.text().catch(() => '');
+    let body: { data?: ZohoAccount[] };
+    try {
+      body = JSON.parse(text) as { data?: ZohoAccount[] };
+    } catch {
+      throw new MailboxTransportError('REJECTED');
+    }
     const account = (body.data ?? []).find((a) => a.accountId && a.primaryEmailAddress);
     if (!account) throw new MailboxTransportError('AUTH_FAILED');
     const address = normalised(account.primaryEmailAddress);
     if (!address) throw new MailboxTransportError('AUTH_FAILED');
-    return { accountId: String(account.accountId), address, sendAs: sendAsAddresses(account) };
+    // The first account with an id is the one used; its id is read as text (see idFromText).
+    const accountId =
+      typeof account.accountId === 'string' ? account.accountId : idFromText(text, 'accountId');
+    if (!accountId) throw new MailboxTransportError('AUTH_FAILED');
+    return { accountId, address, sendAs: sendAsAddresses(account) };
   }
 
   /** Sends one message; attachments are uploaded first, as Zoho requires. */
@@ -269,8 +306,8 @@ export class ZohoMailboxClient {
       headers: { ...this.headers(accessToken), 'Content-Type': 'application/json' },
       body: JSON.stringify({
         fromAddress: message.from,
-        toAddress: message.to.join(','),
-        ...(message.cc?.length ? { ccAddress: message.cc.join(',') } : {}),
+        toAddress: primaryRecipients(message).join(','),
+        ...(ccOf(message).length ? { ccAddress: ccOf(message).join(',') } : {}),
         ...(message.bcc?.length ? { bccAddress: message.bcc.join(',') } : {}),
         subject: message.subject,
         content: message.html,
@@ -278,12 +315,9 @@ export class ZohoMailboxClient {
         ...(attachments.length ? { attachments } : {}),
       }),
     });
-    if (!response.ok) throw httpError(response.status);
-    const body = await readJson<{ data?: { messageId?: string | number } }>(response).catch(
-      () => ({}) as { data?: { messageId?: string | number } }
-    );
-    const id = body.data?.messageId;
-    return { providerMessageId: id === undefined || id === null ? null : String(id) };
+    if (!response.ok) throw await apiError(response);
+    const text = await response.text().catch(() => '');
+    return { providerMessageId: idFromText(text, 'messageId') };
   }
 
   private async upload(
@@ -297,7 +331,7 @@ export class ZohoMailboxClient {
       headers: { ...this.headers(accessToken), 'Content-Type': 'application/octet-stream' },
       body: new Uint8Array(file.content),
     });
-    if (!response.ok) throw httpError(response.status);
+    if (!response.ok) throw await apiError(response);
     const body = await readJson<{ data?: UploadedFile | UploadedFile[] }>(response);
     const uploaded = Array.isArray(body.data) ? body.data[0] : body.data;
     if (!uploaded?.storeName || !uploaded.attachmentPath) {
@@ -309,6 +343,21 @@ export class ZohoMailboxClient {
       attachmentName: uploaded.attachmentName ?? file.filename,
     };
   }
+}
+
+/**
+ * Zoho requires a To. A Cc-only send uses its first Cc as the To; a Bcc-only one is addressed to
+ * the sender (the usual way), so no Bcc address is shown to the other Bcc recipients.
+ */
+function primaryRecipients(message: ZohoOutgoingMessage): readonly string[] {
+  if (message.to.length > 0) return message.to;
+  const firstCc = message.cc?.[0];
+  return firstCc ? [firstCc] : [message.from];
+}
+
+function ccOf(message: ZohoOutgoingMessage): readonly string[] {
+  const cc = message.cc ?? [];
+  return message.to.length > 0 ? cc : cc.slice(1);
 }
 
 interface UploadedFile {

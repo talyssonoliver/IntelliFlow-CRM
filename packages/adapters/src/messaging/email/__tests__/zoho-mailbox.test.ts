@@ -232,6 +232,65 @@ describe('ZohoMailboxClient', () => {
     expect(String((error as Error).message)).not.toContain('provider detail');
   });
 
+  it('reads a dead token from the body, whatever the status (Zoho answers 404 for it)', async () => {
+    const fetchImpl = vi.fn(async () =>
+      respond(404, { status: { code: 404 }, data: { errorCode: 'INVALID_OAUTHTOKEN' } })
+    );
+    expect(await codeOf(client(fetchImpl).identity(ACCESS, 'mail.zoho.com'))).toBe('AUTH_FAILED');
+  });
+
+  it('keeps a 19-digit account id and message id exact (past a JSON number)', async () => {
+    const text =
+      '{"data":[{"accountId":2560636000000008002,"primaryEmailAddress":"o@b.example.invalid"}]}';
+    const identity = await client(vi.fn(async () => new Response(text, { status: 200 }))).identity(
+      ACCESS,
+      'mail.zoho.com'
+    );
+    expect(identity.accountId).toBe('2560636000000008002');
+
+    const sent = await client(
+      vi.fn(async () => new Response('{"data":{"messageId":1734567890123456789}}', { status: 200 }))
+    ).sendMessage(
+      ACCESS,
+      { mailHost: 'mail.zoho.com', accountId: '1' },
+      {
+        from: 'o@b.example.invalid',
+        to: ['a@example.invalid'],
+        subject: 's',
+        html: 'h',
+      }
+    );
+    expect(sent.providerMessageId).toBe('1734567890123456789');
+  });
+
+  it.each([
+    [
+      'Cc only',
+      { to: [], cc: ['cy@example.invalid', 'di@example.invalid'] },
+      'cy@example.invalid',
+      'di@example.invalid',
+    ],
+    ['Bcc only', { to: [], bcc: ['bo@example.invalid'] }, 'o@b.example.invalid', undefined],
+  ])(
+    'gives a %s send the To Zoho requires, showing no Bcc address',
+    async (_label, fields, to, cc) => {
+      const fetchImpl = vi.fn(async () => respond(200, { data: {} }));
+      await client(fetchImpl).sendMessage(
+        ACCESS,
+        { mailHost: 'mail.zoho.com', accountId: '1' },
+        {
+          from: 'o@b.example.invalid',
+          subject: 's',
+          html: 'h',
+          ...fields,
+        }
+      );
+      const body = JSON.parse(String(calls(fetchImpl)[0]![1].body));
+      expect(body.toAddress).toBe(to);
+      expect(body.ccAddress).toBe(cc);
+    }
+  );
+
   it('never calls a stored mail host that is not Zoho', async () => {
     const fetchImpl = vi.fn();
     const send = client(fetchImpl).sendMessage(
