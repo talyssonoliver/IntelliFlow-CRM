@@ -98,7 +98,7 @@ const ok = <T,>(data: T): QueryState<T> => ({ data, isLoading: false, error: nul
 function setup(settings: QueryState<EmailSettingsDto> = ok(settingsDto())) {
   api.settings.mockReturnValue(settings);
   api.mine.mockReturnValue(
-    ok({ mailbox: myMailbox, providersAvailable: { GMAIL: true, MICROSOFT: true } })
+    ok({ mailbox: myMailbox, providersAvailable: { GMAIL: true, MICROSOFT: true, ZOHO: false } })
   );
   api.tenant.mockReturnValue(ok(null));
   return render(<EmailSettingsContent />);

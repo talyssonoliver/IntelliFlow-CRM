@@ -899,3 +899,15 @@ waivers:
     author: ai agents lane
     date: '2026-11-12'
     expires: '2026-11-26'
+  - fingerprint: 0424bbbb75a3d9ac287a62a8545522fd68e36dafdbb98599652cabdecc7b32c8
+    reason: >-
+      Handled as the finding's own fallback asks ("flag it"). Zoho Mail's send API has no
+      reply-to field (zoho.com/mail/help/api/post-send-an-email.html lists fromAddress,
+      toAddress, ccAddress, bccAddress, subject, content, mailFormat, askReceipt, encoding and
+      scheduling only), so a reply-to cannot be carried. When a Zoho mailbox is connected, the
+      Reply-to setting says so and points to Zoho Mail's own reply-to (TenantSettingsCards
+      ReplyToCard, zohoConnected). Refusing the send instead would stop all Zoho sending for any
+      tenant with a reply-to set. MVP-001.
+    author: ifc-074 lane
+    date: '2026-11-16'
+    expires: '2026-12-16'

@@ -50,7 +50,8 @@ export function canReadBounces(
 ): boolean {
   if (row.kind === 'SMTP') return Boolean(row.imapHost && row.imapPassword);
   // Gmail holds gmail.send only (owner decision 14/11): its bounce reports are never read.
-  if (row.kind === 'GMAIL') return false;
+  // Zoho holds send and account read only (MVP-001): nothing is read from it either.
+  if (row.kind === 'GMAIL' || row.kind === 'ZOHO') return false;
   return Boolean(row.refreshToken);
 }
 

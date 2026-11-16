@@ -90,7 +90,7 @@ function transports() {
     },
     imap: { read: vi.fn(), verify: vi.fn(async () => undefined) },
     oauth: vi.fn((p: string) => (p === 'GMAIL' ? oauthClient : null)),
-    oauthConfigured: { GMAIL: true, MICROSOFT: false },
+    oauthConfigured: { GMAIL: true, MICROSOFT: false, ZOHO: false },
   };
 }
 
