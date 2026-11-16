@@ -52,6 +52,7 @@ import { toMailboxDto, type MailboxRowLike } from './email-dto';
 import { requireEncryptionKey } from './encryption-guard';
 import { smtpFailure } from './smtp-check';
 import { type TransportMailbox } from './mailbox-transport';
+import { freshScanState, freshSyncState } from './mailbox-fresh-state';
 import {
   checkOAuthMailbox,
   connectAccount,
@@ -118,15 +119,6 @@ function stateHash(state: string): string {
 }
 
 /**
- * A mailbox made ACTIVE again (new credentials or a passing test) starts bounce
- * reading afresh: an old failure streak would otherwise turn the next single
- * scan failure back into ERROR.
- */
-function freshScanState(): { failureCount: number; nextScanAt: Date } {
-  return { failureCount: 0, nextScanAt: new Date() };
-}
-
-/**
  * Creates or updates the scope's mailbox. A racing duplicate is CONFLICT, and
  * so is an update whose row changed since it was read and validated: a kept
  * password is only ever paired with the server it was checked against.
@@ -148,7 +140,7 @@ async function writeMailbox(
           tenantId: existing.tenantId,
           tokenVersion: existing.tokenVersion,
         },
-        data: { ...data, tokenVersion: { increment: 1 }, lockedUntil: null },
+        data: { ...data, ...freshSyncState(), tokenVersion: { increment: 1 }, lockedUntil: null },
       });
     }
     return await ctx.prismaWithTenant.emailMailbox.create({

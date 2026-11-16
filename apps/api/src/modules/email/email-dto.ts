@@ -41,6 +41,8 @@ export interface MailboxRowLike extends SmtpEndpointRow, SmtpAccountRow {
   imapPassword: string | null;
   accountAddress: string | null;
   refreshToken: string | null;
+  /** #1177 Outlook inbox sync: the last finished round (absent on rows read without it). */
+  syncedAt?: Date | null;
   updatedAt: Date;
 }
 
@@ -76,6 +78,7 @@ export function toMailboxDto(
     hasImapPassword: Boolean(row.imapPassword),
     bounceReadingEnabled: canReadBounces(row),
     accountAddress: row.accountAddress,
+    inboxSyncedAt: row.syncedAt ? row.syncedAt.toISOString() : null,
     updatedAt: row.updatedAt.toISOString(),
   };
 }
