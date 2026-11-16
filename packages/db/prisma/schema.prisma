@@ -4467,7 +4467,7 @@ model EmailMailbox {
   scope           String    @db.VarChar(10) // USER | TENANT (SQL CHECK)
   userId          String?
   user            User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  kind            String    @db.VarChar(12) // SMTP | GMAIL | MICROSOFT (SQL CHECK)
+  kind            String    @db.VarChar(12) // SMTP | GMAIL | MICROSOFT | ZOHO (SQL CHECK)
   status          String    @default("ACTIVE") @db.VarChar(14) // ACTIVE | ERROR | DISCONNECTED
   lastErrorCode   String?   @db.VarChar(32)
   fromAddress     String    @db.VarChar(320)
@@ -4487,6 +4487,9 @@ model EmailMailbox {
   /// @encrypted
   refreshToken    String?   @db.Text
   grantedScopes   String[]  @default([])
+  /// MVP-001 Zoho: the Zoho Mail account id and its data centre's API host (not credentials).
+  oauthAccountId  String?   @db.VarChar(64)
+  oauthApiDomain  String?   @db.VarChar(64)
   tokenVersion    Int       @default(0)
   imapUidValidity BigInt?
   imapLastUid     BigInt?
