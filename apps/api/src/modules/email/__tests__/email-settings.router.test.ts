@@ -206,6 +206,23 @@ describe('emailSettings.suppression', () => {
     });
   });
 
+  // #1402: Email Settings reads the list with useInfiniteQuery, whose first page sends
+  // cursor null and direction 'forward'. That input was refused (400) on every load.
+  it('answers the first page as useInfiniteQuery asks for it', async () => {
+    (prismaMock.emailSuppression.findMany as any).mockResolvedValue([]);
+
+    await expect(
+      caller(createAdminContext()).suppression.list({
+        limit: 2,
+        cursor: null,
+        direction: 'forward',
+      })
+    ).resolves.toEqual({ items: [], nextCursor: null });
+    const args = (prismaMock.emailSuppression.findMany as any).mock.calls[0][0];
+    expect(args).not.toHaveProperty('cursor');
+    expect(args.take).toBe(3);
+  });
+
   it('keeps the suppression list (PII) from members', async () => {
     await expect(caller().suppression.list()).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });

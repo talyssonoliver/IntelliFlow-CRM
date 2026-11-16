@@ -42,10 +42,16 @@ export type AddSuppressionInput = z.infer<typeof addSuppressionInputSchema>;
 export const removeSuppressionInputSchema = z.object({ id: idSchema }).strict();
 export type RemoveSuppressionInput = z.infer<typeof removeSuppressionInputSchema>;
 
+/**
+ * The suppression list page. It is read with tRPC's useInfiniteQuery, which adds `cursor` (null
+ * on the first page) and `direction` to the input itself, so both are accepted here (#1402);
+ * `direction` is ignored, the list only pages forward.
+ */
 export const listSuppressionsInputSchema = z
   .object({
-    cursor: idSchema.optional(),
+    cursor: idSchema.nullish(),
     limit: z.number().int().min(1).max(100).default(50),
+    direction: z.enum(['forward', 'backward']).optional(),
   })
   .strict()
   .optional();
