@@ -127,26 +127,36 @@ function ownAddresses(ctx: EmailRouterCtx, email: StoredEmail): Set<string> {
   );
 }
 
-/** Addresses the mail hard-bounced at: it never reached them. */
-function bouncedAddresses(email: Pick<StoredEmail, 'metadata'>): Set<string> {
-  const list = (email.metadata as { hardBouncedRecipients?: unknown } | null)
-    ?.hardBouncedRecipients;
-  return new Set(
-    (Array.isArray(list) ? list : [])
-      .filter((a): a is string => typeof a === 'string')
-      .map((a) => a.toLowerCase())
-  );
+/**
+ * Addresses the mail never reached: refused when it was sent (`rejectedRecipients`, a 4xx too) or
+ * bounced afterwards (`bouncedRecipients`, `hardBouncedRecipients`).
+ */
+const UNREACHED_KEYS = [
+  'rejectedRecipients',
+  'bouncedRecipients',
+  'hardBouncedRecipients',
+] as const;
+
+function unreachedAddresses(email: Pick<StoredEmail, 'metadata'>): Set<string> {
+  const metadata = (email.metadata as Record<string, unknown> | null) ?? {};
+  const out = new Set<string>();
+  for (const key of UNREACHED_KEYS) {
+    const list = metadata[key];
+    if (!Array.isArray(list)) continue;
+    for (const a of list) if (typeof a === 'string') out.add(a.toLowerCase());
+  }
+  return out;
 }
 
 /**
  * The first address that is a lead or contact of the tenant: never the user's own, and never one
- * the mail hard-bounced at (it did not reach them).
+ * the mail did not reach (refused or bounced).
  */
 async function findCounterparty(ctx: EmailRouterCtx, email: StoredEmail) {
   const own = ownAddresses(ctx, email);
-  const bounced = bouncedAddresses(email);
+  const unreached = unreachedAddresses(email);
   for (const address of emailAddresses(email)) {
-    if (own.has(address) || bounced.has(address)) continue;
+    if (own.has(address) || unreached.has(address)) continue;
     const where = {
       tenantId: ctx.tenant.tenantId,
       email: { equals: address, mode: 'insensitive' },

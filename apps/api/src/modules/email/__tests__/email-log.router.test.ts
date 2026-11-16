@@ -158,18 +158,21 @@ describe('emailLog.logToContact (#1177)', () => {
     expect(prismaMock.emailRecord.update).not.toHaveBeenCalled();
   });
 
-  it('skips a recipient the mail hard-bounced at, and links the next one it reached', async () => {
-    (prismaMock.emailRecord.findFirst as any).mockResolvedValue(
-      stored({ metadata: { threadId: 't1', hardBouncedRecipients: ['Ada@example.invalid'] } })
-    );
+  it.each(['hardBouncedRecipients', 'bouncedRecipients', 'rejectedRecipients'])(
+    'skips a recipient listed in %s, and links the next one the mail reached',
+    async (key) => {
+      (prismaMock.emailRecord.findFirst as any).mockResolvedValue(
+        stored({ metadata: { threadId: 't1', [key]: ['Ada@example.invalid'] } })
+      );
 
-    await member().logToContact({ emailId: EMAIL_ID });
+      await member().logToContact({ emailId: EMAIL_ID });
 
-    const looked = (prismaMock.contact.findFirst as any).mock.calls.map(
-      (c: any[]) => c[0].where.email.equals
-    );
-    expect(looked).toEqual(['bob@example.invalid']);
-  });
+      const looked = (prismaMock.contact.findFirst as any).mock.calls.map(
+        (c: any[]) => c[0].where.email.equals
+      );
+      expect(looked).toEqual(['bob@example.invalid']);
+    }
+  );
 
   it('never links a person with an active processing restriction', async () => {
     mockAdapters.processingRestrictionRepository.status.mockResolvedValue({
