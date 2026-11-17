@@ -192,7 +192,8 @@ export type ConvertLeadInput = z.infer<typeof convertLeadSchema>;
 // Convert Lead to Deal Schema (IFC-062: Lead to Deal conversion)
 export const convertLeadToDealSchema = z.object({
   leadId: idSchema,
-  dealValue: z.number().int().positive(),
+  // MVP-003: optional; a deal converted without a value starts at £0 and shows "Add value".
+  dealValue: z.number().int().positive().optional(),
   dealName: z.string().min(1).max(200).trim().optional(),
   accountName: z.string().min(1).max(200).trim().optional(),
   createContact: z.boolean().default(true),

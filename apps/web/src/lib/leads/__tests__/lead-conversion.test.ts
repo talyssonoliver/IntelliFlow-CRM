@@ -71,8 +71,9 @@ describe('deal value', () => {
   it.each(['0', '-5', '12.5', 'abc', '', '1e3'])('rejects %j', (raw) => {
     expect(parseDealValue(raw)).toBeNull();
   });
-  it('explains what is wrong', () => {
-    expect(validateDealValue('')).toMatch(/Enter the deal value/);
+  it('explains what is wrong, and accepts an empty value (not known yet, MVP-003)', () => {
+    expect(validateDealValue('')).toBeNull();
+    expect(validateDealValue('   ')).toBeNull();
     expect(validateDealValue('0')).toMatch(/greater than zero/);
     expect(validateDealValue('250')).toBeNull();
   });
@@ -108,6 +109,13 @@ describe('buildConvertToDealPayload', () => {
 
   it('returns null for an invalid value', () => {
     expect(buildConvertToDealPayload('lead-1', { ...base, dealValue: '0' })).toBeNull();
+  });
+
+  it('leaves the value out when it is empty (MVP-003)', () => {
+    expect(buildConvertToDealPayload('lead-1', { ...base, dealValue: ' ' })).toEqual({
+      leadId: 'lead-1',
+      createContact: true,
+    });
   });
 });
 

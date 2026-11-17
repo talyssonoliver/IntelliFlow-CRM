@@ -35,8 +35,9 @@ export function parseDealValue(raw: string): number | null {
   return Number.isSafeInteger(value) && value > 0 ? value : null;
 }
 
+/** The value is optional (MVP-003): empty is fine and the deal starts with "Add value". */
 export function validateDealValue(raw: string): string | null {
-  if (!raw.trim()) return 'Enter the deal value in pounds.';
+  if (!raw.trim()) return null;
   return parseDealValue(raw) === null
     ? 'Deal value must be a whole number of pounds greater than zero.'
     : null;
@@ -52,25 +53,27 @@ export interface ConvertToDealFormValues {
 
 export interface ConvertToDealPayload {
   leadId: string;
-  dealValue: number;
+  /** Omitted when the value is not known yet. */
+  dealValue?: number;
   createContact: true;
   dealName?: string;
   accountName?: string;
   expectedCloseDate?: Date;
 }
 
-/** Builds the lead.convertToDeal input, or null when the value is invalid. */
+/** Builds the lead.convertToDeal input, or null when a value was typed but is invalid. */
 export function buildConvertToDealPayload(
   leadId: string,
   form: ConvertToDealFormValues
 ): ConvertToDealPayload | null {
-  const dealValue = parseDealValue(form.dealValue);
-  if (dealValue === null) return null;
+  const hasValue = form.dealValue.trim() !== '';
+  const dealValue = hasValue ? parseDealValue(form.dealValue) : null;
+  if (hasValue && dealValue === null) return null;
   const dealName = form.dealName.trim();
   const accountName = form.accountName.trim();
   return {
     leadId,
-    dealValue,
+    ...(dealValue === null ? {} : { dealValue }),
     createContact: true,
     ...(dealName ? { dealName } : {}),
     ...(accountName ? { accountName } : {}),

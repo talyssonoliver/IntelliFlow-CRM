@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-16T15:57:05.406Z",
+  "timestamp": "2026-11-17T12:44:41.155Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 80,
-    "total_endpoints": 614,
-    "total_queries": 265,
-    "total_mutations": 349,
+    "total_routers": 81,
+    "total_endpoints": 616,
+    "total_queries": 266,
+    "total_mutations": 350,
     "routers": [
       {
         "name": "contact",
@@ -1424,6 +1424,12 @@
       },
       {
         "name": "emailLog",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
+        "name": "conversionUndo",
         "endpoints": 2,
         "queries": 1,
         "mutations": 1
@@ -5677,6 +5683,18 @@
         "name": "intelligence.ragSearch",
         "method": "GET",
         "description": "Rag search"
+      }
+    ],
+    "conversionUndo": [
+      {
+        "name": "conversionUndo.status",
+        "method": "GET",
+        "description": "Status"
+      },
+      {
+        "name": "conversionUndo.undo",
+        "method": "POST",
+        "description": "Undo"
       }
     ],
     "leadSettings": [
