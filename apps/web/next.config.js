@@ -1,5 +1,9 @@
 const path = require('path');
 const { withSentryConfig } = require('@sentry/nextjs');
+// The report-only CSP builder the proxy uses. Node strips the types of this import-free module.
+const { buildReportOnlyCsp, cspEnvFromProcess } = require('./src/lib/security/csp.ts');
+
+const CSP_REPORT_ONLY_HEADER = 'Content-Security-Policy-Report-Only';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -139,6 +143,19 @@ const nextConfig = {
           // (policy in src/lib/security/csp.ts), with hosts read from the
           // environment at runtime. Enforcing it needs a nonce or hash plan for
           // Next.js's inline scripts first, including on prerendered pages.
+        ],
+      },
+      // A signed-out request for `/` does not run the proxy (see `config` in src/proxy.ts): it is
+      // the prerendered landing page, served from the CDN without a function. The same
+      // report-only policy is set here for that one response.
+      {
+        source: '/',
+        missing: [{ type: 'cookie', key: 'accessToken' }],
+        headers: [
+          {
+            key: CSP_REPORT_ONLY_HEADER,
+            value: buildReportOnlyCsp(cspEnvFromProcess()),
+          },
         ],
       },
       // PG-203 DSAR (spec sign-off D-AC-10): the confirm and download links carry a token in

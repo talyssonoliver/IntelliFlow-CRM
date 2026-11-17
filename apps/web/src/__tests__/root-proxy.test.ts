@@ -168,16 +168,30 @@ describe('proxy: headers', () => {
 });
 
 describe('config', () => {
+  const [home, pages] = config.matcher as [
+    { source: string; has: Array<{ type: string; key: string }> },
+    string,
+  ];
+
   it('is exported as config so Next.js runs the proxy', () => {
-    expect(config.matcher).toHaveLength(1);
+    expect(config.matcher).toHaveLength(2);
+  });
+
+  it('runs on / only when the request carries the access-token cookie', () => {
+    expect(home).toEqual({ source: '/', has: [{ type: 'cookie', key: 'accessToken' }] });
   });
 
   it('skips API routes, Next.js assets and static files', () => {
-    const matcher = new RegExp(`^${config.matcher[0]}$`);
+    const matcher = new RegExp(`^${pages}$`);
 
     expect(matcher.test('/deals/abc123')).toBe(true);
+    expect(matcher.test('/pricing')).toBe(true);
     expect(matcher.test('/api/trpc/auth.login')).toBe(false);
     expect(matcher.test('/_next/static/chunk.js')).toBe(false);
     expect(matcher.test('/brand/logo.svg')).toBe(false);
+  });
+
+  it('leaves / itself to the cookie rule, so a signed-out / runs no proxy', () => {
+    expect(new RegExp(`^${pages}$`).test('/')).toBe(false);
   });
 });
