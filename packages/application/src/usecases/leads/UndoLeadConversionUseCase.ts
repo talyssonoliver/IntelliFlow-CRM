@@ -127,8 +127,11 @@ export class UndoLeadConversionUseCase {
   private async persist(deal: ConvertedDeal, lead: Lead): Promise<Result<void, DomainError>> {
     try {
       await this.transactionManager.run(async (tx) => {
+        // Lock first, then look: what is seen below is what the delete removes (see lockRecords).
+        await this.conversionUndo.lockRecords(deal, tx);
         const current = await this.conversionUndo.findDeal(deal.opportunityId, deal.tenantId, tx);
         if (!current || current.deleted) throw new Error('the deal was deleted meanwhile');
+        if (current.contactId !== deal.contactId) throw new Error('the deal changed meanwhile');
         const blockers = await this.conversionUndo.findBlockers(current, tx);
         if (blockers.length > 0) throw new UndoBlockedError(blockers);
         await this.conversionUndo.removeCreatedRecords(current, tx);

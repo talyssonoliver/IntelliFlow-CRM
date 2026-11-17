@@ -4,8 +4,13 @@
  *
  * "Since the conversion" is read from what exists, so no migration is needed: a conversion
  * creates the deal at PROSPECTING with nothing attached, and the contact it creates carries the
- * lead's id (Contact.leadId, unique). Records written by the AI on its own (insight notes signed
- * "AI Insights", AI scores, reply drafts) do not count and are removed with the contact.
+ * lead's id (Contact.leadId, unique) and is created in the same transaction as the deal. Records
+ * written by the AI on its own (insight notes signed "AI Insights", AI scores, reply drafts) do
+ * not count and are removed with the contact.
+ *
+ * Contact.leadId alone is an association, not proof of creation (a contact can be linked to a
+ * lead before or after), so a contact counts as created by the conversion only when it was also
+ * created within seconds of the deal. Any doubt keeps the contact.
  */
 import type { PrismaClient } from '@intelliflow/db';
 import type { RepositoryTransaction } from '@intelliflow/domain';
@@ -18,7 +23,16 @@ import type {
 /** userName on the ContactActivity notes the AI insight job writes by itself. */
 export const AI_INSIGHT_AUTHOR = 'AI Insights';
 
+/** A conversion creates its contact and its deal within the same transaction, milliseconds apart. */
+export const CONVERSION_CONTACT_WINDOW_MS = 10_000;
+
 const anyPositive = (counts: number[]) => counts.some((n) => n > 0);
+
+function createdTogether(contactCreatedAt: Date, dealCreatedAt: Date): boolean {
+  return (
+    Math.abs(contactCreatedAt.getTime() - dealCreatedAt.getTime()) <= CONVERSION_CONTACT_WINDOW_MS
+  );
+}
 
 export class PrismaConversionUndoAdapter implements ConversionUndoPort {
   constructor(private readonly prisma: PrismaClient) {}
@@ -40,8 +54,9 @@ export class PrismaConversionUndoAdapter implements ConversionUndoPort {
         sourceLeadId: true,
         stage: true,
         deletedAt: true,
+        createdAt: true,
         contactId: true,
-        contact: { select: { leadId: true } },
+        contact: { select: { leadId: true, createdAt: true } },
       },
     });
     if (!deal) return null;
@@ -53,8 +68,20 @@ export class PrismaConversionUndoAdapter implements ConversionUndoPort {
       deleted: deal.deletedAt !== null,
       contactId: deal.contactId,
       contactCreatedByConversion:
-        deal.sourceLeadId !== null && deal.contact?.leadId === deal.sourceLeadId,
+        deal.sourceLeadId !== null &&
+        deal.contact?.leadId === deal.sourceLeadId &&
+        createdTogether(deal.contact.createdAt, deal.createdAt),
     };
+  }
+
+  async lockRecords(deal: ConvertedDeal, tx: RepositoryTransaction): Promise<void> {
+    const db = this.client(tx);
+    // Row locks (FOR UPDATE) conflict with the key-share lock a child insert takes on its parent,
+    // so a file, product or note added meanwhile waits for this transaction. Same order every time.
+    await db.$queryRaw`SELECT id FROM opportunities WHERE id = ${deal.opportunityId} AND "tenantId" = ${deal.tenantId} FOR UPDATE`;
+    if (deal.contactCreatedByConversion && deal.contactId) {
+      await db.$queryRaw`SELECT id FROM contacts WHERE id = ${deal.contactId} AND "tenantId" = ${deal.tenantId} FOR UPDATE`;
+    }
   }
 
   async findBlockers(

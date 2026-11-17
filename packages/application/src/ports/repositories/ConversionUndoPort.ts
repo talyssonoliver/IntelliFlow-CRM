@@ -18,7 +18,11 @@ export interface ConvertedDeal {
   stage: string;
   deleted: boolean;
   contactId: string | null;
-  /** True when the deal's contact was created by the conversion (Contact.leadId is the lead). */
+  /**
+   * True only when the deal's contact was created by the conversion itself: it points at the lead
+   * AND was created together with the deal. A contact that merely points at the lead (linked to
+   * it earlier or afterwards) or that existed before is never one, so undo never deletes it.
+   */
   contactCreatedByConversion: boolean;
 }
 
@@ -43,6 +47,14 @@ export interface ConversionUndoPort {
    * conversion. Empty means it can be undone. Called again inside the undo transaction.
    */
   findBlockers(deal: ConvertedDeal, tx?: RepositoryTransaction): Promise<ConversionUndoBlocker[]>;
+
+  /**
+   * Locks the deal, and the contact the conversion created, for the rest of the transaction. A
+   * record that points at a locked row (a file, product, note...) cannot be inserted until the
+   * transaction ends, so what findBlockers sees next is what the delete removes: nothing is
+   * deleted unseen with the cascade. Call it before findBlockers, inside the transaction.
+   */
+  lockRecords(deal: ConvertedDeal, tx: RepositoryTransaction): Promise<void>;
 
   /** Deletes the deal, and the contact when the conversion created it. */
   removeCreatedRecords(deal: ConvertedDeal, tx: RepositoryTransaction): Promise<void>;

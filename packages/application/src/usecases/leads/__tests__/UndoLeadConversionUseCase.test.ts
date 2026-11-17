@@ -54,6 +54,7 @@ function setup(
     findBlockers: vi.fn(async (_d: ConvertedDeal, tx?: unknown) =>
       tx ? (opts.blockersInTx ?? opts.blockers ?? []) : (opts.blockers ?? [])
     ),
+    lockRecords: vi.fn(async () => undefined),
     removeCreatedRecords: vi.fn(async () => undefined),
   } satisfies ConversionUndoPort;
   const leadRepository = {
@@ -83,6 +84,16 @@ describe('UndoLeadConversionUseCase.execute', () => {
     expect(result.value.leadId).toBe(lead!.id.value);
     expect(lead!.status).toBe('QUALIFIED');
     expect(port.findBlockers).toHaveBeenLastCalledWith(expect.anything(), TX);
+    // The rows are locked before anything is read inside the transaction (no unseen cascade delete).
+    expect(port.lockRecords).toHaveBeenCalledWith(
+      expect.objectContaining({ opportunityId: 'opp-1' }),
+      TX
+    );
+    const order = (m: { mock: { invocationCallOrder: number[] } }) =>
+      m.mock.invocationCallOrder.at(-1)!;
+    expect(order(port.lockRecords)).toBeLessThan(order(port.findDeal));
+    expect(order(port.lockRecords)).toBeLessThan(order(port.findBlockers));
+    expect(order(port.findBlockers)).toBeLessThan(order(port.removeCreatedRecords));
     expect(port.removeCreatedRecords).toHaveBeenCalledWith(
       expect.objectContaining({ opportunityId: 'opp-1', contactCreatedByConversion: true }),
       TX
@@ -148,6 +159,22 @@ describe('UndoLeadConversionUseCase.execute', () => {
   it('requires who undid it', async () => {
     const result = await setup().useCase.execute({ ...input, undoneBy: ' ' });
     expect(result.error.message).toMatch(/undoneBy is required/);
+  });
+
+  it('does not lock or delete anything when the check outside the transaction already refuses', async () => {
+    const { port, useCase } = setup({ blockers: ['DEAL_HAS_TASKS'] });
+    await useCase.execute(input);
+    expect(port.lockRecords).not.toHaveBeenCalled();
+  });
+
+  it('stops when the deal changed its contact between the check and the lock', async () => {
+    const s = setup();
+    s.port.findDeal
+      .mockResolvedValueOnce(s.deal)
+      .mockResolvedValueOnce({ ...s.deal!, contactId: 'contact-2' });
+    const result = await s.useCase.execute(input);
+    expect(result.error.message).toMatch(/changed meanwhile/);
+    expect(s.port.removeCreatedRecords).not.toHaveBeenCalled();
   });
 
   it('reports a deal deleted between the check and the transaction', async () => {
