@@ -37,10 +37,15 @@ export interface FeedEntryLike {
 export function isSystemFeedEntry(
   entry: Pick<FeedEntryLike, 'type' | 'actor'> & { source?: string }
 ): boolean {
-  if (entry.actor !== null && SYSTEM_AUTHOR.test(entry.actor.name.trim())) return true;
+  const hasPerson = !!entry.actor?.id;
+  const name = entry.actor?.name.trim() ?? '';
+  // The API falls back to the display name "System" for some entries a person wrote (it carries
+  // their id), so the name only counts when no person is attached.
+  if (!hasPerson && SYSTEM_AUTHOR.test(name)) return true;
   if (entry.source === 'TICKET_ACTIVITY') return false;
   if (!SYSTEM_FEED_TYPES.has(entry.type)) return false;
-  return entry.type !== 'STATUS_CHANGE' || !entry.actor?.id;
+  // A status change is a person's when it has a person id or an email as its author.
+  return entry.type !== 'STATUS_CHANGE' || (!hasPerson && !name.includes('@'));
 }
 
 export interface ActivityLogOptions {
@@ -76,7 +81,8 @@ export function splitActivityLog<T extends FeedEntryLike>(
   const personal: T[] = [];
   const system: T[] = [];
   for (const entry of entries) {
-    if (fold && isSystemFeedEntry(entry)) {
+    // What the signed-in person did stays in their feed, whatever its type.
+    if (fold && isSystemFeedEntry(entry) && !isMine(entry)) {
       system.push(entry);
     } else if (!mine || isMine(entry)) {
       personal.push(entry);

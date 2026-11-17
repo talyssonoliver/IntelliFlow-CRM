@@ -63,6 +63,38 @@ describe('isSystemFeedEntry', () => {
     expect(personal.map((e) => e.id)).toEqual(['1', '2']);
   });
 
+  it('does not count the display name "System" when a person id is attached', () => {
+    // The opportunity feed writes { id: userId, name: agentName || 'System' } for a person's entry.
+    expect(isSystemFeedEntry(entry('a', 'NOTE', { id: 'user-1', name: 'System' }))).toBe(false);
+    expect(isSystemFeedEntry(entry('b', 'CALL', { id: 'user-1', name: 'System (portal)' }))).toBe(
+      false
+    );
+  });
+
+  it('treats a status change authored by an email as a person, not the system', () => {
+    const logged = entry('a', 'STATUS_CHANGE', { id: null, name: 'someone@example.invalid' });
+
+    expect(isSystemFeedEntry(logged)).toBe(false);
+  });
+
+  it('keeps his own system-typed entries in his feed, found by his email', () => {
+    const entries = [
+      entry('1', 'STATUS_CHANGE', { id: null, name: 'talysson@example.invalid' }),
+      entry('2', 'SCORE_UPDATE', { id: 'user-1', name: 'Talysson' }),
+      entry('3', 'SCORE_UPDATE', { id: null, name: 'AI Scoring Agent' }),
+    ];
+
+    const { personal, system } = splitActivityLog(entries, {
+      fold: true,
+      mine: false,
+      userId: 'user-1',
+      userNames: ['talysson@example.invalid'],
+    });
+
+    expect(personal.map((e) => e.id)).toEqual(['1', '2']);
+    expect(system.map((e) => e.id)).toEqual(['3']);
+  });
+
   it('is true for a "System (...)" author on any type', () => {
     expect(isSystemFeedEntry(entry('a', 'NOTE', coa))).toBe(true);
     expect(isSystemFeedEntry(entry('b', 'NOTE', { id: null, name: 'System' }))).toBe(true);
