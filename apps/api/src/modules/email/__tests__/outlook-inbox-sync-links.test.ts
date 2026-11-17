@@ -12,6 +12,12 @@ vi.mock('../mailbox-transport', () => ({ getOAuthAccess: tokens.getOAuthAccess }
 import { runInboxSync } from '../outlook-inbox-sync';
 import { TENANT, mail, round, setup } from './inbox-sync-harness';
 
+/** The SQL statements the sync ran: the text with `?` for each bound value, and the values. */
+const writes = (prisma: ReturnType<typeof setup>['prisma']) =>
+  (prisma.$executeRaw.mock.calls as unknown as Array<[TemplateStringsArray, ...unknown[]]>).map(
+    ([strings, ...values]) => ({ sql: strings.join('?').replace(/\s+/g, ' ').trim(), values })
+  );
+
 const sentMail = (overrides: Partial<SyncedMessage> = {}) =>
   mail({
     providerMessageId: 'graph-sent-1',
@@ -119,10 +125,11 @@ describe('mailbox sync: threads and the lead timeline (MVP-001)', () => {
     const data = (prisma.emailRecord.create.mock.calls[0] as unknown as [{ data: any }])[0].data;
     expect(data.metadata.threadId).toBe('sent-1');
     // The first mail carries the thread id too, so the thread view shows it with the reply.
-    expect(prisma.emailRecord.update).toHaveBeenCalledWith({
-      where: { id: 'sent-1', tenantId: TENANT },
-      data: { metadata: { conversationId: 'conv-1', threadId: 'sent-1' } },
-    });
+    const [stamp] = writes(prisma);
+    expect(stamp!.sql).toContain("|| jsonb_build_object('threadId', ?::text)");
+    expect(stamp!.values).toEqual(['sent-1', TENANT, 'mbx-1', 'sent-1', 'conv-1']);
+    // Only the key is merged in the database: no whole metadata object is written back.
+    expect(prisma.emailRecord.update).not.toHaveBeenCalled();
   });
 
   it('skips one mail whose body the provider refuses, and keeps going', async () => {
@@ -212,10 +219,48 @@ describe('mailbox sync: threads and the lead timeline (MVP-001)', () => {
     await runInboxSync(deps);
 
     expect(prisma.emailRecord.create).not.toHaveBeenCalled();
-    expect(prisma.emailRecord.update).toHaveBeenCalledWith({
-      where: { id: 'crm-sent', tenantId: TENANT },
-      data: { metadata: { threadId: 't-1', conversationId: 'zoho-thread-7' } },
-    });
+    const [learn] = writes(prisma);
+    expect(learn!.sql).toContain("|| jsonb_build_object('conversationId', ?::text)");
+    expect(learn!.values).toEqual(['zoho-thread-7', 'crm-sent', TENANT]);
+    // Only the key is merged in the database: the record's other metadata is never rewritten.
+    expect(prisma.emailRecord.update).not.toHaveBeenCalled();
+  });
+
+  it('stamps the thread id on every mail of the conversation that has none, in one statement', async () => {
+    const { prisma, deps } = setup();
+    prisma.emailRecord.findFirst.mockImplementation((async (args: {
+      where: Record<string, unknown>;
+    }) =>
+      isThreadLookup(args.where)
+        ? { id: 'first', metadata: { conversationId: 'conv-1' } }
+        : null) as never);
+
+    await runInboxSync(deps);
+
+    const stamps = writes(prisma).filter((w) => w.sql.includes("'threadId'"));
+    expect(stamps).toHaveLength(1);
+    // The first mail, and the others of the same conversation in the same tenant and mailbox,
+    // each only while they have no thread id; one already there is never replaced.
+    expect(stamps[0]!.sql).toContain('"tenantId" = ? AND "mailboxId" = ?');
+    expect(stamps[0]!.sql).toContain("(id = ? OR metadata->>'conversationId' = ?)");
+    expect(stamps[0]!.sql).toContain("metadata->>'threadId' IS NULL");
+  });
+
+  it('uses the thread id a sync running at the same time stamped on the first mail', async () => {
+    const { prisma, deps } = setup();
+    prisma.emailRecord.findFirst.mockImplementation((async (args: {
+      where: Record<string, any>;
+    }) => {
+      if (isThreadLookup(args.where))
+        return { id: 'first', metadata: { conversationId: 'conv-1' } };
+      // Read back after our own stamp found the id already set by the other sync.
+      return args.where.id === 'first' ? { metadata: { threadId: 'thread-of-other-sync' } } : null;
+    }) as never);
+
+    await runInboxSync(deps);
+
+    const data = (prisma.emailRecord.create.mock.calls[0] as unknown as [{ data: any }])[0].data;
+    expect(data.metadata.threadId).toBe('thread-of-other-sync');
   });
 
   it('threads a reply read in the same run as the CRM mail it answers (Sent learns first)', async () => {
@@ -229,17 +274,19 @@ describe('mailbox sync: threads and the lead timeline (MVP-001)', () => {
     prisma.emailRecord.findFirst.mockImplementation((async (args: {
       where: Record<string, any>;
     }) => {
+      if (args.where.id) return crmSent; // the thread id read back after stamping
       if (!isThreadLookup(args.where)) {
         return args.where.OR[0].providerMessageId === 'graph-sent-1' ? crmSent : null;
       }
       return crmSent.metadata.conversationId === args.where.OR[0].metadata.equals ? crmSent : null;
     }) as never);
-    prisma.emailRecord.update.mockImplementation((async (args: {
-      data: { metadata: Record<string, unknown> };
-    }) => {
-      crmSent.metadata = args.data.metadata;
-      return {};
-    }) as never);
+    // The merge in SQL adds one key to what the record holds.
+    prisma.$executeRaw.mockImplementation(async (strings: unknown, ...values: unknown[]) => {
+      const sql = (strings as TemplateStringsArray).join('?');
+      const key = sql.includes("'conversationId', ?") ? 'conversationId' : 'threadId';
+      crmSent.metadata = { ...crmSent.metadata, [key]: values[0] };
+      return 1;
+    });
 
     await runInboxSync(deps);
 
