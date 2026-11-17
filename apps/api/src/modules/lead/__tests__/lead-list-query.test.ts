@@ -78,6 +78,23 @@ describe('buildLeadListWhere', () => {
     });
   });
 
+  it('with a search and "needs follow-up" together, both must hold (AND, not one merged OR)', () => {
+    const cutoff = new Date('2026-11-10T23:59:59.999Z');
+    const where = buildLeadListWhere({ search: 'fern', lastContactedBefore: cutoff });
+    expect(where.OR).toBeUndefined();
+    expect(where.AND).toEqual([
+      {
+        OR: [
+          { email: { contains: 'fern', mode: 'insensitive' } },
+          { firstName: { contains: 'fern', mode: 'insensitive' } },
+          { lastName: { contains: 'fern', mode: 'insensitive' } },
+          { company: { contains: 'fern', mode: 'insensitive' } },
+        ],
+      },
+      { OR: [{ lastContactedAt: null }, { lastContactedAt: { lte: cutoff } }] },
+    ]);
+  });
+
   it('filters to the given ids, and an empty id list matches nothing', () => {
     expect(buildLeadListWhere({ ids: ['a', 'b'] })).toEqual({ id: { in: ['a', 'b'] } });
     expect(buildLeadListWhere({ ids: [] })).toEqual({ id: { in: [] } });

@@ -83,11 +83,18 @@ export function buildLeadListWhere(filters: {
   // (never contacted) OR older than the threshold. Indexed via
   // @@index([tenantId, lastContactedAt]) in schema.prisma:620.
   if (lastContactedBefore) {
-    baseWhere.OR = [
-      ...((baseWhere.OR as object[] | undefined) ?? []),
+    const followUpOr = [
       { lastContactedAt: null },
       { lastContactedAt: { lte: lastContactedBefore } },
     ];
+    if (baseWhere.OR) {
+      // A search is on as well: both must hold (search AND needs follow-up). Merging them into
+      // one OR made the search match leads it should have excluded.
+      baseWhere.AND = [{ OR: baseWhere.OR }, { OR: followUpOr }];
+      delete baseWhere.OR;
+    } else {
+      baseWhere.OR = followUpOr;
+    }
   }
 
   // PG-059 "Starred": covered by @@index([tenantId, ownerId, isStarred]).
