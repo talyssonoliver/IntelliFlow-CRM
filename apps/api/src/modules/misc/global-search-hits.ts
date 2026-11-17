@@ -20,6 +20,12 @@ function clean(value: string | null | undefined): string {
   return (value ?? '').trim();
 }
 
+/** A deal in the header search: its stage, then its value in pounds (the CRM works in GBP). */
+export function dealSearchSubtitle(stage: string, value: number | string | null): string {
+  const amount = Number(value ?? 0);
+  return `${stage} · £${(Number.isFinite(amount) ? amount : 0).toLocaleString('en-GB')}`;
+}
+
 export function leadSearchText(row: LeadSearchRow): LeadSearchHitText {
   const person = [clean(row.firstName), clean(row.lastName)].filter(Boolean).join(' ');
   const company = clean(row.company);

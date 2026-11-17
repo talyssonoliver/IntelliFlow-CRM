@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { leadSearchText, type LeadSearchRow } from '../global-search-hits';
+import { dealSearchSubtitle, leadSearchText, type LeadSearchRow } from '../global-search-hits';
 
 const row = (overrides: Partial<LeadSearchRow>): LeadSearchRow => ({
   id: 'lead-1',
@@ -36,5 +36,16 @@ describe('leadSearchText (MVP-008: name first, email second)', () => {
       title: 'hello@example.invalid',
       subtitle: null,
     });
+  });
+});
+
+describe('dealSearchSubtitle', () => {
+  it('shows the stage and the value in pounds, never dollars', () => {
+    expect(dealSearchSubtitle('PROPOSAL', 12500)).toBe('PROPOSAL · £12,500');
+  });
+
+  it('reads a decimal string and a missing value as pounds', () => {
+    expect(dealSearchSubtitle('NEGOTIATION', '900.00')).toBe('NEGOTIATION · £900');
+    expect(dealSearchSubtitle('QUALIFICATION', null)).toBe('QUALIFICATION · £0');
   });
 });
