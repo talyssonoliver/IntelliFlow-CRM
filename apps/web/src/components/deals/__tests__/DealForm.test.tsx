@@ -155,6 +155,40 @@ describe('DealForm', () => {
     });
   });
 
+  const unknownValueDeal = {
+    name: 'Pilates rollout',
+    value: { amount: 0, currency: 'GBP' },
+    accountId: ACCOUNT_ID_1,
+    accountName: 'Acme Corp',
+  };
+
+  it('lets a deal whose value is not known yet save other edits (MVP-003)', async () => {
+    const onSubmit = vi.fn();
+    renderDealForm({ onSubmit, mode: 'edit', initialData: unknownValueDeal });
+    fireEvent.change(screen.getByLabelText(/deal name/i), { target: { value: 'Pilates website' } });
+    fireEvent.click(screen.getByText('Save Changes'));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({
+      name: 'Pilates website',
+      value: { amount: 0 },
+    });
+  });
+
+  it('still requires a value above 0 once the deal has one (MVP-003)', async () => {
+    const onSubmit = vi.fn();
+    renderDealForm({
+      onSubmit,
+      mode: 'edit',
+      initialData: { ...unknownValueDeal, value: { amount: 5000, currency: 'GBP' } },
+    });
+    fireEvent.change(screen.getByLabelText(/deal value/i), { target: { value: '0' } });
+    fireEvent.click(screen.getByText('Save Changes'));
+    await waitFor(() =>
+      expect(screen.getByText('Deal value must be greater than 0')).toBeInTheDocument()
+    );
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
   it('validates account selection before submit', async () => {
     const onSubmit = vi.fn();
     renderDealForm({ onSubmit });
