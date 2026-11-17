@@ -65,6 +65,7 @@ function reconstituteOpportunity(record: {
   updatedAt: Date;
   closedAt?: Date | null;
   sourceLeadId?: string | null;
+  createdContactId?: string | null;
   deletedAt?: Date | null;
 }): Opportunity {
   return Opportunity.reconstitute(createOpportunityId(record.id), {
@@ -82,6 +83,7 @@ function reconstituteOpportunity(record: {
     updatedAt: record.updatedAt,
     closedAt: record.closedAt ?? undefined,
     sourceLeadId: record.sourceLeadId ?? undefined,
+    createdContactId: record.createdContactId ?? undefined,
     deletedAt: record.deletedAt ?? null,
   });
 }
@@ -113,6 +115,7 @@ export class PrismaOpportunityRepository implements OpportunityRepository {
       updatedAt: opportunity.updatedAt,
       closedAt: opportunity.closedAt ?? null,
       sourceLeadId: opportunity.sourceLeadId ?? null,
+      createdContactId: opportunity.createdContactId ?? null,
     };
 
     await db.opportunity.upsert({

@@ -71,6 +71,7 @@ interface OpportunityProps {
   accountId: string;
   contactId?: string;
   sourceLeadId?: string;
+  createdContactId?: string;
   ownerId: string;
   tenantId: string;
   createdAt: Date;
@@ -87,6 +88,8 @@ export interface CreateOpportunityProps {
   accountId: string;
   contactId?: string;
   sourceLeadId?: string;
+  /** MVP-003: the contact a lead conversion created for this deal (undo deletes only this one). */
+  createdContactId?: string;
   expectedCloseDate?: Date;
   description?: string;
   ownerId: string;
@@ -143,6 +146,10 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
 
   get sourceLeadId(): string | undefined {
     return this.props.sourceLeadId;
+  }
+
+  get createdContactId(): string | undefined {
+    return this.props.createdContactId;
   }
 
   get ownerId(): string {
@@ -247,6 +254,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
       accountId: props.accountId,
       contactId: props.contactId,
       sourceLeadId: props.sourceLeadId,
+      createdContactId: props.createdContactId,
       ownerId: props.ownerId,
       tenantId: props.tenantId,
       createdAt: now,
@@ -274,9 +282,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
 
   // Commands
   changeStage(newStage: OpportunityStage, changedBy: string): Result<void, DomainError> {
-    if (this.isClosed) {
-      return Result.fail(new OpportunityAlreadyClosedError());
-    }
+    if (this.isClosed) return Result.fail(new OpportunityAlreadyClosedError());
     if (newStage === 'CLOSED_WON' && this.props.value.amount === 0) return this.valueNeededToWin();
 
     const previousStage = this.props.stage;
@@ -298,9 +304,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
   }
 
   updateValue(newValue: number | Money, updatedBy: string): Result<void, DomainError> {
-    if (this.isClosed) {
-      return Result.fail(new OpportunityAlreadyClosedError());
-    }
+    if (this.isClosed) return Result.fail(new OpportunityAlreadyClosedError());
 
     const valueResult = Opportunity.toMoney(newValue, this.props.value.currency);
     if (valueResult.isFailure) return Result.fail(valueResult.error);
@@ -321,9 +325,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     newProbability: number | Percentage,
     updatedBy: string
   ): Result<void, DomainError> {
-    if (this.isClosed) {
-      return Result.fail(new OpportunityAlreadyClosedError());
-    }
+    if (this.isClosed) return Result.fail(new OpportunityAlreadyClosedError());
 
     // Convert to Percentage if number provided
     let percentageValue: Percentage;
@@ -357,9 +359,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     newDate: Date,
     changedBy: string
   ): Result<void, OpportunityAlreadyClosedError> {
-    if (this.isClosed) {
-      return Result.fail(new OpportunityAlreadyClosedError());
-    }
+    if (this.isClosed) return Result.fail(new OpportunityAlreadyClosedError());
 
     const previousDate = this.props.expectedCloseDate ?? null;
     this.props.expectedCloseDate = newDate;
@@ -380,9 +380,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
    * description update is never a "clear", always a new value.
    */
   clearExpectedCloseDate(_changedBy: string): Result<void, OpportunityAlreadyClosedError> {
-    if (this.isClosed) {
-      return Result.fail(new OpportunityAlreadyClosedError());
-    }
+    if (this.isClosed) return Result.fail(new OpportunityAlreadyClosedError());
     this.props.expectedCloseDate = undefined;
     this.props.updatedAt = new Date();
     return Result.ok(undefined);
@@ -396,9 +394,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
   }
 
   markAsWon(closedBy: string): Result<void, DomainError> {
-    if (this.isClosed) {
-      return Result.fail(new OpportunityAlreadyClosedError());
-    }
+    if (this.isClosed) return Result.fail(new OpportunityAlreadyClosedError());
     if (this.props.value.amount === 0) return this.valueNeededToWin();
 
     this.props.stage = 'CLOSED_WON';
@@ -420,9 +416,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
   }
 
   markAsLost(reason: string, closedBy: string): Result<void, DomainError> {
-    if (this.isClosed) {
-      return Result.fail(new OpportunityAlreadyClosedError());
-    }
+    if (this.isClosed) return Result.fail(new OpportunityAlreadyClosedError());
 
     this.props.stage = 'CLOSED_LOST';
 
