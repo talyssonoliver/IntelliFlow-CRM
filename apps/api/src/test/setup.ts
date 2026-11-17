@@ -685,13 +685,13 @@ export const mockOpportunity = {
   contactId: TEST_UUIDS.contact1,
   ownerId: TEST_UUIDS.user1,
   sourceLeadId: null,
+  createdContactId: null,
   deliveryTier: null,
   tenantSlug: null,
   stripeCustomerId: null,
   createdAt: new Date('2024-01-01'),
   updatedAt: new Date('2024-01-01'),
 };
-
 export const mockTask = {
   id: TEST_UUIDS.task1,
   tenantId: TEST_UUIDS.tenant,

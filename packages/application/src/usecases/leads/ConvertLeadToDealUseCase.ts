@@ -195,7 +195,15 @@ export class ConvertLeadToDealUseCase {
     const { contactId, contact, linkExisting } = contactResolution.value;
 
     // 7. Create opportunity
-    const opportunityResult = this.createOpportunityFromLead(lead, input, accountId, contactId);
+    // MVP-003: record the contact this conversion created (not one it linked), so undo can delete it.
+    const createdContactId = contact ? (contactId ?? undefined) : undefined;
+    const opportunityResult = this.createOpportunityFromLead(
+      lead,
+      input,
+      accountId,
+      contactId,
+      createdContactId
+    );
     if (opportunityResult.isFailure) {
       return Result.fail(opportunityResult.error);
     }
@@ -438,7 +446,8 @@ export class ConvertLeadToDealUseCase {
     lead: Lead,
     input: ConvertLeadToDealInput,
     accountId: string,
-    contactId: string | null
+    contactId: string | null,
+    createdContactId?: string
   ): Result<Opportunity, DomainError> {
     // Generate deal name if not provided
     const dealName = input.dealName ?? this.generateDealName(lead);
@@ -450,6 +459,7 @@ export class ConvertLeadToDealUseCase {
       accountId,
       contactId: contactId ?? undefined,
       sourceLeadId: lead.id.value,
+      createdContactId,
       expectedCloseDate: input.expectedCloseDate,
       ownerId: lead.ownerId,
       tenantId: lead.tenantId,
