@@ -6,8 +6,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MailboxTransportError } from '@intelliflow/adapters';
 import type { SyncedMessage } from '../mail-sync-reader';
 
-const tokens = vi.hoisted(() => ({ getOAuthAccess: vi.fn() }));
-vi.mock('../mailbox-transport', () => ({ getOAuthAccess: tokens.getOAuthAccess }));
+const tokens = vi.hoisted(() => ({
+  getOAuthAccess: vi.fn(),
+  hasOAuthClient: vi.fn((..._args: unknown[]) => true),
+}));
+vi.mock('../mailbox-transport', () => ({
+  getOAuthAccess: tokens.getOAuthAccess,
+  hasOAuthClient: tokens.hasOAuthClient,
+  oauthClientEnvNames: (kind: string) => [`EMAIL_OAUTH_${kind}_CLIENT_ID`],
+}));
 
 import {
   inboxSyncEnabled,
