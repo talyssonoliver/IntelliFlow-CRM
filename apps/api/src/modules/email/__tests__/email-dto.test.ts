@@ -5,6 +5,7 @@ import {
   toMailboxDto,
   toSignatureDto,
   toSuppressionDto,
+  replySyncState,
 } from '../email-dto';
 import {
   NO_SMTP_ACCOUNT,
@@ -59,6 +60,7 @@ describe('toMailboxDto', () => {
       bounceReadingEnabled: true,
       accountAddress: null,
       inboxSyncedAt: null,
+      replySync: null,
       updatedAt: updatedAt.toISOString(),
     });
     expect(JSON.stringify(dto)).not.toContain(secret);
@@ -212,5 +214,34 @@ describe('signature and suppression DTOs', () => {
       source: 'DSN',
       createdAt: updatedAt.toISOString(),
     });
+  });
+});
+
+describe('replySyncState (MVP-001)', () => {
+  it('is ON when the kind has a reader and the read permission was granted', () => {
+    expect(replySyncState({ kind: 'MICROSOFT', grantedScopes: ['Mail.Send', 'Mail.Read'] })).toBe(
+      'ON'
+    );
+    expect(
+      replySyncState({
+        kind: 'ZOHO',
+        grantedScopes: ['ZohoMail.messages.READ', 'ZohoMail.folders.READ'],
+      })
+    ).toBe('ON');
+  });
+
+  it('asks for a reconnect when the connection predates the read permission', () => {
+    expect(
+      replySyncState({
+        kind: 'ZOHO',
+        grantedScopes: ['ZohoMail.messages.CREATE', 'ZohoMail.accounts.READ'],
+      })
+    ).toBe('NEEDS_RECONNECT');
+    expect(replySyncState({ kind: 'MICROSOFT', grantedScopes: [] })).toBe('NEEDS_RECONNECT');
+  });
+
+  it('is null for kinds that do not sync', () => {
+    expect(replySyncState({ kind: 'SMTP', grantedScopes: [] })).toBeNull();
+    expect(replySyncState({ kind: 'GMAIL', grantedScopes: ['gmail.send'] })).toBeNull();
   });
 });
