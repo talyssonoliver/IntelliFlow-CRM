@@ -65,6 +65,8 @@ describe('runInboxSync (#1177)', () => {
         metadata: {
           source: 'outlook-sync',
           folder: 'inbox',
+          direction: 'inbound',
+          fromName: 'Ada',
           mailboxOwnerId: 'user-1',
           conversationId: 'conv-1',
         },
@@ -109,19 +111,8 @@ describe('runInboxSync (#1177)', () => {
     const data = (prisma.emailRecord.create.mock.calls[0] as unknown as [{ data: any }])[0].data;
     expect(data.contactId).toBeNull();
     expect(data.metadata.leadId).toBe('lead-1');
-    // A lead's timeline is its activities: the mail shows there as an EMAIL entry.
-    expect(prisma.leadActivity.create).toHaveBeenCalledWith({
-      data: {
-        type: 'EMAIL',
-        title: 'Pricing',
-        timestamp: new Date('2026-11-14T09:00:00.000Z'),
-        userId: 'user-1',
-        userName: 'Synced from email',
-        leadId: 'lead-1',
-        tenantId: TENANT,
-        metadata: { emailRecordId: 'rec-1', source: 'mailbox-sync' },
-      },
-    });
+    // The lead's timeline entry (its author, direction and sender) is in the direction tests.
+    expect(prisma.leadActivity.create).toHaveBeenCalledTimes(1);
   });
 
   it('never stores mail from someone who is not a lead or contact (personal mail, erased people)', async () => {

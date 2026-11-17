@@ -5,7 +5,8 @@
  *   thread id, Outlook's conversation id); a CRM-sent mail found in Sent learns that conversation.
  * - Leads: synced mail with a lead adds an EMAIL activity to the lead's timeline.
  */
-import type { SyncedMessage } from './mail-sync-reader';
+import type { SyncFolder, SyncedMessage } from './mail-sync-reader';
+import { directionOf, senderOf, type RecordMailbox } from './mail-sync-record';
 
 /** The database calls these helpers make (the sync's encrypted Prisma client). */
 export interface SyncDb {
@@ -113,24 +114,41 @@ export async function threadOf(
   return typeof threadId === 'string' ? threadId : root.id;
 }
 
-/** A lead's timeline is its activities: synced mail with a lead gets an EMAIL entry (subject only). */
+/**
+ * A lead's timeline is its activities: synced mail with a lead gets an EMAIL entry (the subject,
+ * never the body), with which way it went and who sent it.
+ * - Mail the owner sent is theirs: their id and the name it was sent under, so "My activity" can
+ *   include it. Mail they received was written by the sender, so it carries no user id and the
+ *   sender's name (or address): it is not the owner's own activity.
+ * - `direction` and `from` (and `fromName`) are in the activity's metadata, for the Emails tab.
+ */
 export async function logOnLead(
   deps: SyncDb,
-  mailbox: SyncLinkMailbox,
+  mailbox: RecordMailbox,
   message: SyncedMessage,
   leadId: string,
-  emailRecordId: string
+  emailRecordId: string,
+  folder: SyncFolder
 ): Promise<void> {
+  const direction = directionOf(folder);
+  const from = senderOf(message, mailbox);
+  const fromName = message.fromName?.trim();
   await deps.prisma.leadActivity.create({
     data: {
       type: 'EMAIL',
       title: message.subject.slice(0, 200),
       timestamp: message.receivedAt,
-      userId: mailbox.userId,
-      userName: 'Synced from email',
+      userId: direction === 'outbound' ? mailbox.userId : null,
+      userName: fromName || from,
       leadId,
       tenantId: mailbox.tenantId,
-      metadata: { emailRecordId, source: 'mailbox-sync' },
+      metadata: {
+        emailRecordId,
+        source: 'mailbox-sync',
+        direction,
+        from,
+        ...(fromName ? { fromName } : {}),
+      },
     },
   });
 }
