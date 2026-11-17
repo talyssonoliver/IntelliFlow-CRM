@@ -1,32 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { ACTIVITY_FEED_TYPES } from '@intelliflow/domain';
-import {
-  PERSONAL_FEED_TYPES,
-  SYSTEM_FEED_TYPES,
-  emptyFeedMessage,
-  isSystemFeedEntry,
-  mergeById,
-  splitActivityLog,
-} from '../activity-log-split';
+import { emptyFeedMessage, isSystemFeedEntry, splitActivityLog } from '../activity-log-split';
 
-const entry = (
-  id: string,
-  type: string,
-  actor: { id: string | null; name: string } | null,
-  timestamp = '2026-11-16T10:00:00Z'
-) => ({ id, type, actor, timestamp });
+const entry = (id: string, type: string, actor: { id: string | null; name: string } | null) => ({
+  id,
+  type,
+  actor,
+});
 
 const me = { id: 'user-1', name: 'Talysson' };
 const other = { id: 'user-2', name: 'Bob Wilson' };
 const coa = { id: null, name: 'System (COA sync)' };
-
-describe('feed type lists', () => {
-  it('cover every feed type exactly once between them', () => {
-    expect([...SYSTEM_FEED_TYPES, ...PERSONAL_FEED_TYPES].sort()).toEqual(
-      [...ACTIVITY_FEED_TYPES].sort()
-    );
-  });
-});
 
 describe('isSystemFeedEntry', () => {
   it('is true for the system types whoever the author is', () => {
@@ -60,33 +43,56 @@ describe('splitActivityLog', () => {
   ];
 
   it('puts what people did in the feed and what the system wrote in the group, in order', () => {
-    const { personal, system } = splitActivityLog(all, null);
+    const { personal, system } = splitActivityLog(all, {
+      fold: true,
+      mine: false,
+      userId: 'user-1',
+    });
 
     expect(personal.map((e) => e.id)).toEqual(['1', '3', '5']);
     expect(system.map((e) => e.id)).toEqual(['2', '4']);
   });
 
   it('keeps only his own entries for My activity, and no system group', () => {
-    const { personal, system } = splitActivityLog(all, 'user-1');
+    const { personal, system } = splitActivityLog(all, {
+      fold: true,
+      mine: true,
+      userId: 'user-1',
+    });
 
     expect(personal.map((e) => e.id)).toEqual(['1', '5']);
     expect(system).toEqual([]);
   });
 
-  it('handles an empty list', () => {
-    expect(splitActivityLog([], null)).toEqual({ personal: [], system: [] });
+  it('shows a chosen type as it is, with no group', () => {
+    const { personal, system } = splitActivityLog(all, {
+      fold: false,
+      mine: false,
+      userId: 'user-1',
+    });
+
+    expect(personal.map((e) => e.id)).toEqual(['1', '2', '3', '4', '5']);
+    expect(system).toEqual([]);
   });
-});
 
-describe('mergeById', () => {
-  it('joins two lists without repeating an entry, newest first', () => {
-    const a = [entry('1', 'NOTE', coa, '2026-11-16T09:00:00Z')];
-    const b = [
-      entry('2', 'NOTE', coa, '2026-11-16T11:00:00Z'),
-      entry('1', 'NOTE', coa, '2026-11-16T09:00:00Z'),
-    ];
+  it('applies My activity to a chosen type too', () => {
+    const { personal } = splitActivityLog(all, { fold: false, mine: true, userId: 'user-1' });
 
-    expect(mergeById(a, b).map((e) => e.id)).toEqual(['2', '1']);
+    expect(personal.map((e) => e.id)).toEqual(['1', '5']);
+  });
+
+  it('matches nothing for My activity until the signed-in person is known', () => {
+    const noAuthor = [entry('1', 'CALL', null), ...all];
+    const { personal } = splitActivityLog(noAuthor, { fold: true, mine: true, userId: null });
+
+    expect(personal).toEqual([]);
+  });
+
+  it('handles an empty list', () => {
+    expect(splitActivityLog([], { fold: true, mine: false, userId: null })).toEqual({
+      personal: [],
+      system: [],
+    });
   });
 });
 

@@ -63,7 +63,6 @@ vi.mock('@/components/shared/activity-feed', () => ({
 }));
 
 import ActivityPage from '../page';
-import { PERSONAL_FEED_TYPES, SYSTEM_FEED_TYPES } from '@/lib/activity/activity-log-split';
 
 const item = (
   id: string,
@@ -98,30 +97,25 @@ function feed(items: unknown[], overrides: Record<string, unknown> = {}) {
   };
 }
 
-/** The person-written query is called with the person-written types, the system one with its own. */
-function mockFeeds(personal: unknown[], system: unknown[], personalOverrides = {}) {
-  mockUseActivityFeed.mockImplementation((options: { types?: string[] }) =>
-    options.types === SYSTEM_FEED_TYPES ? feed(system) : feed(personal, personalOverrides)
-  );
+function mockFeed(items: unknown[], overrides: Record<string, unknown> = {}) {
+  mockUseActivityFeed.mockReturnValue(feed(items, overrides));
 }
+
+const mixed = () => [
+  item('s1', 'Lead lost, moved by the COA sync', 'STATUS_CHANGE', coa),
+  item('p1', 'Call with Acme', 'CALL', me),
+  item('s2', 'Lead scored COLD', 'SCORE_UPDATE', coa),
+  item('p2', 'Email to Bob', 'EMAIL', bob),
+];
 
 describe('ActivityPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseActivityFeedSearch.mockReturnValue({
-      ...feed([]),
-      isSearchActive: false,
-    });
+    mockUseActivityFeedSearch.mockReturnValue({ ...feed([]), isSearchActive: false });
   });
 
-  it('shows his own entries first and folds the system entries into one group', () => {
-    mockFeeds(
-      [item('p1', 'Call with Acme', 'CALL', me), item('p2', 'Email to Bob', 'EMAIL', bob)],
-      [
-        item('s1', 'Lead lost, moved by the COA sync', 'STATUS_CHANGE', coa),
-        item('s2', 'Lead scored COLD', 'SCORE_UPDATE', coa),
-      ]
-    );
+  it('shows what people did first and folds the system entries into one group', () => {
+    mockFeed(mixed());
 
     render(<ActivityPage />);
 
@@ -138,29 +132,28 @@ describe('ActivityPage', () => {
     expect(within(screen.getByTestId('system-feed')).getByText(/COA sync/)).toBeInTheDocument();
   });
 
-  it('asks the server for the person-written types and the system types separately', () => {
-    mockFeeds([], []);
+  it('reads the whole feed, not a type list the server would filter after limiting', () => {
+    mockFeed(mixed());
 
     render(<ActivityPage />);
 
-    const calls = mockUseActivityFeed.mock.calls.map(([options]) => options);
-    expect(calls.some((o) => o.types === PERSONAL_FEED_TYPES && o.enabled)).toBe(true);
-    expect(calls.some((o) => o.types === SYSTEM_FEED_TYPES && o.enabled)).toBe(true);
+    const options = mockUseActivityFeed.mock.calls.map(([o]) => o);
+    expect(options.every((o) => o.types === undefined)).toBe(true);
   });
 
   it('moves an entry written by "System (...)" into the group even when its type is a note', () => {
-    mockFeeds([item('p1', 'Imported note', 'NOTE', coa), item('p2', 'My note', 'NOTE', me)], []);
+    mockFeed([item('p1', 'Imported note', 'NOTE', coa), item('p2', 'My note', 'NOTE', me)]);
 
     render(<ActivityPage />);
 
-    expect(
-      within(screen.getByTestId('personal-feed')).queryByText('Imported note')
-    ).not.toBeInTheDocument();
+    const personal = within(screen.getByTestId('personal-feed'));
+    expect(personal.queryByText('Imported note')).not.toBeInTheDocument();
+    expect(personal.getByText('My note')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /System updates \(1\)/ })).toBeInTheDocument();
   });
 
   it('says only system updates exist when there is nothing person-written yet', () => {
-    mockFeeds([], [item('s1', 'Lead scored COLD', 'SCORE_UPDATE', coa)]);
+    mockFeed([item('s1', 'Lead scored COLD', 'SCORE_UPDATE', coa)]);
 
     render(<ActivityPage />);
 
@@ -172,10 +165,7 @@ describe('ActivityPage', () => {
   });
 
   it('My activity keeps only his own entries and hides the system group', () => {
-    mockFeeds(
-      [item('p1', 'Call with Acme', 'CALL', me), item('p2', 'Email to Bob', 'EMAIL', bob)],
-      [item('s1', 'Lead scored COLD', 'SCORE_UPDATE', coa)]
-    );
+    mockFeed(mixed());
 
     render(<ActivityPage />);
     fireEvent.click(screen.getByRole('button', { name: 'My activity' }));
@@ -190,19 +180,25 @@ describe('ActivityPage', () => {
     expect(screen.queryByRole('button', { name: /System updates/ })).not.toBeInTheDocument();
   });
 
-  it('shows a chosen type as it is, with no system group', () => {
-    mockFeeds([item('p1', 'Call with Acme', 'CALL', me)], [item('s1', 'x', 'SYSTEM', coa)]);
+  it('shows a chosen type as it is, with no system group, and My activity still applies', () => {
+    mockFeed([item('p1', 'Call with Acme', 'CALL', me), item('p2', 'Call with Bob', 'CALL', bob)]);
 
     render(<ActivityPage />);
     fireEvent.click(screen.getByRole('button', { name: 'choose calls' }));
 
     expect(screen.queryByRole('button', { name: /System updates/ })).not.toBeInTheDocument();
-    const calls = mockUseActivityFeed.mock.calls.map(([options]) => options);
-    expect(calls.some((o) => Array.isArray(o.types) && o.types.join() === 'CALL')).toBe(true);
+    expect(mockUseActivityFeed.mock.calls.some(([o]) => o.types?.join() === 'CALL')).toBe(true);
+    let personal = within(screen.getByTestId('personal-feed'));
+    expect(personal.getByText('Call with Bob')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'My activity' }));
+    personal = within(screen.getByTestId('personal-feed'));
+    expect(personal.getByText('Call with Acme')).toBeInTheDocument();
+    expect(personal.queryByText('Call with Bob')).not.toBeInTheDocument();
   });
 
   it('keeps loading older pages while the person-written feed is short', () => {
-    mockFeeds([item('p1', 'Call with Acme', 'CALL', me)], [], { hasNextPage: true });
+    mockFeed([item('p1', 'Call with Acme', 'CALL', me)], { hasNextPage: true });
 
     render(<ActivityPage />);
 
@@ -211,11 +207,32 @@ describe('ActivityPage', () => {
 
   it('does not keep loading once the feed has enough entries', () => {
     const many = Array.from({ length: 10 }, (_, i) => item(`p${i}`, `Call ${i}`, 'CALL', me));
-    mockFeeds(many, [], { hasNextPage: true });
+    mockFeed(many, { hasNextPage: true });
 
     render(<ActivityPage />);
 
     expect(mockFetchNextPage).not.toHaveBeenCalled();
+  });
+
+  it('stops loading by itself at the cap and offers a button to look further back', () => {
+    const noise = Array.from({ length: 500 }, (_, i) =>
+      item(`s${i}`, `Lead scored ${i}`, 'SCORE_UPDATE', coa)
+    );
+    mockFeed(noise, { hasNextPage: true });
+
+    render(<ActivityPage />);
+
+    expect(mockFetchNextPage).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Load older activity' }));
+    expect(mockFetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('has no load-older button when there is nothing older or enough is shown', () => {
+    mockFeed(mixed());
+
+    render(<ActivityPage />);
+
+    expect(screen.queryByRole('button', { name: /older activity/ })).not.toBeInTheDocument();
   });
 
   it('splits a search result the same way', () => {
@@ -226,7 +243,7 @@ describe('ActivityPage', () => {
       ]),
       isSearchActive: true,
     });
-    mockFeeds([], []);
+    mockFeed([]);
 
     render(<ActivityPage />);
 

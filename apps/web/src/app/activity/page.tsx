@@ -15,13 +15,7 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useActivityFeed } from '@/hooks/useActivityFeed';
 import { useActivityFeedSearch } from '@/hooks/useActivityFeedSearch';
 import type { ActivityFeedItemProps } from '@/components/shared/activity-feed/ActivityFeedItem';
-import {
-  PERSONAL_FEED_TYPES,
-  SYSTEM_FEED_TYPES,
-  emptyFeedMessage,
-  mergeById,
-  splitActivityLog,
-} from '@/lib/activity/activity-log-split';
+import { emptyFeedMessage, splitActivityLog } from '@/lib/activity/activity-log-split';
 import type { ActivityFeedType } from '@intelliflow/domain';
 
 const DEFAULT_FILTER: ActivityFeedTypeFilterValue = 'all';
@@ -50,27 +44,24 @@ export default function ActivityPage() {
   }, [searchParams]);
 
   // "All Activity" folds the system's entries into one group; picking a type shows that type as is.
+  // The feed is read whole and split here: the API filters by type after limiting each source's
+  // rows, so asking it for "everything but the system's types" could hide older entries.
   const foldSystem = feedFilter === 'all';
   const feedTypes = useMemo(
-    () => (foldSystem ? PERSONAL_FEED_TYPES : [feedFilter as ActivityFeedType]),
+    () => (foldSystem ? undefined : [feedFilter as ActivityFeedType]),
     [feedFilter, foldSystem]
   );
 
   const search = useActivityFeedSearch({
     query: deferredSearch,
     limit: 50,
-    types: foldSystem ? undefined : feedTypes,
+    types: feedTypes,
     enabled: isAuthenticated,
   });
   const personalFeed = useActivityFeed({
     limit: 50,
     types: feedTypes,
     enabled: isAuthenticated && !search.isSearchActive,
-  });
-  const systemFeed = useActivityFeed({
-    limit: 50,
-    types: SYSTEM_FEED_TYPES,
-    enabled: isAuthenticated && !search.isSearchActive && foldSystem && !mineOnly,
   });
   const source: {
     items: ActivityFeedItemProps[];
@@ -81,35 +72,23 @@ export default function ActivityPage() {
     hasNextPage: boolean;
     fetchNextPage: () => void;
   } = search.isSearchActive ? search : personalFeed;
-  const mineUserId = mineOnly ? (user?.id ?? null) : null;
-  const split = useMemo(
-    () =>
-      foldSystem
-        ? splitActivityLog(source.items, mineUserId)
-        : { personal: source.items, system: [] },
-    [foldSystem, source.items, mineUserId]
+  const userId = user?.id ?? null;
+  const { personal: personalItems, system: systemItems } = useMemo(
+    () => splitActivityLog(source.items, { fold: foldSystem, mine: mineOnly, userId }),
+    [source.items, foldSystem, mineOnly, userId]
   );
-  // A disabled query still returns what it cached, so the group is shown only while it applies.
-  const showSystemGroup = foldSystem && !mineOnly;
-  const systemFeedLive = showSystemGroup && !search.isSearchActive;
-  const systemItems = useMemo(
-    () =>
-      showSystemGroup
-        ? mergeById<ActivityFeedItemProps>(systemFeedLive ? systemFeed.items : [], split.system)
-        : [],
-    [showSystemGroup, systemFeedLive, systemFeed.items, split.system]
-  );
-  const systemHasMore = systemFeedLive && systemFeed.hasNextPage;
 
   // The system writes most of this workspace's entries, so a page of 50 may hold few or none of
   // the person-written ones: keep loading older pages (bounded) until the feed has some.
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = source;
+  const personalShort = personalItems.length < MIN_PERSONAL_ENTRIES;
+  const autoLoadCapReached = source.items.length >= MAX_AUTO_LOADED_ENTRIES;
   useEffect(() => {
-    if (!hasNextPage || isFetchingNextPage) return;
-    if (split.personal.length >= MIN_PERSONAL_ENTRIES) return;
-    if (source.items.length >= MAX_AUTO_LOADED_ENTRIES) return;
+    if (!hasNextPage || isFetchingNextPage || !personalShort || autoLoadCapReached) return;
     fetchNextPage();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage, split.personal.length, source.items.length]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, personalShort, autoLoadCapReached]);
+  // Past the cap, the empty feed has no Load More of its own, so offer one here.
+  const showLoadOlder = hasNextPage && personalShort && autoLoadCapReached;
 
   const hasActiveFilter = feedFilter !== DEFAULT_FILTER || searchInput.length > 0 || mineOnly;
   const deepLinkedSystemId =
@@ -204,7 +183,7 @@ export default function ActivityPage() {
             />
           </div>
           <ActivityFeed
-            items={split.personal}
+            items={personalItems}
             isLoading={source.isLoading}
             isError={source.isError}
             error={source.error}
@@ -221,18 +200,30 @@ export default function ActivityPage() {
             })}
             selectedId={selectedActivityId}
           />
+          {showLoadOlder && (
+            <div className="px-5 pb-4 text-center">
+              <button
+                type="button"
+                onClick={() => fetchNextPage()}
+                disabled={isFetchingNextPage}
+                className="px-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50"
+              >
+                {isFetchingNextPage ? 'Loading older activity…' : 'Load older activity'}
+              </button>
+            </div>
+          )}
           {systemItems.length > 0 && (
             <div className="p-3 sm:p-4 border-t border-[#e2e8f0] dark:border-[#334155]">
               <SystemUpdatesGroup
                 count={systemItems.length}
-                more={systemHasMore}
+                more={hasNextPage}
                 deepLinkedId={deepLinkedSystemId}
               >
                 <ActivityFeed
                   items={systemItems}
-                  hasNextPage={systemHasMore}
-                  fetchNextPage={systemFeed.fetchNextPage}
-                  isFetchingNextPage={systemFeed.isFetchingNextPage}
+                  hasNextPage={hasNextPage}
+                  fetchNextPage={fetchNextPage}
+                  isFetchingNextPage={isFetchingNextPage}
                   height={480}
                   selectedId={selectedActivityId}
                 />
