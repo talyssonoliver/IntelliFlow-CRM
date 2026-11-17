@@ -1262,6 +1262,9 @@ model Opportunity {
   contactId     String?
   contact       Contact?            @relation(fields: [contactId], references: [id])
   sourceLeadId  String?
+  // MVP-003: the contact this deal's lead conversion created. Null when the conversion linked an
+  // existing contact, created none, or predates this column. Undo deletes only this contact.
+  createdContactId String?
   tasks         Task[]
   products      DealProduct[]
   files         DealFile[]
