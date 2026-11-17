@@ -277,6 +277,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     if (this.isClosed) {
       return Result.fail(new OpportunityAlreadyClosedError());
     }
+    if (newStage === 'CLOSED_WON' && this.props.value.amount === 0) return this.valueNeededToWin();
 
     const previousStage = this.props.stage;
     this.props.stage = newStage;
@@ -387,10 +388,18 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
     return Result.ok(undefined);
   }
 
+  /** MVP-003: a won deal can no longer be edited, so its value must be known before it is won. */
+  private valueNeededToWin(): Result<void, DomainError> {
+    return Result.fail(
+      new InvalidOpportunityValueError('Add the deal value before marking it won')
+    );
+  }
+
   markAsWon(closedBy: string): Result<void, DomainError> {
     if (this.isClosed) {
       return Result.fail(new OpportunityAlreadyClosedError());
     }
+    if (this.props.value.amount === 0) return this.valueNeededToWin();
 
     this.props.stage = 'CLOSED_WON';
 

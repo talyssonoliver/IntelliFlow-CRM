@@ -34,6 +34,23 @@ describe('Opportunity value rules (MVP-003)', () => {
     expect(ok.isSuccess).toBe(true);
   });
 
+  it('cannot be won until its value is known (a won deal can no longer be edited)', () => {
+    const deal = Opportunity.create({ ...base, value: 0, valueNotYetKnown: true }).value;
+    const won = deal.markAsWon('owner-1');
+    expect(won.isFailure).toBe(true);
+    expect(won.error.message).toBe('Add the deal value before marking it won');
+    expect(deal.changeStage('CLOSED_WON', 'owner-1').isFailure).toBe(true);
+    expect(deal.stage).toBe('PROSPECTING');
+    expect(deal.changeStage('NEGOTIATION', 'owner-1').isSuccess).toBe(true);
+    expect(deal.markAsLost('Went with another agency', 'owner-1').isSuccess).toBe(true);
+  });
+
+  it('can be won once a value is added', () => {
+    const deal = Opportunity.create({ ...base, value: 0, valueNotYetKnown: true }).value;
+    deal.updateValue(3000, 'owner-1');
+    expect(deal.markAsWon('owner-1').isSuccess).toBe(true);
+  });
+
   it('lets a value be added later, and still refuses setting it back to 0', () => {
     const deal = Opportunity.create({ ...base, value: 0, valueNotYetKnown: true }).value;
     expect(deal.updateValue(2500, 'owner-1').isSuccess).toBe(true);
