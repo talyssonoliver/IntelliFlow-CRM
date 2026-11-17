@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   toast: vi.fn(),
   undoMutate: vi.fn(),
-  refetch: vi.fn(),
+  refetch: vi.fn(() => Promise.resolve()),
   revalidateLead: vi.fn(async () => undefined),
   revalidateDeal: vi.fn(async () => undefined),
   status: {
