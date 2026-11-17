@@ -246,6 +246,10 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
     retry: () => void refetchLeads(),
   };
   const qualified = leadStats?.byStatus?.QUALIFIED ?? 0;
+  // The next step needs the lead counts; without the deals it can still say "convert a qualified
+  // lead", but must not guess "qualify a lead" while it is unknown whether deals exist.
+  const dealsKnown = !dealsState.loading && !dealsState.failed;
+  const showNextStep = !leadsState.loading && !leadsState.failed && (qualified > 0 || dealsKnown);
 
   return (
     <div className="p-4 sm:p-6 h-full flex flex-col">
@@ -270,9 +274,7 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
           <DealsSection stages={stages} state={dealsState} />
         </div>
       </div>
-      {!leadsState.failed && !leadsState.loading && (
-        <NextStep qualified={qualified} hasDeals={hasOpenDeals(stages)} />
-      )}
+      {showNextStep && <NextStep qualified={qualified} hasDeals={hasOpenDeals(stages)} />}
     </div>
   );
 }

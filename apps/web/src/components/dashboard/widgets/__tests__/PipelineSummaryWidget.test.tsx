@@ -101,9 +101,12 @@ describe('PipelineSummaryWidget: one funnel, leads then deals', () => {
 });
 
 describe('PipelineSummaryWidget leads add up', () => {
-  it("counts every lead: the owner's 121 leads, 15 of them lost or unqualified", () => {
+  it("counts every lead: the owner's 121 leads, 15 of them out of the funnel", () => {
     leads = {
-      data: { total: 121, byStatus: { NEW: 1, CONTACTED: 105, LOST: 9, UNQUALIFIED: 6 } },
+      data: {
+        total: 121,
+        byStatus: { NEW: 1, CONTACTED: 105, LOST: 9, UNQUALIFIED: 4, DISQUALIFIED: 1, ARCHIVED: 1 },
+      },
       isLoading: false,
     };
     render(<PipelineSummaryWidget />);
@@ -112,13 +115,13 @@ describe('PipelineSummaryWidget leads add up', () => {
     expect(within(section).getByText('121 leads')).toBeInTheDocument();
     expect(within(section).getByText('1 lead')).toBeInTheDocument();
     expect(within(section).getByText('105 leads')).toBeInTheDocument();
-    expect(within(section).getByText('Lost or unqualified')).toBeInTheDocument();
+    expect(within(section).getByText('Left the funnel')).toBeInTheDocument();
     expect(within(section).getByText('15 leads')).toBeInTheDocument();
   });
 
-  it('has no "Lost or unqualified" line when every lead is in the funnel', () => {
+  it('has no "Left the funnel" line when every lead is in the funnel', () => {
     render(<PipelineSummaryWidget />);
-    expect(screen.queryByText('Lost or unqualified')).not.toBeInTheDocument();
+    expect(screen.queryByText('Left the funnel')).not.toBeInTheDocument();
   });
 });
 
@@ -163,6 +166,31 @@ describe('PipelineSummaryWidget next step with open deals', () => {
       'href',
       '/deals?view=pipeline'
     );
+  });
+});
+
+describe('PipelineSummaryWidget next step while the deals are unknown', () => {
+  const noneQualified = { data: { total: 3, byStatus: { NEW: 3 } }, isLoading: false };
+
+  it('gives no advice while the deals load: it cannot tell "qualify a lead" from "open the board"', () => {
+    leads = noneQualified;
+    pipeline = { data: undefined, isLoading: true };
+    render(<PipelineSummaryWidget />);
+    expect(screen.queryByText(/Qualify a lead|Open the board/)).not.toBeInTheDocument();
+  });
+
+  it('gives no advice when the deals failed and no lead is qualified', () => {
+    leads = noneQualified;
+    pipeline = { data: undefined, isLoading: false, isError: true, refetch: vi.fn() };
+    render(<PipelineSummaryWidget />);
+    expect(screen.queryByText('Qualify a lead to convert it to a deal')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Go to leads' })).not.toBeInTheDocument();
+  });
+
+  it('still points at a qualified lead when the deals failed: that needs no deals', () => {
+    pipeline = { data: undefined, isLoading: false, isError: true, refetch: vi.fn() };
+    render(<PipelineSummaryWidget />);
+    expect(screen.getByText('1 lead qualified, ready to convert to a deal')).toBeInTheDocument();
   });
 });
 

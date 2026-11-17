@@ -2,8 +2,8 @@
  * Pipeline Summary card data (MVP-009): one funnel with two parts, always both shown. First where
  * the workspace's leads stand (from the same lead.stats the Total Leads card reads), then its
  * deals by stage as they are created. The leads part always adds up to the workspace's lead total:
- * leads that left the funnel (lost, unqualified) are counted on their own line rather than
- * dropped, so the card never disagrees with the Total Leads card beside it.
+ * leads that left the funnel (lost, unqualified, disqualified, archived) are counted on their own
+ * line rather than dropped, so the card never disagrees with the Total Leads card beside it.
  */
 
 /** The lead statuses a lead moves through on its way to a deal, in order. */
@@ -26,7 +26,7 @@ export interface FunnelRow {
 export interface LeadFunnel {
   /** Every funnel step in order, counting a missing status as 0. */
   rows: FunnelRow[];
-  /** Leads outside the funnel (lost, unqualified): total minus the funnel steps. */
+  /** Leads outside the funnel (lost, unqualified, disqualified, archived): total minus its steps. */
   other: FunnelRow | null;
   /** All the workspace's leads: what the Total Leads card shows. */
   total: number;
@@ -66,7 +66,7 @@ export function leadFunnel(stats: LeadStatsLike | undefined): LeadFunnel {
       otherCount > 0
         ? {
             status: 'OTHER',
-            label: 'Lost or unqualified',
+            label: 'Left the funnel',
             count: otherCount,
             percent: percent(otherCount),
           }

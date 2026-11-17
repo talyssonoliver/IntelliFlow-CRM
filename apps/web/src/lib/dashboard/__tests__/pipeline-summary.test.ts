@@ -21,13 +21,14 @@ describe('leadFunnel', () => {
   });
 
   it("adds up to the workspace's lead total: the owner's 121 leads", () => {
-    // 1 new + 105 contacted + 15 that left the funnel (lost or unqualified) = 121.
+    // 1 new + 105 contacted + 15 that left the funnel (lost, unqualified, disqualified or
+    // archived: every status outside the funnel) = 121.
     const { rows, other, total } = leadFunnel({
       total: 121,
-      byStatus: { NEW: 1, CONTACTED: 105, LOST: 9, UNQUALIFIED: 6 },
+      byStatus: { NEW: 1, CONTACTED: 105, LOST: 9, UNQUALIFIED: 4, DISQUALIFIED: 1, ARCHIVED: 1 },
     });
     expect(total).toBe(121);
-    expect(other).toMatchObject({ label: 'Lost or unqualified', count: 15 });
+    expect(other).toMatchObject({ label: 'Left the funnel', count: 15 });
     expect(rows.reduce((sum, r) => sum + r.count, 0) + (other?.count ?? 0)).toBe(121);
   });
 
