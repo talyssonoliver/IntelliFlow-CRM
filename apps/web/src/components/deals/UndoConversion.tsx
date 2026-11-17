@@ -37,6 +37,10 @@ function logCacheFailure(error: unknown): void {
   console.warn('[UndoConversion] Cache revalidation failed:', error);
 }
 
+function logRecheckFailure(error: unknown): void {
+  console.warn('[UndoConversion] Re-checking the undo status failed:', error);
+}
+
 /**
  * Undoes the conversion through the plain client, so it still works after the page that
  * converted has navigated away (the convert toast). Resolves to the lead's id.
@@ -133,7 +137,7 @@ export function useConversionUndo(dealId: string, userId?: string, enabled = tru
       router.push(`/leads/${leadId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'The conversion could not be undone.');
-      void status.refetch();
+      status.refetch().catch(logRecheckFailure);
     } finally {
       setPending(false);
     }
@@ -146,7 +150,7 @@ export function useConversionUndo(dealId: string, userId?: string, enabled = tru
         onClick: () => {
           setError(null);
           setOpen(true);
-          void status.refetch();
+          status.refetch().catch(logRecheckFailure);
         },
       }
     : null;
