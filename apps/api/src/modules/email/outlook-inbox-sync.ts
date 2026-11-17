@@ -19,7 +19,15 @@
  * affected by a sync problem.
  */
 import { MailboxTransportError } from '@intelliflow/adapters';
-import { getOAuthAccess, type MailboxTransports, type TransportMailbox } from './mailbox-transport';
+import {
+  getOAuthAccess,
+  hasOAuthClient,
+  oauthClientEnvNames,
+  type MailboxTransports,
+  type TransportMailbox,
+} from './mailbox-transport';
+import { countOutcome, logFailure, logNoClient, logRound, newTally } from './mail-sync-report';
+import type { FolderTally } from './mail-sync-report';
 import {
   PRODUCTION_READERS,
   type MailSyncReader,
@@ -315,6 +323,8 @@ interface MailboxRun {
   /** Epoch ms after which no more mail of this mailbox is stored (bodies are read while storing). */
   storeBy: number;
   report: InboxSyncReport;
+  /** What each folder's round read and did with it (logged once the mailbox is done). */
+  tallies: Record<SyncFolder, FolderTally>;
 }
 
 /** A folder's round, and the cursor it actually started from (null after a restart). */
@@ -351,15 +361,19 @@ async function syncFolder(
   cursor: string | null
 ): Promise<SyncRound> {
   const { round, startedFrom } = await readRound(deps, run, folder, cursor);
-  for (const message of round.messages) {
+  const tally = run.tallies[folder];
+  countOutcome(tally, 'read', round.messages.length);
+  for (const [index, message] of round.messages.entries()) {
     // Out of time for this mailbox: stop well inside the lease, so no other worker takes it over
     // mid-write. The folder keeps the cursor its round started from (never a rejected one, which
     // would repeat the failed read and restart every tick) and stays due; what was stored is
     // deduped next time.
     if (deps.now().getTime() >= run.storeBy) {
+      countOutcome(tally, 'left', round.messages.length - index);
       return { ...round, cursor: startedFrom, complete: false };
     }
     const outcome = await storeSyncedMessage(deps, mailbox, message, folder, run.reader.provider);
+    countOutcome(tally, outcome);
     if (outcome === 'stored') run.report.stored += 1;
     else run.report.skipped += 1;
   }
@@ -384,6 +398,14 @@ async function syncMailbox(
     });
     return;
   }
+  // No OAuth client for this kind in this process (its env lacks it): a setup gap, not a mailbox
+  // failure. Checked again next interval, no failure counted, no backoff.
+  if (!hasOAuthClient(deps.transports, mailbox.kind)) {
+    const nextSyncAt = new Date(now.getTime() + INBOX_SYNC_INTERVAL_MS);
+    await release(deps, claim, mailbox.tokenVersion, { nextSyncAt });
+    logNoClient(claim.id, mailbox.kind, oauthClientEnvNames(mailbox.kind));
+    return;
+  }
   // A folder that finished keeps its cursor even when the other one then fails.
   const progress: Record<string, unknown> = {};
   // The credential version this round runs on (a refresh that rotates the token moves it on).
@@ -399,7 +421,8 @@ async function syncMailbox(
       startedAt + MAILBOX_STORE_BUDGET_MS,
       claim.leaseUntil.getTime() - LEASE_MARGIN_MS
     );
-    const run: MailboxRun = { reader, mailbox, token, now, deadline, storeBy, report };
+    const tallies = { sentitems: newTally(), inbox: newTally() };
+    const run: MailboxRun = { reader, mailbox, token, now, deadline, storeBy, report, tallies };
     // Sent first: a CRM-sent mail learns its provider conversation there, so a reply read in the
     // same run (or the first run's 30 days) already finds the thread it joins.
     const sent = await syncFolder(deps, mailbox, run, 'sentitems', mailbox.syncSentCursor);
@@ -415,6 +438,7 @@ async function syncMailbox(
         inbox.complete && sent.complete ? new Date(now.getTime() + INBOX_SYNC_INTERVAL_MS) : now,
       syncFailureCount: 0,
     });
+    logRound(claim.id, mailbox.kind, tallies, inbox.complete && sent.complete);
   } catch (error) {
     report.failures += 1;
     const failures = mailbox.syncFailureCount + 1;
@@ -424,8 +448,7 @@ async function syncMailbox(
       syncFailureCount: failures,
       nextSyncAt: new Date(now.getTime() + backoff),
     });
-    const code = error instanceof MailboxTransportError ? error.code : 'CONNECT_FAILED';
-    console.error('[email] inbox sync failed', { mailboxId: claim.id, code });
+    logFailure(claim.id, error);
   }
 }
 
