@@ -31,6 +31,11 @@ export function metaOf(record: { metadata: unknown }): Record<string, unknown> {
 /**
  * A mail the CRM sent, found again in the provider's Sent folder: it learns its provider thread id,
  * so the replies the sync reads later join its conversation (Zoho keeps no Message-ID of ours).
+ *
+ * The key is set in the database itself (`metadata || {...}`), never written back from a copy read
+ * earlier: another job may have changed the same record's metadata meanwhile (the bounce reader
+ * adds the recipients that bounced), and a whole-object write would undo that. The write only
+ * happens while the record has no conversation yet, so two syncs cannot replace each other's.
  */
 export async function learnThread(
   deps: SyncDb,
@@ -38,12 +43,37 @@ export async function learnThread(
   record: LoggedRecord,
   message: SyncedMessage
 ) {
-  const meta = metaOf(record);
-  if (!message.conversationId || meta.conversationId) return;
-  await deps.prisma.emailRecord.update({
-    where: { id: record.id, tenantId: mailbox.tenantId },
-    data: { metadata: { ...meta, conversationId: message.conversationId } },
-  });
+  const conversationId = message.conversationId;
+  if (!conversationId || metaOf(record).conversationId) return;
+  await deps.prisma.$executeRaw`
+    UPDATE email_records
+    SET metadata = COALESCE(metadata, '{}'::jsonb)
+      || jsonb_build_object('conversationId', ${conversationId}::text)
+    WHERE id = ${record.id} AND "tenantId" = ${mailbox.tenantId}
+      AND (metadata IS NULL
+        OR (jsonb_typeof(metadata) = 'object' AND metadata->>'conversationId' IS NULL))`;
+}
+
+/**
+ * Gives the thread id to the first mail of a conversation and to every other mail of it that has
+ * none (mail logged before threads were stamped, or matched by conversation later), in one
+ * statement that only adds the key: nothing else in anyone's metadata is rewritten, and a thread id
+ * already there is never replaced. The thread view shows the mail that carries the id.
+ */
+async function stampThread(
+  deps: SyncDb,
+  mailbox: SyncLinkMailbox,
+  rootId: string,
+  conversationId: string
+): Promise<void> {
+  await deps.prisma.$executeRaw`
+    UPDATE email_records
+    SET metadata = COALESCE(metadata, '{}'::jsonb)
+      || jsonb_build_object('threadId', ${rootId}::text)
+    WHERE "tenantId" = ${mailbox.tenantId} AND "mailboxId" = ${mailbox.id}
+      AND (id = ${rootId} OR metadata->>'conversationId' = ${conversationId})
+      AND (metadata IS NULL
+        OR (jsonb_typeof(metadata) = 'object' AND metadata->>'threadId' IS NULL))`;
 }
 
 /** The CRM thread a mail belongs to: the thread of a logged mail in the same provider conversation. */
@@ -68,15 +98,19 @@ export async function threadOf(
     select: { id: true, metadata: true },
   });
   if (!root) return null;
-  const meta = metaOf(root);
-  if (typeof meta.threadId === 'string') return meta.threadId;
-  // The first mail of the conversation starts the thread: it carries the thread id too, so the
-  // thread view (which reads mail by metadata.threadId) shows it with its replies.
-  await deps.prisma.emailRecord.update({
+  const known = metaOf(root).threadId;
+  if (typeof known === 'string') return known;
+  // The first mail of the conversation starts the thread: it carries the thread id too (and so
+  // does every mail of the conversation without one), so the thread view, which reads mail by
+  // metadata.threadId, shows them with the replies.
+  await stampThread(deps, mailbox, root.id, message.conversationId);
+  // A sync running at the same time may have stamped the root first: use what the root holds.
+  const stamped = await deps.prisma.emailRecord.findFirst({
     where: { id: root.id, tenantId: mailbox.tenantId },
-    data: { metadata: { ...meta, threadId: root.id } },
+    select: { metadata: true },
   });
-  return root.id;
+  const threadId = stamped ? metaOf(stamped).threadId : undefined;
+  return typeof threadId === 'string' ? threadId : root.id;
 }
 
 /** A lead's timeline is its activities: synced mail with a lead gets an EMAIL entry (subject only). */

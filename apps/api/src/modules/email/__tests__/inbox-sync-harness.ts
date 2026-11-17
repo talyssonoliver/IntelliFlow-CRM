@@ -81,6 +81,7 @@ export function setup(
   const claims = [{ id: 'mbx-1', syncLockedUntil: LEASE }];
   const prisma = {
     $queryRaw: vi.fn(async () => claims.splice(0, 1)),
+    $executeRaw: vi.fn(async (..._statement: unknown[]) => 1),
     $transaction: vi.fn(
       async (work: (tx: unknown) => Promise<unknown>): Promise<unknown> => work(prisma)
     ),
