@@ -3692,7 +3692,9 @@ MVP-004:
   acceptance_owner: 'Owner'
   debt_allowed: no
   evidence_required:
-    - .specify/sprints/sprint-24/attestations/MVP-004/owner-screenshot.png
+    # Production captures stay out of this public repository; the attestation records the merged
+    # PRs, the check and the captures' SHA-256 hashes.
+    - .specify/sprints/sprint-24/attestations/MVP-004/attestation.json
 MVP-005:
   tier: A
   gate_profile:
@@ -3703,7 +3705,9 @@ MVP-005:
   acceptance_owner: 'Owner'
   debt_allowed: no
   evidence_required:
-    - .specify/sprints/sprint-24/attestations/MVP-005/owner-screenshot.png
+    # Production captures stay out of this public repository; the attestation records the merged
+    # PRs, the check and the captures' SHA-256 hashes.
+    - .specify/sprints/sprint-24/attestations/MVP-005/attestation.json
 MVP-006:
   tier: A
   gate_profile:
@@ -3714,7 +3718,9 @@ MVP-006:
   acceptance_owner: 'Owner'
   debt_allowed: no
   evidence_required:
-    - .specify/sprints/sprint-25/attestations/MVP-006/owner-screenshot.png
+    # Production captures stay out of this public repository; the attestation records the merged
+    # PRs, the check and the captures' SHA-256 hashes.
+    - .specify/sprints/sprint-25/attestations/MVP-006/attestation.json
 MVP-007:
   tier: A
   gate_profile:
@@ -3725,7 +3731,9 @@ MVP-007:
   acceptance_owner: 'Owner'
   debt_allowed: no
   evidence_required:
-    - .specify/sprints/sprint-25/attestations/MVP-007/owner-screenshot.png
+    # Production captures stay out of this public repository; the attestation records the merged
+    # PRs, the check and the captures' SHA-256 hashes.
+    - .specify/sprints/sprint-25/attestations/MVP-007/attestation.json
 MVP-008:
   tier: A
   gate_profile:
@@ -3736,7 +3744,9 @@ MVP-008:
   acceptance_owner: 'Owner'
   debt_allowed: no
   evidence_required:
-    - .specify/sprints/sprint-25/attestations/MVP-008/owner-screenshot.png
+    # Production captures stay out of this public repository; the attestation records the merged
+    # PRs, the check and the captures' SHA-256 hashes.
+    - .specify/sprints/sprint-25/attestations/MVP-008/attestation.json
 MVP-009:
   tier: A
   gate_profile:
@@ -3747,7 +3757,9 @@ MVP-009:
   acceptance_owner: 'Owner'
   debt_allowed: no
   evidence_required:
-    - .specify/sprints/sprint-25/attestations/MVP-009/owner-screenshot.png
+    # Production captures stay out of this public repository; the attestation records the merged
+    # PRs, the check and the captures' SHA-256 hashes.
+    - .specify/sprints/sprint-25/attestations/MVP-009/attestation.json
 MVP-010:
   tier: A
   gate_profile:
@@ -3758,7 +3770,9 @@ MVP-010:
   acceptance_owner: 'Owner'
   debt_allowed: no
   evidence_required:
-    - .specify/sprints/sprint-25/attestations/MVP-010/owner-screenshot.png
+    # Production captures stay out of this public repository; the attestation records the merged
+    # PRs, the check and the captures' SHA-256 hashes.
+    - .specify/sprints/sprint-25/attestations/MVP-010/attestation.json
 
 # Plan reconcile 2026-11-16: these tasks were marked Completed while ENV-008-AI was still open.
 # ENV-008-AI is re-dated to sprint 25, so the finished tasks no longer wait on it.
