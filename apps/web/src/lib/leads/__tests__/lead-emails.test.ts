@@ -40,6 +40,48 @@ describe('leadEmailRows', () => {
     expect(rows.map((row) => row.direction)).toEqual([null, null, null]);
   });
 
+  it('reads a "Reply received" title with no direction as inbound (MVP-001)', () => {
+    const rows = leadEmailRows([
+      activity({ id: 'plain', title: 'Reply received: "We did not get your email"' }),
+      activity({ id: 'dated', title: 'Reply received 14/10/2026: "Sure also cost"' }),
+      activity({
+        id: 'case',
+        title: '  reply RECEIVED: pricing ',
+        metadata: { subject: 'Pricing' },
+      }),
+      activity({ id: 'empty-meta', title: 'Reply received: hi', metadata: { opened: false } }),
+    ]);
+    expect(rows.map((row) => row.direction)).toEqual(['inbound', 'inbound', 'inbound', 'inbound']);
+  });
+
+  it('keeps a stored direction over the title', () => {
+    const rows = leadEmailRows([
+      activity({
+        id: 'out',
+        title: 'Reply received: logged by mistake',
+        metadata: { direction: 'outbound' },
+      }),
+      activity({ id: 'in', title: 'Outreach email sent', metadata: { direction: 'inbound' } }),
+    ]);
+    expect(rows.map((row) => row.direction)).toEqual(['outbound', 'inbound']);
+  });
+
+  it('does not read other titles as replies, even when they mention one', () => {
+    const rows = leadEmailRows([
+      activity({ id: 'a', title: 'Price follow-up sent: reply received soon?' }),
+      activity({ id: 'b', title: 'No reply received yet' }),
+      activity({ id: 'c', title: 'Replies received' }),
+      activity({ id: 'd', title: 'Reply receivedx' }),
+    ]);
+    expect(rows.map((row) => row.direction)).toEqual([null, null, null, null]);
+  });
+
+  it('labels such a row "Received" rather than "Sent"', () => {
+    const [row] = leadEmailRows([activity({ title: 'Reply received: pricing' })]);
+    expect(row).toBeDefined();
+    expect(emailRowLabel(row!)).toBe('Received');
+  });
+
   it('takes the subject from the metadata, else the title, with the open tracking as before', () => {
     const [a, b] = leadEmailRows([
       activity({ metadata: { subject: 'Your proposal', opened: true, openCount: 3 } }),

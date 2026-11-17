@@ -18,6 +18,7 @@ import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { loadBullMQ } from '../../lib/load-bullmq';
 import { enqueueLeadAi } from './lead-scoring-enqueue';
 import { buildLeadListWhere, leadListOrderBy } from './lead-list-query';
+import { directionMetadata } from './lead-activity-direction';
 import {
   createLeadSchema,
   updateLeadSchema,
@@ -1740,9 +1741,7 @@ export const leadRouter = createTRPCRouter({
       return note;
     }),
 
-  /**
-   * Log an activity on a lead (updates lastContactedAt)
-   */
+  /** Log an activity on a lead (updates lastContactedAt; a "Reply received" email is inbound) */
   logActivity: tenantProcedure
     .input(
       z.object({
@@ -1805,7 +1804,7 @@ export const leadRouter = createTRPCRouter({
             userName: ctx.user?.email ?? 'Unknown',
             leadId: input.leadId,
             tenantId: typedCtx.tenant.tenantId,
-            ...(input.direction ? { metadata: { direction: input.direction } } : {}),
+            ...directionMetadata(input),
           },
         });
 

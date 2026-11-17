@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { LoadingForSession } from '../loading-for-session';
-import HomeLoading from '@/app/(public)/(home)/loading';
+import HomeLoading from '@/app/(public)/signed-in-home/loading';
 import RootLoading from '@/app/loading';
 
 const tokenExpiringIn = (seconds: number) => {
@@ -69,7 +69,7 @@ describe('LoadingForSession', () => {
 });
 
 describe.each([
-  ['(home)/loading', HomeLoading],
+  ['signed-in-home/loading', HomeLoading],
   ['app/loading', RootLoading],
 ])('%s', (_name, Loading) => {
   it('shows no portal shape with no session', () => {

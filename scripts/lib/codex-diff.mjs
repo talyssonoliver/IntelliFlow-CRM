@@ -52,8 +52,16 @@ export function batchPaths(files, limit = PATH_BATCH_CHARS) {
 /**
  * Fixed options so the output parses the same whatever the user's git config says: no colour, no
  * external diff tool, a/ and b/ prefixes, and paths written as they are rather than octal-quoted.
+ * No rename detection: a moved file shows as the deletion of its old path and the whole new file,
+ * each its own section, matching the `--no-renames` file list in codex-chunk-review.mjs.
  */
-const DIFF_OPTIONS = ['--no-color', '--no-ext-diff', '--src-prefix=a/', '--dst-prefix=b/'];
+const DIFF_OPTIONS = [
+  '--no-color',
+  '--no-ext-diff',
+  '--no-renames',
+  '--src-prefix=a/',
+  '--dst-prefix=b/',
+];
 
 /** Runs `git diff` with no shell. A non-zero exit, a spawn error or a signal throws. */
 function runGitDiff(spawn, diffArgs, repoRoot) {
