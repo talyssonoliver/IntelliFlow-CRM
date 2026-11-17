@@ -136,7 +136,9 @@ describe('PipelineSummaryWidget with no open deals', () => {
     expect(within(leadsSection()).getByText('4 leads')).toBeInTheDocument();
     expect(screen.queryByText(/\(0 Deals\)/)).not.toBeInTheDocument();
     // The shared deals empty state fills that half of the card, instead of one line.
-    expect(within(dealsSection()).getByText('No deals yet')).toBeInTheDocument();
+    expect(within(dealsSection()).getByText('No open deals')).toBeInTheDocument();
+    // Open deals only: a workspace that has won deals must not be told it has none.
+    expect(screen.queryByText('No deals yet')).not.toBeInTheDocument();
   });
 
   it('points at the qualified leads ready to convert', () => {

@@ -164,7 +164,15 @@ function DealsSection({ stages, state }: Readonly<{ stages: PipelineStage[]; sta
       <section aria-label="Deals" className="flex flex-col">
         <SectionHeading title="Deals" />
         {/* Read-only here: the create action is on the leads (convert a qualified lead). */}
-        <EmptyState entity="deals" showCta={false} className="flex-1 justify-center py-2" />
+        {/* This part counts open deals only, so it never says "No deals yet" to a workspace that
+            has won some: its title and text say "open". */}
+        <EmptyState
+          entity="deals"
+          showCta={false}
+          title="No open deals"
+          description="Deals appear here, by stage, as you convert leads."
+          className="flex-1 justify-center py-2"
+        />
       </section>
     );
   }
