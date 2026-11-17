@@ -23,7 +23,8 @@ function buildUseCase(ctx: Context): UndoLeadConversionUseCase {
   }
   return new UndoLeadConversionUseCase(
     adapters.leadRepository,
-    new PrismaConversionUndoAdapter(ctx.prisma),
+    // Reads outside the transaction go through the tenant-scoped client.
+    new PrismaConversionUndoAdapter(getTenantContext(ctx).prismaWithTenant),
     adapters.eventBus,
     adapters.transactionManager
   );
