@@ -45,6 +45,7 @@ import { cn } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { isPublicAuthRoute, isProtectedAppRoute } from '@/lib/auth/route-protection';
+import { isHomePath } from '@/lib/auth/home-paths';
 import pricingData from '@/data/pricing-data.json';
 
 // ============================================
@@ -343,7 +344,7 @@ function OnboardingWelcomeInner() {
   // deliberately EXCLUDES public marketing/legal pages (`/pricing`, `/about`,
   // `/terms`, `/privacy`, …) so the dialog never interrupts an authenticated
   // user merely browsing those, and the auth-flow pages (handled below).
-  const isOnboardingSurface = pathname === '/' || isProtectedAppRoute(pathname);
+  const isOnboardingSurface = isHomePath(pathname) || isProtectedAppRoute(pathname);
 
   // tRPC
   const { data: onboardingState, isLoading: onboardingLoading } = trpc.onboarding.getState.useQuery(

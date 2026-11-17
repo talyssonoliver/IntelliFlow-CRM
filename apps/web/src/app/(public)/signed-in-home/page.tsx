@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import { getAccessToken } from '@/lib/trpc-server';
 import { decodeJwtPayload } from '@/lib/auth/jwt';
 import { fetchWelcomeSummary } from '@/lib/cached-queries/home-queries';
@@ -7,38 +6,22 @@ import { serializeForClient } from '@/lib/shared/serialize-for-client';
 import { HomePagePublicWithAuthFallback } from '@/components/home/HomePagePublicWithAuthFallback';
 import { AuroraLandingPage } from '@/components/aurora-landing/AuroraLandingPage';
 import { AuthenticatedHomePage } from '@/components/home/AuthenticatedHomePage';
-import { OG_IMAGES } from '@/lib/og-images';
+import { LANDING_METADATA } from '@/components/aurora-landing/landing-metadata';
 
-export const metadata: Metadata = {
-  title: { absolute: 'Aurora, the AI CRM that asks before it acts' },
-  description:
-    'Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Nothing goes out until a person says yes.',
-  openGraph: {
-    images: OG_IMAGES,
-    title: 'Aurora, the AI CRM that asks before it acts',
-    description:
-      'Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Nothing goes out until a person says yes.',
-    url: 'https://intelli-flow-crm-web.vercel.app',
-    siteName: 'Aurora',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Aurora, the AI CRM that asks before it acts',
-    description:
-      'Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.',
-  },
-};
+export const metadata = LANDING_METADATA;
 
 /**
- * Home page — Server Component
+ * Signed-in home — Server Component, rendered per request.
+ *
+ * The proxy rewrites `/` here when the request carries a usable access token (see
+ * lib/auth/home-paths). Signed-out visits to `/` never reach this page: they get the prerendered
+ * landing page in `app/(landing)`, served from the CDN.
  *
  * Reads the auth cookie server-side and renders the correct experience:
  * - Users whose session the API accepts → `<AuthenticatedHomePage />` with welcome data prefetched
  *   server-side and passed as `initialWelcomeData`. The greeting and user name
  *   are in the initial HTML, so no client-side hydration flash.
- * - Unauthenticated visitors → the Aurora landing page, SSR'd directly with full
- *   marketing content visible to crawlers and Lighthouse on first paint.
+ * - A token the API does not accept → the Aurora landing page, as before.
  *
  * This is the `/` route's counterpart to `/dashboard/page.tsx`, following the
  * same cached-query prefetch pattern used across the app.

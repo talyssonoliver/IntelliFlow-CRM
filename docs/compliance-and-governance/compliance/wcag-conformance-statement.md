@@ -20,7 +20,7 @@ partially supported on the `/deals` pipeline view.
 
 ## 2. Scope
 
-This statement covers the IntelliFlow CRM web application across all 185
+This statement covers the IntelliFlow CRM web application across all 186
 user-facing routes. Dynamic segment routes (e.g., `/contacts/[id]`,
 `/settings/help-center/articles/[id]/edit`) inherit conformance status from
 their parent static route and are not listed separately.
@@ -103,6 +103,10 @@ their parent static route and are not listed separately.
   parent route to inherit from.
 - **Public booking page (dynamic, no static parent):** `/book/[handle]/[slug]` —
   public, no app chrome and `noindex`; covered on its own for the same reason.
+- **Signed-in home (1):** `/signed-in-home` — the signed-in rendering of `/`.
+  The proxy rewrites a signed-in visit to `/` here, so the browser keeps showing
+  `/`; it is the same portal home `/` rendered before, and it inherits the
+  conformance status of `/`.
 - **Design previews (1):** `/preview/aurora` — the Aurora landing page under
   review; unlinked and `noindex`. Not yet assessed (see Section 3).
 
