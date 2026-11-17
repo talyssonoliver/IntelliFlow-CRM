@@ -1066,6 +1066,56 @@ describe('LeadDetailPage - Activity Feed Toggle (IFC-247)', () => {
   });
 });
 
+// ─── MVP-006: the activity cards fit a phone screen ──────────────────────────
+
+describe('LeadDetailPage - activity card on a phone (MVP-006)', () => {
+  // The first card of the Pitshanger lead carries an email address and a ledger id in its
+  // description. Without min-w-0 the text column kept that width and pushed the expand button
+  // 9 px past a 390 px screen, so the whole page scrolled sideways.
+  const LONG = 'hello@pitshangerhealthandfitness.co.uk cmw5j72u40001p5ug01kf3vot';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockLeadQueryState.error = null;
+    mockLeadQueryState.isLoading = false;
+    mockLeadQueryState.data.aiInsights = [];
+    mockLeadQueryState.data.activities = [
+      {
+        id: 'act-long',
+        type: 'EMAIL' as const,
+        title: 'Price follow-up sent',
+        description: LONG,
+        timestamp: '2026-11-06T00:00:00.000Z',
+        userName: 'Test User',
+        metadata: {} as Record<string, unknown>,
+        sentiment: null,
+      },
+    ];
+  });
+  afterEach(() => {
+    mockLeadQueryState.data.activities = [];
+  });
+
+  it('lets the text column shrink and wrap a long unbroken string', () => {
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+
+    const column = screen.getByText(LONG).parentElement as HTMLElement;
+    expect(column.className).toContain('min-w-0');
+    expect(column.className).toContain('break-words');
+  });
+
+  it('keeps the expand button its own size instead of squeezing it', () => {
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+
+    const column = screen.getByText(LONG).parentElement as HTMLElement;
+    const expand = column.nextElementSibling as HTMLElement;
+    expect(expand.tagName).toBe('BUTTON');
+    expect(expand.className).toContain('shrink-0');
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Floating-promise handling: cache refreshes are returned from onSuccess and
 // failures are reported rather than left unhandled.
