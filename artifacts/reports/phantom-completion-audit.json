@@ -1,17 +1,17 @@
 {
   "audit_metadata": {
-    "generated_at": "2026-11-16T15:02:30.622Z",
+    "generated_at": "2026-11-17T19:26:20.522Z",
     "audit_type": "PHANTOM_COMPLETION_DETECTION",
     "sprint_scope": "all",
     "severity": "INFO"
   },
   "summary": {
-    "total_completed_tasks": 426,
-    "verified_completions": 426,
+    "total_completed_tasks": 433,
+    "verified_completions": 433,
     "phantom_completions": 0,
     "sprint_path_mismatches": 1,
     "untracked_by_design_artifacts": 104,
-    "dod_wording_warnings": 145,
+    "dod_wording_warnings": 152,
     "integrity_score": "100%",
     "conclusion": "1 tasks have attestations in the wrong sprint folder"
   },
@@ -4641,6 +4641,55 @@
       "artifacts_verified": [
         ".specify/sprints/sprint-24/attestations/MVP-002/attestation.json"
       ]
+    },
+    {
+      "task_id": "MVP-004",
+      "description": "Live updates work: the live-update connection opens on every",
+      "artifacts_verified": [
+        ".specify/sprints/sprint-24/attestations/MVP-004/attestation.json"
+      ]
+    },
+    {
+      "task_id": "MVP-005",
+      "description": "Find his own work: his own calls, notes and emails are easy ",
+      "artifacts_verified": [
+        ".specify/sprints/sprint-24/attestations/MVP-005/attestation.json"
+      ]
+    },
+    {
+      "task_id": "MVP-006",
+      "description": "Lead list on a phone: at 390px the lead list shows name, sco",
+      "artifacts_verified": [
+        ".specify/sprints/sprint-25/attestations/MVP-006/attestation.json"
+      ]
+    },
+    {
+      "task_id": "MVP-007",
+      "description": "Fast first load: the dashboard opens quickly on the first vi",
+      "artifacts_verified": [
+        ".specify/sprints/sprint-25/attestations/MVP-007/attestation.json"
+      ]
+    },
+    {
+      "task_id": "MVP-008",
+      "description": "Small fixes from the walkthrough: global search shows the pe",
+      "artifacts_verified": [
+        ".specify/sprints/sprint-25/attestations/MVP-008/attestation.json"
+      ]
+    },
+    {
+      "task_id": "MVP-009",
+      "description": "Dashboard Pipeline Summary shows the real funnel: where his ",
+      "artifacts_verified": [
+        ".specify/sprints/sprint-25/attestations/MVP-009/attestation.json"
+      ]
+    },
+    {
+      "task_id": "MVP-010",
+      "description": "Dashboard Upcoming Tasks says what to do today: follow-ups d",
+      "artifacts_verified": [
+        ".specify/sprints/sprint-25/attestations/MVP-010/attestation.json"
+      ]
     }
   ],
   "phantom_completions": [],
@@ -6230,6 +6279,54 @@
     },
     {
       "task_id": "MVP-002",
+      "issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
+      "task_id": "MVP-004",
+      "issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
+      "task_id": "MVP-005",
+      "issues": [
+        "DOD has no artifact reference"
+      ]
+    },
+    {
+      "task_id": "MVP-006",
+      "issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
+      "task_id": "MVP-007",
+      "issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
+      "task_id": "MVP-008",
+      "issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
+      "task_id": "MVP-009",
+      "issues": [
+        "DOD has no artifact reference",
+        "DOD has no measurable or testable criteria"
+      ]
+    },
+    {
+      "task_id": "MVP-010",
       "issues": [
         "DOD has no artifact reference",
         "DOD has no measurable or testable criteria"
