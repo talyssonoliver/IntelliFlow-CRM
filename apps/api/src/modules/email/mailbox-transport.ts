@@ -143,6 +143,23 @@ function oauthProvider(kind: string): OAuthMailboxProvider {
   return kind === 'MICROSOFT' ? 'MICROSOFT' : 'GMAIL';
 }
 
+/**
+ * Whether this process can get access tokens for a mailbox kind: its OAuth client is configured
+ * here. Each process (the api, the combined worker) reads its own env, so one can lack a client
+ * the other has.
+ */
+export function hasOAuthClient(transports: MailboxTransports, kind: string): boolean {
+  return kind === 'ZOHO'
+    ? Boolean(transports.zoho)
+    : Boolean(transports.oauth(oauthProvider(kind)));
+}
+
+/** The env variable NAMES that configure a mailbox kind's OAuth client (never their values). */
+export function oauthClientEnvNames(kind: string): string[] {
+  const prefix = ENV_PREFIX[kind === 'ZOHO' ? 'ZOHO' : oauthProvider(kind)];
+  return [`${prefix}_CLIENT_ID`, `${prefix}_CLIENT_SECRET`, 'EMAIL_OAUTH_REDIRECT_URI'];
+}
+
 /** A fresh access token from the mailbox's provider (Zoho at the account's own data centre). */
 function refreshAccess(
   mailbox: TransportMailbox,
