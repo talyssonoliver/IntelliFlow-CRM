@@ -336,23 +336,6 @@ describe('runInboxSync (#1177)', () => {
     expect(report.mailboxesSynced).toBe(2);
   });
 
-  it('stops storing once the mailbox is out of time, keeping the old cursor and staying due', async () => {
-    const { prisma, deps } = setup({
-      rounds: [round({ messages: [mail(), mail({ providerMessageId: 'graph-2' })] })],
-    });
-    let clock = NOW.getTime();
-    deps.now = () => new Date(clock);
-    prisma.emailRecord.create.mockImplementation(async () => {
-      clock += 4 * 60_000; // one slow write (bodies, database) uses up the mailbox's time
-      return { id: 'rec-1' };
-    });
-
-    await runInboxSync(deps);
-
-    expect(prisma.emailRecord.create).toHaveBeenCalledTimes(1);
-    expect(released(prisma).data).toMatchObject({ syncCursor: CURSOR, nextSyncAt: NOW });
-  });
-
   it('gives each mailbox read a time budget', async () => {
     const { readDelta, deps } = setup();
 

@@ -317,12 +317,13 @@ interface MailboxRun {
   report: InboxSyncReport;
 }
 
+/** A folder's round, and the cursor it actually started from (null after a restart). */
 async function readRound(
   deps: InboxSyncDeps,
   run: MailboxRun,
   folder: SyncFolder,
   cursor: string | null
-): Promise<SyncRound> {
+): Promise<{ round: SyncRound; startedFrom: string | null }> {
   // Every read gets what is left of the mailbox's budget, so both folders and a restart
   // together still end well inside the lease.
   const read = (from: string | null) =>
@@ -335,10 +336,10 @@ async function readRound(
       budgetMs: Math.max(0, run.deadline - deps.now().getTime()),
     });
   const round = await read(cursor);
-  if (!round.expired) return round;
+  if (!round.expired) return { round, startedFrom: cursor };
   // The provider no longer accepts the cursor: start the folder again (dedupe keeps it safe).
   run.report.restarts += 1;
-  return read(null);
+  return { round: await read(null), startedFrom: null };
 }
 
 /** Reads one folder's round and logs what belongs in the CRM. */
@@ -349,11 +350,15 @@ async function syncFolder(
   folder: SyncFolder,
   cursor: string | null
 ): Promise<SyncRound> {
-  const round = await readRound(deps, run, folder, cursor);
+  const { round, startedFrom } = await readRound(deps, run, folder, cursor);
   for (const message of round.messages) {
     // Out of time for this mailbox: stop well inside the lease, so no other worker takes it over
-    // mid-write. The folder keeps its old cursor and stays due; what was stored is deduped next time.
-    if (deps.now().getTime() >= run.storeBy) return { ...round, cursor, complete: false };
+    // mid-write. The folder keeps the cursor its round started from (never a rejected one, which
+    // would repeat the failed read and restart every tick) and stays due; what was stored is
+    // deduped next time.
+    if (deps.now().getTime() >= run.storeBy) {
+      return { ...round, cursor: startedFrom, complete: false };
+    }
     const outcome = await storeSyncedMessage(deps, mailbox, message, folder, run.reader.provider);
     if (outcome === 'stored') run.report.stored += 1;
     else run.report.skipped += 1;
