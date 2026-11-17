@@ -152,8 +152,14 @@ describe('ConvertLeadDialog', () => {
     expect(mocks.contactMutate).not.toHaveBeenCalled();
   });
 
+  it('converts without a value when it is left empty (MVP-003)', () => {
+    renderDialog();
+    chooseDeal();
+    fireEvent.click(screen.getByRole('button', { name: 'Convert and create deal' }));
+    expect(mocks.dealMutate).toHaveBeenCalledWith({ leadId: 'lead-1', createContact: true });
+  });
+
   it.each([
-    ['', /Enter the deal value/],
     ['0', /greater than zero/],
     ['12.5', /whole number/],
     ['abc', /whole number/],

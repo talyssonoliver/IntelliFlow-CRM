@@ -160,7 +160,7 @@ function DealFields({
     <>
       <div>
         <label htmlFor="convert-deal-value" className={LABEL_CLASS}>
-          Deal value (£) <span className="text-red-500">*</span>
+          Deal value (£) <span className="text-xs font-normal text-slate-400">(optional)</span>
         </label>
         <input
           id="convert-deal-value"
@@ -173,7 +173,8 @@ function DealFields({
           className={INPUT_CLASS}
         />
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          Whole pounds, for example 5000 for £5,000.
+          Whole pounds, for example 5000 for £5,000. Leave it empty if you don&apos;t know it yet;
+          you can add it on the deal later.
         </p>
         {valueError && (
           <p role="alert" className="mt-1 text-sm text-red-600 dark:text-red-400">

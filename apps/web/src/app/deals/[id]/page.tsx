@@ -28,6 +28,11 @@ import { PinButton } from '@/components/home/PinButton';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 import { LossReasonModal } from '@/components/deals/LossReasonModal';
 import { DealForm, type DealFormData } from '@/components/deals/DealForm';
+import {
+  DealStageProgress,
+  STAGE_LABELS,
+  formatCurrency,
+} from '@/components/deals/DealStageProgress';
 import { revalidateDealCaches } from '@/app/deals/actions';
 
 // Material Symbols icon helper component
@@ -72,28 +77,6 @@ interface DealDetail {
 }
 
 // =============================================================================
-// Constants — Domain-aligned 7-stage enum
-// =============================================================================
-
-const STAGE_LABELS: Record<OpportunityStage, string> = {
-  PROSPECTING: 'Prospecting',
-  QUALIFICATION: 'Qualification',
-  NEEDS_ANALYSIS: 'Needs Analysis',
-  PROPOSAL: 'Proposal',
-  NEGOTIATION: 'Negotiation',
-  CLOSED_WON: 'Won',
-  CLOSED_LOST: 'Lost',
-};
-
-const ACTIVE_STAGES: OpportunityStage[] = [
-  'PROSPECTING',
-  'QUALIFICATION',
-  'NEEDS_ANALYSIS',
-  'PROPOSAL',
-  'NEGOTIATION',
-];
-
-// =============================================================================
 // Utility Functions
 // =============================================================================
 
@@ -106,94 +89,9 @@ function logDealCacheFailure(error: unknown): void {
   console.warn('[DealPage] Deal cache revalidation failed:', error);
 }
 
-function formatCurrency(value: number): string {
-  return new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
 // =============================================================================
 // Components
 // =============================================================================
-
-function StageProgress({
-  value,
-  stage,
-  probability,
-}: Readonly<{
-  value: number;
-  stage: OpportunityStage;
-  probability: number;
-}>) {
-  const isClosedWon = stage === 'CLOSED_WON';
-  const isClosedLost = stage === 'CLOSED_LOST';
-  const isClosed = isClosedWon || isClosedLost;
-
-  const stageIndex = isClosed ? ACTIVE_STAGES.length - 1 : ACTIVE_STAGES.indexOf(stage);
-  const progressWidth = isClosed ? 100 : ((stageIndex + 1) / ACTIVE_STAGES.length) * 100;
-
-  let barColor: string;
-  if (isClosedWon) {
-    barColor = 'bg-green-500';
-  } else if (isClosedLost) {
-    barColor = 'bg-red-500';
-  } else {
-    barColor = 'bg-primary';
-  }
-
-  return (
-    <Card className="p-6">
-      <div className="flex justify-between items-end mb-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">Total Value</p>
-          <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">
-            {formatCurrency(value)}
-          </p>
-        </div>
-        <div className="text-right">
-          <p className="text-sm font-medium text-slate-900 dark:text-white">
-            {STAGE_LABELS[stage]}
-          </p>
-          <p className="text-xs text-slate-500">
-            {isClosed
-              ? `${STAGE_LABELS[stage]}`
-              : `Stage ${stageIndex + 1} of ${ACTIVE_STAGES.length}`}{' '}
-            &bull; {probability}% Probability
-          </p>
-        </div>
-      </div>
-
-      {/* Progress Bar */}
-      <div className="relative w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-        <div
-          className={`absolute top-0 left-0 h-full ${barColor} rounded-full transition-all duration-300`}
-          style={{ width: `${progressWidth}%` }}
-        />
-        {/* Stage dividers */}
-        <div className="absolute top-0 left-0 w-full h-full flex justify-between px-[10%]">
-          {ACTIVE_STAGES.slice(0, -1).map((stage) => (
-            <div
-              key={`divider-${stage}`}
-              className="w-0.5 h-full bg-white dark:bg-slate-900 opacity-50"
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Stage Labels */}
-      <div className="flex justify-between mt-2 text-xs font-medium text-slate-500 px-1">
-        {ACTIVE_STAGES.map((s, index) => (
-          <span key={s} className={index <= stageIndex || isClosed ? 'text-primary' : ''}>
-            {STAGE_LABELS[s]}
-          </span>
-        ))}
-      </div>
-    </Card>
-  );
-}
 
 function AboutDealCard({ deal }: Readonly<{ deal: DealDetail }>) {
   const { timezone } = useTimezoneContext();
@@ -751,7 +649,12 @@ export default function DealDetailPage() {
         </Dialog>
 
         {/* Stage Progress */}
-        <StageProgress value={d.value} stage={stage} probability={d.probability} />
+        <DealStageProgress
+          value={d.value}
+          stage={stage}
+          probability={d.probability}
+          onAddValue={d.isClosed ? undefined : () => setEditDialogOpen(true)}
+        />
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">

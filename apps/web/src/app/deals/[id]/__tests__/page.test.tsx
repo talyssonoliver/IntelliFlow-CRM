@@ -503,24 +503,13 @@ describe('DealDetailPage', () => {
       expect(stageElements.length).toBeGreaterThan(0);
     });
 
-    it('renders green bar for CLOSED_WON stage', async () => {
-      (mockOpportunityQueryState.data as Record<string, unknown>).stage = 'CLOSED_WON';
-      (mockOpportunityQueryState.data as Record<string, unknown>).isClosed = true;
-      (mockOpportunityQueryState.data as Record<string, unknown>).isWon = true;
+    // The bar colours are tested with the card itself (DealStageProgress.test.tsx, MVP-003).
+    it('offers "Add value" for a deal without a value and opens the edit form (MVP-003)', async () => {
+      (mockOpportunityQueryState.data as Record<string, unknown>).value = 0;
       const { default: DealDetailPage } = await import('../page');
       render(<DealDetailPage />);
-      const wonBadges = screen.getAllByText('Won');
-      expect(wonBadges.length).toBeGreaterThan(0);
-    });
-
-    it('renders red bar for CLOSED_LOST stage', async () => {
-      (mockOpportunityQueryState.data as Record<string, unknown>).stage = 'CLOSED_LOST';
-      (mockOpportunityQueryState.data as Record<string, unknown>).isClosed = true;
-      (mockOpportunityQueryState.data as Record<string, unknown>).isLost = true;
-      const { default: DealDetailPage } = await import('../page');
-      render(<DealDetailPage />);
-      const lostBadges = screen.getAllByText('Lost');
-      expect(lostBadges.length).toBeGreaterThan(0);
+      fireEvent.click(screen.getByRole('button', { name: 'Add value' }));
+      expect(screen.getByTestId('deal-form')).toBeInTheDocument();
     });
   });
 

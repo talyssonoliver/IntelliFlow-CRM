@@ -69,8 +69,8 @@ export interface ConvertLeadToDealInput {
   leadId: string;
   /** Optional deal name - auto-generated from lead if not provided */
   dealName?: string;
-  /** Deal value (required) */
-  dealValue: number;
+  /** Deal value in pounds; omitted when not known yet, so the deal starts at £0 (MVP-003) */
+  dealValue?: number;
   /** Expected close date (optional) */
   expectedCloseDate?: Date;
   /** Account name - creates new or links existing (uses lead.company if not provided) */
@@ -257,7 +257,7 @@ export class ConvertLeadToDealUseCase {
     if (!input.convertedBy || input.convertedBy.trim() === '') {
       return Result.fail(new ValidationError('convertedBy is required for audit trail'));
     }
-    if (input.dealValue <= 0) {
+    if (input.dealValue !== undefined && input.dealValue <= 0) {
       return Result.fail(new ValidationError('Deal value must be greater than zero'));
     }
     return Result.ok(undefined);
@@ -445,7 +445,8 @@ export class ConvertLeadToDealUseCase {
 
     return Opportunity.create({
       name: dealName,
-      value: input.dealValue,
+      value: input.dealValue ?? 0,
+      valueNotYetKnown: input.dealValue === undefined,
       accountId,
       contactId: contactId ?? undefined,
       sourceLeadId: lead.id.value,
