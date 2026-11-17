@@ -36,6 +36,7 @@ import {
   type SyncedMessage,
 } from './mail-sync-reader';
 import { learnThread, logOnLead, threadOf, type LoggedRecord } from './mail-sync-links';
+import { messageIdHeader, recordData } from './mail-sync-record';
 
 export const INBOX_SYNC_INTERVAL_MS = 5 * 60_000;
 const LEASE_MS = 5 * 60_000;
@@ -191,10 +192,6 @@ async function anyoneRestricted(
   return false;
 }
 
-function messageIdHeader(message: SyncedMessage): string | null {
-  return message.internetMessageId?.slice(0, 255) ?? null;
-}
-
 /** Mail already in the CRM: the same provider message, or (sent mail) the CRM's own send. */
 async function alreadyLogged(
   deps: InboxSyncDeps,
@@ -215,48 +212,6 @@ async function alreadyLogged(
     select: { id: true, metadata: true },
   });
   return existing;
-}
-
-/** The email record a kept synced mail becomes. */
-function recordData(args: {
-  mailbox: SyncMailbox;
-  message: SyncedMessage;
-  folder: SyncFolder;
-  provider: MailSyncReader['provider'];
-  party: { contactId: string | null; leadId: string | null };
-  body: string;
-  threadId: string | null;
-}): Record<string, unknown> {
-  const { mailbox, message, folder, provider, party, body, threadId } = args;
-  const sent = folder === 'sentitems';
-  return {
-    subject: message.subject,
-    body,
-    fromEmail: message.fromAddress ?? mailbox.accountAddress ?? mailbox.fromAddress,
-    toEmail: message.to.join(', '),
-    ccEmails: message.cc.join(', ') || null,
-    status: sent ? 'SENT' : 'DELIVERED',
-    ...(sent ? { sentAt: message.receivedAt } : {}),
-    isRead: sent ? true : message.isRead,
-    tenantId: mailbox.tenantId,
-    mailboxId: mailbox.id,
-    // userId is the sender on an email record: the owner for mail they sent, none for mail they
-    // received, so received mail stays out of their Sent folder (as the inbound webhook does).
-    ...(sent ? { userId: mailbox.userId } : {}),
-    contactId: party.contactId,
-    messageIdHeader: messageIdHeader(message),
-    provider,
-    providerMessageId: message.providerMessageId.slice(0, 255),
-    createdAt: message.receivedAt,
-    metadata: {
-      source: 'outlook-sync',
-      folder,
-      mailboxOwnerId: mailbox.userId,
-      conversationId: message.conversationId,
-      ...(threadId ? { threadId } : {}),
-      ...(party.leadId ? { leadId: party.leadId } : {}),
-    },
-  };
 }
 
 /** A kept mail's body; null when the provider refuses that one message (deleted meanwhile). */
@@ -298,7 +253,7 @@ export async function storeSyncedMessage(
       data: recordData({ mailbox, message, folder, provider, party, body, threadId }),
       select: { id: true },
     });
-    if (leadId) await logOnLead({ prisma: db }, mailbox, message, leadId, record.id);
+    if (leadId) await logOnLead({ prisma: db }, mailbox, message, leadId, record.id, folder);
   };
   try {
     // A lead's mail and its timeline entry land together or not at all: a retry finds no record
