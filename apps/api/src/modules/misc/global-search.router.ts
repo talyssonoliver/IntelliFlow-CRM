@@ -12,7 +12,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
-import { leadSearchText, type LeadSearchRow } from './global-search-hits';
+import { dealSearchSubtitle, leadSearchText, type LeadSearchRow } from './global-search-hits';
 
 // ── Input schema ────────────────────────────────────────────────────────
 
@@ -180,7 +180,7 @@ async function searchDeals(
     entityType: 'DEAL' as const,
     id: r.id,
     title: r.name,
-    subtitle: `${r.stage} · $${Number(r.value).toLocaleString('en-GB')}`,
+    subtitle: dealSearchSubtitle(r.stage, r.value),
     href: `/deals/${r.id}`,
   }));
 }

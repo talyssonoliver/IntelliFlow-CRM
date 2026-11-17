@@ -466,7 +466,7 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
       case 'opportunity.created':
         return `New deal: ${name}`;
       case 'opportunity.won':
-        return `Deal won: ${name} ($${value})`;
+        return `Deal won: ${name} (£${Number(value).toLocaleString('en-GB')})`;
       case 'contact.created':
         return `New contact: ${name}`;
       case 'task.completed':

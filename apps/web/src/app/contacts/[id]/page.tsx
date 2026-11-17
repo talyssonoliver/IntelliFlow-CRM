@@ -1314,7 +1314,7 @@ export default function Contact360Page() {
                         </div>
                         <div className="text-right ml-4">
                           <p className="font-semibold text-slate-900 dark:text-white">
-                            ${deal.value.toLocaleString('en-GB')}
+                            £{deal.value.toLocaleString('en-GB')}
                           </p>
                           <p className="text-xs text-slate-500">{deal.probability}%</p>
                         </div>
@@ -1360,7 +1360,7 @@ export default function Contact360Page() {
                     </div>
                     <div className="text-right ml-4">
                       <p className="font-semibold text-slate-900 dark:text-white">
-                        ${deal.value.toLocaleString('en-GB')}
+                        £{deal.value.toLocaleString('en-GB')}
                       </p>
                       <p className="text-xs text-slate-500">{deal.probability}% probability</p>
                     </div>

@@ -897,7 +897,7 @@ describe('Contact360Page - tab content, states & addNote (IFC-265)', () => {
 
     expect(screen.getByText('Acme Expansion')).toBeInTheDocument();
     expect(screen.getByText('PROPOSAL')).toBeInTheDocument();
-    expect(screen.getByText('$50,000')).toBeInTheDocument();
+    expect(screen.getByText('£50,000')).toBeInTheDocument();
     expect(screen.getByText('60% probability')).toBeInTheDocument();
   });
 
