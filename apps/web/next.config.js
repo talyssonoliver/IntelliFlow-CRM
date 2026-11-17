@@ -178,6 +178,13 @@ const nextConfig = {
         destination: '/',
         permanent: true,
       },
+      // /deals/pipeline was never a page: the deal page took "pipeline" for a deal id and sat on
+      // a skeleton while the failed lookup was retried. The board is /deals?view=pipeline.
+      {
+        source: '/deals/pipeline',
+        destination: '/deals?view=pipeline',
+        permanent: false,
+      },
       // Legacy /calendar/new and /calendar/[id] → /appointments/... after the
       // appointments/calendar split migration. Settings sub-routes
       // (availability, calendar-settings, event-types) remain under /calendar.
