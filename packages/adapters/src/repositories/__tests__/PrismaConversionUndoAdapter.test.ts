@@ -2,11 +2,7 @@
  * MVP-003: what counts as "something has happened since" a conversion, and what undo deletes.
  */
 import { describe, it, expect, vi } from 'vitest';
-import {
-  PrismaConversionUndoAdapter,
-  AI_INSIGHT_AUTHOR,
-  CONVERSION_CONTACT_WINDOW_MS,
-} from '../PrismaConversionUndoAdapter';
+import { PrismaConversionUndoAdapter, AI_INSIGHT_AUTHOR } from '../PrismaConversionUndoAdapter';
 
 const COUNTED = [
   'task',
@@ -42,21 +38,16 @@ function fakePrisma(counts: (model: string, where: Record<string, unknown>) => n
   };
 }
 
-/** The moment a conversion created its deal (and, together with it, its contact). */
-const CONVERTED_AT = new Date('2026-11-17T10:00:00.000Z');
-const msAfter = (ms: number) => new Date(CONVERTED_AT.getTime() + ms);
-
-/** A deal row as Prisma returns it, with its contact created offsetMs after the deal. */
-function dealRow(contact: { leadId: string | null; offsetMs: number } | null, extra = {}) {
+/** A deal row as Prisma returns it; the conversion recorded createdContactId as the one it created. */
+function dealRow(extra: Record<string, unknown> = {}) {
   return {
     id: 'opp-1',
     tenantId: 'tenant-1',
     sourceLeadId: 'lead-1',
     stage: 'PROSPECTING',
     deletedAt: null,
-    createdAt: CONVERTED_AT,
     contactId: 'contact-1',
-    contact: contact ? { leadId: contact.leadId, createdAt: msAfter(contact.offsetMs) } : null,
+    createdContactId: 'contact-1',
     ...extra,
   };
 }
@@ -74,7 +65,7 @@ const deal = {
 describe('PrismaConversionUndoAdapter.findDeal', () => {
   it('reads the deal in the tenant and tells whether the conversion created its contact', async () => {
     const db = fakePrisma();
-    db.opportunity.findFirst.mockResolvedValue(dealRow({ leadId: 'lead-1', offsetMs: -40 }));
+    db.opportunity.findFirst.mockResolvedValue(dealRow());
     const adapter = new PrismaConversionUndoAdapter(db as never);
     expect(await adapter.findDeal('opp-1', 'tenant-1')).toEqual(deal);
     expect(db.opportunity.findFirst).toHaveBeenCalledWith(
@@ -85,10 +76,7 @@ describe('PrismaConversionUndoAdapter.findDeal', () => {
   it('marks a linked existing contact, a deleted deal and a missing deal', async () => {
     const db = fakePrisma();
     db.opportunity.findFirst.mockResolvedValueOnce(
-      dealRow(
-        { leadId: 'other-lead', offsetMs: 0 },
-        { deletedAt: new Date(), contactId: 'contact-9' }
-      )
+      dealRow({ deletedAt: new Date(), contactId: 'contact-9', createdContactId: null })
     );
     const adapter = new PrismaConversionUndoAdapter(db as never);
     const found = await adapter.findDeal('opp-1', 'tenant-1');
@@ -97,22 +85,16 @@ describe('PrismaConversionUndoAdapter.findDeal', () => {
     expect(await adapter.findDeal('opp-x', 'tenant-1')).toBeNull();
   });
 
-  // A contact counts as created by the conversion only if it points at the lead AND was created with the deal.
-  const HOUR = 3_600_000;
-  const linked = (offsetMs: number, leadId: string | null = 'lead-1') => ({ leadId, offsetMs });
+  // A contact counts as created by the conversion only when the conversion recorded it on the deal.
   it.each([
-    ['created with the deal', linked(-40), {}, true],
-    ['created just after the deal', linked(25), {}, true],
-    ['linked to the lead but created an hour before', linked(-HOUR), {}, false],
-    ['linked to the lead but created an hour after', linked(HOUR), {}, false],
-    ['just outside the window', linked(-CONVERSION_CONTACT_WINDOW_MS - 1), {}, false],
-    ['created with the deal but linked to another lead', linked(0, 'lead-2'), {}, false],
-    ['created with the deal but linked to no lead', linked(0, null), {}, false],
-    ['absent', null, { contactId: null }, false],
-    ['created with a deal that has no source lead', linked(0), { sourceLeadId: null }, false],
-  ])('a contact %s: created by the conversion = %s', async (_label, contact, extra, created) => {
+    ['recorded as created by the conversion', {}, true],
+    ['linked, not created (nothing recorded)', { createdContactId: null }, false],
+    ['different from the one recorded', { createdContactId: 'contact-2' }, false],
+    ['absent from the deal', { contactId: null, createdContactId: null }, false],
+    ['on a deal that has no source lead', { sourceLeadId: null }, false],
+  ])('a contact %s: created by the conversion = %s', async (_label, extra, created) => {
     const db = fakePrisma();
-    db.opportunity.findFirst.mockResolvedValue(dealRow(contact, extra));
+    db.opportunity.findFirst.mockResolvedValue(dealRow(extra));
     const found = await new PrismaConversionUndoAdapter(db as never).findDeal('opp-1', 'tenant-1');
     expect(found?.contactCreatedByConversion).toBe(created);
   });

@@ -3,10 +3,10 @@ import type { RepositoryTransaction } from '@intelliflow/domain';
 /**
  * Conversion undo port (MVP-003): what undoing a lead-to-deal conversion needs from storage.
  *
- * A conversion creates a deal (with the lead as its source), may create a contact (linked to
- * the lead by Contact.leadId, which is unique) and may create or reuse an account. Undo removes
- * the deal, and the contact only when the conversion created it; the account stays, because a
- * later conversion of the same company reuses it by name.
+ * A conversion creates a deal (with the lead as its source), may create a contact or link an
+ * existing one, and may create or reuse an account. It records the contact it created on the deal
+ * (Opportunity.createdContactId). Undo removes the deal, and the contact only when it is that
+ * recorded one; the account stays, because a later conversion of the same company reuses it.
  */
 
 /** The deal a conversion created, as stored. */
@@ -19,9 +19,9 @@ export interface ConvertedDeal {
   deleted: boolean;
   contactId: string | null;
   /**
-   * True only when the deal's contact was created by the conversion itself: it points at the lead
-   * AND was created together with the deal. A contact that merely points at the lead (linked to
-   * it earlier or afterwards) or that existed before is never one, so undo never deletes it.
+   * True only when the conversion recorded this contact as the one it created
+   * (Opportunity.createdContactId equals the deal's contact). A linked existing contact, or a deal
+   * that predates that record, is never one, so undo never deletes it.
    */
   contactCreatedByConversion: boolean;
 }
