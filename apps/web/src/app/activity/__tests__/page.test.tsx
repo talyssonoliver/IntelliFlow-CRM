@@ -214,17 +214,42 @@ describe('ActivityPage', () => {
     expect(mockFetchNextPage).not.toHaveBeenCalled();
   });
 
-  it('stops loading by itself at the cap and offers a button to look further back', () => {
-    const noise = Array.from({ length: 500 }, (_, i) =>
-      item(`s${i}`, `Lead scored ${i}`, 'SCORE_UPDATE', coa)
-    );
-    mockFeed(noise, { hasNextPage: true });
+  /** One page request finishing: the feed reports it fetching, then idle, with nothing new shown. */
+  function finishPageRequests(rerender: () => void, times: number) {
+    const noise = [item('s1', 'Lead scored', 'SCORE_UPDATE', coa)];
+    for (let i = 0; i < times; i++) {
+      mockFeed(noise, { hasNextPage: true, isFetchingNextPage: true });
+      rerender();
+      mockFeed(noise, { hasNextPage: true, isFetchingNextPage: false });
+      rerender();
+    }
+  }
 
-    render(<ActivityPage />);
+  it('stops loading by itself after ten page requests and offers a button to look further back', () => {
+    // Entries that repeat are dropped by the feed, so the budget counts requests, not entries.
+    mockFeed([item('s1', 'Lead scored', 'SCORE_UPDATE', coa)], { hasNextPage: true });
 
-    expect(mockFetchNextPage).not.toHaveBeenCalled();
+    const { rerender } = render(<ActivityPage />);
+    finishPageRequests(() => rerender(<ActivityPage />), 15);
+
+    expect(mockFetchNextPage).toHaveBeenCalledTimes(10);
+    mockFetchNextPage.mockClear();
     fireEvent.click(screen.getByRole('button', { name: 'Load older activity' }));
     expect(mockFetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('gives a new view its own budget', () => {
+    mockFeed([item('s1', 'Lead scored', 'SCORE_UPDATE', coa)], { hasNextPage: true });
+
+    const { rerender } = render(<ActivityPage />);
+    finishPageRequests(() => rerender(<ActivityPage />), 15);
+    expect(mockFetchNextPage).toHaveBeenCalledTimes(10);
+
+    mockFetchNextPage.mockClear();
+    fireEvent.click(screen.getByRole('button', { name: 'My activity' }));
+    finishPageRequests(() => rerender(<ActivityPage />), 15);
+
+    expect(mockFetchNextPage).toHaveBeenCalledTimes(10);
   });
 
   it('does not retry a failed page by itself, and the button retries it', () => {

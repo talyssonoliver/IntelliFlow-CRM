@@ -21,8 +21,8 @@ import type { ActivityFeedType } from '@intelliflow/domain';
 const DEFAULT_FILTER: ActivityFeedTypeFilterValue = 'all';
 /** Keep loading older pages while the person-written feed is this short (the system writes most). */
 const MIN_PERSONAL_ENTRIES = 10;
-/** ...but never load more than this many entries just to find them. */
-const MAX_AUTO_LOADED_ENTRIES = 500;
+/** ...but never request more than this many pages (of 50) just to find them. */
+const MAX_AUTO_PAGES = 10;
 
 export default function ActivityPage() {
   const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
@@ -89,12 +89,18 @@ export default function ActivityPage() {
   // the person-written ones: keep loading older pages (bounded) until the feed has some.
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = source;
   const personalShort = personalItems.length < MIN_PERSONAL_ENTRIES;
-  const autoLoadCapReached = source.items.length >= MAX_AUTO_LOADED_ENTRIES;
+  // The budget counts the page requests made, not the entries shown: the feed drops entries that
+  // repeat (same title, text and minute), so a count of what is shown would not bound the loading.
+  const [autoPages, setAutoPages] = useState(0);
+  const autoLoadCapReached = autoPages >= MAX_AUTO_PAGES;
+  const viewKey = `${feedFilter}|${mineOnly}|${search.isSearchActive ? deferredSearch : ''}`;
+  useEffect(() => setAutoPages(0), [viewKey]);
   // A failed page is not retried by itself (it would fail again in a loop): the button below is.
   const loadFailed = source.isError;
   useEffect(() => {
     if (!hasNextPage || isFetchingNextPage || !personalShort || autoLoadCapReached) return;
     if (loadFailed) return;
+    setAutoPages((n) => n + 1);
     fetchNextPage();
   }, [
     hasNextPage,
