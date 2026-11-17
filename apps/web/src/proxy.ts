@@ -74,10 +74,18 @@ export function proxy(request: NextRequest): NextResponse {
 }
 
 /**
- * Every path except API routes, Next.js assets and static files.
+ * `/` only when the request carries the access-token cookie, and every other path except API
+ * routes, Next.js assets and static files.
+ *
+ * A signed-out `/` skips the proxy: it is the prerendered landing page, served from the CDN with
+ * no function at all (an uptime monitor fetches it every minute). Nothing here would change for
+ * it: no redirect, no rewrite, no cookie to drop. Its report-only CSP comes from `next.config.js`.
+ * With the cookie, `/` still runs the proxy: a usable token is rewritten to the signed-in home and
+ * an expired one is dropped.
  */
 export const config = {
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).*)',
+    { source: '/', has: [{ type: 'cookie', key: 'accessToken' }] },
+    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).+)',
   ],
 };
