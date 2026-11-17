@@ -15,18 +15,30 @@ const lines = (text) =>
  * Files changed between the base and HEAD, plus staged files (the `--base=HEAD` self-test).
  * git runs without a shell. A base that does not resolve throws: an empty list would read as
  * "nothing to review" and pass.
+ *
+ * `--no-renames`: with rename detection a moved file is listed under its new path only, so the
+ * review never saw that the old path was gone. On 2026-11-17 a PR that moved a page to a new route
+ * was failed for "the old page still exists", which it did not.
  */
 export function listChangedFiles(base, spawn) {
   const options = { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true };
   const quote = ['-c', 'core.quotePath=false'];
-  const committed = spawn('git', [...quote, 'diff', '--name-only', `${base}...HEAD`], options);
+  const committed = spawn(
+    'git',
+    [...quote, 'diff', '--name-only', '--no-renames', `${base}...HEAD`],
+    options
+  );
   if (committed.error || committed.status !== 0) {
     const reason = committed.error
       ? committed.error.message
       : (committed.stderr || '').trim() || `exit ${committed.status}`;
     throw new DiffInputError('base-unresolved', `cannot list changes against ${base}: ${reason}`);
   }
-  const staged = spawn('git', [...quote, 'diff', '--cached', '--name-only'], options);
+  const staged = spawn(
+    'git',
+    [...quote, 'diff', '--cached', '--name-only', '--no-renames'],
+    options
+  );
   const stagedFiles = staged.status === 0 ? lines(staged.stdout || '') : [];
   return [...new Set([...lines(committed.stdout || ''), ...stagedFiles])];
 }

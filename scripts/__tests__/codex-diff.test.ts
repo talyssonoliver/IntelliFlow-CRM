@@ -17,6 +17,7 @@ import {
   PATH_BATCH_CHARS,
   splitFileSections,
 } from '../lib/codex-diff.mjs';
+import { listChangedFiles } from '../lib/codex-chunk-review.mjs';
 
 /** Longest command line CreateProcess accepts without a shell. */
 const WINDOWS_ARG_LIMIT = 32_767;
@@ -239,6 +240,65 @@ describe('against a real git repository', () => {
       const chunks = chunkSections(sections, 4_000);
       expect(chunks.length).toBeGreaterThan(1);
       expect(chunks.flatMap((c) => c.files)).toEqual(files);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
+  });
+
+  it('shows a renamed file as the old path deleted and the new path added', () => {
+    const repo = realpathSync(mkdtempSync(path.join(tmpdir(), 'codex-diff-rename-')));
+    // Same isolation as above: no inherited GIT_* variable may point git at the real repository.
+    const env = Object.fromEntries(
+      Object.entries(process.env).filter(([key]) => !key.toUpperCase().startsWith('GIT_'))
+    );
+    const isolatedSpawn = (cmd: string, args: string[], options: Record<string, unknown>) =>
+      spawnSync(cmd, args, { ...options, cwd: repo, env });
+    const git = (...args: string[]) => {
+      const r = spawnSync('git', args, { cwd: repo, encoding: 'utf8', env });
+      if (r.status !== 0) throw new Error(`git ${args.join(' ')}: ${r.stderr}`);
+      return r.stdout;
+    };
+    try {
+      git('init', '-q', '-b', 'main');
+      const gitDir = realpathSync(path.resolve(repo, git('rev-parse', '--git-dir').trim()));
+      expect(gitDir).toBe(path.join(repo, '.git'));
+      git('config', 'user.email', 'test@example.invalid');
+      git('config', 'user.name', 'test');
+      git('config', 'commit.gpgsign', 'false');
+      // Make sure the repository's own config would detect the rename if the code allowed it.
+      git('config', 'diff.renames', 'true');
+      const page = Array.from({ length: 20 }, (_, i) => `export const line${i} = ${i};`).join('\n');
+      mkdirSync(path.join(repo, 'app/(home)'), { recursive: true });
+      writeFileSync(path.join(repo, 'app/(home)/page.tsx'), `${page}\n`);
+      git('add', '.');
+      git('commit', '-q', '-m', 'base');
+      git('checkout', '-q', '-b', 'feature');
+      mkdirSync(path.join(repo, 'app/signed-in-home'), { recursive: true });
+      git('mv', 'app/(home)/page.tsx', 'app/signed-in-home/page.tsx');
+      writeFileSync(
+        path.join(repo, 'app/signed-in-home/page.tsx'),
+        `${page}\nexport const moved = true;\n`
+      );
+      git('add', '.');
+      git('commit', '-q', '-m', 'move');
+      // git itself sees a rename here, so a listing with rename detection would name one path.
+      expect(git('diff', '--name-status', '-M', 'main...HEAD')).toMatch(/^R\d+/m);
+
+      const files = listChangedFiles('main', isolatedSpawn);
+      expect(files.sort()).toEqual(['app/(home)/page.tsx', 'app/signed-in-home/page.tsx']);
+
+      const sections = collectScopedDiff({
+        baseRef: 'main',
+        files,
+        repoRoot: repo,
+        spawn: isolatedSpawn,
+      });
+      const byFile = Object.fromEntries(sections.map((s) => [s.file, s.text]));
+      expect(byFile['app/(home)/page.tsx']).toContain('deleted file mode');
+      expect(byFile['app/(home)/page.tsx']).toContain('+++ /dev/null');
+      expect(byFile['app/signed-in-home/page.tsx']).toContain('new file mode');
+      expect(byFile['app/signed-in-home/page.tsx']).toContain('+export const moved = true;');
+      for (const text of Object.values(byFile)) expect(text).not.toMatch(/^rename (from|to) /m);
     } finally {
       rmSync(repo, { recursive: true, force: true });
     }

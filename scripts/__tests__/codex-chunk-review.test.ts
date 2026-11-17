@@ -43,6 +43,17 @@ describe('listing changed files', () => {
     for (const c of calls) expect(c.options.shell).toBeUndefined();
   });
 
+  it('lists a renamed file under both paths (no rename detection)', () => {
+    const calls: string[][] = [];
+    const spawn = (_cmd: string, args: string[]) => {
+      calls.push(args);
+      return { status: 0, stdout: '' };
+    };
+    listChangedFiles('origin/main', spawn);
+    expect(calls).toHaveLength(2);
+    for (const args of calls) expect(args).toContain('--no-renames');
+  });
+
   it('ignores a failed staged listing', () => {
     const spawn = (_c: string, args: string[]) =>
       args.includes('--cached') ? { status: 128, stdout: '' } : { status: 0, stdout: 'a.ts\n' };
