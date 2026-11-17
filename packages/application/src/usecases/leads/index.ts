@@ -8,4 +8,5 @@ export * from './QualifyLeadUseCase';
 export * from './ConvertLeadUseCase';
 export * from './ConvertLeadToContactUseCase';
 export * from './ConvertLeadToDealUseCase';
+export * from './UndoLeadConversionUseCase';
 export * from './ConversionSnapshot';

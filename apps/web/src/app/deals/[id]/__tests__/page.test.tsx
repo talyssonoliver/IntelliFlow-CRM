@@ -122,6 +122,7 @@ vi.mock('@/lib/auth/AuthContext', () => ({
   }),
 }));
 
+vi.mock('@/components/deals/UndoConversion', () => ({ useConversionUndo: () => ({}) }));
 vi.mock('@/lib/api', () => ({
   api: {
     opportunity: {
@@ -503,7 +504,6 @@ describe('DealDetailPage', () => {
       expect(stageElements.length).toBeGreaterThan(0);
     });
 
-    // The bar colours are tested with the card itself (DealStageProgress.test.tsx, MVP-003).
     it('offers "Add value" for a deal without a value and opens the edit form (MVP-003)', async () => {
       (mockOpportunityQueryState.data as Record<string, unknown>).value = 0;
       const { default: DealDetailPage } = await import('../page');

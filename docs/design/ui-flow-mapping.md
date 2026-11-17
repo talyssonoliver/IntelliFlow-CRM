@@ -3,7 +3,7 @@
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-05-02
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
 > Guide Components **Total Pages**: 221 implemented **Total Flows**: 42 **API
-> Routers**: 79 (464 procedures)
+> Routers**: 80 (466 procedures)
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -718,6 +718,7 @@ data
 | ---------------------------- | ---------- | ---------------------------------------------------------------------------------------------------------- | ----------------- |
 | `auth`                       | 18         | `/login`, `/signup`, `/auth/*`, `/settings/account`                                                        | ✅ Active         |
 | `lead`                       | 18         | `/leads`, `/leads/new`, `/leads/[id]`                                                                      | ✅ Active         |
+| `leadConversion`             | 2          | `/deals/[id]` (MVP-003: undo a lead-to-deal conversion)                                                    | ✅ Active         |
 | `contact`                    | 17         | `/contacts`, `/contacts/new`, `/contacts/[id]`                                                             | ✅ Active         |
 | `account`                    | 12         | `/accounts`, `/accounts/[id]`                                                                              | ✅ Active         |
 | `opportunity`                | 12         | `/deals`, `/deals/[id]`                                                                                    | ✅ Active         |
@@ -775,7 +776,7 @@ data
 | `calendar.eventTypes`        | 6          | `/calendar/event-types`, `/calendar/new` (PG-203)                                                          | ✅ Active         |
 | `publicBooking`              | 3          | `/book/[handle]/[slug]` (PG-203, public)                                                                   | ✅ Active         |
 | `privacy`                    | 17         | `/dsar/[handle]/*` (public), `/settings/privacy-requests` (admin), lead and contact detail banner (PG-203) | ✅ Active         |
-| **Total**                    | **464**    | **58 routers**                                                                                             |                   |
+| **Total**                    | **466**    | **59 routers**                                                                                             |                   |
 
 ---
 

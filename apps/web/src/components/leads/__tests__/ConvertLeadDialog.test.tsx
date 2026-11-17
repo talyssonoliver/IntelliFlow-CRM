@@ -17,6 +17,7 @@ const mocks = vi.hoisted(() => ({
   push: vi.fn(),
   toast: vi.fn(),
   revalidate: vi.fn(),
+  undo: vi.fn(),
   contactOpts: {} as Opts,
   dealOpts: {} as Opts,
 }));
@@ -25,6 +26,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: mocks.push }) }));
 
 vi.mock('@/lib/api', () => ({
   api: {
+    useUtils: () => ({ client: {} }),
     lead: {
       convert: {
         useMutation: (opts: Opts) => {
@@ -43,11 +45,20 @@ vi.mock('@/lib/api', () => ({
 }));
 
 vi.mock('@/app/leads/actions', () => ({ revalidateLeadConversionCaches: mocks.revalidate }));
+vi.mock('@/components/deals/UndoConversion', () => ({
+  UNDONE_TOAST: { title: 'Conversion undone' },
+  undoConversion: mocks.undo,
+}));
 
 vi.mock('@intelliflow/ui', () => {
   const Pass = ({ children }: { children?: React.ReactNode }) => <div>{children}</div>;
   return {
     toast: mocks.toast,
+    ToastAction: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
+      <button type="button" onClick={onClick}>
+        {children}
+      </button>
+    ),
     // A hidden close control lets tests close the dialog the way Escape or a click outside does.
     AlertDialog: ({
       children,
@@ -200,6 +211,32 @@ describe('ConvertLeadDialog', () => {
       expect.objectContaining({ title: 'Lead converted to a deal' })
     );
     expect(mocks.push).toHaveBeenCalledWith('/deals/opp-9');
+  });
+
+  it("the convert toast's Undo undoes the conversion and goes back to the lead (MVP-003)", async () => {
+    mocks.undo.mockResolvedValueOnce('lead-1');
+    renderDialog();
+    mocks.dealOpts.onSuccess?.({ opportunityId: 'opp-9' });
+    const { action } = mocks.toast.mock.calls.at(-1)?.[0] as { action: React.ReactElement };
+    render(action);
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(mocks.undo).toHaveBeenCalledWith({}, 'opp-9', 'user-1');
+    await vi.waitFor(() => expect(mocks.push).toHaveBeenLastCalledWith('/leads/lead-1'));
+    expect(mocks.toast).toHaveBeenLastCalledWith({ title: 'Conversion undone' });
+  });
+
+  it('tells the user when the toast Undo fails', async () => {
+    mocks.undo.mockRejectedValueOnce(new Error('This conversion can no longer be undone: x.'));
+    renderDialog();
+    mocks.dealOpts.onSuccess?.({ opportunityId: 'opp-9' });
+    const { action } = mocks.toast.mock.calls.at(-1)?.[0] as { action: React.ReactElement };
+    render(action);
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    await vi.waitFor(() =>
+      expect(mocks.toast).toHaveBeenLastCalledWith(
+        expect.objectContaining({ title: 'Could not undo the conversion', variant: 'destructive' })
+      )
+    );
   });
 
   it('on contact success opens the new contact', () => {
