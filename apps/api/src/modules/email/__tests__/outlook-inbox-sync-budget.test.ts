@@ -4,8 +4,15 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const tokens = vi.hoisted(() => ({ getOAuthAccess: vi.fn() }));
-vi.mock('../mailbox-transport', () => ({ getOAuthAccess: tokens.getOAuthAccess }));
+const tokens = vi.hoisted(() => ({
+  getOAuthAccess: vi.fn(),
+  hasOAuthClient: vi.fn((..._args: unknown[]) => true),
+}));
+vi.mock('../mailbox-transport', () => ({
+  getOAuthAccess: tokens.getOAuthAccess,
+  hasOAuthClient: tokens.hasOAuthClient,
+  oauthClientEnvNames: (kind: string) => [`EMAIL_OAUTH_${kind}_CLIENT_ID`],
+}));
 
 import { runInboxSync } from '../outlook-inbox-sync';
 import { CURSOR, NOW, mail, released, round, setup } from './inbox-sync-harness';
