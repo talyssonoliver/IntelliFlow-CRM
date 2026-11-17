@@ -10,15 +10,30 @@ import {
   ActivityFeedStatsBar,
   type ActivityFeedTypeFilterValue,
 } from '@/components/shared/activity-feed';
+import { SystemUpdatesGroup } from '@/components/leads/SystemUpdatesGroup';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { useActivityFeed } from '@/hooks/useActivityFeed';
 import { useActivityFeedSearch } from '@/hooks/useActivityFeedSearch';
+import type { ActivityFeedItemProps } from '@/components/shared/activity-feed/ActivityFeedItem';
+import {
+  PERSONAL_FEED_TYPES,
+  SYSTEM_FEED_TYPES,
+  emptyFeedMessage,
+  mergeById,
+  splitActivityLog,
+} from '@/lib/activity/activity-log-split';
 import type { ActivityFeedType } from '@intelliflow/domain';
 
 const DEFAULT_FILTER: ActivityFeedTypeFilterValue = 'all';
+/** Keep loading older pages while the person-written feed is this short (the system writes most). */
+const MIN_PERSONAL_ENTRIES = 10;
+/** ...but never load more than this many entries just to find them. */
+const MAX_AUTO_LOADED_ENTRIES = 500;
 
 export default function ActivityPage() {
-  const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
   const [feedFilter, setFeedFilter] = useState<ActivityFeedTypeFilterValue>(DEFAULT_FILTER);
+  const [mineOnly, setMineOnly] = useState(false);
   const searchParams = useSearchParams();
   const [searchInput, setSearchInput] = useState(searchParams.get('q') ?? '');
   const deferredSearch = useDeferredValue(searchInput);
@@ -34,23 +49,78 @@ export default function ActivityPage() {
     }
   }, [searchParams]);
 
+  // "All Activity" folds the system's entries into one group; picking a type shows that type as is.
+  const foldSystem = feedFilter === 'all';
   const feedTypes = useMemo(
-    () => (feedFilter === 'all' ? undefined : [feedFilter as ActivityFeedType]),
-    [feedFilter]
+    () => (foldSystem ? PERSONAL_FEED_TYPES : [feedFilter as ActivityFeedType]),
+    [feedFilter, foldSystem]
   );
 
   const search = useActivityFeedSearch({
     query: deferredSearch,
     limit: 50,
-    types: feedTypes,
+    types: foldSystem ? undefined : feedTypes,
     enabled: isAuthenticated,
   });
+  const personalFeed = useActivityFeed({
+    limit: 50,
+    types: feedTypes,
+    enabled: isAuthenticated && !search.isSearchActive,
+  });
+  const systemFeed = useActivityFeed({
+    limit: 50,
+    types: SYSTEM_FEED_TYPES,
+    enabled: isAuthenticated && !search.isSearchActive && foldSystem && !mineOnly,
+  });
+  const source: {
+    items: ActivityFeedItemProps[];
+    isLoading: boolean;
+    isError: boolean;
+    error: { message: string } | null;
+    isFetchingNextPage: boolean;
+    hasNextPage: boolean;
+    fetchNextPage: () => void;
+  } = search.isSearchActive ? search : personalFeed;
+  const mineUserId = mineOnly ? (user?.id ?? null) : null;
+  const split = useMemo(
+    () =>
+      foldSystem
+        ? splitActivityLog(source.items, mineUserId)
+        : { personal: source.items, system: [] },
+    [foldSystem, source.items, mineUserId]
+  );
+  // A disabled query still returns what it cached, so the group is shown only while it applies.
+  const showSystemGroup = foldSystem && !mineOnly;
+  const systemFeedLive = showSystemGroup && !search.isSearchActive;
+  const systemItems = useMemo(
+    () =>
+      showSystemGroup
+        ? mergeById<ActivityFeedItemProps>(systemFeedLive ? systemFeed.items : [], split.system)
+        : [],
+    [showSystemGroup, systemFeedLive, systemFeed.items, split.system]
+  );
+  const systemHasMore = systemFeedLive && systemFeed.hasNextPage;
 
-  const hasActiveFilter = feedFilter !== DEFAULT_FILTER || searchInput.length > 0;
+  // The system writes most of this workspace's entries, so a page of 50 may hold few or none of
+  // the person-written ones: keep loading older pages (bounded) until the feed has some.
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = source;
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+    if (split.personal.length >= MIN_PERSONAL_ENTRIES) return;
+    if (source.items.length >= MAX_AUTO_LOADED_ENTRIES) return;
+    fetchNextPage();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, split.personal.length, source.items.length]);
+
+  const hasActiveFilter = feedFilter !== DEFAULT_FILTER || searchInput.length > 0 || mineOnly;
+  const deepLinkedSystemId =
+    selectedActivityId && systemItems.some((item) => item.id === selectedActivityId)
+      ? selectedActivityId
+      : null;
 
   const handleClearFilters = useCallback(() => {
     setFeedFilter(DEFAULT_FILTER);
     setSearchInput('');
+    setMineOnly(false);
   }, []);
 
   if (authLoading) {
@@ -109,6 +179,18 @@ export default function ActivityPage() {
                   aria-label="Search activity feed"
                 />
               </div>
+              <button
+                type="button"
+                onClick={() => setMineOnly((v) => !v)}
+                aria-pressed={mineOnly}
+                className={`px-3 py-1.5 text-sm rounded-lg border transition-colors ${
+                  mineOnly
+                    ? 'border-[#2a78f6] bg-[#2a78f6]/10 text-[#2a78f6]'
+                    : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                }`}
+              >
+                My activity
+              </button>
               <ActivityFeedTypeFilter value={feedFilter} onChange={setFeedFilter} />
             </div>
           </div>
@@ -121,34 +203,41 @@ export default function ActivityPage() {
               showBreakdown
             />
           </div>
-          {search.isSearchActive ? (
-            <ActivityFeed
-              items={search.items}
-              isLoading={search.isLoading}
-              isError={search.isError}
-              error={search.error}
-              isFetchingNextPage={search.isFetchingNextPage}
-              hasNextPage={search.hasNextPage}
-              fetchNextPage={search.fetchNextPage}
-              height={680}
-              className="p-3 sm:p-4"
-              emptyMessage="No activity matches your search"
-              selectedId={selectedActivityId}
-            />
-          ) : (
-            <ActivityFeed
-              limit={50}
-              types={feedTypes}
-              enabled={isAuthenticated}
-              height={680}
-              className="p-3 sm:p-4"
-              emptyMessage={
-                hasActiveFilter
-                  ? 'No activity matches the selected filter'
-                  : 'No activity recorded yet'
-              }
-              selectedId={selectedActivityId}
-            />
+          <ActivityFeed
+            items={split.personal}
+            isLoading={source.isLoading}
+            isError={source.isError}
+            error={source.error}
+            isFetchingNextPage={source.isFetchingNextPage}
+            hasNextPage={source.hasNextPage}
+            fetchNextPage={source.fetchNextPage}
+            height={680}
+            className="p-3 sm:p-4"
+            emptyMessage={emptyFeedMessage({
+              mine: mineOnly,
+              filtered: feedFilter !== DEFAULT_FILTER,
+              searching: search.isSearchActive,
+              systemCount: systemItems.length,
+            })}
+            selectedId={selectedActivityId}
+          />
+          {systemItems.length > 0 && (
+            <div className="p-3 sm:p-4 border-t border-[#e2e8f0] dark:border-[#334155]">
+              <SystemUpdatesGroup
+                count={systemItems.length}
+                more={systemHasMore}
+                deepLinkedId={deepLinkedSystemId}
+              >
+                <ActivityFeed
+                  items={systemItems}
+                  hasNextPage={systemHasMore}
+                  fetchNextPage={systemFeed.fetchNextPage}
+                  isFetchingNextPage={systemFeed.isFetchingNextPage}
+                  height={480}
+                  selectedId={selectedActivityId}
+                />
+              </SystemUpdatesGroup>
+            </div>
           )}
         </Card>
       </div>

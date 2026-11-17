@@ -12,8 +12,15 @@ import { useEffect, useState } from 'react';
 export function SystemUpdatesGroup({
   count,
   deepLinkedId = null,
+  more = false,
   children,
-}: Readonly<{ count: number; deepLinkedId?: string | null; children: React.ReactNode }>) {
+}: Readonly<{
+  count: number;
+  deepLinkedId?: string | null;
+  /** More entries exist than are loaded: the count reads "50+". */
+  more?: boolean;
+  children: React.ReactNode;
+}>) {
   const [open, setOpen] = useState(deepLinkedId !== null);
 
   useEffect(() => {
@@ -40,7 +47,8 @@ export function SystemUpdatesGroup({
           <span className="material-symbols-outlined !text-[18px]" aria-hidden="true">
             settings
           </span>
-          System updates ({count})
+          System updates ({count}
+          {more ? '+' : ''})
         </span>
         <span
           className={`material-symbols-outlined !text-[18px] transition-transform ${open ? 'rotate-180' : ''}`}

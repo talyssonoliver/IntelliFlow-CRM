@@ -1,0 +1,114 @@
+import { describe, it, expect } from 'vitest';
+import { ACTIVITY_FEED_TYPES } from '@intelliflow/domain';
+import {
+  PERSONAL_FEED_TYPES,
+  SYSTEM_FEED_TYPES,
+  emptyFeedMessage,
+  isSystemFeedEntry,
+  mergeById,
+  splitActivityLog,
+} from '../activity-log-split';
+
+const entry = (
+  id: string,
+  type: string,
+  actor: { id: string | null; name: string } | null,
+  timestamp = '2026-11-16T10:00:00Z'
+) => ({ id, type, actor, timestamp });
+
+const me = { id: 'user-1', name: 'Talysson' };
+const other = { id: 'user-2', name: 'Bob Wilson' };
+const coa = { id: null, name: 'System (COA sync)' };
+
+describe('feed type lists', () => {
+  it('cover every feed type exactly once between them', () => {
+    expect([...SYSTEM_FEED_TYPES, ...PERSONAL_FEED_TYPES].sort()).toEqual(
+      [...ACTIVITY_FEED_TYPES].sort()
+    );
+  });
+});
+
+describe('isSystemFeedEntry', () => {
+  it('is true for the system types whoever the author is', () => {
+    expect(isSystemFeedEntry(entry('a', 'SCORE_UPDATE', me))).toBe(true);
+    expect(isSystemFeedEntry(entry('b', 'STATUS_CHANGE', null))).toBe(true);
+    expect(isSystemFeedEntry(entry('c', 'SYSTEM', me))).toBe(true);
+  });
+
+  it('is true for a "System (...)" author on any type', () => {
+    expect(isSystemFeedEntry(entry('a', 'NOTE', coa))).toBe(true);
+    expect(isSystemFeedEntry(entry('b', 'NOTE', { id: null, name: 'System' }))).toBe(true);
+    expect(isSystemFeedEntry(entry('c', 'NOTE', { id: null, name: ' System (portal) ' }))).toBe(
+      true
+    );
+  });
+
+  it('is false for a person, even one whose name starts with System', () => {
+    expect(isSystemFeedEntry(entry('a', 'EMAIL', me))).toBe(false);
+    expect(isSystemFeedEntry(entry('b', 'NOTE', { id: 'u', name: 'System Admin' }))).toBe(false);
+    expect(isSystemFeedEntry(entry('c', 'CALL', null))).toBe(false);
+  });
+});
+
+describe('splitActivityLog', () => {
+  const all = [
+    entry('1', 'CALL', me),
+    entry('2', 'STATUS_CHANGE', coa),
+    entry('3', 'EMAIL', other),
+    entry('4', 'NOTE', coa),
+    entry('5', 'NOTE', me),
+  ];
+
+  it('puts what people did in the feed and what the system wrote in the group, in order', () => {
+    const { personal, system } = splitActivityLog(all, null);
+
+    expect(personal.map((e) => e.id)).toEqual(['1', '3', '5']);
+    expect(system.map((e) => e.id)).toEqual(['2', '4']);
+  });
+
+  it('keeps only his own entries for My activity, and no system group', () => {
+    const { personal, system } = splitActivityLog(all, 'user-1');
+
+    expect(personal.map((e) => e.id)).toEqual(['1', '5']);
+    expect(system).toEqual([]);
+  });
+
+  it('handles an empty list', () => {
+    expect(splitActivityLog([], null)).toEqual({ personal: [], system: [] });
+  });
+});
+
+describe('mergeById', () => {
+  it('joins two lists without repeating an entry, newest first', () => {
+    const a = [entry('1', 'NOTE', coa, '2026-11-16T09:00:00Z')];
+    const b = [
+      entry('2', 'NOTE', coa, '2026-11-16T11:00:00Z'),
+      entry('1', 'NOTE', coa, '2026-11-16T09:00:00Z'),
+    ];
+
+    expect(mergeById(a, b).map((e) => e.id)).toEqual(['2', '1']);
+  });
+});
+
+describe('emptyFeedMessage', () => {
+  const base = { mine: false, filtered: false, searching: false, systemCount: 0 };
+
+  it('says only system updates exist when they are all there is', () => {
+    expect(emptyFeedMessage({ ...base, systemCount: 3 })).toBe(
+      'No emails, calls, notes or meetings yet. Only system updates so far.'
+    );
+  });
+
+  it('says the right thing for search, filter, My activity and a truly empty log', () => {
+    expect(emptyFeedMessage({ ...base, searching: true, systemCount: 3 })).toBe(
+      'No activity matches your search'
+    );
+    expect(emptyFeedMessage({ ...base, mine: true, systemCount: 3 })).toBe(
+      'You have no activity yet'
+    );
+    expect(emptyFeedMessage({ ...base, filtered: true })).toBe(
+      'No activity matches the selected filter'
+    );
+    expect(emptyFeedMessage(base)).toBe('No activity recorded yet');
+  });
+});
