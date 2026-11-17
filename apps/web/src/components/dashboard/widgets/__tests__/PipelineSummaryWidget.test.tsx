@@ -71,6 +71,17 @@ describe('PipelineSummaryWidget: one funnel, leads then deals', () => {
     expect(screen.getByText(/£0 \(0 Deals\)/)).toBeInTheDocument();
   });
 
+  it('says "1 Deal", not "1 Deals"', () => {
+    pipeline = {
+      data: {
+        stages: [{ stageKey: 'PROPOSAL', displayName: 'Proposal', count: 1, totalValue: 120000 }],
+      },
+      isLoading: false,
+    };
+    render(<PipelineSummaryWidget />);
+    expect(screen.getByText('£120,000 (1 Deal)')).toBeInTheDocument();
+  });
+
   it('sums the open stages in the deals heading', () => {
     render(<PipelineSummaryWidget />);
     expect(within(dealsSection()).getByText('£50,000 open across 11 deals')).toBeInTheDocument();
@@ -121,7 +132,8 @@ describe('PipelineSummaryWidget with no open deals', () => {
 
     expect(within(leadsSection()).getByText('4 leads')).toBeInTheDocument();
     expect(screen.queryByText(/\(0 Deals\)/)).not.toBeInTheDocument();
-    expect(within(dealsSection()).getByText(/No open deals yet/)).toBeInTheDocument();
+    // The shared deals empty state fills that half of the card, instead of one line.
+    expect(within(dealsSection()).getByText('No deals yet')).toBeInTheDocument();
   });
 
   it('points at the qualified leads ready to convert', () => {

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { EmptyState } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import {
   DASHBOARD_REFETCH_INTERVAL_MS,
@@ -162,9 +163,8 @@ function DealsSection({ stages, state }: Readonly<{ stages: PipelineStage[]; sta
     return (
       <section aria-label="Deals" className="flex flex-col">
         <SectionHeading title="Deals" />
-        <p className="text-sm text-muted-foreground">
-          No open deals yet. They appear here, by stage, as you convert leads.
-        </p>
+        {/* Read-only here: the create action is on the leads (convert a qualified lead). */}
+        <EmptyState entity="deals" showCta={false} className="flex-1 justify-center py-2" />
       </section>
     );
   }
@@ -183,7 +183,7 @@ function DealsSection({ stages, state }: Readonly<{ stages: PipelineStage[]; sta
           <Row
             key={stage.stageKey}
             label={stage.displayName}
-            detail={`${formatGBP(stage.totalValue)} (${stage.count} Deals)`}
+            detail={`${formatGBP(stage.totalValue)} (${stage.count} ${stage.count === 1 ? 'Deal' : 'Deals'})`}
             percent={computePipelineStagePercent(stage.totalValue, displayedTotal)}
             color={STAGE_COLORS[stage.stageKey] || 'bg-primary'}
           />
