@@ -66,7 +66,8 @@ describe('Sitemap Reconciliation', () => {
     // PG-203: +1 for the public booking page (public)/book/[handle]/[slug]/page.tsx → 216.
     const pageFiles = findPageFiles(APP_DIR);
     // PG-203 DSAR: +4 (3 public /dsar pages, /settings/privacy-requests) → 220.
-    expect(pageFiles.length).toBe(220);
+    // MVP-007: +1, the signed-in home (app/(public)/signed-in-home) → 221.
+    expect(pageFiles.length).toBe(221);
   });
 
   // TC-26

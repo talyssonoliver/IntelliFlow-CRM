@@ -89,6 +89,42 @@ describe('proxy: pages that load', () => {
   });
 });
 
+describe('proxy: the home page', () => {
+  const rewrittenTo = (res: Response) => res.headers.get('x-middleware-rewrite');
+
+  it('rewrites a signed-in visit to / to the signed-in home, keeping the query', () => {
+    const res = proxy(request('/?_rsc=abc', { token: tokenExpiringIn(3600) }));
+
+    expect(res.status).toBe(200);
+    const target = new URL(rewrittenTo(res)!);
+    expect(target.pathname).toBe('/signed-in-home');
+    expect(target.searchParams.get('_rsc')).toBe('abc');
+    expect(res.headers.get('location')).toBeNull();
+  });
+
+  it('passes the request id on with the rewrite', () => {
+    const res = proxy(request('/', { token: tokenExpiringIn(3600), requestId: 'req-home' }));
+
+    expect(res.headers.get('x-middleware-request-x-request-id')).toBe('req-home');
+    expect(res.headers.get(CSP_REPORT_ONLY_HEADER)).toBeTruthy();
+  });
+
+  it('leaves a signed-out visit to / on the prerendered landing page', () => {
+    expect(rewrittenTo(proxy(request('/')))).toBeNull();
+  });
+
+  it('treats an expired token on / as signed out and drops the cookie', () => {
+    const res = proxy(request('/', { token: tokenExpiringIn(-60) }));
+
+    expect(rewrittenTo(res)).toBeNull();
+    expect(res.headers.get('set-cookie')).toMatch(/accessToken=;/);
+  });
+
+  it('rewrites only the home page, not other signed-in pages', () => {
+    expect(rewrittenTo(proxy(request('/pricing', { token: tokenExpiringIn(3600) })))).toBeNull();
+  });
+});
+
 describe('proxy: headers', () => {
   it('sends the policy report-only, never as an enforced policy', () => {
     const res = proxy(request('/'));

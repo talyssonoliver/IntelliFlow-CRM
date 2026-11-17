@@ -1,8 +1,9 @@
 import { LoadingForSession } from '@/components/shared/loading-for-session';
+import { QuickActionsCardSkeleton } from '@/components/home/QuickActionsCardSkeleton';
 
 /**
- * Home page loading skeleton — scoped to `/` only via the `(home)` nested
- * route group. Other routes in `(public)/` (login, pricing, etc.) continue
+ * Home page loading skeleton — scoped to the signed-in home, which the proxy
+ * serves at `/` (lib/auth/home-paths). Other routes in `(public)/` (login, pricing, etc.) continue
  * to use the dark marketing skeleton at `(public)/loading.tsx`.
  *
  * This skeleton mirrors the layout of `<AuthenticatedHomePage />` — welcome
@@ -48,14 +49,7 @@ export default function HomeLoading() {
             </div>
 
             {/* Quick Actions card — 1 col */}
-            <div className="col-span-1 bg-white dark:bg-[#1e2936] rounded-xl border border-[#e2e8f0] dark:border-[#334155] shadow-sm p-5">
-              <div className="h-5 w-28 bg-slate-200 dark:bg-slate-700 rounded mb-4" />
-              <div className="grid grid-cols-2 gap-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-20 bg-slate-100 dark:bg-slate-800 rounded-lg" />
-                ))}
-              </div>
-            </div>
+            <QuickActionsCardSkeleton />
 
             {/* Activity Feed card — spans 3 cols, 2 rows */}
             <div className="col-span-1 md:col-span-2 lg:col-span-3 row-span-2 bg-white dark:bg-[#1e2936] rounded-xl border border-[#e2e8f0] dark:border-[#334155] shadow-sm">

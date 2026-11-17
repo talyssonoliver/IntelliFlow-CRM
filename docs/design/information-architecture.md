@@ -1,7 +1,7 @@
 # IntelliFlow CRM - Information Architecture
 
 > **Location**: `docs/design/information-architecture.md` **Last Updated**:
-> 2026-05-02 **Total Pages**: 220 | **Total Flows**: 48 | **API Routers**: 79
+> 2026-05-02 **Total Pages**: 221 | **Total Flows**: 48 | **API Routers**: 79
 > (381 procedures) | **Ghost Links**: 0
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
@@ -541,8 +541,8 @@ Four distinct layout patterns used across modules.
 
 | Category        | Count |
 | --------------- | ----- |
-| **Total Pages** | 220   |
-| Public Pages    | 36    |
+| **Total Pages** | 221   |
+| Public Pages    | 37    |
 | Developer Pages | 14    |
 | Protected Pages | 170   |
 
