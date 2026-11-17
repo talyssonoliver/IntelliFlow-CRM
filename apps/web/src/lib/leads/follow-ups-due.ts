@@ -1,9 +1,11 @@
 /**
  * Follow-ups due on the dashboard's Upcoming Tasks card (MVP-010).
  *
- * A lead has no stored follow-up date, so one is derived the way the Leads "Needs Follow-up"
- * view does it: a contacted lead is due a follow-up 7 days after its last contact, and a lead
- * that was never actually contacted is due now. Days are UTC days, as on the tasks next to it.
+ * A lead has no stored follow-up date, so one is derived with the same 7 day rule as the Leads
+ * "Needs Follow-up" view: a contacted lead is due a follow-up 7 days after its last contact, and a
+ * lead that was never actually contacted is due now. The card counts whole UTC days, as the tasks
+ * next to it do, where that view uses a rolling 7 x 24 hours, so a lead contacted late on a day
+ * shows on the card as "Due today" a few hours before the view lists it.
  */
 
 const DAY_MS = 86_400_000;
