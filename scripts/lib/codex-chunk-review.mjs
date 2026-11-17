@@ -23,22 +23,16 @@ const lines = (text) =>
 export function listChangedFiles(base, spawn) {
   const options = { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true };
   const quote = ['-c', 'core.quotePath=false'];
-  const committed = spawn(
-    'git',
-    [...quote, 'diff', '--name-only', '--no-renames', `${base}...HEAD`],
-    options
-  );
+  const committedArgs = [...quote, 'diff', '--name-only', '--no-renames', `${base}...HEAD`];
+  const committed = spawn('git', committedArgs, options);
   if (committed.error || committed.status !== 0) {
     const reason = committed.error
       ? committed.error.message
       : (committed.stderr || '').trim() || `exit ${committed.status}`;
     throw new DiffInputError('base-unresolved', `cannot list changes against ${base}: ${reason}`);
   }
-  const staged = spawn(
-    'git',
-    [...quote, 'diff', '--cached', '--name-only', '--no-renames'],
-    options
-  );
+  const stagedArgs = [...quote, 'diff', '--cached', '--name-only', '--no-renames'];
+  const staged = spawn('git', stagedArgs, options);
   const stagedFiles = staged.status === 0 ? lines(staged.stdout || '') : [];
   return [...new Set([...lines(committed.stdout || ''), ...stagedFiles])];
 }
