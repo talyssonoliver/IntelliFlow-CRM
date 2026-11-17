@@ -110,6 +110,12 @@ describe('planCompanyChange', () => {
   });
 });
 
+/** lead.updateMany calls that write the company; the sync's last-contact write is a separate one. */
+const companyWrites = () =>
+  prismaMock.lead.updateMany.mock.calls.filter(
+    (call) => (call[0] as { data: Record<string, unknown> }).data.company !== undefined
+  );
+
 describe('inboundRouter.syncPipelineLead — company correction', () => {
   beforeEach(() => {
     vi.stubEnv('PORTAL_INTERNAL_SECRET', SECRET);
@@ -211,7 +217,7 @@ describe('inboundRouter.syncPipelineLead — company correction', () => {
 
     await expect(caller().syncPipelineLead(payload({ applyCompany: true }))).rejects.toBeDefined();
 
-    expect(prismaMock.lead.updateMany).toHaveBeenCalledTimes(1);
+    expect(companyWrites()).toHaveLength(1);
     expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
     expect(noteMetadata(0)).toMatchObject({
       source: 'coa-company-correction',
@@ -223,7 +229,7 @@ describe('inboundRouter.syncPipelineLead — company correction', () => {
     const retry = await caller().syncPipelineLead(payload({ applyCompany: true }));
 
     expect(retry.companyChange).toBeUndefined();
-    expect(prismaMock.lead.updateMany).toHaveBeenCalledTimes(1);
+    expect(companyWrites()).toHaveLength(1);
     error.mockRestore();
   });
 
@@ -232,7 +238,7 @@ describe('inboundRouter.syncPipelineLead — company correction', () => {
 
     const result = await caller().syncPipelineLead(payload());
 
-    expect(prismaMock.lead.updateMany).not.toHaveBeenCalled();
+    expect(companyWrites()).toHaveLength(0);
     expect(result.companyChange).toEqual({ from: LISTING, to: TRADING, applied: false });
     expect(noteMetadata()).toMatchObject({
       listingName: LISTING,
@@ -245,7 +251,7 @@ describe('inboundRouter.syncPipelineLead — company correction', () => {
 
     const result = await caller().syncPipelineLead(payload({ applyCompany: true }));
 
-    expect(prismaMock.lead.updateMany).not.toHaveBeenCalled();
+    expect(companyWrites()).toHaveLength(0);
     expect(result.companyChange).toBeUndefined();
     expect(noteMetadata()).not.toHaveProperty('companyChange');
     // The three COA fields are still recorded for the audit trail.
@@ -268,7 +274,7 @@ describe('inboundRouter.syncPipelineLead — company correction', () => {
     const result = await caller().syncPipelineLead(payload({ applyCompany: true }));
 
     expect(createLead().mock.calls[0]?.[0]).toMatchObject({ company: TRADING });
-    expect(prismaMock.lead.updateMany).not.toHaveBeenCalled();
+    expect(companyWrites()).toHaveLength(0);
     expect(result.companyChange).toBeUndefined();
   });
 
@@ -281,7 +287,7 @@ describe('inboundRouter.syncPipelineLead — company correction', () => {
 
     const result = await caller().syncPipelineLead(payload({ applyCompany: true }));
 
-    expect(prismaMock.lead.updateMany).toHaveBeenCalledTimes(1);
+    expect(companyWrites()).toHaveLength(1);
     expect(result.changed).toBe(false);
     expect(result.companyChange).toEqual({ from: LISTING, to: TRADING, applied: true });
     expect(prismaMock.leadActivity.create).toHaveBeenCalledTimes(1);
@@ -410,7 +416,7 @@ describe('inboundRouter.syncPipelineLead — dryRun', () => {
     expect(createLead()).not.toHaveBeenCalled();
     expect(changeStatus()).not.toHaveBeenCalled();
     expect(qualify()).not.toHaveBeenCalled();
-    expect(prismaMock.lead.updateMany).not.toHaveBeenCalled();
+    expect(companyWrites()).toHaveLength(0);
     expect(prismaMock.lead.update).not.toHaveBeenCalled();
     expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
     expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
