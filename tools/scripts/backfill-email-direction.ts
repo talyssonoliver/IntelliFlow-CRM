@@ -28,9 +28,15 @@
  *   DATABASE_URL=<db> pnpm tsx tools/scripts/backfill-email-direction.ts --apply
  */
 
-import { PrismaClient } from '../../packages/db/generated/prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
 import { isReplyReceivedTitle } from '../../apps/api/src/modules/lead/lead-activity-direction';
+import {
+  connect,
+  databaseUrl,
+  modeLine,
+  modeOf,
+  runWhenInvoked,
+  type BackfillPrisma,
+} from './lib/backfill-cli';
 
 const BATCH_SIZE = 200;
 const TAG = '[backfill-email-direction]';
@@ -76,7 +82,7 @@ export function planDirectionFix(row: {
   return { metadata: { ...meta, direction: 'inbound' } };
 }
 
-type Prisma = InstanceType<typeof PrismaClient>;
+type Prisma = BackfillPrisma;
 
 export interface Totals {
   fixed: number;
@@ -120,7 +126,7 @@ async function handleRow(
   }
   totals.fixed += 1;
   console.log(
-    `${TAG} ${args.isApply ? 'setting' : 'would set'} row=${row.id} tenant=${row.tenantId}` +
+    `${TAG} ${modeOf(args) === 'APPLY' ? 'setting' : 'would set'} row=${row.id} tenant=${row.tenantId}` +
       ` lead=${row.leadId} title=${JSON.stringify(row.title)}` +
       ` metadata ${JSON.stringify(row.metadata)} -> ${JSON.stringify(fix.metadata)}`
   );
@@ -143,21 +149,14 @@ export async function run(prisma: Prisma, args: ParsedArgs, totals: Totals): Pro
 }
 
 export async function main(): Promise<void> {
-  if (!process.env['DATABASE_URL']) {
-    console.error(`${TAG} ERROR: DATABASE_URL is not set.`);
+  const url = databaseUrl(TAG);
+  if (!url) {
     process.exit(1);
     return;
   }
   const args = parseArgs(process.argv);
-  const prisma = new PrismaClient({
-    adapter: new PrismaPg({ connectionString: process.env['DATABASE_URL'] }),
-  });
-
-  console.log(
-    `${TAG} mode=${args.isApply ? 'APPLY' : 'DRY-RUN'}` +
-      (args.tenantFilter ? ` tenant=${args.tenantFilter}` : ' (all tenants)') +
-      (args.leadFilter ? ` lead=${args.leadFilter}` : '')
-  );
+  const prisma = connect(url);
+  console.log(modeLine(TAG, args));
 
   const totals: Totals = { fixed: 0, skipped: 0 };
   try {
@@ -166,17 +165,8 @@ export async function main(): Promise<void> {
     await prisma.$disconnect();
   }
 
-  console.log(`${TAG} summary:`, { ...totals, mode: args.isApply ? 'APPLY' : 'DRY-RUN' });
+  console.log(`${TAG} summary:`, { ...totals, mode: modeOf(args) });
 }
 
-// CLI entry point guard: importing this module (e.g. from a test) must not
-// run main(), connect to a database, or call process.exit().
-if (
-  import.meta.url === `file://${process.argv[1]}` ||
-  process.argv[1]?.endsWith('backfill-email-direction.ts')
-) {
-  main().catch((err) => {
-    console.error(`${TAG} FAILED:`, err);
-    process.exit(1);
-  });
-}
+// Importing this module (e.g. from a test) must not run main(), connect to a database, or exit.
+runWhenInvoked(import.meta.url, 'backfill-email-direction.ts', main, TAG);
