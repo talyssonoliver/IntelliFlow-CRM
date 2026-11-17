@@ -45,22 +45,33 @@ describe('isSystemFeedEntry', () => {
     );
   });
 
-  it('matches My activity on the author name or email when the entry has no author id', () => {
+  it('matches My activity on the author email when the entry has no author id, never on a name', () => {
     const entries = [
-      entry('1', 'NOTE', { id: null, name: 'talysson@example.invalid' }),
-      entry('2', 'NOTE', { id: null, name: ' TALYSSON ' }),
+      entry('1', 'NOTE', { id: null, name: ' Talysson@Example.invalid ' }),
+      entry('2', 'NOTE', { id: null, name: 'Talysson' }),
       entry('3', 'NOTE', { id: null, name: 'Bob Wilson' }),
-      entry('4', 'NOTE', { id: 'user-2', name: 'Talysson' }),
+      entry('4', 'NOTE', { id: 'user-2', name: 'talysson@example.invalid' }),
     ];
 
     const { personal } = splitActivityLog(entries, {
       fold: true,
       mine: true,
       userId: 'user-1',
-      userNames: ['Talysson', 'talysson@example.invalid', null],
+      userEmail: 'talysson@example.invalid',
     });
 
-    expect(personal.map((e) => e.id)).toEqual(['1', '2']);
+    expect(personal.map((e) => e.id)).toEqual(['1']);
+  });
+
+  it('folds an automated AI author, but not a person whose id is attached', () => {
+    expect(isSystemFeedEntry(entry('a', 'NOTE', { id: null, name: 'AI Insights' }))).toBe(true);
+    expect(isSystemFeedEntry(entry('b', 'NOTE', { id: null, name: 'AI Scoring Agent' }))).toBe(
+      true
+    );
+    expect(isSystemFeedEntry(entry('c', 'NOTE', { id: 'user-1', name: 'AI Insights' }))).toBe(
+      false
+    );
+    expect(isSystemFeedEntry(entry('d', 'NOTE', { id: null, name: 'Aiden Smith' }))).toBe(false);
   });
 
   it('does not count the display name "System" when a person id is attached', () => {
@@ -88,7 +99,7 @@ describe('isSystemFeedEntry', () => {
       fold: true,
       mine: false,
       userId: 'user-1',
-      userNames: ['talysson@example.invalid'],
+      userEmail: 'talysson@example.invalid',
     });
 
     expect(personal.map((e) => e.id)).toEqual(['1', '2']);

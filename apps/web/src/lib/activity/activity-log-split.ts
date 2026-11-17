@@ -17,6 +17,9 @@ const SYSTEM_FEED_TYPES = new Set(['SYSTEM', 'SCORE_UPDATE', 'STATUS_CHANGE']);
  */
 const SYSTEM_AUTHOR = /^System(?: \([^)]+\))?$/;
 
+/** The automated authors the API names, such as "AI Insights" and "AI Scoring Agent". */
+const AI_AUTHOR = /^AI [A-Z][\w ]*$/;
+
 export interface FeedEntryLike {
   id: string;
   type: string;
@@ -41,7 +44,7 @@ export function isSystemFeedEntry(
   const name = entry.actor?.name.trim() ?? '';
   // The API falls back to the display name "System" for some entries a person wrote (it carries
   // their id), so the name only counts when no person is attached.
-  if (!hasPerson && SYSTEM_AUTHOR.test(name)) return true;
+  if (!hasPerson && (SYSTEM_AUTHOR.test(name) || AI_AUTHOR.test(name))) return true;
   if (entry.source === 'TICKET_ACTIVITY') return false;
   if (!SYSTEM_FEED_TYPES.has(entry.type)) return false;
   // A status change is a person's when it has a person id or an email as its author.
@@ -56,10 +59,12 @@ export interface ActivityLogOptions {
   /** The signed-in person; with `mine` on and no id yet, nothing matches. */
   userId: string | null;
   /**
-   * The signed-in person's name and email. Some entries (tickets, lead activity written with the
-   * author's email) carry no author id, only a name: those match on it, ignoring case.
+   * The signed-in person's email. Lead activity written through logActivity carries the author's
+   * email and no id: those entries match on it, ignoring case. A display name is not used: it is
+   * not unique, so a namesake's entries would pass as his. (Ticket entries carry only a display
+   * name, so they stay out of My activity until the API records the author's id.)
    */
-  userNames?: readonly (string | null | undefined)[];
+  userEmail?: string | null;
 }
 
 /**
@@ -68,15 +73,13 @@ export interface ActivityLogOptions {
  */
 export function splitActivityLog<T extends FeedEntryLike>(
   entries: readonly T[],
-  { fold, mine, userId, userNames = [] }: ActivityLogOptions
+  { fold, mine, userId, userEmail = null }: ActivityLogOptions
 ): { personal: T[]; system: T[] } {
-  const names = new Set(
-    userNames.filter((n): n is string => !!n?.trim()).map((n) => n.trim().toLowerCase())
-  );
+  const email = userEmail?.trim().toLowerCase() ?? '';
   const isMine = (entry: T) => {
     if (!entry.actor) return false;
     if (entry.actor.id) return userId !== null && entry.actor.id === userId;
-    return names.has(entry.actor.name.trim().toLowerCase());
+    return email !== '' && entry.actor.name.trim().toLowerCase() === email;
   };
   const personal: T[] = [];
   const system: T[] = [];
