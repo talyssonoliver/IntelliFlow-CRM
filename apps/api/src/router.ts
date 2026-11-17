@@ -7,6 +7,7 @@
 
 import { createTRPCRouter } from './trpc';
 import { leadRouter } from './modules/lead/lead.router';
+import { conversionUndoRouter } from './modules/lead/conversion-undo.router';
 import { leadSettingsRouter } from './modules/lead/lead-settings.router';
 import { contactRouter } from './modules/contact/contact.router';
 import { contactSettingsRouter } from './modules/contact/contact-settings.router';
@@ -144,6 +145,8 @@ export const appRouter = createTRPCRouter({
 
   // Core CRM entities
   lead: leadRouter,
+  // MVP-003: undo a lead-to-deal conversion while nothing has happened since
+  leadConversion: conversionUndoRouter,
   contact: contactRouter,
   account: accountRouter,
   opportunity: opportunityRouter,

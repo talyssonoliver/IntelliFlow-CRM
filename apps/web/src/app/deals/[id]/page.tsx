@@ -33,6 +33,7 @@ import {
   STAGE_LABELS,
   formatCurrency,
 } from '@/components/deals/DealStageProgress';
+import { useConversionUndo } from '@/components/deals/UndoConversion';
 import { revalidateDealCaches } from '@/app/deals/actions';
 
 // Material Symbols icon helper component
@@ -75,10 +76,6 @@ interface DealDetail {
     email: string;
   } | null;
 }
-
-// =============================================================================
-// Utility Functions
-// =============================================================================
 
 /**
  * The server-cache refresh after a mutation is best-effort (the mutation already
@@ -385,6 +382,7 @@ export default function DealDetailPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'WON' | 'LOST' | null>(null);
   const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
+  const conversionUndo = useConversionUndo(dealId, user?.id, isAuthenticated && !authLoading);
 
   const {
     data: deal,
@@ -595,6 +593,7 @@ export default function DealDetailPage() {
           extraActions={[
             { label: 'Clone Deal', icon: 'content_copy', onClick: () => comingSoon('Clone deal') },
             { label: 'Archive', icon: 'archive', onClick: () => comingSoon('Archive deal') },
+            ...(conversionUndo.action ? [conversionUndo.action] : []),
             {
               label: 'Delete',
               icon: 'delete',
@@ -604,6 +603,7 @@ export default function DealDetailPage() {
           ]}
         />
 
+        {conversionUndo.dialog}
         {/* Mark-as-Lost reason modal (CLOSED_LOST requires a reason >=10 chars) */}
         <LossReasonModal
           open={lossModalOpen}

@@ -11,9 +11,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  ToastAction,
   toast,
 } from '@intelliflow/ui';
 import { api } from '@/lib/api';
+import { UNDONE_TOAST, undoConversion } from '@/components/deals/UndoConversion';
 import { revalidateLeadConversionCaches } from '@/app/leads/actions';
 import { leadDisplayName } from '@/lib/leads/lead-format';
 import {
@@ -268,12 +270,35 @@ export function ConvertLeadDialog({
     onError: (err) => onFailure(err.message),
   });
 
+  const utils = api.useUtils();
+  // MVP-003: "Undo" right after converting. Uses the plain client, since this page has
+  // navigated to the deal by the time it is pressed.
+  const undoFromToast = (opportunityId: string) => {
+    undoConversion(utils.client, opportunityId, userId)
+      .then((leadId) => {
+        toast(UNDONE_TOAST);
+        router.push(`/leads/${leadId}`);
+      })
+      .catch((err: unknown) =>
+        toast({
+          title: 'Could not undo the conversion',
+          description: err instanceof Error ? err.message : undefined,
+          variant: 'destructive',
+        })
+      );
+  };
+
   const dealMutation = api.lead.convertToDeal.useMutation({
     onSuccess: (data) => {
       afterConversion();
       toast({
         title: 'Lead converted to a deal',
         description: 'The deal is at Prospecting. Open it to move it through the pipeline.',
+        action: (
+          <ToastAction altText="Undo conversion" onClick={() => undoFromToast(data.opportunityId)}>
+            Undo
+          </ToastAction>
+        ),
       });
       router.push(`/deals/${data.opportunityId}`);
     },
@@ -327,7 +352,7 @@ export function ConvertLeadDialog({
           </AlertDialogTitle>
           <AlertDialogDescription>
             {isDeal
-              ? `Convert ${leadDisplayName(lead)} to a contact and open a deal. The lead status will change to CONVERTED and this cannot be undone.`
+              ? `Convert ${leadDisplayName(lead)} to a contact and open a deal. The lead status will change to CONVERTED. You can undo this from the deal until anything happens to it (a stage change, a task, an email or a call).`
               : `Convert ${leadDisplayName(lead)} to a contact record? This action will change the lead status to CONVERTED and cannot be undone.`}
           </AlertDialogDescription>
         </AlertDialogHeader>
