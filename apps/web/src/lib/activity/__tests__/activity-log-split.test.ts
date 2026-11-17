@@ -63,6 +63,26 @@ describe('isSystemFeedEntry', () => {
     expect(personal.map((e) => e.id)).toEqual(['1']);
   });
 
+  it('keeps mail synced from his mailbox in the feed but not in My activity', () => {
+    // The sync writes the mailbox owner's id for sent and received mail alike.
+    const synced = entry('1', 'EMAIL', { id: 'user-1', name: 'Synced from email' });
+    const written = entry('2', 'EMAIL', me);
+
+    const all = splitActivityLog([synced, written], {
+      fold: true,
+      mine: false,
+      userId: 'user-1',
+    });
+    const mineOnly = splitActivityLog([synced, written], {
+      fold: true,
+      mine: true,
+      userId: 'user-1',
+    });
+
+    expect(all.personal.map((e) => e.id)).toEqual(['1', '2']);
+    expect(mineOnly.personal.map((e) => e.id)).toEqual(['2']);
+  });
+
   it('folds an automated AI author, but not a person whose id is attached', () => {
     expect(isSystemFeedEntry(entry('a', 'NOTE', { id: null, name: 'AI Insights' }))).toBe(true);
     expect(isSystemFeedEntry(entry('b', 'NOTE', { id: null, name: 'AI Scoring Agent' }))).toBe(

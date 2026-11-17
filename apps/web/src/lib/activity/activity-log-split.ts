@@ -17,6 +17,9 @@ const SYSTEM_FEED_TYPES = new Set(['SYSTEM', 'SCORE_UPDATE', 'STATUS_CHANGE']);
  */
 const SYSTEM_AUTHOR = /^System(?: \([^)]+\))?$/;
 
+/** The author the mailbox sync writes for the mail it logs on a lead (mail-sync-links.ts). */
+const SYNCED_MAIL_AUTHOR = 'Synced from email';
+
 /** The automated authors the API names, such as "AI Insights" and "AI Scoring Agent". */
 const AI_AUTHOR = /^AI [A-Z][\w ]*$/;
 
@@ -78,6 +81,9 @@ export function splitActivityLog<T extends FeedEntryLike>(
   const email = userEmail?.trim().toLowerCase() ?? '';
   const isMine = (entry: T) => {
     if (!entry.actor) return false;
+    // Mail synced from a mailbox is written with the mailbox owner's id whether it was sent or
+    // received, so the id does not make it theirs: it shows in the feed, not in My activity.
+    if (entry.actor.name.trim() === SYNCED_MAIL_AUTHOR) return false;
     if (entry.actor.id) return userId !== null && entry.actor.id === userId;
     return email !== '' && entry.actor.name.trim().toLowerCase() === email;
   };
