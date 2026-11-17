@@ -56,7 +56,7 @@ export function FollowUpsDueSection({
           href="/leads?segment=followup"
           className="block px-3 pt-1 text-xs text-ds-primary hover:underline"
         >
-          +{more} more {more === 1 ? 'lead needs' : 'leads need'} a follow-up
+          See all leads needing a follow-up
         </Link>
       )}
     </section>

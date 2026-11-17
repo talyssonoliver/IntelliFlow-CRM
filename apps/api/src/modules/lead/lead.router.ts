@@ -17,6 +17,7 @@ import { Prisma } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { loadBullMQ } from '../../lib/load-bullmq';
 import { enqueueLeadAi } from './lead-scoring-enqueue';
+import { buildLeadListWhere, leadListOrderBy } from './lead-list-query';
 import {
   createLeadSchema,
   updateLeadSchema,
@@ -67,102 +68,6 @@ import { requiredProdEnv } from '@intelliflow/validators/required-url';
  */
 function logLeadAuditFailure(err: unknown): void {
   console.error('[lead.router] Audit log failed:', err);
-}
-
-function buildNumberRange(
-  min: number | undefined,
-  max: number | undefined
-): Record<string, number> | undefined {
-  if (min === undefined && max === undefined) return undefined;
-  const r: Record<string, number> = {};
-  if (min !== undefined) r.gte = min;
-  if (max !== undefined) r.lte = max;
-  return r;
-}
-
-function buildDateRange(
-  from: Date | undefined,
-  to: Date | undefined
-): Record<string, Date> | undefined {
-  if (!from && !to) return undefined;
-  const r: Record<string, Date> = {};
-  if (from) r.gte = from;
-  if (to) r.lte = to;
-  return r;
-}
-
-/**
- * Build the base WHERE clause for the leads list query.
- * Extracted to reduce cognitive complexity of the list procedure.
- */
-function buildLeadListWhere(filters: {
-  status?: string[];
-  source?: string[];
-  minScore?: number;
-  maxScore?: number;
-  search?: string;
-  ownerId?: string;
-  dateFrom?: Date;
-  dateTo?: Date;
-  lastContactedBefore?: Date;
-  isStarred?: boolean;
-  ids?: string[];
-}): Record<string, unknown> {
-  const {
-    status,
-    source,
-    minScore,
-    maxScore,
-    search,
-    ownerId,
-    dateFrom,
-    dateTo,
-    lastContactedBefore,
-    isStarred,
-    ids,
-  } = filters;
-  const baseWhere: Record<string, unknown> = {};
-
-  if (status && status.length > 0) baseWhere.status = { in: status };
-  if (source && source.length > 0) baseWhere.source = { in: source };
-
-  const scoreRange = buildNumberRange(minScore, maxScore);
-  if (scoreRange) baseWhere.score = scoreRange;
-
-  if (search) {
-    baseWhere.OR = [
-      { email: { contains: search, mode: 'insensitive' } },
-      { firstName: { contains: search, mode: 'insensitive' } },
-      { lastName: { contains: search, mode: 'insensitive' } },
-      { company: { contains: search, mode: 'insensitive' } },
-    ];
-  }
-
-  if (ownerId) baseWhere.ownerId = ownerId;
-
-  const dateRange = buildDateRange(dateFrom, dateTo);
-  if (dateRange) baseWhere.createdAt = dateRange;
-
-  // PG-059 "Needs Follow-up": include leads where lastContactedAt is NULL
-  // (never contacted) OR older than the threshold. Indexed via
-  // @@index([tenantId, lastContactedAt]) in schema.prisma:620.
-  if (lastContactedBefore) {
-    baseWhere.OR = [
-      ...((baseWhere.OR as object[] | undefined) ?? []),
-      { lastContactedAt: null },
-      { lastContactedAt: { lte: lastContactedBefore } },
-    ];
-  }
-
-  // PG-059 "Starred": covered by @@index([tenantId, ownerId, isStarred]).
-  if (typeof isStarred === 'boolean') baseWhere.isStarred = isStarred;
-
-  // PG-059 "Recently Viewed": client passes the capped recent-ids list
-  // (max 50 per validator). When empty, this intentionally yields no rows
-  // (Prisma treats `{ in: [] }` as no-match), which matches user expectation.
-  if (ids) baseWhere.id = { in: ids };
-
-  return baseWhere;
 }
 
 /**
@@ -696,7 +601,7 @@ export const leadRouter = createTRPCRouter({
         where,
         skip,
         take: limit,
-        orderBy: { [sortBy]: sortOrder },
+        orderBy: leadListOrderBy(sortBy, sortOrder),
         include: {
           owner: {
             select: {

@@ -61,7 +61,7 @@ describe('FollowUpsDueSection', () => {
     expect(screen.getByText('Never contacted').className).toContain('text-red-600');
   });
 
-  it('counts the leads it does not list and links to the Needs Follow-up view', () => {
+  it('counts all due leads in its heading and links to the Needs Follow-up view for the rest', () => {
     render(
       <FollowUpsDueSection
         now={NOW}
@@ -69,17 +69,15 @@ describe('FollowUpsDueSection', () => {
         leads={[lead({}), lead({ id: 'l2' }), lead({ id: 'l3' })]}
       />
     );
-    const more = screen.getByRole('link', { name: '+118 more leads need a follow-up' });
-    expect(more).toHaveAttribute('href', '/leads?segment=followup');
+    expect(screen.getByText('Follow-ups due (121)')).toBeInTheDocument();
+    // The link carries no number: that view also lists leads of other statuses, so a count
+    // here would not match what opens.
+    const all = screen.getByRole('link', { name: 'See all leads needing a follow-up' });
+    expect(all).toHaveAttribute('href', '/leads?segment=followup');
   });
 
-  it('says "lead needs" for exactly one more, and shows no link when all are listed', () => {
-    const { rerender } = render(<FollowUpsDueSection now={NOW} total={2} leads={[lead({})]} />);
-    expect(
-      screen.getByRole('link', { name: '+1 more lead needs a follow-up' })
-    ).toBeInTheDocument();
-
-    rerender(<FollowUpsDueSection now={NOW} total={1} leads={[lead({})]} />);
-    expect(screen.queryByText(/more lead/)).toBeNull();
+  it('shows no see-all link when every due lead is already listed', () => {
+    render(<FollowUpsDueSection now={NOW} total={1} leads={[lead({})]} />);
+    expect(screen.queryByRole('link', { name: /See all leads/ })).toBeNull();
   });
 });
