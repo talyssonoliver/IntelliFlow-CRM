@@ -23,10 +23,15 @@ export interface FeedEntryLike {
   actor: { id: string | null; name: string } | null;
 }
 
-/** True for an entry the system wrote: a system type, or a "System (...)" author. */
+/**
+ * True for an entry the system wrote: a "System (...)" author, a score update or system event, or
+ * a status change with no person behind it. A status change a person made (converting a lead, a
+ * bulk status change) carries that person as its author and stays in their activity.
+ */
 export function isSystemFeedEntry(entry: Pick<FeedEntryLike, 'type' | 'actor'>): boolean {
-  if (SYSTEM_FEED_TYPES.has(entry.type)) return true;
-  return entry.actor !== null && SYSTEM_AUTHOR.test(entry.actor.name.trim());
+  if (entry.actor !== null && SYSTEM_AUTHOR.test(entry.actor.name.trim())) return true;
+  if (!SYSTEM_FEED_TYPES.has(entry.type)) return false;
+  return entry.type !== 'STATUS_CHANGE' || !entry.actor?.id;
 }
 
 export interface ActivityLogOptions {

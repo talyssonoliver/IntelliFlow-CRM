@@ -12,10 +12,26 @@ const other = { id: 'user-2', name: 'Bob Wilson' };
 const coa = { id: null, name: 'System (COA sync)' };
 
 describe('isSystemFeedEntry', () => {
-  it('is true for the system types whoever the author is', () => {
+  it('is true for score updates and system events whoever the author is', () => {
     expect(isSystemFeedEntry(entry('a', 'SCORE_UPDATE', me))).toBe(true);
-    expect(isSystemFeedEntry(entry('b', 'STATUS_CHANGE', null))).toBe(true);
     expect(isSystemFeedEntry(entry('c', 'SYSTEM', me))).toBe(true);
+  });
+
+  it('is true for a status change with no person behind it', () => {
+    expect(isSystemFeedEntry(entry('a', 'STATUS_CHANGE', null))).toBe(true);
+    expect(isSystemFeedEntry(entry('b', 'STATUS_CHANGE', { id: null, name: 'Import' }))).toBe(true);
+  });
+
+  it('is false for a status change a person made, such as converting a lead', () => {
+    expect(isSystemFeedEntry(entry('a', 'STATUS_CHANGE', me))).toBe(false);
+  });
+
+  it('keeps a status change he made in My activity', () => {
+    const mine = [entry('1', 'STATUS_CHANGE', me), entry('2', 'STATUS_CHANGE', coa)];
+
+    const { personal } = splitActivityLog(mine, { fold: true, mine: true, userId: 'user-1' });
+
+    expect(personal.map((e) => e.id)).toEqual(['1']);
   });
 
   it('is true for a "System (...)" author on any type', () => {

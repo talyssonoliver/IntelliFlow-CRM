@@ -227,6 +227,31 @@ describe('ActivityPage', () => {
     expect(mockFetchNextPage).toHaveBeenCalledTimes(1);
   });
 
+  it('does not retry a failed page by itself, and the button retries it', () => {
+    mockFeed([item('p1', 'Call with Acme', 'CALL', me)], {
+      hasNextPage: true,
+      isError: true,
+      error: { message: 'Network error' },
+    });
+
+    render(<ActivityPage />);
+
+    expect(mockFetchNextPage).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Load older activity' }));
+    expect(mockFetchNextPage).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps a status change he made in the feed, not in the system group', () => {
+    mockFeed([item('p1', 'Lead Converted', 'STATUS_CHANGE', me)]);
+
+    render(<ActivityPage />);
+
+    expect(
+      within(screen.getByTestId('personal-feed')).getByText('Lead Converted')
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /System updates/ })).not.toBeInTheDocument();
+  });
+
   it('has no load-older button when there is nothing older or enough is shown', () => {
     mockFeed(mixed());
 

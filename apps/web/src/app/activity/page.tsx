@@ -83,12 +83,22 @@ export default function ActivityPage() {
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = source;
   const personalShort = personalItems.length < MIN_PERSONAL_ENTRIES;
   const autoLoadCapReached = source.items.length >= MAX_AUTO_LOADED_ENTRIES;
+  // A failed page is not retried by itself (it would fail again in a loop): the button below is.
+  const loadFailed = source.isError;
   useEffect(() => {
     if (!hasNextPage || isFetchingNextPage || !personalShort || autoLoadCapReached) return;
+    if (loadFailed) return;
     fetchNextPage();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage, personalShort, autoLoadCapReached]);
-  // Past the cap, the empty feed has no Load More of its own, so offer one here.
-  const showLoadOlder = hasNextPage && personalShort && autoLoadCapReached;
+  }, [
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    personalShort,
+    autoLoadCapReached,
+    loadFailed,
+  ]);
+  // Past the cap, or after a failure, the empty feed has no Load More of its own: offer one here.
+  const showLoadOlder = hasNextPage && personalShort && (autoLoadCapReached || loadFailed);
 
   const hasActiveFilter = feedFilter !== DEFAULT_FILTER || searchInput.length > 0 || mineOnly;
   const deepLinkedSystemId =
