@@ -246,6 +246,13 @@ describe('ChurnRiskChain', () => {
       expect(result).toBeDefined();
     });
 
+    it('shows the model the total revenue in pounds, never dollars', () => {
+      const text = (chain as any).formatTransactionData({ ...baseInput, totalRevenue: 50000 });
+
+      expect(text).toContain('Total revenue: £50,000');
+      expect(text).not.toContain('$');
+    });
+
     it('should handle all entity types', async () => {
       const entityTypes: ChurnRiskInput['entityType'][] = [
         'lead',

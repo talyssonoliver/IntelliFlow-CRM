@@ -25,6 +25,7 @@ import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { loadVersionedPrompt, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import { usableVersionedPrompt } from '../versioning/versioned-prompt';
+import { formatPounds } from '../utils/format-pounds';
 import pino from 'pino';
 
 // Import domain constants (IFC-095: DRY pattern)
@@ -492,7 +493,7 @@ export class ChurnRiskChain {
     const parts: string[] = [];
 
     if (input.totalRevenue !== undefined) {
-      parts.push(`Total revenue: $${input.totalRevenue.toLocaleString('en-US')}`);
+      parts.push(`Total revenue: ${formatPounds(input.totalRevenue)}`);
     }
     if (input.paymentConsistency !== undefined) {
       parts.push(`Payment consistency: ${(input.paymentConsistency * 100).toFixed(0)}%`);
