@@ -1070,7 +1070,7 @@ function ActivityTimelineItem({
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
-          <div className="flex-1">
+          <div className="min-w-0 flex-1 break-words">
             <p className="text-sm font-semibold text-slate-900 dark:text-white">{activity.title}</p>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
               {activity.description}
@@ -1081,7 +1081,7 @@ function ActivityTimelineItem({
           </div>
           <button
             onClick={() => onToggleExpand(activity.id)}
-            className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
+            className="shrink-0 p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 rounded transition-colors"
           >
             <span
               className={`material-symbols-outlined !text-[18px] transition-transform ${isExpanded ? 'rotate-180' : ''}`}
