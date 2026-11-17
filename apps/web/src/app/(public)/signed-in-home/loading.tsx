@@ -1,8 +1,8 @@
 import { LoadingForSession } from '@/components/shared/loading-for-session';
 
 /**
- * Home page loading skeleton — scoped to `/` only via the `(home)` nested
- * route group. Other routes in `(public)/` (login, pricing, etc.) continue
+ * Home page loading skeleton — scoped to the signed-in home, which the proxy
+ * serves at `/` (lib/auth/home-paths). Other routes in `(public)/` (login, pricing, etc.) continue
  * to use the dark marketing skeleton at `(public)/loading.tsx`.
  *
  * This skeleton mirrors the layout of `<AuthenticatedHomePage />` — welcome

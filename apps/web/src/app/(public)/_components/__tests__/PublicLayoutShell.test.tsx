@@ -400,4 +400,20 @@ describe('signed in, a public page keeps the .aurora-site scope', () => {
 
     expect(screen.getByTestId('child-content').closest('.aurora-site')).toBeNull();
   });
+
+  it('treats the rewritten signed-in home path as the home page too', () => {
+    mockAuthLoading = false;
+    mockClientAuthenticated = false;
+    renderShell({ isAuthenticated: true, pathname: '/signed-in-home' });
+
+    expect(screen.getByTestId('child-content').closest('.aurora-site')).toBeNull();
+    expect(screen.queryByTestId('public-header')).toBeNull();
+  });
+
+  it('adds nothing around the landing page on the rewritten path when signed out', () => {
+    const { container } = renderShell({ isAuthenticated: false, pathname: '/signed-in-home' });
+
+    expect(screen.queryByTestId('public-header')).toBeNull();
+    expect(container.querySelector('.aurora-site')).toBeNull();
+  });
 });
