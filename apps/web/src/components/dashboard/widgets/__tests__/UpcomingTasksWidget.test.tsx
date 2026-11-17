@@ -1,11 +1,24 @@
 // @vitest-environment jsdom
-import { render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen, within } from '@testing-library/react';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { UpcomingTasksWidget } from '../UpcomingTasksWidget';
+
+// What lead.list returns for the follow-ups query; each test sets it.
+const followUpQuery = vi.hoisted(() => ({
+  state: { data: { data: [], total: 0 }, isLoading: false } as {
+    data: { data: unknown[]; total: number } | undefined;
+    isLoading: boolean;
+  },
+  lastInput: undefined as Record<string, unknown> | undefined,
+}));
 
 // Mock TaskCreateSheet to avoid deep tRPC dependency chain
 vi.mock('@/components/tasks/TaskCreateSheet', () => ({
   TaskCreateSheet: () => null,
+}));
+
+vi.mock('@/providers/TimezoneProvider', () => ({
+  useTimezoneContext: () => ({ timezone: 'Europe/London' }),
 }));
 
 // Mock the tRPC API
@@ -31,6 +44,14 @@ vi.mock('@/lib/api', () => ({
         })),
       },
     },
+    lead: {
+      list: {
+        useQuery: vi.fn((input: Record<string, unknown>) => {
+          followUpQuery.lastInput = input;
+          return followUpQuery.state;
+        }),
+      },
+    },
     useUtils: vi.fn(() => ({
       task: {
         list: {
@@ -44,7 +65,22 @@ vi.mock('@/lib/api', () => ({
   },
 }));
 
+const lead = (over: Record<string, unknown>) => ({
+  id: 'lead-1',
+  firstName: 'Jane',
+  lastName: 'Example',
+  company: 'Example Corp',
+  email: 'jane@example.invalid',
+  lastContactedAt: '2020-01-01T10:00:00.000Z',
+  ...over,
+});
+
 describe('UpcomingTasksWidget', () => {
+  beforeEach(() => {
+    followUpQuery.state = { data: { data: [], total: 0 }, isLoading: false };
+    followUpQuery.lastInput = undefined;
+  });
+
   it('renders widget title and view all link', () => {
     render(<UpcomingTasksWidget />);
 
@@ -59,5 +95,54 @@ describe('UpcomingTasksWidget', () => {
     const buttons = screen.getAllByRole('button');
     expect(buttons).toHaveLength(1);
     expect(buttons[0]).toHaveTextContent('+ Add New Task');
+  });
+
+  it('with nothing due shows the empty state and no follow-ups section', () => {
+    render(<UpcomingTasksWidget />);
+
+    expect(screen.getByText('No tasks yet')).toBeInTheDocument();
+    expect(screen.queryByTestId('follow-ups-due')).toBeNull();
+  });
+
+  it('asks for contacted leads, most overdue first, and nothing else', () => {
+    render(<UpcomingTasksWidget />);
+
+    expect(followUpQuery.lastInput).toMatchObject({
+      status: ['CONTACTED'],
+      sortBy: 'lastContactedAt',
+      sortOrder: 'asc',
+      limit: 3,
+      page: 1,
+    });
+    expect(followUpQuery.lastInput?.lastContactedBefore).toBeInstanceOf(Date);
+  });
+
+  it('lists due follow-ups when there are no tasks, instead of the empty state', () => {
+    followUpQuery.state = {
+      data: {
+        data: [lead({}), lead({ id: 'lead-2', firstName: 'Bob', lastName: 'Stone' })],
+        total: 5,
+      },
+      isLoading: false,
+    };
+    render(<UpcomingTasksWidget />);
+
+    const section = within(screen.getByTestId('follow-ups-due'));
+    expect(section.getByText('Follow-ups due (5)')).toBeInTheDocument();
+    expect(section.getByText('Follow up with Jane Example')).toBeInTheDocument();
+    expect(section.getByRole('link', { name: /Bob Stone/ })).toHaveAttribute(
+      'href',
+      '/leads/lead-2'
+    );
+    expect(screen.queryByText('No tasks yet')).toBeNull();
+    // Still one create action.
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+  });
+
+  it('does not show the empty state while the follow-ups are still loading', () => {
+    followUpQuery.state = { data: undefined, isLoading: true };
+    render(<UpcomingTasksWidget />);
+
+    expect(screen.queryByText('No tasks yet')).toBeNull();
   });
 });

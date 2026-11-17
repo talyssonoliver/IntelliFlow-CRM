@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { EmptyState, Skeleton } from '@intelliflow/ui';
 import { TaskCreateSheet } from '@/components/tasks/TaskCreateSheet';
+import { FollowUpsDueSection } from './FollowUpsDueSection';
+import { useFollowUpsDue } from './useFollowUpsDue';
 import type { WidgetProps } from './index';
 import type { TaskStatus } from '@intelliflow/domain';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
@@ -60,6 +62,9 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
   });
 
   const tasks = data?.tasks ?? [];
+  // Contacted leads due a follow-up (MVP-010): there is no stored follow-up task, so they are
+  // derived from the leads themselves and listed after the real tasks.
+  const followUps = useFollowUpsDue();
 
   return (
     <div className="p-6 h-full flex flex-col">
@@ -78,11 +83,14 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
             <Skeleton className="h-14 w-full" />
           </>
         )}
-        {!isLoading && tasks.length === 0 && (
-          // The card's "+ Add New Task" below is the one create action, so the empty state
-          // shows no second button for the same thing.
-          <EmptyState entity="tasks" showCta={false} className="py-2" />
-        )}
+        {!isLoading &&
+          tasks.length === 0 &&
+          !followUps.isLoading &&
+          followUps.leads.length === 0 && (
+            // The card's "+ Add New Task" below is the one create action, so the empty state
+            // shows no second button for the same thing.
+            <EmptyState entity="tasks" showCta={false} className="py-2" />
+          )}
         {!isLoading &&
           tasks.map((task) => (
             <Link
@@ -117,6 +125,7 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
               </div>
             </Link>
           ))}
+        {!isLoading && <FollowUpsDueSection leads={followUps.leads} total={followUps.total} />}
       </div>
 
       <button
