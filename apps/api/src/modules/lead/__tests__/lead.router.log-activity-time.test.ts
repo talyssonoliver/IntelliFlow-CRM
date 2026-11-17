@@ -125,6 +125,34 @@ describe('lead.logActivity occurredAt', () => {
     expect(captured.activity).not.toHaveProperty('metadata');
   });
 
+  it('stores inbound for a "Reply received" email logged without a direction (MVP-001)', async () => {
+    prismaMock.lead.findUnique.mockResolvedValue(mockLead as any);
+    const captured = captureTransaction();
+
+    await leadRouter.createCaller(createTestContext()).logActivity({
+      leadId: TEST_UUIDS.lead1,
+      type: 'EMAIL',
+      title: 'Reply received: "We did not get your email"',
+    });
+    expect(captured.activity.metadata).toEqual({ direction: 'inbound' });
+
+    // An explicit direction still wins, and an ordinary email stays without one.
+    await leadRouter.createCaller(createTestContext()).logActivity({
+      leadId: TEST_UUIDS.lead1,
+      type: 'EMAIL',
+      title: 'Reply received: x',
+      direction: 'outbound',
+    });
+    expect(captured.activity.metadata).toEqual({ direction: 'outbound' });
+
+    await leadRouter.createCaller(createTestContext()).logActivity({
+      leadId: TEST_UUIDS.lead1,
+      type: 'EMAIL',
+      title: 'Outreach email sent',
+    });
+    expect(captured.activity).not.toHaveProperty('metadata');
+  });
+
   it('rejects an unknown direction', async () => {
     prismaMock.lead.findUnique.mockResolvedValue(mockLead as any);
     captureTransaction();
