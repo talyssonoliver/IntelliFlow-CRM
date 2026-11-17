@@ -86,6 +86,6 @@ export function proxy(request: NextRequest): NextResponse {
 export const config = {
   matcher: [
     { source: '/', has: [{ type: 'cookie', key: 'accessToken' }] },
-    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).+)',
+    '/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff|woff2|ttf|eot)$).+)', // NOSONAR: Next.js parses `config` statically and needs a plain string literal here, not String.raw
   ],
 };
