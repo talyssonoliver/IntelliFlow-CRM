@@ -204,7 +204,7 @@ export type GoalType = (typeof GOAL_TYPES)[number];
 
 export const GOAL_DEFAULTS: Record<GoalType, { targetValue: number; label: string; unit: string }> =
   {
-    revenue: { targetValue: 5000, label: 'Sales', unit: '$' },
+    revenue: { targetValue: 5000, label: 'Sales', unit: '£' },
     calls: { targetValue: 10, label: 'Calls', unit: 'calls' },
     meetings: { targetValue: 3, label: 'Meetings', unit: 'meetings' },
     tasks: { targetValue: 5, label: 'Tasks', unit: 'tasks' },

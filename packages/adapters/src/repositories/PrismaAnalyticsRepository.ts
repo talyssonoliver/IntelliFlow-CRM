@@ -379,7 +379,7 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
         case 'opportunity.created':
           return `New deal: ${data.name || 'Unknown'}`;
         case 'opportunity.won':
-          return `Deal won: ${data.name || 'Unknown'} ($${data.value || 0})`;
+          return `Deal won: ${data.name || 'Unknown'} (£${Number(data.value || 0).toLocaleString('en-GB')})`;
         case 'contact.created':
           return `New contact: ${data.name || 'Unknown'}`;
         case 'task.completed':

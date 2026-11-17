@@ -1,3 +1,5 @@
+import { formatPounds } from '../../shared/format-pounds';
+
 /**
  * How a lead reads in the header search (MVP-008): the lead's name first, its email second.
  * The name is the person's name, else the company (most leads from the COA sync are a company
@@ -22,8 +24,7 @@ function clean(value: string | null | undefined): string {
 
 /** A deal in the header search: its stage, then its value in pounds (the CRM works in GBP). */
 export function dealSearchSubtitle(stage: string, value: number | string | null): string {
-  const amount = Number(value ?? 0);
-  return `${stage} · £${(Number.isFinite(amount) ? amount : 0).toLocaleString('en-GB')}`;
+  return `${stage} · ${formatPounds(Number(value ?? 0))}`;
 }
 
 export function leadSearchText(row: LeadSearchRow): LeadSearchHitText {

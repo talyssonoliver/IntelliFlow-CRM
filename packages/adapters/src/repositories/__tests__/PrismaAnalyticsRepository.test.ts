@@ -578,12 +578,12 @@ describe('PrismaAnalyticsRepository', () => {
         await testDescription(
           'opportunity.won',
           { name: 'Won Deal', value: 5000 },
-          'Deal won: Won Deal ($5000)'
+          'Deal won: Won Deal (£5,000)'
         );
       });
 
       it('should format opportunity.won with default value', async () => {
-        await testDescription('opportunity.won', { name: 'Won Deal' }, 'Deal won: Won Deal ($0)');
+        await testDescription('opportunity.won', { name: 'Won Deal' }, 'Deal won: Won Deal (£0)');
       });
 
       it('should format contact.created', async () => {

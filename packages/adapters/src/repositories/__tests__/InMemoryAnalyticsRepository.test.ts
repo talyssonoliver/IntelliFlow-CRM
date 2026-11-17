@@ -551,7 +551,7 @@ describe('InMemoryAnalyticsRepository', () => {
 
       const [item] = await repo.getRecentAuditLogs(TENANT_ID, 10);
       expect(item.icon).toBe('celebration');
-      expect(item.description).toBe('Deal won: BigDeal ($50000)');
+      expect(item.description).toBe('Deal won: BigDeal (£50,000)');
     });
 
     it('should handle task.completed action', async () => {
