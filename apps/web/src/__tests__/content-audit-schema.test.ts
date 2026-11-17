@@ -7,6 +7,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const REPO_ROOT = resolve(__dirname, '../../../..');
 const AUDIT_PATH = resolve(REPO_ROOT, 'artifacts/reports/content-audit-results.json');
+// Public routes in the committed audit (PG-203 /book; PG-203 DSAR: +3 public /dsar pages; MVP-007:
+// +1, the signed-in home route, with / now in the public (landing) group). TC-04 and TC-05 use it.
+const PUBLIC_ROUTE_COUNT = 37;
 
 interface MetadataField {
   value: string | null;
@@ -198,8 +201,8 @@ describe('Content Audit Results Schema Validation', () => {
   it('TC-04: all public routes have integer seo_score 0-100', () => {
     const publicRoutes = auditData.routes.filter((r) => r.access_tier === 'public');
     // Regenerate content-audit-results.json (`npx tsx tools/scripts/content-audit.ts`)
-    // whenever the public route set grows. Current baseline: 36 public routes (PG-203 /book; PG-203 DSAR: +3 public /dsar pages).
-    expect(publicRoutes.length).toBe(36);
+    // whenever the public route set grows, and update PUBLIC_ROUTE_COUNT at the top.
+    expect(publicRoutes.length).toBe(PUBLIC_ROUTE_COUNT);
 
     for (const route of publicRoutes) {
       expect(typeof route.seo_score).toBe('number');
@@ -214,7 +217,7 @@ describe('Content Audit Results Schema Validation', () => {
     const nonPublicRoutes = auditData.routes.filter(
       (r) => r.access_tier === 'auth-gated' || r.access_tier === 'developer'
     );
-    expect(nonPublicRoutes.length).toBe(auditData.routes.length - 36);
+    expect(nonPublicRoutes.length).toBe(auditData.routes.length - PUBLIC_ROUTE_COUNT);
 
     for (const route of nonPublicRoutes) {
       expect(route.seo_score).toBeNull();
