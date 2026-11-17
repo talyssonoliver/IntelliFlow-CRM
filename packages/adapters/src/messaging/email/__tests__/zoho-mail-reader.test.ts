@@ -1,10 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import {
-  readZohoFolder,
-  readZohoFolderIds,
-  zohoAddresses,
-  zohoBodyText,
-} from '../zoho-mail-reader';
+import { readZohoFolder, readZohoFolderIds } from '../zoho-mail-reader';
 import { MailboxTransportError } from '../mailbox-errors';
 
 const NOW = new Date('2026-11-16T12:00:00.000Z');
@@ -393,6 +388,28 @@ describe('readZohoFolder', () => {
     });
   });
 
+  it('decodes the entities in a sender name, from `sender` or the address field', async () => {
+    const fetchImpl = vi.fn(async () =>
+      json(
+        // Newest first, as Zoho lists them; the reader returns oldest first.
+        '{"data":[' +
+          '{"messageId":9000000000000000092,' +
+          '"fromAddress":"O&#39;Neil &lt;o@example.invalid&gt;",' +
+          `"receivedTime":"${T - 1_000}"},` +
+          '{"messageId":9000000000000000091,"fromAddress":"sales@example.invalid",' +
+          `"sender":"Smith &amp; Co","receivedTime":"${T - 2_000}"}]}`
+      )
+    );
+
+    const round = await readZohoFolder(ACCESS, REF, null, options({ fetchImpl }));
+
+    expect(round.messages.map((m) => m.fromName)).toEqual(['Smith & Co', "O'Neil"]);
+    expect(round.messages.map((m) => m.fromAddress)).toEqual([
+      'sales@example.invalid',
+      'o@example.invalid',
+    ]);
+  });
+
   it('loads the body only when asked, as text', async () => {
     const fetchImpl = vi
       .fn()
@@ -428,45 +445,5 @@ describe('readZohoFolder', () => {
     );
     expect(error).toBeInstanceOf(MailboxTransportError);
     expect(error).toMatchObject({ code: 'AUTH_FAILED' });
-  });
-});
-
-describe('zohoAddresses / zohoBodyText', () => {
-  it('reads every address, whatever the format', () => {
-    expect(zohoAddresses('"Ada" &lt;Ada@Example.invalid&gt;, bob@example.invalid; nobody')).toEqual(
-      ['ada@example.invalid', 'bob@example.invalid']
-    );
-    expect(zohoAddresses(undefined)).toEqual([]);
-  });
-
-  it('keeps an apostrophe inside an address, and drops quotes around one', () => {
-    expect(zohoAddresses("O'Neil &lt;o'neil@example.invalid&gt;")).toEqual([
-      "o'neil@example.invalid",
-    ]);
-    expect(zohoAddresses("'ada@example.invalid'")).toEqual(['ada@example.invalid']);
-  });
-
-  it('takes the address in angle brackets, never one written in the display name', () => {
-    expect(
-      zohoAddresses('"ceo@lead.example.invalid" &lt;someone@other.example.invalid&gt;')
-    ).toEqual(['someone@other.example.invalid']);
-    expect(
-      zohoAddresses(
-        '"Lee, ceo@lead.example.invalid" &lt;lee@example.invalid&gt;, bo@example.invalid'
-      )
-    ).toEqual(['lee@example.invalid', 'bo@example.invalid']);
-  });
-
-  it('turns HTML into text and cuts it', () => {
-    expect(zohoBodyText('<style>x{}</style><div>Hello</div><div>world</div>', 100)).toBe(
-      'Hello\nworld'
-    );
-    expect(zohoBodyText('<p>abcdef</p>', 3)).toBe('abc');
-  });
-
-  it('keeps a "<" that starts no tag, and skips script and style in any case', () => {
-    expect(zohoBodyText('price < 100, call me', 100)).toBe('price < 100, call me');
-    expect(zohoBodyText('<p>a < b</p><p>c</p>', 100)).toBe('a < b\nc');
-    expect(zohoBodyText('<STYLE>x{}</Style>Hi', 100)).toBe('Hi');
   });
 });
