@@ -20,16 +20,25 @@ const SYSTEM_AUTHOR = /^System(?: \([^)]+\))?$/;
 export interface FeedEntryLike {
   id: string;
   type: string;
+  /** Where the entry comes from (LEAD_ACTIVITY, TICKET_ACTIVITY, EMAIL...). */
+  source?: string;
   actor: { id: string | null; name: string } | null;
 }
 
 /**
- * True for an entry the system wrote: a "System (...)" author, a score update or system event, or
- * a status change with no person behind it. A status change a person made (converting a lead, a
- * bulk status change) carries that person as its author and stays in their activity.
+ * True for an entry the system wrote:
+ * - a "System (...)" author;
+ * - a ticket entry never counts otherwise: ticket entries carry no author id, and a human reply
+ *   to a ticket is typed SYSTEM;
+ * - a score update or system event;
+ * - a status change with no person behind it. A status change a person made (converting a lead, a
+ *   bulk status change) carries that person as its author and stays in their activity.
  */
-export function isSystemFeedEntry(entry: Pick<FeedEntryLike, 'type' | 'actor'>): boolean {
+export function isSystemFeedEntry(
+  entry: Pick<FeedEntryLike, 'type' | 'actor'> & { source?: string }
+): boolean {
   if (entry.actor !== null && SYSTEM_AUTHOR.test(entry.actor.name.trim())) return true;
+  if (entry.source === 'TICKET_ACTIVITY') return false;
   if (!SYSTEM_FEED_TYPES.has(entry.type)) return false;
   return entry.type !== 'STATUS_CHANGE' || !entry.actor?.id;
 }
@@ -41,6 +50,11 @@ export interface ActivityLogOptions {
   mine: boolean;
   /** The signed-in person; with `mine` on and no id yet, nothing matches. */
   userId: string | null;
+  /**
+   * The signed-in person's name and email. Some entries (tickets, lead activity written with the
+   * author's email) carry no author id, only a name: those match on it, ignoring case.
+   */
+  userNames?: readonly (string | null | undefined)[];
 }
 
 /**
@@ -49,9 +63,16 @@ export interface ActivityLogOptions {
  */
 export function splitActivityLog<T extends FeedEntryLike>(
   entries: readonly T[],
-  { fold, mine, userId }: ActivityLogOptions
+  { fold, mine, userId, userNames = [] }: ActivityLogOptions
 ): { personal: T[]; system: T[] } {
-  const isMine = (entry: T) => userId !== null && entry.actor?.id === userId;
+  const names = new Set(
+    userNames.filter((n): n is string => !!n?.trim()).map((n) => n.trim().toLowerCase())
+  );
+  const isMine = (entry: T) => {
+    if (!entry.actor) return false;
+    if (entry.actor.id) return userId !== null && entry.actor.id === userId;
+    return names.has(entry.actor.name.trim().toLowerCase());
+  };
   const personal: T[] = [];
   const system: T[] = [];
   for (const entry of entries) {

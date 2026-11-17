@@ -34,6 +34,35 @@ describe('isSystemFeedEntry', () => {
     expect(personal.map((e) => e.id)).toEqual(['1']);
   });
 
+  it('never folds a ticket entry, whose human replies are typed SYSTEM and carry no author id', () => {
+    const reply = { id: null, name: 'Jane Agent' };
+
+    expect(isSystemFeedEntry({ ...entry('a', 'SYSTEM', reply), source: 'TICKET_ACTIVITY' })).toBe(
+      false
+    );
+    expect(isSystemFeedEntry({ ...entry('b', 'SYSTEM', coa), source: 'TICKET_ACTIVITY' })).toBe(
+      true
+    );
+  });
+
+  it('matches My activity on the author name or email when the entry has no author id', () => {
+    const entries = [
+      entry('1', 'NOTE', { id: null, name: 'talysson@example.invalid' }),
+      entry('2', 'NOTE', { id: null, name: ' TALYSSON ' }),
+      entry('3', 'NOTE', { id: null, name: 'Bob Wilson' }),
+      entry('4', 'NOTE', { id: 'user-2', name: 'Talysson' }),
+    ];
+
+    const { personal } = splitActivityLog(entries, {
+      fold: true,
+      mine: true,
+      userId: 'user-1',
+      userNames: ['Talysson', 'talysson@example.invalid', null],
+    });
+
+    expect(personal.map((e) => e.id)).toEqual(['1', '2']);
+  });
+
   it('is true for a "System (...)" author on any type', () => {
     expect(isSystemFeedEntry(entry('a', 'NOTE', coa))).toBe(true);
     expect(isSystemFeedEntry(entry('b', 'NOTE', { id: null, name: 'System' }))).toBe(true);

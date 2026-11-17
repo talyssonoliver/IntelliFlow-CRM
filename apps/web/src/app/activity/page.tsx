@@ -73,9 +73,17 @@ export default function ActivityPage() {
     fetchNextPage: () => void;
   } = search.isSearchActive ? search : personalFeed;
   const userId = user?.id ?? null;
+  const userName = user?.name ?? null;
+  const userEmail = user?.email ?? null;
   const { personal: personalItems, system: systemItems } = useMemo(
-    () => splitActivityLog(source.items, { fold: foldSystem, mine: mineOnly, userId }),
-    [source.items, foldSystem, mineOnly, userId]
+    () =>
+      splitActivityLog(source.items, {
+        fold: foldSystem,
+        mine: mineOnly,
+        userId,
+        userNames: [userName, userEmail],
+      }),
+    [source.items, foldSystem, mineOnly, userId, userName, userEmail]
   );
 
   // The system writes most of this workspace's entries, so a page of 50 may hold few or none of
