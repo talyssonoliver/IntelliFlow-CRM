@@ -5,6 +5,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   __resetAccessTokenCache,
   createMailboxTransports,
+  hasOAuthClient,
+  oauthClientEnvNames,
   oauthConfigFromEnv,
   sendThroughMailbox,
   type MailboxTransports,
@@ -145,5 +147,34 @@ describe('Zoho configuration from env', () => {
     expect(built.zoho).not.toBeNull();
     expect(built.oauth('ZOHO')).toBeNull();
     expect(createMailboxTransports({}).zoho).toBeNull();
+  });
+});
+
+describe('hasOAuthClient / oauthClientEnvNames (MVP-001)', () => {
+  const zohoEnv = {
+    EMAIL_OAUTH_REDIRECT_URI: 'https://app.example.invalid/email/oauth/callback',
+    EMAIL_OAUTH_ZOHO_CLIENT_ID: 'zoho-id',
+    EMAIL_OAUTH_ZOHO_CLIENT_SECRET: ['zoho', 'secret', 'for', 'tests'].join('-'),
+  };
+
+  it('a process without the Zoho variables has no Zoho client (the worker on 17/11)', () => {
+    // The worker that runs the sync had none of them, so every Zoho token request failed.
+    expect(hasOAuthClient(createMailboxTransports({}), 'ZOHO')).toBe(false);
+    expect(hasOAuthClient(createMailboxTransports(zohoEnv), 'ZOHO')).toBe(true);
+    // The redirect is needed to build the client, though a token refresh does not use it.
+    const { EMAIL_OAUTH_REDIRECT_URI: _redirect, ...withoutRedirect } = zohoEnv;
+    expect(hasOAuthClient(createMailboxTransports(withoutRedirect), 'ZOHO')).toBe(false);
+    // Each kind needs its own client.
+    expect(hasOAuthClient(createMailboxTransports(zohoEnv), 'MICROSOFT')).toBe(false);
+  });
+
+  it('names the variables to set per kind, never their values', () => {
+    expect(oauthClientEnvNames('ZOHO')).toEqual([
+      'EMAIL_OAUTH_ZOHO_CLIENT_ID',
+      'EMAIL_OAUTH_ZOHO_CLIENT_SECRET',
+      'EMAIL_OAUTH_REDIRECT_URI',
+    ]);
+    expect(oauthClientEnvNames('MICROSOFT')[0]).toBe('EMAIL_OAUTH_MICROSOFT_CLIENT_ID');
+    expect(oauthClientEnvNames('GMAIL')[0]).toBe('EMAIL_OAUTH_GOOGLE_CLIENT_ID');
   });
 });
