@@ -1145,52 +1145,6 @@ describe('ConvertLeadToDealUseCase', () => {
     });
   });
 
-  describe('Contact Creation Edge Cases', () => {
-    it('should use "Unknown" for missing firstName when creating contact', async () => {
-      const lead = createQualifiedLead({
-        email: 'nofirst@example.com',
-        lastName: 'OnlyLast',
-        company: 'NoFirst Corp',
-        ownerId: 'owner-nf',
-        tenantId: 'tenant-nf',
-      });
-      leadRepository.setLead(lead);
-
-      const input: ConvertLeadToDealInput = {
-        leadId: lead.id.value,
-        dealValue: 10000,
-        accountName: 'NoFirst Corp',
-        convertedBy: 'sales-rep',
-      };
-
-      const result = await useCase.execute(input);
-      expect(result.isSuccess).toBe(true);
-      expect(contactRepository.savedContact).not.toBeNull();
-    });
-
-    it('should use "Unknown" for missing lastName when creating contact', async () => {
-      const lead = createQualifiedLead({
-        email: 'nolast@example.com',
-        firstName: 'OnlyFirst',
-        company: 'NoLast Corp',
-        ownerId: 'owner-nl',
-        tenantId: 'tenant-nl',
-      });
-      leadRepository.setLead(lead);
-
-      const input: ConvertLeadToDealInput = {
-        leadId: lead.id.value,
-        dealValue: 10000,
-        accountName: 'NoLast Corp',
-        convertedBy: 'sales-rep',
-      };
-
-      const result = await useCase.execute(input);
-      expect(result.isSuccess).toBe(true);
-      expect(contactRepository.savedContact).not.toBeNull();
-    });
-  });
-
   describe('Event Bus Resilience', () => {
     // DDD-001: event-publish failure now propagates (no swallow). Account +
     // Contact + Opportunity + Lead saves and the single event-outbox publish

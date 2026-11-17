@@ -123,6 +123,26 @@ describe('ConvertLeadDialog', () => {
     mocks.revalidate.mockResolvedValue(undefined);
   });
 
+  it('shows the name the contact will get on the Contact line (MVP-003)', () => {
+    renderDialog();
+    expect(screen.getByText('Contact:').parentElement).toHaveTextContent('Contact: Jane Roe');
+  });
+
+  it('names the contact after the company when the lead has no person name (MVP-003)', () => {
+    const email = 'owner@pilates.example.invalid';
+    render(
+      <ConvertLeadDialog
+        lead={{ id: 'lead-9', company: 'Pilates Living', email }}
+        userId="user-1"
+        open
+        onOpenChange={vi.fn()}
+      />
+    );
+    const line = screen.getByText('Contact:').parentElement;
+    expect(line).toHaveTextContent(`Contact: Pilates Living (${email})`);
+    expect(line).not.toHaveTextContent(/unknown/i);
+  });
+
   it('defaults to contact only and keeps the existing conversion call', () => {
     renderDialog();
     expect(screen.getByText('Convert Lead to Contact')).toBeInTheDocument();

@@ -1,6 +1,7 @@
 /**
  * MVP-003: a lead-to-deal conversion records the contact it created on the deal, so undo can
  * delete exactly that contact. A contact it only linked, or no contact, is never recorded.
+ * The contact it creates is named from the lead (the company when there is no person name).
  */
 import { describe, it, expect, vi } from 'vitest';
 import { Lead, Contact, type Opportunity } from '@intelliflow/domain';
@@ -8,10 +9,14 @@ import { ConvertLeadToDealUseCase } from '../ConvertLeadToDealUseCase';
 
 const EMAIL = 'owner@pilates.example.invalid';
 
-function setup(existing: Contact | null = null) {
+function setup(
+  existing: Contact | null = null,
+  name: { firstName?: string; lastName?: string } = {}
+) {
   const lead = Lead.create({
     email: EMAIL,
     company: 'Pilates Living',
+    ...name,
     source: 'WEBSITE',
     ownerId: 'owner-1',
     tenantId: 'tenant-1',
@@ -69,5 +74,32 @@ describe('ConvertLeadToDealUseCase createdContactId (MVP-003)', () => {
     await useCase.execute({ leadId: lead.id.value, convertedBy: 'owner-1', createContact: false });
     expect(saved.deal?.contactId).toBeUndefined();
     expect(saved.deal?.createdContactId).toBeUndefined();
+  });
+});
+
+describe('ConvertLeadToDealUseCase contact name (MVP-003)', () => {
+  it('names the contact after the company when the lead has only a company and an email', async () => {
+    const { lead, useCase, saved } = setup();
+    await useCase.execute({ leadId: lead.id.value, convertedBy: 'owner-1' });
+    expect(saved.contact?.firstName).toBe('Pilates Living');
+    expect(saved.contact?.lastName).toBe('');
+    expect(saved.contact?.fullName.trim()).toBe('Pilates Living');
+    expect(saved.contact?.email.value).toBe(EMAIL);
+  });
+
+  it.each([
+    ['a full person name', { firstName: 'Ana', lastName: 'Lima' }, ['Ana', 'Lima']],
+    ['only a first name', { firstName: 'OnlyFirst' }, ['OnlyFirst', '']],
+    ['only a last name', { lastName: 'OnlyLast' }, ['', 'OnlyLast']],
+  ])('keeps the lead name when it has %s, and invents nothing', async (_label, name, expected) => {
+    const { lead, useCase, saved } = setup(null, name);
+    await useCase.execute({ leadId: lead.id.value, convertedBy: 'owner-1' });
+    expect([saved.contact?.firstName, saved.contact?.lastName]).toEqual(expected);
+  });
+
+  it('never names a contact Unknown', async () => {
+    const { lead, useCase, saved } = setup();
+    await useCase.execute({ leadId: lead.id.value, convertedBy: 'owner-1' });
+    expect(`${saved.contact?.firstName} ${saved.contact?.lastName}`).not.toMatch(/unknown/i);
   });
 });
