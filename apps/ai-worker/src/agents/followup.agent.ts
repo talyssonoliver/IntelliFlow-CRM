@@ -11,6 +11,7 @@ import {
 import { replayConversation } from '../utils/conversation-replay.js';
 import { ensurePromptBudget } from '../utils/prompt-budget.js';
 import { isPurposeCeilingReached } from '../lib/purpose-ceiling.js';
+import { formatPounds } from '../utils/format-pounds.js';
 
 const logger = pino({
   name: 'followup-agent',
@@ -244,8 +245,7 @@ the specific context of each lead. You excel at balancing persistence with profe
       `Days Since Last Contact: ${input.daysSinceLastContact}`,
     ];
     if (input.assignedSalesRep) currentStatus.push(`Assigned To: ${input.assignedSalesRep}`);
-    if (input.dealValue)
-      currentStatus.push(`Deal Value: $${input.dealValue.toLocaleString('en-US')}`);
+    if (input.dealValue) currentStatus.push(`Deal Value: ${formatPounds(input.dealValue)}`);
     if (input.targetCloseDate) currentStatus.push(`Target Close: ${input.targetCloseDate}`);
     sections.push(...currentStatus);
 

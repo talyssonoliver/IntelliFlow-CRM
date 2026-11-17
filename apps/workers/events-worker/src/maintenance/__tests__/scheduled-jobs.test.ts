@@ -455,6 +455,21 @@ describe('checkStaleDeal (NP-031)', () => {
     expect(prisma.notification.create).not.toHaveBeenCalled();
   });
 
+  it('writes the deal value in pounds, and N/A when it has none', async () => {
+    prisma.opportunity.findMany.mockResolvedValue([
+      makeDeal('d1'),
+      { ...makeDeal('d2'), value: null },
+    ]);
+    prisma.notification.findMany.mockResolvedValue([]);
+
+    await (scheduler as unknown as { checkStaleDeal(): Promise<void> }).checkStaleDeal();
+
+    const call = prisma.notification.createMany.mock.calls[0][0] as { data: { body: string }[] };
+    expect(call.data[0].body).toContain('Value: £50,000.');
+    expect(call.data[0].body).not.toContain('$');
+    expect(call.data[1].body).toContain('Value: N/A.');
+  });
+
   it('N+1 regression: 10 deals → exactly 1 findMany + 1 createMany', async () => {
     const deals = Array.from({ length: 10 }, (_, i) => makeDeal(`d${i}`));
     prisma.opportunity.findMany.mockResolvedValue(deals);

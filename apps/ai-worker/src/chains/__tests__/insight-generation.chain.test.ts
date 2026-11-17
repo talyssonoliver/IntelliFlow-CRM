@@ -134,6 +134,24 @@ describe('InsightGenerationChain', () => {
       });
     });
 
+    it('shows the model a deal value in pounds, never dollars', async () => {
+      const chain = new InsightGenerationChain();
+      const invoke = vi.fn().mockResolvedValue({ insights: [] });
+      (chain as any).structuredModel = { invoke };
+
+      await chain.generateInsights(
+        createInput({
+          dealsAtRisk: [
+            { id: 'deal-1', name: 'Enterprise Renewal', daysSinceUpdate: 18, value: 12500 },
+          ],
+        })
+      );
+
+      const prompt = String(invoke.mock.calls[0][0]);
+      expect(prompt).toContain('value: £12,500');
+      expect(prompt).not.toContain('$12,500');
+    });
+
     it('should fall back to heuristics when LLM throws timeout', async () => {
       const chain = new InsightGenerationChain();
       // Override the model to throw

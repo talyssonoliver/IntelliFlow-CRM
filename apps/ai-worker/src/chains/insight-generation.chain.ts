@@ -25,6 +25,7 @@ import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { loadVersionedPrompt, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import { usableVersionedPrompt } from '../versioning/versioned-prompt';
+import { formatPounds } from '../utils/format-pounds';
 import pino from 'pino';
 
 const logger = pino({
@@ -269,7 +270,7 @@ export class InsightGenerationChain {
                 (d) =>
                   `- ${sanitizeStringField(d.name, 200)} (ID: ${d.id}): ${d.daysSinceUpdate} days since last update` +
                   (d.stage ? `, stage: ${sanitizeStringField(d.stage, 100)}` : '') +
-                  (d.value ? `, value: $${d.value.toLocaleString('en-GB')}` : '')
+                  (d.value ? `, value: ${formatPounds(d.value)}` : '')
               )
               .join('\n')
           : 'No deals at risk';

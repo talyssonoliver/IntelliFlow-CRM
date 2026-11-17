@@ -400,7 +400,7 @@ export class MaintenanceScheduler {
             recipientId: deal.ownerId as string,
             channel: 'IN_APP' as const,
             subject: `Stale deal: ${deal.name}`,
-            body: `Deal "${deal.name}" (${deal.stage}) has had no activity for ${daysSinceUpdate} days. Value: ${deal.value ?? 'N/A'}. Review or update its status.`,
+            body: `Deal "${deal.name}" (${deal.stage}) has had no activity for ${daysSinceUpdate} days. Value: ${deal.value == null ? 'N/A' : `£${Number(deal.value).toLocaleString('en-GB')}`}. Review or update its status.`,
             priority: 'HIGH' as const,
             status: 'PENDING' as const,
             category: 'ALERTS' as const,
