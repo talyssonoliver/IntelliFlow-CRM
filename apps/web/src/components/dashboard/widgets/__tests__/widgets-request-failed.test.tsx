@@ -102,13 +102,24 @@ describe('dashboard widgets when the request fails', () => {
     expect(screen.queryByText(/%/)).not.toBeInTheDocument();
   });
 
-  it('Pipeline Summary offers a retry', () => {
+  it('Pipeline Summary offers a retry for each part that failed', () => {
     const refetch = vi.fn();
+    const refetchLeads = vi.fn();
     pipelineMock.mockReturnValue({ ...failed, refetch });
+    leadStatsMock.mockReturnValue({ ...failed, refetch: refetchLeads });
     render(<PipelineSummaryWidget />);
-    expect(screen.getByRole('alert')).toHaveTextContent("Couldn't load the pipeline.");
-    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+
+    // Leads and deals are two requests: each fails, and retries, on its own.
+    const [leadsAlert, dealsAlert] = screen.getAllByRole('alert');
+    expect(leadsAlert).toHaveTextContent("Couldn't load your leads.");
+    expect(dealsAlert).toHaveTextContent("Couldn't load the pipeline.");
+
+    const [retryLeads, retryDeals] = screen.getAllByRole('button', { name: 'Retry' });
+    fireEvent.click(retryDeals);
     expect(refetch).toHaveBeenCalledTimes(1);
+    expect(refetchLeads).not.toHaveBeenCalled();
+    fireEvent.click(retryLeads);
+    expect(refetchLeads).toHaveBeenCalledTimes(1);
   });
 });
 
