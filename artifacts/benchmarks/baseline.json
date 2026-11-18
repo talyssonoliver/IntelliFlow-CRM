@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-17T20:48:35.562Z",
+  "timestamp": "2026-11-18T02:59:26.645Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 81,
-    "total_endpoints": 616,
+    "total_routers": 82,
+    "total_endpoints": 618,
     "total_queries": 266,
-    "total_mutations": 350,
+    "total_mutations": 352,
     "routers": [
       {
         "name": "contact",
@@ -1415,6 +1415,12 @@
         "endpoints": 2,
         "queries": 2,
         "mutations": 0
+      },
+      {
+        "name": "replyDraft",
+        "endpoints": 2,
+        "queries": 0,
+        "mutations": 2
       },
       {
         "name": "upload",
@@ -5102,6 +5108,18 @@
         "name": "contact.listReplyDrafts",
         "method": "GET",
         "description": "List reply drafts"
+      }
+    ],
+    "replyDraft": [
+      {
+        "name": "replyDraft.openInCompose",
+        "method": "POST",
+        "description": "Open in compose"
+      },
+      {
+        "name": "replyDraft.dismiss",
+        "method": "POST",
+        "description": "Dismiss"
       }
     ],
     "customActionHandler": [
