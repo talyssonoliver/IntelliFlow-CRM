@@ -14,6 +14,7 @@ vi.mock('../../email/mailbox-sender', () => ({ dispatchUserMail: dispatch }));
 import { draftBodyHtml, replyDraftRouter } from '../reply-draft.router';
 import { emailSendError } from '../../email/email-send-error';
 import { contactRouter } from '../contact.router';
+import { REPLY_DRAFT_STATUSES } from '@intelliflow/validators';
 
 const TO = 'enquiries@handyman.example.invalid';
 const BODY = 'Hi Sam,\n\nThanks for getting in touch.\nFriday at 10 works <b>fine</b>.';
@@ -218,6 +219,17 @@ describe('contact.listReplyDrafts (MVP-012)', () => {
       where: { contactId: TEST_UUIDS.contact1, status: { not: 'DISMISSED' } },
       take: 5,
     });
+  });
+
+  it('lists waiting drafts first, so settled ones never push them past the limit (codex)', async () => {
+    (prismaMock.contactReplyDraft.findMany as any).mockResolvedValue([]);
+    const list = contactRouter.createCaller(createTestContext() as never);
+    await list.listReplyDrafts({ contactId: TEST_UUIDS.contact1, limit: 5 });
+    const { orderBy } = (prismaMock.contactReplyDraft.findMany as any).mock.calls[0][0];
+    expect(orderBy).toEqual([{ status: 'asc' }, { createdAt: 'desc' }]);
+    // The order relies on DRAFT sorting before every other listed status.
+    const listed = REPLY_DRAFT_STATUSES.filter((s) => s !== 'DISMISSED');
+    expect([...listed].sort((a, b) => a.localeCompare(b))[0]).toBe('DRAFT');
   });
 });
 

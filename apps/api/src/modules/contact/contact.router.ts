@@ -2601,13 +2601,13 @@ export const contactRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const drafts = await ctx.prismaWithTenant.contactReplyDraft.findMany({
         where: { contactId: input.contactId, status: { not: 'DISMISSED' } }, // MVP-012: set aside
-        orderBy: { createdAt: 'desc' },
+        orderBy: [{ status: 'asc' }, { createdAt: 'desc' }], // DRAFT (waiting) sorts first
         take: input.limit,
       });
       return {
         drafts: drafts.map((d: ContactReplyDraft) => ({
           id: d.id,
-          contactId: d.contactId,
+          contactId: d.contactId ?? input.contactId, // listed by contact
           draftSubject: d.draftSubject,
           draftBody: d.draftBody,
           tone: d.tone,
