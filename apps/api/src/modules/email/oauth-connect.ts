@@ -27,14 +27,25 @@ export function hasRequiredScopes(provider: OAuthMailboxProvider, granted: strin
   return REQUIRED_SCOPES[provider].every((scope) => names.has(scope.toLowerCase()));
 }
 
-/** The provider's consent URL, or null when it is not configured on this server. */
+/**
+ * The provider's consent URL, or null when it is not configured on this server. Google is asked
+ * for send and read (MVP-011); `sendOnly` asks for sending only, after the user's Workspace domain
+ * refused the read permission (its admin does not trust Aurora yet).
+ */
 export function connectStartUrl(
   transports: MailboxTransports,
   provider: OAuthMailboxProvider,
-  args: { state: string; codeChallenge: string }
+  args: { state: string; codeChallenge: string; sendOnly?: boolean }
 ): string | null {
-  if (provider === 'ZOHO') return transports.zoho?.authorizationUrl(args) ?? null;
-  return transports.oauth(provider)?.authorizationUrl(args) ?? null;
+  const { sendOnly, ...pkce } = args;
+  if (provider === 'ZOHO') return transports.zoho?.authorizationUrl(pkce) ?? null;
+  const consent = provider === 'GMAIL' && sendOnly ? { ...pkce, sendOnly: true } : pkce;
+  return transports.oauth(provider)?.authorizationUrl(consent) ?? null;
+}
+
+/** MVP-011: the Google client id a Workspace admin trusts, or null when Google is not set up. */
+export function googleClientId(transports: MailboxTransports): string | null {
+  return transports.oauth('GMAIL')?.clientId ?? null;
 }
 
 export interface ConnectedAccount {

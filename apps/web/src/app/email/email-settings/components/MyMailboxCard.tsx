@@ -19,6 +19,7 @@ import { oneClickNotYet, providerByServer } from './mailbox-providers';
 import { SmtpHostingNotice } from './SmtpHostingNotice';
 import { SendFromHint, type HintProvider } from './SendFromHint';
 import { inboxSyncLine } from './inbox-sync-status';
+import { GoogleAdminTrust } from './GoogleAdminTrust';
 
 // Loaded on demand: most users connect with Google or Microsoft (C-FE5).
 const SmtpMailboxForm = dynamic(() => import('./SmtpMailboxForm').then((m) => m.SmtpMailboxForm), {
@@ -56,6 +57,8 @@ export interface MailboxConnectionProps {
   headingId: string;
   onChanged: () => void;
   announce: (message: string) => void;
+  /** MVP-011: the Google client id a Workspace admin trusts (shown on the admin-trust card). */
+  googleClientId?: string | null;
 }
 
 /** Connection status and actions for one mailbox scope. */
@@ -67,6 +70,7 @@ export function MailboxConnection({
   headingId,
   onChanged,
   announce,
+  googleClientId = null,
 }: Readonly<MailboxConnectionProps>) {
   const prefix = scope === 'USER' ? 'my' : 'company';
   const oauthStart = trpc.emailMailbox.oauthStart.useMutation();
@@ -95,10 +99,15 @@ export function MailboxConnection({
   const connected = mailbox !== null && mailbox.status !== 'DISCONNECTED';
   const broken = mailbox?.status === 'ERROR';
 
-  const startOAuth = async (provider: Provider) => {
+  /** `sendOnly` (Google): sign in for sending only, when the domain blocks reading (MVP-011). */
+  const startOAuth = async (provider: Provider, sendOnly = false) => {
     setError(null);
     try {
-      const { url } = await oauthStart.mutateAsync({ provider, scope });
+      const { url } = await oauthStart.mutateAsync({
+        provider,
+        scope,
+        ...(sendOnly ? { sendOnly: true } : {}),
+      });
       const state = new URL(url).searchParams.get('state');
       if (state) sessionStorage.setItem(oauthProviderKey(state), provider);
       window.location.assign(url);
@@ -207,6 +216,15 @@ export function MailboxConnection({
           )}
         </div>
       )}
+      {connected && !broken && mailbox?.replySync === 'NEEDS_ADMIN_TRUST' && (
+        <GoogleAdminTrust
+          idPrefix={prefix}
+          clientId={googleClientId}
+          lead="This Google mailbox is connected for sending only."
+          onRetry={providersAvailable.GMAIL ? () => void startOAuth('GMAIL') : undefined}
+          pending={oauthStart.isPending}
+        />
+      )}
 
       {!connected && !editing && <SendFromHint scope={scope} onProvider={setPreferred} />}
 
@@ -233,6 +251,23 @@ export function MailboxConnection({
             <p className="w-full text-xs text-muted-foreground">
               {oneClickNotYet(notYet.join(' and '))}
             </p>
+          )}
+          {/* Google asks for reading too; a domain that does not trust Aurora blocks that sign-in. */}
+          {!editing && providersAvailable.GMAIL && (
+            <details className="w-full text-sm" data-testid="google-blocked-help">
+              <summary className="cursor-pointer text-muted-foreground">
+                Google blocked the sign-in?
+              </summary>
+              <div className="mt-2">
+                <GoogleAdminTrust
+                  idPrefix={`${prefix}-blocked`}
+                  clientId={googleClientId}
+                  lead="Google blocks reading mail for a Workspace account whose admin has not trusted Aurora yet."
+                  onSendOnly={() => void startOAuth('GMAIL', true)}
+                  pending={oauthStart.isPending}
+                />
+              </div>
+            </details>
           )}
         </div>
       )}
@@ -331,6 +366,7 @@ export interface MyMailboxCardProps {
   companyFallbackAddress: string | null;
   onChanged: () => void;
   announce: (message: string) => void;
+  googleClientId?: string | null;
 }
 
 export function MyMailboxCard({
@@ -339,6 +375,7 @@ export function MyMailboxCard({
   companyFallbackAddress,
   onChanged,
   announce,
+  googleClientId = null,
 }: Readonly<MyMailboxCardProps>) {
   const consequence = companyFallbackAddress
     ? `Your email will be sent from the company mailbox (${companyFallbackAddress}) instead.`
@@ -364,6 +401,7 @@ export function MyMailboxCard({
           disconnectConsequence={consequence}
           onChanged={onChanged}
           announce={announce}
+          googleClientId={googleClientId}
         />
       </Card>
     </section>

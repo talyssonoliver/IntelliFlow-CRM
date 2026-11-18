@@ -38,7 +38,10 @@ type OAuthClientLike = Pick<
   | 'accountAddress'
   | 'sendRaw'
   | 'listDsnSince'
->;
+> & {
+  /** MVP-011: the public client id a Workspace admin trusts (absent on test doubles). */
+  readonly clientId?: string;
+};
 
 /** Zoho Mail (MVP-001): HTTPS API, its own shape (data centre host, JSON send). */
 export type ZohoClientLike = Pick<

@@ -5,7 +5,8 @@
  * The first production use of OAuth mail in IntelliFlow (the legacy
  * GmailAdapter / OutlookAdapter only run health checks). Kept separate from
  * those adapters on purpose: it asks for explicit minimal scopes (send + identity, plus read
- * for Microsoft's bounce scan and inbox sync; Gmail is send-only), never the legacy
+ * for Microsoft's bounce scan and inbox sync, and gmail.readonly for Gmail's inbox sync, MVP-011,
+ * which a Workspace domain grants once its admin trusts Aurora; else send only), never the legacy
  * modify/labels/ReadWrite defaults, uses S256 PKCE, talks only to fixed provider hosts, sends the
  * one MIME message built by `buildMime`, revokes with the token in the body,
  * and reduces every failure to a MailboxTransportError code — provider error
@@ -20,10 +21,17 @@ import {
 import { isBounceSenderAddress } from './bounce-senders';
 import { MailboxTransportError } from './mailbox-errors';
 
-export const GMAIL_MAILBOX_SCOPES = [
+/** Sending only: what a Google mailbox falls back to when its domain does not trust Aurora. */
+export const GMAIL_SEND_ONLY_SCOPES = [
   'openid',
   'email',
   'https://www.googleapis.com/auth/gmail.send',
+] as const;
+
+/** MVP-011: send, and read for the inbox sync (Workspace admin-trusted apps need no assessment). */
+export const GMAIL_MAILBOX_SCOPES = [
+  ...GMAIL_SEND_ONLY_SCOPES,
+  'https://www.googleapis.com/auth/gmail.readonly',
 ] as const;
 
 export const MICROSOFT_MAILBOX_SCOPES = [
@@ -179,12 +187,20 @@ export class OAuthMailboxClient {
     return this.provider === 'GMAIL' ? GOOGLE_TOKEN : `${MS_AUTHORITY}/token`;
   }
 
-  authorizationUrl(args: { state: string; codeChallenge: string }): string {
+  /** The OAuth client id: public (it is in every consent URL); a Workspace admin trusts it. */
+  get clientId(): string {
+    return this.config.clientId;
+  }
+
+  /** `sendOnly` (Gmail): ask for sending only, after a domain refused the read permission. */
+  authorizationUrl(args: { state: string; codeChallenge: string; sendOnly?: boolean }): string {
+    const scopes =
+      this.provider === 'GMAIL' && args.sendOnly ? GMAIL_SEND_ONLY_SCOPES : this.scopes;
     const params = new URLSearchParams({
       client_id: this.config.clientId,
       redirect_uri: this.config.redirectUri,
       response_type: 'code',
-      scope: this.scopes.join(' '),
+      scope: scopes.join(' '),
       state: args.state,
       code_challenge: args.codeChallenge,
       code_challenge_method: 'S256',
@@ -307,7 +323,7 @@ export class OAuthMailboxClient {
 
   /** Bounce-report candidates received since `since`, oldest first (the parser decides what is one). */
   async listDsnSince(accessToken: string, since: Date, limit: number): Promise<DsnListing> {
-    // Gmail mailboxes hold gmail.send only (owner decision 14/11): nothing is read from Gmail.
+    // Gmail's bounce reports are not scanned: its read permission is for the inbox sync (MVP-011).
     if (this.provider === 'GMAIL') return { messages: [], resumeFrom: null };
     const headers = { Authorization: `Bearer ${accessToken}` };
     return this.listGraphDsns(headers, since, limit);

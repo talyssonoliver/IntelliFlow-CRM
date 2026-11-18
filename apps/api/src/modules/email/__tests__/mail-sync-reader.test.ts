@@ -52,7 +52,7 @@ describe('graphReader', () => {
 
   it('is the reader production registers for Microsoft mailboxes', () => {
     expect(PRODUCTION_READERS.MICROSOFT?.provider).toBe('MICROSOFT');
-    expect(Object.keys(PRODUCTION_READERS)).toEqual(['MICROSOFT', 'ZOHO']);
+    expect(Object.keys(PRODUCTION_READERS)).toEqual(['MICROSOFT', 'ZOHO', 'GMAIL']);
   });
 });
 
