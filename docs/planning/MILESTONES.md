@@ -689,6 +689,10 @@ pipeline, and see today's tasks and activity. MVP-001 to MVP-010 come first in
 sprints 24 and 25. Each is done when the owner can do that step on production
 for Leangency, proven with a screenshot.
 
+MVP-011 (sprint 24, owner ruling 2026-11-18) adds reading a Google Workspace
+customer's Gmail once their admin trusts Aurora: enquiries land on leads as
+Received, with reply drafts offered. "How would our AI CRM be fed?"
+
 **Acceptance:** the owner scores his weekly flow at **7/10 or higher** on
 production. The launch tasks in sprint 27, IFC-051 (Pilot Customer Selection)
 and IFC-052 (Production Deployment), depend on that acceptance.
