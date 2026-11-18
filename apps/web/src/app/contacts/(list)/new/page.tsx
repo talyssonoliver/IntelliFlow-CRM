@@ -39,7 +39,6 @@ function validatePersonalStep(
 ): Partial<Record<keyof ContactFormData, string>> {
   const errors: Partial<Record<keyof ContactFormData, string>> = {};
   if (!formData.firstName.trim()) errors.firstName = 'First name is required';
-  if (!formData.lastName.trim()) errors.lastName = 'Last name is required';
   if (!formData.email.trim()) {
     errors.email = 'Email is required';
   } else if (!isValidEmailAddress(formData.email)) {
@@ -474,7 +473,7 @@ export default function CreateNewContactPage() {
                         htmlFor="lastName"
                         className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
                       >
-                        Last Name <span className="text-red-500">*</span>
+                        Last Name
                       </label>
                       <input
                         type="text"
@@ -488,7 +487,6 @@ export default function CreateNewContactPage() {
                             : 'border-slate-200 dark:border-slate-700'
                         }`}
                       />
-                      {errors.lastName && <p className="text-xs text-red-500">{errors.lastName}</p>}
                     </div>
 
                     {/* Email */}
