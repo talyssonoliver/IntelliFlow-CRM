@@ -220,3 +220,36 @@ describe('Edit Contact page — contact type (PG-205)', () => {
     expect(h.mutateAsync.mock.calls[1][0].accountId).toBeNull();
   });
 });
+
+describe('Edit Contact page — clearing the last name (MVP-003, #28)', () => {
+  it('sends "" when the last name is cleared, so the API saves it empty', async () => {
+    h.record = { ...h.record, firstName: 'Unknown', lastName: 'Unknown' };
+    render(<EditContactPage />);
+    fireEvent.change(screen.getByLabelText(/First Name/i), { target: { value: 'Pilates Living' } });
+    fireEvent.change(screen.getByLabelText(/Last Name/i), { target: { value: '' } });
+    goToLastStep();
+    fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
+    await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledTimes(1));
+    const sent = h.mutateAsync.mock.calls[0][0];
+    expect(sent).toHaveProperty('lastName', '');
+    expect(sent.firstName).toBe('Pilates Living');
+  });
+
+  it('treats a last name of only spaces as cleared', async () => {
+    render(<EditContactPage />);
+    fireEvent.change(screen.getByLabelText(/Last Name/i), { target: { value: '   ' } });
+    goToLastStep();
+    fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
+    await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledTimes(1));
+    expect(h.mutateAsync.mock.calls[0][0].lastName).toBe('');
+  });
+
+  it('still sends a last name that is kept, trimmed', async () => {
+    render(<EditContactPage />);
+    fireEvent.change(screen.getByLabelText(/Last Name/i), { target: { value: ' Lima ' } });
+    goToLastStep();
+    fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
+    await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledTimes(1));
+    expect(h.mutateAsync.mock.calls[0][0].lastName).toBe('Lima');
+  });
+});
