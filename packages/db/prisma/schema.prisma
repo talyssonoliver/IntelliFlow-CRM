@@ -718,6 +718,7 @@ model Lead {
   files                   LeadFile[]
   experimentAssignments   ExperimentAssignment[]
   autoResponseDrafts      AutoResponseDraft[]
+  replyDrafts             ContactReplyDraft[] // MVP-012: replies Aurora drafted to the lead
 
   // Account association (IFC-227: Company-to-Account Navigation Link)
   accountId     String?
@@ -3872,10 +3873,14 @@ model CaseAIInsight {
 }
 
 /// IFC-312: AI-generated reply drafts for contact inbox. NEVER auto-sent (ADR-037).
+/// A reply Aurora drafted, for a contact or (MVP-012) a lead: exactly one of the two is set
+/// (CHECK contact_reply_drafts_one_subject_check, migration 20261118100000).
 model ContactReplyDraft {
   id            String   @id @default(cuid())
-  contactId     String
-  contact       Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId     String?
+  contact       Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  leadId        String?
+  lead          Lead?    @relation(fields: [leadId], references: [id], onDelete: Cascade)
   tenantId      String
   tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   emailThreadId String?
@@ -3890,6 +3895,7 @@ model ContactReplyDraft {
   createdBy     String?
 
   @@index([contactId, status])
+  @@index([leadId, status])
   @@index([tenantId, status])
   @@map("contact_reply_drafts")
 }
