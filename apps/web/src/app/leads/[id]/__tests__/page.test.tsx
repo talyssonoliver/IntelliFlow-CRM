@@ -1779,6 +1779,76 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
       expect(screen.getByText('COA stage moved to Proposal')).toBeInTheDocument();
     });
 
+    describe('score rows and actions (UI-021)', () => {
+      const expandSystemRow = () => {
+        render(<Lead360Page />);
+        openActivity();
+        fireEvent.click(screen.getByRole('button', { name: /System updates \(1\)/ }));
+        fireEvent.click(screen.getByRole('button', { name: 'expand_more' }));
+      };
+
+      it('reads the previous score the scoring API writes, not an empty "from"', () => {
+        data().activities = [scored];
+        expandSystemRow();
+
+        const row = screen.getByTestId('score-change');
+        expect(row).toHaveTextContent('Score changed from');
+        expect(row).toHaveTextContent('30');
+        expect(row).toHaveTextContent('40');
+      });
+
+      it('says "First score" for a lead\'s first real score', () => {
+        data().activities = [
+          { ...scored, metadata: { previousScore: 0, newScore: 38, firstScore: true } },
+        ];
+        expandSystemRow();
+
+        const row = screen.getByTestId('score-change');
+        expect(row).toHaveTextContent('First score');
+        expect(row).not.toHaveTextContent('Score changed from');
+        expect(row).toHaveTextContent('38');
+      });
+
+      it('reads the score the events-worker writes as `score`', () => {
+        data().activities = [{ ...scored, metadata: { score: 52, previousScore: 38 } }];
+        expandSystemRow();
+
+        const row = screen.getByTestId('score-change');
+        expect(row).toHaveTextContent('Score changed from');
+        expect(row).toHaveTextContent('38');
+        expect(row).toHaveTextContent('52');
+      });
+
+      it('shows no score row for a failed scoring, which has no new score', () => {
+        data().activities = [
+          {
+            ...scored,
+            title: 'AI scoring failed',
+            metadata: { scoringStatus: 'FAILED', errorClass: 'PersistenceError' },
+          },
+        ];
+        expandSystemRow();
+
+        expect(screen.queryByTestId('score-change')).not.toBeInTheDocument();
+      });
+
+      it('offers no reply, react, note or share on a system record', () => {
+        data().activities = [scored];
+        expandSystemRow();
+
+        expect(screen.queryByText('Activity Feed Item Actions')).not.toBeInTheDocument();
+      });
+
+      it("still offers them on a person's own activity", () => {
+        data().activities = [emailActivity];
+        render(<Lead360Page />);
+        openActivity();
+        fireEvent.click(screen.getByRole('button', { name: 'expand_more' }));
+
+        expect(screen.getByText('Activity Feed Item Actions')).toBeInTheDocument();
+      });
+    });
+
     it('shows the people filter only when the workspace has more than one person', () => {
       render(<Lead360Page />);
       openActivity();

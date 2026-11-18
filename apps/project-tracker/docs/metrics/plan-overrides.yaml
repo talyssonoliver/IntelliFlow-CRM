@@ -3883,3 +3883,337 @@ IFC-213:
 IFC-223:
   override_deps_remove:
     - IFC-157
+
+# WhatsApp channel: IFC-035 and IFC-036 re-scoped into small rows, sprints 24-25 (owner ruling 18/11/2026:
+# build both transports behind one seam). Design: docs/architecture/whatsapp-channel-design.md.
+# Each row is 1,500 lines or fewer. IFC-034 (the investment gate) is unchanged and still the owner's.
+IFC-320:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-24/attestations/IFC-320/attestation.json
+  acceptance_criteria:
+    - 'The port, the event and outbound types and the coded errors exist, with no infrastructure import in packages/domain'
+    - 'The contract suite rejects no signature, a wrong signature, a right-length wrong signature and a missing secret, accepts a right one, detects a replayed delivery and returns no events for an unknown shape'
+    - 'The fake transport passes the whole suite; a transport without the suite fails the provider-test-exists gate'
+    - 'UK numbers in national and international form normalise to one E.164 value; an invalid or ambiguous number returns null, never a guess'
+    - 'The row is 1,500 lines or fewer, tests included'
+IFC-321:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - integration_test
+  acceptance_owner: 'Tech Lead'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-24/attestations/IFC-321/attestation.json
+  acceptance_criteria:
+    - "One additive migration only: no drop, no rewrite. It is classified in the PR: Class A because the new unique keys are partial indexes over new nullable columns (existing rows are NULL and unaffected), with the production row counts of the chat tables recorded; if that does not hold it is Class B with an escalation before production. Applied to production only with the owner's yes"
+    - 'Connection secrets are in ENCRYPTED_FIELDS and never returned by a repository read model'
+    - "A tenant cannot read or write another tenant's connections, archive rows, conversations or messages (two-tenant integration test)"
+    - 'The database allows one live connection per tenant'
+    - 'A replayed provider message id cannot create a second message (unique key)'
+    - 'Archived webhook bodies are purged after 30 days by a job with a test; if the row goes over 1,500 lines the purge job moves to its own row'
+IFC-322:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - security_scan
+    - manual_review
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-24/attestations/IFC-322/attestation.json
+  acceptance_criteria:
+    - 'The ADR records the choice (a container per tenant, or one container with a session and an API key per tenant) with the spike evidence'
+    - "It states WAHA's edition, licence, session limits and any cost from WAHA's own pages, and what the owner must approve; this row purchases nothing"
+    - "In the spike tenant A's key cannot list, read, send from or stop tenant B's session (all four attempts fail), and a tenant key cannot call an administrative endpoint"
+    - 'The WAHA API and dashboard are reachable only on the private network'
+    - 'The per-session webhook HMAC key signs events and a changed key makes verification fail'
+    - 'If per-session keys do not exist in the edition the owner would run, the ADR says a container per tenant; the WAHA version is pinned'
+IFC-323:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - security_scan
+  acceptance_owner: 'Security Engineer'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-24/attestations/IFC-323/attestation.json
+  acceptance_criteria:
+    - 'Rejected with 401 and nothing stored: no signature, a wrong signature, a right-length wrong signature, a missing secret, an unknown token, a disconnected connection'
+    - 'Fail-closed has no switch: no setting, environment variable or default disables verification, proven by a test across the environment combinations'
+    - 'The tenant and connection come from the token only: a body naming another tenant or number changes nothing; the token is redacted from request logs and error reports'
+    - 'Only authenticated bodies are archived (encrypted, with a purge date); a rejected delivery logs a reason code and a size, never the body'
+    - 'Oversized bodies and floods per token are refused before parsing'
+    - "This row owns the HTTP routes, including the Meta GET handshake route, which answers only for the right verify token by calling the transport's handshake logic (IFC-325); it is tested here with the fake transport, and IFC-325 and IFC-326 each add an end-to-end test through this real route"
+    - 'A wiring test shows the routes are registered in the HTTP server; the row is 1,500 lines or fewer, tests included'
+IFC-035:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - manual_review
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/IFC-035/attestation.json
+  acceptance_criteria:
+    - 'Every fact in the Settings notice (cost, setup time, ban risk, terms) has a source link and a date, checked against Meta''s and WAHA''s own pages and WhatsApp''s terms; the design doc''s facts marked "verify" are settled or corrected'
+    - "WAHA's edition, licence, session limits and any cost are stated from WAHA's own pages (whether several sessions are free or paid decides the spend IFC-322 and IFC-331 must ask for)"
+    - "cost-analysis.xlsx compares both transports for 1, 10 and 100 customers, including WAHA hosting per tenant and Meta's per-message charges"
+    - "poc-results.json holds real provider responses from a Meta sandbox number (Meta's own test number; whether business verification is needed is stated) and from a WAHA session on a throwaway number"
+    - 'integration-design.puml matches the design doc; the Supabase-webhook idea is recorded as considered and replaced, with the reason'
+    - 'The owner has reviewed the notice facts, and the spend each option implies (a throwaway number or SIM, hosting, per-message charges) is listed for his yes before anything is bought'
+IFC-324:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - integration_test
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/IFC-324/attestation.json
+  acceptance_criteria:
+    - "A message from a number matching a contact lands on that contact, a lead's number on that lead; national and international UK formats both match"
+    - 'An unknown number creates a lead (source WhatsApp) named from the profile or the number; over the rate limit no new lead is created and the message is kept'
+    - 'A replayed delivery creates nothing; a delivery-status update only moves forward'
+    - "The timeline entry is type WHATSAPP, direction inbound, the sender as author and no user id, so it shows as Received and is not the owner's own activity"
+    - 'Group chats and status or broadcast messages are ignored'
+    - 'Two different people never merge on an ambiguous number'
+    - "Restrictions, objection, export, erasure and the privacy record are IFC-329; this row stores nothing for a person IFC-329's check refuses"
+    - 'The row is 1,500 lines or fewer, tests included'
+IFC-325:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - security_scan
+  acceptance_owner: 'Security Engineer'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/IFC-325/attestation.json
+  acceptance_criteria:
+    - 'A valid X-Hub-Signature-256 is accepted; a missing header, a wrong prefix, a wrong length and a wrong value are rejected'
+    - "The handshake logic returns the challenge only for the connection's verify token (the route is IFC-323's)"
+    - 'Text messages and status updates parse; other message types are stored as an unsupported message with their type'
+    - 'Send goes to the allow-listed Meta host with a timeout; an invalid token, a closed window, rate limiting and a number that is not allowed map to coded errors'
+    - 'No secret or message text appears in a log line'
+    - 'The shared contract suite passes, and an end-to-end test sends a signed Meta payload through the real route from IFC-323; live provider responses from IFC-035 are added to the fixtures when recorded'
+    - 'The row is 1,500 lines or fewer, tests included'
+IFC-326:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - security_scan
+  acceptance_owner: 'Security Engineer'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/IFC-326/attestation.json
+  acceptance_criteria:
+    - "Events without a valid HMAC from the session's own key are rejected (no signature, wrong, right-length wrong, missing key) and the connection is marked as needing attention"
+    - "Per the ADR: with one shared container the instance key is used only to create and delete sessions and never for a tenant's reads or sends, every other call uses that tenant's own key, and a tenant key cannot call an administrative endpoint (negative test); with a container per tenant each container's key is its own tenant's"
+    - "A client built for tenant A cannot address tenant B's session (negative test)"
+    - "NOWEB events parse: 1:1 chats only, groups and status ignored, the echo of our own message not stored again; text is sent through the tenant's own client"
+    - 'No secret or message text appears in a log line, and no anti-detection or pacing-evasion code exists'
+    - 'The shared contract suite passes, and an end-to-end test sends a signed WAHA event through the real route from IFC-323'
+    - 'The row is 1,500 lines or fewer, tests included'
+IFC-328:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - integration_test
+    - security_scan
+  acceptance_owner: 'Security Engineer'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/IFC-328/attestation.json
+  acceptance_criteria:
+    - 'Only an admin can read or change the connection; every query is scoped to the tenant (two-tenant test)'
+    - 'Choosing the unofficial transport is refused without the acknowledgement; the acknowledgement stores who, when and the notice version'
+    - "Meta credentials are encrypted on save, tested through the transport's status check, and never returned (a response-leak test over every procedure)"
+    - 'The webhook URL and verify token are shown once when created and cannot be read back'
+    - 'Switching transport disconnects the old connection first and keeps its messages; one live connection per tenant holds'
+    - "The procedures are wired in the router and container (the integration-wired gate passes); the WAHA session calls are IFC-330's and the QR and status procedures call it"
+    - 'The row is 1,500 lines or fewer, tests included'
+IFC-331:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - security_scan
+    - manual_review
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/IFC-331/attestation.json
+  acceptance_criteria:
+    - 'The owner has approved the hosting spend before anything is deployed; the runbook states the monthly cost'
+    - 'The pinned WAHA runs on the private network only: an external probe cannot reach the API or the dashboard'
+    - 'A restart keeps a paired session (the volume works) and the health check reports it'
+    - 'Secrets are set by the owner or the deploy tooling, never committed, and the runbook says how to rotate them'
+    - 'The deployment follows the ADR from IFC-322 (container per tenant or shared) and says how a new tenant is added'
+IFC-327:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - integration_test
+  acceptance_owner: 'Backend Dev'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/IFC-327/attestation.json
+  acceptance_criteria:
+    - "A reply is sent through the connected transport and stored with direction outbound and the sender's user id; a number that has not messaged first cannot be messaged"
+    - "With Meta's window closed the answer says so and nothing is sent; a contact who sent STOP cannot be messaged until they message again"
+    - 'A processing restriction cannot be bypassed; the same request id sent twice sends once'
+    - 'A failed send is stored as failed and shown, never lost; delivery-status updates (sent, delivered, read, failed) only move a message forward'
+    - 'The tRPC procedures are wired in the router and container (the integration-wired gate passes)'
+    - 'The row is 1,500 lines or fewer, tests included'
+IFC-329:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - integration_test
+  acceptance_owner: 'Security Engineer'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/IFC-329/attestation.json
+  acceptance_criteria:
+    - 'A person with a processing restriction or an objection is not stored by the ingest and cannot be messaged by the send'
+    - "The erase-a-person's-communications path (IFC-316) removes that person's WhatsApp conversations, messages and timeline entries, with a test"
+    - 'The personal-data export includes WhatsApp messages: IFC-317 as merged is checked, and if it has not merged this row adds the WhatsApp source and IFC-317 reuses it'
+    - 'The record of processing and the sub-processor list name Meta (and WAHA when Aurora hosts it), what is processed and the retention (30 days for archived webhook bodies)'
+    - 'The row is 1,500 lines or fewer, tests included'
+IFC-330:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - security_scan
+  acceptance_owner: 'Security Engineer'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/IFC-330/attestation.json
+  acceptance_criteria:
+    - 'Each tenant has its own session, API key and webhook HMAC key, made by Aurora, stored encrypted and never sent to the browser'
+    - 'Create, start, QR, status, stop and delete work against the deployed WAHA; a half-created session leaves a FAILED row, not an orphan, and a retry is idempotent'
+    - 'A tenant can only reach its own session through the manager (negative test); the instance key, if one exists, never leaves the server and is used only to create and delete'
+    - 'A session that stops sending signed events shows as needing attention'
+    - 'The row is 1,500 lines or fewer, tests included'
+PG-215:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - lighthouse
+    - manual_review
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/PG-215/attestation.json
+    - .specify/sprints/sprint-25/attestations/PG-215/owner-screenshot.png
+  acceptance_criteria:
+    - "The comparison covers cost, setup time, ban risk, terms and who it suits for both transports, in plain words, with the owner's approved wording and IFC-035's dated facts"
+    - 'Choosing the unofficial transport needs an explicit tick-box; the tick, who, when and the notice version are stored through IFC-328'
+    - 'Admin-only; one connection per tenant; switching asks first and disconnects the old one, keeping the messages'
+    - 'Readable at 390px; accessibility checks pass'
+PG-214:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - lighthouse
+    - manual_review
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/PG-214/attestation.json
+    - .specify/sprints/sprint-25/attestations/PG-214/owner-screenshot.png
+  acceptance_criteria:
+    - 'WhatsApp entries show on the lead timeline as Received or Sent and the WhatsApp tab shows the thread and a reply box'
+    - 'The reply box explains why it cannot send (no connection, window closed, STOP) instead of failing'
+    - 'The contact page shows the same thread through the shared WhatsAppThread component'
+    - 'At 390px there is no sideways scroll and the reply box is reachable above the keyboard'
+    - 'Real data only, no placeholders; the page file shrinks because the tab is its own component'
+    - 'The owner sees it on a phone-sized screen and signs off; if the row goes over 1,500 lines the contact page moves to its own row'
+PG-216:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - security_scan
+    - manual_review
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/PG-216/attestation.json
+    - .specify/sprints/sprint-25/attestations/PG-216/owner-screenshot.png
+  acceptance_criteria:
+    - 'Official: a guided form with a test button that shows the webhook URL and verify token once'
+    - 'Unofficial: a QR code, live pairing status, reconnect and disconnect'
+    - 'After saving, no secret is ever sent back to the browser (response-leak test)'
+    - 'Errors are plain and coded; a half-finished connection can be resumed or removed'
+    - 'The owner sees both panels and signs off'
+IFC-036:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+    - manual_review
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-25/attestations/IFC-036/attestation.json
+    - .specify/sprints/sprint-25/attestations/IFC-036/owner-screenshot.png
+  acceptance_criteria:
+    - 'A real enquiry from the West London Handyman planner to a Leangency-owned number reaches Aurora, creates or matches the lead and shows as Received, on both transports'
+    - 'The owner replies from Aurora and the reply reaches the phone on both transports'
+    - 'webhook-test-results.json holds real provider responses; processing (webhook accepted to message stored) is under 1s for 99.9% of deliveries; the first delivery after the API wakes from idle sleep is measured and reported separately; a replay of 1,000 deliveries stores each exactly once'
+    - 'The live deployment rejects unsigned and wrongly signed requests on every inbound path'
+    - "The owner's screenshots show the lead with the message as Received and the reply on the phone"

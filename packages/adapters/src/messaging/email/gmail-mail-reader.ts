@@ -141,7 +141,9 @@ interface GmailHeader {
 
 interface GmailPart {
   mimeType?: string;
-  body?: { data?: string };
+  filename?: string;
+  /** Inline `data`, or an `attachmentId` to read through messages.attachments.get. */
+  body?: { data?: string; attachmentId?: string };
   parts?: GmailPart[];
   headers?: GmailHeader[];
 }
@@ -159,10 +161,22 @@ function header(message: GmailMessage, name: string): string | null {
   return message.payload?.headers?.find((h) => h.name?.toLowerCase() === wanted)?.value ?? null;
 }
 
-/** The first part of a type in the MIME tree, depth first (the order the mail shows them). */
+/** An attached file (named, or marked as an attachment): never the mail's own text. */
+function isAttachment(part: GmailPart): boolean {
+  if (part.filename?.trim()) return true;
+  const disposition = part.headers?.find((h) => h.name?.toLowerCase() === 'content-disposition');
+  return /^\s*attachment/i.test(disposition?.value ?? '');
+}
+
+/**
+ * The first body part of a type in the MIME tree, depth first (the order the mail shows them).
+ * Attachments and everything inside them are skipped; a part counts with its text inline or behind
+ * an attachment id (Gmail stores large parts that way).
+ */
 function firstPart(part: GmailPart | undefined, mimeType: string): GmailPart | null {
-  if (!part) return null;
-  if (part.mimeType?.toLowerCase() === mimeType && part.body?.data) return part;
+  if (!part || isAttachment(part)) return null;
+  const hasBody = Boolean(part.body?.data || part.body?.attachmentId);
+  if (part.mimeType?.toLowerCase() === mimeType && hasBody) return part;
   for (const child of part.parts ?? []) {
     const found = firstPart(child, mimeType);
     if (found) return found;
@@ -170,17 +184,51 @@ function firstPart(part: GmailPart | undefined, mimeType: string): GmailPart | n
   return null;
 }
 
-/** The mail's text: its plain-text part, else its HTML part as text; NUL removed. */
-export function gmailBodyText(payload: GmailPart | undefined, maxChars: number): string {
-  const decode = (part: GmailPart) =>
-    Buffer.from(part.body?.data ?? '', 'base64url').toString('utf8');
+/** The part that holds the mail's text: plain text first, else HTML. */
+export function gmailBodyPart(
+  payload: GmailPart | undefined
+): { part: GmailPart; html: boolean } | null {
   const plain = firstPart(payload, 'text/plain');
-  if (plain) {
-    const text = decode(plain).replaceAll('\u0000', '').replace(/\r\n/g, '\n').trim();
-    return text.slice(0, maxChars);
-  }
+  if (plain) return { part: plain, html: false };
   const html = firstPart(payload, 'text/html');
-  return html ? zohoBodyText(decode(html), maxChars) : '';
+  return html ? { part: html, html: true } : null;
+}
+
+/** A body part's base64url content as text (HTML made plain); NUL removed, capped. */
+function partText(data: string, html: boolean, maxChars: number): string {
+  const raw = Buffer.from(data, 'base64url').toString('utf8');
+  if (html) return zohoBodyText(raw, maxChars);
+  return raw.replaceAll('\u0000', '').replace(/\r\n/g, '\n').trim().slice(0, maxChars);
+}
+
+/** The mail's text from inline parts: its plain-text part, else its HTML part as text. */
+export function gmailBodyText(payload: GmailPart | undefined, maxChars: number): string {
+  const pick = gmailBodyPart(payload);
+  return pick ? partText(pick.part.body?.data ?? '', pick.html, maxChars) : '';
+}
+
+/** The full message's text, reading a part stored behind an attachment id when it is one. */
+async function loadBodyText(
+  fetchImpl: typeof fetch,
+  accessToken: string,
+  id: string,
+  maxChars: number
+): Promise<string> {
+  const path = `/messages/${encodeURIComponent(id)}`;
+  const full = await gmailGet<GmailMessage>(fetchImpl, accessToken, `${path}?format=full`);
+  const pick = gmailBodyPart(full.payload);
+  if (!pick) return '';
+  let data = pick.part.body?.data;
+  const attachmentId = pick.part.body?.attachmentId;
+  if (!data && attachmentId) {
+    const stored = await gmailGet<{ data?: string }>(
+      fetchImpl,
+      accessToken,
+      `${path}/attachments/${encodeURIComponent(attachmentId)}`
+    );
+    data = stored.data;
+  }
+  return partText(data ?? '', pick.html, maxChars);
 }
 
 /** Mail never logged from a label: drafts, spam and chats. */
@@ -211,17 +259,11 @@ function toMessage(
     receivedAt: new Date(receivedTime),
     isRead: !labels.includes('UNREAD'),
     bodyText: '',
-    loadBody: async () => {
-      const full = await gmailGet<GmailMessage>(
-        fetchImpl,
-        accessToken,
-        `/messages/${encodeURIComponent(id)}?format=full`
-      ).catch((error: unknown) => {
+    loadBody: () =>
+      loadBodyText(fetchImpl, accessToken, id, options.maxBodyChars).catch((error: unknown) => {
         // Deleted since it was listed: that one mail is skipped, the round goes on.
         throw error instanceof NotFound ? new MailboxTransportError('REJECTED') : error;
-      });
-      return gmailBodyText(full.payload, options.maxBodyChars);
-    },
+      }),
   };
 }
 
@@ -282,8 +324,12 @@ async function historyPage(
   }>(fetchImpl, accessToken, `/history?${query.toString()}`);
   const ids: string[] = [];
   for (const record of body.history ?? []) {
+    // The request is already filtered by label, and Gmail often lists added messages with only
+    // their id: one is dropped only when its labels are given and do not hold the label. Drafts,
+    // spam and chats are left out from each message's own labels (toMessage).
     for (const added of record.messagesAdded ?? []) {
-      if (added.message?.id && (added.message.labelIds ?? []).includes(options.label)) {
+      const labels = added.message?.labelIds;
+      if (added.message?.id && (!labels || labels.includes(options.label))) {
         ids.push(added.message.id);
       }
     }

@@ -210,11 +210,29 @@ describe('CreateNewContactPage - Step Validation (T-03)', () => {
     render(<CreateNewContactPage />);
     clickNext();
     expect(screen.getByText('First name is required')).toBeInTheDocument();
-    expect(screen.getByText('Last name is required')).toBeInTheDocument();
+    // MVP-003: the last name is optional
+    expect(screen.queryByText('Last name is required')).not.toBeInTheDocument();
     expect(screen.getByText('Email is required')).toBeInTheDocument();
     // Still on step 1.
     expect(screen.getByRole('heading', { name: 'Contact Information' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Company & Role' })).not.toBeInTheDocument();
+  });
+
+  it('creates a contact with only a first name: the last name is optional (MVP-003)', async () => {
+    render(<CreateNewContactPage />);
+    fillPersonalStep({ firstName: 'Pilates Living', lastName: '' });
+    clickNext();
+    expect(screen.queryByText('Last name is required')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Company & Role' })).toBeInTheDocument();
+    clickNext();
+    fireEvent.click(screen.getByRole('button', { name: /Create Contact/i }));
+
+    await waitFor(() => expect(mockCreateMutateAsync).toHaveBeenCalledTimes(1));
+    expect(mockCreateMutateAsync.mock.calls[0][0]).toMatchObject({
+      firstName: 'Pilates Living',
+      lastName: '',
+      email: 'jane@example.com',
+    });
   });
 
   it('rejects an invalid email format', () => {

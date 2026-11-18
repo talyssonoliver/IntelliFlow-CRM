@@ -201,6 +201,32 @@ export function visibleTags(tags: readonly string[]): string[] {
   return tags.filter((tag) => !isSystemTag(tag));
 }
 
+/**
+ * The from/to of a score-change activity, or null when the row has no new score
+ * (a failed scoring). `from` is null for a first score or a row with no prior value.
+ * The scoring API writes `newScore` and `previousScore`; the events-worker writes the new
+ * value as `score` (with `previousScore`); older rows used `oldScore` (UI-021).
+ */
+export function describeScoreChange(
+  meta:
+    | Readonly<{
+        oldScore?: number | null;
+        previousScore?: number | null;
+        newScore?: number | null;
+        score?: number | null;
+        firstScore?: boolean;
+      }>
+    | null
+    | undefined
+): { from: number | null; to: number } | null {
+  if (!meta) return null;
+  const to = typeof meta.newScore === 'number' ? meta.newScore : meta.score;
+  if (typeof to !== 'number') return null;
+  const prior = meta.previousScore ?? meta.oldScore;
+  const from = meta.firstScore === true || typeof prior !== 'number' ? null : prior;
+  return { from, to };
+}
+
 /** The parts of a lead that can name it. */
 export interface LeadNameParts {
   firstName?: string | null;

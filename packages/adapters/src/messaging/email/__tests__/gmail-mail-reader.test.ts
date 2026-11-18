@@ -22,6 +22,8 @@ interface FakeMessage {
   messageId?: string;
   plain?: string;
   html?: string;
+  /** A whole MIME tree instead of `plain`/`html`. */
+  parts?: unknown[];
 }
 
 function metadata(m: FakeMessage) {
@@ -39,7 +41,7 @@ function metadata(m: FakeMessage) {
     payload: {
       headers,
       mimeType: 'multipart/alternative',
-      parts: [
+      parts: m.parts ?? [
         ...(m.plain ? [{ mimeType: 'text/plain', body: { data: b64(m.plain) } }] : []),
         ...(m.html ? [{ mimeType: 'text/html', body: { data: b64(m.html) } }] : []),
       ],
@@ -60,6 +62,8 @@ function gmail(options: {
   list?: Array<{ ids: string[]; next?: string }>;
   history?: Array<{ records: unknown[]; next?: string; historyId?: string } | 'gone'>;
   messages?: FakeMessage[];
+  /** Part contents stored behind an attachment id. */
+  attachments?: Record<string, string>;
 }) {
   const calls: string[] = [];
   const fetchImpl = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -79,7 +83,12 @@ function gmail(options: {
       if (!page || page === 'gone') return json({ error: { code: 404 } }, 404);
       return json({ history: page.records, nextPageToken: page.next, historyId: page.historyId });
     }
-    const id = decodeURIComponent(path.split('/')[2]!.split('?')[0]!);
+    const segments = path.split('?')[0]!.split('/');
+    if (segments[3] === 'attachments') {
+      const stored = options.attachments?.[decodeURIComponent(segments[4]!)];
+      return stored === undefined ? json({}, 404) : json({ data: b64(stored) });
+    }
+    const id = decodeURIComponent(segments[2]!);
     const message = options.messages?.find((m) => m.id === id);
     return message ? json(metadata(message)) : json({ error: { code: 404 } }, 404);
   });
@@ -270,6 +279,31 @@ describe('readGmailLabel — history after the first round', () => {
     expect(JSON.parse(second.cursor!)).toEqual({ h: '9' });
   });
 
+  it('reads mail the history lists with only its id (labels left out by Gmail)', async () => {
+    const api = gmail({
+      history: [
+        {
+          records: [
+            { messagesAdded: [{ message: { id: 'bare', threadId: 't' } }] },
+            { messagesAdded: [{ message: { id: 'dr', labelIds: ['DRAFT'] } }] },
+          ],
+          historyId: '12',
+        },
+      ],
+      messages: [
+        { id: 'bare', at: '2026-11-18T10:00:00Z' },
+        { id: 'dr', at: '2026-11-18T10:00:00Z', labels: ['DRAFT'] },
+      ],
+    });
+    const round = await readGmailLabel(
+      TOKEN,
+      JSON.stringify({ h: '11' }),
+      opts({ fetchImpl: api.fetchImpl })
+    );
+    expect(round.messages.map((m) => m.providerMessageId)).toEqual(['bare']);
+    expect(JSON.parse(round.cursor!)).toEqual({ h: '12' });
+  });
+
   it('says the cursor expired when Gmail no longer holds that history', async () => {
     const api = gmail({ history: ['gone'] });
     const round = await readGmailLabel(
@@ -347,6 +381,43 @@ describe('bodies', () => {
     const message = round.messages[0]!;
     (api.fetchImpl as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(json({}, 404));
     await expect(message.loadBody()).rejects.toMatchObject({ code: 'REJECTED' });
+  });
+
+  it('reads a body part Gmail stores behind an attachment id', async () => {
+    const api = gmail({
+      history: [{ records: [added('big')], historyId: '2' }],
+      messages: [
+        {
+          id: 'big',
+          at: '2026-11-18T10:00:00Z',
+          parts: [{ mimeType: 'text/plain', body: { attachmentId: 'att-1', size: 90000 } }],
+        },
+      ],
+      attachments: { 'att-1': 'A long enquiry about Friday.' },
+    });
+    const round = await readGmailLabel(
+      TOKEN,
+      JSON.stringify({ h: '1' }),
+      opts({ fetchImpl: api.fetchImpl })
+    );
+    await expect(round.messages[0]!.loadBody()).resolves.toBe('A long enquiry about Friday.');
+    expect(api.calls.at(-1)).toBe(`${API}/messages/big/attachments/att-1`);
+  });
+
+  it('never takes an attached file as the body', () => {
+    const payload = {
+      mimeType: 'multipart/mixed',
+      parts: [
+        { mimeType: 'text/html', body: { data: b64('<p>See the brief</p>') } },
+        { mimeType: 'text/plain', filename: 'notes.txt', body: { data: b64('attached notes') } },
+        {
+          mimeType: 'text/plain',
+          headers: [{ name: 'Content-Disposition', value: 'attachment; filename="x.txt"' }],
+          body: { data: b64('another attachment') },
+        },
+      ],
+    };
+    expect(gmailBodyText(payload, 1000)).toBe('See the brief');
   });
 
   it('falls back to the HTML part as text, and caps the length', () => {

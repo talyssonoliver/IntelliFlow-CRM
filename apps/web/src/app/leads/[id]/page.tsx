@@ -36,7 +36,8 @@ import {
   EmptyState,
 } from '@intelliflow/ui';
 import { api } from '@/lib/api';
-import { showPeopleFilter, splitActivityFeed } from '@/lib/leads/activity-feed';
+import { isSystemActivity, showPeopleFilter, splitActivityFeed } from '@/lib/leads/activity-feed';
+import { ScoreChangeRow } from '@/components/leads/ScoreChangeRow';
 import { SystemUpdatesGroup } from '@/components/leads/SystemUpdatesGroup';
 import { ActivityCountLine } from '@/components/leads/ActivityCountLine';
 import { ActivityFilterBar } from '@/components/leads/ActivityFilterBar';
@@ -254,9 +255,12 @@ interface Activity {
     // Web form
     source?: string;
     message?: string;
-    // Score update
+    // Score update: the API writes previousScore and newScore, the events-worker score
     oldScore?: number;
+    previousScore?: number;
     newScore?: number;
+    score?: number;
+    firstScore?: boolean;
     // Email
     subject?: string;
     preview?: string;
@@ -942,20 +946,7 @@ function ActivityRichPreview({ activity }: { activity: Activity }) {
       </div>
     );
   }
-  if (activity.type === 'score_update') {
-    return (
-      <div className="mt-2 flex items-center gap-2">
-        <span className="text-xs text-slate-500">Score changed from</span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600">
-          {meta.oldScore}
-        </span>
-        <span className="material-symbols-outlined text-slate-400 !text-sm">arrow_forward</span>
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">
-          {meta.newScore}
-        </span>
-      </div>
-    );
-  }
+  if (activity.type === 'score_update') return <ScoreChangeRow meta={meta} />;
   if (activity.type === 'email') {
     return (
       <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-700">
@@ -2618,21 +2609,24 @@ export default function Lead360Page() {
     });
   };
 
-  // renderActivityActions closure — depends on hook results from Lead360Page scope
-  const renderActivityActions = (activity: Activity) => (
-    <ActivityFeedItemActions
-      activityId={activity.id}
-      activityTitle={activity.title}
-      onReply={addComment}
-      onSubmitNote={(content) => addNoteMutation.mutate({ leadId, content })}
-      onToggleReaction={toggleReaction}
-      isSubmitting={addNoteMutation.isPending || isAddingComment}
-      shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/leads/${leadId}#activity-${activity.id}`}
-      reactions={reactionsMap[activity.id] ?? []}
-      currentUserId={user?.email ?? undefined}
-      comments={commentsMap[activity.id] ?? []}
-    />
-  );
+  // renderActivityActions closure — depends on hook results from Lead360Page scope.
+  // Reply, react, note and share belong on human activity, not on system records such as a
+  // score or status change (UI-021).
+  const renderActivityActions = (activity: Activity) =>
+    isSystemActivity(activity) ? null : (
+      <ActivityFeedItemActions
+        activityId={activity.id}
+        activityTitle={activity.title}
+        onReply={addComment}
+        onSubmitNote={(content) => addNoteMutation.mutate({ leadId, content })}
+        onToggleReaction={toggleReaction}
+        isSubmitting={addNoteMutation.isPending || isAddingComment}
+        shareUrl={`${typeof window !== 'undefined' ? window.location.origin : ''}/leads/${leadId}#activity-${activity.id}`}
+        reactions={reactionsMap[activity.id] ?? []}
+        currentUserId={user?.email ?? undefined}
+        comments={commentsMap[activity.id] ?? []}
+      />
+    );
 
   return (
     <div className="mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
