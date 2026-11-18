@@ -53,7 +53,9 @@ const CHARS_PER_TOKEN = 4;
 const MAX_TOKENS_PER_FILE = 18000; // Conservative limit to stay well under 25000
 const MAX_CHARS_PER_FILE = MAX_TOKENS_PER_FILE * CHARS_PER_TOKEN; // ~72000 chars
 
-const PART_NAMES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']; // Support up to 10 parts if needed
+// Support up to 11 parts: the plan outgrew ten (the parts were full on 18/11/2026), and the next
+// part only takes the tail, so no earlier part changes.
+const PART_NAMES = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K'];
 
 interface PartInfo {
   name: string;
@@ -76,6 +78,31 @@ interface SplitResult {
  */
 function estimateTokens(text: string): number {
   return Math.ceil(text.length / CHARS_PER_TOKEN);
+}
+
+/** Write one part file and describe it; throws when the plan needs more parts than PART_NAMES. */
+function writePart(
+  header: string,
+  partLines: string[],
+  partIndex: number,
+  startRow: number
+): PartInfo {
+  if (partIndex >= PART_NAMES.length) {
+    throw new Error(
+      `File too large: needs more than ${PART_NAMES.length} parts. ` +
+        `Consider increasing MAX_TOKENS_PER_FILE or adding more PART_NAMES.`
+    );
+  }
+  const name = PART_NAMES[partIndex];
+  const path = join(METRICS_DIR, `Sprint_plan_${name}.csv`);
+  writeFileSync(path, header + '\n' + partLines.join('\n'), 'utf-8');
+  return {
+    name,
+    path,
+    rows: partLines.length,
+    startRow,
+    endRow: startRow + partLines.length - 1,
+  };
 }
 
 export function splitSprintPlan(): SplitResult {
@@ -101,26 +128,7 @@ export function splitSprintPlan(): SplitResult {
       // Check if adding this line would exceed the limit
       // (but always add at least one line per part)
       if (currentPartLines.length > 0 && currentPartChars + lineChars > MAX_CHARS_PER_FILE) {
-        // Save current part
-        if (partIndex >= PART_NAMES.length) {
-          throw new Error(
-            `File too large: needs more than ${PART_NAMES.length} parts. ` +
-              `Consider increasing MAX_TOKENS_PER_FILE or adding more PART_NAMES.`
-          );
-        }
-
-        const partName = PART_NAMES[partIndex];
-        const partPath = join(METRICS_DIR, `Sprint_plan_${partName}.csv`);
-        const partContent = header + '\n' + currentPartLines.join('\n');
-        writeFileSync(partPath, partContent, 'utf-8');
-
-        parts.push({
-          name: partName,
-          path: partPath,
-          rows: currentPartLines.length,
-          startRow: currentStartRow,
-          endRow: currentStartRow + currentPartLines.length - 1,
-        });
+        parts.push(writePart(header, currentPartLines, partIndex, currentStartRow));
 
         // Start new part
         partIndex++;
@@ -136,26 +144,7 @@ export function splitSprintPlan(): SplitResult {
 
     // Save final part if there are remaining lines
     if (currentPartLines.length > 0) {
-      if (partIndex >= PART_NAMES.length) {
-        throw new Error(
-          `File too large: needs more than ${PART_NAMES.length} parts. ` +
-            `Consider increasing MAX_TOKENS_PER_FILE or adding more PART_NAMES.`
-        );
-      }
-
-      const partName = PART_NAMES[partIndex];
-      const partPath = join(METRICS_DIR, `Sprint_plan_${partName}.csv`);
-      const partContent = header + '\n' + currentPartLines.join('\n');
-      writeFileSync(partPath, partContent, 'utf-8');
-
-      parts.push({
-        name: partName,
-        path: partPath,
-        rows: currentPartLines.length,
-        startRow: currentStartRow,
-        endRow: currentStartRow + currentPartLines.length - 1,
-      });
-
+      parts.push(writePart(header, currentPartLines, partIndex, currentStartRow));
       partIndex++;
     }
 
