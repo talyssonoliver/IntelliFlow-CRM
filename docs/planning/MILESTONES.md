@@ -697,6 +697,19 @@ Received, with reply drafts offered. "How would our AI CRM be fed?"
 production. The launch tasks in sprint 27, IFC-051 (Pilot Customer Selection)
 and IFC-052 (Production Deployment), depend on that acceptance.
 
+## WhatsApp channel (sprints 24–25)
+
+A customer's WhatsApp number is connected to Aurora; a message from their
+customer lands on that person's lead or contact as **Received**, and the team
+replies from Aurora. Both transports are built behind one seam: the official
+Meta Cloud API and WAHA (QR pairing, against WhatsApp's terms), and the customer
+picks one in Settings after a plain-words notice of the differences. IFC-035 and
+IFC-036 are re-scoped into IFC-320 to IFC-331 and PG-214 to PG-216 (each 1,500
+lines or fewer). The first demo is a West London Handyman site enquiry going to
+WhatsApp and then into Aurora (IFC-036). Design:
+`docs/architecture/whatsapp-channel-design.md`. IFC-034, the investment gate,
+stays the owner's: the rows commit no spend.
+
 ## 🛡️ Risk Assessment
 
 | Risk Level  | Risk                          | Mitigation Strategy                                                                                                                 | Status      |
