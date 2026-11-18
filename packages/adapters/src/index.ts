@@ -120,6 +120,7 @@ export * from './messaging/email/smtp-provider';
 export * from './messaging/email/oauth-mailbox';
 export * from './messaging/email/zoho-mailbox';
 export * from './messaging/email/zoho-mail-reader';
+export * from './messaging/email/gmail-mail-reader';
 export * from './messaging/email/graph-mail-delta';
 export * from './messaging/email/dsn-parser';
 export * from './messaging/email/imap-dsn-reader';
