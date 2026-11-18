@@ -40,7 +40,9 @@ export default function OAuthCallbackContent() {
     const code = params.get('code');
     const state = params.get('state');
     if (params.get('error')) {
-      router.replace(`${SETTINGS_PATH}?error=denied`);
+      // MVP-011: Google refuses reading for a Workspace domain that does not trust Aurora yet.
+      const google = state && sessionStorage.getItem(oauthProviderKey(state)) === 'GMAIL';
+      router.replace(`${SETTINGS_PATH}?error=${google ? 'google-denied' : 'denied'}`);
       return;
     }
     if (!code || !state) {

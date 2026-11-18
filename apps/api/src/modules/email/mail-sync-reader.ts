@@ -6,13 +6,14 @@
  */
 import {
   MailboxTransportError,
+  readGmailLabel,
   readGraphMailDelta,
   readZohoFolder,
   readZohoFolderIds,
 } from '@intelliflow/adapters';
-import { hasMailRead, hasZohoRead } from './mail-sync-scopes';
+import { hasGmailRead, hasMailRead, hasZohoRead } from './mail-sync-scopes';
 
-export { hasMailRead, hasZohoRead } from './mail-sync-scopes';
+export { hasGmailRead, hasMailRead, hasZohoRead } from './mail-sync-scopes';
 
 /** The folders a sync reads: received mail and mail the user sent from the provider itself. */
 export type SyncFolder = 'inbox' | 'sentitems';
@@ -58,7 +59,7 @@ export interface SyncReadArgs {
 
 export interface MailSyncReader {
   /** Stored on each synced email record (EmailRecord.provider). */
-  provider: 'MICROSOFT' | 'ZOHO';
+  provider: 'MICROSOFT' | 'ZOHO' | 'GMAIL';
   /** Whether the granted scopes allow reading mail (else the mailbox is checked again daily). */
   canRead(scopes: readonly string[]): boolean;
   read(args: SyncReadArgs): Promise<SyncRound>;
@@ -101,8 +102,30 @@ export function zohoReader(
   };
 }
 
+/** Smaller pages than the others: each listed Gmail message costs one more request (its headers). */
+const GMAIL_READ = { maxPages: 4, pageSize: 25, initialDays: 30, maxBodyChars: 100_000 } as const;
+
+/**
+ * MVP-011: Gmail (a Workspace domain that trusts Aurora) through its history: the Inbox is the
+ * INBOX label, Sent Items the SENT label (gmail-mail-reader.ts).
+ */
+export function gmailReader(read: typeof readGmailLabel = readGmailLabel): MailSyncReader {
+  return {
+    provider: 'GMAIL',
+    canRead: hasGmailRead,
+    read: ({ accessToken, folder, cursor, now, budgetMs }) =>
+      read(accessToken, cursor, {
+        label: folder === 'inbox' ? 'INBOX' : 'SENT',
+        ...GMAIL_READ,
+        now,
+        budgetMs,
+      }),
+  };
+}
+
 /** The readers production uses, per mailbox kind. */
 export const PRODUCTION_READERS: Readonly<Partial<Record<string, MailSyncReader>>> = {
   MICROSOFT: graphReader(),
   ZOHO: zohoReader(),
+  GMAIL: gmailReader(),
 };

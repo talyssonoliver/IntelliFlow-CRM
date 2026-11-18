@@ -21,6 +21,8 @@ const CONNECTED: Record<string, string> = {
 
 const ERRORS: Record<string, string> = {
   denied: 'The sign-in was cancelled, so no mailbox was connected.',
+  'google-denied':
+    'Google did not connect the mailbox. If your company uses Google Workspace, its admin may need to trust Aurora first: see "Google blocked the sign-in?" under My mailbox.',
   expired: 'The sign-in took too long. Start again from Connect.',
   failed: 'The mailbox could not be connected. Try again, or set it up with SMTP.',
 };

@@ -242,6 +242,14 @@ describe('replySyncState (MVP-001)', () => {
 
   it('is null for kinds that do not sync', () => {
     expect(replySyncState({ kind: 'SMTP', grantedScopes: [] })).toBeNull();
-    expect(replySyncState({ kind: 'GMAIL', grantedScopes: ['gmail.send'] })).toBeNull();
+  });
+
+  it('a Gmail mailbox is ON with read-only, else waits for its Workspace admin (MVP-011)', () => {
+    const send = 'https://www.googleapis.com/auth/gmail.send';
+    const read = 'https://www.googleapis.com/auth/gmail.readonly';
+    expect(replySyncState({ kind: 'GMAIL', grantedScopes: [send, read] })).toBe('ON');
+    // Google granted sending only: reconnecting alone does not help, the admin must trust Aurora.
+    expect(replySyncState({ kind: 'GMAIL', grantedScopes: [send] })).toBe('NEEDS_ADMIN_TRUST');
+    expect(replySyncState({ kind: 'GMAIL', grantedScopes: [] })).toBe('NEEDS_ADMIN_TRUST');
   });
 });

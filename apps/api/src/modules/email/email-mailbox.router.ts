@@ -33,7 +33,7 @@ import {
   smtpEndpointDiffers,
   type ConnectionTestResultDto,
   type MailboxDto,
-  type OAuthProvidersAvailableDto,
+  type MyMailboxDto,
   type SaveSmtpMailboxInput,
   type SendingIdentityDto,
 } from '@intelliflow/validators';
@@ -57,6 +57,7 @@ import {
   checkOAuthMailbox,
   connectAccount,
   connectStartUrl,
+  googleClientId,
   hasRequiredScopes,
   revokeGrant,
 } from './oauth-connect';
@@ -258,20 +259,17 @@ function imapAccountChanged(existing: MailboxRow, input: SaveSmtpMailboxInput): 
 // ─── Router ─────────────────────────────────────────────────────────────────
 
 export const emailMailboxRouter = createTRPCRouter({
-  getMine: tenantProcedure.query(
-    async ({
-      ctx,
-    }): Promise<{ mailbox: MailboxDto | null; providersAvailable: OAuthProvidersAvailableDto }> => {
-      assertTenantContext(ctx);
-      const c = ctx as unknown as EmailRouterCtx;
-      const { transports } = emailRuntimeDeps(c);
-      const row = await findMailbox(c, 'USER');
-      return {
-        mailbox: row ? toMailboxDto(row, { includeConnection: true }) : null,
-        providersAvailable: { ...transports.oauthConfigured },
-      };
-    }
-  ),
+  getMine: tenantProcedure.query(async ({ ctx }): Promise<MyMailboxDto> => {
+    assertTenantContext(ctx);
+    const c = ctx as unknown as EmailRouterCtx;
+    const { transports } = emailRuntimeDeps(c);
+    const row = await findMailbox(c, 'USER');
+    return {
+      mailbox: row ? toMailboxDto(row, { includeConnection: true }) : null,
+      providersAvailable: { ...transports.oauthConfigured },
+      googleClientId: googleClientId(transports),
+    };
+  }),
 
   /** Who a new email would go out as, by the same rules as a send (no connection details). */
   sendingIdentity: tenantProcedure.query(async ({ ctx }): Promise<SendingIdentityDto> => {
@@ -444,7 +442,8 @@ export const emailMailboxRouter = createTRPCRouter({
           expiresAt: new Date(Date.now() + EMAIL_LIMITS.oauthStateTtlMinutes * 60_000),
         },
       });
-      const url = connectStartUrl(transports, input.provider, { state, codeChallenge: challenge });
+      const consent = { state, codeChallenge: challenge, sendOnly: input.sendOnly === true };
+      const url = connectStartUrl(transports, input.provider, consent);
       if (!url) throw new TRPCError({ code: 'PRECONDITION_FAILED', message: 'Not configured.' });
       return { url };
     }),
