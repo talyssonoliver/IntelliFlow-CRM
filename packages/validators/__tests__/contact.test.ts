@@ -109,15 +109,15 @@ describe('Contact Validators', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject empty lastName', () => {
-      const invalidData = {
+    it('should accept an empty lastName (a contact named after its company)', () => {
+      const validData = {
         email: 'test@example.com',
         firstName: 'John',
         lastName: '',
       };
 
-      const result = createContactSchema.safeParse(invalidData);
-      expect(result.success).toBe(false);
+      const result = createContactSchema.safeParse(validData);
+      expect(result.success).toBe(true);
     });
 
     it('should reject lastName exceeding max length', () => {

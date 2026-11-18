@@ -45,11 +45,19 @@ export const logActivitySchema = z.object({
 });
 export type LogActivityInput = z.infer<typeof logActivitySchema>;
 
+// MVP-003: the last name may be empty. A contact created from a lead with only a company is named
+// after the company (empty last name), and its form and API must be able to save it. The first
+// name stays required.
+const lastNameSchema = z
+  .string()
+  .max(100)
+  .transform((val) => val.trim());
+
 // Base contact fields schema (DRY - used by create and update)
 const baseContactFieldsSchema = z.object({
   email: emailSchema,
   firstName: nameSchema,
-  lastName: nameSchema,
+  lastName: lastNameSchema,
   title: nameSchema.optional(),
   phone: phoneSchema,
   department: nameSchema.optional(),
@@ -66,8 +74,10 @@ const baseContactFieldsSchema = z.object({
   contactNotes: z.string().max(5000).optional(),
 });
 
-// Create Contact Schema
-export const createContactSchema = baseContactFieldsSchema;
+// Create Contact Schema (an omitted last name is empty; update stays partial: omitted = unchanged)
+export const createContactSchema = baseContactFieldsSchema.extend({
+  lastName: lastNameSchema.default(''),
+});
 
 export type CreateContactInput = z.infer<typeof createContactSchema>;
 
@@ -123,7 +133,7 @@ export const contactResponseSchema = z.object({
   id: idSchema,
   email: emailSchema,
   firstName: nameSchema,
-  lastName: nameSchema,
+  lastName: z.string(), // may be empty (MVP-003)
   title: nameSchema.nullable(),
   phone: z.string().nullable(), // Plain string for response (VO transform only in input schemas)
   department: nameSchema.nullable(),

@@ -140,7 +140,6 @@ export function ContactForm({
 
     if (currentStep === 'personal') {
       if (!formData.firstName.trim()) newErrors.firstName = 'First name is required';
-      if (!formData.lastName.trim()) newErrors.lastName = 'Last name is required';
       if (!formData.email.trim()) {
         newErrors.email = 'Email is required';
       } else if (!isValidEmailAddress(formData.email)) {
@@ -302,14 +301,13 @@ export function ContactForm({
                     className={fieldClassName(errors.firstName)}
                   />
                 </FormField>
-                <FormField label="Last Name" id="lastName" required error={errors.lastName}>
+                <FormField label="Last Name" id="lastName" error={errors.lastName}>
                   <input
                     type="text"
                     id="lastName"
                     value={formData.lastName}
                     onChange={(e) => updateField('lastName', e.target.value)}
                     placeholder="e.g. Connor"
-                    aria-required="true"
                     aria-invalid={!!errors.lastName}
                     aria-describedby={errors.lastName ? 'lastName-error' : undefined}
                     className={fieldClassName(errors.lastName)}
