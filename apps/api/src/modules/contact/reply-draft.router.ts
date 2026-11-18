@@ -12,6 +12,7 @@
  * - dismiss: DISMISSED, never sent.
  * Kept apart from contact.router.ts, which may only shrink.
  */
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import type { SendUserEmailResultDto } from '@intelliflow/validators';
@@ -108,15 +109,18 @@ async function claim(c: EmailRouterCtx, draft: DraftRow, to: ReplyDraftStatus): 
 /**
  * True only when a failed send certainly did not go out. A refusal or failed send from the
  * mailbox path carries `emailSendError` (it is thrown before delivery, or for a delivery that
- * failed). Any other error with the send's email record already written may come after the
- * mailbox accepted the mail, so it is not known to be undelivered. With no record, nothing was
- * handed to the mailbox.
+ * failed). Any other error with this attempt's email record already written may come after the
+ * mailbox accepted the mail, so it is not known to be undelivered. With no record of this attempt
+ * (an earlier failed attempt's does not count), nothing was handed to the mailbox.
  */
-async function notDelivered(c: EmailRouterCtx, draftId: string, error: unknown): Promise<boolean> {
+async function notDelivered(c: EmailRouterCtx, attempt: string, error: unknown): Promise<boolean> {
   // The mailbox path throws its refusals as a TRPCError whose cause names the refusal.
   if (emailSendErrorFromCause(error instanceof TRPCError ? error.cause : error)) return true;
   const record = await c.prismaWithTenant.emailRecord.findFirst({
-    where: { tenantId: c.tenant.tenantId, metadata: { path: ['replyDraftId'], equals: draftId } },
+    where: {
+      tenantId: c.tenant.tenantId,
+      metadata: { path: ['replyDraftAttempt'], equals: attempt },
+    },
     select: { id: true },
   });
   return record === null;
@@ -143,6 +147,7 @@ export const replyDraftRouter = createTRPCRouter({
       const draft = await loadDraft(c, input.draftId);
       const to = recipientOf(draft);
       await claim(c, draft, 'SENDING');
+      const attempt = randomUUID();
       let result: SendUserEmailResultDto;
       try {
         result = await dispatchUserMail(
@@ -157,13 +162,19 @@ export const replyDraftRouter = createTRPCRouter({
           },
           deps,
           {
-            metadata: { replyDraftId: draft.id, contactId: draft.contactId, source: 'ai-reply' },
+            metadata: {
+              replyDraftId: draft.id,
+              // This attempt's own id: only its record is evidence the mail may have gone (codex).
+              replyDraftAttempt: attempt,
+              contactId: draft.contactId,
+              source: 'ai-reply',
+            },
           }
         );
       } catch (error) {
         // Only a send known not to have gone out makes the draft sendable again; anything else
         // may have been delivered, so it stays SENDING and is never offered twice (codex).
-        if (await notDelivered(c, draft.id, error)) {
+        if (await notDelivered(c, attempt, error)) {
           await move(c.prismaWithTenant, c, draft.id, 'SENDING', 'DRAFT');
         }
         throw error;

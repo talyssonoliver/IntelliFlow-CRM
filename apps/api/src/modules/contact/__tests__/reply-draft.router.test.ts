@@ -70,7 +70,12 @@ describe('replyDraft.send (MVP-012)', () => {
     });
     expect(input.htmlBody).toContain('&lt;b&gt;fine&lt;/b&gt;');
     expect(options).toEqual({
-      metadata: { replyDraftId: 'draft-1', contactId: TEST_UUIDS.contact1, source: 'ai-reply' },
+      metadata: {
+        replyDraftId: 'draft-1',
+        replyDraftAttempt: expect.stringMatching(/^[0-9a-f-]{36}$/),
+        contactId: TEST_UUIDS.contact1,
+        source: 'ai-reply',
+      },
     });
     expect(moves()).toEqual([
       ['DRAFT', 'SENDING'],
@@ -98,10 +103,27 @@ describe('replyDraft.send (MVP-012)', () => {
 
     await expect(caller().send({ draftId: 'draft-1' })).rejects.toThrow('connection reset');
     expect(moves()).toEqual([['DRAFT', 'SENDING']]);
+    // Evidence is looked for under this attempt's own id, the one the send recorded.
+    const attempt = dispatch.mock.calls[0]![3].metadata.replyDraftAttempt;
     expect((prismaMock.emailRecord.findFirst as any).mock.calls[0][0].where).toEqual({
       tenantId: TEST_UUIDS.tenant,
-      metadata: { path: ['replyDraftId'], equals: 'draft-1' },
+      metadata: { path: ['replyDraftAttempt'], equals: attempt },
     });
+  });
+
+  it('an earlier failed attempt’s record does not keep a later one stuck (codex)', async () => {
+    // Attempt 1 is recorded as failed (its email record exists) and the draft waits again.
+    dispatch.mockResolvedValueOnce({ id: 'email-1', status: 'FAILED', skipped: [] });
+    await caller().send({ draftId: 'draft-1' });
+    const first = dispatch.mock.calls[0]![3].metadata.replyDraftAttempt;
+    // Attempt 2 fails before writing anything: only attempt 1's record exists.
+    (prismaMock.emailRecord.findFirst as any).mockImplementation(async ({ where }: any) =>
+      where.metadata.equals === first ? { id: 'email-1' } : null
+    );
+    dispatch.mockRejectedValueOnce(new Error('database unavailable'));
+    await expect(caller().send({ draftId: 'draft-1' })).rejects.toThrow('database unavailable');
+    expect(dispatch.mock.calls[1]![3].metadata.replyDraftAttempt).not.toBe(first);
+    expect(moves().at(-1)).toEqual(['SENDING', 'DRAFT']);
   });
 
   it('makes the draft sendable again after an error before anything was written', async () => {
