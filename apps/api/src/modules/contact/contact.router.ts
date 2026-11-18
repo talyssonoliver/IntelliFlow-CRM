@@ -2607,7 +2607,7 @@ export const contactRouter = createTRPCRouter({
       return {
         drafts: drafts.map((d: ContactReplyDraft) => ({
           id: d.id,
-          contactId: d.contactId,
+          contactId: d.contactId ?? input.contactId, // listed by contact
           draftSubject: d.draftSubject,
           draftBody: d.draftBody,
           tone: d.tone,
