@@ -16,10 +16,20 @@ export function hasZohoRead(scopes: readonly string[]): boolean {
   return has('messages') && has('folders');
 }
 
+/**
+ * MVP-011: Gmail reads with gmail.readonly (or the wider modify / full-mail scopes, never asked
+ * for). Google reports full URIs; a Workspace domain that does not trust Aurora grants send only.
+ */
+export function hasGmailRead(scopes: readonly string[]): boolean {
+  const names = new Set(scopes.map((s) => s.toLowerCase().replace(/\/$/, '').split('/').pop()));
+  return names.has('gmail.readonly') || names.has('gmail.modify') || names.has('mail.google.com');
+}
+
 /** The read-permission check per mailbox kind the sync reads. */
 export const SYNC_READ_CHECKS: Readonly<
   Partial<Record<string, (scopes: readonly string[]) => boolean>>
 > = {
   MICROSOFT: hasMailRead,
   ZOHO: hasZohoRead,
+  GMAIL: hasGmailRead,
 };

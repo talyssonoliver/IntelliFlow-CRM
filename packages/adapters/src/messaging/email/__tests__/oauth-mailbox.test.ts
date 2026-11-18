@@ -3,6 +3,7 @@ import { EMAIL_LIMITS } from '@intelliflow/domain';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   GMAIL_MAILBOX_SCOPES,
+  GMAIL_SEND_ONLY_SCOPES,
   MICROSOFT_MAILBOX_SCOPES,
   OAuthMailboxClient,
   createPkcePair,
@@ -64,13 +65,43 @@ describe.each([
 });
 
 describe('scopes', () => {
-  it('asks Google only for send + identity: never a Gmail read scope (owner decision 14/11)', () => {
+  it('asks Google for send + read-only + identity, never modify (owner ruling 18/11, MVP-011)', () => {
     expect(GMAIL_MAILBOX_SCOPES).toEqual([
       'openid',
       'email',
       'https://www.googleapis.com/auth/gmail.send',
+      'https://www.googleapis.com/auth/gmail.readonly',
     ]);
-    expect(GMAIL_MAILBOX_SCOPES.join(' ')).not.toMatch(/gmail\.(readonly|modify|metadata)/);
+    expect(GMAIL_MAILBOX_SCOPES.join(' ')).not.toMatch(
+      /gmail\.(modify|metadata|compose)|mail\.google/
+    );
+  });
+  it('asks Google for send + identity only when the sign-in is for sending only', () => {
+    expect(GMAIL_SEND_ONLY_SCOPES).toEqual([
+      'openid',
+      'email',
+      'https://www.googleapis.com/auth/gmail.send',
+    ]);
+    const url = new URL(
+      new OAuthMailboxClient('GMAIL', config).authorizationUrl({
+        state: 's'.repeat(43),
+        codeChallenge: 'c'.repeat(43),
+        sendOnly: true,
+      })
+    );
+    expect(url.searchParams.get('scope')).toBe(GMAIL_SEND_ONLY_SCOPES.join(' '));
+    // Microsoft has no send-only sign-in: its read permission serves the bounce scan.
+    const microsoft = new URL(
+      new OAuthMailboxClient('MICROSOFT', config).authorizationUrl({
+        state: 's'.repeat(43),
+        codeChallenge: 'c'.repeat(43),
+        sendOnly: true,
+      })
+    );
+    expect(microsoft.searchParams.get('scope')).toBe(MICROSOFT_MAILBOX_SCOPES.join(' '));
+  });
+  it('exposes the public client id a Workspace admin trusts', () => {
+    expect(new OAuthMailboxClient('GMAIL', config).clientId).toBe(config.clientId);
   });
   it('asks Microsoft only for send + read (bounce scan) + identity + refresh', () => {
     expect(MICROSOFT_MAILBOX_SCOPES).toEqual([

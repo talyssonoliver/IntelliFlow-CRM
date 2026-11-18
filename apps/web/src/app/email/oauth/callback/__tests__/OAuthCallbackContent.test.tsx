@@ -103,6 +103,15 @@ describe('OAuthCallbackContent', () => {
     expect(complete.mutateAsync).not.toHaveBeenCalled();
   });
 
+  it('points a refused Google sign-in at the Workspace admin help (MVP-011)', async () => {
+    sessionStorage.setItem(oauthProviderKey(STATE), 'GMAIL');
+    renderAt(`error=access_denied&state=${STATE}`);
+    await waitFor(() =>
+      expect(nav.replace).toHaveBeenCalledWith('/email/email-settings?error=google-denied')
+    );
+    expect(complete.mutateAsync).not.toHaveBeenCalled();
+  });
+
   it('explains an incomplete link, with a way back', async () => {
     renderAt(`state=${STATE}`);
     const alert = await screen.findByRole('alert');

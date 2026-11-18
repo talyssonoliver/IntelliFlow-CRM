@@ -72,7 +72,12 @@ export const mailboxScopeInputSchema = z.object({ scope: mailboxScopeSchema }).s
 export type MailboxScopeInput = z.infer<typeof mailboxScopeInputSchema>;
 
 export const oauthStartInputSchema = z
-  .object({ provider: oauthMailboxProviderSchema, scope: mailboxScopeSchema })
+  .object({
+    provider: oauthMailboxProviderSchema,
+    scope: mailboxScopeSchema,
+    /** MVP-011, Google: ask for sending only (the Workspace domain does not trust Aurora yet). */
+    sendOnly: z.boolean().optional(),
+  })
   .strict();
 export type OAuthStartInput = z.infer<typeof oauthStartInputSchema>;
 
@@ -109,8 +114,12 @@ export interface MailboxDto extends SmtpEndpointDto, SmtpAccountDto {
   accountAddress: string | null;
   /** #1177: when the Outlook inbox sync last finished a round (ISO); null before the first. */
   inboxSyncedAt?: string | null;
-  /** MVP-001: replies logged (ON), the connection needs the read permission (NEEDS_RECONNECT), or n/a. */
-  replySync?: 'ON' | 'NEEDS_RECONNECT' | null;
+  /**
+   * MVP-001: replies logged (ON), the connection needs the read permission (NEEDS_RECONNECT), or
+   * n/a. MVP-011: NEEDS_ADMIN_TRUST, a Google mailbox sending only until its Workspace admin trusts
+   * Aurora.
+   */
+  replySync?: 'ON' | 'NEEDS_RECONNECT' | 'NEEDS_ADMIN_TRUST' | null;
   updatedAt: string;
 }
 
@@ -118,6 +127,14 @@ export interface OAuthProvidersAvailableDto {
   GMAIL: boolean;
   MICROSOFT: boolean;
   ZOHO: boolean;
+}
+
+/** The user's own mailbox, the one-click providers, and (MVP-011) the Google client id to trust. */
+export interface MyMailboxDto {
+  mailbox: MailboxDto | null;
+  providersAvailable: OAuthProvidersAvailableDto;
+  /** Public (it is in every consent URL): what a Workspace admin trusts; null without Google. */
+  googleClientId: string | null;
 }
 
 /** Who a new email would be sent as, or why it could not be sent yet. */

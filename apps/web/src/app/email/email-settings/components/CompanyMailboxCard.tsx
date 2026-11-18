@@ -27,6 +27,8 @@ export interface CompanyMailboxCardProps {
   announce: (message: string) => void;
   /** Id of the page's "Managed by your admin" note, for disabled controls. */
   readOnlyNoteId: string;
+  /** MVP-011: the Google client id a Workspace admin trusts. */
+  googleClientId?: string | null;
 }
 
 export function CompanyMailboxCard({
@@ -39,6 +41,7 @@ export function CompanyMailboxCard({
   onChanged,
   announce,
   readOnlyNoteId,
+  googleClientId = null,
 }: Readonly<CompanyMailboxCardProps>) {
   const memberLine =
     allowFallback && companyMailboxAddress
@@ -88,6 +91,7 @@ export function CompanyMailboxCard({
             }
             onChanged={onChanged}
             announce={announce}
+            googleClientId={googleClientId}
           />
         ) : (
           <p className="text-sm text-muted-foreground">{memberLine}</p>

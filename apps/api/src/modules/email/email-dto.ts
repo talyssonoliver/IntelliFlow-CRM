@@ -52,14 +52,17 @@ export interface MailboxRowLike extends SmtpEndpointRow, SmtpAccountRow {
 /**
  * MVP-001: whether replies are logged from this mailbox. ON when its kind has a sync reader and the
  * read permission was granted; NEEDS_RECONNECT when the kind can sync but the connection predates
- * the read permission; null when the kind does not sync (password mailboxes, Gmail).
+ * the read permission; null when the kind does not sync (password mailboxes). MVP-011: a Gmail
+ * mailbox without read is NEEDS_ADMIN_TRUST: Google grants read only once the Workspace admin trusts
+ * Aurora, so reconnecting alone does not help.
  */
 export function replySyncState(
   row: Pick<MailboxRowLike, 'kind' | 'grantedScopes'>
-): 'ON' | 'NEEDS_RECONNECT' | null {
+): 'ON' | 'NEEDS_RECONNECT' | 'NEEDS_ADMIN_TRUST' | null {
   const canRead = SYNC_READ_CHECKS[row.kind];
   if (!canRead) return null;
-  return canRead(row.grantedScopes ?? []) ? 'ON' : 'NEEDS_RECONNECT';
+  if (canRead(row.grantedScopes ?? [])) return 'ON';
+  return row.kind === 'GMAIL' ? 'NEEDS_ADMIN_TRUST' : 'NEEDS_RECONNECT';
 }
 
 /** Whether the bounce reader can scan this mailbox. */
@@ -67,8 +70,8 @@ export function canReadBounces(
   row: Pick<MailboxRowLike, 'kind' | 'imapHost' | 'imapPassword' | 'refreshToken'>
 ): boolean {
   if (row.kind === 'SMTP') return Boolean(row.imapHost && row.imapPassword);
-  // Gmail holds gmail.send only (owner decision 14/11): its bounce reports are never read.
-  // Zoho holds send and account read only (MVP-001): nothing is read from it either.
+  // Gmail's read permission (MVP-011) serves the inbox sync; its bounce reports are not scanned.
+  // Zoho's reads serve the inbox sync too (MVP-001): no bounce scan either.
   if (row.kind === 'GMAIL' || row.kind === 'ZOHO') return false;
   return Boolean(row.refreshToken);
 }
