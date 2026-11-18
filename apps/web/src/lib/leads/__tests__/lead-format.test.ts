@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
+  describeScoreChange,
   getActivityIcon,
   getActivityIconBg,
   formatRelativeTime,
@@ -423,5 +424,56 @@ describe('lead-format · leadExportFields', () => {
     expect(fields.lastContactedAt).toBe('2026-11-02T10:00:00.000Z');
     expect(fields.owner).toBe('');
     expect(fields.estimatedValuePence).toBe('');
+  });
+});
+
+describe('describeScoreChange (UI-021)', () => {
+  it('reads the scoring API shape: previousScore to newScore', () => {
+    expect(describeScoreChange({ previousScore: 30, newScore: 40 })).toEqual({ from: 30, to: 40 });
+  });
+
+  it('reads the events-worker shape, which stores the new value as score', () => {
+    expect(
+      describeScoreChange({
+        score: 52,
+        previousScore: 38,
+        scoringModel: 'm',
+        scoreLabel: 'l',
+      } as never)
+    ).toEqual({ from: 38, to: 52 });
+  });
+
+  it('reads the older oldScore name', () => {
+    expect(describeScoreChange({ oldScore: 20, newScore: 25 })).toEqual({ from: 20, to: 25 });
+  });
+
+  it('has no "from" for a first score, or a row with no prior value', () => {
+    expect(describeScoreChange({ previousScore: 0, newScore: 38, firstScore: true })).toEqual({
+      from: null,
+      to: 38,
+    });
+    expect(describeScoreChange({ score: 85, previousScore: undefined })).toEqual({
+      from: null,
+      to: 85,
+    });
+    expect(describeScoreChange({ newScore: 12 })).toEqual({ from: null, to: 12 });
+  });
+
+  it('prefers newScore over score', () => {
+    expect(describeScoreChange({ newScore: 60, score: 10, previousScore: 50 })).toEqual({
+      from: 50,
+      to: 60,
+    });
+  });
+
+  it('is null when there is no new score, as for a failed scoring', () => {
+    expect(describeScoreChange(null)).toBeNull();
+    expect(describeScoreChange(undefined)).toBeNull();
+    expect(describeScoreChange({})).toBeNull();
+    expect(describeScoreChange({ previousScore: 30, newScore: null, score: null })).toBeNull();
+  });
+
+  it('keeps a score of zero', () => {
+    expect(describeScoreChange({ previousScore: 5, newScore: 0 })).toEqual({ from: 5, to: 0 });
   });
 });

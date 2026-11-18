@@ -19,6 +19,7 @@ import { loadBullMQ } from '../../lib/load-bullmq';
 import { enqueueLeadAi } from './lead-scoring-enqueue';
 import { buildLeadListWhere, leadListOrderBy } from './lead-list-query';
 import { directionMetadata } from './lead-activity-direction';
+import { readScoringState, scoreUpdateActivity } from './lead-score-log';
 import {
   createLeadSchema,
   updateLeadSchema,
@@ -1059,6 +1060,8 @@ export const leadRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const leadService = getLeadService(ctx);
 
+      // The lead's scoring state before the run: did it hold a real score already?
+      const before = await readScoringState(typedCtx.prismaWithTenant, input.leadId);
       const result = await leadService.scoreLead(input.leadId, typedCtx.tenant.userId);
 
       if (result.isFailure) {
@@ -1115,23 +1118,14 @@ export const leadRouter = createTRPCRouter({
         typedCtx.services?.notificationOrchestrator
       ).catch(() => {}); // Swallow notification errors — non-critical side-effect
 
-      await writeLeadActivityLog(typedCtx, {
-        leadId: result.value.leadId,
-        tenantId: typedCtx.tenant.tenantId,
-        type: 'SCORE_UPDATE',
-        title: 'Lead Scored by AI',
-        description: `Score ${result.value.newScore} (${result.value.tier}) at ${(result.value.confidence * 100).toFixed(0)}% confidence`,
-        metadata: {
-          previousScore: result.value.previousScore,
-          newScore: result.value.newScore,
-          confidence: result.value.confidence,
-          tier: result.value.tier,
-          autoQualified: result.value.autoQualified,
-          autoDisqualified: result.value.autoDisqualified,
-        },
-        userId: typedCtx.tenant.userId,
-        userName: 'AI Scoring Agent',
-      });
+      // A re-score that left the score and status as they were is not logged as a change.
+      const scoreLog = scoreUpdateActivity(
+        before,
+        await readScoringState(typedCtx.prismaWithTenant, input.leadId),
+        result.value,
+        { tenantId: typedCtx.tenant.tenantId, userId: typedCtx.tenant.userId }
+      );
+      if (scoreLog) await writeLeadActivityLog(typedCtx, scoreLog);
 
       // Fire-and-forget: populate LeadAIInsight so Lead IQ sidebar shows real data
       (async () => {
