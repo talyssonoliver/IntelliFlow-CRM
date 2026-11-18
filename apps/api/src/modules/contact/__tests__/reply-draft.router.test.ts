@@ -12,6 +12,8 @@ const dispatch = vi.hoisted(() => vi.fn());
 vi.mock('../../email/mailbox-sender', () => ({ dispatchUserMail: dispatch }));
 
 import { draftBodyHtml, replyDraftRouter } from '../reply-draft.router';
+import { emailSendError } from '../../email/email-send-error';
+import { contactRouter } from '../contact.router';
 
 const TO = 'enquiries@handyman.example.invalid';
 const BODY = 'Hi Sam,\n\nThanks for getting in touch.\nFriday at 10 works <b>fine</b>.';
@@ -46,6 +48,7 @@ const moves = () =>
 beforeEach(() => {
   vi.clearAllMocks();
   (prismaMock.contactReplyDraft.findFirst as any).mockResolvedValue(draftRow());
+  (prismaMock.contact.findFirst as any).mockResolvedValue({ id: TEST_UUIDS.contact1 });
   (prismaMock.contactReplyDraft.updateMany as any).mockResolvedValue({ count: 1 });
   (prismaMock.$transaction as any).mockImplementation(async (fn: any) => fn(prismaMock));
   (prismaMock.emailRecord.create as any).mockResolvedValue({ id: 'email-draft-9' });
@@ -74,15 +77,38 @@ describe('replyDraft.send (MVP-012)', () => {
     ]);
   });
 
-  it('puts the draft back to waiting when the mailbox refuses, and passes the refusal on', async () => {
-    const refusal = Object.assign(new Error('NO_MAILBOX'), { data: { emailSendError: {} } });
-    dispatch.mockRejectedValueOnce(refusal);
+  it.each(['NO_MAILBOX', 'SEND_FAILED'] as const)(
+    'puts the draft back to waiting when the mailbox path refuses (%s), and passes it on',
+    async (code) => {
+      dispatch.mockRejectedValueOnce(emailSendError(code));
 
-    await expect(caller().send({ draftId: 'draft-1' })).rejects.toThrow('NO_MAILBOX');
-    expect(moves()).toEqual([
-      ['DRAFT', 'SENDING'],
-      ['SENDING', 'DRAFT'],
-    ]);
+      await expect(caller().send({ draftId: 'draft-1' })).rejects.toThrow(code);
+      expect(moves()).toEqual([
+        ['DRAFT', 'SENDING'],
+        ['SENDING', 'DRAFT'],
+      ]);
+    }
+  );
+
+  it('keeps a draft whose mail may have gone out from being sent again (codex)', async () => {
+    // The mailbox accepted it, then storing the outcome failed: the email record exists.
+    dispatch.mockRejectedValueOnce(new Error('connection reset while saving'));
+    (prismaMock.emailRecord.findFirst as any).mockResolvedValueOnce({ id: 'email-1' });
+
+    await expect(caller().send({ draftId: 'draft-1' })).rejects.toThrow('connection reset');
+    expect(moves()).toEqual([['DRAFT', 'SENDING']]);
+    expect((prismaMock.emailRecord.findFirst as any).mock.calls[0][0].where).toEqual({
+      tenantId: TEST_UUIDS.tenant,
+      metadata: { path: ['replyDraftId'], equals: 'draft-1' },
+    });
+  });
+
+  it('makes the draft sendable again after an error before anything was written', async () => {
+    dispatch.mockRejectedValueOnce(new Error('database unavailable'));
+    (prismaMock.emailRecord.findFirst as any).mockResolvedValueOnce(null);
+
+    await expect(caller().send({ draftId: 'draft-1' })).rejects.toThrow('database unavailable');
+    expect(moves().at(-1)).toEqual(['SENDING', 'DRAFT']);
   });
 
   it('keeps the draft waiting when the send was recorded as failed', async () => {
@@ -126,6 +152,22 @@ describe('replyDraft.send (MVP-012)', () => {
     expect(prismaMock.contactReplyDraft.updateMany).not.toHaveBeenCalled();
   });
 
+  it('does not exist for a user outside the contact’s owner or team scope (codex)', async () => {
+    (prismaMock.contact.findFirst as any).mockResolvedValue(null);
+    for (const act of ['send', 'openInCompose', 'dismiss'] as const) {
+      await expect(caller()[act]({ draftId: 'draft-1' })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
+    }
+    expect(dispatch).not.toHaveBeenCalled();
+    expect(prismaMock.contactReplyDraft.updateMany).not.toHaveBeenCalled();
+    // The scope check is the contact pages' own predicate, on the draft's contact.
+    expect((prismaMock.contact.findFirst as any).mock.calls[0][0].where).toMatchObject({
+      id: TEST_UUIDS.contact1,
+      tenantId: TEST_UUIDS.tenant,
+    });
+  });
+
   it('only reads drafts of the caller’s tenant', async () => {
     (prismaMock.contactReplyDraft.findFirst as any).mockResolvedValue(null);
     await expect(caller().send({ draftId: 'other' })).rejects.toMatchObject({ code: 'NOT_FOUND' });
@@ -164,6 +206,18 @@ describe('replyDraft.openInCompose (Edit, MVP-012)', () => {
       message: 'This draft was already sent.',
     });
     expect(prismaMock.emailRecord.create).not.toHaveBeenCalled();
+  });
+});
+
+describe('contact.listReplyDrafts (MVP-012)', () => {
+  it('leaves dismissed drafts out before the limit, so they never hide waiting ones (codex)', async () => {
+    (prismaMock.contactReplyDraft.findMany as any).mockResolvedValue([]);
+    const list = contactRouter.createCaller(createTestContext() as never);
+    await list.listReplyDrafts({ contactId: TEST_UUIDS.contact1, limit: 5 });
+    expect((prismaMock.contactReplyDraft.findMany as any).mock.calls[0][0]).toMatchObject({
+      where: { contactId: TEST_UUIDS.contact1, status: { not: 'DISMISSED' } },
+      take: 5,
+    });
   });
 });
 

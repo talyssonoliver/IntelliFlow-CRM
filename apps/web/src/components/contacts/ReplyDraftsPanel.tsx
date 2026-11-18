@@ -16,7 +16,7 @@ import { getEmailSendError } from '@/components/email/send-errors';
 export const WAITING_TITLE = 'Reply drafted by Aurora: waiting for you';
 
 const SETTLED: Record<string, string> = {
-  SENDING: 'Sending…',
+  SENDING: 'Being sent. If this stays, check your Sent folder: it may already have gone.',
   SENT: 'Sent from your mailbox.',
   EDITED: 'Opened in Compose. Find it in your email drafts.',
 };

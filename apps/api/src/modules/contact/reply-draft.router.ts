@@ -17,7 +17,9 @@ import { TRPCError } from '@trpc/server';
 import type { SendUserEmailResultDto } from '@intelliflow/validators';
 import { createTRPCRouter, tenantProcedure, verifiedTenantProcedure } from '../../trpc';
 import { escapeHtml } from '../../security/html-escape';
+import { createTenantWhereClause, getTenantContext } from '../../security/tenant-context';
 import { emailRuntimeDeps, type EmailRouterCtx } from '../email/email-access';
+import { emailSendErrorFromCause } from '../email/email-send-error';
 import { dispatchUserMail } from '../email/mailbox-sender';
 
 const draftInput = z.object({ draftId: z.string().min(1).max(64) });
@@ -44,12 +46,25 @@ export function draftBodyHtml(text: string): string {
     .join('');
 }
 
+const notFound = () => new TRPCError({ code: 'NOT_FOUND', message: 'Draft not found' });
+
+/**
+ * The draft, only when its contact is one the caller may work on: the same access predicate the
+ * contact pages use (own contacts for users, the team's for managers, all for admins). Outside
+ * that scope it does not exist for the caller (NOT_FOUND, no existence leak).
+ */
 async function loadDraft(c: EmailRouterCtx, draftId: string): Promise<DraftRow> {
   const draft: DraftRow | null = await c.prismaWithTenant.contactReplyDraft.findFirst({
     where: { id: draftId, tenantId: c.tenant.tenantId },
     include: { contact: { select: { email: true } } },
   });
-  if (!draft) throw new TRPCError({ code: 'NOT_FOUND', message: 'Draft not found' });
+  if (!draft) throw notFound();
+  const typed = getTenantContext(c as never);
+  const contact = await c.prismaWithTenant.contact.findFirst({
+    where: createTenantWhereClause(typed.tenant, { id: draft.contactId }),
+    select: { id: true },
+  });
+  if (!contact) throw notFound();
   return draft;
 }
 
@@ -88,6 +103,23 @@ async function claim(c: EmailRouterCtx, draft: DraftRow, to: ReplyDraftStatus): 
   if (await move(c.prismaWithTenant, c, draft.id, 'DRAFT', to)) return;
   // Someone acted on it between the read and the claim: say what happened.
   throw alreadyActed((await loadDraft(c, draft.id)).status);
+}
+
+/**
+ * True only when a failed send certainly did not go out. A refusal or failed send from the
+ * mailbox path carries `emailSendError` (it is thrown before delivery, or for a delivery that
+ * failed). Any other error with the send's email record already written may come after the
+ * mailbox accepted the mail, so it is not known to be undelivered. With no record, nothing was
+ * handed to the mailbox.
+ */
+async function notDelivered(c: EmailRouterCtx, draftId: string, error: unknown): Promise<boolean> {
+  // The mailbox path throws its refusals as a TRPCError whose cause names the refusal.
+  if (emailSendErrorFromCause(error instanceof TRPCError ? error.cause : error)) return true;
+  const record = await c.prismaWithTenant.emailRecord.findFirst({
+    where: { tenantId: c.tenant.tenantId, metadata: { path: ['replyDraftId'], equals: draftId } },
+    select: { id: true },
+  });
+  return record === null;
 }
 
 function recipientOf(draft: DraftRow): string {
@@ -129,8 +161,11 @@ export const replyDraftRouter = createTRPCRouter({
           }
         );
       } catch (error) {
-        // Not sent: the draft waits again, and the refusal reaches the user as Compose shows it.
-        await move(c.prismaWithTenant, c, draft.id, 'SENDING', 'DRAFT');
+        // Only a send known not to have gone out makes the draft sendable again; anything else
+        // may have been delivered, so it stays SENDING and is never offered twice (codex).
+        if (await notDelivered(c, draft.id, error)) {
+          await move(c.prismaWithTenant, c, draft.id, 'SENDING', 'DRAFT');
+        }
         throw error;
       }
       const sent = result.status === 'SENT';

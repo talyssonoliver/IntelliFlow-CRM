@@ -2600,7 +2600,7 @@ export const contactRouter = createTRPCRouter({
     .output(contactListReplyDraftsOutputSchema)
     .query(async ({ ctx, input }) => {
       const drafts = await ctx.prismaWithTenant.contactReplyDraft.findMany({
-        where: { contactId: input.contactId },
+        where: { contactId: input.contactId, status: { not: 'DISMISSED' } }, // MVP-012: set aside
         orderBy: { createdAt: 'desc' },
         take: input.limit,
       });
