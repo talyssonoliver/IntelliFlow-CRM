@@ -137,10 +137,7 @@ export interface CreateContactProps {
   contactNotes?: string;
 }
 
-/**
- * Contact Aggregate Root
- * Represents a person in the CRM (converted from lead or directly created)
- */
+/** Contact Aggregate Root: a person in the CRM (converted from a lead or created directly). */
 export class Contact extends AggregateRoot<ContactId> {
   private readonly props: ContactProps;
 
@@ -349,7 +346,7 @@ export class Contact extends AggregateRoot<ContactId> {
       firstName: string;
       lastName: string;
       title: string;
-      phone: string | PhoneNumber;
+      phone: string | PhoneNumber | null; // null removes the number (MVP-003 #28)
       department: string;
       status: ContactStatus;
       // Extended fields
@@ -381,7 +378,10 @@ export class Contact extends AggregateRoot<ContactId> {
       updatedFields
     );
 
-    if (updates.phone !== undefined) {
+    if (updates.phone === null && this.props.phone) {
+      this.props.phone = undefined;
+      updatedFields.push('phone');
+    } else if (updates.phone != null) {
       const phoneError = this.applyPhoneUpdate(updates.phone, updatedFields);
       if (phoneError) return Result.fail(phoneError);
     }

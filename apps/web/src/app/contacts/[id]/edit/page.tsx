@@ -125,6 +125,10 @@ export default function EditContactPage() {
 
   const toOptional = (value: string): string | undefined =>
     value.trim() ? value.trim() : undefined;
+  // MVP-003 (#28): an optional field is sent, trimmed, when it changed, so a cleared one goes as
+  // "" and is saved empty (the phone as removed). Unchanged fields stay out of the update.
+  const edited = (value: string, stored: string | null | undefined): string | undefined =>
+    value.trim() === (stored ?? '').trim() ? undefined : value.trim();
 
   const handleSubmit = async (data: ContactFormData) => {
     const payload: Record<string, unknown> = {
@@ -133,16 +137,16 @@ export default function EditContactPage() {
       // MVP-003 (#28): the last name is optional, so a cleared one is sent as "" and saved
       // empty. Dropping it (undefined) would mean "unchanged" and keep the old value.
       lastName: data.lastName.trim(),
-      phone: toOptional(data.phone),
-      title: toOptional(data.jobTitle),
-      department: toOptional(data.department),
+      phone: edited(data.phone, record?.phone),
+      title: edited(data.jobTitle, record?.title),
+      department: edited(data.department, record?.department),
       status: data.status || undefined,
-      streetAddress: toOptional(data.streetAddress),
-      city: toOptional(data.city),
-      zipCode: toOptional(data.zipCode),
-      company: toOptional(data.company),
-      linkedInUrl: toOptional(data.linkedIn),
-      contactNotes: toOptional(data.notes),
+      streetAddress: edited(data.streetAddress, record?.streetAddress),
+      city: edited(data.city, record?.city),
+      zipCode: edited(data.zipCode, record?.zipCode),
+      company: edited(data.company, record?.company),
+      linkedInUrl: edited(data.linkedIn, record?.linkedInUrl),
+      contactNotes: edited(data.notes, record?.contactNotes),
       tags: data.tags.trim()
         ? data.tags
             .split(',')

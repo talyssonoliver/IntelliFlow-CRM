@@ -244,6 +244,54 @@ describe('Edit Contact page — clearing the last name (MVP-003, #28)', () => {
     expect(h.mutateAsync.mock.calls[0][0].lastName).toBe('');
   });
 
+  it('sends "" for every kind of optional field cleared, and leaves untouched ones out', async () => {
+    h.record = {
+      ...h.record,
+      phone: '+447700900123',
+      company: 'Pilates Living',
+      title: 'Owner',
+      department: 'Studio',
+      linkedInUrl: 'https://www.linkedin.com/in/example-invalid',
+      contactNotes: 'Prefers mornings',
+    };
+    render(<EditContactPage />);
+    // Step 1: the phone. Step 2: plain text, a name-type field and the URL. Step 3: notes.
+    fireEvent.change(screen.getByLabelText(/Phone Number/i), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: /Next Step/i }));
+    fireEvent.change(screen.getByLabelText(/Company Name/i), { target: { value: '' } });
+    fireEvent.change(screen.getByLabelText(/Job Title/i), { target: { value: ' ' } });
+    fireEvent.change(screen.getByLabelText(/LinkedIn Profile/i), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: /Next Step/i }));
+    fireEvent.change(screen.getByLabelText(/^Notes/i), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
+    await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledTimes(1));
+    const sent = h.mutateAsync.mock.calls[0][0];
+    expect(sent).toMatchObject({
+      phone: '',
+      company: '',
+      title: '',
+      linkedInUrl: '',
+      contactNotes: '',
+    });
+    // Department was left as it was: not part of the update.
+    expect(sent.department).toBeUndefined();
+  });
+
+  it('sends a changed optional field trimmed, and nothing for one left as it was', async () => {
+    h.record = { ...h.record, company: 'Acme' };
+    render(<EditContactPage />);
+    fireEvent.click(screen.getByRole('button', { name: /Next Step/i }));
+    fireEvent.change(screen.getByLabelText(/Company Name/i), { target: { value: ' Globex ' } });
+    fireEvent.click(screen.getByRole('button', { name: /Next Step/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
+    await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledTimes(1));
+    const sent = h.mutateAsync.mock.calls[0][0];
+    expect(sent.company).toBe('Globex');
+    for (const field of ['phone', 'title', 'department', 'linkedInUrl', 'contactNotes']) {
+      expect(sent[field]).toBeUndefined();
+    }
+  });
+
   it('still sends a last name that is kept, trimmed', async () => {
     render(<EditContactPage />);
     fireEvent.change(screen.getByLabelText(/Last Name/i), { target: { value: ' Lima ' } });
