@@ -130,7 +130,9 @@ export default function EditContactPage() {
     const payload: Record<string, unknown> = {
       id: contactId,
       firstName: toOptional(data.firstName),
-      lastName: toOptional(data.lastName),
+      // MVP-003 (#28): the last name is optional, so a cleared one is sent as "" and saved
+      // empty. Dropping it (undefined) would mean "unchanged" and keep the old value.
+      lastName: data.lastName.trim(),
       phone: toOptional(data.phone),
       title: toOptional(data.jobTitle),
       department: toOptional(data.department),
