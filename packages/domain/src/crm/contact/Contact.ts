@@ -163,7 +163,7 @@ export class Contact extends AggregateRoot<ContactId> {
   }
 
   get fullName(): string {
-    return `${this.props.firstName} ${this.props.lastName}`;
+    return [this.props.firstName, this.props.lastName].filter(Boolean).join(' ');
   }
 
   get title(): string | undefined {

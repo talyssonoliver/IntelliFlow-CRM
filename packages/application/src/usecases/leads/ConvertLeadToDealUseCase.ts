@@ -20,6 +20,7 @@ import {
   Contact,
   Account,
   Opportunity,
+  contactNameFromLead,
   ContactAccountAssociatedEvent,
   type DomainEvent,
   type RepositoryTransaction,
@@ -420,10 +421,17 @@ export class ConvertLeadToDealUseCase {
   }
 
   private prepareContactFromLead(lead: Lead, accountId: string): Result<Contact, DomainError> {
+    // MVP-003: a lead with no person name is named after its company, never "Unknown".
+    const name = contactNameFromLead({
+      firstName: lead.firstName,
+      lastName: lead.lastName,
+      company: lead.company,
+      email: lead.email.value,
+    });
     const contactResult = Contact.create({
       email: lead.email.value,
-      firstName: lead.firstName ?? 'Unknown',
-      lastName: lead.lastName ?? 'Unknown',
+      firstName: name.firstName,
+      lastName: name.lastName,
       title: lead.title,
       phone: lead.phone,
       accountId,

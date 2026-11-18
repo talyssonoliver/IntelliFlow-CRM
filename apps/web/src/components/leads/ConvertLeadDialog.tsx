@@ -14,6 +14,7 @@ import {
   ToastAction,
   toast,
 } from '@intelliflow/ui';
+import { contactNameFromLead } from '@intelliflow/domain';
 import { api } from '@/lib/api';
 import { UNDONE_TOAST, undoConversion } from '@/components/deals/UndoConversion';
 import { revalidateLeadConversionCaches } from '@/app/leads/actions';
@@ -335,6 +336,7 @@ export function ConvertLeadDialog({
   };
 
   const placeholder = lead.company || 'Company name';
+  const contactName = contactNameFromLead(lead);
   const isDeal = mode === 'deal';
 
   return (
@@ -357,6 +359,13 @@ export function ConvertLeadDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <div className="flex flex-col gap-3 py-2">
+          {/* MVP-003: the name the contact will get, the same one the server uses. */}
+          <p className="text-sm text-slate-700 dark:text-slate-300">
+            <span className="font-medium">Contact:</span> {contactName.display}
+            {lead.email && lead.email !== contactName.display && (
+              <span className="text-slate-500 dark:text-slate-400"> ({lead.email})</span>
+            )}
+          </p>
           <ModeChoice mode={mode} onChange={setMode} />
           {isDeal ? (
             <DealFields
