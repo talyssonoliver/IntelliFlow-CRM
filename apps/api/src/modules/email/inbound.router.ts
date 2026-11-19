@@ -36,6 +36,7 @@ import { sendUserEmailInputSchema, type SendUserEmailResultDto } from '@intellif
 import * as adapters from '@intelliflow/adapters';
 import { emailAttachmentStorage, emailRuntimeDeps, type EmailRouterCtx } from './email-access';
 import { dispatchUserMail } from './mailbox-sender';
+import { sendComposedEmail } from '../contact/reply-draft-compose';
 const InboundEmailParser = (adapters as any).InboundEmailParser;
 
 /**
@@ -673,13 +674,12 @@ export const inboundEmailRouter = createTRPCRouter({
    * Resolution, suppression, quota, attachments, MIME and the send itself are
    * `dispatchUserMail`; refusals carry `data.emailSendError` for compose.
    */
-  // SECURITY (2026-06-16): gated to email-verified users only — prevents
-  // unverified accounts from using IntelliFlow as a spam relay.
+  // SECURITY (2026-06-16): email-verified users only, so IntelliFlow is never a spam relay.
   sendEmail: verifiedTenantProcedure
     .input(sendUserEmailInputSchema)
     .mutation(async ({ input, ctx }): Promise<SendUserEmailResultDto> => {
       const c = ctx as unknown as EmailRouterCtx;
-      return dispatchUserMail(c, input, emailRuntimeDeps(c));
+      return sendComposedEmail(c, input, emailRuntimeDeps(c)); // MVP-012: links a drafted reply
     }),
 
   /**
