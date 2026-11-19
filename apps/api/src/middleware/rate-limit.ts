@@ -171,6 +171,10 @@ export function createWindowStore(windowMs: number) {
     windowFor(key: string, now: number): WindowState {
       const existing = live(key, now);
       if (existing) return existing;
+      // A caller counted in the overflow window stays in it until it ends, even if room has
+      // opened up since: starting a window of its own would hand it a fresh quota early.
+      const overflow = live(OVERFLOW_KEY, now);
+      if (overflow) return overflow;
 
       if (now - lastSweep >= windowMs || store.size >= MAX_TRACKED_KEYS) {
         lastSweep = now;

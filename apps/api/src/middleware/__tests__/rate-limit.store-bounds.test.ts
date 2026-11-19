@@ -75,6 +75,28 @@ describe('createWindowStore', () => {
     expect(windows.windowFor('ip:limited', Date.now()).count).toBe(99);
   });
 
+  it('keeps a caller in the overflow window until it ends, even after older windows expire', () => {
+    const windows = createWindowStore(WINDOW);
+    for (let i = 0; i < MAX_TRACKED_KEYS; i++) windows.windowFor(`ip:${i}`, Date.now());
+
+    vi.advanceTimersByTime(30_000);
+    const overflow = windows.windowFor('ip:late', Date.now());
+    overflow.count = 5;
+
+    // At 60.001 s the 10,000 individual windows are gone, the overflow window (from 30 s) is not.
+    vi.advanceTimersByTime(30_001);
+    const again = windows.windowFor('ip:late', Date.now());
+
+    expect(again).toBe(overflow);
+    expect(again.count).toBe(5);
+
+    // At 90.001 s it has ended too, and the caller gets a window of its own.
+    vi.advanceTimersByTime(30_000);
+    const fresh = windows.windowFor('ip:late', Date.now());
+    expect(fresh).not.toBe(overflow);
+    expect(fresh.count).toBe(0);
+  });
+
   it('counts new callers in one shared overflow window once the store is full of live ones', () => {
     const windows = createWindowStore(WINDOW);
     for (let i = 0; i < MAX_TRACKED_KEYS; i++) windows.windowFor(`ip:${i}`, Date.now());
