@@ -121,20 +121,13 @@ describe('queueReplyDraftForSyncedMail (MVP-012 PR C)', () => {
     expect(enqueue).not.toHaveBeenCalled();
   });
 
-  it('queues nothing when a waiting draft already answers this mail (stamped at or after it)', async () => {
-    const message = mail({ conversationId: 'conv-9' });
+  it('queues every stored mail: the worker decides whether a waiting draft already answers it', async () => {
     const db = prisma({ waiting: { id: 'draft-1' } });
-    await expect(queue(db, { message })).resolves.toBe(false);
-    expect(enqueue).not.toHaveBeenCalled();
-    expect(db.contactReplyDraft.findFirst.mock.calls[0]![0].where).toEqual({
-      tenantId: TENANT,
-      leadId: 'lead-1',
-      status: 'DRAFT',
-      emailThreadId: 'conv-9',
-      createdAt: { gte: message.receivedAt },
-    });
+    await expect(queue(db)).resolves.toBe(true);
+    expect(enqueue).toHaveBeenCalledTimes(1);
+    // No time-based guess here (codex): which mails a draft answers is known only by identity.
+    expect(db.contactReplyDraft.findFirst).not.toHaveBeenCalled();
   });
-
   it('uses just the stored mail when it has no conversation', async () => {
     const db = prisma();
     await queue(db, { message: mail({ conversationId: null }) });

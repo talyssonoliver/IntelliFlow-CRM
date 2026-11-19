@@ -7,10 +7,11 @@
  * arrived while the job waited is answered too, and everyone on the thread (From, To and Cc) is
  * checked for a data request.
  *
- * A draft is stamped with the time of the newest mail it answers (its createdAt). A conversation's
- * waiting draft stamped at or after the newest mail already answers it: the job writes nothing
- * and calls no model. An older waiting draft is superseded (set aside) when the new one is written,
- * under the subject's row lock, so the conversation never has two drafts waiting.
+ * Which mails a draft answers is recorded on the mails themselves: writing a draft marks each one
+ * it read with `metadata.replyDraftId`. A conversation is answered when every mail of its latest
+ * thread is marked with its waiting draft; then the job calls no model and writes nothing. Mails
+ * sharing a received time, or synced late, are told apart by identity, never by time (codex).
+ * Otherwise the new draft replaces the waiting one (set aside), so one draft waits per conversation.
  */
 import type { EmailThreadEntry } from '../contact-reply-draft.chain.js';
 
@@ -22,6 +23,7 @@ const BODY_LIMIT = 4000;
 export type DraftSubject = { contactId: string } | { leadId: string };
 
 interface StoredMail {
+  id: string;
   fromEmail: string;
   toEmail: string;
   ccEmails: string | null;
@@ -32,11 +34,15 @@ interface StoredMail {
 
 /** The calls these helpers make: the worker's Prisma client, or a transaction of it. */
 export interface ThreadDb {
-  emailRecord: { findMany(args: unknown): Promise<StoredMail[]> };
+  emailRecord: {
+    findMany(args: unknown): Promise<StoredMail[]>;
+    count(args: unknown): Promise<number>;
+  };
   contactReplyDraft: {
     findFirst(args: unknown): Promise<{ id: string } | null>;
     updateMany(args: unknown): Promise<{ count: number }>;
   };
+  $executeRaw(query: TemplateStringsArray, ...values: unknown[]): Promise<number>;
 }
 
 export interface ThreadRef {
@@ -45,25 +51,32 @@ export interface ThreadRef {
   conversationId?: string;
 }
 
+export interface LoadedThread {
+  thread: EmailThreadEntry[];
+  /** The stored mails read, when read from the database (empty: the queued thread was used). */
+  recordIds: string[];
+}
+
 /**
- * The conversation's latest stored mails when the job names its mailbox and conversation, with the
- * time of the newest; else the thread as it was queued (no stamp: drafts asked for by hand).
+ * The conversation's latest stored mails when the job names its mailbox and conversation; else the
+ * thread as it was queued (drafts asked for by hand).
  */
 export async function latestThread(
   db: ThreadDb,
   ref: ThreadRef,
   queued: EmailThreadEntry[]
-): Promise<{ thread: EmailThreadEntry[]; newestAt: Date | null }> {
-  if (!ref.mailboxId || !ref.conversationId) return { thread: queued, newestAt: null };
+): Promise<LoadedThread> {
+  if (!ref.mailboxId || !ref.conversationId) return { thread: queued, recordIds: [] };
   const latest = await db.emailRecord.findMany({
     where: {
       tenantId: ref.tenantId,
       mailboxId: ref.mailboxId,
       metadata: { path: ['conversationId'], equals: ref.conversationId },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
     take: THREAD_LIMIT,
     select: {
+      id: true,
       fromEmail: true,
       toEmail: true,
       ccEmails: true,
@@ -72,7 +85,7 @@ export async function latestThread(
       createdAt: true,
     },
   });
-  if (latest.length === 0) return { thread: queued, newestAt: null };
+  if (latest.length === 0) return { thread: queued, recordIds: [] };
   const oldestFirst = latest.reverse();
   return {
     thread: oldestFirst.map((mail) => ({
@@ -83,47 +96,60 @@ export async function latestThread(
       body: mail.body.slice(0, BODY_LIMIT),
       at: mail.createdAt.toISOString(),
     })),
-    newestAt: oldestFirst.at(-1)?.createdAt ?? null,
+    recordIds: oldestFirst.map((mail) => mail.id),
   };
 }
 
-/** True when a waiting draft of this conversation already answers its newest mail. */
+/** True when the conversation's waiting draft already answers every mail of its latest thread. */
 export async function alreadyAnswered(
   db: ThreadDb,
   tenantId: string,
   subject: DraftSubject,
   conversationId: string,
-  newestAt: Date
+  recordIds: string[]
 ): Promise<boolean> {
-  const answering = await db.contactReplyDraft.findFirst({
-    where: {
-      tenantId,
-      ...subject,
-      status: 'DRAFT',
-      emailThreadId: conversationId,
-      createdAt: { gte: newestAt },
-    },
+  if (recordIds.length === 0) return false;
+  const waiting = await db.contactReplyDraft.findFirst({
+    where: { tenantId, ...subject, status: 'DRAFT', emailThreadId: conversationId },
     select: { id: true },
   });
-  return answering !== null;
+  if (!waiting) return false;
+  const answered = await db.emailRecord.count({
+    where: {
+      tenantId,
+      id: { in: recordIds },
+      metadata: { path: ['replyDraftId'], equals: waiting.id },
+    },
+  });
+  return answered === recordIds.length;
 }
 
-/** Sets aside the conversation's waiting drafts that answer an older mail. */
-export async function supersedeOlder(
+/** Sets aside the conversation's waiting drafts: the one being written replaces them. */
+export async function supersedeWaiting(
   db: ThreadDb,
   tenantId: string,
   subject: DraftSubject,
-  conversationId: string,
-  newestAt: Date
+  conversationId: string
 ): Promise<void> {
   await db.contactReplyDraft.updateMany({
-    where: {
-      tenantId,
-      ...subject,
-      status: 'DRAFT',
-      emailThreadId: conversationId,
-      createdAt: { lt: newestAt },
-    },
+    where: { tenantId, ...subject, status: 'DRAFT', emailThreadId: conversationId },
     data: { status: 'DISMISSED' },
   });
+}
+
+/**
+ * Marks the mails a draft answers. Set in the database itself (`metadata || {...}`), never written
+ * back from a copy, so another job's metadata keys on the same mails are kept.
+ */
+export async function markAnswered(
+  db: ThreadDb,
+  tenantId: string,
+  recordIds: string[],
+  draftId: string
+): Promise<void> {
+  if (recordIds.length === 0) return;
+  await db.$executeRaw`
+    UPDATE email_records
+    SET metadata = COALESCE(metadata, '{}'::jsonb) || jsonb_build_object('replyDraftId', ${draftId}::text)
+    WHERE "tenantId" = ${tenantId} AND id = ANY(${recordIds}::text[])`;
 }

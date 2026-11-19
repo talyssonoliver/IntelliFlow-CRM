@@ -14,7 +14,8 @@ import { replyDraftingEnabled } from '@intelliflow/domain';
 import {
   alreadyAnswered,
   latestThread,
-  supersedeOlder,
+  markAnswered,
+  supersedeWaiting,
   type DraftSubject,
   type ThreadDb,
 } from './reply-draft-thread.js';
@@ -100,6 +101,54 @@ async function anyBlocked(db: unknown, tenantId: string, addresses: string[]): P
   return false;
 }
 
+/**
+ * The new draft, written under the subject's row lock (ADR-037: always DRAFT). A draft written
+ * meanwhile that already answers every mail of the thread wins (ANSWERED); else the waiting one is
+ * set aside and the mails this draft answers are marked with it (see reply-draft-thread.ts).
+ */
+async function writeAnsweringDraft(
+  tx: ThreadDb & typeof prisma,
+  args: {
+    tenantId: string;
+    draftSubject: DraftSubject;
+    emailThreadId: string | undefined;
+    recordIds: string[];
+    createdBy: string | undefined;
+    draft: {
+      draftSubject: string;
+      draftBody: string;
+      tone?: string | null;
+      confidence: number;
+      modelVersion: string;
+    };
+  }
+): Promise<{ id: string } | typeof ANSWERED> {
+  const { tenantId, draftSubject, emailThreadId, recordIds, createdBy, draft } = args;
+  // Only drafts of synced mail (read from the database) take a conversation's place; one asked
+  // for by hand is written as before.
+  if (emailThreadId && recordIds.length > 0) {
+    if (await alreadyAnswered(tx, tenantId, draftSubject, emailThreadId, recordIds)) {
+      return ANSWERED;
+    }
+    await supersedeWaiting(tx, tenantId, draftSubject, emailThreadId);
+  }
+  const created = await tx.contactReplyDraft.create({
+    data: {
+      ...draftSubject,
+      tenantId,
+      ...(emailThreadId ? { emailThreadId } : {}),
+      draftSubject: draft.draftSubject,
+      draftBody: draft.draftBody,
+      tone: draft.tone ?? null,
+      status: 'DRAFT',
+      confidence: draft.confidence,
+      modelVersion: draft.modelVersion,
+      ...(createdBy ? { createdBy } : {}),
+    },
+  });
+  await markAnswered(tx, tenantId, recordIds, created.id);
+  return created;
+}
 export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise<{
   skipped?: boolean;
   draftId?: string;
@@ -120,7 +169,7 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
     }
 
     // MVP-012: the conversation's latest stored mails (with Cc), read now rather than when queued.
-    const { thread: emailThread, newestAt } = await latestThread(
+    const { thread: emailThread, recordIds } = await latestThread(
       prisma as unknown as ThreadDb,
       {
         tenantId,
@@ -129,12 +178,17 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
       },
       data.emailThread as EmailThreadEntry[]
     );
-    const answeredBy = (db: ThreadDb) =>
-      newestAt && emailThreadId
-        ? alreadyAnswered(db, tenantId, draftSubject, emailThreadId, newestAt)
-        : Promise.resolve(false);
-    // A waiting draft already answers the newest mail: no model call, nothing written.
-    if (await answeredBy(prisma as unknown as ThreadDb)) {
+    // The waiting draft already answers every mail of the thread: no model call, nothing written.
+    if (
+      emailThreadId &&
+      (await alreadyAnswered(
+        prisma as unknown as ThreadDb,
+        tenantId,
+        draftSubject,
+        emailThreadId,
+        recordIds
+      ))
+    ) {
       logger.info({ contactId, leadId, tenantId }, 'reply-draft skipped — already answered');
       return { skipped: true };
     }
@@ -188,28 +242,13 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
         // with the contact's, in one sorted order): one restricted or erased while the model
         // ran stops the draft, and two drafts on one thread cannot deadlock (codex).
         if (await anyBlocked(tx, tenantId, participants)) return null;
-        // Under the subject's row lock: a draft written meanwhile for this conversation's newest
-        // mail wins; an older waiting one is set aside, so one draft waits (codex).
-        const threadDb = tx as unknown as ThreadDb;
-        if (await answeredBy(threadDb)) return ANSWERED;
-        if (newestAt && emailThreadId) {
-          await supersedeOlder(threadDb, tenantId, draftSubject, emailThreadId, newestAt);
-        }
-        return (tx as unknown as typeof prisma).contactReplyDraft.create({
-          data: {
-            ...draftSubject,
-            // Stamped with the newest mail it answers (see reply-draft-thread.ts).
-            ...(newestAt ? { createdAt: newestAt } : {}),
-            tenantId,
-            ...(emailThreadId ? { emailThreadId } : {}),
-            draftSubject: draft.draftSubject,
-            draftBody: draft.draftBody,
-            tone: draft.tone ?? null,
-            status: 'DRAFT',
-            confidence: draft.confidence,
-            modelVersion: draft.modelVersion,
-            ...(createdBy ? { createdBy } : {}),
-          },
+        return writeAnsweringDraft(tx as unknown as ThreadDb & typeof prisma, {
+          tenantId,
+          draftSubject,
+          emailThreadId,
+          recordIds,
+          createdBy,
+          draft,
         });
       }
     );

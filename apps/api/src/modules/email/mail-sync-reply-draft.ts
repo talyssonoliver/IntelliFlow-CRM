@@ -8,10 +8,9 @@
  * It never fails the sync: a draft is a convenience, so any error here is logged and dropped.
  * - Only received mail (Inbox), only with a lead or contact, and only when the tenant's reply
  *   drafting is on (a tenant that never saved the setting gets the default, see reply-drafting).
- * - One waiting draft per conversation: a draft is stamped with the newest mail it answers, and a
- *   mail no newer than a waiting draft's stamp queues nothing. The worker reads the conversation's
- *   latest mails (with Cc) when it runs and sets an older waiting draft aside when it writes the
- *   new one, so mail that arrives while a job waits is answered too (codex).
+ * - One waiting draft per conversation, decided by the worker when it runs: it reads the latest
+ *   mails (with Cc), and writes nothing when the waiting draft already answers every one of them
+ *   (each answered mail is marked with its draft). A burst of mails costs one model call (codex).
  * - The job id is the stored mail's record id, so a retried sync never queues the same mail twice.
  */
 import { replyDraftingEnabled } from '@intelliflow/domain';
@@ -73,27 +72,6 @@ async function threadOf(
   return latest.reverse();
 }
 
-/** A waiting draft of this conversation already answers this mail (stamped at or after it). */
-async function alreadyAnswered(
-  deps: ReplyDraftDeps,
-  tenantId: string,
-  subject: { contactId: string } | { leadId: string },
-  conversationId: string,
-  receivedAt: Date
-): Promise<boolean> {
-  const answering = await deps.prisma.contactReplyDraft.findFirst({
-    where: {
-      tenantId,
-      ...subject,
-      status: 'DRAFT',
-      emailThreadId: conversationId,
-      createdAt: { gte: receivedAt },
-    },
-    select: { id: true },
-  });
-  return answering !== null;
-}
-
 /** Who the draft answers. A contact wins when the sender is both: it waits where the mail was logged. */
 function draftSubject(party: {
   contactId: string | null;
@@ -125,13 +103,6 @@ export async function queueReplyDraftForSyncedMail(
       select: { aiAutoReplyDrafting: true },
     });
     if (!replyDraftingEnabled(setting?.aiAutoReplyDrafting)) return false;
-    const conversationId = message.conversationId;
-    if (
-      conversationId &&
-      (await alreadyAnswered(deps, mailbox.tenantId, subject, conversationId, message.receivedAt))
-    ) {
-      return false;
-    }
     const thread = await threadOf(deps, mailbox, message, recordId);
     if (thread.length === 0) return false;
     const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
