@@ -25,10 +25,12 @@ const toneClass = {
 export function WaitingForReplySection({
   people,
   total,
+  leadTotal,
   now = new Date(),
-}: Readonly<{ people: readonly WaitingPerson[]; total: number; now?: Date }>) {
+}: Readonly<{ people: readonly WaitingPerson[]; total: number; leadTotal: number; now?: Date }>) {
   if (people.length === 0) return null;
-  const more = total - people.length;
+  // The list link opens the Leads list, so it only shows when leads beyond those listed wait.
+  const moreLeads = leadTotal - people.filter((p) => p.kind === 'lead').length;
   return (
     <section aria-label="Waiting for reply" data-testid="waiting-for-reply" className="space-y-1">
       <h4 className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
@@ -53,7 +55,7 @@ export function WaitingForReplySection({
           </li>
         ))}
       </ul>
-      {more > 0 && (
+      {moreLeads > 0 && (
         <Link
           href="/leads?segment=waiting"
           className="block px-3 pt-1 text-xs text-ds-primary hover:underline"

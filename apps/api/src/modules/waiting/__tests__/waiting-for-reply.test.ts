@@ -335,15 +335,16 @@ function fakeDb(tables: {
   contactActivities: Record<string, unknown>[];
   emails: Record<string, unknown>[];
 }) {
+  // One Prisma where condition: `{ in: [...] }`, `{ not: x }` or plain equality (null equals unset).
+  const holds = (value: unknown, cond: unknown): boolean => {
+    if (cond && typeof cond === 'object' && 'in' in cond)
+      return (cond as { in: unknown[] }).in.includes(value);
+    if (cond && typeof cond === 'object' && 'not' in cond)
+      return (value ?? null) !== (cond as { not: unknown }).not;
+    return (value ?? null) === cond;
+  };
   const match = (rows: Record<string, unknown>[], where: Record<string, unknown>) =>
-    rows.filter((r) =>
-      Object.entries(where).every(([k, v]) =>
-        v && typeof v === 'object' && 'in' in v
-          ? (v as { in: unknown[] }).in.includes(r[k])
-          : r[k] === v
-      )
-    );
-  // Like Prisma: filter, then order (newest first when asked) and cut to 	ake.
+    rows.filter((r) => Object.entries(where).every(([k, v]) => holds(r[k], v))); // Like Prisma: filter, then order (newest first when asked) and cut to take.
   const table = (rows: Record<string, unknown>[]) => ({
     findMany: async ({
       where,
@@ -356,8 +357,14 @@ function fakeDb(tables: {
     }) => {
       let out = match(rows, where);
       const key = orderBy ? Object.keys(orderBy)[0] : undefined;
-      if (key) {
-        out = [...out].sort((a, b) => (b[key] as Date).getTime() - (a[key] as Date).getTime());
+      if (key && orderBy) {
+        const num = (v: unknown) => (v instanceof Date ? v.getTime() : String(v));
+        const sign = orderBy[key] === 'asc' ? 1 : -1;
+        out = [...out].sort((a, b) => {
+          const [x, y] = [num(a[key]), num(b[key])];
+          if (x === y) return 0;
+          return sign * (x < y ? -1 : 1);
+        });
       }
       return take === undefined ? out : out.slice(0, take);
     },
@@ -646,6 +653,243 @@ describe('cap boundary: every source is judged on the same history', () => {
       coverageFloor([{ times: [d(14), d(9), d(8)] }, { times: [d(14), d(11), d(10)] }], 3)
     ).toBe(d(10).getTime());
     expect(coverageFloor([{ times: [d(14), d(9)] }], 3)).toBe(-Infinity);
+  });
+});
+
+describe('one clock for records: sentAt, else createdAt', () => {
+  const scope = { tenantId: 't1' };
+  const contactScope = { tenantId: 't1', id: { in: [] } };
+  const rec = (id: string, over: Record<string, unknown>, sent: number | null, created: number) =>
+    ({
+      id,
+      tenantId: 't1',
+      subject: id,
+      status: 'SENT',
+      metadata: null,
+      userId: 'u1',
+      contactId: null,
+      fromEmail: 'me@example.invalid',
+      toEmail: 'x@example.invalid',
+      ccEmails: null,
+      bccEmails: null,
+      sentAt: sent === null ? null : day(sent),
+      createdAt: day(created),
+      ...over,
+    }) as never;
+  const inboundRec = (id: string, sent: number | null, created: number) =>
+    rec(
+      id,
+      {
+        status: 'DELIVERED',
+        userId: null,
+        metadata: { direction: 'inbound' },
+        fromEmail: 'lead-a@example.invalid',
+        toEmail: 'me@example.invalid',
+      },
+      sent,
+      created
+    );
+  const db = (emails: unknown[]) => {
+    const t = tables();
+    t.leads = [leadRow('lead-a', 't1')];
+    t.contacts = [];
+    t.leadActivities = [];
+    t.contactActivities = [];
+    t.emails = emails as never;
+    return fakeDb(t);
+  };
+
+  it('does not list someone whose reply was cut by the cap when createdAt and sentAt disagree', async () => {
+    // The inbound was sent on day 9 but stored on day 15; the reply was sent and stored on day 10.
+    // Three unrelated records sent on days 11 to 13 fill a cap of 3, so both the reply (10) and the
+    // inbound (9) are older than anything read: the person must not be listed.
+    const items = await loadWaiting(
+      db([
+        inboundRec('in', 9, 15),
+        rec('reply', { toEmail: 'lead-a@example.invalid' }, 10, 10),
+        rec('n1', {}, 11, 11),
+        rec('n2', {}, 12, 12),
+        rec('n3', {}, 13, 13),
+      ]),
+      't1',
+      scope,
+      contactScope,
+      3
+    );
+    expect(items.map((i) => i.id)).toEqual([]);
+  });
+
+  it('judges a received mail by when it arrived, not when it was stored', async () => {
+    // Stored on day 15 but sent on day 9, with the reply on day 10: answered, uncapped.
+    const items = await loadWaiting(
+      db([inboundRec('in', 9, 15), rec('reply', { toEmail: 'lead-a@example.invalid' }, 10, 10)]),
+      't1',
+      scope,
+      contactScope
+    );
+    expect(items.map((i) => i.id)).toEqual([]);
+  });
+
+  it('reads mail with no sentAt by createdAt, in its own capped stream', async () => {
+    // Webhook mail has no sentAt. Its stream is ordered by createdAt and capped on its own, so the
+    // newer sent records cannot push it out of the window.
+    const items = await loadWaiting(
+      db([
+        inboundRec('webhook', null, 14),
+        rec('n1', {}, 11, 11),
+        rec('n2', {}, 12, 12),
+        rec('n3', {}, 13, 13),
+      ]),
+      't1',
+      scope,
+      contactScope,
+      3
+    );
+    expect(items.map((i) => i.id)).toEqual(['lead-a']);
+  });
+});
+
+describe('message identity', () => {
+  it('counts two different mails with the same timestamp as two', () => {
+    const [item] = pickWaiting(
+      [jane],
+      [
+        { ...mail(jane, 'inbound', day(10), 'First'), ref: 'r1' },
+        { ...mail(jane, 'inbound', day(10), 'Second'), ref: 'r2' },
+      ]
+    );
+    expect(item?.unanswered).toBe(2);
+  });
+
+  it('counts the same mail read as an activity and as a record once, even at different times', () => {
+    const [item] = pickWaiting(
+      [jane],
+      [
+        { ...mail(jane, 'inbound', day(10, 9), 'Hi'), ref: 'r1' },
+        { ...mail(jane, 'inbound', day(10, 10), 'Hi'), ref: 'r1' },
+      ]
+    );
+    expect(item?.unanswered).toBe(1);
+  });
+
+  it('without a record, equal time and subject still count once', () => {
+    const [item] = pickWaiting(
+      [jane],
+      [mail(jane, 'inbound', day(10), 'Hi'), mail(jane, 'inbound', day(10), 'Hi')]
+    );
+    expect(item?.unanswered).toBe(1);
+  });
+});
+
+describe('activities that mirror records, tenants and owners', () => {
+  const scope = { tenantId: 't1' };
+  const none = { tenantId: 't1', id: { in: [] } };
+  const act = (leadId: string, tenantId: string, d: number, metadata: unknown, title = 'Mail') =>
+    ({ leadId, tenantId, type: 'EMAIL', title, timestamp: day(d), metadata }) as never;
+  const rec = (over: Record<string, unknown>) =>
+    ({
+      id: 'rec-1',
+      tenantId: 't1',
+      subject: 'Mail',
+      status: 'SENT',
+      metadata: null,
+      userId: 'u1',
+      contactId: null,
+      fromEmail: 'me@example.invalid',
+      toEmail: 'lead-a@example.invalid',
+      ccEmails: null,
+      bccEmails: null,
+      sentAt: day(11),
+      createdAt: day(11),
+      ...over,
+    }) as never;
+  const world = (acts: unknown[], emails: unknown[]) => {
+    const t = tables();
+    t.leads = [leadRow('lead-a', 't1')];
+    t.contacts = [];
+    t.contactActivities = [];
+    t.leadActivities = acts as never;
+    t.emails = emails as never;
+    return fakeDb(t);
+  };
+
+  it('reads an activity that mirrors a record at the record time, not its own', async () => {
+    // Inbound mail received on day 10, answered on day 11. The activity that mirrors the inbound
+    // was written later (day 12): it must not look like a fresh unanswered mail.
+    const db = world(
+      [act('lead-a', 't1', 12, { direction: 'inbound', emailRecordId: 'in-1' })],
+      [
+        rec({
+          id: 'in-1',
+          status: 'DELIVERED',
+          userId: null,
+          metadata: { direction: 'inbound' },
+          fromEmail: 'lead-a@example.invalid',
+          toEmail: 'me@example.invalid',
+          sentAt: day(10),
+          createdAt: day(10),
+        }),
+        rec({ id: 'reply', sentAt: day(11), createdAt: day(11) }),
+      ]
+    );
+    expect((await loadWaiting(db, 't1', scope, none)).map((i) => i.id)).toEqual([]);
+  });
+
+  it('links a person whose address differs from the mail when it was logged to them', async () => {
+    // Mail from alice@ was logged to lead-a (bob@ would not match by address).
+    const db = world(
+      [act('lead-a', 't1', 12, { emailRecordId: 'in-2', source: 'log-to-contact' })],
+      [
+        rec({
+          id: 'in-2',
+          status: 'DELIVERED',
+          userId: null,
+          metadata: { direction: 'inbound' },
+          fromEmail: 'alice@elsewhere.example.invalid',
+          toEmail: 'me@example.invalid',
+          sentAt: day(10),
+          createdAt: day(10),
+        }),
+      ]
+    );
+    expect((await loadWaiting(db, 't1', scope, none)).map((i) => i.id)).toEqual(['lead-a']);
+  });
+
+  it('never lets another tenant answer or open a wait', async () => {
+    // A t2 reply to the same address, and a t2 activity for the same lead id, change nothing.
+    const db = world(
+      [
+        act('lead-a', 't1', 10, { direction: 'inbound' }),
+        act('lead-a', 't2', 12, { direction: 'outbound' }),
+      ],
+      [rec({ id: 'other-tenant', tenantId: 't2' })]
+    );
+    expect((await loadWaiting(db, 't1', scope, none)).map((i) => i.id)).toEqual(['lead-a']);
+    const quiet = world([act('lead-a', 't2', 10, { direction: 'inbound' })], []);
+    expect(await loadWaiting(quiet, 't1', scope, none)).toEqual([]);
+  });
+
+  it('applies the owner scope to contacts as well as leads', async () => {
+    const t = tables();
+    t.leads = [];
+    t.leadActivities = [];
+    t.emails = [];
+    t.contacts = [{ ...leadRow('contact-a', 't1', 'u2'), firstName: 'Con', lastName: 'Tact' }];
+    t.contactActivities = [
+      {
+        contactId: 'contact-a',
+        tenantId: 't1',
+        type: 'EMAIL',
+        title: 'Hi',
+        timestamp: day(10),
+        metadata: { direction: 'inbound' },
+      } as never,
+    ];
+    const db = fakeDb(t);
+    const mine = await loadWaiting(db, 't1', scope, { tenantId: 't1', ownerId: 'u1' });
+    expect(mine).toEqual([]);
+    const theirs = await loadWaiting(db, 't1', scope, { tenantId: 't1', ownerId: 'u2' });
+    expect(theirs.map((i) => i.id)).toEqual(['contact-a']);
   });
 });
 

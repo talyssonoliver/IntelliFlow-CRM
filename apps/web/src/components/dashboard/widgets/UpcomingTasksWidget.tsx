@@ -132,7 +132,13 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
             </Link>
           ))}
         {!isLoading && <FollowUpsDueSection leads={followUps.leads} total={followUps.total} />}
-        {!isLoading && <WaitingForReplySection people={waiting.people} total={waiting.total} />}
+        {!isLoading && (
+          <WaitingForReplySection
+            people={waiting.people}
+            total={waiting.total}
+            leadTotal={waiting.leadTotal}
+          />
+        )}
       </div>
 
       <button

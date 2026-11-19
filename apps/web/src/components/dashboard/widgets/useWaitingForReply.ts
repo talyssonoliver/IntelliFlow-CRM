@@ -8,8 +8,14 @@ import type { WaitingPerson } from './WaitingForReplySection';
 export function useWaitingForReply(): {
   people: WaitingPerson[];
   total: number;
+  leadTotal: number;
   isLoading: boolean;
 } {
   const { data, isLoading } = api.waiting.list.useQuery({ limit: WAITING_CARD_LIMIT });
-  return { people: data?.items ?? [], total: data?.total ?? 0, isLoading };
+  return {
+    people: data?.items ?? [],
+    total: data?.total ?? 0,
+    leadTotal: data?.leadTotal ?? 0,
+    isLoading,
+  };
 }

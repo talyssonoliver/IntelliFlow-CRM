@@ -30,6 +30,8 @@ export interface MailEvent {
   direction: ActivityDirection;
   at: Date;
   subject: string;
+  /** The email_records row this mail is, when known: the same mail read twice has one ref. */
+  ref?: string | undefined;
 }
 
 export interface WaitingItem extends WaitingPerson {
@@ -134,8 +136,9 @@ function unansweredSince(
   for (const e of sorted) if (e.direction === 'outbound') lastOutbound = e.at.getTime();
   const open = sorted.filter((e) => e.direction === 'inbound' && e.at.getTime() > lastOutbound);
   const first = open[0];
-  // The same mail can reach a person twice (synced mail logs an activity and a record).
-  const distinct = new Set(open.map((e) => e.at.getTime())).size;
+  // The same mail can reach a person twice (synced mail logs an activity and a record), so mail is
+  // counted by the record it is; one without a record falls back to its time and subject.
+  const distinct = new Set(open.map((e) => e.ref ?? `${e.at.getTime()}|${e.subject}`)).size;
   return first ? { since: first.at, subject: first.subject, count: distinct } : null;
 }
 

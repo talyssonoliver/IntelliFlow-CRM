@@ -15,7 +15,7 @@ const followUpQuery = vi.hoisted(() => ({
 // What waiting.list returns for the "Waiting for reply" section (MVP-014); each test sets it.
 const waitingQuery = vi.hoisted(() => ({
   state: { data: { items: [], total: 0 }, isLoading: false } as {
-    data: { items: unknown[]; total: number } | undefined;
+    data: { items: unknown[]; total: number; leadTotal?: number } | undefined;
     isLoading: boolean;
   },
   lastInput: undefined as Record<string, unknown> | undefined,
@@ -108,6 +108,7 @@ describe('UpcomingTasksWidget', () => {
           { kind: 'lead', id: 'lead-9', name: 'Jane Example', company: null, since, subject: 'Hi' },
         ],
         total: 4,
+        leadTotal: 3,
       },
       isLoading: false,
     };

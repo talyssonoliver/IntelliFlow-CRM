@@ -37,7 +37,9 @@ describe('waitingLabel', () => {
 
 describe('WaitingForReplySection', () => {
   it('renders nothing when nobody is waiting', () => {
-    const { container } = render(<WaitingForReplySection people={[]} total={0} now={NOW} />);
+    const { container } = render(
+      <WaitingForReplySection people={[]} total={0} leadTotal={0} now={NOW} />
+    );
     expect(container.firstChild).toBeNull();
   });
 
@@ -46,6 +48,7 @@ describe('WaitingForReplySection', () => {
       <WaitingForReplySection
         now={NOW}
         total={2}
+        leadTotal={1}
         people={[person({}), person({ kind: 'contact', id: 'c-1', name: 'Omar', company: null })]}
       />
     );
@@ -60,16 +63,26 @@ describe('WaitingForReplySection', () => {
   });
 
   it('links to the Waiting for reply list when more are waiting than the card lists', () => {
-    render(<WaitingForReplySection now={NOW} total={7} people={[person({})]} />);
+    render(<WaitingForReplySection now={NOW} total={7} leadTotal={5} people={[person({})]} />);
     expect(screen.getByText('Waiting for reply (7)')).toBeTruthy();
     expect(screen.getByText(/See leads waiting/).getAttribute('href')).toBe(
       '/leads?segment=waiting'
     );
   });
 
+  it('does not link to the Leads list when the people not shown are all contacts', () => {
+    render(<WaitingForReplySection now={NOW} total={7} leadTotal={1} people={[person({})]} />);
+    expect(screen.queryByText(/See leads waiting/)).toBeNull();
+  });
+
   it('keeps long names and subjects on one line each so a 390px card does not overflow', () => {
     render(
-      <WaitingForReplySection now={NOW} total={1} people={[person({ name: 'N'.repeat(120) })]} />
+      <WaitingForReplySection
+        now={NOW}
+        total={1}
+        leadTotal={1}
+        people={[person({ name: 'N'.repeat(120) })]}
+      />
     );
     const name = screen.getByText(/^N{120}/);
     expect(name.className).toContain('truncate');

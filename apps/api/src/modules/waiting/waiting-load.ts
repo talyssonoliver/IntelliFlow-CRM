@@ -47,8 +47,9 @@ async function loadPeople(
 ): Promise<WaitingPerson[]> {
   const select = { id: true, firstName: true, lastName: true, email: true, company: true };
   const [leads, contacts] = await Promise.all([
-    db.lead.findMany({ where: leadScope, select, take: PEOPLE_CAP }),
-    db.contact.findMany({ where: contactScope, select, take: PEOPLE_CAP }),
+    // Ordered, so a tenant past the cap loses the same people every time, not a random few.
+    db.lead.findMany({ where: leadScope, select, orderBy: { id: 'asc' }, take: PEOPLE_CAP }),
+    db.contact.findMany({ where: contactScope, select, orderBy: { id: 'asc' }, take: PEOPLE_CAP }),
   ]);
   return [
     ...leads.map((r) => toPerson('lead', r as PersonRow)),
@@ -71,26 +72,49 @@ interface RecordRow {
   createdAt: Date;
 }
 
-async function loadRecords(db: PrismaClient, tenantId: string, cap: number): Promise<RecordRow[]> {
-  return (await db.emailRecord.findMany({
-    where: { tenantId },
-    select: {
-      id: true,
-      subject: true,
-      status: true,
-      metadata: true,
-      userId: true,
-      contactId: true,
-      fromEmail: true,
-      toEmail: true,
-      ccEmails: true,
-      bccEmails: true,
-      sentAt: true,
-      createdAt: true,
-    },
-    orderBy: { createdAt: 'desc' },
-    take: cap,
-  })) as RecordRow[];
+/** The one clock a record is judged by everywhere: when it was sent, else when it was created. */
+const recordTime = (r: RecordRow): Date => r.sentAt ?? r.createdAt;
+
+const RECORD_SELECT = {
+  id: true,
+  subject: true,
+  status: true,
+  metadata: true,
+  userId: true,
+  contactId: true,
+  fromEmail: true,
+  toEmail: true,
+  ccEmails: true,
+  bccEmails: true,
+  sentAt: true,
+  createdAt: true,
+};
+
+/**
+ * email_records, newest first by their event time, in two streams so that ordering, the cap and the
+ * coverage floor all use the same clock: rows with a sentAt are read by sentAt, rows without one
+ * (received by webhook, still unsent) by createdAt. Each stream is one source for coverageFloor.
+ */
+async function loadRecords(
+  db: PrismaClient,
+  tenantId: string,
+  cap: number
+): Promise<{ sent: RecordRow[]; unsent: RecordRow[] }> {
+  const [sent, unsent] = await Promise.all([
+    db.emailRecord.findMany({
+      where: { tenantId, sentAt: { not: null } },
+      select: RECORD_SELECT,
+      orderBy: { sentAt: 'desc' },
+      take: cap,
+    }),
+    db.emailRecord.findMany({
+      where: { tenantId, sentAt: null },
+      select: RECORD_SELECT,
+      orderBy: { createdAt: 'desc' },
+      take: cap,
+    }),
+  ]);
+  return { sent: sent as RecordRow[], unsent: unsent as RecordRow[] };
 }
 /** Who a record did not really reach: nobody when it left, everybody when it never did. */
 function unreached(r: RecordRow): { all: boolean; addresses: Set<string> } {
@@ -100,6 +124,12 @@ function unreached(r: RecordRow): { all: boolean; addresses: Set<string> } {
 /** Person key to lower-cased email, for every lead and contact. */
 function emailsByKey(people: WaitingPerson[]): Map<string, string> {
   return new Map(people.map((p) => [personKey(p.kind, p.id), p.email.toLowerCase()]));
+}
+
+/** The email_records row an activity logs (the Inbox's log to contact, synced mail), if any. */
+function loggedRecordId(r: { metadata: unknown }): string | undefined {
+  const id = (r.metadata as { emailRecordId?: unknown } | null)?.emailRecordId;
+  return typeof id === 'string' ? id : undefined;
 }
 
 interface ActivityRow {
@@ -155,8 +185,12 @@ export function coverageFloor(sources: { times: Date[] }[], cap: number): number
 }
 
 /**
- * Activity rows (lead and contact) as mail events. An outbound activity that logs a record which
- * never reached that person (not sent, or bounced for their address) is not a reply.
+ * Activity rows (lead and contact) as mail events. An activity that logs an email record is read
+ * at that record's time and, when it carries no direction of its own, in that record's direction,
+ * so it is judged on the same clock as the record and still links a person whose address differs
+ * from the mail's. An outbound activity whose record never reached that person (not sent, or
+ * bounced for their address) is not a reply. An activity that logs a record outside the rows read
+ * is dropped when it carries no direction, since nothing says which way the mail went.
  */
 function activityMail(
   rows: ActivityRows,
@@ -165,31 +199,30 @@ function activityMail(
   floor: number
 ): MailEvent[] {
   const emails = emailsByKey(people);
-  const missed = new Map(records.map((r) => [r.id, unreached(r)]));
-  const toEvent = (key: string, r: ActivityRow) => ({
-    key,
-    direction: activityRowDirection(r),
-    at: r.timestamp,
-    subject: r.title,
-  });
-  const reached = (key: string, r: ActivityRow): boolean => {
-    if (r.timestamp.getTime() <= floor || isUntaggedRecordLog(r.metadata)) return false;
-    const id = (r.metadata as { emailRecordId?: unknown } | null)?.emailRecordId;
-    const m = typeof id === 'string' ? missed.get(id) : undefined;
-    return !m || (!m.all && !m.addresses.has(emails.get(key) ?? ''));
+  const byId = new Map(records.map((r) => [r.id, r]));
+  const toEvent = (key: string, r: ActivityRow): MailEvent | undefined => {
+    const id = loggedRecordId(r);
+    const rec = id ? byId.get(id) : undefined;
+    if (!rec && isUntaggedRecordLog(r.metadata)) return undefined;
+    const direction =
+      rec && isUntaggedRecordLog(r.metadata) ? recordDirection(rec) : activityRowDirection(r);
+    const at = rec ? recordTime(rec) : r.timestamp;
+    if (!direction || at.getTime() <= floor) return undefined;
+    if (rec && direction === 'outbound') {
+      const m = unreached(rec);
+      if (m.all || m.addresses.has(emails.get(key) ?? '')) return undefined;
+    }
+    return { key, direction, at, subject: r.title, ref: id };
   };
   const events: MailEvent[] = [];
-  for (const r of rows.leadRows) {
-    const key = personKey('lead', r.leadId);
-    if (reached(key, r)) events.push(toEvent(key, r));
-  }
-  for (const r of rows.contactRows) {
-    const key = personKey('contact', r.contactId);
-    if (reached(key, r)) events.push(toEvent(key, r));
-  }
+  const add = (key: string, r: ActivityRow) => {
+    const e = toEvent(key, r);
+    if (e) events.push(e);
+  };
+  for (const r of rows.leadRows) add(personKey('lead', r.leadId), r);
+  for (const r of rows.contactRows) add(personKey('contact', r.contactId), r);
   return events;
 }
-
 /** email_records as mail events, matched to people by contact link or by address. */
 function recordMail(records: RecordRow[], people: WaitingPerson[], floor: number): MailEvent[] {
   const keysByEmail = new Map<string, string[]>();
@@ -202,7 +235,8 @@ function recordMail(records: RecordRow[], people: WaitingPerson[], floor: number
   const events: MailEvent[] = [];
   for (const r of records) {
     const direction = recordDirection(r);
-    if (!direction || r.createdAt.getTime() <= floor) continue;
+    const at = recordTime(r);
+    if (!direction || at.getTime() <= floor) continue;
     // Everyone the mail went to counts, Bcc included, except addresses it bounced for.
     const bounced = bouncedAddresses(r.metadata);
     const addresses =
@@ -218,8 +252,7 @@ function recordMail(records: RecordRow[], people: WaitingPerson[], floor: number
     );
     const linked = r.contactId ? personKey('contact', r.contactId) : undefined;
     if (linked && !bounced.has(emails.get(linked) ?? '')) keys.add(linked);
-    const at = r.sentAt ?? r.createdAt;
-    for (const key of keys) events.push({ key, direction, at, subject: r.subject });
+    for (const key of keys) events.push({ key, direction, at, subject: r.subject, ref: r.id });
   }
   return events;
 }
@@ -233,11 +266,13 @@ export async function loadWaiting(
   cap: number = MAIL_CAP
 ): Promise<WaitingItem[]> {
   const people = await loadPeople(db, leadScope, contactScope);
-  const records = await loadRecords(db, tenantId, cap);
+  const { sent, unsent } = await loadRecords(db, tenantId, cap);
+  const records = [...sent, ...unsent];
   const rows = await loadActivityRows(db, tenantId, cap);
   const floor = coverageFloor(
     [
-      { times: records.map((r) => r.createdAt) },
+      { times: sent.map(recordTime) },
+      { times: unsent.map(recordTime) },
       { times: rows.leadRows.map((r) => r.timestamp) },
       { times: rows.contactRows.map((r) => r.timestamp) },
     ],
