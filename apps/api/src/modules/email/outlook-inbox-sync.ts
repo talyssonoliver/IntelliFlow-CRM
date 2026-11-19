@@ -38,6 +38,7 @@ import {
 } from './mail-sync-reader';
 import { learnThread, logOnLead, threadOf, type LoggedRecord } from './mail-sync-links';
 import { messageIdHeader, recordData } from './mail-sync-record';
+import { queueReplyDraftForSyncedMail } from './mail-sync-reply-draft';
 import {
   MAX_ENQUIRIES_PER_RUN,
   createEnquiryLead,
@@ -60,10 +61,7 @@ const LEASE_MARGIN_MS = 90_000;
 const MAX_BACKOFF_MS = 6 * 60 * 60_000;
 /** A mailbox without Mail.Read (connected before the scope, or narrowed) is checked daily. */
 const NO_SCOPE_RECHECK_MS = 24 * 60 * 60_000;
-/**
- * Prisma codes for a row the database refuses as data (too long, bad value, or a lead or contact
- * erased since it was matched): skip that mail.
- */
+/** Prisma codes for a row the database refuses as data (too long, bad value, or an erased lead or contact): skip that mail. */
 const DATA_ERROR_CODES = new Set(['P2000', 'P2003', 'P2006', 'P2007', 'P2011']);
 
 export interface InboxSyncDeps {
@@ -197,10 +195,7 @@ async function counterparty(
   return null;
 }
 
-/**
- * True when anyone on the mail but the owner (sender, To, Cc) has a processing restriction:
- * then nothing of it is stored, wherever that person sits among the recipients.
- */
+/** True when anyone on the mail but the owner (sender, To, Cc) has a processing restriction: then nothing of it is stored. */
 async function anyoneRestricted(
   deps: InboxSyncDeps,
   mailbox: SyncMailbox,
@@ -322,17 +317,20 @@ async function writeMail(
 ): Promise<StoreOutcome> {
   const { mailbox, message, folder, party } = args;
   const leadId = party.leadId;
-  const write = async (db: any) => {
+  const write = async (db: any): Promise<string> => {
     const record: { id: string } = await db.emailRecord.create({
       data: recordData(args),
       select: { id: true },
     });
     if (leadId) await logOnLead({ prisma: db }, mailbox, message, leadId, record.id, folder);
+    return record.id;
   };
   try {
     // A lead's mail and its timeline entry land together or not at all: a retry finds no record
     // and writes both again, so the lead never misses the entry.
-    await (leadId ? deps.prisma.$transaction(write) : write(deps.prisma));
+    const recordId = await (leadId ? deps.prisma.$transaction(write) : write(deps.prisma));
+    // MVP-012: Aurora drafts a reply to received mail for the user to check; never sent unasked.
+    await queueReplyDraftForSyncedMail(deps, mailbox, message, folder, party, recordId);
     return 'stored';
   } catch (error) {
     // One mail the database rejects as data never fails the round: skip it and go on.
