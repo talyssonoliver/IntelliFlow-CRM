@@ -8,10 +8,10 @@
  * It never fails the sync: a draft is a convenience, so any error here is logged and dropped.
  * - Only received mail (Inbox), only with a lead or contact, and only when the tenant's reply
  *   drafting is on (a tenant that never saved the setting gets the default, see reply-drafting).
- * - One draft per conversation at a time: a new mail in a thread with a draft waiting, or one still
- *   being written (a BullMQ deduplication id held until that job ends), queues no other, so a long
- *   thread is not drafted (and paid for) over and over. Mail with no conversation id is judged on
- *   its own (codex): an unrelated draft for the same person never holds it back.
+ * - One waiting draft per conversation: a draft is stamped with the newest mail it answers, and a
+ *   mail no newer than a waiting draft's stamp queues nothing. The worker reads the conversation's
+ *   latest mails (with Cc) when it runs and sets an older waiting draft aside when it writes the
+ *   new one, so mail that arrives while a job waits is answered too (codex).
  * - The job id is the stored mail's record id, so a retried sync never queues the same mail twice.
  */
 import { replyDraftingEnabled } from '@intelliflow/domain';
@@ -36,6 +36,7 @@ export interface ReplyDraftMailbox {
 interface StoredMail {
   fromEmail: string;
   toEmail: string;
+  ccEmails: string | null;
   subject: string;
   body: string;
   createdAt: Date;
@@ -48,7 +49,14 @@ async function threadOf(
   message: SyncedMessage,
   recordId: string
 ): Promise<StoredMail[]> {
-  const select = { fromEmail: true, toEmail: true, subject: true, body: true, createdAt: true };
+  const select = {
+    fromEmail: true,
+    toEmail: true,
+    ccEmails: true,
+    subject: true,
+    body: true,
+    createdAt: true,
+  };
   const where = message.conversationId
     ? {
         tenantId: mailbox.tenantId,
@@ -65,28 +73,25 @@ async function threadOf(
   return latest.reverse();
 }
 
-/** A draft already waiting for this conversation (and person): no second one is queued. */
-async function draftWaiting(
+/** A waiting draft of this conversation already answers this mail (stamped at or after it). */
+async function alreadyAnswered(
   deps: ReplyDraftDeps,
   tenantId: string,
   subject: { contactId: string } | { leadId: string },
-  conversationId: string
+  conversationId: string,
+  receivedAt: Date
 ): Promise<boolean> {
-  const waiting = await deps.prisma.contactReplyDraft.findFirst({
-    where: { tenantId, ...subject, status: 'DRAFT', emailThreadId: conversationId },
+  const answering = await deps.prisma.contactReplyDraft.findFirst({
+    where: {
+      tenantId,
+      ...subject,
+      status: 'DRAFT',
+      emailThreadId: conversationId,
+      createdAt: { gte: receivedAt },
+    },
     select: { id: true },
   });
-  return waiting !== null;
-}
-
-/** The deduplication id of a conversation's draft: tenant, person and conversation. */
-function conversationKey(
-  tenantId: string,
-  subject: { contactId: string } | { leadId: string },
-  conversationId: string
-): string {
-  const person = 'contactId' in subject ? `contact:${subject.contactId}` : `lead:${subject.leadId}`;
-  return `reply-draft:${tenantId}:${person}:${conversationId}`;
+  return answering !== null;
 }
 
 /** Who the draft answers. A contact wins when the sender is both: it waits where the mail was logged. */
@@ -121,7 +126,10 @@ export async function queueReplyDraftForSyncedMail(
     });
     if (!replyDraftingEnabled(setting?.aiAutoReplyDrafting)) return false;
     const conversationId = message.conversationId;
-    if (conversationId && (await draftWaiting(deps, mailbox.tenantId, subject, conversationId))) {
+    if (
+      conversationId &&
+      (await alreadyAnswered(deps, mailbox.tenantId, subject, conversationId, message.receivedAt))
+    ) {
       return false;
     }
     const thread = await threadOf(deps, mailbox, message, recordId);
@@ -134,9 +142,12 @@ export async function queueReplyDraftForSyncedMail(
         ...subject,
         tenantId: mailbox.tenantId,
         ...(message.conversationId ? { emailThreadId: message.conversationId } : {}),
+        // The worker reads the conversation's latest mails from this mailbox when it runs.
+        mailboxId: mailbox.id,
         emailThread: thread.map((mail) => ({
           from: mail.fromEmail,
           to: mail.toEmail,
+          ...(mail.ccEmails ? { cc: mail.ccEmails } : {}),
           subject: mail.subject,
           body: mail.body.slice(0, BODY_LIMIT),
           at: mail.createdAt.toISOString(),
@@ -146,11 +157,6 @@ export async function queueReplyDraftForSyncedMail(
       {
         // One job per stored mail: a retried sync round never queues it twice.
         jobId: `reply-draft-${recordId}`,
-        // One job per conversation while it is queued or running (codex): two mails of a thread
-        // synced before the first draft is written queue one draft, not two.
-        ...(conversationId
-          ? { deduplication: { id: conversationKey(mailbox.tenantId, subject, conversationId) } }
-          : {}),
       }
     );
     return true;

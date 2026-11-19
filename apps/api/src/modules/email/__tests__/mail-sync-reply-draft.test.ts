@@ -25,6 +25,7 @@ function prisma(
   const stored = (n: number) => ({
     fromEmail: `p${n}@lead.example.invalid`,
     toEmail: 'owner@shop.example.invalid',
+    ccEmails: n === 2 ? 'partner@lead.example.invalid' : null,
     subject: `Fence ${n}`,
     body: `Body ${n}`,
     createdAt: new Date(Date.UTC(2026, 10, 19, 10, n)),
@@ -63,15 +64,14 @@ describe('queueReplyDraftForSyncedMail (MVP-012 PR C)', () => {
     const [queueName, jobName, data, options] = enqueue.mock.calls[0]!;
     expect(queueName).toBe('ai-reply-draft');
     expect(jobName).toBe('draft');
-    expect(options).toEqual({
-      jobId: 'reply-draft-rec-1',
-      // Held while the job is queued or running: a second mail of the thread queues no other.
-      deduplication: { id: `reply-draft:${TENANT}:lead:lead-1:conv-9` },
-    });
+    // One job per stored mail; the worker keeps one waiting draft per conversation.
+    expect(options).toEqual({ jobId: 'reply-draft-rec-1' });
     expect(data).toMatchObject({
       leadId: 'lead-1',
       tenantId: TENANT,
       emailThreadId: 'conv-9',
+      // The worker reads the conversation's latest mails from this mailbox when it runs.
+      mailboxId: 'mbx-1',
       createdBy: 'user-1',
     });
     expect(data).not.toHaveProperty('contactId');
@@ -86,6 +86,8 @@ describe('queueReplyDraftForSyncedMail (MVP-012 PR C)', () => {
       body: 'Body 1',
       at: '2026-11-19T10:01:00.000Z',
     });
+    // Cc is carried, so the worker checks everyone on the thread (codex).
+    expect(data.emailThread[1].cc).toBe('partner@lead.example.invalid');
     // The thread is the conversation's stored mail in this mailbox, the latest few.
     expect(db.emailRecord.findMany.mock.calls[0]![0]).toMatchObject({
       where: {
@@ -119,15 +121,17 @@ describe('queueReplyDraftForSyncedMail (MVP-012 PR C)', () => {
     expect(enqueue).not.toHaveBeenCalled();
   });
 
-  it('does not queue a second draft while one waits for the same conversation', async () => {
+  it('queues nothing when a waiting draft already answers this mail (stamped at or after it)', async () => {
+    const message = mail({ conversationId: 'conv-9' });
     const db = prisma({ waiting: { id: 'draft-1' } });
-    await expect(queue(db)).resolves.toBe(false);
+    await expect(queue(db, { message })).resolves.toBe(false);
     expect(enqueue).not.toHaveBeenCalled();
     expect(db.contactReplyDraft.findFirst.mock.calls[0]![0].where).toEqual({
       tenantId: TENANT,
       leadId: 'lead-1',
       status: 'DRAFT',
       emailThreadId: 'conv-9',
+      createdAt: { gte: message.receivedAt },
     });
   });
 
@@ -146,13 +150,6 @@ describe('queueReplyDraftForSyncedMail (MVP-012 PR C)', () => {
     const db = prisma({ waiting: { id: 'draft-other-thread' } });
     await expect(queue(db, { message: mail({ conversationId: null }) })).resolves.toBe(true);
     expect(db.contactReplyDraft.findFirst).not.toHaveBeenCalled();
-  });
-
-  it('keys the conversation by tenant and person, so another person’s thread is apart', async () => {
-    await queue(prisma(), { party: { contactId: 'contact-1', leadId: null } });
-    expect(enqueue.mock.calls[0]![3].deduplication).toEqual({
-      id: `reply-draft:${TENANT}:contact:contact-1:conv-9`,
-    });
   });
 
   it('cuts long bodies before queueing them', async () => {
