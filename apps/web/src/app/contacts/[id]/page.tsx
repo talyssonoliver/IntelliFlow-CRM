@@ -1164,6 +1164,8 @@ export default function Contact360Page() {
           {/* Overview Tab */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
+              {/* MVP-012: a reply Aurora drafted waits here for Send, Edit or Dismiss. */}
+              <ReplyDraftsPanel contactId={contactId} enabled={true} />
               <Card>
                 <div className="flex items-center justify-between p-6 border-b border-border">
                   <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
@@ -1446,20 +1448,13 @@ export default function Contact360Page() {
 
           {/* AI Insights Tab (IFC-095) */}
           {activeTab === 'ai-insights' && (
-            <>
-              <ContactAiInsightsTab
-                aiInsights={aiInsights}
-                churnRiskData={churnRiskData}
-                nextBestActionData={nextBestActionData}
-                onPendingAction={() => scoreWithAIMutation.mutate({ contactId })}
-                isPending={scoreWithAIMutation.isPending}
-              />
-              {/* IFC-312 — AI reply drafts panel (hidden when flag off or empty). */}
-              <div className="mt-6">
-                <h3 className="text-sm font-semibold mb-2">AI-drafted replies</h3>
-                <ReplyDraftsPanel contactId={contactId} enabled={true} />
-              </div>
-            </>
+            <ContactAiInsightsTab
+              aiInsights={aiInsights}
+              churnRiskData={churnRiskData}
+              nextBestActionData={nextBestActionData}
+              onPendingAction={() => scoreWithAIMutation.mutate({ contactId })}
+              isPending={scoreWithAIMutation.isPending}
+            />
           )}
         </section>
 

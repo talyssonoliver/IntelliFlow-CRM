@@ -3785,6 +3785,18 @@ MVP-011:
   debt_allowed: no
   evidence_required:
     - .specify/sprints/sprint-24/attestations/MVP-011/owner-screenshot.png
+# Owner promise to West London Handyman 2026-11-18: Aurora drafts replies for him to check.
+MVP-012:
+  tier: A
+  gate_profile:
+    - typecheck
+    - lint
+    - unit
+    - build
+  acceptance_owner: 'Owner'
+  debt_allowed: no
+  evidence_required:
+    - .specify/sprints/sprint-24/attestations/MVP-012/owner-screenshot.png
 
 # Plan reconcile 2026-11-16: these tasks were marked Completed while ENV-008-AI was still open.
 # ENV-008-AI is re-dated to sprint 25, so the finished tasks no longer wait on it.
