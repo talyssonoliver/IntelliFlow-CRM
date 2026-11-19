@@ -1,0 +1,92 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "MVP-003",
+  "run_id": "plan-mvp-close-2026-11-19",
+  "attestor": "Claude Code (claude-sonnet-5-5), plan lane (plan close for Aurora)",
+  "attestation_timestamp": "2026-11-19T16:30:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [],
+    "invariants_acknowledged": [
+      "Shipped in #1436 (deal value optional), #1437 (undo a conversion while nothing has happened), #1444 (createdContactId migration, applied to production 2026-11-17 20:55), #1446 (contact named from the company), #1447 (last name optional), #1453 and #1455 (cleared fields save). All merged and deployed; #1455 at 41af0af75 on 2026-11-19 13:06.",
+      "The production captures were taken signed in as the owner, at his instruction (his words on 17/11/2026: \"Why can't you do it? I'm driving\", relayed by Aurora): a headless browser, in the Leangency workspace. The conversion on 2026-11-17 22:41 and the stage move on 2026-11-19 16:12 changed that workspace's data, as the owner and with his decision (modal 19/11).",
+      "The captures are not committed because this repository is public (they show the owner and his data). They are held privately; their SHA-256 hashes are recorded in artifact_hashes.",
+      "The stage move was made through the opportunity.moveStage API call, the same call the pipeline board makes, as the owner. It was not made by dragging on the board, because the automated browser could not drive the board drag. The deal page offers only Won and Lost, no stage control (customer-issue register #32), so a person moving a stage uses the pipeline board. The board drag itself is therefore not shown in these captures; they show the result (deal at Qualification, 20%) on the deal page and the board."
+    ],
+    "acknowledged_at": "2026-11-19T16:30:00Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 10,
+    "kpis_met": 2,
+    "kpis_missed": 0
+  },
+  "artifact_hashes": {
+    "ops/reviews/convert-pilates-1117/_leads_bddc9c2b_28ac_42fa_9b26_b9101cb4e3fa-desk.png": "sha256:17cdf43e35acf39fa03bd908b4e8abcfca3da6f35ef81f59af7c8980f70cd13e",
+    "ops/reviews/mvp003-pilates-1117/_dashboard-desk.png": "sha256:f147abbc70d2f92dc43bb5dc46e0f58cd48606bfcbfa2aed7f36dd65af6d89d2",
+    "ops/reviews/mvp003-pilates-1117/_dashboard-phone.png": "sha256:3a0976074eba82e29b048244a4eece18449f2c1efd96a178c4475d893f5bec1d",
+    "ops/reviews/mvp003-pilates-1117/_deals_638f77b8_3a8c_47e4_b85c_b1da1433dc6b-desk.png": "sha256:851cf6ffa3dec32c3de1395d73c42bb84b33f1d9e1849e38a539323b0d27cf73",
+    "ops/reviews/mvp003-pilates-1117-menu/_deals_638f77b8_3a8c_47e4_b85c_b1da1433dc6b-desk.png": "sha256:282df409c5ca8573490e0d8c37a7fd22615dcc274aa4272bf85dd7807c050dcc",
+    "ops/reviews/pilates-contact-rename2/_contacts_7dd58ceb_5e5c_488f_9b7a_6e4f85a0b495_edit-desk.png": "sha256:cb190206b728aaaa4aca82610c884ee95015aafc1ee9e719c15088c4f6d013b0",
+    "ops/reviews/mvp003-stage-1119-final/_deals_638f77b8_3a8c_47e4_b85c_b1da1433dc6b-desk.png": "sha256:7a1a74e8b9be44ccf62b482f41e0057e6a4fd4b1e1a8e0dfd5742135c6a258c1",
+    "ops/reviews/mvp003-stage-1119-final/_deals_638f77b8_3a8c_47e4_b85c_b1da1433dc6b-phone.png": "sha256:a3cdabf11d6fb9af20f3982734a64de7a9ed800f06d8191240decd1293b5b5bf",
+    "ops/reviews/mvp003-stage-1119-final/_deals_view_pipeline-desk.png": "sha256:3b4c0387ae0cd645f0b5ec102d0205e8e3dd5b239e0a88f78bdb06f6a5fbfa2d",
+    "ops/reviews/mvp003-stage-1119-final/_deals_view_pipeline-phone.png": "sha256:997945851a1f2baa9dccb986287adffada703f18f2406a6771e2347fdc15d0bc"
+  },
+  "manual_verification": {
+    "performed_by": "Claude Code (claude-sonnet-5-5), plan lane, for Aurora (the evidence was captured as the owner)",
+    "performed_at": "2026-11-19T16:30:00Z",
+    "review_notes": "Each cited image was viewed at full size before citing. The 2026-11-19 08:11 contact capture in mvp003-close-1119 shows only a loading skeleton (rate-limited requests) and is not cited; the contact name is cited from pilates-contact-rename2 instead. On the phone pipeline capture the donut chart labels overlap; the stage is readable on the deal page. The board drag was not exercised (see invariants).",
+    "items_checked": [
+      "Qualify: the lead Pilates Living is shown as Qualified and the dashboard says 1 lead qualified, ready to convert to a deal (convert-pilates-1117, mvp003-pilates-1117 dashboard).",
+      "Convert: the Convert Lead to Deal dialog is open on the qualified lead with Contact and deal selected and the deal value labelled in pounds. At 2026-11-17 22:41 the lead was converted; the deal was created at Prospecting, 10%, value 0 (deal page, desktop). The dashboard showed Active Deals 1 and the funnel Converted 1.",
+      "Undo: the deal menu offers Undo conversion (mvp003-pilates-1117-menu). #1444 stored createdContactId in production on 2026-11-17 20:55.",
+      "Contact: Pilates Living, last name empty, saved through the edit form on 2026-11-19; the contact page shows Active Deal and Deals 1 (pilates-contact-rename2).",
+      "Move one stage: on 2026-11-19 16:12 the deal moved from Prospecting to Qualification, probability 20%, through opportunity.moveStage as the owner. The deal page shows Qualification, Stage 2 of 5, 20% Probability, on desktop and phone; the pipeline board shows Active Deals 1 and a Qualification column with count 1, Prospecting 0.",
+      "One currency: the dashboard, the pipeline summary, the pipeline board header figures and the convert dialog show pounds (£0 on every figure); no other currency symbol appears on the captured screens. Only the screens listed here were captured."
+    ]
+  },
+  "validation_results": [
+    {
+      "name": "Production lead to deal conversion, signed in as the owner",
+      "command": "headless check of /leads/bddc9c2b-28ac-42fa-9b26-b9101cb4e3fa and /dashboard on production (2026-11-17)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-17T22:41:00Z"
+    },
+    {
+      "name": "Production stage move, deal page and pipeline board, desktop and phone",
+      "command": "opportunity.moveStage as the owner, then headless check of /deals/638f77b8-3a8c-47e4-b85c-b1da1433dc6b and /deals?view=pipeline on production (2026-11-19)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-19T16:12:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "merged-pr-evidence",
+      "passed": true
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Convert Lead enabled for a qualified lead",
+      "target": "enabled",
+      "actual": "Convert Lead to Deal dialog opened and completed on a qualified lead on production",
+      "met": true
+    },
+    {
+      "kpi": "One currency (GBP) on every money figure",
+      "target": "GBP",
+      "actual": "pounds on every captured money figure (dashboard, pipeline, convert dialog)",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "The owner can qualify a lead, convert it to a deal and move the deal one stage on production for the Leangency workspace, proven with a screenshot attached to the task",
+      "met": true
+    }
+  ],
+  "notes": "Lead bddc9c2b-28ac-42fa-9b26-b9101cb4e3fa, deal 638f77b8-3a8c-47e4-b85c-b1da1433dc6b, contact 7dd58ceb-5e5c-488f-9b7a-6e4f85a0b495. Defects found and fixed along the way: customer-issue register #24, #26, #27, #28. Open: #32, the deal page has no stage control (Won and Lost only); the stage is moved on the pipeline board, whose drag was not driven in these captures."
+}

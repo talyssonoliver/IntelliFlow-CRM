@@ -21,7 +21,15 @@ import { displayName, zohoAddresses as headerAddresses, zohoBodyText } from './z
 const GMAIL_API = 'https://gmail.googleapis.com/gmail/v1/users/me';
 const REQUEST_TIMEOUT_MS = 30_000;
 const DAY_MS = 24 * 60 * 60 * 1000;
-const HEADERS = ['From', 'To', 'Cc', 'Subject', 'Message-ID'] as const;
+const HEADERS = [
+  'From',
+  'To',
+  'Cc',
+  'Subject',
+  'Message-ID',
+  'List-Unsubscribe',
+  'Precedence',
+] as const;
 
 export type GmailSyncLabel = 'INBOX' | 'SENT';
 
@@ -36,6 +44,8 @@ export interface GmailSyncedMessage {
   to: string[];
   cc: string[];
   receivedAt: Date;
+  /** MVP-011: bulk mail (List-Unsubscribe or Precedence: bulk/list/junk). */
+  bulk?: boolean;
   isRead: boolean;
   /** Empty: the body is read only through `loadBody()`. */
   bodyText: string;
@@ -234,6 +244,14 @@ async function loadBodyText(
 /** Mail never logged from a label: drafts, spam and chats. */
 const SKIPPED_LABELS = ['DRAFT', 'SPAM', 'CHAT'];
 
+/** A List-Unsubscribe header, or Precedence: bulk, list or junk: mail sent to many, not to one person. */
+function isBulk(item: GmailMessage): boolean {
+  return (
+    !!header(item, 'List-Unsubscribe') ||
+    /^(bulk|list|junk)$/i.test(header(item, 'Precedence')?.trim() ?? '')
+  );
+}
+
 function toMessage(
   item: GmailMessage,
   accessToken: string,
@@ -258,6 +276,7 @@ function toMessage(
     cc: headerAddresses(header(item, 'Cc')),
     receivedAt: new Date(receivedTime),
     isRead: !labels.includes('UNREAD'),
+    ...(isBulk(item) ? { bulk: true } : {}),
     bodyText: '',
     loadBody: () =>
       loadBodyText(fetchImpl, accessToken, id, options.maxBodyChars).catch((error: unknown) => {
