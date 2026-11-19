@@ -691,7 +691,9 @@ for Leangency, proven with a screenshot.
 
 MVP-011 (sprint 24, owner ruling 2026-11-18) adds reading a Google Workspace
 customer's Gmail once their admin trusts Aurora: enquiries land on leads as
-Received, with reply drafts offered. "How would our AI CRM be fed?"
+Received, with reply drafts offered. "How would our AI CRM be fed?" MVP-012
+(sprint 24) lets him approve those drafts: Send, Edit or Dismiss, and nothing is
+sent without his click (ADR-037).
 
 **Acceptance:** the owner scores his weekly flow at **7/10 or higher** on
 production. The launch tasks in sprint 27, IFC-051 (Pilot Customer Selection)

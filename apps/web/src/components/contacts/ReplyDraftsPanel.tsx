@@ -1,70 +1,179 @@
 'use client';
 
 /**
- * IFC-312 — Lists the latest AI-drafted reply emails for a contact.
- * Displays up to 5 drafts with provenance + status. Drafts are always DRAFT;
- * Send/Edit/Dismiss actions live here but this v1 surface only renders rows
- * (send/edit/dismiss wiring is deferred to a real inbox integration task).
- * Empty state uses canonical `<EmptyState entity='emails' />`.
- *
- * IFC-312 audit fix F5 (2026-04-24): the `contact.draftReply` mutation now
- * requires a real `emailThread` array from the caller (server rejects empty
- * requests with PRECONDITION_FAILED). Auto-triggered drafting is therefore
- * blocked until IFC-313 lands real inbox ingestion — this panel stays
- * read-only for now.
+ * MVP-012 (was IFC-312's read-only list): the replies Aurora drafted for a contact, for the user to
+ * check. A waiting draft reads "Reply drafted by Aurora: waiting for you", shows its whole text,
+ * and offers Send (from the user's connected mailbox, as Compose sends), Edit (opens it in
+ * Compose as an ordinary email draft) and Dismiss. Nothing is sent without the Send click
+ * (ADR-037): Aurora only ever writes drafts. Renders nothing when there is no draft to show.
  */
-
-import { EmptyState } from '@intelliflow/ui';
+import { useId, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@intelliflow/ui';
 import { trpc } from '@intelliflow/api-client';
+import { getEmailSendError } from '@/components/email/send-errors';
+
+export const WAITING_TITLE = 'Reply drafted by Aurora: waiting for you';
+
+const SETTLED: Record<string, string> = {
+  SENDING: 'Being sent. If this stays, check your Sent folder: it may already have gone.',
+  SENT: 'Sent from your mailbox.',
+  EDITED: 'Opened in Compose. Find it in your email drafts.',
+};
 
 export interface ReplyDraftsPanelProps {
   readonly contactId: string;
   readonly enabled: boolean;
 }
 
-export function ReplyDraftsPanel({ contactId, enabled }: Readonly<ReplyDraftsPanelProps>) {
-  const query = trpc.contact.listReplyDrafts.useQuery({ contactId, limit: 5 }, { enabled });
+interface Draft {
+  id: string;
+  draftSubject: string;
+  draftBody: string;
+  status: string;
+}
 
+function errorText(error: unknown, fallback: string): string {
+  const message = (error as { message?: unknown } | null)?.message;
+  return typeof message === 'string' && message ? message : fallback;
+}
+
+function DraftItem({ draft, onChanged }: Readonly<{ draft: Draft; onChanged: () => void }>) {
+  const router = useRouter();
+  const titleId = useId();
+  const send = trpc.replyDraft.send.useMutation();
+  const openInCompose = trpc.replyDraft.openInCompose.useMutation();
+  const dismiss = trpc.replyDraft.dismiss.useMutation();
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const busy = send.isPending || openInCompose.isPending || dismiss.isPending;
+  const waiting = draft.status === 'DRAFT';
+
+  const onSend = async () => {
+    setError(null);
+    try {
+      const result = await send.mutateAsync({ draftId: draft.id });
+      if (result.status === 'SENT') setNotice('Reply sent from your mailbox.');
+      else setError(getEmailSendError(null).message);
+    } catch (e) {
+      const view = getEmailSendError(e);
+      setError(view.code ? `${view.title}: ${view.message}` : errorText(e, view.message));
+    }
+    onChanged();
+  };
+
+  const onEdit = async () => {
+    setError(null);
+    try {
+      const { emailDraftId } = await openInCompose.mutateAsync({ draftId: draft.id });
+      router.push(`/email/compose?draftId=${encodeURIComponent(emailDraftId)}`);
+    } catch (e) {
+      setError(errorText(e, 'The draft could not be opened in Compose.'));
+      onChanged();
+    }
+  };
+
+  const onDismiss = async () => {
+    setError(null);
+    try {
+      await dismiss.mutateAsync({ draftId: draft.id });
+    } catch (e) {
+      setError(errorText(e, 'The draft could not be dismissed.'));
+    }
+    onChanged();
+  };
+
+  return (
+    <li
+      aria-labelledby={titleId}
+      className="rounded-lg border border-border bg-card p-4 text-sm"
+      data-testid="reply-draft-item"
+    >
+      <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">
+        {waiting ? WAITING_TITLE : 'Reply drafted by Aurora'}
+      </p>
+      <p id={titleId} className="mt-1 font-medium text-foreground">
+        {draft.draftSubject}
+      </p>
+      {waiting && (
+        <p className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap text-foreground">
+          {draft.draftBody}
+        </p>
+      )}
+      {!waiting && SETTLED[draft.status] && (
+        <p className="mt-1 text-xs text-muted-foreground">{SETTLED[draft.status]}</p>
+      )}
+      {waiting && (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Button type="button" size="sm" disabled={busy} onClick={() => void onSend()}>
+            {send.isPending ? 'Sending…' : 'Send'}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            disabled={busy}
+            onClick={() => void onEdit()}
+          >
+            Edit
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            disabled={busy}
+            onClick={() => void onDismiss()}
+          >
+            Dismiss
+          </Button>
+        </div>
+      )}
+      {notice && (
+        <output className="mt-2 block text-xs text-foreground" data-testid="reply-draft-notice">
+          {notice}
+        </output>
+      )}
+      {error && (
+        <p role="alert" className="mt-2 text-xs text-red-700 dark:text-red-300">
+          {error}
+        </p>
+      )}
+    </li>
+  );
+}
+
+export function ReplyDraftsPanel({ contactId, enabled }: Readonly<ReplyDraftsPanelProps>) {
+  const headingId = useId();
+  const utils = trpc.useUtils();
+  const query = trpc.contact.listReplyDrafts.useQuery({ contactId, limit: 5 }, { enabled });
   if (!enabled) return null;
 
   if (query.isLoading) {
     return (
       <div className="text-xs text-muted-foreground" data-testid="reply-drafts-loading">
-        Loading AI draft replies…
+        Loading replies drafted by Aurora…
       </div>
     );
   }
 
-  const drafts = query.data?.drafts ?? [];
-  if (drafts.length === 0) {
-    return <EmptyState entity="emails" />;
-  }
+  // Dismissed drafts are set aside: they are not shown again.
+  const drafts = (query.data?.drafts ?? []).filter((d) => d.status !== 'DISMISSED');
+  if (drafts.length === 0) return null;
+
+  const refresh = () => {
+    utils.contact.listReplyDrafts.invalidate({ contactId }).catch(() => undefined);
+  };
 
   return (
-    <ul className="space-y-3" data-testid="reply-drafts-panel">
-      {drafts.map((d) => (
-        <li
-          key={d.id}
-          className="rounded-lg border border-border bg-card p-3 text-sm"
-          data-testid="reply-draft-item"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <span className="font-medium">{d.draftSubject}</span>
-            <span
-              className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-700"
-              title="Draft — not sent"
-            >
-              {d.status}
-            </span>
-          </div>
-          <p className="mt-2 line-clamp-3 text-xs text-muted-foreground">{d.draftBody}</p>
-          <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
-            {d.tone && <span>tone: {d.tone}</span>}
-            <span>confidence: {Math.round(d.confidence * 100)}%</span>
-            <span>model: {d.modelVersion}</span>
-          </div>
-        </li>
-      ))}
-    </ul>
+    <section aria-labelledby={headingId} data-testid="reply-drafts-panel">
+      <h3 id={headingId} className="mb-2 text-sm font-semibold">
+        Replies drafted by Aurora
+      </h3>
+      <ul className="space-y-3">
+        {drafts.map((d) => (
+          <DraftItem key={d.id} draft={d} onChanged={refresh} />
+        ))}
+      </ul>
+    </section>
   );
 }

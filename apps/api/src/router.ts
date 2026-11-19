@@ -8,6 +8,7 @@
 import { createTRPCRouter } from './trpc';
 import { leadRouter } from './modules/lead/lead.router';
 import { conversionUndoRouter } from './modules/lead/conversion-undo.router';
+import { replyDraftRouter } from './modules/contact/reply-draft.router';
 import { leadSettingsRouter } from './modules/lead/lead-settings.router';
 import { contactRouter } from './modules/contact/contact.router';
 import { contactSettingsRouter } from './modules/contact/contact-settings.router';
@@ -148,6 +149,8 @@ export const appRouter = createTRPCRouter({
   // MVP-003: undo a lead-to-deal conversion while nothing has happened since
   leadConversion: conversionUndoRouter,
   contact: contactRouter,
+  // MVP-012: send, edit in Compose or dismiss an AI-drafted reply (never sent without a click)
+  replyDraft: replyDraftRouter,
   account: accountRouter,
   opportunity: opportunityRouter,
   pipelineConfig: pipelineConfigRouter,

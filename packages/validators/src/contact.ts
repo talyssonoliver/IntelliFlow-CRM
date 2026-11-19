@@ -345,13 +345,18 @@ export const contactListReplyDraftsInputSchema = z.object({
 });
 export type ContactListReplyDraftsInput = z.infer<typeof contactListReplyDraftsInputSchema>;
 
+/** A reply draft: written by Aurora (always DRAFT, ADR-037), then acted on once by the user. */
+export const REPLY_DRAFT_STATUSES = ['DRAFT', 'SENDING', 'SENT', 'EDITED', 'DISMISSED'] as const;
+export type ReplyDraftStatus = (typeof REPLY_DRAFT_STATUSES)[number];
+
 export const contactReplyDraftSchema = z.object({
   id: z.string(),
   contactId: z.string(),
   draftSubject: z.string(),
   draftBody: z.string(),
   tone: z.string().nullable(),
-  status: z.enum(['DRAFT', 'DISMISSED', 'SENT']),
+  // MVP-012: SENDING while a send runs, EDITED once taken into Compose.
+  status: z.enum(REPLY_DRAFT_STATUSES),
   confidence: z.number(),
   modelVersion: z.string(),
   createdAt: z.date(),

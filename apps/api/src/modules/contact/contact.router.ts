@@ -16,8 +16,7 @@ import { context as otelContext, propagation } from '@opentelemetry/api';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 // IFC-312 audit fix F7: type the listReplyDrafts .map() result instead of `any`.
-import type { ContactReplyDraft } from '@intelliflow/db';
-import { tenantUserWhere } from '@intelliflow/db';
+import { tenantUserWhere, type ContactReplyDraft } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import {
   assertCanDeleteContact,
@@ -65,6 +64,7 @@ import {
   bulkEmailContactsSchema,
   bulkExportContactsSchema,
   bulkDeleteContactsSchema,
+  type ReplyDraftStatus,
 } from '@intelliflow/validators';
 import {
   performContactReassign,
@@ -2554,8 +2554,8 @@ export const contactRouter = createTRPCRouter({
     .output(contactListReplyDraftsOutputSchema)
     .query(async ({ ctx, input }) => {
       const drafts = await ctx.prismaWithTenant.contactReplyDraft.findMany({
-        where: { contactId: input.contactId },
-        orderBy: { createdAt: 'desc' },
+        where: { contactId: input.contactId, status: { not: 'DISMISSED' } }, // MVP-012: set aside
+        orderBy: [{ status: 'asc' }, { createdAt: 'desc' }], // DRAFT (waiting) sorts first
         take: input.limit,
       });
       return {
@@ -2565,7 +2565,7 @@ export const contactRouter = createTRPCRouter({
           draftSubject: d.draftSubject,
           draftBody: d.draftBody,
           tone: d.tone,
-          status: d.status as 'DRAFT' | 'DISMISSED' | 'SENT',
+          status: d.status as ReplyDraftStatus,
           confidence: d.confidence,
           modelVersion: d.modelVersion,
           createdAt: d.createdAt,
