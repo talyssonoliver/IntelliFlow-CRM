@@ -94,7 +94,9 @@ describe('direction helpers', () => {
 
   it('counts only mail that really left as outbound', () => {
     expect(recordDirection({ status: 'SENT', metadata: null })).toBe('outbound');
-    expect(recordDirection({ status: 'DELIVERED', metadata: {} })).toBe('outbound');
+    expect(recordDirection({ status: 'DELIVERED', metadata: {}, userId: 'u1' })).toBe('outbound');
+    // Webhook mail: DELIVERED, no direction, no sender user.
+    expect(recordDirection({ status: 'DELIVERED', metadata: {}, userId: null })).toBe('inbound');
     expect(recordDirection({ status: 'PENDING', metadata: null })).toBeUndefined();
     expect(recordDirection({ status: 'BOUNCED', metadata: null })).toBeUndefined();
     expect(recordDirection({ status: 'DELIVERED', metadata: { direction: 'inbound' } })).toBe(
@@ -268,6 +270,32 @@ describe('names', () => {
       { tenantId: 't1', id: { in: [] } }
     );
     expect(items[0]?.name).toBe('lead-a@example.invalid');
+  });
+});
+
+describe('webhook mail', () => {
+  it('lists the sender, and does not clear a lead who is only copied on it', async () => {
+    const t = tables();
+    // lead-b wrote in earlier and is waiting; being copied on lead-a's mail must not clear it.
+    t.leadActivities = [t.leadActivities[1]!];
+    t.contactActivities = [];
+    t.emails = [
+      {
+        tenantId: 't1',
+        subject: 'Question',
+        status: 'DELIVERED',
+        metadata: { threadId: 'x' },
+        userId: null,
+        contactId: null,
+        fromEmail: 'lead-a@example.invalid',
+        toEmail: 'me@example.invalid',
+        ccEmails: 'lead-b@example.invalid',
+        sentAt: null,
+        createdAt: day(12),
+      } as never,
+    ];
+    const items = await loadWaiting(fakeDb(t), 't1', { tenantId: 't1' }, { tenantId: 't1' });
+    expect(items.map((i) => i.id)).toEqual(['lead-b', 'lead-a']);
   });
 });
 

@@ -94,6 +94,7 @@ async function loadRecordMail(
       subject: true,
       status: true,
       metadata: true,
+      userId: true,
       contactId: true,
       fromEmail: true,
       toEmail: true,

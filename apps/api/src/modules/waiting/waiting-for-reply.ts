@@ -57,16 +57,22 @@ export function activityRowDirection(row: { title: string; metadata: unknown }):
   return activityDirection({ type: 'EMAIL', title: row.title, direction: stored }) ?? 'outbound';
 }
 
-/** Direction of an email_records row, or undefined when it is not a mail that left or arrived. */
+/**
+ * Direction of an email_records row, or undefined when it is not a mail that left or arrived.
+ * Synced mail stores its direction. Without one, the inbound email webhook stores received mail
+ * as DELIVERED with no sender user, while mail sent from the CRM always has the sending user, so
+ * a DELIVERED row without a user is inbound and any other sent status is outbound.
+ */
 export function recordDirection(row: {
   status: string;
   metadata: unknown;
+  userId?: string | null;
 }): ActivityDirection | undefined {
   const stored = metadataDirection(row.metadata);
   if (stored) return stored;
+  if (row.status === 'DELIVERED' && !row.userId) return 'inbound';
   return (SENT_STATUSES as readonly string[]).includes(row.status) ? 'outbound' : undefined;
 }
-
 /** Lower-cased addresses in a comma, semicolon or space separated list. */
 export function splitAddresses(list: string | null | undefined): string[] {
   if (!list) return [];
