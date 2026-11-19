@@ -12,18 +12,24 @@ type Draft = { id: string; draftSubject: string; draftBody: string; status: stri
 
 const api = vi.hoisted(() => ({
   drafts: [] as Draft[],
+  leadDrafts: [] as Draft[],
   isLoading: false,
+  leadQueries: [] as unknown[],
   send: { mutateAsync: vi.fn(), isPending: false },
   openInCompose: { mutateAsync: vi.fn(), isPending: false },
   dismiss: { mutateAsync: vi.fn(), isPending: false },
   invalidate: vi.fn(async () => undefined),
+  invalidateLead: vi.fn(async () => undefined),
   push: vi.fn(),
 }));
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: api.push }) }));
 vi.mock('@intelliflow/api-client', () => ({
   trpc: {
-    useUtils: () => ({ contact: { listReplyDrafts: { invalidate: api.invalidate } } }),
+    useUtils: () => ({
+      contact: { listReplyDrafts: { invalidate: api.invalidate } },
+      replyDraft: { listForLead: { invalidate: api.invalidateLead } },
+    }),
     contact: {
       listReplyDrafts: {
         useQuery: (_input: unknown, options?: { enabled?: boolean }) => ({
@@ -33,6 +39,15 @@ vi.mock('@intelliflow/api-client', () => ({
       },
     },
     replyDraft: {
+      listForLead: {
+        useQuery: (input: unknown, options?: { enabled?: boolean }) => {
+          if (options?.enabled) api.leadQueries.push(input);
+          return {
+            data: options?.enabled ? { drafts: api.leadDrafts } : undefined,
+            isLoading: false,
+          };
+        },
+      },
       send: { useMutation: () => api.send },
       openInCompose: { useMutation: () => api.openInCompose },
       dismiss: { useMutation: () => api.dismiss },
@@ -52,6 +67,8 @@ const waiting: Draft = {
 beforeEach(() => {
   vi.clearAllMocks();
   api.drafts = [waiting];
+  api.leadDrafts = [];
+  api.leadQueries = [];
   api.isLoading = false;
   api.send.mutateAsync.mockResolvedValue({ id: 'e1', status: 'SENT', skipped: [] });
   api.openInCompose.mutateAsync.mockResolvedValue({ emailDraftId: 'em/9' });
@@ -144,5 +161,26 @@ describe('ReplyDraftsPanel (MVP-012)', () => {
   it('has no axe violations', async () => {
     const { container } = renderPanel();
     expect((await axe.run(container)).violations).toEqual([]);
+  });
+});
+
+describe('ReplyDraftsPanel on a lead (MVP-012 PR B)', () => {
+  it('shows the lead’s drafts, read through listForLead, with the same actions', async () => {
+    api.drafts = [];
+    api.leadDrafts = [{ ...waiting, id: 'ld1', draftSubject: 'Re: Fence repair quote' }];
+    render(<ReplyDraftsPanel leadId="lead-1" enabled />);
+    expect(api.leadQueries).toEqual([{ leadId: 'lead-1', limit: 5 }]);
+    const item = screen.getByTestId('reply-draft-item');
+    expect(item).toHaveTextContent(WAITING_TITLE);
+    expect(item).toHaveTextContent('Re: Fence repair quote');
+    fireEvent.click(within(item).getByRole('button', { name: 'Send' }));
+    await waitFor(() => expect(api.send.mutateAsync).toHaveBeenCalledWith({ draftId: 'ld1' }));
+    await waitFor(() => expect(api.invalidateLead).toHaveBeenCalledWith({ leadId: 'lead-1' }));
+    expect(api.invalidate).not.toHaveBeenCalled();
+  });
+
+  it('does not read the lead’s drafts on a contact', () => {
+    render(<ReplyDraftsPanel contactId="c-1" enabled />);
+    expect(api.leadQueries).toEqual([]);
   });
 });

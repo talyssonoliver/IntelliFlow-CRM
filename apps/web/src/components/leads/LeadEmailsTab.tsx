@@ -3,13 +3,17 @@
 /**
  * The lead page's Emails tab (moved out of the page, unchanged except that mail received from the
  * lead is labelled "Received": the label comes from the mail's direction, not its status).
+ * MVP-012 PR B: a reply Aurora drafted to the lead waits at the top for Send, Edit or Dismiss.
  */
 import Link from 'next/link';
 import { Card, EmptyState } from '@intelliflow/ui';
 import { formatRelativeTime } from '@/lib/leads/lead-format';
 import { emailRowLabel, type LeadEmailRow } from '@/lib/leads/lead-emails';
+import { ReplyDraftsPanel } from '@/components/contacts/ReplyDraftsPanel';
 
 interface LeadEmailsTabProps {
+  /** The lead whose drafted replies are shown (MVP-012). */
+  leadId: string;
   emails: LeadEmailRow[];
   timezone: string;
   /** The lead's email address; Compose (header and empty state) is offered only when there is one. */
@@ -24,7 +28,13 @@ function badgeClass(email: LeadEmailRow): string {
   return email.status === 'opened' ? 'bg-green-50 text-green-700' : 'bg-slate-100 text-slate-600';
 }
 
-export function LeadEmailsTab({ emails, timezone, leadEmail, onOpenActivity }: LeadEmailsTabProps) {
+export function LeadEmailsTab({
+  leadId,
+  emails,
+  timezone,
+  leadEmail,
+  onOpenActivity,
+}: LeadEmailsTabProps) {
   const to = leadEmail?.trim();
   return (
     <Card className="p-6">
@@ -41,6 +51,9 @@ export function LeadEmailsTab({ emails, timezone, leadEmail, onOpenActivity }: L
             Compose
           </Link>
         )}
+      </div>
+      <div className="mb-4">
+        <ReplyDraftsPanel leadId={leadId} enabled />
       </div>
       <div className="space-y-3">
         {emails.length > 0 ? (

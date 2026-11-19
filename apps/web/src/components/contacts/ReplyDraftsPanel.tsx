@@ -6,6 +6,7 @@
  * and offers Send (from the user's connected mailbox, as Compose sends), Edit (opens it in
  * Compose as an ordinary email draft) and Dismiss. Nothing is sent without the Send click
  * (ADR-037): Aurora only ever writes drafts. Renders nothing when there is no draft to show.
+ * MVP-012 PR B: the same panel shows a lead's drafts on its Emails tab (`leadId` instead).
  */
 import { useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -21,10 +22,11 @@ const SETTLED: Record<string, string> = {
   EDITED: 'Opened in Compose. Find it in your email drafts.',
 };
 
-export interface ReplyDraftsPanelProps {
-  readonly contactId: string;
-  readonly enabled: boolean;
-}
+/** The drafts of one contact, or (MVP-012 PR B) of one lead. */
+export type ReplyDraftsPanelProps = (
+  | { readonly contactId: string; readonly leadId?: undefined }
+  | { readonly leadId: string; readonly contactId?: undefined }
+) & { readonly enabled: boolean };
 
 interface Draft {
   id: string;
@@ -142,10 +144,19 @@ function DraftItem({ draft, onChanged }: Readonly<{ draft: Draft; onChanged: () 
   );
 }
 
-export function ReplyDraftsPanel({ contactId, enabled }: Readonly<ReplyDraftsPanelProps>) {
+export function ReplyDraftsPanel({ contactId, leadId, enabled }: Readonly<ReplyDraftsPanelProps>) {
   const headingId = useId();
   const utils = trpc.useUtils();
-  const query = trpc.contact.listReplyDrafts.useQuery({ contactId, limit: 5 }, { enabled });
+  // Both hooks always run (rules of hooks); only the one for this panel's subject fetches.
+  const contactQuery = trpc.contact.listReplyDrafts.useQuery(
+    { contactId: contactId ?? '', limit: 5 },
+    { enabled: enabled && Boolean(contactId) }
+  );
+  const leadQuery = trpc.replyDraft.listForLead.useQuery(
+    { leadId: leadId ?? '', limit: 5 },
+    { enabled: enabled && Boolean(leadId) }
+  );
+  const query = leadId ? leadQuery : contactQuery;
   if (!enabled) return null;
 
   if (query.isLoading) {
@@ -161,7 +172,10 @@ export function ReplyDraftsPanel({ contactId, enabled }: Readonly<ReplyDraftsPan
   if (drafts.length === 0) return null;
 
   const refresh = () => {
-    utils.contact.listReplyDrafts.invalidate({ contactId }).catch(() => undefined);
+    const invalidating = leadId
+      ? utils.replyDraft.listForLead.invalidate({ leadId })
+      : utils.contact.listReplyDrafts.invalidate({ contactId });
+    invalidating.catch(() => undefined);
   };
 
   return (
