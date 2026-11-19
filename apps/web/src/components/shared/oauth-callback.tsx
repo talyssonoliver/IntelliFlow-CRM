@@ -157,14 +157,12 @@ function dropAbandonedSession(
     revokeSession(supabase, abandonedAccessToken).catch(logRevokeFailure);
     return;
   }
-  try {
-    // Fire and forget: revocation touches neither the SDK's storage nor its events, so its
-    // timing cannot affect any session signed in afterwards.
-    supabase.auth.admin.signOut(abandonedAccessToken, 'local').catch(logRevokeFailure);
-  } catch (error) {
-    // The local cleanup below still applies.
-    logRevokeFailure(error);
-  }
+  // Fire and forget: revocation touches neither the SDK's storage nor its events, so its
+  // timing cannot affect any session signed in afterwards. The call still runs synchronously;
+  // a synchronous throw becomes a rejection, so the local cleanup below always applies.
+  new Promise<unknown>((resolve) =>
+    resolve(supabase.auth.admin.signOut(abandonedAccessToken, 'local'))
+  ).catch(logRevokeFailure);
   clearSupabaseLocalStorage();
   const current = getStoredAccessToken();
   if (!current || current === abandonedAccessToken) {
@@ -186,15 +184,11 @@ function logRevokeFailure(error: unknown): void {
  * cannot disturb the session the app holds now. Fire and forget, like dropAbandonedSession.
  */
 function revokeSession(supabase: BrowserSupabase, accessToken: string): Promise<void> {
-  try {
-    return supabase.auth.admin
-      .signOut(accessToken, 'local')
-      .then(() => undefined, logRevokeFailure);
-  } catch (error) {
-    // Nothing else to clean: this session was never stored by this callback.
-    logRevokeFailure(error);
-    return Promise.resolve();
-  }
+  // A synchronous throw becomes a rejection: nothing else to clean, as this session was never
+  // stored by this callback.
+  return new Promise<unknown>((resolve) =>
+    resolve(supabase.auth.admin.signOut(accessToken, 'local'))
+  ).then(() => undefined, logRevokeFailure);
 }
 
 /** True when the JWT carries an `exp` that has passed; an unreadable token is not "expired". */
