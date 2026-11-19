@@ -63,6 +63,27 @@ export const rateLimitConfig = {
 // ---------------------------------------------------------------------------
 
 /**
+ * A request as the limiter sees it: a Fetch `Request` (`headers` is a `Headers`) or a Node/Fastify
+ * request (`headers` is a plain object of lower-cased names; a repeated header is an array).
+ */
+export type RequestWithHeaders = {
+  headers?: { get?: (name: string) => string | null } | Record<string, unknown> | null;
+};
+
+/** One header as a string, from either header shape; undefined when absent. */
+export function readHeader(req: RequestWithHeaders, name: string): string | undefined {
+  const headers = req.headers;
+  if (!headers) return undefined;
+  const key = name.toLowerCase();
+  if (typeof (headers as { get?: unknown }).get === 'function') {
+    return (headers as { get: (n: string) => string | null }).get(key) ?? undefined;
+  }
+  const value = (headers as Record<string, unknown>)[key];
+  if (Array.isArray(value)) return typeof value[0] === 'string' ? value.join(', ') : undefined;
+  return typeof value === 'string' ? value : undefined;
+}
+
+/**
  * Client IP for anonymous callers, from headers the edge sets, never from one the client can
  * write.
  *
@@ -74,11 +95,11 @@ export const rateLimitConfig = {
  * Without a usable header the key is 'unknown', so those callers share one bucket (the safe
  * side: an unidentifiable caller is limited with the other unidentifiable callers).
  */
-export function getRateLimitClientId(req: Request | undefined): string {
+export function getRateLimitClientId(req: RequestWithHeaders | undefined): string {
   if (!req) return 'unknown';
-  const realIp = req.headers.get('x-real-ip')?.trim();
+  const realIp = readHeader(req, 'x-real-ip')?.trim();
   if (realIp) return realIp;
-  const hops = (req.headers.get('x-forwarded-for') ?? '')
+  const hops = (readHeader(req, 'x-forwarded-for') ?? '')
     .split(',')
     .map((hop) => hop.trim())
     .filter(Boolean);

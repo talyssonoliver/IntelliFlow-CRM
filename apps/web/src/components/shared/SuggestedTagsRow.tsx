@@ -12,7 +12,7 @@
  * Accept → calls `trpc.<entity>.addTags`. Dismiss → local hide.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { trpc } from '@intelliflow/api-client';
 
 export interface SuggestedTagsRowProps {
@@ -42,24 +42,14 @@ export function SuggestedTagsRow({ entity, entityId, enabled }: Readonly<Suggest
   const suggestMutation = entity === 'contact' ? contactSuggest : accountSuggest;
   const acceptMutation = entity === 'contact' ? contactAddTags : accountAddTags;
 
-  // The mutation object is a NEW object every time its state changes (idle → pending → success),
-  // so listing it in the effect's dependencies made every response re-run the effect: on
-  // 19/11/2026 one contact page sent ~3,000 AI calls in two seconds, used up the user's
-  // 1,000/min budget and turned the page's other calls into 429s. Keep the latest function in a
-  // ref and fetch once per entity.
-  const suggestRef = useRef(suggestMutation.mutateAsync);
-  useEffect(() => {
-    suggestRef.current = suggestMutation.mutateAsync;
-  });
-
   useEffect(() => {
     if (!enabled) return;
     let cancelled = false;
     setLoading(true);
     const payload = entity === 'contact' ? { contactId: entityId } : { accountId: entityId };
-    suggestRef
+    suggestMutation
       // `mutateAsync` is typed differently across the two — cast narrowly.
-      .current(payload as never)
+      .mutateAsync(payload as never)
       .then((result: unknown) => {
         if (cancelled) return;
         const arr = Array.isArray(result) ? (result as Suggestion[]) : [];
@@ -74,7 +64,7 @@ export function SuggestedTagsRow({ entity, entityId, enabled }: Readonly<Suggest
     return () => {
       cancelled = true;
     };
-  }, [entity, entityId, enabled]);
+  }, [entity, entityId, enabled, suggestMutation]);
 
   const visible = suggestions.filter((s) => !dismissed.has(s.label) && !accepting.has(s.label));
 
