@@ -217,10 +217,15 @@ export const emailLogRouter = createTRPCRouter({
  * a lead's timeline is its activities, so a lead gets an EMAIL activity (the subject only) and
  * the email keeps the lead and the activity in its metadata.
  */
-async function linkParty(
+export async function linkParty(
   c: EmailRouterCtx,
-  email: StoredEmail,
-  party: { contactId: string | null; leadId: string | null }
+  email: Pick<StoredEmail, 'id' | 'subject' | 'sentAt' | 'createdAt' | 'userId'>,
+  party: { contactId: string | null; leadId: string | null },
+  /** Who the timeline says logged it (MVP-012: a reply drafted by Aurora and sent by the user). */
+  label: { source: string; userName: string } = {
+    source: 'log-to-contact',
+    userName: 'Logged from email',
+  }
 ): Promise<EmailLinkDto> {
   const tenantId = c.tenant.tenantId;
   return c.prismaWithTenant.$transaction(async (tx: any) => {
@@ -248,10 +253,10 @@ async function linkParty(
         timestamp: email.sentAt ?? email.createdAt,
         // The person whose email it is (an admin may log a member's email for them).
         userId: email.userId ?? c.tenant.userId,
-        userName: 'Logged from email',
+        userName: label.userName,
         leadId,
         tenantId,
-        metadata: { emailRecordId: email.id, source: 'log-to-contact', loggedBy: c.tenant.userId },
+        metadata: { emailRecordId: email.id, source: label.source, loggedBy: c.tenant.userId },
       },
       select: { id: true },
     });

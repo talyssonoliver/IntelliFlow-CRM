@@ -332,9 +332,9 @@ vi.mock('@/components/shared/entity-hover-card', () => ({
 vi.mock('@/components/shared/more-actions-button', () => ({
   MoreActionsButton: () => <button type="button">More Actions</button>,
 }));
-
-// PG-203 DSAR: the banner has its own tests and reads a router these mocks do not stub.
+// PG-203 DSAR / MVP-012: these panels have their own tests and read routers not stubbed here.
 vi.mock('@/components/privacy/RestrictionBanner', () => ({ RestrictionBanner: () => null }));
+vi.mock('@/components/contacts/ReplyDraftsPanel', () => ({ ReplyDraftsPanel: () => null })); // MVP-012
 
 vi.mock('@/components/home/PinButton', () => ({
   PinButton: () => <button type="button">Pin</button>,

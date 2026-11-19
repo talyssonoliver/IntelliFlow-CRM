@@ -2074,7 +2074,6 @@ function scoredLeadInsight<T>(
 }
 
 export default function Lead360Page() {
-  // Get lead ID from URL params
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -2779,6 +2778,7 @@ export default function Lead360Page() {
 
           {activeTab === 'emails' && (
             <LeadEmailsTab
+              leadId={leadId}
               emails={emails}
               timezone={timezone}
               leadEmail={lead?.email}

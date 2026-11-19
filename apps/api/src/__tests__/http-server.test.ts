@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AddressInfo } from 'node:net';
 import http, { type Server } from 'node:http';
+import { TRPCError } from '@trpc/server';
 import { createApiServer } from '../http-server';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 import { createPublicContext, prismaMock } from '../test/setup';
@@ -223,6 +224,74 @@ describe('HTTP API Server', () => {
     expect(directBody).toContain('world');
     expect(aliasResponse.status).toBe(200);
     expect(aliasBody).toContain('world');
+  });
+
+  // MVP-007 — a rate-limited call says when to come back, in the header and in the body
+  describe('429 Retry-After (MVP-007)', () => {
+    async function startRateLimitedServer(): Promise<string> {
+      const router = createTRPCRouter({
+        limited: publicProcedure.query(() => {
+          throw new TRPCError({
+            code: 'TOO_MANY_REQUESTS',
+            message: 'Rate limit exceeded.',
+            cause: { tier: 'authenticated', retryAfter: 17 },
+          });
+        }),
+        bare: publicProcedure.query(() => {
+          throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: 'Slow down.' });
+        }),
+        broken: publicProcedure.query(() => {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'boom' });
+        }),
+      });
+      const server = createApiServer({
+        router,
+        createContext: (opts) => createPublicContext({ req: opts?.req }),
+      });
+      await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', () => resolve()));
+      servers.push(server);
+      return `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
+    }
+
+    it('sends Retry-After and the same seconds in the error body', async () => {
+      const baseUrl = await startRateLimitedServer();
+      const response = await fetch(`${baseUrl}/api/trpc/limited`);
+      const body = await readJson<{ error: { data: { code: string; retryAfterSeconds: number } } }>(
+        response
+      );
+
+      expect(response.status).toBe(429);
+      expect(response.headers.get('retry-after')).toBe('17');
+      expect(body.error.data).toMatchObject({ code: 'TOO_MANY_REQUESTS', retryAfterSeconds: 17 });
+    });
+
+    it('sends no Retry-After when the rejection carries no wait, or for other errors', async () => {
+      const baseUrl = await startRateLimitedServer();
+      const bare = await fetch(`${baseUrl}/api/trpc/bare`);
+      const broken = await fetch(`${baseUrl}/api/trpc/broken`);
+
+      expect(bare.status).toBe(429);
+      expect(bare.headers.get('retry-after')).toBeNull();
+      expect((await readJson<{ error: { data: unknown } }>(bare)).error.data).toMatchObject({
+        retryAfterSeconds: null,
+      });
+      expect(broken.status).toBe(500);
+      expect(broken.headers.get('retry-after')).toBeNull();
+    });
+
+    it('lets the cross-origin web client read Retry-After', async () => {
+      const baseUrl = await startRateLimitedServer();
+      const preflight = await rawRequest(baseUrl, {
+        method: 'OPTIONS',
+        path: '/api/trpc/limited',
+        headers: {
+          Origin: 'http://localhost:3000',
+          'Access-Control-Request-Method': 'GET',
+        },
+      });
+
+      expect(preflight.headers['access-control-expose-headers']).toBe('Retry-After');
+    });
   });
 
   // Fix #19 — Security headers are present on all responses

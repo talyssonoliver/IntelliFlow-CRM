@@ -25,6 +25,13 @@ vi.mock('@intelliflow/ui', async (importOriginal) => ({
   ),
 }));
 
+// The drafted-replies panel has its own tests; here it only shows which lead it was given.
+vi.mock('@/components/contacts/ReplyDraftsPanel', () => ({
+  ReplyDraftsPanel: ({ leadId }: Readonly<{ leadId?: string }>) => (
+    <div data-testid="reply-drafts-for-lead">{leadId}</div>
+  ),
+}));
+
 import { LeadEmailsTab } from '../LeadEmailsTab';
 import type { LeadEmailRow } from '@/lib/leads/lead-emails';
 
@@ -41,6 +48,7 @@ const row = (overrides: Partial<LeadEmailRow> = {}): LeadEmailRow => ({
 const renderTab = (emails: LeadEmailRow[], onOpenActivity = vi.fn()) =>
   render(
     <LeadEmailsTab
+      leadId="lead-1"
       emails={emails}
       timezone="Europe/London"
       leadEmail="ada@example.invalid"
@@ -97,6 +105,7 @@ describe('LeadEmailsTab', () => {
   it('offers no Compose when the lead has no address', () => {
     render(
       <LeadEmailsTab
+        leadId="lead-1"
         emails={[]}
         timezone="Europe/London"
         leadEmail={null}
@@ -104,5 +113,14 @@ describe('LeadEmailsTab', () => {
       />
     );
     expect(screen.queryByRole('link', { name: /Compose/ })).not.toBeInTheDocument();
+  });
+
+  it('shows the replies Aurora drafted to this lead above its emails (MVP-012)', () => {
+    renderTab([row()]);
+    const panel = screen.getByTestId('reply-drafts-for-lead');
+    expect(panel).toHaveTextContent('lead-1');
+    // Above the list: a waiting reply is the first thing on the tab.
+    const first = screen.getAllByTestId(/reply-drafts-for-lead|email-row-label/)[0];
+    expect(first).toBe(panel);
   });
 });

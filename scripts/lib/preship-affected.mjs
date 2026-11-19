@@ -100,10 +100,28 @@ export function resolveAffected({
   } catch (err) {
     return FULL(`cannot read the workspace packages: ${err.message}`);
   }
-  const result = classify(changed, pkgs, []);
+  let result = classify(changed, pkgs, []);
+  let widenedToCi = null;
+  if (result.mode === 'full') {
+    // Owner ruling 2026-11-19: a root-config widening to every package is CI's job, not this
+    // PC's. Locally typecheck only the packages whose own files changed (plus dependents).
+    // A change to the shared tsconfig package or another path that reaches every package
+    // stays full, because typecheck needs it.
+    const inPackages = changed.filter((f) => pkgs.some((p) => f.startsWith(p.dir + '/')));
+    const narrowed = inPackages.length > 0 ? classify(inPackages, pkgs, []) : null;
+    if (narrowed && narrowed.mode !== 'full') {
+      widenedToCi = result.reason;
+      result = narrowed;
+    } else if (!narrowed && changed.every((f) => !pkgs.some((p) => f.startsWith(p.dir + '/')))) {
+      widenedToCi = result.reason;
+      result = { ...result, mode: 'none', packages: [] };
+    }
+  }
   return {
     mode: result.mode,
-    reason: result.reason,
+    reason: widenedToCi
+      ? `${result.reason} (widening left to CI: ${widenedToCi})`
+      : result.reason,
     packages: result.packages,
     testsOrDocsOnly: changed.every(isTestOrDoc),
     // Root scripts, root tests and the integration suite import the libraries
@@ -231,18 +249,16 @@ export function typecheckFilters(scope) {
 }
 
 /**
- * Turbo filters for library-build: the affected libraries, and the dependencies
- * of each affected app (`<app>^...`), which its typecheck and tests read from
- * dist/. `null` means the original repo-wide library build, which a change
- * outside every package (root scripts, root tests) also needs: their tests
- * import any library.
+ * Turbo filters for library-build: the dependency closure of each affected package
+ * (`<pkg>^...`), which is the dist/ its typecheck and related tests read. The affected
+ * packages themselves are built by typecheck's own `^build` only when a dependent needs
+ * them (owner ruling 2026-11-19: no tsup beyond what typecheck needs). `null` means the
+ * repo-wide library build: CI or PRESHIP_FULL_BUILD=1 only.
  */
 export function libraryBuildFilters(scope) {
-  if (scope.mode === 'full' || scope.outsidePackages) return null;
+  if (scope.mode === 'full') return null;
   if (scope.mode === 'none') return [];
-  return [...scope.packages]
-    .sort(byText)
-    .map((p) => (APP_PACKAGES.includes(p) ? `--filter=${p}^...` : `--filter=${p}`));
+  return [...scope.packages].sort(byText).map((p) => `--filter=${p}^...`);
 }
 
 /**

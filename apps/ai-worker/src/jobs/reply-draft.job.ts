@@ -1,7 +1,8 @@
 /**
  * IFC-312 — Reply-draft job handler.
  *
- * Consumes `AI_REPLY_DRAFT` queue. Re-checks `aiAutoReplyDrafting` toggle.
+ * Consumes `AI_REPLY_DRAFT` queue. Re-checks `aiAutoReplyDrafting` toggle. MVP-012: a draft answers a
+ * contact or a lead (exactly one), stored on that one.
  * Writes `ContactReplyDraft` with HARD-CODED `status: 'DRAFT'` (ADR-037 —
  * review-before-send). NEVER writes `status: 'SENT'` from this path.
  */
@@ -32,15 +33,20 @@ const ThreadEntrySchema = z.object({
   at: z.string(),
 });
 
-export const ReplyDraftJobDataSchema = z.object({
-  contactId: z.string().min(1),
-  tenantId: recordIdSchema,
-  emailThreadId: z.string().optional(),
-  emailThread: z.array(ThreadEntrySchema).min(1),
-  userInstructions: z.string().optional(),
-  createdBy: z.string().optional(),
-  _otelCarrier: z.record(z.string(), z.string()).optional(),
-});
+export const ReplyDraftJobDataSchema = z
+  .object({
+    contactId: z.string().min(1).optional(),
+    leadId: z.string().min(1).optional(),
+    tenantId: recordIdSchema,
+    emailThreadId: z.string().optional(),
+    emailThread: z.array(ThreadEntrySchema).min(1),
+    userInstructions: z.string().optional(),
+    createdBy: z.string().optional(),
+    _otelCarrier: z.record(z.string(), z.string()).optional(),
+  })
+  .refine((d) => Boolean(d.contactId) !== Boolean(d.leadId), {
+    message: 'A reply draft answers exactly one contact or lead',
+  });
 export type ReplyDraftJobData = z.infer<typeof ReplyDraftJobDataSchema>;
 
 /**
@@ -74,21 +80,28 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
   draftId?: string;
 }> {
   const data = ReplyDraftJobDataSchema.parse(job.data);
-  const { contactId, tenantId, emailThread, userInstructions, emailThreadId, createdBy } = data;
+  const { contactId, leadId, tenantId, emailThread, userInstructions, emailThreadId, createdBy } =
+    data;
+  // The person the draft answers: the contact, or (MVP-012) the lead the enquiry landed on.
+  const subjectId = (contactId ?? leadId) as string;
 
   try {
     const setting = await prisma.contactAutomationSetting.findUnique({ where: { tenantId } });
     if (!setting?.aiAutoReplyDrafting) {
-      logger.info({ contactId, tenantId }, 'reply-draft skipped — toggle disabled');
+      logger.info({ contactId, leadId, tenantId }, 'reply-draft skipped — toggle disabled');
       return { skipped: true };
     }
 
     // PG-203 Q22: the thread and the person's details are never sent to the model for an
     // erased or restricted contact.
-    const subject = { kind: 'contact' as const, id: contactId, tenantId };
+    const subject = {
+      kind: contactId ? ('contact' as const) : ('lead' as const),
+      id: subjectId,
+      tenantId,
+    };
     const email = await eligibleSubjectEmail(prisma as unknown as SubjectPrisma, subject);
     if (email === null) {
-      logger.info({ contactId, tenantId }, 'reply-draft skipped — data subject request');
+      logger.info({ contactId, leadId, tenantId }, 'reply-draft skipped — data subject request');
       return { skipped: true };
     }
     // The queued thread goes to the model as it is: no one it names may be restricted or
@@ -99,20 +112,23 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
     const participants = threadAddresses(emailThread).filter((a) => a !== own);
     for (const address of participants) {
       if (await queuedAddressBlocked(prisma as never, tenantId, address)) {
-        logger.info({ contactId, tenantId }, 'reply-draft skipped — data subject request');
+        logger.info({ contactId, leadId, tenantId }, 'reply-draft skipped — data subject request');
         return { skipped: true };
       }
     }
 
     const result = await draftContactReply({
-      contactId,
+      contactId: subjectId,
       tenantId,
       emailThread: emailThread as EmailThreadEntry[],
       ...(userInstructions ? { userInstructions } : {}),
     });
 
     if (!result.success) {
-      logger.warn({ contactId, tenantId, reason: result.reason }, 'reply-draft chain failed');
+      logger.warn(
+        { contactId, leadId, tenantId, reason: result.reason },
+        'reply-draft chain failed'
+      );
       return { skipped: true };
     }
 
@@ -131,7 +147,7 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
         }
         return (tx as unknown as typeof prisma).contactReplyDraft.create({
           data: {
-            contactId,
+            ...(contactId ? { contactId } : { leadId }),
             tenantId,
             ...(emailThreadId ? { emailThreadId } : {}),
             draftSubject: draft.draftSubject,
@@ -146,13 +162,13 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
       }
     );
     if (!outcome.written || outcome.value === null) {
-      logger.info({ contactId, tenantId }, 'reply-draft discarded — data subject request');
+      logger.info({ contactId, leadId, tenantId }, 'reply-draft discarded — data subject request');
       return { skipped: true };
     }
 
     return { draftId: outcome.value.id };
   } catch (err) {
-    logger.error({ err, contactId, tenantId }, 'reply-draft job failed');
+    logger.error({ err, contactId, leadId, tenantId }, 'reply-draft job failed');
     throw err;
   }
 }
