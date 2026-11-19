@@ -25,7 +25,7 @@ import {
   type SmtpEndpointRow,
   type SuppressionDto,
 } from '@intelliflow/validators';
-import { SYNC_READ_CHECKS } from './mail-sync-scopes';
+import { SYNC_READ_CHECKS, hasGoogleCalendar } from './mail-sync-scopes';
 
 /** A mailbox row; the SMTP columns come from SmtpEndpointRow and SmtpAccountRow (#1103). */
 export interface MailboxRowLike extends SmtpEndpointRow, SmtpAccountRow {
@@ -65,6 +65,18 @@ export function replySyncState(
   return row.kind === 'GMAIL' ? 'NEEDS_ADMIN_TRUST' : 'NEEDS_RECONNECT';
 }
 
+/**
+ * MVP-013: whether the connected Google account let Aurora use its calendar. A calendar belongs to a
+ * person, so only a user's own Google mailbox has one (null for the company mailbox and other kinds).
+ * GRANTED says the permission is there; it does not say a sync has run.
+ */
+export function calendarAccessState(
+  row: Pick<MailboxRowLike, 'kind' | 'scope' | 'grantedScopes'>
+): 'GRANTED' | 'NOT_GRANTED' | null {
+  if (row.kind !== 'GMAIL' || row.scope !== 'USER') return null;
+  return hasGoogleCalendar(row.grantedScopes ?? []) ? 'GRANTED' : 'NOT_GRANTED';
+}
+
 /** Whether the bounce reader can scan this mailbox. */
 export function canReadBounces(
   row: Pick<MailboxRowLike, 'kind' | 'imapHost' | 'imapPassword' | 'refreshToken'>
@@ -99,6 +111,7 @@ export function toMailboxDto(
     accountAddress: row.accountAddress,
     inboxSyncedAt: row.syncedAt ? row.syncedAt.toISOString() : null,
     replySync: replySyncState(row),
+    calendarAccess: calendarAccessState(row),
     updatedAt: row.updatedAt.toISOString(),
   };
 }

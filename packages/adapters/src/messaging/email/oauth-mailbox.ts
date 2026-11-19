@@ -6,7 +6,8 @@
  * GmailAdapter / OutlookAdapter only run health checks). Kept separate from
  * those adapters on purpose: it asks for explicit minimal scopes (send + identity, plus read
  * for Microsoft's bounce scan and inbox sync, and gmail.readonly for Gmail's inbox sync, MVP-011,
- * which a Workspace domain grants once its admin trusts Aurora; else send only), never the legacy
+ * which a Workspace domain grants once its admin trusts Aurora; else send only; and Gmail's
+ * calendar events, MVP-013), never the legacy
  * modify/labels/ReadWrite defaults, uses S256 PKCE, talks only to fixed provider hosts, sends the
  * one MIME message built by `buildMime`, revokes with the token in the body,
  * and reduces every failure to a MailboxTransportError code — provider error
@@ -28,10 +29,22 @@ export const GMAIL_SEND_ONLY_SCOPES = [
   'https://www.googleapis.com/auth/gmail.send',
 ] as const;
 
-/** MVP-011: send, and read for the inbox sync (Workspace admin-trusted apps need no assessment). */
+/**
+ * MVP-013: view and edit events on the user's Google calendars, so appointments sync both ways. It
+ * rides the same Google sign-in as mail; Google lets the user untick it, and the mailbox then works
+ * without a calendar (the settings card says so). Narrower than the full calendar scope: no
+ * calendar settings, sharing or deletion of calendars.
+ */
+export const GOOGLE_CALENDAR_EVENTS_SCOPE = 'https://www.googleapis.com/auth/calendar.events';
+
+/**
+ * MVP-011: send, and read for the inbox sync (Workspace admin-trusted apps need no assessment).
+ * MVP-013: and the calendar events scope.
+ */
 export const GMAIL_MAILBOX_SCOPES = [
   ...GMAIL_SEND_ONLY_SCOPES,
   'https://www.googleapis.com/auth/gmail.readonly',
+  GOOGLE_CALENDAR_EVENTS_SCOPE,
 ] as const;
 
 export const MICROSOFT_MAILBOX_SCOPES = [

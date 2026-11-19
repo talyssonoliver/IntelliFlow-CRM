@@ -20,6 +20,7 @@ import { SmtpHostingNotice } from './SmtpHostingNotice';
 import { SendFromHint, type HintProvider } from './SendFromHint';
 import { inboxSyncLine } from './inbox-sync-status';
 import { GoogleAdminTrust } from './GoogleAdminTrust';
+import { GoogleCalendarAccess } from './GoogleCalendarAccess';
 
 // Loaded on demand: most users connect with Google or Microsoft (C-FE5).
 const SmtpMailboxForm = dynamic(() => import('./SmtpMailboxForm').then((m) => m.SmtpMailboxForm), {
@@ -179,7 +180,6 @@ export function MailboxConnection({
           </>
         )}
       </div>
-
       {!connected && (
         <p className="text-sm text-muted-foreground">
           {scope === 'USER'
@@ -224,10 +224,19 @@ export function MailboxConnection({
           onRetry={providersAvailable.GMAIL ? () => void startOAuth('GMAIL') : undefined}
           pending={oauthStart.isPending}
         />
-      )}
-
+      )}{' '}
+      {/* The admin-trust card above already covers a domain that blocks reading: it blocks the calendar too. */}
+      {connected &&
+        !broken &&
+        mailbox?.calendarAccess === 'NOT_GRANTED' &&
+        mailbox.replySync !== 'NEEDS_ADMIN_TRUST' && (
+          <GoogleCalendarAccess
+            idPrefix={prefix}
+            onConnect={providersAvailable.GMAIL ? () => void startOAuth('GMAIL') : undefined}
+            pending={oauthStart.isPending}
+          />
+        )}
       {!connected && !editing && <SendFromHint scope={scope} onProvider={setPreferred} />}
-
       {(!connected || broken) && (
         <div className="flex flex-wrap items-start gap-2">
           {/* While setting up, the form's own first step is the only choice on screen. */}
@@ -262,7 +271,7 @@ export function MailboxConnection({
                 <GoogleAdminTrust
                   idPrefix={`${prefix}-blocked`}
                   clientId={googleClientId}
-                  lead="Google blocks reading mail for a Workspace account whose admin has not trusted Aurora yet."
+                  lead="Google blocks reading mail and using the calendar for a Workspace account whose admin has not trusted Aurora yet."
                   onSendOnly={() => void startOAuth('GMAIL', true)}
                   pending={oauthStart.isPending}
                 />
@@ -271,7 +280,6 @@ export function MailboxConnection({
           )}
         </div>
       )}
-
       {connected && (
         <div className="flex flex-wrap gap-2">
           <Button
@@ -299,7 +307,6 @@ export function MailboxConnection({
           </Button>
         </div>
       )}
-
       {result && (
         <p
           className={
@@ -314,7 +321,6 @@ export function MailboxConnection({
           {error}
         </p>
       )}
-
       {editing && <SmtpHostingNotice />}
       {editing && (
         <SmtpMailboxForm
@@ -333,7 +339,6 @@ export function MailboxConnection({
           }}
         />
       )}
-
       <ConfirmationDialog
         open={disconnectOpen}
         onOpenChange={setDisconnectOpen}
