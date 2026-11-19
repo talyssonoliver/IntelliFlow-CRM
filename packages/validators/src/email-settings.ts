@@ -153,6 +153,8 @@ export const sendUserEmailInputSchema = z
     attachments: z.array(emailAttachmentRefSchema).max(20).optional(),
     threadId: z.string().max(200).optional(),
     templateId: z.string().max(200).optional(),
+    /** MVP-012: the Compose draft being sent, so a reply drafted by Aurora can be linked. */
+    draftId: z.string().max(64).optional(),
     /**
      * IFC-315: MARKETING skips recipients who objected to direct marketing; SERVICE is sent to
      * them. Absent: refused (PURPOSE_REQUIRED) when any recipient objected.

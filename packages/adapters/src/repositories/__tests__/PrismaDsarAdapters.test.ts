@@ -698,8 +698,12 @@ describe('PrismaSubjectDataRepository', () => {
       OTHER_RECORDS: 0,
       EXCESS_ROWS: 0,
     });
+    // On their contacts, or on their leads (MVP-012: an enquiry's draft is the lead's, codex).
     expect(prisma.contactReplyDraft.count).toHaveBeenCalledWith({
-      where: { tenantId: 't1', contactId: { in: ['c1'] } },
+      where: {
+        tenantId: 't1',
+        OR: [{ contactId: { in: ['c1'] } }, { leadId: { in: ['l1'] } }],
+      },
     });
     expect(prisma.autoResponseDraft.count.mock.calls[0][0].where).toMatchObject({
       tenantId: 't1',
@@ -927,6 +931,23 @@ describe('PrismaSubjectDataRepository', () => {
     const preview = await repo.previewErasure('t1', 'ada@example.invalid');
     expect(preview.counts).toEqual({ leads: 2, contacts: 0, bookings: 1 });
     expect(preview.checklist).toMatchObject({ tickets: 2, emailRecords: 0 });
+  });
+
+  it('puts a lead’s reply drafts on the manual checklist (MVP-012, codex)', async () => {
+    const prisma = subjectPrisma();
+    // Only a lead: an enquiry Aurora drafted a reply to, never converted to a contact.
+    prisma.$queryRaw
+      .mockResolvedValueOnce([{ id: 'l1' }])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([]);
+    prisma.contactReplyDraft.count.mockResolvedValue(1);
+    const repo = new PrismaSubjectDataRepository(asClient(prisma));
+    const preview = await repo.previewErasure('t1', 'ada@example.invalid');
+    expect(preview.checklist).toMatchObject({ contactReplyDrafts: 1 });
+    expect(prisma.contactReplyDraft.count.mock.calls[0][0].where).toEqual({
+      tenantId: 't1',
+      OR: [{ contactId: { in: [] } }, { leadId: { in: ['l1'] } }],
+    });
   });
 
   it('puts deals and tasks on the manual checklist, not in the erasure (Q23)', async () => {

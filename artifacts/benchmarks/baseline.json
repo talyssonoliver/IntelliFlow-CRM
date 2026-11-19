@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-19T13:23:36.389Z",
+  "timestamp": "2026-11-19T14:27:06.863Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 83,
-    "total_endpoints": 619,
+    "total_endpoints": 620,
     "total_queries": 267,
-    "total_mutations": 352,
+    "total_mutations": 353,
     "routers": [
       {
         "name": "contact",
@@ -1387,6 +1387,12 @@
         "mutations": 1
       },
       {
+        "name": "replyDraft",
+        "endpoints": 3,
+        "queries": 0,
+        "mutations": 3
+      },
+      {
         "name": "emailMailbox",
         "endpoints": 3,
         "queries": 2,
@@ -1415,12 +1421,6 @@
         "endpoints": 2,
         "queries": 2,
         "mutations": 0
-      },
-      {
-        "name": "replyDraft",
-        "endpoints": 2,
-        "queries": 0,
-        "mutations": 2
       },
       {
         "name": "upload",
@@ -5117,6 +5117,11 @@
       }
     ],
     "replyDraft": [
+      {
+        "name": "replyDraft.listForLead",
+        "method": "POST",
+        "description": "List for lead"
+      },
       {
         "name": "replyDraft.openInCompose",
         "method": "POST",

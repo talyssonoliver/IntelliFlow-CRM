@@ -10,7 +10,9 @@
  * - openInCompose: the draft becomes an ordinary email draft of the user's (EDITED), which the
  *   existing Compose opens, edits and sends; the AI draft itself can then no longer be sent.
  * - dismiss: DISMISSED, never sent.
- * Kept apart from contact.router.ts, which may only shrink.
+ * A draft answers a contact or (MVP-012 PR B) a lead: the lead's Emails tab lists its drafts with
+ * `listForLead`, and every action applies to either. Kept apart from contact.router.ts, which may only
+ * shrink.
  */
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
@@ -20,6 +22,8 @@ import { createTRPCRouter, tenantProcedure, verifiedTenantProcedure } from '../.
 import { escapeHtml } from '../../security/html-escape';
 import { createTenantWhereClause, getTenantContext } from '../../security/tenant-context';
 import { emailRuntimeDeps, type EmailRouterCtx } from '../email/email-access';
+import { linkParty } from '../email/email-log.router';
+import { restrictionReader } from '../privacy/restriction-reader';
 import { emailSendErrorFromCause } from '../email/email-send-error';
 import { dispatchUserMail } from '../email/mailbox-sender';
 
@@ -28,13 +32,16 @@ const draftInput = z.object({ draftId: z.string().min(1).max(64) });
 /** What a reply draft can be: written by Aurora, then acted on once by the user. */
 export type ReplyDraftStatus = 'DRAFT' | 'SENDING' | 'SENT' | 'EDITED' | 'DISMISSED';
 
-interface DraftRow {
+export interface DraftRow {
   id: string;
   status: string;
-  contactId: string;
+  /** Exactly one is set (CHECK contact_reply_drafts_one_subject_check). */
+  contactId: string | null;
+  leadId: string | null;
   draftSubject: string;
   draftBody: string;
   contact: { email: string } | null;
+  lead: { email: string | null } | null;
 }
 
 /** Plain text as simple HTML: escaped, paragraphs on blank lines, line breaks kept. */
@@ -50,22 +57,37 @@ export function draftBodyHtml(text: string): string {
 const notFound = () => new TRPCError({ code: 'NOT_FOUND', message: 'Draft not found' });
 
 /**
- * The draft, only when its contact is one the caller may work on: the same access predicate the
- * contact pages use (own contacts for users, the team's for managers, all for admins). Outside
- * that scope it does not exist for the caller (NOT_FOUND, no existence leak).
+ * Whether the caller may work on this contact or lead: the same access predicate their pages use
+ * (own records for users, the team's for managers, all for admins).
  */
-async function loadDraft(c: EmailRouterCtx, draftId: string): Promise<DraftRow> {
+async function inScope(
+  c: EmailRouterCtx,
+  subject: { contactId: string | null; leadId: string | null }
+): Promise<boolean> {
+  const typed = getTenantContext(c as never);
+  const select = { id: true };
+  const found = subject.contactId
+    ? await c.prismaWithTenant.contact.findFirst({
+        where: createTenantWhereClause(typed.tenant, { id: subject.contactId }),
+        select,
+      })
+    : await c.prismaWithTenant.lead.findFirst({
+        where: createTenantWhereClause(typed.tenant, { id: subject.leadId }),
+        select,
+      });
+  return Boolean(found);
+}
+
+/**
+ * The draft, only when its contact or lead is one the caller may work on. Outside that scope it
+ * does not exist for the caller (NOT_FOUND, no existence leak).
+ */
+export async function loadDraft(c: EmailRouterCtx, draftId: string): Promise<DraftRow> {
   const draft: DraftRow | null = await c.prismaWithTenant.contactReplyDraft.findFirst({
     where: { id: draftId, tenantId: c.tenant.tenantId },
-    include: { contact: { select: { email: true } } },
+    include: { contact: { select: { email: true } }, lead: { select: { email: true } } },
   });
-  if (!draft) throw notFound();
-  const typed = getTenantContext(c as never);
-  const contact = await c.prismaWithTenant.contact.findFirst({
-    where: createTenantWhereClause(typed.tenant, { id: draft.contactId }),
-    select: { id: true },
-  });
-  if (!contact) throw notFound();
+  if (!draft || !(await inScope(c, draft))) throw notFound();
   return draft;
 }
 
@@ -126,18 +148,118 @@ async function notDelivered(c: EmailRouterCtx, attempt: string, error: unknown):
   return record === null;
 }
 
+/**
+ * Puts the sent reply on its contact's or lead's timeline, the way "Log to contact" does (a lead
+ * gets its EMAIL activity, a contact its contactId), so it shows on the lead's Emails tab (codex).
+ * The mail has gone: a failure here is logged, never thrown, so nothing makes it sendable again.
+ */
+export async function linkSentReply(
+  c: EmailRouterCtx,
+  draft: DraftRow,
+  emailId: string,
+  /** The subject actually sent: an edit in Compose may have changed it (codex). */
+  subject: string = draft.draftSubject
+): Promise<void> {
+  const now = new Date();
+  try {
+    // As "Log to contact" refuses it (codex): a person with an active processing restriction is
+    // not put on a timeline. The reply stays sent; only the link is left out.
+    const restriction = await restrictionReader(c as never).status(
+      c.tenant.tenantId,
+      recipientOf(draft)
+    );
+    if (restriction.restricted) return;
+    await linkParty(
+      c,
+      {
+        id: emailId,
+        subject,
+        sentAt: now,
+        createdAt: now,
+        userId: c.tenant.userId,
+      },
+      { contactId: draft.contactId, leadId: draft.leadId },
+      { source: 'ai-reply', userName: 'Reply drafted by Aurora' }
+    );
+  } catch (error) {
+    console.warn('[reply-draft] sent reply not linked to its timeline', {
+      draftId: draft.id,
+      emailId,
+      error: error instanceof Error ? error.message : 'unknown',
+    });
+  }
+}
+
 function recipientOf(draft: DraftRow): string {
-  const email = draft.contact?.email?.trim();
+  const email = (draft.contact?.email ?? draft.lead?.email)?.trim();
   if (!email) {
     throw new TRPCError({
       code: 'PRECONDITION_FAILED',
-      message: 'This contact has no email address to reply to.',
+      message: 'There is no email address to reply to.',
     });
   }
   return email;
 }
 
+const leadListInput = z.object({
+  leadId: z.string().min(1).max(64),
+  limit: z.number().int().min(1).max(50).default(5),
+});
+
+/** A lead's draft as its Emails tab lists it. */
+export interface LeadReplyDraftDto {
+  id: string;
+  leadId: string;
+  draftSubject: string;
+  draftBody: string;
+  tone: string | null;
+  status: ReplyDraftStatus;
+  confidence: number;
+  modelVersion: string;
+  createdAt: Date;
+}
+
 export const replyDraftRouter = createTRPCRouter({
+  /**
+   * MVP-012 PR B: the replies Aurora drafted to a lead, for its Emails tab. Dismissed ones are left
+   * out before the limit and waiting ones (DRAFT) sort first, so neither hides a waiting draft.
+   */
+  listForLead: tenantProcedure
+    .input(leadListInput)
+    .query(async ({ ctx, input }): Promise<{ drafts: LeadReplyDraftDto[] }> => {
+      const c = ctx as unknown as EmailRouterCtx;
+      if (!(await inScope(c, { contactId: null, leadId: input.leadId }))) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Lead not found' });
+      }
+      const rows: Array<Omit<LeadReplyDraftDto, 'leadId' | 'status'> & { status: string }> =
+        await c.prismaWithTenant.contactReplyDraft.findMany({
+          where: {
+            tenantId: c.tenant.tenantId,
+            leadId: input.leadId,
+            status: { not: 'DISMISSED' },
+          },
+          orderBy: [{ status: 'asc' }, { createdAt: 'desc' }], // DRAFT (waiting) sorts first
+          take: input.limit,
+          select: {
+            id: true,
+            draftSubject: true,
+            draftBody: true,
+            tone: true,
+            status: true,
+            confidence: true,
+            modelVersion: true,
+            createdAt: true,
+          },
+        });
+      return {
+        drafts: rows.map((d) => ({
+          ...d,
+          leadId: input.leadId,
+          status: d.status as ReplyDraftStatus,
+        })),
+      };
+    }),
+
   /** Sends the draft as written, from the user's connected mailbox (same path as Compose). */
   send: verifiedTenantProcedure
     .input(draftInput)
@@ -166,7 +288,6 @@ export const replyDraftRouter = createTRPCRouter({
               replyDraftId: draft.id,
               // This attempt's own id: only its record is evidence the mail may have gone (codex).
               replyDraftAttempt: attempt,
-              contactId: draft.contactId,
               source: 'ai-reply',
             },
           }
@@ -181,6 +302,7 @@ export const replyDraftRouter = createTRPCRouter({
       }
       const sent = result.status === 'SENT';
       await move(c.prismaWithTenant, c, draft.id, 'SENDING', sent ? 'SENT' : 'DRAFT');
+      if (sent) await linkSentReply(c, draft, result.id);
       return result;
     }),
 
@@ -212,7 +334,6 @@ export const replyDraftRouter = createTRPCRouter({
               isHtml: true,
               textBody: draft.draftBody,
               replyDraftId: draft.id,
-              contactId: draft.contactId,
             },
           },
           select: { id: true },

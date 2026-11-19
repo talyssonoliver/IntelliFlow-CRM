@@ -11,7 +11,7 @@ import { RemindersProvider } from '@/lib/cases/reminders-context';
 import { AUTH_TOKEN_CHANGED_EVENT, clearTokenCookie } from '@/lib/shared/session-cleanup';
 import { getValidAccessToken } from '@/lib/auth/access-token';
 import { getBaseUrl, getWsUrl } from '@/lib/api-endpoints';
-import { isAuthError, MUTATION_RETRY, shouldRetryQuery } from '@/lib/query-retry';
+import { isAuthError, MUTATION_RETRY, queryRetryDelay, shouldRetryQuery } from '@/lib/query-retry';
 import { noRealtimeLink } from '@/lib/no-realtime-link';
 import {
   ACTIVE_TENANT_HEADER,
@@ -171,6 +171,8 @@ export function Providers({ children }: Readonly<{ children: React.ReactNode }>)
             gcTime: 10 * 60 * 1000, // React Query v5 uses gcTime (v4 used cacheTime)
             // Don't retry on auth errors - they won't succeed without re-authentication
             retry: shouldRetryQuery,
+            // A 429 waits for the server's Retry-After instead of failing the page.
+            retryDelay: queryRetryDelay,
           },
           mutations: {
             // Never auto-retried (not idempotent) — see lib/query-retry.ts
