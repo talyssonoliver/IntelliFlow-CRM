@@ -70,7 +70,9 @@ export function activityRowDirection(row: { title: string; metadata: unknown }):
  * Direction of an email_records row, or undefined when it is not a mail that left or arrived.
  * Synced mail stores its direction. Without one, the inbound email webhook stores received mail
  * as DELIVERED with no sender user, while mail sent from the CRM always has the sending user, so
- * a DELIVERED row without a user is inbound and any other sent status is outbound.
+ * a DELIVERED row without a user is inbound and any other sent status is outbound. An outbound
+ * mail only counts once it left (SENT, DELIVERED, OPENED, CLICKED): a stored outbound direction
+ * on a FAILED, BOUNCED or still PENDING record is not a reply.
  */
 export function recordDirection(row: {
   status: string;
@@ -78,9 +80,30 @@ export function recordDirection(row: {
   userId?: string | null;
 }): ActivityDirection | undefined {
   const stored = metadataDirection(row.metadata);
-  if (stored) return stored;
-  if (row.status === 'DELIVERED' && !row.userId) return 'inbound';
+  if (stored === 'inbound') return 'inbound';
+  if (!stored && row.status === 'DELIVERED' && !row.userId) return 'inbound';
   return (SENT_STATUSES as readonly string[]).includes(row.status) ? 'outbound' : undefined;
+}
+
+/** True when the record's stored direction is outbound but it never left (see recordDirection). */
+export function isUnsentOutbound(row: { status: string; metadata: unknown }): boolean {
+  return metadataDirection(row.metadata) === 'outbound' && recordDirection(row) === undefined;
+}
+
+/**
+ * Addresses a send bounced or was rejected for, as the bounce reader records them on the record
+ * (a partly bounced mail keeps its status, so the status alone does not say who it reached).
+ */
+export function bouncedAddresses(metadata: unknown): Set<string> {
+  const out = new Set<string>();
+  if (!metadata || typeof metadata !== 'object') return out;
+  const m = metadata as Record<string, unknown>;
+  for (const key of ['bouncedRecipients', 'hardBouncedRecipients', 'rejectedRecipients']) {
+    const list = m[key];
+    if (!Array.isArray(list)) continue;
+    for (const a of list) if (typeof a === 'string') splitAddresses(a).forEach((x) => out.add(x));
+  }
+  return out;
 }
 /** Lower-cased addresses in a comma, semicolon or space separated list. */
 export function splitAddresses(list: string | null | undefined): string[] {
@@ -112,22 +135,31 @@ function unansweredSince(
   return first ? { since: first.at, subject: first.subject, count: distinct } : null;
 }
 
-/** Who is waiting, oldest first. Pure: no clock, no database. */
+/**
+ * Who is waiting, oldest first. Pure: no clock, no database. A lead and a contact with the same
+ * email are one person, so their histories are merged before deciding: a reply logged against
+ * the contact answers a mail logged against the lead. The person is then listed as the lead(s),
+ * so every lead stays in the leads filter, or as the contact(s) when there is no lead.
+ */
 export function pickWaiting(people: WaitingPerson[], mail: MailEvent[]): WaitingItem[] {
   const byKey = new Map<string, MailEvent[]>();
   for (const e of mail) byKey.set(e.key, [...(byKey.get(e.key) ?? []), e]);
 
-  const items: WaitingItem[] = [];
+  const byEmail = new Map<string, WaitingPerson[]>();
   for (const p of people) {
-    const open = unansweredSince(byKey.get(personKey(p.kind, p.id)) ?? []);
-    if (open)
-      items.push({ ...p, since: open.since, subject: open.subject, unanswered: open.count });
+    const email = p.email.toLowerCase();
+    byEmail.set(email, [...(byEmail.get(email) ?? []), p]);
   }
-  // One person can be both a lead and a contact (same email): list them once, as the lead,
-  // so the card never counts one sender twice and every lead stays in the leads filter.
-  const leadEmails = new Set(
-    items.filter((i) => i.kind === 'lead').map((i) => i.email.toLowerCase())
-  );
-  const unique = items.filter((i) => i.kind === 'lead' || !leadEmails.has(i.email.toLowerCase()));
-  return unique.sort((a, b) => a.since.getTime() - b.since.getTime() || a.id.localeCompare(b.id));
+
+  const items: WaitingItem[] = [];
+  for (const group of byEmail.values()) {
+    const events = group.flatMap((p) => byKey.get(personKey(p.kind, p.id)) ?? []);
+    const open = unansweredSince(events);
+    if (!open) continue;
+    const leads = group.filter((p) => p.kind === 'lead');
+    for (const p of leads.length > 0 ? leads : group) {
+      items.push({ ...p, since: open.since, subject: open.subject, unanswered: open.count });
+    }
+  }
+  return items.sort((a, b) => a.since.getTime() - b.since.getTime() || a.id.localeCompare(b.id));
 }

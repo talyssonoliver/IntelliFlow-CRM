@@ -102,6 +102,171 @@ describe('one person, two records', () => {
   });
 });
 
+describe('replies that did not reach the person', () => {
+  const scope = { tenantId: 't1' };
+  const contactScope = { tenantId: 't1', id: { in: [] } };
+  // lead-a wrote in on day 10; the reply under test goes out on day 12.
+  const waitingLead = () => {
+    const t = tables();
+    t.leads = [leadRow('lead-a', 't1')];
+    t.contacts = [];
+    t.contactActivities = [];
+    t.leadActivities = [
+      {
+        leadId: 'lead-a',
+        tenantId: 't1',
+        type: 'EMAIL',
+        title: 'Question',
+        timestamp: day(10),
+        metadata: { direction: 'inbound' },
+      } as never,
+    ];
+    t.emails = [];
+    return t;
+  };
+  const sent = (over: Record<string, unknown>) =>
+    ({
+      id: 'rec-1',
+      tenantId: 't1',
+      subject: 'Answer',
+      status: 'SENT',
+      metadata: null,
+      userId: 'u1',
+      contactId: null,
+      fromEmail: 'me@example.invalid',
+      toEmail: 'lead-a@example.invalid',
+      ccEmails: null,
+      bccEmails: null,
+      sentAt: day(12),
+      createdAt: day(12),
+      ...over,
+    }) as never;
+  const ids = async (t: ReturnType<typeof waitingLead>) =>
+    (await loadWaiting(fakeDb(t), 't1', scope, contactScope)).map((i) => i.id);
+
+  it('a reply sent to them clears the wait (control)', async () => {
+    const t = waitingLead();
+    t.emails = [sent({})];
+    expect(await ids(t)).toEqual([]);
+  });
+
+  it('a bounce or rejection for their address is not a reply, even when the mail was sent', async () => {
+    const t = waitingLead();
+    t.emails = [
+      sent({
+        toEmail: 'lead-a@example.invalid, other@example.invalid',
+        metadata: { bouncedRecipients: ['Lead-A@example.invalid'] },
+      }),
+    ];
+    expect(await ids(t)).toEqual(['lead-a']);
+  });
+
+  it('a bounce for someone else on the same mail does not undo the reply', async () => {
+    const t = waitingLead();
+    t.emails = [
+      sent({
+        toEmail: 'lead-a@example.invalid, other@example.invalid',
+        metadata: { bouncedRecipients: ['other@example.invalid'] },
+      }),
+    ];
+    expect(await ids(t)).toEqual([]);
+  });
+
+  it('a stored outbound direction on a failed or bounced record is not a reply', async () => {
+    for (const status of ['FAILED', 'BOUNCED', 'PENDING']) {
+      const t = waitingLead();
+      t.emails = [sent({ status, metadata: { direction: 'outbound' } })];
+      expect(await ids(t)).toEqual(['lead-a']);
+    }
+  });
+
+  it('a stored outbound direction on a delivered record is a reply', async () => {
+    const t = waitingLead();
+    t.emails = [sent({ status: 'DELIVERED', metadata: { direction: 'outbound' } })];
+    expect(await ids(t)).toEqual([]);
+  });
+
+  it('an activity logging a mail that never left is not a reply either', async () => {
+    const t = waitingLead();
+    t.emails = [sent({ status: 'FAILED', metadata: { direction: 'outbound' } })];
+    t.leadActivities.push({
+      leadId: 'lead-a',
+      tenantId: 't1',
+      type: 'EMAIL',
+      title: 'Answer',
+      timestamp: day(12),
+      metadata: { direction: 'outbound', emailRecordId: 'rec-1' },
+    } as never);
+    expect(await ids(t)).toEqual(['lead-a']);
+  });
+
+  it('an activity logging a mail that bounced for their address is not a reply', async () => {
+    const t = waitingLead();
+    t.emails = [
+      sent({ metadata: { direction: 'outbound', bouncedRecipients: ['lead-a@example.invalid'] } }),
+    ];
+    t.leadActivities.push({
+      leadId: 'lead-a',
+      tenantId: 't1',
+      type: 'EMAIL',
+      title: 'Answer',
+      timestamp: day(12),
+      metadata: { direction: 'outbound', emailRecordId: 'rec-1' },
+    } as never);
+    expect(await ids(t)).toEqual(['lead-a']);
+  });
+
+  it('a reply that went to them in Bcc counts', async () => {
+    const t = waitingLead();
+    t.emails = [sent({ toEmail: 'team@example.invalid', bccEmails: 'Lead-A@example.invalid' })];
+    expect(await ids(t)).toEqual([]);
+  });
+
+  it('a Bcc address that bounced does not count', async () => {
+    const t = waitingLead();
+    t.emails = [
+      sent({
+        toEmail: 'team@example.invalid',
+        bccEmails: 'lead-a@example.invalid',
+        metadata: { bouncedRecipients: ['lead-a@example.invalid'] },
+      }),
+    ];
+    expect(await ids(t)).toEqual(['lead-a']);
+  });
+});
+
+describe('a lead and a contact with one email', () => {
+  it('a reply logged against the contact clears a mail logged against the lead', () => {
+    const twin: WaitingPerson = { ...omar, email: jane.email };
+    expect(
+      pickWaiting([jane, twin], [mail(jane, 'inbound', day(10)), mail(twin, 'outbound', day(11))])
+    ).toEqual([]);
+  });
+
+  it('a reply logged against the lead clears a mail logged against the contact', () => {
+    const twin: WaitingPerson = { ...omar, email: jane.email.toUpperCase() };
+    expect(
+      pickWaiting([jane, twin], [mail(twin, 'inbound', day(10)), mail(jane, 'outbound', day(11))])
+    ).toEqual([]);
+  });
+
+  it('lists the lead, not the contact, when the merged history is still unanswered', () => {
+    const twin: WaitingPerson = { ...omar, email: jane.email };
+    const items = pickWaiting(
+      [twin, jane],
+      [mail(twin, 'inbound', day(10)), mail(jane, 'inbound', day(12))]
+    );
+    expect(items.map((i) => i.kind + ':' + i.id)).toEqual(['lead:lead-1']);
+    expect(items[0]?.since).toEqual(day(10));
+    expect(items[0]?.unanswered).toBe(2);
+  });
+
+  it('lists the contact when there is no lead', () => {
+    const items = pickWaiting([omar], [mail(omar, 'inbound', day(10))]);
+    expect(items.map((i) => i.id)).toEqual(['contact-1']);
+  });
+});
+
 describe('direction helpers', () => {
   it('reads the stored direction, then the title, then falls back to outbound', () => {
     expect(activityRowDirection({ title: 'x', metadata: { direction: 'inbound' } })).toBe(
