@@ -4422,6 +4422,8 @@ model EmailRecord {
   @@index([sentAt])
   // IFC-069: Composite index for unified activity feed
   @@index([tenantId, createdAt(sort: Desc)])
+  // MVP-014: waiting reads of sent mail, newest first
+  @@index([tenantId, sentAt(sort: Desc)])
   @@index([tenantId, isRead])
   @@index([tenantId, messageIdHeader])
   @@index([mailboxId])
