@@ -25,6 +25,16 @@ export function hasGmailRead(scopes: readonly string[]): boolean {
   return names.has('gmail.readonly') || names.has('gmail.modify') || names.has('mail.google.com');
 }
 
+/**
+ * MVP-013: Google Calendar events. The connect asks for `calendar.events`; the wider `calendar` scope
+ * (never asked for) also lets events be written. Google reports full URIs, and a user can untick the
+ * calendar permission on the consent screen, so this is checked on what was granted.
+ */
+export function hasGoogleCalendar(scopes: readonly string[]): boolean {
+  const names = new Set(scopes.map((s) => s.toLowerCase().replace(/\/$/, '').split('/').pop()));
+  return names.has('calendar.events') || names.has('calendar');
+}
+
 /** The read-permission check per mailbox kind the sync reads. */
 export const SYNC_READ_CHECKS: Readonly<
   Partial<Record<string, (scopes: readonly string[]) => boolean>>
