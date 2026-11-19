@@ -22,6 +22,7 @@ import { createTRPCRouter, tenantProcedure, verifiedTenantProcedure } from '../.
 import { escapeHtml } from '../../security/html-escape';
 import { createTenantWhereClause, getTenantContext } from '../../security/tenant-context';
 import { emailRuntimeDeps, type EmailRouterCtx } from '../email/email-access';
+import { linkParty } from '../email/email-log.router';
 import { emailSendErrorFromCause } from '../email/email-send-error';
 import { dispatchUserMail } from '../email/mailbox-sender';
 
@@ -146,9 +147,33 @@ async function notDelivered(c: EmailRouterCtx, attempt: string, error: unknown):
   return record === null;
 }
 
-/** The record the sent email is linked to: the draft's contact, or its lead. */
-function subjectOf(draft: DraftRow): { contactId: string } | { leadId: string } {
-  return draft.contactId ? { contactId: draft.contactId } : { leadId: draft.leadId as string };
+/**
+ * Puts the sent reply on its contact's or lead's timeline, the way "Log to contact" does (a lead
+ * gets its EMAIL activity, a contact its contactId), so it shows on the lead's Emails tab (codex).
+ * The mail has gone: a failure here is logged, never thrown, so nothing makes it sendable again.
+ */
+async function linkSentReply(c: EmailRouterCtx, draft: DraftRow, emailId: string): Promise<void> {
+  const now = new Date();
+  try {
+    await linkParty(
+      c,
+      {
+        id: emailId,
+        subject: draft.draftSubject,
+        sentAt: now,
+        createdAt: now,
+        userId: c.tenant.userId,
+      },
+      { contactId: draft.contactId, leadId: draft.leadId },
+      { source: 'ai-reply', userName: 'Reply drafted by Aurora' }
+    );
+  } catch (error) {
+    console.warn('[reply-draft] sent reply not linked to its timeline', {
+      draftId: draft.id,
+      emailId,
+      error: error instanceof Error ? error.message : 'unknown',
+    });
+  }
 }
 
 function recipientOf(draft: DraftRow): string {
@@ -249,7 +274,6 @@ export const replyDraftRouter = createTRPCRouter({
               replyDraftId: draft.id,
               // This attempt's own id: only its record is evidence the mail may have gone (codex).
               replyDraftAttempt: attempt,
-              ...subjectOf(draft),
               source: 'ai-reply',
             },
           }
@@ -264,6 +288,7 @@ export const replyDraftRouter = createTRPCRouter({
       }
       const sent = result.status === 'SENT';
       await move(c.prismaWithTenant, c, draft.id, 'SENDING', sent ? 'SENT' : 'DRAFT');
+      if (sent) await linkSentReply(c, draft, result.id);
       return result;
     }),
 
@@ -295,7 +320,6 @@ export const replyDraftRouter = createTRPCRouter({
               isHtml: true,
               textBody: draft.draftBody,
               replyDraftId: draft.id,
-              ...subjectOf(draft),
             },
           },
           select: { id: true },
