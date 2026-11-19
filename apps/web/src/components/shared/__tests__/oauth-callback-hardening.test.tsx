@@ -338,6 +338,29 @@ describe('never hangs silently', () => {
       expect(onError).toHaveBeenCalledTimes(1);
     });
 
+    it('a revoke that throws synchronously is logged and the local cleanup still runs', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const failure = new Error('revoke blew up');
+      h.adminSignOut.mockImplementation(() => {
+        throw failure;
+      });
+      render(<OAuthCallback onSuccess={vi.fn()} onError={vi.fn()} flowTimeoutMs={15_000} />);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(15_000);
+      });
+      resetCleanupSpies();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(5_000);
+      });
+
+      expect(h.adminSignOut).toHaveBeenCalledWith(SESSION.access_token, 'local');
+      expect(warn).toHaveBeenCalledWith('[OAuthCallback] Session revoke failed:', failure);
+      expect(h.clearSupabaseLocalStorage).toHaveBeenCalled();
+      expect(h.clearSessionTokens).toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
     it('during the grant claim: no sign-in, the session is dropped, one error only', async () => {
       const onSuccess = vi.fn();
       const onError = vi.fn();

@@ -126,7 +126,7 @@ export function verify(appDir, distDir) {
       queue.push([n, pkgDir, name]);
     }
   }
-  return { checked: checked.sort(), problems };
+  return { checked: checked.sort((x, y) => Number(x > y) - Number(x < y)), problems };
 }
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);

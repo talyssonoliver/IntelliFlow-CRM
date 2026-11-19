@@ -254,7 +254,7 @@ export function buildArtifact({
     ? rows
         .map((r) => r[dateCol])
         .filter((d) => d && d !== '(unknown)')
-        .sort()
+        .sort((x, y) => Number(x > y) - Number(x < y))
     : [];
   const minDate = dates[0] || null;
   const maxDate = dates[dates.length - 1] || null;
