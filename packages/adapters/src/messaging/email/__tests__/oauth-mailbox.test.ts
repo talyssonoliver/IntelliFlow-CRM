@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   GMAIL_MAILBOX_SCOPES,
   GMAIL_SEND_ONLY_SCOPES,
+  GOOGLE_CALENDAR_EVENTS_SCOPE,
   MICROSOFT_MAILBOX_SCOPES,
   OAuthMailboxClient,
   createPkcePair,
@@ -65,16 +66,32 @@ describe.each([
 });
 
 describe('scopes', () => {
-  it('asks Google for send + read-only + identity, never modify (owner ruling 18/11, MVP-011)', () => {
+  it('asks Google for send + read-only + identity + calendar events, never modify (owner ruling 18/11, MVP-011, MVP-013)', () => {
     expect(GMAIL_MAILBOX_SCOPES).toEqual([
       'openid',
       'email',
       'https://www.googleapis.com/auth/gmail.send',
       'https://www.googleapis.com/auth/gmail.readonly',
+      'https://www.googleapis.com/auth/calendar.events',
     ]);
     expect(GMAIL_MAILBOX_SCOPES.join(' ')).not.toMatch(
       /gmail\.(modify|metadata|compose)|mail\.google/
     );
+    // Events only: not the full calendar scope (settings, sharing, deleting calendars).
+    expect(GMAIL_MAILBOX_SCOPES).not.toContain('https://www.googleapis.com/auth/calendar');
+    expect(GOOGLE_CALENDAR_EVENTS_SCOPE).toBe('https://www.googleapis.com/auth/calendar.events');
+  });
+  it('sends the calendar scope in the consent URL, but not when signing in for sending only', () => {
+    const consent = (sendOnly: boolean) =>
+      new URL(
+        new OAuthMailboxClient('GMAIL', config).authorizationUrl({
+          state: 's'.repeat(43),
+          codeChallenge: 'c'.repeat(43),
+          sendOnly,
+        })
+      ).searchParams.get('scope') ?? '';
+    expect(consent(false).split(' ')).toContain(GOOGLE_CALENDAR_EVENTS_SCOPE);
+    expect(consent(true).split(' ')).not.toContain(GOOGLE_CALENDAR_EVENTS_SCOPE);
   });
   it('asks Google for send + identity only when the sign-in is for sending only', () => {
     expect(GMAIL_SEND_ONLY_SCOPES).toEqual([
