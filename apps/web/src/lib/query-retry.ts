@@ -27,9 +27,56 @@ export function isAuthError(error: unknown): boolean {
   return message.includes('unauthorized') || message.includes('authentication required');
 }
 
+/** Rate-limited reads wait for the server's Retry-After, so they are given more attempts. */
+const MAX_RATE_LIMIT_RETRIES = 5;
+const MAX_RETRY_DELAY_MS = 30_000;
+
+type TrpcErrorShape = {
+  data?: { code?: string; httpStatus?: number; retryAfterSeconds?: number | null };
+  meta?: { response?: { status?: number; headers?: { get(name: string): string | null } } };
+};
+
+/** True for a 429 (the API's TOO_MANY_REQUESTS). */
+export function isRateLimitError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const err = error as TrpcErrorShape;
+  return (
+    err.data?.code === 'TOO_MANY_REQUESTS' ||
+    err.data?.httpStatus === 429 ||
+    err.meta?.response?.status === 429
+  );
+}
+
+/** Seconds the server asked us to wait: the error body first, then the Retry-After header. */
+function retryAfterSeconds(error: unknown): number | null {
+  const err = error as TrpcErrorShape;
+  const fromBody = err.data?.retryAfterSeconds;
+  if (typeof fromBody === 'number' && fromBody > 0) return fromBody;
+  const header = Number(err.meta?.response?.headers?.get('retry-after'));
+  return Number.isFinite(header) && header > 0 ? header : null;
+}
+
 export function shouldRetryQuery(failureCount: number, error: unknown): boolean {
   if (isAuthError(error)) return false;
+  if (isRateLimitError(error)) return failureCount < MAX_RATE_LIMIT_RETRIES;
   return failureCount < MAX_QUERY_RETRIES;
+}
+
+/**
+ * Wait before the next try. A 429 waits for the server's Retry-After (plus up to one second of
+ * jitter so the calls of one page do not all come back in the same instant); anything else keeps
+ * React Query's exponential default.
+ */
+export function queryRetryDelay(
+  failureCount: number,
+  error: unknown,
+  random: () => number = Math.random
+): number {
+  if (isRateLimitError(error)) {
+    const waitMs = (retryAfterSeconds(error) ?? 2 ** failureCount) * 1000;
+    return Math.min(MAX_RETRY_DELAY_MS, waitMs + Math.floor(random() * 1000));
+  }
+  return Math.min(1000 * 2 ** failureCount, MAX_RETRY_DELAY_MS);
 }
 
 /** Mutations are never retried automatically — see the module comment. */

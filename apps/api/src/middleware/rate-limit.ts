@@ -62,8 +62,54 @@ export const rateLimitConfig = {
 // Core helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Client IP for anonymous callers, from headers the edge sets, never from one the client can
+ * write.
+ *
+ * 1. `x-real-ip`: set by the Railway/Vercel edge to the connecting client.
+ * 2. `x-forwarded-for`: a client can PREPEND hops to it but cannot append, so the entry
+ *    `TRUSTED_PROXY_HOPS` from the right (default 1: the hop our own edge added) is the
+ *    address our edge saw. The leftmost entry is client-controlled and is not read.
+ *
+ * Without a usable header the key is 'unknown', so those callers share one bucket (the safe
+ * side: an unidentifiable caller is limited with the other unidentifiable callers).
+ */
+export function getRateLimitClientId(req: Request | undefined): string {
+  if (!req) return 'unknown';
+  const realIp = req.headers.get('x-real-ip')?.trim();
+  if (realIp) return realIp;
+  const hops = (req.headers.get('x-forwarded-for') ?? '')
+    .split(',')
+    .map((hop) => hop.trim())
+    .filter(Boolean);
+  const trusted = Math.max(1, Number.parseInt(process.env.TRUSTED_PROXY_HOPS ?? '1', 10) || 1);
+  return hops[hops.length - trusted] || 'unknown';
+}
+
+/**
+ * Who a request is counted against. A signed-in call is counted per tenant AND user, whatever
+ * the network path: many users behind one proxy, or one user on several devices, never share
+ * or split a bucket by address. Only an anonymous call falls back to the client address.
+ */
+export function rateLimitSubject(ctx: Context): string {
+  if (ctx.user?.userId) return `user:${ctx.user.tenantId ?? '-'}:${ctx.user.userId}`;
+  return `ip:${getRateLimitClientId(ctx.req)}`;
+}
+
 function getKey(ctx: Context): string {
-  return ctx.user?.userId || 'anonymous';
+  return rateLimitSubject(ctx);
+}
+
+/** Seconds left in the fixed window that `Date.now()` falls in (at least 1). */
+function secondsToWindowEnd(windowMs: number): number {
+  return Math.max(1, Math.ceil((windowMs - (Date.now() % windowMs)) / 1000));
+}
+
+/** `retryAfter` (seconds) a rate-limit rejection carries in its cause, or null for any other error. */
+export function retryAfterFromCause(cause: unknown): number | null {
+  if (!cause || typeof cause !== 'object') return null;
+  const value = (cause as { retryAfter?: unknown }).retryAfter;
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
 }
 
 function getRetryAfterSeconds(windowStart: number, windowMs: number): number {
@@ -407,31 +453,9 @@ export function isDistributedRateLimitEnabled(): boolean {
   return !!url && /^rediss:\/\//i.test(url);
 }
 
-/**
- * Client identifier for anonymous rate-limit keys. Prefers x-real-ip (set by the
- * Vercel/Railway edge to the real client IP), then the LEFTMOST x-forwarded-for
- * hop, then 'unknown'.
- *
- * NOTE: this deliberately differs from public-feedback's extractClientIp, which
- * takes the RIGHTMOST (edge) hop to throttle suspicious traffic HARDER on that
- * one low-volume endpoint. For a GENERAL per-client limiter the rightmost hop is
- * the shared edge IP — keying on it would drop ALL anonymous traffic into one
- * bucket and throttle the whole public API at once. x-real-ip / leftmost give a
- * per-client bucket (spoofable — the inherent limitation of IP rate limiting).
- */
-function getRateLimitClientId(req: Request | undefined): string {
-  if (!req) return 'unknown';
-  const realIp = req.headers.get('x-real-ip');
-  if (realIp?.trim()) return realIp.trim();
-  const forwarded = req.headers.get('x-forwarded-for');
-  const first = forwarded?.split(',')[0]?.trim();
-  return first || 'unknown';
-}
-
-/** Per-tier rate-limit key: authenticated → userId; otherwise client IP. */
+/** Per-tier rate-limit key: signed-in → tenant + user; otherwise client IP (see rateLimitSubject). */
 function distributedKey(ctx: Context, tier: RateLimitTier): string {
-  const id = ctx.user?.userId || getRateLimitClientId(ctx.req);
-  return `${tier.name}:${id}`;
+  return `${tier.name}:${rateLimitSubject(ctx)}`;
 }
 
 export interface DistributedRateLimitOptions {
@@ -471,10 +495,11 @@ export function createDistributedRateLimitMiddleware(
         tier.windowMs
       );
       if (!allowed) {
+        const retryAfter = secondsToWindowEnd(tier.windowMs);
         throw new TRPCError({
           code: 'TOO_MANY_REQUESTS',
-          message: `Rate limit exceeded. Try again in ${Math.ceil(tier.windowMs / 1000)} seconds.`,
-          cause: { tier: tier.name, limit: tier.limit, windowMs: tier.windowMs },
+          message: `Rate limit exceeded. Try again in ${retryAfter} seconds.`,
+          cause: { tier: tier.name, retryAfter, limit: tier.limit, windowMs: tier.windowMs },
         });
       }
       return next();
