@@ -204,6 +204,37 @@ describe('enquiry from an unknown sender (MVP-011)', () => {
     expect(report).toMatchObject({ stored: 0, leadsCreated: 0 });
   });
 
+  it('also keeps out pre-erasure mail of a sender who is a lead again', async () => {
+    const { prisma, deps } = enquirySetup();
+    prisma.lead.findFirst = vi.fn(async () => ({ id: 'lead-new' }));
+    prisma.dsarRequest.findFirst = vi.fn(async () => ({ id: 'dsar-1' }));
+
+    await runInboxSync(deps);
+
+    expect(prisma.emailRecord.create).not.toHaveBeenCalled();
+  });
+
+  it('creates no lead from the mailbox alias or another tenant mailbox on a free provider', async () => {
+    const { prisma, deps, createLead } = enquirySetup({
+      mailbox: { accountAddress: 'owner@gmail.com', fromAddress: 'alias@gmail.com' },
+      rounds: [
+        round({
+          messages: [
+            mail({ providerMessageId: 'a', fromAddress: 'alias@gmail.com' }),
+            mail({ providerMessageId: 'b', fromAddress: 'second@gmail.com' }),
+          ],
+        }),
+      ],
+    });
+    prisma.emailMailbox.findMany = vi.fn(async () => [
+      { accountAddress: 'second@gmail.com', fromAddress: 'second@gmail.com' },
+    ]);
+
+    await runInboxSync(deps);
+
+    expect(createLead).not.toHaveBeenCalled();
+  });
+
   it('fails the round, keeping the cursor, when the lead cannot be saved for now', async () => {
     const { prisma, deps, createLead } = enquirySetup();
     vi.spyOn(console, 'error').mockImplementation(() => undefined);

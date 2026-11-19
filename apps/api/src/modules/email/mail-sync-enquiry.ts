@@ -78,10 +78,12 @@ export function looksLikeEnquiry(
   return from !== own;
 }
 
-/** True when the sender's domain is one of the tenant's own mailbox domains (a free provider's never is). */
+/**
+ * True when the sender is one of the tenant's own mailbox addresses (exactly), or on one of its own
+ * mailbox domains (a free provider's domain is shared by strangers, so only exact addresses count).
+ */
 async function fromOwnDomain(deps: EnquiryDeps, mailbox: EnquiryMailbox, from: string) {
   const domain = domainOf(from);
-  if (isPersonalMailDomain(domain)) return false;
   const rows: Array<{ accountAddress: string | null; fromAddress: string | null }> =
     await deps.prisma.emailMailbox.findMany({
       where: { tenantId: mailbox.tenantId },
@@ -90,7 +92,10 @@ async function fromOwnDomain(deps: EnquiryDeps, mailbox: EnquiryMailbox, from: s
   const own = [mailbox.accountAddress, mailbox.fromAddress].concat(
     rows.flatMap((row) => [row.accountAddress, row.fromAddress])
   );
-  return own.some((address) => !!address && domainOf(address) === domain);
+  const addresses = own.filter((address): address is string => !!address);
+  if (addresses.some((address) => address.toLowerCase() === from)) return true;
+  if (isPersonalMailDomain(domain)) return false;
+  return addresses.some((address) => domainOf(address) === domain);
 }
 
 /** True when the sender is eligible and the tenant can take another enquiry this run. */
@@ -112,7 +117,7 @@ export async function isEnquirySender(
  * received: old mail of an erased person must not bring them back as a new lead, however it is
  * read (another mailbox connected later). Mail received after the erasure is a new enquiry.
  */
-async function erasedSince(
+export async function erasedSince(
   deps: EnquiryDeps,
   mailbox: EnquiryMailbox,
   email: string,

@@ -41,6 +41,7 @@ import { messageIdHeader, recordData } from './mail-sync-record';
 import {
   MAX_ENQUIRIES_PER_RUN,
   createEnquiryLead,
+  erasedSince,
   isEnquirySender,
   type CreateLead,
 } from './mail-sync-enquiry';
@@ -255,7 +256,14 @@ async function partyOf(
   folder: SyncFolder
 ): Promise<{ party: Party; enquiry: boolean } | null> {
   const known = await counterparty(deps, mailbox, message, folder);
-  if (known) return { party: known, enquiry: false };
+  if (known) {
+    // A lead made from a later mail must not let mail from before the sender's erasure back in.
+    const old = deps.createLead && folder === 'inbox' && message.fromAddress;
+    if (old && (await erasedSince(deps, mailbox, message.fromAddress!, message.receivedAt))) {
+      return null;
+    }
+    return { party: known, enquiry: false };
+  }
   if (!(await isEnquirySender(deps, mailbox, message, folder))) return null;
   const email = message.fromAddress!.toLowerCase();
   return { party: { email, contactId: null, leadId: null }, enquiry: true };
