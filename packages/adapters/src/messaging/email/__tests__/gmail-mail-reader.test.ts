@@ -20,6 +20,7 @@ interface FakeMessage {
   to?: string;
   subject?: string;
   messageId?: string;
+  extraHeaders?: Array<{ name: string; value: string }>;
   plain?: string;
   html?: string;
   /** A whole MIME tree instead of `plain`/`html`. */
@@ -32,6 +33,7 @@ function metadata(m: FakeMessage) {
     { name: 'To', value: m.to ?? 'owner@shop.example.invalid' },
     { name: 'Subject', value: m.subject ?? 'Booking enquiry' },
     ...(m.messageId ? [{ name: 'Message-ID', value: m.messageId }] : []),
+    ...(m.extraHeaders ?? []),
   ];
   return {
     id: m.id,
@@ -109,6 +111,29 @@ function opts(over: Partial<GmailReadOptions> = {}): GmailReadOptions {
 
 const added = (id: string, labels = ['INBOX']) => ({
   messagesAdded: [{ message: { id, labelIds: labels } }],
+});
+
+describe('readGmailLabel — bulk mail (MVP-011)', () => {
+  it('flags List-Unsubscribe and Precedence bulk mail, and only that', async () => {
+    const api = gmail({
+      list: [{ ids: ['m1', 'm2', 'm3'] }],
+      messages: [
+        {
+          id: 'm1',
+          at: '2026-11-10T09:00:00Z',
+          extraHeaders: [{ name: 'List-Unsubscribe', value: '<mailto:u@x.example.invalid>' }],
+        },
+        {
+          id: 'm2',
+          at: '2026-11-11T09:00:00Z',
+          extraHeaders: [{ name: 'Precedence', value: 'bulk' }],
+        },
+        { id: 'm3', at: '2026-11-12T09:00:00Z' },
+      ],
+    });
+    const round = await readGmailLabel(TOKEN, null, opts({ fetchImpl: api.fetchImpl }));
+    expect(round.messages.map((m) => m.bulk)).toEqual([true, true, undefined]);
+  });
 });
 
 describe('readGmailLabel — the first round', () => {
