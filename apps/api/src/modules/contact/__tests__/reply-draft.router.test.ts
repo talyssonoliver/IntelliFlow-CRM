@@ -73,7 +73,6 @@ describe('replyDraft.send (MVP-012)', () => {
       metadata: {
         replyDraftId: 'draft-1',
         replyDraftAttempt: expect.stringMatching(/^[0-9a-f-]{36}$/),
-        contactId: TEST_UUIDS.contact1,
         source: 'ai-reply',
       },
     });
@@ -132,6 +131,15 @@ describe('replyDraft.send (MVP-012)', () => {
 
     await expect(caller().send({ draftId: 'draft-1' })).rejects.toThrow('database unavailable');
     expect(moves().at(-1)).toEqual(['SENDING', 'DRAFT']);
+  });
+
+  it('puts the sent reply on the contact’s timeline once it has gone (codex)', async () => {
+    (prismaMock.emailRecord.findFirst as any).mockResolvedValue({ contactId: null, metadata: {} });
+    await caller().send({ draftId: 'draft-1' });
+    expect((prismaMock.emailRecord.update as any).mock.calls[0][0]).toMatchObject({
+      where: { id: 'email-1', tenantId: TEST_UUIDS.tenant },
+      data: { contactId: TEST_UUIDS.contact1 },
+    });
   });
 
   it('keeps the draft waiting when the send was recorded as failed', async () => {
