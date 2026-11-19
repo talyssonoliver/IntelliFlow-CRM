@@ -301,3 +301,20 @@ describe('Edit Contact page — clearing the last name (MVP-003, #28)', () => {
     expect(h.mutateAsync.mock.calls[0][0].lastName).toBe('Lima');
   });
 });
+
+describe('Edit Contact page — stable edit baseline (codex mutable-edit-baseline)', () => {
+  it('a refetch that adds a phone the user never touched does not send the phone', async () => {
+    const { rerender } = render(<EditContactPage />);
+    // Someone else adds a phone; the query refetches while this form is open.
+    h.record = { ...h.record, phone: '+440000000000', city: 'Ealing', accountId: 'acc-2' };
+    rerender(<EditContactPage />);
+    goToLastStep();
+    fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
+    await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledTimes(1));
+    const payload = h.mutateAsync.mock.calls[0][0];
+    // undefined means "unchanged" (dropped from the request); the refetched number must not be cleared.
+    expect(payload.phone).toBeUndefined();
+    expect(payload.city).toBeUndefined();
+    expect(payload).not.toHaveProperty('accountId');
+  });
+});

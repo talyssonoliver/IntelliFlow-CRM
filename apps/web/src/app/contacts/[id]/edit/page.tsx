@@ -52,6 +52,10 @@ export default function EditContactPage() {
 
   const [formData, setFormData] = useState<Partial<ContactFormData> | null>(null);
   const [seeded, setSeeded] = useState(false);
+  // The values the form opened with. Submitted values are compared against this snapshot, not
+  // the live query data: a refetch after someone else edits the contact must not turn a field
+  // this user never touched into a change (codex review, mutable-edit-baseline).
+  const [baseline, setBaseline] = useState<Partial<ContactFormData> | null>(null);
   const [toastData, setToastData] = useState<ToastData>({
     open: false,
     variant: 'default',
@@ -83,6 +87,7 @@ export default function EditContactPage() {
         notes: r.contactNotes ?? '',
       };
       setFormData(next);
+      setBaseline(next);
       setSeeded(true);
     }
   }, [record, seeded]);
@@ -137,16 +142,16 @@ export default function EditContactPage() {
       // MVP-003 (#28): the last name is optional, so a cleared one is sent as "" and saved
       // empty. Dropping it (undefined) would mean "unchanged" and keep the old value.
       lastName: data.lastName.trim(),
-      phone: edited(data.phone, record?.phone),
-      title: edited(data.jobTitle, record?.title),
-      department: edited(data.department, record?.department),
+      phone: edited(data.phone, baseline?.phone),
+      title: edited(data.jobTitle, baseline?.jobTitle),
+      department: edited(data.department, baseline?.department),
       status: data.status || undefined,
-      streetAddress: edited(data.streetAddress, record?.streetAddress),
-      city: edited(data.city, record?.city),
-      zipCode: edited(data.zipCode, record?.zipCode),
-      company: edited(data.company, record?.company),
-      linkedInUrl: edited(data.linkedIn, record?.linkedInUrl),
-      contactNotes: edited(data.notes, record?.contactNotes),
+      streetAddress: edited(data.streetAddress, baseline?.streetAddress),
+      city: edited(data.city, baseline?.city),
+      zipCode: edited(data.zipCode, baseline?.zipCode),
+      company: edited(data.company, baseline?.company),
+      linkedInUrl: edited(data.linkedIn, baseline?.linkedIn),
+      contactNotes: edited(data.notes, baseline?.notes),
       tags: data.tags.trim()
         ? data.tags
             .split(',')
@@ -158,10 +163,10 @@ export default function EditContactPage() {
     // PG-205: send the type only when it changed; "No type" on a typed contact clears it
     // (null). An untyped contact saved unchanged sends no key, so an API that predates
     // contact types still accepts the update during a web-before-API deploy.
-    const storedContactType = record?.contactType ?? '';
+    const storedContactType = baseline?.contactType ?? '';
     if (data.contactType !== storedContactType) payload.contactType = data.contactType || null;
     // PG-205 ruling 9: send the account only when it changed; '' unlinks it (null).
-    const storedAccountId = record?.accountId ?? '';
+    const storedAccountId = baseline?.accountId ?? '';
     if (data.accountId !== storedAccountId) payload.accountId = data.accountId || null;
 
     await mutation.mutateAsync(payload as never);
