@@ -141,25 +141,50 @@ function getRetryAfterSeconds(windowStart: number, windowMs: number): number {
 /** Most windows one in-memory limiter keeps; anonymous callers are keyed per address. */
 export const MAX_TRACKED_KEYS = 10_000;
 
+/** Key of the shared window new callers are counted in once the store is full of live windows. */
+export const OVERFLOW_KEY = 'overflow';
+
 /**
- * Keeps an in-memory limiter's store bounded. A key is only removed when the same caller comes
- * back after its window, so with one key per anonymous address the store grew with every address
- * ever seen. Call it when a NEW key is about to be added: once per window (and whenever the store
- * is full) it drops expired windows, and if the store is still full it drops the oldest keys.
+ * The windows of one in-memory limiter, kept bounded. A key used to be removed only when the same
+ * caller came back, so with one key per anonymous address the store grew with every address ever
+ * seen. Now, once per window (and whenever the store is full), expired windows are dropped. A
+ * window that has NOT expired is never dropped, so a caller who is limited stays limited. If the
+ * store is still full of live windows, a new caller is counted in one shared overflow window
+ * instead of getting a window of its own: a flood of new addresses is limited together, and
+ * nobody's existing count is lost.
  */
-export function createStoreSweeper(store: Map<string, WindowState>, windowMs: number) {
+export function createWindowStore(windowMs: number) {
+  const store = new Map<string, WindowState>();
   let lastSweep = Date.now();
-  return (now: number): void => {
-    if (now - lastSweep < windowMs && store.size < MAX_TRACKED_KEYS) return;
-    lastSweep = now;
-    for (const [key, state] of store) {
-      if (now - state.windowStart >= windowMs) store.delete(key);
-    }
-    // Maps iterate in insertion order, so the first keys are the oldest.
-    for (const key of store.keys()) {
-      if (store.size < MAX_TRACKED_KEYS) break;
+
+  const live = (key: string, now: number): WindowState | undefined => {
+    const state = store.get(key);
+    if (state && now - state.windowStart >= windowMs) {
       store.delete(key);
+      return undefined;
     }
+    return state;
+  };
+
+  return {
+    size: () => store.size,
+    windowFor(key: string, now: number): WindowState {
+      const existing = live(key, now);
+      if (existing) return existing;
+
+      if (now - lastSweep >= windowMs || store.size >= MAX_TRACKED_KEYS) {
+        lastSweep = now;
+        for (const [k, state] of store) {
+          if (now - state.windowStart >= windowMs) store.delete(k);
+        }
+      }
+      const slot = store.size >= MAX_TRACKED_KEYS ? OVERFLOW_KEY : key;
+      const shared = live(slot, now);
+      if (shared) return shared;
+      const fresh: WindowState = { count: 0, windowStart: now };
+      store.set(slot, fresh);
+      return fresh;
+    },
   };
 }
 
@@ -172,26 +197,10 @@ export function createStoreSweeper(store: Map<string, WindowState>, windowMs: nu
  * Each call creates an independent in-memory store (closure-scoped Map).
  */
 export function createRateLimitMiddleware(limit = 100, windowMs = 60000) {
-  const store = new Map<string, WindowState>();
-  const sweep = createStoreSweeper(store, windowMs);
+  const windows = createWindowStore(windowMs);
 
   return async ({ ctx, next }: MiddlewareOpts) => {
-    const key = getKey(ctx);
-    const now = Date.now();
-
-    let state = store.get(key);
-
-    // Reset window if expired
-    if (state && now - state.windowStart >= windowMs) {
-      state = undefined;
-      store.delete(key);
-    }
-
-    if (!state) {
-      sweep(now);
-      state = { count: 0, windowStart: now };
-      store.set(key, state);
-    }
+    const state = windows.windowFor(getKey(ctx), Date.now());
 
     // Check limit BEFORE incrementing: if count > 0 and count >= limit, reject
     if (state.count > 0 && state.count >= limit) {
@@ -225,25 +234,10 @@ export function createLenientRateLimitMiddleware() {
  * Tiered rate limiter with tier metadata in error cause.
  */
 export function createTieredRateLimitMiddleware(tier: RateLimitTier) {
-  const store = new Map<string, WindowState>();
-  const sweep = createStoreSweeper(store, tier.windowMs);
+  const windows = createWindowStore(tier.windowMs);
 
   return async ({ ctx, next }: MiddlewareOpts) => {
-    const key = getKey(ctx);
-    const now = Date.now();
-
-    let state = store.get(key);
-
-    if (state && now - state.windowStart >= tier.windowMs) {
-      state = undefined;
-      store.delete(key);
-    }
-
-    if (!state) {
-      sweep(now);
-      state = { count: 0, windowStart: now };
-      store.set(key, state);
-    }
+    const state = windows.windowFor(getKey(ctx), Date.now());
 
     if (state.count > 0 && state.count >= tier.limit) {
       const retryAfter = getRetryAfterSeconds(state.windowStart, tier.windowMs);

@@ -1,16 +1,16 @@
 /**
  * MVP-007: anonymous callers are keyed per address, so the in-memory limiters must not keep a
- * window for every address they have ever seen.
+ * window for every address they have ever seen, and must never forget a caller who is limited.
  */
 import { describe, it, expect, afterEach, beforeEach, vi } from 'vitest';
 import type { Context } from '../../context';
 import {
   MAX_TRACKED_KEYS,
+  OVERFLOW_KEY,
   RATE_LIMIT_TIERS,
   createRateLimitMiddleware,
-  createStoreSweeper,
   createTieredRateLimitMiddleware,
-  type WindowState,
+  createWindowStore,
 } from '../rate-limit.js';
 
 const WINDOW = 60_000;
@@ -33,53 +33,78 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe('createStoreSweeper', () => {
-  it('drops windows that have expired, once per window', () => {
-    const store = new Map<string, WindowState>();
-    const sweep = createStoreSweeper(store, WINDOW);
-    const start = Date.now();
-    store.set('old', { count: 1, windowStart: start });
+describe('createWindowStore', () => {
+  it('gives each key its own window and returns the same one while it is live', () => {
+    const windows = createWindowStore(WINDOW);
+    const a = windows.windowFor('a', Date.now());
+    a.count = 3;
+
+    expect(windows.windowFor('a', Date.now() + 1000)).toBe(a);
+    expect(windows.windowFor('b', Date.now()).count).toBe(0);
+    expect(windows.size()).toBe(2);
+  });
+
+  it('starts a fresh window for a key whose window has ended', () => {
+    const windows = createWindowStore(WINDOW);
+    windows.windowFor('a', Date.now()).count = 5;
     vi.advanceTimersByTime(WINDOW + 1);
-    store.set('fresh', { count: 1, windowStart: Date.now() });
 
-    sweep(Date.now());
-
-    expect([...store.keys()]).toEqual(['fresh']);
+    expect(windows.windowFor('a', Date.now()).count).toBe(0);
   });
 
-  it('does nothing inside a window while the store is not full', () => {
-    const store = new Map<string, WindowState>();
-    const sweep = createStoreSweeper(store, WINDOW);
-    store.set('a', { count: 1, windowStart: Date.now() - WINDOW - 5 });
+  it('drops the windows of callers who never came back, once per window', () => {
+    const windows = createWindowStore(WINDOW);
+    for (let i = 0; i < 50; i++) windows.windowFor(`ip:${i}`, Date.now());
+    expect(windows.size()).toBe(50);
 
-    sweep(Date.now() + 10);
+    vi.advanceTimersByTime(WINDOW + 1);
+    windows.windowFor('ip:new', Date.now());
 
-    expect(store.size).toBe(1);
+    expect(windows.size()).toBe(1);
   });
 
-  it('drops the oldest keys when the store is full of live windows', () => {
-    const store = new Map<string, WindowState>();
-    const sweep = createStoreSweeper(store, WINDOW);
-    for (let i = 0; i < MAX_TRACKED_KEYS + 5; i++) {
-      store.set(`ip:${i}`, { count: 1, windowStart: Date.now() });
-    }
+  it('never drops a live window, even when the store is full', () => {
+    const windows = createWindowStore(WINDOW);
+    const limited = windows.windowFor('ip:limited', Date.now());
+    limited.count = 99;
+    for (let i = 0; i < MAX_TRACKED_KEYS + 50; i++) windows.windowFor(`ip:${i}`, Date.now());
 
-    sweep(Date.now());
+    // The cap, plus the one shared overflow window.
+    expect(windows.size()).toBeLessThanOrEqual(MAX_TRACKED_KEYS + 1);
+    expect(windows.windowFor('ip:limited', Date.now())).toBe(limited);
+    expect(windows.windowFor('ip:limited', Date.now()).count).toBe(99);
+  });
 
-    expect(store.size).toBe(MAX_TRACKED_KEYS - 1);
-    expect(store.has('ip:0')).toBe(false);
-    expect(store.has(`ip:${MAX_TRACKED_KEYS + 4}`)).toBe(true);
+  it('counts new callers in one shared overflow window once the store is full of live ones', () => {
+    const windows = createWindowStore(WINDOW);
+    for (let i = 0; i < MAX_TRACKED_KEYS; i++) windows.windowFor(`ip:${i}`, Date.now());
+
+    const first = windows.windowFor('ip:late-1', Date.now());
+    const second = windows.windowFor('ip:late-2', Date.now());
+
+    expect(second).toBe(first);
+    expect(windows.size()).toBe(MAX_TRACKED_KEYS + 1);
+    expect(windows.windowFor(OVERFLOW_KEY, Date.now())).toBe(first);
+
+    // The overflow window ends like any other.
+    vi.advanceTimersByTime(WINDOW + 1);
+    expect(windows.windowFor('ip:late-1', Date.now()).count).toBe(0);
   });
 });
 
-describe('the in-memory limiters stay bounded', () => {
+describe('the in-memory limiters stay bounded without forgetting anyone', () => {
   it('keeps limiting an address while thousands of others come and go', async () => {
     const mw = createTieredRateLimitMiddleware(RATE_LIMIT_TIERS.AUTH);
     const next = vi.fn(async () => ({ ok: true }));
     const abuser = anonymous('9.9.9.9');
 
     for (let i = 0; i < RATE_LIMIT_TIERS.AUTH.limit; i++) await mw({ ctx: abuser, next });
-    for (let i = 0; i < 300; i++) await mw({ ctx: anonymous(`10.0.${i >> 8}.${i & 255}`), next });
+    for (let i = 0; i < MAX_TRACKED_KEYS + 200; i++) {
+      // Each of these is a new address; most are refused once the shared overflow window is used up.
+      await mw({ ctx: anonymous(`10.${i >> 16}.${(i >> 8) & 255}.${i & 255}`), next }).catch(
+        () => undefined
+      );
+    }
 
     await expect(mw({ ctx: abuser, next })).rejects.toMatchObject({ code: 'TOO_MANY_REQUESTS' });
   });
@@ -96,9 +121,6 @@ describe('the in-memory limiters stay bounded', () => {
     await expect(generic({ ctx, next })).rejects.toMatchObject({ code: 'TOO_MANY_REQUESTS' });
 
     vi.advanceTimersByTime(WINDOW + 1);
-    // A different new address makes the limiter sweep; the first one is let back in either way.
-    await tiered({ ctx: anonymous('7.7.7.8'), next });
-    await generic({ ctx: anonymous('7.7.7.8'), next });
     await expect(tiered({ ctx, next })).resolves.toBeDefined();
     await expect(generic({ ctx, next })).resolves.toBeDefined();
   });
