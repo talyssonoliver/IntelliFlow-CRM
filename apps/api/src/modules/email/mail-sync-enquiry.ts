@@ -26,7 +26,11 @@ export type CreateLead = (
     tenantId: string;
   },
   opts?: { note?: { content: string; author: string } }
-) => Promise<{ isFailure: boolean; value?: { id: { value: string } } }>;
+) => Promise<{
+  isFailure: boolean;
+  value?: { id: { value: string } };
+  error?: { code?: string };
+}>;
 
 export interface EnquiryDeps {
   prisma: any;
@@ -98,7 +102,33 @@ export async function isEnquirySender(
 ): Promise<boolean> {
   if (!deps.createLead || !mailbox.userId) return false;
   if (!looksLikeEnquiry(mailbox, message, folder)) return false;
-  return !(await fromOwnDomain(deps, mailbox, message.fromAddress!.trim().toLowerCase()));
+  const from = message.fromAddress!.trim().toLowerCase();
+  if (await fromOwnDomain(deps, mailbox, from)) return false;
+  return !(await erasedSince(deps, mailbox, from, message.receivedAt));
+}
+
+/**
+ * True when the address's data was erased (a completed erasure request) at or after the mail was
+ * received: old mail of an erased person must not bring them back as a new lead, however it is
+ * read (another mailbox connected later). Mail received after the erasure is a new enquiry.
+ */
+async function erasedSince(
+  deps: EnquiryDeps,
+  mailbox: EnquiryMailbox,
+  email: string,
+  receivedAt: Date
+): Promise<boolean> {
+  const erasure = await deps.prisma.dsarRequest.findFirst({
+    where: {
+      tenantId: mailbox.tenantId,
+      type: 'ERASURE',
+      status: 'COMPLETED',
+      subjectEmail: email,
+      completedAt: { gte: receivedAt },
+    },
+    select: { id: true },
+  });
+  return !!erasure;
 }
 
 function nameParts(fromName: string | null): { firstName?: string; lastName?: string } {
@@ -112,7 +142,11 @@ function nameParts(fromName: string | null): { firstName?: string; lastName?: st
   return { firstName: first.slice(0, 100), ...(last ? { lastName: last.slice(0, 100) } : {}) };
 }
 
-/** Creates the enquiry's lead; its id, or null when the lead use case refuses (the mail is skipped). */
+/**
+ * Creates the enquiry's lead; its id, or null when the lead use case refuses the mail as data (it
+ * is skipped). A failure that may pass (persistence, an outside service) throws: the round fails,
+ * keeps its cursor and the mail is tried again.
+ */
 export async function createEnquiryLead(
   deps: EnquiryDeps,
   mailbox: EnquiryMailbox,
@@ -136,5 +170,10 @@ export async function createEnquiryLead(
     where: { tenantId: mailbox.tenantId, email: { equals: email, mode: 'insensitive' } },
     select: { id: true },
   });
-  return existing?.id ?? null;
+  if (existing) return existing.id;
+  const code = result.error?.code;
+  if (code === 'PERSISTENCE_ERROR' || code === 'EXTERNAL_SERVICE_ERROR') {
+    throw new Error('Enquiry lead could not be saved');
+  }
+  return null;
 }

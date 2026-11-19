@@ -27,6 +27,7 @@ function enquirySetup(options: Parameters<typeof setup>[0] = {}) {
   prisma.emailMailbox.findMany = vi.fn(async () => [
     { accountAddress: 'me@shop.example.invalid', fromAddress: 'me@shop.example.invalid' },
   ]);
+  prisma.dsarRequest = { findFirst: vi.fn(async () => null) };
   prisma.lead.findFirst = vi.fn(async ({ where }: any) => {
     const id = known.get(String(where.email?.equals ?? where.email).toLowerCase());
     return id ? { id } : null;
@@ -181,6 +182,43 @@ describe('enquiry from an unknown sender (MVP-011)', () => {
 
     expect(prisma.emailRecord.create).not.toHaveBeenCalled();
     expect(report).toMatchObject({ stored: 0, skipped: 1, leadsCreated: 0 });
+  });
+
+  it('does not bring back a person erased since the mail was received', async () => {
+    const { prisma, deps, createLead } = enquirySetup();
+    prisma.dsarRequest.findFirst = vi.fn(async () => ({ id: 'dsar-1' }));
+
+    const report = await runInboxSync(deps);
+
+    expect(prisma.dsarRequest.findFirst).toHaveBeenCalledWith({
+      where: {
+        tenantId: TENANT,
+        type: 'ERASURE',
+        status: 'COMPLETED',
+        subjectEmail: 'ada@example.invalid',
+        completedAt: { gte: new Date('2026-11-14T09:00:00.000Z') },
+      },
+      select: { id: true },
+    });
+    expect(createLead).not.toHaveBeenCalled();
+    expect(report).toMatchObject({ stored: 0, leadsCreated: 0 });
+  });
+
+  it('fails the round, keeping the cursor, when the lead cannot be saved for now', async () => {
+    const { prisma, deps, createLead } = enquirySetup();
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    createLead.mockResolvedValueOnce({
+      isFailure: true,
+      error: { code: 'PERSISTENCE_ERROR' },
+    } as never);
+
+    const report = await runInboxSync(deps);
+
+    expect(report).toMatchObject({ failures: 1, stored: 0 });
+    expect(prisma.emailRecord.create).not.toHaveBeenCalled();
+    const released = prisma.emailMailbox.update.mock.calls.at(-1)[0].data;
+    expect(released).not.toHaveProperty('syncCursor');
+    expect(released.syncFailureCount).toBe(1);
   });
 
   it('skips the mail when the mailbox has no owner to assign the lead to', async () => {
