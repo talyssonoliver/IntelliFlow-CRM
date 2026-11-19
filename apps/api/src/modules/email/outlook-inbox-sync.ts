@@ -310,9 +310,6 @@ async function openEnquiry(
   enquiries?: Pick<InboxSyncReport, 'leadsCreated'>
 ): Promise<string | 'capped' | null> {
   if ((enquiries?.leadsCreated ?? 0) >= MAX_ENQUIRIES_PER_RUN) return 'capped';
-  // Again, now the body is read and just before the write: an erasure completed meanwhile wins.
-  const email = message.fromAddress!.trim().toLowerCase();
-  if (await erasedSince(deps, mailbox, email, message.receivedAt)) return null;
   const created = await createEnquiryLead(deps, mailbox, message);
   if (created && enquiries) enquiries.leadsCreated += 1;
   return created;
@@ -544,7 +541,7 @@ export async function createInboxSyncDeps(): Promise<InboxSyncDeps> {
       (await restrictions.status(tenantId, email)).restricted,
     now: () => new Date(),
     // MVP-011: unknown senders become leads through the lead use case.
-    createLead: ((props, opts) =>
-      (container as any).leadService.createLead(props, opts)) as CreateLead,
+    createLead: ((props, tx) =>
+      (container as any).leadService.createLeadInTransaction(props, tx)) as CreateLead,
   };
 }

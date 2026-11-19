@@ -28,6 +28,7 @@ function enquirySetup(options: Parameters<typeof setup>[0] = {}) {
     { accountAddress: 'me@shop.example.invalid', fromAddress: 'me@shop.example.invalid' },
   ]);
   prisma.dsarRequest = { findFirst: vi.fn(async () => null) };
+  prisma.leadNote = { create: vi.fn(async () => ({})) };
   prisma.lead.findFirst = vi.fn(async ({ where }: any) => {
     const id = known.get(String(where.email?.equals ?? where.email).toLowerCase());
     return id ? { id } : null;
@@ -66,8 +67,16 @@ describe('enquiry from an unknown sender (MVP-011)', () => {
         ownerId: 'user-1',
         tenantId: TENANT,
       },
-      { note: { content: 'Email enquiry: Boiler quote', author: 'System' } }
+      prisma
     );
+    expect(prisma.leadNote.create).toHaveBeenCalledWith({
+      data: {
+        leadId: 'lead-1',
+        tenantId: TENANT,
+        author: 'System',
+        content: 'Email enquiry: Boiler quote',
+      },
+    });
     const data = prisma.emailRecord.create.mock.calls[0][0].data;
     expect(data.metadata).toMatchObject({ direction: 'inbound', leadId: 'lead-1' });
     expect(data.status).toBe('DELIVERED');
@@ -160,13 +169,28 @@ describe('enquiry from an unknown sender (MVP-011)', () => {
     expect(report).toMatchObject({ stored: 2, leadsCreated: 1 });
   });
 
-  it('uses the lead another round created meanwhile when the use case refuses', async () => {
+  it('uses the lead another round created meanwhile, found under the address lock', async () => {
     const { prisma, deps, createLead } = enquirySetup();
-    createLead.mockResolvedValueOnce({ isFailure: true } as never);
     prisma.lead.findFirst = vi
       .fn()
       .mockResolvedValueOnce(null) // the sender match
-      .mockResolvedValueOnce({ id: 'lead-raced' }); // the re-read after the refusal
+      .mockResolvedValueOnce({ id: 'lead-raced' }); // inside the transaction
+
+    await runInboxSync(deps);
+
+    expect(createLead).not.toHaveBeenCalled();
+    const data = prisma.emailRecord.create.mock.calls[0][0].data;
+    expect(data.metadata.leadId).toBe('lead-raced');
+  });
+
+  it('uses the lead that won a unique-email race at the insert', async () => {
+    const { prisma, deps, createLead } = enquirySetup();
+    createLead.mockRejectedValueOnce(Object.assign(new Error('unique'), { code: 'P2002' }));
+    prisma.lead.findFirst = vi
+      .fn()
+      .mockResolvedValueOnce(null) // the sender match
+      .mockResolvedValueOnce(null) // inside the transaction
+      .mockResolvedValueOnce({ id: 'lead-raced' }); // after the rollback
 
     await runInboxSync(deps);
 
@@ -243,10 +267,7 @@ describe('enquiry from an unknown sender (MVP-011)', () => {
   it('fails the round, keeping the cursor, when the lead cannot be saved for now', async () => {
     const { prisma, deps, createLead } = enquirySetup();
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    createLead.mockResolvedValueOnce({
-      isFailure: true,
-      error: { code: 'PERSISTENCE_ERROR' },
-    } as never);
+    createLead.mockRejectedValueOnce(new Error('database unavailable'));
 
     const report = await runInboxSync(deps);
 
