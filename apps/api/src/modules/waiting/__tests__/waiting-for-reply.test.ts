@@ -256,6 +256,21 @@ describe('loadWaiting', () => {
   });
 });
 
+describe('names', () => {
+  it('falls back to the email when a lead has no name', async () => {
+    const t = tables();
+    t.leads = [{ ...leadRow('lead-a', 't1'), firstName: null, lastName: null } as never];
+    t.emails = [];
+    const items = await loadWaiting(
+      fakeDb(t),
+      't1',
+      { tenantId: 't1' },
+      { tenantId: 't1', id: { in: [] } }
+    );
+    expect(items[0]?.name).toBe('lead-a@example.invalid');
+  });
+});
+
 describe('narrowToWaiting (the leads-list filter)', () => {
   const ctx = (db: unknown) =>
     ({

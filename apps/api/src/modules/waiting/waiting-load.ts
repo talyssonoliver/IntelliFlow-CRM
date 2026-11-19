@@ -18,20 +18,21 @@ import {
 } from './waiting-for-reply';
 
 const PEOPLE_CAP = 20000;
+// Newest first, so a tenant past the cap loses its oldest history, never its latest replies.
 const MAIL_CAP = 50000;
 
 type Scope = Record<string, unknown> & { tenantId: string };
 
 interface PersonRow {
   id: string;
-  firstName: string;
-  lastName: string;
+  firstName: string | null;
+  lastName: string | null;
   email: string;
   company: string | null;
 }
 
 function toPerson(kind: WaitingKind, r: PersonRow): WaitingPerson {
-  const name = `${r.firstName} ${r.lastName}`.trim();
+  const name = [r.firstName, r.lastName].filter(Boolean).join(' ').trim();
   return { kind, id: r.id, name: name || r.email, email: r.email, company: r.company };
 }
 
@@ -56,8 +57,18 @@ async function loadActivityMail(db: PrismaClient, tenantId: string): Promise<Mai
   const select = { title: true, timestamp: true, metadata: true };
   const where = { tenantId, type: 'EMAIL' as const };
   const [leadRows, contactRows] = await Promise.all([
-    db.leadActivity.findMany({ where, select: { ...select, leadId: true }, take: MAIL_CAP }),
-    db.contactActivity.findMany({ where, select: { ...select, contactId: true }, take: MAIL_CAP }),
+    db.leadActivity.findMany({
+      where,
+      select: { ...select, leadId: true },
+      orderBy: { timestamp: 'desc' },
+      take: MAIL_CAP,
+    }),
+    db.contactActivity.findMany({
+      where,
+      select: { ...select, contactId: true },
+      orderBy: { timestamp: 'desc' },
+      take: MAIL_CAP,
+    }),
   ]);
   const toEvent = (key: string, r: { title: string; timestamp: Date; metadata: unknown }) => ({
     key,
@@ -90,6 +101,7 @@ async function loadRecordMail(
       sentAt: true,
       createdAt: true,
     },
+    orderBy: { createdAt: 'desc' },
     take: MAIL_CAP,
   });
 
