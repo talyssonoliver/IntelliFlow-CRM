@@ -39,9 +39,38 @@ const PERSONAL_DOMAINS: ReadonlyMap<string, MailProvider> = new Map([
   ['gmx.com', 'OTHER'],
 ]);
 
+/** More free or ISP mailbox domains that many unrelated people share (not used for the setup hint). */
+const OTHER_SHARED_DOMAINS: ReadonlySet<string> = new Set([
+  'gmx.net',
+  'gmx.de',
+  'gmx.co.uk',
+  'mail.com',
+  'ymail.com',
+  'yahoo.ie',
+  'yahoo.fr',
+  'yahoo.de',
+  'outlook.co.uk',
+  'outlook.ie',
+  'hotmail.fr',
+  'hotmail.de',
+  'live.ie',
+  'icloud.co.uk',
+  'btinternet.com',
+  'btopenworld.com',
+  'sky.com',
+  'talktalk.net',
+  'virginmedia.com',
+  'blueyonder.co.uk',
+  'ntlworld.com',
+  'tiscali.co.uk',
+  'yandex.com',
+  'pm.me',
+]);
+
 /** True for a free personal mailbox domain (gmail.com ...): many unrelated people share it. */
 export function isPersonalMailDomain(domain: string): boolean {
-  return PERSONAL_DOMAINS.has(domain.toLowerCase());
+  const lower = domain.toLowerCase();
+  return PERSONAL_DOMAINS.has(lower) || OTHER_SHARED_DOMAINS.has(lower);
 }
 
 const LOOKUP_TIMEOUT_MS = 3_000;
