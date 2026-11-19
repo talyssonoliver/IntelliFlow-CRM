@@ -173,6 +173,7 @@ model Tenant {
   emailSettings          TenantEmailSettings?     @ignore // PG-207
   emailSignatures        EmailSignature[]         @ignore // PG-207
   emailSuppressions      EmailSuppression[]       @ignore // PG-207
+  calendarEventLinks     CalendarEventLink[]      @ignore // MVP-013
   dealWinLossReasons     DealWinLossReason[]      @ignore
   dealScoringRules       DealScoringRule[]        @ignore
   dealDuplicateRules     DealDuplicateRule[]      @ignore
@@ -2216,6 +2217,8 @@ model Appointment {
   calendar            Calendar?           @relation(fields: [calendarId], references: [id], onDelete: SetNull)
   attendees           AppointmentAttendee[]
   linkedCases         AppointmentCase[]
+  /// MVP-013: the Google Calendar events that stand for this appointment (one per connected calendar).
+  calendarLinks       CalendarEventLink[]
 
   // PG-203 — event type + public booking (ADR-083). All nullable; NULL for in-app bookings without a type.
   /// FK ("tenantId","eventTypeId") -> event_types("tenantId","id") ON DELETE SET NULL ("eventTypeId") is SQL-only (see EventType).
@@ -4517,16 +4520,62 @@ model EmailMailbox {
   nextSyncAt       DateTime?
   syncLockedUntil  DateTime?
   syncFailureCount Int       @default(0)
+  /// MVP-013 Google Calendar sync of a user's own Google mailbox: Google's incremental sync token for
+  /// the primary calendar (not a credential), the last finished round, the next due time and the
+  /// lease the sync tick claims a mailbox with (null nextSync = due now), and the backoff counter.
+  calendarSyncToken    String?   @db.Text
+  calendarSyncedAt     DateTime?
+  calendarNextSyncAt   DateTime?
+  calendarLockedUntil  DateTime?
+  calendarFailureCount Int       @default(0)
+  /// ACTIVE | NEEDS_RECONNECT (SQL CHECK): Google withdrew the calendar permission after it was granted.
+  calendarStatus       String    @default("ACTIVE") @db.VarChar(16)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   emailRecords   EmailRecord[]
   bounceReceipts EmailBounceReceipt[]
+  calendarLinks  CalendarEventLink[]
 
   @@unique([tenantId, id])
   @@index([tenantId, scope])
   @@index([status, nextScanAt])
   @@map("email_mailboxes")
+}
+
+/// MVP-013: which Google Calendar event stands for which Aurora appointment, per connected mailbox.
+/// It is what makes the sync idempotent (an event or appointment already linked is updated, never
+/// created twice) and what tells an echo of our own write from a change. The composite FK
+/// ("tenantId","mailboxId") -> email_mailboxes("tenantId","id") ON DELETE CASCADE and the CHECKs on
+/// origin are SQL-only (see the migration); "appointmentId" is SET NULL when the appointment is
+/// deleted, so the sync can then delete the Google event too.
+model CalendarEventLink {
+  id                String       @id @default(cuid())
+  tenantId          String
+  tenant            Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  mailboxId         String
+  mailbox           EmailMailbox @relation(fields: [tenantId, mailboxId], references: [tenantId, id], onDelete: Cascade)
+  appointmentId     String?
+  appointment       Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  googleEventId     String       @db.VarChar(1024)
+  /// AURORA (created from an appointment) | GOOGLE (imported from an event) (SQL CHECK).
+  origin            String       @db.VarChar(10)
+  /// Google's etag of the event as last written or read by the sync: equal means nothing changed.
+  etag              String?      @db.VarChar(256)
+  /// The appointment's updatedAt as last synced: later means it changed in Aurora since.
+  localSyncedAt     DateTime?
+  /// Google's "updated" of the event as last applied.
+  remoteUpdatedAt   DateTime?
+  /// The event was cancelled or deleted in Google; kept so it is never created again.
+  remoteCancelledAt DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@unique([mailboxId, googleEventId])
+  @@unique([mailboxId, appointmentId])
+  @@index([tenantId])
+  @@index([appointmentId])
+  @@map("calendar_event_links")
 }
 
 /// Single-use OAuth connect state (PKCE). Only the sha256 of the state is

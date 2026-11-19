@@ -14,6 +14,7 @@ import {
   CalendarRateLimitError,
   CalendarEventNotFoundError,
   CalendarConflictError,
+  CalendarSyncTokenExpiredError,
 } from '@intelliflow/application';
 import { RetryHandler, RateLimiter } from '../shared/RetryHandler';
 import { IdempotencyManager, InMemoryIdempotencyStore } from '../shared/IdempotencyManager';
@@ -55,6 +56,7 @@ interface GoogleCalendarEvent {
   etag?: string;
   updated?: string;
   created?: string;
+  visibility?: string;
 }
 
 interface GoogleAttendee {
@@ -101,6 +103,28 @@ export interface GoogleCalendarConfig {
   oauthConfig: OAuthConfig;
   calendarId?: string; // Default: 'primary'
   apiBaseUrl?: string;
+}
+
+/**
+ * What the adapter needs of an appointment to write it to Google. The domain Appointment has all of
+ * it; MVP-013's sync builds it from a database row, with the guests left out (an invitation would
+ * email people on the user's behalf).
+ */
+export interface CalendarAppointmentLike {
+  readonly id: { readonly value: string };
+  readonly title: string;
+  readonly description?: string | null;
+  readonly location?: string | null;
+  readonly startTime: Date;
+  readonly endTime: Date;
+  readonly attendeeIds: ReadonlyArray<string>;
+  readonly isCancelled: boolean;
+}
+
+/** The window of a full sync, fixed across its pages (Google refuses a page request whose query changed). */
+export interface FullSyncWindow {
+  timeMin: Date;
+  timeMax?: Date;
 }
 
 /**
@@ -267,10 +291,16 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
 
   // ==================== Event CRUD Operations ====================
 
+  /**
+   * `options.eventId` (MVP-013): the id the new event is created with, which Google keeps unique in a
+   * calendar. A retry after a lost answer then finds the event it made already there (409) and
+   * returns it, instead of creating a second one.
+   */
   async createEvent(
     tokens: OAuthTokens,
-    appointment: Appointment,
-    idempotencyKey: string
+    appointment: CalendarAppointmentLike,
+    idempotencyKey: string,
+    options?: { eventId?: string }
   ): Promise<Result<ExternalCalendarEvent, DomainError>> {
     // Check for duplicate operation
     const duplicateCheck = await this.idempotencyManager.checkDuplicate(idempotencyKey);
@@ -293,6 +323,7 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
       }
 
       const googleEvent = this.appointmentToGoogleEvent(appointment);
+      if (options?.eventId) googleEvent.id = options.eventId;
 
       try {
         this.rateLimiter.recordRequest();
@@ -307,6 +338,13 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
             body: JSON.stringify(googleEvent),
           }
         );
+
+        if (response.status === 409 && options?.eventId) {
+          // That id exists already: an earlier attempt created this event and its answer was lost.
+          const existing = await this.getEvent(tokens, options.eventId);
+          if (existing.isFailure) return Result.fail(existing.error);
+          if (existing.value) return Result.ok(existing.value);
+        }
 
         if (!response.ok) {
           const error = await response.json().catch(() => ({}));
@@ -342,7 +380,7 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
   async updateEvent(
     tokens: OAuthTokens,
     externalEventId: string,
-    appointment: Appointment,
+    appointment: CalendarAppointmentLike,
     etag?: string
   ): Promise<Result<ExternalCalendarEvent, DomainError>> {
     return this.retryHandler.executeWithRetry(async () => {
@@ -384,6 +422,63 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
 
         const updatedEvent = (await response.json()) as GoogleCalendarEvent;
         return Result.ok(this.googleEventToExternal(updatedEvent));
+      } catch (error) {
+        return Result.fail(
+          new CalendarSyncError('google', error instanceof Error ? error.message : 'Unknown error')
+        );
+      }
+    });
+  }
+
+  /**
+   * MVP-013: changes only what the CRM owns of an event (title, notes, place, time, status) with a
+   * PATCH, so what Google keeps on its own side (guests, Meet link, reminders, colour) survives:
+   * the PUT of updateEvent replaces the whole event. A cleared note or place is sent as null, which
+   * is how Google removes a field.
+   */
+  async patchEvent(
+    tokens: OAuthTokens,
+    externalEventId: string,
+    appointment: CalendarAppointmentLike
+  ): Promise<Result<ExternalCalendarEvent, DomainError>> {
+    return this.retryHandler.executeWithRetry(async () => {
+      if (!this.rateLimiter.canMakeRequest()) {
+        const waitTime = this.rateLimiter.getTimeUntilAllowed();
+        return Result.fail(new CalendarRateLimitError('google', Math.ceil(waitTime / 1000)));
+      }
+
+      const event = this.appointmentToGoogleEvent(appointment);
+      const body = {
+        summary: event.summary,
+        description: appointment.description ?? null,
+        location: appointment.location ?? null,
+        start: event.start,
+        end: event.end,
+        status: event.status,
+      };
+
+      try {
+        this.rateLimiter.recordRequest();
+        const response = await fetch(
+          `${this.apiBaseUrl}/calendars/${encodeURIComponent(this.calendarId)}/events/${encodeURIComponent(externalEventId)}`,
+          {
+            method: 'PATCH',
+            headers: {
+              Authorization: `Bearer ${tokens.accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(body),
+          }
+        );
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          return this.handleApiError(response.status, error);
+        }
+
+        return Result.ok(
+          this.googleEventToExternal((await response.json()) as GoogleCalendarEvent)
+        );
       } catch (error) {
         return Result.fail(
           new CalendarSyncError('google', error instanceof Error ? error.message : 'Unknown error')
@@ -518,10 +613,15 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
 
   // ==================== Sync Operations ====================
 
+  /**
+   * `window` (MVP-013) is the full sync's time range, passed on every page of it: without one the
+   * start is "now" at each call, which Google rejects once a second page asks with another time.
+   */
   async fetchChanges(
     tokens: OAuthTokens,
     syncToken?: string,
-    pageToken?: string
+    pageToken?: string,
+    window?: FullSyncWindow
   ): Promise<
     Result<
       {
@@ -541,22 +641,7 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
 
       try {
         this.rateLimiter.recordRequest();
-        const params = new URLSearchParams({
-          showDeleted: 'true',
-          singleEvents: 'true',
-          maxResults: '250',
-        });
-
-        if (syncToken) {
-          params.set('syncToken', syncToken);
-        } else {
-          // Full sync - get events from now onwards
-          params.set('timeMin', new Date().toISOString());
-        }
-
-        if (pageToken) {
-          params.set('pageToken', pageToken);
-        }
+        const params = this.changesQuery(syncToken, pageToken, window);
 
         const response = await fetch(
           `${this.apiBaseUrl}/calendars/${encodeURIComponent(this.calendarId)}/events?${params}`,
@@ -570,9 +655,7 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
 
         if (response.status === 410) {
           // Sync token expired, need full sync
-          return Result.fail(
-            new CalendarSyncError('google', 'Sync token expired. Full sync required.')
-          );
+          return Result.fail(new CalendarSyncTokenExpiredError('google'));
         }
 
         if (!response.ok) {
@@ -605,6 +688,30 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
         );
       }
     });
+  }
+
+  /**
+   * The list query of a sync read. An incremental read (with a sync token) takes no time range;
+   * a full read starts at the window's start (default: now) and, with one, ends at its end.
+   */
+  private changesQuery(
+    syncToken: string | undefined,
+    pageToken: string | undefined,
+    window: FullSyncWindow | undefined
+  ): URLSearchParams {
+    const params = new URLSearchParams({
+      showDeleted: 'true',
+      singleEvents: 'true',
+      maxResults: '250',
+    });
+    if (syncToken) {
+      params.set('syncToken', syncToken);
+    } else {
+      params.set('timeMin', (window?.timeMin ?? new Date()).toISOString());
+      if (window?.timeMax) params.set('timeMax', window.timeMax.toISOString());
+    }
+    if (pageToken) params.set('pageToken', pageToken);
+    return params;
   }
 
   async fetchEventsInRange(
@@ -930,11 +1037,11 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
 
   // ==================== Private Helpers ====================
 
-  private appointmentToGoogleEvent(appointment: Appointment): GoogleCalendarEvent {
+  private appointmentToGoogleEvent(appointment: CalendarAppointmentLike): GoogleCalendarEvent {
     const event: GoogleCalendarEvent = {
       summary: appointment.title,
-      description: appointment.description,
-      location: appointment.location,
+      description: appointment.description ?? undefined,
+      location: appointment.location ?? undefined,
       start: {
         dateTime: appointment.startTime.toISOString(),
         timeZone: 'UTC',
@@ -996,7 +1103,14 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
       htmlLink: event.htmlLink,
       etag: event.etag,
       lastModified: event.updated ? new Date(event.updated) : new Date(),
+      visibility: this.mapGoogleVisibility(event.visibility),
     };
+  }
+
+  private mapGoogleVisibility(visibility?: string): ExternalCalendarEvent['visibility'] {
+    return visibility === 'public' || visibility === 'private' || visibility === 'confidential'
+      ? visibility
+      : 'default';
   }
 
   private mapGoogleStatus(status?: string): 'confirmed' | 'tentative' | 'cancelled' {
@@ -1014,13 +1128,21 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
     switch (status) {
       case 401:
         return Result.fail(new CalendarAuthenticationError('google', 'Token expired or invalid'));
-      case 403:
-        if (error.error?.errors?.[0]?.reason === 'rateLimitExceeded') {
+      case 403: {
+        const reason = error.error?.errors?.[0]?.reason;
+        if (reason === 'rateLimitExceeded') {
           return Result.fail(new CalendarRateLimitError('google', 60));
+        }
+        if (reason === 'insufficientPermissions') {
+          // The calendar permission was never granted or has been withdrawn: the user reconnects.
+          return Result.fail(
+            new CalendarAuthenticationError('google', 'Calendar permission not granted')
+          );
         }
         return Result.fail(
           new CalendarSyncError('google', error.error?.message ?? 'Access denied')
         );
+      }
       case 404:
         return Result.fail(
           new CalendarEventNotFoundError('google', error.error?.message ?? 'Event not found')

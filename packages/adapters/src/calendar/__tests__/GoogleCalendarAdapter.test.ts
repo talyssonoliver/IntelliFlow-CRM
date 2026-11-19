@@ -11,7 +11,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { GoogleCalendarAdapter, GoogleCalendarConfig } from '../google/client';
-import type { OAuthTokens } from '@intelliflow/application';
+import { CalendarSyncTokenExpiredError, type OAuthTokens } from '@intelliflow/application';
 
 // Mock global fetch
 const mockFetch = vi.fn();
@@ -751,6 +751,238 @@ describe('GoogleCalendarAdapter', () => {
     });
   });
 
+  describe('what the Google Calendar sync needs (MVP-013)', () => {
+    const calendarEvents = 'https://www.googleapis.com/calendar/v3/calendars/primary/events';
+    const eventJson = (over: Record<string, unknown> = {}) => ({
+      id: 'ev-1',
+      summary: 'Site visit',
+      status: 'confirmed',
+      start: { dateTime: '2025-01-15T10:00:00Z' },
+      end: { dateTime: '2025-01-15T11:00:00Z' },
+      etag: '"etag-1"',
+      updated: '2025-01-15T09:00:00Z',
+      ...over,
+    });
+    const body = () => JSON.parse(mockFetch.mock.calls[0][1].body as string);
+
+    describe('createEvent with an event id', () => {
+      it('creates the event under that id, and adds none without one', async () => {
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => eventJson() });
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => eventJson() });
+
+        await adapter.createEvent(mockTokens, createMockAppointment() as any, 'k1', {
+          eventId: 'abc123',
+        });
+        expect(body().id).toBe('abc123');
+
+        mockFetch.mockClear();
+        await adapter.createEvent(mockTokens, createMockAppointment() as any, 'k2');
+        expect(body()).not.toHaveProperty('id');
+      });
+
+      it('returns the event that is already there when Google answers 409', async () => {
+        mockFetch
+          .mockResolvedValueOnce({ ok: false, status: 409, json: async () => ({}) })
+          .mockResolvedValueOnce({ ok: true, json: async () => eventJson({ id: 'abc123' }) });
+
+        const result = await adapter.createEvent(mockTokens, createMockAppointment() as any, 'k3', {
+          eventId: 'abc123',
+        });
+
+        expect(result.isSuccess).toBe(true);
+        expect(result.value?.externalId).toBe('abc123');
+        expect(mockFetch.mock.calls[1][0]).toBe(`${calendarEvents}/abc123`);
+        expect(mockFetch.mock.calls[1][1].method).toBe('GET');
+      });
+
+      it('fails on a 409 when that event cannot be found, or cannot be read', async () => {
+        mockFetch
+          .mockResolvedValueOnce({ ok: false, status: 409, json: async () => ({}) })
+          .mockResolvedValueOnce({ ok: false, status: 404, json: async () => ({}) });
+        const gone = await adapter.createEvent(mockTokens, createMockAppointment() as any, 'k4', {
+          eventId: 'abc123',
+        });
+        expect(gone.isFailure).toBe(true);
+
+        mockFetch
+          .mockResolvedValueOnce({ ok: false, status: 409, json: async () => ({}) })
+          .mockResolvedValueOnce({ ok: false, status: 401, json: async () => ({}) });
+        const unreadable = await adapter.createEvent(
+          mockTokens,
+          createMockAppointment() as any,
+          'k5',
+          { eventId: 'abc123' }
+        );
+        expect(unreadable.error?.code).toBe('CALENDAR_AUTH_ERROR');
+      });
+    });
+
+    describe('patchEvent', () => {
+      it('changes only what the CRM owns of the event, with a PATCH', async () => {
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => eventJson() });
+        const appointment = createMockAppointment({ description: undefined, location: undefined });
+
+        const result = await adapter.patchEvent(mockTokens, 'ev-1', appointment as any);
+
+        expect(result.isSuccess).toBe(true);
+        expect(result.value?.etag).toBe('"etag-1"');
+        const [url, init] = mockFetch.mock.calls[0];
+        expect(url).toBe(`${calendarEvents}/ev-1`);
+        expect(init.method).toBe('PATCH');
+        expect(init.headers.Authorization).toBe(['Bearer', mockTokens.accessToken].join(' '));
+        // A removed note and place are sent as null, which is how Google clears them; no guests.
+        expect(JSON.parse(init.body)).toEqual({
+          summary: 'Test Meeting',
+          description: null,
+          location: null,
+          start: { dateTime: '2025-01-15T10:00:00.000Z', timeZone: 'UTC' },
+          end: { dateTime: '2025-01-15T11:00:00.000Z', timeZone: 'UTC' },
+          status: 'confirmed',
+        });
+      });
+
+      it('sends a cancelled appointment as a cancelled event', async () => {
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => eventJson() });
+        const appointment = { ...createMockAppointment(), isCancelled: true };
+
+        await adapter.patchEvent(mockTokens, 'ev-1', appointment as any);
+
+        expect(body().status).toBe('cancelled');
+      });
+
+      it('reports an event that is gone, and a permission that is not there', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          status: 404,
+          json: async () => ({ error: { message: 'Not Found' } }),
+        });
+        const gone = await adapter.patchEvent(mockTokens, 'ev-1', createMockAppointment() as any);
+        expect(gone.error?.code).toBe('CALENDAR_EVENT_NOT_FOUND');
+
+        mockFetch.mockResolvedValueOnce({ ok: false, status: 401, json: async () => ({}) });
+        const denied = await adapter.patchEvent(mockTokens, 'ev-1', createMockAppointment() as any);
+        expect(denied.error?.code).toBe('CALENDAR_AUTH_ERROR');
+      });
+
+      it('reports a network failure as a sync error', async () => {
+        mockFetch.mockRejectedValueOnce(new Error('socket hang up'));
+
+        const result = await adapter.patchEvent(mockTokens, 'ev-1', createMockAppointment() as any);
+
+        expect(result.error?.code).toBe('CALENDAR_SYNC_ERROR');
+      });
+    });
+
+    describe('a withdrawn calendar permission', () => {
+      it('is an authentication error (the user reconnects), not a plain refusal', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            error: {
+              message: 'Insufficient Permission',
+              errors: [{ reason: 'insufficientPermissions' }],
+            },
+          }),
+        });
+
+        const result = await adapter.getEvent(mockTokens, 'ev-1');
+
+        expect(result.error?.code).toBe('CALENDAR_AUTH_ERROR');
+      });
+
+      it('stays a sync error for any other 403', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: false,
+          status: 403,
+          json: async () => ({
+            error: {
+              message: 'Calendar API has not been used',
+              errors: [{ reason: 'accessNotConfigured' }],
+            },
+          }),
+        });
+
+        const result = await adapter.getEvent(mockTokens, 'ev-1');
+
+        expect(result.error?.code).toBe('CALENDAR_SYNC_ERROR');
+      });
+    });
+
+    describe('fetchChanges for a sync', () => {
+      it('says the sync token expired with a typed error that is still a sync error', async () => {
+        mockFetch.mockResolvedValueOnce({ ok: false, status: 410, json: async () => ({}) });
+
+        const result = await adapter.fetchChanges(mockTokens, 'old-token');
+
+        expect(result.error).toBeInstanceOf(CalendarSyncTokenExpiredError);
+        expect(result.error?.code).toBe('CALENDAR_SYNC_ERROR');
+      });
+
+      it('uses the window it is given on a full sync, and none with a sync token', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ items: [], nextSyncToken: 't' }),
+        });
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ items: [], nextSyncToken: 't' }),
+        });
+        const window = {
+          timeMin: new Date('2025-01-15T10:00:00Z'),
+          timeMax: new Date('2026-01-15T10:00:00Z'),
+        };
+
+        await adapter.fetchChanges(mockTokens, undefined, 'page-2', window);
+        const full = new URL(mockFetch.mock.calls[0][0]);
+        expect(full.searchParams.get('timeMin')).toBe('2025-01-15T10:00:00.000Z');
+        expect(full.searchParams.get('timeMax')).toBe('2026-01-15T10:00:00.000Z');
+        expect(full.searchParams.get('pageToken')).toBe('page-2');
+
+        mockFetch.mockClear();
+        await adapter.fetchChanges(mockTokens, 'token', undefined, window);
+        const incremental = new URL(mockFetch.mock.calls[0][0]);
+        expect(incremental.searchParams.get('syncToken')).toBe('token');
+        expect(incremental.searchParams.has('timeMin')).toBe(false);
+        expect(incremental.searchParams.has('timeMax')).toBe(false);
+      });
+
+      it('starts a full sync with no window from now, as before', async () => {
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => ({ items: [] }) });
+
+        await adapter.fetchChanges(mockTokens);
+
+        const url = new URL(mockFetch.mock.calls[0][0]);
+        expect(url.searchParams.get('timeMin')).toBe(new Date().toISOString());
+        expect(url.searchParams.has('timeMax')).toBe(false);
+      });
+
+      it('carries the event visibility, so private events can be left out', async () => {
+        mockFetch.mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            items: [
+              eventJson({ id: 'a', visibility: 'private' }),
+              eventJson({ id: 'b', visibility: 'confidential' }),
+              eventJson({ id: 'c', visibility: 'public' }),
+              eventJson({ id: 'd' }),
+              eventJson({ id: 'e', visibility: 'something-new' }),
+            ],
+          }),
+        });
+
+        const result = await adapter.fetchChanges(mockTokens, 'token');
+
+        expect(result.value?.events.map((e) => e.visibility)).toEqual([
+          'private',
+          'confidential',
+          'public',
+          'default',
+          'default',
+        ]);
+      });
+    });
+  });
   describe('Webhook Management', () => {
     const CHANNEL_TOKEN = ['channel', 'value', 'for', 'tests'].join('-');
     beforeEach(() => vi.stubEnv('GOOGLE_CALENDAR_CHANNEL_TOKEN', CHANNEL_TOKEN));
