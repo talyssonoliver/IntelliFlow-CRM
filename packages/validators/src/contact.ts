@@ -83,11 +83,19 @@ export type CreateContactInput = z.infer<typeof createContactSchema>;
 
 // Update Contact Schema - all fields optional except id
 // Email is omitted: use updateContactEmail service method for email changes
-export const updateContactSchema = baseContactFieldsSchema.omit({ email: true }).partial().extend({
-  id: idSchema,
-  accountId: idSchema.optional().nullable(), // Allow unsetting account
-  contactType: contactTypeKeySchema.nullable().optional(), // PG-205: null removes the type
-});
+export const updateContactSchema = baseContactFieldsSchema
+  .omit({ email: true })
+  .partial()
+  .extend({
+    id: idSchema,
+    // MVP-003 (#28): a field cleared in the edit form is saved empty, never ignored. Title and
+    // department may be "" (stored empty); a cleared phone is null (the number is removed).
+    title: z.union([z.literal(''), nameSchema]).optional(),
+    department: z.union([z.literal(''), nameSchema]).optional(),
+    phone: z.union([z.literal('').transform(() => null), z.null(), phoneSchema]).optional(),
+    accountId: idSchema.optional().nullable(), // Allow unsetting account
+    contactType: contactTypeKeySchema.nullable().optional(), // PG-205: null removes the type
+  });
 
 export type UpdateContactInput = z.infer<typeof updateContactSchema>;
 

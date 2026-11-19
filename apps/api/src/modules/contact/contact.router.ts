@@ -27,6 +27,7 @@ import {
   normalizePhone,
   toContactRequiredFieldPayload,
 } from './contact-automation';
+import { buildContactInfoUpdates, type UpdateContactData } from './contact-info-updates';
 import {
   assertContactTypeOnUpdate,
   assertTypeRequiredOnCreate,
@@ -103,54 +104,7 @@ const contactSearchSchema = z.object({
   includeAccount: z.boolean().default(false),
 });
 
-type UpdateContactData = Record<string, unknown> & {
-  phone?: string | { toValue?: () => string };
-  firstName?: string;
-  lastName?: string;
-  title?: string;
-  department?: string;
-  status?: string;
-  streetAddress?: string;
-  city?: string;
-  zipCode?: string;
-  company?: string;
-  linkedInUrl?: string;
-  /** null removes the contact's type (PG-205). */
-  contactType?: string | null;
-  tags?: string[];
-  contactNotes?: string;
-};
-
-const CONTACT_INFO_FIELDS = [
-  'firstName',
-  'lastName',
-  'title',
-  'department',
-  'status',
-  'streetAddress',
-  'city',
-  'zipCode',
-  'company',
-  'linkedInUrl',
-  'contactType',
-  'tags',
-  'contactNotes',
-] as const;
-
-/**
- * Build the info-update payload from a contact update input, extracting
- * all scalar fields and resolving the phone Value Object.
- */
-function buildContactInfoUpdates(data: UpdateContactData): Record<string, unknown> {
-  const updates: Record<string, unknown> = {};
-  for (const field of CONTACT_INFO_FIELDS) {
-    if (data[field] !== undefined) updates[field] = data[field];
-  }
-  if (data.phone !== undefined) {
-    updates.phone = typeof data.phone === 'string' ? data.phone : data.phone?.toValue?.();
-  }
-  return updates;
-}
+// The update fields and their payload builder live in ./contact-info-updates (MVP-003 #28).
 
 /**
  * Build the base WHERE clause for the contacts list query.
@@ -453,7 +407,7 @@ function buildHygienedContactData(
     ...(data.lastName !== undefined
       ? { lastName: capitalizeName(data.lastName, flags) ?? data.lastName }
       : {}),
-    ...(rawPhone !== undefined ? { phone: normalizePhone(rawPhone, flags) ?? undefined } : {}),
+    ...(rawPhone !== undefined ? { phone: normalizePhone(rawPhone, flags) } : {}), // null: cleared
   };
 }
 
