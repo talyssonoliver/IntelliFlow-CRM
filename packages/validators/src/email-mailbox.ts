@@ -120,6 +120,12 @@ export interface MailboxDto extends SmtpEndpointDto, SmtpAccountDto {
    * Aurora.
    */
   replySync?: 'ON' | 'NEEDS_RECONNECT' | 'NEEDS_ADMIN_TRUST' | null;
+  /**
+   * MVP-013: whether the connected Google account let Aurora use its calendar (GRANTED), or the user
+   * left that permission unticked or connected before it was asked for (NOT_GRANTED); null for a
+   * mailbox that has no calendar (company mailbox, other providers).
+   */
+  calendarAccess?: 'GRANTED' | 'NOT_GRANTED' | null;
   updatedAt: string;
 }
 
