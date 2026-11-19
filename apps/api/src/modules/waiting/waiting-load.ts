@@ -21,8 +21,9 @@ import {
 } from './waiting-for-reply';
 
 const PEOPLE_CAP = 20000;
-// Newest first, so a tenant past the cap loses its oldest history, never its latest replies.
-const MAIL_CAP = 50000;
+// Rows read per table, newest first. A table that fills the cap only covers history back to its oldest
+// row, so every source is cut to the shortest such window (see coverageFloor).
+export const MAIL_CAP = 50000;
 
 type Scope = Record<string, unknown> & { tenantId: string };
 
@@ -70,7 +71,7 @@ interface RecordRow {
   createdAt: Date;
 }
 
-async function loadRecords(db: PrismaClient, tenantId: string): Promise<RecordRow[]> {
+async function loadRecords(db: PrismaClient, tenantId: string, cap: number): Promise<RecordRow[]> {
   return (await db.emailRecord.findMany({
     where: { tenantId },
     select: {
@@ -88,10 +89,9 @@ async function loadRecords(db: PrismaClient, tenantId: string): Promise<RecordRo
       createdAt: true,
     },
     orderBy: { createdAt: 'desc' },
-    take: MAIL_CAP,
+    take: cap,
   })) as RecordRow[];
 }
-
 /** Who a record did not really reach: nobody when it left, everybody when it never did. */
 function unreached(r: RecordRow): { all: boolean; addresses: Set<string> } {
   return { all: isUnsentOutbound(r), addresses: bouncedAddresses(r.metadata) };
@@ -102,16 +102,22 @@ function emailsByKey(people: WaitingPerson[]): Map<string, string> {
   return new Map(people.map((p) => [personKey(p.kind, p.id), p.email.toLowerCase()]));
 }
 
-/**
- * Activity rows (lead and contact) as mail events. An outbound activity that logs a record which
- * never reached that person (not sent, or bounced for their address) is not a reply.
- */
-async function loadActivityMail(
+interface ActivityRow {
+  title: string;
+  timestamp: Date;
+  metadata: unknown;
+}
+
+interface ActivityRows {
+  leadRows: (ActivityRow & { leadId: string })[];
+  contactRows: (ActivityRow & { contactId: string })[];
+}
+
+async function loadActivityRows(
   db: PrismaClient,
   tenantId: string,
-  people: WaitingPerson[],
-  records: RecordRow[]
-): Promise<MailEvent[]> {
+  cap: number
+): Promise<ActivityRows> {
   const select = { title: true, timestamp: true, metadata: true };
   const where = { tenantId, type: 'EMAIL' as const };
   const [leadRows, contactRows] = await Promise.all([
@@ -119,35 +125,65 @@ async function loadActivityMail(
       where,
       select: { ...select, leadId: true },
       orderBy: { timestamp: 'desc' },
-      take: MAIL_CAP,
+      take: cap,
     }),
     db.contactActivity.findMany({
       where,
       select: { ...select, contactId: true },
       orderBy: { timestamp: 'desc' },
-      take: MAIL_CAP,
+      take: cap,
     }),
   ]);
+  return { leadRows, contactRows };
+}
+
+/**
+ * The instant after which every source is complete. A table that returned `cap` rows may have more
+ * history it did not read, and the oldest row it did read (it reads newest first) marks how far back
+ * it is complete. Reply and inbound can live in different tables, so a reply stored only in a capped
+ * email_records table must not be dropped while the inbound it answers stays in a table that was not
+ * capped: every source is cut to the shortest window, so each is judged on the same history.
+ */
+export function coverageFloor(sources: { times: Date[] }[], cap: number): number {
+  let floor = -Infinity;
+  for (const s of sources) {
+    if (s.times.length < cap) continue;
+    const oldest = s.times.reduce((min, t) => Math.min(min, t.getTime()), Infinity);
+    floor = Math.max(floor, oldest);
+  }
+  return floor;
+}
+
+/**
+ * Activity rows (lead and contact) as mail events. An outbound activity that logs a record which
+ * never reached that person (not sent, or bounced for their address) is not a reply.
+ */
+function activityMail(
+  rows: ActivityRows,
+  people: WaitingPerson[],
+  records: RecordRow[],
+  floor: number
+): MailEvent[] {
   const emails = emailsByKey(people);
   const missed = new Map(records.map((r) => [r.id, unreached(r)]));
-  const toEvent = (key: string, r: { title: string; timestamp: Date; metadata: unknown }) => ({
+  const toEvent = (key: string, r: ActivityRow) => ({
     key,
     direction: activityRowDirection(r),
     at: r.timestamp,
     subject: r.title,
   });
-  const reached = (key: string, r: { metadata: unknown }): boolean => {
-    if (isUntaggedRecordLog(r.metadata)) return false;
+  const reached = (key: string, r: ActivityRow): boolean => {
+    if (r.timestamp.getTime() <= floor || isUntaggedRecordLog(r.metadata)) return false;
     const id = (r.metadata as { emailRecordId?: unknown } | null)?.emailRecordId;
     const m = typeof id === 'string' ? missed.get(id) : undefined;
     return !m || (!m.all && !m.addresses.has(emails.get(key) ?? ''));
   };
   const events: MailEvent[] = [];
-  for (const r of leadRows) {
+  for (const r of rows.leadRows) {
     const key = personKey('lead', r.leadId);
     if (reached(key, r)) events.push(toEvent(key, r));
   }
-  for (const r of contactRows) {
+  for (const r of rows.contactRows) {
     const key = personKey('contact', r.contactId);
     if (reached(key, r)) events.push(toEvent(key, r));
   }
@@ -155,7 +191,7 @@ async function loadActivityMail(
 }
 
 /** email_records as mail events, matched to people by contact link or by address. */
-function recordMail(records: RecordRow[], people: WaitingPerson[]): MailEvent[] {
+function recordMail(records: RecordRow[], people: WaitingPerson[], floor: number): MailEvent[] {
   const keysByEmail = new Map<string, string[]>();
   for (const p of people) {
     const e = p.email.toLowerCase();
@@ -166,7 +202,7 @@ function recordMail(records: RecordRow[], people: WaitingPerson[]): MailEvent[] 
   const events: MailEvent[] = [];
   for (const r of records) {
     const direction = recordDirection(r);
-    if (!direction) continue;
+    if (!direction || r.createdAt.getTime() <= floor) continue;
     // Everyone the mail went to counts, Bcc included, except addresses it bounced for.
     const bounced = bouncedAddresses(r.metadata);
     const addresses =
@@ -193,10 +229,22 @@ export async function loadWaiting(
   db: PrismaClient,
   tenantId: string,
   leadScope: Scope,
-  contactScope: Scope
+  contactScope: Scope,
+  cap: number = MAIL_CAP
 ): Promise<WaitingItem[]> {
   const people = await loadPeople(db, leadScope, contactScope);
-  const records = await loadRecords(db, tenantId);
-  const activityMail = await loadActivityMail(db, tenantId, people, records);
-  return pickWaiting(people, [...activityMail, ...recordMail(records, people)]);
+  const records = await loadRecords(db, tenantId, cap);
+  const rows = await loadActivityRows(db, tenantId, cap);
+  const floor = coverageFloor(
+    [
+      { times: records.map((r) => r.createdAt) },
+      { times: rows.leadRows.map((r) => r.timestamp) },
+      { times: rows.contactRows.map((r) => r.timestamp) },
+    ],
+    cap
+  );
+  return pickWaiting(people, [
+    ...activityMail(rows, people, records, floor),
+    ...recordMail(records, people, floor),
+  ]);
 }

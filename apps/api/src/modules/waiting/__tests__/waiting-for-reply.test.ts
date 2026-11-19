@@ -8,7 +8,7 @@ import {
   type MailEvent,
   type WaitingPerson,
 } from '../waiting-for-reply';
-import { loadWaiting } from '../waiting-load';
+import { coverageFloor, loadWaiting } from '../waiting-load';
 import { narrowToWaiting } from '../waiting-lead-filter';
 
 const day = (d: number, h = 9) => new Date(Date.UTC(2026, 10, d, h));
@@ -343,8 +343,24 @@ function fakeDb(tables: {
           : r[k] === v
       )
     );
+  // Like Prisma: filter, then order (newest first when asked) and cut to 	ake.
   const table = (rows: Record<string, unknown>[]) => ({
-    findMany: async ({ where }: { where: Record<string, unknown> }) => match(rows, where),
+    findMany: async ({
+      where,
+      orderBy,
+      take,
+    }: {
+      where: Record<string, unknown>;
+      orderBy?: Record<string, 'asc' | 'desc'>;
+      take?: number;
+    }) => {
+      let out = match(rows, where);
+      const key = orderBy ? Object.keys(orderBy)[0] : undefined;
+      if (key) {
+        out = [...out].sort((a, b) => (b[key] as Date).getTime() - (a[key] as Date).getTime());
+      }
+      return take === undefined ? out : out.slice(0, take);
+    },
   });
   return {
     lead: table(tables.leads),
@@ -543,6 +559,93 @@ describe('logged mail', () => {
     ];
     const items = await loadWaiting(fakeDb(t), 't1', { tenantId: 't1' }, { tenantId: 't1' });
     expect(items.map((i) => i.id)).toEqual(['lead-a']);
+  });
+});
+
+describe('cap boundary: every source is judged on the same history', () => {
+  const scope = { tenantId: 't1' };
+  const contactScope = { tenantId: 't1', id: { in: [] } };
+  const at = (d: number) => day(d);
+  const rec = (id: string, d: number, to: string) =>
+    ({
+      id,
+      tenantId: 't1',
+      subject: id,
+      status: 'SENT',
+      metadata: null,
+      userId: 'u1',
+      contactId: null,
+      fromEmail: 'me@example.invalid',
+      toEmail: to,
+      ccEmails: null,
+      bccEmails: null,
+      sentAt: at(d),
+      createdAt: at(d),
+    }) as never;
+  const inbound = (d: number) =>
+    ({
+      leadId: 'lead-a',
+      tenantId: 't1',
+      type: 'EMAIL',
+      title: 'Question',
+      timestamp: at(d),
+      metadata: { direction: 'inbound' },
+    }) as never;
+  const setup = (emails: unknown[], activities: unknown[]) => {
+    const t = tables();
+    t.leads = [leadRow('lead-a', 't1')];
+    t.contacts = [];
+    t.contactActivities = [];
+    t.leadActivities = activities as never;
+    t.emails = emails as never;
+    return fakeDb(t);
+  };
+
+  it('does not list a person whose reply was pushed out of the capped records', async () => {
+    // lead-a wrote on day 10 and was answered on day 11 by a record. Three newer unrelated records
+    // fill a cap of 3, so the reply is not read; the inbound activity (one row, not capped) is.
+    const db = setup(
+      [
+        rec('reply', 11, 'lead-a@example.invalid'),
+        rec('n1', 12, 'x@example.invalid'),
+        rec('n2', 13, 'x@example.invalid'),
+        rec('n3', 14, 'x@example.invalid'),
+      ],
+      [inbound(10)]
+    );
+    const items = await loadWaiting(db, 't1', scope, contactScope, 3);
+    expect(items.map((i) => i.id)).toEqual([]);
+  });
+
+  it('still lists a person who wrote inside the window and has no reply', async () => {
+    const db = setup(
+      [
+        rec('n1', 12, 'x@example.invalid'),
+        rec('n2', 13, 'x@example.invalid'),
+        rec('n3', 14, 'x@example.invalid'),
+        rec('old', 5, 'x@example.invalid'),
+      ],
+      [inbound(15)]
+    );
+    const items = await loadWaiting(db, 't1', scope, contactScope, 3);
+    expect(items.map((i) => i.id)).toEqual(['lead-a']);
+  });
+
+  it('with the cap not reached, the same history lists them as before', async () => {
+    const db = setup([rec('n1', 12, 'x@example.invalid')], [inbound(10)]);
+    const items = await loadWaiting(db, 't1', scope, contactScope, 3);
+    expect(items.map((i) => i.id)).toEqual(['lead-a']);
+  });
+
+  it('cuts to the shortest window when several sources are capped', () => {
+    const d = (n: number) => day(n);
+    expect(coverageFloor([{ times: [d(14), d(13), d(12)] }, { times: [d(14), d(9)] }], 3)).toBe(
+      d(12).getTime()
+    );
+    expect(
+      coverageFloor([{ times: [d(14), d(9), d(8)] }, { times: [d(14), d(11), d(10)] }], 3)
+    ).toBe(d(10).getTime());
+    expect(coverageFloor([{ times: [d(14), d(9)] }], 3)).toBe(-Infinity);
   });
 });
 
