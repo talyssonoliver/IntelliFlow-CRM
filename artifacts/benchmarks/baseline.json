@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-18T04:06:57.811Z",
+  "timestamp": "2026-11-19T13:23:36.389Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,9 +1015,9 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 82,
-    "total_endpoints": 618,
-    "total_queries": 266,
+    "total_routers": 83,
+    "total_endpoints": 619,
+    "total_queries": 267,
     "total_mutations": 352,
     "routers": [
       {
@@ -1502,6 +1502,12 @@
       },
       {
         "name": "team",
+        "endpoints": 1,
+        "queries": 1,
+        "mutations": 0
+      },
+      {
+        "name": "waiting",
         "endpoints": 1,
         "queries": 1,
         "mutations": 0
@@ -7141,6 +7147,13 @@
         "name": "user.list",
         "method": "GET",
         "description": "List users with pagination"
+      }
+    ],
+    "waiting": [
+      {
+        "name": "waiting.list",
+        "method": "GET",
+        "description": "List waitings with pagination"
       }
     ],
     "webhooks": [

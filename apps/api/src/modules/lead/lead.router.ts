@@ -18,6 +18,7 @@ import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { loadBullMQ } from '../../lib/load-bullmq';
 import { enqueueLeadAi } from './lead-scoring-enqueue';
 import { buildLeadListWhere, leadListOrderBy } from './lead-list-query';
+import { narrowToWaiting } from '../waiting/waiting-lead-filter';
 import { directionMetadata } from './lead-activity-direction';
 import { readScoringState, scoreUpdateActivity } from './lead-score-log';
 import {
@@ -559,42 +560,13 @@ export const leadRouter = createTRPCRouter({
    */
   list: tenantProcedure.input(leadQuerySchema).query(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
-    const {
-      page = 1,
-      limit = 20,
-      status,
-      source,
-      minScore,
-      maxScore,
-      search,
-      ownerId,
-      dateFrom,
-      dateTo,
-      lastContactedBefore,
-      isStarred,
-      ids,
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
-    } = input;
-
+    const { page = 1, limit = 20, sortBy = 'createdAt', sortOrder = 'desc', ...filters } = input;
     const skip = (page - 1) * limit;
 
-    // Apply tenant filtering
+    // Apply tenant filtering; MVP-014 "Waiting for reply" narrows `ids` to the leads waiting
     const where = createTenantWhereClause(
       typedCtx.tenant,
-      buildLeadListWhere({
-        status,
-        source,
-        minScore,
-        maxScore,
-        search,
-        ownerId,
-        dateFrom,
-        dateTo,
-        lastContactedBefore,
-        isStarred,
-        ids,
-      })
+      buildLeadListWhere({ ...filters, ids: await narrowToWaiting(typedCtx, filters) })
     );
 
     // Execute queries in parallel using tenant-scoped Prisma

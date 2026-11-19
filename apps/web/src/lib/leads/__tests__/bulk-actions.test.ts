@@ -621,6 +621,15 @@ describe('getLeadScope — sidebar view + segment wiring', () => {
     expect(scope.pendingNotice).toBe(null);
   });
 
+  it('segment=waiting → waitingForReply filter; no pending notice (MVP-014)', async () => {
+    const { getLeadScope } = await import('../bulk-actions');
+    const scope = getLeadScope(null, 'waiting', 'user-1', now);
+    expect(scope.segment).toBe('waiting');
+    expect(scope.title).toBe('Waiting for reply');
+    expect(scope.params).toEqual({ waitingForReply: true });
+    expect(scope.pendingNotice).toBe(null);
+  });
+
   it('unknown view + unknown segment → default all scope', async () => {
     const { getLeadScope } = await import('../bulk-actions');
     const scope = getLeadScope('bogus', 'also-bogus', 'user-1', now);
