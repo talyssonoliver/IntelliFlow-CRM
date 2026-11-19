@@ -545,6 +545,59 @@ describe('narrowToWaiting (the leads-list filter)', () => {
     expect(ids).toEqual(['lead-a']);
   });
 
+  it('decides a lead the way the card does when a contact shares their email', async () => {
+    const t = tables();
+    t.emails = [];
+    t.contactActivities = [];
+    t.leads = [leadRow('lead-a', 't1')];
+    t.contacts = [{ ...leadRow('contact-a', 't1'), email: 'lead-a@example.invalid' }];
+    t.leadActivities = [
+      {
+        leadId: 'lead-a',
+        tenantId: 't1',
+        type: 'EMAIL',
+        title: 'Q',
+        timestamp: day(10),
+        metadata: { direction: 'inbound' },
+      } as never,
+    ];
+    const db = fakeDb(t);
+    // Answered through the contact: neither the card nor the filter lists the lead.
+    t.contactActivities.splice(
+      0,
+      9,
+      ...[
+        {
+          contactId: 'contact-a',
+          tenantId: 't1',
+          type: 'EMAIL',
+          title: 'A',
+          timestamp: day(11),
+          metadata: { direction: 'outbound' },
+        } as never,
+      ]
+    );
+    expect(await narrowToWaiting(ctx(db), { waitingForReply: true })).toEqual([]);
+    expect(await loadWaiting(db, 't1', { tenantId: 't1' }, { tenantId: 't1' })).toEqual([]);
+    // Unanswered after a later mail to the contact: both list the lead, once.
+    t.contactActivities.splice(
+      0,
+      9,
+      ...[
+        {
+          contactId: 'contact-a',
+          tenantId: 't1',
+          type: 'EMAIL',
+          title: 'A',
+          timestamp: day(9),
+          metadata: { direction: 'outbound' },
+        } as never,
+      ]
+    );
+    const card = await loadWaiting(db, 't1', { tenantId: 't1' }, { tenantId: 't1' });
+    expect(await narrowToWaiting(ctx(db), { waitingForReply: true })).toEqual(['lead-a']);
+    expect(card.map((i) => i.id)).toEqual(['lead-a']);
+  });
   it('stays inside ids when both are given, and is empty when nobody is waiting', async () => {
     const t = tables();
     t.emails = [];

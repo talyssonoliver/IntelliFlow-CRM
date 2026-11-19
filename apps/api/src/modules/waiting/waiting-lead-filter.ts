@@ -13,11 +13,13 @@ export async function narrowToWaiting(
 ): Promise<string[] | undefined> {
   if (!filters.waitingForReply) return filters.ids;
   const { tenantId } = ctx.tenant;
+  // Contacts are loaded with the card's scope: a lead and a contact with one email merge their
+  // histories, so the filter and the card decide each lead the same way.
   const waiting = await loadWaiting(
     ctx.prismaWithTenant,
     tenantId,
     createTenantWhereClause(ctx.tenant),
-    { tenantId, id: { in: [] } }
+    createTenantWhereClause(ctx.tenant)
   );
   const ids = waiting.filter((w) => w.kind === 'lead').map((w) => w.id);
   const allowed = filters.ids ? new Set(filters.ids) : undefined;
