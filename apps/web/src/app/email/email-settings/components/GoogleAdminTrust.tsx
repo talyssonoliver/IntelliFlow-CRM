@@ -3,7 +3,8 @@
 /**
  * MVP-011: reading a Google mailbox needs gmail.readonly, which Google grants a Google Workspace
  * account once the domain's admin trusts Aurora's OAuth client (admin-trusted apps need no paid
- * assessment). Until then the mailbox sends only. This card says so plainly, with the client ID
+ * assessment); MVP-013: the calendar permission is held back the same way. Until then the mailbox
+ * sends only. This card says so plainly, with the client ID
  * and the four Admin console steps, and offers the next sign-in: again with reading (after the
  * admin trusted Aurora) or for sending only.
  */
@@ -49,8 +50,9 @@ export function GoogleAdminTrust({
         Ask your Google Workspace admin to trust Aurora
       </h3>
       <p className="text-muted-foreground">
-        {lead} Aurora logs the email leads and contacts send you once your Google Workspace admin
-        trusts it. Until then, email you send still leaves from this mailbox.
+        {lead} Aurora logs the email leads and contacts send you, and syncs your Google Calendar,
+        once your Google Workspace admin trusts it. Until then, email you send still leaves from
+        this mailbox.
       </p>
       <ol className="list-decimal space-y-1 pl-5 text-foreground">
         {ADMIN_TRUST_STEPS.map((step) => (
