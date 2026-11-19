@@ -193,6 +193,20 @@ describe('IFC-312 job handlers — safety gates', () => {
       expect(prismaReplyDraftMock.create).not.toHaveBeenCalled();
     });
 
+    it('drafts for a tenant that never saved the setting: the default is on (MVP-012)', async () => {
+      prismaContactSettingMock.findUnique.mockResolvedValue(null);
+      const { processReplyDraftJob } = await import('../reply-draft.job.js');
+      const out = await processReplyDraftJob({
+        data: {
+          contactId: 'c-1',
+          tenantId: 't-1',
+          emailThread: [{ from: 'a@b.com', body: 'hi', at: '2026-01-01' }],
+        },
+      } as any);
+      expect(out.draftId).toBe('draft-1');
+      expect(prismaReplyDraftMock.create.mock.calls[0]![0].data.status).toBe('DRAFT');
+    });
+
     it('writes ContactReplyDraft with status="DRAFT" — NEVER "SENT"', async () => {
       prismaContactSettingMock.findUnique.mockResolvedValue({ aiAutoReplyDrafting: true });
       const { processReplyDraftJob } = await import('../reply-draft.job.js');

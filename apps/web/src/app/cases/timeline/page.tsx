@@ -1064,7 +1064,7 @@ function CaseTimelinePageContent() {
         <div className="mb-4 flex items-center justify-between text-sm text-gray-500 bg-gray-50 px-4 py-2 rounded-lg">
           <span>
             Showing {timelineData.events.length} events from API
-            {timelineData.queryDurationMs && ` (${timelineData.queryDurationMs.toFixed(0)}ms)`}
+            {!!timelineData.queryDurationMs && ` (${timelineData.queryDurationMs.toFixed(0)}ms)`}
           </span>
           <button
             onClick={() => refetch()}

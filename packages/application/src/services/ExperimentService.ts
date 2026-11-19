@@ -942,8 +942,8 @@ export class ExperimentService {
     // Simple approximation for t-critical value
     // For df > 30, use z-value approximation
     if (df > 30) {
-      if (alpha === 0.025) return 1.96;
-      if (alpha === 0.005) return 2.576;
+      if (Math.abs(alpha - 0.025) < 1e-9) return 1.96;
+      if (Math.abs(alpha - 0.005) < 1e-9) return 2.576;
       return 1.645;
     }
     // Rough interpolation for smaller df
