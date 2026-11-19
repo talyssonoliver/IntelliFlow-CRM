@@ -96,6 +96,31 @@ describe('resolveAffected', () => {
     expect(r.packages).toContain('@x/web');
   });
 
+  it('a root file alone typechecks nothing locally; CI covers the widening', () => {
+    const r = resolve('turbo.json\n');
+    expect(r.mode).toBe('none');
+    expect(r.packages).toEqual([]);
+    expect(r.reason).toContain('widening left to CI');
+  });
+
+  it('a shared tsconfig change still typechecks every package', () => {
+    const r = resolveAffected({
+      cwd: '.',
+      env: {},
+      packages: [
+        ...packages,
+        { name: '@x/typescript-config', dir: 'packages/typescript-config', deps: [] },
+      ],
+      git: fakeGit({
+        'merge-base': 'abc\n',
+        diff: 'packages/typescript-config/base.json\nturbo.json\n',
+        'ls-files': '',
+      }),
+    });
+    expect(r.mode).toBe('full');
+    expect(r.reason).not.toContain('widening left to CI');
+  });
+
   it('is none for a docs-only diff', () => {
     const r = resolve('docs/guide.md\nREADME.md\n');
     expect(r.mode).toBe('none');
