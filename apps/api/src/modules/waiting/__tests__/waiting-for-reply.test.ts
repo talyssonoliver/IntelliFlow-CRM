@@ -83,6 +83,25 @@ describe('pickWaiting', () => {
   });
 });
 
+describe('one person, two records', () => {
+  it('lists a lead and a contact with the same email once, as the lead', () => {
+    const twin: WaitingPerson = { ...omar, email: jane.email };
+    const items = pickWaiting(
+      [jane, twin],
+      [mail(jane, 'inbound', day(10)), mail(twin, 'inbound', day(10))]
+    );
+    expect(items.map((i) => i.kind + ':' + i.id)).toEqual(['lead:lead-1']);
+  });
+
+  it('counts a mail that arrives as both an activity and a record once', () => {
+    const [item] = pickWaiting(
+      [jane],
+      [mail(jane, 'inbound', day(10)), mail(jane, 'inbound', day(10))]
+    );
+    expect(item?.unanswered).toBe(1);
+  });
+});
+
 describe('direction helpers', () => {
   it('reads the stored direction, then the title, then falls back to outbound', () => {
     expect(activityRowDirection({ title: 'x', metadata: { direction: 'inbound' } })).toBe(

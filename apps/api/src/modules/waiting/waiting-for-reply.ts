@@ -98,7 +98,9 @@ function unansweredSince(
   for (const e of sorted) if (e.direction === 'outbound') lastOutbound = e.at.getTime();
   const open = sorted.filter((e) => e.direction === 'inbound' && e.at.getTime() > lastOutbound);
   const first = open[0];
-  return first ? { since: first.at, subject: first.subject, count: open.length } : null;
+  // The same mail can reach a person twice (synced mail logs an activity and a record).
+  const distinct = new Set(open.map((e) => e.at.getTime())).size;
+  return first ? { since: first.at, subject: first.subject, count: distinct } : null;
 }
 
 /** Who is waiting, oldest first. Pure: no clock, no database. */
@@ -112,5 +114,11 @@ export function pickWaiting(people: WaitingPerson[], mail: MailEvent[]): Waiting
     if (open)
       items.push({ ...p, since: open.since, subject: open.subject, unanswered: open.count });
   }
-  return items.sort((a, b) => a.since.getTime() - b.since.getTime() || a.id.localeCompare(b.id));
+  // One person can be both a lead and a contact (same email): list them once, as the lead,
+  // so the card never counts one sender twice and every lead stays in the leads filter.
+  const leadEmails = new Set(
+    items.filter((i) => i.kind === 'lead').map((i) => i.email.toLowerCase())
+  );
+  const unique = items.filter((i) => i.kind === 'lead' || !leadEmails.has(i.email.toLowerCase()));
+  return unique.sort((a, b) => a.since.getTime() - b.since.getTime() || a.id.localeCompare(b.id));
 }
