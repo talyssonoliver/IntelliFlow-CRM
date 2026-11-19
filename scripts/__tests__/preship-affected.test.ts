@@ -89,8 +89,36 @@ describe('resolveAffected', () => {
     expect(resolve('', 'packages/ui/src/new.tsx\n').packages).toEqual(['@x/ui', '@x/web']);
   });
 
-  it('is full when a root file changes', () => {
-    expect(resolve('apps/web/src/a.tsx\nturbo.json\n').mode).toBe('full');
+  it('leaves a root-file widening to CI: only the changed packages locally', () => {
+    const r = resolve('apps/web/src/a.tsx\nturbo.json\n');
+    expect(r.mode).toBe('affected');
+    expect(r.reason).toContain('widening left to CI');
+    expect(r.packages).toContain('@x/web');
+  });
+
+  it('a root file alone typechecks nothing locally; CI covers the widening', () => {
+    const r = resolve('turbo.json\n');
+    expect(r.mode).toBe('none');
+    expect(r.packages).toEqual([]);
+    expect(r.reason).toContain('widening left to CI');
+  });
+
+  it('a shared tsconfig change still typechecks every package', () => {
+    const r = resolveAffected({
+      cwd: '.',
+      env: {},
+      packages: [
+        ...packages,
+        { name: '@x/typescript-config', dir: 'packages/typescript-config', deps: [] },
+      ],
+      git: fakeGit({
+        'merge-base': 'abc\n',
+        diff: 'packages/typescript-config/base.json\nturbo.json\n',
+        'ls-files': '',
+      }),
+    });
+    expect(r.mode).toBe('full');
+    expect(r.reason).not.toContain('widening left to CI');
   });
 
   it('is none for a docs-only diff', () => {
@@ -175,17 +203,20 @@ describe('filters', () => {
     ]);
   });
 
-  it('library-build: an affected app contributes only its dependencies', () => {
+  it('library-build: only the dependency closure of each affected package', () => {
     expect(libraryBuildFilters(full)).toBeNull();
     expect(libraryBuildFilters(none)).toEqual([]);
     expect(libraryBuildFilters(affected)).toEqual([
-      '--filter=@intelliflow/ui',
+      '--filter=@intelliflow/ui^...',
       '--filter=@intelliflow/web^...',
     ]);
   });
 
-  it('library-build: every library when a file outside the packages changed', () => {
-    expect(libraryBuildFilters({ ...affected, outsidePackages: true })).toBeNull();
+  it('library-build: a file outside the packages does not widen it', () => {
+    expect(libraryBuildFilters({ ...affected, outsidePackages: true })).toEqual([
+      '--filter=@intelliflow/ui^...',
+      '--filter=@intelliflow/web^...',
+    ]);
   });
 
   it('build: skipped for docs or tests only', () => {
@@ -245,7 +276,7 @@ describe('runLibraryBuild', () => {
         path.join('repo', 'node_modules', 'turbo', 'bin', 'turbo'),
         'run',
         'build',
-        '--filter=@intelliflow/ui',
+        '--filter=@intelliflow/ui^...',
         '--filter=@intelliflow/web^...',
       ],
       { cwd: 'repo', stdio: 'inherit' }
