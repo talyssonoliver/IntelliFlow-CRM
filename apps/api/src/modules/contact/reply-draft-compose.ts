@@ -35,7 +35,7 @@ export async function sendComposedEmail(
   const result = await dispatchUserMail(c as never, message, deps);
   if (result.status !== 'SENT' || !replyDraftId) return result;
   try {
-    await linkSentReply(c, await loadDraft(c, replyDraftId), result.id);
+    await linkSentReply(c, await loadDraft(c, replyDraftId), result.id, message.subject);
   } catch (error) {
     // The mail has gone: a draft no longer in the user's scope, or any failure here, only logs.
     console.warn('[reply-draft] composed reply not linked to its timeline', {

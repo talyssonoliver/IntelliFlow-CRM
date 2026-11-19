@@ -13,7 +13,8 @@ import { sendComposedEmail } from '../reply-draft-compose';
 const LEAD = TEST_UUIDS.lead1;
 const message = {
   to: ['robert@handyman.example.invalid'],
-  subject: 'Re: Fence repair quote',
+  // The user changed the subject in Compose (the AI draft said 'Re: Fence repair quote').
+  subject: 'Fence quote: Thursday 10am',
   htmlBody: '<p>Thursday works, edited.</p>',
 };
 const restrictions = { status: vi.fn(async () => ({ restricted: false })) };
@@ -70,6 +71,8 @@ describe('sendComposedEmail (MVP-012)', () => {
     });
     expect((prismaMock.leadActivity.create as any).mock.calls[0][0].data).toMatchObject({
       type: 'EMAIL',
+      // The timeline shows the subject actually sent, not the AI draft's (codex).
+      title: 'Fence quote: Thursday 10am',
       leadId: LEAD,
       metadata: { emailRecordId: 'email-7', source: 'ai-reply' },
     });

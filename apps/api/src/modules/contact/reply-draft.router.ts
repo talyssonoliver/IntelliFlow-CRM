@@ -156,7 +156,9 @@ async function notDelivered(c: EmailRouterCtx, attempt: string, error: unknown):
 export async function linkSentReply(
   c: EmailRouterCtx,
   draft: DraftRow,
-  emailId: string
+  emailId: string,
+  /** The subject actually sent: an edit in Compose may have changed it (codex). */
+  subject: string = draft.draftSubject
 ): Promise<void> {
   const now = new Date();
   try {
@@ -171,7 +173,7 @@ export async function linkSentReply(
       c,
       {
         id: emailId,
-        subject: draft.draftSubject,
+        subject,
         sentAt: now,
         createdAt: now,
         userId: c.tenant.userId,
