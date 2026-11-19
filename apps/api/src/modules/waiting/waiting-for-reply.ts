@@ -85,9 +85,13 @@ export function recordDirection(row: {
   return (SENT_STATUSES as readonly string[]).includes(row.status) ? 'outbound' : undefined;
 }
 
-/** True when the record's stored direction is outbound but it never left (see recordDirection). */
+/**
+ * True when the record is a mail of ours that never left (see recordDirection): not sent, and not
+ * received. CRM sends carry no stored direction, so an untagged FAILED, BOUNCED or PENDING record
+ * counts the same as a tagged one.
+ */
 export function isUnsentOutbound(row: { status: string; metadata: unknown }): boolean {
-  return metadataDirection(row.metadata) === 'outbound' && recordDirection(row) === undefined;
+  return metadataDirection(row.metadata) !== 'inbound' && recordDirection(row) === undefined;
 }
 
 /**

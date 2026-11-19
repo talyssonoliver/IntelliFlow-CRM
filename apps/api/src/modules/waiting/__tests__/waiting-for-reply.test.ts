@@ -216,6 +216,35 @@ describe('replies that did not reach the person', () => {
     expect(await ids(t)).toEqual(['lead-a']);
   });
 
+  it('an activity logging an untagged CRM send that failed or bounced is not a reply', async () => {
+    for (const status of ['FAILED', 'BOUNCED', 'PENDING']) {
+      const t = waitingLead();
+      t.emails = [sent({ status, metadata: null })];
+      t.leadActivities.push({
+        leadId: 'lead-a',
+        tenantId: 't1',
+        type: 'EMAIL',
+        title: 'Answer',
+        timestamp: day(12),
+        metadata: { direction: 'outbound', emailRecordId: 'rec-1' },
+      } as never);
+      expect(await ids(t)).toEqual(['lead-a']);
+    }
+  });
+
+  it('an activity logging an untagged CRM send that left is a reply', async () => {
+    const t = waitingLead();
+    t.emails = [sent({ status: 'SENT', metadata: null })];
+    t.leadActivities.push({
+      leadId: 'lead-a',
+      tenantId: 't1',
+      type: 'EMAIL',
+      title: 'Answer',
+      timestamp: day(12),
+      metadata: { direction: 'outbound', emailRecordId: 'rec-1' },
+    } as never);
+    expect(await ids(t)).toEqual([]);
+  });
   it('a reply that went to them in Bcc counts', async () => {
     const t = waitingLead();
     t.emails = [sent({ toEmail: 'team@example.invalid', bccEmails: 'Lead-A@example.invalid' })];
