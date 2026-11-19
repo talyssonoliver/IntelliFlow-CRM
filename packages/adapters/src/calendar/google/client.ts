@@ -452,8 +452,11 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
         summary: event.summary,
         description: appointment.description ?? null,
         location: appointment.location ?? null,
-        start: event.start,
-        end: event.end,
+        // The instant only: no timeZone, so a recurring event keeps the zone its repeats are
+        // expanded in (daylight saving), and date: null clears an all-day event's date, which
+        // PATCH would otherwise merge with the new dateTime.
+        start: { dateTime: appointment.startTime.toISOString(), date: null },
+        end: { dateTime: appointment.endTime.toISOString(), date: null },
         status: event.status,
       };
 

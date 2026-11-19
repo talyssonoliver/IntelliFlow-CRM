@@ -835,8 +835,10 @@ describe('GoogleCalendarAdapter', () => {
           summary: 'Test Meeting',
           description: null,
           location: null,
-          start: { dateTime: '2025-01-15T10:00:00.000Z', timeZone: 'UTC' },
-          end: { dateTime: '2025-01-15T11:00:00.000Z', timeZone: 'UTC' },
+          // No timeZone (a recurring event keeps its own), and date: null so an all-day
+          // event's date does not stay beside the new dateTime.
+          start: { dateTime: '2025-01-15T10:00:00.000Z', date: null },
+          end: { dateTime: '2025-01-15T11:00:00.000Z', date: null },
           status: 'confirmed',
         });
       });
