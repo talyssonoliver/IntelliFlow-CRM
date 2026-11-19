@@ -11,7 +11,7 @@
 import type { SendUserEmailInput, SendUserEmailResultDto } from '@intelliflow/validators';
 import type { EmailRouterCtx, EmailRuntimeDeps } from '../email/email-access';
 import { dispatchUserMail } from '../email/mailbox-sender';
-import { linkSentReply, loadDraft } from './reply-draft.router';
+import { linkSentReply, loadDraft, type DraftRow } from './reply-draft.router';
 
 /** The AI draft a Compose draft of this user came from, if it came from one. */
 async function replyDraftIdOf(c: EmailRouterCtx, composeDraftId: string): Promise<string | null> {
@@ -21,6 +21,21 @@ async function replyDraftIdOf(c: EmailRouterCtx, composeDraftId: string): Promis
   });
   const id = (draft?.metadata as { replyDraftId?: unknown } | null)?.replyDraftId;
   return typeof id === 'string' && id ? id : null;
+}
+
+/** True when the AI draft's person was among the recipients sent to (not skipped or refused). */
+function sentTo(
+  draft: DraftRow,
+  message: Pick<SendUserEmailInput, 'to' | 'cc' | 'bcc'>,
+  result: SendUserEmailResultDto
+): boolean {
+  const address = (draft.contact?.email ?? draft.lead?.email)?.trim().toLowerCase();
+  if (!address) return false;
+  const lower = (list: readonly string[] | undefined) =>
+    (list ?? []).map((a) => a.trim().toLowerCase());
+  const recipients = [...lower(message.to), ...lower(message.cc), ...lower(message.bcc)];
+  const notReached = [...lower(result.skipped), ...lower(result.rejected)];
+  return recipients.includes(address) && !notReached.includes(address);
 }
 
 /** email.sendEmail: the send itself is unchanged; a sent reply drafted by Aurora is then linked. */
@@ -35,7 +50,10 @@ export async function sendComposedEmail(
   const result = await dispatchUserMail(c as never, message, deps);
   if (result.status !== 'SENT' || !replyDraftId) return result;
   try {
-    await linkSentReply(c, await loadDraft(c, replyDraftId), result.id, message.subject);
+    const draft = await loadDraft(c, replyDraftId);
+    // Only when it went to that person: Compose may have changed the recipient (codex).
+    if (!sentTo(draft, message, result)) return result;
+    await linkSentReply(c, draft, result.id, message.subject);
   } catch (error) {
     // The mail has gone: a draft no longer in the user's scope, or any failure here, only logs.
     console.warn('[reply-draft] composed reply not linked to its timeline', {

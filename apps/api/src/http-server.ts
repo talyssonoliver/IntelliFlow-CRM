@@ -3,6 +3,7 @@ import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import type { AnyRouter } from '@trpc/server';
 import { createContext } from './context';
 import { appRouter } from './router';
+import { retryAfterFromCause } from './middleware/rate-limit';
 import {
   createCorrelationHeaders,
   initializeRequestContext,
@@ -212,6 +213,8 @@ function applyCorsHeaders(res: ServerResponse, allowedOrigin: string): void {
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', CORS_ALLOWED_METHODS);
   res.setHeader('Access-Control-Allow-Headers', CORS_ALLOWED_HEADERS);
+  // The cross-origin web client reads this to wait the right time after a 429.
+  res.setHeader('Access-Control-Expose-Headers', 'Retry-After');
   // NOTE: deliberately NO `Access-Control-Allow-Credentials`. The web client
   // authenticates with a Bearer token (from localStorage), never cookies, so
   // cross-origin requests are not credentialed. Omitting it keeps a permissive
@@ -411,6 +414,14 @@ async function handleTrpcRoute(
     req: webRequest,
     router,
     createContext: () => Promise.resolve(createContextFn({ req: webRequest })),
+    // A rate-limited call says when to come back (the longest wait of the batch).
+    responseMeta: ({ errors }) => {
+      const waits = errors
+        .filter((error) => error.code === 'TOO_MANY_REQUESTS')
+        .map((error) => retryAfterFromCause(error.cause) ?? 0);
+      const wait = Math.max(0, ...waits);
+      return wait > 0 ? { headers: { 'Retry-After': String(wait) } } : {};
+    },
   });
 
   await writeFetchResponse(res, response, headOnly);

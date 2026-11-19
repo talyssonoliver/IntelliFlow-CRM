@@ -78,6 +78,30 @@ describe('sendComposedEmail (MVP-012)', () => {
     });
   });
 
+  it('links nothing when Compose sent it to someone else instead (codex)', async () => {
+    await sendComposedEmail(
+      ctx(),
+      { ...message, to: ['someone.else@other.example.invalid'], draftId: 'compose-1' },
+      deps
+    );
+    expect(dispatch).toHaveBeenCalledTimes(1);
+    expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+  });
+
+  it('links nothing when the lead was skipped by the send (suppressed or refused)', async () => {
+    dispatch.mockResolvedValueOnce({
+      id: 'email-9',
+      status: 'SENT',
+      skipped: ['robert@handyman.example.invalid'],
+    });
+    await sendComposedEmail(
+      ctx(),
+      { ...message, to: [...message.to, 'cc@other.example.invalid'], draftId: 'compose-1' },
+      deps
+    );
+    expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+  });
+
   it('links nothing for an ordinary email, or a send that did not go out', async () => {
     await sendComposedEmail(ctx(), message, deps);
     await sendComposedEmail(ctx(), { ...message, draftId: 'compose-other' }, deps);
