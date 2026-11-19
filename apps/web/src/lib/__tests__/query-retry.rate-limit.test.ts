@@ -54,8 +54,11 @@ describe('429 handling for queries (MVP-007)', () => {
     expect(queryRetryDelay(0, rateLimited(null, 'soon'), () => 0)).toBe(1000);
   });
 
-  it('never waits longer than 30 seconds', () => {
-    expect(queryRetryDelay(0, rateLimited(600), () => 0.99)).toBe(30_000);
+  it('honours a long wait the server asked for in full, and caps only its own guess', () => {
+    // Retrying earlier would land inside the restriction and use up the attempts.
+    expect(queryRetryDelay(0, rateLimited(600), () => 0)).toBe(600_000);
+    expect(queryRetryDelay(0, rateLimited(600), () => 0.5)).toBe(600_500);
+    expect(queryRetryDelay(9, rateLimited(null), () => 0.99)).toBe(30_000);
   });
 
   it('keeps exponential backoff for other errors', () => {

@@ -73,8 +73,12 @@ export function queryRetryDelay(
   random: () => number = Math.random
 ): number {
   if (isRateLimitError(error)) {
-    const waitMs = (retryAfterSeconds(error) ?? 2 ** failureCount) * 1000;
-    return Math.min(MAX_RETRY_DELAY_MS, waitMs + Math.floor(random() * 1000));
+    const jitter = Math.floor(random() * 1000);
+    const asked = retryAfterSeconds(error);
+    // A wait the server asked for is honoured in full (a shorter one would retry before the limit
+    // lifts and use up the attempts); only our own exponential guess is capped.
+    if (asked !== null) return asked * 1000 + jitter;
+    return Math.min(MAX_RETRY_DELAY_MS, 2 ** failureCount * 1000 + jitter);
   }
   return Math.min(1000 * 2 ** failureCount, MAX_RETRY_DELAY_MS);
 }
