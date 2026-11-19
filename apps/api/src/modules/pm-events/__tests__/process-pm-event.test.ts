@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { processPmEvent, type ProcessPmEventInput } from '../process-pm-event';
+import { processPmEvent, sameSecret, type ProcessPmEventInput } from '../process-pm-event';
 import { InMemoryInboundPmEventStore } from '../inbound-store';
 
 // Test bearer fixture (NOT a real credential — a fixed >=16-char stub).
@@ -52,6 +52,32 @@ describe('processPmEvent — auth', () => {
   });
   it('accepts a valid bearer', async () => {
     expect((await processPmEvent(input())).statusCode).toBe(202);
+  });
+  it('401 for a bearer of the same length that differs in one character', async () => {
+    const sameLength = `${BEARER.slice(0, -1)}2`;
+    expect(sameLength).toHaveLength(BEARER.length);
+    const r = await processPmEvent(input({ authorizationHeader: `Bearer ${sameLength}` }));
+    expect(r).toEqual({ statusCode: 401, body: { accepted: false, error: 'unauthorized' } });
+  });
+  it.each([
+    ['a prefix of it', BEARER.slice(0, -1)],
+    ['it with extra characters', `${BEARER}0`],
+    ['an empty token', ''],
+  ])('401 for a bearer of a different length: %s', async (_label, token) => {
+    const r = await processPmEvent(input({ authorizationHeader: `Bearer ${token}` }));
+    expect(r.statusCode).toBe(401);
+  });
+});
+
+describe('sameSecret', () => {
+  it('is true only for the identical token', () => {
+    expect(sameSecret(BEARER, BEARER)).toBe(true);
+    expect(sameSecret(`${BEARER.slice(0, -1)}2`, BEARER)).toBe(false);
+  });
+  it('compares tokens of any length without throwing', () => {
+    expect(sameSecret('x', BEARER)).toBe(false);
+    expect(sameSecret(`${BEARER}${BEARER}`, BEARER)).toBe(false);
+    expect(sameSecret(undefined, BEARER)).toBe(false);
   });
 });
 
