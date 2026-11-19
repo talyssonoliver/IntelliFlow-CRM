@@ -205,12 +205,17 @@ describe('enquiry from an unknown sender (MVP-011)', () => {
   });
 
   it('also keeps out pre-erasure mail of a sender who is a lead again', async () => {
-    const { prisma, deps } = enquirySetup();
+    const { prisma, deps } = enquirySetup({
+      rounds: [round({ messages: [mail({ fromAddress: 'Ada@Example.invalid' })] })],
+    });
     prisma.lead.findFirst = vi.fn(async () => ({ id: 'lead-new' }));
     prisma.dsarRequest.findFirst = vi.fn(async () => ({ id: 'dsar-1' }));
 
     await runInboxSync(deps);
 
+    expect(prisma.dsarRequest.findFirst.mock.calls[0][0].where.subjectEmail).toBe(
+      'ada@example.invalid'
+    );
     expect(prisma.emailRecord.create).not.toHaveBeenCalled();
   });
 

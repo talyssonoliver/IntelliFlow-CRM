@@ -128,7 +128,7 @@ export async function erasedSince(
       tenantId: mailbox.tenantId,
       type: 'ERASURE',
       status: 'COMPLETED',
-      subjectEmail: email,
+      subjectEmail: email.trim().toLowerCase(),
       completedAt: { gte: receivedAt },
     },
     select: { id: true },
