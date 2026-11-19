@@ -27,16 +27,24 @@ const leadDraft = (over: Record<string, unknown> = {}) => ({
   ...over,
 });
 
+const restrictions = { status: vi.fn(async (_t: string, _a: string) => ({ restricted: false })) };
+
 const caller = () => {
   const base = createTestContext() as any;
   return replyDraftRouter.createCaller({
     ...base,
-    adapters: { ...base.adapters, mailboxTransports: { oauth: vi.fn() }, storageService: {} },
+    adapters: {
+      ...base.adapters,
+      mailboxTransports: { oauth: vi.fn() },
+      storageService: {},
+      processingRestrictionRepository: restrictions,
+    },
   } as never);
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  restrictions.status.mockResolvedValue({ restricted: false });
   (prismaMock.contactReplyDraft.findFirst as any).mockResolvedValue(leadDraft());
   (prismaMock.lead.findFirst as any).mockResolvedValue({ id: LEAD });
   (prismaMock.contactReplyDraft.updateMany as any).mockResolvedValue({ count: 1 });
@@ -101,6 +109,14 @@ describe('a lead draft (MVP-012 PR B)', () => {
       expect.anything()
     );
     warn.mockRestore();
+  });
+
+  it('is not put on the timeline of a person with a processing restriction, and stays sent', async () => {
+    restrictions.status.mockResolvedValue({ restricted: true });
+    await expect(caller().send({ draftId: 'draft-l1' })).resolves.toMatchObject({ status: 'SENT' });
+    expect(restrictions.status).toHaveBeenCalledWith(TEST_UUIDS.tenant, LEAD_EMAIL);
+    expect(prismaMock.leadActivity.create).not.toHaveBeenCalled();
+    expect(prismaMock.emailRecord.update).not.toHaveBeenCalled();
   });
 
   it('does not exist for a user outside the lead’s owner or team scope', async () => {

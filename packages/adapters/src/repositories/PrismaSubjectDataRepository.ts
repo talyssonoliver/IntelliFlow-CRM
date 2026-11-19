@@ -1,7 +1,6 @@
 /**
  * Prisma implementation of SubjectDataPort (PG-203 DSAR, spec Addendum A + rounds 2-4,
  * owner ruling Q19).
- *
  * One person inside one firm, matched by dsar_normalise_email(email) = the exact normalised address
  * (existing rows are not guaranteed lowercase; no +tag folding). The export is an explicit
  * allowlist per category, capped at DSAR_LIMITS.exportRowCap rows (rows past the cap are
@@ -15,6 +14,7 @@
  */
 import { Prisma, type PrismaClient } from '@intelliflow/db';
 import { DSAR_LIMITS, ERASED_EMAIL_DOMAIN, normalizeSubjectEmail } from '@intelliflow/domain';
+import { replyDraftsOf } from './subject-reply-drafts';
 import type {
   ErasureOutcome,
   ErasureResult,
@@ -281,7 +281,7 @@ async function checklist(
     db.autoResponseDraft.count({
       where: { tenantId, OR: [{ leadId: { in: leadIds } }, { id: { in: byAddress.drafts } }] },
     }),
-    db.contactReplyDraft.count({ where: { tenantId, contactId: { in: contactIds } } }),
+    db.contactReplyDraft.count({ where: replyDraftsOf(tenantId, ids) }),
     db.calendarEvent.count({ where: { tenantId, contactId: { in: contactIds } } }),
     db.experimentAssignment.count({ where: { leadId: { in: leadIds } } }),
     db.leadFile.count({ where: { tenantId, leadId: { in: leadIds }, url: { not: null } } }),
@@ -604,7 +604,7 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
       }),
       db.leadFile.count({ where: where.leadOwned }),
       // Reply drafts written to the person are message bodies: withheld and counted (codex).
-      db.contactReplyDraft.count({ where: where.contactOwned }),
+      db.contactReplyDraft.count({ where: replyDraftsOf(tenantId, { leadIds, contactIds }) }),
       db.autoResponseDraft.count({
         where: { tenantId, OR: [{ leadId: { in: leadIds } }, { id: { in: byAddress.drafts } }] },
       }),

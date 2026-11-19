@@ -20,6 +20,7 @@ const api = vi.hoisted(() => ({
   dismiss: { mutateAsync: vi.fn(), isPending: false },
   invalidate: vi.fn(async () => undefined),
   invalidateLead: vi.fn(async () => undefined),
+  invalidateLeadPage: vi.fn(async () => undefined),
   push: vi.fn(),
 }));
 
@@ -29,6 +30,7 @@ vi.mock('@intelliflow/api-client', () => ({
     useUtils: () => ({
       contact: { listReplyDrafts: { invalidate: api.invalidate } },
       replyDraft: { listForLead: { invalidate: api.invalidateLead } },
+      lead: { getById: { invalidate: api.invalidateLeadPage } },
     }),
     contact: {
       listReplyDrafts: {
@@ -176,6 +178,8 @@ describe('ReplyDraftsPanel on a lead (MVP-012 PR B)', () => {
     fireEvent.click(within(item).getByRole('button', { name: 'Send' }));
     await waitFor(() => expect(api.send.mutateAsync).toHaveBeenCalledWith({ draftId: 'ld1' }));
     await waitFor(() => expect(api.invalidateLead).toHaveBeenCalledWith({ leadId: 'lead-1' }));
+    // The lead's Emails tab and timeline are read from the lead: refreshed too (codex).
+    expect(api.invalidateLeadPage).toHaveBeenCalledWith({ id: 'lead-1' });
     expect(api.invalidate).not.toHaveBeenCalled();
   });
 

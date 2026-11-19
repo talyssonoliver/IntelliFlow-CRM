@@ -23,6 +23,7 @@ import { escapeHtml } from '../../security/html-escape';
 import { createTenantWhereClause, getTenantContext } from '../../security/tenant-context';
 import { emailRuntimeDeps, type EmailRouterCtx } from '../email/email-access';
 import { linkParty } from '../email/email-log.router';
+import { restrictionReader } from '../privacy/restriction-reader';
 import { emailSendErrorFromCause } from '../email/email-send-error';
 import { dispatchUserMail } from '../email/mailbox-sender';
 
@@ -155,6 +156,13 @@ async function notDelivered(c: EmailRouterCtx, attempt: string, error: unknown):
 async function linkSentReply(c: EmailRouterCtx, draft: DraftRow, emailId: string): Promise<void> {
   const now = new Date();
   try {
+    // As "Log to contact" refuses it (codex): a person with an active processing restriction is
+    // not put on a timeline. The reply stays sent; only the link is left out.
+    const restriction = await restrictionReader(c as never).status(
+      c.tenant.tenantId,
+      recipientOf(draft)
+    );
+    if (restriction.restricted) return;
     await linkParty(
       c,
       {
