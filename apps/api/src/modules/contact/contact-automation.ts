@@ -9,7 +9,7 @@
  */
 
 import type { ContactAutomationSetting } from '@intelliflow/db';
-import { CONTACT_POLICY_FIELD_TO_COLUMN } from '@intelliflow/domain';
+import { AI_REPLY_DRAFTING_DEFAULT, CONTACT_POLICY_FIELD_TO_COLUMN } from '@intelliflow/domain';
 import { TRPCError } from '@trpc/server';
 
 export interface ContactAutomationFlags {
@@ -39,7 +39,7 @@ const AUTOMATION_FACTORY_DEFAULTS: ContactAutomationFlags = {
   aiEnrichment: false,
   aiTagSuggestions: false,
   aiInsightGeneration: false,
-  aiAutoReplyDrafting: false,
+  aiAutoReplyDrafting: AI_REPLY_DRAFTING_DEFAULT, // MVP-012: on unless the tenant saved off
 };
 
 interface HasTenantContext {

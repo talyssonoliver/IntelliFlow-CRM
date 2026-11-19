@@ -35,6 +35,7 @@ export * from './crm/contact/ContactEvents';
 export * from './crm/contact/ContactRepository';
 export * from './crm/contact/CrossTenantOrNotFoundError';
 export * from './crm/contact/contact-type-defaults';
+export * from './crm/contact/reply-drafting';
 
 // CRM Domain - Accounts
 export * from './crm/account/Account';

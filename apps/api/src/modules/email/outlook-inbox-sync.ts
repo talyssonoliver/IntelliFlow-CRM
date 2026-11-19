@@ -37,6 +37,7 @@ import {
 } from './mail-sync-reader';
 import { learnThread, logOnLead, threadOf, type LoggedRecord } from './mail-sync-links';
 import { messageIdHeader, recordData } from './mail-sync-record';
+import { queueReplyDraftForSyncedMail } from './mail-sync-reply-draft';
 
 export const INBOX_SYNC_INTERVAL_MS = 5 * 60_000;
 const LEASE_MS = 5 * 60_000;
@@ -248,17 +249,20 @@ export async function storeSyncedMessage(
   const body = await bodyOf(message);
   if (body === null) return 'rejected';
   const leadId = party.leadId;
-  const write = async (db: any) => {
+  const write = async (db: any): Promise<string> => {
     const record: { id: string } = await db.emailRecord.create({
       data: recordData({ mailbox, message, folder, provider, party, body, threadId }),
       select: { id: true },
     });
     if (leadId) await logOnLead({ prisma: db }, mailbox, message, leadId, record.id, folder);
+    return record.id;
   };
   try {
     // A lead's mail and its timeline entry land together or not at all: a retry finds no record
     // and writes both again, so the lead never misses the entry.
-    await (leadId ? deps.prisma.$transaction(write) : write(deps.prisma));
+    const recordId = await (leadId ? deps.prisma.$transaction(write) : write(deps.prisma));
+    // MVP-012: Aurora drafts a reply to received mail for the user to check; never sent unasked.
+    await queueReplyDraftForSyncedMail(deps, mailbox, message, folder, party, recordId);
     return 'stored';
   } catch (error) {
     // One mail the database rejects as data never fails the round: skip it and go on.

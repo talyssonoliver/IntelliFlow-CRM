@@ -9,6 +9,7 @@
 import type { Job } from 'bullmq';
 import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
+import { replyDraftingEnabled } from '@intelliflow/domain';
 import pino from 'pino';
 import { prisma } from '@intelliflow/db';
 import { draftContactReply, type EmailThreadEntry } from '../contact-reply-draft.chain.js';
@@ -78,7 +79,8 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
 
   try {
     const setting = await prisma.contactAutomationSetting.findUnique({ where: { tenantId } });
-    if (!setting?.aiAutoReplyDrafting) {
+    // MVP-012: a tenant that never saved the setting gets the default (on).
+    if (!replyDraftingEnabled(setting?.aiAutoReplyDrafting)) {
       logger.info({ contactId, tenantId }, 'reply-draft skipped — toggle disabled');
       return { skipped: true };
     }
