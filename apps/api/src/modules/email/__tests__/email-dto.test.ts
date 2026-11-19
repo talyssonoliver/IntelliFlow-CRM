@@ -6,6 +6,7 @@ import {
   toSignatureDto,
   toSuppressionDto,
   replySyncState,
+  calendarAccessState,
 } from '../email-dto';
 import {
   NO_SMTP_ACCOUNT,
@@ -61,6 +62,7 @@ describe('toMailboxDto', () => {
       accountAddress: null,
       inboxSyncedAt: null,
       replySync: null,
+      calendarAccess: null,
       updatedAt: updatedAt.toISOString(),
     });
     expect(JSON.stringify(dto)).not.toContain(secret);
@@ -251,5 +253,67 @@ describe('replySyncState (MVP-001)', () => {
     // Google granted sending only: reconnecting alone does not help, the admin must trust Aurora.
     expect(replySyncState({ kind: 'GMAIL', grantedScopes: [send] })).toBe('NEEDS_ADMIN_TRUST');
     expect(replySyncState({ kind: 'GMAIL', grantedScopes: [] })).toBe('NEEDS_ADMIN_TRUST');
+  });
+});
+
+describe('calendarAccessState (MVP-013)', () => {
+  const send = 'https://www.googleapis.com/auth/gmail.send';
+  const events = 'https://www.googleapis.com/auth/calendar.events';
+
+  it('is GRANTED for a user Google mailbox that was given calendar events', () => {
+    expect(
+      calendarAccessState({ kind: 'GMAIL', scope: 'USER', grantedScopes: [send, events] })
+    ).toBe('GRANTED');
+  });
+
+  it('accepts the wider calendar scope too, however the provider spells the URI', () => {
+    const wide = 'https://www.googleapis.com/auth/calendar/';
+    expect(calendarAccessState({ kind: 'GMAIL', scope: 'USER', grantedScopes: [wide] })).toBe(
+      'GRANTED'
+    );
+    expect(
+      calendarAccessState({ kind: 'GMAIL', scope: 'USER', grantedScopes: [events.toUpperCase()] })
+    ).toBe('GRANTED');
+  });
+
+  it('is NOT_GRANTED when the user unticked it, connected before it was asked, or nothing is known', () => {
+    const read = 'https://www.googleapis.com/auth/gmail.readonly';
+    expect(calendarAccessState({ kind: 'GMAIL', scope: 'USER', grantedScopes: [send, read] })).toBe(
+      'NOT_GRANTED'
+    );
+    expect(calendarAccessState({ kind: 'GMAIL', scope: 'USER', grantedScopes: [] })).toBe(
+      'NOT_GRANTED'
+    );
+    expect(calendarAccessState({ kind: 'GMAIL', scope: 'USER' })).toBe('NOT_GRANTED');
+  });
+
+  it('is not confused by a scope that only mentions calendar', () => {
+    const lookalike = 'https://www.googleapis.com/auth/calendar.readonly';
+    expect(calendarAccessState({ kind: 'GMAIL', scope: 'USER', grantedScopes: [lookalike] })).toBe(
+      'NOT_GRANTED'
+    );
+  });
+
+  it('is null where there is no personal Google calendar', () => {
+    expect(
+      calendarAccessState({ kind: 'GMAIL', scope: 'TENANT', grantedScopes: [events] })
+    ).toBeNull();
+    expect(
+      calendarAccessState({ kind: 'MICROSOFT', scope: 'USER', grantedScopes: [events] })
+    ).toBeNull();
+    expect(calendarAccessState({ kind: 'SMTP', scope: 'USER', grantedScopes: [] })).toBeNull();
+  });
+
+  it('reaches the mailbox DTO', () => {
+    const row = {
+      ...smtpRow,
+      kind: 'GMAIL',
+      refreshToken: 'r'.repeat(30),
+      grantedScopes: [send, events],
+    };
+    expect(toMailboxDto(row, { includeConnection: true }).calendarAccess).toBe('GRANTED');
+    expect(
+      toMailboxDto({ ...row, grantedScopes: [send] }, { includeConnection: true }).calendarAccess
+    ).toBe('NOT_GRANTED');
   });
 });
