@@ -32,7 +32,7 @@ const draftInput = z.object({ draftId: z.string().min(1).max(64) });
 /** What a reply draft can be: written by Aurora, then acted on once by the user. */
 export type ReplyDraftStatus = 'DRAFT' | 'SENDING' | 'SENT' | 'EDITED' | 'DISMISSED';
 
-interface DraftRow {
+export interface DraftRow {
   id: string;
   status: string;
   /** Exactly one is set (CHECK contact_reply_drafts_one_subject_check). */
@@ -82,7 +82,7 @@ async function inScope(
  * The draft, only when its contact or lead is one the caller may work on. Outside that scope it
  * does not exist for the caller (NOT_FOUND, no existence leak).
  */
-async function loadDraft(c: EmailRouterCtx, draftId: string): Promise<DraftRow> {
+export async function loadDraft(c: EmailRouterCtx, draftId: string): Promise<DraftRow> {
   const draft: DraftRow | null = await c.prismaWithTenant.contactReplyDraft.findFirst({
     where: { id: draftId, tenantId: c.tenant.tenantId },
     include: { contact: { select: { email: true } }, lead: { select: { email: true } } },
@@ -153,7 +153,13 @@ async function notDelivered(c: EmailRouterCtx, attempt: string, error: unknown):
  * gets its EMAIL activity, a contact its contactId), so it shows on the lead's Emails tab (codex).
  * The mail has gone: a failure here is logged, never thrown, so nothing makes it sendable again.
  */
-async function linkSentReply(c: EmailRouterCtx, draft: DraftRow, emailId: string): Promise<void> {
+export async function linkSentReply(
+  c: EmailRouterCtx,
+  draft: DraftRow,
+  emailId: string,
+  /** The subject actually sent: an edit in Compose may have changed it (codex). */
+  subject: string = draft.draftSubject
+): Promise<void> {
   const now = new Date();
   try {
     // As "Log to contact" refuses it (codex): a person with an active processing restriction is
@@ -167,7 +173,7 @@ async function linkSentReply(c: EmailRouterCtx, draft: DraftRow, emailId: string
       c,
       {
         id: emailId,
-        subject: draft.draftSubject,
+        subject,
         sentAt: now,
         createdAt: now,
         userId: c.tenant.userId,

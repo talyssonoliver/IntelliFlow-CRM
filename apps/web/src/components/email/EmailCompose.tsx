@@ -418,6 +418,7 @@ export function EmailCompose({
           threadId,
           attachments: uploaded.length > 0 ? uploaded : undefined,
           ...purposeField(isMarketing ? 'MARKETING' : chosen),
+          ...(draftIdRef.current ? { draftId: draftIdRef.current } : {}), // MVP-012
         });
         const notice = partialSendNotice(result);
         setSkippedNotice(notice);
@@ -426,8 +427,7 @@ export function EmailCompose({
         await removeSentDraft();
         onSent?.();
       } catch (error) {
-        // The draft stays as it is; the focused alert says what to do next (and is
-        // the only announcement: the live region is left alone).
+        // The draft stays; the focused alert (the only announcement) says what to do next.
         setSendError(getEmailSendError(error));
       }
     },
