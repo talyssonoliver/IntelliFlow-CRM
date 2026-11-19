@@ -15,8 +15,10 @@ import {
   alreadyAnswered,
   latestThread,
   markAnswered,
+  threadMovedOn,
   supersedeWaiting,
   type DraftSubject,
+  type ThreadRef,
   type ThreadDb,
 } from './reply-draft-thread.js';
 
@@ -103,8 +105,8 @@ async function anyBlocked(db: unknown, tenantId: string, addresses: string[]): P
 
 /**
  * The new draft, written under the subject's row lock (ADR-037: always DRAFT). A draft written
- * meanwhile that already answers every mail of the thread wins (ANSWERED); else the waiting one is
- * set aside and the mails this draft answers are marked with it (see reply-draft-thread.ts).
+ * meanwhile that already answers every mail of the thread wins, and so does a thread that moved on
+ * since the model read it (both ANSWERED: nothing is written); else the waiting one is set aside and the mails this draft answers are marked with it (see reply-draft-thread.ts).
  */
 async function writeAnsweringDraft(
   tx: ThreadDb & typeof prisma,
@@ -112,6 +114,7 @@ async function writeAnsweringDraft(
     tenantId: string;
     draftSubject: DraftSubject;
     emailThreadId: string | undefined;
+    ref: ThreadRef;
     recordIds: string[];
     createdBy: string | undefined;
     draft: {
@@ -123,13 +126,14 @@ async function writeAnsweringDraft(
     };
   }
 ): Promise<{ id: string } | typeof ANSWERED> {
-  const { tenantId, draftSubject, emailThreadId, recordIds, createdBy, draft } = args;
+  const { tenantId, draftSubject, emailThreadId, ref, recordIds, createdBy, draft } = args;
   // Only drafts of synced mail (read from the database) take a conversation's place; one asked
   // for by hand is written as before.
   if (emailThreadId && recordIds.length > 0) {
     if (await alreadyAnswered(tx, tenantId, draftSubject, emailThreadId, recordIds)) {
       return ANSWERED;
     }
+    if (await threadMovedOn(tx, ref, recordIds)) return ANSWERED;
     await supersedeWaiting(tx, tenantId, draftSubject, emailThreadId);
   }
   const created = await tx.contactReplyDraft.create({
@@ -169,13 +173,14 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
     }
 
     // MVP-012: the conversation's latest stored mails (with Cc), read now rather than when queued.
+    const ref: ThreadRef = {
+      tenantId,
+      ...(mailboxId ? { mailboxId } : {}),
+      ...(emailThreadId ? { conversationId: emailThreadId } : {}),
+    };
     const { thread: emailThread, recordIds } = await latestThread(
       prisma as unknown as ThreadDb,
-      {
-        tenantId,
-        ...(mailboxId ? { mailboxId } : {}),
-        ...(emailThreadId ? { conversationId: emailThreadId } : {}),
-      },
+      ref,
       data.emailThread as EmailThreadEntry[]
     );
     // The waiting draft already answers every mail of the thread: no model call, nothing written.
@@ -246,6 +251,7 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
           tenantId,
           draftSubject,
           emailThreadId,
+          ref,
           recordIds,
           createdBy,
           draft,
@@ -253,7 +259,10 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
       }
     );
     if (outcome.written && outcome.value === ANSWERED) {
-      logger.info({ contactId, leadId, tenantId }, 'reply-draft discarded — already answered');
+      logger.info(
+        { contactId, leadId, tenantId },
+        'reply-draft discarded — already answered or thread moved on'
+      );
       return { skipped: true };
     }
     if (!outcome.written || outcome.value === null) {

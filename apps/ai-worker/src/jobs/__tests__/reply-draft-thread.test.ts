@@ -159,6 +159,26 @@ describe('the reply draft job reads the latest thread (MVP-012 PR C)', () => {
     expect(db.draft.updateMany).not.toHaveBeenCalled();
   });
 
+  it('discards a draft built on a thread that moved on, and leaves the newer draft alone (codex)', async () => {
+    // This job read m1..m2; by the time it writes, a newer mail m3 is stored and the window moved.
+    db.draft.findFirst.mockResolvedValue({ id: 'draft-newer' });
+    db.email.count.mockResolvedValue(1); // the newer draft does not answer m1
+    db.email.findMany
+      .mockResolvedValueOnce([stored('m2', 2), stored('m1', 1)])
+      .mockResolvedValueOnce([{ id: 'm3' }, { id: 'm2' }]);
+    await expect(processReplyDraftJob(job())).resolves.toEqual({ skipped: true });
+    expect(db.draft.updateMany).not.toHaveBeenCalled();
+    expect(db.draft.create).not.toHaveBeenCalled();
+    expect(db.executeRaw).not.toHaveBeenCalled();
+  });
+
+  it('writes when the thread is still the one it read', async () => {
+    db.email.findMany
+      .mockResolvedValueOnce([stored('m2', 2), stored('m1', 1)])
+      .mockResolvedValueOnce([{ id: 'm2' }, { id: 'm1' }]);
+    await expect(processReplyDraftJob(job())).resolves.toEqual({ draftId: 'draft-new' });
+  });
+
   it('checks Cc people for data requests too (codex)', async () => {
     db.email.findMany.mockResolvedValue([
       stored('m2', 2, 'partner@lead.example.invalid'),

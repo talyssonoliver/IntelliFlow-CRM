@@ -57,6 +57,35 @@ export interface LoadedThread {
   recordIds: string[];
 }
 
+/** The conversation's latest stored mails in a mailbox: the window the model reads, newest first. */
+function threadQuery(tenantId: string, mailboxId: string, conversationId: string) {
+  return {
+    where: { tenantId, mailboxId, metadata: { path: ['conversationId'], equals: conversationId } },
+    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+    take: THREAD_LIMIT,
+  };
+}
+
+/**
+ * True when the conversation's latest mails are no longer the ones a job read (a newer mail was
+ * stored, or the window moved on): its output answers a stale thread and is discarded; the newer
+ * mail's own job drafts it. Checked under the write lock, so a slower job never replaces a newer
+ * draft with one that misses the latest mail (codex).
+ */
+export async function threadMovedOn(
+  db: ThreadDb,
+  ref: ThreadRef,
+  recordIds: string[]
+): Promise<boolean> {
+  if (!ref.mailboxId || !ref.conversationId || recordIds.length === 0) return false;
+  const current = await db.emailRecord.findMany({
+    ...threadQuery(ref.tenantId, ref.mailboxId, ref.conversationId),
+    select: { id: true },
+  });
+  const read = new Set(recordIds);
+  return current.length !== read.size || current.some((mail) => !read.has(mail.id));
+}
+
 /**
  * The conversation's latest stored mails when the job names its mailbox and conversation; else the
  * thread as it was queued (drafts asked for by hand).
@@ -68,13 +97,7 @@ export async function latestThread(
 ): Promise<LoadedThread> {
   if (!ref.mailboxId || !ref.conversationId) return { thread: queued, recordIds: [] };
   const latest = await db.emailRecord.findMany({
-    where: {
-      tenantId: ref.tenantId,
-      mailboxId: ref.mailboxId,
-      metadata: { path: ['conversationId'], equals: ref.conversationId },
-    },
-    orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-    take: THREAD_LIMIT,
+    ...threadQuery(ref.tenantId, ref.mailboxId, ref.conversationId),
     select: {
       id: true,
       fromEmail: true,
