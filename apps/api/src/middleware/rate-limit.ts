@@ -121,9 +121,9 @@ function getKey(ctx: Context): string {
   return rateLimitSubject(ctx);
 }
 
-/** Seconds left in the fixed window that `Date.now()` falls in (at least 1). */
-function secondsToWindowEnd(windowMs: number): number {
-  return Math.max(1, Math.ceil((windowMs - (Date.now() % windowMs)) / 1000));
+/** Whole seconds from now until `resetAt` (epoch ms), at least 1. */
+function secondsUntil(resetAt: number): number {
+  return Math.max(1, Math.ceil((resetAt - Date.now()) / 1000));
 }
 
 /** `retryAfter` (seconds) a rate-limit rejection carries in its cause, or null for any other error. */
@@ -310,13 +310,26 @@ export class RedisRateLimiter {
   }
 
   async checkLimit(key: string, limit: number, windowMs: number): Promise<boolean> {
+    return (await this.checkLimitWithReset(key, limit, windowMs)).allowed;
+  }
+
+  /**
+   * Like checkLimit, plus when the bucket this call was counted in ends. The end comes from the
+   * bucket chosen BEFORE the Redis round trip, so a slow answer that lands after the window
+   * rolled over never reports a wait for a restriction that has already lifted.
+   */
+  async checkLimitWithReset(
+    key: string,
+    limit: number,
+    windowMs: number
+  ): Promise<{ allowed: boolean; resetAt: number }> {
     const redis = await this.getRedis();
-    const windowKey = `rl:${key}:${Math.floor(Date.now() / windowMs)}`;
-    const count = await redis.incr(windowKey);
+    const bucket = Math.floor(Date.now() / windowMs);
+    const count = await redis.incr(`rl:${key}:${bucket}`);
     if (count === 1) {
-      await redis.pexpire(windowKey, windowMs);
+      await redis.pexpire(`rl:${key}:${bucket}`, windowMs);
     }
-    return count <= limit;
+    return { allowed: count <= limit, resetAt: (bucket + 1) * windowMs };
   }
 }
 
@@ -510,13 +523,13 @@ export function createDistributedRateLimitMiddleware(
     }
 
     try {
-      const allowed = await getSharedRedisLimiter().checkLimit(
+      const { allowed, resetAt } = await getSharedRedisLimiter().checkLimitWithReset(
         distributedKey(ctx, tier),
         tier.limit,
         tier.windowMs
       );
       if (!allowed) {
-        const retryAfter = secondsToWindowEnd(tier.windowMs);
+        const retryAfter = secondsUntil(resetAt);
         throw new TRPCError({
           code: 'TOO_MANY_REQUESTS',
           message: `Rate limit exceeded. Try again in ${retryAfter} seconds.`,

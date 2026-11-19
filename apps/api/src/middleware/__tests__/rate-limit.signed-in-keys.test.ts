@@ -208,6 +208,34 @@ describe('rate-limit keys (MVP-007)', () => {
       expect((redisError as Error).message).toContain('40 seconds');
     });
 
+    it('bases the wait on the bucket that was counted, even if Redis answers after the window rolled over', async () => {
+      vi.resetModules();
+      process.env.REDIS_URL = 'rediss://managed-host:6379';
+      const fresh = await import('../rate-limit.js');
+      vi.setSystemTime(new Date('2026-11-19T08:11:59.990Z'));
+      fresh.__setSharedRedisLimiter(
+        new fresh.RedisRateLimiter({
+          // The bucket was chosen at 08:11:59.990; the answer comes back at 08:12:00.010.
+          incr: async () => {
+            vi.setSystemTime(new Date('2026-11-19T08:12:00.010Z'));
+            return fresh.RATE_LIMIT_TIERS.AUTH.limit + 1;
+          },
+          pexpire: async () => 1,
+          connect: async () => {},
+        })
+      );
+      const mw = fresh.createDistributedRateLimitMiddleware(fresh.RATE_LIMIT_TIERS.AUTH, {
+        fallback: 'in-memory',
+      });
+      const error = await mw({
+        ctx: ctxFor(null, { 'x-real-ip': '8.8.8.8' }),
+        next: vi.fn(),
+      }).catch((e: unknown) => e);
+
+      // The rejected bucket ended 10 ms ago: wait the minimum, not a whole new window.
+      expect(fresh.retryAfterFromCause((error as { cause: unknown }).cause)).toBe(1);
+    });
+
     it('reads only a positive number as a wait', () => {
       expect(retryAfterFromCause({ retryAfter: 12 })).toBe(12);
       expect(retryAfterFromCause({ retryAfter: 0 })).toBeNull();
