@@ -15,7 +15,11 @@ import { initTRPC, TRPCError } from '@trpc/server';
 import { Context } from './context';
 import { ZodError } from 'zod';
 import { tracingMiddleware } from './tracing/middleware';
-import { createDistributedRateLimitMiddleware, RATE_LIMIT_TIERS } from './middleware/rate-limit';
+import {
+  createDistributedRateLimitMiddleware,
+  RATE_LIMIT_TIERS,
+  retryAfterFromCause,
+} from './middleware/rate-limit';
 import { createTenantScopedPrisma } from './security/tenant-context';
 import { runWithLogContext } from '@intelliflow/observability';
 import {
@@ -59,6 +63,9 @@ const t = initTRPC.context<Context>().create({
         // PG-207: why a user-mail send was refused (NO_MAILBOX, MAILBOX_ERROR, ALL_SUPPRESSED,
         // SEND_FAILED) plus the skipped suppressed recipients — compose shows the right message.
         emailSendError: emailSendErrorFromCause(error.cause),
+        // Seconds to wait before retrying a rate-limited call (null for every other error).
+        retryAfterSeconds:
+          error.code === 'TOO_MANY_REQUESTS' ? retryAfterFromCause(error.cause) : null,
       },
     };
   },
