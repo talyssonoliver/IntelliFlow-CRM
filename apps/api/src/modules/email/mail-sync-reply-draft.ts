@@ -8,8 +8,10 @@
  * It never fails the sync: a draft is a convenience, so any error here is logged and dropped.
  * - Only received mail (Inbox), only with a lead or contact, and only when the tenant's reply
  *   drafting is on (a tenant that never saved the setting gets the default, see reply-drafting).
- * - One waiting draft per conversation: a new mail in a thread that already has a draft waiting
- *   does not queue another, so a long thread is not drafted (and paid for) over and over.
+ * - One draft per conversation at a time: a new mail in a thread with a draft waiting, or one still
+ *   being written (a BullMQ deduplication id held until that job ends), queues no other, so a long
+ *   thread is not drafted (and paid for) over and over. Mail with no conversation id is judged on
+ *   its own (codex): an unrelated draft for the same person never holds it back.
  * - The job id is the stored mail's record id, so a retried sync never queues the same mail twice.
  */
 import { replyDraftingEnabled } from '@intelliflow/domain';
@@ -68,18 +70,23 @@ async function draftWaiting(
   deps: ReplyDraftDeps,
   tenantId: string,
   subject: { contactId: string } | { leadId: string },
-  conversationId: string | null
+  conversationId: string
 ): Promise<boolean> {
   const waiting = await deps.prisma.contactReplyDraft.findFirst({
-    where: {
-      tenantId,
-      ...subject,
-      status: 'DRAFT',
-      ...(conversationId ? { emailThreadId: conversationId } : {}),
-    },
+    where: { tenantId, ...subject, status: 'DRAFT', emailThreadId: conversationId },
     select: { id: true },
   });
   return waiting !== null;
+}
+
+/** The deduplication id of a conversation's draft: tenant, person and conversation. */
+function conversationKey(
+  tenantId: string,
+  subject: { contactId: string } | { leadId: string },
+  conversationId: string
+): string {
+  const person = 'contactId' in subject ? `contact:${subject.contactId}` : `lead:${subject.leadId}`;
+  return `reply-draft:${tenantId}:${person}:${conversationId}`;
 }
 
 /** Who the draft answers. A contact wins when the sender is both: it waits where the mail was logged. */
@@ -113,7 +120,10 @@ export async function queueReplyDraftForSyncedMail(
       select: { aiAutoReplyDrafting: true },
     });
     if (!replyDraftingEnabled(setting?.aiAutoReplyDrafting)) return false;
-    if (await draftWaiting(deps, mailbox.tenantId, subject, message.conversationId)) return false;
+    const conversationId = message.conversationId;
+    if (conversationId && (await draftWaiting(deps, mailbox.tenantId, subject, conversationId))) {
+      return false;
+    }
     const thread = await threadOf(deps, mailbox, message, recordId);
     if (thread.length === 0) return false;
     const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
@@ -133,8 +143,15 @@ export async function queueReplyDraftForSyncedMail(
         })),
         ...(mailbox.userId ? { createdBy: mailbox.userId } : {}),
       },
-      // One job per stored mail: a retried sync round never queues it twice.
-      { jobId: `reply-draft-${recordId}` }
+      {
+        // One job per stored mail: a retried sync round never queues it twice.
+        jobId: `reply-draft-${recordId}`,
+        // One job per conversation while it is queued or running (codex): two mails of a thread
+        // synced before the first draft is written queue one draft, not two.
+        ...(conversationId
+          ? { deduplication: { id: conversationKey(mailbox.tenantId, subject, conversationId) } }
+          : {}),
+      }
     );
     return true;
   } catch (error) {

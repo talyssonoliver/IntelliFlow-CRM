@@ -63,7 +63,11 @@ describe('queueReplyDraftForSyncedMail (MVP-012 PR C)', () => {
     const [queueName, jobName, data, options] = enqueue.mock.calls[0]!;
     expect(queueName).toBe('ai-reply-draft');
     expect(jobName).toBe('draft');
-    expect(options).toEqual({ jobId: 'reply-draft-rec-1' });
+    expect(options).toEqual({
+      jobId: 'reply-draft-rec-1',
+      // Held while the job is queued or running: a second mail of the thread queues no other.
+      deduplication: { id: `reply-draft:${TENANT}:lead:lead-1:conv-9` },
+    });
     expect(data).toMatchObject({
       leadId: 'lead-1',
       tenantId: TENANT,
@@ -130,11 +134,25 @@ describe('queueReplyDraftForSyncedMail (MVP-012 PR C)', () => {
   it('uses just the stored mail when it has no conversation', async () => {
     const db = prisma();
     await queue(db, { message: mail({ conversationId: null }) });
+    expect(enqueue.mock.calls[0]![3]).toEqual({ jobId: 'reply-draft-rec-1' });
     expect(db.emailRecord.findMany.mock.calls[0]![0].where).toEqual({
       tenantId: TENANT,
       id: 'rec-1',
     });
     expect(enqueue.mock.calls[0]![2]).not.toHaveProperty('emailThreadId');
+  });
+
+  it('never holds mail with no conversation back on an unrelated draft (codex)', async () => {
+    const db = prisma({ waiting: { id: 'draft-other-thread' } });
+    await expect(queue(db, { message: mail({ conversationId: null }) })).resolves.toBe(true);
+    expect(db.contactReplyDraft.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('keys the conversation by tenant and person, so another person’s thread is apart', async () => {
+    await queue(prisma(), { party: { contactId: 'contact-1', leadId: null } });
+    expect(enqueue.mock.calls[0]![3].deduplication).toEqual({
+      id: `reply-draft:${TENANT}:contact:contact-1:conv-9`,
+    });
   });
 
   it('cuts long bodies before queueing them', async () => {
