@@ -318,6 +318,40 @@ describe('webhook mail', () => {
   });
 });
 
+describe('logged mail', () => {
+  it('keeps a lead waiting when the received mail was logged to them from the Inbox', async () => {
+    const t = tables();
+    t.leadActivities = [
+      {
+        leadId: 'lead-a',
+        tenantId: 't1',
+        type: 'EMAIL',
+        title: 'Question',
+        timestamp: day(12),
+        metadata: { emailRecordId: 'rec-1', source: 'log-to-contact' },
+      } as never,
+    ];
+    t.contactActivities = [];
+    t.emails = [
+      {
+        tenantId: 't1',
+        subject: 'Question',
+        status: 'DELIVERED',
+        metadata: { threadId: 'x' },
+        userId: null,
+        contactId: null,
+        fromEmail: 'lead-a@example.invalid',
+        toEmail: 'me@example.invalid',
+        ccEmails: null,
+        sentAt: null,
+        createdAt: day(12),
+      } as never,
+    ];
+    const items = await loadWaiting(fakeDb(t), 't1', { tenantId: 't1' }, { tenantId: 't1' });
+    expect(items.map((i) => i.id)).toEqual(['lead-a']);
+  });
+});
+
 describe('narrowToWaiting (the leads-list filter)', () => {
   const ctx = (db: unknown) =>
     ({

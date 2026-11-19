@@ -51,6 +51,15 @@ function metadataDirection(metadata: unknown): ActivityDirection | undefined {
   return value === 'inbound' || value === 'outbound' ? value : undefined;
 }
 
+/**
+ * True for an activity that only logs an email_records row against a person (the Inbox's log to
+ * contact) and carries no direction of its own: the record is counted with its real direction.
+ */
+export function isUntaggedRecordLog(metadata: unknown): boolean {
+  if (!metadata || typeof metadata !== 'object' || metadataDirection(metadata)) return false;
+  return Boolean((metadata as { emailRecordId?: unknown }).emailRecordId);
+}
+
 /** Direction of a lead/contact EMAIL activity row; untagged rows read as the Emails tab does. */
 export function activityRowDirection(row: { title: string; metadata: unknown }): ActivityDirection {
   const stored = metadataDirection(row.metadata);

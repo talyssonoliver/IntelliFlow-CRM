@@ -7,6 +7,7 @@
 import type { PrismaClient } from '@intelliflow/db';
 import {
   activityRowDirection,
+  isUntaggedRecordLog,
   personKey,
   pickWaiting,
   recordDirection,
@@ -70,6 +71,7 @@ async function loadActivityMail(db: PrismaClient, tenantId: string): Promise<Mai
       take: MAIL_CAP,
     }),
   ]);
+  const own = (r: { metadata: unknown }) => !isUntaggedRecordLog(r.metadata);
   const toEvent = (key: string, r: { title: string; timestamp: Date; metadata: unknown }) => ({
     key,
     direction: activityRowDirection(r),
@@ -77,8 +79,8 @@ async function loadActivityMail(db: PrismaClient, tenantId: string): Promise<Mai
     subject: r.title,
   });
   return [
-    ...leadRows.map((r) => toEvent(personKey('lead', r.leadId), r)),
-    ...contactRows.map((r) => toEvent(personKey('contact', r.contactId), r)),
+    ...leadRows.filter(own).map((r) => toEvent(personKey('lead', r.leadId), r)),
+    ...contactRows.filter(own).map((r) => toEvent(personKey('contact', r.contactId), r)),
   ];
 }
 
