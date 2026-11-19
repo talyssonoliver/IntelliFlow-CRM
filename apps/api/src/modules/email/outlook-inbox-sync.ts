@@ -8,7 +8,8 @@
  *
  * What is stored, on purpose:
  * - Only mail with an existing lead or contact of the mailbox's tenant (the sender of received
- *   mail, a recipient of sent mail). Personal mail never
+ *   mail, a recipient of sent mail), plus received mail from a real person who is neither: that is
+ *   a new enquiry and becomes a new lead (MVP-011, mail-sync-enquiry.ts). Personal mail never
  *   reaches the CRM, and an erased person (whose lead/contact keeps only a placeholder address)
  *   is never matched, so erased data cannot come back through the sync.
  * - Nothing from a sender with an active processing restriction.
@@ -37,6 +38,13 @@ import {
 } from './mail-sync-reader';
 import { learnThread, logOnLead, threadOf, type LoggedRecord } from './mail-sync-links';
 import { messageIdHeader, recordData } from './mail-sync-record';
+import {
+  MAX_ENQUIRIES_PER_RUN,
+  createEnquiryLead,
+  erasedSince,
+  isEnquirySender,
+  type CreateLead,
+} from './mail-sync-enquiry';
 
 export const INBOX_SYNC_INTERVAL_MS = 5 * 60_000;
 const LEASE_MS = 5 * 60_000;
@@ -66,6 +74,8 @@ export interface InboxSyncDeps {
   now: () => Date;
   /** The reader per readable mailbox kind; defaults to PRODUCTION_READERS. */
   readers?: Partial<Record<string, MailSyncReader>>;
+  /** MVP-011: the lead use case; without it unknown senders are skipped as before. */
+  createLead?: CreateLead;
 }
 
 function readersOf(deps: InboxSyncDeps): Partial<Record<string, MailSyncReader>> {
@@ -78,6 +88,9 @@ export interface InboxSyncReport {
   skipped: number;
   failures: number;
   restarts: number;
+  /** MVP-011: new leads made from unknown senders this run, and mails held back by the cap. */
+  leadsCreated: number;
+  leadsCapped: number;
 }
 
 /** The mailbox row as the encrypted client returns it (the token helper reads its credentials). */
@@ -97,7 +110,16 @@ interface Claim {
   leaseUntil: Date;
 }
 
-type StoreOutcome = 'stored' | 'duplicate' | 'unmatched' | 'restricted' | 'own' | 'rejected';
+type Party = { email: string; contactId: string | null; leadId: string | null };
+
+type StoreOutcome =
+  | 'stored'
+  | 'duplicate'
+  | 'unmatched'
+  | 'restricted'
+  | 'own'
+  | 'rejected'
+  | 'capped';
 
 function prismaCode(error: unknown): string | undefined {
   return (error as { code?: unknown })?.code as string | undefined;
@@ -226,16 +248,41 @@ async function bodyOf(message: SyncedMessage): Promise<string | null> {
   }
 }
 
+/** The lead or contact the mail is with; else, for an eligible stranger, a new enquiry (MVP-011). */
+async function partyOf(
+  deps: InboxSyncDeps,
+  mailbox: SyncMailbox,
+  message: SyncedMessage,
+  folder: SyncFolder
+): Promise<{ party: Party; enquiry: boolean } | null> {
+  const known = await counterparty(deps, mailbox, message, folder);
+  if (known) {
+    // A lead made from a later mail must not let mail from before the sender's erasure back in.
+    const old = deps.createLead && folder === 'inbox' && message.fromAddress;
+    if (old && (await erasedSince(deps, mailbox, message.fromAddress!, message.receivedAt))) {
+      return null;
+    }
+    return { party: known, enquiry: false };
+  }
+  if (!(await isEnquirySender(deps, mailbox, message, folder))) return null;
+  const email = message.fromAddress!.toLowerCase();
+  return { party: { email, contactId: null, leadId: null }, enquiry: true };
+}
+
 export async function storeSyncedMessage(
   deps: InboxSyncDeps,
   mailbox: SyncMailbox,
   message: SyncedMessage,
   folder: SyncFolder = 'inbox',
-  provider: MailSyncReader['provider'] = 'MICROSOFT'
+  provider: MailSyncReader['provider'] = 'MICROSOFT',
+  /** The run's counters: the cap on new enquiry leads is per run. */
+  enquiries?: Pick<InboxSyncReport, 'leadsCreated'>
 ): Promise<StoreOutcome> {
   if (folder === 'inbox' && !message.fromAddress) return 'own';
-  const party = await counterparty(deps, mailbox, message, folder);
-  if (!party) return 'unmatched';
+  const found = await partyOf(deps, mailbox, message, folder);
+  if (!found) return 'unmatched';
+  let party = found.party;
+  const enquiry = found.enquiry;
   if (await anyoneRestricted(deps, mailbox, message)) return 'restricted';
   const logged = await alreadyLogged(deps, mailbox, message);
   if (logged) {
@@ -247,10 +294,37 @@ export async function storeSyncedMessage(
   // content is never fetched).
   const body = await bodyOf(message);
   if (body === null) return 'rejected';
+  if (enquiry) {
+    const created = await openEnquiry(deps, mailbox, message, enquiries);
+    if (created === 'capped' || created === null) return created === null ? 'unmatched' : 'capped';
+    party = { ...party, leadId: created };
+  }
+  return writeMail(deps, { mailbox, message, folder, provider, party, body, threadId });
+}
+
+/** MVP-011: the new lead for an enquiry; 'capped' when this run's cap is reached; null when refused. */
+async function openEnquiry(
+  deps: InboxSyncDeps,
+  mailbox: SyncMailbox,
+  message: SyncedMessage,
+  enquiries?: Pick<InboxSyncReport, 'leadsCreated'>
+): Promise<string | 'capped' | null> {
+  if ((enquiries?.leadsCreated ?? 0) >= MAX_ENQUIRIES_PER_RUN) return 'capped';
+  const created = await createEnquiryLead(deps, mailbox, message);
+  if (created && enquiries) enquiries.leadsCreated += 1;
+  return created;
+}
+
+/** Stores the mail (and, for a lead, its timeline entry in the same transaction). */
+async function writeMail(
+  deps: InboxSyncDeps,
+  args: Parameters<typeof recordData>[0]
+): Promise<StoreOutcome> {
+  const { mailbox, message, folder, party } = args;
   const leadId = party.leadId;
   const write = async (db: any) => {
     const record: { id: string } = await db.emailRecord.create({
-      data: recordData({ mailbox, message, folder, provider, party, body, threadId }),
+      data: recordData(args),
       select: { id: true },
     });
     if (leadId) await logOnLead({ prisma: db }, mailbox, message, leadId, record.id, folder);
@@ -327,7 +401,21 @@ async function syncFolder(
       countOutcome(tally, 'left', round.messages.length - index);
       return { ...round, cursor: startedFrom, complete: false };
     }
-    const outcome = await storeSyncedMessage(deps, mailbox, message, folder, run.reader.provider);
+    const outcome = await storeSyncedMessage(
+      deps,
+      mailbox,
+      message,
+      folder,
+      run.reader.provider,
+      run.report
+    );
+    if (outcome === 'capped') {
+      // The run's cap on new enquiry leads is reached: keep this mail and the rest for the next
+      // run (same hold as running out of time), so a backlog is worked off in steps, never lost.
+      run.report.leadsCapped += round.messages.length - index;
+      countOutcome(tally, 'left', round.messages.length - index);
+      return { ...round, cursor: startedFrom, complete: false };
+    }
     countOutcome(tally, outcome);
     if (outcome === 'stored') run.report.stored += 1;
     else run.report.skipped += 1;
@@ -415,6 +503,8 @@ export async function runInboxSync(deps: InboxSyncDeps): Promise<InboxSyncReport
     skipped: 0,
     failures: 0,
     restarts: 0,
+    leadsCreated: 0,
+    leadsCapped: 0,
   };
   const startedAt = deps.now().getTime();
   const kinds = Object.keys(readersOf(deps));
@@ -450,5 +540,8 @@ export async function createInboxSyncDeps(): Promise<InboxSyncDeps> {
     isRestricted: async (tenantId, email) =>
       (await restrictions.status(tenantId, email)).restricted,
     now: () => new Date(),
+    // MVP-011: unknown senders become leads through the lead use case.
+    createLead: ((props, tx) =>
+      (container as any).leadService.createLeadInTransaction(props, tx)) as CreateLead,
   };
 }
