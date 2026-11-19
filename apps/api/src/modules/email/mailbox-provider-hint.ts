@@ -39,6 +39,11 @@ const PERSONAL_DOMAINS: ReadonlyMap<string, MailProvider> = new Map([
   ['gmx.com', 'OTHER'],
 ]);
 
+/** True for a free personal mailbox domain (gmail.com ...): many unrelated people share it. */
+export function isPersonalMailDomain(domain: string): boolean {
+  return PERSONAL_DOMAINS.has(domain.toLowerCase());
+}
+
 const LOOKUP_TIMEOUT_MS = 3_000;
 const CACHE_TTL_MS = 10 * 60_000;
 const CACHE_MAX = 500;

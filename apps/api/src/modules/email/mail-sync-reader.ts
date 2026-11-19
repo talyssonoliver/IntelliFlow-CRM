@@ -32,6 +32,8 @@ export interface SyncedMessage {
   receivedAt: Date;
   isRead: boolean;
   bodyText: string;
+  /** True for bulk mail (a List-Unsubscribe or Precedence: bulk/list/junk header), where the reader sees headers. */
+  bulk?: boolean;
   /** When set, the body is read only for mail the sync keeps (`bodyText` is then empty). */
   loadBody?: () => Promise<string>;
 }
