@@ -8,7 +8,7 @@
  * aligned to the portal drain's retry classification (2xx=sent, 4xx≠408/425/429=dead,
  * 429/5xx=retryable). See docs/pm/crm-pm-event-receiver-contract.md.
  */
-import { createHash } from 'node:crypto';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { IDEMPOTENCY_KEY_RE, pmEventEnvelopeSchema } from './pm-event-envelope';
 import type { InboundPmEventStore } from './inbound-store';
 
@@ -38,6 +38,15 @@ const err = (statusCode: number, error: SafeErrorCode): ProcessPmEventResult => 
   body: { accepted: false, error },
 });
 
+/**
+ * Compares the presented token with the shared secret by their SHA-256 digests, with
+ * timingSafeEqual: both digests are 32 bytes, so tokens of any length compare the same way.
+ */
+export function sameSecret(presented: string | undefined, secret: string): boolean {
+  const digest = (value: string) => createHash('sha256').update(value, 'utf8').digest();
+  return timingSafeEqual(digest(presented ?? ''), digest(secret));
+}
+
 export async function processPmEvent(input: ProcessPmEventInput): Promise<ProcessPmEventResult> {
   const now = input.now ?? (() => new Date());
 
@@ -47,7 +56,7 @@ export async function processPmEvent(input: ProcessPmEventInput): Promise<Proces
 
   // 2. Bearer auth — non-retryable 401.
   const parts = (input.authorizationHeader ?? '').split(' ');
-  if (parts.length !== 2 || parts[0]?.toLowerCase() !== 'bearer' || parts[1] !== secret) {
+  if (parts.length !== 2 || parts[0]?.toLowerCase() !== 'bearer' || !sameSecret(parts[1], secret)) {
     return err(401, 'unauthorized');
   }
 
