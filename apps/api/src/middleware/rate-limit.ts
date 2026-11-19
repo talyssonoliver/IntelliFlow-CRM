@@ -25,7 +25,7 @@ export interface RateLimitTier {
   name: string;
 }
 
-interface WindowState {
+export interface WindowState {
   count: number;
   windowStart: number;
 }
@@ -138,6 +138,31 @@ function getRetryAfterSeconds(windowStart: number, windowMs: number): number {
   return Math.max(1, Math.ceil((windowMs - elapsed) / 1000));
 }
 
+/** Most windows one in-memory limiter keeps; anonymous callers are keyed per address. */
+export const MAX_TRACKED_KEYS = 10_000;
+
+/**
+ * Keeps an in-memory limiter's store bounded. A key is only removed when the same caller comes
+ * back after its window, so with one key per anonymous address the store grew with every address
+ * ever seen. Call it when a NEW key is about to be added: once per window (and whenever the store
+ * is full) it drops expired windows, and if the store is still full it drops the oldest keys.
+ */
+export function createStoreSweeper(store: Map<string, WindowState>, windowMs: number) {
+  let lastSweep = Date.now();
+  return (now: number): void => {
+    if (now - lastSweep < windowMs && store.size < MAX_TRACKED_KEYS) return;
+    lastSweep = now;
+    for (const [key, state] of store) {
+      if (now - state.windowStart >= windowMs) store.delete(key);
+    }
+    // Maps iterate in insertion order, so the first keys are the oldest.
+    for (const key of store.keys()) {
+      if (store.size < MAX_TRACKED_KEYS) break;
+      store.delete(key);
+    }
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Middleware factories
 // ---------------------------------------------------------------------------
@@ -148,6 +173,7 @@ function getRetryAfterSeconds(windowStart: number, windowMs: number): number {
  */
 export function createRateLimitMiddleware(limit = 100, windowMs = 60000) {
   const store = new Map<string, WindowState>();
+  const sweep = createStoreSweeper(store, windowMs);
 
   return async ({ ctx, next }: MiddlewareOpts) => {
     const key = getKey(ctx);
@@ -162,6 +188,7 @@ export function createRateLimitMiddleware(limit = 100, windowMs = 60000) {
     }
 
     if (!state) {
+      sweep(now);
       state = { count: 0, windowStart: now };
       store.set(key, state);
     }
@@ -199,6 +226,7 @@ export function createLenientRateLimitMiddleware() {
  */
 export function createTieredRateLimitMiddleware(tier: RateLimitTier) {
   const store = new Map<string, WindowState>();
+  const sweep = createStoreSweeper(store, tier.windowMs);
 
   return async ({ ctx, next }: MiddlewareOpts) => {
     const key = getKey(ctx);
@@ -212,6 +240,7 @@ export function createTieredRateLimitMiddleware(tier: RateLimitTier) {
     }
 
     if (!state) {
+      sweep(now);
       state = { count: 0, windowStart: now };
       store.set(key, state);
     }
