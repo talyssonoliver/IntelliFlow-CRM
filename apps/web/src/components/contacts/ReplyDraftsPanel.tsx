@@ -176,6 +176,8 @@ export function ReplyDraftsPanel({ contactId, leadId, enabled }: Readonly<ReplyD
       ? utils.replyDraft.listForLead.invalidate({ leadId })
       : utils.contact.listReplyDrafts.invalidate({ contactId });
     invalidating.catch(() => undefined);
+    // A sent reply lands on the lead's Emails tab and timeline, both read from the lead (codex).
+    if (leadId) utils.lead.getById.invalidate({ id: leadId }).catch(() => undefined);
   };
 
   return (
