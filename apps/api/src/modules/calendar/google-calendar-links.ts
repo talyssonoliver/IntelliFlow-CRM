@@ -4,7 +4,7 @@
  * table (calendar_event_links) makes both directions idempotent; the etag and times kept on a link
  * tell an echo of our own write from a real change.
  */
-import type { FullSyncWindow } from '@intelliflow/adapters';
+import type { CalendarAppointmentLike, FullSyncWindow } from '@intelliflow/adapters';
 import type { ExternalCalendarEvent, OAuthTokens } from '@intelliflow/application';
 import type { DomainError, Result } from '@intelliflow/domain';
 
@@ -29,6 +29,18 @@ export interface CalendarGateway {
     pageToken?: string,
     window?: FullSyncWindow
   ): Promise<Result<ChangesPage, DomainError>>;
+  createEvent(
+    tokens: OAuthTokens,
+    appointment: CalendarAppointmentLike,
+    idempotencyKey: string,
+    options?: { eventId?: string }
+  ): Promise<Result<ExternalCalendarEvent, DomainError>>;
+  patchEvent(
+    tokens: OAuthTokens,
+    eventId: string,
+    appointment: CalendarAppointmentLike
+  ): Promise<Result<ExternalCalendarEvent, DomainError>>;
+  deleteEvent(tokens: OAuthTokens, eventId: string): Promise<Result<void, DomainError>>;
   /** One event by id; null when Google has no such event (deleted). */
   getEvent(
     tokens: OAuthTokens,
@@ -92,6 +104,12 @@ export interface SyncContext {
   /** Events that failed to apply and are tried again next round, with their attempts so far. */
   failed: Map<string, number>;
 }
+
+/**
+ * The id Aurora gives an event it creates (a sha-256 in hex). Google's own events have shorter ids, so an
+ * event with this shape that has no link yet is one Aurora is still linking: the pull leaves it to the push.
+ */
+export const AURORA_EVENT_ID = /^[0-9a-v]{64}$/;
 
 export function prismaCode(error: unknown): string | undefined {
   const code = (error as { code?: unknown } | null)?.code;

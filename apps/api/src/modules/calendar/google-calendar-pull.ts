@@ -14,6 +14,7 @@ import {
 } from '@intelliflow/application';
 import {
   ACTIVE_STATUSES,
+  AURORA_EVENT_ID,
   appointmentFields,
   isPersonal,
   prismaCode,
@@ -401,7 +402,7 @@ async function applyEvent(ctx: SyncContext, event: ExternalCalendarEvent): Promi
 }
 
 async function importEvent(ctx: SyncContext, event: ExternalCalendarEvent): Promise<void> {
-  if (isPersonal(event)) {
+  if (isPersonal(event) || AURORA_EVENT_ID.test(event.externalId)) {
     ctx.report.skipped += 1;
     return;
   }

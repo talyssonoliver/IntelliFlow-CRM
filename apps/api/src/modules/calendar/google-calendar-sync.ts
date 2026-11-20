@@ -1,7 +1,7 @@
 /**
  * Google Calendar sync (MVP-013). Like the inbox sync, each due mailbox (a user's own Google mailbox
  * with the calendar permission, due every five minutes) is claimed one at a time with a lease, read
- * (google-calendar-pull.ts; the push of Aurora's own is a later change) and released with the outcome.
+ * (google-calendar-pull.ts) then written to (google-calendar-push.ts), and released with the outcome.
  * A failure backs the mailbox off and never changes its mail status. Google answering that the
  * calendar permission is gone marks it NEEDS_RECONNECT, and the sync stops until the user reconnects.
  * The tick that runs this is wired in a later change.
@@ -29,6 +29,7 @@ import {
   type SyncContext,
 } from './google-calendar-links';
 import { pullChanges, type PullResult } from './google-calendar-pull';
+import { pushChanges, type PushResult } from './google-calendar-push';
 
 export const CALENDAR_SYNC_INTERVAL_MS = 5 * 60_000;
 const LEASE_MS = 5 * 60_000;
@@ -185,24 +186,26 @@ async function syncMailbox(
     let access = await getOAuthAccess(deps.prisma, mailbox, deps.transports, now);
     version = access.tokenVersion;
     const deadline = deps.now().getTime() + MAILBOX_BUDGET_MS;
-    const pullWith = (accessToken: string) =>
-      pullChanges(
-        roundContext(deps, mailbox, accessToken, now, report, deadline),
-        mailbox.calendarSyncToken
-      );
-    let pulled: PullResult;
+    // Google's changes first, then Aurora's: what the pull finished stays even if the push fails.
+    const round = async (accessToken: string) => {
+      const ctx = roundContext(deps, mailbox, accessToken, now, report, deadline);
+      const pulled = await pullChanges(ctx, mailbox.calendarSyncToken);
+      progress.calendarSyncToken = pulled.syncToken;
+      return { pulled, pushed: await pushChanges(ctx) };
+    };
+    let done: { pulled: PullResult; pushed: PushResult };
     try {
-      pulled = await pullWith(access.accessToken);
+      done = await round(access.accessToken);
     } catch (error) {
       if (!(error instanceof CalendarAuthenticationError)) throw error;
       // The access token may just have run out during the round: drop it and go again with a fresh
-      // one, once (the pull is idempotent from the stored token). Refused again, the permission is gone.
+      // one, once (both directions are idempotent). Refused again, the permission is gone.
       forgetAccessToken(mailbox.id);
       access = await getOAuthAccess(deps.prisma, mailbox, deps.transports, now);
       version = access.tokenVersion;
-      pulled = await pullWith(access.accessToken);
+      done = await round(access.accessToken);
     }
-    progress.calendarSyncToken = pulled.syncToken;
+    const { pulled, pushed } = done;
     report.mailboxesSynced += 1;
     await release(deps, claim, version, {
       calendarSyncToken: pulled.syncToken,
@@ -210,9 +213,10 @@ async function syncMailbox(
       calendarFailureCount: 0,
       // More to do: due again on the next tick (after Google's wait, if it asked for one); caught up:
       // wait the interval.
-      calendarNextSyncAt: pulled.complete
-        ? nextRound
-        : new Date(deps.now().getTime() + (pulled.retryAfterMs ?? 0)),
+      calendarNextSyncAt:
+        pulled.complete && pushed.complete
+          ? nextRound
+          : new Date(deps.now().getTime() + (pulled.retryAfterMs ?? 0)),
     });
   } catch (error) {
     // Google says the permission is not there (never granted or withdrawn): stop until reconnected.
