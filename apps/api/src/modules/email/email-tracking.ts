@@ -69,6 +69,43 @@ function asciiLower(text: string): string {
   return text.replace(/[A-Z]/g, (char) => String.fromCharCode(char.charCodeAt(0) + 32));
 }
 
+/** A numeric reference's code point when a browser reads it as written, else null (see below). */
+function numericChar(code: number): string | null {
+  // Not 0x80-0x9F (remapped to other characters), controls, surrogates or noncharacters.
+  const plain =
+    (code >= 0x20 && code <= 0x7e) ||
+    (code >= 0xa0 && code <= 0xd7ff) ||
+    (code >= 0xe000 && code <= 0xfdcf) ||
+    (code >= 0xfdf0 && code <= 0xfffd);
+  return Number.isInteger(code) && plain ? String.fromCodePoint(code) : null;
+}
+
+function isDigit(char: string, hex: boolean): boolean {
+  return hex ? /[0-9a-f]/i.test(char) : /[0-9]/.test(char);
+}
+
+/** The end (exclusive) of the run of letters and digits that starts at `from`. */
+function referenceRunEnd(text: string, from: number, hex = false, digitsOnly = false): number {
+  let at = from;
+  while (
+    at < text.length &&
+    (digitsOnly ? isDigit(text.charAt(at), hex) : /[a-z0-9]/i.test(text.charAt(at)))
+  ) {
+    at += 1;
+  }
+  return at;
+}
+
+/** A numeric reference at `amp` ("&#38;", "&#x26;"): its character and the index after it, or null. */
+function decodeNumeric(text: string, amp: number): { char: string; next: number } | null {
+  const hex = text.charAt(amp + 2) === 'x' || text.charAt(amp + 2) === 'X';
+  const first = amp + (hex ? 3 : 2);
+  const last = referenceRunEnd(text, first, hex, true);
+  if (last === first || text.charAt(last) !== ';' || last - first > 7) return null;
+  const char = numericChar(Number.parseInt(text.slice(first, last), hex ? 16 : 10));
+  return char === null ? null : { char, next: last + 1 };
+}
+
 /** The references HTML defines with exactly these spellings (a mixed-case "Amp" is not one). */
 const NAMED_ENTITIES: ReadonlyMap<string, string> = new Map([
   ['amp', '&'],
@@ -82,55 +119,37 @@ const NAMED_ENTITIES: ReadonlyMap<string, string> = new Map([
   ['GT', '>'],
 ]);
 
-function entityChar(name: string): string | null {
-  const named = NAMED_ENTITIES.get(name);
-  if (named !== undefined) return named;
-  if (!name.startsWith('#')) return null;
-  const hex = name.charAt(1) === 'x' || name.charAt(1) === 'X';
-  const code = hex ? Number.parseInt(name.slice(2), 16) : Number.parseInt(name.slice(1), 10);
-  // Only code points a browser reads as written: not 0x80-0x9F (remapped to other characters), not controls,
-  // surrogates or noncharacters.
-  const plain =
-    (code >= 0x20 && code <= 0x7e) ||
-    (code >= 0xa0 && code <= 0xd7ff) ||
-    (code >= 0xe000 && code <= 0xfdcf) ||
-    (code >= 0xfdf0 && code <= 0xfffd);
-  return Number.isInteger(code) && plain ? String.fromCodePoint(code) : null;
-}
-
-function isReferenceChar(char: string): boolean {
-  return /[a-z0-9]/i.test(char);
-}
-
-/** The end (exclusive) of the run of letters and digits that starts at `from`. */
-function referenceRunEnd(text: string, from: number): number {
-  let at = from;
-  while (at < text.length && isReferenceChar(text.charAt(at))) at += 1;
-  return at;
-}
-
 /**
- * An attribute value as a browser reads it: the common named and numeric character references decoded.
- * Null when it holds a reference we cannot decode exactly (a numeric one without its semicolon, an unknown or
- * very long name; the full table has over two thousand names): that link is then left as written, which always
- * works, instead of being tracked with a wrong destination. A bare "&" before anything else is a literal "&".
+ * An attribute value as a browser reads it, for the references we can decode exactly: the five common named ones
+ * and numeric ones, each with its semicolon. "&name=" is a literal "&" (the attribute rule of HTML), as is a bare
+ * "&". Anything else (a reference without its semicolon, an unknown or mixed-case name, a code point a browser
+ * remaps) returns null: that link is then left as written, which always works, instead of being tracked with a
+ * destination that might differ from the one the browser would open.
  */
 function decodeEntities(text: string): string | null {
   let out = '';
   let from = 0;
   for (let amp = text.indexOf('&', from); amp !== -1; amp = text.indexOf('&', from)) {
     out += text.slice(from, amp);
-    const numeric = text.charAt(amp + 1) === '#';
-    const nameEnd = referenceRunEnd(text, amp + (numeric ? 2 : 1));
-    const closed = text.charAt(nameEnd) === ';' && nameEnd - amp <= 10;
-    if (numeric || (nameEnd > amp + 1 && text.charAt(nameEnd) === ';')) {
-      const char = closed ? entityChar(text.slice(amp + 1, nameEnd)) : null;
-      if (char === null) return null;
+    if (text.charAt(amp + 1) === '#') {
+      const numeric = decodeNumeric(text, amp);
+      if (numeric === null) return null;
+      out += numeric.char;
+      from = numeric.next;
+      continue;
+    }
+    const nameEnd = referenceRunEnd(text, amp + 1);
+    const terminator = text.charAt(nameEnd);
+    if (nameEnd > amp + 1 && terminator === ';') {
+      const char = NAMED_ENTITIES.get(text.slice(amp + 1, nameEnd));
+      if (char === undefined) return null;
       out += char;
       from = nameEnd + 1;
-    } else {
+    } else if (nameEnd === amp + 1 || terminator === '=') {
       out += '&';
       from = amp + 1;
+    } else {
+      return null;
     }
   }
   return out + text.slice(from);
