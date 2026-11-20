@@ -52,6 +52,7 @@ const UNAUTH_SPECS = [
   '**/smoke.spec.ts',
   '**/icons.spec.ts',
   '**/features-tour.spec.ts',
+  '**/landing-taps.spec.ts',
   '**/email/inbound-webhook.spec.ts',
   '**/preview/aurora-preview.spec.ts',
 ];
