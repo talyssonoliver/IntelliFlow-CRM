@@ -62,6 +62,21 @@ describe('WaitingForReplySection', () => {
     expect(section.queryByText(/See leads waiting/)).toBeNull();
   });
 
+  it('does not repeat the company when the person is named after it (#45)', () => {
+    render(
+      <WaitingForReplySection
+        now={NOW}
+        total={1}
+        leadTotal={1}
+        people={[
+          person({ name: 'West London Handyman Ltd', company: ' west london HANDYMAN ltd ' }),
+        ]}
+      />
+    );
+    const name = screen.getByText('West London Handyman Ltd');
+    expect(name.textContent).toBe('West London Handyman Ltd');
+  });
+
   it('links to the Waiting for reply list when more are waiting than the card lists', () => {
     render(<WaitingForReplySection now={NOW} total={7} leadTotal={5} people={[person({})]} />);
     expect(screen.getByText('Waiting for reply (7)')).toBeTruthy();

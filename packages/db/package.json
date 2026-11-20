@@ -34,6 +34,7 @@
     "db:migrate:dev": "node ../../tools/scripts/guard-db-target.mjs migrate-dev && prisma migrate dev",
     "db:migrate:create": "prisma migrate dev --create-only",
     "db:migrate:deploy": "prisma migrate deploy",
+    "db:drift": "prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script --exit-code",
     "db:studio": "prisma studio",
     "db:seed": "tsx --env-file-if-exists=.env prisma/seed.ts",
     "db:cleanup-legacy": "tsx --env-file-if-exists=.env prisma/cleanup-legacy-seed-ids.ts",

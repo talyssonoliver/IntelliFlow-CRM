@@ -100,6 +100,8 @@ import {
   httpUrlOrNull,
   insightRecommendations,
   leadActivityMetrics,
+  displayActivityText,
+  leadCompanyIfDistinct,
   mergeEmailEngagement,
   leadDisplayName,
   leadExportFields,
@@ -386,7 +388,7 @@ function matchesActivitySearch(activity: Activity, query: string): boolean {
   const q = query.toLowerCase();
   return (
     activity.title.toLowerCase().includes(q) ||
-    activity.description.toLowerCase().includes(q) ||
+    displayActivityText(activity.description).toLowerCase().includes(q) ||
     activity.user.toLowerCase().includes(q) ||
     !!activity.metadata?.subject?.toLowerCase().includes(q) ||
     !!activity.metadata?.preview?.toLowerCase().includes(q) ||
@@ -1015,7 +1017,7 @@ function ActivityTimelineItem({
           <div className="min-w-0 flex-1 break-words">
             <p className="text-sm font-semibold text-slate-900 dark:text-white">{activity.title}</p>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-              {activity.description}
+              {displayActivityText(activity.description)}
             </p>
             <p className="text-xs text-slate-500 mt-1">
               {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
@@ -1790,7 +1792,7 @@ function LeadRightSidebar({
   );
 }
 
-// ─── Tab bar ──────────────────────────────────────────────────────────────────
+// ─── Tab bar (wraps on a phone: seven tabs do not fit 390px) ──────────────────
 
 interface LeadTabBarProps {
   tabs: Tab[];
@@ -1812,12 +1814,12 @@ function LeadTabBar({
 }: LeadTabBarProps) {
   return (
     <Card>
-      <div className="flex border-b border-slate-200 dark:border-slate-800 px-2 overflow-x-auto">
+      <div className="flex flex-wrap border-b border-slate-200 dark:border-slate-800 px-2 sm:flex-nowrap sm:overflow-x-auto">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
+            className={`px-3 py-3 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap sm:px-4 sm:py-4 ${
               activeTab === tab.id
                 ? 'text-[#2a78f6] border-[#2a78f6]'
                 : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'
@@ -2524,7 +2526,7 @@ export default function Lead360Page() {
           type: 'lead',
           id: lead.id,
           title: leadDisplayName(lead),
-          subtitle: lead.company || undefined,
+          subtitle: leadCompanyIfDistinct(lead),
           icon: 'person',
           url: `/leads/${lead.id}`,
         }}

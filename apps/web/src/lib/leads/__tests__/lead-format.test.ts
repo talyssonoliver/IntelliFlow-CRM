@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
+  leadListSubtitle,
+  leadCompanyIfDistinct,
+  displayActivityText,
   isSameName,
   mergeEmailEngagement,
   describeScoreChange,
@@ -209,9 +212,14 @@ describe('lead-format · system tags (UI-017)', () => {
   it('recognises the COA sync bookkeeping tags', () => {
     expect(isSystemTag('coa-pipeline')).toBe(true);
     expect(isSystemTag('coa-lead:abc123')).toBe(true);
+    // #42: every tag the COA sync writes, not only the two it used to.
+    expect(isSystemTag('coa-qualified')).toBe(true);
     expect(isSystemTag('vip')).toBe(false);
     expect(isSystemTag('coa-pipeline-old')).toBe(false);
     expect(isSystemTag('my-coa-lead:1')).toBe(false);
+    // A tag a person names "coa-..." themselves stays visible.
+    expect(isSystemTag('coa-follow-up')).toBe(false);
+    expect(isSystemTag('coa-pitshanger')).toBe(false);
   });
 
   it('hides the other sync tags and a bare machine id (register row 42)', () => {
@@ -536,5 +544,101 @@ describe('mergeEmailEngagement (open rate from the CRM email records too)', () =
       { sent: 5, opened: 2 }
     );
     expect(merged.emailsOpened).toBeLessThanOrEqual(merged.emailsSent);
+  });
+});
+
+describe('leadListSubtitle (the leads list no longer repeats the company under the name)', () => {
+  it('leaves the company out when the lead is named after it', () => {
+    expect(
+      leadListSubtitle({ firstName: '', lastName: '', company: 'West London Handyman Ltd' })
+    ).toBe('');
+    expect(
+      leadListSubtitle({
+        firstName: null,
+        lastName: null,
+        company: ' pilates  LIVING ',
+        email: 'a@x.invalid',
+      })
+    ).toBe('');
+  });
+
+  it('keeps the title when the company is the name', () => {
+    expect(leadListSubtitle({ company: 'Acme', title: 'Owner' })).toBe('Owner');
+  });
+
+  it('shows "title @ company" and the company alone for a person with a different company', () => {
+    expect(
+      leadListSubtitle({ firstName: 'Jane', lastName: 'Doe', company: 'Acme', title: 'CEO' })
+    ).toBe('CEO @ Acme');
+    expect(leadListSubtitle({ firstName: 'Jane', lastName: 'Doe', company: 'Acme' })).toBe('Acme');
+  });
+
+  it('is empty when there is neither a company nor a title', () => {
+    expect(leadListSubtitle({ firstName: 'Jane', lastName: 'Doe' })).toBe('');
+  });
+});
+
+describe('displayActivityText (no machine ids in what a person reads, #42)', () => {
+  it('takes out the COA ledger row id the sync wrote into the text', () => {
+    expect(
+      displayActivityText(
+        'Private proposal link to pitshanger.leangency.com. COA ledger row cmw5j72u40001p5ug01kf3vot.'
+      )
+    ).toBe('Private proposal link to pitshanger.leangency.com.');
+    expect(displayActivityText('Replied. COA ledger row cmw5j72u40001p5ug01kf3vot')).toBe(
+      'Replied.'
+    );
+  });
+
+  it('leaves everything else alone: ids a person typed, links, addresses, words and numbers', () => {
+    const same = [
+      'Moved cmw5j72u40001p5ug01kf3vot to Proposal',
+      'Order cloudflare2024reportfinal shipped',
+      'See https://app.example.invalid/leads/cmw5j72u40001p5ug01kf3vot',
+      'Mail from cmw5j72u40001p5ug01kf3vot@x.invalid',
+      'Call about the conversation, 25 minutes, ref 4412',
+      'Characteristically internationalisation',
+    ];
+    for (const text of same) expect(displayActivityText(text)).toBe(text);
+  });
+  it('removes more than one, in any case, and leaves a marker with no id after it', () => {
+    expect(
+      displayActivityText(
+        'A. coa LEDGER row cmw5j72u40001p5ug01kf3vot. B. COA ledger row cabcdefghij0123456789xyz'
+      )
+    ).toBe('A. B.');
+    expect(displayActivityText('See the COA ledger row for details')).toBe(
+      'See the COA ledger row for details'
+    );
+    expect(displayActivityText('COA ledger row 12345')).toBe('COA ledger row 12345');
+  });
+
+  it('only matches the marker at the start of a word, and survives text that changes length in lower case', () => {
+    expect(displayActivityText('xCOA ledger row cmw5j72u40001p5ug01kf3vot')).toBe(
+      'xCOA ledger row cmw5j72u40001p5ug01kf3vot'
+    );
+    expect(displayActivityText('İİİ note. COA ledger row cmw5j72u40001p5ug01kf3vot.')).toBe(
+      'İİİ note.'
+    );
+  });
+
+  it('is empty for no text', () => {
+    expect(displayActivityText(null)).toBe('');
+    expect(displayActivityText(undefined)).toBe('');
+  });
+});
+
+describe('leadCompanyIfDistinct (the pin and sheet subtitle)', () => {
+  it('is the company when it differs from the name, and nothing when it only repeats it', () => {
+    expect(leadCompanyIfDistinct({ firstName: 'Jane', lastName: 'Doe', company: ' Acme ' })).toBe(
+      'Acme'
+    );
+    expect(
+      leadCompanyIfDistinct({ firstName: '', lastName: '', company: 'Pilates Living' })
+    ).toBeUndefined();
+    expect(leadCompanyIfDistinct({ firstName: 'Jane', lastName: 'Doe' })).toBeUndefined();
+    expect(
+      leadCompanyIfDistinct({ firstName: 'Jane', lastName: 'Doe', company: '  ' })
+    ).toBeUndefined();
   });
 });

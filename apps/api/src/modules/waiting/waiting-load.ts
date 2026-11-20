@@ -37,7 +37,14 @@ interface PersonRow {
 
 function toPerson(kind: WaitingKind, r: PersonRow): WaitingPerson {
   const name = [r.firstName, r.lastName].filter(Boolean).join(' ').trim();
-  return { kind, id: r.id, name: name || r.email, email: r.email, company: r.company };
+  // The same fallback chain as the lead's display name: person, then company, then email (#45).
+  return {
+    kind,
+    id: r.id,
+    name: name || r.company?.trim() || r.email,
+    email: r.email,
+    company: r.company,
+  };
 }
 
 async function loadPeople(
