@@ -383,19 +383,36 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
     appointment: CalendarAppointmentLike,
     etag?: string
   ): Promise<Result<ExternalCalendarEvent, DomainError>> {
+    return this.sendEventChange(
+      tokens,
+      externalEventId,
+      'PUT',
+      this.appointmentToGoogleEvent(appointment),
+      etag
+    );
+  }
+
+  /**
+   * One change to an existing event (PUT or PATCH): rate limit, request, and the answer as a Result.
+   * An etag makes it conditional (optimistic concurrency): a 412 is a conflict.
+   */
+  private sendEventChange(
+    tokens: OAuthTokens,
+    externalEventId: string,
+    method: 'PUT' | 'PATCH',
+    body: unknown,
+    etag?: string
+  ): Promise<Result<ExternalCalendarEvent, DomainError>> {
     return this.retryHandler.executeWithRetry(async () => {
       if (!this.rateLimiter.canMakeRequest()) {
         const waitTime = this.rateLimiter.getTimeUntilAllowed();
         return Result.fail(new CalendarRateLimitError('google', Math.ceil(waitTime / 1000)));
       }
 
-      const googleEvent = this.appointmentToGoogleEvent(appointment);
       const headers: Record<string, string> = {
         Authorization: `Bearer ${tokens.accessToken}`,
         'Content-Type': 'application/json',
       };
-
-      // Use etag for optimistic concurrency control
       if (etag) {
         headers['If-Match'] = etag;
       }
@@ -404,11 +421,7 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
         this.rateLimiter.recordRequest();
         const response = await fetch(
           `${this.apiBaseUrl}/calendars/${encodeURIComponent(this.calendarId)}/events/${encodeURIComponent(externalEventId)}`,
-          {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify(googleEvent),
-          }
+          { method, headers, body: JSON.stringify(body) }
         );
 
         if (!response.ok) {
@@ -441,52 +454,16 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
     externalEventId: string,
     appointment: CalendarAppointmentLike
   ): Promise<Result<ExternalCalendarEvent, DomainError>> {
-    return this.retryHandler.executeWithRetry(async () => {
-      if (!this.rateLimiter.canMakeRequest()) {
-        const waitTime = this.rateLimiter.getTimeUntilAllowed();
-        return Result.fail(new CalendarRateLimitError('google', Math.ceil(waitTime / 1000)));
-      }
-
-      const event = this.appointmentToGoogleEvent(appointment);
-      const body = {
-        summary: event.summary,
-        description: appointment.description ?? null,
-        location: appointment.location ?? null,
-        // The instant only: no timeZone, so a recurring event keeps the zone its repeats are
-        // expanded in (daylight saving), and date: null clears an all-day event's date, which
-        // PATCH would otherwise merge with the new dateTime.
-        start: { dateTime: appointment.startTime.toISOString(), date: null },
-        end: { dateTime: appointment.endTime.toISOString(), date: null },
-        status: event.status,
-      };
-
-      try {
-        this.rateLimiter.recordRequest();
-        const response = await fetch(
-          `${this.apiBaseUrl}/calendars/${encodeURIComponent(this.calendarId)}/events/${encodeURIComponent(externalEventId)}`,
-          {
-            method: 'PATCH',
-            headers: {
-              Authorization: `Bearer ${tokens.accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(body),
-          }
-        );
-
-        if (!response.ok) {
-          const error = await response.json().catch(() => ({}));
-          return this.handleApiError(response.status, error);
-        }
-
-        return Result.ok(
-          this.googleEventToExternal((await response.json()) as GoogleCalendarEvent)
-        );
-      } catch (error) {
-        return Result.fail(
-          new CalendarSyncError('google', error instanceof Error ? error.message : 'Unknown error')
-        );
-      }
+    return this.sendEventChange(tokens, externalEventId, 'PATCH', {
+      summary: appointment.title,
+      description: appointment.description ?? null,
+      location: appointment.location ?? null,
+      // The instant only: no timeZone, so a recurring event keeps the zone its repeats are
+      // expanded in (daylight saving), and date: null clears an all-day event's date, which
+      // PATCH would otherwise merge with the new dateTime.
+      start: { dateTime: appointment.startTime.toISOString(), date: null },
+      end: { dateTime: appointment.endTime.toISOString(), date: null },
+      status: appointment.isCancelled ? 'cancelled' : 'confirmed',
     });
   }
 
