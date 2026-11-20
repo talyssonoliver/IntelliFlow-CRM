@@ -71,7 +71,8 @@ describe('opportunity.moveStage writes the deal activity feed (#31)', () => {
       userId: TEST_UUIDS.user1,
       tenantId: TEST_UUIDS.tenant,
     });
-    expect(data.timestamp).toBeInstanceOf(Date);
+    // The row's timestamp is the database default (now()), set when the entry is written.
+    expect(data.title).toBe('Stage changed: Proposal to Negotiation');
   });
 
   it('does not write when the move fails', async () => {

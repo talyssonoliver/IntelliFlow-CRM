@@ -127,6 +127,14 @@ export interface FullSyncWindow {
   timeMax?: Date;
 }
 
+/** Google's refusals that mean "too many requests": wait and try again, do not treat as an error of the item. */
+const RATE_LIMIT_REASONS = [
+  'rateLimitExceeded',
+  'userRateLimitExceeded',
+  'quotaExceeded',
+  'dailyLimitExceeded',
+];
+
 /**
  * Google Calendar Service Adapter
  */
@@ -452,19 +460,27 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
   async patchEvent(
     tokens: OAuthTokens,
     externalEventId: string,
-    appointment: CalendarAppointmentLike
+    appointment: CalendarAppointmentLike,
+    etag?: string
   ): Promise<Result<ExternalCalendarEvent, DomainError>> {
-    return this.sendEventChange(tokens, externalEventId, 'PATCH', {
-      summary: appointment.title,
-      description: appointment.description ?? null,
-      location: appointment.location ?? null,
-      // The instant only: no timeZone, so a recurring event keeps the zone its repeats are
-      // expanded in (daylight saving), and date: null clears an all-day event's date, which
-      // PATCH would otherwise merge with the new dateTime.
-      start: { dateTime: appointment.startTime.toISOString(), date: null },
-      end: { dateTime: appointment.endTime.toISOString(), date: null },
-      status: appointment.isCancelled ? 'cancelled' : 'confirmed',
-    });
+    return this.sendEventChange(
+      tokens,
+      externalEventId,
+      'PATCH',
+      {
+        summary: appointment.title,
+        description: appointment.description ?? null,
+        location: appointment.location ?? null,
+        // The instant only: no timeZone, so a recurring event keeps the zone its repeats are
+        // expanded in (daylight saving), and the other of date / dateTime is cleared, which PATCH
+        // would otherwise merge.
+        start: { dateTime: appointment.startTime.toISOString(), date: null },
+        end: { dateTime: appointment.endTime.toISOString(), date: null },
+        // Only a cancellation sets the status: confirming would bring back an event deleted in Google.
+        ...(appointment.isCancelled ? { status: 'cancelled' } : {}),
+      },
+      etag
+    );
   }
 
   async deleteEvent(
@@ -1110,7 +1126,8 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
         return Result.fail(new CalendarAuthenticationError('google', 'Token expired or invalid'));
       case 403: {
         const reason = error.error?.errors?.[0]?.reason;
-        if (reason === 'rateLimitExceeded') {
+        // Google's rate and quota refusals (per user, per project, daily) all mean: slow down.
+        if (RATE_LIMIT_REASONS.includes(reason)) {
           return Result.fail(new CalendarRateLimitError('google', 60));
         }
         if (reason === 'insufficientPermissions') {

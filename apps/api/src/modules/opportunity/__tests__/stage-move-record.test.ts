@@ -53,6 +53,12 @@ describe('recordStageMove', () => {
     });
   });
 
+  it('does not write a feed entry for a move to the same stage', async () => {
+    const create = vi.fn().mockResolvedValue({});
+    await recordStageMove(ctxWith(create), deal, 'PROPOSAL', 'PROPOSAL', tenant);
+    expect(create).not.toHaveBeenCalled();
+  });
+
   it('does not throw when the entry cannot be written (the move already happened)', async () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const create = vi.fn().mockRejectedValue(new Error('db down'));

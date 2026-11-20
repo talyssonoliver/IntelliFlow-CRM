@@ -4,10 +4,16 @@
  * calendar that numbers its changes so a sync token means something.
  */
 import { vi } from 'vitest';
+import type { CalendarAppointmentLike } from '@intelliflow/adapters';
 import {
+  CalendarAuthenticationError,
+  CalendarConflictError,
+  CalendarEventNotFoundError,
+  CalendarSyncError,
   CalendarSyncTokenExpiredError,
   type ExternalCalendarEvent,
 } from '@intelliflow/application';
+import { Prisma } from '@intelliflow/db';
 import { Result, type DomainError } from '@intelliflow/domain';
 import type { CalendarGateway, ChangesPage } from '../google-calendar-links';
 import { runCalendarSync, type CalendarSyncDeps } from '../google-calendar-sync';
@@ -46,6 +52,22 @@ function sameValue(a: unknown, b: unknown): boolean {
   return a instanceof Date && b instanceof Date ? a.getTime() === b.getTime() : a === b;
 }
 
+export function appointmentRow(over: Row = {}): Row {
+  return {
+    id: 'appt-1',
+    tenantId: TENANT,
+    organizerId: 'user-1',
+    title: 'Site visit',
+    description: null,
+    location: null,
+    startTime: new Date('2026-11-21T09:00:00.000Z'),
+    endTime: new Date('2026-11-21T10:00:00.000Z'),
+    status: 'SCHEDULED',
+    updatedAt: new Date('2026-11-19T08:00:00.000Z'),
+    ...over,
+  };
+}
+
 export function p2002() {
   return Object.assign(new Error('Unique constraint failed'), { code: 'P2002' });
 }
@@ -66,9 +88,11 @@ export interface FakeDb {
 function matchesOperator(value: any, c: Row): boolean {
   const n = (d: unknown) => (d instanceof Date ? d.getTime() : (d as string | number));
   if ('in' in c) return (c.in as unknown[]).includes(value);
+  if ('equals' in c && c.equals === Prisma.DbNull) return value === null || value === undefined;
   if ('gte' in c) return n(value) >= n(c.gte);
   if ('gt' in c) return n(value) > n(c.gt);
   if ('lt' in c) return n(value) < n(c.lt);
+  if ('lte' in c) return n(value) <= n(c.lte);
   if ('not' in c) return c.not === null ? value != null : value !== c.not;
   throw new Error(`fake db: unsupported condition ${JSON.stringify(c)}`);
 }
@@ -90,19 +114,30 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
     if (table === 'calendarEventLink' && key === 'appointment') {
       return tables.appointment.find((a) => a.id === row.appointmentId);
     }
+    if (table === 'appointment' && key === 'calendarLinks') {
+      return tables.calendarEventLink.filter((l) => l.appointmentId === row.id);
+    }
     return undefined;
   }
 
   function matches(row: Row, where: Row, table: Table): boolean {
     return Object.entries(where).every(([key, cond]) => {
       if (key === 'OR') return (cond as Row[]).some((w) => matches(row, w, table));
+      if (key === 'AND') return (cond as Row[]).every((w) => matches(row, w, table));
       if (table === 'calendarEventLink' && key === 'appointment') {
         const target = relation(row, table, key) as Row | undefined;
         return Boolean(target) && matches(target as Row, cond as Row, 'appointment');
       }
+      if (table === 'appointment' && key === 'calendarLinks') {
+        const links = relation(row, table, key) as Row[];
+        return !links.some((l) => matches(l, (cond as Row).none, 'calendarEventLink'));
+      }
 
       const value = row[key];
       if (cond === null) return value === null || value === undefined;
+      // A Json column's null is filtered as { equals: Prisma.DbNull }, not by the bare sentinel.
+      if (cond === Prisma.DbNull)
+        throw new Error('fake db: filter a Json null with { equals: Prisma.DbNull }');
       if (cond instanceof Date) return sameValue(value, cond);
       if (typeof cond === 'object') return matchesOperator(value, cond as Row);
       return sameValue(value, cond);
@@ -121,9 +156,25 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
     const find = (args: Row = {}) => {
       let rows = tables[table].filter((r) => matches(r, args.where ?? {}, table));
 
+      if (args.orderBy?.startTime) {
+        rows = [...rows].sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+      }
+      if (args.orderBy?.appointment?.updatedAt === 'desc') {
+        rows = [...rows].sort(
+          (a, b) =>
+            (relation(b, table, 'appointment') as Row).updatedAt.getTime() -
+            (relation(a, table, 'appointment') as Row).updatedAt.getTime()
+        );
+      }
       if (args.orderBy?.id === 'asc') rows = [...rows].sort((a, b) => (a.id < b.id ? -1 : 1));
       // Copies, as a database returns: a row read earlier does not change when another writer does.
-      return (args.take ? rows.slice(0, args.take) : rows).map((r) => ({ ...r }));
+      const page = args.take === undefined ? rows : rows.slice(0, args.take);
+      return page.map((r) => ({
+        ...r,
+        ...(args.include?.appointment
+          ? { appointment: { ...relation(r, table, 'appointment') } }
+          : {}),
+      }));
     };
     return {
       findFirst: vi.fn(async (args: Row) => run('findFirst', () => find(args)[0] ?? null)),
@@ -151,6 +202,13 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
           return { count: rows.length };
         })
       ),
+      delete: vi.fn(async ({ where }: Row) =>
+        run('delete', () => {
+          const index = tables[table].findIndex((r) => matches(r, where, table));
+          if (index < 0) throw Object.assign(new Error('Record not found'), { code: 'P2025' });
+          return tables[table].splice(index, 1)[0];
+        })
+      ),
       update: vi.fn(async ({ where, data }: Row) =>
         run('update', () => {
           const row = tables[table].find((r) => matches(r, where, table));
@@ -168,7 +226,11 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
     failures,
     emailMailbox: crud('emailMailbox'),
     appointment: crud('appointment', { status: 'SCHEDULED' }),
-    calendarEventLink: crud('calendarEventLink'),
+    calendarEventLink: crud('calendarEventLink', {
+      pending: false,
+      pushAttempts: 0,
+      nextPushAt: null,
+    }),
     // The claim: the mailbox that is due, ACTIVE, a user's Google mailbox with the calendar scope.
     $queryRaw: vi.fn(async (_sql: unknown, leaseUntil: Date, scopes: string[], now: Date) => {
       const row = tables.emailMailbox
@@ -302,6 +364,69 @@ export class FakeGoogle implements CalendarGateway {
     return Result.ok<ExternalCalendarEvent | null, DomainError>(found);
   }
 
+  async createEvent(
+    _tokens: unknown,
+    appointment: CalendarAppointmentLike,
+    _key: string,
+    options?: { eventId?: string }
+  ) {
+    this.log.push(`createEvent:${options?.eventId ?? ''}`);
+    const failure = this.failure('createEvent');
+    if (failure) return Result.fail<ExternalCalendarEvent, DomainError>(failure);
+    const id = options?.eventId ?? `generated-${this.events.size + 1}`;
+    // The id exists already: an earlier create's answer was lost. Google answers 409, the adapter
+    // hands back the event that is there.
+    const existing = this.events.get(id);
+    if (existing) return Result.ok<ExternalCalendarEvent, DomainError>(this.external(existing));
+    const event = this.put(id, this.fieldsOf(appointment));
+    return Result.ok<ExternalCalendarEvent, DomainError>(this.external(event));
+  }
+
+  async patchEvent(
+    _tokens: unknown,
+    id: string,
+    appointment: CalendarAppointmentLike,
+    etag?: string
+  ) {
+    this.log.push(`patchEvent:${id}`);
+    const failure = this.failure('patchEvent');
+    if (failure) return Result.fail<ExternalCalendarEvent, DomainError>(failure);
+    // If-Match: Google refuses (412) when the event changed since that etag. GoogleCalendarAdapter.patchEvent
+    // sends the etag it is given as If-Match and answers CalendarConflictError (its own tests check both).
+    const there = this.events.get(id);
+    // A PATCH updates an event that exists: a missing one is a 404.
+    if (!there) {
+      return Result.fail<ExternalCalendarEvent, DomainError>(
+        new CalendarEventNotFoundError('google', 'Event not found')
+      );
+    }
+    if (etag && there.etag !== etag) {
+      return Result.fail<ExternalCalendarEvent, DomainError>(
+        new CalendarConflictError('Event was modified by another source')
+      );
+    }
+    // As Google does for a PATCH of a deleted event: the event comes back.
+    const event = this.put(id, { ...this.fieldsOf(appointment), status: 'confirmed' });
+    return Result.ok<ExternalCalendarEvent, DomainError>(this.external(event));
+  }
+
+  async deleteEvent(_tokens: unknown, id: string) {
+    this.log.push(`deleteEvent:${id}`);
+    const failure = this.failure('deleteEvent');
+    if (failure) return Result.fail<void, DomainError>(failure);
+    this.remove(id);
+    return Result.ok<void, DomainError>(undefined);
+  }
+
+  private fieldsOf(appointment: CalendarAppointmentLike): Partial<FakeEvent> {
+    return {
+      title: appointment.title,
+      description: appointment.description ?? undefined,
+      location: appointment.location ?? undefined,
+      start: appointment.startTime,
+      end: appointment.endTime,
+    };
+  }
   async fetchChanges(
     _tokens: unknown,
     syncToken?: string,
@@ -338,6 +463,9 @@ export class FakeGoogle implements CalendarGateway {
     });
   }
 }
+
+export const authFailure = () => new CalendarAuthenticationError('google', 'permission withdrawn');
+export const refusal = () => new CalendarSyncError('google', 'Bad request');
 
 /** One scenario: a database, a Google calendar and a clock that moves five minutes a round. */
 export function createSyncHarness() {

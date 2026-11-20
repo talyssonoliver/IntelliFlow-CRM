@@ -446,6 +446,8 @@ async function updateFromEvent(
   event: ExternalCalendarEvent,
   retry = true
 ): Promise<void> {
+  // A create the push has not finished: the event is Aurora's own, and the push settles the link.
+  if (link.pending) return;
   if (link.etag && event.etag && link.etag === event.etag) return;
   // An older version of the event than the one already applied (a late or retried round): ignore it.
   if (link.remoteUpdatedAt && event.lastModified.getTime() < link.remoteUpdatedAt.getTime()) {
@@ -539,7 +541,7 @@ export async function applyCancelled(
   retry = true
 ): Promise<void> {
   const link = await findLink(ctx, googleEventId);
-  if (!link || link.remoteCancelledAt) return;
+  if (!link || link.remoteCancelledAt || link.pending) return;
   const { tenantId } = ctx.mailbox;
   const appointment = link.appointmentId
     ? await ctx.prisma.appointment.findFirst({ where: { id: link.appointmentId, tenantId } })
