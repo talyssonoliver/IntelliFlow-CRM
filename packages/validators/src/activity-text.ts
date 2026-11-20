@@ -55,18 +55,6 @@ function trimSpacesEnd(text: string): string {
   return text.slice(0, end);
 }
 
-function trimSpacesStart(text: string): string {
-  let start = 0;
-  while (start < text.length && (text.charAt(start) === ' ' || text.charAt(start) === '\t'))
-    start += 1;
-  return text.slice(start);
-}
-/** The id ending at `end` is the last word of its sentence: a space or the end follows, or a full stop and then a space or the end. */
-function endsSentence(text: string, end: number): boolean {
-  const isBreak = (char: string) => char === '' || ' \t\r\n'.includes(char);
-  const next = text.charAt(end);
-  return isBreak(next) || (next === '.' && isBreak(text.charAt(end + 1)));
-}
 /** The text without "COA ledger row <id>." (the full stop after the id goes with it). Other text is unchanged. */
 export function stripMachineIds(text: string): string {
   let out = '';
@@ -75,7 +63,7 @@ export function stripMachineIds(text: string): string {
   for (let at = findMarker(text, from); at >= 0; at = findMarker(text, from)) {
     const after = at + LEDGER_MARKER.length;
     let end = recordIdEnd(text, after);
-    if (end < 0 || !endsSentence(text, end)) {
+    if (end < 0 || !endsSentence(text, end) || sentenceHasPath(text.slice(0, at))) {
       out += text.slice(from, after);
       from = after;
       continue;
@@ -83,15 +71,15 @@ export function stripMachineIds(text: string): string {
     if (text.charAt(end) === '.') end += 1;
     out += trimSpacesEnd(text.slice(from, at));
     from = end;
+    while (text.charAt(from) === ' ' || text.charAt(from) === '\t') from += 1;
+    // One space between what stays on each side of the gap, none at an end or a line break.
+    const next = text.charAt(from);
+    if (out !== '' && !out.endsWith('\n') && next !== '' && next !== '\n' && next !== '\r')
+      out += ' ';
     removed = true;
   }
-  if (!removed) return text;
-  // Only the gap the removal left is closed: one space between what stays on each side, none at an end or a line break.
-  const rest = trimSpacesStart(text.slice(from));
-  const glue = out === '' || rest === '' || out.endsWith('\n') || rest.startsWith('\n') ? '' : ' ';
-  return (out + glue + rest).trim();
+  return removed ? (out + text.slice(from)).trim() : text;
 }
-
 /** True when the whole text is one record id: a cuid (with a digit) or a UUID. */
 export function isRecordId(text: string): boolean {
   if (text.length === 36) {

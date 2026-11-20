@@ -27,6 +27,11 @@ describe('stripMachineIds: only "COA ledger row <id>." is removed', () => {
     expect(stripMachineIds(`Sent COA ledger row ${ID} today`)).toBe('Sent today');
   });
 
+  it('does not add a space into a later marker that is not followed by an id', () => {
+    expect(stripMachineIds(`Done. COA ledger row ${ID}. Open COA ledger row.csv`)).toBe(
+      'Done. Open COA ledger row.csv'
+    );
+  });
   it('removes every occurrence', () => {
     expect(stripMachineIds(`A COA ledger row ${ID}. B COA ledger row ${ID}.`)).toBe('A B');
   });
@@ -56,6 +61,8 @@ describe('stripMachineIds: only "COA ledger row <id>." is removed', () => {
     ['a file name', `Saved to C:\\Exports\\COA ledger row ${ID}.csv`],
     ['a path', `Saved to C:\\Exports\\COA ledger row ${ID}`],
     ['a unix path', `Saved to /exports/COA ledger row ${ID}`],
+    ['a path with spaces', `Open C:\\Exports\\Archived COA ledger row ${ID}`],
+    ['a unix path with spaces', `Open /exports/Archived COA ledger row ${ID}`],
     ['an id followed by more text', `COA ledger row ${ID}_final`],
     ['the label inside a longer word', `xCOA ledger row ${ID}`],
   ])('leaves %s exactly as written', (_name, text) => {
