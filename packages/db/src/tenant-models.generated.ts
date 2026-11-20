@@ -58,6 +58,7 @@ export const TENANT_MODELS: Readonly<Record<string, TenantModelInfo>> = {
   BusinessRuleExecution: { nullable: false, defaulted: false, relation: 'tenant' },
   Calendar: { nullable: false, defaulted: false, relation: 'tenant' },
   CalendarEvent: { nullable: false, defaulted: false, relation: 'tenant' },
+  CalendarEventLink: { nullable: false, defaulted: false, relation: 'tenant' },
   CallRecord: { nullable: false, defaulted: false, relation: 'tenant' },
   Case: { nullable: false, defaulted: false, relation: 'tenant' },
   CaseAIInsight: { nullable: false, defaulted: false, relation: 'tenant' },

@@ -1521,16 +1521,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 216,
-    "total_fields": 3187,
-    "total_indexes": 959,
-    "total_relations": 306,
+    "total_tables": 217,
+    "total_fields": 3211,
+    "total_indexes": 964,
+    "total_relations": 309,
     "tables_with_embeddings": 4,
     "enums": 82,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 193,
+        "fields": 194,
         "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
@@ -1543,6 +1543,13 @@
         "hasEmbedding": true
       },
       {
+        "name": "EmailMailbox",
+        "fields": 51,
+        "indexes": 4,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "User",
         "fields": 49,
         "indexes": 7,
@@ -1550,15 +1557,8 @@
         "hasEmbedding": false
       },
       {
-        "name": "EmailMailbox",
-        "fields": 44,
-        "indexes": 4,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
         "name": "Appointment",
-        "fields": 38,
+        "fields": 39,
         "indexes": 10,
         "relations": 4,
         "hasEmbedding": false
@@ -1960,6 +1960,13 @@
         "fields": 15,
         "indexes": 5,
         "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CalendarEventLink",
+        "fields": 15,
+        "indexes": 5,
+        "relations": 3,
         "hasEmbedding": false
       },
       {
