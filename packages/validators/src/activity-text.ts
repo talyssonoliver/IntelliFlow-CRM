@@ -124,7 +124,8 @@ function isInsideAddress(before: string, after: string): boolean {
     word.includes('/') ||
     word.includes('@') ||
     word.startsWith('www.') ||
-    ((prev === '=' || prev === '#') && word.length > 1)
+    prev === '=' ||
+    prev === '#'
   );
 }
 

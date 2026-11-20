@@ -56,6 +56,12 @@ describe('stripMachineIds', () => {
     expect(stripMachineIds(`See page?id=${ID} now`)).toBe(`See page?id=${ID} now`);
   });
 
+  it('keeps a standalone fragment or key=value id', () => {
+    expect(stripMachineIds(`See #${ID} now`)).toBe(`See #${ID} now`);
+    expect(stripMachineIds(`See #${UUID}`)).toBe(`See #${UUID}`);
+    expect(stripMachineIds(`See id=${ID}`)).toBe(`See id=${ID}`);
+  });
+
   it('never takes a label from the end of a link before the id', () => {
     const link = 'https://example.invalid/reference';
     expect(stripMachineIds(`See ${link} ref ${ID}.`)).toBe(`See ${link}.`);
