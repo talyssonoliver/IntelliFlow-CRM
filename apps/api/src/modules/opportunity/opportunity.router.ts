@@ -43,6 +43,7 @@ import { type Context } from '../../context';
 import { getTenantContext, createTenantWhereClause } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
 import { getAuditLogger } from '../../security/audit-logger';
+import { recordStageMove } from './stage-move-record';
 import {
   loadDealAutomation,
   capitalizeDealName,
@@ -1149,15 +1150,8 @@ export const opportunityRouter = createTRPCRouter({
       ctx.services?.notificationOrchestrator
     ).catch((err) => console.error('[opportunity.router] Notification failed:', err));
 
-    // IFC-281: Fire-and-forget audit logging with stage transition metadata
-    const auditLogger = getAuditLogger(ctx.prisma);
-    auditLogger
-      .logAction('UPDATE', 'opportunity', result.value.id.value, typedCtx.tenant.tenantId, {
-        actorId: typedCtx.tenant.userId,
-        metadata: { targetStage: input.targetStage, previousStage },
-        afterState: { name: result.value.name, stage: result.value.stage },
-      })
-      .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+    // IFC-281 audit row plus the deal's activity entry (#31); never fails the move itself.
+    await recordStageMove(ctx, result.value, previousStage, input.targetStage, typedCtx.tenant);
 
     return mapOpportunityToResponse(result.value);
   }),

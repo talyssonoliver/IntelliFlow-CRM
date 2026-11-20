@@ -44,6 +44,7 @@ import {
 } from '../privacy/restriction-reader';
 import { settingsValues } from './email-dto';
 import { emailSendError } from './email-send-error';
+import { instrumentHtml } from './email-tracking';
 
 export { emailSendErrorFromCause } from './email-send-error';
 import { claimSendSlot, sendThroughMailbox, type MailboxTransports } from './mailbox-transport';
@@ -431,7 +432,7 @@ export async function dispatchUserMail(
       bcc: recipients.bcc,
       replyTo: settings.replyToAddress,
       subject: input.subject,
-      html: input.htmlBody,
+      html: instrumentHtml(input.htmlBody, recordId, settings),
       text: input.textBody,
       attachments: parts,
       keepBcc: mailbox.kind !== 'SMTP',
