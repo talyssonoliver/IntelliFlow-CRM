@@ -30,7 +30,7 @@ import {
   bulkUpdateStageSchema,
   bulkDeleteDealsSchema,
 } from '@intelliflow/validators/opportunity';
-import { executeMoveStage, recordStageChangeActivity } from './move-stage';
+import { executeMoveStage } from './move-stage';
 import {
   performDealReassign,
   emitDealReassignSideEffects,
@@ -1122,15 +1122,6 @@ export const opportunityRouter = createTRPCRouter({
     if (result.isFailure) {
       throwMoveStageError(result.error);
     }
-
-    // MVP-012 #31: every stage change lands on the deal's activity feed
-    await recordStageChangeActivity(typedCtx.prismaWithTenant, {
-      opportunityId: result.value.id.value,
-      tenantId: typedCtx.tenant.tenantId,
-      userId: typedCtx.tenant.userId,
-      fromStage: previousStage,
-      toStage: result.value.stage,
-    });
 
     const notif = resolveStageNotification(input.targetStage);
     createNotification(
