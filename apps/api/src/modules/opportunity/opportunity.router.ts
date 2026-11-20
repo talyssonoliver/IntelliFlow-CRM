@@ -19,7 +19,6 @@ import {
   opportunityQuerySchema,
   idSchema,
   moveStageSchema,
-  type MoveStageInput,
   opportunityHistoryQuerySchema,
   opportunityProductsQuerySchema,
   opportunityPipelineQuerySchema,
@@ -31,6 +30,7 @@ import {
   bulkUpdateStageSchema,
   bulkDeleteDealsSchema,
 } from '@intelliflow/validators/opportunity';
+import { executeMoveStage, recordStageChangeActivity } from './move-stage';
 import {
   performDealReassign,
   emitDealReassignSideEffects,
@@ -567,51 +567,6 @@ function buildWinRateTrend(
     const rate = monthDeals.length > 0 ? Math.round((monthWon / monthDeals.length) * 100) : 0;
     return { month, rate: rate || overallWinRate, isProjected: monthDeals.length === 0 };
   });
-}
-
-// ── moveStage helpers ──
-
-async function executeMoveStage(
-  ctx: Context,
-  input: Pick<MoveStageInput, 'id' | 'targetStage' | 'reason'>,
-  userId: string,
-  tenantId: string
-) {
-  if (input.targetStage === 'CLOSED_WON') {
-    // IFC-065: Route through CloseDealWonUseCase for enriched event + notification
-    const closeDealWonService = ctx.services?.closeDealWon;
-    if (!closeDealWonService) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'CloseDealWon service not available',
-      });
-    }
-    return closeDealWonService.execute({
-      opportunityId: input.id,
-      closedBy: userId,
-      tenantId,
-    });
-  }
-
-  if (input.targetStage === 'CLOSED_LOST') {
-    // IFC-066: Route through CloseDealLostUseCase for enriched event + notification
-    const closeDealLostService = ctx.services?.closeDealLost;
-    if (!closeDealLostService) {
-      throw new TRPCError({
-        code: 'INTERNAL_SERVER_ERROR',
-        message: 'CloseDealLost service not available',
-      });
-    }
-    return closeDealLostService.execute({
-      opportunityId: input.id,
-      reason: input.reason || '',
-      closedBy: userId,
-      tenantId,
-    });
-  }
-
-  const opportunityService = getOpportunityService(ctx);
-  return opportunityService.changeStage(input.id, input.targetStage, userId, tenantId);
 }
 
 /** dealForecast input: the opportunity's record id (a cuid). */
@@ -1166,6 +1121,15 @@ export const opportunityRouter = createTRPCRouter({
     if (result.isFailure) {
       throwMoveStageError(result.error);
     }
+
+    // MVP-012 #31: every stage change lands on the deal's activity feed
+    await recordStageChangeActivity(typedCtx.prismaWithTenant, {
+      opportunityId: result.value.id.value,
+      tenantId: typedCtx.tenant.tenantId,
+      userId: typedCtx.tenant.userId,
+      fromStage: previousStage,
+      toStage: result.value.stage,
+    });
 
     const notif = resolveStageNotification(input.targetStage);
     createNotification(
