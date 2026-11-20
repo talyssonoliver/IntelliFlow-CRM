@@ -53,6 +53,8 @@ describe('stripMachineIds: only "COA ledger row <id>." is removed', () => {
     ['a file name', `Open ${UUID}.pdf`],
     ['the label without an id', 'See the COA ledger row for details'],
     ['the label with a short number', 'COA ledger row 12345'],
+    ['a file name', `Saved to C:\\Exports\\COA ledger row ${ID}.csv`],
+    ['an id followed by more text', `COA ledger row ${ID}_final`],
     ['the label inside a longer word', `xCOA ledger row ${ID}`],
   ])('leaves %s exactly as written', (_name, text) => {
     expect(stripMachineIds(text)).toBe(text);
@@ -75,6 +77,8 @@ describe('isRecordId and hasMachineId', () => {
     expect(isRecordId('c' + 'o'.repeat(24))).toBe(false);
     expect(isRecordId(`${ID} `)).toBe(false);
     expect(isRecordId('coa-qualified')).toBe(false);
+    expect(isRecordId('-'.repeat(36))).toBe(false);
+    expect(isRecordId('123e4567-e89b-42d3-a456-42661417400-')).toBe(false);
   });
 
   it('is true for the ledger row form and for a whole id, false otherwise', () => {

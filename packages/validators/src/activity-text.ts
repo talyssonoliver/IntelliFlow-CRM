@@ -60,6 +60,12 @@ function trimSpacesStart(text: string): string {
     start += 1;
   return text.slice(start);
 }
+/** The id ending at `end` is the last word of its sentence: a space or the end follows, or a full stop and then a space or the end. */
+function endsSentence(text: string, end: number): boolean {
+  const isBreak = (char: string) => char === '' || ' \t\r\n'.includes(char);
+  const next = text.charAt(end);
+  return isBreak(next) || (next === '.' && isBreak(text.charAt(end + 1)));
+}
 /** The text without "COA ledger row <id>." (the full stop after the id goes with it). Other text is unchanged. */
 export function stripMachineIds(text: string): string {
   let out = '';
@@ -68,7 +74,7 @@ export function stripMachineIds(text: string): string {
   for (let at = findMarker(text, from); at >= 0; at = findMarker(text, from)) {
     const after = at + LEDGER_MARKER.length;
     let end = recordIdEnd(text, after);
-    if (end < 0) {
+    if (end < 0 || !endsSentence(text, end)) {
       out += text.slice(from, after);
       from = after;
       continue;
@@ -88,9 +94,8 @@ export function stripMachineIds(text: string): string {
 /** True when the whole text is one record id: a cuid (with a digit) or a UUID. */
 export function isRecordId(text: string): boolean {
   if (text.length === 36) {
-    const dashes = [8, 13, 18, 23].every((at) => text.charAt(at) === '-');
-    return (
-      dashes && [...text].every((char) => char === '-' || '0123456789abcdefABCDEF'.includes(char))
+    return [...text].every((char, at) =>
+      [8, 13, 18, 23].includes(at) ? char === '-' : '0123456789abcdefABCDEF'.includes(char)
     );
   }
   return (
