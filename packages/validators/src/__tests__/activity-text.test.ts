@@ -103,6 +103,12 @@ describe('stripMachineIds', () => {
     }
     expect(stripMachineIds(`See (${ID}) now`)).toBe('See now');
   });
+  it('keeps a quoted or bracketed id that continues as an email address or a file name', () => {
+    for (const text of [`Reply to "${ID}"@example.invalid`, `See (${ID}).pdf`, `See (${ID})/x`]) {
+      expect(stripMachineIds(text)).toBe(text);
+    }
+    expect(stripMachineIds(`Sent "${ID}", thanks`)).toBe('Sent, thanks');
+  });
   it('removes a bare key=id assignment together with its key', () => {
     expect(stripMachineIds(`Price follow-up sent (lead_id=${ID})`)).toBe('Price follow-up sent');
     expect(stripMachineIds(`Synced id=${ID} ok`)).toBe('Synced ok');

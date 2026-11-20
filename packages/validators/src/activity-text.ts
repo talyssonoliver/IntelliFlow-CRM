@@ -105,11 +105,20 @@ function withoutTrailingLabels(text: string): string {
   }
 }
 
+/** Brackets and quotes that are left empty when the id between them goes. */
+const PAIRS: ReadonlyArray<readonly [string, string]> = [
+  ['(', ')'],
+  ['[', ']'],
+  ['{', '}'],
+  ['"', '"'],
+  ["'", "'"],
+];
+
 /** Closes the gap an id left: "()" , a space before punctuation, a doubled full stop. */
 function closeGap(before: string, after: string): [string, string] {
   let out = before;
   let rest = after;
-  if (out.endsWith('(') && rest.startsWith(')')) {
+  if (PAIRS.some(([open, close]) => out.endsWith(open) && rest.startsWith(close))) {
     out = trimSpacesEnd(out.slice(0, -1));
     rest = rest.slice(1);
   }
@@ -147,16 +156,20 @@ function endsInQueryOrPath(before: string): boolean {
  * follows it. An id attached to anything else is part of a larger token (a link, a path, a file name, a
  * host name, an email address, a fragment, a query value) and is left exactly as written.
  */
+/** True when the token ends at `at` in `text`: a space or the end, or sentence punctuation then a space or the end. */
+function tokenEndsAt(text: string, at: number): boolean {
+  const char = text.charAt(at);
+  if (isBreakOrEnd(char)) return true;
+  return '.,;:!?'.includes(char) && isBreakOrEnd(text.charAt(at + 1));
+}
+
 function isStandalone(before: string, after: string): boolean {
   const prev = before.charAt(before.length - 1);
   const beforeOk =
     isBreakOrEnd(prev) || ((OPENERS.includes(prev) || prev === '=') && !endsInQueryOrPath(before));
   if (!beforeOk) return false;
-  const next = after.charAt(0);
-  if (isBreakOrEnd(next) || CLOSERS.includes(next)) return true;
-  return (
-    '.,;:!?'.includes(next) && (isBreakOrEnd(after.charAt(1)) || CLOSERS.includes(after.charAt(1)))
-  );
+  // A closing bracket or quote counts only when the token ends right after it ("(id)." yes, "(id).pdf" no).
+  return CLOSERS.includes(after.charAt(0)) ? tokenEndsAt(after, 1) : tokenEndsAt(after, 0);
 }
 /**
  * The text with machine ids removed: cuids and UUIDs, and the label in front of one ("COA ledger row",
