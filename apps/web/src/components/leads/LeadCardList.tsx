@@ -2,7 +2,7 @@
 
 import { EmptyState, TableRowActions } from '@intelliflow/ui';
 import type { Lead } from '@/lib/leads/lead-types';
-import { leadDisplayName } from '@/lib/leads/lead-format';
+import { leadDisplayName, leadListSubtitle } from '@/lib/leads/lead-format';
 import {
   emailComposeHref,
   formatLeadListDate,
@@ -70,7 +70,7 @@ function LeadCard({
   timezone?: string;
 }>) {
   const name = leadDisplayName(lead);
-  const companyLine = lead.title ? `${lead.title} @ ${lead.company}` : lead.company;
+  const subtitle = leadListSubtitle(lead);
   return (
     <li
       data-testid={`lead-card-${lead.id}`}
@@ -84,10 +84,8 @@ function LeadCard({
         <LeadAvatar lead={lead} />
         <span className="flex min-w-0 flex-col">
           <span className="truncate text-sm font-bold text-slate-900 dark:text-white">{name}</span>
-          {companyLine && companyLine !== name && (
-            <span className="truncate text-xs text-slate-500 dark:text-slate-400">
-              {companyLine}
-            </span>
+          {subtitle && (
+            <span className="truncate text-xs text-slate-500 dark:text-slate-400">{subtitle}</span>
           )}
         </span>
       </button>

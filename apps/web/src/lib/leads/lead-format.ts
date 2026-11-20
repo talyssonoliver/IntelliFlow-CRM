@@ -188,14 +188,67 @@ export function formatEstimatedValue(cents: number): string {
 
 /**
  * Tags the COA pipeline sync writes for its own bookkeeping
- * (`apps/api/src/modules/inbound/inbound.router.ts`): `coa-pipeline` and
- * `coa-lead:<id>`. They stay on the lead (the sync matches on them) but are not
- * the user's tags, so they are hidden wherever tags are shown (UI-017).
+ * (`apps/api/src/modules/inbound/inbound.router.ts`): `coa-pipeline`, `coa-lead:<id>` and
+ * `coa-qualified`. They stay on the lead (the sync matches on them) but are not the user's tags, so
+ * they are hidden wherever tags are shown (UI-017, #42). Only these: a tag a person names `coa-...`
+ * themselves stays visible.
  */
 export function isSystemTag(tag: string): boolean {
-  return tag === 'coa-pipeline' || tag.startsWith('coa-lead:');
+  return tag === 'coa-pipeline' || tag === 'coa-qualified' || tag.startsWith('coa-lead:');
 }
 
+/**
+ * Activity text as a person should read it: the id the COA sync wrote into the text, "COA ledger row
+ * <record id>", is taken out (#42). Only that exact form is removed, so an id a person typed, a link
+ * or an address is never touched.
+ */
+export function displayActivityText(text: string | null | undefined): string {
+  const src = text ?? '';
+  let out = '';
+  let from = 0;
+  for (let at = findLedgerMarker(src, from); at >= 0; at = findLedgerMarker(src, from)) {
+    let end = at + LEDGER_MARKER.length;
+    while (src[end] === ' ' || src[end] === '\t') end++;
+    const idStart = end;
+    while (end < src.length && isAlphanumeric(src.charAt(end))) end++;
+    const isRecordId = end - idStart >= 21 && src.charAt(idStart).toLowerCase() === 'c';
+    if (!isRecordId) {
+      out += src.slice(from, at + LEDGER_MARKER.length);
+      from = at + LEDGER_MARKER.length;
+      continue;
+    }
+    if (src[end] === '.') end++;
+    out += src.slice(from, at).trimEnd();
+    from = end;
+  }
+  return (out + src.slice(from)).replace(/[ \t]{2,}/g, ' ').trim();
+}
+
+const LEDGER_MARKER = 'coa ledger row';
+
+/**
+ * The index of the next "COA ledger row" at or after `from`, ignoring case, that starts a word. It
+ * compares slice by slice rather than searching a lower-cased copy, so an index never shifts when a
+ * character changes length in lower case.
+ */
+function findLedgerMarker(src: string, from: number): number {
+  for (let at = from; at + LEDGER_MARKER.length <= src.length; at++) {
+    const startsWord = at === 0 || !isAlphanumeric(src.charAt(at - 1));
+    if (startsWord && src.slice(at, at + LEDGER_MARKER.length).toLowerCase() === LEDGER_MARKER) {
+      return at;
+    }
+  }
+  return -1;
+}
+
+function isAlphanumeric(ch: string): boolean {
+  return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9');
+}
+/** A lead's company, or undefined when it only repeats the lead's name (for a pin or sheet subtitle). */
+export function leadCompanyIfDistinct(lead: Readonly<LeadNameParts>): string | undefined {
+  const company = lead.company?.trim();
+  return company && !isSameName(company, leadDisplayName(lead)) ? company : undefined;
+}
 /** The tags to show a user: everything except the system tags. */
 export function visibleTags(tags: readonly string[]): string[] {
   return tags.filter((tag) => !isSystemTag(tag));
@@ -281,6 +334,21 @@ export function leadActivityMetrics(activities: readonly Readonly<LeadMetricActi
     meetings: activities.filter((act) => act.type === 'meeting').length,
     touchpoints: activities.filter((act) => isTouchpoint(act.type)).length,
   };
+}
+
+/**
+ * The second line under a lead's name in the list: its title and company, with the company left
+ * out when it is the name already (a lead named after its company), and nothing when there is neither.
+ */
+export function leadListSubtitle(
+  lead: Readonly<LeadNameParts & { title?: string | null }>
+): string {
+  const company = isSameName(lead.company, leadDisplayName(lead))
+    ? ''
+    : (lead.company?.trim() ?? '');
+  const title = lead.title?.trim() ?? '';
+  if (title && company) return `${title} @ ${company}`;
+  return title || company;
 }
 
 /**

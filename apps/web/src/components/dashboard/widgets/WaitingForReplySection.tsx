@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { isSameName } from '@/lib/leads/lead-format';
 import { waitingLabel, waitingTone } from '@/lib/leads/waiting-for-reply';
 
 export interface WaitingPerson {
@@ -45,7 +46,7 @@ export function WaitingForReplySection({
             >
               <p className="truncate text-sm font-medium text-slate-900 dark:text-white">
                 {p.name}
-                {p.company ? ` · ${p.company}` : ''}
+                {p.company && !isSameName(p.company, p.name) ? ` · ${p.company}` : ''}
               </p>
               <p className="truncate text-xs text-slate-500 dark:text-slate-400">{p.subject}</p>
               <p className={`mt-1 text-xs ${toneClass[waitingTone(p.since, now)]}`}>

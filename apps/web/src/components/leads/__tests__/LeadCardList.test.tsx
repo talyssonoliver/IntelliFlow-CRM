@@ -122,3 +122,38 @@ describe('LeadCardList', () => {
     expect(within(empty).getByText('No leads match your search criteria')).toBeTruthy();
   });
 });
+
+describe('LeadCardList: the company is not repeated under the name (#44, the phone list)', () => {
+  const renderCard = (lead: Lead) => {
+    render(
+      <LeadCardList
+        leads={[lead]}
+        handlers={makeHandlers()}
+        onOpen={vi.fn()}
+        timezone="Europe/London"
+        emptyMessage="No leads"
+      />
+    );
+    return within(screen.getByTestId(`lead-card-${lead.id}`));
+  };
+
+  it('a lead named after its company shows the name once, even with other case and spacing', () => {
+    const card = renderCard(
+      makeLead({ firstName: '', lastName: '', company: ' west london  HANDYMAN ltd ', title: '' })
+    );
+    expect(card.getAllByText(/west london\s+handyman ltd/i)).toHaveLength(1);
+  });
+
+  it('keeps the title when the company is the name, without "@ company"', () => {
+    const card = renderCard(
+      makeLead({ firstName: '', lastName: '', company: 'West London Handyman Ltd', title: 'Owner' })
+    );
+    expect(card.getByText('Owner')).toBeTruthy();
+    expect(card.queryByText(/Owner @/)).toBeNull();
+  });
+
+  it('keeps "title @ company" for a person with a different company', () => {
+    const card = renderCard(makeLead());
+    expect(card.getByText('Founder @ Acme Ltd')).toBeTruthy();
+  });
+});
