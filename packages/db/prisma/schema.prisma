@@ -3328,6 +3328,7 @@ model TicketActivity {
 
   // Author info
   authorName      String
+  authorId        String?               // MVP-012: user who wrote the entry (null: customer/system/legacy)
   authorRole      String?               // 'Customer', 'Support Agent', 'System'
   authorAvatar    String?
 
@@ -3356,6 +3357,7 @@ model TicketActivity {
   @@index([tenantId])
   // IFC-069: Composite index for unified activity feed
   @@index([tenantId, timestamp(sort: Desc)])
+  @@index([tenantId, authorId, timestamp(sort: Desc)])
   @@map("ticket_activities")
 }
 
