@@ -56,6 +56,12 @@ describe('stripMachineIds', () => {
     expect(stripMachineIds(`See page?id=${ID} now`)).toBe(`See page?id=${ID} now`);
   });
 
+  it('never takes a label from the end of a link before the id', () => {
+    const link = 'https://example.invalid/reference';
+    expect(stripMachineIds(`See ${link} ref ${ID}.`)).toBe(`See ${link}.`);
+    expect(stripMachineIds(`See ${link} ${ID}.`)).toBe(`See ${link}.`);
+  });
+
   it('still removes an id that follows a link in the same sentence', () => {
     expect(stripMachineIds(`See https://app.example.invalid/x then ref ${ID}.`)).toBe(
       'See https://app.example.invalid/x then.'

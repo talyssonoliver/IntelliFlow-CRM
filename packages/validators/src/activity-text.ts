@@ -55,6 +55,9 @@ function firstId(text: string): IdMatch | null {
 
 const SPACES = new Set([' ', '\t']);
 
+/** What may sit right before a label word: a space or a bracket, quote or punctuation that ends a clause. */
+const WORD_STARTS = ' \t\r\n([{"\':;,';
+
 function trimSpacesEnd(text: string): string {
   let end = text.length;
   while (end > 0 && SPACES.has(text.charAt(end - 1))) end -= 1;
@@ -78,7 +81,8 @@ function withoutTrailingLabels(text: string): string {
     const label = LABELS.find((word) => {
       if (!lower.endsWith(word)) return false;
       const lead = head.charAt(head.length - word.length - 1);
-      return lead === '' || !/[a-z0-9_]/i.test(lead);
+      // A standalone word only: not the end of a longer word, a domain or a path ("/reference").
+      return lead === '' || WORD_STARTS.includes(lead);
     });
     if (!label) return out;
     out = head.slice(0, head.length - label.length);
