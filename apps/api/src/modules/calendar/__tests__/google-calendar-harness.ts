@@ -88,6 +88,7 @@ export interface FakeDb {
 function matchesOperator(value: any, c: Row): boolean {
   const n = (d: unknown) => (d instanceof Date ? d.getTime() : (d as string | number));
   if ('in' in c) return (c.in as unknown[]).includes(value);
+  if ('equals' in c && c.equals === Prisma.DbNull) return value === null || value === undefined;
   if ('gte' in c) return n(value) >= n(c.gte);
   if ('gt' in c) return n(value) > n(c.gt);
   if ('lt' in c) return n(value) < n(c.lt);
@@ -133,7 +134,10 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
       }
 
       const value = row[key];
-      if (cond === null || cond === Prisma.DbNull) return value === null || value === undefined;
+      if (cond === null) return value === null || value === undefined;
+      // A Json column's null is filtered as { equals: Prisma.DbNull }, not by the bare sentinel.
+      if (cond === Prisma.DbNull)
+        throw new Error('fake db: filter a Json null with { equals: Prisma.DbNull }');
       if (cond instanceof Date) return sameValue(value, cond);
       if (typeof cond === 'object') return matchesOperator(value, cond as Row);
       return sameValue(value, cond);

@@ -289,7 +289,7 @@ async function createEvents(ctx: SyncContext, cutoff: Date, budget: number): Pro
     endTime: { gte: cutoff },
     // A recurring appointment is one row with its first occurrence and a rule that cannot be written to
     // Google yet: it is not pushed (as one event it would be wrong, and a series half-way would be missing).
-    recurrence: Prisma.DbNull,
+    recurrence: { equals: Prisma.DbNull },
   };
   // Creates that did not finish first, by the same rule as every other write: not while waiting after a
   // failure, unless the appointment was edited since (which may be what fixes it).
@@ -446,7 +446,7 @@ async function patchEvents(ctx: SyncContext, cutoff: Date, budget: number): Prom
       organizerId: userId,
       status: { in: [...ACTIVE_STATUSES] },
       endTime: { gte: cutoff },
-      recurrence: Prisma.DbNull,
+      recurrence: { equals: Prisma.DbNull },
     },
   };
   return scanLinks(ctx, where, budget, isEdited, (link) => patchOne(ctx, link));
