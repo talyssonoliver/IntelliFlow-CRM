@@ -7,6 +7,7 @@ import { AppAvatar } from '@/components/shared/app-avatar';
 import { ContactMapPreview } from '@/components/contacts/ContactMapPreview';
 import {
   formatEstimatedValue,
+  isSameName,
   leadDisplayName,
   leadWebsite,
   openRateLabel,
@@ -248,18 +249,21 @@ export function LeadProfileCard({
             {leadDisplayName(lead)}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{lead.title}</p>
-          <div className="flex items-center gap-1 text-[#2a78f6] text-sm font-medium mt-1">
-            <span aria-hidden="true" className="material-symbols-outlined !text-sm">
-              domain
-            </span>
-            {lead.accountId && lead.account ? (
-              <Link href={`/accounts/${lead.accountId}`} className="hover:underline">
-                {lead.company}
-              </Link>
-            ) : (
-              <span>{lead.company}</span>
-            )}
-          </div>
+          {/* A lead named after its company shows the name once, not again as the company. */}
+          {lead.company && !isSameName(lead.company, leadDisplayName(lead)) && (
+            <div className="flex items-center gap-1 text-[#2a78f6] text-sm font-medium mt-1">
+              <span aria-hidden="true" className="material-symbols-outlined !text-sm">
+                domain
+              </span>
+              {lead.accountId && lead.account ? (
+                <Link href={`/accounts/${lead.accountId}`} className="hover:underline">
+                  {lead.company}
+                </Link>
+              ) : (
+                <span>{lead.company}</span>
+              )}
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap gap-2 mb-6">
           <LeadStatusBadge status={lead.status} />

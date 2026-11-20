@@ -19,9 +19,10 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
-import { assertTenantContext } from '../../security/tenant-context';
+import { assertTenantContext, createTenantWhereClause } from '../../security/tenant-context';
 import { restrictionReader } from '../privacy/restriction-reader';
 import { isEmailAdmin, type EmailRouterCtx } from './email-access';
+import { leadEmailEngagement } from './lead-email-engagement';
 
 const emailIdInput = z.object({ emailId: recordIdSchema });
 
@@ -175,6 +176,43 @@ export const emailLogRouter = createTRPCRouter({
     assertTenantContext(ctx);
     return linkOf(await loadEmail(ctx as unknown as EmailRouterCtx, input.emailId));
   }),
+
+  /**
+   * Tracked sends to the lead's address and how many were opened, from the CRM's email records (the
+   * profile card's open rate). Only a lead the caller can see; another tenant's records never count.
+   */
+  engagementForLead: tenantProcedure
+    .input(z.object({ leadId: recordIdSchema }))
+    .query(async ({ ctx, input }) => {
+      assertTenantContext(ctx);
+      const c = ctx as unknown as EmailRouterCtx;
+      const { tenantId } = c.tenant;
+      const lead = await c.prismaWithTenant.lead.findFirst({
+        where: createTenantWhereClause(c.tenant as never, { id: input.leadId }),
+        select: { email: true },
+      });
+      if (!lead?.email) return { sent: 0, opened: 0 };
+      const mentions = { contains: lead.email, mode: 'insensitive' as const };
+      const records = await c.prismaWithTenant.emailRecord.findMany({
+        where: {
+          tenantId,
+          OR: [{ toEmail: mentions }, { ccEmails: mentions }, { bccEmails: mentions }],
+        },
+        select: {
+          status: true,
+          userId: true,
+          metadata: true,
+          openCount: true,
+          openedAt: true,
+          toEmail: true,
+          ccEmails: true,
+          bccEmails: true,
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 5000,
+      });
+      return leadEmailEngagement(records, lead.email);
+    }),
 
   /** Links the email to the lead or contact it is with. */
   logToContact: tenantProcedure

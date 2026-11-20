@@ -133,6 +133,10 @@ vi.mock('@/lib/auth/AuthContext', () => ({
   }),
 }));
 
+const mockEmailEngagement = vi.hoisted(() => ({
+  current: undefined as { sent: number; opened: number } | undefined,
+}));
+
 vi.mock('@/lib/api', () => ({
   api: {
     useUtils: () => ({
@@ -210,6 +214,12 @@ vi.mock('@/lib/api', () => ({
             isPending: mockLogActivityState.isPending,
           };
         },
+      },
+    },
+    // The profile card's open rate also reads the CRM's own email records for the lead.
+    emailLog: {
+      engagementForLead: {
+        useQuery: () => ({ data: mockEmailEngagement.current }),
       },
     },
     home: {
@@ -1716,6 +1726,33 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
     expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('0%');
   });
 
+  it('Open Rate reads the CRM email records for the lead, not only the activity metadata', () => {
+    // No activity carries open data, but the lead has 4 tracked sends to its address, 3 opened.
+    data().activities = [
+      { ...emailActivity, id: 'act-sync-2', metadata: { subject: 'Outreach email sent' } },
+    ];
+    mockEmailEngagement.current = { sent: 4, opened: 3 };
+    try {
+      render(<Lead360Page />);
+      expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('75%');
+    } finally {
+      mockEmailEngagement.current = undefined;
+    }
+  });
+
+  it('Open Rate never counts the same mail twice when the activity and the record both have it', () => {
+    data().activities = [
+      { ...emailActivity, metadata: { subject: 'Your proposal', opened: true, openCount: 1 } },
+    ];
+    mockEmailEngagement.current = { sent: 1, opened: 1 };
+    try {
+      render(<Lead360Page />);
+      expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('100%');
+    } finally {
+      mockEmailEngagement.current = undefined;
+    }
+  });
+
   it('Compose opens the email composer addressed to the lead', () => {
     render(<Lead360Page />);
     fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
@@ -1984,17 +2021,14 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
     unmount();
 
     withLocation.location = '10 Downing Street, London';
-    const open = vi.spyOn(window, 'open').mockReturnValue(null);
     render(<Lead360Page />);
-    const button = screen.getByRole('button', { name: 'View Map' });
-    expect(button).toBeEnabled();
-    fireEvent.click(button);
-    expect(open).toHaveBeenCalledWith(
-      'https://www.google.com/maps/search/?api=1&query=10%20Downing%20Street%2C%20London',
-      '_blank',
-      'noopener,noreferrer'
+    // A real link (an anchor works on every phone browser), to Google Maps for that address.
+    const link = screen.getByRole('link', { name: 'View Map' });
+    expect(link).toHaveAttribute(
+      'href',
+      'https://www.google.com/maps/search/?api=1&query=10%20Downing%20Street%2C%20London'
     );
+    expect(link).toHaveAttribute('target', '_blank');
     delete withLocation.location;
-    open.mockRestore();
   });
 });

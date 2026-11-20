@@ -24,10 +24,6 @@ import {
   DialogTitle,
   DialogDescription,
   toast,
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
   type ChurnRiskData,
   type NextBestActionData,
   type ChurnRiskLevel,
@@ -47,13 +43,11 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { revalidateLeadCaches } from '../actions';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
-import { MoreActionsButton } from '@/components/shared/more-actions-button';
-import { PinButton } from '@/components/home/PinButton';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 import { leadScoreDisplay } from '@/lib/leads/score-display';
-import { QualifyLeadButton, QualifyLeadDialog } from '@/components/leads/QualifyLeadDialog';
+import { QualifyLeadDialog } from '@/components/leads/QualifyLeadDialog';
 import { ConvertLeadDialog } from '@/components/leads/ConvertLeadDialog';
-import { canQualifyLead } from '@/lib/leads/lead-conversion';
+import { LeadPageHeader, leadHeaderSheetActions } from '@/components/leads/LeadPageHeader';
 
 /** #1218: the lead's score, or "Not scored" when no real AI score exists. */
 function LeadScoreValue({
@@ -106,6 +100,7 @@ import {
   httpUrlOrNull,
   insightRecommendations,
   leadActivityMetrics,
+  mergeEmailEngagement,
   leadDisplayName,
   leadExportFields,
 } from '@/lib/leads/lead-format';
@@ -579,53 +574,6 @@ type LeadDialogsLead = {
   company: string;
   email: string;
 };
-
-const CONVERT_BLOCKED_REASON: Record<string, string> = {
-  LOST: 'Lost leads cannot be converted. Reopen the lead first.',
-  UNQUALIFIED: 'Disqualified leads cannot be converted.',
-  NEGOTIATING: 'Lead is in negotiation. Qualify the lead first to convert.',
-};
-
-function LeadConvertButton({
-  lead,
-  onOpenConvert,
-}: {
-  lead: LeadDialogsLead & { status: string };
-  onOpenConvert: () => void;
-}) {
-  if (lead.status === 'CONVERTED') return null;
-  const isConvertible = lead.status === 'QUALIFIED';
-  const convertTooltipText =
-    CONVERT_BLOCKED_REASON[lead.status] ?? 'Lead must be qualified before conversion.';
-  return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span
-            tabIndex={isConvertible ? undefined : 0}
-            aria-label={isConvertible ? undefined : convertTooltipText}
-          >
-            <button
-              onClick={onOpenConvert}
-              disabled={!isConvertible}
-              className="flex items-center gap-2 px-3 sm:px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-            >
-              <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
-                transform
-              </span>{' '}
-              Convert to deal
-            </button>
-          </span>
-        </TooltipTrigger>
-        {!isConvertible && (
-          <TooltipContent>
-            <p>{convertTooltipText}</p>
-          </TooltipContent>
-        )}
-      </Tooltip>
-    </TooltipProvider>
-  );
-}
 
 function LeadDialogs({
   lead,
@@ -1900,80 +1848,6 @@ function LeadTabBar({
   );
 }
 
-// ─── Page header ──────────────────────────────────────────────────────────────
-
-interface LeadPageHeaderProps {
-  lead: LeadProfileData;
-  onOpenConvert: () => void;
-  onOpenQualify: () => void;
-  onEdit: () => void;
-  onLogCall: () => void;
-  onOpenActionSheet: () => void;
-}
-
-function LeadPageHeader({
-  lead,
-  onOpenConvert,
-  onOpenQualify,
-  onEdit,
-  onLogCall,
-  onOpenActionSheet,
-}: LeadPageHeaderProps) {
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-      <div>
-        <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-          <Link href="/leads" className="hover:text-[#2a78f6]">
-            Leads
-          </Link>
-          <span className="material-symbols-outlined !text-sm hidden sm:inline">chevron_right</span>
-          <span className="font-medium text-slate-900 dark:text-white hidden sm:inline">
-            {leadDisplayName(lead)}
-          </span>
-        </div>
-        <h1 className="sr-only sm:not-sr-only text-2xl font-bold text-slate-900 dark:text-white">
-          {leadDisplayName(lead)}
-        </h1>
-      </div>
-      <div className="flex flex-wrap gap-2 sm:gap-3">
-        {canQualifyLead(lead.status) && <QualifyLeadButton onClick={onOpenQualify} />}
-        <LeadConvertButton lead={lead} onOpenConvert={onOpenConvert} />
-        <button
-          onClick={onEdit}
-          aria-label="Edit lead"
-          className="hidden sm:flex items-center gap-2 px-3 sm:px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-        >
-          <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
-            edit
-          </span>{' '}
-          <span className="hidden sm:inline">Edit</span>
-        </button>
-        <button
-          onClick={onLogCall}
-          className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#2a78f6] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
-        >
-          <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
-            call
-          </span>{' '}
-          Log call
-        </button>
-        <PinButton
-          entityType="lead"
-          entityId={lead.id}
-          title={leadDisplayName(lead)}
-          subtitle={lead.company || undefined}
-          icon="person"
-          url={`/leads/${lead.id}`}
-          className="hidden sm:inline-flex"
-        />
-        <MoreActionsButton onClick={onOpenActionSheet} />
-      </div>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-
 const LEAD_VALID_TABS: TabId[] = [
   'overview',
   'activity',
@@ -2082,6 +1956,7 @@ export default function Lead360Page() {
 
   // Require authentication - redirects to login if not authenticated
   const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
+  const canLoadLead = isAuthenticated && !authLoading && !!leadId;
 
   // PG-059 Recently Viewed: record every successful detail page load.
   useEffect(() => {
@@ -2103,9 +1978,11 @@ export default function Lead360Page() {
     data: rawApiLead,
     isLoading,
     error,
-  } = api.lead.getById.useQuery(
-    { id: leadId },
-    { enabled: isAuthenticated && !authLoading && !!leadId }
+  } = api.lead.getById.useQuery({ id: leadId }, { enabled: canLoadLead });
+  // The open rate also reads the CRM's own email records for this lead's address.
+  const { data: emailEngagement } = api.emailLog.engagementForLead.useQuery(
+    { leadId },
+    { enabled: canLoadLead }
   );
 
   // Check for auth errors
@@ -2589,7 +2466,7 @@ export default function Lead360Page() {
   // system records (score and status changes).
   const leadMetrics = {
     estimatedValue: lead.estimatedValue,
-    ...leadActivityMetrics(activities),
+    ...mergeEmailEngagement(leadActivityMetrics(activities), emailEngagement),
   };
 
   // Use pre-computed filtered/visible activities (hooks moved before early returns)
@@ -2654,6 +2531,10 @@ export default function Lead360Page() {
         }}
         exportFields={apiLead ? leadExportFields(apiLead) : undefined}
         extraActions={[
+          ...leadHeaderSheetActions(lead, {
+            onOpenQualify: () => setQualifyOpen(true),
+            onOpenConvert: () => setConvertConfirmOpen(true),
+          }),
           { label: 'Edit', icon: 'edit', onClick: () => router.push(`/leads/${lead.id}/edit`) },
           { label: 'Archive', icon: 'archive', onClick: () => setArchiveConfirmOpen(true) },
           {

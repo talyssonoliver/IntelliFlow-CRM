@@ -73,6 +73,10 @@ vi.mock('@/lib/auth/AuthContext', () => ({
   }),
 }));
 
+const mockEmailEngagement = vi.hoisted(() => ({
+  current: undefined as { sent: number; opened: number } | undefined,
+}));
+
 vi.mock('@/lib/api', () => ({
   api: {
     useUtils: () => ({
@@ -120,6 +124,12 @@ vi.mock('@/lib/api', () => ({
       },
       logActivity: {
         useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
+    },
+    // The profile card's open rate also reads the CRM's own email records for the lead.
+    emailLog: {
+      engagementForLead: {
+        useQuery: () => ({ data: mockEmailEngagement.current }),
       },
     },
     home: {

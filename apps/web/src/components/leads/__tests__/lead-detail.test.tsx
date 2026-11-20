@@ -76,13 +76,38 @@ const metrics: LeadMetrics = {
 };
 
 describe('LeadDetail', () => {
+  it('shows a lead named after its company once: the company line is hidden when it repeats the name', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({ firstName: '', lastName: '', company: 'West London Handyman Ltd' })}
+        leadMetrics={metrics}
+      />
+    );
+    expect(screen.getAllByText('West London Handyman Ltd')).toHaveLength(1);
+  });
+
+  it('matches the company to the name ignoring case and spaces', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({ firstName: 'Pilates', lastName: 'Living', company: ' pilates  LIVING ' })}
+        leadMetrics={metrics}
+      />
+    );
+    expect(screen.getAllByText(/pilates\s+living/i)).toHaveLength(1);
+  });
+
+  it('keeps the company line when it differs from the name', () => {
+    render(<LeadDetail lead={makeLead()} leadMetrics={metrics} />);
+    expect(screen.getByText('Acme Corp')).toBeInTheDocument();
+  });
   it('renders identity and contact details (AC-001)', () => {
     render(<LeadDetail lead={makeLead()} leadMetrics={metrics} />);
     expect(screen.getByText('John Doe')).toBeInTheDocument();
     expect(screen.getByText('CTO')).toBeInTheDocument();
     expect(screen.getByText('john@example.com')).toBeInTheDocument();
     expect(screen.getByText('+1 555-0101')).toBeInTheDocument();
-    expect(screen.getByText('London, UK')).toBeInTheDocument();
+    // Once in the Location row and once on the map card (pin plus the address, with a real link).
+    expect(screen.getAllByText('London, UK')).toHaveLength(2);
     expect(screen.getByText('acme.com')).toBeInTheDocument();
     expect(screen.getByText('enterprise')).toBeInTheDocument();
   });
