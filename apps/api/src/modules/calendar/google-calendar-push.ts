@@ -46,6 +46,8 @@ const LINKS_PAGE = 100;
  */
 const RETRY_BASE_MS = 5 * 60_000;
 const RETRY_MAX_MS = 24 * 60 * 60_000;
+/** A change in Google counts as the user's, against one here, only if made this long after it. */
+const IN_FLIGHT_MS = 60_000;
 
 /**
  * The id an Aurora appointment's event is created with in a mailbox's calendar. Google keeps ids
@@ -250,11 +252,6 @@ async function removeEvents(ctx: SyncContext, cutoff: Date, budget: number): Pro
     }
   );
 }
-/** Items not waiting after a failure. */
-function due(ctx: SyncContext) {
-  return { OR: [{ nextPushAt: null }, { nextPushAt: { lte: ctx.now } }] };
-}
-
 /** A link's write failed: it waits, later and less often each time, and the rest goes on. */
 async function failedAttempt(ctx: SyncContext, link: any, error: unknown): Promise<void> {
   if (endsRound(error)) return; // a rate limit or a lost permission is not this item's fault
@@ -294,41 +291,43 @@ async function createEvents(ctx: SyncContext, cutoff: Date, budget: number): Pro
     // Google yet: it is not pushed (as one event it would be wrong, and a series half-way would be missing).
     recurrence: Prisma.DbNull,
   };
-  const pending: any[] = await ctx.prisma.calendarEventLink.findMany({
-    where: {
-      tenantId,
-      mailboxId,
-      pending: true,
-      remoteCancelledAt: null,
-      ...due(ctx),
-      appointment: live,
-    },
-    include: { appointment: true },
-    orderBy: { id: 'asc' },
-    take: budget,
-  });
-  const fresh: any[] = await ctx.prisma.appointment.findMany({
-    where: { ...live, calendarLinks: { none: { mailboxId } } },
-    orderBy: { startTime: 'asc' },
-    take: budget - pending.length,
-  });
-  let writes = 0;
-  for (const link of pending) {
-    if (!ctx.hasTime()) return { writes, complete: false };
-    writes += 1;
-    await item(ctx, link.id, () => makeEvent(ctx, link, link.appointment));
+  // Creates that did not finish first, by the same rule as every other write: not while waiting after a
+  // failure, unless the appointment was edited since (which may be what fixes it).
+  const { id: mbx } = ctx.mailbox;
+  const pendingWhere = { pending: true, remoteCancelledAt: null, appointment: live };
+  const finishing = await scanLinks(
+    ctx,
+    pendingWhere,
+    budget,
+    () => true,
+    (link) => makeEvent(ctx, link, link.appointment)
+  );
+  if (!finishing.complete || finishing.writes >= budget) {
+    return { writes: finishing.writes, complete: false };
   }
+  const room = budget - finishing.writes;
+  const fresh: any[] = await ctx.prisma.appointment.findMany({
+    where: { ...live, calendarLinks: { none: { mailboxId: mbx } } },
+    orderBy: { startTime: 'asc' },
+    take: room,
+  });
+  let writes = finishing.writes;
   for (const row of fresh) {
     if (!ctx.hasTime()) return { writes, complete: false };
     writes += 1;
     await item(ctx, row.id, async () => {
       const link = await startLink(ctx, row);
-      if (link) await makeEvent(ctx, link, row);
+      if (!link) return;
+      try {
+        await makeEvent(ctx, link, row);
+      } catch (error) {
+        await failedAttempt(ctx, link, error);
+        throw error;
+      }
     });
   }
-  return { writes, complete: pending.length + fresh.length < budget };
+  return { writes, complete: fresh.length < room };
 }
-
 /**
  * The pending link of an appointment; null when it has a link already (made meanwhile). The event id is
  * made from the mailbox and the appointment; if an old tombstone holds that id (the appointment was
@@ -360,75 +359,74 @@ async function startLink(ctx: SyncContext, row: any): Promise<any | null> {
 }
 /** Creates the event of a pending link, then settles the link. */
 async function makeEvent(ctx: SyncContext, link: any, row: any): Promise<void> {
-  try {
-    // The revision this create sends, remembered on the pending link (the first attempt's stays): if the
-    // answer is lost, it tells an edit made here since from one made in Google.
-    const sent: Date = link.localSyncedAt ?? row.updatedAt;
-    if (!link.localSyncedAt) {
-      await ctx.prisma.calendarEventLink.update({
-        where: { id: link.id, tenantId: ctx.mailbox.tenantId },
-        data: { localSyncedAt: sent },
+  // A failure is recorded on the link by the caller, once.
+  // The revision this create sends, remembered on the pending link (the first attempt's stays): if the
+  // answer is lost, it tells an edit made here since from one made in Google.
+  const sent: Date = link.localSyncedAt ?? row.updatedAt;
+  if (!link.localSyncedAt) {
+    await ctx.prisma.calendarEventLink.update({
+      where: { id: link.id, tenantId: ctx.mailbox.tenantId },
+      data: { localSyncedAt: sent },
+    });
+  }
+  const event = must(
+    await ctx.gateway.createEvent(ctx.tokens, toCalendarAppointment(row), `${row.id}:create`, {
+      eventId: link.googleEventId,
+    })
+  );
+  // An event Google answers 409 for that is cancelled there (deleted by the user after an earlier
+  // create whose answer was lost) is not brought back: the link is marked, like a deletion. One that
+  // is there with older content (the appointment was edited between the tries) is patched next.
+  const gone = event.status === 'cancelled';
+  const hidden = !gone && isPersonal(event);
+  const { tenantId } = ctx.mailbox;
+  const settled = {
+    pending: false,
+    etag: event.etag ?? null,
+    remoteUpdatedAt: event.lastModified,
+    // A private or confidential event is marked like the pull marks one made private: nothing is written
+    // to it again.
+    ...(gone || hidden ? { remoteCancelledAt: ctx.now } : {}),
+    localSyncedAt: sameContent(event, row) || hidden ? row.updatedAt : null,
+    pushAttempts: 0,
+    nextPushAt: null,
+  };
+  // The event was deleted in Google: the appointment is cancelled, as when the pull hears of a
+  // deletion, and the link settled with it.
+  await ctx.prisma.$transaction(async (tx: any) => {
+    if (gone) {
+      await tx.appointment.updateMany({
+        where: { id: row.id, tenantId, status: { in: [...ACTIVE_STATUSES] } },
+        data: {
+          status: 'CANCELLED',
+          cancelledAt: ctx.now,
+          cancellationReason: 'Cancelled in Google Calendar',
+        },
       });
     }
-    const event = must(
-      await ctx.gateway.createEvent(ctx.tokens, toCalendarAppointment(row), `${row.id}:create`, {
-        eventId: link.googleEventId,
-      })
-    );
-    // An event Google answers 409 for that is cancelled there (deleted by the user after an earlier
-    // create whose answer was lost) is not brought back: the link is marked, like a deletion. One that
-    // is there with older content (the appointment was edited between the tries) is patched next.
-    const gone = event.status === 'cancelled';
-    const hidden = !gone && isPersonal(event);
-    const { tenantId } = ctx.mailbox;
-    const settled = {
-      pending: false,
-      etag: event.etag ?? null,
-      remoteUpdatedAt: event.lastModified,
-      // A private or confidential event is marked like the pull marks one made private: nothing is written
-      // to it again.
-      ...(gone || hidden ? { remoteCancelledAt: ctx.now } : {}),
-      localSyncedAt: sameContent(event, row) || hidden ? row.updatedAt : null,
-      pushAttempts: 0,
-      nextPushAt: null,
-    };
-    // The event was deleted in Google: the appointment is cancelled, as when the pull hears of a
-    // deletion, and the link settled with it.
-    await ctx.prisma.$transaction(async (tx: any) => {
-      if (gone) {
-        await tx.appointment.updateMany({
-          where: { id: row.id, tenantId, status: { in: [...ACTIVE_STATUSES] } },
-          data: {
-            status: 'CANCELLED',
-            cancelledAt: ctx.now,
-            cancellationReason: 'Cancelled in Google Calendar',
-          },
-        });
+    // An event found with other content was edited in Google, or Aurora's appointment was edited here since
+    // the revision sent. Aurora not changed since: Google's content is adopted. Changed on both sides: the
+    // newer wins, Google's counting only if made over a minute later (a commit that was still in flight
+    // when the appointment was edited is not an edit by the user). Never a private event's content.
+    const editedHere = row.updatedAt.getTime() > sent.getTime();
+    const googleNewer = event.lastModified.getTime() > row.updatedAt.getTime() + IN_FLIGHT_MS;
+    if (!gone && (!editedHere || googleNewer) && !sameContent(event, row) && !isPersonal(event)) {
+      const adopted = await tx.appointment.updateMany({
+        where: { id: row.id, tenantId, updatedAt: row.updatedAt },
+        data: appointmentFields(event),
+      });
+      if (adopted.count > 0) {
+        const fresh = await tx.appointment.findFirst({ where: { id: row.id, tenantId } });
+        settled.localSyncedAt = fresh.updatedAt;
       }
-      // An event found with other content while Aurora has not changed since the revision sent was edited in
-      // Google: its content is adopted (never a private or confidential event's). If Aurora's appointment was
-      // edited since, Aurora's content wins, and the next patch sends it.
-      const editedHere = row.updatedAt.getTime() > sent.getTime();
-      if (!gone && !editedHere && !sameContent(event, row) && !isPersonal(event)) {
-        const adopted = await tx.appointment.updateMany({
-          where: { id: row.id, tenantId, updatedAt: row.updatedAt },
-          data: appointmentFields(event),
-        });
-        if (adopted.count > 0) {
-          const fresh = await tx.appointment.findFirst({ where: { id: row.id, tenantId } });
-          settled.localSyncedAt = fresh.updatedAt;
-        }
-      }
-      await tx.calendarEventLink.update({ where: { id: link.id, tenantId }, data: settled });
-    });
-    if (gone) ctx.report.cancelled += 1;
-    else if (hidden) ctx.report.skipped += 1;
-    else ctx.report.pushedCreated += 1;
-  } catch (error) {
-    await failedAttempt(ctx, link, error);
-    throw error;
-  }
+    }
+    await tx.calendarEventLink.update({ where: { id: link.id, tenantId }, data: settled });
+  });
+  if (gone) ctx.report.cancelled += 1;
+  else if (hidden) ctx.report.skipped += 1;
+  else ctx.report.pushedCreated += 1;
 }
+
 /** A link whose appointment was edited in Aurora since the last sync. */
 function isEdited(link: any): boolean {
   return (

@@ -673,6 +673,8 @@ describe('Aurora to Google: review cases', () => {
         calendarEventLink: [pendingLink(new Date('2026-11-18T08:00:00.000Z'))],
       });
       const id = eventIdFor('mbx-1', 'appt-1');
+      // Google's copy is older than the edit made here: Aurora's is the newer.
+      h.google.now = new Date('2026-11-19T07:00:00.000Z');
       h.google.put(id, { title: 'What the first create sent' });
 
       await runCalendarSync(sync);
@@ -753,6 +755,81 @@ describe('Aurora to Google: review cases', () => {
     expect(h.google.log.some((l) => l.startsWith('patchEvent'))).toBe(false);
     expect(h.google.events.get(id)?.title).toBe('Now private');
     expect(h.appointments()[0].title).toBe('Aurora title');
+  });
+  describe('a lost create found again after both sides changed', () => {
+    const seed = (appointmentUpdatedAt: Date) => ({
+      appointment: [appointmentRow({ title: 'Edited here', updatedAt: appointmentUpdatedAt })],
+      calendarEventLink: [
+        {
+          id: 'link-1',
+          tenantId: TENANT,
+          mailboxId: 'mbx-1',
+          appointmentId: 'appt-1',
+          googleEventId: eventIdFor('mbx-1', 'appt-1'),
+          origin: 'AURORA',
+          pending: true,
+          pushAttempts: 0,
+          nextPushAt: null,
+          etag: null,
+          localSyncedAt: new Date('2026-11-18T08:00:00.000Z'),
+          remoteUpdatedAt: null,
+          remoteCancelledAt: null,
+        },
+      ],
+    });
+
+    it('adopts Google’s edit when it was made well after the one here', async () => {
+      const sync = h.setup(seed(new Date('2026-11-19T08:00:00.000Z')));
+      h.google.now = new Date('2026-11-19T10:00:00.000Z');
+      h.google.put(eventIdFor('mbx-1', 'appt-1'), { title: 'Edited in Google later' });
+
+      await runCalendarSync(sync);
+
+      expect(h.appointments()[0].title).toBe('Edited in Google later');
+    });
+
+    it('keeps Aurora’s edit when Google’s change is within a minute of it (a commit still in flight)', async () => {
+      const sync = h.setup(seed(new Date('2026-11-19T08:00:00.000Z')));
+      h.google.now = new Date('2026-11-19T08:00:20.000Z');
+      h.google.put(eventIdFor('mbx-1', 'appt-1'), { title: 'What the create committed' });
+
+      await runCalendarSync(sync);
+
+      expect(h.appointments()[0].title).toBe('Edited here');
+      expect(h.google.events.get(eventIdFor('mbx-1', 'appt-1'))?.title).toBe('Edited here');
+    });
+  });
+
+  it('creates a pending event as soon as its appointment is edited, without waiting out the backoff', async () => {
+    const id = eventIdFor('mbx-1', 'appt-1');
+    const sync = h.setup({
+      appointment: [
+        appointmentRow({ title: 'Fixed', updatedAt: new Date('2026-11-19T12:00:00.000Z') }),
+      ],
+      calendarEventLink: [
+        {
+          id: 'link-1',
+          tenantId: TENANT,
+          mailboxId: 'mbx-1',
+          appointmentId: 'appt-1',
+          googleEventId: id,
+          origin: 'AURORA',
+          pending: true,
+          pushAttempts: 6,
+          nextPushAt: new Date(NOW.getTime() + 20 * 3_600_000),
+          updatedAt: new Date('2026-11-19T09:00:00.000Z'),
+          etag: null,
+          localSyncedAt: null,
+          remoteUpdatedAt: null,
+          remoteCancelledAt: null,
+        },
+      ],
+    });
+
+    await runCalendarSync(sync);
+
+    expect(h.links()[0]).toMatchObject({ pending: false, pushAttempts: 0 });
+    expect(h.google.events.get(id)?.title).toBe('Fixed');
   });
   it('does not push a recurring appointment, which would be one wrong event', async () => {
     const sync = h.setup({
