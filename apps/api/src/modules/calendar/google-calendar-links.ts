@@ -105,12 +105,6 @@ export interface SyncContext {
   failed: Map<string, number>;
 }
 
-/**
- * The id Aurora gives an event it creates (a sha-256 in hex). Google's own events have shorter ids, so an
- * event with this shape that has no link yet is one Aurora is still linking: the pull leaves it to the push.
- */
-export const AURORA_EVENT_ID = /^[0-9a-v]{64}$/;
-
 export function prismaCode(error: unknown): string | undefined {
   const code = (error as { code?: unknown } | null)?.code;
   return typeof code === 'string' ? code : undefined;

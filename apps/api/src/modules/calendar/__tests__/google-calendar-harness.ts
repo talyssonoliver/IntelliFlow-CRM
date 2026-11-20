@@ -88,6 +88,7 @@ function matchesOperator(value: any, c: Row): boolean {
   if ('gte' in c) return n(value) >= n(c.gte);
   if ('gt' in c) return n(value) > n(c.gt);
   if ('lt' in c) return n(value) < n(c.lt);
+  if ('lte' in c) return n(value) <= n(c.lte);
   if ('not' in c) return c.not === null ? value != null : value !== c.not;
   throw new Error(`fake db: unsupported condition ${JSON.stringify(c)}`);
 }
@@ -217,7 +218,11 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
     failures,
     emailMailbox: crud('emailMailbox'),
     appointment: crud('appointment', { status: 'SCHEDULED' }),
-    calendarEventLink: crud('calendarEventLink'),
+    calendarEventLink: crud('calendarEventLink', {
+      pending: false,
+      pushAttempts: 0,
+      nextPushAt: null,
+    }),
     // The claim: the mailbox that is due, ACTIVE, a user's Google mailbox with the calendar scope.
     $queryRaw: vi.fn(async (_sql: unknown, leaseUntil: Date, scopes: string[], now: Date) => {
       const row = tables.emailMailbox

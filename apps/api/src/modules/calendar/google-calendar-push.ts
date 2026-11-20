@@ -32,6 +32,11 @@ export const PAST_GRACE_MS = 24 * 60 * 60_000;
 const MAX_WRITES = 50;
 /** Links read per query while looking for appointments changed in Aurora (paged by link id). */
 const LINKS_PAGE = 100;
+/** A refused item waits 5 minutes after its first failure, then twice as long each time, up to a day. */
+const RETRY_BASE_MS = 5 * 60_000;
+const RETRY_MAX_MS = 24 * 60 * 60_000;
+/** After this many failures in a row an item is left alone (until its appointment is edited again). */
+const MAX_ATTEMPTS = 8;
 
 /**
  * The id an Aurora appointment's event is created with in a mailbox's calendar. Google keeps ids
@@ -152,61 +157,129 @@ async function removeEvents(ctx: SyncContext, _cutoff: Date, budget: number): Pr
   return { writes: links.length, complete: links.length < budget };
 }
 
-/** Events to make: the user's live appointments that have no link in this calendar yet. */
-async function createEvents(ctx: SyncContext, cutoff: Date, budget: number): Promise<StepResult> {
-  const { tenantId, id: mailboxId, userId } = ctx.mailbox;
-  const rows: any[] = await ctx.prisma.appointment.findMany({
-    where: {
-      tenantId,
-      organizerId: userId,
-      status: { in: [...ACTIVE_STATUSES] },
-      endTime: { gte: cutoff },
-      calendarLinks: { none: { mailboxId } },
-    },
-    orderBy: { startTime: 'asc' },
-    take: budget,
-  });
-  for (const row of rows) {
-    if (!ctx.hasTime()) return { writes: 0, complete: false };
-    await item(ctx, row.id, async () => {
-      const event = must(
-        await ctx.gateway.createEvent(ctx.tokens, toCalendarAppointment(row), `${row.id}:create`, {
-          eventId: eventIdFor(mailboxId, row.id),
-        })
-      );
-      // An event Google answers 409 for that is cancelled there (deleted by the user after an earlier
-      // create whose answer was lost) is not brought back: the link is marked, like a deletion.
-      const gone = event.status === 'cancelled';
-      try {
-        await ctx.prisma.calendarEventLink.create({
-          data: {
-            tenantId,
-            mailboxId,
-            appointmentId: row.id,
-            googleEventId: event.externalId,
-            origin: 'AURORA',
-            etag: event.etag ?? null,
-            remoteUpdatedAt: event.lastModified,
-            remoteCancelledAt: gone ? ctx.now : null,
-            // The row as it was written: a later change is a change to push.
-            localSyncedAt: row.updatedAt,
-          },
-        });
-      } catch (error) {
-        // Only a link for this appointment already being there is fine (made meanwhile). Any other
-        // clash (the event id belongs to another link) would leave the appointment unlinked: a failure.
-        const linked = await ctx.prisma.calendarEventLink.findFirst({
-          where: { tenantId, mailboxId, appointmentId: row.id },
-        });
-        if (prismaCode(error) !== 'P2002' || !linked) throw error;
-      }
-      if (gone) ctx.report.skipped += 1;
-      else ctx.report.pushedCreated += 1;
-    });
-  }
-  return { writes: rows.length, complete: rows.length < budget };
+/** Items not waiting after a failure and not given up on. */
+function due(ctx: SyncContext) {
+  return {
+    pushAttempts: { lt: MAX_ATTEMPTS },
+    OR: [{ nextPushAt: null }, { nextPushAt: { lte: ctx.now } }],
+  };
 }
 
+/** A link's write failed: it waits, later and less often each time, and the rest goes on. */
+async function failedAttempt(ctx: SyncContext, link: any, error: unknown): Promise<void> {
+  if (endsRound(error)) return; // a rate limit or a lost permission is not this item's fault
+  const attempts = link.pushAttempts ?? 0;
+  const wait = Math.min(RETRY_BASE_MS * 2 ** attempts, RETRY_MAX_MS);
+  await ctx.prisma.calendarEventLink.update({
+    where: { id: link.id, tenantId: ctx.mailbox.tenantId },
+    data: { pushAttempts: attempts + 1, nextPushAt: new Date(ctx.now.getTime() + wait) },
+  });
+}
+
+/** Does the event Google has hold what the appointment says? */
+function sameContent(event: any, row: any): boolean {
+  return (
+    event.title === row.title &&
+    (event.location ?? null) === (row.location ?? null) &&
+    (event.description ?? null) === (row.description ?? null) &&
+    event.startTime.getTime() === row.startTime.getTime() &&
+    event.endTime.getTime() === row.endTime.getTime()
+  );
+}
+
+/**
+ * Events to make: the user's live appointments that have no link in this calendar yet, and creates
+ * that did not finish. The link is written first, pending, with the id the event will have: it says
+ * the event is Aurora's (the pull leaves it alone) and a lost answer cannot leave the appointment
+ * unlinked.
+ */
+async function createEvents(ctx: SyncContext, cutoff: Date, budget: number): Promise<StepResult> {
+  const { tenantId, id: mailboxId, userId } = ctx.mailbox;
+  const live = {
+    tenantId,
+    organizerId: userId,
+    status: { in: [...ACTIVE_STATUSES] },
+    endTime: { gte: cutoff },
+  };
+  const pending: any[] = await ctx.prisma.calendarEventLink.findMany({
+    where: { tenantId, mailboxId, pending: true, ...due(ctx), appointment: live },
+    include: { appointment: true },
+    orderBy: { id: 'asc' },
+    take: budget,
+  });
+  const fresh: any[] = await ctx.prisma.appointment.findMany({
+    where: { ...live, calendarLinks: { none: { mailboxId } } },
+    orderBy: { startTime: 'asc' },
+    take: budget - pending.length,
+  });
+  let writes = 0;
+  for (const link of pending) {
+    if (!ctx.hasTime()) return { writes, complete: false };
+    writes += 1;
+    await item(ctx, link.id, () => makeEvent(ctx, link, link.appointment));
+  }
+  for (const row of fresh) {
+    if (!ctx.hasTime()) return { writes, complete: false };
+    writes += 1;
+    await item(ctx, row.id, async () => {
+      const link = await startLink(ctx, row);
+      if (link) await makeEvent(ctx, link, row);
+    });
+  }
+  return { writes, complete: pending.length + fresh.length < budget };
+}
+
+/** The pending link of an appointment; null when it has a link already (made meanwhile). */
+async function startLink(ctx: SyncContext, row: any): Promise<any | null> {
+  const { tenantId, id: mailboxId } = ctx.mailbox;
+  try {
+    return await ctx.prisma.calendarEventLink.create({
+      data: {
+        tenantId,
+        mailboxId,
+        appointmentId: row.id,
+        googleEventId: eventIdFor(mailboxId, row.id),
+        origin: 'AURORA',
+        pending: true,
+      },
+    });
+  } catch (error) {
+    if (prismaCode(error) === 'P2002') return null;
+    throw error;
+  }
+}
+
+/** Creates the event of a pending link, then settles the link. */
+async function makeEvent(ctx: SyncContext, link: any, row: any): Promise<void> {
+  try {
+    const event = must(
+      await ctx.gateway.createEvent(ctx.tokens, toCalendarAppointment(row), `${row.id}:create`, {
+        eventId: link.googleEventId,
+      })
+    );
+    // An event Google answers 409 for that is cancelled there (deleted by the user after an earlier
+    // create whose answer was lost) is not brought back: the link is marked, like a deletion. One that
+    // is there with older content (the appointment was edited between the tries) is patched next.
+    const gone = event.status === 'cancelled';
+    await ctx.prisma.calendarEventLink.update({
+      where: { id: link.id, tenantId: ctx.mailbox.tenantId },
+      data: {
+        pending: false,
+        etag: event.etag ?? null,
+        remoteUpdatedAt: event.lastModified,
+        remoteCancelledAt: gone ? ctx.now : null,
+        localSyncedAt: sameContent(event, row) ? row.updatedAt : null,
+        pushAttempts: 0,
+        nextPushAt: null,
+      },
+    });
+    if (gone) ctx.report.skipped += 1;
+    else ctx.report.pushedCreated += 1;
+  } catch (error) {
+    await failedAttempt(ctx, link, error);
+    throw error;
+  }
+}
 /**
  * Links of live, upcoming appointments of the user that were edited in Aurora since they were last
  * synced. Paged by link id until the write budget is covered or the links run out, so a backlog is
@@ -226,6 +299,8 @@ async function changedLinks(
         tenantId,
         mailboxId,
         remoteCancelledAt: null,
+        pending: false,
+        ...due(ctx),
         id: { gt: after },
         appointment: {
           tenantId,
@@ -257,7 +332,14 @@ async function patchEvents(ctx: SyncContext, cutoff: Date, budget: number): Prom
   for (const link of changed.slice(0, budget)) {
     if (!ctx.hasTime()) return { writes, complete: false };
     writes += 1;
-    await item(ctx, link.id, () => patchOne(ctx, link));
+    await item(ctx, link.id, async () => {
+      try {
+        await patchOne(ctx, link);
+      } catch (error) {
+        await failedAttempt(ctx, link, error);
+        throw error;
+      }
+    });
   }
   return { writes, complete: exhausted && changed.length <= budget };
 }
@@ -290,6 +372,8 @@ async function patchOne(ctx: SyncContext, link: any): Promise<void> {
       etag: event.etag ?? null,
       remoteUpdatedAt: event.lastModified,
       localSyncedAt: appointment.updatedAt,
+      pushAttempts: 0,
+      nextPushAt: null,
     },
   });
   ctx.report.pushedUpdated += 1;

@@ -20,6 +20,7 @@ vi.mock('../../email/mailbox-transport', () => ({
 import { runCalendarSync } from '../google-calendar-sync';
 import { eventIdFor } from '../google-calendar-push';
 import { CalendarEventNotFoundError } from '@intelliflow/application';
+import { Result } from '@intelliflow/domain';
 import {
   FakeGoogle,
   NOW,
@@ -84,45 +85,118 @@ describe('Aurora to Google: an appointment becomes an event', () => {
   });
 
   it('finds its own event when the answer to an earlier create was lost', async () => {
-    const sync = h.setup({ appointment: [appointmentRow()] });
-    // Google made the event, the answer never arrived, so no link was written.
-    h.google.put(eventIdFor('mbx-1', 'appt-1'), { title: 'Site visit' });
+    const id = eventIdFor('mbx-1', 'appt-1');
+    const sync = h.setup({
+      appointment: [appointmentRow()],
+      // The link was written first, so the lost answer left it pending.
+      calendarEventLink: [
+        {
+          id: 'link-1',
+          tenantId: TENANT,
+          mailboxId: 'mbx-1',
+          appointmentId: 'appt-1',
+          googleEventId: id,
+          origin: 'AURORA',
+          pending: true,
+          pushAttempts: 0,
+          nextPushAt: null,
+          etag: null,
+          localSyncedAt: null,
+          remoteUpdatedAt: null,
+          remoteCancelledAt: null,
+        },
+      ],
+    });
+    // Google made the event, the answer never arrived.
+    h.google.put(id, { title: 'Site visit' });
 
     const report = await runCalendarSync(sync);
 
-    expect(report.pushedCreated).toBe(1);
+    expect(report).toMatchObject({ pushedCreated: 1, imported: 0 });
     expect(h.google.events.size).toBe(1);
-    expect(h.links()).toHaveLength(1);
+    expect(h.appointments()).toHaveLength(1);
+    expect(h.links()[0].pending).toBe(false);
   });
-
-  it('tolerates a link for the appointment being there already when it writes its own', async () => {
+  it('leaves an appointment alone when a link for it was made meanwhile', async () => {
     const sync = h.setup({ appointment: [appointmentRow()] });
     h.db.failures.set('calendarEventLink.create', p2002());
-    const read = h.db.calendarEventLink.findFirst.getMockImplementation() as (
-      a: unknown
-    ) => unknown;
-    h.db.calendarEventLink.findFirst.mockImplementation(async (args: any) =>
-      args.where.appointmentId ? { id: 'made-meanwhile' } : read(args)
-    );
 
     const report = await runCalendarSync(sync);
 
-    expect(report).toMatchObject({ pushedCreated: 1, itemFailures: 0 });
+    expect(report).toMatchObject({ pushedCreated: 0, itemFailures: 0 });
+    expect(h.google.events.size).toBe(0);
   });
 
-  it('counts a failure, and tries again next round, when the link clashes but is not there', async () => {
+  it('writes the link first, pending, and settles it once the event is made', async () => {
     const sync = h.setup({ appointment: [appointmentRow()] });
-    h.db.failures.set('calendarEventLink.create', p2002());
+    const create = h.google.createEvent.bind(h.google);
+    let during: unknown;
+    h.google.createEvent = async (...args: Parameters<typeof create>) => {
+      during = { ...h.links()[0] };
+      return create(...args);
+    };
+
+    await runCalendarSync(sync);
+
+    expect(during).toMatchObject({ pending: true, googleEventId: eventIdFor('mbx-1', 'appt-1') });
+    expect(h.links()[0]).toMatchObject({ pending: false, pushAttempts: 0 });
+  });
+
+  it('makes a refused create wait, then tries it again, and the link keeps the appointment linked', async () => {
+    const sync = h.setup({ appointment: [appointmentRow()] });
+    h.google.failNext.set('createEvent', refusal());
 
     const first = await runCalendarSync(sync);
-    expect(first).toMatchObject({ pushedCreated: 0, itemFailures: 1 });
-    expect(h.links()).toHaveLength(0);
+    expect(first.itemFailures).toBe(1);
+    expect(h.links()[0]).toMatchObject({ pending: true, pushAttempts: 1 });
+    expect(h.links()[0].nextPushAt.getTime()).toBe(NOW.getTime() + 5 * 60_000);
 
     await h.nextRound(sync);
-    expect(h.links()).toHaveLength(1);
+    expect(h.links()[0]).toMatchObject({ pending: false, pushAttempts: 0, nextPushAt: null });
     expect(h.google.events.size).toBe(1);
   });
 
+  it('does not let refused items hold up the ones behind them', async () => {
+    const rows = [
+      ...Array.from({ length: 50 }, (_, n) =>
+        appointmentRow({
+          id: `bad-${String(n).padStart(2, '0')}`,
+          title: 'bad',
+          startTime: new Date(NOW.getTime() + 60_000 * (n + 1)),
+          endTime: new Date(NOW.getTime() + 60_000 * (n + 61)),
+        })
+      ),
+      ...Array.from({ length: 5 }, (_, n) => appointmentRow({ id: `good-${n}`, title: 'good' })),
+    ];
+    const sync = h.setup({ appointment: rows });
+    const create = h.google.createEvent.bind(h.google);
+    h.google.createEvent = async (...args: Parameters<typeof create>) =>
+      args[1].title === 'bad' ? (Result.fail(refusal()) as any) : create(...args);
+
+    await runCalendarSync(sync);
+
+    // The 50 refused ones wait; the engine finished the five behind them in the same tick.
+    expect(h.links().filter((l) => !l.pending)).toHaveLength(5);
+    expect(h.links().filter((l) => l.pending)).toHaveLength(50);
+  });
+
+  it('gives up on an item after enough failures in a row', async () => {
+    const sync = h.setup({ appointment: [appointmentRow()] });
+    const create = h.google.createEvent.bind(h.google);
+    let calls = 0;
+    h.google.createEvent = async (...args: Parameters<typeof create>) => {
+      calls += 1;
+      return Result.fail(refusal()) as any;
+    };
+    for (let round = 0; round < 40; round++) {
+      await (round === 0 ? runCalendarSync(sync) : h.nextRound(sync));
+      h.mailbox().calendarNextSyncAt = null;
+      h.db.tables.calendarEventLink.forEach((l) => (l.nextPushAt = null));
+    }
+
+    expect(calls).toBe(8);
+    expect(create).toBeDefined();
+  });
   it('writes no guests and sends no invitation', async () => {
     const sync = h.setup({ appointment: [appointmentRow()] });
     const seen: unknown[] = [];
@@ -151,16 +225,35 @@ describe('Aurora to Google: an appointment becomes an event', () => {
     expect(h.google.log.some((l) => l.startsWith('patchEvent'))).toBe(false);
   });
 
-  it('leaves an event Aurora is still linking to the push, not the pull', async () => {
-    const sync = h.setup({ appointment: [appointmentRow()] });
-    h.google.put(eventIdFor('mbx-1', 'appt-1'), { title: 'Site visit' });
+  it('leaves an event whose link is still pending to the push, not the pull', async () => {
+    const sync = h.setup({
+      appointment: [appointmentRow()],
+      calendarEventLink: [
+        {
+          id: 'link-1',
+          tenantId: TENANT,
+          mailboxId: 'mbx-1',
+          appointmentId: 'appt-1',
+          googleEventId: 'ev-pending',
+          origin: 'AURORA',
+          pending: true,
+          pushAttempts: 0,
+          nextPushAt: null,
+          etag: null,
+          localSyncedAt: null,
+          remoteUpdatedAt: null,
+          remoteCancelledAt: null,
+        },
+      ],
+    });
+    h.google.put('ev-pending', { title: 'Site visit' });
 
     const report = await runCalendarSync(sync);
 
-    expect(report.imported).toBe(0);
+    expect(report).toMatchObject({ imported: 0, updated: 0 });
     expect(h.appointments()).toHaveLength(1);
+    expect(h.links()[0].pending).toBe(false);
   });
-
   it('only sends the user’s own live, upcoming appointments of the mailbox tenant', async () => {
     const sync = h.setup({
       appointment: [
@@ -270,7 +363,10 @@ describe('Aurora to Google: an appointment changes or goes', () => {
     const report = await runCalendarSync(sync);
 
     expect(report).toMatchObject({ pushedCreated: 1, itemFailures: 1, failures: 0 });
-    expect(h.links().map((l) => l.appointmentId)).toEqual(['b']);
+    expect(h.links().map((l) => [l.appointmentId, l.pending])).toEqual([
+      ['a', true],
+      ['b', false],
+    ]);
   });
 });
 
