@@ -15,6 +15,8 @@ const mockUpdate = vi.fn();
 const mockDeleteAsync = vi.fn().mockResolvedValue({ success: true, id: 'deal-123' });
 const mockInvalidate = vi.fn();
 const mockListInvalidate = vi.fn();
+const mockFeedInvalidate = vi.fn();
+const mockUnifiedFeedInvalidate = vi.fn();
 const mockToast = vi.fn();
 type CapturedMutationConfig = {
   onSuccess?: (...args: unknown[]) => unknown;
@@ -164,6 +166,10 @@ vi.mock('@/lib/api', () => ({
       opportunity: {
         getById: { invalidate: mockInvalidate },
         list: { invalidate: mockListInvalidate },
+      },
+      activityFeed: {
+        getEntityFeed: { invalidate: mockFeedInvalidate },
+        getUnifiedFeed: { invalidate: mockUnifiedFeedInvalidate },
       },
     }),
   },
@@ -640,6 +646,16 @@ describe('DealDetailPage', () => {
       );
     });
 
+    it('a move refreshes the activity feed so its new entry shows at once (#31)', async () => {
+      await renderDealPage();
+      await act(async () => {
+        await capturedMoveStageConfig.onSuccess?.({}, { targetStage: 'PROPOSAL' });
+      });
+      // The deal's feed reads getUnifiedFeed, so that is the one that must refetch.
+      expect(mockUnifiedFeedInvalidate).toHaveBeenCalled();
+      expect(mockFeedInvalidate).toHaveBeenCalled();
+    });
+
     it('moveStage onError surfaces the already-closed message', async () => {
       await renderDealPage();
       capturedMoveStageConfig.onError?.({ message: 'Opportunity has already been closed' });
@@ -655,6 +671,67 @@ describe('DealDetailPage', () => {
       patchDeal({ stage: 'PROPOSAL' });
       await renderDealPage();
       expect((screen.getByTestId('action-Won') as HTMLButtonElement).disabled).toBe(true);
+    });
+  });
+
+  describe('MVP-012 #32 — the stage bar moves the deal, after asking', () => {
+    const stageButton = (name: string) =>
+      screen
+        .getByRole('group', { name: /move this deal/i })
+        .querySelector(`button[type="button"]`) && screen.getByRole('button', { name });
+
+    it('tapping an allowed stage asks first and does not move the deal yet', async () => {
+      await renderDealPage();
+      fireEvent.click(stageButton('Proposal') as HTMLElement);
+      expect(screen.getByTestId('confirm-title')).toHaveTextContent('Move to Proposal?');
+      expect(mockMoveStage).not.toHaveBeenCalled();
+    });
+
+    it('offers only the stages the rules allow from this stage (a NEGOTIATION deal: Proposal)', async () => {
+      await renderDealPage();
+      expect(screen.getByRole('button', { name: 'Proposal' })).toBeEnabled();
+      for (const name of ['Prospecting', 'Qualification', 'Needs Analysis']) {
+        expect(screen.getByRole('button', { name })).toBeDisabled();
+      }
+    });
+
+    it('confirming moves the deal to that stage', async () => {
+      await renderDealPage();
+      fireEvent.click(stageButton('Proposal') as HTMLElement);
+      fireEvent.click(screen.getByTestId('confirm-delete'));
+      expect(mockMoveStage).toHaveBeenCalledWith(
+        { id: 'deal-123', targetStage: 'PROPOSAL' },
+        expect.objectContaining({ onSettled: expect.any(Function) })
+      );
+    });
+
+    it('cancelling leaves the deal where it is', async () => {
+      await renderDealPage();
+      fireEvent.click(stageButton('Proposal') as HTMLElement);
+      fireEvent.click(screen.getByTestId('confirm-cancel'));
+      expect(mockMoveStage).not.toHaveBeenCalled();
+      expect(screen.queryByTestId('confirm-dialog')).toBeNull();
+    });
+
+    it("the deal's own stage is not a move: it is marked current and disabled", async () => {
+      await renderDealPage();
+      const current = screen.getByRole('button', { name: 'Negotiation' });
+      expect(current).toBeDisabled();
+      expect(current).toHaveAttribute('aria-current', 'step');
+    });
+
+    it('a closed deal has no stage buttons', async () => {
+      patchDeal({ stage: 'CLOSED_WON', isClosed: true });
+      await renderDealPage();
+      expect(screen.queryByRole('group', { name: /move this deal/i })).toBeNull();
+    });
+
+    it('names the new stage in the success toast', async () => {
+      await renderDealPage();
+      await act(async () => {
+        await capturedMoveStageConfig.onSuccess?.({}, { targetStage: 'QUALIFICATION' });
+      });
+      expect(mockToast).toHaveBeenCalledWith({ title: 'Moved to Qualification' });
     });
   });
 
