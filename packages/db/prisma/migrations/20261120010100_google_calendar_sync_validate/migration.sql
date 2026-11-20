@@ -1,4 +1,4 @@
--- MVP-013: validate the check added NOT VALID in 20261119120000_google_calendar_sync.
+-- MVP-013: validate the check added NOT VALID in 20261120010000_google_calendar_sync.
 --
 -- Class A: VALIDATE CONSTRAINT scans the table under a SHARE UPDATE EXCLUSIVE lock only, so reads
 -- and writes keep going. Every row passes (the column was just added with the default 'ACTIVE'), so
@@ -8,7 +8,7 @@
 -- Recovery plan: forward-only; a failed validation leaves the check NOT VALID (still enforced for
 -- new rows) and changes no data. If this file fails, `prisma migrate deploy` stops here and
 -- refuses later deploys: fix the cause, then `prisma migrate resolve --rolled-back
--- 20261119120100_google_calendar_sync_validate` and run `prisma migrate deploy` again.
+-- 20261120010100_google_calendar_sync_validate` and run `prisma migrate deploy` again.
 
 -- VALIDATE only waits behind autovacuum or another VALIDATE; cap that wait.
 SET lock_timeout = '30s';
