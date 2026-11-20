@@ -193,9 +193,15 @@ async function syncMailbox(
     version = access.tokenVersion;
     const deadline = deps.now().getTime() + MAILBOX_BUDGET_MS;
     // Google's changes first, then Aurora's: what the pull finished stays even if the push fails.
+    // Where a retry in this run resumes: the latest saved state, not the one the run began with.
+    let saved = mailbox.calendarSyncToken;
     const round = async (accessToken: string) => {
       const ctx = roundContext(deps, mailbox, accessToken, now, report, deadline);
-      const pulled = await pullChanges(ctx, mailbox.calendarSyncToken);
+      ctx.rememberState = (state) => {
+        saved = state;
+      };
+      const pulled = await pullChanges(ctx, saved);
+      saved = pulled.syncToken;
       progress.calendarSyncToken = pulled.syncToken;
       return { pulled, pushed: await pushChanges(ctx, { patch: pulled.complete }) };
     };

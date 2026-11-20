@@ -707,6 +707,26 @@ describe('a reconnect (MVP-013)', () => {
       'From the new account',
     ]);
   });
+
+  it('saves the new account before reading, so a failed round does not clear the links again', async () => {
+    const sync = h.setup();
+    h.google.put('ev-1');
+    await runCalendarSync(sync);
+    h.mailbox().accountAddress = 'someone.else@studio.example.invalid';
+    h.google.failNext.set('fetchChanges', new CalendarRateLimitError('google', 5));
+
+    await h.nextRound(sync);
+
+    expect(h.mailbox().calendarSyncToken).toContain('someone.else@studio.example.invalid');
+    expect(h.links()).toHaveLength(0);
+    // The next round reads on from there: its links stay once made.
+    await h.nextRound(sync); // still inside the failure backoff
+    await h.nextRound(sync);
+    const made = h.links().map((l) => l.id);
+    expect(made.length).toBeGreaterThan(0);
+    await h.nextRound(sync);
+    expect(h.links().map((l) => l.id)).toEqual(made);
+  });
 });
 describe('two tenants', () => {
   it('keeps each tenant’s events to itself, even with the same event id', async () => {

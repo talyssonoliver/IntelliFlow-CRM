@@ -207,7 +207,15 @@ async function forgetOtherAccount(ctx: SyncContext, saved: string | null): Promi
   await ctx.prisma.calendarEventLink.deleteMany({
     where: { tenantId: ctx.mailbox.tenantId, mailboxId: ctx.mailbox.id },
   });
-  return null;
+  // Saved before anything is imported, naming the new account: a retry after a failure must not find the
+  // old account again and delete the links of what this round imports. The first sync is a replacement.
+  const reset = encodeState(ctx, { t: null, r: 1, h: ctx.now.toISOString() });
+  await ctx.prisma.emailMailbox.updateMany({
+    where: { id: ctx.mailbox.id, tenantId: ctx.mailbox.tenantId },
+    data: { calendarSyncToken: reset },
+  });
+  ctx.rememberState?.(reset);
+  return reset;
 }
 /** A round that stopped during the check after a replacement sync carries on with that check. */
 function resumeVerification(ctx: SyncContext, raw: string | null): Promise<PullResult> | null {

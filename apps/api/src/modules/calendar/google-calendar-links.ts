@@ -106,6 +106,8 @@ export interface SyncContext {
   report: CalendarSyncReport;
   /** Events that failed to apply and are tried again next round, with their attempts so far. */
   failed: Map<string, number>;
+  /** Called with the state saved when the account changed, so a retry in the same run starts from it. */
+  rememberState?: (state: string) => void;
 }
 
 export function prismaCode(error: unknown): string | undefined {
