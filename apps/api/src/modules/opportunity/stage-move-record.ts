@@ -26,7 +26,13 @@ export interface MovedDeal {
   stage: string;
 }
 
-/** Writes the activity entry and the audit row for one stage move; never throws. */
+/**
+ * Writes the activity entry and the audit row for one stage move; never throws.
+ *
+ * The entry stores only `userId`: PrismaActivityFeedRepository resolves it to the user's name when
+ * it reads the feed (tests/integration/stage-move-activity.test.ts proves write to feed on a real
+ * database), so it is not copied here and cannot go stale.
+ */
 export async function recordStageMove(
   ctx: Context,
   deal: MovedDeal,
