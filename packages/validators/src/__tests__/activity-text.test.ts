@@ -38,6 +38,23 @@ describe('stripMachineIds', () => {
     expect(stripMachineIds(text)).toBe(text);
   });
 
+  it('keeps an id in a query value or a fragment, and a bare path', () => {
+    for (const link of [
+      `https://app.example.invalid/leads?id=${ID}`,
+      `https://app.example.invalid/leads#${ID}`,
+      `www.example.invalid?ref=${UUID}`,
+      `/leads/${ID}`,
+    ]) {
+      expect(stripMachineIds(`See ${link} now`)).toBe(`See ${link} now`);
+    }
+  });
+
+  it('still removes an id that follows a link in the same sentence', () => {
+    expect(stripMachineIds(`See https://app.example.invalid/x then ref ${ID}.`)).toBe(
+      'See https://app.example.invalid/x then.'
+    );
+  });
+
   it('keeps a label that is part of a longer word', () => {
     expect(stripMachineIds(`android ${ID}`)).toBe('android');
   });

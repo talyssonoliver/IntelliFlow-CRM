@@ -103,18 +103,25 @@ function closeGap(before: string, after: string): [string, string] {
   return [out, rest];
 }
 
+/** True when the word the id sits in (the text before it back to the last space) is a link or a path. */
+function isInsideAddress(before: string): boolean {
+  let start = before.length;
+  while (start > 0 && !' \t\r\n'.includes(before.charAt(start - 1))) start -= 1;
+  const word = before.slice(start).toLowerCase();
+  return word.includes('://') || word.startsWith('www.') || word.includes('/');
+}
+
 /**
  * The text with machine ids removed: cuids and UUIDs, and the label in front of one ("COA ledger row",
- * "lead id"). An id inside an address ("/leads/<id>") stays, so the link still works. Text without an id
- * is returned unchanged.
+ * "lead id"). An id inside an address (a path, a query value or a fragment) stays, so the link still
+ * works. Text without an id is returned unchanged.
  */
 export function stripMachineIds(text: string): string {
   let out = '';
   let rest = text;
   for (let found = firstId(rest); found; found = firstId(rest)) {
-    const lead = found.index > 0 ? rest.charAt(found.index - 1) : out.charAt(out.length - 1);
     const end = found.index + found.length;
-    if (lead === '/') {
+    if (isInsideAddress(out + rest.slice(0, found.index))) {
       out += rest.slice(0, end);
       rest = rest.slice(end);
       continue;
