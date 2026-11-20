@@ -4598,6 +4598,13 @@ model CalendarEventLink {
   remoteUpdatedAt   DateTime?
   /// The event was cancelled or deleted in Google; kept so it is never created again.
   remoteCancelledAt DateTime?
+  /// The link was written before the event was created in Google (it says whose event that id is); false
+  /// once the create has succeeded.
+  pending           Boolean      @default(false)
+  /// Failed attempts to write this link's event to Google (a create or a patch), since the last success.
+  pushAttempts      Int          @default(0)
+  /// Earliest time to try writing it again after a failure: a refused item waits, and does not hold up the rest.
+  nextPushAt        DateTime?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
