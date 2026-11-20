@@ -93,6 +93,16 @@ describe('stripMachineIds', () => {
     expect(stripMachineIds(`Replied, ref ${ID}, thanks`)).toBe('Replied, thanks');
     expect(stripMachineIds(`Done (${ID}).`)).toBe('Done.');
   });
+  it('keeps a bracketed or quoted id inside a link or a path', () => {
+    for (const word of [
+      `https://example.invalid/leads/(${ID})`,
+      `C:\\Exports\\(${ID}).pdf`,
+      `https://example.invalid/x?q="${ID}"`,
+    ]) {
+      expect(stripMachineIds(`See ${word} now`)).toBe(`See ${word} now`);
+    }
+    expect(stripMachineIds(`See (${ID}) now`)).toBe('See now');
+  });
   it('removes a bare key=id assignment together with its key', () => {
     expect(stripMachineIds(`Price follow-up sent (lead_id=${ID})`)).toBe('Price follow-up sent');
     expect(stripMachineIds(`Synced id=${ID} ok`)).toBe('Synced ok');

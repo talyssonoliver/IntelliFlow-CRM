@@ -150,7 +150,7 @@ function endsInQueryOrPath(before: string): boolean {
 function isStandalone(before: string, after: string): boolean {
   const prev = before.charAt(before.length - 1);
   const beforeOk =
-    isBreakOrEnd(prev) || OPENERS.includes(prev) || (prev === '=' && !endsInQueryOrPath(before));
+    isBreakOrEnd(prev) || ((OPENERS.includes(prev) || prev === '=') && !endsInQueryOrPath(before));
   if (!beforeOk) return false;
   const next = after.charAt(0);
   if (isBreakOrEnd(next) || CLOSERS.includes(next)) return true;
