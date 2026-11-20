@@ -60,6 +60,15 @@ describe('stripMachineIds: an id a label introduces goes with its label', () => 
     }
   });
 
+  it('keeps a label and id inside a quoted path or link that has spaces in it', () => {
+    for (const text of [
+      `Open "C:\\Exports\\Customer ref ${ID}"`,
+      `Open "https://example.invalid/my files/lead id ${UUID}"`,
+    ]) {
+      expect(stripMachineIds(text)).toBe(text);
+    }
+    expect(stripMachineIds(`Said "hello" ref ${ID}.`)).toBe('Said "hello".');
+  });
   it('removes a labelled id that follows a link in the same sentence', () => {
     expect(stripMachineIds(`See https://app.example.invalid/x then ref ${ID}.`)).toBe(
       'See https://app.example.invalid/x then.'

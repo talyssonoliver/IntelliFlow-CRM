@@ -150,6 +150,14 @@ function beforeLabel(before: string): string {
   return before.endsWith('=') ? before.slice(0, -1) : before;
 }
 
+/** True when the text ends inside a double-quoted link or path that has spaces in it ("C:\Exports\My Files ref"). */
+function insideQuotedAddress(text: string): boolean {
+  const line = text.slice(text.lastIndexOf('\n') + 1);
+  const parts = line.split('"');
+  if (parts.length % 2 !== 0) return false; // an even number of quotes so far: none is open
+  const open = parts[parts.length - 1] ?? '';
+  return open.includes('/') || open.includes('\\');
+}
 /**
  * True when the id is introduced by a label ("COA ledger row <id>", "lead_id=<id>", "ref: <id>") and the id's
  * token ends right after it (a closing bracket or quote counts, so "(ref <id>)." does), or when the id is the
@@ -158,6 +166,7 @@ function beforeLabel(before: string): string {
 function isRemovable(before: string, after: string): boolean {
   if (before.trim() === '' && after.trim() === '') return true;
   const base = beforeLabel(before);
+  if (insideQuotedAddress(base)) return false;
   if (withoutTrailingLabels(base).length >= base.length) return false;
   return CLOSERS.includes(after.charAt(0)) ? tokenEndsAt(after, 1) : tokenEndsAt(after, 0);
 }
