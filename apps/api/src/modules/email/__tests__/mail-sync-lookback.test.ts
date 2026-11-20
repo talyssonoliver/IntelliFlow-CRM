@@ -26,6 +26,8 @@ function fakePrisma(leads: Row[], contacts: Row[] = []) {
       const { gt, lte } = args.where.createdAt;
       const out = rows
         .filter((r) => (r.tenantId ?? 'tenant-1') === args.where.tenantId)
+        // like SQL "email <> ''": a null address never passes
+        .filter((r) => r.email !== null && r.email !== args.where.email.not)
         .filter((r) => r.createdAt > gt && (!lte || r.createdAt <= lte))
         .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
       return args.take ? out.slice(0, args.take) : out;
@@ -177,6 +179,26 @@ describe('runLookback (MVP-011)', () => {
 
     expect(stored).toEqual([{ id: 'i1', folder: 'inbox' }]);
     expect(result.data).toMatchObject({ lookbackWatermark: T2 });
+  });
+
+  it('a long run of rows without an address never hides the leads after it', async () => {
+    const empty: Row[] = Array.from({ length: PASS_ADDRESSES + 20 }, (_, i) => ({
+      email: i % 2 ? null : '',
+      createdAt: new Date(T1.getTime() + i * 1000),
+    }));
+    const valid: Row = {
+      email: 'robert@example.invalid',
+      createdAt: new Date(T1.getTime() + (PASS_ADDRESSES + 20) * 1000),
+    };
+    const { ctx, stored } = setup({
+      leads: [...empty, valid],
+      inbox: [round({ messages: [fromRobert('i1')], cursor: 'x' })],
+    });
+
+    const result = await runLookback(ctx);
+
+    expect(stored).toEqual([{ id: 'i1', folder: 'inbox' }]);
+    expect(result.data).toMatchObject({ lookbackWatermark: valid.createdAt });
   });
 
   it('only looks for leads and contacts of the mailbox tenant', async () => {

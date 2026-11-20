@@ -73,8 +73,11 @@ async function createdBetween(
   until: Date | null,
   take?: number
 ): Promise<Array<{ email: string; createdAt: Date }>> {
+  // Rows without an address are left out in the query, before the limit: a run of them must not
+  // fill a batch and hide the leads after it (a null address never equals the empty string).
   const where = {
     tenantId,
+    email: { not: '' },
     createdAt: until ? { gt: since, lte: until } : { gt: since },
   };
   const args = {
