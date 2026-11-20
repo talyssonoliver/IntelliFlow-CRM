@@ -45,9 +45,7 @@ import {
 // (a tenant on a plan without it must not reach these endpoints directly).
 const tenantProcedure = moduleTenantProcedure('SUPPORT');
 
-/**
- * Helper to get ticket service from context
- */
+/** Helper to get ticket service from context */
 function getTicketService(ctx: Context) {
   if (!ctx.services?.ticket) {
     throw new TRPCError({
@@ -76,9 +74,7 @@ function getAssigneeTitle(role?: string | null): string {
 // Post-creation side-effect helpers (all fire-and-forget, non-blocking)
 // =============================================================================
 
-/**
- * Notify the assigned agent (in-app) and enqueue an email notification via BullMQ.
- */
+/** Notify the assigned agent (in-app) and enqueue an email notification via BullMQ. */
 function notifyAssignee(
   ctx: Context & { prismaWithTenant: Context['prisma'] },
   params: { assigneeId: string; tenantId: string; ticketId: string; subject: string }
@@ -702,7 +698,8 @@ export const ticketRouter = createTRPCRouter({
         input.ticketId,
         input.content,
         input.authorName,
-        input.authorRole
+        input.authorRole,
+        ctx.user?.userId ?? null
       );
 
       return { success: true };

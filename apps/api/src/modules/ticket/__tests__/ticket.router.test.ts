@@ -511,7 +511,8 @@ describe('ticketRouter', () => {
         TICKET_UUID,
         'This is a response',
         'Test User',
-        'AGENT'
+        'AGENT',
+        USER_UUID
       );
     });
 

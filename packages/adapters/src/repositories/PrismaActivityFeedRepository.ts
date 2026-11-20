@@ -19,9 +19,7 @@ import type {
   ActivityFeedEntityType,
 } from '@intelliflow/domain';
 
-/**
- * Maps from source-specific activity types to normalized feed types.
- */
+/** Maps from source-specific activity types to normalized feed types. */
 const LEAD_ACTIVITY_TYPE_MAP: Record<string, ActivityFeedType> = {
   WEB_FORM: 'SYSTEM',
   EMAIL: 'EMAIL',
@@ -210,9 +208,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     return merged.slice(0, limit);
   }
 
-  /**
-   * Build ILIKE search conditions for a set of fields.
-   */
+  /** Build ILIKE search conditions for a set of fields. */
   private buildSearchConditions(query: string, fields: string[]): Record<string, unknown>[] {
     return fields.map((field) => ({
       [field]: { contains: query, mode: 'insensitive' },
@@ -430,7 +426,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       title: r.content.length > 100 ? r.content.slice(0, 100) + '...' : r.content,
       description: r.isInternal ? '[Internal note]' : null,
       timestamp: r.timestamp,
-      actor: { id: null, name: r.authorName },
+      actor: { id: r.authorId ?? null, name: r.authorName },
       entity: r.ticket
         ? {
             id: r.ticket.id,
@@ -791,7 +787,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       title: r.content.length > 100 ? r.content.slice(0, 100) + '...' : r.content,
       description: r.isInternal ? '[Internal note]' : null,
       timestamp: r.timestamp,
-      actor: { id: null, name: r.authorName },
+      actor: { id: r.authorId ?? null, name: r.authorName },
       entity: r.ticket
         ? {
             id: r.ticket.id,
