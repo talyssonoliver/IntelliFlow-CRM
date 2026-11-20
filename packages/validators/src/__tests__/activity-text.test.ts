@@ -86,6 +86,13 @@ describe('stripMachineIds', () => {
       expect(stripMachineIds(`See ${path} now`)).toBe(`See ${path} now`);
     }
   });
+  it('keeps an id that is part of a file name or a host name, and removes one that ends a sentence', () => {
+    expect(stripMachineIds(`Open ${UUID}.pdf`)).toBe(`Open ${UUID}.pdf`);
+    expect(stripMachineIds(`See ${ID}.example.invalid`)).toBe(`See ${ID}.example.invalid`);
+    expect(stripMachineIds(`Exported ${ID}_final.csv`)).toBe(`Exported ${ID}_final.csv`);
+    expect(stripMachineIds(`Replied, ref ${ID}, thanks`)).toBe('Replied, thanks');
+    expect(stripMachineIds(`Done (${ID}).`)).toBe('Done.');
+  });
   it('removes a bare key=id assignment together with its key', () => {
     expect(stripMachineIds(`Price follow-up sent (lead_id=${ID})`)).toBe('Price follow-up sent');
     expect(stripMachineIds(`Synced id=${ID} ok`)).toBe('Synced ok');

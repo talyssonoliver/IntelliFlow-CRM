@@ -115,7 +115,7 @@ function closeGap(before: string, after: string): [string, string] {
   }
   if (rest.startsWith('.') || rest.startsWith(',') || rest.startsWith(';')) {
     out = trimSpacesEnd(out);
-    if (out === '' || out.endsWith('\n') || (out.endsWith('.') && rest.startsWith('.'))) {
+    if (out === '' || out.endsWith('\n') || out.endsWith(rest.charAt(0))) {
       rest = rest.slice(1);
     }
   }
@@ -125,39 +125,50 @@ function closeGap(before: string, after: string): [string, string] {
 
 const BREAKS = ' \t\r\n';
 
-/**
- * True when the id sits in a link, a path or an email address: the word around it (back and forward to
- * the nearest space) has a slash or an "@", or it is a query value or a fragment.
- */
-function isInsideAddress(before: string, after: string): boolean {
+/** What may sit right before or after an id that stands alone as a word. */
+const OPENERS = '([{"\'';
+const CLOSERS = ')]}"\'';
+
+function isBreakOrEnd(char: string): boolean {
+  return char === '' || BREAKS.includes(char);
+}
+
+/** True when the text before the id ends in a link, path or query ("?a=1&id=" or "https://x/y?id="). */
+function endsInQueryOrPath(before: string): boolean {
   let start = before.length;
   while (start > 0 && !BREAKS.includes(before.charAt(start - 1))) start -= 1;
-  let end = 0;
-  while (end < after.length && !BREAKS.includes(after.charAt(end))) end += 1;
-  const word = before.slice(start).toLowerCase() + after.slice(0, end).toLowerCase();
-  const prev = before.charAt(before.length - 1);
-  return (
-    word.includes('/') ||
-    word.includes('\\') ||
-    word.includes('@') ||
-    word.startsWith('www.') ||
-    // A query value ("?a=1&id=<id>") or a fragment, not a bare "lead_id=<id>" assignment.
-    (prev === '=' && (word.includes('?') || word.includes('&'))) ||
-    prev === '#'
-  );
+  const word = before.slice(start);
+  return ['/', '\\', '?', '&', '@'].some((char) => word.includes(char));
 }
 
 /**
+ * True when the id stands alone as a word: it follows a space, a bracket or a quote (or a bare "key=", which
+ * goes with it), and a space, a closing bracket or quote, or a full stop or comma that ends the sentence
+ * follows it. An id attached to anything else is part of a larger token (a link, a path, a file name, a
+ * host name, an email address, a fragment, a query value) and is left exactly as written.
+ */
+function isStandalone(before: string, after: string): boolean {
+  const prev = before.charAt(before.length - 1);
+  const beforeOk =
+    isBreakOrEnd(prev) || OPENERS.includes(prev) || (prev === '=' && !endsInQueryOrPath(before));
+  if (!beforeOk) return false;
+  const next = after.charAt(0);
+  if (isBreakOrEnd(next) || CLOSERS.includes(next)) return true;
+  return (
+    '.,;:!?'.includes(next) && (isBreakOrEnd(after.charAt(1)) || CLOSERS.includes(after.charAt(1)))
+  );
+}
+/**
  * The text with machine ids removed: cuids and UUIDs, and the label in front of one ("COA ledger row",
- * "lead id"). An id inside an address (a path, a query value or a fragment) stays, so the link still
- * works. Text without an id is returned unchanged.
+ * "lead id"). An id attached to other characters (a link, path, file name, host name, email address,
+ * fragment or query value) stays, so what it belongs to still works. Text without an id is returned unchanged.
  */
 export function stripMachineIds(text: string): string {
   let out = '';
   let rest = text;
   for (let found = firstId(rest); found; found = firstId(rest)) {
     const end = found.index + found.length;
-    if (isInsideAddress(out + rest.slice(0, found.index), rest.slice(end))) {
+    if (!isStandalone(out + rest.slice(0, found.index), rest.slice(end))) {
       out += rest.slice(0, end);
       rest = rest.slice(end);
       continue;
