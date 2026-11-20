@@ -24,6 +24,7 @@ import {
 } from './background-jobs';
 import { getHealthProbes } from './modules/misc/health-probes';
 import { processStripeWebhook } from './webhooks/stripe-webhook';
+import { handleEmailTracking } from './modules/email/email-tracking-http';
 import { handlePmEventsRoute } from './modules/pm-events/handle-pm-events-route';
 import {
   handleTaskAutomationWebhookRoute,
@@ -517,6 +518,9 @@ async function handleRequest(
     return;
   }
 
+  // Row 41: the open pixel and click redirect a mail reader calls (public, signature-checked).
+  if (await handleEmailTracking(req, res, pathname, origin)) return;
+
   // CORS: echo an allowed origin onto every response, and short-circuit the
   // preflight here — OPTIONS must never reach the health/tRPC routers (they'd
   // 404/405 it and the browser would block the real request). Disallowed
@@ -590,18 +594,15 @@ export function startApiServer(options: ApiServerOptions = {}): http.Server {
   const port = options.port ?? API_PORT;
   const server = createApiServer(options);
 
-  // Note: every request handler awaits `containerReady` itself before touching
-  // the lazily-initialised container (createContext for tRPC, the Stripe webhook
-  // route directly), so it is safe to start listening immediately — a request
-  // that arrives mid-init simply waits inside its handler.
+  // Every handler awaits `containerReady` itself before touching the lazily-initialised
+  // container, so listening immediately is safe: a mid-init request waits in its handler.
   server.listen(port, () => {
     console.log(`[API] HTTP server listening on http://localhost:${port}`);
   });
 
-  // PG-198 / PG-207 / PG-203: approval sweep, bounce scanner and DSAR deadline
-  // alerts — long-lived server
-  // process only. API_BACKGROUND_JOBS=off keeps an idle api free of outbound
-  // traffic so Railway can sleep it; the combined worker runs them instead.
+  // PG-198 / PG-207 / PG-203: approval sweep, bounce scanner and DSAR deadline alerts —
+  // long-lived server process only. API_BACKGROUND_JOBS=off keeps an idle api free of
+  // outbound traffic so Railway can sleep it; the combined worker runs them instead.
   if (apiBackgroundJobsEnabled(process.env)) {
     startBackgroundJobs({ ready: () => containerReady });
   } else {
@@ -612,11 +613,10 @@ export function startApiServer(options: ApiServerOptions = {}): http.Server {
     );
   }
 
-  // PG-208: task automation runner — long-lived server process only, and the event
-  // intake is registered only when the runner runs (a disabled runner never buffers).
-  // Not behind API_BACKGROUND_JOBS: the intake listens on the in-memory event bus,
-  // so entity-event rules only see events published in this process, and the
-  // combined worker could not run them. TASK_AUTOMATION_INTERVAL_MS=0 turns it off.
+  // PG-208: task automation runner — long-lived server process only; the event intake is
+  // registered only when the runner runs. Not behind API_BACKGROUND_JOBS: the intake listens
+  // on the in-memory event bus, so the combined worker could not run it.
+  // TASK_AUTOMATION_INTERVAL_MS=0 turns it off.
   const automationIntervalMs = taskAutomationRunnerIntervalFromEnv(process.env);
   if (automationIntervalMs > 0) {
     containerReady

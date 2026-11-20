@@ -155,7 +155,7 @@ export function TrackingCard({
           title="Tracking"
           titleId={titleId}
           headingLevel={2}
-          description="Your choice is saved, but opens and clicks aren't recorded yet."
+          description="Applies to mail sent from Aurora after you switch it on. Opens use a tiny image, so a reader that blocks or preloads images can miss or add an open."
         />
         <SwitchRow
           id="email-settings-track-opens"
