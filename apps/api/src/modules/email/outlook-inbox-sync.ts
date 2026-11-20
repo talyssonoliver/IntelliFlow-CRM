@@ -1,25 +1,20 @@
 /**
- * Mailbox sync (#1177, MVP-001): received mail, and mail sent from the provider itself, logged to the CRM.
- * Provider-neutral: each readable mailbox kind plugs in a reader (mail-sync-reader.ts).
- *
- * Each tick claims due readable mailboxes one at a time (a lease in "syncLockedUntil", like the
- * bounce scan's), reads the Inbox and Sent Items deltas since their stored cursors, and logs new
- * mail to the CRM: both ways, so mail the user sends from Outlook itself is logged too.
+ * Mailbox sync (#1177, MVP-001): received mail, and mail sent from the provider itself, logged to
+ * the CRM. Provider-neutral: each readable mailbox kind plugs in a reader (mail-sync-reader.ts).
+ * Each tick claims due readable mailboxes one at a time (a lease in "syncLockedUntil"), reads the
+ * Inbox and Sent Items deltas since their stored cursors and logs new mail, both ways.
  *
  * What is stored, on purpose:
- * - Only mail with an existing lead or contact of the mailbox's tenant (the sender of received
- *   mail, a recipient of sent mail), plus received mail from a real person who is neither: that is
- *   a new enquiry and becomes a new lead (MVP-011, mail-sync-enquiry.ts). Personal mail never
- *   reaches the CRM, and an erased person (whose lead/contact keeps only a placeholder address)
- *   is never matched, so erased data cannot come back through the sync.
+ * - Only mail with an existing lead or contact of the tenant (the sender of received mail, a
+ *   recipient of sent mail), plus received mail from a real person who is neither: a new enquiry,
+ *   which becomes a lead (MVP-011, mail-sync-enquiry.ts). Personal mail never reaches the CRM; an
+ *   erased person (placeholder address) is never matched, so erased data cannot come back.
  * - Nothing from a sender with an active processing restriction.
- * - Nothing twice: the provider's message id, or the mail's Message-ID header, per mailbox
- *   (the header also matches sent mail the CRM itself sent).
- * - Mail the user deletes in Outlook stays logged: the CRM record is the user's log, not a mirror.
- * A failure backs the mailbox off; it never changes the mailbox's status, so sending is not
- * affected by a sync problem.
+ * - Nothing twice: the provider's message id, or the Message-ID header, per mailbox.
+ * - Mail deleted in the provider stays logged: the CRM record is the user's log, not a mirror.
+ * MVP-011: after the folders, a look-back reads 90 days for the leads and contacts created since
+ * the last one (mail-sync-lookback.ts). A failure backs the mailbox off and never changes its status.
  */
-import { MailboxTransportError } from '@intelliflow/adapters';
 import {
   getOAuthAccess,
   hasOAuthClient,
@@ -36,7 +31,9 @@ import {
   type SyncRound,
   type SyncedMessage,
 } from './mail-sync-reader';
-import { learnThread, logOnLead, threadOf, type LoggedRecord } from './mail-sync-links';
+import { learnThread, logOnLead, threadOf } from './mail-sync-links';
+import { alreadyLogged, anyoneRestricted, bodyOf, counterparty } from './mail-sync-match';
+import { runLookback, type LookbackState } from './mail-sync-lookback';
 import { messageIdHeader, recordData } from './mail-sync-record';
 import { queueReplyDraftForSyncedMail } from './mail-sync-reply-draft';
 import {
@@ -74,6 +71,8 @@ export interface InboxSyncDeps {
   readers?: Partial<Record<string, MailSyncReader>>;
   /** MVP-011: the lead use case; without it unknown senders are skipped as before. */
   createLead?: CreateLead;
+  /** MVP-011: a look-back stores old mail: no reply drafts are queued for it. */
+  backfill?: boolean;
 }
 
 function readersOf(deps: InboxSyncDeps): Partial<Record<string, MailSyncReader>> {
@@ -92,7 +91,7 @@ export interface InboxSyncReport {
 }
 
 /** The mailbox row as the encrypted client returns it (the token helper reads its credentials). */
-interface SyncMailbox extends TransportMailbox {
+interface SyncMailbox extends TransportMailbox, LookbackState {
   userId: string | null;
   status: string;
   accountAddress: string | null;
@@ -159,87 +158,6 @@ async function release(
     });
   } catch (error) {
     if (prismaCode(error) !== 'P2025') throw error; // P2025: another worker holds it now.
-  }
-}
-
-/** The lead or contact the sender is, in the mailbox's tenant; null when neither. */
-async function matchSender(
-  deps: InboxSyncDeps,
-  tenantId: string,
-  email: string
-): Promise<{ contactId: string | null; leadId: string | null } | null> {
-  const where = { tenantId, email: { equals: email, mode: 'insensitive' } };
-  const contact = await deps.prisma.contact.findFirst({ where, select: { id: true } });
-  if (contact) return { contactId: contact.id, leadId: null };
-  const lead = await deps.prisma.lead.findFirst({ where, select: { id: true } });
-  return lead ? { contactId: null, leadId: lead.id } : null;
-}
-
-/**
- * Who the mail is with: the sender of received mail, or the first recipient of sent mail who is
- * a lead or contact. Null when nobody is (then nothing is stored).
- */
-async function counterparty(
-  deps: InboxSyncDeps,
-  mailbox: SyncMailbox,
-  message: SyncedMessage,
-  folder: SyncFolder
-): Promise<{ email: string; contactId: string | null; leadId: string | null } | null> {
-  const own = (mailbox.accountAddress ?? mailbox.fromAddress).toLowerCase();
-  const candidates = folder === 'inbox' ? [message.fromAddress] : [...message.to, ...message.cc];
-  for (const email of candidates) {
-    if (!email || email === own) continue;
-    const match = await matchSender(deps, mailbox.tenantId, email);
-    if (match) return { email, ...match };
-  }
-  return null;
-}
-
-/** True when anyone on the mail but the owner (sender, To, Cc) has a processing restriction: then nothing of it is stored. */
-async function anyoneRestricted(
-  deps: InboxSyncDeps,
-  mailbox: SyncMailbox,
-  message: SyncedMessage
-): Promise<boolean> {
-  const own = (mailbox.accountAddress ?? mailbox.fromAddress).toLowerCase();
-  const people = new Set([message.fromAddress, ...message.to, ...message.cc]);
-  for (const email of people) {
-    if (email && email !== own && (await deps.isRestricted(mailbox.tenantId, email))) return true;
-  }
-  return false;
-}
-
-/** Mail already in the CRM: the same provider message, or (sent mail) the CRM's own send. */
-async function alreadyLogged(
-  deps: InboxSyncDeps,
-  mailbox: SyncMailbox,
-  message: SyncedMessage
-): Promise<LoggedRecord | null> {
-  // Same provider id, or the same Message-ID header already logged for this mailbox.
-  const header = messageIdHeader(message);
-  const existing = await deps.prisma.emailRecord.findFirst({
-    where: {
-      tenantId: mailbox.tenantId,
-      mailboxId: mailbox.id,
-      OR: [
-        { providerMessageId: message.providerMessageId.slice(0, 255) },
-        ...(header ? [{ messageIdHeader: header }] : []),
-      ],
-    },
-    select: { id: true, metadata: true },
-  });
-  return existing;
-}
-
-/** A kept mail's body; null when the provider refuses that one message (deleted meanwhile). */
-async function bodyOf(message: SyncedMessage): Promise<string | null> {
-  if (!message.loadBody) return message.bodyText;
-  try {
-    return await message.loadBody();
-  } catch (error) {
-    // One message the provider refuses never fails the round; a dead token or an outage does.
-    if (error instanceof MailboxTransportError && error.code === 'REJECTED') return null;
-    throw error;
   }
 }
 
@@ -330,7 +248,9 @@ async function writeMail(
     // and writes both again, so the lead never misses the entry.
     const recordId = await (leadId ? deps.prisma.$transaction(write) : write(deps.prisma));
     // MVP-012: Aurora drafts a reply to received mail for the user to check; never sent unasked.
-    await queueReplyDraftForSyncedMail(deps, mailbox, message, folder, party, recordId);
+    if (!deps.backfill) {
+      await queueReplyDraftForSyncedMail(deps, mailbox, message, folder, party, recordId);
+    }
     return 'stored';
   } catch (error) {
     // One mail the database rejects as data never fails the round: skip it and go on.
@@ -469,6 +389,25 @@ async function syncMailbox(
     const sent = await syncFolder(deps, mailbox, run, 'sentitems', mailbox.syncSentCursor);
     progress.syncSentCursor = sent.cursor;
     const inbox = await syncFolder(deps, mailbox, run, 'inbox', mailbox.syncCursor);
+    const lookback = await runLookback({
+      prisma: deps.prisma,
+      reader,
+      mailbox,
+      token,
+      now,
+      clock: deps.now,
+      deadline,
+      storeBy,
+      store: (message, folder) =>
+        storeSyncedMessage(
+          { ...deps, createLead: undefined, backfill: true },
+          mailbox,
+          message,
+          folder,
+          reader.provider
+        ),
+    });
+    report.stored += lookback.stored;
     report.mailboxesSynced += 1;
     await release(deps, claim, version, {
       syncCursor: inbox.cursor,
@@ -476,8 +415,11 @@ async function syncMailbox(
       syncedAt: now,
       // More to read: due again on the next tick; caught up: wait the interval.
       nextSyncAt:
-        inbox.complete && sent.complete ? new Date(now.getTime() + INBOX_SYNC_INTERVAL_MS) : now,
+        inbox.complete && sent.complete && !lookback.more
+          ? new Date(now.getTime() + INBOX_SYNC_INTERVAL_MS)
+          : now,
       syncFailureCount: 0,
+      ...lookback.data,
     });
     logRound(claim.id, mailbox.kind, tallies, inbox.complete && sent.complete);
   } catch (error) {

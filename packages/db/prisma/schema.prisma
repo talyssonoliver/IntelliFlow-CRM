@@ -4522,6 +4522,14 @@ model EmailMailbox {
   nextSyncAt       DateTime?
   syncLockedUntil  DateTime?
   syncFailureCount Int       @default(0)
+  /// MVP-011 history look-back: leads and contacts created up to this time have had their mail
+  /// looked for in the mailbox's last 90 days (null: none has yet).
+  lookbackWatermark DateTime?
+  /// A look-back pass in progress covers leads and contacts created up to here (null: idle).
+  lookbackUntil     DateTime?
+  /// The pass's resume point in the Inbox and in Sent Items (provider cursors, not credentials).
+  lookbackCursor     String? @db.Text
+  lookbackSentCursor String? @db.Text
   /// MVP-013 Google Calendar sync of a user's own Google mailbox: Google's incremental sync token for
   /// the primary calendar (not a credential), the last finished round, the next due time and the
   /// lease the sync tick claims a mailbox with (null nextSync = due now), and the backoff counter.

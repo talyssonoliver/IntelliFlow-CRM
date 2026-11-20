@@ -55,6 +55,8 @@ export interface SyncReadArgs {
   now: Date;
   /** What is left of this mailbox's read budget. */
   budgetMs: number;
+  /** MVP-011: how far back a read with no cursor starts (the look-back reads 90 days). */
+  initialDays?: number;
   /** Where the mailbox's account lives (Zoho: account id and Mail API host). */
   mailbox: { oauthAccountId?: string | null; oauthApiDomain?: string | null };
 }
@@ -76,8 +78,14 @@ export function graphReader(
   return {
     provider: 'MICROSOFT',
     canRead: hasMailRead,
-    read: ({ accessToken, folder, cursor, now, budgetMs }) =>
-      readDelta(accessToken, cursor, { folder, ...GRAPH_DELTA, now, budgetMs }),
+    read: ({ accessToken, folder, cursor, now, budgetMs, initialDays }) =>
+      readDelta(accessToken, cursor, {
+        folder,
+        ...GRAPH_DELTA,
+        ...(initialDays ? { initialDays } : {}),
+        now,
+        budgetMs,
+      }),
   };
 }
 
@@ -91,7 +99,7 @@ export function zohoReader(
   return {
     provider: 'ZOHO',
     canRead: hasZohoRead,
-    read: async ({ accessToken, folder, cursor, now, budgetMs, mailbox }) => {
+    read: async ({ accessToken, folder, cursor, now, budgetMs, mailbox, initialDays }) => {
       if (!mailbox.oauthAccountId || !mailbox.oauthApiDomain) {
         throw new MailboxTransportError('AUTH_FAILED');
       }
@@ -99,7 +107,13 @@ export function zohoReader(
       const ids = await folderIds(accessToken, ref);
       const folderId = folder === 'inbox' ? ids.inbox : ids.sent;
       if (!folderId) throw new MailboxTransportError('REJECTED');
-      return read(accessToken, ref, cursor, { folderId, ...ZOHO_READ, now, budgetMs });
+      return read(accessToken, ref, cursor, {
+        folderId,
+        ...ZOHO_READ,
+        ...(initialDays ? { initialDays } : {}),
+        now,
+        budgetMs,
+      });
     },
   };
 }
@@ -115,10 +129,11 @@ export function gmailReader(read: typeof readGmailLabel = readGmailLabel): MailS
   return {
     provider: 'GMAIL',
     canRead: hasGmailRead,
-    read: ({ accessToken, folder, cursor, now, budgetMs }) =>
+    read: ({ accessToken, folder, cursor, now, budgetMs, initialDays }) =>
       read(accessToken, cursor, {
         label: folder === 'inbox' ? 'INBOX' : 'SENT',
         ...GMAIL_READ,
+        ...(initialDays ? { initialDays } : {}),
         now,
         budgetMs,
       }),

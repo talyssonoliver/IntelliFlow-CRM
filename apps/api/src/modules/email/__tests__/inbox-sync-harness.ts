@@ -69,8 +69,8 @@ export function testReader(
   return {
     provider: 'MICROSOFT',
     canRead: (scopes) => scopes.includes('Mail.Read'),
-    read: ({ accessToken, folder, cursor, now, budgetMs }) =>
-      read(accessToken, cursor, { folder, initialDays: 30, now, budgetMs }),
+    read: ({ accessToken, folder, cursor, now, budgetMs, initialDays }) =>
+      read(accessToken, cursor, { folder, initialDays: initialDays ?? 30, now, budgetMs }),
   };
 }
 
@@ -89,8 +89,15 @@ export function setup(
       findFirst: vi.fn(async () => mailbox(options.mailbox)),
       update: vi.fn(async () => ({})),
     },
-    contact: { findFirst: vi.fn(async () => ({ id: 'contact-1' })) },
-    lead: { findFirst: vi.fn(async () => null) },
+    // findMany feeds the look-back: no lead or contact was created since it last looked.
+    contact: {
+      findFirst: vi.fn(async () => ({ id: 'contact-1' })),
+      findMany: vi.fn(async (..._args: unknown[]): Promise<unknown[]> => []),
+    },
+    lead: {
+      findFirst: vi.fn(async () => null),
+      findMany: vi.fn(async (..._args: unknown[]): Promise<unknown[]> => []),
+    },
     emailRecord: {
       findFirst: vi.fn(async () => null),
       create: vi.fn(async () => ({ id: 'rec-1' })),

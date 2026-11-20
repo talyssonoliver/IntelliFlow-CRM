@@ -18,6 +18,8 @@ export function freshScanState(): { failureCount: number; nextScanAt: Date } {
  * lease is left alone: a round still running ends on its own and, its credentials being stale,
  * writes nothing back (its release requires the tokenVersion it read), so two syncs of one
  * mailbox never run at once.
+ * MVP-011: a (re)connected account has not been looked back in either, so the history look-back
+ * (mail-sync-lookback.ts) starts over for it: the last 90 days of mail with every lead and contact.
  */
 export function freshSyncState() {
   return {
@@ -26,5 +28,9 @@ export function freshSyncState() {
     syncedAt: null,
     nextSyncAt: null,
     syncFailureCount: 0,
+    lookbackWatermark: null,
+    lookbackUntil: null,
+    lookbackCursor: null,
+    lookbackSentCursor: null,
   };
 }
