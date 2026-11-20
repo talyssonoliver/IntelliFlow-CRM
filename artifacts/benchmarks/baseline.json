@@ -1015,9 +1015,9 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 82,
-    "total_endpoints": 619,
-    "total_queries": 266,
+    "total_routers": 83,
+    "total_endpoints": 620,
+    "total_queries": 267,
     "total_mutations": 353,
     "routers": [
       {
@@ -1502,6 +1502,12 @@
       },
       {
         "name": "team",
+        "endpoints": 1,
+        "queries": 1,
+        "mutations": 0
+      },
+      {
+        "name": "waiting",
         "endpoints": 1,
         "queries": 1,
         "mutations": 0
@@ -7146,6 +7152,13 @@
         "name": "user.list",
         "method": "GET",
         "description": "List users with pagination"
+      }
+    ],
+    "waiting": [
+      {
+        "name": "waiting.list",
+        "method": "GET",
+        "description": "List waitings with pagination"
       }
     ],
     "webhooks": [

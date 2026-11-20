@@ -69,6 +69,7 @@ import { webhooksRouter } from './modules/webhooks/webhooks.router';
 import { queuesAdminRouter } from './modules/admin/queues.router';
 import { activityFeedRouter } from './modules/misc/activity-feed.router';
 import { globalSearchRouter } from './modules/misc/global-search.router';
+import { waitingRouter } from './modules/waiting/waiting.router';
 import { moduleAccessRouter } from './modules/subscription/subscription.router';
 import { experimentRouter } from './modules/experiment';
 import { routingRouter } from './modules/routing';
@@ -243,6 +244,7 @@ export const appRouter = createTRPCRouter({
 
   // Global Search (IFC-203: cross-entity search from header)
   globalSearch: globalSearchRouter,
+  waiting: waitingRouter,
 
   // Module Access (IFC-209)
   moduleAccess: moduleAccessRouter,

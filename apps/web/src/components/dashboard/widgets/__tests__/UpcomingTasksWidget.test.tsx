@@ -12,6 +12,15 @@ const followUpQuery = vi.hoisted(() => ({
   lastInput: undefined as Record<string, unknown> | undefined,
 }));
 
+// What waiting.list returns for the "Waiting for reply" section (MVP-014); each test sets it.
+const waitingQuery = vi.hoisted(() => ({
+  state: { data: { items: [], total: 0 }, isLoading: false } as {
+    data: { items: unknown[]; total: number; leadTotal?: number } | undefined;
+    isLoading: boolean;
+  },
+  lastInput: undefined as Record<string, unknown> | undefined,
+}));
+
 // Mock TaskCreateSheet to avoid deep tRPC dependency chain
 vi.mock('@/components/tasks/TaskCreateSheet', () => ({
   TaskCreateSheet: () => null,
@@ -52,6 +61,14 @@ vi.mock('@/lib/api', () => ({
         }),
       },
     },
+    waiting: {
+      list: {
+        useQuery: vi.fn((input: Record<string, unknown>) => {
+          waitingQuery.lastInput = input;
+          return waitingQuery.state;
+        }),
+      },
+    },
     useUtils: vi.fn(() => ({
       task: {
         list: {
@@ -79,6 +96,34 @@ describe('UpcomingTasksWidget', () => {
   beforeEach(() => {
     followUpQuery.state = { data: { data: [], total: 0 }, isLoading: false };
     followUpQuery.lastInput = undefined;
+    waitingQuery.state = { data: { items: [], total: 0 }, isLoading: false };
+    waitingQuery.lastInput = undefined;
+  });
+
+  it('lists who is waiting for a reply, oldest first, instead of the empty state', () => {
+    const since = new Date(Date.now() - 2 * 86_400_000 - 3_600_000).toISOString();
+    waitingQuery.state = {
+      data: {
+        items: [
+          { kind: 'lead', id: 'lead-9', name: 'Jane Example', company: null, since, subject: 'Hi' },
+        ],
+        total: 4,
+        leadTotal: 3,
+      },
+      isLoading: false,
+    };
+    render(<UpcomingTasksWidget />);
+
+    expect(waitingQuery.lastInput).toEqual({ limit: 3 });
+    const section = within(screen.getByTestId('waiting-for-reply'));
+    expect(section.getByText('Waiting for reply (4)')).toBeInTheDocument();
+    expect(section.getByText('waiting 2 days')).toBeInTheDocument();
+    expect(screen.queryByText('No tasks yet')).toBeNull();
+  });
+
+  it('shows no waiting section when nobody is waiting', () => {
+    render(<UpcomingTasksWidget />);
+    expect(screen.queryByTestId('waiting-for-reply')).toBeNull();
   });
 
   it('renders widget title and view all link', () => {
