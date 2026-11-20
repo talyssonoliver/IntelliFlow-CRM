@@ -411,7 +411,11 @@ describe('Aurora to Google: an appointment changes or goes', () => {
     const sync = h.setup({
       appointment: [
         appointmentRow({ id: 'a' }),
-        appointmentRow({ id: 'b', startTime: new Date('2026-11-21T11:00:00.000Z') }),
+        appointmentRow({
+          id: 'b',
+          startTime: new Date('2026-11-21T11:00:00.000Z'),
+          endTime: new Date('2026-11-21T12:00:00.000Z'),
+        }),
       ],
     });
     h.google.failNext.set('createEvent', refusal());
@@ -632,7 +636,7 @@ describe('Aurora to Google: review cases', () => {
     expect(ctx.report.pushedUpdated).toBe(1);
   });
 
-  it('adopts a newer edit made in Google when a create finds its event with other content', async () => {
+  it('sends Aurora’s content over a recovered event that has other content, never the other way', async () => {
     const id = eventIdFor('mbx-1', 'appt-1');
     const sync = h.setup({
       appointment: [appointmentRow({ title: 'Aurora title' })],
@@ -655,15 +659,13 @@ describe('Aurora to Google: review cases', () => {
       ],
     });
     h.google.now = new Date(NOW.getTime() + 3_600_000);
-    h.google.put(id, { title: 'Google title' });
+    h.google.put(id, { title: 'Older content in Google' });
 
     await runCalendarSync(sync);
 
-    expect(h.appointments()[0].title).toBe('Google title');
-    expect(h.links()[0].localSyncedAt).not.toBeNull();
-    expect(h.google.log.some((l) => l.startsWith('patchEvent'))).toBe(false);
+    expect(h.appointments()[0].title).toBe('Aurora title');
+    expect(h.google.events.get(id)?.title).toBe('Aurora title');
   });
-
   it('does not copy a private event’s content into the appointment when a create finds it changed', async () => {
     const id = eventIdFor('mbx-1', 'appt-1');
     const sync = h.setup({

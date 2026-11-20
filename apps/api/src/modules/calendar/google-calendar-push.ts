@@ -375,24 +375,8 @@ async function makeEvent(ctx: SyncContext, link: any, row: any): Promise<void> {
           },
         });
       }
-      // The event is there with other content (the appointment was edited, or the user edited the event,
-      // between the tries): the newer wins, as in the pull. Google's newer edit is adopted (never a private
-      // or confidential event's content: Aurora is shared); otherwise the next patch sends Aurora's.
-      if (
-        !gone &&
-        !isPersonal(event) &&
-        !sameContent(event, row) &&
-        event.lastModified.getTime() > row.updatedAt.getTime()
-      ) {
-        const adopted = await tx.appointment.updateMany({
-          where: { id: row.id, tenantId, updatedAt: row.updatedAt },
-          data: appointmentFields(event),
-        });
-        if (adopted.count > 0) {
-          const fresh = await tx.appointment.findFirst({ where: { id: row.id, tenantId } });
-          settled.localSyncedAt = fresh.updatedAt;
-        }
-      }
+      // An event that is there with other content (the appointment was edited between the tries) is left
+      // as it is: localSyncedAt is null, so the next patch sends Aurora's content over it.
       await tx.calendarEventLink.update({ where: { id: link.id, tenantId }, data: settled });
     });
     if (gone) ctx.report.cancelled += 1;
