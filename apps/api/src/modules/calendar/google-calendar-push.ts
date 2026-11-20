@@ -23,6 +23,7 @@ import {
   CalendarEventNotFoundError,
   CalendarRateLimitError,
 } from '@intelliflow/application';
+import { Prisma } from '@intelliflow/db';
 import { errorCause } from '../email/mail-sync-report';
 import {
   ACTIVE_STATUSES,
@@ -275,6 +276,9 @@ async function createEvents(ctx: SyncContext, cutoff: Date, budget: number): Pro
     organizerId: userId,
     status: { in: [...ACTIVE_STATUSES] },
     endTime: { gte: cutoff },
+    // A recurring appointment is one row with its first occurrence and a rule that cannot be written to
+    // Google yet: it is not pushed (as one event it would be wrong, and a series half-way would be missing).
+    recurrence: Prisma.DbNull,
   };
   const pending: any[] = await ctx.prisma.calendarEventLink.findMany({
     where: {
@@ -343,6 +347,15 @@ async function startLink(ctx: SyncContext, row: any): Promise<any | null> {
 /** Creates the event of a pending link, then settles the link. */
 async function makeEvent(ctx: SyncContext, link: any, row: any): Promise<void> {
   try {
+    // The revision this create sends, remembered on the pending link (the first attempt's stays): if the
+    // answer is lost, it tells an edit made here since from one made in Google.
+    const sent: Date = link.localSyncedAt ?? row.updatedAt;
+    if (!link.localSyncedAt) {
+      await ctx.prisma.calendarEventLink.update({
+        where: { id: link.id, tenantId: ctx.mailbox.tenantId },
+        data: { localSyncedAt: sent },
+      });
+    }
     const event = must(
       await ctx.gateway.createEvent(ctx.tokens, toCalendarAppointment(row), `${row.id}:create`, {
         eventId: link.googleEventId,
@@ -375,8 +388,20 @@ async function makeEvent(ctx: SyncContext, link: any, row: any): Promise<void> {
           },
         });
       }
-      // An event that is there with other content (the appointment was edited between the tries) is left
-      // as it is: localSyncedAt is null, so the next patch sends Aurora's content over it.
+      // An event found with other content while Aurora has not changed since the revision sent was edited in
+      // Google: its content is adopted (never a private or confidential event's). If Aurora's appointment was
+      // edited since, Aurora's content wins, and the next patch sends it.
+      const editedHere = row.updatedAt.getTime() > sent.getTime();
+      if (!gone && !editedHere && !sameContent(event, row) && !isPersonal(event)) {
+        const adopted = await tx.appointment.updateMany({
+          where: { id: row.id, tenantId, updatedAt: row.updatedAt },
+          data: appointmentFields(event),
+        });
+        if (adopted.count > 0) {
+          const fresh = await tx.appointment.findFirst({ where: { id: row.id, tenantId } });
+          settled.localSyncedAt = fresh.updatedAt;
+        }
+      }
       await tx.calendarEventLink.update({ where: { id: link.id, tenantId }, data: settled });
     });
     if (gone) ctx.report.cancelled += 1;
@@ -405,6 +430,7 @@ async function patchEvents(ctx: SyncContext, cutoff: Date, budget: number): Prom
       organizerId: userId,
       status: { in: [...ACTIVE_STATUSES] },
       endTime: { gte: cutoff },
+      recurrence: Prisma.DbNull,
     },
   };
   return scanLinks(ctx, where, budget, isEdited, (link) => patchOne(ctx, link));

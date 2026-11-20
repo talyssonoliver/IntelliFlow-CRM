@@ -13,6 +13,7 @@ import {
   CalendarSyncTokenExpiredError,
   type ExternalCalendarEvent,
 } from '@intelliflow/application';
+import { Prisma } from '@intelliflow/db';
 import { Result, type DomainError } from '@intelliflow/domain';
 import type { CalendarGateway, ChangesPage } from '../google-calendar-links';
 import { runCalendarSync, type CalendarSyncDeps } from '../google-calendar-sync';
@@ -132,7 +133,7 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
       }
 
       const value = row[key];
-      if (cond === null) return value === null || value === undefined;
+      if (cond === null || cond === Prisma.DbNull) return value === null || value === undefined;
       if (cond instanceof Date) return sameValue(value, cond);
       if (typeof cond === 'object') return matchesOperator(value, cond as Row);
       return sameValue(value, cond);
@@ -386,7 +387,8 @@ export class FakeGoogle implements CalendarGateway {
     this.log.push(`patchEvent:${id}`);
     const failure = this.failure('patchEvent');
     if (failure) return Result.fail<ExternalCalendarEvent, DomainError>(failure);
-    // If-Match: Google refuses when the event changed since that etag.
+    // If-Match: Google refuses (412) when the event changed since that etag. GoogleCalendarAdapter.patchEvent
+    // sends the etag it is given as If-Match and answers CalendarConflictError (its own tests check both).
     const there = this.events.get(id);
     // A PATCH updates an event that exists: a missing one is a 404.
     if (!there) {

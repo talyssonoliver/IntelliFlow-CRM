@@ -636,35 +636,61 @@ describe('Aurora to Google: review cases', () => {
     expect(ctx.report.pushedUpdated).toBe(1);
   });
 
-  it('sends Aurora’s content over a recovered event that has other content, never the other way', async () => {
-    const id = eventIdFor('mbx-1', 'appt-1');
-    const sync = h.setup({
-      appointment: [appointmentRow({ title: 'Aurora title' })],
-      calendarEventLink: [
-        {
-          id: 'link-1',
-          tenantId: TENANT,
-          mailboxId: 'mbx-1',
-          appointmentId: 'appt-1',
-          googleEventId: id,
-          origin: 'AURORA',
-          pending: true,
-          pushAttempts: 0,
-          nextPushAt: null,
-          etag: null,
-          localSyncedAt: null,
-          remoteUpdatedAt: null,
-          remoteCancelledAt: null,
-        },
-      ],
+  describe('a create whose answer was lost, found again with other content', () => {
+    const pendingLink = (localSyncedAt: Date | null) => ({
+      id: 'link-1',
+      tenantId: TENANT,
+      mailboxId: 'mbx-1',
+      appointmentId: 'appt-1',
+      googleEventId: eventIdFor('mbx-1', 'appt-1'),
+      origin: 'AURORA',
+      pending: true,
+      pushAttempts: 0,
+      nextPushAt: null,
+      etag: null,
+      localSyncedAt,
+      remoteUpdatedAt: null,
+      remoteCancelledAt: null,
     });
-    h.google.now = new Date(NOW.getTime() + 3_600_000);
-    h.google.put(id, { title: 'Older content in Google' });
+
+    it('adopts the edit made in Google when Aurora has not changed since the revision sent', async () => {
+      const sent = new Date('2026-11-19T08:00:00.000Z');
+      const sync = h.setup({
+        appointment: [appointmentRow({ title: 'Aurora title', updatedAt: sent })],
+        calendarEventLink: [pendingLink(sent)],
+      });
+      h.google.put(eventIdFor('mbx-1', 'appt-1'), { title: 'Edited in Google' });
+
+      await runCalendarSync(sync);
+
+      expect(h.appointments()[0].title).toBe('Edited in Google');
+      expect(h.google.log.some((l) => l.startsWith('patchEvent'))).toBe(false);
+    });
+
+    it('sends Aurora’s content over it when the appointment was edited here since the revision sent', async () => {
+      const sync = h.setup({
+        appointment: [appointmentRow({ title: 'Edited here meanwhile' })],
+        calendarEventLink: [pendingLink(new Date('2026-11-18T08:00:00.000Z'))],
+      });
+      const id = eventIdFor('mbx-1', 'appt-1');
+      h.google.put(id, { title: 'What the first create sent' });
+
+      await runCalendarSync(sync);
+
+      expect(h.appointments()[0].title).toBe('Edited here meanwhile');
+      expect(h.google.events.get(id)?.title).toBe('Edited here meanwhile');
+    });
+  });
+
+  it('does not push a recurring appointment, which would be one wrong event', async () => {
+    const sync = h.setup({
+      appointment: [appointmentRow({ recurrence: { frequency: 'WEEKLY', interval: 1 } })],
+    });
 
     await runCalendarSync(sync);
 
-    expect(h.appointments()[0].title).toBe('Aurora title');
-    expect(h.google.events.get(id)?.title).toBe('Aurora title');
+    expect(h.links()).toHaveLength(0);
+    expect(h.google.events.size).toBe(0);
   });
   it('does not copy a private event’s content into the appointment when a create finds it changed', async () => {
     const id = eventIdFor('mbx-1', 'appt-1');
