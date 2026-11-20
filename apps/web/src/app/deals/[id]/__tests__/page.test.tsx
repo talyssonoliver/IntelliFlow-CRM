@@ -15,6 +15,7 @@ const mockUpdate = vi.fn();
 const mockDeleteAsync = vi.fn().mockResolvedValue({ success: true, id: 'deal-123' });
 const mockInvalidate = vi.fn();
 const mockListInvalidate = vi.fn();
+const mockFeedInvalidate = vi.fn();
 const mockToast = vi.fn();
 type CapturedMutationConfig = {
   onSuccess?: (...args: unknown[]) => unknown;
@@ -164,6 +165,9 @@ vi.mock('@/lib/api', () => ({
       opportunity: {
         getById: { invalidate: mockInvalidate },
         list: { invalidate: mockListInvalidate },
+      },
+      activityFeed: {
+        getEntityFeed: { invalidate: mockFeedInvalidate },
       },
     }),
   },
@@ -638,6 +642,17 @@ describe('DealDetailPage', () => {
       expect(mockToast).toHaveBeenCalledWith(
         expect.objectContaining({ title: expect.stringMatching(/won/i) })
       );
+    });
+
+    it('a move refreshes the activity feed so its new entry shows at once (#31)', async () => {
+      await renderDealPage();
+      await act(async () => {
+        await capturedMoveStageConfig.onSuccess?.({}, { targetStage: 'PROPOSAL' });
+      });
+      expect(mockFeedInvalidate).toHaveBeenCalledWith({
+        entityType: 'OPPORTUNITY',
+        entityId: 'deal-123',
+      });
     });
 
     it('moveStage onError surfaces the already-closed message', async () => {

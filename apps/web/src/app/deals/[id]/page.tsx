@@ -412,6 +412,11 @@ export default function DealDetailPage() {
       return Promise.all([
         revalidateServerCaches(),
         utils.opportunity.getById.invalidate({ id: dealId }),
+        // The move wrote a STAGE_CHANGE entry (#31): show it now, not at the feed's next poll.
+        utils.activityFeed.getEntityFeed.invalidate({
+          entityType: 'OPPORTUNITY',
+          entityId: dealId,
+        }),
       ]);
     },
     onError: (err) => {
