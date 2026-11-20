@@ -29,7 +29,8 @@ function isAlphanumeric(char: string): boolean {
  */
 function findMarker(text: string, from: number): number {
   for (let at = from; at + LEDGER_MARKER.length <= text.length; at += 1) {
-    const startsWord = at === 0 || !isAlphanumeric(text.charAt(at - 1));
+    // A word of its own: after a space, a line break or an opening bracket, not after a slash or a letter.
+    const startsWord = at === 0 || ' \t\r\n([{"\''.includes(text.charAt(at - 1));
     if (startsWord && text.slice(at, at + LEDGER_MARKER.length).toLowerCase() === LEDGER_MARKER) {
       return at;
     }

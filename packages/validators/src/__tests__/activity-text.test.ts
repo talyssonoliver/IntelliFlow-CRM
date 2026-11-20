@@ -54,6 +54,8 @@ describe('stripMachineIds: only "COA ledger row <id>." is removed', () => {
     ['the label without an id', 'See the COA ledger row for details'],
     ['the label with a short number', 'COA ledger row 12345'],
     ['a file name', `Saved to C:\\Exports\\COA ledger row ${ID}.csv`],
+    ['a path', `Saved to C:\\Exports\\COA ledger row ${ID}`],
+    ['a unix path', `Saved to /exports/COA ledger row ${ID}`],
     ['an id followed by more text', `COA ledger row ${ID}_final`],
     ['the label inside a longer word', `xCOA ledger row ${ID}`],
   ])('leaves %s exactly as written', (_name, text) => {
