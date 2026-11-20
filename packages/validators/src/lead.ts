@@ -238,6 +238,8 @@ export const leadQuerySchema = paginationSchema.extend({
   // the shape contract. Max 50 ids enforced to keep the SQL `IN` predicate
   // reasonable.
   ids: z.array(idSchema).max(50).optional(),
+  // MVP-014 "Waiting for reply": only leads whose last email to us has had no reply.
+  waitingForReply: z.boolean().optional(),
   sortBy: z.enum(LEAD_SORTABLE_FIELDS).optional(),
 });
 

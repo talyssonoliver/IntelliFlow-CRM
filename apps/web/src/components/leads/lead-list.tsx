@@ -172,7 +172,7 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
 
   const { recentIds, push: pushRecentView } = useLeadRecentViews();
 
-  // Sidebar-driven scope: /leads?view=my|starred|recent OR /leads?segment=new-week|hot|followup
+  // Sidebar-driven scope: /leads?view=my|starred|recent OR /leads?segment=new-week|hot|followup|waiting
   const scope = useMemo(
     () =>
       getLeadScope(
@@ -212,8 +212,7 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
     scope.view === 'all' &&
     scope.segment === null;
 
-  // Scope params (from view/segment) merge with the in-page filters.
-  // In-page filters win when both set the same key (explicit user intent).
+  // Scope params (from view/segment) merge with the in-page filters; in-page filters win on a clash.
   const statusFromScope = scope.params.status ? [...scope.params.status] : undefined;
   const statusForQuery = statusFilter ? [statusFilter as LeadStatus] : statusFromScope;
 
@@ -228,6 +227,7 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
       dateTo: scope.params.dateTo,
       lastContactedBefore: scope.params.lastContactedBefore,
       isStarred: scope.params.isStarred,
+      waitingForReply: scope.params.waitingForReply,
       ids: scope.params.ids ? [...scope.params.ids] : undefined,
       minScore: scoreParams.minScore ?? scope.params.minScore,
       maxScore: scoreParams.maxScore ?? scope.params.maxScore,
