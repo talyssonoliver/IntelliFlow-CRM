@@ -151,15 +151,15 @@ function beforeLabel(before: string): string {
 }
 
 /** A quote opens after a space, a bracket, an "=", ":" or "," or the start of the line, and closes before a space, punctuation or the end. */
-const QUOTE_OPENS_AFTER = ' \t([{=:,;';
-const QUOTE_CLOSES_BEFORE = ' \t)]},.;:!?';
+const QUOTE_OPENS_AFTER = ' \t\r\n([{=:,;';
+const QUOTE_CLOSES_BEFORE = ' \t\r\n)]},.;:!?';
 
 /**
  * True when the text ends inside a quoted value that is not ours to change ("Customer ref ...", 'C:\Exports\My
  * Files ref ...'). A quote mark inside a word (an apostrophe in "It's") is never a delimiter.
  */
 function insideQuotedValue(text: string): boolean {
-  const line = text.slice(text.lastIndexOf('\n') + 1);
+  const line = text;
   let open = '';
   for (let at = 0; at < line.length; at += 1) {
     const char = line.charAt(at);

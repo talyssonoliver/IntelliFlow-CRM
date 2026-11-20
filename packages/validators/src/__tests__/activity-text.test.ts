@@ -89,6 +89,11 @@ describe('stripMachineIds: an id a label introduces goes with its label', () => 
       expect(stripMachineIds(text)).toBe(text);
     }
   });
+  it('keeps a labelled id inside a quote that spans lines', () => {
+    const text = `Customer wrote: "First line\nreference ${ID}\nKeep this"`;
+    expect(stripMachineIds(text)).toBe(text);
+    expect(stripMachineIds(`${text}\nDone ref ${ID}.`)).toBe(`${text}\nDone.`);
+  });
   it('removes a labelled id that follows a link in the same sentence', () => {
     expect(stripMachineIds(`See https://app.example.invalid/x then ref ${ID}.`)).toBe(
       'See https://app.example.invalid/x then.'
