@@ -162,19 +162,59 @@ function skipWhitespace(html: string, from: number): number {
   return at;
 }
 
-/** Where the quoted value of the `href` at `at` starts and ends, when it is an attribute of an `<a ...>` tag. */
-function hrefSpan(html: string, lower: string, at: number): { start: number; end: number } | null {
-  if (!WHITESPACE.includes(html.charAt(at - 1))) return null;
-  const open = html.lastIndexOf('<', at);
-  if (open === -1 || open < html.lastIndexOf('>', at)) return null;
-  if (lower.charAt(open + 1) !== 'a' || !WHITESPACE.includes(html.charAt(open + 2))) return null;
-  const equals = skipWhitespace(html, at + 4);
-  if (html.charAt(equals) !== '=') return null;
-  const quoteAt = skipWhitespace(html, equals + 1);
-  const quote = html.charAt(quoteAt);
-  if (quote !== '"' && quote !== "'") return null;
-  const end = html.indexOf(quote, quoteAt + 1);
-  return end === -1 ? null : { start: quoteAt + 1, end };
+/** The index after the attribute name that starts at `from`. */
+function nameEnd(html: string, from: number): number {
+  let at = from;
+  while (
+    at < html.length &&
+    !WHITESPACE.includes(html.charAt(at)) &&
+    !'=/>'.includes(html.charAt(at))
+  ) {
+    at += 1;
+  }
+  return at;
+}
+
+interface AnchorTag {
+  /** The quoted value of the first `href` attribute, when it has one. */
+  href: { start: number; end: number } | null;
+  /** The index after the tag (after its closing ">"), or the end of the text when it never closes. */
+  end: number;
+}
+
+/**
+ * Reads the attributes of the `<a ...>` tag whose attributes start at `from`, quote by quote as a browser does,
+ * so an `href` written inside another attribute's value is never mistaken for the real one and a ">" inside a
+ * quoted value does not end the tag.
+ */
+function readAnchorTag(html: string, lower: string, from: number): AnchorTag {
+  let href: AnchorTag['href'] = null;
+  let seenHref = false;
+  let at = from;
+  for (;;) {
+    at = skipWhitespace(html, at);
+    while (html.charAt(at) === '/') at = skipWhitespace(html, at + 1);
+    if (at >= html.length) return { href, end: html.length };
+    if (html.charAt(at) === '>') return { href, end: at + 1 };
+    const nameStop = nameEnd(html, at);
+    const isHref = nameStop > at && lower.slice(at, nameStop) === 'href' && !seenHref;
+    at = skipWhitespace(html, nameStop === at ? at + 1 : nameStop);
+    if (html.charAt(at) !== '=') continue;
+    at = skipWhitespace(html, at + 1);
+    const quote = html.charAt(at);
+    if (quote === '"' || quote === "'") {
+      const close = html.indexOf(quote, at + 1);
+      if (close === -1) return { href, end: html.length };
+      if (isHref) href = { start: at + 1, end: close };
+      seenHref = seenHref || isHref;
+      at = close + 1;
+    } else {
+      // An unquoted value: skipped, and never tracked (it can hold anything up to a space or ">").
+      seenHref = seenHref || isHref;
+      while (at < html.length && !WHITESPACE.includes(html.charAt(at)) && html.charAt(at) !== '>')
+        at += 1;
+    }
+  }
 }
 
 /**
@@ -198,26 +238,35 @@ function trackedHref(target: string, recordId: string, base: string): string | n
   return `${base}/t/c/${recordId}/${sig}?u=${encoded}`;
 }
 
-/** Rewrites the http(s) links of `<a href="...">` tags (single or double quoted, any case), by plain scanning. */
+/**
+ * Rewrites the http(s) links of `<a href="...">` tags (single or double quoted, any case), by plain scanning:
+ * comments are skipped, tags are read attribute by attribute, and text, styles and other tags are never touched.
+ */
 function rewriteLinks(html: string, recordId: string, base: string): string {
   const lower = asciiLower(html);
   let out = '';
   let copied = 0;
-  let from = 0;
-  for (let at = lower.indexOf('href', from); at !== -1; at = lower.indexOf('href', from)) {
-    from = at + 4;
-    const span = hrefSpan(html, lower, at);
-    if (!span) continue;
-    from = span.end;
-    const value = decodeEntities(html.slice(span.start, span.end).trim());
+  let at = 0;
+  for (let open = html.indexOf('<', at); open !== -1; open = html.indexOf('<', at)) {
+    if (lower.startsWith('<!--', open)) {
+      const close = html.indexOf('-->', open + 4);
+      if (close === -1) break;
+      at = close + 3;
+      continue;
+    }
+    at = open + 1;
+    if (lower.charAt(open + 1) !== 'a' || !WHITESPACE.includes(html.charAt(open + 2))) continue;
+    const tag = readAnchorTag(html, lower, open + 2);
+    at = tag.end;
+    if (!tag.href) continue;
+    const value = decodeEntities(html.slice(tag.href.start, tag.href.end).trim());
     const tracked = value === null ? null : trackedHref(value, recordId, base);
     if (!tracked) continue;
-    out += html.slice(copied, span.start) + tracked;
-    copied = span.end;
+    out += html.slice(copied, tag.href.start) + tracked;
+    copied = tag.href.end;
   }
   return out + html.slice(copied);
 }
-
 function withPixel(html: string, recordId: string, base: string): string {
   const sig = trackingSignature('o', recordId);
   const pixel = `<img src="${base}/t/o/${recordId}/${sig}.gif" width="1" height="1" alt="" style="display:none" />`;

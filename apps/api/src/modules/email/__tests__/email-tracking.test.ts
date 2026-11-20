@@ -108,6 +108,52 @@ describe('instrumentHtml: tracked links verify exactly as the redirect reads the
     expect(isValidSignature('c', RECORD, links[0]!.signature, links[0]!.target)).toBe(true);
   });
 
+  it('reads attributes quote by quote: href text inside another value is not the link', () => {
+    const html = `<a title="See href='https://docs.example.invalid/" href='https://shop.example.invalid/'>Shop</a>`;
+    const out = instrumentHtml(html, RECORD, CLICKS, ENV);
+    expect(
+      out.startsWith(
+        `<a title="See href='https://docs.example.invalid/" href='https://api.example.invalid/t/c/`
+      )
+    ).toBe(true);
+    const links = trackedLinks(out);
+    expect(links).toHaveLength(1);
+    expect(links[0]!.target).toBe('https://shop.example.invalid/');
+  });
+
+  it('tracks an anchor whose earlier attribute holds a ">" and one with other attributes after the href', () => {
+    const html =
+      '<a title="Spend > £10" href="https://shop.example.invalid/a" target="_blank" class=x>A</a>' +
+      '<a href="https://shop.example.invalid/b" data-x=\'1>2\'>B</a>';
+    const out = instrumentHtml(html, RECORD, CLICKS, ENV);
+    expect(trackedLinks(out).map((link) => link.target)).toEqual([
+      'https://shop.example.invalid/a',
+      'https://shop.example.invalid/b',
+    ]);
+    expect(out).toContain('title="Spend > £10"');
+    expect(out).toContain(`target="_blank" class=x>A</a>`);
+    expect(out).toContain(`data-x='1>2'>B</a>`);
+  });
+
+  it('uses only the first href of a tag, as a browser does', () => {
+    const html = '<a href="https://one.example.invalid/" href="https://two.example.invalid/">x</a>';
+    const out = instrumentHtml(html, RECORD, CLICKS, ENV);
+    expect(trackedLinks(out).map((link) => link.target)).toEqual(['https://one.example.invalid/']);
+    expect(out).toContain('href="https://two.example.invalid/"');
+  });
+
+  it('skips comments, an unclosed tag and an unquoted href without damage', () => {
+    for (const html of [
+      '<!-- <a href="https://a.example.invalid/"> -->',
+      '<a href=https://a.example.invalid/ >x</a>',
+      '<a href="https://a.example.invalid/',
+      '<a title="open',
+      '<!-- never closed <a href="https://a.example.invalid/">',
+    ]) {
+      expect(instrumentHtml(html, RECORD, CLICKS, ENV)).toBe(html);
+    }
+  });
+
   it('decodes upper case references and keeps an apostrophe from ending a single-quoted attribute', () => {
     const upper = instrumentHtml(
       '<a href="https://shop.example.invalid/?a=1&AMP;b=2">x</a>',
