@@ -103,12 +103,25 @@ function closeGap(before: string, after: string): [string, string] {
   return [out, rest];
 }
 
-/** True when the word the id sits in (the text before it back to the last space) is a link or a path. */
-function isInsideAddress(before: string): boolean {
+const BREAKS = ' \t\r\n';
+
+/**
+ * True when the id sits in a link, a path or an email address: the word around it (back and forward to
+ * the nearest space) has a slash or an "@", or it is a query value or a fragment.
+ */
+function isInsideAddress(before: string, after: string): boolean {
   let start = before.length;
-  while (start > 0 && !' \t\r\n'.includes(before.charAt(start - 1))) start -= 1;
-  const word = before.slice(start).toLowerCase();
-  return word.includes('://') || word.startsWith('www.') || word.includes('/');
+  while (start > 0 && !BREAKS.includes(before.charAt(start - 1))) start -= 1;
+  let end = 0;
+  while (end < after.length && !BREAKS.includes(after.charAt(end))) end += 1;
+  const word = before.slice(start).toLowerCase() + after.slice(0, end).toLowerCase();
+  const prev = before.charAt(before.length - 1);
+  return (
+    word.includes('/') ||
+    word.includes('@') ||
+    word.startsWith('www.') ||
+    ((prev === '=' || prev === '#') && word.length > 1)
+  );
 }
 
 /**
@@ -121,7 +134,7 @@ export function stripMachineIds(text: string): string {
   let rest = text;
   for (let found = firstId(rest); found; found = firstId(rest)) {
     const end = found.index + found.length;
-    if (isInsideAddress(out + rest.slice(0, found.index))) {
+    if (isInsideAddress(out + rest.slice(0, found.index), rest.slice(end))) {
       out += rest.slice(0, end);
       rest = rest.slice(end);
       continue;

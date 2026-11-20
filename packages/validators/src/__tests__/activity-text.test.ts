@@ -49,6 +49,13 @@ describe('stripMachineIds', () => {
     }
   });
 
+  it('keeps an id that starts or ends an email address or a relative path', () => {
+    for (const word of [`${ID}@example.invalid`, `${ID}/report`, `a.${ID}@example.invalid`]) {
+      expect(stripMachineIds(`Reply to ${word} now`)).toBe(`Reply to ${word} now`);
+    }
+    expect(stripMachineIds(`See page?id=${ID} now`)).toBe(`See page?id=${ID} now`);
+  });
+
   it('still removes an id that follows a link in the same sentence', () => {
     expect(stripMachineIds(`See https://app.example.invalid/x then ref ${ID}.`)).toBe(
       'See https://app.example.invalid/x then.'
