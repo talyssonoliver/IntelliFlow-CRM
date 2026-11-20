@@ -98,9 +98,17 @@ function addressSet(rows: Array<{ email: string }>): Set<string> {
   return new Set(rows.map((row) => row.email.trim().toLowerCase()).filter(Boolean));
 }
 
-/** True when anyone on the mail (sender, To, Cc) is one of the pass's addresses. */
-function concerns(message: SyncedMessage, addresses: ReadonlySet<string>): boolean {
-  const people = [message.fromAddress, ...message.to, ...message.cc];
+/**
+ * True when the mail is with one of the pass's addresses the way the sync itself judges it: the
+ * sender of received mail, a recipient (To or Cc) of sent mail. Mail the sync would not log for a
+ * lead or contact (received mail that only Cc's them) is not offered to the store either.
+ */
+function concerns(
+  message: SyncedMessage,
+  addresses: ReadonlySet<string>,
+  folder: SyncFolder
+): boolean {
+  const people = folder === 'inbox' ? [message.fromAddress] : [...message.to, ...message.cc];
   return people.some((email) => !!email && addresses.has(email.trim().toLowerCase()));
 }
 
@@ -129,7 +137,6 @@ interface FolderOutcome {
   /** The cursor to store for the folder. */
   cursor: string;
   done: boolean;
-  stored: number;
 }
 
 /** One folder's pass round: reads it and logs the mail that is with the pass's addresses. */
@@ -139,22 +146,18 @@ async function passFolder(
   cursor: string | null,
   addresses: ReadonlySet<string>
 ): Promise<FolderOutcome | null> {
-  if (cursor === FOLDER_DONE) return { cursor: FOLDER_DONE, done: true, stored: 0 };
+  if (cursor === FOLDER_DONE) return { cursor: FOLDER_DONE, done: true };
   // Out of read time already: leave the folder as it is for the next tick.
   if (ctx.clock().getTime() >= ctx.deadline) return null;
   const { round, startedFrom } = await readFolder(ctx, folder, cursor);
-  let stored = 0;
   for (const message of round.messages) {
     // Out of time: stop well inside the lease and keep the cursor the round started from (never a
     // rejected one); what was stored is deduped next time.
-    if (ctx.clock().getTime() >= ctx.storeBy) {
-      return { cursor: startedFrom ?? '', done: false, stored };
-    }
-    if (!concerns(message, addresses)) continue;
-    if ((await ctx.store(message, folder)) === 'stored') stored += 1;
+    if (ctx.clock().getTime() >= ctx.storeBy) return { cursor: startedFrom ?? '', done: false };
+    if (concerns(message, addresses, folder)) await ctx.store(message, folder);
   }
-  if (round.complete) return { cursor: FOLDER_DONE, done: true, stored };
-  return { cursor: round.cursor ?? '', done: false, stored };
+  if (round.complete) return { cursor: FOLDER_DONE, done: true };
+  return { cursor: round.cursor ?? '', done: false };
 }
 
 /** A stored cursor of '' means "start the folder from the beginning". */
@@ -164,7 +167,17 @@ const fromStored = (cursor: string | null): string | null => (cursor ? cursor : 
  * One tick of the mailbox's look-back: starts a pass when leads or contacts were created since the
  * last one, or continues the pass in progress. Never throws.
  */
-export async function runLookback(ctx: LookbackContext): Promise<LookbackResult> {
+export async function runLookback(input: LookbackContext): Promise<LookbackResult> {
+  // What was stored is counted as it happens, so a later failure still reports it.
+  let stored = 0;
+  const ctx: LookbackContext = {
+    ...input,
+    store: async (message, folder) => {
+      const outcome = await input.store(message, folder);
+      if (outcome === 'stored') stored += 1;
+      return outcome;
+    },
+  };
   try {
     const { mailbox, prisma } = ctx;
     const since = mailbox.lookbackWatermark ?? new Date(0);
@@ -187,7 +200,6 @@ export async function runLookback(ctx: LookbackContext): Promise<LookbackResult>
     // Sent first, as the normal sync does: a CRM-sent mail teaches the thread a reply joins.
     const sent = await passFolder(ctx, 'sentitems', fromStored(sentFrom), addresses);
     const inbox = await passFolder(ctx, 'inbox', fromStored(inboxFrom), addresses);
-    const stored = (sent?.stored ?? 0) + (inbox?.stored ?? 0);
     if (sent?.done && inbox?.done) {
       // The pass is finished: its leads and contacts are looked for. A further batch may wait.
       return {
@@ -216,6 +228,6 @@ export async function runLookback(ctx: LookbackContext): Promise<LookbackResult>
       mailboxId: ctx.mailbox.id,
       error: error instanceof Error ? error.message : 'unknown',
     });
-    return nothing();
+    return { ...nothing(), stored };
   }
 }

@@ -151,21 +151,63 @@ describe('runLookback (MVP-011)', () => {
     expect(result.more).toBe(true);
   });
 
-  it('matches on the sender, To or Cc, ignoring case', async () => {
+  it('matches the way the sync judges mail: a recipient (To or Cc) of sent mail, the sender of received mail, any case', async () => {
     const cc = mail({
       providerMessageId: 'c1',
       fromAddress: 'me@example.invalid',
       to: ['other@example.invalid'],
       cc: ['ROBERT@example.INVALID'],
     });
+    const shout = mail({ providerMessageId: 'i1', fromAddress: 'Robert@EXAMPLE.invalid' });
     const { ctx, stored } = setup({
       sent: [round({ messages: [cc], cursor: 'x' })],
-      inbox: [round({ messages: [], cursor: 'y' })],
+      inbox: [round({ messages: [shout], cursor: 'y' })],
     });
 
     await runLookback(ctx);
 
-    expect(stored).toEqual([{ id: 'c1', folder: 'sentitems' }]);
+    expect(stored).toEqual([
+      { id: 'c1', folder: 'sentitems' },
+      { id: 'i1', folder: 'inbox' },
+    ]);
+  });
+
+  it('does not offer received mail that only has the new person in To or Cc, nor sent mail from them', async () => {
+    const copied = mail({
+      providerMessageId: 'i2',
+      fromAddress: 'stranger@example.invalid',
+      to: ['me@example.invalid'],
+      cc: ['robert@example.invalid'],
+    });
+    const sentFromThem = mail({
+      providerMessageId: 's2',
+      fromAddress: 'robert@example.invalid',
+      to: ['other@example.invalid'],
+    });
+    const { ctx, stored } = setup({
+      sent: [round({ messages: [sentFromThem], cursor: 'x' })],
+      inbox: [round({ messages: [copied], cursor: 'y' })],
+    });
+
+    const result = await runLookback(ctx);
+
+    expect(stored).toEqual([]);
+    // Nothing was offered, but the pass still finished: those mails are not the sync's to log.
+    expect(result.data).toMatchObject({ lookbackWatermark: T1 });
+  });
+
+  it('counts what was stored even when a later folder fails', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const { ctx, read } = setup({
+      sent: [round({ messages: [toRobert('s1')], cursor: 'x' })],
+    });
+    read.mockImplementationOnce(async () => round({ messages: [toRobert('s1')], cursor: 'x' }));
+    read.mockRejectedValueOnce(new Error('inbox down'));
+
+    const result = await runLookback(ctx);
+
+    expect(result).toEqual({ data: {}, more: false, stored: 1 });
+    warn.mockRestore();
   });
 
   it('looks for contacts as well as leads, and skips a row without an address', async () => {
