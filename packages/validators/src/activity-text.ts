@@ -150,6 +150,11 @@ function endsInQueryOrPath(before: string): boolean {
   return ['/', '\\', '?', '&', '@'].some((char) => word.includes(char));
 }
 
+/** True when the text ends in a recognized id label ("... ref", "lead_id"), so "ref:<id>" is a reference, not "urn:uuid:<id>" or "C:<id>". */
+function endsInLabel(text: string): boolean {
+  const head = trimSpacesEnd(text);
+  return head.length > 0 && withoutTrailingLabels(head).length < head.length;
+}
 /**
  * True when the id stands alone as a word: it follows a space, a bracket or a quote (or a bare "key=", which
  * goes with it), and a space, a closing bracket or quote, or a full stop or comma that ends the sentence
@@ -167,7 +172,8 @@ function isStandalone(before: string, after: string): boolean {
   const prev = before.charAt(before.length - 1);
   const beforeOk =
     isBreakOrEnd(prev) ||
-    ((OPENERS.includes(prev) || prev === '=' || prev === ':') && !endsInQueryOrPath(before));
+    ((OPENERS.includes(prev) || prev === '=') && !endsInQueryOrPath(before)) ||
+    (prev === ':' && endsInLabel(before.slice(0, -1)));
   if (!beforeOk) return false;
   // A closing bracket or quote counts only when the token ends right after it ("(id)." yes, "(id).pdf" no).
   return CLOSERS.includes(after.charAt(0)) ? tokenEndsAt(after, 1) : tokenEndsAt(after, 0);

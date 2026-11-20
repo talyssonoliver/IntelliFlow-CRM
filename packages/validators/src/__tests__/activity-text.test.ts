@@ -116,6 +116,12 @@ describe('stripMachineIds', () => {
       `See https://example.invalid/wiki/x:${ID} now`
     );
   });
+  it('keeps an id after a colon that is not an id label (a urn, a drive letter)', () => {
+    for (const text of [`See urn:uuid:${UUID} now`, `See C:${ID} now`]) {
+      expect(stripMachineIds(text)).toBe(text);
+    }
+    expect(stripMachineIds(`Sent lead_id:${ID} today`)).toBe('Sent today');
+  });
   it('removes a bare key=id assignment together with its key', () => {
     expect(stripMachineIds(`Price follow-up sent (lead_id=${ID})`)).toBe('Price follow-up sent');
     expect(stripMachineIds(`Synced id=${ID} ok`)).toBe('Synced ok');
