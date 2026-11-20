@@ -20,6 +20,10 @@ SET lock_timeout = '30s';
 
 ALTER TABLE "email_records" VALIDATE CONSTRAINT "email_records_provider_check_v2";
 
+-- DROP and RENAME need a brief ACCESS EXCLUSIVE lock on the table: do not queue readers and writers behind
+-- them for long. If they cannot get it in 5s the whole file rolls back (nothing changes) and is retried.
+SET lock_timeout = '5s';
+
 ALTER TABLE "email_records" DROP CONSTRAINT "email_records_provider_check";
 ALTER TABLE "email_records" RENAME CONSTRAINT "email_records_provider_check_v2" TO "email_records_provider_check";
 
