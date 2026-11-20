@@ -671,6 +671,43 @@ describe('Google to Aurora: edits racing the sync, failing items and restores', 
   });
 });
 
+describe('a reconnect (MVP-013)', () => {
+  it('resumes from the saved token for the same account', async () => {
+    const sync = h.setup();
+    h.google.put('ev-1');
+    await runCalendarSync(sync);
+    h.google.put('ev-2');
+    h.google.log.length = 0;
+
+    await h.nextRound(sync);
+
+    expect(h.google.log[0]).toMatch(/^fetchChanges:tok-/);
+    expect(h.appointments()).toHaveLength(2);
+  });
+
+  it('starts over for another Google account: the old account’s links go, its appointments stay', async () => {
+    const sync = h.setup();
+    h.google.put('ev-1', { title: 'From the old account' });
+    await runCalendarSync(sync);
+    const oldLinkId = h.links()[0].id;
+    h.mailbox().accountAddress = 'someone.else@studio.example.invalid';
+    h.google.events.clear();
+    h.google.put('ev-new', { title: 'From the new account' });
+    h.google.log.length = 0;
+
+    await h.nextRound(sync);
+
+    expect(h.google.log[0]).toBe('fetchChanges:full');
+    // The new calendar's event is imported, and the old appointment (the user's own) is made there too.
+    expect(h.links().map((l) => l.googleEventId)).toContain('ev-new');
+    expect(h.links()).toHaveLength(2);
+    expect(h.links().some((l) => l.id === oldLinkId)).toBe(false);
+    expect(h.appointments().map((a) => a.title)).toEqual([
+      'From the old account',
+      'From the new account',
+    ]);
+  });
+});
 describe('two tenants', () => {
   it('keeps each tenant’s events to itself, even with the same event id', async () => {
     const sync = h.setup({

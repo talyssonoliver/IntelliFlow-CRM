@@ -50,7 +50,8 @@ type Window = { timeMin: Date; timeMax: Date };
  * the full-sync window (Google refuses a changed query), `r` the full sync replaces an expired token,
  * `v` the check that follows it is under way, at this link id ("" = the start), `h` when the window
  * the sync token covers began (a steady state is just `t` and `h`), `f` events that failed to apply
- * and are tried again, with their attempts so far (0: not yet reached, for want of time).
+ * and are tried again, with their attempts so far (0: not yet reached, for want of time), k the Google
+ * account the state belongs to.
  */
 interface State {
   t: string | null;
@@ -61,6 +62,8 @@ interface State {
   v?: string;
   h?: string;
   f?: Record<string, number>;
+  /** The Google account the state belongs to: another account starts the sync over. */
+  k?: string;
 }
 
 const STATE_PREFIX = 'resume:';
@@ -71,9 +74,10 @@ function fullWindow(now: Date): Window {
 }
 
 function encodeState(ctx: SyncContext, state: State, window?: Window): string {
+  const base: State = { ...state, k: ctx.mailbox.account };
   const full: State = window
-    ? { ...state, a: window.timeMin.toISOString(), b: window.timeMax.toISOString() }
-    : { ...state };
+    ? { ...base, a: window.timeMin.toISOString(), b: window.timeMax.toISOString() }
+    : base;
   // What still has attempts left rides along with the token.
   const pending = [...ctx.failed].filter(([, attempts]) => attempts < ITEM_ATTEMPTS);
   if (pending.length > 0) full.f = Object.fromEntries(pending);
@@ -154,7 +158,8 @@ function startCursor(ctx: SyncContext, raw: string | null): Cursor {
 }
 
 /** Reads Google's changes page by page and applies each; throws what Google answered on failure. */
-export async function pullChanges(ctx: SyncContext, raw: string | null): Promise<PullResult> {
+export async function pullChanges(ctx: SyncContext, saved: string | null): Promise<PullResult> {
+  const raw = await forgetOtherAccount(ctx, saved);
   ctx.failed = new Map(Object.entries(decodeState(raw)?.f ?? {}));
   await retryFailed(ctx);
   const resumed = resumeVerification(ctx, raw);
@@ -190,6 +195,20 @@ export async function pullChanges(ctx: SyncContext, raw: string | null): Promise
   return paused(ctx, cur);
 }
 
+/**
+ * The saved state belongs to the Google account it was made for. After a reconnect to another account its
+ * token means nothing, and its links point at events of the old calendar: they are dropped (the
+ * appointments stay) and the sync starts over, so Aurora's appointments are made again in the new
+ * calendar and its events imported. A state made before the account was recorded is kept.
+ */
+async function forgetOtherAccount(ctx: SyncContext, saved: string | null): Promise<string | null> {
+  const known = decodeState(saved)?.k;
+  if (known === undefined || known === ctx.mailbox.account) return saved;
+  await ctx.prisma.calendarEventLink.deleteMany({
+    where: { tenantId: ctx.mailbox.tenantId, mailboxId: ctx.mailbox.id },
+  });
+  return null;
+}
 /** A round that stopped during the check after a replacement sync carries on with that check. */
 function resumeVerification(ctx: SyncContext, raw: string | null): Promise<PullResult> | null {
   const saved = decodeState(raw);

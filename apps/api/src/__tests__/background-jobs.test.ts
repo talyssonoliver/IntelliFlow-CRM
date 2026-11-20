@@ -30,8 +30,14 @@ const m = vi.hoisted(() => ({
   startInboxSync: vi.fn((_options: SchedulerOptions) => true),
   stopInboxSync: vi.fn<() => Promise<void>>(async () => undefined),
   inboxSyncIntervalFromEnv: vi.fn(() => 444),
+  runCalendarSyncTick: vi.fn().mockResolvedValue(undefined),
+  calendarSyncEnabled: vi.fn(() => true),
 }));
 
+vi.mock('../modules/calendar/google-calendar-sync', () => ({
+  runCalendarSyncTick: m.runCalendarSyncTick,
+  calendarSyncEnabled: m.calendarSyncEnabled,
+}));
 vi.mock('../modules/email/outlook-inbox-sync', () => ({
   runInboxSync: m.runInboxSync,
   createInboxSyncDeps: m.createInboxSyncDeps,
@@ -104,6 +110,8 @@ beforeEach(() => {
   m.runDsarSlaSweep.mockResolvedValue({ alerted: 0 });
   m.createDsarSlaDeps.mockResolvedValue({ marker: 'dsar-deps' });
   m.runInboxSync.mockResolvedValue({ mailboxesSynced: 0 });
+  m.runCalendarSyncTick.mockResolvedValue(undefined);
+  m.calendarSyncEnabled.mockReturnValue(true);
   m.createInboxSyncDeps.mockResolvedValue({ marker: 'sync-deps' });
   m.startInboxSync.mockReturnValue(true);
   m.stopInboxSync.mockResolvedValue(undefined);
@@ -255,6 +263,46 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
       expect(m.runInboxSync).not.toHaveBeenCalled();
     });
 
+    it('runs the Google Calendar sync in the same tick, after the inbox sync, with the same env and log', async () => {
+      const env = { GOOGLE_CALENDAR_SYNC: 'on' } as NodeJS.ProcessEnv;
+      const log = { warn: vi.fn(), info: vi.fn() };
+      const order: string[] = [];
+      m.runInboxSync.mockImplementationOnce(async () => {
+        order.push('inbox');
+        return { mailboxesSynced: 0 };
+      });
+      m.runCalendarSyncTick.mockImplementationOnce(async () => {
+        order.push('calendar');
+      });
+      startBackgroundJobs({ env, log, ready: async () => undefined });
+
+      await m.startInboxSync.mock.calls[0]![0].run();
+
+      expect(order).toEqual(['inbox', 'calendar']);
+      expect(m.runCalendarSyncTick).toHaveBeenCalledWith(env, log);
+    });
+
+    it('still runs the calendar sync when the inbox sync fails, and the failure still shows', async () => {
+      m.runInboxSync.mockRejectedValueOnce(new Error('graph down'));
+      startBackgroundJobs({ env: {}, ready: async () => undefined });
+
+      await expect(m.startInboxSync.mock.calls[0]![0].run()).rejects.toThrow('graph down');
+      expect(m.runCalendarSyncTick).toHaveBeenCalledTimes(1);
+    });
+
+    it('says so once when the inbox timer is off, because the calendar sync rides on it', () => {
+      const log = { warn: vi.fn(), info: vi.fn() };
+      m.startInboxSync.mockReturnValueOnce(false);
+      startBackgroundJobs({ env: {}, log, ready: async () => undefined });
+
+      expect(log.info).toHaveBeenCalledWith(expect.stringContaining('[calendar-sync] not running'));
+
+      log.info.mockClear();
+      m.calendarSyncEnabled.mockReturnValueOnce(false);
+      m.startInboxSync.mockReturnValueOnce(false);
+      startBackgroundJobs({ env: {}, log, ready: async () => undefined });
+      expect(log.info).not.toHaveBeenCalled();
+    });
     it('a sync failure stays in its own tick (the scheduler logs it)', async () => {
       m.runInboxSync.mockRejectedValueOnce(new Error('graph down'));
       startBackgroundJobs({ env: {}, ready: async () => undefined });

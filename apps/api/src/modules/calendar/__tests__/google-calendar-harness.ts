@@ -202,6 +202,14 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
           return { count: rows.length };
         })
       ),
+      deleteMany: vi.fn(async ({ where }: Row) =>
+        run('deleteMany', () => {
+          const kept = tables[table].filter((r) => !matches(r, where, table));
+          const count = tables[table].length - kept.length;
+          tables[table].splice(0, tables[table].length, ...kept);
+          return { count };
+        })
+      ),
       delete: vi.fn(async ({ where }: Row) =>
         run('delete', () => {
           const index = tables[table].findIndex((r) => matches(r, where, table));

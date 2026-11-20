@@ -4,7 +4,7 @@
  * (google-calendar-pull.ts) then written to (google-calendar-push.ts), and released with the outcome.
  * A failure backs the mailbox off and never changes its mail status. Google answering that the
  * calendar permission is gone marks it NEEDS_RECONNECT, and the sync stops until the user reconnects.
- * The tick that runs this is wired in a later change.
+ * The shared background tick runs it (background-jobs.ts), unless GOOGLE_CALENDAR_SYNC=off.
  */
 import { GoogleCalendarAdapter, MailboxTransportError } from '@intelliflow/adapters';
 import {
@@ -56,6 +56,7 @@ export interface CalendarSyncDeps {
 /** The mailbox row as the encrypted client returns it (the token helper reads its credentials). */
 interface SyncMailbox extends TransportMailbox {
   userId: string | null;
+  accountAddress: string | null;
   scope: string;
   status: string;
   grantedScopes: string[];
@@ -141,7 +142,12 @@ function roundContext(
     gateway: deps.gatewayFor ? deps.gatewayFor({ id: mailbox.id }) : defaultGateway(),
     tokens: tokensFor(accessToken, mailbox.grantedScopes, now),
     // The caller has checked that the mailbox is a user's own (it has a userId).
-    mailbox: { id: mailbox.id, tenantId: mailbox.tenantId, userId: mailbox.userId as string },
+    mailbox: {
+      id: mailbox.id,
+      tenantId: mailbox.tenantId,
+      userId: mailbox.userId as string,
+      account: (mailbox.accountAddress ?? '').toLowerCase(),
+    },
     now,
     hasTime: () => deps.now().getTime() < deadline,
     report,
@@ -257,4 +263,39 @@ export async function runCalendarSync(deps: CalendarSyncDeps): Promise<CalendarS
     await syncMailbox(deps, claim, claimedAt, report);
   }
   return report;
+}
+
+/** GOOGLE_CALENDAR_SYNC=off turns the calendar sync off in this process (the inbox sync keeps running). */
+export function calendarSyncEnabled(env: NodeJS.ProcessEnv): boolean {
+  return (env.GOOGLE_CALENDAR_SYNC ?? '').trim().toLowerCase() !== 'off';
+}
+
+/** Production wiring: the shared encrypted Prisma client and the container's transports. */
+export async function createCalendarSyncDeps(): Promise<CalendarSyncDeps> {
+  const [{ prisma }, { container }] = await Promise.all([
+    import('@intelliflow/db'),
+    import('../../container.js'),
+  ]);
+  const adapters = container.adapters as unknown as { mailboxTransports: MailboxTransports };
+  return { prisma, transports: adapters.mailboxTransports, now: () => new Date() };
+}
+
+/**
+ * The calendar sync's part of the shared tick. It never throws, so it can follow the inbox sync in a
+ * `finally`: a failure here is logged and the next tick tries again. Mailboxes are due every five
+ * minutes whatever the tick's interval, so a faster tick does not sync more often.
+ */
+export async function runCalendarSyncTick(
+  env: NodeJS.ProcessEnv,
+  log: Pick<Console, 'warn' | 'info'> = console
+): Promise<void> {
+  if (!calendarSyncEnabled(env)) return;
+  try {
+    const report = await runCalendarSync(await createCalendarSyncDeps());
+    if (report.mailboxesSynced + report.failures + report.reconnects > 0) {
+      log.info('[calendar-sync] tick', report);
+    }
+  } catch (error) {
+    log.warn('[calendar-sync] tick failed', errorCause(error));
+  }
 }

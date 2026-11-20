@@ -126,6 +126,13 @@ export interface MailboxDto extends SmtpEndpointDto, SmtpAccountDto {
    * mailbox that has no calendar (company mailbox, other providers).
    */
   calendarAccess?: 'GRANTED' | 'NOT_GRANTED' | null;
+  /**
+   * MVP-013: the calendar sync of a mailbox that has the permission: ON, or NEEDS_RECONNECT when Google
+   * refused its access (the user withdrew it); null when there is no calendar.
+   */
+  calendarSync?: 'ON' | 'NEEDS_RECONNECT' | null;
+  /** When the calendar sync last finished a round (ISO); null before the first. */
+  calendarSyncedAt?: string | null;
   updatedAt: string;
 }
 

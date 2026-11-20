@@ -133,11 +133,69 @@ describe('a Google mailbox without the calendar permission (MVP-013)', () => {
   });
 });
 
+describe('a Google mailbox whose calendar sync Google has stopped (MVP-013)', () => {
+  const stopped = () =>
+    gmailMailbox({ calendarAccess: 'GRANTED', calendarSync: 'NEEDS_RECONNECT' });
+
+  it('says the calendar needs to be connected again, and why', () => {
+    renderCard({ mailbox: stopped() });
+    const card = screen.getByRole('region', {
+      name: 'Google Calendar needs to be connected again',
+    });
+    expect(card).toHaveTextContent('no longer lets Aurora use your calendar');
+    expect(screen.queryByTestId('google-calendar-access')).not.toBeInTheDocument();
+  });
+
+  it('signs in with Google again from the reconnect button', async () => {
+    renderCard({ mailbox: stopped() });
+    fireEvent.click(screen.getByRole('button', { name: 'Reconnect Google Calendar' }));
+    await waitFor(() => expect(assign).toHaveBeenCalled());
+    expect(api.oauthStart.mutateAsync).toHaveBeenCalledWith({ provider: 'GMAIL', scope: 'USER' });
+  });
+
+  it('gives way to the admin-trust card, and is not shown on a broken mailbox', () => {
+    renderCard({ mailbox: { ...stopped(), replySync: 'NEEDS_ADMIN_TRUST' } });
+    expect(screen.queryByTestId('google-calendar-reconnect')).not.toBeInTheDocument();
+    renderCard({ mailbox: { ...stopped(), status: 'ERROR', lastErrorCode: 'TOKEN_REVOKED' } });
+    expect(screen.queryByTestId('google-calendar-reconnect')).not.toBeInTheDocument();
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = renderCard({ mailbox: stopped() });
+    expect((await axe.run(container)).violations).toEqual([]);
+  });
+});
+
+describe('a Google mailbox whose calendar syncs (MVP-013)', () => {
+  it('says what syncs and when it last did', () => {
+    renderCard({
+      mailbox: gmailMailbox({
+        calendarAccess: 'GRANTED',
+        calendarSync: 'ON',
+        calendarSyncedAt: '2026-11-20T10:30:00.000Z',
+      }),
+    });
+    expect(screen.getByTestId('calendar-sync-status')).toHaveTextContent('Last synced');
+    expect(screen.queryByTestId('google-calendar-reconnect')).not.toBeInTheDocument();
+  });
+
+  it('waits for the first sync before it has run', () => {
+    renderCard({ mailbox: gmailMailbox({ calendarAccess: 'GRANTED', calendarSync: 'ON' }) });
+    expect(screen.getByTestId('calendar-sync-status')).toHaveTextContent(
+      'Waiting for the first sync.'
+    );
+  });
+});
 describe('GoogleCalendarAccess on its own', () => {
   it('offers no button when Google is not set up on this server', () => {
     render(<GoogleCalendarAccess idPrefix="x" pending={false} />);
     expect(screen.getByTestId('google-calendar-access')).toBeInTheDocument();
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('offers its button on the reconnect card too', () => {
+    render(<GoogleCalendarAccess idPrefix="x" pending={false} reconnect onConnect={vi.fn()} />);
+    expect(screen.getByTestId('google-calendar-reconnect')).toBeInTheDocument();
   });
 
   it('disables the button while a sign-in is starting', () => {

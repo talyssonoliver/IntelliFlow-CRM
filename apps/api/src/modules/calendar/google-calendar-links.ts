@@ -90,6 +90,8 @@ export interface SyncMailbox {
   id: string;
   tenantId: string;
   userId: string;
+  /** The Google account the mailbox is connected to (its address); the sync's state remembers it. */
+  account: string;
 }
 
 export interface SyncContext {
