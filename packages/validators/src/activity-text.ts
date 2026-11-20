@@ -6,6 +6,11 @@
  * and it reads as a leak of internals. The ids belong in an activity's metadata, never in its title or
  * description.
  *
+ * Only an id that is introduced by a label is removed, together with the label ("COA ledger row <id>",
+ * "lead id: <id>", "ref=<id>"), or an id that is the whole text. An id anywhere else (inside a link, a path, a file
+ * name, a host name, an email address, a quoted value) is left exactly as written: nothing there is a label, and a
+ * user's own text and addresses must never be changed.
+ *
  * Pure, browser safe, no dependencies and no backtracking patterns: it is used by the API when an
  * activity is written, by the web when one is shown, and by the one-off cleanup script for rows that were
  * written before. Only the removal point is tidied; the rest of the text is returned as it was.
@@ -77,13 +82,7 @@ function endsInsideAddress(before: string): boolean {
   const word = before.slice(start).toLowerCase();
   return word.includes('/') || word.includes('\\') || word.includes('@') || word.startsWith('www.');
 }
-/** "... lead_id=" -> "... ": a bare key=<id> assignment goes with its key. */
-function withoutAssignmentKey(text: string): string {
-  if (!text.endsWith('=')) return text;
-  let start = text.length - 1;
-  while (start > 0 && /[a-z0-9_-]/i.test(text.charAt(start - 1))) start -= 1;
-  return text.slice(0, start);
-}
+
 /** The text without a label at its end ("... COA ledger row" -> "... "), repeated for "row id". */
 function withoutTrailingLabels(text: string): string {
   let out = text;
@@ -95,9 +94,9 @@ function withoutTrailingLabels(text: string): string {
     const label = LABELS.find((word) => {
       if (!lower.endsWith(word)) return false;
       const lead = head.charAt(head.length - word.length - 1);
-      // A standalone word only: not the end of a longer word, a domain or a path ("/reference").
+      // A standalone word only: not the end of a longer word, a domain or a path ("/reference"),
+      // and not a word that is itself a link, path or email ("?q=(reference").
       const boundary = lead === '' || WORD_STARTS.includes(lead);
-      // ...and not a word that is itself a link, path or email ("?q=(reference").
       return boundary && !endsInsideAddress(head.slice(0, head.length - word.length));
     });
     if (!label) return out;
@@ -114,7 +113,7 @@ const PAIRS: ReadonlyArray<readonly [string, string]> = [
   ["'", "'"],
 ];
 
-/** Closes the gap an id left: "()" , a space before punctuation, a doubled full stop. */
+/** Closes the gap an id left: empty brackets, a space before punctuation, a doubled full stop. */
 function closeGap(before: string, after: string): [string, string] {
   let out = before;
   let rest = after;
@@ -133,34 +132,12 @@ function closeGap(before: string, after: string): [string, string] {
 }
 
 const BREAKS = ' \t\r\n';
-
-/** What may sit right before or after an id that stands alone as a word. */
-const OPENERS = '([{"\'';
 const CLOSERS = ')]}"\'';
 
 function isBreakOrEnd(char: string): boolean {
   return char === '' || BREAKS.includes(char);
 }
 
-/** True when the text before the id ends in a link, path or query ("?a=1&id=" or "https://x/y?id="). */
-function endsInQueryOrPath(before: string): boolean {
-  let start = before.length;
-  while (start > 0 && !BREAKS.includes(before.charAt(start - 1))) start -= 1;
-  const word = before.slice(start);
-  return ['/', '\\', '?', '&', '@'].some((char) => word.includes(char));
-}
-
-/** True when the text ends in a recognized id label ("... ref", "lead_id"), so "ref:<id>" is a reference, not "urn:uuid:<id>" or "C:<id>". */
-function endsInLabel(text: string): boolean {
-  const head = trimSpacesEnd(text);
-  return head.length > 0 && withoutTrailingLabels(head).length < head.length;
-}
-/**
- * True when the id stands alone as a word: it follows a space, a bracket or a quote (or a bare "key=", which
- * goes with it), and a space, a closing bracket or quote, or a full stop or comma that ends the sentence
- * follows it. An id attached to anything else is part of a larger token (a link, a path, a file name, a
- * host name, an email address, a fragment, a query value) and is left exactly as written.
- */
 /** True when the token ends at `at` in `text`: a space or the end, or sentence punctuation then a space or the end. */
 function tokenEndsAt(text: string, at: number): boolean {
   const char = text.charAt(at);
@@ -168,32 +145,41 @@ function tokenEndsAt(text: string, at: number): boolean {
   return '.,;:!?'.includes(char) && isBreakOrEnd(text.charAt(at + 1));
 }
 
-function isStandalone(before: string, after: string): boolean {
-  const prev = before.charAt(before.length - 1);
-  const beforeOk =
-    isBreakOrEnd(prev) ||
-    ((OPENERS.includes(prev) || prev === '=') && !endsInQueryOrPath(before)) ||
-    (prev === ':' && endsInLabel(before.slice(0, -1)));
-  if (!beforeOk) return false;
-  // A closing bracket or quote counts only when the token ends right after it ("(id)." yes, "(id).pdf" no).
+/** The text before an id without the "=" of a "lead_id=<id>" assignment, so the label before it can be read. */
+function beforeLabel(before: string): string {
+  return before.endsWith('=') ? before.slice(0, -1) : before;
+}
+
+/**
+ * True when the id is introduced by a label ("COA ledger row <id>", "lead_id=<id>", "ref: <id>") and the id's
+ * token ends right after it (a closing bracket or quote counts, so "(ref <id>)." does), or when the id is the
+ * whole text.
+ */
+function isRemovable(before: string, after: string): boolean {
+  if (before.trim() === '' && after.trim() === '') return true;
+  const base = beforeLabel(before);
+  if (withoutTrailingLabels(base).length >= base.length) return false;
   return CLOSERS.includes(after.charAt(0)) ? tokenEndsAt(after, 1) : tokenEndsAt(after, 0);
 }
+
 /**
- * The text with machine ids removed: cuids and UUIDs, and the label in front of one ("COA ledger row",
- * "lead id"). An id attached to other characters (a link, path, file name, host name, email address,
- * fragment or query value) stays, so what it belongs to still works. Text without an id is returned unchanged.
+ * The text with machine ids removed: cuids and UUIDs that a label introduces ("COA ledger row <id>", "lead id: <id>",
+ * "ref=<id>"), together with the label, or an id that is the whole text. Any other id stays where it is, so a link,
+ * path, file name, host name, email address or quoted value is never changed. Text without such an id is returned
+ * unchanged.
  */
 export function stripMachineIds(text: string): string {
   let out = '';
   let rest = text;
   for (let found = firstId(rest); found; found = firstId(rest)) {
     const end = found.index + found.length;
-    if (!isStandalone(out + rest.slice(0, found.index), rest.slice(end))) {
+    const before = out + rest.slice(0, found.index);
+    if (!isRemovable(before, rest.slice(end))) {
       out += rest.slice(0, end);
       rest = rest.slice(end);
       continue;
     }
-    out = withoutTrailingLabels(withoutAssignmentKey(out + rest.slice(0, found.index)));
+    out = withoutTrailingLabels(beforeLabel(before));
     [out, rest] = closeGap(out, rest.slice(end));
   }
   const result = out + rest;
