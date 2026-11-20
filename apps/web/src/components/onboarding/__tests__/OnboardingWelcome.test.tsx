@@ -101,7 +101,7 @@ vi.mock('next/navigation', () => ({
   useParams: () => ({}),
 }));
 
-vi.mock('@stripe/stripe-js', () => ({
+vi.mock('@stripe/stripe-js/pure', () => ({
   loadStripe: mockLoadStripe,
 }));
 
