@@ -10,7 +10,8 @@ export interface LeadNameSource {
   firstName?: string | null;
   lastName?: string | null;
   company?: string | null;
-  email?: string | null;
+  /** The address as text, or an Email value object. */
+  email?: string | { value: string } | null;
 }
 
 export interface ContactName {
@@ -21,6 +22,8 @@ export interface ContactName {
 }
 
 const clean = (value?: string | null): string => (value ?? '').trim();
+const text = (value?: string | { value: string } | null): string =>
+  typeof value === 'object' && value !== null ? clean(value.value) : clean(value);
 
 function named(firstName: string, lastName: string): ContactName {
   return { firstName, lastName, display: [firstName, lastName].filter(Boolean).join(' ') };
@@ -30,5 +33,11 @@ export function contactNameFromLead(lead: LeadNameSource): ContactName {
   const firstName = clean(lead.firstName);
   const lastName = clean(lead.lastName);
   if (firstName || lastName) return named(firstName, lastName);
-  return named(clean(lead.company) || clean(lead.email) || 'Unnamed contact', '');
+  return named(clean(lead.company) || text(lead.email) || 'Unnamed contact', '');
+}
+
+/** Just the two stored halves, for code that writes a contact row. */
+export function contactNameFields(lead: LeadNameSource): { firstName: string; lastName: string } {
+  const { firstName, lastName } = contactNameFromLead(lead);
+  return { firstName, lastName };
 }
