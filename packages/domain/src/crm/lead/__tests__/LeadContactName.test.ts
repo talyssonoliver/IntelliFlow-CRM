@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { contactNameFromLead } from '../LeadContactName';
+import { contactNameFromLead, contactNameFields } from '../LeadContactName';
 import { Contact } from '../../contact/Contact';
 
 /** MVP-003: a contact created from a lead is named from what the lead has, never "Unknown". */
@@ -22,6 +22,13 @@ describe('contactNameFromLead', () => {
     ],
   ])('keeps a half person name as it is (%s), never filling the rest', (_label, lead, expected) => {
     expect(contactNameFromLead({ ...lead, company, email })).toEqual(expected);
+  });
+
+  it('accepts an Email value object and returns just the stored halves', () => {
+    expect(contactNameFields({ email: { value: email } })).toEqual({
+      firstName: email,
+      lastName: '',
+    });
   });
 
   it('names a lead with only a company after the company', () => {

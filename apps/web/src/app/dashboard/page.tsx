@@ -14,14 +14,21 @@
  * Task: PG-129 - Dashboard Page, MVP-007
  */
 
+import { Suspense } from 'react';
 import DashboardClient from './DashboardClient';
+import Loading from './loading';
 
-// Still rendered per request, as it was while it read the token: the client island reads the URL
-// (useSearchParams, through useRequireAuth), and a page with no request-time API would otherwise be
-// prerendered, which fails the build or turns the whole tree client-rendered. This removes the
-// server wait, not the per-request render.
-export const dynamic = 'force-dynamic';
-
+// Prerendered, served from the CDN with no function run. The client island reads the URL
+// (useSearchParams, through useRequireAuth), so it sits inside a Suspense boundary: the build
+// prerenders the same skeleton the page already shows until the auth status is known
+// (./loading), and the island renders on the client. The proxy still redirects signed-out
+// visits to /login before any HTML is served, and the API checks every call.
+// It was `force-dynamic`, which ran a function for every dashboard load (Vercel Hobby active
+// CPU budget, 20/11).
 export default function DashboardPage() {
-  return <DashboardClient />;
+  return (
+    <Suspense fallback={<Loading />}>
+      <DashboardClient />
+    </Suspense>
+  );
 }

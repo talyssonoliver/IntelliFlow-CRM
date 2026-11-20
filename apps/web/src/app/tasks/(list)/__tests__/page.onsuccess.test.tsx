@@ -43,6 +43,10 @@ function mutation(name: string) {
   };
 }
 
+vi.mock('@/components/tasks/FollowUpsDueTasks', () => ({
+  FollowUpsDueTasks: () => <div data-testid="follow-ups-due-tasks" />,
+}));
+
 vi.mock('@/lib/api', () => ({
   api: {
     useUtils: () => ({

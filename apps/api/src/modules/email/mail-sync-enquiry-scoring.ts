@@ -19,13 +19,14 @@ export function queueEnquiryLeadScoring(
       leadId: ref.leadId,
       error: error instanceof Error ? error.name : 'unknown',
     });
-  try {
-    queueLeadAi({
-      leadId: ref.leadId,
-      tenantId: ref.tenantId,
-      correlationId: `mail-enquiry:${ref.providerMessageId}`,
-    }).catch(warn);
-  } catch (error) {
-    warn(error);
-  }
+  // Promise.resolve().then also turns a synchronous throw into a rejection the .catch handles.
+  void Promise.resolve()
+    .then(() =>
+      queueLeadAi({
+        leadId: ref.leadId,
+        tenantId: ref.tenantId,
+        correlationId: `mail-enquiry:${ref.providerMessageId}`,
+      })
+    )
+    .catch(warn);
 }
