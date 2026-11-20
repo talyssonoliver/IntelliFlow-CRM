@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-20T11:54:42.049Z",
+  "timestamp": "2026-11-20T12:38:07.527Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,8 +1016,8 @@
   },
   "api_inventory": {
     "total_routers": 83,
-    "total_endpoints": 620,
-    "total_queries": 267,
+    "total_endpoints": 621,
+    "total_queries": 268,
     "total_mutations": 353,
     "routers": [
       {
@@ -1393,6 +1393,12 @@
         "mutations": 3
       },
       {
+        "name": "emailLog",
+        "endpoints": 3,
+        "queries": 2,
+        "mutations": 1
+      },
+      {
         "name": "emailMailbox",
         "endpoints": 3,
         "queries": 2,
@@ -1424,12 +1430,6 @@
       },
       {
         "name": "upload",
-        "endpoints": 2,
-        "queries": 1,
-        "mutations": 1
-      },
-      {
-        "name": "emailLog",
         "endpoints": 2,
         "queries": 1,
         "mutations": 1
@@ -1522,7 +1522,7 @@
   },
   "database_inventory": {
     "total_tables": 217,
-    "total_fields": 3216,
+    "total_fields": 3219,
     "total_indexes": 965,
     "total_relations": 309,
     "tables_with_embeddings": 4,
@@ -1802,6 +1802,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "CalendarEventLink",
+        "fields": 18,
+        "indexes": 5,
+        "relations": 3,
+        "hasEmbedding": false
+      },
+      {
         "name": "AccountAutomationSetting",
         "fields": 17,
         "indexes": 2,
@@ -1960,13 +1967,6 @@
         "fields": 15,
         "indexes": 5,
         "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "CalendarEventLink",
-        "fields": 15,
-        "indexes": 5,
-        "relations": 3,
         "hasEmbedding": false
       },
       {
@@ -5178,6 +5178,11 @@
         "name": "emailLog.status",
         "method": "GET",
         "description": "Status"
+      },
+      {
+        "name": "emailLog.engagementForLead",
+        "method": "GET",
+        "description": "Engagement for lead"
       },
       {
         "name": "emailLog.logToContact",

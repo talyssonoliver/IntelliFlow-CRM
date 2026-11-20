@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
+  isSameName,
+  mergeEmailEngagement,
   describeScoreChange,
   getActivityIcon,
   getActivityIconBg,
@@ -475,5 +477,48 @@ describe('describeScoreChange (UI-021)', () => {
 
   it('keeps a score of zero', () => {
     expect(describeScoreChange({ previousScore: 5, newScore: 0 })).toEqual({ from: 5, to: 0 });
+  });
+});
+
+describe('isSameName (the profile card hides a company that repeats the name)', () => {
+  it('ignores case and runs of spaces', () => {
+    expect(isSameName('West London Handyman Ltd', 'west  london handyman LTD ')).toBe(true);
+    expect(isSameName('Pilates Living N16', 'Pilates Living N16')).toBe(true);
+  });
+
+  it('is false for different names and never true for an empty one', () => {
+    expect(isSameName('Acme Ltd', 'Jane Doe')).toBe(false);
+    expect(isSameName('', '')).toBe(false);
+    expect(isSameName(null, undefined)).toBe(false);
+    expect(isSameName('Acme', '')).toBe(false);
+  });
+});
+
+describe('mergeEmailEngagement (open rate from the CRM email records too)', () => {
+  const metrics = { emailsSent: 1, emailsOpened: 0, meetings: 2, touchpoints: 5 };
+
+  it('leaves the activity counts alone when there is nothing from the records', () => {
+    expect(mergeEmailEngagement(metrics, undefined)).toBe(metrics);
+    expect(mergeEmailEngagement(metrics, null)).toBe(metrics);
+  });
+
+  it('takes the larger of the two per count, so the same mail is never counted twice', () => {
+    expect(mergeEmailEngagement(metrics, { sent: 4, opened: 3 })).toEqual({
+      emailsSent: 4,
+      emailsOpened: 3,
+      meetings: 2,
+      touchpoints: 5,
+    });
+    expect(
+      mergeEmailEngagement({ ...metrics, emailsSent: 3, emailsOpened: 2 }, { sent: 1, opened: 1 })
+    ).toMatchObject({ emailsSent: 3, emailsOpened: 2 });
+  });
+
+  it('never lets opened exceed sent', () => {
+    const merged = mergeEmailEngagement(
+      { ...metrics, emailsSent: 3, emailsOpened: 1 },
+      { sent: 5, opened: 2 }
+    );
+    expect(merged.emailsOpened).toBeLessThanOrEqual(merged.emailsSent);
   });
 });
