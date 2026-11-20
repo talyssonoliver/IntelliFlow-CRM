@@ -89,6 +89,8 @@ export interface SyncContext {
   /** False once the round's time budget is spent: no new item is started. */
   hasTime: () => boolean;
   report: CalendarSyncReport;
+  /** Events that failed to apply and are tried again next round, with their attempts so far. */
+  failed: Map<string, number>;
 }
 
 export function prismaCode(error: unknown): string | undefined {

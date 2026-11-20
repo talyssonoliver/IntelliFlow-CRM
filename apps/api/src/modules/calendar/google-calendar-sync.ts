@@ -7,8 +7,13 @@
  * The tick that runs this is wired in a later change.
  */
 import { GoogleCalendarAdapter, MailboxTransportError } from '@intelliflow/adapters';
-import { CalendarAuthenticationError, type OAuthTokens } from '@intelliflow/application';
 import {
+  CalendarAuthenticationError,
+  CalendarRateLimitError,
+  type OAuthTokens,
+} from '@intelliflow/application';
+import {
+  forgetAccessToken,
   getOAuthAccess,
   hasOAuthClient,
   oauthClientEnvNames,
@@ -23,7 +28,7 @@ import {
   type CalendarSyncReport,
   type SyncContext,
 } from './google-calendar-links';
-import { pullChanges } from './google-calendar-pull';
+import { pullChanges, type PullResult } from './google-calendar-pull';
 
 export const CALENDAR_SYNC_INTERVAL_MS = 5 * 60_000;
 const LEASE_MS = 5 * 60_000;
@@ -122,6 +127,27 @@ function tokensFor(access: string, scopes: string[], now: Date): OAuthTokens {
   };
 }
 
+function roundContext(
+  deps: CalendarSyncDeps,
+  mailbox: SyncMailbox,
+  accessToken: string,
+  now: Date,
+  report: CalendarSyncReport,
+  deadline: number
+): SyncContext {
+  return {
+    prisma: deps.prisma,
+    gateway: deps.gatewayFor ? deps.gatewayFor({ id: mailbox.id }) : defaultGateway(),
+    tokens: tokensFor(accessToken, mailbox.grantedScopes, now),
+    // The caller has checked that the mailbox is a user's own (it has a userId).
+    mailbox: { id: mailbox.id, tenantId: mailbox.tenantId, userId: mailbox.userId as string },
+    now,
+    hasTime: () => deps.now().getTime() < deadline,
+    report,
+    failed: new Map(),
+  };
+}
+
 async function syncMailbox(
   deps: CalendarSyncDeps,
   claim: Claim,
@@ -156,27 +182,37 @@ async function syncMailbox(
   const progress: Record<string, unknown> = {};
   let version = mailbox.tokenVersion;
   try {
-    const access = await getOAuthAccess(deps.prisma, mailbox, deps.transports, now);
+    let access = await getOAuthAccess(deps.prisma, mailbox, deps.transports, now);
     version = access.tokenVersion;
     const deadline = deps.now().getTime() + MAILBOX_BUDGET_MS;
-    const ctx: SyncContext = {
-      prisma: deps.prisma,
-      gateway: deps.gatewayFor ? deps.gatewayFor({ id: mailbox.id }) : defaultGateway(),
-      tokens: tokensFor(access.accessToken, mailbox.grantedScopes, now),
-      mailbox: { id: mailbox.id, tenantId: mailbox.tenantId, userId: mailbox.userId },
-      now,
-      hasTime: () => deps.now().getTime() < deadline,
-      report,
-    };
-    const pulled = await pullChanges(ctx, mailbox.calendarSyncToken);
+    const pullWith = (accessToken: string) =>
+      pullChanges(
+        roundContext(deps, mailbox, accessToken, now, report, deadline),
+        mailbox.calendarSyncToken
+      );
+    let pulled: PullResult;
+    try {
+      pulled = await pullWith(access.accessToken);
+    } catch (error) {
+      if (!(error instanceof CalendarAuthenticationError)) throw error;
+      // The access token may just have run out during the round: drop it and go again with a fresh
+      // one, once (the pull is idempotent from the stored token). Refused again, the permission is gone.
+      forgetAccessToken(mailbox.id);
+      access = await getOAuthAccess(deps.prisma, mailbox, deps.transports, now);
+      version = access.tokenVersion;
+      pulled = await pullWith(access.accessToken);
+    }
     progress.calendarSyncToken = pulled.syncToken;
     report.mailboxesSynced += 1;
     await release(deps, claim, version, {
       calendarSyncToken: pulled.syncToken,
       calendarSyncedAt: now,
       calendarFailureCount: 0,
-      // More to do: due again on the next tick; caught up: wait the interval.
-      calendarNextSyncAt: pulled.complete ? nextRound : now,
+      // More to do: due again on the next tick (after Google's wait, if it asked for one); caught up:
+      // wait the interval.
+      calendarNextSyncAt: pulled.complete
+        ? nextRound
+        : new Date(deps.now().getTime() + (pulled.retryAfterMs ?? 0)),
     });
   } catch (error) {
     // Google says the permission is not there (never granted or withdrawn): stop until reconnected.
@@ -187,11 +223,13 @@ async function syncMailbox(
     }
     report.failures += 1;
     const failures = mailbox.calendarFailureCount + 1;
+    // Google's own wait, when it gave one, is a minimum on top of the (capped) backoff.
+    const asked = error instanceof CalendarRateLimitError ? error.retryAfterSeconds * 1000 : 0;
     const backoff = Math.min(CALENDAR_SYNC_INTERVAL_MS * 2 ** failures, MAX_BACKOFF_MS);
     await release(deps, claim, version, {
       ...progress,
       calendarFailureCount: failures,
-      calendarNextSyncAt: new Date(now.getTime() + backoff),
+      calendarNextSyncAt: new Date(deps.now().getTime() + Math.max(backoff, asked)),
     });
     logFailure(claim.id, error);
   }

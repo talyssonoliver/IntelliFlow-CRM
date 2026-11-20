@@ -122,7 +122,8 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
       let rows = tables[table].filter((r) => matches(r, args.where ?? {}, table));
 
       if (args.orderBy?.id === 'asc') rows = [...rows].sort((a, b) => (a.id < b.id ? -1 : 1));
-      return args.take ? rows.slice(0, args.take) : rows;
+      // Copies, as a database returns: a row read earlier does not change when another writer does.
+      return (args.take ? rows.slice(0, args.take) : rows).map((r) => ({ ...r }));
     };
     return {
       findFirst: vi.fn(async (args: Row) => run('findFirst', () => find(args)[0] ?? null)),
@@ -141,6 +142,13 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
           }
           tables[table].push(row);
           return row;
+        })
+      ),
+      updateMany: vi.fn(async ({ where, data }: Row) =>
+        run('updateMany', () => {
+          const rows = tables[table].filter((r) => matches(r, where, table));
+          for (const row of rows) Object.assign(row, data, { updatedAt: new Date(clock.now) });
+          return { count: rows.length };
         })
       ),
       update: vi.fn(async ({ where, data }: Row) =>
@@ -290,7 +298,7 @@ export class FakeGoogle implements CalendarGateway {
     const failure = this.failure('getEvent');
     if (failure) return Result.fail<ExternalCalendarEvent | null, DomainError>(failure);
     const event = this.events.get(id);
-    const found = event && event.status !== 'cancelled' ? this.external(event) : null;
+    const found = event ? this.external(event) : null;
     return Result.ok<ExternalCalendarEvent | null, DomainError>(found);
   }
 
@@ -314,7 +322,7 @@ export class FakeGoogle implements CalendarGateway {
         (e) =>
           e.status !== 'cancelled' &&
           (!window ||
-            (e.start.getTime() >= window.timeMin.getTime() &&
+            (e.end.getTime() > window.timeMin.getTime() &&
               (!window.timeMax || e.start.getTime() < window.timeMax.getTime())))
       );
     }
@@ -368,5 +376,10 @@ export function createSyncHarness() {
     appointments: () => state.db.tables.appointment,
     links: () => state.db.tables.calendarEventLink,
     mailbox: () => state.db.tables.emailMailbox[0],
+    /** The Google sync token inside the saved state. */
+    token: (): string => {
+      const saved: string = state.db.tables.emailMailbox[0].calendarSyncToken;
+      return saved.startsWith('resume:') ? JSON.parse(saved.slice(7)).t : saved;
+    },
   };
 }
