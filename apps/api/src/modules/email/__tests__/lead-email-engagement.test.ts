@@ -62,6 +62,25 @@ describe('leadEmailEngagement', () => {
     });
   });
 
+  it('does not count mail synced from a mailbox Sent folder (it has the user, a direction and a source)', () => {
+    const synced = record({ metadata: { direction: 'outbound', source: 'outlook-sync' } });
+    expect(leadEmailEngagement([synced, synced], ADDRESS)).toEqual({ sent: 0, opened: 0 });
+    // ...and the CRM sends beside it still make the rate: 2 CRM sends (both opened) and 8 synced = 100%.
+    const crm = [record({ openCount: 1 }), record({ openCount: 2 })];
+    const eightSynced = Array.from({ length: 8 }, () => synced);
+    expect(leadEmailEngagement([...crm, ...eightSynced], ADDRESS)).toEqual({ sent: 2, opened: 2 });
+    // A synced mail that really was opened is both a tracked send and an open.
+    expect(
+      leadEmailEngagement(
+        [record({ metadata: { source: 'gmail-sync' }, openedAt: new Date() })],
+        ADDRESS
+      )
+    ).toEqual({
+      sent: 1,
+      opened: 1,
+    });
+  });
+
   it('counts a record the provider reports OPENED or CLICKED as opened', () => {
     const records = [record({ status: 'OPENED' }), record({ status: 'CLICKED' })];
     expect(leadEmailEngagement(records, ADDRESS)).toEqual({ sent: 2, opened: 2 });
