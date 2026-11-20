@@ -75,7 +75,7 @@ function endsInsideAddress(before: string): boolean {
   let start = before.length;
   while (start > 0 && !' \t\r\n'.includes(before.charAt(start - 1))) start -= 1;
   const word = before.slice(start).toLowerCase();
-  return word.includes('/') || word.includes('@') || word.startsWith('www.');
+  return word.includes('/') || word.includes('\\') || word.includes('@') || word.startsWith('www.');
 }
 /** "... lead_id=" -> "... ": a bare key=<id> assignment goes with its key. */
 function withoutAssignmentKey(text: string): string {
@@ -138,6 +138,7 @@ function isInsideAddress(before: string, after: string): boolean {
   const prev = before.charAt(before.length - 1);
   return (
     word.includes('/') ||
+    word.includes('\\') ||
     word.includes('@') ||
     word.startsWith('www.') ||
     // A query value ("?a=1&id=<id>") or a fragment, not a bare "lead_id=<id>" assignment.

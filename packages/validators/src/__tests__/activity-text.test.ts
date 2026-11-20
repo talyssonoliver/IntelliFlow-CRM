@@ -77,6 +77,15 @@ describe('stripMachineIds', () => {
       expect(stripMachineIds(`See ${link} ${ID}.`)).toBe(`See ${link}.`);
     }
   });
+  it('keeps an id inside a Windows drive, UNC or relative backslash path', () => {
+    for (const path of [
+      `C:\\Exports\\${UUID}.pdf`,
+      `\\\\server\\share\\${ID}\\file.txt`,
+      `exports\\${ID}.csv`,
+    ]) {
+      expect(stripMachineIds(`See ${path} now`)).toBe(`See ${path} now`);
+    }
+  });
   it('removes a bare key=id assignment together with its key', () => {
     expect(stripMachineIds(`Price follow-up sent (lead_id=${ID})`)).toBe('Price follow-up sent');
     expect(stripMachineIds(`Synced id=${ID} ok`)).toBe('Synced ok');
