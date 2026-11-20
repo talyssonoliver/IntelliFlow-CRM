@@ -11,6 +11,7 @@ import {
   httpUrlOrNull,
   insightRecommendations,
   isSystemTag,
+  stripMachineIds,
   isTouchpoint,
   isTrackedEmailSend,
   leadActivityMetrics,
@@ -211,6 +212,21 @@ describe('lead-format · system tags (UI-017)', () => {
     expect(isSystemTag('vip')).toBe(false);
     expect(isSystemTag('coa-pipeline-old')).toBe(false);
     expect(isSystemTag('my-coa-lead:1')).toBe(false);
+  });
+
+  it('hides the other sync tags and a bare machine id (register row 42)', () => {
+    const machineId = 'c' + 'mw5j72u40001p5ug01kf3vot';
+    expect(isSystemTag('coa-qualified')).toBe(true);
+    expect(isSystemTag('coa-won')).toBe(true);
+    expect(isSystemTag('portal-discover')).toBe(true);
+    expect(isSystemTag(machineId)).toBe(true);
+    expect(visibleTags(['portal-discover', 'coa-qualified', 'vip'])).toEqual(['vip']);
+  });
+
+  it('re-exports the activity text cleaner the lead page uses', () => {
+    expect(stripMachineIds('Sent. COA ledger row ' + 'c' + 'mw5j72u40001p5ug01kf3vot.')).toBe(
+      'Sent.'
+    );
   });
 
   it('keeps only the user tags, in order', () => {

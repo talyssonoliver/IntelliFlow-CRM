@@ -103,11 +103,11 @@ import {
   mergeEmailEngagement,
   leadDisplayName,
   leadExportFields,
+  stripMachineIds,
 } from '@/lib/leads/lead-format';
 import { LeadTimeline } from '@/components/leads/lead-timeline';
 import { RestrictionBanner } from '@/components/privacy/RestrictionBanner';
 
-// Common nullable date type
 type DateStringNull = Date | string | null;
 
 // Tab types matching Contact360 pattern
@@ -2154,8 +2154,8 @@ export default function Lead360Page() {
     return apiLead.activities.map((act) => ({
       id: act.id,
       type: mapActivityType(act.type as DBActivityType),
-      title: act.title,
-      description: act.description || '',
+      title: stripMachineIds(act.title),
+      description: stripMachineIds(act.description || ''),
       timestamp: typeof act.timestamp === 'string' ? act.timestamp : act.timestamp.toISOString(),
       user: act.userName,
       metadata: act.metadata as Activity['metadata'],

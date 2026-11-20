@@ -36,6 +36,7 @@ import {
   bulkArchiveLeadsSchema,
   bulkDeleteLeadsSchema,
   setLeadStarredSchema,
+  stripMachineIds,
 } from '@intelliflow/validators';
 import { mapLeadToResponse } from '../../shared/mappers';
 import type { Context } from '../../context';
@@ -1764,8 +1765,8 @@ export const leadRouter = createTRPCRouter({
         const created = await tx.leadActivity.create({
           data: {
             type: input.type,
-            title: input.title,
-            description: input.description ?? '',
+            title: stripMachineIds(input.title) || input.title,
+            description: stripMachineIds(input.description ?? ''),
             timestamp: occurredAt,
             userName: ctx.user?.email ?? 'Unknown',
             leadId: input.leadId,
@@ -1776,10 +1777,9 @@ export const leadRouter = createTRPCRouter({
 
         const leadWhere = { id: input.leadId, ...createTenantWhereClause(typedCtx.tenant, {}) };
         await tx.lead.update({ where: leadWhere, data: { updatedAt: now } });
-        // A back-dated activity must never move lastContactedAt backwards, even
-        // when another activity commits in between: compare in the UPDATE itself
-        // (Postgres re-checks the WHERE on the latest row version), not against
-        // the value read before the transaction.
+        // A back-dated activity must never move lastContactedAt backwards, even when another
+        // activity commits in between: compare in the UPDATE itself (Postgres re-checks the WHERE
+        // on the latest row version), not against the value read before the transaction.
         await tx.lead.updateMany({
           where: {
             ...leadWhere,
