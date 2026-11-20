@@ -379,13 +379,16 @@ async function makeEvent(ctx: SyncContext, link: any, row: any): Promise<void> {
     // create whose answer was lost) is not brought back: the link is marked, like a deletion. One that
     // is there with older content (the appointment was edited between the tries) is patched next.
     const gone = event.status === 'cancelled';
+    const hidden = !gone && isPersonal(event);
     const { tenantId } = ctx.mailbox;
     const settled = {
       pending: false,
       etag: event.etag ?? null,
       remoteUpdatedAt: event.lastModified,
-      ...(gone ? { remoteCancelledAt: ctx.now } : {}),
-      localSyncedAt: sameContent(event, row) ? row.updatedAt : null,
+      // A private or confidential event is marked like the pull marks one made private: nothing is written
+      // to it again.
+      ...(gone || hidden ? { remoteCancelledAt: ctx.now } : {}),
+      localSyncedAt: sameContent(event, row) || hidden ? row.updatedAt : null,
       pushAttempts: 0,
       nextPushAt: null,
     };
@@ -419,6 +422,7 @@ async function makeEvent(ctx: SyncContext, link: any, row: any): Promise<void> {
       await tx.calendarEventLink.update({ where: { id: link.id, tenantId }, data: settled });
     });
     if (gone) ctx.report.cancelled += 1;
+    else if (hidden) ctx.report.skipped += 1;
     else ctx.report.pushedCreated += 1;
   } catch (error) {
     await failedAttempt(ctx, link, error);

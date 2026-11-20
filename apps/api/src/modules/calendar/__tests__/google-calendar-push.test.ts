@@ -721,6 +721,39 @@ describe('Aurora to Google: review cases', () => {
     expect(h.links()[0].remoteCancelledAt).not.toBeNull();
     expect(h.google.events.get(id)?.status).toBe('cancelled');
   });
+  it('marks a recovered event that was made private in Google, and never writes to it again', async () => {
+    const id = eventIdFor('mbx-1', 'appt-1');
+    const sync = h.setup({
+      appointment: [appointmentRow({ title: 'Aurora title' })],
+      calendarEventLink: [
+        {
+          id: 'link-1',
+          tenantId: TENANT,
+          mailboxId: 'mbx-1',
+          appointmentId: 'appt-1',
+          googleEventId: id,
+          origin: 'AURORA',
+          pending: true,
+          pushAttempts: 0,
+          nextPushAt: null,
+          etag: null,
+          localSyncedAt: null,
+          remoteUpdatedAt: null,
+          remoteCancelledAt: null,
+        },
+      ],
+    });
+    h.google.put(id, { title: 'Now private', visibility: 'private' });
+
+    await runCalendarSync(sync);
+    await h.nextRound(sync);
+
+    expect(h.links()[0]).toMatchObject({ pending: false });
+    expect(h.links()[0].remoteCancelledAt).not.toBeNull();
+    expect(h.google.log.some((l) => l.startsWith('patchEvent'))).toBe(false);
+    expect(h.google.events.get(id)?.title).toBe('Now private');
+    expect(h.appointments()[0].title).toBe('Aurora title');
+  });
   it('does not push a recurring appointment, which would be one wrong event', async () => {
     const sync = h.setup({
       appointment: [appointmentRow({ recurrence: { frequency: 'WEEKLY', interval: 1 } })],
