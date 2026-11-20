@@ -9,7 +9,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Hoist the mock function so it persists across resetModules
 const mockLoadStripe = vi.hoisted(() => vi.fn(() => Promise.resolve({ elements: vi.fn() })));
 
-vi.mock('@stripe/stripe-js', () => ({
+vi.mock('@stripe/stripe-js/pure', () => ({
   loadStripe: mockLoadStripe,
 }));
 
