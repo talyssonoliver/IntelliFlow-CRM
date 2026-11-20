@@ -55,8 +55,8 @@ function firstId(text: string): IdMatch | null {
 
 const SPACES = new Set([' ', '\t']);
 
-/** What may sit right before a label word: a space or a bracket, quote or punctuation that ends a clause. */
-const WORD_STARTS = ' \t\r\n([{"\':;,';
+/** What may sit right before a label word: a space, a bracket or a quote (not : or ;, which occur inside links). */
+const WORD_STARTS = ' \t\r\n([{"\'';
 
 function trimSpacesEnd(text: string): string {
   let end = text.length;

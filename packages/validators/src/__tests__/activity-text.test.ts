@@ -68,6 +68,14 @@ describe('stripMachineIds', () => {
     expect(stripMachineIds(`See ${link} ${ID}.`)).toBe(`See ${link}.`);
   });
 
+  it('does not take a label from the end of a link whose path holds a colon or semicolon', () => {
+    for (const link of [
+      'https://example.invalid/wiki/Category:Reference',
+      'https://example.invalid/a;ref',
+    ]) {
+      expect(stripMachineIds(`See ${link} ${ID}.`)).toBe(`See ${link}.`);
+    }
+  });
   it('still removes an id that follows a link in the same sentence', () => {
     expect(stripMachineIds(`See https://app.example.invalid/x then ref ${ID}.`)).toBe(
       'See https://app.example.invalid/x then.'
