@@ -224,14 +224,14 @@
 
 /*
  * Phones: taps must reach the controls. The pinned stack object is drawn from the first screen
- * down (it rides up behind the hero) and, being positioned, painted over the hero's buttons; its
- * canvas also took pointer events, so "Get started", "Book a demo", "Log in" and the pause button
- * were all under it (document.elementFromPoint at their centres returned the CANVAS). Here the
- * canvas takes no pointer events on a phone (the drag-the-stack effect is for a mouse), and the
- * hero and the copy sit above it. They pass pointer events through everywhere except on their
- * links and buttons, so the wave's own pause button, which sits under the hero's box, is
- * reachable too. This block comes after the base `#stack` rule above because both have the same
- * specificity: the later one wins. Desktop (961px and up) is unchanged.
+ * down (it rides up behind the hero) and, being positioned with z-index 1, paints over the hero.
+ * Its canvas also takes pointer events (the base rule just above), so "Get started", "Book a demo",
+ * "Log in" and the pause button were all under it: document.elementFromPoint at their centres
+ * returned the CANVAS. `.stage-grid` already passes pointer events through and gives them back to
+ * links and buttons (aurora-landing.css), so the only thing in the way was the canvas. On a phone
+ * it takes none (the drag-the-stack effect is for a mouse), and the hero is painted above the
+ * stack. This block comes after the base `#stack` rule because both have the same specificity: the
+ * later one wins. Desktop (961px and up) is unchanged.
  */
 @media (max-width: 960px) {
   .aurora-page .stage-object.stack-visual #stack,
@@ -241,16 +241,5 @@
   .aurora-page .stage-grid.stage-grid-v2 .hero {
     position: relative;
     z-index: 2;
-    pointer-events: none;
-  }
-  .aurora-page .stage-grid.stage-grid-v2 .hero a,
-  .aurora-page .stage-grid.stage-grid-v2 .hero button {
-    pointer-events: auto;
-  }
-  .aurora-page .stage-grid.stage-grid-v2 .stage-copy {
-    pointer-events: none;
-  }
-  .aurora-page .stage-grid.stage-grid-v2 .stage-copy .layer-step-inner {
-    pointer-events: auto;
   }
 }

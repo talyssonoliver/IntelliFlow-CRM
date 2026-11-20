@@ -178,8 +178,9 @@ export const emailLogRouter = createTRPCRouter({
   }),
 
   /**
-   * Tracked sends to the lead's address and how many were opened, from the CRM's email records (the
-   * profile card's open rate). Only a lead the caller can see; another tenant's records never count.
+   * Tracked sends to the lead's address and how many were opened, counted in the database over the
+   * CRM's email records (the profile card's open rate). Only a lead the caller can see; another
+   * tenant's records never count.
    */
   engagementForLead: tenantProcedure
     .input(z.object({ leadId: recordIdSchema }))
@@ -192,26 +193,7 @@ export const emailLogRouter = createTRPCRouter({
         select: { email: true },
       });
       if (!lead?.email) return { sent: 0, opened: 0 };
-      const mentions = { contains: lead.email, mode: 'insensitive' as const };
-      const records = await c.prismaWithTenant.emailRecord.findMany({
-        where: {
-          tenantId,
-          OR: [{ toEmail: mentions }, { ccEmails: mentions }, { bccEmails: mentions }],
-        },
-        select: {
-          status: true,
-          userId: true,
-          metadata: true,
-          openCount: true,
-          openedAt: true,
-          toEmail: true,
-          ccEmails: true,
-          bccEmails: true,
-        },
-        orderBy: { createdAt: 'desc' },
-        take: 5000,
-      });
-      return leadEmailEngagement(records, lead.email);
+      return leadEmailEngagement(c.prismaWithTenant as never, tenantId, lead.email);
     }),
 
   /** Links the email to the lead or contact it is with. */

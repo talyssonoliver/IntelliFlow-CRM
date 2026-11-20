@@ -225,6 +225,44 @@ export interface LeadMetrics {
 
 // ─── Profile / owner cards ───────────────────────────────────────────────────
 
+/**
+ * The profile card's name, title and company. A lead named after its company shows the name once,
+ * not again as the company line; when that company is a linked account the name itself is the link
+ * to the account, so the way to the account is not lost with the duplicate line.
+ */
+function LeadProfileTitle({ lead }: Readonly<{ lead: LeadProfileData }>) {
+  const name = leadDisplayName(lead);
+  const accountHref = lead.accountId && lead.account ? `/accounts/${lead.accountId}` : null;
+  const nameIsCompany = isSameName(lead.company, name);
+  return (
+    <>
+      <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+        {nameIsCompany && accountHref ? (
+          <Link href={accountHref} className="hover:underline">
+            {name}
+          </Link>
+        ) : (
+          name
+        )}
+      </h2>
+      <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{lead.title}</p>
+      {lead.company && !nameIsCompany && (
+        <div className="flex items-center gap-1 text-[#2a78f6] text-sm font-medium mt-1">
+          <span aria-hidden="true" className="material-symbols-outlined !text-sm">
+            domain
+          </span>
+          {accountHref ? (
+            <Link href={accountHref} className="hover:underline">
+              {lead.company}
+            </Link>
+          ) : (
+            <span>{lead.company}</span>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
 export function LeadProfileCard({
   lead,
   leadMetrics,
@@ -245,25 +283,7 @@ export function LeadProfileCard({
           />
         </div>
         <div className="mb-4">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-            {leadDisplayName(lead)}
-          </h2>
-          <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{lead.title}</p>
-          {/* A lead named after its company shows the name once, not again as the company. */}
-          {lead.company && !isSameName(lead.company, leadDisplayName(lead)) && (
-            <div className="flex items-center gap-1 text-[#2a78f6] text-sm font-medium mt-1">
-              <span aria-hidden="true" className="material-symbols-outlined !text-sm">
-                domain
-              </span>
-              {lead.accountId && lead.account ? (
-                <Link href={`/accounts/${lead.accountId}`} className="hover:underline">
-                  {lead.company}
-                </Link>
-              ) : (
-                <span>{lead.company}</span>
-              )}
-            </div>
-          )}
+          <LeadProfileTitle lead={lead} />
         </div>
         <div className="flex flex-wrap gap-2 mb-6">
           <LeadStatusBadge status={lead.status} />

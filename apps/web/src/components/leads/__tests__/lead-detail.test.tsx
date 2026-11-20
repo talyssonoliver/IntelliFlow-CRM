@@ -86,6 +86,43 @@ describe('LeadDetail', () => {
     expect(screen.getAllByText('West London Handyman Ltd')).toHaveLength(1);
   });
 
+  it('keeps the way to the account when the company repeats the name: the name is the link', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({
+          firstName: '',
+          lastName: '',
+          company: 'West London Handyman Ltd',
+          accountId: 'acc-1',
+          account: { id: 'acc-1', name: 'West London Handyman Ltd' },
+        })}
+        leadMetrics={metrics}
+      />
+    );
+    const links = screen.getAllByRole('link', { name: 'West London Handyman Ltd' });
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute('href', '/accounts/acc-1');
+    expect(screen.getAllByText('West London Handyman Ltd')).toHaveLength(1);
+  });
+
+  it('links the company line to the account when the name is a person', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({
+          company: 'Acme Corp',
+          accountId: 'acc-2',
+          account: { id: 'acc-2', name: 'Acme Corp' },
+        })}
+        leadMetrics={metrics}
+      />
+    );
+    expect(screen.getByRole('link', { name: 'Acme Corp' })).toHaveAttribute(
+      'href',
+      '/accounts/acc-2'
+    );
+    expect(screen.getByRole('heading', { level: 2, name: 'John Doe' })).toBeInTheDocument();
+  });
+
   it('matches the company to the name ignoring case and spaces', () => {
     render(
       <LeadDetail

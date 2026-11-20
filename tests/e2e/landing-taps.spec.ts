@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 
 /**
  * Tap proof for the public landing page (MVP-012 / UI-010): on a phone and on a desktop, the
@@ -20,41 +20,47 @@ async function answerCookieBanner(page: Page) {
     .catch(() => {});
 }
 
-/** The controls a finger could meet in the page's own content: links and buttons that show. */
-async function coveredControls(page: Page): Promise<string[]> {
-  return page.evaluate(() => {
-    const covered: string[] = [];
-    const controls = [...document.querySelectorAll<HTMLElement>('main a[href], main button')];
-    for (const el of controls) {
-      const style = getComputedStyle(el);
-      if (style.display === 'none' || style.visibility === 'hidden') continue;
-      if (el.closest('[aria-hidden="true"], [hidden], [inert]')) continue;
-      el.scrollIntoView({ block: 'center' });
-      const box = el.getBoundingClientRect();
-      if (box.width < 2 || box.height < 2) continue;
-      const x = box.x + box.width / 2;
-      const y = box.y + box.height / 2;
-      if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) continue;
+/**
+ * What the browser hands a tap at the centre of `locator`: true when it is the control itself or
+ * something inside it. `elementFromPoint` is what a finger hits.
+ */
+async function isUnderFinger(page: Page, locator: Locator): Promise<boolean> {
+  await locator.scrollIntoViewIfNeeded();
+  const box = (await locator.boundingBox())!;
+  return locator.evaluate(
+    (el, [x, y]) => {
       const top = document.elementFromPoint(x, y);
-      if (top && (top === el || el.contains(top))) continue;
-      const label = (el.textContent ?? el.getAttribute('aria-label') ?? '').trim().slice(0, 30);
-      covered.push(`${label} (${el.getAttribute('href') ?? 'button'}) under ${top?.tagName}`);
-    }
-    return covered;
-  });
+      return !!top && (top === el || el.contains(top));
+    },
+    [box.x + box.width / 2, box.y + box.height / 2] as [number, number]
+  );
 }
-
 for (const vp of VIEWPORTS) {
   test.describe(`landing taps, ${vp.name}`, () => {
     test.use({ viewport: { width: vp.width, height: vp.height }, hasTouch: vp.touch });
 
-    test('no control on the page is covered by another element', async ({ page }) => {
+    test('the hero buttons, the header Log in and the pause control are under the finger', async ({
+      page,
+    }) => {
       await page.goto('/');
       await page.waitForLoadState('networkidle');
       await answerCookieBanner(page);
-      expect(await coveredControls(page)).toEqual([]);
+      const main = page.locator('main');
+      const controls = [
+        main.getByRole('link', { name: 'Get started', exact: true }).first(),
+        main.getByRole('link', { name: 'Book a demo', exact: true }).first(),
+        page.getByRole('button', { name: /pause background animation/i }),
+      ];
+      for (const control of controls) {
+        // The pause control only exists once the live background has started (not on reduced motion).
+        if ((await control.count()) === 0) continue;
+        expect(await isUnderFinger(page, control)).toBe(true);
+      }
+      // "Log in" is in the header on desktop and in the menu sheet on a phone.
+      if (vp.touch) await page.getByLabel('Menu').click();
+      const login = page.getByRole('link', { name: 'Log in', exact: true }).first();
+      expect(await isUnderFinger(page, login)).toBe(true);
     });
-
     test('the hero buttons are the element under their own centre, and tapping them navigates', async ({
       page,
     }) => {

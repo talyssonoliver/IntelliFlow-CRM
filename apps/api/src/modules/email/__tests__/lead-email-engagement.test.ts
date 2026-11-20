@@ -1,89 +1,32 @@
 /**
- * The open rate on a lead's profile card, from the CRM's email records for the lead's address.
+ * The open rate on a lead's profile card: the procedure's scoping, and the address pattern. What the
+ * counts are for each kind of mail is proved against a real database in
+ * tests/integration/lead-email-engagement.test.ts.
  */
 import { beforeEach, describe, expect, it } from 'vitest';
 import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 import { emailLogRouter } from '../email-log.router';
-import { leadEmailEngagement, type EngagementRecord } from '../lead-email-engagement';
+import { addressPattern } from '../lead-email-engagement';
 
 const LEAD_ID = 'clh0000000000000000000l01';
 const ADDRESS = 'ada@example.invalid';
 
-const record = (over: Partial<EngagementRecord> = {}): EngagementRecord => ({
-  status: 'SENT',
-  userId: TEST_UUIDS.user1,
-  metadata: null,
-  openCount: 0,
-  openedAt: null,
-  toEmail: ADDRESS,
-  ccEmails: null,
-  bccEmails: null,
-  ...over,
-});
-
-describe('leadEmailEngagement', () => {
-  it('counts a CRM send to the lead as tracked, and it is opened by openCount or openedAt', () => {
-    const records = [
-      record(),
-      record({ openCount: 2 }),
-      record({ openedAt: new Date('2026-11-15T10:00:00.000Z') }),
-    ];
-    expect(leadEmailEngagement(records, ADDRESS)).toEqual({ sent: 3, opened: 2 });
+describe('addressPattern', () => {
+  it('matches the address as a whole entry of a recipient list, and escapes regex characters', () => {
+    const re = new RegExp(addressPattern(ADDRESS), 'i');
+    expect(re.test('ada@example.invalid')).toBe(true);
+    expect(re.test('Bob <b@x.invalid>, Ada <ADA@example.invalid>')).toBe(true);
+    expect(re.test('b@x.invalid; ada@example.invalid')).toBe(true);
+    // Not a longer address that merely contains it, and the dot is a dot, not "any character".
+    expect(re.test('someone-ada@example.invalid')).toBe(false);
+    expect(re.test('ada@example.invalid.other')).toBe(false);
+    expect(re.test('ada@exampleXinvalid')).toBe(false);
   });
 
-  it('matches the address in To, Cc or Bcc, ignoring case and display names', () => {
-    const records = [
-      record({ toEmail: 'Ada <ADA@example.invalid>, x@example.invalid' }),
-      record({ toEmail: 'x@example.invalid', ccEmails: ADDRESS, openCount: 1 }),
-      record({ toEmail: 'x@example.invalid', bccEmails: 'Ada@Example.invalid' }),
-      record({ toEmail: 'someone-ada@example.invalid.other' }),
-    ];
-    expect(leadEmailEngagement(records, ADDRESS)).toEqual({ sent: 3, opened: 1 });
-  });
-
-  it('leaves out mail that did not leave, was received, or bounced for the lead', () => {
-    const records = [
-      record({ status: 'FAILED' }),
-      record({ status: 'PENDING' }),
-      record({ status: 'BOUNCED' }),
-      record({ metadata: { direction: 'inbound' } }),
-      record({ metadata: { bouncedRecipients: ['ADA@example.invalid'] } }),
-    ];
-    expect(leadEmailEngagement(records, ADDRESS)).toEqual({ sent: 0, opened: 0 });
-  });
-
-  it('does not count untracked mail (synced or logged, no sending user, never opened) as a send', () => {
-    const records = [record({ userId: null })];
-    expect(leadEmailEngagement(records, ADDRESS)).toEqual({ sent: 0, opened: 0 });
-    // ...but once it is opened it is both a tracked send and an open.
-    expect(leadEmailEngagement([record({ userId: null, openCount: 1 })], ADDRESS)).toEqual({
-      sent: 1,
-      opened: 1,
-    });
-  });
-
-  it('does not count mail synced from a mailbox Sent folder (it has the user, a direction and a source)', () => {
-    const synced = record({ metadata: { direction: 'outbound', source: 'outlook-sync' } });
-    expect(leadEmailEngagement([synced, synced], ADDRESS)).toEqual({ sent: 0, opened: 0 });
-    // ...and the CRM sends beside it still make the rate: 2 CRM sends (both opened) and 8 synced = 100%.
-    const crm = [record({ openCount: 1 }), record({ openCount: 2 })];
-    const eightSynced = Array.from({ length: 8 }, () => synced);
-    expect(leadEmailEngagement([...crm, ...eightSynced], ADDRESS)).toEqual({ sent: 2, opened: 2 });
-    // A synced mail that really was opened is both a tracked send and an open.
-    expect(
-      leadEmailEngagement(
-        [record({ metadata: { source: 'gmail-sync' }, openedAt: new Date() })],
-        ADDRESS
-      )
-    ).toEqual({
-      sent: 1,
-      opened: 1,
-    });
-  });
-
-  it('counts a record the provider reports OPENED or CLICKED as opened', () => {
-    const records = [record({ status: 'OPENED' }), record({ status: 'CLICKED' })];
-    expect(leadEmailEngagement(records, ADDRESS)).toEqual({ sent: 2, opened: 2 });
+  it('escapes every regex metacharacter in an address', () => {
+    const re = new RegExp(addressPattern('a+b(1)@x.invalid'));
+    expect(re.test('a+b(1)@x.invalid')).toBe(true);
+    expect(re.test('aab(1)@x.invalid')).toBe(false);
   });
 });
 
@@ -92,32 +35,41 @@ describe('emailLog.engagementForLead', () => {
 
   beforeEach(() => {
     (prismaMock.lead.findFirst as any).mockResolvedValue({ email: ADDRESS });
-    (prismaMock.emailRecord.findMany as any).mockResolvedValue([
-      record({ openCount: 1 }),
-      record(),
-    ]);
+    (prismaMock.$queryRaw as any).mockResolvedValue([{ sent: 4, opened: 3 }]);
   });
 
-  it('reads the lead and its mail tenant-scoped, and returns the counts from the records', async () => {
+  it('returns the database counts, asking for the lead tenant and address only', async () => {
     await expect(caller().engagementForLead({ leadId: LEAD_ID })).resolves.toEqual({
-      sent: 2,
-      opened: 1,
+      sent: 4,
+      opened: 3,
     });
     expect((prismaMock.lead.findFirst as any).mock.calls[0][0].where).toMatchObject({
       id: LEAD_ID,
       tenantId: TEST_UUIDS.tenant,
     });
-    const query = (prismaMock.emailRecord.findMany as any).mock.calls[0][0];
-    expect(query.where.tenantId).toBe(TEST_UUIDS.tenant);
-    expect(query.where.OR).toHaveLength(3);
+    // One aggregate query, nothing loaded and capped: the tenant and the address go in as parameters.
+    expect(prismaMock.emailRecord.findMany).not.toHaveBeenCalled();
+    const sql = (prismaMock.$queryRaw as any).mock.calls[0][0];
+    expect(sql.values).toContain(TEST_UUIDS.tenant);
+    expect(sql.values).toContain(addressPattern(ADDRESS));
+    expect(sql.values).toContain(ADDRESS);
+    // The tenant is a bound parameter in the where clause, not interpolated text.
+    expect(sql.sql).toContain('r."tenantId" = ?');
+    expect(sql.sql).not.toContain(TEST_UUIDS.tenant);
   });
 
-  it('returns zero, reading no mail, for a lead the caller cannot see', async () => {
+  it('returns zeros for no rows, and zero for a lead the caller cannot see (no mail query at all)', async () => {
+    (prismaMock.$queryRaw as any).mockResolvedValue([]);
+    await expect(caller().engagementForLead({ leadId: LEAD_ID })).resolves.toEqual({
+      sent: 0,
+      opened: 0,
+    });
+    (prismaMock.$queryRaw as any).mockClear();
     (prismaMock.lead.findFirst as any).mockResolvedValue(null);
     await expect(caller().engagementForLead({ leadId: LEAD_ID })).resolves.toEqual({
       sent: 0,
       opened: 0,
     });
-    expect(prismaMock.emailRecord.findMany).not.toHaveBeenCalled();
+    expect(prismaMock.$queryRaw).not.toHaveBeenCalled();
   });
 });

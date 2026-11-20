@@ -9,47 +9,44 @@ import { resolve } from 'node:path';
  * cannot quietly put the pinned stack canvas back over the hero buttons.
  */
 const css = readFileSync(resolve(__dirname, '../stack-stage.css'), 'utf8');
+const stage = readFileSync(resolve(__dirname, '../../aurora-landing.css'), 'utf8');
 
-/** The body of the last `@media (max-width: 960px)` block: the phone tap rules. */
-function phoneTapBlock(): string {
-  const start = css.lastIndexOf('@media (max-width: 960px)');
-  expect(start).toBeGreaterThan(-1);
-  return css.slice(start);
-}
+const PHONE = '@media (max-width: 960px)';
+/** Where the base (all widths) rule that gives the canvas pointer events starts. */
+const baseCanvasRule = css.indexOf('.aurora-page .stage-object.stack-visual #stack,');
+/** The last phone block: the tap rules. */
+const phoneTapStart = css.lastIndexOf(PHONE);
+const phoneTap = css.slice(phoneTapStart);
 
 describe('stack stage: taps reach the controls on a phone', () => {
-  it('turns pointer events off on the stack canvas on a phone', () => {
-    expect(phoneTapBlock()).toMatch(/#stack\s*\{[^}]*pointer-events:\s*none/);
+  it('gives the canvas pointer events at every width in the base rule (the desktop drag)', () => {
+    expect(baseCanvasRule).toBeGreaterThan(-1);
+    const base = css.slice(baseCanvasRule, css.indexOf('}', baseCanvasRule));
+    expect(base).toMatch(/pointer-events:\s*auto/);
   });
 
-  it('puts that rule after the base rule that turns them on, which has the same specificity', () => {
-    const base = css.indexOf(
-      '#stack,\n.aurora-page .object-sticky #stack {\n  pointer-events: auto'
+  it('turns them off on a phone in a block that comes AFTER the base rule (same specificity: the later wins)', () => {
+    expect(phoneTapStart).toBeGreaterThan(baseCanvasRule);
+    expect(phoneTap).toMatch(
+      /\.stage-object\.stack-visual #stack,[^{]*\{[^}]*pointer-events:\s*none/s
     );
-    const phone = css.lastIndexOf('pointer-events: none', css.length);
-    expect(base).toBeGreaterThan(-1);
-    expect(css.lastIndexOf('.aurora-page .object-sticky #stack')).toBeGreaterThan(base);
-    expect(phone).toBeGreaterThan(base);
+    expect(phoneTap).toMatch(/\.object-sticky #stack\s*\{[^}]*pointer-events:\s*none/s);
   });
 
-  it('paints the hero above the pinned stack (z-index 1) and lets only its controls take pointer events', () => {
-    const block = phoneTapBlock();
-    expect(block).toMatch(/\.hero\s*\{[^}]*position:\s*relative[^}]*z-index:\s*2/s);
-    expect(block).toMatch(/\.hero\s*\{[^}]*pointer-events:\s*none/s);
-    expect(block).toMatch(/\.hero a,[^{]*\.hero button\s*\{[^}]*pointer-events:\s*auto/s);
+  it('paints the hero above the pinned stack, which sits at z-index 1', () => {
+    expect(css).toMatch(/\.stage-object\.stack-visual\s*\{[^}]*z-index:\s*1[;\s]/s);
+    expect(phoneTap).toMatch(/\.hero\s*\{[^}]*position:\s*relative[^}]*z-index:\s*2/s);
   });
 
-  it('keeps the story cards tappable while the copy column passes events through', () => {
-    const block = phoneTapBlock();
-    expect(block).toMatch(/\.stage-copy\s*\{[^}]*pointer-events:\s*none/s);
-    expect(block).toMatch(/\.layer-step-inner\s*\{[^}]*pointer-events:\s*auto/s);
+  it('relies on the stage grid passing events through and re-enabling links and buttons', () => {
+    expect(stage).toMatch(/\.aurora-page \.stage-grid\s*\{[^}]*pointer-events:\s*none/s);
+    expect(stage).toMatch(
+      /\.stage-grid :is\(a, button, summary\)\s*\{[^}]*pointer-events:\s*auto/s
+    );
   });
 
-  it('leaves the desktop stack drag alone (the base rule is not inside a max-width block)', () => {
-    const base = css.indexOf('#stack:active');
-    const phone = css.lastIndexOf('@media (max-width: 960px)');
-    expect(base).toBeGreaterThan(-1);
-    expect(base).toBeLessThan(phone);
-    expect(css.slice(0, phone)).toMatch(/touch-action:\s*pan-y/);
+  it('keeps the tap rules out of the desktop widths', () => {
+    expect(css.slice(0, phoneTapStart)).toMatch(/touch-action:\s*pan-y/);
+    expect(phoneTap).not.toContain('min-width');
   });
 });
