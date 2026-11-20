@@ -94,6 +94,10 @@ describe('stripMachineIds: an id a label introduces goes with its label', () => 
     expect(stripMachineIds(text)).toBe(text);
     expect(stripMachineIds(`${text}\nDone ref ${ID}.`)).toBe(`${text}\nDone.`);
   });
+  it('does not end a quoted value at an escaped quote', () => {
+    const text = `Set name:"Customer \\"VIP\\" ref ${ID}"`;
+    expect(stripMachineIds(text)).toBe(text);
+  });
   it('removes a labelled id that follows a link in the same sentence', () => {
     expect(stripMachineIds(`See https://app.example.invalid/x then ref ${ID}.`)).toBe(
       'See https://app.example.invalid/x then.'

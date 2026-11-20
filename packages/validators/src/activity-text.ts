@@ -163,7 +163,8 @@ function insideQuotedValue(text: string): boolean {
   let open = '';
   for (let at = 0; at < line.length; at += 1) {
     const char = line.charAt(at);
-    if (char !== '"' && char !== "'") continue;
+    // An escaped quote (backslash before it) is part of the value, not a delimiter.
+    if ((char !== '"' && char !== "'") || line.charAt(at - 1) === '\\') continue;
     if (open === '') {
       const prev = line.charAt(at - 1);
       if (at === 0 || QUOTE_OPENS_AFTER.includes(prev)) open = char;
