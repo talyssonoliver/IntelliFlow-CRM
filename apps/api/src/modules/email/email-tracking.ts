@@ -69,21 +69,33 @@ function asciiLower(text: string): string {
   return text.replace(/[A-Z]/g, (char) => String.fromCharCode(char.charCodeAt(0) + 32));
 }
 
+/** The references HTML defines with exactly these spellings (a mixed-case "Amp" is not one). */
 const NAMED_ENTITIES: ReadonlyMap<string, string> = new Map([
   ['amp', '&'],
+  ['AMP', '&'],
   ['quot', '"'],
+  ['QUOT', '"'],
   ['apos', "'"],
   ['lt', '<'],
+  ['LT', '<'],
   ['gt', '>'],
+  ['GT', '>'],
 ]);
 
 function entityChar(name: string): string | null {
-  const named = NAMED_ENTITIES.get(name.toLowerCase());
+  const named = NAMED_ENTITIES.get(name);
   if (named !== undefined) return named;
   if (!name.startsWith('#')) return null;
   const hex = name.charAt(1) === 'x' || name.charAt(1) === 'X';
   const code = hex ? Number.parseInt(name.slice(2), 16) : Number.parseInt(name.slice(1), 10);
-  return Number.isInteger(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : null;
+  // Only code points a browser reads as written: not 0x80-0x9F (remapped to other characters), not controls,
+  // surrogates or noncharacters.
+  const plain =
+    (code >= 0x20 && code <= 0x7e) ||
+    (code >= 0xa0 && code <= 0xd7ff) ||
+    (code >= 0xe000 && code <= 0xfdcf) ||
+    (code >= 0xfdf0 && code <= 0xfffd);
+  return Number.isInteger(code) && plain ? String.fromCodePoint(code) : null;
 }
 
 function isReferenceChar(char: string): boolean {

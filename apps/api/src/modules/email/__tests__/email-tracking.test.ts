@@ -136,6 +136,8 @@ describe('instrumentHtml: tracked links verify exactly as the redirect reads the
     ['a numeric reference without its semicolon', 'https://shop.example.invalid/?q=&#65'],
     ['a hex reference without its semicolon', 'https://shop.example.invalid/?q=&#x41'],
     ['an impossible code point', 'https://shop.example.invalid/?q=&#0;'],
+    ['a code point a browser remaps (0x80)', 'https://shop.example.invalid/?q=&#128;'],
+    ['a mixed-case name HTML does not define', 'https://shop.example.invalid/?a=1&Amp;b=2'],
   ])('leaves a link as written when it holds %s', (_name, href) => {
     const html = `<a href="${href}">x</a>`;
     expect(instrumentHtml(html, RECORD, CLICKS, ENV)).toBe(html);
