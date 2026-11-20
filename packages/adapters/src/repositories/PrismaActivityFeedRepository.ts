@@ -377,6 +377,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       include: { opportunity: { select: { id: true, name: true } } },
     });
 
+    const names = await this.userNamesFor(rows);
+
     return rows.map((r) => ({
       id: `opp_${r.id}`,
       source: 'OPPORTUNITY_EVENT' as const,
@@ -384,7 +386,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       title: r.title,
       description: r.description,
       timestamp: r.timestamp,
-      actor: r.userId ? { id: r.userId, name: r.agentName || 'System' } : null,
+      actor: r.userId
+        ? { id: r.userId, name: r.agentName || names.get(r.userId) || 'System' }
+        : null,
       entity: r.opportunity
         ? { id: r.opportunity.id, type: 'OPPORTUNITY' as const, name: r.opportunity.name }
         : null,
@@ -742,6 +746,8 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       include: { opportunity: { select: { id: true, name: true } } },
     });
 
+    const names = await this.userNamesFor(rows);
+
     return rows.map((r) => ({
       id: `opp_${r.id}`,
       source: 'OPPORTUNITY_EVENT' as const,
@@ -749,7 +755,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       title: r.title,
       description: r.description,
       timestamp: r.timestamp,
-      actor: r.userId ? { id: r.userId, name: r.agentName || 'System' } : null,
+      actor: r.userId
+        ? { id: r.userId, name: r.agentName || names.get(r.userId) || 'System' }
+        : null,
       entity: r.opportunity
         ? { id: r.opportunity.id, type: 'OPPORTUNITY' as const, name: r.opportunity.name }
         : null,
@@ -758,6 +766,29 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
           ? { stageFrom: r.stageFrom, stageTo: r.stageTo, confidenceScore: r.confidenceScore }
           : null,
     }));
+  }
+
+  /**
+   * Display names for the people behind opportunity events (a stage move records who moved it).
+   * An agent's own name wins, so only rows without one are looked up; a failed lookup leaves the
+   * actor as "System" rather than hiding the entry.
+   */
+  private async userNamesFor(
+    rows: ReadonlyArray<{ userId: string | null; agentName: string | null }>
+  ): Promise<Map<string, string>> {
+    const ids = [...new Set(rows.filter((r) => r.userId && !r.agentName).map((r) => r.userId!))];
+    const names = new Map<string, string>();
+    if (ids.length === 0) return names;
+    try {
+      const users = await this.prisma.user.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, name: true },
+      });
+      for (const u of users) if (u.name) names.set(u.id, u.name);
+    } catch {
+      // keep "System": the feed still lists the entry
+    }
+    return names;
   }
 
   private async queryTicketActivities(

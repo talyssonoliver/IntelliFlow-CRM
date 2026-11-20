@@ -413,10 +413,9 @@ export default function DealDetailPage() {
         revalidateServerCaches(),
         utils.opportunity.getById.invalidate({ id: dealId }),
         // The move wrote a STAGE_CHANGE entry (#31): show it now, not at the feed's next poll.
-        utils.activityFeed.getEntityFeed.invalidate({
-          entityType: 'OPPORTUNITY',
-          entityId: dealId,
-        }),
+        // The deal's feed reads the unified query; the leads and contacts pages invalidate both.
+        utils.activityFeed.getUnifiedFeed.invalidate(),
+        utils.activityFeed.getEntityFeed.invalidate(),
       ]);
     },
     onError: (err) => {

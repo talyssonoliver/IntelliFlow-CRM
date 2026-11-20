@@ -16,6 +16,7 @@ const mockDeleteAsync = vi.fn().mockResolvedValue({ success: true, id: 'deal-123
 const mockInvalidate = vi.fn();
 const mockListInvalidate = vi.fn();
 const mockFeedInvalidate = vi.fn();
+const mockUnifiedFeedInvalidate = vi.fn();
 const mockToast = vi.fn();
 type CapturedMutationConfig = {
   onSuccess?: (...args: unknown[]) => unknown;
@@ -168,6 +169,7 @@ vi.mock('@/lib/api', () => ({
       },
       activityFeed: {
         getEntityFeed: { invalidate: mockFeedInvalidate },
+        getUnifiedFeed: { invalidate: mockUnifiedFeedInvalidate },
       },
     }),
   },
@@ -649,10 +651,9 @@ describe('DealDetailPage', () => {
       await act(async () => {
         await capturedMoveStageConfig.onSuccess?.({}, { targetStage: 'PROPOSAL' });
       });
-      expect(mockFeedInvalidate).toHaveBeenCalledWith({
-        entityType: 'OPPORTUNITY',
-        entityId: 'deal-123',
-      });
+      // The deal's feed reads getUnifiedFeed, so that is the one that must refetch.
+      expect(mockUnifiedFeedInvalidate).toHaveBeenCalled();
+      expect(mockFeedInvalidate).toHaveBeenCalled();
     });
 
     it('moveStage onError surfaces the already-closed message', async () => {
