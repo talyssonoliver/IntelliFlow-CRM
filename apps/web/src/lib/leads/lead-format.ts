@@ -283,6 +283,23 @@ export function leadActivityMetrics(activities: readonly Readonly<LeadMetricActi
   };
 }
 
+/**
+ * The card's counts with the CRM's email records folded in. The activity metadata and the records can
+ * describe the same mails, so each count takes the larger of the two rather than adding them: it never
+ * double counts, and opened never exceeds sent (each source already keeps opened within sent).
+ */
+export function mergeEmailEngagement<T extends { emailsSent: number; emailsOpened: number }>(
+  metrics: T,
+  records: { sent: number; opened: number } | null | undefined
+): T {
+  if (!records) return metrics;
+  return {
+    ...metrics,
+    emailsSent: Math.max(metrics.emailsSent, records.sent),
+    emailsOpened: Math.max(metrics.emailsOpened, records.opened),
+  };
+}
+
 /** The open rate of tracked sends, or "—" when there are none to measure. */
 export function openRateLabel(trackedSent: number, opened: number): string {
   if (trackedSent <= 0) return '—';
@@ -302,6 +319,13 @@ export function leadDisplayName(lead: Readonly<LeadNameParts>): string {
     .filter(Boolean)
     .join(' ');
   return personName || lead.company?.trim() || lead.email?.trim() || 'Unnamed lead';
+}
+
+/** True when two names are the same text ignoring case and runs of spaces (empty is never the same). */
+export function isSameName(a: string | null | undefined, b: string | null | undefined): boolean {
+  const norm = (s: string | null | undefined) =>
+    (s ?? '').trim().replace(/\s+/g, ' ').toLowerCase();
+  return norm(a) !== '' && norm(a) === norm(b);
 }
 
 /**
