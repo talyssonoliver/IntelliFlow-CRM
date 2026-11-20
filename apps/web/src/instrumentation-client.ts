@@ -1,3 +1,6 @@
+// First, before anything that builds a zod schema: stops zod's `new Function` probe, which a
+// Content-Security-Policy without unsafe-eval reports on every page load.
+import './lib/security/zod-jitless';
 import * as Sentry from '@sentry/nextjs';
 import { initSentry } from './lib/sentry/init';
 

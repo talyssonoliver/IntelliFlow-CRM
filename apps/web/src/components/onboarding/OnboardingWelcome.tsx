@@ -32,7 +32,10 @@
 
 import { useState, useEffect, useCallback, useRef, type SyntheticEvent } from 'react';
 import { usePathname } from 'next/navigation';
-import { loadStripe } from '@stripe/stripe-js';
+// `/pure`: this modal is mounted by the root layout on every page, and the main entry of
+// @stripe/stripe-js injects js.stripe.com as a side effect of being imported. With `/pure` the
+// script is requested only when loadStripe() runs, at the payment step.
+import { loadStripe } from '@stripe/stripe-js/pure';
 import {
   Elements,
   CardNumberElement,
