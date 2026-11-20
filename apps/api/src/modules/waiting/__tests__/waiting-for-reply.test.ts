@@ -495,6 +495,26 @@ describe('loadWaiting', () => {
 });
 
 describe('names', () => {
+  it('names a lead with no person name by its company before its email (#45)', async () => {
+    const t = tables();
+    t.leads = [
+      {
+        ...leadRow('lead-a', 't1'),
+        firstName: null,
+        lastName: null,
+        company: ' West London Handyman Ltd ',
+      } as never,
+    ];
+    t.emails = [];
+    const items = await loadWaiting(
+      fakeDb(t),
+      't1',
+      { tenantId: 't1' },
+      { tenantId: 't1', id: { in: [] } }
+    );
+    expect(items[0]?.name).toBe('West London Handyman Ltd');
+  });
+
   it('falls back to the email when a lead has no name', async () => {
     const t = tables();
     t.leads = [{ ...leadRow('lead-a', 't1'), firstName: null, lastName: null } as never];

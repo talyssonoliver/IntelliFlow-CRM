@@ -127,6 +127,31 @@ export interface FullSyncWindow {
   timeMax?: Date;
 }
 
+/** Google's refusals that mean "too many requests": wait and try again, do not treat as an error of the item. */
+const RATE_LIMIT_REASONS = [
+  'rateLimitExceeded',
+  'userRateLimitExceeded',
+  'quotaExceeded',
+  'dailyLimitExceeded',
+];
+
+const DAY_MS = 86_400_000;
+
+/** start and end for a PATCH: dates for whole days from midnight to midnight (UTC), else the instants. */
+function patchTimes(appointment: CalendarAppointmentLike) {
+  const start = appointment.startTime;
+  const end = appointment.endTime;
+  const wholeDays =
+    start.getTime() % DAY_MS === 0 &&
+    end.getTime() % DAY_MS === 0 &&
+    end.getTime() > start.getTime();
+  const point = (d: Date) =>
+    wholeDays
+      ? { date: d.toISOString().slice(0, 10), dateTime: null }
+      : { dateTime: d.toISOString(), date: null };
+  return { start: point(start), end: point(end) };
+}
+
 /**
  * Google Calendar Service Adapter
  */
@@ -459,11 +484,11 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
       description: appointment.description ?? null,
       location: appointment.location ?? null,
       // The instant only: no timeZone, so a recurring event keeps the zone its repeats are
-      // expanded in (daylight saving), and date: null clears an all-day event's date, which
-      // PATCH would otherwise merge with the new dateTime.
-      start: { dateTime: appointment.startTime.toISOString(), date: null },
-      end: { dateTime: appointment.endTime.toISOString(), date: null },
-      status: appointment.isCancelled ? 'cancelled' : 'confirmed',
+      // expanded in (daylight saving), and the other of date / dateTime is cleared, which PATCH
+      // would otherwise merge. Whole days from midnight to midnight stay an all-day event.
+      ...patchTimes(appointment),
+      // Only a cancellation sets the status: confirming would bring back an event deleted in Google.
+      ...(appointment.isCancelled ? { status: 'cancelled' } : {}),
     });
   }
 
@@ -1110,7 +1135,8 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
         return Result.fail(new CalendarAuthenticationError('google', 'Token expired or invalid'));
       case 403: {
         const reason = error.error?.errors?.[0]?.reason;
-        if (reason === 'rateLimitExceeded') {
+        // Google's rate and quota refusals (per user, per project, daily) all mean: slow down.
+        if (RATE_LIMIT_REASONS.includes(reason)) {
           return Result.fail(new CalendarRateLimitError('google', 60));
         }
         if (reason === 'insufficientPermissions') {

@@ -17,7 +17,7 @@ const toneClass: Record<FollowUpTone, string> = {
 };
 
 /**
- * "Follow-ups due" on the dashboard's Upcoming Tasks card (MVP-010): the contacted leads that are
+ * "Follow-ups due" on the dashboard's Upcoming Tasks card (MVP-010) and the Tasks page: the contacted leads that are
  * due or overdue for a follow-up, each linking to the lead page where the owner acts, and a link
  * to the full "Needs Follow-up" view when there are more than the card lists.
  */

@@ -75,6 +75,7 @@
     "test:db:run": "node scripts/test-db.mjs run",
     "test:db:up": "node scripts/test-db.mjs up",
     "test:db:down": "node scripts/test-db.mjs down",
+    "db:drift": "node scripts/test-db.mjs run -- pnpm --filter @intelliflow/db db:drift",
     "db:reset": "pnpm --filter @intelliflow/db db:reset",
     "db:push": "pnpm --filter @intelliflow/db db:push",
     "clean": "turbo run clean && rm -rf node_modules",

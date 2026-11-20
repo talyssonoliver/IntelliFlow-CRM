@@ -48,12 +48,24 @@ export function DealStageProgress({
   stage,
   probability,
   onAddValue,
+  onSelectStage,
+  allowedStages,
+  moving = false,
 }: Readonly<{
   value: number;
   stage: OpportunityStage;
   probability: number;
   /** Opens the edit form; shown as "Add value" while the value is not known yet (0). */
   onAddValue?: () => void;
+  /**
+   * Makes the stage labels buttons that ask to move the deal to that stage (the page confirms
+   * first). Not passed for a closed deal, whose labels stay plain text.
+   */
+  onSelectStage?: (stage: OpportunityStage) => void;
+  /** The stages the deal may move to from here (the API accepts only these); the rest are disabled. */
+  allowedStages?: readonly OpportunityStage[];
+  /** A move is in flight: no stage can be started until it settles. */
+  moving?: boolean;
 }>) {
   const isClosed = stage === 'CLOSED_WON' || stage === 'CLOSED_LOST';
   const stageIndex = isClosed ? ACTIVE_STAGES.length - 1 : ACTIVE_STAGES.indexOf(stage);
@@ -90,7 +102,6 @@ export function DealStageProgress({
           </p>
         </div>
       </div>
-
       {/* Progress Bar */}
       <div className="relative w-full h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
         <div
@@ -107,15 +118,50 @@ export function DealStageProgress({
           ))}
         </div>
       </div>
-
-      {/* Stage Labels */}
-      <div className="flex justify-between mt-2 text-xs font-medium text-slate-500 px-1">
-        {ACTIVE_STAGES.map((s, index) => (
-          <span key={s} className={index <= stageIndex || isClosed ? 'text-primary' : ''}>
-            {STAGE_LABELS[s]}
-          </span>
-        ))}
-      </div>
+      {/* Stage labels: buttons when the deal can be moved. They wrap on a phone, each a full tap target. */}
+      <fieldset
+        aria-label={onSelectStage ? 'Move this deal to a stage' : undefined}
+        className="m-0 mt-3 flex min-w-0 flex-wrap gap-2 border-0 p-0 text-xs font-medium sm:mt-2 sm:flex-nowrap sm:justify-between sm:gap-1"
+      >
+        {ACTIVE_STAGES.map((s, index) => {
+          const reached = index <= stageIndex || isClosed;
+          const tone = reached ? 'text-primary' : 'text-slate-500';
+          if (!onSelectStage) {
+            return (
+              <span key={s} className={tone}>
+                {STAGE_LABELS[s]}
+              </span>
+            );
+          }
+          const current = s === stage;
+          // A deal moves one step at a time: a stage the API would refuse is shown but not offered.
+          const allowed = !allowedStages || allowedStages.includes(s);
+          return (
+            <button
+              key={s}
+              type="button"
+              disabled={current || moving || !allowed}
+              aria-current={current ? 'step' : undefined}
+              title={!current && !allowed ? 'A deal moves one stage at a time' : undefined}
+              onClick={() => onSelectStage(s)}
+              className={`min-h-11 rounded-lg border px-3 transition-colors disabled:cursor-not-allowed sm:px-2 ${tone} ${
+                current
+                  ? 'border-primary bg-primary/10 font-semibold'
+                  : 'border-slate-200 hover:bg-slate-100 disabled:opacity-50 disabled:hover:bg-transparent dark:border-slate-700 dark:hover:bg-slate-800'
+              }`}
+            >
+              {STAGE_LABELS[s]}
+            </button>
+          );
+        })}
+      </fieldset>
     </Card>
   );
+}
+
+/** The toast after a stage move: Won and Lost keep their wording, any other stage is named. */
+export function stageMoveToastTitle(target: OpportunityStage): string {
+  if (target === 'CLOSED_WON') return 'Deal marked as Won';
+  if (target === 'CLOSED_LOST') return 'Deal marked as Lost';
+  return `Moved to ${STAGE_LABELS[target]}`;
 }

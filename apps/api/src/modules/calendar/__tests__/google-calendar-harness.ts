@@ -161,7 +161,7 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
       }
       if (args.orderBy?.id === 'asc') rows = [...rows].sort((a, b) => (a.id < b.id ? -1 : 1));
       // Copies, as a database returns: a row read earlier does not change when another writer does.
-      const page = args.take ? rows.slice(0, args.take) : rows;
+      const page = args.take === undefined ? rows : rows.slice(0, args.take);
       return page.map((r) => ({
         ...r,
         ...(args.include?.appointment
@@ -379,7 +379,8 @@ export class FakeGoogle implements CalendarGateway {
     this.log.push(`patchEvent:${id}`);
     const failure = this.failure('patchEvent');
     if (failure) return Result.fail<ExternalCalendarEvent, DomainError>(failure);
-    const event = this.put(id, this.fieldsOf(appointment));
+    // As Google does for a PATCH of a deleted event: the event comes back.
+    const event = this.put(id, { ...this.fieldsOf(appointment), status: 'confirmed' });
     return Result.ok<ExternalCalendarEvent, DomainError>(this.external(event));
   }
 

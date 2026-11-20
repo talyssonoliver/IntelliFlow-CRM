@@ -12,22 +12,14 @@ import {
   AccountId,
   ContactId,
   CreateOpportunityProps,
+  STAGE_TRANSITION_RULES,
 } from '@intelliflow/domain';
 import { EventBusPort } from '../ports/external';
 import { PersistenceError, ValidationError, NotFoundError } from '../errors';
 
-/**
- * Stage transition rules - defines valid transitions between stages
- */
-export const STAGE_TRANSITION_RULES: Record<OpportunityStage, OpportunityStage[]> = {
-  PROSPECTING: ['QUALIFICATION', 'CLOSED_LOST'],
-  QUALIFICATION: ['NEEDS_ANALYSIS', 'PROSPECTING', 'CLOSED_LOST'],
-  NEEDS_ANALYSIS: ['PROPOSAL', 'QUALIFICATION', 'CLOSED_LOST'],
-  PROPOSAL: ['NEGOTIATION', 'NEEDS_ANALYSIS', 'CLOSED_LOST'],
-  NEGOTIATION: ['CLOSED_WON', 'CLOSED_LOST', 'PROPOSAL'],
-  CLOSED_WON: [], // Terminal state
-  CLOSED_LOST: ['PROSPECTING'], // Can reopen
-};
+// The stage transition rules live in the domain package (with the stages); re-exported for callers
+// that import them from here.
+export { STAGE_TRANSITION_RULES };
 
 /**
  * Default probabilities for each stage

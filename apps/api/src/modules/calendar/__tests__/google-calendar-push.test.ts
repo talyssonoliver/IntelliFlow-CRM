@@ -18,8 +18,9 @@ vi.mock('../../email/mailbox-transport', () => ({
   oauthClientEnvNames: () => ['EMAIL_OAUTH_GOOGLE_CLIENT_ID'],
 }));
 import { runCalendarSync } from '../google-calendar-sync';
-import { eventIdFor } from '../google-calendar-push';
-import { CalendarEventNotFoundError } from '@intelliflow/application';
+import { eventIdFor, pushChanges } from '../google-calendar-push';
+import { CalendarEventNotFoundError, CalendarRateLimitError } from '@intelliflow/application';
+import { newReport } from '../google-calendar-links';
 import { Result } from '@intelliflow/domain';
 import {
   FakeGoogle,
@@ -504,6 +505,173 @@ describe('Aurora to Google: what is never written, and a backlog', () => {
     for (let round = 0; round < 5; round++) patched += (await h.nextRound(sync)).pushedUpdated;
 
     expect(patched).toBe(130);
+  });
+});
+describe('Aurora to Google: the scan of edited appointments', () => {
+  it('writes the edits it has found even when the round’s time runs out while it scans on', async () => {
+    let t = NOW;
+    const rows = Array.from({ length: 150 }, (_, n) =>
+      appointmentRow({ id: `a-${String(n).padStart(3, '0')}`, title: `Visit ${n}` })
+    );
+    const sync = h.setup({ appointment: rows }, () => t);
+    await runCalendarSync(sync);
+    await (async () => {
+      t = new Date(NOW.getTime() + 10 * 60_000);
+      await runCalendarSync(sync);
+      t = new Date(NOW.getTime() + 20 * 60_000);
+      await runCalendarSync(sync);
+    })();
+    // The first of 150 links is edited; the time runs out when the next page of links is read.
+    Object.assign(h.appointments()[0], {
+      title: 'Edited',
+      updatedAt: new Date(NOW.getTime() + 3_600_000),
+    });
+    const find = h.db.calendarEventLink.findMany.getMockImplementation() as (
+      a: unknown
+    ) => Promise<unknown>;
+    let pages = 0;
+    h.db.calendarEventLink.findMany.mockImplementation(async (args: any) => {
+      if (args.where?.pending === false && ++pages === 2)
+        t = new Date(NOW.getTime() + 6 * 3_600_000);
+      return find(args);
+    });
+    t = new Date(NOW.getTime() + 2 * 3_600_000);
+
+    const report = await runCalendarSync(sync);
+
+    expect(report.pushedUpdated).toBe(1);
+  });
+});
+describe('Aurora to Google: review cases', () => {
+  const settled = async () => {
+    const sync = h.setup({ appointment: [appointmentRow()] });
+    await runCalendarSync(sync);
+    return sync;
+  };
+
+  it('never creates the event of a pending link whose appointment was cancelled and then restored', async () => {
+    const sync = h.setup({ appointment: [appointmentRow()] });
+    h.google.failNext.set('createEvent', refusal());
+    await runCalendarSync(sync);
+    h.appointments()[0].status = 'CANCELLED';
+    h.links()[0].nextPushAt = null;
+    await h.nextRound(sync);
+    expect(h.links()[0]).toMatchObject({ pending: false });
+    expect(h.links()[0].remoteCancelledAt).not.toBeNull();
+    h.appointments()[0].status = 'SCHEDULED';
+    h.google.log.length = 0;
+
+    await h.nextRound(sync);
+
+    expect(h.google.log.some((l) => l.startsWith('createEvent'))).toBe(false);
+    expect(h.links()[0].remoteCancelledAt).not.toBeNull();
+  });
+
+  it('takes the event down when its appointment is reassigned to someone else', async () => {
+    const sync = await settled();
+    Object.assign(h.appointments()[0], {
+      organizerId: 'user-2',
+      updatedAt: new Date(NOW.getTime() + 60_000),
+    });
+
+    const report = await h.nextRound(sync);
+
+    expect(report.pushedDeleted).toBe(1);
+    expect(h.google.events.get(eventIdFor('mbx-1', 'appt-1'))?.status).toBe('cancelled');
+    expect(h.links()[0].remoteCancelledAt).not.toBeNull();
+  });
+
+  it('writes an edit made while its item waits after a failure, without waiting out the backoff', async () => {
+    const sync = await settled();
+    Object.assign(h.appointments()[0], {
+      title: 'First edit',
+      updatedAt: new Date(NOW.getTime() + 60_000),
+    });
+    h.google.failNext.set('patchEvent', refusal());
+    await h.nextRound(sync);
+    expect(h.links()[0].nextPushAt).not.toBeNull();
+    // Edited again after the failure: not held back by the wait.
+    Object.assign(h.appointments()[0], {
+      title: 'Second edit',
+      updatedAt: new Date(NOW.getTime() + 3_600_000),
+    });
+
+    const report = await h.nextRound(sync);
+
+    expect(report.pushedUpdated).toBe(1);
+    expect(h.google.events.get(eventIdFor('mbx-1', 'appt-1'))?.title).toBe('Second edit');
+  });
+
+  it('does not patch while the pull has not finished, and does once it has', async () => {
+    const sync = await settled();
+    Object.assign(h.appointments()[0], {
+      title: 'Edited',
+      updatedAt: new Date(NOW.getTime() + 60_000),
+    });
+    const ctx: any = {
+      prisma: sync.prisma,
+      gateway: h.google,
+      tokens: {},
+      mailbox: { id: 'mbx-1', tenantId: TENANT, userId: 'user-1' },
+      now: new Date(NOW.getTime() + 10 * 60_000),
+      hasTime: () => true,
+      report: newReport(),
+      failed: new Map(),
+    };
+
+    const held = await pushChanges(ctx, { patch: false });
+    expect(held.complete).toBe(false);
+    expect(ctx.report.pushedUpdated).toBe(0);
+
+    await pushChanges(ctx, { patch: true });
+    expect(ctx.report.pushedUpdated).toBe(1);
+  });
+
+  it('adopts a newer edit made in Google when a create finds its event with other content', async () => {
+    const id = eventIdFor('mbx-1', 'appt-1');
+    const sync = h.setup({
+      appointment: [appointmentRow({ title: 'Aurora title' })],
+      calendarEventLink: [
+        {
+          id: 'link-1',
+          tenantId: TENANT,
+          mailboxId: 'mbx-1',
+          appointmentId: 'appt-1',
+          googleEventId: id,
+          origin: 'AURORA',
+          pending: true,
+          pushAttempts: 0,
+          nextPushAt: null,
+          etag: null,
+          localSyncedAt: null,
+          remoteUpdatedAt: null,
+          remoteCancelledAt: null,
+        },
+      ],
+    });
+    h.google.now = new Date(NOW.getTime() + 3_600_000);
+    h.google.put(id, { title: 'Google title' });
+
+    await runCalendarSync(sync);
+
+    expect(h.appointments()[0].title).toBe('Google title');
+    expect(h.links()[0].localSyncedAt).not.toBeNull();
+    expect(h.google.log.some((l) => l.startsWith('patchEvent'))).toBe(false);
+  });
+
+  it('ends the round on Google’s rate limit, keeping the pull’s token and waiting as long as asked', async () => {
+    const sync = h.setup({ appointment: [appointmentRow()] });
+    h.google.failNext.set('createEvent', new CalendarRateLimitError('google', 3600));
+
+    const report = await runCalendarSync(sync);
+
+    expect(report.failures).toBe(1);
+    expect(h.mailbox().calendarSyncToken).not.toBeNull();
+    expect(h.mailbox().calendarNextSyncAt.getTime()).toBeGreaterThanOrEqual(
+      NOW.getTime() + 3600_000
+    );
+    // A rate limit is not the item's failure.
+    expect(h.links()[0].pushAttempts).toBe(0);
   });
 });
 describe('two tenants', () => {

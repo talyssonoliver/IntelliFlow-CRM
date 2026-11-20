@@ -23,7 +23,12 @@ import {
   CalendarRateLimitError,
 } from '@intelliflow/application';
 import { errorCause } from '../email/mail-sync-report';
-import { ACTIVE_STATUSES, prismaCode, type SyncContext } from './google-calendar-links';
+import {
+  ACTIVE_STATUSES,
+  appointmentFields,
+  prismaCode,
+  type SyncContext,
+} from './google-calendar-links';
 
 /** An appointment that ended longer ago than this is left alone: the sync is for what is coming up. */
 export const PAST_GRACE_MS = 24 * 60 * 60_000;
@@ -104,11 +109,21 @@ function must<T>(result: { isFailure: boolean; error?: unknown; value?: T }): T 
   return result.value as T;
 }
 
-export async function pushChanges(ctx: SyncContext): Promise<PushResult> {
+/**
+ * Writes Aurora's changes to Google. The patch step runs only when the pull finished: a patch could
+ * otherwise reach an event the user deleted in Google that the pull has not heard of yet.
+ */
+export async function pushChanges(
+  ctx: SyncContext,
+  options: { patch: boolean } = { patch: true }
+): Promise<PushResult> {
   const cutoff = new Date(ctx.now.getTime() - PAST_GRACE_MS);
   let budget = MAX_WRITES;
-  let complete = true;
-  for (const step of [removeEvents, createEvents, patchEvents]) {
+  let complete = options.patch;
+  const steps = options.patch
+    ? [removeEvents, createEvents, patchEvents]
+    : [removeEvents, createEvents];
+  for (const step of steps) {
     if (budget <= 0 || !ctx.hasTime()) {
       complete = false;
       break;
@@ -119,52 +134,95 @@ export async function pushChanges(ctx: SyncContext): Promise<PushResult> {
   }
   return { complete };
 }
-
 interface StepResult {
   writes: number;
   complete: boolean;
 }
 
-/** Events to take down: a cancelled or deleted appointment's event, when Aurora made that event. */
-async function removeEvents(ctx: SyncContext, _cutoff: Date, budget: number): Promise<StepResult> {
+/** May this link be written to now? Not while it waits after a failure, unless its appointment was edited since. */
+function eligible(ctx: SyncContext, link: any): boolean {
+  if (!link.nextPushAt || link.nextPushAt.getTime() <= ctx.now.getTime()) return true;
+  const edited = link.appointment?.updatedAt?.getTime() ?? 0;
+  return edited > (link.updatedAt?.getTime() ?? 0);
+}
+
+/**
+ * Pages the mailbox's links that match `where` by id and runs `work` on each one `wants` and that is
+ * eligible, as it is found: a scan cannot use up the round's time before anything is written, and a
+ * backlog is not hidden behind rows already in step. A failing item is remembered on its link (it waits,
+ * later each time) and the round goes on.
+ */
+async function scanLinks(
+  ctx: SyncContext,
+  where: object,
+  budget: number,
+  wants: (link: any) => boolean,
+  work: (link: any) => Promise<void>
+): Promise<StepResult> {
   const { tenantId, id: mailboxId } = ctx.mailbox;
-  const links: any[] = await ctx.prisma.calendarEventLink.findMany({
-    where: {
-      tenantId,
-      mailboxId,
-      origin: 'AURORA',
-      remoteCancelledAt: null,
-      OR: [{ appointmentId: null }, { appointment: { status: 'CANCELLED' } }],
-      AND: [due(ctx)],
-    },
-    orderBy: { id: 'asc' },
-    take: budget,
-  });
-  for (const link of links) {
-    if (!ctx.hasTime()) return { writes: 0, complete: false };
-    await item(ctx, link.id, async () => {
-      try {
-        must(await ctx.gateway.deleteEvent(ctx.tokens, link.googleEventId));
-      } catch (error) {
-        await failedAttempt(ctx, link, error);
-        throw error;
-      }
+  let writes = 0;
+  let after = '';
+  for (;;) {
+    const page: any[] = await ctx.prisma.calendarEventLink.findMany({
+      where: { tenantId, mailboxId, id: { gt: after }, ...where },
+      include: { appointment: true },
+      orderBy: { id: 'asc' },
+      take: LINKS_PAGE,
+    });
+    if (page.length === 0) return { writes, complete: true };
+    after = page[page.length - 1].id;
+    for (const link of page.filter((l) => wants(l) && eligible(ctx, l))) {
+      if (writes >= budget || !ctx.hasTime()) return { writes, complete: false };
+      writes += 1;
+      await item(ctx, link.id, async () => {
+        try {
+          await work(link);
+        } catch (error) {
+          await failedAttempt(ctx, link, error);
+          throw error;
+        }
+      });
+    }
+    if (!ctx.hasTime()) return { writes, complete: false };
+  }
+}
+
+/**
+ * Events to take down: the event of an appointment that was cancelled or deleted, or is no longer the
+ * mailbox user's (reassigned), when Aurora made that event.
+ */
+async function removeEvents(ctx: SyncContext, _cutoff: Date, budget: number): Promise<StepResult> {
+  const { tenantId, userId } = ctx.mailbox;
+  const where = {
+    origin: 'AURORA',
+    remoteCancelledAt: null,
+    OR: [
+      { appointmentId: null },
+      { appointment: { status: 'CANCELLED' } },
+      { appointment: { organizerId: { not: userId } } },
+    ],
+  };
+  return scanLinks(
+    ctx,
+    where,
+    budget,
+    () => true,
+    async (link) => {
+      must(await ctx.gateway.deleteEvent(ctx.tokens, link.googleEventId));
       // Its appointment is gone: nothing left to track. Otherwise keep the link, marked, so the
-      // event is never made again.
+      // event is never made again (and a create that never finished is not finished later).
       if (link.appointmentId === null) {
         await ctx.prisma.calendarEventLink.delete({ where: { id: link.id, tenantId } });
       } else {
         await ctx.prisma.calendarEventLink.update({
           where: { id: link.id, tenantId },
-          data: { remoteCancelledAt: ctx.now },
+          data: { remoteCancelledAt: ctx.now, pending: false },
         });
       }
       ctx.report.pushedDeleted += 1;
-    });
-  }
-  return { writes: links.length, complete: links.length < budget };
+    }
+  );
 }
-
 /** Items not waiting after a failure. */
 function due(ctx: SyncContext) {
   return { OR: [{ nextPushAt: null }, { nextPushAt: { lte: ctx.now } }] };
@@ -207,7 +265,14 @@ async function createEvents(ctx: SyncContext, cutoff: Date, budget: number): Pro
     endTime: { gte: cutoff },
   };
   const pending: any[] = await ctx.prisma.calendarEventLink.findMany({
-    where: { tenantId, mailboxId, pending: true, ...due(ctx), appointment: live },
+    where: {
+      tenantId,
+      mailboxId,
+      pending: true,
+      remoteCancelledAt: null,
+      ...due(ctx),
+      appointment: live,
+    },
     include: { appointment: true },
     orderBy: { id: 'asc' },
     take: budget,
@@ -271,7 +336,7 @@ async function makeEvent(ctx: SyncContext, link: any, row: any): Promise<void> {
       pending: false,
       etag: event.etag ?? null,
       remoteUpdatedAt: event.lastModified,
-      remoteCancelledAt: gone ? ctx.now : null,
+      ...(gone ? { remoteCancelledAt: ctx.now } : {}),
       localSyncedAt: sameContent(event, row) ? row.updatedAt : null,
       pushAttempts: 0,
       nextPushAt: null,
@@ -289,6 +354,23 @@ async function makeEvent(ctx: SyncContext, link: any, row: any): Promise<void> {
           },
         });
       }
+      // The event is there with other content (the appointment was edited, or the user edited the event,
+      // between the tries): the newer wins, as in the pull. Google's newer edit is adopted; otherwise the
+      // next patch sends Aurora's.
+      if (
+        !gone &&
+        !sameContent(event, row) &&
+        event.lastModified.getTime() > row.updatedAt.getTime()
+      ) {
+        const adopted = await tx.appointment.updateMany({
+          where: { id: row.id, tenantId, updatedAt: row.updatedAt },
+          data: appointmentFields(event),
+        });
+        if (adopted.count > 0) {
+          const fresh = await tx.appointment.findFirst({ where: { id: row.id, tenantId } });
+          settled.localSyncedAt = fresh.updatedAt;
+        }
+      }
       await tx.calendarEventLink.update({ where: { id: link.id, tenantId }, data: settled });
     });
     if (gone) ctx.report.cancelled += 1;
@@ -298,68 +380,28 @@ async function makeEvent(ctx: SyncContext, link: any, row: any): Promise<void> {
     throw error;
   }
 }
-/**
- * Links of live, upcoming appointments of the user that were edited in Aurora since they were last
- * synced. Paged by link id until the write budget is covered or the links run out, so a backlog is
- * not hidden behind rows that are already in step.
- */
-async function changedLinks(
-  ctx: SyncContext,
-  cutoff: Date,
-  budget: number
-): Promise<{ changed: any[]; exhausted: boolean }> {
-  const { tenantId, id: mailboxId, userId } = ctx.mailbox;
-  const changed: any[] = [];
-  let after = '';
-  for (;;) {
-    const page: any[] = await ctx.prisma.calendarEventLink.findMany({
-      where: {
-        tenantId,
-        mailboxId,
-        remoteCancelledAt: null,
-        pending: false,
-        ...due(ctx),
-        id: { gt: after },
-        appointment: {
-          tenantId,
-          organizerId: userId,
-          status: { in: [...ACTIVE_STATUSES] },
-          endTime: { gte: cutoff },
-        },
-      },
-      include: { appointment: true },
-      orderBy: { id: 'asc' },
-      take: LINKS_PAGE,
-    });
-    if (page.length === 0) return { changed, exhausted: true };
-    after = page[page.length - 1].id;
-    for (const link of page) {
-      const edited =
-        link.localSyncedAt === null ||
-        link.appointment.updatedAt.getTime() > link.localSyncedAt.getTime();
-      if (edited) changed.push(link);
-    }
-    if (changed.length > budget || !ctx.hasTime()) return { changed, exhausted: false };
-  }
+/** A link whose appointment was edited in Aurora since the last sync. */
+function isEdited(link: any): boolean {
+  return (
+    link.localSyncedAt === null ||
+    link.appointment.updatedAt.getTime() > link.localSyncedAt.getTime()
+  );
 }
 
-/** Events to change: linked live appointments edited in Aurora since they were last synced. */
+/** Events to change: linked live appointments of the user edited in Aurora since they were last synced. */
 async function patchEvents(ctx: SyncContext, cutoff: Date, budget: number): Promise<StepResult> {
-  const { changed, exhausted } = await changedLinks(ctx, cutoff, budget);
-  let writes = 0;
-  for (const link of changed.slice(0, budget)) {
-    if (!ctx.hasTime()) return { writes, complete: false };
-    writes += 1;
-    await item(ctx, link.id, async () => {
-      try {
-        await patchOne(ctx, link);
-      } catch (error) {
-        await failedAttempt(ctx, link, error);
-        throw error;
-      }
-    });
-  }
-  return { writes, complete: exhausted && changed.length <= budget };
+  const { tenantId, userId } = ctx.mailbox;
+  const where = {
+    remoteCancelledAt: null,
+    pending: false,
+    appointment: {
+      tenantId,
+      organizerId: userId,
+      status: { in: [...ACTIVE_STATUSES] },
+      endTime: { gte: cutoff },
+    },
+  };
+  return scanLinks(ctx, where, budget, isEdited, (link) => patchOne(ctx, link));
 }
 async function patchOne(ctx: SyncContext, link: any): Promise<void> {
   const appointment = link.appointment;

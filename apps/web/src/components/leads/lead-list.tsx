@@ -21,7 +21,7 @@ import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { invalidateLeadsCache } from '@/app/leads/(list)/actions';
 import { revalidateLeadCaches, revalidateLeadConversionCaches } from '@/app/leads/actions';
 import type { Lead } from '@/lib/leads/lead-types';
-import { leadDisplayName } from '@/lib/leads/lead-format';
+import { leadDisplayName, leadListSubtitle } from '@/lib/leads/lead-format';
 import { LeadAvatar } from '@/components/leads/LeadAvatar';
 import { LeadScoreBadge } from '@/components/leads/LeadScoreBadge';
 import { LeadCardList } from '@/components/leads/LeadCardList';
@@ -83,7 +83,7 @@ function createColumns(
                 {leadDisplayName(lead)}
               </span>
               <span className="text-xs text-slate-500 dark:text-slate-400">
-                {lead.title ? `${lead.title} @ ${lead.company}` : lead.company}
+                {leadListSubtitle(lead)}
               </span>
             </div>
           </div>

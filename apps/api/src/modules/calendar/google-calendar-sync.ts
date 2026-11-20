@@ -191,7 +191,7 @@ async function syncMailbox(
       const ctx = roundContext(deps, mailbox, accessToken, now, report, deadline);
       const pulled = await pullChanges(ctx, mailbox.calendarSyncToken);
       progress.calendarSyncToken = pulled.syncToken;
-      return { pulled, pushed: await pushChanges(ctx) };
+      return { pulled, pushed: await pushChanges(ctx, { patch: pulled.complete }) };
     };
     let done: { pulled: PullResult; pushed: PushResult };
     try {

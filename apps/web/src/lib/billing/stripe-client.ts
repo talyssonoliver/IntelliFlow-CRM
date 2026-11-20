@@ -7,7 +7,10 @@
  * Returns null if NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY is not set.
  */
 
-import { loadStripe, type Stripe } from '@stripe/stripe-js';
+// `/pure`: loads Stripe.js only when loadStripe() is called (the checkout step), never on import.
+// The main entry injects js.stripe.com as a side effect of being imported.
+import { loadStripe } from '@stripe/stripe-js/pure';
+import type { Stripe } from '@stripe/stripe-js';
 
 const key = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 
