@@ -189,6 +189,11 @@ export async function getOAuthAccessToken(
   return (await getOAuthAccess(prisma, mailbox, transports, now)).accessToken;
 }
 
+/** Drops a cached access token, so the next request mints a fresh one (a 401 on a token that may just have run out). */
+export function forgetAccessToken(mailboxId: string): void {
+  accessTokens.delete(mailboxId);
+}
+
 /**
  * The access token and the credential version it belongs to: a rotation moves
  * the version on. A rotation that finds the credentials changed meanwhile

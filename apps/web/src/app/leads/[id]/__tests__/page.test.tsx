@@ -133,6 +133,10 @@ vi.mock('@/lib/auth/AuthContext', () => ({
   }),
 }));
 
+const mockEmailEngagement = vi.hoisted(() => ({
+  current: undefined as { sent: number; opened: number } | undefined,
+}));
+
 vi.mock('@/lib/api', () => ({
   api: {
     useUtils: () => ({
@@ -210,6 +214,12 @@ vi.mock('@/lib/api', () => ({
             isPending: mockLogActivityState.isPending,
           };
         },
+      },
+    },
+    // The profile card's open rate also reads the CRM's own email records for the lead.
+    emailLog: {
+      engagementForLead: {
+        useQuery: () => ({ data: mockEmailEngagement.current }),
       },
     },
     home: {
@@ -1295,11 +1305,13 @@ describe('LeadDetailPage - display name fallback (UI-016)', () => {
   });
 
   describe('phone header (MVP-003)', () => {
-    it('shows the name once on a phone: the page title is for screen readers only there', () => {
+    it('shows the lead name as the visible page title on a phone, on one line', () => {
       render(<Lead360Page />);
       const title = screen.getByRole('heading', { level: 1 });
       expect(title).toHaveTextContent('John Doe');
-      expect(title).toHaveClass('sr-only', 'sm:not-sr-only');
+      // Not screen-reader only: a phone shows the name (it was blank there, MVP-012).
+      expect(title).not.toHaveClass('sr-only');
+      expect(title).toHaveClass('truncate');
     });
 
     it('labels the actions "Convert to deal" and "Log call"', () => {
@@ -1312,12 +1324,34 @@ describe('LeadDetailPage - display name fallback (UI-016)', () => {
       ).toBeGreaterThan(0);
     });
 
-    it('moves Edit and Pin under More on a phone', () => {
+    it('keeps only Log call and the three dots in the header on a phone', () => {
       render(<Lead360Page />);
-      expect(screen.getByRole('button', { name: 'Edit lead' })).toHaveClass('hidden', 'sm:flex');
-      const edit = mockActionSheetActions.current.find((a) => a.label === 'Edit');
-      expect(edit).toBeDefined();
-      edit?.onClick();
+      // Log call and More actions are not inside anything hidden below sm...
+      for (const name of [/log call/i, /more actions/i]) {
+        expect(screen.getByRole('button', { name }).closest('.hidden')).toBeNull();
+      }
+      // ...while Qualify, Convert to deal and Edit sit in a wrapper that is hidden below sm.
+      for (const name of [/qualify lead/i, 'Convert to deal', 'Edit lead']) {
+        const wrapper = screen.getByRole('button', { name }).closest('.hidden');
+        expect(wrapper).not.toBeNull();
+        expect(wrapper).toHaveClass('sm:contents');
+      }
+    });
+
+    it('moves Qualify, Convert to deal, Edit and the rest into the three-dots sheet', () => {
+      render(<Lead360Page />);
+      const labels = mockActionSheetActions.current.map((a) => a.label);
+      expect(labels).toEqual(
+        expect.arrayContaining(['Qualify', 'Convert to deal', 'Edit', 'Archive', 'Delete'])
+      );
+      // A NEW lead is not qualified yet: Convert is listed but disabled, with its reason.
+      const convert = mockActionSheetActions.current.find((a) => a.label === 'Convert to deal') as
+        | { disabled?: boolean; hint?: string }
+        | undefined;
+      expect(convert?.disabled).toBe(true);
+      expect(convert?.hint).toBe('Lead must be qualified before conversion.');
+      // The sheet entries do what the header buttons do.
+      mockActionSheetActions.current.find((a) => a.label === 'Edit')?.onClick();
       expect(mockPush).toHaveBeenCalledWith(expect.stringMatching(/^\/leads\/.+\/edit$/));
     });
   });
@@ -1716,6 +1750,33 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
     expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('0%');
   });
 
+  it('Open Rate reads the CRM email records for the lead, not only the activity metadata', () => {
+    // No activity carries open data, but the lead has 4 tracked sends to its address, 3 opened.
+    data().activities = [
+      { ...emailActivity, id: 'act-sync-2', metadata: { subject: 'Outreach email sent' } },
+    ];
+    mockEmailEngagement.current = { sent: 4, opened: 3 };
+    try {
+      render(<Lead360Page />);
+      expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('75%');
+    } finally {
+      mockEmailEngagement.current = undefined;
+    }
+  });
+
+  it('Open Rate never counts the same mail twice when the activity and the record both have it', () => {
+    data().activities = [
+      { ...emailActivity, metadata: { subject: 'Your proposal', opened: true, openCount: 1 } },
+    ];
+    mockEmailEngagement.current = { sent: 1, opened: 1 };
+    try {
+      render(<Lead360Page />);
+      expect(screen.getByTestId('lead-open-rate')).toHaveTextContent('100%');
+    } finally {
+      mockEmailEngagement.current = undefined;
+    }
+  });
+
   it('Compose opens the email composer addressed to the lead', () => {
     render(<Lead360Page />);
     fireEvent.click(screen.getByRole('button', { name: /^Emails/i }));
@@ -1984,17 +2045,14 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
     unmount();
 
     withLocation.location = '10 Downing Street, London';
-    const open = vi.spyOn(window, 'open').mockReturnValue(null);
     render(<Lead360Page />);
-    const button = screen.getByRole('button', { name: 'View Map' });
-    expect(button).toBeEnabled();
-    fireEvent.click(button);
-    expect(open).toHaveBeenCalledWith(
-      'https://www.google.com/maps/search/?api=1&query=10%20Downing%20Street%2C%20London',
-      '_blank',
-      'noopener,noreferrer'
+    // A real link (an anchor works on every phone browser), to Google Maps for that address.
+    const link = screen.getByRole('link', { name: 'View Map' });
+    expect(link).toHaveAttribute(
+      'href',
+      'https://www.google.com/maps/search/?api=1&query=10%20Downing%20Street%2C%20London'
     );
+    expect(link).toHaveAttribute('target', '_blank');
     delete withLocation.location;
-    open.mockRestore();
   });
 });
