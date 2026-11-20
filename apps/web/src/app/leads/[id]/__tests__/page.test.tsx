@@ -1079,10 +1079,11 @@ describe('LeadDetailPage - Activity Feed Toggle (IFC-247)', () => {
 // ─── MVP-006: the activity cards fit a phone screen ──────────────────────────
 
 describe('LeadDetailPage - activity card on a phone (MVP-006)', () => {
-  // The first card of the Pitshanger lead carries an email address and a ledger id in its
-  // description. Without min-w-0 the text column kept that width and pushed the expand button
-  // 9 px past a 390 px screen, so the whole page scrolled sideways.
-  const LONG = 'hello@pitshangerhealthandfitness.co.uk cmw5j72u40001p5ug01kf3vot';
+  // The first card of the Pitshanger lead carried an email address and a long unbroken token in its
+  // description (it was a ledger id; ids are now stripped from activity text, row 42, so the fixture
+  // is a plain 25 character word). Without min-w-0 the text column kept that width and pushed the
+  // expand button 9 px past a 390 px screen, so the whole page scrolled sideways.
+  const LONG = 'hello@pitshangerhealthandfitness.co.uk pitshangerfollowupmessage';
 
   beforeEach(() => {
     vi.clearAllMocks();
