@@ -5,6 +5,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { MailSyncReader, SyncFolder, SyncRound, SyncedMessage } from '../mail-sync-reader';
 import {
+  COMMIT_GRACE_MS,
   FOLDER_DONE,
   LOOKBACK_DAYS,
   PASS_ADDRESSES,
@@ -253,6 +254,32 @@ describe('runLookback (MVP-011)', () => {
 
     expect(stored).toEqual([{ id: 'i1', folder: 'inbox' }]);
     expect(result.data).toMatchObject({ lookbackWatermark: valid.createdAt });
+  });
+
+  it('waits for a lead created inside the commit grace window, then looks for it', async () => {
+    // createdAt is when a transaction started: a row younger than the grace may still be
+    // uncommitted, so a pass must not move the watermark past it yet.
+    const fresh: Row = {
+      email: 'robert@example.invalid',
+      createdAt: new Date(NOW.getTime() - COMMIT_GRACE_MS + 30_000),
+    };
+    const early = setup({ leads: [fresh] });
+
+    const first = await runLookback(early.ctx);
+
+    expect(first).toEqual({ data: {}, more: false, stored: 0 });
+    expect(early.read).not.toHaveBeenCalled();
+
+    const later = setup({
+      leads: [fresh],
+      inbox: [round({ messages: [fromRobert('i1')], cursor: 'x' })],
+    });
+    later.ctx.now = new Date(NOW.getTime() + 60_000);
+
+    const second = await runLookback(later.ctx);
+
+    expect(later.stored).toEqual([{ id: 'i1', folder: 'inbox' }]);
+    expect(second.data).toMatchObject({ lookbackWatermark: fresh.createdAt });
   });
 
   it('only looks for leads and contacts of the mailbox tenant', async () => {

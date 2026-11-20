@@ -66,6 +66,14 @@ export interface LookbackResult {
 const nothing = (): LookbackResult => ({ data: {}, more: false, stored: 0 });
 
 /**
+ * A pass only covers leads and contacts created at least this long ago. `createdAt` is the time a
+ * transaction started, not when it committed, so a row whose transaction is still open when a pass
+ * moves the watermark past it would be skipped for good. Waiting this long (far more than any
+ * lead or contact write takes) closes that gap; a new lead's history is looked back a little later.
+ */
+export const COMMIT_GRACE_MS = 10 * 60_000;
+
+/**
  * Leads and contacts of the tenant created in (since, until], by creation time.
  *
  * Creation time is a complete trigger because a lead's or contact's address is fixed when the
@@ -77,7 +85,7 @@ async function createdBetween(
   prisma: any,
   tenantId: string,
   since: Date,
-  until: Date | null,
+  until: Date,
   take?: number
 ): Promise<Array<{ email: string; createdAt: Date }>> {
   // Rows without an address are left out in the query, before the limit: a run of them must not
@@ -85,7 +93,7 @@ async function createdBetween(
   const where = {
     tenantId,
     email: { not: '' },
-    createdAt: until ? { gt: since, lte: until } : { gt: since },
+    createdAt: { gt: since, lte: until },
   };
   const args = {
     where,
@@ -191,7 +199,8 @@ export async function runLookback(input: LookbackContext): Promise<LookbackResul
     let until = mailbox.lookbackUntil;
     const started: Record<string, unknown> = {};
     if (!until) {
-      const batch = await createdBetween(prisma, mailbox.tenantId, since, null, PASS_ADDRESSES);
+      const cutoff = new Date(ctx.now.getTime() - COMMIT_GRACE_MS);
+      const batch = await createdBetween(prisma, mailbox.tenantId, since, cutoff, PASS_ADDRESSES);
       if (batch.length === 0) return nothing();
       until = batch[Math.min(batch.length, PASS_ADDRESSES) - 1]!.createdAt;
       Object.assign(started, {
