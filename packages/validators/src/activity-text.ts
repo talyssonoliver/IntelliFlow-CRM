@@ -176,16 +176,20 @@ function insideQuotedValue(text: string): boolean {
   return open !== '';
 }
 /**
- * True when the line the id is on already holds a Windows path or a link before it ("Saved to C:\Exports\Customer ref
- * <id>"). A path may have spaces in it and the cleaner cannot tell where it ends, so nothing on that line is removed.
+ * True when the sentence the id is in already holds a path or a link before it ("Saved to C:\Exports\Customer ref <id>",
+ * "Open exports/Customer ref <id>"). A path may have spaces in it and the cleaner cannot tell where it ends, so
+ * nothing in that sentence is removed. An earlier sentence ("... GBP 69.99/month. COA ledger row <id>.") is not looked at.
  */
-function lineHasPathOrLink(before: string): boolean {
-  const line = before.slice(before.lastIndexOf('\n') + 1);
-  if (line.includes('\\') || line.includes('://')) return true;
-  // A Unix-style path starts a word: /exports, ./out, ../out, ~/files.
-  return line
-    .split(/\s+/)
-    .some((word) => ['/', './', '../', '~/'].some((start) => word.startsWith(start)));
+function sentenceHasPathOrLink(before: string): boolean {
+  const start = Math.max(
+    before.lastIndexOf('\n'),
+    before.lastIndexOf('. '),
+    before.lastIndexOf('; '),
+    before.lastIndexOf('! '),
+    before.lastIndexOf('? ')
+  );
+  const sentence = before.slice(start + 1);
+  return sentence.includes('/') || sentence.includes('\\');
 }
 /**
  * True when the id is introduced by a label ("COA ledger row <id>", "lead_id=<id>", "ref: <id>") and the id's
@@ -195,7 +199,7 @@ function lineHasPathOrLink(before: string): boolean {
 function isRemovable(before: string, after: string): boolean {
   if (before.trim() === '' && after.trim() === '') return true;
   const base = beforeLabel(before);
-  if (insideQuotedValue(base) || lineHasPathOrLink(base)) return false;
+  if (insideQuotedValue(base) || sentenceHasPathOrLink(base)) return false;
   if (withoutTrailingLabels(base).length >= base.length) return false;
   return CLOSERS.includes(after.charAt(0)) ? tokenEndsAt(after, 1) : tokenEndsAt(after, 0);
 }

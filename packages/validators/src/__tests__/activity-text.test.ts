@@ -89,6 +89,12 @@ describe('stripMachineIds: an id a label introduces goes with its label', () => 
       expect(stripMachineIds(text)).toBe(text);
     }
   });
+  it('still cleans the real Pitshanger row, whose earlier sentences hold a slash', () => {
+    const text = `Reply in their thread. Offer: GBP 0 today, then GBP 69.99/month, cancel any time. COA ledger row ${ID}.`;
+    expect(stripMachineIds(text)).toBe(
+      'Reply in their thread. Offer: GBP 0 today, then GBP 69.99/month, cancel any time.'
+    );
+  });
   it('keeps a labelled id inside a quote that spans lines', () => {
     const text = `Customer wrote: "First line\nreference ${ID}\nKeep this"`;
     expect(stripMachineIds(text)).toBe(text);
@@ -104,6 +110,8 @@ describe('stripMachineIds: an id a label introduces goes with its label', () => 
       `Saved to C:\\Exports\\Customer ref ${ID}`,
       `Saved to /exports/Customer ref ${ID}`,
       `Saved to ~/My Files ref ${ID}`,
+      `Open exports/Customer ref ${ID}`,
+      `Open (/exports/Customer ref ${ID})`,
       `Saved to \\\\server\\share\\My Files lead id ${UUID}`,
     ]) {
       expect(stripMachineIds(text)).toBe(text);
