@@ -25,7 +25,12 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Only a newer push to the same PR cancels its older run. A run on main is never cancelled:
+  # production deploys wait for a green "CI Pipeline" on the exact main commit, and on a busy
+  # day every merge cancelled the previous commit's run, so no main commit ever went green
+  # (the deploy of 19-20/11/2026 stopped twice on a cancelled run). Runs on main queue behind
+  # each other instead; the group is per ref, so PRs are unaffected.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
