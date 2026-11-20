@@ -108,6 +108,33 @@ describe('instrumentHtml: tracked links verify exactly as the redirect reads the
     expect(isValidSignature('c', RECORD, links[0]!.signature, links[0]!.target)).toBe(true);
   });
 
+  it('decodes upper case references and keeps an apostrophe from ending a single-quoted attribute', () => {
+    const upper = instrumentHtml(
+      '<a href="https://shop.example.invalid/?a=1&AMP;b=2">x</a>',
+      RECORD,
+      CLICKS,
+      ENV
+    );
+    expect(trackedLinks(upper)[0]!.target).toBe('https://shop.example.invalid/?a=1&b=2');
+
+    const quoted = instrumentHtml(
+      "<a href='https://shop.example.invalid/it&apos;s'>x</a>",
+      RECORD,
+      CLICKS,
+      ENV
+    );
+    // Only the attribute's own two quotes remain; the apostrophe in the address is percent-encoded.
+    expect(quoted.split("'")).toHaveLength(3);
+    const link = trackedLinks(quoted)[0]!;
+    expect(link.target).toBe("https://shop.example.invalid/it's");
+    expect(isValidSignature('c', RECORD, link.signature, link.target)).toBe(true);
+  });
+
+  it('leaves a link as written when it holds a character reference we cannot decode', () => {
+    const html = '<a href="https://shop.example.invalid/?a=1&hellip;b=2">x</a>';
+    expect(instrumentHtml(html, RECORD, CLICKS, ENV)).toBe(html);
+  });
+
   it('keeps every index right when a character changes length in lower case', () => {
     const html = 'İİİ <a href="https://shop.example.invalid/a">x</a>';
     const out = instrumentHtml(html, RECORD, CLICKS, ENV);

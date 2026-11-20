@@ -78,7 +78,7 @@ const NAMED_ENTITIES: ReadonlyMap<string, string> = new Map([
 ]);
 
 function entityChar(name: string): string | null {
-  const named = NAMED_ENTITIES.get(name);
+  const named = NAMED_ENTITIES.get(name.toLowerCase());
   if (named !== undefined) return named;
   if (!name.startsWith('#')) return null;
   const hex = name.charAt(1) === 'x' || name.charAt(1) === 'X';
@@ -86,14 +86,25 @@ function entityChar(name: string): string | null {
   return Number.isInteger(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : null;
 }
 
-/** An attribute value as a browser reads it: the common named and numeric character references decoded. */
-function decodeEntities(text: string): string {
+/** Looks like a character reference name ("copy", "#38", "#x26"), whether or not we know it. */
+function looksLikeReference(name: string): boolean {
+  return name.length > 0 && [...name].every((char) => /[a-z0-9#]/i.test(char));
+}
+
+/**
+ * An attribute value as a browser reads it: the common named and numeric character references decoded.
+ * Null when it holds a reference we cannot decode (the full table has over two thousand names): that link is
+ * then left exactly as written, which always works, instead of being tracked with a wrong destination.
+ */
+function decodeEntities(text: string): string | null {
   let out = '';
   let from = 0;
   for (let amp = text.indexOf('&', from); amp !== -1; amp = text.indexOf('&', from)) {
     out += text.slice(from, amp);
     const semi = text.indexOf(';', amp);
-    const char = semi !== -1 && semi - amp <= 10 ? entityChar(text.slice(amp + 1, semi)) : null;
+    const name = semi !== -1 && semi - amp <= 10 ? text.slice(amp + 1, semi) : '';
+    const char = looksLikeReference(name) ? entityChar(name) : null;
+    if (looksLikeReference(name) && char === null) return null;
     out += char ?? '&';
     from = char === null ? amp + 1 : semi + 1;
   }
@@ -139,7 +150,9 @@ function trackedHref(target: string, recordId: string, base: string): string | n
   const normalized = url.toString();
   if (normalized.startsWith(`${base}/t/`)) return null;
   const sig = trackingSignature('c', recordId, normalized);
-  return `${base}/t/c/${recordId}/${sig}?u=${encodeURIComponent(normalized)}`;
+  // encodeURIComponent keeps the apostrophe, which would end a single-quoted attribute.
+  const encoded = encodeURIComponent(normalized).split("'").join('%27');
+  return `${base}/t/c/${recordId}/${sig}?u=${encoded}`;
 }
 
 /** Rewrites the http(s) links of `<a href="...">` tags (single or double quoted, any case), by plain scanning. */
@@ -154,7 +167,7 @@ function rewriteLinks(html: string, recordId: string, base: string): string {
     if (!span) continue;
     from = span.end;
     const value = decodeEntities(html.slice(span.start, span.end).trim());
-    const tracked = trackedHref(value, recordId, base);
+    const tracked = value === null ? null : trackedHref(value, recordId, base);
     if (!tracked) continue;
     out += html.slice(copied, span.start) + tracked;
     copied = span.end;
