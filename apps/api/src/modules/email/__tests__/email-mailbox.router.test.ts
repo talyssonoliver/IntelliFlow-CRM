@@ -646,6 +646,13 @@ describe('emailMailbox OAuth connect', () => {
       nextSyncAt: null,
       syncFailureCount: 0,
     });
+    // MVP-011: and the history look-back starts over for it (the last 90 days, every lead and contact).
+    expect(data).toMatchObject({
+      lookbackWatermark: null,
+      lookbackUntil: null,
+      lookbackCursor: null,
+      lookbackSentCursor: null,
+    });
     // The sync lease is left alone: a running round ends on its own (no two syncs at once).
     expect(data).not.toHaveProperty('syncLockedUntil');
   });
