@@ -16,7 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@intelliflow/ui';
-import { type OpportunityStage } from '@intelliflow/domain';
+import { STAGE_TRANSITION_RULES, type OpportunityStage } from '@intelliflow/domain';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
@@ -32,7 +32,9 @@ import {
   DealStageProgress,
   STAGE_LABELS,
   formatCurrency,
+  stageMoveToastTitle,
 } from '@/components/deals/DealStageProgress';
+import { useDealStageMove } from '@/components/deals/useDealStageMove';
 import { useConversionUndo } from '@/components/deals/UndoConversion';
 import { revalidateDealCaches } from '@/app/deals/actions';
 
@@ -406,10 +408,7 @@ export default function DealDetailPage() {
   const moveStage = api.opportunity.moveStage.useMutation({
     onSuccess: (_data, variables) => {
       setPendingAction(null);
-      toast({
-        title:
-          variables.targetStage === 'CLOSED_WON' ? 'Deal marked as Won' : 'Deal marked as Lost',
-      });
+      toast({ title: stageMoveToastTitle(variables.targetStage as OpportunityStage) });
       return Promise.all([
         revalidateServerCaches(),
         utils.opportunity.getById.invalidate({ id: dealId }),
@@ -422,6 +421,14 @@ export default function DealDetailPage() {
         : 'Failed to update deal stage. Please try again.';
       toast({ title: message, variant: 'destructive' });
     },
+  });
+
+  // #32: tapping a stage on the bar asks first, then moves the deal (and logs it on its activity).
+  const stageMove = useDealStageMove({
+    dealId,
+    dealName: deal?.name ?? '',
+    stage: (deal?.stage ?? 'PROSPECTING') as OpportunityStage,
+    mutation: moveStage,
   });
 
   const deleteMutation = api.opportunity.delete.useMutation({
@@ -654,7 +661,11 @@ export default function DealDetailPage() {
           stage={stage}
           probability={d.probability}
           onAddValue={d.isClosed ? undefined : () => setEditDialogOpen(true)}
+          onSelectStage={d.isClosed ? undefined : stageMove.requestMove}
+          allowedStages={STAGE_TRANSITION_RULES[stage]}
+          moving={stageMove.moving}
         />
+        {stageMove.dialog}
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
