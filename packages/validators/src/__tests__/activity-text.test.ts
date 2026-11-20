@@ -65,10 +65,13 @@ describe('stripMachineIds: an id a label introduces goes with its label', () => 
       `Open "C:\\Exports\\Customer ref ${ID}"`,
       `Open "https://example.invalid/my files/lead id ${UUID}"`,
       `Open 'C:\\Exports\\Customer ref ${ID}'`,
+      `Open "Customer ref ${ID}"`,
+      `Quote: "he said lead id ${ID}"`,
     ]) {
       expect(stripMachineIds(text)).toBe(text);
     }
     expect(stripMachineIds(`Said "hello" ref ${ID}.`)).toBe('Said "hello".');
+    expect(stripMachineIds(`It's done ref ${ID}.`)).toBe("It's done.");
   });
   it('removes a labelled id that follows a link in the same sentence', () => {
     expect(stripMachineIds(`See https://app.example.invalid/x then ref ${ID}.`)).toBe(

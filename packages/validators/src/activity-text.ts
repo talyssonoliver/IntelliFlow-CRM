@@ -150,15 +150,17 @@ function beforeLabel(before: string): string {
   return before.endsWith('=') ? before.slice(0, -1) : before;
 }
 
-/** True when the text ends inside a quoted link or path that has spaces in it ("C:\Exports\My Files ref"). */
+/**
+ * True when the text ends inside a quoted value that is not ours to change: any open double quote ("Customer ref"), or
+ * an open single quote that holds a link or path ('C:\Exports\My Files ref'; a lone apostrophe is just prose).
+ */
 function insideQuotedAddress(text: string): boolean {
   const line = text.slice(text.lastIndexOf('\n') + 1);
-  return ['"', "'"].some((quote) => {
-    const parts = line.split(quote);
-    if (parts.length % 2 !== 0) return false; // an even number of quotes so far: none is open
-    const open = parts[parts.length - 1] ?? '';
-    return open.includes('/') || open.includes('\\');
-  });
+  const doubleOpen = line.split('"').length % 2 === 0;
+  const singles = line.split("'");
+  const singleOpen = singles.length % 2 === 0;
+  const lastSingle = singles[singles.length - 1] ?? '';
+  return doubleOpen || (singleOpen && (lastSingle.includes('/') || lastSingle.includes('\\')));
 }
 /**
  * True when the id is introduced by a label ("COA ledger row <id>", "lead_id=<id>", "ref: <id>") and the id's
