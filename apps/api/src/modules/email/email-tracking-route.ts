@@ -135,30 +135,32 @@ interface TrackingDb {
       data: Record<string, unknown>;
     }): Promise<unknown>;
   };
+  /** The batch form: every write of one event commits together or not at all. */
+  $transaction(writes: Promise<unknown>[]): Promise<unknown>;
 }
 
-/** Writes to the email record by its id (the signature already proved the caller held the mail). */
+/**
+ * Writes to the email record by its id (the signature already proved the caller held the mail). One event is
+ * one transaction, so a failure leaves neither a count without its timestamp nor the reverse. The timestamps are
+ * set only where still empty, so the first open and the first click keep their time.
+ */
 export function createTrackingStore(db: TrackingDb): TrackingStore {
-  const mark = async (recordId: string, at: Date, count: 'openCount' | 'clickCount') => {
-    // First open: openedAt is set once, only where it is still empty.
-    await db.emailRecord.updateMany({
-      where: { id: recordId, openedAt: null },
-      data: { openedAt: at },
-    });
-    await db.emailRecord.updateMany({
-      where: { id: recordId },
-      data: { [count]: { increment: 1 } },
-    });
-  };
+  const write = (where: Record<string, unknown>, data: Record<string, unknown>) =>
+    db.emailRecord.updateMany({ where, data });
   return {
-    recordOpen: (recordId, at) => mark(recordId, at, 'openCount'),
-    async recordClick(recordId, at) {
+    recordOpen: async (recordId, at) => {
+      await db.$transaction([
+        write({ id: recordId, openedAt: null }, { openedAt: at }),
+        write({ id: recordId }, { openCount: { increment: 1 } }),
+      ]);
+    },
+    recordClick: async (recordId, at) => {
       // A click proves the mail was opened too.
-      await mark(recordId, at, 'clickCount');
-      await db.emailRecord.updateMany({
-        where: { id: recordId, clickedAt: null },
-        data: { clickedAt: at },
-      });
+      await db.$transaction([
+        write({ id: recordId, openedAt: null }, { openedAt: at }),
+        write({ id: recordId, clickedAt: null }, { clickedAt: at }),
+        write({ id: recordId }, { clickCount: { increment: 1 } }),
+      ]);
     },
   };
 }

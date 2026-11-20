@@ -202,6 +202,35 @@ describe('instrumentHtml: tracked links verify exactly as the redirect reads the
     expect(trackedLinks(out)[0]!.target).toBe('https://shop.example.invalid/?a=1&b=2&');
   });
 
+  it('keeps a character that is not an ASCII space, such as a no-break space, in the destination', () => {
+    const out = instrumentHtml(
+      '<a href="https://shop.example.invalid/report\u00a0">x</a>',
+      RECORD,
+      CLICKS,
+      ENV
+    );
+    expect(trackedLinks(out)[0]!.target).toBe('https://shop.example.invalid/report%C2%A0');
+  });
+
+  it('never reads an anchor out of another tag attribute, or out of script, style, title or textarea content', () => {
+    for (const html of [
+      `<span title='<a href="https://a.example.invalid/">'>x</span>`,
+      '<script>var s = \'<a href="https://a.example.invalid/">\';</script>',
+      '<style>/* <a href="https://a.example.invalid/"> */</style>',
+      '<title><a href="https://a.example.invalid/"></title>',
+      '<textarea><a href="https://a.example.invalid/"></textarea>',
+    ]) {
+      expect(instrumentHtml(html, RECORD, CLICKS, ENV)).toBe(html);
+    }
+    // A real anchor after such an element is still tracked.
+    const after = instrumentHtml(
+      '<style>a{}</style><a href="https://shop.example.invalid/">x</a>',
+      RECORD,
+      CLICKS,
+      ENV
+    );
+    expect(trackedLinks(after)).toHaveLength(1);
+  });
   it('keeps every index right when a character changes length in lower case', () => {
     const html = 'İİİ <a href="https://shop.example.invalid/a">x</a>';
     const out = instrumentHtml(html, RECORD, CLICKS, ENV);

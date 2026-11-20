@@ -182,37 +182,57 @@ describe('handleEmailTrackingRoute', () => {
 });
 
 describe('createTrackingStore', () => {
-  function fakeDb() {
-    const calls: Array<{ where: Record<string, unknown>; data: Record<string, unknown> }> = [];
-    return {
-      calls,
-      db: {
-        emailRecord: {
-          updateMany: vi.fn(async (a: never) => {
-            calls.push(a);
-            return { count: 1 };
-          }),
-        },
+  type Write = { where: Record<string, unknown>; data: Record<string, unknown> };
+
+  function fakeDb(failOn?: number) {
+    const batches: Write[][] = [];
+    let seen = 0;
+    const db = {
+      emailRecord: {
+        updateMany: vi.fn((args: Write) => {
+          seen += 1;
+          return { args, fail: seen === failOn } as unknown as Promise<unknown>;
+        }),
       },
+      // Like a database transaction: nothing is kept unless every write succeeds.
+      $transaction: vi.fn(async (writes: Array<{ args: Write; fail: boolean }>) => {
+        if (writes.some((w) => w.fail)) throw new Error('write failed');
+        batches.push(writes.map((w) => w.args));
+      }),
     };
+    return { db, batches };
   }
 
-  it('sets openedAt once and counts the open, by record id', async () => {
-    const { db, calls } = fakeDb();
+  it('sets openedAt once and counts the open, in one transaction, by record id', async () => {
+    const { db, batches } = fakeDb();
     await createTrackingStore(db as never).recordOpen(RECORD, AT);
-    expect(calls).toEqual([
-      { where: { id: RECORD, openedAt: null }, data: { openedAt: AT } },
-      { where: { id: RECORD }, data: { openCount: { increment: 1 } } },
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
+    expect(batches).toEqual([
+      [
+        { where: { id: RECORD, openedAt: null }, data: { openedAt: AT } },
+        { where: { id: RECORD }, data: { openCount: { increment: 1 } } },
+      ],
     ]);
   });
 
-  it('counts a click, and a click also proves the open', async () => {
-    const { db, calls } = fakeDb();
+  it('counts a click, stamps the first click, and a click also proves the open, in one transaction', async () => {
+    const { db, batches } = fakeDb();
     await createTrackingStore(db as never).recordClick(RECORD, AT);
-    expect(calls).toEqual([
-      { where: { id: RECORD, openedAt: null }, data: { openedAt: AT } },
-      { where: { id: RECORD }, data: { clickCount: { increment: 1 } } },
-      { where: { id: RECORD, clickedAt: null }, data: { clickedAt: AT } },
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
+    expect(batches).toEqual([
+      [
+        { where: { id: RECORD, openedAt: null }, data: { openedAt: AT } },
+        { where: { id: RECORD, clickedAt: null }, data: { clickedAt: AT } },
+        { where: { id: RECORD }, data: { clickCount: { increment: 1 } } },
+      ],
     ]);
+  });
+
+  it('keeps nothing of an event when one of its writes fails, so no count is left without its time', async () => {
+    const { db, batches } = fakeDb(2);
+    await expect(createTrackingStore(db as never).recordClick(RECORD, AT)).rejects.toThrow(
+      'write failed'
+    );
+    expect(batches).toEqual([]);
   });
 });

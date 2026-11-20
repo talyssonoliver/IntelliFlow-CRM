@@ -2,7 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
 const db = vi.hoisted(() => ({ updateMany: vi.fn(async () => ({ count: 1 })) }));
-vi.mock('@intelliflow/db', () => ({ prisma: { emailRecord: { updateMany: db.updateMany } } }));
+vi.mock('@intelliflow/db', () => ({
+  prisma: {
+    emailRecord: { updateMany: db.updateMany },
+    $transaction: (writes: Promise<unknown>[]) => Promise.all(writes),
+  },
+}));
 
 import { handleEmailTracking } from '../email-tracking-http';
 import { trackingSignature } from '../email-tracking';

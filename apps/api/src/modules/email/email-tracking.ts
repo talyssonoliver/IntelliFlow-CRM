@@ -251,9 +251,44 @@ function trackedHref(target: string, recordId: string, base: string): string | n
   return `${base}/t/c/${recordId}/${sig}?u=${encoded}`;
 }
 
+/** Elements whose content is text, not tags: a "<a href" inside them is not a link. */
+const RAW_TEXT_ELEMENTS: ReadonlySet<string> = new Set(['script', 'style', 'textarea', 'title']);
+
+/** The lower-case name of the tag that starts at `open` (empty for "</x>", "<!doctype" or a lone "<") and where it ends. */
+function readTagName(lower: string, open: number): { name: string; end: number } {
+  let end = open + 1;
+  while (end < lower.length && /[a-z0-9]/.test(lower.charAt(end))) end += 1;
+  return { name: lower.slice(open + 1, end), end };
+}
+
+/**
+ * Reads the tag (or comment) that starts at `open`: where scanning resumes after it, and the quoted `href` value
+ * when it is an `<a>` tag. A comment is skipped whole, and so is the content of a raw-text element.
+ */
+function scanTag(
+  html: string,
+  lower: string,
+  open: number
+): { resume: number; href: AnchorTag['href'] } {
+  if (lower.startsWith('<!--', open)) {
+    const close = html.indexOf('-->', open + 4);
+    return { resume: close === -1 ? html.length : close + 3, href: null };
+  }
+  const { name, end } = readTagName(lower, open);
+  if (name === '') return { resume: open + 1, href: null };
+  const tag = readAnchorTag(html, lower, end);
+  let resume = tag.end;
+  if (RAW_TEXT_ELEMENTS.has(name)) {
+    const close = lower.indexOf(`</${name}`, resume);
+    resume = close === -1 ? html.length : close;
+  }
+  return { resume, href: name === 'a' ? tag.href : null };
+}
+
 /**
  * Rewrites the http(s) links of `<a href="...">` tags (single or double quoted, any case), by plain scanning:
- * comments are skipped, tags are read attribute by attribute, and text, styles and other tags are never touched.
+ * every tag is read attribute by attribute so a quoted value that looks like a tag is never mistaken for one,
+ * and text, comments, styles and other tags are never touched.
  */
 function rewriteLinks(html: string, recordId: string, base: string): string {
   const lower = asciiLower(html);
@@ -261,22 +296,15 @@ function rewriteLinks(html: string, recordId: string, base: string): string {
   let copied = 0;
   let at = 0;
   for (let open = html.indexOf('<', at); open !== -1; open = html.indexOf('<', at)) {
-    if (lower.startsWith('<!--', open)) {
-      const close = html.indexOf('-->', open + 4);
-      if (close === -1) break;
-      at = close + 3;
-      continue;
-    }
-    at = open + 1;
-    if (lower.charAt(open + 1) !== 'a' || !WHITESPACE.includes(html.charAt(open + 2))) continue;
-    const tag = readAnchorTag(html, lower, open + 2);
-    at = tag.end;
-    if (!tag.href) continue;
-    const value = decodeEntities(html.slice(tag.href.start, tag.href.end).trim());
+    const scan = scanTag(html, lower, open);
+    at = scan.resume;
+    if (!scan.href) continue;
+    // Not trimmed here: the URL parser drops the surrounding ASCII spaces itself and keeps any other character.
+    const value = decodeEntities(html.slice(scan.href.start, scan.href.end));
     const tracked = value === null ? null : trackedHref(value, recordId, base);
     if (!tracked) continue;
-    out += html.slice(copied, tag.href.start) + tracked;
-    copied = tag.href.end;
+    out += html.slice(copied, scan.href.start) + tracked;
+    copied = scan.href.end;
   }
   return out + html.slice(copied);
 }
