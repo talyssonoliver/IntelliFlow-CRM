@@ -76,6 +76,16 @@ describe('stripMachineIds', () => {
       expect(stripMachineIds(`See ${link} ${ID}.`)).toBe(`See ${link}.`);
     }
   });
+  it('never takes a label out of a word that is itself a link, path or email', () => {
+    for (const word of [
+      'https://example.invalid/search?q=(reference',
+      'https://example.invalid/x?a="id',
+      'www.example.invalid/ref',
+      'a@example.invalid/row',
+    ]) {
+      expect(stripMachineIds(`See ${word} ${ID}.`)).toBe(`See ${word}.`);
+    }
+  });
   it('still removes an id that follows a link in the same sentence', () => {
     expect(stripMachineIds(`See https://app.example.invalid/x then ref ${ID}.`)).toBe(
       'See https://app.example.invalid/x then.'

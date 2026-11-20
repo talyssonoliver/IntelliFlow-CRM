@@ -70,6 +70,13 @@ function trimSpacesStart(text: string): string {
   return text.slice(start);
 }
 
+/** True when the text ends inside a link, path or email address: its last word (back to a space) is one. */
+function endsInsideAddress(before: string): boolean {
+  let start = before.length;
+  while (start > 0 && !' \t\r\n'.includes(before.charAt(start - 1))) start -= 1;
+  const word = before.slice(start).toLowerCase();
+  return word.includes('/') || word.includes('@') || word.startsWith('www.');
+}
 /** The text without a label at its end ("... COA ledger row" -> "... "), repeated for "row id". */
 function withoutTrailingLabels(text: string): string {
   let out = text;
@@ -82,7 +89,9 @@ function withoutTrailingLabels(text: string): string {
       if (!lower.endsWith(word)) return false;
       const lead = head.charAt(head.length - word.length - 1);
       // A standalone word only: not the end of a longer word, a domain or a path ("/reference").
-      return lead === '' || WORD_STARTS.includes(lead);
+      const boundary = lead === '' || WORD_STARTS.includes(lead);
+      // ...and not a word that is itself a link, path or email ("?q=(reference").
+      return boundary && !endsInsideAddress(head.slice(0, head.length - word.length));
     });
     if (!label) return out;
     out = head.slice(0, head.length - label.length);
