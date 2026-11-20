@@ -109,6 +109,13 @@ describe('stripMachineIds', () => {
     }
     expect(stripMachineIds(`Sent "${ID}", thanks`)).toBe('Sent, thanks');
   });
+  it('removes a compact label:id reference, but not a colon inside a link', () => {
+    expect(stripMachineIds(`ref:${UUID}`)).toBe('');
+    expect(stripMachineIds(`Sent ref:${ID} today`)).toBe('Sent today');
+    expect(stripMachineIds(`See https://example.invalid/wiki/x:${ID} now`)).toBe(
+      `See https://example.invalid/wiki/x:${ID} now`
+    );
+  });
   it('removes a bare key=id assignment together with its key', () => {
     expect(stripMachineIds(`Price follow-up sent (lead_id=${ID})`)).toBe('Price follow-up sent');
     expect(stripMachineIds(`Synced id=${ID} ok`)).toBe('Synced ok');

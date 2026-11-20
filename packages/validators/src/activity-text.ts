@@ -166,7 +166,8 @@ function tokenEndsAt(text: string, at: number): boolean {
 function isStandalone(before: string, after: string): boolean {
   const prev = before.charAt(before.length - 1);
   const beforeOk =
-    isBreakOrEnd(prev) || ((OPENERS.includes(prev) || prev === '=') && !endsInQueryOrPath(before));
+    isBreakOrEnd(prev) ||
+    ((OPENERS.includes(prev) || prev === '=' || prev === ':') && !endsInQueryOrPath(before));
   if (!beforeOk) return false;
   // A closing bracket or quote counts only when the token ends right after it ("(id)." yes, "(id).pdf" no).
   return CLOSERS.includes(after.charAt(0)) ? tokenEndsAt(after, 1) : tokenEndsAt(after, 0);
