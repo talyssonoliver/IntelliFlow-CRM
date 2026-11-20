@@ -38,7 +38,8 @@ export interface CalendarGateway {
   patchEvent(
     tokens: OAuthTokens,
     eventId: string,
-    appointment: CalendarAppointmentLike
+    appointment: CalendarAppointmentLike,
+    etag?: string
   ): Promise<Result<ExternalCalendarEvent, DomainError>>;
   deleteEvent(tokens: OAuthTokens, eventId: string): Promise<Result<void, DomainError>>;
   /** One event by id; null when Google has no such event (deleted). */

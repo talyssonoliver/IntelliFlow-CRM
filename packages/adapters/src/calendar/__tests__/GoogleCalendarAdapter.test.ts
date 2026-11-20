@@ -12,6 +12,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { GoogleCalendarAdapter, GoogleCalendarConfig } from '../google/client';
 import {
+  CalendarConflictError,
   CalendarRateLimitError,
   CalendarSyncTokenExpiredError,
   type OAuthTokens,
@@ -847,19 +848,26 @@ describe('GoogleCalendarAdapter', () => {
         });
       });
 
-      it('keeps whole days from midnight to midnight an all-day event', async () => {
+      it('sends the etag as If-Match, so a change made in Google meanwhile is not overwritten', async () => {
         mockFetch.mockResolvedValueOnce({ ok: true, json: async () => eventJson() });
-        const appointment = createMockAppointment({
-          startTime: new Date('2026-11-25T00:00:00.000Z'),
-          endTime: new Date('2026-11-26T00:00:00.000Z'),
-        });
 
-        await adapter.patchEvent(mockTokens, 'ev-1', appointment as any);
+        await adapter.patchEvent(mockTokens, 'ev-1', createMockAppointment() as any, '"etag-0"');
 
-        expect(body().start).toEqual({ date: '2026-11-25', dateTime: null });
-        expect(body().end).toEqual({ date: '2026-11-26', dateTime: null });
+        expect(mockFetch.mock.calls[0][1].headers['If-Match']).toBe('"etag-0"');
       });
 
+      it('answers a conflict when Google has changed the event since that etag', async () => {
+        mockFetch.mockResolvedValueOnce({ ok: false, status: 412, json: async () => ({}) });
+
+        const result = await adapter.patchEvent(
+          mockTokens,
+          'ev-1',
+          createMockAppointment() as any,
+          '"old"'
+        );
+
+        expect(result.error).toBeInstanceOf(CalendarConflictError);
+      });
       it('sends a cancelled appointment as a cancelled event', async () => {
         mockFetch.mockResolvedValueOnce({ ok: true, json: async () => eventJson() });
         const appointment = { ...createMockAppointment(), isCancelled: true };

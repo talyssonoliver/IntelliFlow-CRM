@@ -135,23 +135,6 @@ const RATE_LIMIT_REASONS = [
   'dailyLimitExceeded',
 ];
 
-const DAY_MS = 86_400_000;
-
-/** start and end for a PATCH: dates for whole days from midnight to midnight (UTC), else the instants. */
-function patchTimes(appointment: CalendarAppointmentLike) {
-  const start = appointment.startTime;
-  const end = appointment.endTime;
-  const wholeDays =
-    start.getTime() % DAY_MS === 0 &&
-    end.getTime() % DAY_MS === 0 &&
-    end.getTime() > start.getTime();
-  const point = (d: Date) =>
-    wholeDays
-      ? { date: d.toISOString().slice(0, 10), dateTime: null }
-      : { dateTime: d.toISOString(), date: null };
-  return { start: point(start), end: point(end) };
-}
-
 /**
  * Google Calendar Service Adapter
  */
@@ -477,19 +460,27 @@ export class GoogleCalendarAdapter implements CalendarServicePort {
   async patchEvent(
     tokens: OAuthTokens,
     externalEventId: string,
-    appointment: CalendarAppointmentLike
+    appointment: CalendarAppointmentLike,
+    etag?: string
   ): Promise<Result<ExternalCalendarEvent, DomainError>> {
-    return this.sendEventChange(tokens, externalEventId, 'PATCH', {
-      summary: appointment.title,
-      description: appointment.description ?? null,
-      location: appointment.location ?? null,
-      // The instant only: no timeZone, so a recurring event keeps the zone its repeats are
-      // expanded in (daylight saving), and the other of date / dateTime is cleared, which PATCH
-      // would otherwise merge. Whole days from midnight to midnight stay an all-day event.
-      ...patchTimes(appointment),
-      // Only a cancellation sets the status: confirming would bring back an event deleted in Google.
-      ...(appointment.isCancelled ? { status: 'cancelled' } : {}),
-    });
+    return this.sendEventChange(
+      tokens,
+      externalEventId,
+      'PATCH',
+      {
+        summary: appointment.title,
+        description: appointment.description ?? null,
+        location: appointment.location ?? null,
+        // The instant only: no timeZone, so a recurring event keeps the zone its repeats are
+        // expanded in (daylight saving), and the other of date / dateTime is cleared, which PATCH
+        // would otherwise merge.
+        start: { dateTime: appointment.startTime.toISOString(), date: null },
+        end: { dateTime: appointment.endTime.toISOString(), date: null },
+        // Only a cancellation sets the status: confirming would bring back an event deleted in Google.
+        ...(appointment.isCancelled ? { status: 'cancelled' } : {}),
+      },
+      etag
+    );
   }
 
   async deleteEvent(

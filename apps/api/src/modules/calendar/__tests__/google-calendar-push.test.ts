@@ -659,6 +659,89 @@ describe('Aurora to Google: review cases', () => {
     expect(h.google.log.some((l) => l.startsWith('patchEvent'))).toBe(false);
   });
 
+  it('does not copy a private event’s content into the appointment when a create finds it changed', async () => {
+    const id = eventIdFor('mbx-1', 'appt-1');
+    const sync = h.setup({
+      appointment: [appointmentRow({ title: 'Aurora title' })],
+      calendarEventLink: [
+        {
+          id: 'link-1',
+          tenantId: TENANT,
+          mailboxId: 'mbx-1',
+          appointmentId: 'appt-1',
+          googleEventId: id,
+          origin: 'AURORA',
+          pending: true,
+          pushAttempts: 0,
+          nextPushAt: null,
+          etag: null,
+          localSyncedAt: null,
+          remoteUpdatedAt: null,
+          remoteCancelledAt: null,
+        },
+      ],
+    });
+    h.google.now = new Date(NOW.getTime() + 3_600_000);
+    h.google.put(id, {
+      title: 'Secret meeting',
+      description: 'Private notes',
+      visibility: 'private',
+    });
+
+    await runCalendarSync(sync);
+
+    expect(JSON.stringify(h.appointments())).not.toContain('Secret meeting');
+    expect(JSON.stringify(h.appointments())).not.toContain('Private notes');
+  });
+
+  describe('a change made in Google between the pull and the push', () => {
+    const pushNow = (sync: any) => {
+      const ctx: any = {
+        prisma: sync.prisma,
+        gateway: h.google,
+        tokens: {},
+        mailbox: { id: 'mbx-1', tenantId: TENANT, userId: 'user-1' },
+        now: new Date(NOW.getTime() + 10 * 60_000),
+        hasTime: () => true,
+        report: newReport(),
+        failed: new Map(),
+      };
+      return pushChanges(ctx).then(() => ctx.report);
+    };
+
+    it('is not overwritten: Google’s newer edit is adopted into the appointment', async () => {
+      const sync = await settled();
+      const id = eventIdFor('mbx-1', 'appt-1');
+      Object.assign(h.appointments()[0], {
+        title: 'Aurora edit',
+        updatedAt: new Date(NOW.getTime() + 60_000),
+      });
+      h.google.now = new Date(NOW.getTime() + 3_600_000);
+      h.google.put(id, { title: 'Google edit' });
+
+      const report = await pushNow(sync);
+
+      expect(report.pushedUpdated).toBe(0);
+      expect(h.appointments()[0].title).toBe('Google edit');
+      expect(h.google.events.get(id)?.title).toBe('Google edit');
+    });
+
+    it('is sent over again with the fresh etag when Aurora’s edit is the newer', async () => {
+      const sync = await settled();
+      const id = eventIdFor('mbx-1', 'appt-1');
+      Object.assign(h.appointments()[0], {
+        title: 'Aurora edit',
+        updatedAt: new Date(NOW.getTime() + 3_600_000),
+      });
+      h.google.now = new Date(NOW.getTime() + 60_000);
+      h.google.put(id, { title: 'Google edit' });
+
+      const report = await pushNow(sync);
+
+      expect(report.pushedUpdated).toBe(1);
+      expect(h.google.events.get(id)?.title).toBe('Aurora edit');
+    });
+  });
   it('ends the round on Google’s rate limit, keeping the pull’s token and waiting as long as asked', async () => {
     const sync = h.setup({ appointment: [appointmentRow()] });
     h.google.failNext.set('createEvent', new CalendarRateLimitError('google', 3600));

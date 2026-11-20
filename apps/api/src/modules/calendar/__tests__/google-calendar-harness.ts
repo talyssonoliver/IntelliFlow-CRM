@@ -7,6 +7,7 @@ import { vi } from 'vitest';
 import type { CalendarAppointmentLike } from '@intelliflow/adapters';
 import {
   CalendarAuthenticationError,
+  CalendarConflictError,
   CalendarSyncError,
   CalendarSyncTokenExpiredError,
   type ExternalCalendarEvent,
@@ -375,10 +376,22 @@ export class FakeGoogle implements CalendarGateway {
     return Result.ok<ExternalCalendarEvent, DomainError>(this.external(event));
   }
 
-  async patchEvent(_tokens: unknown, id: string, appointment: CalendarAppointmentLike) {
+  async patchEvent(
+    _tokens: unknown,
+    id: string,
+    appointment: CalendarAppointmentLike,
+    etag?: string
+  ) {
     this.log.push(`patchEvent:${id}`);
     const failure = this.failure('patchEvent');
     if (failure) return Result.fail<ExternalCalendarEvent, DomainError>(failure);
+    // If-Match: Google refuses when the event changed since that etag.
+    const there = this.events.get(id);
+    if (etag && there && there.etag !== etag) {
+      return Result.fail<ExternalCalendarEvent, DomainError>(
+        new CalendarConflictError('Event was modified by another source')
+      );
+    }
     // As Google does for a PATCH of a deleted event: the event comes back.
     const event = this.put(id, { ...this.fieldsOf(appointment), status: 'confirmed' });
     return Result.ok<ExternalCalendarEvent, DomainError>(this.external(event));

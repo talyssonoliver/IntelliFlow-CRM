@@ -19,6 +19,7 @@ import { createHash } from 'node:crypto';
 import type { CalendarAppointmentLike } from '@intelliflow/adapters';
 import {
   CalendarAuthenticationError,
+  CalendarConflictError,
   CalendarEventNotFoundError,
   CalendarRateLimitError,
 } from '@intelliflow/application';
@@ -26,6 +27,7 @@ import { errorCause } from '../email/mail-sync-report';
 import {
   ACTIVE_STATUSES,
   appointmentFields,
+  isPersonal,
   prismaCode,
   type SyncContext,
 } from './google-calendar-links';
@@ -355,10 +357,11 @@ async function makeEvent(ctx: SyncContext, link: any, row: any): Promise<void> {
         });
       }
       // The event is there with other content (the appointment was edited, or the user edited the event,
-      // between the tries): the newer wins, as in the pull. Google's newer edit is adopted; otherwise the
-      // next patch sends Aurora's.
+      // between the tries): the newer wins, as in the pull. Google's newer edit is adopted (never a private
+      // or confidential event's content: Aurora is shared); otherwise the next patch sends Aurora's.
       if (
         !gone &&
+        !isPersonal(event) &&
         !sameContent(event, row) &&
         event.lastModified.getTime() > row.updatedAt.getTime()
       ) {
@@ -403,12 +406,20 @@ async function patchEvents(ctx: SyncContext, cutoff: Date, budget: number): Prom
   };
   return scanLinks(ctx, where, budget, isEdited, (link) => patchOne(ctx, link));
 }
-async function patchOne(ctx: SyncContext, link: any): Promise<void> {
+async function patchOne(
+  ctx: SyncContext,
+  link: any,
+  etag = link.etag ?? undefined,
+  retry = true
+): Promise<void> {
   const appointment = link.appointment;
+  // The etag the link holds goes as If-Match: Google refuses (412) when the event changed since, and an
+  // edit made there between the pull and now is never overwritten.
   const result = await ctx.gateway.patchEvent(
     ctx.tokens,
     link.googleEventId,
-    toCalendarAppointment(appointment)
+    toCalendarAppointment(appointment),
+    etag
   );
   if (result.isFailure) {
     // Google no longer has the event. A deletion there reaches us as a cancelled event in the next
@@ -423,6 +434,7 @@ async function patchOne(ctx: SyncContext, link: any): Promise<void> {
       ctx.report.skipped += 1;
       return;
     }
+    if (result.error instanceof CalendarConflictError && retry) return resolveConflict(ctx, link);
     throw result.error;
   }
   const event = result.value;
@@ -437,4 +449,41 @@ async function patchOne(ctx: SyncContext, link: any): Promise<void> {
     },
   });
   ctx.report.pushedUpdated += 1;
+}
+
+/**
+ * Google changed the event since the etag the link holds (an edit the pull has not delivered yet). The
+ * newer wins, as in the pull: Google's edit is adopted, or Aurora's is sent again over the fresh etag.
+ */
+async function resolveConflict(ctx: SyncContext, link: any): Promise<void> {
+  const appointment = link.appointment;
+  const current = must(await ctx.gateway.getEvent(ctx.tokens, link.googleEventId));
+  // Gone, cancelled or private there: the pull deals with it when Google reports it. Not this round.
+  if (!current || current.status === 'cancelled' || isPersonal(current)) {
+    ctx.report.skipped += 1;
+    return;
+  }
+  if (current.lastModified.getTime() <= appointment.updatedAt.getTime()) {
+    return patchOne(ctx, link, current.etag ?? undefined, false);
+  }
+  const { tenantId } = ctx.mailbox;
+  await ctx.prisma.$transaction(async (tx: any) => {
+    const adopted = await tx.appointment.updateMany({
+      where: { id: appointment.id, tenantId, updatedAt: appointment.updatedAt },
+      data: appointmentFields(current),
+    });
+    if (adopted.count === 0) return; // edited here meanwhile: decided again next round
+    const fresh = await tx.appointment.findFirst({ where: { id: appointment.id, tenantId } });
+    await tx.calendarEventLink.update({
+      where: { id: link.id, tenantId },
+      data: {
+        etag: current.etag ?? null,
+        remoteUpdatedAt: current.lastModified,
+        localSyncedAt: fresh.updatedAt,
+        pushAttempts: 0,
+        nextPushAt: null,
+      },
+    });
+    ctx.report.updated += 1;
+  });
 }
