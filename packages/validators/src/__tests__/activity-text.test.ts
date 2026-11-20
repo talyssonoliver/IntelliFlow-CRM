@@ -59,7 +59,8 @@ describe('stripMachineIds', () => {
   it('keeps a standalone fragment or key=value id', () => {
     expect(stripMachineIds(`See #${ID} now`)).toBe(`See #${ID} now`);
     expect(stripMachineIds(`See #${UUID}`)).toBe(`See #${UUID}`);
-    expect(stripMachineIds(`See id=${ID}`)).toBe(`See id=${ID}`);
+    expect(stripMachineIds(`See page?id=${ID}`)).toBe(`See page?id=${ID}`);
+    expect(stripMachineIds(`See a=1&id=${ID}`)).toBe(`See a=1&id=${ID}`);
   });
 
   it('never takes a label from the end of a link before the id', () => {
@@ -75,6 +76,10 @@ describe('stripMachineIds', () => {
     ]) {
       expect(stripMachineIds(`See ${link} ${ID}.`)).toBe(`See ${link}.`);
     }
+  });
+  it('removes a bare key=id assignment together with its key', () => {
+    expect(stripMachineIds(`Price follow-up sent (lead_id=${ID})`)).toBe('Price follow-up sent');
+    expect(stripMachineIds(`Synced id=${ID} ok`)).toBe('Synced ok');
   });
   it('never takes a label out of a word that is itself a link, path or email', () => {
     for (const word of [

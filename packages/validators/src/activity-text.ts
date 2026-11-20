@@ -77,6 +77,13 @@ function endsInsideAddress(before: string): boolean {
   const word = before.slice(start).toLowerCase();
   return word.includes('/') || word.includes('@') || word.startsWith('www.');
 }
+/** "... lead_id=" -> "... ": a bare key=<id> assignment goes with its key. */
+function withoutAssignmentKey(text: string): string {
+  if (!text.endsWith('=')) return text;
+  let start = text.length - 1;
+  while (start > 0 && /[a-z0-9_-]/i.test(text.charAt(start - 1))) start -= 1;
+  return text.slice(0, start);
+}
 /** The text without a label at its end ("... COA ledger row" -> "... "), repeated for "row id". */
 function withoutTrailingLabels(text: string): string {
   let out = text;
@@ -133,7 +140,8 @@ function isInsideAddress(before: string, after: string): boolean {
     word.includes('/') ||
     word.includes('@') ||
     word.startsWith('www.') ||
-    prev === '=' ||
+    // A query value ("?a=1&id=<id>") or a fragment, not a bare "lead_id=<id>" assignment.
+    (prev === '=' && (word.includes('?') || word.includes('&'))) ||
     prev === '#'
   );
 }
@@ -153,7 +161,7 @@ export function stripMachineIds(text: string): string {
       rest = rest.slice(end);
       continue;
     }
-    out = withoutTrailingLabels(out + rest.slice(0, found.index));
+    out = withoutTrailingLabels(withoutAssignmentKey(out + rest.slice(0, found.index)));
     [out, rest] = closeGap(out, rest.slice(end));
   }
   const result = out + rest;
