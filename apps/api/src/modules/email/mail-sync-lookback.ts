@@ -65,7 +65,14 @@ export interface LookbackResult {
 
 const nothing = (): LookbackResult => ({ data: {}, more: false, stored: 0 });
 
-/** Leads and contacts of the tenant created in (since, until], by creation time. */
+/**
+ * Leads and contacts of the tenant created in (since, until], by creation time.
+ *
+ * Creation time is a complete trigger because a lead's or contact's address is fixed when the
+ * record is created: `email` is a required column, unique per tenant, and the update inputs omit
+ * it (updateLeadSchema, updateContactSchema), so no address is ever assigned or changed later. A
+ * test holds that invariant: if address edits are ever allowed, the look-back must follow them.
+ */
 async function createdBetween(
   prisma: any,
   tenantId: string,

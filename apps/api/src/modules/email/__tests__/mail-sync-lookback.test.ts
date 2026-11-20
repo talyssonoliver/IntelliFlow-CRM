@@ -11,6 +11,8 @@ import {
   runLookback,
   type LookbackContext,
 } from '../mail-sync-lookback';
+import { updateContactSchema } from '@intelliflow/validators/contact';
+import { updateLeadSchema } from '@intelliflow/validators/lead';
 import { mail, round } from './inbox-sync-harness';
 
 const NOW = new Date('2026-11-20T00:30:00.000Z');
@@ -109,6 +111,16 @@ const stranger = (id: string) =>
     fromAddress: 'stranger@example.invalid',
     to: ['me@example.invalid'],
   });
+
+describe('why creation time is enough to find new addresses (MVP-011)', () => {
+  it('a lead or contact cannot be given another address after it is created', () => {
+    // The look-back is triggered by creation time. If either update input ever accepts an email,
+    // an address could change after the watermark passed it and its history would never be read:
+    // then the look-back needs a change trigger too.
+    expect(Object.keys(updateLeadSchema.shape)).not.toContain('email');
+    expect(Object.keys(updateContactSchema.shape)).not.toContain('email');
+  });
+});
 
 describe('runLookback (MVP-011)', () => {
   it('does nothing, and reads nothing, when no lead or contact was created since the watermark', async () => {
