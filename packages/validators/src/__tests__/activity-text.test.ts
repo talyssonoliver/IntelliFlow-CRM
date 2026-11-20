@@ -48,7 +48,7 @@ describe('stripMachineIds: an id a label introduces goes with its label', () => 
   it('keeps a label that is part of a longer word, and a label inside a link', () => {
     expect(stripMachineIds(`android ${ID}`)).toBe(`android ${ID}`);
     const link = 'https://example.invalid/reference';
-    expect(stripMachineIds(`See ${link} ref ${ID}.`)).toBe(`See ${link}.`);
+    expect(stripMachineIds(`See ${link} ref ${ID}.`)).toBe(`See ${link} ref ${ID}.`);
     for (const word of [
       'https://example.invalid/search?q=(reference',
       'https://example.invalid/wiki/Category:Reference',
@@ -98,9 +98,16 @@ describe('stripMachineIds: an id a label introduces goes with its label', () => 
     const text = `Set name:"Customer \\"VIP\\" ref ${ID}"`;
     expect(stripMachineIds(text)).toBe(text);
   });
-  it('removes a labelled id that follows a link in the same sentence', () => {
-    expect(stripMachineIds(`See https://app.example.invalid/x then ref ${ID}.`)).toBe(
-      'See https://app.example.invalid/x then.'
+  it('leaves a line alone that holds a link or a Windows path before the id, and cleans the next line', () => {
+    for (const text of [
+      `See https://app.example.invalid/x then ref ${ID}.`,
+      `Saved to C:\\Exports\\Customer ref ${ID}`,
+      `Saved to \\\\server\\share\\My Files lead id ${UUID}`,
+    ]) {
+      expect(stripMachineIds(text)).toBe(text);
+    }
+    expect(stripMachineIds(`See https://app.example.invalid/x\nDone ref ${ID}.`)).toBe(
+      'See https://app.example.invalid/x\nDone.'
     );
   });
 });

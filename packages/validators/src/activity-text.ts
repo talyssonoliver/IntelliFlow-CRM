@@ -176,6 +176,14 @@ function insideQuotedValue(text: string): boolean {
   return open !== '';
 }
 /**
+ * True when the line the id is on already holds a Windows path or a link before it ("Saved to C:\Exports\Customer ref
+ * <id>"). A path may have spaces in it and the cleaner cannot tell where it ends, so nothing on that line is removed.
+ */
+function lineHasPathOrLink(before: string): boolean {
+  const line = before.slice(before.lastIndexOf('\n') + 1);
+  return line.includes('\\') || line.includes('://');
+}
+/**
  * True when the id is introduced by a label ("COA ledger row <id>", "lead_id=<id>", "ref: <id>") and the id's
  * token ends right after it (a closing bracket or quote counts, so "(ref <id>)." does), or when the id is the
  * whole text.
@@ -183,7 +191,7 @@ function insideQuotedValue(text: string): boolean {
 function isRemovable(before: string, after: string): boolean {
   if (before.trim() === '' && after.trim() === '') return true;
   const base = beforeLabel(before);
-  if (insideQuotedValue(base)) return false;
+  if (insideQuotedValue(base) || lineHasPathOrLink(base)) return false;
   if (withoutTrailingLabels(base).length >= base.length) return false;
   return CLOSERS.includes(after.charAt(0)) ? tokenEndsAt(after, 1) : tokenEndsAt(after, 0);
 }
