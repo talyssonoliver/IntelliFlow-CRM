@@ -213,12 +213,22 @@ async function removeEvents(ctx: SyncContext, _cutoff: Date, budget: number): Pr
       must(await ctx.gateway.deleteEvent(ctx.tokens, link.googleEventId));
       // Its appointment is gone: nothing left to track. Otherwise keep the link, marked, so the
       // event is never made again (and a create that never finished is not finished later).
+      const reassigned =
+        link.appointment?.organizerId !== undefined &&
+        link.appointment.organizerId !== userId &&
+        link.appointment.status !== 'CANCELLED';
       if (link.appointmentId === null) {
         await ctx.prisma.calendarEventLink.delete({ where: { id: link.id, tenantId } });
       } else {
+        // A reassigned appointment lets go of its link (the tombstone stays for the old event), so if it
+        // comes back to this user it is made again as a new event.
         await ctx.prisma.calendarEventLink.update({
           where: { id: link.id, tenantId },
-          data: { remoteCancelledAt: ctx.now, pending: false },
+          data: {
+            remoteCancelledAt: ctx.now,
+            pending: false,
+            ...(reassigned ? { appointmentId: null } : {}),
+          },
         });
       }
       ctx.report.pushedDeleted += 1;
@@ -301,26 +311,35 @@ async function createEvents(ctx: SyncContext, cutoff: Date, budget: number): Pro
   return { writes, complete: pending.length + fresh.length < budget };
 }
 
-/** The pending link of an appointment; null when it has a link already (made meanwhile). */
+/**
+ * The pending link of an appointment; null when it has a link already (made meanwhile). The event id is
+ * made from the mailbox and the appointment; if an old tombstone holds that id (the appointment was
+ * reassigned away and has come back), a new one is made, so it gets a new event.
+ */
 async function startLink(ctx: SyncContext, row: any): Promise<any | null> {
   const { tenantId, id: mailboxId } = ctx.mailbox;
-  try {
-    return await ctx.prisma.calendarEventLink.create({
+  const make = (googleEventId: string) =>
+    ctx.prisma.calendarEventLink.create({
       data: {
         tenantId,
         mailboxId,
         appointmentId: row.id,
-        googleEventId: eventIdFor(mailboxId, row.id),
+        googleEventId,
         origin: 'AURORA',
         pending: true,
       },
     });
+  try {
+    return await make(eventIdFor(mailboxId, row.id));
   } catch (error) {
-    if (prismaCode(error) === 'P2002') return null;
-    throw error;
+    if (prismaCode(error) !== 'P2002') throw error;
   }
+  const linked = await ctx.prisma.calendarEventLink.findFirst({
+    where: { tenantId, mailboxId, appointmentId: row.id },
+  });
+  if (linked) return null;
+  return make(eventIdFor(mailboxId, `${row.id}:${ctx.now.getTime()}`));
 }
-
 /** Creates the event of a pending link, then settles the link. */
 async function makeEvent(ctx: SyncContext, link: any, row: any): Promise<void> {
   try {

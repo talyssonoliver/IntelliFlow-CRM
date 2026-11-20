@@ -121,13 +121,18 @@ describe('Aurora to Google: an appointment becomes an event', () => {
   it('leaves an appointment alone when a link for it was made meanwhile', async () => {
     const sync = h.setup({ appointment: [appointmentRow()] });
     h.db.failures.set('calendarEventLink.create', p2002());
+    const read = h.db.calendarEventLink.findFirst.getMockImplementation() as (
+      a: unknown
+    ) => unknown;
+    h.db.calendarEventLink.findFirst.mockImplementation(async (args: any) =>
+      args.where.appointmentId ? { id: 'made-meanwhile' } : read(args)
+    );
 
     const report = await runCalendarSync(sync);
 
     expect(report).toMatchObject({ pushedCreated: 0, itemFailures: 0 });
     expect(h.google.events.size).toBe(0);
   });
-
   it('writes the link first, pending, and settles it once the event is made', async () => {
     const sync = h.setup({ appointment: [appointmentRow()] });
     const create = h.google.createEvent.bind(h.google);

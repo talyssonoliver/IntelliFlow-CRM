@@ -8,6 +8,7 @@ import type { CalendarAppointmentLike } from '@intelliflow/adapters';
 import {
   CalendarAuthenticationError,
   CalendarConflictError,
+  CalendarEventNotFoundError,
   CalendarSyncError,
   CalendarSyncTokenExpiredError,
   type ExternalCalendarEvent,
@@ -387,7 +388,13 @@ export class FakeGoogle implements CalendarGateway {
     if (failure) return Result.fail<ExternalCalendarEvent, DomainError>(failure);
     // If-Match: Google refuses when the event changed since that etag.
     const there = this.events.get(id);
-    if (etag && there && there.etag !== etag) {
+    // A PATCH updates an event that exists: a missing one is a 404.
+    if (!there) {
+      return Result.fail<ExternalCalendarEvent, DomainError>(
+        new CalendarEventNotFoundError('google', 'Event not found')
+      );
+    }
+    if (etag && there.etag !== etag) {
       return Result.fail<ExternalCalendarEvent, DomainError>(
         new CalendarConflictError('Event was modified by another source')
       );
