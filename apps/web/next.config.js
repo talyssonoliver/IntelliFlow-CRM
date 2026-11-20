@@ -169,6 +169,22 @@ const nextConfig = {
           { key: 'Cache-Control', value: 'no-store' },
         ],
       },
+      // Vercel Hobby active-CPU budget (20/11): the public layout reads the auth cookie, so every
+      // marketing page renders in a function per request, crawlers and bots included. Signed-out
+      // requests (no access-token cookie: visitors, crawlers, monitors) may be cached at the edge
+      // for a few minutes, the same trade PERF-06 makes below for /login and /pricing. Signed-in
+      // requests keep the uncached per-request render. /status is live and stays uncached.
+      {
+        source:
+          '/(about|aup|blog|blog/:slug|careers|careers/:id|contact|cookies|dpa|features|partners|press|press/:id|privacy|security|terms)',
+        missing: [{ type: 'cookie', key: 'accessToken' }],
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=300, stale-while-revalidate=3600',
+          },
+        ],
+      },
       // PERF-06: bfcache / repeat-visit caching for the two confirmed
       // non-personalized public pages. `/login` and `/pricing` bake NO per-user
       // data into their SSR HTML, so a shared (edge) cache is safe. The root `/`

@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-20T14:02:34.856Z",
+  "timestamp": "2026-11-20T13:54:04.523Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
