@@ -84,6 +84,11 @@ describe('stripMachineIds: an id a label introduces goes with its label', () => 
       `He said "ok" and 'yes' then.`
     );
   });
+  it('keeps a quoted value that follows an equals sign or a colon', () => {
+    for (const text of [`Open path="C:\\Exports\\Customer ref ${ID}"`, `Set name:"My ref ${ID}"`]) {
+      expect(stripMachineIds(text)).toBe(text);
+    }
+  });
   it('removes a labelled id that follows a link in the same sentence', () => {
     expect(stripMachineIds(`See https://app.example.invalid/x then ref ${ID}.`)).toBe(
       'See https://app.example.invalid/x then.'

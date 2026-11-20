@@ -150,8 +150,8 @@ function beforeLabel(before: string): string {
   return before.endsWith('=') ? before.slice(0, -1) : before;
 }
 
-/** A quote opens after a space, a bracket or the start of the line, and closes before a space, punctuation or the end. */
-const QUOTE_OPENS_AFTER = ' \t([{';
+/** A quote opens after a space, a bracket, an "=", ":" or "," or the start of the line, and closes before a space, punctuation or the end. */
+const QUOTE_OPENS_AFTER = ' \t([{=:,;';
 const QUOTE_CLOSES_BEFORE = ' \t)]},.;:!?';
 
 /**
