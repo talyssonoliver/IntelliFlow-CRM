@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-20T00:02:06.472Z",
+  "timestamp": "2026-11-20T00:53:26.803Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1522,7 +1522,7 @@
   },
   "database_inventory": {
     "total_tables": 216,
-    "total_fields": 3187,
+    "total_fields": 3191,
     "total_indexes": 959,
     "total_relations": 306,
     "tables_with_embeddings": 4,
@@ -1551,7 +1551,7 @@
       },
       {
         "name": "EmailMailbox",
-        "fields": 44,
+        "fields": 48,
         "indexes": 4,
         "relations": 2,
         "hasEmbedding": false
