@@ -597,6 +597,15 @@ describe('displayActivityText (no machine ids in what a person reads, #42)', () 
     expect(displayActivityText('COA ledger row 12345')).toBe('COA ledger row 12345');
   });
 
+  it('only matches the marker at the start of a word, and survives text that changes length in lower case', () => {
+    expect(displayActivityText('xCOA ledger row cmw5j72u40001p5ug01kf3vot')).toBe(
+      'xCOA ledger row cmw5j72u40001p5ug01kf3vot'
+    );
+    expect(displayActivityText('İİİ note. COA ledger row cmw5j72u40001p5ug01kf3vot.')).toBe(
+      'İİİ note.'
+    );
+  });
+
   it('is empty for no text', () => {
     expect(displayActivityText(null)).toBe('');
     expect(displayActivityText(undefined)).toBe('');

@@ -204,12 +204,9 @@ export function isSystemTag(tag: string): boolean {
  */
 export function displayActivityText(text: string | null | undefined): string {
   const src = text ?? '';
-  const lower = src.toLowerCase();
   let out = '';
   let from = 0;
-  for (;;) {
-    const at = lower.indexOf(LEDGER_MARKER, from);
-    if (at < 0) break;
+  for (let at = findLedgerMarker(src, from); at >= 0; at = findLedgerMarker(src, from)) {
     let end = at + LEDGER_MARKER.length;
     while (src[end] === ' ' || src[end] === '\t') end++;
     const idStart = end;
@@ -228,6 +225,21 @@ export function displayActivityText(text: string | null | undefined): string {
 }
 
 const LEDGER_MARKER = 'coa ledger row';
+
+/**
+ * The index of the next "COA ledger row" at or after `from`, ignoring case, that starts a word. It
+ * compares slice by slice rather than searching a lower-cased copy, so an index never shifts when a
+ * character changes length in lower case.
+ */
+function findLedgerMarker(src: string, from: number): number {
+  for (let at = from; at + LEDGER_MARKER.length <= src.length; at++) {
+    const startsWord = at === 0 || !isAlphanumeric(src.charAt(at - 1));
+    if (startsWord && src.slice(at, at + LEDGER_MARKER.length).toLowerCase() === LEDGER_MARKER) {
+      return at;
+    }
+  }
+  return -1;
+}
 
 function isAlphanumeric(ch: string): boolean {
   return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9');
