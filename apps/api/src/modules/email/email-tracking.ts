@@ -86,31 +86,43 @@ function entityChar(name: string): string | null {
   return Number.isInteger(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : null;
 }
 
-/** Looks like a character reference name ("copy", "#38", "#x26"), whether or not we know it. */
-function looksLikeReference(name: string): boolean {
-  return name.length > 0 && [...name].every((char) => /[a-z0-9#]/i.test(char));
+function isReferenceChar(char: string): boolean {
+  return /[a-z0-9]/i.test(char);
+}
+
+/** The end (exclusive) of the run of letters and digits that starts at `from`. */
+function referenceRunEnd(text: string, from: number): number {
+  let at = from;
+  while (at < text.length && isReferenceChar(text.charAt(at))) at += 1;
+  return at;
 }
 
 /**
  * An attribute value as a browser reads it: the common named and numeric character references decoded.
- * Null when it holds a reference we cannot decode (the full table has over two thousand names): that link is
- * then left exactly as written, which always works, instead of being tracked with a wrong destination.
+ * Null when it holds a reference we cannot decode exactly (a numeric one without its semicolon, an unknown or
+ * very long name; the full table has over two thousand names): that link is then left as written, which always
+ * works, instead of being tracked with a wrong destination. A bare "&" before anything else is a literal "&".
  */
 function decodeEntities(text: string): string | null {
   let out = '';
   let from = 0;
   for (let amp = text.indexOf('&', from); amp !== -1; amp = text.indexOf('&', from)) {
     out += text.slice(from, amp);
-    const semi = text.indexOf(';', amp);
-    const name = semi !== -1 && semi - amp <= 10 ? text.slice(amp + 1, semi) : '';
-    const char = looksLikeReference(name) ? entityChar(name) : null;
-    if (looksLikeReference(name) && char === null) return null;
-    out += char ?? '&';
-    from = char === null ? amp + 1 : semi + 1;
+    const numeric = text.charAt(amp + 1) === '#';
+    const nameEnd = referenceRunEnd(text, amp + (numeric ? 2 : 1));
+    const closed = text.charAt(nameEnd) === ';' && nameEnd - amp <= 10;
+    if (numeric || (nameEnd > amp + 1 && text.charAt(nameEnd) === ';')) {
+      const char = closed ? entityChar(text.slice(amp + 1, nameEnd)) : null;
+      if (char === null) return null;
+      out += char;
+      from = nameEnd + 1;
+    } else {
+      out += '&';
+      from = amp + 1;
+    }
   }
   return out + text.slice(from);
 }
-
 const WHITESPACE = ' \t\r\n';
 
 function skipWhitespace(html: string, from: number): number {

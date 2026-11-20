@@ -130,9 +130,25 @@ describe('instrumentHtml: tracked links verify exactly as the redirect reads the
     expect(isValidSignature('c', RECORD, link.signature, link.target)).toBe(true);
   });
 
-  it('leaves a link as written when it holds a character reference we cannot decode', () => {
-    const html = '<a href="https://shop.example.invalid/?a=1&hellip;b=2">x</a>';
+  it.each([
+    ['an unknown name', 'https://shop.example.invalid/?a=1&hellip;b=2'],
+    ['a long name', 'https://shop.example.invalid/?a=1&CounterClockwiseContourIntegral;b=2'],
+    ['a numeric reference without its semicolon', 'https://shop.example.invalid/?q=&#65'],
+    ['a hex reference without its semicolon', 'https://shop.example.invalid/?q=&#x41'],
+    ['an impossible code point', 'https://shop.example.invalid/?q=&#0;'],
+  ])('leaves a link as written when it holds %s', (_name, href) => {
+    const html = `<a href="${href}">x</a>`;
     expect(instrumentHtml(html, RECORD, CLICKS, ENV)).toBe(html);
+  });
+
+  it('treats a bare ampersand before anything else as the literal character', () => {
+    const out = instrumentHtml(
+      '<a href="https://shop.example.invalid/?a=1&b=2&">x</a>',
+      RECORD,
+      CLICKS,
+      ENV
+    );
+    expect(trackedLinks(out)[0]!.target).toBe('https://shop.example.invalid/?a=1&b=2&');
   });
 
   it('keeps every index right when a character changes length in lower case', () => {
