@@ -13,7 +13,15 @@ vi.mock('@intelliflow/ui', () => ({
         <h2>{title}</h2>
         <p>{description}</p>
         <button onClick={() => onOpenChange(false)}>Cancel</button>
-        <button onClick={() => onConfirm()}>{confirmLabel}</button>
+        {/* Like the real dialog: await onConfirm, then ask to close. */}
+        <button
+          onClick={async () => {
+            await onConfirm();
+            onOpenChange(false);
+          }}
+        >
+          {confirmLabel}
+        </button>
       </div>
     ) : null,
 }));

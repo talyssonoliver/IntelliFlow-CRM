@@ -43,10 +43,21 @@ export function useDealStageMove(opts: {
       icon="swap_horiz"
       isLoading={mutation.isPending}
       onConfirm={() => {
-        if (!target || mutation.isPending) return;
-        // The dialog stays open, showing it is working, until the move settles; the bar is
-        // disabled meanwhile, so a second move cannot start from a stage that is about to change.
-        mutation.mutate({ id: dealId, targetStage: target }, { onSettled: () => setTarget(null) });
+        if (!target || mutation.isPending) return undefined;
+        // The dialog closes when this promise resolves (it awaits onConfirm, then closes), so it
+        // stays open showing it is working until the move settles; the bar is disabled meanwhile,
+        // so a second move cannot start from a stage that is about to change.
+        return new Promise<void>((resolve) => {
+          mutation.mutate(
+            { id: dealId, targetStage: target },
+            {
+              onSettled: () => {
+                setTarget(null);
+                resolve();
+              },
+            }
+          );
+        });
       }}
     />
   );
