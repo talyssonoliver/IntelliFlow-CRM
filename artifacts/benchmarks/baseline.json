@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-20T00:42:32.213Z",
+  "timestamp": "2026-11-20T01:22:11.973Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1521,16 +1521,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 216,
-    "total_fields": 3205,
-    "total_indexes": 959,
-    "total_relations": 320,
+    "total_tables": 217,
+    "total_fields": 3229,
+    "total_indexes": 964,
+    "total_relations": 323,
     "tables_with_embeddings": 4,
     "enums": 82,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 193,
+        "fields": 194,
         "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
@@ -1551,14 +1551,14 @@
       },
       {
         "name": "EmailMailbox",
-        "fields": 44,
+        "fields": 51,
         "indexes": 4,
         "relations": 2,
         "hasEmbedding": false
       },
       {
         "name": "Appointment",
-        "fields": 40,
+        "fields": 41,
         "indexes": 10,
         "relations": 6,
         "hasEmbedding": false
@@ -1967,6 +1967,13 @@
         "fields": 15,
         "indexes": 5,
         "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CalendarEventLink",
+        "fields": 15,
+        "indexes": 5,
+        "relations": 3,
         "hasEmbedding": false
       },
       {
