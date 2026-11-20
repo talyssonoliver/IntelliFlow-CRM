@@ -62,6 +62,7 @@ function sendPixel(res: ServerResponse, headOnly: boolean): void {
   // Every open must reach us: nothing may cache the image.
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
   res.setHeader('Pragma', 'no-cache');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
   res.end(headOnly ? undefined : PIXEL);
 }
 
@@ -122,6 +123,8 @@ export async function handleEmailTrackingRoute(
   res.statusCode = 302;
   res.setHeader('Location', target);
   res.setHeader('Cache-Control', 'no-store');
+  // The destination must not learn which tracking address sent the reader.
+  res.setHeader('Referrer-Policy', 'no-referrer');
   res.end();
 }
 

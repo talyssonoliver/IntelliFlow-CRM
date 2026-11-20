@@ -46,6 +46,110 @@ describe('signatures', () => {
   });
 });
 
+/** Every tracked link in the html, read back the way the redirect route reads it. */
+function trackedLinks(
+  html: string
+): Array<{ recordId: string; signature: string; target: string }> {
+  const found: Array<{ recordId: string; signature: string; target: string }> = [];
+  for (const part of html.split('https://api.example.invalid/t/c/').slice(1)) {
+    const [path, rest = ''] = part.split('?u=');
+    const [recordId = '', signature = ''] = path!.split('/');
+    const raw = decodeURIComponent(rest.split(/["'\s]/)[0] ?? '');
+    found.push({ recordId, signature, target: new URL(raw).toString() });
+  }
+  return found;
+}
+
+const CLICKS = { trackOpens: false, trackClicks: true };
+
+describe('instrumentHtml: tracked links verify exactly as the redirect reads them', () => {
+  it.each([
+    [
+      'a bare host',
+      '<a href="https://shop.example.invalid">x</a>',
+      'https://shop.example.invalid/',
+    ],
+    [
+      'an upper case scheme and host',
+      '<a href="HTTPS://Shop.Example.invalid/A">x</a>',
+      'https://shop.example.invalid/A',
+    ],
+    [
+      'spaces and non-ASCII characters',
+      '<a href="https://shop.example.invalid/a b/é">x</a>',
+      'https://shop.example.invalid/a%20b/%C3%A9',
+    ],
+    [
+      'a default port',
+      '<a href="https://shop.example.invalid:443/p">x</a>',
+      'https://shop.example.invalid/p',
+    ],
+    [
+      'a numeric character reference',
+      '<a href="https://shop.example.invalid/a?x=1&#38;y=2">x</a>',
+      'https://shop.example.invalid/a?x=1&y=2',
+    ],
+    [
+      'a hex reference and a quote reference',
+      '<a href="https://shop.example.invalid/a?x=1&#x26;q=&quot;">x</a>',
+      'https://shop.example.invalid/a?x=1&q=%22',
+    ],
+    [
+      'an upper case HREF with spaces around the equals sign',
+      '<A CLASS="b" HREF = "https://shop.example.invalid/z">x</A>',
+      'https://shop.example.invalid/z',
+    ],
+  ])('%s', (_name, html, expected) => {
+    const out = instrumentHtml(html, RECORD, CLICKS, ENV);
+    const links = trackedLinks(out);
+    expect(links).toHaveLength(1);
+    expect(links[0]!.target).toBe(expected);
+    expect(links[0]!.recordId).toBe(RECORD);
+    expect(isValidSignature('c', RECORD, links[0]!.signature, links[0]!.target)).toBe(true);
+  });
+
+  it('keeps every index right when a character changes length in lower case', () => {
+    const html = 'İİİ <a href="https://shop.example.invalid/a">x</a>';
+    const out = instrumentHtml(html, RECORD, CLICKS, ENV);
+    expect(out.startsWith('İİİ <a href="https://api.example.invalid/t/c/')).toBe(true);
+    expect(out.endsWith('">x</a>')).toBe(true);
+  });
+
+  it('leaves text, comments, styles, other attributes and other tags alone', () => {
+    const html =
+      'Use href="https://a.example.invalid/1" in text. <!-- href="https://b.example.invalid/2" -->' +
+      '<link href="https://c.example.invalid/3"> <style>a{background:url(x)} a[href="https://d.example.invalid/4"]{}</style> ' +
+      '<span data-href="https://e.example.invalid/5">s</span> <a href=https://f.example.invalid/6>unquoted</a>';
+    expect(instrumentHtml(html, RECORD, CLICKS, ENV)).toBe(html);
+  });
+
+  it('does not wrap a link that is already one of ours (a reply quoting a tracked mail)', () => {
+    const once = instrumentHtml(
+      '<a href="https://shop.example.invalid/a">x</a>',
+      RECORD,
+      CLICKS,
+      ENV
+    );
+    expect(instrumentHtml(once, RECORD, CLICKS, ENV)).toBe(once);
+  });
+
+  it('leaves an invalid or non-http address as it was', () => {
+    const html =
+      '<a href="http://">x</a> <a href="ftp://f.example.invalid/x">y</a> <a href="javascript:void(0)">z</a>';
+    expect(instrumentHtml(html, RECORD, CLICKS, ENV)).toBe(html);
+  });
+
+  it('puts the pixel before the closing body tag, whatever its case', () => {
+    const out = instrumentHtml(
+      '<body>Hi</body>',
+      RECORD,
+      { trackOpens: true, trackClicks: false },
+      ENV
+    );
+    expect(out.indexOf('<img')).toBeLessThan(out.lastIndexOf('</body>'));
+  });
+});
+
 describe('instrumentHtml', () => {
   it('returns the html byte for byte when both settings are off', () => {
     expect(instrumentHtml(HTML, RECORD, OFF, ENV)).toBe(HTML);

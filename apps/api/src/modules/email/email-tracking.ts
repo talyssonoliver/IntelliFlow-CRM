@@ -64,43 +64,108 @@ export function trackingBaseUrl(env: NodeJS.ProcessEnv = process.env): string | 
   }
 }
 
-function isTrackableLink(value: string): boolean {
-  const lower = value.trim().toLowerCase();
-  return lower.startsWith('http://') || lower.startsWith('https://');
+/** Lower-cases A-Z only, so every index in the result is an index in the input (toLowerCase can change lengths). */
+function asciiLower(text: string): string {
+  return text.replace(/[A-Z]/g, (char) => String.fromCharCode(char.charCodeAt(0) + 32));
 }
 
-/** Rewrites every `href="..."` / `href='...'` that is an http(s) link, by plain scanning. */
-function rewriteLinks(html: string, recordId: string, base: string): string {
-  const lower = html.toLowerCase();
+const NAMED_ENTITIES: ReadonlyMap<string, string> = new Map([
+  ['amp', '&'],
+  ['quot', '"'],
+  ['apos', "'"],
+  ['lt', '<'],
+  ['gt', '>'],
+]);
+
+function entityChar(name: string): string | null {
+  const named = NAMED_ENTITIES.get(name);
+  if (named !== undefined) return named;
+  if (!name.startsWith('#')) return null;
+  const hex = name.charAt(1) === 'x' || name.charAt(1) === 'X';
+  const code = hex ? Number.parseInt(name.slice(2), 16) : Number.parseInt(name.slice(1), 10);
+  return Number.isInteger(code) && code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : null;
+}
+
+/** An attribute value as a browser reads it: the common named and numeric character references decoded. */
+function decodeEntities(text: string): string {
   let out = '';
-  let cursor = 0;
-  for (let at = lower.indexOf('href=', cursor); at !== -1; at = lower.indexOf('href=', cursor)) {
-    const quote = html.charAt(at + 5);
-    if (quote !== '"' && quote !== "'") {
-      out += html.slice(cursor, at + 5);
-      cursor = at + 5;
-      continue;
-    }
-    const start = at + 6;
-    const end = html.indexOf(quote, start);
-    if (end === -1) break;
-    const target = html.slice(start, end).trim().split('&amp;').join('&');
-    out += html.slice(cursor, start);
-    if (isTrackableLink(target)) {
-      const sig = trackingSignature('c', recordId, target);
-      out += `${base}/t/c/${recordId}/${sig}?u=${encodeURIComponent(target)}`;
-    } else {
-      out += html.slice(start, end);
-    }
-    cursor = end;
+  let from = 0;
+  for (let amp = text.indexOf('&', from); amp !== -1; amp = text.indexOf('&', from)) {
+    out += text.slice(from, amp);
+    const semi = text.indexOf(';', amp);
+    const char = semi !== -1 && semi - amp <= 10 ? entityChar(text.slice(amp + 1, semi)) : null;
+    out += char ?? '&';
+    from = char === null ? amp + 1 : semi + 1;
   }
-  return out + html.slice(cursor);
+  return out + text.slice(from);
+}
+
+const WHITESPACE = ' \t\r\n';
+
+function skipWhitespace(html: string, from: number): number {
+  let at = from;
+  while (at < html.length && WHITESPACE.includes(html.charAt(at))) at += 1;
+  return at;
+}
+
+/** Where the quoted value of the `href` at `at` starts and ends, when it is an attribute of an `<a ...>` tag. */
+function hrefSpan(html: string, lower: string, at: number): { start: number; end: number } | null {
+  if (!WHITESPACE.includes(html.charAt(at - 1))) return null;
+  const open = html.lastIndexOf('<', at);
+  if (open === -1 || open < html.lastIndexOf('>', at)) return null;
+  if (lower.charAt(open + 1) !== 'a' || !WHITESPACE.includes(html.charAt(open + 2))) return null;
+  const equals = skipWhitespace(html, at + 4);
+  if (html.charAt(equals) !== '=') return null;
+  const quoteAt = skipWhitespace(html, equals + 1);
+  const quote = html.charAt(quoteAt);
+  if (quote !== '"' && quote !== "'") return null;
+  const end = html.indexOf(quote, quoteAt + 1);
+  return end === -1 ? null : { start: quoteAt + 1, end };
+}
+
+/**
+ * The redirect address for one link, or null when the link is left alone: not http(s), not a valid address, or
+ * already one of our tracking addresses (a reply or forward that quotes a tracked mail). The link is signed in the
+ * normalized form the redirect reads back, so what is signed is what is checked.
+ */
+function trackedHref(target: string, recordId: string, base: string): string | null {
+  let url: URL;
+  try {
+    url = new URL(target);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return null;
+  const normalized = url.toString();
+  if (normalized.startsWith(`${base}/t/`)) return null;
+  const sig = trackingSignature('c', recordId, normalized);
+  return `${base}/t/c/${recordId}/${sig}?u=${encodeURIComponent(normalized)}`;
+}
+
+/** Rewrites the http(s) links of `<a href="...">` tags (single or double quoted, any case), by plain scanning. */
+function rewriteLinks(html: string, recordId: string, base: string): string {
+  const lower = asciiLower(html);
+  let out = '';
+  let copied = 0;
+  let from = 0;
+  for (let at = lower.indexOf('href', from); at !== -1; at = lower.indexOf('href', from)) {
+    from = at + 4;
+    const span = hrefSpan(html, lower, at);
+    if (!span) continue;
+    from = span.end;
+    const value = decodeEntities(html.slice(span.start, span.end).trim());
+    const tracked = trackedHref(value, recordId, base);
+    if (!tracked) continue;
+    out += html.slice(copied, span.start) + tracked;
+    copied = span.end;
+  }
+  return out + html.slice(copied);
 }
 
 function withPixel(html: string, recordId: string, base: string): string {
   const sig = trackingSignature('o', recordId);
   const pixel = `<img src="${base}/t/o/${recordId}/${sig}.gif" width="1" height="1" alt="" style="display:none" />`;
-  const close = html.toLowerCase().lastIndexOf('</body>');
+  const close = asciiLower(html).lastIndexOf('</body>');
   return close === -1 ? html + pixel : html.slice(0, close) + pixel + html.slice(close);
 }
 
