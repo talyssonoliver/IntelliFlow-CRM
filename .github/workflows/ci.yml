@@ -356,6 +356,16 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
 
+      # MVP-007 (register #35): the database the migrations just built must equal schema.prisma. A
+      # constraint or index created by raw SQL but not declared there would be DROPPED by the next
+      # migration generated from the schema; this fails with the SQL that would do it. Declare the
+      # object in schema.prisma (see packages/db/prisma/schema.prisma, PG-203 block) or add a
+      # migration; locally: pnpm run db:drift.
+      - name: Schema drift guard
+        run: pnpm --filter @intelliflow/db db:drift
+        env:
+          DATABASE_URL: postgresql://postgres:${{ secrets.CI_POSTGRES_PASSWORD }}@localhost:5432/intelliflow_test
+
       # Emit the per-test JSON alongside the normal console output so the
       # silent-skip gate below has something to audit. This job is NOT sharded,
       # so it sees the whole integration project and no file-subset problem

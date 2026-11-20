@@ -592,6 +592,11 @@ model User {
   taskAutomationRulesCreated  TaskAutomationRule[] @relation("TaskAutomationRuleCreator") @ignore // PG-208
   emailMailboxes              EmailMailbox[]   // PG-207
   emailSignatures             EmailSignature[] // PG-207
+  hostedEventTypes            EventType[]      @relation("EventTypeHost")
+  dsarRequestsCreated         DsarRequest[]    @relation("DsarCreatedBy")
+  dsarRequestsResolved        DsarRequest[]    @relation("DsarResolvedBy")
+  restrictionsCreated         ProcessingRestriction[] @relation("RestrictionCreatedBy")
+  restrictionsLifted          ProcessingRestriction[] @relation("RestrictionLiftedBy")
 
   @@index([email])
   @@index([role])
@@ -741,6 +746,7 @@ model Lead {
   @@index([tenantId, utmCampaign]) // ADR-070: campaign attribution reports
   @@index([tenantId, outreachSlug]) // COA outreach funnel: lead by concept-page slug
   @@index([accountId])
+  appointments            Appointment[] // PG-203: FK ("tenantId","leadId"), ON DELETE SET NULL ("leadId")
   // PG-203: composite target for appointments ("tenantId","leadId") (DBA-012); built CONCURRENTLY in
   // migrations/20261021120300_leads_tenant_id_key.
   @@unique([tenantId, id])
@@ -2218,10 +2224,13 @@ model Appointment {
   linkedCases         AppointmentCase[]
 
   // PG-203 — event type + public booking (ADR-083). All nullable; NULL for in-app bookings without a type.
-  /// FK ("tenantId","eventTypeId") -> event_types("tenantId","id") ON DELETE SET NULL ("eventTypeId") is SQL-only (see EventType).
+  /// The database FK is ON DELETE SET NULL ("eventTypeId") (PostgreSQL 15 column list: tenantId is
+  /// kept). Prisma cannot write the column list, so this relation only mirrors it (see EventType).
   eventTypeId           String?
-  /// FK ("tenantId","leadId") -> leads("tenantId","id") ON DELETE SET NULL ("leadId") is SQL-only (see EventType).
+  eventType             EventType?        @relation(fields: [tenantId, eventTypeId], references: [tenantId, id], onDelete: SetNull, onUpdate: Cascade)
+  /// As above: ON DELETE SET NULL ("leadId") in the database.
   leadId                String?
+  lead                  Lead?             @relation(fields: [tenantId, leadId], references: [tenantId, id], onDelete: SetNull, onUpdate: Cascade)
   bookerName            String?   @db.VarChar(200)
   bookerEmail           String?   @db.VarChar(320)
   /// Allowlisted keys only (phone, company, notes, phoneRejected); size CHECK in SQL.
@@ -2313,8 +2322,9 @@ model Case {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   /// PG-204 — case type applied at creation (ADR-076). Plain scalar: the tenant-consistent
-  /// FK ("tenantId","caseTypeId") -> case_types("tenantId","id") is SQL-only (see CaseType).
+  /// FK ("tenantId","caseTypeId") -> case_types("tenantId","id"), NO ACTION (see CaseType).
   caseTypeId   String?
+  caseType     CaseType?    @relation(fields: [tenantId, caseTypeId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
 
   // Multi-tenancy
   tenantId    String
@@ -2438,9 +2448,7 @@ model CaseAutomationSetting {
 // tests/integration/case-types.test.ts — do not drop in a diff):
 //   - case_types_tenant_lower_name_key   UNIQUE ("tenantId", lower("name"))
 //   - case_types_one_default_key         UNIQUE ("tenantId") WHERE "isDefault"
-//   - cases_tenantId_caseTypeId_fkey     FOREIGN KEY ("tenantId","caseTypeId")
-//                                        REFERENCES case_types("tenantId","id") ON DELETE NO ACTION
-//     (Prisma cannot model an optional relation over the required tenantId)
+//   (cases_tenantId_caseTypeId_fkey is declared as a relation on Case, MVP-007.)
 //   - CHECKs on colorToken, defaultSlaDays, name, requiredFields, checklist title/sortOrder
 //   - RLS tenant policies on both tables
 
@@ -2463,6 +2471,7 @@ model CaseType {
   checklist CaseTypeChecklistItem[]
 
   // DBA-012: composite target for tenant-consistent child FKs
+  cases           Case[]
   @@unique([tenantId, id])
   @@index([tenantId, isActive])
   @@map("case_types")
@@ -2547,13 +2556,14 @@ model AvailabilityClosure {
 // migrations/20261021120100_event_types and 20261021120400_appointments_lead_fk,
 // asserted by tests/integration/event-types.test.ts — do not drop in a diff):
 //   - event_types_tenant_lower_name_key    UNIQUE ("tenantId", lower("name"))
-//   - event_types_hostUserId_fkey          FOREIGN KEY ("hostUserId") REFERENCES users("id") ON DELETE NO ACTION
-//   - appointments_tenantId_eventTypeId_fkey  FOREIGN KEY ("tenantId","eventTypeId")
-//                                         REFERENCES event_types("tenantId","id") ON DELETE SET NULL ("eventTypeId")
-//   - appointments_tenantId_leadId_fkey    FOREIGN KEY ("tenantId","leadId")
-//                                         REFERENCES leads("tenantId","id") ON DELETE SET NULL ("leadId")
-//   - booking_attempts_tenantId_eventTypeId_fkey  (column-list SET NULL, same reason)
-//     (Prisma cannot model optional relations over the required tenantId, nor SET NULL column lists)
+//   - the column-list form of the SET NULL foreign keys below (MVP-007, register #35). Their
+//     relations ARE declared (so a migration generated from this schema never drops them), but
+//     Prisma can only write plain ON DELETE SET NULL, which would also null the required tenantId.
+//     The database keeps the column list from the migrations; never regenerate these constraints:
+//       appointments_tenantId_eventTypeId_fkey   ("tenantId","eventTypeId") -> event_types, SET NULL ("eventTypeId")
+//       appointments_tenantId_leadId_fkey        ("tenantId","leadId") -> leads, SET NULL ("leadId")
+//       booking_attempts_tenantId_eventTypeId_fkey  ("tenantId","eventTypeId") -> event_types, SET NULL ("eventTypeId")
+//     prisma validate warns about SetNull over a required field for these three; that is expected.
 //   - CHECKs on event_types name/slug/description/duration/colorToken/locationDetails/requiredFields/leadSource,
 //     booking_attempts hashes, tenants bookingHandle/bookingPrivacyUrl, appointments bookedVia/bookingAnswers
 //   - RLS tenant policies on event_types and booking_attempts
@@ -2571,8 +2581,12 @@ model EventType {
   locationType    EventLocationType @default(VIDEO)
   locationDetails String?           @db.VarChar(500)
   appointmentType AppointmentType   @default(MEETING)
-  /// Host user (organizer of public bookings). FK to users is SQL-only (see block above).
+  /// Host user (organizer of public bookings). ON DELETE NO ACTION (checked at statement end), so a
+  /// tenant delete that cascades to both users and event types does not trip it mid-statement.
   hostUserId      String
+  hostUser        User              @relation("EventTypeHost", fields: [hostUserId], references: [id], onDelete: NoAction, onUpdate: Cascade)
+  appointments    Appointment[]
+  bookingAttempts BookingAttempt[]
   requiredFields  String[]          @default([])
   leadSource      LeadSource        @default(BOOKING)
   isActive        Boolean           @default(true)
@@ -2599,8 +2613,9 @@ model BookingAttempt {
   id          String   @id @default(cuid())
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  /// FK ("tenantId","eventTypeId") -> event_types ON DELETE SET NULL ("eventTypeId") is SQL-only.
+  /// The database FK is ON DELETE SET NULL ("eventTypeId"): column list, see Appointment.
   eventTypeId String?
+  eventType   EventType? @relation(fields: [tenantId, eventTypeId], references: [tenantId, id], onDelete: SetNull, onUpdate: Cascade)
   emailHash   String   @db.Char(64)
   ipHash      String   @db.Char(64)
   createdAt   DateTime @default(now())
@@ -2615,9 +2630,9 @@ model BookingAttempt {
 // PG-203 DSAR — data subject requests and processing restrictions
 // (spec Addendum A; migration 20261022120000_dsar_requests, Class A: new tables + enums only).
 // Replaces the never-applied raw-SQL data_subject_requests design (ADR-007 addendum).
-// SQL-only (documented here): named CHECKs, hash CHECKs, the createdById/resolvedById/
-// liftedById -> users FKs (ON DELETE SET NULL), the partial unique index on active
-// restrictions and the RLS policies. Do not drop in a diff. In full (all in
+// SQL-only (documented here): named CHECKs, hash CHECKs, the partial unique index on active
+// restrictions and the RLS policies. The createdById/resolvedById/liftedById -> users FKs (ON
+// DELETE SET NULL) are declared as relations (MVP-007). Do not drop in a diff. In full (all in
 // migrations/20261022120000_dsar_requests):
 //   - CHECKs on dsar_requests: dsar_requests_source_check, dsar_requests_capEmailHash_check,
 //     dsar_requests_ipHash_check, dsar_requests_details_check, dsar_requests_objectionScope_check,
@@ -2687,7 +2702,9 @@ model DsarRequest {
   exportDownloadedAt    DateTime?
   ipHash                String?           @db.Char(64)
   createdById           String?
+  createdBy             User?             @relation("DsarCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
   resolvedById          String?
+  resolvedBy            User?             @relation("DsarResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
   resolutionNote        String?
   noHoldConfirmedAt     DateTime?
   marketingStopMethod   String?           @db.VarChar(500)
@@ -2720,10 +2737,12 @@ model ProcessingRestriction {
   /// The DSAR requests that created or extended this restriction.
   dsarRequestIds  String[]  @default([])
   createdById     String?
+  createdBy       User?     @relation("RestrictionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   liftedAt        DateTime?
   liftedById      String?
+  liftedBy        User?     @relation("RestrictionLiftedBy", fields: [liftedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
   liftNote        String?   @db.VarChar(500)
 
   @@unique([tenantId, id])
@@ -2926,6 +2945,7 @@ model ReportTemplate {
   // No @@unique here — Prisma does not support partial unique indexes.
   @@index([tenantId])
   @@index([createdBy])
+  @@index([tenantId, name]) // migrations/20260629000002_report_templates_partial_unique
   @@map("report_templates")
 }
 
