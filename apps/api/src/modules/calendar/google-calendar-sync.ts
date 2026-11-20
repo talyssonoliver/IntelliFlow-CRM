@@ -1,0 +1,218 @@
+/**
+ * Google Calendar sync (MVP-013). Like the inbox sync, each due mailbox (a user's own Google mailbox
+ * with the calendar permission, due every five minutes) is claimed one at a time with a lease, read
+ * (google-calendar-pull.ts; the push of Aurora's own is a later change) and released with the outcome.
+ * A failure backs the mailbox off and never changes its mail status. Google answering that the
+ * calendar permission is gone marks it NEEDS_RECONNECT, and the sync stops until the user reconnects.
+ * The tick that runs this is wired in a later change.
+ */
+import { GoogleCalendarAdapter, MailboxTransportError } from '@intelliflow/adapters';
+import { CalendarAuthenticationError, type OAuthTokens } from '@intelliflow/application';
+import {
+  getOAuthAccess,
+  hasOAuthClient,
+  oauthClientEnvNames,
+  type MailboxTransports,
+  type TransportMailbox,
+} from '../email/mailbox-transport';
+import { hasGoogleCalendar } from '../email/mail-sync-scopes';
+import { errorCause, logNoClient } from '../email/mail-sync-report';
+import {
+  newReport,
+  type CalendarGateway,
+  type CalendarSyncReport,
+  type SyncContext,
+} from './google-calendar-links';
+import { pullChanges } from './google-calendar-pull';
+
+export const CALENDAR_SYNC_INTERVAL_MS = 5 * 60_000;
+const LEASE_MS = 5 * 60_000;
+const MAILBOXES_PER_TICK = 10;
+/** A tick stops claiming mailboxes after this, so one tick always ends well inside a lease. */
+const TICK_BUDGET_MS = 2 * 60_000;
+/** Time one mailbox's round may take: well inside the lease. */
+const MAILBOX_BUDGET_MS = 3 * 60_000;
+const MAX_BACKOFF_MS = 6 * 60 * 60_000;
+/** The scopes that let events be read and written (the connect asks for the first). */
+const CALENDAR_SCOPE_URIS = [
+  'https://www.googleapis.com/auth/calendar.events',
+  'https://www.googleapis.com/auth/calendar',
+];
+
+export interface CalendarSyncDeps {
+  prisma: any;
+  transports: MailboxTransports;
+  now: () => Date;
+  /** The Google client for a round; defaults to the Google Calendar adapter. */
+  gatewayFor?: (mailbox: { id: string }) => CalendarGateway;
+}
+
+/** The mailbox row as the encrypted client returns it (the token helper reads its credentials). */
+interface SyncMailbox extends TransportMailbox {
+  userId: string | null;
+  scope: string;
+  status: string;
+  grantedScopes: string[];
+  calendarSyncToken: string | null;
+  calendarStatus: string;
+  calendarFailureCount: number;
+}
+
+interface Claim {
+  id: string;
+  leaseUntil: Date;
+}
+
+async function claimNext(deps: CalendarSyncDeps, now: Date): Promise<Claim | null> {
+  const leaseUntil = new Date(now.getTime() + LEASE_MS);
+  const rows: Array<{ id: string; calendarLockedUntil: Date }> = await deps.prisma.$queryRaw`
+    UPDATE email_mailboxes SET "calendarLockedUntil" = ${leaseUntil}
+    WHERE id IN (
+      SELECT id FROM email_mailboxes
+      WHERE status = 'ACTIVE' AND kind = 'GMAIL' AND scope = 'USER'
+        AND "calendarStatus" = 'ACTIVE'
+        AND "grantedScopes" && ${CALENDAR_SCOPE_URIS}::text[]
+        AND ("calendarNextSyncAt" IS NULL OR "calendarNextSyncAt" <= ${now})
+        AND ("calendarLockedUntil" IS NULL OR "calendarLockedUntil" < ${now})
+      ORDER BY "calendarNextSyncAt" ASC NULLS FIRST
+      LIMIT 1
+      FOR UPDATE SKIP LOCKED
+    )
+    RETURNING id, "calendarLockedUntil"`;
+  const row = rows[0];
+  return row ? { id: row.id, leaseUntil: row.calendarLockedUntil } : null;
+}
+
+/**
+ * Writes the round's outcome only while this worker still holds the lease AND the credentials it read
+ * are still the mailbox's: after a reconnect (tokenVersion moved on) nothing of the old round is
+ * written back, and the lease simply runs out.
+ */
+async function release(
+  deps: CalendarSyncDeps,
+  claim: Claim,
+  tokenVersion: number,
+  data: Record<string, unknown>
+): Promise<void> {
+  try {
+    await deps.prisma.emailMailbox.update({
+      where: { id: claim.id, calendarLockedUntil: claim.leaseUntil, tokenVersion },
+      data: { calendarLockedUntil: null, ...data },
+    });
+  } catch (error) {
+    if ((error as { code?: unknown })?.code !== 'P2025') throw error; // another worker holds it now
+  }
+}
+
+function defaultGateway(): CalendarGateway {
+  // The adapter's OAuth methods are not used: the access token comes from the mailbox's own grant.
+  return new GoogleCalendarAdapter({
+    oauthConfig: { clientId: '', clientSecret: '', redirectUri: '', scopes: [] },
+    calendarId: 'primary',
+  });
+}
+
+function tokensFor(access: string, scopes: string[], now: Date): OAuthTokens {
+  return {
+    accessToken: access,
+    refreshToken: '',
+    expiresAt: new Date(now.getTime() + 5 * 60_000),
+    scope: scopes,
+    tokenType: 'Bearer',
+  };
+}
+
+async function syncMailbox(
+  deps: CalendarSyncDeps,
+  claim: Claim,
+  now: Date,
+  report: CalendarSyncReport
+): Promise<void> {
+  const mailbox: SyncMailbox | null = await deps.prisma.emailMailbox.findFirst({
+    where: { id: claim.id },
+  });
+  if (!mailbox) return;
+  const nextRound = new Date(now.getTime() + CALENDAR_SYNC_INTERVAL_MS);
+  // The row can change between the claim and this read: check again what the claim looked for.
+  if (
+    !mailbox.userId ||
+    mailbox.kind !== 'GMAIL' ||
+    mailbox.scope !== 'USER' ||
+    mailbox.status !== 'ACTIVE' ||
+    mailbox.calendarStatus !== 'ACTIVE' ||
+    !hasGoogleCalendar(mailbox.grantedScopes)
+  ) {
+    await release(deps, claim, mailbox.tokenVersion, { calendarNextSyncAt: nextRound });
+    return;
+  }
+  // No Google client in this process (its env lacks it): a setup gap, not a mailbox failure.
+  if (!hasOAuthClient(deps.transports, 'GMAIL')) {
+    await release(deps, claim, mailbox.tokenVersion, { calendarNextSyncAt: nextRound });
+    logNoClient(claim.id, mailbox.kind, oauthClientEnvNames(mailbox.kind));
+    return;
+  }
+
+  // What the pull finished stays, even when the push then fails.
+  const progress: Record<string, unknown> = {};
+  let version = mailbox.tokenVersion;
+  try {
+    const access = await getOAuthAccess(deps.prisma, mailbox, deps.transports, now);
+    version = access.tokenVersion;
+    const deadline = deps.now().getTime() + MAILBOX_BUDGET_MS;
+    const ctx: SyncContext = {
+      prisma: deps.prisma,
+      gateway: deps.gatewayFor ? deps.gatewayFor({ id: mailbox.id }) : defaultGateway(),
+      tokens: tokensFor(access.accessToken, mailbox.grantedScopes, now),
+      mailbox: { id: mailbox.id, tenantId: mailbox.tenantId, userId: mailbox.userId },
+      now,
+      hasTime: () => deps.now().getTime() < deadline,
+      report,
+    };
+    const pulled = await pullChanges(ctx, mailbox.calendarSyncToken);
+    progress.calendarSyncToken = pulled.syncToken;
+    report.mailboxesSynced += 1;
+    await release(deps, claim, version, {
+      calendarSyncToken: pulled.syncToken,
+      calendarSyncedAt: now,
+      calendarFailureCount: 0,
+      // More to do: due again on the next tick; caught up: wait the interval.
+      calendarNextSyncAt: pulled.complete ? nextRound : now,
+    });
+  } catch (error) {
+    // Google says the permission is not there (never granted or withdrawn): stop until reconnected.
+    if (error instanceof CalendarAuthenticationError) {
+      report.reconnects += 1;
+      await release(deps, claim, version, { ...progress, calendarStatus: 'NEEDS_RECONNECT' });
+      return;
+    }
+    report.failures += 1;
+    const failures = mailbox.calendarFailureCount + 1;
+    const backoff = Math.min(CALENDAR_SYNC_INTERVAL_MS * 2 ** failures, MAX_BACKOFF_MS);
+    await release(deps, claim, version, {
+      ...progress,
+      calendarFailureCount: failures,
+      calendarNextSyncAt: new Date(now.getTime() + backoff),
+    });
+    logFailure(claim.id, error);
+  }
+}
+
+/** Class name and codes only: never an event title, an address or a token. */
+function logFailure(mailboxId: string, error: unknown, log: Pick<Console, 'warn'> = console): void {
+  const code = error instanceof MailboxTransportError ? error.code : undefined;
+  log.warn('[calendar-sync] round failed', { mailboxId, ...errorCause(error), code });
+}
+
+/** One tick: sync the due mailboxes, one claim at a time, within the tick budget. */
+export async function runCalendarSync(deps: CalendarSyncDeps): Promise<CalendarSyncReport> {
+  const report = newReport();
+  const startedAt = deps.now().getTime();
+  for (let i = 0; i < MAILBOXES_PER_TICK; i++) {
+    const claimedAt = deps.now();
+    if (claimedAt.getTime() - startedAt >= TICK_BUDGET_MS) break;
+    const claim = await claimNext(deps, claimedAt);
+    if (!claim) break;
+    await syncMailbox(deps, claim, claimedAt, report);
+  }
+  return report;
+}
