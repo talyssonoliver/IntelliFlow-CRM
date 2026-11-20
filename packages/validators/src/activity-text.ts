@@ -55,6 +55,29 @@ function trimSpacesEnd(text: string): string {
   return text.slice(0, end);
 }
 
+/** The id ending at `end` is the last word of its sentence: a space or the end follows, or a full stop and then a space or the end. */
+function endsSentence(text: string, end: number): boolean {
+  const isBreak = (char: string) => char === '' || ' \t\r\n'.includes(char);
+  const next = text.charAt(end);
+  return isBreak(next) || (next === '.' && isBreak(text.charAt(end + 1)));
+}
+
+/**
+ * True when the sentence before the marker already holds a path or a link ("Open C:\Exports\Archived COA ledger row
+ * <id>"). A path can have spaces in it and the cleaner cannot tell where it ends, so that sentence is left alone. An
+ * earlier sentence ("... GBP 69.99/month. COA ledger row <id>.") is not looked at.
+ */
+function sentenceHasPath(before: string): boolean {
+  const start = Math.max(
+    before.lastIndexOf('\n'),
+    before.lastIndexOf('. '),
+    before.lastIndexOf('; '),
+    before.lastIndexOf('! '),
+    before.lastIndexOf('? ')
+  );
+  const sentence = before.slice(start + 1);
+  return sentence.includes('/') || sentence.includes('\\');
+}
 /** The text without "COA ledger row <id>." (the full stop after the id goes with it). Other text is unchanged. */
 export function stripMachineIds(text: string): string {
   let out = '';
