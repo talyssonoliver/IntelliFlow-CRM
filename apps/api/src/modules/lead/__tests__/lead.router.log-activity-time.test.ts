@@ -161,11 +161,11 @@ describe('lead.logActivity occurredAt', () => {
     await leadRouter.createCaller(createTestContext()).logActivity({
       leadId: TEST_UUIDS.lead1,
       type: 'EMAIL',
-      title: `Price follow-up sent (lead id ${id})`,
+      title: `Price follow-up sent. COA ledger row ${id}.`,
       description: `Reply in their thread. COA ledger row ${id}.`,
     });
 
-    expect(captured.activity.title).toBe('Price follow-up sent');
+    expect(captured.activity.title).toBe('Price follow-up sent.');
     expect(captured.activity.description).toBe('Reply in their thread.');
     expect(JSON.stringify(captured.activity)).not.toContain(id);
   });

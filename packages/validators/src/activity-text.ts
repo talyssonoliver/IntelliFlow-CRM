@@ -1,236 +1,109 @@
 /**
- * User-facing activity text without machine identifiers (register row 42).
+ * User-facing activity text without the machine id the COA sync writes into it (register row 42).
  *
- * Scripts and syncs that log activity on a lead sometimes put a system id in the text, for example
- * "... Pitshanger Health and Fitness. COA ledger row cmw5j72u40001p5ug01kf3vot." A user cannot use that id
- * and it reads as a leak of internals. The ids belong in an activity's metadata, never in its title or
- * description.
+ * The operator script that logs COA outreach on a lead wrote "... COA ledger row <record id>." into the
+ * description. A user cannot use that id and it reads as a leak of internals; the id belongs in the activity's
+ * metadata. Only that exact form is removed: the words "COA ledger row", a record id (a cuid: "c" and at least 20
+ * letters or digits, one of them a digit) and the full stop after it. Nothing else is touched, so an id a person
+ * typed, a link, a path, a file name or an address is never changed.
  *
- * Only an id that is introduced by a label is removed, together with the label ("COA ledger row <id>",
- * "lead id: <id>", "ref=<id>"), or an id that is the whole text. An id anywhere else (inside a link, a path, a file
- * name, a host name, an email address, a quoted value) is left exactly as written: nothing there is a label, and a
- * user's own text and addresses must never be changed.
- *
- * Pure, browser safe, no dependencies and no backtracking patterns: it is used by the API when an
- * activity is written, by the web when one is shown, and by the one-off cleanup script for rows that were
- * written before. Only the removal point is tidied; the rest of the text is returned as it was.
+ * Pure, browser safe and without backtracking patterns: the API uses it when an activity is written, the web when
+ * one is shown, and the one-off cleanup script for rows written before.
  */
 
 /** What a title becomes when it was nothing but an id. */
 export const FALLBACK_ACTIVITY_TITLE = 'Activity';
 
-/** A cuid: "c" and 24 letters or digits (Prisma's default id). One without a digit is a word. */
-const CUID = /\bc[a-z0-9]{24}\b/gi;
+const LEDGER_MARKER = 'coa ledger row';
 
-/** A UUID, any version. */
-const UUID = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
-
-/** Words that introduce an id, longest first. The label goes with the id: "COA ledger row" alone says nothing. */
-const LABELS: readonly string[] = [
-  'coa ledger row',
-  'coa lead id',
-  'ledger row',
-  'coa ledger',
-  'coa lead',
-  'lead id',
-  'row id',
-  'reference',
-  'row',
-  'ref',
-  'id',
-];
-
-interface IdMatch {
-  index: number;
-  length: number;
+function isAlphanumeric(char: string): boolean {
+  return (
+    (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9')
+  );
 }
 
-function firstId(text: string): IdMatch | null {
-  let best: IdMatch | null = null;
-  for (const re of [CUID, UUID]) {
-    re.lastIndex = 0;
-    for (let m = re.exec(text); m; m = re.exec(text)) {
-      if (re === CUID && !/\d/.test(m[0])) continue;
-      if (!best || m.index < best.index) best = { index: m.index, length: m[0].length };
-      break;
+/**
+ * The index of the next "COA ledger row" at or after `from`, ignoring case, that starts a word. It compares slice by
+ * slice rather than searching a lower-cased copy, so an index never shifts when a character changes length in lower
+ * case.
+ */
+function findMarker(text: string, from: number): number {
+  for (let at = from; at + LEDGER_MARKER.length <= text.length; at += 1) {
+    const startsWord = at === 0 || !isAlphanumeric(text.charAt(at - 1));
+    if (startsWord && text.slice(at, at + LEDGER_MARKER.length).toLowerCase() === LEDGER_MARKER) {
+      return at;
     }
   }
-  return best;
+  return -1;
 }
 
-const SPACES = new Set([' ', '\t']);
-
-/** What may sit right before a label word: a space, a bracket or a quote (not : or ;, which occur inside links). */
-const WORD_STARTS = ' \t\r\n([{"\'';
+/** The end of the record id that follows the marker ending at `from` (after spaces), or -1 when there is none. */
+function recordIdEnd(text: string, from: number): number {
+  let start = from;
+  while (text.charAt(start) === ' ' || text.charAt(start) === '\t') start += 1;
+  let end = start;
+  while (end < text.length && isAlphanumeric(text.charAt(end))) end += 1;
+  const id = text.slice(start, end);
+  const isId = id.length >= 21 && id.charAt(0).toLowerCase() === 'c' && /\d/.test(id);
+  return isId ? end : -1;
+}
 
 function trimSpacesEnd(text: string): string {
   let end = text.length;
-  while (end > 0 && SPACES.has(text.charAt(end - 1))) end -= 1;
+  while (end > 0 && (text.charAt(end - 1) === ' ' || text.charAt(end - 1) === '\t')) end -= 1;
   return text.slice(0, end);
 }
 
 function trimSpacesStart(text: string): string {
   let start = 0;
-  while (start < text.length && SPACES.has(text.charAt(start))) start += 1;
+  while (start < text.length && (text.charAt(start) === ' ' || text.charAt(start) === '\t'))
+    start += 1;
   return text.slice(start);
 }
-
-/** True when the text ends inside a link, path or email address: its last word (back to a space) is one. */
-function endsInsideAddress(before: string): boolean {
-  let start = before.length;
-  while (start > 0 && !' \t\r\n'.includes(before.charAt(start - 1))) start -= 1;
-  const word = before.slice(start).toLowerCase();
-  return word.includes('/') || word.includes('\\') || word.includes('@') || word.startsWith('www.');
-}
-
-/** The text without a label at its end ("... COA ledger row" -> "... "), repeated for "row id". */
-function withoutTrailingLabels(text: string): string {
-  let out = text;
-  for (;;) {
-    let head = trimSpacesEnd(out);
-    if (head.endsWith(':')) head = trimSpacesEnd(head.slice(0, -1));
-    // "lead_id" and "lead-id" read as "lead id".
-    const lower = head.toLowerCase().split('_').join(' ').split('-').join(' ');
-    const label = LABELS.find((word) => {
-      if (!lower.endsWith(word)) return false;
-      const lead = head.charAt(head.length - word.length - 1);
-      // A standalone word only: not the end of a longer word, a domain or a path ("/reference"),
-      // and not a word that is itself a link, path or email ("?q=(reference").
-      const boundary = lead === '' || WORD_STARTS.includes(lead);
-      return boundary && !endsInsideAddress(head.slice(0, head.length - word.length));
-    });
-    if (!label) return out;
-    out = head.slice(0, head.length - label.length);
-  }
-}
-
-/** Brackets and quotes that are left empty when the id between them goes. */
-const PAIRS: ReadonlyArray<readonly [string, string]> = [
-  ['(', ')'],
-  ['[', ']'],
-  ['{', '}'],
-  ['"', '"'],
-  ["'", "'"],
-];
-
-/** Closes the gap an id left: empty brackets, a space before punctuation, a doubled full stop. */
-function closeGap(before: string, after: string): [string, string] {
-  let out = before;
-  let rest = after;
-  if (PAIRS.some(([open, close]) => out.endsWith(open) && rest.startsWith(close))) {
-    out = trimSpacesEnd(out.slice(0, -1));
-    rest = rest.slice(1);
-  }
-  if (rest.startsWith('.') || rest.startsWith(',') || rest.startsWith(';')) {
-    out = trimSpacesEnd(out);
-    if (out === '' || out.endsWith('\n') || out.endsWith(rest.charAt(0))) {
-      rest = rest.slice(1);
-    }
-  }
-  if (out === '' || out.endsWith(' ') || out.endsWith('\n')) rest = trimSpacesStart(rest);
-  return [out, rest];
-}
-
-const BREAKS = ' \t\r\n';
-const CLOSERS = ')]}"\'';
-
-function isBreakOrEnd(char: string): boolean {
-  return char === '' || BREAKS.includes(char);
-}
-
-/** True when the token ends at `at` in `text`: a space or the end, or sentence punctuation then a space or the end. */
-function tokenEndsAt(text: string, at: number): boolean {
-  const char = text.charAt(at);
-  if (isBreakOrEnd(char)) return true;
-  return '.,;:!?'.includes(char) && isBreakOrEnd(text.charAt(at + 1));
-}
-
-/** The text before an id without the "=" of a "lead_id=<id>" assignment, so the label before it can be read. */
-function beforeLabel(before: string): string {
-  return before.endsWith('=') ? before.slice(0, -1) : before;
-}
-
-/** A quote opens after a space, a bracket, an "=", ":" or "," or the start of the line, and closes before a space, punctuation or the end. */
-const QUOTE_OPENS_AFTER = ' \t\r\n([{=:,;';
-const QUOTE_CLOSES_BEFORE = ' \t\r\n)]},.;:!?';
-
-/**
- * True when the text ends inside a quoted value that is not ours to change ("Customer ref ...", 'C:\Exports\My
- * Files ref ...'). A quote mark inside a word (an apostrophe in "It's") is never a delimiter.
- */
-function insideQuotedValue(text: string): boolean {
-  const line = text;
-  let open = '';
-  for (let at = 0; at < line.length; at += 1) {
-    const char = line.charAt(at);
-    // An escaped quote (backslash before it) is part of the value, not a delimiter.
-    if ((char !== '"' && char !== "'") || line.charAt(at - 1) === '\\') continue;
-    if (open === '') {
-      const prev = line.charAt(at - 1);
-      if (at === 0 || QUOTE_OPENS_AFTER.includes(prev)) open = char;
-    } else if (char === open) {
-      const next = line.charAt(at + 1);
-      if (next === '' || QUOTE_CLOSES_BEFORE.includes(next)) open = '';
-    }
-  }
-  return open !== '';
-}
-/**
- * True when the sentence the id is in already holds a path or a link before it ("Saved to C:\Exports\Customer ref <id>",
- * "Open exports/Customer ref <id>"). A path may have spaces in it and the cleaner cannot tell where it ends, so
- * nothing in that sentence is removed. An earlier sentence ("... GBP 69.99/month. COA ledger row <id>.") is not looked at.
- */
-function sentenceHasPathOrLink(before: string): boolean {
-  const start = Math.max(
-    before.lastIndexOf('\n'),
-    before.lastIndexOf('. '),
-    before.lastIndexOf('; '),
-    before.lastIndexOf('! '),
-    before.lastIndexOf('? ')
-  );
-  const sentence = before.slice(start + 1);
-  return sentence.includes('/') || sentence.includes('\\');
-}
-/**
- * True when the id is introduced by a label ("COA ledger row <id>", "lead_id=<id>", "ref: <id>") and the id's
- * token ends right after it (a closing bracket or quote counts, so "(ref <id>)." does), or when the id is the
- * whole text.
- */
-function isRemovable(before: string, after: string): boolean {
-  if (before.trim() === '' && after.trim() === '') return true;
-  const base = beforeLabel(before);
-  if (insideQuotedValue(base) || sentenceHasPathOrLink(base)) return false;
-  if (withoutTrailingLabels(base).length >= base.length) return false;
-  return CLOSERS.includes(after.charAt(0)) ? tokenEndsAt(after, 1) : tokenEndsAt(after, 0);
-}
-
-/**
- * The text with machine ids removed: cuids and UUIDs that a label introduces ("COA ledger row <id>", "lead id: <id>",
- * "ref=<id>"), together with the label, or an id that is the whole text. Any other id stays where it is, so a link,
- * path, file name, host name, email address or quoted value is never changed. Text without such an id is returned
- * unchanged.
- */
+/** The text without "COA ledger row <id>." (the full stop after the id goes with it). Other text is unchanged. */
 export function stripMachineIds(text: string): string {
   let out = '';
-  let rest = text;
-  for (let found = firstId(rest); found; found = firstId(rest)) {
-    const end = found.index + found.length;
-    const before = out + rest.slice(0, found.index);
-    if (!isRemovable(before, rest.slice(end))) {
-      out += rest.slice(0, end);
-      rest = rest.slice(end);
+  let from = 0;
+  let removed = false;
+  for (let at = findMarker(text, from); at >= 0; at = findMarker(text, from)) {
+    const after = at + LEDGER_MARKER.length;
+    let end = recordIdEnd(text, after);
+    if (end < 0) {
+      out += text.slice(from, after);
+      from = after;
       continue;
     }
-    out = withoutTrailingLabels(beforeLabel(before));
-    [out, rest] = closeGap(out, rest.slice(end));
+    if (text.charAt(end) === '.') end += 1;
+    out += trimSpacesEnd(text.slice(from, at));
+    from = end;
+    removed = true;
   }
-  const result = out + rest;
-  return result === text ? text : result.trim();
+  if (!removed) return text;
+  // Only the gap the removal left is closed: one space between what stays on each side, none at an end or a line break.
+  const rest = trimSpacesStart(text.slice(from));
+  const glue = out === '' || rest === '' || out.endsWith('\n') || rest.startsWith('\n') ? '' : ' ';
+  return (out + glue + rest).trim();
 }
 
-/** True when the text carries a machine id. */
+/** True when the whole text is one record id: a cuid (with a digit) or a UUID. */
+export function isRecordId(text: string): boolean {
+  if (text.length === 36) {
+    const dashes = [8, 13, 18, 23].every((at) => text.charAt(at) === '-');
+    return (
+      dashes && [...text].every((char) => char === '-' || '0123456789abcdefABCDEF'.includes(char))
+    );
+  }
+  return (
+    text.length === 25 &&
+    text.charAt(0).toLowerCase() === 'c' &&
+    [...text].every(isAlphanumeric) &&
+    /\d/.test(text)
+  );
+}
+
+/** True when the text carries the COA ledger row id, or is one record id and nothing else. */
 export function hasMachineId(text: string): boolean {
-  return stripMachineIds(text) !== text;
+  return stripMachineIds(text) !== text || isRecordId(text.trim());
 }
 
 /** An activity's title and description, cleaned; a title that was only an id becomes a neutral one. */
@@ -238,8 +111,9 @@ export function cleanActivityText(activity: { title: string; description?: strin
   title: string;
   description: string;
 } {
+  const title = stripMachineIds(activity.title);
   return {
-    title: stripMachineIds(activity.title) || FALLBACK_ACTIVITY_TITLE,
+    title: title === '' || isRecordId(title.trim()) ? FALLBACK_ACTIVITY_TITLE : title,
     description: stripMachineIds(activity.description ?? ''),
   };
 }
