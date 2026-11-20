@@ -18,50 +18,14 @@ import type {
   ActivityFeedStats,
   ActivityFeedEntityType,
 } from '@intelliflow/domain';
-
-/** Maps from source-specific activity types to normalized feed types. */
-const LEAD_ACTIVITY_TYPE_MAP: Record<string, ActivityFeedType> = {
-  WEB_FORM: 'SYSTEM',
-  EMAIL: 'EMAIL',
-  CALL: 'CALL',
-  MEETING: 'MEETING',
-  NOTE: 'NOTE',
-  SCORE_UPDATE: 'SCORE_UPDATE',
-  STATUS_CHANGE: 'STATUS_CHANGE',
-  QUALIFICATION: 'QUALIFICATION',
-};
-
-const CONTACT_ACTIVITY_TYPE_MAP: Record<string, ActivityFeedType> = {
-  EMAIL: 'EMAIL',
-  CALL: 'CALL',
-  MEETING: 'MEETING',
-  CHAT: 'CHAT',
-  DOCUMENT: 'DOCUMENT',
-  DEAL: 'DEAL',
-  TICKET: 'TICKET',
-  NOTE: 'NOTE',
-};
-
-const OPPORTUNITY_EVENT_TYPE_MAP: Record<string, ActivityFeedType> = {
-  EMAIL: 'EMAIL',
-  CALL: 'CALL',
-  MEETING: 'MEETING',
-  NOTE: 'NOTE',
-  TASK: 'TASK',
-  STAGE_CHANGE: 'STAGE_CHANGE',
-  AGENT_ACTION: 'AGENT_ACTION',
-  SYSTEM: 'SYSTEM',
-};
-
-const TICKET_ACTIVITY_TYPE_MAP: Record<string, ActivityFeedType> = {
-  CUSTOMER_MESSAGE: 'SYSTEM',
-  AGENT_REPLY: 'SYSTEM',
-  INTERNAL_NOTE: 'NOTE',
-  SYSTEM_EVENT: 'SYSTEM',
-  SLA_ALERT: 'SLA_ALERT',
-  ASSIGNMENT: 'ASSIGNMENT',
-  STATUS_CHANGE: 'STATUS_CHANGE',
-};
+import {
+  LEAD_ACTIVITY_TYPE_MAP,
+  CONTACT_ACTIVITY_TYPE_MAP,
+  OPPORTUNITY_EVENT_TYPE_MAP,
+  TICKET_ACTIVITY_TYPE_MAP,
+  sourceServesType,
+  sourceTypeWhere,
+} from './activity-feed-type-maps';
 
 /**
  * Lead label in the feed: person, then company, then email (#1223). Synced
@@ -640,6 +604,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     if (filters.after) where.timestamp = { ...where.timestamp, gte: filters.after };
     if (filters.before) where.timestamp = { ...where.timestamp, lte: filters.before };
 
+    const typeWhere = sourceTypeWhere(LEAD_ACTIVITY_TYPE_MAP, filters.types);
+    if (typeWhere === null) return [];
+    if (typeWhere) where.AND = [typeWhere];
     const rows = await this.prisma.leadActivity.findMany({
       where,
       orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
@@ -688,6 +655,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     if (filters.after) where.timestamp = { ...where.timestamp, gte: filters.after };
     if (filters.before) where.timestamp = { ...where.timestamp, lte: filters.before };
 
+    const typeWhere = sourceTypeWhere(CONTACT_ACTIVITY_TYPE_MAP, filters.types);
+    if (typeWhere === null) return [];
+    if (typeWhere) where.AND = [typeWhere];
     const rows = await this.prisma.contactActivity.findMany({
       where,
       orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
@@ -731,6 +701,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     if (filters.after) where.timestamp = { ...where.timestamp, gte: filters.after };
     if (filters.before) where.timestamp = { ...where.timestamp, lte: filters.before };
 
+    const typeWhere = sourceTypeWhere(OPPORTUNITY_EVENT_TYPE_MAP, filters.types);
+    if (typeWhere === null) return [];
+    if (typeWhere) where.AND = [typeWhere];
     const rows = await this.prisma.activityEvent.findMany({
       where,
       orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
@@ -773,6 +746,9 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     if (filters.after) where.timestamp = { ...where.timestamp, gte: filters.after };
     if (filters.before) where.timestamp = { ...where.timestamp, lte: filters.before };
 
+    const typeWhere = sourceTypeWhere(TICKET_ACTIVITY_TYPE_MAP, filters.types);
+    if (typeWhere === null) return [];
+    if (typeWhere) where.AND = [typeWhere];
     const rows = await this.prisma.ticketActivity.findMany({
       where,
       orderBy: [{ timestamp: 'desc' }, { id: 'desc' }],
@@ -805,6 +781,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     cursor: { timestamp: Date; id: string } | null,
     filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
+    if (!sourceServesType('EMAIL', filters.types)) return [];
     const where: any = { tenantId };
     if (cursor) {
       where.OR = [
@@ -846,6 +823,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     cursor: { timestamp: Date; id: string } | null,
     filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
+    if (!sourceServesType('CALL', filters.types)) return [];
     const where: any = { tenantId };
     if (cursor) {
       where.OR = [
@@ -891,6 +869,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
     cursor: { timestamp: Date; id: string } | null,
     filters: ActivityFeedFilters
   ): Promise<UnifiedActivityItem[]> {
+    if (!sourceServesType('CHAT', filters.types)) return [];
     const where: any = { tenantId };
     if (cursor) {
       where.OR = [

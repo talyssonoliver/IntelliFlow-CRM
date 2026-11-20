@@ -90,6 +90,10 @@ const mockQueryState = {
   refetch: vi.fn(),
 };
 
+vi.mock('@/components/tasks/FollowUpsDueTasks', () => ({
+  FollowUpsDueTasks: () => <div data-testid="follow-ups-due-tasks" />,
+}));
+
 // ─── 5. tRPC/API mock ───────────────────────────────────────────
 const mockMutate = vi.fn();
 const mockMutateAsync = vi.fn().mockResolvedValue({});
@@ -248,6 +252,17 @@ describe('TasksListPage', () => {
     render(<TasksListPage />);
     expect(screen.getByTestId('page-header')).toBeInTheDocument();
     expect(screen.getByTestId('task-list')).toBeInTheDocument();
+  });
+
+  it('shows the follow-ups due section on the unfiltered list', () => {
+    render(<TasksListPage />);
+    expect(screen.getByTestId('follow-ups-due-tasks')).toBeInTheDocument();
+  });
+
+  it('hides the follow-ups due section when the list is filtered', () => {
+    mockSearchParams = new URLSearchParams('status=OVERDUE');
+    render(<TasksListPage />);
+    expect(screen.queryByTestId('follow-ups-due-tasks')).not.toBeInTheDocument();
   });
 
   it('renders all task items', () => {

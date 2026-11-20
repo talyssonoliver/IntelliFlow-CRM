@@ -1082,7 +1082,9 @@ describe('LeadDetailPage - activity card on a phone (MVP-006)', () => {
   // The first card of the Pitshanger lead carries an email address and a ledger id in its
   // description. Without min-w-0 the text column kept that width and pushed the expand button
   // 9 px past a 390 px screen, so the whole page scrolled sideways.
-  const LONG = 'hello@pitshangerhealthandfitness.co.uk cmw5j72u40001p5ug01kf3vot';
+  // Long and unbroken, like a pasted address with no spaces (not a record id: those are stripped, #42).
+  const LONG =
+    'hello@pitshangerhealthandfitness.co.uk-and-a-very-long-unbroken-tail-of-text-without-spaces';
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -1775,6 +1777,59 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
     } finally {
       mockEmailEngagement.current = undefined;
     }
+  });
+
+  it('the tab strip wraps on a phone instead of scrolling sideways (#16)', () => {
+    render(<Lead360Page />);
+    const strip = screen.getByRole('button', { name: /^Overview/i }).parentElement!;
+    expect(strip).toHaveClass('flex-wrap', 'sm:flex-nowrap', 'sm:overflow-x-auto');
+    // Below sm the strip is not a scroll container.
+    expect(strip.className.split(/\s+/)).not.toContain('overflow-x-auto');
+    // Every tab is still there and keeps its name.
+    for (const name of [/^Overview/i, /^Activity/i, /^Tasks/i, /^Notes/i, /^Emails/i, /^Files/i]) {
+      expect(screen.getByRole('button', { name })).toBeInTheDocument();
+    }
+  });
+
+  it('does not show the sync machine id in an activity entry (#42)', () => {
+    data().activities = [
+      {
+        id: 'act-coa-1',
+        type: 'NOTE',
+        title: 'Reply logged',
+        description: 'Offer sent by email. COA ledger row cmw5j72u40001p5ug01kf3vot.',
+        timestamp: '2026-03-02T12:00:00.000Z',
+        userName: 'Owner',
+        metadata: {},
+        sentiment: null,
+      },
+    ];
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+    expect(screen.getByText('Offer sent by email.')).toBeInTheDocument();
+    expect(screen.queryByText(/cmw5j72u40001p5ug01kf3vot/)).toBeNull();
+    expect(screen.queryByText(/COA ledger row/)).toBeNull();
+  });
+
+  it('searches the text a person reads, not the sync id that is hidden (#42)', () => {
+    data().activities = [
+      {
+        id: 'act-coa-2',
+        type: 'NOTE',
+        title: 'Reply logged',
+        description: 'Offer sent by email. COA ledger row cmw5j72u40001p5ug01kf3vot.',
+        timestamp: '2026-03-02T12:00:00.000Z',
+        userName: 'Owner',
+        metadata: {},
+        sentiment: null,
+      },
+    ];
+    render(<Lead360Page />);
+    fireEvent.click(screen.getByRole('button', { name: /^Activity/i }));
+    fireEvent.change(screen.getByPlaceholderText(/search activities/i), {
+      target: { value: 'cmw5j72u' },
+    });
+    expect(screen.queryByText('Offer sent by email.')).toBeNull();
   });
 
   it('Compose opens the email composer addressed to the lead', () => {
