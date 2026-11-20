@@ -11,6 +11,7 @@ import {
   type LeadSaveOptions,
   type RepositoryTransaction,
   normalizeSubjectEmail,
+  contactNameFields,
 } from '@intelliflow/domain';
 import { LeadRepository } from '@intelliflow/application';
 
@@ -435,7 +436,6 @@ export class PrismaLeadRepository implements LeadRepository {
       const successful: string[] = [];
       const failed: Array<{ id: string; error: string }> = [];
 
-      // Fetch all leads in single query
       const leads = await tx.lead.findMany({
         where: { id: { in: ids } },
       });
@@ -472,8 +472,7 @@ export class PrismaLeadRepository implements LeadRepository {
       // Batch create contacts
       await tx.contact.createMany({
         data: validLeads.map((lead) => ({
-          firstName: lead.firstName || 'Unknown',
-          lastName: lead.lastName || 'Unknown',
+          ...contactNameFields(lead),
           email: lead.email,
           phone: lead.phone,
           company: lead.company,

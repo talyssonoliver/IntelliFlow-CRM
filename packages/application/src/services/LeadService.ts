@@ -18,6 +18,7 @@ import {
   isErasedEmail,
   normalizeSubjectEmail,
   requiresHumanReview,
+  contactNameFields,
 } from '@intelliflow/domain';
 import { AIServicePort, EventBusPort } from '../ports/external';
 import { ContactRepository, AccountRepository } from '../ports/repositories';
@@ -580,8 +581,7 @@ export class LeadService {
     // Create contact from lead (NO write yet)
     const contactResult = Contact.create({
       email: lead.email.value,
-      firstName: lead.firstName ?? 'Unknown',
-      lastName: lead.lastName ?? 'Unknown',
+      ...contactNameFields(lead),
       title: lead.title,
       phone: lead.phone,
       accountId: accountId ?? undefined,
