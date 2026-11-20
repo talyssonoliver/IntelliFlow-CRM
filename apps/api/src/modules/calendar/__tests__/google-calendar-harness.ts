@@ -119,6 +119,7 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
   function matches(row: Row, where: Row, table: Table): boolean {
     return Object.entries(where).every(([key, cond]) => {
       if (key === 'OR') return (cond as Row[]).some((w) => matches(row, w, table));
+      if (key === 'AND') return (cond as Row[]).every((w) => matches(row, w, table));
       if (table === 'calendarEventLink' && key === 'appointment') {
         const target = relation(row, table, key) as Row | undefined;
         return Boolean(target) && matches(target as Row, cond as Row, 'appointment');

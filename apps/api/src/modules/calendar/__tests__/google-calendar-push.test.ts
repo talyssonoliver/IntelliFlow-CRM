@@ -180,22 +180,72 @@ describe('Aurora to Google: an appointment becomes an event', () => {
     expect(h.links().filter((l) => l.pending)).toHaveLength(50);
   });
 
-  it('gives up on an item after enough failures in a row', async () => {
+  it('keeps backing off a refused item, never for longer than a day, and never gives up on it', async () => {
     const sync = h.setup({ appointment: [appointmentRow()] });
-    const create = h.google.createEvent.bind(h.google);
     let calls = 0;
-    h.google.createEvent = async (...args: Parameters<typeof create>) => {
+    h.google.createEvent = async () => {
       calls += 1;
       return Result.fail(refusal()) as any;
     };
-    for (let round = 0; round < 40; round++) {
+    for (let round = 0; round < 14; round++) {
       await (round === 0 ? runCalendarSync(sync) : h.nextRound(sync));
+      expect(h.links()[0].nextPushAt.getTime() - NOW.getTime()).toBeLessThanOrEqual(
+        24 * 60 * 60_000 + round * 5 * 60_000
+      );
+      // Each failure moves its next attempt on: now make it due again.
+      h.links()[0].nextPushAt = null;
       h.mailbox().calendarNextSyncAt = null;
-      h.db.tables.calendarEventLink.forEach((l) => (l.nextPushAt = null));
     }
 
-    expect(calls).toBe(8);
-    expect(create).toBeDefined();
+    expect(calls).toBe(14);
+    expect(h.links()[0].pushAttempts).toBe(14);
+  });
+
+  it('does not let refused deletions hold up the creates behind them', async () => {
+    const cancelled = Array.from({ length: 50 }, (_, n) =>
+      appointmentRow({ id: `gone-${String(n).padStart(2, '0')}`, status: 'CANCELLED' })
+    );
+    const links = cancelled.map((a, n) => ({
+      id: `link-${String(n).padStart(2, '0')}`,
+      tenantId: TENANT,
+      mailboxId: 'mbx-1',
+      appointmentId: a.id,
+      googleEventId: `ev-${n}`,
+      origin: 'AURORA',
+      pending: false,
+      pushAttempts: 0,
+      nextPushAt: null,
+      etag: '"e"',
+      localSyncedAt: a.updatedAt,
+      remoteUpdatedAt: null,
+      remoteCancelledAt: null,
+    }));
+    const sync = h.setup({
+      appointment: [...cancelled, appointmentRow({ id: 'fresh', title: 'fresh' })],
+      calendarEventLink: links,
+    });
+    h.google.deleteEvent = async () => Result.fail(refusal()) as any;
+
+    await runCalendarSync(sync);
+
+    expect(h.links().find((l) => l.appointmentId === 'fresh')).toMatchObject({ pending: false });
+    expect(h.links().filter((l) => l.pushAttempts === 1)).toHaveLength(50);
+  });
+
+  it('cancels the appointment when the create finds its event already deleted in Google', async () => {
+    const sync = h.setup({ appointment: [appointmentRow()] });
+    const id = eventIdFor('mbx-1', 'appt-1');
+    h.google.put(id);
+    h.google.remove(id);
+
+    await runCalendarSync(sync);
+
+    expect(h.appointments()[0]).toMatchObject({
+      status: 'CANCELLED',
+      cancellationReason: 'Cancelled in Google Calendar',
+    });
+    expect(h.links()[0]).toMatchObject({ pending: false });
+    expect(h.links()[0].remoteCancelledAt).not.toBeNull();
   });
   it('writes no guests and sends no invitation', async () => {
     const sync = h.setup({ appointment: [appointmentRow()] });

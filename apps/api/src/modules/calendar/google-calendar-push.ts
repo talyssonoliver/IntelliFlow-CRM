@@ -32,11 +32,12 @@ export const PAST_GRACE_MS = 24 * 60 * 60_000;
 const MAX_WRITES = 50;
 /** Links read per query while looking for appointments changed in Aurora (paged by link id). */
 const LINKS_PAGE = 100;
-/** A refused item waits 5 minutes after its first failure, then twice as long each time, up to a day. */
+/**
+ * A refused item waits 5 minutes after its first failure, then twice as long each time, up to a day:
+ * it is never given up on, so an edit that fixes it (or Google changing its mind) gets through within a day.
+ */
 const RETRY_BASE_MS = 5 * 60_000;
 const RETRY_MAX_MS = 24 * 60 * 60_000;
-/** After this many failures in a row an item is left alone (until its appointment is edited again). */
-const MAX_ATTEMPTS = 8;
 
 /**
  * The id an Aurora appointment's event is created with in a mailbox's calendar. Google keeps ids
@@ -134,13 +135,20 @@ async function removeEvents(ctx: SyncContext, _cutoff: Date, budget: number): Pr
       origin: 'AURORA',
       remoteCancelledAt: null,
       OR: [{ appointmentId: null }, { appointment: { status: 'CANCELLED' } }],
+      AND: [due(ctx)],
     },
+    orderBy: { id: 'asc' },
     take: budget,
   });
   for (const link of links) {
     if (!ctx.hasTime()) return { writes: 0, complete: false };
     await item(ctx, link.id, async () => {
-      must(await ctx.gateway.deleteEvent(ctx.tokens, link.googleEventId));
+      try {
+        must(await ctx.gateway.deleteEvent(ctx.tokens, link.googleEventId));
+      } catch (error) {
+        await failedAttempt(ctx, link, error);
+        throw error;
+      }
       // Its appointment is gone: nothing left to track. Otherwise keep the link, marked, so the
       // event is never made again.
       if (link.appointmentId === null) {
@@ -157,12 +165,9 @@ async function removeEvents(ctx: SyncContext, _cutoff: Date, budget: number): Pr
   return { writes: links.length, complete: links.length < budget };
 }
 
-/** Items not waiting after a failure and not given up on. */
+/** Items not waiting after a failure. */
 function due(ctx: SyncContext) {
-  return {
-    pushAttempts: { lt: MAX_ATTEMPTS },
-    OR: [{ nextPushAt: null }, { nextPushAt: { lte: ctx.now } }],
-  };
+  return { OR: [{ nextPushAt: null }, { nextPushAt: { lte: ctx.now } }] };
 }
 
 /** A link's write failed: it waits, later and less often each time, and the rest goes on. */
@@ -261,19 +266,32 @@ async function makeEvent(ctx: SyncContext, link: any, row: any): Promise<void> {
     // create whose answer was lost) is not brought back: the link is marked, like a deletion. One that
     // is there with older content (the appointment was edited between the tries) is patched next.
     const gone = event.status === 'cancelled';
-    await ctx.prisma.calendarEventLink.update({
-      where: { id: link.id, tenantId: ctx.mailbox.tenantId },
-      data: {
-        pending: false,
-        etag: event.etag ?? null,
-        remoteUpdatedAt: event.lastModified,
-        remoteCancelledAt: gone ? ctx.now : null,
-        localSyncedAt: sameContent(event, row) ? row.updatedAt : null,
-        pushAttempts: 0,
-        nextPushAt: null,
-      },
+    const { tenantId } = ctx.mailbox;
+    const settled = {
+      pending: false,
+      etag: event.etag ?? null,
+      remoteUpdatedAt: event.lastModified,
+      remoteCancelledAt: gone ? ctx.now : null,
+      localSyncedAt: sameContent(event, row) ? row.updatedAt : null,
+      pushAttempts: 0,
+      nextPushAt: null,
+    };
+    // The event was deleted in Google: the appointment is cancelled, as when the pull hears of a
+    // deletion, and the link settled with it.
+    await ctx.prisma.$transaction(async (tx: any) => {
+      if (gone) {
+        await tx.appointment.updateMany({
+          where: { id: row.id, tenantId, status: { in: [...ACTIVE_STATUSES] } },
+          data: {
+            status: 'CANCELLED',
+            cancelledAt: ctx.now,
+            cancellationReason: 'Cancelled in Google Calendar',
+          },
+        });
+      }
+      await tx.calendarEventLink.update({ where: { id: link.id, tenantId }, data: settled });
     });
-    if (gone) ctx.report.skipped += 1;
+    if (gone) ctx.report.cancelled += 1;
     else ctx.report.pushedCreated += 1;
   } catch (error) {
     await failedAttempt(ctx, link, error);
