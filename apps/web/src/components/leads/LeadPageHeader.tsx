@@ -7,7 +7,7 @@ import { MoreActionsButton } from '@/components/shared/more-actions-button';
 import type { ExtraAction } from '@/components/shared/entity-action-sheet';
 import { QualifyLeadButton } from '@/components/leads/QualifyLeadDialog';
 import { canQualifyLead } from '@/lib/leads/lead-conversion';
-import { leadDisplayName } from '@/lib/leads/lead-format';
+import { leadCompanyIfDistinct, leadDisplayName } from '@/lib/leads/lead-format';
 
 /** What the header needs of a lead: the name parts, its status and what the pin card shows. */
 export interface LeadHeaderLead {
@@ -159,7 +159,7 @@ export function LeadPageHeader({
           entityType="lead"
           entityId={lead.id}
           title={name}
-          subtitle={lead.company || undefined}
+          subtitle={leadCompanyIfDistinct(lead)}
           icon="person"
           url={`/leads/${lead.id}`}
           className="hidden sm:inline-flex"

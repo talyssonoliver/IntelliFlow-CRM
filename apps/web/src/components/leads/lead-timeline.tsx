@@ -1,6 +1,7 @@
 'use client';
 
 import { EmptyState } from '@intelliflow/ui';
+import { displayActivityText } from '@/lib/leads/lead-format';
 import {
   type ActivityType,
   getActivityIcon,
@@ -61,7 +62,7 @@ export function LeadTimeline({ activities, limit, timezone }: Readonly<LeadTimel
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-slate-900 dark:text-white">{activity.title}</p>
             <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
-              {activity.description}
+              {displayActivityText(activity.description)}
             </p>
             <p className="text-xs text-slate-500 mt-1">
               {activity.user} • {formatRelativeTime(activity.timestamp, timezone)}
