@@ -304,7 +304,7 @@
       "linkify-it": ">=5.0.2 <6",
       "@opentelemetry/propagator-jaeger": ">=2.9.0 <3",
       "sharp": ">=0.35.5 <0.36",
-      "next": "16.4.2",
+      "next": "16.4.6",
       "nanoid": ">=5.1.16 <6",
       "browserslist": ">=4.28.7 <5",
       "mysql2": ">=3.22.0 <4",
