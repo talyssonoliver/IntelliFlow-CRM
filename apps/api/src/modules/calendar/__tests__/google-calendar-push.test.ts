@@ -682,6 +682,45 @@ describe('Aurora to Google: review cases', () => {
     });
   });
 
+  it.each([
+    [
+      'ended long ago',
+      {
+        endTime: new Date('2026-10-01T10:00:00.000Z'),
+        startTime: new Date('2026-10-01T09:00:00.000Z'),
+      },
+    ],
+    ['became recurring', { recurrence: { frequency: 'WEEKLY', interval: 1 } }],
+  ])('retires a pending link whose appointment %s, taking its event down', async (_name, over) => {
+    const id = eventIdFor('mbx-1', 'appt-1');
+    const sync = h.setup({
+      appointment: [appointmentRow(over)],
+      calendarEventLink: [
+        {
+          id: 'link-1',
+          tenantId: TENANT,
+          mailboxId: 'mbx-1',
+          appointmentId: 'appt-1',
+          googleEventId: id,
+          origin: 'AURORA',
+          pending: true,
+          pushAttempts: 0,
+          nextPushAt: null,
+          etag: null,
+          localSyncedAt: null,
+          remoteUpdatedAt: null,
+          remoteCancelledAt: null,
+        },
+      ],
+    });
+    h.google.put(id);
+
+    await runCalendarSync(sync);
+
+    expect(h.links()[0]).toMatchObject({ pending: false });
+    expect(h.links()[0].remoteCancelledAt).not.toBeNull();
+    expect(h.google.events.get(id)?.status).toBe('cancelled');
+  });
   it('does not push a recurring appointment, which would be one wrong event', async () => {
     const sync = h.setup({
       appointment: [appointmentRow({ recurrence: { frequency: 'WEEKLY', interval: 1 } })],

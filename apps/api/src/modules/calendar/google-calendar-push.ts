@@ -190,11 +190,22 @@ async function scanLinks(
   }
 }
 
+/** Would this appointment be sent to Google as a new event? */
+function qualifiesForCreate(appointment: any, ctx: SyncContext, cutoff: Date): boolean {
+  return (
+    !!appointment &&
+    appointment.organizerId === ctx.mailbox.userId &&
+    (ACTIVE_STATUSES as readonly string[]).includes(appointment.status) &&
+    appointment.endTime.getTime() >= cutoff.getTime() &&
+    (appointment.recurrence ?? null) === null
+  );
+}
+
 /**
  * Events to take down: the event of an appointment that was cancelled or deleted, or is no longer the
  * mailbox user's (reassigned), when Aurora made that event.
  */
-async function removeEvents(ctx: SyncContext, _cutoff: Date, budget: number): Promise<StepResult> {
+async function removeEvents(ctx: SyncContext, cutoff: Date, budget: number): Promise<StepResult> {
   const { tenantId, userId } = ctx.mailbox;
   const where = {
     origin: 'AURORA',
@@ -203,13 +214,16 @@ async function removeEvents(ctx: SyncContext, _cutoff: Date, budget: number): Pr
       { appointmentId: null },
       { appointment: { status: 'CANCELLED' } },
       { appointment: { organizerId: { not: userId } } },
+      // A create that never finished whose appointment no longer qualifies for one (it ended, or became
+      // recurring) would stay pending for good, and the pull leaves pending links alone.
+      { pending: true },
     ],
   };
   return scanLinks(
     ctx,
     where,
     budget,
-    () => true,
+    (link) => !link.pending || !qualifiesForCreate(link.appointment, ctx, cutoff),
     async (link) => {
       must(await ctx.gateway.deleteEvent(ctx.tokens, link.googleEventId));
       // Its appointment is gone: nothing left to track. Otherwise keep the link, marked, so the
