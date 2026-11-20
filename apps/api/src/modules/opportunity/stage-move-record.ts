@@ -43,18 +43,21 @@ export async function recordStageMove(
   const from = stageLabel(previousStage);
   const to = stageLabel(targetStage);
   try {
-    await (ctx.prismaWithTenant ?? ctx.prisma).activityEvent.create({
-      data: {
-        type: 'STAGE_CHANGE',
-        title: `Stage changed: ${from} to ${to}`,
-        description: `"${deal.name}" moved from ${from} to ${to}.`,
-        stageFrom: previousStage ?? null,
-        stageTo: targetStage,
-        opportunityId: deal.id.value,
-        userId: tenant.userId,
-        tenantId: tenant.tenantId,
-      },
-    });
+    // A move to the same stage is not a change: no feed entry (the audit row below still records it).
+    if (previousStage !== targetStage) {
+      await (ctx.prismaWithTenant ?? ctx.prisma).activityEvent.create({
+        data: {
+          type: 'STAGE_CHANGE',
+          title: `Stage changed: ${from} to ${to}`,
+          description: `"${deal.name}" moved from ${from} to ${to}.`,
+          stageFrom: previousStage ?? null,
+          stageTo: targetStage,
+          opportunityId: deal.id.value,
+          userId: tenant.userId,
+          tenantId: tenant.tenantId,
+        },
+      });
+    }
   } catch (err) {
     console.error('[opportunity.router] Stage activity failed:', err);
   }
