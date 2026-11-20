@@ -182,6 +182,29 @@ interface AnchorTag {
   end: number;
 }
 
+function skipSeparators(html: string, from: number): number {
+  let at = skipWhitespace(html, from);
+  while (html.charAt(at) === '/') at = skipWhitespace(html, at + 1);
+  return at;
+}
+
+/** The value of an attribute whose "=" ends just before `at`: its quoted span (null when unquoted) and the index after it. */
+function readAttributeValue(html: string, at: number): { span: AnchorTag['href']; next: number } {
+  const quote = html.charAt(at);
+  if (quote === '"' || quote === "'") {
+    const close = html.indexOf(quote, at + 1);
+    return close === -1
+      ? { span: null, next: html.length }
+      : { span: { start: at + 1, end: close }, next: close + 1 };
+  }
+  // An unquoted value is never tracked (it can hold anything up to a space or ">").
+  let end = at;
+  while (end < html.length && !WHITESPACE.includes(html.charAt(end)) && html.charAt(end) !== '>') {
+    end += 1;
+  }
+  return { span: null, next: end };
+}
+
 /**
  * Reads the attributes of the `<a ...>` tag whose attributes start at `from`, quote by quote as a browser does,
  * so an `href` written inside another attribute's value is never mistaken for the real one and a ">" inside a
@@ -189,34 +212,24 @@ interface AnchorTag {
  */
 function readAnchorTag(html: string, lower: string, from: number): AnchorTag {
   let href: AnchorTag['href'] = null;
-  let seenHref = false;
+  let seenHref: boolean = false;
   let at = from;
   for (;;) {
-    at = skipWhitespace(html, at);
-    while (html.charAt(at) === '/') at = skipWhitespace(html, at + 1);
+    at = skipSeparators(html, at);
     if (at >= html.length) return { href, end: html.length };
     if (html.charAt(at) === '>') return { href, end: at + 1 };
-    const nameStop = nameEnd(html, at);
-    const isHref = nameStop > at && lower.slice(at, nameStop) === 'href' && !seenHref;
-    at = skipWhitespace(html, nameStop === at ? at + 1 : nameStop);
+    const stop = nameEnd(html, at);
+    const isHref: boolean = stop > at && lower.slice(at, stop) === 'href' && !seenHref;
+    at = skipWhitespace(html, stop === at ? at + 1 : stop);
     if (html.charAt(at) !== '=') continue;
-    at = skipWhitespace(html, at + 1);
-    const quote = html.charAt(at);
-    if (quote === '"' || quote === "'") {
-      const close = html.indexOf(quote, at + 1);
-      if (close === -1) return { href, end: html.length };
-      if (isHref) href = { start: at + 1, end: close };
-      seenHref = seenHref || isHref;
-      at = close + 1;
-    } else {
-      // An unquoted value: skipped, and never tracked (it can hold anything up to a space or ">").
-      seenHref = seenHref || isHref;
-      while (at < html.length && !WHITESPACE.includes(html.charAt(at)) && html.charAt(at) !== '>')
-        at += 1;
+    const value = readAttributeValue(html, skipWhitespace(html, at + 1));
+    if (isHref) {
+      href = value.span;
+      seenHref = true;
     }
+    at = value.next;
   }
 }
-
 /**
  * The redirect address for one link, or null when the link is left alone: not http(s), not a valid address, or
  * already one of our tracking addresses (a reply or forward that quotes a tracked mail). The link is signed in the
