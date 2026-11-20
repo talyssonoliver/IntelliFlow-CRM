@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-20T13:08:20.650Z",
+  "timestamp": "2026-11-20T13:54:04.523Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1522,8 +1522,8 @@
   },
   "database_inventory": {
     "total_tables": 217,
-    "total_fields": 3236,
-    "total_indexes": 964,
+    "total_fields": 3237,
+    "total_indexes": 965,
     "total_relations": 323,
     "tables_with_embeddings": 4,
     "enums": 82,
@@ -1802,6 +1802,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TicketActivity",
+        "fields": 18,
+        "indexes": 7,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "CalendarEventLink",
         "fields": 18,
         "indexes": 5,
@@ -1826,13 +1833,6 @@
         "name": "AppointmentSettings",
         "fields": 17,
         "indexes": 3,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "TicketActivity",
-        "fields": 17,
-        "indexes": 6,
         "relations": 2,
         "hasEmbedding": false
       },
