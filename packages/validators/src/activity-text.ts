@@ -150,17 +150,29 @@ function beforeLabel(before: string): string {
   return before.endsWith('=') ? before.slice(0, -1) : before;
 }
 
+/** A quote opens after a space, a bracket or the start of the line, and closes before a space, punctuation or the end. */
+const QUOTE_OPENS_AFTER = ' \t([{';
+const QUOTE_CLOSES_BEFORE = ' \t)]},.;:!?';
+
 /**
- * True when the text ends inside a quoted value that is not ours to change: any open double quote ("Customer ref"), or
- * an open single quote that holds a link or path ('C:\Exports\My Files ref'; a lone apostrophe is just prose).
+ * True when the text ends inside a quoted value that is not ours to change ("Customer ref ...", 'C:\Exports\My
+ * Files ref ...'). A quote mark inside a word (an apostrophe in "It's") is never a delimiter.
  */
-function insideQuotedAddress(text: string): boolean {
+function insideQuotedValue(text: string): boolean {
   const line = text.slice(text.lastIndexOf('\n') + 1);
-  const doubleOpen = line.split('"').length % 2 === 0;
-  const singles = line.split("'");
-  const singleOpen = singles.length % 2 === 0;
-  const lastSingle = singles[singles.length - 1] ?? '';
-  return doubleOpen || (singleOpen && (lastSingle.includes('/') || lastSingle.includes('\\')));
+  let open = '';
+  for (let at = 0; at < line.length; at += 1) {
+    const char = line.charAt(at);
+    if (char !== '"' && char !== "'") continue;
+    if (open === '') {
+      const prev = line.charAt(at - 1);
+      if (at === 0 || QUOTE_OPENS_AFTER.includes(prev)) open = char;
+    } else if (char === open) {
+      const next = line.charAt(at + 1);
+      if (next === '' || QUOTE_CLOSES_BEFORE.includes(next)) open = '';
+    }
+  }
+  return open !== '';
 }
 /**
  * True when the id is introduced by a label ("COA ledger row <id>", "lead_id=<id>", "ref: <id>") and the id's
@@ -170,7 +182,7 @@ function insideQuotedAddress(text: string): boolean {
 function isRemovable(before: string, after: string): boolean {
   if (before.trim() === '' && after.trim() === '') return true;
   const base = beforeLabel(before);
-  if (insideQuotedAddress(base)) return false;
+  if (insideQuotedValue(base)) return false;
   if (withoutTrailingLabels(base).length >= base.length) return false;
   return CLOSERS.includes(after.charAt(0)) ? tokenEndsAt(after, 1) : tokenEndsAt(after, 0);
 }

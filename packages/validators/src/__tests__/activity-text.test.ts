@@ -73,6 +73,17 @@ describe('stripMachineIds: an id a label introduces goes with its label', () => 
     expect(stripMachineIds(`Said "hello" ref ${ID}.`)).toBe('Said "hello".');
     expect(stripMachineIds(`It's done ref ${ID}.`)).toBe("It's done.");
   });
+  it('tracks quotes properly: apostrophes in words and closed quotes do not hide a labelled id', () => {
+    expect(stripMachineIds(`It's in 'C:\\Exports\\Customer ref ${ID}'`)).toBe(
+      `It's in 'C:\\Exports\\Customer ref ${ID}'`
+    );
+    expect(stripMachineIds(`Don't forget, we're done ref ${ID}.`)).toBe(
+      "Don't forget, we're done."
+    );
+    expect(stripMachineIds(`He said "ok" and 'yes' then ref ${ID}.`)).toBe(
+      `He said "ok" and 'yes' then.`
+    );
+  });
   it('removes a labelled id that follows a link in the same sentence', () => {
     expect(stripMachineIds(`See https://app.example.invalid/x then ref ${ID}.`)).toBe(
       'See https://app.example.invalid/x then.'
