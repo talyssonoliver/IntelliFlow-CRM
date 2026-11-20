@@ -181,7 +181,11 @@ function insideQuotedValue(text: string): boolean {
  */
 function lineHasPathOrLink(before: string): boolean {
   const line = before.slice(before.lastIndexOf('\n') + 1);
-  return line.includes('\\') || line.includes('://');
+  if (line.includes('\\') || line.includes('://')) return true;
+  // A Unix-style path starts a word: /exports, ./out, ../out, ~/files.
+  return line
+    .split(/\s+/)
+    .some((word) => ['/', './', '../', '~/'].some((start) => word.startsWith(start)));
 }
 /**
  * True when the id is introduced by a label ("COA ledger row <id>", "lead_id=<id>", "ref: <id>") and the id's

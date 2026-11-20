@@ -102,6 +102,8 @@ describe('stripMachineIds: an id a label introduces goes with its label', () => 
     for (const text of [
       `See https://app.example.invalid/x then ref ${ID}.`,
       `Saved to C:\\Exports\\Customer ref ${ID}`,
+      `Saved to /exports/Customer ref ${ID}`,
+      `Saved to ~/My Files ref ${ID}`,
       `Saved to \\\\server\\share\\My Files lead id ${UUID}`,
     ]) {
       expect(stripMachineIds(text)).toBe(text);
