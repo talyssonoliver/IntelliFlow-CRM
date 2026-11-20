@@ -36,7 +36,7 @@ import {
   bulkArchiveLeadsSchema,
   bulkDeleteLeadsSchema,
   setLeadStarredSchema,
-  stripMachineIds,
+  cleanActivityText,
 } from '@intelliflow/validators';
 import { mapLeadToResponse } from '../../shared/mappers';
 import type { Context } from '../../context';
@@ -1765,8 +1765,7 @@ export const leadRouter = createTRPCRouter({
         const created = await tx.leadActivity.create({
           data: {
             type: input.type,
-            title: stripMachineIds(input.title) || input.title,
-            description: stripMachineIds(input.description ?? ''),
+            ...cleanActivityText(input),
             timestamp: occurredAt,
             userName: ctx.user?.email ?? 'Unknown',
             leadId: input.leadId,

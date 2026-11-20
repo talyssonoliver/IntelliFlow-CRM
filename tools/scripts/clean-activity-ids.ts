@@ -4,7 +4,8 @@
  * Existing lead_activities rows whose title or description carries a machine id, for example
  * "... COA ledger row cmw5j72u40001p5ug01kf3vot.", get the id (and the label in front of it) removed.
  * New rows are cleaned when they are written (`lead.logActivity`) and when they are shown; this script
- * rewrites the old ones. Metadata is not touched, so nothing is lost.
+ * rewrites the old ones. Only the title and description change; metadata is not touched. The removed
+ * text is kept only in the dry-run output (see Recovery), so save it.
  *
  * Safety (ADR-069 Class B: a row rewrite on existing production data):
  *   - Dry run by default: prints every planned change and writes nothing. `--apply` writes.
@@ -20,7 +21,7 @@
 
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { stripMachineIds } from '../../packages/validators/src/activity-text';
+import { cleanActivityText } from '../../packages/validators/src/activity-text';
 
 const BATCH_SIZE = 200;
 const TAG = '[clean-activity-ids]';
@@ -49,14 +50,11 @@ export interface TextFix {
   description: string;
 }
 
-/** The cleaned title and description, or null when neither carries an id (or cleaning would empty the title). */
+/** The cleaned title and description, or null when neither carries an id. A title that was only an id becomes "Activity". */
 export function planCleanup(row: { title: string; description: string | null }): TextFix | null {
-  const description = row.description ?? '';
-  const title = stripMachineIds(row.title);
-  const cleanedDescription = stripMachineIds(description);
-  if (title === '') return null;
-  if (title === row.title && cleanedDescription === description) return null;
-  return { title, description: cleanedDescription };
+  const fix = cleanActivityText(row);
+  if (fix.title === row.title && fix.description === (row.description ?? '')) return null;
+  return fix;
 }
 
 type Prisma = InstanceType<typeof PrismaClient>;

@@ -8,94 +8,136 @@
  *
  * Pure, browser safe, no dependencies and no backtracking patterns: it is used by the API when an
  * activity is written, by the web when one is shown, and by the one-off cleanup script for rows that were
- * written before.
+ * written before. Only the removal point is tidied; the rest of the text is returned as it was.
  */
 
-/** A cuid: "c" and 24 lowercase letters or digits (Prisma's default id). */
-const CUID = /\bc[a-z0-9]{24}\b/g;
+/** What a title becomes when it was nothing but an id. */
+export const FALLBACK_ACTIVITY_TITLE = 'Activity';
+
+/** A cuid: "c" and 24 letters or digits (Prisma's default id). One without a digit is a word. */
+const CUID = /\bc[a-z0-9]{24}\b/gi;
 
 /** A UUID, any version. */
 const UUID = /\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/gi;
 
-/**
- * Words that introduce an id ("COA ledger row <id>", "lead id <id>", "ref <id>"). The label goes with the
- * id: "COA ledger row" alone says nothing.
- */
+/** Words that introduce an id, longest first. The label goes with the id: "COA ledger row" alone says nothing. */
 const LABELS: readonly string[] = [
   'coa ledger row',
-  'ledger row',
   'coa lead id',
+  'ledger row',
+  'coa ledger',
   'coa lead',
   'lead id',
   'row id',
-  'row',
-  'id',
-  'ref',
   'reference',
+  'row',
+  'ref',
+  'id',
 ];
 
-/** A real cuid has a digit; a 25 letter lowercase word starting with c is not one. */
-function isMachineCuid(token: string): boolean {
-  return /\d/.test(token);
+interface IdMatch {
+  index: number;
+  length: number;
 }
 
-function removeLabelledIds(text: string): string {
-  let out = '';
-  let cursor = 0;
-  for (const match of text.matchAll(CUID)) {
-    if (!isMachineCuid(match[0])) continue;
-    const at = match.index ?? 0;
-    const prefix = out + text.slice(cursor, at);
-    let head = prefix.trimEnd();
-    if (head.endsWith(':')) head = head.slice(0, -1).trimEnd();
-    const lower = head.toLowerCase();
+function firstId(text: string): IdMatch | null {
+  let best: IdMatch | null = null;
+  for (const re of [CUID, UUID]) {
+    re.lastIndex = 0;
+    for (let m = re.exec(text); m; m = re.exec(text)) {
+      if (re === CUID && !/\d/.test(m[0])) continue;
+      if (!best || m.index < best.index) best = { index: m.index, length: m[0].length };
+      break;
+    }
+  }
+  return best;
+}
+
+const SPACES = new Set([' ', '\t']);
+
+function trimSpacesEnd(text: string): string {
+  let end = text.length;
+  while (end > 0 && SPACES.has(text.charAt(end - 1))) end -= 1;
+  return text.slice(0, end);
+}
+
+function trimSpacesStart(text: string): string {
+  let start = 0;
+  while (start < text.length && SPACES.has(text.charAt(start))) start += 1;
+  return text.slice(start);
+}
+
+/** The text without a label at its end ("... COA ledger row" -> "... "), repeated for "row id". */
+function withoutTrailingLabels(text: string): string {
+  let out = text;
+  for (;;) {
+    let head = trimSpacesEnd(out);
+    if (head.endsWith(':')) head = trimSpacesEnd(head.slice(0, -1));
+    // "lead_id" and "lead-id" read as "lead id".
+    const lower = head.toLowerCase().split('_').join(' ').split('-').join(' ');
     const label = LABELS.find((word) => {
       if (!lower.endsWith(word)) return false;
       const lead = head.charAt(head.length - word.length - 1);
-      return lead === '' || !/[a-z0-9]/i.test(lead);
+      return lead === '' || !/[a-z0-9_]/i.test(lead);
     });
-    out = label ? head.slice(0, head.length - label.length) : prefix;
-    cursor = at;
+    if (!label) return out;
+    out = head.slice(0, head.length - label.length);
   }
-  return out + text.slice(cursor);
 }
 
-/** Tidy what removing an id left behind: doubled spaces, a space before punctuation, a dangling colon. */
-function tidy(text: string): string {
-  return text
-    .split('\n')
-    .map((line) =>
-      line
-        .split(/[ \t]{2,}/)
-        .join(' ')
-        .trimEnd()
-    )
-    .map((line) => (line === '.' ? '' : line))
-    .join('\n')
-    .split(' .')
-    .join('.')
-    .split(' ,')
-    .join(',')
-    .split(' ;')
-    .join(';')
-    .split('..')
-    .join('.')
-    .trim();
+/** Closes the gap an id left: "()" , a space before punctuation, a doubled full stop. */
+function closeGap(before: string, after: string): [string, string] {
+  let out = before;
+  let rest = after;
+  if (out.endsWith('(') && rest.startsWith(')')) {
+    out = trimSpacesEnd(out.slice(0, -1));
+    rest = rest.slice(1);
+  }
+  if (rest.startsWith('.') || rest.startsWith(',') || rest.startsWith(';')) {
+    out = trimSpacesEnd(out);
+    if (out === '' || out.endsWith('\n') || (out.endsWith('.') && rest.startsWith('.'))) {
+      rest = rest.slice(1);
+    }
+  }
+  if (out === '' || out.endsWith(' ') || out.endsWith('\n')) rest = trimSpacesStart(rest);
+  return [out, rest];
 }
 
 /**
  * The text with machine ids removed: cuids and UUIDs, and the label in front of one ("COA ledger row",
- * "lead id"). Text without an id is returned unchanged.
+ * "lead id"). An id inside an address ("/leads/<id>") stays, so the link still works. Text without an id
+ * is returned unchanged.
  */
 export function stripMachineIds(text: string): string {
-  const withoutLabelled = removeLabelledIds(text);
-  const bare = withoutLabelled
-    .replace(CUID, (token) => (isMachineCuid(token) ? '' : token))
-    .replace(UUID, '');
-  return bare === text ? text : tidy(bare);
+  let out = '';
+  let rest = text;
+  for (let found = firstId(rest); found; found = firstId(rest)) {
+    const lead = found.index > 0 ? rest.charAt(found.index - 1) : out.charAt(out.length - 1);
+    const end = found.index + found.length;
+    if (lead === '/') {
+      out += rest.slice(0, end);
+      rest = rest.slice(end);
+      continue;
+    }
+    out = withoutTrailingLabels(out + rest.slice(0, found.index));
+    [out, rest] = closeGap(out, rest.slice(end));
+  }
+  const result = out + rest;
+  return result === text ? text : result.trim();
 }
 
 /** True when the text carries a machine id. */
 export function hasMachineId(text: string): boolean {
   return stripMachineIds(text) !== text;
+}
+
+/** An activity's title and description, cleaned; a title that was only an id becomes a neutral one. */
+export function cleanActivityText(activity: { title: string; description?: string | null }): {
+  title: string;
+  description: string;
+} {
+  return {
+    title: stripMachineIds(activity.title) || FALLBACK_ACTIVITY_TITLE,
+    description: stripMachineIds(activity.description ?? ''),
+  };
 }

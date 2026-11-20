@@ -165,12 +165,12 @@ describe('lead.logActivity occurredAt', () => {
       description: `Reply in their thread. COA ledger row ${id}.`,
     });
 
-    expect(captured.activity.title).toBe('Price follow-up sent ()');
+    expect(captured.activity.title).toBe('Price follow-up sent');
     expect(captured.activity.description).toBe('Reply in their thread.');
     expect(JSON.stringify(captured.activity)).not.toContain(id);
   });
 
-  it('keeps the title when it is nothing but an id', async () => {
+  it('gives a title that is nothing but an id a neutral one, never the id', async () => {
     prismaMock.lead.findUnique.mockResolvedValue(mockLead as any);
     const captured = captureTransaction();
     const id = 'c' + 'mw5j72u40001p5ug01kf3vot';
@@ -181,7 +181,8 @@ describe('lead.logActivity occurredAt', () => {
       title: id,
     });
 
-    expect(captured.activity.title).toBe(id);
+    expect(captured.activity.title).toBe('Activity');
+    expect(JSON.stringify(captured.activity)).not.toContain(id);
   });
 
   it('rejects an unknown direction', async () => {

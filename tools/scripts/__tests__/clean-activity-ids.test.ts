@@ -35,8 +35,11 @@ describe('planCleanup', () => {
     expect(planCleanup({ title: 'Call', description: null })).toBeNull();
   });
 
-  it('never empties a title', () => {
-    expect(planCleanup({ title: ID, description: '' })).toBeNull();
+  it('gives a title that was only an id a neutral one, never an empty or id title', () => {
+    expect(planCleanup({ title: ID, description: '' })).toEqual({
+      title: 'Activity',
+      description: '',
+    });
   });
 });
 

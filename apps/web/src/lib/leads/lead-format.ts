@@ -7,7 +7,7 @@
  * PG-059 `lib/leads/*` extraction convention.
  */
 
-import { hasMachineId, stripMachineIds } from '@intelliflow/validators';
+import { cleanActivityText, hasMachineId, stripMachineIds } from '@intelliflow/validators';
 import { formatGBPCompact } from '@/lib/format/gbp-compact';
 
 // Activity types matching the database enum (UI-facing variant).
@@ -188,7 +188,7 @@ export function formatEstimatedValue(cents: number): string {
 }
 
 /** Activity text without machine ids (register row 42); the one implementation lives in validators. */
-export { stripMachineIds };
+export { cleanActivityText, stripMachineIds };
 
 /** The tags the sync writes with a fixed name. */
 const SYSTEM_TAGS: ReadonlySet<string> = new Set([
