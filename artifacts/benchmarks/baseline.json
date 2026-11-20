@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-20T12:38:07.527Z",
+  "timestamp": "2026-11-20T13:54:04.523Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1522,9 +1522,9 @@
   },
   "database_inventory": {
     "total_tables": 217,
-    "total_fields": 3219,
+    "total_fields": 3237,
     "total_indexes": 965,
-    "total_relations": 309,
+    "total_relations": 323,
     "tables_with_embeddings": 4,
     "enums": 82,
     "tables": [
@@ -1536,6 +1536,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "Lead",
+        "fields": 55,
+        "indexes": 16,
+        "relations": 3,
+        "hasEmbedding": true
+      },
+      {
         "name": "EmailMailbox",
         "fields": 55,
         "indexes": 4,
@@ -1543,24 +1550,24 @@
         "hasEmbedding": false
       },
       {
-        "name": "Lead",
-        "fields": 54,
-        "indexes": 16,
-        "relations": 3,
-        "hasEmbedding": true
-      },
-      {
         "name": "User",
-        "fields": 49,
+        "fields": 54,
         "indexes": 7,
-        "relations": 9,
+        "relations": 14,
         "hasEmbedding": false
       },
       {
         "name": "Appointment",
-        "fields": 39,
+        "fields": 41,
         "indexes": 10,
-        "relations": 4,
+        "relations": 6,
+        "hasEmbedding": false
+      },
+      {
+        "name": "DsarRequest",
+        "fields": 39,
+        "indexes": 6,
+        "relations": 3,
         "hasEmbedding": false
       },
       {
@@ -1569,13 +1576,6 @@
         "indexes": 15,
         "relations": 4,
         "hasEmbedding": true
-      },
-      {
-        "name": "DsarRequest",
-        "fields": 37,
-        "indexes": 6,
-        "relations": 1,
-        "hasEmbedding": false
       },
       {
         "name": "TaskAutomationRule",
@@ -1683,6 +1683,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "Case",
+        "fields": 24,
+        "indexes": 8,
+        "relations": 5,
+        "hasEmbedding": false
+      },
+      {
         "name": "CallRecord",
         "fields": 24,
         "indexes": 6,
@@ -1694,13 +1701,6 @@
         "fields": 23,
         "indexes": 13,
         "relations": 7,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Case",
-        "fields": 23,
-        "indexes": 8,
-        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -1729,6 +1729,13 @@
         "fields": 21,
         "indexes": 7,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EventType",
+        "fields": 20,
+        "indexes": 5,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -1827,13 +1834,6 @@
         "fields": 17,
         "indexes": 3,
         "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "EventType",
-        "fields": 17,
-        "indexes": 5,
-        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -1956,6 +1956,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "CaseType",
+        "fields": 15,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "CaseTask",
         "fields": 15,
         "indexes": 7,
@@ -2047,10 +2054,10 @@
         "hasEmbedding": false
       },
       {
-        "name": "CaseType",
+        "name": "ProcessingRestriction",
         "fields": 14,
         "indexes": 3,
-        "relations": 1,
+        "relations": 3,
         "hasEmbedding": false
       },
       {
@@ -2212,13 +2219,6 @@
         "fields": 12,
         "indexes": 4,
         "relations": 3,
-        "hasEmbedding": false
-      },
-      {
-        "name": "ProcessingRestriction",
-        "fields": 12,
-        "indexes": 3,
-        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -2782,6 +2782,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "BookingAttempt",
+        "fields": 8,
+        "indexes": 4,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "AccountAIInsight",
         "fields": 8,
         "indexes": 2,
@@ -2904,13 +2911,6 @@
         "name": "AvailabilityClosure",
         "fields": 7,
         "indexes": 3,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "BookingAttempt",
-        "fields": 7,
-        "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
       },
