@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '@/lib/api';
 import {
   FOLLOW_UP_CARD_LIMIT,
@@ -24,6 +24,36 @@ import type { FollowUpLead } from './FollowUpsDueSection';
  * the rows due today among those read; `dueTodayIsLowerBound` says every row read was due today
  * and there are more, so the true number is at least that.
  */
+const DAY_MS = 86_400_000;
+const utcDayOf = (d: Date) => Math.floor(d.getTime() / DAY_MS);
+
+/**
+ * "Now" for day-based counts: fixed within a UTC day (follow-ups are counted in UTC days, see
+ * follow-ups-due.ts), moved on at the next UTC midnight and when a tab comes back to view, since
+ * a background tab's timer may not fire. Codex 21/11: a dashboard left open overnight kept
+ * yesterday's "due today" and cutoff.
+ */
+function useUtcDayClock(): Date {
+  const [now, setNow] = useState(() => new Date());
+  const day = utcDayOf(now);
+
+  useEffect(() => {
+    const catchUp = () => {
+      const current = new Date();
+      if (utcDayOf(current) !== day) setNow(current);
+    };
+    const untilMidnight = (day + 1) * DAY_MS - Date.now() + 1000;
+    const timer = setTimeout(catchUp, Math.max(untilMidnight, 1000));
+    document.addEventListener('visibilitychange', catchUp);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('visibilitychange', catchUp);
+    };
+  }, [day]);
+
+  return now;
+}
+
 export function useFollowUpsDue(limit: number = FOLLOW_UP_CARD_LIMIT): {
   leads: FollowUpLead[];
   total: number;
@@ -31,8 +61,8 @@ export function useFollowUpsDue(limit: number = FOLLOW_UP_CARD_LIMIT): {
   dueTodayIsLowerBound: boolean;
   isLoading: boolean;
 } {
-  // Fixed for the life of the card so the query key does not change on every render.
-  const now = useMemo(() => new Date(), []);
+  // The same instant all day, so the query key holds still; a new one from each UTC midnight.
+  const now = useUtcDayClock();
   const cutoff = useMemo(() => followUpCutoff(now), [now]);
 
   const { data, isLoading } = api.lead.list.useQuery({

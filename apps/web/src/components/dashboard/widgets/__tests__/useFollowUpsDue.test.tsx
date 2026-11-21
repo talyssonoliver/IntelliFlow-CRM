@@ -1,9 +1,9 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as React from 'react';
-import { render } from '@testing-library/react';
+import { act, render } from '@testing-library/react';
 
 const listQuery = vi.fn();
 vi.mock('@/lib/api', () => ({
@@ -71,5 +71,67 @@ describe('useFollowUpsDue (#46)', () => {
     expect(seen.dueToday).toBe(0);
     expect(seen.dueTodayIsLowerBound).toBe(false);
     expect(seen.total).toBe(111);
+  });
+
+  describe('when the page stays open into the next day (codex: frozen clock)', () => {
+    // 23:59 UTC; the lead was contacted 7 days earlier, so it is due today until midnight.
+    const BEFORE_MIDNIGHT = new Date('2026-11-21T23:59:00.000Z');
+    const contacted = '2026-11-14T10:00:00.000Z';
+
+    function live() {
+      const ref: { current?: ReturnType<typeof useFollowUpsDue> } = {};
+      function Probe() {
+        ref.current = useFollowUpsDue();
+        return null;
+      }
+      render(<Probe />);
+      return ref;
+    }
+
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'Date'] });
+      vi.setSystemTime(BEFORE_MIDNIGHT);
+      listQuery.mockReturnValue({
+        data: { data: [lead(1, contacted)], total: 1 },
+        isLoading: false,
+      });
+    });
+    afterEach(() => vi.useRealTimers());
+
+    it('moves "due today" to overdue and asks with the new cutoff after midnight', () => {
+      const seen = live();
+      expect(seen.current!.dueToday).toBe(1);
+      const firstCutoff = (listQuery.mock.calls.at(-1)![0] as { lastContactedBefore: Date })
+        .lastContactedBefore;
+
+      act(() => {
+        vi.advanceTimersByTime(2 * 60_000);
+      });
+
+      expect(seen.current!.dueToday).toBe(0);
+      const nextCutoff = (listQuery.mock.calls.at(-1)![0] as { lastContactedBefore: Date })
+        .lastContactedBefore;
+      expect(nextCutoff.getTime() - firstCutoff.getTime()).toBe(86_400_000);
+    });
+
+    it('keeps one cutoff within the day, so re-renders do not change the query', () => {
+      live();
+      const cutoffs = new Set(
+        listQuery.mock.calls.map((c) =>
+          (c[0] as { lastContactedBefore: Date }).lastContactedBefore.getTime()
+        )
+      );
+      expect(cutoffs.size).toBe(1);
+    });
+
+    it('catches up when a background tab comes back after midnight', () => {
+      const seen = live();
+      // A background tab's timer may not fire; the clock jumps instead.
+      vi.setSystemTime(new Date('2026-11-22T08:00:00.000Z'));
+      act(() => {
+        document.dispatchEvent(new Event('visibilitychange'));
+      });
+      expect(seen.current!.dueToday).toBe(0);
+    });
   });
 });
