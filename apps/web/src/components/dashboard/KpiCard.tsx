@@ -50,13 +50,18 @@ export function KpiCard({
   const badge = failed ? undefined : badgeProp;
   const footer = failed ? undefined : footerProp;
   const figure = failed ? (
-    <p className="text-sm text-muted-foreground truncate" data-testid="kpi-value" role="alert">
+    <p
+      className="text-sm text-muted-foreground truncate max-sm:@min-[10.5rem]:leading-8"
+      data-testid="kpi-value"
+      role="alert"
+    >
       Couldn&apos;t load
     </p>
   ) : (
     <p
-      className="text-2xl sm:text-3xl font-bold text-foreground tabular-nums truncate"
+      className={`text-2xl sm:text-3xl font-bold text-foreground tabular-nums truncate max-sm:@min-[10.5rem]:text-[clamp(1.125rem,11.5cqi,1.5rem)] max-sm:@min-[10.5rem]:leading-8 ${pending ? 'animate-pulse motion-reduce:animate-none' : ''}`}
       data-testid="kpi-value"
+      aria-busy={pending || undefined}
     >
       {pending ? '...' : value}
     </p>
@@ -83,21 +88,43 @@ export function KpiCard({
     );
   }
 
+  // Phone row layout (owner 20/11): below `sm`, a card at least 10.5rem wide puts the icon beside
+  // the label and number, the icon exactly as tall as the two of them (16px label + 2px gap +
+  // 32px number = 50px). It keys on the card's own width (container query), so a card the user
+  // resized to the full phone row gets the row too, and a card too narrow for it (a 320px
+  // phone, two per row) keeps the stacked layout instead of cutting the label off.
+  // In the row the number scales with the card (24px on a wide card, about 20px on a 390px phone)
+  // so "£125,000" still fits; its 32px line keeps the icon at 50px.
+  // From `sm` up the card is unchanged.
   return (
-    <div className="p-4 sm:p-6 h-full flex flex-col min-w-0">
-      <div className="flex items-start justify-between gap-2">
-        <div
-          className={`size-9 sm:size-12 shrink-0 rounded-lg flex items-center justify-center ${iconClassName}`}
-        >
-          <span className="material-symbols-outlined text-xl sm:text-2xl" aria-hidden="true">
-            {icon}
-          </span>
+    <div className="@container h-full min-w-0">
+      <div className="p-4 sm:p-6 h-full flex flex-col min-w-0 max-sm:@min-[10.5rem]:p-2.5">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 max-sm:@min-[10.5rem]:grid-cols-[auto_minmax(0,1fr)]">
+          <div
+            className={`col-start-1 row-start-1 size-9 sm:size-12 shrink-0 rounded-lg flex items-center justify-center max-sm:@min-[10.5rem]:row-span-2 max-sm:@min-[10.5rem]:size-[50px] ${iconClassName}`}
+            data-testid="kpi-icon"
+          >
+            <span
+              className="material-symbols-outlined text-xl sm:text-2xl max-sm:@min-[10.5rem]:text-[26px]"
+              aria-hidden="true"
+            >
+              {icon}
+            </span>
+          </div>
+          {badge ? (
+            <div className="col-start-3 row-start-1 justify-self-end max-sm:@min-[10.5rem]:col-start-2 max-sm:@min-[10.5rem]:row-start-3 max-sm:@min-[10.5rem]:justify-self-start max-sm:@min-[10.5rem]:mt-1">
+              {badge}
+            </div>
+          ) : null}
+          <p className="col-span-3 row-start-2 text-xs sm:text-sm text-muted-foreground mt-3 sm:mt-4 truncate max-sm:@min-[10.5rem]:col-span-1 max-sm:@min-[10.5rem]:col-start-2 max-sm:@min-[10.5rem]:row-start-1 max-sm:@min-[10.5rem]:mt-0 max-sm:@min-[10.5rem]:leading-4">
+            {label}
+          </p>
+          <div className="col-span-3 row-start-3 mt-1 min-w-0 max-sm:@min-[10.5rem]:col-span-1 max-sm:@min-[10.5rem]:col-start-2 max-sm:@min-[10.5rem]:row-start-2 max-sm:@min-[10.5rem]:mt-0.5 max-sm:@min-[10.5rem]:leading-8">
+            {figure}
+          </div>
         </div>
-        {badge}
+        {footer}
       </div>
-      <p className="text-xs sm:text-sm text-muted-foreground mt-3 sm:mt-4 truncate">{label}</p>
-      <div className="mt-1 min-w-0">{figure}</div>
-      {footer}
     </div>
   );
 }

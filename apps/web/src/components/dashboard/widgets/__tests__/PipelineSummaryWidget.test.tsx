@@ -238,3 +238,75 @@ describe('PipelineSummaryWidget loading and errors', () => {
     expect(screen.queryByText("Couldn't load your leads.")).not.toBeInTheDocument();
   });
 });
+
+describe('PipelineSummaryWidget: folded sections on a narrow card (owner 20/11)', () => {
+  const bodyOf = (toggle: HTMLElement) => {
+    const body = document.getElementById(toggle.getAttribute('aria-controls') ?? '');
+    if (!body) throw new Error('toggle does not point at its section body');
+    return body;
+  };
+
+  it('puts a divider above each section, removed once the sections sit side by side', () => {
+    render(<PipelineSummaryWidget />);
+    for (const section of [leadsSection(), dealsSection()]) {
+      expect(section).toHaveClass('border-t', 'pt-4', '@xl:border-t-0', '@xl:pt-0');
+    }
+  });
+
+  it('renders each heading once, so the folded row and the open card read the same', () => {
+    render(<PipelineSummaryWidget />);
+    expect(screen.getAllByText('Leads')).toHaveLength(1);
+    expect(screen.getAllByText('Deals')).toHaveLength(1);
+  });
+
+  it('folds each section to its heading row and opens it on tap', () => {
+    render(<PipelineSummaryWidget />);
+    const toggle = screen.getByTestId('pipeline-leads-toggle');
+    const body = bodyOf(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    // A stable name; the state is aria-expanded, so a screen reader does not hear "Hide..., expanded".
+    expect(toggle).toHaveAccessibleName('Leads by stage');
+    // Folded below @xl only: the stages still render, so the side-by-side card shows them.
+    expect(body).toHaveClass('@max-xl:hidden');
+    expect(within(body).getByText('New')).toBeInTheDocument();
+    // The heading row keeps the total on the folded row.
+    expect(within(leadsSection()).getByText('7 leads')).toBeInTheDocument();
+
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(toggle).toHaveAccessibleName('Leads by stage');
+    expect(body).not.toHaveClass('@max-xl:hidden');
+
+    fireEvent.click(toggle);
+    expect(body).toHaveClass('@max-xl:hidden');
+  });
+
+  it('folds the deals on their own, and hides both toggles on a wide card', () => {
+    render(<PipelineSummaryWidget />);
+    const deals = screen.getByTestId('pipeline-deals-toggle');
+    const leadsToggle = screen.getByTestId('pipeline-leads-toggle');
+    fireEvent.click(deals);
+    expect(deals).toHaveAttribute('aria-expanded', 'true');
+    expect(leadsToggle).toHaveAttribute('aria-expanded', 'false');
+    expect(deals).toHaveClass('@xl:hidden');
+    expect(leadsToggle).toHaveClass('@xl:hidden');
+  });
+
+  it('folds while loading too, so the card does not open and then jump shut', () => {
+    pipeline = { data: undefined, isLoading: true };
+    leads = { data: undefined, isLoading: true };
+    render(<PipelineSummaryWidget />);
+    expect(bodyOf(screen.getByTestId('pipeline-leads-toggle'))).toHaveClass('@max-xl:hidden');
+    expect(bodyOf(screen.getByTestId('pipeline-deals-toggle'))).toHaveClass('@max-xl:hidden');
+  });
+
+  it('keeps an error and the no-open-deals message unfolded', () => {
+    pipeline = { data: { stages: [], totalPipelineValue: 0 }, isLoading: false };
+    leads = { data: undefined, isLoading: false, isError: true, refetch: vi.fn() };
+    render(<PipelineSummaryWidget />);
+    expect(screen.queryByTestId('pipeline-leads-toggle')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('pipeline-deals-toggle')).not.toBeInTheDocument();
+    expect(within(leadsSection()).getByText("Couldn't load your leads.")).toBeInTheDocument();
+    expect(within(dealsSection()).getByText('No open deals')).toBeInTheDocument();
+  });
+});
