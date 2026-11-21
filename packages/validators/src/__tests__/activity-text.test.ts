@@ -11,15 +11,25 @@ describe('stripMachineIds: only "COA ledger row <id>." is removed', () => {
     expect(stripMachineIds(text)).toBe('Reply in their thread to the owner. Offer: GBP 0 today.');
   });
 
-  it('still cleans a row whose earlier sentences hold a slash, a link or a path', () => {
-    const text =
-      `Offer: GBP 69.99/month, see https://shop.example.invalid/a and C:\\Exports\\My Files. ` +
-      `COA ledger row ${ID}.`;
+  it('still cleans the real Pitshanger row, whose text holds a price with a slash', () => {
+    const text = `Reply in their thread. Offer: GBP 0 today, then GBP 69.99/month, cancel any time. COA ledger row ${ID}.`;
     expect(stripMachineIds(text)).toBe(
-      'Offer: GBP 69.99/month, see https://shop.example.invalid/a and C:\\Exports\\My Files.'
+      'Reply in their thread. Offer: GBP 0 today, then GBP 69.99/month, cancel any time.'
     );
   });
 
+  it('leaves a line alone that holds a path or a link before the marker, and cleans the next line', () => {
+    for (const text of [
+      `Saved to C:\\Exports\\Mr. Smith COA ledger row ${ID}`,
+      `See https://shop.example.invalid/a. COA ledger row ${ID}.`,
+      `Open exports/Customer. COA ledger row ${ID}.`,
+    ]) {
+      expect(stripMachineIds(text)).toBe(text);
+    }
+    expect(stripMachineIds(`See https://shop.example.invalid/a\nDone. COA ledger row ${ID}.`)).toBe(
+      'See https://shop.example.invalid/a\nDone.'
+    );
+  });
   it('ignores case and spacing, and removes an id in the middle of the text', () => {
     expect(stripMachineIds(`Sent. coa LEDGER row   ${ID.toUpperCase()}. Thanks`)).toBe(
       'Sent. Thanks'

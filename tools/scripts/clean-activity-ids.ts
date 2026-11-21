@@ -130,7 +130,7 @@ export async function runCleanup(prisma: Prisma, args: ParsedArgs, totals: Total
 function describeRun(args: ParsedArgs): string {
   const scope = args.tenantFilter ? `tenant=${args.tenantFilter}` : '(all tenants)';
   const lead = args.leadFilter ? ' lead=' + args.leadFilter : '';
-  return ` mode=${args.isApply ? 'APPLY' : 'DRY-RUN'} ${scope}${lead}`;
+  return `${TAG} mode=${args.isApply ? 'APPLY' : 'DRY-RUN'} ${scope}${lead}`;
 }
 
 function openDatabase(url: string): Prisma {

@@ -62,21 +62,27 @@ function endsSentence(text: string, end: number): boolean {
   return isBreak(next) || (next === '.' && isBreak(text.charAt(end + 1)));
 }
 
+function isLetter(char: string): boolean {
+  return (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z');
+}
+
+/** A word that is a path or a link: it holds a backslash, or a slash that starts it or follows a letter ("/x", "a/b", "https://x"). */
+function isPathWord(word: string): boolean {
+  if (word.includes('\\')) return true;
+  for (let at = word.indexOf('/'); at !== -1; at = word.indexOf('/', at + 1)) {
+    if (at === 0 || isLetter(word.charAt(at - 1))) return true;
+  }
+  return false;
+}
+
 /**
- * True when the sentence before the marker already holds a path or a link ("Open C:\Exports\Archived COA ledger row
- * <id>"). A path can have spaces in it and the cleaner cannot tell where it ends, so that sentence is left alone. An
- * earlier sentence ("... GBP 69.99/month. COA ledger row <id>.") is not looked at.
+ * True when the line before the marker already holds a path or a link ("Open C:\Exports\Mr. Smith COA ledger row <id>").
+ * A path can have spaces and full stops in it and the cleaner cannot tell where it ends, so that line is left alone.
+ * A price such as "GBP 69.99/month" is not a path (the slash follows a digit).
  */
-function sentenceHasPath(before: string): boolean {
-  const start = Math.max(
-    before.lastIndexOf('\n'),
-    before.lastIndexOf('. '),
-    before.lastIndexOf('; '),
-    before.lastIndexOf('! '),
-    before.lastIndexOf('? ')
-  );
-  const sentence = before.slice(start + 1);
-  return sentence.includes('/') || sentence.includes('\\');
+function lineHasPath(before: string): boolean {
+  const line = before.slice(before.lastIndexOf('\n') + 1);
+  return line.split(' ').some(isPathWord);
 }
 /** The text without "COA ledger row <id>." (the full stop after the id goes with it). Other text is unchanged. */
 export function stripMachineIds(text: string): string {
@@ -86,7 +92,7 @@ export function stripMachineIds(text: string): string {
   for (let at = findMarker(text, from); at >= 0; at = findMarker(text, from)) {
     const after = at + LEDGER_MARKER.length;
     let end = recordIdEnd(text, after);
-    if (end < 0 || !endsSentence(text, end) || sentenceHasPath(text.slice(0, at))) {
+    if (end < 0 || !endsSentence(text, end) || lineHasPath(text.slice(0, at))) {
       out += text.slice(from, after);
       from = after;
       continue;
