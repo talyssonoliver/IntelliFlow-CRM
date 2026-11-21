@@ -36,6 +36,8 @@ import { alreadyLogged, anyoneRestricted, bodyOf, counterparty } from './mail-sy
 import { runLookback, type LookbackState } from './mail-sync-lookback';
 import { messageIdHeader, recordData } from './mail-sync-record';
 import { queueReplyDraftForSyncedMail } from './mail-sync-reply-draft';
+import { queueEnquiryLeadScoring, type QueueLeadAi } from './mail-sync-enquiry-scoring';
+import { enqueueLeadAiById } from '../lead/lead-scoring-enqueue';
 import {
   MAX_ENQUIRIES_PER_RUN,
   createEnquiryLead,
@@ -71,6 +73,8 @@ export interface InboxSyncDeps {
   readers?: Partial<Record<string, MailSyncReader>>;
   /** MVP-011: the lead use case; without it unknown senders are skipped as before. */
   createLead?: CreateLead;
+  /** MVP-012 #34: queue the AI scoring job for a lead made from an enquiry (best-effort). */
+  queueLeadAi?: QueueLeadAi;
   /** MVP-011: a look-back stores old mail: no reply drafts are queued for it. */
   backfill?: boolean;
 }
@@ -225,6 +229,12 @@ async function openEnquiry(
   if ((enquiries?.leadsCreated ?? 0) >= MAX_ENQUIRIES_PER_RUN) return 'capped';
   const created = await createEnquiryLead(deps, mailbox, message);
   if (created && enquiries) enquiries.leadsCreated += 1;
+  // The lead is committed: queue its AI scoring (detached, best-effort).
+  if (created) {
+    const { tenantId } = mailbox;
+    const { providerMessageId } = message;
+    queueEnquiryLeadScoring(deps.queueLeadAi, { leadId: created, tenantId, providerMessageId });
+  }
   return created;
 }
 
@@ -483,5 +493,7 @@ export async function createInboxSyncDeps(): Promise<InboxSyncDeps> {
     // MVP-011: unknown senders become leads through the lead use case.
     createLead: ((props, tx) =>
       (container as any).leadService.createLeadInTransaction(props, tx)) as CreateLead,
+    // MVP-012 #34: the same scoring job a manually created lead gets.
+    queueLeadAi: (ref) => enqueueLeadAiById(prisma as never, restrictions, ref),
   };
 }
