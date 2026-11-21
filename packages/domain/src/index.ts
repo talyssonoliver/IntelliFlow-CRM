@@ -181,3 +181,6 @@ export * from './workflow/node-catalog';
 
 // PG-207 (ADR-085): user mailbox sending, bounce rules and signature defaults.
 export * from './email';
+
+// IFC-320: WhatsApp channel vocabulary, E.164 normalisation, status rules.
+export * from './communication/whatsapp';
