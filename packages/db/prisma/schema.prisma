@@ -4524,7 +4524,7 @@ model EmailMailbox {
   refreshToken    String?   @db.Text
   grantedScopes   String[]  @default([])
   /// MVP-001 Zoho: the Zoho Mail account id and its data centre's API host (not credentials).
-  oauthAccountId  String?   @db.VarChar(64)
+  oauthAccountId  String?   @db.VarChar(255)
   oauthApiDomain  String?   @db.VarChar(64)
   tokenVersion    Int       @default(0)
   imapUidValidity BigInt?
@@ -4590,6 +4590,10 @@ model CalendarEventLink {
   appointmentId     String?
   appointment       Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
   googleEventId     String       @db.VarChar(1024)
+  /// The Google account (lower-case address) the link was made under. Links of another account are kept
+  /// when the mailbox is connected to a different one, and used again if that account returns. An event id
+  /// is unique per calendar, not across accounts, so it is unique per (mailbox, account).
+  googleAccount     String       @default("") @db.VarChar(320)
   /// AURORA (created from an appointment) | GOOGLE (imported from an event) (SQL CHECK).
   origin            String       @db.VarChar(10)
   /// Google's etag of the event as last written or read by the sync: equal means nothing changed.
@@ -4610,7 +4614,7 @@ model CalendarEventLink {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 
-  @@unique([mailboxId, googleEventId])
+  @@unique([mailboxId, googleAccount, googleEventId])
   @@unique([mailboxId, appointmentId])
   @@index([tenantId])
   @@index([appointmentId])

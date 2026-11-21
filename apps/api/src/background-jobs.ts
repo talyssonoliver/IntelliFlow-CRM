@@ -1,6 +1,6 @@
 /**
  * Background jobs the API process can run on timers (approval sweep, email
- * bounce scan, Outlook inbox sync, DSAR deadline alerts).
+ * bounce scan, Outlook inbox sync with the Google Calendar sync, DSAR deadline alerts).
  *
  * Idle-sleep (Railway App Sleeping): a process that makes outbound traffic while
  * idle never sleeps, and these timers are the traffic. They are therefore behind
@@ -28,6 +28,7 @@ import {
   stopBounceScanner,
 } from './modules/email/bounce-scheduler';
 import { createBounceReaderDeps, runBounceScan } from './modules/email/bounce-reader';
+import { calendarSyncEnabled, runCalendarSyncTick } from './modules/calendar/google-calendar-sync';
 import { createInboxSyncDeps, runInboxSync } from './modules/email/outlook-inbox-sync';
 import {
   inboxSyncIntervalFromEnv,
@@ -157,15 +158,28 @@ export function startBackgroundJobs({
     },
   });
 
-  // #1177: Outlook inbox sync, on its own timer so a slow Graph read never holds the bounce scan.
+  // #1177: Outlook inbox sync, on its own timer so a slow Graph read never holds the bounce scan. MVP-013:
+  // the Google Calendar sync runs in the same tick, so it shares this timer and its off switch.
   const inboxSync = startInboxSync({
     intervalMs: inboxSyncIntervalFromEnv(env),
     log,
     run: async () => {
       await ready();
-      return runInboxSync(await createInboxSyncDeps());
+      try {
+        return await runInboxSync(await createInboxSyncDeps());
+      } finally {
+        // MVP-013: Google Calendar, both ways, in the same tick (it never throws; GOOGLE_CALENDAR_SYNC=off).
+        await runCalendarSyncTick(env, log);
+      }
     },
   });
+
+  // The calendar sync rides on the inbox timer: with that timer off (its interval 0) it does not run.
+  if (!inboxSync && calendarSyncEnabled(env)) {
+    log.info(
+      '[calendar-sync] not running: the inbox sync timer is off, and the calendar sync runs in its tick'
+    );
+  }
 
   // PG-203 D8: DSAR deadline alerts to each firm's admins, and the purge of
   // expired unconfirmed requests.

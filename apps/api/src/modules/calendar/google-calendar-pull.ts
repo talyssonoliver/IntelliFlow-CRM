@@ -14,6 +14,7 @@ import {
 } from '@intelliflow/application';
 import {
   ACTIVE_STATUSES,
+  activeAccountLinks,
   appointmentFields,
   isPersonal,
   prismaCode,
@@ -50,7 +51,8 @@ type Window = { timeMin: Date; timeMax: Date };
  * the full-sync window (Google refuses a changed query), `r` the full sync replaces an expired token,
  * `v` the check that follows it is under way, at this link id ("" = the start), `h` when the window
  * the sync token covers began (a steady state is just `t` and `h`), `f` events that failed to apply
- * and are tried again, with their attempts so far (0: not yet reached, for want of time).
+ * and are tried again, with their attempts so far (0: not yet reached, for want of time), k the Google
+ * account the state belongs to.
  */
 interface State {
   t: string | null;
@@ -61,6 +63,8 @@ interface State {
   v?: string;
   h?: string;
   f?: Record<string, number>;
+  /** The Google account the state belongs to: another account starts the sync over. */
+  k?: string;
 }
 
 const STATE_PREFIX = 'resume:';
@@ -71,9 +75,10 @@ function fullWindow(now: Date): Window {
 }
 
 function encodeState(ctx: SyncContext, state: State, window?: Window): string {
+  const base: State = { ...state, k: ctx.mailbox.account };
   const full: State = window
-    ? { ...state, a: window.timeMin.toISOString(), b: window.timeMax.toISOString() }
-    : { ...state };
+    ? { ...base, a: window.timeMin.toISOString(), b: window.timeMax.toISOString() }
+    : base;
   // What still has attempts left rides along with the token.
   const pending = [...ctx.failed].filter(([, attempts]) => attempts < ITEM_ATTEMPTS);
   if (pending.length > 0) full.f = Object.fromEntries(pending);
@@ -154,7 +159,8 @@ function startCursor(ctx: SyncContext, raw: string | null): Cursor {
 }
 
 /** Reads Google's changes page by page and applies each; throws what Google answered on failure. */
-export async function pullChanges(ctx: SyncContext, raw: string | null): Promise<PullResult> {
+export async function pullChanges(ctx: SyncContext, saved: string | null): Promise<PullResult> {
+  const raw = await forgetOtherAccount(ctx, saved);
   ctx.failed = new Map(Object.entries(decodeState(raw)?.f ?? {}));
   await retryFailed(ctx);
   const resumed = resumeVerification(ctx, raw);
@@ -190,6 +196,33 @@ export async function pullChanges(ctx: SyncContext, raw: string | null): Promise
   return paused(ctx, cur);
 }
 
+/**
+ * The saved state belongs to the Google account it was made for. After a reconnect to another account its
+ * token means nothing and the sync starts over (a replacement sync, which also checks every link).
+ *
+ * Links are scoped to the Google account they were made under (calendarEventLink.googleAccount) and are
+ * never deleted on a switch: only the active account's links are used to find an event's appointment
+ * (import dedupe), to check links, and to decide what is written to Google. So A to B to A finds A's
+ * links again and imports nothing twice. The rule that never duplicates: an appointment that has a
+ * link under another account is not exported to the active account. It could be a copy of an event
+ * the active calendar cannot see, and a link is unique per appointment, so it is left alone until its
+ * own account returns; only appointments with no link at all are created as new events.
+ * Nothing wrote links before the account column existed (the sync tick ships with it), so every link
+ * names its account.
+ */
+async function forgetOtherAccount(ctx: SyncContext, saved: string | null): Promise<string | null> {
+  const known = decodeState(saved)?.k;
+  if (known === undefined || known === ctx.mailbox.account) return saved;
+  // Saved before anything is imported, naming the new account: a retry after a failure starts from it.
+  // The first sync is a replacement.
+  const reset = encodeState(ctx, { t: null, r: 1, h: ctx.now.toISOString() });
+  await ctx.prisma.emailMailbox.updateMany({
+    where: { id: ctx.mailbox.id, tenantId: ctx.mailbox.tenantId },
+    data: { calendarSyncToken: reset },
+  });
+  ctx.rememberState?.(reset);
+  return reset;
+}
 /** A round that stopped during the check after a replacement sync carries on with that check. */
 function resumeVerification(ctx: SyncContext, raw: string | null): Promise<PullResult> | null {
   const saved = decodeState(raw);
@@ -298,6 +331,7 @@ async function verifyLinks(
       where: {
         tenantId: ctx.mailbox.tenantId,
         mailboxId: ctx.mailbox.id,
+        ...activeAccountLinks(ctx),
         appointmentId: { not: null },
         id: { gt: last },
       },
@@ -383,7 +417,12 @@ async function decideAgain(
 
 async function findLink(ctx: SyncContext, googleEventId: string) {
   return ctx.prisma.calendarEventLink.findFirst({
-    where: { tenantId: ctx.mailbox.tenantId, mailboxId: ctx.mailbox.id, googleEventId },
+    where: {
+      tenantId: ctx.mailbox.tenantId,
+      mailboxId: ctx.mailbox.id,
+      ...activeAccountLinks(ctx),
+      googleEventId,
+    },
   });
 }
 
@@ -422,6 +461,7 @@ async function importEvent(ctx: SyncContext, event: ExternalCalendarEvent): Prom
         data: {
           tenantId,
           mailboxId,
+          googleAccount: ctx.mailbox.account,
           appointmentId: appointment.id,
           googleEventId: event.externalId,
           origin: 'GOOGLE',

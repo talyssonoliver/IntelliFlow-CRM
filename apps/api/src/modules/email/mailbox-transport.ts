@@ -41,6 +41,8 @@ type OAuthClientLike = Pick<
 > & {
   /** MVP-011: the public client id a Workspace admin trusts (absent on test doubles). */
   readonly clientId?: string;
+  /** MVP-013: Google's immutable account id, kept so the calendar sync survives a renamed address. */
+  accountSubject?(accessToken: string): Promise<string | null>;
 };
 
 /** Zoho Mail (MVP-001): HTTPS API, its own shape (data centre host, JSON send). */

@@ -4,7 +4,7 @@
  * (google-calendar-pull.ts) then written to (google-calendar-push.ts), and released with the outcome.
  * A failure backs the mailbox off and never changes its mail status. Google answering that the
  * calendar permission is gone marks it NEEDS_RECONNECT, and the sync stops until the user reconnects.
- * The tick that runs this is wired in a later change.
+ * The shared background tick runs it (background-jobs.ts), unless GOOGLE_CALENDAR_SYNC=off.
  */
 import { GoogleCalendarAdapter, MailboxTransportError } from '@intelliflow/adapters';
 import {
@@ -56,6 +56,9 @@ export interface CalendarSyncDeps {
 /** The mailbox row as the encrypted client returns it (the token helper reads its credentials). */
 interface SyncMailbox extends TransportMailbox {
   userId: string | null;
+  accountAddress: string | null;
+  /** A Gmail mailbox: Google's immutable account id, when it was captured at connect. */
+  oauthAccountId?: string | null;
   scope: string;
   status: string;
   grantedScopes: string[];
@@ -128,6 +131,14 @@ function tokensFor(access: string, scopes: string[], now: Date): OAuthTokens {
   };
 }
 
+/**
+ * Which Google account a round runs for: Google's immutable id, never the address (an address can be
+ * renamed, and the same account must keep its links). A mailbox without the id does not sync.
+ */
+export function accountKey(mailbox: { oauthAccountId?: string | null }): string {
+  return `sub:${mailbox.oauthAccountId}`;
+}
+
 function roundContext(
   deps: CalendarSyncDeps,
   mailbox: SyncMailbox,
@@ -141,7 +152,12 @@ function roundContext(
     gateway: deps.gatewayFor ? deps.gatewayFor({ id: mailbox.id }) : defaultGateway(),
     tokens: tokensFor(accessToken, mailbox.grantedScopes, now),
     // The caller has checked that the mailbox is a user's own (it has a userId).
-    mailbox: { id: mailbox.id, tenantId: mailbox.tenantId, userId: mailbox.userId as string },
+    mailbox: {
+      id: mailbox.id,
+      tenantId: mailbox.tenantId,
+      userId: mailbox.userId as string,
+      account: accountKey(mailbox),
+    },
     now,
     hasTime: () => deps.now().getTime() < deadline,
     report,
@@ -172,6 +188,14 @@ async function syncMailbox(
     await release(deps, claim, mailbox.tokenVersion, { calendarNextSyncAt: nextRound });
     return;
   }
+  // Connected without Google's account id (its lookup failed, or it was connected before the id was kept):
+  // the calendar stays off and the reconnect card is shown, until a connect captures the id. The mail
+  // keeps working.
+  if (!mailbox.oauthAccountId) {
+    report.reconnects += 1;
+    await release(deps, claim, mailbox.tokenVersion, { calendarStatus: 'NEEDS_RECONNECT' });
+    return;
+  }
   // No Google client in this process (its env lacks it): a setup gap, not a mailbox failure.
   if (!hasOAuthClient(deps.transports, 'GMAIL')) {
     await release(deps, claim, mailbox.tokenVersion, { calendarNextSyncAt: nextRound });
@@ -187,9 +211,15 @@ async function syncMailbox(
     version = access.tokenVersion;
     const deadline = deps.now().getTime() + MAILBOX_BUDGET_MS;
     // Google's changes first, then Aurora's: what the pull finished stays even if the push fails.
+    // Where a retry in this run resumes: the latest saved state, not the one the run began with.
+    let saved = mailbox.calendarSyncToken;
     const round = async (accessToken: string) => {
       const ctx = roundContext(deps, mailbox, accessToken, now, report, deadline);
-      const pulled = await pullChanges(ctx, mailbox.calendarSyncToken);
+      ctx.rememberState = (state) => {
+        saved = state;
+      };
+      const pulled = await pullChanges(ctx, saved);
+      saved = pulled.syncToken;
       progress.calendarSyncToken = pulled.syncToken;
       return { pulled, pushed: await pushChanges(ctx, { patch: pulled.complete }) };
     };
@@ -257,4 +287,39 @@ export async function runCalendarSync(deps: CalendarSyncDeps): Promise<CalendarS
     await syncMailbox(deps, claim, claimedAt, report);
   }
   return report;
+}
+
+/** GOOGLE_CALENDAR_SYNC=off turns the calendar sync off in this process (the inbox sync keeps running). */
+export function calendarSyncEnabled(env: NodeJS.ProcessEnv): boolean {
+  return (env.GOOGLE_CALENDAR_SYNC ?? '').trim().toLowerCase() !== 'off';
+}
+
+/** Production wiring: the shared encrypted Prisma client and the container's transports. */
+export async function createCalendarSyncDeps(): Promise<CalendarSyncDeps> {
+  const [{ prisma }, { container }] = await Promise.all([
+    import('@intelliflow/db'),
+    import('../../container.js'),
+  ]);
+  const adapters = container.adapters as unknown as { mailboxTransports: MailboxTransports };
+  return { prisma, transports: adapters.mailboxTransports, now: () => new Date() };
+}
+
+/**
+ * The calendar sync's part of the shared tick. It never throws, so it can follow the inbox sync in a
+ * `finally`: a failure here is logged and the next tick tries again. Mailboxes are due every five
+ * minutes whatever the tick's interval, so a faster tick does not sync more often.
+ */
+export async function runCalendarSyncTick(
+  env: NodeJS.ProcessEnv,
+  log: Pick<Console, 'warn' | 'info'> = console
+): Promise<void> {
+  if (!calendarSyncEnabled(env)) return;
+  try {
+    const report = await runCalendarSync(await createCalendarSyncDeps());
+    if (report.mailboxesSynced + report.failures + report.reconnects > 0) {
+      log.info('[calendar-sync] tick', report);
+    }
+  } catch (error) {
+    log.warn('[calendar-sync] tick failed', errorCause(error));
+  }
 }

@@ -46,6 +46,9 @@ export interface MailboxRowLike extends SmtpEndpointRow, SmtpAccountRow {
   syncedAt?: Date | null;
   /** Scopes the provider granted (OAuth mailboxes). */
   grantedScopes?: string[];
+  /** MVP-013: the calendar sync's state and last finished round (absent on rows read without them). */
+  calendarStatus?: string | null;
+  calendarSyncedAt?: Date | null;
   updatedAt: Date;
 }
 
@@ -88,6 +91,18 @@ export function canReadBounces(
   return Boolean(row.refreshToken);
 }
 
+/**
+ * MVP-013: the state of the calendar sync of a user's Google mailbox that has the calendar permission:
+ * ON, or NEEDS_RECONNECT when Google refused the sync's access (the permission was withdrawn); null
+ * when there is no calendar to sync (see calendarAccessState).
+ */
+export function calendarSyncState(
+  row: Pick<MailboxRowLike, 'kind' | 'scope' | 'grantedScopes' | 'calendarStatus'>
+): 'ON' | 'NEEDS_RECONNECT' | null {
+  if (calendarAccessState(row) !== 'GRANTED') return null;
+  return row.calendarStatus === 'NEEDS_RECONNECT' ? 'NEEDS_RECONNECT' : 'ON';
+}
+
 export function toMailboxDto(
   row: MailboxRowLike,
   options: { includeConnection: boolean }
@@ -112,6 +127,8 @@ export function toMailboxDto(
     inboxSyncedAt: row.syncedAt ? row.syncedAt.toISOString() : null,
     replySync: replySyncState(row),
     calendarAccess: calendarAccessState(row),
+    calendarSync: calendarSyncState(row),
+    calendarSyncedAt: row.calendarSyncedAt ? row.calendarSyncedAt.toISOString() : null,
     updatedAt: row.updatedAt.toISOString(),
   };
 }
