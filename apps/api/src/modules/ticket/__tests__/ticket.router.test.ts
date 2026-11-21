@@ -190,9 +190,7 @@ describe('ticketRouter', () => {
       ]);
 
       const mockContext = createMockContext();
-      const caller = ticketRouterEntitled.createCaller(
-        mockContext as any // test-only mock
-      );
+      const caller = ticketRouterEntitled.createCaller(mockContext as any); // test-only mock
 
       const result = await caller.assignees();
 

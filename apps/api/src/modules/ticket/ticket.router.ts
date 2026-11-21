@@ -699,7 +699,7 @@ export const ticketRouter = createTRPCRouter({
         input.content,
         input.authorName,
         input.authorRole,
-        ctx.user?.userId ?? null
+        ctx.user?.userId
       );
 
       return { success: true };
