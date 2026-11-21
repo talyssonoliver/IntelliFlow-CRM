@@ -785,7 +785,7 @@ describe('a reconnect (MVP-013)', () => {
     expect(calendars[A].events.get(droppedId)?.status).not.toBe('cancelled');
   });
 
-  it('skips, without failing, an event id already linked under the other account', async () => {
+  it('imports an event id that another account also uses, as a separate event', async () => {
     const sync = h.setup();
     const A = 'a@studio.example.invalid';
     const B = 'b@studio.example.invalid';
@@ -796,28 +796,12 @@ describe('a reconnect (MVP-013)', () => {
     await runCalendarSync(sync);
 
     h.mailbox().accountAddress = B;
-    calendars[B].put('shared-ev', { title: 'Both calendars' });
+    calendars[B].put('shared-ev', { title: 'Another event, same id' });
     const report = await h.nextRound(sync);
 
     expect(report.itemFailures).toBe(0);
-    expect(h.appointments()).toHaveLength(1);
-    expect(h.links()).toHaveLength(1);
-  });
-
-  it('treats links made before they carried an account as the active account’s, and stamps them on a switch', async () => {
-    const sync = h.setup();
-    h.mailbox().accountAddress = 'a@studio.example.invalid';
-    h.google.put('ev-1');
-    await runCalendarSync(sync);
-    for (const l of h.links()) delete l.googleAccount;
-
-    await h.nextRound(sync);
-    expect(h.appointments()).toHaveLength(1);
-    expect(h.links()).toHaveLength(1);
-
-    h.mailbox().accountAddress = 'b@studio.example.invalid';
-    await h.nextRound(sync);
-    expect(h.links()[0].googleAccount).toBe('a@studio.example.invalid');
+    expect(h.appointments()).toHaveLength(2);
+    expect(h.links()).toHaveLength(2);
   });
 
   it('saves the new account before reading, so a failed round does not clear the links again', async () => {

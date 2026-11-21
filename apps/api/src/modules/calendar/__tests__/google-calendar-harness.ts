@@ -102,7 +102,7 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
   const tables: Record<Table, Row[]> = {
     emailMailbox: [...(seed.emailMailbox ?? [mailboxRow()])],
     appointment: [...(seed.appointment ?? [])],
-    calendarEventLink: [...(seed.calendarEventLink ?? [])],
+    calendarEventLink: (seed.calendarEventLink ?? []).map((l) => ({ googleAccount: '', ...l })),
   };
   const clock = { now: new Date(NOW) };
   let ids = 0;
@@ -186,7 +186,7 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
             const clash = tables.calendarEventLink.some(
               (l) =>
                 l.mailboxId === row.mailboxId &&
-                (l.googleEventId === row.googleEventId ||
+                ((l.googleEventId === row.googleEventId && l.googleAccount === row.googleAccount) ||
                   (row.appointmentId && l.appointmentId === row.appointmentId))
             );
             if (clash) throw p2002();
@@ -238,6 +238,7 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
       pending: false,
       pushAttempts: 0,
       nextPushAt: null,
+      googleAccount: '',
     }),
     // The claim: the mailbox that is due, ACTIVE, a user's Google mailbox with the calendar scope.
     $queryRaw: vi.fn(async (_sql: unknown, leaseUntil: Date, scopes: string[], now: Date) => {

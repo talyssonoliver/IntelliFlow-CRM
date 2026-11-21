@@ -207,19 +207,12 @@ export async function pullChanges(ctx: SyncContext, saved: string | null): Promi
  * link under another account is not exported to the active account. It could be a copy of an event
  * the active calendar cannot see, and a link is unique per appointment, so it is left alone until its
  * own account returns; only appointments with no link at all are created as new events.
- * Links made before the column existed have no account: they count as the active account's, and a
- * switch stamps them with the account the saved state records (the one being left).
+ * Nothing wrote links before the account column existed (the sync tick ships with it), so every link
+ * names its account.
  */
 async function forgetOtherAccount(ctx: SyncContext, saved: string | null): Promise<string | null> {
   const known = decodeState(saved)?.k;
-  if (known === undefined) {
-    // A state that names no account (a bare token, or one that cannot be read) cannot say which account the
-    // links without one belong to: they are this account's, and are stamped so a later switch keeps them apart.
-    if (saved !== null) await stampUnscopedLinks(ctx, ctx.mailbox.account);
-    return saved;
-  }
-  if (known === ctx.mailbox.account) return saved;
-  await stampUnscopedLinks(ctx, known);
+  if (known === undefined || known === ctx.mailbox.account) return saved;
   // Saved before anything is imported, naming the new account: a retry after a failure starts from it.
   // The first sync is a replacement.
   const reset = encodeState(ctx, { t: null, r: 1, h: ctx.now.toISOString() });
@@ -229,13 +222,6 @@ async function forgetOtherAccount(ctx: SyncContext, saved: string | null): Promi
   });
   ctx.rememberState?.(reset);
   return reset;
-}
-/** Gives the links made before links carried an account to the account they were made under (the one being left). */
-async function stampUnscopedLinks(ctx: SyncContext, account: string): Promise<void> {
-  await ctx.prisma.calendarEventLink.updateMany({
-    where: { tenantId: ctx.mailbox.tenantId, mailboxId: ctx.mailbox.id, googleAccount: null },
-    data: { googleAccount: account },
-  });
 }
 /** A round that stopped during the check after a replacement sync carries on with that check. */
 function resumeVerification(ctx: SyncContext, raw: string | null): Promise<PullResult> | null {
@@ -489,16 +475,7 @@ async function importEvent(ctx: SyncContext, event: ExternalCalendarEvent): Prom
   } catch (error) {
     // Our link exists already (another replica made it first): the transaction made no appointment.
     // Any other unique clash is a real failure.
-    if (prismaCode(error) !== 'P2002') throw error;
-    if (!(await findLink(ctx, event.externalId))) {
-      // The unique key is (mailbox, event id), not per account: the same event id can already be linked
-      // under another Google account (an event both calendars hold). That link stays with its account and
-      // the appointment it made; importing it again here would duplicate it, so it is skipped, not failed.
-      const other = await ctx.prisma.calendarEventLink.findFirst({
-        where: { tenantId, mailboxId, googleEventId: event.externalId },
-      });
-      if (!other) throw error;
-    }
+    if (prismaCode(error) !== 'P2002' || !(await findLink(ctx, event.externalId))) throw error;
     ctx.report.skipped += 1;
   }
 }
