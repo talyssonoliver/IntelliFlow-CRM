@@ -404,7 +404,8 @@ export function DataTable<TData, TValue>({
       .getSelectedRowModel()
       .rows.filter((row) => row.getCanSelect())
       .map((row) => row.original);
-  }, [table.getSelectedRowModel().rows]);
+    // The selectable-rows rule is a dependency too: changing it must drop rows it now excludes.
+  }, [table.getSelectedRowModel().rows, canSelectRow, enableRowSelection]);
 
   const clearSelection = React.useCallback(() => {
     setRowSelection({});

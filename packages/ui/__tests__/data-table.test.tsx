@@ -355,6 +355,33 @@ describe('DataTable', () => {
       expect(row2.querySelector('td')!.innerHTML).toBe('');
     });
 
+    it('drops a selected row from bulk actions when canSelectRow later excludes it', async () => {
+      const onExecute = vi.fn();
+      const cols = basicColumns;
+      const data = createTestData(2);
+      const { rerender } = render(
+        <DataTable
+          columns={cols}
+          data={data}
+          enableRowSelection
+          canSelectRow={() => true}
+          bulkActions={[{ label: 'Archive', onExecute }]}
+        />
+      );
+      await userEvent.click(screen.getByRole('checkbox', { name: 'Select all' }));
+      rerender(
+        <DataTable
+          columns={cols}
+          data={data}
+          enableRowSelection
+          canSelectRow={(row) => row.id !== '2'}
+          bulkActions={[{ label: 'Archive', onExecute }]}
+        />
+      );
+      await userEvent.click(screen.getByRole('button', { name: /Archive/ }));
+      expect(onExecute).toHaveBeenCalledWith([expect.objectContaining({ id: '1' })]);
+    });
+
     it('counts and acts only on selectable rows', async () => {
       const onExecute = vi.fn();
       render(
