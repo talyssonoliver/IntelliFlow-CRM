@@ -180,11 +180,7 @@ describe('DealCard', () => {
       <DealCard deal={deal} onNavigate={mockOnNavigate} isPending={true} />
     );
 
-    // DealCard.tsx:61 renders a native <button> for the card wrapper with
-    // aria-label="View deal: <name>" (line 77). A second <button> is the
-    // nested drag handle with aria-label="Drag to move deal" (line 83), so
-    // `querySelector('[role="button"]')` ambiguously matches the drag handle.
-    // Query by the card's aria-label to pin to the outer wrapper.
+    // The card is the outer div; the name button inside it opens the deal.
     const card = container.firstElementChild as HTMLElement;
     expect(card.className).toContain('animate-pulse');
     expect(card.className).toContain('ring-primary/50');

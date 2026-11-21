@@ -65,12 +65,12 @@ export const DealCard = React.memo(function DealCard({
       )}
     >
       <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
-        <h4 className="font-medium text-foreground text-xs sm:text-sm line-clamp-2">
+        <h4 className="min-w-0 flex-1 font-medium text-foreground text-xs sm:text-sm">
           {/* A real button, stretched over the whole card, so the card opens the deal by mouse, touch and keyboard. */}
           <button
             type="button"
             aria-label={`View deal: ${deal.name}`}
-            className="text-left focus:outline-none after:absolute after:inset-0 after:content-['']"
+            className="block w-full text-left line-clamp-2 focus:outline-none after:absolute after:inset-0 after:content-['']"
             onClick={onNavigate}
           >
             {deal.name}
@@ -80,7 +80,6 @@ export const DealCard = React.memo(function DealCard({
           type="button"
           aria-label="Drag to move deal"
           className="relative z-10 p-1 -mr-1 text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing touch-none flex-shrink-0"
-          onClick={(e) => e.stopPropagation()}
           {...attributes}
           {...listeners}
         >
