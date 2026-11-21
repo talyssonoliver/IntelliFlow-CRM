@@ -30,7 +30,12 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import type { Deal, OpportunityStage } from './types';
-import { OPPORTUNITY_STAGES, PIPELINE_STAGE_CONFIG, formatCurrencyCompact } from './types';
+import {
+  OPPORTUNITY_STAGES,
+  PIPELINE_STAGE_CONFIG,
+  formatCurrencyCompact,
+  NO_DEAL_VALUE_LABEL,
+} from './types';
 import { StageColumn } from './StageColumn';
 
 interface PipelineBoardProps {
@@ -199,7 +204,7 @@ export const PipelineBoard = React.memo(function PipelineBoard({
                   payments
                 </span>
                 <span className="font-semibold text-foreground text-xs sm:text-sm">
-                  {formatCurrencyCompact(activeDeal.value)}
+                  {activeDeal.value ? formatCurrencyCompact(activeDeal.value) : NO_DEAL_VALUE_LABEL}
                 </span>
               </div>
             </div>

@@ -42,6 +42,8 @@ interface ConvertLeadDialogLead {
   lastName?: string | null;
   company?: string | null;
   email?: string | null;
+  /** The lead's own estimate in pence (Lead.estimatedValue); pre-fills the deal value. */
+  estimatedValue?: number | null;
 }
 
 export interface ConvertLeadDialogProps {
@@ -176,8 +178,9 @@ function DealFields({
           className={INPUT_CLASS}
         />
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          Whole pounds, for example 5000 for £5,000. Leave it empty if you don&apos;t know it yet;
-          you can add it on the deal later.
+          Whole pounds, for example 5000 for £5,000. Without a value the deal shows &quot;No value
+          set&quot; and counts as £0 in revenue totals. Leave it empty only if you don&apos;t know
+          it yet; you can add it on the deal later.
         </p>
         {valueError && (
           <p role="alert" className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -236,6 +239,12 @@ const EMPTY_DEAL_FORM: DealFormState = {
   expectedCloseDate: '',
 };
 
+/** The deal form, with the lead's own estimate (pence) pre-filled as whole pounds when it has one. */
+function initialDealForm(estimatedValue: number | null | undefined): DealFormState {
+  const pounds = estimatedValue && estimatedValue > 0 ? Math.round(estimatedValue / 100) : 0;
+  return pounds > 0 ? { ...EMPTY_DEAL_FORM, dealValue: String(pounds) } : EMPTY_DEAL_FORM;
+}
+
 /** Converts a qualified lead to a contact, or to a contact plus a deal in the pipeline. */
 export function ConvertLeadDialog({
   lead,
@@ -248,7 +257,7 @@ export function ConvertLeadDialog({
   const [mode, setMode] = useState<ConvertMode>(initialMode);
   const [createAccount, setCreateAccount] = useState(true);
   const [accountName, setAccountName] = useState('');
-  const [deal, setDeal] = useState<DealFormState>(EMPTY_DEAL_FORM);
+  const [deal, setDeal] = useState<DealFormState>(() => initialDealForm(lead.estimatedValue));
   const [submitted, setSubmitted] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -313,7 +322,7 @@ export function ConvertLeadDialog({
     setMode(initialMode);
     setCreateAccount(true);
     setAccountName('');
-    setDeal(EMPTY_DEAL_FORM);
+    setDeal(initialDealForm(lead.estimatedValue));
     setSubmitted(false);
     setErrorMessage(null);
   };

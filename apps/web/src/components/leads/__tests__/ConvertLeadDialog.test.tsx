@@ -123,6 +123,27 @@ describe('ConvertLeadDialog', () => {
     mocks.revalidate.mockResolvedValue(undefined);
   });
 
+  it("pre-fills the deal value from the lead's own estimate (pence to pounds)", () => {
+    render(
+      <ConvertLeadDialog
+        lead={{ ...lead, estimatedValue: 250000 }}
+        userId="user-1"
+        open
+        onOpenChange={vi.fn()}
+      />
+    );
+    chooseDeal();
+    expect(screen.getByLabelText(/Deal value/i)).toHaveValue('2500');
+    fireEvent.click(screen.getByRole('button', { name: 'Convert and create deal' }));
+    expect(mocks.dealMutate).toHaveBeenCalledWith(expect.objectContaining({ dealValue: 2500 }));
+  });
+
+  it('leaves the deal value empty when the lead has no estimate', () => {
+    renderDialog();
+    chooseDeal();
+    expect(screen.getByLabelText(/Deal value/i)).toHaveValue('');
+  });
+
   it('shows the name the contact will get on the Contact line (MVP-003)', () => {
     renderDialog();
     expect(screen.getByText('Contact:').parentElement).toHaveTextContent('Contact: Jane Roe');
