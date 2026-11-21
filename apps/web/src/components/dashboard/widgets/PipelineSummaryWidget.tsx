@@ -1,5 +1,6 @@
 'use client';
 
+import { useId, useState } from 'react';
 import Link from 'next/link';
 import { EmptyState } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
@@ -63,9 +64,13 @@ function Row({
   );
 }
 
-function SectionHeading({ title, detail }: Readonly<{ title: string; detail?: string }>) {
+function SectionHeading({
+  title,
+  detail,
+  className = '',
+}: Readonly<{ title: string; detail?: string; className?: string }>) {
   return (
-    <div className="flex items-baseline justify-between gap-3 mb-3">
+    <div className={`flex items-baseline justify-between gap-3 mb-3 ${className}`}>
       <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {title}
       </h4>
@@ -76,6 +81,68 @@ function SectionHeading({ title, detail }: Readonly<{ title: string; detail?: st
 
 function SectionRows({ children }: Readonly<{ children: React.ReactNode }>) {
   return <div className="flex-1 flex flex-col justify-between gap-3">{children}</div>;
+}
+
+/**
+ * A Leads or Deals section. Owner 20/11, on the phone: a divider above each section, and each
+ * section folded to its one heading row ("LEADS · 155 leads"), tapping the row opens its stages.
+ * That applies while the card is stacked (narrower than `@xl`); once the two sections sit side by
+ * side the divider and the toggle are hidden and the stages always show, as before.
+ * The heading is rendered once: the toggle is a separate button stretched over the heading row,
+ * centred on it (the heading has no margin inside the wrapper, so the chevron never moves).
+ * Loading folds too, so the card does not open and then jump shut when the counts arrive; an
+ * error or the no-open-deals message stays visible, since it is the one thing to read there.
+ */
+function Section({
+  title,
+  detail,
+  children,
+  foldable = false,
+}: Readonly<{ title: string; detail?: string; children: React.ReactNode; foldable?: boolean }>) {
+  const [open, setOpen] = useState(false);
+  const bodyId = useId();
+  return (
+    <section
+      aria-label={title}
+      className="flex flex-col border-t border-border pt-4 @xl:border-t-0 @xl:pt-0"
+    >
+      {foldable ? (
+        <>
+          <div className="relative">
+            <SectionHeading title={title} detail={detail} className="mb-0 @max-xl:pr-8" />
+            {/* 44px tap target over the whole heading row; the chevron sits at its right end. */}
+            <button
+              type="button"
+              aria-expanded={open}
+              aria-controls={bodyId}
+              aria-label={`${title} by stage`}
+              onClick={() => setOpen((o) => !o)}
+              className="@xl:hidden absolute inset-x-0 top-1/2 -translate-y-1/2 h-11 flex items-center justify-end rounded-md cursor-pointer text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              data-testid={`pipeline-${title.toLowerCase()}-toggle`}
+            >
+              <span
+                className={`material-symbols-outlined text-xl motion-safe:transition-transform ${open ? 'rotate-180' : ''}`}
+                aria-hidden="true"
+              >
+                expand_more
+              </span>
+            </button>
+          </div>
+          <div
+            id={bodyId}
+            className={`flex flex-1 flex-col mt-3 @max-xl:mt-4 ${open ? '' : '@max-xl:hidden'}`}
+          >
+            {children}
+          </div>
+        </>
+      ) : (
+        <>
+          <SectionHeading title={title} detail={detail} />
+          {children}
+        </>
+      )}
+    </section>
+  );
 }
 
 function LoadingRows({ count }: Readonly<{ count: number }>) {
@@ -108,24 +175,21 @@ function LeadsSection({
   if (state.failed) {
     // Never draw a funnel of made-up zeros when the counts did not load.
     return (
-      <section aria-label="Leads" className="flex flex-col">
-        <SectionHeading title="Leads" />
+      <Section title="Leads">
         <ChartUnavailable message="Couldn't load your leads." onRetry={state.retry} />
-      </section>
+      </Section>
     );
   }
   if (state.loading) {
     return (
-      <section aria-label="Leads" className="flex flex-col">
-        <SectionHeading title="Leads" />
+      <Section title="Leads" foldable>
         <LoadingRows count={5} />
-      </section>
+      </Section>
     );
   }
   const { rows, other, total } = leadFunnel(stats);
   return (
-    <section aria-label="Leads" className="flex flex-col">
-      <SectionHeading title="Leads" detail={leadCountLabel(total)} />
+    <Section title="Leads" detail={leadCountLabel(total)} foldable>
       <SectionRows>
         {[...rows, ...(other ? [other] : [])].map((row) => (
           <Row
@@ -137,7 +201,7 @@ function LeadsSection({
           />
         ))}
       </SectionRows>
-    </section>
+    </Section>
   );
 }
 
@@ -145,24 +209,21 @@ function LeadsSection({
 function DealsSection({ stages, state }: Readonly<{ stages: PipelineStage[]; state: PartState }>) {
   if (state.failed) {
     return (
-      <section aria-label="Deals" className="flex flex-col">
-        <SectionHeading title="Deals" />
+      <Section title="Deals">
         <ChartUnavailable message="Couldn't load the pipeline." onRetry={state.retry} />
-      </section>
+      </Section>
     );
   }
   if (state.loading) {
     return (
-      <section aria-label="Deals" className="flex flex-col">
-        <SectionHeading title="Deals" />
+      <Section title="Deals" foldable>
         <LoadingRows count={3} />
-      </section>
+      </Section>
     );
   }
   if (!hasOpenDeals(stages)) {
     return (
-      <section aria-label="Deals" className="flex flex-col">
-        <SectionHeading title="Deals" />
+      <Section title="Deals">
         {/* Read-only here: the create action is on the leads (convert a qualified lead). */}
         {/* This part counts open deals only, so it never says "No deals yet" to a workspace that
             has won some: its title and text say "open". */}
@@ -173,7 +234,7 @@ function DealsSection({ stages, state }: Readonly<{ stages: PipelineStage[]; sta
           description="Deals appear here, by stage, as you convert leads."
           className="flex-1 justify-center py-2"
         />
-      </section>
+      </Section>
     );
   }
   // Denominator = sum of the DISPLAYED (open) stages, not the API's `totalPipelineValue`,
@@ -181,11 +242,11 @@ function DealsSection({ stages, state }: Readonly<{ stages: PipelineStage[]; sta
   const displayedTotal = stages.reduce((sum, st) => sum + Number(st.totalValue), 0);
   const dealCount = stages.reduce((sum, st) => sum + st.count, 0);
   return (
-    <section aria-label="Deals" className="flex flex-col">
-      <SectionHeading
-        title="Deals"
-        detail={`${formatGBP(displayedTotal)} open across ${dealCount} ${dealCount === 1 ? 'deal' : 'deals'}`}
-      />
+    <Section
+      title="Deals"
+      detail={`${formatGBP(displayedTotal)} open across ${dealCount} ${dealCount === 1 ? 'deal' : 'deals'}`}
+      foldable
+    >
       <SectionRows>
         {stages.map((stage) => (
           <Row
@@ -197,7 +258,7 @@ function DealsSection({ stages, state }: Readonly<{ stages: PipelineStage[]; sta
           />
         ))}
       </SectionRows>
-    </section>
+    </Section>
   );
 }
 
@@ -277,7 +338,7 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
       </div>
       {/* Side by side once the card itself is wide enough, stacked below that. */}
       <div className="@container flex-1 flex flex-col">
-        <div className="grid flex-1 grid-cols-1 gap-6 @xl:grid-cols-2 @xl:gap-8">
+        <div className="grid flex-1 grid-cols-1 content-start gap-4 @xl:grid-cols-2 @xl:content-stretch @xl:gap-8">
           <LeadsSection stats={leadStats} state={leadsState} />
           <DealsSection stages={stages} state={dealsState} />
         </div>
