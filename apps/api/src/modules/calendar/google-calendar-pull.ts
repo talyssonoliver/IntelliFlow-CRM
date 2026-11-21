@@ -14,6 +14,7 @@ import {
 } from '@intelliflow/application';
 import {
   ACTIVE_STATUSES,
+  activeAccountLinks,
   appointmentFields,
   isPersonal,
   prismaCode,
@@ -197,18 +198,30 @@ export async function pullChanges(ctx: SyncContext, saved: string | null): Promi
 
 /**
  * The saved state belongs to the Google account it was made for. After a reconnect to another account its
- * token means nothing, and its links point at events of the old calendar: they are dropped (the
- * appointments stay) and the sync starts over, so Aurora's appointments are made again in the new
- * calendar and its events imported. A state made before the account was recorded is kept.
+ * token means nothing and the sync starts over (a replacement sync, which also checks every link).
+ *
+ * Links are scoped to the Google account they were made under (calendarEventLink.googleAccount) and are
+ * never deleted on a switch: only the active account's links are used to find an event's appointment
+ * (import dedupe), to check links, and to decide what is written to Google. So A to B to A finds A's
+ * links again and imports nothing twice. The rule that never duplicates: an appointment that has a
+ * link under another account is not exported to the active account. It could be a copy of an event
+ * the active calendar cannot see, and a link is unique per appointment, so it is left alone until its
+ * own account returns; only appointments with no link at all are created as new events.
+ * Links made before the column existed have no account: they count as the active account's, and a
+ * switch stamps them with the account the saved state records (the one being left).
  */
 async function forgetOtherAccount(ctx: SyncContext, saved: string | null): Promise<string | null> {
   const known = decodeState(saved)?.k;
-  if (known === undefined || known === ctx.mailbox.account) return saved;
-  await ctx.prisma.calendarEventLink.deleteMany({
-    where: { tenantId: ctx.mailbox.tenantId, mailboxId: ctx.mailbox.id },
-  });
-  // Saved before anything is imported, naming the new account: a retry after a failure must not find the
-  // old account again and delete the links of what this round imports. The first sync is a replacement.
+  if (known === undefined) {
+    // A state that names no account (a bare token, or one that cannot be read) cannot say which account the
+    // links without one belong to: they are this account's, and are stamped so a later switch keeps them apart.
+    if (saved !== null) await stampUnscopedLinks(ctx, ctx.mailbox.account);
+    return saved;
+  }
+  if (known === ctx.mailbox.account) return saved;
+  await stampUnscopedLinks(ctx, known);
+  // Saved before anything is imported, naming the new account: a retry after a failure starts from it.
+  // The first sync is a replacement.
   const reset = encodeState(ctx, { t: null, r: 1, h: ctx.now.toISOString() });
   await ctx.prisma.emailMailbox.updateMany({
     where: { id: ctx.mailbox.id, tenantId: ctx.mailbox.tenantId },
@@ -216,6 +229,13 @@ async function forgetOtherAccount(ctx: SyncContext, saved: string | null): Promi
   });
   ctx.rememberState?.(reset);
   return reset;
+}
+/** Gives the links made before links carried an account to the account they were made under (the one being left). */
+async function stampUnscopedLinks(ctx: SyncContext, account: string): Promise<void> {
+  await ctx.prisma.calendarEventLink.updateMany({
+    where: { tenantId: ctx.mailbox.tenantId, mailboxId: ctx.mailbox.id, googleAccount: null },
+    data: { googleAccount: account },
+  });
 }
 /** A round that stopped during the check after a replacement sync carries on with that check. */
 function resumeVerification(ctx: SyncContext, raw: string | null): Promise<PullResult> | null {
@@ -325,6 +345,7 @@ async function verifyLinks(
       where: {
         tenantId: ctx.mailbox.tenantId,
         mailboxId: ctx.mailbox.id,
+        ...activeAccountLinks(ctx),
         appointmentId: { not: null },
         id: { gt: last },
       },
@@ -410,7 +431,12 @@ async function decideAgain(
 
 async function findLink(ctx: SyncContext, googleEventId: string) {
   return ctx.prisma.calendarEventLink.findFirst({
-    where: { tenantId: ctx.mailbox.tenantId, mailboxId: ctx.mailbox.id, googleEventId },
+    where: {
+      tenantId: ctx.mailbox.tenantId,
+      mailboxId: ctx.mailbox.id,
+      ...activeAccountLinks(ctx),
+      googleEventId,
+    },
   });
 }
 
@@ -449,6 +475,7 @@ async function importEvent(ctx: SyncContext, event: ExternalCalendarEvent): Prom
         data: {
           tenantId,
           mailboxId,
+          googleAccount: ctx.mailbox.account,
           appointmentId: appointment.id,
           googleEventId: event.externalId,
           origin: 'GOOGLE',
@@ -462,7 +489,16 @@ async function importEvent(ctx: SyncContext, event: ExternalCalendarEvent): Prom
   } catch (error) {
     // Our link exists already (another replica made it first): the transaction made no appointment.
     // Any other unique clash is a real failure.
-    if (prismaCode(error) !== 'P2002' || !(await findLink(ctx, event.externalId))) throw error;
+    if (prismaCode(error) !== 'P2002') throw error;
+    if (!(await findLink(ctx, event.externalId))) {
+      // The unique key is (mailbox, event id), not per account: the same event id can already be linked
+      // under another Google account (an event both calendars hold). That link stays with its account and
+      // the appointment it made; importing it again here would duplicate it, so it is skipped, not failed.
+      const other = await ctx.prisma.calendarEventLink.findFirst({
+        where: { tenantId, mailboxId, googleEventId: event.externalId },
+      });
+      if (!other) throw error;
+    }
     ctx.report.skipped += 1;
   }
 }

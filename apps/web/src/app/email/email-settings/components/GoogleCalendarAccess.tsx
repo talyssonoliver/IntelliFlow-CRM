@@ -4,8 +4,7 @@
  * MVP-013: the Google sign-in also asks to use the calendar, so Aurora's appointments and the
  * user's Google events can sync both ways. Google lets the user untick that on its consent screen,
  * and a mailbox connected before it was asked for does not have it. This card says so plainly and
- * offers the sign-in again (the mailbox keeps working meanwhile). 
-econnect: the calendar was connected
+ * offers the sign-in again (the mailbox keeps working meanwhile). Reconnect: the calendar was connected
  * and syncing, and Google has since refused Aurora's access to it (the user withdrew the permission), so
  * the sync has stopped until they sign in again.
  */

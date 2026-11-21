@@ -19,12 +19,14 @@ vi.mock('../../email/mailbox-transport', () => ({
   forgetAccessToken: mocks.forgetAccessToken,
   oauthClientEnvNames: () => ['EMAIL_OAUTH_GOOGLE_CLIENT_ID'],
 }));
+import { eventIdFor } from '../google-calendar-push';
 import { runCalendarSync } from '../google-calendar-sync';
 import {
   FakeGoogle,
   NOW,
   OTHER_TENANT,
   TENANT,
+  appointmentRow,
   createSyncHarness,
   mailboxRow,
   p2002,
@@ -685,7 +687,7 @@ describe('a reconnect (MVP-013)', () => {
     expect(h.appointments()).toHaveLength(2);
   });
 
-  it('starts over for another Google account: the old account’s links go, its appointments stay', async () => {
+  it('starts over for another Google account: the old account’s links are kept, its appointments are not exported', async () => {
     const sync = h.setup();
     h.google.put('ev-1', { title: 'From the old account' });
     await runCalendarSync(sync);
@@ -698,14 +700,124 @@ describe('a reconnect (MVP-013)', () => {
     await h.nextRound(sync);
 
     expect(h.google.log[0]).toBe('fetchChanges:full');
-    // The new calendar's event is imported, and the old appointment (the user's own) is made there too.
+    // The new calendar's event is imported; the old account's link stays, under the old account.
     expect(h.links().map((l) => l.googleEventId)).toContain('ev-new');
     expect(h.links()).toHaveLength(2);
-    expect(h.links().some((l) => l.id === oldLinkId)).toBe(false);
+    expect(h.links().find((l) => l.id === oldLinkId)?.googleAccount).toBe('');
+    // The old appointment has a link under another account: it is not made a second time in the new calendar.
+    expect(h.google.log.filter((l) => l.startsWith('createEvent'))).toEqual([]);
     expect(h.appointments().map((a) => a.title)).toEqual([
       'From the old account',
       'From the new account',
     ]);
+  });
+
+  it('A to B to A: no second appointment, no second Google event, and A’s links are reused', async () => {
+    const sync = h.setup();
+    const A = 'a@studio.example.invalid';
+    const B = 'b@studio.example.invalid';
+    const calendars: Record<string, FakeGoogle> = { [A]: h.google, [B]: new FakeGoogle() };
+    sync.gatewayFor = () => calendars[h.mailbox().accountAddress];
+    h.mailbox().accountAddress = A;
+    calendars[A].put('ev-a', { title: 'Event of A' });
+    h.appointments().push({
+      ...appointmentRow({ id: 'aurora-appt', title: 'Made in Aurora' }),
+    });
+    await runCalendarSync(sync);
+    expect(calendars[A].events.has(eventIdFor('mbx-1', 'aurora-appt'))).toBe(true);
+    expect(h.appointments()).toHaveLength(2);
+    const created = () =>
+      [A, B].flatMap((k) => calendars[k].log.filter((l) => l.startsWith('createEvent')));
+    const createdAtA = created().length;
+    const linkIds = h.links().map((l) => l.id);
+
+    h.mailbox().accountAddress = B;
+    calendars[B].put('ev-b', { title: 'Event of B' });
+    await h.nextRound(sync);
+    expect(h.appointments().map((a) => a.title)).toContain('Event of B');
+    expect(h.appointments()).toHaveLength(3);
+    expect(created()).toHaveLength(createdAtA);
+    expect(calendars[B].events.size).toBe(1);
+
+    h.mailbox().accountAddress = A;
+    await h.nextRound(sync);
+    await h.nextRound(sync);
+
+    // A's events were not imported again, nothing was exported again, A's links are the ones it had.
+    expect(h.appointments()).toHaveLength(3);
+    expect(created()).toHaveLength(createdAtA);
+    expect(calendars[A].events.size).toBe(2);
+    expect(calendars[B].events.size).toBe(1);
+    for (const id of linkIds) expect(h.links().some((l) => l.id === id)).toBe(true);
+    expect(h.links().filter((l) => l.googleAccount === A)).toHaveLength(2);
+    expect(h.links().filter((l) => l.googleAccount === B)).toHaveLength(1);
+  });
+
+  it('does not patch or delete the other account’s events from the active account', async () => {
+    const sync = h.setup();
+    const A = 'a@studio.example.invalid';
+    const B = 'b@studio.example.invalid';
+    const calendars: Record<string, FakeGoogle> = { [A]: h.google, [B]: new FakeGoogle() };
+    sync.gatewayFor = () => calendars[h.mailbox().accountAddress];
+    h.mailbox().accountAddress = A;
+    h.appointments().push(appointmentRow({ id: 'edited', title: 'To edit' }));
+    h.appointments().push(appointmentRow({ id: 'dropped', title: 'To cancel' }));
+    await runCalendarSync(sync);
+    const id = eventIdFor('mbx-1', 'edited');
+    const droppedId = eventIdFor('mbx-1', 'dropped');
+    expect(calendars[A].events.has(id)).toBe(true);
+
+    h.mailbox().accountAddress = B;
+    const edited = h.appointments().find((x) => x.id === 'edited');
+    Object.assign(edited as object, {
+      title: 'Edited on B',
+      updatedAt: new Date(NOW.getTime() + 3_600_000),
+    });
+    Object.assign(h.appointments().find((x) => x.id === 'dropped') as object, {
+      status: 'CANCELLED',
+      updatedAt: new Date(NOW.getTime() + 3_600_000),
+    });
+    await h.nextRound(sync);
+    await h.nextRound(sync);
+
+    expect(calendars[B].log.filter((l) => /patchEvent|deleteEvent/.test(l))).toEqual([]);
+    expect(calendars[A].events.get(id)?.title).toBe('To edit');
+    expect(calendars[A].events.get(droppedId)?.status).not.toBe('cancelled');
+  });
+
+  it('skips, without failing, an event id already linked under the other account', async () => {
+    const sync = h.setup();
+    const A = 'a@studio.example.invalid';
+    const B = 'b@studio.example.invalid';
+    const calendars: Record<string, FakeGoogle> = { [A]: h.google, [B]: new FakeGoogle() };
+    sync.gatewayFor = () => calendars[h.mailbox().accountAddress];
+    h.mailbox().accountAddress = A;
+    calendars[A].put('shared-ev', { title: 'Both calendars' });
+    await runCalendarSync(sync);
+
+    h.mailbox().accountAddress = B;
+    calendars[B].put('shared-ev', { title: 'Both calendars' });
+    const report = await h.nextRound(sync);
+
+    expect(report.itemFailures).toBe(0);
+    expect(h.appointments()).toHaveLength(1);
+    expect(h.links()).toHaveLength(1);
+  });
+
+  it('treats links made before they carried an account as the active account’s, and stamps them on a switch', async () => {
+    const sync = h.setup();
+    h.mailbox().accountAddress = 'a@studio.example.invalid';
+    h.google.put('ev-1');
+    await runCalendarSync(sync);
+    for (const l of h.links()) delete l.googleAccount;
+
+    await h.nextRound(sync);
+    expect(h.appointments()).toHaveLength(1);
+    expect(h.links()).toHaveLength(1);
+
+    h.mailbox().accountAddress = 'b@studio.example.invalid';
+    await h.nextRound(sync);
+    expect(h.links()[0].googleAccount).toBe('a@studio.example.invalid');
   });
 
   it('saves the new account before reading, so a failed round does not clear the links again', async () => {
@@ -718,7 +830,7 @@ describe('a reconnect (MVP-013)', () => {
     await h.nextRound(sync);
 
     expect(h.mailbox().calendarSyncToken).toContain('someone.else@studio.example.invalid');
-    expect(h.links()).toHaveLength(0);
+    expect(h.links().map((l) => l.googleAccount)).toEqual(['']);
     // The next round reads on from there: its links stay once made.
     await h.nextRound(sync); // still inside the failure backoff
     await h.nextRound(sync);

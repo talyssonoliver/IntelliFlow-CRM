@@ -110,6 +110,15 @@ export interface SyncContext {
   rememberState?: (state: string) => void;
 }
 
+/**
+ * The mailbox links that belong to the active Google account: those made under it, and those made before
+ * links carried an account (googleAccount NULL), which are the active account's until a switch stamps
+ * them with the account they were made under. Written as an AND so it combines with any other condition.
+ */
+export function activeAccountLinks(ctx: SyncContext) {
+  return { AND: [{ OR: [{ googleAccount: ctx.mailbox.account }, { googleAccount: null }] }] };
+}
+
 export function prismaCode(error: unknown): string | undefined {
   const code = (error as { code?: unknown } | null)?.code;
   return typeof code === 'string' ? code : undefined;

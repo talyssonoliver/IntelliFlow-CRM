@@ -27,6 +27,7 @@ import { Prisma } from '@intelliflow/db';
 import { errorCause } from '../email/mail-sync-report';
 import {
   ACTIVE_STATUSES,
+  activeAccountLinks,
   appointmentFields,
   isPersonal,
   prismaCode,
@@ -169,7 +170,13 @@ async function scanLinks(
   let after = '';
   for (;;) {
     const page: any[] = await ctx.prisma.calendarEventLink.findMany({
-      where: { tenantId, mailboxId, id: { gt: after }, ...where },
+      where: {
+        tenantId,
+        mailboxId,
+        ...activeAccountLinks(ctx),
+        id: { gt: after },
+        ...where,
+      },
       include: { appointment: true },
       orderBy: { id: 'asc' },
       take: LINKS_PAGE,
@@ -307,6 +314,8 @@ async function createEvents(ctx: SyncContext, cutoff: Date, budget: number): Pro
   }
   const room = budget - finishing.writes;
   const fresh: any[] = await ctx.prisma.appointment.findMany({
+    // No link under ANY account of this mailbox: an appointment linked under another Google account is not
+    // exported here (see forgetOtherAccount in the pull), so an account switch never duplicates it.
     where: { ...live, calendarLinks: { none: { mailboxId: mbx } } },
     orderBy: { startTime: 'asc' },
     take: room,
@@ -340,6 +349,7 @@ async function startLink(ctx: SyncContext, row: any): Promise<any | null> {
       data: {
         tenantId,
         mailboxId,
+        googleAccount: ctx.mailbox.account,
         appointmentId: row.id,
         googleEventId,
         origin: 'AURORA',
