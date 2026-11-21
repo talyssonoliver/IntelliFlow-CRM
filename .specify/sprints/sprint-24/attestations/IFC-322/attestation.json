@@ -1,0 +1,67 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-322",
+  "run_id": "ifc322-waha-isolation-2026-11-21",
+  "attestor": "Claude Code (claude-sonnet-5-5), ifc-074 lane",
+  "attestation_timestamp": "2026-11-21T19:05:00Z",
+  "verdict": "PARTIAL",
+  "context_acknowledgment": {
+    "files_read": [],
+    "invariants_acknowledged": [
+      "Spike run 2026-11-21 against devlikeapro/waha:noweb-2026.10.1 (tier CORE, engine NOWEB) in Docker, bound to 127.0.0.1. 21 cross-tenant calls with tenant A's session key against tenant B's session: 0 succeeded (19 refused with 403, 2 list calls returned A's own session only). Positive controls passed; B was untouched afterwards.",
+      "The sessions were created and started but never paired: no real WhatsApp number was used. Memory for a paired session is therefore unmeasured; the per-tenant cost states its assumption.",
+      "Not closed: the row's MANUAL step (the owner decides the hosting cost) is pending, and the ADR is Proposed until then. Nothing was purchased."
+    ],
+    "acknowledged_at": "2026-11-21T19:05:00Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "kpis_met": 1,
+    "kpis_missed": 0
+  },
+  "artifact_hashes": {
+    "docs/architecture/adr/ADR-089-waha-tenant-isolation.md": "sha256:c64918fb95c504c110a08c2b734292cf84e1d9328eade9624bf938ebe567d83e",
+    "infra/waha/compose.yaml": "sha256:a010adf0782a70ce3a37c2bd488511f22e4f92be10a3807e348719ed7e92d6ee",
+    "infra/waha/isolation-spike.mjs": "sha256:49cc9d7c21946dc7f865ca8b3575d745f4a00492395ad1436d6d2b910ecfa3f6",
+    "artifacts/misc/waha-isolation-spike.json": "sha256:4e483fb3606fc26b481b4acd4ddf2aa8234595ebdf96d8a52575164b979bd75f"
+  },
+  "validation_results": [
+    {
+      "name": "Cross-tenant negative test, WAHA 2026.10.1 NOWEB",
+      "command": "node infra/waha/isolation-spike.mjs",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-21T18:53:28Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "owner-approves-hosting-cost",
+      "passed": false
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Cross-tenant calls that succeed in the spike",
+      "target": "0",
+      "actual": "0 of 21",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "ADR chooses container per tenant or one container with a session and API key per tenant, on spike evidence",
+      "met": true
+    },
+    {
+      "criterion": "WAHA edition, licence and monthly hosting cost per tenant stated",
+      "met": true
+    },
+    {
+      "criterion": "Owner decides the hosting cost",
+      "met": false
+    }
+  ],
+  "notes": "Close by: owner approves the Railway spend in the ADR's Cost section (or rules otherwise), the ADR status moves to Accepted, then set the row Completed pointing evidence at this file."
+}
