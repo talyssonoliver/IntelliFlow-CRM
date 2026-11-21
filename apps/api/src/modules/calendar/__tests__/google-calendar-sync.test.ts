@@ -12,6 +12,14 @@ const mocks = vi.hoisted(() => ({
   hasOAuthClient: vi.fn(),
   forgetAccessToken: vi.fn(),
 }));
+const ticks = vi.hoisted(() => ({ queryRaw: vi.fn() }));
+vi.mock('../../../container.js', () => ({
+  container: { adapters: { mailboxTransports: {} } },
+}));
+vi.mock('@intelliflow/db', async (original) => ({
+  ...(await original<object>()),
+  prisma: { $queryRaw: ticks.queryRaw },
+}));
 vi.mock('../../email/mailbox-transport', () => ({
   getOAuthAccess: mocks.getOAuthAccess,
   hasOAuthClient: mocks.hasOAuthClient,
@@ -19,7 +27,12 @@ vi.mock('../../email/mailbox-transport', () => ({
   oauthClientEnvNames: () => ['EMAIL_OAUTH_GOOGLE_CLIENT_ID'],
 }));
 
-import { CALENDAR_SYNC_INTERVAL_MS, runCalendarSync } from '../google-calendar-sync';
+import {
+  CALENDAR_SYNC_INTERVAL_MS,
+  calendarSyncEnabled,
+  runCalendarSync,
+  runCalendarSyncTick,
+} from '../google-calendar-sync';
 import {
   NOW,
   appointmentRow,
@@ -271,5 +284,46 @@ describe('the time budget', () => {
     const report = await runCalendarSync(sync);
 
     expect(report.mailboxesSynced).toBe(1);
+  });
+});
+
+describe('the shared tick (MVP-013)', () => {
+  const log = { warn: vi.fn(), info: vi.fn() };
+  beforeEach(() => {
+    log.warn.mockClear();
+    log.info.mockClear();
+    ticks.queryRaw.mockReset().mockResolvedValue([]);
+  });
+
+  it.each([
+    [{}, true],
+    [{ GOOGLE_CALENDAR_SYNC: 'on' }, true],
+    [{ GOOGLE_CALENDAR_SYNC: '' }, true],
+    [{ GOOGLE_CALENDAR_SYNC: 'off' }, false],
+    [{ GOOGLE_CALENDAR_SYNC: ' OFF ' }, false],
+  ])('is %j enabled: %s', (env, enabled) => {
+    expect(calendarSyncEnabled(env as NodeJS.ProcessEnv)).toBe(enabled);
+  });
+
+  it('does nothing at all when switched off', async () => {
+    await runCalendarSyncTick({ GOOGLE_CALENDAR_SYNC: 'off' }, log);
+
+    expect(ticks.queryRaw).not.toHaveBeenCalled();
+  });
+
+  it('claims due mailboxes when on, and says nothing when there was nothing to do', async () => {
+    await runCalendarSyncTick({}, log);
+
+    expect(ticks.queryRaw).toHaveBeenCalled();
+    expect(log.info).not.toHaveBeenCalled();
+  });
+
+  it('never throws: a failure is logged by its class, never its message, and the tick goes on', async () => {
+    ticks.queryRaw.mockRejectedValue(new Error('password=hunter2 refused'));
+
+    await expect(runCalendarSyncTick({}, log)).resolves.toBeUndefined();
+
+    expect(log.warn).toHaveBeenCalledWith('[calendar-sync] tick failed', expect.anything());
+    expect(JSON.stringify(log.warn.mock.calls)).not.toContain('hunter2');
   });
 });

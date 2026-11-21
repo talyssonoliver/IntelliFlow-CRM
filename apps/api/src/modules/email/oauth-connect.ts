@@ -89,11 +89,16 @@ export async function connectAccount(
   if (!client) throw new MailboxTransportError('CONNECT_FAILED');
   const tokens = await client.exchangeCode(input.code, input.verifier, now);
   const address = await client.accountAddress(tokens.accessToken);
+  // Google's stable account id rides in the column Zoho uses for its account id. Best effort: without
+  // it the calendar sync falls back to the address as the account's identity.
+  const subject = client.accountSubject
+    ? await client.accountSubject(tokens.accessToken).catch(() => null)
+    : null;
   return {
     refreshToken: tokens.refreshToken,
     scopes: tokens.scopes,
     address,
-    oauthAccountId: null,
+    oauthAccountId: subject,
     oauthApiDomain: null,
     giveBack: () => client.revoke(tokens.refreshToken),
   };

@@ -7,6 +7,7 @@ import {
   toSuppressionDto,
   replySyncState,
   calendarAccessState,
+  calendarSyncState,
 } from '../email-dto';
 import {
   NO_SMTP_ACCOUNT,
@@ -63,6 +64,8 @@ describe('toMailboxDto', () => {
       inboxSyncedAt: null,
       replySync: null,
       calendarAccess: null,
+      calendarSync: null,
+      calendarSyncedAt: null,
       updatedAt: updatedAt.toISOString(),
     });
     expect(JSON.stringify(dto)).not.toContain(secret);
@@ -315,5 +318,63 @@ describe('calendarAccessState (MVP-013)', () => {
     expect(
       toMailboxDto({ ...row, grantedScopes: [send] }, { includeConnection: true }).calendarAccess
     ).toBe('NOT_GRANTED');
+  });
+});
+
+describe('calendarSyncState (MVP-013)', () => {
+  const granted = ['https://www.googleapis.com/auth/calendar.events'];
+
+  it('is ON for a Google mailbox that has the permission, until Google stops the sync', () => {
+    const row = { kind: 'GMAIL', scope: 'USER', grantedScopes: granted };
+    expect(calendarSyncState({ ...row, calendarStatus: 'ACTIVE' })).toBe('ON');
+    expect(calendarSyncState({ ...row, calendarStatus: null })).toBe('ON');
+    expect(calendarSyncState({ ...row, calendarStatus: 'NEEDS_RECONNECT' })).toBe(
+      'NEEDS_RECONNECT'
+    );
+  });
+
+  it('is null when there is no calendar to sync', () => {
+    expect(
+      calendarSyncState({
+        kind: 'GMAIL',
+        scope: 'USER',
+        grantedScopes: [],
+        calendarStatus: 'ACTIVE',
+      })
+    ).toBeNull();
+    expect(
+      calendarSyncState({ kind: 'GMAIL', scope: 'TENANT', grantedScopes: granted })
+    ).toBeNull();
+    expect(
+      calendarSyncState({ kind: 'MICROSOFT', scope: 'USER', grantedScopes: granted })
+    ).toBeNull();
+  });
+
+  it('is in the mailbox DTO with when the sync last finished', () => {
+    const dto = toMailboxDto(
+      {
+        id: 'mb1',
+        scope: 'USER',
+        kind: 'GMAIL',
+        status: 'ACTIVE',
+        lastErrorCode: null,
+        fromAddress: 'owner@studio.example.invalid',
+        fromName: null,
+        imapHost: null,
+        imapPort: null,
+        imapUsername: null,
+        imapPassword: null,
+        accountAddress: null,
+        refreshToken: null,
+        grantedScopes: granted,
+        calendarStatus: 'NEEDS_RECONNECT',
+        calendarSyncedAt: new Date('2026-11-20T10:30:00.000Z'),
+        updatedAt: new Date('2026-11-20T10:30:00.000Z'),
+      } as never,
+      { includeConnection: false }
+    );
+
+    expect(dto.calendarSync).toBe('NEEDS_RECONNECT');
+    expect(dto.calendarSyncedAt).toBe('2026-11-20T10:30:00.000Z');
   });
 });

@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-20T23:42:56.833Z",
+  "timestamp": "2026-11-21T10:04:00.193Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1522,7 +1522,7 @@
   },
   "database_inventory": {
     "total_tables": 217,
-    "total_fields": 3237,
+    "total_fields": 3238,
     "total_indexes": 965,
     "total_relations": 323,
     "tables_with_embeddings": 4,
@@ -1774,6 +1774,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "CalendarEventLink",
+        "fields": 19,
+        "indexes": 5,
+        "relations": 3,
+        "hasEmbedding": false
+      },
+      {
         "name": "ReportDefinition",
         "fields": 19,
         "indexes": 5,
@@ -1806,13 +1813,6 @@
         "fields": 18,
         "indexes": 7,
         "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "CalendarEventLink",
-        "fields": 18,
-        "indexes": 5,
-        "relations": 3,
         "hasEmbedding": false
       },
       {

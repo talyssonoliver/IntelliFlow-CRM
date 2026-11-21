@@ -18,6 +18,7 @@ import { connectionFailureHelp } from './connection-help';
 import { oneClickNotYet, providerByServer } from './mailbox-providers';
 import { SmtpHostingNotice } from './SmtpHostingNotice';
 import { SendFromHint, type HintProvider } from './SendFromHint';
+import { calendarSyncLine } from './calendar-sync-status';
 import { inboxSyncLine } from './inbox-sync-status';
 import { GoogleAdminTrust } from './GoogleAdminTrust';
 import { GoogleCalendarAccess } from './GoogleCalendarAccess';
@@ -62,6 +63,37 @@ export interface MailboxConnectionProps {
   googleClientId?: string | null;
 }
 
+/** Google Calendar line under a healthy mailbox: the reconnect card, or when it last synced. */
+function CalendarSyncSection({
+  mailbox,
+  prefix,
+  gmailAvailable,
+  pending,
+  onConnect,
+}: Readonly<{
+  mailbox: MailboxDto;
+  prefix: string;
+  gmailAvailable: boolean;
+  pending: boolean;
+  onConnect: () => void;
+}>) {
+  if (mailbox.calendarSync === 'NEEDS_RECONNECT' && mailbox.replySync !== 'NEEDS_ADMIN_TRUST') {
+    return (
+      <GoogleCalendarAccess
+        reconnect
+        idPrefix={prefix}
+        onConnect={gmailAvailable ? onConnect : undefined}
+        pending={pending}
+      />
+    );
+  }
+  if (mailbox.calendarSync !== 'ON') return null;
+  return (
+    <p className="text-xs text-muted-foreground" data-testid="calendar-sync-status">
+      {calendarSyncLine(mailbox.calendarSyncedAt)}
+    </p>
+  );
+}
 /** Connection status and actions for one mailbox scope. */
 export function MailboxConnection({
   scope,
@@ -236,6 +268,15 @@ export function MailboxConnection({
             pending={oauthStart.isPending}
           />
         )}
+      {connected && !broken && mailbox && (
+        <CalendarSyncSection
+          mailbox={mailbox}
+          prefix={prefix}
+          gmailAvailable={providersAvailable.GMAIL}
+          pending={oauthStart.isPending}
+          onConnect={() => void startOAuth('GMAIL')}
+        />
+      )}
       {!connected && !editing && <SendFromHint scope={scope} onProvider={setPreferred} />}
       {(!connected || broken) && (
         <div className="flex flex-wrap items-start gap-2">

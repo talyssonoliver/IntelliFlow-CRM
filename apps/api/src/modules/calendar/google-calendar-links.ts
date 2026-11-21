@@ -90,6 +90,8 @@ export interface SyncMailbox {
   id: string;
   tenantId: string;
   userId: string;
+  /** The Google account the mailbox is connected to (its address); the sync's state remembers it. */
+  account: string;
 }
 
 export interface SyncContext {
@@ -104,6 +106,13 @@ export interface SyncContext {
   report: CalendarSyncReport;
   /** Events that failed to apply and are tried again next round, with their attempts so far. */
   failed: Map<string, number>;
+  /** Called with the state saved when the account changed, so a retry in the same run starts from it. */
+  rememberState?: (state: string) => void;
+}
+
+/** The mailbox links that belong to the active Google account: only those are used in a round. */
+export function activeAccountLinks(ctx: SyncContext) {
+  return { googleAccount: ctx.mailbox.account };
 }
 
 export function prismaCode(error: unknown): string | undefined {
