@@ -250,6 +250,16 @@ function BulkActionsBar<T>({
  * same table markup, so nothing renders twice and the DOM order is the reading order. The header
  * row stays for screen readers (sr-only). Inline column widths are overridden with `!`.
  */
+/**
+ * Phone header: a compact toolbar above the cards that keeps only the header cells holding a
+ * control (the select-all checkbox, a sort button); plain text headings are hidden because each
+ * card already labels its values (codex 21/11: sorting and select-all must stay reachable).
+ */
+const PHONE_HEAD_ROW =
+  'max-md:flex max-md:flex-wrap max-md:items-center max-md:gap-x-3 max-md:gap-y-1 max-md:border-0 max-md:bg-transparent max-md:px-1 max-md:pb-2';
+const PHONE_HEAD_CELL =
+  'max-md:h-auto max-md:w-auto! max-md:min-w-0! max-md:max-w-none! max-md:p-0 max-md:[&:not(:has(button,input,[role=checkbox]))]:hidden';
+
 const PHONE_CELL = 'max-md:block max-md:w-auto! max-md:min-w-0! max-md:max-w-none! max-md:p-0';
 const PHONE_CELL_ROLE = {
   select: 'max-md:pt-0.5 max-md:empty:hidden!',
@@ -452,11 +462,11 @@ export function DataTable<TData, TValue>({
       {/* Table */}
       <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 max-md:overflow-visible max-md:border-0 max-md:bg-transparent dark:max-md:bg-transparent">
         <Table className="max-md:block max-md:w-full">
-          <TableHeader className="max-md:sr-only">
+          <TableHeader className="max-md:block">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className="bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50/50"
+                className={`bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-700 hover:bg-slate-50/50 ${PHONE_HEAD_ROW}`}
               >
                 {headerGroup.headers.map((header) => {
                   return (
@@ -466,7 +476,7 @@ export function DataTable<TData, TValue>({
                         header.id,
                         header.column.columnDef as ColumnDef<TData, TValue> // NOSONAR
                       )}
-                      className="font-semibold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400"
+                      className={`font-semibold text-xs uppercase tracking-wider text-slate-500 dark:text-slate-400 ${PHONE_HEAD_CELL}`}
                     >
                       {header.isPlaceholder
                         ? null

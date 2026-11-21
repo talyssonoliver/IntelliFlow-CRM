@@ -319,8 +319,11 @@ describe('DataTable', () => {
         expect(td.getAttribute('data-label')).toBeTruthy();
       }
       expect(row).toHaveClass('max-md:rounded-lg', 'max-md:border!');
-      // Hidden on phones but kept for screen readers (review 21/11).
-      expect(document.querySelector('thead')).toHaveClass('max-md:sr-only');
+      // On phones the header row is a toolbar that keeps only header cells holding a control.
+      expect(document.querySelector('thead')).toHaveClass('max-md:block');
+      for (const th of document.querySelectorAll('th')) {
+        expect(th.className).toContain('max-md:[&:not(:has(button,input,[role=checkbox]))]:hidden');
+      }
     });
   });
 
@@ -409,6 +412,15 @@ describe('DataTable', () => {
       );
       rerender(<DataTable columns={basicColumns} data={createTestData(8)} pageSize={8} />);
       expect(screen.getByText('User 8')).toBeInTheDocument();
+    });
+  });
+
+  describe('Phone header toolbar (codex 21/11)', () => {
+    it('keeps the select-all checkbox reachable: its header cell holds a control', () => {
+      render(<DataTable columns={basicColumns} data={createTestData(2)} enableRowSelection />);
+      const selectAll = screen.getByRole('checkbox', { name: 'Select all' });
+      expect(selectAll.closest('th')!.matches(':has([role=checkbox])')).toBe(true);
+      expect(document.querySelector('thead')).not.toHaveClass('max-md:sr-only');
     });
   });
 
