@@ -132,16 +132,11 @@ function tokensFor(access: string, scopes: string[], now: Date): OAuthTokens {
 }
 
 /**
- * Which Google account a round runs for: Google's immutable id when the connect captured it (a renamed
- * address is the same account, so its links stay), otherwise the address.
+ * Which Google account a round runs for: Google's immutable id, never the address (an address can be
+ * renamed, and the same account must keep its links). A mailbox without the id does not sync.
  */
-export function accountKey(mailbox: {
-  oauthAccountId?: string | null;
-  accountAddress: string | null;
-}): string {
-  return mailbox.oauthAccountId
-    ? `sub:${mailbox.oauthAccountId}`
-    : (mailbox.accountAddress ?? '').toLowerCase();
+export function accountKey(mailbox: { oauthAccountId?: string | null }): string {
+  return `sub:${mailbox.oauthAccountId}`;
 }
 
 function roundContext(
@@ -191,6 +186,14 @@ async function syncMailbox(
     !hasGoogleCalendar(mailbox.grantedScopes)
   ) {
     await release(deps, claim, mailbox.tokenVersion, { calendarNextSyncAt: nextRound });
+    return;
+  }
+  // Connected without Google's account id (its lookup failed, or it was connected before the id was kept):
+  // the calendar stays off and the reconnect card is shown, until a connect captures the id. The mail
+  // keeps working.
+  if (!mailbox.oauthAccountId) {
+    report.reconnects += 1;
+    await release(deps, claim, mailbox.tokenVersion, { calendarStatus: 'NEEDS_RECONNECT' });
     return;
   }
   // No Google client in this process (its env lacks it): a setup gap, not a mailbox failure.

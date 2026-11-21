@@ -141,7 +141,15 @@ async function writeMailbox(
           tenantId: existing.tenantId,
           tokenVersion: existing.tokenVersion,
         },
-        data: { ...data, ...freshSyncState(), tokenVersion: { increment: 1 }, lockedUntil: null },
+        data: {
+          ...data,
+          ...freshSyncState(),
+          ...(data.calendarStatus === 'NEEDS_RECONNECT'
+            ? { calendarStatus: 'NEEDS_RECONNECT' }
+            : {}),
+          tokenVersion: { increment: 1 },
+          lockedUntil: null,
+        },
       });
     }
     return await ctx.prismaWithTenant.emailMailbox.create({
@@ -509,6 +517,15 @@ export const emailMailboxRouter = createTRPCRouter({
 
       requireEncryptionKey();
       const existing = await findMailbox(c, saved.scope);
+      // MVP-013: a Gmail connection is identified for the calendar by Google's immutable id. A failed
+      // lookup keeps the mail working, but the calendar stays off (NEEDS_RECONNECT shows the reconnect
+      // card) until a connect captures it. An id already stored for the same address is never replaced
+      // by nothing, and is never replaced by the address.
+      const sameAccount =
+        existing?.kind === input.provider && existing.accountAddress === account.address;
+      const subject =
+        account.oauthAccountId ?? (sameAccount ? (existing?.oauthAccountId ?? null) : null);
+      const calendarOff = input.provider === 'GMAIL' && !subject;
       const row = await writeMailbox(c, existing, ownerFor(c, saved.scope), {
         kind: input.provider,
         status: 'ACTIVE',
@@ -518,8 +535,9 @@ export const emailMailboxRouter = createTRPCRouter({
         accountAddress: account.address,
         refreshToken: account.refreshToken,
         grantedScopes: account.scopes,
-        oauthAccountId: account.oauthAccountId,
+        oauthAccountId: subject,
         oauthApiDomain: account.oauthApiDomain,
+        ...(calendarOff ? { calendarStatus: 'NEEDS_RECONNECT' } : {}),
         ...NO_SMTP_ENDPOINT,
         ...NO_SMTP_ACCOUNT,
         imapHost: null,

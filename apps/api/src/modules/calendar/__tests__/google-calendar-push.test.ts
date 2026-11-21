@@ -23,6 +23,7 @@ import { CalendarEventNotFoundError, CalendarRateLimitError } from '@intelliflow
 import { newReport } from '../google-calendar-links';
 import { Result } from '@intelliflow/domain';
 import {
+  DEFAULT_ACCOUNT,
   FakeGoogle,
   NOW,
   OTHER_TENANT,
@@ -621,7 +622,7 @@ describe('Aurora to Google: review cases', () => {
       prisma: sync.prisma,
       gateway: h.google,
       tokens: {},
-      mailbox: { id: 'mbx-1', tenantId: TENANT, userId: 'user-1', account: '' },
+      mailbox: { id: 'mbx-1', tenantId: TENANT, userId: 'user-1', account: DEFAULT_ACCOUNT },
       now: new Date(NOW.getTime() + 10 * 60_000),
       hasTime: () => true,
       report: newReport(),
@@ -882,7 +883,7 @@ describe('Aurora to Google: review cases', () => {
         prisma: sync.prisma,
         gateway: h.google,
         tokens: {},
-        mailbox: { id: 'mbx-1', tenantId: TENANT, userId: 'user-1', account: '' },
+        mailbox: { id: 'mbx-1', tenantId: TENANT, userId: 'user-1', account: DEFAULT_ACCOUNT },
         now: new Date(NOW.getTime() + 10 * 60_000),
         hasTime: () => true,
         report: newReport(),

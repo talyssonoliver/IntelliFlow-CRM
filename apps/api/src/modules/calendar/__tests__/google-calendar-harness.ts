@@ -18,6 +18,7 @@ import { Result, type DomainError } from '@intelliflow/domain';
 import type { CalendarGateway, ChangesPage } from '../google-calendar-links';
 import { runCalendarSync, type CalendarSyncDeps } from '../google-calendar-sync';
 
+export const DEFAULT_ACCOUNT = 'sub:1000000000000000001';
 export const NOW = new Date('2026-11-20T10:00:00.000Z');
 export const TENANT = '00000000-0000-4000-a000-000000000001';
 export const OTHER_TENANT = '00000000-0000-4000-a000-000000000002';
@@ -33,6 +34,7 @@ export function mailboxRow(over: Row = {}): Row {
     tenantId: TENANT,
     userId: 'user-1',
     kind: 'GMAIL',
+    oauthAccountId: '1000000000000000001',
     scope: 'USER',
     status: 'ACTIVE',
     refreshToken: 'stored-refresh',
@@ -102,7 +104,10 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
   const tables: Record<Table, Row[]> = {
     emailMailbox: [...(seed.emailMailbox ?? [mailboxRow()])],
     appointment: [...(seed.appointment ?? [])],
-    calendarEventLink: (seed.calendarEventLink ?? []).map((l) => ({ googleAccount: '', ...l })),
+    calendarEventLink: (seed.calendarEventLink ?? []).map((l) => ({
+      googleAccount: DEFAULT_ACCOUNT,
+      ...l,
+    })),
   };
   const clock = { now: new Date(NOW) };
   let ids = 0;
@@ -238,7 +243,7 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
       pending: false,
       pushAttempts: 0,
       nextPushAt: null,
-      googleAccount: '',
+      googleAccount: DEFAULT_ACCOUNT,
     }),
     // The claim: the mailbox that is due, ACTIVE, a user's Google mailbox with the calendar scope.
     $queryRaw: vi.fn(async (_sql: unknown, leaseUntil: Date, scopes: string[], now: Date) => {

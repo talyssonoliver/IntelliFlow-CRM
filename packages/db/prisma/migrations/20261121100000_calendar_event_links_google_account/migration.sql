@@ -6,7 +6,8 @@
 --
 --   * ADD COLUMN ... NOT NULL DEFAULT '': a constant default, so Postgres rewrites nothing.
 --   * The new unique index is built before the old one is dropped. Nothing in production has ever
---     written this table: the sync tick that writes it ships with this change (main has no caller of
+--     written this table: calendar_event_links held 0 rows in production when this was written (checked
+--     read-only), and the sync tick that writes it ships with this change (main has no caller of
 --     runCalendarSync), so both index builds run over an empty table and take no meaningful lock. The
 --     widened key is strictly weaker than the old one, so no existing row can violate it.
 --   * No row is read, rewritten or deleted. The table holds no credential.

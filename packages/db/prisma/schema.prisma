@@ -4524,7 +4524,7 @@ model EmailMailbox {
   refreshToken    String?   @db.Text
   grantedScopes   String[]  @default([])
   /// MVP-001 Zoho: the Zoho Mail account id and its data centre's API host (not credentials).
-  oauthAccountId  String?   @db.VarChar(64)
+  oauthAccountId  String?   @db.VarChar(255)
   oauthApiDomain  String?   @db.VarChar(64)
   tokenVersion    Int       @default(0)
   imapUidValidity BigInt?

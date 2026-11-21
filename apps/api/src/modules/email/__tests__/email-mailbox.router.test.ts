@@ -59,6 +59,7 @@ function makeTransports() {
       ],
     })),
     accountAddress: vi.fn(async () => 'me@gmail.example'),
+    accountSubject: vi.fn(async (): Promise<string | null> => null),
     revoke: vi.fn(async () => undefined),
     refresh: vi.fn(async () => ({
       accessToken: 'at2',
@@ -655,6 +656,73 @@ describe('emailMailbox OAuth connect', () => {
     });
     // The sync lease is left alone: a running round ends on its own (no two syncs at once).
     expect(data).not.toHaveProperty('syncLockedUntil');
+  });
+
+  describe('the Google account id (MVP-013)', () => {
+    const connect = async () => {
+      (prismaMock.emailOAuthState.findFirst as any).mockResolvedValue({
+        id: 'st1',
+        scope: 'USER',
+        codeVerifier: 'v'.repeat(43),
+        expiresAt: new Date(Date.now() + 60_000),
+      });
+      (prismaMock.emailOAuthState.deleteMany as any).mockResolvedValue({ count: 1 });
+      await member().oauthComplete({
+        provider: 'GMAIL',
+        code: 'c'.repeat(20),
+        state: 's'.repeat(43),
+      });
+    };
+
+    it('stores the id captured at connect, and leaves the calendar status alone', async () => {
+      t.oauthClient.accountSubject.mockResolvedValueOnce('x'.repeat(255));
+      await connect();
+      const data = (prismaMock.emailMailbox.create as any).mock.calls[0][0].data;
+      expect(data.oauthAccountId).toBe('x'.repeat(255));
+      expect(data).not.toHaveProperty('calendarStatus');
+    });
+
+    it('keeps the mail but turns the calendar off when the id cannot be read', async () => {
+      await connect();
+      const data = (prismaMock.emailMailbox.create as any).mock.calls[0][0].data;
+      expect(data).toMatchObject({
+        status: 'ACTIVE',
+        oauthAccountId: null,
+        calendarStatus: 'NEEDS_RECONNECT',
+      });
+    });
+
+    it('keeps the id already stored for the same address when a reconnect cannot read it', async () => {
+      (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
+        smtpRow({
+          kind: 'GMAIL',
+          smtpPassword: null,
+          refreshToken: secret,
+          accountAddress: 'me@gmail.example',
+          oauthAccountId: 'stored-id',
+        })
+      );
+      await connect();
+      const data = (prismaMock.emailMailbox.update as any).mock.calls[0][0].data;
+      expect(data.oauthAccountId).toBe('stored-id');
+      expect(data.calendarStatus).toBe('ACTIVE');
+    });
+
+    it('does not carry an id over to another address', async () => {
+      (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
+        smtpRow({
+          kind: 'GMAIL',
+          smtpPassword: null,
+          refreshToken: secret,
+          accountAddress: 'other@gmail.example',
+          oauthAccountId: 'stored-id',
+        })
+      );
+      await connect();
+      const data = (prismaMock.emailMailbox.update as any).mock.calls[0][0].data;
+      expect(data.oauthAccountId).toBeNull();
+      expect(data.calendarStatus).toBe('NEEDS_RECONNECT');
+    });
   });
 
   it('gives the new grant back when a racing save wins the reconnect (CONFLICT)', async () => {

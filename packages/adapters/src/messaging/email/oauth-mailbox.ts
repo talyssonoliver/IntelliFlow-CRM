@@ -324,7 +324,7 @@ export class OAuthMailboxClient {
     });
     if (!response.ok) throw httpError(response.status);
     const data = await json<{ sub?: string }>(response);
-    return typeof data.sub === 'string' && data.sub.length > 0 && data.sub.length <= 64
+    return typeof data.sub === 'string' && data.sub.length > 0 && data.sub.length <= 255
       ? data.sub
       : null;
   }
