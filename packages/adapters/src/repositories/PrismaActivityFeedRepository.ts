@@ -26,6 +26,7 @@ import {
   sourceServesType,
   sourceTypeWhere,
 } from './activity-feed-type-maps';
+import { toTicketActivityItem } from './ticket-activity-item';
 
 /**
  * Lead label in the feed: person, then company, then email (#1223). Synced
@@ -387,23 +388,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       include: { ticket: { select: { id: true, subject: true, ticketNumber: true } } },
     });
 
-    return rows.map((r) => ({
-      id: `ticket_${r.id}`,
-      source: 'TICKET_ACTIVITY' as const,
-      type: TICKET_ACTIVITY_TYPE_MAP[r.type] || 'SYSTEM',
-      title: r.content.length > 100 ? r.content.slice(0, 100) + '...' : r.content,
-      description: r.isInternal ? '[Internal note]' : null,
-      timestamp: r.timestamp,
-      actor: { id: r.authorId ?? null, name: r.authorName },
-      entity: r.ticket
-        ? {
-            id: r.ticket.id,
-            type: 'TICKET' as const,
-            name: `${r.ticket.ticketNumber}: ${r.ticket.subject}`,
-          }
-        : null,
-      metadata: r.systemEventData as Record<string, unknown> | null,
-    }));
+    return rows.map(toTicketActivityItem);
   }
 
   private async searchEmailRecords(
@@ -787,23 +772,7 @@ export class PrismaActivityFeedRepository implements ActivityFeedRepositoryPort 
       include: { ticket: { select: { id: true, subject: true, ticketNumber: true } } },
     });
 
-    return rows.map((r) => ({
-      id: `ticket_${r.id}`,
-      source: 'TICKET_ACTIVITY' as const,
-      type: TICKET_ACTIVITY_TYPE_MAP[r.type] || 'SYSTEM',
-      title: r.content.length > 100 ? r.content.slice(0, 100) + '...' : r.content,
-      description: r.isInternal ? '[Internal note]' : null,
-      timestamp: r.timestamp,
-      actor: { id: r.authorId ?? null, name: r.authorName },
-      entity: r.ticket
-        ? {
-            id: r.ticket.id,
-            type: 'TICKET' as const,
-            name: `${r.ticket.ticketNumber}: ${r.ticket.subject}`,
-          }
-        : null,
-      metadata: r.systemEventData as Record<string, unknown> | null,
-    }));
+    return rows.map(toTicketActivityItem);
   }
 
   private async queryEmailRecords(
