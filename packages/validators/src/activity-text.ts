@@ -62,19 +62,22 @@ function endsSentence(text: string, end: number): boolean {
   return isBreak(next) || (next === '.' && isBreak(text.charAt(end + 1)));
 }
 
-function isLetter(char: string): boolean {
-  return (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z');
+/** A bare number such as "69.99" or "1,000": the part before the slash of "GBP 69.99/month" or "1/2". */
+function isNumber(text: string): boolean {
+  return (
+    text !== '' &&
+    [...text].every((char) => (char >= '0' && char <= '9') || char === '.' || char === ',')
+  );
 }
 
-/** A word that is a path or a link: it holds a backslash, or a slash that starts it or follows a letter ("/x", "a/b", "https://x"). */
+/** A word that is a path or a link: it holds a backslash, or a slash that is not the one in "69.99/month" or "1/2". */
 function isPathWord(word: string): boolean {
   if (word.includes('\\')) return true;
   for (let at = word.indexOf('/'); at !== -1; at = word.indexOf('/', at + 1)) {
-    if (at === 0 || isLetter(word.charAt(at - 1))) return true;
+    if (at === 0 || !isNumber(word.slice(0, at))) return true;
   }
   return false;
 }
-
 /**
  * True when the line before the marker already holds a path or a link ("Open C:\Exports\Mr. Smith COA ledger row <id>").
  * A path can have spaces and full stops in it and the cleaner cannot tell where it ends, so that line is left alone.
