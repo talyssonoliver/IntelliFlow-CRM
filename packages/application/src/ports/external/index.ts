@@ -17,3 +17,4 @@ export * from './AVScannerPort';
 export * from './SignatureProviderPort';
 export * from './PortalDeliverySyncPort';
 export * from './DsarNotificationPort'; // PG-203 DSAR
+export * from './WhatsAppTransportPort'; // IFC-320 WhatsApp seam
