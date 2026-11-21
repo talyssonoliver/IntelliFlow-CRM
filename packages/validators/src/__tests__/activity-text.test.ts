@@ -24,6 +24,8 @@ describe('stripMachineIds: only "COA ledger row <id>." is removed', () => {
       `See https://shop.example.invalid/a. COA ledger row ${ID}.`,
       `Open exports/Customer. COA ledger row ${ID}.`,
       `Open exports2/Archived COA ledger row ${ID}`,
+      `Saved to ../Archived COA ledger row ${ID}`,
+      `Saved to ./Archived COA ledger row ${ID}`,
       `Open http://localhost:3000/Archived COA ledger row ${ID}`,
     ]) {
       expect(stripMachineIds(text)).toBe(text);

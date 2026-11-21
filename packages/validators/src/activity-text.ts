@@ -65,7 +65,7 @@ function endsSentence(text: string, end: number): boolean {
 /** A bare number such as "69.99" or "1,000": the part before the slash of "GBP 69.99/month" or "1/2". */
 function isNumber(text: string): boolean {
   return (
-    text !== '' &&
+    /\d/.test(text) &&
     [...text].every((char) => (char >= '0' && char <= '9') || char === '.' || char === ',')
   );
 }
