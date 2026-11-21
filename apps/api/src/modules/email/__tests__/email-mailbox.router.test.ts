@@ -692,7 +692,7 @@ describe('emailMailbox OAuth connect', () => {
       });
     });
 
-    it('keeps the id already stored for the same address when a reconnect cannot read it', async () => {
+    it('does not inherit the stored id by address when a reconnect cannot read it', async () => {
       (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
         smtpRow({
           kind: 'GMAIL',
@@ -704,8 +704,9 @@ describe('emailMailbox OAuth connect', () => {
       );
       await connect();
       const data = (prismaMock.emailMailbox.update as any).mock.calls[0][0].data;
-      expect(data.oauthAccountId).toBe('stored-id');
-      expect(data.calendarStatus).toBe('ACTIVE');
+      expect(data.oauthAccountId).toBeNull();
+      expect(data.calendarStatus).toBe('NEEDS_RECONNECT');
+      expect(data.status).toBe('ACTIVE');
     });
 
     it('does not carry an id over to another address', async () => {

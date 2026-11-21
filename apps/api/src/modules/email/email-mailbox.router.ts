@@ -519,12 +519,9 @@ export const emailMailboxRouter = createTRPCRouter({
       const existing = await findMailbox(c, saved.scope);
       // MVP-013: a Gmail connection is identified for the calendar by Google's immutable id. A failed
       // lookup keeps the mail working, but the calendar stays off (NEEDS_RECONNECT shows the reconnect
-      // card) until a connect captures it. An id already stored for the same address is never replaced
-      // by nothing, and is never replaced by the address.
-      const sameAccount =
-        existing?.kind === input.provider && existing.accountAddress === account.address;
-      const subject =
-        account.oauthAccountId ?? (sameAccount ? (existing?.oauthAccountId ?? null) : null);
+      // card) until a connect captures it. An id is never inherited from the stored one by address: an
+      // address can be given to another account, and it is never the calendar key itself.
+      const subject = account.oauthAccountId;
       const calendarOff = input.provider === 'GMAIL' && !subject;
       const row = await writeMailbox(c, existing, ownerFor(c, saved.scope), {
         kind: input.provider,
