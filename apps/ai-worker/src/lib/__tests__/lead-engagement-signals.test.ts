@@ -50,6 +50,12 @@ describe('lead engagement signals', () => {
     expect(lines).toEqual(['Referrer: www.example.invalid', 'Landing Page: /pilates']);
   });
 
+  it('never puts the text of an unreadable referrer or website in the prompt', () => {
+    expect(
+      enquiryLines({ referrer: 'https://[bad]/?token=secret', website: 'http://[x]/?k=v' })
+    ).toEqual([]);
+  });
+
   it('escapes regex characters in the address pattern', () => {
     expect(addressPattern('a.b+c@example.invalid')).toBe(
       String.raw`(^|[\s,;<])a\.b\+c@example\.invalid($|[\s,;>])`

@@ -280,7 +280,7 @@ describe('lead activity context for scoring', () => {
     );
     const lines = formatLeadActivityContext(context, NOW);
     expect(lines).toContain(
-      'Email Tracking: 3 tracked emails sent, 2 opened (5 opens, last 2026-11-06 (1 day ago)), 1 with a link clicked (1 clicks)'
+      'Email Tracking: 3 tracked emails sent, 2 opened (5 opens, most recent mail first opened 2026-11-06 (1 day ago)), 1 with a link clicked (1 clicks)'
     );
     expect(lines).toContain('Emails Received From The Lead (mailbox sync): 1');
     expect(lines).toContain('Notes: 2 written by the team');

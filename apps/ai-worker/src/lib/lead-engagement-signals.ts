@@ -63,17 +63,14 @@ function present(value: string | null | undefined): value is string {
   return typeof value === 'string' && value.trim() !== '';
 }
 
-function hostOf(url: string): string {
+/** The host of a link, capped, or null when it cannot be read: the original text is never used. */
+function cappedHost(url: string): string | null {
   try {
-    return new URL(url.includes('://') ? url : `https://${url}`).hostname;
+    const host = new URL(url.includes('://') ? url : `https://${url}`).hostname;
+    return host ? sanitizeStringField(host, 80) : null;
   } catch {
-    return sanitizeStringField(url, 80);
+    return null;
   }
-}
-
-/** The host of a link, capped, for the prompt. */
-function cappedHost(url: string): string {
-  return sanitizeStringField(hostOf(url), 80);
 }
 
 const PATH_MAX = 120;
@@ -84,6 +81,24 @@ function pathOf(path: string): string {
   } catch {
     return sanitizeStringField(path.split(/[?#]/, 1)[0] ?? '', PATH_MAX);
   }
+}
+
+/** Where the lead came from: campaign, referrer host, landing path, concept page and website. */
+function sourceLines(fields: EnquiryFields): string[] {
+  const lines: string[] = [];
+  const campaign = [fields.utmSource, fields.utmMedium, fields.utmCampaign]
+    .filter(present)
+    .map((part) => sanitizeStringField(part, 60));
+  if (campaign.length > 0) lines.push(`Arrived Via Campaign: ${campaign.join(' / ')}`);
+  const referrerHost = present(fields.referrer) ? cappedHost(fields.referrer) : null;
+  if (referrerHost) lines.push(`Referrer: ${referrerHost}`);
+  if (present(fields.landingPath)) lines.push(`Landing Page: ${pathOf(fields.landingPath)}`);
+  if (present(fields.outreachSlug)) {
+    lines.push(`Outreach Concept Page: ${sanitizeStringField(fields.outreachSlug, 80)}`);
+  }
+  const websiteHost = present(fields.website) ? cappedHost(fields.website) : null;
+  if (websiteHost) lines.push(`Website: ${websiteHost}`);
+  return lines;
 }
 
 /** The enquiry data as prompt lines; empty when the lead has none of it. */
@@ -105,17 +120,7 @@ export function enquiryLines(fields: EnquiryFields | null | undefined): string[]
   if (fields.estimatedValue && fields.estimatedValue > 0) {
     lines.push(`Estimated Deal Value: £${Math.round(fields.estimatedValue / 100)}`);
   }
-  const campaign = [fields.utmSource, fields.utmMedium, fields.utmCampaign]
-    .filter(present)
-    .map((part) => sanitizeStringField(part, 60));
-  if (campaign.length > 0) lines.push(`Arrived Via Campaign: ${campaign.join(' / ')}`);
-  if (present(fields.referrer)) lines.push(`Referrer: ${cappedHost(fields.referrer)}`);
-  if (present(fields.landingPath)) lines.push(`Landing Page: ${pathOf(fields.landingPath)}`);
-  if (present(fields.outreachSlug)) {
-    lines.push(`Outreach Concept Page: ${sanitizeStringField(fields.outreachSlug, 80)}`);
-  }
-  if (present(fields.website)) lines.push(`Website: ${cappedHost(fields.website)}`);
-  if (present(fields.location)) lines.push(`Location: ${sanitizeStringField(fields.location, 80)}`);
+  lines.push(...sourceLines(fields));
   const tags = (fields.tags ?? []).filter(present).slice(0, MAX_TAGS);
   if (tags.length > 0) {
     lines.push(`Tags: ${tags.map((tag) => sanitizeStringField(tag, 50)).join(', ')}`);
@@ -249,8 +254,10 @@ function daysAgo(date: Date, now: Date): string {
   return days === 0 ? 'today' : `${days} day${days === 1 ? '' : 's'} ago`;
 }
 
-function lastSeen(date: Date | null, now: Date): string {
-  return date ? `, last ${isoDay(date)} (${daysAgo(date, now)})` : '';
+function lastSeen(date: Date | null, now: Date, verb: 'opened' | 'clicked'): string {
+  // openedAt and clickedAt hold the FIRST open or click of a mail (later ones only raise the
+  // counts), so the date is that of the most recent mail that was first opened or clicked.
+  return date ? `, most recent mail first ${verb} ${isoDay(date)} (${daysAgo(date, now)})` : '';
 }
 
 /** The email record counts as prompt lines; empty when the lead has no email records at all. */
@@ -262,7 +269,7 @@ export function emailTrackingLines(
   const lines: string[] = [];
   if (tracking.sent > 0) {
     lines.push(
-      `Email Tracking: ${tracking.sent} tracked emails sent, ${tracking.opened} opened (${tracking.openEvents} opens${lastSeen(tracking.lastOpenedAt, now)}), ${tracking.clicked} with a link clicked (${tracking.clickEvents} clicks${lastSeen(tracking.lastClickedAt, now)})`
+      `Email Tracking: ${tracking.sent} tracked emails sent, ${tracking.opened} opened (${tracking.openEvents} opens${lastSeen(tracking.lastOpenedAt, now, 'opened')}), ${tracking.clicked} with a link clicked (${tracking.clickEvents} clicks${lastSeen(tracking.lastClickedAt, now, 'clicked')})`
     );
   }
   if (tracking.received > 0) {
