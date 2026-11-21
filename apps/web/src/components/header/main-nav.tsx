@@ -22,6 +22,8 @@ const LINK =
   'inline-flex items-center gap-2 min-h-11 px-3 text-sm font-medium whitespace-nowrap rounded-lg transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 const ACTIVE = 'bg-primary/10 text-primary';
 const IDLE = 'text-muted-foreground hover:text-foreground hover:bg-accent';
+/** Bar items are tighter below xl, so search keeps room for its placeholder at 1024px. */
+const BAR = 'max-xl:px-2';
 
 /**
  * The top bar (owner 21/11 reference): the main destinations with their icons, and every other
@@ -50,7 +52,7 @@ export function MainNav({ routes, className }: Readonly<MainNavProps>) {
             key={route.href}
             href={route.href}
             aria-current={active ? 'page' : undefined}
-            className={cn(LINK, active ? ACTIVE : IDLE)}
+            className={cn(LINK, BAR, active ? ACTIVE : IDLE)}
           >
             {route.icon && (
               <span
@@ -70,7 +72,7 @@ export function MainNav({ routes, className }: Readonly<MainNavProps>) {
           <PopoverTrigger asChild>
             <button
               type="button"
-              className={cn(LINK, moreActive || open ? ACTIVE : IDLE)}
+              className={cn(LINK, BAR, moreActive || open ? ACTIVE : IDLE)}
               data-testid="nav-more"
             >
               <span
