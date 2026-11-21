@@ -11,7 +11,8 @@
  */
 
 import { Suspense, useState, useEffect } from 'react';
-import { PageHeader } from '@/components/shared/page-header';
+import { PageHeader, type PageAction } from '@/components/shared/page-header';
+import { useEnabledModules } from '@/hooks/useEnabledModules';
 import { useLiveConnection } from '@/lib/live-connection';
 import { Card } from '@intelliflow/ui';
 import type { Widget } from '@intelliflow/ui';
@@ -82,7 +83,26 @@ export default function DashboardClient({ initialLeadStats }: Readonly<Dashboard
   const { isLoading: authLoading } = useRequireAuth();
   // MVP-004: "Live" only while the live-update connection is really open.
   const live = useLiveConnection();
+  const { isModuleEnabled } = useEnabledModules();
   const [widgets, setWidgets] = useState<Widget[]>(defaultWidgets);
+
+  // The hero's actions (owner 21/11 reference): Add New first, then Customize, Calendar and
+  // Reports as icon controls. Every one opens an existing page; Reports only when the Analytics
+  // module is on (the navigation's own rule), so no control leads nowhere.
+  const heroActions: PageAction[] = [
+    { label: 'Add New', icon: 'add', variant: 'primary', href: '/dashboard/new' },
+    {
+      label: 'Customize',
+      icon: 'tune',
+      variant: 'secondary',
+      href: '/dashboard/customize',
+      hideOnMobile: true,
+    },
+    { label: 'Calendar', icon: 'calendar_month', variant: 'secondary', href: '/calendar' },
+    ...(isModuleEnabled('ANALYTICS')
+      ? [{ label: 'Reports', icon: 'bar_chart', variant: 'secondary' as const, href: '/analytics' }]
+      : []),
+  ];
 
   // Load saved layout from localStorage on mount.
   // This no longer gates the entire grid — widgets render immediately with
@@ -136,30 +156,26 @@ export default function DashboardClient({ initialLeadStats }: Readonly<Dashboard
         className="mb-6"
         breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Dashboard' }]}
         title="Dashboard"
-        actions={[
-          {
-            label: 'Customize',
-            icon: 'tune',
-            variant: 'secondary',
-            href: '/dashboard/customize',
-            hideOnMobile: true,
-          },
-          { label: 'Add New', icon: 'add', variant: 'primary', href: '/dashboard/new' },
-        ]}
+        description="Your sales, deals and tasks at a glance."
+        actions={heroActions}
       >
         {/* Single polite live region (semantic <output> = status role) for the
             auto-refresh cadence — KPI cards themselves are NOT aria-live to
             avoid screen-reader spam on each poll. */}
-        <output className="hidden sm:inline-flex items-center gap-1 mt-1 text-xs text-slate-500 dark:text-slate-400">
+        <output className="hidden sm:inline-flex items-center gap-1.5 mt-2 text-xs text-white/75">
           <span
             className={
               live
-                ? 'size-1.5 rounded-full bg-green-500 motion-safe:animate-pulse'
-                : 'size-1.5 rounded-full bg-slate-400'
+                ? 'size-1 rounded-full bg-green-400 motion-safe:animate-pulse'
+                : 'size-1 rounded-full bg-white/60'
             }
             aria-hidden="true"
           />
-          <span>{live ? 'Live · refreshes every minute' : 'Refreshes every minute'}</span>
+          {/* Owner 21/11: say what really happens. The four KPI cards and the pipeline poll every
+              minute (DASHBOARD_REFETCH_INTERVAL_MS); Deals Won and Upcoming Tasks do not. */}
+          <span>
+            {live ? 'Live · key figures refresh every minute' : 'Key figures refresh every minute'}
+          </span>
         </output>
       </PageHeader>
 
