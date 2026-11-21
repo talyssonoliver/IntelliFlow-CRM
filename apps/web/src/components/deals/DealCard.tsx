@@ -16,7 +16,7 @@ import { cn } from '@intelliflow/ui';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { Deal } from './types';
-import { formatCurrencyFull } from './types';
+import { formatDealValue } from './types';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 
 interface DealCardProps {
@@ -50,38 +50,36 @@ export const DealCard = React.memo(function DealCard({
     transition,
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onNavigate();
-    }
-  };
-
   return (
     <div
       ref={setNodeRef}
       style={style}
-      role="button"
-      tabIndex={0}
       className={cn(
-        'bg-card rounded-lg border border-border text-left w-full',
+        'relative bg-card rounded-lg border border-border text-left w-full',
         'p-3 sm:p-4 cursor-pointer touch-pan-y',
-        'hover:border-primary hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary',
+        'hover:border-primary hover:shadow-md focus-within:ring-2 focus-within:ring-primary',
         isPending && 'animate-pulse ring-2 ring-primary/50 opacity-75',
         isDragging
           ? 'opacity-50 shadow-lg ring-2 ring-primary'
           : 'transition-[border-color,box-shadow] duration-200'
       )}
-      onClick={onNavigate}
-      onKeyDown={handleKeyDown}
-      aria-label={`View deal: ${deal.name}`}
     >
       <div className="flex items-start justify-between gap-2 mb-2 sm:mb-3">
-        <h4 className="font-medium text-foreground text-xs sm:text-sm line-clamp-2">{deal.name}</h4>
+        <h4 className="font-medium text-foreground text-xs sm:text-sm line-clamp-2">
+          {/* A real button, stretched over the whole card, so the card opens the deal by mouse, touch and keyboard. */}
+          <button
+            type="button"
+            aria-label={`View deal: ${deal.name}`}
+            className="text-left focus:outline-none after:absolute after:inset-0 after:content-['']"
+            onClick={onNavigate}
+          >
+            {deal.name}
+          </button>
+        </h4>
         <button
           type="button"
           aria-label="Drag to move deal"
-          className="p-1 -mr-1 text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing touch-none flex-shrink-0"
+          className="relative z-10 p-1 -mr-1 text-muted-foreground hover:text-foreground cursor-grab active:cursor-grabbing touch-none flex-shrink-0"
           onClick={(e) => e.stopPropagation()}
           {...attributes}
           {...listeners}
@@ -110,7 +108,7 @@ export const DealCard = React.memo(function DealCard({
             payments
           </span>
           <span className="font-semibold text-foreground text-xs sm:text-sm">
-            {formatCurrencyFull(deal.value)}
+            {formatDealValue(deal.value)}
           </span>
         </div>
         <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -125,13 +123,10 @@ export const DealCard = React.memo(function DealCard({
           <span className="font-medium text-foreground">{deal.probability}%</span>
         </div>
         <div className="h-1 sm:h-1.5 bg-muted rounded-full overflow-hidden">
-          <span
-            className="h-full bg-primary rounded-full transition-all duration-300 block"
-            style={{ width: `${deal.probability}%` }}
-            role="progressbar"
-            aria-valuenow={deal.probability}
-            aria-valuemin={0}
-            aria-valuemax={100}
+          <progress
+            className="block h-full w-full appearance-none [&::-webkit-progress-bar]:bg-transparent [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-primary [&::-webkit-progress-value]:transition-all [&::-moz-progress-bar]:rounded-full [&::-moz-progress-bar]:bg-primary"
+            value={deal.probability}
+            max={100}
             aria-label={`Probability: ${deal.probability}%`}
           />
         </div>

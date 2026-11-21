@@ -6,7 +6,7 @@
  */
 import * as React from 'react';
 import Link from 'next/link';
-import { type Deal, formatCurrencyFull } from './types';
+import { type Deal, formatDealValue } from './types';
 import { DealAvatar, ProbabilityBar, StageBadge, formatDate } from './DealBadges';
 
 const PHONE_QUERY = '(max-width: 767px)';
@@ -57,7 +57,7 @@ export function DealPhoneCards({
                 </div>
               </div>
               <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
-                {formatCurrencyFull(deal.value)}
+                {formatDealValue(deal.value)}
               </span>
             </div>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">

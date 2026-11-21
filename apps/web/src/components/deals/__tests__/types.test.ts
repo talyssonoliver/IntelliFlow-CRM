@@ -6,6 +6,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   transformDeals,
+  formatDealValue,
   dateRangeToBounds,
   buildOpportunityListInput,
   calculateStats,
@@ -176,5 +177,17 @@ describe('buildOpportunityListInput (F-10)', () => {
     const result = buildOpportunityListInput({ dateRange: 'this_month' }, now);
     expect(result.dateFrom).toEqual(new Date(2026, 5, 1));
     expect(result.dateTo).toEqual(new Date(2026, 6, 0, 23, 59, 59, 999));
+  });
+});
+
+describe('formatDealValue', () => {
+  it('says "No value set" for 0, null and undefined, never £0', () => {
+    expect(formatDealValue(0)).toBe('No value set');
+    expect(formatDealValue(null)).toBe('No value set');
+    expect(formatDealValue(undefined)).toBe('No value set');
+  });
+
+  it('formats a real value as full GBP', () => {
+    expect(formatDealValue(75000)).toBe('£75,000');
   });
 });

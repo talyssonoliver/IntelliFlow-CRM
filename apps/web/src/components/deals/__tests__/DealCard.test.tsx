@@ -7,7 +7,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { DealCard } from '../DealCard';
 import { createMockDeal } from './deal-test-utils';
@@ -80,6 +80,14 @@ describe('DealCard', () => {
     expect(screen.getByText('£75,000')).toBeInTheDocument();
   });
 
+  it.each([0, undefined])('shows "No value set" instead of £0 when the value is %s', (value) => {
+    const deal = createMockDeal({ value: value as unknown as number });
+    render(<DealCard deal={deal} onNavigate={mockOnNavigate} />);
+
+    expect(screen.getByText('No value set')).toBeInTheDocument();
+    expect(screen.queryByText('£0')).not.toBeInTheDocument();
+  });
+
   it('shows "No date" when expectedCloseDate is null', () => {
     const deal = createMockDeal({ expectedCloseDate: null });
     render(<DealCard deal={deal} onNavigate={mockOnNavigate} />);
@@ -101,7 +109,7 @@ describe('DealCard', () => {
 
     expect(screen.getByText('65%')).toBeInTheDocument();
     const progressBar = screen.getByRole('progressbar');
-    expect(progressBar).toHaveStyle({ width: '65%' });
+    expect(progressBar).toHaveAttribute('value', '65');
   });
 
   it('click calls onNavigate callback', async () => {
@@ -115,22 +123,24 @@ describe('DealCard', () => {
     expect(mockOnNavigate).toHaveBeenCalledTimes(1);
   });
 
-  it('Enter key calls onNavigate callback', () => {
+  it('Enter key calls onNavigate callback', async () => {
+    const user = userEvent.setup();
     const deal = createMockDeal();
     render(<DealCard deal={deal} onNavigate={mockOnNavigate} />);
 
-    const card = screen.getByLabelText(/View deal/);
-    fireEvent.keyDown(card, { key: 'Enter' });
+    screen.getByLabelText(/View deal/).focus();
+    await user.keyboard('{Enter}');
 
     expect(mockOnNavigate).toHaveBeenCalledTimes(1);
   });
 
-  it('Space key calls onNavigate callback', () => {
+  it('Space key calls onNavigate callback', async () => {
+    const user = userEvent.setup();
     const deal = createMockDeal();
     render(<DealCard deal={deal} onNavigate={mockOnNavigate} />);
 
-    const card = screen.getByLabelText(/View deal/);
-    fireEvent.keyDown(card, { key: ' ' });
+    screen.getByLabelText(/View deal/).focus();
+    await user.keyboard(' ');
 
     expect(mockOnNavigate).toHaveBeenCalledTimes(1);
   });
@@ -158,7 +168,7 @@ describe('DealCard', () => {
 
     // The card should have opacity-related class when isDragging is true
     // Since isDragging is false by default, verify the card renders without it
-    const card = container.querySelector('[role="button"]');
+    const card = container.firstElementChild;
     expect(card).not.toHaveClass('opacity-50');
   });
 
@@ -166,14 +176,16 @@ describe('DealCard', () => {
 
   it('renders with pending visual state when isPending=true', () => {
     const deal = createMockDeal();
-    render(<DealCard deal={deal} onNavigate={mockOnNavigate} isPending={true} />);
+    const { container } = render(
+      <DealCard deal={deal} onNavigate={mockOnNavigate} isPending={true} />
+    );
 
     // DealCard.tsx:61 renders a native <button> for the card wrapper with
     // aria-label="View deal: <name>" (line 77). A second <button> is the
     // nested drag handle with aria-label="Drag to move deal" (line 83), so
     // `querySelector('[role="button"]')` ambiguously matches the drag handle.
     // Query by the card's aria-label to pin to the outer wrapper.
-    const card = screen.getByRole('button', { name: new RegExp(`View deal:.*${deal.name}`, 'i') });
+    const card = container.firstElementChild as HTMLElement;
     expect(card.className).toContain('animate-pulse');
     expect(card.className).toContain('ring-primary/50');
     expect(card.className).toContain('opacity-75');
@@ -181,9 +193,11 @@ describe('DealCard', () => {
 
   it('renders normal state when isPending is false', () => {
     const deal = createMockDeal();
-    render(<DealCard deal={deal} onNavigate={mockOnNavigate} isPending={false} />);
+    const { container } = render(
+      <DealCard deal={deal} onNavigate={mockOnNavigate} isPending={false} />
+    );
 
-    const card = screen.getByRole('button', { name: new RegExp(`View deal:.*${deal.name}`, 'i') });
+    const card = container.firstElementChild as HTMLElement;
     expect(card.className).not.toContain('animate-pulse');
   });
 });

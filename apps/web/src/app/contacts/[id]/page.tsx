@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { formatDealValue } from '@/components/deals/types';
 import { RestrictionBanner } from '@/components/privacy/RestrictionBanner';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -1316,7 +1317,7 @@ export default function Contact360Page() {
                         </div>
                         <div className="text-right ml-4">
                           <p className="font-semibold text-slate-900 dark:text-white">
-                            £{deal.value.toLocaleString('en-GB')}
+                            {formatDealValue(deal.value)}
                           </p>
                           <p className="text-xs text-slate-500">{deal.probability}%</p>
                         </div>
@@ -1362,7 +1363,7 @@ export default function Contact360Page() {
                     </div>
                     <div className="text-right ml-4">
                       <p className="font-semibold text-slate-900 dark:text-white">
-                        £{deal.value.toLocaleString('en-GB')}
+                        {formatDealValue(deal.value)}
                       </p>
                       <p className="text-xs text-slate-500">{deal.probability}% probability</p>
                     </div>
