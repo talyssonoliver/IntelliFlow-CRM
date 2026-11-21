@@ -1,8 +1,8 @@
 /**
  * clean-activity-ids.ts (register row 42)
  *
- * Existing lead_activities rows whose title or description carries a machine id, for example
- * "... COA ledger row cmw5j72u40001p5ug01kf3vot.", get the id (and the label in front of it) removed.
+ * Existing lead_activities rows whose title or description carries the COA ledger row id, for example
+ * "... COA ledger row cmw5j72u40001p5ug01kf3vot.", get that sentence part removed.
  * New rows are cleaned when they are written (`lead.logActivity`) and when they are shown; this script
  * rewrites the old ones. Only the title and description change; metadata is not touched. The removed
  * text is kept only in the dry-run output (see Recovery), so save it.
@@ -19,6 +19,7 @@
  *   DATABASE_URL=<db> pnpm tsx tools/scripts/clean-activity-ids.ts --tenant <id> --apply
  */
 
+import { parseArgs as readFlags } from 'node:util';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { cleanActivityText } from '../../packages/validators/src/activity-text';
@@ -32,19 +33,25 @@ export interface ParsedArgs {
   leadFilter: string | undefined;
 }
 
-function argValue(argv: string[], flag: string): string | undefined {
-  const i = argv.indexOf(flag);
-  return i !== -1 && argv[i + 1] && !argv[i + 1]!.startsWith('--') ? argv[i + 1] : undefined;
-}
-
+/** Reads `--apply`, `--tenant <id>` and `--lead <id>`; anything else is ignored. */
 export function parseArgs(argv: string[]): ParsedArgs {
+  const { values } = readFlags({
+    args: argv,
+    allowPositionals: true,
+    strict: false,
+    options: {
+      apply: { type: 'boolean' },
+      tenant: { type: 'string' },
+      lead: { type: 'string' },
+    },
+  });
+  const text = (value: unknown) => (typeof value === 'string' && value !== '' ? value : undefined);
   return {
-    isApply: argv.includes('--apply'),
-    tenantFilter: argValue(argv, '--tenant'),
-    leadFilter: argValue(argv, '--lead'),
+    isApply: values.apply === true,
+    tenantFilter: text(values.tenant),
+    leadFilter: text(values.lead),
   };
 }
-
 export interface TextFix {
   title: string;
   description: string;
@@ -101,52 +108,66 @@ async function cleanRow(
 }
 
 export async function runCleanup(prisma: Prisma, args: ParsedArgs, totals: Totals): Promise<void> {
-  let cursor: string | undefined;
-  for (;;) {
-    const rows: ScanRow[] = await prisma.leadActivity.findMany({
+  const page = async (cursor: string | undefined): Promise<ScanRow[]> =>
+    prisma.leadActivity.findMany({
       where: scanWhere(args),
       select: { id: true, tenantId: true, title: true, description: true },
       orderBy: { id: 'asc' },
       take: BATCH_SIZE,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     });
-    for (const row of rows) await cleanRow(prisma, args, row, totals);
-    if (rows.length < BATCH_SIZE) return;
-    cursor = rows[rows.length - 1]!.id;
-  }
+  // Pages are read one after another (each starts after the last row of the one before); the rows of a page are
+  // written together, so there is no await inside a loop.
+  const pending = async (cursor: string | undefined): Promise<void> => {
+    const rows = await page(cursor);
+    await Promise.all(rows.map((row) => cleanRow(prisma, args, row, totals)));
+    const last = rows.at(-1);
+    if (rows.length === BATCH_SIZE && last) await pending(last.id);
+  };
+  await pending(undefined);
 }
 
-export async function main(): Promise<void> {
-  if (!process.env['DATABASE_URL']) {
+function describeRun(args: ParsedArgs): string {
+  const scope = args.tenantFilter ? `tenant=${args.tenantFilter}` : '(all tenants)';
+  const lead = args.leadFilter ? ' lead=' + args.leadFilter : '';
+  return ` mode=${args.isApply ? 'APPLY' : 'DRY-RUN'} ${scope}${lead}`;
+}
+
+function openDatabase(url: string): Prisma {
+  return new PrismaClient({ adapter: new PrismaPg({ connectionString: url }) });
+}
+
+export async function main(
+  argv: string[] = process.argv.slice(2),
+  env: NodeJS.ProcessEnv = process.env
+): Promise<number> {
+  const url = env['DATABASE_URL'];
+  if (!url) {
     console.error(`${TAG} ERROR: DATABASE_URL is not set.`);
-    process.exit(1);
-    return;
+    return 1;
   }
-  const args = parseArgs(process.argv);
-  const prisma = new PrismaClient({
-    adapter: new PrismaPg({ connectionString: process.env['DATABASE_URL'] }),
-  });
-  console.log(
-    `${TAG} mode=${args.isApply ? 'APPLY' : 'DRY-RUN'}` +
-      (args.tenantFilter ? ` tenant=${args.tenantFilter}` : ' (all tenants)') +
-      (args.leadFilter ? ` lead=${args.leadFilter}` : '')
-  );
+  const args = parseArgs(argv);
+  console.log(describeRun(args));
   const totals: Totals = { cleaned: 0, skipped: 0 };
+  const prisma = openDatabase(url);
   try {
     await runCleanup(prisma, args, totals);
   } finally {
     await prisma.$disconnect();
   }
   console.log(`${TAG} summary:`, { ...totals, mode: args.isApply ? 'APPLY' : 'DRY-RUN' });
+  return 0;
 }
 
 // CLI entry point guard: importing this module (e.g. from a test) must not run main().
-if (
-  import.meta.url === `file://${process.argv[1]}` ||
-  process.argv[1]?.endsWith('clean-activity-ids.ts')
-) {
-  main().catch((err) => {
-    console.error(`${TAG} FAILED:`, err);
-    process.exit(1);
-  });
+if (process.argv[1]?.endsWith('clean-activity-ids.ts')) {
+  main().then(
+    (code) => {
+      process.exitCode = code;
+    },
+    (err) => {
+      console.error(`${TAG} FAILED:`, err);
+      process.exitCode = 1;
+    }
+  );
 }
