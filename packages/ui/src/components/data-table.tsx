@@ -397,6 +397,12 @@ export function DataTable<TData, TValue>({
     },
   });
 
+  // `pageSize` is read once by TanStack (initialState); follow later changes too, so a caller
+  // that grows its page (Tasks adds the follow-ups after they load) does not leave rows on page 2.
+  React.useEffect(() => {
+    table.setPageSize(pageSize);
+  }, [table, pageSize]);
+
   // Get selected rows data
   const selectedRows = React.useMemo(() => {
     // A selection made before the data changed can point at a row that is not selectable now.

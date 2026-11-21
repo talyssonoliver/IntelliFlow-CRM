@@ -402,6 +402,16 @@ describe('DataTable', () => {
     });
   });
 
+  describe('Page size changes (codex 21/11)', () => {
+    it('follows a larger pageSize after mount, so rows added later are not left on page 2', () => {
+      const { rerender } = render(
+        <DataTable columns={basicColumns} data={createTestData(3)} pageSize={3} />
+      );
+      rerender(<DataTable columns={basicColumns} data={createTestData(8)} pageSize={8} />);
+      expect(screen.getByText('User 8')).toBeInTheDocument();
+    });
+  });
+
   describe('Row Selection', () => {
     it('gives a checkbox only to the rows canSelectRow allows', () => {
       const testData = createTestData(5); // Admin, User, Admin, User, Admin
