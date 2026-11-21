@@ -148,7 +148,7 @@ export function Navigation() {
 
         {/* Desktop Navigation */}
         {modulesLoading && !modulesError ? (
-          <nav className="hidden xl:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1">
             {NAV_SKELETON_KEYS.map((key) => (
               <div key={key} className="h-8 w-20 rounded-lg bg-muted animate-pulse" />
             ))}
@@ -164,7 +164,7 @@ export function Navigation() {
         <div className="flex-1" />
 
         {/* Search */}
-        <div className="hidden md:flex items-center mr-2 min-w-24 xl:max-[1365px]:min-w-[6.25rem] max-w-64 flex-[1_1_16rem] shrink-[100] 2xl:mr-4">
+        <div className="hidden md:flex items-center ml-3 mr-2 min-w-24 xl:max-[1365px]:min-w-[6.25rem] max-w-64 flex-[1_1_16rem] shrink-[100] 2xl:mr-4">
           <SearchBar className="w-full" />
         </div>
 
@@ -184,7 +184,7 @@ export function Navigation() {
 
         {/* Mobile Menu Button */}
         <button
-          className="xl:hidden ml-4 p-2 text-muted-foreground hover:text-foreground"
+          className="lg:hidden ml-4 p-2 text-muted-foreground hover:text-foreground"
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >
