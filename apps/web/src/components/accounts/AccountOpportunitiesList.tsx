@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { OPPORTUNITY_STAGES, type OpportunityStage } from '@intelliflow/domain';
 import { formatLabel } from '@/lib/shared/filter-utils';
 import { formatCurrency } from '@/lib/pricing/calculator';
+import { NO_DEAL_VALUE_LABEL } from '@/components/deals/types';
 
 const OPP_GRID_SKELETON_KEYS = ['opp-grid-0', 'opp-grid-1', 'opp-grid-2'] as const;
 const OPP_LIST_SKELETON_KEYS = [
@@ -140,7 +141,8 @@ export function AccountOpportunitiesList({
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">{opp.name}</p>
               <p className="text-xs text-muted-foreground">
-                {formatCurrency(opp.value)} &middot; {opp.probability}% probability
+                {opp.value ? formatCurrency(opp.value) : NO_DEAL_VALUE_LABEL} &middot;{' '}
+                {opp.probability}% probability
               </p>
             </div>
             <Badge variant="outline" className="text-xs shrink-0">
