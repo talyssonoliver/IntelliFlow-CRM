@@ -26,44 +26,77 @@ describe('KpiCard (#1225 UI-009)', () => {
     expect(screen.getByTestId('kpi-value')).toHaveTextContent('...');
   });
 
-  it('lays the icon beside the label and number on a phone-width card, sized to both (owner 20/11)', () => {
+  it('uses one row layout at every width: icon left, label and number right (owner 21/11)', () => {
     const { container } = render(<KpiCard label="Total Leads" icon="group" value="155" />);
-    // The card measures its own width, so a card resized to the full phone row gets the row too.
+    // Sized by the card's own width, so resized cards and other pages follow it too.
     expect(container.firstElementChild).toHaveClass('@container');
     const icon = screen.getByTestId('kpi-icon');
-    // Phone row: the icon spans the label and number rows, 50px = 16px label + 2px gap + 32px number.
-    expect(icon).toHaveClass(
-      'max-sm:@min-[10.5rem]:row-span-2',
-      'max-sm:@min-[10.5rem]:size-[50px]'
-    );
-    expect(screen.getByText('Total Leads')).toHaveClass(
-      'max-sm:@min-[10.5rem]:col-start-2',
-      'max-sm:@min-[10.5rem]:leading-4'
-    );
+    const row = icon.parentElement as HTMLElement;
+    expect(row).toHaveClass('flex', 'items-center');
+    // No breakpoint switches the row off; only a card under 9rem (320px phone) stacks.
+    expect(row.className).not.toMatch(/(^| )(sm|md|lg):flex-col/);
+    expect(row).toHaveClass('@max-[9rem]:flex-col');
+    // Label and number sit in the column beside the icon.
+    const column = screen.getByText('Total Leads').parentElement as HTMLElement;
+    expect(column).toBe(row.lastElementChild);
+    expect(column).toContainElement(screen.getByTestId('kpi-value'));
+  });
+
+  it('sizes the icon to the label plus the number at each card width', () => {
+    render(<KpiCard label="Total Leads" icon="group" value="155" />);
+    const icon = screen.getByTestId('kpi-icon');
+    // 46 = 16 + 2 + 28 (narrow), 50 = 16 + 2 + 32, 56 = 20 + 4 + 32 (desktop)
+    expect(icon).toHaveClass('size-[46px]', '@min-[11rem]:size-[50px]', '@min-[14rem]:size-14');
+    expect(screen.getByText('Total Leads')).toHaveClass('leading-4', '@min-[14rem]:leading-5');
+    expect(screen.getByTestId('kpi-value')).toHaveClass('leading-7', '@min-[11rem]:leading-8');
     expect(screen.getByTestId('kpi-value').parentElement).toHaveClass(
-      'max-sm:@min-[10.5rem]:row-start-2',
-      'max-sm:@min-[10.5rem]:leading-8'
-    );
-    // The number shrinks with the card in the row, so a six-figure amount fits a 390px phone.
-    expect(screen.getByTestId('kpi-value')).toHaveClass(
-      'max-sm:@min-[10.5rem]:text-[clamp(1.125rem,11.5cqi,1.5rem)]'
-    );
-    // From `sm` up nothing changes: the stacked tile keeps its icon size.
-    expect(icon).toHaveClass('size-9', 'sm:size-12');
-    // Two columns in the row (no empty third column eating the number's width).
-    expect(icon.parentElement).toHaveClass(
-      'gap-x-2',
-      'max-sm:@min-[10.5rem]:grid-cols-[auto_minmax(0,1fr)]'
+      'mt-0.5',
+      '@min-[14rem]:mt-1'
     );
   });
 
-  it('moves the badge under the number in the phone row', () => {
+  it('is at least 112px tall on a desktop-width card, with equal padding', () => {
+    render(<KpiCard label="Total Leads" icon="group" value="155" />);
+    const inner = screen.getByTestId('kpi-icon').parentElement!.parentElement as HTMLElement;
+    expect(inner).toHaveClass('p-3', '@min-[14rem]:p-5', '@min-[14rem]:min-h-28', 'justify-center');
+  });
+
+  it('scales the number with the card, so a six-figure amount fits a phone (#50)', () => {
+    render(<KpiCard label="Sales Revenue" icon="payments" value="£125,000" />);
+    expect(screen.getByTestId('kpi-value')).toHaveClass('text-[clamp(1.125rem,11cqi,1.875rem)]');
+  });
+
+  it('puts the badge under the number', () => {
     render(<KpiCard label="Total Leads" icon="group" value="155" badge={<span>+12%</span>} />);
-    expect(screen.getByText('+12%').parentElement).toHaveClass(
-      'justify-self-end',
-      'max-sm:@min-[10.5rem]:col-start-2',
-      'max-sm:@min-[10.5rem]:row-start-3'
+    const badgeBox = screen.getByText('+12%').parentElement as HTMLElement;
+    expect(badgeBox.previousElementSibling).toContainElement(screen.getByTestId('kpi-value'));
+  });
+
+  it('says it could not load, without the badge or the footer', () => {
+    render(
+      <KpiCard
+        label="Total Leads"
+        icon="group"
+        value="155"
+        failed
+        badge={<span>+12%</span>}
+        footer={<p>Footer line</p>}
+      />
     );
+    expect(screen.getByRole('alert')).toHaveTextContent("Couldn't load");
+    expect(screen.queryByText('+12%')).toBeNull();
+    expect(screen.queryByText('Footer line')).toBeNull();
+  });
+
+  it('renders a value given as an element (Tickets colours its breached count)', () => {
+    render(
+      <KpiCard
+        label="SLA Breached"
+        icon="timer_off"
+        value={<span className="text-destructive">3</span>}
+      />
+    );
+    expect(screen.getByText('3')).toHaveClass('text-destructive');
   });
 
   it('pulses while pending, so every KPI card loads the same way', () => {
@@ -73,8 +106,9 @@ describe('KpiCard (#1225 UI-009)', () => {
   });
 
   it('keeps no empty badge slot when there is no badge', () => {
-    const { container } = render(<KpiCard label="Active Deals" icon="handshake" value={1} />);
-    expect(container.querySelector('.justify-self-end')).toBeNull();
+    render(<KpiCard label="Active Deals" icon="handshake" value={1} />);
+    const column = screen.getByText('Active Deals').parentElement as HTMLElement;
+    expect(column.children).toHaveLength(2);
   });
 
   it('renders the compact variant with the label as a heading', () => {
@@ -112,5 +146,19 @@ describe('KpiCard framed (owner 21/11: one KPI card on every page)', () => {
     expect(container.firstElementChild).toHaveClass('rounded-lg', 'border', 'bg-card');
     rerender(<KpiCard label="Total Accounts" icon="domain" value="1" />);
     expect(container.firstElementChild).not.toHaveClass('border');
+  });
+
+  it('shows a framed card footer under the row (Accounts: "avg/account")', () => {
+    render(
+      <KpiCard
+        framed
+        label="Average Revenue"
+        icon="calculate"
+        value="£0"
+        footer={<p>avg/account</p>}
+      />
+    );
+    const footer = screen.getByText('avg/account');
+    expect(footer.previousElementSibling).toContainElement(screen.getByTestId('kpi-icon'));
   });
 });

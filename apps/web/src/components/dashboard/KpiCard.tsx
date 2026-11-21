@@ -56,9 +56,15 @@ export function KpiCard({
   const frame = framed ? ' rounded-lg border border-border bg-card' : '';
   const badge = failed ? undefined : badgeProp;
   const footer = failed ? undefined : footerProp;
+  const row = variant === 'default';
+  // Default card: the number scales with the card (about 18px on a 360px phone card, up to 30px
+  // on a wide desktop card) on a line as tall as the icon needs; compact keeps its fixed sizes.
+  const figureSize = row
+    ? 'text-[clamp(1.125rem,11cqi,1.875rem)] leading-7 @min-[11rem]:leading-8'
+    : 'text-2xl sm:text-3xl';
   const figure = failed ? (
     <p
-      className="text-sm text-muted-foreground truncate max-sm:@min-[10.5rem]:leading-8"
+      className={`text-sm text-muted-foreground truncate ${row ? 'leading-7 @min-[11rem]:leading-8' : ''}`}
       data-testid="kpi-value"
       role="alert"
     >
@@ -66,7 +72,7 @@ export function KpiCard({
     </p>
   ) : (
     <p
-      className={`text-2xl sm:text-3xl font-bold text-foreground tabular-nums truncate max-sm:@min-[10.5rem]:text-[clamp(1.125rem,11.5cqi,1.5rem)] max-sm:@min-[10.5rem]:leading-8 ${pending ? 'animate-pulse motion-reduce:animate-none' : ''}`}
+      className={`${figureSize} font-bold text-foreground tabular-nums truncate ${pending ? 'animate-pulse motion-reduce:animate-none' : ''}`}
       data-testid="kpi-value"
       aria-busy={pending || undefined}
     >
@@ -95,39 +101,35 @@ export function KpiCard({
     );
   }
 
-  // Phone row layout (owner 20/11): below `sm`, a card at least 10.5rem wide puts the icon beside
-  // the label and number, the icon exactly as tall as the two of them (16px label + 2px gap +
-  // 32px number = 50px). It keys on the card's own width (container query), so a card the user
-  // resized to the full phone row gets the row too, and a card too narrow for it (a 320px
-  // phone, two per row) keeps the stacked layout instead of cutting the label off.
-  // In the row the number scales with the card (24px on a wide card, about 20px on a 390px phone)
-  // so "£125,000" still fits; its 32px line keeps the icon at 50px.
-  // From `sm` up the card is unchanged.
+  // One layout at every width (owner 21/11): icon on the left, exactly as tall as the label and
+  // number beside it; the badge under the number; the footer under the row. It keys on the card's
+  // own width (container query), not the screen, so a resized card and the Accounts/Tickets cards
+  // follow it too:
+  // - under 9rem (two per row on a 320px phone): stacked, so the label is not cut;
+  // - 9-11rem (360-389px phones): 46px icon = 16px label + 2px gap + 28px number line;
+  // - 11-14rem (390-440px phones, squeezed desktop): 50px icon = 16 + 2 + 32;
+  // - 14rem and up (desktop): 56px icon = 20 + 4 + 32, at least 112px tall.
   return (
     <div className={`@container h-full min-w-0${frame}`}>
-      <div className="p-4 sm:p-6 h-full flex flex-col min-w-0 max-sm:@min-[10.5rem]:p-2.5">
-        <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 max-sm:@min-[10.5rem]:grid-cols-[auto_minmax(0,1fr)]">
+      <div className="h-full flex flex-col justify-center min-w-0 p-3 @min-[14rem]:p-5 @min-[14rem]:min-h-28">
+        <div className="flex items-center gap-2 @min-[11rem]:gap-3 @min-[14rem]:gap-4 @max-[9rem]:flex-col @max-[9rem]:items-start">
           <div
-            className={`col-start-1 row-start-1 size-9 sm:size-12 shrink-0 rounded-lg flex items-center justify-center max-sm:@min-[10.5rem]:row-span-2 max-sm:@min-[10.5rem]:size-[50px] ${iconClassName}`}
+            className={`shrink-0 rounded-xl flex items-center justify-center size-[46px] @min-[11rem]:size-[50px] @min-[14rem]:size-14 @max-[9rem]:size-9 ${iconClassName}`}
             data-testid="kpi-icon"
           >
             <span
-              className="material-symbols-outlined text-xl sm:text-2xl max-sm:@min-[10.5rem]:text-[26px]"
+              className="material-symbols-outlined text-[24px] @min-[14rem]:text-[28px] @max-[9rem]:text-xl"
               aria-hidden="true"
             >
               {icon}
             </span>
           </div>
-          {badge ? (
-            <div className="col-start-3 row-start-1 justify-self-end max-sm:@min-[10.5rem]:col-start-2 max-sm:@min-[10.5rem]:row-start-3 max-sm:@min-[10.5rem]:justify-self-start max-sm:@min-[10.5rem]:mt-1">
-              {badge}
-            </div>
-          ) : null}
-          <p className="col-span-3 row-start-2 text-xs sm:text-sm text-muted-foreground mt-3 sm:mt-4 truncate max-sm:@min-[10.5rem]:col-span-1 max-sm:@min-[10.5rem]:col-start-2 max-sm:@min-[10.5rem]:row-start-1 max-sm:@min-[10.5rem]:mt-0 max-sm:@min-[10.5rem]:leading-4">
-            {label}
-          </p>
-          <div className="col-span-3 row-start-3 mt-1 min-w-0 max-sm:@min-[10.5rem]:col-span-1 max-sm:@min-[10.5rem]:col-start-2 max-sm:@min-[10.5rem]:row-start-2 max-sm:@min-[10.5rem]:mt-0.5 max-sm:@min-[10.5rem]:leading-8">
-            {figure}
+          <div className="min-w-0 flex-1 flex flex-col @max-[9rem]:w-full">
+            <p className="text-xs leading-4 @min-[14rem]:text-sm @min-[14rem]:leading-5 text-muted-foreground truncate">
+              {label}
+            </p>
+            <div className="mt-0.5 @min-[14rem]:mt-1 min-w-0">{figure}</div>
+            {badge ? <div className="mt-1">{badge}</div> : null}
           </div>
         </div>
         {footer}

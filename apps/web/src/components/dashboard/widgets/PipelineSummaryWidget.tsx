@@ -16,6 +16,7 @@ import {
   type LeadStatsLike,
 } from '@/lib/dashboard/pipeline-summary';
 import { ChartUnavailable } from '@/components/shared/ChartEmptyState';
+import { NO_DEAL_VALUE_LABEL } from '@/components/deals/types';
 import type { WidgetProps } from './index';
 
 const STAGE_COLORS: Record<string, string> = {
@@ -27,6 +28,26 @@ const STAGE_COLORS: Record<string, string> = {
   DISCOVERY: 'bg-blue-400',
   DEMO: 'bg-indigo-400',
 };
+
+/**
+ * #48: a stage holding deals with no value says so, as the deal cards do ("No value set"),
+ * instead of a real-looking £0. An empty stage keeps "£0 (0 Deals)".
+ */
+export function stageValueLabel(totalValue: number | string, count: number): string {
+  const deals = `${count} ${count === 1 ? 'Deal' : 'Deals'}`;
+  const value = Number(totalValue);
+  return count > 0 && !value
+    ? `${NO_DEAL_VALUE_LABEL} (${deals})`
+    : `${formatGBP(value)} (${deals})`;
+}
+
+/** The Deals heading total; "1 open deal · no value set" when the open deals carry no value. */
+export function dealsTotalLabel(total: number, dealCount: number): string {
+  const deals = `${dealCount} ${dealCount === 1 ? 'deal' : 'deals'}`;
+  return dealCount > 0 && !total
+    ? `${dealCount} open ${dealCount === 1 ? 'deal' : 'deals'} · no value set`
+    : `${formatGBP(total)} open across ${deals}`;
+}
 
 interface PipelineStage {
   stageKey: string;
@@ -242,17 +263,13 @@ function DealsSection({ stages, state }: Readonly<{ stages: PipelineStage[]; sta
   const displayedTotal = stages.reduce((sum, st) => sum + Number(st.totalValue), 0);
   const dealCount = stages.reduce((sum, st) => sum + st.count, 0);
   return (
-    <Section
-      title="Deals"
-      detail={`${formatGBP(displayedTotal)} open across ${dealCount} ${dealCount === 1 ? 'deal' : 'deals'}`}
-      foldable
-    >
+    <Section title="Deals" detail={dealsTotalLabel(displayedTotal, dealCount)} foldable>
       <SectionRows>
         {stages.map((stage) => (
           <Row
             key={stage.stageKey}
             label={stage.displayName}
-            detail={`${formatGBP(stage.totalValue)} (${stage.count} ${stage.count === 1 ? 'Deal' : 'Deals'})`}
+            detail={stageValueLabel(stage.totalValue, stage.count)}
             percent={computePipelineStagePercent(stage.totalValue, displayedTotal)}
             color={STAGE_COLORS[stage.stageKey] || 'bg-primary'}
           />
@@ -269,11 +286,13 @@ function NextStep({ qualified, hasDeals }: Readonly<{ qualified: number; hasDeal
   if (qualified > 0) summary = `${leadCountLabel(qualified)} qualified, ready to convert to a deal`;
   else if (hasDeals) summary = 'Open the board to move your deals on';
   return (
-    <div className="mt-4 pt-4 border-t border-border flex flex-wrap items-center justify-between gap-2">
+    // Phone (owner 21/11): the message and the link stack with room between them, and the link is
+    // a full 44px tap target; side by side from sm.
+    <div className="mt-4 pt-4 border-t border-border flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <span className="text-sm text-muted-foreground">{summary}</span>
       <Link
         href={boardNext ? '/deals?view=pipeline' : '/leads'}
-        className="text-sm font-medium text-primary hover:underline whitespace-nowrap"
+        className="inline-flex min-h-11 items-center self-start sm:self-auto text-sm font-medium text-primary hover:underline whitespace-nowrap"
       >
         {boardNext ? 'Open the board' : 'Go to leads'}
       </Link>

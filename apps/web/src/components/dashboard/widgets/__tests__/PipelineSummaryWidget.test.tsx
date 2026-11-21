@@ -31,7 +31,7 @@ vi.mock('@/lib/trpc', () => ({
   },
 }));
 
-import { PipelineSummaryWidget } from '../PipelineSummaryWidget';
+import { PipelineSummaryWidget, dealsTotalLabel, stageValueLabel } from '../PipelineSummaryWidget';
 import { DASHBOARD_REFETCH_INTERVAL_MS } from '@/lib/dashboard/kpi-calculator';
 
 const leadsSection = () => screen.getByRole('region', { name: 'Leads' });
@@ -308,5 +308,40 @@ describe('PipelineSummaryWidget: folded sections on a narrow card (owner 20/11)'
     expect(screen.queryByTestId('pipeline-deals-toggle')).not.toBeInTheDocument();
     expect(within(leadsSection()).getByText("Couldn't load your leads.")).toBeInTheDocument();
     expect(within(dealsSection()).getByText('No open deals')).toBeInTheDocument();
+  });
+});
+
+describe('Pipeline values with no deal value (#48)', () => {
+  it('says "No value set" for a stage whose deals have no value, like the deal cards', () => {
+    expect(stageValueLabel(0, 1)).toBe('No value set (1 Deal)');
+    expect(stageValueLabel('0', 2)).toBe('No value set (2 Deals)');
+    expect(stageValueLabel(0, 0)).toBe('£0 (0 Deals)');
+    expect(stageValueLabel(120000, 1)).toBe('£120,000 (1 Deal)');
+  });
+
+  it('words the Deals total the same way', () => {
+    expect(dealsTotalLabel(0, 1)).toBe('1 open deal · no value set');
+    expect(dealsTotalLabel(50000, 11)).toBe('£50,000 open across 11 deals');
+  });
+});
+
+describe('Pipeline footer on phones (owner 21/11)', () => {
+  it('stacks the message and a full-size link, side by side from sm', () => {
+    pipeline = { data: { stages: openStages, totalPipelineValue: 50000 }, isLoading: false };
+    leads = {
+      data: { total: 7, byStatus: { NEW: 4, CONTACTED: 2, QUALIFIED: 1 } },
+      isLoading: false,
+    };
+    render(<PipelineSummaryWidget />);
+    const link = screen.getByRole('link', { name: 'Go to leads' });
+    expect(link).toHaveClass('inline-flex', 'min-h-11');
+    expect(link.parentElement).toHaveClass('flex-col', 'gap-3', 'sm:flex-row');
+  });
+
+  it('gives the board link the same tap target', () => {
+    pipeline = { data: { stages: openStages, totalPipelineValue: 50000 }, isLoading: false };
+    leads = { data: { total: 4, byStatus: { NEW: 4 } }, isLoading: false };
+    render(<PipelineSummaryWidget />);
+    expect(screen.getByRole('link', { name: 'Open the board' })).toHaveClass('min-h-11');
   });
 });
