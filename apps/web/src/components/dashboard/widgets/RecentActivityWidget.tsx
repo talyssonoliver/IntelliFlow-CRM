@@ -29,7 +29,7 @@ export function RecentActivityWidget({ config }: Readonly<WidgetProps>) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between p-6 pb-6 border-b border-border">
+      <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border">
         <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Recent Activity</h3>
         <div className="flex items-center gap-2">
           <ActivityFeedTypeFilter value={feedFilter} onChange={setFeedFilter} />
@@ -40,7 +40,7 @@ export function RecentActivityWidget({ config }: Readonly<WidgetProps>) {
       </div>
 
       {/* IFC-202: Activity stats summary */}
-      <div className="px-6 py-2 border-b border-border bg-slate-50/50 dark:bg-slate-800/30">
+      <div className="px-4 sm:px-6 py-2 border-b border-border bg-slate-50/50 dark:bg-slate-800/30">
         <ActivityFeedStatsBar timeWindow="7d" />
       </div>
 

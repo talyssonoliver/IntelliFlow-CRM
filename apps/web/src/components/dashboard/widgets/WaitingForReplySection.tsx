@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { CardList, CardListMore, CardListRow, CardListSection } from './CardListSection';
 import { isSameName } from '@/lib/leads/lead-format';
 import { waitingLabel, waitingTone } from '@/lib/leads/waiting-for-reply';
 
@@ -33,37 +33,33 @@ export function WaitingForReplySection({
   // The list link opens the Leads list, so it only shows when leads beyond those listed wait.
   const moreLeads = leadTotal - people.filter((p) => p.kind === 'lead').length;
   return (
-    <section aria-label="Waiting for reply" data-testid="waiting-for-reply" className="space-y-1">
-      <h4 className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        Waiting for reply ({total})
-      </h4>
-      <ul className="space-y-1">
+    <CardListSection
+      label="Waiting for reply"
+      caption={`${total} waiting for a reply`}
+      testId="waiting-for-reply"
+      footer={
+        moreLeads > 0 ? (
+          <CardListMore href="/leads?segment=waiting">See leads waiting for a reply</CardListMore>
+        ) : null
+      }
+    >
+      <CardList>
         {people.map((p) => (
-          <li key={`${p.kind}:${p.id}`}>
-            <Link
-              href={p.kind === 'lead' ? `/leads/${p.id}` : `/contacts/${p.id}`}
-              className="block rounded-lg p-3 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              <p className="truncate text-sm font-medium text-slate-900 dark:text-white">
+          <CardListRow
+            key={`${p.kind}:${p.id}`}
+            href={p.kind === 'lead' ? `/leads/${p.id}` : `/contacts/${p.id}`}
+            primary={
+              <>
                 {p.name}
                 {p.company && !isSameName(p.company, p.name) ? ` · ${p.company}` : ''}
-              </p>
-              <p className="truncate text-xs text-slate-500 dark:text-slate-400">{p.subject}</p>
-              <p className={`mt-1 text-xs ${toneClass[waitingTone(p.since, now)]}`}>
-                {waitingLabel(p.since, now)}
-              </p>
-            </Link>
-          </li>
+              </>
+            }
+            secondary={p.subject}
+            status={waitingLabel(p.since, now)}
+            statusClassName={toneClass[waitingTone(p.since, now)]}
+          />
         ))}
-      </ul>
-      {moreLeads > 0 && (
-        <Link
-          href="/leads?segment=waiting"
-          className="block px-3 pt-1 text-xs text-ds-primary hover:underline"
-        >
-          See leads waiting for a reply
-        </Link>
-      )}
-    </section>
+      </CardList>
+    </CardListSection>
   );
 }

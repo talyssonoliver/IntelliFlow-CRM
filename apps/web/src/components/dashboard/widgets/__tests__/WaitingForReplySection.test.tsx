@@ -53,7 +53,9 @@ describe('WaitingForReplySection', () => {
       />
     );
     const section = within(screen.getByTestId('waiting-for-reply'));
-    expect(section.getByText('Waiting for reply (2)')).toBeTruthy();
+    expect(
+      within(screen.getByTestId('waiting-for-reply')).getByText('2 waiting for a reply')
+    ).toBeTruthy();
     expect(section.getAllByText('waiting 2 days')).toHaveLength(2);
     expect(section.getByText('Jane Example · Example Ltd').closest('a')?.getAttribute('href')).toBe(
       '/leads/lead-1'
@@ -79,7 +81,9 @@ describe('WaitingForReplySection', () => {
 
   it('links to the Waiting for reply list when more are waiting than the card lists', () => {
     render(<WaitingForReplySection now={NOW} total={7} leadTotal={5} people={[person({})]} />);
-    expect(screen.getByText('Waiting for reply (7)')).toBeTruthy();
+    expect(
+      within(screen.getByTestId('waiting-for-reply')).getByText('7 waiting for a reply')
+    ).toBeTruthy();
     expect(screen.getByText(/See leads waiting/).getAttribute('href')).toBe(
       '/leads?segment=waiting'
     );

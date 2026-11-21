@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-15T17:54:56.376Z",
+  "generated_at": "2026-11-21T14:32:10.855Z",
   "upstream_font_sha256": "b9a28e5c5328940ee287c3d7f6b626e32a9afa92f86b055295cdf6fd5d1c004b",
   "subsetter_version": "subset-font@^2.5.0",
   "variation_axes": {
@@ -54,6 +54,7 @@
     "business",
     "business_center",
     "cached",
+    "calculate",
     "calendar_month",
     "calendar_today",
     "call",
@@ -380,8 +381,8 @@
     "zoom_in",
     "zoom_out"
   ],
-  "icons_count": 370,
-  "scanned_files_count": 1420,
+  "icons_count": 371,
+  "scanned_files_count": 1469,
   "source_scan_patterns": [
     "apps/web/src",
     "packages/ui/src"

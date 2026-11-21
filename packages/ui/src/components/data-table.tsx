@@ -55,6 +55,8 @@ export interface DataTableProps<TData, TValue> {
   entity?: EmptyStateEntity;
   onRowClick?: (row: TData) => void;
   enableRowSelection?: boolean;
+  /** With row selection on: which rows get a checkbox (all when omitted). */
+  canSelectRow?: (row: TData) => boolean;
   bulkActions?: BulkAction<TData>[];
   hidePagination?: boolean;
   columnSizing?: Record<string, number>;
@@ -240,6 +242,59 @@ function BulkActionsBar<T>({
 // Selection Column Sub-Components (extracted to avoid S6478: inner component)
 // =============================================================================
 
+/**
+ * Phone layout (below `md`), shared by every DataTable (owner 21/11: fix it once in the shared
+ * component, never per table). Each row becomes a card like the Leads phone cards: the checkbox,
+ * the main column (the first one that is not the checkbox or the actions) and the actions on one
+ * line, every other column as a "Header ... value" line, and the actions last. CSS only, on the
+ * same table markup, so nothing renders twice and the DOM order is the reading order. The header
+ * row stays for screen readers (sr-only). Inline column widths are overridden with `!`.
+ */
+const PHONE_CELL = 'max-md:block max-md:w-auto! max-md:min-w-0! max-md:max-w-none! max-md:p-0';
+const PHONE_CELL_ROLE = {
+  select: 'max-md:pt-0.5 max-md:empty:hidden!',
+  primary: 'max-md:flex-1',
+  // Last in the DOM and last on the card (same reading and focus order), on the right.
+  actions: 'max-md:flex! max-md:basis-full max-md:justify-end max-md:pt-1',
+  // The label takes the free space, so a cell's parts stay together on the right.
+  detail:
+    'max-md:flex! max-md:basis-full max-md:items-center max-md:gap-3 max-md:text-sm max-md:[&>*]:min-w-0 max-md:[&>*]:max-w-full max-md:empty:hidden! max-md:before:mr-auto max-md:before:shrink-0 max-md:before:text-xs max-md:before:text-slate-500 max-md:before:content-[attr(data-label)] dark:max-md:before:text-slate-400',
+} as const;
+
+function phoneCellRole(
+  columnId: string,
+  primaryId: string | undefined
+): keyof typeof PHONE_CELL_ROLE {
+  if (columnId === 'select') return 'select';
+  if (columnId === 'actions') return 'actions';
+  return columnId === primaryId ? 'primary' : 'detail';
+}
+
+/** "N of M row(s) selected.", counting only rows that can be selected. */
+function SelectionCount<TData>({ table }: Readonly<{ table: ReactTable<TData> }>) {
+  const selected = table.getFilteredSelectedRowModel().rows.filter((r) => r.getCanSelect()).length;
+  const selectable = table.getFilteredRowModel().rows.filter((r) => r.getCanSelect()).length;
+  return (
+    <>
+      {selected} of {selectable} row(s) selected.
+    </>
+  );
+}
+
+/** Row selection on, off, or per row when `canSelectRow` is given. */
+function rowSelectionRule<TData>(
+  enabled: boolean | undefined,
+  canSelectRow: ((row: TData) => boolean) | undefined
+): boolean | ((row: Row<TData>) => boolean) {
+  if (!enabled) return false;
+  return canSelectRow ? (row) => canSelectRow(row.original) : true;
+}
+
+/** The phone card label of a column: its header when the header is plain text. */
+function headerLabel(header: unknown): string | undefined {
+  return typeof header === 'string' ? header : undefined;
+}
+
 function SelectAllHeader<TData>({ table }: Readonly<{ table: ReactTable<TData> }>) {
   return (
     <div className="px-1">
@@ -255,6 +310,8 @@ function SelectAllHeader<TData>({ table }: Readonly<{ table: ReactTable<TData> }
 }
 
 function SelectRowCell<TData>({ row }: Readonly<{ row: Row<TData> }>) {
+  // A row that cannot be selected gets no checkbox and no empty gutter.
+  if (!row.getCanSelect()) return null;
   return (
     <div
       className="px-1"
@@ -289,6 +346,7 @@ export function DataTable<TData, TValue>({
   entity,
   onRowClick,
   enableRowSelection,
+  canSelectRow,
   bulkActions,
   hidePagination,
   columnSizing,
@@ -325,7 +383,7 @@ export function DataTable<TData, TValue>({
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
-    enableRowSelection: enableRowSelection,
+    enableRowSelection: rowSelectionRule(enableRowSelection, canSelectRow),
     state: {
       sorting,
       columnFilters,
@@ -341,7 +399,11 @@ export function DataTable<TData, TValue>({
 
   // Get selected rows data
   const selectedRows = React.useMemo(() => {
-    return table.getSelectedRowModel().rows.map((row) => row.original);
+    // A selection made before the data changed can point at a row that is not selectable now.
+    return table
+      .getSelectedRowModel()
+      .rows.filter((row) => row.getCanSelect())
+      .map((row) => row.original);
   }, [table.getSelectedRowModel().rows]);
 
   const clearSelection = React.useCallback(() => {
@@ -349,6 +411,12 @@ export function DataTable<TData, TValue>({
   }, []);
 
   // Column width styles - reads from column definition size property
+  // The phone card's main line: the first visible column that is not the checkbox or the actions
+  // (TanStack ids, so `accessorKey: 'metadata.title'` is matched as `metadata_title`).
+  const primaryColumnId = table
+    .getVisibleLeafColumns()
+    .find((c) => c.id !== 'select' && c.id !== 'actions')?.id;
+
   const getColumnStyle = (
     columnId: string,
     columnDef?: ColumnDef<TData, TValue>
@@ -375,9 +443,9 @@ export function DataTable<TData, TValue>({
       ) : null}
 
       {/* Table */}
-      <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900">
-        <Table>
-          <TableHeader>
+      <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden bg-white dark:bg-slate-900 max-md:overflow-visible max-md:border-0 max-md:bg-transparent dark:max-md:bg-transparent">
+        <Table className="max-md:block max-md:w-full">
+          <TableHeader className="max-md:sr-only">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
@@ -402,7 +470,7 @@ export function DataTable<TData, TValue>({
               </TableRow>
             ))}
           </TableHeader>
-          <TableBody>
+          <TableBody className="max-md:flex max-md:flex-col max-md:gap-3">
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
@@ -421,7 +489,7 @@ export function DataTable<TData, TValue>({
                   }
                   tabIndex={onRowClick ? 0 : undefined}
                   role={onRowClick ? 'button' : undefined}
-                  className={`bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 ${onRowClick ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset' : ''}`}
+                  className={`bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 max-md:flex max-md:flex-wrap max-md:items-start max-md:gap-x-3 max-md:gap-y-1.5 max-md:rounded-lg max-md:border! max-md:border-slate-200 max-md:p-4 dark:max-md:border-slate-700 ${onRowClick ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset' : ''}`}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell
@@ -430,6 +498,8 @@ export function DataTable<TData, TValue>({
                         cell.column.id,
                         cell.column.columnDef as ColumnDef<TData, TValue> // NOSONAR
                       )}
+                      className={`${PHONE_CELL} ${PHONE_CELL_ROLE[phoneCellRole(cell.column.id, primaryColumnId)]}`}
+                      data-label={headerLabel(cell.column.columnDef.header)}
                     >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
@@ -437,8 +507,8 @@ export function DataTable<TData, TValue>({
                 </TableRow>
               ))
             ) : (
-              <TableRow className="bg-white dark:bg-slate-900 hover:bg-white">
-                <TableCell colSpan={allColumns.length} className="h-48">
+              <TableRow className="bg-white dark:bg-slate-900 hover:bg-white max-md:block max-md:rounded-lg max-md:border! max-md:border-slate-200 dark:max-md:border-slate-700">
+                <TableCell colSpan={allColumns.length} className="h-48 max-md:block max-md:h-auto">
                   {entity ? (
                     <EmptyState
                       entity={entity}
@@ -464,12 +534,7 @@ export function DataTable<TData, TValue>({
       {!hidePagination && (
         <div className="flex items-center justify-between py-2">
           <div className="text-sm text-muted-foreground">
-            {enableRowSelection ? (
-              <>
-                {table.getFilteredSelectedRowModel().rows.length} of{' '}
-                {table.getFilteredRowModel().rows.length} row(s) selected.
-              </>
-            ) : null}
+            {enableRowSelection ? <SelectionCount table={table} /> : null}
           </div>
           <div className="flex items-center space-x-2">
             <Button

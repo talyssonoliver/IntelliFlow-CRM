@@ -15,6 +15,7 @@
  * - Empty state
  */
 
+import { KpiCard } from '@/components/dashboard/KpiCard';
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { ColumnDef } from '@tanstack/react-table';
 import {
@@ -635,7 +636,7 @@ export function TicketList({
           type="button"
           className={cn(
             'rounded-lg border bg-card text-card-foreground shadow-sm',
-            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md text-left',
+            'border-border cursor-pointer transition-all duration-200 hover:shadow-md text-left',
             statusFilter === 'OPEN'
               ? 'bg-primary/5 border-primary ring-1 ring-primary/30'
               : 'hover:bg-accent/50'
@@ -644,23 +645,19 @@ export function TicketList({
           aria-pressed={statusFilter === 'OPEN'}
           aria-label={`Filter by Open tickets: ${stats.open}`}
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-xl text-primary">
-                confirmation_number
-              </span>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Open</p>
-              <p className="text-2xl font-bold text-foreground">{stats.open}</p>
-            </div>
-          </div>
+          {/* The shared KPI card (owner 21/11: one card everywhere, row layout on phones). */}
+          <KpiCard
+            label="Open"
+            icon="confirmation_number"
+            iconClassName="bg-primary/10 text-primary"
+            value={stats.open}
+          />
         </button>
         <button
           type="button"
           className={cn(
             'rounded-lg border bg-card text-card-foreground shadow-sm',
-            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md text-left',
+            'border-border cursor-pointer transition-all duration-200 hover:shadow-md text-left',
             statusFilter === 'IN_PROGRESS'
               ? 'bg-amber-500/5 border-amber-500 ring-1 ring-amber-500/30'
               : 'hover:bg-accent/50'
@@ -669,21 +666,19 @@ export function TicketList({
           aria-pressed={statusFilter === 'IN_PROGRESS'}
           aria-label={`Filter by In Progress tickets: ${stats.inProgress}`}
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-xl text-amber-500">pending</span>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">In Progress</p>
-              <p className="text-2xl font-bold text-foreground">{stats.inProgress}</p>
-            </div>
-          </div>
+          {/* The shared KPI card (owner 21/11: one card everywhere, row layout on phones). */}
+          <KpiCard
+            label="In Progress"
+            icon="pending"
+            iconClassName="bg-amber-500/10 text-amber-500"
+            value={stats.inProgress}
+          />
         </button>
         <button
           type="button"
           className={cn(
             'rounded-lg border bg-card text-card-foreground shadow-sm',
-            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md text-left',
+            'border-border cursor-pointer transition-all duration-200 hover:shadow-md text-left',
             slaFilter === 'BREACHED'
               ? 'bg-red-500/5 border-red-500 ring-1 ring-red-500/30'
               : 'hover:bg-accent/50'
@@ -692,21 +687,19 @@ export function TicketList({
           aria-pressed={slaFilter === 'BREACHED'}
           aria-label={`Filter by SLA Breached tickets: ${stats.breached}`}
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-xl text-red-500">timer_off</span>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">SLA Breached</p>
-              <p className="text-2xl font-bold text-destructive">{stats.breached}</p>
-            </div>
-          </div>
+          {/* The shared KPI card (owner 21/11: one card everywhere, row layout on phones). */}
+          <KpiCard
+            label="SLA Breached"
+            icon="timer_off"
+            iconClassName="bg-red-500/10 text-red-500"
+            value={<span className="text-destructive">{stats.breached}</span>}
+          />
         </button>
         <button
           type="button"
           className={cn(
             'rounded-lg border bg-card text-card-foreground shadow-sm',
-            'p-4 border-border cursor-pointer transition-all duration-200 hover:shadow-md text-left',
+            'border-border cursor-pointer transition-all duration-200 hover:shadow-md text-left',
             statusFilter === 'RESOLVED'
               ? 'bg-green-500/5 border-green-500 ring-1 ring-green-500/30'
               : 'hover:bg-accent/50'
@@ -715,15 +708,13 @@ export function TicketList({
           aria-pressed={statusFilter === 'RESOLVED'}
           aria-label={`Filter by Resolved tickets: ${stats.resolvedToday}`}
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-              <span className="material-symbols-outlined text-xl text-green-500">check_circle</span>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Resolved Today</p>
-              <p className="text-2xl font-bold text-foreground">{stats.resolvedToday}</p>
-            </div>
-          </div>
+          {/* The shared KPI card (owner 21/11: one card everywhere, row layout on phones). */}
+          <KpiCard
+            label="Resolved Today"
+            icon="check_circle"
+            iconClassName="bg-green-500/10 text-green-500"
+            value={stats.resolvedToday}
+          />
         </button>
       </div>
 

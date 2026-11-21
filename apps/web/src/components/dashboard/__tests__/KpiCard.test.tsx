@@ -103,3 +103,14 @@ describe('KpiTrendBadge', () => {
     expect(screen.getByText('>999%')).toBeInTheDocument();
   });
 });
+
+describe('KpiCard framed (owner 21/11: one KPI card on every page)', () => {
+  it('draws its own frame outside the dashboard grid, and none by default', () => {
+    const { container, rerender } = render(
+      <KpiCard label="Total Accounts" icon="domain" value="1" framed />
+    );
+    expect(container.firstElementChild).toHaveClass('rounded-lg', 'border', 'bg-card');
+    rerender(<KpiCard label="Total Accounts" icon="domain" value="1" />);
+    expect(container.firstElementChild).not.toHaveClass('border');
+  });
+});

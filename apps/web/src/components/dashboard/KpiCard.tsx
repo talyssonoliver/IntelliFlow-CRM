@@ -34,6 +34,11 @@ export interface KpiCardProps {
   /** Under the number (a comparison line, a progress bar, a warning). */
   footer?: React.ReactNode;
   variant?: 'default' | 'compact';
+  /**
+   * Draw the card's own border and background, for a page that lists KPIs outside the dashboard
+   * grid (whose widget box already frames the card). Owner 21/11: one KPI card everywhere.
+   */
+  framed?: boolean;
 }
 
 export function KpiCard({
@@ -46,7 +51,9 @@ export function KpiCard({
   badge: badgeProp,
   footer: footerProp,
   variant = 'default',
+  framed = false,
 }: Readonly<KpiCardProps>) {
+  const frame = framed ? ' rounded-lg border border-border bg-card' : '';
   const badge = failed ? undefined : badgeProp;
   const footer = failed ? undefined : footerProp;
   const figure = failed ? (
@@ -69,7 +76,7 @@ export function KpiCard({
 
   if (variant === 'compact') {
     return (
-      <div className="p-4 sm:p-5 flex flex-col justify-between gap-3 h-full min-w-0">
+      <div className={`p-4 sm:p-5 flex flex-col justify-between gap-3 h-full min-w-0${frame}`}>
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div
             className={`size-8 shrink-0 rounded-full flex items-center justify-center ${iconClassName}`}
@@ -97,7 +104,7 @@ export function KpiCard({
   // so "£125,000" still fits; its 32px line keeps the icon at 50px.
   // From `sm` up the card is unchanged.
   return (
-    <div className="@container h-full min-w-0">
+    <div className={`@container h-full min-w-0${frame}`}>
       <div className="p-4 sm:p-6 h-full flex flex-col min-w-0 max-sm:@min-[10.5rem]:p-2.5">
         <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-x-2 max-sm:@min-[10.5rem]:grid-cols-[auto_minmax(0,1fr)]">
           <div
