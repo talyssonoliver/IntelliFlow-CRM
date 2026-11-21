@@ -153,6 +153,38 @@ describe('lead.logActivity occurredAt', () => {
     expect(captured.activity).not.toHaveProperty('metadata');
   });
 
+  it('writes no machine id into the title or description (register row 42)', async () => {
+    prismaMock.lead.findUnique.mockResolvedValue(mockLead as any);
+    const captured = captureTransaction();
+    const id = 'c' + 'mw5j72u40001p5ug01kf3vot';
+
+    await leadRouter.createCaller(createTestContext()).logActivity({
+      leadId: TEST_UUIDS.lead1,
+      type: 'EMAIL',
+      title: `Price follow-up sent. COA ledger row ${id}.`,
+      description: `Reply in their thread. COA ledger row ${id}.`,
+    });
+
+    expect(captured.activity.title).toBe('Price follow-up sent.');
+    expect(captured.activity.description).toBe('Reply in their thread.');
+    expect(JSON.stringify(captured.activity)).not.toContain(id);
+  });
+
+  it('gives a title that is nothing but an id a neutral one, never the id', async () => {
+    prismaMock.lead.findUnique.mockResolvedValue(mockLead as any);
+    const captured = captureTransaction();
+    const id = 'c' + 'mw5j72u40001p5ug01kf3vot';
+
+    await leadRouter.createCaller(createTestContext()).logActivity({
+      leadId: TEST_UUIDS.lead1,
+      type: 'NOTE',
+      title: id,
+    });
+
+    expect(captured.activity.title).toBe('Activity');
+    expect(JSON.stringify(captured.activity)).not.toContain(id);
+  });
+
   it('rejects an unknown direction', async () => {
     prismaMock.lead.findUnique.mockResolvedValue(mockLead as any);
     captureTransaction();

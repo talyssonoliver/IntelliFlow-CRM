@@ -7,6 +7,7 @@
  * PG-059 `lib/leads/*` extraction convention.
  */
 
+import { hasMachineId } from '@intelliflow/validators';
 import { formatGBPCompact } from '@/lib/format/gbp-compact';
 
 // Activity types matching the database enum (UI-facing variant).
@@ -186,15 +187,28 @@ export function formatEstimatedValue(cents: number): string {
   return formatGBPCompact(cents / 100);
 }
 
+/** Activity text without machine ids (register row 42); the one implementation lives in validators. */
+export { cleanActivityText, stripMachineIds } from '@intelliflow/validators';
+
+/** The tags the sync writes with a fixed name. */
+const SYSTEM_TAGS: ReadonlySet<string> = new Set([
+  'coa-pipeline',
+  'coa-won',
+  'coa-qualified',
+  'portal-discover',
+]);
+
 /**
- * Tags the COA pipeline sync writes for its own bookkeeping
- * (`apps/api/src/modules/inbound/inbound.router.ts`): `coa-pipeline`, `coa-lead:<id>` and
- * `coa-qualified`. They stay on the lead (the sync matches on them) but are not the user's tags, so
- * they are hidden wherever tags are shown (UI-017, #42). Only these: a tag a person names `coa-...`
- * themselves stays visible.
+ * Tags the COA pipeline sync and the portal import write for their own bookkeeping
+ * (`apps/api/src/modules/inbound/inbound.router.ts`): `coa-pipeline`, `coa-won`,
+ * `coa-qualified`, `portal-discover`, `coa-lead:<id>`, and a bare id. They stay on the lead
+ * (the sync matches on them) but are not the user's tags, so they are hidden wherever tags
+ * are shown (UI-017, register row 42).
  */
 export function isSystemTag(tag: string): boolean {
-  return tag === 'coa-pipeline' || tag === 'coa-qualified' || tag.startsWith('coa-lead:');
+  return (
+    SYSTEM_TAGS.has(tag) || tag.startsWith('coa-lead:') || (tag.length === 25 && hasMachineId(tag))
+  );
 }
 
 /**
