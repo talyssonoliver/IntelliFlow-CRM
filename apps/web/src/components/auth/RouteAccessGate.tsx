@@ -5,8 +5,11 @@ import { usePathname, useSelectedLayoutSegments } from 'next/navigation';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { isProtectedAppRoute } from '@/lib/auth/route-protection';
 
-/** Next's segment for the 404 route (next/dist/shared/lib/segment NOT_FOUND_SEGMENT_KEY). */
-const NOT_FOUND_SEGMENT = '/_not-found';
+/**
+ * The 404 route's segment. Measured in the production build (21/11): the root layout sees
+ * '_not-found'; Next's internal key is '/_not-found', accepted too in case a version reports it.
+ */
+const NOT_FOUND_SEGMENTS: ReadonlySet<string> = new Set(['_not-found', '/_not-found']);
 
 export function RouteAccessGate({ children }: Readonly<{ children: ReactNode }>) {
   const pathname = usePathname() ?? '/';
@@ -14,7 +17,7 @@ export function RouteAccessGate({ children }: Readonly<{ children: ReactNode }>)
   // '/_not-found' (unprotected). Gating it by the address bar (/settings/typo) rendered the auth
   // placeholder in the browser instead, a hydration mismatch (React #418). Judge the 404 by the
   // route actually rendered.
-  const renderingNotFound = useSelectedLayoutSegments()[0] === NOT_FOUND_SEGMENT;
+  const renderingNotFound = NOT_FOUND_SEGMENTS.has(useSelectedLayoutSegments()[0] ?? '');
   if (renderingNotFound || !isProtectedAppRoute(pathname)) {
     return <>{children}</>;
   }

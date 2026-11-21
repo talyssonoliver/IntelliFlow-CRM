@@ -59,7 +59,8 @@ describe('RouteAccessGate', () => {
     // Production pre-renders one 404 under '/_not-found' (not protected); a mistyped
     // /settings/... address must render that same page in the browser, not the auth placeholder.
     mockUsePathname.mockReturnValue('/settings/no-such-page');
-    mockSegments.mockReturnValue(['/_not-found']);
+    // '_not-found' is what the root layout sees in the production build (measured 21/11).
+    mockSegments.mockReturnValue(['_not-found']);
     mockUseRequireAuth.mockReturnValue({ isLoading: true, isAuthenticated: false });
 
     render(
