@@ -37,9 +37,10 @@ export function WidgetHeader({
         )}
         {title}
       </h3>
-      {actions && (
+      {/* Ternary, not &&: a numeric 0 passed as actions must not print "0". */}
+      {actions ? (
         <div className="ml-auto flex shrink-0 items-center gap-1 whitespace-nowrap">{actions}</div>
-      )}
+      ) : null}
     </div>
   );
 }

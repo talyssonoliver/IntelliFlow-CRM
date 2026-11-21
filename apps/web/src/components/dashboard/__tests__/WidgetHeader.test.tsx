@@ -32,8 +32,13 @@ describe('WidgetHeader (owner 21/11: one header for every dashboard card)', () =
     expect(screen.getByTestId('widget-header')).toHaveClass('mb-4');
   });
 
-  it('draws no actions group when there are none', () => {
-    render(<WidgetHeader title="Deals Won" />);
-    expect(screen.getByTestId('widget-header').children).toHaveLength(1);
+  it('draws no actions group when there are none, false or 0', () => {
+    for (const actions of [undefined, false, 0]) {
+      const { unmount } = render(<WidgetHeader title="Deals Won" actions={actions} />);
+      const header = screen.getByTestId('widget-header');
+      expect(header.children).toHaveLength(1);
+      expect(header).not.toHaveTextContent('0');
+      unmount();
+    }
   });
 });

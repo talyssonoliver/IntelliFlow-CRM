@@ -108,7 +108,8 @@ export function KpiCard({
   // - under 9rem (two per row on a 320px phone): stacked, so the label is not cut;
   // - 9-11rem (360-389px phones): 46px icon = 16px label + 2px gap + 28px number line;
   // - 11-14rem (390-440px phones, squeezed desktop): 50px icon = 16 + 2 + 32;
-  // - 14rem and up (desktop): 56px icon = 20 + 4 + 32, at least 112px tall.
+  // - 13rem and up (desktop from 1024px): at least 112px tall, so every desktop card matches;
+  // - 14rem and up: 56px icon = 20 + 4 + 32.
   return (
     <div className={`@container h-full min-w-0${frame}`}>
       <div className="h-full flex flex-col justify-center min-w-0 p-3 @min-[13rem]:min-h-28 @min-[14rem]:p-5">
