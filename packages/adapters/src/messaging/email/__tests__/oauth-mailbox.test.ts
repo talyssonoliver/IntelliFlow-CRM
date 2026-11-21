@@ -277,6 +277,23 @@ describe('accountAddress', () => {
   });
 });
 
+describe('accountSubject', () => {
+  it('reads Google’s immutable account id from userinfo', async () => {
+    fetchMock.mockReturnValueOnce(respond(200, { sub: '1000000000000000001' }));
+    await expect(new OAuthMailboxClient('GMAIL', config).accountSubject('at')).resolves.toBe(
+      '1000000000000000001'
+    );
+    expect(hostOf(calls()[0]![0])).toBe('openidconnect.googleapis.com');
+  });
+
+  it('has none for Microsoft, and makes no request', async () => {
+    await expect(
+      new OAuthMailboxClient('MICROSOFT', config).accountSubject('at')
+    ).resolves.toBeNull();
+    expect(calls()).toHaveLength(0);
+  });
+});
+
 describe('sendRaw', () => {
   it('sends Gmail raw MIME as base64url and returns the message id', async () => {
     fetchMock.mockReturnValueOnce(respond(200, { id: 'gm1', threadId: 't1' }));

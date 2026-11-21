@@ -57,6 +57,8 @@ export interface CalendarSyncDeps {
 interface SyncMailbox extends TransportMailbox {
   userId: string | null;
   accountAddress: string | null;
+  /** A Gmail mailbox: Google's immutable account id, when it was captured at connect. */
+  oauthAccountId?: string | null;
   scope: string;
   status: string;
   grantedScopes: string[];
@@ -129,6 +131,19 @@ function tokensFor(access: string, scopes: string[], now: Date): OAuthTokens {
   };
 }
 
+/**
+ * Which Google account a round runs for: Google's immutable id when the connect captured it (a renamed
+ * address is the same account, so its links stay), otherwise the address.
+ */
+export function accountKey(mailbox: {
+  oauthAccountId?: string | null;
+  accountAddress: string | null;
+}): string {
+  return mailbox.oauthAccountId
+    ? `sub:${mailbox.oauthAccountId}`
+    : (mailbox.accountAddress ?? '').toLowerCase();
+}
+
 function roundContext(
   deps: CalendarSyncDeps,
   mailbox: SyncMailbox,
@@ -146,7 +161,7 @@ function roundContext(
       id: mailbox.id,
       tenantId: mailbox.tenantId,
       userId: mailbox.userId as string,
-      account: (mailbox.accountAddress ?? '').toLowerCase(),
+      account: accountKey(mailbox),
     },
     now,
     hasTime: () => deps.now().getTime() < deadline,

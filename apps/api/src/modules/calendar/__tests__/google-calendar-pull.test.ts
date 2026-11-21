@@ -804,6 +804,25 @@ describe('a reconnect (MVP-013)', () => {
     expect(h.links()).toHaveLength(2);
   });
 
+  it('keeps the same account when only its address is renamed (Google’s id is the same)', async () => {
+    const sync = h.setup();
+    Object.assign(h.mailbox(), {
+      accountAddress: 'old@studio.example.invalid',
+      oauthAccountId: '1000000000000000001',
+    });
+    h.google.put('ev-1', { title: 'Lunch' });
+    await runCalendarSync(sync);
+    const links = h.links().map((l) => l.id);
+
+    h.mailbox().accountAddress = 'renamed@studio.example.invalid';
+    await h.nextRound(sync);
+    await h.nextRound(sync);
+
+    expect(h.appointments()).toHaveLength(1);
+    expect(h.links().map((l) => l.id)).toEqual(links);
+    expect(h.links()[0].googleAccount).toBe('sub:1000000000000000001');
+  });
+
   it('saves the new account before reading, so a failed round does not clear the links again', async () => {
     const sync = h.setup();
     h.google.put('ev-1');

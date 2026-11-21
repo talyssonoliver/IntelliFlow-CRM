@@ -313,6 +313,22 @@ export class OAuthMailboxClient {
     return address.trim().toLowerCase();
   }
 
+  /**
+   * Google's immutable account id (the OpenID `sub`): unlike the address, it does not change when the
+   * user renames the account. Null for providers that have no such id here.
+   */
+  async accountSubject(accessToken: string): Promise<string | null> {
+    if (this.provider !== 'GMAIL') return null;
+    const response = await call(GOOGLE_USERINFO, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (!response.ok) throw httpError(response.status);
+    const data = await json<{ sub?: string }>(response);
+    return typeof data.sub === 'string' && data.sub.length > 0 && data.sub.length <= 64
+      ? data.sub
+      : null;
+  }
+
   async sendRaw(accessToken: string, raw: Buffer): Promise<{ providerMessageId: string | null }> {
     if (this.provider === 'GMAIL') {
       const response = await call(`${GMAIL_API}/messages/send`, {
