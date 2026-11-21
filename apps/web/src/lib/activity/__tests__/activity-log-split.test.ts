@@ -45,6 +45,18 @@ describe('isSystemFeedEntry', () => {
     );
   });
 
+  it('keeps a ticket reply he wrote in My activity, now that ticket entries carry the author id (MVP-012)', () => {
+    const entries = [
+      { ...entry('1', 'SYSTEM', me), source: 'TICKET_ACTIVITY' },
+      { ...entry('2', 'SYSTEM', other), source: 'TICKET_ACTIVITY' },
+      { ...entry('3', 'SYSTEM', { id: null, name: me.name }), source: 'TICKET_ACTIVITY' },
+    ];
+
+    const { personal } = splitActivityLog(entries, { fold: true, mine: true, userId: 'user-1' });
+
+    expect(personal.map((e) => e.id)).toEqual(['1']);
+  });
+
   it('matches My activity on the author email when the entry has no author id, never on a name', () => {
     const entries = [
       entry('1', 'NOTE', { id: null, name: ' Talysson@Example.invalid ' }),

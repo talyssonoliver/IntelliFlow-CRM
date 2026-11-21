@@ -41,9 +41,7 @@ export interface CreateTicketInput {
 export class TicketService {
   constructor(private readonly prisma: PrismaClient) {}
 
-  /**
-   * Map user role to a human-friendly assignee title.
-   */
+  /** Map user role to a human-friendly assignee title. */
   private getAssigneeTitle(role?: string | null): string {
     switch (role) {
       case 'ADMIN':
@@ -58,9 +56,7 @@ export class TicketService {
     }
   }
 
-  /**
-   * Batch-load assignee profiles for tickets.
-   */
+  /** Batch-load assignee profiles for tickets. */
   private async getAssigneeProfiles(assigneeIds: string[]): Promise<
     Map<
       string,
@@ -97,9 +93,7 @@ export class TicketService {
     );
   }
 
-  /**
-   * Attach assignee display metadata to a ticket payload.
-   */
+  /** Attach assignee display metadata to a ticket payload. */
   private withAssigneeMetadata<T extends { assigneeId: string | null }>(
     ticket: T,
     profiles: Map<string, { name: string | null; title: string; avatar: string | null }>
@@ -117,9 +111,7 @@ export class TicketService {
     };
   }
 
-  /**
-   * Calculate SLA status for a ticket
-   */
+  /** Calculate SLA status for a ticket */
   calculateSLAStatus(ticket: Ticket): SLAStatus {
     const now = new Date();
     const hasSLADue = Boolean(ticket.slaResponseDue || ticket.slaResolutionDue);
@@ -161,9 +153,7 @@ export class TicketService {
     return 'ON_TRACK';
   }
 
-  /**
-   * Find tickets with filters and pagination
-   */
+  /** Find tickets with filters and pagination */
   async findMany(params: {
     status?: TicketStatus;
     priority?: TicketPriority;
@@ -905,7 +895,13 @@ export class TicketService {
   /**
    * Add a response to a ticket
    */
-  async addResponse(ticketId: string, content: string, authorName: string, authorRole: string) {
+  async addResponse(
+    ticketId: string,
+    content: string,
+    authorName: string,
+    authorRole: string,
+    authorId: string | null = null
+  ) {
     const ticket = await this.prisma.ticket.findUnique({
       where: { id: ticketId },
     });
@@ -922,6 +918,7 @@ export class TicketService {
         type: 'AGENT_REPLY',
         content,
         authorName,
+        authorId,
         authorRole,
         channel: 'PORTAL',
       },

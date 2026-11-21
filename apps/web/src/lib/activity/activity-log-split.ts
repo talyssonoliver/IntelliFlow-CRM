@@ -34,7 +34,7 @@ export interface FeedEntryLike {
 /**
  * True for an entry the system wrote:
  * - a "System (...)" author;
- * - a ticket entry never counts otherwise: ticket entries carry no author id, and a human reply
+ * - a ticket entry never counts otherwise: ticket entries from before MVP-012 carry no author id, and a human reply
  *   to a ticket is typed SYSTEM;
  * - a score update or system event;
  * - a status change with no person behind it. A status change a person made (converting a lead, a
@@ -64,8 +64,8 @@ export interface ActivityLogOptions {
   /**
    * The signed-in person's email. Lead activity written through logActivity carries the author's
    * email and no id: those entries match on it, ignoring case. A display name is not used: it is
-   * not unique, so a namesake's entries would pass as his. (Ticket entries carry only a display
-   * name, so they stay out of My activity until the API records the author's id.)
+   * not unique, so a namesake's entries would pass as his. (Ticket entries carry the author's id
+   * since MVP-012; those written before it carry none, so they stay out of My activity.)
    */
   userEmail?: string | null;
 }

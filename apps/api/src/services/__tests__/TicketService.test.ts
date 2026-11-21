@@ -1576,6 +1576,28 @@ describe('TicketService', () => {
       );
     });
 
+    it('stores the id of the user who wrote the reply (MVP-012)', async () => {
+      mockPrisma.ticket.findUnique.mockResolvedValue(createMockTicket());
+      mockPrisma.ticketActivity.create.mockResolvedValue({});
+
+      await service.addResponse('ticket-1', 'Reply', 'Agent Name', 'Support', 'user-9');
+
+      expect(mockPrisma.ticketActivity.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ authorId: 'user-9' }) })
+      );
+    });
+
+    it('stores no author id when none is given', async () => {
+      mockPrisma.ticket.findUnique.mockResolvedValue(createMockTicket());
+      mockPrisma.ticketActivity.create.mockResolvedValue({});
+
+      await service.addResponse('ticket-1', 'Reply', 'Agent Name', 'Support');
+
+      expect(mockPrisma.ticketActivity.create).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ authorId: null }) })
+      );
+    });
+
     it('should throw error if ticket not found', async () => {
       mockPrisma.ticket.findUnique.mockResolvedValue(null);
 
