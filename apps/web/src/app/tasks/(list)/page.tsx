@@ -437,7 +437,7 @@ export default function TasksPage() {
         <p className="text-sm text-muted-foreground">
           Showing {followUpsDue.leads.length} of {followUpsDue.total} follow-ups due.{' '}
           <Link href="/leads?segment=followup" className="text-ds-primary hover:underline">
-            See all leads needing a follow-up
+            See all leads needing a <span className="whitespace-nowrap">follow-up</span>
           </Link>
         </p>
       )}

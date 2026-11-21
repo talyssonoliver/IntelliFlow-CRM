@@ -80,7 +80,7 @@ export function FollowUpsDueSection({
       footer={
         more > 0 ? (
           <CardListMore href="/leads?segment=followup">
-            See all leads needing a follow-up
+            See all leads needing a <span className="whitespace-nowrap">follow-up</span>
           </CardListMore>
         ) : null
       }
