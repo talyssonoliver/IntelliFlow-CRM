@@ -25,7 +25,7 @@ import { SearchFilterBar, type FilterOption } from '@/components/shared';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { revalidateDealCaches } from '@/app/deals/actions';
-import { type Deal, PIPELINE_STAGE_CONFIG, formatCurrencyFull, transformDeals } from './types';
+import { type Deal, PIPELINE_STAGE_CONFIG, formatDealValue, transformDeals } from './types';
 import { DealAvatar, ProbabilityBar, StageBadge, formatDate } from './DealBadges';
 import { DealPhoneCards, usePhoneLayout } from './DealPhoneCards';
 
@@ -177,7 +177,7 @@ function createColumns(
       size: 120,
       cell: ({ row }) => (
         <span className="text-sm font-semibold text-foreground tabular-nums">
-          {formatCurrencyFull(row.original.value)}
+          {formatDealValue(row.original.value)}
         </span>
       ),
     },

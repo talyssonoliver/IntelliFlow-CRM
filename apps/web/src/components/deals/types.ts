@@ -70,6 +70,15 @@ export function formatCurrencyFull(value: number): string {
   }).format(value);
 }
 
+/**
+ * A deal's value for cards and lists: "No value set" while it is unknown (null, undefined or 0),
+ * so a deal converted from a lead without a value does not read as a £0 deal (register #48).
+ */
+export const NO_DEAL_VALUE_LABEL = 'No value set';
+export function formatDealValue(value: number | null | undefined): string {
+  return value ? formatCurrencyFull(value) : NO_DEAL_VALUE_LABEL;
+}
+
 /** Compact pounds (e.g., £125k, £1.2M): the shared GBP formatter. */
 export const formatCurrencyCompact = formatGBPCompact;
 

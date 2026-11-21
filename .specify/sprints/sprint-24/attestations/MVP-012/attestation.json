@@ -1,0 +1,112 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "MVP-012",
+  "run_id": "plan-mvp012-014-evidence-2026-11-21",
+  "attestor": "Claude Code (claude-sonnet-5-5), ifc-074 lane (plan evidence for Aurora)",
+  "attestation_timestamp": "2026-11-21T16:45:00Z",
+  "verdict": "PARTIAL",
+  "context_acknowledgment": {
+    "files_read": [],
+    "invariants_acknowledged": [
+      "Shipped and merged: #1452 (a reply draft may belong to a lead; migration, Class A), #1454 (list drafts by contact with a nullable contact id), #1456 (Send, Edit or Dismiss a drafted reply; ADR-037, nothing is sent without the click), #1466 (the draft waits on the lead's Emails tab; a sent reply is linked to the record), #1470 (Aurora drafts a reply when an enquiry lands on a lead or contact; Claude Haiku within the monthly cap, drafting on by default). All five are contained in production commit 57f74af53 (api and worker deployed 21/11/2026 07:26).",
+      "The production capture was taken signed in as the owner, in the Leangency workspace, on 19/11/2026 about 23:14, after #1470 merged (21:47). It shows the lead Talysson Oliveira, created from a test enquiry (subject 'Test enquiry: leaking tap, Ealing W5 (Aurora check)'), with 'Replies drafted by Aurora', 'Reply drafted by Aurora: waiting for you', the drafted text built from that enquiry, and the buttons Send, Edit and Dismiss. The Emails tab shows 1 email (the enquiry), so nothing had been sent. It was viewed at full size on desktop and phone width.",
+      "The captures are not committed because this repository is public (they show the owner and his data). They are held privately; their SHA-256 hashes are recorded in artifact_hashes.",
+      "NOT shown by any capture: clicking Send and the sent reply appearing on the lead's record; Edit opening Compose; a second enquiry drafting on its own. Those rest on the merged PRs' tests only. This lane did not take new production captures and did not send mail from the owner's mailbox (a send is an external effect, and the free-plan budget rule forbids walking production unprompted)."
+    ],
+    "acknowledged_at": "2026-11-21T16:45:00Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 2,
+    "kpis_met": 1,
+    "kpis_missed": 4
+  },
+  "artifact_hashes": {
+    "ops/reviews/e2e-enquiry-1119/_leads_81c57bcb_0ed7_42d6_a227_06ca8ce8cfb8-desk.png": "sha256:3460958b934d73601cf608c0759cde25a6a568f2c3fb5fa1454808a93d00546d",
+    "ops/reviews/e2e-enquiry-1119/_leads_81c57bcb_0ed7_42d6_a227_06ca8ce8cfb8-phone.png": "sha256:c9acb7c08c8b1af13fb590c260d1d8ffd139f40c7a1df8a1cf03e4451e8a375a"
+  },
+  "manual_verification": {
+    "performed_by": "Claude Code (claude-sonnet-5-5), ifc-074 lane, for Aurora (the capture was taken as the owner)",
+    "performed_at": "2026-11-21T16:45:00Z",
+    "review_notes": "Both cited images were viewed at full size before citing. The desktop capture shows the draft's Send, Edit and Dismiss; the phone capture shows the Emails tab with the draft header and subject, cut off by the page scroll before the buttons. Whether the draft was queued by the mail sync rather than asked for by hand comes from #1470, not from the capture.",
+    "items_checked": [
+      "A reply Aurora drafted waits on the lead as 'Reply drafted by Aurora: waiting for you' with Send, Edit and Dismiss (desktop capture, production).",
+      "The draft is built from the real enquiry: it answers the leaking tap and the sticking door in Ealing W5 and asks for times and a photo (desktop capture).",
+      "Nothing was sent: the lead's Emails count is 1 and its Activity count is 1 (desktop capture)."
+    ]
+  },
+  "validation_results": [
+    {
+      "name": "Production lead page with a waiting draft, desktop and phone, signed in as the owner",
+      "command": "headless check of /leads/81c57bcb-0ed7-42d6-a227-06ca8ce8cfb8 on production (19/11/2026 23:14)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-19T23:14:00Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "merged-pr-evidence",
+      "passed": true
+    },
+    {
+      "gate_id": "owner-screenshot-of-send",
+      "passed": false
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "0 replies sent without a click",
+      "target": "0",
+      "actual": "0 on the one production enquiry captured (draft waiting, Emails count 1); the job hard-codes DRAFT (#1456, #1470 tests)",
+      "met": true
+    },
+    {
+      "kpi": "A drafted reply sent in one click",
+      "target": "one click",
+      "actual": "not shown on production: no capture of a send",
+      "met": false
+    },
+    {
+      "kpi": "Draft created automatically on each new enquiry",
+      "target": "each enquiry",
+      "actual": "1 enquiry observed on production (19/11/2026 23:14), one sample",
+      "met": false
+    },
+    {
+      "kpi": "Sent reply saved on the lead record",
+      "target": "saved",
+      "actual": "not shown on production; #1466 links a sent reply to the lead's Emails tab in tests",
+      "met": false
+    },
+    {
+      "kpi": "0 placeholder drafts stored",
+      "target": "0",
+      "actual": "the one draft seen is real text from the enquiry; the stored drafts were not counted",
+      "met": false
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "A reply is drafted for an enquiry and shown on the lead with Send, Edit and Dismiss, on production",
+      "met": true
+    },
+    {
+      "criterion": "It is never sent without the owner's click (ADR-037)",
+      "met": true
+    },
+    {
+      "criterion": "The draft is built from the real mail thread; no placeholder draft is stored",
+      "met": true
+    },
+    {
+      "criterion": "The owner sends the draft from his mailbox on production and the sent reply is saved on the customer's record, proven with a screenshot",
+      "met": false
+    },
+    {
+      "criterion": "The owner edits the draft in Compose on production",
+      "met": false
+    }
+  ],
+  "notes": "Shipped and deployed, but not closed: the row's own proof (a send from the owner's mailbox, with the sent reply on the record, and a screenshot) is not in the evidence. To close it: on the production draft above (or the next real enquiry) click Send, then capture the lead's Emails tab and timeline showing the sent reply, and attach it here. Then set the row Completed with percent 100 and point evidence_required at this file, as #1445 did for the closed rows."
+}

@@ -361,7 +361,9 @@ describe('PipelineBoard', () => {
 
     // When pendingDealId matches, DealCard should get isPending=true
     // cn() mock concatenates — check for animate-pulse class on the deal card
-    const dealCard = container.querySelector('[aria-label="View deal: Pending Deal"]');
+    const dealCard = container
+      .querySelector('[aria-label="View deal: Pending Deal"]')
+      ?.closest('.relative');
     expect(dealCard?.className).toContain('animate-pulse');
   });
 
