@@ -18,6 +18,7 @@ import {
 import { ChartUnavailable } from '@/components/shared/ChartEmptyState';
 import { NO_DEAL_VALUE_LABEL } from '@/components/deals/types';
 import type { WidgetProps } from './index';
+import { WidgetHeader } from '../WidgetHeader';
 
 const STAGE_COLORS: Record<string, string> = {
   QUALIFICATION: 'bg-stage-qualification',
@@ -341,20 +342,22 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
 
   return (
     <div className="p-4 sm:p-6 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
-        <h3 className="text-lg font-semibold text-foreground">Pipeline Summary</h3>
-        {/* #1225 UI-012: was an options button with no handler; it now opens the board. */}
-        <Link
-          href="/deals?view=pipeline"
-          aria-label="Open the pipeline board"
-          title="Open the pipeline board"
-          className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <span className="material-symbols-outlined" aria-hidden="true">
-            open_in_new
-          </span>
-        </Link>
-      </div>
+      <WidgetHeader
+        title="Pipeline Summary"
+        actions={
+          /* #1225 UI-012: was an options button with no handler; it now opens the board. */
+          <Link
+            href="/deals?view=pipeline"
+            aria-label="Open the pipeline board"
+            title="Open the pipeline board"
+            className="inline-flex size-11 items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">
+              open_in_new
+            </span>
+          </Link>
+        }
+      />
       {/* Side by side once the card itself is wide enough, stacked below that. */}
       <div className="@container flex-1 flex flex-col">
         <div className="grid flex-1 grid-cols-1 content-start gap-4 @xl:grid-cols-2 @xl:content-stretch @xl:gap-8">

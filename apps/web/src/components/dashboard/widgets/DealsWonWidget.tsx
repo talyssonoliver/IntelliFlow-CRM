@@ -12,6 +12,7 @@ import {
   computeBarHeightPercent,
 } from '@/lib/dashboard/kpi-calculator';
 import type { WidgetProps } from './index';
+import { WidgetHeader } from '../WidgetHeader';
 
 interface DealsWonData {
   month: string;
@@ -74,21 +75,24 @@ export function DealsWonWidget(_props: Readonly<WidgetProps>) {
 
   return (
     <div className="p-4 sm:p-6 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-foreground">Deals Won</h3>
-        <select
-          aria-label="Select deals-won time range"
-          value={months}
-          onChange={(e) => setMonths(Number(e.target.value) as DealsWonMonths)}
-          className="px-2 py-1 text-sm border border-border rounded bg-card text-foreground"
-        >
-          {DEALS_WON_RANGES.map((r) => (
-            <option key={r.months} value={r.months}>
-              {r.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      <WidgetHeader
+        title="Deals Won"
+        className="mb-6"
+        actions={
+          <select
+            aria-label="Select deals-won time range"
+            value={months}
+            onChange={(e) => setMonths(Number(e.target.value) as DealsWonMonths)}
+            className="px-2 py-1 text-sm border border-border rounded bg-card text-foreground"
+          >
+            {DEALS_WON_RANGES.map((r) => (
+              <option key={r.months} value={r.months}>
+                {r.label}
+              </option>
+            ))}
+          </select>
+        }
+      />
 
       {/* Bar Chart */}
       {isError && (

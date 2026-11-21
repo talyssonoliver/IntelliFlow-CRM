@@ -12,6 +12,7 @@ import {
   type ActivityFeedTypeFilterValue,
 } from '@/components/shared/activity-feed';
 import type { ActivityFeedType } from '@intelliflow/domain';
+import { WidgetHeader } from '../WidgetHeader';
 
 const DEFAULT_MAX_ITEMS = 3;
 
@@ -29,15 +30,19 @@ export function RecentActivityWidget({ config }: Readonly<WidgetProps>) {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex items-center justify-between p-4 sm:p-6 border-b border-border">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Recent Activity</h3>
-        <div className="flex items-center gap-2">
-          <ActivityFeedTypeFilter value={feedFilter} onChange={setFeedFilter} />
-          <Link href="/activity" className="text-sm text-ds-primary hover:underline">
-            View All
-          </Link>
-        </div>
-      </div>
+      <WidgetHeader
+        title="Recent Activity"
+        titleClassName="text-lg font-semibold text-slate-900 dark:text-white"
+        className="p-4 sm:p-6 border-b border-border"
+        actions={
+          <>
+            <ActivityFeedTypeFilter value={feedFilter} onChange={setFeedFilter} />
+            <Link href="/activity" className="ml-1 text-sm text-ds-primary hover:underline">
+              View All
+            </Link>
+          </>
+        }
+      />
 
       {/* IFC-202: Activity stats summary */}
       <div className="px-4 sm:px-6 py-2 border-b border-border bg-slate-50/50 dark:bg-slate-800/30">

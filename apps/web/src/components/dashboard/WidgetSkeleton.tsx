@@ -50,7 +50,7 @@ export function StatCardSkeleton({ colSpan = 1 }: Readonly<{ colSpan?: number }>
     >
       {/* Same row shape and sizes as KpiCard (owner 21/11), so nothing moves when it loads. */}
       <div className="@container h-full">
-        <div className="h-full flex flex-col justify-center p-3 @min-[14rem]:p-5 @min-[14rem]:min-h-28">
+        <div className="h-full flex flex-col justify-center p-3 @min-[13rem]:min-h-28 @min-[14rem]:p-5">
           <div className="flex items-center gap-2 @min-[11rem]:gap-3 @min-[14rem]:gap-4 @max-[9rem]:flex-col @max-[9rem]:items-start">
             <div className="shrink-0 rounded-xl size-[46px] @min-[11rem]:size-[50px] @min-[14rem]:size-14 @max-[9rem]:size-9 bg-slate-200 dark:bg-slate-700" />
             <div className="min-w-0 flex-1 space-y-2">

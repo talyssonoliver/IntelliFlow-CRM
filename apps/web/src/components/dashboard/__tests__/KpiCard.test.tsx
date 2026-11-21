@@ -58,7 +58,7 @@ describe('KpiCard (#1225 UI-009)', () => {
   it('is at least 112px tall on a desktop-width card, with equal padding', () => {
     render(<KpiCard label="Total Leads" icon="group" value="155" />);
     const inner = screen.getByTestId('kpi-icon').parentElement!.parentElement as HTMLElement;
-    expect(inner).toHaveClass('p-3', '@min-[14rem]:p-5', '@min-[14rem]:min-h-28', 'justify-center');
+    expect(inner).toHaveClass('p-3', '@min-[14rem]:p-5', '@min-[13rem]:min-h-28', 'justify-center');
   });
 
   it('scales the number with the card, so a six-figure amount fits a phone (#50)', () => {

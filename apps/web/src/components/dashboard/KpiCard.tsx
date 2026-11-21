@@ -111,7 +111,7 @@ export function KpiCard({
   // - 14rem and up (desktop): 56px icon = 20 + 4 + 32, at least 112px tall.
   return (
     <div className={`@container h-full min-w-0${frame}`}>
-      <div className="h-full flex flex-col justify-center min-w-0 p-3 @min-[14rem]:p-5 @min-[14rem]:min-h-28">
+      <div className="h-full flex flex-col justify-center min-w-0 p-3 @min-[13rem]:min-h-28 @min-[14rem]:p-5">
         <div className="flex items-center gap-2 @min-[11rem]:gap-3 @min-[14rem]:gap-4 @max-[9rem]:flex-col @max-[9rem]:items-start">
           <div
             className={`shrink-0 rounded-xl flex items-center justify-center size-[46px] @min-[11rem]:size-[50px] @min-[14rem]:size-14 @max-[9rem]:size-9 ${iconClassName}`}
