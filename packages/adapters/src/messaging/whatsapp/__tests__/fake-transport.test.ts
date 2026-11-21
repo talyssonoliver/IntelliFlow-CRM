@@ -141,6 +141,7 @@ describe('InMemoryWhatsAppTransport', () => {
       [{ kind: 'message', id: 'a', from: NUMBER, text: 't', ts: 'soon' }],
       [{ kind: 'status', id: 'a', status: 'teleported', ts: 5 }],
       [{ kind: 'status', id: 'a', status: 'queued', ts: 5 }],
+      [{ kind: 'status', id: 'a', status: { toString: null }, ts: 5 }],
       [{ kind: 'reaction', id: 'a', ts: 5 }],
       [null],
     ])('drops a malformed event %j', (event) => {

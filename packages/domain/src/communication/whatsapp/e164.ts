@@ -7,21 +7,71 @@
  * `@c.us` forms providers send, so it has its own normaliser.
  */
 
-/** `+`, a non-zero first digit, 8 to 15 digits in total (E.164 allows up to 15). */
-export const E164_PATTERN = /^\+[1-9]\d{7,14}$/;
+/**
+ * `+`, a non-zero first digit, 7 to 15 digits in total (E.164 allows up to 15; the shortest
+ * real plans, such as Niue's 4-digit subscriber numbers, give 7). Structural only: no per-country check.
+ */
+export const E164_PATTERN = /^\+[1-9]\d{6,14}$/;
 
 /** Calling code used for numbers typed in national form (leading 0). */
 export const DEFAULT_COUNTRY_CALLING_CODE = '44';
 
 export interface NormalizeE164Options {
-  /** Digits only, no `+`. Applied to national numbers that start with a single 0. */
+  /**
+   * Digits only, no `+`. Applied to national numbers that start with a single 0. Only meaningful for
+   * countries whose national numbers start with a trunk 0 (UK, BR, ...); for a country such as Italy
+   * a leading 0 belongs to the number and must be typed with "+".
+   */
   defaultCountryCallingCode?: string;
-  // Only meaningful for countries whose national numbers start with a trunk 0 (UK, BR, ...);
-  // for a country such as Italy a leading 0 belongs to the number and must be typed with "+".
 }
+
+/**
+ * Calling codes whose national plan drops the trunk 0 when dialled internationally, so "+CC (0) ..." means
+ * "+CC ...": UK 44, Germany 49, France 33, Netherlands 31, Australia 61, New Zealand 64, Switzerland 41,
+ * Austria 43, Belgium 32, Ireland 353. Deliberately small; Italy (39, 378 and 379) keeps the zero and is NOT here.
+ */
+export const TRUNK_ZERO_DROPPED_CODES = [
+  '44',
+  '49',
+  '33',
+  '31',
+  '61',
+  '64',
+  '41',
+  '43',
+  '32',
+  '353',
+] as const;
+
+const TRUNK_BRACKET_AFTER_CODE = new RegExp(
+  `^(?:\\+|00)\\s*(?:${TRUNK_ZERO_DROPPED_CODES.join('|')})\\s*\\(0\\)`
+);
+
+const TRUNK_ZERO_AFTER_CODE = new RegExp('^[+](?:' + TRUNK_ZERO_DROPPED_CODES.join('|') + ')0');
 
 export function isE164(value: string): boolean {
   return E164_PATTERN.test(value);
+}
+
+/** Only digits and the usual separators, one leading plus at most, brackets paired. */
+function isTypedNumberShape(trimmed: string): boolean {
+  // Tabs and newlines are not part of a typed number.
+  if (!/^[\d ().+-]+$/.test(trimmed)) return false;
+  if (trimmed.lastIndexOf('+') > 0) return false;
+  // "+44 (7700 900123" is a typo, not a number.
+  return (trimmed.match(/\(/g)?.length ?? 0) === (trimmed.match(/\)/g)?.length ?? 0);
+}
+
+/**
+ * "+44 (0) 7700 ..." writes the trunk zero in brackets; it is not dialled abroad. That is only true for
+ * the plans in TRUNK_ZERO_DROPPED_CODES. Elsewhere (Italy's +39 keeps the zero) or after an unknown code
+ * the bracketed zero is ambiguous: null, rather than a guess. Returns the text without it otherwise.
+ */
+function stripTrunkBracket(trimmed: string): string | null {
+  if (!/\(0\)/.test(trimmed)) return trimmed;
+  if (!TRUNK_BRACKET_AFTER_CODE.test(trimmed)) return null;
+  const stripped = trimmed.replace(/\(0\)/, '');
+  return /\(0\)/.test(stripped) ? null : stripped;
 }
 
 /**
@@ -33,14 +83,11 @@ export function isE164(value: string): boolean {
  * message to a stranger.
  */
 export function normalizeE164(input: string, options: NormalizeE164Options = {}): string | null {
+  if (typeof input !== 'string') return null;
   const trimmed = input.trim();
-  // Only digits, spaces and the usual separators; tabs and newlines are not part of a typed number.
-  if (!/^[\d ().+-]+$/.test(trimmed)) return null;
-  // A plus is only valid as the first character.
-  if (trimmed.lastIndexOf('+') > 0) return null;
-
-  // "+44 (0) 7700 ..." writes the trunk zero in brackets; it is not dialled abroad.
-  const withoutTrunk = trimmed.replace(/\(0\)/, '');
+  if (!isTypedNumberShape(trimmed)) return null;
+  const withoutTrunk = stripTrunkBracket(trimmed);
+  if (withoutTrunk === null) return null;
   const digits = withoutTrunk.replace(/\D/g, '');
 
   let candidate: string;
@@ -56,9 +103,9 @@ export function normalizeE164(input: string, options: NormalizeE164Options = {})
     return null;
   }
 
-  // No UK number has a 0 right after +44: "+44 07700..." keeps the trunk zero and would
+  // No number in these plans has a 0 right after the code: "+44 07700..." keeps the trunk zero and would
   // dial a dead number. Reject rather than guess.
-  if (candidate.startsWith('+440')) return null;
+  if (TRUNK_ZERO_AFTER_CODE.test(candidate)) return null;
 
   return isE164(candidate) ? candidate : null;
 }
@@ -69,6 +116,7 @@ export function normalizeE164(input: string, options: NormalizeE164Options = {})
  * the dialled number by a 9 or a 1, so contact matching should try both forms.
  */
 export function e164FromWaId(waId: string): string | null {
+  if (typeof waId !== 'string') return null;
   const candidate = `+${waId.trim()}`;
   return isE164(candidate) ? candidate : null;
 }

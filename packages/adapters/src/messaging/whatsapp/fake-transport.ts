@@ -16,6 +16,7 @@ import {
   e164FromWaId,
   isRetryableSendError,
   validateOutboundText,
+  WHATSAPP_MESSAGE_STATUSES,
   type WhatsAppEvent,
   type WhatsAppProviderStatus,
   type WhatsAppSendErrorCode,
@@ -29,14 +30,18 @@ import {
  * network, but it verifies like the real ones must: HMAC over the raw bytes,
  * fail-closed, constant-time compare. (Real transports use their provider's
  * algorithm and header; do not copy the fake's.) Not wired into the container:
- * it is a test double, and the real adapters arrive in IFC-325 and IFC-326.
+ * it is a test double, and the real adapters arrive in IFC-325 and IFC-326. Later rows import it by
+ * relative path from their tests; it is deliberately not exported from the package index.
  */
 
 export const FAKE_SIGNATURE_HEADER = 'x-fake-signature';
 const SIGNATURE_PATTERN = /^sha256=([0-9a-f]{64})$/;
 const CHALLENGE_PATTERN = /^[\w.-]{1,128}$/;
 const MAX_EVENTS_PER_DELIVERY = 1000;
-const PROVIDER_STATUSES: readonly string[] = ['SENT', 'DELIVERED', 'READ', 'FAILED'];
+// Derived from the domain list so a new status cannot drift; QUEUED is ours, never a provider's.
+const PROVIDER_STATUSES: readonly string[] = WHATSAPP_MESSAGE_STATUSES.filter(
+  (s) => s !== 'QUEUED'
+);
 
 export type FakeWireEvent =
   | {
@@ -142,9 +147,9 @@ export class InMemoryWhatsAppTransport implements WhatsAppTransportPort {
     connection: WhatsAppConnectionRef,
     message: OutboundWhatsAppText
   ): Promise<WhatsAppSendResult> {
-    const invalid = validateOutboundText(message.to, message.body);
+    const invalid = validateOutboundText(message?.to, message?.body);
     if (invalid) return { ok: false, code: invalid, retryable: false };
-    if (!connection.credential || !connection.accountId) {
+    if (!connection?.credential || !connection.accountId) {
       return { ok: false, code: 'AUTH_FAILED', retryable: false };
     }
 
@@ -167,9 +172,18 @@ export class InMemoryWhatsAppTransport implements WhatsAppTransportPort {
     query: Readonly<Record<string, string | undefined>>,
     verifyToken: string
   ): WhatsAppHandshakeResult {
-    const token = query['hub.verify_token'];
-    const challenge = query['hub.challenge'];
-    if (!verifyToken || !token || !challenge || query['hub.mode'] !== 'subscribe') {
+    const token = query?.['hub.verify_token'];
+    const challenge = query?.['hub.challenge'];
+    // Query parsers can yield arrays or objects at runtime: anything but a string fails closed.
+    if (
+      typeof verifyToken !== 'string' ||
+      typeof token !== 'string' ||
+      typeof challenge !== 'string' ||
+      !verifyToken ||
+      !token ||
+      !challenge ||
+      query['hub.mode'] !== 'subscribe'
+    ) {
       return { ok: false };
     }
     // The challenge is echoed to the caller: accept only plain tokens, never markup.
@@ -211,7 +225,7 @@ function toMessage(raw: Wire, providerMessageId: string, occurredAt: Date): What
           type: 'unresolved',
           providerMessageId,
           accountId: null,
-          providerChatId: sender,
+          providerChatId: sender.trim(),
           occurredAt,
         }
       : null;
@@ -230,7 +244,8 @@ function toMessage(raw: Wire, providerMessageId: string, occurredAt: Date): What
 }
 
 function toStatus(raw: Wire, providerMessageId: string, occurredAt: Date): WhatsAppEvent | null {
-  const status = String(raw['status']).toUpperCase();
+  if (typeof raw['status'] !== 'string') return null;
+  const status = raw['status'].toUpperCase();
   if (!PROVIDER_STATUSES.includes(status)) return null;
   return {
     type: 'status',

@@ -4,7 +4,11 @@ import type {
   WhatsAppTransportPort,
   WhatsAppWebhookHeaders,
 } from '@intelliflow/application';
-import { WHATSAPP_MAX_TEXT_LENGTH, WHATSAPP_TRANSPORT_KINDS } from '@intelliflow/domain';
+import {
+  WHATSAPP_MAX_TEXT_LENGTH,
+  WHATSAPP_TRANSPORT_KINDS,
+  type WhatsAppProviderStatus,
+} from '@intelliflow/domain';
 
 /**
  * Contract suite every WhatsApp transport must pass (IFC-320; the
@@ -21,7 +25,7 @@ export interface ContractDelivery {
   statuses?: Array<{
     id: string;
     to: string;
-    status: 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
+    status: WhatsAppProviderStatus;
     at: number;
     error?: string;
   }>;
@@ -29,6 +33,10 @@ export interface ContractDelivery {
   mediaMessage?: { id: string; from: string; at: number };
   /** A message from a group chat (must be ignored: 1:1 only). */
   groupMessage?: { id: string; text: string; at: number };
+  /** A message we sent from our own phone, echoed back: must never become an inbound event. */
+  ownEcho?: { id: string; text: string; at: number };
+  /** A 1:1 sender with no phone number behind it (WAHA @lid): surfaced as `unresolved`. */
+  unresolvedSender?: { id: string; chatId: string; at: number };
 }
 
 export type SignatureMode = 'valid' | 'none' | 'wrong' | 'wrong-length' | 'malformed';
@@ -46,6 +54,11 @@ export interface TransportContractHarness {
   headers(rawBody: string, secret: string, mode: SignatureMode): WhatsAppWebhookHeaders;
   /** True for transports with a GET subscription handshake (Meta). The suite then requires it. */
   expectsHandshake: boolean;
+  /**
+   * Delivery kinds the provider cannot express (Meta has no own-message echo, for one). Opt out
+   * by name; the harness must otherwise map `ownEcho` and `unresolvedSender` to real bytes.
+   */
+  optOut?: ReadonlyArray<'ownEcho' | 'unresolvedSender'>;
   /** Makes the next send fail at the provider with this class of failure. */
   failNextSend(
     transport: WhatsAppTransportPort,
@@ -266,6 +279,29 @@ export function runTransportContract(h: TransportContractHarness): void {
         ).toEqual(['a', 'b', 'o3']);
       });
 
+      it('ignores messages we sent ourselves', () => {
+        if (h.optOut?.includes('ownEcho')) return;
+        const events = h
+          .create()
+          .parseWebhook(h.body({ ownEcho: { id: 'e1', text: 'from my phone', at: AT } }));
+        expect(events).toEqual([]);
+      });
+
+      it('surfaces a 1:1 sender without a number as unresolved', () => {
+        if (h.optOut?.includes('unresolvedSender')) return;
+        const events = h
+          .create()
+          .parseWebhook(
+            h.body({ unresolvedSender: { id: 'u1', chatId: '1234567890@lid', at: AT } })
+          );
+        expect(events).toHaveLength(1);
+        expect(events[0]).toMatchObject({
+          type: 'unresolved',
+          providerMessageId: 'u1',
+          providerChatId: '1234567890@lid',
+        });
+      });
+
       it('ignores group chats: 1:1 only', () => {
         const events = h
           .create()
@@ -316,7 +352,7 @@ export function runTransportContract(h: TransportContractHarness): void {
         const [event] = h
           .create()
           .parseWebhook(h.body({ messages: [{ id: 'm5', from: CUSTOMER, text: 'x', at: AT }] }));
-        expect((event as { from: string }).from).toMatch(/^\+[1-9]\d{7,14}$/);
+        expect((event as { from: string }).from).toMatch(/^\+[1-9]\d{6,14}$/);
         expect((event as { from: string }).from).toBe(`+${CUSTOMER_DIGITS}`);
       });
     });
@@ -361,6 +397,25 @@ export function runTransportContract(h: TransportContractHarness): void {
         expect(noAccount).toEqual({ ok: false, code: 'AUTH_FAILED', retryable: false });
       });
 
+      it('never puts the credential in a result, including a failed one', async () => {
+        const t = h.create();
+        h.failNextSend(t, 'PROVIDER_ERROR');
+        const failed = await t.send(h.connection, { to: CUSTOMER, body: 'hi' });
+        const ok = await t.send(h.connection, { to: CUSTOMER, body: 'hi' });
+        const status = await t.status(h.connection);
+        for (const result of [failed, ok, status]) {
+          expect(JSON.stringify(result)).not.toContain(h.connection.credential);
+        }
+      });
+
+      it('returns a coded result instead of throwing on missing arguments', async () => {
+        const t = h.create();
+        const noMessage = await t.send(h.connection, undefined as never);
+        const noConnection = await t.send(undefined as never, { to: CUSTOMER, body: 'hi' });
+        expect(noMessage.ok).toBe(false);
+        expect(noConnection.ok).toBe(false);
+      });
+
       it.each([
         ['AUTH_FAILED', false],
         ['RATE_LIMITED', true],
@@ -397,6 +452,16 @@ export function runTransportContract(h: TransportContractHarness): void {
           ok: true,
           challenge: 'challenge-123',
         });
+        // Query parsers can hand over arrays or objects: refuse, never throw.
+        expect(
+          t.verifyHandshake(
+            { ...query, 'hub.verify_token': ['verify-token-value'] as never },
+            'verify-token-value'
+          )
+        ).toEqual({ ok: false });
+        expect(
+          t.verifyHandshake({ ...query, 'hub.challenge': { a: 1 } as never }, 'verify-token-value')
+        ).toEqual({ ok: false });
         // Same length as the real token, and a prefix of it: neither may pass.
         expect(t.verifyHandshake(query, 'verify-token-valuf')).toEqual({ ok: false });
         expect(

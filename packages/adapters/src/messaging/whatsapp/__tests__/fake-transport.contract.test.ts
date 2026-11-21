@@ -44,6 +44,29 @@ function wireEvents(d: ContractDelivery): FakeWireEvent[] {
           } as FakeWireEvent,
         ]
       : []),
+    ...(d.ownEcho
+      ? [
+          {
+            kind: 'message',
+            id: d.ownEcho.id,
+            from: '44' + '7700900123',
+            text: d.ownEcho.text,
+            ts: d.ownEcho.at,
+            fromMe: true,
+          } as FakeWireEvent,
+        ]
+      : []),
+    ...(d.unresolvedSender
+      ? [
+          {
+            kind: 'message',
+            id: d.unresolvedSender.id,
+            from: d.unresolvedSender.chatId,
+            text: 'hi',
+            ts: d.unresolvedSender.at,
+          } as FakeWireEvent,
+        ]
+      : []),
     ...(d.groupMessage
       ? [
           {

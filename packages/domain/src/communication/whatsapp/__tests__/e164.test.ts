@@ -15,8 +15,32 @@ describe('normalizeE164', () => {
     ['+44 (0) 7700 900123', E164],
     ['  +44 7700 900123  ', E164],
     ['0044 (0) 7700 900123', E164],
+    ['+44 (0)20 7946 0123', '+442079460123'],
+    ['+49 (0)30 12345678', '+493012345678'],
+    ['+353 (0)1 2345678', '+35312345678'],
+    // Italy keeps the zero, so the plain form stays +3902...
+    ['+39 02 12345678', '+390212345678'],
   ])('reads %s', (input, expected) => {
     expect(normalizeE164(input)).toBe(expected);
+  });
+
+  it.each(['+44', '+49', '+33', '+31', '+61', '+64', '+41', '+43', '+32', '+353'])(
+    'drops a bracketed trunk zero after %s',
+    (code) => {
+      expect(normalizeE164(`${code} (0) 12345678`)).toBe(`${code}12345678`);
+    }
+  );
+
+  it.each([
+    ['+39 (0)2 12345678'],
+    ['+378 (0) 549 123456'],
+    ['+379 (0) 6 698 12345'],
+    ['+1 (0) 555 0123456'],
+    ['+55 (0) 11 912345678'],
+    ['+44 (0) 20 (0) 7946 0123'],
+    ['+44 20 (0) 7946 0123'],
+  ])('rejects the ambiguous bracketed zero in %s', (input) => {
+    expect(normalizeE164(input)).toBeNull();
   });
 
   it('uses the given default country for national numbers', () => {
@@ -34,7 +58,13 @@ describe('normalizeE164', () => {
     ['+44 7700 900123 +1'],
     ['44+7700900123'],
     ['+0 7700 900123'],
+    ['+39 (0) 2 12345678'],
+    ['(0) 7700 900123'],
     ['+44 12'],
+    ['+49 030 12345678'],
+    ['+33 01 23456789'],
+    ['+44 (7700 900123'],
+    ['+44 7700) 900123'],
     ['+1234567890123456'],
     ['+44 07700 900123'],
     ['0044 07700 900123'],
@@ -51,12 +81,20 @@ describe('normalizeE164', () => {
   });
 });
 
+describe('non-string input', () => {
+  it('gives null instead of throwing', () => {
+    expect(normalizeE164(undefined as never)).toBeNull();
+    expect(e164FromWaId(null as never)).toBeNull();
+  });
+});
+
 describe('isE164', () => {
   it('accepts only the canonical form', () => {
     expect(isE164(E164)).toBe(true);
     expect(isE164('447700900123')).toBe(false);
     expect(isE164('+44 7700900123')).toBe(false);
-    expect(isE164('+1234567')).toBe(false);
+    expect(isE164('+123456')).toBe(false);
+    expect(isE164('+6835000')).toBe(true);
   });
 });
 
