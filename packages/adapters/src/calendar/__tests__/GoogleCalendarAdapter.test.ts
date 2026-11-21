@@ -11,7 +11,12 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { GoogleCalendarAdapter, GoogleCalendarConfig } from '../google/client';
-import { CalendarSyncTokenExpiredError, type OAuthTokens } from '@intelliflow/application';
+import {
+  CalendarConflictError,
+  CalendarRateLimitError,
+  CalendarSyncTokenExpiredError,
+  type OAuthTokens,
+} from '@intelliflow/application';
 
 // Mock global fetch
 const mockFetch = vi.fn();
@@ -839,10 +844,30 @@ describe('GoogleCalendarAdapter', () => {
           // event's date does not stay beside the new dateTime.
           start: { dateTime: '2025-01-15T10:00:00.000Z', date: null },
           end: { dateTime: '2025-01-15T11:00:00.000Z', date: null },
-          status: 'confirmed',
+          // No status: confirming would bring back an event the user deleted in Google.
         });
       });
 
+      it('sends the etag as If-Match, so a change made in Google meanwhile is not overwritten', async () => {
+        mockFetch.mockResolvedValueOnce({ ok: true, json: async () => eventJson() });
+
+        await adapter.patchEvent(mockTokens, 'ev-1', createMockAppointment() as any, '"etag-0"');
+
+        expect(mockFetch.mock.calls[0][1].headers['If-Match']).toBe('"etag-0"');
+      });
+
+      it('answers a conflict when Google has changed the event since that etag', async () => {
+        mockFetch.mockResolvedValueOnce({ ok: false, status: 412, json: async () => ({}) });
+
+        const result = await adapter.patchEvent(
+          mockTokens,
+          'ev-1',
+          createMockAppointment() as any,
+          '"old"'
+        );
+
+        expect(result.error).toBeInstanceOf(CalendarConflictError);
+      });
       it('sends a cancelled appointment as a cancelled event', async () => {
         mockFetch.mockResolvedValueOnce({ ok: true, json: async () => eventJson() });
         const appointment = { ...createMockAppointment(), isCancelled: true };
@@ -893,6 +918,23 @@ describe('GoogleCalendarAdapter', () => {
         expect(result.error?.code).toBe('CALENDAR_AUTH_ERROR');
       });
 
+      it.each(['userRateLimitExceeded', 'quotaExceeded', 'dailyLimitExceeded'])(
+        'treats the 403 %s as a rate limit, not an error of the item',
+        async (reason) => {
+          // The retry handler waits and asks again; Google keeps refusing.
+          mockFetch.mockResolvedValue({
+            ok: false,
+            status: 403,
+            json: async () => ({ error: { errors: [{ reason }] } }),
+          });
+
+          const pending = adapter.patchEvent(mockTokens, 'ev-1', createMockAppointment() as any);
+          await vi.runAllTimersAsync();
+          const result = await pending;
+
+          expect(result.error).toBeInstanceOf(CalendarRateLimitError);
+        }
+      );
       it('stays a sync error for any other 403', async () => {
         mockFetch.mockResolvedValueOnce({
           ok: false,

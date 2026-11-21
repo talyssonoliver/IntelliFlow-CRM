@@ -10,6 +10,9 @@ export * from './config';
 // Base composable schemas (DRY principle)
 export * from './base-schemas';
 
+// Activity text without machine ids (register row 42)
+export * from './activity-text';
+
 // Entity Schemas
 export * from './lead';
 
