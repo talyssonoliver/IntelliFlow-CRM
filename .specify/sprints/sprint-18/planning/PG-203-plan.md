@@ -419,7 +419,7 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 **Files to Modify:**
 - `apps/api/src/modules/legal/__tests__/appointments.router.test.ts`
 - `apps/api/src/modules/lead/__tests__/lead.router.test.ts`
-- `apps/api/src/workflow/__tests__/dsar-workflow.test.ts` *(superseded: Plan Addendum A replaced the broken DSAR workflow; the file and its test were deleted in 3fcafee91, and booker fields are exported and erased by PrismaSubjectDataRepository)*
+- apps/api/src/workflow/__tests__/dsar-workflow.test.ts *(superseded: Plan Addendum A replaced the broken DSAR workflow; the file and its test were deleted in 3fcafee91, and booker fields are exported and erased by PrismaSubjectDataRepository)*
 
 - [x] `appointments.create` with `eventTypeId`: *Verified tdd/red-api-regression.txt (2 eventTypeId cases fail) then appointments.router.caller 73/73; lead.router 61/61 (enqueue regression)*
   - the `{id, tenantId, isActive}` check comes next to `assertAppointmentRefsInTenant`;
@@ -1124,11 +1124,11 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
 
 ### Step D4: Application (`packages/application/src/`)
 **Files to Create:**
-- `ports/repositories/DsarRepositoryPort.ts`
-- `ports/repositories/SubjectDataPort.ts`
-- `ports/repositories/ProcessingRestrictionPort.ts`
-- `ports/external/DsarNotificationPort.ts`
-- `services/DataSubjectRequestService.ts`, plus tests using in-memory fakes
+- `packages/application/src/ports/repositories/DsarRepositoryPort.ts`
+- `packages/application/src/ports/repositories/SubjectDataPort.ts`
+- `packages/application/src/ports/repositories/ProcessingRestrictionPort.ts`
+- `packages/application/src/ports/external/DsarNotificationPort.ts`
+- `packages/application/src/services/DataSubjectRequestService.ts`, plus tests using in-memory fakes
 
 **Requirements:**
 - [x] Use cases: *Verified DataSubjectRequestService.ts:98-616 (all use cases); 61 service tests; green-application-all-services.txt 1142, d7-application.txt 1162*
@@ -1171,14 +1171,14 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
 
 ### Step D6: API (`apps/api/src/modules/privacy/`)
 **Files to Create:**
-- `privacy-public.router.ts` and `privacy-admin.router.ts`
-- `dsar-email.ts` (fixed templates; escaped; no visitor text; ICO wording; honest objection wording)
-- `dsar-token.ts` (HMAC key `HMAC(BOOKING_IP_SALT, 'dsar-token-v1')`; `timingSafeEqual`; dummy hash)
+- `apps/api/src/modules/privacy/privacy-public.router.ts` and `privacy-admin.router.ts`
+- `apps/api/src/modules/privacy/dsar-email.ts` (fixed templates; escaped; no visitor text; ICO wording; honest objection wording)
+- `apps/api/src/modules/privacy/dsar-token.ts` (HMAC key `HMAC(BOOKING_IP_SALT, 'dsar-token-v1')`; `timingSafeEqual`; dummy hash)
 
 **Files to Modify:**
 - `apps/api/src/router.ts`: `privacy: mergeRouters(privacyPublicRouter, createTRPCRouter({ admin: privacyAdminRouter }))`
-- `container.ts` and `context.ts`: service, adapters and notification port, with a runtime check
-- `security/types.ts` and `rbac.ts`: the `dsar_request` resource
+- `apps/api/src/container.ts` and `context.ts`: service, adapters and notification port, with a runtime check
+- `apps/api/src/security/types.ts` and `rbac.ts`: the `dsar_request` resource
 - the `tests/architecture` allowlist, as decided in the preflight
 
 **Files to Delete (replacement, not addition):**
@@ -1340,9 +1340,9 @@ rulings Q23-Q26 (2026-10-25) decided the open choices; the fixes:
 
 ### Step D9: Web
 **Files to Create:**
-- `(public)/dsar/[handle]/page.tsx`, `DsarRequestContent.tsx` and `loading.tsx`
-- `(public)/dsar/[handle]/verify/page.tsx` and `DsarVerifyContent.tsx`
-- `(public)/dsar/[handle]/export/page.tsx` and `DsarExportContent.tsx` (human-readable summary as text nodes only; no
+- `apps/web/src/app/(public)/dsar/[handle]/page.tsx`, `DsarRequestContent.tsx` and `loading.tsx`
+- `apps/web/src/app/(public)/dsar/[handle]/verify/page.tsx` and `DsarVerifyContent.tsx`
+- `apps/web/src/app/(public)/dsar/[handle]/export/page.tsx` and `DsarExportContent.tsx` (human-readable summary as text nodes only; no
   storage)
 - `settings/privacy-requests/page.tsx`, `PrivacyRequestsContent.tsx`, and dialogs for log, extend, complete (erasure
   confirmation and counted checklist; objection stop method), completeAccess, reject, cancel, lift and revoke
@@ -1350,11 +1350,11 @@ rulings Q23-Q26 (2026-10-25) decided the open choices; the fixes:
 - tests for each, with axe
 
 **Files to Modify:**
-- `PublicLayoutShell.tsx`: `/dsar/` added to `AUTH_PAGES_NO_CHROME`
+- `apps/web/src/app/(public)/_components/PublicLayoutShell.tsx`: `/dsar/` added to `AUTH_PAGES_NO_CHROME`
 - `apps/web/next.config.js`: `/dsar/:path*` headers after `/:path*`, plus a header test
-- `robots.ts`: `/dsar/`
-- `navigation.tsx`: `PUBLIC_ROUTES`
-- `lib/sentry/scrub.ts`: drop fragments from request.url, transactions, breadcrumbs and replay, plus a test
+- `apps/web/src/app/robots.ts`: `/dsar/`
+- `apps/web/src/components/navigation.tsx`: `PUBLIC_ROUTES`
+- `apps/web/src/lib/sentry/scrub.ts`: drop fragments from request.url, transactions, breadcrumbs and replay, plus a test
 - the booking page footer link and `booking-email.ts` confirmation link to `/dsar/<handle>`
 - the `settings.ts` sidebar entry
 - the lead and contact detail pages: `RestrictionBanner`

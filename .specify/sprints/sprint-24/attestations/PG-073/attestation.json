@@ -35,6 +35,62 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-11-16T11:30:00Z"
+    },
+    {
+      "name": "TypeScript typecheck, web",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T07:11:57Z"
+    },
+    {
+      "name": "Lint, web",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T07:13:29Z"
+    },
+    {
+      "name": "Build, web",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T07:16:39Z"
+    },
+    {
+      "name": "Tests, web",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T07:29:04Z"
+    },
+    {
+      "name": "TypeScript typecheck, api",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T07:13:06Z"
+    },
+    {
+      "name": "Lint, api",
+      "command": "pnpm --filter @intelliflow/api lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T07:13:45Z"
+    },
+    {
+      "name": "Build, api",
+      "command": "pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T07:14:17Z"
+    },
+    {
+      "name": "Tests, api",
+      "command": "pnpm --filter @intelliflow/api test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T07:18:52Z"
     }
   ],
   "gate_results": [
@@ -57,5 +113,5 @@
       "met": true
     }
   ],
-  "notes": "The old artifact names (opportunity-list.tsx, pipeline-view.tsx) were never created; the work lives in DealListView and PipelineBoard."
+  "notes": "The old artifact names (opportunity-list.tsx, pipeline-view.tsx) were never created; the work lives in DealListView and PipelineBoard. Checks recorded 2026-11-22 by re-running them on a fresh worktree of origin/main (dee63796e), each through the test-slot wrapper, for the packages this row's merged PRs touched (web, and api for the stage move). Dependency packages (domain, validators, db, platform, webhooks, application, adapters, observability, partner-sdk, worker-shared, ai-worker, events-worker, ingestion-worker) were built first. Only the passing runs are recorded; the first-line file-exists check above stays as the behaviour evidence."
 }
