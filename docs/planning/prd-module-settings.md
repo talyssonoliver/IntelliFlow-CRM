@@ -1259,7 +1259,9 @@ Spec: `.specify/sprints/sprint-18/specifications/PG-207-spec.md`. ADR-085.
   admin, organisation signatures, with a default that is prefilled in new
   messages.
 - **US-EM8 (Tracking)**: As an admin, I want to choose whether opens and clicks
-  are tracked once tracking ships (IFC-221).
+  are tracked (wired by #1500: a pixel and link redirects on the sent HTML,
+  recorded on the email record; a message goes out untracked, with a log line,
+  when `API_PUBLIC_URL` is unusable).
 
 ### Additional Acceptance Criteria
 
@@ -1275,8 +1277,8 @@ Defined as AC-EM-001..040 in the spec (finalised at spec consensus). In summary:
   accepted; suppressed recipients skipped before quota; attachments really sent;
   coded errors shown in compose.
 - AC-EM-020 to 023: admin-edited tenant settings with documented defaults; reset
-  keeps mailboxes, signatures and suppressions; tracking labelled as pending
-  IFC-221.
+  keeps mailboxes, signatures and suppressions; tracking toggles wired to the
+  sender (#1500).
 - AC-EM-024 to 031: lease-based bounce reader; only delivery-status reports,
   matched to our own sent records; hard/soft rules; per-recipient bounces;
   idempotent; optional sender notification; audited suppression management.
@@ -1287,13 +1289,13 @@ Defined as AC-EM-001..040 in the spec (finalised at spec consensus). In summary:
 
 ### Boolean toggles (playbook §8)
 
-| Toggle                       | Category | Runtime consumer                             |
-| ---------------------------- | -------- | -------------------------------------------- |
-| `allowTenantMailboxFallback` | 1        | mailbox resolution in the user-mail sender   |
-| `notifySenderOnBounce`       | 1        | bounce reader → `email_bounced` notification |
-| `trackOpens`                 | 2        | IFC-221 (broadened to every mailbox kind)    |
-| `trackClicks`                | 2        | IFC-221 (broadened to every mailbox kind)    |
-| `EmailSignature.isDefault`   | 1        | compose prefill                              |
+| Toggle                       | Category | Runtime consumer                                                           |
+| ---------------------------- | -------- | -------------------------------------------------------------------------- |
+| `allowTenantMailboxFallback` | 1        | mailbox resolution in the user-mail sender                                 |
+| `notifySenderOnBounce`       | 1        | bounce reader → `email_bounced` notification                               |
+| `trackOpens`                 | 1        | `email-tracking.ts` pixel, injected by `mailbox-sender.ts` (#1500)         |
+| `trackClicks`                | 1        | `email-tracking.ts` link redirect, injected by `mailbox-sender.ts` (#1500) |
+| `EmailSignature.isDefault`   | 1        | compose prefill                                                            |
 
 No AI toggles; no colour tokens; no tags (TagsTab N/A).
 
