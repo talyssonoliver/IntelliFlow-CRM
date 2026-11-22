@@ -88,6 +88,89 @@ function useSidebarNavigation(
   return { filteredSections, moduleColor, isItemActive };
 }
 
+/**
+ * Rail tooltip (register #47). The collapsed rail shows only icons and colour dots, so each
+ * control needs a name a sighted user can read on hover AND keyboard focus (the native `title`
+ * shows on hover only, after a delay, and never on focus). The tooltip is portalled with fixed
+ * position because the rail's scroll area would clip an absolutely placed one. Escape dismisses
+ * it (WCAG 1.4.13). It is `aria-hidden`: the control carries the accessible name (aria-label).
+ */
+function useRailTooltip(label: string, enabled: boolean) {
+  const [pos, setPos] = React.useState<{ top: number; left: number } | null>(null);
+  // Hover and focus each keep the tooltip open: a mouse passing over a focused item must not
+  // close it, and leaving the item with the pointer must not close a focus-opened one.
+  const sources = React.useRef({ hover: false, focus: false });
+
+  const open = React.useCallback(
+    (el: HTMLElement) => {
+      if (!enabled) return;
+      const rect = el.getBoundingClientRect();
+      setPos({ top: rect.top + rect.height / 2, left: rect.right + 8 });
+    },
+    [enabled]
+  );
+  const release = React.useCallback((source: 'hover' | 'focus') => {
+    sources.current[source] = false;
+    if (!sources.current.hover && !sources.current.focus) setPos(null);
+  }, []);
+
+  // The rail collapsing/expanding moves or removes the item: drop any open tooltip.
+  React.useEffect(() => {
+    if (!enabled) {
+      sources.current = { hover: false, focus: false };
+      setPos(null);
+    }
+  }, [enabled]);
+
+  React.useEffect(() => {
+    if (!pos) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        sources.current = { hover: false, focus: false };
+        setPos(null);
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [pos]);
+
+  const handlers = {
+    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+      sources.current.hover = true;
+      open(e.currentTarget);
+    },
+    onMouseLeave: () => release('hover'),
+    onFocus: (e: React.FocusEvent<HTMLElement>) => {
+      sources.current.focus = true;
+      open(e.currentTarget);
+    },
+    onBlur: () => release('focus'),
+  };
+
+  const tooltip =
+    enabled && pos && typeof document !== 'undefined'
+      ? createPortal(
+          <span
+            role="tooltip"
+            aria-hidden="true"
+            data-rail-tooltip=""
+            style={{
+              position: 'fixed',
+              top: pos.top,
+              left: pos.left,
+              transform: 'translateY(-50%)',
+            }}
+            className="pointer-events-none z-50 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md"
+          >
+            {label}
+          </span>,
+          document.body
+        )
+      : null;
+
+  return { handlers, tooltip };
+}
+
 interface AppSidebarProps {
   config: SidebarConfig;
   className?: string;
@@ -108,6 +191,7 @@ function SidebarSettingsFooter({
   isExpanded,
   hasFooterContent,
 }: Readonly<SidebarSettingsFooterProps>) {
+  const { handlers, tooltip } = useRailTooltip('Module Settings', !isExpanded);
   if (config.showSettings === false) return null;
   if (!config.settingsHref && !config.onSettingsClick) return null;
 
@@ -120,20 +204,39 @@ function SidebarSettingsFooter({
   return (
     <div className={cn('border-t border-border p-2', !hasFooterContent && 'mt-auto')}>
       {config.onSettingsClick ? (
-        <button type="button" onClick={config.onSettingsClick} className={cn(itemClass, 'w-full')}>
-          <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">
+        <button
+          type="button"
+          onClick={config.onSettingsClick}
+          aria-label={isExpanded ? undefined : 'Module Settings'}
+          {...handlers}
+          className={cn(itemClass, 'w-full')}
+        >
+          <span
+            className="material-symbols-outlined text-xl transition-colors group-hover:text-primary"
+            aria-hidden="true"
+          >
             settings
           </span>
           {isExpanded && <span className="font-medium">Module Settings</span>}
         </button>
       ) : (
-        <Link prefetch={false} href={config.settingsHref!} className={itemClass}>
-          <span className="material-symbols-outlined text-xl transition-colors group-hover:text-primary">
+        <Link
+          prefetch={false}
+          href={config.settingsHref!}
+          aria-label={isExpanded ? undefined : 'Module Settings'}
+          {...handlers}
+          className={itemClass}
+        >
+          <span
+            className="material-symbols-outlined text-xl transition-colors group-hover:text-primary"
+            aria-hidden="true"
+          >
             settings
           </span>
           {isExpanded && <span className="font-medium">Module Settings</span>}
         </Link>
       )}
+      {tooltip}
     </div>
   );
 }
@@ -366,13 +469,19 @@ function SidebarItemComponent({
   moduleColor,
 }: Readonly<SidebarItemComponentProps>) {
   const isSegment = Boolean(item.color);
+  const hasBadge = item.badge !== undefined && item.badge > 0;
+  const collapsedName = hasBadge ? `${item.label} (${item.badge})` : item.label;
+  const { handlers, tooltip } = useRailTooltip(collapsedName, !isExpanded);
 
   return (
     <Link
       prefetch={false}
       href={item.href}
       aria-current={isActive ? 'page' : undefined}
-      title={isExpanded ? undefined : item.label}
+      // Collapsed, the icon or colour dot is the only thing on screen: name it for assistive
+      // tech (the dot alone says nothing) and show the same name in a tooltip on hover/focus.
+      aria-label={isExpanded ? undefined : collapsedName}
+      {...handlers}
       className={cn(
         'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors group relative',
         isActive
@@ -415,6 +524,7 @@ function SidebarItemComponent({
       {!isExpanded && item.badge !== undefined && item.badge > 0 && (
         <span className="absolute top-1 right-1 w-2 h-2 bg-primary rounded-full" />
       )}
+      {tooltip}
     </Link>
   );
 }
