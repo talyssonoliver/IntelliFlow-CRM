@@ -278,6 +278,36 @@ describe('AIMonitoringService', () => {
       expect(result.stats.totalValuesTracked).toBe(1);
     });
 
+    it('returns numbers when event values arrive as Decimal-like strings (register #54)', async () => {
+      mockPrisma.aIMonitoringEvent.findMany
+        .mockResolvedValueOnce([
+          { id: 'c1', eventType: 'roi_cost', value: '10.5' },
+          { id: 'c2', eventType: 'roi_cost', value: { toString: () => '19.5' } },
+          { id: 'c3', eventType: 'roi_cost', value: null },
+        ])
+        .mockResolvedValueOnce([{ id: 'v1', eventType: 'roi_value', value: '100' }]);
+
+      const result = await service.getROIMetrics({ tenantId: TEST_TENANT_ID });
+
+      expect(typeof result.roi.roi).toBe('number');
+      expect(result.roi.totalCost).toBe(30);
+      expect(result.roi.totalValue).toBe(100);
+      expect(result.roi.roi).toBeCloseTo(233.33, 1);
+      expect(Number.isFinite(result.stats.currentROI)).toBe(true);
+    });
+
+    it('treats non-numeric event values as zero', async () => {
+      mockPrisma.aIMonitoringEvent.findMany
+        .mockResolvedValueOnce([{ id: 'c1', eventType: 'roi_cost', value: 'abc' }])
+        .mockResolvedValueOnce([{ id: 'v1', eventType: 'roi_value', value: Infinity }]);
+
+      const result = await service.getROIMetrics({ tenantId: TEST_TENANT_ID });
+
+      expect(result.roi.totalCost).toBe(0);
+      expect(result.roi.totalValue).toBe(0);
+      expect(result.roi.roi).toBe(0);
+    });
+
     it('returns zero ROI when no events exist', async () => {
       mockPrisma.aIMonitoringEvent.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
 
