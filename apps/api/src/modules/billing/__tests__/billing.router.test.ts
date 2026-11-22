@@ -480,6 +480,29 @@ describe('billingRouter', () => {
       expect(result?.planLimits.storage.limit).toBe(-1);
     });
 
+    it.each([
+      ['ENTERPRISE', -1],
+      ['PROFESSIONAL', 10000],
+      ['STARTER', 1000],
+      ['PARTNER_FREE', 500],
+    ])('maps a %s tenant with no Stripe customer to its contact limit', async (plan, contacts) => {
+      const caller = billingRouter.createCaller({
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'ADMIN',
+          tenantId: 'tenant_123',
+          stripeCustomerId: undefined,
+          emailVerified: true,
+        } as UserSession,
+        prisma: createUsageMetricsPrismaMock(plan) as unknown,
+        prismaWithTenant: createUsageMetricsPrismaMock(plan) as unknown,
+      } as unknown as Parameters<typeof billingRouter.createCaller>[0]);
+
+      const result = await caller.getUsageMetrics();
+      expect(result?.planLimits.contacts.limit).toBe(contacts);
+    });
+
     it('scopes every count to the caller tenant and gives SUPER_ADMIN without Stripe enterprise limits', async () => {
       const countSpies: Array<ReturnType<typeof vi.fn>> = [];
       const prisma = new Proxy(
