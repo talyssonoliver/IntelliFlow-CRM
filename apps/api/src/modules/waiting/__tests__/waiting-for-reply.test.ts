@@ -467,6 +467,22 @@ describe('loadWaiting', () => {
     expect(items.map((i) => i.id)).not.toContain('lead-z');
   });
 
+  it('does not list a lead archived as an automated sender, but does list a lost real one', async () => {
+    const t = tables();
+    t.emails = t.emails.filter((e) => e.subject !== 'Sent from CRM');
+    t.leads = t.leads.map((l) =>
+      l.id === 'lead-a' ? { ...l, status: 'LOST', tags: ['automated-sender'] } : l
+    );
+    expect((await loadWaiting(fakeDb(t), 't1', scope, scope)).map((i) => i.id)).toEqual([
+      'contact-a',
+    ]);
+    t.leads = t.leads.map((l) => (l.id === 'lead-a' ? { ...l, status: 'LOST', tags: [] } : l));
+    expect((await loadWaiting(fakeDb(t), 't1', scope, scope)).map((i) => i.id)).toEqual([
+      'lead-a',
+      'contact-a',
+    ]);
+  });
+
   it('lists inbound with no reply and drops replied people', async () => {
     const t = tables();
     // Without the CRM-sent mail, lead-a is still waiting.

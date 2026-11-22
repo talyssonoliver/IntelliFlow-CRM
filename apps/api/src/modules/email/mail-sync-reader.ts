@@ -5,6 +5,7 @@
  * Readers are registered per kind in PRODUCTION_READERS (Microsoft through Graph, then Zoho).
  */
 import {
+  type MailAutomationSignals,
   MailboxTransportError,
   readGmailLabel,
   readGraphMailDelta,
@@ -34,6 +35,8 @@ export interface SyncedMessage {
   bodyText: string;
   /** True for bulk mail (a List-Unsubscribe or Precedence: bulk/list/junk header), where the reader sees headers. */
   bulk?: boolean;
+  /** MVP-011: the headers that tell automated mail from a person's (Gmail and Graph; see mail-sync-automated.ts). */
+  signals?: MailAutomationSignals;
   /** When set, the body is read only for mail the sync keeps (`bodyText` is then empty). */
   loadBody?: () => Promise<string>;
 }

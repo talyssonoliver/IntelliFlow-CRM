@@ -15,7 +15,8 @@ vi.mock('../mailbox-transport', () => ({
 }));
 
 import { runInboxSync } from '../outlook-inbox-sync';
-import { MAX_ENQUIRIES_PER_RUN, isAutomatedAddress } from '../mail-sync-enquiry';
+import { MAX_ENQUIRIES_PER_RUN } from '../mail-sync-enquiry';
+import { isAutomatedAddress } from '../mail-sync-automated';
 import { TENANT, mail, round, setup } from './inbox-sync-harness';
 
 function enquirySetup(options: Parameters<typeof setup>[0] = {}) {
