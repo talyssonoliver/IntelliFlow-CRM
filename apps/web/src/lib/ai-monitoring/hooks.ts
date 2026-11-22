@@ -9,6 +9,7 @@
 
 import { api } from '@/lib/api';
 import { useMemo } from 'react';
+import { normalizeROI } from './roi-utils';
 import type {
   DriftDashboardData,
   DriftFilters,
@@ -96,15 +97,8 @@ export function useDriftDashboard(
       }
     | undefined;
 
-  const roiData = roiQuery.data as
-    | {
-        totalCost: number;
-        totalValue: number;
-        netValue: number;
-        roi: number;
-        trendDirection: string;
-      }
-    | undefined;
+  const roiRaw = roiQuery.data as unknown;
+  const roiData = normalizeROI(roiRaw);
 
   const status = driftData?.status ?? {
     trackedMetrics: 0,
@@ -118,14 +112,14 @@ export function useDriftDashboard(
 
   // Check if backend reports data unavailable (multi-process isolation)
   const driftAvailable = (driftData as Record<string, unknown>)?.available !== false;
-  const roiAvailable = (roiData as Record<string, unknown>)?.available !== false;
+  const roiAvailable = (roiRaw as Record<string, unknown> | undefined)?.available !== false;
   const available = driftAvailable && roiAvailable;
 
   return {
     available,
     status,
     history,
-    roi: roiData ?? null,
+    roi: roiData,
     isLoading,
     error: error as Error | null,
     refetch: () => {
