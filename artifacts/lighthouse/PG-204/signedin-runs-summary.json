@@ -1,0 +1,48 @@
+{
+  "task": "PG-204",
+  "command": "lhci collect (desktop preset, onlyCategories performance+accessibility, 3 runs, puppeteerScript tools/lighthouse/lhci-auth.js)",
+  "startedAt": "2026-11-22T15:23:59Z",
+  "finishedAt": "2026-11-22T15:25:33Z",
+  "exitCode": 0,
+  "target": "http://localhost:3400 (local production build, local Supabase, ephemeral DB)",
+  "runs": {
+    "http://localhost:3400/cases/case-types": [
+      {
+        "performance": 0.95,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:24:06.056Z"
+      },
+      {
+        "performance": 0.95,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:24:22.113Z"
+      },
+      {
+        "performance": 0.95,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:24:36.550Z"
+      }
+    ],
+    "http://localhost:3400/cases/new": [
+      {
+        "performance": 0.94,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:24:51.004Z"
+      },
+      {
+        "performance": 0.94,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:25:06.048Z"
+      },
+      {
+        "performance": 0.94,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:25:21.020Z"
+      }
+    ]
+  },
+  "median_reports": [
+    "cases-case-types-auth.report.json",
+    "cases-new-auth.report.json"
+  ]
+}
