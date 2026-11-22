@@ -30,11 +30,12 @@ describe('PrismaLeadRepository.save scoreOnlyIfEmail', () => {
       lead: { upsert },
     } as unknown as PrismaClient);
     const l = lead();
+    l.updateScore(64, 0.55, 'model-1');
     await repo.save(l, { scoreOnlyIfEmail: ' ADA@example.invalid ' });
     expect(upsert).not.toHaveBeenCalled();
     const sql = ($executeRaw.mock.calls[0]![0] as string[]).join('?');
     expect(sql).toMatch(
-      /UPDATE leads SET score = \?, "updatedAt" = \?,\s+"scoringStatus" = \?::"LeadScoringStatus", "scoredAt" = \?\s/
+      /UPDATE leads SET score = \?, "updatedAt" = \?,\s+"scoringStatus" = \?::"LeadScoringStatus", "scoredAt" = \?,\s+"scoreConfidence" = \?\s/
     );
     // A stored " Ada@Example.invalid " matches the address the lead was read with.
     expect(sql).toContain('AND dsar_normalise_email(email) = ?');
@@ -43,10 +44,24 @@ describe('PrismaLeadRepository.save scoreOnlyIfEmail', () => {
       l.updatedAt,
       'SCORED',
       l.updatedAt,
+      // Stored beside the score (register #49).
+      0.55,
       l.id.value,
       'tenant-1',
       'ada@example.invalid',
     ]);
+  });
+
+  it('stores the confidence of a low-confidence score as it is, not rounded up to 1', async () => {
+    const $executeRaw = vi.fn().mockResolvedValue(1);
+    const repo = new PrismaLeadRepository({ $executeRaw } as unknown as PrismaClient);
+    const l = lead();
+    l.updateScore(12, 0.4, 'model-1');
+    await repo.save(l, { scoreOnlyIfEmail: 'ada@example.invalid', scoringStatus: 'NEEDS_REVIEW' });
+    const values = $executeRaw.mock.calls[0]!.slice(1);
+    expect(values[0]).toBe(12);
+    expect(values[2]).toBe('NEEDS_REVIEW');
+    expect(values[4]).toBe(0.4);
   });
 
   it('throws LeadIdentityChangedError when the email no longer matches (erased meanwhile)', async () => {
@@ -101,5 +116,51 @@ describe('PrismaLeadRepository.markScoringFailed (#1218)', () => {
         updatedAt: new Date(),
       })
     ).resolves.toBeUndefined();
+  });
+});
+
+describe('PrismaLeadRepository reads the stored score confidence (register #49)', () => {
+  const record = (scoreConfidence: number | null) => ({
+    id: '11111111-1111-4111-8111-111111111111',
+    email: 'ada@example.invalid',
+    firstName: 'Ada',
+    lastName: null,
+    company: null,
+    title: null,
+    phone: null,
+    source: 'WEBSITE',
+    status: 'NEW',
+    score: 20,
+    scoreConfidence,
+    location: null,
+    website: null,
+    avatarUrl: null,
+    estimatedValue: null,
+    lastContactedAt: null,
+    tags: [],
+    budget: null,
+    authority: null,
+    need: null,
+    timeline: null,
+    annualRevenue: null,
+    ownerId: 'owner-1',
+    tenantId: 'tenant-1',
+    createdAt: new Date('2026-11-01T00:00:00.000Z'),
+    updatedAt: new Date('2026-11-02T00:00:00.000Z'),
+  });
+  const readWith = async (scoreConfidence: number | null) => {
+    const findUnique = vi.fn().mockResolvedValue(record(scoreConfidence));
+    const repo = new PrismaLeadRepository({ lead: { findUnique } } as unknown as PrismaClient);
+    const found = await repo.findById({ value: '11111111-1111-4111-8111-111111111111' } as never);
+    expect(found).not.toBeNull();
+    return found!;
+  };
+
+  it('hands the stored confidence to the lead', async () => {
+    expect((await readWith(0.4)).score.confidence).toBe(0.4);
+  });
+
+  it('treats a lead scored before the column existed (NULL) as confidence 1', async () => {
+    expect((await readWith(null)).score.confidence).toBe(1);
   });
 });

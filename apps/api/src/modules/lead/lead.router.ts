@@ -261,6 +261,7 @@ function mapPrismaLeadToResponse(lead: {
   source: string;
   status: string;
   score: number;
+  scoreConfidence?: number | null;
   ownerId: string;
   tenantId: string;
   createdAt: Date;
@@ -277,7 +278,7 @@ function mapPrismaLeadToResponse(lead: {
     source: lead.source,
     status: lead.status,
     score: lead.score,
-    scoreConfidence: ((lead as Record<string, unknown>).scoreConfidence as number) ?? null,
+    scoreConfidence: lead.scoreConfidence ?? null,
     scoreTier: (() => {
       if (lead.score >= LEAD_SCORE_THRESHOLDS.HOT) return 'HOT';
       if (lead.score >= LEAD_SCORE_THRESHOLDS.WARM) return 'WARM';
