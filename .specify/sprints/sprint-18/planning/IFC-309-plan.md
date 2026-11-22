@@ -247,7 +247,7 @@ pnpm --filter @intelliflow/db typecheck
 **Type:** implementation
 **Files to Create:**
 - `packages/domain/src/legal/TermsAcceptance.ts`
-- `packages/domain/src/legal/index.ts` (create if not present, or add export)
+- _(No `legal/index.ts` barrel was created: the legal folder has no barrel on main. `TermsAcceptance` is exported directly from `packages/domain/src/index.ts` line 93, `export * from './legal/TermsAcceptance'`.)_
 
 **Implementation (zero infra deps — AC-012):**
 ```typescript
@@ -687,9 +687,9 @@ pnpm --filter @intelliflow/web test -- --coverage \
   --testPathPattern="components/legal/__tests__/TermsAcceptanceConfirm"
 ```
 
-- [x] `TermsAcceptance.ts` coverage >= 90% statements/branches/functions/lines
-- [x] `terms-acceptance.router.ts` coverage >= 90%
-- [x] `TermsAcceptanceConfirm.tsx` coverage >= 90%
+- [x] `TermsAcceptance.ts` coverage >= 90% statements/branches/functions/lines _(Verified 2026-11-22: domain vitest v8 coverage 100% stmts, 100% branch, 100% funcs, 100% lines; was 71.4%.)_
+- [x] `terms-acceptance.router.ts` coverage >= 90% _(Verified 2026-11-22: api vitest istanbul coverage 95.65% stmts, 92.85% branch, 100% funcs, 100% lines; was 95.7% stmts, 78.6% branch.)_
+- [x] `TermsAcceptanceConfirm.tsx` coverage >= 90% _(Verified 2026-11-22 on origin/main 580bfac5d: web vitest istanbul coverage 94.44% stmts, 91.3% branch, 100% funcs, 100% lines, 14 tests pass.)_
 
 ---
 
