@@ -15,6 +15,7 @@
  * - Requests go only to Gmail's own API host, each with a timeout; failures are reduced to
  *   MailboxTransportError codes, never provider text.
  */
+import { readAutomationSignals, type MailAutomationSignals } from './mail-automation-signals';
 import { MailboxTransportError } from './mailbox-errors';
 import { displayName, zohoAddresses as headerAddresses, zohoBodyText } from './zoho-text';
 
@@ -29,6 +30,11 @@ const HEADERS = [
   'Message-ID',
   'List-Unsubscribe',
   'Precedence',
+  'Auto-Submitted',
+  'List-Id',
+  'Content-Type',
+  'In-Reply-To',
+  'References',
 ] as const;
 
 export type GmailSyncLabel = 'INBOX' | 'SENT';
@@ -46,6 +52,8 @@ export interface GmailSyncedMessage {
   receivedAt: Date;
   /** MVP-011: bulk mail (List-Unsubscribe or Precedence: bulk/list/junk). */
   bulk?: boolean;
+  /** MVP-011: the headers that tell automated mail from a person's (see mail-automation-signals.ts). */
+  signals?: MailAutomationSignals;
   isRead: boolean;
   /** Empty: the body is read only through `loadBody()`. */
   bodyText: string;
@@ -277,6 +285,9 @@ function toMessage(
     receivedAt: new Date(receivedTime),
     isRead: !labels.includes('UNREAD'),
     ...(isBulk(item) ? { bulk: true } : {}),
+    signals: readAutomationSignals((name) =>
+      name === 'Content-Type' ? (item.payload?.mimeType ?? header(item, name)) : header(item, name)
+    ),
     bodyText: '',
     loadBody: () =>
       loadBodyText(fetchImpl, accessToken, id, options.maxBodyChars).catch((error: unknown) => {

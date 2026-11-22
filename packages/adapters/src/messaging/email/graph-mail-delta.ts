@@ -14,6 +14,11 @@
  *   restart from scratch instead of failing the mailbox.
  * - Every other failure is a MailboxTransportError code; provider text never leaves here.
  */
+import {
+  headerLookup,
+  readAutomationSignals,
+  type MailAutomationSignals,
+} from './mail-automation-signals';
 import { MailboxTransportError } from './mailbox-errors';
 
 const GRAPH_HOST = 'graph.microsoft.com';
@@ -32,6 +37,8 @@ const SELECT = [
   'receivedDateTime',
   'isRead',
   'body',
+  // MVP-011: the headers that tell automated mail from a person's (Auto-Submitted, List-Id, ...).
+  'internetMessageHeaders',
 ].join(',');
 
 export type GraphSyncFolder = 'inbox' | 'sentitems';
@@ -49,6 +56,8 @@ export interface GraphSyncedMessage {
   receivedAt: Date;
   isRead: boolean;
   bodyText: string;
+  /** MVP-011: what the headers say about who sent it (see mail-automation-signals.ts). */
+  signals?: MailAutomationSignals;
 }
 
 export interface GraphDeltaRound {
@@ -98,6 +107,7 @@ interface GraphDeltaMessage {
   receivedDateTime?: string | null;
   isRead?: boolean | null;
   body?: { content?: string | null } | null;
+  internetMessageHeaders?: Array<{ name?: string | null; value?: string | null }> | null;
   '@removed'?: unknown;
 }
 
@@ -166,6 +176,7 @@ export function toSyncedMessage(
     receivedAt,
     isRead: entry.isRead === true,
     bodyText: storableText(entry.body?.content ?? '').slice(0, maxBodyChars),
+    signals: readAutomationSignals(headerLookup(entry.internetMessageHeaders)),
   };
 }
 

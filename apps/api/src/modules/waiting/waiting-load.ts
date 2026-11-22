@@ -20,6 +20,8 @@ import {
   type WaitingPerson,
 } from './waiting-for-reply';
 
+/** The tag tools/scripts/clean-automated-leads.ts puts on a lead it archives (status LOST). */
+export const AUTOMATED_SENDER_TAG = 'automated-sender';
 const PEOPLE_CAP = 20000;
 // Rows read per table, newest first. A table that fills the cap only covers history back to its oldest
 // row, so every source is cut to the shortest such window (see coverageFloor).
@@ -55,11 +57,19 @@ async function loadPeople(
   const select = { id: true, firstName: true, lastName: true, email: true, company: true };
   const [leads, contacts] = await Promise.all([
     // Ordered, so a tenant past the cap loses the same people every time, not a random few.
-    db.lead.findMany({ where: leadScope, select, orderBy: { id: 'asc' }, take: PEOPLE_CAP }),
+    db.lead.findMany({
+      where: leadScope,
+      select: { ...select, status: true, tags: true },
+      orderBy: { id: 'asc' },
+      take: PEOPLE_CAP,
+    }),
     db.contact.findMany({ where: contactScope, select, orderBy: { id: 'asc' }, take: PEOPLE_CAP }),
   ]);
   return [
-    ...leads.map((r) => toPerson('lead', r as PersonRow)),
+    // A lead archived as an automated sender (register #57) is nobody's wait.
+    ...leads
+      .filter((r) => !(r.status === 'LOST' && (r.tags ?? []).includes(AUTOMATED_SENDER_TAG)))
+      .map((r) => toPerson('lead', r as PersonRow)),
     ...contacts.map((r) => toPerson('contact', r as PersonRow)),
   ];
 }
