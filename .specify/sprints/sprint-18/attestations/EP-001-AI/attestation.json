@@ -75,5 +75,21 @@
       "evidence": "SonarCloud project talyssonoliver_IntelliFlow-CRM analysed main at 9a566ce5c on 2026-11-12 12:45 UTC, quality gate OK (17 analyses on record)."
     }
   ],
-  "notes": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. The DoD and KPIs in Sprint_plan.csv were amended from the EasyPanel stack (collector, Prometheus, Loki, Tempo, SonarQube self-hosted) to the Grafana Cloud stack; retention amended to 14 days by the same ruling. The web app on Vercel is tracked under ENV-008-AI / IFC-116 (owner ruling: it also sends OTLP to Grafana). The sprint-0 attestation stays as history."
+  "notes": "Owner ruling 2026-11-12 (relayed by the IntelliFlow coordinator): the tasks are proven on the real stack, Grafana Cloud + Railway + Vercel; no EasyPanel. The DoD and KPIs in Sprint_plan.csv were amended from the EasyPanel stack (collector, Prometheus, Loki, Tempo, SonarQube self-hosted) to the Grafana Cloud stack; retention amended to 14 days by the same ruling. The web app on Vercel is tracked under ENV-008-AI / IFC-116 (owner ruling: it also sends OTLP to Grafana). The sprint-0 attestation stays as history.",
+  "validation_results": [
+    {
+      "name": "Format, prettier",
+      "command": "npx prettier --check infra/monitoring/otel-collector.yaml infra/monitoring/tempo-config.yml infra/monitoring/docker-compose.monitoring.yml infra/monitoring/prometheus.yml infra/monitoring/loki-config.yml docs/operations/runbooks/monitoring-runbook.md docs/operations/runbooks/easypanel-runbook.md artifacts/monitoring-config-hashes.txt",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:58:02Z"
+    },
+    {
+      "name": "Compose schema validation (docker compose config -q)",
+      "command": "docker compose -f infra/monitoring/docker-compose.monitoring.yml config -q",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:51:53Z"
+    }
+  ]
 }
