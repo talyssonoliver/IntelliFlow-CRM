@@ -10,9 +10,9 @@
  *     1. Sender local part: dmarc*, bounce*, noreply / no-reply / donotreply, postmaster,
  *        mailer-daemon, abuse, notifications, newsletters, mailer, daemon, auto-reply
  *        (see AUTOMATED_LOCAL_PART; a short list on purpose).
- *     2. Auto-Submitted header with any value but "no" (RFC 3834: auto-replied, auto-generated).
- *     3. Content-Type multipart/report (delivery and disposition reports) or a bare application/zip,
- *        application/gzip (a report sent as the whole message).
+ *     2. Auto-Submitted header with any keyword but "no" (RFC 3834: auto-replied, auto-generated).
+ *     3. Content-Type multipart/report (delivery and disposition reports), or a bare application/zip
+ *        or gzip whose subject says report or dmarc (a report sent as the whole message).
  *     4. Subject in the DMARC aggregate report format ("Report Domain: x Submitter: y Report-ID: z").
  *   Skipped unless the mail is a reply to a mail we sent (a real person can carry these headers):
  *     5. List-Id or List-Unsubscribe header.
@@ -54,6 +54,10 @@ const AUTOMATED_WORDS = new Set([
 /** dmarcreport, dmarcreports, dmarcrua, dmarcruf and bounce1234 as one word; dmarcus and bouncer are people. */
 const AUTOMATED_WORD_PATTERN = /^(?:dmarc(?:reports?|rua|ruf)|bounces?\d+)$/;
 
+const ARCHIVE_TYPES = new Set(['application/zip', 'application/gzip', 'application/x-gzip']);
+/** A subject that names a report (the DMARC aggregate subject has its own rule). */
+const REPORT_WORDS = /\b(?:dmarc|report)\b/i;
+
 /** The DMARC aggregate report subject (RFC 7489 appendix B.2). */
 const DMARC_REPORT_SUBJECT = /\breport domain:.*\bsubmitter:/i;
 
@@ -81,13 +85,17 @@ export function machineReason(message: {
 }): string | null {
   if (message.fromAddress && isAutomatedAddress(message.fromAddress)) return 'automated-sender';
   const signals = message.signals;
-  const autoSubmitted = signals?.autoSubmitted?.trim().toLowerCase();
+  // The keyword, without RFC 3834 parameters or comments: `no; x-origin=human` is still `no`.
+  const autoSubmitted = signals?.autoSubmitted
+    ?.trim()
+    .split(/[\s;(]/, 1)[0]
+    ?.toLowerCase();
   if (autoSubmitted && autoSubmitted !== 'no') return 'auto-submitted';
   const type = signals?.contentType;
   if (type === 'multipart/report') return 'report-content-type';
-  if (type === 'application/zip' || type === 'application/gzip' || type === 'application/x-gzip') {
+  // A bare archive is a person's too (plans, photos): it counts only when the subject says report.
+  if (ARCHIVE_TYPES.has(type ?? '') && REPORT_WORDS.test(message.subject))
     return 'report-attachment';
-  }
   if (isDmarcReportSubject(message.subject)) return 'dmarc-report';
   return null;
 }

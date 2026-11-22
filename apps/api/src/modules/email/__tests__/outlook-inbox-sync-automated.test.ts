@@ -118,21 +118,33 @@ describe('automated mail never becomes a lead (register #57)', () => {
       expect(machineReason(message)).toBe('auto-submitted');
       expect((await leadsFor([message])).created).toBe(0);
     }
-    const human = person({ signals: { autoSubmitted: 'no' } });
+    const human = person({ signals: { autoSubmitted: 'no; x-origin=human (typed)' } });
     expect(machineReason(human)).toBeNull();
     expect((await leadsFor([human])).created).toBe(1);
   });
 
-  it('skips report content types: multipart/report and a bare zip or gzip', async () => {
-    for (const contentType of ['multipart/report', 'application/zip', 'application/gzip']) {
-      const message = person({ signals: { contentType } });
-      expect(machineReason(message)).not.toBeNull();
+  it('skips multipart/report, and a bare zip or gzip when the subject says report', async () => {
+    const report = person({ signals: { contentType: 'multipart/report' } });
+    expect(machineReason(report)).toBe('report-content-type');
+    expect((await leadsFor([report])).created).toBe(0);
+    for (const contentType of ['application/zip', 'application/gzip']) {
+      const message = person({
+        subject: 'Aggregate report for shop.example.invalid',
+        signals: { contentType },
+      });
+      expect(machineReason(message)).toBe('report-attachment');
       expect((await leadsFor([message])).created).toBe(0);
     }
-    // A normal mail with an attachment is multipart/mixed: a person's.
-    expect(
-      (await leadsFor([person({ signals: { contentType: 'multipart/mixed' } })])).created
-    ).toBe(1);
+  });
+
+  it('keeps a person whose whole mail is a zip, and one with an attachment (multipart/mixed)', async () => {
+    const zip = person({
+      subject: 'Plans for the extension',
+      signals: { contentType: 'application/zip' },
+    });
+    expect((await leadsFor([zip])).created).toBe(1);
+    const mixed = person({ signals: { contentType: 'multipart/mixed' } });
+    expect((await leadsFor([mixed])).created).toBe(1);
   });
 
   it('skips the DMARC aggregate subject even where headers cannot be read (Zoho)', async () => {

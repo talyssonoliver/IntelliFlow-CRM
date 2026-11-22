@@ -911,3 +911,16 @@ waivers:
     author: ifc-074 lane
     date: '2026-11-16'
     expires: '2026-12-16'
+  - fingerprint: 01cd645a324abb44ad268be1966e371160ad9db7f2bba9836241b2018b49511f
+    reason: >-
+      Accepted risk, MVP-011 register #57. A stored Graph delta cursor keeps the $select it was
+      created with, so a Microsoft mailbox that already has a cursor reads the message headers
+      (Auto-Submitted, List-Unsubscribe) only after its cursor restarts. Restarting every existing
+      cursor would re-read 30 days of Inbox and Sent mail through the unknown-sender rule and bring
+      back leads people deleted on purpose, which is worse than the gap. The sender and subject
+      rules (dmarc*, no-reply, mailer-daemon, DMARC report subject) need no headers and apply to
+      every mailbox at once, and that is what caused register #57. Gmail reads the headers on every
+      message.
+    author: ai agents lane
+    date: '2026-11-22'
+    expires: '2026-12-22'
