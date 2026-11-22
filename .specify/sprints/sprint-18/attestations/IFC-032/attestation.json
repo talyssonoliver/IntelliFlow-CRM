@@ -5,5 +5,21 @@
   "attestor": "IFC production observability lane",
   "attestation_timestamp": "2026-10-06T17:40:00Z",
   "verdict": "COMPLETE",
-  "notes": "Production OTLP export to Grafana Cloud (stack graysushi1880, UK). Real production traces from ai-worker (see artifacts/misc/trace-examples.json; first evidence trace 6a0c4b9ddcfa0f542d63d13798efd6d2, 2026-10-06 13:13:53 BST). Alert rules as code (infra/monitoring/grafana/cloud/alert-rules.json, #804/#807) applied by workflow runs 37499952027 (apply), 37500057256 (dry run), 37500642496 (send_test), 37501195583 (cleanup). Test alert \"[FIRING:1] IFC-032 delivery test\" received in the owner's Gmail at 18:05 BST 2026-10-06. Owner ruling 2026-10-06 18:20 BST: close it. Follow-ups, out of scope of this close: logs to Grafana, api SERVER spans after #802 promotion, availability check via Synthetic Monitoring."
+  "notes": "Production OTLP export to Grafana Cloud (stack graysushi1880, UK). Real production traces from ai-worker (see artifacts/misc/trace-examples.json; first evidence trace 6a0c4b9ddcfa0f542d63d13798efd6d2, 2026-10-06 13:13:53 BST). Alert rules as code (infra/monitoring/grafana/cloud/alert-rules.json, #804/#807) applied by workflow runs 37499952027 (apply), 37500057256 (dry run), 37500642496 (send_test), 37501195583 (cleanup). Test alert \"[FIRING:1] IFC-032 delivery test\" received in the owner's Gmail at 18:05 BST 2026-10-06. Owner ruling 2026-10-06 18:20 BST: close it. Follow-ups, out of scope of this close: logs to Grafana, api SERVER spans after #802 promotion, availability check via Synthetic Monitoring.",
+  "validation_results": [
+    {
+      "name": "Format, prettier",
+      "command": "npx prettier --check artifacts/misc/otel-collector-config.yaml artifacts/misc/trace-examples.json docs/architecture/adr/ADR-017-workflow-reliability.md",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:58:02Z"
+    },
+    {
+      "name": "Attestation JSON schema validation (ajv, attestation.schema.json)",
+      "command": "node ajv-validate attestation.schema.json .specify/sprints/sprint-18/attestations/IFC-032/attestation.json",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:58:02Z"
+    }
+  ]
 }

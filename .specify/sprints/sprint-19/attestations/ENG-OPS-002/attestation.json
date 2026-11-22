@@ -48,6 +48,13 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-07-22T11:35:00Z"
+    },
+    {
+      "name": "Format, prettier",
+      "command": "npx prettier --check docs/audit/sprints-1-18-current-state-audit.md",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:58:02Z"
     }
   ],
   "gate_results": [

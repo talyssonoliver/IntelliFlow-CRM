@@ -108,6 +108,41 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-11-13T11:41:31Z"
+    },
+    {
+      "name": "Build, api",
+      "command": "pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:55:32Z"
+    },
+    {
+      "name": "Build, application",
+      "command": "pnpm --filter @intelliflow/application build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:55:39Z"
+    },
+    {
+      "name": "Build, adapters",
+      "command": "pnpm --filter @intelliflow/adapters build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:55:58Z"
+    },
+    {
+      "name": "Build, validators",
+      "command": "pnpm --filter @intelliflow/validators build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:56:03Z"
+    },
+    {
+      "name": "Build, web",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:55:04Z"
     }
   ],
   "gate_results": [
