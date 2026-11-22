@@ -3,13 +3,25 @@
 ## £3000 decision on scaling - IntelliFlow CRM (Aurora)
 
 **Document ID:** IFC-034-GATE3-ANALYSIS **Date:** 2026-11-22 **Decision owner:**
-Talysson (the owner) **Status:** PENDING. No decision is recorded in this file.
+Talysson (the owner) **Status:** Decided 2026-11-22: HOLD (see "Decision").
 
 This pack follows the shape of Gate 2 (`docs/planning/gate-2/`). Every number
 was read on 22/11/2026 from production (read-only), the Railway API, GitHub, the
 uptime log, the issue register, the project tracker or a repo file named in
 section 9. Where data could not be read, section 8 says so. Nothing is estimated
 and presented as measured.
+
+## Decision
+
+**Decided by Talysson (the owner), 2026-11-22: HOLD** (his answer in Aurora's
+modal, "Hold (Recommended)").
+
+- No scaling spend now.
+- Close the stability gaps first: main CI pass rate 82.5%, load test p95 1.1 s
+  against the 200 ms target, and the 13 open register rows.
+- Get a first outside customer.
+- **Review date: about 2026-12-21**, together with Gate 2. Re-run the queries in
+  this pack and decide again then (section 11, step 5).
 
 ## 1. Decision needed
 
