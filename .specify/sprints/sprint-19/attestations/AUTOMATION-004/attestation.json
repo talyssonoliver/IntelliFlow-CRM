@@ -40,6 +40,27 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-11-12T14:19:00Z"
+    },
+    {
+      "name": "TypeScript typecheck, task-contract tools",
+      "command": "pnpm exec tsc --noEmit --strict --skipLibCheck --target ES2022 --module ESNext --moduleResolution bundler --esModuleInterop --resolveJsonModule --types node tools/scripts/orchestration/validate-task-contract.ts tools/scripts/orchestration/verify-dispatch-binding.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:52:10Z"
+    },
+    {
+      "name": "Lint, task-contract tools",
+      "command": "pnpm exec eslint tools/scripts/orchestration/validate-task-contract.ts tools/scripts/orchestration/verify-dispatch-binding.ts tools/scripts/orchestration/__tests__/validate-task-contract.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:52:19Z"
+    },
+    {
+      "name": "Build, repo (turbo)",
+      "command": "pnpm build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:57:45Z"
     }
   ],
   "gate_results": [
