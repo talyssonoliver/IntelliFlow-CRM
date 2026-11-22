@@ -1251,7 +1251,7 @@ export const billingRouter = createTRPCRouter({
     } else if (!user?.stripeCustomerId) {
       // No Stripe customer: the workspace may be on a contract plan billed outside Stripe
       // (Tenant.plan = CUSTOM, unlimited quotas), so read the tenant's own plan.
-      const tenantRow = await ctx.prisma.tenant.findUnique({
+      const tenantRow = await ctx.prismaWithTenant.tenant.findUnique({
         where: { id: user.tenantId },
         select: { plan: true },
       });

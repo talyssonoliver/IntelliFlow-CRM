@@ -444,6 +444,7 @@ describe('billingRouter', () => {
           emailVerified: true,
         } as UserSession,
         prisma: createUsageMetricsPrismaMock() as unknown,
+        prismaWithTenant: createUsageMetricsPrismaMock() as unknown,
       };
 
       const caller = billingRouter.createCaller(
@@ -469,6 +470,7 @@ describe('billingRouter', () => {
           emailVerified: true,
         } as UserSession,
         prisma: createUsageMetricsPrismaMock('CUSTOM') as unknown,
+        prismaWithTenant: createUsageMetricsPrismaMock('CUSTOM') as unknown,
       } as unknown as Parameters<typeof billingRouter.createCaller>[0]);
 
       const result = await caller.getUsageMetrics();
