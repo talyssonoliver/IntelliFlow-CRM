@@ -46,7 +46,7 @@ export function MobileNav({ routes, isOpen, onClose }: Readonly<MobileNavProps>)
   const noRouteActive = !routes.some(isRouteActive);
 
   return (
-    <div className="xl:hidden max-h-[calc(100svh-7rem)] overflow-y-auto border-t border-border">
+    <div className="lg:hidden max-h-[calc(100svh-7rem)] overflow-y-auto border-t border-border">
       <Suspense fallback={null}>
         <CloseOnNavigate onClose={onClose} />
       </Suspense>

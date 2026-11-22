@@ -59,6 +59,14 @@ beforeEach(() => {
   mocks.getUnreadCounts.mockReturnValue({ data: { inbox: 0 }, isLoading: false, isError: false });
 });
 
+describe('EmailPage heading (owner 21/11 check)', () => {
+  it('names the page for screen readers without a banner above the inbox', () => {
+    refusal('NO_MAILBOX');
+    render(<EmailPage />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Email' })).toHaveClass('sr-only');
+  });
+});
+
 describe('EmailPage mailbox prompt', () => {
   it('asks to connect a mailbox when the inbox is empty and none is connected', () => {
     refusal('NO_MAILBOX');

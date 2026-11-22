@@ -12,6 +12,14 @@ vi.mock('@/lib/auth/AuthContext', () => ({
   useAuth: () => ({ isAuthenticated: true, isLoading: false }),
 }));
 
+// ── Modules: Reports shows in the hero only when Analytics is on ─────────────
+const modules = { analytics: false };
+vi.mock('@/hooks/useEnabledModules', () => ({
+  useEnabledModules: () => ({
+    isModuleEnabled: (id: string) => id === 'CORE_CRM' || (id === 'ANALYTICS' && modules.analytics),
+  }),
+}));
+
 // ── Widget registry — lightweight stubs so each widget renders instantly ──────
 vi.mock('@/components/dashboard/widgets', () => ({
   widgetRegistry: {
@@ -63,14 +71,14 @@ describe('DashboardClient', () => {
 
   it('says Live only while the live-update connection is open (MVP-004)', () => {
     renderDashboard();
-    expect(screen.getByText('Refreshes every minute')).toBeInTheDocument();
+    expect(screen.getByText('Key figures refresh every minute')).toBeInTheDocument();
     expect(screen.queryByText(/^Live/)).not.toBeInTheDocument();
 
     act(() => setLiveConnected(true));
-    expect(screen.getByText('Live · refreshes every minute')).toBeInTheDocument();
+    expect(screen.getByText('Live · key figures refresh every minute')).toBeInTheDocument();
 
     act(() => setLiveConnected(false));
-    expect(screen.getByText('Refreshes every minute')).toBeInTheDocument();
+    expect(screen.getByText('Key figures refresh every minute')).toBeInTheDocument();
   });
 
   it('renders the page header', () => {
@@ -90,6 +98,32 @@ describe('DashboardClient', () => {
       'href',
       '/dashboard/new'
     );
+  });
+
+  it('shows the hero subtitle and leads with Add New (owner 21/11)', () => {
+    renderDashboard();
+
+    expect(screen.getByText('Your sales, deals and tasks at a glance.')).toBeInTheDocument();
+    const hrefs = screen
+      .getAllByRole('link')
+      .map((l) => l.getAttribute('href'))
+      .filter((h) => h !== '/');
+    expect(hrefs.slice(0, 3)).toEqual(['/dashboard/new', '/dashboard/customize', '/calendar']);
+  });
+
+  it('offers Reports only when the Analytics module is on, so no control leads nowhere', () => {
+    modules.analytics = false;
+    const { unmount } = renderDashboard();
+    expect(screen.queryByRole('link', { name: 'Reports' })).toBeNull();
+    unmount();
+
+    modules.analytics = true;
+    try {
+      renderDashboard();
+      expect(screen.getByRole('link', { name: 'Reports' })).toHaveAttribute('href', '/analytics');
+    } finally {
+      modules.analytics = false;
+    }
   });
 
   it('renders all 8 default widgets', () => {
