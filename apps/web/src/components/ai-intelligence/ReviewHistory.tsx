@@ -9,7 +9,8 @@
  * Reuses:
  * - ReviewCard from ai-review (read-only for completed reviews)
  * - SearchFilterBar from shared
- * - Card, Badge, Button, Skeleton, EmptyState from @intelliflow/ui
+ * - Badge, Button, Skeleton, EmptyState from @intelliflow/ui
+ * - KpiCard from @/components/dashboard/KpiCard
  * - REVIEW_STATUSES, AI_OUTPUT_TYPES from @intelliflow/domain
  */
 

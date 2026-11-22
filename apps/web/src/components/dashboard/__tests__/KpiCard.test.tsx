@@ -78,7 +78,6 @@ describe('KpiCard (#1225 UI-009)', () => {
     expect(value).toHaveClass('[overflow-wrap:anywhere]');
     expect(value).toHaveAttribute('title', '£1,250,000');
     expect(screen.getByText('Significant Results')).toHaveClass('line-clamp-2');
-    expect(screen.getByText('Significant Results')).toHaveAttribute('title', 'Significant Results');
   });
 
   it('shows a skeleton bar while loading, keeping the label and icon', () => {
@@ -214,5 +213,41 @@ describe('KpiCard framed (owner 21/11: one KPI card on every page)', () => {
     );
     const footer = screen.getByText('avg/account');
     expect(footer.previousElementSibling).toContainElement(screen.getByTestId('kpi-icon'));
+  });
+
+  it('sizes the number from its own column between 9rem and 11rem, where the icon sits beside it (#50)', () => {
+    render(<KpiCard label="Sales Revenue" icon="payments" value="£1,250,000" />);
+    expect(screen.getByTestId('kpi-value').className).toContain(
+      '@min-[9rem]:@max-[11rem]:text-[clamp(0.75rem,calc((100cqi-5.5rem)/4.8),1.125rem)]'
+    );
+  });
+
+  it('announces loading, and loading wins over failed', () => {
+    render(<KpiCard label="Pending" icon="hourglass_empty" value={4} loading failed />);
+    expect(screen.getByRole('status', { name: 'Loading' })).toBe(screen.getByTestId('kpi-value'));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('can keep a heading and a region landmark for a card that had them', () => {
+    render(
+      <KpiCard
+        framed
+        landmark
+        labelAs="h3"
+        ariaLabel="Endpoint health"
+        label="Endpoints"
+        icon="api"
+        value="3/4"
+      />
+    );
+    expect(screen.getByRole('region', { name: 'Endpoint health' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'Endpoints' })).toBeInTheDocument();
+  });
+
+  it('puts the test id and spoken name on the compact card too', () => {
+    render(
+      <KpiCard variant="compact" testId="c" ariaLabel="Open: 3" label="Open" icon="a" value={3} />
+    );
+    expect(screen.getByTestId('c')).toHaveAttribute('aria-label', 'Open: 3');
   });
 });

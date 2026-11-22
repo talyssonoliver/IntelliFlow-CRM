@@ -5,7 +5,8 @@
  *
  * Uses existing shared components:
  * - SearchFilterBar + useMultiFilterState from shared
- * - EmptyState, Skeleton, Card from @intelliflow/ui
+ * - EmptyState, Skeleton from @intelliflow/ui
+ * - KpiCard from @/components/dashboard/KpiCard
  * - ReviewCard from ./ReviewCard
  * - useReviewQueue from hooks
  */

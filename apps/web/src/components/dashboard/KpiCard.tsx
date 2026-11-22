@@ -52,6 +52,10 @@ export interface KpiCardProps {
   testId?: string;
   /** Spoken name of the whole card, when the label and figure alone are not enough. */
   ariaLabel?: string;
+  /** Render the box as a `<section>` (a region landmark when `ariaLabel` is set), not a div. */
+  landmark?: boolean;
+  /** Render the label as a heading (`h3`) so the card stays in heading navigation. */
+  labelAs?: 'p' | 'h3';
 }
 
 export function KpiCard(props: Readonly<KpiCardProps>) {
@@ -83,10 +87,11 @@ function KpiFigure({ row, loading, failed, pending, value, fullValue }: Readonly
   const rowLeading = row ? 'leading-7 @min-[11rem]:leading-8' : '';
   if (loading) {
     return (
-      <div
-        className={`rounded bg-muted animate-pulse motion-reduce:animate-none h-6 w-14 ${row ? 'my-0.5 @min-[11rem]:my-1' : ''}`}
+      <output
+        className={`block rounded bg-muted animate-pulse motion-reduce:animate-none h-6 w-14 ${row ? 'my-0.5 @min-[11rem]:my-1 @max-[9rem]:my-0' : ''}`}
         data-testid="kpi-value"
         aria-busy="true"
+        aria-label="Loading"
       />
     );
   }
@@ -102,7 +107,7 @@ function KpiFigure({ row, loading, failed, pending, value, fullValue }: Readonly
     );
   }
   const figureSize = row
-    ? 'text-[clamp(1.125rem,11cqi,1.875rem)] leading-7 @min-[11rem]:leading-8 @max-[9rem]:text-[clamp(0.875rem,calc((100cqi-1.5rem)/6.2),1.125rem)] @max-[9rem]:leading-6'
+    ? 'text-[clamp(1.125rem,11cqi,1.875rem)] leading-7 @min-[11rem]:leading-8 @max-[9rem]:text-[clamp(0.875rem,calc((100cqi-1.5rem)/6.2),1.125rem)] @max-[9rem]:leading-6 @min-[9rem]:@max-[11rem]:text-[clamp(0.75rem,calc((100cqi-5.5rem)/4.8),1.125rem)]'
     : 'text-2xl sm:text-3xl';
   return (
     <p
@@ -132,14 +137,20 @@ function KpiCardBody({
   className,
   testId,
   ariaLabel,
+  landmark = false,
+  labelAs = 'p',
 }: Readonly<KpiCardProps>) {
   const frame =
     (framed ? ' rounded-lg border border-border bg-card' : '') +
     (framed && accentClassName ? ` ${accentClassName}` : '') +
     (className ? ` ${className}` : '');
-  const labelProps = ariaLabel ? { role: 'group', 'aria-label': ariaLabel } : {};
+  const Box = landmark ? 'section' : 'div';
+  const labelProps = ariaLabel
+    ? { ...(landmark ? {} : { role: 'group' }), 'aria-label': ariaLabel }
+    : {};
   const fullValue =
     typeof value === 'string' || typeof value === 'number' ? String(value) : undefined;
+  const LabelTag = labelAs;
   const badge = failed ? undefined : badgeProp;
   const footer = failed ? undefined : footerProp;
   const row = variant === 'default';
@@ -195,7 +206,7 @@ function KpiCardBody({
   // - 13rem and up (desktop from 1024px): at least 112px tall, so every desktop card matches;
   // - 14rem and up: 56px icon = 20 + 4 + 32.
   return (
-    <div className={`@container h-full min-w-0${frame}`} data-testid={testId} {...labelProps}>
+    <Box className={`@container h-full min-w-0${frame}`} data-testid={testId} {...labelProps}>
       <div className="h-full flex flex-col justify-center min-w-0 p-3 @min-[13rem]:min-h-28 @min-[14rem]:p-5">
         <div className="flex items-center gap-2 @min-[11rem]:gap-3 @min-[14rem]:gap-4 @max-[9rem]:flex-col @max-[9rem]:items-start">
           <div
@@ -210,19 +221,16 @@ function KpiCardBody({
             </span>
           </div>
           <div className="min-w-0 flex-1 flex flex-col @max-[9rem]:w-full">
-            <p
-              className="text-xs leading-4 @min-[14rem]:text-sm @min-[14rem]:leading-5 text-muted-foreground line-clamp-2 break-words"
-              title={label}
-            >
+            <LabelTag className="text-xs leading-4 @min-[14rem]:text-sm @min-[14rem]:leading-5 text-muted-foreground line-clamp-2 break-words">
               {label}
-            </p>
+            </LabelTag>
             <div className="mt-0.5 @min-[14rem]:mt-1 min-w-0">{figure}</div>
             {badge ? <div className="mt-1">{badge}</div> : null}
           </div>
         </div>
         {footer}
       </div>
-    </div>
+    </Box>
   );
 }
 

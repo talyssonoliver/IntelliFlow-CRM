@@ -116,6 +116,7 @@ function MetricCard({
       value={<span className={getValueColor(passing, ms, targetMs)}>{value}</span>}
       badge={<PassFailPill passing={passing} />}
       ariaLabel={ariaLabel}
+      labelAs="h3"
       footer={
         <div className="mt-3">
           <Progress
@@ -155,6 +156,8 @@ function EndpointHealthCard({
       }
       badge={<PassFailPill passing={allPass} />}
       ariaLabel="Endpoint health"
+      landmark
+      labelAs="h3"
       footer={
         <div className="mt-3">
           <Progress
@@ -186,6 +189,8 @@ function LoadTestCard({
       iconClassName="bg-muted text-muted-foreground"
       value={rps != null ? `${rps} rps` : 'N/A'}
       ariaLabel="Load test results"
+      landmark
+      labelAs="h3"
       footer={
         <p className="mt-3 text-xs text-muted-foreground">
           {vus != null && duration != null
