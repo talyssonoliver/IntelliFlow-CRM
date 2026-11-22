@@ -39,6 +39,7 @@ import {
 import { HealthScoreGauge } from './HealthScoreGauge';
 import { RiskIndicators } from './RiskIndicators';
 import { InterventionAlerts } from './InterventionAlerts';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 
 const ChurnTrendChart = lazy(() => import('./ChurnTrendChart'));
 
@@ -49,46 +50,6 @@ const ChurnTrendChart = lazy(() => import('./ChurnTrendChart'));
 const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'Churn Risk' }];
 
 const CHURN_SKELETON_KEYS = ['churn-0', 'churn-1', 'churn-2'] as const;
-
-// ============================================
-// Stats Card (internal)
-// ============================================
-
-function StatCard({
-  label,
-  value,
-  icon,
-  colorClass,
-  isLoading,
-}: Readonly<{
-  label: string;
-  value: number;
-  icon: string;
-  colorClass: string;
-  isLoading: boolean;
-}>) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', colorClass)}>
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">
-              {icon}
-            </span>
-          </div>
-          <div>
-            {isLoading ? (
-              <Skeleton className="h-6 w-10" />
-            ) : (
-              <p className="text-2xl font-bold text-foreground">{value}</p>
-            )}
-            <p className="text-xs text-muted-foreground">{label}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 // ============================================
 // Filter options
@@ -390,40 +351,45 @@ export function ChurnDashboard() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        <StatCard
+        <KpiCard
+          framed
           label="Critical"
           value={stats?.critical ?? 0}
           icon="error"
-          colorClass="bg-destructive/10 text-destructive"
-          isLoading={isLoading}
+          iconClassName="bg-destructive/10 text-destructive"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="High"
           value={stats?.high ?? 0}
           icon="warning"
-          colorClass="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
-          isLoading={isLoading}
+          iconClassName="bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Medium"
           value={stats?.medium ?? 0}
           icon="info"
-          colorClass="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-          isLoading={isLoading}
+          iconClassName="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Low"
           value={stats?.low ?? 0}
           icon="check_circle"
-          colorClass="bg-primary/10 text-primary"
-          isLoading={isLoading}
+          iconClassName="bg-primary/10 text-primary"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Minimal"
           value={stats?.minimal ?? 0}
           icon="verified"
-          colorClass="bg-success/10 text-success"
-          isLoading={isLoading}
+          iconClassName="bg-success/10 text-success"
+          loading={isLoading}
         />
       </div>
 

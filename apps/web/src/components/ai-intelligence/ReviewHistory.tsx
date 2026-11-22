@@ -14,10 +14,11 @@
  */
 
 import { useState, useCallback, useId, useMemo } from 'react';
-import { Card, CardContent, Badge, Button, EmptyState, Skeleton, cn } from '@intelliflow/ui';
+import { Badge, Button, EmptyState, Skeleton, cn } from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useReviewHistory } from '@/lib/ai-review/hooks';
 import { ReviewCard } from '@/components/ai-review/ReviewCard';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 import type { ReviewResponse } from '@intelliflow/validators/ai-review';
 import { AI_OUTPUT_TYPES, type AIOutputType } from '@intelliflow/domain';
 
@@ -137,25 +138,14 @@ function HistoryStatCard({
   isLoading: boolean;
 }>) {
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', colorClass)}>
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">
-              {icon}
-            </span>
-          </div>
-          <div>
-            {isLoading ? (
-              <Skeleton className="h-6 w-10" />
-            ) : (
-              <p className="text-2xl font-bold text-foreground">{value}</p>
-            )}
-            <p className="text-xs text-muted-foreground">{label}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <KpiCard
+      framed
+      label={label}
+      icon={icon}
+      iconClassName={colorClass}
+      value={value.toLocaleString('en-GB')}
+      loading={isLoading}
+    />
   );
 }
 

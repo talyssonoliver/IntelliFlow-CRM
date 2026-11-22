@@ -29,6 +29,7 @@ import type {
   DateRange,
   SortOption,
 } from '@/lib/ai-search/types';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 
 // ============================================
 // Breadcrumbs
@@ -37,46 +38,6 @@ import type {
 const BREADCRUMBS = [{ label: 'AI & Agents', href: '/agent-approvals' }, { label: 'AI Search' }];
 
 const SEARCH_SKELETON_KEYS = ['search-skel-0', 'search-skel-1', 'search-skel-2'] as const;
-
-// ============================================
-// Stats Card
-// ============================================
-
-function StatCard({
-  label,
-  value,
-  icon,
-  colorClass,
-  isLoading,
-}: Readonly<{
-  label: string;
-  value: string | number;
-  icon: string;
-  colorClass: string;
-  isLoading: boolean;
-}>) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', colorClass)}>
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">
-              {icon}
-            </span>
-          </div>
-          <div>
-            {isLoading ? (
-              <Skeleton className="h-6 w-10" />
-            ) : (
-              <p className="text-2xl font-bold text-foreground">{value}</p>
-            )}
-            <p className="text-xs text-muted-foreground">{label}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 // ============================================
 // Filter options
@@ -375,40 +336,45 @@ export function AISearchPage() {
       {/* Stats Cards */}
       {hasQuery && (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          <StatCard
+          <KpiCard
+            framed
             label="Total Results"
             value={totalResults}
             icon="database"
-            colorClass="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-            isLoading={isLoading}
+            iconClassName="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
+            loading={isLoading}
           />
-          <StatCard
+          <KpiCard
+            framed
             label="Documents Found"
             value={sourceCounts['documents'] ?? 0}
             icon="description"
-            colorClass="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
-            isLoading={isLoading}
+            iconClassName="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+            loading={isLoading}
           />
-          <StatCard
+          <KpiCard
+            framed
             label="Avg Relevance"
             value={formatRelevanceScore(avgRelevance)}
             icon="analytics"
-            colorClass="bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
-            isLoading={isLoading}
+            iconClassName="bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400"
+            loading={isLoading}
           />
-          <StatCard
+          <KpiCard
+            framed
             label="Response Time"
             value={`${executionTimeMs}ms`}
             icon="speed"
-            colorClass="bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
-            isLoading={isLoading}
+            iconClassName="bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400"
+            loading={isLoading}
           />
-          <StatCard
+          <KpiCard
+            framed
             label="Active Sources"
             value={activeSources}
             icon="hub"
-            colorClass="bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
-            isLoading={isLoading}
+            iconClassName="bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400"
+            loading={isLoading}
           />
         </div>
       )}

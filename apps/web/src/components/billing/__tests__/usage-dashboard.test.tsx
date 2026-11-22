@@ -152,8 +152,8 @@ describe('UsageDashboard', () => {
 
   it('links CRM cards to their pages', () => {
     render(<UsageDashboard />);
-    expect(screen.getByRole('link', { name: /156.*leads/i })).toHaveAttribute('href', '/leads');
-    expect(screen.getByRole('link', { name: /234.*deals/i })).toHaveAttribute('href', '/deals');
+    expect(screen.getByRole('link', { name: /leads.*156/i })).toHaveAttribute('href', '/leads');
+    expect(screen.getByRole('link', { name: /deals.*234/i })).toHaveAttribute('href', '/deals');
   });
 
   // --- AI section ---

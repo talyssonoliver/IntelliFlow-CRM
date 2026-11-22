@@ -29,6 +29,7 @@ import {
 import { DriftAlerts } from './DriftAlerts';
 import { ErrorRateGauge } from './ErrorRateGauge';
 import { CostTracker } from './CostTracker';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 
 const ModelPerformanceChart = lazy(() => import('./ModelPerformanceChart'));
 
@@ -47,42 +48,6 @@ const SEVERITY_CHIP_COLORS: Record<string, string> = {
   HIGH: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   CRITICAL: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
 };
-
-function StatCard({
-  label,
-  value,
-  icon,
-  colorClass,
-  isLoading,
-}: Readonly<{
-  label: string;
-  value: string | number;
-  icon: string;
-  colorClass: string;
-  isLoading: boolean;
-}>) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', colorClass)}>
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">
-              {icon}
-            </span>
-          </div>
-          <div>
-            {isLoading ? (
-              <Skeleton className="h-6 w-10" />
-            ) : (
-              <p className="text-2xl font-bold text-foreground">{value}</p>
-            )}
-            <p className="text-xs text-muted-foreground">{label}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 export function DriftDashboard() {
   const [severityFilter, setSeverityFilter] = useState<string>('ALL');
@@ -172,55 +137,61 @@ export function DriftDashboard() {
 
       {/* Stats row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mt-6">
-        <StatCard
+        <KpiCard
+          framed
           label="Tracked Metrics"
           value={status.trackedMetrics}
           icon="insights"
-          colorClass="bg-slate-100 dark:bg-slate-800"
-          isLoading={isLoading}
+          iconClassName="bg-slate-100 dark:bg-slate-800"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Drift Detected"
           value={status.driftDetected ? 'YES' : 'NO'}
           icon="trending_down"
-          colorClass={
+          iconClassName={
             status.driftDetected
               ? 'bg-red-100 dark:bg-red-900/30'
               : 'bg-green-100 dark:bg-green-900/30'
           }
-          isLoading={isLoading}
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="High Severity"
           value={status.highSeverityCount}
           icon="error"
-          colorClass="bg-orange-100 dark:bg-orange-900/30"
-          isLoading={isLoading}
+          iconClassName="bg-orange-100 dark:bg-orange-900/30"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Total Samples"
           value={status.totalSamples}
           icon="analytics"
-          colorClass="bg-blue-100 dark:bg-blue-900/30"
-          isLoading={isLoading}
+          iconClassName="bg-blue-100 dark:bg-blue-900/30"
+          loading={isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Failed Jobs"
           value={failedJobs.error ? '—' : failedJobs.total}
           icon="report_problem"
-          colorClass={(() => {
+          iconClassName={(() => {
             if (failedJobs.error) return 'bg-slate-100 dark:bg-slate-800';
             if (failedJobs.total > 0) return 'bg-red-100 dark:bg-red-900/30';
             return 'bg-green-100 dark:bg-green-900/30';
           })()}
-          isLoading={failedJobs.isLoading}
+          loading={failedJobs.isLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Last Check"
           value={status.lastCheck ? formatRelativeTime(status.lastCheck) : 'Never'}
           icon="schedule"
-          colorClass="bg-slate-100 dark:bg-slate-800"
-          isLoading={isLoading}
+          iconClassName="bg-slate-100 dark:bg-slate-800"
+          loading={isLoading}
         />
       </div>
 

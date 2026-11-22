@@ -15,6 +15,7 @@
  */
 
 import * as React from 'react';
+import Link from 'next/link';
 import { formatTrendPercent, shouldShowTrend } from '@/lib/dashboard/kpi-calculator';
 
 export interface KpiCardProps {
@@ -39,9 +40,83 @@ export interface KpiCardProps {
    * grid (whose widget box already frames the card). Owner 21/11: one KPI card everywhere.
    */
   framed?: boolean;
+  /** Data is on its way: a skeleton bar where the figure goes (the label and icon stay). */
+  loading?: boolean;
+  /** A coloured edge on the framed card, e.g. `border-l-4 border-l-green-500` (status cards). */
+  accentClassName?: string;
+  /** Extra classes on the outer box, e.g. a hover state when the card sits inside a link. */
+  className?: string;
+  /** Makes the whole card a link (counts that open their list). */
+  href?: string;
+  /** `data-testid` of the outer box. */
+  testId?: string;
+  /** Spoken name of the whole card, when the label and figure alone are not enough. */
+  ariaLabel?: string;
 }
 
-export function KpiCard({
+export function KpiCard(props: Readonly<KpiCardProps>) {
+  const { href } = props;
+  const card = <KpiCardBody {...props} />;
+  if (!href) return card;
+  return (
+    <Link
+      href={href}
+      className="block h-full rounded-lg transition-colors hover:[&>*]:border-primary/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+    >
+      {card}
+    </Link>
+  );
+}
+
+interface KpiFigureProps {
+  row: boolean;
+  loading: boolean;
+  failed: boolean;
+  pending: boolean;
+  value: React.ReactNode;
+  fullValue: string | undefined;
+}
+
+const WRAP_SAFE = '[overflow-wrap:anywhere]';
+
+function KpiFigure({ row, loading, failed, pending, value, fullValue }: Readonly<KpiFigureProps>) {
+  const rowLeading = row ? 'leading-7 @min-[11rem]:leading-8' : '';
+  if (loading) {
+    return (
+      <div
+        className={`rounded bg-muted animate-pulse motion-reduce:animate-none h-6 w-14 ${row ? 'my-0.5 @min-[11rem]:my-1' : ''}`}
+        data-testid="kpi-value"
+        aria-busy="true"
+      />
+    );
+  }
+  if (failed) {
+    return (
+      <p
+        className={`text-sm text-muted-foreground ${WRAP_SAFE} ${rowLeading}`}
+        data-testid="kpi-value"
+        role="alert"
+      >
+        Couldn&apos;t load
+      </p>
+    );
+  }
+  const figureSize = row
+    ? 'text-[clamp(1.125rem,11cqi,1.875rem)] leading-7 @min-[11rem]:leading-8 @max-[9rem]:text-[clamp(0.875rem,calc((100cqi-1.5rem)/6.2),1.125rem)] @max-[9rem]:leading-6'
+    : 'text-2xl sm:text-3xl';
+  return (
+    <p
+      className={`${figureSize} font-bold text-foreground tabular-nums ${WRAP_SAFE} ${pending ? 'animate-pulse motion-reduce:animate-none' : ''}`}
+      data-testid="kpi-value"
+      title={pending ? undefined : fullValue}
+      aria-busy={pending || undefined}
+    >
+      {pending ? '...' : value}
+    </p>
+  );
+}
+
+function KpiCardBody({
   label,
   icon,
   iconClassName = 'bg-ds-primary/10 text-ds-primary',
@@ -52,37 +127,46 @@ export function KpiCard({
   footer: footerProp,
   variant = 'default',
   framed = false,
+  loading = false,
+  accentClassName,
+  className,
+  testId,
+  ariaLabel,
 }: Readonly<KpiCardProps>) {
-  const frame = framed ? ' rounded-lg border border-border bg-card' : '';
+  const frame =
+    (framed ? ' rounded-lg border border-border bg-card' : '') +
+    (framed && accentClassName ? ` ${accentClassName}` : '') +
+    (className ? ` ${className}` : '');
+  const labelProps = ariaLabel ? { role: 'group', 'aria-label': ariaLabel } : {};
+  const fullValue =
+    typeof value === 'string' || typeof value === 'number' ? String(value) : undefined;
   const badge = failed ? undefined : badgeProp;
   const footer = failed ? undefined : footerProp;
   const row = variant === 'default';
   // Default card: the number scales with the card (about 18px on a 360px phone card, up to 30px
   // on a wide desktop card) on a line as tall as the icon needs; compact keeps its fixed sizes.
-  const figureSize = row
-    ? 'text-[clamp(1.125rem,11cqi,1.875rem)] leading-7 @min-[11rem]:leading-8'
-    : 'text-2xl sm:text-3xl';
-  const figure = failed ? (
-    <p
-      className={`text-sm text-muted-foreground truncate ${row ? 'leading-7 @min-[11rem]:leading-8' : ''}`}
-      data-testid="kpi-value"
-      role="alert"
-    >
-      Couldn&apos;t load
-    </p>
-  ) : (
-    <p
-      className={`${figureSize} font-bold text-foreground tabular-nums truncate ${pending ? 'animate-pulse motion-reduce:animate-none' : ''}`}
-      data-testid="kpi-value"
-      aria-busy={pending || undefined}
-    >
-      {pending ? '...' : value}
-    </p>
+  // Under 9rem (two per row on a 320px phone) the card is stacked and only has its own width to
+  // use, so the number shrinks to what is left after the padding (about 5.6em for "£125,000" plus
+  // room for a seventh digit) instead of being cut. It never uses `truncate`: a figure that still
+  // cannot fit wraps onto a second line, so no amount is ever hidden (register #50).
+  const figure = (
+    <KpiFigure
+      row={row}
+      loading={loading}
+      failed={failed}
+      pending={pending}
+      value={value}
+      fullValue={fullValue}
+    />
   );
 
   if (variant === 'compact') {
     return (
-      <div className={`p-4 sm:p-5 flex flex-col justify-between gap-3 h-full min-w-0${frame}`}>
+      <div
+        className={`p-4 sm:p-5 flex flex-col justify-between gap-3 h-full min-w-0${frame}`}
+        data-testid={testId}
+        {...labelProps}
+      >
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div
             className={`size-8 shrink-0 rounded-full flex items-center justify-center ${iconClassName}`}
@@ -111,7 +195,7 @@ export function KpiCard({
   // - 13rem and up (desktop from 1024px): at least 112px tall, so every desktop card matches;
   // - 14rem and up: 56px icon = 20 + 4 + 32.
   return (
-    <div className={`@container h-full min-w-0${frame}`}>
+    <div className={`@container h-full min-w-0${frame}`} data-testid={testId} {...labelProps}>
       <div className="h-full flex flex-col justify-center min-w-0 p-3 @min-[13rem]:min-h-28 @min-[14rem]:p-5">
         <div className="flex items-center gap-2 @min-[11rem]:gap-3 @min-[14rem]:gap-4 @max-[9rem]:flex-col @max-[9rem]:items-start">
           <div
@@ -126,7 +210,10 @@ export function KpiCard({
             </span>
           </div>
           <div className="min-w-0 flex-1 flex flex-col @max-[9rem]:w-full">
-            <p className="text-xs leading-4 @min-[14rem]:text-sm @min-[14rem]:leading-5 text-muted-foreground truncate">
+            <p
+              className="text-xs leading-4 @min-[14rem]:text-sm @min-[14rem]:leading-5 text-muted-foreground line-clamp-2 break-words"
+              title={label}
+            >
               {label}
             </p>
             <div className="mt-0.5 @min-[14rem]:mt-1 min-w-0">{figure}</div>

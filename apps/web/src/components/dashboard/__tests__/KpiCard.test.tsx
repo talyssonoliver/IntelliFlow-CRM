@@ -63,7 +63,61 @@ describe('KpiCard (#1225 UI-009)', () => {
 
   it('scales the number with the card, so a six-figure amount fits a phone (#50)', () => {
     render(<KpiCard label="Sales Revenue" icon="payments" value="£125,000" />);
-    expect(screen.getByTestId('kpi-value')).toHaveClass('text-[clamp(1.125rem,11cqi,1.875rem)]');
+    const value = screen.getByTestId('kpi-value');
+    expect(value).toHaveClass('text-[clamp(1.125rem,11cqi,1.875rem)]');
+    // Stacked (a card under 9rem, two per row on 320px): sized from what is left after padding.
+    expect(value.className).toContain(
+      '@max-[9rem]:text-[clamp(0.875rem,calc((100cqi-1.5rem)/6.2),1.125rem)]'
+    );
+  });
+
+  it('never cuts a figure or a label: they wrap, with the full text in the title (#50)', () => {
+    render(<KpiCard label="Significant Results" icon="verified" value="£1,250,000" />);
+    const value = screen.getByTestId('kpi-value');
+    expect(value).not.toHaveClass('truncate');
+    expect(value).toHaveClass('[overflow-wrap:anywhere]');
+    expect(value).toHaveAttribute('title', '£1,250,000');
+    expect(screen.getByText('Significant Results')).toHaveClass('line-clamp-2');
+    expect(screen.getByText('Significant Results')).toHaveAttribute('title', 'Significant Results');
+  });
+
+  it('shows a skeleton bar while loading, keeping the label and icon', () => {
+    render(<KpiCard label="Pending" icon="hourglass_empty" value={4} loading />);
+    expect(screen.getByText('Pending')).toBeInTheDocument();
+    const bar = screen.getByTestId('kpi-value');
+    expect(bar).toHaveAttribute('aria-busy', 'true');
+    expect(bar).toBeEmptyDOMElement();
+  });
+
+  it('draws a coloured edge on a framed card only', () => {
+    const { container, rerender } = render(
+      <KpiCard
+        framed
+        accentClassName="border-l-4 border-l-green-500"
+        label="Hot"
+        icon="a"
+        value={1}
+      />
+    );
+    expect(container.firstElementChild).toHaveClass('border-l-4', 'border-l-green-500');
+    rerender(<KpiCard accentClassName="border-l-4" label="Hot" icon="a" value={1} />);
+    expect(container.firstElementChild).not.toHaveClass('border-l-4');
+  });
+
+  it('can be a link, and can carry a test id and a spoken name', () => {
+    render(
+      <KpiCard
+        framed
+        href="/leads"
+        testId="leads-kpi"
+        ariaLabel="Leads: 12"
+        label="Leads"
+        icon="a"
+        value={12}
+      />
+    );
+    expect(screen.getByRole('link')).toHaveAttribute('href', '/leads');
+    expect(screen.getByTestId('leads-kpi')).toHaveAttribute('aria-label', 'Leads: 12');
   });
 
   it('puts the badge under the number', () => {

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Card, Progress, Button } from '@intelliflow/ui';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { PageHeader } from '@/components/shared';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 import { getScoreColor, getProgressColor, parseDurationMs } from './quality-report-utils';
 
 // ============================================================================
@@ -107,22 +108,25 @@ function MetricCard({
       : 0;
 
   return (
-    <Card className="p-4" aria-label={ariaLabel}>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-base text-muted-foreground">{icon}</span>
-          <h3 className="font-medium text-foreground">{label}</h3>
+    <KpiCard
+      framed
+      label={label}
+      icon={icon}
+      iconClassName="bg-muted text-muted-foreground"
+      value={<span className={getValueColor(passing, ms, targetMs)}>{value}</span>}
+      badge={<PassFailPill passing={passing} />}
+      ariaLabel={ariaLabel}
+      footer={
+        <div className="mt-3">
+          <Progress
+            value={Math.max(0, Math.min(100, score))}
+            className={`h-2 mb-2 ${getProgressColor(score)}`}
+            aria-label={`${label}: ${value}`}
+          />
+          <p className="text-xs text-muted-foreground">Target: &lt;{targetMs}ms</p>
         </div>
-        <PassFailPill passing={passing} />
-      </div>
-      <p className={`text-3xl font-bold mb-2 ${getValueColor(passing, ms, targetMs)}`}>{value}</p>
-      <Progress
-        value={Math.max(0, Math.min(100, score))}
-        className={`h-2 mb-2 ${getProgressColor(score)}`}
-        aria-label={`${label}: ${value}`}
-      />
-      <p className="text-xs text-muted-foreground">Target: &lt;{targetMs}ms</p>
-    </Card>
+      }
+    />
   );
 }
 
@@ -139,27 +143,29 @@ function EndpointHealthCard({
   const allPass = failing === 0;
 
   return (
-    <section
-      className="rounded-lg border bg-card text-card-foreground shadow-sm p-4"
-      aria-label="Endpoint health"
-    >
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-base text-muted-foreground">api</span>
-          <h3 className="font-medium text-foreground">Endpoints</h3>
+    <KpiCard
+      framed
+      label="Endpoints"
+      icon="api"
+      iconClassName="bg-muted text-muted-foreground"
+      value={
+        <span className={getScoreColor(pct)}>
+          {passing}/{tested}
+        </span>
+      }
+      badge={<PassFailPill passing={allPass} />}
+      ariaLabel="Endpoint health"
+      footer={
+        <div className="mt-3">
+          <Progress
+            value={pct}
+            className={`h-2 mb-2 ${getProgressColor(pct)}`}
+            aria-label={`${passing} of ${tested} endpoints passing`}
+          />
+          <p className="text-xs text-muted-foreground">{pct}% passing</p>
         </div>
-        <PassFailPill passing={allPass} />
-      </div>
-      <p className={`text-3xl font-bold mb-2 ${getScoreColor(pct)}`}>
-        {passing}/{tested}
-      </p>
-      <Progress
-        value={pct}
-        className={`h-2 mb-2 ${getProgressColor(pct)}`}
-        aria-label={`${passing} of ${tested} endpoints passing`}
-      />
-      <p className="text-xs text-muted-foreground">{pct}% passing</p>
-    </section>
+      }
+    />
   );
 }
 
@@ -173,23 +179,21 @@ function LoadTestCard({
   duration: string | null;
 }) {
   return (
-    <section
-      className="rounded-lg border bg-card text-card-foreground shadow-sm p-4"
-      aria-label="Load test results"
-    >
-      <div className="flex items-center gap-2 mb-3">
-        <span className="material-symbols-outlined text-base text-muted-foreground">groups</span>
-        <h3 className="font-medium text-foreground">Load Test</h3>
-      </div>
-      <p className="text-3xl font-bold text-foreground mb-2">
-        {rps != null ? `${rps} rps` : 'N/A'}
-      </p>
-      <p className="text-xs text-muted-foreground">
-        {vus != null && duration != null
-          ? `${vus} virtual users, ${duration}`
-          : 'No load test data'}
-      </p>
-    </section>
+    <KpiCard
+      framed
+      label="Load Test"
+      icon="groups"
+      iconClassName="bg-muted text-muted-foreground"
+      value={rps != null ? `${rps} rps` : 'N/A'}
+      ariaLabel="Load test results"
+      footer={
+        <p className="mt-3 text-xs text-muted-foreground">
+          {vus != null && duration != null
+            ? `${vus} virtual users, ${duration}`
+            : 'No load test data'}
+        </p>
+      }
+    />
   );
 }
 
