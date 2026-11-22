@@ -162,7 +162,7 @@ build, audits, Lighthouse, reviews, attestation).
 - `.specify/sprints/sprint-18/attestations/PG-207/context_ack.json` (CSV
   EVIDENCE; written at exec Phase 0 before the spike)
 
-- [ ] Build one MIME with `X-IntelliFlow-Record` + our `Message-ID` via
+- [x] Build one MIME with `X-IntelliFlow-Record` + our `Message-ID` via
       `MailComposer` (local, no network) and record the exact header bytes.
 - [x] If live Gmail/Microsoft test credentials exist in `.env.local`
       (`GMAIL_*`/`OUTLOOK_*` + a test refresh token), send one message to an
