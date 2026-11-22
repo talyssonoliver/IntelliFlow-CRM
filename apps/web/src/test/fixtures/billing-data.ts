@@ -84,6 +84,7 @@ interface MockUsageLimitMetric {
 }
 
 interface MockUsageMetrics {
+  effectivePlan: string;
   planLimits: {
     activeUsers: MockUsageLimitMetric;
     contacts: MockUsageLimitMetric;
@@ -196,6 +197,7 @@ export function createMockBillingInformation(
 
 export function createMockUsageMetrics(overrides?: Partial<MockUsageMetrics>): MockUsageMetrics {
   return {
+    effectivePlan: 'professional',
     planLimits: {
       activeUsers: { current: 12, limit: 25 },
       contacts: { current: 4200, limit: 10000 },
