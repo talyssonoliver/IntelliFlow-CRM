@@ -3825,27 +3825,33 @@ IFC-010:
   override_deps_remove:
     - IFC-112
 IFC-032:
+  tier: C
   override_deps_remove:
     - IFC-030
 IFC-073:
+  tier: C
   override_deps_remove:
     - IFC-072
 PG-010:
   override_deps_remove:
     - PG-009
 PG-017:
+  tier: C
   override_deps_remove:
     - PG-016
 PG-023:
   override_deps_remove:
     - PG-016
 PG-047:
+  tier: C
   override_deps_remove:
     - PG-046
 PG-048:
+  tier: C
   override_deps_remove:
     - PG-046
 IFC-121:
+  tier: C
   override_deps_remove:
     - IFC-113
 IFC-158:
@@ -3859,18 +3865,22 @@ TRACK-005:
   override_deps_remove:
     - EXC-SEC-001
 IFC-173:
+  tier: C
   override_deps_remove:
     - IFC-144
 IFC-183:
   override_deps_remove:
     - IFC-157
 PG-132:
+  tier: C
   override_deps_remove:
     - IFC-030
 PG-141:
+  tier: C
   override_deps_remove:
     - IFC-144
 IFC-191:
+  tier: C
   override_deps_remove:
     - IFC-182
 IFC-192:
@@ -3880,19 +3890,24 @@ IFC-194:
   override_deps_remove:
     - IFC-182
 IFC-195:
+  tier: C
   override_deps_remove:
     - IFC-182
 IFC-196:
+  tier: C
   override_deps_remove:
     - IFC-182
     - IFC-075
 PG-174:
+  tier: C
   override_deps_remove:
     - IFC-157
 IFC-213:
+  tier: C
   override_deps_remove:
     - IFC-099
 IFC-223:
+  tier: C
   override_deps_remove:
     - IFC-157
 
