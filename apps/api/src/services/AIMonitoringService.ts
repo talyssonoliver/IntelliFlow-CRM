@@ -121,8 +121,12 @@ export class AIMonitoringService {
       where: { eventType: 'roi_value', recordedAt: { gte: since }, ...tf },
       _sum: { value: true },
     });
-    const totalCost = roiCostSum._sum?.value ?? 0;
-    const totalValue = roiValueSum._sum?.value ?? 0;
+    const toNum = (v: unknown): number => {
+      const n = Number(v ?? 0);
+      return Number.isFinite(n) ? n : 0;
+    };
+    const totalCost = toNum(roiCostSum._sum?.value);
+    const totalValue = toNum(roiValueSum._sum?.value);
     const currentROI = totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0;
 
     return {
@@ -385,8 +389,14 @@ export class AIMonitoringService {
       db.aIMonitoringEvent.findMany({ where: valueWhere }),
     ]);
 
-    const totalCost = costEvents.reduce((sum: number, e: any) => sum + (e.value ?? 0), 0);
-    const totalValue = valueEvents.reduce((sum: number, e: any) => sum + (e.value ?? 0), 0);
+    // Boundary guard (register #54): values may arrive as Decimal/string; `0 + "1.5"`
+    // would string-concatenate, so coerce each to a finite number first.
+    const finite = (v: unknown): number => {
+      const n = Number(v ?? 0);
+      return Number.isFinite(n) ? n : 0;
+    };
+    const totalCost = costEvents.reduce((sum: number, e: any) => sum + finite(e.value), 0);
+    const totalValue = valueEvents.reduce((sum: number, e: any) => sum + finite(e.value), 0);
     const netValue = totalValue - totalCost;
     const roi = totalCost > 0 ? (netValue / totalCost) * 100 : 0;
 
