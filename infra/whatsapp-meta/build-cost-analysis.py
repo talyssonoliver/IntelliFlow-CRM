@@ -33,7 +33,6 @@ rows = [
     ("Free-text replies sent per customer per month", 300, "service messages", "ASSUMPTION (a small UK service business)"),
     ("Business-started utility templates per customer per month", 20, "messages", "ASSUMPTION"),
     ("Marketing templates per customer per month", 0, "messages", "Design rule: reply, do not start conversations; 0 for now"),
-    ("USD to GBP", 0.75, "GBP per USD", "ASSUMPTION, NOT SOURCED. Finance to set the real rate; only the GBP row of transport B uses it"),
     ("Heavy-use multiplier for the sensitivity row", 5, "x", "ASSUMPTION"),
 ]
 for r in rows:
@@ -42,7 +41,7 @@ ws["A1"].font = BOLD
 for c in ws[2]:
     c.font = BOLD
     c.fill = HEAD
-for i in range(13, 19):
+for i in range(13, 18):
     ws.cell(row=i, column=2).fill = ASSUME
 for col, w in zip("ABCD", (62, 24, 26, 100)):
     ws.column_dimensions[col].width = w
@@ -77,7 +76,7 @@ a5 = line("Utility template cost", "={c}3*Inputs!$B$15*Inputs!$B$4")
 a6 = line("Marketing template cost", "={c}3*Inputs!$B$16*Inputs!$B$3")
 a7 = line("Meta total (GBP / month)", f"={{c}}{a4}+{{c}}{a5}+{{c}}{a6}", "No hosting: the Aurora API already receives the webhook. No platform fee is stated on the pricing page.")
 line("Meta per customer (GBP / month)", f"={{c}}{a7}/{{c}}3")
-line("Sensitivity: heavy use (GBP / month)", f"=MAX(0,{{c}}3*Inputs!$B$14*Inputs!$B$18-{{c}}3*Inputs!$B$7)*Inputs!$B$6+{{c}}{a5}+{{c}}{a6}", "Replies above 1,000 per number per month cost the service rate.")
+line("Sensitivity: heavy use (GBP / month)", f"=MAX(0,{{c}}3*Inputs!$B$14*Inputs!$B$17-{{c}}3*Inputs!$B$7)*Inputs!$B$6+{{c}}{a5}+{{c}}{a6}", "Replies above 1,000 per number per month cost the service rate.")
 s.append([])
 s.append(["TRANSPORT B: WAHA, one shared container (USD)", "", "", "", ""])
 s.cell(row=s.max_row, column=1).font = BOLD
@@ -86,8 +85,7 @@ b2 = line("Paired-session memory", "={c}3*Inputs!$B$13*Inputs!$B$9", "ASSUMPTION
 b3 = line("CPU and volume", "=0.02+Inputs!$B$11", "ADR-089: about $0.02 CPU plus a 1 GB volume")
 b4 = line("WAHA hosting total (USD / month)", f"={{c}}{b1}+{{c}}{b2}+{{c}}{b3}")
 line("WAHA per customer (USD / month)", f"={{c}}{b4}/{{c}}3")
-line("WAHA hosting total (GBP / month, uses the unsourced FX input)", f"={{c}}{b4}*Inputs!$B$17")
-line("Meta fees on this transport (GBP)", 0, "None: WAHA sends through a WhatsApp Web session. The risk is a ban, not a bill.")
+line("Meta fees on this transport", 0, "None: WAHA sends through a WhatsApp Web session. The risk is a ban, not a bill.")
 s.append([])
 s.append(["NOT INCLUDED"])
 s.cell(row=s.max_row, column=1).font = BOLD
@@ -95,6 +93,7 @@ for t in (
     "Railway plan fee (Hobby $5 with $5 included, Pro $20 with $20 included; per workspace, shared; ADR-089). The first few tenants fit inside the included credit.",
     "A WAHA container ceiling: not set until a paired session is measured (IFC-331). At 100 tenants the memory line implies several containers.",
     "Business verification documents, a SIM or number rental, and any partner (BSP) fees: not found on the pages read; any spend is the owner's decision.",
+    "Currency conversion: Meta is priced in GBP and Railway in USD; they are deliberately not converted here (no sourced rate is used). Finance converts at its own rate.",
     "Cost of a ban: a banned WAHA number loses its chats. Not priced; it is the risk the customer accepts in the notice.",
 ):
     s.append([t])

@@ -297,8 +297,8 @@ one number per customer.
   the ban.
 - Not included: the Railway plan fee (Hobby $5 with $5 included; Pro $20 with
   $20 included, per workspace), a number or SIM, partner fees, and the unpriced
-  cost of a ban. The USD to GBP rate in the workbook is an unsourced placeholder
-  and only feeds one GBP row.
+  cost of a ban. Meta is priced in GBP and Railway in USD; the workbook keeps
+  each in its own currency and applies no exchange rate.
 - Spend needs the owner's yes (IFC-034 ruling); this row buys nothing.
 
 ## 8. Integration approach
