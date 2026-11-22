@@ -2,18 +2,18 @@
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "IFC-322",
-  "run_id": "ifc322-waha-isolation-2026-11-21",
+  "run_id": "ifc322-waha-isolation-2026-11-21-approved",
   "attestor": "Claude Code (claude-sonnet-5-5), ifc-074 lane",
-  "attestation_timestamp": "2026-11-21T19:05:00Z",
-  "verdict": "PARTIAL",
+  "attestation_timestamp": "2026-11-21T19:10:00Z",
+  "verdict": "COMPLETE",
   "context_acknowledgment": {
     "files_read": [],
     "invariants_acknowledged": [
       "Spike run 2026-11-21 against devlikeapro/waha:noweb-2026.10.1 (tier CORE, engine NOWEB) in Docker, bound to 127.0.0.1. 21 cross-tenant calls with tenant A's session key against tenant B's session: 0 succeeded (19 refused with 403, 2 list calls returned A's own session only). Positive controls passed; B was untouched afterwards.",
       "The sessions were created and started but never paired: no real WhatsApp number was used. Memory for a paired session is therefore unmeasured; the per-tenant cost states its assumption.",
-      "Not closed: the row's MANUAL step (the owner decides the hosting cost) is pending, and the ADR is Proposed until then. Nothing was purchased."
+      "Closed 2026-11-21 (about 19:05-19:10): the owner, Talysson, approved ADR-089 in Aurora's modal ('Approve (Recommended)'): one shared WAHA container with a session key per tenant, about US$3.30/month plus about US$2 per paired tenant, deployed only at go-live (IFC-331). The ADR status moved from Proposed to Accepted. Spike and ADR merged in PR #1516. Nothing was purchased; the paired-session memory (200 MB) remains an unverified assumption stated in the ADR."
     ],
-    "acknowledged_at": "2026-11-21T19:05:00Z"
+    "acknowledged_at": "2026-11-21T19:10:00Z"
   },
   "evidence_summary": {
     "artifacts_verified": 4,
@@ -21,7 +21,7 @@
     "kpis_missed": 0
   },
   "artifact_hashes": {
-    "docs/architecture/adr/ADR-089-waha-tenant-isolation.md": "sha256:c64918fb95c504c110a08c2b734292cf84e1d9328eade9624bf938ebe567d83e",
+    "docs/architecture/adr/ADR-089-waha-tenant-isolation.md": "sha256:a80b6340706fde87500d0d17ae64f7da64723f7653fd950c2dbf6cf4baac9000",
     "infra/waha/compose.yaml": "sha256:a010adf0782a70ce3a37c2bd488511f22e4f92be10a3807e348719ed7e92d6ee",
     "infra/waha/isolation-spike.mjs": "sha256:49cc9d7c21946dc7f865ca8b3575d745f4a00492395ad1436d6d2b910ecfa3f6",
     "artifacts/misc/waha-isolation-spike.json": "sha256:4e483fb3606fc26b481b4acd4ddf2aa8234595ebdf96d8a52575164b979bd75f"
@@ -38,7 +38,7 @@
   "gate_results": [
     {
       "gate_id": "owner-approves-hosting-cost",
-      "passed": false
+      "passed": true
     }
   ],
   "kpi_results": [
@@ -60,8 +60,8 @@
     },
     {
       "criterion": "Owner decides the hosting cost",
-      "met": false
+      "met": true
     }
   ],
-  "notes": "Close by: owner approves the Railway spend in the ADR's Cost section (or rules otherwise), the ADR status moves to Accepted, then set the row Completed pointing evidence at this file."
+  "notes": "Row closed 2026-11-21 on the owner's approval of ADR-089 (see invariants) and the spike merged in PR #1516. The ADR status is Accepted (2026-11-21, owner)."
 }
