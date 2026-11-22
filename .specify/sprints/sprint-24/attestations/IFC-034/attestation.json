@@ -1,0 +1,64 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-034",
+  "run_id": "ifc034-gate3-pack-2026-11-22",
+  "attestor": "Claude Code (claude-sonnet-5-5), ifc-034 lane",
+  "attestation_timestamp": "2026-11-22T10:54:47Z",
+  "verdict": "PARTIAL",
+  "context_acknowledgment": {
+    "files_read": [],
+    "invariants_acknowledged": [
+      "The evidence pack for Gate 3 (the £3000 scale decision) is prepared. The decision is the owner's and is NOT recorded: the row stays open until he decides.",
+      "The pack recommends HOLD. The deciding fact: 0 paid subscriptions, 0 workflow definitions and 0 workflow runs in production; the only user is the owner.",
+      "The row names automation-roi-analysis.xlsx, stability-report.pdf and scale-plan.pptx. None is produced: Gate 1 and Gate 2 were reviewed from markdown and the repo has no generator for them. The owner's review accepts the markdown pack instead (its section 12).",
+      "Not readable and stated in section 8 of the pack: Sentry data, uptime before 17/11, Railway process restarts, invoices."
+    ],
+    "acknowledged_at": "2026-11-22T10:54:47Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 1,
+    "kpis_met": 0,
+    "kpis_missed": 0
+  },
+  "artifact_hashes": {
+    "docs/planning/gate-3/investment-gate-3-analysis.md": "sha256:2e4eba341cbe68c7cf4048aecd1f2fef6acf2626ce5f86b04e67e5b7b16778ea"
+  },
+  "validation_results": [
+    {
+      "name": "Prettier format check, gate 3 analysis",
+      "command": "npx prettier --check docs/planning/gate-3/investment-gate-3-analysis.md",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T10:54:52Z"
+    },
+    {
+      "name": "Attestation JSON schema validation (ajv, attestation.schema.json)",
+      "command": "node ajv-validate attestation.schema.json .specify/sprints/sprint-24/attestations/IFC-034/attestation.json",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T10:54:53Z"
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "owner-decision-recorded",
+      "passed": false
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Scale/hold/cut decision on the £3000 tranche recorded by the owner",
+      "target": "decision recorded",
+      "actual": "pending",
+      "met": false
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Scale decision with modern stack validated, with the evidence pack",
+      "met": false
+    }
+  ],
+  "notes": "PARTIAL: evidence prepared, decision pending. Recommendation HOLD. No binary artifact (xlsx, pdf, pptx) was produced; see section 12 of the pack."
+}
