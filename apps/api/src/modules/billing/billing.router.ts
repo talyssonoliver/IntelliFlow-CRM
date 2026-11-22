@@ -56,6 +56,47 @@ import {
 } from '@intelliflow/domain';
 import { formatDateTimeInTimezone } from '../../lib/timezone-utils';
 
+/**
+ * Map a Tenant.plan (no Stripe subscription) to a getUsageMetrics limits key.
+ * CUSTOM (contract) and ENTERPRISE are unlimited; unknown or free tiers use free limits.
+ */
+function planKeyForTenantPlan(plan: string | null | undefined): string {
+  switch (plan) {
+    case 'CUSTOM':
+    case 'ENTERPRISE':
+      return 'enterprise';
+    case 'PROFESSIONAL':
+      return 'professional';
+    case 'STARTER':
+      return 'starter';
+    default:
+      return 'free';
+  }
+}
+
+/**
+ * Plan key from the customer's Stripe subscription price id; 'free' when there is no
+ * subscription, the price id is not a known plan, or Stripe is unavailable.
+ */
+async function resolveStripePlanKey(customerId: string, planKeys: string[]): Promise<string> {
+  try {
+    const stripe = await getStripeAdapter();
+    const subsResult = await callStripeAPI(() => stripe.listSubscriptions(customerId));
+    if (subsResult.isSuccess && subsResult.value.length > 0) {
+      const activeSub =
+        subsResult.value.find((s) => s.status === 'active' || s.status === 'trialing') ??
+        subsResult.value[0];
+      const parts = activeSub.priceId.split('_');
+      if (parts.length >= 2 && planKeys.includes(parts[1])) {
+        return parts[1];
+      }
+    }
+  } catch {
+    // Stripe unavailable — fall back to free tier limits
+  }
+  return 'free';
+}
+
 // ============================================
 // Price ID Resolution (incident 2026-06-16 onboarding redesign)
 // ============================================
@@ -1178,16 +1219,13 @@ export const billingRouter = createTRPCRouter({
    * - API calls: count of audit log entries this billing period
    * - Storage: estimated from document + attachment counts
    *
-   * Limits are derived from the subscription's plan tier.
+   * Limits are derived from the subscription's plan tier. A tenant with no Stripe
+   * customer (contracted or free workspace) still gets its own real counts, measured
+   * against the free tier; only billing-specific data is absent (getSubscription
+   * returns null for it).
    */
   getUsageMetrics: tenantProcedure.query(async ({ ctx }) => {
     const user = ctx.user;
-
-    // No subscription = no usage metrics. SUPER_ADMIN skips this check so the
-    // dev/seed environment can still surface counts without a Stripe customer.
-    if (!user?.stripeCustomerId && user?.role !== 'SUPER_ADMIN') {
-      return null;
-    }
 
     // Plan tier limits — aligned with pricing-data.json comparisonFeatures
     // "Unlimited" is represented as -1 (frontend renders as "Unlimited")
@@ -1208,34 +1246,37 @@ export const billingRouter = createTRPCRouter({
 
     // Resolve plan tier from subscription (default to free if no subscription)
     let planKey = 'free';
+    // Plan the limits actually come from, reported to the UI ('contract' = Tenant.plan CUSTOM)
+    let effectivePlan: string | undefined;
 
     if (user?.stripeCustomerId) {
-      try {
-        const stripe = await getStripeAdapter();
-        const subsResult = await callStripeAPI(() =>
-          stripe.listSubscriptions(user.stripeCustomerId!)
-        );
-
-        if (subsResult.isSuccess && subsResult.value.length > 0) {
-          const activeSub =
-            subsResult.value.find((s) => s.status === 'active' || s.status === 'trialing') ??
-            subsResult.value[0];
-          const parts = activeSub.priceId.split('_');
-          if (parts.length >= 2 && parts[1] in PLAN_LIMITS) {
-            planKey = parts[1];
-          }
-        }
-      } catch {
-        // Stripe unavailable — fall back to free tier limits
-      }
+      planKey = await resolveStripePlanKey(user.stripeCustomerId, Object.keys(PLAN_LIMITS));
     }
 
     // Super admin (no stripeCustomerId, dev/seed environment) gets enterprise limits
     if (!user?.stripeCustomerId && user.role === 'SUPER_ADMIN') {
       planKey = 'enterprise';
+    } else if (!user?.stripeCustomerId) {
+      // No Stripe customer: the workspace may be on a contract plan billed outside Stripe
+      // (Tenant.plan = CUSTOM, unlimited quotas), so read the tenant's own plan.
+      const tenantRow = await ctx.prismaWithTenant.tenant.findUnique({
+        where: { id: user.tenantId },
+        select: { plan: true },
+      });
+      planKey = planKeyForTenantPlan(tenantRow?.plan);
+      if (tenantRow?.plan === 'CUSTOM') effectivePlan = 'contract';
     }
 
-    const limits = PLAN_LIMITS[planKey]!;
+    effectivePlan ??= planKey;
+    const limits = { ...PLAN_LIMITS[planKey]! };
+
+    // No Stripe customer: seats and contacts follow the quotas the application enforces
+    // (QuotaRegistry defaults plus tenant overrides); null means unlimited (-1 here).
+    if (!user?.stripeCustomerId && user.role !== 'SUPER_ADMIN' && ctx.services?.quota) {
+      const quotaLimits = await ctx.services.quota.getLimits(user.tenantId);
+      limits.maxUsers = quotaLimits.seats ?? -1;
+      limits.contacts = quotaLimits.contacts ?? -1;
+    }
     const tenantId = user.tenantId;
 
     // Billing period start (first day of current month)
@@ -1310,6 +1351,8 @@ export const billingRouter = createTRPCRouter({
     const estimatedStorageGB = Math.round(((documentCount * 50) / (1024 * 1024)) * 100) / 100;
 
     return {
+      // Plan the limits above come from: free | starter | professional | enterprise | contract
+      effectivePlan,
       // Plan-limited metrics (with progress bars)
       planLimits: {
         activeUsers: { current: userCount, limit: limits.maxUsers },
