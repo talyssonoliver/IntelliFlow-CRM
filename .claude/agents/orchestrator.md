@@ -119,22 +119,21 @@ unattended runs.
 - Verify the harness reclaimed the finished worktree (a committed branch may
   linger); if not, note it for the periodic audit.
 
-### Gate-lock: serialize the HEAVY gate (not just the merge)
+### Heavy gates serialize themselves (no manual gate-lock)
 
-The merge token serializes merges; a **separate gate-lock** must serialize the
-full **pre-ship/coverage gate**. On this single host, two coverage runs at once
-collide on `artifacts/coverage-parts` (ENOTEMPTY), OOM the web Istanbul write
-(SIGKILL), and triple wall-clock (coverage 43min contended vs 18min solo).
+The merge token serializes merges. The full **pre-ship/coverage gate** no longer
+needs a granted lock: `scripts/pre-ship.mjs` re-runs itself under the
+machine-wide slot queue (`scripts/lib/test-slot.mjs`), and IntelliFlow pushes go
+through `with-slot.mjs --exclusive`, so only one heavy gate runs at a time
+without a manual grant (owner ruling 2026-11-12, see CLAUDE.md "Heavy commands
+run only in the queue"). Do not hand out or wait for a "gate-lock"; an executor
+that reports "ready for the gate-lock" should just push and let the queue order
+it.
 
-- Grant the gate-lock to **exactly one** executor at a time. Everything else
-  (spec, plan, exec-build, scoped tests, cheap gates, codex standalone) runs
-  parallel; only the full `pre-ship` / `git push` (its pre-push hook runs the
-  gate) needs the lock.
-- Set this expectation at **dispatch** (it's in the generated prompt), not
-  mid-run — an executor that reaches the gate before being told to wait will
-  push and re-introduce contention.
-- On a strict-serialize re-sync, the re-syncing executor needs the gate-lock
-  again for its solo re-run; hand it over in order.
+- Everything else (spec, plan, exec-build, scoped tests, cheap gates, codex
+  standalone) still runs in parallel.
+- On a strict-serialize re-sync, the executor re-runs its full pre-ship and it
+  queues for a slot on its own.
 
 ### Driving sub-agent executors (harness-managed)
 

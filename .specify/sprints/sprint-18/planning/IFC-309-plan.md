@@ -757,10 +757,10 @@ node scripts/codex-review.mjs  # run 3 — must be CLEAN
 - [x] Stage `.specify/sprints/sprint-18/planning/IFC-309-plan.md`
 - [x] Stage `.specify/sprints/sprint-18/attestations/IFC-309/attestation.json`
 - [x] Stage `.specify/sprints/sprint-18/attestations/IFC-309/task-tracking.json`
-- [ ] Stage `.specify/sprints/sprint-18/attestations/IFC-309/context_ack.json`
+- [x] Stage `.specify/sprints/sprint-18/attestations/IFC-309/context_ack.json` (n/a: gitignored by `.specify/sprints/.gitignore` `sprint-*/attestations/**`, cannot be staged, verified 2026-11-22)
 - [x] Stage `docs/operations/sprint-18-ifc-309-session-issues-log.md`
 - [x] Commit with subject <= 100 chars, NO `Co-Authored-By: Claude` trailer
-- [ ] **Message orchestrator: "READY FOR GATE-LOCK IFC-309" and wait for grant**
+- [x] **Message orchestrator: "READY FOR GATE-LOCK IFC-309" and wait for grant** (n/a: gate-lock handshake replaced by the pre-ship slot queue, scripts/lib/test-slot.mjs and with-slot --exclusive, verified 2026-11-22)
 
 ---
 
