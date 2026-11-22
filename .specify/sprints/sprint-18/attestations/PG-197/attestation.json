@@ -4,8 +4,8 @@
   "task_id": "PG-197",
   "run_id": "run-20261007T090902Z",
   "attestor": "Claude Code (claude-opus-5-5) - /full-pipeline PG-197 exec lane, branch feat/pg-197-territory-mapping",
-  "attestation_timestamp": "2026-10-07T10:33:01Z",
-  "verdict": "NEEDS_HUMAN",
+  "attestation_timestamp": "2026-11-22T15:28:41Z",
+  "verdict": "COMPLETE",
   "evidence_summary": {
     "artifacts_verified": 15,
     "validations_passed": 12,
@@ -31,7 +31,11 @@
     "apps/web/src/components/shared/country-select.tsx": "0f2360ab44fe0a8936b4df671074e010aadaa0ddcddbe14c223f12fa3f9b5561",
     "docs/architecture/adr/ADR-074-territory-based-account-owner-assignment.md": "8147eef6a4b4b90c9617b51a6cb2fbb2db7e555194178f2285c220baa78fb65c",
     "tests/integration/account-territories.test.ts": "d0178362785a97f576c71d5d6fb03944831d8727d0ad5ccc2dd6ae0759d77b2e",
-    ".specify/sprints/sprint-18/attestations/PG-197/context_ack.json": "402d919c890c754b36336ac5fab02c1b67c7c13578eb25bd35ec05c64cf4a362"
+    ".specify/sprints/sprint-18/attestations/PG-197/context_ack.json": "402d919c890c754b36336ac5fab02c1b67c7c13578eb25bd35ec05c64cf4a362",
+    "artifacts/lighthouse/PG-197/accounts-territory-mapping-signedin.report.json": "262d52f8a694e06f6c3e6400c185d0759068165d956398a26ee6c969ca3d22cf",
+    "artifacts/lighthouse/PG-197/accounts-new-signedin.report.json": "e2e07a644e72204158b932625e201e5fe1c7e9d9607f1d9cd563ab7b9ca2da04",
+    "artifacts/lighthouse/PG-197/accounts-id-edit-signedin.report.json": "ba0ea227538074fe042769f8ffbe2f178af0aaf9d74863a1a1f2d4cc58580aff",
+    "artifacts/lighthouse/PG-197/signedin-runs-summary.json": "097e43ae83fce640139594130da95886c4f85f0cc28e1a93fb3f7124bf19304a"
   },
   "validation_results": [
     {
@@ -117,6 +121,13 @@
       "exit_code": 0,
       "passed": true,
       "output_summary": "audit OK - 370 icons"
+    },
+    {
+      "name": "Lighthouse authenticated (performance, accessibility)",
+      "command": "node_modules/.bin/lhci collect --config=./.lhci-PG-197.cjs (desktop preset, onlyCategories performance+accessibility, 3 runs per route, puppeteerScript ./tools/lighthouse/lhci-auth.js; run inside scripts/test-db.mjs run --seed with API :4000 and web :3400 production build, local Supabase)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T15:22:20Z"
     }
   ],
   "gate_results": [
@@ -142,16 +153,18 @@
     },
     {
       "gate_id": "lighthouse-gte-90",
-      "passed": false,
-      "log_path": "OPEN GATE - not run. LHCI_TEST_EMAIL / LHCI_TEST_PASSWORD are not set in .env.local, .env.test or apps/web/.env.local (verified by grep), and tools/lighthouse/lhci-auth.js authenticates against the production Supabase project. No waiver is claimed. Harness parametrised; run: LHCI_URLS=\"http://localhost:3000/accounts/territory-mapping,http://localhost:3000/accounts/new,http://localhost:3000/accounts/<seeded-id>/edit\" LHCI_OUTPUT_DIR=./artifacts/lighthouse/PG-197 pnpm --filter @intelliflow/web lighthouse:auth"
+      "passed": true,
+      "log_path": "artifacts/lighthouse/PG-197/signedin-runs-summary.json (authenticated LHCI run 2026-11-22T15:19:51Z, exit 0)",
+      "exit_code": 0,
+      "timestamp": "2026-11-22T15:22:20Z"
     }
   ],
   "kpi_results": [
     {
       "kpi": "Lighthouse (performance/accessibility) on the 3 PG-197 routes",
-      "target": ">= 90",
-      "actual": "not measured (open gate)",
-      "met": false
+      "target": ">= 0.90 performance and accessibility (authenticated view)",
+      "actual": "authenticated run 2026-11-22 (median of 3, final URL equals requested URL): /accounts/territory-mapping perf 0.92 / a11y 0.97; /accounts/new perf 0.94 / a11y 0.93; /accounts/<id>/edit perf 0.94 / a11y 0.93. Evidence: artifacts/lighthouse/PG-197/accounts-territory-mapping-signedin.report.json, artifacts/lighthouse/PG-197/accounts-new-signedin.report.json, artifacts/lighthouse/PG-197/accounts-id-edit-signedin.report.json",
+      "met": true
     }
   ],
   "dependencies_verified": [
@@ -231,12 +244,5 @@
     "os": "Windows 11",
     "test_db": "intelliflow-postgres-test (127.0.0.1:5433)"
   },
-  "notes": [
-    "Commits: dd0f8e37b (db), 5a5e47d62 (domain), e5e11db77 (validators), 0d7d54584 (application/adapters), e6c2dd8af (api), 2e0b9bb7b (web account pages), db68d3b8e (web territory page), fe8fbe482 (docs), 41ffa3253 (lighthouse harness), f687fd912 (refactor), then governance commits 054b4497c and its hash refresh.",
-    "Plan deviation: MemberMultiSelect is a labelled checkbox group inside the Popover instead of an aria-multiselectable listbox - the web Sonar a11y guard (jsx-a11y/prefer-tag-over-role) rejects ARIA listbox/option roles; native checkboxes carry multi-selection semantics. The trigger name still carries the selected count.",
-    "Plan deviation: the Step 13 existing-test stubs were not needed - every existing account router test stayed green because autoAssignOwner defaults to false.",
-    "Local DB note: 'localhost' intermittently resolves to an unreachable IPv6 path on this host; the integration run used 127.0.0.1 (same local test container). .env.test URLs contain DB_USER/DB_PASSWORD placeholders and must be sourced, not cut.",
-    "Out-of-scope finding filed: https://github.com/talyssonoliver/IntelliFlow-CRM/issues/830 (Deals sidebar 'Territory Map' dead link).",
-    "Diff-coverage (Sonar new_coverage parity) is authoritative at the runner's pre-ship gate; not run locally."
-  ]
+  "notes": "Commits: dd0f8e37b (db), 5a5e47d62 (domain), e5e11db77 (validators), 0d7d54584 (application/adapters), e6c2dd8af (api), 2e0b9bb7b (web account pages), db68d3b8e (web territory page), fe8fbe482 (docs), 41ffa3253 (lighthouse harness), f687fd912 (refactor), then governance commits 054b4497c and its hash refresh.\nPlan deviation: MemberMultiSelect is a labelled checkbox group inside the Popover instead of an aria-multiselectable listbox - the web Sonar a11y guard (jsx-a11y/prefer-tag-over-role) rejects ARIA listbox/option roles; native checkboxes carry multi-selection semantics. The trigger name still carries the selected count.\nPlan deviation: the Step 13 existing-test stubs were not needed - every existing account router test stayed green because autoAssignOwner defaults to false.\nLocal DB note: 'localhost' intermittently resolves to an unreachable IPv6 path on this host; the integration run used 127.0.0.1 (same local test container). .env.test URLs contain DB_USER/DB_PASSWORD placeholders and must be sourced, not cut.\nOut-of-scope finding filed: https://github.com/talyssonoliver/IntelliFlow-CRM/issues/830 (Deals sidebar 'Territory Map' dead link).\nDiff-coverage (Sonar new_coverage parity) is authoritative at the runner's pre-ship gate; not run locally.\nVERDICT CLEARED 2026-11-22T15:28:41Z: the open items were the authenticated Lighthouse run and Gate 4b. Gate 4b: the code is merged on main (PR #831). Lighthouse (performance/accessibility >= 90): /accounts/territory-mapping perf 0.92 / a11y 0.97; /accounts/new perf 0.94 / a11y 0.93; /accounts/<id>/edit perf 0.94 / a11y 0.93. Run 2026-11-22T15:19:51Z to 2026-11-22T15:22:20Z UTC, exit 0, on a local production build with local Supabase auth and an ephemeral seeded DB, signed in as the seeded admin; every report's final URL equals the requested URL (no /login redirect). onlyCategories were performance and accessibility, so best-practices and SEO were not measured. The harness's app-wide assertions (color-contrast #871/#540, TTI < 1 s) are not task failures."
 }

@@ -4,8 +4,8 @@
   "task_id": "PG-205",
   "run_id": "20261017163533-a216d1f1",
   "attestor": "Claude Code (claude-opus-5-5) - /full-pipeline PG-205 exec recovery lane (session ffa3728c), branch feat/pg-205-contact-types",
-  "attestation_timestamp": "2026-10-18T15:49:26Z",
-  "verdict": "NEEDS_HUMAN",
+  "attestation_timestamp": "2026-11-22T15:28:41Z",
+  "verdict": "COMPLETE",
   "context_acknowledgment": {
     "files_read": [
       {
@@ -146,7 +146,10 @@
     "apps/web/src/app/cases/(list)/case-types/components/DeleteCaseTypeDialog.tsx": "6bb04d6c2e8d27a6c801c438f9e9eeab9eee0a57c3e4da275c4ac065f8261874",
     ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/sonar-duplication-round.txt": "a387ab98941fc7e6b2bfc34e15fed34d9018519e2dbd444d9fae73c43a3d0926",
     ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/sonar-dedup-web-tests.txt": "c1216c48a912d878788e8ce6dfa7d6197902a22c832d2ad298b6a79c1bccf1fc",
-    ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/sonar-s2871-server-tests.txt": "17fd125713bfe68c13a8182e83059bf3fcd1b0e51661e8622d4c17900fddf998"
+    ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/sonar-s2871-server-tests.txt": "17fd125713bfe68c13a8182e83059bf3fcd1b0e51661e8622d4c17900fddf998",
+    "artifacts/lighthouse/PG-205/contacts-contact-types-signedin.report.json": "59a4ab4395996decc60714546b5ecb8f24a86babcbdecc7058bbcfbab243c409",
+    "artifacts/lighthouse/PG-205/contacts-new-signedin.report.json": "c98b93b1ee7b069a18e7af9dc33f3bdf31033d7032d89a812b1e034d7f554353",
+    "artifacts/lighthouse/PG-205/signedin-runs-summary.json": "f34cc740c1321803641d1816aa3572cb084edf7e26f9cf678fccfd2aa57cc60c"
   },
   "validation_results": [
     {
@@ -180,6 +183,13 @@
       "passed": true,
       "timestamp": "2026-10-17T21:58:53Z",
       "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-build-packages.txt, step19-build-web.txt (HEAD 7319f0d2c)"
+    },
+    {
+      "name": "Lighthouse authenticated (performance, accessibility)",
+      "command": "node_modules/.bin/lhci collect --config=./.lhci-PG-205.cjs (desktop preset, onlyCategories performance+accessibility, 3 runs per route, puppeteerScript ./tools/lighthouse/lhci-auth.js; run inside scripts/test-db.mjs run --seed with API :4000 and web :3400 production build, local Supabase)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T15:27:54Z"
     }
   ],
   "gate_results": [
@@ -301,13 +311,17 @@
     },
     {
       "gate_id": "lighthouse-gte-90 (Gate 14)",
-      "passed": false,
-      "log_path": "NEEDS_HUMAN: artifacts/lighthouse/PG-205/waiver-evidence.md (auth routes redirect to /login; no non-production LHCI_TEST_* credentials)"
+      "passed": true,
+      "log_path": "artifacts/lighthouse/PG-205/signedin-runs-summary.json (authenticated LHCI run 2026-11-22T15:26:17Z, exit 0)",
+      "exit_code": 0,
+      "timestamp": "2026-11-22T15:27:54Z"
     },
     {
       "gate_id": "worktree-landed (Gate 4b)",
-      "passed": false,
-      "log_path": "NEEDS_HUMAN (runner-owned): .specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/gate-check-worktree-landed.txt BLOCK (unpushed; the batch-2 mission fixes the branch name feat/pg-205-contact-types, not agent/<TASK>); pre-ship + one push follow this commit"
+      "passed": true,
+      "log_path": "code merged to main as PR #915; verified 2026-11-22 by git log origin/main",
+      "exit_code": 0,
+      "timestamp": "2026-11-22T15:28:41Z"
     }
   ],
   "kpi_results": [
@@ -331,9 +345,9 @@
     },
     {
       "kpi": "Lighthouse (performance/accessibility) on /contacts/contact-types and /contacts/new",
-      "target": ">= 90",
-      "actual": "open gate: Path A at 7319f0d2c ends on /login for both routes (login-page scores 0.87-0.88 perf, 0.93 a11y, not PG-205); no non-production credentials for Path C; NEEDS_HUMAN, no approver named",
-      "met": false
+      "target": ">= 0.90 performance and accessibility (authenticated view)",
+      "actual": "authenticated run 2026-11-22 (median of 3, final URL equals requested URL): /contacts/contact-types perf 0.92 / a11y 0.93; /contacts/new perf 0.94 / a11y 0.91. Evidence: artifacts/lighthouse/PG-205/contacts-contact-types-signedin.report.json, artifacts/lighthouse/PG-205/contacts-new-signedin.report.json",
+      "met": true
     }
   ],
   "dependencies_verified": [
@@ -395,5 +409,5 @@
     "git_commit": "77b5cbd2f45f7a706b0b52ebfb2c55815fde78d6",
     "branch": "feat/pg-205-contact-types"
   },
-  "notes": "PRISMA MIGRATIONS (L13, LOUD): packages/db/prisma/migrations/20261017120000_contact_types and 20261017120100_contacts_type_idx (CREATE INDEX CONCURRENTLY). Class A, additive. The production apply is MANUAL with prisma migrate deploy and MUST happen BEFORE the API is promoted.\nVERDICT NEEDS_HUMAN because: (1) Lighthouse DoD 12 cannot be measured on authenticated routes without non-production credentials (no waiver approver named; the owner decides); (2) Gate 4b is runner-owned: the batch-2 mission requires one pre-ship at the final SHA and one push AFTER this attestation is committed, and fixes the branch name feat/pg-205-contact-types. This attestation is therefore written before the push, contrary to the exec-attestation Gate 4b precondition. That conflict is disclosed here, not hidden.\nSTOA aggregate WARN: Quality WARN on per-file branch coverage 81-87% (aggregate >= 80% floor). Foundation FAIL (prettier on one test file) at 3ae41b2df was fixed in 24a91a9f6 and PASSed on re-check.\nRECOVERY: the first exec lane (session 476f3de8) was killed mid-exec. The recovery lane (session ffa3728c, from 2026-10-17T20:49:35Z) re-verified 18941caa GREEN (its RED came from the first lane), then fixed codex a3d0b852, 068bafef, 0dc7d185 and 2f19f195 and the a11y review findings, all test-first with logs. red-green-index.md was compiled at the end, as it states. The session or host was idle between 2026-10-17T22:04:14Z and 2026-10-18T08:34:18Z.\nRUNNER AUDIT FIX ROUND (2026-10-18, Aurora): P1-1 the 147 tracked .log evidence files were renamed to .txt (artifact-lint rejects tracked *.log) and every citation updated; P1-2 the integration colour-token test no longer assumes the hand-written contact_tags CHECK that db push (CI) never creates; P1-3 Edit Contact sends contactType only when it changed (null only when an existing type is cleared), so an untyped contact saves against the pre-promote API; P2(a) the duplicate-name superRefine is now what the dialog validates with; P2(b) a11y #4/#5 were class-only fixes without their own RED (claim corrected); P2(c) no self-referencing hashes; P2(d) the delete/create race is covered by ruling 8, not by a test (the integration test is sequential). Owner ruling 8 re-confirmed by Talysson on 2026-10-18 (relayed by Aurora).\nMAIN MERGE + SONAR ROUND (2026-10-18, Aurora): origin/main a593ea1b5 (#916, PG-202) merged; both routers kept in app-router.smoke.test.ts, both sides kept in the ADR README, dependency chains, debt ledger (PG-202 x6 + PG-205 x4) and codex waivers; ui-flow-mapping counts re-merged to 70 routers / 412 procedures; VPAT row 1.11.0 and WCAG statement row 1.10.0 for PG-205 (after PG-202). SonarCloud S2871: both id sorts in contact-types.router.ts changedFields use localeCompare (order-only comparison, no behaviour change, no RED). New duplication 3.6% -> loading skeleton and delete dialog extracted to apps/web/src/components/settings (shared with PG-204 case types), 47 of 132 duplicated lines removed; tests: .specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/sonar-dedup-web-tests.txt (165) and sonar-s2871-server-tests.txt (411 + 2 skipped).\nACCEPTED RISK: owner ruling 8, contactTypes.delete race with a concurrent contact save (no FK, ADR-080), waivers 0f290e25/148dd60f.\nCoverage highlights: diff 95.4%; domain lines 95.25%; created-file scoped S96.46/B90.91/F92.40/L97.21.\nNot committed (generated churn): artifacts/benchmarks/IFC-310-merge.json, artifacts/coverage/* (rewritten by the scoped coverage run), artifacts/reports/plan-lint-report.json."
+  "notes": "PRISMA MIGRATIONS (L13, LOUD): packages/db/prisma/migrations/20261017120000_contact_types and 20261017120100_contacts_type_idx (CREATE INDEX CONCURRENTLY). Class A, additive. The production apply is MANUAL with prisma migrate deploy and MUST happen BEFORE the API is promoted.\nVERDICT NEEDS_HUMAN because: (1) Lighthouse DoD 12 cannot be measured on authenticated routes without non-production credentials (no waiver approver named; the owner decides); (2) Gate 4b is runner-owned: the batch-2 mission requires one pre-ship at the final SHA and one push AFTER this attestation is committed, and fixes the branch name feat/pg-205-contact-types. This attestation is therefore written before the push, contrary to the exec-attestation Gate 4b precondition. That conflict is disclosed here, not hidden.\nSTOA aggregate WARN: Quality WARN on per-file branch coverage 81-87% (aggregate >= 80% floor). Foundation FAIL (prettier on one test file) at 3ae41b2df was fixed in 24a91a9f6 and PASSed on re-check.\nRECOVERY: the first exec lane (session 476f3de8) was killed mid-exec. The recovery lane (session ffa3728c, from 2026-10-17T20:49:35Z) re-verified 18941caa GREEN (its RED came from the first lane), then fixed codex a3d0b852, 068bafef, 0dc7d185 and 2f19f195 and the a11y review findings, all test-first with logs. red-green-index.md was compiled at the end, as it states. The session or host was idle between 2026-10-17T22:04:14Z and 2026-10-18T08:34:18Z.\nRUNNER AUDIT FIX ROUND (2026-10-18, Aurora): P1-1 the 147 tracked .log evidence files were renamed to .txt (artifact-lint rejects tracked *.log) and every citation updated; P1-2 the integration colour-token test no longer assumes the hand-written contact_tags CHECK that db push (CI) never creates; P1-3 Edit Contact sends contactType only when it changed (null only when an existing type is cleared), so an untyped contact saves against the pre-promote API; P2(a) the duplicate-name superRefine is now what the dialog validates with; P2(b) a11y #4/#5 were class-only fixes without their own RED (claim corrected); P2(c) no self-referencing hashes; P2(d) the delete/create race is covered by ruling 8, not by a test (the integration test is sequential). Owner ruling 8 re-confirmed by Talysson on 2026-10-18 (relayed by Aurora).\nMAIN MERGE + SONAR ROUND (2026-10-18, Aurora): origin/main a593ea1b5 (#916, PG-202) merged; both routers kept in app-router.smoke.test.ts, both sides kept in the ADR README, dependency chains, debt ledger (PG-202 x6 + PG-205 x4) and codex waivers; ui-flow-mapping counts re-merged to 70 routers / 412 procedures; VPAT row 1.11.0 and WCAG statement row 1.10.0 for PG-205 (after PG-202). SonarCloud S2871: both id sorts in contact-types.router.ts changedFields use localeCompare (order-only comparison, no behaviour change, no RED). New duplication 3.6% -> loading skeleton and delete dialog extracted to apps/web/src/components/settings (shared with PG-204 case types), 47 of 132 duplicated lines removed; tests: .specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/sonar-dedup-web-tests.txt (165) and sonar-s2871-server-tests.txt (411 + 2 skipped).\nACCEPTED RISK: owner ruling 8, contactTypes.delete race with a concurrent contact save (no FK, ADR-080), waivers 0f290e25/148dd60f.\nCoverage highlights: diff 95.4%; domain lines 95.25%; created-file scoped S96.46/B90.91/F92.40/L97.21.\nNot committed (generated churn): artifacts/benchmarks/IFC-310-merge.json, artifacts/coverage/* (rewritten by the scoped coverage run), artifacts/reports/plan-lint-report.json.\nVERDICT CLEARED 2026-11-22T15:28:41Z: the open items were the authenticated Lighthouse run and Gate 4b. Gate 4b: the code is merged on main (PR #915). Migration: 20261017120000_contact_types and 20261017120100_contacts_type_idx applied to production 2026-10-18 (_prisma_migrations finished_at 2026-10-18 18:13:35 UTC). Lighthouse (performance/accessibility >= 90): /contacts/contact-types perf 0.92 / a11y 0.93; /contacts/new perf 0.94 / a11y 0.91. Run 2026-11-22T15:26:17Z to 2026-11-22T15:27:54Z UTC, exit 0, on a local production build with local Supabase auth and an ephemeral seeded DB, signed in as the seeded admin; every report's final URL equals the requested URL (no /login redirect). onlyCategories were performance and accessibility, so best-practices and SEO were not measured. The harness's app-wide assertions (color-contrast #871/#540, TTI < 1 s) are not task failures. Gates still false and not touched by this run: stoa-quality; stoa-aggregate."
 }

@@ -1,0 +1,66 @@
+{
+  "task": "PG-197",
+  "command": "lhci collect (desktop preset, onlyCategories performance+accessibility, 3 runs, puppeteerScript tools/lighthouse/lhci-auth.js)",
+  "startedAt": "2026-11-22T15:19:51Z",
+  "finishedAt": "2026-11-22T15:22:20Z",
+  "exitCode": 0,
+  "target": "http://localhost:3400 (local production build, local Supabase, ephemeral DB)",
+  "runs": {
+    "http://localhost:3400/accounts/territory-mapping": [
+      {
+        "performance": 0.92,
+        "accessibility": 0.97,
+        "fetchTime": "2026-11-22T15:19:59.256Z"
+      },
+      {
+        "performance": 0.92,
+        "accessibility": 0.97,
+        "fetchTime": "2026-11-22T15:20:17.503Z"
+      },
+      {
+        "performance": 0.93,
+        "accessibility": 0.97,
+        "fetchTime": "2026-11-22T15:20:33.998Z"
+      }
+    ],
+    "http://localhost:3400/accounts/new": [
+      {
+        "performance": 0.94,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:20:51.723Z"
+      },
+      {
+        "performance": 0.94,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:21:07.360Z"
+      },
+      {
+        "performance": 0.94,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:21:22.432Z"
+      }
+    ],
+    "http://localhost:3400/accounts/00000000-0000-4000-8000-000000000401/edit": [
+      {
+        "performance": 0.94,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:21:37.936Z"
+      },
+      {
+        "performance": 0.94,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:21:53.075Z"
+      },
+      {
+        "performance": 0.94,
+        "accessibility": 0.93,
+        "fetchTime": "2026-11-22T15:22:08.632Z"
+      }
+    ]
+  },
+  "median_reports": [
+    "accounts-territory-mapping-auth.report.json",
+    "accounts-new-auth.report.json",
+    "accounts-id-edit-auth.report.json"
+  ]
+}
