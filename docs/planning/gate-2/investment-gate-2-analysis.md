@@ -3,12 +3,21 @@
 ## £2000 decision on the AI features - IntelliFlow CRM (Aurora)
 
 **Document ID:** IFC-027-GATE2-ANALYSIS **Date:** 2026-11-21 **Decision owner:**
-Talysson (the owner) **Status:** Pack prepared. **The decision is not recorded
-here. It is the owner's.**
+Talysson (the owner) **Status:** Decided 2026-11-21: MAINTAIN (see "Decision").
 
 An earlier version of this file recommended GO and quoted sprint counts and
 eight AI features. It is replaced. This version uses only data read from
 production on 21/11/2026 and files named below.
+
+## Decision
+
+**Decided by Talysson (the owner), 2026-11-21: MAINTAIN** (his answer in
+Aurora's modal, "Maintain (Recommended)").
+
+- Keep the AI features running and make them provable.
+- No new AI spend now.
+- **Review date: about 2026-12-21**, after a month of pilot use. Re-run the
+  queries in the ROI report and decide again then (section 7, step 7).
 
 ## 1. Decision needed
 

@@ -1,0 +1,51 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-027",
+  "run_id": "ifc027-gate2-maintain-2026-11-21",
+  "attestor": "Claude Code (claude-sonnet-5-5), ifc-074 lane",
+  "attestation_timestamp": "2026-11-21T19:10:00Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "files_read": [],
+    "invariants_acknowledged": [
+      "Decision recorded 2026-11-21 (about 19:05-19:10): the owner, Talysson, chose MAINTAIN in Aurora's modal ('Maintain (Recommended)'): keep the AI features running, make them provable, review after a month of pilot use (about 2026-12-21), no new AI spend now.",
+      "The evidence pack (production data read 21/11/2026, ROI report, customer feedback) merged in PR #1517; the decision is written in the 'Decision' section of docs/planning/gate-2/investment-gate-2-analysis.md.",
+      "This supersedes the February 2026 PARTIAL attestation under sprint-15 (T1 approved, T2/T3 pending), which is left unchanged as history."
+    ],
+    "acknowledged_at": "2026-11-21T19:10:00Z"
+  },
+  "evidence_summary": {
+    "artifacts_verified": 4,
+    "kpis_met": 1,
+    "kpis_missed": 0
+  },
+  "artifact_hashes": {
+    "docs/planning/gate-2/investment-gate-2-analysis.md": "sha256:50253488d46e85473639c4e966d0fe6b836f641b6381f411bd8caef3f78ba2b1",
+    "docs/planning/customer-feedback.md": "sha256:61a2e5ab57db4d779aaa9d24ef05de941d4e22eb321e6810507cbe88d9a81ddc",
+    "docs/planning/board-presentation.md": "sha256:5e546aba19e2dec473016be814377fb19a8faf8d1a3404ebb27b39cbc2a1ce72",
+    "docs/planning/financial/ai-roi-report.md": "sha256:26457bc5477c1e589f55438f5f9844b14c941a135e7e288db0ad53e9ae269b84"
+  },
+  "validation_results": [],
+  "gate_results": [
+    {
+      "gate_id": "owner-decision-recorded",
+      "passed": true
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Expand/maintain decision on the AI features recorded by the owner",
+      "target": "decision recorded",
+      "actual": "MAINTAIN, 2026-11-21, review about 2026-12-21",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Expand/maintain decision on AI features recorded, with the evidence pack (PR #1517)",
+      "met": true
+    }
+  ],
+  "notes": "Row closed on the owner's decision. The review in about a month (2026-12-21) is a new decision, not an open part of this row."
+}

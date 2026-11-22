@@ -1,7 +1,8 @@
 # ADR-089: WAHA tenant isolation: one container, one session and one API key per tenant
 
-- **Status:** Proposed (the technical decision rests on the spike below; the
-  hosting spend is the owner's to approve, see "Cost")
+- **Status:** Accepted (2026-11-21, owner). Decision: one shared WAHA container
+  with a session key per tenant, about US$3.30/month plus about US$2 per paired
+  tenant, deployed only at go-live (IFC-331).
 - **Date:** 2026-11-21
 - **Task:** IFC-322 (feeds IFC-326 the WAHA adapter and IFC-331 the deployment)
 - **Relates to:** `docs/architecture/whatsapp-channel-design.md` sections 2, 4
