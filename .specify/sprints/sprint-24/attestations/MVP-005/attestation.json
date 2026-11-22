@@ -51,6 +51,118 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-11-17T19:26:06Z"
+    },
+    {
+      "name": "TypeScript typecheck, web",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:01Z"
+    },
+    {
+      "name": "Lint, web",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:41Z"
+    },
+    {
+      "name": "Build, web",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:00:58Z"
+    },
+    {
+      "name": "Tests, web",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:14:11Z"
+    },
+    {
+      "name": "TypeScript typecheck, api",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:14:59Z"
+    },
+    {
+      "name": "Lint, api",
+      "command": "pnpm --filter @intelliflow/api lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:06Z"
+    },
+    {
+      "name": "Build, api",
+      "command": "pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:33Z"
+    },
+    {
+      "name": "Tests, api",
+      "command": "pnpm --filter @intelliflow/api test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:04:27Z"
+    },
+    {
+      "name": "TypeScript typecheck, workers",
+      "command": "pnpm --filter @intelliflow/workers typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:17:20Z"
+    },
+    {
+      "name": "Lint, workers",
+      "command": "pnpm --filter @intelliflow/workers lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:21Z"
+    },
+    {
+      "name": "Build, workers",
+      "command": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/combined-worker build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:49Z"
+    },
+    {
+      "name": "Tests, workers",
+      "command": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/combined-worker --filter @intelliflow/worker-shared test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:56Z"
+    },
+    {
+      "name": "TypeScript typecheck, validators",
+      "command": "pnpm --filter @intelliflow/validators typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:54:05Z"
+    },
+    {
+      "name": "Lint, validators",
+      "command": "pnpm --filter @intelliflow/validators lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:56:34Z"
+    },
+    {
+      "name": "Build, validators",
+      "command": "pnpm --filter @intelliflow/validators build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:53:01Z"
+    },
+    {
+      "name": "Tests, validators",
+      "command": "pnpm --filter @intelliflow/validators test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:01:10Z"
     }
   ],
   "gate_results": [
@@ -73,5 +185,5 @@
       "met": true
     }
   ],
-  "notes": "Closed by the 17/11 plan close on the signed-in production evidence listed here. Two \"Lead Scored by AI\" entries from 8 Nov still show in the main list of the capture (their author carries an id, which the page counts as a person): a small leftover for a follow-up. The \"My activity\" button was shown, not pressed, in the capture."
+  "notes": "Closed by the 17/11 plan close on the signed-in production evidence listed here. Two \"Lead Scored by AI\" entries from 8 Nov still show in the main list of the capture (their author carries an id, which the page counts as a person): a small leftover for a follow-up. The \"My activity\" button was shown, not pressed, in the capture. Checks recorded 2026-11-22 by re-running them on a fresh worktree of origin/main (3df6095e9), each through the test-slot wrapper, for the packages this row's merged PRs touched. Dependency packages (domain, validators, db, platform, webhooks, application, adapters, observability, partner-sdk, worker-shared, ai-worker) were built first; earlier attempts that ran before those builds failed with unresolved modules and were re-run after, only the passing re-runs are recorded. Packages with no build script (ui) have no Build record. The production captures above stay as the behaviour evidence."
 }
