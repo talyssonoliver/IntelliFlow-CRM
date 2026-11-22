@@ -420,11 +420,16 @@ describe('billingRouter', () => {
     // Build a prisma mock where every model's `count` resolves to 0.
     // The router queries ~25 different models in parallel inside getUsageMetrics,
     // so we provide a zero-count default rather than enumerating each model.
-    const createUsageMetricsPrismaMock = () =>
+    const createUsageMetricsPrismaMock = (tenantPlan: string | null = 'PARTNER_FREE') =>
       new Proxy(
         {},
         {
-          get: () => ({ count: vi.fn().mockResolvedValue(0) }),
+          get: (_t, model) => ({
+            count: vi.fn().mockResolvedValue(0),
+            findUnique: vi
+              .fn()
+              .mockResolvedValue(model === 'tenant' && tenantPlan ? { plan: tenantPlan } : null),
+          }),
         }
       );
 
@@ -451,6 +456,26 @@ describe('billingRouter', () => {
       expect(result?.planLimits.contacts.limit).toBe(500);
       expect(result?.crm).toBeDefined();
       expect(mockStripeAdapterMethods.listSubscriptions).not.toHaveBeenCalled();
+    });
+
+    it('gives a CUSTOM contract workspace with no Stripe customer unlimited limits, not Free', async () => {
+      const caller = billingRouter.createCaller({
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'ADMIN',
+          tenantId: 'tenant_123',
+          stripeCustomerId: undefined,
+          emailVerified: true,
+        } as UserSession,
+        prisma: createUsageMetricsPrismaMock('CUSTOM') as unknown,
+      } as unknown as Parameters<typeof billingRouter.createCaller>[0]);
+
+      const result = await caller.getUsageMetrics();
+      expect(result?.planLimits.activeUsers.limit).toBe(-1);
+      expect(result?.planLimits.contacts.limit).toBe(-1);
+      expect(result?.planLimits.aiPredictions.limit).toBe(-1);
+      expect(result?.planLimits.storage.limit).toBe(-1);
     });
 
     it('scopes every count to the caller tenant and gives SUPER_ADMIN without Stripe enterprise limits', async () => {

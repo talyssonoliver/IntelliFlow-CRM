@@ -56,6 +56,24 @@ import {
 } from '@intelliflow/domain';
 import { formatDateTimeInTimezone } from '../../lib/timezone-utils';
 
+/**
+ * Map a Tenant.plan (no Stripe subscription) to a getUsageMetrics limits key.
+ * CUSTOM (contract) and ENTERPRISE are unlimited; unknown or free tiers use free limits.
+ */
+function planKeyForTenantPlan(plan: string | null | undefined): string {
+  switch (plan) {
+    case 'CUSTOM':
+    case 'ENTERPRISE':
+      return 'enterprise';
+    case 'PROFESSIONAL':
+      return 'professional';
+    case 'STARTER':
+      return 'starter';
+    default:
+      return 'free';
+  }
+}
+
 // ============================================
 // Price ID Resolution (incident 2026-06-16 onboarding redesign)
 // ============================================
@@ -1230,6 +1248,14 @@ export const billingRouter = createTRPCRouter({
     // Super admin (no stripeCustomerId, dev/seed environment) gets enterprise limits
     if (!user?.stripeCustomerId && user.role === 'SUPER_ADMIN') {
       planKey = 'enterprise';
+    } else if (!user?.stripeCustomerId) {
+      // No Stripe customer: the workspace may be on a contract plan billed outside Stripe
+      // (Tenant.plan = CUSTOM, unlimited quotas), so read the tenant's own plan.
+      const tenantRow = await ctx.prisma.tenant.findUnique({
+        where: { id: user.tenantId },
+        select: { plan: true },
+      });
+      planKey = planKeyForTenantPlan(tenantRow?.plan);
     }
 
     const limits = PLAN_LIMITS[planKey]!;
