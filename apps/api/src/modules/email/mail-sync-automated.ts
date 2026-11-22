@@ -87,8 +87,9 @@ export function machineReason(message: {
   const signals = message.signals;
   // The keyword, without RFC 3834 parameters or comments: `no; x-origin=human` is still `no`.
   const autoSubmitted = signals?.autoSubmitted
-    ?.trim()
-    .split(/[\s;(]/, 1)[0]
+    ?.replaceAll(/\([^()]*\)/g, ' ') // RFC 5322 comments, leading or trailing
+    .trim()
+    .split(/[\s;]/, 1)[0]
     ?.toLowerCase();
   if (autoSubmitted && autoSubmitted !== 'no') return 'auto-submitted';
   const type = signals?.contentType;
@@ -109,11 +110,16 @@ export function bulkReason(message: Pick<SyncedMessage, 'bulk' | 'signals'>): st
   return message.bulk ? 'bulk' : null;
 }
 
+const MAX_REFERENCED = 20;
+
 /** The Message-IDs a reply names: In-Reply-To first, then References, as written (angle brackets kept). */
 export function referencedMessageIds(signals: MailAutomationSignals | undefined): string[] {
-  const text = `${signals?.inReplyTo ?? ''} ${signals?.references ?? ''}`;
-  const ids = text.match(/<[^<>\s]+>/g) ?? [];
-  return [...new Set(ids)].slice(-20); // the newest of a long thread are last
+  const idsOf = (text: string | undefined): string[] => text?.match(/<[^<>\s]+>/g) ?? [];
+  const parents = idsOf(signals?.inReplyTo);
+  // The direct parent always counts; the rest of the allowance is the newest of the thread (last).
+  const thread = idsOf(signals?.references).filter((id) => !parents.includes(id));
+  const room = Math.max(0, MAX_REFERENCED - parents.length);
+  return [...new Set([...parents, ...thread.slice(-room)])].slice(0, MAX_REFERENCED);
 }
 
 /** Outbound statuses that mean our mail really left (the same set the waiting list uses). */

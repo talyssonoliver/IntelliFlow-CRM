@@ -113,12 +113,17 @@ describe('automated mail never becomes a lead (register #57)', () => {
   });
 
   it('skips Auto-Submitted other than "no" and keeps Auto-Submitted: no', async () => {
-    for (const value of ['auto-replied', 'auto-generated', 'Auto-Notified']) {
+    for (const value of [
+      'auto-replied',
+      'auto-generated',
+      'Auto-Notified',
+      '(by a rule) auto-replied',
+    ]) {
       const message = person({ signals: { autoSubmitted: value } });
       expect(machineReason(message)).toBe('auto-submitted');
       expect((await leadsFor([message])).created).toBe(0);
     }
-    const human = person({ signals: { autoSubmitted: 'no; x-origin=human (typed)' } });
+    const human = person({ signals: { autoSubmitted: '(a person) no; x-origin=human (typed)' } });
     expect(machineReason(human)).toBeNull();
     expect((await leadsFor([human])).created).toBe(1);
   });
@@ -208,6 +213,18 @@ describe('automated mail never becomes a lead (register #57)', () => {
       signals: { inReplyTo: '<ours-1@shop.example.invalid>' },
     });
     expect((await leadsFor([bounce], ['<ours-1@shop.example.invalid>'])).created).toBe(0);
+  });
+
+  it('keeps the direct parent of a reply in a thread of more than 20 messages', () => {
+    const thread = Array.from({ length: 30 }, (_, i) => `<m${i}@x.invalid>`);
+    const ids = referencedMessageIds({
+      inReplyTo: '<parent@x.invalid>',
+      references: thread.join(' '),
+    });
+    expect(ids).toHaveLength(20);
+    expect(ids[0]).toBe('<parent@x.invalid>');
+    expect(ids).toContain('<m29@x.invalid>');
+    expect(ids).not.toContain('<m0@x.invalid>');
   });
 
   it('reads the Message-IDs a reply names, once each', () => {
