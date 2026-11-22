@@ -194,6 +194,7 @@ jobs:
             $filters \
             --shard=${{ matrix.shard }}/${{ env.SHARD_TOTAL }} \
             $UNIT_PROJECTS \
+            --reporter=default \
             --reporter=blob \
             --coverage \
             --coverage.thresholds.lines=0 \
