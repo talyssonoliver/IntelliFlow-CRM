@@ -116,7 +116,9 @@ describe('UpcomingTasksWidget', () => {
 
     expect(waitingQuery.lastInput).toEqual({ limit: 3 });
     const section = within(screen.getByTestId('waiting-for-reply'));
-    expect(section.getByText('Waiting for reply (4)')).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId('waiting-for-reply')).getByText('4 waiting for a reply')
+    ).toBeInTheDocument();
     expect(section.getByText('waiting 2 days')).toBeInTheDocument();
     expect(screen.queryByText('No tasks yet')).toBeNull();
   });
@@ -136,10 +138,10 @@ describe('UpcomingTasksWidget', () => {
   it('offers one create-task action when there are no tasks', () => {
     render(<UpcomingTasksWidget />);
 
-    // The empty state shows no button of its own; the card's "+ Add New Task" is the only one.
+    // The empty state shows no button of its own; the header's (+) "Add task" is the only one.
     const buttons = screen.getAllByRole('button');
     expect(buttons).toHaveLength(1);
-    expect(buttons[0]).toHaveTextContent('+ Add New Task');
+    expect(buttons[0]).toHaveAccessibleName('Add task');
   });
 
   it('with nothing due shows the empty state and no follow-ups section', () => {
@@ -149,14 +151,16 @@ describe('UpcomingTasksWidget', () => {
     expect(screen.queryByTestId('follow-ups-due')).toBeNull();
   });
 
-  it('asks for contacted leads, most overdue first, and nothing else', () => {
+  it('asks for contacted leads, newest due first, and nothing else (#46)', () => {
     render(<UpcomingTasksWidget />);
 
+    // Newest due first: today's follow-ups lead, then the most recently overdue (#46). The card
+    // reads the Tasks page's 25 rows (one shared query) and lists 3.
     expect(followUpQuery.lastInput).toMatchObject({
       status: ['CONTACTED'],
       sortBy: 'lastContactedAt',
-      sortOrder: 'asc',
-      limit: 3,
+      sortOrder: 'desc',
+      limit: 25,
       page: 1,
     });
     expect(followUpQuery.lastInput?.lastContactedBefore).toBeInstanceOf(Date);
@@ -173,8 +177,9 @@ describe('UpcomingTasksWidget', () => {
     render(<UpcomingTasksWidget />);
 
     const section = within(screen.getByTestId('follow-ups-due'));
-    expect(section.getByText('Follow-ups due (5)')).toBeInTheDocument();
-    expect(section.getByText('Follow up with Jane Example')).toBeInTheDocument();
+    expect(within(screen.getByTestId('follow-ups-due')).getByText(/5 overdue/)).toBeInTheDocument();
+    // The row names the lead; the block heading already says these are follow-ups (owner 21/11).
+    expect(section.getByRole('link', { name: /^Jane Example/ })).toBeInTheDocument();
     expect(section.getByRole('link', { name: /Bob Stone/ })).toHaveAttribute(
       'href',
       '/leads/lead-2'

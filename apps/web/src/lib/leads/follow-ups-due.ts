@@ -16,6 +16,12 @@ export const FOLLOW_UP_AFTER_DAYS = 7;
 /** How many follow-ups the card lists; the rest are counted. */
 export const FOLLOW_UP_CARD_LIMIT = 3;
 
+/**
+ * How many due leads the dashboard card and the Tasks page read (one shared query, newest due
+ * first). The card lists the first FOLLOW_UP_CARD_LIMIT; the rows read also give the count due today.
+ */
+export const FOLLOW_UP_SCAN_LIMIT = 25;
+
 function utcDay(date: Date): number {
   return Math.floor(date.getTime() / DAY_MS);
 }

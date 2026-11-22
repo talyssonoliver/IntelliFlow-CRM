@@ -16,7 +16,9 @@ import {
   type LeadStatsLike,
 } from '@/lib/dashboard/pipeline-summary';
 import { ChartUnavailable } from '@/components/shared/ChartEmptyState';
+import { NO_DEAL_VALUE_LABEL } from '@/components/deals/types';
 import type { WidgetProps } from './index';
+import { WidgetHeader } from '../WidgetHeader';
 
 const STAGE_COLORS: Record<string, string> = {
   QUALIFICATION: 'bg-stage-qualification',
@@ -27,6 +29,26 @@ const STAGE_COLORS: Record<string, string> = {
   DISCOVERY: 'bg-blue-400',
   DEMO: 'bg-indigo-400',
 };
+
+/**
+ * #48: a stage holding deals with no value says so, as the deal cards do ("No value set"),
+ * instead of a real-looking £0. An empty stage keeps "£0 (0 Deals)".
+ */
+export function stageValueLabel(totalValue: number | string, count: number): string {
+  const deals = `${count} ${count === 1 ? 'Deal' : 'Deals'}`;
+  const value = Number(totalValue);
+  return count > 0 && !value
+    ? `${NO_DEAL_VALUE_LABEL} (${deals})`
+    : `${formatGBP(value)} (${deals})`;
+}
+
+/** The Deals heading total; "1 open deal · no value set" when the open deals carry no value. */
+export function dealsTotalLabel(total: number, dealCount: number): string {
+  const deals = `${dealCount} ${dealCount === 1 ? 'deal' : 'deals'}`;
+  return dealCount > 0 && !total
+    ? `${dealCount} open ${dealCount === 1 ? 'deal' : 'deals'} · no value set`
+    : `${formatGBP(total)} open across ${deals}`;
+}
 
 interface PipelineStage {
   stageKey: string;
@@ -242,17 +264,13 @@ function DealsSection({ stages, state }: Readonly<{ stages: PipelineStage[]; sta
   const displayedTotal = stages.reduce((sum, st) => sum + Number(st.totalValue), 0);
   const dealCount = stages.reduce((sum, st) => sum + st.count, 0);
   return (
-    <Section
-      title="Deals"
-      detail={`${formatGBP(displayedTotal)} open across ${dealCount} ${dealCount === 1 ? 'deal' : 'deals'}`}
-      foldable
-    >
+    <Section title="Deals" detail={dealsTotalLabel(displayedTotal, dealCount)} foldable>
       <SectionRows>
         {stages.map((stage) => (
           <Row
             key={stage.stageKey}
             label={stage.displayName}
-            detail={`${formatGBP(stage.totalValue)} (${stage.count} ${stage.count === 1 ? 'Deal' : 'Deals'})`}
+            detail={stageValueLabel(stage.totalValue, stage.count)}
             percent={computePipelineStagePercent(stage.totalValue, displayedTotal)}
             color={STAGE_COLORS[stage.stageKey] || 'bg-primary'}
           />
@@ -269,11 +287,13 @@ function NextStep({ qualified, hasDeals }: Readonly<{ qualified: number; hasDeal
   if (qualified > 0) summary = `${leadCountLabel(qualified)} qualified, ready to convert to a deal`;
   else if (hasDeals) summary = 'Open the board to move your deals on';
   return (
-    <div className="mt-4 pt-4 border-t border-border flex flex-wrap items-center justify-between gap-2">
+    // Phone (owner 21/11): the message and the link stack with room between them, and the link is
+    // a full 44px tap target; side by side from sm.
+    <div className="mt-4 pt-4 border-t border-border flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <span className="text-sm text-muted-foreground">{summary}</span>
       <Link
         href={boardNext ? '/deals?view=pipeline' : '/leads'}
-        className="text-sm font-medium text-primary hover:underline whitespace-nowrap"
+        className="inline-flex min-h-11 items-center self-start sm:self-auto text-sm font-medium text-primary hover:underline whitespace-nowrap"
       >
         {boardNext ? 'Open the board' : 'Go to leads'}
       </Link>
@@ -322,20 +342,22 @@ export function PipelineSummaryWidget(_props: Readonly<WidgetProps>) {
 
   return (
     <div className="p-4 sm:p-6 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-4 sm:mb-6">
-        <h3 className="text-lg font-semibold text-foreground">Pipeline Summary</h3>
-        {/* #1225 UI-012: was an options button with no handler; it now opens the board. */}
-        <Link
-          href="/deals?view=pipeline"
-          aria-label="Open the pipeline board"
-          title="Open the pipeline board"
-          className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <span className="material-symbols-outlined" aria-hidden="true">
-            open_in_new
-          </span>
-        </Link>
-      </div>
+      <WidgetHeader
+        title="Pipeline Summary"
+        actions={
+          /* #1225 UI-012: was an options button with no handler; it now opens the board. */
+          <Link
+            href="/deals?view=pipeline"
+            aria-label="Open the pipeline board"
+            title="Open the pipeline board"
+            className="inline-flex size-11 items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <span className="material-symbols-outlined" aria-hidden="true">
+              open_in_new
+            </span>
+          </Link>
+        }
+      />
       {/* Side by side once the card itself is wide enough, stacked below that. */}
       <div className="@container flex-1 flex flex-col">
         <div className="grid flex-1 grid-cols-1 content-start gap-4 @xl:grid-cols-2 @xl:content-stretch @xl:gap-8">

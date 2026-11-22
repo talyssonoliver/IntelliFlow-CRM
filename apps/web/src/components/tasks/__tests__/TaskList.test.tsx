@@ -5,13 +5,17 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { TaskList, type TaskListItem } from '../TaskList';
+import { followUpTaskRows } from '../follow-up-rows';
+
+const routerPush = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: routerPush }) }));
 
 // Mock @intelliflow/ui (partial — preserve real exports like EmptyState)
 vi.mock('@intelliflow/ui', async (importOriginal) => ({
   ...((await importOriginal()) as Record<string, unknown>),
-  DataTable: ({ columns, data, onRowClick, bulkActions }: any) => (
+  DataTable: ({ columns, data, onRowClick, bulkActions, canSelectRow }: any) => (
     <div data-testid="data-table">
       <table>
         <thead>
@@ -23,7 +27,12 @@ vi.mock('@intelliflow/ui', async (importOriginal) => ({
         </thead>
         <tbody>
           {data.map((row: any) => (
-            <tr key={row.id} data-testid={`task-row-${row.id}`} onClick={() => onRowClick?.(row)}>
+            <tr
+              key={row.id}
+              data-testid={`task-row-${row.id}`}
+              data-selectable={canSelectRow ? String(canSelectRow(row)) : 'true'}
+              onClick={() => onRowClick?.(row)}
+            >
               {columns.map((col: any, i: number) => (
                 <td key={i}>
                   {col.cell ? col.cell({ row: { original: row } }) : row[col.accessorKey]}
@@ -114,6 +123,80 @@ describe('TaskList', () => {
     expect(screen.getByText('No tasks found')).toBeInTheDocument();
   });
 
+  it('does not ask to adjust filters when none is on', () => {
+    render(<TaskList {...defaultProps} tasks={[]} filtered={false} />);
+    expect(screen.getByTestId('task-list-empty')).toBeInTheDocument();
+    expect(screen.queryByText(/adjusting your filters/i)).toBeNull();
+  });
+
+  describe('follow-up rows (owner 21/11: follow-ups in the same task table)', () => {
+    const followUp = followUpTaskRows([
+      {
+        id: 'lead-9',
+        firstName: 'Jane',
+        lastName: 'Example',
+        company: null,
+        email: 'jane@example.invalid',
+        lastContactedAt: '2026-11-13T09:00:00.000Z',
+      },
+    ])[0];
+
+    it('shows a follow-up like any task, pending and urgent (it is due), linked to its lead', () => {
+      render(<TaskList {...defaultProps} tasks={[...defaultProps.tasks, followUp]} />);
+      const row = screen.getByTestId(`task-row-${followUp.id}`);
+      expect(row).toHaveTextContent('Follow up with Jane Example');
+      // The table's own status pill and priority, no one-off badge (owner 21/11).
+      expect(row).toHaveTextContent('PENDING');
+      expect(row).toHaveTextContent('URGENT');
+      expect(within(row).getByRole('link', { name: /Jane Example/ })).toHaveAttribute(
+        'href',
+        '/leads/lead-9'
+      );
+    });
+
+    it('opens the lead on tap and offers only "Open lead", never complete or delete', () => {
+      routerPush.mockClear();
+      render(<TaskList {...defaultProps} tasks={[followUp]} />);
+      const row = screen.getByTestId(`task-row-${followUp.id}`);
+      expect(within(row).getByRole('button', { name: 'Open lead' })).toBeInTheDocument();
+      expect(within(row).queryByRole('button', { name: 'Complete' })).toBeNull();
+      expect(within(row).queryByRole('button', { name: 'Delete' })).toBeNull();
+      fireEvent.click(row);
+      expect(routerPush).toHaveBeenCalledWith('/leads/lead-9');
+      expect(defaultProps.onRowClick).not.toHaveBeenCalledWith(followUp.id);
+    });
+
+    it('never sends a follow-up id to bulk complete, archive or delete', () => {
+      const onBulkComplete = vi.fn();
+      const onBulkDelete = vi.fn();
+      render(
+        <TaskList
+          {...defaultProps}
+          tasks={[...defaultProps.tasks, followUp]}
+          onBulkComplete={onBulkComplete}
+          onBulkDelete={onBulkDelete}
+        />
+      );
+      // The DataTable mock hands every row to the action, as a stale selection could.
+      fireEvent.click(screen.getByTestId('bulk-mark-complete'));
+      fireEvent.click(screen.getByTestId('bulk-delete'));
+      expect(onBulkComplete).toHaveBeenCalledWith([defaultProps.tasks[0].id]);
+      expect(onBulkDelete).toHaveBeenCalledWith([defaultProps.tasks[0].id]);
+    });
+
+    it('gives follow-ups no selection checkbox, so bulk actions never touch them', () => {
+      render(<TaskList {...defaultProps} tasks={[...defaultProps.tasks, followUp]} />);
+      expect(screen.getByTestId(`task-row-${followUp.id}`)).toHaveAttribute(
+        'data-selectable',
+        'false'
+      );
+      expect(screen.getByTestId(`task-row-${defaultProps.tasks[0].id}`)).toHaveAttribute(
+        'data-selectable',
+        'true'
+      );
+    });
+  });
+
   it('renders DataTable with task data', () => {
     render(<TaskList {...defaultProps} />);
 
@@ -158,7 +241,7 @@ describe('TaskList', () => {
     });
     render(<TaskList {...defaultProps} tasks={[taskWithLead]} />);
 
-    expect(screen.getByText('John Doe')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /John Doe/ })).toBeInTheDocument();
   });
 
   it('renders dash when no entity linked', () => {
@@ -215,7 +298,7 @@ describe('TaskList', () => {
       contact: { id: 'c-1', firstName: 'Alice', lastName: 'Wonder' },
     });
     render(<TaskList {...defaultProps} tasks={[taskWithContact]} />);
-    expect(screen.getByText('Alice Wonder')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Alice Wonder/ })).toBeInTheDocument();
   });
 
   it('renders opportunity entity link', () => {
@@ -223,7 +306,7 @@ describe('TaskList', () => {
       opportunity: { id: 'opp-1', name: 'Big Deal', stage: 'NEGOTIATION' },
     });
     render(<TaskList {...defaultProps} tasks={[taskWithOpp]} />);
-    expect(screen.getByText('Big Deal')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Big Deal/ })).toBeInTheDocument();
   });
 
   it('renders overdue date styling', () => {

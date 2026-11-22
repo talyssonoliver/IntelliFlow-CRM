@@ -306,7 +306,143 @@ describe('DataTable', () => {
     });
   });
 
+  describe('Phone layout (owner 21/11, shared by every table)', () => {
+    it('labels each detail cell with its column header and marks the main column', () => {
+      render(<DataTable columns={basicColumns} data={createTestData(1)} />);
+      const row = screen.getByText('User 1').closest('tr')!;
+      const cells = Array.from(row.querySelectorAll('td'));
+      // The first column is the card's main line; the rest are "Header ... value" lines.
+      expect(cells[0]).toHaveClass('max-md:flex-1');
+      expect(cells[0]).not.toHaveClass('max-md:basis-full');
+      for (const td of cells.slice(1)) {
+        expect(td).toHaveClass('max-md:basis-full');
+        expect(td.getAttribute('data-label')).toBeTruthy();
+      }
+      expect(row).toHaveClass('max-md:rounded-lg', 'max-md:border!');
+      // On phones the header row is a toolbar that keeps only header cells holding a control.
+      expect(document.querySelector('thead')).toHaveClass('max-md:block');
+      for (const th of document.querySelectorAll('th')) {
+        expect(th.className).toContain('max-md:[&:not(:has(button,input,[role=checkbox]))]:hidden');
+      }
+    });
+  });
+
+  describe('Phone layout edge cases (review 21/11)', () => {
+    it('finds the main column by its TanStack id, also for a dotted accessorKey', () => {
+      type Doc = { id: string; metadata: { title: string }; size: string };
+      const cols: ColumnDef<Doc>[] = [
+        { accessorKey: 'metadata.title', header: 'Title' },
+        { accessorKey: 'size', header: 'Size' },
+      ];
+      render(
+        <DataTable
+          columns={cols}
+          data={[{ id: '1', metadata: { title: 'Contract' }, size: '2 MB' }]}
+        />
+      );
+      const cells = Array.from(screen.getByText('Contract').closest('tr')!.querySelectorAll('td'));
+      expect(cells[0]).toHaveClass('max-md:flex-1');
+      expect(cells[1]).toHaveClass('max-md:basis-full');
+    });
+
+    it('draws nothing in the checkbox cell of a row that cannot be selected', () => {
+      render(
+        <DataTable
+          columns={basicColumns}
+          data={createTestData(2)}
+          enableRowSelection
+          canSelectRow={(row) => row.id === '1'}
+        />
+      );
+      const row2 = screen.getByText('User 2').closest('tr')!;
+      expect(row2.querySelector('td')!.innerHTML).toBe('');
+    });
+
+    it('drops a selected row from bulk actions when canSelectRow later excludes it', async () => {
+      const onExecute = vi.fn();
+      const cols = basicColumns;
+      const data = createTestData(2);
+      const { rerender } = render(
+        <DataTable
+          columns={cols}
+          data={data}
+          enableRowSelection
+          canSelectRow={() => true}
+          bulkActions={[{ label: 'Archive', onExecute }]}
+        />
+      );
+      await userEvent.click(screen.getByRole('checkbox', { name: 'Select all' }));
+      rerender(
+        <DataTable
+          columns={cols}
+          data={data}
+          enableRowSelection
+          canSelectRow={(row) => row.id !== '2'}
+          bulkActions={[{ label: 'Archive', onExecute }]}
+        />
+      );
+      await userEvent.click(screen.getByRole('button', { name: /Archive/ }));
+      expect(onExecute).toHaveBeenCalledWith([expect.objectContaining({ id: '1' })]);
+    });
+
+    it('counts and acts only on selectable rows', async () => {
+      const onExecute = vi.fn();
+      render(
+        <DataTable
+          columns={basicColumns}
+          data={createTestData(3)}
+          enableRowSelection
+          canSelectRow={(row) => row.id !== '3'}
+          bulkActions={[{ label: 'Archive', onExecute }]}
+        />
+      );
+      expect(screen.getByText(/0\s+of 2 row\(s\)/)).toBeInTheDocument();
+      await userEvent.click(screen.getByRole('checkbox', { name: 'Select all' }));
+      await userEvent.click(screen.getByRole('button', { name: /Archive/ }));
+      expect(onExecute).toHaveBeenCalledWith(
+        expect.not.arrayContaining([expect.objectContaining({ id: '3' })])
+      );
+    });
+  });
+
+  describe('Page size changes (codex 21/11)', () => {
+    it('follows a larger pageSize after mount, so rows added later are not left on page 2', () => {
+      const { rerender } = render(
+        <DataTable columns={basicColumns} data={createTestData(3)} pageSize={3} />
+      );
+      rerender(<DataTable columns={basicColumns} data={createTestData(8)} pageSize={8} />);
+      expect(screen.getByText('User 8')).toBeInTheDocument();
+    });
+  });
+
+  describe('Phone header toolbar (codex 21/11)', () => {
+    it('keeps the select-all checkbox reachable: its header cell holds a control', () => {
+      render(<DataTable columns={basicColumns} data={createTestData(2)} enableRowSelection />);
+      const selectAll = screen.getByRole('checkbox', { name: 'Select all' });
+      expect(selectAll.closest('th')!.matches(':has([role=checkbox])')).toBe(true);
+      expect(document.querySelector('thead')).not.toHaveClass('max-md:sr-only');
+    });
+  });
+
   describe('Row Selection', () => {
+    it('gives a checkbox only to the rows canSelectRow allows', () => {
+      const testData = createTestData(5); // Admin, User, Admin, User, Admin
+      render(
+        <DataTable
+          columns={basicColumns}
+          data={testData}
+          enableRowSelection
+          canSelectRow={(row) => row.role === 'Admin'}
+        />
+      );
+      expect(screen.getAllByRole('checkbox', { name: 'Select row' })).toHaveLength(3);
+    });
+
+    it('gives every row a checkbox when canSelectRow is not set', () => {
+      render(<DataTable columns={basicColumns} data={createTestData(5)} enableRowSelection />);
+      expect(screen.getAllByRole('checkbox', { name: 'Select row' })).toHaveLength(5);
+    });
+
     it('should display row selection count', () => {
       const testData = createTestData(5);
       render(<DataTable columns={selectableColumns} data={testData} enableRowSelection />);

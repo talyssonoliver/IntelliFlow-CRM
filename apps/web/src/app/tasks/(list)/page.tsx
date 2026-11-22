@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from '@intelliflow/ui';
 import type { TaskStatus, TaskPriority } from '@intelliflow/domain';
@@ -10,7 +11,9 @@ import { api } from '@/lib/api';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { TaskList, type TaskListItem } from '@/components/tasks/TaskList';
-import { FollowUpsDueTasks } from '@/components/tasks/FollowUpsDueTasks';
+import { followUpTaskRows } from '@/components/tasks/follow-up-rows';
+import { FOLLOW_UP_SCAN_LIMIT } from '@/lib/leads/follow-ups-due';
+import { useFollowUpsDue } from '@/components/dashboard/widgets/useFollowUpsDue';
 import {
   getEditingTaskDueDate,
   getEntityName,
@@ -316,6 +319,14 @@ export default function TasksPage() {
     searchParams.get('priority')
   );
   const showFollowUps = isAuthenticated && !authLoading && !hasActiveFilters && page === 1;
+  // The follow-ups due, from the same shared query the dashboard card reads. Owner 21/11: they
+  // are rows of this same task table (after the stored tasks, newest due first), not a second
+  // list above it. Unfiltered first page only, as before.
+  const followUpsDue = useFollowUpsDue(FOLLOW_UP_SCAN_LIMIT);
+  const tableRows = useMemo(
+    () => (showFollowUps ? [...tasks, ...followUpTaskRows(followUpsDue.leads)] : tasks),
+    [showFollowUps, tasks, followUpsDue.leads]
+  );
   const totalItems = data?.total ?? tasks.length;
   const taskCountSuffix = totalItems > 0 ? ` (${totalItems} total)` : '';
 
@@ -344,8 +355,6 @@ export default function TasksPage() {
         dueTodayCount={dueTodayCount}
         onFilter={handleReminderFilter}
       />
-
-      {showFollowUps && <FollowUpsDueTasks />}
 
       {/* Search/Filters */}
       <SearchFilterBar
@@ -408,8 +417,8 @@ export default function TasksPage() {
       {/* Content */}
       {!error && (
         <TaskList
-          tasks={tasks}
-          isLoading={isLoading}
+          tasks={tableRows}
+          isLoading={isLoading || (showFollowUps && followUpsDue.isLoading)}
           onRowClick={handleRowClick}
           onComplete={handleComplete}
           onEdit={handleEdit}
@@ -419,7 +428,18 @@ export default function TasksPage() {
           onBulkDelete={handleBulkDelete}
           onBulkArchive={handleBulkArchive}
           onCreate={() => setShowCreateForm(true)}
+          filtered={hasActiveFilters}
         />
+      )}
+
+      {/* The table lists the first follow-ups due; the rest are on the Leads view. */}
+      {!error && showFollowUps && followUpsDue.total > followUpsDue.leads.length && (
+        <p className="text-sm text-muted-foreground">
+          Showing {followUpsDue.leads.length} of {followUpsDue.total} follow-ups due.{' '}
+          <Link href="/leads?segment=followup" className="text-ds-primary hover:underline">
+            See all leads needing a <span className="whitespace-nowrap">follow-up</span>
+          </Link>
+        </p>
       )}
 
       {/* Pagination */}

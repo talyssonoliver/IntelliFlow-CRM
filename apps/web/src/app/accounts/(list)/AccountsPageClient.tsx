@@ -1,5 +1,6 @@
 'use client';
 
+import { KpiCard } from '@/components/dashboard/KpiCard';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DataTable, Pagination, Skeleton } from '@intelliflow/ui';
@@ -102,35 +103,6 @@ function formatCompactValue(value: number): string {
     notation: 'compact',
     maximumFractionDigits: 1,
   }).format(value);
-}
-
-interface StatCardProps {
-  title: string;
-  value: string;
-  detail?: string;
-  isLoading?: boolean;
-}
-
-function StatCard({ title, value, detail, isLoading }: Readonly<StatCardProps>) {
-  if (isLoading) {
-    return (
-      <div className="rounded-lg border border-border bg-card p-5">
-        <Skeleton className="h-3 w-24 mb-3" />
-        <Skeleton className="h-8 w-20 mb-1" />
-        <Skeleton className="h-3 w-16" />
-      </div>
-    );
-  }
-
-  return (
-    <div className="rounded-lg border border-border bg-card p-5">
-      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-        {title}
-      </p>
-      <p className="text-2xl font-bold text-foreground mt-1">{value}</p>
-      {detail && <p className="text-xs text-muted-foreground mt-1">{detail}</p>}
-    </div>
-  );
 }
 
 // =============================================================================
@@ -376,28 +348,41 @@ export default function AccountsPageClient({
       />
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Total Accounts"
-          value={stats ? stats.total.toLocaleString('en-GB') : '\u2014'}
-          isLoading={statsLoading}
+      {/* The shared KPI card (owner 21/11: same card as the dashboard, row layout on phones). */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <KpiCard
+          framed
+          label="Total Accounts"
+          icon="domain"
+          pending={statsLoading}
+          value={stats ? stats.total.toLocaleString('en-GB') : '—'}
         />
-        <StatCard
-          title="Total Revenue"
-          value={stats ? formatCompactValue(totalRevenue) : '\u2014'}
-          isLoading={statsLoading}
+        <KpiCard
+          framed
+          label="Total Revenue"
+          icon="payments"
+          pending={statsLoading}
+          value={stats ? formatCompactValue(totalRevenue) : '—'}
         />
-        <StatCard
-          title="Average Revenue"
-          value={stats ? formatCompactValue(avgRevenue) : '\u2014'}
-          detail="avg/account"
-          isLoading={statsLoading}
+        <KpiCard
+          framed
+          label="Average Revenue"
+          icon="calculate"
+          pending={statsLoading}
+          value={stats ? formatCompactValue(avgRevenue) : '—'}
+          footer={<p className="mt-1 text-xs text-muted-foreground">avg/account</p>}
         />
-        <StatCard
-          title="With Opportunities"
-          value={withOpportunities == null ? '\u2014' : withOpportunities.toLocaleString('en-GB')}
-          detail={oppShare > 0 ? `${oppShare}% share` : undefined}
-          isLoading={statsLoading}
+        <KpiCard
+          framed
+          label="With Opportunities"
+          icon="handshake"
+          pending={statsLoading}
+          value={withOpportunities == null ? '—' : withOpportunities.toLocaleString('en-GB')}
+          footer={
+            oppShare > 0 ? (
+              <p className="mt-1 text-xs text-muted-foreground">{oppShare}% share</p>
+            ) : undefined
+          }
         />
       </div>
 

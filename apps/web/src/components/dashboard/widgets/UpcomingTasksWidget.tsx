@@ -3,7 +3,14 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
-import { EmptyState, Skeleton } from '@intelliflow/ui';
+import {
+  EmptyState,
+  Skeleton,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@intelliflow/ui';
 import { TaskCreateSheet } from '@/components/tasks/TaskCreateSheet';
 import { FollowUpsDueSection } from './FollowUpsDueSection';
 import { useFollowUpsDue } from './useFollowUpsDue';
@@ -12,6 +19,7 @@ import { useWaitingForReply } from './useWaitingForReply';
 import type { WidgetProps } from './index';
 import type { TaskStatus } from '@intelliflow/domain';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { WidgetHeader } from '../WidgetHeader';
 
 const priorityColors: Record<string, string> = {
   URGENT: 'text-red-600 dark:text-red-400',
@@ -71,15 +79,41 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
   const waiting = useWaitingForReply();
 
   return (
-    <div className="p-6 h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Upcoming Tasks</h3>
-        <Link href="/tasks" className="text-sm text-ds-primary hover:underline">
-          View All
-        </Link>
-      </div>
+    <div className="p-4 sm:p-6 h-full flex flex-col">
+      {/* Owner 21/11: one header with both actions, not a second "+ Add New Task" at the bottom
+          next to the "see all" link. */}
+      <WidgetHeader
+        title="Upcoming Tasks"
+        titleClassName="text-lg font-semibold text-slate-900 dark:text-white"
+        actions={
+          <>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => setCreateOpen(true)}
+                    aria-label="Add task"
+                    className="inline-flex size-11 items-center justify-center rounded-md text-ds-primary transition-colors hover:bg-primary/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span className="material-symbols-outlined text-[22px]" aria-hidden="true">
+                      add
+                    </span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Add task</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <Link href="/tasks" className="px-1 py-2 text-sm text-ds-primary hover:underline">
+              View All
+            </Link>
+          </>
+        }
+      />
 
-      <div className="space-y-3 flex-1">
+      <div className="space-y-5 flex-1">
         {isLoading && (
           <>
             <Skeleton className="h-14 w-full" />
@@ -93,8 +127,8 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
           followUps.leads.length === 0 &&
           !waiting.isLoading &&
           waiting.people.length === 0 && (
-            // The card's "+ Add New Task" below is the one create action, so the empty state
-            // shows no second button for the same thing.
+            // The card header's (+) is the one create action, so the empty state shows no
+            // second button for the same thing.
             <EmptyState entity="tasks" showCta={false} className="py-2" />
           )}
         {!isLoading &&
@@ -131,7 +165,14 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
               </div>
             </Link>
           ))}
-        {!isLoading && <FollowUpsDueSection leads={followUps.leads} total={followUps.total} />}
+        {!isLoading && (
+          <FollowUpsDueSection
+            leads={followUps.leads}
+            total={followUps.total}
+            dueToday={followUps.dueToday}
+            dueTodayIsLowerBound={followUps.dueTodayIsLowerBound}
+          />
+        )}
         {!isLoading && (
           <WaitingForReplySection
             people={waiting.people}
@@ -140,13 +181,6 @@ export function UpcomingTasksWidget(_props: Readonly<WidgetProps>) {
           />
         )}
       </div>
-
-      <button
-        onClick={() => setCreateOpen(true)}
-        className="mt-3 w-full py-2 text-sm text-primary font-medium hover:bg-primary/5 rounded-lg border border-transparent hover:border-primary/20 transition-all"
-      >
-        + Add New Task
-      </button>
 
       <TaskCreateSheet
         open={createOpen}

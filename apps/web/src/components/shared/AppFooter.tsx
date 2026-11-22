@@ -6,8 +6,8 @@
  * `(public)/layout.tsx` leaves the Aurora site footer out for signed-in users
  * on purpose (it is decided on the server, so the header never flashes), which
  * left no signed-in screen linking to the legal pages. This footer closes that
- * gap: it is rendered by the root layout and shows exactly when the signed-in
- * header (`Navigation`) shows.
+ * gap: it is rendered by the root layout and shows on the signed-in home (`/`) and
+ * the site pages, when the signed-in header (`Navigation`) shows.
  *
  * On desktop the module sidebar is fixed to the left edge, so the footer pads
  * itself by the sidebar's width (see `.app-footer` in globals.css).
@@ -28,6 +28,38 @@ export const APP_FOOTER_LINKS: ReadonlyArray<{ href: string; label: string }> = 
   { href: '/contact', label: 'Contact' },
 ];
 
+/**
+ * The signed-in home: `/` (served by `(public)/signed-in-home`, the browser keeps `/`). Owner
+ * 21/11: the footer belongs there, not on the Dashboard.
+ */
+export const APP_HOME_PATH = '/';
+
+/** Site pages under `(public)` that a signed-in user can open; the site footer is off there. */
+export const SITE_PAGE_PREFIXES: readonly string[] = [
+  '/about',
+  '/aup',
+  '/blog',
+  '/careers',
+  '/contact',
+  '/cookies',
+  '/dpa',
+  '/features',
+  '/partners',
+  '/press',
+  '/pricing',
+  '/privacy',
+  '/security',
+  '/status',
+  '/terms',
+];
+
+/** The signed-in home and the site pages show the footer; the app's working pages do not. */
+export function showsAppFooter(pathname: string | null | undefined): boolean {
+  if (!pathname) return false;
+  if (pathname === APP_HOME_PATH) return true;
+  return SITE_PAGE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
 export function AppFooter() {
   const { isAuthenticated, isLoading } = useAuth();
   const pathname = usePathname();
@@ -36,6 +68,11 @@ export function AppFooter() {
   // is loading (prevents a flash) or for a visitor.
   const isPublicRoute = PUBLIC_ROUTES.some((route) => pathname?.startsWith(route));
   if (isPublicRoute || isLoading || !isAuthenticated) return null;
+  // Owner 21/11: not under every working page (Leads, Deals, Tasks...), where it read as clutter.
+  // It shows on the signed-in home (`/`) and on the site pages a signed-in user opens
+  // (privacy, terms, status...), where the site footer is off and this one stands in for it.
+  // The marketing landing page keeps its own site footer; this is not it.
+  if (!showsAppFooter(pathname)) return null;
 
   return (
     <footer className="app-footer border-t border-border bg-card text-xs text-muted-foreground">

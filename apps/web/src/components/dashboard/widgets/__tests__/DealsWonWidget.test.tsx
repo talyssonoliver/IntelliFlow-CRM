@@ -67,7 +67,10 @@ describe('DealsWonWidget', () => {
     render(<DealsWonWidget />);
 
     expect(screen.getByText('Deals Won')).toBeInTheDocument();
-    expect(screen.getByTestId('chart-empty')).toHaveTextContent('No deals won in this period yet');
+    // The illustrated EmptyState the dashboard's other zero states use (owner 21/11), not the
+    // chart placeholder that stretched to the neighbouring card's height on desktop.
+    expect(screen.getByText('No deals won in this period yet')).toBeInTheDocument();
+    expect(screen.queryByTestId('chart-empty')).toBeNull();
     expect(screen.queryByText('Jan')).toBeNull();
   });
 
@@ -77,7 +80,7 @@ describe('DealsWonWidget', () => {
     render(<DealsWonWidget />);
 
     expect(screen.getByTestId('deals-won-error')).toHaveTextContent("Couldn't load deals won.");
-    expect(screen.queryByTestId('chart-empty')).toBeNull();
+    expect(screen.queryByText('No deals won in this period yet')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(refetch).toHaveBeenCalledTimes(1);
   });

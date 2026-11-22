@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen, within } from '@testing-library/react';
-import { FollowUpsDueSection, type FollowUpLead } from '../FollowUpsDueSection';
+import { FollowUpsDueSection, followUpSummary, type FollowUpLead } from '../FollowUpsDueSection';
 
 const NOW = new Date('2026-11-17T10:00:00.000Z');
 
@@ -38,7 +38,9 @@ describe('FollowUpsDueSection', () => {
       />
     );
     const section = within(screen.getByTestId('follow-ups-due'));
-    expect(section.getByText('Follow-ups due (2)')).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId('follow-ups-due')).getByText('2 follow-ups due')
+    ).toBeInTheDocument();
 
     const first = section.getByRole('link', { name: /Jane Example/ });
     expect(first).toHaveAttribute('href', '/leads/lead-1');
@@ -69,7 +71,9 @@ describe('FollowUpsDueSection', () => {
         leads={[lead({}), lead({ id: 'l2' }), lead({ id: 'l3' })]}
       />
     );
-    expect(screen.getByText('Follow-ups due (121)')).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId('follow-ups-due')).getByText('121 follow-ups due')
+    ).toBeInTheDocument();
     // The link carries no number: that view also lists leads of other statuses, so a count
     // here would not match what opens.
     const all = screen.getByRole('link', { name: 'See all leads needing a follow-up' });
@@ -79,5 +83,41 @@ describe('FollowUpsDueSection', () => {
   it('shows no see-all link when every due lead is already listed', () => {
     render(<FollowUpsDueSection now={NOW} total={1} leads={[lead({})]} />);
     expect(screen.queryByRole('link', { name: /See all leads/ })).toBeNull();
+  });
+
+  it('splits the list into Today and Overdue when it holds both (#46)', () => {
+    render(
+      <FollowUpsDueSection
+        now={NOW}
+        total={2}
+        dueToday={1}
+        leads={[lead({}), lead({ id: 'lead-2', lastContactedAt: '2026-11-01T09:00:00.000Z' })]}
+      />
+    );
+    const today = screen.getByRole('list', { name: 'Today' });
+    const overdue = screen.getByRole('list', { name: 'Overdue' });
+    expect(within(today).getByRole('link')).toHaveAttribute('href', '/leads/lead-1');
+    expect(within(overdue).getByRole('link')).toHaveAttribute('href', '/leads/lead-2');
+    expect(screen.getByTestId('follow-ups-summary')).toHaveTextContent('1 due today · 1 overdue');
+  });
+
+  it('shows no group headings when every listed lead is the same kind', () => {
+    render(<FollowUpsDueSection now={NOW} total={1} dueToday={1} leads={[lead({})]} />);
+    expect(screen.queryByRole('list', { name: 'Today' })).toBeNull();
+  });
+
+  it('shows no summary line when no today count is given', () => {
+    render(<FollowUpsDueSection now={NOW} total={1} leads={[lead({})]} />);
+    expect(screen.queryByTestId('follow-ups-summary')).toBeNull();
+  });
+});
+
+describe('followUpSummary', () => {
+  it('says what is due today and how many are overdue', () => {
+    expect(followUpSummary(111, 0)).toBe('Nothing new due today · 111 overdue, most recent first');
+    expect(followUpSummary(111, 3)).toBe('3 due today · 108 overdue');
+    expect(followUpSummary(3, 3)).toBe('3 due today');
+    // Every row read was due today and there are more: the count is a floor, overdue unknown.
+    expect(followUpSummary(140, 25, true)).toBe('25+ due today');
   });
 });

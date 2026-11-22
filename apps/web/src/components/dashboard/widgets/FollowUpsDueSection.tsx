@@ -1,4 +1,10 @@
-import Link from 'next/link';
+import {
+  CardList,
+  CardListGroup,
+  CardListMore,
+  CardListRow,
+  CardListSection,
+} from './CardListSection';
 import { leadDisplayName } from '@/lib/leads/lead-format';
 import { followUpStatus, type FollowUpTone } from '@/lib/leads/follow-ups-due';
 
@@ -20,45 +26,80 @@ const toneClass: Record<FollowUpTone, string> = {
  * "Follow-ups due" on the dashboard's Upcoming Tasks card (MVP-010) and the Tasks page: the contacted leads that are
  * due or overdue for a follow-up, each linking to the lead page where the owner acts, and a link
  * to the full "Needs Follow-up" view when there are more than the card lists.
+ * #46 (21/11): the leads come newest due first; a summary line says what is due today, and the
+ * list splits into "Due today" and "Overdue" when it holds both.
  */
+/** "3 due today · 108 overdue" or "Nothing new due today · 111 overdue, most recent first". */
+export function followUpSummary(total: number, dueToday: number, lowerBound = false): string {
+  const overdue = total - dueToday;
+  if (dueToday === 0) return `Nothing new due today · ${total} overdue, most recent first`;
+  const today = `${dueToday}${lowerBound ? '+' : ''} due today`;
+  return overdue > 0 && !lowerBound ? `${today} · ${overdue} overdue` : today;
+}
+
 export function FollowUpsDueSection({
   leads,
   total,
+  dueToday,
+  dueTodayIsLowerBound = false,
   now = new Date(),
-}: Readonly<{ leads: readonly FollowUpLead[]; total: number; now?: Date }>) {
+}: Readonly<{
+  leads: readonly FollowUpLead[];
+  total: number;
+  /** Due today among the leads read (newest due first); omit to show no summary line. */
+  dueToday?: number;
+  dueTodayIsLowerBound?: boolean;
+  now?: Date;
+}>) {
   if (leads.length === 0) return null;
   const more = total - leads.length;
+  const rows = leads.map((lead) => ({ lead, status: followUpStatus(lead.lastContactedAt, now) }));
+  const todayRows = rows.filter((r) => r.status.tone === 'today');
+  const overdueRows = rows.filter((r) => r.status.tone !== 'today');
+  // Group headings only when the list holds both kinds; one kind needs no heading.
+  const groups =
+    todayRows.length > 0 && overdueRows.length > 0
+      ? [
+          { key: 'today', title: 'Today', rows: todayRows },
+          { key: 'overdue', title: 'Overdue', rows: overdueRows },
+        ]
+      : [{ key: 'all', title: null, rows }];
   return (
-    <section aria-label="Follow-ups due" data-testid="follow-ups-due" className="space-y-1">
-      <h4 className="px-3 text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        Follow-ups due ({total})
-      </h4>
-      <ul className="space-y-1">
-        {leads.map((lead) => {
-          const status = followUpStatus(lead.lastContactedAt, now);
-          return (
-            <li key={lead.id}>
-              <Link
+    <CardListSection
+      label="Follow-ups due"
+      testId="follow-ups-due"
+      caption={
+        dueToday === undefined ? (
+          `${total} ${total === 1 ? 'follow-up' : 'follow-ups'} due`
+        ) : (
+          <span data-testid="follow-ups-summary">
+            {followUpSummary(total, dueToday, dueTodayIsLowerBound)}
+          </span>
+        )
+      }
+      footer={
+        more > 0 ? (
+          <CardListMore href="/leads?segment=followup">
+            See all leads needing a <span className="whitespace-nowrap">follow-up</span>
+          </CardListMore>
+        ) : null
+      }
+    >
+      {groups.map((group) => (
+        <CardListGroup key={group.key} title={group.title}>
+          <CardList label={group.title ?? undefined}>
+            {group.rows.map(({ lead, status }) => (
+              <CardListRow
+                key={lead.id}
                 href={`/leads/${lead.id}`}
-                className="block rounded-lg p-3 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                <p className="truncate text-sm font-medium text-slate-900 dark:text-white">
-                  Follow up with {leadDisplayName(lead)}
-                </p>
-                <p className={`mt-1 text-xs ${toneClass[status.tone]}`}>{status.label}</p>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-      {more > 0 && (
-        <Link
-          href="/leads?segment=followup"
-          className="block px-3 pt-1 text-xs text-ds-primary hover:underline"
-        >
-          See all leads needing a follow-up
-        </Link>
-      )}
-    </section>
+                primary={leadDisplayName(lead)}
+                status={status.label}
+                statusClassName={toneClass[status.tone]}
+              />
+            ))}
+          </CardList>
+        </CardListGroup>
+      ))}
+    </CardListSection>
   );
 }

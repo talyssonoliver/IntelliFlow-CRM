@@ -43,8 +43,23 @@ function mutation(name: string) {
   };
 }
 
-vi.mock('@/components/tasks/FollowUpsDueTasks', () => ({
-  FollowUpsDueTasks: () => <div data-testid="follow-ups-due-tasks" />,
+// The follow-ups due the page adds to the task table (owner 21/11); none by default.
+const followUpsDue = {
+  leads: [] as Array<{
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    company: string | null;
+    email: string;
+    lastContactedAt: string | null;
+  }>,
+  total: 0,
+  dueToday: 0,
+  dueTodayIsLowerBound: false,
+  isLoading: false,
+};
+vi.mock('@/components/dashboard/widgets/useFollowUpsDue', () => ({
+  useFollowUpsDue: () => followUpsDue,
 }));
 
 vi.mock('@/lib/api', () => ({
