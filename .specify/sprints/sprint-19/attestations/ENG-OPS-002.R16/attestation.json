@@ -60,6 +60,20 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-07-25T17:20:00Z"
+    },
+    {
+      "name": "Format, prettier",
+      "command": "npx prettier --check artifacts/metrics/debt-ledger.yaml",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:58:02Z"
+    },
+    {
+      "name": "Attestation JSON schema validation (ajv, attestation.schema.json)",
+      "command": "node ajv-validate attestation.schema.json .specify/sprints/sprint-19/attestations/ENG-OPS-002.R16/attestation.json",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:58:02Z"
     }
   ],
   "gate_results": [
@@ -98,7 +112,10 @@
       "met": true
     }
   ],
-  "dependencies_verified": ["ENG-OPS-002", "PM-OPS-002"],
+  "dependencies_verified": [
+    "ENG-OPS-002",
+    "PM-OPS-002"
+  ],
   "definition_of_done_items": [
     {
       "criterion": "Backfill the 18 Sprint-18 tasks marked Completed with no canonical attestation.json",

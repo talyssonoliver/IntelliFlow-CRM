@@ -35,6 +35,27 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-11-16T00:30:00Z"
+    },
+    {
+      "name": "TypeScript typecheck, web",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:52:23Z"
+    },
+    {
+      "name": "Lint, web",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:52:39Z"
+    },
+    {
+      "name": "Build, web",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:55:04Z"
     }
   ],
   "gate_results": [

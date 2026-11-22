@@ -63,6 +63,13 @@
       "name": "Coverage (merged Istanbul)",
       "command": "pnpm test:coverage",
       "result": "exit 0; lines 86.4% / stmts 85.2% / funcs 82.4% / branches ~76% — below 90%/80% global thresholds (recorded as debt)"
+    },
+    {
+      "name": "Format, prettier",
+      "command": "npx prettier --check docs/audit/sprints-1-18-current-state-audit.md",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:58:02Z"
     }
   ],
   "gate_results": [

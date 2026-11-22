@@ -108,6 +108,20 @@
       "timestamp": "2026-10-07T08:27:11.881Z",
       "duration_ms": 716,
       "stdout_hash": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
+    },
+    {
+      "name": "Format, prettier",
+      "command": "npx prettier --check docs/planning/sprint-19-rebaseline.md docs/planning/sprint-19-execution-plan.md docs/planning/sprint-19-critical-path.md docs/planning/sprint-19-risk-register.md docs/planning/sprint-19-waves.md artifacts/reports/sprint-19/readiness-report.json",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:58:02Z"
+    },
+    {
+      "name": "Lint, plan-linter sprint 19 plan",
+      "command": "node tools/plan-linter/index.js --sprint=19",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T14:58:31Z"
     }
   ]
 }
