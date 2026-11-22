@@ -109,10 +109,25 @@ function useRailTooltip(label: string, enabled: boolean) {
     },
     [enabled]
   );
-  const release = React.useCallback((source: 'hover' | 'focus') => {
-    sources.current[source] = false;
-    if (!sources.current.hover && !sources.current.focus) setPos(null);
-  }, []);
+  const closeTimer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const cancelClose = React.useCallback(() => clearTimeout(closeTimer.current), []);
+  const release = React.useCallback(
+    (source: 'hover' | 'focus') => {
+      sources.current[source] = false;
+      cancelClose();
+      if (source === 'focus') {
+        if (!sources.current.hover) setPos(null);
+        return;
+      }
+      // Short grace period so the pointer can travel from the item onto the tooltip
+      // (WCAG 1.4.13 "hoverable"); the tooltip's own mouseenter cancels the close.
+      closeTimer.current = setTimeout(() => {
+        if (!sources.current.hover && !sources.current.focus) setPos(null);
+      }, 150);
+    },
+    [cancelClose]
+  );
+  React.useEffect(() => cancelClose, [cancelClose]);
 
   // The rail collapsing/expanding moves or removes the item: drop any open tooltip.
   React.useEffect(() => {
@@ -136,6 +151,7 @@ function useRailTooltip(label: string, enabled: boolean) {
 
   const handlers = {
     onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
+      cancelClose();
       sources.current.hover = true;
       open(e.currentTarget);
     },
@@ -146,6 +162,13 @@ function useRailTooltip(label: string, enabled: boolean) {
     },
     onBlur: () => release('focus'),
   };
+  const tooltipHandlers = {
+    onMouseEnter: () => {
+      cancelClose();
+      sources.current.hover = true;
+    },
+    onMouseLeave: () => release('hover'),
+  };
 
   const tooltip =
     enabled && pos && typeof document !== 'undefined'
@@ -154,13 +177,14 @@ function useRailTooltip(label: string, enabled: boolean) {
             role="tooltip"
             aria-hidden="true"
             data-rail-tooltip=""
+            {...tooltipHandlers}
             style={{
               position: 'fixed',
               top: pos.top,
               left: pos.left,
               transform: 'translateY(-50%)',
             }}
-            className="pointer-events-none z-50 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md"
+            className="z-50 whitespace-nowrap rounded-md border border-border bg-popover px-2 py-1 text-xs font-medium text-popover-foreground shadow-md"
           >
             {label}
           </span>,

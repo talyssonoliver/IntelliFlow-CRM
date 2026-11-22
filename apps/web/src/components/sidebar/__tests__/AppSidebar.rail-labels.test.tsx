@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AppSidebar } from '../AppSidebar';
 import { SidebarProvider } from '../SidebarContext';
@@ -77,7 +77,7 @@ describe.each(configs)('collapsed %s rail', (_name, config) => {
 });
 
 describe('rail tooltip', () => {
-  it('shows on hover, closes on Escape, and also names Module Settings', () => {
+  it('shows on hover, closes on Escape, and also names Module Settings', async () => {
     const rail = renderRail(configs[0][1]);
     const settings = within(rail).getByRole('button', { name: 'Module Settings' });
     fireEvent.focus(settings);
@@ -89,16 +89,29 @@ describe('rail tooltip', () => {
     fireEvent.mouseEnter(overdue);
     expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Overdue');
     fireEvent.mouseLeave(overdue);
-    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+    await waitFor(() => expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull());
   });
 
-  it('keeps a focus-opened tooltip when the pointer leaves, and has no label or tooltip when expanded', () => {
+  it('stays open while the pointer moves from the item onto the tooltip (hoverable)', async () => {
+    const rail = renderRail(configs[0][1]);
+    const overdue = within(rail).getByRole('link', { name: 'Overdue' });
+    fireEvent.mouseEnter(overdue);
+    fireEvent.mouseLeave(overdue);
+    fireEvent.mouseEnter(screen.getByRole('tooltip', { hidden: true }));
+    await new Promise((r) => setTimeout(r, 300));
+    expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Overdue');
+    fireEvent.mouseLeave(screen.getByRole('tooltip', { hidden: true }));
+    await waitFor(() => expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull());
+  });
+
+  it('keeps a focus-opened tooltip when the pointer leaves the collapsed item', async () => {
     const rail = renderRail(configs[0][1]);
     expect(rail.className).toContain('w-14');
     const overdue = within(rail).getByRole('link', { name: 'Overdue' });
     fireEvent.focus(overdue);
     fireEvent.mouseEnter(overdue);
     fireEvent.mouseLeave(overdue);
+    await new Promise((r) => setTimeout(r, 300));
     expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('Overdue');
     fireEvent.blur(overdue);
     expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
