@@ -74,6 +74,29 @@ function planKeyForTenantPlan(plan: string | null | undefined): string {
   }
 }
 
+/**
+ * Plan key from the customer's Stripe subscription price id; 'free' when there is no
+ * subscription, the price id is not a known plan, or Stripe is unavailable.
+ */
+async function resolveStripePlanKey(customerId: string, planKeys: string[]): Promise<string> {
+  try {
+    const stripe = await getStripeAdapter();
+    const subsResult = await callStripeAPI(() => stripe.listSubscriptions(customerId));
+    if (subsResult.isSuccess && subsResult.value.length > 0) {
+      const activeSub =
+        subsResult.value.find((s) => s.status === 'active' || s.status === 'trialing') ??
+        subsResult.value[0];
+      const parts = activeSub.priceId.split('_');
+      if (parts.length >= 2 && planKeys.includes(parts[1])) {
+        return parts[1];
+      }
+    }
+  } catch {
+    // Stripe unavailable — fall back to free tier limits
+  }
+  return 'free';
+}
+
 // ============================================
 // Price ID Resolution (incident 2026-06-16 onboarding redesign)
 // ============================================
@@ -1227,24 +1250,7 @@ export const billingRouter = createTRPCRouter({
     let effectivePlan: string | undefined;
 
     if (user?.stripeCustomerId) {
-      try {
-        const stripe = await getStripeAdapter();
-        const subsResult = await callStripeAPI(() =>
-          stripe.listSubscriptions(user.stripeCustomerId!)
-        );
-
-        if (subsResult.isSuccess && subsResult.value.length > 0) {
-          const activeSub =
-            subsResult.value.find((s) => s.status === 'active' || s.status === 'trialing') ??
-            subsResult.value[0];
-          const parts = activeSub.priceId.split('_');
-          if (parts.length >= 2 && parts[1] in PLAN_LIMITS) {
-            planKey = parts[1];
-          }
-        }
-      } catch {
-        // Stripe unavailable — fall back to free tier limits
-      }
+      planKey = await resolveStripePlanKey(user.stripeCustomerId, Object.keys(PLAN_LIMITS));
     }
 
     // Super admin (no stripeCustomerId, dev/seed environment) gets enterprise limits
@@ -1262,7 +1268,15 @@ export const billingRouter = createTRPCRouter({
     }
 
     effectivePlan ??= planKey;
-    const limits = PLAN_LIMITS[planKey]!;
+    const limits = { ...PLAN_LIMITS[planKey]! };
+
+    // No Stripe customer: seats and contacts follow the quotas the application enforces
+    // (QuotaRegistry defaults plus tenant overrides); null means unlimited (-1 here).
+    if (!user?.stripeCustomerId && user.role !== 'SUPER_ADMIN' && ctx.services?.quota) {
+      const quotaLimits = await ctx.services.quota.getLimits(user.tenantId);
+      limits.maxUsers = quotaLimits.seats ?? -1;
+      limits.contacts = quotaLimits.contacts ?? -1;
+    }
     const tenantId = user.tenantId;
 
     // Billing period start (first day of current month)

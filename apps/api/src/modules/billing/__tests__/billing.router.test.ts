@@ -483,27 +483,34 @@ describe('billingRouter', () => {
     });
 
     it.each([
-      ['ENTERPRISE', -1],
-      ['PROFESSIONAL', 10000],
-      ['STARTER', 1000],
-      ['PARTNER_FREE', 500],
-    ])('maps a %s tenant with no Stripe customer to its contact limit', async (plan, contacts) => {
-      const caller = billingRouter.createCaller({
-        user: {
-          userId: 'user_123',
-          email: 'test@example.com',
-          role: 'ADMIN',
-          tenantId: 'tenant_123',
-          stripeCustomerId: undefined,
-          emailVerified: true,
-        } as UserSession,
-        prisma: createUsageMetricsPrismaMock(plan) as unknown,
-        prismaWithTenant: createUsageMetricsPrismaMock(plan) as unknown,
-      } as unknown as Parameters<typeof billingRouter.createCaller>[0]);
+      ['ENTERPRISE', { seats: null, contacts: null }, -1, -1],
+      ['PROFESSIONAL', { seats: 10, contacts: 20000 }, 10, 20000],
+      ['STARTER', { seats: 3, contacts: 2000 }, 3, 2000],
+      ['PARTNER_FREE', { seats: 2, contacts: 500 }, 2, 500],
+    ])(
+      'uses the enforced quotas for a %s tenant with no Stripe customer',
+      async (plan, quota, seats, contacts) => {
+        const getLimits = vi.fn().mockResolvedValue(quota);
+        const caller = billingRouter.createCaller({
+          user: {
+            userId: 'user_123',
+            email: 'test@example.com',
+            role: 'ADMIN',
+            tenantId: 'tenant_123',
+            stripeCustomerId: undefined,
+            emailVerified: true,
+          } as UserSession,
+          prisma: createUsageMetricsPrismaMock(plan) as unknown,
+          prismaWithTenant: createUsageMetricsPrismaMock(plan) as unknown,
+          services: { quota: { getLimits } },
+        } as unknown as Parameters<typeof billingRouter.createCaller>[0]);
 
-      const result = await caller.getUsageMetrics();
-      expect(result?.planLimits.contacts.limit).toBe(contacts);
-    });
+        const result = await caller.getUsageMetrics();
+        expect(getLimits).toHaveBeenCalledWith('tenant_123');
+        expect(result?.planLimits.activeUsers.limit).toBe(seats);
+        expect(result?.planLimits.contacts.limit).toBe(contacts);
+      }
+    );
 
     it('scopes every count to the caller tenant and gives SUPER_ADMIN without Stripe enterprise limits', async () => {
       const countSpies: Array<ReturnType<typeof vi.fn>> = [];
