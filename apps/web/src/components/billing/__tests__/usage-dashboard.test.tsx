@@ -97,6 +97,33 @@ describe('UsageDashboard', () => {
     expect(screen.getByText('Free')).toBeInTheDocument();
   });
 
+  it('shows a calm no-subscription note with real metrics, not an error', () => {
+    mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
+    render(<UsageDashboard />);
+    expect(screen.getByText(/no paid subscription on this workspace/i)).toBeInTheDocument();
+    expect(screen.getByText('Plan Limits')).toBeInTheDocument();
+    expect(screen.queryByText(/unable to load|failed to load/i)).not.toBeInTheDocument();
+  });
+
+  it('does not show the no-subscription note when a subscription exists', () => {
+    render(<UsageDashboard />);
+    expect(screen.queryByText(/no paid subscription/i)).not.toBeInTheDocument();
+  });
+
+  it('shows the error state, not the no-subscription note, when the usage query errors', () => {
+    mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
+    mockGetUsageMetrics.mockReturnValue({ data: null, isLoading: false, error: new Error('boom') });
+    render(<UsageDashboard />);
+    expect(screen.getByText(/failed to load usage/i)).toBeInTheDocument();
+    expect(screen.queryByText(/no paid subscription/i)).not.toBeInTheDocument();
+  });
+
+  it('shows the error state when the usage query returns no data and no error', () => {
+    mockGetUsageMetrics.mockReturnValue({ data: null, isLoading: false, error: null });
+    render(<UsageDashboard />);
+    expect(screen.getByText(/unable to load usage data/i)).toBeInTheDocument();
+  });
+
   // --- Plan Limits section ---
 
   it('renders plan limit cards with progress bars', () => {

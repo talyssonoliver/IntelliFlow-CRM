@@ -428,12 +428,12 @@ describe('billingRouter', () => {
         }
       );
 
-    it('returns null when user has no stripeCustomerId', async () => {
+    it('returns real metrics against free-tier limits for an ADMIN with no stripeCustomerId', async () => {
       const mockContext = {
         user: {
           userId: 'user_123',
           email: 'test@example.com',
-          role: 'USER',
+          role: 'ADMIN',
           tenantId: 'tenant_123',
           stripeCustomerId: undefined,
           emailVerified: true,
@@ -446,7 +446,44 @@ describe('billingRouter', () => {
       );
 
       const result = await caller.getUsageMetrics();
-      expect(result).toBeNull();
+      expect(result).not.toBeNull();
+      expect(result?.planLimits.activeUsers.limit).toBe(5);
+      expect(result?.planLimits.contacts.limit).toBe(500);
+      expect(result?.crm).toBeDefined();
+      expect(mockStripeAdapterMethods.listSubscriptions).not.toHaveBeenCalled();
+    });
+
+    it('scopes every count to the caller tenant and gives SUPER_ADMIN without Stripe enterprise limits', async () => {
+      const countSpies: Array<ReturnType<typeof vi.fn>> = [];
+      const prisma = new Proxy(
+        {},
+        {
+          get: () => {
+            const count = vi.fn().mockResolvedValue(3);
+            countSpies.push(count);
+            return { count };
+          },
+        }
+      );
+      const caller = billingRouter.createCaller({
+        user: {
+          userId: 'user_123',
+          email: 'test@example.com',
+          role: 'SUPER_ADMIN',
+          tenantId: 'tenant_abc',
+          stripeCustomerId: undefined,
+          emailVerified: true,
+        } as UserSession,
+        prisma,
+      } as unknown as Parameters<typeof billingRouter.createCaller>[0]);
+
+      const result = await caller.getUsageMetrics();
+      expect(result?.planLimits.contacts.limit).toBe(-1);
+      expect(result?.crm.contacts).toBe(3);
+      expect(countSpies.length).toBeGreaterThan(0);
+      for (const spy of countSpies) {
+        expect(JSON.stringify(spy.mock.calls[0]?.[0])).toContain('tenant_abc');
+      }
     });
 
     it('returns usage metrics when user has subscription', async () => {

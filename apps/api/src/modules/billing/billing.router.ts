@@ -1178,16 +1178,13 @@ export const billingRouter = createTRPCRouter({
    * - API calls: count of audit log entries this billing period
    * - Storage: estimated from document + attachment counts
    *
-   * Limits are derived from the subscription's plan tier.
+   * Limits are derived from the subscription's plan tier. A tenant with no Stripe
+   * customer (contracted or free workspace) still gets its own real counts, measured
+   * against the free tier; only billing-specific data is absent (getSubscription
+   * returns null for it).
    */
   getUsageMetrics: tenantProcedure.query(async ({ ctx }) => {
     const user = ctx.user;
-
-    // No subscription = no usage metrics. SUPER_ADMIN skips this check so the
-    // dev/seed environment can still surface counts without a Stripe customer.
-    if (!user?.stripeCustomerId && user?.role !== 'SUPER_ADMIN') {
-      return null;
-    }
 
     // Plan tier limits — aligned with pricing-data.json comparisonFeatures
     // "Unlimited" is represented as -1 (frontend renders as "Unlimited")

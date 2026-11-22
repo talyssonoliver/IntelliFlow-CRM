@@ -195,6 +195,17 @@ export function UsageDashboard() {
         </CardHeader>
       </Card>
 
+      {/* No paid subscription: a calm note, not an error */}
+      {!subscription && (
+        <p
+          role="note"
+          className="text-sm text-slate-600 dark:text-slate-400 rounded-lg border border-slate-200 dark:border-slate-800 px-4 py-3"
+        >
+          No paid subscription on this workspace. The figures below are this workspace&apos;s own
+          usage, measured against the Free plan limits.
+        </p>
+      )}
+
       {/* Plan limits (with progress bars) */}
       <div>
         <h3 className="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-3">
