@@ -14,7 +14,7 @@ export function toFiniteNumber(value: unknown): number | null {
   if (typeof value === 'string' && value.trim() === '') return null;
   if (typeof value === 'object' && !(value instanceof Number)) {
     const s = (value as { toString?: () => string }).toString?.();
-    if (typeof s !== 'string' || s === '[object Object]') return null;
+    if (typeof s !== 'string' || s.trim() === '' || s === '[object Object]') return null;
     value = s;
   }
   const n = typeof value === 'string' ? Number(value.trim()) : Number(value);
