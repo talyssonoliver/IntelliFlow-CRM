@@ -228,10 +228,22 @@ describe('LeadDetail', () => {
     expect(notScored.nextElementSibling?.textContent).toBe('Lead Score');
   });
 
-  it('marks a low-confidence score as needing review in the profile card (#1218)', () => {
+  it('shows "Few signals yet" in the profile card for a NEEDS_REVIEW lead with unknown confidence', () => {
     render(<LeadDetail lead={makeLead({ scoringStatus: 'NEEDS_REVIEW' })} leadMetrics={metrics} />);
-    const flag = screen.getByText('needs review');
-    expect(flag.parentElement?.textContent).toBe('75needs review');
+    const flag = screen.getByTitle(/little activity/);
+    expect(flag.textContent).toMatch(/^Few signals yet\. This score is based on little activity/);
+    expect(flag.parentElement?.textContent).toMatch(/^75Few signals yet/);
+  });
+
+  it('shows "Low confidence" only when the stored confidence is below 0.6', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({ scoringStatus: 'NEEDS_REVIEW', scoreConfidence: 0.4 })}
+        leadMetrics={metrics}
+      />
+    );
+    expect(screen.getByText('Low confidence')).toBeTruthy();
+    expect(screen.queryByText('Few signals yet')).toBeNull();
   });
 
   it('links the company to its account when accountId is present (IFC-227 parity)', () => {

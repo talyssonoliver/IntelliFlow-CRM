@@ -21,14 +21,44 @@ describe('LeadScoreBadge', () => {
     expect(screen.getByText(String(score)).className).toContain(cls);
   });
 
-  it('marks a low-confidence score as needing review', () => {
-    render(<LeadScoreBadge score={34} scoringStatus="NEEDS_REVIEW" />);
-    expect(screen.getByText('(low confidence, needs review)', { exact: false })).toBeTruthy();
-    expect(screen.getByTitle('Low confidence: needs review').textContent).toBe('?');
+  it('shows the red "?" only when the confidence is really low (< 0.6)', () => {
+    render(<LeadScoreBadge score={34} scoringStatus="NEEDS_REVIEW" scoreConfidence={0.4} />);
+    expect(screen.getByTitle(/^Low confidence:/).textContent).toBe('?');
+    expect(screen.getByText('(Low confidence', { exact: false })).toBeTruthy();
+    expect(screen.queryByText('Few signals yet')).toBeNull();
   });
 
-  it('has no review mark for a confident score', () => {
+  it('shows a quiet "Few signals yet" between 0.6 and 0.85, with an explaining label', () => {
+    render(<LeadScoreBadge score={34} scoringStatus="NEEDS_REVIEW" scoreConfidence={0.7} />);
+    const note = screen.getByTitle(/little activity/);
+    // Visible text plus an sr-only explanation: the accessible name is spoken once.
+    expect(note.textContent).toMatch(/^Few signals yet\. This score is based on little activity/);
+    expect(note.querySelector('.sr-only')?.textContent).toMatch(/based on little activity/);
+    expect(note.className).toContain('text-slate-600');
+    expect(screen.queryByText('?')).toBeNull();
+  });
+
+  it('shows no flag at 0.85 and above', () => {
+    render(<LeadScoreBadge score={34} scoringStatus="SCORED" scoreConfidence={0.9} />);
+    expect(screen.queryByText('Few signals yet')).toBeNull();
+    expect(screen.queryByText('?')).toBeNull();
+  });
+
+  it('keeps the review gate but shows no flag at exactly 0.85', () => {
+    render(<LeadScoreBadge score={34} scoringStatus="NEEDS_REVIEW" scoreConfidence={0.85} />);
+    expect(screen.queryByText('Few signals yet')).toBeNull();
+    expect(screen.queryByText('?')).toBeNull();
+  });
+
+  it('a NEEDS_REVIEW lead with no stored confidence gets the quiet note, not the red mark', () => {
+    render(<LeadScoreBadge score={34} scoringStatus="NEEDS_REVIEW" />);
+    expect(screen.getByText('Few signals yet')).toBeTruthy();
+    expect(screen.queryByText('?')).toBeNull();
+  });
+
+  it('has no flag for a scored lead with no stored confidence', () => {
     render(<LeadScoreBadge score={34} scoringStatus="SCORED" />);
-    expect(screen.queryByTitle('Low confidence: needs review')).toBeNull();
+    expect(screen.queryByText('Few signals yet')).toBeNull();
+    expect(screen.queryByText('?')).toBeNull();
   });
 });

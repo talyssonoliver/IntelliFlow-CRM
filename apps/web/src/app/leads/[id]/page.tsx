@@ -44,7 +44,13 @@ import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { revalidateLeadCaches } from '../actions';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
-import { leadScoreDisplay } from '@/lib/leads/score-display';
+import {
+  FEW_SIGNALS_LABEL,
+  FEW_SIGNALS_TITLE,
+  LOW_CONFIDENCE_LABEL,
+  LOW_CONFIDENCE_TITLE,
+  leadScoreDisplay,
+} from '@/lib/leads/score-display';
 import { QualifyLeadDialog } from '@/components/leads/QualifyLeadDialog';
 import { ConvertLeadDialog } from '@/components/leads/ConvertLeadDialog';
 import { LeadPageHeader, leadHeaderSheetActions } from '@/components/leads/LeadPageHeader';
@@ -53,8 +59,13 @@ import { LeadPageHeader, leadHeaderSheetActions } from '@/components/leads/LeadP
 function LeadScoreValue({
   score,
   scoringStatus,
-}: Readonly<{ score: number | null | undefined; scoringStatus?: string | null }>) {
-  const display = leadScoreDisplay(score, scoringStatus);
+  scoreConfidence,
+}: Readonly<{
+  score: number | null | undefined;
+  scoringStatus?: string | null;
+  scoreConfidence?: number | null;
+}>) {
+  const display = leadScoreDisplay(score, scoringStatus, scoreConfidence);
   if (display.kind === 'not-scored') {
     return (
       <span className="text-slate-500 dark:text-slate-400" title={display.title}>
@@ -65,9 +76,21 @@ function LeadScoreValue({
   return (
     <span>
       {display.score}/100
-      {display.needsReview && (
-        <span className="ml-1 text-xs font-normal text-amber-600 dark:text-amber-400">
-          (low confidence, needs review)
+      {display.flag === 'low-confidence' && (
+        <span
+          className="ml-1 text-xs font-normal text-red-600 dark:text-red-400"
+          title={LOW_CONFIDENCE_TITLE}
+        >
+          {LOW_CONFIDENCE_LABEL}
+        </span>
+      )}
+      {display.flag === 'few-signals' && (
+        <span
+          className="ml-1 text-xs font-normal text-slate-500 dark:text-slate-400"
+          title={FEW_SIGNALS_TITLE}
+        >
+          {FEW_SIGNALS_LABEL}
+          <span className="sr-only">. {FEW_SIGNALS_TITLE}</span>
         </span>
       )}
     </span>
@@ -298,6 +321,7 @@ interface LeadWithRelations {
   source: string;
   score: number;
   scoringStatus?: string | null;
+  scoreConfidence?: number | null;
   createdAt: string | Date;
   updatedAt: string | Date;
   // New Lead 360 fields
@@ -866,7 +890,11 @@ function LeadOverviewTab({
           <div>
             <dt className="text-sm text-slate-500 dark:text-slate-400">Lead Score</dt>
             <dd className="text-sm font-medium text-slate-900 dark:text-white">
-              <LeadScoreValue score={lead.score} scoringStatus={lead.scoringStatus} />
+              <LeadScoreValue
+                score={lead.score}
+                scoringStatus={lead.scoringStatus}
+                scoreConfidence={lead.scoreConfidence}
+              />
             </dd>
           </div>
         </dl>
@@ -1898,6 +1926,7 @@ function transformLeadForUI(apiLead: LeadWithRelations) {
     source: apiLead.source as LeadSource,
     score: apiLead.score,
     scoringStatus: apiLead.scoringStatus ?? null,
+    scoreConfidence: apiLead.scoreConfidence ?? null,
     temperature: getTemperature(apiLead.score),
     createdAt: apiLead.createdAt,
     lastContactedAt: apiLead.lastContactedAt || apiLead.createdAt,
