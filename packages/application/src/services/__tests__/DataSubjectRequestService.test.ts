@@ -715,6 +715,7 @@ describe('staff requests (compliance R3; security S5)', () => {
       id,
       actorId: 'admin-2',
       reason: 'Logged by mistake',
+      now: NOW,
     });
     expect(result.outcome).toBe('OK');
     expect(repo.rows.get(id)).toMatchObject({
