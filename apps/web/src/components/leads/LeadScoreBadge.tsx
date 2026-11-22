@@ -1,10 +1,21 @@
-import { leadScoreDisplay } from '@/lib/leads/score-display';
+import {
+  FEW_SIGNALS_LABEL,
+  FEW_SIGNALS_TITLE,
+  LOW_CONFIDENCE_TITLE,
+  leadScoreDisplay,
+} from '@/lib/leads/score-display';
 
 export function LeadScoreBadge({
   score,
   scoringStatus,
-}: Readonly<{ score: number; scoringStatus?: string | null }>) {
-  const display = leadScoreDisplay(score, scoringStatus);
+  scoreConfidence,
+}: Readonly<{
+  score: number;
+  scoringStatus?: string | null;
+  /** 0 to 1, when the API supplies it. Decides the flag band; see `leadScoreFlag`. */
+  scoreConfidence?: number | null;
+}>) {
+  const display = leadScoreDisplay(score, scoringStatus, scoreConfidence);
   if (display.kind === 'not-scored') {
     return (
       <span
@@ -46,10 +57,18 @@ export function LeadScoreBadge({
     >
       <span className={`size-1.5 rounded-full ${dotClass}`} aria-hidden="true" />
       {score}
-      {display.needsReview && <span className="sr-only"> (low confidence, needs review)</span>}
-      {display.needsReview && (
-        <span className="font-normal" aria-hidden="true" title="Low confidence: needs review">
-          ?
+      {display.flag === 'low-confidence' && (
+        <>
+          <span className="sr-only"> ({LOW_CONFIDENCE_TITLE})</span>
+          <span className="font-normal" aria-hidden="true" title={LOW_CONFIDENCE_TITLE}>
+            ?
+          </span>
+        </>
+      )}
+      {display.flag === 'few-signals' && (
+        <span className="font-normal text-slate-600 dark:text-slate-300" title={FEW_SIGNALS_TITLE}>
+          {FEW_SIGNALS_LABEL}
+          <span className="sr-only">. {FEW_SIGNALS_TITLE}</span>
         </span>
       )}
     </span>

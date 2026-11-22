@@ -13,14 +13,25 @@ import {
   openRateLabel,
   visibleTags,
 } from '@/lib/leads/lead-format';
-import { leadScoreDisplay } from '@/lib/leads/score-display';
+import {
+  FEW_SIGNALS_LABEL,
+  FEW_SIGNALS_TITLE,
+  LOW_CONFIDENCE_LABEL,
+  LOW_CONFIDENCE_TITLE,
+  leadScoreDisplay,
+} from '@/lib/leads/score-display';
 
 /** #1218: the profile card's score, or "Not scored" when no real AI score exists. */
 function ProfileScoreValue({
   score,
   scoringStatus,
-}: Readonly<{ score: number; scoringStatus?: string | null }>) {
-  const display = leadScoreDisplay(score, scoringStatus);
+  scoreConfidence,
+}: Readonly<{
+  score: number;
+  scoringStatus?: string | null;
+  scoreConfidence?: number | null;
+}>) {
+  const display = leadScoreDisplay(score, scoringStatus, scoreConfidence);
   if (display.kind === 'not-scored') {
     return (
       <p className="text-lg font-bold text-slate-500 dark:text-slate-400" title={display.title}>
@@ -31,12 +42,21 @@ function ProfileScoreValue({
   return (
     <p className="text-lg font-bold text-slate-900 dark:text-white">
       {display.score}
-      {display.needsReview && (
+      {display.flag === 'low-confidence' && (
         <span
-          className="ml-1 text-xs font-normal text-amber-600 dark:text-amber-400"
-          title="Low confidence: needs review"
+          className="ml-1 text-xs font-normal text-red-600 dark:text-red-400"
+          title={LOW_CONFIDENCE_TITLE}
         >
-          needs review
+          {LOW_CONFIDENCE_LABEL}
+        </span>
+      )}
+      {display.flag === 'few-signals' && (
+        <span
+          className="ml-1 text-xs font-normal text-slate-500 dark:text-slate-400"
+          title={FEW_SIGNALS_TITLE}
+        >
+          {FEW_SIGNALS_LABEL}
+          <span className="sr-only">. {FEW_SIGNALS_TITLE}</span>
         </span>
       )}
     </p>
@@ -204,6 +224,8 @@ export interface LeadProfileData {
   score: number;
   /** #1218: whether `score` is a real AI score (NONE / FAILED show as not scored). */
   scoringStatus?: string | null;
+  /** 0 to 1 when the API supplies it; decides the score flag band. */
+  scoreConfidence?: number | null;
   temperature: LeadTemperature;
   createdAt: string | Date;
   lastContactedAt: string | Date;
@@ -391,7 +413,11 @@ export function LeadProfileCard({
             <p className="text-xs text-slate-500">Est. Value</p>
           </div>
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
-            <ProfileScoreValue score={lead.score} scoringStatus={lead.scoringStatus} />
+            <ProfileScoreValue
+              score={lead.score}
+              scoringStatus={lead.scoringStatus}
+              scoreConfidence={lead.scoreConfidence}
+            />
             <p className="text-xs text-slate-500">Lead Score</p>
           </div>
           <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">

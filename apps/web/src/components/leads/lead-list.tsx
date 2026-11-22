@@ -111,7 +111,11 @@ function createColumns(
       header: 'Score',
       size: 80,
       cell: ({ row }) => (
-        <LeadScoreBadge score={row.original.score} scoringStatus={row.original.scoringStatus} />
+        <LeadScoreBadge
+          score={row.original.score}
+          scoringStatus={row.original.scoringStatus}
+          scoreConfidence={row.original.scoreConfidence}
+        />
       ),
     },
     {
