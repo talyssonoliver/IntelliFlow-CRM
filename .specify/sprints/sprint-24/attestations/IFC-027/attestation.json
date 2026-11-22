@@ -26,7 +26,22 @@
     "docs/planning/board-presentation.md": "sha256:5e546aba19e2dec473016be814377fb19a8faf8d1a3404ebb27b39cbc2a1ce72",
     "docs/planning/financial/ai-roi-report.md": "sha256:26457bc5477c1e589f55438f5f9844b14c941a135e7e288db0ad53e9ae269b84"
   },
-  "validation_results": [],
+  "validation_results": [
+    {
+      "name": "Prettier format check, 3 tracked docs",
+      "command": "npx prettier --check docs/planning/gate-2/investment-gate-2-analysis.md docs/planning/customer-feedback.md docs/planning/board-presentation.md",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T04:50:28Z"
+    },
+    {
+      "name": "Attestation JSON schema validation (ajv, attestation.schema.json)",
+      "command": "node ajv-validate attestation.schema.json .specify/sprints/sprint-24/attestations/IFC-027/attestation.json",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T04:50:21Z"
+    }
+  ],
   "gate_results": [
     {
       "gate_id": "owner-decision-recorded",

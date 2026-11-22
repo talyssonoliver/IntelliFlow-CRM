@@ -33,6 +33,20 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-11-21T18:53:28Z"
+    },
+    {
+      "name": "Prettier format check, ADR-089, compose.yaml, channel design doc",
+      "command": "npx prettier --check docs/architecture/adr/ADR-089-waha-tenant-isolation.md infra/waha/compose.yaml docs/architecture/whatsapp-channel-design.md",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T04:50:29Z"
+    },
+    {
+      "name": "Compose schema validation (docker compose config -q)",
+      "command": "WAHA_ADMIN_KEY=<placeholder> docker compose -f infra/waha/compose.yaml config -q",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T04:50:24Z"
     }
   ],
   "gate_results": [

@@ -41,6 +41,69 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-11-22T01:27:14Z"
+    },
+    {
+      "name": "TypeScript typecheck, domain",
+      "command": "pnpm --filter @intelliflow/domain typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:29:39Z"
+    },
+    {
+      "name": "TypeScript typecheck, application",
+      "command": "pnpm --filter @intelliflow/application typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:31:01Z"
+    },
+    {
+      "name": "TypeScript typecheck, adapters",
+      "command": "pnpm --filter @intelliflow/adapters typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:32:03Z"
+    },
+    {
+      "name": "Lint, domain",
+      "command": "pnpm --filter @intelliflow/domain lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:29:52Z"
+    },
+    {
+      "name": "Lint, application",
+      "command": "pnpm --filter @intelliflow/application lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:29:57Z"
+    },
+    {
+      "name": "Lint, adapters",
+      "command": "pnpm --filter @intelliflow/adapters lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:30:03Z"
+    },
+    {
+      "name": "Build, domain",
+      "command": "pnpm --filter @intelliflow/domain build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:30:08Z"
+    },
+    {
+      "name": "Build, application",
+      "command": "pnpm --filter @intelliflow/application build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:31:07Z"
+    },
+    {
+      "name": "Build, adapters",
+      "command": "pnpm --filter @intelliflow/adapters build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:32:21Z"
     }
   ],
   "gate_results": [
@@ -77,5 +140,5 @@
       "met": true
     }
   ],
-  "notes": "Architecture-test result is taken from PR #1515's gate pass, not re-run here. The 1,500-line target was not re-measured."
+  "notes": "Architecture-test result is taken from PR #1515's gate pass, not re-run here. The 1,500-line target was not re-measured. Typecheck, lint and build of domain, application and adapters were run on 2026-11-22 on a fresh worktree of origin/main, each through the test-slot wrapper; validators, db, platform and webhooks were built first because application and adapters import them (first attempts without those builds failed with unresolved modules, then passed)."
 }
