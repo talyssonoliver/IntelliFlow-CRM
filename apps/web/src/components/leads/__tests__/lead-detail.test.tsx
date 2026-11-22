@@ -246,6 +246,32 @@ describe('LeadDetail', () => {
     expect(screen.queryByText('Few signals yet')).toBeNull();
   });
 
+  it.each([
+    [0.59, 'Low confidence', 'Few signals yet'],
+    [0.6, 'Few signals yet', 'Low confidence'],
+    [0.84, 'Few signals yet', 'Low confidence'],
+  ])('shows only the right flag for a stored confidence of %s', (confidence, shown, hidden) => {
+    render(
+      <LeadDetail
+        lead={makeLead({ scoringStatus: 'NEEDS_REVIEW', scoreConfidence: confidence })}
+        leadMetrics={metrics}
+      />
+    );
+    expect(screen.getByText(shown, { exact: false })).toBeTruthy();
+    expect(screen.queryByText(hidden, { exact: false })).toBeNull();
+  });
+
+  it('shows no flag at a stored confidence of 0.85 or more', () => {
+    render(
+      <LeadDetail
+        lead={makeLead({ scoringStatus: 'SCORED', scoreConfidence: 0.85 })}
+        leadMetrics={metrics}
+      />
+    );
+    expect(screen.queryByText('Few signals yet', { exact: false })).toBeNull();
+    expect(screen.queryByText('Low confidence', { exact: false })).toBeNull();
+  });
+
   it('links the company to its account when accountId is present (IFC-227 parity)', () => {
     render(
       <LeadDetail

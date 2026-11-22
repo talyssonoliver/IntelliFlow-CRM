@@ -630,11 +630,14 @@ async function writeAutomaticLeadScore(
     ? 'NEEDS_REVIEW'
     : 'SCORED';
   const now = new Date();
+  // The confidence the score was made with, so the UI can tell "very little to go on" (below 0.6)
+  // from "few signals yet" (below 0.85). Stored only when it is a real number.
+  const scoreConfidence = Number.isFinite(result.confidence) ? result.confidence : null;
   await (tx as { $executeRaw: (s: TemplateStringsArray, ...v: unknown[]) => Promise<number> })
     .$executeRaw`
     UPDATE leads SET score = ${Math.round(result.score)},
       "scoringStatus" = ${scoringStatus}::"LeadScoringStatus", "scoredAt" = ${now},
-      "updatedAt" = ${now}
+      "scoreConfidence" = ${scoreConfidence}, "updatedAt" = ${now}
     WHERE id = ${leadId} AND "tenantId" = ${tenantId}`;
 }
 

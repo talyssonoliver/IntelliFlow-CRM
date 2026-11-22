@@ -74,7 +74,8 @@ function recordToLeadProps(record: LeadRecord) {
     annualRevenue: record.annualRevenue ?? undefined,
     score: {
       value: record.score,
-      confidence: 1, // Prisma stores only the score value; default confidence
+      // NULL = scored before the confidence was stored: no evidence of low confidence, so 1.
+      confidence: record.scoreConfidence ?? 1,
     },
     ownerId: record.ownerId,
     tenantId: record.tenantId,
@@ -87,8 +88,8 @@ function recordToLeadProps(record: LeadRecord) {
  * Prisma Lead Repository
  * Implements LeadRepository port using Prisma ORM
  *
- * Note: Prisma schema only has 'score' (Int), not separate value/confidence.
- * We store score value and use default confidence (1.0) when reconstituting.
+ * Note: the score is stored as `score` (Int) plus `scoreConfidence` (Float, nullable). A lead scored
+ * before the confidence was stored has NULL there and reconstitutes with confidence 1.0.
  */
 export class PrismaLeadRepository implements LeadRepository {
   constructor(private readonly prisma: PrismaClient) {}
@@ -156,11 +157,13 @@ export class PrismaLeadRepository implements LeadRepository {
       // PG-203 DSAR: a scoring result lands only on the person it was computed for. An
       // erasure (or email change) during the AI call makes this match nothing. Compared on
       // the normalised address, as the lead was read (codex), in one conditional write.
-      // #1218: the same write records what the score means and when it was set.
+      // #1218: the same write records what the score means and when it was set; the confidence
+      // it was made with is stored beside it (register #49).
       const scoringStatus = opts.scoringStatus ?? 'SCORED';
       const count = await db.$executeRaw`
         UPDATE leads SET score = ${data.score}, "updatedAt" = ${data.updatedAt},
-          "scoringStatus" = ${scoringStatus}::"LeadScoringStatus", "scoredAt" = ${data.updatedAt}
+          "scoringStatus" = ${scoringStatus}::"LeadScoringStatus", "scoredAt" = ${data.updatedAt},
+          "scoreConfidence" = ${lead.score.confidence}
         WHERE id = ${data.id} AND "tenantId" = ${data.tenantId}
           AND dsar_normalise_email(email) = ${normalizeSubjectEmail(opts.scoreOnlyIfEmail)}`;
       if (count === 0) throw new LeadIdentityChangedError(data.id);

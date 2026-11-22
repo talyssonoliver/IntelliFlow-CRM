@@ -600,6 +600,7 @@ export const mockLead = {
   outreachSlugEventAt: null,
   scoringStatus: 'NONE' as const,
   scoredAt: null,
+  scoreConfidence: null,
   // Lead 360 fields
   location: null,
   website: null,
