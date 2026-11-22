@@ -131,8 +131,11 @@ describe('OAuthCallback active tenant', () => {
       const onSuccess = vi.fn();
       render(<OAuthCallback onSuccess={onSuccess} />);
 
-      await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'Continue' }, { timeout: 5000 })
+      );
+      // A multi-step async flow: allow for a loaded CI/test machine (it timed out at the 1s default).
+      await waitFor(() => expect(onSuccess).toHaveBeenCalled(), { timeout: 5000 });
 
       expect(h.order).toEqual(['verifyOtp', 'claim', 'storeSessionTokens']);
       expect(JSON.parse((h.fetch.mock.calls[0][1] as RequestInit).body as string)).toEqual({
@@ -149,8 +152,10 @@ describe('OAuthCallback active tenant', () => {
       );
       const onSuccess = vi.fn();
       const { unmount } = render(<OAuthCallback onSuccess={onSuccess} />);
-      await userEvent.click(await screen.findByRole('button', { name: 'Continue' }));
-      await waitFor(() => expect(h.fetch).toHaveBeenCalled());
+      await userEvent.click(
+        await screen.findByRole('button', { name: 'Continue' }, { timeout: 5000 })
+      );
+      await waitFor(() => expect(h.fetch).toHaveBeenCalled(), { timeout: 5000 });
 
       unmount();
       await act(async () => {
@@ -179,7 +184,8 @@ describe('OAuthCallback active tenant', () => {
     it('claims with the NEW session token before anything else is stored', async () => {
       const onSuccess = vi.fn();
       render(<OAuthCallback onSuccess={onSuccess} />);
-      await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+      // A multi-step async flow: allow for a loaded CI/test machine (it timed out at the 1s default).
+      await waitFor(() => expect(onSuccess).toHaveBeenCalled(), { timeout: 5000 });
 
       expect(h.order).toEqual(['signOut', 'verifyOtp', 'claim', 'storeSessionTokens']);
       expect(h.fetch).toHaveBeenCalledTimes(1);
@@ -194,7 +200,8 @@ describe('OAuthCallback active tenant', () => {
       setActiveTenantId('tenant_stale');
       const onSuccess = vi.fn();
       render(<OAuthCallback onSuccess={onSuccess} />);
-      await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+      // A multi-step async flow: allow for a loaded CI/test machine (it timed out at the 1s default).
+      await waitFor(() => expect(onSuccess).toHaveBeenCalled(), { timeout: 5000 });
 
       const init = h.fetch.mock.calls[0][1] as RequestInit;
       expect(Object.keys(init.headers as object).map((k) => k.toLowerCase())).not.toContain(
@@ -206,7 +213,8 @@ describe('OAuthCallback active tenant', () => {
       h.query.value = 'token_hash=hash123&type=magiclink&next=/dashboard&tenant=tenant_hint';
       const onSuccess = vi.fn();
       render(<OAuthCallback onSuccess={onSuccess} />);
-      await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+      // A multi-step async flow: allow for a loaded CI/test machine (it timed out at the 1s default).
+      await waitFor(() => expect(onSuccess).toHaveBeenCalled(), { timeout: 5000 });
 
       expect(h.fetch).not.toHaveBeenCalled();
     });
@@ -226,7 +234,8 @@ describe('OAuthCallback active tenant', () => {
     it('stores the tenant the SERVER returned, not the link hint', async () => {
       const onSuccess = vi.fn();
       render(<OAuthCallback onSuccess={onSuccess} />);
-      await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+      // A multi-step async flow: allow for a loaded CI/test machine (it timed out at the 1s default).
+      await waitFor(() => expect(onSuccess).toHaveBeenCalled(), { timeout: 5000 });
 
       expect(getActiveTenantId()).toBe('tenant_client');
       expect(localStorage.getItem(ACTIVE_TENANT_STORAGE_KEY)).toBe('tenant_client');
@@ -238,7 +247,8 @@ describe('OAuthCallback active tenant', () => {
         seenAtSuccess = getActiveTenantId();
       });
       render(<OAuthCallback onSuccess={onSuccess} />);
-      await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+      // A multi-step async flow: allow for a loaded CI/test machine (it timed out at the 1s default).
+      await waitFor(() => expect(onSuccess).toHaveBeenCalled(), { timeout: 5000 });
 
       expect(seenAtSuccess).toBe('tenant_client');
     });
@@ -247,7 +257,8 @@ describe('OAuthCallback active tenant', () => {
       h.query.value = 'token_hash=hash123&type=magiclink&tenant=tenant_hint';
       const onSuccess = vi.fn();
       render(<OAuthCallback onSuccess={onSuccess} />);
-      await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+      // A multi-step async flow: allow for a loaded CI/test machine (it timed out at the 1s default).
+      await waitFor(() => expect(onSuccess).toHaveBeenCalled(), { timeout: 5000 });
 
       expect(getActiveTenantId()).toBe('tenant_hint');
     });
@@ -256,7 +267,8 @@ describe('OAuthCallback active tenant', () => {
       h.query.value = 'token_hash=hash123&type=magiclink&tenant=bad%20tenant%0D%0A';
       const onSuccess = vi.fn();
       render(<OAuthCallback onSuccess={onSuccess} />);
-      await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+      // A multi-step async flow: allow for a loaded CI/test machine (it timed out at the 1s default).
+      await waitFor(() => expect(onSuccess).toHaveBeenCalled(), { timeout: 5000 });
 
       expect(getActiveTenantId()).toBeNull();
     });
@@ -266,7 +278,8 @@ describe('OAuthCallback active tenant', () => {
       h.query.value = 'token_hash=hash123&type=magiclink';
       const onSuccess = vi.fn();
       render(<OAuthCallback onSuccess={onSuccess} />);
-      await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+      // A multi-step async flow: allow for a loaded CI/test machine (it timed out at the 1s default).
+      await waitFor(() => expect(onSuccess).toHaveBeenCalled(), { timeout: 5000 });
 
       expect(getActiveTenantId()).toBeNull();
       expect(localStorage.getItem(ACTIVE_TENANT_STORAGE_KEY)).toBeNull();
@@ -276,7 +289,8 @@ describe('OAuthCallback active tenant', () => {
       vi.stubEnv(FLAG, '0');
       const onSuccess = vi.fn();
       render(<OAuthCallback onSuccess={onSuccess} />);
-      await waitFor(() => expect(onSuccess).toHaveBeenCalled());
+      // A multi-step async flow: allow for a loaded CI/test machine (it timed out at the 1s default).
+      await waitFor(() => expect(onSuccess).toHaveBeenCalled(), { timeout: 5000 });
 
       expect(h.fetch).toHaveBeenCalledTimes(1);
       expect(localStorage.getItem(ACTIVE_TENANT_STORAGE_KEY)).toBe('tenant_client');

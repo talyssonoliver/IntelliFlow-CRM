@@ -206,6 +206,13 @@ const nextConfig = {
   // Redirects
   async redirects() {
     return [
+      // Profile settings live at /settings/account (/profile forwards there too); signup and
+      // onboarding used to link /settings/profile, which did not exist (owner 21/11).
+      {
+        source: '/settings/profile',
+        destination: '/settings/account',
+        permanent: true,
+      },
       {
         source: '/home',
         destination: '/',

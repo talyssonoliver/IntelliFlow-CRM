@@ -79,6 +79,8 @@ export function UserMenu({
         className="flex items-center gap-2 p-1 rounded-lg hover:bg-accent transition-colors"
         aria-expanded={isOpen}
         aria-haspopup="true"
+        // The name is shortened on narrow desktops; the button keeps it whole (label in name).
+        aria-label={`${user.name}, account menu`}
       >
         <AppAvatar
           name={user.name}

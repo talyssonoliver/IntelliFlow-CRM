@@ -138,6 +138,7 @@ export function SearchBar({ placeholder = 'Search...', className = '' }: Readonl
           if (query.trim().length > 0) setIsOpen(true);
         }}
         onKeyDown={handleKeyDown}
+        aria-keyshortcuts="Control+K Meta+K"
         className="w-full pl-10 pr-4 xl:max-[1365px]:pl-8 xl:max-[1365px]:pr-2 py-2 text-sm border border-input rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
       />
 
