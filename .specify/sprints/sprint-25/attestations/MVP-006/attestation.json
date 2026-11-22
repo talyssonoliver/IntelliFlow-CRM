@@ -51,6 +51,34 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-11-17T19:22:16Z"
+    },
+    {
+      "name": "TypeScript typecheck, web",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:01Z"
+    },
+    {
+      "name": "Lint, web",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:41Z"
+    },
+    {
+      "name": "Build, web",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:00:58Z"
+    },
+    {
+      "name": "Tests, web",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:14:11Z"
     }
   ],
   "gate_results": [
@@ -73,5 +101,5 @@
       "met": true
     }
   ],
-  "notes": "Closed by the 17/11 plan close on the signed-in production evidence listed here. The capture predates #1433, which concerns the lead detail Activity tab, not the list."
+  "notes": "Closed by the 17/11 plan close on the signed-in production evidence listed here. The capture predates #1433, which concerns the lead detail Activity tab, not the list. Checks recorded 2026-11-22 by re-running them on a fresh worktree of origin/main (3df6095e9), each through the test-slot wrapper, for the packages this row's merged PRs touched. Dependency packages (domain, validators, db, platform, webhooks, application, adapters, observability, partner-sdk, worker-shared, ai-worker) were built first; earlier attempts that ran before those builds failed with unresolved modules and were re-run after, only the passing re-runs are recorded. Packages with no build script (ui) have no Build record. The production captures above stay as the behaviour evidence."
 }

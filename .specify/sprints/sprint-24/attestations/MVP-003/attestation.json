@@ -60,6 +60,202 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-11-19T16:12:00Z"
+    },
+    {
+      "name": "TypeScript typecheck, web",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:01Z"
+    },
+    {
+      "name": "Lint, web",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:41Z"
+    },
+    {
+      "name": "Build, web",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:00:58Z"
+    },
+    {
+      "name": "Tests, web",
+      "command": "pnpm --filter @intelliflow/web test --run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:14:11Z"
+    },
+    {
+      "name": "TypeScript typecheck, api",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:14:59Z"
+    },
+    {
+      "name": "Lint, api",
+      "command": "pnpm --filter @intelliflow/api lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:06Z"
+    },
+    {
+      "name": "Build, api",
+      "command": "pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:33Z"
+    },
+    {
+      "name": "Tests, api",
+      "command": "pnpm --filter @intelliflow/api test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:04:27Z"
+    },
+    {
+      "name": "TypeScript typecheck, application",
+      "command": "pnpm --filter @intelliflow/application typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:54:24Z"
+    },
+    {
+      "name": "Lint, application",
+      "command": "pnpm --filter @intelliflow/application lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:56:48Z"
+    },
+    {
+      "name": "Build, application",
+      "command": "pnpm --filter @intelliflow/application build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:53:40Z"
+    },
+    {
+      "name": "Tests, application",
+      "command": "pnpm --filter @intelliflow/application test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:01:42Z"
+    },
+    {
+      "name": "TypeScript typecheck, domain",
+      "command": "pnpm --filter @intelliflow/domain typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:54:21Z"
+    },
+    {
+      "name": "Lint, domain",
+      "command": "pnpm --filter @intelliflow/domain lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:56:43Z"
+    },
+    {
+      "name": "Build, domain",
+      "command": "pnpm --filter @intelliflow/domain build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:52:54Z"
+    },
+    {
+      "name": "Tests, domain",
+      "command": "pnpm --filter @intelliflow/domain test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:01:27Z"
+    },
+    {
+      "name": "TypeScript typecheck, validators",
+      "command": "pnpm --filter @intelliflow/validators typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:54:05Z"
+    },
+    {
+      "name": "Lint, validators",
+      "command": "pnpm --filter @intelliflow/validators lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:56:34Z"
+    },
+    {
+      "name": "Build, validators",
+      "command": "pnpm --filter @intelliflow/validators build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:53:01Z"
+    },
+    {
+      "name": "Tests, validators",
+      "command": "pnpm --filter @intelliflow/validators test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:01:10Z"
+    },
+    {
+      "name": "TypeScript typecheck, adapters",
+      "command": "pnpm --filter @intelliflow/adapters typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:54:35Z"
+    },
+    {
+      "name": "Lint, adapters",
+      "command": "pnpm --filter @intelliflow/adapters lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:56:54Z"
+    },
+    {
+      "name": "Build, adapters",
+      "command": "pnpm --filter @intelliflow/adapters build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:54:01Z"
+    },
+    {
+      "name": "Tests, adapters",
+      "command": "pnpm --filter @intelliflow/adapters test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:02:00Z"
+    },
+    {
+      "name": "TypeScript typecheck, db",
+      "command": "pnpm --filter @intelliflow/db typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:54:17Z"
+    },
+    {
+      "name": "Lint, db",
+      "command": "pnpm --filter @intelliflow/db lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:56:38Z"
+    },
+    {
+      "name": "Build, db",
+      "command": "pnpm --filter @intelliflow/db build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:53:24Z"
+    },
+    {
+      "name": "Tests, db",
+      "command": "pnpm --filter @intelliflow/db test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:01:16Z"
     }
   ],
   "gate_results": [
@@ -88,5 +284,5 @@
       "met": true
     }
   ],
-  "notes": "Lead bddc9c2b-28ac-42fa-9b26-b9101cb4e3fa, deal 638f77b8-3a8c-47e4-b85c-b1da1433dc6b, contact 7dd58ceb-5e5c-488f-9b7a-6e4f85a0b495. Defects found and fixed along the way: customer-issue register #24, #26, #27, #28. Open: #32, the deal page has no stage control (Won and Lost only); the stage is moved on the pipeline board, whose drag was not driven in these captures."
+  "notes": "Lead bddc9c2b-28ac-42fa-9b26-b9101cb4e3fa, deal 638f77b8-3a8c-47e4-b85c-b1da1433dc6b, contact 7dd58ceb-5e5c-488f-9b7a-6e4f85a0b495. Defects found and fixed along the way: customer-issue register #24, #26, #27, #28. Open: #32, the deal page has no stage control (Won and Lost only); the stage is moved on the pipeline board, whose drag was not driven in these captures. Checks recorded 2026-11-22 by re-running them on a fresh worktree of origin/main (3df6095e9), each through the test-slot wrapper, for the packages this row's merged PRs touched. Dependency packages (domain, validators, db, platform, webhooks, application, adapters, observability, partner-sdk, worker-shared, ai-worker) were built first; earlier attempts that ran before those builds failed with unresolved modules and were re-run after, only the passing re-runs are recorded. Packages with no build script (ui) have no Build record. The production captures above stay as the behaviour evidence."
 }

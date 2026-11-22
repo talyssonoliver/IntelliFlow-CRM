@@ -40,6 +40,48 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-11-15T20:04:24Z"
+    },
+    {
+      "name": "TypeScript typecheck, api",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:14:59Z"
+    },
+    {
+      "name": "Lint, api",
+      "command": "pnpm --filter @intelliflow/api lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T05:57:06Z"
+    },
+    {
+      "name": "Build, api",
+      "command": "pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:16:33Z"
+    },
+    {
+      "name": "Tests, api",
+      "command": "pnpm --filter @intelliflow/api test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:04:27Z"
+    },
+    {
+      "name": "Lint, tools-contract-plan",
+      "command": "npx eslint tools/scripts/set-contract-plan.ts tools/scripts/__tests__/set-contract-plan.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:17:35Z"
+    },
+    {
+      "name": "Tests, tools-contract-plan",
+      "command": "pnpm exec vitest run tools/scripts/__tests__/set-contract-plan.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-11-22T06:14:15Z"
     }
   ],
   "gate_results": [
@@ -62,5 +104,5 @@
       "met": true
     }
   ],
-  "notes": "Closed by the 16/11 plan corrections on the owner relay of #1370 and the 15/11 production screenshots."
+  "notes": "Closed by the 16/11 plan corrections on the owner relay of #1370 and the 15/11 production screenshots. Checks recorded 2026-11-22 by re-running them on a fresh worktree of origin/main (3df6095e9), each through the test-slot wrapper, for the packages this row's merged PRs touched. Dependency packages (domain, validators, db, platform, webhooks, application, adapters, observability, partner-sdk, worker-shared, ai-worker) were built first; earlier attempts that ran before those builds failed with unresolved modules and were re-run after, only the passing re-runs are recorded. Packages with no build script (ui) have no Build record. The production captures above stay as the behaviour evidence."
 }
