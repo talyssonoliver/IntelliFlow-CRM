@@ -453,6 +453,7 @@ describe('billingRouter', () => {
 
       const result = await caller.getUsageMetrics();
       expect(result).not.toBeNull();
+      expect(result?.effectivePlan).toBe('free');
       expect(result?.planLimits.activeUsers.limit).toBe(5);
       expect(result?.planLimits.contacts.limit).toBe(500);
       expect(result?.crm).toBeDefined();
@@ -474,6 +475,7 @@ describe('billingRouter', () => {
       } as unknown as Parameters<typeof billingRouter.createCaller>[0]);
 
       const result = await caller.getUsageMetrics();
+      expect(result?.effectivePlan).toBe('contract');
       expect(result?.planLimits.activeUsers.limit).toBe(-1);
       expect(result?.planLimits.contacts.limit).toBe(-1);
       expect(result?.planLimits.aiPredictions.limit).toBe(-1);

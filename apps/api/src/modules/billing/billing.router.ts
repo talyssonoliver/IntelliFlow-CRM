@@ -1223,6 +1223,8 @@ export const billingRouter = createTRPCRouter({
 
     // Resolve plan tier from subscription (default to free if no subscription)
     let planKey = 'free';
+    // Plan the limits actually come from, reported to the UI ('contract' = Tenant.plan CUSTOM)
+    let effectivePlan: string | undefined;
 
     if (user?.stripeCustomerId) {
       try {
@@ -1256,8 +1258,10 @@ export const billingRouter = createTRPCRouter({
         select: { plan: true },
       });
       planKey = planKeyForTenantPlan(tenantRow?.plan);
+      if (tenantRow?.plan === 'CUSTOM') effectivePlan = 'contract';
     }
 
+    effectivePlan ??= planKey;
     const limits = PLAN_LIMITS[planKey]!;
     const tenantId = user.tenantId;
 
@@ -1333,6 +1337,8 @@ export const billingRouter = createTRPCRouter({
     const estimatedStorageGB = Math.round(((documentCount * 50) / (1024 * 1024)) * 100) / 100;
 
     return {
+      // Plan the limits above come from: free | starter | professional | enterprise | contract
+      effectivePlan,
       // Plan-limited metrics (with progress bars)
       planLimits: {
         activeUsers: { current: userCount, limit: limits.maxUsers },

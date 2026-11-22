@@ -105,6 +105,21 @@ describe('UsageDashboard', () => {
     expect(screen.queryByText(/unable to load|failed to load/i)).not.toBeInTheDocument();
   });
 
+  it.each([
+    ['contract', /against the Contract plan \(no limits\)/],
+    ['enterprise', /against the Enterprise plan \(no limits\)/],
+    ['free', /against the Free plan limits/],
+  ])('names the %s plan in the no-subscription note', (effectivePlan, pattern) => {
+    mockGetSubscription.mockReturnValue({ data: null, isLoading: false, error: null });
+    mockGetUsageMetrics.mockReturnValue({
+      data: createMockUsageMetrics({ effectivePlan }),
+      isLoading: false,
+      error: null,
+    });
+    render(<UsageDashboard />);
+    expect(screen.getByRole('note')).toHaveTextContent(pattern);
+  });
+
   it('does not show the no-subscription note when a subscription exists', () => {
     render(<UsageDashboard />);
     expect(screen.queryByText(/no paid subscription/i)).not.toBeInTheDocument();

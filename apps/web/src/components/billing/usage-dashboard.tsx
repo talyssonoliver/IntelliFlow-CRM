@@ -28,6 +28,22 @@ import { KpiCard } from '@/components/dashboard/KpiCard';
 
 const UNLIMITED = -1;
 
+/** Wording for the plan the usage limits come from, as reported by the API. */
+function describeEffectivePlan(plan: string | undefined): string {
+  switch (plan) {
+    case 'contract':
+      return 'Usage is shown against the Contract plan (no limits).';
+    case 'enterprise':
+      return 'Usage is shown against the Enterprise plan (no limits).';
+    case 'professional':
+      return 'Usage is shown against the Professional plan limits.';
+    case 'starter':
+      return 'Usage is shown against the Starter plan limits.';
+    default:
+      return 'Usage is shown against the Free plan limits.';
+  }
+}
+
 function isUnlimited(limit: number): boolean {
   return limit === UNLIMITED;
 }
@@ -201,8 +217,7 @@ export function UsageDashboard() {
           role="note"
           className="text-sm text-slate-600 dark:text-slate-400 rounded-lg border border-slate-200 dark:border-slate-800 px-4 py-3"
         >
-          No paid subscription on this workspace. The figures below are this workspace&apos;s own
-          usage, measured against the Free plan limits.
+          No paid subscription on this workspace. {describeEffectivePlan(usage.effectivePlan)}
         </p>
       )}
 
