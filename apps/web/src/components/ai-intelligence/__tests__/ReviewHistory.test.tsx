@@ -259,6 +259,21 @@ describe('ReviewHistory', () => {
       expect(skeletons.length).toBeGreaterThan(0);
     });
 
+    it('shows a busy bar in each of the four stat cards while stats load', () => {
+      mockUseReviewHistory.mockReturnValue({ ...defaultHookReturn(), isStatsLoading: true });
+      render(<ReviewHistory />);
+      expect(screen.getAllByRole('status', { name: 'Loading' })).toHaveLength(4);
+    });
+
+    it('formats large counts with thousands separators', () => {
+      mockUseReviewHistory.mockReturnValue({
+        ...defaultHookReturn(),
+        stats: { approved: 12345, rejected: 2, expired: 3 },
+      });
+      render(<ReviewHistory />);
+      expect(screen.getByText('12,345')).toBeInTheDocument();
+    });
+
     it('renders empty state when no reviews', () => {
       mockUseReviewHistory.mockReturnValue({
         ...defaultHookReturn(),
@@ -506,7 +521,7 @@ describe('ReviewHistory', () => {
       const toggles = screen.getAllByRole('button', { name: /audit trail/i });
       toggles.forEach((btn) => fireEvent.click(btn));
       // Should show days format (e.g., "3d 0h")
-      const timeCells = screen.getAllByText(/\d+d \d+h/);
+      const timeCells = screen.getAllByText(/\d{1,3}d \d{1,2}h/);
       expect(timeCells.length).toBeGreaterThan(0);
     });
 

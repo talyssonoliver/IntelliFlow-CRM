@@ -22,6 +22,7 @@ import { downloadCSV } from '@/lib/export/csv';
 import { useAnalyticsDateRange, type PeriodKey } from '@/hooks/useAnalyticsDateRange';
 import { refreshAnalyticsCache } from '@/app/analytics/actions';
 import { formatGBPCompact } from '@/lib/format/gbp-compact';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 
 export default function AnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>('30d');
@@ -197,42 +198,45 @@ export default function AnalyticsPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
         {isLoading ? (
           <>
-            <MetricCardSkeleton />
-            <MetricCardSkeleton />
-            <MetricCardSkeleton />
-            <MetricCardSkeleton />
+            <KpiCard framed loading label="Total Leads" icon="people" value={null} />
+            <KpiCard framed loading label="Revenue" icon="attach_money" value={null} />
+            <KpiCard framed loading label="Open Opportunities" icon="handshake" value={null} />
+            <KpiCard framed loading label="Win Rate" icon="emoji_events" value={null} />
           </>
         ) : (
           <>
-            <MetricCard
-              title="Total Leads"
-              value={overview?.totalLeads ?? 0}
-              delta={overview?.leadDelta ?? 0}
+            <KpiCard
+              framed
+              label="Total Leads"
               icon="people"
-              formatValue={String}
-              badge={leadStats ? `${leadStats.newThisMonth} new this month` : undefined}
+              value={String(overview?.totalLeads ?? 0)}
+              footer={
+                <DeltaFooter
+                  delta={overview?.leadDelta ?? 0}
+                  badge={leadStats ? `${leadStats.newThisMonth} new this month` : undefined}
+                />
+              }
             />
-            <MetricCard
-              title="Revenue"
-              value={overview?.totalRevenue ?? 0}
-              delta={overview?.revenueDelta ?? 0}
+            <KpiCard
+              framed
+              label="Revenue"
               icon="attach_money"
-              formatValue={formatCurrency}
+              value={formatCurrency(overview?.totalRevenue ?? 0)}
+              footer={<DeltaFooter delta={overview?.revenueDelta ?? 0} />}
             />
-            <MetricCard
-              title="Open Opportunities"
-              value={overview?.openOpportunities ?? 0}
-              delta={overview?.openOpportunitiesDelta ?? 0}
+            <KpiCard
+              framed
+              label="Open Opportunities"
               icon="handshake"
-              formatValue={String}
+              value={String(overview?.openOpportunities ?? 0)}
+              footer={<DeltaFooter delta={overview?.openOpportunitiesDelta ?? 0} />}
             />
-            <MetricCard
-              title="Win Rate"
-              value={overview?.winRate ?? 0}
-              delta={overview?.winRateDelta ?? 0}
+            <KpiCard
+              framed
+              label="Win Rate"
               icon="emoji_events"
-              formatValue={(v) => `${v}%`}
-              suffix="pp"
+              value={`${overview?.winRate ?? 0}%`}
+              footer={<DeltaFooter delta={overview?.winRateDelta ?? 0} suffix="pp" />}
             />
           </>
         )}
@@ -345,35 +349,17 @@ function formatRelativeTime(date: Date | string, timezone: string = 'Europe/Lond
 
 // --- Sub-components ---
 
-function MetricCard({
-  title,
-  value,
+/** "vs prev period" line under a KPI figure: trend icon, signed change, optional note. */
+function DeltaFooter({
   delta,
-  icon,
-  formatValue,
   suffix,
   badge,
-}: Readonly<{
-  title: string;
-  value: number;
-  delta: number;
-  icon: string;
-  formatValue: (v: number) => string;
-  suffix?: string;
-  badge?: string;
-}>) {
+}: Readonly<{ delta: number; suffix?: string; badge?: string }>) {
   const isPositive = delta >= 0;
 
   return (
-    <Card className="p-6 bg-card border-border">
-      <div className="flex items-center justify-between mb-3">
-        <p className="text-sm font-medium text-muted-foreground">{title}</p>
-        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-          <span className="material-symbols-outlined text-primary">{icon}</span>
-        </div>
-      </div>
-      <p className="text-3xl font-bold text-foreground mb-1">{formatValue(value)}</p>
-      <div className="flex items-center gap-1">
+    <div className="mt-2">
+      <div className="flex flex-wrap items-center gap-x-1">
         <span
           className={`inline-flex items-center text-sm font-medium ${
             isPositive ? 'text-success' : 'text-destructive'
@@ -389,20 +375,7 @@ function MetricCard({
         <span className="text-sm text-muted-foreground">vs prev period</span>
       </div>
       {badge && <p className="text-xs text-muted-foreground mt-1">{badge}</p>}
-    </Card>
-  );
-}
-
-function MetricCardSkeleton() {
-  return (
-    <Card className="p-6 bg-card border-border animate-pulse">
-      <div className="flex items-center justify-between mb-3">
-        <div className="h-4 w-24 bg-muted rounded" />
-        <div className="w-10 h-10 rounded-lg bg-muted" />
-      </div>
-      <div className="h-8 w-20 bg-muted rounded mb-1" />
-      <div className="h-4 w-32 bg-muted rounded" />
-    </Card>
+    </div>
   );
 }
 

@@ -112,8 +112,8 @@ describe('ReviewQueue', () => {
 
   it('renders stats values', () => {
     const { container } = render(<ReviewQueue />);
-    // Stats values are bold <p> tags inside stat cards
-    const statValues = container.querySelectorAll('p.text-2xl.font-bold');
+    // Stats values are the shared KpiCard figures
+    const statValues = container.querySelectorAll('[data-testid="kpi-value"]');
     const valueTexts = Array.from(statValues).map((el) => el.textContent);
     expect(valueTexts).toContain('5'); // pending
     expect(valueTexts).toContain('2'); // inReview

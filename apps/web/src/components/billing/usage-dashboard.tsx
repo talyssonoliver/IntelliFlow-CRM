@@ -24,6 +24,7 @@ import {
   getPlanByPriceId,
 } from '@/lib/billing/stripe-portal';
 import { ErrorState, CardSkeleton } from './billing-shared';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 
 const UNLIMITED = -1;
 
@@ -108,56 +109,6 @@ function LimitCard({ title, icon, current, limit, formatValue }: Readonly<LimitC
       </CardContent>
     </Card>
   );
-}
-
-// ============================================
-// Stat Card (simple count)
-// ============================================
-
-interface StatCardProps {
-  title: string;
-  icon: string;
-  value: number;
-  href?: string;
-}
-
-function StatCard({ title, icon, value, href }: Readonly<StatCardProps>) {
-  const content = (
-    <Card
-      className={cn(
-        'border border-slate-200 dark:border-slate-800',
-        href && 'hover:border-primary/50 transition-colors cursor-pointer'
-      )}
-    >
-      <CardContent className="p-5">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-            <span
-              className="material-symbols-outlined text-xl text-slate-600 dark:text-slate-400"
-              aria-hidden="true"
-            >
-              {icon}
-            </span>
-          </div>
-          <div>
-            <p className="text-2xl font-bold text-slate-900 dark:text-white">
-              {value.toLocaleString('en-GB')}
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">{title}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  if (href) {
-    return (
-      <Link href={href} className="block">
-        {content}
-      </Link>
-    );
-  }
-  return content;
 }
 
 // ============================================
@@ -312,18 +263,49 @@ export function UsageDashboard() {
           CRM Data
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-          <StatCard title="Leads" icon="person_search" value={crm.leads} href="/leads" />
-          <StatCard title="Contacts" icon="contacts" value={crm.contacts} href="/contacts" />
-          <StatCard title="Accounts" icon="business" value={crm.accounts} href="/accounts" />
-          <StatCard title="Deals" icon="handshake" value={crm.deals} href="/deals" />
-          <StatCard title="Tasks" icon="task_alt" value={crm.tasks} href="/tasks" />
-          <StatCard
-            title="Tickets"
+          <KpiCard
+            framed
+            label="Leads"
+            icon="person_search"
+            value={crm.leads.toLocaleString('en-GB')}
+            href="/leads"
+          />
+          <KpiCard
+            framed
+            label="Contacts"
+            icon="contacts"
+            value={crm.contacts.toLocaleString('en-GB')}
+            href="/contacts"
+          />
+          <KpiCard
+            framed
+            label="Accounts"
+            icon="business"
+            value={crm.accounts.toLocaleString('en-GB')}
+            href="/accounts"
+          />
+          <KpiCard
+            framed
+            label="Deals"
+            icon="handshake"
+            value={crm.deals.toLocaleString('en-GB')}
+            href="/deals"
+          />
+          <KpiCard
+            framed
+            label="Tasks"
+            icon="task_alt"
+            value={crm.tasks.toLocaleString('en-GB')}
+            href="/tasks"
+          />
+          <KpiCard
+            framed
+            label="Tickets"
             icon="confirmation_number"
-            value={crm.tickets}
+            value={crm.tickets.toLocaleString('en-GB')}
             href="/tickets"
           />
-          <StatCard title="Cases" icon="gavel" value={crm.cases} />
+          <KpiCard framed label="Cases" icon="gavel" value={crm.cases.toLocaleString('en-GB')} />
         </div>
       </div>
 
@@ -333,19 +315,84 @@ export function UsageDashboard() {
           AI & Intelligence
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          <StatCard title="AI Scores (total)" icon="psychology" value={ai.scores} />
-          <StatCard title="Scores This Month" icon="trending_up" value={ai.scoresThisPeriod} />
-          <StatCard title="Conversations" icon="chat" value={ai.conversations} />
-          <StatCard title="Messages" icon="forum" value={ai.messages} />
-          <StatCard title="Tool Calls" icon="build" value={ai.toolCalls} />
-          <StatCard title="AI Insights" icon="lightbulb" value={ai.insights} />
-          <StatCard title="Lead Insights" icon="person_search" value={ai.leadInsights} />
-          <StatCard title="Contact Insights" icon="contacts" value={ai.contactInsights} />
-          <StatCard title="Output Reviews" icon="rate_review" value={ai.outputReviews} />
-          <StatCard title="Monitoring Events" icon="monitoring" value={ai.monitoringEvents} />
-          <StatCard title="Agent Actions" icon="smart_toy" value={ai.agentActions} />
-          <StatCard title="Chain Versions" icon="account_tree" value={ai.chainVersions} />
-          <StatCard title="Experiments" icon="science" value={ai.experiments} />
+          <KpiCard
+            framed
+            label="AI Scores (total)"
+            icon="psychology"
+            value={ai.scores.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="Scores This Month"
+            icon="trending_up"
+            value={ai.scoresThisPeriod.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="Conversations"
+            icon="chat"
+            value={ai.conversations.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="Messages"
+            icon="forum"
+            value={ai.messages.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="Tool Calls"
+            icon="build"
+            value={ai.toolCalls.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="AI Insights"
+            icon="lightbulb"
+            value={ai.insights.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="Lead Insights"
+            icon="person_search"
+            value={ai.leadInsights.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="Contact Insights"
+            icon="contacts"
+            value={ai.contactInsights.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="Output Reviews"
+            icon="rate_review"
+            value={ai.outputReviews.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="Monitoring Events"
+            icon="monitoring"
+            value={ai.monitoringEvents.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="Agent Actions"
+            icon="smart_toy"
+            value={ai.agentActions.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="Chain Versions"
+            icon="account_tree"
+            value={ai.chainVersions.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="Experiments"
+            icon="science"
+            value={ai.experiments.toLocaleString('en-GB')}
+          />
         </div>
       </div>
 
@@ -355,13 +402,29 @@ export function UsageDashboard() {
           Activity & Content
         </h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard title="Audit Logs" icon="history" value={activity.auditLogs} />
-          <StatCard title="Notifications" icon="notifications" value={activity.notifications} />
-          <StatCard title="Documents" icon="description" value={content.documents} />
-          <StatCard
-            title="Calendar Events"
+          <KpiCard
+            framed
+            label="Audit Logs"
+            icon="history"
+            value={activity.auditLogs.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="Notifications"
+            icon="notifications"
+            value={activity.notifications.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="Documents"
+            icon="description"
+            value={content.documents.toLocaleString('en-GB')}
+          />
+          <KpiCard
+            framed
+            label="Calendar Events"
             icon="calendar_month"
-            value={content.calendarEvents}
+            value={content.calendarEvents.toLocaleString('en-GB')}
             href="/calendar"
           />
         </div>

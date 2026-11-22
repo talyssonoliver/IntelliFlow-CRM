@@ -5,28 +5,21 @@
  *
  * Uses existing shared components:
  * - SearchFilterBar + useMultiFilterState from shared
- * - EmptyState, Skeleton, Card from @intelliflow/ui
+ * - EmptyState, Skeleton from @intelliflow/ui
+ * - KpiCard from @/components/dashboard/KpiCard
  * - ReviewCard from ./ReviewCard
  * - useReviewQueue from hooks
  */
 
 import { useCallback } from 'react';
-import {
-  Card,
-  CardContent,
-  Button,
-  Skeleton,
-  EmptyState,
-  Switch,
-  Slider,
-  cn,
-} from '@intelliflow/ui';
+import { Button, Skeleton, EmptyState, Switch, Slider } from '@intelliflow/ui';
 import { SearchFilterBar, useMultiFilterState } from '@/components/shared/search-filter-bar';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useReviewQueue } from '@/lib/ai-review/hooks';
 import { ReviewCard } from './ReviewCard';
 import type { ReviewListFilter, ReviewResponse } from '@intelliflow/validators/ai-review';
 import { REVIEW_STATUSES, AI_OUTPUT_TYPES } from '@intelliflow/domain';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 
 const REVIEW_QUEUE_SKELETON_KEYS = [
   'review-0',
@@ -35,46 +28,6 @@ const REVIEW_QUEUE_SKELETON_KEYS = [
   'review-3',
   'review-4',
 ] as const;
-
-// ============================================
-// Stats Card (internal)
-// ============================================
-
-function StatCard({
-  label,
-  value,
-  icon,
-  colorClass,
-  isLoading,
-}: Readonly<{
-  label: string;
-  value: number;
-  icon: string;
-  colorClass: string;
-  isLoading: boolean;
-}>) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', colorClass)}>
-            <span className="material-symbols-outlined text-lg" aria-hidden="true">
-              {icon}
-            </span>
-          </div>
-          <div>
-            {isLoading ? (
-              <Skeleton className="h-6 w-10" />
-            ) : (
-              <p className="text-2xl font-bold text-foreground">{value}</p>
-            )}
-            <p className="text-xs text-muted-foreground">{label}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 // ============================================
 // Filter options
@@ -223,40 +176,45 @@ export function ReviewQueue() {
 
       {/* Stats cards row */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-        <StatCard
+        <KpiCard
+          framed
           label="Pending"
           value={stats?.pending ?? 0}
           icon="hourglass_empty"
-          colorClass="bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
-          isLoading={isStatsLoading}
+          iconClassName="bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+          loading={isStatsLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="In Review"
           value={stats?.inReview ?? 0}
           icon="rate_review"
-          colorClass="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-          isLoading={isStatsLoading}
+          iconClassName="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+          loading={isStatsLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Approved"
           value={stats?.approved ?? 0}
           icon="check_circle"
-          colorClass="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
-          isLoading={isStatsLoading}
+          iconClassName="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
+          loading={isStatsLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Escalated"
           value={stats?.escalated ?? 0}
           icon="arrow_upward"
-          colorClass="bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
-          isLoading={isStatsLoading}
+          iconClassName="bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
+          loading={isStatsLoading}
         />
-        <StatCard
+        <KpiCard
+          framed
           label="SLA Breached"
           value={stats?.slaBreachedCount ?? 0}
           icon="warning"
-          colorClass="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
-          isLoading={isStatsLoading}
+          iconClassName="bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400"
+          loading={isStatsLoading}
         />
       </div>
 

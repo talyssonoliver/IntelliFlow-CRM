@@ -20,6 +20,7 @@ import {
   computeExperimentStats,
 } from '@/lib/experiments/experiment-utils';
 import type { ExperimentSummary } from '@/lib/experiments/types';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 
 const ExperimentResultsPanel = lazy(() => import('./ExperimentResultsPanel'));
 
@@ -37,50 +38,6 @@ const EXP_GRID_SKELETON_KEYS = [
   'exp-grid-4',
 ] as const;
 const EXP_LIST_SKELETON_KEYS = ['exp-list-0', 'exp-list-1', 'exp-list-2'] as const;
-
-// ============================================
-// Internal StatCard (defined within file, following LeadScoringDashboard pattern)
-// ============================================
-
-function StatCard({
-  label,
-  value,
-  icon,
-  iconBgClass,
-  borderClass,
-  isLoading,
-}: Readonly<{
-  label: string;
-  value: number | string;
-  icon: string;
-  iconBgClass: string;
-  borderClass?: string;
-  isLoading: boolean;
-}>) {
-  return (
-    <div
-      className={cn(
-        'bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm',
-        borderClass && `border-l-4 ${borderClass}`
-      )}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <span
-          className={cn('material-symbols-outlined p-2 rounded-lg', iconBgClass)}
-          aria-hidden="true"
-        >
-          {icon}
-        </span>
-      </div>
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{label}</p>
-      {isLoading ? (
-        <Skeleton className="h-7 w-14 mt-1" />
-      ) : (
-        <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{value}</p>
-      )}
-    </div>
-  );
-}
 
 // ============================================
 // Filter options
@@ -245,44 +202,44 @@ export function ExperimentsDashboard() {
 
       {/* Stat Cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mt-6">
-        <StatCard
+        <KpiCard
+          framed
           label="Total Experiments"
           value={stats.total}
           icon="science"
-          iconBgClass="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
-          isLoading={false}
+          iconClassName="bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Running"
           value={stats.running}
           icon="play_circle"
-          iconBgClass="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300"
-          borderClass="border-l-blue-500"
-          isLoading={false}
+          iconClassName="bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300"
+          accentClassName="border-l-4 border-l-blue-500"
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Completed"
           value={stats.completed}
           icon="check_circle"
-          iconBgClass="bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300"
-          borderClass="border-l-green-500"
-          isLoading={false}
+          iconClassName="bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-300"
+          accentClassName="border-l-4 border-l-green-500"
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Significant Results"
           value={stats.significant}
           icon="verified"
-          iconBgClass="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300"
-          borderClass="border-l-emerald-500"
-          isLoading={false}
+          iconClassName="bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300"
+          accentClassName="border-l-4 border-l-emerald-500"
         />
-        <StatCard
+        <KpiCard
+          framed
           label="Avg Progress"
           value={`${stats.avgProgress}%`}
           icon="speed"
-          iconBgClass="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300"
-          borderClass="border-l-indigo-500"
-          isLoading={false}
+          iconClassName="bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-300"
+          accentClassName="border-l-4 border-l-indigo-500"
         />
       </div>
 

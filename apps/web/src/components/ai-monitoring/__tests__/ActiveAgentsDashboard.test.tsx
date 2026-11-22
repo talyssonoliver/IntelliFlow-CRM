@@ -228,7 +228,7 @@ describe('Category 2: Data Display', () => {
   it('stat cards show correct counts', () => {
     render(<ActiveAgentsDashboard />);
     // Total = 4, Active = 2, Idle = 1, Error = 1
-    const statValues = screen.getAllByTestId('stat-value');
+    const statValues = screen.getAllByTestId('kpi-value');
     expect(statValues[0]).toHaveTextContent('4');
     expect(statValues[1]).toHaveTextContent('2');
     expect(statValues[2]).toHaveTextContent('1');

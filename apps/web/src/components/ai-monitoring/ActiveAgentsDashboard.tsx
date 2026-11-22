@@ -32,6 +32,7 @@ import {
   filterAgents,
 } from '@/lib/active-agents/agent-utils';
 import type { ActiveAgent, ActiveAgentFilters } from '@/lib/active-agents/types';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -82,52 +83,6 @@ const STATUS_FILTER_OPTIONS = [
   { value: 'idle', label: 'Idle' },
   { value: 'error', label: 'Error' },
 ];
-
-// ---------------------------------------------------------------------------
-// StatCard
-// ---------------------------------------------------------------------------
-
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  icon: string;
-  colorClass: string;
-  isLoading: boolean;
-  testId?: string;
-  ariaLabel?: string;
-}
-
-function StatCard({
-  label,
-  value,
-  icon,
-  colorClass,
-  isLoading,
-  testId,
-  ariaLabel,
-}: Readonly<StatCardProps>) {
-  return (
-    <Card>
-      <CardContent className="p-4" data-testid={testId} aria-label={ariaLabel}>
-        <div className="flex items-center gap-3">
-          <div className={cn('h-10 w-10 rounded-lg flex items-center justify-center', colorClass)}>
-            <span className="material-symbols-outlined text-lg">{icon}</span>
-          </div>
-          <div>
-            {isLoading ? (
-              <Skeleton className="h-6 w-10" data-testid="skeleton" />
-            ) : (
-              <p className="text-2xl font-bold" data-testid="stat-value">
-                {value}
-              </p>
-            )}
-            <p className="text-xs text-muted-foreground">{label}</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
 
 // ---------------------------------------------------------------------------
 // AgentCard
@@ -407,44 +362,44 @@ export function ActiveAgentsDashboard() {
       ) : (
         <>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            <StatCard
+            <KpiCard
+              framed
               label="Total Agents"
               value={stats.total}
               icon="groups"
-              colorClass="bg-primary/10 text-primary"
-              isLoading={false}
+              iconClassName="bg-primary/10 text-primary"
             />
-            <StatCard
+            <KpiCard
+              framed
               label="Active"
               value={stats.active}
               icon="play_circle"
-              colorClass="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-              isLoading={false}
+              iconClassName="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
             />
-            <StatCard
+            <KpiCard
+              framed
               label="Idle"
               value={stats.idle}
               icon="pause_circle"
-              colorClass="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-              isLoading={false}
+              iconClassName="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
             />
-            <StatCard
+            <KpiCard
+              framed
               label="Error"
               value={stats.error}
               icon="error"
-              colorClass="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-              isLoading={false}
+              iconClassName="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
             />
-            <StatCard
+            <KpiCard
+              framed
               label="Health"
               value={healthLabel}
               icon={healthStatus?.healthy ? 'check_circle' : 'warning'}
-              colorClass={
+              iconClassName={
                 healthStatus?.healthy
                   ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                   : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
               }
-              isLoading={false}
               testId="health-stat"
               ariaLabel={`System health: ${healthLabel}`}
             />
