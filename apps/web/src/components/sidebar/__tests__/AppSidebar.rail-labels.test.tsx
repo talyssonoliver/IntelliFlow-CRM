@@ -117,6 +117,18 @@ describe('rail tooltip', () => {
     expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
   });
 
+  it('closes when the rail scrolls or the window resizes, so it is never left detached', () => {
+    const rail = renderRail(configs[0][1]);
+    const overdue = within(rail).getByRole('link', { name: 'Overdue' });
+    fireEvent.focus(overdue);
+    expect(screen.getByRole('tooltip', { hidden: true })).toBeInTheDocument();
+    fireEvent.scroll(rail.querySelector('.overflow-y-auto')!);
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+    fireEvent.focus(overdue);
+    fireEvent(window, new Event('resize'));
+    expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+  });
+
   it('adds the unread count to the collapsed name', () => {
     const rail = renderRail({
       moduleId: 'tasks',

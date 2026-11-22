@@ -139,14 +139,23 @@ function useRailTooltip(label: string, enabled: boolean) {
 
   React.useEffect(() => {
     if (!pos) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        sources.current = { hover: false, focus: false };
-        setPos(null);
-      }
+    const close = () => {
+      sources.current = { hover: false, focus: false };
+      setPos(null);
     };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') close();
+    };
+    // The tooltip is fixed to the viewport: if the rail scrolls or the window resizes, the item
+    // moves and the tooltip would be left behind, so it closes instead (re-opens on next hover/focus).
     document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
   }, [pos]);
 
   const handlers = {
