@@ -1,82 +1,19 @@
 {
+  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
   "task_id": "PM-OPS-003",
-  "title": "Sprint 19 Rebaseline, Planning & Readiness Gate",
-  "sprint": 19,
   "run_id": "pmops003-2026-07-22",
-  "created_at": "2026-07-22",
-  "branch": "pmops003",
-  "base_commit": "7f15fcaaf6bf30f956cab73c4b3cd5c3ee1ab560",
+  "attestor": "PM-OPS-003 sprint 19 rebaseline run (attestor field added during schema conformance; the original file named none)",
+  "attestation_timestamp": "2026-07-22T00:00:00Z",
   "verdict": "COMPLETE",
-  "provenance_version": "ADR-068",
-  "summary": "Rebaselined Sprint 19 against real repo state: validated 4 completed tasks (2 VALID, 2 phantom/dead reopened), reassessed 11 backlog tasks, validated dependencies (0 missing, S19 acyclic), duplication scan across 616 tasks + 11 PRs + 60 issues + specs + debt ledger (0 duplicates, 0 net-new remediation tasks), real multi-factor capacity model, prioritized P0-P3, execution waves 0-5, readiness verdict CONDITIONALLY_READY.",
-  "gate_results": [
-    {
-      "gate": "scope-defined",
-      "result": "PASS",
-      "detail": "10 committed / 11 deferred; scope-delta.json"
-    },
-    {
-      "gate": "dependency-integrity",
-      "result": "PASS",
-      "detail": "0 missing deps; S19 subgraph acyclic (dependency-validation.json)"
-    },
-    {
-      "gate": "no-cycles-in-scope",
-      "result": "PASS",
-      "detail": "S19 acyclic; 1 pre-existing S25 cycle logged out-of-scope"
-    },
-    {
-      "gate": "critical-path-preserved",
-      "result": "PASS",
-      "detail": "IFC-033 -> IFC-034; deps satisfied"
-    },
-    {
-      "gate": "duplication-scan",
-      "result": "PASS",
-      "detail": "0 duplicate tasks; 0 net-new remediation tasks (findings already R01-R18)"
-    },
-    {
-      "gate": "completed-validation",
-      "result": "PASS",
-      "detail": "evidence-based; 2 phantom completions reopened not falsely attested"
-    },
-    {
-      "gate": "capacity-real-multifactor",
-      "result": "PASS",
-      "detail": "throughput+cycle+WIP+availability+rework+buffer; 7.3 vs 7.4 slots"
-    },
-    {
-      "gate": "no-fabricated-data",
-      "result": "PASS",
-      "detail": "all numbers from git + committed artifacts + task-tracking sampling"
-    }
-  ],
-  "kpi_results": {
-    "committed_tasks": 10,
-    "deferred_tasks": 11,
-    "net_new_tasks": 0,
-    "genuinely_completed": 6,
-    "reopened_phantom": 2,
-    "missing_dependencies": 0,
-    "cycles_in_s19": 0,
-    "duplicate_tasks": 0,
-    "demand_weighted_slots": 7.3,
-    "effective_supply_slots": 7.4,
-    "readiness_verdict": "CONDITIONALLY_READY"
+  "evidence_summary": {
+    "artifacts_verified": 11,
+    "validations_passed": 1,
+    "validations_failed": 0,
+    "gates_passed": 8,
+    "gates_failed": 0,
+    "placeholders_found": 0
   },
-  "artifacts": [
-    "docs/planning/sprint-19-rebaseline.md",
-    "docs/planning/sprint-19-execution-plan.md",
-    "docs/planning/sprint-19-capacity-plan.csv",
-    "docs/planning/sprint-19-critical-path.md",
-    "docs/planning/sprint-19-risk-register.md",
-    "docs/planning/sprint-19-waves.md",
-    "artifacts/reports/sprint-19/current-scope.json",
-    "artifacts/reports/sprint-19/audit-findings-triage.json",
-    "artifacts/reports/sprint-19/scope-delta.json",
-    "artifacts/reports/sprint-19/dependency-validation.json",
-    "artifacts/reports/sprint-19/readiness-report.json"
-  ],
   "artifact_hashes": {
     "docs/planning/sprint-19-rebaseline.md": "sha256:4674c32624ed4ac0a00a26cfd4d9ec191689e1e014c1d364034454c9d03ec714",
     "docs/planning/sprint-19-execution-plan.md": "sha256:e47ae8a07f634fcfc0060604f8067d0c6b31dfa538b44684793126aa4b27a9be",
@@ -90,15 +27,6 @@
     "artifacts/reports/sprint-19/dependency-validation.json": "sha256:1602b3e7051c48b3c42b9be525b95af1e16906e661be90414ffcd15c7e55c6e5",
     "artifacts/reports/sprint-19/readiness-report.json": "sha256:b8caaccd667cc53d379fa59b52616ab90126825d783cc188bc6156f8b939e3f2"
   },
-  "csv_mutations": [
-    "IFC-304 Status Completed->Backlog (phantom completion, evidence-verified)",
-    "IFC-306 Status Completed->Backlog (dead endpoint, evidence-verified)",
-    "PG-066/067/068,IFC-305,PG-210,IFC-313 Target Sprint 19->20 (capacity deferral)",
-    "ENG-OPS-002.R04/R07/R11/R15/R18 Target Sprint 19->20 (deferral/held-for-review)",
-    "PM-OPS-003 registered (Completed)"
-  ],
-  "validation_method": "pnpm validate:sprint-data",
-  "notes": "Referenced spec file (893da4bf-PMOPS003.md / docs/planning/tasks/PM-OPS-003.md) absent on disk; executed against task-brief scope + real repo state. No fabricated data.",
   "validation_results": [
     {
       "name": "Prettier (sprint-19 planning docs) (pmops; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
@@ -109,5 +37,46 @@
       "duration_ms": 716,
       "stdout_hash": "17aa973d3f004560237d9a95171210b0671deff23d61628eecf7322ff5938f20"
     }
-  ]
+  ],
+  "gate_results": [
+    {
+      "gate_id": "scope-defined",
+      "passed": true
+    },
+    {
+      "gate_id": "dependency-integrity",
+      "passed": true
+    },
+    {
+      "gate_id": "no-cycles-in-scope",
+      "passed": true
+    },
+    {
+      "gate_id": "critical-path-preserved",
+      "passed": true
+    },
+    {
+      "gate_id": "duplication-scan",
+      "passed": true
+    },
+    {
+      "gate_id": "completed-validation",
+      "passed": true
+    },
+    {
+      "gate_id": "capacity-real-multifactor",
+      "passed": true
+    },
+    {
+      "gate_id": "no-fabricated-data",
+      "passed": true
+    }
+  ],
+  "kpi_results": [],
+  "dependencies_verified": [],
+  "environment": {
+    "branch": "pmops003",
+    "git_commit": "7f15fcaaf6bf30f956cab73c4b3cd5c3ee1ab560"
+  },
+  "notes": "Referenced spec file (893da4bf-PMOPS003.md / docs/planning/tasks/PM-OPS-003.md) absent on disk; executed against task-brief scope + real repo state. No fabricated data.\n\nSchema conformance (original fields that attestation.schema.json does not allow, kept here without loss):\n- title: Sprint 19 Rebaseline, Planning & Readiness Gate; sprint: 19; created_at: 2026-07-22; provenance_version: ADR-068; validation_method: pnpm validate:sprint-data\n- branch: pmops003; git_commit is the recorded base_commit 7f15fcaaf6bf30f956cab73c4b3cd5c3ee1ab560\n- summary: Rebaselined Sprint 19 against real repo state: validated 4 completed tasks (2 VALID, 2 phantom/dead reopened), reassessed 11 backlog tasks, validated dependencies (0 missing, S19 acyclic), duplication scan across 616 tasks + 11 PRs + 60 issues + specs + debt ledger (0 duplicates, 0 net-new remediation tasks), real multi-factor capacity model, prioritized P0-P3, execution waves 0-5, readiness verdict CONDITIONALLY_READY.\n- gate results with their original detail text: [{\"gate\":\"scope-defined\",\"result\":\"PASS\",\"detail\":\"10 committed / 11 deferred; scope-delta.json\"},{\"gate\":\"dependency-integrity\",\"result\":\"PASS\",\"detail\":\"0 missing deps; S19 subgraph acyclic (dependency-validation.json)\"},{\"gate\":\"no-cycles-in-scope\",\"result\":\"PASS\",\"detail\":\"S19 acyclic; 1 pre-existing S25 cycle logged out-of-scope\"},{\"gate\":\"critical-path-preserved\",\"result\":\"PASS\",\"detail\":\"IFC-033 -> IFC-034; deps satisfied\"},{\"gate\":\"duplication-scan\",\"result\":\"PASS\",\"detail\":\"0 duplicate tasks; 0 net-new remediation tasks (findings already R01-R18)\"},{\"gate\":\"completed-validation\",\"result\":\"PASS\",\"detail\":\"evidence-based; 2 phantom completions reopened not falsely attested\"},{\"gate\":\"capacity-real-multifactor\",\"result\":\"PASS\",\"detail\":\"throughput+cycle+WIP+availability+rework+buffer; 7.3 vs 7.4 slots\"},{\"gate\":\"no-fabricated-data\",\"result\":\"PASS\",\"detail\":\"all numbers from git + committed artifacts + task-tracking sampling\"}]\n- kpi_results as originally recorded (an object, the schema wants a list of {kpi,target,actual,met}): {\"committed_tasks\":10,\"deferred_tasks\":11,\"net_new_tasks\":0,\"genuinely_completed\":6,\"reopened_phantom\":2,\"missing_dependencies\":0,\"cycles_in_s19\":0,\"duplicate_tasks\":0,\"demand_weighted_slots\":7.3,\"effective_supply_slots\":7.4,\"readiness_verdict\":\"CONDITIONALLY_READY\"}\n- artifacts: [\"docs/planning/sprint-19-rebaseline.md\",\"docs/planning/sprint-19-execution-plan.md\",\"docs/planning/sprint-19-capacity-plan.csv\",\"docs/planning/sprint-19-critical-path.md\",\"docs/planning/sprint-19-risk-register.md\",\"docs/planning/sprint-19-waves.md\",\"artifacts/reports/sprint-19/current-scope.json\",\"artifacts/reports/sprint-19/audit-findings-triage.json\",\"artifacts/reports/sprint-19/scope-delta.json\",\"artifacts/reports/sprint-19/dependency-validation.json\",\"artifacts/reports/sprint-19/readiness-report.json\"]\n- csv_mutations: [\"IFC-304 Status Completed->Backlog (phantom completion, evidence-verified)\",\"IFC-306 Status Completed->Backlog (dead endpoint, evidence-verified)\",\"PG-066/067/068,IFC-305,PG-210,IFC-313 Target Sprint 19->20 (capacity deferral)\",\"ENG-OPS-002.R04/R07/R11/R15/R18 Target Sprint 19->20 (deferral/held-for-review)\",\"PM-OPS-003 registered (Completed)\"]\n- attestation_timestamp is the original created_at date at 00:00:00Z; the original file had no time of day."
 }
