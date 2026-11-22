@@ -43,7 +43,7 @@ export function PinButton({
             type="button"
             size="icon"
             variant="ghost"
-            className={cn(className)}
+            className={cn('size-11', className)}
             aria-label={label}
             aria-pressed={isPinned}
             disabled={isLoading}

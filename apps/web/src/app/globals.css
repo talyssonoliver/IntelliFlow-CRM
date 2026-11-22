@@ -775,6 +775,57 @@
  * so the footer pads itself by the sidebar's width, the same offsets
  * SidebarInset gives the page (w-14 rail, w-60 pinned).
  */
+/*
+ * Page hero (owner 21/11): the shared PageHeader's dark card. Navy base, the wave image as a CSS
+ * background (never an <img>), and a navy overlay measured against the image's own pixels so
+ * white text keeps WCAG AA: on phones the wave crosses behind the subtitle, so the overlay also
+ * darkens from the top and fades out by the action row (worst case 4.5:1 title band, 7.5:1
+ * subtitle at 390px); from md the wave sits right of the text and a left-to-right fade is enough
+ * (5.9:1). The image is 17 KB and served from /public, so it costs no function run.
+ */
+@layer components {
+  .page-hero {
+    background-color: #0b1730;
+    background-image: url('/assets/dashboard-hero.webp');
+    background-size: cover;
+    background-position: 80% center;
+    background-repeat: no-repeat;
+  }
+  .page-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(to bottom, rgb(11 23 48 / 0.85), rgb(11 23 48 / 0) 85%),
+      linear-gradient(to right, rgb(11 23 48 / 0.85), rgb(11 23 48 / 0.6) 60%, rgb(11 23 48 / 0));
+  }
+  @media (min-width: 768px) {
+    .page-hero {
+      background-position: center;
+    }
+    .page-hero::before {
+      background: linear-gradient(
+        to right,
+        rgb(11 23 48 / 0.75),
+        rgb(11 23 48 / 0.45) 60%,
+        rgb(11 23 48 / 0)
+      );
+    }
+  }
+  @media print {
+    .page-hero {
+      background: none;
+      color: #000;
+      border: 1px solid #ccc;
+    }
+    .page-hero::before {
+      display: none;
+    }
+  }
+}
+
 @layer components {
   @media (min-width: 1024px) {
     body:has([data-app-sidebar='rail']) .app-footer {

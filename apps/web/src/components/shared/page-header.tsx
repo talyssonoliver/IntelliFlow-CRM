@@ -46,6 +46,12 @@ export interface PageHeaderProps {
   children?: React.ReactNode;
   /** Additional CSS classes */
   className?: string;
+  /**
+   * `hero` (default, owner 21/11): the shared page hero, a dark navy card with the wave
+   * background, white text, the primary action first. `plain`: the flat header, for a page
+   * where a hero does not fit.
+   */
+  variant?: 'hero' | 'plain';
 }
 
 // =============================================================================
@@ -60,20 +66,25 @@ interface BreadcrumbsProps {
    * its trail holds ancestors only, so every item keeps its link.
    */
   endsWithCurrentPage?: boolean;
+  /** `inverse`: light text for the dark page hero, with a home icon on the `/` crumb. */
+  tone?: 'default' | 'inverse';
 }
 
 export function Breadcrumbs({
   items,
   className,
   endsWithCurrentPage = true,
+  tone = 'default',
 }: Readonly<BreadcrumbsProps>) {
+  const inverse = tone === 'inverse';
   if (!items.length) return null;
 
   return (
     <nav
       aria-label="Breadcrumb"
       className={cn(
-        'flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-muted-foreground mb-1',
+        'flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm mb-1',
+        inverse ? 'text-white/85' : 'text-muted-foreground',
         className
       )}
     >
@@ -83,13 +94,18 @@ export function Breadcrumbs({
         return (
           <React.Fragment key={item.label}>
             {index > 0 && (
-              <span className="material-symbols-outlined text-xs" aria-hidden="true">
+              <span
+                className={cn('material-symbols-outlined text-xs', inverse && 'text-white/60')}
+                aria-hidden="true"
+              >
                 chevron_right
               </span>
             )}
             {isLast || !item.href ? (
               <span
-                className={cn(isLast && 'text-foreground font-medium')}
+                className={cn(
+                  isLast && (inverse ? 'text-white font-medium' : 'text-foreground font-medium')
+                )}
                 aria-current={isLast ? 'page' : undefined}
               >
                 {item.label}
@@ -97,8 +113,18 @@ export function Breadcrumbs({
             ) : (
               <Link
                 href={item.href}
-                className="hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className={cn(
+                  'inline-flex min-h-11 -my-3 items-center gap-1 transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+                  inverse
+                    ? 'hover:text-white focus-visible:ring-white focus-visible:ring-offset-[#0b1730]'
+                    : 'hover:text-foreground focus-visible:ring-ring'
+                )}
               >
+                {inverse && item.href === '/' && (
+                  <span className="material-symbols-outlined text-base" aria-hidden="true">
+                    home
+                  </span>
+                )}
                 {item.label}
               </Link>
             )}
@@ -130,9 +156,82 @@ export function breadcrumbAncestors(
 
 interface ActionButtonProps {
   action: PageAction;
+  /** `hero`: styles for the dark page hero (blue-gradient primary, translucent secondaries). */
+  tone?: 'hero' | 'plain';
 }
 
-function ActionButton({ action }: Readonly<ActionButtonProps>) {
+/** Hero styles; the primary gradient starts at #1f63d4 so white text keeps AA contrast. */
+const HERO_ACTION = {
+  base: 'min-h-11 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b1730]',
+  primary:
+    'border border-white/15 bg-linear-to-r from-[#1f63d4] to-[#4f46e5] px-5 text-white font-bold shadow-md shadow-black/25',
+  primaryHover: 'hover:from-[#2a6fe0] hover:to-[#5b52f0]',
+  secondary: 'min-w-11 border border-white/25 bg-white/10 text-white font-medium',
+  secondaryHover: 'hover:bg-white/20',
+} as const;
+
+/** Classes for a header action: the hero styles on the dark card, the plain ones elsewhere. */
+function actionClasses(
+  variant: NonNullable<PageAction['variant']>,
+  disabled: boolean,
+  hero: boolean
+): string {
+  const primary = variant === 'primary';
+  const tone = hero
+    ? [
+        HERO_ACTION.base,
+        primary ? HERO_ACTION.primary : HERO_ACTION.secondary,
+        !disabled && (primary ? HERO_ACTION.primaryHover : HERO_ACTION.secondaryHover),
+        !primary && 'px-3 sm:px-4',
+      ]
+    : [
+        'min-h-11 px-3 sm:px-5 py-2 sm:py-2.5 rounded-lg',
+        primary
+          ? [
+              'bg-primary text-white font-bold shadow-sm shadow-primary/30',
+              !disabled && 'hover:bg-primary-hover',
+            ]
+          : [
+              'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-medium',
+              !disabled && 'hover:bg-slate-50 dark:hover:bg-slate-700',
+            ],
+      ];
+  return cn(
+    'group flex items-center justify-center gap-2 text-sm transition-all motion-safe:active:scale-95 motion-reduce:transition-none',
+    disabled && 'opacity-50 cursor-not-allowed',
+    tone
+  );
+}
+
+/** The action's icon, or a spinner while it is loading. */
+function ActionIcon({ icon, loading }: Readonly<{ icon?: string; loading: boolean }>) {
+  if (loading) {
+    return (
+      <span
+        className="material-symbols-outlined text-[20px] motion-safe:animate-spin"
+        aria-hidden="true"
+      >
+        progress_activity
+      </span>
+    );
+  }
+  if (!icon) return null;
+  return (
+    <span
+      className="material-symbols-outlined text-[20px] motion-safe:group-hover:rotate-90 motion-safe:transition-transform"
+      aria-hidden="true"
+    >
+      {icon}
+    </span>
+  );
+}
+
+/**
+ * The one page/record header action button: PageHeader and EntityHeader both use it (owner
+ * 21/11: no copies that drift). 44px minimum on every variant.
+ */
+export function ActionButton({ action, tone = 'plain' }: Readonly<ActionButtonProps>) {
+  const hero = tone === 'hero';
   const {
     label,
     onClick,
@@ -144,46 +243,21 @@ function ActionButton({ action }: Readonly<ActionButtonProps>) {
     loading = false,
   } = action;
 
-  const baseClasses = cn(
-    'group flex items-center justify-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-sm rounded-lg transition-all active:scale-95',
-    disabled && 'opacity-50 cursor-not-allowed',
-    variant === 'primary' && [
-      'bg-primary text-white font-bold shadow-sm shadow-primary/30',
-      !disabled && 'hover:bg-primary-hover',
-    ],
-    variant === 'secondary' && [
-      'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-medium',
-      !disabled && 'hover:bg-slate-50 dark:hover:bg-slate-700',
-    ]
-  );
+  // In the hero a secondary control with an icon is icon-only on phones, so a page with several
+  // actions still fits; it keeps its name as aria-label and tooltip (UI-010).
+  const labelHiddenOnMobile = hideOnMobile || (hero && variant === 'secondary' && Boolean(icon));
+  const baseClasses = actionClasses(variant, disabled, hero);
 
   const content = (
     <>
-      {(() => {
-        if (loading)
-          return (
-            <span className="material-symbols-outlined text-[20px] animate-spin" aria-hidden="true">
-              progress_activity
-            </span>
-          );
-        if (icon)
-          return (
-            <span
-              className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform"
-              aria-hidden="true"
-            >
-              {icon}
-            </span>
-          );
-        return null;
-      })()}
-      <span className={cn(hideOnMobile && 'hidden sm:inline')}>{label}</span>
+      <ActionIcon icon={icon} loading={loading} />
+      <span className={cn(labelHiddenOnMobile && 'hidden sm:inline')}>{label}</span>
     </>
   );
 
   // #1225 UI-010: when the label is hidden on phones only the (aria-hidden)
   // icon is visible, so the control carries its name itself, plus a tooltip.
-  const iconOnlyOnMobile = hideOnMobile && Boolean(icon || loading);
+  const iconOnlyOnMobile = labelHiddenOnMobile && Boolean(icon || loading);
   const nameProps = iconOnlyOnMobile ? { 'aria-label': label, title: label } : {};
 
   if (href && !disabled) {
@@ -256,28 +330,76 @@ export function PageHeader({
   actions,
   children,
   className,
+  variant = 'hero',
 }: Readonly<PageHeaderProps>) {
   const ancestors = breadcrumbAncestors(breadcrumbs, title);
+  const hero = variant === 'hero';
+  // The hero leads with the primary action (owner's reference), the secondary controls after it.
+  const ordered = hero
+    ? [...(actions ?? [])].sort(
+        (a, b) => Number(a.variant !== 'primary') - Number(b.variant !== 'primary')
+      )
+    : (actions ?? []);
   return (
     <div
-      className={cn('flex flex-col sm:flex-row sm:items-center justify-between gap-4', className)}
+      data-variant={variant}
+      className={cn(
+        hero
+          ? // .page-hero (globals.css): navy base, the wave image and the contrast overlay.
+            'page-hero relative isolate overflow-hidden rounded-[22px] sm:rounded-3xl ring-1 ring-white/10 shadow-sm px-5 py-5 sm:px-8 sm:py-7 text-white flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between'
+          : 'flex flex-col sm:flex-row sm:items-center justify-between gap-4',
+        className
+      )}
     >
       {/* Left side: Breadcrumbs, Title, Description */}
-      <div className="min-w-0 flex-1">
-        {ancestors.length > 0 && <Breadcrumbs items={ancestors} endsWithCurrentPage={false} />}
+      <div className={cn('min-w-0 flex-1', hero && 'relative z-10')}>
+        {ancestors.length > 0 && (
+          <Breadcrumbs
+            items={ancestors}
+            endsWithCurrentPage={false}
+            tone={hero ? 'inverse' : 'default'}
+          />
+        )}
 
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">{title}</h1>
+        <h1
+          className={cn(
+            'font-bold tracking-tight [overflow-wrap:anywhere]',
+            hero
+              ? 'text-[32px] leading-tight sm:text-4xl text-white'
+              : 'text-2xl md:text-3xl text-foreground'
+          )}
+        >
+          {title}
+        </h1>
 
-        {description && <p className="text-muted-foreground mt-1">{description}</p>}
+        {description && (
+          <p
+            className={cn(
+              'mt-1',
+              hero ? 'max-w-prose text-[15px] sm:text-base text-white/90' : 'text-muted-foreground'
+            )}
+          >
+            {description}
+          </p>
+        )}
 
         {children}
       </div>
 
-      {/* Right side: Actions */}
-      {actions && actions.length > 0 && (
-        <div className="flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap flex-shrink-0">
-          {actions.map((action, index) => (
-            <ActionButton key={action.label + index} action={action} />
+      {/* Actions: in the hero, the primary first, and the row wraps on narrow screens. */}
+      {ordered.length > 0 && (
+        <div
+          className={cn(
+            'flex items-center gap-2 sm:gap-3',
+            hero ? 'relative z-10 flex-wrap' : 'flex-wrap sm:flex-nowrap flex-shrink-0'
+          )}
+        >
+          {ordered.map((action, index) => (
+            <ActionButton
+              key={action.label + index}
+              action={action}
+              tone={hero ? 'hero' : 'plain'}
+            />
           ))}
         </div>
       )}

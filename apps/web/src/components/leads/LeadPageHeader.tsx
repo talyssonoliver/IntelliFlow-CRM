@@ -45,7 +45,7 @@ function LeadConvertButton({
             <button
               onClick={onOpenConvert}
               disabled={blocked !== null}
-              className="flex items-center gap-2 px-3 sm:px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-3 sm:px-4 h-11 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
             >
               <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
                 transform
@@ -117,7 +117,10 @@ export function LeadPageHeader({
     <div className="flex items-center justify-between gap-3 mb-6">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-          <Link href="/leads" className="hover:text-[#2a78f6]">
+          <Link
+            href="/leads"
+            className="inline-flex min-h-11 -my-3 items-center hover:text-[#2a78f6]"
+          >
             Leads
           </Link>
           <span className="material-symbols-outlined !text-sm hidden sm:inline">chevron_right</span>
@@ -138,7 +141,7 @@ export function LeadPageHeader({
           <button
             onClick={onEdit}
             aria-label="Edit lead"
-            className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            className="flex items-center gap-2 px-4 h-11 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
           >
             <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
               edit
@@ -148,7 +151,7 @@ export function LeadPageHeader({
         </div>
         <button
           onClick={onLogCall}
-          className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#2a78f6] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
+          className="flex items-center gap-2 px-4 h-11 rounded-lg bg-[#2a78f6] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
         >
           <span aria-hidden="true" className="material-symbols-outlined !text-[18px]">
             call
