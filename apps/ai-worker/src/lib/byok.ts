@@ -38,6 +38,7 @@ import {
 } from '@intelliflow/validators';
 import { createLogger } from '../utils/logger.js';
 import { CircuitBreaker } from '../utils/circuit-breaker.js';
+import { tenantContextStore } from '../tracing/tenant-context.js';
 
 const logger = createLogger('byok');
 
@@ -107,6 +108,22 @@ export function isByokFailure(err: unknown): boolean {
 // platform is counted as the platform call it then is.
 if (typeof CircuitBreaker.ignoreFailuresMatching === 'function') {
   CircuitBreaker.ignoreFailuresMatching(isByokFailure);
+}
+
+/**
+ * An OPEN platform breaker does not refuse a tenant that runs on its own key (and an INVALID
+ * key is not one: that call goes to the platform or fails). Asked only when the breaker is
+ * OPEN, so a closed breaker costs nothing extra.
+ */
+async function runsOnOwnKey(): Promise<boolean> {
+  const tenantId = tenantContextStore.getStore()?.tenantId;
+  if (!isBillableTenant(tenantId)) return false;
+  const credential = await resolveByokCredential(tenantId);
+  return credential !== null && credential.status !== 'INVALID';
+}
+
+if (typeof CircuitBreaker.bypassWhenOpen === 'function') {
+  CircuitBreaker.bypassWhenOpen(runsOnOwnKey);
 }
 
 export interface ByokCredential {
@@ -392,6 +409,9 @@ export function getCachedByokModel(
 const QUOTA_PATTERN =
   /insufficient[_ ]quota|exceeded your current quota|credit balance is too low|out of credits/i;
 
+const KEY_REJECTED_403 = /key|unauthori[sz]ed|authentication|permission|not allowed|access|denied/i;
+const NOT_THE_KEY_403 = /moderation|flagged|region|country|territory/i;
+
 /** Errors of our own parsing of an answer: never the provider's verdict on the key. */
 const PARSE_FAILURES: ReadonlySet<string> = new Set(['OutputParserException', 'ZodError']);
 
@@ -423,7 +443,11 @@ export function classifyByokFailure(
   // An empty balance arrives as 400 (Anthropic), 402 or 429.
   const quotaStatus = status === 400 || status === 402 || status === 429;
   if (quotaStatus && QUOTA_PATTERN.test(text)) return 'QUOTA_EXCEEDED';
-  if (status === 401 || status === 403) return 'INVALID';
+  if (status === 401) return 'INVALID';
+  // 403 is a bad key only when the provider says it is about the key or its permissions: other
+  // 403s (OpenRouter's moderation of one flagged prompt, a region refusal) are not the key's fault.
+  if (status === 403)
+    return KEY_REJECTED_403.test(text) && !NOT_THE_KEY_403.test(text) ? 'INVALID' : null;
   if (status === 402) return 'QUOTA_EXCEEDED';
   if (status === 429) return 'RATE_LIMITED';
   // Google answers a bad key at run time with 400 "API key not valid".
@@ -515,6 +539,13 @@ function recordByokSuccess(credential: ByokCredential): void {
 // Failure handling around the tenant's model
 // ---------------------------------------------------------------------------
 
+function platformBreakerRefusesCall(): boolean {
+  return (
+    typeof CircuitBreaker.callBypassedOpenBreaker === 'function' &&
+    CircuitBreaker.callBypassedOpenBreaker()
+  );
+}
+
 /** Tell the surrounding shared breaker (if any) whether this call is the platform's answer. */
 function markNotPlatform(notPlatform: boolean): void {
   if (typeof CircuitBreaker.markCallNotPlatform === 'function') {
@@ -573,6 +604,11 @@ export function withByokFailureHandling(
           failure,
           byokFailureMessage(credential.provider, failure)
         );
+      }
+      // The call was let through an OPEN platform breaker because it runs on the tenant's key:
+      // the platform is not to be called now, whatever the tenant allowed.
+      if (platformBreakerRefusesCall()) {
+        throw new Error('Circuit breaker is OPEN - too many failures', { cause: err });
       }
       // The platform's answer is the one that counts for the shared breaker from here on.
       markNotPlatform(false);

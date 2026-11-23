@@ -209,8 +209,8 @@ export const aiProviderKeyRouter = createTRPCRouter({
       requireEncryptionKey(process.env, 'AI provider keys');
       const stored = (await ctx.prismaWithTenant.tenantAIProviderKey.findFirst({
         where: { tenantId },
-        select: { provider: true, apiKey: true },
-      })) as { provider: string; apiKey: string } | null;
+        select: { id: true, updatedAt: true, provider: true, apiKey: true },
+      })) as { id: string; updatedAt: Date; provider: string; apiKey: string } | null;
       if (!stored) throw new TRPCError({ code: 'NOT_FOUND', message: 'No key is saved yet.' });
 
       const result = await checkProviderKey(stored.provider as AIKeyProvider, stored.apiKey);
@@ -218,14 +218,30 @@ export const aiProviderKeyRouter = createTRPCRouter({
       if (!result.ok && result.reason === 'unavailable') {
         return { ok: false, message: result.message, key: null };
       }
-      const row = (await ctx.prismaWithTenant.tenantAIProviderKey.update({
-        where: { tenantId },
+      // Only the row that was checked: a key saved or removed while the provider was being
+      // asked (up to 8 s) must not take this result.
+      const written = await ctx.prismaWithTenant.tenantAIProviderKey.updateMany({
+        where: { tenantId, id: stored.id, updatedAt: stored.updatedAt },
         data: result.ok
           ? { status: 'ACTIVE', statusDetail: null }
           : { status: 'INVALID', statusDetail: 'The provider did not accept this key.' },
+      });
+      if (written.count === 0) {
+        return {
+          ok: result.ok,
+          message: 'The key changed while it was being checked. Test it again.',
+          key: null,
+        };
+      }
+      const row = (await ctx.prismaWithTenant.tenantAIProviderKey.findFirst({
+        where: { tenantId },
         select: KEY_SELECT,
-      })) as KeyRow;
-      return { ok: result.ok, message: result.ok ? ACCEPTED : result.message, key: toDto(row) };
+      })) as KeyRow | null;
+      return {
+        ok: result.ok,
+        message: result.ok ? ACCEPTED : result.message,
+        key: row ? toDto(row) : null,
+      };
     }),
 
   /** Change the fallback switch of the stored key. */
@@ -239,11 +255,18 @@ export const aiProviderKeyRouter = createTRPCRouter({
         select: { id: true, ...KEY_SELECT },
       })) as (KeyRow & { id: string }) | null;
       if (!before) throw new TRPCError({ code: 'NOT_FOUND', message: 'No key is saved yet.' });
-      const row = (await ctx.prismaWithTenant.tenantAIProviderKey.update({
-        where: { tenantId },
+      const changed = await ctx.prismaWithTenant.tenantAIProviderKey.updateMany({
+        where: { tenantId, id: before.id },
         data: { allowFallback: input.allowFallback },
+      });
+      if (changed.count === 0) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'No key is saved yet.' });
+      }
+      const row = (await ctx.prismaWithTenant.tenantAIProviderKey.findFirst({
+        where: { tenantId },
         select: KEY_SELECT,
-      })) as KeyRow;
+      })) as KeyRow | null;
+      if (!row) throw new TRPCError({ code: 'NOT_FOUND', message: 'No key is saved yet.' });
       logKeyAudit(ctx, before.id, {
         action: 'UPDATE',
         eventType: 'AIProviderKeyOptionsChanged',

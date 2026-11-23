@@ -321,7 +321,7 @@ describe('classifyByokFailure', () => {
 
   it.each([
     [httpError(401), 'INVALID'],
-    [httpError(403), 'INVALID'],
+    [httpError(403, 'Your API key does not have permission to use this resource'), 'INVALID'],
     [httpError(402), 'QUOTA_EXCEEDED'],
     [httpError(429), 'RATE_LIMITED'],
     [
@@ -705,5 +705,83 @@ describe('a BYOK call is not the platform provider answer for the shared breaker
     });
     await breaker.execute(() => wrapped.invoke('hi') as Promise<unknown>);
     expect(breaker.getState().state).toBe('CLOSED');
+  });
+});
+
+describe('403 is a bad key only when the provider says it is about the key', () => {
+  it.each([
+    ['Your API key does not have permission to use the specified resource', 'INVALID'],
+    ['Project does not have access to model gpt-4o', 'INVALID'],
+    ['Forbidden: access denied', 'INVALID'],
+  ])('%s -> %s', (message, expected) => {
+    expect(classifyByokFailure(httpError(403, message))).toBe(expected);
+  });
+
+  it.each([
+    ['Your chosen model requires moderation and your input was flagged'],
+    ['Country, region, or territory not supported'],
+    ['something unrelated'],
+  ])('%s is not a key failure', (message) => {
+    expect(classifyByokFailure(httpError(403, message))).toBeNull();
+  });
+});
+
+describe('an OPEN platform breaker does not refuse a tenant on its own key', () => {
+  async function openBreaker() {
+    const { CircuitBreaker } = await import('../../utils/circuit-breaker');
+    const breaker = new CircuitBreaker(2, 60_000);
+    for (let i = 0; i < 2; i++) {
+      await breaker.execute(() => Promise.reject(httpError(500))).catch(() => undefined);
+    }
+    return breaker;
+  }
+
+  it('runs the own-key call; a tenant without a key (or with a rejected one) is still refused', async () => {
+    const { tenantContextStore } = await import('../../tracing/tenant-context');
+    const breaker = await openBreaker();
+    db.findFirst.mockImplementation(async ({ where }: { where: { tenantId: string } }) => {
+      if (where.tenantId === 'tenant-a') return row();
+      if (where.tenantId === 'tenant-rejected') return row({ status: 'INVALID' });
+      return null;
+    });
+    const own = fakeModel(async () => ({ content: 'own key answer' }));
+    const wrapped = withByokFailureHandling(own.model, {
+      credential: credential(),
+      fallback: null,
+    });
+
+    await expect(
+      tenantContextStore.run({ tenantId: 'tenant-a' }, () =>
+        breaker.execute(() => wrapped.invoke('hi') as Promise<unknown>)
+      )
+    ).resolves.toEqual({ content: 'own key answer' });
+    for (const tenantId of ['tenant-none', 'tenant-rejected']) {
+      await expect(
+        tenantContextStore.run({ tenantId }, () => breaker.execute(async () => 'x'))
+      ).rejects.toThrow(/OPEN/);
+    }
+    // The own-key call neither counted nor closed anything.
+    expect(breaker.getState().state).toBe('OPEN');
+  });
+
+  it('even a tenant that allowed fallback does not call the platform while the breaker is OPEN', async () => {
+    const { tenantContextStore } = await import('../../tracing/tenant-context');
+    const breaker = await openBreaker();
+    db.findFirst.mockResolvedValue(row({ allowFallback: true }));
+    const platform = fakeModel(async () => ({ content: 'platform answer' }));
+    const own = fakeModel(async () => {
+      throw httpError(429);
+    });
+    const wrapped = withByokFailureHandling(own.model, {
+      credential: credential({ allowFallback: true }),
+      fallback: async () => platform.model,
+    });
+    await expect(
+      tenantContextStore.run({ tenantId: 'tenant-a' }, () =>
+        breaker.execute(() => wrapped.invoke('hi') as Promise<unknown>)
+      )
+    ).rejects.toThrow(/OPEN/);
+    expect(platform.invoke).not.toHaveBeenCalled();
+    expect(breaker.getState().failureCount).toBe(2);
   });
 });

@@ -44,6 +44,7 @@ import {
 
 const tenantId = TEST_UUIDS.tenant;
 const NOW = new Date('2026-11-23T12:00:00.000Z');
+const SAVED = new Date('2026-11-22T09:00:00.000Z');
 
 function keyRow(overrides: Record<string, unknown> = {}) {
   return {
@@ -84,6 +85,7 @@ describe('aiProviderKeyRouter (PG-199 BYOK)', () => {
       keyRow({ ...create, apiKey: undefined })
     );
     delegate().update.mockResolvedValue(keyRow());
+    delegate().updateMany.mockResolvedValue({ count: 1 });
     delegate().deleteMany.mockResolvedValue({ count: 1 });
   });
 
@@ -282,16 +284,19 @@ describe('aiProviderKeyRouter (PG-199 BYOK)', () => {
       const result = await admin.test({ provider: 'google', apiKey: FAKE_KEY });
       expect(checkProviderKey).toHaveBeenCalledWith('google', FAKE_KEY);
       expect(result).toMatchObject({ ok: true, key: null });
-      expect(delegate().update).not.toHaveBeenCalled();
+      expect(delegate().updateMany).not.toHaveBeenCalled();
       expect(delegate().upsert).not.toHaveBeenCalled();
     });
 
+    const STORED_ROW = { id: 'key-1', updatedAt: SAVED, provider: 'openai', apiKey: FAKE_KEY };
+
     it('re-checks the stored key and marks it ACTIVE when the provider accepts it', async () => {
-      delegate().findFirst.mockResolvedValue({ provider: 'openai', apiKey: FAKE_KEY });
+      delegate().findFirst.mockResolvedValue({ ...STORED_ROW, ...keyRow() });
       const result = await admin.test(null);
       expect(checkProviderKey).toHaveBeenCalledWith('openai', FAKE_KEY);
-      expect(delegate().update.mock.calls[0][0]).toMatchObject({
-        where: { tenantId },
+      // Only the row that was checked: its id and the updatedAt it had when it was read.
+      expect(delegate().updateMany.mock.calls[0][0]).toMatchObject({
+        where: { tenantId, id: 'key-1', updatedAt: SAVED },
         data: { status: 'ACTIVE', statusDetail: null },
       });
       expect(result.ok).toBe(true);
@@ -299,7 +304,7 @@ describe('aiProviderKeyRouter (PG-199 BYOK)', () => {
     });
 
     it('marks the stored key INVALID when the provider rejects it', async () => {
-      delegate().findFirst.mockResolvedValue({ provider: 'openai', apiKey: FAKE_KEY });
+      delegate().findFirst.mockResolvedValue({ ...STORED_ROW, ...keyRow() });
       checkProviderKey.mockResolvedValue({
         ok: false,
         reason: 'invalid',
@@ -307,11 +312,25 @@ describe('aiProviderKeyRouter (PG-199 BYOK)', () => {
       });
       const result = await admin.test(null);
       expect(result.ok).toBe(false);
-      expect(delegate().update.mock.calls[0][0].data.status).toBe('INVALID');
+      expect(delegate().updateMany.mock.calls[0][0].data.status).toBe('INVALID');
+    });
+
+    it('a key saved or removed while the provider was being asked takes no result and throws nothing', async () => {
+      delegate().findFirst.mockResolvedValue({ ...STORED_ROW, ...keyRow() });
+      delegate().updateMany.mockResolvedValue({ count: 0 });
+      checkProviderKey.mockResolvedValue({
+        ok: false,
+        reason: 'invalid',
+        message: 'The provider did not accept this key.',
+      });
+      const result = await admin.test(null);
+      expect(result).toMatchObject({ ok: false, key: null });
+      expect(result.message).toMatch(/changed while it was being checked/);
+      expect(delegate().update).not.toHaveBeenCalled();
     });
 
     it('leaves the status alone when the provider cannot be reached', async () => {
-      delegate().findFirst.mockResolvedValue({ provider: 'openai', apiKey: FAKE_KEY });
+      delegate().findFirst.mockResolvedValue({ ...STORED_ROW, ...keyRow() });
       checkProviderKey.mockResolvedValue({
         ok: false,
         reason: 'unavailable',
@@ -319,7 +338,7 @@ describe('aiProviderKeyRouter (PG-199 BYOK)', () => {
       });
       const result = await admin.test(null);
       expect(result).toMatchObject({ ok: false, key: null });
-      expect(delegate().update).not.toHaveBeenCalled();
+      expect(delegate().updateMany).not.toHaveBeenCalled();
     });
 
     it('re-checking the stored key needs field encryption: nothing is read, sent or overwritten without it', async () => {
@@ -327,7 +346,7 @@ describe('aiProviderKeyRouter (PG-199 BYOK)', () => {
       await expectCode(admin.test(null), 'PRECONDITION_FAILED');
       expect(delegate().findFirst).not.toHaveBeenCalled();
       expect(checkProviderKey).not.toHaveBeenCalled();
-      expect(delegate().update).not.toHaveBeenCalled();
+      expect(delegate().updateMany).not.toHaveBeenCalled();
     });
 
     it('is NOT_FOUND when there is no stored key to test', async () => {
@@ -342,11 +361,12 @@ describe('aiProviderKeyRouter (PG-199 BYOK)', () => {
 
   describe('setOptions', () => {
     it('changes the fallback switch for this tenant and audits it', async () => {
-      delegate().findFirst.mockResolvedValue(keyRow());
-      delegate().update.mockResolvedValue(keyRow({ allowFallback: true }));
+      delegate()
+        .findFirst.mockResolvedValueOnce(keyRow())
+        .mockResolvedValueOnce(keyRow({ allowFallback: true }));
       const result = await admin.setOptions({ allowFallback: true });
-      expect(delegate().update.mock.calls[0][0]).toMatchObject({
-        where: { tenantId },
+      expect(delegate().updateMany.mock.calls[0][0]).toMatchObject({
+        where: { tenantId, id: 'key-1' },
         data: { allowFallback: true },
       });
       expect(result.key.allowFallback).toBe(true);
@@ -355,7 +375,10 @@ describe('aiProviderKeyRouter (PG-199 BYOK)', () => {
       });
     });
 
-    it('is NOT_FOUND without a stored key', async () => {
+    it('is NOT_FOUND without a stored key, and when the key is removed meanwhile (no 500)', async () => {
+      await expectCode(admin.setOptions({ allowFallback: true }), 'NOT_FOUND');
+      delegate().findFirst.mockResolvedValue(keyRow());
+      delegate().updateMany.mockResolvedValue({ count: 0 });
       await expectCode(admin.setOptions({ allowFallback: true }), 'NOT_FOUND');
     });
   });
