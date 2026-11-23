@@ -10,6 +10,8 @@ interface ExportReportButtonProps {
   className?: string;
   /** Button text; defaults to "Export Report". */
   label?: string;
+  /** Disable when the figures are not available to this user. */
+  disabled?: boolean;
 }
 
 type JsPDFDoc = {
@@ -18,7 +20,12 @@ type JsPDFDoc = {
   setFont: (family: string, style: string) => void;
   setTextColor: (r: number, g: number, b: number) => void;
   setDrawColor: (r: number, g: number, b: number) => void;
-  text: (text: string, x: number, y: number, options?: { align: string }) => void;
+  text: (
+    text: string,
+    x: number,
+    y: number,
+    options?: { align?: string; maxWidth?: number }
+  ) => void;
   line: (x1: number, y1: number, x2: number, y2: number) => void;
   addPage: () => void;
   setPage: (page: number) => void;
@@ -185,6 +192,7 @@ export function standardRow(framework: FrameworkView) {
 export function ExportReportButton({
   className,
   label = 'Export Report',
+  disabled = false,
 }: Readonly<ExportReportButtonProps>) {
   const { timezone } = useTimezoneContext();
   const utils = trpc.useUtils();
@@ -243,12 +251,9 @@ export function ExportReportButton({
 
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
-      doc.text(
-        `Overall: ${scoreText(overview.overall.score)} (${overview.overall.measuredFrameworks} of ${overview.overall.totalFrameworks} frameworks measured). Readiness checks on firm data, not a certification.`,
-        14,
-        yPosRef.value - 4
-      );
-      yPosRef.value += 4;
+      const summary = `Overall: ${scoreText(overview.overall.score)} (${overview.overall.measuredFrameworks} of ${overview.overall.totalFrameworks} frameworks measured). Readiness checks on firm data, not a certification.`;
+      doc.text(summary, 14, yPosRef.value - 4, { maxWidth: pageWidth - 28 });
+      yPosRef.value += 8;
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
@@ -311,7 +316,7 @@ export function ExportReportButton({
   };
 
   return (
-    <Button onClick={handleExport} disabled={exporting} className={className}>
+    <Button onClick={handleExport} disabled={exporting || disabled} className={className}>
       <span className="material-symbols-outlined text-lg mr-2">
         {exporting ? 'progress_activity' : 'download'}
       </span>

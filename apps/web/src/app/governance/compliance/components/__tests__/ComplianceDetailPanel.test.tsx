@@ -167,6 +167,15 @@ describe('ComplianceDetailPanel', () => {
     expect(screen.getByText('No change between stored days yet.')).toBeInTheDocument();
   });
 
+  it('labels a stored day as the same calendar date in any timezone', async () => {
+    historyState.data = { points: [point('2026-11-22', 40), point('2026-11-23', 60)] };
+    const user = userEvent.setup();
+    render(<ComplianceDetailPanel framework={framework} open onClose={() => undefined} />);
+    await user.click(screen.getByRole('button', { name: 'history' }));
+    expect(screen.getByText('22 Nov 2026')).toBeInTheDocument();
+    expect(screen.getByText('23 Nov 2026')).toBeInTheDocument();
+  });
+
   it('shows a loading note while history loads', async () => {
     historyState.data = undefined;
     historyState.isLoading = true;

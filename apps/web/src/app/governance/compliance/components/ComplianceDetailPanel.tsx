@@ -10,7 +10,6 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
-import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import {
   CONTROL_STATE,
   STATUS_LABEL,
@@ -61,7 +60,6 @@ export function describeChanges(points: HistoryPoint[]) {
 }
 
 function HistoryChart({ points }: Readonly<{ points: HistoryPoint[] }>) {
-  const { timezone } = useTimezoneContext();
   const chart = buildChartPoints(points);
   if (chart.length === 0) return null;
   const { width, height, padding } = CHART;
@@ -118,7 +116,7 @@ function HistoryChart({ points }: Readonly<{ points: HistoryPoint[] }>) {
             {new Date(p.day).toLocaleDateString('en-GB', {
               day: 'numeric',
               month: 'short',
-              timeZone: timezone,
+              timeZone: 'UTC', // a stored day is a calendar date, not an instant
             })}
           </text>
         </g>
@@ -142,7 +140,6 @@ export function ComplianceDetailPanel({
   open,
   onClose,
 }: Readonly<ComplianceDetailPanelProps>) {
-  const { timezone } = useTimezoneContext();
   const [activeTab, setActiveTab] = useState<Tab>('controls');
   const historyQuery = trpc.compliance.history.useQuery(
     { frameworkId: framework?.id ?? 'gdpr' },
@@ -155,7 +152,7 @@ export function ComplianceDetailPanel({
       day: 'numeric',
       month: 'short',
       year: 'numeric',
-      timeZone: timezone,
+      timeZone: 'UTC', // a stored day is a calendar date, not an instant
     });
 
   return (

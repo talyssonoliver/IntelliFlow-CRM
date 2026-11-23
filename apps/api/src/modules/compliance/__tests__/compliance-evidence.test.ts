@@ -29,7 +29,7 @@ function evidence(overrides: Partial<Evidence> = {}): Evidence {
     },
     bookings: { publicBookings: 6, withoutConsent: 0 },
     terms: { seats: 4, accepted: 4, latestVersion: '2026-01' },
-    retention: { documentPolicies: 2, aiConversationDays: 90 },
+    retention: { documentPolicies: 2, aiConversationDays: 90, memoryPolicyRow: true },
     ai: { events30d: 10, highSeverity30d: 0 },
     ...overrides,
   };
@@ -224,7 +224,7 @@ describe('evaluateFrameworks', () => {
           'gdpr',
           'art15-completion'
         )
-      ).toMatchObject({ state: 'attention', evidence: expect.stringContaining('0 completed') });
+      ).toMatchObject({ state: 'not_measured', evidence: expect.stringContaining('0 completed') });
       expect(
         control(
           evidence({ dsar: { ...base, completed12m: 3, open: 1, overdue: 1 } }),
@@ -232,6 +232,52 @@ describe('evaluateFrameworks', () => {
           'art15-completion'
         ).state
       ).toBe('attention');
+    });
+
+    it('never calls an open request still inside its deadline a failure', () => {
+      const base = evidence().dsar!;
+      const c = control(
+        evidence({ dsar: { ...base, completed12m: 0, open: 1, overdue: 0 } }),
+        'gdpr',
+        'art15-completion'
+      );
+      expect(c.state).toBe('not_measured');
+      expect(
+        control(
+          evidence({ dsar: { ...base, completed12m: 0, open: 1, overdue: 1 } }),
+          'gdpr',
+          'art15-completion'
+        ).state
+      ).toBe('attention');
+    });
+
+    it('keeps all three data request controls when the requests could not be read', () => {
+      const ids = byId(evidence({ dsar: null }), 'gdpr').controls.map((c) => c.id);
+      expect(ids).toEqual(
+        expect.arrayContaining(['art12-sla', 'art17-erasure', 'art15-completion'])
+      );
+      expect(byId(evidence({ dsar: null }), 'gdpr').controls).toHaveLength(
+        byId(evidence(), 'gdpr').controls.length
+      );
+    });
+
+    it('tells a missing retention policy from one with no period', () => {
+      const none = control(
+        evidence({
+          retention: { documentPolicies: 1, aiConversationDays: null, memoryPolicyRow: false },
+        }),
+        'iso-42001',
+        'ai-retention'
+      );
+      expect(none.evidence).toMatch(/platform default/);
+      const kept = control(
+        evidence({
+          retention: { documentPolicies: 1, aiConversationDays: null, memoryPolicyRow: true },
+        }),
+        'iso-42001',
+        'ai-retention'
+      );
+      expect(kept.evidence).toMatch(/kept indefinitely/);
     });
 
     it('checks consent on public bookings, and says when there are none', () => {
@@ -284,14 +330,18 @@ describe('evaluateFrameworks', () => {
     it('needs a retention rule of some kind', () => {
       expect(
         control(
-          evidence({ retention: { documentPolicies: 0, aiConversationDays: null } }),
+          evidence({
+            retention: { documentPolicies: 0, aiConversationDays: null, memoryPolicyRow: false },
+          }),
           'gdpr',
           'art5-retention'
         ).state
       ).toBe('attention');
       expect(
         control(
-          evidence({ retention: { documentPolicies: 0, aiConversationDays: 30 } }),
+          evidence({
+            retention: { documentPolicies: 0, aiConversationDays: 30, memoryPolicyRow: true },
+          }),
           'gdpr',
           'art5-retention'
         ).state
@@ -325,7 +375,9 @@ describe('evaluateFrameworks', () => {
     it('asks for an AI conversation retention period', () => {
       expect(
         control(
-          evidence({ retention: { documentPolicies: 1, aiConversationDays: null } }),
+          evidence({
+            retention: { documentPolicies: 1, aiConversationDays: null, memoryPolicyRow: false },
+          }),
           'iso-42001',
           'ai-retention'
         ).state

@@ -23,7 +23,12 @@ const state = vi.hoisted(() => ({
     refetch: vi.fn(),
   },
   refresh: { mutate: vi.fn(), isPending: false },
+  refreshOptions: {} as {
+    onSuccess?: (r: { stored: number }) => Promise<void>;
+    onError?: () => void;
+  },
   invalidate: vi.fn(),
+  toast: vi.fn(),
 }));
 
 const twoHoursAgo = new Date(Date.now() - 2 * 3600 * 1000).toISOString();
@@ -52,17 +57,35 @@ vi.mock('@/lib/trpc', () => ({
     },
     compliance: {
       overview: { useQuery: () => state.overview },
-      refresh: { useMutation: () => state.refresh },
+      refresh: {
+        useMutation: (options: typeof state.refreshOptions) => {
+          state.refreshOptions = options;
+          return state.refresh;
+        },
+      },
       history: { useQuery: () => ({ data: { points: [] }, isLoading: false }) },
     },
   },
 }));
 
+vi.mock('@intelliflow/ui', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@intelliflow/ui')>()),
+  toast: state.toast,
+}));
+
 vi.mock('../components', () => ({
   RiskHeatMap: () => <div data-testid="risk-heat-map" />,
   ComplianceTimeline: () => <div data-testid="timeline" />,
-  ExportReportButton: ({ label = 'Export Report' }: { label?: string }) => (
-    <button type="button">{label}</button>
+  ExportReportButton: ({
+    label = 'Export Report',
+    disabled,
+  }: {
+    label?: string;
+    disabled?: boolean;
+  }) => (
+    <button type="button" disabled={disabled}>
+      {label}
+    </button>
   ),
   ComplianceDetailPanel: ({
     framework,
@@ -157,6 +180,7 @@ describe('ComplianceDashboardPage', () => {
     };
     state.refresh = { mutate: vi.fn(), isPending: false };
     state.invalidate.mockReset();
+    state.toast.mockReset();
   });
 
   it('renders the header, the buttons and the recent activity', () => {
@@ -261,6 +285,35 @@ describe('ComplianceDashboardPage', () => {
     render(<ComplianceDashboardPage />);
     await user.click(screen.getByRole('button', { name: /refresh data/i }));
     expect(state.refresh.mutate).toHaveBeenCalledTimes(1);
+  });
+
+  it('tells the user when a refresh stored a snapshot, stored nothing, or failed', async () => {
+    render(<ComplianceDashboardPage />);
+    await state.refreshOptions.onSuccess?.({ stored: 5 });
+    expect(state.toast).toHaveBeenLastCalledWith({ title: 'Compliance data refreshed' });
+    await state.refreshOptions.onSuccess?.({ stored: 0 });
+    expect(state.toast).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        title: expect.stringContaining('not stored'),
+        variant: 'destructive',
+      })
+    );
+    state.refreshOptions.onError?.();
+    expect(state.toast).toHaveBeenLastCalledWith(
+      expect.objectContaining({ title: 'Refresh failed', variant: 'destructive' })
+    );
+    expect(state.invalidate).toHaveBeenCalled();
+  });
+
+  it('disables Export for a user the router refuses', () => {
+    state.overview = {
+      data: undefined,
+      isError: true,
+      error: { data: { code: 'FORBIDDEN' } },
+      refetch: vi.fn(),
+    };
+    render(<ComplianceDashboardPage />);
+    expect(screen.getAllByRole('button', { name: /export report/i })[0]).toBeDisabled();
   });
 
   it('shows a skeleton while loading', () => {

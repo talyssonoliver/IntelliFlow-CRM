@@ -116,7 +116,12 @@ export interface Evidence {
   } | null;
   bookings: { publicBookings: number; withoutConsent: number } | null;
   terms: { seats: number; accepted: number; latestVersion: string | null } | null;
-  retention: { documentPolicies: number; aiConversationDays: number | null } | null;
+  retention: {
+    documentPolicies: number;
+    aiConversationDays: number | null;
+    /** A memory policy row exists. With no row the platform default applies; with a null period, conversations are kept indefinitely. */
+    memoryPolicyRow: boolean;
+  } | null;
   ai: { events30d: number; highSeverity30d: number } | null;
 }
 
@@ -295,7 +300,11 @@ export async function collectEvidence(
         select: { conversationRetentionDays: true },
       }),
     ]);
-    return { documentPolicies, aiConversationDays: memory?.conversationRetentionDays ?? null };
+    return {
+      documentPolicies,
+      aiConversationDays: memory?.conversationRetentionDays ?? null,
+      memoryPolicyRow: memory !== null && memory !== undefined,
+    };
   });
 
   const ai = await safely(async () => {
@@ -574,13 +583,19 @@ function completionControl(d: Dsar): Control {
       'At least one request, so completion can be observed.'
     );
   }
-  return control(
-    id,
-    name,
-    d.completed12m > 0 && d.overdue === 0 ? 'pass' : 'attention',
-    `${d.completed12m} completed in the last 12 months; ${d.open} still open, ${d.overdue} past their deadline.`,
-    REQUESTS
-  );
+  const evidence = `${d.completed12m} completed in the last 12 months; ${d.open} still open, ${d.overdue} past their deadline.`;
+  if (d.overdue > 0) return control(id, name, 'attention', evidence, REQUESTS);
+  if (d.completed12m === 0) {
+    // Only requests still inside their deadline: nothing late, nothing completed to judge yet.
+    return notMeasured(
+      id,
+      name,
+      evidence,
+      'A completed request, so completion can be observed.',
+      REQUESTS
+    );
+  }
+  return control(id, name, 'pass', evidence, REQUESTS);
 }
 
 function consentControl(b: NonNullable<Evidence['bookings']>): Control {
@@ -619,11 +634,17 @@ function termsControl(t: NonNullable<Evidence['terms']>): Control {
   });
 }
 
+function noAiRetention(r: { memoryPolicyRow: boolean }): string {
+  return r.memoryPolicyRow
+    ? 'AI conversations are kept indefinitely (no period set)'
+    : 'no AI conversation retention period set (platform default applies)';
+}
+
 function retentionControl(r: NonNullable<Evidence['retention']>): Control {
   const set = r.documentPolicies > 0 || r.aiConversationDays !== null;
   const ai =
     r.aiConversationDays === null
-      ? 'no AI conversation retention period'
+      ? noAiRetention(r)
       : `AI conversations kept ${r.aiConversationDays} days`;
   return control(
     'art5-retention',
@@ -640,6 +661,7 @@ function gdprControls(e: Evidence): Control[] {
     : [
         unread('art12-sla', 'Data requests answered on time', REQUESTS.href, REQUESTS.label),
         unread('art17-erasure', 'Erasure requests handled', REQUESTS.href, REQUESTS.label),
+        unread('art15-completion', 'Data requests completed', REQUESTS.href, REQUESTS.label),
       ];
 
   out.push(
@@ -734,7 +756,7 @@ function aiControls(e: Evidence): Control[] {
         'AI conversation retention set',
         e.retention.aiConversationDays === null ? 'attention' : 'pass',
         e.retention.aiConversationDays === null
-          ? 'No retention period for AI conversations; the platform default applies.'
+          ? `${noAiRetention(e.retention)[0]!.toUpperCase()}${noAiRetention(e.retention).slice(1)}.`
           : `AI conversations are kept ${e.retention.aiConversationDays} days.`,
         { href: '/agent-approvals/drift', label: 'Open AI monitoring' }
       )

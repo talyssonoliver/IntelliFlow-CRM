@@ -387,6 +387,27 @@ describe('ExportReportButton', () => {
       expect(mockText).not.toHaveBeenCalledWith('OWASP', expect.any(Number), expect.any(Number));
     });
 
+    it('should wrap the overall summary line to the page width', async () => {
+      const user = userEvent.setup();
+      render(<ExportReportButton />);
+
+      await user.click(screen.getByRole('button', { name: /export report/i }));
+
+      await waitFor(() => {
+        expect(mockText).toHaveBeenCalledWith(
+          expect.stringContaining('Overall: 71% (2 of 5 frameworks measured)'),
+          expect.any(Number),
+          expect.any(Number),
+          { maxWidth: 182 }
+        );
+      });
+    });
+
+    it('should be disabled when the figures are not available', () => {
+      render(<ExportReportButton disabled />);
+      expect(screen.getByRole('button', { name: /export report/i })).toBeDisabled();
+    });
+
     it('should use a custom label', () => {
       render(<ExportReportButton label="Download Full Report" />);
       expect(screen.getByRole('button', { name: /download full report/i })).toBeInTheDocument();

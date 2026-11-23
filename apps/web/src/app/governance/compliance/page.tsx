@@ -9,7 +9,7 @@
  * score appears in this file.
  */
 import { useState } from 'react';
-import { Card } from '@intelliflow/ui';
+import { Card, toast } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import {
@@ -262,9 +262,25 @@ export default function ComplianceDashboardPage() {
   const { data: recentActivity = [] } = trpc.analytics.recentActivity.useQuery({ limit: 10 });
   const overviewQuery = trpc.compliance.overview.useQuery();
   const refresh = trpc.compliance.refresh.useMutation({
-    onSuccess: async () => {
+    onSuccess: async (result) => {
       await utils.compliance.overview.invalidate();
       await utils.compliance.history.invalidate();
+      toast(
+        result.stored === 0
+          ? {
+              title: 'Today\u2019s snapshot was not stored',
+              description: 'Some evidence could not be read. The figures shown are current.',
+              variant: 'destructive',
+            }
+          : { title: 'Compliance data refreshed' }
+      );
+    },
+    onError: () => {
+      toast({
+        title: 'Refresh failed',
+        description: 'The compliance figures could not be refreshed. Try again.',
+        variant: 'destructive',
+      });
     },
   });
 
@@ -347,7 +363,7 @@ export default function ComplianceDashboardPage() {
               </span>{' '}
               Refresh Data
             </button>
-            <ExportReportButton className="whitespace-nowrap" />
+            <ExportReportButton className="whitespace-nowrap" disabled={forbidden} />
           </div>
         </div>
 
