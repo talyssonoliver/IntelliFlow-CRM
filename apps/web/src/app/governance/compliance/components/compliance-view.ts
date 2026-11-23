@@ -84,16 +84,18 @@ export function trendDirection(trend: TrendView): 'up' | 'down' | 'flat' | 'pend
 }
 
 /**
- * The overall trend: the mean change of the frameworks that have one. Pending until at least one
- * measured framework has two stored days.
+ * The overall trend: shown only when every measured framework has a stored trend over the same
+ * period, so it is the change of the same mean the overall score is. Otherwise it is pending.
  */
 export function overallTrend(frameworks: FrameworkView[]): TrendView {
-  const deltas = frameworks.flatMap((f) =>
-    f.score !== null && f.trend.state === 'available' ? [f.trend.delta] : []
-  );
-  if (deltas.length === 0) return { state: 'pending', reason: 'Trend starts tomorrow' };
-  const mean = Math.round(deltas.reduce((a, b) => a + b, 0) / deltas.length);
-  return { state: 'available', delta: mean, since: '' };
+  const measured = frameworks.filter((f) => f.score !== null);
+  const trends = measured.flatMap((f) => (f.trend.state === 'available' ? [f.trend] : []));
+  const sameSince = trends.every((t) => t.since === trends[0]?.since);
+  if (measured.length === 0 || trends.length !== measured.length || !sameSince) {
+    return { state: 'pending', reason: 'Trend starts tomorrow' };
+  }
+  const mean = Math.round(trends.reduce((sum, t) => sum + t.delta, 0) / trends.length);
+  return { state: 'available', delta: mean, since: trends[0]!.since };
 }
 
 export function scoreText(score: number | null): string {

@@ -65,7 +65,7 @@ describe('runComplianceSnapshots', () => {
       unknown
     >;
     expect(args.take).toBe(COMPLIANCE_SNAPSHOT_BATCH);
-    expect(JSON.stringify(args.where)).toContain('ACTIVE');
+    expect(JSON.stringify(args.where)).toContain('TRIAL');
     expect(JSON.stringify(args.where)).toContain('2026-11-23T00:00:00.000Z');
   });
 

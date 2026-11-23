@@ -158,7 +158,7 @@ const overviewFixture = {
         { label: 'Needs', value: 'An environmental policy recorded per firm.' },
       ],
     }),
-    framework({}),
+    framework({ trend: { state: 'available', delta: 0, since: '2026-11-01' } }),
     framework({
       id: 'adr-registry',
       title: 'ADR Registry',
@@ -233,7 +233,7 @@ describe('ComplianceDashboardPage', () => {
       within(screen.getByTestId('framework-iso-42001')).getByText('+4 pts')
     ).toBeInTheDocument();
     expect(
-      within(screen.getByTestId('framework-gdpr')).getByText('Trend starts tomorrow')
+      within(screen.getByTestId('framework-iso-14001')).getByText('Trend starts tomorrow')
     ).toBeInTheDocument();
   });
 

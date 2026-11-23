@@ -58,7 +58,7 @@ export async function runComplianceSnapshots(
   for (const [id, until] of deferred) if (until <= now.getTime()) deferred.delete(id);
   const tenants = await db.tenant.findMany({
     where: {
-      status: 'ACTIVE',
+      status: { in: ['ACTIVE', 'TRIAL'] },
       // A day counts as done only when its last row (the marker) is stored.
       complianceSnapshots: { none: { day, frameworkId: DAY_MARKER_FRAMEWORK } },
       ...(deferred.size > 0 ? { id: { notIn: [...deferred.keys()] } } : {}),
