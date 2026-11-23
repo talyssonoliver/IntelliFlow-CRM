@@ -136,16 +136,17 @@ describe('planBackfill', () => {
     expect(plan.overrides).toEqual([]);
   });
 
-  it('flags a module the plan does not include, and a row that had been switched off', () => {
+  it('sends a module the plan does not include, or one switched off, to review and writes nothing for it', () => {
     const plan = planBackfill({
       tenants: [tenant('starter', { plan: 'STARTER' }), tenant('off')],
       moduleRows: [row('off', 'SUPPORT', false, 'PLAN')],
       rowCounts: counts({ starter: 2 }, { off: 5 }),
     });
-    expect(plan.overrides.find((o) => o.tenantId === 'starter')!.reason).toMatch(
+    expect(plan.overrides).toEqual([]);
+    expect(plan.review.find((o) => o.tenantId === 'starter')!.reason).toMatch(
       /NOTE: plan STARTER does not include it/
     );
-    expect(plan.overrides.find((o) => o.tenantId === 'off')!.reason).toMatch(
+    expect(plan.review.find((o) => o.tenantId === 'off')!.reason).toMatch(
       /NOTE: it had been switched off/
     );
   });
@@ -232,9 +233,13 @@ describe('backfillBusinessType', () => {
 
   it('counts documents as LEGAL data and converts legacy add-ons when applied', async () => {
     const { db, raw } = fakeDb({
-      tenants: [tenant('docs'), tenant('addon', { plan: 'STARTER' })],
+      tenants: [
+        tenant('docs'),
+        tenant('addon', { plan: 'STARTER' }),
+        tenant('lower', { plan: 'STARTER' }),
+      ],
       moduleRows: [row('addon', 'LEGAL', true, 'PLAN')],
-      documents: { docs: 9 },
+      documents: { docs: 9, lower: 2 },
     });
     const result = await backfillBusinessType(db, { apply: true, target: LOCAL });
 
@@ -245,6 +250,9 @@ describe('backfillBusinessType', () => {
       where: { tenantId_moduleId: { tenantId: 'addon', moduleId: 'LEGAL' } },
       data: { origin: 'OVERRIDE' },
     });
+    // The STARTER tenant's documents are reported for review, never turned into a free paid module.
+    expect(result.plan.review.map((o) => o.tenantId)).toEqual(['lower']);
+    expect(raw.tenantModule.upsert).toHaveBeenCalledTimes(1);
   });
 
   it('refuses to write to a database that is not local without the production flag', async () => {

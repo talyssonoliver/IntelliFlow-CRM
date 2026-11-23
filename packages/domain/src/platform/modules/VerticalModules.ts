@@ -119,5 +119,28 @@ export function isModuleResolvedEnabled(moduleId: ModuleId, input: ResolveModule
 export const DATA_PROTECTED_MODULES = ['LEGAL', 'SUPPORT'] as const satisfies readonly ModuleId[];
 export type DataProtectedModule = (typeof DATA_PROTECTED_MODULES)[number];
 
+export type DataProtection = 'none' | 'protect' | 'review';
+
+/**
+ * What to do about a vertical module the workspace holds data in. One rule for the backfill and for a
+ * business-type change, so they can never disagree:
+ *  - none: no data, or the resolver already enables the module.
+ *  - protect: the plan includes the module and nobody switched it off, so only the business type hides it;
+ *    write an EXISTING_DATA override ON.
+ *  - review: the plan does not include the module (a downgrade hid it) or someone deliberately switched it
+ *    off. Writing an override would hand out a paid module or undo a decision, so a human decides.
+ */
+export function dataProtectionFor(input: {
+  moduleId: ModuleId;
+  plan: PlanTier;
+  hasData: boolean;
+  enabled: boolean;
+  switchedOff: boolean;
+}): DataProtection {
+  if (!input.hasData || input.enabled) return 'none';
+  if (input.switchedOff || !MODULE_PLAN_MAP[input.plan].includes(input.moduleId)) return 'review';
+  return 'protect';
+}
+
 /** Message the server returns when a module is not part of the workspace. */
 export const MODULE_NOT_IN_WORKSPACE_MESSAGE = "Not part of your workspace's modules";

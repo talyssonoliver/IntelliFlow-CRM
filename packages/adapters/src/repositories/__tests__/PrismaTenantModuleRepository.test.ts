@@ -544,3 +544,37 @@ describe('PrismaTenantModuleRepository.syncModulesToPlan existing-data protectio
     );
   });
 });
+
+describe('PrismaTenantModuleRepository.protectExistingData leaves decisions to a human', () => {
+  let repo: PrismaTenantModuleRepository;
+  let mockPrisma: ReturnType<typeof createMockPrisma>;
+
+  beforeEach(() => {
+    mockPrisma = createMockPrisma();
+    mockPrisma.tenantModule.upsert.mockResolvedValue({});
+    repo = new PrismaTenantModuleRepository(mockPrisma as unknown as PrismaClient);
+  });
+
+  it('does not hand out a module the plan does not include, even with data (downgrade)', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER', businessType: 'LAW_FIRM' });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+    mockPrisma.case.count.mockResolvedValue(8);
+
+    expect(await repo.setBusinessType(TENANT_ID, 'LAW_FIRM')).toEqual([]);
+    expect(mockPrisma.tenantModule.upsert).not.toHaveBeenCalled();
+  });
+
+  it('does not undo an admin who deliberately switched a module off', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({
+      plan: 'PROFESSIONAL',
+      businessType: 'TRADES_HOME_SERVICES',
+    });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([
+      makeModuleRecord('SUPPORT', false, 'PLAN'),
+    ]);
+    mockPrisma.ticket.count.mockResolvedValue(12);
+
+    expect(await repo.setBusinessType(TENANT_ID, 'TRADES_HOME_SERVICES')).toEqual([]);
+    expect(mockPrisma.tenantModule.upsert).not.toHaveBeenCalled();
+  });
+});

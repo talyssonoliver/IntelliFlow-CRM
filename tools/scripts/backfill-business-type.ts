@@ -26,6 +26,7 @@
 
 import {
   DATA_PROTECTED_MODULES,
+  dataProtectionFor,
   resolveEnabledModules,
   isTenantBusinessType,
   type TenantBusinessType,
@@ -128,6 +129,8 @@ export interface BackfillPlan {
   setType: TenantSetType[];
   leftNull: number;
   overrides: TenantOverrideOn[];
+  /** Data in a module the plan does not include, or one that was switched off: reported, never written. */
+  review: TenantOverrideOn[];
   legacyAddOns: LegacyAddOn[];
 }
 
@@ -185,7 +188,10 @@ function overrideNotes(
   return notes;
 }
 
-/** EXISTING_DATA overrides for the vertical modules the tenant holds rows in but the resolver would hide. */
+/**
+ * The vertical modules the tenant holds rows in but the resolver would hide: those only the business type
+ * hides get an EXISTING_DATA override; the rest (plan does not include them, or switched off) are for review.
+ */
 function dataOverrides(ctx: {
   tenant: TenantRow;
   businessType: TenantBusinessType | null;
@@ -194,13 +200,21 @@ function dataOverrides(ctx: {
   enabled: ReadonlySet<ModuleId>;
   legacyIds: ReadonlySet<ModuleId>;
   rowCounts: Readonly<Record<DataModule, ReadonlyMap<string, number>>>;
-}): TenantOverrideOn[] {
-  const out: TenantOverrideOn[] = [];
+}): { overrides: TenantOverrideOn[]; review: TenantOverrideOn[] } {
+  const out = { overrides: [] as TenantOverrideOn[], review: [] as TenantOverrideOn[] };
   for (const moduleId of DATA_MODULES) {
     const count = ctx.rowCounts[moduleId].get(ctx.tenant.id) ?? 0;
-    if (count === 0 || ctx.enabled.has(moduleId) || ctx.legacyIds.has(moduleId)) continue;
+    if (ctx.legacyIds.has(moduleId)) continue;
+    const verdict = dataProtectionFor({
+      moduleId,
+      plan: asPlan(ctx.tenant.plan),
+      hasData: count > 0,
+      enabled: ctx.enabled.has(moduleId),
+      switchedOff: ctx.rows.some((o) => o.moduleId === moduleId && !o.enabled),
+    });
+    if (verdict === 'none') continue;
     const notes = overrideNotes(ctx.tenant, moduleId, ctx.rows, ctx.planModules);
-    out.push({
+    (verdict === 'protect' ? out.overrides : out.review).push({
       tenantId: ctx.tenant.id,
       slug: ctx.tenant.slug,
       moduleId,
@@ -230,6 +244,7 @@ export function planBackfill(input: {
     setType: [],
     leftNull: 0,
     overrides: [],
+    review: [],
     legacyAddOns: [],
   };
 
@@ -258,17 +273,17 @@ export function planBackfill(input: {
     plan.legacyAddOns.push(...legacy);
     const legacyIds = new Set(legacy.map((l) => l.moduleId));
 
-    plan.overrides.push(
-      ...dataOverrides({
-        tenant,
-        businessType,
-        rows,
-        planModules,
-        enabled,
-        legacyIds,
-        rowCounts: input.rowCounts,
-      })
-    );
+    const found = dataOverrides({
+      tenant,
+      businessType,
+      rows,
+      planModules,
+      enabled,
+      legacyIds,
+      rowCounts: input.rowCounts,
+    });
+    plan.overrides.push(...found.overrides);
+    plan.review.push(...found.review);
   }
 
   return plan;
@@ -337,6 +352,8 @@ export async function backfillBusinessType(
     `left NULL:       ${plan.leftNull} (gated like OTHER; the admin sees a banner)`,
     `override ON:     ${plan.overrides.length} (existing data stays reachable)`,
     ...plan.overrides.map((o) => `  - ${o.slug} (${o.tenantId}) ${o.moduleId}: ${o.reason}`),
+    `review (not written): ${plan.review.length} (plan does not include the module, or it was switched off: owner decides)`,
+    ...plan.review.map((o) => `  - ${o.slug} (${o.tenantId}) ${o.moduleId}: ${o.reason}`),
     `legacy add-ons:  ${plan.legacyAddOns.length} (enabled outside the plan; become explicit overrides)`,
     ...plan.legacyAddOns.map((a) => `  - ${a.slug} (${a.tenantId}) ${a.moduleId}`),
   ];

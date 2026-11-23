@@ -8,6 +8,7 @@ import {
   isModuleResolvedEnabled,
   getModulesForBusinessType,
   isTenantBusinessType,
+  dataProtectionFor,
   type TenantBusinessType,
 } from '../VerticalModules';
 
@@ -158,6 +159,33 @@ describe('resolveEnabledModules overrides', () => {
     const input = { plan: 'PROFESSIONAL', businessType: 'LAW_FIRM' } as const;
     expect(isModuleResolvedEnabled('LEGAL', input)).toBe(true);
     expect(isModuleResolvedEnabled('SUPPORT', input)).toBe(false);
+  });
+});
+
+describe('dataProtectionFor', () => {
+  const base = {
+    moduleId: 'SUPPORT',
+    plan: 'PROFESSIONAL',
+    hasData: true,
+    enabled: false,
+    switchedOff: false,
+  } as const;
+
+  it('protects data hidden only by the business type', () => {
+    expect(dataProtectionFor(base)).toBe('protect');
+  });
+
+  it('does nothing without data or when the module is already enabled', () => {
+    expect(dataProtectionFor({ ...base, hasData: false })).toBe('none');
+    expect(dataProtectionFor({ ...base, enabled: true })).toBe('none');
+  });
+
+  it('sends a plan downgrade to review instead of handing out a paid module', () => {
+    expect(dataProtectionFor({ ...base, moduleId: 'LEGAL', plan: 'STARTER' })).toBe('review');
+  });
+
+  it('sends a deliberate switch-off to review instead of undoing it', () => {
+    expect(dataProtectionFor({ ...base, switchedOff: true })).toBe('review');
   });
 });
 

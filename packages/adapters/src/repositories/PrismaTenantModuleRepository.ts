@@ -16,6 +16,7 @@ import {
   type TenantModuleOrigin,
   DATA_PROTECTED_MODULES,
   MODULE_PLAN_MAP,
+  dataProtectionFor,
   getModulesForPlan,
   isTenantBusinessType,
   resolveEnabledModules,
@@ -83,11 +84,18 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
 
   /**
    * Nobody loses sight of data they already have: for every vertical module the workspace holds rows in
-   * (cases and documents for LEGAL, tickets for SUPPORT) that the single resolver would now hide, write an
-   * EXISTING_DATA override ON. A plan sync never switches such a row off. Returns the modules protected.
+   * (cases and case documents for LEGAL, tickets for SUPPORT) that only the business type now hides, write an
+   * EXISTING_DATA override ON. A plan sync never switches such a row off. A module the plan does not include,
+   * or one someone deliberately switched off, is left alone for a human to decide (see `dataProtectionFor`).
+   * Returns the modules protected.
    */
   async protectExistingData(tenantId: string): Promise<ModuleId[]> {
-    const enabled = new Set(await this.getEnabledModules(tenantId));
+    const [enabledList, plan, moduleRows] = await Promise.all([
+      this.getEnabledModules(tenantId),
+      this.getTenantPlan(tenantId),
+      this.prisma.tenantModule.findMany({ where: { tenantId } }),
+    ]);
+    const enabled = new Set(enabledList);
     const [cases, documents, tickets] = await Promise.all([
       this.prisma.case.count({ where: { tenantId } }),
       this.prisma.caseDocument.count({ where: { tenantId, deletedAt: null } }),
@@ -100,7 +108,14 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
     const now = new Date();
     const protectedModules: ModuleId[] = [];
     for (const moduleId of DATA_PROTECTED_MODULES) {
-      if (rows[moduleId] === 0 || enabled.has(moduleId)) continue;
+      const verdict = dataProtectionFor({
+        moduleId,
+        plan,
+        hasData: rows[moduleId] > 0,
+        enabled: enabled.has(moduleId),
+        switchedOff: moduleRows.some((r) => r.moduleId === moduleId && !r.enabled),
+      });
+      if (verdict !== 'protect') continue;
       await this.prisma.tenantModule.upsert({
         where: { tenantId_moduleId: { tenantId, moduleId } },
         create: { tenantId, moduleId, enabled: true, origin: 'EXISTING_DATA', enabledAt: now },
