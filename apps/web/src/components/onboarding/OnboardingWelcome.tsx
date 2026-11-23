@@ -509,7 +509,7 @@ function OnboardingWelcomeInner() {
       }
       setBusinessTypeSaved(true);
       // The navigation follows the new business type straight away.
-      void utils.moduleAccess.getEnabledModules.invalidate();
+      await utils.moduleAccess.getEnabledModules.invalidate();
     }
     // Save the profile fields before advancing to the plan step.
     persistProfile();
