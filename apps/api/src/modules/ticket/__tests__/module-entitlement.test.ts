@@ -7,6 +7,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { TRPCError } from '@trpc/server';
+import { MODULE_NOT_IN_WORKSPACE_MESSAGE } from '@intelliflow/domain';
 import { createAdminContext } from '../../../test/setup';
 import { ticketRouter } from '../ticket.router';
 import { ticketRoutingRouter } from '../ticket-routing.router';
@@ -67,7 +68,9 @@ describe('module-gated routers deny a tenant whose plan lacks the module', () =>
       for (const path of procedures) {
         const err = await outcome(resolve(caller, path));
         const forbidden =
-          err instanceof TRPCError && err.code === 'FORBIDDEN' && err.message.includes(moduleId);
+          err instanceof TRPCError &&
+          err.code === 'FORBIDDEN' &&
+          err.message === MODULE_NOT_IN_WORKSPACE_MESSAGE;
         if (exempt.has(path.split('.').pop()!)) {
           expect(forbidden, `${name}.${path} is core-shared and must stay reachable`).toBe(false);
         } else {
@@ -83,7 +86,9 @@ describe('module-gated routers deny a tenant whose plan lacks the module', () =>
     const caller = (ticketRouter as any).createCaller(ctxDenying('COMMERCE'));
     const err = await outcome(resolve(caller, 'list'));
     expect(
-      err instanceof TRPCError && err.code === 'FORBIDDEN' && /SUPPORT/.test(err.message)
+      err instanceof TRPCError &&
+        err.code === 'FORBIDDEN' &&
+        err.message === MODULE_NOT_IN_WORKSPACE_MESSAGE
     ).toBe(false);
   });
 });

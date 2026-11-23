@@ -36,6 +36,8 @@ const mockUpdateProfile = vi.hoisted(() => vi.fn());
 const mockResendVerification = vi.hoisted(() => vi.fn());
 const mockShowModal = vi.hoisted(() => vi.fn());
 const mockClose = vi.hoisted(() => vi.fn());
+const mockSetBusinessType = vi.hoisted(() => vi.fn());
+const mockInvalidateModules = vi.hoisted(() => vi.fn());
 
 // ============================================================
 // vi.mock declarations (hoisted to top of file by Vitest)
@@ -43,6 +45,14 @@ const mockClose = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
+    useUtils: () => ({
+      moduleAccess: { getEnabledModules: { invalidate: mockInvalidateModules } },
+    }),
+    moduleAccess: {
+      setBusinessType: {
+        useMutation: () => ({ mutateAsync: mockSetBusinessType, isPending: false }),
+      },
+    },
     onboarding: {
       getState: {
         useQuery: mockGetState,
@@ -872,5 +882,80 @@ describe('OnboardingWelcome', () => {
     expect(screen.queryByText(/confirm your email/i)).toBeNull();
     const dialog = screen.getByTestId('onboarding-dialog');
     expect((dialog as HTMLDialogElement).open).toBe(false);
+  });
+});
+
+// ============================================================
+// Business type question (owner ruling 23/11/2026)
+// ============================================================
+
+describe('OnboardingWelcome business type step', () => {
+  beforeEach(() => {
+    mockSetBusinessType.mockReset();
+    mockSetBusinessType.mockResolvedValue({});
+    mockInvalidateModules.mockReset();
+    mockGetState.mockReturnValue({
+      data: {
+        completed: false,
+        flowDone: false,
+        emailConfirmed: false,
+        selectedPlan: null,
+        needsBusinessType: true,
+      },
+      isLoading: false,
+    });
+  });
+
+  it('asks for the business type and blocks Continue until one is chosen', () => {
+    render(<OnboardingWelcome />);
+
+    expect(screen.getByTestId('onboarding-business-type')).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /law firm/i })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /trades and home services/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^continue$/i })).toBeDisabled();
+    expect(screen.queryByRole('region', { name: /choose your plan/i })).not.toBeInTheDocument();
+  });
+
+  it('saves the choice, refreshes the modules and moves on to the plan step', async () => {
+    render(<OnboardingWelcome />);
+
+    fireEvent.click(screen.getByRole('radio', { name: /trades and home services/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
+
+    await waitFor(() =>
+      expect(mockSetBusinessType).toHaveBeenCalledWith({ businessType: 'TRADES_HOME_SERVICES' })
+    );
+    await waitFor(() => expect(mockInvalidateModules).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(screen.getByRole('region', { name: /choose your plan/i })).toBeInTheDocument()
+    );
+  });
+
+  it('stays on the step and shows the error when saving fails', async () => {
+    mockSetBusinessType.mockRejectedValue(new Error('Only a workspace admin can change it'));
+    render(<OnboardingWelcome />);
+
+    fireEvent.click(screen.getByRole('radio', { name: /agency/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/only a workspace admin/i);
+    expect(screen.queryByRole('region', { name: /choose your plan/i })).not.toBeInTheDocument();
+  });
+
+  it('does not ask a member whose workspace already has a business type', () => {
+    mockGetState.mockReturnValue({
+      data: {
+        completed: false,
+        flowDone: false,
+        emailConfirmed: false,
+        selectedPlan: null,
+        needsBusinessType: false,
+      },
+      isLoading: false,
+    });
+    render(<OnboardingWelcome />);
+
+    expect(screen.queryByTestId('onboarding-business-type')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^continue$/i })).toBeEnabled();
   });
 });

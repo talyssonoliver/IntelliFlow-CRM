@@ -45,6 +45,8 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import { cn } from '@intelliflow/ui';
+import type { TenantBusinessType } from '@intelliflow/domain';
+import { BusinessTypePicker } from '@/components/workspace/BusinessTypePicker';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { isPublicAuthRoute, isProtectedAppRoute } from '@/lib/auth/route-protection';
@@ -359,6 +361,10 @@ function OnboardingWelcomeInner() {
   );
 
   const completeMutation = trpc.onboarding.complete.useMutation();
+  // Owner ruling 23/11/2026: a new workspace must say what kind of business it is (it decides which
+  // vertical modules it gets). Asked in the welcome step, saved before the plan step.
+  const setBusinessTypeMutation = trpc.moduleAccess.setBusinessType.useMutation();
+  const utils = trpc.useUtils();
   // Persists the optional profile fields (company / job title) the welcome step
   // collects — previously these were captured then thrown away.
   const updateProfileMutation = trpc.user.updateProfile.useMutation();
@@ -371,6 +377,9 @@ function OnboardingWelcomeInner() {
   const [selectedTierId, setSelectedTierId] = useState<string | null>(null);
   const [company, setCompany] = useState('');
   const [department, setDepartment] = useState('');
+  const [businessType, setBusinessType] = useState<TenantBusinessType | null>(null);
+  const [businessTypeSaved, setBusinessTypeSaved] = useState(false);
+  const [businessTypeError, setBusinessTypeError] = useState<string | null>(null);
   const [sessionDismissed, setSessionDismissed] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent' | 'rate-limited'>(
@@ -483,11 +492,29 @@ function OnboardingWelcomeInner() {
     setSessionDismissed(true);
   }, [persistProfile]);
 
-  const handleContinueWelcome = useCallback(() => {
+  const needsBusinessType = onboardingState?.needsBusinessType === true && !businessTypeSaved;
+
+  const handleContinueWelcome = useCallback(async () => {
+    // The business type is required: save it first, and stay on this step if that fails.
+    if (needsBusinessType) {
+      if (!businessType) return;
+      setBusinessTypeError(null);
+      try {
+        await setBusinessTypeMutation.mutateAsync({ businessType });
+      } catch (err: unknown) {
+        setBusinessTypeError(
+          err instanceof Error ? err.message : 'Could not save your business type. Try again.'
+        );
+        return;
+      }
+      setBusinessTypeSaved(true);
+      // The navigation follows the new business type straight away.
+      void utils.moduleAccess.getEnabledModules.invalidate();
+    }
     // Save the profile fields before advancing to the plan step.
     persistProfile();
     setStep('plan');
-  }, [persistProfile]);
+  }, [needsBusinessType, businessType, setBusinessTypeMutation, utils, persistProfile]);
 
   const handleResendVerification = useCallback(async () => {
     if (resendState === 'sending' || resendState === 'sent') return;
@@ -732,6 +759,22 @@ function OnboardingWelcomeInner() {
             </div>
           </fieldset>
 
+          {needsBusinessType && (
+            <div className="space-y-2" data-testid="onboarding-business-type">
+              <BusinessTypePicker
+                value={businessType}
+                onChange={setBusinessType}
+                idPrefix="ob-business-type"
+                disabled={setBusinessTypeMutation.isPending}
+              />
+              {businessTypeError && (
+                <p role="alert" className="text-sm text-destructive">
+                  {businessTypeError}
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="flex gap-3">
             <button
               type="button"
@@ -745,10 +788,12 @@ function OnboardingWelcomeInner() {
             </button>
             <button
               type="button"
-              onClick={handleContinueWelcome}
+              onClick={() => void handleContinueWelcome()}
+              disabled={(needsBusinessType && !businessType) || setBusinessTypeMutation.isPending}
               className={cn(
                 'flex-1 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground',
-                'hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                'hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                'disabled:cursor-not-allowed disabled:opacity-50'
               )}
             >
               Continue

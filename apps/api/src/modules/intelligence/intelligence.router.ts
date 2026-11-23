@@ -28,6 +28,7 @@ import {
 } from '@intelliflow/validators';
 import { getTenantContext } from '../../security/tenant-context';
 import { assertQuota } from '../../shared/quota-guard';
+import { isModuleEnabledForTenant } from '../../shared/module-enabled';
 import { SIGNIFICANCE_LEVELS, requiresHumanReview } from '@intelliflow/domain';
 
 // ADR-070: server-side AI_INTELLIGENCE entitlement — intelligence router
@@ -1456,7 +1457,11 @@ export const intelligenceRouter = createTRPCRouter({
         'messages',
         'tickets',
       ];
-      const searchSources = input.sources ?? allSources;
+      const requestedSources = input.sources ?? allSources;
+      // Tickets belong to the SUPPORT module: leave them out when the workspace does not have it.
+      const searchSources = (await isModuleEnabledForTenant(ctx, tenantId, 'SUPPORT'))
+        ? requestedSources
+        : requestedSources.filter((source) => source !== 'tickets');
 
       // Search each source with tenant isolation
       const dateFilter = since ? { gte: since } : undefined;
