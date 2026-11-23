@@ -91,7 +91,13 @@ export interface BackfillDb {
     }): unknown;
   };
   case: { groupBy(args: { by: ['tenantId']; _count: { _all: true } }): Promise<CountRow[]> };
-  document: { groupBy(args: { by: ['tenantId']; _count: { _all: true } }): Promise<CountRow[]> };
+  caseDocument: {
+    groupBy(args: {
+      by: ['tenantId'];
+      where: { deletedAt: null };
+      _count: { _all: true };
+    }): Promise<CountRow[]>;
+  };
   ticket: { groupBy(args: { by: ['tenantId']; _count: { _all: true } }): Promise<CountRow[]> };
   $transaction(operations: unknown[]): Promise<unknown>;
 }
@@ -306,7 +312,11 @@ export async function backfillBusinessType(
       select: { tenantId: true, moduleId: true, enabled: true, origin: true },
     }),
     db.case.groupBy({ by: ['tenantId'], _count: { _all: true } }),
-    db.document.groupBy({ by: ['tenantId'], _count: { _all: true } }),
+    db.caseDocument.groupBy({
+      by: ['tenantId'],
+      where: { deletedAt: null },
+      _count: { _all: true },
+    }),
     db.ticket.groupBy({ by: ['tenantId'], _count: { _all: true } }),
   ]);
 

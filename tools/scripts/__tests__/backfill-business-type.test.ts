@@ -56,7 +56,7 @@ function fakeDb(opts: {
       update: vi.fn((args: unknown) => ({ op: 'tenantModule.update', args })),
     },
     case: { groupBy: group(opts.cases) },
-    document: { groupBy: group(opts.documents) },
+    caseDocument: { groupBy: group(opts.documents) },
     ticket: { groupBy: group(opts.tickets) },
     $transaction: vi.fn(async (ops: unknown[]) => ops),
   };

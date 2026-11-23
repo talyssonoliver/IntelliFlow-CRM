@@ -90,7 +90,7 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
     const enabled = new Set(await this.getEnabledModules(tenantId));
     const [cases, documents, tickets] = await Promise.all([
       this.prisma.case.count({ where: { tenantId } }),
-      this.prisma.document.count({ where: { tenantId } }),
+      this.prisma.caseDocument.count({ where: { tenantId, deletedAt: null } }),
       this.prisma.ticket.count({ where: { tenantId } }),
     ]);
     const rows: Record<(typeof DATA_PROTECTED_MODULES)[number], number> = {

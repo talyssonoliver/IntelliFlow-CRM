@@ -18,7 +18,8 @@ import { trpc } from '@/lib/trpc';
 
 export default function WorkspaceSettingsPage() {
   const { user } = useRequireAuth();
-  const isAdmin = !!user?.role && ['ADMIN', 'admin', 'SUPER_ADMIN', 'owner'].includes(user.role);
+  // The server accepts the tenant ADMIN role only (setBusinessType), so the page offers the same.
+  const isAdmin = user?.role === 'ADMIN';
   const utils = trpc.useUtils();
   const { businessType, enabledModules, isLoading } = useEnabledModules();
   const [selected, setSelected] = useState<TenantBusinessType | null>(null);

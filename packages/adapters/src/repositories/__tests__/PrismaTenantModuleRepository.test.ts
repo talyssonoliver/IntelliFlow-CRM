@@ -19,7 +19,7 @@ function createMockPrisma(): Record<string, any> {
     tenant: { findUnique: vi.fn(), update: vi.fn().mockResolvedValue({}) },
     // Row counts that decide which modules hold data a business-type change must not hide.
     case: { count: vi.fn().mockResolvedValue(0) },
-    document: { count: vi.fn().mockResolvedValue(0) },
+    caseDocument: { count: vi.fn().mockResolvedValue(0) },
     ticket: { count: vi.fn().mockResolvedValue(0) },
     // Array-form transaction used by syncModulesToPlan: the operation promises
     // are already created when the array is built, so just await them.
@@ -480,7 +480,7 @@ describe('PrismaTenantModuleRepository business type', () => {
     });
     mockPrisma.tenantModule.findMany.mockResolvedValue([]);
     mockPrisma.ticket.count.mockResolvedValue(12);
-    mockPrisma.document.count.mockResolvedValue(3);
+    mockPrisma.caseDocument.count.mockResolvedValue(3);
     mockPrisma.tenantModule.upsert.mockResolvedValue({});
 
     const protectedModules = await repo.setBusinessType(TENANT_ID, 'TRADES_HOME_SERVICES');
@@ -497,6 +497,21 @@ describe('PrismaTenantModuleRepository business type', () => {
         }),
       })
     );
+  });
+
+  it('legal documents alone (no cases) keep LEGAL on for a trades business', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({
+      plan: 'PROFESSIONAL',
+      businessType: 'TRADES_HOME_SERVICES',
+    });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+    mockPrisma.caseDocument.count.mockResolvedValue(5);
+    mockPrisma.tenantModule.upsert.mockResolvedValue({});
+
+    expect(await repo.setBusinessType(TENANT_ID, 'TRADES_HOME_SERVICES')).toEqual(['LEGAL']);
+    expect(mockPrisma.caseDocument.count).toHaveBeenCalledWith({
+      where: { tenantId: TENANT_ID, deletedAt: null },
+    });
   });
 
   it('a module the new business type already has is not overridden even with data', async () => {
