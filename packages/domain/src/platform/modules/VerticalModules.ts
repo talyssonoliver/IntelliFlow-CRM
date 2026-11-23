@@ -51,8 +51,9 @@ export const VERTICAL_MODULE_MAP: Record<TenantBusinessType, readonly ModuleId[]
  *  - PLAN: written by the plan sync; it only mirrors the plan and never widens access beyond the vertical.
  *  - OVERRIDE: an explicit decision (a platform operator's à-la-carte enable); it can switch a module on.
  *  - EXISTING_DATA: written by the backfill, or when the business type changes, because the workspace
- *    already holds rows in the module's tables. It switches the module on like OVERRIDE, and a plan
- *    sync never switches it off (nobody is locked out of data they already have).
+ *    already holds rows in the module's tables and only the business type hides the module. It switches
+ *    the module on like OVERRIDE. It is written only for a module the plan includes, so a downgrade still
+ *    switches it off like any other above-plan row (see `dataProtectionFor`).
  * An `enabled: false` row of any origin switches the module off.
  */
 export const TENANT_MODULE_ORIGINS = ['PLAN', 'OVERRIDE', 'EXISTING_DATA'] as const;

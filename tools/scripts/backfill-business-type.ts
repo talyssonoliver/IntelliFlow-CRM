@@ -6,11 +6,11 @@
  *
  *  1. Known production tenants get their business type explicitly (KNOWN_TENANT_BUSINESS_TYPES below).
  *     Everything else is left NULL: no guessing from names. NULL gates like OTHER and the admin sees a banner.
- *  2. If a tenant already has rows in a vertical module's tables (cases and documents for LEGAL, tickets for
- *     SUPPORT) but the single resolver (plan + business type + overrides) would not enable that module, an
- *     EXISTING_DATA override ON row is written for it, so nobody loses sight of data they already have. A plan
- *     sync never switches such a row off. Each one is logged, with a note when the plan does not include the
- *     module or the row had been switched off, so the owner can see it. COMMERCE has no tables yet.
+ *  2. If a tenant already has rows in a vertical module's tables (cases and case documents for LEGAL, tickets
+ *     for SUPPORT) and only its business type hides that module (the plan includes it, nobody switched it
+ *     off), an EXISTING_DATA override ON row is written, so nobody loses sight of data they already have.
+ *     A module the plan does not include, or one that was switched off, is only listed under "review" and
+ *     never written: a human decides, so no paid module is handed out and no decision is undone.
  *  3. A legacy a-la-carte add-on (an enabled tenant_modules row for a module outside the tenant's plan, written
  *     before rows had an origin) becomes an explicit OVERRIDE, so the new business-type rule does not hide a
  *     module someone enabled on purpose.

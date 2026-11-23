@@ -527,8 +527,8 @@ describe('PrismaTenantModuleRepository business type', () => {
   });
 });
 
-describe('PrismaTenantModuleRepository.syncModulesToPlan existing-data protection', () => {
-  it('the downgrade disable never touches EXISTING_DATA rows', async () => {
+describe('PrismaTenantModuleRepository.syncModulesToPlan downgrade', () => {
+  it('switches off every enabled above-plan row, whatever its origin (no paid-module leak)', async () => {
     const mockPrisma = createMockPrisma();
     mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'STARTER', businessType: 'AGENCY' });
     mockPrisma.tenantModule.findMany.mockResolvedValue([]);
@@ -537,11 +537,13 @@ describe('PrismaTenantModuleRepository.syncModulesToPlan existing-data protectio
 
     await repo.syncModulesToPlan(TENANT_ID, 'STARTER');
 
-    expect(mockPrisma.tenantModule.updateMany).toHaveBeenCalledWith(
-      expect.objectContaining({
-        where: expect.objectContaining({ enabled: true, origin: { not: 'EXISTING_DATA' } }),
-      })
-    );
+    const call = mockPrisma.tenantModule.updateMany.mock.calls[0][0];
+    expect(call.where).toEqual({
+      tenantId: TENANT_ID,
+      enabled: true,
+      moduleId: { notIn: expect.any(Array) },
+    });
+    expect(call.where.origin).toBeUndefined();
   });
 });
 

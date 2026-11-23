@@ -536,7 +536,7 @@ model TenantModule {
   /// PLAN = mirrors the plan (written by plan sync, never widens the business type's modules);
   /// OVERRIDE = explicit decision (operator à-la-carte) that can switch a module on;
   /// EXISTING_DATA = the workspace already has rows in the module's tables (backfill / business-type change):
-  /// on like OVERRIDE, and a plan sync never switches it off.
+  /// on like OVERRIDE; only written for a module the plan includes, so a downgrade still switches it off.
   origin     TenantModuleOrigin @default(PLAN)
   enabledAt  DateTime   @default(now())
   disabledAt DateTime?

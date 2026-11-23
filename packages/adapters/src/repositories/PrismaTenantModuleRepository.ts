@@ -85,8 +85,9 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
   /**
    * Nobody loses sight of data they already have: for every vertical module the workspace holds rows in
    * (cases and case documents for LEGAL, tickets for SUPPORT) that only the business type now hides, write an
-   * EXISTING_DATA override ON. A plan sync never switches such a row off. A module the plan does not include,
-   * or one someone deliberately switched off, is left alone for a human to decide (see `dataProtectionFor`).
+   * EXISTING_DATA override ON. The row is only written for a module the plan includes, so a later downgrade
+   * still switches it off like any other above-plan row. A module the plan does not include, or one someone
+   * deliberately switched off, is left alone for a human to decide (see `dataProtectionFor`).
    * Returns the modules protected.
    */
   async protectExistingData(tenantId: string): Promise<ModuleId[]> {
@@ -224,13 +225,7 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
         })
       ),
       this.prisma.tenantModule.updateMany({
-        // EXISTING_DATA rows protect data the workspace already holds; a plan change must not hide it.
-        where: {
-          tenantId,
-          enabled: true,
-          origin: { not: 'EXISTING_DATA' },
-          moduleId: { notIn: [...planModules] },
-        },
+        where: { tenantId, enabled: true, moduleId: { notIn: [...planModules] } },
         data: { enabled: false, disabledAt: now },
       }),
     ]);
