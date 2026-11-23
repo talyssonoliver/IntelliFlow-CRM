@@ -153,6 +153,16 @@ describe('billing.handleSubscriptionWebhook outbox routing', () => {
       });
     });
 
+    it('fails the replay when the ended subscription itself cannot be persisted', async () => {
+      upsertFromWebhook.mockRejectedValueOnce(new Error('upsert failed'));
+      const ctx = makeCtx({ stripeSubscriptionRepository: { upsertFromWebhook } });
+
+      await expect(
+        billingRouter.createCaller(ctx as never).handleSubscriptionWebhook(DELETED)
+      ).rejects.toMatchObject({ code: 'INTERNAL_SERVER_ERROR' });
+      expect(prismaMock.workspaceExportRequest.create).not.toHaveBeenCalled();
+    });
+
     it('fails the replay (so it is retried) when the export request cannot be recorded', async () => {
       prismaMock.tenant.findUnique.mockResolvedValue({ id: 'tenant_1' } as never);
       prismaMock.stripeSubscription.count.mockResolvedValue(0 as never);

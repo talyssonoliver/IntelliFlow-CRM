@@ -289,6 +289,33 @@ export function renderExportEmail(input: {
   };
 }
 
+/** Where attempt `n` of a request stores its archive: one path per attempt, so runs never collide. */
+export function attemptArchivePath(tenantId: string, requestId: string, attempt: number): string {
+  return `${tenantId}/${requestId}-${attempt}.zip`;
+}
+
+/**
+ * Removes the archives of attempts `1..upTo` that a crash left behind (the kept one is never
+ * touched). The ZIP holds a customer's whole workspace and must not outlive its 14 days.
+ */
+async function removeAttemptArchives(
+  deps: Pick<ExportJobDeps, 'archiveStorage' | 'log'>,
+  request: { id: string; tenantId: string },
+  upTo: number,
+  keep?: string
+): Promise<void> {
+  for (let n = 1; n <= upTo; n += 1) {
+    const path = attemptArchivePath(request.tenantId, request.id, n);
+    if (path === keep) continue;
+    await deps.archiveStorage.removeArchive(path).catch((err: unknown) => {
+      deps.log?.warn(
+        { requestId: request.id, path, err: String(err) },
+        'stale export archive not removed'
+      );
+    });
+  }
+}
+
 /** How often a running export proves it is alive (the stale-RUNNING check reads startedAt). */
 export const HEARTBEAT_MS = 60 * 1000;
 
@@ -334,6 +361,9 @@ export async function processWorkspaceExport(
   const request = await claimExport(deps, input.requestId, now);
   if (!request) return { status: 'skipped', requestId: input.requestId, reason: 'not queued' };
 
+  // A crashed earlier attempt may have uploaded an archive that never became READY.
+  await removeAttemptArchives(deps, request, request.attempts - 1);
+
   const ownsClaim = { id: request.id, status: 'RUNNING' as const, attempts: request.attempts };
   const heartbeat = setInterval(() => {
     prisma.workspaceExportRequest
@@ -344,7 +374,7 @@ export async function processWorkspaceExport(
 
   const dir = deps.tmpDir ?? join(tmpdir(), 'intelliflow-workspace-export');
   const archivePath = join(dir, `${request.id}-${randomUUID()}.zip`);
-  const storagePath = `${request.tenantId}/${request.id}-${request.attempts}.zip`;
+  const storagePath = attemptArchivePath(request.tenantId, request.id, request.attempts);
   let uploaded = false;
   try {
     await mkdir(dir, { recursive: true });
@@ -557,6 +587,7 @@ async function failExhausted(deps: ExportJobDeps, now: Date): Promise<number> {
       where: { id: row.id, status: { in: ['QUEUED', 'RUNNING'] } },
       data: { status: 'FAILED', error: 'Gave up after repeated failures' },
     });
+    await removeAttemptArchives(deps, row, MAX_EXPORT_ATTEMPTS);
     // An export the customer is owed (agreement clause 5) failing for good needs a person.
     deps.log?.error(
       { requestId: row.id, tenantId: row.tenantId, trigger: row.trigger },

@@ -542,6 +542,13 @@ interface SubscriptionWebhookPayload {
   };
 }
 
+/** A cancellation: Stripe `.deleted`, or a status of canceled, for a known workspace. */
+function endsSubscription(input: SubscriptionWebhookPayload): boolean {
+  const obj = input.data.object;
+  const canceled = input.type === 'customer.subscription.deleted' || obj.status === 'canceled';
+  return canceled && Boolean(obj.metadata?.tenantId);
+}
+
 /**
  * IFC-314: persist Stripe subscription status (offline-reliable) and — for ENGINE
  * subscriptions (metadata.tenantSlug present) — enqueue the portal push on the
@@ -597,6 +604,15 @@ async function syncSubscriptionFromWebhook(
       // Nothing durable holds the portal push: fail the webhook so Stripe redelivers.
       console.error('[Billing Webhook] Portal push enqueue failed:', err);
       throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.message });
+    }
+    if (endsSubscription(input)) {
+      // The customer is leaving and their data export is owed (agreement clause 5): a failed
+      // persist or import before the export is recorded must be retried, not logged and dropped.
+      console.error('[Billing Webhook] Ending subscription not synced:', err);
+      throw new TRPCError({
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'The ended subscription could not be recorded. Retry the replay.',
+      });
     }
     console.error('[Billing Webhook] Subscription sync failed (non-fatal):', err);
   }

@@ -15,8 +15,6 @@ import type { ExportFileStorage } from './export-workspace';
 export const WORKSPACE_EXPORT_BUCKET = 'workspace-exports';
 /** Time allowed for a storage download to start answering. */
 const OPEN_FILE_HEADERS_TIMEOUT_MS = 60_000;
-/** Largest archive the export bucket accepts (the project-wide Storage limit must allow it too). */
-const EXPORT_BUCKET_FILE_SIZE_LIMIT = '5GB';
 /** The link and the archive live for 14 days (agreement clause 5). */
 export const EXPORT_LINK_TTL_SECONDS = 14 * 24 * 60 * 60;
 
@@ -114,7 +112,6 @@ export class SupabaseExportStorage implements ExportFileStorage, ExportArchiveSt
       if (data) return;
       const { error } = await this.client.storage.createBucket(this.exportBucket, {
         public: false,
-        fileSizeLimit: EXPORT_BUCKET_FILE_SIZE_LIMIT,
       });
       if (error && !/already exists/i.test(error.message)) {
         this.bucketReady = null;

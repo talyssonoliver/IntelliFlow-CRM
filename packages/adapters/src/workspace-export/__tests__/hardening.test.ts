@@ -431,3 +431,45 @@ describe('review follow-ups', () => {
     expect(enqueue).toHaveBeenCalledWith({ requestId: 'f1', tenantId: T }, { retry: 0 });
   });
 });
+
+describe('archives of crashed attempts do not outlive their request', () => {
+  it('a new attempt removes what the earlier attempts uploaded', async () => {
+    const { db } = world([
+      {
+        id: 'r1',
+        tenantId: T,
+        status: 'QUEUED',
+        attempts: 2,
+        trigger: 'ADMIN',
+        requestedAt: t0,
+        updatedAt: t0,
+      },
+    ]);
+    const { d, removed, tmp } = deps(db);
+    await processWorkspaceExport(d, { requestId: 'r1' });
+    // The claim made this attempt number 3; attempts 1 and 2 left nothing behind.
+    expect(removed).toEqual([`${T}/r1-1.zip`, `${T}/r1-2.zip`]);
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('a request that gave up has every attempt archive removed', async () => {
+    const stale = new Date(t0.getTime() - 2 * STALE_QUEUED_MS);
+    const { db } = world([
+      {
+        id: 'dead',
+        tenantId: T,
+        status: 'QUEUED',
+        attempts: MAX_EXPORT_ATTEMPTS,
+        trigger: 'ADMIN',
+        requestedAt: t0,
+        updatedAt: stale,
+      },
+    ]);
+    const { d, removed, tmp } = deps(db);
+    await sweepWorkspaceExports(d, async () => {});
+    expect(removed).toEqual(
+      Array.from({ length: MAX_EXPORT_ATTEMPTS }, (_, i) => `${T}/dead-${i + 1}.zip`)
+    );
+    rmSync(tmp, { recursive: true, force: true });
+  });
+});
