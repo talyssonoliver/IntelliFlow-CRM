@@ -105,11 +105,13 @@ export async function bootWorkspaceExportWorker(
     });
   };
 
+  // A re-queue gets an id of its own: BullMQ silently drops an add whose id it still holds, and a
+  // failed job keeps its id for 7 days.
   const enqueue: ExportEnqueue = async ({ requestId, tenantId }, opts) => {
     await queue.add(
       WORKSPACE_EXPORT_JOB,
       { requestId, tenantId },
-      { jobId: opts?.retry ? `${requestId}-retry-${opts.retry}` : requestId }
+      { jobId: opts ? `${requestId}-requeue-${Date.now()}` : requestId }
     );
   };
 

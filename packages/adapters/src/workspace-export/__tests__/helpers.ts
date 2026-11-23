@@ -56,6 +56,9 @@ export function delegate(rows: Row[], tables?: Record<string, Row[]>) {
         const dir = args.orderBy.createdAt === 'asc' ? 1 : -1;
         out = [...out].sort((a, b) => dir * (a.createdAt - b.createdAt));
       }
+      if (args.orderBy?.updatedAt === 'asc') {
+        out = [...out].sort((a, b) => a.updatedAt - b.updatedAt);
+      }
       if (args.orderBy?.requestedAt) {
         out = [...out].sort((a, b) => b.requestedAt - a.requestedAt);
       }

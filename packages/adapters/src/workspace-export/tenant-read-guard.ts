@@ -23,13 +23,29 @@ const READ_OPERATIONS = new Set([
   'groupBy',
 ]);
 
+const UNIQUE_READS = new Set(['findUnique', 'findUniqueOrThrow']);
+
+/** Raw SQL bypasses the tenant filter, so the guard refuses it outright. */
+const RAW_OPERATIONS = [
+  '$queryRaw',
+  '$queryRawUnsafe',
+  '$executeRaw',
+  '$executeRawUnsafe',
+] as const;
+
 type Args = Record<string, unknown> | undefined;
+
+function toArray(value: unknown): unknown[] {
+  if (value === undefined) return [];
+  return Array.isArray(value) ? value : [value];
+}
 
 /** `args` with the tenant added to its filter. Pure. */
 export function pinReadArgsToTenant(
   model: string,
   args: Args,
-  tenantId: string
+  tenantId: string,
+  operation = 'findMany'
 ): Record<string, unknown> {
   const base = (args ?? {}) as Record<string, unknown>;
   let condition: Record<string, unknown> | null = null;
@@ -40,6 +56,12 @@ export function pinReadArgsToTenant(
   }
   if (!condition) return base;
   const where = base.where as Record<string, unknown> | undefined;
+  if (UNIQUE_READS.has(operation)) {
+    // A unique read needs its unique key at the top level of `where`: the tenant rides along in AND.
+    const existing = where?.AND;
+    const and = toArray(existing);
+    return { ...base, where: { ...where, AND: [...and, condition] } };
+  }
   return {
     ...base,
     where: where && Object.keys(where).length > 0 ? { AND: [where, condition] } : condition,
@@ -68,9 +90,17 @@ export function createTenantReadGuard<T extends { $extends: (ext: any) => any }>
           if (!READ_OPERATIONS.has(operation)) {
             throw new Error(`Workspace export is read-only: ${model}.${operation} refused`);
           }
-          return query(pinReadArgsToTenant(model, args, tenantId));
+          return query(pinReadArgsToTenant(model, args, tenantId, operation));
         },
       },
+      ...Object.fromEntries(
+        RAW_OPERATIONS.map((op) => [
+          op,
+          () => {
+            throw new Error(`Workspace export is read-only and tenant-pinned: ${op} refused`);
+          },
+        ])
+      ),
     },
   });
 }

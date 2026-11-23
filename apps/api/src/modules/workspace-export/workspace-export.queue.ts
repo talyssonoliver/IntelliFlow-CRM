@@ -10,14 +10,17 @@ import {
 } from '@intelliflow/adapters';
 import { enqueueOneShot } from '../../lib/queue-producer';
 
-/** One job per request; a retry after a sweep gets its own id (BullMQ refuses a repeated id). */
+/**
+ * One job per request; every re-queue gets an id of its own. BullMQ silently drops an add whose
+ * id it still holds (a failed job is kept for 7 days), so a re-queue must never reuse one.
+ */
 export const enqueueWorkspaceExport: ExportEnqueue = async ({ requestId, tenantId }, opts) => {
   await enqueueOneShot(
     WORKSPACE_EXPORT_QUEUE,
     WORKSPACE_EXPORT_JOB,
     { requestId, tenantId },
     {
-      jobId: opts?.retry ? `${requestId}-retry-${opts.retry}` : requestId,
+      jobId: opts ? `${requestId}-requeue-${Date.now()}` : requestId,
       attempts: 3,
       backoff: { type: 'exponential', delay: 30_000 },
       removeOnComplete: { age: 3_600, count: 100 },

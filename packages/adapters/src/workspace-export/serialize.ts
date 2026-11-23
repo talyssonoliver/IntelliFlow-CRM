@@ -49,13 +49,18 @@ export function toJsonRow(
   return out;
 }
 
+/** Decimal and BigInt columns are written as text; a refund such as -12.50 is a number. */
+const PLAIN_NEGATIVE_NUMBER = /^-\d+(?:\.\d+)?$/;
+
 /** RFC 4180 cell: quoted when it holds a comma, quote, CR or LF; quotes doubled. */
 export function csvCell(value: unknown): string {
   if (value === null || value === undefined) return '';
   let text = typeof value === 'object' ? JSON.stringify(value) : String(value);
   // Spreadsheet formula injection: text that other people typed (leads, bookings, tickets, chat)
   // must not run when an administrator opens the CSV. Numbers and booleans are not text.
-  if (typeof value === 'string' && /^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+  if (typeof value === 'string' && /^[=+\-@\t\r]/.test(text) && !PLAIN_NEGATIVE_NUMBER.test(text)) {
+    text = `'${text}`;
+  }
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 }
 

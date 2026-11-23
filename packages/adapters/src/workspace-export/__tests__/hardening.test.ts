@@ -10,6 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ArchiveWriter } from '../archive-writer';
 import { csvCell } from '../serialize';
+import { createTenantReadGuard, pinReadArgsToTenant } from '../tenant-read-guard';
 import { runWorkspaceExport } from '../export-workspace';
 import {
   MAX_EXPORT_ATTEMPTS,
@@ -307,6 +308,126 @@ describe('a failed commitment is retried', () => {
       attempts: 0,
       error: null,
     });
-    expect(enqueue).toHaveBeenCalledWith({ requestId: 'f1', tenantId: T });
+    expect(enqueue).toHaveBeenCalledWith({ requestId: 'f1', tenantId: T }, { retry: 0 });
+  });
+});
+
+describe('review follow-ups', () => {
+  it('writes a negative decimal as a number, not as a formula', () => {
+    expect(csvCell('-12.50')).toBe('-12.50');
+    expect(csvCell('-0')).toBe('-0');
+    expect(csvCell('-1+1')).toBe("'-1+1");
+  });
+
+  it('a unique read keeps its unique key at the top level and pins the tenant beside it', () => {
+    expect(pinReadArgsToTenant('Lead', { where: { id: 'l1' } }, T, 'findUnique')).toEqual({
+      where: { id: 'l1', AND: [{ tenantId: T }] },
+    });
+    expect(
+      pinReadArgsToTenant(
+        'Lead',
+        { where: { id: 'l1', AND: { status: 'NEW' } } },
+        T,
+        'findUniqueOrThrow'
+      )
+    ).toEqual({ where: { id: 'l1', AND: [{ status: 'NEW' }, { tenantId: T }] } });
+    // A Tenant lookup for another id still finds nothing: the pin is an AND, not an overwrite.
+    expect(pinReadArgsToTenant('Tenant', { where: { id: 'other' } }, T, 'findUnique')).toEqual({
+      where: { id: 'other', AND: [{ id: T }] },
+    });
+  });
+
+  it('refuses raw SQL as well as writes', () => {
+    let extension: any;
+    createTenantReadGuard({ $extends: (e: any) => ((extension = e), {}) }, T);
+    for (const op of ['$queryRaw', '$queryRawUnsafe', '$executeRaw', '$executeRawUnsafe']) {
+      expect(() => extension.query[op]()).toThrow(/refused/);
+    }
+  });
+
+  it('stops retrying an email once someone has the link', async () => {
+    const { tables, db } = world([
+      {
+        id: 'r',
+        tenantId: T,
+        status: 'READY',
+        storagePath: `${T}/r-1.zip`,
+        archiveSha256: 'b'.repeat(64),
+        archiveBytes: 10n,
+        expiresAt: new Date(t0.getTime() + 86_400_000),
+        emailedAt: null,
+        requestedById: 'owner',
+        subscriptionId: null,
+        requestedAt: t0,
+        attempts: 1,
+        updatedAt: t0,
+      },
+    ]);
+    tables.user.push({
+      id: 'asker',
+      tenantId: T,
+      email: 'asker@example.invalid',
+      role: 'ADMIN',
+      createdAt: new Date(t0.getTime() + 1),
+    });
+    tables.workspaceExportRequest[0].requestedById = 'asker';
+    const sent: string[] = [];
+    const { d, tmp } = deps(db, {
+      sendEmail: async (m) => {
+        if (m.recipientUserId === 'asker') throw new Error('bounce');
+        sent.push(m.recipientUserId);
+      },
+    });
+    await sweepWorkspaceExports(d, async () => {});
+    expect(sent).toEqual(['owner']);
+    expect(tables.workspaceExportRequest[0].emailedAt).toEqual(t0);
+    await sweepWorkspaceExports(d, async () => {});
+    expect(sent).toEqual(['owner']);
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('a row that can never be delivered goes to the back of the line', async () => {
+    const mk = (id: string, updatedAt: Date) => ({
+      id,
+      tenantId: T,
+      status: 'READY',
+      storagePath: `${T}/${id}.zip`,
+      archiveSha256: 'b'.repeat(64),
+      archiveBytes: 10n,
+      expiresAt: new Date(t0.getTime() + 86_400_000),
+      emailedAt: null,
+      requestedById: null,
+      subscriptionId: null,
+      requestedAt: t0,
+      attempts: 1,
+      updatedAt,
+    });
+    const { tables, db } = world([mk('stuck', new Date(t0.getTime() - 1000)), mk('later', t0)]);
+    tables.user.length = 0; // nobody to send to
+    const { d, tmp } = deps(db);
+    await sweepWorkspaceExports(d, async () => {});
+    const [stuck, later] = tables.workspaceExportRequest;
+    expect(stuck.updatedAt.getTime()).toBeGreaterThan(later.updatedAt.getTime() - 1);
+    expect(stuck.emailedAt).toBeNull();
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('a revived FAILED export is queued as a re-queue (a fresh job id), not as the first job', async () => {
+    const { db } = world([
+      {
+        id: 'f1',
+        tenantId: T,
+        status: 'FAILED',
+        attempts: MAX_EXPORT_ATTEMPTS,
+        trigger: 'SUBSCRIPTION_ENDED',
+        subscriptionId: 'sub_1',
+        requestedAt: t0,
+        updatedAt: t0,
+      },
+    ]);
+    db.stripeSubscription = { count: async () => 0 };
+    const enqueue = vi.fn(async () => {});
+    await requestExportForEndedSubscription(db, { tenantId: T, subscriptionId: 'sub_1' }, enqueue);
+    expect(enqueue).toHaveBeenCalledWith({ requestId: 'f1', tenantId: T }, { retry: 0 });
   });
 });

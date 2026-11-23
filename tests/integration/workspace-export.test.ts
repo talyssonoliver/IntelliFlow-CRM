@@ -223,5 +223,13 @@ describeDb('workspace export (real database)', () => {
     const leads = await guard.lead.findMany({ where: { tenantId: tB } });
     expect(leads).toEqual([]);
     expect(await guard.tenant.findFirst({ where: { id: tB } })).toBeNull();
+    // Unique reads work, and still cannot reach another tenant's row.
+    const [own] = await guard.lead.findMany({});
+    expect((await guard.lead.findUnique({ where: { id: own.id } }))?.id).toBe(own.id);
+    const foreign = await prisma.lead.findFirst({ where: { tenantId: tB } });
+    expect(await guard.lead.findUnique({ where: { id: foreign.id } })).toBeNull();
+    expect(await guard.tenant.findUnique({ where: { id: tB } })).toBeNull();
+    // Raw SQL would bypass the pin, so it is refused.
+    await expect(guard.$queryRaw`SELECT 1`).rejects.toThrow(/refused/);
   });
 });

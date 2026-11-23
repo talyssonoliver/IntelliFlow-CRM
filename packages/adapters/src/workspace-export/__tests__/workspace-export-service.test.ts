@@ -438,13 +438,16 @@ describe('processWorkspaceExport', () => {
       async () => {},
       () => t0
     );
-    const { d, tmp } = deps(db);
+    const run = vi.fn(fakeRun);
+    const { d, tmp } = deps(db, { runExport: run as never });
     tables.workspaceExportRequest[0].status = 'RUNNING';
     tables.workspaceExportRequest[0].startedAt = t0;
     expect(
       await processWorkspaceExport(d, { requestId: tables.workspaceExportRequest[0].id })
     ).toMatchObject({ status: 'skipped' });
-    expect(fakeRun).not.toHaveBeenCalledWith(expect.objectContaining({ requestId: 'never' }));
+    expect(run).not.toHaveBeenCalled();
+    // The row is untouched: no attempt counted, still RUNNING for the worker that owns it.
+    expect(tables.workspaceExportRequest[0]).toMatchObject({ status: 'RUNNING', attempts: 0 });
     rmSync(tmp, { recursive: true, force: true });
   });
 });

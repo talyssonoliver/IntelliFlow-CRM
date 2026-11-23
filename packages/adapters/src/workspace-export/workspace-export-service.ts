@@ -147,7 +147,11 @@ export async function requestExportForEndedSubscription(
       where: { id: existing.id, status: 'FAILED' },
       data: { status: 'QUEUED', attempts: 0, error: null },
     });
-    await enqueueSafely(enqueue, { requestId: existing.id, tenantId: input.tenantId });
+    await enqueueSafely(
+      enqueue,
+      { requestId: existing.id, tenantId: input.tenantId },
+      { retry: 0 }
+    );
     return { kind: 'created', requestId: existing.id };
   }
   if (existing) return { kind: 'skipped', reason: 'already_requested' };
@@ -178,10 +182,11 @@ export async function requestExportForEndedSubscription(
 /** The row is durable; a failed enqueue is repaired by the sweep, so it never fails the caller. */
 async function enqueueSafely(
   enqueue: ExportEnqueue,
-  input: { requestId: string; tenantId: string }
+  input: { requestId: string; tenantId: string },
+  opts?: { retry?: number }
 ): Promise<void> {
   try {
-    await enqueue(input);
+    await (opts ? enqueue(input, opts) : enqueue(input));
   } catch {
     // swept within minutes
   }
@@ -453,14 +458,26 @@ async function deliverLink(
       bytes: info.bytes,
       sha256: info.sha256,
     });
+    // Once anyone has the link the retries stop: a recipient who keeps failing must not make the
+    // others get the same email again every five minutes for 14 days.
+    let sent = 0;
     for (const r of recipients) {
-      await deps.sendEmail({
-        recipientUserId: r.userId,
-        tenantId: request.tenantId,
-        subject: mail.subject,
-        body: mail.body,
-      });
+      try {
+        await deps.sendEmail({
+          recipientUserId: r.userId,
+          tenantId: request.tenantId,
+          subject: mail.subject,
+          body: mail.body,
+        });
+        sent += 1;
+      } catch (err) {
+        deps.log?.warn(
+          { requestId: request.id, recipientUserId: r.userId, err: String(err) },
+          'workspace export email not sent to one recipient'
+        );
+      }
     }
+    if (sent === 0) return false;
     await deps.prisma.workspaceExportRequest.update({
       where: { id: request.id },
       data: { emailedAt: now() },
@@ -590,6 +607,8 @@ async function retryUnsentEmails(deps: ExportJobDeps, now: Date): Promise<number
   const { prisma } = deps;
   const unsent = await prisma.workspaceExportRequest.findMany({
     where: { status: 'READY', emailedAt: null, expiresAt: { gt: now } },
+    // Least recently tried first, so rows that can never be delivered cannot starve the others.
+    orderBy: { updatedAt: 'asc' },
     take: 20,
   });
   let retried = 0;
@@ -606,7 +625,15 @@ async function retryUnsentEmails(deps: ExportJobDeps, now: Date): Promise<number
       sha256: row.archiveSha256,
       workspaceName: tenant?.name ?? 'your workspace',
     });
-    if (ok) retried += 1;
+    if (ok) {
+      retried += 1;
+    } else {
+      // Touch the row (updatedAt) so the next sweep tries other rows first.
+      await prisma.workspaceExportRequest.updateMany({
+        where: { id: row.id, status: 'READY', emailedAt: null },
+        data: { emailedAt: null },
+      });
+    }
   }
   return retried;
 }
