@@ -115,6 +115,17 @@ describe('runComplianceSnapshots', () => {
     expect(d.complianceSnapshot.upsert).not.toHaveBeenCalled();
   });
 
+  it('keeps going in batches within a tick while firms remain', async () => {
+    const full = Array.from({ length: COMPLIANCE_SNAPSHOT_BATCH }, (_, i) => `t${i}`);
+    const d = db(full);
+    (d.tenant.findMany as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(full.map((id) => ({ id })))
+      .mockResolvedValueOnce([{ id: 'last' }]);
+    const report = await runComplianceSnapshots(d);
+    expect(report.tenants).toBe(COMPLIANCE_SNAPSHOT_BATCH + 1);
+    expect(d.tenant.findMany).toHaveBeenCalledTimes(2);
+  });
+
   it('stores five framework rows per firm', async () => {
     const d = db(['t1', 't2']);
     const report = await runComplianceSnapshots(d);

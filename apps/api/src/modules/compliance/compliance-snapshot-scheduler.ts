@@ -14,6 +14,8 @@ import { DAY_MARKER_FRAMEWORK, snapshotTenant, type SnapshotDb } from './complia
 
 export const DEFAULT_COMPLIANCE_SNAPSHOT_INTERVAL_MS = 3_600_000;
 export const COMPLIANCE_SNAPSHOT_BATCH = 25;
+/** Most batches one tick runs (1000 firms), so a tick stays bounded. */
+export const COMPLIANCE_SNAPSHOT_MAX_BATCHES = 40;
 
 /** A firm that failed is put aside in this process for this long, so it cannot starve the others. */
 export const COMPLIANCE_SNAPSHOT_RETRY_MS = 6 * 3_600_000;
@@ -49,6 +51,26 @@ export interface ComplianceSnapshotReport {
   failed: number;
 }
 
+/** Store one firm's snapshot; false (and the firm put aside) when it could not be stored. */
+async function snapshotOne(
+  db: ComplianceSnapshotJobDb,
+  tenantId: string,
+  now: Date,
+  log: Pick<Console, 'warn'>
+): Promise<boolean> {
+  try {
+    const { stored } = await snapshotTenant(db, tenantId, now);
+    if (stored > 0) return true;
+    // Some evidence could not be read: try again later, not on every tick.
+  } catch (error) {
+    log.warn(
+      `[compliance-snapshot] tenant ${tenantId} failed: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+  deferred.set(tenantId, now.getTime() + COMPLIANCE_SNAPSHOT_RETRY_MS);
+  return false;
+}
+
 export async function runComplianceSnapshots(
   db: ComplianceSnapshotJobDb,
   now: Date = new Date(),
@@ -56,35 +78,29 @@ export async function runComplianceSnapshots(
 ): Promise<ComplianceSnapshotReport> {
   const day = utcDay(now);
   for (const [id, until] of deferred) if (until <= now.getTime()) deferred.delete(id);
-  const tenants = await db.tenant.findMany({
-    where: {
-      status: { in: ['ACTIVE', 'TRIAL'] },
-      // A day counts as done only when its last row (the marker) is stored.
-      complianceSnapshots: { none: { day, frameworkId: DAY_MARKER_FRAMEWORK } },
-      ...(deferred.size > 0 ? { id: { notIn: [...deferred.keys()] } } : {}),
-    },
-    select: { id: true },
-    orderBy: { id: 'asc' },
-    take: COMPLIANCE_SNAPSHOT_BATCH,
-  });
+  let total = 0;
   let failed = 0;
-  for (const t of tenants) {
-    try {
-      const { stored } = await snapshotTenant(db, t.id, now);
-      if (stored === 0) {
-        // Some evidence could not be read: try again later, not on every tick.
-        failed += 1;
-        deferred.set(t.id, now.getTime() + COMPLIANCE_SNAPSHOT_RETRY_MS);
-      }
-    } catch (error) {
-      failed += 1;
-      deferred.set(t.id, now.getTime() + COMPLIANCE_SNAPSHOT_RETRY_MS);
-      log.warn(
-        `[compliance-snapshot] tenant ${t.id} failed: ${error instanceof Error ? error.message : String(error)}`
-      );
+  // Several batches per tick, so a firm late in id order is still reached the same day. A failed
+  // firm is put aside, so the next batch moves past it.
+  for (let batch = 0; batch < COMPLIANCE_SNAPSHOT_MAX_BATCHES; batch++) {
+    const tenants = await db.tenant.findMany({
+      where: {
+        status: { in: ['ACTIVE', 'TRIAL'] },
+        // A day counts as done only when its last row (the marker) is stored.
+        complianceSnapshots: { none: { day, frameworkId: DAY_MARKER_FRAMEWORK } },
+        ...(deferred.size > 0 ? { id: { notIn: [...deferred.keys()] } } : {}),
+      },
+      select: { id: true },
+      orderBy: { id: 'asc' },
+      take: COMPLIANCE_SNAPSHOT_BATCH,
+    });
+    total += tenants.length;
+    for (const t of tenants) {
+      if (!(await snapshotOne(db, t.id, now, log))) failed += 1;
     }
+    if (tenants.length < COMPLIANCE_SNAPSHOT_BATCH) break;
   }
-  return { tenants: tenants.length, failed };
+  return { tenants: total, failed };
 }
 
 export async function createComplianceSnapshotDb(): Promise<ComplianceSnapshotJobDb> {
