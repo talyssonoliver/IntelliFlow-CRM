@@ -639,6 +639,16 @@ describe('a BYOK call is not the platform provider answer for the shared breaker
     expect(breaker.getState().state).toBe('CLOSED');
   });
 
+  it('a routing error (rejected key, no fallback) thrown before any model call leaves a HALF_OPEN breaker as it was', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const breaker = await openBreaker();
+    vi.setSystemTime(Date.now() + 61_000);
+    const routingError = new ByokKeyError('tenant-a', 'openai', 'INVALID', 'rejected');
+    await breaker.execute(() => Promise.reject(routingError)).catch(() => undefined);
+    // Not counted as a platform failure, and the platform never answered: not CLOSED either.
+    expect(breaker.getState()).toMatchObject({ state: 'HALF_OPEN', failureCount: 0 });
+  });
+
   it('its failures are never counted, whatever the error', async () => {
     const { CircuitBreaker } = await import('../../utils/circuit-breaker');
     const breaker = new CircuitBreaker(2, 60_000);
