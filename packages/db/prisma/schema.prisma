@@ -220,6 +220,7 @@ model Tenant {
   toolEnablements           TenantToolEnablement[]    // H6: per-tenant tool on/off
   aiConfigs                 TenantAIConfig[]           // M8/M9: per-tenant LLM tier overrides
   chainRuns                 ChainRun[]                 // AI Chains page usage stats
+  workspaceExportRequests   WorkspaceExportRequest[]   // whole-workspace data export (agreement clause 5)
   memoryPolicy              TenantMemoryPolicy?        // P2.7: per-tenant memory retention
   goalDefault               TenantGoalDefault?         // IFC-211: org-wide default daily goal
   termsAcceptances          TermsAcceptance[]          @relation("TenantTermsAcceptances") @ignore // IFC-309
@@ -304,6 +305,57 @@ model ChainRun {
   @@map("chain_runs")
 }
 
+
+// Whole-workspace data export (customer agreement clause 5: a standalone copy of a leaving
+// client's data within 14 days). One row per request: who, when, status, counts, link expiry.
+// The ZIP itself lives in a private Supabase Storage bucket; the signed link is never stored.
+enum WorkspaceExportStatus {
+  QUEUED
+  RUNNING
+  READY
+  FAILED
+  EXPIRED
+}
+
+enum WorkspaceExportTrigger {
+  ADMIN
+  SUBSCRIPTION_ENDED
+}
+
+model WorkspaceExportRequest {
+  id              String                 @id @default(cuid())
+  tenantId        String
+  /// The admin who asked; null when the system asked (subscription ended).
+  requestedById   String?
+  trigger         WorkspaceExportTrigger
+  /// Stripe subscription id behind a SUBSCRIPTION_ENDED request (one export per subscription).
+  subscriptionId  String?
+  status          WorkspaceExportStatus  @default(QUEUED)
+  /// Rows per exported file, plus counts of stored files and skipped files.
+  rowCounts       Json?
+  fileCount       Int?
+  archiveBytes    BigInt?
+  archiveSha256   String?                @db.Char(64)
+  storageBucket   String?
+  storagePath     String?
+  attempts        Int                    @default(0)
+  error           String?
+  requestedAt     DateTime               @default(now())
+  startedAt       DateTime?
+  completedAt     DateTime?
+  /// completedAt + 14 days: after it the link is dead and the archive is removed.
+  expiresAt       DateTime?
+  emailedAt       DateTime?
+  createdAt       DateTime               @default(now())
+  updatedAt       DateTime               @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, subscriptionId])
+  @@index([tenantId, requestedAt])
+  @@index([status, requestedAt])
+  @@map("workspace_export_requests")
+}
 
 // P2.7 — Per-tenant retention policy for conversation/memory artifacts.
 // Absent row = platform default. Pruning job (memory-retention.job.ts) joins

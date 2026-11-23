@@ -81,6 +81,7 @@ import { teamRouter } from './modules/team/team.router';
 import { calendarRouter } from './modules/calendar/calendar.router';
 import { calendarWebhooksRouter } from './modules/calendar/calendar-webhook.router';
 import { privacyRouter } from './modules/privacy/privacy.router';
+import { workspaceExportRouter } from './modules/workspace-export/workspace-export.router';
 import { helpArticleRouter } from './modules/help-article/help-article.router';
 import { customNodeTypeRouter } from './modules/custom-node-type/custom-node-type.router';
 import { customActionHandlerRouter } from './modules/custom-action-handler/custom-action-handler.router';
@@ -273,6 +274,9 @@ export const appRouter = createTRPCRouter({
 
   // Privacy & GDPR (Fix #17 — IFC-140)
   privacy: privacyRouter, // PG-203: public data requests, banner read, admin handling
+
+  // Whole-workspace data export (agreement clause 5): admin request, list, fresh signed link
+  workspaceExport: workspaceExportRouter,
 
   // Support Help Center (IFC-299)
   helpArticle: helpArticleRouter,

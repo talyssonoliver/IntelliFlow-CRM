@@ -13,6 +13,9 @@ export * from './common';
 export * from './storage/SupabaseStorageAdapter';
 export * from './storage/InMemoryStorageAdapter';
 
+// Whole-workspace data export (agreement clause 5)
+export * from './workspace-export';
+
 // Antivirus Adapters
 export * from './antivirus/ClamAVScanner';
 export * from './antivirus/NoOpAVScanner';

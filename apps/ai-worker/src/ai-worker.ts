@@ -186,6 +186,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private ingestionWorkersHandle?: import('./workers/ingestion-workers.js').IngestionWorkersHandle;
   // #230: notification-email queue consumer (folded from apps/workers/notifications-worker).
   private notificationEmailWorkerHandle?: import('./workers/notification-email-worker.js').NotificationEmailWorkerHandle;
+  private workspaceExportWorkerHandle?: import('./workers/workspace-export-worker.js').WorkspaceExportWorkerHandle;
   /** Passive dead-letter queue — no worker, just for inspection and replay. */
   private dlqQueue: Queue | null = null;
   /** QueueEvents instances for each AI queue (used for lifecycle listeners). */
@@ -360,6 +361,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     await this.bootContactEmbedWorker();
     await this.bootIngestionWorkers();
     await this.bootNotificationEmailWorker();
+    await this.bootWorkspaceExportWorker();
   }
 
   /**
@@ -687,6 +689,46 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },
         'Failed to boot notification email worker — ticket-assignment emails will remain queued'
+      );
+    }
+  }
+
+  /**
+   * Whole-workspace data export (agreement clause 5). Consumes `intelliflow-workspace-export`,
+   * writes one ZIP per tenant to the private `workspace-exports` bucket and emails a 14-day
+   * signed link through the notification-email queue. Needs Supabase Storage (service role);
+   * without it the worker does not boot and requests stay QUEUED (they are not lost: the
+   * sweep picks them up once storage is configured).
+   */
+  private async bootWorkspaceExportWorker(): Promise<void> {
+    try {
+      const supabaseUrl = process.env.SUPABASE_URL;
+      const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      if (!supabaseUrl || !serviceKey) {
+        this.logger.warn(
+          'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set — workspace export worker not started. ' +
+            'Export requests stay queued.'
+        );
+        return;
+      }
+      const { bootWorkspaceExportWorker } = await import('./workers/workspace-export-worker.js');
+      const { SupabaseExportStorage } = await import('@intelliflow/adapters');
+      const storage = new SupabaseExportStorage(supabaseUrl, serviceKey);
+      const emailBucket = process.env.EMAIL_ATTACHMENTS_BUCKET || 'email-attachments';
+      this.workspaceExportWorkerHandle = await bootWorkspaceExportWorker(
+        redisConnectionOptions(),
+        {
+          prisma: this.prisma as never,
+          archiveStorage: storage,
+          fileStorage: storage,
+          buckets: [emailBucket, 'case-documents'],
+        },
+        this.logger
+      );
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Failed to boot workspace export worker — export requests will remain queued'
       );
     }
   }
@@ -1117,6 +1159,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     if (this.notificationEmailWorkerHandle) {
       this.logger.info('NotificationEmailWorker stopped');
     }
+
+    await this.tryStop(this.workspaceExportWorkerHandle, 'WorkspaceExportWorker');
 
     // H8: Close DLQ queue and lifecycle event listeners
     await this.closeQueueResources();

@@ -561,12 +561,17 @@ async function syncSubscriptionFromWebhook(
     if (!subscriptionRepository) return;
 
     const obj = input.data.object;
+    // Loaded here, not at the top: the export module pulls in the adapters package.
+    const { createEndedSubscriptionExportHook } =
+      await import('../workspace-export/ended-subscription-export.js');
     await createSubscriptionSyncHandler({
       repo: subscriptionRepository,
       // Gated on the portal sync being configured, as the inline push was.
       enqueuePortalPush: adapters?.portalDeliverySync
         ? createOutboxPortalPushEnqueuer(ctx.prisma)
         : undefined,
+      // Agreement clause 5: a subscription that ends starts the customer's data export at once.
+      onSubscriptionEnded: createEndedSubscriptionExportHook(ctx.prisma, console),
       logger: {
         info: (o, m) => console.log(m ?? '', o),
         warn: (o, m) => console.warn(m ?? '', o),
@@ -583,6 +588,11 @@ async function syncSubscriptionFromWebhook(
       tenantSlug: obj.metadata?.tenantSlug,
     });
   } catch (err) {
+    if (err instanceof Error && err.name === 'WorkspaceExportTriggerError') {
+      // The leaving customer's data export could not be recorded: fail so the replay is retried.
+      console.error('[Billing Webhook] Workspace export not recorded:', err);
+      throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: err.message });
+    }
     if (err instanceof PortalPushEnqueueError) {
       // Nothing durable holds the portal push: fail the webhook so Stripe redelivers.
       console.error('[Billing Webhook] Portal push enqueue failed:', err);
