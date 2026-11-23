@@ -610,84 +610,54 @@ describe('success reads the status now, not the one the model was built with', (
   });
 });
 
-describe('a BYOK tenant bypasses the shared platform breaker in both directions', () => {
-  async function openBreaker() {
+describe('a BYOK call is not the platform provider answer for the shared breaker', () => {
+  async function openBreaker(threshold = 2) {
     const { CircuitBreaker } = await import('../../utils/circuit-breaker');
-    const breaker = new CircuitBreaker(2, 60_000);
-    for (let i = 0; i < 2; i++) {
+    const breaker = new CircuitBreaker(threshold, 60_000);
+    for (let i = 0; i < threshold; i++) {
       await breaker.execute(() => Promise.reject(httpError(500))).catch(() => undefined);
     }
     await expect(breaker.execute(async () => 'x')).rejects.toThrow(/OPEN/);
     return breaker;
   }
 
-  it('is not refused while the platform breaker is OPEN; a tenant without a key still is', async () => {
-    const { tenantContextStore } = await import('../../tracing/tenant-context');
-    const breaker = await openBreaker();
-    db.findFirst.mockImplementation(async ({ where }: { where: { tenantId: string } }) =>
-      where.tenantId === 'tenant-a' ? row() : null
-    );
-    await expect(
-      tenantContextStore.run({ tenantId: 'tenant-a' }, () => breaker.execute(async () => 'own key'))
-    ).resolves.toBe('own key');
-    await expect(
-      tenantContextStore.run({ tenantId: 'tenant-b' }, () => breaker.execute(async () => 'x'))
-    ).rejects.toThrow(/OPEN/);
-  });
-
-  it('its success does not close the platform breaker; only a platform call does', async () => {
+  it('its success does not close a HALF_OPEN platform breaker; a platform success does', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
-    const { tenantContextStore } = await import('../../tracing/tenant-context');
     const breaker = await openBreaker();
     vi.setSystemTime(Date.now() + 61_000);
-    db.findFirst.mockResolvedValue(row());
-    await tenantContextStore.run({ tenantId: 'tenant-a' }, () => breaker.execute(async () => 'ok'));
-    // The BYOK call did not touch the breaker: it is still OPEN, not CLOSED by that success.
-    expect(breaker.getState().state).toBe('OPEN');
-    // Only a platform call probes it (HALF_OPEN) and closes it when the platform answers.
-    await expect(breaker.execute(async () => 'platform ok')).resolves.toBe('platform ok');
+
+    const own = fakeModel(async () => ({ content: 'own key answer' }));
+    const wrapped = withByokFailureHandling(own.model, {
+      credential: credential(),
+      fallback: null,
+    });
+    await breaker.execute(() => wrapped.invoke('hi') as Promise<unknown>);
+    // Entered HALF_OPEN for the probe, but the BYOK success did not close it.
+    expect(breaker.getState().state).toBe('HALF_OPEN');
+
+    await breaker.execute(async () => 'platform ok');
     expect(breaker.getState().state).toBe('CLOSED');
   });
 
-  it('an INVALID key is not bypassed (that call goes to the platform or fails)', async () => {
-    const { tenantContextStore } = await import('../../tracing/tenant-context');
-    const breaker = await openBreaker();
-    db.findFirst.mockResolvedValue(row({ status: 'INVALID' }));
-    await expect(
-      tenantContextStore.run({ tenantId: 'tenant-a' }, () => breaker.execute(async () => 'x'))
-    ).rejects.toThrow(/OPEN/);
-  });
-});
-
-describe('the platform fallback of a BYOK call goes through the platform breaker', () => {
-  it('is refused while the platform breaker is OPEN and not called; a platform failure is counted', async () => {
+  it('its failures are never counted, whatever the error', async () => {
     const { CircuitBreaker } = await import('../../utils/circuit-breaker');
-    const { tenantContextStore } = await import('../../tracing/tenant-context');
-    db.findFirst.mockResolvedValue(row({ allowFallback: true }));
     const breaker = new CircuitBreaker(2, 60_000);
-    for (let i = 0; i < 2; i++) {
-      await breaker.execute(() => Promise.reject(httpError(500))).catch(() => undefined);
-    }
-    const platform = fakeModel(async () => ({ content: 'platform answer' }));
     const own = fakeModel(async () => {
-      throw httpError(429);
+      throw httpError(500);
     });
     const wrapped = withByokFailureHandling(own.model, {
-      credential: credential({ allowFallback: true }),
-      fallback: async () => platform.model,
-      guardFallback: (call) => breaker.execute(call),
+      credential: credential(),
+      fallback: null,
     });
-
-    await expect(
-      tenantContextStore.run({ tenantId: 'tenant-a' }, () => wrapped.invoke('hi'))
-    ).rejects.toThrow(/OPEN/);
-    expect(platform.invoke).not.toHaveBeenCalled();
+    for (let i = 0; i < 5; i++) {
+      await breaker.execute(() => wrapped.invoke('hi') as Promise<unknown>).catch(() => undefined);
+    }
+    expect(breaker.getState().failureCount).toBe(0);
+    await expect(breaker.execute(async () => 'still closed')).resolves.toBe('still closed');
   });
 
-  it('with the breaker CLOSED the fallback answers, and its failures are counted', async () => {
+  it('when the key fails and the call falls back to the platform, the platform answer is counted', async () => {
     const { CircuitBreaker } = await import('../../utils/circuit-breaker');
-    const { tenantContextStore } = await import('../../tracing/tenant-context');
-    db.findFirst.mockResolvedValue(row({ allowFallback: true }));
     const breaker = new CircuitBreaker(2, 60_000);
     const own = fakeModel(async () => {
       throw httpError(429);
@@ -698,14 +668,32 @@ describe('the platform fallback of a BYOK call goes through the platform breaker
     const wrapped = withByokFailureHandling(own.model, {
       credential: credential({ allowFallback: true }),
       fallback: async () => failingPlatform.model,
-      guardFallback: (call) => breaker.execute(call),
     });
     for (let i = 0; i < 2; i++) {
-      await tenantContextStore
-        .run({ tenantId: 'tenant-a' }, () => wrapped.invoke('hi'))
-        .catch(() => undefined);
+      await breaker.execute(() => wrapped.invoke('hi') as Promise<unknown>).catch(() => undefined);
     }
     expect(breaker.getState().failureCount).toBe(2);
     expect(breaker.getState().state).toBe('OPEN');
+    // ...and an OPEN platform breaker refuses the call before anything is sent to the platform.
+    await expect(breaker.execute(() => wrapped.invoke('hi') as Promise<unknown>)).rejects.toThrow(
+      /OPEN/
+    );
+    expect(failingPlatform.invoke).toHaveBeenCalledTimes(2);
+  });
+
+  it('a platform fallback that succeeds closes a HALF_OPEN breaker (it is the platform answering)', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const breaker = await openBreaker();
+    vi.setSystemTime(Date.now() + 61_000);
+    const own = fakeModel(async () => {
+      throw httpError(429);
+    });
+    const platform = fakeModel(async () => ({ content: 'platform answer' }));
+    const wrapped = withByokFailureHandling(own.model, {
+      credential: credential({ allowFallback: true }),
+      fallback: async () => platform.model,
+    });
+    await breaker.execute(() => wrapped.invoke('hi') as Promise<unknown>);
+    expect(breaker.getState().state).toBe('CLOSED');
   });
 });

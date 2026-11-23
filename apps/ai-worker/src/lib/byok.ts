@@ -27,7 +27,6 @@
  * within the cache TTL, and `invalidateByok` clears both at once for this process).
  */
 
-import { AsyncLocalStorage } from 'node:async_hooks';
 import { createHash } from 'node:crypto';
 import { prisma } from '@intelliflow/db';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
@@ -39,7 +38,6 @@ import {
 } from '@intelliflow/validators';
 import { createLogger } from '../utils/logger.js';
 import { CircuitBreaker } from '../utils/circuit-breaker.js';
-import { tenantContextStore } from '../tracing/tenant-context.js';
 
 const logger = createLogger('byok');
 
@@ -104,8 +102,9 @@ export function isByokFailure(err: unknown): boolean {
 }
 
 // Shared circuit breakers guard the PLATFORM provider. A BYOK failure is never counted (any
-// caller, present or future), and a call that runs on a tenant's own key bypasses the breaker
-// in both directions (see bypassesPlatformBreaker, registered below the routing code).
+// caller, present or future); a BYOK success is not counted either (the wrapper below marks the
+// call, see CircuitBreaker.markCallNotPlatform), and a BYOK call that falls back to the
+// platform is counted as the platform call it then is.
 if (typeof CircuitBreaker.ignoreFailuresMatching === 'function') {
   CircuitBreaker.ignoreFailuresMatching(isByokFailure);
 }
@@ -354,27 +353,6 @@ export async function routeForTenant(
   return { kind: 'byok', credential };
 }
 
-/** Set while a BYOK call runs on the platform fallback model (see withByokFailureHandling). */
-const platformFallbackScope = new AsyncLocalStorage<boolean>();
-
-/**
- * True when the current job's tenant would run on its own key: its call is not the platform
- * provider's, so a shared platform breaker must neither refuse it while OPEN nor be closed by
- * its success. An INVALID key is not bypassed (that call goes to the platform or fails).
- */
-async function bypassesPlatformBreaker(): Promise<boolean> {
-  // The platform fallback of a BYOK call is a platform call: the breaker applies to it.
-  if (platformFallbackScope.getStore() === true) return false;
-  const tenantId = tenantContextStore.getStore()?.tenantId;
-  if (!isBillableTenant(tenantId)) return false;
-  const credential = await resolveByokCredential(tenantId);
-  return credential !== null && credential.status !== 'INVALID';
-}
-
-if (typeof CircuitBreaker.bypassWhen === 'function') {
-  CircuitBreaker.bypassWhen(bypassesPlatformBreaker);
-}
-
 // ---------------------------------------------------------------------------
 // Built-model cache
 // ---------------------------------------------------------------------------
@@ -537,6 +515,13 @@ function recordByokSuccess(credential: ByokCredential): void {
 // Failure handling around the tenant's model
 // ---------------------------------------------------------------------------
 
+/** Tell the surrounding shared breaker (if any) whether this call is the platform's answer. */
+function markNotPlatform(notPlatform: boolean): void {
+  if (typeof CircuitBreaker.markCallNotPlatform === 'function') {
+    CircuitBreaker.markCallNotPlatform(notPlatform);
+  }
+}
+
 interface Invokable {
   invoke: (input: unknown, options?: unknown) => Promise<unknown>;
 }
@@ -545,12 +530,6 @@ export interface ByokFailureOptions {
   credential: ByokCredential;
   /** Builds the platform model; present only when the tenant allowed fallback. */
   fallback: (() => Promise<BaseChatModel> | BaseChatModel) | null;
-  /**
-   * Runs the platform fallback call. The caller passes the platform's circuit breaker here, so
-   * a fallback is refused while that breaker is OPEN and its failures are counted (the BYOK
-   * call itself bypasses the breaker; the platform fallback must not).
-   */
-  guardFallback?: (call: () => Promise<unknown>) => Promise<unknown>;
 }
 
 /**
@@ -564,13 +543,15 @@ export function withByokFailureHandling(
   model: BaseChatModel,
   options: ByokFailureOptions
 ): BaseChatModel {
-  const { credential, fallback, guardFallback } = options;
+  const { credential, fallback } = options;
 
   const run = async (
     own: () => Promise<unknown>,
     onFallback: (fallbackModel: BaseChatModel) => Promise<unknown>
   ): Promise<unknown> => {
     try {
+      // Not the platform provider's answer: a shared breaker must not count it either way.
+      markNotPlatform(true);
       const result = await own();
       recordByokSuccess(credential);
       return result;
@@ -593,12 +574,9 @@ export function withByokFailureHandling(
           byokFailureMessage(credential.provider, failure)
         );
       }
-      // The whole platform call, including the breaker check that guards it, runs inside the
-      // scope: the breaker must not read the tenant's own key as a reason to bypass it.
-      return platformFallbackScope.run(true, async () => {
-        const runPlatform = async () => onFallback(await fallback());
-        return guardFallback ? guardFallback(runPlatform) : runPlatform();
-      });
+      // The platform's answer is the one that counts for the shared breaker from here on.
+      markNotPlatform(false);
+      return onFallback(await fallback());
     }
   };
 
