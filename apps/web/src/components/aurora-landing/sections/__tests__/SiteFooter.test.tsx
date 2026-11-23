@@ -41,6 +41,7 @@ describe('SiteFooter', () => {
       '/terms',
       '/cookies',
       '/dpa',
+      '/data-and-ai',
       '/aup',
     ]) {
       expect(hrefs).toContain(href);

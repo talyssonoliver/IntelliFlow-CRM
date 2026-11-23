@@ -187,10 +187,14 @@ export default function DpaPage() {
                   also review our{' '}
                   <Link href="/privacy" className="font-medium text-[#2a78f6] hover:underline">
                     Privacy Policy
-                  </Link>{' '}
-                  and{' '}
+                  </Link>
+                  ,{' '}
                   <Link href="/security" className="font-medium text-[#2a78f6] hover:underline">
                     Security Overview
+                  </Link>
+                  , and{' '}
+                  <Link href="/data-and-ai" className="font-medium text-[#2a78f6] hover:underline">
+                    Data and AI
                   </Link>{' '}
                   for additional data governance information.
                 </p>

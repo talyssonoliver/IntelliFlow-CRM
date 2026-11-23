@@ -1,7 +1,7 @@
 ---
 title: Data Processing Addendum
-version: v2026.10
-effectiveDate: 2026-10-07
+version: v2026.11
+effectiveDate: 2026-11-22
 contactEmail: hello@leangency.com
 summary:
   - Leangency acts as a data processor under UK GDPR Article 28 on behalf of the
@@ -64,7 +64,7 @@ set out in "Data Return and Deletion" below.
 The Processor processes personal data solely to provide Aurora's contracted
 functionality: capturing and qualifying leads, managing contacts, accounts,
 opportunities, cases and tickets, scheduling appointments, sending transactional
-email and SMS notifications, generating AI-assisted lead scores and predictions,
+email notifications, generating AI-assisted lead scores and predictions,
 maintaining an audit trail of account activity, and billing the Controller's
 subscription.
 
@@ -169,7 +169,7 @@ fully liable to the Controller for the performance of that sub-processor's
 obligations, in accordance with UK GDPR Article 28(4). See the ICO's guidance
 cited in "Introduction and Parties" above for the equivalent requirement.
 
-As checked on 12 October 2026, the sub-processors used to provide Aurora in
+As checked on 22 November 2026, the sub-processors used to provide Aurora in
 production are the following.
 
 Vercel Inc. hosts the Aurora web application.
@@ -185,19 +185,25 @@ application.
 
 Resend, Inc. delivers transactional email.
 
-Twilio Inc. delivers SMS notifications.
-
 Functional Software, Inc., trading as Sentry, provides error tracking and
 performance monitoring.
 
-Google LLC generates vector embeddings of CRM text content, used for AI-assisted
-scoring, qualification, and semantic search, through the Gemini Developer API.
+Google LLC generates vector embeddings of contact details (first and last name,
+email address and company), used for AI-assisted scoring, qualification and
+semantic search, through the Gemini API on a paid, billing-enabled project. For
+paid use Google's terms say it does not use prompts or responses to improve its
+products.
 
-OpenRouter, Inc. receives the prompts for AI-assisted lead scoring,
-qualification, email drafting, and reasoning, and routes each request to the
-underlying large-language-model provider for the model configured for that
-request. That onward routing is OpenRouter's own sub-processing relationship,
-not a direct relationship between Leangency and the underlying provider.
+Anthropic, PBC generates AI text (reply drafts, lead scores and summaries)
+through the Anthropic API. It is the only model provider for generated text.
+Reply drafts send up to ten emails from the thread, and lead scoring sends the
+lead's domain, company, job title, source and activity history. Anthropic's
+Commercial Terms bar it from training models on customer content, and it deletes
+API inputs and outputs from its backend within 30 days, except content it flags
+for Usage Policy enforcement, which it can keep for up to 2 years.
+
+OpenRouter, Inc. has been removed. It is no longer a sub-processor and receives
+no Aurora data.
 
 Raintank Inc., trading as Grafana Labs, provides the Grafana Cloud monitoring
 service, which receives logs, traces, and metrics from Aurora's production
@@ -208,10 +214,16 @@ Zoho Corporation provides the mailboxes that receive email sent to Leangency's
 own addresses, including hello@leangency.com, and so holds any personal data
 sent to those addresses. Added on 3 November 2026.
 
-Twilio SendGrid Inc., OpenAI, L.L.C., Anthropic, PBC, and Amazon Web Services,
-Inc. (S3 storage) are supported by Aurora's codebase as configurable providers
-but are not enabled in production. This DPA will be updated, and the Controller
-notified as described above, before any of them is switched on.
+Twilio Inc. is not used: the multi-factor sign-in step in Aurora's code that
+would use it is a stub and sends nothing. Twilio SendGrid Inc., OpenAI, L.L.C.,
+and Amazon Web Services, Inc. (S3 storage) are supported by Aurora's codebase as
+configurable providers but are not enabled in production. This DPA will be
+updated, and the Controller notified as described above, before any of them is
+switched on.
+
+A plain-English summary of where data is held, what the AI providers receive and
+what Aurora reads from Gmail and Google Calendar is on the Data and AI page,
+https://intelli-flow-crm-web.vercel.app/data-and-ai.
 
 Stripe, Inc. is not a sub-processor under this DPA. It receives only the
 Controller's own billing details (the billing contact's name and email, tax ID,
@@ -301,7 +313,8 @@ https://ico.org.uk/about-the-ico/media-centre/news-and-blogs/2026/01/updated-gui
 
 For each sub-processor listed in "Sub-processors" above, Leangency relies on the
 transfer safeguard named in that sub-processor's own published data-processing
-terms, as read on 12 October 2026 unless a later date is given below.
+terms, as read on 12 October 2026 unless a later date is given below. The
+Anthropic and Google entries were read on 22 November 2026.
 
 Vercel Inc.: Data Processing Addendum, https://vercel.com/legal/dpa, which
 incorporates the UK International Data Transfer Agreement for customers on
@@ -319,11 +332,6 @@ Resend, Inc.: Data Processing Addendum, https://resend.com/legal/dpa, using the
 EU Standard Contractual Clauses as amended by the UK Addendum, binding on
 entering the Resend agreement.
 
-Twilio Inc.: Data Protection Addendum,
-https://www.twilio.com/en-us/legal/data-protection-addendum, using the UK
-International Data Transfer Agreement (version B1.0), forming part of the Twilio
-agreement.
-
 Functional Software, Inc., trading as Sentry: Data Processing Addendum,
 https://sentry.io/legal/dpa/, relying on Sentry's certification to the UK
 Extension to the EU-U.S. Data Privacy Framework, with the UK International Data
@@ -337,13 +345,20 @@ of Service.
 Google LLC: Data Processing Addendum for Products Where Google is a Data
 Processor, https://business.safety.google/processorterms/, relying on Google
 LLC's certification to the UK Extension to the EU-U.S. Data Privacy Framework.
-Google's Gemini API terms apply its paid-service data-use terms to accounts in
-the United Kingdom, so prompts and responses are not used to improve Google's
-products.
+Google's Gemini API Additional Terms, https://ai.google.dev/gemini-api/terms
+(effective 23 March 2026, read on 22 November 2026), say that Google does not
+use prompts or responses from Paid Services to improve its products. Aurora uses
+a paid, billing-enabled project.
 
-OpenRouter, Inc.: OpenRouter offers a Data Processing Addendum, naming the EU
-Standard Contractual Clauses and the UK Addendum, as part of its Enterprise
-Access Agreement, https://openrouter.ai/terms-of-service-enterprise.
+Anthropic, PBC: Commercial Terms,
+https://www.anthropic.com/legal/commercial-terms (effective 17 June 2025, read
+on 22 November 2026), which say Anthropic may not train models on customer
+content. Anthropic's privacy centre, at
+https://privacy.claude.com/en/articles/7996866-how-long-do-you-store-my-organization-s-data
+(updated 1 July 2026, read on 22 November 2026), says it deletes API inputs and
+outputs within 30 days of receipt or generation. The transfer safeguard in
+Anthropic's data processing terms will be confirmed before this DPA is signed
+with any customer.
 
 Raintank Inc., trading as Grafana Labs: Data Processing Agreement,
 https://grafana.com/legal/data-processing-agreement/, version dated 2 April 2026
@@ -360,6 +375,6 @@ from the addendum itself before this DPA is signed with any customer.
 
 Where a sub-processor's data-processing terms take effect only after a separate
 signature or opt-in, or apply only on a particular plan, Leangency will complete
-that step before this DPA is signed with any customer. If Twilio SendGrid,
-OpenAI, Anthropic, or Amazon Web Services is enabled later, its transfer
+that step before this DPA is signed with any customer. If Twilio, Twilio
+SendGrid, OpenAI, or Amazon Web Services is enabled later, its transfer
 safeguard will be checked and added here first.
