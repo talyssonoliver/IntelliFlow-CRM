@@ -93,6 +93,7 @@ import {
   type PredictionJobResult,
   type PredictionType,
 } from './prediction.job';
+import { AiActionsExhaustedError } from '../lib/ai-actions-allowance';
 
 // Test UUID constants
 const TEST_UUIDS = {
@@ -788,6 +789,14 @@ describe('prediction job failures that cannot heal on retry', () => {
 
     expect(mapped).toBeInstanceOf(UnrecoverableError);
     expect((mapped as Error).message).toContain('Monthly AI budget reached');
+    expect((mapped as { expected?: boolean }).expected).toBe(true);
+  });
+
+  it('maps an exhausted plan allowance of AI actions to an unrecoverable, expected failure', () => {
+    const mapped = toPredictionJobFailure(new AiActionsExhaustedError(1000, 1000));
+
+    expect(mapped).toBeInstanceOf(UnrecoverableError);
+    expect((mapped as Error).message).toContain('Monthly AI actions limit reached');
     expect((mapped as { expected?: boolean }).expected).toBe(true);
   });
 

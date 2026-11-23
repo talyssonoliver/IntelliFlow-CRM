@@ -7216,7 +7216,7 @@ model PortalPmDelivery {
 /// Per-tenant override of a plan quota (QuotaRegistry key). `limit` null = unlimited.
 model TenantQuotaOverride {
   id        String   @id @default(cuid())
-  key       String   // QuotaKey: contacts | seats | emailsPerMonth | aiSpendCentsPerMonth | workflowsActive
+  key       String   // QuotaKey: contacts | seats | emailsPerMonth | aiSpendCentsPerMonth | aiActionsPerMonth | workflowsActive
   limit     Int?     // null = unlimited
   reason    String?
   createdAt DateTime @default(now())
