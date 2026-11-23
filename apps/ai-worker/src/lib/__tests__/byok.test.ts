@@ -658,3 +658,54 @@ describe('a BYOK tenant bypasses the shared platform breaker in both directions'
     ).rejects.toThrow(/OPEN/);
   });
 });
+
+describe('the platform fallback of a BYOK call goes through the platform breaker', () => {
+  it('is refused while the platform breaker is OPEN and not called; a platform failure is counted', async () => {
+    const { CircuitBreaker } = await import('../../utils/circuit-breaker');
+    const { tenantContextStore } = await import('../../tracing/tenant-context');
+    db.findFirst.mockResolvedValue(row({ allowFallback: true }));
+    const breaker = new CircuitBreaker(2, 60_000);
+    for (let i = 0; i < 2; i++) {
+      await breaker.execute(() => Promise.reject(httpError(500))).catch(() => undefined);
+    }
+    const platform = fakeModel(async () => ({ content: 'platform answer' }));
+    const own = fakeModel(async () => {
+      throw httpError(429);
+    });
+    const wrapped = withByokFailureHandling(own.model, {
+      credential: credential({ allowFallback: true }),
+      fallback: async () => platform.model,
+      guardFallback: (call) => breaker.execute(call),
+    });
+
+    await expect(
+      tenantContextStore.run({ tenantId: 'tenant-a' }, () => wrapped.invoke('hi'))
+    ).rejects.toThrow(/OPEN/);
+    expect(platform.invoke).not.toHaveBeenCalled();
+  });
+
+  it('with the breaker CLOSED the fallback answers, and its failures are counted', async () => {
+    const { CircuitBreaker } = await import('../../utils/circuit-breaker');
+    const { tenantContextStore } = await import('../../tracing/tenant-context');
+    db.findFirst.mockResolvedValue(row({ allowFallback: true }));
+    const breaker = new CircuitBreaker(2, 60_000);
+    const own = fakeModel(async () => {
+      throw httpError(429);
+    });
+    const failingPlatform = fakeModel(async () => {
+      throw httpError(500);
+    });
+    const wrapped = withByokFailureHandling(own.model, {
+      credential: credential({ allowFallback: true }),
+      fallback: async () => failingPlatform.model,
+      guardFallback: (call) => breaker.execute(call),
+    });
+    for (let i = 0; i < 2; i++) {
+      await tenantContextStore
+        .run({ tenantId: 'tenant-a' }, () => wrapped.invoke('hi'))
+        .catch(() => undefined);
+    }
+    expect(breaker.getState().failureCount).toBe(2);
+    expect(breaker.getState().state).toBe('OPEN');
+  });
+});

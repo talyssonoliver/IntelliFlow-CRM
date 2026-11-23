@@ -835,6 +835,8 @@ export async function createLLMForTenant(
     model = withByokFailureHandling(own, {
       credential,
       fallback: credential.allowFallback ? buildPlatformModel : null,
+      // The own-key call bypasses the shared breaker; its platform fallback goes through it.
+      guardFallback: (call) => getLLMBreaker(purpose, effectiveTier).execute(call),
     });
   } else {
     model = buildPlatformModel();
