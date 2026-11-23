@@ -20,14 +20,14 @@ partially supported on the `/deals` pipeline view.
 
 ## 2. Scope
 
-This statement covers the IntelliFlow CRM web application across all 186
+This statement covers the IntelliFlow CRM web application across all 187
 user-facing routes. Dynamic segment routes (e.g., `/contacts/[id]`,
 `/settings/help-center/articles/[id]/edit`) inherit conformance status from
 their parent static route and are not listed separately.
 
-- **Public & marketing (18):** `/`, `/about`, `/aup`, `/blog`, `/careers`,
-  `/contact`, `/cookies`, `/dpa`, `/features`, `/partners`, `/press`,
-  `/pricing`, `/privacy`, `/security`, `/signup`, `/status`, `/terms`,
+- **Public & marketing (19):** `/`, `/about`, `/aup`, `/blog`, `/careers`,
+  `/contact`, `/cookies`, `/data-and-ai`, `/dpa`, `/features`, `/partners`,
+  `/press`, `/pricing`, `/privacy`, `/security`, `/signup`, `/status`, `/terms`,
   `/upgrade`
 - **Auth flows (9):** `/auth/callback`, `/forgot-password`, `/login`, `/logout`,
   `/mfa/verify`, `/reset-password/callback`, `/signup/success`, `/sso`,
@@ -284,3 +284,4 @@ Users who encounter accessibility barriers can report issues via:
 | 1.12.0  | 2026-10-21 | Engineering (PG-207)          | Added `/email/oauth/callback` (the mailbox OAuth return page, `noindex`) — scope now 184 routes; `/email/email-settings` and `/email/signatures` stubs replaced at the same URLs. Sectioned cards with `aria-labelledby`, secret fields with show/hide, the Save button stays enabled and focuses the first invalid field, `role="alert"` send refusals that take focus, a signature preview that is `inert`, and a callback page heading that states the outcome; axe in component tests; a11y-expert WCAG 2.1 AA review: 3 high and 6 medium findings fixed (`abdc38383`), no new conformance exceptions                                          |
 | 1.13.0  | 2026-10-24 | Engineering (PG-203)          | Added `/settings/privacy-requests` (the ADMIN data subject request queue) — scope now 185 routes; listed the three public `/dsar/[handle]` request, verify and export pages, which have no static parent to inherit from. Axe checks run in their component tests; the a11y-expert WCAG 2.1 AA review is part of the PG-203 close                                                                                                                                                                                                                                                                                                                   |
 | 1.14.0  | 2026-10-29 | Engineering (PG-203)          | Listed the public booking page `/book/[handle]/[slug]` (PG-203 PR 1, #1003), which has no static parent and was missed when it shipped; route count unchanged (185). Lighthouse on 2026-10-29 with real content: `/book` accessibility 96 (after a layout-shift fix), `/calendar/event-types` 93, `/settings/privacy-requests` 96, `/dsar` pages 96-100 (artifacts/lighthouse/PG-203/local-run-note.md)                                                                                                                                                                                                                                             |
+| 1.15.0  | 2026-11-22 | Engineering (MVP-012)         | Added the public `/data-and-ai` page (static, one `h1`, sections with `h2` headings, a captioned sub-processor table with column headers) — scope now 187 routes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
