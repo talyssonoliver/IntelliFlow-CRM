@@ -62,12 +62,25 @@ function requireQuota(ctx: QuotaContext, tenantId: string, key: QuotaKey) {
   });
 }
 
+/** The reason shown to the user when a plan limit is reached. */
+function quotaExceededMessage(key: QuotaKey, used: number, limit: number): string {
+  if (key === 'aiActionsPerMonth') {
+    // The AI allowance is a count of AI actions per month, as on the public pricing page.
+    return (
+      `Your plan's monthly AI actions limit has been reached (${used.toLocaleString('en-GB')} of ` +
+      `${limit.toLocaleString('en-GB')} AI actions this month). No AI action was run; it resets at the ` +
+      'start of next month (UTC), or upgrade your plan for a higher allowance.'
+    );
+  }
+  return `Your plan's ${key} limit has been reached (${used} of ${limit}).`;
+}
+
 function toTRPCError(error: unknown, tenantId: string, key: QuotaKey): TRPCError {
   if (error instanceof TRPCError) return error;
   if (isQuotaExceeded(error)) {
     return new TRPCError({
       code: 'PRECONDITION_FAILED',
-      message: `Your plan's ${key} limit has been reached (${error.used} of ${error.limit}).`,
+      message: quotaExceededMessage(key, error.used, error.limit),
       cause: error,
     });
   }

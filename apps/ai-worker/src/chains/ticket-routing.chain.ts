@@ -38,6 +38,7 @@ import {
   type TicketRoutingResult,
   type AgentCandidate,
 } from '@intelliflow/validators';
+import { isAiActionsExhausted } from '../lib/ai-actions-allowance';
 
 const logger = pino({
   name: 'ticket-routing-chain',
@@ -246,6 +247,8 @@ export class TicketRoutingChain {
         isFallback: false,
       };
     } catch (error) {
+      // The plan's AI actions are used up: fail with that reason, never answer with a heuristic.
+      if (isAiActionsExhausted(error)) throw error;
       logger.error({ error, ticketId: input.ticketId }, 'LLM routing failed — using fallback');
       return this.generateFallbackResult(input, Date.now() - startTime);
     }

@@ -8,6 +8,9 @@ const h = vi.hoisted(() => ({
   capturedListeners: [] as Array<(usage: unknown) => void>,
   record: vi.fn(),
   recordPurpose: vi.fn(),
+  recordAction: vi.fn(),
+  setAllowanceReader: vi.fn(),
+  setActionRecorder: vi.fn(),
   setReader: vi.fn(),
   publisherStart: vi.fn(),
   publisherClient: [] as unknown[],
@@ -147,6 +150,12 @@ vi.mock('@intelliflow/application', async (importOriginal) => ({
 vi.mock('../utils/tenant-ai-spend', () => ({
   createTenantAiSpendRecorder: () => h.record,
   createPurposeSpendRecorder: () => h.recordPurpose,
+  createTenantAiActionsRecorder: () => h.recordAction,
+}));
+
+vi.mock('../lib/ai-actions-allowance', () => ({
+  setAiActionsAllowanceReader: (...args: unknown[]) => h.setAllowanceReader(...args),
+  setAiActionRecorder: (...args: unknown[]) => h.setActionRecorder(...args),
 }));
 
 vi.mock('../lib/purpose-ceiling', () => ({
@@ -224,6 +233,9 @@ describe('AIWorker.wireTenantAiSpend listener', () => {
     h.capturedListeners.length = 0;
     h.record.mockReset();
     h.recordPurpose.mockReset().mockResolvedValue(undefined);
+    h.recordAction.mockReset().mockResolvedValue(undefined);
+    h.setAllowanceReader.mockReset();
+    h.setActionRecorder.mockReset();
     h.setReader.mockReset();
   });
 
@@ -273,6 +285,35 @@ describe('AIWorker.wireTenantAiSpend listener', () => {
 
     expect(h.recordPurpose).toHaveBeenCalledWith({ cost: 0.02, metadata: { purpose: 'email' } });
     expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  // Owner ruling 2026-11-23: the plan allowance counts AI actions, one per chat call. The
+  // tracing wrapper reports each call through the registered recorder (not the cost listener,
+  // so it works with cost tracking off).
+  it('registers the AI actions recorder, which writes one action per call', async () => {
+    h.record.mockResolvedValue(undefined);
+    const { logger } = await wire();
+
+    expect(h.setActionRecorder).toHaveBeenCalledTimes(1);
+    const register = h.setActionRecorder.mock.calls[0][0] as () => Promise<void>;
+    await register();
+    expect(h.recordAction).toHaveBeenCalledTimes(1);
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('does not hand cost-tracker usage events to the AI actions recorder', async () => {
+    h.record.mockResolvedValue(undefined);
+    const { listener } = await wire();
+    listener({ cost: 0, metadata: { purpose: 'scoring' } });
+    await Promise.resolve();
+    expect(h.recordAction).not.toHaveBeenCalled();
+  });
+
+  it('registers the quota service as the AI actions allowance reader', async () => {
+    h.record.mockResolvedValue(undefined);
+    await wire();
+    expect(h.setAllowanceReader).toHaveBeenCalledTimes(1);
+    expect(h.setAllowanceReader.mock.calls[0][0]).toBeDefined();
   });
 
   it('logs a warning when the per-purpose recorder rejects', async () => {

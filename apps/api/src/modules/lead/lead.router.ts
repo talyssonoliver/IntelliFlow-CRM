@@ -1034,6 +1034,9 @@ export const leadRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const leadService = getLeadService(ctx);
 
+      // Plan allowance counted in AI actions (aiActionsPerMonth): refuse before any AI work is queued.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
+
       // The lead's scoring state before the run: did it hold a real score already?
       const before = await readScoringState(typedCtx.prismaWithTenant, input.leadId);
       const result = await leadService.scoreLead(input.leadId, typedCtx.tenant.userId);

@@ -16,6 +16,27 @@ const conversion = {
   convertedAt: new Date(),
 };
 
+describe('lead scoreWithAI AI actions allowance guard', () => {
+  it('refuses with the plan limit before any scoring is queued', async () => {
+    const scoreLead = vi.fn();
+    const ctx = createTestContext({
+      services: {
+        ...mockServices,
+        lead: { scoreLead } as never,
+        quota: overQuota('aiActionsPerMonth', 1000, 1000) as never,
+      },
+    });
+
+    await expect(
+      leadRouter.createCaller(ctx).scoreWithAI({ leadId: TEST_UUIDS.lead1 })
+    ).rejects.toMatchObject({
+      ...quotaRejection('aiActionsPerMonth', 1000, 1000),
+      message: expect.stringContaining('1,000 of 1,000 AI actions'),
+    });
+    expect(scoreLead).not.toHaveBeenCalled();
+  });
+});
+
 describe('lead conversion quota guards', () => {
   describe('convert', () => {
     it('rejects when the tenant is at its contact limit', async () => {

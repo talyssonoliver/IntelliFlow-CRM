@@ -16,8 +16,10 @@
 import type { PurposeSpendPort, QuotaService } from '@intelliflow/application';
 import { LLM_PURPOSES, purposeSpendPeriod, type LLMPurpose } from '@intelliflow/domain';
 import { notePurposeSpend, notePurposeSpendTotal } from '../lib/purpose-ceiling.js';
+import { AI_ACTIONS_KEY, isAllowanceTenant, noteAiActions } from '../lib/ai-actions-allowance.js';
 import type { UsageMetrics } from './cost-tracker';
 
+/** Internal cost metric only (owner ruling 2026-11-23); the customer allowance is AI_ACTIONS_KEY. */
 export const AI_SPEND_KEY = 'aiSpendCentsPerMonth' as const;
 
 interface SpendLogger {
@@ -61,6 +63,50 @@ export function createTenantAiSpendRecorder(options: TenantAiSpendRecorderOption
       logger.warn(
         { tenantId, key: AI_SPEND_KEY, cents: whole, error: String(error) },
         'USAGE_NOT_RECORDED: failed to record AI spend; will retry with the next call'
+      );
+    });
+  };
+}
+
+// ---------------------------------------------------------------------------
+// AI actions: the customer-facing plan allowance (aiActionsPerMonth)
+// ---------------------------------------------------------------------------
+
+export interface TenantAiActionsRecorderOptions {
+  quota: Pick<QuotaService, 'increment'>;
+  /** Tenant of the job currently being processed, if any. */
+  getTenantId: () => string | undefined;
+  logger: SpendLogger;
+  /** Upper bound on actions held back after repeated failures. */
+  maxUnwrittenActions?: number;
+}
+
+/**
+ * Counts one AI action per completed chat call, free models included (cost 0 still counts),
+ * for the job's tenant, through QuotaService.increment under aiActionsPerMonth. Called by the
+ * tracing wrapper (recordAiAction) for every chat call, whether or not cost tracking is on;
+ * embeddings never reach it, so they are not AI actions. A failed write is logged at WARN and kept to be written with the next call,
+ * so a transient DB error delays the counter rather than losing actions. Never rejects.
+ */
+export function createTenantAiActionsRecorder(options: TenantAiActionsRecorderOptions) {
+  const { quota, getTenantId, logger, maxUnwrittenActions = 100_000 } = options;
+  const unwritten = new Map<string, number>();
+
+  return function recordTenantAiAction(): Promise<void> {
+    const tenantId = getTenantId();
+    if (!isAllowanceTenant(tenantId)) return Promise.resolve();
+    noteAiActions(tenantId, 1);
+    const whole = 1 + (unwritten.get(tenantId) ?? 0);
+    unwritten.delete(tenantId);
+
+    return quota.increment(tenantId, AI_ACTIONS_KEY, whole).catch((error: unknown) => {
+      unwritten.set(
+        tenantId,
+        Math.min((unwritten.get(tenantId) ?? 0) + whole, maxUnwrittenActions)
+      );
+      logger.warn(
+        { tenantId, key: AI_ACTIONS_KEY, actions: whole, error: String(error) },
+        'USAGE_NOT_RECORDED: failed to record AI actions; will retry with the next call'
       );
     });
   };

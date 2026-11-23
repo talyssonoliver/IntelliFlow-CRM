@@ -38,6 +38,7 @@ import {
   type NBAActionPriority,
 } from '@intelliflow/domain';
 import { isPurposeCeilingReached } from '../lib/purpose-ceiling.js';
+import { isAiActionsExhausted } from '../lib/ai-actions-allowance';
 import { formatPounds } from '../utils/format-pounds.js';
 
 // Re-export with original names for backward compatibility
@@ -429,7 +430,7 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
       return this.parseRecommendations(response, context);
     } catch (error) {
       // PG-199: a budget refusal is not an LLM failure; never answer it with heuristics.
-      if (isPurposeCeilingReached(error)) throw error;
+      if (isPurposeCeilingReached(error) || isAiActionsExhausted(error)) throw error;
       logger.error(
         { error: error instanceof Error ? error.message : String(error) },
         'LLM recommendation generation failed'

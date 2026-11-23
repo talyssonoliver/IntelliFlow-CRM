@@ -28,6 +28,21 @@ describe('quota-guard', () => {
   });
 
   describe('assertQuota', () => {
+    it('tells the user the plan limit in AI actions when the AI allowance is used up', async () => {
+      const quota = {
+        assertWithinQuota: vi
+          .fn()
+          .mockRejectedValue(new QuotaExceededError('aiActionsPerMonth', 1000, 1000)),
+      };
+      await expect(
+        assertQuota({ services: { quota } }, TENANT, 'aiActionsPerMonth')
+      ).rejects.toMatchObject({
+        code: 'PRECONDITION_FAILED',
+        message: expect.stringContaining('1,000 of 1,000 AI actions this month'),
+        cause: expect.objectContaining({ code: 'QUOTA_EXCEEDED', key: 'aiActionsPerMonth' }),
+      });
+    });
+
     it('skips a missing service only in a test process that opted in explicitly', async () => {
       vi.stubEnv('NODE_ENV', 'test');
       vi.stubEnv('QUOTA_GUARD_ALLOW_MISSING_SERVICE', '1');

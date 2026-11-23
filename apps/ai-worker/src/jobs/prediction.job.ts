@@ -14,6 +14,7 @@
 
 import { UnrecoverableError, type Job } from 'bullmq';
 import { isMonthlyBudgetExceeded, type MonthlyBudgetExceededError } from '../lib/monthly-budget';
+import { isAiActionsExhausted } from '../lib/ai-actions-allowance';
 import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
@@ -144,7 +145,9 @@ function isMeasuredBudgetCap(error: unknown): boolean {
 
 export function toPredictionJobFailure(error: unknown): unknown {
   const permanent =
-    isMeasuredBudgetCap(error) || (error instanceof Error && error.message === NBA_USER_REQUIRED);
+    isMeasuredBudgetCap(error) ||
+    isAiActionsExhausted(error) ||
+    (error instanceof Error && error.message === NBA_USER_REQUIRED);
   if (!permanent) return error;
   // `expected` keeps the shared worker's failure logs at warning level (worker-shared
   // isExpectedJobOutcome).

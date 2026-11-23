@@ -377,8 +377,9 @@ export const agentRouter = createTRPCRouter({
         throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Tenant context missing' });
       }
 
-      // Per-tenant metering: agent runs are AI spend. Assert only; cost is recorded elsewhere.
-      await assertQuota(ctx, ctx.user.tenantId, 'aiSpendCentsPerMonth');
+      // Plan allowance counted in AI actions (aiActionsPerMonth). Assert only; each model call is
+      // counted by the ai-worker as it completes (the spend in cents stays an internal metric).
+      await assertQuota(ctx, ctx.user.tenantId, 'aiActionsPerMonth');
 
       // Gate: check tool is enabled for this tenant BEFORE building approval prompt
       let tool;

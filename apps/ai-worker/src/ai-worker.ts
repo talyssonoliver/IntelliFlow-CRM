@@ -71,7 +71,12 @@ import {
   type MemoryRetentionJobResult,
 } from './jobs';
 import { costTracker } from './utils/cost-tracker';
-import { createTenantAiSpendRecorder, createPurposeSpendRecorder } from './utils/tenant-ai-spend';
+import {
+  createTenantAiSpendRecorder,
+  createPurposeSpendRecorder,
+  createTenantAiActionsRecorder,
+} from './utils/tenant-ai-spend';
+import { setAiActionRecorder, setAiActionsAllowanceReader } from './lib/ai-actions-allowance';
 import { setPurposeSpendReader } from './lib/purpose-ceiling';
 import { aiConfig, loadAIConfig } from './config/ai.config';
 import { anthropicModelForTier } from './lib/anthropic-config';
@@ -380,8 +385,9 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   }
 
   /**
-   * Attribute each model call's estimated cost to the job's tenant so the API can enforce
-   * the aiSpendCentsPerMonth quota (nothing else increments that counter).
+   * Attribute each completed model call to the job's tenant: its estimated cost (internal
+   * metric, aiSpendCentsPerMonth) and one AI action (the customer allowance,
+   * aiActionsPerMonth, enforced here before each call and in the API where AI work starts).
    */
   private async wireTenantAiSpend(): Promise<void> {
     try {
@@ -394,6 +400,13 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       );
       const getTenantId = () => tenantContextStore.getStore()?.tenantId;
       const record = createTenantAiSpendRecorder({ quota, getTenantId, logger: this.logger });
+      const recordAction = createTenantAiActionsRecorder({
+        quota,
+        getTenantId,
+        logger: this.logger,
+      });
+      setAiActionsAllowanceReader(quota);
+      setAiActionRecorder(() => recordAction());
       // PG-199: per-purpose spend feeds the purpose cost ceilings, and the same repository
       // is the spend reader of the pre-call ceiling check.
       const purposeSpend = new PrismaPurposeSpendRepository(this.prisma as never);
@@ -418,7 +431,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         });
       });
       this.logger.info(
-        'Tenant AI spend recorder wired — model cost counts toward aiSpendCentsPerMonth and the per-purpose ceilings'
+        'Tenant AI spend recorder wired — model cost counts toward aiSpendCentsPerMonth and the per-purpose ceilings; each chat call counts toward aiActionsPerMonth (tracing wrapper)'
       );
     } catch (error) {
       this.logger.error(
@@ -1073,6 +1086,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     this.logger.info('Shutting down AI Worker...');
 
     this.stopTenantAiSpend?.();
+    setAiActionRecorder(null);
 
     // IFC-117: stop drift detection before the flush, so the final flush holds the last results
     this.driftScheduler?.stop();

@@ -43,6 +43,7 @@ import {
   type UpdateAccountInput,
 } from '@intelliflow/validators/account';
 import { mapAccountToResponse } from '../../shared/mappers';
+import { assertQuota } from '../../shared/quota-guard';
 import { type Context } from '../../context';
 import { getTenantContext, createTenantWhereClause } from '../../security/tenant-context';
 import { getAuditLogger } from '../../security/audit-logger';
@@ -1553,6 +1554,9 @@ export const accountRouter = createTRPCRouter({
       const flags = await loadAccountAutomation(typedCtx);
       if (!flags.aiTagSuggestions) return [];
 
+      // Plan allowance counted in AI actions (aiActionsPerMonth): refuse before any AI work is queued.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
+
       const account = await ctx.prismaWithTenant.account.findUnique({
         where: { id: input.accountId },
       });
@@ -1606,6 +1610,9 @@ export const accountRouter = createTRPCRouter({
       const flags = await loadAccountAutomation(typedCtx);
       if (!flags.aiInsightGeneration) return { enqueued: false };
 
+      // Plan allowance counted in AI actions (aiActionsPerMonth): refuse before any AI work is queued.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
+
       try {
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
         const otelCarrier: Record<string, string> = {};
@@ -1634,6 +1641,9 @@ export const accountRouter = createTRPCRouter({
           message: 'AI account scoring is disabled for this tenant',
         });
       }
+
+      // Plan allowance counted in AI actions (aiActionsPerMonth): refuse before any AI work is queued.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
 
       try {
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
