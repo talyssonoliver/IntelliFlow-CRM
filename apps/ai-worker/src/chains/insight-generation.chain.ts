@@ -27,6 +27,7 @@ import { loadVersionedPrompt, CHAIN_TYPE_MAP } from '../versioning/chain-version
 import { usableVersionedPrompt } from '../versioning/versioned-prompt';
 import { formatPounds } from '../utils/format-pounds';
 import pino from 'pino';
+import { isAiActionsExhausted } from '../lib/ai-actions-allowance';
 
 const logger = pino({
   name: 'insight-generation-chain',
@@ -351,6 +352,8 @@ export class InsightGenerationChain {
         executionTimeMs,
       };
     } catch (error) {
+      // The plan's AI actions are used up: fail with that reason, never answer with a heuristic.
+      if (isAiActionsExhausted(error)) throw error;
       const executionTimeMs = Date.now() - startTime;
       const errorMessage = error instanceof Error ? error.message : String(error);
 

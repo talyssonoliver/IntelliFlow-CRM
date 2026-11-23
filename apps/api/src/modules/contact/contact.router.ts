@@ -2100,6 +2100,9 @@ export const contactRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
 
+      // Plan allowance counted in AI actions (aiActionsPerMonth): refuse before any AI work is queued.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
+
       const contact = await typedCtx.prismaWithTenant.contact.findUnique({
         where: { id: input.contactId },
         select: {
@@ -2353,6 +2356,9 @@ export const contactRouter = createTRPCRouter({
       const flags = await loadContactAutomation(typedCtx);
       if (!flags.aiTagSuggestions) return [];
 
+      // Plan allowance counted in AI actions (aiActionsPerMonth): refuse before any AI work is queued.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
+
       const contact = await ctx.prismaWithTenant.contact.findUnique({
         where: { id: input.contactId },
       });
@@ -2413,6 +2419,9 @@ export const contactRouter = createTRPCRouter({
       const flags = await loadContactAutomation(typedCtx);
       if (!flags.aiInsightGeneration) return { enqueued: false };
 
+      // Plan allowance counted in AI actions (aiActionsPerMonth): refuse before any AI work is queued.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
+
       try {
         const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
         const otelCarrier: Record<string, string> = {};
@@ -2448,6 +2457,9 @@ export const contactRouter = createTRPCRouter({
           message: 'AI reply drafting is disabled for this tenant',
         });
       }
+
+      // Plan allowance counted in AI actions (aiActionsPerMonth): refuse before any AI work is queued.
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
 
       const contact = await ctx.prismaWithTenant.contact.findUnique({
         where: { id: input.contactId },

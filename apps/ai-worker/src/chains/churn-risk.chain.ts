@@ -30,6 +30,7 @@ import pino from 'pino';
 
 // Import domain constants (IFC-095: DRY pattern)
 import { CHURN_RISK_LEVELS, type ChurnRiskLevel } from '@intelliflow/domain';
+import { isAiActionsExhausted } from '../lib/ai-actions-allowance';
 
 const logger = pino({
   name: 'churn-risk-chain',
@@ -364,6 +365,8 @@ export class ChurnRiskChain {
 
       return result;
     } catch (error) {
+      // The plan's AI actions are used up: fail with that reason, never answer with a heuristic.
+      if (isAiActionsExhausted(error)) throw error;
       const executionTimeMs = Date.now() - startTime;
 
       logger.error(
