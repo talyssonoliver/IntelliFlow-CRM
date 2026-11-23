@@ -63,6 +63,52 @@ vi.mock('jspdf', () => ({
   default: mocks.MockJsPDF,
 }));
 
+// The standards table comes from the compliance router, never from typed-in scores.
+const overviewFixture = {
+  generatedAt: '2026-11-23T10:00:00.000Z',
+  overall: {
+    score: 71,
+    measuredFrameworks: 2,
+    totalFrameworks: 5,
+    actionItems: 3,
+    notMeasuredControls: 9,
+  },
+  frameworks: [
+    {
+      id: 'gdpr',
+      title: 'GDPR',
+      subtitle: 'Data Protection',
+      icon: 'gavel',
+      scope: 'scope',
+      score: 80,
+      status: 'attention',
+      controls: [],
+      details: [],
+      counts: { passing: 4, attention: 1, notMeasured: 4 },
+      trend: { state: 'pending', reason: 'Trend starts tomorrow' },
+    },
+    {
+      id: 'iso-14001',
+      title: 'ISO 14001',
+      subtitle: 'Environment',
+      icon: 'eco',
+      scope: 'scope',
+      score: null,
+      status: 'not_measured',
+      controls: [],
+      details: [],
+      counts: { passing: 0, attention: 0, notMeasured: 2 },
+      trend: { state: 'pending', reason: 'Trend starts tomorrow' },
+    },
+  ],
+};
+const overviewFetch = vi.fn();
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    useUtils: () => ({ compliance: { overview: { fetch: overviewFetch } } }),
+  },
+}));
+
 // Mock data for API responses
 const mockRisksResponse = {
   success: true,
@@ -111,6 +157,7 @@ import { ExportReportButton } from '../ExportReportButton';
 describe('ExportReportButton', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    overviewFetch.mockResolvedValue(overviewFixture);
     // Re-stub fetch and alert in beforeEach because unstubGlobals:true removes them after each test
     vi.stubGlobal('fetch', mockFetch);
     vi.stubGlobal('alert', vi.fn());
@@ -315,6 +362,34 @@ describe('ExportReportButton', () => {
           expect.any(Number)
         );
       });
+    });
+
+    it('should list the router frameworks, with Not measured instead of a score', async () => {
+      const user = userEvent.setup();
+      render(<ExportReportButton />);
+
+      await user.click(screen.getByRole('button', { name: /export report/i }));
+
+      await waitFor(() => {
+        expect(mockText).toHaveBeenCalledWith('GDPR', expect.any(Number), expect.any(Number));
+      });
+      expect(mockText).toHaveBeenCalledWith('80%', expect.any(Number), expect.any(Number));
+      expect(mockText).toHaveBeenCalledWith('4 of 5 pass', expect.any(Number), expect.any(Number));
+      expect(mockText).toHaveBeenCalledWith('ISO 14001', expect.any(Number), expect.any(Number));
+      expect(mockText).toHaveBeenCalledWith('Not measured', expect.any(Number), expect.any(Number));
+      expect(mockText).toHaveBeenCalledWith(
+        '2 not measured',
+        expect.any(Number),
+        expect.any(Number)
+      );
+      // The old typed-in rows must be gone.
+      expect(mockText).not.toHaveBeenCalledWith('SOC 2', expect.any(Number), expect.any(Number));
+      expect(mockText).not.toHaveBeenCalledWith('OWASP', expect.any(Number), expect.any(Number));
+    });
+
+    it('should use a custom label', () => {
+      render(<ExportReportButton label="Download Full Report" />);
+      expect(screen.getByRole('button', { name: /download full report/i })).toBeInTheDocument();
     });
 
     it('should include risk summary section', async () => {

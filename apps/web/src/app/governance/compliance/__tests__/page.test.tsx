@@ -1,23 +1,41 @@
 /**
- * Compliance Dashboard Page Integration Tests
+ * Compliance Dashboard Page Tests (PG-194)
  *
- * Tests for the governance compliance dashboard page with all components integrated.
+ * Every figure on the page comes from the `compliance` tRPC router. These tests drive the page
+ * with router fixtures and prove that what is shown is what the router said, that a framework
+ * with no evidence shows "Not measured" and never a number, and that the page source holds no
+ * literal scores.
+ *
  * @vitest-environment jsdom
  */
 
-import { render, screen } from '@testing-library/react';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock tRPC — the compliance page calls
-// `trpc.analytics.recentActivity.useQuery` for Recent Activity. Without a
-// QueryClientProvider we need to stub the hook so the fixture drives the UI.
-// formatActivityTime (page.tsx:207) produces "Just now" / "N hour(s) ago" /
-// "N day(s) ago" relative to now — fixtures use real ISO dates so the live
-// formatter produces the exact strings the test assertions check for.
+const state = vi.hoisted(() => ({
+  overview: {
+    data: undefined as unknown,
+    isError: false,
+    error: null as unknown,
+    refetch: vi.fn(),
+  },
+  refresh: { mutate: vi.fn(), isPending: false },
+  invalidate: vi.fn(),
+}));
+
 const twoHoursAgo = new Date(Date.now() - 2 * 3600 * 1000).toISOString();
-const oneDayAgo = new Date(Date.now() - 1 * 86400 * 1000).toISOString();
+
 vi.mock('@/lib/trpc', () => ({
   trpc: {
+    useUtils: () => ({
+      compliance: {
+        overview: { invalidate: state.invalidate, fetch: vi.fn() },
+        history: { invalidate: state.invalidate },
+      },
+    }),
     analytics: {
       recentActivity: {
         useQuery: () => ({
@@ -28,402 +46,317 @@ vi.mock('@/lib/trpc', () => ({
               actorName: 'Alice Compliance',
               createdAt: twoHoursAgo,
             },
-            {
-              id: 'act-2',
-              description: 'New Risk Detected: AI Model Bias',
-              actorName: 'Bob Security',
-              createdAt: oneDayAgo,
-            },
-            {
-              id: 'act-3',
-              description: 'GDPR Policy Updated',
-              actorName: 'Carol Legal',
-              createdAt: oneDayAgo,
-            },
           ],
-          isLoading: false,
-          error: null,
         }),
       },
     },
+    compliance: {
+      overview: { useQuery: () => state.overview },
+      refresh: { useMutation: () => state.refresh },
+      history: { useQuery: () => ({ data: { points: [] }, isLoading: false }) },
+    },
   },
 }));
 
-// Mock jsPDF for ExportReportButton
-vi.mock('jspdf', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    internal: {
-      pageSize: {
-        getWidth: () => 210,
-        getHeight: () => 297,
-      },
-    },
-    save: vi.fn(),
-    addPage: vi.fn(),
-    setPage: vi.fn(),
-    text: vi.fn(),
-    line: vi.fn(),
-    setFontSize: vi.fn(),
-    setFont: vi.fn(),
-    setTextColor: vi.fn(),
-    setDrawColor: vi.fn(),
-    getNumberOfPages: vi.fn(() => 1),
-  })),
+vi.mock('../components', () => ({
+  RiskHeatMap: () => <div data-testid="risk-heat-map" />,
+  ComplianceTimeline: () => <div data-testid="timeline" />,
+  ExportReportButton: ({ label = 'Export Report' }: { label?: string }) => (
+    <button type="button">{label}</button>
+  ),
+  ComplianceDetailPanel: ({
+    framework,
+    open,
+  }: {
+    framework: { id: string } | null;
+    open: boolean;
+  }) => (open ? <div data-testid="detail-panel">{framework?.id}</div> : null),
 }));
 
-// Mock data
-const mockRisksResponse = {
-  success: true,
-  data: {
-    risks: [
-      {
-        id: 'RISK-001',
-        title: 'AI Model Bias',
-        probability: 'high',
-        impact: 'high',
-        status: 'requires_action',
-        category: 'ISO 42001',
-      },
-      {
-        id: 'RISK-002',
-        title: 'Data Retention Gap',
-        probability: 'medium',
-        impact: 'medium',
-        status: 'mitigated',
-        category: 'GDPR',
-      },
-    ],
-    summary: {
-      total: 2,
-      byStatus: { accepted: 0, mitigated: 1, requires_action: 1 },
-      byProbability: { high: 1, medium: 1, low: 0 },
-      byImpact: { high: 1, medium: 1, low: 0 },
-    },
-    lastUpdated: '2026-01-05T10:00:00Z',
-  },
-};
-
-const mockTimelineResponse = {
-  success: true,
-  data: {
-    events: [
-      {
-        id: 'EVT-001',
-        title: 'ISO 27001 Annual Audit',
-        date: '2026-01-15',
-        type: 'audit',
-        standard: 'ISO 27001',
-        status: 'scheduled',
-      },
-      {
-        id: 'EVT-002',
-        title: 'GDPR Policy Review',
-        date: '2026-01-20',
-        type: 'review',
-        standard: 'GDPR',
-        status: 'scheduled',
-      },
-    ],
-    currentMonth: '2026-01',
-    upcomingCount: 2,
-  },
-};
-
-const mockDetailResponse = {
-  success: true,
-  data: {
-    standardId: 'iso-27001',
-    standardName: 'ISO 27001',
-    score: 92,
-    trend: 2.4,
-    status: 'compliant',
-    nextAuditDate: '2026-03-01',
-    certificationExpiry: '2027-03-01',
-    controls: [
-      {
-        id: 'A.5.1',
-        name: 'Information Security Policies',
-        status: 'passed',
-        lastAssessed: '2026-01-01',
-      },
-    ],
-    historicalScores: [
-      { date: '2025-08-01', score: 85 },
-      { date: '2026-01-01', score: 92 },
-    ],
-    recentChanges: [
-      {
-        action: 'Updated access control policy',
-        date: '2026-01-03',
-        user: 'Security Team',
-      },
-    ],
-  },
-};
-
-// Mock fetch - declared at module level, stubbed in beforeEach
-const mockFetch = vi.fn();
-
-// Import page after mocks are set up
 import ComplianceDashboardPage from '../page';
+
+const pending = { state: 'pending', reason: 'Trend starts tomorrow' };
+
+function framework(over: Record<string, unknown>) {
+  return {
+    id: 'gdpr',
+    title: 'GDPR',
+    subtitle: 'Data Protection',
+    icon: 'gavel',
+    scope: 'Scope line.',
+    score: 80,
+    status: 'attention',
+    controls: [],
+    details: [
+      { label: 'Open Requests', value: '2 (1 overdue)' },
+      { label: 'Active Restrictions', value: '1' },
+    ],
+    counts: { passing: 4, attention: 1, notMeasured: 3 },
+    trend: pending,
+    ...over,
+  };
+}
+
+const overviewFixture = {
+  generatedAt: '2026-11-23T10:00:00.000Z',
+  overall: {
+    score: 77,
+    measuredFrameworks: 2,
+    totalFrameworks: 5,
+    actionItems: 4,
+    notMeasuredControls: 6,
+  },
+  frameworks: [
+    framework({
+      id: 'iso-27001',
+      title: 'ISO 27001',
+      subtitle: 'InfoSec',
+      score: 74,
+      status: 'attention',
+      trend: { state: 'available', delta: -6, since: '2026-11-01' },
+      details: [{ label: 'MFA Adoption', value: '3 of 5 users' }],
+    }),
+    framework({
+      id: 'iso-42001',
+      title: 'ISO 42001',
+      subtitle: 'AI Mgmt',
+      score: 100,
+      status: 'compliant',
+      trend: { state: 'available', delta: 4, since: '2026-11-01' },
+    }),
+    framework({
+      id: 'iso-14001',
+      title: 'ISO 14001',
+      subtitle: 'Environment',
+      score: null,
+      status: 'not_measured',
+      details: [
+        { label: 'Status', value: 'Not measured' },
+        { label: 'Needs', value: 'An environmental policy recorded per firm.' },
+      ],
+    }),
+    framework({}),
+    framework({
+      id: 'adr-registry',
+      title: 'ADR Registry',
+      subtitle: 'Architecture',
+      score: null,
+      status: 'not_measured',
+      details: [],
+    }),
+  ],
+};
 
 describe('ComplianceDashboardPage', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    // Re-stub fetch in beforeEach because unstubGlobals:true removes it after each test
-    vi.stubGlobal('fetch', mockFetch);
-    mockFetch.mockImplementation((url: string) => {
-      if (url.includes('/risks')) {
-        return Promise.resolve({ json: () => Promise.resolve(mockRisksResponse) });
-      }
-      if (url.includes('/timeline')) {
-        return Promise.resolve({ json: () => Promise.resolve(mockTimelineResponse) });
-      }
-      if (url.includes('/api/compliance/')) {
-        return Promise.resolve({ json: () => Promise.resolve(mockDetailResponse) });
-      }
-      return Promise.resolve({ json: () => Promise.resolve({}) });
-    });
+    state.overview = {
+      data: overviewFixture,
+      isError: false,
+      error: null,
+      refetch: vi.fn(),
+    };
+    state.refresh = { mutate: vi.fn(), isPending: false };
+    state.invalidate.mockReset();
   });
 
-  describe('Page Header', () => {
-    it('should render the page title', async () => {
-      render(<ComplianceDashboardPage />);
+  it('renders the header, the buttons and the recent activity', () => {
+    render(<ComplianceDashboardPage />);
+    expect(screen.getByRole('heading', { name: 'Compliance Dashboard' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /refresh data/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /export report/i })).toBeInTheDocument();
+    expect(screen.getByText('Audit completed for ISO 27001')).toBeInTheDocument();
+    expect(screen.getByText('2 hours ago')).toBeInTheDocument();
+    expect(screen.getByText(/Not a certification or legal advice/)).toBeInTheDocument();
+  });
 
-      expect(screen.getByRole('heading', { name: 'Compliance Dashboard' })).toBeInTheDocument();
-    });
-
-    it('should render the page description', async () => {
-      render(<ComplianceDashboardPage />);
-
+  it('shows every framework card, none dropped', () => {
+    render(<ComplianceDashboardPage />);
+    for (const title of ['ISO 27001', 'ISO 42001', 'ISO 14001', 'GDPR', 'ADR Registry']) {
       expect(
-        screen.getByText(/Monitor adherence to international standards and internal policies/)
+        screen.getByTestId(`framework-${title.toLowerCase().replaceAll(' ', '-')}`)
       ).toBeInTheDocument();
-    });
-
-    it('should have Refresh Data button', async () => {
-      render(<ComplianceDashboardPage />);
-
-      expect(screen.getByRole('button', { name: /refresh data/i })).toBeInTheDocument();
-    });
-
-    it('should have Export Report button', async () => {
-      render(<ComplianceDashboardPage />);
-
-      expect(screen.getByRole('button', { name: /export report/i })).toBeInTheDocument();
-    });
+      expect(screen.getByRole('button', { name: `${title} details` })).toBeInTheDocument();
+    }
   });
 
-  describe('Compliance Cards', () => {
-    it('should render ISO 27001 card', async () => {
-      render(<ComplianceDashboardPage />);
-
-      expect(screen.getByText('ISO 27001')).toBeInTheDocument();
-      expect(screen.getByText('InfoSec')).toBeInTheDocument();
-    });
-
-    it('should render ISO 42001 card', async () => {
-      render(<ComplianceDashboardPage />);
-
-      expect(screen.getByText('ISO 42001')).toBeInTheDocument();
-      expect(screen.getByText('AI Mgmt')).toBeInTheDocument();
-    });
-
-    it('should render ISO 14001 card', async () => {
-      render(<ComplianceDashboardPage />);
-
-      expect(screen.getByText('ISO 14001')).toBeInTheDocument();
-      expect(screen.getByText('Environment')).toBeInTheDocument();
-    });
-
-    it('should render GDPR card', async () => {
-      render(<ComplianceDashboardPage />);
-
-      expect(screen.getByText('GDPR')).toBeInTheDocument();
-      expect(screen.getByText('Data Protection')).toBeInTheDocument();
-    });
-
-    it('should render ADR Registry card', async () => {
-      render(<ComplianceDashboardPage />);
-
-      expect(screen.getByText('ADR Registry')).toBeInTheDocument();
-      expect(screen.getByText('Architecture')).toBeInTheDocument();
-    });
-
-    it('should render Overall Score card', async () => {
-      render(<ComplianceDashboardPage />);
-
-      expect(screen.getByText('Overall Score')).toBeInTheDocument();
-      expect(screen.getByText('Compliance Maturity')).toBeInTheDocument();
-    });
-
-    it('should display compliance scores', async () => {
-      render(<ComplianceDashboardPage />);
-
-      expect(screen.getByText('92%')).toBeInTheDocument(); // ISO 27001
-      expect(screen.getByText('45%')).toBeInTheDocument(); // ISO 42001
-      expect(screen.getByText('98%')).toBeInTheDocument(); // GDPR
-    });
-
-    it('should display trend indicators', async () => {
-      render(<ComplianceDashboardPage />);
-
-      expect(screen.getByText('+2.4%')).toBeInTheDocument(); // ISO 27001 trend
-    });
-
-    it('should display status badges', async () => {
-      render(<ComplianceDashboardPage />);
-
-      const compliantBadges = screen.getAllByText('Compliant');
-      const criticalBadges = screen.getAllByText('Critical');
-      const attentionBadges = screen.getAllByText('Attention');
-
-      expect(compliantBadges.length).toBeGreaterThan(0);
-      expect(criticalBadges.length).toBeGreaterThan(0);
-      expect(attentionBadges.length).toBeGreaterThan(0);
-    });
+  it('shows the scores, statuses and detail lines the router returned', () => {
+    render(<ComplianceDashboardPage />);
+    const card = screen.getByTestId('framework-iso-27001');
+    expect(within(card).getByText('74%')).toBeInTheDocument();
+    expect(within(card).getByText('Attention')).toBeInTheDocument();
+    expect(within(card).getByText('3 of 5 users')).toBeInTheDocument();
+    const compliant = screen.getByTestId('framework-iso-42001');
+    expect(within(compliant).getByText('100%')).toBeInTheDocument();
+    expect(within(compliant).getByText('Compliant')).toBeInTheDocument();
   });
 
-  // Note: RiskHeatMap and ComplianceTimeline components are not included in the current
-  // page implementation. These tests are skipped as the page uses static hardcoded data.
-
-  describe('Recent Activity Section', () => {
-    it('should render Recent Compliance Activity section', async () => {
-      render(<ComplianceDashboardPage />);
-
-      expect(screen.getByText('Recent Compliance Activity')).toBeInTheDocument();
-    });
-
-    it('should have View All History link', async () => {
-      render(<ComplianceDashboardPage />);
-
-      expect(screen.getByRole('button', { name: /view all history/i })).toBeInTheDocument();
-    });
-
-    it('should display activity items', async () => {
-      render(<ComplianceDashboardPage />);
-
-      expect(screen.getByText('Audit completed for ISO 27001')).toBeInTheDocument();
-      expect(screen.getByText('New Risk Detected: AI Model Bias')).toBeInTheDocument();
-      expect(screen.getByText('GDPR Policy Updated')).toBeInTheDocument();
-    });
-
-    it('should display activity timestamps', async () => {
-      // formatActivityTime produces relative strings: "N hours ago", "N day(s) ago".
-      // Fixture timestamps are 2h and 1d old so output is deterministic.
-      render(<ComplianceDashboardPage />);
-
-      expect(screen.getByText('2 hours ago')).toBeInTheDocument();
-      // Two activities share the 1-day-old timestamp; getAllByText to handle
-      // the duplicate rather than asserting a single element.
-      expect(screen.getAllByText('1 day ago').length).toBeGreaterThan(0);
-    });
+  it('shows Not measured, with what is needed, and no percentage for a framework without evidence', () => {
+    render(<ComplianceDashboardPage />);
+    const card = screen.getByTestId('framework-iso-14001');
+    expect(within(card).getAllByText('Not measured').length).toBeGreaterThan(0);
+    expect(
+      within(card).getByText('An environmental policy recorded per firm.')
+    ).toBeInTheDocument();
+    expect(card.textContent).not.toMatch(/\d%/);
   });
 
-  // Note: Drilldown functionality with ComplianceDetailPanel is not yet implemented
-  // in the current page. Cards are static display-only components.
-
-  describe('Button Functionality', () => {
-    it('should have clickable Refresh Data button', async () => {
-      render(<ComplianceDashboardPage />);
-
-      const refreshButton = screen.getByRole('button', { name: /refresh data/i });
-      expect(refreshButton).toBeInTheDocument();
-      expect(refreshButton).not.toBeDisabled();
-    });
+  it('shows a trend only from stored history, and "Trend starts tomorrow" otherwise', () => {
+    render(<ComplianceDashboardPage />);
+    expect(
+      within(screen.getByTestId('framework-iso-27001')).getByText('-6 pts')
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId('framework-iso-42001')).getByText('+4 pts')
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByTestId('framework-gdpr')).getByText('Trend starts tomorrow')
+    ).toBeInTheDocument();
   });
 
-  describe('Accessibility', () => {
-    it('should have proper heading hierarchy', async () => {
-      render(<ComplianceDashboardPage />);
-
-      const h1 = screen.getByRole('heading', { level: 1 });
-      expect(h1).toHaveTextContent('Compliance Dashboard');
-    });
-
-    it('should have interactive elements with proper roles', async () => {
-      render(<ComplianceDashboardPage />);
-
-      const buttons = screen.getAllByRole('button');
-      expect(buttons.length).toBeGreaterThan(0);
-    });
+  it('shows the overall figures from the router, with how many frameworks they cover', () => {
+    render(<ComplianceDashboardPage />);
+    expect(screen.getByText('Overall Score')).toBeInTheDocument();
+    expect(screen.getByText('77')).toBeInTheDocument();
+    expect(screen.getByText('2 of 5 frameworks measured')).toBeInTheDocument();
+    expect(screen.getByText('4 to review')).toBeInTheDocument();
+    // Mean of the two available deltas, -6 and +4.
+    expect(screen.getByText('-1 pts')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Download Full Report' })).toBeInTheDocument();
   });
 
-  describe('Responsive Layout', () => {
-    it('should have grid layout for cards', async () => {
-      const { container } = render(<ComplianceDashboardPage />);
-
-      const grids = container.querySelectorAll('[class*="grid"]');
-      expect(grids.length).toBeGreaterThan(0);
-    });
-
-    it('should have responsive grid classes', async () => {
-      const { container } = render(<ComplianceDashboardPage />);
-
-      const responsiveGrids = container.querySelectorAll('[class*="md:grid-cols"]');
-      expect(responsiveGrids.length).toBeGreaterThan(0);
-    });
+  it('shows Not measured for the overall score when nothing could be measured', () => {
+    state.overview = {
+      ...state.overview,
+      data: {
+        ...overviewFixture,
+        overall: { ...overviewFixture.overall, score: null, measuredFrameworks: 0 },
+        frameworks: overviewFixture.frameworks.map((f) => ({
+          ...f,
+          score: null,
+          status: 'not_measured',
+          trend: pending,
+        })),
+      },
+    };
+    render(<ComplianceDashboardPage />);
+    expect(screen.getByText('0 of 5 frameworks measured')).toBeInTheDocument();
+    expect(screen.getAllByText('Trend starts tomorrow').length).toBeGreaterThan(0);
+    expect(screen.queryByText('Score')).not.toBeInTheDocument();
   });
 
-  describe('Dark Mode Support', () => {
-    it('should have dark mode classes', async () => {
-      const { container } = render(<ComplianceDashboardPage />);
+  it('opens the detail panel for the clicked framework, by mouse and keyboard', async () => {
+    const user = userEvent.setup();
+    render(<ComplianceDashboardPage />);
+    expect(screen.queryByTestId('detail-panel')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'GDPR details' }));
+    expect(screen.getByTestId('detail-panel')).toHaveTextContent('gdpr');
 
-      const darkElements = container.querySelectorAll('[class*="dark:"]');
-      expect(darkElements.length).toBeGreaterThan(0);
-    });
+    screen.getByRole('button', { name: 'ISO 27001 details' }).focus();
+    await user.keyboard('{Enter}');
+    expect(screen.getByTestId('detail-panel')).toHaveTextContent('iso-27001');
+  });
+
+  it('refreshes: stores a snapshot through the router', async () => {
+    const user = userEvent.setup();
+    render(<ComplianceDashboardPage />);
+    await user.click(screen.getByRole('button', { name: /refresh data/i }));
+    expect(state.refresh.mutate).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a skeleton while loading', () => {
+    state.overview = { ...state.overview, data: undefined };
+    render(<ComplianceDashboardPage />);
+    expect(screen.getByLabelText('Loading compliance data')).toBeInTheDocument();
+    expect(screen.queryByText('Overall Score')).not.toBeInTheDocument();
+  });
+
+  it('says who can see it when the router refuses', () => {
+    state.overview = {
+      data: undefined,
+      isError: true,
+      error: { data: { code: 'FORBIDDEN' } },
+      refetch: vi.fn(),
+    };
+    render(<ComplianceDashboardPage />);
+    expect(
+      screen.getByText('Compliance figures are visible to administrators and managers.')
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /refresh data/i })).toBeDisabled();
+  });
+
+  it('offers a retry when the figures could not be loaded', async () => {
+    const refetch = vi.fn();
+    state.overview = { data: undefined, isError: true, error: new Error('x'), refetch };
+    const user = userEvent.setup();
+    render(<ComplianceDashboardPage />);
+    expect(screen.getByRole('alert')).toHaveTextContent('could not be loaded');
+    await user.click(screen.getByRole('button', { name: /try again/i }));
+    expect(refetch).toHaveBeenCalled();
+  });
+
+  it('renders the risk heat map and the timeline', () => {
+    render(<ComplianceDashboardPage />);
+    expect(screen.getByTestId('risk-heat-map')).toBeInTheDocument();
+    expect(screen.getByTestId('timeline')).toBeInTheDocument();
   });
 });
 
-describe('Fetch Mock Integration', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    // Re-stub fetch in beforeEach because unstubGlobals:true removes it after each test
-    vi.stubGlobal('fetch', mockFetch);
+// The owner's rule (23/11/2026): never fake data. If someone types a score back into the page, this fails.
+describe('compliance page source holds no literal scores', () => {
+  const files = [
+    join(__dirname, '..', 'page.tsx'),
+    join(__dirname, '..', 'components', 'ComplianceDetailPanel.tsx'),
+    join(__dirname, '..', 'components', 'ExportReportButton.tsx'),
+    join(__dirname, '..', 'components', 'compliance-view.ts'),
+  ];
+
+  /** Code lines only: comment lines are skipped. */
+  const codeLines = (file: string) =>
+    readFileSync(file, 'utf-8')
+      .split('\n')
+      .filter((line) => {
+        const t = line.trim();
+        return !(t.startsWith('//') || t.startsWith('*') || t.startsWith('/*'));
+      });
+
+  /** Percent signs written right after a digit: a typed-in percentage, not a template placeholder. */
+  const typedPercents = (src: string) =>
+    [...src.matchAll(/%/g)].filter((m) => /\d/.test(src.charAt((m.index ?? 0) - 1)));
+
+  it('the scan itself catches a typed-in score and ignores a computed one', () => {
+    expect(typedPercents('<span>98%</span>')).toHaveLength(1);
+    expect(typedPercents('<span>{`${score}%`}</span>')).toHaveLength(0);
   });
 
-  it('should mock risks API correctly', async () => {
-    mockFetch.mockImplementation((url: string) => {
-      if (url.includes('/risks')) {
-        return Promise.resolve({ json: () => Promise.resolve(mockRisksResponse) });
-      }
-      return Promise.resolve({ json: () => Promise.resolve({}) });
-    });
-
-    const response = await fetch('/api/compliance/risks');
-    const data = await response.json();
-
-    expect(data.success).toBe(true);
-    expect(data.data.risks).toHaveLength(2);
+  it.each(files)('%s has no percentage or score literals', (file) => {
+    const lines = codeLines(file);
+    const src = lines.join('\n');
+    // "92%", "74.6%" typed in a string or JSX text. A template placeholder before % is fine.
+    expect(typedPercents(src)).toHaveLength(0);
+    // score or trend given as a number literal.
+    const literal = lines.filter(
+      (l) => /\b(score|trend)=\{-?\d/.test(l) || /\b(score|trend): -?\d/.test(l)
+    );
+    expect(literal).toEqual([]);
+    // The values the page used to hold.
+    for (const typed of [
+      '74.6',
+      '104 / 114',
+      '12 Pending',
+      '4 Pending',
+      '16 Total',
+      'Oct 24, 2023',
+      'Expiring Soon',
+      '0 Reported',
+      'Up to date',
+      'strokeDasharray="74',
+    ]) {
+      expect(src).not.toContain(typed);
+    }
   });
 
-  it('should mock timeline API correctly', async () => {
-    mockFetch.mockImplementation((url: string) => {
-      if (url.includes('/timeline')) {
-        return Promise.resolve({ json: () => Promise.resolve(mockTimelineResponse) });
-      }
-      return Promise.resolve({ json: () => Promise.resolve({}) });
-    });
-
-    const response = await fetch('/api/compliance/timeline');
-    const data = await response.json();
-
-    expect(data.success).toBe(true);
-    expect(data.data.events).toHaveLength(2);
-  });
-
-  it('should mock detail API correctly', async () => {
-    mockFetch.mockImplementation((url: string) => {
-      if (url.includes('/api/compliance/')) {
-        return Promise.resolve({ json: () => Promise.resolve(mockDetailResponse) });
-      }
-      return Promise.resolve({ json: () => Promise.resolve({}) });
-    });
-
-    const response = await fetch('/api/compliance/iso-27001');
-    const data = await response.json();
-
-    expect(data.success).toBe(true);
-    expect(data.data.standardId).toBe('iso-27001');
+  it('page.tsx draws the gauge from the router score', () => {
+    const src = readFileSync(files[0]!, 'utf-8');
+    expect(src).toContain('strokeDasharray={`${overall.score}, 100`}');
   });
 });

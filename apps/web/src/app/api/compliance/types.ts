@@ -58,45 +58,6 @@ export interface RiskHeatMapResponse {
 }
 
 // ============================================
-// Compliance Detail Types (for Drilldowns)
-// ============================================
-
-export type ControlStatus = 'passed' | 'failed' | 'not_applicable' | 'in_progress';
-
-export interface ComplianceControl {
-  id: string;
-  name: string;
-  status: ControlStatus;
-  lastAssessed: string;
-  evidence?: string;
-  notes?: string;
-}
-
-export interface HistoricalScore {
-  date: string;
-  score: number;
-}
-
-export interface RecentChange {
-  date: string;
-  action: string;
-  user: string;
-}
-
-export interface ComplianceDetailResponse {
-  standardId: string;
-  standardName: string;
-  score: number;
-  trend: number;
-  status: 'compliant' | 'critical' | 'attention';
-  controls: ComplianceControl[];
-  historicalScores: HistoricalScore[];
-  recentChanges: RecentChange[];
-  nextAuditDate?: string;
-  certificationExpiry?: string;
-}
-
-// ============================================
 // Export Data Types
 // ============================================
 

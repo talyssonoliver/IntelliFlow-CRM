@@ -2,10 +2,14 @@
 
 import { useState } from 'react';
 import { Button } from '@intelliflow/ui';
+import { trpc } from '@/lib/trpc';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { STATUS_LABEL, scoreText, type FrameworkView } from './compliance-view';
 
 interface ExportReportButtonProps {
   className?: string;
+  /** Button text; defaults to "Export Report". */
+  label?: string;
 }
 
 type JsPDFDoc = {
@@ -23,10 +27,12 @@ type JsPDFDoc = {
 };
 
 function applyStatusColor(doc: JsPDFDoc, status: string): void {
-  if (status === 'Compliant') {
+  if (status === STATUS_LABEL.compliant) {
     doc.setTextColor(16, 185, 129); // emerald
-  } else if (status === 'Critical') {
+  } else if (status === STATUS_LABEL.critical) {
     doc.setTextColor(239, 68, 68); // red
+  } else if (status === STATUS_LABEL.not_measured) {
+    doc.setTextColor(120, 120, 120); // grey
   } else {
     doc.setTextColor(245, 158, 11); // amber
   }
@@ -162,15 +168,34 @@ function addTimelineSection(
   }
 }
 
-export function ExportReportButton({ className }: Readonly<ExportReportButtonProps>) {
+/** One row of the PDF's standards table, from the router's figures. */
+export function standardRow(framework: FrameworkView) {
+  const { passing, attention, notMeasured } = framework.counts;
+  return {
+    name: framework.title,
+    score: scoreText(framework.score),
+    status: STATUS_LABEL[framework.status],
+    controls:
+      passing + attention === 0
+        ? `${notMeasured} not measured`
+        : `${passing} of ${passing + attention} pass`,
+  };
+}
+
+export function ExportReportButton({
+  className,
+  label = 'Export Report',
+}: Readonly<ExportReportButtonProps>) {
   const { timezone } = useTimezoneContext();
+  const utils = trpc.useUtils();
   const [exporting, setExporting] = useState(false);
 
   const handleExport = async () => {
     setExporting(true);
     try {
       const { default: jsPDF } = await import('jspdf');
-      const [risksRes, timelineRes] = await Promise.all([
+      const [overview, risksRes, timelineRes] = await Promise.all([
+        utils.compliance.overview.fetch(),
         fetch('/api/compliance/risks'),
         fetch('/api/compliance/timeline'),
       ]);
@@ -214,14 +239,16 @@ export function ExportReportButton({ className }: Readonly<ExportReportButtonPro
       doc.text('Compliance Standards Overview', 14, yPosRef.value);
       yPosRef.value += 10;
 
-      const standards = [
-        { name: 'ISO 27001', score: 92, status: 'Compliant', controls: '104/114' },
-        { name: 'ISO 42001', score: 45, status: 'Critical', controls: '5/12' },
-        { name: 'ISO 14001', score: 78, status: 'Attention', controls: '6/8' },
-        { name: 'GDPR', score: 98, status: 'Compliant', controls: '12/12' },
-        { name: 'SOC 2', score: 89, status: 'Compliant', controls: '8/10' },
-        { name: 'OWASP', score: 96, status: 'Compliant', controls: '9/10' },
-      ];
+      const standards = overview.frameworks.map(standardRow);
+
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.text(
+        `Overall: ${scoreText(overview.overall.score)} (${overview.overall.measuredFrameworks} of ${overview.overall.totalFrameworks} frameworks measured). Readiness checks on firm data, not a certification.`,
+        14,
+        yPosRef.value - 4
+      );
+      yPosRef.value += 4;
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
@@ -237,7 +264,7 @@ export function ExportReportButton({ className }: Readonly<ExportReportButtonPro
       doc.setFont('helvetica', 'normal');
       for (const standard of standards) {
         doc.text(standard.name, 14, yPosRef.value);
-        doc.text(`${standard.score}%`, 60, yPosRef.value);
+        doc.text(standard.score, 60, yPosRef.value);
         applyStatusColor(doc, standard.status);
         doc.text(standard.status, 90, yPosRef.value);
         doc.setTextColor(0, 0, 0);
@@ -288,7 +315,7 @@ export function ExportReportButton({ className }: Readonly<ExportReportButtonPro
       <span className="material-symbols-outlined text-lg mr-2">
         {exporting ? 'progress_activity' : 'download'}
       </span>
-      {exporting ? 'Exporting...' : 'Export Report'}
+      {exporting ? 'Exporting...' : label}
     </Button>
   );
 }
