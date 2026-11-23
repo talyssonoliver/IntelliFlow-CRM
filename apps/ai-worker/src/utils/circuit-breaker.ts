@@ -35,6 +35,29 @@ export class CircuitBreaker {
    */
   private static readonly ignoredFailures: Array<(error: unknown) => boolean> = [];
 
+  /**
+   * Calls that never go through a breaker at all, in either direction (for example a tenant
+   * running on its own BYOK key, registered by lib/byok.ts): the breaker guards the PLATFORM
+   * provider, so such a call is neither refused while it is OPEN nor allowed to close it on
+   * success. A predicate that throws means "not bypassed".
+   */
+  private static readonly bypasses: Array<() => boolean | Promise<boolean>> = [];
+
+  static bypassWhen(predicate: () => boolean | Promise<boolean>): void {
+    if (!CircuitBreaker.bypasses.includes(predicate)) CircuitBreaker.bypasses.push(predicate);
+  }
+
+  private static async shouldBypass(): Promise<boolean> {
+    for (const bypass of CircuitBreaker.bypasses) {
+      try {
+        if (await bypass()) return true;
+      } catch {
+        // Not bypassed: the breaker applies as usual.
+      }
+    }
+    return false;
+  }
+
   static ignoreFailuresMatching(predicate: (error: unknown) => boolean): void {
     if (!CircuitBreaker.ignoredFailures.includes(predicate)) {
       CircuitBreaker.ignoredFailures.push(predicate);
@@ -51,6 +74,8 @@ export class CircuitBreaker {
   ) {}
 
   async execute<T>(fn: () => Promise<T>): Promise<T> {
+    if (CircuitBreaker.bypasses.length > 0 && (await CircuitBreaker.shouldBypass())) return fn();
+
     // Check if circuit should attempt reset
     if (this.state === 'OPEN' && Date.now() - this.lastFailureTime > this.resetTimeout) {
       getLogger().info('Circuit breaker entering HALF_OPEN state');

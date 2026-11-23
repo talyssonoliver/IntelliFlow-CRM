@@ -38,6 +38,7 @@ import {
 } from '@intelliflow/validators';
 import { createLogger } from '../utils/logger.js';
 import { CircuitBreaker } from '../utils/circuit-breaker.js';
+import { tenantContextStore } from '../tracing/tenant-context.js';
 
 const logger = createLogger('byok');
 
@@ -101,7 +102,9 @@ export function isByokFailure(err: unknown): boolean {
   return false;
 }
 
-// Shared circuit breakers never count a BYOK failure (any caller, present or future).
+// Shared circuit breakers guard the PLATFORM provider. A BYOK failure is never counted (any
+// caller, present or future), and a call that runs on a tenant's own key bypasses the breaker
+// in both directions (see bypassesPlatformBreaker, registered below the routing code).
 if (typeof CircuitBreaker.ignoreFailuresMatching === 'function') {
   CircuitBreaker.ignoreFailuresMatching(isByokFailure);
 }
@@ -348,6 +351,22 @@ export async function routeForTenant(
     );
   }
   return { kind: 'byok', credential };
+}
+
+/**
+ * True when the current job's tenant would run on its own key: its call is not the platform
+ * provider's, so a shared platform breaker must neither refuse it while OPEN nor be closed by
+ * its success. An INVALID key is not bypassed (that call goes to the platform or fails).
+ */
+async function bypassesPlatformBreaker(): Promise<boolean> {
+  const tenantId = tenantContextStore.getStore()?.tenantId;
+  if (!isBillableTenant(tenantId)) return false;
+  const credential = await resolveByokCredential(tenantId);
+  return credential !== null && credential.status !== 'INVALID';
+}
+
+if (typeof CircuitBreaker.bypassWhen === 'function') {
+  CircuitBreaker.bypassWhen(bypassesPlatformBreaker);
 }
 
 // ---------------------------------------------------------------------------

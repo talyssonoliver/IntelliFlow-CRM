@@ -609,3 +609,52 @@ describe('success reads the status now, not the one the model was built with', (
     expect(db.updateMany.mock.calls[0][0].data.status).toBeUndefined();
   });
 });
+
+describe('a BYOK tenant bypasses the shared platform breaker in both directions', () => {
+  async function openBreaker() {
+    const { CircuitBreaker } = await import('../../utils/circuit-breaker');
+    const breaker = new CircuitBreaker(2, 60_000);
+    for (let i = 0; i < 2; i++) {
+      await breaker.execute(() => Promise.reject(httpError(500))).catch(() => undefined);
+    }
+    await expect(breaker.execute(async () => 'x')).rejects.toThrow(/OPEN/);
+    return breaker;
+  }
+
+  it('is not refused while the platform breaker is OPEN; a tenant without a key still is', async () => {
+    const { tenantContextStore } = await import('../../tracing/tenant-context');
+    const breaker = await openBreaker();
+    db.findFirst.mockImplementation(async ({ where }: { where: { tenantId: string } }) =>
+      where.tenantId === 'tenant-a' ? row() : null
+    );
+    await expect(
+      tenantContextStore.run({ tenantId: 'tenant-a' }, () => breaker.execute(async () => 'own key'))
+    ).resolves.toBe('own key');
+    await expect(
+      tenantContextStore.run({ tenantId: 'tenant-b' }, () => breaker.execute(async () => 'x'))
+    ).rejects.toThrow(/OPEN/);
+  });
+
+  it('its success does not close the platform breaker; only a platform call does', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const { tenantContextStore } = await import('../../tracing/tenant-context');
+    const breaker = await openBreaker();
+    vi.setSystemTime(Date.now() + 61_000);
+    db.findFirst.mockResolvedValue(row());
+    await tenantContextStore.run({ tenantId: 'tenant-a' }, () => breaker.execute(async () => 'ok'));
+    // The BYOK call did not touch the breaker: it is still OPEN, not CLOSED by that success.
+    expect(breaker.getState().state).toBe('OPEN');
+    // Only a platform call probes it (HALF_OPEN) and closes it when the platform answers.
+    await expect(breaker.execute(async () => 'platform ok')).resolves.toBe('platform ok');
+    expect(breaker.getState().state).toBe('CLOSED');
+  });
+
+  it('an INVALID key is not bypassed (that call goes to the platform or fails)', async () => {
+    const { tenantContextStore } = await import('../../tracing/tenant-context');
+    const breaker = await openBreaker();
+    db.findFirst.mockResolvedValue(row({ status: 'INVALID' }));
+    await expect(
+      tenantContextStore.run({ tenantId: 'tenant-a' }, () => breaker.execute(async () => 'x'))
+    ).rejects.toThrow(/OPEN/);
+  });
+});
