@@ -267,8 +267,9 @@ describe('OwnKeySection - key hygiene', () => {
     fireEvent.change(keyInput(), { target: { value: FAKE_KEY } });
     fireEvent.click(button('Save key'));
     await waitFor(() => expect(h.set.mutateAsync).toHaveBeenCalled());
+    // Replace is for the provider already in use (the stored key is OpenAI), not the form default.
     expect(h.set.mutateAsync.mock.calls[0]![0]).toEqual({
-      provider: 'anthropic',
+      provider: 'openai',
       apiKey: FAKE_KEY,
     });
   });
@@ -287,6 +288,20 @@ describe('OwnKeySection - key hygiene', () => {
     await waitFor(() => expect(h.test.reset).toHaveBeenCalled());
     fireEvent.click(button('Save key'));
     await waitFor(() => expect(h.set.reset).toHaveBeenCalled());
+  });
+});
+
+describe('OwnKeySection - refetch errors', () => {
+  it('a failed background refetch keeps the stored key and its controls, with a small notice', () => {
+    h.query = {
+      data: { canManage: true, key: STORED },
+      isLoading: false,
+      error: { message: 'network' },
+    };
+    render(<OwnKeySection />);
+    expect(screen.getByTestId('own-key-stored').textContent).toContain('•••• abcd');
+    expect(button('Remove')).toBeTruthy();
+    expect(screen.getByRole('alert').textContent).toContain('Could not refresh');
   });
 });
 

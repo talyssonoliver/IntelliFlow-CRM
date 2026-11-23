@@ -204,6 +204,9 @@ export const aiProviderKeyRouter = createTRPCRouter({
         return { ok: result.ok, message: result.ok ? ACCEPTED : result.message, key: null };
       }
 
+      // Without the encryption key the client returns the stored ciphertext: it would be sent to
+      // the provider as the key and a working key would be marked INVALID.
+      requireEncryptionKey(process.env, 'AI provider keys');
       const stored = (await ctx.prismaWithTenant.tenantAIProviderKey.findFirst({
         where: { tenantId },
         select: { provider: true, apiKey: true },

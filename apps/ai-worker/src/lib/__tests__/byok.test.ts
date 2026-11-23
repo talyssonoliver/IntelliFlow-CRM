@@ -282,9 +282,34 @@ describe('classifyByokFailure', () => {
     expect(
       classifyByokFailure(httpError(400, 'Your credit balance is too low to access the API'))
     ).toBe('QUOTA_EXCEEDED');
-    expect(classifyByokFailure(new Error('You exceeded your current quota'))).toBe(
-      'QUOTA_EXCEEDED'
-    );
+  });
+
+  it('an error with no HTTP status is never a key failure, whatever its text says', () => {
+    expect(classifyByokFailure(new Error('You exceeded your current quota'))).toBeNull();
+    expect(classifyByokFailure(new Error('Failed to parse. Text: billing'))).toBeNull();
+    expect(
+      classifyByokFailure(
+        Object.assign(new Error("Invalid enum: received 'billing'"), { name: 'ZodError' })
+      )
+    ).toBeNull();
+    expect(
+      classifyByokFailure(
+        Object.assign(new Error('insufficient_quota'), { code: 'insufficient_quota' })
+      )
+    ).toBeNull();
+  });
+
+  it('CRM text that mentions billing is not an empty balance, even on an HTTP status', () => {
+    expect(classifyByokFailure(httpError(400, 'unexpected category: billing'))).toBeNull();
+    expect(classifyByokFailure(httpError(429, 'ticket about billing'))).toBe('RATE_LIMITED');
+  });
+
+  it('a parse failure is never a key failure, even with a status-like field', () => {
+    const parse = Object.assign(new Error('Failed to parse. Text: credit balance is too low'), {
+      name: 'OutputParserException',
+      status: 400,
+    });
+    expect(classifyByokFailure(parse)).toBeNull();
   });
 
   it('Google answers a bad key at run time with 400 "API key not valid": INVALID, only for Google', () => {
@@ -306,7 +331,7 @@ describe('classifyByokFailure', () => {
     [httpError(429, 'Your credit balance is too low'), 'QUOTA_EXCEEDED'],
     [Object.assign(new Error('x'), { error: { status: 401 } }), 'INVALID'],
     [
-      Object.assign(new Error('insufficient_quota'), { code: 'insufficient_quota' }),
+      Object.assign(new Error('insufficient_quota'), { code: 'insufficient_quota', status: 429 }),
       'QUOTA_EXCEEDED',
     ],
   ])('%#: %s', (err, expected) => {
@@ -553,5 +578,34 @@ describe('model cache eviction', () => {
     expect(build).toHaveBeenCalledTimes(501);
     getCachedByokModel(credential({ tenantId: 'tenant-0' }), 's', build);
     expect(build).toHaveBeenCalledTimes(502);
+  });
+});
+
+describe('success reads the status now, not the one the model was built with', () => {
+  it('a model built ACTIVE that was later marked RATE_LIMITED still heals the row on success', async () => {
+    db.findFirst.mockResolvedValue(row());
+    await resolveByokCredential('tenant-a');
+    const { model } = fakeModel(async () => ({ content: 'ok' }));
+    const wrapped = withByokFailureHandling(model, { credential: credential(), fallback: null });
+    await markByokStatus(credential(), 'RATE_LIMITED');
+    db.updateMany.mockClear();
+    await wrapped.invoke('hi');
+    expect(db.updateMany.mock.calls[0][0].data).toMatchObject({ status: 'ACTIVE' });
+  });
+
+  it('a model built RATE_LIMITED whose key is ACTIVE again does not rewrite the row on every call', async () => {
+    db.findFirst.mockResolvedValue(row({ status: 'ACTIVE' }));
+    await resolveByokCredential('tenant-a');
+    const { model } = fakeModel(async () => ({ content: 'ok' }));
+    const wrapped = withByokFailureHandling(model, {
+      credential: credential({ status: 'RATE_LIMITED' }),
+      fallback: null,
+    });
+    await wrapped.invoke('hi');
+    await wrapped.invoke('hi');
+    await wrapped.invoke('hi');
+    // Only the throttled lastUsedAt stamp, once: no status rewrite, no write per call.
+    expect(db.updateMany).toHaveBeenCalledTimes(1);
+    expect(db.updateMany.mock.calls[0][0].data.status).toBeUndefined();
   });
 });

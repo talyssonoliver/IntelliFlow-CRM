@@ -322,6 +322,14 @@ describe('aiProviderKeyRouter (PG-199 BYOK)', () => {
       expect(delegate().update).not.toHaveBeenCalled();
     });
 
+    it('re-checking the stored key needs field encryption: nothing is read, sent or overwritten without it', async () => {
+      delete process.env['PRISMA_FIELD_ENCRYPTION_KEY'];
+      await expectCode(admin.test(null), 'PRECONDITION_FAILED');
+      expect(delegate().findFirst).not.toHaveBeenCalled();
+      expect(checkProviderKey).not.toHaveBeenCalled();
+      expect(delegate().update).not.toHaveBeenCalled();
+    });
+
     it('is NOT_FOUND when there is no stored key to test', async () => {
       await expectCode(admin.test(null), 'NOT_FOUND');
     });

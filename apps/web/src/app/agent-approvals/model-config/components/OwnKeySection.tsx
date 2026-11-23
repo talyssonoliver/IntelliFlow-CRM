@@ -141,7 +141,7 @@ export function OwnKeySection() {
     );
   }
 
-  if (query.error || !data) {
+  if (!data) {
     return (
       <section aria-labelledby="own-key-title" className="mb-4">
         <Card className="space-y-3 p-4 sm:p-5">
@@ -253,6 +253,12 @@ export function OwnKeySection() {
     <section aria-labelledby="own-key-title" className="mb-4">
       <Card className="space-y-4 p-4 sm:p-5">
         <Header />
+
+        {query.error && (
+          <p className="text-sm text-amber-800 dark:text-amber-200" role="alert">
+            Could not refresh your key settings. Showing the last values loaded.
+          </p>
+        )}
 
         {stored && (
           <div
@@ -381,6 +387,9 @@ export function OwnKeySection() {
               className={BUTTON_CLASS}
               onClick={() => {
                 setFeedback(null);
+                // The replacement is for the provider the workspace already uses.
+                setProvider(stored.provider);
+                setApiKey('');
                 setReplacing(true);
               }}
               disabled={busy}

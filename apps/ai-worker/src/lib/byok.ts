@@ -387,7 +387,10 @@ export function getCachedByokModel(
 // ---------------------------------------------------------------------------
 
 const QUOTA_PATTERN =
-  /insufficient[_ ]quota|exceeded your current quota|credit balance is too low|out of credits|billing/i;
+  /insufficient[_ ]quota|exceeded your current quota|credit balance is too low|out of credits/i;
+
+/** Errors of our own parsing of an answer: never the provider's verdict on the key. */
+const PARSE_FAILURES: ReadonlySet<string> = new Set(['OutputParserException', 'ZodError']);
 
 function httpStatusOf(err: unknown): number | undefined {
   const e = err as {
@@ -409,10 +412,13 @@ export function classifyByokFailure(
   provider?: AIKeyProvider
 ): Exclude<AIKeyStatus, 'ACTIVE'> | null {
   const status = httpStatusOf(err);
-  const e = err as { code?: unknown; message?: unknown; type?: unknown } | null;
+  const e = err as { code?: unknown; message?: unknown; type?: unknown; name?: unknown } | null;
   const text = `${String(e?.code ?? '')} ${String(e?.type ?? '')} ${String(e?.message ?? '')}`;
-  // An empty balance arrives as 400 (Anthropic), 402 or 429, or with no status at all.
-  const quotaStatus = status === undefined || status === 400 || status === 402 || status === 429;
+  // Only an HTTP answer from the provider is a verdict on the key. An error with no status
+  // (a parse failure quoting the model's own output, a network error) never is.
+  if (status === undefined || PARSE_FAILURES.has(String(e?.name ?? ''))) return null;
+  // An empty balance arrives as 400 (Anthropic), 402 or 429.
+  const quotaStatus = status === 400 || status === 402 || status === 429;
   if (quotaStatus && QUOTA_PATTERN.test(text)) return 'QUOTA_EXCEEDED';
   if (status === 401 || status === 403) return 'INVALID';
   if (status === 402) return 'QUOTA_EXCEEDED';
@@ -469,7 +475,9 @@ const LAST_USED_WRITE_INTERVAL_MS = 5 * 60_000;
 /** A successful call: stamp lastUsedAt (at most every 5 min) and heal a non-ACTIVE status. */
 function recordByokSuccess(credential: ByokCredential): void {
   const now = Date.now();
-  const heals = credential.status !== 'ACTIVE';
+  // The status NOW (a model outlives the status it was built with), not the captured one.
+  const current = credentialCache.get(credential.tenantId)?.value?.status ?? credential.status;
+  const heals = current !== 'ACTIVE';
   const last = lastUsedWrittenAt.get(credential.tenantId) ?? 0;
   if (!heals && now - last < LAST_USED_WRITE_INTERVAL_MS) return;
   lastUsedWrittenAt.set(credential.tenantId, now);
