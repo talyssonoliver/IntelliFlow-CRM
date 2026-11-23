@@ -1419,6 +1419,8 @@ interface AiInsightsData {
   /** The lead's stored score; shown only when scoringStatus says it is a real score. */
   leadScore: number;
   scoringStatus: string | null;
+  /** 0 to 1; null when the score was made before the confidence was stored. */
+  scoreConfidence: number | null;
   engagementLevel: string;
   engagementScore: number;
   conversionProbability: number;
@@ -1540,6 +1542,7 @@ function LeadAIInsightsTab({
                   <LeadScoreValue
                     score={aiInsights.leadScore}
                     scoringStatus={aiInsights.scoringStatus}
+                    scoreConfidence={aiInsights.scoreConfidence}
                   />
                 </span>
               </p>
@@ -1666,6 +1669,7 @@ function LeadRightSidebar({
                 <LeadScoreValue
                   score={aiInsights.leadScore}
                   scoringStatus={aiInsights.scoringStatus}
+                  scoreConfidence={aiInsights.scoreConfidence}
                 />
               </span>
             </div>
@@ -2234,6 +2238,7 @@ export default function Lead360Page() {
       return {
         leadScore: lead?.score ?? 0,
         scoringStatus: lead?.scoringStatus ?? null,
+        scoreConfidence: lead?.scoreConfidence ?? null,
         engagementLevel: 'Not analyzed',
         engagementScore: 0,
         conversionProbability: 0,
@@ -2256,6 +2261,7 @@ export default function Lead360Page() {
     return {
       leadScore: lead?.score ?? 0,
       scoringStatus: lead?.scoringStatus ?? null,
+      scoreConfidence: lead?.scoreConfidence ?? null,
       engagementLevel,
       engagementScore: insight.engagementScore,
       conversionProbability: insight.conversionProbability,
@@ -2274,7 +2280,7 @@ export default function Lead360Page() {
       recommendations: insightRecommendations(insight.recommendations),
       icpMatch: insight.icpMatch || 'Not analyzed',
     };
-  }, [apiInsight, lead?.score, lead?.scoringStatus, lead?.estimatedValue]);
+  }, [apiInsight, lead?.score, lead?.scoringStatus, lead?.scoreConfidence, lead?.estimatedValue]);
 
   // IFC-226: Null-state detection for AI insight styling
   const hasAiInsight = !!apiInsight;

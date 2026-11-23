@@ -504,6 +504,23 @@ describe('LeadService', () => {
       expect(result.value.tier).toBe('WARM');
     });
 
+    it('keeps the confidence on the saved lead, so the repository stores it with the score (register #49)', async () => {
+      const lead = Lead.create({
+        email: 'confidence@example.com',
+        source: 'WEBSITE',
+        ownerId: 'owner-123',
+      }).value;
+      leadRepository.add(lead);
+
+      aiService.setMockScore(30, 0.5);
+
+      const result = await leadService.scoreLead(lead.id.value);
+
+      expect(result.isSuccess).toBe(true);
+      expect(lead.score.value).toBe(30);
+      expect(lead.score.confidence).toBe(0.5);
+    });
+
     it('should auto-qualify lead with high score', async () => {
       const lead = Lead.create({
         email: 'hotlead@example.com',

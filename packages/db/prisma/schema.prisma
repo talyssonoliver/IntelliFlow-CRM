@@ -678,6 +678,8 @@ model Lead {
   scoringStatus   LeadScoringStatus @default(NONE)
   /// #1218: when `score` was last set by a successful scoring.
   scoredAt        DateTime?
+  /// Confidence (0 to 1) of the score. NULL = unknown (scored before it was stored); set on the next scoring.
+  scoreConfidence Float?
   location        String?
   website         String?
   avatarUrl       String?

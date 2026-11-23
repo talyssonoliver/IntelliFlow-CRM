@@ -523,6 +523,24 @@ describe('LeadDetailPage - Real AI Insight Rendering (IFC-226)', () => {
     expect(screen.getByTestId('engagement-value')).toHaveTextContent('High');
   });
 
+  it('passes the stored score confidence to the score in the sidebar (register #49)', () => {
+    const data = mockLeadQueryState.data as { scoringStatus?: string; scoreConfidence?: number };
+    data.scoringStatus = 'NEEDS_REVIEW';
+    data.scoreConfidence = 0.4;
+    try {
+      const { unmount } = render(<Lead360Page />);
+      expect(screen.getByTestId('sidebar-lead-score')).toHaveTextContent('Low confidence');
+      unmount();
+
+      data.scoreConfidence = 0.7;
+      render(<Lead360Page />);
+      expect(screen.getByTestId('sidebar-lead-score')).toHaveTextContent('Few signals yet');
+      expect(screen.getByTestId('sidebar-lead-score')).not.toHaveTextContent('Low confidence');
+    } finally {
+      delete data.scoreConfidence;
+    }
+  });
+
   it('renders sentiment with green styling when real data exists', () => {
     render(<Lead360Page />);
     const aiTab = screen.getByRole('button', { name: /AI Insights/i });
