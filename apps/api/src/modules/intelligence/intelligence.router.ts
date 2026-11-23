@@ -932,8 +932,9 @@ export const intelligenceRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const { entityType, entityId, predictionType, priority } = input;
 
-      // Per-tenant metering: the queued prediction is AI spend. Assert only; cost is recorded elsewhere.
-      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiSpendCentsPerMonth');
+      // Plan allowance counted in AI actions (aiActionsPerMonth). Assert only; the ai-worker counts
+      // each model call as it completes (the spend in cents stays an internal metric).
+      await assertQuota(ctx, typedCtx.tenant.tenantId, 'aiActionsPerMonth');
 
       // Verify entity exists
       if (entityType === 'lead') {

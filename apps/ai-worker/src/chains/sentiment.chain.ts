@@ -32,6 +32,7 @@ import {
   URGENCY_LEVELS,
   type SentimentLabel,
 } from '@intelliflow/domain';
+import { isAiActionsExhausted } from '../lib/ai-actions-allowance';
 
 // Re-export for consumers
 export { SENTIMENT_LABELS, EMOTION_LABELS, URGENCY_LEVELS } from '@intelliflow/domain';
@@ -279,6 +280,8 @@ export class SentimentAnalysisChain {
 
       return result;
     } catch (error) {
+      // The plan's AI actions are used up: fail with that reason, never answer with a heuristic.
+      if (isAiActionsExhausted(error)) throw error;
       logger.error(
         {
           textLength: input.text.length,

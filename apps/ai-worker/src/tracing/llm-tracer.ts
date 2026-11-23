@@ -34,6 +34,7 @@ import {
   recordMonthlyModelSpend,
 } from '../lib/usage-metering.js';
 import { assertWithinMonthlyBudget } from '../lib/monthly-budget.js';
+import { assertWithinAiActions, recordAiAction } from '../lib/ai-actions-allowance.js';
 
 const tracer = trace.getTracer('intelliflow-ai-worker', '0.1.0');
 
@@ -101,6 +102,8 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
       // The worker-wide monthly cap (owner constraint): refuse before any provider is called.
       await assertWithinMonthlyBudget(chatPricingKey(meta), meta.provider ?? aiConfig.provider);
     }
+    // The tenant's plan allowance, counted in AI actions: applies on its own key too.
+    await assertWithinAiActions(tenantId);
 
     return tracer.startActiveSpan(
       'llm.invoke',
@@ -120,6 +123,7 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
           const result = await originalInvoke(input, options);
           span.setStatus({ code: SpanStatusCode.OK });
           recordModelUsage(meta, input, result);
+          recordAiAction();
           await recordMonthlyModelSpend(meta, result);
           return result;
         } catch (err) {
@@ -136,6 +140,7 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
           const billed = (err as { billedResult?: unknown } | null)?.billedResult;
           if (billed) {
             recordModelUsage(meta, input, billed);
+            recordAiAction();
             await recordMonthlyModelSpend(meta, billed);
           }
           throw err;

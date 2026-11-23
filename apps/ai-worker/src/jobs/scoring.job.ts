@@ -18,6 +18,7 @@ import { logAIAgentAction } from '../utils/audit-log';
 import { getLLMBreaker, resolveFallbackProvider } from '../lib/llm-factory';
 import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
 import { isMonthlyBudgetExceeded } from '../lib/monthly-budget';
+import { isAiActionsExhausted } from '../lib/ai-actions-allowance';
 import { formatLeadActivityContext, loadLeadActivityContext } from '../lib/lead-activity-context';
 import { requiresHumanReview } from '@intelliflow/domain';
 import type { CircuitBreaker } from '../utils/circuit-breaker';
@@ -317,7 +318,8 @@ async function scoreThroughBreaker(
         isInconclusive(error) ||
         isContentRefusal(error) ||
         isPurposeCeilingReached(error) ||
-        isMonthlyBudgetExceeded(error)
+        isMonthlyBudgetExceeded(error) ||
+        isAiActionsExhausted(error)
       )
         return { notCounted: error };
       throw error;

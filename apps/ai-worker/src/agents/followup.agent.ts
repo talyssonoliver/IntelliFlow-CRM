@@ -11,6 +11,7 @@ import {
 import { replayConversation } from '../utils/conversation-replay.js';
 import { ensurePromptBudget } from '../utils/prompt-budget.js';
 import { isPurposeCeilingReached } from '../lib/purpose-ceiling.js';
+import { isAiActionsExhausted } from '../lib/ai-actions-allowance';
 import { formatPounds } from '../utils/format-pounds.js';
 
 const logger = pino({
@@ -183,7 +184,7 @@ the specific context of each lead. You excel at balancing persistence with profe
       return result;
     } catch (parseError) {
       // PG-199: a budget refusal is not a parse failure; never turn it into a fallback answer.
-      if (isPurposeCeilingReached(parseError)) throw parseError;
+      if (isPurposeCeilingReached(parseError) || isAiActionsExhausted(parseError)) throw parseError;
       logger.error(
         {
           leadId: input.leadId,

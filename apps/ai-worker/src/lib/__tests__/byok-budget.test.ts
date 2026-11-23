@@ -8,6 +8,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { wrapModelWithTracing } from '../../tracing/llm-tracer';
 import { tenantContextStore } from '../../tracing/tenant-context';
 import { costTracker } from '../../utils/cost-tracker';
+import { setAiActionRecorder } from '../ai-actions-allowance';
 import {
   MonthlyBudgetExceededError,
   _resetPendingSpend,
@@ -114,5 +115,18 @@ describe('BYOK calls and the platform budget', () => {
       operationType: 'llm:scoring',
     });
     expect(costTracker.getDailyCost()).toBeGreaterThan(before);
+  });
+});
+
+describe('BYOK calls and the tenant AI-actions allowance', () => {
+  afterEach(() => setAiActionRecorder(null));
+
+  it('a BYOK call still counts one AI action for the tenant (it skips only the platform budget)', async () => {
+    const recorder = vi.fn().mockResolvedValue(undefined);
+    setAiActionRecorder(recorder);
+    const model = wrapModelWithTracing(bigSpender(), { ...META, byok: true });
+    await runAsTenant(() => model.invoke('hi'));
+    expect(recorder).toHaveBeenCalledTimes(1);
+    expect(values.get(monthlyBudgetKey()) ?? 0).toBe(0);
   });
 });
