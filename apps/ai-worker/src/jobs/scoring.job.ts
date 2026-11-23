@@ -18,6 +18,7 @@ import { logAIAgentAction } from '../utils/audit-log';
 import { getLLMBreaker, resolveFallbackProvider } from '../lib/llm-factory';
 import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
 import { isMonthlyBudgetExceeded } from '../lib/monthly-budget';
+import { isByokFailure } from '../lib/byok';
 import { formatLeadActivityContext, loadLeadActivityContext } from '../lib/lead-activity-context';
 import { requiresHumanReview } from '@intelliflow/domain';
 import type { CircuitBreaker } from '../utils/circuit-breaker';
@@ -302,7 +303,9 @@ function scoringErrorClass(primary: unknown, fallback?: unknown): string {
  * Run a scoring call through the provider's circuit breaker. Some failures say nothing about the
  * provider, so they are not counted as breaker failures: an inconclusive answer or a content
  * refusal (the provider is up and answered about this lead), a tenant's monthly budget refusal
- * and the worker-wide monthly AI budget refusal (no provider was called). The breaker is shared by every tenant, so counting them
+ * and the worker-wide monthly AI budget refusal (no provider was called), and any failure of a
+ * tenant's own BYOK key or provider (PG-199: one customer's key must not open the platform
+ * breaker). The breaker is shared by every tenant, so counting them
  * would block scoring for everyone. All are still rethrown for this lead (codex, #1218).
  */
 async function scoreThroughBreaker(
@@ -317,7 +320,8 @@ async function scoreThroughBreaker(
         isInconclusive(error) ||
         isContentRefusal(error) ||
         isPurposeCeilingReached(error) ||
-        isMonthlyBudgetExceeded(error)
+        isMonthlyBudgetExceeded(error) ||
+        isByokFailure(error)
       )
         return { notCounted: error };
       throw error;

@@ -27,6 +27,20 @@ function getLogger(): pino.Logger {
  * @param resetTimeout     - ms before attempting HALF_OPEN reset (default 60 s)
  */
 export class CircuitBreaker {
+  /**
+   * Failures that say nothing about the provider this breaker guards (for example a tenant's
+   * own BYOK key being rejected, registered by lib/byok.ts): they are rethrown and never
+   * counted, in every breaker, so no caller can forget the exemption. Breakers are shared by
+   * every tenant, so counting one customer's failure would stop the others.
+   */
+  private static readonly ignoredFailures: Array<(error: unknown) => boolean> = [];
+
+  static ignoreFailuresMatching(predicate: (error: unknown) => boolean): void {
+    if (!CircuitBreaker.ignoredFailures.includes(predicate)) {
+      CircuitBreaker.ignoredFailures.push(predicate);
+    }
+  }
+
   private failureCount = 0;
   private lastFailureTime = 0;
   private state: 'CLOSED' | 'OPEN' | 'HALF_OPEN' = 'CLOSED';
@@ -61,6 +75,7 @@ export class CircuitBreaker {
 
       return result;
     } catch (error) {
+      if (CircuitBreaker.ignoredFailures.some((matches) => matches(error))) throw error;
       this.failureCount++;
       this.lastFailureTime = Date.now();
 

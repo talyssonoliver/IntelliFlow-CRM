@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-22T21:38:43.578Z",
+  "timestamp": "2026-11-23T02:11:28.187Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 83,
-    "total_endpoints": 621,
+    "total_routers": 84,
+    "total_endpoints": 624,
     "total_queries": 268,
-    "total_mutations": 353,
+    "total_mutations": 356,
     "routers": [
       {
         "name": "contact",
@@ -1357,6 +1357,12 @@
         "mutations": 2
       },
       {
+        "name": "aiProviderKey",
+        "endpoints": 3,
+        "queries": 0,
+        "mutations": 3
+      },
+      {
         "name": "modelConfig",
         "endpoints": 3,
         "queries": 1,
@@ -1521,16 +1527,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 217,
-    "total_fields": 3239,
-    "total_indexes": 965,
-    "total_relations": 323,
+    "total_tables": 218,
+    "total_fields": 3253,
+    "total_indexes": 967,
+    "total_relations": 324,
     "tables_with_embeddings": 4,
     "enums": 82,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 194,
+        "fields": 195,
         "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
@@ -2113,6 +2119,13 @@
         "name": "TenantAIConfig",
         "fields": 13,
         "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "TenantAIProviderKey",
+        "fields": 13,
+        "indexes": 2,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -3412,11 +3425,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 74,
-    "total_schemas": 692,
+    "total_validators": 75,
+    "total_schemas": 695,
     "by_complexity": {
       "complex": 39,
-      "moderate": 26,
+      "moderate": 27,
       "simple": 9
     },
     "validators": [
@@ -3730,6 +3743,12 @@
         "name": "terms-acceptance",
         "file": "terms-acceptance.ts",
         "schemas": 4,
+        "complexity": "moderate"
+      },
+      {
+        "name": "ai-provider-key",
+        "file": "ai-provider-key.ts",
+        "schemas": 3,
         "complexity": "moderate"
       },
       {
@@ -4209,6 +4228,23 @@
         "name": "agent.getPendingCount",
         "method": "GET",
         "description": "Get pending count"
+      }
+    ],
+    "aiProviderKey": [
+      {
+        "name": "aiProviderKey.get",
+        "method": "POST",
+        "description": "Get"
+      },
+      {
+        "name": "aiProviderKey.setOptions",
+        "method": "POST",
+        "description": "Set options"
+      },
+      {
+        "name": "aiProviderKey.remove",
+        "method": "POST",
+        "description": "Remove"
       }
     ],
     "approvalPolicies": [

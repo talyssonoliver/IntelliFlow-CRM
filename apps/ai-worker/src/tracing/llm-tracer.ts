@@ -37,6 +37,16 @@ import { assertWithinMonthlyBudget } from '../lib/monthly-budget.js';
 
 const tracer = trace.getTracer('intelliflow-ai-worker', '0.1.0');
 
+/** An error with only the class and HTTP status of `err`: no provider message. */
+function byokSafeError(err: unknown): Error {
+  const e = err as { name?: unknown; status?: unknown } | null;
+  const name = typeof e?.name === 'string' ? e.name : 'Error';
+  const status = typeof e?.status === 'number' ? ` (HTTP ${e.status})` : '';
+  const safe = new Error(`BYOK call failed: ${name}${status}`);
+  safe.name = name;
+  return safe;
+}
+
 export interface LLMTracingMeta {
   purpose: LLMPurpose;
   tier: LLMTier;
@@ -49,6 +59,11 @@ export interface LLMTracingMeta {
    * job-level fallback). The monthly budget fails closed per provider (monthly-budget.ts).
    */
   provider?: AIProvider;
+  /**
+   * PG-199 BYOK: this model runs on the tenant's own key. Its usage is metered for the tenant
+   * but skips the platform's daily cost limit and monthly budget (lib/usage-metering.ts).
+   */
+  byok?: boolean;
 }
 
 export interface EmbeddingsTracingMeta {
@@ -79,9 +94,13 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
     options?: InvokeParams[1]
   ) => {
     const tenantId = tenantContextStore.getStore()?.tenantId ?? 'unknown';
-    assertWithinDailyLimit();
-    // The worker-wide monthly cap (owner constraint): refuse before any provider is called.
-    await assertWithinMonthlyBudget(chatPricingKey(meta), meta.provider ?? aiConfig.provider);
+    // The platform's own caps (daily cost limit, worker-wide monthly budget) protect what the
+    // PLATFORM pays: a tenant on its own key is never refused by them (PG-199 BYOK).
+    if (!meta.byok) {
+      assertWithinDailyLimit();
+      // The worker-wide monthly cap (owner constraint): refuse before any provider is called.
+      await assertWithinMonthlyBudget(chatPricingKey(meta), meta.provider ?? aiConfig.provider);
+    }
 
     return tracer.startActiveSpan(
       'llm.invoke',
@@ -104,8 +123,14 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
           await recordMonthlyModelSpend(meta, result);
           return result;
         } catch (err) {
-          span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
-          span.recordException(err as Error);
+          // A tenant's own-key call can fail with a provider message that quotes (masked) key
+          // text: its span carries only the error class and HTTP status (PG-199 BYOK).
+          const traced = meta.byok ? byokSafeError(err) : (err as Error);
+          span.setStatus({
+            code: SpanStatusCode.ERROR,
+            message: meta.byok ? traced.message : String(err),
+          });
+          span.recordException(traced);
           // A provider response that completed but was unusable (a Claude refusal or a cut-off
           // answer) is still billed: meter it, or repeated failures would escape spend limits.
           const billed = (err as { billedResult?: unknown } | null)?.billedResult;

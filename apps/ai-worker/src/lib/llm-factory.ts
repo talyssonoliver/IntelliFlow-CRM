@@ -6,6 +6,12 @@ import { aiConfig, AIProviderSchema, type AIProvider } from '../config/ai.config
 import { CircuitBreaker } from '../utils/circuit-breaker.js';
 import { resolveEffectiveTier } from './tenant-ai-config.js';
 import { assertWithinCeiling } from './purpose-ceiling.js';
+import {
+  getCachedByokModel,
+  routeForTenant,
+  withByokFailureHandling,
+  type ByokCredential,
+} from './byok.js';
 import { wrapModelWithTracing, wrapEmbeddingsWithTracing } from '../tracing/llm-tracer.js';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { GeminiEmbeddings } from './gemini-embeddings.js';
@@ -13,6 +19,7 @@ import { embeddingDimensions } from './embedding-dimensions.js';
 import { AnthropicChatModel } from './anthropic-chat-model.js';
 import {
   ANTHROPIC_MIN_MAX_TOKENS,
+  DEFAULT_ANTHROPIC_MODEL,
   anthropicEffort,
   anthropicModelForTier,
 } from './anthropic-config.js';
@@ -640,6 +647,110 @@ function runningPricingKey(
   return openRouterModel && !pinApplies ? openRouterModel : undefined;
 }
 
+// ============================================================================
+// BYOK: the tenant's own provider key (PG-199)
+// ============================================================================
+
+interface ByokModelSpec {
+  model: string;
+  /** MODEL_PRICING key the usage estimate is priced with. */
+  pricingKey: string;
+}
+
+/**
+ * The model a tenant's own key runs, by provider and tier. Every id has a MODEL_PRICING entry
+ * (or an equally priced alias) so the tenant's usage is estimated, never priced as some other
+ * model. Premium moves up one model where the provider has one we price.
+ */
+export function byokModelSpec(provider: ByokCredential['provider'], tier: LLMTier): ByokModelSpec {
+  switch (provider) {
+    case 'anthropic': {
+      const model = tier === 'premium' ? 'claude-sonnet-5-5' : DEFAULT_ANTHROPIC_MODEL;
+      return { model, pricingKey: model };
+    }
+    case 'openai': {
+      const model = tier === 'premium' ? 'gpt-4o' : 'gpt-4o-mini';
+      return { model, pricingKey: model };
+    }
+    case 'google':
+      // gemini-2.5-flash is priced as the 'structured-free' alias ($0.075 / $0.30 per M).
+      return { model: 'gemini-2.5-flash', pricingKey: 'structured-free' };
+    case 'openrouter': {
+      const model = tier === 'premium' ? 'gpt-4o' : 'gpt-4o-mini';
+      return { model: `openai/${model}`, pricingKey: model };
+    }
+  }
+}
+
+/**
+ * Provider hosts are fixed here, never read from env: a platform `OPENAI_BASE_URL` or
+ * `OPENROUTER_BASE_URL` must not be able to send a customer's key anywhere but its provider.
+ */
+const BYOK_BASE_URL = {
+  openai: 'https://api.openai.com/v1',
+  google: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+  openrouter: 'https://openrouter.ai/api/v1',
+} as const;
+
+/**
+ * Build a chat model on the tenant's own provider and key. It is wrapped with the tracer
+ * flagged `byok`: its usage is metered for the tenant but never counts toward, or is refused
+ * by, the platform's daily cost limit or worker-wide monthly budget.
+ */
+export function createByokModel(
+  credential: ByokCredential,
+  purpose: LLMPurpose,
+  tier: LLMTier,
+  params: { temperature: number; maxTokens: number; timeout: number }
+): BaseChatModel {
+  const spec = byokModelSpec(credential.provider, tier);
+  let model: BaseChatModel;
+  let tracedProvider: AIProvider;
+  if (credential.provider === 'anthropic') {
+    tracedProvider = 'anthropic';
+    model = new AnthropicChatModel({
+      model: spec.model,
+      maxTokens: Math.max(params.maxTokens, ANTHROPIC_MIN_MAX_TOKENS),
+      timeout: params.timeout,
+      effort: anthropicEffort(),
+      apiKey: credential.apiKey,
+    });
+  } else {
+    tracedProvider = credential.provider === 'openrouter' ? 'openrouter' : 'openai';
+    const chat = new ChatOpenAI({
+      apiKey: credential.apiKey,
+      modelName: spec.model,
+      ...params,
+      configuration: {
+        baseURL: BYOK_BASE_URL[credential.provider],
+        defaultHeaders: {
+          // The platform's OpenAI organization / project (OPENAI_ORGANIZATION, OPENAI_PROJECT_ID)
+          // must not ride along with a customer's key: null removes the header.
+          'OpenAI-Organization': null,
+          'OpenAI-Project': null,
+          ...(credential.provider === 'openrouter'
+            ? {
+                'HTTP-Referer': process.env['OPENROUTER_SITE_URL'] || 'https://intelliflow-crm.app',
+                'X-Title': 'IntelliFlow CRM',
+              }
+            : {}),
+        },
+        fetch: bodySafeFetch,
+      },
+    });
+    // Google's and OpenRouter's OpenAI-compatible endpoints answer strict json_schema poorly;
+    // tool calling is the path the platform already uses on OpenRouter.
+    model = credential.provider === 'openai' ? chat : withFunctionCallingDefault(chat);
+  }
+  return wrapModelWithTracing(model, {
+    purpose,
+    tier,
+    pricingKey: spec.pricingKey,
+    provider: tracedProvider,
+    byok: true,
+  });
+}
+
 /**
  * Tenant-aware async sibling of `createLLM`.
  *
@@ -686,19 +797,48 @@ export async function createLLMForTenant(
 
   // PG-199: model pin + ordered fallbacks. An id no longer in the catalog is never
   // silently swapped for a cheaper default: the tenant fallbacks take over first.
-  const fallbackIds = (resolved.fallbackModelIds ?? []).filter((id) => getCatalogEntry(id));
-  let primaryId: string | undefined = resolved.modelId ?? undefined;
-  if (primaryId && !getCatalogEntry(primaryId)) {
-    console.error(
-      `[llm-factory] pin_retired: tenant ${tenantId} ${purpose} pin "${primaryId}" is not in the model catalog`
+  const buildPlatformModel = (): BaseChatModel => {
+    const fallbackIds = (resolved.fallbackModelIds ?? []).filter((id) => getCatalogEntry(id));
+    let primaryId: string | undefined = resolved.modelId ?? undefined;
+    if (primaryId && !getCatalogEntry(primaryId)) {
+      console.error(
+        `[llm-factory] pin_retired: tenant ${tenantId} ${purpose} pin "${primaryId}" is not in the model catalog`
+      );
+      primaryId = fallbackIds.shift();
+    }
+    const primary = createLLM(purpose, effectiveTier, { ...effectiveOptions, model: primaryId });
+    const fallbacks = fallbackIds.map((id) =>
+      createLLM(purpose, effectiveTier, { ...effectiveOptions, model: id })
     );
-    primaryId = fallbackIds.shift();
+    return withModelFallbacks(primary, fallbacks);
+  };
+
+  // BYOK (PG-199): a tenant with its own provider key runs on it; every other tenant takes the
+  // platform path unchanged. The tenant's model pin and fallbacks name catalog models on the
+  // platform's gateway, so they do not apply to the customer's own key. May throw ByokKeyError
+  // (key unusable and fallback not allowed): the job then fails with that clear message.
+  const route = await routeForTenant(tenantId, {
+    explicitProvider: options.provider !== undefined,
+  });
+  let model: BaseChatModel;
+  if (route.kind === 'byok') {
+    const { credential } = route;
+    const params = {
+      temperature: effectiveOptions.temperature ?? 0.7,
+      maxTokens: effectiveOptions.maxTokens ?? 2000,
+      timeout: effectiveOptions.timeout ?? 120_000,
+    };
+    const shape = `${purpose}:${effectiveTier}:${params.temperature}:${params.maxTokens}:${params.timeout}`;
+    const own = getCachedByokModel(credential, shape, () =>
+      createByokModel(credential, purpose, effectiveTier, params)
+    );
+    model = withByokFailureHandling(own, {
+      credential,
+      fallback: credential.allowFallback ? buildPlatformModel : null,
+    });
+  } else {
+    model = buildPlatformModel();
   }
-  const primary = createLLM(purpose, effectiveTier, { ...effectiveOptions, model: primaryId });
-  const fallbacks = fallbackIds.map((id) =>
-    createLLM(purpose, effectiveTier, { ...effectiveOptions, model: id })
-  );
-  const model = withModelFallbacks(primary, fallbacks);
   if (resolved.ceilingCents === null || resolved.ceilingCents === undefined) return model;
   return withCeilingGuard(model, () =>
     assertWithinCeiling(tenantId, purpose, resolved.ceilingCents)
