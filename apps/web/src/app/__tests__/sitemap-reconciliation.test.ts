@@ -50,7 +50,7 @@ beforeAll(async () => {
 
 describe('Sitemap Reconciliation', () => {
   // TC-25
-  it('total page.tsx count equals 219 (regression guard)', () => {
+  it('total page.tsx count equals 222 (regression guard)', () => {
     // Updated by PG-186: document-settings, document-types, storage-policies moved to (list)/.
     // Net count increased by 2 from PG-182/PG-183/PG-186 work (was 205 before sprint-17).
     // 208 = 207 baseline + 3 newly-tracked under agent-approvals/logs/*, governance/quality-reports/coverage/
@@ -67,7 +67,8 @@ describe('Sitemap Reconciliation', () => {
     const pageFiles = findPageFiles(APP_DIR);
     // PG-203 DSAR: +4 (3 public /dsar pages, /settings/privacy-requests) → 220.
     // MVP-007: +1, the signed-in home (app/(public)/signed-in-home) → 221.
-    expect(pageFiles.length).toBe(221);
+    // MVP-012: +1, the public Data and AI page (app/(public)/data-and-ai) → 222.
+    expect(pageFiles.length).toBe(222);
   });
 
   // TC-26
