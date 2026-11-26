@@ -44,6 +44,7 @@ import { uploadRouter } from './modules/documents/upload.router';
 import { agentRouter } from './modules/agent/agent.router';
 import { approvalPoliciesRouter } from './modules/agent/approval-policies.router'; // PG-198
 import { modelConfigRouter } from './modules/agent/model-config.router'; // PG-199
+import { aiProviderKeyRouter } from './modules/agent/ai-provider-key.router'; // PG-199 BYOK
 import { conversationRouter } from './modules/agent/conversation.router';
 import { auditRouter } from './modules/security/audit.router';
 import { authRouter } from './modules/auth/auth.router';
@@ -190,6 +191,7 @@ export const appRouter = createTRPCRouter({
   agent: agentRouter,
   approvalPolicies: approvalPoliciesRouter, // PG-198: Approval Policies
   modelConfig: modelConfigRouter, // PG-199: Model Config
+  aiProviderKey: aiProviderKeyRouter, // PG-199 BYOK: the workspace's own provider key
   conversation: conversationRouter, // IFC-148: Conversation records, messages, tool calls
   chainVersion: chainVersionRouter,
   zepBudget: zepBudgetRouter,

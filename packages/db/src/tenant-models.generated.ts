@@ -180,6 +180,7 @@ export const TENANT_MODELS: Readonly<Record<string, TenantModelInfo>> = {
   TeamMember: { nullable: false, defaulted: false, relation: 'tenant' },
   TeamMessage: { nullable: false, defaulted: false, relation: 'tenant' },
   TenantAIConfig: { nullable: false, defaulted: false, relation: 'tenant' },
+  TenantAIProviderKey: { nullable: false, defaulted: false, relation: 'tenant' },
   TenantEmailSettings: { nullable: false, defaulted: false, relation: 'tenant' },
   TenantGoalDefault: { nullable: false, defaulted: false, relation: 'tenant' },
   TenantMembership: { nullable: false, defaulted: false, relation: 'tenant' },

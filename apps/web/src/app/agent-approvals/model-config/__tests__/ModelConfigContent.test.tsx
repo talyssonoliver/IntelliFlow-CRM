@@ -31,6 +31,10 @@ vi.mock('@intelliflow/ui', async (orig) => ({
   toast: h.toast,
 }));
 vi.mock('@/lib/auth/AuthContext', () => ({ useRequireAuth: () => h.auth }));
+// The own-key section has its own tests (OwnKeySection.test.tsx) and its own tRPC procedures.
+vi.mock('../components/OwnKeySection', () => ({
+  OwnKeySection: () => <section data-testid="own-key-section" />,
+}));
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     useUtils: () => ({ modelConfig: { get: { invalidate: h.invalidate } } }),
@@ -76,6 +80,11 @@ beforeEach(() => {
 });
 
 describe('ModelConfigContent — layout', () => {
+  it('renders the own-key section between the notes and the purpose cards', () => {
+    render(<ModelConfigContent />);
+    expect(screen.getByTestId('own-key-section')).toBeTruthy();
+  });
+
   it('renders the header, breadcrumbs, the AI Settings link and six purpose cards', () => {
     render(<ModelConfigContent />);
     expect(
