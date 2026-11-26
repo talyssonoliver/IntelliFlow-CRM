@@ -3528,6 +3528,31 @@ model AIMonitoringEvent {
   @@map("ai_monitoring_events")
 }
 
+/// Daily roll-up of AIMonitoringEvent rows older than the retention window (egress audit 1126).
+/// Written only by tools/scripts/ai-monitoring-retention.ts, which is not scheduled and needs the
+/// owner's yes before it deletes anything. tenantKey is the tenant id or '' for a global event;
+/// it is deliberately not a foreign key: a roll-up outlives the tenant row.
+model AIMonitoringDailySummary {
+  id           String   @id @default(cuid())
+  day          DateTime @db.Date
+  eventType    String
+  tenantKey    String   @default("")
+  model        String   @default("")
+  eventCount   Int
+  flaggedCount Int
+  valueSum     Float?
+  valueMin     Float?
+  valueMax     Float?
+  valueP50     Float?
+  valueP95     Float?
+  valueP99     Float?
+  createdAt    DateTime @default(now())
+
+  @@unique([day, eventType, tenantKey, model])
+  @@index([day])
+  @@map("ai_monitoring_daily_summaries")
+}
+
 /// Actor type enum
 enum ActorType {
   USER

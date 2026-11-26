@@ -21,6 +21,7 @@ import {
   startApprovalSweep,
   stopApprovalSweep,
 } from './agent/approval-sweep-scheduler';
+import { runWithEgressJob } from '@intelliflow/db';
 import { createDefaultSweepDeps, runApprovalSweep } from './agent/approval-escalation-sweep';
 import {
   bounceScanIntervalFromEnv,
@@ -140,7 +141,9 @@ export function startBackgroundJobs({
     log,
     run: async () => {
       await ready();
-      const report = await runApprovalSweep(await createDefaultSweepDeps());
+      const report = await runWithEgressJob('api.approvalSweep', async () =>
+        runApprovalSweep(await createDefaultSweepDeps())
+      );
       await beat('approvalSweep');
       return report;
     },
@@ -152,7 +155,9 @@ export function startBackgroundJobs({
     log,
     run: async () => {
       await ready();
-      const report = await runBounceScan(await createBounceReaderDeps());
+      const report = await runWithEgressJob('api.bounceScan', async () =>
+        runBounceScan(await createBounceReaderDeps())
+      );
       await beat('bounceScan');
       return report;
     },
@@ -166,10 +171,12 @@ export function startBackgroundJobs({
     run: async () => {
       await ready();
       try {
-        return await runInboxSync(await createInboxSyncDeps());
+        return await runWithEgressJob('api.inboxSync', async () =>
+          runInboxSync(await createInboxSyncDeps())
+        );
       } finally {
         // MVP-013: Google Calendar, both ways, in the same tick (it never throws; GOOGLE_CALENDAR_SYNC=off).
-        await runCalendarSyncTick(env, log);
+        await runWithEgressJob('api.calendarSync', () => runCalendarSyncTick(env, log));
       }
     },
   });
@@ -188,7 +195,9 @@ export function startBackgroundJobs({
     log,
     run: async () => {
       await ready();
-      const report = await runDsarSlaSweep(await createDsarSlaDeps());
+      const report = await runWithEgressJob('api.dsarSla', async () =>
+        runDsarSlaSweep(await createDsarSlaDeps())
+      );
       await beat('dsarSla');
       return report;
     },

@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-26T01:27:28.769Z",
+  "timestamp": "2026-11-26T17:33:45.151Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1521,9 +1521,9 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 217,
-    "total_fields": 3245,
-    "total_indexes": 965,
+    "total_tables": 218,
+    "total_fields": 3259,
+    "total_indexes": 968,
     "total_relations": 323,
     "tables_with_embeddings": 4,
     "enums": 82,
@@ -2058,6 +2058,13 @@
         "fields": 14,
         "indexes": 3,
         "relations": 3,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AIMonitoringDailySummary",
+        "fields": 14,
+        "indexes": 3,
+        "relations": 0,
         "hasEmbedding": false
       },
       {
