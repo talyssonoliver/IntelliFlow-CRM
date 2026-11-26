@@ -67,7 +67,8 @@ describe('Sitemap Reconciliation', () => {
     const pageFiles = findPageFiles(APP_DIR);
     // PG-203 DSAR: +4 (3 public /dsar pages, /settings/privacy-requests) → 220.
     // MVP-007: +1, the signed-in home (app/(public)/signed-in-home) → 221.
-    expect(pageFiles.length).toBe(221);
+    // Workspace business type: +1, /settings/workspace → 222.
+    expect(pageFiles.length).toBe(222);
   });
 
   // TC-26
