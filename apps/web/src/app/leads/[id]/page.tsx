@@ -1,5 +1,6 @@
 'use client';
 
+import { scrollToSection } from '@/lib/ui/scroll-to-section';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
@@ -1762,8 +1763,9 @@ function LeadRightSidebar({
           )}
         </div>
         <button
+          type="button"
           onClick={onViewAIInsights}
-          className="w-full mt-4 text-sm text-[#2a78f6] hover:underline text-center"
+          className="mt-2 flex min-h-11 w-full items-center justify-center rounded-md text-sm font-medium text-[#2a78f6] hover:bg-primary/10 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           View Full Analysis
         </button>
@@ -2067,6 +2069,14 @@ export default function Lead360Page() {
       el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
   }, [selectedActivityId, activeTab]);
+
+  // Owner 23/11 on the lead page ("No ops button, why?"): "View Full Analysis" sits in the sidebar,
+  // which on a phone is below the tabs. Switching the tab alone changed nothing on screen when the
+  // AI Insights tab was already open, so it also scrolls the tabs into view.
+  const openAiInsights = () => {
+    setActiveTab('ai-insights');
+    scrollToSection('lead-tabs');
+  };
 
   // Emails tab "Open": show that activity in the timeline without changing the URL.
   // Filters are cleared and enough rows shown so the activity is rendered, then it is
@@ -2617,8 +2627,10 @@ export default function Lead360Page() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <LeadDetail lead={lead} leadMetrics={leadMetrics} />
 
-        {/* Center Content - Tabs and Content */}
-        <section className="lg:col-span-6 flex flex-col gap-6">
+        {/* Center Content - Tabs and Content. The anchor lets a button further down the page
+            (e.g. "View Full Analysis" in the sidebar, below everything on a phone) bring the
+            tabs into view. */}
+        <section id="lead-tabs" className="lg:col-span-6 flex flex-col gap-6 scroll-mt-20">
           <LeadTabBar
             tabs={tabs}
             activeTab={activeTab}
@@ -2724,7 +2736,7 @@ export default function Lead360Page() {
           notes={notes}
           leadId={leadId}
           timezone={timezone}
-          onViewAIInsights={() => setActiveTab('ai-insights')}
+          onViewAIInsights={openAiInsights}
           onViewNotes={() => setActiveTab('notes')}
           onViewTasks={() => setActiveTab('tasks')}
         />
