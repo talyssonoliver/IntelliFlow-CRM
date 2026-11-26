@@ -13,6 +13,7 @@
 
 import { initTRPC, TRPCError } from '@trpc/server';
 import { Context } from './context';
+import { MODULE_NOT_IN_WORKSPACE_MESSAGE } from '@intelliflow/domain';
 import { ZodError } from 'zod';
 import { tracingMiddleware } from './tracing/middleware';
 import {
@@ -444,7 +445,8 @@ export const tenantProcedure = protectedProcedure.use(tenantMiddleware);
 // ============================================
 
 /**
- * Enforce — server-side — that the tenant's plan includes a given add-on module.
+ * Enforce — server-side — that a module is part of the workspace: the plan includes it AND the
+ * business type can have it (or an explicit override switches it on).
  *
  * Backend routers for add-on modules (LEGAL, COMMERCE, …) previously relied on
  * the frontend `<ModuleGate>`/`<ModulePaywall>` to hide UI, so a tenant on a
@@ -492,7 +494,7 @@ export function requireModule(moduleId: import('@intelliflow/domain').ModuleId) 
     if (enabled === false) {
       throw new TRPCError({
         code: 'FORBIDDEN',
-        message: `Your plan does not include the ${moduleId} module.`,
+        message: MODULE_NOT_IN_WORKSPACE_MESSAGE,
       });
     }
     return next();

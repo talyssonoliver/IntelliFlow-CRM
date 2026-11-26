@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-26T07:38:08.560Z",
+  "timestamp": "2026-11-26T18:41:25.195Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 84,
-    "total_endpoints": 624,
+    "total_endpoints": 625,
     "total_queries": 268,
-    "total_mutations": 356,
+    "total_mutations": 357,
     "routers": [
       {
         "name": "contact",
@@ -1351,6 +1351,12 @@
         "mutations": 0
       },
       {
+        "name": "subscription",
+        "endpoints": 4,
+        "queries": 2,
+        "mutations": 2
+      },
+      {
         "name": "user",
         "endpoints": 4,
         "queries": 2,
@@ -1415,12 +1421,6 @@
         "endpoints": 3,
         "queries": 1,
         "mutations": 2
-      },
-      {
-        "name": "subscription",
-        "endpoints": 3,
-        "queries": 2,
-        "mutations": 1
       },
       {
         "name": "taskSettings",
@@ -1528,15 +1528,15 @@
   },
   "database_inventory": {
     "total_tables": 218,
-    "total_fields": 3259,
+    "total_fields": 3261,
     "total_indexes": 967,
     "total_relations": 324,
     "tables_with_embeddings": 4,
-    "enums": 82,
+    "enums": 84,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 195,
+        "fields": 196,
         "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
@@ -2760,6 +2760,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TenantModule",
+        "fields": 8,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "AccountIndustryOption",
         "fields": 8,
         "indexes": 3,
@@ -2869,13 +2876,6 @@
         "fields": 8,
         "indexes": 3,
         "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "TenantModule",
-        "fields": 7,
-        "indexes": 3,
-        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -3426,7 +3426,7 @@
   },
   "validators_inventory": {
     "total_validators": 75,
-    "total_schemas": 695,
+    "total_schemas": 697,
     "by_complexity": {
       "complex": 39,
       "moderate": 27,
@@ -3614,6 +3614,12 @@
         "complexity": "complex"
       },
       {
+        "name": "module",
+        "file": "module.ts",
+        "schemas": 9,
+        "complexity": "moderate"
+      },
+      {
         "name": "ticket-settings",
         "file": "ticket-settings.ts",
         "schemas": 9,
@@ -3654,12 +3660,6 @@
         "file": "events.ts",
         "schemas": 7,
         "complexity": "complex"
-      },
-      {
-        "name": "module",
-        "file": "module.ts",
-        "schemas": 7,
-        "complexity": "moderate"
       },
       {
         "name": "email-mailbox",
@@ -6825,6 +6825,11 @@
         "name": "subscription.getEnabledModules",
         "method": "GET",
         "description": "Get enabled modules"
+      },
+      {
+        "name": "subscription.setBusinessType",
+        "method": "POST",
+        "description": "Set business type"
       },
       {
         "name": "subscription.getPlans",

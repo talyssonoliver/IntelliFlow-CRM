@@ -77,7 +77,7 @@ export default function AgentApprovalsLayoutShell({
   }, [onSettingsPage, urlSectionId, InactiveSections, handleSettingsClick]);
 
   return (
-    <ModuleGate moduleId="AI_INTELLIGENCE">
+    <ModuleGate moduleId="AI_INTELLIGENCE" featureLabel="Agent approvals">
       <SidebarProvider>
         <div className="flex min-h-[calc(100vh-4rem)]">
           <SidebarWithSuspense config={sidebarConfig} />

@@ -354,8 +354,8 @@ export class AnalyticsAggregationService {
       this.analyticsRepository.countLeadsInRange(tenantId, prevRange),
       this.analyticsRepository.getRevenueInRange(tenantId, range),
       this.analyticsRepository.getRevenueInRange(tenantId, prevRange),
-      this.analyticsRepository.countOpportunitiesInRange(tenantId, range),
-      this.analyticsRepository.countOpportunitiesInRange(tenantId, prevRange),
+      this.analyticsRepository.countOpenOpportunities(tenantId),
+      this.analyticsRepository.countOpenOpportunitiesAsOf(tenantId, prevRange.endDate),
       this.analyticsRepository.countContactsInRange(tenantId, range),
       this.analyticsRepository.countContactsInRange(tenantId, prevRange),
       this.analyticsRepository.countClosedWonInRange(tenantId, range),
@@ -378,6 +378,8 @@ export class AnalyticsAggregationService {
       totalRevenue,
       revenueDelta: totalRevenue - prevRevenue,
       openOpportunities,
+      // `openOpportunities` is the open-deal count right now (the Pipeline Summary's definition);
+      // its delta is the change since the previous period ended.
       openOpportunitiesDelta: openOpportunities - prevOpenOpportunities,
       newContacts,
       newContactsDelta: newContacts - prevNewContacts,

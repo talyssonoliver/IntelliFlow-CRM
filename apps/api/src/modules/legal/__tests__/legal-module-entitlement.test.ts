@@ -23,6 +23,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { TRPCError } from '@trpc/server';
+import { MODULE_NOT_IN_WORKSPACE_MESSAGE } from '@intelliflow/domain';
 import { createTestContext, prismaMock } from '../../../test/setup';
 import { casesRouter } from '../cases.router';
 import { appointmentsRouter } from '../appointments.router';
@@ -88,7 +89,7 @@ describe('LEGAL routers enforce module entitlement server-side', () => {
 
         expect(thrown, `${name}.${path} must reject when not entitled`).toBeInstanceOf(TRPCError);
         expect((thrown as TRPCError).code, `${name}.${path} must be FORBIDDEN`).toBe('FORBIDDEN');
-        expect((thrown as TRPCError).message).toMatch(/LEGAL module/);
+        expect((thrown as TRPCError).message).toBe(MODULE_NOT_IN_WORKSPACE_MESSAGE);
       }
     });
   }

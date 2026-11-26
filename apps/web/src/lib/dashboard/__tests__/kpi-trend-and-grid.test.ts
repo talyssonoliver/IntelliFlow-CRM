@@ -6,7 +6,12 @@ import {
   formatTrendPercent,
   shouldShowTrend,
 } from '../kpi-calculator';
-import { DASHBOARD_COL_SPAN_CLASSES, dashboardColSpanClass, dashboardWidgetKind } from '../grid';
+import {
+  DASHBOARD_COL_SPAN_CLASSES,
+  dashboardColSpanClass,
+  dashboardWidgetKind,
+  kpiRunSpanClasses,
+} from '../grid';
 
 describe('shouldShowTrend (#1225 UI-009)', () => {
   it('hides the badge when the baseline is near zero', () => {
@@ -82,5 +87,52 @@ describe('dashboard grid: panels take the full phone row (#1249 visual check)', 
       expect(dashboardWidgetKind(type)).toBe('panel');
     }
     expect(dashboardWidgetKind('unknown-widget')).toBe('panel');
+  });
+});
+
+describe('kpiRunSpanClasses (no hole beside the last KPI tile)', () => {
+  const kpi = (id: string, type = 'total-leads') => ({ id, type, colSpan: 1 });
+  const panel = (id: string, colSpan: number) => ({ id, type: 'pipeline', colSpan });
+
+  it('three tiles: the third fills the phone row and spans two on desktop', () => {
+    const m = kpiRunSpanClasses([kpi('a'), kpi('b'), kpi('c')]);
+    expect(m.get('a')).toBe('col-span-1 md:col-span-1 lg:col-span-1');
+    expect(m.get('b')).toBe('col-span-1 md:col-span-1 lg:col-span-1');
+    expect(m.get('c')).toBe('col-span-2 md:col-span-2 lg:col-span-2');
+  });
+
+  it('four tiles need no fill', () => {
+    const m = kpiRunSpanClasses([kpi('a'), kpi('b'), kpi('c'), kpi('d')]);
+    expect([...m.values()].every((v) => v === 'col-span-1 md:col-span-1 lg:col-span-1')).toBe(true);
+  });
+
+  it('a lone tile takes the whole row', () => {
+    expect(kpiRunSpanClasses([kpi('a')]).get('a')).toBe('col-span-2 md:col-span-2 lg:col-span-4');
+  });
+
+  it('after a 3-span panel (one column left at lg) a lone tile fills that column, not a new row', () => {
+    const m = kpiRunSpanClasses([panel('p', 3), kpi('d')]);
+    expect(m.get('d')).toBe('col-span-2 md:col-span-2 lg:col-span-1');
+  });
+
+  it('after a 3-span panel, two tiles use the leftover column then a full row', () => {
+    const m = kpiRunSpanClasses([panel('p', 3), kpi('a'), kpi('b')]);
+    expect(m.get('a')).toBe('col-span-1 md:col-span-1 lg:col-span-1');
+    expect(m.get('b')).toBe('col-span-1 md:col-span-1 lg:col-span-4');
+  });
+
+  it('after a 1-span panel (one column of two at md) tiles are counted from the second column', () => {
+    const m = kpiRunSpanClasses([panel('p', 1), kpi('a'), kpi('b'), kpi('c')]);
+    // md: panel, a | b, c fill. Phone: panel full row, a b | c full row.
+    expect(m.get('a')).toBe('col-span-1 md:col-span-1 lg:col-span-1');
+    expect(m.get('b')).toBe('col-span-1 md:col-span-1 lg:col-span-1');
+    expect(m.get('c')).toBe('col-span-2 md:col-span-1 lg:col-span-1');
+  });
+
+  it('a panel ends a run, so each run is filled on its own', () => {
+    const m = kpiRunSpanClasses([kpi('a'), kpi('b'), kpi('c'), panel('p', 4), kpi('d')]);
+    expect(m.get('c')).toBe('col-span-2 md:col-span-2 lg:col-span-2');
+    expect(m.has('p')).toBe(false);
+    expect(m.get('d')).toBe('col-span-2 md:col-span-2 lg:col-span-4');
   });
 });
