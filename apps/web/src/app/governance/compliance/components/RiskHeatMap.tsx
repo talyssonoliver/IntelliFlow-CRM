@@ -196,6 +196,9 @@ export function RiskHeatMap() {
   const probabilities: RiskProbability[] = ['high', 'medium', 'low'];
   const impacts: RiskImpact[] = ['low', 'medium', 'high'];
 
+  // A register that could not be read (or a failed request) is not "zero risks": say so.
+  const registerMissing = !loading && (data === null || data.registerAvailable === false);
+
   if (loading) {
     return (
       <Card className="p-6">
@@ -231,7 +234,12 @@ export function RiskHeatMap() {
           <div>
             <h2 className="text-lg font-semibold text-foreground">Risk Heat Map</h2>
             <p className="text-sm text-muted-foreground">
-              {data?.summary.total || 0} risks tracked
+              {registerMissing
+                ? 'Risk register not available'
+                : `${data?.summary.total || 0} risks tracked`}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Platform register, not specific to your firm
             </p>
           </div>
         </div>
@@ -247,8 +255,19 @@ export function RiskHeatMap() {
         </div>
       </div>
 
+      {registerMissing && (
+        <p
+          className="mb-4 rounded-md border border-border bg-muted p-3 text-sm text-muted-foreground"
+          data-testid="risk-register-unavailable"
+        >
+          The platform risk register could not be read, so no risks are shown. This is the
+          platform&apos;s own register, not your firm&apos;s, and an empty grid here does not mean
+          there are no risks.
+        </p>
+      )}
+
       {/* Legend */}
-      <div className="flex flex-wrap gap-4 mb-4 text-xs">
+      <div className={registerMissing ? 'hidden' : 'flex flex-wrap gap-4 mb-4 text-xs'}>
         <div className="flex items-center gap-1">
           <span className="text-emerald-600 dark:text-emerald-400">○</span>
           <span className="text-muted-foreground">
@@ -270,7 +289,7 @@ export function RiskHeatMap() {
       </div>
 
       {/* Heat Map Grid */}
-      <div className="overflow-x-auto">
+      <div className={registerMissing ? 'hidden' : 'overflow-x-auto'}>
         <div className="min-w-[300px]">
           {/* Header row */}
           <div className="grid grid-cols-4 gap-2 mb-2">

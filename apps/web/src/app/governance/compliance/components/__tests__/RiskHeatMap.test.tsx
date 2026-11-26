@@ -293,6 +293,35 @@ describe('RiskHeatMap', () => {
   });
 
   describe('Error Handling', () => {
+    it('says the register is unavailable instead of showing an all-zero grid', async () => {
+      mockFetch.mockResolvedValue({
+        json: () =>
+          Promise.resolve({
+            success: true,
+            data: {
+              ...mockRiskResponse.data,
+              risks: [],
+              registerAvailable: false,
+              summary: { ...mockRiskResponse.data.summary, total: 0 },
+            },
+          }),
+      });
+      render(<RiskHeatMap />);
+
+      expect(await screen.findByTestId('risk-register-unavailable')).toHaveTextContent(
+        /platform's own register, not your firm's/i
+      );
+      expect(screen.getByText('Risk register not available')).toBeInTheDocument();
+      expect(screen.queryByText(/0 risks tracked/)).not.toBeInTheDocument();
+    });
+
+    it('labels a readable register as the platform register', async () => {
+      render(<RiskHeatMap />);
+      expect(await screen.findByText('3 risks tracked')).toBeInTheDocument();
+      expect(screen.getByText(/platform register, not specific to your firm/i)).toBeInTheDocument();
+      expect(screen.queryByTestId('risk-register-unavailable')).not.toBeInTheDocument();
+    });
+
     it('should handle API error gracefully', async () => {
       const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockFetch.mockRejectedValue(new Error('Network error'));

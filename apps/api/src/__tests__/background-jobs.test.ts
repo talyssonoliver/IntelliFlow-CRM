@@ -25,6 +25,11 @@ const m = vi.hoisted(() => ({
   dsarSlaIntervalFromEnv: vi.fn(() => 333),
   runDsarSlaSweep: vi.fn().mockResolvedValue({ alerted: 0 }),
   createDsarSlaDeps: vi.fn().mockResolvedValue({ marker: 'dsar-deps' }),
+  startComplianceSnapshotScheduler: vi.fn((_options: SchedulerOptions) => true),
+  stopComplianceSnapshotScheduler: vi.fn<() => Promise<void>>(async () => undefined),
+  complianceSnapshotIntervalFromEnv: vi.fn(() => 555),
+  runComplianceSnapshots: vi.fn().mockResolvedValue({ tenants: 0, failed: 0 }),
+  createComplianceSnapshotDb: vi.fn().mockResolvedValue({ marker: 'compliance-db' }),
   runInboxSync: vi.fn().mockResolvedValue({ mailboxesSynced: 0 }),
   createInboxSyncDeps: vi.fn().mockResolvedValue({ marker: 'sync-deps' }),
   startInboxSync: vi.fn((_options: SchedulerOptions) => true),
@@ -72,6 +77,13 @@ vi.mock('../modules/privacy/dsar-sla-scheduler', () => ({
   runDsarSlaSweep: m.runDsarSlaSweep,
   createDsarSlaDeps: m.createDsarSlaDeps,
 }));
+vi.mock('../modules/compliance/compliance-snapshot-scheduler', () => ({
+  startComplianceSnapshotScheduler: m.startComplianceSnapshotScheduler,
+  stopComplianceSnapshotScheduler: m.stopComplianceSnapshotScheduler,
+  complianceSnapshotIntervalFromEnv: m.complianceSnapshotIntervalFromEnv,
+  runComplianceSnapshots: m.runComplianceSnapshots,
+  createComplianceSnapshotDb: m.createComplianceSnapshotDb,
+}));
 vi.mock('../background-jobs-heartbeat', () => ({
   checkBackgroundJobsHeartbeat: m.checkBackgroundJobsHeartbeat,
   closeHeartbeatStore: m.closeHeartbeatStore,
@@ -109,6 +121,11 @@ beforeEach(() => {
   m.dsarSlaIntervalFromEnv.mockReturnValue(333);
   m.runDsarSlaSweep.mockResolvedValue({ alerted: 0 });
   m.createDsarSlaDeps.mockResolvedValue({ marker: 'dsar-deps' });
+  m.startComplianceSnapshotScheduler.mockReturnValue(true);
+  m.stopComplianceSnapshotScheduler.mockResolvedValue(undefined);
+  m.complianceSnapshotIntervalFromEnv.mockReturnValue(555);
+  m.runComplianceSnapshots.mockResolvedValue({ tenants: 0, failed: 0 });
+  m.createComplianceSnapshotDb.mockResolvedValue({ marker: 'compliance-db' });
   m.runInboxSync.mockResolvedValue({ mailboxesSynced: 0 });
   m.runCalendarSyncTick.mockResolvedValue(undefined);
   m.calendarSyncEnabled.mockReturnValue(true);
@@ -153,6 +170,7 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
       bounceScan: true,
       inboxSync: true,
       dsarSla: true,
+      complianceSnapshot: true,
     });
     expect(m.approvalSweepIntervalFromEnv).toHaveBeenCalledWith(env);
     expect(m.bounceScanIntervalFromEnv).toHaveBeenCalledWith(env);
@@ -168,7 +186,23 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
       bounceScan: true,
       inboxSync: true,
       dsarSla: true,
+      complianceSnapshot: true,
     });
+  });
+
+  // PG-194: the daily compliance snapshots start with their env interval and run against the db.
+  it('starts the compliance snapshots with their env interval; a run builds the db', async () => {
+    const env = { MARK: 'c' } as NodeJS.ProcessEnv;
+    startBackgroundJobs({ env, ready: async () => undefined });
+    expect(m.complianceSnapshotIntervalFromEnv).toHaveBeenCalledWith(env);
+    const options = m.startComplianceSnapshotScheduler.mock.calls[0]![0] as SchedulerOptions;
+    expect(options.intervalMs).toBe(555);
+    await options.run();
+    expect(m.runComplianceSnapshots).toHaveBeenCalledWith(
+      { marker: 'compliance-db' },
+      expect.any(Date),
+      expect.anything()
+    );
   });
 
   // PG-203 D8: the DSAR deadline alerts follow the same flag, so an api with
