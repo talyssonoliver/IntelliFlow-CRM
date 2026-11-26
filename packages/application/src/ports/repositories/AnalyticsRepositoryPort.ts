@@ -200,6 +200,14 @@ export interface AnalyticsRepository {
   countOpportunitiesInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number>;
 
   /**
+   * Count the workspace's open deals right now: not won, not lost, not archived (deletedAt null).
+   * This is the one "open deals" definition. The dashboard Active Deals tile and the Pipeline
+   * Summary ("open across N deals", opportunity.getPipeline) must both agree with it.
+   * @param tenantId - Tenant to filter by
+   */
+  countOpenOpportunities(tenantId: string): Promise<number>;
+
+  /**
    * Count contacts created in date range
    * @param tenantId - Tenant to filter by
    * @param dateRange - Date range to query

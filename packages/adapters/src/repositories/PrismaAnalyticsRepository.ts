@@ -85,6 +85,16 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
     });
   }
 
+  async countOpenOpportunities(tenantId: string): Promise<number> {
+    return this.prisma.opportunity.count({
+      where: {
+        tenantId,
+        deletedAt: null,
+        stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] },
+      },
+    });
+  }
+
   async countContactsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
     return this.prisma.contact.count({
       where: {

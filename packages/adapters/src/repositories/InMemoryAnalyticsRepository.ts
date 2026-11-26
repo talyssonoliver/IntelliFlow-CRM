@@ -98,6 +98,19 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
   }
 
   /**
+   * Count open deals right now: not won, not lost, not archived
+   */
+  async countOpenOpportunities(tenantId: string): Promise<number> {
+    return this.opportunities.filter(
+      (opp) =>
+        opp.tenantId === tenantId &&
+        !opp.deletedAt &&
+        opp.stage !== 'CLOSED_WON' &&
+        opp.stage !== 'CLOSED_LOST'
+    ).length;
+  }
+
+  /**
    * Count contacts created in date range
    */
   async countContactsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
@@ -488,6 +501,7 @@ export interface OpportunityData {
   value: number | null;
   createdAt: Date;
   closedAt: Date | null;
+  deletedAt?: Date | null;
   ownerId?: string;
 }
 

@@ -31,6 +31,7 @@ function createMockRepo(): Record<keyof AnalyticsRepository, ReturnType<typeof v
     getMonthlyRevenue: vi.fn().mockResolvedValue(0),
     countLeadsInRange: vi.fn().mockResolvedValue(0),
     countOpportunitiesInRange: vi.fn().mockResolvedValue(0),
+    countOpenOpportunities: vi.fn().mockResolvedValue(0),
     countContactsInRange: vi.fn().mockResolvedValue(0),
     getLeadsBySource: vi.fn().mockResolvedValue([]),
     getRecentAuditLogs: vi.fn().mockResolvedValue([]),
@@ -132,6 +133,26 @@ describe('AnalyticsAggregationService', () => {
   // ============================================
   // getGrowthTrend
   // ============================================
+
+  describe('getOverview', () => {
+    it('reports open deals now, not deals created in the period', async () => {
+      // getOverview reads more of the port than the shared mock declares.
+      Object.assign(mockRepo, {
+        getRevenueInRange: vi.fn().mockResolvedValue(0),
+        countClosedWonInRange: vi.fn().mockResolvedValue(0),
+        countClosedLostInRange: vi.fn().mockResolvedValue(0),
+      });
+      mockRepo.countOpenOpportunities.mockResolvedValue(14);
+      mockRepo.countOpportunitiesInRange.mockResolvedValueOnce(27).mockResolvedValueOnce(20);
+
+      const result = await service.getOverview(TENANT_ID);
+
+      expect(result.openOpportunities).toBe(14);
+      expect(mockRepo.countOpenOpportunities).toHaveBeenCalledWith(TENANT_ID);
+      // The delta is the change in deals created, this period against the previous one.
+      expect(result.openOpportunitiesDelta).toBe(7);
+    });
+  });
 
   describe('getGrowthTrend', () => {
     it('returns revenue growth trend for N months', async () => {

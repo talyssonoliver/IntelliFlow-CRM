@@ -272,6 +272,23 @@ describe('PrismaAnalyticsRepository', () => {
     });
   });
 
+  describe('countOpenOpportunities()', () => {
+    it('counts deals that are not won, not lost and not archived', async () => {
+      mockPrisma.opportunity.count.mockResolvedValue(14);
+
+      const result = await repository.countOpenOpportunities(tenantId);
+
+      expect(result).toBe(14);
+      expect(mockPrisma.opportunity.count).toHaveBeenCalledWith({
+        where: {
+          tenantId,
+          deletedAt: null,
+          stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] },
+        },
+      });
+    });
+  });
+
   describe('countContactsInRange()', () => {
     it('should count contacts within date range', async () => {
       const dateRange = {
