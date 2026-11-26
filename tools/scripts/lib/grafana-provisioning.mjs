@@ -140,6 +140,9 @@ function queryModel(entry, datasourceUid) {
     : { ...model, instant: true };
 }
 
+/** Where a rule's `runbook` path (relative to the repo root) is served from. */
+const RUNBOOK_BASE_URL = 'https://github.com/talyssonoliver/IntelliFlow-CRM/blob/main/';
+
 /**
  * Grafana alert rule (provisioning API shape): query -> reduce -> threshold.
  * `source` is the only thing that differs between this repo's two callers —
@@ -163,7 +166,11 @@ export function buildAlertRulePayload(entry, config, source) {
     execErrState: 'KeepLast',
     for: entry.for,
     labels: { severity: entry.severity, team: 'owner', source },
-    annotations: { summary: entry.summary },
+    annotations: {
+      summary: entry.summary,
+      // Optional repo path of the runbook for this alert, shown as a link in the notification.
+      ...(entry.runbook ? { runbook_url: `${RUNBOOK_BASE_URL}${entry.runbook}` } : {}),
+    },
     isPaused: false,
     data: [
       {
