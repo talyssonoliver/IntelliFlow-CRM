@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/shared/page-header';
 import { KpiCard } from '@/components/dashboard/KpiCard';
 import { WidgetHeader } from '@/components/dashboard/WidgetHeader';
 import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
+import { CardList, CardListRow } from '@/components/dashboard/widgets/CardListSection';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { formatMoney, formatMoneyCompact } from '@/lib/format/money';
 import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
@@ -141,7 +142,7 @@ function ForecastKpis({
         framed
         label="Forecast accuracy"
         icon="gps_fixed"
-        value={hasHistory ? `${accuracy}%` : 'Not enough history'}
+        value={hasHistory ? `${accuracy}%` : 'No history yet'}
         badge={
           hasHistory ? (
             <span
@@ -202,7 +203,23 @@ function RevenueProjectionChart({
  * Win rate per month, last six months. A month with no closed deals shows no bar (owner 23/11:
  * it used to show the overall average as if it were that month's result).
  */
-function WinRateTrendCard({ data }: Readonly<{ data: WinRateData[] }>) {
+/**
+ * The API's win-rate months, in either shape: today's ({ rate: number | null, closed }) or the one
+ * before the fix deploys ({ rate, isProjected }), where a month with no closed deals carried the
+ * overall rate and `isProjected: true`. Those months count as empty, never as history.
+ */
+function normaliseWinRate(
+  data: ReadonlyArray<WinRateData & { isProjected?: boolean }>
+): WinRateData[] {
+  return data.map((d) => {
+    if (typeof d.closed === 'number') return d;
+    const real = d.isProjected === false && d.rate !== null;
+    return { month: d.month, rate: real ? d.rate : null, closed: real ? 1 : 0 };
+  });
+}
+
+function WinRateTrendCard({ data: raw }: Readonly<{ data: WinRateData[] }>) {
+  const data = normaliseWinRate(raw);
   const closed = data.reduce((sum, d) => sum + d.closed, 0);
   const won = data.reduce((sum, d) => sum + ((d.rate ?? 0) * d.closed) / 100, 0);
   const average = closed > 0 ? Math.round((won / closed) * 100) : null;
@@ -302,7 +319,31 @@ function OpportunitiesAtRiskTable({ deals }: Readonly<{ deals: ForecastDeal[] }>
           View All Deals
         </Link>
       </div>
-      <div className="overflow-x-auto">
+      {/* Phones (owner 23/11, "not enhanced to mobile"): one tappable row per deal, the same
+          card-list row the Dashboard uses; the six-column table only from sm up. */}
+      <div className="px-4 pb-2 sm:hidden">
+        <CardList label="Opportunities at risk">
+          {riskyDeals.map((deal) => (
+            <CardListRow
+              key={deal.id}
+              href={`/deals/${deal.id}`}
+              primary={deal.name}
+              secondary={`${STAGE_LABELS[deal.stage]} · ${formatFullCurrency(deal.value)}`}
+              status={`${deal.probability}% probability · ${
+                deal.expectedCloseDate
+                  ? new Date(deal.expectedCloseDate).toLocaleDateString('en-GB', {
+                      month: 'short',
+                      day: 'numeric',
+                      timeZone: timezone,
+                    })
+                  : 'no close date'
+              } · ${deal.owner.name}`}
+              statusClassName={deal.probability < 50 ? 'text-destructive' : 'text-muted-foreground'}
+            />
+          ))}
+        </CardList>
+      </div>
+      <div className="hidden overflow-x-auto sm:block">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">

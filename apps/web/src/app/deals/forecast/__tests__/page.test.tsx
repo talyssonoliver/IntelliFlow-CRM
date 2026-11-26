@@ -6,7 +6,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 
 // ─── Mock State ─────────────────────────────────────────────────────────────
 
@@ -230,7 +230,29 @@ describe('DealForecastPage', () => {
     mockQueryState.data = { ...mockForecastData, monthlyRevenue: [] };
     render(<DealForecastPage />);
 
-    expect(screen.getByText('Not enough history')).toBeInTheDocument();
+    expect(screen.getByText('No history yet')).toBeInTheDocument();
+  });
+
+  it('treats the old API shape (rate filled in for empty months) as no history', () => {
+    mockQueryState.data = {
+      ...mockForecastData,
+      winRateTrend: [
+        { month: 'May', rate: 35, isProjected: true },
+        { month: 'Jun', rate: 35, isProjected: true },
+      ],
+    };
+    render(<DealForecastPage />);
+    expect(screen.getByText(/No deals closed in the last six months/)).toBeInTheDocument();
+  });
+
+  it('lists the at-risk deals as rows on phones, linking to each deal', () => {
+    mockQueryState.data = mockForecastData;
+    render(<DealForecastPage />);
+    const list = screen.getByRole('list', { name: 'Opportunities at risk' });
+    expect(within(list).getByRole('link', { name: /Test Deal/ })).toHaveAttribute(
+      'href',
+      '/deals/1'
+    );
   });
 
   it('shows the shared empty state when no deals closed in six months', () => {

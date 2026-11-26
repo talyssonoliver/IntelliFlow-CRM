@@ -556,13 +556,16 @@ export default function DealDetailPage() {
             .join(' · ')}
           controls={
             <>
+              {/* Phones (owner 26/11): Won, Lost, Edit, Forecast and ⋮ fit one row; Pin is in the
+                  ⋮ sheet ("Pin to Home"), so the separate pin shows from sm up. */}
               <PinButton
                 entityType="opportunity"
                 entityId={d.id}
                 title={d.name}
                 url={`/deals/${dealId}`}
+                className="hidden text-white hover:bg-white/10 sm:inline-flex"
               />
-              <MoreActionsButton onClick={() => setActionSheetOpen(true)} />
+              <MoreActionsButton variant="hero" onClick={() => setActionSheetOpen(true)} />
             </>
           }
           actions={[
