@@ -11,6 +11,7 @@ import {
   SidebarPortalTarget,
 } from '@/components/sidebar';
 import {
+  buildCalendarTypeItems,
   createCalendarSidebarConfig,
   createCalendarSettingsSidebarConfig,
   isCalendarSettingsPage,
@@ -18,6 +19,7 @@ import {
 import { CalendarVisibilityProvider } from '@/hooks/useCalendarVisibility';
 import { CalendarSettingsPanel } from '@/components/calendar/CalendarSettingsPanel';
 import { CalendarSettingsSidebarNav } from '@/components/calendar/CalendarSettingsSidebarNav';
+import { trpc } from '@/lib/trpc';
 
 export default function CalendarLayoutShell({ children }: Readonly<{ children: React.ReactNode }>) {
   const pathname = usePathname();
@@ -25,14 +27,26 @@ export default function CalendarLayoutShell({ children }: Readonly<{ children: R
 
   const onSettingsPage = isCalendarSettingsPage(pathname);
 
+  // "By Type" lists the tenant's own active event types (calendar.eventTypes.listActive).
+  const eventTypesQuery = trpc.calendar.eventTypes.listActive.useQuery(undefined, {
+    staleTime: 60_000,
+  });
+  const typeItems = useMemo(
+    () => buildCalendarTypeItems(eventTypesQuery.data ?? []),
+    [eventTypesQuery.data]
+  );
+
   const sidebarConfig = useMemo(() => {
     if (onSettingsPage) {
-      return createCalendarSettingsSidebarConfig(({ isExpanded }: { isExpanded: boolean }) => (
-        <CalendarSettingsSidebarNav isExpanded={isExpanded} />
-      ));
+      return createCalendarSettingsSidebarConfig(
+        ({ isExpanded }: { isExpanded: boolean }) => (
+          <CalendarSettingsSidebarNav isExpanded={isExpanded} />
+        ),
+        typeItems
+      );
     }
-    return createCalendarSidebarConfig(() => setSettingsOpen((prev) => !prev));
-  }, [onSettingsPage]);
+    return createCalendarSidebarConfig(() => setSettingsOpen((prev) => !prev), typeItems);
+  }, [onSettingsPage, typeItems]);
 
   return (
     <CalendarVisibilityProvider>

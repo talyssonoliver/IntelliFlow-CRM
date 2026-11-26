@@ -16,6 +16,7 @@ import { PageHeader } from '@/components/shared';
 import { AppointmentCalendar } from '@/components/appointments';
 import type {
   AppointmentListItem,
+  AppointmentType,
   CalendarAppointment,
   CalendarTask,
 } from '@/components/appointments/types';
@@ -25,6 +26,19 @@ import { useCalendarVisibility } from '@/hooks/useCalendarVisibility';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
 import { toAppointmentListItem } from '@/lib/appointments/list-item';
+
+const APPOINTMENT_TYPE_VALUES: readonly string[] = [
+  'MEETING',
+  'CALL',
+  'HEARING',
+  'CONSULTATION',
+  'DEPOSITION',
+  'OTHER',
+];
+
+function isAppointmentType(value: string | null): value is AppointmentType {
+  return value !== null && APPOINTMENT_TYPE_VALUES.includes(value);
+}
 
 /**
  * Compute the visible date range for a calendar view.
@@ -57,7 +71,7 @@ function getCalendarRange(date: Date, view: 'month' | 'week' | 'day'): { from: D
 export default function CalendarPage() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
   const router = useRouter();
-  const { filters, queryParams, setCalendarView } = useAppointmentFilters();
+  const { filters, queryParams, setCalendarView, setTypeFilter } = useAppointmentFilters();
   const { isVisible: isCalendarVisible, setOnlyVisible } = useCalendarVisibility();
   const searchParams = useSearchParams();
 
@@ -71,6 +85,12 @@ export default function CalendarPage() {
       setOnlyVisible(ids);
     }
   }, [searchParams, setOnlyVisible]);
+
+  // Apply ?type=<APPOINTMENT_TYPE> (sidebar "By Type"); an absent or unknown value clears it.
+  const typeParam = searchParams.get('type');
+  useEffect(() => {
+    setTypeFilter(isAppointmentType(typeParam) ? typeParam : '');
+  }, [typeParam, setTypeFilter]);
 
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [showTaskCreate, setShowTaskCreate] = useState(false);

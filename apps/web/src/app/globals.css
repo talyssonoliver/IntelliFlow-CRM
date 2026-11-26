@@ -770,6 +770,71 @@
   border-left: 1px solid #1e293b !important;
 }
 
+/* ─── Desktop month/week polish (owner review #7, >= 1024px; phones keep the rules above) ─── */
+@media (min-width: 1024px) {
+  /* Taller grid so six month rows fit three chips plus "+N more" without clipping */
+  .sx-calendar-container {
+    height: clamp(760px, calc(100vh - 220px), 1000px);
+    max-height: none;
+  }
+
+  /* Month cells: contain overflow, tint today's cell */
+  .sx-calendar-container .sx__month-grid-day {
+    min-width: 0;
+    overflow: hidden;
+  }
+  .sx-calendar-container .sx__month-grid-day:has(.sx__is-today) {
+    background-color: rgb(42 120 246 / 0.06);
+  }
+  .sx-calendar-container .sx__month-grid-day__events {
+    gap: 2px;
+    padding-inline: 4px;
+  }
+
+  /* Month chips: one line, ellipsis, compact type */
+  .sx-calendar-container .sx__month-grid-event {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 12px;
+    line-height: 18px;
+    min-height: 20px;
+  }
+  .sx-calendar-container .sx__month-grid-event-time {
+    font-variant-numeric: tabular-nums;
+  }
+  .sx-calendar-container .sx__month-grid-day__events-more {
+    font-size: 11px;
+    line-height: 16px;
+    padding-inline: 4px;
+  }
+
+  /* Week/day: readable chips and a visible today column */
+  .sx-calendar-container .sx__time-grid-event {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 12px;
+  }
+  .sx-calendar-container .sx__time-grid-event-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sx-calendar-container .sx__time-grid-day:has(.sx__current-time-indicator) {
+    background-color: rgb(42 120 246 / 0.05);
+  }
+
+  /* Current-time line: a firm 2px rule with a larger dot */
+  .sx-calendar-container .sx__current-time-indicator {
+    height: 2px !important;
+    z-index: 3;
+  }
+  .sx-calendar-container .sx__current-time-indicator::before {
+    width: 10px !important;
+    height: 10px !important;
+  }
+}
+
 /*
  * Signed-in footer (#1224): the module sidebar is position: fixed on desktop,
  * so the footer pads itself by the sidebar's width, the same offsets
