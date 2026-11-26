@@ -351,23 +351,34 @@ async function claimExport(
 ): Promise<ClaimedRequest | null> {
   const startedAt = now();
   const staleBefore = new Date(startedAt.getTime() - STALE_RUNNING_MS);
-  const claimed = await deps.prisma.workspaceExportRequest.updateMany({
-    where: {
-      id: requestId,
-      attempts: { lt: MAX_EXPORT_ATTEMPTS },
-      OR: [{ status: 'QUEUED' }, { status: 'RUNNING', startedAt: { lt: staleBefore } }],
-    },
-    data: { status: 'RUNNING', startedAt, attempts: { increment: 1 }, error: null },
+  // One transaction: the claim's row lock is held until the read, so the row read back is the
+  // one this claim produced (a worker that stalls here cannot pick up a later worker's claim).
+  return deps.prisma.$transaction(async (tx) => {
+    const claimed = await tx.workspaceExportRequest.updateMany({
+      where: {
+        id: requestId,
+        attempts: { lt: MAX_EXPORT_ATTEMPTS },
+        OR: [{ status: 'QUEUED' }, { status: 'RUNNING', startedAt: { lt: staleBefore } }],
+      },
+      data: {
+        status: 'RUNNING',
+        startedAt,
+        attempts: { increment: 1 },
+        claimCount: { increment: 1 },
+        archivesRemovedAt: null,
+        error: null,
+      },
+    });
+    if (claimed.count === 0) return null;
+    return tx.workspaceExportRequest.findUnique({ where: { id: requestId } });
   });
-  if (claimed.count === 0) return null;
-  return deps.prisma.workspaceExportRequest.findUnique({ where: { id: requestId } });
 }
 
 /**
  * Runs one export request end to end. Throws on failure so BullMQ retries.
  *
- * The claim is identified by (id, RUNNING, attempts): every write this run makes states it, so a
- * run that was reclaimed after a stall (attempts moved on) cannot overwrite the newer run's
+ * The claim is identified by (id, RUNNING, claimCount): every write this run makes states it, so a
+ * run that was reclaimed after a stall (claimCount moved on) cannot overwrite the newer run's
  * result, and removes the archive it uploaded under its own per-attempt path.
  */
 export async function processWorkspaceExport(
@@ -382,9 +393,13 @@ export async function processWorkspaceExport(
   if (!request) return { status: 'skipped', requestId: input.requestId, reason: 'not queued' };
 
   // A crashed earlier attempt may have uploaded an archive that never became READY.
-  await removeAttemptArchives(deps, request, request.attempts - 1);
+  await removeAttemptArchives(deps, request, request.claimCount - 1);
 
-  const ownsClaim = { id: request.id, status: 'RUNNING' as const, attempts: request.attempts };
+  const ownsClaim = {
+    id: request.id,
+    status: 'RUNNING' as const,
+    claimCount: request.claimCount,
+  };
   const heartbeat = setInterval(() => {
     prisma.workspaceExportRequest
       .updateMany({ where: ownsClaim, data: { startedAt: now() } })
@@ -394,7 +409,7 @@ export async function processWorkspaceExport(
 
   const dir = deps.tmpDir ?? join(tmpdir(), 'intelliflow-workspace-export');
   const archivePath = join(dir, `${request.id}-${randomUUID()}.zip`);
-  const storagePath = attemptArchivePath(request.tenantId, request.id, request.attempts);
+  const storagePath = attemptArchivePath(request.tenantId, request.id, request.claimCount);
   let uploaded = false;
   try {
     await mkdir(dir, { recursive: true });
@@ -602,6 +617,7 @@ async function failExhausted(deps: ExportJobDeps, now: Date): Promise<number> {
     select: { id: true, tenantId: true, trigger: true },
     take: 50,
   });
+  let failed = 0;
   for (const row of exhausted) {
     // Re-check exhaustion and staleness in the write itself: a worker that resumed and finished
     // after the read above must not be failed, nor have its archive removed.
@@ -617,14 +633,42 @@ async function failExhausted(deps: ExportJobDeps, now: Date): Promise<number> {
       data: { status: 'FAILED', error: 'Gave up after repeated failures' },
     });
     if (count !== 1) continue;
-    await removeAttemptArchives(deps, row, MAX_EXPORT_ATTEMPTS);
+    failed += 1;
     // An export the customer is owed (agreement clause 5) failing for good needs a person.
     deps.log?.error(
       { requestId: row.id, tenantId: row.tenantId, trigger: row.trigger },
       'workspace export gave up: needs manual follow-up'
     );
   }
-  return exhausted.length;
+  return failed;
+}
+
+/**
+ * FAILED requests whose archives are not yet confirmed removed (a crashed attempt may have
+ * uploaded one). Retried every sweep until every attempt's archive is gone, then marked.
+ */
+async function removeFailedArchives(deps: ExportJobDeps): Promise<number> {
+  const { prisma } = deps;
+  const rows = await prisma.workspaceExportRequest.findMany({
+    where: { status: 'FAILED', archivesRemovedAt: null },
+    select: { id: true, tenantId: true, claimCount: true },
+    orderBy: { updatedAt: 'asc' },
+    take: 20,
+  });
+  let cleaned = 0;
+  for (const row of rows) {
+    try {
+      await removeAttemptArchives(deps, row, row.claimCount, undefined, true);
+      await prisma.workspaceExportRequest.updateMany({
+        where: { id: row.id, status: 'FAILED', claimCount: row.claimCount },
+        data: { archivesRemovedAt: deps.now?.() ?? new Date() },
+      });
+      cleaned += 1;
+    } catch (err) {
+      deps.log?.warn({ requestId: row.id, err: String(err) }, 'failed export archives not removed');
+    }
+  }
+  return cleaned;
 }
 
 /** Rows whose job was lost (QUEUED too long) or whose worker died (RUNNING too long). */
@@ -642,7 +686,7 @@ async function requeueStuck(
         { status: 'RUNNING', startedAt: { lt: new Date(now.getTime() - STALE_RUNNING_MS) } },
       ],
     },
-    select: { id: true, tenantId: true, attempts: true, status: true },
+    select: { id: true, tenantId: true, attempts: true, claimCount: true, status: true },
     take: 50,
   });
   let requeued = 0;
@@ -657,13 +701,13 @@ async function requeueStuck(
           ? {
               id: row.id,
               status: 'RUNNING',
-              attempts: row.attempts,
+              claimCount: row.claimCount,
               startedAt: { lt: new Date(now.getTime() - STALE_RUNNING_MS) },
             }
           : {
               id: row.id,
               status: 'QUEUED',
-              attempts: row.attempts,
+              claimCount: row.claimCount,
               updatedAt: { lt: new Date(now.getTime() - STALE_QUEUED_MS) },
             },
       data: row.status === 'RUNNING' ? { status: 'QUEUED' } : { error: null },
@@ -719,7 +763,7 @@ async function retryUnsentEmails(deps: ExportJobDeps, now: Date): Promise<number
 async function expireOldExports(deps: ExportJobDeps, now: Date): Promise<number> {
   const old = await deps.prisma.workspaceExportRequest.findMany({
     where: { status: 'READY', expiresAt: { lte: now } },
-    select: { id: true, tenantId: true, attempts: true, storagePath: true },
+    select: { id: true, tenantId: true, claimCount: true, storagePath: true },
     take: 50,
   });
   let expired = 0;
@@ -727,7 +771,7 @@ async function expireOldExports(deps: ExportJobDeps, now: Date): Promise<number>
     try {
       // Every attempt's archive goes, not only the kept one: a failed earlier cleanup must not
       // outlive the retention period. A failure keeps the row READY, so the next sweep retries.
-      await removeAttemptArchives(deps, row, row.attempts, row.storagePath ?? undefined, true);
+      await removeAttemptArchives(deps, row, row.claimCount, row.storagePath ?? undefined, true);
       if (row.storagePath) await deps.archiveStorage.removeArchive(row.storagePath);
       await deps.prisma.workspaceExportRequest.update({
         where: { id: row.id },
@@ -748,6 +792,7 @@ export async function sweepWorkspaceExports(
 ): Promise<SweepResult> {
   const now = (deps.now ?? (() => new Date()))();
   await failExhausted(deps, now);
+  await removeFailedArchives(deps);
   return {
     requeued: await requeueStuck(deps, enqueue, now),
     emailsRetried: await retryUnsentEmails(deps, now),

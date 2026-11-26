@@ -338,7 +338,13 @@ model WorkspaceExportRequest {
   archiveSha256   String?                @db.Char(64)
   storageBucket   String?
   storagePath     String?
+  /// Retry budget; a replay of a failed subscription export resets it to 0.
   attempts        Int                    @default(0)
+  /// Counts every claim and is never reset: it owns the claim (a stalled worker cannot match a
+  /// newer claim) and names the attempt's archive path.
+  claimCount      Int                    @default(0)
+  /// Set once every attempt's archive of a FAILED request is confirmed removed.
+  archivesRemovedAt DateTime?
   error           String?
   requestedAt     DateTime               @default(now())
   startedAt       DateTime?

@@ -57,6 +57,11 @@ function world(extra: Record<string, any[]> = {}) {
     ],
     ...extra,
   };
+  tables.workspaceExportRequest = tables.workspaceExportRequest!.map((r) => ({
+    claimCount: r.attempts ?? 0,
+    archivesRemovedAt: null,
+    ...r,
+  }));
   const db = makeDb(tables) as any;
   db.$extends = () => db;
   db.$transaction = async (fn: (tx: unknown) => unknown) => fn(db);

@@ -64,7 +64,8 @@ export function delegate(rows: Row[], tables?: Record<string, Row[]>) {
       }
       if (args.cursor) {
         const i = out.findIndex((r) => r.id === args.cursor.id);
-        out = out.slice(i + (args.skip ?? 0));
+        // Prisma: a cursor row that no longer exists matches nothing.
+        out = i === -1 ? [] : out.slice(i + (args.skip ?? 0));
       }
       if (args.take) out = out.slice(0, args.take);
       return out.map((r) => (args.select ? pick(r, args.select) : { ...r }));

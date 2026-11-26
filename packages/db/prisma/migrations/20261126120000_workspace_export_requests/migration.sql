@@ -33,6 +33,8 @@ CREATE TABLE "workspace_export_requests" (
     "storageBucket" TEXT,
     "storagePath" TEXT,
     "attempts" INTEGER NOT NULL DEFAULT 0,
+    "claimCount" INTEGER NOT NULL DEFAULT 0,
+    "archivesRemovedAt" TIMESTAMP(3),
     "error" TEXT,
     "requestedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "startedAt" TIMESTAMP(3),

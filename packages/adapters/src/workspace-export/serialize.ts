@@ -58,7 +58,11 @@ export function csvCell(value: unknown): string {
   let text = typeof value === 'object' ? JSON.stringify(value) : String(value);
   // Spreadsheet formula injection: text that other people typed (leads, bookings, tickets, chat)
   // must not run when an administrator opens the CSV. Numbers and booleans are not text.
-  if (typeof value === 'string' && /^[=+\-@\t\r]/.test(text) && !PLAIN_NEGATIVE_NUMBER.test(text)) {
+  if (
+    typeof value === 'string' &&
+    /^[=+\-@\t\r\n]/.test(text) &&
+    !PLAIN_NEGATIVE_NUMBER.test(text)
+  ) {
     text = `'${text}`;
   }
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;

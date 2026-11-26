@@ -91,6 +91,11 @@ export const EXPORT_ENTITIES: readonly ExportEntity[] = [
     model: 'AppointmentAttendee',
     description: 'Which users attend which appointment.',
   },
+  {
+    name: 'appointment_cases',
+    model: 'AppointmentCase',
+    description: 'Which cases each appointment is linked to.',
+  },
   // Email and messaging
   {
     name: 'emails',

@@ -141,13 +141,18 @@ function world(rows: any[]) {
         updatedAt: t0,
       },
     ],
-    workspaceExportRequest: rows,
+    workspaceExportRequest: rows.map((r) => ({
+      claimCount: r.attempts ?? 0,
+      archivesRemovedAt: null,
+      ...r,
+    })),
     stripeSubscription: [],
     user: [
       { id: 'owner', tenantId: T, email: 'owner@example.invalid', role: 'ADMIN', createdAt: t0 },
     ],
   };
   const db = makeDb(tables) as any;
+  db.$transaction = async (fn: (tx: unknown) => unknown) => fn(db);
   db.$extends = () => db;
   return { tables, db };
 }
@@ -514,8 +519,10 @@ describe('review follow-ups: paging and recipients', () => {
     };
     const out = join(dir, 'a.zip');
     await runWorkspaceExport({ db, tenantId: T, outputPath: out, pageSize: 2 });
-    const csvIds = readZip(out)['data/leads.csv']!.match(/l\d/g) ?? [];
-    expect(csvIds).toEqual(expect.arrayContaining(['l3', 'l4', 'l5']));
+    const csvIds = (readZip(out)['data/leads.csv']!.match(/l\d@x/g) ?? []).map((m) =>
+      m.slice(0, 2)
+    );
+    expect(csvIds).toEqual(['l1', 'l2', 'l3', 'l4', 'l5']);
   });
 
   it('drops an asker who is no longer an administrator of the workspace', async () => {
@@ -718,5 +725,73 @@ describe('review follow-ups: sweep races and the export bucket', () => {
     expect(JSON.parse(zip['data/leads.json']!).map((l: any) => l.id)).toEqual(['l1', 'l2', 'l3']);
     expect(zip['data/leads.csv']).toContain('l3@x.invalid');
     expect(reads).toBe(1);
+  });
+});
+
+describe('review follow-ups: claims and cleanup of failed requests', () => {
+  it('a replayed request never reuses an earlier claim number or archive path', async () => {
+    const { tables, db } = world([
+      {
+        id: 'again',
+        tenantId: T,
+        status: 'FAILED',
+        attempts: MAX_EXPORT_ATTEMPTS,
+        claimCount: 5,
+        trigger: 'SUBSCRIPTION_ENDED',
+        subscriptionId: 'sub_1',
+        requestedAt: t0,
+        updatedAt: t0,
+      },
+    ]);
+    const { d, tmp } = deps(db);
+    // The replay resets the retry budget, not the claim counter.
+    await db.workspaceExportRequest.updateMany({
+      where: { id: 'again' },
+      data: { status: 'QUEUED', attempts: 0 },
+    });
+    await processWorkspaceExport(d, { requestId: 'again' });
+    expect(tables.workspaceExportRequest[0]).toMatchObject({
+      status: 'READY',
+      attempts: 1,
+      claimCount: 6,
+      storagePath: `${T}/again-6.zip`,
+    });
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('keeps retrying the archives of a FAILED request until all are removed', async () => {
+    const { tables, db } = world([
+      {
+        id: 'bad',
+        tenantId: T,
+        status: 'FAILED',
+        attempts: MAX_EXPORT_ATTEMPTS,
+        claimCount: 2,
+        trigger: 'ADMIN',
+        requestedAt: t0,
+        updatedAt: t0,
+      },
+    ]);
+    const { d, tmp } = deps(db);
+    let down = true;
+    d.archiveStorage.removeArchive = async (p) => {
+      if (down && p.endsWith('bad-1.zip')) throw new Error('storage down');
+    };
+    await sweepWorkspaceExports(
+      d,
+      vi.fn(async () => {})
+    );
+    expect(tables.workspaceExportRequest[0].archivesRemovedAt).toBeNull();
+    down = false;
+    await sweepWorkspaceExports(
+      d,
+      vi.fn(async () => {})
+    );
+    expect(tables.workspaceExportRequest[0].archivesRemovedAt).toBeInstanceOf(Date);
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('neutralises a formula that follows a line feed', () => {
+    expect(csvCell('\n=1+1')).toBe('"\'\n=1+1"');
   });
 });
