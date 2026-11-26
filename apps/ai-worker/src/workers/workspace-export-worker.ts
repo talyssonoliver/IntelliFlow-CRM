@@ -134,19 +134,29 @@ export async function bootWorkspaceExportWorker(
     );
   });
 
+  const closeAll = async (): Promise<void> => {
+    await worker.close();
+    await Promise.all([queue.close(), mailQueue.close()]);
+  };
+
   // Repeatable sweep: one scheduler id, so restarts and several workers do not multiply it.
-  await queue.upsertJobScheduler(
-    'workspace-export-sweep',
-    { every: SWEEP_EVERY_MS },
-    { name: WORKSPACE_EXPORT_SWEEP_JOB, data: {}, opts: { attempts: 1 } }
-  );
+  try {
+    await queue.upsertJobScheduler(
+      'workspace-export-sweep',
+      { every: SWEEP_EVERY_MS },
+      { name: WORKSPACE_EXPORT_SWEEP_JOB, data: {}, opts: { attempts: 1 } }
+    );
+  } catch (err) {
+    // No handle is returned on failure, so nothing else would ever close the live Worker.
+    await closeAll().catch(() => undefined);
+    throw err;
+  }
 
   workerLogger.info({ queue: WORKSPACE_EXPORT_QUEUE }, 'Workspace export worker started');
 
   return {
     async stop(): Promise<void> {
-      await worker.close();
-      await Promise.all([queue.close(), mailQueue.close()]);
+      await closeAll();
       workerLogger.info('Workspace export worker stopped');
     },
   };

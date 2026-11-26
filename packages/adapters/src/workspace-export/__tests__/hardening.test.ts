@@ -17,6 +17,7 @@ import {
   STALE_QUEUED_MS,
   processWorkspaceExport,
   requestExportForEndedSubscription,
+  resolveExportRecipients,
   sweepWorkspaceExports,
   type ExportJobDeps,
 } from '../workspace-export-service';
@@ -471,5 +472,84 @@ describe('archives of crashed attempts do not outlive their request', () => {
       Array.from({ length: MAX_EXPORT_ATTEMPTS }, (_, i) => `${T}/dead-${i + 1}.zip`)
     );
     rmSync(tmp, { recursive: true, force: true });
+  });
+});
+
+describe('review follow-ups: paging and recipients', () => {
+  it('keeps every later row when the last row of a page is deleted mid-export', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'wsx-h-'));
+    const leads = [1, 2, 3, 4, 5].map((n) => ({
+      id: `l${n}`,
+      tenantId: T,
+      email: `l${n}@x.invalid`,
+    }));
+    const db = makeDb({
+      tenant: [
+        {
+          id: T,
+          name: 'Alpha',
+          slug: 'alpha',
+          status: 'ACTIVE',
+          plan: 'STARTER',
+          createdAt: t0,
+          updatedAt: t0,
+        },
+      ],
+      lead: leads,
+    });
+    const real = db.lead.findMany;
+    let calls = 0;
+    db.lead.findMany = async (args: any) => {
+      const out = await real(args);
+      calls += 1;
+      // After the first page of the CSV read is served, a user deletes that page's last lead.
+      if (calls === 1)
+        leads.splice(
+          leads.findIndex((l) => l.id === 'l2'),
+          1
+        );
+      return out;
+    };
+    const out = join(dir, 'a.zip');
+    await runWorkspaceExport({ db, tenantId: T, outputPath: out, pageSize: 2 });
+    const csvIds = readZip(out)['data/leads.csv']!.match(/l\d/g) ?? [];
+    expect(csvIds).toEqual(expect.arrayContaining(['l3', 'l4', 'l5']));
+  });
+
+  it('drops an asker who is no longer an administrator of the workspace', async () => {
+    const mk = (user: any[], tenantMembership: any[] = []) =>
+      makeDb({ user, tenantMembership, stripeSubscription: [] }) as any;
+    const req = { tenantId: T, requestedById: 'asker', subscriptionId: null };
+    const owner = { id: 'owner', tenantId: T, email: 'o@x.invalid', role: 'ADMIN', createdAt: t0 };
+    const ids = async (db: any) =>
+      (await resolveExportRecipients(db, req)).map((r) => r.userId).sort();
+
+    const demoted = { id: 'asker', tenantId: T, email: 'a@x.invalid', role: 'USER', createdAt: t0 };
+    expect(await ids(mk([owner, demoted]))).toEqual(['owner']);
+
+    const moved = {
+      id: 'asker',
+      tenantId: 'other',
+      email: 'a@x.invalid',
+      role: 'ADMIN',
+      createdAt: t0,
+    };
+    expect(await ids(mk([owner, moved]))).toEqual(['owner']);
+
+    const stillAdmin = {
+      id: 'asker',
+      tenantId: T,
+      email: 'a@x.invalid',
+      role: 'ADMIN',
+      createdAt: t0,
+    };
+    expect(await ids(mk([owner, stillAdmin]))).toEqual(['asker', 'owner']);
+
+    const invitedAdmin = [
+      { id: 'm1', userId: 'asker', tenantId: T, role: 'ADMIN', revokedAt: null },
+    ];
+    expect(await ids(mk([owner, moved], invitedAdmin))).toEqual(['asker', 'owner']);
+    const revoked = [{ id: 'm1', userId: 'asker', tenantId: T, role: 'ADMIN', revokedAt: t0 }];
+    expect(await ids(mk([owner, moved], revoked))).toEqual(['owner']);
   });
 });

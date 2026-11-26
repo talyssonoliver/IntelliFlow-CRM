@@ -253,7 +253,25 @@ export async function resolveExportRecipients(
     select: { id: true },
   });
   if (owner) ids.add(owner.id);
-  if (request.requestedById) ids.add(request.requestedById);
+  // The asker only counts while they are still an administrator of this workspace (home tenant or
+  // an active membership): a removed or demoted admin must not get the link on a later retry.
+  if (request.requestedById) {
+    const asker = await prisma.user.findFirst({
+      where: {
+        id: request.requestedById,
+        OR: [
+          { tenantId: request.tenantId, role: 'ADMIN' },
+          {
+            memberships: {
+              some: { tenantId: request.tenantId, role: 'ADMIN', revokedAt: null },
+            },
+          },
+        ],
+      },
+      select: { id: true },
+    });
+    if (asker) ids.add(asker.id);
+  }
   if (ids.size === 0) return [];
   const users = await prisma.user.findMany({
     where: { id: { in: [...ids] } },

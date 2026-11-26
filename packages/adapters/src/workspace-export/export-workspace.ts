@@ -168,11 +168,14 @@ async function* readPages(
   let cursor: string | undefined;
   for (;;) {
     const rows: ExportRow[] = await delegate.findMany({
-      where: plan.where(tenantId, now),
+      // Keyset paging (id > last id), not a Prisma cursor: a cursor row deleted mid-export would
+      // match nothing and silently cut off every later row.
+      where: cursor
+        ? { AND: [plan.where(tenantId, now), { id: { gt: cursor } }] }
+        : plan.where(tenantId, now),
       orderBy: { id: 'asc' },
       take: pageSize,
       select,
-      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
     });
     if (rows.length === 0) return;
     yield rows;
