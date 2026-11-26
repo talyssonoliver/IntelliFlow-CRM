@@ -15,7 +15,7 @@ function setup(
 ) {
   const lead = Lead.create({
     email: EMAIL,
-    company: 'Pilates Living',
+    company: 'Studio Pilates Demo',
     ...name,
     source: 'WEBSITE',
     ownerId: 'owner-1',
@@ -81,9 +81,9 @@ describe('ConvertLeadToDealUseCase contact name (MVP-003)', () => {
   it('names the contact after the company when the lead has only a company and an email', async () => {
     const { lead, useCase, saved } = setup();
     await useCase.execute({ leadId: lead.id.value, convertedBy: 'owner-1' });
-    expect(saved.contact?.firstName).toBe('Pilates Living');
+    expect(saved.contact?.firstName).toBe('Studio Pilates Demo');
     expect(saved.contact?.lastName).toBe('');
-    expect(saved.contact?.fullName.trim()).toBe('Pilates Living');
+    expect(saved.contact?.fullName.trim()).toBe('Studio Pilates Demo');
     expect(saved.contact?.email.value).toBe(EMAIL);
   });
 

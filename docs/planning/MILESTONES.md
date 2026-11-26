@@ -707,7 +707,7 @@ replies from Aurora. Both transports are built behind one seam: the official
 Meta Cloud API and WAHA (QR pairing, against WhatsApp's terms), and the customer
 picks one in Settings after a plain-words notice of the differences. IFC-035 and
 IFC-036 are re-scoped into IFC-320 to IFC-331 and PG-214 to PG-216 (each 1,500
-lines or fewer). The first demo is a West London Handyman site enquiry going to
+lines or fewer). The first demo is a Acme Handyman site enquiry going to
 WhatsApp and then into Aurora (IFC-036). Design:
 `docs/architecture/whatsapp-channel-design.md`. IFC-034, the investment gate,
 stays the owner's: the rows commit no spend.

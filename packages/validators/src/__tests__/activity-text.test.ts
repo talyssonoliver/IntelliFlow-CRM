@@ -6,12 +6,12 @@ const ID = 'c' + 'mw5j72u40001p5ug01kf3vot';
 const UUID = ['123e4567', 'e89b', '42d3', 'a456', '426614174000'].join('-');
 
 describe('stripMachineIds: only "COA ledger row <id>." is removed', () => {
-  it('removes the label, the id and the full stop from the Pitshanger row', () => {
+  it('removes the label, the id and the full stop from the Greenleaf row', () => {
     const text = `Reply in their thread to the owner. Offer: GBP 0 today. COA ledger row ${ID}.`;
     expect(stripMachineIds(text)).toBe('Reply in their thread to the owner. Offer: GBP 0 today.');
   });
 
-  it('still cleans the real Pitshanger row, whose text holds a price with a slash', () => {
+  it('still cleans the real Greenleaf row, whose text holds a price with a slash', () => {
     const text = `Reply in their thread. Offer: GBP 0 today, then GBP 69.99/month, cancel any time. COA ledger row ${ID}.`;
     expect(stripMachineIds(text)).toBe(
       'Reply in their thread. Offer: GBP 0 today, then GBP 69.99/month, cancel any time.'

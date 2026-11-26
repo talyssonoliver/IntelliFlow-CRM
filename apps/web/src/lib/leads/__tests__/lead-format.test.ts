@@ -219,7 +219,7 @@ describe('lead-format · system tags (UI-017)', () => {
     expect(isSystemTag('my-coa-lead:1')).toBe(false);
     // A tag a person names "coa-..." themselves stays visible.
     expect(isSystemTag('coa-follow-up')).toBe(false);
-    expect(isSystemTag('coa-pitshanger')).toBe(false);
+    expect(isSystemTag('coa-greenleaf')).toBe(false);
   });
 
   it('hides the other sync tags and a bare machine id (register row 42)', () => {
@@ -257,8 +257,13 @@ describe('lead-format · formatGBPCompact rounding', () => {
 describe('lead-format · leadWebsite (#1277)', () => {
   it('shows the bare host for an ad-tracking URL and drops the tracking parameters', () => {
     expect(
-      leadWebsite('http://www.energym.co.uk/?utm_source=google&utm_medium=wix_google&gclid=abc')
-    ).toEqual({ href: 'http://www.energym.co.uk/', label: 'energym.co.uk' });
+      leadWebsite(
+        'http://www.northfield-fitness.example.invalid/?utm_source=google&utm_medium=wix_google&gclid=abc'
+      )
+    ).toEqual({
+      href: 'http://www.northfield-fitness.example.invalid/',
+      label: 'northfield-fitness.example.invalid',
+    });
   });
 
   it('adds https to a bare domain and keeps a real path and real parameters', () => {
@@ -506,8 +511,8 @@ describe('describeScoreChange (UI-021)', () => {
 
 describe('isSameName (the profile card hides a company that repeats the name)', () => {
   it('ignores case and runs of spaces', () => {
-    expect(isSameName('West London Handyman Ltd', 'west  london handyman LTD ')).toBe(true);
-    expect(isSameName('Pilates Living N16', 'Pilates Living N16')).toBe(true);
+    expect(isSameName('Acme Handyman Ltd', 'acme  handyman LTD ')).toBe(true);
+    expect(isSameName('Studio Pilates Demo East', 'Studio Pilates Demo East')).toBe(true);
   });
 
   it('is false for different names and never true for an empty one', () => {
@@ -549,9 +554,9 @@ describe('mergeEmailEngagement (open rate from the CRM email records too)', () =
 
 describe('leadListSubtitle (the leads list no longer repeats the company under the name)', () => {
   it('leaves the company out when the lead is named after it', () => {
-    expect(
-      leadListSubtitle({ firstName: '', lastName: '', company: 'West London Handyman Ltd' })
-    ).toBe('');
+    expect(leadListSubtitle({ firstName: '', lastName: '', company: 'Acme Handyman Ltd' })).toBe(
+      ''
+    );
     expect(
       leadListSubtitle({
         firstName: null,
@@ -582,9 +587,9 @@ describe('displayActivityText (no machine ids in what a person reads, #42)', () 
   it('takes out the COA ledger row id the sync wrote into the text', () => {
     expect(
       displayActivityText(
-        'Private proposal link to pitshanger.leangency.com. COA ledger row cmw5j72u40001p5ug01kf3vot.'
+        'Private proposal link to greenleaf.leangency.com. COA ledger row cmw5j72u40001p5ug01kf3vot.'
       )
-    ).toBe('Private proposal link to pitshanger.leangency.com.');
+    ).toBe('Private proposal link to greenleaf.leangency.com.');
     expect(displayActivityText('Replied. COA ledger row cmw5j72u40001p5ug01kf3vot')).toBe(
       'Replied.'
     );
@@ -634,7 +639,7 @@ describe('leadCompanyIfDistinct (the pin and sheet subtitle)', () => {
       'Acme'
     );
     expect(
-      leadCompanyIfDistinct({ firstName: '', lastName: '', company: 'Pilates Living' })
+      leadCompanyIfDistinct({ firstName: '', lastName: '', company: 'Studio Pilates Demo' })
     ).toBeUndefined();
     expect(leadCompanyIfDistinct({ firstName: 'Jane', lastName: 'Doe' })).toBeUndefined();
     expect(

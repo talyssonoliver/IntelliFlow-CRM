@@ -5,12 +5,12 @@ import { Contact } from '../Contact';
 function contact(phone?: string) {
   return Contact.create({
     email: 'owner@pilates.example.invalid',
-    firstName: 'Pilates Living',
+    firstName: 'Studio Pilates Demo',
     lastName: 'Unknown',
     ownerId: 'owner-1',
     tenantId: 'tenant-1',
     title: 'Owner',
-    company: 'Pilates Living',
+    company: 'Studio Pilates Demo',
     ...(phone ? { phone } : {}),
   }).value;
 }

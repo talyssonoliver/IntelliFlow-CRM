@@ -2,7 +2,7 @@
  * Stale-lead follow-ups as ONE daily line per owner (owner, MVP-005).
  *
  * The job used to write a "Stale lead: <name>" notification per lead, so the same names piled up
- * ("Stale lead: Juliana Alves" five times). Now each owner gets a single "N leads need a
+ * ("Stale lead: Jane Sample" five times). Now each owner gets a single "N leads need a
  * follow-up" notification per day, linking to the leads list's Needs Follow-up view. When the
  * job runs again that day it updates the same notification instead of adding another.
  */

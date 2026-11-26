@@ -518,7 +518,7 @@ describe('names', () => {
         ...leadRow('lead-a', 't1'),
         firstName: null,
         lastName: null,
-        company: ' West London Handyman Ltd ',
+        company: ' Acme Handyman Ltd ',
       } as never,
     ];
     t.emails = [];
@@ -528,7 +528,7 @@ describe('names', () => {
       { tenantId: 't1' },
       { tenantId: 't1', id: { in: [] } }
     );
-    expect(items[0]?.name).toBe('West London Handyman Ltd');
+    expect(items[0]?.name).toBe('Acme Handyman Ltd');
   });
 
   it('falls back to the email when a lead has no name', async () => {
