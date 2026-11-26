@@ -118,7 +118,7 @@ describe('kpiRunSpanClasses (no hole beside the last KPI tile)', () => {
   it('after a 3-span panel, two tiles use the leftover column then a full row', () => {
     const m = kpiRunSpanClasses([panel('p', 3), kpi('a'), kpi('b')]);
     expect(m.get('a')).toBe('col-span-1 md:col-span-1 lg:col-span-1');
-    expect(m.get('b')).toBe('col-span-1 md:col-span-1 lg:col-span-1');
+    expect(m.get('b')).toBe('col-span-1 md:col-span-1 lg:col-span-4');
   });
 
   it('after a 1-span panel (one column of two at md) tiles are counted from the second column', () => {
