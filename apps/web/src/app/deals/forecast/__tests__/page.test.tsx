@@ -120,6 +120,7 @@ vi.mock('@/components/shared/page-header', () => ({
 
 // Import after mocks
 import DealForecastPage from '../page';
+import { formatCloseDate } from '@/lib/deals/close-date';
 
 // ─── Test Data ──────────────────────────────────────────────────────────────
 
@@ -243,6 +244,16 @@ describe('DealForecastPage', () => {
     };
     render(<DealForecastPage />);
     expect(screen.getByText(/No deals closed in the last six months/)).toBeInTheDocument();
+  });
+
+  // Codex review 26/11: a YYYY-MM-DD close date is a calendar date, never shifted a day.
+  it('formats a close date as the calendar day, whatever the timezone', () => {
+    expect(formatCloseDate('2026-03-15', { day: 'numeric', month: 'short', year: 'numeric' })).toBe(
+      '15 Mar 2026'
+    );
+    expect(formatCloseDate('')).toBe('');
+    expect(formatCloseDate(null)).toBe('');
+    expect(formatCloseDate('not a date')).toBe('');
   });
 
   it('lists the at-risk deals as rows on phones, linking to each deal', () => {

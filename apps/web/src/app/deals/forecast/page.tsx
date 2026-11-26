@@ -12,10 +12,10 @@ import { KpiCard } from '@/components/dashboard/KpiCard';
 import { WidgetHeader } from '@/components/dashboard/WidgetHeader';
 import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
 import { CardList, CardListRow } from '@/components/dashboard/widgets/CardListSection';
-import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { formatMoney, formatMoneyCompact } from '@/lib/format/money';
 import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import { buildRevenueProjection } from '@/lib/deals/forecast-projection';
+import { formatCloseDate } from '@/lib/deals/close-date';
 
 const ForecastRevenueChart = dynamic(() => import('@/components/deals/ForecastRevenueChart'), {
   ssr: false,
@@ -302,7 +302,6 @@ function PipelineByStageCard({ stages }: Readonly<{ stages: StageData[] }>) {
 
 function OpportunitiesAtRiskTable({ deals }: Readonly<{ deals: ForecastDeal[] }>) {
   const { formatFullCurrency } = useForecastMoney();
-  const { timezone } = useTimezoneContext();
   // Filter and sort by risk level and value
   const riskyDeals = deals
     .filter((d) => d.riskLevel === 'medium' || d.riskLevel === 'high' || d.probability < 60)
@@ -330,13 +329,8 @@ function OpportunitiesAtRiskTable({ deals }: Readonly<{ deals: ForecastDeal[] }>
               primary={deal.name}
               secondary={`${STAGE_LABELS[deal.stage]} · ${formatFullCurrency(deal.value)}`}
               status={`${deal.probability}% probability · ${
-                deal.expectedCloseDate
-                  ? new Date(deal.expectedCloseDate).toLocaleDateString('en-GB', {
-                      month: 'short',
-                      day: 'numeric',
-                      timeZone: timezone,
-                    })
-                  : 'no close date'
+                formatCloseDate(deal.expectedCloseDate, { month: 'short', day: 'numeric' }) ||
+                'no close date'
               } · ${deal.owner.name}`}
               statusClassName={deal.probability < 50 ? 'text-destructive' : 'text-muted-foreground'}
             />
@@ -418,14 +412,11 @@ function OpportunitiesAtRiskTable({ deals }: Readonly<{ deals: ForecastDeal[] }>
                 </td>
                 <td className="px-6 py-4">
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {deal.expectedCloseDate
-                      ? new Date(deal.expectedCloseDate).toLocaleDateString('en-GB', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                          timeZone: timezone,
-                        })
-                      : 'Not set'}
+                    {formatCloseDate(deal.expectedCloseDate, {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    }) || 'Not set'}
                   </p>
                 </td>
                 <td className="px-6 py-4">
@@ -516,8 +507,7 @@ function buildForecastCSV(
   deals: ForecastDeal[],
   totalPipelineValue: number,
   weightedForecast: number,
-  quarterLabel: string,
-  timezone: string = 'UTC'
+  quarterLabel: string
 ): string {
   const lines: string[] = [];
 
@@ -530,9 +520,7 @@ function buildForecastCSV(
   );
 
   for (const deal of deals) {
-    const closeDate = new Date(deal.expectedCloseDate).toLocaleDateString('en-GB', {
-      timeZone: timezone,
-    });
+    const closeDate = formatCloseDate(deal.expectedCloseDate);
     const row = [
       `"${deal.name.replaceAll('"', '""')}"`,
       STAGE_LABELS[deal.stage] || deal.stage,
@@ -554,7 +542,6 @@ function buildForecastCSV(
 
 export default function DealForecastPage() {
   const tenantCurrency = useTenantCurrency();
-  const { timezone } = useTimezoneContext();
   const router = useRouter();
 
   // Require authentication - redirects to login if not authenticated
@@ -669,13 +656,7 @@ export default function DealForecastPage() {
   }
 
   const exportReport = () => {
-    const csv = buildForecastCSV(
-      deals,
-      totalPipelineValue,
-      weightedForecast,
-      currentQuarter,
-      timezone
-    );
+    const csv = buildForecastCSV(deals, totalPipelineValue, weightedForecast, currentQuarter);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement('a');
