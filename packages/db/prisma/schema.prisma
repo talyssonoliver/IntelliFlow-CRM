@@ -345,6 +345,8 @@ model WorkspaceExportRequest {
   claimCount      Int                    @default(0)
   /// Set once every attempt's archive of a FAILED request is confirmed removed.
   archivesRemovedAt DateTime?
+  /// Last time a cleanup of this FAILED request's archives was tried (the sweep goes oldest first).
+  lastCleanupAttemptAt DateTime?
   error           String?
   requestedAt     DateTime               @default(now())
   startedAt       DateTime?

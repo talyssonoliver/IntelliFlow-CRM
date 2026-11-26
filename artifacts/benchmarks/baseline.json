@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-26T13:25:35.304Z",
+  "timestamp": "2026-11-26T13:46:32.785Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1522,7 +1522,7 @@
   },
   "database_inventory": {
     "total_tables": 218,
-    "total_fields": 3270,
+    "total_fields": 3271,
     "total_indexes": 969,
     "total_relations": 324,
     "tables_with_embeddings": 4,
@@ -1662,6 +1662,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "WorkspaceExportRequest",
+        "fields": 25,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "AgentAction",
         "fields": 25,
         "indexes": 8,
@@ -1680,13 +1687,6 @@
         "fields": 25,
         "indexes": 5,
         "relations": 3,
-        "hasEmbedding": false
-      },
-      {
-        "name": "WorkspaceExportRequest",
-        "fields": 24,
-        "indexes": 4,
-        "relations": 1,
         "hasEmbedding": false
       },
       {

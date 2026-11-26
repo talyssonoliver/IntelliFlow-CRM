@@ -11,12 +11,14 @@ import { join } from 'node:path';
 import { ArchiveWriter } from '../archive-writer';
 import { SupabaseExportStorage } from '../supabase-export-storage';
 import { csvCell } from '../serialize';
+import { scrubJson } from '../deny-list';
 import { createTenantReadGuard, pinReadArgsToTenant } from '../tenant-read-guard';
 import { runWorkspaceExport } from '../export-workspace';
 import {
   MAX_EXPORT_ATTEMPTS,
   STALE_QUEUED_MS,
   STALE_RUNNING_MS,
+  RECONCILE_BATCH,
   processWorkspaceExport,
   requestExportForEndedSubscription,
   resolveExportRecipients,
@@ -793,5 +795,142 @@ describe('review follow-ups: claims and cleanup of failed requests', () => {
 
   it('neutralises a formula that follows a line feed', () => {
     expect(csvCell('\n=1+1')).toBe('"\'\n=1+1"');
+  });
+});
+
+describe('review follow-ups: storage reconciliation and cleanup order', () => {
+  const OLD = new Date(t0.getTime() - 16 * 24 * 60 * 60 * 1000);
+  const NEW = new Date(t0.getTime() - 3 * 24 * 60 * 60 * 1000);
+
+  function reconDeps(objects: Array<{ path: string; at: Date }>) {
+    const { db } = world([]);
+    const { d, tmp } = deps(db);
+    const removed: string[] = [];
+    let lists = 0;
+    d.archiveStorage.listArchivesOlderThan = async (cutoff, limit) => {
+      lists += 1;
+      return objects
+        .filter((o) => o.at < cutoff && !removed.includes(o.path))
+        .map((o) => o.path)
+        .slice(0, limit);
+    };
+    d.archiveStorage.removeArchive = async (p) => void removed.push(p);
+    return { d, removed, tmp, lists: () => lists };
+  }
+
+  it('removes archives older than 14 days plus a day grace, whatever any row says', async () => {
+    const { d, removed, tmp } = reconDeps([
+      { path: `${T}/late-6.zip`, at: OLD },
+      { path: `${T}/live.zip`, at: NEW },
+    ]);
+    await sweepWorkspaceExports(
+      d,
+      vi.fn(async () => {})
+    );
+    expect(removed).toEqual([`${T}/late-6.zip`]);
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('runs once a day, and keeps going while a batch comes back full', async () => {
+    const many = Array.from({ length: RECONCILE_BATCH + 5 }, (_, i) => ({
+      path: `${T}/o${i}.zip`,
+      at: OLD,
+    }));
+    const { d, removed, tmp, lists } = reconDeps(many);
+    await sweepWorkspaceExports(
+      d,
+      vi.fn(async () => {})
+    );
+    expect(removed).toHaveLength(RECONCILE_BATCH); // bounded per run
+    await sweepWorkspaceExports(
+      d,
+      vi.fn(async () => {})
+    ); // continues at once
+    expect(removed).toHaveLength(RECONCILE_BATCH + 5);
+    const before = lists();
+    await sweepWorkspaceExports(
+      d,
+      vi.fn(async () => {})
+    ); // pass finished: waits a day
+    await sweepWorkspaceExports(
+      d,
+      vi.fn(async () => {})
+    );
+    expect(lists()).toBe(before);
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('a failing deletion or listing never fails the sweep', async () => {
+    const { d, tmp } = reconDeps([{ path: `${T}/x.zip`, at: OLD }]);
+    d.archiveStorage.removeArchive = async () => {
+      throw new Error('down');
+    };
+    await expect(
+      sweepWorkspaceExports(
+        d,
+        vi.fn(async () => {})
+      )
+    ).resolves.toBeDefined();
+    d.archiveStorage.listArchivesOlderThan = async () => {
+      throw new Error('list down');
+    };
+    await expect(
+      sweepWorkspaceExports(
+        d,
+        vi.fn(async () => {})
+      )
+    ).resolves.toBeDefined();
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('lists old objects across tenants from the bucket, bounded by the limit', async () => {
+    const storage = new SupabaseExportStorage('https://x.example.invalid', 'k'.repeat(20));
+    const tree: Record<string, any[]> = {
+      '': [{ name: 'ta' }, { name: 'tb' }],
+      ta: [
+        { id: '1', name: 'a-1.zip', updated_at: OLD.toISOString() },
+        { id: '2', name: 'a-2.zip', updated_at: NEW.toISOString() },
+      ],
+      tb: [{ id: '3', name: 'b-1.zip', created_at: OLD.toISOString() }],
+    };
+    (storage as any).client = {
+      storage: {
+        from: () => ({ list: async (p: string) => ({ data: tree[p] ?? [], error: null }) }),
+      },
+    };
+    const cutoff = new Date(t0.getTime() - 15 * 24 * 60 * 60 * 1000);
+    expect(await storage.listArchivesOlderThan(cutoff, 10)).toEqual(['ta/a-1.zip', 'tb/b-1.zip']);
+    expect(await storage.listArchivesOlderThan(cutoff, 1)).toEqual(['ta/a-1.zip']);
+  });
+
+  it('stamps every cleanup attempt so failing rows rotate to the back', async () => {
+    const { tables, db } = world([
+      {
+        id: 'bad',
+        tenantId: T,
+        status: 'FAILED',
+        attempts: 5,
+        claimCount: 1,
+        trigger: 'ADMIN',
+        requestedAt: t0,
+        updatedAt: t0,
+      },
+    ]);
+    const { d, tmp } = deps(db);
+    d.archiveStorage.removeArchive = async () => {
+      throw new Error('down');
+    };
+    await sweepWorkspaceExports(
+      d,
+      vi.fn(async () => {})
+    );
+    expect(tables.workspaceExportRequest[0].lastCleanupAttemptAt).toEqual(t0);
+    expect(tables.workspaceExportRequest[0].archivesRemovedAt).toBeNull();
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('keeps a customer key named __proto__ when scrubbing JSON', () => {
+    const out = scrubJson(JSON.parse('{"__proto__":{"label":"x"},"ok":1,"apiKey":"s"}')) as any;
+    expect(JSON.stringify(out)).toBe('{"__proto__":{"label":"x"},"ok":1,"apiKey":"[redacted]"}');
   });
 });

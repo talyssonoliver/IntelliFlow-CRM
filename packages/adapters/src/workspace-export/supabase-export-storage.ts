@@ -27,6 +27,19 @@ export interface ExportArchiveStorage {
   signedDownloadUrl(path: string, expiresInSeconds: number, downloadName: string): Promise<string>;
   /** Remove the archive (after its 14 days). */
   removeArchive(path: string): Promise<void>;
+  /** Objects last written before `olderThan`, any tenant, at most `limit` (storage reconciliation). */
+  listArchivesOlderThan?(olderThan: Date, limit: number): Promise<string[]>;
+}
+
+interface StorageListEntry {
+  id?: string | null;
+  name: string;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+function entryTime(e: StorageListEntry): Date {
+  return new Date(e.updated_at ?? e.created_at ?? Date.now());
 }
 
 export class SupabaseExportStorage implements ExportFileStorage, ExportArchiveStorage {
@@ -172,6 +185,34 @@ export class SupabaseExportStorage implements ExportFileStorage, ExportArchiveSt
       .createSignedUrl(path, expiresInSeconds, { download: downloadName });
     if (error || !data) throw new Error('Export link could not be created');
     return data.signedUrl;
+  }
+
+  /** Every entry under `folder`, page by page (stops early when `stop()` says so). */
+  private async *listPages(folder: string): AsyncGenerator<StorageListEntry> {
+    const bucket = this.client.storage.from(this.exportBucket);
+    const PAGE = 100;
+    for (let offset = 0; ; offset += PAGE) {
+      const { data, error } = await bucket.list(folder, { limit: PAGE, offset });
+      if (error) throw new Error(`Export bucket listing failed: ${error.message}`);
+      for (const entry of (data ?? []) as StorageListEntry[]) yield entry;
+      if (!data || data.length < PAGE) return;
+    }
+  }
+
+  /**
+   * Archive objects last written before `olderThan`, tenant-agnostic, at most `limit`. Walks
+   * `<tenantId>/<file>` and stops as soon as the limit is reached.
+   */
+  async listArchivesOlderThan(olderThan: Date, limit: number): Promise<string[]> {
+    const found: string[] = [];
+    for await (const folder of this.listPages('')) {
+      for await (const obj of this.listPages(folder.name)) {
+        if (found.length >= limit) return found;
+        if (obj.id && entryTime(obj) < olderThan) found.push(`${folder.name}/${obj.name}`);
+      }
+      if (found.length >= limit) break;
+    }
+    return found;
   }
 
   async removeArchive(path: string): Promise<void> {

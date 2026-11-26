@@ -106,7 +106,14 @@ export function scrubJson(value: unknown, depth = 0): unknown {
   if (value !== null && typeof value === 'object' && !(value instanceof Date)) {
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-      out[k] = SECRET_JSON_KEY_PATTERN.test(k) ? REDACTED : scrubJson(v, depth + 1);
+      // defineProperty: a plain assignment to "__proto__" would hit the prototype setter and
+      // silently drop the customer's key.
+      Object.defineProperty(out, k, {
+        value: SECRET_JSON_KEY_PATTERN.test(k) ? REDACTED : scrubJson(v, depth + 1),
+        enumerable: true,
+        writable: true,
+        configurable: true,
+      });
     }
     return out;
   }

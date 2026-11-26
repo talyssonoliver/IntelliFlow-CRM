@@ -652,11 +652,17 @@ async function removeFailedArchives(deps: ExportJobDeps): Promise<number> {
   const rows = await prisma.workspaceExportRequest.findMany({
     where: { status: 'FAILED', archivesRemovedAt: null },
     select: { id: true, tenantId: true, claimCount: true },
-    orderBy: { updatedAt: 'asc' },
+    // Never-tried rows first, then the least recently tried: rows that keep failing cannot
+    // monopolise the batch and starve the others.
+    orderBy: { lastCleanupAttemptAt: { sort: 'asc', nulls: 'first' } },
     take: 20,
   });
   let cleaned = 0;
   for (const row of rows) {
+    await prisma.workspaceExportRequest.updateMany({
+      where: { id: row.id, status: 'FAILED' },
+      data: { lastCleanupAttemptAt: deps.now?.() ?? new Date() },
+    });
     try {
       await removeAttemptArchives(deps, row, row.claimCount, undefined, true);
       await prisma.workspaceExportRequest.updateMany({
@@ -669,6 +675,45 @@ async function removeFailedArchives(deps: ExportJobDeps): Promise<number> {
     }
   }
   return cleaned;
+}
+
+/** An archive older than its 14-day link plus this grace is never legitimate. */
+export const ARCHIVE_GRACE_MS = 24 * 60 * 60 * 1000;
+export const RECONCILE_BATCH = 500;
+export const RECONCILE_EVERY_MS = 24 * 60 * 60 * 1000;
+const lastReconcile = new WeakMap<object, number>();
+
+/**
+ * Storage reconciliation, whatever the request rows say: removes bucket objects older than the
+ * link lifetime plus a day (late uploads of stale workers, failed deletions). At most
+ * RECONCILE_BATCH objects per run; a full batch means more may remain, so the next sweep
+ * continues. A finished pass waits a day before the next one.
+ */
+export async function reconcileExportStorage(deps: ExportJobDeps, now: Date): Promise<number> {
+  const storage = deps.archiveStorage;
+  if (!storage.listArchivesOlderThan) return 0;
+  const last = lastReconcile.get(storage);
+  if (last !== undefined && now.getTime() - last < RECONCILE_EVERY_MS) return 0;
+  try {
+    const cutoff = new Date(now.getTime() - EXPORT_TTL_MS - ARCHIVE_GRACE_MS);
+    const paths = await storage.listArchivesOlderThan(cutoff, RECONCILE_BATCH);
+    let removed = 0;
+    for (const path of paths) {
+      try {
+        await storage.removeArchive(path);
+        removed += 1;
+      } catch (err) {
+        deps.log?.warn({ path, err: String(err) }, 'stale export archive not removed');
+      }
+    }
+    deps.log?.info({ removed, found: paths.length }, 'workspace export storage reconciled');
+    // A full batch: more may remain, so no daily wait.
+    if (paths.length < RECONCILE_BATCH) lastReconcile.set(storage, now.getTime());
+    return removed;
+  } catch (err) {
+    deps.log?.warn({ err: String(err) }, 'workspace export storage reconciliation failed');
+    return 0;
+  }
 }
 
 /** Rows whose job was lost (QUEUED too long) or whose worker died (RUNNING too long). */
@@ -793,6 +838,7 @@ export async function sweepWorkspaceExports(
   const now = (deps.now ?? (() => new Date()))();
   await failExhausted(deps, now);
   await removeFailedArchives(deps);
+  await reconcileExportStorage(deps, now);
   return {
     requeued: await requeueStuck(deps, enqueue, now),
     emailsRetried: await retryUnsentEmails(deps, now),
