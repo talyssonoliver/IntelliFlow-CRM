@@ -99,31 +99,62 @@ export function unreviewedSecretLikeColumns(
   );
 }
 
-/** Replace the value of every secret-looking key in a Json value (deep copy). */
-export function scrubJson(value: unknown, depth = 0): unknown {
-  if (depth > 20) return REDACTED;
-  if (Array.isArray(value)) return value.map((v) => scrubJson(v, depth + 1));
-  if (value !== null && typeof value === 'object' && !(value instanceof Date)) {
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+const isContainer = (v: unknown): v is object =>
+  v !== null && typeof v === 'object' && !(v instanceof Date);
+
+type ScrubFrame = { src: object; dst: object };
+
+/** The scrubbed copy of one value; a container is copied empty and queued to be filled. */
+function scrubChild(key: string, v: unknown, inArray: boolean, stack: ScrubFrame[]): unknown {
+  if (!inArray && SECRET_JSON_KEY_PATTERN.test(key)) return REDACTED;
+  if (!isContainer(v)) return v;
+  const dst = Array.isArray(v) ? [] : {};
+  stack.push({ src: v, dst });
+  return dst;
+}
+
+/**
+ * Replace the value of every secret-looking key in a Json value (deep copy). Walks with an
+ * explicit stack, so a value of any depth is kept as it is: nothing is cut off or replaced for
+ * being deeply nested.
+ */
+export function scrubJson(value: unknown): unknown {
+  if (!isContainer(value)) return value;
+  const root: object = Array.isArray(value) ? [] : {};
+  const stack: ScrubFrame[] = [{ src: value, dst: root }];
+  while (stack.length > 0) {
+    const { src, dst } = stack.pop()!;
+    const inArray = Array.isArray(src);
+    const entries: Array<[string, unknown]> = inArray
+      ? (src as unknown[]).map((v, i) => [String(i), v])
+      : Object.entries(src as Record<string, unknown>);
+    for (const [k, v] of entries) {
       // defineProperty: a plain assignment to "__proto__" would hit the prototype setter and
       // silently drop the customer's key.
-      Object.defineProperty(out, k, {
-        value: SECRET_JSON_KEY_PATTERN.test(k) ? REDACTED : scrubJson(v, depth + 1),
+      Object.defineProperty(dst, k, {
+        value: scrubChild(k, v, inArray, stack),
         enumerable: true,
         writable: true,
         configurable: true,
       });
     }
-    return out;
   }
-  return value;
+  return root;
 }
 
 /** A URL without query string or fragment: signed links carry their token there. */
 export function stripUrlSecrets(value: string): string {
   const cut = value.search(/[?#]/);
   const base = cut === -1 ? value : value.slice(0, cut);
-  // Credentials in the address (user:pass@host) go too, not only the signed query and fragment.
-  return base.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/@]*@/i, '$1');
+  // Credentials in the address go too (the user information before the host, with or without a
+  // scheme). As in the URL standard, the authority ends at the first slash and the user
+  // information is everything before its LAST at-sign, so a password that itself holds an
+  // at-sign is removed whole.
+  const prefix = /^(?:[a-z][a-z0-9+.-]{0,30}:)?\/\//i.exec(base)?.[0];
+  if (!prefix) return base;
+  let end = prefix.length;
+  while (end < base.length && base[end] !== '/') end += 1;
+  const authority = base.slice(prefix.length, end);
+  const at = authority.lastIndexOf('@');
+  return at === -1 ? base : prefix + authority.slice(at + 1) + base.slice(end);
 }

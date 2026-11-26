@@ -375,6 +375,8 @@ model WorkspaceExportRequest {
   lastCleanupAttemptAt DateTime?
   /// Users who have been sent the download link (a failed recipient is retried on its own).
   emailedToUserIds String[] @default([])
+  /// While set and in the future, one run holds the right to send the export email (no duplicates).
+  deliveryLeaseUntil DateTime?
   /// The stored parts of the archive: { items: [{ part, path, bytes, sha256 }], manifestPath }.
   /// storagePath stays part 1; archiveBytes is the total of all parts.
   parts Json?

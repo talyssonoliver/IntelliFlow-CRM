@@ -37,6 +37,7 @@ CREATE TABLE "workspace_export_requests" (
     "archivesRemovedAt" TIMESTAMP(3),
     "lastCleanupAttemptAt" TIMESTAMP(3),
     "emailedToUserIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
+    "deliveryLeaseUntil" TIMESTAMP(3),
     "parts" JSONB,
     "error" TEXT,
     "requestedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

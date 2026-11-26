@@ -95,15 +95,39 @@ export class ArchiveWriter {
     this.current?.destroy(err);
   }
 
-  private begin(name: string): { tee: DigestTransform } {
+  /**
+   * Resolves when archiver has finished the entry `name` (its 'entry' event), rejects when the
+   * archive fails. Waiting for this, not only for the source, keeps what is queued behind a slow
+   * disk down to one entry: archiver wraps a stream in its own buffer, so a small file can finish
+   * on our side long before it is written.
+   */
+  private entryDone(name: string): Promise<void> {
+    const done = new Promise<void>((resolve, reject) => {
+      const onEntry = (entry: { name: string }) => {
+        if (entry.name !== name) return;
+        this.archive.off('entry', onEntry);
+        resolve();
+      };
+      this.archive.on('entry', onEntry);
+      this.failed.catch((err: Error) => {
+        this.archive.off('entry', onEntry);
+        reject(err);
+      });
+    });
+    done.catch(() => undefined);
+    return done;
+  }
+
+  private begin(name: string): { tee: DigestTransform; entry: Promise<void> } {
     assertSafeEntryName(name);
     if (this.failure) throw this.failure;
     if (this.names.has(name)) throw new Error(`Duplicate archive entry: ${name}`);
     this.names.add(name);
     const tee = new DigestTransform();
     this.current = tee;
+    const entry = this.entryDone(name);
     this.archive.append(tee, { name });
-    return { tee };
+    return { tee, entry };
   }
 
   /** Write one entry from a producer that calls `write` with text chunks (back-pressured). */
@@ -111,10 +135,12 @@ export class ArchiveWriter {
     name: string,
     produce: (write: (chunk: string) => Promise<void>) => Promise<void>
   ): Promise<ArchiveEntryInfo> {
-    const { tee } = this.begin(name);
-    const settled = finished(tee).catch((err: Error) => {
-      throw this.failure ?? err;
-    });
+    const { tee, entry } = this.begin(name);
+    const settled = Promise.all([finished(tee), entry])
+      .then(() => undefined)
+      .catch((err: Error) => {
+        throw this.failure ?? err;
+      });
     // fail() can reject this while the producer is still writing: the producer's own error path
     // reports it, so it must never surface as an unhandled rejection.
     settled.catch(() => undefined);
@@ -137,13 +163,14 @@ export class ArchiveWriter {
 
   /** Write one entry by piping a readable (a stored file). */
   async addStream(name: string, source: Readable): Promise<ArchiveEntryInfo> {
-    const { tee } = this.begin(name);
-    // The entry is done only when the archive has consumed it (the tee's readable side ended),
-    // not when the source has been handed over: otherwise small files queue up in memory behind
-    // a slow disk.
-    const settled = finished(tee).catch((err: Error) => {
-      throw this.failure ?? err;
-    });
+    const { tee, entry } = this.begin(name);
+    // The entry is done only when archiver has written it, not when the source has been handed
+    // over: otherwise small files queue up in memory behind a slow disk.
+    const settled = Promise.all([finished(tee), entry])
+      .then(() => undefined)
+      .catch((err: Error) => {
+        throw this.failure ?? err;
+      });
     settled.catch(() => undefined);
     try {
       await new Promise<void>((resolve, reject) => {

@@ -8,6 +8,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { Readable } from 'node:stream';
 import { ArchiveWriter } from '../archive-writer';
 import { SupabaseExportStorage } from '../supabase-export-storage';
 import { csvCell } from '../serialize';
@@ -149,6 +150,8 @@ function world(rows: any[]) {
       archivesRemovedAt: null,
       lastCleanupAttemptAt: null,
       emailedToUserIds: [],
+      deliveryLeaseUntil: null,
+      emailedAt: null,
       ...r,
     })),
     stripeSubscription: [],
@@ -1232,5 +1235,112 @@ describe('review follow-ups: asker membership and URL credentials', () => {
     expect(stripUrlSecrets('https://files.example.invalid/a@b.pdf')).toBe(
       'https://files.example.invalid/a@b.pdf'
     );
+  });
+});
+
+describe('review follow-ups: entry backpressure, JSON depth, URL credentials, delivery lease', () => {
+  it('an entry is finished only once archiver has written it', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'wsx-h-'));
+    const writer = new ArchiveWriter(join(dir, 'a.zip'));
+    expect(writer.bytesWritten).toBe(0);
+    await writer.addStream('small.txt', Readable.from([Buffer.from('tiny file')]));
+    const afterStream = writer.bytesWritten;
+    expect(afterStream).toBeGreaterThan(0);
+    await writer.addGenerated('gen.txt', (w) => w('generated'));
+    expect(writer.bytesWritten).toBeGreaterThan(afterStream);
+    await writer.finalize();
+  });
+
+  it('keeps customer JSON of any depth and still redacts a deep secret', () => {
+    let deep: any = { note: 'customer data', apiKey: 'k' };
+    for (let i = 0; i < 5000; i += 1) deep = { child: deep, list: [i] };
+    const out: any = scrubJson(deep);
+    let node = out;
+    for (let i = 0; i < 5000; i += 1) node = node.child;
+    expect(node).toEqual({ note: 'customer data', apiKey: '[redacted]' });
+    expect(out.list).toEqual([4999]);
+  });
+
+  it('removes URL credentials in every form', () => {
+    const url = (...p: string[]) => p.join('');
+    expect(stripUrlSecrets(url('//alice:', 'password', '@example.invalid/file'))).toBe(
+      '//example.invalid/file'
+    );
+    expect(stripUrlSecrets(url('https://alice:p', '@ss', '@example.invalid/file'))).toBe(
+      'https://example.invalid/file'
+    );
+    expect(stripUrlSecrets(url('https://alice@example.invalid/file?x=1#y'))).toBe(
+      'https://example.invalid/file'
+    );
+    expect(stripUrlSecrets(url('ftp://u:', 'pw', '@host.invalid'))).toBe('ftp://host.invalid');
+    // Not credentials: an "@" after the host stays.
+    expect(stripUrlSecrets('https://files.example.invalid/a@b.pdf')).toBe(
+      'https://files.example.invalid/a@b.pdf'
+    );
+    expect(stripUrlSecrets('/relative/a@b.pdf')).toBe('/relative/a@b.pdf');
+  });
+
+  const readyRow = (over: any = {}) => ({
+    id: 'r',
+    tenantId: T,
+    status: 'READY',
+    storagePath: `${T}/r-1.zip`,
+    archiveSha256: 'b'.repeat(64),
+    archiveBytes: 10n,
+    expiresAt: new Date(t0.getTime() + 86_400_000),
+    emailedAt: null,
+    requestedById: 'owner',
+    subscriptionId: null,
+    requestedAt: t0,
+    attempts: 1,
+    updatedAt: t0,
+    ...over,
+  });
+
+  it('overlapping runs send the export email once', async () => {
+    const { tables, db } = world([readyRow()]);
+    const sent: string[] = [];
+    const { d, tmp } = deps(db, {
+      sendEmail: async (m) => {
+        await new Promise((r) => setTimeout(r, 20));
+        sent.push(m.recipientUserId);
+      },
+    });
+    await Promise.all([
+      sweepWorkspaceExports(d, async () => {}),
+      sweepWorkspaceExports(d, async () => {}),
+      sweepWorkspaceExports(d, async () => {}),
+    ]);
+    expect(sent).toEqual(['owner']);
+    expect(tables.workspaceExportRequest[0].emailedAt).toEqual(t0);
+    expect(tables.workspaceExportRequest[0].deliveryLeaseUntil).toBeNull();
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('a lease held by another run blocks delivery until it expires', async () => {
+    const { tables, db } = world([
+      readyRow({ deliveryLeaseUntil: new Date(t0.getTime() + 60_000) }),
+    ]);
+    const sent: string[] = [];
+    const { d, tmp } = deps(db, { sendEmail: async (m) => void sent.push(m.recipientUserId) });
+    await sweepWorkspaceExports(d, async () => {});
+    expect(sent).toEqual([]);
+    tables.workspaceExportRequest[0].deliveryLeaseUntil = new Date(t0.getTime() - 1);
+    await sweepWorkspaceExports(d, async () => {});
+    expect(sent).toEqual(['owner']);
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('releases the lease after a failed delivery so the next sweep retries', async () => {
+    const { tables, db } = world([readyRow()]);
+    const { d, tmp } = deps(db, {
+      sendEmail: async () => {
+        throw new Error('bounce');
+      },
+    });
+    await sweepWorkspaceExports(d, async () => {});
+    expect(tables.workspaceExportRequest[0].emailedAt).toBeNull();
+    expect(tables.workspaceExportRequest[0].deliveryLeaseUntil).toBeNull();
+    rmSync(tmp, { recursive: true, force: true });
   });
 });

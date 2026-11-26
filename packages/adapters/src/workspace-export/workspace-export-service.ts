@@ -634,6 +634,9 @@ export async function processWorkspaceExport(
 }
 
 /** Sign the link and email every recipient. A mail failure leaves emailedAt empty for the sweep. */
+/** How long one run may hold the right to send the export email. */
+export const DELIVERY_LEASE_MS = 10 * 60 * 1000;
+
 async function deliverLink(
   deps: ExportJobDeps,
   request: {
@@ -654,7 +657,25 @@ async function deliverLink(
   const now = deps.now ?? (() => new Date());
   const remaining = Math.floor((info.expiresAt.getTime() - now().getTime()) / 1000);
   if (remaining <= 0) return false;
+  // One run at a time sends the email: an atomic claim of the request row. Another run (the
+  // sweep, or the first delivery) that finds the lease taken leaves it to the holder.
+  const leaseUntil = new Date(now().getTime() + DELIVERY_LEASE_MS);
+  const { count } = await deps.prisma.workspaceExportRequest.updateMany({
+    where: {
+      id: request.id,
+      status: 'READY',
+      emailedAt: null,
+      OR: [{ deliveryLeaseUntil: null }, { deliveryLeaseUntil: { lt: now() } }],
+    },
+    data: { deliveryLeaseUntil: leaseUntil },
+  });
+  if (count !== 1) return false;
   try {
+    // Read what is recorded now, after the claim: not the snapshot the caller started from.
+    const fresh = await deps.prisma.workspaceExportRequest.findUnique({
+      where: { id: request.id },
+      select: { emailedToUserIds: true },
+    });
     const recipients = await resolveExportRecipients(deps.prisma, request, now());
     if (recipients.length === 0) return false;
     const { links, manifestUrl } = await signPartLinks(
@@ -673,7 +694,7 @@ async function deliverLink(
     });
     // Delivery is tracked per recipient: one who already has the link is never mailed again,
     // and one whose mail failed is retried on its own until every recipient has it.
-    const already = new Set(request.emailedToUserIds ?? []);
+    const already = new Set(fresh?.emailedToUserIds ?? request.emailedToUserIds ?? []);
     const delivered: string[] = [];
     let failures = 0;
     for (const r of recipients) {
@@ -706,6 +727,14 @@ async function deliverLink(
   } catch (err) {
     deps.log?.warn({ requestId: request.id, err: String(err) }, 'workspace export email not sent');
     return false;
+  } finally {
+    // Release the lease (only our own): a failed delivery is retried by the next sweep at once.
+    await deps.prisma.workspaceExportRequest
+      .updateMany({
+        where: { id: request.id, deliveryLeaseUntil: leaseUntil },
+        data: { deliveryLeaseUntil: null },
+      })
+      .catch(() => undefined);
   }
 }
 

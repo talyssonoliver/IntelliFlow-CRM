@@ -30,8 +30,6 @@ export interface PartedEntryInfo extends ArchiveEntryInfo {
 
 export class PartedArchive {
   private readonly writers: ArchiveWriter[];
-  /** Raw size of the last entry of each part: it may not be fully counted by the archiver yet. */
-  private readonly lastRaw: number[] = [0];
 
   constructor(
     private readonly basePath: string,
@@ -56,14 +54,13 @@ export class PartedArchive {
   private rollIfFull(sizeHint?: number | null): void {
     const cur = this.current();
     if (cur.entryCount === 0) return;
-    // Conservative: what the archiver has written plus the whole last entry, as if uncompressed.
-    const size = cur.bytesWritten + (this.lastRaw[this.writers.length - 1] ?? 0);
+    // An entry is added only once archiver has written it, so this is what the part holds.
+    const size = cur.bytesWritten;
     const full =
       size >= this.maxPartBytes ||
       (typeof sizeHint === 'number' && size + sizeHint > this.maxPartBytes);
     if (full) {
       this.writers.push(new ArchiveWriter(this.partPath(this.writers.length + 1)));
-      this.lastRaw.push(0);
     }
   }
 
@@ -74,7 +71,6 @@ export class PartedArchive {
     this.rollIfFull();
     const part = this.writers.length;
     const info = await this.current().addGenerated(name, produce);
-    this.lastRaw[part - 1] = info.bytes;
     return { ...info, part };
   }
 
@@ -86,7 +82,6 @@ export class PartedArchive {
     this.rollIfFull(sizeHint);
     const part = this.writers.length;
     const info = await this.current().addStream(name, source);
-    this.lastRaw[part - 1] = info.bytes;
     return { ...info, part };
   }
 

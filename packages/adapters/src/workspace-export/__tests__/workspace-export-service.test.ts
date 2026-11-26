@@ -61,6 +61,8 @@ function world(extra: Record<string, any[]> = {}) {
     claimCount: r.attempts ?? 0,
     archivesRemovedAt: null,
     emailedToUserIds: [],
+    deliveryLeaseUntil: null,
+    emailedAt: null,
     ...r,
   }));
   const db = makeDb(tables) as any;

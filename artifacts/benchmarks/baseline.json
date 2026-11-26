@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-26T16:56:35.996Z",
+  "timestamp": "2026-11-26T18:31:19.983Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1528,7 +1528,7 @@
   },
   "database_inventory": {
     "total_tables": 219,
-    "total_fields": 3277,
+    "total_fields": 3278,
     "total_indexes": 968,
     "total_relations": 324,
     "tables_with_embeddings": 4,
@@ -1808,6 +1808,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "WorkspaceExportRequest",
+        "fields": 18,
+        "indexes": 1,
+        "relations": 0,
+        "hasEmbedding": false
+      },
+      {
         "name": "MessageRecord",
         "fields": 18,
         "indexes": 5,
@@ -1819,13 +1826,6 @@
         "fields": 18,
         "indexes": 7,
         "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "WorkspaceExportRequest",
-        "fields": 17,
-        "indexes": 1,
-        "relations": 0,
         "hasEmbedding": false
       },
       {

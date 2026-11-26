@@ -95,6 +95,8 @@ export function delegate(rows: Row[], tables?: Record<string, Row[]>) {
         updatedAt: new Date(),
         subscriptionId: null,
         emailedAt: null,
+        deliveryLeaseUntil: null,
+        emailedToUserIds: [],
         ...data,
       };
       rows.push(row);
