@@ -34,7 +34,7 @@ function domainContact(overrides: Record<string, unknown> = {}) {
   return {
     id: { value: TEST_UUIDS.contact1 },
     email: { value: email },
-    firstName: 'Pilates Living',
+    firstName: 'Studio Pilates Demo',
     lastName: '',
     title: null,
     phone: null,
@@ -73,11 +73,11 @@ describe('contact.create without a last name (MVP-003)', () => {
     ['empty', { lastName: '' }],
   ])('creates the contact with only a first name when the last name is %s', async (_l, extra) => {
     const { createContact, caller } = setup();
-    const result = await caller.create({ email, firstName: 'Pilates Living', ...extra });
-    expect(result.firstName).toBe('Pilates Living');
+    const result = await caller.create({ email, firstName: 'Studio Pilates Demo', ...extra });
+    expect(result.firstName).toBe('Studio Pilates Demo');
     expect(result.lastName).toBe('');
     expect(createContact).toHaveBeenCalledWith(
-      expect.objectContaining({ firstName: 'Pilates Living', lastName: '' })
+      expect.objectContaining({ firstName: 'Studio Pilates Demo', lastName: '' })
     );
   });
 
@@ -107,13 +107,13 @@ describe('contact.update the last name (MVP-003)', () => {
     const { updateContactInfo, caller } = setup();
     const result = await caller.update({
       id: TEST_UUIDS.contact1,
-      firstName: 'Pilates Living',
+      firstName: 'Studio Pilates Demo',
       lastName: '',
     });
     expect(result.lastName).toBe('');
     // The empty last name reaches the service: it is applied, not dropped as "no value".
     expect(updateContactInfo.mock.calls[0][1]).toMatchObject({
-      firstName: 'Pilates Living',
+      firstName: 'Studio Pilates Demo',
       lastName: '',
     });
   });

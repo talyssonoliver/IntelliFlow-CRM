@@ -4,7 +4,7 @@ import { Contact } from '../../contact/Contact';
 
 /** MVP-003: a contact created from a lead is named from what the lead has, never "Unknown". */
 describe('contactNameFromLead', () => {
-  const company = 'Pilates Living';
+  const company = 'Studio Pilates Demo';
   const email = 'owner@pilates.example.invalid';
 
   it('uses the person name when the lead has one', () => {
@@ -63,7 +63,7 @@ describe('contactNameFromLead', () => {
 describe('a contact named from a lead', () => {
   it('reads as the company, without a stray space after it', () => {
     const name = contactNameFromLead({
-      company: 'Pilates Living',
+      company: 'Studio Pilates Demo',
       email: 'owner@pilates.example.invalid',
     });
     const contact = Contact.create({
@@ -73,6 +73,6 @@ describe('a contact named from a lead', () => {
       ownerId: 'owner-1',
       tenantId: 'tenant-1',
     }).value;
-    expect(contact.fullName).toBe('Pilates Living');
+    expect(contact.fullName).toBe('Studio Pilates Demo');
   });
 });

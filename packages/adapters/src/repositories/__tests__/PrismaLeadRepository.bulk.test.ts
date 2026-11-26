@@ -502,7 +502,7 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
           findMany: vi
             .fn()
             .mockResolvedValue([
-              { ...mockLeads[1], company: 'Pilates Living', email: 'o@x.example.invalid' },
+              { ...mockLeads[1], company: 'Studio Pilates Demo', email: 'o@x.example.invalid' },
             ]),
           updateMany: vi.fn().mockResolvedValue({ count: 1 }),
         },
@@ -514,7 +514,7 @@ describe('PrismaLeadRepository - Bulk Operations (IFC-007)', () => {
       await repo.bulkConvert(['lead-2'], false, 'user-1');
 
       expect(txClient.contact.createMany).toHaveBeenCalledWith({
-        data: [expect.objectContaining({ firstName: 'Pilates Living', lastName: '' })],
+        data: [expect.objectContaining({ firstName: 'Studio Pilates Demo', lastName: '' })],
         skipDuplicates: true,
       });
     });

@@ -17,7 +17,7 @@ const lead = (over: Record<string, unknown> = {}) => ({
   id: 'lead-1',
   firstName: null,
   lastName: null,
-  company: 'West London Handyman Ltd',
+  company: 'Acme Handyman Ltd',
   email: 'info@wlh.example.invalid',
   status: 'QUALIFIED',
   ...over,
@@ -34,7 +34,7 @@ const handlers = () => ({
 describe('LeadPageHeader', () => {
   it('shows the lead name as the page title on every screen (not screen-reader only)', () => {
     render(<LeadPageHeader lead={lead()} {...handlers()} />);
-    const title = screen.getByRole('heading', { level: 1, name: 'West London Handyman Ltd' });
+    const title = screen.getByRole('heading', { level: 1, name: 'Acme Handyman Ltd' });
     expect(title.className).not.toContain('sr-only');
     // It truncates instead of wrapping, so the header stays one line.
     expect(title.className).toContain('truncate');

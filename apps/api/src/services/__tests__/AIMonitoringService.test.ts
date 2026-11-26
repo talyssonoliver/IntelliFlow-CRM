@@ -1,351 +1,431 @@
 /**
  * @vitest-environment node
+ *
+ * AIMonitoringService unit tests (SQL-summary version, egress audit 1126).
+ *
+ * The aggregates run in Postgres, so these tests mock `$queryRaw` and prove the mapping from the
+ * SQL row to the response, the empty paths, the bound parameters, the caps and the cache. That
+ * the SQL itself gives the same figures as the old JavaScript calculation is proven against a
+ * real database in tests/integration/ai-monitoring-sql-parity.test.ts.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AIMonitoringService } from '../AIMonitoringService';
 
-const mockPrisma = {
-  aIMonitoringEvent: {
-    findMany: vi.fn().mockResolvedValue([]),
-    count: vi.fn().mockResolvedValue(0),
-    aggregate: vi.fn().mockResolvedValue({ _sum: { value: null } }),
-    groupBy: vi.fn().mockResolvedValue([]),
-  },
-} as any;
+type Rows = unknown[];
 
-/** Shared tenantId used across all service tests. */
-const TEST_TENANT_ID = 'tenant-test-001';
+/** Tagged-template mock: picks the canned rows by a marker found in the SQL text. */
+function makePrisma(canned: Partial<Record<'counts' | 'pct' | 'latency' | 'trend' | 'roi', Rows>>) {
+  const calls: Array<{ sql: string; values: unknown[] }> = [];
+  const $queryRaw = vi.fn(async (strings: TemplateStringsArray, ...values: unknown[]) => {
+    const sql = strings.join('?');
+    calls.push({ sql, values });
+    if (sql.includes('drift_count')) return canned.counts ?? [{}];
+    if (
+      sql.includes('AS p99') &&
+      sql.includes('FROM ranked') &&
+      !sql.includes('oldest') &&
+      !sql.includes('GROUP BY b')
+    )
+      return canned.pct ?? [{ p95: null, p99: null }];
+    if (sql.includes('oldest')) return canned.latency ?? [{ n: null }];
+    if (sql.includes('GROUP BY b')) return canned.trend ?? [];
+    if (sql.includes('event_type')) return canned.roi ?? [];
+    throw new Error(`unexpected SQL: ${sql.slice(0, 80)}`);
+  });
+  return {
+    prisma: {
+      $queryRaw,
+      aIMonitoringEvent: { findMany: vi.fn().mockResolvedValue([]) },
+    } as any,
+    calls,
+  };
+}
+
+const TENANT = 'tenant-test-001';
+const NOW = Date.UTC(2026, 10, 26, 12, 0, 30); // 30 s past the minute
+
+function svc(prisma: any, opts: { cacheTtlMs?: number; now?: () => number } = {}) {
+  return new AIMonitoringService(prisma, { cacheTtlMs: 0, now: () => NOW, ...opts });
+}
 
 describe('AIMonitoringService', () => {
-  let service: AIMonitoringService;
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    // Re-set default return values after clearAllMocks
-    mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue([]);
-    mockPrisma.aIMonitoringEvent.count.mockResolvedValue(0);
-    mockPrisma.aIMonitoringEvent.aggregate.mockResolvedValue({ _sum: { value: null } });
-    mockPrisma.aIMonitoringEvent.groupBy.mockResolvedValue([]);
-    service = new AIMonitoringService(mockPrisma);
-  });
-
   describe('getStatus', () => {
-    it('returns healthy status with available: true when no events', async () => {
-      const result = await service.getStatus({ tenantId: TEST_TENANT_ID });
-
+    it('returns healthy status with zeros when there are no events', async () => {
+      const { prisma } = makePrisma({});
+      const result = await svc(prisma).getStatus({ tenantId: TENANT });
       expect(result.available).toBe(true);
       expect(result.healthy).toBe(true);
       expect(result.issues).toEqual([]);
-      expect(result.drift).toBeDefined();
-      expect(result.latency).toBeDefined();
-      expect(result.hallucination).toBeDefined();
-      expect(result.roi).toBeDefined();
+      expect(result.latency).toEqual({ sloCompliant: true, p95: 0, p99: 0 });
+      expect(result.roi).toEqual({ currentROI: 0, totalCost: 0, totalValue: 0 });
     });
 
-    it('aggregates event counts from DB over 24h window', async () => {
-      mockPrisma.aIMonitoringEvent.count
-        .mockResolvedValueOnce(10) // drift
-        .mockResolvedValueOnce(50) // latency
-        .mockResolvedValueOnce(20) // hallucination
-        .mockResolvedValueOnce(30) // roi_cost
-        .mockResolvedValueOnce(0) // hallucination flagged
-        .mockResolvedValueOnce(2); // drift flagged
-
-      const result = await service.getStatus({ tenantId: TEST_TENANT_ID });
-
-      expect(result.available).toBe(true);
-      expect(result.drift.trackedMetrics).toBe(10);
-      expect(result.drift.driftDetected).toBe(true);
-      expect(result.drift.highSeverityCount).toBe(2);
-    });
-
-    it('reports issues when hallucination rate exceeds 5%', async () => {
-      mockPrisma.aIMonitoringEvent.count
-        .mockResolvedValueOnce(0) // drift
-        .mockResolvedValueOnce(0) // latency
-        .mockResolvedValueOnce(100) // hallucination total
-        .mockResolvedValueOnce(0) // roi_cost
-        .mockResolvedValueOnce(10) // hallucination flagged (10%)
-        .mockResolvedValueOnce(0); // drift flagged
-
-      const result = await service.getStatus({ tenantId: TEST_TENANT_ID });
-
-      expect(result.healthy).toBe(false);
-      expect(result.issues.length).toBeGreaterThan(0);
-      expect(result.hallucination.kpiCompliant).toBe(false);
-    });
-  });
-
-  describe('getDriftMetrics', () => {
-    it('returns drift events with payload deserialization', async () => {
-      const mockEvents = [
-        {
-          id: 'drift-1',
-          eventType: 'drift',
-          model: 'gpt-4o',
-          metric: 'score_distribution',
-          value: 0.85,
-          flagged: true,
-          severity: 'high',
-          payload: {
-            pValue: 0.01,
-            baselineWindow: { mean: 0.7 },
-            currentWindow: { mean: 0.85 },
-            recommendations: ['Retrain model'],
+    it('maps the one counts row and the percentile row', async () => {
+      const { prisma } = makePrisma({
+        counts: [
+          {
+            drift_count: 10,
+            drift_flagged: 2,
+            hallucination_count: 20,
+            hallucination_flagged: 0,
+            cost_sum: 2,
+            value_sum: 5,
           },
-          recordedAt: new Date('2026-03-16T00:00:00Z'),
-        },
-      ];
-      mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue(mockEvents);
-
-      const result = await service.getDriftMetrics({ limit: 10, tenantId: TEST_TENANT_ID });
-
-      expect(result.available).toBe(true);
-      expect(result.status.trackedMetrics).toBe(1);
-      expect(result.status.driftDetected).toBe(true);
-      expect(result.history).toHaveLength(1);
-      expect(result.history[0].detected).toBe(true);
-      expect(result.history[0].severity).toBe('high');
-      expect(result.history[0].driftScore).toBe(0.85);
-      expect(result.history[0].pValue).toBe(0.01);
+        ],
+        pct: [{ p95: 1800, p99: 2500 }],
+      });
+      const result = await svc(prisma).getStatus({ tenantId: TENANT });
+      expect(result.drift).toEqual({
+        trackedMetrics: 10,
+        driftDetected: true,
+        highSeverityCount: 2,
+      });
+      expect(result.issues).toEqual(['2 drift detection(s) in last 24h']);
+      expect(result.healthy).toBe(false);
+      expect(result.latency).toEqual({ sloCompliant: true, p95: 1800, p99: 2500 });
+      expect(result.hallucination).toEqual({ rate: 0, kpiCompliant: true, totalChecks: 20 });
+      expect(result.roi).toEqual({ currentROI: 150, totalCost: 2, totalValue: 5 });
     });
 
-    it('returns empty results gracefully on empty DB', async () => {
-      mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue([]);
+    it('reports an issue when the hallucination rate exceeds 5%', async () => {
+      const { prisma } = makePrisma({
+        counts: [{ hallucination_count: 100, hallucination_flagged: 10 }],
+      });
+      const result = await svc(prisma).getStatus({ tenantId: TENANT });
+      expect(result.hallucination.rate).toBeCloseTo(0.1);
+      expect(result.hallucination.kpiCompliant).toBe(false);
+      expect(result.issues.some((i) => i.includes('Hallucination rate 10.0%'))).toBe(true);
+    });
 
-      const result = await service.getDriftMetrics({ tenantId: TEST_TENANT_ID });
+    it('marks the latency SLO as missed above 2000 ms p95', async () => {
+      const { prisma } = makePrisma({ pct: [{ p95: 2100, p99: 3000 }] });
+      const result = await svc(prisma).getStatus({ tenantId: TENANT });
+      expect(result.latency.sloCompliant).toBe(false);
+    });
 
-      expect(result.available).toBe(true);
-      expect(result.status.trackedMetrics).toBe(0);
-      expect(result.status.driftDetected).toBe(false);
-      expect(result.history).toEqual([]);
+    it('treats a NaN or infinite sum as 0 (boundary guard)', async () => {
+      const { prisma } = makePrisma({ counts: [{ cost_sum: Number.NaN, value_sum: Infinity }] });
+      const result = await svc(prisma).getStatus({ tenantId: TENANT });
+      expect(result.roi).toEqual({ currentROI: 0, totalCost: 0, totalValue: 0 });
+    });
+
+    it('binds the tenant and a 24 h window floored to the minute; two queries, no row reads', async () => {
+      const { prisma, calls } = makePrisma({});
+      await svc(prisma).getStatus({ tenantId: TENANT });
+      expect(calls).toHaveLength(2);
+      const expectedSince = Math.floor((NOW - 24 * 3600_000) / 60_000) * 60_000;
+      for (const c of calls) {
+        expect(c.values).toContain(TENANT);
+        expect(c.values).toContain(expectedSince);
+      }
+      expect(prisma.aIMonitoringEvent.findMany).not.toHaveBeenCalled();
     });
   });
 
   describe('getLatencyMetrics', () => {
-    it('computes percentiles from stored latency events', async () => {
-      const mockEvents = Array.from({ length: 100 }, (_, i) => ({
-        id: `lat-${i}`,
-        eventType: 'latency',
-        model: 'gpt-4o',
-        value: (i + 1) * 20, // 20ms to 2000ms
-        flagged: false,
-        recordedAt: new Date(Date.now() - i * 60000),
-      }));
-      mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue(mockEvents);
-
-      const result = await service.getLatencyMetrics({ tenantId: TEST_TENANT_ID });
-
-      expect(result.available).toBe(true);
-      expect(result.stats.sampleCount).toBe(100);
-      expect(result.stats.percentiles.p50).toBeGreaterThan(0);
-      expect(result.stats.percentiles.p95).toBeGreaterThan(0);
-      expect(result.stats.percentiles.p99).toBeGreaterThan(0);
-      expect(result.stats.successRate).toBe(1);
+    it('maps the summary row into percentiles and SLO compliance', async () => {
+      const oldest = new Date('2026-11-26T10:00:00Z');
+      const newest = new Date('2026-11-26T11:59:00Z');
+      const { prisma } = makePrisma({
+        latency: [
+          {
+            n: 4,
+            mean: 262.5,
+            min: 100,
+            max: 500,
+            ok: 3,
+            oldest,
+            newest,
+            p50: 150,
+            p75: 300,
+            p90: 500,
+            p95: 500,
+            p99: 500,
+          },
+        ],
+      });
+      const { stats } = await svc(prisma).getLatencyMetrics({ tenantId: TENANT });
+      expect(stats.sampleCount).toBe(4);
+      expect(stats.successRate).toBe(0.75);
+      expect(stats.percentiles).toMatchObject({
+        p50: 150,
+        p75: 300,
+        p90: 500,
+        p95: 500,
+        p99: 500,
+        max: 500,
+        min: 100,
+        mean: 262.5,
+      });
+      expect(stats.periodStart).toBe(oldest);
+      expect(stats.periodEnd).toBe(newest);
+      expect(stats.sloCompliance.overallCompliant).toBe(true);
+      expect(stats.sloCompliance.complianceRate).toBe(0.75);
     });
 
-    it('returns empty stats on empty DB', async () => {
-      mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue([]);
+    it('returns empty stats when no events are in range', async () => {
+      const { prisma } = makePrisma({});
+      const { stats, alerts } = await svc(prisma).getLatencyMetrics({ tenantId: TENANT });
+      expect(stats.sampleCount).toBe(0);
+      expect(stats.successRate).toBe(1);
+      expect(stats.percentiles.p99).toBe(0);
+      expect(alerts).toEqual([]);
+    });
 
-      const result = await service.getLatencyMetrics({ tenantId: TEST_TENANT_ID });
-
-      expect(result.available).toBe(true);
-      expect(result.stats.sampleCount).toBe(0);
-      expect(result.stats.percentiles.p50).toBe(0);
+    it('binds the range and the 10,000 sample cap', async () => {
+      const { prisma, calls } = makePrisma({});
+      const startTime = new Date('2026-11-26T08:00:00Z');
+      const endTime = new Date('2026-11-26T09:00:00Z');
+      await svc(prisma).getLatencyMetrics({ tenantId: TENANT, startTime, endTime });
+      expect(calls[0].values).toEqual(
+        expect.arrayContaining([TENANT, startTime.getTime(), endTime.getTime(), 10_000])
+      );
+      expect(calls[0].sql).toMatch(/LIMIT \?::bigint/);
     });
   });
 
   describe('getLatencyTrend', () => {
-    it('buckets events by time and computes percentiles', async () => {
-      const now = Date.now();
-      const mockEvents = [
-        { id: '1', value: 100, recordedAt: new Date(now - 5 * 60000) },
-        { id: '2', value: 200, recordedAt: new Date(now - 4 * 60000) },
-        { id: '3', value: 300, recordedAt: new Date(now - 1 * 60000) },
-      ];
-      mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue(mockEvents);
-
-      const result = await service.getLatencyTrend({
-        periodMinutes: 60,
-        bucketMinutes: 5,
-        tenantId: TEST_TENANT_ID,
+    it('maps bucket rows to trend points', async () => {
+      const b = Date.UTC(2026, 10, 26, 11, 0, 0);
+      const { prisma } = makePrisma({
+        trend: [
+          { b, count: 3, p50: 100, p95: 200, p99: 300 },
+          { b: b + 300_000, count: 1, p50: 50, p95: 50, p99: 50 },
+        ],
       });
-
-      expect(result.available).toBe(true);
-      expect(result.trend.length).toBeGreaterThan(0);
-      for (const bucket of result.trend) {
-        expect(bucket.timestamp).toBeInstanceOf(Date);
-        expect(typeof bucket.p50).toBe('number');
-        expect(typeof bucket.p95).toBe('number');
-        expect(typeof bucket.count).toBe('number');
-      }
+      const { trend } = await svc(prisma).getLatencyTrend({ tenantId: TENANT });
+      expect(trend).toEqual([
+        { timestamp: new Date(b), p50: 100, p95: 200, p99: 300, count: 3 },
+        { timestamp: new Date(b + 300_000), p50: 50, p95: 50, p99: 50, count: 1 },
+      ]);
     });
 
-    it('returns empty trend on no events', async () => {
-      mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue([]);
-
-      const result = await service.getLatencyTrend({ tenantId: TEST_TENANT_ID });
-
-      expect(result.available).toBe(true);
-      expect(result.trend).toEqual([]);
-    });
-  });
-
-  describe('getHallucinationReport', () => {
-    it('returns stats and recent results from hallucination events', async () => {
-      const mockEvents = [
-        {
-          id: 'hal-1',
-          eventType: 'hallucination',
-          model: 'gpt-4o',
-          value: 0.87,
-          flagged: true,
-          payload: {
-            confidence: 0.87,
-            hallucinationTypes: ['factual_error'],
-            evidence: ['Claim not in context'],
-            groundTruthSources: ['CRM record'],
-          },
-          recordedAt: new Date('2026-03-16T00:00:00Z'),
-        },
-        {
-          id: 'hal-2',
-          eventType: 'hallucination',
-          model: 'gpt-4o',
-          value: 0.1,
-          flagged: false,
-          payload: {
-            confidence: 0.1,
-            hallucinationTypes: [],
-            evidence: [],
-            groundTruthSources: [],
-          },
-          recordedAt: new Date('2026-03-15T23:00:00Z'),
-        },
-      ];
-      mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue(mockEvents);
-
-      const result = await service.getHallucinationReport({ tenantId: TEST_TENANT_ID });
-
-      expect(result.available).toBe(true);
-      expect(result.stats.totalChecks).toBe(2);
-      expect(result.stats.hallucinationsDetected).toBe(1);
-      expect(result.stats.hallucinationRate).toBe(0.5);
-      expect(result.recentResults).toHaveLength(2);
-      expect(result.recentResults[0].hallucinated).toBe(true);
-      expect(result.recentResults[0].confidence).toBe(0.87);
+    it('returns an empty trend for no events', async () => {
+      const { prisma } = makePrisma({});
+      expect((await svc(prisma).getLatencyTrend({ tenantId: TENANT })).trend).toEqual([]);
     });
 
-    it('reports kpiCompliant when rate is under threshold', async () => {
-      const mockEvents = Array.from({ length: 100 }, (_, i) => ({
-        id: `hal-${i}`,
-        eventType: 'hallucination',
-        model: 'gpt-4o',
-        value: 0.1,
-        flagged: i < 3, // 3% rate
-        payload: { confidence: 0.1, hallucinationTypes: [], evidence: [], groundTruthSources: [] },
-        recordedAt: new Date(),
-      }));
-      mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue(mockEvents);
+    it('uses the later of the period start and startTime, and ignores endTime otherwise (as before)', async () => {
+      const { prisma, calls } = makePrisma({});
+      const since = Math.floor((NOW - 60 * 60_000) / 60_000) * 60_000;
+      const oldStart = new Date(since - 3_600_000);
+      await svc(prisma).getLatencyTrend({
+        tenantId: TENANT,
+        startTime: oldStart,
+        endTime: new Date(NOW),
+      });
+      expect(calls[0].values).toContain(since);
+      expect(calls[0].values).not.toContain(NOW);
 
-      const result = await service.getHallucinationReport({ tenantId: TEST_TENANT_ID });
-
-      expect(result.stats.kpiCompliant).toBe(true);
+      const recentStart = new Date(since + 600_000);
+      const end = new Date(since + 1_200_000);
+      await svc(prisma).getLatencyTrend({ tenantId: TENANT, startTime: recentStart, endTime: end });
+      expect(calls[1].values).toEqual(
+        expect.arrayContaining([recentStart.getTime(), end.getTime()])
+      );
     });
   });
 
   describe('getROIMetrics', () => {
-    it('computes ROI from cost and value events', async () => {
-      const costEvents = [
-        { id: 'c1', eventType: 'roi_cost', value: 10, recordedAt: new Date() },
-        { id: 'c2', eventType: 'roi_cost', value: 20, recordedAt: new Date() },
-      ];
-      const valueEvents = [
-        { id: 'v1', eventType: 'roi_value', value: 100, recordedAt: new Date() },
-      ];
-      mockPrisma.aIMonitoringEvent.findMany
-        .mockResolvedValueOnce(costEvents)
-        .mockResolvedValueOnce(valueEvents);
-
-      const result = await service.getROIMetrics({ tenantId: TEST_TENANT_ID });
-
-      expect(result.available).toBe(true);
-      expect(result.roi.totalCost).toBe(30);
-      expect(result.roi.totalValue).toBe(100);
-      expect(result.roi.netValue).toBe(70);
-      expect(result.roi.roi).toBeCloseTo(233.33, 1);
-      expect(result.stats.totalCostsTracked).toBe(2);
-      expect(result.stats.totalValuesTracked).toBe(1);
-    });
-
-    it('returns numbers when event values arrive as Decimal-like strings (register #54)', async () => {
-      mockPrisma.aIMonitoringEvent.findMany
-        .mockResolvedValueOnce([
-          { id: 'c1', eventType: 'roi_cost', value: '10.5' },
-          { id: 'c2', eventType: 'roi_cost', value: { toString: () => '19.5' } },
-          { id: 'c3', eventType: 'roi_cost', value: null },
-        ])
-        .mockResolvedValueOnce([{ id: 'v1', eventType: 'roi_value', value: '100' }]);
-
-      const result = await service.getROIMetrics({ tenantId: TEST_TENANT_ID });
-
-      expect(typeof result.roi.roi).toBe('number');
-      expect(result.roi.totalCost).toBe(30);
-      expect(result.roi.totalValue).toBe(100);
-      expect(result.roi.roi).toBeCloseTo(233.33, 1);
-      expect(Number.isFinite(result.stats.currentROI)).toBe(true);
-    });
-
-    it('treats non-numeric event values as zero', async () => {
-      mockPrisma.aIMonitoringEvent.findMany
-        .mockResolvedValueOnce([{ id: 'c1', eventType: 'roi_cost', value: 'abc' }])
-        .mockResolvedValueOnce([{ id: 'v1', eventType: 'roi_value', value: Infinity }]);
-
-      const result = await service.getROIMetrics({ tenantId: TEST_TENANT_ID });
-
-      expect(result.roi.totalCost).toBe(0);
-      expect(result.roi.totalValue).toBe(0);
-      expect(result.roi.roi).toBe(0);
+    it('computes ROI from the grouped sums', async () => {
+      const { prisma } = makePrisma({
+        roi: [
+          { event_type: 'roi_cost', n: 2, total: 0.5 },
+          { event_type: 'roi_value', n: 1, total: 2.5 },
+        ],
+      });
+      const r = await svc(prisma).getROIMetrics({ tenantId: TENANT });
+      expect(r.roi.totalCost).toBe(0.5);
+      expect(r.roi.totalValue).toBe(2.5);
+      expect(r.roi.netValue).toBe(2);
+      expect(r.roi.roi).toBe(400);
+      expect(r.roi.efficiency).toBe(5);
+      expect(r.stats.totalCostsTracked).toBe(2);
+      expect(r.stats.totalValuesTracked).toBe(1);
+      expect(r.stats.averageCostPerOperation).toBe(0.25);
+      expect(r.stats.averageValuePerOperation).toBe(2.5);
+      expect(r.roi.periodStart).toEqual(new Date(NOW - 7 * 24 * 3600_000));
     });
 
     it('returns zero ROI when no events exist', async () => {
-      mockPrisma.aIMonitoringEvent.findMany.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+      const { prisma } = makePrisma({});
+      const r = await svc(prisma).getROIMetrics({ tenantId: TENANT });
+      expect(r.roi.totalCost).toBe(0);
+      expect(r.roi.roi).toBe(0);
+      expect(r.stats.averageCostPerOperation).toBe(0);
+    });
 
-      const result = await service.getROIMetrics({ tenantId: TEST_TENANT_ID });
-
-      expect(result.available).toBe(true);
-      expect(result.roi.totalCost).toBe(0);
-      expect(result.roi.totalValue).toBe(0);
-      expect(result.roi.roi).toBe(0);
+    it('guards a NaN total', async () => {
+      const { prisma } = makePrisma({ roi: [{ event_type: 'roi_cost', n: 1, total: Number.NaN }] });
+      const r = await svc(prisma).getROIMetrics({ tenantId: TENANT });
+      expect(r.roi.totalCost).toBe(0);
     });
   });
 
-  describe('tenant filtering', () => {
-    it('passes tenantId filter to drift query (includes null for global drift)', async () => {
-      mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue([]);
-
-      await service.getDriftMetrics({ tenantId: 'tenant-1' });
-
-      // Drift uses OR filter: global drift (tenantId: null) + tenant-specific drift
-      expect(mockPrisma.aIMonitoringEvent.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            OR: expect.arrayContaining([{ tenantId: null }, { tenantId: 'tenant-1' }]),
-          }),
-        })
+  describe('row lists (drift history, hallucination results)', () => {
+    it('drift: selects only shown columns, caps the page at 100, merges tenant and global', async () => {
+      const { prisma } = makePrisma({});
+      const recordedAt = new Date('2026-11-26T10:00:00Z');
+      prisma.aIMonitoringEvent.findMany.mockResolvedValue([
+        {
+          flagged: true,
+          severity: 'high',
+          metric: 'm1',
+          model: 'x',
+          value: 0.7,
+          payload: { pValue: 0.01, recommendations: ['r'] },
+          recordedAt,
+        },
+        {
+          flagged: false,
+          severity: null,
+          metric: null,
+          model: null,
+          value: null,
+          payload: null,
+          recordedAt,
+        },
+      ]);
+      const result = await svc(prisma).getDriftMetrics({ tenantId: TENANT, limit: 5000 });
+      const args = prisma.aIMonitoringEvent.findMany.mock.calls[0][0];
+      expect(args.where.OR).toEqual([{ tenantId: null }, { tenantId: TENANT }]);
+      expect(args.take).toBe(100);
+      expect(Object.keys(args.select).sort()).toEqual(
+        ['flagged', 'metric', 'model', 'payload', 'recordedAt', 'severity', 'value'].sort()
       );
+      expect(result.status).toMatchObject({
+        trackedMetrics: 2,
+        driftDetected: true,
+        highSeverityCount: 1,
+        lastCheck: recordedAt,
+      });
+      expect(result.history[0]).toMatchObject({
+        detected: true,
+        severity: 'high',
+        metric: 'm1',
+        driftScore: 0.7,
+        pValue: 0.01,
+        recommendations: ['r'],
+      });
+      expect(result.history[1]).toMatchObject({
+        detected: false,
+        severity: 'none',
+        metric: 'unknown',
+        driftScore: 0,
+        pValue: 1,
+      });
     });
 
-    it('passes direct tenantId filter to non-drift query methods', async () => {
-      mockPrisma.aIMonitoringEvent.findMany.mockResolvedValue([]);
-
-      await service.getLatencyMetrics({ tenantId: 'tenant-1' });
-
-      expect(mockPrisma.aIMonitoringEvent.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({ tenantId: 'tenant-1' }),
-        })
-      );
+    it('hallucination: scoped to the tenant, capped, stats over the returned page', async () => {
+      const { prisma } = makePrisma({});
+      const t = new Date('2026-11-26T10:00:00Z');
+      prisma.aIMonitoringEvent.findMany.mockResolvedValue([
+        {
+          id: 'a',
+          recordedAt: t,
+          model: 'gpt',
+          flagged: true,
+          value: 0.9,
+          payload: { confidence: 0.8, evidence: ['e'] },
+        },
+        { id: 'b', recordedAt: t, model: null, flagged: false, value: null, payload: null },
+      ]);
+      const result = await svc(prisma).getHallucinationReport({ tenantId: TENANT });
+      const args = prisma.aIMonitoringEvent.findMany.mock.calls[0][0];
+      expect(args.where).toMatchObject({ eventType: 'hallucination', tenantId: TENANT });
+      expect(args.take).toBe(100);
+      expect(result.stats.hallucinationRate).toBe(0.5);
+      expect(result.stats.kpiCompliant).toBe(false);
+      expect(result.recentResults[0]).toMatchObject({
+        id: 'a',
+        model: 'gpt',
+        hallucinated: true,
+        confidence: 0.8,
+      });
+      expect(result.recentResults[1]).toMatchObject({
+        model: 'unknown',
+        hallucinated: false,
+        score: 0,
+      });
     });
+
+    it('hallucination: empty page is compliant', async () => {
+      const { prisma } = makePrisma({});
+      const r = await svc(prisma).getHallucinationReport({ tenantId: TENANT, limit: 10 });
+      expect(r.stats.totalChecks).toBe(0);
+      expect(r.stats.kpiCompliant).toBe(true);
+    });
+  });
+
+  describe('cache', () => {
+    it('serves a repeat call from memory inside the TTL and re-queries after it', async () => {
+      let now = NOW;
+      const { prisma } = makePrisma({});
+      const s = new AIMonitoringService(prisma, { cacheTtlMs: 120_000, now: () => now });
+      await s.getROIMetrics({ tenantId: TENANT });
+      await s.getROIMetrics({ tenantId: TENANT });
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
+      now += 119_000;
+      await s.getROIMetrics({ tenantId: TENANT });
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
+      now += 2_000;
+      await s.getROIMetrics({ tenantId: TENANT });
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);
+    });
+
+    it('never shares a result between tenants or between different parameters', async () => {
+      const { prisma } = makePrisma({});
+      const s = new AIMonitoringService(prisma, { cacheTtlMs: 120_000, now: () => NOW });
+      await s.getROIMetrics({ tenantId: 'a' });
+      await s.getROIMetrics({ tenantId: 'b' });
+      await s.getROIMetrics({ tenantId: 'a', startTime: new Date(1000) });
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(3);
+    });
+
+    it('shares one in-flight query between concurrent callers', async () => {
+      const { prisma } = makePrisma({});
+      const s = new AIMonitoringService(prisma, { cacheTtlMs: 120_000, now: () => NOW });
+      await Promise.all([s.getStatus({ tenantId: TENANT }), s.getStatus({ tenantId: TENANT })]);
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(2); // one status = 2 queries, not 4
+    });
+
+    it('does not cache a failure', async () => {
+      const { prisma } = makePrisma({});
+      prisma.$queryRaw.mockRejectedValueOnce(new Error('db down'));
+      const s = new AIMonitoringService(prisma, { cacheTtlMs: 120_000, now: () => NOW });
+      await expect(s.getROIMetrics({ tenantId: TENANT })).rejects.toThrow('db down');
+      await expect(s.getROIMetrics({ tenantId: TENANT })).resolves.toBeDefined();
+    });
+
+    it('is off when the TTL is 0, and clearCache() empties it', async () => {
+      const { prisma } = makePrisma({});
+      const off = new AIMonitoringService(prisma, { cacheTtlMs: 0, now: () => NOW });
+      await off.getROIMetrics({ tenantId: TENANT });
+      await off.getROIMetrics({ tenantId: TENANT });
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);
+
+      const on = new AIMonitoringService(prisma, { cacheTtlMs: 120_000, now: () => NOW });
+      await on.getROIMetrics({ tenantId: TENANT });
+      on.clearCache();
+      await on.getROIMetrics({ tenantId: TENANT });
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(4);
+    });
+
+    it('reads the TTL from AI_MONITORING_QUERY_CACHE_TTL_MS', async () => {
+      const { prisma } = makePrisma({});
+      vi.stubEnv('AI_MONITORING_QUERY_CACHE_TTL_MS', '0');
+      try {
+        const s = new AIMonitoringService(prisma, { now: () => NOW });
+        await s.getROIMetrics({ tenantId: TENANT });
+        await s.getROIMetrics({ tenantId: TENANT });
+        expect(prisma.$queryRaw).toHaveBeenCalledTimes(2);
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+  });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 });
