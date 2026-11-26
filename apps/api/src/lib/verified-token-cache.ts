@@ -102,8 +102,11 @@ export class VerifiedTokenCache {
 
   /**
    * Remember a user Supabase confirmed for this token. Never call it with a refusal.
-   * `checkStartedAt` is when the check that produced `user` began: if the user was invalidated
-   * since, the result is stale and is not stored.
+   * `checkStartedAt` is when the check that produced `user` began. The 60 s are counted from
+   * then, not from when the answer arrived: Supabase's answer is only known to be true as of the
+   * moment it was asked, so a slow answer gets a shorter life (and one older than 60 s is not
+   * stored). If the user was invalidated since the check began, the result is stale and is not
+   * stored either.
    */
   set(token: string, user: User, checkStartedAt?: number): void {
     if (!user?.id) return;
@@ -112,8 +115,9 @@ export class VerifiedTokenCache {
       const invalidated = this.invalidatedAt.get(user.id);
       if (invalidated !== undefined && invalidated >= checkStartedAt) return;
     }
-    // Never longer than 60 s, and never past the token's own expiry.
-    let expiresAt = now + Math.min(this.ttlMs, VERIFIED_TOKEN_TTL_MS);
+    // Never longer than 60 s from the START of the check, and never past the token's own expiry.
+    const startedAt = checkStartedAt === undefined ? now : Math.min(checkStartedAt, now);
+    let expiresAt = startedAt + Math.min(this.ttlMs, VERIFIED_TOKEN_TTL_MS);
     const tokenExp = jwtExpiryMs(token);
     if (tokenExp !== null) expiresAt = Math.min(expiresAt, tokenExp);
     if (expiresAt <= now) return;

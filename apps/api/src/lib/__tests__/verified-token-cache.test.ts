@@ -189,4 +189,33 @@ describe('VerifiedTokenCache', () => {
     first.user_metadata.role = 'ADMIN'; // and one reader edits what it was given
     expect((cache.get(token) as any).user_metadata.role).toBe('USER');
   });
+
+  it('counts the 60 s from when the check started, so a slow answer cannot extend the window', () => {
+    const { cache, tick, nowSeconds } = clockedCache();
+    const token = tokenWithExp(nowSeconds() + 3600, 'slow', 'user-1');
+    const checkStartedAt = (cache as any).now();
+    tick(30_000); // Supabase takes 30 s to answer
+    cache.set(token, user('user-1'), checkStartedAt);
+    tick(29_999);
+    expect(cache.get(token)?.id).toBe('user-1'); // 59.999 s after the check began
+    tick(1);
+    expect(cache.get(token)).toBeNull(); // 60 s after the check began, not 90
+  });
+
+  it('does not store an answer that took 60 s or more to arrive', () => {
+    const { cache, tick, nowSeconds } = clockedCache();
+    const token = tokenWithExp(nowSeconds() + 3600, 'slower', 'user-1');
+    const checkStartedAt = (cache as any).now();
+    tick(60_000);
+    cache.set(token, user('user-1'), checkStartedAt);
+    expect(cache.size).toBe(0);
+  });
+
+  it('a check that started in the future of the cache clock is not given extra time', () => {
+    const { cache, tick, nowSeconds } = clockedCache();
+    const token = tokenWithExp(nowSeconds() + 3600, 'skew', 'user-1');
+    cache.set(token, user('user-1'), (cache as any).now() + 30_000);
+    tick(60_000);
+    expect(cache.get(token)).toBeNull();
+  });
 });
