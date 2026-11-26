@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card, Button } from '@intelliflow/ui';
+import { KpiCard } from '@/components/dashboard/KpiCard';
 import { NoActionsEmptyState } from '../components/NoActionsEmptyState';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
@@ -592,13 +593,11 @@ function ActionCard({
 
 function MetricsLoadingSkeleton() {
   return (
-    <div className="grid gap-4 md:grid-cols-4" data-testid="metrics-dashboard">
-      {[1, 2, 3, 4].map((i) => (
-        <Card key={i} className="p-4 animate-pulse">
-          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20 mb-2" />
-          <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-12" />
-        </Card>
-      ))}
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-4" data-testid="metrics-dashboard">
+      <KpiCard framed loading label="Pending Review" icon="schedule" value={null} />
+      <KpiCard framed loading label="Actions Loaded" icon="inbox" value={null} />
+      <KpiCard framed loading label="Expiring Soon" icon="timer" value={null} />
+      <KpiCard framed loading label="High Impact" icon="priority_high" value={null} />
     </div>
   );
 }
@@ -622,38 +621,38 @@ function MetricsSection({ actions, pendingCount, isLoading }: MetricsSectionProp
   const highImpact = actions.filter((a) => a.impact === 'HIGH').length;
 
   return (
-    <div className="grid gap-4 md:grid-cols-4" data-testid="metrics-dashboard">
-      <Card className="p-4" data-testid="metric-pending">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Pending Review</div>
-        <div className="text-2xl font-bold text-amber-600" data-testid="metric-value">
-          {pendingCount}
-        </div>
-      </Card>
-
-      <Card className="p-4" data-testid="metric-loaded">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Actions Loaded</div>
-        <div
-          className="text-2xl font-bold text-slate-900 dark:text-white"
-          data-testid="metric-value"
-        >
-          {actions.length}
-        </div>
-      </Card>
-
-      <Card className="p-4" data-testid="metric-expiring">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Expiring Soon</div>
-        <div className="text-2xl font-bold text-red-600" data-testid="metric-value">
-          {expiringSoon}
-        </div>
-        <div className="text-xs text-slate-500 dark:text-slate-400">Within 2 hours</div>
-      </Card>
-
-      <Card className="p-4" data-testid="metric-highimpact">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">High Impact</div>
-        <div className="text-2xl font-bold text-[#2a78f6]" data-testid="metric-value">
-          {highImpact}
-        </div>
-      </Card>
+    <div className="grid grid-cols-2 gap-4 md:grid-cols-4" data-testid="metrics-dashboard">
+      <KpiCard
+        framed
+        testId="metric-pending"
+        label="Pending Review"
+        icon="schedule"
+        iconClassName="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+        value={pendingCount}
+      />
+      <KpiCard
+        framed
+        testId="metric-loaded"
+        label="Actions Loaded"
+        icon="inbox"
+        value={actions.length}
+      />
+      <KpiCard
+        framed
+        testId="metric-expiring"
+        label="Expiring Soon"
+        icon="timer"
+        iconClassName="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+        value={expiringSoon}
+        footer={<p className="text-xs text-muted-foreground">Within 2 hours</p>}
+      />
+      <KpiCard
+        framed
+        testId="metric-highimpact"
+        label="High Impact"
+        icon="priority_high"
+        value={highImpact}
+      />
     </div>
   );
 }

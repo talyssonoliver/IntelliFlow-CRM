@@ -151,7 +151,7 @@ describe('AgentApprovalsPreviewPage queue facts (PG-198)', () => {
     render(<AgentApprovalsPreviewPage />);
 
     const card = screen.getByTestId('metric-highimpact');
-    expect(within(card).getByTestId('metric-value')).toHaveTextContent('1');
+    expect(within(card).getByTestId('kpi-value')).toHaveTextContent('1');
   });
 
   it('alerts when an approved action could not be executed (RF-1)', async () => {

@@ -97,9 +97,9 @@ export const NotificationItem = React.memo(function NotificationItem({
       </div>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col gap-1">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-1">
+        <div className="flex items-start justify-between gap-2 group-hover:pr-20 group-focus-within:pr-20">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
             <h3
               className={`text-sm ${isUnread ? 'font-bold' : 'font-medium'} text-slate-900 dark:text-white`}
             >
@@ -114,7 +114,7 @@ export const NotificationItem = React.memo(function NotificationItem({
             )}
             {isUnread && <div className="h-2 w-2 rounded-full bg-primary" />}
           </div>
-          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+          <span className="shrink-0 whitespace-nowrap text-xs font-medium text-slate-500 dark:text-slate-400">
             {formatRelativeTime(notification.createdAt)}
           </span>
         </div>
