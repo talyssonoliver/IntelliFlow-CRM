@@ -543,7 +543,8 @@ describe('sweep', () => {
     const { d, calls } = deps(db);
     const res = await sweepWorkspaceExports(d, async () => {});
     expect(res.expired).toBe(1);
-    expect(calls.removed).toEqual([`${T}/old.zip`]);
+    // The kept archive and the attempt-1 path (a crash may have left it) both go.
+    expect([...calls.removed].sort()).toEqual([`${T}/old-1.zip`, `${T}/old.zip`]);
     expect(tables.workspaceExportRequest.map((r) => r.status)).toEqual(['EXPIRED', 'READY']);
   });
 

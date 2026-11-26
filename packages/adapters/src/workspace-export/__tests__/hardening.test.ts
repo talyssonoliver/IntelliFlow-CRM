@@ -9,12 +9,14 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ArchiveWriter } from '../archive-writer';
+import { SupabaseExportStorage } from '../supabase-export-storage';
 import { csvCell } from '../serialize';
 import { createTenantReadGuard, pinReadArgsToTenant } from '../tenant-read-guard';
 import { runWorkspaceExport } from '../export-workspace';
 import {
   MAX_EXPORT_ATTEMPTS,
   STALE_QUEUED_MS,
+  STALE_RUNNING_MS,
   processWorkspaceExport,
   requestExportForEndedSubscription,
   resolveExportRecipients,
@@ -551,5 +553,170 @@ describe('review follow-ups: paging and recipients', () => {
     expect(await ids(mk([owner, moved], invitedAdmin))).toEqual(['asker', 'owner']);
     const revoked = [{ id: 'm1', userId: 'asker', tenantId: T, role: 'ADMIN', revokedAt: t0 }];
     expect(await ids(mk([owner, moved], revoked))).toEqual(['owner']);
+  });
+});
+
+describe('review follow-ups: sweep races and the export bucket', () => {
+  it('does not fail a request, or delete its archive, when the worker finished first', async () => {
+    const stale = new Date(t0.getTime() - 2 * STALE_QUEUED_MS);
+    const { tables, db } = world([
+      {
+        id: 'late',
+        tenantId: T,
+        status: 'QUEUED',
+        attempts: MAX_EXPORT_ATTEMPTS,
+        trigger: 'ADMIN',
+        requestedAt: t0,
+        updatedAt: stale,
+      },
+    ]);
+    // The worker publishes READY between the sweep's read and its write.
+    const real = db.workspaceExportRequest.findMany;
+    db.workspaceExportRequest.findMany = async (args: any) => {
+      const out = await real(args);
+      for (const r of tables.workspaceExportRequest) r.status = 'READY';
+      return out;
+    };
+    const { d, removed, logged, tmp } = deps(db);
+    await sweepWorkspaceExports(
+      d,
+      vi.fn(async () => {})
+    );
+    expect(tables.workspaceExportRequest[0].status).toBe('READY');
+    expect(removed).toEqual([]);
+    expect(logged).toEqual([]);
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('does not reset a row that a worker reclaimed after the sweep read it', async () => {
+    const stale = new Date(t0.getTime() - 2 * STALE_RUNNING_MS);
+    const { tables, db } = world([
+      {
+        id: 'busy',
+        tenantId: T,
+        status: 'RUNNING',
+        attempts: 1,
+        startedAt: stale,
+        trigger: 'ADMIN',
+        requestedAt: t0,
+        updatedAt: stale,
+      },
+    ]);
+    const real = db.workspaceExportRequest.findMany;
+    db.workspaceExportRequest.findMany = async (args: any) => {
+      const out = await real(args);
+      // claimExport: attempt 2, fresh heartbeat.
+      Object.assign(tables.workspaceExportRequest[0], { attempts: 2, startedAt: t0 });
+      return out;
+    };
+    const { d, tmp } = deps(db);
+    const enqueue = vi.fn(async () => {});
+    await sweepWorkspaceExports(d, enqueue);
+    expect(tables.workspaceExportRequest[0]).toMatchObject({ status: 'RUNNING', attempts: 2 });
+    expect(enqueue).not.toHaveBeenCalled();
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('keeps a READY row for the next sweep when an earlier attempt archive cannot be removed', async () => {
+    const { tables, db } = world([
+      {
+        id: 'old',
+        tenantId: T,
+        status: 'READY',
+        attempts: 2,
+        storagePath: `${T}/old-2.zip`,
+        expiresAt: new Date(t0.getTime() - 1000),
+        emailedAt: t0,
+        requestedAt: t0,
+        updatedAt: t0,
+      },
+    ]);
+    const { d, tmp } = deps(db);
+    d.archiveStorage.removeArchive = async (p) => {
+      if (p.endsWith('old-1.zip')) throw new Error('storage down');
+    };
+    const res = await sweepWorkspaceExports(
+      d,
+      vi.fn(async () => {})
+    );
+    expect(res.expired).toBe(0);
+    expect(tables.workspaceExportRequest[0].status).toBe('READY');
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('refuses to upload into a public export bucket: it is made private first', async () => {
+    const storage = new SupabaseExportStorage('https://x.example.invalid', 'k'.repeat(20));
+    const calls: string[] = [];
+    (storage as any).client = {
+      storage: {
+        getBucket: async () => ({ data: { public: true } }),
+        updateBucket: async (_n: string, o: any) => {
+          calls.push(`update:${o.public}`);
+          return { error: null };
+        },
+      },
+    };
+    await storage.ensureBucket();
+    expect(calls).toEqual(['update:false']);
+  });
+
+  it('fails when a public export bucket cannot be made private', async () => {
+    const storage = new SupabaseExportStorage('https://x.example.invalid', 'k'.repeat(20));
+    (storage as any).client = {
+      storage: {
+        getBucket: async () => ({ data: { public: true } }),
+        updateBucket: async () => ({ error: { message: 'denied' } }),
+      },
+    };
+    await expect(storage.ensureBucket()).rejects.toThrow(/not private/);
+  });
+
+  it('reads the bucket back after losing a creation race', async () => {
+    const storage = new SupabaseExportStorage('https://x.example.invalid', 'k'.repeat(20));
+    let reads = 0;
+    const updated: boolean[] = [];
+    (storage as any).client = {
+      storage: {
+        getBucket: async () => ({ data: ++reads === 1 ? null : { public: true } }),
+        createBucket: async () => ({ error: { message: 'The resource already exists' } }),
+        updateBucket: async (_n: string, o: any) => {
+          updated.push(o.public);
+          return { error: null };
+        },
+      },
+    };
+    await storage.ensureBucket();
+    expect(updated).toEqual([false]);
+  });
+
+  it('writes identical rows to the CSV and the JSON from one read', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'wsx-h-'));
+    const leads = [1, 2, 3].map((n) => ({ id: `l${n}`, tenantId: T, email: `l${n}@x.invalid` }));
+    const db = makeDb({
+      tenant: [
+        {
+          id: T,
+          name: 'Alpha',
+          slug: 'alpha',
+          status: 'ACTIVE',
+          plan: 'STARTER',
+          createdAt: t0,
+          updatedAt: t0,
+        },
+      ],
+      lead: leads,
+    });
+    const real = db.lead.findMany;
+    let reads = 0;
+    db.lead.findMany = async (args: any) => {
+      reads += 1;
+      return real(args);
+    };
+    const out = join(dir, 'a.zip');
+    await runWorkspaceExport({ db, tenantId: T, outputPath: out, pageSize: 10 });
+    const zip = readZip(out);
+    expect(JSON.parse(zip['data/leads.json']!).map((l: any) => l.id)).toEqual(['l1', 'l2', 'l3']);
+    expect(zip['data/leads.csv']).toContain('l3@x.invalid');
+    expect(reads).toBe(1);
   });
 });

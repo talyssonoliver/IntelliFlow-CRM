@@ -18,6 +18,8 @@
  */
 import { Prisma } from '@intelliflow/db';
 import { createHash } from 'node:crypto';
+import { createReadStream, createWriteStream } from 'node:fs';
+import { rm } from 'node:fs/promises';
 import type { Readable } from 'node:stream';
 import { ArchiveWriter, type ArchiveEntryInfo } from './archive-writer';
 import {
@@ -184,42 +186,51 @@ async function* readPages(
   }
 }
 
-async function writeCsv(
+/**
+ * One read of the entity feeds BOTH files, so the CSV and the JSON always hold the same rows with
+ * the same values (two separate reads could see an edit in between). The CSV goes straight into
+ * the archive; the JSON is spooled to a temporary file in the same pass and added right after.
+ */
+async function writeCsvAndSpoolJson(
   write: (s: string) => Promise<void>,
+  spoolPath: string,
   pages: AsyncIterable<ExportRow[]>,
   plan: Plan
 ): Promise<number> {
-  await write('﻿' + csvHeader(plan.columns));
-  let rows = 0;
-  for await (const page of pages) {
-    let chunk = '';
-    for (const row of page) {
-      chunk += csvLine(toJsonRow(row, plan.columns, plan.urlColumns), plan.columns);
-      rows += 1;
+  const spool = createWriteStream(spoolPath);
+  const spoolClosed = new Promise<void>((resolve, reject) => {
+    spool.once('close', resolve);
+    spool.once('error', reject);
+  });
+  spoolClosed.catch(() => undefined);
+  const spoolWrite = (s: string) =>
+    new Promise<void>((resolve, reject) =>
+      spool.write(s, (err) => (err ? reject(err) : resolve()))
+    );
+  try {
+    await write('\ufeff' + csvHeader(plan.columns));
+    await spoolWrite('[');
+    let rows = 0;
+    for await (const page of pages) {
+      let csv = '';
+      let json = '';
+      for (const row of page) {
+        const out = toJsonRow(row, plan.columns, plan.urlColumns);
+        csv += csvLine(out, plan.columns);
+        json += (rows === 0 ? '\n' : ',\n') + JSON.stringify(out);
+        rows += 1;
+      }
+      await write(csv);
+      await spoolWrite(json);
     }
-    await write(chunk);
+    await spoolWrite(rows === 0 ? ']\n' : '\n]\n');
+    spool.end();
+    await spoolClosed;
+    return rows;
+  } catch (err) {
+    spool.destroy();
+    throw err;
   }
-  return rows;
-}
-
-async function writeJson(
-  write: (s: string) => Promise<void>,
-  pages: AsyncIterable<ExportRow[]>,
-  plan: Plan
-): Promise<number> {
-  await write('[');
-  let rows = 0;
-  for await (const page of pages) {
-    let chunk = '';
-    for (const row of page) {
-      chunk +=
-        (rows === 0 ? '\n' : ',\n') + JSON.stringify(toJsonRow(row, plan.columns, plan.urlColumns));
-      rows += 1;
-    }
-    await write(chunk);
-  }
-  await write(rows === 0 ? ']\n' : '\n]\n');
-  return rows;
 }
 
 /** A stored object path is only ever the tenant's own, and never steps out of it. */
@@ -331,27 +342,28 @@ interface ExportRun {
 async function writeEntityFiles(
   run: ExportRun,
   plan: Plan,
-  ctx: { db: ExportDb; tenantId: string; now: Date; pageSize: number }
+  ctx: { db: ExportDb; tenantId: string; now: Date; pageSize: number; spoolBase: string }
 ): Promise<void> {
-  let csvRows = 0;
-  let jsonRows = 0;
+  let rows = 0;
   const csvPath = `data/${plan.name}.csv`;
   const jsonPath = `data/${plan.name}.json`;
-  const pages = () => readPages(ctx.db, plan, ctx.tenantId, ctx.now, ctx.pageSize);
-  const csv = await run.writer.addGenerated(csvPath, async (w) => {
-    csvRows = await writeCsv(w, pages(), plan);
-  });
-  run.track(csv, { path: csvPath, kind: 'csv', entity: plan.name, rows: csvRows });
-  const json = await run.writer.addGenerated(jsonPath, async (w) => {
-    jsonRows = await writeJson(w, pages(), plan);
-  });
-  run.track(json, { path: jsonPath, kind: 'json', entity: plan.name, rows: jsonRows });
-  if (csvRows !== jsonRows) {
-    run.warnings.push(
-      `${plan.name}: data changed while the export ran (${csvRows} rows in CSV, ${jsonRows} in JSON).`
-    );
+  const spoolPath = `${ctx.spoolBase}.${plan.name}.json.spool`;
+  try {
+    const csv = await run.writer.addGenerated(csvPath, async (w) => {
+      rows = await writeCsvAndSpoolJson(
+        w,
+        spoolPath,
+        readPages(ctx.db, plan, ctx.tenantId, ctx.now, ctx.pageSize),
+        plan
+      );
+    });
+    run.track(csv, { path: csvPath, kind: 'csv', entity: plan.name, rows });
+    const json = await run.writer.addStream(jsonPath, createReadStream(spoolPath));
+    run.track(json, { path: jsonPath, kind: 'json', entity: plan.name, rows });
+  } finally {
+    await rm(spoolPath, { force: true });
   }
-  run.entities[plan.name] = { rows: Math.max(csvRows, jsonRows), description: plan.description };
+  run.entities[plan.name] = { rows, description: plan.description };
 }
 
 /** The tenant's own objects from each bucket, streamed into files/<bucket>/. */
@@ -433,7 +445,13 @@ export async function runWorkspaceExport(
     });
 
     for (const plan of plans) {
-      await writeEntityFiles(run, plan, { db, tenantId, now: generatedAt, pageSize });
+      await writeEntityFiles(run, plan, {
+        db,
+        tenantId,
+        now: generatedAt,
+        pageSize,
+        spoolBase: outputPath,
+      });
     }
     if (opts.files) await copyStoredFiles(run, opts.files, buckets, tenantId);
 

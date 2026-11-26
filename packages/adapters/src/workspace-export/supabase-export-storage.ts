@@ -108,14 +108,29 @@ export class SupabaseExportStorage implements ExportFileStorage, ExportArchiveSt
 
   ensureBucket(): Promise<void> {
     this.bucketReady ??= (async () => {
-      const { data } = await this.client.storage.getBucket(this.exportBucket);
-      if (data) return;
-      const { error } = await this.client.storage.createBucket(this.exportBucket, {
-        public: false,
-      });
-      if (error && !/already exists/i.test(error.message)) {
-        this.bucketReady = null;
-        throw new Error(`Export bucket unavailable: ${error.message}`);
+      // The archives hold a customer's whole workspace: the bucket must be private, or a public
+      // URL would bypass the 14-day signed link. A bucket that already exists is checked, and
+      // made private when it is not.
+      let { data } = await this.client.storage.getBucket(this.exportBucket);
+      if (!data) {
+        const { error } = await this.client.storage.createBucket(this.exportBucket, {
+          public: false,
+        });
+        if (error && !/already exists/i.test(error.message)) {
+          this.bucketReady = null;
+          throw new Error(`Export bucket unavailable: ${error.message}`);
+        }
+        // Someone else may have created it first (with any visibility): read it back.
+        data = (await this.client.storage.getBucket(this.exportBucket)).data;
+      }
+      if (data?.public !== false) {
+        const { error } = await this.client.storage.updateBucket(this.exportBucket, {
+          public: false,
+        });
+        if (error) {
+          this.bucketReady = null;
+          throw new Error(`Export bucket is not private and could not be fixed: ${error.message}`);
+        }
       }
     })();
     return this.bucketReady;

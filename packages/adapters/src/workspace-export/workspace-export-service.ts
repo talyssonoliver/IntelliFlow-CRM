@@ -320,12 +320,14 @@ async function removeAttemptArchives(
   deps: Pick<ExportJobDeps, 'archiveStorage' | 'log'>,
   request: { id: string; tenantId: string },
   upTo: number,
-  keep?: string
+  keep?: string,
+  strict = false
 ): Promise<void> {
   for (let n = 1; n <= upTo; n += 1) {
     const path = attemptArchivePath(request.tenantId, request.id, n);
     if (path === keep) continue;
     await deps.archiveStorage.removeArchive(path).catch((err: unknown) => {
+      if (strict) throw err;
       deps.log?.warn(
         { requestId: request.id, path, err: String(err) },
         'stale export archive not removed'
@@ -601,10 +603,20 @@ async function failExhausted(deps: ExportJobDeps, now: Date): Promise<number> {
     take: 50,
   });
   for (const row of exhausted) {
-    await prisma.workspaceExportRequest.updateMany({
-      where: { id: row.id, status: { in: ['QUEUED', 'RUNNING'] } },
+    // Re-check exhaustion and staleness in the write itself: a worker that resumed and finished
+    // after the read above must not be failed, nor have its archive removed.
+    const { count } = await prisma.workspaceExportRequest.updateMany({
+      where: {
+        id: row.id,
+        attempts: { gte: MAX_EXPORT_ATTEMPTS },
+        OR: [
+          { status: 'QUEUED', updatedAt: { lt: new Date(now.getTime() - STALE_QUEUED_MS) } },
+          { status: 'RUNNING', startedAt: { lt: new Date(now.getTime() - STALE_RUNNING_MS) } },
+        ],
+      },
       data: { status: 'FAILED', error: 'Gave up after repeated failures' },
     });
+    if (count !== 1) continue;
     await removeAttemptArchives(deps, row, MAX_EXPORT_ATTEMPTS);
     // An export the customer is owed (agreement clause 5) failing for good needs a person.
     deps.log?.error(
@@ -637,10 +649,26 @@ async function requeueStuck(
   for (const row of stuck) {
     // RUNNING goes back to QUEUED; a QUEUED row is only touched (updatedAt), so the next sweep
     // does not re-queue it again at once.
-    await prisma.workspaceExportRequest.updateMany({
-      where: { id: row.id, status: row.status },
+    // The write names the attempt and the staleness it read: a worker that reclaimed the row
+    // since (a fresh attempt, a fresh heartbeat) must not be reset to QUEUED.
+    const { count } = await prisma.workspaceExportRequest.updateMany({
+      where:
+        row.status === 'RUNNING'
+          ? {
+              id: row.id,
+              status: 'RUNNING',
+              attempts: row.attempts,
+              startedAt: { lt: new Date(now.getTime() - STALE_RUNNING_MS) },
+            }
+          : {
+              id: row.id,
+              status: 'QUEUED',
+              attempts: row.attempts,
+              updatedAt: { lt: new Date(now.getTime() - STALE_QUEUED_MS) },
+            },
       data: row.status === 'RUNNING' ? { status: 'QUEUED' } : { error: null },
     });
+    if (count !== 1) continue;
     try {
       await enqueue({ requestId: row.id, tenantId: row.tenantId }, { retry: row.attempts });
       requeued += 1;
@@ -691,12 +719,15 @@ async function retryUnsentEmails(deps: ExportJobDeps, now: Date): Promise<number
 async function expireOldExports(deps: ExportJobDeps, now: Date): Promise<number> {
   const old = await deps.prisma.workspaceExportRequest.findMany({
     where: { status: 'READY', expiresAt: { lte: now } },
-    select: { id: true, storagePath: true },
+    select: { id: true, tenantId: true, attempts: true, storagePath: true },
     take: 50,
   });
   let expired = 0;
   for (const row of old) {
     try {
+      // Every attempt's archive goes, not only the kept one: a failed earlier cleanup must not
+      // outlive the retention period. A failure keeps the row READY, so the next sweep retries.
+      await removeAttemptArchives(deps, row, row.attempts, row.storagePath ?? undefined, true);
       if (row.storagePath) await deps.archiveStorage.removeArchive(row.storagePath);
       await deps.prisma.workspaceExportRequest.update({
         where: { id: row.id },
