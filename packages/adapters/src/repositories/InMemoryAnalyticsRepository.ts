@@ -111,6 +111,18 @@ export class InMemoryAnalyticsRepository implements AnalyticsRepository {
   }
 
   /**
+   * Count deals that were open at a past moment
+   */
+  async countOpenOpportunitiesAsOf(tenantId: string, asOf: Date): Promise<number> {
+    return this.opportunities.filter((opp) => {
+      if (opp.tenantId !== tenantId || opp.createdAt > asOf) return false;
+      if (opp.deletedAt && opp.deletedAt <= asOf) return false;
+      const closed = opp.stage === 'CLOSED_WON' || opp.stage === 'CLOSED_LOST';
+      return !closed || (opp.closedAt !== null && opp.closedAt > asOf);
+    }).length;
+  }
+
+  /**
    * Count contacts created in date range
    */
   async countContactsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {

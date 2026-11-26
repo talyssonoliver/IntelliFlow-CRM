@@ -118,6 +118,7 @@ describe('dashboard Active Deals tile and Pipeline Summary agree', () => {
       getRecentAuditLogs: async () => [],
       countOpportunitiesInRange: real.countOpportunitiesInRange.bind(real),
       countOpenOpportunities: real.countOpenOpportunities.bind(real),
+      countOpenOpportunitiesAsOf: async () => 0,
     } as unknown as AnalyticsRepository;
     const overview = await new AnalyticsAggregationService(repo).getOverview(TENANT);
 

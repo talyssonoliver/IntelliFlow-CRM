@@ -289,6 +289,29 @@ describe('PrismaAnalyticsRepository', () => {
     });
   });
 
+  describe('countOpenOpportunitiesAsOf()', () => {
+    it('counts deals created by then that were not yet won, lost or archived', async () => {
+      const asOf = new Date('2025-05-31T23:59:59.999Z');
+      mockPrisma.opportunity.count.mockResolvedValue(9);
+
+      const result = await repository.countOpenOpportunitiesAsOf(tenantId, asOf);
+
+      expect(result).toBe(9);
+      expect(mockPrisma.opportunity.count).toHaveBeenCalledWith({
+        where: {
+          tenantId,
+          createdAt: { lte: asOf },
+          AND: [
+            { OR: [{ deletedAt: null }, { deletedAt: { gt: asOf } }] },
+            {
+              OR: [{ stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } }, { closedAt: { gt: asOf } }],
+            },
+          ],
+        },
+      });
+    });
+  });
+
   describe('countContactsInRange()', () => {
     it('should count contacts within date range', async () => {
       const dateRange = {

@@ -95,6 +95,21 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
     });
   }
 
+  async countOpenOpportunitiesAsOf(tenantId: string, asOf: Date): Promise<number> {
+    return this.prisma.opportunity.count({
+      where: {
+        tenantId,
+        createdAt: { lte: asOf },
+        AND: [
+          { OR: [{ deletedAt: null }, { deletedAt: { gt: asOf } }] },
+          {
+            OR: [{ stage: { notIn: ['CLOSED_WON', 'CLOSED_LOST'] } }, { closedAt: { gt: asOf } }],
+          },
+        ],
+      },
+    });
+  }
+
   async countContactsInRange(tenantId: string, dateRange: DateRangeQuery): Promise<number> {
     return this.prisma.contact.count({
       where: {
