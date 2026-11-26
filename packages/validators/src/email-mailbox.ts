@@ -64,6 +64,8 @@ export const saveSmtpMailboxInputSchema = z
       .transform((v) => v ?? null),
     imapUsername: mailboxUsernameSchema.nullish().transform((v) => v ?? null),
     imapPassword: secretUpdateSchema,
+    /** The user confirmed a personal (consumer-domain) mailbox when asked. */
+    acceptPersonal: z.boolean().optional(),
   })
   .strict();
 export type SaveSmtpMailboxInput = z.infer<typeof saveSmtpMailboxInputSchema>;
@@ -77,6 +79,8 @@ export const oauthStartInputSchema = z
     scope: mailboxScopeSchema,
     /** MVP-011, Google: ask for sending only (the Workspace domain does not trust Aurora yet). */
     sendOnly: z.boolean().optional(),
+    /** The user confirmed a personal (consumer-domain) mailbox when asked. */
+    acceptPersonal: z.boolean().optional(),
   })
   .strict();
 export type OAuthStartInput = z.infer<typeof oauthStartInputSchema>;
@@ -114,6 +118,8 @@ export interface MailboxDto extends SmtpEndpointDto, SmtpAccountDto {
   accountAddress: string | null;
   /** #1177: when the Outlook inbox sync last finished a round (ISO); null before the first. */
   inboxSyncedAt?: string | null;
+  /** The history import's real progress; null when nothing is importing. */
+  historyImport?: { done: number; total: number; paused: boolean } | null;
   /**
    * MVP-001: replies logged (ON), the connection needs the read permission (NEEDS_RECONNECT), or
    * n/a. MVP-011: NEEDS_ADMIN_TRUST, a Google mailbox sending only until its Workspace admin trusts
