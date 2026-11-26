@@ -44,6 +44,13 @@ import {
   stopDsarSlaScheduler,
 } from './modules/privacy/dsar-sla-scheduler';
 import {
+  complianceSnapshotIntervalFromEnv,
+  createComplianceSnapshotDb,
+  runComplianceSnapshots,
+  startComplianceSnapshotScheduler,
+  stopComplianceSnapshotScheduler,
+} from './modules/compliance/compliance-snapshot-scheduler';
+import {
   checkBackgroundJobsHeartbeat,
   closeHeartbeatStore,
   getHeartbeatStore,
@@ -90,6 +97,7 @@ export interface StartedBackgroundJobs {
   bounceScan: boolean;
   inboxSync: boolean;
   dsarSla: boolean;
+  complianceSnapshot: boolean;
 }
 
 async function defaultReady(): Promise<unknown> {
@@ -203,8 +211,19 @@ export function startBackgroundJobs({
     },
   });
 
+  // PG-194: the daily compliance snapshots that feed the dashboard's trend. Not a heartbeat job:
+  // a missed tick only delays a trend point, it never leaves a customer waiting.
+  const complianceSnapshot = startComplianceSnapshotScheduler({
+    intervalMs: complianceSnapshotIntervalFromEnv(env),
+    log,
+    run: async () => {
+      await ready();
+      return runComplianceSnapshots(await createComplianceSnapshotDb(), new Date(), log);
+    },
+  });
+
   markJobsRunningHere(approvalSweep || bounceScan || dsarSla);
-  return { approvalSweep, bounceScan, inboxSync, dsarSla };
+  return { approvalSweep, bounceScan, inboxSync, dsarSla, complianceSnapshot };
 }
 
 /**
@@ -217,6 +236,7 @@ export async function stopBackgroundJobs(): Promise<void> {
     stopBounceScanner(),
     stopInboxSync(),
     stopDsarSlaScheduler(),
+    stopComplianceSnapshotScheduler(),
   ]);
   markJobsRunningHere(false);
   // After the ticks drained, so their final heartbeat write is not cut off.
