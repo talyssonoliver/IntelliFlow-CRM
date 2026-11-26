@@ -33,6 +33,7 @@ import {
 } from './mail-sync-reader';
 import { learnThread, logOnLead, threadOf } from './mail-sync-links';
 import { alreadyLogged, anyoneRestricted, bodyOf, counterparty } from './mail-sync-match';
+import { assertMailboxAllowed } from './mailbox-connect-policy';
 import { runLookback, type LookbackState } from './mail-sync-lookback';
 import { messageIdHeader, recordData } from './mail-sync-record';
 import { queueReplyDraftForSyncedMail } from './mail-sync-reply-draft';
@@ -104,6 +105,16 @@ interface SyncMailbox extends TransportMailbox, LookbackState {
   syncCursor: string | null;
   syncSentCursor: string | null;
   syncFailureCount: number;
+}
+
+/** True unless the tenant has a mailbox allowlist that does not list this mailbox's address. */
+function mailboxAllowed(mailbox: SyncMailbox): boolean {
+  try {
+    assertMailboxAllowed(mailbox.tenantId, mailbox.accountAddress ?? mailbox.fromAddress);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 interface Claim {
@@ -366,6 +377,17 @@ async function syncMailbox(
   if (!reader || !reader.canRead(mailbox.grantedScopes)) {
     await release(deps, claim, mailbox.tokenVersion, {
       nextSyncAt: new Date(now.getTime() + NO_SCOPE_RECHECK_MS),
+    });
+    return;
+  }
+  // A mailbox that is not on its tenant allowlist (connected before the list existed) is not read.
+  if (!mailboxAllowed(mailbox)) {
+    await release(deps, claim, mailbox.tokenVersion, {
+      nextSyncAt: new Date(now.getTime() + NO_SCOPE_RECHECK_MS),
+    });
+    console.warn('[email] inbox sync skipped: mailbox is not on the tenant allowlist', {
+      mailboxId: claim.id,
+      tenantId: mailbox.tenantId,
     });
     return;
   }

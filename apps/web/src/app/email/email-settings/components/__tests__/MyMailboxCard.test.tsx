@@ -206,6 +206,36 @@ describe('MyMailboxCard', () => {
     expect(screen.queryByTestId('reply-sync-reconnect')).not.toBeInTheDocument();
   });
 
+  it('shows the history import from the stored progress, and that a pause resumes by itself (register #58)', () => {
+    renderCard({
+      mailbox: mailbox({
+        kind: 'GMAIL',
+        smtpHost: null,
+        accountAddress: 'me@work.example.invalid',
+        fromAddress: 'me@work.example.invalid',
+        replySync: 'ON',
+        historyImport: { done: 40, total: 163, paused: true },
+      }),
+    });
+    expect(screen.getByTestId('history-import-status')).toHaveTextContent(
+      "Importing email history: 40 of 163 contacts. Paused by Gmail's limits, resumes automatically."
+    );
+  });
+
+  it('shows no import line when nothing is importing', () => {
+    renderCard({
+      mailbox: mailbox({
+        kind: 'GMAIL',
+        smtpHost: null,
+        accountAddress: 'me@work.example.invalid',
+        fromAddress: 'me@work.example.invalid',
+        replySync: 'ON',
+        historyImport: null,
+      }),
+    });
+    expect(screen.queryByTestId('history-import-status')).not.toBeInTheDocument();
+  });
+
   it('offers to reconnect a Zoho mailbox connected before replies could be read (MVP-001)', async () => {
     api.oauthStart.mutateAsync.mockResolvedValue({
       url: 'https://accounts.zoho.example.invalid/oauth/v2/auth?state=r1',

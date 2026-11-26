@@ -3,7 +3,7 @@
  */
 import { StrictMode } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import axe from 'axe-core';
 
 const nav = vi.hoisted(() => ({ params: new URLSearchParams(), replace: vi.fn() }));
@@ -12,8 +12,14 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: nav.replace }),
 }));
 const complete = vi.hoisted(() => ({ mutateAsync: vi.fn(), isPending: false }));
+const restart = vi.hoisted(() => ({ mutateAsync: vi.fn(), isPending: false }));
 vi.mock('@/lib/trpc', () => ({
-  trpc: { emailMailbox: { oauthComplete: { useMutation: () => complete } } },
+  trpc: {
+    emailMailbox: {
+      oauthComplete: { useMutation: () => complete },
+      oauthStart: { useMutation: () => restart },
+    },
+  },
 }));
 vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: () => ({ isLoading: false, isAuthenticated: true }),
@@ -140,6 +146,34 @@ describe('OAuthCallbackContent', () => {
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Mailbox not connected');
     await waitFor(() => expect(document.activeElement).toBe(alert));
     expect(nav.replace).not.toHaveBeenCalled();
+  });
+
+  it('asks before connecting a personal mailbox and signs in again with the confirmation', async () => {
+    sessionStorage.setItem(oauthProviderKey(STATE), 'GMAIL');
+    complete.mutateAsync.mockRejectedValue(
+      new Error(
+        'PERSONAL_MAILBOX:USER: This looks like a personal mailbox. Aurora will import mail with your leads and contacts. Continue?'
+      )
+    );
+    const assign = vi.fn();
+    vi.stubGlobal('location', { ...window.location, assign });
+    restart.mutateAsync.mockResolvedValue({
+      url: 'https://accounts.example.invalid/auth?state=' + 'n'.repeat(43),
+    });
+    renderAt(`code=${CODE}&state=${STATE}`);
+
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent(
+      'This looks like a personal mailbox. Aurora will import mail with your leads and contacts. Continue?'
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
+
+    await waitFor(() => expect(assign).toHaveBeenCalled());
+    expect(restart.mutateAsync).toHaveBeenCalledWith({
+      provider: 'GMAIL',
+      scope: 'USER',
+      acceptPersonal: true,
+    });
+    vi.unstubAllGlobals();
   });
 
   it('has no axe violations while working or failed', async () => {

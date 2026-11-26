@@ -62,6 +62,7 @@ describe('toMailboxDto', () => {
       bounceReadingEnabled: true,
       accountAddress: null,
       inboxSyncedAt: null,
+      historyImport: null,
       replySync: null,
       calendarAccess: null,
       calendarSync: null,

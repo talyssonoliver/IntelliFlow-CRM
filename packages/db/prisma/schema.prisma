@@ -4554,6 +4554,15 @@ model EmailMailbox {
   /// The pass's resume point in the Inbox and in Sent Items (provider cursors, not credentials).
   lookbackCursor     String? @db.Text
   lookbackSentCursor String? @db.Text
+  /// Pacing: no look-back round starts before this time (null: no wait). Set after each batch and
+  /// after a provider RATE_LIMITED (exponential with lookbackBackoffCount).
+  lookbackNextAt       DateTime?
+  lookbackBackoffCount Int       @default(0)
+  /// The last time the look-back made progress; no progress for 6 h or more with a backlog alerts.
+  lookbackProgressAt   DateTime?
+  /// Real counts for the settings page (null total: nothing is importing).
+  lookbackImportTotal  Int?
+  lookbackImportDone   Int       @default(0)
   /// MVP-013 Google Calendar sync of a user's own Google mailbox: Google's incremental sync token for
   /// the primary calendar (not a credential), the last finished round, the next due time and the
   /// lease the sync tick claims a mailbox with (null nextSync = due now), and the backoff counter.
@@ -4626,17 +4635,19 @@ model CalendarEventLink {
 /// Single-use OAuth connect state (PKCE). Only the sha256 of the state is
 /// stored; the verifier is encrypted. Expires after 10 minutes.
 model EmailOAuthState {
-  id           String   @id @default(cuid())
-  tenantId     String
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  userId       String
-  scope        String   @db.VarChar(10)
-  provider     String   @db.VarChar(12)
-  stateHash    String   @unique @db.VarChar(64)
+  id             String   @id @default(cuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId         String
+  scope          String   @db.VarChar(10)
+  provider       String   @db.VarChar(12)
+  stateHash      String   @unique @db.VarChar(64)
   /// @encrypted
-  codeVerifier String   @db.Text
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
+  codeVerifier   String   @db.Text
+  expiresAt      DateTime
+  /// The user confirmed a personal (consumer-domain) mailbox before the sign-in started.
+  acceptPersonal Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
   @@index([expiresAt])
   @@map("email_oauth_states")

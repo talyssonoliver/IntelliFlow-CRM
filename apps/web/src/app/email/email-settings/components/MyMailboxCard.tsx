@@ -19,7 +19,7 @@ import { oneClickNotYet, providerByServer } from './mailbox-providers';
 import { SmtpHostingNotice } from './SmtpHostingNotice';
 import { SendFromHint, type HintProvider } from './SendFromHint';
 import { calendarSyncLine } from './calendar-sync-status';
-import { inboxSyncLine } from './inbox-sync-status';
+import { historyImportLine, inboxSyncLine } from './inbox-sync-status';
 import { GoogleAdminTrust } from './GoogleAdminTrust';
 import { GoogleCalendarAccess } from './GoogleCalendarAccess';
 
@@ -227,6 +227,11 @@ export function MailboxConnection({
       {connected && !broken && mailbox?.replySync === 'ON' && (
         <p className="text-xs text-muted-foreground" data-testid="inbox-sync-status">
           {inboxSyncLine(mailbox.inboxSyncedAt)}
+        </p>
+      )}
+      {connected && !broken && historyImportLine(mailbox?.historyImport, mailbox?.kind) && (
+        <p className="text-xs text-muted-foreground" data-testid="history-import-status">
+          {historyImportLine(mailbox?.historyImport, mailbox?.kind)}
         </p>
       )}
       {connected && !broken && mailbox?.replySync === 'NEEDS_RECONNECT' && (
