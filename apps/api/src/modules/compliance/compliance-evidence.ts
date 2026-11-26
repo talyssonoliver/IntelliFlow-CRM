@@ -15,6 +15,7 @@
  *   and the page says so.
  */
 import { seatUserWhere } from '@intelliflow/db';
+import { PUBLISHED_TERMS_VERSION } from '@intelliflow/validators';
 
 export type ControlState = 'pass' | 'attention' | 'not_measured';
 export type FrameworkStatus = 'compliant' | 'attention' | 'critical' | 'not_measured';
@@ -115,7 +116,7 @@ export interface Evidence {
     activeRestrictions: number;
   } | null;
   bookings: { publicBookings: number; withoutConsent: number } | null;
-  terms: { seats: number; accepted: number; latestVersion: string | null } | null;
+  terms: { seats: number; accepted: number; publishedVersion: string } | null;
   retention: {
     documentPolicies: number;
     aiConversationDays: number | null;
@@ -136,7 +137,6 @@ export interface EvidenceDb {
   appointment: { count(args: unknown): Promise<number> };
   termsAcceptance: {
     count(args: unknown): Promise<number>;
-    findFirst(args: unknown): Promise<{ termsVersion: string } | null>;
   };
   documentRetentionPolicy: { count(args: unknown): Promise<number> };
   tenantMemoryPolicy: {
@@ -270,26 +270,21 @@ export async function collectEvidence(
   });
 
   const terms = await safely(async () => {
-    const latest = await db.termsAcceptance.findFirst({
-      where: { tenantId },
-      orderBy: { acceptedAt: 'desc' },
-      select: { termsVersion: true },
-    });
-    const latestVersion = latest?.termsVersion ?? null;
+    // Compared against the PUBLISHED version (server constant), never a version read from a
+    // user-supplied acceptance row.
+    const publishedVersion = PUBLISHED_TERMS_VERSION;
     const [seatCount, accepted] = await Promise.all([
       db.user.count({ where: seats }),
-      latestVersion === null
-        ? Promise.resolve(0)
-        : db.user.count({
-            where: {
-              AND: [
-                seats,
-                { termsAcceptances: { some: { tenantId, termsVersion: latestVersion } } },
-              ],
-            },
-          }),
+      db.user.count({
+        where: {
+          AND: [
+            seats,
+            { termsAcceptances: { some: { tenantId, termsVersion: publishedVersion } } },
+          ],
+        },
+      }),
     ]);
-    return { seats: seatCount, accepted, latestVersion };
+    return { seats: seatCount, accepted, publishedVersion };
   });
 
   const retention = await safely(async () => {
@@ -624,10 +619,7 @@ function termsControl(t: NonNullable<Evidence['terms']>): Control {
   if (t.seats === 0) {
     return notMeasured(id, name, 'No users in this firm.', 'At least one user.');
   }
-  const evidence =
-    t.latestVersion === null
-      ? `${plural(t.seats, 'user')}, none with an acceptance record.`
-      : `${t.accepted} of ${plural(t.seats, 'user')} accepted the latest recorded version (${t.latestVersion}).`;
+  const evidence = `${t.accepted} of ${plural(t.seats, 'user')} accepted the published terms (${t.publishedVersion}).`;
   return control(id, name, t.accepted === t.seats ? 'pass' : 'attention', evidence, {
     href: '/terms',
     label: 'Open the terms',

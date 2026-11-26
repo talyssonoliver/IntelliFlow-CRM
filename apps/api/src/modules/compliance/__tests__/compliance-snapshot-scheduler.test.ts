@@ -21,7 +21,7 @@ function db(tenants: string[], failFor?: string): ComplianceSnapshotJobDb {
     dsarRequest: { count: zero },
     processingRestriction: { count: zero },
     appointment: { count: zero },
-    termsAcceptance: { count: zero, findFirst: vi.fn(async () => null) },
+    termsAcceptance: { count: zero },
     documentRetentionPolicy: { count: zero },
     tenantMemoryPolicy: { findUnique: vi.fn(async () => null) },
     aIMonitoringEvent: { count: zero },

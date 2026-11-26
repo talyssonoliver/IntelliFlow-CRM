@@ -25,7 +25,6 @@ function zeroCounts() {
   prismaMock.processingRestriction.count.mockResolvedValue(0);
   prismaMock.appointment.count.mockResolvedValue(0);
   prismaMock.termsAcceptance.count.mockResolvedValue(0);
-  prismaMock.termsAcceptance.findFirst.mockResolvedValue(null);
   prismaMock.documentRetentionPolicy.count.mockResolvedValue(0);
   prismaMock.tenantMemoryPolicy.findUnique.mockResolvedValue(null);
   prismaMock.aIMonitoringEvent.count.mockResolvedValue(0);

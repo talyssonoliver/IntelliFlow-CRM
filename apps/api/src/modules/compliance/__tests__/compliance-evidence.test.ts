@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { PUBLISHED_TERMS_VERSION } from '@intelliflow/validators';
 import {
   buildOverview,
   collectEvidence,
@@ -28,7 +29,7 @@ function evidence(overrides: Partial<Evidence> = {}): Evidence {
       activeRestrictions: 0,
     },
     bookings: { publicBookings: 6, withoutConsent: 0 },
-    terms: { seats: 4, accepted: 4, latestVersion: '2026-01' },
+    terms: { seats: 4, accepted: 4, publishedVersion: 'v2026.10' },
     retention: { documentPolicies: 2, aiConversationDays: 90, memoryPolicyRow: true },
     ai: { events30d: 10, highSeverity30d: 0 },
     ...overrides,
@@ -303,24 +304,27 @@ describe('evaluateFrameworks', () => {
     it('checks terms acceptance against the users who take a seat', () => {
       expect(
         control(
-          evidence({ terms: { seats: 4, accepted: 1, latestVersion: '2026-02' } }),
+          evidence({ terms: { seats: 4, accepted: 1, publishedVersion: 'v2026.10' } }),
           'gdpr',
           'terms-acceptance'
         )
       ).toMatchObject({
         state: 'attention',
-        evidence: '1 of 4 users accepted the latest recorded version (2026-02).',
+        evidence: '1 of 4 users accepted the published terms (v2026.10).',
       });
       expect(
         control(
-          evidence({ terms: { seats: 4, accepted: 0, latestVersion: null } }),
+          evidence({ terms: { seats: 4, accepted: 0, publishedVersion: 'v2026.10' } }),
           'gdpr',
           'terms-acceptance'
-        ).evidence
-      ).toBe('4 users, none with an acceptance record.');
+        )
+      ).toMatchObject({
+        state: 'attention',
+        evidence: '0 of 4 users accepted the published terms (v2026.10).',
+      });
       expect(
         control(
-          evidence({ terms: { seats: 0, accepted: 0, latestVersion: null } }),
+          evidence({ terms: { seats: 0, accepted: 0, publishedVersion: 'v2026.10' } }),
           'gdpr',
           'terms-acceptance'
         ).state
@@ -486,7 +490,6 @@ describe('collectEvidence', () => {
       appointment: { count: count('appointment') },
       termsAcceptance: {
         count: count('termsAcceptance'),
-        findFirst: vi.fn(async () => ({ termsVersion: '2026-01' })),
       },
       documentRetentionPolicy: { count: count('documentRetentionPolicy') },
       tenantMemoryPolicy: { findUnique: vi.fn(async () => ({ conversationRetentionDays: 45 })) },
@@ -498,7 +501,7 @@ describe('collectEvidence', () => {
     const db = fakeDb({ user: 3 });
     const e = await collectEvidence(db, 'tenant-a', NOW);
     expect(e.users?.seats).toBe(3);
-    expect(e.terms?.latestVersion).toBe('2026-01');
+    expect(e.terms?.publishedVersion).toBe(PUBLISHED_TERMS_VERSION);
     expect(e.retention?.aiConversationDays).toBe(45);
     for (const call of (db.auditLogEntry.count as ReturnType<typeof vi.fn>).mock.calls) {
       expect(JSON.stringify(call[0])).toContain('tenant-a');
@@ -511,13 +514,19 @@ describe('collectEvidence', () => {
     }
   });
 
-  it('counts accepted terms against the latest recorded version only', async () => {
+  it('counts accepted terms against the PUBLISHED version, not any version users sent', async () => {
     const db = fakeDb({ user: 3 });
+    // A row with a client-chosen version must not move the yardstick.
+    (db.termsAcceptance as Record<string, unknown>).findFirst = vi.fn(async () => ({
+      termsVersion: 'attacker-chosen',
+    }));
     await collectEvidence(db, 'tenant-a', NOW);
     const calls = (db.user.count as ReturnType<typeof vi.fn>).mock.calls.map((c) =>
       JSON.stringify(c[0])
     );
-    expect(calls.some((c) => c.includes('"termsVersion":"2026-01"'))).toBe(true);
+    expect(calls.some((c) => c.includes(`"termsVersion":"${PUBLISHED_TERMS_VERSION}"`))).toBe(true);
+    expect(calls.some((c) => c.includes('attacker-chosen'))).toBe(false);
+    expect((db.termsAcceptance as Record<string, unknown>).findFirst).not.toHaveBeenCalled();
   });
 
   it('counts administrators of this firm: home role or a live ADMIN membership here', async () => {
