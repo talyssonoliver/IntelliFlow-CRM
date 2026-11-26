@@ -890,34 +890,54 @@ describe('OnboardingWelcome', () => {
 // ============================================================
 
 describe('OnboardingWelcome business type step', () => {
+  const state = (over: Record<string, unknown> = {}) => ({
+    data: {
+      completed: false,
+      flowDone: false,
+      emailConfirmed: false,
+      selectedPlan: null,
+      needsBusinessType: true,
+      ...over,
+    },
+    isLoading: false,
+  });
+
   beforeEach(() => {
     mockSetBusinessType.mockReset();
     mockSetBusinessType.mockResolvedValue({});
     mockInvalidateModules.mockReset();
-    mockGetState.mockReturnValue({
-      data: {
-        completed: false,
-        flowDone: false,
-        emailConfirmed: false,
-        selectedPlan: null,
-        needsBusinessType: true,
-      },
-      isLoading: false,
-    });
+    mockMutate.mockReset();
+    sessionStorage.clear();
+    mockGetState.mockReturnValue(state());
   });
 
-  it('asks for the business type and blocks Continue until one is chosen', () => {
+  it('is its own full-page step with five option cards and no Skip, Continue blocked until chosen', () => {
     render(<OnboardingWelcome />);
 
-    expect(screen.getByTestId('onboarding-business-type')).toBeInTheDocument();
+    expect(screen.getByTestId('onboarding-business-type-page')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /what kind of business/i })).toBeInTheDocument();
+    expect(screen.getAllByRole('radio')).toHaveLength(5);
     expect(screen.getByRole('radio', { name: /law firm/i })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /trades and home services/i })).toBeInTheDocument();
+    // Nothing is chosen for the user, and there is no way past the question.
+    for (const radio of screen.getAllByRole('radio')) expect(radio).not.toBeChecked();
+    expect(screen.queryByRole('button', { name: /skip/i })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^continue$/i })).toBeDisabled();
-    expect(screen.queryByRole('region', { name: /choose your plan/i })).not.toBeInTheDocument();
+    // The profile/plan dialog is not shown yet.
+    expect(screen.queryByText(/choose your plan/i)).not.toBeInTheDocument();
+    expect(screen.queryByTestId('onboarding-business-type')).toBeInTheDocument();
   });
 
-  it('saves the choice, refreshes the modules and moves on to the plan step', async () => {
+  it('Escape does not dismiss it', () => {
     render(<OnboardingWelcome />);
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    expect(screen.getByTestId('onboarding-business-type-page')).toBeInTheDocument();
+    expect(sessionStorage.getItem('intelliflow_onboarding_session_dismissed')).toBeNull();
+  });
+
+  it('saves the choice, refreshes the modules, then moves a new workspace on to the welcome step', async () => {
+    render(<OnboardingWelcome />);
+    expect(screen.getByText(/step 1 of 3/i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('radio', { name: /trades and home services/i }));
     fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
@@ -927,8 +947,9 @@ describe('OnboardingWelcome business type step', () => {
     );
     await waitFor(() => expect(mockInvalidateModules).toHaveBeenCalled());
     await waitFor(() =>
-      expect(screen.getByRole('region', { name: /choose your plan/i })).toBeInTheDocument()
+      expect(screen.queryByTestId('onboarding-business-type-page')).not.toBeInTheDocument()
     );
+    expect(screen.getByText(/step 2 of 3/i)).toBeInTheDocument();
   });
 
   it('stays on the step and shows the error when saving fails', async () => {
@@ -939,40 +960,35 @@ describe('OnboardingWelcome business type step', () => {
     fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/only a workspace admin/i);
-    expect(screen.queryByRole('region', { name: /choose your plan/i })).not.toBeInTheDocument();
+    expect(screen.getByTestId('onboarding-business-type-page')).toBeInTheDocument();
   });
 
-  it('says setup finishes once chosen, and skipping dismisses without completing or choosing', async () => {
+  it('shows the same step to an EXISTING workspace that finished onboarding, even if dismissed', async () => {
+    sessionStorage.setItem('intelliflow_onboarding_session_dismissed', '1');
+    mockGetState.mockReturnValue(state({ completed: true, flowDone: true, emailConfirmed: true }));
     render(<OnboardingWelcome />);
 
-    expect(screen.getByTestId('onboarding-business-type-note')).toHaveTextContent(
-      /setup finishes once you choose/i
-    );
-    // Nothing is pre-selected on the user's behalf.
-    for (const radio of screen.getAllByRole('radio')) expect(radio).not.toBeChecked();
+    expect(screen.getByTestId('onboarding-business-type-page')).toBeInTheDocument();
+    // No step counter: this is not part of a new workspace's onboarding.
+    expect(screen.queryByText(/step 1 of 3/i)).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /skip for now/i }));
+    fireEvent.click(screen.getByRole('radio', { name: /law firm/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^continue$/i }));
     await waitFor(() =>
-      expect(sessionStorage.getItem('intelliflow_onboarding_session_dismissed')).toBe('1')
+      expect(mockSetBusinessType).toHaveBeenCalledWith({ businessType: 'LAW_FIRM' })
     );
-    expect(mockSetBusinessType).not.toHaveBeenCalled();
-    expect(mockMutate).not.toHaveBeenCalled();
+    await waitFor(() =>
+      expect(screen.queryByTestId('onboarding-business-type-page')).not.toBeInTheDocument()
+    );
+    // It does not drag a finished workspace back through profile and plan.
+    expect(screen.queryByText(/choose your plan/i)).not.toBeInTheDocument();
   });
 
   it('does not ask a member whose workspace already has a business type', () => {
-    mockGetState.mockReturnValue({
-      data: {
-        completed: false,
-        flowDone: false,
-        emailConfirmed: false,
-        selectedPlan: null,
-        needsBusinessType: false,
-      },
-      isLoading: false,
-    });
+    mockGetState.mockReturnValue(state({ needsBusinessType: false }));
     render(<OnboardingWelcome />);
 
-    expect(screen.queryByTestId('onboarding-business-type')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('onboarding-business-type-page')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^continue$/i })).toBeEnabled();
   });
 });

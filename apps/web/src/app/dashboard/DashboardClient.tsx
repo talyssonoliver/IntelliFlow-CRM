@@ -13,7 +13,6 @@
 import { Suspense, useState, useEffect } from 'react';
 import { PageHeader, type PageAction } from '@/components/shared/page-header';
 import { useEnabledModules } from '@/hooks/useEnabledModules';
-import { BusinessTypeBanner } from '@/components/workspace/BusinessTypeBanner';
 import { filterAvailableWidgets } from '@/lib/modules/module-visibility';
 import { useLiveConnection } from '@/lib/live-connection';
 import { Card } from '@intelliflow/ui';
@@ -30,6 +29,7 @@ import {
   DASHBOARD_GRID_CLASSES,
   dashboardColSpanClass,
   dashboardWidgetKind,
+  kpiRunSpanClasses,
 } from '@/lib/dashboard/grid';
 
 // Default widgets matching the original dashboard layout
@@ -127,6 +127,8 @@ export default function DashboardClient({ initialLeadStats }: Readonly<Dashboard
   // A widget that reads a module's data (Open Tickets) is not drawn when the workspace has no such
   // module, so it never asks the server for data it would refuse. Saved layouts are filtered too.
   const visibleWidgets = filterAvailableWidgets(widgets, isModuleEnabled);
+  // With Open Tickets hidden an odd number of KPI tiles is left: the last one fills its row, no hole.
+  const kpiFill = kpiRunSpanClasses(visibleWidgets);
 
   // Show loading skeleton while auth is being verified
   if (authLoading) {
@@ -185,14 +187,12 @@ export default function DashboardClient({ initialLeadStats }: Readonly<Dashboard
         </output>
       </PageHeader>
 
-      <BusinessTypeBanner className="mb-6" />
-
       {/* Dashboard Widgets Grid — each widget has its own Suspense boundary */}
       <div className={`${DASHBOARD_GRID_CLASSES} auto-rows-min`}>
         {visibleWidgets.map((widget) => {
           const WidgetComponent = widgetRegistry[widget.type];
           const gridClasses = `
-            ${dashboardColSpanClass(widget.colSpan, dashboardWidgetKind(widget.type))}
+            ${kpiFill.get(widget.id) ?? dashboardColSpanClass(widget.colSpan, dashboardWidgetKind(widget.type))}
             ${rowSpanClasses[widget.rowSpan] || ''}
           `;
 

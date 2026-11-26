@@ -44,3 +44,37 @@ export function dashboardColSpanClass(
   const table = kind === 'kpi' ? DASHBOARD_COL_SPAN_CLASSES : DASHBOARD_PANEL_COL_SPAN_CLASSES;
   return table[colSpan ?? 1] ?? table[1];
 }
+
+/**
+ * A run of 1-span KPI tiles that does not fill its rows leaves a hole beside the last tile
+ * (3 tiles on the 2-column phone grid, 3 on the 4-column desktop grid). The last tile(s) of the
+ * run grow to fill the row instead. Returns, per widget id, the span classes to use in place of
+ * the plain `col-span-1`. Literal strings so Tailwind keeps them.
+ */
+export function kpiRunSpanClasses(
+  widgets: ReadonlyArray<{ id: string; type: string; colSpan?: number }>
+): Map<string, string> {
+  const out = new Map<string, string>();
+  let run: string[] = [];
+  const flush = () => {
+    const n = run.length;
+    run.forEach((id, idx) => {
+      const small = n % 2 === 1 && idx === n - 1 ? 'col-span-2' : 'col-span-1';
+      const r = n % 4;
+      let large = 'lg:col-span-1';
+      if (idx >= n - r) {
+        if (r === 1) large = 'lg:col-span-4';
+        else if (r === 2) large = 'lg:col-span-2';
+        else if (idx === n - 1) large = 'lg:col-span-2';
+      }
+      out.set(id, `${small} ${large}`);
+    });
+    run = [];
+  };
+  for (const w of widgets) {
+    if (dashboardWidgetKind(w.type) === 'kpi' && (w.colSpan ?? 1) === 1) run.push(w.id);
+    else flush();
+  }
+  flush();
+  return out;
+}

@@ -6,7 +6,12 @@ import {
   formatTrendPercent,
   shouldShowTrend,
 } from '../kpi-calculator';
-import { DASHBOARD_COL_SPAN_CLASSES, dashboardColSpanClass, dashboardWidgetKind } from '../grid';
+import {
+  DASHBOARD_COL_SPAN_CLASSES,
+  dashboardColSpanClass,
+  dashboardWidgetKind,
+  kpiRunSpanClasses,
+} from '../grid';
 
 describe('shouldShowTrend (#1225 UI-009)', () => {
   it('hides the badge when the baseline is near zero', () => {
@@ -82,5 +87,38 @@ describe('dashboard grid: panels take the full phone row (#1249 visual check)', 
       expect(dashboardWidgetKind(type)).toBe('panel');
     }
     expect(dashboardWidgetKind('unknown-widget')).toBe('panel');
+  });
+});
+
+describe('kpiRunSpanClasses (no hole beside the last KPI tile)', () => {
+  const kpi = (id: string, type = 'total-leads') => ({ id, type, colSpan: 1 });
+
+  it('three tiles: the third fills the phone row and spans two on desktop', () => {
+    const m = kpiRunSpanClasses([kpi('a'), kpi('b'), kpi('c')]);
+    expect(m.get('a')).toBe('col-span-1 lg:col-span-1');
+    expect(m.get('b')).toBe('col-span-1 lg:col-span-1');
+    expect(m.get('c')).toBe('col-span-2 lg:col-span-2');
+  });
+
+  it('four tiles need no fill', () => {
+    const m = kpiRunSpanClasses([kpi('a'), kpi('b'), kpi('c'), kpi('d')]);
+    expect([...m.values()].every((v) => v === 'col-span-1 lg:col-span-1')).toBe(true);
+  });
+
+  it('a lone tile takes the whole row', () => {
+    expect(kpiRunSpanClasses([kpi('a')]).get('a')).toBe('col-span-2 lg:col-span-4');
+  });
+
+  it('a panel ends a run, so each run is filled on its own', () => {
+    const m = kpiRunSpanClasses([
+      kpi('a'),
+      kpi('b'),
+      kpi('c'),
+      { id: 'p', type: 'pipeline', colSpan: 3 },
+      kpi('d'),
+    ]);
+    expect(m.get('c')).toBe('col-span-2 lg:col-span-2');
+    expect(m.has('p')).toBe(false);
+    expect(m.get('d')).toBe('col-span-2 lg:col-span-4');
   });
 });

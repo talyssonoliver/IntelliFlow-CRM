@@ -336,6 +336,137 @@ function StripeCardForm({
   );
 }
 
+/** True while the required business-type step must be on screen (see OnboardingWelcomeInner). */
+function isBusinessTypeStepDue(input: {
+  authLoading: boolean;
+  onboardingLoading: boolean;
+  isAuthenticated: boolean;
+  onSurface: boolean;
+  publicAuthRoute: boolean;
+  serverSaysNeeded: boolean;
+  savedHere: boolean;
+}): boolean {
+  const ready = !input.authLoading && !input.onboardingLoading && input.isAuthenticated;
+  const onPage = input.onSurface && !input.publicAuthRoute;
+  return ready && onPage && input.serverSaysNeeded && !input.savedHere;
+}
+
+/** Remembers that the step was part of this session's NEW-workspace onboarding (changes the step count). */
+function useBusinessStepShown(stepDue: boolean, inNewOnboarding: boolean): boolean {
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (stepDue && inNewOnboarding) setShown(true);
+  }, [stepDue, inNewOnboarding]);
+  return shown;
+}
+
+/**
+ * Saves the chosen business type (owner ruling 23/11/2026: it decides which vertical modules the
+ * workspace gets). A failed save keeps the step open with the error; success refreshes the
+ * navigation straight away and calls onSaved.
+ */
+function useBusinessTypeSave(businessType: TenantBusinessType | null, onSaved: () => void) {
+  const mutation = trpc.moduleAccess.setBusinessType.useMutation();
+  const utils = trpc.useUtils();
+  const [error, setError] = useState<string | null>(null);
+  const save = useCallback(async () => {
+    if (!businessType) return;
+    setError(null);
+    try {
+      await mutation.mutateAsync({ businessType });
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : 'Could not save your business type. Try again.'
+      );
+      return;
+    }
+    onSaved();
+    await utils.moduleAccess.getEnabledModules.invalidate();
+  }, [businessType, mutation, utils, onSaved]);
+  return { save: () => void save(), error, pending: mutation.isPending };
+}
+
+// ============================================
+// BusinessTypeStep: the required, full-page business-type question
+// ============================================
+
+function BusinessTypeStep({
+  showStepCount,
+  value,
+  onChange,
+  error,
+  pending,
+  onContinue,
+}: Readonly<{
+  showStepCount: boolean;
+  value: TenantBusinessType | null;
+  onChange: (value: TenantBusinessType) => void;
+  error: string | null;
+  pending: boolean;
+  onContinue: () => void;
+}>) {
+  return (
+    <section
+      aria-label="Choose your business type"
+      data-testid="onboarding-business-type-page"
+      className="fixed inset-0 z-[200] overflow-y-auto bg-background"
+    >
+      <div className="mx-auto flex min-h-full w-full max-w-xl flex-col px-4 pt-8 sm:px-6 sm:pt-12">
+        <div className="flex items-center gap-3">
+          <span className="material-symbols-outlined text-4xl text-primary" aria-hidden="true">
+            storefront
+          </span>
+          <div>
+            {showStepCount && (
+              <p className="text-xs font-medium text-muted-foreground" aria-live="polite">
+                Step 1 of 3
+              </p>
+            )}
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              What kind of business is this?
+            </h1>
+          </div>
+        </div>
+        <p className="mt-3 text-sm text-muted-foreground">
+          It sets up your workspace with the right tools. You can change it later in Settings, and
+          nothing you already have is removed.
+        </p>
+
+        <div className="mt-6 flex-1" data-testid="onboarding-business-type">
+          <BusinessTypePicker
+            value={value}
+            onChange={onChange}
+            idPrefix="ob-business-type"
+            disabled={pending}
+            legend="Choose your business type"
+            legendHidden
+          />
+          {error && (
+            <p role="alert" className="mt-3 text-sm text-destructive">
+              {error}
+            </p>
+          )}
+        </div>
+
+        <div className="sticky bottom-0 -mx-4 mt-6 border-t border-border bg-background/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6">
+          <button
+            type="button"
+            onClick={onContinue}
+            disabled={!value || pending}
+            className={cn(
+              'w-full whitespace-nowrap rounded-md bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground',
+              'hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'disabled:cursor-not-allowed disabled:opacity-50'
+            )}
+          >
+            Continue
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ============================================
 // OnboardingWelcome — main modal
 // ============================================
@@ -361,10 +492,6 @@ function OnboardingWelcomeInner() {
   );
 
   const completeMutation = trpc.onboarding.complete.useMutation();
-  // Owner ruling 23/11/2026: a new workspace must say what kind of business it is (it decides which
-  // vertical modules it gets). Asked in the welcome step, saved before the plan step.
-  const setBusinessTypeMutation = trpc.moduleAccess.setBusinessType.useMutation();
-  const utils = trpc.useUtils();
   // Persists the optional profile fields (company / job title) the welcome step
   // collects — previously these were captured then thrown away.
   const updateProfileMutation = trpc.user.updateProfile.useMutation();
@@ -379,7 +506,7 @@ function OnboardingWelcomeInner() {
   const [department, setDepartment] = useState('');
   const [businessType, setBusinessType] = useState<TenantBusinessType | null>(null);
   const [businessTypeSaved, setBusinessTypeSaved] = useState(false);
-  const [businessTypeError, setBusinessTypeError] = useState<string | null>(null);
+  const saveBusinessType = useBusinessTypeSave(businessType, () => setBusinessTypeSaved(true));
   const [sessionDismissed, setSessionDismissed] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
   const [resendState, setResendState] = useState<'idle' | 'sending' | 'sent' | 'rate-limited'>(
@@ -420,6 +547,26 @@ function OnboardingWelcomeInner() {
   // When getState is undefined (errored, or resolved with no data) we therefore
   // do NOT open: a bare `!flowDone` would default an unknown state to "show",
   // flashing the welcome at already-onboarded users on a transient getState error.
+  // The business type is asked on its own full-page step, before anything else, and cannot be
+  // skipped or dismissed. A NEW workspace's admin meets it first in onboarding; an EXISTING
+  // workspace without a type gets the same step on the next sign-in (the server only reports
+  // needsBusinessType for the workspace admin, so other members are never blocked).
+  const needsBusinessType = isBusinessTypeStepDue({
+    authLoading,
+    onboardingLoading,
+    isAuthenticated,
+    onSurface: isOnboardingSurface,
+    publicAuthRoute: isPublicAuthRoute(pathname),
+    serverSaysNeeded: onboardingState?.needsBusinessType === true,
+    savedHere: businessTypeSaved,
+  });
+  const businessStepShown = useBusinessStepShown(
+    needsBusinessType,
+    onboardingState?.flowDone === false
+  );
+  // The business-type step counts as one more step of this session's onboarding.
+  const extraSteps = Number(businessStepShown);
+
   const shouldShow =
     !authLoading &&
     !onboardingLoading &&
@@ -430,6 +577,7 @@ function OnboardingWelcomeInner() {
     !isPublicAuthRoute(pathname) &&
     !sessionDismissed &&
     !onboardingComplete &&
+    !needsBusinessType &&
     (onboardingState?.flowDone === false || needsEmailVerify);
 
   useEffect(() => {
@@ -492,29 +640,11 @@ function OnboardingWelcomeInner() {
     setSessionDismissed(true);
   }, [persistProfile]);
 
-  const needsBusinessType = onboardingState?.needsBusinessType === true && !businessTypeSaved;
-
-  const handleContinueWelcome = useCallback(async () => {
-    // The business type is required: save it first, and stay on this step if that fails.
-    if (needsBusinessType) {
-      if (!businessType) return;
-      setBusinessTypeError(null);
-      try {
-        await setBusinessTypeMutation.mutateAsync({ businessType });
-      } catch (err: unknown) {
-        setBusinessTypeError(
-          err instanceof Error ? err.message : 'Could not save your business type. Try again.'
-        );
-        return;
-      }
-      setBusinessTypeSaved(true);
-      // The navigation follows the new business type straight away.
-      await utils.moduleAccess.getEnabledModules.invalidate();
-    }
+  const handleContinueWelcome = useCallback(() => {
     // Save the profile fields before advancing to the plan step.
     persistProfile();
     setStep('plan');
-  }, [needsBusinessType, businessType, setBusinessTypeMutation, utils, persistProfile]);
+  }, [persistProfile]);
 
   const handleResendVerification = useCallback(async () => {
     if (resendState === 'sending' || resendState === 'sent') return;
@@ -588,6 +718,19 @@ function OnboardingWelcomeInner() {
   // ==========================================
 
   const stripeJsPromise = step === 'checkout' ? getStripePromise() : null;
+
+  if (needsBusinessType) {
+    return (
+      <BusinessTypeStep
+        showStepCount={businessStepShown}
+        value={businessType}
+        onChange={setBusinessType}
+        error={saveBusinessType.error}
+        pending={saveBusinessType.pending}
+        onContinue={saveBusinessType.save}
+      />
+    );
+  }
 
   return (
     <dialog
@@ -759,29 +902,6 @@ function OnboardingWelcomeInner() {
             </div>
           </fieldset>
 
-          {needsBusinessType && (
-            <div className="space-y-2" data-testid="onboarding-business-type">
-              <BusinessTypePicker
-                value={businessType}
-                onChange={setBusinessType}
-                idPrefix="ob-business-type"
-                disabled={setBusinessTypeMutation.isPending}
-              />
-              <p
-                className="text-xs text-muted-foreground"
-                data-testid="onboarding-business-type-note"
-              >
-                Setup finishes once you choose. If you skip for now, a reminder stays on your
-                dashboard until you do.
-              </p>
-              {businessTypeError && (
-                <p role="alert" className="text-sm text-destructive">
-                  {businessTypeError}
-                </p>
-              )}
-            </div>
-          )}
-
           <div className="flex gap-3">
             <button
               type="button"
@@ -795,8 +915,7 @@ function OnboardingWelcomeInner() {
             </button>
             <button
               type="button"
-              onClick={() => void handleContinueWelcome()}
-              disabled={(needsBusinessType && !businessType) || setBusinessTypeMutation.isPending}
+              onClick={handleContinueWelcome}
               className={cn(
                 'flex-1 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground',
                 'hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
@@ -809,7 +928,7 @@ function OnboardingWelcomeInner() {
 
           {/* Step indicator */}
           <p className="text-center text-xs text-muted-foreground" aria-live="polite">
-            Step 1 of 2
+            Step {1 + extraSteps} of {2 + extraSteps}
           </p>
         </section>
       )}
@@ -957,7 +1076,7 @@ function OnboardingWelcomeInner() {
           </button>
 
           <p className="text-center text-xs text-muted-foreground" aria-live="polite">
-            Step 2 of 2
+            Step {2 + extraSteps} of {2 + extraSteps}
           </p>
         </section>
       )}
