@@ -37,11 +37,12 @@ describe('AppFooter', () => {
       '/terms',
       '/cookies',
       '/dpa',
+      '/data-and-ai',
       '/aup',
       '/status',
       '/contact',
     ]);
-    expect(APP_FOOTER_LINKS).toHaveLength(7);
+    expect(APP_FOOTER_LINKS).toHaveLength(8);
     expect(screen.getByRole('contentinfo')).toHaveClass('app-footer');
   });
 

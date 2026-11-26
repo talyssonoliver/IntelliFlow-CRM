@@ -58,6 +58,7 @@ export const FOOTER_COLUMNS: ReadonlyArray<{ title: string; links: readonly Foot
       { label: 'Terms of service', href: '/terms' },
       { label: 'Cookie policy', href: '/cookies' },
       { label: 'Data processing addendum', href: '/dpa' },
+      { label: 'Data and AI', href: '/data-and-ai' },
       { label: 'Acceptable use policy', href: '/aup' },
     ],
   },

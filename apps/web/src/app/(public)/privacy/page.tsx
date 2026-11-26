@@ -173,8 +173,12 @@ export default function PrivacyPage() {
                   . You can also return to the public site or review our{' '}
                   <Link href="/security" className="font-medium text-[#2a78f6] hover:underline">
                     security overview
+                  </Link>
+                  , or see{' '}
+                  <Link href="/data-and-ai" className="font-medium text-[#2a78f6] hover:underline">
+                    Data and AI
                   </Link>{' '}
-                  for additional governance details.
+                  for where your data is held and which AI providers see it.
                 </p>
               </Card>
             </div>

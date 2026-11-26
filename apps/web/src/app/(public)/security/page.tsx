@@ -89,6 +89,9 @@ export default function SecurityPage() {
               <Link href="/privacy" className="as-btn as-btn-secondary">
                 Privacy policy
               </Link>
+              <Link href="/data-and-ai" className="as-btn as-btn-secondary">
+                Data and AI
+              </Link>
             </div>
           </div>
         </div>

@@ -114,12 +114,12 @@ describe('IFC-209: sitemap defect fixes', () => {
   });
 
   // TC-NEW-05: Total entry count matches current baseline
-  it('total sitemap entry count is exactly 26', () => {
+  it('total sitemap entry count is exactly 27', () => {
     // Baseline grew as public routes were added (32 = original 29 + 3 new public
     // routes), then lost the 2 blog post and 4 press release pages when that
-    // unpublished sample content was removed. Keep this pinned so unintended growth
+    // unpublished sample content was removed, then gained /data-and-ai (MVP-012). Keep this pinned so unintended growth
     // triggers review; bump the constant in sync when sitemap composition changes.
-    expect(sitemapEntries.length).toBe(26);
+    expect(sitemapEntries.length).toBe(27);
   });
 
   // TC-NEW-06: No dynamic/static URL overlap
