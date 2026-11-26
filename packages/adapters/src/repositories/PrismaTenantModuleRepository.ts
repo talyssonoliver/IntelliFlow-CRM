@@ -200,6 +200,9 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
       update: {
         enabled: false,
         disabledAt: new Date(),
+        // An off row belongs to the plan again: a later plan sync that re-enables it must not bring
+        // back an OVERRIDE or EXISTING_DATA grant that someone deliberately switched off.
+        origin: 'PLAN',
       },
     });
 

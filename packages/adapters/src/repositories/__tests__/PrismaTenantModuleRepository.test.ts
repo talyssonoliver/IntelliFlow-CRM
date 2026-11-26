@@ -369,6 +369,9 @@ describe('PrismaTenantModuleRepository.disableModule', () => {
     const call = mockPrisma.tenantModule.upsert.mock.calls[0][0];
     expect(call.create.enabled).toBe(false);
     expect(call.update.enabled).toBe(false);
+    // Switching a module off hands the row back to the plan, so a later plan sync cannot revive an
+    // OVERRIDE or EXISTING_DATA grant outside the business type.
+    expect(call.update.origin).toBe('PLAN');
     expect(result.enabled).toBe(false);
   });
 });
