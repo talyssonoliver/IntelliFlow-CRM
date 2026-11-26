@@ -6,11 +6,13 @@ import { TRPCError } from '@trpc/server';
  * attached and a write would store plaintext (packages/db/src/client.ts), so
  * every secret write calls this first and nothing is written when it throws.
  */
-export function requireEncryptionKey(env: NodeJS.ProcessEnv = process.env): void {
+export function requireEncryptionKey(
+  env: NodeJS.ProcessEnv = process.env,
+  what = 'mailbox credentials'
+): void {
   if (env.PRISMA_FIELD_ENCRYPTION_KEY?.trim()) return;
   throw new TRPCError({
     code: 'PRECONDITION_FAILED',
-    message:
-      'Secure storage for mailbox credentials is not configured on this server. Ask your administrator.',
+    message: `Secure storage for ${what} is not configured on this server. Ask your administrator.`,
   });
 }
