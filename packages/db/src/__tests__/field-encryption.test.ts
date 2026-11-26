@@ -68,9 +68,9 @@ describe('schema.prisma — @encrypted annotations', () => {
     expect(n).not.toMatch(/\/\/\/\s*@encrypted[^\n]*\n\s*promptHash/);
   });
 
-  it('contains exactly nine @encrypted annotations total (3 + PG-207 mailbox and OAuth secrets + PG-208 webhook secrets)', () => {
+  it('contains exactly ten @encrypted annotations total (3 + PG-207 mailbox and OAuth secrets + PG-208 webhook secrets + PG-199 BYOK key)', () => {
     const matches = schema.match(/\/\/\/\s*@encrypted/gm) ?? [];
-    expect(matches).toHaveLength(9);
+    expect(matches).toHaveLength(10);
   });
 
   it('annotates the PG-207 mailbox and OAuth-state secrets', () => {
@@ -101,6 +101,7 @@ describe('schema.prisma — @encrypted annotations', () => {
     expect(ENCRYPTED_FIELDS.EmailMailbox).toEqual(['smtpPassword', 'imapPassword', 'refreshToken']);
     expect(ENCRYPTED_FIELDS.EmailOAuthState).toEqual(['codeVerifier']);
     expect(ENCRYPTED_FIELDS.TaskAutomationRule).toEqual(['webhookSecret', 'webhookSecretPrevious']);
+    expect(ENCRYPTED_FIELDS.TenantAIProviderKey).toEqual(['apiKey']);
   });
 });
 

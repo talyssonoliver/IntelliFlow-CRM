@@ -25,6 +25,11 @@ vi.mock('../../tracing/llm-tracer.js', () => ({
   wrapModelWithTracing: vi.fn((model: unknown) => model),
 }));
 
+// BYOK (PG-199): no tenant in these tests has its own provider key.
+vi.mock('@intelliflow/db', () => ({
+  prisma: { tenantAIProviderKey: { findFirst: vi.fn().mockResolvedValue(null) } },
+}));
+
 vi.mock('../tenant-ai-config.js', () => ({
   resolveEffectiveTier: (...args: unknown[]) => mockResolveEffectiveTier(...args),
   _tierCache: new Map(),

@@ -8,6 +8,7 @@
  * @module ai-worker/utils/circuit-breaker
  * @task H9 (2026-04-17 audit remediation)
  */
+import { AsyncLocalStorage } from 'node:async_hooks';
 import type pino from 'pino';
 import { createLogger } from './logger';
 
@@ -27,6 +28,67 @@ function getLogger(): pino.Logger {
  * @param resetTimeout     - ms before attempting HALF_OPEN reset (default 60 s)
  */
 export class CircuitBreaker {
+  /**
+   * Failures that say nothing about the provider this breaker guards (for example a tenant's
+   * own BYOK key being rejected, registered by lib/byok.ts): they are rethrown and never
+   * counted, in every breaker, so no caller can forget the exemption. Breakers are shared by
+   * every tenant, so counting one customer's failure would stop the others.
+   */
+  private static readonly ignoredFailures: Array<(error: unknown) => boolean> = [];
+
+  /**
+   * Per-call scope: a call that ended up answered by something other than the platform
+   * provider this breaker guards (a tenant's own BYOK model, lib/byok.ts) marks itself with
+   * `markCallNotPlatform(true)`, so its outcome is not counted either way: its success cannot
+   * close a half-open breaker. The mark is cleared (`false`) if the call then falls back to the
+   * platform, whose answer is the one that counts.
+   */
+  private static readonly callScope = new AsyncLocalStorage<{
+    notPlatform: boolean;
+    bypassedOpen: boolean;
+  }>();
+
+  /**
+   * Asked when this breaker is OPEN, before it refuses a call: true means the call will run on
+   * something other than the platform provider (a tenant's own BYOK key, registered by
+   * lib/byok.ts), so the platform outage is no reason to refuse it. Such a call runs unaccounted
+   * and must not fall back to the platform while the breaker is OPEN
+   * (`callBypassedOpenBreaker`). A predicate that throws means "refuse as usual".
+   */
+  private static readonly openBypasses: Array<() => boolean | Promise<boolean>> = [];
+
+  static bypassWhenOpen(predicate: () => boolean | Promise<boolean>): void {
+    if (!CircuitBreaker.openBypasses.includes(predicate))
+      CircuitBreaker.openBypasses.push(predicate);
+  }
+
+  private static async shouldBypassOpen(): Promise<boolean> {
+    for (const bypass of CircuitBreaker.openBypasses) {
+      try {
+        if (await bypass()) return true;
+      } catch {
+        // Refused as usual.
+      }
+    }
+    return false;
+  }
+
+  /** True inside a call that was let through an OPEN breaker: it must not call the platform. */
+  static callBypassedOpenBreaker(): boolean {
+    return CircuitBreaker.callScope.getStore()?.bypassedOpen === true;
+  }
+
+  static markCallNotPlatform(notPlatform: boolean): void {
+    const scope = CircuitBreaker.callScope.getStore();
+    if (scope) scope.notPlatform = notPlatform;
+  }
+
+  static ignoreFailuresMatching(predicate: (error: unknown) => boolean): void {
+    if (!CircuitBreaker.ignoredFailures.includes(predicate)) {
+      CircuitBreaker.ignoredFailures.push(predicate);
+    }
+  }
+
   private failureCount = 0;
   private lastFailureTime = 0;
   private state: 'CLOSED' | 'OPEN' | 'HALF_OPEN' = 'CLOSED';
@@ -44,16 +106,20 @@ export class CircuitBreaker {
       this.failureCount = 0;
     }
 
-    // Reject immediately when open
+    // Reject immediately when open, unless the call does not touch the platform provider
     if (this.state === 'OPEN') {
-      throw new Error('Circuit breaker is OPEN - too many failures');
+      if (CircuitBreaker.openBypasses.length === 0 || !(await CircuitBreaker.shouldBypassOpen())) {
+        throw new Error('Circuit breaker is OPEN - too many failures');
+      }
+      return CircuitBreaker.callScope.run({ notPlatform: true, bypassedOpen: true }, fn);
     }
 
+    const scope = { notPlatform: false, bypassedOpen: false };
     try {
-      const result = await fn();
+      const result = await CircuitBreaker.callScope.run(scope, fn);
 
-      // Reset on success in HALF_OPEN
-      if (this.state === 'HALF_OPEN') {
+      // Reset on success in HALF_OPEN (only the platform's own answer counts)
+      if (this.state === 'HALF_OPEN' && !scope.notPlatform) {
         getLogger().info('Circuit breaker reset to CLOSED state');
         this.state = 'CLOSED';
         this.failureCount = 0;
@@ -61,6 +127,9 @@ export class CircuitBreaker {
 
       return result;
     } catch (error) {
+      if (scope.notPlatform || CircuitBreaker.ignoredFailures.some((matches) => matches(error))) {
+        throw error;
+      }
       this.failureCount++;
       this.lastFailureTime = Date.now();
 

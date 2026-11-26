@@ -113,6 +113,7 @@ export * from './account-tiers';
 export * from './account-territories';
 export * from './approval-policies';
 export * from './model-config'; // PG-199
+export * from './ai-provider-key'; // PG-199 BYOK
 
 // Deal Settings Schemas (PG-184)
 export * from './deal-settings';
