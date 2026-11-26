@@ -152,8 +152,12 @@ export interface ParsedEmailResponse {
 
 export function mapEmailRecord(record: any): ParsedEmailResponse {
   const metadata = (record.metadata as Record<string, any>) ?? {};
+  // Mail synced or imported from a provider keeps its text in body (its HTML, if any, is bodyHtml):
+  // an address like <ada@example.invalid> in that text is not markup.
+  const textInBody = metadata.source === 'outlook-sync' || metadata.source === 'coa-import';
   const isHtml =
-    metadata.isHtml ?? (typeof record.body === 'string' && /<[a-z][\s\S]*>/i.test(record.body));
+    metadata.isHtml ??
+    (!textInBody && typeof record.body === 'string' && /<[a-z][\s\S]*>/i.test(record.body));
   // A synced mail keeps the provider's HTML in bodyHtml (and its text in body); older mail and mail
   // composed here keep HTML in body. Either way it is sanitised again on the way out.
   const html = sanitizeEmailHtml(record.bodyHtml ?? (isHtml ? record.body : null));

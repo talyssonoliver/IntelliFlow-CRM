@@ -228,6 +228,17 @@ describe('mapEmailRecord: HTML is sanitised again on the way out', () => {
     expect(mapped.textBody).toBeUndefined();
   });
 
+  it('does not read an address in synced text as markup', () => {
+    const mapped = mapEmailRecord(
+      row('r', {
+        body: 'On Mon, John <john@example.invalid> wrote:\nsee <https://example.invalid/x>',
+        metadata: { source: 'outlook-sync' },
+      })
+    );
+    expect(mapped.htmlBody).toBeUndefined();
+    expect(mapped.textBody).toContain('<john@example.invalid>');
+  });
+
   it('keeps plain text as text', () => {
     const mapped = mapEmailRecord(row('r', { body: 'just words' }));
     expect(mapped.htmlBody).toBeUndefined();

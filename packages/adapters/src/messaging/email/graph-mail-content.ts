@@ -164,7 +164,7 @@ async function readGraph(
   /** True (the backfill): only a 404 means "gone"; any other refusal is an error, not a deletion. */
   strict = false
 ): Promise<{ found: boolean; receivedAt: Date | null; content: MailContent }> {
-  const id = encodeURIComponent(messageId);
+  const id = encodeURIComponent(safeSegment(messageId));
   type Body = {
     receivedDateTime?: string | null;
     body?: { content?: string | null; contentType?: string } | null;
@@ -195,9 +195,10 @@ async function readGraph(
   // hasAttachments is false for a mail whose only attachments are inline images, so a body that
   // names a cid: is read too (the Zoho reader does the same).
   const wantsList = message.hasAttachments === true || namesCid;
-  const attachments = wantsList
-    ? await orNothing(() => readAttachmentList(fetchImpl, accessToken, id), [])
-    : [];
+  // The sync keeps the mail when the list is refused; the backfill must not record "no attachments".
+  const readList = () => readAttachmentList(fetchImpl, accessToken, id);
+  let attachments: MailAttachmentMeta[] = [];
+  if (wantsList) attachments = strict ? await readList() : await orNothing(readList, []);
   const received = message.receivedDateTime ? new Date(message.receivedDateTime) : null;
   return {
     found: true,

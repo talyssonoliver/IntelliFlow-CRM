@@ -34,7 +34,10 @@ export function gmailAttachmentMeta(payload: GmailApiPart | undefined): MailAtta
     const mimeType = (part.mimeType ?? 'application/octet-stream').toLowerCase();
     const contentId = bareContentId(partHeader(part, 'Content-ID'));
     const asAttachment = ATTACHMENT_DISPOSITION.test(partHeader(part, 'Content-Disposition') ?? '');
-    const isFile = Boolean(part.filename?.trim()) || asAttachment || contentId !== null;
+    // A Content-ID alone does not make the mail's own text or HTML part a file.
+    const bodyText = mimeType === 'text/plain' || mimeType === 'text/html';
+    const isFile =
+      Boolean(part.filename?.trim()) || asAttachment || (contentId !== null && !bodyText);
     const hasBytes = Boolean(part.body?.attachmentId || part.body?.data);
     if (isFile && part.partId && hasBytes && !mimeType.startsWith('multipart/')) {
       found.push({

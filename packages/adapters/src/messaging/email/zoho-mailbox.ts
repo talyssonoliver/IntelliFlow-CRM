@@ -150,7 +150,7 @@ async function apiError(response: Response): Promise<MailboxTransportError> {
 }
 
 /** The keys whose values are Zoho ids (about 19 digits, past what a JSON number holds exactly). */
-const ID_KEYS = new Set(['accountId', 'messageId', 'folderId', 'threadId']);
+const ID_KEYS = new Set(['accountId', 'messageId', 'folderId', 'threadId', 'attachmentId']);
 
 /**
  * JSON.parse that keeps every id as the exact digits Zoho sent (each record keeps its own id),

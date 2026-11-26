@@ -231,6 +231,22 @@ describe('Gmail', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it('does not list the mail body part as a file because it has a Content-ID', () => {
+    expect(
+      gmailAttachmentMeta({
+        mimeType: 'multipart/related',
+        parts: [
+          {
+            partId: '0',
+            mimeType: 'text/html',
+            headers: [{ name: 'Content-ID', value: '<root>' }],
+            body: { data: b64('<p>x</p>'), size: 8 },
+          },
+        ],
+      })
+    ).toEqual([]);
+  });
+
   it('lists nothing for a mail with no attachment parts', () => {
     expect(gmailAttachmentMeta({ mimeType: 'text/plain', body: { data: b64('x') } })).toEqual([]);
   });
@@ -471,6 +487,25 @@ describe('Microsoft Graph', () => {
     ]);
   });
 
+  it('the backfill read fails, rather than record no attachments, when the list is refused', async () => {
+    const fetchImpl = vi.fn(async (input: RequestInfo | URL) =>
+      String(input).includes('/attachments?')
+        ? json({}, 400)
+        : json({
+            receivedDateTime: '2026-11-09T08:30:00Z',
+            body: { contentType: 'html', content: '<p>x</p>' },
+            hasAttachments: true,
+          })
+    );
+    await expect(readGraphMessage(TOKEN, 'g1', fetchImpl as never)).rejects.toMatchObject({
+      code: 'REJECTED',
+    });
+    // The sync still keeps the mail.
+    await expect(readGraphContent(TOKEN, 'g1', 't', fetchImpl as never)).resolves.toMatchObject({
+      attachments: [],
+    });
+  });
+
   it('names an attached item by what its raw content is (message, contact or event)', async () => {
     const answer = (content: string) =>
       vi.fn(async (input: RequestInfo | URL) =>
@@ -577,6 +612,23 @@ describe('Zoho', () => {
     const content = await round.messages[0]!.loadContent();
     expect(content.attachments).toEqual([]);
     expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps a 19-digit attachment id exact, never rounded', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(listing(',"hasAttachment":"1"'))
+      .mockResolvedValueOnce(new Response('{"data":{"content":"<p>x</p>"}}'))
+      .mockResolvedValueOnce(
+        new Response(
+          '{"data":{"attachments":[{"attachmentId":138907275303090133,"attachmentName":"a.pdf","attachmentSize":5}]}}'
+        )
+      );
+    const round = await readZohoFolder(TOKEN, REF, null, readOptions(fetchImpl));
+    const content = await round.messages[0]!.loadContent();
+    expect(content.attachments[0]?.providerAttachmentId).toBe(
+      '1100000000000000001:138907275303090133'
+    );
   });
 
   it('fetches a file on demand through its folder and id', async () => {

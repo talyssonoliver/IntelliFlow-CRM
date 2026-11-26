@@ -82,6 +82,14 @@ describe('buildEmailFrame', () => {
     expect(srcDoc).not.toContain('svg');
   });
 
+  it('opens image-map links in a new tab too, so none navigates the frame', () => {
+    const { srcDoc } = buildEmailFrame({
+      html: '<map name="m"><area href="https://example.invalid" shape="rect" coords="0,0,9,9"></map>',
+      showRemoteImages: false,
+    });
+    expect(srcDoc).toContain('target="_blank"');
+  });
+
   it('opens every link in a new tab with noopener', () => {
     const { srcDoc } = buildEmailFrame({
       html: '<a href="https://example.invalid">go</a>',

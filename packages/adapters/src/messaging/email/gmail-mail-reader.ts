@@ -18,7 +18,7 @@
 import { readAutomationSignals, type MailAutomationSignals } from './mail-automation-signals';
 import { MailboxTransportError } from './mailbox-errors';
 import { displayName, zohoAddresses as headerAddresses, zohoBodyText } from './zoho-text';
-import type { MailContent } from './mail-content';
+import { safeSegment, type MailContent } from './mail-content';
 import { gmailAttachmentMeta, gmailHtml } from './gmail-mail-content';
 
 const GMAIL_API = 'https://gmail.googleapis.com/gmail/v1/users/me';
@@ -247,7 +247,7 @@ async function loadFull(
   id: string,
   maxChars: number
 ): Promise<{ receivedAt: Date | null; content: MailContent }> {
-  const path = `/messages/${encodeURIComponent(id)}`;
+  const path = `/messages/${encodeURIComponent(safeSegment(id))}`;
   const readPart = async (attachmentId: string): Promise<string | undefined> => {
     const stored = await gmailGet<{ data?: string }>(
       fetchImpl,

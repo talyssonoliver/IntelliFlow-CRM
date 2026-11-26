@@ -137,7 +137,7 @@ export function buildEmailFrame(input: EmailFrameInput): EmailFrame {
       image.removeAttribute('src');
     }
   }
-  for (const link of Array.from(body.querySelectorAll('a'))) {
+  for (const link of Array.from(body.querySelectorAll('a, area'))) {
     link.setAttribute('target', '_blank');
     link.setAttribute('rel', 'noopener noreferrer nofollow');
   }
