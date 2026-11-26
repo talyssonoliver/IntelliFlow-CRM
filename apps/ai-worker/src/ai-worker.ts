@@ -77,6 +77,7 @@ import {
   createTenantAiActionsRecorder,
 } from './utils/tenant-ai-spend';
 import { setAiActionRecorder, setAiActionsAllowanceReader } from './lib/ai-actions-allowance';
+import { insightJobQueryBudget } from './lib/insight-query-budget';
 import { setPurposeSpendReader } from './lib/purpose-ceiling';
 import { aiConfig, loadAIConfig } from './config/ai.config';
 import { anthropicModelForTier } from './lib/anthropic-config';
@@ -1179,7 +1180,11 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
               context: 'background',
               route: job.queueName ?? job.name ?? 'background-job',
               requestId: correlationId,
-              budget: resolveBackgroundBudget(),
+              budget: insightJobQueryBudget(
+                job.queueName,
+                INSIGHT_QUEUE,
+                resolveBackgroundBudget()
+              ),
             },
             () => this._processJobImpl(job)
           )

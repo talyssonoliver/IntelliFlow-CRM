@@ -41,17 +41,33 @@ export function logNoClient(
   });
 }
 
-/** A failed mailbox round: the transport code, or for anything else (a bug, the database) its cause. */
+/**
+ * Consecutive failed rounds after which a mail-server connect failure is an error. Rounds back
+ * off 10, 20 and 40 minutes (outlook-inbox-sync.ts), so three failures in a row is about an hour
+ * of no mail: a person should look. One or two are a provider or network blip (a single
+ * CONNECT_FAILED at 06:28 on 25/11/2026 raised a high-severity Grafana alert and then recovered).
+ */
+export const REPEATED_CONNECT_FAILURES = 3;
+
+/**
+ * A failed mailbox round: the transport code, or for anything else (a bug, the database) its
+ * cause. `consecutiveFailures` counts this round. A transient connect failure is logged as a
+ * warning until it repeats; every other failure is an error at once.
+ */
 export function logFailure(
   mailboxId: string,
   error: unknown,
-  log: Pick<Console, 'error'> = console
+  consecutiveFailures: number = REPEATED_CONNECT_FAILURES,
+  log: Pick<Console, 'error' | 'warn'> = console
 ): void {
   const transport = error instanceof MailboxTransportError;
-  log.error('[email] inbox sync failed', {
+  const transient =
+    transport && error.code === 'CONNECT_FAILED' && consecutiveFailures < REPEATED_CONNECT_FAILURES;
+  (transient ? log.warn : log.error).call(log, '[email] inbox sync failed', {
     mailboxId,
     code: transport ? error.code : 'CONNECT_FAILED',
     ...(transport ? {} : errorCause(error)),
+    ...(transient ? { consecutiveFailures, retry: 'with backoff' } : {}),
   });
 }
 
