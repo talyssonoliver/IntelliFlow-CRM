@@ -22,6 +22,16 @@ describe('saveName', () => {
     expect(saveName('nul')).toBe('_nul');
   });
 
+  it('shortens the stem, never the final extension, so an inner .exe cannot become the one saved', () => {
+    const name = `${'a'.repeat(196)}.exe.pdf`;
+    const saved = saveName(name);
+    expect(saved.endsWith('.pdf')).toBe(true);
+    expect(saved).toHaveLength(200);
+    expect(saved.endsWith('.exe')).toBe(false);
+    // A long name with a long "extension" is simply cut.
+    expect(saveName(`${'b'.repeat(300)}.${'c'.repeat(40)}`)).toHaveLength(200);
+  });
+
   it('falls back when nothing is left, and caps the length', () => {
     expect(saveName('...')).toBe('attachment');
     expect(saveName('x'.repeat(500))).toHaveLength(200);

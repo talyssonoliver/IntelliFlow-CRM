@@ -76,15 +76,28 @@ for (const property of [...BOX, ...TEXT]) ALLOWED_STYLES[property] = SAFE_VALUE;
 ALLOWED_STYLES['display'] = [/^(block|inline|inline-block|table|table-row|table-cell)$/i];
 ALLOWED_STYLES['float'] = [/^(left|right|none)$/i];
 
-const TRACKER_PIXEL = /^\s*[0-2](?:\.\d+)?(?:px)?\s*$/;
+const SIZE_UNITS = ['px', 'pt', 'rem', 'em', '%'];
 
+/** A length of 2 or less in any unit (a tracking pixel), with or without !important. */
 function pixelSized(value: string | undefined): boolean {
-  return value !== undefined && TRACKER_PIXEL.test(value);
+  if (value === undefined) return false;
+  let text = value.trim().toLowerCase();
+  if (text.endsWith('!important')) text = text.slice(0, -'!important'.length).trim();
+  const unit = SIZE_UNITS.find((candidate) => text.endsWith(candidate));
+  if (unit) text = text.slice(0, -unit.length).trim();
+  const size = Number(text);
+  return text !== '' && Number.isFinite(size) && size >= 0 && size <= 2;
 }
 
+/** The value of one declaration in an inline style, read without a pattern. */
 function styleSize(style: string | undefined, property: 'width' | 'height'): string | undefined {
-  const match = new RegExp(`(?:^|;)\\s*${property}\\s*:\\s*([^;]+)`, 'i').exec(style ?? '');
-  return match?.[1];
+  for (const declaration of (style ?? '').split(';')) {
+    const colon = declaration.indexOf(':');
+    if (colon > 0 && declaration.slice(0, colon).trim().toLowerCase() === property) {
+      return declaration.slice(colon + 1);
+    }
+  }
+  return undefined;
 }
 
 /** An image the reader would never see (a tracking pixel), or one left with no usable source. */
@@ -183,8 +196,13 @@ const OPTIONS: sanitizeHtml.IOptions = {
     }),
     img: (tagName, attribs) => {
       const src = attribs['src'] ?? '';
+      // The scheme as sanitize-html and browsers read it: whitespace and control characters ignored.
+      const scheme = [...src]
+        .filter((char) => char.charCodeAt(0) > 32)
+        .join('')
+        .toLowerCase();
       const keep =
-        !src.toLowerCase().startsWith('data:') ||
+        !scheme.startsWith('data:') ||
         (RASTER_DATA.test(src) && src.length <= MAX_DATA_IMAGE_CHARS);
       const { src: _dropped, ...rest } = attribs;
       // Judged on the raw attributes (the style allow-list would hide `display:none`): a pixel or a

@@ -88,6 +88,33 @@ async function orNothing<T>(read: () => Promise<T>, fallback: T): Promise<T> {
   }
 }
 
+/** `contentId` exists only on fileAttachment, so it is selected through the cast; contentBytes is never selected. */
+const LIST_SELECT = 'id,name,contentType,size,isInline,microsoft.graph.fileAttachment/contentId';
+const LIST_SELECT_BASIC = 'id,name,contentType,size,isInline';
+
+/** The attachments list as metadata; without the cast select if Graph refuses it (then no cid mapping, but the files are still listed). */
+async function readAttachmentList(
+  fetchImpl: typeof fetch,
+  accessToken: string,
+  id: string
+): Promise<MailAttachmentMeta[]> {
+  const read = async (select: string): Promise<MailAttachmentMeta[]> => {
+    const list = await graphGet(
+      fetchImpl,
+      accessToken,
+      `/messages/${id}/attachments?$select=${select}&$top=${String(MAX_ATTACHMENTS_PER_MAIL)}`,
+      IMMUTABLE
+    );
+    return graphAttachmentMeta((await readJsonBody<{ value?: GraphAttachment[] }>(list)).value);
+  };
+  try {
+    return await read(LIST_SELECT);
+  } catch (error) {
+    if (asTransportError(error).code !== 'REJECTED') throw asTransportError(error);
+    return read(LIST_SELECT_BASIC);
+  }
+}
+
 /**
  * The HTML body and the attachments' metadata of one message; `text` is what the delta already
  * read. A read Graph refuses for this mail leaves that part out (the text is kept); a dead token or
@@ -138,17 +165,11 @@ async function readGraph(
   }, {});
   const isHtml = (message.body?.contentType ?? 'html').toLowerCase() === 'html';
   const html = isHtml ? capHtml(message.body?.content) : null;
-  const attachments = message.hasAttachments
-    ? await orNothing(async () => {
-        const list = await graphGet(
-          fetchImpl,
-          accessToken,
-          `/messages/${id}/attachments?$select=id,name,contentType,size,isInline,contentId&$top=${String(MAX_ATTACHMENTS_PER_MAIL)}`,
-          IMMUTABLE
-        );
-        const body = await readJsonBody<{ value?: GraphAttachment[] }>(list);
-        return graphAttachmentMeta(body.value);
-      }, [] as MailAttachmentMeta[])
+  // hasAttachments is false for a mail whose only attachments are inline images, so a body that
+  // names a cid: is read too (the Zoho reader does the same).
+  const wantsList = message.hasAttachments === true || /cid:/i.test(html ?? '');
+  const attachments = wantsList
+    ? await orNothing(() => readAttachmentList(fetchImpl, accessToken, id), [])
     : [];
   const received = message.receivedDateTime ? new Date(message.receivedDateTime) : null;
   return {

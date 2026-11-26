@@ -299,8 +299,59 @@ describe('Microsoft Graph', () => {
       ['a2', 'logo1', true],
     ]);
     const urls = fetchImpl.mock.calls.map((c) => String(c[0]));
-    expect(urls[1]).toContain('$select=id,name,contentType,size,isInline,contentId');
+    expect(urls[1]).toContain(
+      '$select=id,name,contentType,size,isInline,microsoft.graph.fileAttachment/contentId'
+    );
     expect(urls.some((u) => u.includes('/$value'))).toBe(false);
+  });
+
+  it('reads the attachments list for a mail whose body names a cid: even when hasAttachments is false', async () => {
+    const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).includes('/attachments?')) {
+        return json({
+          value: [
+            {
+              '@odata.type': '#microsoft.graph.fileAttachment',
+              id: 'i1',
+              name: 'logo.png',
+              contentType: 'image/png',
+              size: 5,
+              isInline: true,
+              contentId: 'logo1',
+            },
+          ],
+        });
+      }
+      return json({
+        body: { contentType: 'html', content: '<img src="cid:logo1">' },
+        hasAttachments: false,
+      });
+    });
+    const content = await readGraphContent(TOKEN, 'g1', '', fetchImpl as never);
+    expect(content.attachments.map((a) => a.contentId)).toEqual(['logo1']);
+    // Without a cid: and without attachments, the list is not read.
+    const plain = vi.fn(async () =>
+      json({ body: { contentType: 'html', content: '<p>x</p>' }, hasAttachments: false })
+    );
+    await readGraphContent(TOKEN, 'g1', '', plain as never);
+    expect(plain).toHaveBeenCalledTimes(1);
+  });
+
+  it('lists the files without cid mapping when Graph refuses the cast select', async () => {
+    const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('fileAttachment/contentId')) return json({}, 400);
+      if (url.includes('/attachments?')) {
+        return json({
+          value: [
+            { '@odata.type': '#microsoft.graph.fileAttachment', id: 'a1', name: 'q.pdf', size: 3 },
+          ],
+        });
+      }
+      return json({ body: { contentType: 'html', content: '<p>x</p>' }, hasAttachments: true });
+    });
+    const content = await readGraphContent(TOKEN, 'g1', '', fetchImpl as never);
+    expect(content.attachments.map((a) => [a.fileName, a.contentId])).toEqual([['q.pdf', null]]);
   });
 
   it('keeps the text when Graph refuses the HTML read for one mail, but not on a dead token', async () => {

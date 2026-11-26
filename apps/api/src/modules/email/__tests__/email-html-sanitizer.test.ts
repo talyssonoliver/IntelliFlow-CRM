@@ -91,6 +91,19 @@ describe('sanitizeEmailHtml', () => {
     expect(out).toContain('https://cdn.example.invalid/hero.png');
   });
 
+  it('catches pixels sized with !important, other units or upper case, and padded data: schemes', () => {
+    const out = clean(
+      '<img src="https://t.example.invalid/a.gif" style="width:1px !important;height:1px !important">' +
+        '<img src="https://t.example.invalid/b.gif" style="width:0pt;height:0pt">' +
+        '<img src="https://t.example.invalid/c.gif" style="height:1PX" width="50">' +
+        '<img src=" data:image/svg+xml;base64,PHN2Zz4=" width="40">' +
+        '<img src="da\tta:image/svg+xml;base64,PHN2Zz4=" width="40">' +
+        '<img src="https://cdn.example.invalid/ok.png" width="300">'
+    );
+    expect(out).not.toMatch(/t\.example|svg/i);
+    expect(out).toContain('https://cdn.example.invalid/ok.png');
+  });
+
   it('keeps cid: images (inline attachments) and small raster data: images, drops other schemes', () => {
     const out = clean(
       '<img src="cid:logo@example.invalid" alt="logo">' +
