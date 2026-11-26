@@ -63,9 +63,19 @@ function makePrismaWithEvents(events: FixtureEvent[]) {
       return uniq;
     }
     const want = args?.where?.tenantId;
-    return events.filter((e) => e.tenantId === want);
+    const types: string[] | undefined = args?.where?.eventType?.in;
+    const slim = args?.select && !args.select.payload;
+    return events
+      .filter((e) => e.tenantId === want && (!types || types.includes(e.eventType)))
+      .map((e) => (slim ? { ...e, payload: undefined } : e));
   });
-  return { aIMonitoringEvent: { findMany } } as any;
+  const aggregate = vi.fn(async () => ({
+    _count: { _all: events.length },
+    _max: {
+      recordedAt: events.length ? new Date(Math.max(...events.map((e) => +e.recordedAt))) : null,
+    },
+  }));
+  return { aIMonitoringEvent: { findMany, aggregate } } as any;
 }
 
 const baseEvent = (over: Record<string, unknown>) => ({
@@ -223,8 +233,10 @@ describe('RedisMonitoringPublisher (IFC-214)', () => {
     await vi.advanceTimersByTimeAsync(5000);
     await vi.advanceTimersByTimeAsync(5000);
     await vi.advanceTimersByTimeAsync(2000); // total 12s
-    // 2 ticks completed
-    expect(redis.set.mock.calls.length).toBe(10);
+    // 2 ticks fired (2 marker probes); the data never changed, so only the
+    // first one published (5 set calls = 1 tenant x 5 kinds).
+    expect(prisma.aIMonitoringEvent.aggregate).toHaveBeenCalledTimes(2);
+    expect(redis.set.mock.calls.length).toBe(5);
     await pub.stop();
   });
 
@@ -429,13 +441,13 @@ describe('RedisMonitoringPublisher (IFC-214)', () => {
       else process.env.AI_MONITORING_REDIS_TTL_SECONDS = savedTtl;
     });
 
-    it('publishes every 60s by default, not every 5s', async () => {
+    it('publishes every 5 min by default, not every 5s', async () => {
       const redis = makeRedis();
       const prisma = makePrismaWithEvents([baseEvent({ eventType: 'latency', value: 100 })]);
       const pub = new RedisMonitoringPublisher(redis, prisma);
       pub.start();
 
-      await vi.advanceTimersByTimeAsync(59_000);
+      await vi.advanceTimersByTimeAsync(299_000);
       expect(redis.set).not.toHaveBeenCalled();
 
       await vi.advanceTimersByTimeAsync(1_000);
@@ -443,14 +455,14 @@ describe('RedisMonitoringPublisher (IFC-214)', () => {
       await pub.stop();
     });
 
-    it('defaults the TTL to 6x the cadence (360s at 60s)', async () => {
+    it('defaults the TTL to 6x the cadence (1800s at 5 min)', async () => {
       const redis = makeRedis();
       const prisma = makePrismaWithEvents([baseEvent({ eventType: 'latency', value: 100 })]);
       const pub = new RedisMonitoringPublisher(redis, prisma);
 
       await pub.tick();
 
-      for (const call of redis.set.mock.calls) expect(call[3]).toBe(360);
+      for (const call of redis.set.mock.calls) expect(call[3]).toBe(1800);
     });
 
     it('keeps the env override for the interval, and the TTL follows it', async () => {
@@ -475,6 +487,99 @@ describe('RedisMonitoringPublisher (IFC-214)', () => {
       await pub.tick();
 
       for (const call of redis.set.mock.calls) expect(call[3]).toBe(900);
+    });
+  });
+
+  describe('egress: skip unchanged, slim columns', () => {
+    const rowReads = (prisma: any) =>
+      prisma.aIMonitoringEvent.findMany.mock.calls.filter((c: any[]) => !c[0].distinct).length;
+
+    it('unchanged table: second tick reads 0 rows and writes nothing', async () => {
+      const redis = makeRedis();
+      const prisma = makePrismaWithEvents([baseEvent({ eventType: 'latency', value: 100 })]);
+      const pub = new RedisMonitoringPublisher(redis, prisma, { intervalMs: 300_000 });
+      await pub.tick();
+      const readsAfterFirst = rowReads(prisma);
+      const setsAfterFirst = redis.set.mock.calls.length;
+      expect(readsAfterFirst).toBeGreaterThan(0);
+
+      vi.advanceTimersByTime(300_000);
+      const second = await pub.tick();
+
+      expect(second).toEqual({ written: 0, skipped: 0 });
+      expect(rowReads(prisma)).toBe(readsAfterFirst);
+      expect(redis.set.mock.calls.length).toBe(setsAfterFirst);
+    });
+
+    it('a new event triggers exactly one more publish', async () => {
+      const redis = makeRedis();
+      const events = [baseEvent({ eventType: 'latency', value: 100 })];
+      const prisma = makePrismaWithEvents(events);
+      const pub = new RedisMonitoringPublisher(redis, prisma, { intervalMs: 300_000 });
+      await pub.tick();
+      events.push(
+        baseEvent({
+          eventType: 'latency',
+          value: 200,
+          recordedAt: new Date('2026-04-27T00:01:00Z'),
+        })
+      );
+      const r = await pub.tick();
+      expect(r.written).toBe(5);
+      expect((await pub.tick()).written).toBe(0);
+    });
+
+    it('extends the TTL before it runs out without reading any rows', async () => {
+      const redis = makeRedis();
+      const prisma = makePrismaWithEvents([baseEvent({ eventType: 'latency', value: 100 })]);
+      const pub = new RedisMonitoringPublisher(redis, prisma, {
+        intervalMs: 300_000,
+        ttlSeconds: 1800,
+      });
+      await pub.tick();
+      const reads = rowReads(prisma);
+      vi.advanceTimersByTime(899_000);
+      expect((await pub.tick()).written).toBe(0);
+      vi.advanceTimersByTime(2_000); // past half of the 1800 s TTL
+      expect((await pub.tick()).written).toBe(5);
+      expect(rowReads(prisma)).toBe(reads);
+    });
+
+    it('a failed redis write is retried with a full read on the next tick', async () => {
+      const redis = makeRedis();
+      redis.set.mockRejectedValueOnce(new Error('redis down'));
+      const prisma = makePrismaWithEvents([baseEvent({ eventType: 'latency', value: 100 })]);
+      const pub = new RedisMonitoringPublisher(redis, prisma);
+      expect((await pub.tick()).skipped).toBe(1);
+      expect((await pub.tick()).written).toBe(5);
+    });
+
+    it('fetches only needed columns: payload only for drift/hallucination, no unused types', async () => {
+      const redis = makeRedis();
+      const prisma = makePrismaWithEvents([baseEvent({ eventType: 'latency', value: 100 })]);
+      await new RedisMonitoringPublisher(redis, prisma).tick();
+      const perTenant = prisma.aIMonitoringEvent.findMany.mock.calls
+        .map((c: any[]) => c[0])
+        .filter((a: any) => !a.distinct);
+      const withPayload = perTenant.filter((a: any) => a.select.payload);
+      const slim = perTenant.filter((a: any) => !a.select.payload);
+      expect(withPayload).toHaveLength(1);
+      expect(withPayload[0].where.eventType.in).toEqual(['drift', 'hallucination']);
+      expect(slim).toHaveLength(1);
+      expect(slim[0].where.eventType.in).toEqual(['latency', 'roi_cost', 'roi_value']);
+    });
+
+    it('snapshot payloads keep drift/hallucination payload fields', async () => {
+      const redis = makeRedis();
+      const prisma = makePrismaWithEvents([
+        baseEvent({ eventType: 'drift', flagged: true, payload: { pValue: 0.01 } }),
+        baseEvent({ eventType: 'hallucination', payload: { confidence: 0.9 } }),
+      ]);
+      await new RedisMonitoringPublisher(redis, prisma).tick();
+      const get = (k: string) =>
+        JSON.parse(redis.set.mock.calls.find((c) => (c[0] as string).endsWith(k))![1] as string);
+      expect(get(':drift').history[0].pValue).toBe(0.01);
+      expect(get(':hallucination').recentResults[0].confidence).toBe(0.9);
     });
   });
 });
