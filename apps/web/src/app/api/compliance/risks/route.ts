@@ -29,7 +29,8 @@ function findProjectRoot(startDir: string): string {
   return startDir;
 }
 
-function loadRiskData(): Risk[] {
+/** `available` is false when the register file is missing or unreadable, so an absent register is never shown as zero risks. */
+function loadRiskData(): { risks: Risk[]; available: boolean } {
   const projectRoot = findProjectRoot(process.cwd());
   const riskRegisterPath = path.join(projectRoot, 'artifacts', 'misc', 'risk-register.json');
 
@@ -37,13 +38,13 @@ function loadRiskData(): Risk[] {
     if (fs.existsSync(riskRegisterPath)) {
       const content = fs.readFileSync(riskRegisterPath, 'utf-8');
       const data = JSON.parse(content);
-      return data.risks || [];
+      return { risks: data.risks || [], available: true };
     }
   } catch (error) {
     console.error('Failed to load risk register:', error);
   }
 
-  return [];
+  return { risks: [], available: false };
 }
 
 function calculateSummary(risks: Risk[]): RiskSummary {
@@ -83,12 +84,13 @@ export async function GET(request: NextRequest) {
   const denied = await requireSignedIn(request);
   if (denied) return denied;
   try {
-    const risks = loadRiskData();
+    const { risks, available } = loadRiskData();
     const summary = calculateSummary(risks);
 
     const response: RiskHeatMapResponse = {
       risks,
       summary,
+      registerAvailable: available,
       lastUpdated: new Date().toISOString(),
     };
 

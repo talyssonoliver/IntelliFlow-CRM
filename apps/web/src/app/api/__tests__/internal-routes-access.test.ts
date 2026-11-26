@@ -38,7 +38,6 @@ import * as adrCreate from '../adr/create/route';
 import * as adrIndex from '../adr/index/route';
 import * as adrStatus from '../adr/status/route';
 import * as adrValidate from '../adr/validate/route';
-import * as complianceDetail from '../compliance/[standardId]/route';
 import * as complianceRisks from '../compliance/risks/route';
 import * as complianceTimeline from '../compliance/timeline/route';
 import * as reports from '../quality-reports/route';
@@ -78,7 +77,6 @@ const OPERATOR_READS: [string, unknown][] = [
 ];
 
 const SIGNED_IN_READS: [string, unknown][] = [
-  ['compliance/[standardId] GET', complianceDetail.GET],
   ['compliance/risks GET', complianceRisks.GET],
   ['compliance/timeline GET', complianceTimeline.GET],
 ];
