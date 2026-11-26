@@ -459,13 +459,13 @@ describe('createEmbeddings()', () => {
       vi.stubEnv('OPENROUTER_BASE_URL', '');
     });
 
-    it('calls OpenRouter /embeddings with the default free Nemotron model', async () => {
+    it('calls OpenRouter /embeddings with the default free Nemotron 3.5 model (3-embed-1b ended 2026-11-23, HTTP 410)', async () => {
       const { createEmbeddings } = await importFactory('openrouter');
       createEmbeddings('free');
 
       expect(OpenAIEmbeddings).toHaveBeenCalledOnce();
       const args = embeddingArgs();
-      expect(args.model).toBe('nvidia/nemotron-3-embed-1b:free');
+      expect(args.model).toBe('nvidia/nemotron-3.5-embed-1b:free');
       expect(args.apiKey).toBe('test-openrouter-key');
       expect((args.configuration as Record<string, unknown>).baseURL).toBe(
         'https://openrouter.ai/api/v1'
@@ -475,11 +475,11 @@ describe('createEmbeddings()', () => {
     });
 
     it('OPENROUTER_EMBEDDING_MODEL selects another :free model', async () => {
-      vi.stubEnv('OPENROUTER_EMBEDDING_MODEL', 'nvidia/nemotron-3.5-embed-1b:free');
+      vi.stubEnv('OPENROUTER_EMBEDDING_MODEL', 'example/other-embed-1b:free');
       const { createEmbeddings } = await importFactory('openrouter');
       createEmbeddings('free');
 
-      expect(embeddingArgs().model).toBe('nvidia/nemotron-3.5-embed-1b:free');
+      expect(embeddingArgs().model).toBe('example/other-embed-1b:free');
     });
 
     it('refuses a paid model at the first embed call and never sends it', async () => {
@@ -496,7 +496,7 @@ describe('createEmbeddings()', () => {
     it('prices embeddings as the OpenRouter model id (a :free id meters at $0)', async () => {
       const { embeddingsPricingKey } = await importFactory('openrouter');
 
-      expect(embeddingsPricingKey('free')).toBe('nvidia/nemotron-3-embed-1b:free');
+      expect(embeddingsPricingKey('free')).toBe('nvidia/nemotron-3.5-embed-1b:free');
     });
   });
 
