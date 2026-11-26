@@ -18,7 +18,7 @@ import {
   MAX_INLINE_IMAGES,
   MAX_INLINE_IMAGE_BYTES,
   buildEmailFrame,
-  referencedContentIds,
+  resolveContentIds,
 } from '@/lib/email/email-frame';
 import { saveName } from '@/lib/email/save-name';
 
@@ -57,6 +57,106 @@ function isEmbeddable(type: string): boolean {
   return (INLINE_IMAGE_TYPES as readonly string[]).includes(type.toLowerCase());
 }
 
+/** The inline images to fetch and how the body's ids map to them: the effect runs again when this changes. */
+function keyOf(
+  todo: readonly EmailBodyAttachment[],
+  cidMap: Readonly<Record<string, string>>
+): string {
+  const ids = todo.map((a) => [a.id, a.contentId].join(':')).join('|');
+  return [ids, JSON.stringify(cidMap)].join('#');
+}
+
+interface InlineLoad {
+  list: readonly EmailBodyAttachment[];
+  cidMap: Readonly<Record<string, string>>;
+  fetchFile: (attachmentId: string) => Promise<{ contentType: string; contentBase64: string }>;
+  isCancelled: () => boolean;
+  onImages: (images: Record<string, string>) => void;
+  onSettled: (attachmentId: string) => void;
+}
+
+/**
+ * Inline (cid:) images, one at a time: each is a request to the mail provider, and the server limits
+ * how many a user can have running. An image is keyed by the id the body names (one attachment can
+ * serve several spellings of it); one that fails or is not a raster type stays blank.
+ */
+/** One inline image's data URL, keyed by every id the body names for it; null when it cannot be drawn. */
+async function inlineImageOf(
+  load: InlineLoad,
+  attachment: EmailBodyAttachment
+): Promise<Record<string, string> | null> {
+  try {
+    const file = await load.fetchFile(attachment.id!);
+    if (!isEmbeddable(file.contentType)) return null;
+    const data = `data:${file.contentType};base64,${file.contentBase64}`;
+    const keyed: Record<string, string> = {};
+    for (const [named, cid] of Object.entries(load.cidMap)) {
+      if (cid === attachment.contentId) keyed[named] = data;
+    }
+    return keyed;
+  } catch {
+    return null; // that image stays blank
+  }
+}
+
+async function loadInlineImages(load: InlineLoad): Promise<void> {
+  const found: Record<string, string> = {};
+  for (const attachment of load.list) {
+    if (load.isCancelled()) return;
+    const keyed = await inlineImageOf(load, attachment);
+    if (load.isCancelled()) return;
+    if (keyed) {
+      Object.assign(found, keyed);
+      load.onImages({ ...found });
+    }
+    load.onSettled(attachment.id!);
+  }
+}
+
+/** Which `cid:` the body names each fetchable inline attachment serves, and which of them are fetched. */
+function planInline(
+  htmlBody: string | undefined,
+  attachments: readonly EmailBodyAttachment[]
+): { cidMap: Record<string, string>; todo: EmailBodyAttachment[] } {
+  const fetchable = attachments.filter((a) => a.id && a.onDemand && a.contentId);
+  const cidMap = htmlBody
+    ? resolveContentIds(
+        htmlBody,
+        fetchable.map((a) => a.contentId!)
+      )
+    : {};
+  const matched = new Set(Object.values(cidMap));
+  const todo = fetchable
+    .filter((a) => matched.has(a.contentId!))
+    .filter((a) => a.size <= MAX_INLINE_IMAGE_BYTES)
+    .slice(0, MAX_INLINE_IMAGES);
+  return { cidMap, todo };
+}
+
+/**
+ * The attachments listed to download. An inline image is left out only while it is (or will be)
+ * drawn in the body; one that is not drawn (too large, an unsupported type, not referenced, failed)
+ * is listed so it can still be downloaded.
+ */
+function listedFiles(
+  attachments: readonly EmailBodyAttachment[],
+  state: {
+    todo: readonly EmailBodyAttachment[];
+    cidMap: Readonly<Record<string, string>>;
+    inlineImages: Readonly<Record<string, string>>;
+    settled: Readonly<Record<string, boolean>>;
+  }
+): EmailBodyAttachment[] {
+  const drawing = new Set(state.todo.map((a) => a.id));
+  return attachments.filter((a) => {
+    if (!a.isInline || !a.id || !drawing.has(a.id)) return true;
+    const drawn = Object.entries(state.cidMap).some(
+      ([named, cid]) => cid === a.contentId && state.inlineImages[named]
+    );
+    return !drawn && state.settled[a.id] === true;
+  });
+}
+
 export function EmailBody({
   emailId,
   htmlBody,
@@ -75,16 +175,14 @@ export function EmailBody({
 
   // Inline (cid:) images: fetched through the proxy when the mail is shown, never stored. The
   // effect runs again only when the set of images to fetch changes (callers pass fresh arrays).
-  const wanted = new Set(htmlBody ? referencedContentIds(htmlBody) : []);
-  const todo = attachments
-    .filter((a) => a.id && a.onDemand && a.contentId && wanted.has(a.contentId.toLowerCase()))
-    .filter((a) => a.size <= MAX_INLINE_IMAGE_BYTES)
-    .slice(0, MAX_INLINE_IMAGES);
+  const { cidMap, todo } = planInline(htmlBody, attachments);
   const todoRef = useRef(todo);
   todoRef.current = todo;
+  const cidMapRef = useRef(cidMap);
+  cidMapRef.current = cidMap;
   const utilsRef = useRef(utils);
   utilsRef.current = utils;
-  const todoKey = todo.map((a) => `${a.id}:${a.contentId}`).join('|');
+  const todoKey = keyOf(todo, cidMap);
   useEffect(() => {
     const list = todoRef.current;
     // A different mail starts with no images of the last one (Content-IDs are often generic).
@@ -92,30 +190,15 @@ export function EmailBody({
     setSettled({});
     if (list.length === 0) return;
     let cancelled = false;
-    // One at a time: each is a request to the mail provider, and the server limits how many a
-    // user can have running.
-    (async () => {
-      const found: Record<string, string> = {};
-      for (const a of list) {
-        if (cancelled) return;
-        try {
-          const file = await utilsRef.current.emailAttachments.fetch.fetch({
-            emailId,
-            attachmentId: a.id!,
-          });
-          if (cancelled) return;
-          if (isEmbeddable(file.contentType)) {
-            found[a.contentId!.toLowerCase()] =
-              `data:${file.contentType};base64,${file.contentBase64}`;
-            setInlineImages({ ...found });
-          }
-        } catch {
-          // that image stays blank
-        }
-        if (cancelled) return;
-        setSettled((now) => ({ ...now, [a.id!]: true }));
-      }
-    })().catch(() => undefined);
+    loadInlineImages({
+      list,
+      cidMap: cidMapRef.current,
+      fetchFile: (attachmentId) =>
+        utilsRef.current.emailAttachments.fetch.fetch({ emailId, attachmentId }),
+      isCancelled: () => cancelled,
+      onImages: setInlineImages,
+      onSettled: (id) => setSettled((now) => ({ ...now, [id]: true })),
+    }).catch(() => undefined);
     return () => {
       cancelled = true;
     };
@@ -129,15 +212,7 @@ export function EmailBody({
     [htmlBody, showImages, inlineImages]
   );
 
-  // An inline image is left out of the list only while it is (or will be) drawn in the body; one
-  // that is not drawn (too large, an unsupported type, not referenced, failed) is listed to download.
-  const drawing = new Set(todo.map((a) => a.id));
-  const files = attachments.filter((a) => {
-    if (!a.isInline) return true;
-    if (!a.id || !drawing.has(a.id)) return true;
-    const drawn = Boolean(a.contentId && inlineImages[a.contentId.toLowerCase()]);
-    return !drawn && settled[a.id] === true;
-  });
+  const files = listedFiles(attachments, { todo, cidMap, inlineImages, settled });
 
   async function download(attachment: EmailBodyAttachment) {
     if (!attachment.id) return;

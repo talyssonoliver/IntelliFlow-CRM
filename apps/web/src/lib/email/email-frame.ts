@@ -22,13 +22,34 @@ export const INLINE_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'imag
 /** `src=cid:x`, `src="cid:x"` or `src='cid:x'`. */
 const CID_SRC = /(\bsrc\s*=\s*)(["']?)cid:([^"'\s>]+)\2/gi;
 
-/** The Content-IDs the body's images name (`cid:` URLs), lower-cased and decoded. */
+/** The Content-IDs the body's images name (`cid:` URLs), decoded, case kept, once each. */
 export function referencedContentIds(html: string): string[] {
   const found = new Set<string>();
   for (const match of html.matchAll(CID_SRC)) {
-    found.add(safeDecode(match[3] ?? '').toLowerCase());
+    found.add(safeDecode(match[3] ?? ''));
   }
   return [...found];
+}
+
+/**
+ * Which attachment Content-ID each `cid:` in the body means. An exact match wins; failing that, a
+ * case-insensitive one counts only when exactly one attachment fits (providers differ in case, but
+ * two ids that differ only by case are different images).
+ */
+export function resolveContentIds(
+  html: string,
+  attachmentIds: readonly string[]
+): Record<string, string> {
+  const resolved: Record<string, string> = {};
+  for (const wanted of referencedContentIds(html)) {
+    if (attachmentIds.includes(wanted)) {
+      resolved[wanted] = wanted;
+      continue;
+    }
+    const loose = attachmentIds.filter((id) => id.toLowerCase() === wanted.toLowerCase());
+    if (new Set(loose).size === 1) resolved[wanted] = loose[0]!;
+  }
+  return resolved;
 }
 
 function safeDecode(value: string): string {
@@ -43,7 +64,7 @@ export interface EmailFrameInput {
   html: string;
   /** Load https images from other sites (default: blocked). */
   showRemoteImages: boolean;
-  /** Content-ID (lower-case) to a `data:image/...` URL already fetched through the attachment proxy. */
+  /** Content-ID as the body names it (case kept) to a `data:image/...` URL already fetched through the attachment proxy. */
   inlineImages?: Readonly<Record<string, string>>;
 }
 
@@ -75,8 +96,9 @@ export function buildEmailFrame(input: EmailFrameInput): EmailFrame {
   const resolved = input.html.replaceAll(
     CID_SRC,
     (_all, prefix: string, _quote: string, id: string) => {
-      const data = inline[safeDecode(id).toLowerCase()];
-      return `${prefix}"${data ?? ''}"`;
+      const key = safeDecode(id);
+      const data = Object.hasOwn(inline, key) ? inline[key] : '';
+      return `${prefix}"${data}"`;
     }
   );
   const body = DOMPurify.sanitize(resolved, {

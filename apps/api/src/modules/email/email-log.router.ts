@@ -27,6 +27,7 @@ import { mapEmailRecord, type ParsedEmailResponse } from './inbound.router';
 
 const emailIdInput = z.object({ emailId: recordIdSchema });
 const LEAD_EMAILS_LIMIT = 200;
+const LEAD_EMAILS_MAX_PAGES = 5;
 
 export interface EmailLinkDto {
   logged: boolean;
@@ -214,23 +215,37 @@ export const emailLogRouter = createTRPCRouter({
         select: { id: true },
       });
       if (!lead) throw new TRPCError({ code: 'NOT_FOUND', message: 'Lead not found.' });
-      const rows: any[] = await c.prismaWithTenant.emailRecord.findMany({
-        where: {
-          tenantId,
-          metadata: { path: ['leadId'], equals: input.leadId },
-          // Someone else's own mail is left out in the query, so it never uses up the limit.
-          ...(isEmailAdmin(c) ? {} : { OR: [{ userId: null }, { userId: c.tenant.userId }] }),
-        },
-        include: { attachments: true },
-        // The newest mail when a lead has more than the limit; the thread is then sorted oldest first.
-        orderBy: { createdAt: 'desc' },
-        take: LEAD_EMAILS_LIMIT,
-      });
-      const visible = rows.filter((row) => {
-        if ((row.metadata as { isDraft?: unknown } | null)?.isDraft === true) return false;
-        // Someone else's own mail is theirs; an email admin sees all of the tenant's.
-        return !row.userId || row.userId === c.tenant.userId || isEmailAdmin(c);
-      });
+      const where = {
+        tenantId,
+        metadata: { path: ['leadId'], equals: input.leadId },
+        // Someone else's own mail is left out in the query, so it never uses up the limit.
+        ...(isEmailAdmin(c) ? {} : { OR: [{ userId: null }, { userId: c.tenant.userId }] }),
+      };
+      // Newest first by the provider's date (mail not yet backfilled has none: createdAt is it).
+      // Drafts are not part of the thread, so pages are read until the limit of mails is reached.
+      const visible: any[] = [];
+      for (
+        let page = 0;
+        page < LEAD_EMAILS_MAX_PAGES && visible.length < LEAD_EMAILS_LIMIT;
+        page++
+      ) {
+        const rows: any[] = await c.prismaWithTenant.emailRecord.findMany({
+          where,
+          include: { attachments: true },
+          orderBy: [
+            { sentAt: { sort: 'desc', nulls: 'last' } },
+            { createdAt: 'desc' },
+            { id: 'desc' },
+          ],
+          take: LEAD_EMAILS_LIMIT,
+          skip: page * LEAD_EMAILS_LIMIT,
+        });
+        for (const row of rows) {
+          if ((row.metadata as { isDraft?: unknown } | null)?.isDraft !== true) visible.push(row);
+        }
+        if (rows.length < LEAD_EMAILS_LIMIT) break;
+      }
+      visible.splice(LEAD_EMAILS_LIMIT);
       const at = (row: any): number => (row.sentAt ?? row.createdAt).getTime();
       visible.sort((a, b) => at(a) - at(b) || String(a.id).localeCompare(String(b.id)));
       return { emails: visible.map(mapEmailRecord) };

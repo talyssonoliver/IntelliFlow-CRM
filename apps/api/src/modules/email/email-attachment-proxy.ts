@@ -34,8 +34,20 @@ export interface ProxiedAttachment {
   contentBase64: string;
 }
 
-/** Content types that are never served as-is to a browser tab that may render them. */
 const SAFE_FALLBACK_TYPE = 'application/octet-stream';
+
+/** The extension an attached item's name gets once its content type is known (items are named by subject). */
+const ITEM_EXTENSIONS: Record<string, string> = {
+  'message/rfc822': '.eml',
+  'text/vcard': '.vcf',
+  'text/calendar': '.ics',
+};
+
+function withExtension(name: string, contentType: string): string {
+  const extension = ITEM_EXTENSIONS[contentType];
+  const named = /\.[a-z0-9]{1,5}$/i.test(name);
+  return extension && !named ? `${name}${extension}` : name;
+}
 
 function notFound(): TRPCError {
   return new TRPCError({ code: 'NOT_FOUND', message: 'Attachment not found.' });
@@ -220,9 +232,11 @@ async function readFromProvider(
       }
       throw error;
     }
+    const contentType =
+      file.contentType?.split(';')[0]?.trim() || row.fileType || SAFE_FALLBACK_TYPE;
     return {
-      fileName: row.fileName,
-      contentType: file.contentType?.split(';')[0]?.trim() || row.fileType || SAFE_FALLBACK_TYPE,
+      fileName: withExtension(row.fileName, contentType),
+      contentType,
       size: file.bytes.length,
       contentBase64: file.bytes.toString('base64'),
     };

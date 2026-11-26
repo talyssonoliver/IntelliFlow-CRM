@@ -90,23 +90,26 @@ function pixelSized(value: string | undefined): boolean {
   return text !== '' && Number.isFinite(size) && size >= 0 && size <= 2;
 }
 
-/** The value of one declaration in an inline style, read without a pattern. */
-function styleSize(style: string | undefined, property: 'width' | 'height'): string | undefined {
+/** Every value declared for a property in an inline style, read without a pattern. */
+function styleSizes(style: string | undefined, property: 'width' | 'height'): string[] {
+  const values: string[] = [];
   for (const declaration of (style ?? '').split(';')) {
     const colon = declaration.indexOf(':');
     if (colon > 0 && declaration.slice(0, colon).trim().toLowerCase() === property) {
-      return declaration.slice(colon + 1);
+      values.push(declaration.slice(colon + 1));
     }
   }
-  return undefined;
+  return values;
 }
 
 /** An image the reader would never see (a tracking pixel), or one left with no usable source. */
 function isTrackerOrEmptyImage(attribs: Record<string, string>): boolean {
   if (!attribs['src']) return true;
   if (pixelSized(attribs['width']) || pixelSized(attribs['height'])) return true;
-  if (pixelSized(styleSize(attribs['style'], 'width'))) return true;
-  if (pixelSized(styleSize(attribs['style'], 'height'))) return true;
+  // Any declaration of a tiny size counts: a later one can override a larger one before it.
+  for (const property of ['width', 'height'] as const) {
+    if (styleSizes(attribs['style'], property).some(pixelSized)) return true;
+  }
   return /display\s*:\s*none/i.test(attribs['style'] ?? '');
 }
 
@@ -218,5 +221,9 @@ const OPTIONS: sanitizeHtml.IOptions = {
 export function sanitizeEmailHtml(html: string | null | undefined): string | null {
   if (!html) return null;
   const clean = sanitizeHtml(html, OPTIONS).trim();
-  return clean.length > 0 ? clean : null;
+  if (clean.length === 0) return null;
+  // Empty wrappers left after trackers were removed are nothing to read: the text body is used.
+  const hasImage = clean.includes('<img');
+  const hasText = sanitizeHtml(clean, { allowedTags: [], allowedAttributes: {} }).trim().length > 0;
+  return hasImage || hasText ? clean : null;
 }

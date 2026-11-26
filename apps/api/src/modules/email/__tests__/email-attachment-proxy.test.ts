@@ -173,6 +173,25 @@ describe('emailAttachments.fetch', () => {
     await expect(caller().fetch(INPUT)).resolves.toMatchObject({ size: 1 });
   });
 
+  it('gives an attached message, contact or event the extension its content needs', async () => {
+    setRows(row({ fileName: 'Quote request', providerAttachmentId: 'loc-1' }));
+    provider.fetchGraphAttachment.mockResolvedValue({
+      bytes: Buffer.from('BEGIN:VCARD'),
+      contentType: 'text/vcard',
+    });
+    await expect(caller().fetch(INPUT)).resolves.toMatchObject({
+      fileName: 'Quote request.vcf',
+      contentType: 'text/vcard',
+    });
+    // A name that already has an extension is left alone.
+    setRows(row({ fileName: 'invite.ics' }));
+    provider.fetchGraphAttachment.mockResolvedValue({
+      bytes: Buffer.from('BEGIN:VCALENDAR'),
+      contentType: 'text/calendar',
+    });
+    await expect(caller().fetch(INPUT)).resolves.toMatchObject({ fileName: 'invite.ics' });
+  });
+
   it("serves the caller's own mail", async () => {
     setRows(row({}, { userId: OWNER }));
     await expect(caller().fetch(INPUT)).resolves.toMatchObject({ size: 10 });

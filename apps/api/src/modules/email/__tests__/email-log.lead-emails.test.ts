@@ -50,7 +50,11 @@ describe('emailLog.leadEmails', () => {
     });
     expect(args.include).toEqual({ attachments: true });
     // The newest 200 when a lead has more; the thread is then ordered oldest first.
-    expect(args.orderBy).toEqual({ createdAt: 'desc' });
+    expect(args.orderBy).toEqual([
+      { sentAt: { sort: 'desc', nulls: 'last' } },
+      { createdAt: 'desc' },
+      { id: 'desc' },
+    ]);
     expect(args.take).toBe(200);
   });
 
@@ -78,23 +82,33 @@ describe('emailLog.leadEmails', () => {
     ]);
   });
 
-  it("leaves out drafts and other users' own mail, except for an email admin", async () => {
-    const rows = [
-      row('draft', { metadata: { leadId: LEAD, isDraft: true } }),
-      row('mine', { userId: TEST_UUIDS.user1 }),
-      row('theirs', { userId: 'someone-else' }),
-      row('inbound'),
-    ];
-    (prismaMock.emailRecord.findMany as any).mockResolvedValue(rows);
-    const asMember = await member().leadEmails({ leadId: LEAD });
-    expect(asMember.emails.map((e) => e.id).sort()).toEqual(['inbound', 'mine']);
-    const asAdmin = await admin().leadEmails({ leadId: LEAD });
+  it("leaves other users' own mail out in the query, except for an email admin", async () => {
+    (prismaMock.emailRecord.findMany as any).mockResolvedValue([]);
+    await member().leadEmails({ leadId: LEAD });
+    expect((prismaMock.emailRecord.findMany as any).mock.calls.at(-1)[0].where).toEqual({
+      tenantId,
+      metadata: { path: ['leadId'], equals: LEAD },
+      OR: [{ userId: null }, { userId: TEST_UUIDS.user1 }],
+    });
+    await admin().leadEmails({ leadId: LEAD });
     // An email admin's query has no per-user condition.
     expect((prismaMock.emailRecord.findMany as any).mock.calls.at(-1)[0].where).toEqual({
       tenantId,
       metadata: { path: ['leadId'], equals: LEAD },
     });
-    expect(asAdmin.emails.map((e) => e.id).sort()).toEqual(['inbound', 'mine', 'theirs']);
+  });
+
+  it('leaves drafts out, and reads on past them so they never use up the limit', async () => {
+    const drafts = Array.from({ length: 200 }, (_, n) =>
+      row(`draft-${n}`, { metadata: { leadId: LEAD, isDraft: true } })
+    );
+    (prismaMock.emailRecord.findMany as any)
+      .mockResolvedValueOnce(drafts)
+      .mockResolvedValueOnce([row('old-1'), row('old-2')]);
+    const { emails } = await member().leadEmails({ leadId: LEAD });
+    expect(emails.map((e) => e.id).sort()).toEqual(['old-1', 'old-2']);
+    const calls = (prismaMock.emailRecord.findMany as any).mock.calls;
+    expect(calls.map((c: any[]) => c[0].skip)).toEqual([0, 200]);
   });
 
   it('returns the sanitised HTML with the text as the fallback, and attachment metadata', async () => {

@@ -467,8 +467,27 @@ describe('Microsoft Graph', () => {
         { id: 'b', name: 'link', '@odata.type': '#microsoft.graph.referenceAttachment' },
       ])
     ).toMatchObject([
-      { providerAttachmentId: 'a', fileName: 'Quote.eml', fileType: 'message/rfc822' },
+      { providerAttachmentId: 'a', fileName: 'Quote', fileType: 'application/octet-stream' },
     ]);
+  });
+
+  it('names an attached item by what its raw content is (message, contact or event)', async () => {
+    const answer = (content: string) =>
+      vi.fn(async (input: RequestInfo | URL) =>
+        String(input).endsWith('/$value') ? new Response(content) : json({ size: content.length })
+      );
+    for (const [content, type] of [
+      ['BEGIN:VCARD\r\nFN:Alex', 'text/vcard'],
+      ['BEGIN:VCALENDAR\r\nVERSION:2.0', 'text/calendar'],
+      ['From: a@example.invalid\r\nSubject: x\r\n\r\nbody', 'message/rfc822'],
+    ] as const) {
+      const file = await fetchGraphAttachment(
+        TOKEN,
+        { messageId: 'g1', attachmentId: 'a1' },
+        answer(content) as never
+      );
+      expect(file.contentType).toBe(type);
+    }
   });
 
   it('finds a cid: in a body too large to store, so inline images are still listed', async () => {

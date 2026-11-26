@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 import { describe, it, expect } from 'vitest';
-import { EMAIL_FRAME_SANDBOX, buildEmailFrame, referencedContentIds } from '../email-frame';
+import {
+  EMAIL_FRAME_SANDBOX,
+  buildEmailFrame,
+  referencedContentIds,
+  resolveContentIds,
+} from '../email-frame';
 
 const PNG = 'data:image/png;base64,iVBORw0KGgo=';
 
@@ -61,7 +66,7 @@ describe('buildEmailFrame', () => {
     const { srcDoc, blockedImageCount } = buildEmailFrame({
       html,
       showRemoteImages: false,
-      inlineImages: { 'logo@mail': PNG },
+      inlineImages: { 'Logo@mail': PNG },
     });
     expect(srcDoc).toContain(PNG);
     expect(srcDoc).not.toContain('cid:');
@@ -98,11 +103,41 @@ describe('referencedContentIds', () => {
     expect(srcDoc).toContain(PNG);
   });
 
-  it('lists the cids the body names, decoded and lower-cased, once each', () => {
+  it('keeps the case of a Content-ID, so ids that differ only by case stay different images', () => {
+    expect(referencedContentIds('<img src="cid:Logo"><img src="cid:logo">')).toEqual([
+      'Logo',
+      'logo',
+    ]);
+    const { srcDoc } = buildEmailFrame({
+      html: '<img src="cid:Logo"><img src="cid:logo">',
+      showRemoteImages: false,
+      inlineImages: { Logo: PNG, logo: 'data:image/gif;base64,R0lGODlhAQABAAAAACw=' },
+    });
+    expect(srcDoc).toContain(PNG);
+    expect(srcDoc).toContain('R0lGODlh');
+    // A body naming __proto__ never reads from the object's prototype.
+    expect(
+      buildEmailFrame({ html: '<img src="cid:__proto__">', showRemoteImages: false }).srcDoc
+    ).not.toContain('object');
+  });
+
+  it('matches an attachment id exactly, else by case only when exactly one fits', () => {
+    const html =
+      '<img src="cid:Logo"><img src="cid:banner"><img src="cid:dup"><img src="cid:none">';
+    expect(resolveContentIds(html, ['Logo', 'Banner', 'DUP', 'dup', 'logo'])).toEqual({
+      Logo: 'Logo',
+      banner: 'Banner',
+      dup: 'dup',
+    });
+    expect(resolveContentIds('<img src="cid:x">', ['X', 'x'])).toEqual({ x: 'x' });
+    expect(resolveContentIds('<img src="cid:ab">', ['AB', 'Ab'])).toEqual({});
+  });
+
+  it('lists the cids the body names, decoded, once each', () => {
     expect(
       referencedContentIds(
         '<img src="cid:A%40b"><img src=\'cid:c\'><img src="cid:c"><img src="https://x">'
       )
-    ).toEqual(['a@b', 'c']);
+    ).toEqual(['A@b', 'c']);
   });
 });

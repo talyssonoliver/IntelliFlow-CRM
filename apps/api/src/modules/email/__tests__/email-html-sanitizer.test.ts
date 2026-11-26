@@ -91,6 +91,23 @@ describe('sanitizeEmailHtml', () => {
     expect(out).toContain('https://cdn.example.invalid/hero.png');
   });
 
+  it('catches a pixel size declared again after a larger one, and falls back to text for empty wrappers', () => {
+    const out = clean(
+      '<img src="https://t.example.invalid/a.gif" style="width:600px;width:1px;height:600px;height:1px">' +
+        '<p>kept</p>'
+    );
+    expect(out).toBe('<p>kept</p>');
+    expect(
+      sanitizeEmailHtml(
+        '<div><img src="https://t.example.invalid/o.gif" width="1" height="1"></div>'
+      )
+    ).toBeNull();
+    // An image-only mail is still a mail.
+    expect(
+      sanitizeEmailHtml('<div><img src="https://cdn.example.invalid/a.png" width="300"></div>')
+    ).toContain('cdn.example.invalid');
+  });
+
   it('does not let a line break hide a url() from the value check', () => {
     const out = clean(
       '<div style="background:linear-gradient(red,\nred),url(https://t.example.invalid/open)">a</div>' +

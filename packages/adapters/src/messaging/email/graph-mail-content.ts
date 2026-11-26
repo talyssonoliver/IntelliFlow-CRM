@@ -77,14 +77,12 @@ export function graphAttachmentMeta(list: GraphAttachment[] | undefined): MailAt
     if (out.length >= MAX_ATTACHMENTS_PER_MAIL) break;
     const type = a['@odata.type'] ?? '';
     if (!a.id || /referenceAttachment$/i.test(type)) continue;
-    const isItem = /itemAttachment$/i.test(type);
     const name = a.name?.trim() || `attachment-${out.length + 1}`;
     out.push({
       providerAttachmentId: a.id.slice(0, 512),
-      fileName: (isItem && !/\.[a-z0-9]{1,5}$/i.test(name) ? `${name}.eml` : name).slice(0, 255),
-      fileType: (
-        a.contentType?.trim() || (isItem ? 'message/rfc822' : 'application/octet-stream')
-      ).slice(0, 127),
+      fileName: name.slice(0, 255),
+      // An attached message, contact or event has no content type until its content is read.
+      fileType: (a.contentType?.trim() || 'application/octet-stream').slice(0, 127),
       fileSize: Math.max(0, Math.trunc(a.size ?? 0)),
       contentId: bareContentId(a.contentId),
       isInline: a.isInline === true,
@@ -208,6 +206,17 @@ async function readGraph(
   };
 }
 
+/**
+ * What an attached item's raw content is: Graph returns a message as MIME, a contact as a vCard and
+ * an event as iCalendar, and gives such an attachment no content type of its own.
+ */
+function sniffItemType(bytes: Buffer): string {
+  const head = bytes.subarray(0, 64).toString('utf8').trimStart().toUpperCase();
+  if (head.startsWith('BEGIN:VCARD')) return 'text/vcard';
+  if (head.startsWith('BEGIN:VCALENDAR')) return 'text/calendar';
+  return 'message/rfc822';
+}
+
 /** One attachment's bytes, read from Graph now and never stored. */
 export async function fetchGraphAttachment(
   accessToken: string,
@@ -225,5 +234,5 @@ export async function fetchGraphAttachment(
   if ((info.size ?? 0) > MAX_ATTACHMENT_BYTES) throw new MailboxTransportError('REJECTED');
   const raw = await graphGet(fetchImpl, accessToken, `${path}/$value`, IMMUTABLE);
   const bytes = await readCapped(raw, MAX_ATTACHMENT_BYTES);
-  return { bytes, contentType: info.contentType ?? raw.headers.get('content-type') };
+  return { bytes, contentType: info.contentType || sniffItemType(bytes) };
 }
