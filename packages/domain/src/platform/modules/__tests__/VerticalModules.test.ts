@@ -135,6 +135,21 @@ describe('resolveEnabledModules overrides', () => {
     expect(modules).toContain('SUPPORT');
   });
 
+  it('an EXISTING_DATA row never enables a module the plan does not include', () => {
+    const overrides = [{ moduleId: 'LEGAL', enabled: true, origin: 'EXISTING_DATA' }] as const;
+    // Protected while the plan had LEGAL; a downgrade to STARTER switches it off again.
+    expect(
+      resolveEnabledModules({
+        plan: 'PROFESSIONAL',
+        businessType: 'TRADES_HOME_SERVICES',
+        overrides,
+      })
+    ).toContain('LEGAL');
+    expect(
+      resolveEnabledModules({ plan: 'STARTER', businessType: 'TRADES_HOME_SERVICES', overrides })
+    ).not.toContain('LEGAL');
+  });
+
   it('an enabled=false row switches a module off whatever its origin', () => {
     for (const origin of ['PLAN', 'OVERRIDE', 'EXISTING_DATA'] as const) {
       const modules = resolveEnabledModules({

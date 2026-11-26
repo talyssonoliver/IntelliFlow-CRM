@@ -100,6 +100,9 @@ export function resolveEnabledModules(input: ResolveModulesInput): ModuleId[] {
     if (override.moduleId === 'CORE_CRM') continue;
     if (!override.enabled) {
       enabled.delete(override.moduleId);
+    } else if (override.origin === 'EXISTING_DATA') {
+      // Data protection never hands out a paid module: after a downgrade the plan decides.
+      if (MODULE_PLAN_MAP[input.plan].includes(override.moduleId)) enabled.add(override.moduleId);
     } else if ((override.origin ?? 'OVERRIDE') !== 'PLAN') {
       enabled.add(override.moduleId);
     }
