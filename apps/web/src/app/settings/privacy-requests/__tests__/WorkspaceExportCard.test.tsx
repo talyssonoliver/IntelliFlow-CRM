@@ -116,6 +116,20 @@ describe('WorkspaceExportCard', () => {
     expect(screen.getByText(/The export failed/)).toBeInTheDocument();
   });
 
+  it('shows one link per part for a split export', async () => {
+    h.list = { data: [row({ partCount: 3 })], isLoading: false, isError: false };
+    h.link.mutateAsync.mockResolvedValue({
+      url: 'https://files.example.invalid/1',
+      links: [1, 2, 3].map((n) => ({ part: n, of: 3, url: `https://files.example.invalid/${n}` })),
+    });
+    render(<WorkspaceExportCard />);
+    expect(screen.getByText(/in 3 parts/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Get a new link' }));
+    const part2 = await screen.findByRole('link', { name: 'Part 2 of 3' });
+    expect(part2).toHaveAttribute('href', 'https://files.example.invalid/2');
+    expect(screen.getAllByRole('link')).toHaveLength(3);
+  });
+
   it('formats sizes', () => {
     expect(formatBytes(null)).toBe('');
     expect(formatBytes(10)).toBe('1 KB');

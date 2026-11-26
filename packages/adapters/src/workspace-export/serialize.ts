@@ -57,7 +57,7 @@ const PLAIN_NEGATIVE_NUMBER = /^-\d+(?:\.\d+)?$/;
  * lose something that way gets the same leading apostrophe; the JSON keeps the exact text.
  */
 function losesPrecisionInSpreadsheet(text: string): boolean {
-  if (/^0\d+$/.test(text)) return true;
+  if (/^-?0\d+(?:\.\d+)?$/.test(text)) return true;
   const m = /^-?(\d+)(?:\.(\d+))?$/.exec(text);
   return m !== null && (m[1]! + (m[2] ?? '')).replace(/^0+/, '').length > 15;
 }

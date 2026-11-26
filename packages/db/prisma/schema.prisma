@@ -349,6 +349,9 @@ model WorkspaceExportRequest {
   lastCleanupAttemptAt DateTime?
   /// Users who have been sent the download link (a failed recipient is retried on its own).
   emailedToUserIds String[] @default([])
+  /// The stored parts of the archive: { items: [{ part, path, bytes, sha256 }], manifestPath }.
+  /// storagePath stays part 1; archiveBytes is the total of all parts.
+  parts Json?
   error           String?
   requestedAt     DateTime               @default(now())
   startedAt       DateTime?

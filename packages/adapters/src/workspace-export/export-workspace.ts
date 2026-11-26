@@ -19,9 +19,14 @@
 import { Prisma } from '@intelliflow/db';
 import { createHash } from 'node:crypto';
 import { createReadStream, createWriteStream } from 'node:fs';
-import { rm } from 'node:fs/promises';
+import { rm, writeFile } from 'node:fs/promises';
 import type { Readable } from 'node:stream';
-import { ArchiveWriter, type ArchiveEntryInfo } from './archive-writer';
+import {
+  DEFAULT_MAX_PART_BYTES,
+  PartedArchive,
+  type PartInfo,
+  type PartedEntryInfo,
+} from './parted-archive';
 import {
   DEFAULT_EXPORT_FILE_BUCKETS,
   EXPORT_ENTITIES,
@@ -54,6 +59,8 @@ export interface RunWorkspaceExportOptions {
   buckets?: readonly string[];
   now?: () => Date;
   pageSize?: number;
+  /** A part is closed once it passes this size (default about 4 GB). Tests inject a small one. */
+  maxPartBytes?: number;
 }
 
 export interface ManifestFile {
@@ -61,8 +68,19 @@ export interface ManifestFile {
   kind: 'csv' | 'json' | 'stored-file' | 'readme' | 'workspace';
   entity?: string;
   rows?: number;
+  /** Which part (ZIP) of the export holds this file. */
+  part: number;
   bytes: number;
   sha256: string;
+}
+
+export interface ManifestPart {
+  part: number;
+  /** The name the part is downloaded as. */
+  file: string;
+  bytes: number | null;
+  /** null for part 1 inside its own manifest (it cannot hold its own hash): see the standalone manifest.json. */
+  sha256: string | null;
 }
 
 export interface WorkspaceExportManifest {
@@ -71,6 +89,8 @@ export interface WorkspaceExportManifest {
   requestId: string | null;
   workspace: { id: string; name: string; slug: string };
   generatedAt: string;
+  /** Every ZIP of the export, in order. */
+  parts: ManifestPart[];
   /** Rows per entity (the CSV and the JSON of one entity are checked to agree). */
   entities: Record<string, { rows: number; description: string }>;
   files: ManifestFile[];
@@ -79,9 +99,16 @@ export interface WorkspaceExportManifest {
 }
 
 export interface WorkspaceExportResult {
+  /** Part 1 (the only part of a small export). */
   archivePath: string;
+  /** All parts together. */
   archiveBytes: number;
+  /** Part 1. */
   archiveSha256: string;
+  /** Every part, local file and checksum. */
+  parts: PartInfo[];
+  /** The complete manifest as its own file, with the checksum of every part. */
+  manifestPath: string;
   manifest: WorkspaceExportManifest;
   /** Rows per entity, for the audit row. */
   rowCounts: Record<string, number>;
@@ -316,7 +343,14 @@ export function renderReadme(
     'manifest.json lists the sha256 of every file. On Linux or macOS: sha256sum data/leads.csv'
   );
   lines.push('On Windows (PowerShell): Get-FileHash data\\leads.csv -Algorithm SHA256');
-  lines.push('The sha256 of the whole ZIP is shown on the export request and in the email.');
+  lines.push('The sha256 of each ZIP is shown on the export request and in the email.');
+  if (manifest.parts.length > 1) {
+    lines.push(
+      `This export is split into ${manifest.parts.length} ZIP parts (each file says which part holds it in`
+    );
+    lines.push('manifest.json). Download all parts and extract them into one folder. The separate');
+    lines.push('manifest.json download lists every part with its size and sha256.');
+  }
   if (manifest.skippedFiles.length > 0 || manifest.warnings.length > 0) {
     lines.push('');
     lines.push('Notes on this export');
@@ -331,12 +365,12 @@ export function renderReadme(
 }
 
 interface ExportRun {
-  writer: ArchiveWriter;
+  writer: PartedArchive;
   files: ManifestFile[];
   entities: WorkspaceExportManifest['entities'];
   warnings: string[];
   skippedFiles: WorkspaceExportManifest['skippedFiles'];
-  track(info: ArchiveEntryInfo, extra: Omit<ManifestFile, 'bytes' | 'sha256'>): void;
+  track(info: PartedEntryInfo, extra: Omit<ManifestFile, 'bytes' | 'sha256' | 'part'>): void;
 }
 
 /** One entity: its CSV, then its JSON, each from its own keyset read. */
@@ -397,7 +431,7 @@ async function copyStoredFiles(
       }
       const entryName = `files/${bucket}/${obj.path.slice(tenantId.length + 1)}`;
       // An error while streaming corrupts the archive entry, so it fails the whole export.
-      run.track(await run.writer.addStream(entryName, stream), {
+      run.track(await run.writer.addStream(entryName, stream, obj.size), {
         path: entryName,
         kind: 'stored-file',
       });
@@ -422,7 +456,7 @@ export async function runWorkspaceExport(
   if (!tenant || tenant.id !== tenantId) throw new Error(`Workspace ${tenantId} not found`);
 
   const plans = buildPlans();
-  const writer = new ArchiveWriter(outputPath);
+  const writer = new PartedArchive(outputPath, opts.maxPartBytes ?? DEFAULT_MAX_PART_BYTES);
   const run: ExportRun = {
     writer,
     files: [],
@@ -430,7 +464,7 @@ export async function runWorkspaceExport(
     warnings: [],
     skippedFiles: [],
     track(info, extra) {
-      this.files.push({ ...extra, bytes: info.bytes, sha256: info.sha256 });
+      this.files.push({ ...extra, part: info.part, bytes: info.bytes, sha256: info.sha256 });
     },
   };
 
@@ -456,30 +490,61 @@ export async function runWorkspaceExport(
     }
     if (opts.files) await copyStoredFiles(run, opts.files, buckets, tenantId);
 
+    // Every data part is closed first, so the manifest can list their sizes and checksums.
+    const later = await writer.finalizeLaterParts();
+    const total = later.length + 1;
+    const partFile = (n: number) => partDownloadName(opts.requestId ?? null, n, total);
+    const partsFor = (first: PartInfo | null): ManifestPart[] => [
+      {
+        part: 1,
+        file: partFile(1),
+        bytes: first ? first.bytes : null,
+        sha256: first ? first.sha256 : null,
+      },
+      ...later.map((p) => ({
+        part: p.part,
+        file: partFile(p.part),
+        bytes: p.bytes,
+        sha256: p.sha256,
+      })),
+    ];
     const manifest: WorkspaceExportManifest = {
       format: EXPORT_FORMAT,
       version: EXPORT_FORMAT_VERSION,
       requestId: opts.requestId ?? null,
       workspace: { id: tenant.id, name: tenant.name, slug: tenant.slug },
       generatedAt: generatedAt.toISOString(),
+      parts: partsFor(null),
       entities: run.entities,
       files: run.files,
       skippedFiles: run.skippedFiles,
       warnings: run.warnings,
     };
     const readme = renderReadme(manifest, plans);
-    const readmeInfo = await writer.addGenerated('README.txt', (w) => w(readme));
+    const readmeInfo = await writer.addToFirstPart('README.txt', (w) => w(readme));
     manifest.files.unshift({ ...readmeInfo, path: 'README.txt', kind: 'readme' });
-    await writer.addGenerated('manifest.json', (w) => w(JSON.stringify(manifest, null, 2) + '\n'));
+    await writer.addToFirstPart('manifest.json', (w) =>
+      w(JSON.stringify(manifest, null, 2) + '\n')
+    );
 
-    const { bytes, sha256 } = await writer.finalize();
+    const first = await writer.finalizeFirstPart();
+    // The standalone copy is complete: part 1's own checksum can only be known now.
+    const manifestPath = `${outputPath}.manifest.json`;
+    await writeFile(
+      manifestPath,
+      JSON.stringify({ ...manifest, parts: partsFor(first) }, null, 2) + '\n',
+      'utf8'
+    );
+    const parts = [first, ...later];
     const rowCounts: Record<string, number> = {};
     for (const [name, e] of Object.entries(run.entities)) rowCounts[name] = e.rows;
     return {
       archivePath: outputPath,
-      archiveBytes: bytes,
-      archiveSha256: sha256,
-      manifest,
+      archiveBytes: parts.reduce((sum, p) => sum + p.bytes, 0),
+      archiveSha256: first.sha256,
+      parts,
+      manifestPath,
+      manifest: { ...manifest, parts: partsFor(first) },
       rowCounts,
       storedFileCount: run.files.filter((f) => f.kind === 'stored-file').length,
     };
@@ -487,6 +552,12 @@ export async function runWorkspaceExport(
     writer.abort();
     throw err;
   }
+}
+
+/** What a part is downloaded as: one ZIP keeps the plain name. */
+export function partDownloadName(requestId: string | null, part: number, total: number): string {
+  const base = requestId ? `workspace-export-${requestId}` : 'workspace-export';
+  return total > 1 ? `${base}-part-${part}.zip` : `${base}.zip`;
 }
 
 /** sha256 of a string, hex (used by tests and callers that verify the manifest). */

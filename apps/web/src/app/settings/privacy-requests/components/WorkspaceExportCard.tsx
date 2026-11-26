@@ -8,6 +8,7 @@
  * link valid for 14 days. A fresh link for a finished export can be issued here until it expires.
  * The server owns the rules (one export a day, one at a time); this card shows its answer.
  */
+import { useState } from 'react';
 import { Badge, Button, Card, toast } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { SectionHeader } from '@/components/shared/section-header';
@@ -32,6 +33,11 @@ export function formatBytes(bytes: number | null): string {
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+}
+
+/** " in 3 parts" for a split export, nothing for a single ZIP. */
+function partsLabel(count: number | undefined): string {
+  return count && count > 1 ? ' in ' + count + ' parts' : '';
 }
 
 function dateLabel(value: Date | string | null): string {
@@ -65,6 +71,10 @@ export function WorkspaceExportCard({ enabled = true }: Readonly<{ enabled?: boo
     onSuccess: () => utils.workspaceExport.invalidate(),
   });
   const link = trpc.workspaceExport.downloadLink.useMutation();
+  // The links of an export with several parts, shown under its row (one signed link per part).
+  const [partLinks, setPartLinks] = useState<
+    Record<string, Array<{ part: number; of: number; url: string }>>
+  >({});
 
   const rows = list.data ?? [];
   const busy = rows.some((r) => r.status === 'QUEUED' || r.status === 'RUNNING');
@@ -87,7 +97,11 @@ export function WorkspaceExportCard({ enabled = true }: Readonly<{ enabled?: boo
 
   const download = async (requestId: string) => {
     try {
-      const { url } = await link.mutateAsync({ requestId });
+      const { url, links } = await link.mutateAsync({ requestId });
+      if (links && links.length > 1) {
+        setPartLinks((prev) => ({ ...prev, [requestId]: links }));
+        return;
+      }
       window.location.assign(url);
     } catch (error) {
       toast({ title: 'No link', description: errorMessage(error), variant: 'destructive' });
@@ -129,7 +143,7 @@ export function WorkspaceExportCard({ enabled = true }: Readonly<{ enabled?: boo
                 </p>
                 <p className="text-muted-foreground">
                   {r.status === 'READY' &&
-                    `${formatBytes(r.archiveBytes)} · ${r.fileCount ?? 0} stored files · link valid until ${dateLabel(r.expiresAt)}`}
+                    `${formatBytes(r.archiveBytes)}${partsLabel(r.partCount)} · ${r.fileCount ?? 0} stored files · link valid until ${dateLabel(r.expiresAt)}`}
                   {r.status === 'FAILED' && 'The export failed. Request it again.'}
                   {r.status === 'EXPIRED' &&
                     `Expired ${dateLabel(r.expiresAt)}. Request a new one.`}
@@ -152,6 +166,17 @@ export function WorkspaceExportCard({ enabled = true }: Readonly<{ enabled?: boo
                   </Button>
                 )}
               </div>
+              {partLinks[r.id] && (
+                <ul className="basis-full space-y-1 text-sm" aria-label="Download links">
+                  {partLinks[r.id]!.map((l) => (
+                    <li key={l.part}>
+                      <a className="underline" href={l.url}>
+                        Part {l.part} of {l.of}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           ))}
         </ul>

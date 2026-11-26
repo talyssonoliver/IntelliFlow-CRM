@@ -12,6 +12,7 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import {
   ExportLinkError,
+  storedPartsOf,
   SupabaseExportStorage,
   issueDownloadLink,
   requestWorkspaceExport,
@@ -49,6 +50,8 @@ export interface WorkspaceExportDto {
   fileCount: number | null;
   archiveBytes: number | null;
   archiveSha256: string | null;
+  /** How many ZIP parts the export has (1 for a small one). */
+  partCount: number;
   totalRows: number | null;
   skippedFiles: number;
 }
@@ -123,6 +126,7 @@ export const workspaceExportRouter = createTRPCRouter({
       fileCount: r.fileCount,
       archiveBytes: r.archiveBytes === null ? null : Number(r.archiveBytes),
       archiveSha256: r.archiveSha256,
+      partCount: storedPartsOf(r).items.length || 1,
       ...countsOf(r.rowCounts),
     }));
   }),

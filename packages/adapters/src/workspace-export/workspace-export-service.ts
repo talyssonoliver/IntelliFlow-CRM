@@ -18,6 +18,8 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { partDownloadName } from './export-workspace';
+import { removeExportFiles } from './parted-archive';
 import {
   runWorkspaceExport,
   type ExportFileStorage,
@@ -280,29 +282,45 @@ export async function resolveExportRecipients(
   return users.filter((u) => u.email).map((u) => ({ userId: u.id, email: u.email }));
 }
 
+export interface ExportPartLink {
+  part: number;
+  of: number;
+  url: string;
+}
+
 export function renderExportEmail(input: {
   workspaceName: string;
-  url: string;
+  /** One signed link per part. */
+  links: ExportPartLink[];
+  manifestUrl?: string | null;
   expiresAt: Date;
   bytes: number | bigint;
   sha256: string;
 }): { subject: string; body: string } {
   const mb = (Number(input.bytes) / (1024 * 1024)).toFixed(1);
+  const multi = input.links.length > 1;
+  const until = input.expiresAt.toISOString().slice(0, 10);
   return {
     subject: `Your workspace data export is ready: ${input.workspaceName}`,
     body: [
       `The export of all data in the workspace "${input.workspaceName}" is ready.`,
       '',
-      `Download (private link, valid until ${input.expiresAt.toISOString().slice(0, 10)}):`,
-      input.url,
+      multi
+        ? `The export is split into ${input.links.length} ZIP parts. Download them all (private links, valid until ${until}):`
+        : `Download (private link, valid until ${until}):`,
+      ...input.links.flatMap((l) =>
+        multi ? [`Part ${l.part} of ${l.of}:`, l.url, ''] : [l.url, '']
+      ),
+      ...(input.manifestUrl
+        ? [`Manifest with the size and SHA-256 of every part: ${input.manifestUrl}`, '']
+        : []),
+      `Size: ${mb} MB${multi ? ' in total' : ''}. SHA-256 of ${multi ? 'part 1' : 'the ZIP'}: ${input.sha256}`,
       '',
-      `Size: ${mb} MB. SHA-256: ${input.sha256}`,
-      '',
-      'The ZIP holds one CSV and one JSON file for every kind of record, your stored files, a',
+      `${multi ? 'The ZIPs hold' : 'The ZIP holds'} one CSV and one JSON file for every kind of record, your stored files, a`,
       'README that explains each file, and a manifest with row counts and checksums.',
       '',
-      'Anyone with this link can download the archive until it expires, so keep it private. After',
-      `${input.expiresAt.toISOString().slice(0, 10)} the link stops working and the archive is deleted.`,
+      `Anyone with ${multi ? 'these links' : 'this link'} can download the archive until it expires, so keep ${multi ? 'them' : 'it'} private. After`,
+      `${until} the ${multi ? 'links stop' : 'link stops'} working and the archive is deleted.`,
     ].join('\n'),
   };
 }
@@ -310,6 +328,81 @@ export function renderExportEmail(input: {
 /** Where attempt `n` of a request stores its archive: one path per attempt, so runs never collide. */
 export function attemptArchivePath(tenantId: string, requestId: string, attempt: number): string {
   return `${tenantId}/${requestId}-${attempt}.zip`;
+}
+
+/** Where part `part` of attempt `n` is stored; part 1 keeps the plain path. */
+export function attemptPartPath(
+  tenantId: string,
+  requestId: string,
+  attempt: number,
+  part: number
+): string {
+  return part === 1
+    ? attemptArchivePath(tenantId, requestId, attempt)
+    : `${tenantId}/${requestId}-${attempt}-p${part}.zip`;
+}
+
+export function attemptManifestPath(tenantId: string, requestId: string, attempt: number): string {
+  return `${tenantId}/${requestId}-${attempt}-manifest.json`;
+}
+
+export interface StoredParts {
+  items: Array<{ part: number; path: string; bytes: number; sha256: string }>;
+  manifestPath: string | null;
+}
+
+/** The stored parts of a request row; a row from before parts existed is one part. */
+export function storedPartsOf(row: {
+  storagePath: string | null;
+  archiveBytes?: bigint | number | null;
+  archiveSha256?: string | null;
+  parts?: unknown;
+}): StoredParts {
+  const p = row.parts as StoredParts | null | undefined;
+  if (p && Array.isArray(p.items) && p.items.length > 0) return p;
+  return {
+    items: row.storagePath
+      ? [
+          {
+            part: 1,
+            path: row.storagePath,
+            bytes: Number(row.archiveBytes ?? 0),
+            sha256: row.archiveSha256 ?? '',
+          },
+        ]
+      : [],
+    manifestPath: null,
+  };
+}
+
+/** Signs one 14-day (at most) link per part, and one for the standalone manifest. */
+async function signPartLinks(
+  storage: Pick<ExportArchiveStorage, 'signedDownloadUrl'>,
+  requestId: string,
+  stored: StoredParts,
+  seconds: number
+): Promise<{ links: ExportPartLink[]; manifestUrl: string | null }> {
+  const of = stored.items.length;
+  const links: ExportPartLink[] = [];
+  for (const item of stored.items) {
+    links.push({
+      part: item.part,
+      of,
+      url: await storage.signedDownloadUrl(
+        item.path,
+        seconds,
+        partDownloadName(requestId, item.part, of)
+      ),
+    });
+  }
+  const manifestUrl = stored.manifestPath
+    ? await storage.signedDownloadUrl(
+        stored.manifestPath,
+        seconds,
+        `workspace-export-${requestId}-manifest.json`
+      )
+    : null;
+  return { links, manifestUrl };
 }
 
 /**
@@ -326,13 +419,18 @@ async function removeAttemptArchives(
   for (let n = 1; n <= upTo; n += 1) {
     const path = attemptArchivePath(request.tenantId, request.id, n);
     if (path === keep) continue;
-    await deps.archiveStorage.removeArchive(path).catch((err: unknown) => {
+    const onError = (err: unknown) => {
       if (strict) throw err;
       deps.log?.warn(
         { requestId: request.id, path, err: String(err) },
         'stale export archive not removed'
       );
-    });
+    };
+    await deps.archiveStorage.removeArchive(path).catch(onError);
+    // The later parts and the manifest of that attempt (their number is not recorded for a crash).
+    await deps.archiveStorage
+      .removeAttemptObjects?.(request.tenantId, request.id, n)
+      ?.catch(onError);
   }
 }
 
@@ -410,7 +508,11 @@ export async function processWorkspaceExport(
   const dir = deps.tmpDir ?? join(tmpdir(), 'intelliflow-workspace-export');
   const archivePath = join(dir, `${request.id}-${randomUUID()}.zip`);
   const storagePath = attemptArchivePath(request.tenantId, request.id, request.claimCount);
-  let uploaded = false;
+  const uploadedPaths: string[] = [];
+  const removeUploaded = async () => {
+    for (const p of uploadedPaths) await archiveStorage.removeArchive(p).catch(() => undefined);
+    uploadedPaths.length = 0;
+  };
   try {
     await mkdir(dir, { recursive: true });
     const result = await (deps.runExport ?? runWorkspaceExport)({
@@ -423,8 +525,41 @@ export async function processWorkspaceExport(
       now,
     });
 
-    uploaded = true;
-    await archiveStorage.uploadArchive(storagePath, archivePath);
+    const localParts =
+      result.parts && result.parts.length > 0
+        ? result.parts
+        : [
+            {
+              part: 1,
+              path: result.archivePath,
+              bytes: result.archiveBytes,
+              sha256: result.archiveSha256,
+            },
+          ];
+    const storedParts: StoredParts = {
+      items: localParts.map((p) => ({
+        part: p.part,
+        path: attemptPartPath(request.tenantId, request.id, request.claimCount, p.part),
+        bytes: p.bytes,
+        sha256: p.sha256,
+      })),
+      manifestPath: result.manifestPath
+        ? attemptManifestPath(request.tenantId, request.id, request.claimCount)
+        : null,
+    };
+    // Each part goes up with the standard upload; one request never carries more than a part.
+    for (const [i, item] of storedParts.items.entries()) {
+      uploadedPaths.push(item.path);
+      await archiveStorage.uploadArchive(item.path, localParts[i]!.path);
+    }
+    if (storedParts.manifestPath && result.manifestPath) {
+      uploadedPaths.push(storedParts.manifestPath);
+      await archiveStorage.uploadArchive(
+        storedParts.manifestPath,
+        result.manifestPath,
+        'application/json'
+      );
+    }
 
     const completedAt = now();
     const expiresAt = new Date(completedAt.getTime() + EXPORT_TTL_MS);
@@ -441,6 +576,7 @@ export async function processWorkspaceExport(
         },
         fileCount: result.storedFileCount,
         archiveBytes: BigInt(result.archiveBytes),
+        parts: storedParts as unknown as object,
         archiveSha256: result.archiveSha256,
         storageBucket: 'workspace-exports',
         storagePath,
@@ -452,13 +588,13 @@ export async function processWorkspaceExport(
     });
     if (ready.count === 0) {
       // Another run took this request over while we worked: its result stands, ours goes.
-      await archiveStorage.removeArchive(storagePath).catch(() => undefined);
+      await removeUploaded();
       return { status: 'skipped', requestId: request.id, reason: 'superseded' };
     }
-    uploaded = false;
+    uploadedPaths.length = 0;
 
     const emailed = await deliverLink(deps, request, {
-      storagePath,
+      stored: storedParts,
       expiresAt,
       bytes: result.archiveBytes,
       sha256: result.archiveSha256,
@@ -479,12 +615,12 @@ export async function processWorkspaceExport(
       })
       .catch(() => undefined);
     // An archive that was uploaded but never became READY is not left behind.
-    if (uploaded) await archiveStorage.removeArchive(storagePath).catch(() => undefined);
+    await removeUploaded();
     log.error({ requestId: request.id, err: message }, 'workspace export failed');
     throw err;
   } finally {
     clearInterval(heartbeat);
-    await rm(archivePath, { force: true }).catch(() => undefined);
+    await removeExportFiles(archivePath);
   }
 }
 
@@ -499,7 +635,7 @@ async function deliverLink(
     emailedToUserIds?: string[];
   },
   info: {
-    storagePath: string;
+    stored: StoredParts;
     expiresAt: Date;
     bytes: number | bigint;
     sha256: string;
@@ -512,14 +648,16 @@ async function deliverLink(
   try {
     const recipients = await resolveExportRecipients(deps.prisma, request);
     if (recipients.length === 0) return false;
-    const url = await deps.archiveStorage.signedDownloadUrl(
-      info.storagePath,
-      remaining,
-      `workspace-export-${request.id}.zip`
+    const { links, manifestUrl } = await signPartLinks(
+      deps.archiveStorage,
+      request.id,
+      info.stored,
+      remaining
     );
     const mail = renderExportEmail({
       workspaceName: info.workspaceName,
-      url,
+      links,
+      manifestUrl,
       expiresAt: info.expiresAt,
       bytes: info.bytes,
       sha256: info.sha256,
@@ -585,7 +723,12 @@ export async function issueDownloadLink(
   archiveStorage: Pick<ExportArchiveStorage, 'signedDownloadUrl'>,
   input: { tenantId: string; requestId: string },
   now: () => Date = () => new Date()
-): Promise<{ url: string; expiresAt: Date }> {
+): Promise<{
+  url: string;
+  expiresAt: Date;
+  links: ExportPartLink[];
+  manifestUrl: string | null;
+}> {
   const row = await prisma.workspaceExportRequest.findFirst({
     where: { id: input.requestId, tenantId: input.tenantId },
   });
@@ -597,12 +740,13 @@ export async function issueDownloadLink(
     throw new ExportLinkError('not_ready', 'This export is not ready yet.');
   }
   const seconds = Math.floor((row.expiresAt.getTime() - now().getTime()) / 1000);
-  const url = await archiveStorage.signedDownloadUrl(
-    row.storagePath,
-    Math.min(seconds, EXPORT_LINK_TTL_SECONDS),
-    `workspace-export-${row.id}.zip`
+  const { links, manifestUrl } = await signPartLinks(
+    archiveStorage,
+    row.id,
+    storedPartsOf(row),
+    Math.min(seconds, EXPORT_LINK_TTL_SECONDS)
   );
-  return { url, expiresAt: row.expiresAt };
+  return { url: links[0]!.url, expiresAt: row.expiresAt, links, manifestUrl };
 }
 
 export interface SweepResult {
@@ -793,7 +937,7 @@ async function retryUnsentEmails(deps: ExportJobDeps, now: Date): Promise<number
       select: { name: true },
     });
     const ok = await deliverLink(deps, row, {
-      storagePath: row.storagePath,
+      stored: storedPartsOf(row),
       expiresAt: row.expiresAt,
       bytes: row.archiveBytes ?? 0,
       sha256: row.archiveSha256,
@@ -816,7 +960,13 @@ async function retryUnsentEmails(deps: ExportJobDeps, now: Date): Promise<number
 async function expireOldExports(deps: ExportJobDeps, now: Date): Promise<number> {
   const old = await deps.prisma.workspaceExportRequest.findMany({
     where: { status: 'READY', expiresAt: { lte: now } },
-    select: { id: true, tenantId: true, claimCount: true, storagePath: true },
+    select: {
+      id: true,
+      tenantId: true,
+      claimCount: true,
+      storagePath: true,
+      parts: true,
+    },
     // Never-tried first, then least recently tried: failing deletions rotate to the back.
     orderBy: { lastCleanupAttemptAt: { sort: 'asc', nulls: 'first' } },
     take: 50,
@@ -831,7 +981,10 @@ async function expireOldExports(deps: ExportJobDeps, now: Date): Promise<number>
       // Every attempt's archive goes, not only the kept one: a failed earlier cleanup must not
       // outlive the retention period. A failure keeps the row READY, so the next sweep retries.
       await removeAttemptArchives(deps, row, row.claimCount, row.storagePath ?? undefined, true);
-      if (row.storagePath) await deps.archiveStorage.removeArchive(row.storagePath);
+      // The kept attempt: every part and the manifest, explicitly.
+      const stored = storedPartsOf(row);
+      for (const item of stored.items) await deps.archiveStorage.removeArchive(item.path);
+      if (stored.manifestPath) await deps.archiveStorage.removeArchive(stored.manifestPath);
       await deps.prisma.workspaceExportRequest.update({
         where: { id: row.id },
         data: { status: 'EXPIRED' },

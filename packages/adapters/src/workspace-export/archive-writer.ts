@@ -80,6 +80,15 @@ export class ArchiveWriter {
     });
   }
 
+  /** Bytes that have reached the file so far (entries still in flight are not counted). */
+  get bytesWritten(): number {
+    return this.archiveDigest.bytes;
+  }
+
+  get entryCount(): number {
+    return this.names.size;
+  }
+
   private fail(err: Error): void {
     this.failure ??= err;
     this.rejectFailed(this.failure);

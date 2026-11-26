@@ -6,3 +6,4 @@ export * from './export-workspace';
 export * from './tenant-read-guard';
 export * from './supabase-export-storage';
 export * from './workspace-export-service';
+export * from './parted-archive';

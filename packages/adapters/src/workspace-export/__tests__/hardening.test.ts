@@ -23,6 +23,7 @@ import {
   requestExportForEndedSubscription,
   resolveExportRecipients,
   sweepWorkspaceExports,
+  issueDownloadLink,
   type ExportJobDeps,
 } from '../workspace-export-service';
 import { makeDb, readZip } from './helpers';
@@ -424,8 +425,9 @@ describe('review follow-ups', () => {
     tables.user.length = 0; // nobody to send to
     const { d, tmp } = deps(db);
     await sweepWorkspaceExports(d, async () => {});
-    const [stuck, later] = tables.workspaceExportRequest;
-    expect(stuck.updatedAt.getTime()).toBeGreaterThan(later.updatedAt.getTime() - 1);
+    const [stuck] = tables.workspaceExportRequest;
+    // Touched by the sweep (a later updatedAt), whatever the millisecond.
+    expect(stuck.updatedAt.getTime()).toBeGreaterThan(t0.getTime() - 1000);
     expect(stuck.emailedAt).toBeNull();
     rmSync(tmp, { recursive: true, force: true });
   });
@@ -994,5 +996,168 @@ describe('review follow-ups: finalize, spreadsheet precision, expiry order', () 
       lastCleanupAttemptAt: t0,
     });
     rmSync(tmp, { recursive: true, force: true });
+  });
+});
+
+describe('split exports: upload, email, links and cleanup treat every part together', () => {
+  const threeParts = (o: any) => ({
+    archivePath: o.outputPath,
+    archiveBytes: 3000,
+    archiveSha256: 'a'.repeat(64),
+    parts: [1, 2, 3].map((n) => ({
+      part: n,
+      path: `${o.outputPath}.p${n}`,
+      bytes: 1000,
+      sha256: String(n).repeat(64),
+    })),
+    manifestPath: `${o.outputPath}.manifest.json`,
+    rowCounts: {},
+    storedFileCount: 0,
+    manifest: { workspace: { id: T, name: 'Alpha', slug: 'alpha' }, skippedFiles: [] },
+  });
+  const queued = () => ({
+    id: 'r1',
+    tenantId: T,
+    status: 'QUEUED',
+    attempts: 0,
+    trigger: 'ADMIN',
+    requestedById: 'owner',
+    requestedAt: t0,
+    updatedAt: t0,
+  });
+
+  it('uploads every part and the manifest, stores them, and emails one link per part', async () => {
+    const { tables, db } = world([queued()]);
+    const uploads: Array<[string, string | undefined]> = [];
+    const signed: Array<[string, string]> = [];
+    const mails: string[] = [];
+    const { d, tmp } = deps(db, {
+      runExport: (async (o: any) => threeParts(o)) as never,
+      sendEmail: async (m) => void mails.push(m.body),
+    });
+    d.archiveStorage.uploadArchive = async (p, _l, type) => void uploads.push([p, type]);
+    d.archiveStorage.signedDownloadUrl = async (p, _s, name) => {
+      signed.push([p, name]);
+      return `https://storage.example.invalid/${p}`;
+    };
+    await processWorkspaceExport(d, { requestId: 'r1' });
+    expect(uploads).toEqual([
+      [`${T}/r1-1.zip`, undefined],
+      [`${T}/r1-1-p2.zip`, undefined],
+      [`${T}/r1-1-p3.zip`, undefined],
+      [`${T}/r1-1-manifest.json`, 'application/json'],
+    ]);
+    const row = tables.workspaceExportRequest[0];
+    expect(row).toMatchObject({ status: 'READY', storagePath: `${T}/r1-1.zip` });
+    expect(row.archiveBytes).toBe(3000n);
+    expect(row.parts.items.map((p: any) => p.path)).toEqual([
+      `${T}/r1-1.zip`,
+      `${T}/r1-1-p2.zip`,
+      `${T}/r1-1-p3.zip`,
+    ]);
+    expect(signed.map((s) => s[1])).toEqual([
+      'workspace-export-r1-part-1.zip',
+      'workspace-export-r1-part-2.zip',
+      'workspace-export-r1-part-3.zip',
+      'workspace-export-r1-manifest.json',
+    ]);
+    expect(mails[0]).toContain('Part 1 of 3:');
+    expect(mails[0]).toContain('Part 3 of 3:');
+    expect(mails[0]).toContain(`${T}/r1-1-p2.zip`);
+    expect(mails[0]).toContain('Manifest with the size and SHA-256 of every part');
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('removes every part already uploaded when a later upload fails', async () => {
+    const { db } = world([queued()]);
+    const { d, removed, tmp } = deps(db, { runExport: (async (o: any) => threeParts(o)) as never });
+    d.archiveStorage.uploadArchive = async (p) => {
+      if (p.endsWith('-p3.zip')) throw new Error('upload failed');
+    };
+    await expect(processWorkspaceExport(d, { requestId: 'r1' })).rejects.toThrow('upload failed');
+    expect(removed.sort()).toEqual([`${T}/r1-1-p2.zip`, `${T}/r1-1-p3.zip`, `${T}/r1-1.zip`]);
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('a new attempt clears the parts and manifest of the earlier ones, and expiry removes all', async () => {
+    const { tables, db } = world([{ ...queued(), attempts: 1, claimCount: 1 }]);
+    const asked: Array<[string, string, number]> = [];
+    const { d, removed, tmp } = deps(db, { runExport: (async (o: any) => threeParts(o)) as never });
+    d.archiveStorage.removeAttemptObjects = async (t, id, n) => void asked.push([t, id, n]);
+    await processWorkspaceExport(d, { requestId: 'r1' });
+    expect(asked).toEqual([[T, 'r1', 1]]);
+
+    removed.length = 0;
+    Object.assign(tables.workspaceExportRequest[0], { expiresAt: new Date(t0.getTime() - 1) });
+    await sweepWorkspaceExports(d, async () => {});
+    expect(tables.workspaceExportRequest[0].status).toBe('EXPIRED');
+    for (const p of ['r1-2.zip', 'r1-2-p2.zip', 'r1-2-p3.zip', 'r1-2-manifest.json']) {
+      expect(removed).toContain(`${T}/${p}`);
+    }
+    rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('issues one fresh link per part', async () => {
+    const { db } = world([
+      {
+        id: 'r1',
+        tenantId: T,
+        status: 'READY',
+        storagePath: `${T}/r1-1.zip`,
+        archiveSha256: 'a'.repeat(64),
+        archiveBytes: 3000n,
+        expiresAt: new Date(t0.getTime() + 86_400_000),
+        parts: {
+          items: [1, 2, 3].map((n) => ({
+            part: n,
+            path: n === 1 ? `${T}/r1-1.zip` : `${T}/r1-1-p${n}.zip`,
+            bytes: 1000,
+            sha256: 'a'.repeat(64),
+          })),
+          manifestPath: `${T}/r1-1-manifest.json`,
+        },
+        requestedAt: t0,
+        updatedAt: t0,
+      },
+    ]);
+    const link = await issueDownloadLink(
+      db,
+      { signedDownloadUrl: async (p) => `https://storage.example.invalid/${p}` },
+      { tenantId: T, requestId: 'r1' },
+      () => t0
+    );
+    expect(link.links.map((l) => `${l.part}/${l.of}`)).toEqual(['1/3', '2/3', '3/3']);
+    expect(link.url).toBe(link.links[0]!.url);
+    expect(link.manifestUrl).toContain('manifest.json');
+  });
+
+  it('removes the parts and manifest of an attempt from the bucket by name', async () => {
+    const storage = new SupabaseExportStorage('https://x.example.invalid', 'k'.repeat(20));
+    const removedBatches: string[][] = [];
+    (storage as any).client = {
+      storage: {
+        from: () => ({
+          list: async () => ({
+            data: [
+              { id: '1', name: 'r1-1.zip' },
+              { id: '2', name: 'r1-1-p2.zip' },
+              { id: '3', name: 'r1-1-manifest.json' },
+              { id: '4', name: 'r1-10.zip' },
+              { id: '5', name: 'r1-2.zip' },
+              { id: '6', name: 'r10-1.zip' },
+            ],
+            error: null,
+          }),
+          remove: async (paths: string[]) => {
+            removedBatches.push(paths);
+            return { error: null };
+          },
+        }),
+      },
+    };
+    await storage.removeAttemptObjects(T, 'r1', 1);
+    expect(removedBatches).toEqual([
+      [`${T}/r1-1.zip`, `${T}/r1-1-p2.zip`, `${T}/r1-1-manifest.json`],
+    ]);
   });
 });

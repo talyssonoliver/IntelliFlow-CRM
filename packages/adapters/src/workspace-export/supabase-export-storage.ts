@@ -22,12 +22,14 @@ export interface ExportArchiveStorage {
   /** Create the private bucket on first use. */
   ensureBucket(): Promise<void>;
   /** Upload the local file to `path` (replacing a half-finished earlier attempt). */
-  uploadArchive(path: string, localPath: string): Promise<void>;
+  uploadArchive(path: string, localPath: string, contentType?: string): Promise<void>;
   /** A link that works for `expiresInSeconds` and then stops. */
   signedDownloadUrl(path: string, expiresInSeconds: number, downloadName: string): Promise<string>;
   /** Remove the archive (after its 14 days). */
   removeArchive(path: string): Promise<void>;
   /** Objects last written before `olderThan`, any tenant, at most `limit` (storage reconciliation). */
+  /** Every object of attempt `attempt` of a request (all parts and the manifest). */
+  removeAttemptObjects?(tenantId: string, requestId: string, attempt: number): Promise<void>;
   listArchivesOlderThan?(olderThan: Date, limit: number): Promise<string[]>;
 }
 
@@ -149,7 +151,11 @@ export class SupabaseExportStorage implements ExportFileStorage, ExportArchiveSt
     return this.bucketReady;
   }
 
-  async uploadArchive(path: string, localPath: string): Promise<void> {
+  async uploadArchive(
+    path: string,
+    localPath: string,
+    contentType = 'application/zip'
+  ): Promise<void> {
     await this.ensureBucket();
     const { size } = await stat(localPath);
     const url = `${this.supabaseUrl.endsWith('/') ? this.supabaseUrl.slice(0, -1) : this.supabaseUrl}/storage/v1/object/${this.exportBucket}/${path
@@ -161,7 +167,7 @@ export class SupabaseExportStorage implements ExportFileStorage, ExportArchiveSt
       headers: {
         Authorization: `Bearer ${this.serviceKey}`,
         apikey: this.serviceKey,
-        'Content-Type': 'application/zip',
+        'Content-Type': contentType,
         'Content-Length': String(size),
         'x-upsert': 'true',
       },
@@ -213,6 +219,21 @@ export class SupabaseExportStorage implements ExportFileStorage, ExportArchiveSt
       if (found.length >= limit) break;
     }
     return found;
+  }
+
+  /** Removes `<requestId>-<attempt>.zip`, its `-pN.zip` parts and its manifest, if any. */
+  async removeAttemptObjects(tenantId: string, requestId: string, attempt: number): Promise<void> {
+    const prefix = `${requestId}-${attempt}`;
+    const own = new RegExp(
+      `^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(\\.zip|-p\\d+\\.zip|-manifest\\.json)$`
+    );
+    const paths: string[] = [];
+    for await (const entry of this.listPages(tenantId)) {
+      if (own.test(entry.name)) paths.push(`${tenantId}/${entry.name}`);
+    }
+    if (paths.length === 0) return;
+    const { error } = await this.client.storage.from(this.exportBucket).remove(paths);
+    if (error) throw new Error(`Export archive could not be removed: ${error.message}`);
   }
 
   async removeArchive(path: string): Promise<void> {
