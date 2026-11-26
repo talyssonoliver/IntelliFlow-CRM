@@ -167,7 +167,10 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
       action: activity.action,
       eventType: activity.eventType,
       icon: this.getIconForAction(activity.action),
-      description: this.getDescriptionForAction(activity.action, activity.metadata),
+      description: this.getDescriptionForAction(activity.action, activity.metadata, {
+        resourceType: activity.resourceType,
+        resourceId: activity.resourceId,
+      }),
       actorName: activity.user?.name ?? null,
       createdAt: activity.timestamp,
       metadata:
@@ -379,36 +382,53 @@ export class PrismaAnalyticsRepository implements AnalyticsRepository {
     return iconMap[action] || 'event';
   }
 
-  private getDescriptionForAction(action: string, metadata: unknown): string {
+  /**
+   * One line for the activity feed, from the real audit row. When the row carries no name (or
+   * title) the line names the record by its type and id instead; nothing is made up, and a row
+   * with neither keeps just the verb ("Updated").
+   */
+  private getDescriptionForAction(
+    action: string,
+    metadata: unknown,
+    record: { resourceType?: string | null; resourceId?: string | null } = {}
+  ): string {
     try {
       const data =
         typeof metadata === 'string'
           ? JSON.parse(metadata)
           : (metadata as Record<string, unknown>) || {};
 
+      const named = (verb: string, label: unknown): string => {
+        if (typeof label === 'string' && label.trim() !== '') return `${verb}: ${label}`;
+        if (record.resourceId) {
+          return `${verb}: ${record.resourceType ?? 'record'} ${record.resourceId}`;
+        }
+        return verb;
+      };
+
       switch (action) {
         case 'CREATE':
-          return `New ${data.resourceType || 'item'}: ${data.name || 'Unknown'}`;
+          return named(`New ${data.resourceType || record.resourceType || 'item'}`, data.name);
         case 'QUALIFY':
-          return `Qualified: ${data.name || 'Unknown'}`;
+          return named('Qualified', data.name);
         case 'CONVERT':
-          return `Converted: ${data.name || 'Unknown'}`;
+          return named('Converted', data.name);
         case 'UPDATE':
-          return `Updated: ${data.name || 'Unknown'}`;
+          return named('Updated', data.name);
         case 'lead.created':
-          return `New lead: ${data.name || 'Unknown'}`;
+          return named('New lead', data.name);
         case 'lead.qualified':
-          return `Lead qualified: ${data.name || 'Unknown'}`;
+          return named('Lead qualified', data.name);
         case 'lead.converted':
-          return `Lead converted to contact: ${data.name || 'Unknown'}`;
+          return named('Lead converted to contact', data.name);
         case 'opportunity.created':
-          return `New deal: ${data.name || 'Unknown'}`;
+          return named('New deal', data.name);
         case 'opportunity.won':
-          return `Deal won: ${data.name || 'Unknown'} (£${Number(data.value || 0).toLocaleString('en-GB')})`;
+          return `${named('Deal won', data.name)} (£${Number(data.value || 0).toLocaleString('en-GB')})`;
         case 'contact.created':
-          return `New contact: ${data.name || 'Unknown'}`;
+          return named('New contact', data.name);
         case 'task.completed':
-          return `Task completed: ${data.title || 'Unknown'}`;
+          return named('Task completed', data.title);
         default:
           return action;
       }
