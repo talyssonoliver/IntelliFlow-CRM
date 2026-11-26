@@ -954,6 +954,21 @@ describe('mailbox connect policy (allowlist and personal mailbox)', () => {
     expect(prismaMock.emailMailbox.create).not.toHaveBeenCalled();
   });
 
+  it('a connection test also refuses a mailbox whose login is not on the allowlist', async () => {
+    vi.stubEnv(allowlistVar, 'talysson@leangency.com');
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
+      smtpRow({
+        status: 'ERROR',
+        fromAddress: 'talysson@leangency.com',
+        ...smtpAccountFields('personal@mail.example.com', secret),
+      })
+    );
+    await expect(member().testConnection({ scope: 'USER' })).rejects.toMatchObject({
+      code: 'FORBIDDEN',
+    });
+    expect(prismaMock.emailMailbox.updateMany).not.toHaveBeenCalled();
+  });
+
   it('a passing connection test does not bring back a mailbox that is not on the allowlist', async () => {
     vi.stubEnv(allowlistVar, 'talysson@leangency.com');
     (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(

@@ -40,7 +40,12 @@ import {
 import { createTRPCRouter, tenantProcedure, verifiedTenantProcedure } from '../../trpc';
 import { assertTenantContext } from '../../security/tenant-context';
 import { resolveSender } from './mailbox-sender';
-import { assertMailboxAllowed, assertPersonalConfirmed } from './mailbox-connect-policy';
+import {
+  assertIdentitiesAllowed,
+  assertMailboxAllowed,
+  assertPersonalConfirmed,
+  type MailboxIdentity,
+} from './mailbox-connect-policy';
 import {
   assertEmailAdmin,
   auditEmail,
@@ -134,7 +139,7 @@ async function writeMailbox(
   const data = written.status === 'ACTIVE' ? { ...written, ...freshScanState() } : written;
   // The allowlist is enforced here too, the one place every connection is written.
   if (written.status !== 'DISCONNECTED') {
-    assertMailboxAllowed(owner.tenantId, (written.accountAddress ?? written.fromAddress) as string);
+    assertIdentitiesAllowed(owner.tenantId, written as MailboxIdentity);
   }
   try {
     if (existing) {
@@ -317,9 +322,7 @@ export const emailMailboxRouter = createTRPCRouter({
       assertScopeAllowed(c, input.scope, 'saveSmtp');
       if (input.smtpPassword !== null) {
         // The identity a mailbox sends and reads as: the from address and any address-shaped login.
-        for (const address of [input.fromAddress, input.smtpUsername, input.imapUsername]) {
-          if (address?.includes('@')) assertMailboxAllowed(c.tenant.tenantId, address);
-        }
+        assertIdentitiesAllowed(c.tenant.tenantId, input);
         for (const address of [input.fromAddress, input.smtpUsername, input.imapUsername]) {
           assertPersonalConfirmed(address, input.acceptPersonal, input.scope);
         }
@@ -401,7 +404,7 @@ export const emailMailboxRouter = createTRPCRouter({
       if (!row) throw mailboxNotFound();
       // A mailbox connected before the tenant had an allowlist is not brought back by a passing test.
       if (row.status !== 'DISCONNECTED') {
-        assertMailboxAllowed(c.tenant.tenantId, row.accountAddress ?? row.fromAddress);
+        assertIdentitiesAllowed(c.tenant.tenantId, row);
       }
 
       let code: MailboxErrorCode | null = null;

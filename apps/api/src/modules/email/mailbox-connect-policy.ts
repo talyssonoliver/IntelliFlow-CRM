@@ -121,3 +121,30 @@ export function assertPersonalConfirmed(
     message: `${PERSONAL_MAILBOX_CODE}:${scope}: ${PERSONAL_MAILBOX_NOTICE}`,
   });
 }
+
+/** What a mailbox signs in and sends as: the provider account, else the from address and any address-shaped login. */
+export interface MailboxIdentity {
+  accountAddress?: string | null;
+  fromAddress?: string | null;
+  smtpUsername?: string | null;
+  imapUsername?: string | null;
+}
+
+/** The address-shaped identities of a mailbox (an OAuth mailbox is its verified account address). */
+export function mailboxIdentities(mailbox: MailboxIdentity): string[] {
+  const identities = mailbox.accountAddress
+    ? [mailbox.accountAddress]
+    : [mailbox.fromAddress, mailbox.smtpUsername, mailbox.imapUsername];
+  return identities.filter((a): a is string => typeof a === 'string' && a.includes('@'));
+}
+
+/** The allowlist check over every identity of the mailbox; a mailbox with none is refused when a list applies. */
+export function assertIdentitiesAllowed(
+  tenantId: string,
+  mailbox: MailboxIdentity,
+  env: NodeJS.ProcessEnv = process.env
+): void {
+  const identities = mailboxIdentities(mailbox);
+  if (identities.length === 0) assertMailboxAllowed(tenantId, null, env);
+  for (const address of identities) assertMailboxAllowed(tenantId, address, env);
+}

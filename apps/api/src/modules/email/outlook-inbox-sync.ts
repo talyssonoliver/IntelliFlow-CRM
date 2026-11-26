@@ -33,7 +33,7 @@ import {
 } from './mail-sync-reader';
 import { learnThread, logOnLead, threadOf } from './mail-sync-links';
 import { alreadyLogged, anyoneRestricted, bodyOf, counterparty } from './mail-sync-match';
-import { assertMailboxAllowed } from './mailbox-connect-policy';
+import { assertIdentitiesAllowed } from './mailbox-connect-policy';
 import { runLookback, type LookbackState } from './mail-sync-lookback';
 import { messageIdHeader, recordData } from './mail-sync-record';
 import { queueReplyDraftForSyncedMail } from './mail-sync-reply-draft';
@@ -110,7 +110,7 @@ interface SyncMailbox extends TransportMailbox, LookbackState {
 /** True unless the tenant has a mailbox allowlist that does not list this mailbox's address. */
 function mailboxAllowed(mailbox: SyncMailbox): boolean {
   try {
-    assertMailboxAllowed(mailbox.tenantId, mailbox.accountAddress ?? mailbox.fromAddress);
+    assertIdentitiesAllowed(mailbox.tenantId, mailbox);
     return true;
   } catch {
     return false;
