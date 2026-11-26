@@ -104,8 +104,8 @@ All figures from the production database on 21/11.
 | NEW       | 1     | 42.0          |
 | LOST      | 15    | 14.4          |
 
-- The top three scores are 78 (the only QUALIFIED lead, West London Handyman),
-  72, and 62 (the only CONVERTED lead).
+- The top three scores are 78 (the only QUALIFIED lead, Acme Handyman), 72, and
+  62 (the only CONVERTED lead).
 - Caution: the 21/11 re-score feeds in opens, clicks and replies (row 49), so
   leads that replied score higher partly because they replied. The pattern is
   encouraging but it is not proof that the score predicts who will buy.

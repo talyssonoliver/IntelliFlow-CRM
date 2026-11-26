@@ -79,11 +79,11 @@ describe('LeadDetail', () => {
   it('shows a lead named after its company once: the company line is hidden when it repeats the name', () => {
     render(
       <LeadDetail
-        lead={makeLead({ firstName: '', lastName: '', company: 'West London Handyman Ltd' })}
+        lead={makeLead({ firstName: '', lastName: '', company: 'Acme Handyman Ltd' })}
         leadMetrics={metrics}
       />
     );
-    expect(screen.getAllByText('West London Handyman Ltd')).toHaveLength(1);
+    expect(screen.getAllByText('Acme Handyman Ltd')).toHaveLength(1);
   });
 
   it('keeps the way to the account when the company repeats the name: the name is the link', () => {
@@ -92,17 +92,17 @@ describe('LeadDetail', () => {
         lead={makeLead({
           firstName: '',
           lastName: '',
-          company: 'West London Handyman Ltd',
+          company: 'Acme Handyman Ltd',
           accountId: 'acc-1',
-          account: { id: 'acc-1', name: 'West London Handyman Ltd' },
+          account: { id: 'acc-1', name: 'Acme Handyman Ltd' },
         })}
         leadMetrics={metrics}
       />
     );
-    const links = screen.getAllByRole('link', { name: 'West London Handyman Ltd' });
+    const links = screen.getAllByRole('link', { name: 'Acme Handyman Ltd' });
     expect(links).toHaveLength(1);
     expect(links[0]).toHaveAttribute('href', '/accounts/acc-1');
-    expect(screen.getAllByText('West London Handyman Ltd')).toHaveLength(1);
+    expect(screen.getAllByText('Acme Handyman Ltd')).toHaveLength(1);
   });
 
   it('links the company line to the account when the name is a person', () => {
@@ -152,13 +152,18 @@ describe('LeadDetail', () => {
   it('shows a tracking-URL website as its clean host, linked without tracking (#1277)', () => {
     render(
       <LeadDetail
-        lead={makeLead({ website: 'http://www.energym.co.uk/?utm_source=google&utm_medium=wix' })}
+        lead={makeLead({
+          website:
+            'http://www.northfield-fitness.example.invalid/?utm_source=google&utm_medium=wix',
+        })}
         leadMetrics={metrics}
       />
     );
-    const link = screen.getByRole('link', { name: 'energym.co.uk (opens in new tab)' });
-    expect(link).toHaveTextContent('energym.co.uk');
-    expect(link).toHaveAttribute('href', 'http://www.energym.co.uk/');
+    const link = screen.getByRole('link', {
+      name: 'northfield-fitness.example.invalid (opens in new tab)',
+    });
+    expect(link).toHaveTextContent('northfield-fitness.example.invalid');
+    expect(link).toHaveAttribute('href', 'http://www.northfield-fitness.example.invalid/');
   });
 
   it('offers "Add value", not "£0", for a lead with no estimated value (#1277, MVP-003)', () => {

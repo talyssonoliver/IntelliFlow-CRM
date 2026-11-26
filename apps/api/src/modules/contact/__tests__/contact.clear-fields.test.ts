@@ -31,7 +31,7 @@ function domainContact() {
   return {
     id: { value: TEST_UUIDS.contact1 },
     email: { value: 'owner@pilates.example.invalid' },
-    firstName: 'Pilates Living',
+    firstName: 'Studio Pilates Demo',
     lastName: '',
     title: null,
     phone: null,
@@ -81,9 +81,9 @@ describe('contact.update with cleared fields (MVP-003 #28)', () => {
 
   it('leaves out fields that were not sent', async () => {
     const { updateContactInfo, caller } = setup();
-    await caller.update({ id: TEST_UUIDS.contact1, company: 'Pilates Living' });
+    await caller.update({ id: TEST_UUIDS.contact1, company: 'Studio Pilates Demo' });
     const sent = updateContactInfo.mock.calls[0][1];
-    expect(sent).toEqual({ company: 'Pilates Living' });
+    expect(sent).toEqual({ company: 'Studio Pilates Demo' });
   });
 });
 

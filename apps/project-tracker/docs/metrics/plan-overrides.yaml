@@ -3785,7 +3785,7 @@ MVP-011:
   debt_allowed: no
   evidence_required:
     - .specify/sprints/sprint-24/attestations/MVP-011/owner-screenshot.png
-# Owner promise to West London Handyman 2026-11-18: Aurora drafts replies for him to check.
+# Owner promise to Acme Handyman 2026-11-18: Aurora drafts replies for him to check.
 MVP-012:
   tier: A
   gate_profile:
@@ -4239,7 +4239,7 @@ IFC-036:
     - .specify/sprints/sprint-25/attestations/IFC-036/attestation.json
     - .specify/sprints/sprint-25/attestations/IFC-036/owner-screenshot.png
   acceptance_criteria:
-    - 'A real enquiry from the West London Handyman planner to a Leangency-owned number reaches Aurora, creates or matches the lead and shows as Received, on both transports'
+    - 'A real enquiry from the Acme Handyman planner to a Leangency-owned number reaches Aurora, creates or matches the lead and shows as Received, on both transports'
     - 'The owner replies from Aurora and the reply reaches the phone on both transports'
     - 'webhook-test-results.json holds real provider responses; processing (webhook accepted to message stored) is under 1s for 99.9% of deliveries; the first delivery after the API wakes from idle sleep is measured and reported separately; a replay of 1,000 deliveries stores each exactly once'
     - 'The live deployment rejects unsigned and wrongly signed requests on every inbound path'

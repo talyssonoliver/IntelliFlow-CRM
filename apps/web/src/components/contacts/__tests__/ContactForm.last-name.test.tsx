@@ -47,7 +47,7 @@ describe('ContactForm last name (MVP-003)', () => {
   it('moves on from the first step with only a first name and an email', async () => {
     const user = userEvent.setup();
     render(<ContactForm mode="create" onSubmit={handlers.onSubmit} onCancel={handlers.onCancel} />);
-    await user.type(screen.getByLabelText(/First Name/i), 'Pilates Living');
+    await user.type(screen.getByLabelText(/First Name/i), 'Studio Pilates Demo');
     await user.type(screen.getByLabelText(/Email Address/i), 'owner@pilates.example.invalid');
     await user.click(screen.getByText('Next Step'));
     await waitFor(() => {
@@ -58,7 +58,7 @@ describe('ContactForm last name (MVP-003)', () => {
 
   it('saves a company-named contact with an empty last name from the edit form', async () => {
     const user = userEvent.setup();
-    const contact = { ...createMockFormData(), firstName: 'Pilates Living', lastName: '' };
+    const contact = { ...createMockFormData(), firstName: 'Studio Pilates Demo', lastName: '' };
     render(
       <ContactForm
         mode="edit"
@@ -72,7 +72,7 @@ describe('ContactForm last name (MVP-003)', () => {
     await user.click(screen.getByRole('button', { name: /Save Changes/i }));
     await waitFor(() => expect(handlers.onSubmit).toHaveBeenCalled());
     expect(handlers.onSubmit.mock.calls[0][0]).toMatchObject({
-      firstName: 'Pilates Living',
+      firstName: 'Studio Pilates Demo',
       lastName: '',
     });
   });

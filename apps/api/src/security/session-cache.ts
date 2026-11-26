@@ -17,6 +17,8 @@
  * of a pinned session take effect on every instance within `PINNED_SESSION_CACHE_TTL_MS`.
  */
 
+import { verifiedTokenCache } from '../lib/verified-token-cache';
+
 export const SESSION_CACHE_TTL_MS = 60_000;
 /** TTL of a resolved PINNED (staff) session: the revocation bound on instances that did not evict. */
 export const PINNED_SESSION_CACHE_TTL_MS = 5_000;
@@ -116,6 +118,9 @@ export function resolvedSessionKey(
  * instances (see the file header).
  */
 export function invalidateUserSessions(userId: string): number {
+  // The Supabase-verified-user cache (lib/verified-token-cache.ts) goes too, so a role or
+  // membership change never waits on it.
+  verifiedTokenCache.deleteUser(userId);
   return baseSessionCache.deleteUser(userId) + resolvedSessionCache.deleteUser(userId);
 }
 

@@ -146,7 +146,7 @@ describe('LeadCardList: the company is not repeated under the name (#44, the pho
 
   it('keeps the title when the company is the name, without "@ company"', () => {
     const card = renderCard(
-      makeLead({ firstName: '', lastName: '', company: 'West London Handyman Ltd', title: 'Owner' })
+      makeLead({ firstName: '', lastName: '', company: 'Acme Handyman Ltd', title: 'Owner' })
     );
     expect(card.getByText('Owner')).toBeTruthy();
     expect(card.queryByText(/Owner @/)).toBeNull();

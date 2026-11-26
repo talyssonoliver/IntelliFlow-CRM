@@ -8,7 +8,7 @@ import { ConvertLeadToDealUseCase } from '../ConvertLeadToDealUseCase';
 function setup() {
   const lead = Lead.create({
     email: 'owner@pilates.example.invalid',
-    company: 'Pilates Living',
+    company: 'Studio Pilates Demo',
     source: 'WEBSITE',
     ownerId: 'owner-1',
     tenantId: 'tenant-1',

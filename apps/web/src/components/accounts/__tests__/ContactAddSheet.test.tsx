@@ -146,7 +146,7 @@ describe('ContactAddSheet', () => {
     render(<ContactAddSheet {...defaultProps} />);
 
     expect(screen.getByLabelText(/Last Name/)).not.toBeRequired();
-    await user.type(screen.getByLabelText(/First Name/), 'Pilates Living');
+    await user.type(screen.getByLabelText(/First Name/), 'Studio Pilates Demo');
     await user.type(screen.getByLabelText(/Email/), 'owner@pilates.example.invalid');
     await user.type(screen.getByLabelText(/Phone/), '+15551234567');
 
@@ -154,7 +154,10 @@ describe('ContactAddSheet', () => {
 
     await waitFor(() => expect(mutateFn).toHaveBeenCalledTimes(1));
     expect(screen.queryByText('Last name is required')).not.toBeInTheDocument();
-    expect(mutateFn.mock.calls[0][0]).toMatchObject({ firstName: 'Pilates Living', lastName: '' });
+    expect(mutateFn.mock.calls[0][0]).toMatchObject({
+      firstName: 'Studio Pilates Demo',
+      lastName: '',
+    });
   });
 
   it('validates email is required', async () => {
