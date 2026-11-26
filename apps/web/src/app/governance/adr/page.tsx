@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { Card } from '@intelliflow/ui';
 import { SearchFilterBar } from '@/components/shared/search-filter-bar';
 
@@ -89,7 +89,11 @@ export default function ADRRegistryPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Search-as-you-type can overlap requests: only the latest one may update the list, so a slow
+  // earlier search never overwrites newer results (codex review 26/11).
+  const latestRequestRef = useRef(0);
   const fetchADRs = useCallback(async () => {
+    const requestId = ++latestRequestRef.current;
     setLoading(true);
     try {
       const url = searchQuery
@@ -97,13 +101,14 @@ export default function ADRRegistryPage() {
         : '/api/adr?action=list';
       const response = await fetch(url);
       const result = await response.json();
+      if (requestId !== latestRequestRef.current) return;
       if (result.success) {
         setAdrs(result.data);
       } else {
         setError(result.error);
       }
     } finally {
-      setLoading(false);
+      if (requestId === latestRequestRef.current) setLoading(false);
     }
   }, [searchQuery]);
 

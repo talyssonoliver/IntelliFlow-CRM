@@ -956,3 +956,48 @@ waivers:
     author: biztype lane
     date: '2026-11-26'
     expires: '2026-12-26'
+  - fingerprint: 112a35ce3118239d87428726b59ab2958edf88840cfcb89d99a1330bfd6660ee
+    reason: >-
+      DealForm edit label. A deal has no stored currency: the opportunities table has no
+      currency column and PrismaOpportunityRepository rebuilds every value with
+      Money.create(value), which defaults to GBP. The 'deal's own currency' the finding points
+      at is that default, not data. The owner chose one real tenant currency for every money
+      figure (MVP-012, 22/11), so showing the tenant currency is correct; using the deal's
+      currency would show a fake GBP for a tenant on another currency.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-26'
+    expires: '2026-12-26'
+  - fingerprint: cdbb0ad2c8238088a06ac7d31010ea5f392049e37fd14197ced38edd2c626ca4
+    reason: >-
+      DealCard amount. A deal has no stored currency: the opportunities table has no currency
+      column and PrismaOpportunityRepository rebuilds every value with Money.create(value),
+      which defaults to GBP. The 'deal's own currency' the finding points at is that default,
+      not data. The owner chose one real tenant currency for every money figure (MVP-012,
+      22/11), so showing the tenant currency is correct; using the deal's currency would show a
+      fake GBP for a tenant on another currency.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-26'
+    expires: '2026-12-26'
+  - fingerprint: 187979b3870008bcbdb8ff0d56df5ef623d84814b0aebaa92d42fdf99c958e26
+    reason: >-
+      StageColumn total: every deal is in the tenant currency, so the sum is in one currency. A
+      deal has no stored currency: the opportunities table has no currency column and
+      PrismaOpportunityRepository rebuilds every value with Money.create(value), which defaults
+      to GBP. The 'deal's own currency' the finding points at is that default, not data. The
+      owner chose one real tenant currency for every money figure (MVP-012, 22/11), so showing
+      the tenant currency is correct; using the deal's currency would show a fake GBP for a
+      tenant on another currency.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-26'
+    expires: '2026-12-26'
+  - fingerprint: 157835439ac2ed51719bf2f0fe8acaee2b0c1208ad94277cfd7f886f6daf5394
+    reason: >-
+      DealStageProgress Total Value. A deal has no stored currency: the opportunities table has
+      no currency column and PrismaOpportunityRepository rebuilds every value with
+      Money.create(value), which defaults to GBP. The 'deal's own currency' the finding points
+      at is that default, not data. The owner chose one real tenant currency for every money
+      figure (MVP-012, 22/11), so showing the tenant currency is correct; using the deal's
+      currency would show a fake GBP for a tenant on another currency.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-26'
+    expires: '2026-12-26'
