@@ -13,7 +13,7 @@
  * The row is the source of truth: queueing is best-effort on top of it, and the sweep repairs a
  * lost job, so a customer's data is never at the mercy of one Redis write.
  */
-import type { PrismaClient } from '@intelliflow/db';
+import type { Prisma, PrismaClient } from '@intelliflow/db';
 import { randomUUID } from 'node:crypto';
 import { mkdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -230,6 +230,25 @@ export type ProcessOutcome =
 const noopLog = { info() {}, warn() {}, error() {} };
 
 /** Who should get the link: the payer of the ended subscription, else the first admin; plus the asker. */
+/**
+ * A home user whose HOME membership was revoked or has expired no longer has access (removing a
+ * member keeps users.tenantId and role and revokes the HOME row instead), so they are neither
+ * the owner nor the payer nor the asker.
+ */
+function homeAccessNotRevoked(tenantId: string, now: Date): Prisma.UserWhereInput {
+  return {
+    NOT: {
+      memberships: {
+        some: {
+          tenantId,
+          source: 'HOME',
+          OR: [{ revokedAt: { not: null } }, { expiresAt: { not: null, lte: now } }],
+        },
+      },
+    },
+  };
+}
+
 export async function resolveExportRecipients(
   prisma: PrismaClient,
   request: { tenantId: string; requestedById: string | null; subscriptionId: string | null },
@@ -243,7 +262,11 @@ export async function resolveExportRecipients(
     });
     if (sub) {
       const payer = await prisma.user.findFirst({
-        where: { stripeCustomerId: sub.stripeCustomerId, tenantId: request.tenantId },
+        where: {
+          stripeCustomerId: sub.stripeCustomerId,
+          tenantId: request.tenantId,
+          ...homeAccessNotRevoked(request.tenantId, now),
+        },
         select: { id: true },
       });
       if (payer) ids.add(payer.id);
@@ -251,7 +274,11 @@ export async function resolveExportRecipients(
   }
   // The workspace owner: the earliest-created administrator of the workspace.
   const owner = await prisma.user.findFirst({
-    where: { tenantId: request.tenantId, role: 'ADMIN' },
+    where: {
+      tenantId: request.tenantId,
+      role: 'ADMIN',
+      ...homeAccessNotRevoked(request.tenantId, now),
+    },
     orderBy: { createdAt: 'asc' },
     select: { id: true },
   });
@@ -263,7 +290,11 @@ export async function resolveExportRecipients(
       where: {
         id: request.requestedById,
         OR: [
-          { tenantId: request.tenantId, role: 'ADMIN' },
+          {
+            tenantId: request.tenantId,
+            role: 'ADMIN',
+            ...homeAccessNotRevoked(request.tenantId, now),
+          },
           {
             memberships: {
               some: {

@@ -36,6 +36,7 @@ export function matches(row: Row, where: Row | undefined, tables?: Record<string
   return Object.entries(where).every(([k, v]) => {
     if (k === 'AND') return (Array.isArray(v) ? v : [v]).every((w: Row) => matches(row, w, tables));
     if (k === 'OR') return (v as Row[]).some((w) => matches(row, w, tables));
+    if (k === 'NOT') return !matches(row, v as Row, tables);
     if (k === 'memberships' && v?.some) {
       return (tables?.tenantMembership ?? []).some(
         (m) => m.userId === row.id && matches(m, v.some, tables)

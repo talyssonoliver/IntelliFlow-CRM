@@ -16,7 +16,7 @@
  * Mirrors notification-email-worker.ts: dependencies are injected so the processor is testable
  * without Redis, Prisma or Supabase; only the boot path in ai-worker.ts builds the real ones.
  */
-import { Queue, Worker, type Job } from 'bullmq';
+import { Queue, QueueEvents, Worker, type Job } from 'bullmq';
 import type pino from 'pino';
 import { z } from 'zod';
 import {
@@ -62,6 +62,37 @@ export async function processWorkspaceExportJob(
   throw new Error(`Unknown workspace export job: ${job.name}`);
 }
 
+/** How long one export email may take from queue to provider (its own retries included). */
+export const MAIL_DELIVERY_TIMEOUT_MS = 2 * 60 * 1000;
+
+/**
+ * Queuing the mail is not delivering it: the recipient counts as mailed only once the
+ * notification worker has finished the job (provider accepted it). A job that fails for good, or
+ * is not finished in time, throws here, so the export sweep retries that recipient.
+ */
+export function createExportMailSender(
+  mailQueue: Pick<Queue, 'add'>,
+  mailEvents: QueueEvents,
+  timeoutMs: number = MAIL_DELIVERY_TIMEOUT_MS
+): (mail: ExportMail) => Promise<void> {
+  return async (mail) => {
+    const job = await mailQueue.add('notification:email', {
+      type: 'workspace_export_ready',
+      recipientUserId: mail.recipientUserId,
+      tenantId: mail.tenantId,
+      subject: mail.subject,
+      body: mail.body,
+      entityType: 'workspace_export',
+    });
+    const result = (await job.waitUntilFinished(mailEvents, timeoutMs)) as
+      | { delivered?: boolean; reason?: string }
+      | undefined;
+    if (result?.delivered === false) {
+      throw new Error(`Export email not delivered: ${result.reason ?? 'unknown reason'}`);
+    }
+  };
+}
+
 export async function bootWorkspaceExportWorker(
   redisConnection: RedisConnection,
   deps: Omit<ExportJobDeps, 'sendEmail'>,
@@ -93,17 +124,10 @@ export async function bootWorkspaceExportWorker(
   });
 
   mailQueue.on('error', (err) => workerLogger.warn({ err: err.message }, 'mail queue error'));
+  const mailEvents = new QueueEvents(EMAIL_NOTIFICATIONS_QUEUE, { connection: redisConnection });
+  mailEvents.on('error', (err) => workerLogger.warn({ err: err.message }, 'mail events error'));
 
-  const sendEmail = async (mail: ExportMail): Promise<void> => {
-    await mailQueue.add('notification:email', {
-      type: 'workspace_export_ready',
-      recipientUserId: mail.recipientUserId,
-      tenantId: mail.tenantId,
-      subject: mail.subject,
-      body: mail.body,
-      entityType: 'workspace_export',
-    });
-  };
+  const sendEmail = createExportMailSender(mailQueue, mailEvents);
 
   // A re-queue gets an id of its own: BullMQ silently drops an add whose id it still holds, and a
   // failed job keeps its id for 7 days.
@@ -136,7 +160,7 @@ export async function bootWorkspaceExportWorker(
 
   const closeAll = async (): Promise<void> => {
     await worker.close();
-    await Promise.all([queue.close(), mailQueue.close()]);
+    await Promise.all([queue.close(), mailQueue.close(), mailEvents.close()]);
   };
 
   // Repeatable sweep: one scheduler id, so restarts and several workers do not multiply it.

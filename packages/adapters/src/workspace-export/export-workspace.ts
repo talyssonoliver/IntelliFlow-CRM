@@ -214,18 +214,27 @@ async function* readPages(
   }
 }
 
+interface SpoolChunk {
+  /** 1 for the first chunk (data/<name>.csv), then 2, 3, ... (data/<name>.part-N.csv). */
+  n: number;
+  csvPath: string;
+  jsonPath: string;
+  rows: number;
+}
+
 /**
  * One read of the entity feeds BOTH files, so the CSV and the JSON always hold the same rows with
  * the same values (two separate reads could see an edit in between). Both are spooled to
- * temporary files in that pass: their sizes are then known before either goes into a part, so a
- * part can be chosen that has room for them.
+ * temporary files in that pass, so their sizes are known before either goes into a part. A table
+ * bigger than `maxChunkBytes` continues in further chunk files (own header, own JSON array):
+ * no single file of the archive can then be too big for one part.
  */
-async function writeSpools(
-  csvSpoolPath: string,
-  jsonSpoolPath: string,
+async function* spoolChunks(
+  spoolBase: string,
+  plan: Plan,
   pages: AsyncIterable<ExportRow[]>,
-  plan: Plan
-): Promise<number> {
+  maxChunkBytes: number
+): AsyncGenerator<SpoolChunk> {
   const open = (path: string) => {
     const stream = createWriteStream(path);
     const closed = new Promise<void>((resolve, reject) => {
@@ -239,32 +248,66 @@ async function writeSpools(
       );
     return { stream, closed, write };
   };
-  const csv = open(csvSpoolPath);
-  const json = open(jsonSpoolPath);
-  try {
-    await csv.write('\ufeff' + csvHeader(plan.columns));
+  let n = 0;
+  let cur: {
+    csv: ReturnType<typeof open>;
+    json: ReturnType<typeof open>;
+    rows: number;
+    csvBytes: number;
+    jsonBytes: number;
+  } | null = null;
+  const start = async () => {
+    n += 1;
+    const csv = open(`${spoolBase}.${plan.name}.${n}.csv.spool`);
+    const json = open(`${spoolBase}.${plan.name}.${n}.json.spool`);
+    const header = '\ufeff' + csvHeader(plan.columns);
+    await csv.write(header);
     await json.write('[');
-    let rows = 0;
+    cur = { csv, json, rows: 0, csvBytes: Buffer.byteLength(header), jsonBytes: 1 };
+  };
+  const finish = async (): Promise<SpoolChunk> => {
+    const c = cur!;
+    await c.json.write(c.rows === 0 ? ']\n' : '\n]\n');
+    c.csv.stream.end();
+    c.json.stream.end();
+    await Promise.all([c.csv.closed, c.json.closed]);
+    cur = null;
+    return {
+      n,
+      csvPath: `${spoolBase}.${plan.name}.${n}.csv.spool`,
+      jsonPath: `${spoolBase}.${plan.name}.${n}.json.spool`,
+      rows: c.rows,
+    };
+  };
+  try {
+    await start();
     for await (const page of pages) {
-      let csvChunk = '';
-      let jsonChunk = '';
       for (const row of page) {
         const out = toJsonRow(row, plan.columns, plan.urlColumns);
-        csvChunk += csvLine(out, plan.columns);
-        jsonChunk += (rows === 0 ? '\n' : ',\n') + JSON.stringify(out);
-        rows += 1;
+        const csvLineText = csvLine(out, plan.columns);
+        const body = JSON.stringify(out);
+        const csvLen = Buffer.byteLength(csvLineText);
+        const jsonLen = Buffer.byteLength(body) + 2;
+        if (
+          cur!.rows > 0 &&
+          (cur!.csvBytes + csvLen > maxChunkBytes || cur!.jsonBytes + jsonLen > maxChunkBytes)
+        ) {
+          yield await finish();
+          await start();
+        }
+        const jsonText = (cur!.rows === 0 ? '\n' : ',\n') + body;
+        await cur!.csv.write(csvLineText);
+        await cur!.json.write(jsonText);
+        cur!.rows += 1;
+        cur!.csvBytes += csvLen;
+        cur!.jsonBytes += jsonLen;
       }
-      await csv.write(csvChunk);
-      await json.write(jsonChunk);
     }
-    await json.write(rows === 0 ? ']\n' : '\n]\n');
-    csv.stream.end();
-    json.stream.end();
-    await Promise.all([csv.closed, json.closed]);
-    return rows;
+    yield await finish();
   } catch (err) {
-    csv.stream.destroy();
-    json.stream.destroy();
+    const c = cur as { csv: ReturnType<typeof open>; json: ReturnType<typeof open> } | null;
+    c?.csv.stream.destroy();
+    c?.json.stream.destroy();
     throw err;
   }
 }
@@ -296,7 +339,13 @@ export function renderReadme(
   lines.push(
     'data/<name>.json (one JSON array per file, for systems and scripts). The two files of'
   );
-  lines.push('an entity hold the same rows.');
+  lines.push(
+    'an entity hold the same rows. A very large table continues in further files of the same'
+  );
+  lines.push(
+    'shape, data/<name>.part-2.csv and so on (each with its own header or JSON array): read'
+  );
+  lines.push('them one after the other. The rows per file are in manifest.json.');
   lines.push('');
   lines.push('Format notes');
   lines.push(
@@ -386,38 +435,50 @@ interface ExportRun {
 async function writeEntityFiles(
   run: ExportRun,
   plan: Plan,
-  ctx: { db: ExportDb; tenantId: string; now: Date; pageSize: number; spoolBase: string }
-): Promise<void> {
-  const csvPath = `data/${plan.name}.csv`;
-  const jsonPath = `data/${plan.name}.json`;
-  const csvSpool = `${ctx.spoolBase}.${plan.name}.csv.spool`;
-  const jsonSpool = `${ctx.spoolBase}.${plan.name}.json.spool`;
-  let rows: number;
-  try {
-    rows = await writeSpools(
-      csvSpool,
-      jsonSpool,
-      readPages(ctx.db, plan, ctx.tenantId, ctx.now, ctx.pageSize),
-      plan
-    );
-    // The raw size is an upper bound of what the entry adds to a part, so a part with room for it
-    // is chosen (a part is never pushed past the limit by an entry that would have fitted).
-    const csv = await run.writer.addStream(
-      csvPath,
-      createReadStream(csvSpool),
-      (await stat(csvSpool)).size
-    );
-    run.track(csv, { path: csvPath, kind: 'csv', entity: plan.name, rows });
-    const json = await run.writer.addStream(
-      jsonPath,
-      createReadStream(jsonSpool),
-      (await stat(jsonSpool)).size
-    );
-    run.track(json, { path: jsonPath, kind: 'json', entity: plan.name, rows });
-  } finally {
-    await Promise.all([rm(csvSpool, { force: true }), rm(jsonSpool, { force: true })]);
+  ctx: {
+    db: ExportDb;
+    tenantId: string;
+    now: Date;
+    pageSize: number;
+    spoolBase: string;
+    maxChunkBytes: number;
   }
-  run.entities[plan.name] = { rows, description: plan.description };
+): Promise<void> {
+  const spools: string[] = [];
+  let total = 0;
+  try {
+    const chunks = spoolChunks(
+      ctx.spoolBase,
+      plan,
+      readPages(ctx.db, plan, ctx.tenantId, ctx.now, ctx.pageSize),
+      ctx.maxChunkBytes
+    );
+    for await (const chunk of chunks) {
+      spools.push(chunk.csvPath, chunk.jsonPath);
+      const base = chunk.n === 1 ? plan.name : `${plan.name}.part-${chunk.n}`;
+      const csvName = `data/${base}.csv`;
+      const jsonName = `data/${base}.json`;
+      // The raw size is an upper bound of what the entry adds to a part, so a part with room for
+      // it is chosen.
+      const csv = await run.writer.addStream(
+        csvName,
+        createReadStream(chunk.csvPath),
+        (await stat(chunk.csvPath)).size
+      );
+      run.track(csv, { path: csvName, kind: 'csv', entity: plan.name, rows: chunk.rows });
+      const json = await run.writer.addStream(
+        jsonName,
+        createReadStream(chunk.jsonPath),
+        (await stat(chunk.jsonPath)).size
+      );
+      run.track(json, { path: jsonName, kind: 'json', entity: plan.name, rows: chunk.rows });
+      await Promise.all([rm(chunk.csvPath, { force: true }), rm(chunk.jsonPath, { force: true })]);
+      total += chunk.rows;
+    }
+  } finally {
+    await Promise.all(spools.map((p) => rm(p, { force: true })));
+  }
+  run.entities[plan.name] = { rows: total, description: plan.description };
 }
 
 /** The tenant's own objects from each bucket, streamed into files/<bucket>/. */
@@ -505,6 +566,7 @@ export async function runWorkspaceExport(
         now: generatedAt,
         pageSize,
         spoolBase: outputPath,
+        maxChunkBytes: opts.maxPartBytes ?? DEFAULT_MAX_PART_BYTES,
       });
     }
     if (opts.files) await copyStoredFiles(run, opts.files, buckets, tenantId);

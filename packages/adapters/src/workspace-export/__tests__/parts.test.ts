@@ -99,7 +99,7 @@ describe('split archives', () => {
     expect(result.archiveSha256).toBe(sha(out));
   });
 
-  it('holds exactly the rows of a single-part export', async () => {
+  it('holds exactly the rows of a single-part export, and no part is bigger than the limit', async () => {
     dir = mkdtempSync(join(tmpdir(), 'wsx-p-'));
     const one = join(dir, 'one.zip');
     const many = join(dir, 'many.zip');
@@ -114,8 +114,30 @@ describe('split archives', () => {
     const merged: Record<string, string> = {};
     for (const p of split.parts) Object.assign(merged, readZip(p.path));
     const single = readZip(one);
-    expect(merged['data/leads.csv']).toBe(single['data/leads.csv']);
-    expect(merged['data/leads.json']).toBe(single['data/leads.json']);
+
+    // A big table continues in chunk files; together they hold exactly the single export's rows.
+    const chunks = Object.keys(merged)
+      .filter((n) => /^data\/leads(\.part-\d+)?\.json$/.test(n))
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+    expect(chunks.length).toBeGreaterThan(1);
+    expect(chunks[0]).toBe('data/leads.json');
+    const rows = chunks.flatMap((n) => JSON.parse(merged[n]!));
+    expect(rows).toEqual(JSON.parse(single['data/leads.json']!));
+    const dataLines = (csv: string) =>
+      csv
+        .replace(String.fromCharCode(0xfeff), '')
+        .split(String.fromCharCode(13, 10))
+        .slice(1)
+        .filter(Boolean);
+    const csvLines = Object.keys(merged)
+      .filter((n) => /^data\/leads(\.part-\d+)?\.csv$/.test(n))
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+      .flatMap((n) => dataLines(merged[n]!));
+    expect(csvLines).toEqual(dataLines(single['data/leads.csv']!));
+    expect(split.manifest.entities.leads!.rows).toBe(rows.length);
+
+    // Every entry stays under the limit, so every part after the first does too.
+    for (const p of split.parts.slice(1)) expect(p.bytes).toBeLessThanOrEqual(20_000 + 2_000);
   });
 
   it('a small export stays one part with the plain name', async () => {

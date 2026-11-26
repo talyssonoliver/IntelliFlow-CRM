@@ -96,6 +96,36 @@ export const EXPORT_ENTITIES: readonly ExportEntity[] = [
     model: 'AppointmentCase',
     description: 'Which cases each appointment is linked to.',
   },
+  {
+    name: 'case_types',
+    model: 'CaseType',
+    description: 'The case types your workspace defined; cases refer to them by caseTypeId.',
+  },
+  {
+    name: 'event_types',
+    model: 'EventType',
+    description: 'The event types for public booking; appointments refer to them by eventTypeId.',
+  },
+  {
+    name: 'workflow_definitions',
+    model: 'WorkflowDefinition',
+    description: 'Workflow definitions with their steps.',
+  },
+  {
+    name: 'team_messages',
+    model: 'TeamMessage',
+    description: 'Team chat messages.',
+  },
+  {
+    name: 'help_articles',
+    model: 'HelpArticle',
+    description: 'Help articles your workspace wrote (built-in articles are not exported).',
+  },
+  {
+    name: 'help_article_sections',
+    model: 'ArticleSection',
+    description: 'The sections and their content of your help articles.',
+  },
   // Email and messaging
   {
     name: 'emails',

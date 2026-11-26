@@ -1344,3 +1344,56 @@ describe('review follow-ups: entry backpressure, JSON depth, URL credentials, de
     rmSync(tmp, { recursive: true, force: true });
   });
 });
+
+describe('review follow-ups: names archiver normalises, revoked home admins', () => {
+  it('an entry name that archiver normalises does not hang the writer', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'wsx-h-'));
+    const writer = new ArchiveWriter(join(dir, 'a.zip'));
+    const run = async () => {
+      await writer.addGenerated('C:report.csv', (w) => w('a,b'));
+      await writer.addStream('D:more.csv', Readable.from([Buffer.from('x')]));
+      await writer.finalize();
+    };
+    await expect(
+      Promise.race([run(), new Promise((_, rej) => setTimeout(() => rej(new Error('hung')), 5000))])
+    ).resolves.toBeUndefined();
+  });
+
+  it('skips a home admin whose HOME membership was revoked when choosing the owner', async () => {
+    const mkUser = (id: string, day: number) => ({
+      id,
+      tenantId: T,
+      email: `${id}@x.invalid`,
+      role: 'ADMIN',
+      createdAt: new Date(2026, 0, day),
+    });
+    const ids = async (memberships: any[], requestedById: string | null = null) =>
+      (
+        await resolveExportRecipients(
+          makeDb({
+            user: [mkUser('removed', 1), mkUser('current', 2)],
+            tenantMembership: memberships,
+            stripeSubscription: [],
+          }) as any,
+          { tenantId: T, requestedById, subscriptionId: null },
+          t0
+        )
+      ).map((r) => r.userId);
+    const home = (over: any) => ({
+      id: 'h1',
+      userId: 'removed',
+      tenantId: T,
+      source: 'HOME',
+      role: 'ADMIN',
+      revokedAt: null,
+      expiresAt: null,
+      ...over,
+    });
+    expect(await ids([])).toEqual(['removed']);
+    expect(await ids([home({ revokedAt: t0 })])).toEqual(['current']);
+    expect(await ids([home({ expiresAt: new Date(t0.getTime() - 1) })])).toEqual(['current']);
+    expect(await ids([home({ expiresAt: new Date(t0.getTime() + 1000) })])).toEqual(['removed']);
+    // The asker branch applies the same check.
+    expect(await ids([home({ revokedAt: t0 })], 'removed')).toEqual(['current']);
+  });
+});

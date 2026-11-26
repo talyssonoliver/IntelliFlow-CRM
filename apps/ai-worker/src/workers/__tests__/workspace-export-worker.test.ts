@@ -13,7 +13,7 @@ vi.mock('@intelliflow/adapters', async (importOriginal) => ({
   sweepWorkspaceExports: (...a: unknown[]) => sweepWorkspaceExports(...a),
 }));
 
-import { processWorkspaceExportJob } from '../workspace-export-worker.js';
+import { createExportMailSender, processWorkspaceExportJob } from '../workspace-export-worker.js';
 
 const deps = {} as never;
 const enqueue = vi.fn();
@@ -61,5 +61,36 @@ describe('processWorkspaceExportJob', () => {
 
   it('uses the queue name the API produces to', () => {
     expect(WORKSPACE_EXPORT_QUEUE).toBe('intelliflow-workspace-export');
+  });
+});
+
+describe('createExportMailSender', () => {
+  const mail = { recipientUserId: 'u1', tenantId: 't1', subject: 's', body: 'b' };
+  const sender = (result: unknown, fail = false) => {
+    const job = {
+      waitUntilFinished: vi.fn(async () => {
+        if (fail) throw new Error('job failed');
+        return result;
+      }),
+    };
+    const queue = { add: vi.fn(async () => job) };
+    return { queue, job, send: createExportMailSender(queue as never, {} as never, 1000) };
+  };
+
+  it('counts the mail as sent only after the notification job finished', async () => {
+    const { queue, job, send } = sender({ delivered: true });
+    await send(mail);
+    expect(queue.add).toHaveBeenCalledTimes(1);
+    expect(job.waitUntilFinished).toHaveBeenCalledTimes(1);
+  });
+
+  it('fails when the job fails, so the sweep retries that recipient', async () => {
+    await expect(sender(undefined, true).send(mail)).rejects.toThrow('job failed');
+  });
+
+  it('fails when the notification worker could not deliver', async () => {
+    await expect(
+      sender({ delivered: false, reason: 'no-recipient-email' }).send(mail)
+    ).rejects.toThrow(/no-recipient-email/);
   });
 });

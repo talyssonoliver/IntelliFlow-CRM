@@ -96,19 +96,17 @@ export class ArchiveWriter {
   }
 
   /**
-   * Resolves when archiver has finished the entry `name` (its 'entry' event), rejects when the
-   * archive fails. Waiting for this, not only for the source, keeps what is queued behind a slow
-   * disk down to one entry: archiver wraps a stream in its own buffer, so a small file can finish
-   * on our side long before it is written.
+   * Resolves when archiver has finished the entry appended next (its 'entry' event), rejects when
+   * the archive fails. Waiting for this, not only for the source, keeps what is queued behind a
+   * slow disk down to one entry: archiver wraps a stream in its own buffer, so a small file can
+   * finish on our side long before it is written. Entries are added one at a time, so the next
+   * event is this entry's: archiver may report a normalized name (it strips "C:" and the like),
+   * so the name is not compared.
    */
-  private entryDone(name: string): Promise<void> {
+  private entryDone(): Promise<void> {
     const done = new Promise<void>((resolve, reject) => {
-      const onEntry = (entry: { name: string }) => {
-        if (entry.name !== name) return;
-        this.archive.off('entry', onEntry);
-        resolve();
-      };
-      this.archive.on('entry', onEntry);
+      const onEntry = () => resolve();
+      this.archive.once('entry', onEntry);
       this.failed.catch((err: Error) => {
         this.archive.off('entry', onEntry);
         reject(err);
@@ -125,7 +123,7 @@ export class ArchiveWriter {
     this.names.add(name);
     const tee = new DigestTransform();
     this.current = tee;
-    const entry = this.entryDone(name);
+    const entry = this.entryDone();
     this.archive.append(tee, { name });
     return { tee, entry };
   }
