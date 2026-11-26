@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-23T01:56:16.047Z",
+  "generated_at": "2026-11-26T23:09:18.565Z",
   "upstream_font_sha256": "b9a28e5c5328940ee287c3d7f6b626e32a9afa92f86b055295cdf6fd5d1c004b",
   "subsetter_version": "subset-font@^2.5.0",
   "variation_axes": {
@@ -15,6 +15,7 @@
     "account_tree",
     "add",
     "add_call",
+    "add_chart",
     "add_circle",
     "add_link",
     "add_task",
@@ -81,6 +82,7 @@
     "code_blocks",
     "comment",
     "compare",
+    "compare_arrows",
     "computer",
     "confirmation_number",
     "construction",
@@ -112,7 +114,6 @@
     "draw",
     "dynamic_feed",
     "dynamic_form",
-    "eco",
     "edit",
     "edit_note",
     "email",
@@ -374,7 +375,6 @@
     "vpn_key",
     "warning",
     "warning_amber",
-    "waterfall_chart",
     "waving_hand",
     "wb_sunny",
     "webhook",
@@ -385,7 +385,7 @@
     "zoom_out"
   ],
   "icons_count": 374,
-  "scanned_files_count": 1482,
+  "scanned_files_count": 1494,
   "source_scan_patterns": [
     "apps/web/src",
     "packages/ui/src"

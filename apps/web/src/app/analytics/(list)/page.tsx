@@ -1,251 +1,298 @@
 'use client';
 
-import { useState } from 'react';
+/**
+ * Analytics: Performance (owner 26/11, Analytics redesign and mockup). The Dashboard is the
+ * operational workspace ("what needs attention today?"); Analytics is the business-intelligence
+ * workspace ("how is the business performing, and why?"). It never repeats the Dashboard's
+ * widgets (owner comment #10).
+ *
+ * Layout follows the mockup: hero with export, the views' tabs, the period and comparison, then
+ * "Business performance": four KPIs with their definitions, booked revenue over time against the
+ * previous period, and what changed with its evidence. Missing data says so; a failed request
+ * says so; nothing shows a real-looking zero.
+ */
 
+import { useState } from 'react';
+import dynamic from 'next/dynamic';
 import { Card } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared/page-header';
+import { HeroMenu, type HeroMenuItem } from '@/components/shared/hero-menu';
 import { KpiCard } from '@/components/dashboard/KpiCard';
-import { WidgetHeader } from '@/components/dashboard/WidgetHeader';
-import { RecentActivityWidget } from '@/components/dashboard/widgets/RecentActivityWidget';
-import { PipelineSummaryWidget } from '@/components/dashboard/widgets/PipelineSummaryWidget';
-import { trpc } from '@/lib/trpc';
+import { ChartEmptyState, ChartUnavailable } from '@/components/shared/ChartEmptyState';
+import { MetricDefinition } from '@/components/shared/MetricDefinition';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { useAnalyticsDateRange, type PeriodKey } from '@/hooks/useAnalyticsDateRange';
-import { HeroMenu, type HeroMenuItem } from '@/components/shared/hero-menu';
-import {
-  PERIOD_ITEMS,
-  RevenueTrendContent,
-  useCompactMoney,
-  useReportExport,
-  type ReportExportType,
-} from './analytics-shared';
+import type { Comparison, MaterialChange } from '@/lib/analytics/period-comparison';
+import { useCompactMoney, useReportExport, type ReportExportType } from './analytics-shared';
+import { AnalyticsViewTabs, PeriodFilters } from './AnalyticsWorkspace';
+import { performanceChanges, usePerformanceMetrics } from './usePerformanceMetrics';
+
+const PeriodComparisonChart = dynamic(
+  () => import('./PeriodComparisonChart').then((m) => ({ default: m.PeriodComparisonChart })),
+  { ssr: false, loading: () => <div className="h-[220px] animate-pulse rounded-lg bg-muted" /> }
+);
 
 const EXPORT_ITEMS: HeroMenuItem[] = [
-  { value: 'overview', label: 'Overview Metrics', icon: 'table_chart' },
-  { value: 'funnel', label: 'Pipeline Funnel', icon: 'waterfall_chart' },
   { value: 'sales', label: 'Sales Metrics', icon: 'download' },
+  { value: 'overview', label: 'Overview Metrics', icon: 'table_chart' },
+  { value: 'leads', label: 'Lead Metrics', icon: 'group' },
 ];
 
-export default function AnalyticsPage() {
-  const formatCurrency = useCompactMoney();
-  const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>('30d');
+const DEFINITIONS = {
+  revenue:
+    'Sum of the value of deals won, by the date they were won. Not cash collected or accounting revenue.',
+  winRate: 'Deals won as a share of deals closed (won or lost) in the period.',
+  cycle:
+    'Average days from a deal being created to being won, for deals won in the period. A median will replace it once the stage history supports it.',
+  pipeline:
+    'Value of opportunities created in the period that are still open. Opportunities already won or lost are not included.',
+};
+
+export default function AnalyticsPerformancePage() {
+  const money = useCompactMoney();
+  const [period, setPeriod] = useState<PeriodKey>('30d');
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const dateRange = useAnalyticsDateRange(selectedPeriod);
-  const enabled = isAuthenticated && !authLoading;
-
-  // --- tRPC queries ---
-  const {
-    data: overview,
-    isLoading: overviewLoading,
-    isError: overviewFailed,
-  } = trpc.analytics.getOverview.useQuery(
-    { startDate: dateRange.startDate, endDate: dateRange.endDate },
-    { enabled }
-  );
-
-  const { data: funnel } = trpc.analytics.getConversionFunnel.useQuery(
-    { startDate: dateRange.startDate, endDate: dateRange.endDate, includeLeads: true },
-    { enabled }
-  );
-
-  const { data: timeSeries, isLoading: timeSeriesLoading } =
-    trpc.analytics.getTimeSeriesData.useQuery(
-      {
-        metric: 'revenue',
-        startDate: dateRange.startDate,
-        endDate: dateRange.endDate,
-        granularity: selectedPeriod === '7d' ? 'day' : 'month',
-      },
-      { enabled }
-    );
-
-  const { data: leadStats } = trpc.analytics.leadStats.useQuery(undefined, { enabled });
-
-  const handleServerExport = useReportExport(dateRange);
-
-  const isLoading = overviewLoading || authLoading;
+  const range = useAnalyticsDateRange(period);
+  const handleExport = useReportExport(range);
+  const m = usePerformanceMetrics(range, period, isAuthenticated && !authLoading);
+  const pending = authLoading || m.pending;
 
   return (
     <>
-      {/* Owner 21/11: the shared hero, like every other page. */}
       <PageHeader
         breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }]}
         title="Analytics"
-        description="AI-powered insights and sales pipeline analytics"
+        description="Understand performance. Identify opportunities. Measure impact."
         controls={
-          <>
-            {/* Owner 22/11: the period picker looks like the hero's buttons (one shared control),
-                and the Refresh button is gone: the data reloads when the period changes. */}
-            <HeroMenu
-              ariaLabel="Period"
-              label="Period"
-              icon="calendar_month"
-              items={PERIOD_ITEMS}
-              value={selectedPeriod}
-              onSelect={(v) => setSelectedPeriod(v as PeriodKey)}
-            />
-            <HeroMenu
-              label="Export"
-              icon="download"
-              variant="primary"
-              heading="CSV export"
-              items={EXPORT_ITEMS}
-              onSelect={(v) => handleServerExport(v as ReportExportType)}
-            />
-          </>
+          <HeroMenu
+            label="Export"
+            icon="download"
+            variant="primary"
+            heading="CSV export"
+            items={EXPORT_ITEMS}
+            onSelect={(v) => handleExport(v as ReportExportType)}
+          />
         }
       />
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <KpiCard
-          framed
-          label="Total Leads"
-          icon="group"
-          value={(overview?.totalLeads ?? 0).toLocaleString('en-GB')}
-          pending={isLoading}
-          failed={overviewFailed && !overview}
-          footer={
-            <PeriodChange delta={overview?.leadDelta ?? 0} format={String}>
-              {leadStats ? ` · ${leadStats.newThisMonth} new this month` : null}
-            </PeriodChange>
-          }
-        />
-        <KpiCard
-          framed
-          label="Revenue"
-          icon="payments"
-          value={formatCurrency(overview?.totalRevenue ?? 0)}
-          pending={isLoading}
-          failed={overviewFailed && !overview}
-          footer={<PeriodChange delta={overview?.revenueDelta ?? 0} format={formatCurrency} />}
-        />
-        <KpiCard
-          framed
-          label="Open deals"
-          icon="handshake"
-          value={String(overview?.openOpportunities ?? 0)}
-          pending={isLoading}
-          failed={overviewFailed && !overview}
-          footer={<PeriodChange delta={overview?.openOpportunitiesDelta ?? 0} format={String} />}
-        />
-        <KpiCard
-          framed
-          label="Win Rate"
-          icon="emoji_events"
-          value={`${overview?.winRate ?? 0}%`}
-          pending={isLoading}
-          failed={overviewFailed && !overview}
-          footer={<PeriodChange delta={overview?.winRateDelta ?? 0} format={(v) => `${v} pp`} />}
-        />
-      </div>
+      <AnalyticsViewTabs active="performance" />
+      <PeriodFilters period={period} onPeriodChange={setPeriod} range={range} />
 
-      {/* Charts Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Owner 22/11: "This pipeline funnel data is different from the data we have on dashboard".
-            It was deals created in the period, with Closed Won and deleted deals counted; now it is
-            the Dashboard's own Pipeline Summary (open deals, the tenant's stages, lead counts). */}
-        <Card className="lg:col-span-2 overflow-hidden p-0 bg-card border-border">
-          <PipelineSummaryWidget />
-        </Card>
+      <section aria-labelledby="business-performance" className="flex flex-col gap-4">
+        <div>
+          <h2 id="business-performance" className="text-lg font-semibold text-foreground">
+            Business performance
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Business outcomes and material changes across the selected period.
+          </p>
+        </div>
 
-        {/* Lead Stats + Quick Info */}
-        <Card className="p-6 bg-card border-border">
-          <WidgetHeader title="Lead Overview" className="mb-6" />
-          {overview ? (
-            <div className="space-y-4">
-              <QuickStat
-                label="New Contacts"
-                value={overview.newContacts}
-                delta={overview.newContactsDelta}
-              />
-              <QuickStat
-                label="Win Rate"
-                value={`${overview.winRate}%`}
-                delta={overview.winRateDelta}
-                suffix="pp"
-              />
-              {leadStats && (
-                <>
-                  <QuickStat label="Total Leads (all time)" value={leadStats.total} />
-                  <QuickStat label="New This Month" value={leadStats.newThisMonth} />
-                </>
-              )}
-              {funnel && <QuickStat label="Total Leads (period)" value={funnel.totalLeads} />}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse h-10 bg-muted rounded" />
-              ))}
-            </div>
-          )}
-        </Card>
-      </div>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <KpiCard
+            framed
+            label="Booked revenue"
+            icon="payments"
+            value={money(m.now?.totalRevenue ?? 0)}
+            pending={pending}
+            failed={m.failed}
+            badge={<MetricDefinition label="Booked revenue" definition={DEFINITIONS.revenue} />}
+            footer={<VsPrevious comparison={m.kpis.revenue} format={money} />}
+          />
+          <KpiCard
+            framed
+            label="Win rate"
+            icon="emoji_events"
+            value={`${Math.round((m.now?.winRate ?? 0) * 10) / 10}%`}
+            pending={pending}
+            failed={m.failed}
+            badge={<MetricDefinition label="Win rate" definition={winRateDefinition(m.now)} />}
+            footer={<VsPrevious comparison={m.kpis.winRate} points />}
+          />
+          <KpiCard
+            framed
+            label="Sales cycle"
+            icon="timer"
+            value={
+              m.now?.avgSalesCycleDays == null
+                ? 'No data'
+                : `${Math.round(m.now.avgSalesCycleDays)} days`
+            }
+            pending={pending}
+            failed={m.failed}
+            badge={<MetricDefinition label="Sales cycle" definition={DEFINITIONS.cycle} />}
+            footer={
+              m.now?.avgSalesCycleDays == null ? (
+                <p className="text-xs text-muted-foreground">no deals won in this period</p>
+              ) : (
+                <VsPrevious comparison={m.kpis.cycle} format={(v) => `${Math.round(v)} days`} />
+              )
+            }
+          />
+          <KpiCard
+            framed
+            label="Pipeline created"
+            icon="add_chart"
+            value={money(m.now?.pipelineValue ?? 0)}
+            pending={pending}
+            failed={m.failed}
+            badge={<MetricDefinition label="Pipeline created" definition={DEFINITIONS.pipeline} />}
+            footer={<VsPrevious comparison={m.kpis.pipeline} format={money} />}
+          />
+        </div>
 
-      {/* Bottom Row */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Revenue Trend Chart */}
-        <Card className="p-6 bg-card border-border">
-          <WidgetHeader title="Revenue Trend" className="mb-6" />
-          <RevenueTrendContent loading={timeSeriesLoading} timeSeries={timeSeries} />
-        </Card>
-
-        {/* Recent Activity: the Dashboard's own card (owner 21/11: unify Analytics with the
-            Dashboard), not a second feed that read "New item: Unknown". */}
-        <Card className="overflow-hidden p-0 bg-card border-border">
-          <RecentActivityWidget />
-        </Card>
-      </div>
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)]">
+          <Card className="border-border bg-card p-5">
+            <PanelHeader title="Booked revenue over time" subtitle="Period comparison" />
+            <RevenueComparison trend={m.trend} money={money} />
+          </Card>
+          <Card className="border-border bg-card p-5">
+            <PanelHeader
+              title="What changed"
+              subtitle="Material changes, with the figures behind them"
+            />
+            <ChangesList
+              pending={pending}
+              failed={m.failed}
+              changes={performanceChanges(m.kpis, money)}
+            />
+          </Card>
+        </div>
+      </section>
     </>
   );
 }
 
-// --- Helpers ---
+function winRateDefinition(now: { closedWonCount: number; closedLostCount: number } | undefined) {
+  if (!now) return DEFINITIONS.winRate;
+  const closed = now.closedWonCount + now.closedLostCount;
+  return `${DEFINITIONS.winRate} This period: ${now.closedWonCount} won of ${closed} closed.`;
+}
 
-function PeriodChange({
-  delta,
-  format,
-  children,
-}: Readonly<{ delta: number; format: (v: number) => string; children?: React.ReactNode }>) {
-  const up = delta >= 0;
+function PanelHeader({ title, subtitle }: Readonly<{ title: string; subtitle: string }>) {
+  return (
+    <div className="mb-3">
+      <h3 className="text-base font-semibold text-foreground">{title}</h3>
+      <p className="text-xs text-muted-foreground">{subtitle}</p>
+    </div>
+  );
+}
+
+function RevenueComparison({
+  trend,
+  money,
+}: Readonly<{
+  trend: ReturnType<typeof usePerformanceMetrics>['trend'];
+  money: (v: number) => string;
+}>) {
+  if (trend.failed) {
+    return <ChartUnavailable message="Couldn't load booked revenue." onRetry={trend.retry} />;
+  }
+  if (trend.pending) return <div className="h-[220px] animate-pulse rounded-lg bg-muted" />;
+  if (trend.points.every((p) => p.current === 0 && !p.previous)) {
+    return (
+      <ChartEmptyState
+        message="No revenue booked in this period yet"
+        description="Won deals show here by the date they were won."
+      />
+    );
+  }
+  return (
+    <>
+      <div className="mb-2 flex flex-wrap gap-4 text-xs text-muted-foreground">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-0.5 w-3 rounded bg-[#2a78f6]" aria-hidden="true" />
+          <span>This period · {money(trend.totalNow ?? 0)}</span>
+        </span>
+        <span className="inline-flex items-center gap-1.5">
+          <span className="h-0.5 w-3 rounded bg-[#a8b6cc]" aria-hidden="true" />
+          <span>Previous period · {money(trend.totalBefore ?? 0)}</span>
+        </span>
+      </div>
+      <PeriodComparisonChart data={trend.points} formatMoney={money} />
+    </>
+  );
+}
+
+/**
+ * "+12% vs previous period" (or "+3 pp" for rates), coloured by whether the change is good for
+ * the business; the previous figure when there is nothing to compare a percentage with.
+ */
+function VsPrevious({
+  comparison,
+  format = String,
+  points = false,
+}: Readonly<{ comparison: Comparison | null; format?: (v: number) => string; points?: boolean }>) {
+  if (!comparison) return null;
+  if (comparison.direction === 'flat') {
+    return <p className="text-xs text-muted-foreground">same as the previous period</p>;
+  }
+  if (!points && comparison.percent === null) {
+    return (
+      <p className="text-xs text-muted-foreground">
+        <span>{format(comparison.previous)}</span>
+        <span> in the previous period</span>
+      </p>
+    );
+  }
+  const sign = comparison.delta > 0 ? '+' : '−';
+  const amount = points
+    ? `${Math.abs(Math.round(comparison.delta * 10) / 10)} pp`
+    : `${Math.abs(Math.round(comparison.percent ?? 0))}%`;
+  const toneClass = comparison.tone === 'good' ? 'text-success' : 'text-destructive';
   return (
     <p className="text-xs text-muted-foreground">
-      <span className={`font-medium ${up ? 'text-success' : 'text-destructive'}`}>
-        {up ? '+' : '-'}
-        {format(Math.abs(delta))}
-      </span>{' '}
-      vs previous period{children}
+      <span className={`font-medium ${toneClass}`}>
+        {sign}
+        {amount}
+      </span>
+      <span> vs previous period</span>
     </p>
   );
 }
 
-function QuickStat({
-  label,
-  value,
-  delta,
-  suffix,
-}: Readonly<{
-  label: string;
-  value: string | number;
-  delta?: number;
-  suffix?: string;
-}>) {
-  return (
-    <div className="flex items-center justify-between py-2 border-b border-border last:border-0">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold text-foreground">{value}</span>
-        {delta !== undefined && (
-          <span
-            className={`text-xs font-medium ${delta >= 0 ? 'text-success' : 'text-destructive'}`}
-          >
-            {delta >= 0 ? '+' : ''}
-            {delta}
-            {suffix ? ` ${suffix}` : ''}
-          </span>
-        )}
+function ChangesList({
+  pending,
+  failed,
+  changes,
+}: Readonly<{ pending: boolean; failed: boolean; changes: MaterialChange[] }>) {
+  if (failed) {
+    return <p className="text-sm text-muted-foreground">Couldn&apos;t compare the periods.</p>;
+  }
+  if (pending) {
+    return (
+      <div className="space-y-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-12 animate-pulse rounded bg-muted" />
+        ))}
       </div>
-    </div>
+    );
+  }
+  if (changes.length === 0) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Nothing moved by 10% (or 5 points) or more against the previous period.
+      </p>
+    );
+  }
+  return (
+    <ul className="divide-y divide-border">
+      {changes.map((c) => (
+        <li key={c.label} className="flex gap-3 py-3 first:pt-0">
+          <span
+            className={`material-symbols-outlined flex size-8 shrink-0 items-center justify-center rounded-lg text-[18px] ${
+              c.tone === 'good' ? 'bg-success/10 text-success' : 'bg-warning/15 text-warning'
+            }`}
+            aria-hidden="true"
+          >
+            {c.tone === 'good' ? 'trending_up' : 'priority_high'}
+          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground">{c.summary}</p>
+            <p className="text-xs text-muted-foreground">{c.evidence}</p>
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }

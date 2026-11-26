@@ -8,7 +8,7 @@
 
 import { useCallback } from 'react';
 import dynamic from 'next/dynamic';
-import { EmptyState } from '@intelliflow/ui';
+import { EmptyState, toast } from '@intelliflow/ui';
 import type { HeroMenuItem } from '@/components/shared/hero-menu';
 import { formatMoneyCompact } from '@/lib/format/money';
 import { downloadCSV } from '@/lib/export/csv';
@@ -101,7 +101,12 @@ export function useReportExport(dateRange: { startDate: string; endDate: string 
         });
         if (result && typeof result.data === 'string') downloadCSV(result.data, result.filename);
       } catch {
-        // The server export is unavailable: nothing to download.
+        // Owner 26/11 (Analytics redesign audit): "CSV export failures are silently suppressed".
+        toast({
+          title: "Couldn't export the report",
+          description: 'Nothing was downloaded. Try again in a moment.',
+          variant: 'destructive',
+        });
       }
     },
     [dateRange, utils]
