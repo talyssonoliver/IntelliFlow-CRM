@@ -38,6 +38,7 @@ const mockShowModal = vi.hoisted(() => vi.fn());
 const mockClose = vi.hoisted(() => vi.fn());
 const mockSetBusinessType = vi.hoisted(() => vi.fn());
 const mockInvalidateModules = vi.hoisted(() => vi.fn());
+const mockSetStateData = vi.hoisted(() => vi.fn());
 
 // ============================================================
 // vi.mock declarations (hoisted to top of file by Vitest)
@@ -47,6 +48,7 @@ vi.mock('@/lib/trpc', () => ({
   trpc: {
     useUtils: () => ({
       moduleAccess: { getEnabledModules: { invalidate: mockInvalidateModules } },
+      onboarding: { getState: { setData: mockSetStateData } },
     }),
     moduleAccess: {
       setBusinessType: {
@@ -906,6 +908,7 @@ describe('OnboardingWelcome business type step', () => {
     mockSetBusinessType.mockReset();
     mockSetBusinessType.mockResolvedValue({});
     mockInvalidateModules.mockReset();
+    mockSetStateData.mockReset();
     mockMutate.mockReset();
     sessionStorage.clear();
     mockGetState.mockReturnValue(state());
@@ -946,6 +949,14 @@ describe('OnboardingWelcome business type step', () => {
       expect(mockSetBusinessType).toHaveBeenCalledWith({ businessType: 'TRADES_HOME_SERVICES' })
     );
     await waitFor(() => expect(mockInvalidateModules).toHaveBeenCalled());
+    // The cached onboarding state is updated, so a remount cannot ask the question again.
+    expect(mockSetStateData).toHaveBeenCalledTimes(1);
+    const updater = mockSetStateData.mock.calls[0][1] as (s: unknown) => unknown;
+    expect(updater({ needsBusinessType: true, flowDone: false })).toEqual({
+      needsBusinessType: false,
+      flowDone: false,
+    });
+    expect(updater(undefined)).toBeUndefined();
     await waitFor(() =>
       expect(screen.queryByTestId('onboarding-business-type-page')).not.toBeInTheDocument()
     );

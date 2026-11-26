@@ -380,6 +380,11 @@ function useBusinessTypeSave(businessType: TenantBusinessType | null, onSaved: (
       );
       return;
     }
+    // The cached onboarding state must say the question is answered, whatever happens to this
+    // component afterwards (it unmounts on public auth routes and mounts again later).
+    utils.onboarding.getState.setData(undefined, (state) =>
+      state ? { ...state, needsBusinessType: false } : state
+    );
     onSaved();
     await utils.moduleAccess.getEnabledModules.invalidate();
   }, [businessType, mutation, utils, onSaved]);
