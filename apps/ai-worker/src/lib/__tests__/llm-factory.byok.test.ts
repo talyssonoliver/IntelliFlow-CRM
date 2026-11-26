@@ -174,7 +174,7 @@ describe('createLLMForTenant with BYOK', () => {
   it.each([
     ['openai', 'free', 'gpt-4o-mini', 'gpt-4o-mini'],
     ['openai', 'premium', 'gpt-4o', 'gpt-4o'],
-    ['google', 'standard', 'gemini-2.5-flash', 'structured-free'],
+    ['google', 'standard', 'gemini-2.5-flash', 'gemini-2.5-flash'],
     ['openrouter', 'free', 'openai/gpt-4o-mini', 'gpt-4o-mini'],
     ['anthropic', 'free', 'claude-haiku-5-5', 'claude-haiku-5-5'],
     ['anthropic', 'premium', 'claude-sonnet-5-5', 'claude-sonnet-5-5'],

@@ -179,7 +179,7 @@ export function invalidateByok(tenantId?: string): void {
   credentialCache.delete(tenantId);
   lastUsedWrittenAt.delete(tenantId);
   lastInvalidProbeAt.delete(tenantId);
-  lastMarked.delete(tenantId);
+  for (const key of lastMarked.keys()) if (key.startsWith(`${tenantId}:`)) lastMarked.delete(key);
   for (const key of modelCache.keys()) {
     if (key.startsWith(`${tenantId}\u0000`)) modelCache.delete(key);
   }
@@ -493,20 +493,24 @@ export async function markByokStatus(
   // Only if the cached credential is the key that failed (a replacement is left alone).
   if (cached?.value && sameKey(cached.value, credential)) {
     credentialCache.set(tenantId, { ...cached, value: { ...cached.value, status } });
+    if (status === 'INVALID') lastInvalidProbeAt.set(tenantId, now);
   }
-  if (status === 'INVALID') lastInvalidProbeAt.set(tenantId, now);
 
-  const previous = lastMarked.get(tenantId);
+  // Throttled per key (tenant and revision): an old key's failure never suppresses the new one's.
+  const markKey = `${tenantId}:${credential.provider}:${credential.revision}`;
+  const previous = lastMarked.get(markKey);
   if (previous && previous.status === status && now - previous.at < MARK_INTERVAL_MS) return;
-  lastMarked.set(tenantId, { status, at: now });
+  lastMarked.set(markKey, { status, at: now });
   try {
     // Only the key this call used: a key replaced meanwhile is not marked for the old one's failure.
-    await prisma.tenantAIProviderKey.updateMany({
+    const written = await prisma.tenantAIProviderKey.updateMany({
       where: { tenantId, provider: credential.provider, createdAt: new Date(credential.revision) },
       data: { status, statusDetail: STATUS_DETAIL[status] },
     });
+    // Matched no row (the key was replaced): nothing was recorded, so nothing is throttled.
+    if (written?.count === 0) lastMarked.delete(markKey);
   } catch (err) {
-    lastMarked.delete(tenantId);
+    lastMarked.delete(markKey);
     logger.warn(
       { tenantId, err: err instanceof Error ? err.name : 'Error' },
       'BYOK key status could not be recorded'
@@ -535,7 +539,7 @@ function recordByokSuccess(credential: ByokCredential): void {
         value: { ...cached.value, status: 'ACTIVE' },
       });
     }
-    lastMarked.delete(credential.tenantId);
+    lastMarked.delete(`${credential.tenantId}:${credential.provider}:${credential.revision}`);
   }
   prisma.tenantAIProviderKey
     .updateMany({

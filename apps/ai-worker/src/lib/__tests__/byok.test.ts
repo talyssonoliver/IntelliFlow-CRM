@@ -824,3 +824,17 @@ describe('key identity: a replacement is not marked or healed by the old key', (
     expect((await resolveByokCredential('tenant-a'))?.status).toBe('RATE_LIMITED');
   });
 });
+
+describe('status write throttle is per key', () => {
+  it('an old key failure that matched no row does not suppress the replacement failure', async () => {
+    db.updateMany.mockResolvedValueOnce({ count: 0 });
+    await markByokStatus(credential({ revision: REVISION_A }), 'RATE_LIMITED');
+    db.updateMany.mockResolvedValue({ count: 1 });
+    await markByokStatus(credential({ revision: REVISION_B }), 'RATE_LIMITED');
+    expect(db.updateMany).toHaveBeenCalledTimes(2);
+    expect(db.updateMany.mock.calls[1][0].where.createdAt).toEqual(new Date(REVISION_B));
+    // Same key, same status, inside a minute: throttled as before.
+    await markByokStatus(credential({ revision: REVISION_B }), 'RATE_LIMITED');
+    expect(db.updateMany).toHaveBeenCalledTimes(2);
+  });
+});

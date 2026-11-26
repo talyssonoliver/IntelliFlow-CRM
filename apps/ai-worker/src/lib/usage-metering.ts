@@ -141,7 +141,11 @@ export function recordModelUsage(meta: ModelUsageMeta, input: unknown, result: u
   const usage = message?.usage_metadata;
   // The gateway may serve another (e.g. a paid fallback) model than the one asked for:
   // price what ran when the response names a known deployment (owner Q9).
-  const model = servedPricingKey(message?.response_metadata?.model_name) ?? chatPricingKey(meta);
+  // A tenant's own key runs the model it was built for: the gateway's served-model mapping
+  // (which prices a deployment alias) does not apply to it.
+  const model = meta.byok
+    ? chatPricingKey(meta)
+    : (servedPricingKey(message?.response_metadata?.model_name) ?? chatPricingKey(meta));
   recordSafely(() =>
     costTracker.recordUsage({
       model,

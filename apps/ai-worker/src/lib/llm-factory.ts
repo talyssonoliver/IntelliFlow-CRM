@@ -674,8 +674,7 @@ export function byokModelSpec(provider: ByokCredential['provider'], tier: LLMTie
       return { model, pricingKey: model };
     }
     case 'google':
-      // gemini-2.5-flash is priced as the 'structured-free' alias ($0.075 / $0.30 per M).
-      return { model: 'gemini-2.5-flash', pricingKey: 'structured-free' };
+      return { model: 'gemini-2.5-flash', pricingKey: 'gemini-2.5-flash' };
     case 'openrouter': {
       const model = tier === 'premium' ? 'gpt-4o' : 'gpt-4o-mini';
       return { model: `openai/${model}`, pricingKey: model };

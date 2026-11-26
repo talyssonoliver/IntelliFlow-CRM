@@ -287,6 +287,9 @@ export const MODEL_PRICING = {
   // LONG_PROMPT_PRICING below. Claude Sonnet 5.5: $2 / $10 per M.
   'claude-haiku-5-5': { input: 0.0001, output: 0.0005 },
   'claude-sonnet-5-5': { input: 0.002, output: 0.01 },
+  // PG-199 BYOK: Gemini 2.5 Flash on a customer's own Google key. Google list price $0.30 / $2.50
+  // per M (the 'structured-free' alias is priced for the platform's gateway deployment).
+  'gemini-2.5-flash': { input: 0.0003, output: 0.0025 },
 } as const;
 
 export type ModelName = keyof typeof MODEL_PRICING;

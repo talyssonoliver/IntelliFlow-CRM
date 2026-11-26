@@ -130,3 +130,24 @@ describe('BYOK calls and the tenant AI-actions allowance', () => {
     expect(values.get(monthlyBudgetKey()) ?? 0).toBe(0);
   });
 });
+
+describe('BYOK pricing is not overridden by the gateway served-model mapping', () => {
+  it('Google flash on a customer key is priced at its own list price, not the structured-free alias', async () => {
+    const own = {
+      invoke: vi.fn().mockResolvedValue({
+        content: 'ok',
+        usage_metadata: { input_tokens: 0, output_tokens: 1_000_000 },
+        response_metadata: { model_name: 'gemini-2.5-flash' },
+      }),
+    } as never;
+    const model = wrapModelWithTracing(own, {
+      purpose: 'scoring',
+      tier: 'free',
+      pricingKey: 'gemini-2.5-flash',
+      byok: true,
+    });
+    await runAsTenant(() => model.invoke('hi'));
+    // $2.50 per million output tokens, not the alias' $0.30.
+    expect(usages.at(-1)!.cost).toBeCloseTo(2.5, 5);
+  });
+});
