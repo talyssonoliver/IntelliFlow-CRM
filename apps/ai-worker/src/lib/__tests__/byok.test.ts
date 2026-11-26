@@ -873,3 +873,29 @@ describe('an OPEN platform breaker and the recovery probe of a rejected key', ()
     ).rejects.toThrow(/OPEN/);
   });
 });
+
+describe('a call let through an OPEN breaker never reaches the platform by any route', () => {
+  it('an ACTIVE key with fallback allowed and an explicit provider override is refused', async () => {
+    const { CircuitBreaker } = await import('../../utils/circuit-breaker');
+    const { tenantContextStore } = await import('../../tracing/tenant-context');
+    const { assertPlatformAllowedForBypassedCall } = await import('../byok');
+    const breaker = new CircuitBreaker(1, 60_000);
+    await breaker.execute(() => Promise.reject(httpError(500))).catch(() => undefined);
+    db.findFirst.mockResolvedValue(row({ allowFallback: true }));
+    const attempt = () =>
+      tenantContextStore.run({ tenantId: 'tenant-a' }, () =>
+        breaker.execute(async () => {
+          // createLLMForTenant: explicit provider + fallback allowed routes to the platform...
+          expect(await routeForTenant('tenant-a', { explicitProvider: true })).toEqual({
+            kind: 'platform',
+          });
+          // ...which must not be built while this call bypassed the OPEN breaker.
+          assertPlatformAllowedForBypassedCall();
+          return 'platform built';
+        })
+      );
+    await expect(attempt()).rejects.toThrow(/OPEN/);
+    // Outside such a call the guard is a no-op.
+    expect(() => assertPlatformAllowedForBypassedCall()).not.toThrow();
+  });
+});

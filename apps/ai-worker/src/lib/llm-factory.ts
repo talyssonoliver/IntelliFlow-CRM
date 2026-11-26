@@ -7,6 +7,7 @@ import { CircuitBreaker } from '../utils/circuit-breaker.js';
 import { resolveEffectiveTier } from './tenant-ai-config.js';
 import { assertWithinCeiling } from './purpose-ceiling.js';
 import {
+  assertPlatformAllowedForBypassedCall,
   getCachedByokModel,
   routeForTenant,
   withByokFailureHandling,
@@ -853,6 +854,8 @@ export async function createLLMForTenant(
       fallback: credential.allowFallback ? buildPlatformModel : null,
     });
   } else {
+    // A call let through an OPEN platform breaker for its own key never reaches the platform.
+    assertPlatformAllowedForBypassedCall();
     model = buildPlatformModel();
   }
   if (resolved.ceilingCents === null || resolved.ceilingCents === undefined) return model;

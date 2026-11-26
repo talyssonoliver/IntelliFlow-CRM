@@ -565,6 +565,15 @@ function recordByokSuccess(credential: ByokCredential): void {
 // Failure handling around the tenant's model
 // ---------------------------------------------------------------------------
 
+/**
+ * Called before any platform model is built for a tenant that has its own key: a call that was
+ * let through an OPEN platform breaker because it runs on that key never reaches the platform,
+ * by any route (fallback after a failure, or an explicit provider override).
+ */
+export function assertPlatformAllowedForBypassedCall(): void {
+  if (platformBreakerRefusesCall()) throw new Error('Circuit breaker is OPEN - too many failures');
+}
+
 function platformBreakerRefusesCall(): boolean {
   return (
     typeof CircuitBreaker.callBypassedOpenBreaker === 'function' &&
