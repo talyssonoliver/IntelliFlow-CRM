@@ -416,6 +416,8 @@ async function readPass(
   const inboxFrom = fresh ? null : mailbox.lookbackCursor;
   const sent = await passFolder(ctx, 'sentitems', fromStored(sentFrom), addresses);
   if (sent) carried.lookbackSentCursor = sent.cursor;
+  // Sent really moved on: if the Inbox read is then refused, that progress is still progress.
+  if (sent?.advanced) carried.lookbackProgressAt = ctx.clock();
   const inbox = await passFolder(ctx, 'inbox', fromStored(inboxFrom), addresses);
   if (sent?.done && inbox?.done) {
     return { data: finishedPassData(ctx, started, until, rows.length), more: false };

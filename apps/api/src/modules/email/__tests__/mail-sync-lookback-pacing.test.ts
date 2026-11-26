@@ -285,6 +285,23 @@ describe('a rate-limited round', () => {
     expect(result.data).not.toHaveProperty('lookbackBackoffCount');
   });
 
+  it('Sent moving on counts as progress even when the Inbox read is then refused', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const stale = new Date(NOW.getTime() - STALL_ALERT_MS - 1000);
+    const { ctx, read } = context(manyLeads(5), { lookbackUntil: T1, lookbackProgressAt: stale });
+    read.mockImplementation(async (args: { folder: SyncFolder }) => {
+      if (args.folder === 'inbox') throw refused();
+      return round({ messages: [], cursor: 'sent-page-2', complete: false });
+    });
+
+    const result = await runLookback(ctx);
+
+    expect(error).not.toHaveBeenCalled();
+    expect(result.data.lookbackSentCursor).toBe('sent-page-2');
+    expect(result.data.lookbackProgressAt).toEqual(NOW);
+  });
+
   it('a pass goes on in steps: a gap between two rounds of one pass', async () => {
     const { ctx } = context(manyLeads(5), {});
     const first = ctx.reader.read as unknown as ReturnType<typeof vi.fn>;
