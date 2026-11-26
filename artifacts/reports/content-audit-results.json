@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-26T20:17:46.795Z",
+  "generated_at": "2026-11-26T21:18:18.870Z",
   "tool_version": "1.2.0",
   "routes": [
     {
@@ -8555,10 +8555,8 @@
       "response_time_ms": null,
       "http_measurement_method": "pending-runtime",
       "stale_content": {
-        "classification": "static-by-design-dated",
-        "patterns_found": [
-          "year-reference"
-        ],
+        "classification": "none",
+        "patterns_found": [],
         "data_sources": []
       },
       "ghost_links": [],

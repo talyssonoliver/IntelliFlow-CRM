@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-26T18:41:25.195Z",
+  "timestamp": "2026-11-26T19:42:48.304Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1527,16 +1527,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 218,
-    "total_fields": 3261,
-    "total_indexes": 967,
-    "total_relations": 324,
+    "total_tables": 219,
+    "total_fields": 3273,
+    "total_indexes": 970,
+    "total_relations": 325,
     "tables_with_embeddings": 4,
     "enums": 84,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 196,
+        "fields": 197,
         "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
@@ -2463,6 +2463,13 @@
         "fields": 11,
         "indexes": 4,
         "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ComplianceSnapshot",
+        "fields": 11,
+        "indexes": 3,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
