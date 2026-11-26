@@ -11,7 +11,6 @@ import { Button, Card, toast } from '@intelliflow/ui';
 import { MODULE_METADATA, type TenantBusinessType } from '@intelliflow/domain';
 import { PageHeader } from '@/components/shared/page-header';
 import { BusinessTypePicker } from '@/components/workspace/BusinessTypePicker';
-import { BusinessTypeBanner } from '@/components/workspace/BusinessTypeBanner';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useEnabledModules } from '@/hooks/useEnabledModules';
 import { trpc } from '@/lib/trpc';
@@ -55,8 +54,6 @@ export default function WorkspaceSettingsPage() {
         title="Workspace"
         description="What kind of business this workspace is. It decides which tools you get."
       />
-
-      <BusinessTypeBanner />
 
       <Card className="max-w-2xl p-6">
         <BusinessTypePicker

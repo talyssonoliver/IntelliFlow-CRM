@@ -942,6 +942,23 @@ describe('OnboardingWelcome business type step', () => {
     expect(screen.queryByRole('region', { name: /choose your plan/i })).not.toBeInTheDocument();
   });
 
+  it('says setup finishes once chosen, and skipping dismisses without completing or choosing', async () => {
+    render(<OnboardingWelcome />);
+
+    expect(screen.getByTestId('onboarding-business-type-note')).toHaveTextContent(
+      /setup finishes once you choose/i
+    );
+    // Nothing is pre-selected on the user's behalf.
+    for (const radio of screen.getAllByRole('radio')) expect(radio).not.toBeChecked();
+
+    fireEvent.click(screen.getByRole('button', { name: /skip for now/i }));
+    await waitFor(() =>
+      expect(sessionStorage.getItem('intelliflow_onboarding_session_dismissed')).toBe('1')
+    );
+    expect(mockSetBusinessType).not.toHaveBeenCalled();
+    expect(mockMutate).not.toHaveBeenCalled();
+  });
+
   it('does not ask a member whose workspace already has a business type', () => {
     mockGetState.mockReturnValue({
       data: {

@@ -108,4 +108,27 @@ describe('ModuleGate', () => {
     expect(screen.queryByTestId('paywall')).not.toBeNull();
     expect(screen.queryByTestId('workspace-module-notice')).toBeNull();
   });
+
+  it('titles the not-in-workspace notice by the feature the user opened, not the module name', () => {
+    mockUseEnabledModules.mockReturnValue({
+      isModuleEnabled: () => false,
+      isLoading: false,
+      isError: false,
+      businessType: 'TRADES_HOME_SERVICES',
+    });
+    const { unmount } = render(
+      <ModuleGate moduleId={'LEGAL' as never} featureLabel="Cases">
+        <div />
+      </ModuleGate>
+    );
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Cases');
+    expect(screen.queryByText('Legal')).toBeNull();
+    unmount();
+    render(
+      <ModuleGate moduleId={'SUPPORT' as never} featureLabel="Help Center">
+        <div />
+      </ModuleGate>
+    );
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Help Center');
+  });
 });

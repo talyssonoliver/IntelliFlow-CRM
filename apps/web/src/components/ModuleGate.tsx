@@ -28,6 +28,8 @@ import { ModulePaywall } from './ModulePaywall';
 
 interface ModuleGateProps {
   moduleId: ModuleId;
+  /** Name of the feature the user tried to open ("Cases"); a module can cover several features. */
+  featureLabel?: string;
   children: React.ReactNode;
 }
 
@@ -36,8 +38,11 @@ interface ModuleGateProps {
  * An upgrade would not help here, so this is not the paywall: it says the tool is not part of the
  * workspace and points to the setting that decides it. Nothing is deleted; the route still exists.
  */
-function WorkspaceModuleNotice({ moduleId }: Readonly<{ moduleId: ModuleId }>) {
-  const label = MODULE_METADATA[moduleId]?.label ?? moduleId;
+function WorkspaceModuleNotice({
+  moduleId,
+  featureLabel,
+}: Readonly<{ moduleId: ModuleId; featureLabel?: string }>) {
+  const label = featureLabel ?? MODULE_METADATA[moduleId]?.label ?? moduleId;
   return (
     <div
       className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center"
@@ -74,7 +79,7 @@ function WorkspaceModuleNotice({ moduleId }: Readonly<{ moduleId: ModuleId }>) {
   );
 }
 
-export function ModuleGate({ moduleId, children }: Readonly<ModuleGateProps>) {
+export function ModuleGate({ moduleId, featureLabel, children }: Readonly<ModuleGateProps>) {
   const { isModuleEnabled, isLoading, isError, businessType } = useEnabledModules();
 
   // While the access query is in-flight, show a loading spinner.
@@ -95,7 +100,7 @@ export function ModuleGate({ moduleId, children }: Readonly<ModuleGateProps>) {
     businessType !== undefined &&
     !getModulesForBusinessType(businessType).includes(moduleId)
   ) {
-    return <WorkspaceModuleNotice moduleId={moduleId} />;
+    return <WorkspaceModuleNotice moduleId={moduleId} featureLabel={featureLabel} />;
   }
 
   // Module not enabled for this tenant — show inline upgrade paywall.

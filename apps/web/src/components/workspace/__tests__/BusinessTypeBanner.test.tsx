@@ -19,6 +19,17 @@ describe('BusinessTypeBanner', () => {
     );
   });
 
+  it('stacks below 640px: text row full width, button on its own row, kept on one line', () => {
+    mockUseEnabledModules.mockReturnValue({ needsBusinessType: true });
+    render(<BusinessTypeBanner />);
+    const banner = screen.getByTestId('business-type-banner');
+    expect(banner.className).toContain('flex-col');
+    expect(banner.className).toContain('sm:flex-row');
+    expect(screen.getByRole('link', { name: /choose business type/i }).className).toContain(
+      'whitespace-nowrap'
+    );
+  });
+
   it('renders nothing when no choice is needed', () => {
     mockUseEnabledModules.mockReturnValue({ needsBusinessType: false });
     const { container } = render(<BusinessTypeBanner />);

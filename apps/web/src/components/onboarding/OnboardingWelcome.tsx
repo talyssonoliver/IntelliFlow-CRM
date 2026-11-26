@@ -767,6 +767,13 @@ function OnboardingWelcomeInner() {
                 idPrefix="ob-business-type"
                 disabled={setBusinessTypeMutation.isPending}
               />
+              <p
+                className="text-xs text-muted-foreground"
+                data-testid="onboarding-business-type-note"
+              >
+                Setup finishes once you choose. If you skip for now, a reminder stays on your
+                dashboard until you do.
+              </p>
               {businessTypeError && (
                 <p role="alert" className="text-sm text-destructive">
                   {businessTypeError}
