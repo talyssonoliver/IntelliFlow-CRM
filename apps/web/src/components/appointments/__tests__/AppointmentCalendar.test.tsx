@@ -82,6 +82,13 @@ const defaultProps = {
 };
 
 describe('AppointmentCalendar', () => {
+  // Owner 26/11: the calendar's sticky header (Schedule-X, z-index 100) drew over the open side
+  // menu. The container isolates its layers so nothing in the calendar rises above the page.
+  it('keeps the calendar layers inside its own stacking context', () => {
+    render(<AppointmentCalendar {...defaultProps} />);
+    expect(screen.getByTestId('month-view').className).toContain('isolate');
+  });
+
   it('renders calendar container', () => {
     render(<AppointmentCalendar {...defaultProps} />);
     expect(screen.getByTestId('appointment-calendar')).toBeInTheDocument();

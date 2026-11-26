@@ -168,10 +168,14 @@ export function AppointmentCalendar({
         </fieldset>
       </div>
 
-      {/* Schedule-X Calendar — fixed-height container prevents layout shift on view toggle */}
+      {/* Schedule-X Calendar — fixed-height container prevents layout shift on view toggle.
+          `isolate` (owner 26/11, calendar on a phone): the Schedule-X theme gives its sticky
+          week/day header z-index 100 and its popups 101-102, above our menus and dialogs (z-50),
+          so the "SAT 26" header drew over the open side menu. Isolating the container keeps
+          those layers inside the calendar: still above its own grid, never above the page. */}
       <div
         data-testid={`${view}-view`}
-        className="sx-calendar-container bg-white dark:bg-slate-800 border border-t-0 border-slate-200 dark:border-slate-700 rounded-b-xl overflow-hidden"
+        className="sx-calendar-container isolate bg-white dark:bg-slate-800 border border-t-0 border-slate-200 dark:border-slate-700 rounded-b-xl overflow-hidden"
       >
         <AppointmentCalendarInner
           appointments={appointments}
