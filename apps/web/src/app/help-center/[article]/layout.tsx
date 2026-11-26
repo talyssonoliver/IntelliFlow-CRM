@@ -15,7 +15,7 @@ export default function HelpCenterArticleLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <ModuleGate moduleId="SUPPORT">
+    <ModuleGate moduleId="SUPPORT" featureLabel="Help Center">
       <SidebarPortalProvider>
         <SidebarProvider>
           <div className="flex min-h-[calc(100vh-4rem)]">

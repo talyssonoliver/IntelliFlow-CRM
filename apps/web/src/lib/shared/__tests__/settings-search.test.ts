@@ -10,10 +10,11 @@ import {
 
 describe('settings-search', () => {
   describe('SETTINGS_ITEMS', () => {
-    it('contains 16 settings items', () => {
+    it('contains 17 settings items', () => {
       // Item count tracked against SETTINGS_ITEMS source; bump when adding/removing hubs.
       // 16: Task Automation (PG-208) and Privacy Requests (PG-203 DSAR).
-      expect(SETTINGS_ITEMS).toHaveLength(16);
+      // 17: Workspace (business type).
+      expect(SETTINGS_ITEMS).toHaveLength(17);
     });
 
     it('includes Task Automation in AI & Automation (PG-208)', () => {

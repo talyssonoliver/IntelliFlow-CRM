@@ -35,6 +35,9 @@ model Tenant {
   partnerId   String?
   externalRef String?
   plan        PlanTier     @default(STARTER)
+  /// Owner ruling 23/11/2026 — what kind of business this workspace is. Decides which vertical modules
+  /// (Cases, Tickets, Commerce) it can have. NULL = not chosen yet: gated like OTHER, admin is prompted.
+  businessType TenantBusinessType?
   /// #1220 — when this workspace's trial ends. NULL until set (new sign-ups) or backfilled; the API
   /// then falls back to createdAt + 14 days. Never derived from age once set.
   trialEndsAt DateTime?
@@ -535,6 +538,20 @@ enum CRMModule {
   COMMERCE
 }
 
+enum TenantBusinessType {
+  TRADES_HOME_SERVICES
+  AGENCY
+  LAW_FIRM
+  SHOP_ECOMMERCE
+  OTHER
+}
+
+enum TenantModuleOrigin {
+  PLAN
+  OVERRIDE
+  EXISTING_DATA
+}
+
 /// Tracks which modules are enabled for each tenant.
 /// Modules can be enabled via plan tier or à la carte purchase.
 model TenantModule {
@@ -542,6 +559,11 @@ model TenantModule {
   tenantId   String
   moduleId   CRMModule
   enabled    Boolean    @default(true)
+  /// PLAN = mirrors the plan (written by plan sync, never widens the business type's modules);
+  /// OVERRIDE = explicit decision (operator à-la-carte) that can switch a module on;
+  /// EXISTING_DATA = the workspace already has rows in the module's tables (backfill / business-type change):
+  /// on like OVERRIDE; only written for a module the plan includes, so a downgrade still switches it off.
+  origin     TenantModuleOrigin @default(PLAN)
   enabledAt  DateTime   @default(now())
   disabledAt DateTime?
 

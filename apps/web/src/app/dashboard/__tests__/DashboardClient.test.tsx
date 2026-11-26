@@ -13,10 +13,13 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 }));
 
 // ── Modules: Reports shows in the hero only when Analytics is on ─────────────
-const modules = { analytics: false };
+const modules = { analytics: false, support: true };
 vi.mock('@/hooks/useEnabledModules', () => ({
   useEnabledModules: () => ({
-    isModuleEnabled: (id: string) => id === 'CORE_CRM' || (id === 'ANALYTICS' && modules.analytics),
+    isModuleEnabled: (id: string) =>
+      id === 'CORE_CRM' ||
+      (id === 'ANALYTICS' && modules.analytics) ||
+      (id === 'SUPPORT' && modules.support),
   }),
 }));
 
@@ -123,6 +126,36 @@ describe('DashboardClient', () => {
       expect(screen.getByRole('link', { name: 'Reports' })).toHaveAttribute('href', '/analytics');
     } finally {
       modules.analytics = false;
+    }
+  });
+
+  it('leaves the Open Tickets widget out when the workspace has no Support module', () => {
+    modules.support = false;
+    try {
+      renderDashboard();
+      expect(screen.queryByTestId('widget-open-tickets')).toBeNull();
+      expect(screen.getByTestId('widget-total-leads')).toBeInTheDocument();
+      expect(screen.getByTestId('widget-pipeline-summary')).toBeInTheDocument();
+    } finally {
+      modules.support = true;
+    }
+  });
+
+  it('also drops it from a saved layout, without losing the other widgets', () => {
+    localStorageMock.setItem(
+      'dashboard-layout',
+      JSON.stringify([
+        { id: 'a', type: 'total-leads', title: 'Total Leads', colSpan: 1, rowSpan: 1 },
+        { id: 'b', type: 'open-tickets', title: 'Open Tickets', colSpan: 1, rowSpan: 1 },
+      ])
+    );
+    modules.support = false;
+    try {
+      renderDashboard();
+      expect(screen.queryByTestId('widget-open-tickets')).toBeNull();
+      expect(screen.getByTestId('widget-total-leads')).toBeInTheDocument();
+    } finally {
+      modules.support = true;
     }
   });
 

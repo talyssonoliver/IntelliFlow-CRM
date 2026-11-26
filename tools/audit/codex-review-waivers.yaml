@@ -924,3 +924,35 @@ waivers:
     author: ai agents lane
     date: '2026-11-22'
     expires: '2026-12-22'
+  - fingerprint: 2c9cc7cd5804a9c3bd1485870e438f8bf5cf69ba17ea92dbab4794f82e24774f
+    reason: >-
+      Deliberate, documented in the function: an unknown business type (no tenant, no service, or a
+      failed lookup) must not stop an admin from finishing onboarding, which would lock them out over
+      a read error. A workspace with no business type is asked again at its next sign-in, and until it
+      answers, every module gate treats it as OTHER (the narrowest set), so nothing is handed out.
+      Business type is a product question, not a security boundary. PR 1557 business-type modules.
+    author: biztype lane
+    date: '2026-11-26'
+    expires: '2026-12-26'
+  - fingerprint: 05bb717a63f34e4de00fee5cdb7f6d46b572ab64876c29e3804e368604b680b4
+    reason: >-
+      Already on main, not introduced here: main filters the pinned list by enabled pin groups
+      (enabledEntityTypes) before it reaches the drag-and-drop region, so a reorder there already
+      sends only the visible pins and the server (home.reorderPinnedItems) replaces the list with
+      them. The module filter in this PR hides a pin type the workspace cannot open, the same way.
+      The fix belongs in reorderPinnedItems keeping omitted pins, which touches every caller; to be
+      filed as its own issue rather than widened into this PR.
+    author: biztype lane
+    date: '2026-11-26'
+    expires: '2026-12-26'
+  - fingerprint: 169fd151173ce139dcf581373a0b02e6aeeaed542c2d91ea0774014d7c51ecc8
+    reason: >-
+      Accepted risk with a narrow window. The protection is only written for a module that holds data
+      (cases, case documents or tickets) that the new business type hides, and the type change and the
+      protection rows are one transaction, so the type never changes without them. The race needs an
+      admin to switch that same module off in the milliseconds between the read and the write while
+      changing the business type; the result is a module the admin just disabled staying visible, and
+      they can switch it off again. Serialising it needs a row lock on tenant modules, a wider change.
+    author: biztype lane
+    date: '2026-11-26'
+    expires: '2026-12-26'

@@ -102,12 +102,26 @@ async function seedTenant(prisma: any, persona: QaPersona, userId: string, email
   const tenantSlug = personaTenantSlug(persona.key);
   const wsSlug = personaWorkspaceSlug(persona.key);
 
+  const businessType = persona.industry === 'legal' ? 'LAW_FIRM' : 'OTHER';
+  // The ENTERPRISE persona stands for "every module on": explicit OVERRIDE rows, as an operator would write.
   const tenant = await prisma.tenant.upsert({
     where: { slug: tenantSlug },
     // plan lives on Tenant (ADR-070) — the entitlement repository no longer reads Workspace.
-    update: { name: `QA ${persona.label}`, plan: persona.plan },
-    create: { name: `QA ${persona.label}`, slug: tenantSlug, plan: persona.plan },
+    // Owner ruling 23/11/2026: vertical modules follow the business type. The legal persona is a law firm,
+    // so LEGAL is granted by plan AND business type; every other persona is OTHER (core set only).
+    update: { name: `QA ${persona.label}`, plan: persona.plan, businessType },
+    create: { name: `QA ${persona.label}`, slug: tenantSlug, plan: persona.plan, businessType },
   });
+
+  if (persona.plan === 'ENTERPRISE') {
+    for (const moduleId of ['LEGAL', 'SUPPORT', 'COMMERCE']) {
+      await prisma.tenantModule.upsert({
+        where: { tenantId_moduleId: { tenantId: tenant.id, moduleId } },
+        update: { enabled: true, origin: 'OVERRIDE', disabledAt: null },
+        create: { tenantId: tenant.id, moduleId, enabled: true, origin: 'OVERRIDE' },
+      });
+    }
+  }
 
   // Clear any stale user row holding this email under a *different* id (Supabase
   // user re-created), then bind User.id === supabase id.
