@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { SettingsNav } from '../settings-nav';
 import { SETTINGS_ITEMS, SETTINGS_CATEGORIES } from '@/lib/shared/settings-search';
@@ -105,5 +105,26 @@ describe('SettingsNav', () => {
       const status = screen.getByRole('status');
       expect(status).toHaveAttribute('aria-live', 'polite');
     });
+  });
+});
+
+// Business-type gating (owner ruling 23/11/2026): modules are controlled per test below.
+const modules = vi.hoisted(() => ({ enabled: new Set(['CORE_CRM', 'LEGAL', 'SUPPORT']) }));
+vi.mock('@/hooks/useEnabledModules', () => ({
+  useEnabledModules: () => ({ isModuleEnabled: (id: string) => modules.enabled.has(id) }),
+}));
+
+describe('SettingsNav follows the workspace modules', () => {
+  it('hides the Tickets and Documents cards when SUPPORT and LEGAL are not enabled', () => {
+    modules.enabled = new Set(['CORE_CRM']);
+    try {
+      render(<SettingsNav />);
+      expect(screen.queryByText('Tickets')).toBeNull();
+      expect(screen.queryByText('Documents')).toBeNull();
+      expect(screen.getByText('Leads')).toBeInTheDocument();
+      expect(screen.getByText('Workspace')).toBeInTheDocument();
+    } finally {
+      modules.enabled = new Set(['CORE_CRM', 'LEGAL', 'SUPPORT']);
+    }
   });
 });

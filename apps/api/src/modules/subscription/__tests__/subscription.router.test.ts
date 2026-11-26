@@ -22,6 +22,7 @@ function port() {
     disableModule: vi.fn().mockResolvedValue({}),
     getEnabledModules: vi.fn().mockResolvedValue(['CORE_CRM', 'LEGAL']),
     getTenantPlan: vi.fn().mockResolvedValue('STARTER'),
+    getBusinessType: vi.fn().mockResolvedValue('OTHER'),
   };
 }
 

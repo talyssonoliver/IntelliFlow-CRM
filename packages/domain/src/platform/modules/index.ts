@@ -6,3 +6,4 @@
 
 export * from './ModuleRegistry';
 export * from './ModuleRoutes';
+export * from './VerticalModules';
