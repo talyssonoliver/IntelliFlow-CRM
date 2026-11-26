@@ -63,11 +63,30 @@ interface RiskEntry {
 
 function addRisksSection(
   doc: JsPDFDoc,
-  risksData: { success: boolean; data?: { summary: Record<string, unknown>; risks: RiskEntry[] } },
+  risksData: {
+    success: boolean;
+    data?: {
+      summary: Record<string, unknown>;
+      risks: RiskEntry[];
+      registerAvailable?: boolean;
+    };
+  },
   yPosRef: { value: number },
   checkNewPage: (space: number) => void
 ): void {
   if (!risksData.success || !risksData.data) return;
+  if (risksData.data.registerAvailable === false) {
+    // A register that could not be read is not "zero risks": say so instead of printing zeros.
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(
+      'Platform risk register not available, no risks shown (this does not mean there are none).',
+      14,
+      yPosRef.value
+    );
+    yPosRef.value += 10;
+    return;
+  }
   const { summary, risks } = risksData.data as {
     summary: {
       total: number;

@@ -280,6 +280,42 @@ describe('ExportReportButton', () => {
       });
     });
 
+    it('says the risk register is unavailable in the PDF instead of printing zero risks', async () => {
+      mockFetch.mockImplementation((input: string | Request) => {
+        const url = typeof input === 'string' ? input : input.url;
+        if (url.includes('/risks')) {
+          return Promise.resolve({
+            json: () =>
+              Promise.resolve({
+                success: true,
+                data: {
+                  risks: [],
+                  registerAvailable: false,
+                  summary: {
+                    total: 0,
+                    byStatus: { accepted: 0, mitigated: 0, requires_action: 0 },
+                    byProbability: { high: 0, medium: 0, low: 0 },
+                    byImpact: { high: 0, medium: 0, low: 0 },
+                  },
+                },
+              }),
+          });
+        }
+        if (url.includes('/timeline')) {
+          return Promise.resolve({ json: () => Promise.resolve(mockTimelineResponse) });
+        }
+        return Promise.resolve({ json: () => Promise.resolve({}) });
+      });
+      const user = userEvent.setup();
+      render(<ExportReportButton />);
+      await user.click(screen.getByRole('button', { name: /export report/i }));
+
+      await waitFor(() => expect(mockSave).toHaveBeenCalled());
+      const printed = mockText.mock.calls.map((c) => String(c[0]));
+      expect(printed.some((t) => /risk register not available/i.test(t))).toBe(true);
+      expect(printed.some((t) => t.startsWith('Total Risks:'))).toBe(false);
+    });
+
     it('should fetch timeline data', async () => {
       const user = userEvent.setup();
       render(<ExportReportButton />);
