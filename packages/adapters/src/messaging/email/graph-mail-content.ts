@@ -23,7 +23,15 @@ const GRAPH_ME = 'https://graph.microsoft.com/v1.0/me';
 const REQUEST_TIMEOUT_MS = 30_000;
 const IMMUTABLE = 'IdType="ImmutableId"';
 
+/** Graph answered 404: the message or attachment is gone (a REJECTED that says so). */
+class GraphNotFound extends MailboxTransportError {
+  constructor() {
+    super('REJECTED');
+  }
+}
+
 function failure(status: number): MailboxTransportError {
+  if (status === 404) return new GraphNotFound();
   if (status === 401 || status === 403) return new MailboxTransportError('AUTH_FAILED');
   if (status === 429) return new MailboxTransportError('RATE_LIMITED');
   if (status >= 500) return new MailboxTransportError('CONNECT_FAILED');
@@ -138,7 +146,7 @@ export async function readGraphMessage(
   messageId: string,
   fetchImpl: typeof fetch = fetch
 ): Promise<{ receivedAt: Date | null; content: MailContent } | null> {
-  const read = await readGraph(accessToken, messageId, '', fetchImpl);
+  const read = await readGraph(accessToken, messageId, '', fetchImpl, true);
   return read.found ? { receivedAt: read.receivedAt, content: read.content } : null;
 }
 
@@ -146,7 +154,9 @@ async function readGraph(
   accessToken: string,
   messageId: string,
   text: string,
-  fetchImpl: typeof fetch
+  fetchImpl: typeof fetch,
+  /** True (the backfill): only a 404 means "gone"; any other refusal is an error, not a deletion. */
+  strict = false
 ): Promise<{ found: boolean; receivedAt: Date | null; content: MailContent }> {
   const id = encodeURIComponent(messageId);
   type Body = {
@@ -154,15 +164,24 @@ async function readGraph(
     body?: { content?: string | null; contentType?: string } | null;
     hasAttachments?: boolean;
   };
-  const message = await orNothing<Body>(async () => {
+  let message: Body;
+  try {
     const response = await graphGet(
       fetchImpl,
       accessToken,
       `/messages/${id}?$select=receivedDateTime,body,hasAttachments`,
       `${IMMUTABLE}, outlook.body-content-type="html"`
     );
-    return readJsonBody<Body>(response);
-  }, {});
+    message = await readJsonBody<Body>(response);
+  } catch (error) {
+    if (error instanceof GraphNotFound) {
+      return { found: false, receivedAt: null, content: { text, html: null, attachments: [] } };
+    }
+    const failed = asTransportError(error);
+    // The sync keeps the text when Graph refuses the extra read; the backfill must not call it deleted.
+    if (strict || failed.code !== 'REJECTED') throw failed;
+    message = {};
+  }
   const isHtml = (message.body?.contentType ?? 'html').toLowerCase() === 'html';
   const html = isHtml ? capHtml(message.body?.content) : null;
   // hasAttachments is false for a mail whose only attachments are inline images, so a body that
@@ -173,7 +192,7 @@ async function readGraph(
     : [];
   const received = message.receivedDateTime ? new Date(message.receivedDateTime) : null;
   return {
-    found: message.receivedDateTime !== undefined || message.body !== undefined,
+    found: true,
     receivedAt: received && !Number.isNaN(received.getTime()) ? received : null,
     content: { text, html, attachments },
   };

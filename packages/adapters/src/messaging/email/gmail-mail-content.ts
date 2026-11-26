@@ -73,9 +73,13 @@ async function get(fetchImpl: typeof fetch, accessToken: string, path: string): 
     throw new MailboxTransportError('CONNECT_FAILED');
   }
   if (response.ok) return response;
-  if (response.status === 401 || response.status === 403) {
-    throw new MailboxTransportError('AUTH_FAILED');
+  if (response.status === 403) {
+    const body = await response.text().catch(() => '');
+    throw new MailboxTransportError(
+      /rateLimitExceeded/i.test(body) ? 'RATE_LIMITED' : 'AUTH_FAILED'
+    );
   }
+  if (response.status === 401) throw new MailboxTransportError('AUTH_FAILED');
   if (response.status === 429) throw new MailboxTransportError('RATE_LIMITED');
   if (response.status >= 500) throw new MailboxTransportError('CONNECT_FAILED');
   throw new MailboxTransportError('REJECTED');

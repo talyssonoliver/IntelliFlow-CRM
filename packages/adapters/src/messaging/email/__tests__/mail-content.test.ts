@@ -6,7 +6,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { readGmailLabel, type GmailReadOptions } from '../gmail-mail-reader';
 import { gmailAttachmentMeta, fetchGmailAttachment } from '../gmail-mail-content';
 import { readGraphMailDelta, toSyncedMessage } from '../graph-mail-delta';
-import { fetchGraphAttachment, graphAttachmentMeta, readGraphContent } from '../graph-mail-content';
+import {
+  fetchGraphAttachment,
+  graphAttachmentMeta,
+  readGraphContent,
+  readGraphMessage,
+} from '../graph-mail-content';
 import { readZohoFolder } from '../zoho-mail-reader';
 import { fetchZohoAttachment } from '../zoho-mail-content';
 import {
@@ -224,6 +229,22 @@ describe('Gmail', () => {
   });
 });
 
+describe('Gmail attachment errors', () => {
+  it('reads a 403 with a rate reason as throttling, any other 403 as a dead token', async () => {
+    const rate = vi.fn(
+      async () =>
+        new Response('{"error":{"errors":[{"reason":"rateLimitExceeded"}]}}', { status: 403 })
+    );
+    await expect(
+      fetchGmailAttachment(TOKEN, { messageId: 'm1', partId: '1' }, rate as never)
+    ).rejects.toMatchObject({ code: 'RATE_LIMITED' });
+    const denied = vi.fn(async () => new Response('{"error":"forbidden"}', { status: 403 }));
+    await expect(
+      fetchGmailAttachment(TOKEN, { messageId: 'm1', partId: '1' }, denied as never)
+    ).rejects.toMatchObject({ code: 'AUTH_FAILED' });
+  });
+});
+
 describe('Microsoft Graph', () => {
   const ME = 'https://graph.microsoft.com/v1.0/me';
 
@@ -386,6 +407,31 @@ describe('Microsoft Graph', () => {
       fetchGraphAttachment(TOKEN, { messageId: 'g1', attachmentId: 'a1' }, big as never)
     ).rejects.toMatchObject({ code: 'REJECTED' });
     expect(big).toHaveBeenCalledTimes(1);
+  });
+
+  it('the backfill read says gone only for a 404; any other refusal is an error', async () => {
+    const gone = vi.fn(async () => json({}, 404));
+    await expect(readGraphMessage(TOKEN, 'g1', gone as never)).resolves.toBeNull();
+    for (const status of [400, 410, 413]) {
+      const refused = vi.fn(async () => json({}, status));
+      await expect(readGraphMessage(TOKEN, 'g1', refused as never)).rejects.toMatchObject({
+        code: 'REJECTED',
+      });
+    }
+    const badBody = vi.fn(async () => new Response('{not json', { status: 200 }));
+    await expect(readGraphMessage(TOKEN, 'g1', badBody as never)).rejects.toMatchObject({
+      code: 'REJECTED',
+    });
+    const found = vi.fn(async () =>
+      json({
+        receivedDateTime: '2026-11-09T08:30:00Z',
+        body: { contentType: 'html', content: '<p>x</p>' },
+      })
+    );
+    await expect(readGraphMessage(TOKEN, 'g1', found as never)).resolves.toMatchObject({
+      receivedAt: new Date('2026-11-09T08:30:00Z'),
+      content: { html: '<p>x</p>' },
+    });
   });
 
   it('ignores items that are not files', () => {

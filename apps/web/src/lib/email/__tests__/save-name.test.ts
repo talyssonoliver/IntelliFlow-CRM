@@ -28,8 +28,15 @@ describe('saveName', () => {
     expect(saved.endsWith('.pdf')).toBe(true);
     expect(saved).toHaveLength(200);
     expect(saved.endsWith('.exe')).toBe(false);
-    // A long name with a long "extension" is simply cut.
+    // A long name with a long "extension" is cut, and its dots no longer make an inner extension.
     expect(saveName(`${'b'.repeat(300)}.${'c'.repeat(40)}`)).toHaveLength(200);
+    const long = saveName(`${'a'.repeat(196)}.exe${'x'.repeat(50)}`);
+    expect(long).toHaveLength(200);
+    expect(long).not.toMatch(/\.exe$/);
+    expect(long).not.toContain('.');
+    // Cutting never leaves a trailing dot or space.
+    const cut = saveName(`${'a'.repeat(199)}. ${'b'.repeat(100)}`);
+    expect(cut.endsWith('.') || cut.endsWith(' ')).toBe(false);
   });
 
   it('falls back when nothing is left, and caps the length', () => {

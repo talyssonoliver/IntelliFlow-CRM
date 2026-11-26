@@ -19,13 +19,26 @@ function isHiddenMark(code: number): boolean {
 const MAX_LENGTH = 200;
 const MAX_EXTENSION = 16;
 
-/** Shortens the stem, never the final extension: cutting from the end could leave an inner `.exe` as the one the file is saved under. */
+/** Drops trailing dots and spaces (Windows ignores them, which can change the extension). */
+function trimEnd(name: string): string {
+  let end = name.length;
+  while (end > 0 && (name[end - 1] === '.' || name[end - 1] === ' ')) end -= 1;
+  return name.slice(0, end);
+}
+
+/**
+ * Shortens a long name. A short final extension is kept and the stem is cut. With none, every dot
+ * of the cut name becomes `_`: cutting from the end could otherwise leave an inner `.exe` as the
+ * extension the file is saved under.
+ */
 function shorten(name: string): string {
   if (name.length <= MAX_LENGTH) return name;
   const dot = name.lastIndexOf('.');
-  const extension = dot > 0 && name.length - dot <= MAX_EXTENSION ? name.slice(dot) : '';
-  const stem = extension ? name.slice(0, dot) : name;
-  return stem.slice(0, MAX_LENGTH - extension.length) + extension;
+  if (dot > 0 && name.length - dot <= MAX_EXTENSION) {
+    const extension = name.slice(dot);
+    return trimEnd(name.slice(0, dot).slice(0, MAX_LENGTH - extension.length)) + extension;
+  }
+  return trimEnd(name.slice(0, MAX_LENGTH).replaceAll('.', '_'));
 }
 
 export function saveName(name: string): string {
@@ -33,9 +46,7 @@ export function saveName(name: string): string {
     .filter((char) => !isHiddenMark(char.codePointAt(0) ?? 0))
     .map((char) => (char.charCodeAt(0) < 32 || FORBIDDEN.has(char) ? '_' : char))
     .join('');
-  let end = cleaned.length;
-  while (end > 0 && (cleaned[end - 1] === '.' || cleaned[end - 1] === ' ')) end -= 1;
-  const trimmed = shorten(cleaned.slice(0, end));
+  const trimmed = shorten(trimEnd(cleaned));
   if (!trimmed) return 'attachment';
   return WINDOWS_RESERVED.test(trimmed) ? `_${trimmed}` : trimmed;
 }
