@@ -8822,6 +8822,9 @@ async function getDefaultTenant() {
       name: 'Default Organization',
       slug: 'default',
       status: 'ACTIVE',
+      // Owner ruling 23/11/2026: vertical modules follow the business type. The dev tenant is an agency
+      // (STARTER plan), which keeps Tickets and Help Center available for local work as before.
+      businessType: 'AGENCY',
     },
   });
 

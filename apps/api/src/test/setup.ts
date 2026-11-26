@@ -411,6 +411,8 @@ export function createTestContext(overrides?: Partial<BaseContext>): BaseContext
           isModuleEnabled: async () => true,
           getEnabledModules: async () => [],
           getTenantPlan: async () => 'ENTERPRISE',
+          getBusinessType: async () => 'OTHER',
+          setBusinessType: async () => [],
         }
       : undefined
   );
