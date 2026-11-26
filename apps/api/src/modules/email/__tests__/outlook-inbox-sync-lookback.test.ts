@@ -18,6 +18,7 @@ const drafts = vi.hoisted(() => ({ queue: vi.fn(async () => true) }));
 vi.mock('../mail-sync-reply-draft', () => ({ queueReplyDraftForSyncedMail: drafts.queue }));
 
 import { runInboxSync, INBOX_SYNC_INTERVAL_MS } from '../outlook-inbox-sync';
+import { PASS_GAP_MS } from '../mail-sync-lookback';
 import { NOW, TENANT, mail, released, round, setup } from './inbox-sync-harness';
 
 const CREATED = new Date('2026-11-17T10:00:00.000Z');
@@ -76,7 +77,7 @@ describe('mailbox sync look-back (MVP-011)', () => {
     expect(report.stored).toBe(2);
   });
 
-  it('writes its progress with the round, and is due again on the next tick', async () => {
+  it('writes its progress with the round, and waits one pacing gap before the next batch', async () => {
     const made = withRobert();
 
     await runInboxSync(made.deps);
@@ -86,7 +87,9 @@ describe('mailbox sync look-back (MVP-011)', () => {
       lookbackUntil: null,
       lookbackCursor: null,
       lookbackSentCursor: null,
-      nextSyncAt: NOW,
+      // Pacing: the next batch is not due before the gap, and the sync is not due before it either.
+      lookbackNextAt: new Date(NOW.getTime() + PASS_GAP_MS),
+      nextSyncAt: new Date(NOW.getTime() + INBOX_SYNC_INTERVAL_MS),
     });
   });
 
@@ -167,6 +170,29 @@ describe('mailbox sync look-back (MVP-011)', () => {
     const data = released(made.prisma).data;
     expect(data).toMatchObject({ syncFailureCount: 0 });
     expect(data).not.toHaveProperty('lookbackWatermark');
+    warn.mockRestore();
+  });
+});
+
+describe('mailbox allowlist at the sync (register #58)', () => {
+  it('does not read a mailbox that is not on its tenant allowlist', async () => {
+    vi.stubEnv(
+      `MAILBOX_CONNECT_ALLOWLIST_${TENANT.toUpperCase().replaceAll('-', '_')}`,
+      'a@b.example'
+    );
+    tokens.getOAuthAccess.mockResolvedValue({ accessToken: 'access-for-tests', tokenVersion: 0 });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const made = setup();
+
+    await runInboxSync(made.deps);
+
+    expect(made.readDelta).not.toHaveBeenCalled();
+    expect(tokens.getOAuthAccess).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('not on the tenant allowlist'),
+      expect.objectContaining({ tenantId: TENANT })
+    );
+    vi.unstubAllEnvs();
     warn.mockRestore();
   });
 });
