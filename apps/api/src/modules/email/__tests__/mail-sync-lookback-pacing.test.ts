@@ -268,6 +268,23 @@ describe('a rate-limited round', () => {
     expect(result.more).toBe(true);
   });
 
+  it('a folder already DONE and no read time left for the other is not progress', async () => {
+    const { ctx, read } = context(manyLeads(5), {
+      lookbackUntil: T1,
+      lookbackSentCursor: 'DONE',
+      lookbackBackoffCount: 2,
+      lookbackProgressAt: new Date(NOW.getTime() - 3_600_000),
+    });
+    ctx.deadline = NOW.getTime() - 1;
+
+    const result = await runLookback(ctx);
+
+    expect(read).not.toHaveBeenCalled();
+    expect(result.data).toEqual({ lookbackSentCursor: 'DONE' });
+    expect(result.data).not.toHaveProperty('lookbackProgressAt');
+    expect(result.data).not.toHaveProperty('lookbackBackoffCount');
+  });
+
   it('a pass goes on in steps: a gap between two rounds of one pass', async () => {
     const { ctx } = context(manyLeads(5), {});
     const first = ctx.reader.read as unknown as ReturnType<typeof vi.fn>;

@@ -197,6 +197,8 @@ interface FolderOutcome {
   /** The cursor to store for the folder. */
   cursor: string;
   done: boolean;
+  /** True when this round read the folder through to its stored cursor (the pass moved on). */
+  advanced: boolean;
 }
 
 /** One folder's pass round: reads it and logs the mail that is with the pass's addresses. */
@@ -206,18 +208,19 @@ async function passFolder(
   cursor: string | null,
   addresses: ReadonlySet<string>
 ): Promise<FolderOutcome | null> {
-  if (cursor === FOLDER_DONE) return { cursor: FOLDER_DONE, done: true };
+  if (cursor === FOLDER_DONE) return { cursor: FOLDER_DONE, done: true, advanced: false };
   // Out of read time already: leave the folder as it is for the next tick.
   if (ctx.clock().getTime() >= ctx.deadline) return null;
   const { round, startedFrom } = await readFolder(ctx, folder, cursor);
   for (const message of round.messages) {
     // Out of time: stop well inside the lease and keep the cursor the round started from (never a
     // rejected one); what was stored is deduped next time.
-    if (ctx.clock().getTime() >= ctx.storeBy) return { cursor: startedFrom ?? '', done: false };
+    if (ctx.clock().getTime() >= ctx.storeBy)
+      return { cursor: startedFrom ?? '', done: false, advanced: false };
     if (concerns(message, addresses, folder)) await ctx.store(message, folder);
   }
-  if (round.complete) return { cursor: FOLDER_DONE, done: true };
-  return { cursor: round.cursor ?? '', done: false };
+  if (round.complete) return { cursor: FOLDER_DONE, done: true, advanced: true };
+  return { cursor: round.cursor ?? '', done: false, advanced: true };
 }
 
 /** A stored cursor of '' means "start the folder from the beginning". */
@@ -325,11 +328,20 @@ function continuingPassData(
   sent: FolderOutcome | null,
   inbox: FolderOutcome | null
 ): Record<string, unknown> {
-  if (!sent && !inbox) return { ...started };
+  // Only a folder that was really read through counts: one already DONE, one skipped for lack of
+  // read time, or one cut short by the store time is not progress (it must not hide a stall).
+  if (!sent?.advanced && !inbox?.advanced) return { ...started, ...cursors(sent, inbox) };
   return {
     ...started,
     ...progressed(ctx),
     lookbackNextAt: new Date(ctx.clock().getTime() + ROUND_GAP_MS),
+    ...cursors(sent, inbox),
+  };
+}
+
+/** The cursors the folders that were looked at keep. */
+function cursors(sent: FolderOutcome | null, inbox: FolderOutcome | null): Record<string, unknown> {
+  return {
     ...(sent ? { lookbackSentCursor: sent.cursor } : {}),
     ...(inbox ? { lookbackCursor: inbox.cursor } : {}),
   };
