@@ -1338,8 +1338,10 @@ export const opportunityRouter = createTRPCRouter({
     });
 
     // Get closed deals for win rate calculation (last 6 months)
-    const sixMonthsAgo = new Date();
-    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    // From the first day (UTC) of the oldest month buildWinRateTrend reports, so that month is
+    // whole (codex review 26/11: setMonth(-6) could start partway through it).
+    const now = new Date();
+    const sixMonthsAgo = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 5, 1));
 
     const closedDeals = await typedCtx.prismaWithTenant.opportunity.findMany({
       where: {

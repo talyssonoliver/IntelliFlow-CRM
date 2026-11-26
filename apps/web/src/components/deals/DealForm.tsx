@@ -138,7 +138,7 @@ export function DealForm({
   // A new deal is saved in this currency, so it must be known (not the GBP placeholder).
   const currencyState = useTenantCurrencyForSave();
   const tenantCurrency = currencyState.currency;
-  const waitingForCurrency = !initialData?.value && !currencyState.ready;
+  const waitingForCurrency = !currencyState.ready;
   const symbol = currencySymbol(tenantCurrency).trim();
   const initialFormData = useMemo<DealFormData>(
     () => ({
@@ -202,15 +202,13 @@ export function DealForm({
       e.preventDefault();
       if (waitingForCurrency) return;
       if (validateForm()) {
-        // A new deal is in the tenant currency (owner 22/11); an existing deal keeps its own.
-        onSubmit(
-          initialData?.value
-            ? formData
-            : { ...formData, value: { ...formData.value, currency: tenantCurrency } }
-        );
+        // Every deal is in the tenant currency (owner 22/11, one real currency). A deal stores
+        // no currency of its own (no column; the repository rebuilds the value as GBP), so a
+        // new deal and an edit both save in the tenant's.
+        onSubmit({ ...formData, value: { ...formData.value, currency: tenantCurrency } });
       }
     },
-    [formData, validateForm, onSubmit, initialData?.value, tenantCurrency, waitingForCurrency]
+    [formData, validateForm, onSubmit, tenantCurrency, waitingForCurrency]
   );
 
   const updateField = useCallback(
@@ -435,7 +433,7 @@ export function DealForm({
 
           {/* Actions */}
           <div className="flex items-center gap-3 pt-4 border-t">
-            {waitingForCurrency && currencyState.failed && (
+            {currencyState.failed && (
               <button
                 type="button"
                 onClick={currencyState.retry}

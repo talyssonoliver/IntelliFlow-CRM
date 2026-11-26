@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useCallback, useId } from 'react';
+import { useState, useCallback, useId, useEffect } from 'react';
 import {
   cn,
   Sheet,
@@ -133,6 +133,18 @@ export function SearchFilterBar({
 }: Readonly<SearchFilterBarProps>) {
   const searchId = useId();
   const [sheetOpen, setSheetOpen] = useState(false);
+  // The sheet is the phone layout: if the screen widens to md (rotated to landscape, a resized
+  // window) while it is open, close it so the desktop row shows its controls (codex 26/11).
+  useEffect(() => {
+    if (!sheetOpen || typeof globalThis.matchMedia !== 'function') return;
+    const md = globalThis.matchMedia('(min-width: 768px)');
+    const closeAtMd = () => {
+      if (md.matches) setSheetOpen(false);
+    };
+    closeAtMd();
+    md.addEventListener('change', closeAtMd);
+    return () => md.removeEventListener('change', closeAtMd);
+  }, [sheetOpen]);
   const hasControls = filters.length > 0 || !!sort || !!extra;
   // Filters a page hides on phones stay hidden in the sheet too (some do nothing yet).
   const phoneFilters = filters.filter((f) => !f.hideOnMobile);

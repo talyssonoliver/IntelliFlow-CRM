@@ -34,7 +34,11 @@ export default function AnalyticsPage() {
   const enabled = isAuthenticated && !authLoading;
 
   // --- tRPC queries ---
-  const { data: overview, isLoading: overviewLoading } = trpc.analytics.getOverview.useQuery(
+  const {
+    data: overview,
+    isLoading: overviewLoading,
+    isError: overviewFailed,
+  } = trpc.analytics.getOverview.useQuery(
     { startDate: dateRange.startDate, endDate: dateRange.endDate },
     { enabled }
   );
@@ -100,6 +104,7 @@ export default function AnalyticsPage() {
           icon="group"
           value={(overview?.totalLeads ?? 0).toLocaleString('en-GB')}
           pending={isLoading}
+          failed={overviewFailed && !overview}
           footer={
             <PeriodChange delta={overview?.leadDelta ?? 0} format={String}>
               {leadStats ? ` · ${leadStats.newThisMonth} new this month` : null}
@@ -112,6 +117,7 @@ export default function AnalyticsPage() {
           icon="payments"
           value={formatCurrency(overview?.totalRevenue ?? 0)}
           pending={isLoading}
+          failed={overviewFailed && !overview}
           footer={<PeriodChange delta={overview?.revenueDelta ?? 0} format={formatCurrency} />}
         />
         <KpiCard
@@ -120,6 +126,7 @@ export default function AnalyticsPage() {
           icon="handshake"
           value={String(overview?.openOpportunities ?? 0)}
           pending={isLoading}
+          failed={overviewFailed && !overview}
           footer={<PeriodChange delta={overview?.openOpportunitiesDelta ?? 0} format={String} />}
         />
         <KpiCard
@@ -128,6 +135,7 @@ export default function AnalyticsPage() {
           icon="emoji_events"
           value={`${overview?.winRate ?? 0}%`}
           pending={isLoading}
+          failed={overviewFailed && !overview}
           footer={<PeriodChange delta={overview?.winRateDelta ?? 0} format={(v) => `${v} pp`} />}
         />
       </div>

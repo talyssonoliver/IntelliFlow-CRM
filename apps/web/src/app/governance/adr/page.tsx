@@ -99,8 +99,15 @@ export default function ADRRegistryPage() {
       const url = searchQuery
         ? `/api/adr?action=search&q=${encodeURIComponent(searchQuery)}`
         : '/api/adr?action=list';
-      const response = await fetch(url);
-      const result = await response.json();
+      let result;
+      try {
+        const response = await fetch(url);
+        result = await response.json();
+      } catch (error) {
+        // A superseded request's failure must not put an error over the newer results.
+        if (requestId !== latestRequestRef.current) return;
+        throw error;
+      }
       if (requestId !== latestRequestRef.current) return;
       if (result.success) {
         setAdrs(result.data);

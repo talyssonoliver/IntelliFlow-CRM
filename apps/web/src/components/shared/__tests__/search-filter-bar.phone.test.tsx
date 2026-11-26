@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SearchFilterBar } from '../search-filter-bar';
 
@@ -89,6 +89,28 @@ describe('SearchFilterBar on phones (owner 21/11: fields split over several line
     await userEvent.click(screen.getByTestId('filters-sheet-button'));
     await screen.findByRole('dialog');
     expect(document.querySelectorAll('#from-date')).toHaveLength(1);
+  });
+
+  it('closes the phone sheet when the screen widens to md', async () => {
+    let listener: (() => void) | undefined;
+    const mq = {
+      matches: false,
+      addEventListener: (_: string, cb: () => void) => {
+        listener = cb;
+      },
+      removeEventListener: vi.fn(),
+    };
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => mq)
+    );
+    setup();
+    await userEvent.click(screen.getByTestId('filters-sheet-button'));
+    await screen.findByRole('dialog');
+    mq.matches = true;
+    listener?.();
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    vi.unstubAllGlobals();
   });
 
   it('draws no Filters button when the bar has only search', () => {

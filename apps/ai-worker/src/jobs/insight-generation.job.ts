@@ -918,6 +918,9 @@ async function persistInsightRecord(
         entityId: insight.entityId,
         type: mapInsightTypeToDbType(insight.type),
         id: { not: created.id },
+        // Only insights older than this one: two jobs running at once then never expire each
+        // other's new insight, and the newest one stays open (codex review 26/11).
+        createdAt: { lt: created.createdAt },
         status: { in: ['NEW', 'VIEWED'] },
         metadata: { path: ['userId'], equals: userId },
       },

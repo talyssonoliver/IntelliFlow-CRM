@@ -187,7 +187,7 @@ describe('processInsightJob', () => {
       ];
     });
 
-    mockCreate.mockResolvedValue({ id: 'insight-1' });
+    mockCreate.mockResolvedValue({ id: 'insight-1', createdAt: new Date('2026-11-26T12:00:00Z') });
     mockInsightUpdateMany.mockResolvedValue({ count: 0 });
     mockNotificationCreate.mockResolvedValue({ id: 'notification-1' });
     mockTaskCreate.mockResolvedValue({ id: 'task-1' });
@@ -232,6 +232,8 @@ describe('processInsightJob', () => {
       entityId: 'deal-1',
       type: mockCreate.mock.calls[0][0].data.type,
       id: { not: 'insight-1' },
+      // Only older insights: two concurrent jobs never expire each other's new one.
+      createdAt: { lt: new Date('2026-11-26T12:00:00Z') },
       // An insight the user ACTED_ON keeps that record (codex review 26/11).
       status: { in: ['NEW', 'VIEWED'] },
       metadata: { path: ['userId'], equals: 'user-001' },

@@ -73,6 +73,29 @@ describe('ADRRegistryPage', () => {
     expect(screen.getByText(/Fresh result/)).toBeInTheDocument();
   });
 
+  it('does not show an error when only a superseded search request fails', async () => {
+    let failFirst: (e: Error) => void = () => {};
+    const slowFirst = new Promise((_, reject) => {
+      failFirst = reject;
+    });
+    mockFetch.mockImplementation(async (url: string) => {
+      if (url.includes('action=stats')) return ok(null);
+      if (url.includes('action=list')) {
+        await slowFirst;
+        return ok([]);
+      }
+      return ok([{ ...adr, id: 'ADR-NEW', title: 'Fresh result' }]);
+    });
+    render(<ADRRegistryPage />);
+    fireEvent.change(screen.getByLabelText('Search ADRs'), { target: { value: 'fresh' } });
+    await waitFor(() => expect(screen.getByText(/Fresh result/)).toBeInTheDocument(), {
+      timeout: 2000,
+    });
+    failFirst(new Error('slow and failed'));
+    await new Promise((r) => setTimeout(r, 50));
+    expect(screen.queryByText(/Failed to fetch ADRs/)).toBeNull();
+  });
+
   it('logs stats failures without breaking the list', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockFetch.mockImplementation(async (url: string) => {
