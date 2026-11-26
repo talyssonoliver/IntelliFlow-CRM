@@ -54,6 +54,25 @@ export function safeSegment(value: string): string {
 }
 
 /**
+ * Any failure while reading a provider response as a transport error: a body that stops or is cut
+ * (timeout, reset) is CONNECT_FAILED, one that is not valid JSON is REJECTED. Provider text never
+ * escapes.
+ */
+export function asTransportError(error: unknown): MailboxTransportError {
+  if (error instanceof MailboxTransportError) return error;
+  return new MailboxTransportError(error instanceof SyntaxError ? 'REJECTED' : 'CONNECT_FAILED');
+}
+
+/** The JSON of a provider response, with read and parse failures as transport errors. */
+export async function readJsonBody<T>(response: Response): Promise<T> {
+  try {
+    return (await response.json()) as T;
+  } catch (error) {
+    throw asTransportError(error);
+  }
+}
+
+/**
  * A response body read into memory with a running byte cap: it stops as soon as the cap is passed,
  * so a provider that sends more than it declared (or declares nothing) cannot fill memory.
  */
@@ -61,24 +80,26 @@ export async function readCapped(response: Response, maxBytes: number): Promise<
   const declared = Number(response.headers.get('content-length'));
   if (Number.isFinite(declared) && declared > maxBytes) throw new MailboxTransportError('REJECTED');
   const reader = response.body?.getReader();
-  if (!reader) {
-    const whole = Buffer.from(await response.arrayBuffer());
-    if (whole.length > maxBytes) throw new MailboxTransportError('REJECTED');
-    return whole;
-  }
-  const chunks: Buffer[] = [];
-  let total = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    total += value.length;
-    if (total > maxBytes) {
-      await reader.cancel();
-      throw new MailboxTransportError('REJECTED');
+  try {
+    if (!reader) {
+      const whole = Buffer.from(await response.arrayBuffer());
+      if (whole.length > maxBytes) throw new MailboxTransportError('REJECTED');
+      return whole;
     }
-    chunks.push(Buffer.from(value));
+    const chunks: Buffer[] = [];
+    let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.length;
+      if (total > maxBytes) throw new MailboxTransportError('REJECTED');
+      chunks.push(Buffer.from(value));
+    }
+    return Buffer.concat(chunks, total);
+  } catch (error) {
+    await reader?.cancel().catch(() => undefined);
+    throw asTransportError(error);
   }
-  return Buffer.concat(chunks, total);
 }
 
 /** A file as fetched on demand from the provider. Never persisted. */

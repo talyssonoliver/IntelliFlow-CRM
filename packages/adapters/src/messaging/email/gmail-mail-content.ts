@@ -10,6 +10,7 @@ import {
   MAX_ATTACHMENT_BYTES,
   bareContentId,
   capHtml,
+  readJsonBody,
   safeSegment,
   type FetchedAttachment,
   type MailAttachmentMeta,
@@ -98,7 +99,7 @@ export async function fetchGmailAttachment(
 ): Promise<FetchedAttachment> {
   const path = `/messages/${encodeURIComponent(safeSegment(ref.messageId))}`;
   const message = await get(fetchImpl, accessToken, `${path}?format=full`);
-  const full = (await message.json()) as GmailApiMessage;
+  const full = await readJsonBody<GmailApiMessage>(message);
   const part = findPart(full.payload, ref.partId);
   const attachmentId = part?.body?.attachmentId;
   if (!part || !attachmentId) throw new MailboxTransportError('REJECTED');
@@ -108,7 +109,7 @@ export async function fetchGmailAttachment(
     accessToken,
     `${path}/attachments/${encodeURIComponent(attachmentId)}`
   );
-  const stored = (await file.json()) as { data?: string };
+  const stored = await readJsonBody<{ data?: string }>(file);
   const bytes = Buffer.from(stored.data ?? '', 'base64url');
   if (bytes.length > MAX_ATTACHMENT_BYTES) throw new MailboxTransportError('REJECTED');
   return { bytes, contentType: part.mimeType ?? null };

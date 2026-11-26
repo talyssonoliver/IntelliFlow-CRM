@@ -9,7 +9,9 @@ import {
   MAX_ATTACHMENTS_PER_MAIL,
   MAX_ATTACHMENT_BYTES,
   bareContentId,
+  asTransportError,
   capHtml,
+  readJsonBody,
   readCapped,
   safeSegment,
   type FetchedAttachment,
@@ -80,8 +82,9 @@ async function orNothing<T>(read: () => Promise<T>, fallback: T): Promise<T> {
   try {
     return await read();
   } catch (error) {
-    if (error instanceof MailboxTransportError && error.code === 'REJECTED') return fallback;
-    throw error;
+    const failure = asTransportError(error);
+    if (failure.code === 'REJECTED') return fallback;
+    throw failure;
   }
 }
 
@@ -131,7 +134,7 @@ async function readGraph(
       `/messages/${id}?$select=receivedDateTime,body,hasAttachments`,
       `${IMMUTABLE}, outlook.body-content-type="html"`
     );
-    return (await response.json()) as Body;
+    return readJsonBody<Body>(response);
   }, {});
   const isHtml = (message.body?.contentType ?? 'html').toLowerCase() === 'html';
   const html = isHtml ? capHtml(message.body?.content) : null;
@@ -143,7 +146,7 @@ async function readGraph(
           `/messages/${id}/attachments?$select=id,name,contentType,size,isInline,contentId&$top=${String(MAX_ATTACHMENTS_PER_MAIL)}`,
           IMMUTABLE
         );
-        const body = (await list.json()) as { value?: GraphAttachment[] };
+        const body = await readJsonBody<{ value?: GraphAttachment[] }>(list);
         return graphAttachmentMeta(body.value);
       }, [] as MailAttachmentMeta[])
     : [];
@@ -168,7 +171,7 @@ export async function fetchGraphAttachment(
     `${path}?$select=size,contentType`,
     IMMUTABLE
   );
-  const info = (await meta.json()) as { size?: number; contentType?: string };
+  const info = await readJsonBody<{ size?: number; contentType?: string }>(meta);
   if ((info.size ?? 0) > MAX_ATTACHMENT_BYTES) throw new MailboxTransportError('REJECTED');
   const raw = await graphGet(fetchImpl, accessToken, `${path}/$value`, IMMUTABLE);
   const bytes = await readCapped(raw, MAX_ATTACHMENT_BYTES);

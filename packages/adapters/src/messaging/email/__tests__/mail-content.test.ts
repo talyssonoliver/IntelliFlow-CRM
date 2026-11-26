@@ -12,9 +12,11 @@ import { fetchZohoAttachment } from '../zoho-mail-content';
 import {
   MAX_ATTACHMENT_BYTES,
   MAX_HTML_CHARS,
+  asTransportError,
   bareContentId,
   capHtml,
   readCapped,
+  readJsonBody,
   safeSegment,
 } from '../mail-content';
 import { MailboxTransportError } from '../mailbox-errors';
@@ -64,6 +66,26 @@ describe('provider URL ids and capped reads', () => {
     });
     await expect(readCapped(new Response(body), 4096)).rejects.toMatchObject({ code: 'REJECTED' });
     expect(pulled).toBeLessThan(50);
+  });
+
+  it('turns a body that fails partway, or is not JSON, into transport errors (no raw error escapes)', async () => {
+    const broken = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.error(new DOMException('timed out', 'TimeoutError'));
+      },
+    });
+    await expect(readCapped(new Response(broken), 4096)).rejects.toMatchObject({
+      code: 'CONNECT_FAILED',
+    });
+    await expect(readJsonBody(new Response('{not json'))).rejects.toMatchObject({
+      code: 'REJECTED',
+    });
+    await expect(readJsonBody(new Response('{"a":1}'))).resolves.toEqual({ a: 1 });
+    expect(asTransportError(new TypeError('socket hang up'))).toMatchObject({
+      code: 'CONNECT_FAILED',
+    });
+    const known = new MailboxTransportError('RATE_LIMITED');
+    expect(asTransportError(known)).toBe(known);
   });
 
   it('refuses a declared size over the cap without reading, and returns a body within it', async () => {

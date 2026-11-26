@@ -67,6 +67,8 @@ export function EmailBody({
   const [showImages, setShowImages] = useState(false);
   const [tall, setTall] = useState(false);
   const [inlineImages, setInlineImages] = useState<Record<string, string>>({});
+  /** Inline attachments whose fetch has finished (drawn or not). */
+  const [settled, setSettled] = useState<Record<string, boolean>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
 
   // Inline (cid:) images: fetched through the proxy when the mail is shown, never stored. The
@@ -83,6 +85,9 @@ export function EmailBody({
   const todoKey = todo.map((a) => `${a.id}:${a.contentId}`).join('|');
   useEffect(() => {
     const list = todoRef.current;
+    // A different mail starts with no images of the last one (Content-IDs are often generic).
+    setInlineImages({});
+    setSettled({});
     if (list.length === 0) return;
     let cancelled = false;
     // One at a time: each is a request to the mail provider, and the server limits how many a
@@ -96,6 +101,7 @@ export function EmailBody({
             emailId,
             attachmentId: a.id!,
           });
+          if (cancelled) return;
           if (isEmbeddable(file.contentType)) {
             found[a.contentId!.toLowerCase()] =
               `data:${file.contentType};base64,${file.contentBase64}`;
@@ -104,6 +110,8 @@ export function EmailBody({
         } catch {
           // that image stays blank
         }
+        if (cancelled) return;
+        setSettled((now) => ({ ...now, [a.id!]: true }));
       }
     })().catch(() => undefined);
     return () => {
@@ -119,7 +127,15 @@ export function EmailBody({
     [htmlBody, showImages, inlineImages]
   );
 
-  const files = attachments.filter((a) => !a.isInline);
+  // An inline image is left out of the list only while it is (or will be) drawn in the body; one
+  // that is not drawn (too large, an unsupported type, not referenced, failed) is listed to download.
+  const drawing = new Set(todo.map((a) => a.id));
+  const files = attachments.filter((a) => {
+    if (!a.isInline) return true;
+    if (!a.id || !drawing.has(a.id)) return true;
+    const drawn = Boolean(a.contentId && inlineImages[a.contentId.toLowerCase()]);
+    return !drawn && settled[a.id] === true;
+  });
 
   async function download(attachment: EmailBodyAttachment) {
     if (!attachment.id) return;

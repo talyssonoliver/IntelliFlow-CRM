@@ -132,10 +132,20 @@ describe('EmailBody', () => {
     const click = vi
       .spyOn(HTMLAnchorElement.prototype, 'click')
       .mockImplementation(() => undefined);
+    m.fetch.mockImplementation(async ({ attachmentId }: { attachmentId: string }) =>
+      attachmentId === 'att-2'
+        ? { fileName: 'logo.png', contentType: 'image/png', size: 8, contentBase64: PNG_B64 }
+        : {
+            fileName: 'quote.pdf',
+            contentType: 'application/pdf',
+            size: 3,
+            contentBase64: Buffer.from('pdf').toString('base64'),
+          }
+    );
     render(
       <EmailBody
         emailId="e1"
-        htmlBody="<p>See attached</p>"
+        htmlBody='<p>See attached</p><img src="cid:l">'
         attachments={[
           {
             id: 'att-1',
@@ -156,15 +166,82 @@ describe('EmailBody', () => {
         ]}
       />
     );
+    // The inline image is being drawn in the body, so only the file is listed.
     expect(screen.getByText('1 attachment(s)')).toBeTruthy();
     expect(screen.queryByText('logo.png')).toBeNull();
-    // Nothing was fetched just by showing the list.
-    expect(m.fetch).not.toHaveBeenCalled();
+    // Only the inline image is fetched by showing the mail; the file waits for a click.
+    await waitFor(() => expect(m.fetch).toHaveBeenCalledTimes(1));
+    expect(m.fetch).toHaveBeenCalledWith({ emailId: 'e1', attachmentId: 'att-2' });
     fireEvent.click(screen.getByRole('button', { name: 'Download quote.pdf' }));
     await waitFor(() => expect(click).toHaveBeenCalled());
     expect(m.fetch).toHaveBeenCalledWith({ emailId: 'e1', attachmentId: 'att-1' });
     expect(createUrl).toHaveBeenCalled();
     click.mockRestore();
+  });
+
+  it('lists an inline attachment that is not drawn, so it can still be downloaded', async () => {
+    m.fetch.mockResolvedValue({
+      fileName: 'scan.tiff',
+      contentType: 'image/tiff',
+      size: 8,
+      contentBase64: 'AAAA',
+    });
+    render(
+      <EmailBody
+        emailId="e1"
+        htmlBody='<img src="cid:scan">'
+        attachments={[
+          {
+            id: 'a1',
+            filename: 'scan.tiff',
+            contentType: 'image/tiff',
+            size: 8,
+            isInline: true,
+            contentId: 'scan',
+            onDemand: true,
+          },
+          {
+            id: 'a2',
+            filename: 'unreferenced.png',
+            contentType: 'image/png',
+            size: 8,
+            isInline: true,
+            contentId: 'other',
+            onDemand: true,
+          },
+        ]}
+      />
+    );
+    // Not referenced by the body: listed at once. Not a raster type: listed once the read settles.
+    expect(screen.getByRole('button', { name: 'Download unreferenced.png' })).toBeTruthy();
+    await screen.findByRole('button', { name: 'Download scan.tiff' });
+  });
+
+  it('starts a different mail with none of the last mail images', async () => {
+    m.fetch.mockResolvedValue({
+      fileName: 'a.png',
+      contentType: 'image/png',
+      size: 8,
+      contentBase64: PNG_B64,
+    });
+    const inline = [
+      {
+        id: 'a1',
+        filename: 'a.png',
+        contentType: 'image/png',
+        size: 8,
+        isInline: true,
+        contentId: 'image001',
+        onDemand: true,
+      },
+    ];
+    const { rerender } = render(
+      <EmailBody emailId="e1" htmlBody='<img src="cid:image001">' attachments={inline} />
+    );
+    await waitFor(() => expect(frame().getAttribute('srcdoc')).toContain(PNG_B64));
+    // Another mail that names the same generic Content-ID but has no such attachment.
+    rerender(<EmailBody emailId="e2" htmlBody='<img src="cid:image001">' attachments={[]} />);
+    expect(frame().getAttribute('srcdoc')).not.toContain(PNG_B64);
   });
 
   it('says so when the provider cannot give the file, and does not download', async () => {
