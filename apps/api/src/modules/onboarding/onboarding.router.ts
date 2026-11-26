@@ -32,6 +32,28 @@ interface OnboardingMetadata {
   onboarding_selected_plan?: string | null;
 }
 
+/**
+ * True when the caller is the admin of a workspace that has not chosen its business type yet.
+ * Owner ruling 23/11/2026: the business type decides which vertical modules (Cases, Tickets,
+ * Commerce) a workspace can have, so it is a required onboarding question for a new workspace.
+ * Invited members are never asked (the admin chooses). Unknown (no tenant, no service) is false.
+ */
+async function needsBusinessType(ctx: {
+  user?: { tenantId?: string | null; role?: string | null } | null;
+  container?: { get: <T>(name: string) => T } | null;
+}): Promise<boolean> {
+  const tenantId = ctx.user?.tenantId;
+  if (!tenantId || ctx.user?.role !== 'ADMIN') return false;
+  const moduleAccess =
+    ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
+  if (!moduleAccess || typeof moduleAccess.getBusinessType !== 'function') return false;
+  try {
+    return (await moduleAccess.getBusinessType(tenantId)) === null;
+  } catch {
+    return false;
+  }
+}
+
 // ============================================
 // Onboarding Router
 // ============================================
@@ -85,6 +107,7 @@ export const onboardingRouter = createTRPCRouter({
       flowDone,
       emailConfirmed,
       selectedPlan: meta.onboarding_selected_plan ?? null,
+      needsBusinessType: await needsBusinessType(ctx),
     };
   }),
 
@@ -109,6 +132,15 @@ export const onboardingRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user!.userId;
+
+      // The business type is required for a new workspace: finish only after the admin chose it
+      // (set with moduleAccess.setBusinessType from the welcome step).
+      if (await needsBusinessType(ctx)) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Choose your business type before finishing setup.',
+        });
+      }
 
       const metadataUpdate: OnboardingMetadata = {
         onboarding_completed: true,
