@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
@@ -73,6 +73,7 @@ describe('alert rules config', () => {
       'ifc074-error-logs-direct',
       'ifc151-outbox-dead-letters',
       'ifc142-ai-budget-80pct',
+      'ifc074-embedding-outage-1h',
     ]);
   });
 
@@ -104,7 +105,28 @@ describe('alert rules config', () => {
       'ifc151-outbox-dead-letters': traffic,
       // IFC-142: the AI cost series exists only while paid calls happen.
       'ifc142-ai-budget-80pct': traffic,
+      // The counter exists only after the first handled embedding fallback.
+      'ifc074-embedding-outage-1h': traffic,
     });
+  });
+
+  // PR #1561: handled embedding fallbacks are a counter, not error spans, so a long outage
+  // needs its own rule. It must wait a full hour (one blip never pages) and be a warning.
+  it('the embedding-outage rule fires on the handled-fallback counter held for 1 hour', () => {
+    const entry = CONFIG.rules.find((r: { uid: string }) => r.uid === 'ifc074-embedding-outage-1h');
+    expect(entry.expr).toBe(
+      'sum by (fallback) (increase(intelliflow_ai_fallback_handled_total[5m]))'
+    );
+    expect(entry).toMatchObject({ operator: 'gt', threshold: 0, for: '1h', severity: 'warning' });
+    expect(entry.summary).toContain('{{ $labels.fallback }}');
+    const rule = buildRule(entry, CONFIG);
+    expect(rule.for).toBe('1h');
+    // Same labels as every other rule, so the default policy routes it to the owner's contact point.
+    expect(rule.labels).toEqual({ severity: 'warning', team: 'owner', source: 'ifc-032' });
+    expect(rule.annotations.runbook_url).toMatch(
+      /\/docs\/operations\/runbooks\/embedding-outage\.md$/
+    );
+    expect(existsSync(join(__dirname, '../../..', entry.runbook))).toBe(true);
   });
 
   it('only a rule that alerts on silence skips the series check', () => {
