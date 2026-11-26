@@ -87,7 +87,7 @@ export function EmailBody({
     let cancelled = false;
     // One at a time: each is a request to the mail provider, and the server limits how many a
     // user can have running.
-    void (async () => {
+    (async () => {
       const found: Record<string, string> = {};
       for (const a of list) {
         if (cancelled) return;
@@ -105,7 +105,7 @@ export function EmailBody({
           // that image stays blank
         }
       }
-    })();
+    })().catch(() => undefined);
     return () => {
       cancelled = true;
     };
