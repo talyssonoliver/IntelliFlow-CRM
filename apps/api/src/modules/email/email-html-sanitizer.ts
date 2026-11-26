@@ -16,7 +16,7 @@ import sanitizeHtml from 'sanitize-html';
 
 /** A CSS value that cannot fetch, script or escape the declaration. */
 const SAFE_VALUE = [
-  /^(?!.*(?:url\s*\(|image-set|src\s*\(|cross-fade|element\s*\(|paint\s*\(|expression|javascript:|vbscript:|@import|behavior|binding|var\())[^<>{}\\;]{1,200}$/i,
+  /^(?![\s\S]*(?:url\s*\(|image-set|src\s*\(|cross-fade|element\s*\(|paint\s*\(|expression|javascript:|vbscript:|@import|behavior|binding|var\())[^<>{}\\;]{1,200}$/i,
 ];
 
 const BOX = [
@@ -76,9 +76,10 @@ for (const property of [...BOX, ...TEXT]) ALLOWED_STYLES[property] = SAFE_VALUE;
 ALLOWED_STYLES['display'] = [/^(block|inline|inline-block|table|table-row|table-cell)$/i];
 ALLOWED_STYLES['float'] = [/^(left|right|none)$/i];
 
-const SIZE_UNITS = ['px', 'pt', 'rem', 'em', '%'];
+/** Only absolute units are judged: 2em or 2% depend on the page, and are real sizes. */
+const SIZE_UNITS = ['px', 'pt'];
 
-/** A length of 2 or less in any unit (a tracking pixel), with or without !important. */
+/** A length of 2px/pt or less (a tracking pixel), unitless or not, with or without !important. */
 function pixelSized(value: string | undefined): boolean {
   if (value === undefined) return false;
   let text = value.trim().toLowerCase();

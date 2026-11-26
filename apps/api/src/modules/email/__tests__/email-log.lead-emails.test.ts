@@ -43,7 +43,11 @@ describe('emailLog.leadEmails', () => {
     (prismaMock.emailRecord.findMany as any).mockResolvedValue([]);
     await member().leadEmails({ leadId: LEAD });
     const args = (prismaMock.emailRecord.findMany as any).mock.calls[0][0];
-    expect(args.where).toEqual({ tenantId, metadata: { path: ['leadId'], equals: LEAD } });
+    expect(args.where).toEqual({
+      tenantId,
+      metadata: { path: ['leadId'], equals: LEAD },
+      OR: [{ userId: null }, { userId: TEST_UUIDS.user1 }],
+    });
     expect(args.include).toEqual({ attachments: true });
     // The newest 200 when a lead has more; the thread is then ordered oldest first.
     expect(args.orderBy).toEqual({ createdAt: 'desc' });
@@ -85,6 +89,11 @@ describe('emailLog.leadEmails', () => {
     const asMember = await member().leadEmails({ leadId: LEAD });
     expect(asMember.emails.map((e) => e.id).sort()).toEqual(['inbound', 'mine']);
     const asAdmin = await admin().leadEmails({ leadId: LEAD });
+    // An email admin's query has no per-user condition.
+    expect((prismaMock.emailRecord.findMany as any).mock.calls.at(-1)[0].where).toEqual({
+      tenantId,
+      metadata: { path: ['leadId'], equals: LEAD },
+    });
     expect(asAdmin.emails.map((e) => e.id).sort()).toEqual(['inbound', 'mine', 'theirs']);
   });
 

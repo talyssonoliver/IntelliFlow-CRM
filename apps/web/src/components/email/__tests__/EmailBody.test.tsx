@@ -61,6 +61,16 @@ describe('EmailBody', () => {
     expect(screen.queryByRole('button', { name: 'Show images' })).toBeNull();
   });
 
+  it('showing images for one mail does not show them for the next', () => {
+    const html = '<img src="https://cdn.example.invalid/hero.png" width="600">';
+    const { rerender } = render(<EmailBody emailId="e1" htmlBody={html} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Show images' }));
+    expect(frame().getAttribute('srcdoc')).toContain('cdn.example.invalid');
+    rerender(<EmailBody emailId="e2" htmlBody={html} />);
+    expect(frame().getAttribute('srcdoc')).not.toContain('cdn.example.invalid');
+    expect(screen.getByRole('button', { name: 'Show images' })).toBeTruthy();
+  });
+
   it('offers no Show images control when the mail has no external images', () => {
     render(<EmailBody emailId="e1" htmlBody="<p>No pictures</p>" />);
     expect(screen.queryByRole('button', { name: 'Show images' })).toBeNull();

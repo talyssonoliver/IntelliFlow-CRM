@@ -35,12 +35,13 @@ export function gmailAttachmentMeta(payload: GmailApiPart | undefined): MailAtta
     const contentId = bareContentId(partHeader(part, 'Content-ID'));
     const asAttachment = ATTACHMENT_DISPOSITION.test(partHeader(part, 'Content-Disposition') ?? '');
     const isFile = Boolean(part.filename?.trim()) || asAttachment || contentId !== null;
-    if (isFile && part.partId && part.body?.attachmentId && !mimeType.startsWith('multipart/')) {
+    const hasBytes = Boolean(part.body?.attachmentId || part.body?.data);
+    if (isFile && part.partId && hasBytes && !mimeType.startsWith('multipart/')) {
       found.push({
         providerAttachmentId: part.partId,
         fileName: (part.filename?.trim() || `attachment-${found.length + 1}`).slice(0, 255),
         fileType: mimeType.slice(0, 127),
-        fileSize: Math.max(0, Math.trunc(part.body.size ?? 0)),
+        fileSize: Math.max(0, Math.trunc(part.body?.size ?? 0)),
         contentId,
         isInline: contentId !== null && mimeType.startsWith('image/') && !asAttachment,
       });
@@ -106,15 +107,18 @@ export async function fetchGmailAttachment(
   const full = await readJsonBody<GmailApiMessage>(message);
   const part = findPart(full.payload, ref.partId);
   const attachmentId = part?.body?.attachmentId;
-  if (!part || !attachmentId) throw new MailboxTransportError('REJECTED');
+  if (!part || !(attachmentId || part.body?.data)) throw new MailboxTransportError('REJECTED');
   if ((part.body?.size ?? 0) > MAX_ATTACHMENT_BYTES) throw new MailboxTransportError('REJECTED');
-  const file = await get(
-    fetchImpl,
-    accessToken,
-    `${path}/attachments/${encodeURIComponent(attachmentId)}`
-  );
-  const stored = await readJsonBody<{ data?: string }>(file);
-  const bytes = Buffer.from(stored.data ?? '', 'base64url');
+  let data = part.body?.data;
+  if (attachmentId) {
+    const file = await get(
+      fetchImpl,
+      accessToken,
+      `${path}/attachments/${encodeURIComponent(attachmentId)}`
+    );
+    data = (await readJsonBody<{ data?: string }>(file)).data;
+  }
+  const bytes = Buffer.from(data ?? '', 'base64url');
   if (bytes.length > MAX_ATTACHMENT_BYTES) throw new MailboxTransportError('REJECTED');
   return { bytes, contentType: part.mimeType ?? null };
 }

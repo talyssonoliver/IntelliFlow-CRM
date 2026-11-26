@@ -91,6 +91,22 @@ describe('sanitizeEmailHtml', () => {
     expect(out).toContain('https://cdn.example.invalid/hero.png');
   });
 
+  it('does not let a line break hide a url() from the value check', () => {
+    const out = clean(
+      '<div style="background:linear-gradient(red,\nred),url(https://t.example.invalid/open)">a</div>' +
+        '<div style="background:red\n;color:blue">b</div>'
+    );
+    expect(out).not.toContain('t.example.invalid');
+  });
+
+  it('keeps an image sized in relative units: 2em is a real size, not a pixel', () => {
+    const out = clean(
+      '<img src="cid:logo" style="height:2em;width:2em"><img src="cid:b" style="width:50%">'
+    );
+    expect(out).toContain('cid:logo');
+    expect(out).toContain('cid:b');
+  });
+
   it('catches pixels sized with !important, other units or upper case, and padded data: schemes', () => {
     const out = clean(
       '<img src="https://t.example.invalid/a.gif" style="width:1px !important;height:1px !important">' +

@@ -215,7 +215,12 @@ export const emailLogRouter = createTRPCRouter({
       });
       if (!lead) throw new TRPCError({ code: 'NOT_FOUND', message: 'Lead not found.' });
       const rows: any[] = await c.prismaWithTenant.emailRecord.findMany({
-        where: { tenantId, metadata: { path: ['leadId'], equals: input.leadId } },
+        where: {
+          tenantId,
+          metadata: { path: ['leadId'], equals: input.leadId },
+          // Someone else's own mail is left out in the query, so it never uses up the limit.
+          ...(isEmailAdmin(c) ? {} : { OR: [{ userId: null }, { userId: c.tenant.userId }] }),
+        },
         include: { attachments: true },
         // The newest mail when a lead has more than the limit; the thread is then sorted oldest first.
         orderBy: { createdAt: 'desc' },

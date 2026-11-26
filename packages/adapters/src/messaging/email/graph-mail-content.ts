@@ -67,16 +67,24 @@ interface GraphAttachment {
   '@odata.type'?: string;
 }
 
-/** The file attachments of a Graph message as metadata (item and reference attachments have no file to fetch). */
+/**
+ * The attachments of a Graph message as metadata: files, and attached messages or items (their raw
+ * content is what Graph's /$value returns). A reference attachment is a link, with nothing to fetch.
+ */
 export function graphAttachmentMeta(list: GraphAttachment[] | undefined): MailAttachmentMeta[] {
   const out: MailAttachmentMeta[] = [];
   for (const a of list ?? []) {
     if (out.length >= MAX_ATTACHMENTS_PER_MAIL) break;
-    if (!a.id || (a['@odata.type'] && !/fileAttachment$/i.test(a['@odata.type']))) continue;
+    const type = a['@odata.type'] ?? '';
+    if (!a.id || /referenceAttachment$/i.test(type)) continue;
+    const isItem = /itemAttachment$/i.test(type);
+    const name = a.name?.trim() || `attachment-${out.length + 1}`;
     out.push({
       providerAttachmentId: a.id.slice(0, 512),
-      fileName: (a.name?.trim() || `attachment-${out.length + 1}`).slice(0, 255),
-      fileType: (a.contentType?.trim() || 'application/octet-stream').slice(0, 127),
+      fileName: (isItem && !/\.[a-z0-9]{1,5}$/i.test(name) ? `${name}.eml` : name).slice(0, 255),
+      fileType: (
+        a.contentType?.trim() || (isItem ? 'message/rfc822' : 'application/octet-stream')
+      ).slice(0, 127),
       fileSize: Math.max(0, Math.trunc(a.size ?? 0)),
       contentId: bareContentId(a.contentId),
       isInline: a.isInline === true,
@@ -184,9 +192,11 @@ async function readGraph(
   }
   const isHtml = (message.body?.contentType ?? 'html').toLowerCase() === 'html';
   const html = isHtml ? capHtml(message.body?.content) : null;
+  // Looked for in the body as Graph sent it, before the storage cap drops a very large one.
+  const namesCid = isHtml && /cid:/i.test(message.body?.content ?? '');
   // hasAttachments is false for a mail whose only attachments are inline images, so a body that
   // names a cid: is read too (the Zoho reader does the same).
-  const wantsList = message.hasAttachments === true || /cid:/i.test(html ?? '');
+  const wantsList = message.hasAttachments === true || namesCid;
   const attachments = wantsList
     ? await orNothing(() => readAttachmentList(fetchImpl, accessToken, id), [])
     : [];

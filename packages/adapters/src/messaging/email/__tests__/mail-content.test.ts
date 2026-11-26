@@ -206,6 +206,31 @@ describe('Gmail', () => {
     expect(calls.filter((c) => c.includes('format=full'))).toHaveLength(1);
   });
 
+  it('records and fetches an attachment whose bytes are inline in the part', async () => {
+    const payload = {
+      mimeType: 'multipart/mixed',
+      parts: [
+        {
+          partId: '1',
+          mimeType: 'text/plain',
+          filename: 'note.txt',
+          body: { data: b64('inline bytes'), size: 12 },
+        },
+      ],
+    };
+    expect(gmailAttachmentMeta(payload)).toMatchObject([
+      { providerAttachmentId: '1', fileName: 'note.txt', fileSize: 12 },
+    ]);
+    const fetchImpl = vi.fn(async () => json({ id: 'm9', payload }));
+    const file = await fetchGmailAttachment(
+      TOKEN,
+      { messageId: 'm9', partId: '1' },
+      fetchImpl as never
+    );
+    expect(file.bytes.toString()).toBe('inline bytes');
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
   it('lists nothing for a mail with no attachment parts', () => {
     expect(gmailAttachmentMeta({ mimeType: 'text/plain', body: { data: b64('x') } })).toEqual([]);
   });
@@ -318,6 +343,7 @@ describe('Microsoft Graph', () => {
     ).toEqual([
       ['a1', null, false],
       ['a2', 'logo1', true],
+      ['a3', null, false],
     ]);
     const urls = fetchImpl.mock.calls.map((c) => String(c[0]));
     expect(urls[1]).toContain(
@@ -434,10 +460,38 @@ describe('Microsoft Graph', () => {
     });
   });
 
-  it('ignores items that are not files', () => {
+  it('lists attached messages (downloaded as raw content) but not reference links', () => {
     expect(
-      graphAttachmentMeta([{ id: 'x', '@odata.type': '#microsoft.graph.referenceAttachment' }])
-    ).toEqual([]);
+      graphAttachmentMeta([
+        { id: 'a', name: 'Quote', size: 9, '@odata.type': '#microsoft.graph.itemAttachment' },
+        { id: 'b', name: 'link', '@odata.type': '#microsoft.graph.referenceAttachment' },
+      ])
+    ).toMatchObject([
+      { providerAttachmentId: 'a', fileName: 'Quote.eml', fileType: 'message/rfc822' },
+    ]);
+  });
+
+  it('finds a cid: in a body too large to store, so inline images are still listed', async () => {
+    const big = `<img src="cid:logo1">${'x'.repeat(MAX_HTML_CHARS)}`;
+    const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
+      if (String(input).includes('/attachments?')) {
+        return json({
+          value: [
+            {
+              '@odata.type': '#microsoft.graph.fileAttachment',
+              id: 'i1',
+              name: 'logo.png',
+              isInline: true,
+              contentId: 'logo1',
+            },
+          ],
+        });
+      }
+      return json({ body: { contentType: 'html', content: big }, hasAttachments: false });
+    });
+    const content = await readGraphContent(TOKEN, 'g1', '', fetchImpl as never);
+    expect(content.html).toBeNull();
+    expect(content.attachments).toHaveLength(1);
   });
 });
 

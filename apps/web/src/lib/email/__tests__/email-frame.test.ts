@@ -88,6 +88,16 @@ describe('buildEmailFrame', () => {
 });
 
 describe('referencedContentIds', () => {
+  it('finds a cid in an unquoted src too, and resolves it', () => {
+    expect(referencedContentIds('<img src=cid:logo><img src = "cid:b">')).toEqual(['logo', 'b']);
+    const { srcDoc } = buildEmailFrame({
+      html: '<img src=cid:logo alt="x">',
+      showRemoteImages: false,
+      inlineImages: { logo: PNG },
+    });
+    expect(srcDoc).toContain(PNG);
+  });
+
   it('lists the cids the body names, decoded and lower-cased, once each', () => {
     expect(
       referencedContentIds(

@@ -64,7 +64,9 @@ export function EmailBody({
   attachments = [],
 }: Readonly<EmailBodyProps>) {
   const utils = trpc.useUtils();
-  const [showImages, setShowImages] = useState(false);
+  // Consent is for one mail: the id of the mail whose images were shown.
+  const [shownFor, setShownFor] = useState<string | null>(null);
+  const showImages = shownFor === emailId;
   const [tall, setTall] = useState(false);
   const [inlineImages, setInlineImages] = useState<Record<string, string>>({});
   /** Inline attachments whose fetch has finished (drawn or not). */
@@ -176,7 +178,7 @@ export function EmailBody({
               <button
                 type="button"
                 className="font-medium text-primary hover:underline"
-                onClick={() => setShowImages(true)}
+                onClick={() => setShownFor(emailId)}
               >
                 Show images
               </button>

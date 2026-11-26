@@ -19,13 +19,14 @@ export const MAX_INLINE_IMAGE_BYTES = 3 * 1024 * 1024;
 /** Only these are embedded from an attachment (never SVG, which can carry markup). */
 export const INLINE_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/gif', 'image/webp'] as const;
 
-const CID_SRC = /(\bsrc\s*=\s*["'])cid:([^"']+)(["'])/gi;
+/** `src=cid:x`, `src="cid:x"` or `src='cid:x'`. */
+const CID_SRC = /(\bsrc\s*=\s*)(["']?)cid:([^"'\s>]+)\2/gi;
 
 /** The Content-IDs the body's images name (`cid:` URLs), lower-cased and decoded. */
 export function referencedContentIds(html: string): string[] {
   const found = new Set<string>();
   for (const match of html.matchAll(CID_SRC)) {
-    found.add(safeDecode(match[2] ?? '').toLowerCase());
+    found.add(safeDecode(match[3] ?? '').toLowerCase());
   }
   return [...found];
 }
@@ -73,9 +74,9 @@ export function buildEmailFrame(input: EmailFrameInput): EmailFrame {
   // cid: images become the fetched data URL, or lose their source (DOMPurify would drop `cid:` anyway).
   const resolved = input.html.replaceAll(
     CID_SRC,
-    (_all, open: string, id: string, close: string) => {
+    (_all, prefix: string, _quote: string, id: string) => {
       const data = inline[safeDecode(id).toLowerCase()];
-      return data ? `${open}${data}${close}` : `${open}${close}`;
+      return `${prefix}"${data ?? ''}"`;
     }
   );
   const body = DOMPurify.sanitize(resolved, {
