@@ -69,6 +69,17 @@ describe('sanitizeEmailHtml', () => {
     expect(out).toContain('height:10px');
   });
 
+  it('drops CSS functions that fetch an image other than url()', () => {
+    const out = clean(
+      '<div style="background:image-set(\'https://t.example.invalid/a.png\' 1x);color:red">a</div>' +
+        '<div style="background-color:cross-fade(red, blue);width:10px">b</div>' +
+        '<div style="background:element(#x);height:5px">c</div>'
+    );
+    expect(out).not.toMatch(/image-set|cross-fade|element\(|t\.example/i);
+    expect(out).toContain('color:red');
+    expect(out).toContain('width:10px');
+  });
+
   it('removes tracking pixels (1x1 or hidden images) but keeps real remote images', () => {
     const out = clean(
       '<img src="https://track.example.invalid/open.gif" width="1" height="1">' +

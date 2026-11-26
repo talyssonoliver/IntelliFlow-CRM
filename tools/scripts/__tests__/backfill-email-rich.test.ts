@@ -183,16 +183,14 @@ describe('backfillEmailRich', () => {
     expect(result.lines.join('\n')).toContain('AUTH_FAILED');
   });
 
-  it('refuses to write to a database that is not local', async () => {
+  it('refuses a database that is not local, dry run or not (it still reads and uses mailbox tokens)', async () => {
     const { db } = fakeDb([record()]);
-    await expect(
-      backfillEmailRich(db, source(PROVIDER_MAIL), deps, options({ apply: true, target: REMOTE }))
-    ).rejects.toThrow(/not a local database/);
+    for (const apply of [true, false]) {
+      await expect(
+        backfillEmailRich(db, source(PROVIDER_MAIL), deps, options({ apply, target: REMOTE }))
+      ).rejects.toThrow(/not a local database/);
+    }
     expect(db.loadRecords).not.toHaveBeenCalled();
-    // A dry run against it is allowed: it only reads.
-    await expect(
-      backfillEmailRich(db, source(PROVIDER_MAIL), deps, options({ target: REMOTE }))
-    ).resolves.toMatchObject({ scanned: 1 });
   });
 });
 

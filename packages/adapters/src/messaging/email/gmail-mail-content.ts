@@ -10,6 +10,7 @@ import {
   MAX_ATTACHMENT_BYTES,
   bareContentId,
   capHtml,
+  safeSegment,
   type FetchedAttachment,
   type MailAttachmentMeta,
 } from './mail-content';
@@ -95,7 +96,7 @@ export async function fetchGmailAttachment(
   ref: { messageId: string; partId: string },
   fetchImpl: typeof fetch = fetch
 ): Promise<FetchedAttachment> {
-  const path = `/messages/${encodeURIComponent(ref.messageId)}`;
+  const path = `/messages/${encodeURIComponent(safeSegment(ref.messageId))}`;
   const message = await get(fetchImpl, accessToken, `${path}?format=full`);
   const full = (await message.json()) as GmailApiMessage;
   const part = findPart(full.payload, ref.partId);

@@ -50,6 +50,8 @@ function row(over: Record<string, unknown> = {}, email: Record<string, unknown> 
       mailboxId: 'mbx-1',
       provider: 'MICROSOFT',
       providerMessageId: 'msg-1',
+      contactId: null,
+      metadata: { leadId: 'lead-1' },
       ...email,
     },
     ...over,
@@ -68,6 +70,9 @@ function setRows(attachment: unknown, box: unknown = mailbox()) {
 beforeEach(() => {
   vi.clearAllMocks();
   transport.getOAuthAccessToken.mockResolvedValue('access-for-tests');
+  // The caller can see the lead the mail is logged on, unless a test says otherwise.
+  (prismaMock as any).lead.findFirst.mockResolvedValue({ id: 'lead-1' });
+  (prismaMock as any).contact.findFirst.mockResolvedValue(null);
   const file = { bytes: Buffer.from('%PDF-bytes'), contentType: 'application/pdf; charset=binary' };
   provider.fetchGraphAttachment.mockResolvedValue(file);
   provider.fetchGmailAttachment.mockResolvedValue(file);
@@ -126,6 +131,46 @@ describe('emailAttachments.fetch', () => {
 
     const admin = { user: { ...createTestContext().user!, role: 'ADMIN' } };
     await expect(caller(admin).fetch(INPUT)).resolves.toMatchObject({ fileName: 'quote.pdf' });
+  });
+
+  it('needs the caller to be able to see the lead or contact the mail is logged on', async () => {
+    setRows(row());
+    (prismaMock as any).lead.findFirst.mockResolvedValue(null);
+    await expect(caller().fetch(INPUT)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect((prismaMock as any).lead.findFirst.mock.calls[0][0].where).toMatchObject({
+      id: 'lead-1',
+      tenantId,
+    });
+    expect(provider.fetchGraphAttachment).not.toHaveBeenCalled();
+
+    // A mail logged on a contact instead: the contact must be visible.
+    setRows(row({}, { metadata: {}, contactId: 'contact-1' }));
+    await expect(caller().fetch(INPUT)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    (prismaMock as any).contact.findFirst.mockResolvedValue({ id: 'contact-1' });
+    await expect(caller().fetch(INPUT)).resolves.toMatchObject({ fileName: 'quote.pdf' });
+
+    // Logged on nobody the caller can see: not served, even though it has no owner.
+    setRows(row({}, { metadata: {}, contactId: null }));
+    await expect(caller().fetch(INPUT)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  });
+
+  it('limits how many provider reads one user has running at once', async () => {
+    setRows(row());
+    const release: Array<() => void> = [];
+    provider.fetchGraphAttachment.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          release.push(() => resolve({ bytes: Buffer.from('x'), contentType: null }));
+        })
+    );
+    const open = Array.from({ length: 4 }, () => caller().fetch(INPUT));
+    await vi.waitFor(() => expect(release).toHaveLength(4));
+    await expect(caller().fetch(INPUT)).rejects.toMatchObject({ code: 'TOO_MANY_REQUESTS' });
+    release.forEach((done) => done());
+    await Promise.all(open);
+    // The slots are free again.
+    provider.fetchGraphAttachment.mockResolvedValue({ bytes: Buffer.from('x'), contentType: null });
+    await expect(caller().fetch(INPUT)).resolves.toMatchObject({ size: 1 });
   });
 
   it("serves the caller's own mail", async () => {

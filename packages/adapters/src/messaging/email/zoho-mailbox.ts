@@ -13,6 +13,7 @@
  * Every failure is a MailboxTransportError code; provider text never leaves this file.
  */
 import { MailboxTransportError } from './mailbox-errors';
+import { readCapped } from './mail-content';
 import type { MimeAttachment } from './mime';
 import type { OAuthClientConfig, OAuthTokens, RefreshedTokens } from './oauth-mailbox';
 import type { MailboxErrorCode } from '@intelliflow/domain';
@@ -223,10 +224,7 @@ export async function zohoAccountGetBytes(
     },
   });
   if (!response.ok) throw await apiError(response);
-  const declared = Number(response.headers.get('content-length'));
-  if (Number.isFinite(declared) && declared > maxBytes) throw new MailboxTransportError('REJECTED');
-  const bytes = Buffer.from(await response.arrayBuffer());
-  if (bytes.length > maxBytes) throw new MailboxTransportError('REJECTED');
+  const bytes = await readCapped(response, maxBytes);
   return { bytes, contentType: response.headers.get('content-type') };
 }
 

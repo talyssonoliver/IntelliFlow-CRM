@@ -18,6 +18,7 @@ import {
   fetchZohoAttachment,
   type FetchedAttachment,
 } from '@intelliflow/adapters';
+import { createTenantWhereClause } from '../../security/tenant-context';
 import { isEmailAdmin, type EmailRouterCtx } from './email-access';
 import {
   forgetAccessToken,
@@ -74,7 +75,55 @@ interface AttachmentRow {
     mailboxId: string | null;
     provider: string | null;
     providerMessageId: string | null;
+    contactId: string | null;
+    metadata: unknown;
   };
+}
+
+/** Most provider reads one user may have running at once (each buffers a file in memory). */
+const MAX_CONCURRENT_PER_USER = 4;
+const running = new Map<string, number>();
+
+async function withUserSlot<T>(userId: string, work: () => Promise<T>): Promise<T> {
+  const count = running.get(userId) ?? 0;
+  if (count >= MAX_CONCURRENT_PER_USER) {
+    throw new TRPCError({
+      code: 'TOO_MANY_REQUESTS',
+      message: 'Too many attachments are opening at once. Try again in a moment.',
+    });
+  }
+  running.set(userId, count + 1);
+  try {
+    return await work();
+  } finally {
+    const left = (running.get(userId) ?? 1) - 1;
+    if (left <= 0) running.delete(userId);
+    else running.set(userId, left);
+  }
+}
+
+/**
+ * Whether the caller may read what the mail is about: their own mail, an email admin, or someone
+ * who can see the lead or contact it is logged on (the same rule as reading the lead's thread).
+ */
+async function maySeeMail(c: EmailRouterCtx, email: AttachmentRow['email']): Promise<boolean> {
+  if (email.userId === c.tenant.userId || isEmailAdmin(c)) return true;
+  const leadId = (email.metadata as { leadId?: unknown } | null)?.leadId;
+  if (typeof leadId === 'string') {
+    const lead = await c.prismaWithTenant.lead.findFirst({
+      where: createTenantWhereClause(c.tenant as never, { id: leadId }),
+      select: { id: true },
+    });
+    if (lead) return true;
+  }
+  if (email.contactId) {
+    const contact = await c.prismaWithTenant.contact.findFirst({
+      where: createTenantWhereClause(c.tenant as never, { id: email.contactId }),
+      select: { id: true },
+    });
+    if (contact) return true;
+  }
+  return false;
 }
 
 async function fromProvider(
@@ -122,6 +171,8 @@ export async function fetchEmailAttachment(
           mailboxId: true,
           provider: true,
           providerMessageId: true,
+          contactId: true,
+          metadata: true,
         },
       },
     },
@@ -130,6 +181,7 @@ export async function fetchEmailAttachment(
   if (!row?.providerAttachmentId || row.email.tenantId !== tenantId) throw notFound();
   // Someone else's mail is theirs; an email admin may open any of the tenant's.
   if (row.email.userId && row.email.userId !== userId && !isEmailAdmin(c)) throw notFound();
+  if (!(await maySeeMail(c, row.email))) throw notFound();
   if (!row.email.mailboxId || !row.email.providerMessageId) throw notFound();
   if (row.fileSize > MAX_ATTACHMENT_BYTES) {
     throw new TRPCError({
@@ -147,6 +199,16 @@ export async function fetchEmailAttachment(
       message: 'The mailbox this email came from is not connected.',
     });
   }
+  return withUserSlot(userId, () => readFromProvider(c, transports, mailbox, row, now));
+}
+
+async function readFromProvider(
+  c: EmailRouterCtx,
+  transports: MailboxTransports,
+  mailbox: TransportMailbox,
+  row: AttachmentRow,
+  now: Date
+): Promise<ProxiedAttachment> {
   try {
     const token = await getOAuthAccessToken(c.prismaWithTenant, mailbox, transports, now);
     let file: FetchedAttachment;

@@ -217,6 +217,8 @@ export const emailLogRouter = createTRPCRouter({
       const rows: any[] = await c.prismaWithTenant.emailRecord.findMany({
         where: { tenantId, metadata: { path: ['leadId'], equals: input.leadId } },
         include: { attachments: true },
+        // The newest mail when a lead has more than the limit; the thread is then sorted oldest first.
+        orderBy: { createdAt: 'desc' },
         take: LEAD_EMAILS_LIMIT,
       });
       const visible = rows.filter((row) => {

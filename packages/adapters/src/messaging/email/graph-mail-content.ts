@@ -10,6 +10,8 @@ import {
   MAX_ATTACHMENT_BYTES,
   bareContentId,
   capHtml,
+  readCapped,
+  safeSegment,
   type FetchedAttachment,
   type MailAttachmentMeta,
   type MailContent,
@@ -159,7 +161,7 @@ export async function fetchGraphAttachment(
   ref: { messageId: string; attachmentId: string },
   fetchImpl: typeof fetch = fetch
 ): Promise<FetchedAttachment> {
-  const path = `/messages/${encodeURIComponent(ref.messageId)}/attachments/${encodeURIComponent(ref.attachmentId)}`;
+  const path = `/messages/${encodeURIComponent(safeSegment(ref.messageId))}/attachments/${encodeURIComponent(safeSegment(ref.attachmentId))}`;
   const meta = await graphGet(
     fetchImpl,
     accessToken,
@@ -169,7 +171,6 @@ export async function fetchGraphAttachment(
   const info = (await meta.json()) as { size?: number; contentType?: string };
   if ((info.size ?? 0) > MAX_ATTACHMENT_BYTES) throw new MailboxTransportError('REJECTED');
   const raw = await graphGet(fetchImpl, accessToken, `${path}/$value`, IMMUTABLE);
-  const bytes = Buffer.from(await raw.arrayBuffer());
-  if (bytes.length > MAX_ATTACHMENT_BYTES) throw new MailboxTransportError('REJECTED');
+  const bytes = await readCapped(raw, MAX_ATTACHMENT_BYTES);
   return { bytes, contentType: info.contentType ?? raw.headers.get('content-type') };
 }

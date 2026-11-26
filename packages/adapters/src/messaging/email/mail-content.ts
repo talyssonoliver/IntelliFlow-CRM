@@ -1,3 +1,5 @@
+import { MailboxTransportError } from './mailbox-errors';
+
 /**
  * Rich mail content for the mailbox sync, shared by the Gmail, Graph and Zoho readers: the
  * provider's HTML body and the METADATA of the mail's attachments (never the files).
@@ -43,6 +45,40 @@ export function capHtml(html: string | null | undefined): string | null {
 export function bareContentId(value: string | null | undefined): string | null {
   const id = (value ?? '').trim().replace(/^<|>$/g, '').trim();
   return id ? id.slice(0, 255) : null;
+}
+
+/** An id that goes into a provider URL path: never empty, `.` or `..` (encodeURIComponent keeps those). */
+export function safeSegment(value: string): string {
+  if (!value || value === '.' || value === '..') throw new MailboxTransportError('REJECTED');
+  return value;
+}
+
+/**
+ * A response body read into memory with a running byte cap: it stops as soon as the cap is passed,
+ * so a provider that sends more than it declared (or declares nothing) cannot fill memory.
+ */
+export async function readCapped(response: Response, maxBytes: number): Promise<Buffer> {
+  const declared = Number(response.headers.get('content-length'));
+  if (Number.isFinite(declared) && declared > maxBytes) throw new MailboxTransportError('REJECTED');
+  const reader = response.body?.getReader();
+  if (!reader) {
+    const whole = Buffer.from(await response.arrayBuffer());
+    if (whole.length > maxBytes) throw new MailboxTransportError('REJECTED');
+    return whole;
+  }
+  const chunks: Buffer[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.length;
+    if (total > maxBytes) {
+      await reader.cancel();
+      throw new MailboxTransportError('REJECTED');
+    }
+    chunks.push(Buffer.from(value));
+  }
+  return Buffer.concat(chunks, total);
 }
 
 /** A file as fetched on demand from the provider. Never persisted. */

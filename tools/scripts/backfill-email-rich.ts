@@ -17,7 +17,8 @@
  * skipped, so a second run changes nothing.
  *
  * A dry run reads the providers (read-only requests) and prints what it would write; `--no-provider`
- * makes it offline (only the date fallback is then possible). `--apply` writes.
+ * makes it offline (only the date fallback is then possible). `--apply` writes. Both refuse a
+ * database that is not local unless the owner said yes and ALLOW_PROD_DB_OPS=1 is set.
  *
  * Usage (from the repo root), against a LOCAL database unless the owner says otherwise:
  *   DATABASE_URL=<aurora url> pnpm tsx tools/scripts/backfill-email-rich.ts \
@@ -246,7 +247,9 @@ export async function backfillEmailRich(
   deps: BackfillDeps,
   options: BackfillOptions
 ): Promise<BackfillResult> {
-  if (options.apply) assertMayWrite(options.target);
+  // Even a dry run reads the database and uses real mailbox connections (a token refresh can rotate
+  // and store credentials), so a database that is not local needs the same explicit decision.
+  assertMayWrite(options.target);
   const result = newResult();
   const records = await db.loadRecords({
     tenantId: options.tenantId,

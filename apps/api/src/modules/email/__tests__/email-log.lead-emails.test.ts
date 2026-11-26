@@ -45,6 +45,9 @@ describe('emailLog.leadEmails', () => {
     const args = (prismaMock.emailRecord.findMany as any).mock.calls[0][0];
     expect(args.where).toEqual({ tenantId, metadata: { path: ['leadId'], equals: LEAD } });
     expect(args.include).toEqual({ attachments: true });
+    // The newest 200 when a lead has more; the thread is then ordered oldest first.
+    expect(args.orderBy).toEqual({ createdAt: 'desc' });
+    expect(args.take).toBe(200);
   });
 
   it('answers not found for a lead of another tenant, and reads no mail', async () => {

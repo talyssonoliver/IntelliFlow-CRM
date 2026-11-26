@@ -9,7 +9,15 @@ import { readGraphMailDelta, toSyncedMessage } from '../graph-mail-delta';
 import { fetchGraphAttachment, graphAttachmentMeta, readGraphContent } from '../graph-mail-content';
 import { readZohoFolder } from '../zoho-mail-reader';
 import { fetchZohoAttachment } from '../zoho-mail-content';
-import { MAX_ATTACHMENT_BYTES, MAX_HTML_CHARS, bareContentId, capHtml } from '../mail-content';
+import {
+  MAX_ATTACHMENT_BYTES,
+  MAX_HTML_CHARS,
+  bareContentId,
+  capHtml,
+  readCapped,
+  safeSegment,
+} from '../mail-content';
+import { MailboxTransportError } from '../mailbox-errors';
 
 const TOKEN = ['access', 'for', 'tests'].join('-');
 const NOW = new Date('2026-11-18T12:00:00Z');
@@ -28,6 +36,40 @@ describe('mail-content helpers', () => {
     expect(capHtml('<p>ok</p>')).toBe('<p>ok</p>');
     expect(capHtml('x'.repeat(MAX_HTML_CHARS + 1))).toBeNull();
     expect(capHtml('   ')).toBeNull();
+  });
+});
+
+describe('provider URL ids and capped reads', () => {
+  it('refuses ids that would change the path, before any request', async () => {
+    expect(safeSegment('abc')).toBe('abc');
+    for (const bad of ['', '.', '..']) {
+      expect(() => safeSegment(bad)).toThrow(MailboxTransportError);
+    }
+    const never = vi.fn();
+    await expect(
+      fetchGraphAttachment(TOKEN, { messageId: '..', attachmentId: 'a' }, never as never)
+    ).rejects.toMatchObject({ code: 'REJECTED' });
+    expect(never).not.toHaveBeenCalled();
+  });
+
+  it('stops reading a body as soon as it passes the cap, even with no Content-Length', async () => {
+    const chunk = new Uint8Array(1024);
+    let pulled = 0;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        pulled += 1;
+        controller.enqueue(chunk);
+        if (pulled > 1000) controller.close();
+      },
+    });
+    await expect(readCapped(new Response(body), 4096)).rejects.toMatchObject({ code: 'REJECTED' });
+    expect(pulled).toBeLessThan(50);
+  });
+
+  it('refuses a declared size over the cap without reading, and returns a body within it', async () => {
+    const declared = new Response('x', { headers: { 'content-length': '999999' } });
+    await expect(readCapped(declared, 10)).rejects.toMatchObject({ code: 'REJECTED' });
+    await expect(readCapped(new Response('hello'), 10)).resolves.toEqual(Buffer.from('hello'));
   });
 });
 

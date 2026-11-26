@@ -16,7 +16,7 @@ import sanitizeHtml from 'sanitize-html';
 
 /** A CSS value that cannot fetch, script or escape the declaration. */
 const SAFE_VALUE = [
-  /^(?!.*(?:url\s*\(|expression|javascript:|vbscript:|@import|behavior|binding|var\())[^<>{}\\;]{1,200}$/i,
+  /^(?!.*(?:url\s*\(|image-set|src\s*\(|cross-fade|element\s*\(|paint\s*\(|expression|javascript:|vbscript:|@import|behavior|binding|var\())[^<>{}\\;]{1,200}$/i,
 ];
 
 const BOX = [

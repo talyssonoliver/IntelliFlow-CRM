@@ -20,6 +20,7 @@ import {
   buildEmailFrame,
   referencedContentIds,
 } from '@/lib/email/email-frame';
+import { saveName } from '@/lib/email/save-name';
 
 export interface EmailBodyAttachment {
   id?: string;
@@ -43,13 +44,6 @@ function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function saveName(name: string): string {
-  const cleaned = [...name]
-    .map((char) => (char.charCodeAt(0) < 32 || '\\/:*?"<>|'.includes(char) ? '_' : char))
-    .join('');
-  return cleaned.slice(0, 200) || 'attachment';
 }
 
 function bytesOf(base64: string): Uint8Array<ArrayBuffer> {
@@ -91,26 +85,27 @@ export function EmailBody({
     const list = todoRef.current;
     if (list.length === 0) return;
     let cancelled = false;
-    void Promise.all(
-      list.map(async (a) => {
+    // One at a time: each is a request to the mail provider, and the server limits how many a
+    // user can have running.
+    void (async () => {
+      const found: Record<string, string> = {};
+      for (const a of list) {
+        if (cancelled) return;
         try {
           const file = await utilsRef.current.emailAttachments.fetch.fetch({
             emailId,
             attachmentId: a.id!,
           });
-          if (!isEmbeddable(file.contentType)) return null;
-          return [
-            a.contentId!.toLowerCase(),
-            `data:${file.contentType};base64,${file.contentBase64}`,
-          ] as const;
+          if (isEmbeddable(file.contentType)) {
+            found[a.contentId!.toLowerCase()] =
+              `data:${file.contentType};base64,${file.contentBase64}`;
+            setInlineImages({ ...found });
+          }
         } catch {
-          return null; // that image stays blank
+          // that image stays blank
         }
-      })
-    ).then((pairs) => {
-      if (cancelled) return;
-      setInlineImages(Object.fromEntries(pairs.filter((p) => p !== null)));
-    });
+      }
+    })();
     return () => {
       cancelled = true;
     };

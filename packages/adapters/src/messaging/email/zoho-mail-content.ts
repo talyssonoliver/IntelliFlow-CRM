@@ -11,6 +11,7 @@ import {
   MAX_ATTACHMENT_BYTES,
   bareContentId,
   capHtml,
+  safeSegment,
   type FetchedAttachment,
   type MailAttachmentMeta,
 } from './mail-content';
@@ -114,6 +115,6 @@ export async function fetchZohoAttachment(
   if (split < 1) throw new MailboxTransportError('REJECTED');
   const folderId = locator.providerAttachmentId.slice(0, split);
   const attachmentId = locator.providerAttachmentId.slice(split + 1);
-  const path = `/folders/${encodeURIComponent(folderId)}/messages/${encodeURIComponent(locator.messageId)}/attachments/${encodeURIComponent(attachmentId)}`;
+  const path = `/folders/${encodeURIComponent(safeSegment(folderId))}/messages/${encodeURIComponent(safeSegment(locator.messageId))}/attachments/${encodeURIComponent(safeSegment(attachmentId))}`;
   return zohoAccountGetBytes(fetchImpl, accessToken, ref, path, MAX_ATTACHMENT_BYTES);
 }
