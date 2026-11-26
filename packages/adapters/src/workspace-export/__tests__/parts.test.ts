@@ -3,12 +3,14 @@
  * injected here (the real one is about 4 GB).
  */
 import { afterEach, describe, expect, it } from 'vitest';
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { mkdtempSync, readFileSync, readdirSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { runWorkspaceExport } from '../export-workspace';
-import { removeExportFiles } from '../parted-archive';
+import { PartedArchive, removeExportFiles } from '../parted-archive';
+import { SupabaseExportStorage } from '../supabase-export-storage';
+import { Readable } from 'node:stream';
 import { csvCell } from '../serialize';
 import { makeDb, memoryFiles, readZip } from './helpers';
 
@@ -159,5 +161,43 @@ describe('spreadsheet text with leading zeros', () => {
     expect(csvCell('0.5')).toBe('0.5');
     expect(csvCell('-12.50')).toBe('-12.50');
     expect(csvCell('0')).toBe('0');
+  });
+});
+
+describe('review follow-ups: part choice by size and batched deletes', () => {
+  it('puts an entry in a part that has room for it, by its known size', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'wsx-p-'));
+    const archive = new PartedArchive(join(dir, 'a.zip'), 1000);
+    const one = await archive.addStream('one.bin', Readable.from([randomBytes(600)]), 600);
+    const two = await archive.addStream('two.bin', Readable.from([randomBytes(600)]), 600);
+    const three = await archive.addStream('three.bin', Readable.from([randomBytes(300)]), 300);
+    expect([one.part, two.part, three.part]).toEqual([1, 2, 2]);
+    await archive.finalizeLaterParts();
+    await archive.finalizeFirstPart();
+  });
+
+  it('deletes a long list of attempt objects in batches of at most 1000', async () => {
+    const storage = new SupabaseExportStorage('https://x.example.invalid', 'k'.repeat(20));
+    const names = Array.from({ length: 1500 }, (_, i) => ({
+      id: String(i),
+      name: `r1-1-p${i + 2}.zip`,
+    }));
+    const batches: number[] = [];
+    (storage as any).client = {
+      storage: {
+        from: () => ({
+          list: async (_f: string, o: { offset: number; limit: number }) => ({
+            data: names.slice(o.offset, o.offset + o.limit),
+            error: null,
+          }),
+          remove: async (paths: string[]) => {
+            batches.push(paths.length);
+            return { error: null };
+          },
+        }),
+      },
+    };
+    await storage.removeAttemptObjects(T, 'r1', 1);
+    expect(batches).toEqual([1000, 500]);
   });
 });

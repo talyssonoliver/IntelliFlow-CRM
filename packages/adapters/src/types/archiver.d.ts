@@ -5,6 +5,8 @@ declare module 'archiver' {
     append(source: Readable | Buffer | string, data: { name: string }): this;
     finalize(): Promise<void>;
     abort(): this;
+    /** Bytes the archiver has produced so far. */
+    pointer(): number;
   }
   export default function archiver(
     format: 'zip',

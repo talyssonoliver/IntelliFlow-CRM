@@ -19,7 +19,7 @@
 import { Prisma } from '@intelliflow/db';
 import { createHash } from 'node:crypto';
 import { createReadStream, createWriteStream } from 'node:fs';
-import { rm, writeFile } from 'node:fs/promises';
+import { rm, stat, writeFile } from 'node:fs/promises';
 import type { Readable } from 'node:stream';
 import {
   DEFAULT_MAX_PART_BYTES,
@@ -215,47 +215,55 @@ async function* readPages(
 
 /**
  * One read of the entity feeds BOTH files, so the CSV and the JSON always hold the same rows with
- * the same values (two separate reads could see an edit in between). The CSV goes straight into
- * the archive; the JSON is spooled to a temporary file in the same pass and added right after.
+ * the same values (two separate reads could see an edit in between). Both are spooled to
+ * temporary files in that pass: their sizes are then known before either goes into a part, so a
+ * part can be chosen that has room for them.
  */
-async function writeCsvAndSpoolJson(
-  write: (s: string) => Promise<void>,
-  spoolPath: string,
+async function writeSpools(
+  csvSpoolPath: string,
+  jsonSpoolPath: string,
   pages: AsyncIterable<ExportRow[]>,
   plan: Plan
 ): Promise<number> {
-  const spool = createWriteStream(spoolPath);
-  const spoolClosed = new Promise<void>((resolve, reject) => {
-    spool.once('close', resolve);
-    spool.once('error', reject);
-  });
-  spoolClosed.catch(() => undefined);
-  const spoolWrite = (s: string) =>
-    new Promise<void>((resolve, reject) =>
-      spool.write(s, (err) => (err ? reject(err) : resolve()))
-    );
+  const open = (path: string) => {
+    const stream = createWriteStream(path);
+    const closed = new Promise<void>((resolve, reject) => {
+      stream.once('close', resolve);
+      stream.once('error', reject);
+    });
+    closed.catch(() => undefined);
+    const write = (s: string) =>
+      new Promise<void>((resolve, reject) =>
+        stream.write(s, (err) => (err ? reject(err) : resolve()))
+      );
+    return { stream, closed, write };
+  };
+  const csv = open(csvSpoolPath);
+  const json = open(jsonSpoolPath);
   try {
-    await write('\ufeff' + csvHeader(plan.columns));
-    await spoolWrite('[');
+    await csv.write('\ufeff' + csvHeader(plan.columns));
+    await json.write('[');
     let rows = 0;
     for await (const page of pages) {
-      let csv = '';
-      let json = '';
+      let csvChunk = '';
+      let jsonChunk = '';
       for (const row of page) {
         const out = toJsonRow(row, plan.columns, plan.urlColumns);
-        csv += csvLine(out, plan.columns);
-        json += (rows === 0 ? '\n' : ',\n') + JSON.stringify(out);
+        csvChunk += csvLine(out, plan.columns);
+        jsonChunk += (rows === 0 ? '\n' : ',\n') + JSON.stringify(out);
         rows += 1;
       }
-      await write(csv);
-      await spoolWrite(json);
+      await csv.write(csvChunk);
+      await json.write(jsonChunk);
     }
-    await spoolWrite(rows === 0 ? ']\n' : '\n]\n');
-    spool.end();
-    await spoolClosed;
+    await json.write(rows === 0 ? ']\n' : '\n]\n');
+    csv.stream.end();
+    json.stream.end();
+    await Promise.all([csv.closed, json.closed]);
     return rows;
   } catch (err) {
-    spool.destroy();
+    csv.stream.destroy();
+    json.stream.destroy();
     throw err;
   }
 }
@@ -379,24 +387,34 @@ async function writeEntityFiles(
   plan: Plan,
   ctx: { db: ExportDb; tenantId: string; now: Date; pageSize: number; spoolBase: string }
 ): Promise<void> {
-  let rows = 0;
   const csvPath = `data/${plan.name}.csv`;
   const jsonPath = `data/${plan.name}.json`;
-  const spoolPath = `${ctx.spoolBase}.${plan.name}.json.spool`;
+  const csvSpool = `${ctx.spoolBase}.${plan.name}.csv.spool`;
+  const jsonSpool = `${ctx.spoolBase}.${plan.name}.json.spool`;
+  let rows: number;
   try {
-    const csv = await run.writer.addGenerated(csvPath, async (w) => {
-      rows = await writeCsvAndSpoolJson(
-        w,
-        spoolPath,
-        readPages(ctx.db, plan, ctx.tenantId, ctx.now, ctx.pageSize),
-        plan
-      );
-    });
+    rows = await writeSpools(
+      csvSpool,
+      jsonSpool,
+      readPages(ctx.db, plan, ctx.tenantId, ctx.now, ctx.pageSize),
+      plan
+    );
+    // The raw size is an upper bound of what the entry adds to a part, so a part with room for it
+    // is chosen (a part is never pushed past the limit by an entry that would have fitted).
+    const csv = await run.writer.addStream(
+      csvPath,
+      createReadStream(csvSpool),
+      (await stat(csvSpool)).size
+    );
     run.track(csv, { path: csvPath, kind: 'csv', entity: plan.name, rows });
-    const json = await run.writer.addStream(jsonPath, createReadStream(spoolPath));
+    const json = await run.writer.addStream(
+      jsonPath,
+      createReadStream(jsonSpool),
+      (await stat(jsonSpool)).size
+    );
     run.track(json, { path: jsonPath, kind: 'json', entity: plan.name, rows });
   } finally {
-    await rm(spoolPath, { force: true });
+    await Promise.all([rm(csvSpool, { force: true }), rm(jsonSpool, { force: true })]);
   }
   run.entities[plan.name] = { rows, description: plan.description };
 }

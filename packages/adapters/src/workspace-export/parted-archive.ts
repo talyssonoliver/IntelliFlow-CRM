@@ -30,6 +30,8 @@ export interface PartedEntryInfo extends ArchiveEntryInfo {
 
 export class PartedArchive {
   private readonly writers: ArchiveWriter[];
+  /** Raw size of the last entry of each part: it may not be fully counted by the archiver yet. */
+  private readonly lastRaw: number[] = [0];
 
   constructor(
     private readonly basePath: string,
@@ -54,10 +56,15 @@ export class PartedArchive {
   private rollIfFull(sizeHint?: number | null): void {
     const cur = this.current();
     if (cur.entryCount === 0) return;
+    // Conservative: what the archiver has written plus the whole last entry, as if uncompressed.
+    const size = cur.bytesWritten + (this.lastRaw[this.writers.length - 1] ?? 0);
     const full =
-      cur.bytesWritten >= this.maxPartBytes ||
-      (typeof sizeHint === 'number' && cur.bytesWritten + sizeHint > this.maxPartBytes);
-    if (full) this.writers.push(new ArchiveWriter(this.partPath(this.writers.length + 1)));
+      size >= this.maxPartBytes ||
+      (typeof sizeHint === 'number' && size + sizeHint > this.maxPartBytes);
+    if (full) {
+      this.writers.push(new ArchiveWriter(this.partPath(this.writers.length + 1)));
+      this.lastRaw.push(0);
+    }
   }
 
   async addGenerated(
@@ -66,7 +73,9 @@ export class PartedArchive {
   ): Promise<PartedEntryInfo> {
     this.rollIfFull();
     const part = this.writers.length;
-    return { ...(await this.current().addGenerated(name, produce)), part };
+    const info = await this.current().addGenerated(name, produce);
+    this.lastRaw[part - 1] = info.bytes;
+    return { ...info, part };
   }
 
   async addStream(
@@ -76,7 +85,9 @@ export class PartedArchive {
   ): Promise<PartedEntryInfo> {
     this.rollIfFull(sizeHint);
     const part = this.writers.length;
-    return { ...(await this.current().addStream(name, source)), part };
+    const info = await this.current().addStream(name, source);
+    this.lastRaw[part - 1] = info.bytes;
+    return { ...info, part };
   }
 
   /** An entry for part 1, which stays open for the README and manifest. */

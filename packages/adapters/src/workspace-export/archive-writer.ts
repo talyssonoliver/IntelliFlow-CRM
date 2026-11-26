@@ -80,9 +80,9 @@ export class ArchiveWriter {
     });
   }
 
-  /** Bytes that have reached the file so far (entries still in flight are not counted). */
+  /** Bytes the archiver has produced so far (the entry being compressed is only partly in). */
   get bytesWritten(): number {
-    return this.archiveDigest.bytes;
+    return this.archive.pointer();
   }
 
   get entryCount(): number {
@@ -138,11 +138,21 @@ export class ArchiveWriter {
   /** Write one entry by piping a readable (a stored file). */
   async addStream(name: string, source: Readable): Promise<ArchiveEntryInfo> {
     const { tee } = this.begin(name);
+    // The entry is done only when the archive has consumed it (the tee's readable side ended),
+    // not when the source has been handed over: otherwise small files queue up in memory behind
+    // a slow disk.
+    const settled = finished(tee).catch((err: Error) => {
+      throw this.failure ?? err;
+    });
+    settled.catch(() => undefined);
     try {
       await new Promise<void>((resolve, reject) => {
         pipeline(source, tee, (err) => (err ? reject(err) : resolve()));
       });
+      await settled;
     } catch (err) {
+      tee.destroy(err instanceof Error ? err : new Error(String(err)));
+      settled.catch(() => undefined);
       throw this.failure ?? err;
     } finally {
       this.current = null;

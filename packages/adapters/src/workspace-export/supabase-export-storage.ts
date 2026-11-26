@@ -231,9 +231,13 @@ export class SupabaseExportStorage implements ExportFileStorage, ExportArchiveSt
     for await (const entry of this.listPages(tenantId)) {
       if (own.test(entry.name)) paths.push(`${tenantId}/${entry.name}`);
     }
-    if (paths.length === 0) return;
-    const { error } = await this.client.storage.from(this.exportBucket).remove(paths);
-    if (error) throw new Error(`Export archive could not be removed: ${error.message}`);
+    // Supabase deletes at most 1000 objects per request.
+    for (let i = 0; i < paths.length; i += 1000) {
+      const { error } = await this.client.storage
+        .from(this.exportBucket)
+        .remove(paths.slice(i, i + 1000));
+      if (error) throw new Error(`Export archive could not be removed: ${error.message}`);
+    }
   }
 
   async removeArchive(path: string): Promise<void> {
