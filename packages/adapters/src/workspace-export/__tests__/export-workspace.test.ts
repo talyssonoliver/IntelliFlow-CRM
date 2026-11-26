@@ -405,6 +405,8 @@ describe('isTenantStoragePath', () => {
     [`${A}/../${B}/a.txt`, false],
     [`${A}/a\\b.txt`, false],
     [`${A}/%2e%2e/a`, false],
+    [`${A}/%2E%2e/a`, false],
+    [`${A}/100% signed contract.pdf`, true],
     [`${A}//a`, false],
     [`${A}x/a`, false],
   ])('%s -> %s', (path, ok) => {

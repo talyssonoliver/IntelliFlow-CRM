@@ -11,7 +11,7 @@ import { join } from 'node:path';
 import { ArchiveWriter } from '../archive-writer';
 import { SupabaseExportStorage } from '../supabase-export-storage';
 import { csvCell } from '../serialize';
-import { scrubJson } from '../deny-list';
+import { scrubJson, stripUrlSecrets } from '../deny-list';
 import { createTenantReadGuard, pinReadArgsToTenant } from '../tenant-read-guard';
 import { runWorkspaceExport } from '../export-workspace';
 import {
@@ -567,10 +567,28 @@ describe('review follow-ups: paging and recipients', () => {
     expect(await ids(mk([owner, stillAdmin]))).toEqual(['asker', 'owner']);
 
     const invitedAdmin = [
-      { id: 'm1', userId: 'asker', tenantId: T, role: 'ADMIN', revokedAt: null },
+      {
+        id: 'm1',
+        userId: 'asker',
+        tenantId: T,
+        role: 'ADMIN',
+        revokedAt: null,
+        expiresAt: null,
+        source: 'OWNER_INVITE',
+      },
     ];
     expect(await ids(mk([owner, moved], invitedAdmin))).toEqual(['asker', 'owner']);
-    const revoked = [{ id: 'm1', userId: 'asker', tenantId: T, role: 'ADMIN', revokedAt: t0 }];
+    const revoked = [
+      {
+        id: 'm1',
+        userId: 'asker',
+        tenantId: T,
+        role: 'ADMIN',
+        revokedAt: t0,
+        expiresAt: null,
+        source: 'OWNER_INVITE',
+      },
+    ];
     expect(await ids(mk([owner, moved], revoked))).toEqual(['owner']);
   });
 });
@@ -1159,5 +1177,60 @@ describe('split exports: upload, email, links and cleanup treat every part toget
     expect(removedBatches).toEqual([
       [`${T}/r1-1.zip`, `${T}/r1-1-p2.zip`, `${T}/r1-1-manifest.json`],
     ]);
+  });
+});
+
+describe('review follow-ups: asker membership and URL credentials', () => {
+  it('does not mail an asker whose admin membership expired or is operator staff', async () => {
+    const owner = { id: 'owner', tenantId: T, email: 'o@x.invalid', role: 'ADMIN', createdAt: t0 };
+    const moved = {
+      id: 'asker',
+      tenantId: 'other',
+      email: 'a@x.invalid',
+      role: 'ADMIN',
+      createdAt: t0,
+    };
+    const ids = async (memberships: any[]) =>
+      (
+        await resolveExportRecipients(
+          makeDb({
+            user: [owner, moved],
+            tenantMembership: memberships,
+            stripeSubscription: [],
+          }) as any,
+          { tenantId: T, requestedById: 'asker', subscriptionId: null },
+          t0
+        )
+      )
+        .map((r) => r.userId)
+        .sort();
+    const m = (over: any) => ({
+      id: 'm1',
+      userId: 'asker',
+      tenantId: T,
+      role: 'ADMIN',
+      revokedAt: null,
+      expiresAt: null,
+      source: 'OWNER_INVITE',
+      ...over,
+    });
+    expect(await ids([m({})])).toEqual(['asker', 'owner']);
+    expect(await ids([m({ expiresAt: new Date(t0.getTime() + 1000) })])).toEqual([
+      'asker',
+      'owner',
+    ]);
+    expect(await ids([m({ expiresAt: new Date(t0.getTime() - 1) })])).toEqual(['owner']);
+    expect(await ids([m({ source: 'PORTAL_STAFF' })])).toEqual(['owner']);
+  });
+
+  it('removes credentials from a URL, not only its query string', () => {
+    expect(
+      stripUrlSecrets(
+        ['https://', 'svc', ':', 'pw', '@files.example.invalid/a.pdf?token=x#f'].join('')
+      )
+    ).toBe('https://files.example.invalid/a.pdf');
+    expect(stripUrlSecrets('https://files.example.invalid/a@b.pdf')).toBe(
+      'https://files.example.invalid/a@b.pdf'
+    );
   });
 });

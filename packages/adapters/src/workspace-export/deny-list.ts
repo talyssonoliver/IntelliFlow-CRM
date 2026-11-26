@@ -123,5 +123,7 @@ export function scrubJson(value: unknown, depth = 0): unknown {
 /** A URL without query string or fragment: signed links carry their token there. */
 export function stripUrlSecrets(value: string): string {
   const cut = value.search(/[?#]/);
-  return cut === -1 ? value : value.slice(0, cut);
+  const base = cut === -1 ? value : value.slice(0, cut);
+  // Credentials in the address (user:pass@host) go too, not only the signed query and fragment.
+  return base.replace(/^([a-z][a-z0-9+.-]*:\/\/)[^/@]*@/i, '$1');
 }

@@ -232,7 +232,8 @@ const noopLog = { info() {}, warn() {}, error() {} };
 /** Who should get the link: the payer of the ended subscription, else the first admin; plus the asker. */
 export async function resolveExportRecipients(
   prisma: PrismaClient,
-  request: { tenantId: string; requestedById: string | null; subscriptionId: string | null }
+  request: { tenantId: string; requestedById: string | null; subscriptionId: string | null },
+  now: Date = new Date()
 ): Promise<Array<{ userId: string; email: string }>> {
   const ids = new Set<string>();
   if (request.subscriptionId) {
@@ -265,7 +266,15 @@ export async function resolveExportRecipients(
           { tenantId: request.tenantId, role: 'ADMIN' },
           {
             memberships: {
-              some: { tenantId: request.tenantId, role: 'ADMIN', revokedAt: null },
+              some: {
+                tenantId: request.tenantId,
+                role: 'ADMIN',
+                revokedAt: null,
+                // The same rule as the users file: the operator's staff are not the customer's
+                // people, and an expired grant is no longer access.
+                source: { not: 'PORTAL_STAFF' },
+                OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+              },
             },
           },
         ],
@@ -646,7 +655,7 @@ async function deliverLink(
   const remaining = Math.floor((info.expiresAt.getTime() - now().getTime()) / 1000);
   if (remaining <= 0) return false;
   try {
-    const recipients = await resolveExportRecipients(deps.prisma, request);
+    const recipients = await resolveExportRecipients(deps.prisma, request, now());
     if (recipients.length === 0) return false;
     const { links, manifestUrl } = await signPartLinks(
       deps.archiveStorage,

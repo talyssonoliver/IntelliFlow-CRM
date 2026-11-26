@@ -153,7 +153,8 @@ export function buildPlans(): Plan[] {
     description: MEMBERSHIP_EXPORT.description,
     columns: [...MEMBERSHIP_EXPORT.columns],
     urlColumns: [],
-    where: (tenantId) => ({ tenantId }),
+    // Like the users file: the operator staff grants are not the customer records.
+    where: (tenantId) => ({ tenantId, source: { not: 'PORTAL_STAFF' } }),
   });
   plans.push({
     name: USER_EXPORT.name,
@@ -274,7 +275,7 @@ export function isTenantStoragePath(tenantId: string, path: string): boolean {
   const segments = path.slice(tenantId.length + 1).split('/');
   return (
     !path.includes('\\') &&
-    segments.every((s) => s !== '' && s !== '.' && s !== '..' && !/[\0%]/.test(s))
+    segments.every((s) => s !== '' && s !== '.' && s !== '..' && !/\0|%2e|%2f|%5c/i.test(s))
   );
 }
 
