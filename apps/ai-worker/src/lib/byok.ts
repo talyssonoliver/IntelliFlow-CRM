@@ -29,6 +29,7 @@
 
 import { createHash } from 'node:crypto';
 import { prisma } from '@intelliflow/db';
+import { RunnableLambda } from '@langchain/core/runnables';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import {
   AI_KEY_PROVIDERS,
@@ -665,13 +666,13 @@ export function withByokFailureHandling(
           const structure = (m: BaseChatModel) =>
             (m.withStructuredOutput as (...a: unknown[]) => Invokable).apply(m, args);
           const own = structure(target);
-          return {
-            invoke: (input: unknown, callOptions?: unknown) =>
-              run(
-                () => own.invoke(input, callOptions),
-                (fb) => structure(fb).invoke(input, callOptions)
-              ),
-          };
+          // A real Runnable (invoke, batch, pipe, withConfig...), not an object with invoke only.
+          return RunnableLambda.from(async (input: unknown, config?: unknown) =>
+            run(
+              () => own.invoke(input, config),
+              (fb) => structure(fb).invoke(input, config)
+            )
+          );
         };
       }
       return Reflect.get(target, prop, receiver);

@@ -899,3 +899,29 @@ describe('a call let through an OPEN breaker never reaches the platform by any r
     expect(() => assertPlatformAllowedForBypassedCall()).not.toThrow();
   });
 });
+
+describe('structured output is a real LangChain Runnable', () => {
+  it('supports withConfig, batch and pipe, and keeps the failure handling', async () => {
+    const own = fakeModel(async () => ({ score: 7 }));
+    const wrapped = withByokFailureHandling(own.model, {
+      credential: credential(),
+      fallback: null,
+    });
+    const structured = (
+      wrapped as unknown as {
+        withStructuredOutput: (s: unknown) => {
+          invoke: (i: unknown) => Promise<unknown>;
+          batch: (i: unknown[]) => Promise<unknown[]>;
+          pipe: (n: unknown) => { invoke: (i: unknown) => Promise<unknown> };
+          withConfig: (c: unknown) => { invoke: (i: unknown) => Promise<unknown> };
+        };
+      }
+    ).withStructuredOutput({});
+    await expect(structured.invoke('a')).resolves.toEqual({ score: 7 });
+    await expect(structured.batch(['a', 'b'])).resolves.toEqual([{ score: 7 }, { score: 7 }]);
+    await expect(structured.withConfig({ tags: ['x'] }).invoke('a')).resolves.toEqual({ score: 7 });
+    const { RunnableLambda } = await import('@langchain/core/runnables');
+    const piped = structured.pipe(RunnableLambda.from((r: { score: number }) => r.score * 2));
+    await expect(piped.invoke('a')).resolves.toBe(14);
+  });
+});

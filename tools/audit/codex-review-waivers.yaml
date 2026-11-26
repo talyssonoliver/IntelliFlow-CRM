@@ -930,7 +930,7 @@ waivers:
       Flash, which the repo already prices and runs. The claim that Google withholds it from new
       API users is not something this repo can verify, and a replacement id cannot be picked or
       priced without guessing. The override is built for exactly this: BYOK_GOOGLE_MODEL names any
-      model that has a MODEL_PRICING entry, with no deploy, and an unpriced name is refused. A
+      Gemini model with no deploy, and a non-Gemini name is refused. A
       customer whose key cannot reach the model gets a clear provider error on the job.
     author: byok lane
     date: '2026-11-26'

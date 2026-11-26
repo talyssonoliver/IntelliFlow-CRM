@@ -665,19 +665,25 @@ interface ByokModelSpec {
  * model. Premium moves up one model where the provider has one we price.
  */
 /**
- * The Google model for a customer key: `BYOK_GOOGLE_MODEL` when ops names one that has a price in
- * MODEL_PRICING (Google retires models for new API users; this avoids a deploy), else Gemini 2.5
- * Flash. An unpriced name is refused so usage is never priced as another model.
+ * The Google model for a customer key: `BYOK_GOOGLE_MODEL` when ops names a Gemini model (Google
+ * retires models for new API users; this avoids a deploy), else Gemini 2.5 Flash. A name that is
+ * not a Gemini model is refused (Google's endpoint only serves Gemini). A Gemini model without
+ * its own MODEL_PRICING entry is priced as Gemini 2.5 Flash, never as some other family.
  */
 function byokGoogleSpec(): ByokModelSpec {
+  const fallback = { model: 'gemini-2.5-flash', pricingKey: 'gemini-2.5-flash' };
   const chosen = (process.env['BYOK_GOOGLE_MODEL'] || '').trim();
-  if (chosen && Object.hasOwn(MODEL_PRICING, chosen)) return { model: chosen, pricingKey: chosen };
-  if (chosen) {
+  if (!chosen) return fallback;
+  if (!/^gemini-[\w.-]+$/.test(chosen)) {
     console.error(
-      `[llm-factory] BYOK_GOOGLE_MODEL "${chosen}" has no MODEL_PRICING entry; using gemini-2.5-flash`
+      `[llm-factory] BYOK_GOOGLE_MODEL "${chosen}" is not a Gemini model; using gemini-2.5-flash`
     );
+    return fallback;
   }
-  return { model: 'gemini-2.5-flash', pricingKey: 'gemini-2.5-flash' };
+  return {
+    model: chosen,
+    pricingKey: Object.hasOwn(MODEL_PRICING, chosen) ? chosen : fallback.pricingKey,
+  };
 }
 
 export function byokModelSpec(provider: ByokCredential['provider'], tier: LLMTier): ByokModelSpec {
