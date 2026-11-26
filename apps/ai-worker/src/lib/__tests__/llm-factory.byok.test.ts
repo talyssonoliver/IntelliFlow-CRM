@@ -55,6 +55,7 @@ function storedKey(overrides: Record<string, unknown> = {}) {
     provider: 'openai',
     apiKey: KEY_A,
     last4: 'AAAA',
+    createdAt: new Date(0),
     status: 'ACTIVE',
     allowFallback: false,
     ...overrides,

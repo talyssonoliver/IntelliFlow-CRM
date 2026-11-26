@@ -30,12 +30,15 @@ import {
 
 const KEY_A = 'a'.repeat(30) + 'AAAA';
 const KEY_B = 'b'.repeat(30) + 'BBBB';
+const REVISION_A = Date.UTC(2026, 10, 20);
+const REVISION_B = Date.UTC(2026, 10, 25);
 
 function row(overrides: Record<string, unknown> = {}) {
   return {
     provider: 'openai',
     apiKey: KEY_A,
     last4: 'AAAA',
+    createdAt: new Date(REVISION_A),
     status: 'ACTIVE',
     allowFallback: false,
     ...overrides,
@@ -48,6 +51,7 @@ function credential(overrides: Partial<ByokCredential> = {}): ByokCredential {
     provider: 'openai',
     apiKey: KEY_A,
     last4: 'AAAA',
+    revision: REVISION_A,
     status: 'ACTIVE',
     allowFallback: false,
     ...overrides,
@@ -130,14 +134,16 @@ describe('resolveByokCredential', () => {
     await expect(resolveByokCredential('tenant-a')).resolves.toBeNull();
   });
 
-  it('fails open (platform path) on a database error, and keeps the last known value', async () => {
+  it('on a database error keeps the last known value, and fails closed for a tenant with none', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     db.findFirst.mockResolvedValueOnce(row());
     await resolveByokCredential('tenant-a');
     vi.setSystemTime(Date.now() + 31_000);
     db.findFirst.mockRejectedValue(new Error('db down'));
     expect((await resolveByokCredential('tenant-a'))?.apiKey).toBe(KEY_A);
-    await expect(resolveByokCredential('tenant-z')).resolves.toBeNull();
+    await expect(resolveByokCredential('tenant-z')).rejects.toMatchObject({
+      keyStatus: 'UNREADABLE',
+    });
   });
 
   it('treats a missing table (migration not applied) as no credential', async () => {
@@ -247,7 +253,7 @@ describe('routeForTenant - how routing decides', () => {
     await expect(routeForTenant('tenant-a')).resolves.toEqual({ kind: 'platform' });
   });
 
-  it('with the database down: a known key is served for a minute past its TTL, then fails closed; an unseen tenant stays on the platform', async () => {
+  it('with the database down: a known key is served for a minute past its TTL, then fails closed; an unseen tenant fails closed too', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     db.findFirst.mockResolvedValueOnce(row());
     await routeForTenant('tenant-a');
@@ -261,7 +267,10 @@ describe('routeForTenant - how routing decides', () => {
     expect(err).toBeInstanceOf(ByokKeyError);
     expect((err as ByokKeyError).keyStatus).toBe('UNREADABLE');
 
-    await expect(routeForTenant('tenant-never-seen')).resolves.toEqual({ kind: 'platform' });
+    // A cold worker cannot tell a tenant with a key (and no fallback consent) from one without.
+    await expect(routeForTenant('tenant-never-seen')).rejects.toMatchObject({
+      keyStatus: 'UNREADABLE',
+    });
   });
 
   it('an explicit provider override (job-level fallback) is refused unless fallback is allowed', async () => {
@@ -350,7 +359,11 @@ describe('markByokStatus', () => {
   it('marks only the key that failed, with a fixed detail (never the provider message)', async () => {
     await markByokStatus(credential(), 'INVALID');
     const args = db.updateMany.mock.calls[0][0];
-    expect(args.where).toEqual({ tenantId: 'tenant-a', provider: 'openai', last4: 'AAAA' });
+    expect(args.where).toEqual({
+      tenantId: 'tenant-a',
+      provider: 'openai',
+      createdAt: new Date(REVISION_A),
+    });
     expect(args.data.status).toBe('INVALID');
     expect(args.data.statusDetail).not.toContain(KEY_A);
   });
@@ -783,5 +796,31 @@ describe('an OPEN platform breaker does not refuse a tenant on its own key', () 
     ).rejects.toThrow(/OPEN/);
     expect(platform.invoke).not.toHaveBeenCalled();
     expect(breaker.getState().failureCount).toBe(2);
+  });
+});
+
+describe('key identity: a replacement is not marked or healed by the old key', () => {
+  it('a delayed failure of the old key marks nothing, even when both keys end the same', async () => {
+    db.findFirst.mockResolvedValue(row({ apiKey: KEY_B, createdAt: new Date(REVISION_B) }));
+    await resolveByokCredential('tenant-a');
+    // The old key (revision A) fails after the replacement (revision B) was saved.
+    await markByokStatus(credential({ revision: REVISION_A }), 'INVALID');
+    expect((await resolveByokCredential('tenant-a'))?.status).toBe('ACTIVE');
+    // The database write is keyed on the old revision, so it matches no row of the new key.
+    expect(db.updateMany.mock.calls[0][0].where.createdAt).toEqual(new Date(REVISION_A));
+  });
+
+  it('a delayed success of the old key does not heal the replacement', async () => {
+    db.findFirst.mockResolvedValue(
+      row({ apiKey: KEY_B, createdAt: new Date(REVISION_B), status: 'RATE_LIMITED' })
+    );
+    await resolveByokCredential('tenant-a');
+    const { model } = fakeModel(async () => ({ content: 'ok' }));
+    const wrapped = withByokFailureHandling(model, {
+      credential: credential({ revision: REVISION_A }),
+      fallback: null,
+    });
+    await wrapped.invoke('hi');
+    expect((await resolveByokCredential('tenant-a'))?.status).toBe('RATE_LIMITED');
   });
 });

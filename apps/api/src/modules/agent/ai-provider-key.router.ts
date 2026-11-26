@@ -167,6 +167,9 @@ export const aiProviderKeyRouter = createTRPCRouter({
       allowFallback: input.allowFallback ?? before?.allowFallback ?? false,
       createdBy: ctx.tenant.userId ?? null,
       lastUsedAt: null,
+      // The key's revision: a replacement is a new one, so a status written for the old key by
+      // a delayed worker call matches nothing.
+      createdAt: new Date(),
     };
     const row = (await ctx.prismaWithTenant.tenantAIProviderKey.upsert({
       where: { tenantId },

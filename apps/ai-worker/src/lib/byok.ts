@@ -131,6 +131,8 @@ export interface ByokCredential {
   provider: AIKeyProvider;
   apiKey: string;
   last4: string;
+  /** Changes on every key replacement (the row's createdAt, rewritten by `set`), in ms. */
+  revision: number;
   status: AIKeyStatus;
   allowFallback: boolean;
 }
@@ -185,6 +187,11 @@ export function invalidateByok(tenantId?: string): void {
 
 function isBillableTenant(tenantId: string | undefined): tenantId is string {
   return !!tenantId && tenantId !== 'unknown' && !tenantId.startsWith('__');
+}
+
+/** The same stored key: same provider and the same revision (a replacement changes it). */
+function sameKey(a: ByokCredential, b: ByokCredential): boolean {
+  return a.provider === b.provider && a.revision === b.revision;
 }
 
 /** Prisma "table does not exist": the migration has not been applied yet. */
@@ -266,11 +273,19 @@ export async function resolveByokCredential(tenantId: string): Promise<ByokCrede
 async function readCredential(tenantId: string): Promise<ByokCredential | null> {
   const row = (await prisma.tenantAIProviderKey.findFirst({
     where: { tenantId },
-    select: { provider: true, apiKey: true, last4: true, status: true, allowFallback: true },
+    select: {
+      provider: true,
+      apiKey: true,
+      last4: true,
+      createdAt: true,
+      status: true,
+      allowFallback: true,
+    },
   })) as {
     provider: string;
     apiKey: string;
     last4: string;
+    createdAt: Date;
     status: string;
     allowFallback: boolean;
   } | null;
@@ -280,6 +295,7 @@ async function readCredential(tenantId: string): Promise<ByokCredential | null> 
     provider: row.provider as AIKeyProvider,
     apiKey: row.apiKey,
     last4: row.last4,
+    revision: new Date(row.createdAt).getTime(),
     status: row.status as AIKeyStatus,
     allowFallback: row.allowFallback,
   };
@@ -299,13 +315,12 @@ async function unreadableOutcome(
     tenantsWithKey.add(tenantId);
     throw unreadable(tenantId, known?.provider ?? null);
   }
-  // The database cannot be reached: serve the last value for a minute, then fail closed for a
-  // tenant known to have a key.
+  // The database cannot be reached: serve the last value for a minute. Past that, neither the
+  // key's existence nor the tenant's fallback consent can be established, so fail closed:
+  // only a cached tenant that allowed fallback goes to the platform.
   if (cached && cached.expiresAt + STALE_SERVE_MS > now) return cached.value;
-  if (tenantsWithKey.has(tenantId) && known?.allowFallback !== true) {
-    throw unreadable(tenantId, known?.provider ?? null);
-  }
-  return null;
+  if (known?.allowFallback === true) return null;
+  throw unreadable(tenantId, known?.provider ?? null);
 }
 
 // ---------------------------------------------------------------------------
@@ -475,8 +490,10 @@ export async function markByokStatus(
   const { tenantId } = credential;
   const now = Date.now();
   const cached = credentialCache.get(tenantId);
-  if (cached?.value)
+  // Only if the cached credential is the key that failed (a replacement is left alone).
+  if (cached?.value && sameKey(cached.value, credential)) {
     credentialCache.set(tenantId, { ...cached, value: { ...cached.value, status } });
+  }
   if (status === 'INVALID') lastInvalidProbeAt.set(tenantId, now);
 
   const previous = lastMarked.get(tenantId);
@@ -485,7 +502,7 @@ export async function markByokStatus(
   try {
     // Only the key this call used: a key replaced meanwhile is not marked for the old one's failure.
     await prisma.tenantAIProviderKey.updateMany({
-      where: { tenantId, provider: credential.provider, last4: credential.last4 },
+      where: { tenantId, provider: credential.provider, createdAt: new Date(credential.revision) },
       data: { status, statusDetail: STATUS_DETAIL[status] },
     });
   } catch (err) {
@@ -503,14 +520,16 @@ const LAST_USED_WRITE_INTERVAL_MS = 5 * 60_000;
 function recordByokSuccess(credential: ByokCredential): void {
   const now = Date.now();
   // The status NOW (a model outlives the status it was built with), not the captured one.
-  const current = credentialCache.get(credential.tenantId)?.value?.status ?? credential.status;
+  const cachedNow = credentialCache.get(credential.tenantId)?.value;
+  const current =
+    cachedNow && sameKey(cachedNow, credential) ? cachedNow.status : credential.status;
   const heals = current !== 'ACTIVE';
   const last = lastUsedWrittenAt.get(credential.tenantId) ?? 0;
   if (!heals && now - last < LAST_USED_WRITE_INTERVAL_MS) return;
   lastUsedWrittenAt.set(credential.tenantId, now);
   if (heals) {
     const cached = credentialCache.get(credential.tenantId);
-    if (cached?.value) {
+    if (cached?.value && sameKey(cached.value, credential)) {
       credentialCache.set(credential.tenantId, {
         ...cached,
         value: { ...cached.value, status: 'ACTIVE' },
@@ -523,7 +542,7 @@ function recordByokSuccess(credential: ByokCredential): void {
       where: {
         tenantId: credential.tenantId,
         provider: credential.provider,
-        last4: credential.last4,
+        createdAt: new Date(credential.revision),
       },
       data: { lastUsedAt: new Date(), ...(heals ? { status: 'ACTIVE', statusDetail: null } : {}) },
     })
