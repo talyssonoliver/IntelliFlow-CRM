@@ -232,7 +232,8 @@ describe('processInsightJob', () => {
       entityId: 'deal-1',
       type: mockCreate.mock.calls[0][0].data.type,
       id: { not: 'insight-1' },
-      status: { in: ['NEW', 'VIEWED', 'ACTED_ON'] },
+      // An insight the user ACTED_ON keeps that record (codex review 26/11).
+      status: { in: ['NEW', 'VIEWED'] },
       metadata: { path: ['userId'], equals: 'user-001' },
     });
     expect(data).toEqual({ status: 'EXPIRED' });
@@ -245,6 +246,15 @@ describe('processInsightJob', () => {
       executionTimeMs: 5,
     });
     await processInsightJob(createMockJob({ overdueTasksCount: 0 }));
+    expect(mockInsightUpdateMany).not.toHaveBeenCalled();
+  });
+
+  it('a heuristic fallback insight never supersedes a model-written one', async () => {
+    mockGenerateInsightsWithMeta.mockRejectedValue(new Error('LLM down'));
+    await processInsightJob(
+      createMockJob({ dealsAtRisk: [{ id: 'deal-1', name: 'Test Deal', daysSinceUpdate: 15 }] })
+    );
+    expect(mockCreate).toHaveBeenCalled();
     expect(mockInsightUpdateMany).not.toHaveBeenCalled();
   });
 

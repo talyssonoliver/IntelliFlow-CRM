@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@intelliflow/ui';
 import { EntitySearchField } from '@/components/tasks/EntitySearchField';
-import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
+import { useTenantCurrencyForSave } from '@/lib/format/useTenantCurrency';
 import { currencySymbol } from '@/lib/format/money';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -135,7 +135,10 @@ export function DealForm({
   onDirtyChange,
   onCancel,
 }: DealFormProps) {
-  const tenantCurrency = useTenantCurrency();
+  // A new deal is saved in this currency, so it must be known (not the GBP placeholder).
+  const currencyState = useTenantCurrencyForSave();
+  const tenantCurrency = currencyState.currency;
+  const waitingForCurrency = !initialData?.value && !currencyState.ready;
   const symbol = currencySymbol(tenantCurrency).trim();
   const initialFormData = useMemo<DealFormData>(
     () => ({
@@ -197,6 +200,7 @@ export function DealForm({
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
       e.preventDefault();
+      if (waitingForCurrency) return;
       if (validateForm()) {
         // A new deal is in the tenant currency (owner 22/11); an existing deal keeps its own.
         onSubmit(
@@ -206,7 +210,7 @@ export function DealForm({
         );
       }
     },
-    [formData, validateForm, onSubmit, initialData?.value, tenantCurrency]
+    [formData, validateForm, onSubmit, initialData?.value, tenantCurrency, waitingForCurrency]
   );
 
   const updateField = useCallback(
@@ -431,7 +435,16 @@ export function DealForm({
 
           {/* Actions */}
           <div className="flex items-center gap-3 pt-4 border-t">
-            <Button type="submit" disabled={isSubmitting}>
+            {waitingForCurrency && currencyState.failed && (
+              <button
+                type="button"
+                onClick={currencyState.retry}
+                className="min-h-11 text-sm text-destructive underline"
+              >
+                Couldn&apos;t load your currency. Try again
+              </button>
+            )}
+            <Button type="submit" disabled={isSubmitting || waitingForCurrency}>
               {isSubmitting ? submittingLabel : submitLabel}
             </Button>
             {onCancel ? (

@@ -196,7 +196,9 @@ export function LeadQueueView() {
                       </span>
                     </td>
                     <td className="py-2 text-muted-foreground">
-                      {lead.estimatedValue ? formatMoney(lead.estimatedValue, currency) : '—'}
+                      {/* Stored in pence/cents, like the lead editor and the convert dialog read it
+                          (codex review 26/11: it showed 100 times too large). */}
+                      {lead.estimatedValue ? formatMoney(lead.estimatedValue / 100, currency) : '—'}
                     </td>
                   </tr>
                 ))}

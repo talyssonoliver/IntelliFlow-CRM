@@ -14,3 +14,28 @@ export function useTenantCurrency(): string {
   const currency = query.data?.currency;
   return typeof currency === 'string' && currency.length > 0 ? currency : 'GBP';
 }
+
+/**
+ * For forms that SAVE a money value (codex review 26/11): the currency plus whether it is really
+ * known. `useTenantCurrency` shows GBP while the setting loads or when it fails, which is right
+ * for display but would save a new deal in GBP for a tenant that uses another currency. A create
+ * form waits until `ready`, and offers `retry` when the setting could not be read.
+ */
+export function useTenantCurrencyForSave(): {
+  currency: string;
+  ready: boolean;
+  failed: boolean;
+  retry: () => void;
+} {
+  const query = trpc.analytics.reportSettings.get.useQuery(undefined, {
+    staleTime: 5 * 60_000,
+  });
+  const value = query.data?.currency;
+  const known = typeof value === 'string' && value.length > 0;
+  return {
+    currency: known ? value : 'GBP',
+    ready: query.isSuccess === true,
+    failed: query.isError === true,
+    retry: () => void query.refetch(),
+  };
+}

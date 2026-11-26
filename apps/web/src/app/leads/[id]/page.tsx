@@ -1239,6 +1239,7 @@ function LeadActivityTab({
                 <PreviousEntries
                   count={previous.length}
                   defaultOpen={previous.some((p) => isDeepLinkedActivity(p.id, selectedActivityId))}
+                  forceOpen={previous.some((p) => expandedActivities.has(p.id))}
                 >
                   {previous.map((activity) => (
                     <ActivityTimelineItem
@@ -1278,6 +1279,7 @@ function LeadActivityTab({
                     defaultOpen={previous.some((p) =>
                       isDeepLinkedActivity(p.id, selectedActivityId)
                     )}
+                    forceOpen={previous.some((p) => expandedActivities.has(p.id))}
                   >
                     {previous.map((activity) => (
                       <ActivityTimelineItem

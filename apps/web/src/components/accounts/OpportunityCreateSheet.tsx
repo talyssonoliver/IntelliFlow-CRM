@@ -13,7 +13,7 @@ import {
 } from '@intelliflow/ui';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 import { api } from '@/lib/api';
-import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
+import { useTenantCurrencyForSave } from '@/lib/format/useTenantCurrency';
 
 export interface OpportunityCreateSheetProps {
   readonly open: boolean;
@@ -46,7 +46,9 @@ export function OpportunityCreateSheet({
   accountName,
   onSuccess,
 }: Readonly<OpportunityCreateSheetProps>) {
-  const currency = useTenantCurrency();
+  // Saved with the deal, so it must be the tenant's real currency, not the GBP placeholder.
+  const currencyState = useTenantCurrencyForSave();
+  const { currency } = currencyState;
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -92,7 +94,7 @@ export function OpportunityCreateSheet({
 
   function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
-    if (!validate()) return;
+    if (!currencyState.ready || !validate()) return;
 
     createMutation.mutate({
       name: form.name.trim(),
@@ -193,7 +195,16 @@ export function OpportunityCreateSheet({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createMutation.isPending}>
+            {currencyState.failed && (
+              <button
+                type="button"
+                onClick={currencyState.retry}
+                className="min-h-11 text-sm text-destructive underline"
+              >
+                Couldn&apos;t load your currency. Try again
+              </button>
+            )}
+            <Button type="submit" disabled={createMutation.isPending || !currencyState.ready}>
               {createMutation.isPending ? 'Creating...' : 'Create Deal'}
             </Button>
           </div>

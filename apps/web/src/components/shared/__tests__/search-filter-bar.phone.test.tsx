@@ -77,6 +77,20 @@ describe('SearchFilterBar on phones (owner 21/11: fields split over several line
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
+  // Codex review 26/11.
+  it('does not count a filter set to "all" as active', () => {
+    setup('all');
+    expect(screen.getByTestId('filters-sheet-button')).not.toHaveTextContent(/Filters\s*\d/);
+  });
+
+  it('renders the extra controls once while the phone sheet is open (no duplicate ids)', async () => {
+    setup('', { extra: <input id="from-date" aria-label="From date" /> });
+    expect(document.querySelectorAll('#from-date')).toHaveLength(1);
+    await userEvent.click(screen.getByTestId('filters-sheet-button'));
+    await screen.findByRole('dialog');
+    expect(document.querySelectorAll('#from-date')).toHaveLength(1);
+  });
+
   it('draws no Filters button when the bar has only search', () => {
     render(<SearchFilterBar searchValue="" onSearchChange={() => {}} />);
     expect(screen.queryByTestId('filters-sheet-button')).toBeNull();

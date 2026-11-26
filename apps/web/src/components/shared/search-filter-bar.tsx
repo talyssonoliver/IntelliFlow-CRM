@@ -114,6 +114,11 @@ export interface SearchFilterBarProps {
  * />
  * ```
  */
+/** '' or 'all' (any case) means the filter is not narrowing the list. */
+export function isNoFilterValue(value: string): boolean {
+  return value === '' || value.toLowerCase() === 'all';
+}
+
 export function SearchFilterBar({
   searchValue,
   onSearchChange,
@@ -131,7 +136,9 @@ export function SearchFilterBar({
   const hasControls = filters.length > 0 || !!sort || !!extra;
   // Filters a page hides on phones stay hidden in the sheet too (some do nothing yet).
   const phoneFilters = filters.filter((f) => !f.hideOnMobile);
-  const activeCount = phoneFilters.filter((f) => f.value !== '').length;
+  // A filter is active unless it holds the "no filter" value: '' on most pages, 'all' on some
+  // (codex review 26/11: the badge said 1 with nothing filtered).
+  const activeCount = phoneFilters.filter((f) => !isNoFilterValue(f.value)).length;
 
   return (
     <div
@@ -224,7 +231,11 @@ export function SearchFilterBar({
         )}
       </div>
 
-      {extra && <div className="hidden md:flex flex-wrap items-center gap-3">{extra}</div>}
+      {/* Not while the phone sheet shows the same controls: two copies would mean duplicate ids
+          (codex review 26/11, Review history's date inputs). */}
+      {extra && !sheetOpen && (
+        <div className="hidden md:flex flex-wrap items-center gap-3">{extra}</div>
+      )}
 
       {/* Filter Chips Row */}
       {filterChips && filterChips.options.length > 0 && (

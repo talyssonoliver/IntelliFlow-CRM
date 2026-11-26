@@ -12,11 +12,13 @@ const sales = {
   data: undefined as unknown,
   isLoading: false,
   isError: false,
+  refetch: vi.fn(),
 };
 const leads = {
   data: undefined as unknown,
   isLoading: false,
   isError: false,
+  refetch: vi.fn(),
 };
 
 vi.mock('@/lib/trpc', () => ({
@@ -105,6 +107,21 @@ describe('Analytics report views', () => {
     expect(screen.getByText('20%')).toBeInTheDocument();
     expect(screen.getByText('Website')).toBeInTheDocument();
     expect(screen.getByText('Needs analysis')).toBeInTheDocument();
+  });
+
+  // Codex review 26/11: a failed request is not an empty period.
+  it('Sales Reports says when its data could not load, with a retry', () => {
+    sales.isError = true;
+    render(<SalesReportsPage />);
+    expect(screen.getByText("Couldn't load won and lost deals.")).toBeInTheDocument();
+    expect(screen.queryByText('No deals closed in this period.')).toBeNull();
+  });
+
+  it('Pipeline Analysis says when its breakdown could not load, with a retry', () => {
+    leads.isError = true;
+    render(<PipelineAnalysisPage />);
+    expect(screen.getAllByText("Couldn't load the lead breakdown.")).toHaveLength(2);
+    expect(screen.queryByText('No leads in this period.')).toBeNull();
   });
 
   it('Pipeline Analysis says when the period has no leads', () => {

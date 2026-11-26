@@ -9,6 +9,7 @@
 
 import { useState } from 'react';
 import { Card } from '@intelliflow/ui';
+import { ChartUnavailable } from '@/components/shared/ChartEmptyState';
 import { PageHeader } from '@/components/shared/page-header';
 import { HeroMenu, type HeroMenuItem } from '@/components/shared/hero-menu';
 import { KpiCard } from '@/components/dashboard/KpiCard';
@@ -147,31 +148,53 @@ export default function SalesReportsPage() {
 
         <Card className="border-border bg-card p-6">
           <WidgetHeader title="Won and lost" className="mb-6" />
-          {pending ? (
-            <div className="space-y-3">
-              {[1, 2].map((i) => (
-                <div key={i} className="h-10 animate-pulse rounded bg-muted" />
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <ShareBar
-                label="Won"
-                count={m?.closedWonCount ?? 0}
-                percentage={closed ? ((m?.closedWonCount ?? 0) / closed) * 100 : 0}
-              />
-              <ShareBar
-                label="Lost"
-                count={m?.closedLostCount ?? 0}
-                percentage={closed ? ((m?.closedLostCount ?? 0) / closed) * 100 : 0}
-              />
-              {closed === 0 && (
-                <p className="text-sm text-muted-foreground">No deals closed in this period.</p>
-              )}
-            </div>
-          )}
+          <WonLostBody
+            failed={failed}
+            pending={pending}
+            won={m?.closedWonCount ?? 0}
+            lost={m?.closedLostCount ?? 0}
+            onRetry={() => void sales.refetch()}
+          />
         </Card>
       </div>
     </>
+  );
+}
+
+/** The won-and-lost card body: a retry when the request failed, never zeros (codex 26/11). */
+function WonLostBody({
+  failed,
+  pending,
+  won,
+  lost,
+  onRetry,
+}: Readonly<{
+  failed: boolean;
+  pending: boolean;
+  won: number;
+  lost: number;
+  onRetry: () => void;
+}>) {
+  if (failed) {
+    return <ChartUnavailable message="Couldn't load won and lost deals." onRetry={onRetry} />;
+  }
+  if (pending) {
+    return (
+      <div className="space-y-3">
+        {[1, 2].map((i) => (
+          <div key={i} className="h-10 animate-pulse rounded bg-muted" />
+        ))}
+      </div>
+    );
+  }
+  const closed = won + lost;
+  return (
+    <div className="space-y-4">
+      <ShareBar label="Won" count={won} percentage={closed ? (won / closed) * 100 : 0} />
+      <ShareBar label="Lost" count={lost} percentage={closed ? (lost / closed) * 100 : 0} />
+      {closed === 0 && (
+        <p className="text-sm text-muted-foreground">No deals closed in this period.</p>
+      )}
+    </div>
   );
 }

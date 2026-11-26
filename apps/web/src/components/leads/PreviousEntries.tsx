@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 /**
  * "See previous (n)" under the newest of a repeated entry (owner 21/11 on the lead page): the
@@ -10,9 +10,22 @@ import { useState } from 'react';
 export function PreviousEntries({
   count,
   defaultOpen = false,
+  forceOpen = false,
   children,
-}: Readonly<{ count: number; defaultOpen?: boolean; children: React.ReactNode }>) {
+}: Readonly<{
+  count: number;
+  defaultOpen?: boolean;
+  /**
+   * Opens the fold when it turns true, e.g. when "Open" on the Emails tab points at an entry
+   * inside it (codex review 26/11: the timeline could not scroll to a folded email).
+   */
+  forceOpen?: boolean;
+  children: React.ReactNode;
+}>) {
   const [open, setOpen] = useState(defaultOpen);
+  useEffect(() => {
+    if (forceOpen) setOpen(true);
+  }, [forceOpen]);
   if (count === 0) return null;
   return (
     <div className="relative">

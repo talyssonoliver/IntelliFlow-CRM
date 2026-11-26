@@ -10,6 +10,7 @@
 
 import { useState } from 'react';
 import { Card } from '@intelliflow/ui';
+import { ChartUnavailable } from '@/components/shared/ChartEmptyState';
 import { PageHeader } from '@/components/shared/page-header';
 import { HeroMenu } from '@/components/shared/hero-menu';
 import { KpiCard } from '@/components/dashboard/KpiCard';
@@ -105,6 +106,8 @@ export default function PipelineAnalysisPage() {
           <WidgetHeader title="Leads by source" className="mb-6" />
           <Breakdown
             pending={pending}
+            failed={failed}
+            onRetry={() => void leads.refetch()}
             rows={(m?.bySource ?? []).map((r) => ({
               key: r.source,
               label: r.name,
@@ -117,6 +120,8 @@ export default function PipelineAnalysisPage() {
           <WidgetHeader title="Leads by status" className="mb-6" />
           <Breakdown
             pending={pending}
+            failed={failed}
+            onRetry={() => void leads.refetch()}
             rows={(m?.byStatus ?? []).map((r) => ({
               key: r.status,
               label: statusLabel(r.status),
@@ -132,11 +137,19 @@ export default function PipelineAnalysisPage() {
 
 function Breakdown({
   pending,
+  failed,
+  onRetry,
   rows,
 }: Readonly<{
   pending: boolean;
+  /** The request failed: say so, never "No leads" (codex review 26/11). */
+  failed: boolean;
+  onRetry: () => void;
   rows: { key: string; label: string; count: number; percentage: number }[];
 }>) {
+  if (failed) {
+    return <ChartUnavailable message="Couldn't load the lead breakdown." onRetry={onRetry} />;
+  }
   if (pending) {
     return (
       <div className="space-y-3">

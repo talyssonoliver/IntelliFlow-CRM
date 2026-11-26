@@ -852,7 +852,9 @@ async function persistInsightRecord(
   userId: string,
   validatedData: InsightJobData,
   now: Date,
-  job: Job<InsightJobData>
+  job: Job<InsightJobData>,
+  /** True when the model was unavailable and this insight is the generic heuristic template. */
+  fromFallback = false
 ): Promise<string | null> {
   const expiresAt = new Date(now.getTime() + getInsightTTL(insight.priority));
 
@@ -906,7 +908,9 @@ async function persistInsightRecord(
   // the model, because the check above matches the exact title only. The newest insight about an
   // entity replaces this user's older open ones of the same type: they are marked EXPIRED (kept,
   // not deleted), so the lists show one insight per entity and purpose.
-  if (created.id && insight.entityId && insight.entityType) {
+  // Only open insights are superseded: one the user ACTED_ON keeps that record. A heuristic
+  // template (written while the model is down) never replaces a model-written insight.
+  if (created.id && insight.entityId && insight.entityType && !fromFallback) {
     await prisma.aIInsight.updateMany({
       where: {
         tenantId,
@@ -914,7 +918,7 @@ async function persistInsightRecord(
         entityId: insight.entityId,
         type: mapInsightTypeToDbType(insight.type),
         id: { not: created.id },
-        status: { in: ['NEW', 'VIEWED', 'ACTED_ON'] },
+        status: { in: ['NEW', 'VIEWED'] },
         metadata: { path: ['userId'], equals: userId },
       },
       data: { status: 'EXPIRED' },
@@ -1271,7 +1275,8 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
               userId,
               validatedData,
               now,
-              job
+              job,
+              usedFallback
             );
             return record.id !== null;
           }
