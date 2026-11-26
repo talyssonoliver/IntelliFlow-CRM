@@ -55,6 +55,8 @@ export class ArchiveWriter {
   private readonly out;
   private readonly outClosed: Promise<void>;
   private failure: Error | null = null;
+  private readonly failed: Promise<never>;
+  private rejectFailed!: (err: Error) => void;
   private current: Transform | null = null;
   private readonly names = new Set<string>();
 
@@ -67,6 +69,10 @@ export class ArchiveWriter {
     // A disk error (ENOSPC, EIO) rejects this promise before finalize() awaits it. Left
     // unhandled it would be an unhandledRejection, which ends the whole worker process.
     this.outClosed.catch(() => undefined);
+    this.failed = new Promise<never>((_, reject) => {
+      this.rejectFailed = reject;
+    });
+    this.failed.catch(() => undefined);
     this.archive.on('error', (err: Error) => this.fail(err));
     this.archive.on('warning', (err: Error) => this.fail(err));
     pipeline(this.archive, this.archiveDigest, this.out, (err) => {
@@ -76,6 +82,7 @@ export class ArchiveWriter {
 
   private fail(err: Error): void {
     this.failure ??= err;
+    this.rejectFailed(this.failure);
     this.current?.destroy(err);
   }
 
@@ -137,8 +144,18 @@ export class ArchiveWriter {
   /** Close the archive and report the whole file's size and sha256. */
   async finalize(): Promise<{ bytes: number; sha256: string }> {
     if (this.failure) throw this.failure;
-    await this.archive.finalize();
-    await this.outClosed;
+    // Raced against fail(): a disk error during finalization can leave archiver's own promise
+    // pending, which would hang the job instead of letting it fail and retry.
+    await Promise.race([
+      (async () => {
+        await this.archive.finalize();
+        await this.outClosed;
+      })(),
+      this.failed,
+    ]).catch((err) => {
+      this.abort();
+      throw this.failure ?? err;
+    });
     if (this.failure) throw this.failure;
     return { bytes: this.archiveDigest.bytes, sha256: this.archiveDigest.digest() };
   }

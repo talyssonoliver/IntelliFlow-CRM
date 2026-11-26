@@ -809,10 +809,16 @@ async function expireOldExports(deps: ExportJobDeps, now: Date): Promise<number>
   const old = await deps.prisma.workspaceExportRequest.findMany({
     where: { status: 'READY', expiresAt: { lte: now } },
     select: { id: true, tenantId: true, claimCount: true, storagePath: true },
+    // Never-tried first, then least recently tried: failing deletions rotate to the back.
+    orderBy: { lastCleanupAttemptAt: { sort: 'asc', nulls: 'first' } },
     take: 50,
   });
   let expired = 0;
   for (const row of old) {
+    await deps.prisma.workspaceExportRequest.updateMany({
+      where: { id: row.id, status: 'READY' },
+      data: { lastCleanupAttemptAt: now },
+    });
     try {
       // Every attempt's archive goes, not only the kept one: a failed earlier cleanup must not
       // outlive the retention period. A failure keeps the row READY, so the next sweep retries.

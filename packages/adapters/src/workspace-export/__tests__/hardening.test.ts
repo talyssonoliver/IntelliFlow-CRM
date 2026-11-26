@@ -934,3 +934,56 @@ describe('review follow-ups: storage reconciliation and cleanup order', () => {
     expect(JSON.stringify(out)).toBe('{"__proto__":{"label":"x"},"ok":1,"apiKey":"[redacted]"}');
   });
 });
+
+describe('review follow-ups: finalize, spreadsheet precision, expiry order', () => {
+  it('protects numeric text that Excel would change, and nothing else', () => {
+    expect(csvCell('00123')).toBe("'00123");
+    expect(csvCell('1234567890123456789')).toBe("'1234567890123456789");
+    expect(csvCell('1234567890.123456789')).toBe("'1234567890.123456789");
+    expect(csvCell('12.50')).toBe('12.50');
+    expect(csvCell('0')).toBe('0');
+    expect(csvCell('0.5')).toBe('0.5');
+    expect(csvCell(123456789012345678n)).toBe('123456789012345678'); // not text: left as is
+  });
+
+  it('finalize rejects (does not hang) when the output fails', async () => {
+    dir = mkdtempSync(join(tmpdir(), 'wsx-h-'));
+    const writer = new ArchiveWriter(join(dir, 'missing-folder', 'a.zip'));
+    await expect(
+      Promise.race([
+        writer.finalize(),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('hung')), 3000)),
+      ])
+    ).rejects.toThrow(/ENOENT|no such file/i);
+  });
+
+  it('stamps every expiry attempt so failing deletions rotate to the back', async () => {
+    const { tables, db } = world([
+      {
+        id: 'old',
+        tenantId: T,
+        status: 'READY',
+        attempts: 1,
+        claimCount: 1,
+        storagePath: `${T}/old-1.zip`,
+        expiresAt: new Date(t0.getTime() - 1000),
+        emailedAt: t0,
+        requestedAt: t0,
+        updatedAt: t0,
+      },
+    ]);
+    const { d, tmp } = deps(db);
+    d.archiveStorage.removeArchive = async () => {
+      throw new Error('down');
+    };
+    await sweepWorkspaceExports(
+      d,
+      vi.fn(async () => {})
+    );
+    expect(tables.workspaceExportRequest[0]).toMatchObject({
+      status: 'READY',
+      lastCleanupAttemptAt: t0,
+    });
+    rmSync(tmp, { recursive: true, force: true });
+  });
+});

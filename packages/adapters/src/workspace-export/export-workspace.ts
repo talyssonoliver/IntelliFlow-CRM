@@ -280,7 +280,8 @@ export function renderReadme(
     '- In CSV, a text cell that starts with = + - @ or a tab gets a leading apostrophe, so a'
   );
   lines.push(
-    '  spreadsheet shows it as text and never runs it as a formula. The JSON files are exact.'
+    '  spreadsheet shows it as text and never runs it as a formula. A text value Excel would change',
+    '  (leading zeros, more than 15 digits) gets the apostrophe too. The JSON files are exact.'
   );
   lines.push('');
   lines.push('Files in this archive');

@@ -52,6 +52,16 @@ export function toJsonRow(
 /** Decimal and BigInt columns are written as text; a refund such as -12.50 is a number. */
 const PLAIN_NEGATIVE_NUMBER = /^-\d+(?:\.\d+)?$/;
 
+/**
+ * Excel turns "00123" into 123 and rounds past 15 significant digits. A text value that would
+ * lose something that way gets the same leading apostrophe; the JSON keeps the exact text.
+ */
+function losesPrecisionInSpreadsheet(text: string): boolean {
+  if (/^0\d+$/.test(text)) return true;
+  const m = /^-?(\d+)(?:\.(\d+))?$/.exec(text);
+  return m !== null && (m[1]! + (m[2] ?? '')).replace(/^0+/, '').length > 15;
+}
+
 /** RFC 4180 cell: quoted when it holds a comma, quote, CR or LF; quotes doubled. */
 export function csvCell(value: unknown): string {
   if (value === null || value === undefined) return '';
@@ -60,8 +70,8 @@ export function csvCell(value: unknown): string {
   // must not run when an administrator opens the CSV. Numbers and booleans are not text.
   if (
     typeof value === 'string' &&
-    /^[=+\-@\t\r\n]/.test(text) &&
-    !PLAIN_NEGATIVE_NUMBER.test(text)
+    ((/^[=+\-@\t\r\n]/.test(text) && !PLAIN_NEGATIVE_NUMBER.test(text)) ||
+      losesPrecisionInSpreadsheet(text))
   ) {
     text = `'${text}`;
   }
