@@ -567,7 +567,11 @@ function SidebarItemComponent({
  * On mobile: opens mobile drawer
  * On desktop: toggles pinned state
  */
-export function SidebarTrigger({ className }: Readonly<{ className?: string }>) {
+/** `label` names what the button opens ("Leads menu"); without it the name is just "menu". */
+export function SidebarTrigger({
+  className,
+  label = 'menu',
+}: Readonly<{ className?: string; label?: string }>) {
   const { togglePinned, toggleMobile, isPinned, isMobileOpen } = useSidebar();
 
   const handleClick = () => {
@@ -588,7 +592,7 @@ export function SidebarTrigger({ className }: Readonly<{ className?: string }>) 
         (isPinned || isMobileOpen) && 'text-primary bg-primary/10',
         className
       )}
-      aria-label={isMobileOpen || isPinned ? 'Close menu' : 'Open menu'}
+      aria-label={isMobileOpen || isPinned ? `Close ${label}` : `Open ${label}`}
       aria-expanded={isMobileOpen || isPinned}
     >
       <span className="material-symbols-outlined text-xl">

@@ -13,6 +13,7 @@ import {
 } from '@intelliflow/ui';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 import { api } from '@/lib/api';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 
 export interface OpportunityCreateSheetProps {
   readonly open: boolean;
@@ -45,6 +46,7 @@ export function OpportunityCreateSheet({
   accountName,
   onSuccess,
 }: Readonly<OpportunityCreateSheetProps>) {
+  const currency = useTenantCurrency();
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -94,7 +96,7 @@ export function OpportunityCreateSheet({
 
     createMutation.mutate({
       name: form.name.trim(),
-      value: { amount: parseFloat(form.value), currency: 'GBP' },
+      value: { amount: parseFloat(form.value), currency },
       stage: form.stage as (typeof OPPORTUNITY_STAGES)[number],
       probability: 10,
       accountId,
@@ -130,7 +132,7 @@ export function OpportunityCreateSheet({
           </div>
 
           <div>
-            <Label htmlFor="opp-value">Value (GBP) *</Label>
+            <Label htmlFor="opp-value">Value ({currency}) *</Label>
             <Input
               id="opp-value"
               type="number"

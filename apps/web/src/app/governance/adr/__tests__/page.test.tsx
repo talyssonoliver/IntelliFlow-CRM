@@ -85,22 +85,23 @@ describe('ADRRegistryPage', () => {
     errorSpy.mockRestore();
   });
 
-  it('refetches the list from Search and from Clear', async () => {
+  it('searches as you type, once you stop for 300ms, and clearing lists all again', async () => {
     mockFetch.mockImplementation(async (url: string) =>
       ok(url.includes('action=stats') ? null : [adr])
     );
     render(<ADRRegistryPage />);
     await screen.findByText(/Use tRPC/);
 
-    fireEvent.change(screen.getByPlaceholderText(/Search ADRs/), { target: { value: 'trpc' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    const search = screen.getByPlaceholderText(/Search ADRs/);
+    fireEvent.change(search, { target: { value: 'trpc' } });
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledWith('/api/adr?action=search&q=trpc');
     });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+    mockFetch.mockClear();
+    fireEvent.change(search, { target: { value: '' } });
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/Search ADRs/)).toHaveValue('');
+      expect(mockFetch).toHaveBeenCalledWith('/api/adr?action=list');
     });
   });
 

@@ -57,7 +57,7 @@ export type UpdateReportSettingsInput = z.infer<typeof updateReportSettingsSchem
 
 export const DEFAULT_REPORT_SETTINGS: ReportSettingsInput = {
   defaultRange: '30d',
-  currency: 'USD',
+  currency: 'GBP',
   scheduledDelivery: {
     enabled: false,
     frequency: 'weekly',

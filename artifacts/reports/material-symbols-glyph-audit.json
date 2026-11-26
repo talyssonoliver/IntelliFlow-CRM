@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-21T14:32:10.855Z",
+  "generated_at": "2026-11-23T01:56:16.047Z",
   "upstream_font_sha256": "b9a28e5c5328940ee287c3d7f6b626e32a9afa92f86b055295cdf6fd5d1c004b",
   "subsetter_version": "subset-font@^2.5.0",
   "variation_axes": {
@@ -11,6 +11,7 @@
   "icons": [
     "ac_unit",
     "account_balance",
+    "account_balance_wallet",
     "account_tree",
     "add",
     "add_call",
@@ -85,6 +86,7 @@
     "construction",
     "contacts",
     "content_copy",
+    "conversion_path",
     "cookie",
     "credit_card",
     "credit_card_off",
@@ -261,6 +263,7 @@
     "published_with_changes",
     "push_pin",
     "qr_code_scanner",
+    "query_stats",
     "queue",
     "radio_button_unchecked",
     "rate_review",
@@ -381,8 +384,8 @@
     "zoom_in",
     "zoom_out"
   ],
-  "icons_count": 371,
-  "scanned_files_count": 1469,
+  "icons_count": 374,
+  "scanned_files_count": 1482,
   "source_scan_patterns": [
     "apps/web/src",
     "packages/ui/src"

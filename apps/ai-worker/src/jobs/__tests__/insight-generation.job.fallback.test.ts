@@ -75,6 +75,7 @@ vi.mock('bullmq', () => {
 vi.mock('@intelliflow/db', () => ({
   prisma: {
     aIInsight: {
+      updateMany: () => Promise.resolve({ count: 0 }),
       create: (...args: any[]) => mockCreate(...args),
       findFirst: () => Promise.resolve(null),
     },

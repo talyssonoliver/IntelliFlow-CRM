@@ -1,5 +1,9 @@
 import type { FollowUpLead } from '@/components/dashboard/widgets/FollowUpsDueSection';
-import { FOLLOW_UP_AFTER_DAYS } from '@/lib/leads/follow-ups-due';
+import {
+  FOLLOW_UP_AFTER_DAYS,
+  followUpActionText,
+  followUpLastContactText,
+} from '@/lib/leads/follow-ups-due';
 import { leadDisplayName } from '@/lib/leads/lead-format';
 import type { TaskListItem } from './TaskList';
 
@@ -21,10 +25,8 @@ export function followUpTaskRows(leads: readonly FollowUpLead[]): TaskListItem[]
     const name = leadDisplayName(lead);
     return {
       id: `${FOLLOW_UP_ROW_PREFIX}${lead.id}`,
-      title: `Follow up with ${name}`,
-      description: valid
-        ? `Last contacted ${contacted.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
-        : 'Never contacted',
+      title: followUpActionText(name),
+      description: followUpLastContactText(lead.lastContactedAt),
       dueDate: valid
         ? new Date(contacted.getTime() + FOLLOW_UP_AFTER_DAYS * DAY_MS).toISOString()
         : null,

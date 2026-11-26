@@ -1,34 +1,35 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import dynamic from 'next/dynamic';
+import { useState } from 'react';
 
-// Lazy-load the recharts-based RevenueTrendChart so its ~100KB minified
-// dependency stays out of this page's main bundle chunk. Loads after first
-// paint (the chart is below-the-fold in most viewports). Addresses
-// Lighthouse #84 script-bundle audit.
-const RevenueTrendChart = dynamic(
-  () => import('./RevenueTrendChart').then((m) => ({ default: m.RevenueTrendChart })),
-  {
-    ssr: false,
-    loading: () => <div className="h-64 animate-pulse rounded-lg bg-muted" />,
-  }
-);
-import { Card, EmptyState } from '@intelliflow/ui';
+import { Card } from '@intelliflow/ui';
+import { PageHeader } from '@/components/shared/page-header';
+import { KpiCard } from '@/components/dashboard/KpiCard';
+import { WidgetHeader } from '@/components/dashboard/WidgetHeader';
+import { RecentActivityWidget } from '@/components/dashboard/widgets/RecentActivityWidget';
+import { PipelineSummaryWidget } from '@/components/dashboard/widgets/PipelineSummaryWidget';
 import { trpc } from '@/lib/trpc';
 import { useAuth } from '@/lib/auth/AuthContext';
-import { downloadCSV } from '@/lib/export/csv';
 import { useAnalyticsDateRange, type PeriodKey } from '@/hooks/useAnalyticsDateRange';
-import { refreshAnalyticsCache } from '@/app/analytics/actions';
-import { formatGBPCompact } from '@/lib/format/gbp-compact';
-import { KpiCard } from '@/components/dashboard/KpiCard';
+import { HeroMenu, type HeroMenuItem } from '@/components/shared/hero-menu';
+import {
+  PERIOD_ITEMS,
+  RevenueTrendContent,
+  useCompactMoney,
+  useReportExport,
+  type ReportExportType,
+} from './analytics-shared';
+
+const EXPORT_ITEMS: HeroMenuItem[] = [
+  { value: 'overview', label: 'Overview Metrics', icon: 'table_chart' },
+  { value: 'funnel', label: 'Pipeline Funnel', icon: 'waterfall_chart' },
+  { value: 'sales', label: 'Sales Metrics', icon: 'download' },
+];
 
 export default function AnalyticsPage() {
+  const formatCurrency = useCompactMoney();
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>('30d');
-  const [exportMenuOpen, setExportMenuOpen] = useState(false);
-  const exportMenuRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
   const dateRange = useAnalyticsDateRange(selectedPeriod);
   const enabled = isAuthenticated && !authLoading;
 
@@ -38,7 +39,7 @@ export default function AnalyticsPage() {
     { enabled }
   );
 
-  const { data: funnel, isLoading: funnelLoading } = trpc.analytics.getConversionFunnel.useQuery(
+  const { data: funnel } = trpc.analytics.getConversionFunnel.useQuery(
     { startDate: dateRange.startDate, endDate: dateRange.endDate, includeLeads: true },
     { enabled }
   );
@@ -56,213 +57,93 @@ export default function AnalyticsPage() {
 
   const { data: leadStats } = trpc.analytics.leadStats.useQuery(undefined, { enabled });
 
-  // Close export menu when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: Readonly<MouseEvent>) {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
-        setExportMenuOpen(false);
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const utils = trpc.useUtils();
-
-  const handleServerExport = useCallback(
-    async (reportType: 'overview' | 'funnel' | 'sales') => {
-      setExportMenuOpen(false);
-      try {
-        const result = await utils.analytics.exportReport.fetch({
-          format: 'csv',
-          reportType,
-          startDate: dateRange.startDate,
-          endDate: dateRange.endDate,
-        });
-        if (result && typeof result.data === 'string') {
-          downloadCSV(result.data, result.filename);
-        }
-      } catch {
-        // Fallback: if server export not available, silently fail
-      }
-    },
-    [dateRange, utils]
-  );
-
-  const handleRefreshAnalytics = useCallback(() => {
-    if (user?.id) refreshAnalyticsCache(user.id).catch(() => {});
-  }, [user]);
+  const handleServerExport = useReportExport(dateRange);
 
   const isLoading = overviewLoading || authLoading;
 
   return (
     <>
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-        <Link href="/dashboard" className="hover:text-primary">
-          Dashboard
-        </Link>
-        <span>/</span>
-        <span className="text-foreground font-medium">Analytics</span>
-      </nav>
-
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight">
-            Analytics
-          </h1>
-          <p className="text-muted-foreground text-base">
-            AI-powered insights and sales pipeline analytics
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <select
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value as PeriodKey)}
-            className="px-3 py-2 border border-border rounded-lg bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-          >
-            <option value="7d">Last 7 days</option>
-            <option value="30d">Last 30 days</option>
-            <option value="90d">Last 90 days</option>
-            <option value="ytd">Year to date</option>
-          </select>
-
-          {/* Analytics cache refresh */}
-          <button
-            onClick={handleRefreshAnalytics}
-            className="inline-flex items-center gap-2 border border-border hover:bg-muted text-foreground font-medium py-2.5 px-4 rounded-lg transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            aria-label="Refresh analytics data"
-          >
-            <span className="material-symbols-outlined text-lg">refresh</span> Refresh
-          </button>
-
-          {/* Export Dropdown */}
-          <div className="relative" ref={exportMenuRef}>
-            <button
-              onClick={() => setExportMenuOpen(!exportMenuOpen)}
-              className="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-2.5 px-5 rounded-lg shadow-sm shadow-primary/30 transition-all active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 group"
-            >
-              <span className="material-symbols-outlined text-lg transition-transform group-hover:scale-110">
-                download
-              </span>{' '}
-              Export
-              <span
-                className={`material-symbols-outlined text-sm transition-transform ${exportMenuOpen ? 'rotate-180' : ''}`}
-              >
-                expand_more
-              </span>
-            </button>
-
-            {exportMenuOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-card rounded-lg shadow-lg border border-border z-50 overflow-hidden">
-                <div className="py-1">
-                  <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider border-b border-border">
-                    CSV Export
-                  </div>
-                  <button
-                    onClick={() => handleServerExport('overview')}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-lg text-muted-foreground">
-                      table_chart
-                    </span>{' '}
-                    Overview Metrics
-                  </button>
-                  <button
-                    onClick={() => handleServerExport('funnel')}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-lg text-muted-foreground">
-                      waterfall_chart
-                    </span>{' '}
-                    Pipeline Funnel
-                  </button>
-                  <button
-                    onClick={() => handleServerExport('sales')}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-lg text-muted-foreground">
-                      download
-                    </span>{' '}
-                    Sales Metrics
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Owner 21/11: the shared hero, like every other page. */}
+      <PageHeader
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }]}
+        title="Analytics"
+        description="AI-powered insights and sales pipeline analytics"
+        controls={
+          <>
+            {/* Owner 22/11: the period picker looks like the hero's buttons (one shared control),
+                and the Refresh button is gone: the data reloads when the period changes. */}
+            <HeroMenu
+              ariaLabel="Period"
+              label="Period"
+              icon="calendar_month"
+              items={PERIOD_ITEMS}
+              value={selectedPeriod}
+              onSelect={(v) => setSelectedPeriod(v as PeriodKey)}
+            />
+            <HeroMenu
+              label="Export"
+              icon="download"
+              variant="primary"
+              heading="CSV export"
+              items={EXPORT_ITEMS}
+              onSelect={(v) => handleServerExport(v as ReportExportType)}
+            />
+          </>
+        }
+      />
 
       {/* Metrics Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-        {isLoading ? (
-          <>
-            <KpiCard framed loading label="Total Leads" icon="people" value={null} />
-            <KpiCard framed loading label="Revenue" icon="attach_money" value={null} />
-            <KpiCard framed loading label="Open Opportunities" icon="handshake" value={null} />
-            <KpiCard framed loading label="Win Rate" icon="emoji_events" value={null} />
-          </>
-        ) : (
-          <>
-            <KpiCard
-              framed
-              label="Total Leads"
-              icon="people"
-              value={String(overview?.totalLeads ?? 0)}
-              footer={
-                <DeltaFooter
-                  delta={overview?.leadDelta ?? 0}
-                  badge={leadStats ? `${leadStats.newThisMonth} new this month` : undefined}
-                />
-              }
-            />
-            <KpiCard
-              framed
-              label="Revenue"
-              icon="attach_money"
-              value={formatCurrency(overview?.totalRevenue ?? 0)}
-              footer={<DeltaFooter delta={overview?.revenueDelta ?? 0} />}
-            />
-            <KpiCard
-              framed
-              label="Open Opportunities"
-              icon="handshake"
-              value={String(overview?.openOpportunities ?? 0)}
-              footer={<DeltaFooter delta={overview?.openOpportunitiesDelta ?? 0} />}
-            />
-            <KpiCard
-              framed
-              label="Win Rate"
-              icon="emoji_events"
-              value={`${overview?.winRate ?? 0}%`}
-              footer={<DeltaFooter delta={overview?.winRateDelta ?? 0} suffix="pp" />}
-            />
-          </>
-        )}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        <KpiCard
+          framed
+          label="Total Leads"
+          icon="group"
+          value={(overview?.totalLeads ?? 0).toLocaleString('en-GB')}
+          pending={isLoading}
+          footer={
+            <PeriodChange delta={overview?.leadDelta ?? 0} format={String}>
+              {leadStats ? ` · ${leadStats.newThisMonth} new this month` : null}
+            </PeriodChange>
+          }
+        />
+        <KpiCard
+          framed
+          label="Revenue"
+          icon="payments"
+          value={formatCurrency(overview?.totalRevenue ?? 0)}
+          pending={isLoading}
+          footer={<PeriodChange delta={overview?.revenueDelta ?? 0} format={formatCurrency} />}
+        />
+        <KpiCard
+          framed
+          label="Open deals"
+          icon="handshake"
+          value={String(overview?.openOpportunities ?? 0)}
+          pending={isLoading}
+          footer={<PeriodChange delta={overview?.openOpportunitiesDelta ?? 0} format={String} />}
+        />
+        <KpiCard
+          framed
+          label="Win Rate"
+          icon="emoji_events"
+          value={`${overview?.winRate ?? 0}%`}
+          pending={isLoading}
+          footer={<PeriodChange delta={overview?.winRateDelta ?? 0} format={(v) => `${v} pp`} />}
+        />
       </div>
 
       {/* Charts Grid */}
-      <div className="grid gap-6 lg:grid-cols-3 mb-6">
-        {/* Pipeline Funnel */}
-        <Card className="lg:col-span-2 p-6 bg-card border-border">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-foreground">Pipeline Funnel</h2>
-            {funnel && (
-              <span className="text-sm text-muted-foreground">
-                {funnel.overallConversionRate}% overall conversion
-              </span>
-            )}
-          </div>
-
-          <PipelineFunnelContent loading={funnelLoading} funnel={funnel} />
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Owner 22/11: "This pipeline funnel data is different from the data we have on dashboard".
+            It was deals created in the period, with Closed Won and deleted deals counted; now it is
+            the Dashboard's own Pipeline Summary (open deals, the tenant's stages, lead counts). */}
+        <Card className="lg:col-span-2 overflow-hidden p-0 bg-card border-border">
+          <PipelineSummaryWidget />
         </Card>
 
         {/* Lead Stats + Quick Info */}
         <Card className="p-6 bg-card border-border">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-foreground">Lead Overview</h2>
-          </div>
+          <WidgetHeader title="Lead Overview" className="mb-6" />
           {overview ? (
             <div className="space-y-4">
               <QuickStat
@@ -298,139 +179,36 @@ export default function AnalyticsPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Revenue Trend Chart */}
         <Card className="p-6 bg-card border-border">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-foreground">Revenue Trend</h2>
-          </div>
+          <WidgetHeader title="Revenue Trend" className="mb-6" />
           <RevenueTrendContent loading={timeSeriesLoading} timeSeries={timeSeries} />
         </Card>
 
-        {/* Recent Activity */}
-        <Card className="p-6 bg-card border-border">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold text-foreground">Recent Activity</h2>
-          </div>
-
-          <RecentActivityContent loading={overviewLoading} overview={overview} />
+        {/* Recent Activity: the Dashboard's own card (owner 21/11: unify Analytics with the
+            Dashboard), not a second feed that read "New item: Unknown". */}
+        <Card className="overflow-hidden p-0 bg-card border-border">
+          <RecentActivityWidget />
         </Card>
       </div>
     </>
   );
 }
 
-// --- Constants ---
-
-const STAGE_COLORS: Record<string, string> = {
-  PROSPECTING: 'bg-blue-400',
-  QUALIFICATION: 'bg-primary',
-  NEEDS_ANALYSIS: 'bg-indigo-500',
-  PROPOSAL: 'bg-violet-500',
-  NEGOTIATION: 'bg-warning',
-  CLOSED_WON: 'bg-success',
-};
-
 // --- Helpers ---
 
-const formatCurrency = (value: number): string => formatGBPCompact(value, 1);
-
-function formatRelativeTime(date: Date | string, timezone: string = 'Europe/London'): string {
-  const now = new Date();
-  const d = typeof date === 'string' ? new Date(date) : date;
-  const diffMs = now.getTime() - d.getTime();
-  const diffMins = Math.floor(diffMs / 60_000);
-
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  const diffHours = Math.floor(diffMins / 60);
-  if (diffHours < 24) return `${diffHours}h ago`;
-  const diffDays = Math.floor(diffHours / 24);
-  if (diffDays < 7) return `${diffDays}d ago`;
-  return d.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', timeZone: timezone });
-}
-
-// --- Sub-components ---
-
-/** "vs prev period" line under a KPI figure: trend icon, signed change, optional note. */
-function DeltaFooter({
+function PeriodChange({
   delta,
-  suffix,
-  badge,
-}: Readonly<{ delta: number; suffix?: string; badge?: string }>) {
-  const isPositive = delta >= 0;
-
+  format,
+  children,
+}: Readonly<{ delta: number; format: (v: number) => string; children?: React.ReactNode }>) {
+  const up = delta >= 0;
   return (
-    <div className="mt-2">
-      <div className="flex flex-wrap items-center gap-x-1">
-        <span
-          className={`inline-flex items-center text-sm font-medium ${
-            isPositive ? 'text-success' : 'text-destructive'
-          }`}
-        >
-          <span className="material-symbols-outlined text-sm">
-            {isPositive ? 'trending_up' : 'trending_down'}
-          </span>{' '}
-          {isPositive ? '+' : ''}
-          {delta}
-          {suffix ? ` ${suffix}` : ''}
-        </span>
-        <span className="text-sm text-muted-foreground">vs prev period</span>
-      </div>
-      {badge && <p className="text-xs text-muted-foreground mt-1">{badge}</p>}
-    </div>
-  );
-}
-
-function PipelineStageBar({
-  name,
-  value,
-  deals,
-  percentage,
-  color,
-}: Readonly<{
-  name: string;
-  value: string;
-  deals: number;
-  percentage: number;
-  color: string;
-}>) {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-foreground">{name}</span>
-        <span className="text-sm text-muted-foreground">
-          {value} ({deals} {deals === 1 ? 'Deal' : 'Deals'})
-        </span>
-      </div>
-      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
-        <div className={`h-full ${color} rounded-full`} style={{ width: `${percentage}%` }} />
-      </div>
-    </div>
-  );
-}
-
-function ActivityItem({
-  icon,
-  actorName,
-  description,
-  createdAt,
-}: Readonly<{
-  icon: string;
-  actorName: string | null;
-  description: string;
-  createdAt: Date | string;
-}>) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <span className="material-symbols-outlined text-sm text-primary">{icon}</span>
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm text-foreground">
-          {actorName && <span className="font-medium">{actorName} — </span>}
-          {description}
-        </p>
-        <p className="text-xs text-muted-foreground mt-0.5">{formatRelativeTime(createdAt)}</p>
-      </div>
-    </div>
+    <p className="text-xs text-muted-foreground">
+      <span className={`font-medium ${up ? 'text-success' : 'text-destructive'}`}>
+        {up ? '+' : '-'}
+        {format(Math.abs(delta))}
+      </span>{' '}
+      vs previous period{children}
+    </p>
   );
 }
 
@@ -462,123 +240,4 @@ function QuickStat({
       </div>
     </div>
   );
-}
-
-interface FunnelStage {
-  stage: string;
-  label: string;
-  value: number;
-  count: number;
-}
-
-interface FunnelData {
-  overallConversionRate: number;
-  totalLeads: number;
-  stages: FunnelStage[];
-}
-
-function PipelineFunnelContent({
-  loading,
-  funnel,
-}: Readonly<{ loading: boolean; funnel: FunnelData | undefined | null }>) {
-  if (loading)
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="animate-pulse">
-            <div className="h-4 w-32 bg-muted rounded mb-2" />
-            <div className="h-2 bg-muted rounded-full" />
-          </div>
-        ))}
-      </div>
-    );
-  if (funnel && funnel.stages.length > 0) {
-    const totalValue = funnel.stages.reduce((sum, s) => sum + s.value, 0);
-    return (
-      <div className="space-y-4">
-        {funnel.stages
-          .filter((s) => s.stage !== 'CLOSED_LOST')
-          .map((stage) => {
-            const percentage = totalValue > 0 ? Math.round((stage.value / totalValue) * 100) : 0;
-            return (
-              <PipelineStageBar
-                key={stage.stage}
-                name={stage.label}
-                value={formatCurrency(stage.value)}
-                deals={stage.count}
-                percentage={percentage}
-                color={STAGE_COLORS[stage.stage] || 'bg-primary/60'}
-              />
-            );
-          })}
-      </div>
-    );
-  }
-  return (
-    <EmptyState entity="activity" showCta={false} description="No pipeline data for this period" />
-  );
-}
-
-interface TimeSeriesEntry {
-  periodLabel: string;
-  value: number;
-}
-
-function RevenueTrendContent({
-  loading,
-  timeSeries,
-}: Readonly<{ loading: boolean; timeSeries: TimeSeriesEntry[] | undefined | null }>) {
-  if (loading) return <div className="h-64 animate-pulse rounded-lg bg-muted" />;
-  if (timeSeries && timeSeries.length > 0)
-    return <RevenueTrendChart timeSeries={timeSeries} formatCurrency={formatCurrency} />;
-  return (
-    <EmptyState entity="activity" showCta={false} description="No revenue data for this period" />
-  );
-}
-
-interface RecentActivityItem {
-  id: string;
-  icon: string;
-  actorName: string | null;
-  description: string;
-  createdAt: string;
-}
-
-interface OverviewForActivity {
-  recentActivity: RecentActivityItem[];
-}
-
-function RecentActivityContent({
-  loading,
-  overview,
-}: Readonly<{ loading: boolean; overview: OverviewForActivity | undefined | null }>) {
-  if (loading)
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="animate-pulse flex gap-3">
-            <div className="w-2 h-2 rounded-full bg-muted mt-2" />
-            <div className="flex-1">
-              <div className="h-4 w-3/4 bg-muted rounded mb-1" />
-              <div className="h-3 w-1/3 bg-muted rounded" />
-            </div>
-          </div>
-        ))}
-      </div>
-    );
-  if (overview && overview.recentActivity.length > 0)
-    return (
-      <div className="space-y-4">
-        {overview.recentActivity.map((activity) => (
-          <ActivityItem
-            key={activity.id}
-            icon={activity.icon}
-            actorName={activity.actorName}
-            description={activity.description}
-            createdAt={activity.createdAt}
-          />
-        ))}
-      </div>
-    );
-  return <EmptyState entity="activity" showCta={false} description="No recent activity" />;
 }

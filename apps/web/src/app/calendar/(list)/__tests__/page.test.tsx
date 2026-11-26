@@ -171,6 +171,21 @@ vi.mock('@/components/shared', () => ({
       ))}
     </header>
   ),
+  SearchFilterBar: ({
+    searchValue,
+    onSearchChange,
+    searchAriaLabel,
+  }: Readonly<{
+    searchValue: string;
+    onSearchChange: (v: string) => void;
+    searchAriaLabel?: string;
+  }>) => (
+    <input
+      aria-label={searchAriaLabel}
+      value={searchValue}
+      onChange={(e) => onSearchChange(e.target.value)}
+    />
+  ),
 }));
 
 // ─── 8. @/components/tasks/TaskForm ────────────────────────────────
@@ -268,6 +283,23 @@ describe('CalendarPage', { timeout: 10000 }, () => {
     const calendar = screen.getByTestId('appointment-calendar');
     expect(calendar).toBeInTheDocument();
     expect(calendar).toHaveAttribute('data-appointment-count', '1');
+  });
+
+  it('searches the calendar by title (owner 21/11: the calendar had no search)', async () => {
+    const CalendarPage = await loadCalendarPage();
+    render(<CalendarPage />);
+    const search = screen.getByRole('textbox', { name: 'Search the calendar' });
+    await userEvent.type(search, 'consult');
+    expect(screen.getByTestId('appointment-calendar')).toHaveAttribute(
+      'data-appointment-count',
+      '1'
+    );
+    await userEvent.clear(search);
+    await userEvent.type(search, 'no such meeting');
+    expect(screen.getByTestId('appointment-calendar')).toHaveAttribute(
+      'data-appointment-count',
+      '0'
+    );
   });
 
   it('does NOT render AppointmentList (that lives at /appointments)', async () => {

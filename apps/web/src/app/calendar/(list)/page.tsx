@@ -12,7 +12,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Skeleton } from '@intelliflow/ui';
-import { PageHeader } from '@/components/shared';
+import { PageHeader, SearchFilterBar } from '@/components/shared';
 import { AppointmentCalendar } from '@/components/appointments';
 import type {
   AppointmentListItem,
@@ -159,6 +159,25 @@ export default function CalendarPage() {
       }));
   }, [taskData, isCalendarVisible]);
 
+  const [search, setSearch] = useState('');
+  const query = search.trim().toLowerCase();
+  const shownAppointments = useMemo(
+    () =>
+      query
+        ? calendarAppointments.filter(
+            (a) =>
+              a.title.toLowerCase().includes(query) ||
+              (a.location ?? '').toLowerCase().includes(query)
+          )
+        : calendarAppointments,
+    [calendarAppointments, query]
+  );
+  const shownTasks = useMemo(
+    () =>
+      query ? calendarTasks.filter((t) => t.title.toLowerCase().includes(query)) : calendarTasks,
+    [calendarTasks, query]
+  );
+
   const taskCreateMutation = api.task.create.useMutation({
     onSuccess: () => {
       setShowTaskCreate(false);
@@ -249,9 +268,18 @@ export default function CalendarPage() {
         ]}
       />
 
+      {/* Owner 21/11: the calendar had no search. The shared toolbar finds appointments and tasks
+          by title (and appointments by location) in what is loaded. */}
+      <SearchFilterBar
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search appointments and tasks..."
+        searchAriaLabel="Search the calendar"
+      />
+
       <AppointmentCalendar
-        appointments={calendarAppointments}
-        tasks={calendarTasks}
+        appointments={shownAppointments}
+        tasks={shownTasks}
         isLoading={isLoading}
         view={filters.calendarView}
         currentDate={currentDate}

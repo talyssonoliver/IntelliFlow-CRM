@@ -8,6 +8,7 @@
 import * as React from 'react';
 import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import { useRouter } from 'next/navigation';
 import { ColumnDef } from '@tanstack/react-table';
 import {
@@ -151,7 +152,8 @@ export function renderDealRowActions(deal: Deal, handlers: Readonly<RowActionHan
 
 function createColumns(
   handlers: Readonly<RowActionHandlers>,
-  timezone: string = 'Europe/London'
+  timezone: string = 'Europe/London',
+  currency: string = 'GBP'
 ): ColumnDef<Deal>[] {
   return [
     {
@@ -177,7 +179,7 @@ function createColumns(
       size: 120,
       cell: ({ row }) => (
         <span className="text-sm font-semibold text-foreground tabular-nums">
-          {formatDealValue(row.original.value)}
+          {formatDealValue(row.original.value, currency)}
         </span>
       ),
     },
@@ -236,6 +238,7 @@ function createColumns(
 
 export const DealListView = React.memo(function DealListView() {
   const { timezone } = useTimezoneContext();
+  const currency = useTenantCurrency();
   const phone = usePhoneLayout();
   const { user } = useAuth();
   const router = useRouter();
@@ -365,8 +368,8 @@ export const DealListView = React.memo(function DealListView() {
   );
 
   const columns = useMemo(
-    () => createColumns(rowActionHandlers, timezone),
-    [rowActionHandlers, timezone]
+    () => createColumns(rowActionHandlers, timezone, currency),
+    [rowActionHandlers, timezone, currency]
   );
 
   // Single deal actions

@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation';
 import {
   SidebarProvider,
   SidebarInset,
-  SidebarTrigger,
   SidebarWithSuspense,
   createAgentApprovalsSidebarConfig,
+  SectionMobileBar,
 } from '@/components/sidebar';
 import {
   findSectionForPath,
@@ -95,10 +95,7 @@ export default function AgentApprovalsLayoutShell({
               className="flex flex-1 flex-col h-full min-w-0 overflow-hidden bg-background relative"
               id="main-content"
             >
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-border lg:hidden">
-                <SidebarTrigger />
-                <span className="text-sm font-medium text-foreground">AI & Agents</span>
-              </div>
+              <SectionMobileBar title="AI & Agents" />
               <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3 md:p-4">
                 <div className="mx-auto flex flex-col gap-6">{children}</div>
               </div>

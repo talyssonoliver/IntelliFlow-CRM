@@ -16,6 +16,8 @@ import { useState, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Card, Button, toast } from '@intelliflow/ui';
 import { NoActionsEmptyState } from './components/NoActionsEmptyState';
+import { PageHeader } from '@/components/shared/page-header';
+import { SearchFilterBar } from '@/components/shared/search-filter-bar';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { AssignSheet } from '@/components/shared/assign-sheet';
@@ -882,10 +884,20 @@ function AgentApprovalsContent() {
     return Array.from(draftMap.values()).map(mapDraftToAction);
   }, [pendingQuery.data, listQuery.data]);
 
+  const [searchQuery, setSearchQuery] = useState('');
   const filteredActions = useMemo(() => {
-    if (filterStatus === 'all') return actions;
-    return actions.filter((action) => action.status === filterStatus);
-  }, [actions, filterStatus]);
+    const byStatus =
+      filterStatus === 'all' ? actions : actions.filter((action) => action.status === filterStatus);
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return byStatus;
+    return byStatus.filter((action) =>
+      [action.agentName, action.entityName, action.description].some((field) =>
+        String(field ?? '')
+          .toLowerCase()
+          .includes(q)
+      )
+    );
+  }, [actions, filterStatus, searchQuery]);
 
   const pendingCount = useMemo(
     () => actions.filter((a) => a.status === 'pending').length,
@@ -1150,44 +1162,35 @@ function AgentApprovalsContent() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
-        <Link href="/dashboard" className="hover:text-[#2a78f6]">
-          Dashboard
-        </Link>
-        <span>/</span>
-        <span className="text-slate-900 dark:text-white font-medium">Agent Approvals</span>
-      </nav>
-
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-            Agent Approvals
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-base">
-            Unified approval hub for all AI-generated actions
+      {/* Owner 21/11: the shared hero, like every page. */}
+      <PageHeader
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }]}
+        title="Agent Approvals"
+        description="Unified approval hub for all AI-generated actions"
+        actions={[
+          {
+            label: 'Refresh',
+            icon: 'refresh',
+            variant: 'secondary',
+            onClick: handleRefresh,
+            disabled: isLoading,
+            loading: isLoading,
+          },
+          {
+            label: 'Preview Mode',
+            icon: 'visibility',
+            variant: 'secondary',
+            href: '/agent-approvals/preview',
+          },
+        ]}
+      >
+        {pendingCount > 0 && (
+          <p className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-200">
+            <Icon name="schedule" className="text-base" />
+            {pendingCount} pending
           </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {pendingCount > 0 && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 text-sm font-medium">
-              <Icon name="schedule" className="text-base" />
-              {pendingCount} pending
-            </span>
-          )}
-          <Button variant="outline" onClick={handleRefresh} disabled={isLoading} className="gap-2">
-            <Icon name="refresh" className={`text-base ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Link href="/agent-approvals/preview">
-            <Button variant="ghost" className="gap-2">
-              <Icon name="visibility" className="text-base" />
-              Preview Mode
-            </Button>
-          </Link>
-        </div>
-      </div>
+        )}
+      </PageHeader>
 
       {/* Approval Sources */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -1244,33 +1247,21 @@ function AgentApprovalsContent() {
       {/* Metrics */}
       <MetricsCard stats={statsQuery.data} isLoading={statsQuery.isLoading} />
 
-      {/* Filters */}
-      <Card className="p-4">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Icon name="filter_list" className="text-base text-slate-400" />
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Filter:</span>
-          </div>
-          <div className="flex flex-wrap gap-2" data-testid="filter-buttons">
-            {(['all', 'pending', 'escalated', 'approved', 'rejected', 'expired'] as const).map(
-              (status) => (
-                <button
-                  key={status}
-                  type="button"
-                  onClick={() => setFilterStatus(status)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                    filterStatus === status
-                      ? 'bg-[#2a78f6] text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
-                </button>
-              )
-            )}
-          </div>
-        </div>
-      </Card>
+      {/* Owner 21/11: the shared toolbar; this page had no search. */}
+      <SearchFilterBar
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search by agent, record or action..."
+        searchAriaLabel="Search approvals"
+        filterChips={{
+          options: APPROVAL_STATUS_FILTERS.map((status) => ({
+            id: status,
+            label: status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1),
+          })),
+          value: filterStatus,
+          onChange: (id) => setFilterStatus(id as ActionStatus | 'all'),
+        }}
+      />
 
       {/* Actions List */}
       <div className="space-y-4">
@@ -1285,8 +1276,11 @@ function AgentApprovalsContent() {
         {!isLoading && filteredActions.length === 0 && (
           <Card className="p-12">
             <NoActionsEmptyState
-              filtered={filterStatus !== 'all'}
-              onClearFilters={() => setFilterStatus('all')}
+              filtered={filterStatus !== 'all' || searchQuery.trim() !== ''}
+              onClearFilters={() => {
+                setFilterStatus('all');
+                setSearchQuery('');
+              }}
             />
           </Card>
         )}
@@ -1452,6 +1446,15 @@ function LoadingFallback() {
 }
 
 // Page component with Suspense boundary
+const APPROVAL_STATUS_FILTERS = [
+  'all',
+  'pending',
+  'escalated',
+  'approved',
+  'rejected',
+  'expired',
+] as const;
+
 export default function AgentApprovalsPage() {
   return (
     <Suspense fallback={<LoadingFallback />}>

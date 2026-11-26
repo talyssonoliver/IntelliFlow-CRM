@@ -902,6 +902,25 @@ async function persistInsightRecord(
     },
   });
 
+  // Owner 21/11: one lead showed three open "Opportunity" insights, each worded differently by
+  // the model, because the check above matches the exact title only. The newest insight about an
+  // entity replaces this user's older open ones of the same type: they are marked EXPIRED (kept,
+  // not deleted), so the lists show one insight per entity and purpose.
+  if (created.id && insight.entityId && insight.entityType) {
+    await prisma.aIInsight.updateMany({
+      where: {
+        tenantId,
+        entityType: insight.entityType === 'deal' ? 'opportunity' : insight.entityType,
+        entityId: insight.entityId,
+        type: mapInsightTypeToDbType(insight.type),
+        id: { not: created.id },
+        status: { in: ['NEW', 'VIEWED', 'ACTED_ON'] },
+        metadata: { path: ['userId'], equals: userId },
+      },
+      data: { status: 'EXPIRED' },
+    });
+  }
+
   return created.id as string;
 }
 

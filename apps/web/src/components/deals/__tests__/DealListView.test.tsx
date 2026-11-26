@@ -143,3 +143,5 @@ describe('DealListView mutation success handlers — failure and ordering', () =
     expect(settled).toBe(true);
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

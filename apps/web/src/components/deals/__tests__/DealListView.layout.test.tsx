@@ -116,3 +116,5 @@ describe('DealListView layout (MVP-012 #43)', () => {
     expect(screen.getByTestId('deal-table')).toBeInTheDocument();
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

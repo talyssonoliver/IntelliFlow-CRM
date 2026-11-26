@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { Fragment, useState, useMemo, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -32,9 +32,12 @@ import {
   EmptyState,
 } from '@intelliflow/ui';
 import { api } from '@/lib/api';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import { isSystemActivity, showPeopleFilter, splitActivityFeed } from '@/lib/leads/activity-feed';
 import { ScoreChangeRow } from '@/components/leads/ScoreChangeRow';
 import { SystemUpdatesGroup } from '@/components/leads/SystemUpdatesGroup';
+import { PreviousEntries } from '@/components/leads/PreviousEntries';
+import { foldRepeats } from '@/lib/leads/fold-repeats';
 import { ActivityCountLine } from '@/components/leads/ActivityCountLine';
 import { ActivityFilterBar } from '@/components/leads/ActivityFilterBar';
 import { LeadEmailsTab } from '@/components/leads/LeadEmailsTab';
@@ -1221,16 +1224,35 @@ function LeadActivityTab({
               className="absolute top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-700"
               style={{ left: 19 }}
             />
-            {visibleActivities.map((activity) => (
-              <ActivityTimelineItem
-                key={activity.id}
-                activity={activity}
-                isExpanded={expandedActivities.has(activity.id)}
-                isDeepLinked={isDeepLinkedActivity(activity.id, selectedActivityId)}
-                timezone={timezone}
-                onToggleExpand={onToggleExpand}
-                renderActions={renderActions}
-              />
+            {/* Owner 21/11: repeated AI insights and email threads fold under the newest. */}
+            {foldRepeats(visibleActivities).map(({ head, previous }) => (
+              <Fragment key={head.id}>
+                <ActivityTimelineItem
+                  key={head.id}
+                  activity={head}
+                  isExpanded={expandedActivities.has(head.id)}
+                  isDeepLinked={isDeepLinkedActivity(head.id, selectedActivityId)}
+                  timezone={timezone}
+                  onToggleExpand={onToggleExpand}
+                  renderActions={renderActions}
+                />
+                <PreviousEntries
+                  count={previous.length}
+                  defaultOpen={previous.some((p) => isDeepLinkedActivity(p.id, selectedActivityId))}
+                >
+                  {previous.map((activity) => (
+                    <ActivityTimelineItem
+                      key={activity.id}
+                      activity={activity}
+                      isExpanded={expandedActivities.has(activity.id)}
+                      isDeepLinked={isDeepLinkedActivity(activity.id, selectedActivityId)}
+                      timezone={timezone}
+                      onToggleExpand={onToggleExpand}
+                      renderActions={renderActions}
+                    />
+                  ))}
+                </PreviousEntries>
+              </Fragment>
             ))}
             {/* COA sync, portal, score and status entries: one folded line (MVP-005). */}
             <SystemUpdatesGroup
@@ -1240,16 +1262,36 @@ function LeadActivityTab({
                 null
               }
             >
-              {systemActivities.map((activity) => (
-                <ActivityTimelineItem
-                  key={activity.id}
-                  activity={activity}
-                  isExpanded={expandedActivities.has(activity.id)}
-                  isDeepLinked={isDeepLinkedActivity(activity.id, selectedActivityId)}
-                  timezone={timezone}
-                  onToggleExpand={onToggleExpand}
-                  renderActions={renderActions}
-                />
+              {foldRepeats(systemActivities).map(({ head, previous }) => (
+                <Fragment key={head.id}>
+                  <ActivityTimelineItem
+                    key={head.id}
+                    activity={head}
+                    isExpanded={expandedActivities.has(head.id)}
+                    isDeepLinked={isDeepLinkedActivity(head.id, selectedActivityId)}
+                    timezone={timezone}
+                    onToggleExpand={onToggleExpand}
+                    renderActions={renderActions}
+                  />
+                  <PreviousEntries
+                    count={previous.length}
+                    defaultOpen={previous.some((p) =>
+                      isDeepLinkedActivity(p.id, selectedActivityId)
+                    )}
+                  >
+                    {previous.map((activity) => (
+                      <ActivityTimelineItem
+                        key={activity.id}
+                        activity={activity}
+                        isExpanded={expandedActivities.has(activity.id)}
+                        isDeepLinked={isDeepLinkedActivity(activity.id, selectedActivityId)}
+                        timezone={timezone}
+                        onToggleExpand={onToggleExpand}
+                        renderActions={renderActions}
+                      />
+                    ))}
+                  </PreviousEntries>
+                </Fragment>
               ))}
             </SystemUpdatesGroup>
           </div>
@@ -1457,6 +1499,7 @@ function LeadAIInsightsTab({
   // scored, whether or not the full analysis has run.
   const isScored =
     leadScoreDisplay(aiInsights.leadScore, aiInsights.scoringStatus).kind === 'score';
+  const currency = useTenantCurrency();
   const hasDealEstimate = aiInsights.estimatedValue > 0;
   return (
     <div className="space-y-6">
@@ -1522,7 +1565,9 @@ function LeadAIInsightsTab({
               >
                 {/* The lead's own value, in pence; none (0) shows as "--", not "£0". */}
                 <span data-testid={hasDealEstimate ? 'deal-value' : 'deal-value-null-state'}>
-                  {hasDealEstimate ? formatEstimatedValue(aiInsights.estimatedValue) : '--'}
+                  {hasDealEstimate
+                    ? formatEstimatedValue(aiInsights.estimatedValue, currency)
+                    : '--'}
                 </span>
               </p>
               <p className="text-xs text-slate-500">Est. Deal Value</p>

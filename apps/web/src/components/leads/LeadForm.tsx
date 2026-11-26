@@ -16,6 +16,8 @@ import {
   type SelectOption,
 } from '@/lib/leads/lead-form-utils';
 import { emailSchema, updateLeadSchema } from '@intelliflow/validators';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
+import { currencySymbol } from '@/lib/format/money';
 
 export interface LeadFormValues {
   firstName: string;
@@ -429,6 +431,7 @@ function CompanySection({ values, errors, onChange, mode }: Readonly<SectionProp
 }
 
 function QualificationSection({ values, errors, onChange, mode }: Readonly<SectionProps>) {
+  const currency = useTenantCurrency();
   const fieldBag = { values, errors, onChange };
   return (
     <div className="flex flex-col gap-6">
@@ -441,7 +444,7 @@ function QualificationSection({ values, errors, onChange, mode }: Readonly<Secti
         {mode === 'edit' && (
           <TextField
             id="estimatedValue"
-            label="Estimated Value (£)"
+            label={`Estimated Value (${currencySymbol(currency).trim()})`}
             type="number"
             placeholder="0.00"
             {...fieldBag}

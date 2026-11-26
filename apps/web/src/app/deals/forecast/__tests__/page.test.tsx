@@ -92,12 +92,28 @@ vi.mock('@intelliflow/ui', () => ({
   Badge: ({ children, ...props }: Readonly<{ children: React.ReactNode }>) => (
     <span {...props}>{children}</span>
   ),
+  cn: (...classes: unknown[]) => classes.filter(Boolean).join(' '),
+  toast: vi.fn(),
+  EmptyState: ({ title, description }: Readonly<{ title?: string; description?: string }>) => (
+    <div data-testid="empty-state">
+      {title} {description}
+    </div>
+  ),
 }));
 
-vi.mock('@/components/shared', () => ({
-  EntityHeader: ({ title, ...props }: Readonly<{ title: string }>) => (
-    <div data-testid="entity-header" {...props}>
-      <span data-testid="entity-title">{title}</span>
+// Owner 23/11: the shared page hero.
+vi.mock('@/components/shared/page-header', () => ({
+  PageHeader: ({
+    title,
+    description,
+    actions = [],
+  }: Readonly<{ title: string; description?: string; actions?: { label: string }[] }>) => (
+    <div data-testid="page-header">
+      <h1 data-testid="page-title">{title}</h1>
+      <p data-testid="page-description">{description}</p>
+      {actions.map((a) => (
+        <button key={a.label}>{a.label}</button>
+      ))}
     </div>
   ),
 }));
@@ -132,7 +148,11 @@ const mockForecastData = {
       riskLevel: 'medium',
     },
   ],
-  monthlyRevenue: [],
+  // Two months of won revenue: enough history for the accuracy figure.
+  monthlyRevenue: [
+    { month: 'Sept', actual: 40000, projected: null },
+    { month: 'Oct', actual: 60000, projected: null },
+  ],
   winRateTrend: [],
 };
 
@@ -173,18 +193,51 @@ describe('DealForecastPage', () => {
     expect(mockReplace).toHaveBeenCalledWith('/login');
   });
 
-  it('renders EntityHeader with "Deal Forecast" title', () => {
+  it('renders the shared page hero with "Deal Forecast" and the open deal count', () => {
     mockQueryState.data = mockForecastData;
     render(<DealForecastPage />);
 
-    expect(screen.getByTestId('entity-title')).toHaveTextContent('Deal Forecast');
+    expect(screen.getByTestId('page-title')).toHaveTextContent('Deal Forecast');
+    expect(screen.getByTestId('page-description')).toHaveTextContent('12 open deals');
+    // The page's own buttons stay (owner 23/11: never remove a control).
+    expect(screen.getByText('This Quarter')).toBeInTheDocument();
+    expect(screen.getByText('Export')).toBeInTheDocument();
   });
 
-  it('renders live data indicator with opportunity count', () => {
+  it('shows no trend figure typed into the code', () => {
     mockQueryState.data = mockForecastData;
     render(<DealForecastPage />);
 
-    expect(screen.getByText(/12 active opportunities/)).toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/vs last month/);
+  });
+
+  it('lists all five open stages, empty ones included', () => {
+    mockQueryState.data = mockForecastData;
+    render(<DealForecastPage />);
+
+    for (const stage of [
+      'Prospecting',
+      'Qualification',
+      'Needs Analysis',
+      'Proposal',
+      'Negotiation',
+    ]) {
+      expect(screen.getAllByText(stage).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('says there is not enough history instead of a 0% accuracy', () => {
+    mockQueryState.data = { ...mockForecastData, monthlyRevenue: [] };
+    render(<DealForecastPage />);
+
+    expect(screen.getByText('Not enough history')).toBeInTheDocument();
+  });
+
+  it('shows the shared empty state when no deals closed in six months', () => {
+    mockQueryState.data = mockForecastData;
+    render(<DealForecastPage />);
+
+    expect(screen.getByText(/No deals closed in the last six months/)).toBeInTheDocument();
   });
 
   it('renders KPI cards with real forecast data', () => {
@@ -214,3 +267,5 @@ describe('DealForecastPage', () => {
     expect(skeletons.length).toBeGreaterThanOrEqual(5);
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

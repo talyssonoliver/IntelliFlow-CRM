@@ -270,13 +270,20 @@ function mapAIInsightToResponse(row: {
   };
 }
 
-/** Deduplicate insights by title — BullMQ double-enqueue can create duplicate
- *  AIInsight rows with different IDs but identical content. Keep the newest. */
-function deduplicateInsights<T extends { title: string }>(items: T[]): T[] {
+/** Deduplicate insights, keeping the first (newest) of each. An insight about one record is
+ *  keyed by record and type: the model words each run differently, so three open "Opportunity"
+ *  insights for one lead had three titles (owner 21/11). Others are keyed by title, which catches
+ *  BullMQ double-enqueue copies. Rows arrive newest first. */
+export function deduplicateInsights<
+  T extends { title: string; type?: string; entityType?: string | null; entityId?: string | null },
+>(items: T[]): T[] {
   const seen = new Set<string>();
   return items.filter((item) => {
-    if (seen.has(item.title)) return false;
-    seen.add(item.title);
+    const key = item.entityId
+      ? `entity:${item.entityType ?? ''}:${item.entityId}:${item.type ?? ''}`
+      : `title:${item.title}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
     return true;
   });
 }
@@ -1664,7 +1671,8 @@ export const homeRouter = createTRPCRouter({
         title: { not: LEGACY_ON_TRACK_TITLE },
         NOT: { type: 'prediction', entityId: null },
       },
-      take: 5,
+      // Read more than the 5 shown: duplicates are removed below before the cut.
+      take: 25,
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,

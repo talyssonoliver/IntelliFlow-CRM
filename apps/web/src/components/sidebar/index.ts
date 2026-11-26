@@ -1,6 +1,7 @@
 // Main components
 export { AppSidebar, SidebarTrigger, SidebarInset, MobileSidebar } from './AppSidebar';
 export { SidebarWithSuspense } from './SidebarSuspenseWrapper';
+export { SectionMobileBar } from './SectionMobileBar';
 export { SidebarProvider, useSidebar, useSidebarOptional } from './SidebarContext';
 
 // Portal-based sidebar (for dynamic content injection)

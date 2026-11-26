@@ -6,7 +6,12 @@ import {
   CardListSection,
 } from './CardListSection';
 import { leadDisplayName } from '@/lib/leads/lead-format';
-import { followUpStatus, type FollowUpTone } from '@/lib/leads/follow-ups-due';
+import {
+  followUpActionText,
+  followUpLastContactText,
+  followUpStatus,
+  type FollowUpTone,
+} from '@/lib/leads/follow-ups-due';
 
 export interface FollowUpLead {
   id: string;
@@ -92,7 +97,11 @@ export function FollowUpsDueSection({
               <CardListRow
                 key={lead.id}
                 href={`/leads/${lead.id}`}
-                primary={leadDisplayName(lead)}
+                primary={followUpActionText(leadDisplayName(lead))}
+                // The status already says "Never contacted" when there is no date.
+                secondary={
+                  lead.lastContactedAt ? followUpLastContactText(lead.lastContactedAt) : undefined
+                }
                 status={status.label}
                 statusClassName={toneClass[status.tone]}
               />

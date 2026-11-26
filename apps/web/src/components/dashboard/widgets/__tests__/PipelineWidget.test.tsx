@@ -41,3 +41,5 @@ describe('PipelineWidget', () => {
     expect(screen.getByText('Closed Won')).toBeInTheDocument();
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

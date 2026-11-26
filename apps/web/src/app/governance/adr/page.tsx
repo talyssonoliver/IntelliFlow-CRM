@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Card } from '@intelliflow/ui';
+import { SearchFilterBar } from '@/components/shared/search-filter-bar';
 
 interface ADRMetadata {
   id: string;
@@ -72,6 +73,11 @@ export default function ADRRegistryPage() {
   const [loading, setLoading] = useState(true);
   const [indexLoading, setIndexLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => setSearchQuery(searchInput.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showValidationPanel, setShowValidationPanel] = useState(false);
   const [newAdrTitle, setNewAdrTitle] = useState('');
@@ -172,11 +178,6 @@ export default function ADRRegistryPage() {
       loadGraph();
     }
   }, [activeTab, indexContent, graphContent, loadIndex, loadGraph]);
-
-  const handleSearch = (e: React.SyntheticEvent) => {
-    e.preventDefault();
-    loadADRs();
-  };
 
   const handleCreate = async (e: React.SyntheticEvent) => {
     e.preventDefault();
@@ -417,39 +418,15 @@ export default function ADRRegistryPage() {
         {/* Tab Content */}
         {activeTab === 'list' && (
           <>
-            {/* Search */}
-            <form onSubmit={handleSearch} className="flex gap-3 mb-6">
-              <div className="relative flex-1 max-w-md">
-                <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  search
-                </span>
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search ADRs by title or content..."
-                  className="w-full pl-10 pr-4 py-2 border border-input rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-card border border-border rounded-lg text-foreground text-sm font-medium hover:bg-accent transition-colors"
-              >
-                Search
-              </button>
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchQuery('');
-                    loadADRs();
-                  }}
-                  className="px-4 py-2 text-muted-foreground hover:text-foreground text-sm"
-                >
-                  Clear
-                </button>
-              )}
-            </form>
+            {/* Owner 21/11: the shared toolbar, like every list. The list reloads 300ms after the
+                last keystroke (each reload is a server call), so no Search button is needed. */}
+            <SearchFilterBar
+              searchValue={searchInput}
+              onSearchChange={setSearchInput}
+              searchPlaceholder="Search ADRs by title or content..."
+              searchAriaLabel="Search ADRs"
+              className="mb-6"
+            />
 
             {/* ADR List */}
             <Card>

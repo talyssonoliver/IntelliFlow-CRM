@@ -17,6 +17,8 @@ import {
   SelectValue,
 } from '@intelliflow/ui';
 import { EntitySearchField } from '@/components/tasks/EntitySearchField';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
+import { currencySymbol } from '@/lib/format/money';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -133,6 +135,8 @@ export function DealForm({
   onDirtyChange,
   onCancel,
 }: DealFormProps) {
+  const tenantCurrency = useTenantCurrency();
+  const symbol = currencySymbol(tenantCurrency).trim();
   const initialFormData = useMemo<DealFormData>(
     () => ({
       ...DEFAULT_FORM_DATA,
@@ -194,10 +198,15 @@ export function DealForm({
     (e: React.FormEvent) => {
       e.preventDefault();
       if (validateForm()) {
-        onSubmit(formData);
+        // A new deal is in the tenant currency (owner 22/11); an existing deal keeps its own.
+        onSubmit(
+          initialData?.value
+            ? formData
+            : { ...formData, value: { ...formData.value, currency: tenantCurrency } }
+        );
       }
     },
-    [formData, validateForm, onSubmit]
+    [formData, validateForm, onSubmit, initialData?.value, tenantCurrency]
   );
 
   const updateField = useCallback(
@@ -272,10 +281,10 @@ export function DealForm({
 
           {/* Deal Value */}
           <div>
-            <Label htmlFor="deal-value">Deal Value (GBP) *</Label>
+            <Label htmlFor="deal-value">Deal Value ({tenantCurrency}) *</Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                £
+                {symbol}
               </span>
               <Input
                 id="deal-value"
@@ -290,7 +299,7 @@ export function DealForm({
                   })
                 }
                 placeholder="0.00"
-                className="pl-7"
+                className={symbol.length > 2 ? 'pl-12' : 'pl-7'}
                 aria-invalid={!!errors.value}
                 aria-describedby={errors.value ? 'deal-value-error' : undefined}
               />

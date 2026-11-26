@@ -14,6 +14,7 @@ import {
   EmptyState,
 } from '@intelliflow/ui';
 import { api } from '@/lib/api';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { revalidateContactCaches } from '../actions';
@@ -205,6 +206,7 @@ function pickContactLoadingScreen(args: {
 }
 
 export default function Contact360Page() {
+  const currency = useTenantCurrency();
   // Get contact ID from URL params
   const params = useParams();
   const router = useRouter();
@@ -1317,7 +1319,7 @@ export default function Contact360Page() {
                         </div>
                         <div className="text-right ml-4">
                           <p className="font-semibold text-slate-900 dark:text-white">
-                            {formatDealValue(deal.value)}
+                            {formatDealValue(deal.value, currency)}
                           </p>
                           <p className="text-xs text-slate-500">{deal.probability}%</p>
                         </div>
@@ -1363,7 +1365,7 @@ export default function Contact360Page() {
                     </div>
                     <div className="text-right ml-4">
                       <p className="font-semibold text-slate-900 dark:text-white">
-                        {formatDealValue(deal.value)}
+                        {formatDealValue(deal.value, currency)}
                       </p>
                       <p className="text-xs text-slate-500">{deal.probability}% probability</p>
                     </div>

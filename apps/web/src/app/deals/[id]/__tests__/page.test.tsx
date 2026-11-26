@@ -180,6 +180,7 @@ vi.mock('@/providers/TimezoneProvider', () => ({
 }));
 
 vi.mock('@intelliflow/ui', () => ({
+  cn: (...classes: unknown[]) => classes.filter(Boolean).join(' '),
   Card: ({ children, className }: Record<string, unknown>) => (
     <div data-testid="card" className={className as string}>
       {children as React.ReactNode}
@@ -286,6 +287,34 @@ type StubAction = {
   disabled?: boolean;
   loading?: boolean;
 };
+
+// Owner 23/11: the deal page uses the shared page hero.
+vi.mock('@/components/shared/page-header', () => ({
+  PageHeader: ({ title, description, actions, controls }: Record<string, unknown>) => (
+    <div data-testid="entity-header">
+      <span data-testid="entity-title">{title as string}</span>
+      <span data-testid="page-description">{description as string}</span>
+      {controls as React.ReactNode}
+      {(actions as StubAction[])?.map((a) =>
+        a.href ? (
+          <a key={a.label} href={a.href} data-testid={`action-${a.label}`}>
+            {a.label}
+          </a>
+        ) : (
+          <button
+            key={a.label}
+            data-testid={`action-${a.label}`}
+            disabled={a.disabled}
+            data-loading={a.loading ? 'true' : 'false'}
+            onClick={a.onClick}
+          >
+            {a.label}
+          </button>
+        )
+      )}
+    </div>
+  ),
+}));
 
 vi.mock('@/components/shared', () => ({
   EntityHeader: ({ title, badges, actions }: Record<string, unknown>) => (

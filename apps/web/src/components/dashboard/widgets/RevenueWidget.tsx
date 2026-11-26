@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { trpc } from '@/lib/trpc';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import { isEmptySeries } from '@/lib/charts/empty-series';
 import { ChartEmptyState, ChartUnavailable } from '@/components/shared/ChartEmptyState';
 import {
@@ -16,14 +17,15 @@ import type { WidgetProps } from './index';
 /** Below £100 last period a revenue percentage is noise (#1225 UI-009). */
 const REVENUE_TREND_MIN_BASELINE = 100;
 
-function revenueFigure(pending: boolean, failed: boolean, total: number): string {
+function revenueFigure(pending: boolean, failed: boolean, total: number, currency: string): string {
   if (failed) return 'Unavailable';
   if (pending) return '...';
-  return formatGBP(total);
+  return formatGBP(total, 0, currency);
 }
 
 export function RevenueWidget({ config }: Readonly<WidgetProps>) {
   const timeRange = (config?.timeRange as string) || 'month';
+  const currency = useTenantCurrency();
 
   const dateRange = useMemo(() => {
     const end = new Date();
@@ -83,7 +85,7 @@ export function RevenueWidget({ config }: Readonly<WidgetProps>) {
           <h3 className="text-slate-900 dark:text-white font-semibold">Total Revenue</h3>
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-slate-900 dark:text-white tabular-nums">
-              {revenueFigure(revenuePending, overviewError, totalRevenue)}
+              {revenueFigure(revenuePending, overviewError, totalRevenue, currency)}
             </span>
             <KpiTrendBadge
               deltaPercent={deltaPercent}

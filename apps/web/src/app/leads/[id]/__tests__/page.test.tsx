@@ -2129,3 +2129,5 @@ describe('LeadDetailPage - dead controls (#1277)', () => {
     delete withLocation.location;
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

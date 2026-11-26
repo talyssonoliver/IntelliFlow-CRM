@@ -7,9 +7,14 @@ import dynamic from 'next/dynamic';
 import { Card, Button, Skeleton, toast } from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { EntityHeader } from '@/components/shared';
+import { PageHeader } from '@/components/shared/page-header';
+import { KpiCard } from '@/components/dashboard/KpiCard';
+import { WidgetHeader } from '@/components/dashboard/WidgetHeader';
+import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
-import { formatGBPCompact } from '@/lib/format/gbp-compact';
+import { formatMoney, formatMoneyCompact } from '@/lib/format/money';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
+import { buildRevenueProjection } from '@/lib/deals/forecast-projection';
 
 const ForecastRevenueChart = dynamic(() => import('@/components/deals/ForecastRevenueChart'), {
   ssr: false,
@@ -47,23 +52,27 @@ interface ForecastDeal {
   riskLevel: 'low' | 'medium' | 'high';
 }
 
-interface MonthlyProjection {
-  month: string;
-  actual: number | null;
-  projected: number | null;
-}
-
 interface WinRateData {
   month: string;
-  rate: number;
-  isProjected: boolean;
+  /** null: no deals closed that month. */
+  rate: number | null;
+  closed: number;
 }
 
 interface StageData {
-  stage: string;
+  stage: StageId;
+  label: string;
   value: number;
-  percentage: number;
+  count: number;
 }
+
+const OPEN_STAGES: StageId[] = [
+  'PROSPECTING',
+  'QUALIFICATION',
+  'NEEDS_ANALYSIS',
+  'PROPOSAL',
+  'NEGOTIATION',
+];
 
 // =============================================================================
 // Constants & Sample Data
@@ -83,15 +92,14 @@ const STAGE_LABELS: Record<StageId, string> = {
 // Utility Functions
 // =============================================================================
 
-const formatCurrency = formatGBPCompact;
-
-function formatFullCurrency(value: number): string {
-  return new Intl.NumberFormat('en-GB', {
-    style: 'currency',
-    currency: 'GBP',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
+/** Compact and full money in the tenant currency (Analytics -> Report settings). */
+function useForecastMoney() {
+  const currency = useTenantCurrency();
+  return {
+    currency,
+    formatCurrency: (value: number) => formatMoneyCompact(value, currency),
+    formatFullCurrency: (value: number) => formatMoney(value, currency),
+  };
 }
 
 function getProbabilityColor(probability: number): string {
@@ -104,130 +112,83 @@ function getProbabilityColor(probability: number): string {
 // Components
 // =============================================================================
 
-function ForecastAccuracyCard({
+/**
+ * Owner 23/11: "This header and kpis aren't following our shared ones". The three KPIs are the
+ * shared KpiCard; the "+12% / +5% vs last month" lines were fixed numbers in the code, so they are
+ * gone rather than replaced with a guess.
+ */
+function ForecastKpis({
   accuracy,
-  isAtRisk,
   target,
+  isAtRisk,
+  hasHistory,
+  pipelineValue,
+  weightedValue,
+  openDeals,
 }: Readonly<{
   accuracy: number;
-  isAtRisk: boolean;
   target: number;
+  isAtRisk: boolean;
+  hasHistory: boolean;
+  pipelineValue: number;
+  weightedValue: number;
+  openDeals: number;
 }>) {
+  const { formatFullCurrency } = useForecastMoney();
   return (
-    <Card className="p-5 relative overflow-hidden">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-1 z-10">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-            Forecast Accuracy
-          </p>
-          <div className="flex items-baseline gap-2">
-            <h3 className="text-3xl font-bold text-slate-900 dark:text-white">{accuracy}%</h3>
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+      <KpiCard
+        framed
+        label="Forecast accuracy"
+        icon="gps_fixed"
+        value={hasHistory ? `${accuracy}%` : 'Not enough history'}
+        badge={
+          hasHistory ? (
             <span
-              className={`text-xs font-medium px-1.5 py-0.5 rounded ${
-                isAtRisk
-                  ? 'text-amber-600 bg-amber-100 dark:bg-amber-900/30'
-                  : 'text-green-600 bg-green-100 dark:bg-green-900/30'
+              className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                isAtRisk ? 'bg-warning/15 text-warning' : 'bg-success/15 text-success'
               }`}
             >
-              {isAtRisk ? 'At Risk' : 'On Target'}
+              {isAtRisk ? 'At risk' : 'On target'}
             </span>
-          </div>
-          <p className="text-xs text-slate-400 mt-1">Target: ≥ {target}%</p>
-        </div>
-
-        {/* Gauge Chart */}
-        <div className="relative size-20 flex-shrink-0">
-          <svg className="size-20 transform -rotate-90" viewBox="0 0 36 36">
-            {/* Background circle */}
-            <path
-              className="text-slate-200 dark:text-slate-700"
-              strokeDasharray="100, 100"
-              d="M18 2.0845
-                a 15.9155 15.9155 0 0 1 0 31.831
-                a 15.9155 15.9155 0 0 1 0 -31.831"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-            />
-            {/* Progress circle */}
-            <path
-              className="text-primary"
-              strokeDasharray={`${accuracy}, 100`}
-              d="M18 2.0845
-                a 15.9155 15.9155 0 0 1 0 31.831
-                a 15.9155 15.9155 0 0 1 0 -31.831"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Icon name="gps_fixed" className="text-2xl text-primary" />
-          </div>
-        </div>
-      </div>
-    </Card>
+          ) : undefined
+        }
+        footer={
+          <p className="text-xs text-muted-foreground">
+            {hasHistory ? `Target: at least ${target}%` : 'Needs deals won in at least two months'}
+          </p>
+        }
+      />
+      <KpiCard
+        framed
+        label="Total pipeline value"
+        icon="account_balance_wallet"
+        value={formatFullCurrency(pipelineValue)}
+        href="/deals"
+        footer={
+          <p className="text-xs text-muted-foreground">
+            {openDeals.toLocaleString('en-GB')} open {openDeals === 1 ? 'deal' : 'deals'}
+          </p>
+        }
+      />
+      <KpiCard
+        framed
+        label="Weighted forecast"
+        icon="query_stats"
+        value={formatFullCurrency(weightedValue)}
+        href="/deals"
+        footer={
+          <p className="text-xs text-muted-foreground">each deal&apos;s value × its probability</p>
+        }
+      />
+    </div>
   );
 }
 
-function PipelineValueCard({ value, trend }: Readonly<{ value: number; trend: number }>) {
-  const isPositive = trend >= 0;
-
-  return (
-    <Card className="p-5">
-      <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Total Pipeline Value</p>
-      <div className="flex items-center gap-3 mt-1">
-        <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
-          {formatFullCurrency(value)}
-        </h3>
-      </div>
-      <div className="flex items-center gap-1 mt-1">
-        {isPositive ? (
-          <Icon name="trending_up" className="text-base text-green-500" />
-        ) : (
-          <Icon name="trending_down" className="text-base text-red-500" />
-        )}
-        <span
-          className={`text-sm font-medium ${isPositive ? 'text-green-600 dark:text-green-500' : 'text-red-600'}`}
-        >
-          {isPositive ? '+' : ''}
-          {trend}% vs last month
-        </span>
-      </div>
-    </Card>
-  );
-}
-
-function WeightedForecastCard({ value, trend }: Readonly<{ value: number; trend: number }>) {
-  const isPositive = trend >= 0;
-
-  return (
-    <Card className="p-5">
-      <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Weighted Forecast</p>
-      <div className="flex items-center gap-3 mt-1">
-        <h3 className="text-3xl font-bold text-slate-900 dark:text-white">
-          {formatFullCurrency(value)}
-        </h3>
-      </div>
-      <div className="flex items-center gap-1 mt-1">
-        {isPositive ? (
-          <Icon name="trending_up" className="text-base text-green-500" />
-        ) : (
-          <Icon name="trending_down" className="text-base text-red-500" />
-        )}
-        <span
-          className={`text-sm font-medium ${isPositive ? 'text-green-600 dark:text-green-500' : 'text-red-600'}`}
-        >
-          {isPositive ? '+' : ''}
-          {trend}% vs last month
-        </span>
-      </div>
-    </Card>
-  );
-}
-
-function RevenueProjectionChart({ data }: Readonly<{ data: MonthlyProjection[] }>) {
+function RevenueProjectionChart({
+  data,
+}: Readonly<{ data: ReturnType<typeof buildRevenueProjection> }>) {
+  const { formatCurrency, formatFullCurrency } = useForecastMoney();
   return (
     <ForecastRevenueChart
       data={data}
@@ -237,61 +198,82 @@ function RevenueProjectionChart({ data }: Readonly<{ data: MonthlyProjection[] }
   );
 }
 
+/**
+ * Win rate per month, last six months. A month with no closed deals shows no bar (owner 23/11:
+ * it used to show the overall average as if it were that month's result).
+ */
 function WinRateTrendCard({ data }: Readonly<{ data: WinRateData[] }>) {
-  const avgRate = Math.round(data.reduce((sum, d) => sum + d.rate, 0) / data.length);
+  const closed = data.reduce((sum, d) => sum + d.closed, 0);
+  const won = data.reduce((sum, d) => sum + ((d.rate ?? 0) * d.closed) / 100, 0);
+  const average = closed > 0 ? Math.round((won / closed) * 100) : null;
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white">Win Rate Trend</h3>
-        <span className="text-xs font-medium text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded-full">
-          Avg {avgRate}%
-        </span>
-      </div>
-      <div className="h-24 flex items-end gap-1 mt-4">
-        {data.map((item, index) => (
-          <div
-            key={`${item.month}-${index}`}
-            className={`flex-1 rounded-t transition-all hover:opacity-80 ${(() => {
-              if (item.isProjected)
-                return 'bg-slate-200 dark:bg-slate-700 border-t-2 border-dashed border-slate-400';
-              if (index === data.length - 2) return 'bg-primary';
-              return 'bg-primary/30';
-            })()}`}
-            style={{ height: `${item.rate * 2.5}%` }}
-            title={`${item.month}: ${item.rate}%`}
-          />
-        ))}
-      </div>
-      <div className="flex justify-between mt-2 text-[10px] text-slate-400">
-        {data.map((item, index) => (
-          <span key={`${item.month}-label-${index}`}>{item.month}</span>
-        ))}
-      </div>
+    <Card className="border-border bg-card p-6">
+      <WidgetHeader
+        title="Win Rate Trend"
+        className="mb-4"
+        actions={
+          average === null ? null : (
+            <span className="rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">
+              Avg {average}%
+            </span>
+          )
+        }
+      />
+      {closed === 0 ? (
+        <ChartEmptyState
+          message="No deals closed in the last six months"
+          description="Each month's win rate shows here once deals are won or lost."
+        />
+      ) : (
+        <>
+          <div className="flex h-24 items-end gap-1">
+            {data.map((item) => (
+              <div key={item.month} className="flex h-full flex-1 items-end">
+                {item.rate !== null && (
+                  <div
+                    className="w-full rounded-t bg-ds-primary"
+                    style={{ height: `${Math.max(item.rate, 2)}%` }}
+                    title={`${item.month}: ${item.rate}% of ${item.closed} closed`}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+            {data.map((item) => (
+              <span key={item.month} className="flex-1 text-center">
+                {item.month}
+              </span>
+            ))}
+          </div>
+        </>
+      )}
     </Card>
   );
 }
 
+/** Every open stage, in pipeline order, empty ones included (owner 23/11). */
 function PipelineByStageCard({ stages }: Readonly<{ stages: StageData[] }>) {
-  const maxValue = Math.max(...stages.map((s) => s.value));
+  const { formatCurrency } = useForecastMoney();
+  const maxValue = Math.max(0, ...stages.map((s) => s.value));
 
   return (
-    <Card className="p-6">
-      <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-4">Pipeline by Stage</h3>
+    <Card className="border-border bg-card p-6">
+      <WidgetHeader title="Pipeline by Stage" className="mb-4" />
       <div className="flex flex-col gap-3">
-        {stages.map((stage, index) => (
+        {stages.map((stage) => (
           <div key={stage.stage} className="flex flex-col gap-1">
-            <div className="flex justify-between text-xs">
-              <span className="text-slate-600 dark:text-slate-300">{stage.stage}</span>
-              <span className="font-medium">{formatCurrency(stage.value)}</span>
+            <div className="flex justify-between gap-3 text-sm">
+              <span className="text-foreground">{stage.label}</span>
+              <span className="shrink-0 text-muted-foreground">
+                {formatCurrency(stage.value)} ({stage.count} {stage.count === 1 ? 'deal' : 'deals'})
+              </span>
             </div>
-            <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{
-                  width: `${(stage.value / maxValue) * 100}%`,
-                  backgroundColor: `rgba(42, 120, 246, ${1 - index * 0.2})`,
-                }}
+                className="h-full rounded-full bg-ds-primary transition-all duration-500"
+                style={{ width: maxValue > 0 ? `${(stage.value / maxValue) * 100}%` : '0%' }}
               />
             </div>
           </div>
@@ -302,6 +284,7 @@ function PipelineByStageCard({ stages }: Readonly<{ stages: StageData[] }>) {
 }
 
 function OpportunitiesAtRiskTable({ deals }: Readonly<{ deals: ForecastDeal[] }>) {
+  const { formatFullCurrency } = useForecastMoney();
   const { timezone } = useTimezoneContext();
   // Filter and sort by risk level and value
   const riskyDeals = deals
@@ -394,12 +377,14 @@ function OpportunitiesAtRiskTable({ deals }: Readonly<{ deals: ForecastDeal[] }>
                 </td>
                 <td className="px-6 py-4">
                   <p className="text-sm text-slate-600 dark:text-slate-400">
-                    {new Date(deal.expectedCloseDate).toLocaleDateString('en-GB', {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
-                      timeZone: timezone,
-                    })}
+                    {deal.expectedCloseDate
+                      ? new Date(deal.expectedCloseDate).toLocaleDateString('en-GB', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          timeZone: timezone,
+                        })
+                      : 'Not set'}
                   </p>
                 </td>
                 <td className="px-6 py-4">
@@ -527,6 +512,7 @@ function buildForecastCSV(
 // =============================================================================
 
 export default function DealForecastPage() {
+  const tenantCurrency = useTenantCurrency();
   const { timezone } = useTimezoneContext();
   const router = useRouter();
 
@@ -573,12 +559,15 @@ export default function DealForecastPage() {
   const totalPipelineValue = forecastData?.totalPipelineValue ?? 0;
   const weightedForecast = Number(forecastData?.weightedValue) || 0;
 
-  const stageBreakdown = useMemo(() => {
-    if (!forecastData?.stageBreakdown) return [];
-    return forecastData.stageBreakdown.map((s) => ({
-      stage: STAGE_LABELS[s.stage as StageId] || s.stage,
-      value: s.totalValue,
-      percentage: s.percentage,
+  // Every open stage in pipeline order, empty ones included (owner 23/11: "Why all the other
+  // stages aren't showing here?" - the API only lists stages that hold a deal).
+  const stageBreakdown = useMemo<StageData[]>(() => {
+    const byStage = new Map((forecastData?.stageBreakdown ?? []).map((s) => [s.stage, s]));
+    return OPEN_STAGES.map((stage) => ({
+      stage,
+      label: STAGE_LABELS[stage],
+      value: byStage.get(stage)?.totalValue ?? 0,
+      count: byStage.get(stage)?.count ?? 0,
     }));
   }, [forecastData]);
 
@@ -587,37 +576,20 @@ export default function DealForecastPage() {
     return forecastData.deals as ForecastDeal[];
   }, [forecastData]);
 
-  const monthlyProjections = useMemo(() => {
-    if (!forecastData?.monthlyRevenue || forecastData.monthlyRevenue.length === 0) {
-      return [];
-    }
-    // Add projected months based on average revenue
-    const projections: MonthlyProjection[] = [...forecastData.monthlyRevenue];
-    const projectedMonths = ['Oct', 'Nov', 'Dec'];
-    const avgRevenue =
-      forecastData.monthlyRevenue.length > 0
-        ? forecastData.monthlyRevenue.reduce((sum, m) => sum + (m.actual || 0), 0) /
-          forecastData.monthlyRevenue.length
-        : 0;
+  // Actual won revenue, then open deals weighted by probability in the month they should close.
+  const monthlyProjections = useMemo(
+    () => buildRevenueProjection(forecastData?.monthlyRevenue ?? [], deals),
+    [forecastData, deals]
+  );
 
-    projectedMonths.forEach((month, i) => {
-      if (!projections.some((p) => p.month === month)) {
-        projections.push({
-          month,
-          actual: null,
-          projected: avgRevenue > 0 ? Math.round(avgRevenue * (1 + (i + 1) * 0.1)) : null,
-        });
-      }
-    });
-    return projections;
-  }, [forecastData]);
+  const winRateData = useMemo<WinRateData[]>(
+    () => forecastData?.winRateTrend ?? [],
+    [forecastData]
+  );
 
-  const winRateData = useMemo(() => {
-    if (!forecastData?.winRateTrend || forecastData.winRateTrend.length === 0) {
-      return [];
-    }
-    return forecastData.winRateTrend;
-  }, [forecastData]);
+  // Accuracy needs won revenue in two or more months; below that the API's 0% is "no data".
+  const hasAccuracyHistory =
+    (forecastData?.monthlyRevenue ?? []).filter((m) => (m.actual ?? 0) > 0).length >= 2;
 
   // Show loading state
   if (isLoading || authLoading) {
@@ -655,19 +627,45 @@ export default function DealForecastPage() {
     );
   }
 
+  const exportReport = () => {
+    const csv = buildForecastCSV(
+      deals,
+      totalPipelineValue,
+      weightedForecast,
+      currentQuarter,
+      timezone
+    );
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `forecast-${new Date().toISOString().split('T')[0]}.csv`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+    toast({ title: 'Exported', description: `Forecast report for ${currentQuarter} downloaded.` });
+  };
+
+  const openDeals = forecastData?.totalOpportunities ?? 0;
+
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mx-auto flex flex-col gap-6">
-        {/* Header using EntityHeader */}
-        <EntityHeader
-          breadcrumbs={[{ label: 'Deals', href: '/deals' }, { label: 'Forecast' }]}
+        {/* Owner 23/11: the shared page hero, with the page's own buttons kept. */}
+        <PageHeader
+          breadcrumbs={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Deals', href: '/deals' },
+          ]}
           title="Deal Forecast"
-          badges={[{ label: currentQuarter, variant: 'info' }]}
+          description={`${currentQuarter} · ${openDeals.toLocaleString('en-GB')} open ${
+            openDeals === 1 ? 'deal' : 'deals'
+          }, in ${tenantCurrency}`}
           actions={[
             {
               label: 'This Quarter',
               icon: 'calendar_today',
               variant: 'secondary',
+              hideOnMobile: true,
               onClick: () =>
                 toast({
                   title: 'Quarter filter',
@@ -676,79 +674,40 @@ export default function DealForecastPage() {
                 }),
             },
             {
-              label: 'GBP',
-              icon: 'currency_pound',
+              label: tenantCurrency,
+              icon: 'payments',
               variant: 'secondary',
+              hideOnMobile: true,
               onClick: () =>
                 toast({
-                  title: 'Currency conversion',
-                  description:
-                    'Multi-currency display is tracked under IFC-201. All values are shown in GBP.',
+                  title: 'Currency',
+                  description: `All values are shown in ${tenantCurrency}. Change the currency in Analytics > Report settings.`,
                 }),
             },
-            {
-              label: 'Export Report',
-              icon: 'download',
-              variant: 'primary',
-              onClick: () => {
-                const csv = buildForecastCSV(
-                  deals,
-                  totalPipelineValue,
-                  weightedForecast,
-                  currentQuarter,
-                  timezone
-                );
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const anchor = document.createElement('a');
-                anchor.href = url;
-                anchor.download = `forecast-${new Date().toISOString().split('T')[0]}.csv`;
-                anchor.click();
-                URL.revokeObjectURL(url);
-                toast({
-                  title: 'Exported',
-                  description: `Forecast report for ${currentQuarter} downloaded.`,
-                });
-              },
-            },
+            { label: 'Export', icon: 'download', variant: 'primary', onClick: exportReport },
           ]}
-        >
-          <p className="text-sm text-muted-foreground mt-1">
-            Performance analysis and revenue projection for {currentQuarter}
-          </p>
-        </EntityHeader>
+        />
 
-        {/* Real-time data indicator */}
-        {forecastData && (
-          <div className="flex items-center gap-2 text-xs text-green-600 dark:text-green-400">
-            <span className="size-2 bg-green-500 rounded-full animate-pulse" />
-            Live data from {forecastData.totalOpportunities} active opportunities
-            {forecastData.winRate > 0 && ` • ${forecastData.winRate}% win rate`}
-          </div>
-        )}
+        <ForecastKpis
+          accuracy={forecastAccuracy.accuracy}
+          target={forecastAccuracy.target}
+          isAtRisk={forecastAccuracy.isAtRisk}
+          hasHistory={hasAccuracyHistory}
+          pipelineValue={totalPipelineValue}
+          weightedValue={weightedForecast}
+          openDeals={openDeals}
+        />
 
-        {/* KPI Cards Row */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <ForecastAccuracyCard {...forecastAccuracy} />
-          <PipelineValueCard value={totalPipelineValue} trend={12} />
-          <WeightedForecastCard value={weightedForecast} trend={5} />
-        </div>
-
-        {/* Charts Row */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Revenue Projection - 2/3 width */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <RevenueProjectionChart data={monthlyProjections} />
           </div>
-
-          {/* Win Rate & Pipeline by Stage - 1/3 width */}
           <div className="flex flex-col gap-6">
             <WinRateTrendCard data={winRateData} />
             <PipelineByStageCard stages={stageBreakdown} />
           </div>
         </div>
 
-        {/* Opportunities at Risk Table */}
         {deals.length > 0 && <OpportunitiesAtRiskTable deals={deals} />}
       </div>
     </div>

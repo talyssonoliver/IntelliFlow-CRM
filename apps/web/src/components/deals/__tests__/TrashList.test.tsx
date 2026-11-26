@@ -1469,3 +1469,5 @@ describe('TrashList - mutation onSuccess waits for fresh data', () => {
     expect(settled).toBe(true);
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

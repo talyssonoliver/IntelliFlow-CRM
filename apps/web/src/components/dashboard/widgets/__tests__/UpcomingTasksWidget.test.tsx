@@ -178,8 +178,8 @@ describe('UpcomingTasksWidget', () => {
 
     const section = within(screen.getByTestId('follow-ups-due'));
     expect(within(screen.getByTestId('follow-ups-due')).getByText(/5 overdue/)).toBeInTheDocument();
-    // The row names the lead; the block heading already says these are follow-ups (owner 21/11).
-    expect(section.getByRole('link', { name: /^Jane Example/ })).toBeInTheDocument();
+    // The row says the action and names the lead (owner 21/11: "It isn't showing what is the action").
+    expect(section.getByRole('link', { name: /^Follow up with Jane Example/ })).toBeInTheDocument();
     expect(section.getByRole('link', { name: /Bob Stone/ })).toHaveAttribute(
       'href',
       '/leads/lead-2'

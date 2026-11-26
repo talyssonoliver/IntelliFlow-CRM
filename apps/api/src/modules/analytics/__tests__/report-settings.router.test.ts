@@ -53,7 +53,7 @@ describe('Report Settings Router (PG-187)', () => {
           create: expect.objectContaining({
             tenantId,
             defaultRange: '30d',
-            currency: 'USD',
+            currency: 'GBP',
           }),
           update: {},
         })
@@ -221,7 +221,7 @@ describe('Report Settings Router (PG-187)', () => {
 
       expect(prismaMock.reportSettings.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          update: expect.objectContaining({ defaultRange: '30d', currency: 'USD' }),
+          update: expect.objectContaining({ defaultRange: '30d', currency: 'GBP' }),
         })
       );
       expect(result).toEqual(mockExistingSettings);

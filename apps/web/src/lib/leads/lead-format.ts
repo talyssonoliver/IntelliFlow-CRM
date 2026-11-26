@@ -9,6 +9,7 @@
 
 import { hasMachineId } from '@intelliflow/validators';
 import { formatGBPCompact } from '@/lib/format/gbp-compact';
+import { formatMoneyCompact } from '@/lib/format/money';
 
 // Activity types matching the database enum (UI-facing variant).
 export type ActivityType =
@@ -183,8 +184,8 @@ export function leadWebsite(
  * (packages/validators/src/lead.ts:36, packages/domain/src/crm/lead/Lead.ts:73) —
  * as a compact pound label: `5_000_000` (pence) -> `"£50k"`, `50_000` -> `"£500"`.
  */
-export function formatEstimatedValue(cents: number): string {
-  return formatGBPCompact(cents / 100);
+export function formatEstimatedValue(cents: number, currency = 'GBP'): string {
+  return formatMoneyCompact(cents / 100, currency);
 }
 
 /** Activity text without machine ids (register row 42); the one implementation lives in validators. */

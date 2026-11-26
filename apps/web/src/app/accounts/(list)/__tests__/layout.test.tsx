@@ -13,6 +13,7 @@ vi.mock('@/components/sidebar', () => ({
   SidebarProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   SidebarInset: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   SidebarTrigger: () => <button type="button">menu</button>,
+  SectionMobileBar: ({ title }: { title: string }) => <div>{title}</div>,
   SidebarWithSuspense: ({ config }: { config: (typeof sidebarConfigs)[number] }) => {
     sidebarConfigs.push(config);
     return null;

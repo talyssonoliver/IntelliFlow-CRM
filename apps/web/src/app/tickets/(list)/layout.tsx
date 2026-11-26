@@ -11,6 +11,7 @@ import {
   isTicketSettingsPage,
   SidebarPortalProvider,
   SidebarPortalTarget,
+  SectionMobileBar,
 } from '@/components/sidebar';
 import { ModuleGate } from '@/components/ModuleGate';
 import { TicketSettingsPanel } from '@/components/tickets/TicketSettingsPanel';
@@ -52,6 +53,7 @@ export default function TicketsListLayout({ children }: Readonly<{ children: Rea
                 className="flex flex-1 flex-col h-full min-w-0 overflow-hidden bg-background relative"
                 id="main-content"
               >
+                <SectionMobileBar title="Tickets" />
                 {/* Mobile header with sidebar trigger */}
 
                 <div className="flex-1 overflow-y-auto overflow-x-hidden p-2 sm:p-3 md:p-4">

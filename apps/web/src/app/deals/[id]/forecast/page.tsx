@@ -14,6 +14,8 @@ import { Card, Button, Skeleton } from '@intelliflow/ui';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
+import { formatMoney } from '@/lib/format/money';
 import {
   ForecastHeader,
   ProbabilityGauge,
@@ -61,6 +63,7 @@ function DealForecastSkeleton() {
 // ─── Main Page ──────────────────────────────────────────────────────────────
 
 export default function DealForecastDetailPage() {
+  const currency = useTenantCurrency();
   const { timezone } = useTimezoneContext();
   const router = useRouter();
   const params = useParams();
@@ -165,13 +168,7 @@ export default function DealForecastDetailPage() {
           <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
             <div>
               <dt className="text-muted-foreground">Value</dt>
-              <dd className="font-medium">
-                {new Intl.NumberFormat('en-GB', {
-                  style: 'currency',
-                  currency: 'GBP',
-                  minimumFractionDigits: 0,
-                }).format(data.deal.value)}
-              </dd>
+              <dd className="font-medium">{formatMoney(data.deal.value, currency)}</dd>
             </div>
             <div>
               <dt className="text-muted-foreground">Stage</dt>

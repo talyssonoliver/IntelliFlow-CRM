@@ -2788,7 +2788,7 @@ model ReportSettings {
   id                String   @id @default(cuid())
   tenantId          String   @unique
   defaultRange      String   @default("30d")
-  currency          String   @default("USD")
+  currency          String   @default("GBP")
   scheduledDelivery Json     @default("{\"enabled\":false,\"frequency\":\"weekly\",\"dayOfWeek\":1,\"time\":\"09:00\",\"recipients\":[],\"format\":\"pdf\"}")
   tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   createdAt         DateTime @default(now())

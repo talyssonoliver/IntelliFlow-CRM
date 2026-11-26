@@ -589,3 +589,5 @@ describe('SavedReportView', () => {
     expect(screen.getByText('£48,500')).toBeInTheDocument();
   });
 });
+
+vi.mock('@/lib/format/useTenantCurrency', () => ({ useTenantCurrency: () => 'GBP' }));

@@ -16,6 +16,7 @@ import {
 } from 'recharts';
 import { isEmptySeries } from '@/lib/charts/empty-series';
 import { formatGBP } from '@/lib/dashboard/kpi-calculator';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import { revenueAxisTick, revenueTooltip } from '@/lib/deals/deals-chart-format';
 import { ChartEmptyState } from '@/components/shared/ChartEmptyState';
 
@@ -42,6 +43,7 @@ interface DealsChartsProps {
  * of each other (#33). The data table below still lists every stage.
  */
 export default function DealsCharts({ pieChartData, barChartData }: Readonly<DealsChartsProps>) {
+  const currency = useTenantCurrency();
   const slices = pieChartData.filter((entry) => entry.value > 0);
   const countByStage = new Map(slices.map((entry) => [entry.name, entry.value]));
   return (
@@ -104,12 +106,12 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
               <XAxis dataKey="name" tick={{ fontSize: 10 }} className="fill-muted-foreground" />
               <YAxis
-                tickFormatter={revenueAxisTick}
+                tickFormatter={(value) => revenueAxisTick(value, currency)}
                 tick={{ fontSize: 10 }}
                 className="fill-muted-foreground"
                 width={50}
               />
-              <Tooltip formatter={revenueTooltip} />
+              <Tooltip formatter={(value) => revenueTooltip(value, currency)} />
               <Bar dataKey="revenue" radius={[4, 4, 0, 0]}>
                 {barChartData.map((entry) => (
                   <Cell key={`bar-${entry.name}`} fill={entry.color} />
@@ -130,7 +132,7 @@ export default function DealsCharts({ pieChartData, barChartData }: Readonly<Dea
             {barChartData.map((entry) => (
               <tr key={`bar-sr-${entry.name}`}>
                 <td>{entry.name}</td>
-                <td>{formatGBP(entry.revenue)}</td>
+                <td>{formatGBP(entry.revenue, 0, currency)}</td>
               </tr>
             ))}
           </tbody>

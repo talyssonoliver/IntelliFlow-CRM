@@ -14,6 +14,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const mockGenerateInsightsWithMeta = vi.hoisted(() => vi.fn());
 const mockGenerateFallbackInsights = vi.hoisted(() => vi.fn());
 const mockCreate = vi.hoisted(() => vi.fn());
+const mockInsightUpdateMany = vi.hoisted(() => vi.fn());
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
 const mockTaskCreate = vi.hoisted(() => vi.fn());
 const mockLeadAIInsightUpsert = vi.hoisted(() => vi.fn());
@@ -60,6 +61,7 @@ vi.mock('@intelliflow/db', () => ({
     aIInsight: {
       create: (...args: any[]) => mockCreate(...args),
       findFirst: () => Promise.resolve(null),
+      updateMany: (...args: any[]) => mockInsightUpdateMany(...args),
     },
     notification: {
       create: (...args: any[]) => mockNotificationCreate(...args),
@@ -186,6 +188,7 @@ describe('processInsightJob', () => {
     });
 
     mockCreate.mockResolvedValue({ id: 'insight-1' });
+    mockInsightUpdateMany.mockResolvedValue({ count: 0 });
     mockNotificationCreate.mockResolvedValue({ id: 'notification-1' });
     mockTaskCreate.mockResolvedValue({ id: 'task-1' });
     mockLeadAIInsightUpsert.mockResolvedValue({ id: 'lead-insight-1' });
@@ -211,6 +214,38 @@ describe('processInsightJob', () => {
     expect(firstCall.data.status).toBe('NEW');
     expect(firstCall.data.expiresAt).toBeInstanceOf(Date);
     expect(firstCall.data.metadata).toHaveProperty('userId', 'user-001');
+  });
+
+  it('supersedes older open insights of the same user of the same type for the same entity', async () => {
+    // Owner 21/11: three "Opportunity" insights for one lead, each worded differently by the
+    // model, so the old exact-title check never matched.
+    const job = createMockJob({
+      dealsAtRisk: [{ id: 'deal-1', name: 'Enterprise Deal', daysSinceUpdate: 20 }],
+    });
+    await processInsightJob(job);
+
+    expect(mockInsightUpdateMany).toHaveBeenCalledTimes(1);
+    const { where, data } = mockInsightUpdateMany.mock.calls[0][0];
+    expect(where).toMatchObject({
+      tenantId: '00000000-0000-4000-a000-000000000001',
+      entityType: 'opportunity',
+      entityId: 'deal-1',
+      type: mockCreate.mock.calls[0][0].data.type,
+      id: { not: 'insight-1' },
+      status: { in: ['NEW', 'VIEWED', 'ACTED_ON'] },
+      metadata: { path: ['userId'], equals: 'user-001' },
+    });
+    expect(data).toEqual({ status: 'EXPIRED' });
+  });
+
+  it('supersedes nothing for an insight that is not about one entity', async () => {
+    mockGenerateInsightsWithMeta.mockResolvedValue({
+      insights: [createInsight({ entityId: null, entityType: null, type: 'achievement' })],
+      source: 'llm',
+      executionTimeMs: 5,
+    });
+    await processInsightJob(createMockJob({ overdueTasksCount: 0 }));
+    expect(mockInsightUpdateMany).not.toHaveBeenCalled();
   });
 
   it('should create rows with confidence 40 when chain falls back to heuristics', async () => {

@@ -2,7 +2,14 @@
 
 import * as React from 'react';
 import { useState, useCallback, useId } from 'react';
-import { cn } from '@intelliflow/ui';
+import {
+  cn,
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@intelliflow/ui';
 
 // =============================================================================
 // Types
@@ -40,9 +47,12 @@ export interface SortOption {
 
 export interface SearchFilterBarProps {
   /** Search input value */
-  searchValue: string;
-  /** Callback when search value changes */
-  onSearchChange: (value: string) => void;
+  searchValue?: string;
+  /**
+   * Callback when search value changes. Leave out for a list with nothing to search (Review
+   * history rows carry no text): the bar then shows only its filters.
+   */
+  onSearchChange?: (value: string) => void;
   /** Placeholder text for search input */
   searchPlaceholder?: string;
   /** ARIA label for search input */
@@ -65,6 +75,11 @@ export interface SearchFilterBarProps {
   className?: string;
   /** Show divider before sort dropdown */
   showSortDivider?: boolean;
+  /**
+   * Page-specific controls the bar has no slot for (a date range, a "clear dates" link). From md
+   * they show as a row under the bar; on phones they go into the Filters sheet with the rest.
+   */
+  extra?: React.ReactNode;
 }
 
 // =============================================================================
@@ -109,8 +124,14 @@ export function SearchFilterBar({
   sort,
   className,
   showSortDivider = true,
+  extra,
 }: Readonly<SearchFilterBarProps>) {
   const searchId = useId();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const hasControls = filters.length > 0 || !!sort || !!extra;
+  // Filters a page hides on phones stay hidden in the sheet too (some do nothing yet).
+  const phoneFilters = filters.filter((f) => !f.hideOnMobile);
+  const activeCount = phoneFilters.filter((f) => f.value !== '').length;
 
   return (
     <div
@@ -121,38 +142,67 @@ export function SearchFilterBar({
       )}
     >
       {/* Main row: Search + Filters + Sort */}
-      <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center">
+      {/* Owner 21/11: on phones the fields split over several lines. Below md the row is search +
+          one Filters button that opens a sheet with every filter and the sort; from md as before. */}
+      <div className="flex flex-row items-center gap-2 md:flex-col md:items-stretch md:gap-4 lg:flex-row lg:items-center">
         {/* Search Input - white background */}
-        <div className="relative flex-1" role="search">
-          <label htmlFor={searchId} className="sr-only">
-            {searchAriaLabel}
-          </label>
-          <span
-            className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl"
-            aria-hidden="true"
-          >
-            search
-          </span>
-          <input
-            id={searchId}
-            type="search"
-            placeholder={searchPlaceholder}
-            value={searchValue}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className={cn(
-              'w-full pl-10 pr-4 py-2.5 rounded-lg',
-              'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700',
-              'text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500',
-              'text-sm font-medium',
-              'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary',
-              'transition-all duration-200'
-            )}
-          />
-        </div>
+        {onSearchChange && (
+          <div className="relative flex-1" role="search">
+            <label htmlFor={searchId} className="sr-only">
+              {searchAriaLabel}
+            </label>
+            <span
+              className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl"
+              aria-hidden="true"
+            >
+              search
+            </span>
+            <input
+              id={searchId}
+              type="search"
+              placeholder={searchPlaceholder}
+              value={searchValue ?? ''}
+              onChange={(e) => onSearchChange(e.target.value)}
+              className={cn(
+                'w-full pl-10 pr-4 py-2.5 rounded-lg',
+                'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700',
+                'text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500',
+                'text-sm font-medium',
+                'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary',
+                'transition-all duration-200'
+              )}
+            />
+          </div>
+        )}
 
         {/* Filters and Sort */}
+        {hasControls && (
+          <button
+            type="button"
+            onClick={() => setSheetOpen(true)}
+            className={cn(
+              'md:hidden inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-lg px-3',
+              'border border-slate-200 bg-white text-sm font-medium text-slate-700',
+              'dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200',
+              'focus:outline-none focus:ring-2 focus:ring-primary/50'
+            )}
+            aria-haspopup="dialog"
+            data-testid="filters-sheet-button"
+          >
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
+              tune
+            </span>
+            Filters
+            {activeCount > 0 && (
+              <span className="inline-flex size-5 items-center justify-center rounded-full bg-primary text-[11px] font-semibold text-primary-foreground">
+                {activeCount}
+              </span>
+            )}
+          </button>
+        )}
+
         {(filters.length > 0 || sort) && (
-          <div className="flex flex-wrap items-center gap-2 lg:gap-3">
+          <div className="hidden md:flex flex-wrap items-center gap-2 lg:gap-3">
             {/* Filter Dropdowns */}
             {filters.map((filter) => (
               <FilterDropdown key={filter.id} {...filter} />
@@ -174,9 +224,11 @@ export function SearchFilterBar({
         )}
       </div>
 
+      {extra && <div className="hidden md:flex flex-wrap items-center gap-3">{extra}</div>}
+
       {/* Filter Chips Row */}
       {filterChips && filterChips.options.length > 0 && (
-        <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-200 dark:border-slate-700">
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pt-4 border-t border-slate-200 dark:border-slate-700 md:mx-0 md:flex-wrap md:overflow-visible md:px-0">
           {filterChips.options.map((chip) => (
             <FilterChipButton
               key={chip.id}
@@ -187,6 +239,41 @@ export function SearchFilterBar({
           ))}
         </div>
       )}
+
+      {hasControls && (
+        <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+          <SheetContent
+            side="bottom"
+            className="max-h-[85svh] overflow-y-auto rounded-t-2xl md:hidden"
+          >
+            <SheetHeader>
+              <SheetTitle>Filters</SheetTitle>
+              <SheetDescription className="sr-only">Filter and sort this list</SheetDescription>
+            </SheetHeader>
+            <div className="mt-4 flex flex-col gap-3">
+              {phoneFilters.map((filter) => (
+                <FilterDropdown key={filter.id} {...filter} fullWidth />
+              ))}
+              {sort && (
+                <SortDropdown
+                  options={sort.options}
+                  value={sort.value}
+                  onChange={sort.onChange}
+                  fullWidth
+                />
+              )}
+              {extra && <div className="flex flex-col gap-3">{extra}</div>}
+              <button
+                type="button"
+                onClick={() => setSheetOpen(false)}
+                className="mt-2 min-h-11 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              >
+                Done
+              </button>
+            </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }
@@ -195,7 +282,10 @@ export function SearchFilterBar({
 // Filter Dropdown Component
 // =============================================================================
 
-type FilterDropdownProps = FilterDropdownConfig;
+type FilterDropdownProps = FilterDropdownConfig & {
+  /** In the phone sheet: the full width, 44px tall. */
+  fullWidth?: boolean;
+};
 
 function FilterDropdown({
   label,
@@ -204,11 +294,12 @@ function FilterDropdown({
   value,
   onChange,
   hideOnMobile,
+  fullWidth = false,
 }: Readonly<FilterDropdownProps>) {
   const selectId = useId();
 
   return (
-    <div className={cn('relative', hideOnMobile && 'hidden sm:block')}>
+    <div className={cn('relative', fullWidth ? 'w-full' : hideOnMobile && 'hidden sm:block')}>
       <label htmlFor={selectId} className="sr-only">
         {label}
       </label>
@@ -231,6 +322,7 @@ function FilterDropdown({
             'text-slate-700 dark:text-slate-200 text-sm font-medium',
             'py-2.5 pr-9',
             icon ? 'pl-10' : 'pl-4',
+            fullWidth && 'w-full min-h-11',
             'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary',
             'cursor-pointer transition-all duration-200',
             'hover:bg-slate-100 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500'
@@ -308,13 +400,19 @@ interface SortDropdownProps {
   options: SortOption[];
   value: string;
   onChange: (value: string) => void;
+  fullWidth?: boolean;
 }
 
-function SortDropdown({ options, value, onChange }: Readonly<SortDropdownProps>) {
+function SortDropdown({
+  options,
+  value,
+  onChange,
+  fullWidth = false,
+}: Readonly<SortDropdownProps>) {
   const selectId = useId();
 
   return (
-    <div className="relative">
+    <div className={cn('relative', fullWidth && 'w-full')}>
       <label htmlFor={selectId} className="sr-only">
         Sort order
       </label>
@@ -334,6 +432,7 @@ function SortDropdown({ options, value, onChange }: Readonly<SortDropdownProps>)
             'bg-slate-50 dark:bg-slate-700/50 border border-slate-50 dark:border-slate-600',
             'text-slate-700 dark:text-slate-200 text-sm font-medium',
             'py-2.5 pl-10 pr-9',
+            fullWidth && 'w-full min-h-11',
             'focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary',
             'cursor-pointer transition-all duration-200',
             'hover:bg-slate-100 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-500'

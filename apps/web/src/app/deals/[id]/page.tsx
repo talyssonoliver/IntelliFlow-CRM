@@ -20,7 +20,10 @@ import { STAGE_TRANSITION_RULES, type OpportunityStage } from '@intelliflow/doma
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
-import { EntityHeader, AppAvatar } from '@/components/shared';
+import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
+import { AppAvatar } from '@/components/shared';
+import { PageHeader } from '@/components/shared/page-header';
+import { WidgetHeader } from '@/components/dashboard/WidgetHeader';
 import { ActivityFeed } from '@/components/shared/activity-feed';
 import { EntityActionSheet } from '@/components/shared/entity-action-sheet';
 import { MoreActionsButton } from '@/components/shared/more-actions-button';
@@ -96,9 +99,7 @@ function AboutDealCard({ deal }: Readonly<{ deal: DealDetail }>) {
   const { timezone } = useTimezoneContext();
   return (
     <Card className="p-5">
-      <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 border-b pb-2">
-        About Deal
-      </h3>
+      <WidgetHeader title="About this deal" className="mb-4" />
       <div className="space-y-4">
         <div>
           <p className="text-xs text-slate-500 mb-1">Expected Close Date</p>
@@ -134,99 +135,93 @@ function AboutDealCard({ deal }: Readonly<{ deal: DealDetail }>) {
   );
 }
 
+/**
+ * Who the deal is with (owner 23/11 on the deal page). Each row says what it is, account or
+ * contact, so a sole trader whose account and contact share a name no longer reads as the same
+ * line twice; the icon-only links are 44px with names.
+ */
 function StakeholdersCard({ deal, onEdit }: Readonly<{ deal: DealDetail; onEdit: () => void }>) {
+  const contactName = deal.contact ? `${deal.contact.firstName} ${deal.contact.lastName}` : null;
   return (
     <Card className="p-5">
-      <div className="flex items-center justify-between mb-4 border-b pb-2">
-        <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-          Stakeholders
-        </h3>
-        <button
-          type="button"
-          onClick={onEdit}
-          aria-label="Edit stakeholders"
-          className="text-primary hover:text-primary/80 text-xs font-semibold"
-        >
-          Edit
-        </button>
-      </div>
+      <WidgetHeader
+        title="Stakeholders"
+        className="mb-4"
+        actions={
+          <button
+            type="button"
+            onClick={onEdit}
+            aria-label="Edit stakeholders"
+            className="inline-flex min-h-11 items-center rounded-md px-2 text-sm font-medium text-ds-primary hover:bg-primary/10"
+          >
+            Edit
+          </button>
+        }
+      />
       <div className="flex flex-col gap-4">
-        {/* Account */}
-        <div className="flex items-start gap-3">
-          <div className="bg-slate-100 p-2 rounded-lg text-slate-500">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
             <Icon name="apartment" className="text-xl" />
           </div>
-          <div className="flex-1">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted-foreground">Account</p>
             {deal.account ? (
-              <>
-                <Link
-                  href={`/accounts/${deal.accountId}`}
-                  className="text-sm font-bold text-slate-900 dark:text-white hover:text-primary"
-                >
-                  {deal.account.name}
-                </Link>
-                <div className="flex gap-2 mt-2">
-                  <Link
-                    href={`/accounts/${deal.accountId}`}
-                    className="text-slate-400 hover:text-primary"
-                  >
-                    <Icon name="open_in_new" className="text-base" />
-                  </Link>
-                  {deal.account.website && (
-                    <a
-                      href={deal.account.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-slate-400 hover:text-primary"
-                    >
-                      <Icon name="language" className="text-base" />
-                    </a>
-                  )}
-                </div>
-              </>
+              <Link
+                href={`/accounts/${deal.accountId}`}
+                className="block truncate text-sm font-semibold text-foreground hover:text-ds-primary"
+              >
+                {deal.account.name}
+              </Link>
             ) : (
-              <p className="text-sm text-slate-400">No account linked</p>
+              <p className="text-sm text-muted-foreground">No account linked</p>
             )}
           </div>
+          {deal.account?.website && (
+            <a
+              href={deal.account.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Open ${deal.account.name} website`}
+              className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-ds-primary"
+            >
+              <Icon name="language" className="text-xl" />
+            </a>
+          )}
         </div>
 
-        <hr className="border-slate-100 dark:border-slate-800" />
+        <hr className="border-border" />
 
-        {/* Contact */}
-        <div className="flex items-start gap-3">
-          {deal.contact ? (
-            <>
-              <AppAvatar
-                name={`${deal.contact.firstName} ${deal.contact.lastName}`}
-                className="w-10 h-10"
-              />
-              <div className="flex-1">
-                <Link
-                  href={`/contacts/${deal.contactId}`}
-                  className="text-sm font-bold text-slate-900 dark:text-white hover:text-primary"
-                >
-                  {deal.contact.firstName} {deal.contact.lastName}
-                </Link>
-                <p className="text-xs text-slate-500">{deal.contact.title}</p>
-                <div className="flex gap-3 mt-2">
-                  <a
-                    href={`mailto:${deal.contact.email}`}
-                    className="bg-primary/10 hover:bg-primary/20 p-1.5 rounded text-primary transition-colors"
-                  >
-                    <Icon name="mail" className="text-base" />
-                  </a>
-                </div>
-              </div>
-            </>
+        <div className="flex items-center gap-3">
+          {contactName ? (
+            <AppAvatar name={contactName} className="size-10 shrink-0" />
           ) : (
-            <>
-              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                <Icon name="person_off" className="text-xl text-slate-400" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-slate-400">No contact linked</p>
-              </div>
-            </>
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-muted">
+              <Icon name="person_off" className="text-xl text-muted-foreground" />
+            </div>
+          )}
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted-foreground">
+              Contact{deal.contact?.title ? ` · ${deal.contact.title}` : ''}
+            </p>
+            {deal.contact && contactName ? (
+              <Link
+                href={`/contacts/${deal.contactId}`}
+                className="block truncate text-sm font-semibold text-foreground hover:text-ds-primary"
+              >
+                {contactName}
+              </Link>
+            ) : (
+              <p className="text-sm text-muted-foreground">No contact linked</p>
+            )}
+          </div>
+          {deal.contact?.email && (
+            <a
+              href={`mailto:${deal.contact.email}`}
+              aria-label={`Email ${contactName}`}
+              className="flex size-11 shrink-0 items-center justify-center rounded-lg text-ds-primary hover:bg-primary/10"
+            >
+              <Icon name="mail" className="text-xl" />
+            </a>
           )}
         </div>
       </div>
@@ -238,6 +233,7 @@ function ProductsCard({
   dealId,
   onAddProduct,
 }: Readonly<{ dealId: string; onAddProduct: () => void }>) {
+  const currency = useTenantCurrency();
   const { data, isLoading } = api.opportunity.getProducts.useQuery({ opportunityId: dealId });
 
   if (isLoading) {
@@ -289,14 +285,16 @@ function ProductsCard({
                   <p className="text-xs text-slate-500">{product.description}</p>
                 </div>
                 <p className="font-semibold text-slate-900 dark:text-white">
-                  {formatCurrency(Number(product.totalPrice))}
+                  {formatCurrency(Number(product.totalPrice), currency)}
                 </p>
               </div>
             ))}
           </div>
           <div className="mt-4 pt-4 border-t border-dashed border-slate-200 flex justify-between items-center">
             <span className="text-sm font-medium text-slate-500">Total</span>
-            <span className="text-lg font-bold text-primary">{formatCurrency(totalValue)}</span>
+            <span className="text-lg font-bold text-primary">
+              {formatCurrency(totalValue, currency)}
+            </span>
           </div>
         </>
       )}
@@ -471,6 +469,7 @@ export default function DealDetailPage() {
   const d = deal as DealDetail;
   const stage = d.stage as OpportunityStage;
 
+  // Owner 23/11: these stay on screen until they are built (PG-074), never removed.
   const comingSoon = (feature: string) =>
     toast({ title: 'Coming soon', description: `${feature} is under development` });
 
@@ -539,46 +538,24 @@ export default function DealDetailPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8">
       <div className="mx-auto flex flex-col gap-6">
-        {/* Header using EntityHeader */}
-        <EntityHeader
-          breadcrumbs={[{ label: 'Deals', href: '/deals' }, { label: d.name }]}
+        {/* Owner 23/11: the shared page hero, like every other page. The raw record id badge is
+            gone (it read like a placeholder); stage and probability are in the line under the
+            name, and the account is named there too. */}
+        <PageHeader
+          breadcrumbs={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Deals', href: '/deals' },
+          ]}
           title={d.name}
-          entityId={d.id}
-          badges={[
-            { label: STAGE_LABELS[stage], variant: 'status' },
-            { label: `${d.probability}%`, variant: 'info' },
-          ]}
-          actions={[
-            {
-              label: 'Forecast',
-              icon: 'bar_chart',
-              variant: 'secondary',
-              href: `/deals/${dealId}/forecast`,
-            },
-            {
-              label: 'Lost',
-              variant: 'secondary',
-              onClick: () => setLossModalOpen(true),
-              disabled: d.isClosed,
-              loading: moveStage.isPending && pendingAction === 'LOST',
-            },
-            {
-              label: 'Edit',
-              variant: 'secondary',
-              onClick: () => setEditDialogOpen(true),
-              loading: updateMutation.isPending,
-            },
-            {
-              label: 'Won',
-              icon: 'check',
-              variant: 'primary',
-              onClick: handleWon,
-              disabled: d.isClosed || stage !== 'NEGOTIATION',
-              loading: moveStage.isPending && pendingAction === 'WON',
-            },
-          ]}
-          endContent={
-            <div className="flex items-center gap-2">
+          description={[
+            d.account?.name,
+            STAGE_LABELS[stage],
+            d.isClosed ? null : `${d.probability}% probability`,
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+          controls={
+            <>
               <PinButton
                 entityType="opportunity"
                 entityId={d.id}
@@ -586,8 +563,41 @@ export default function DealDetailPage() {
                 url={`/deals/${dealId}`}
               />
               <MoreActionsButton onClick={() => setActionSheetOpen(true)} />
-            </div>
+            </>
           }
+          actions={[
+            {
+              label: 'Won',
+              icon: 'check',
+              variant: 'primary',
+              onClick: handleWon,
+              disabled: !(!d.isClosed && stage === 'NEGOTIATION'),
+              loading: moveStage.isPending && pendingAction === 'WON',
+            },
+            {
+              label: 'Lost',
+              icon: 'close',
+              variant: 'secondary',
+              onClick: () => setLossModalOpen(true),
+              disabled: d.isClosed,
+              loading: moveStage.isPending && pendingAction === 'LOST',
+            },
+            {
+              label: 'Edit',
+              icon: 'edit',
+              variant: 'secondary',
+              hideOnMobile: true,
+              onClick: () => setEditDialogOpen(true),
+              loading: updateMutation.isPending,
+            },
+            {
+              label: 'Forecast',
+              icon: 'bar_chart',
+              variant: 'secondary',
+              hideOnMobile: true,
+              href: `/deals/${dealId}/forecast`,
+            },
+          ]}
         />
 
         <EntityActionSheet
@@ -682,10 +692,7 @@ export default function DealDetailPage() {
           {/* Center - Activity Timeline */}
           <div className="lg:col-span-6 flex flex-col gap-6">
             <Card className="p-4 sm:p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Activity</h3>
-                <span className="text-xs text-slate-500">All Sources</span>
-              </div>
+              <WidgetHeader title="Activity" className="mb-4" />
               <ActivityFeed
                 entityType="OPPORTUNITY"
                 entityId={dealId}
