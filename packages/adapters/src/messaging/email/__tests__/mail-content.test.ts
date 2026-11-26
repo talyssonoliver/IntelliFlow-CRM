@@ -13,7 +13,7 @@ import {
   readGraphMessage,
 } from '../graph-mail-content';
 import { readZohoFolder } from '../zoho-mail-reader';
-import { fetchZohoAttachment } from '../zoho-mail-content';
+import { fetchZohoAttachment, readZohoMessageContent } from '../zoho-mail-content';
 import {
   MAX_ATTACHMENT_BYTES,
   MAX_HTML_CHARS,
@@ -612,6 +612,52 @@ describe('Zoho', () => {
     const content = await round.messages[0]!.loadContent();
     expect(content.attachments).toEqual([]);
     expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it('the backfill read fails when the attachment info is refused; the sync keeps the HTML', async () => {
+    const refused = () =>
+      vi
+        .fn()
+        .mockResolvedValueOnce(new Response('{"data":{"content":"<p>x</p>"}}'))
+        .mockResolvedValueOnce(new Response('{"data":{}}', { status: 400 }));
+    await expect(
+      readZohoMessageContent(
+        TOKEN,
+        REF,
+        '1100000000000000001',
+        '9000000000000000006',
+        refused() as never
+      )
+    ).rejects.toMatchObject({ code: 'REJECTED' });
+
+    // The sync path: the mail is kept with its HTML and no attachment rows.
+    const sync = vi
+      .fn()
+      .mockResolvedValueOnce(listing(',"hasAttachment":"1"'))
+      .mockResolvedValueOnce(new Response('{"data":{"content":"<p>x</p>"}}'))
+      .mockResolvedValueOnce(new Response('{"data":{}}', { status: 400 }));
+    const round = await readZohoFolder(TOKEN, REF, null, readOptions(sync));
+    await expect(round.messages[0]!.loadContent()).resolves.toMatchObject({
+      html: '<p>x</p>',
+      attachments: [],
+    });
+
+    // A dead token still fails on both paths.
+    const dead = vi
+      .fn()
+      .mockResolvedValueOnce(new Response('{"data":{"content":"<p>x</p>"}}'))
+      .mockResolvedValueOnce(
+        new Response('{"data":{"errorCode":"INVALID_OAUTHTOKEN"}}', { status: 401 })
+      );
+    await expect(
+      readZohoMessageContent(
+        TOKEN,
+        REF,
+        '1100000000000000001',
+        '9000000000000000006',
+        dead as never
+      )
+    ).rejects.toMatchObject({ code: 'AUTH_FAILED' });
   });
 
   it('keeps a 19-digit attachment id exact, never rounded', async () => {

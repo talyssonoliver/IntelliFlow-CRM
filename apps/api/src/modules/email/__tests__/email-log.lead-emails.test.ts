@@ -38,24 +38,45 @@ beforeEach(() => {
   (prismaMock.lead.findFirst as any).mockResolvedValue({ id: LEAD });
 });
 
+/**
+ * A database for the thread reads: it serves the two streams the router asks for (mail with a
+ * sentAt, mail without one), each newest first by its own date, paged by skip and take.
+ */
+function serve(rows: any[]) {
+  (prismaMock.emailRecord.findMany as any).mockImplementation(async (args: any) => {
+    const undated = args.where.sentAt === null;
+    const at = (r: any) => (r.sentAt ?? r.createdAt).getTime();
+    return rows
+      .filter((r) => (r.sentAt === null) === undated)
+      .sort((x, y) => at(y) - at(x))
+      .slice(args.skip ?? 0, (args.skip ?? 0) + args.take);
+  });
+}
+
+const streamWhere = (call: number) =>
+  (prismaMock.emailRecord.findMany as any).mock.calls[call][0].where;
+
 describe('emailLog.leadEmails', () => {
-  it('is scoped to the tenant and to mail logged on the lead', async () => {
-    (prismaMock.emailRecord.findMany as any).mockResolvedValue([]);
+  it('is scoped to the tenant and to mail logged on the lead, as two streams', async () => {
+    serve([]);
     await member().leadEmails({ leadId: LEAD });
-    const args = (prismaMock.emailRecord.findMany as any).mock.calls[0][0];
-    expect(args.where).toEqual({
+    const calls = (prismaMock.emailRecord.findMany as any).mock.calls;
+    expect(calls).toHaveLength(2);
+    const base = {
       tenantId,
       metadata: { path: ['leadId'], equals: LEAD },
       OR: [{ userId: null }, { userId: TEST_UUIDS.user1 }],
-    });
-    expect(args.include).toEqual({ attachments: true });
-    // The newest 200 when a lead has more; the thread is then ordered oldest first.
-    expect(args.orderBy).toEqual([
-      { sentAt: { sort: 'desc', nulls: 'last' } },
+    };
+    expect(calls[0][0].where).toEqual({ ...base, sentAt: { not: null } });
+    expect(calls[1][0].where).toEqual({ ...base, sentAt: null });
+    expect(calls[0][0].orderBy).toEqual([
+      { sentAt: 'desc' },
       { createdAt: 'desc' },
       { id: 'desc' },
     ]);
-    expect(args.take).toBe(200);
+    expect(calls[1][0].orderBy).toEqual([{ createdAt: 'desc' }, { id: 'desc' }]);
+    expect(calls[0][0].include).toEqual({ attachments: true });
+    expect(calls[0][0].take).toBe(200);
   });
 
   it('answers not found for a lead of another tenant, and reads no mail', async () => {
@@ -67,7 +88,7 @@ describe('emailLog.leadEmails', () => {
   });
 
   it("orders the thread by the provider's date (sentAt, else createdAt), received mail included", async () => {
-    (prismaMock.emailRecord.findMany as any).mockResolvedValue([
+    serve([
       row('late', { sentAt: new Date('2026-11-12T10:00:00Z') }),
       // Received mail synced before sentAt was kept: ordered by createdAt, the same provider date.
       row('early', { createdAt: new Date('2026-11-11T10:00:00Z') }),
@@ -82,33 +103,60 @@ describe('emailLog.leadEmails', () => {
     ]);
   });
 
+  it('cuts the 200 newest by the same date the thread is shown by, across both streams', async () => {
+    const day = (n: number) => new Date(Date.UTC(2026, 0, 1) + n * 86_400_000);
+    // 150 old mails with a sentAt, and 150 newer ones with none (createdAt is their date).
+    const dated = Array.from({ length: 150 }, (_, n) => row(`d-${n}`, { sentAt: day(n) }));
+    const undated = Array.from({ length: 150 }, (_, n) =>
+      row(`u-${n}`, { createdAt: day(1000 + n) })
+    );
+    serve([...dated, ...undated]);
+    const { emails } = await member().leadEmails({ leadId: LEAD });
+    expect(emails).toHaveLength(200);
+    const ids = new Set(emails.map((e) => e.id));
+    // Every newer undated mail is kept (they used to be dropped behind the dated ones) ...
+    for (const r of undated) expect(ids.has(r.id)).toBe(true);
+    // ... with the 50 newest of the dated ones; the 100 oldest are cut.
+    for (let n = 100; n < 150; n++) expect(ids.has(`d-${n}`)).toBe(true);
+    for (let n = 0; n < 100; n++) expect(ids.has(`d-${n}`)).toBe(false);
+    // Shown oldest first.
+    expect(emails[0]!.id).toBe('d-100');
+    expect(emails.at(-1)!.id).toBe('u-149');
+  });
+
   it("leaves other users' own mail out in the query, except for an email admin", async () => {
-    (prismaMock.emailRecord.findMany as any).mockResolvedValue([]);
+    serve([]);
     await member().leadEmails({ leadId: LEAD });
-    expect((prismaMock.emailRecord.findMany as any).mock.calls.at(-1)[0].where).toEqual({
-      tenantId,
-      metadata: { path: ['leadId'], equals: LEAD },
-      OR: [{ userId: null }, { userId: TEST_UUIDS.user1 }],
-    });
+    expect(streamWhere(0).OR).toEqual([{ userId: null }, { userId: TEST_UUIDS.user1 }]);
+    (prismaMock.emailRecord.findMany as any).mockClear();
+    serve([]);
     await admin().leadEmails({ leadId: LEAD });
     // An email admin's query has no per-user condition.
-    expect((prismaMock.emailRecord.findMany as any).mock.calls.at(-1)[0].where).toEqual({
+    expect(streamWhere(0)).toEqual({
       tenantId,
       metadata: { path: ['leadId'], equals: LEAD },
+      sentAt: { not: null },
     });
   });
 
   it('leaves drafts out, and reads on past them so they never use up the limit', async () => {
     const drafts = Array.from({ length: 200 }, (_, n) =>
-      row(`draft-${n}`, { metadata: { leadId: LEAD, isDraft: true } })
+      row(`draft-${n}`, {
+        sentAt: new Date(Date.UTC(2026, 5, 1) + n * 1000),
+        metadata: { leadId: LEAD, isDraft: true },
+      })
     );
-    (prismaMock.emailRecord.findMany as any)
-      .mockResolvedValueOnce(drafts)
-      .mockResolvedValueOnce([row('old-1'), row('old-2')]);
+    const old = [
+      row('old-1', { sentAt: new Date('2026-01-01T00:00:00Z') }),
+      row('old-2', { sentAt: new Date('2026-01-02T00:00:00Z') }),
+    ];
+    serve([...drafts, ...old]);
     const { emails } = await member().leadEmails({ leadId: LEAD });
-    expect(emails.map((e) => e.id).sort()).toEqual(['old-1', 'old-2']);
-    const calls = (prismaMock.emailRecord.findMany as any).mock.calls;
-    expect(calls.map((c: any[]) => c[0].skip)).toEqual([0, 200]);
+    expect(emails.map((e) => e.id)).toEqual(['old-1', 'old-2']);
+    const datedSkips = (prismaMock.emailRecord.findMany as any).mock.calls
+      .filter((c: any[]) => c[0].where.sentAt !== null)
+      .map((c: any[]) => c[0].skip);
+    expect(datedSkips).toEqual([0, 200]);
   });
 
   it('returns the sanitised HTML with the text as the fallback, and attachment metadata', async () => {

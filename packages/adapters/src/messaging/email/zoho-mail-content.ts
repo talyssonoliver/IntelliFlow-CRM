@@ -58,7 +58,9 @@ export async function readZohoContent(
   folderId: string,
   messageId: string,
   rawContent: string,
-  hasAttachment: boolean
+  hasAttachment: boolean,
+  /** True (the backfill): a refused attachment-info read is an error, not "no attachments". */
+  strict = false
 ): Promise<{ html: string | null; attachments: MailAttachmentMeta[] }> {
   const html = /<[a-z][\s\S]*>/i.test(rawContent) ? capHtml(rawContent) : null;
   if (!hasAttachment && !/cid:/i.test(rawContent)) return { html, attachments: [] };
@@ -68,8 +70,9 @@ export async function readZohoContent(
   try {
     body = (await zohoAccountGet(fetchImpl, accessToken, ref, path)) as Info;
   } catch (error) {
-    // The HTML is still worth keeping when the attachment list is refused for this one mail.
-    if (error instanceof MailboxTransportError && error.code === 'REJECTED')
+    // The sync still keeps the HTML when the list is refused for this one mail; the backfill must
+    // not record "no attachments" for good.
+    if (!strict && error instanceof MailboxTransportError && error.code === 'REJECTED')
       return { html, attachments: [] };
     throw error;
   }
@@ -100,6 +103,7 @@ export async function readZohoMessageContent(
     folderId,
     messageId,
     body.data?.content ?? '',
+    true,
     true
   );
 }

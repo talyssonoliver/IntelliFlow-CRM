@@ -173,6 +173,29 @@ async function findCounterparty(ctx: EmailRouterCtx, email: StoredEmail) {
   return null;
 }
 
+/** One ordered stream of a lead's non-draft mail, read in pages until the limit of mails is reached. */
+async function readThreadStream(
+  db: any,
+  where: Record<string, unknown>,
+  orderBy: unknown[]
+): Promise<any[]> {
+  const kept: any[] = [];
+  for (let page = 0; page < LEAD_EMAILS_MAX_PAGES && kept.length < LEAD_EMAILS_LIMIT; page++) {
+    const rows: any[] = await db.emailRecord.findMany({
+      where,
+      include: { attachments: true },
+      orderBy,
+      take: LEAD_EMAILS_LIMIT,
+      skip: page * LEAD_EMAILS_LIMIT,
+    });
+    for (const row of rows) {
+      if ((row.metadata as { isDraft?: unknown } | null)?.isDraft !== true) kept.push(row);
+    }
+    if (rows.length < LEAD_EMAILS_LIMIT) break;
+  }
+  return kept;
+}
+
 export const emailLogRouter = createTRPCRouter({
   /** Whether the email is already linked to a lead or contact. */
   status: tenantProcedure.input(emailIdInput).query(async ({ ctx, input }) => {
@@ -221,33 +244,26 @@ export const emailLogRouter = createTRPCRouter({
         // Someone else's own mail is left out in the query, so it never uses up the limit.
         ...(isEmailAdmin(c) ? {} : { OR: [{ userId: null }, { userId: c.tenant.userId }] }),
       };
-      // Newest first by the provider's date (mail not yet backfilled has none: createdAt is it).
-      // Drafts are not part of the thread, so pages are read until the limit of mails is reached.
-      const visible: any[] = [];
-      for (
-        let page = 0;
-        page < LEAD_EMAILS_MAX_PAGES && visible.length < LEAD_EMAILS_LIMIT;
-        page++
-      ) {
-        const rows: any[] = await c.prismaWithTenant.emailRecord.findMany({
-          where,
-          include: { attachments: true },
-          orderBy: [
-            { sentAt: { sort: 'desc', nulls: 'last' } },
-            { createdAt: 'desc' },
-            { id: 'desc' },
-          ],
-          take: LEAD_EMAILS_LIMIT,
-          skip: page * LEAD_EMAILS_LIMIT,
-        });
-        for (const row of rows) {
-          if ((row.metadata as { isDraft?: unknown } | null)?.isDraft !== true) visible.push(row);
-        }
-        if (rows.length < LEAD_EMAILS_LIMIT) break;
-      }
-      visible.splice(LEAD_EMAILS_LIMIT);
+      // The thread is ordered by sentAt ?? createdAt, so the newest 200 are cut by that same date:
+      // mail with a sentAt and mail without one (not yet backfilled: createdAt is its date) are read
+      // as two streams, each newest first, then merged. Drafts are not part of the thread.
+      const read = (extra: Record<string, unknown>, orderBy: unknown[]) =>
+        readThreadStream(c.prismaWithTenant, { ...where, ...extra }, orderBy);
+      const [dated, undated] = await Promise.all([
+        read({ sentAt: { not: null } }, [
+          { sentAt: 'desc' },
+          { createdAt: 'desc' },
+          { id: 'desc' },
+        ]),
+        read({ sentAt: null }, [{ createdAt: 'desc' }, { id: 'desc' }]),
+      ]);
       const at = (row: any): number => (row.sentAt ?? row.createdAt).getTime();
-      visible.sort((a, b) => at(a) - at(b) || String(a.id).localeCompare(String(b.id)));
+      const byId = new Map<string, any>();
+      for (const row of [...dated, ...undated]) byId.set(row.id, row);
+      const visible = [...byId.values()]
+        .sort((x, y) => at(y) - at(x) || String(y.id).localeCompare(String(x.id)))
+        .slice(0, LEAD_EMAILS_LIMIT)
+        .sort((x, y) => at(x) - at(y) || String(x.id).localeCompare(String(y.id)));
       return { emails: visible.map(mapEmailRecord) };
     }),
 
