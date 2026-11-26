@@ -20,6 +20,7 @@ import { createClient, SupabaseClient, User, Session } from '@supabase/supabase-
 import { z } from 'zod';
 import { leadSearchResultSchema, contactSearchResultSchema } from '@intelliflow/validators';
 import { isJwtShaped } from './jwt-shape';
+import { verifiedTokenCache } from './verified-token-cache';
 
 // ============================================
 // ENVIRONMENT CONFIGURATION
@@ -358,11 +359,17 @@ export async function signIn(email: string, password: string): Promise<SignInRes
  * the user's own access token, not their id: the library sends it as the bearer.
  */
 export async function signOutUser(accessToken: string): Promise<{ error: Error | null }> {
+  // Sign-out bypasses the verified-token cache: this token and the user's others are forgotten now.
+  verifiedTokenCache.deleteToken(accessToken);
   try {
     const { error } = await supabaseAdmin.auth.admin.signOut(accessToken, 'global');
     return { error };
   } catch (err) {
     return { error: err instanceof Error ? err : new Error('Failed to sign out user') };
+  } finally {
+    // Again after Supabase has answered: a check that started before the sign-out landed cannot
+    // put the session back (the cache refuses results older than this).
+    verifiedTokenCache.deleteToken(accessToken);
   }
 }
 
@@ -414,8 +421,16 @@ async function verifyTokenViaAdmin(
   token: string,
   jwtError?: unknown
 ): Promise<{ user: User | null; error: Error | null }> {
+  // At most 60 s of memory of a user Supabase already confirmed (see verified-token-cache.ts).
+  // A refusal is never cached, so a revoked session is refused at the next check at the latest.
+  const cached = verifiedTokenCache.get(token);
+  if (cached) return { user: cached, error: null };
+  const checkStartedAt = Date.now();
   try {
     const { data, error } = await supabaseAdmin.auth.getUser(token);
+    // checkStartedAt: an invalidation (sign-out, role change) that landed while this check was in
+    // flight keeps its result out of the cache.
+    if (!error && data.user) verifiedTokenCache.set(token, data.user, checkStartedAt);
     if (error && jwtError) {
       console.error(
         '[verifyToken] Both local and remote verification failed:',
@@ -526,7 +541,11 @@ export async function updateUserPassword(
       },
       body: JSON.stringify({ password }),
     });
-    if (res.ok) return { error: null };
+    // A password change ends the user's other sessions: forget every cached token of the user.
+    if (res.ok) {
+      verifiedTokenCache.deleteToken(accessToken);
+      return { error: null };
+    }
     const body = (await res.json().catch(() => ({}))) as {
       msg?: string;
       message?: string;

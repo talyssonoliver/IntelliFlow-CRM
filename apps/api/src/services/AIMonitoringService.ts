@@ -1,6 +1,17 @@
 /**
  * AIMonitoringService — DB-backed query service for AI monitoring data (IFC-297)
  * Replaces in-memory singleton queries with PostgreSQL persistence.
+ *
+ * Egress discipline (docs/operations/supabase-egress-audit-1126.md): every figure that is
+ * a count, sum, average or percentile is computed IN SQL and only the summary crosses the
+ * wire. Raw event rows are returned only for the two lists that show rows (drift history,
+ * hallucination results), and those are capped and select only the columns they show.
+ * Results are cached in-process for a few minutes: the dashboard polls, the data moves slowly.
+ *
+ * The percentile rule is the one the JS code used: with the values sorted ascending, the
+ * p-th percentile is the value at position ceil(n * p / 100) (1-based). It is written with
+ * integer arithmetic ((n * p + 99) / 100) so it matches exactly, where percentile_disc's
+ * floating-point fraction can differ by one position.
  */
 import type { PrismaClient } from '@intelliflow/db';
 
@@ -30,8 +41,89 @@ interface HallucinationReportOpts extends DateRangeOpts {
 
 type ROIMetricsOpts = DateRangeOpts;
 
+/** Newest-first cap on the rows one latency summary is computed from (unchanged from the JS version). */
+export const LATENCY_SAMPLE_CAP = 10_000;
+
+/** Default in-process cache lifetime. `AI_MONITORING_QUERY_CACHE_TTL_MS=0` turns the cache off. */
+export const DEFAULT_QUERY_CACHE_TTL_MS = 120_000;
+const MAX_CACHE_ENTRIES = 500;
+
+export interface AIMonitoringServiceOptions {
+  /** Cache lifetime in ms; 0 disables. Defaults to env AI_MONITORING_QUERY_CACHE_TTL_MS, then 2 min. */
+  cacheTtlMs?: number;
+  /** Clock, injectable for tests. */
+  now?: () => number;
+}
+
+function ttlFromEnv(): number {
+  const raw = process.env.AI_MONITORING_QUERY_CACHE_TTL_MS;
+  if (raw === undefined || raw.trim() === '') return DEFAULT_QUERY_CACHE_TTL_MS;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? n : DEFAULT_QUERY_CACHE_TTL_MS;
+}
+
+/** A finite number, or 0. Mirrors the boundary guard of the JS version (register #54). */
+const toNum = (v: unknown): number => {
+  const n = Number(v ?? 0);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const msOrNull = (d: Date | undefined): number | null => (d ? d.getTime() : null);
+
+interface PercentileRow {
+  p50: number | null;
+  p75: number | null;
+  p90: number | null;
+  p95: number | null;
+  p99: number | null;
+}
+
+interface CacheEntry {
+  expiresAt: number;
+  value: Promise<unknown>;
+}
+
 export class AIMonitoringService {
-  constructor(private readonly prisma: PrismaClient) {}
+  private readonly cacheTtlMs: number;
+  private readonly now: () => number;
+  private readonly cache = new Map<string, CacheEntry>();
+
+  constructor(
+    private readonly prisma: PrismaClient,
+    options: AIMonitoringServiceOptions = {}
+  ) {
+    this.cacheTtlMs = options.cacheTtlMs ?? ttlFromEnv();
+    this.now = options.now ?? Date.now;
+  }
+
+  /** Drop every cached result (tests, and after a retention run). */
+  clearCache(): void {
+    this.cache.clear();
+  }
+
+  /**
+   * Run `load` once per key per TTL window. Concurrent callers share one in-flight query;
+   * a failed query is never cached.
+   */
+  private cached<T>(method: string, tenantId: string, opts: unknown, load: () => Promise<T>) {
+    if (this.cacheTtlMs <= 0) return load();
+    const key = `${method}|${tenantId}|${JSON.stringify(opts ?? {})}`;
+    const now = this.now();
+    const hit = this.cache.get(key);
+    if (hit && hit.expiresAt > now) return hit.value as Promise<T>;
+    if (hit) this.cache.delete(key);
+    const value = load();
+    if (this.cache.size >= MAX_CACHE_ENTRIES) {
+      const oldest = this.cache.keys().next().value;
+      if (oldest !== undefined) this.cache.delete(oldest);
+    }
+    const entry: CacheEntry = { expiresAt: now + this.cacheTtlMs, value };
+    this.cache.set(key, entry);
+    value.catch(() => {
+      if (this.cache.get(key) === entry) this.cache.delete(key);
+    });
+    return value;
+  }
 
   private dateFilter(opts: DateRangeOpts) {
     const where: Record<string, unknown> = {};
@@ -61,33 +153,51 @@ export class AIMonitoringService {
   }
 
   async getStatus({ tenantId }: TenantOpts) {
-    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const db = this.prisma as any;
-    const tf = this.tenantFilter(tenantId);
-    const dtf = this.driftTenantFilter(tenantId);
+    // Bucket the 24 h window to the minute so the cache key is stable between polls.
+    const sinceMs = Math.floor((this.now() - 24 * 60 * 60 * 1000) / 60_000) * 60_000;
+    return this.cached('status', tenantId, {}, () => this.loadStatus(tenantId, sinceMs));
+  }
 
-    const [driftCount, latencyCount, hallucinationCount, roiCostCount] = await Promise.all([
-      db.aIMonitoringEvent.count({
-        where: { eventType: 'drift', recordedAt: { gte: since }, ...dtf },
-      }),
-      db.aIMonitoringEvent.count({
-        where: { eventType: 'latency', recordedAt: { gte: since }, ...tf },
-      }),
-      db.aIMonitoringEvent.count({
-        where: { eventType: 'hallucination', recordedAt: { gte: since }, ...tf },
-      }),
-      db.aIMonitoringEvent.count({
-        where: { eventType: 'roi_cost', recordedAt: { gte: since }, ...tf },
-      }),
+  private async loadStatus(tenantId: string, sinceMs: number) {
+    const db = this.prisma as any;
+
+    // One round trip returns one row of counts and sums; one more returns two percentiles.
+    const [countRows, pctRows] = await Promise.all([
+      db.$queryRaw`
+        SELECT
+          (count(*) FILTER (WHERE "eventType" = 'drift'))::int AS drift_count,
+          (count(*) FILTER (WHERE "eventType" = 'drift' AND flagged = true))::int AS drift_flagged,
+          (count(*) FILTER (WHERE "eventType" = 'hallucination'))::int AS hallucination_count,
+          (count(*) FILTER (WHERE "eventType" = 'hallucination' AND flagged = true))::int AS hallucination_flagged,
+          (sum(value) FILTER (WHERE "eventType" = 'roi_cost'))::float8 AS cost_sum,
+          (sum(value) FILTER (WHERE "eventType" = 'roi_value'))::float8 AS value_sum
+        FROM ai_monitoring_events
+        WHERE "recordedAt" >= (to_timestamp(${sinceMs}::double precision / 1000.0) AT TIME ZONE 'UTC')
+          AND (
+            ("eventType" = 'drift' AND ("tenantId" IS NULL OR "tenantId" = ${tenantId}))
+            OR ("eventType" IN ('hallucination', 'roi_cost', 'roi_value') AND "tenantId" = ${tenantId})
+          )`,
+      db.$queryRaw`
+        WITH lat AS (
+          SELECT COALESCE(value, 0) AS v
+          FROM ai_monitoring_events
+          WHERE "eventType" = 'latency'
+            AND "tenantId" = ${tenantId}
+            AND "recordedAt" >= (to_timestamp(${sinceMs}::double precision / 1000.0) AT TIME ZONE 'UTC')
+        ), ranked AS (
+          SELECT v, row_number() OVER (ORDER BY v) AS rn, count(*) OVER () AS n FROM lat
+        )
+        SELECT
+          (max(v) FILTER (WHERE rn = (n * 95 + 99) / 100))::float8 AS p95,
+          (max(v) FILTER (WHERE rn = (n * 99 + 99) / 100))::float8 AS p99
+        FROM ranked`,
     ]);
 
-    const hallucinationFlagged = await db.aIMonitoringEvent.count({
-      where: { eventType: 'hallucination', flagged: true, recordedAt: { gte: since }, ...tf },
-    });
-
-    const driftFlagged = await db.aIMonitoringEvent.count({
-      where: { eventType: 'drift', flagged: true, recordedAt: { gte: since }, ...dtf },
-    });
+    const c = (countRows as any[])[0] ?? {};
+    const driftCount = toNum(c.drift_count);
+    const driftFlagged = toNum(c.drift_flagged);
+    const hallucinationCount = toNum(c.hallucination_count);
+    const hallucinationFlagged = toNum(c.hallucination_flagged);
 
     const hallucinationRate =
       hallucinationCount > 0 ? hallucinationFlagged / hallucinationCount : 0;
@@ -98,35 +208,12 @@ export class AIMonitoringService {
         `Hallucination rate ${(hallucinationRate * 100).toFixed(1)}% exceeds 5% threshold`
       );
 
-    // Compute latency p95/p99 from recent events
-    const latencyEvents = await db.aIMonitoringEvent.findMany({
-      where: { eventType: 'latency', recordedAt: { gte: since }, ...tf },
-      select: { value: true },
-      orderBy: { value: 'asc' },
-    });
-    const latencyValues = latencyEvents
-      .map((e: any) => e.value ?? 0)
-      .sort((a: number, b: number) => a - b);
-    const pct = (arr: number[], p: number) =>
-      arr.length > 0 ? (arr[Math.ceil((arr.length * p) / 100) - 1] ?? 0) : 0;
-    const p95 = pct(latencyValues, 95);
-    const p99 = pct(latencyValues, 99);
+    const p = ((pctRows as any[])[0] ?? {}) as Partial<PercentileRow>;
+    const p95 = toNum(p.p95);
+    const p99 = toNum(p.p99);
 
-    // Compute ROI totals
-    const roiCostSum = await db.aIMonitoringEvent.aggregate({
-      where: { eventType: 'roi_cost', recordedAt: { gte: since }, ...tf },
-      _sum: { value: true },
-    });
-    const roiValueSum = await db.aIMonitoringEvent.aggregate({
-      where: { eventType: 'roi_value', recordedAt: { gte: since }, ...tf },
-      _sum: { value: true },
-    });
-    const toNum = (v: unknown): number => {
-      const n = Number(v ?? 0);
-      return Number.isFinite(n) ? n : 0;
-    };
-    const totalCost = toNum(roiCostSum._sum?.value);
-    const totalValue = toNum(roiValueSum._sum?.value);
+    const totalCost = toNum(c.cost_sum);
+    const totalValue = toNum(c.value_sum);
     const currentROI = totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0;
 
     return {
@@ -153,17 +240,33 @@ export class AIMonitoringService {
   }
 
   async getDriftMetrics(opts: DriftMetricsOpts & TenantOpts) {
-    const db = this.prisma as any;
     const { tenantId, ...rangeOpts } = opts;
+    return this.cached('drift', tenantId, rangeOpts, () =>
+      this.loadDriftMetrics(tenantId, rangeOpts)
+    );
+  }
+
+  private async loadDriftMetrics(tenantId: string, rangeOpts: DriftMetricsOpts) {
+    const db = this.prisma as any;
     const where = {
       eventType: 'drift',
       ...this.dateFilter(rangeOpts),
       ...this.driftTenantFilter(tenantId),
     };
+    // Only the columns the history shows. `take` was always applied (default 100).
     const events = await db.aIMonitoringEvent.findMany({
       where,
+      select: {
+        flagged: true,
+        severity: true,
+        metric: true,
+        model: true,
+        value: true,
+        payload: true,
+        recordedAt: true,
+      },
       orderBy: { recordedAt: 'desc' },
-      take: rangeOpts.limit ?? 100,
+      take: Math.min(rangeOpts.limit ?? 100, 100),
     });
 
     const driftFlagged = events.filter((e: any) => e.flagged);
@@ -195,20 +298,51 @@ export class AIMonitoringService {
   }
 
   async getLatencyMetrics(opts: LatencyMetricsOpts & TenantOpts) {
-    const db = this.prisma as any;
     const { tenantId, ...rangeOpts } = opts;
-    const where = {
-      eventType: 'latency',
-      ...this.dateFilter(rangeOpts),
-      ...this.tenantFilter(tenantId),
-    };
-    const events = await db.aIMonitoringEvent.findMany({
-      where,
-      orderBy: { recordedAt: 'desc' },
-      take: 10000,
-    });
+    return this.cached('latency', tenantId, rangeOpts, () =>
+      this.loadLatencyMetrics(tenantId, rangeOpts)
+    );
+  }
 
-    if (events.length === 0) {
+  private async loadLatencyMetrics(tenantId: string, rangeOpts: LatencyMetricsOpts) {
+    const db = this.prisma as any;
+    const startMs = msOrNull(rangeOpts.startTime);
+    const endMs = msOrNull(rangeOpts.endTime);
+
+    // The summary of the newest LATENCY_SAMPLE_CAP events in range, computed in the database.
+    const rows = await db.$queryRaw`
+      WITH s AS (
+        SELECT COALESCE(value, 0) AS v, COALESCE(flagged, false) AS f, "recordedAt" AS r
+        FROM ai_monitoring_events
+        WHERE "eventType" = 'latency'
+          AND "tenantId" = ${tenantId}
+          AND (${startMs}::double precision IS NULL
+               OR "recordedAt" >= (to_timestamp(${startMs}::double precision / 1000.0) AT TIME ZONE 'UTC'))
+          AND (${endMs}::double precision IS NULL
+               OR "recordedAt" <= (to_timestamp(${endMs}::double precision / 1000.0) AT TIME ZONE 'UTC'))
+        ORDER BY "recordedAt" DESC
+        LIMIT ${LATENCY_SAMPLE_CAP}::bigint
+      ), ranked AS (
+        SELECT v, f, r, row_number() OVER (ORDER BY v) AS rn, count(*) OVER () AS n FROM s
+      )
+      SELECT
+        (max(n))::int AS n,
+        (avg(v))::float8 AS mean,
+        (min(v))::float8 AS min,
+        (max(v))::float8 AS max,
+        (count(*) FILTER (WHERE NOT f))::int AS ok,
+        min(r) AS oldest,
+        max(r) AS newest,
+        (max(v) FILTER (WHERE rn = (n * 50 + 99) / 100))::float8 AS p50,
+        (max(v) FILTER (WHERE rn = (n * 75 + 99) / 100))::float8 AS p75,
+        (max(v) FILTER (WHERE rn = (n * 90 + 99) / 100))::float8 AS p90,
+        (max(v) FILTER (WHERE rn = (n * 95 + 99) / 100))::float8 AS p95,
+        (max(v) FILTER (WHERE rn = (n * 99 + 99) / 100))::float8 AS p99
+      FROM ranked`;
+    const r = (rows as any[])[0] ?? {};
+    const sampleCount = toNum(r.n);
+
+    if (sampleCount === 0) {
       return {
         available: true,
         stats: {
@@ -245,27 +379,26 @@ export class AIMonitoringService {
       };
     }
 
-    const durations = events.map((e: any) => e.value ?? 0).sort((a: number, b: number) => a - b);
-    const successCount = events.filter((e: any) => !e.flagged).length;
-    const percentile = (arr: number[], p: number) =>
-      arr[Math.ceil((arr.length * p) / 100) - 1] ?? 0;
+    const p95 = toNum(r.p95);
+    const p99 = toNum(r.p99);
+    const successRate = toNum(r.ok) / sampleCount;
 
     return {
       available: true,
       stats: {
-        periodStart: events[events.length - 1]?.recordedAt ?? new Date(),
-        periodEnd: events[0]?.recordedAt ?? new Date(),
-        sampleCount: events.length,
-        successRate: successCount / events.length,
+        periodStart: r.oldest ?? new Date(),
+        periodEnd: r.newest ?? new Date(),
+        sampleCount,
+        successRate,
         percentiles: {
-          p50: percentile(durations, 50),
-          p75: percentile(durations, 75),
-          p90: percentile(durations, 90),
-          p95: percentile(durations, 95),
-          p99: percentile(durations, 99),
-          max: durations[durations.length - 1] ?? 0,
-          min: durations[0] ?? 0,
-          mean: durations.reduce((a: number, b: number) => a + b, 0) / durations.length,
+          p50: toNum(r.p50),
+          p75: toNum(r.p75),
+          p90: toNum(r.p90),
+          p95,
+          p99,
+          max: toNum(r.max),
+          min: toNum(r.min),
+          mean: toNum(r.mean),
           stdDev: 0,
         },
         byModel: {},
@@ -274,12 +407,12 @@ export class AIMonitoringService {
         sloCompliance: {
           p95Target: 2000,
           p99Target: 5000,
-          p95Actual: percentile(durations, 95),
-          p99Actual: percentile(durations, 99),
-          p95Compliant: percentile(durations, 95) <= 2000,
-          p99Compliant: percentile(durations, 99) <= 5000,
-          overallCompliant: percentile(durations, 95) <= 2000 && percentile(durations, 99) <= 5000,
-          complianceRate: successCount / events.length,
+          p95Actual: p95,
+          p99Actual: p99,
+          p95Compliant: p95 <= 2000,
+          p99Compliant: p99 <= 5000,
+          overallCompliant: p95 <= 2000 && p99 <= 5000,
+          complianceRate: successRate,
         },
       },
       alerts: [],
@@ -289,53 +422,82 @@ export class AIMonitoringService {
   async getLatencyTrend(opts: LatencyTrendOpts & TenantOpts) {
     const periodMinutes = opts.periodMinutes ?? 60;
     const bucketMinutes = opts.bucketMinutes ?? 5;
-    const db = this.prisma as any;
     const { tenantId, ...rangeOpts } = opts;
-    const since = new Date(Date.now() - periodMinutes * 60 * 1000);
-    const where = {
-      eventType: 'latency',
-      recordedAt: { gte: since },
-      ...this.dateFilter(rangeOpts),
-      ...this.tenantFilter(tenantId),
-    };
-    // Ensure recordedAt gte uses the more recent of since and opts.startTime
-    if (!rangeOpts.startTime || since > rangeOpts.startTime) {
-      (where as any).recordedAt = { gte: since };
-    }
+    // Bucket "now" to the minute so repeated polls share a cache key and a query.
+    const sinceMs = Math.floor((this.now() - periodMinutes * 60 * 1000) / 60_000) * 60_000;
+    return this.cached(
+      'trend',
+      tenantId,
+      { rangeOpts, periodMinutes, bucketMinutes, sinceMs },
+      () => this.loadLatencyTrend(tenantId, rangeOpts, bucketMinutes, sinceMs)
+    );
+  }
 
-    const events = await db.aIMonitoringEvent.findMany({ where, orderBy: { recordedAt: 'asc' } });
+  private async loadLatencyTrend(
+    tenantId: string,
+    rangeOpts: LatencyTrendOpts,
+    bucketMinutes: number,
+    sinceMs: number
+  ) {
+    const db = this.prisma as any;
+    // Window rule of the JS version: the later of `since` and startTime is the lower bound,
+    // and endTime only applies when startTime is the binding bound.
+    let lowerMs = sinceMs;
+    let upperMs: number | null = null;
+    const startMs = msOrNull(rangeOpts.startTime);
+    if (startMs !== null && !(sinceMs > startMs)) {
+      lowerMs = startMs;
+      upperMs = msOrNull(rangeOpts.endTime);
+    }
 
     const bucketMs = bucketMinutes * 60 * 1000;
-    const buckets = new Map<number, number[]>();
+    const rows = await db.$queryRaw`
+      WITH s AS (
+        SELECT
+          COALESCE(value, 0) AS v,
+          floor(extract(epoch FROM "recordedAt") * 1000 / ${bucketMs}::numeric) * ${bucketMs}::numeric AS b
+        FROM ai_monitoring_events
+        WHERE "eventType" = 'latency'
+          AND "tenantId" = ${tenantId}
+          AND "recordedAt" >= (to_timestamp(${lowerMs}::double precision / 1000.0) AT TIME ZONE 'UTC')
+          AND (${upperMs}::double precision IS NULL
+               OR "recordedAt" <= (to_timestamp(${upperMs}::double precision / 1000.0) AT TIME ZONE 'UTC'))
+      ), ranked AS (
+        SELECT b, v,
+               row_number() OVER (PARTITION BY b ORDER BY v) AS rn,
+               count(*) OVER (PARTITION BY b) AS n
+        FROM s
+      )
+      SELECT
+        (b)::float8 AS b,
+        (max(n))::int AS count,
+        (max(v) FILTER (WHERE rn = (n * 50 + 99) / 100))::float8 AS p50,
+        (max(v) FILTER (WHERE rn = (n * 95 + 99) / 100))::float8 AS p95,
+        (max(v) FILTER (WHERE rn = (n * 99 + 99) / 100))::float8 AS p99
+      FROM ranked
+      GROUP BY b
+      ORDER BY b ASC`;
 
-    for (const e of events) {
-      const ts = new Date(e.recordedAt).getTime();
-      const bucketKey = Math.floor(ts / bucketMs) * bucketMs;
-      if (!buckets.has(bucketKey)) buckets.set(bucketKey, []);
-      buckets.get(bucketKey)!.push(e.value ?? 0);
-    }
-
-    const percentile = (arr: number[], p: number) => {
-      const sorted = [...arr].sort((a, b) => a - b);
-      return sorted[Math.ceil((sorted.length * p) / 100) - 1] ?? 0;
-    };
-
-    const trend = Array.from(buckets.entries())
-      .sort(([a], [b]) => a - b)
-      .map(([ts, values]) => ({
-        timestamp: new Date(ts),
-        p50: percentile(values, 50),
-        p95: percentile(values, 95),
-        p99: percentile(values, 99),
-        count: values.length,
-      }));
+    const trend = (rows as any[]).map((row) => ({
+      timestamp: new Date(Number(row.b)),
+      p50: toNum(row.p50),
+      p95: toNum(row.p95),
+      p99: toNum(row.p99),
+      count: toNum(row.count),
+    }));
 
     return { available: true, trend };
   }
 
   async getHallucinationReport(opts: HallucinationReportOpts & TenantOpts) {
-    const db = this.prisma as any;
     const { tenantId, ...rangeOpts } = opts;
+    return this.cached('hallucination', tenantId, rangeOpts, () =>
+      this.loadHallucinationReport(tenantId, rangeOpts)
+    );
+  }
+
+  private async loadHallucinationReport(tenantId: string, rangeOpts: HallucinationReportOpts) {
+    const db = this.prisma as any;
     const where = {
       eventType: 'hallucination',
       ...this.dateFilter(rangeOpts),
@@ -343,8 +505,16 @@ export class AIMonitoringService {
     };
     const events = await db.aIMonitoringEvent.findMany({
       where,
+      select: {
+        id: true,
+        recordedAt: true,
+        model: true,
+        flagged: true,
+        value: true,
+        payload: true,
+      },
       orderBy: { recordedAt: 'desc' },
-      take: rangeOpts.limit ?? 100,
+      take: Math.min(rangeOpts.limit ?? 100, 100),
     });
 
     const total = events.length;
@@ -378,32 +548,47 @@ export class AIMonitoringService {
   }
 
   async getROIMetrics(opts: ROIMetricsOpts & TenantOpts) {
-    const db = this.prisma as any;
     const { tenantId, ...rangeOpts } = opts;
-    const tf = this.tenantFilter(tenantId);
-    const costWhere = { eventType: 'roi_cost', ...this.dateFilter(rangeOpts), ...tf };
-    const valueWhere = { eventType: 'roi_value', ...this.dateFilter(rangeOpts), ...tf };
+    return this.cached('roi', tenantId, rangeOpts, () => this.loadROIMetrics(tenantId, rangeOpts));
+  }
 
-    const [costEvents, valueEvents] = await Promise.all([
-      db.aIMonitoringEvent.findMany({ where: costWhere }),
-      db.aIMonitoringEvent.findMany({ where: valueWhere }),
-    ]);
+  private async loadROIMetrics(tenantId: string, rangeOpts: ROIMetricsOpts) {
+    const db = this.prisma as any;
+    const startMs = msOrNull(rangeOpts.startTime);
+    const endMs = msOrNull(rangeOpts.endTime);
 
-    // Boundary guard (register #54): values may arrive as Decimal/string; `0 + "1.5"`
-    // would string-concatenate, so coerce each to a finite number first.
-    const finite = (v: unknown): number => {
-      const n = Number(v ?? 0);
-      return Number.isFinite(n) ? n : 0;
-    };
-    const totalCost = costEvents.reduce((sum: number, e: any) => sum + finite(e.value), 0);
-    const totalValue = valueEvents.reduce((sum: number, e: any) => sum + finite(e.value), 0);
+    // Boundary guard (register #54): a value that is NaN or infinite counts as 0, per row.
+    const rows = (await db.$queryRaw`
+      SELECT
+        "eventType" AS event_type,
+        (count(*))::int AS n,
+        (COALESCE(sum(
+          CASE WHEN value IS NOT NULL
+                AND value NOT IN ('NaN'::float8, 'Infinity'::float8, '-Infinity'::float8)
+               THEN value ELSE 0 END
+        ), 0))::float8 AS total
+      FROM ai_monitoring_events
+      WHERE "eventType" IN ('roi_cost', 'roi_value')
+        AND "tenantId" = ${tenantId}
+        AND (${startMs}::double precision IS NULL
+             OR "recordedAt" >= (to_timestamp(${startMs}::double precision / 1000.0) AT TIME ZONE 'UTC'))
+        AND (${endMs}::double precision IS NULL
+             OR "recordedAt" <= (to_timestamp(${endMs}::double precision / 1000.0) AT TIME ZONE 'UTC'))
+      GROUP BY "eventType"`) as Array<{ event_type: string; n: number; total: number }>;
+
+    const cost = rows.find((r) => r.event_type === 'roi_cost');
+    const value = rows.find((r) => r.event_type === 'roi_value');
+    const costCount = toNum(cost?.n);
+    const valueCount = toNum(value?.n);
+    const totalCost = toNum(cost?.total);
+    const totalValue = toNum(value?.total);
     const netValue = totalValue - totalCost;
     const roi = totalCost > 0 ? (netValue / totalCost) * 100 : 0;
 
     return {
       available: true,
       roi: {
-        periodStart: rangeOpts.startTime ?? new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        periodStart: rangeOpts.startTime ?? new Date(this.now() - 7 * 24 * 60 * 60 * 1000),
         periodEnd: rangeOpts.endTime ?? new Date(),
         totalCost,
         totalValue,
@@ -416,11 +601,11 @@ export class AIMonitoringService {
         recommendations: [],
       },
       stats: {
-        totalCostsTracked: costEvents.length,
-        totalValuesTracked: valueEvents.length,
+        totalCostsTracked: costCount,
+        totalValuesTracked: valueCount,
         currentROI: roi,
-        averageCostPerOperation: costEvents.length > 0 ? totalCost / costEvents.length : 0,
-        averageValuePerOperation: valueEvents.length > 0 ? totalValue / valueEvents.length : 0,
+        averageCostPerOperation: costCount > 0 ? totalCost / costCount : 0,
+        averageValuePerOperation: valueCount > 0 ? totalValue / valueCount : 0,
         roiTrend: 'stable' as const,
         topPerformingOperations: [],
         underperformingOperations: [],
