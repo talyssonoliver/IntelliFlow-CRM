@@ -4,7 +4,7 @@ import { render, screen } from '@testing-library/react';
 
 const m = vi.hoisted(() => ({ query: vi.fn() }));
 vi.mock('@/lib/trpc', () => ({
-  trpc: { emailLog: { leadEmails: { useQuery: m.query } } },
+  trpc: { emailLog: { leadEmail: { useQuery: m.query } } },
 }));
 vi.mock('@/components/email/EmailBody', () => ({
   EmailBody: (props: { emailId: string; htmlBody?: string; textBody?: string }) => (
@@ -26,9 +26,12 @@ const email = {
 
 describe('LeadEmailMessage', () => {
   it("shows the mail's header and hands its body to the shared renderer", () => {
-    m.query.mockReturnValue({ isLoading: false, data: { emails: [email] } });
+    m.query.mockReturnValue({ isLoading: false, data: email });
     render(<LeadEmailMessage leadId="lead-1" emailRecordId="rec-1" />);
-    expect(m.query).toHaveBeenCalledWith({ leadId: 'lead-1' }, expect.anything());
+    expect(m.query).toHaveBeenCalledWith(
+      { leadId: 'lead-1', emailRecordId: 'rec-1' },
+      expect.anything()
+    );
     expect(screen.getByText(/Robert <robert@lead\.example\.invalid>/)).toBeInTheDocument();
     expect(screen.getByTestId('body')).toHaveTextContent('rec-1|<p>Hi</p>|');
   });
@@ -38,8 +41,24 @@ describe('LeadEmailMessage', () => {
     const { unmount } = render(<LeadEmailMessage leadId="lead-1" emailRecordId="rec-1" />);
     expect(screen.getByText('Loading the message...')).toBeInTheDocument();
     unmount();
-    m.query.mockReturnValue({ isLoading: false, data: { emails: [] } });
+    m.query.mockReturnValue({
+      isLoading: false,
+      isError: true,
+      error: { data: { code: 'NOT_FOUND' } },
+      data: undefined,
+    });
     render(<LeadEmailMessage leadId="lead-1" emailRecordId="rec-1" />);
     expect(screen.getByText('This message is no longer available.')).toBeInTheDocument();
+  });
+
+  it('says it could not load, rather than that the mail is gone, when the query fails', () => {
+    m.query.mockReturnValue({
+      isLoading: false,
+      isError: true,
+      error: { data: { code: 'INTERNAL_SERVER_ERROR' } },
+      data: undefined,
+    });
+    render(<LeadEmailMessage leadId="lead-1" emailRecordId="rec-1" />);
+    expect(screen.getByText('Could not load the message. Try again.')).toBeInTheDocument();
   });
 });

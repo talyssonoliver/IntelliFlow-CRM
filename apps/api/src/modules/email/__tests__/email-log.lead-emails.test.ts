@@ -165,7 +165,52 @@ describe('emailLog.leadEmails', () => {
   });
 });
 
+describe('emailLog.leadEmail', () => {
+  const ID = 'clh0000000000000000000e77';
+
+  it('reads one mail of the lead by id, inside the tenant and the lead', async () => {
+    (prismaMock.emailRecord.findFirst as any).mockResolvedValue(row(ID, { bodyHtml: '<p>Hi</p>' }));
+    const email = await member().leadEmail({ leadId: LEAD, emailRecordId: ID });
+    expect(email).toMatchObject({ id: ID, htmlBody: '<p>Hi</p>' });
+    expect((prismaMock.emailRecord.findFirst as any).mock.calls[0][0].where).toEqual({
+      id: ID,
+      tenantId,
+      metadata: { path: ['leadId'], equals: LEAD },
+      OR: [{ userId: null }, { userId: TEST_UUIDS.user1 }],
+    });
+  });
+
+  it('is not found for another tenant lead, a missing mail or a draft', async () => {
+    (prismaMock.lead.findFirst as any).mockResolvedValue(null);
+    await expect(member().leadEmail({ leadId: LEAD, emailRecordId: ID })).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    });
+    expect(prismaMock.emailRecord.findFirst).not.toHaveBeenCalled();
+    (prismaMock.lead.findFirst as any).mockResolvedValue({ id: LEAD });
+    (prismaMock.emailRecord.findFirst as any).mockResolvedValue(null);
+    await expect(member().leadEmail({ leadId: LEAD, emailRecordId: ID })).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    });
+    (prismaMock.emailRecord.findFirst as any).mockResolvedValue(
+      row(ID, { metadata: { leadId: LEAD, isDraft: true } })
+    );
+    await expect(member().leadEmail({ leadId: LEAD, emailRecordId: ID })).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+    });
+  });
+});
+
 describe('mapEmailRecord: HTML is sanitised again on the way out', () => {
+  it('never shows HTML kept in body as text, even when it sanitises to nothing', () => {
+    const mapped = mapEmailRecord(
+      row('r', {
+        body: '<div><img src="https://t.example.invalid/p.gif" width="1" height="1"></div>',
+      })
+    );
+    expect(mapped.htmlBody).toBeUndefined();
+    expect(mapped.textBody).toBeUndefined();
+  });
+
   it('cleans stored bodyHtml', () => {
     const mapped = mapEmailRecord(
       row('r', {

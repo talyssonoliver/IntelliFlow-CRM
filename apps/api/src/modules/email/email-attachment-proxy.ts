@@ -45,8 +45,7 @@ const ITEM_EXTENSIONS: Record<string, string> = {
 
 function withExtension(name: string, contentType: string): string {
   const extension = ITEM_EXTENSIONS[contentType];
-  const named = /\.[a-z0-9]{1,5}$/i.test(name);
-  return extension && !named ? `${name}${extension}` : name;
+  return extension && !name.toLowerCase().endsWith(extension) ? `${name}${extension}` : name;
 }
 
 function notFound(): TRPCError {

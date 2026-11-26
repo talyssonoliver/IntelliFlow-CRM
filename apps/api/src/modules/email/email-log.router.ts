@@ -251,6 +251,36 @@ export const emailLogRouter = createTRPCRouter({
       return { emails: visible.map(mapEmailRecord) };
     }),
 
+  /**
+   * One mail of a lead's thread by id (the Emails tab opens a row in place; the thread list is
+   * bounded, so an older row is read on its own). Same visibility as leadEmails.
+   */
+  leadEmail: tenantProcedure
+    .input(z.object({ leadId: recordIdSchema, emailRecordId: recordIdSchema }))
+    .query(async ({ ctx, input }): Promise<ParsedEmailResponse> => {
+      assertTenantContext(ctx);
+      const c = ctx as unknown as EmailRouterCtx;
+      const { tenantId } = c.tenant;
+      const lead = await c.prismaWithTenant.lead.findFirst({
+        where: createTenantWhereClause(c.tenant as never, { id: input.leadId }),
+        select: { id: true },
+      });
+      const row: any = lead
+        ? await c.prismaWithTenant.emailRecord.findFirst({
+            where: {
+              id: input.emailRecordId,
+              tenantId,
+              metadata: { path: ['leadId'], equals: input.leadId },
+              ...(isEmailAdmin(c) ? {} : { OR: [{ userId: null }, { userId: c.tenant.userId }] }),
+            },
+            include: { attachments: true },
+          })
+        : null;
+      const isDraft = (row?.metadata as { isDraft?: unknown } | null)?.isDraft === true;
+      if (!row || isDraft) throw new TRPCError({ code: 'NOT_FOUND', message: 'Email not found.' });
+      return mapEmailRecord(row);
+    }),
+
   /** Links the email to the lead or contact it is with. */
   logToContact: tenantProcedure
     .input(emailIdInput)

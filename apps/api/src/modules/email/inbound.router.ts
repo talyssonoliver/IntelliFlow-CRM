@@ -163,7 +163,8 @@ export function mapEmailRecord(record: any): ParsedEmailResponse {
     to: parseRecipients(record.toEmail),
     cc: record.ccEmails ? parseRecipients(record.ccEmails) : undefined,
     subject: record.subject,
-    textBody: html && !record.bodyHtml ? undefined : record.body,
+    // HTML kept in body is never shown as text, even when it sanitises to nothing.
+    textBody: isHtml && !record.bodyHtml ? undefined : record.body,
     htmlBody: html ?? undefined,
     attachments: (record.attachments ?? []).map((a: any) => ({
       id: a.id,

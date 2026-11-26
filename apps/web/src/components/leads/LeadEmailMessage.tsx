@@ -12,10 +12,14 @@ export function LeadEmailMessage({
   leadId,
   emailRecordId,
 }: Readonly<{ leadId: string; emailRecordId: string }>) {
-  const thread = trpc.emailLog.leadEmails.useQuery({ leadId }, { staleTime: 60_000 });
-  const email = thread.data?.emails.find((e) => e.id === emailRecordId);
-  if (thread.isLoading) {
+  // By id: the lead's thread list is bounded, so an older row is not in it.
+  const query = trpc.emailLog.leadEmail.useQuery({ leadId, emailRecordId }, { staleTime: 60_000 });
+  const email = query.data;
+  if (query.isLoading) {
     return <p className="mt-3 text-sm text-slate-500">Loading the message...</p>;
+  }
+  if (query.isError && query.error?.data?.code !== 'NOT_FOUND') {
+    return <p className="mt-3 text-sm text-slate-500">Could not load the message. Try again.</p>;
   }
   if (!email) {
     return <p className="mt-3 text-sm text-slate-500">This message is no longer available.</p>;

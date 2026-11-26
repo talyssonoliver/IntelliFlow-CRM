@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-26T17:18:15.017Z",
+  "timestamp": "2026-11-26T20:01:12.940Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,8 +1016,8 @@
   },
   "api_inventory": {
     "total_routers": 85,
-    "total_endpoints": 626,
-    "total_queries": 269,
+    "total_endpoints": 627,
+    "total_queries": 270,
     "total_mutations": 357,
     "routers": [
       {
@@ -1321,6 +1321,12 @@
         "mutations": 3
       },
       {
+        "name": "emailLog",
+        "endpoints": 5,
+        "queries": 4,
+        "mutations": 1
+      },
+      {
         "name": "health",
         "endpoints": 5,
         "queries": 5,
@@ -1343,12 +1349,6 @@
         "endpoints": 4,
         "queries": 1,
         "mutations": 3
-      },
-      {
-        "name": "emailLog",
-        "endpoints": 4,
-        "queries": 3,
-        "mutations": 1
       },
       {
         "name": "feedbackSurvey",
@@ -5243,6 +5243,11 @@
         "name": "emailLog.leadEmails",
         "method": "GET",
         "description": "Lead emails"
+      },
+      {
+        "name": "emailLog.leadEmail",
+        "method": "GET",
+        "description": "Lead email"
       },
       {
         "name": "emailLog.logToContact",
