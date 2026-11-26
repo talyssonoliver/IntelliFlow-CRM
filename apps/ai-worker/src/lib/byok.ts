@@ -119,7 +119,10 @@ async function runsOnOwnKey(): Promise<boolean> {
   const tenantId = tenantContextStore.getStore()?.tenantId;
   if (!isBillableTenant(tenantId)) return false;
   const credential = await resolveByokCredential(tenantId);
-  return credential !== null && credential.status !== 'INVALID';
+  if (credential === null) return false;
+  if (credential.status !== 'INVALID') return true;
+  // A rejected key's recovery probe (routeForTenant) runs on the key, so it is let through too.
+  return Date.now() - (lastInvalidProbeAt.get(tenantId) ?? 0) >= INVALID_PROBE_INTERVAL_MS;
 }
 
 if (typeof CircuitBreaker.bypassWhenOpen === 'function') {

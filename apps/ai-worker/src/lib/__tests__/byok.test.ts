@@ -768,6 +768,8 @@ describe('an OPEN platform breaker does not refuse a tenant on its own key', () 
         breaker.execute(() => wrapped.invoke('hi') as Promise<unknown>)
       )
     ).resolves.toEqual({ content: 'own key answer' });
+    // The rejected key's one probe is consumed first; after that it is refused like any platform call.
+    await routeForTenant('tenant-rejected');
     for (const tenantId of ['tenant-none', 'tenant-rejected']) {
       await expect(
         tenantContextStore.run({ tenantId }, () => breaker.execute(async () => 'x'))
@@ -836,5 +838,26 @@ describe('status write throttle is per key', () => {
     // Same key, same status, inside a minute: throttled as before.
     await markByokStatus(credential({ revision: REVISION_B }), 'RATE_LIMITED');
     expect(db.updateMany).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('an OPEN platform breaker and the recovery probe of a rejected key', () => {
+  it('lets the due probe through, then refuses the rejected key again', async () => {
+    const { CircuitBreaker } = await import('../../utils/circuit-breaker');
+    const { tenantContextStore } = await import('../../tracing/tenant-context');
+    const breaker = new CircuitBreaker(1, 60_000);
+    await breaker.execute(() => Promise.reject(httpError(500))).catch(() => undefined);
+    db.findFirst.mockResolvedValue(row({ status: 'INVALID' }));
+    // Probe due: the breaker lets the call through (routing then consumes the probe).
+    await expect(
+      tenantContextStore.run({ tenantId: 'tenant-a' }, () =>
+        breaker.execute(async () => 'probe ran')
+      )
+    ).resolves.toBe('probe ran');
+    await routeForTenant('tenant-a');
+    // Probe used: an INVALID key is refused like any platform call while the breaker is OPEN.
+    await expect(
+      tenantContextStore.run({ tenantId: 'tenant-a' }, () => breaker.execute(async () => 'x'))
+    ).rejects.toThrow(/OPEN/);
   });
 });
