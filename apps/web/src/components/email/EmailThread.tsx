@@ -16,10 +16,14 @@ interface EmailMessageData {
   to: Array<{ address: string; name?: string }>;
   receivedAt: string;
   attachments: Array<{
+    id?: string;
     filename: string;
     contentType: string;
     size: number;
     checksum: string;
+    isInline?: boolean;
+    contentId?: string | null;
+    onDemand?: boolean;
   }>;
 }
 

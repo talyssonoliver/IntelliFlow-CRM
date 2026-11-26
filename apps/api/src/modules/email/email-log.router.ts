@@ -23,8 +23,10 @@ import { assertTenantContext, createTenantWhereClause } from '../../security/ten
 import { restrictionReader } from '../privacy/restriction-reader';
 import { isEmailAdmin, type EmailRouterCtx } from './email-access';
 import { leadEmailEngagement } from './lead-email-engagement';
+import { mapEmailRecord, type ParsedEmailResponse } from './inbound.router';
 
 const emailIdInput = z.object({ emailId: recordIdSchema });
+const LEAD_EMAILS_LIMIT = 200;
 
 export interface EmailLinkDto {
   logged: boolean;
@@ -194,6 +196,37 @@ export const emailLogRouter = createTRPCRouter({
       });
       if (!lead?.email) return { sent: 0, opened: 0 };
       return leadEmailEngagement(c.prismaWithTenant as never, tenantId, lead.email);
+    }),
+
+  /**
+   * The mail logged on a lead, oldest first by the provider's own date (sentAt, else createdAt),
+   * with each mail's sanitised HTML and attachment metadata (the files are fetched on demand).
+   * Only a lead of the caller's tenant; drafts are never part of it.
+   */
+  leadEmails: tenantProcedure
+    .input(z.object({ leadId: recordIdSchema }))
+    .query(async ({ ctx, input }): Promise<{ emails: ParsedEmailResponse[] }> => {
+      assertTenantContext(ctx);
+      const c = ctx as unknown as EmailRouterCtx;
+      const { tenantId } = c.tenant;
+      const lead = await c.prismaWithTenant.lead.findFirst({
+        where: createTenantWhereClause(c.tenant as never, { id: input.leadId }),
+        select: { id: true },
+      });
+      if (!lead) throw new TRPCError({ code: 'NOT_FOUND', message: 'Lead not found.' });
+      const rows: any[] = await c.prismaWithTenant.emailRecord.findMany({
+        where: { tenantId, metadata: { path: ['leadId'], equals: input.leadId } },
+        include: { attachments: true },
+        take: LEAD_EMAILS_LIMIT,
+      });
+      const visible = rows.filter((row) => {
+        if ((row.metadata as { isDraft?: unknown } | null)?.isDraft === true) return false;
+        // Someone else's own mail is theirs; an email admin sees all of the tenant's.
+        return !row.userId || row.userId === c.tenant.userId || isEmailAdmin(c);
+      });
+      const at = (row: any): number => (row.sentAt ?? row.createdAt).getTime();
+      visible.sort((a, b) => at(a) - at(b) || String(a.id).localeCompare(String(b.id)));
+      return { emails: visible.map(mapEmailRecord) };
     }),
 
   /** Links the email to the lead or contact it is with. */

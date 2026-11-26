@@ -3,9 +3,9 @@ import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import DOMPurify from 'isomorphic-dompurify';
 
-// EmailMessage renders user-supplied HTML email bodies via
-// `dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(message.htmlBody) }}` —
-// the runtime user-content sanitization path. Two kinds of coverage here:
+// EmailMessage renders user-supplied HTML email bodies through EmailBody: a sandboxed iframe
+// whose document (srcdoc) is built from DOMPurify.sanitize(message.htmlBody) — the runtime
+// user-content sanitization path. The checks below read that document. Two kinds of coverage here:
 //
 //  1. Generic sanitization smoke tests (script/event-handler/javascript: URL
 //     stripping) — these prove the sanitizer is actually WIRED into the render
@@ -27,7 +27,15 @@ vi.mock('@/components/shared', () => ({
   EntityHoverCard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+vi.mock('@intelliflow/ui', () => ({ toast: vi.fn() }));
+
 const { EmailMessage } = await import('../EmailMessage');
+
+/** The sanitised document the body is shown in, parsed. */
+function frameDocument(): Document {
+  const srcdoc = (screen.getByTitle('Email content') as HTMLIFrameElement).getAttribute('srcdoc');
+  return new DOMParser().parseFromString(srcdoc ?? '', 'text/html');
+}
 
 function renderMessage(htmlBody: string) {
   return render(
@@ -63,12 +71,13 @@ function isAtLeast(version: string, floor: [number, number, number]): boolean {
 describe('EmailMessage DOMPurify sanitization', () => {
   it('renders benign HTML content from the email body', () => {
     renderMessage('<p>Hello <strong>world</strong></p>');
-    expect(screen.getByText('world')).toBeInTheDocument();
+    expect(frameDocument().querySelector('strong')?.textContent).toBe('world');
   });
 
   it('strips <script> tags from the rendered email body', () => {
     const { container } = renderMessage('<p>safe</p><script>window.__pwned = true;</script>');
     expect(container.querySelector('script')).toBeNull();
+    expect(frameDocument().querySelector('script')).toBeNull();
     expect(container.innerHTML).not.toContain('__pwned');
   });
 
@@ -79,17 +88,19 @@ describe('EmailMessage DOMPurify sanitization', () => {
     );
     expect(container.innerHTML).not.toContain('onerror');
     expect(container.innerHTML).not.toContain('onclick');
+    expect(frameDocument().body.innerHTML).not.toContain('onerror');
+    expect(frameDocument().body.innerHTML).not.toContain('onclick');
   });
 
   it('strips javascript: URLs from anchors regardless of scheme case', () => {
     // A mixed-case scheme (JaVaScRiPt:) executes identically in the browser, so
     // the assertion must be case-insensitive — a substring check for the literal
     // lowercase token would let a regression of the dompurify override through.
-    const { container } = renderMessage(
+    renderMessage(
       '<a href="javascript:window.__pwned=1">lower</a>' +
         '<a href="JaVaScRiPt:window.__pwned=1">mixed</a>'
     );
-    const anchors = container.querySelectorAll('a');
+    const anchors = frameDocument().querySelectorAll('a');
     expect(anchors.length).toBeGreaterThan(0);
     for (const anchor of anchors) {
       expect((anchor.getAttribute('href') ?? '').toLowerCase()).not.toContain('javascript:');

@@ -203,6 +203,33 @@ export async function zohoAccountGet(
   }
 }
 
+/**
+ * One authenticated GET of a file on a Zoho account (an attachment's content stream), read into
+ * memory up to `maxBytes` and never stored. Same host, timeout and dead-token rules as
+ * zohoAccountGet.
+ */
+export async function zohoAccountGetBytes(
+  fetchImpl: typeof fetch,
+  accessToken: string,
+  ref: ZohoAccountRef,
+  path: string,
+  maxBytes: number
+): Promise<{ bytes: Buffer; contentType: string | null }> {
+  const base = `https://${dataCentreFor(ref.mailHost).mail}/api/accounts/${encodeURIComponent(ref.accountId)}`;
+  const response = await call(fetchImpl, base + path, {
+    headers: {
+      Authorization: `Zoho-oauthtoken ${accessToken}`,
+      Accept: 'application/octet-stream',
+    },
+  });
+  if (!response.ok) throw await apiError(response);
+  const declared = Number(response.headers.get('content-length'));
+  if (Number.isFinite(declared) && declared > maxBytes) throw new MailboxTransportError('REJECTED');
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.length > maxBytes) throw new MailboxTransportError('REJECTED');
+  return { bytes, contentType: response.headers.get('content-type') };
+}
+
 export class ZohoMailboxClient {
   constructor(
     private readonly config: OAuthClientConfig,

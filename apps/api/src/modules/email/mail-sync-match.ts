@@ -2,7 +2,7 @@
  * Who a synced mail is with, and whether it is already logged: split out of the sync engine
  * (outlook-inbox-sync.ts) to keep it within its size limit. No behaviour of its own.
  */
-import { MailboxTransportError } from '@intelliflow/adapters';
+import { MailboxTransportError, type MailContent } from '@intelliflow/adapters';
 import type { LoggedRecord } from './mail-sync-links';
 import { messageIdHeader } from './mail-sync-record';
 import type { SyncFolder, SyncedMessage } from './mail-sync-reader';
@@ -89,6 +89,23 @@ export async function alreadyLogged(
     select: { id: true, metadata: true },
   });
   return existing;
+}
+
+/**
+ * A kept mail's content (text, HTML, attachment metadata); null when the provider refuses that one
+ * message (deleted meanwhile). A reader without rich content yields its text only.
+ */
+export async function contentOf(message: SyncedMessage): Promise<MailContent | null> {
+  if (!message.loadContent) {
+    const text = await bodyOf(message);
+    return text === null ? null : { text, html: null, attachments: [] };
+  }
+  try {
+    return await message.loadContent();
+  } catch (error) {
+    if (error instanceof MailboxTransportError && error.code === 'REJECTED') return null;
+    throw error;
+  }
 }
 
 /** A kept mail's body; null when the provider refuses that one message (deleted meanwhile). */

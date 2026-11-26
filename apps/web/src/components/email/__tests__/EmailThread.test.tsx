@@ -97,7 +97,8 @@ describe('EmailThread', () => {
   it('shows full body content in expanded message', () => {
     render(<EmailThread {...defaultProps} />);
     // Last message should show body
-    expect(screen.getByText(/test body/i)).toBeInTheDocument();
+    // The HTML body is shown in the sandboxed frame (see EmailBody), not inside the page.
+    expect(screen.getByTitle('Email content').getAttribute('srcdoc')).toMatch(/test body/i);
   });
 
   it('opens inline reply compose when reply button clicked', async () => {

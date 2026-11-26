@@ -18,6 +18,8 @@
 import { readAutomationSignals, type MailAutomationSignals } from './mail-automation-signals';
 import { MailboxTransportError } from './mailbox-errors';
 import { displayName, zohoAddresses as headerAddresses, zohoBodyText } from './zoho-text';
+import type { MailContent } from './mail-content';
+import { gmailAttachmentMeta, gmailHtml } from './gmail-mail-content';
 
 const GMAIL_API = 'https://gmail.googleapis.com/gmail/v1/users/me';
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -58,6 +60,8 @@ export interface GmailSyncedMessage {
   /** Empty: the body is read only through `loadBody()`. */
   bodyText: string;
   loadBody: () => Promise<string>;
+  /** The text, the provider's HTML and the attachments' metadata, in one read of the message. */
+  loadContent: () => Promise<MailContent>;
 }
 
 export interface GmailReadRound {
@@ -157,30 +161,31 @@ interface GmailHeader {
   value?: string;
 }
 
-interface GmailPart {
+export interface GmailApiPart {
   mimeType?: string;
   filename?: string;
+  partId?: string;
   /** Inline `data`, or an `attachmentId` to read through messages.attachments.get. */
-  body?: { data?: string; attachmentId?: string };
-  parts?: GmailPart[];
+  body?: { data?: string; attachmentId?: string; size?: number };
+  parts?: GmailApiPart[];
   headers?: GmailHeader[];
 }
 
-interface GmailMessage {
+export interface GmailApiMessage {
   id?: string;
   threadId?: string;
   labelIds?: string[];
   internalDate?: string;
-  payload?: GmailPart;
+  payload?: GmailApiPart;
 }
 
-function header(message: GmailMessage, name: string): string | null {
+function header(message: GmailApiMessage, name: string): string | null {
   const wanted = name.toLowerCase();
   return message.payload?.headers?.find((h) => h.name?.toLowerCase() === wanted)?.value ?? null;
 }
 
 /** An attached file (named, or marked as an attachment): never the mail's own text. */
-function isAttachment(part: GmailPart): boolean {
+function isAttachment(part: GmailApiPart): boolean {
   if (part.filename?.trim()) return true;
   const disposition = part.headers?.find((h) => h.name?.toLowerCase() === 'content-disposition');
   return /^\s*attachment/i.test(disposition?.value ?? '');
@@ -191,7 +196,7 @@ function isAttachment(part: GmailPart): boolean {
  * Attachments and everything inside them are skipped; a part counts with its text inline or behind
  * an attachment id (Gmail stores large parts that way).
  */
-function firstPart(part: GmailPart | undefined, mimeType: string): GmailPart | null {
+export function firstPart(part: GmailApiPart | undefined, mimeType: string): GmailApiPart | null {
   if (!part || isAttachment(part)) return null;
   const hasBody = Boolean(part.body?.data || part.body?.attachmentId);
   if (part.mimeType?.toLowerCase() === mimeType && hasBody) return part;
@@ -204,8 +209,8 @@ function firstPart(part: GmailPart | undefined, mimeType: string): GmailPart | n
 
 /** The part that holds the mail's text: plain text first, else HTML. */
 export function gmailBodyPart(
-  payload: GmailPart | undefined
-): { part: GmailPart; html: boolean } | null {
+  payload: GmailApiPart | undefined
+): { part: GmailApiPart; html: boolean } | null {
   const plain = firstPart(payload, 'text/plain');
   if (plain) return { part: plain, html: false };
   const html = firstPart(payload, 'text/html');
@@ -220,40 +225,77 @@ function partText(data: string, html: boolean, maxChars: number): string {
 }
 
 /** The mail's text from inline parts: its plain-text part, else its HTML part as text. */
-export function gmailBodyText(payload: GmailPart | undefined, maxChars: number): string {
+export function gmailBodyText(payload: GmailApiPart | undefined, maxChars: number): string {
   const pick = gmailBodyPart(payload);
   return pick ? partText(pick.part.body?.data ?? '', pick.html, maxChars) : '';
 }
 
-/** The full message's text, reading a part stored behind an attachment id when it is one. */
-async function loadBodyText(
+/** The full message's content, reading parts stored behind an attachment id when they are. */
+async function loadContent(
   fetchImpl: typeof fetch,
   accessToken: string,
   id: string,
   maxChars: number
-): Promise<string> {
+): Promise<MailContent> {
+  return (await loadFull(fetchImpl, accessToken, id, maxChars)).content;
+}
+
+/** The mail's content with its provider date (internalDate), from one read of the full message. */
+async function loadFull(
+  fetchImpl: typeof fetch,
+  accessToken: string,
+  id: string,
+  maxChars: number
+): Promise<{ receivedAt: Date | null; content: MailContent }> {
   const path = `/messages/${encodeURIComponent(id)}`;
-  const full = await gmailGet<GmailMessage>(fetchImpl, accessToken, `${path}?format=full`);
-  const pick = gmailBodyPart(full.payload);
-  if (!pick) return '';
-  let data = pick.part.body?.data;
-  const attachmentId = pick.part.body?.attachmentId;
-  if (!data && attachmentId) {
+  const readPart = async (attachmentId: string): Promise<string | undefined> => {
     const stored = await gmailGet<{ data?: string }>(
       fetchImpl,
       accessToken,
       `${path}/attachments/${encodeURIComponent(attachmentId)}`
     );
-    data = stored.data;
+    return stored.data;
+  };
+  const full = await gmailGet<GmailApiMessage>(fetchImpl, accessToken, `${path}?format=full`);
+  const pick = gmailBodyPart(full.payload);
+  let text = '';
+  if (pick) {
+    const inline = pick.part.body?.data;
+    const attachmentId = pick.part.body?.attachmentId;
+    const data = inline || (attachmentId ? await readPart(attachmentId) : undefined);
+    text = partText(data ?? '', pick.html, maxChars);
   }
-  return partText(data ?? '', pick.html, maxChars);
+  const html = await gmailHtml(firstPart(full.payload, 'text/html'), readPart);
+  const time = Number(full.internalDate);
+  return {
+    receivedAt: Number.isFinite(time) ? new Date(time) : null,
+    content: { text, html, attachments: gmailAttachmentMeta(full.payload) },
+  };
+}
+
+/**
+ * One message's provider date and content, read now (the backfill of mail synced before HTML and
+ * attachment metadata were kept). Null when Gmail no longer has it.
+ */
+export async function readGmailMessage(
+  accessToken: string,
+  id: string,
+  maxChars: number,
+  fetchImpl: typeof fetch = fetch
+): Promise<{ receivedAt: Date | null; content: MailContent } | null> {
+  try {
+    return await loadFull(fetchImpl, accessToken, id, maxChars);
+  } catch (error) {
+    if (error instanceof NotFound) return null;
+    throw error;
+  }
 }
 
 /** Mail never logged from a label: drafts, spam and chats. */
 const SKIPPED_LABELS = ['DRAFT', 'SPAM', 'CHAT'];
 
 /** A List-Unsubscribe header, or Precedence: bulk, list or junk: mail sent to many, not to one person. */
-function isBulk(item: GmailMessage): boolean {
+function isBulk(item: GmailApiMessage): boolean {
   return (
     !!header(item, 'List-Unsubscribe') ||
     /^(bulk|list|junk)$/i.test(header(item, 'Precedence')?.trim() ?? '')
@@ -261,7 +303,7 @@ function isBulk(item: GmailMessage): boolean {
 }
 
 function toMessage(
-  item: GmailMessage,
+  item: GmailApiMessage,
   accessToken: string,
   options: GmailReadOptions,
   fetchImpl: typeof fetch
@@ -273,6 +315,17 @@ function toMessage(
   const id = item.id;
   const from = header(item, 'From');
   const messageId = header(item, 'Message-ID')?.trim();
+  // One read serves the text, the HTML and the attachments (a repeat call reuses it).
+  let read: Promise<MailContent> | undefined;
+  const content = (): Promise<MailContent> => {
+    read ??= loadContent(fetchImpl, accessToken, id, options.maxBodyChars).catch(
+      (error: unknown) => {
+        // Deleted since it was listed: that one mail is skipped, the round goes on.
+        throw error instanceof NotFound ? new MailboxTransportError('REJECTED') : error;
+      }
+    );
+    return read;
+  };
   return {
     providerMessageId: id,
     internetMessageId: messageId || null,
@@ -289,11 +342,8 @@ function toMessage(
       name === 'Content-Type' ? (item.payload?.mimeType ?? header(item, name)) : header(item, name)
     ),
     bodyText: '',
-    loadBody: () =>
-      loadBodyText(fetchImpl, accessToken, id, options.maxBodyChars).catch((error: unknown) => {
-        // Deleted since it was listed: that one mail is skipped, the round goes on.
-        throw error instanceof NotFound ? new MailboxTransportError('REJECTED') : error;
-      }),
+    loadBody: () => content().then((c) => c.text),
+    loadContent: content,
   };
 }
 
@@ -307,7 +357,7 @@ async function readMessage(
   const query = new URLSearchParams({ format: 'metadata' });
   for (const name of HEADERS) query.append('metadataHeaders', name);
   try {
-    const item = await gmailGet<GmailMessage>(
+    const item = await gmailGet<GmailApiMessage>(
       fetchImpl,
       accessToken,
       `/messages/${encodeURIComponent(id)}?${query.toString()}`
