@@ -219,6 +219,7 @@ model Tenant {
   taskSettings              TaskSettings[]            @ignore
   toolEnablements           TenantToolEnablement[]    // H6: per-tenant tool on/off
   aiConfigs                 TenantAIConfig[]           // M8/M9: per-tenant LLM tier overrides
+  aiProviderKey             TenantAIProviderKey?       @ignore // PG-199 BYOK
   chainRuns                 ChainRun[]                 // AI Chains page usage stats
   memoryPolicy              TenantMemoryPolicy?        // P2.7: per-tenant memory retention
   goalDefault               TenantGoalDefault?         // IFC-211: org-wide default daily goal
@@ -280,6 +281,31 @@ model TenantAIConfig {
   @@index([tenantId])
   @@map("tenant_ai_config")
 }
+/// PG-199 BYOK: the workspace's own AI provider key (one per tenant). When an ACTIVE row
+/// exists the ai-worker runs that tenant's chat calls on this provider and key instead of the
+/// platform's. `apiKey` holds AES-256-GCM ciphertext written by the field-encryption
+/// extension (ENCRYPTED_FIELDS); the API refuses to write it without PRISMA_FIELD_ENCRYPTION_KEY
+/// and never returns it (only provider, last 4, dates and status). SQL adds CHECKs on provider
+/// and status and the RLS policy tenant_ai_provider_keys_tenant_isolation.
+model TenantAIProviderKey {
+  id            String    @id @default(cuid())
+  tenantId      String    @unique
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  provider      String    @db.VarChar(12) // anthropic | openai | google | openrouter (SQL CHECK)
+  /// @encrypted
+  apiKey        String    @db.Text
+  last4         String    @db.VarChar(4)
+  status        String    @default("ACTIVE") @db.VarChar(16) // ACTIVE | INVALID | RATE_LIMITED | QUOTA_EXCEEDED (SQL CHECK)
+  statusDetail  String?   @db.VarChar(200) // short provider-agnostic reason, never the key
+  allowFallback Boolean   @default(false) // true: fall back to platform providers when this key fails
+  createdBy     String?
+  lastUsedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("tenant_ai_provider_keys")
+}
+
 /// One model call made by an ai-worker chain, for the AI Chains page usage stats.
 /// chainType is the saved-version type the chain reads; workerChain is the chain itself.
 /// versionId is the saved version whose prompt was used, or null for the built-in prompt.
