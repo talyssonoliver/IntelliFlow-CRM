@@ -7,13 +7,12 @@
  */
 import { z } from 'zod';
 
-export const AI_KEY_PROVIDERS = ['anthropic', 'openai', 'google', 'openrouter'] as const;
+export const AI_KEY_PROVIDERS = ['anthropic', 'openai', 'openrouter'] as const;
 export type AIKeyProvider = (typeof AI_KEY_PROVIDERS)[number];
 
 export const AI_KEY_PROVIDER_LABELS: Readonly<Record<AIKeyProvider, string>> = {
   anthropic: 'Anthropic (Claude)',
   openai: 'OpenAI',
-  google: 'Google (Gemini)',
   openrouter: 'OpenRouter',
 };
 

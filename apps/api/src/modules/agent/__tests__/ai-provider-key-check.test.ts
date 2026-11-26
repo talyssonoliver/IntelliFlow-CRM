@@ -17,7 +17,6 @@ describe('checkProviderKey', () => {
   it.each([
     ['anthropic', 'https://api.anthropic.com/', 'x-api-key'],
     ['openai', 'https://api.openai.com/', 'Authorization'],
-    ['google', 'https://generativelanguage.googleapis.com/', 'x-goog-api-key'],
     ['openrouter', 'https://openrouter.ai/api/v1/auth/key', 'Authorization'],
   ] as const)('%s: fixed host, key only in the %s header', async (provider, host, header) => {
     const fetchImpl = fetchReturning(200);
@@ -36,7 +35,7 @@ describe('checkProviderKey', () => {
       ok: false,
       reason: 'invalid',
     });
-    for (const provider of ['anthropic', 'google', 'openrouter'] as const) {
+    for (const provider of ['anthropic', 'openrouter'] as const) {
       const result = await checkProviderKey(provider, FAKE_KEY, fetchReturning(403));
       expect(result).toMatchObject({ ok: false, reason: 'invalid' });
     }
@@ -45,12 +44,7 @@ describe('checkProviderKey', () => {
     expect((restricted as { message: string }).message).toMatch(/Models: Read/);
   });
 
-  it('Google answers 400 to a bad key: invalid', async () => {
-    await expect(checkProviderKey('google', FAKE_KEY, fetchReturning(400))).resolves.toMatchObject({
-      ok: false,
-      reason: 'invalid',
-    });
-    // ...but 400 from another provider is not a verdict on the key.
+  it('a 400 is not a verdict on the key', async () => {
     await expect(checkProviderKey('openai', FAKE_KEY, fetchReturning(400))).resolves.toMatchObject({
       ok: false,
       reason: 'unavailable',

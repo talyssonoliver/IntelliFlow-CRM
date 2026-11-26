@@ -17,7 +17,7 @@ const FAKE_KEY = 'x'.repeat(28) + 'wxyz';
 
 describe('ai-provider-key validators', () => {
   it('lists the four providers and labels every one', () => {
-    expect([...AI_KEY_PROVIDERS]).toEqual(['anthropic', 'openai', 'google', 'openrouter']);
+    expect([...AI_KEY_PROVIDERS]).toEqual(['anthropic', 'openai', 'openrouter']);
     for (const provider of AI_KEY_PROVIDERS) expect(AI_KEY_PROVIDER_LABELS[provider]).toBeTruthy();
     expect([...AI_KEY_STATUSES]).toEqual(['ACTIVE', 'INVALID', 'RATE_LIMITED', 'QUOTA_EXCEEDED']);
   });

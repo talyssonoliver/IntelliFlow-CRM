@@ -124,7 +124,6 @@ describe('OwnKeySection - states', () => {
     expect(Array.from(provider.options).map((o) => o.value)).toEqual([
       'anthropic',
       'openai',
-      'google',
       'openrouter',
     ]);
     expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(false);
@@ -212,13 +211,13 @@ describe('OwnKeySection - stored key', () => {
 describe('OwnKeySection - save and test a typed key', () => {
   it('saves the trimmed key with the chosen provider and fallback, then clears the field', async () => {
     render(<OwnKeySection />);
-    fireEvent.change(screen.getByLabelText('Provider'), { target: { value: 'google' } });
+    fireEvent.change(screen.getByLabelText('Provider'), { target: { value: 'openrouter' } });
     fireEvent.change(keyInput(), { target: { value: `  ${FAKE_KEY}  ` } });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(button('Save key'));
     await waitFor(() =>
       expect(h.set.mutateAsync).toHaveBeenCalledWith({
-        provider: 'google',
+        provider: 'openrouter',
         apiKey: FAKE_KEY,
         allowFallback: true,
       })

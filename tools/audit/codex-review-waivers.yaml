@@ -924,14 +924,3 @@ waivers:
     author: ai agents lane
     date: '2026-11-22'
     expires: '2026-12-22'
-  - fingerprint: c34ef5c15d1fab0e63be09f7a458bb310a6214afa7f19e77b8677f2c2f56b6d5
-    reason: >-
-      Accepted risk, PG-199 BYOK. The default Google model for a customer's own key is Gemini 2.5
-      Flash, which the repo already prices and runs. The claim that Google withholds it from new
-      API users is not something this repo can verify, and a replacement id cannot be picked or
-      priced without guessing. The override is built for exactly this: BYOK_GOOGLE_MODEL names any
-      Gemini model with no deploy, and a non-Gemini name is refused. A
-      customer whose key cannot reach the model gets a clear provider error on the job.
-    author: byok lane
-    date: '2026-11-26'
-    expires: '2026-12-26'

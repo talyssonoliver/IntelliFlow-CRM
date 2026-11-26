@@ -158,23 +158,18 @@ describe('createLLMForTenant with BYOK', () => {
     vi.stubEnv('OPENROUTER_BASE_URL', 'https://evil.example.invalid/v1');
     vi.stubEnv('LITELLM_BASE_URL', 'https://evil.example.invalid/v1');
     const { createLLMForTenant } = await importFactory();
-    for (const provider of ['openai', 'google', 'openrouter']) {
+    for (const provider of ['openai', 'openrouter']) {
       h.findFirst.mockResolvedValue(storedKey({ provider }));
       (await import('../byok.js')).invalidateByok();
       await createLLMForTenant('scoring', 'free', { tenantId: 'tenant-a' });
     }
     const hosts = byokCalls().map((c) => c['configuration'].baseURL as string);
-    expect(hosts).toEqual([
-      'https://api.openai.com/v1',
-      'https://generativelanguage.googleapis.com/v1beta/openai/',
-      'https://openrouter.ai/api/v1',
-    ]);
+    expect(hosts).toEqual(['https://api.openai.com/v1', 'https://openrouter.ai/api/v1']);
   });
 
   it.each([
     ['openai', 'free', 'gpt-4o-mini', 'gpt-4o-mini'],
     ['openai', 'premium', 'gpt-4o', 'gpt-4o'],
-    ['google', 'standard', 'gemini-2.5-flash', 'gemini-2.5-flash'],
     ['openrouter', 'free', 'openai/gpt-4o-mini', 'gpt-4o-mini'],
     ['anthropic', 'free', 'claude-haiku-5-5', 'claude-haiku-5-5'],
     ['anthropic', 'premium', 'claude-sonnet-5-5', 'claude-sonnet-5-5'],
@@ -300,21 +295,5 @@ describe('createLLMForTenant with BYOK', () => {
       ).rejects.toMatchObject({ code: 'BYOK_KEY_ERROR' });
       expect(platformCalls()).toHaveLength(0);
     });
-  });
-});
-
-describe('Google BYOK model', () => {
-  it('BYOK_GOOGLE_MODEL picks another Gemini model; a non-Gemini name is refused', async () => {
-    const { byokModelSpec } = await importFactory();
-    vi.stubEnv('BYOK_GOOGLE_MODEL', 'gemini-9-future');
-    expect(byokModelSpec('google', 'free')).toEqual({
-      model: 'gemini-9-future',
-      pricingKey: 'gemini-2.5-flash',
-    });
-    vi.stubEnv('BYOK_GOOGLE_MODEL', 'gpt-4o');
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    expect(byokModelSpec('google', 'free').model).toBe('gemini-2.5-flash');
-    spy.mockRestore();
-    vi.unstubAllEnvs();
   });
 });

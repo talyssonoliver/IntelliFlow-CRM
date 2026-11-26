@@ -333,13 +333,6 @@ describe('classifyByokFailure', () => {
     expect(classifyByokFailure(parse)).toBeNull();
   });
 
-  it('Google answers a bad key at run time with 400 "API key not valid": INVALID, only for Google', () => {
-    const bad = httpError(400, 'API key not valid. Please pass a valid API key.');
-    expect(classifyByokFailure(bad, 'google')).toBe('INVALID');
-    expect(classifyByokFailure(bad, 'openai')).toBeNull();
-    expect(classifyByokFailure(httpError(400, 'bad request'), 'google')).toBeNull();
-  });
-
   it.each([
     [httpError(401), 'INVALID'],
     [httpError(403, 'Your API key does not have permission to use this resource'), 'INVALID'],
@@ -923,5 +916,22 @@ describe('structured output is a real LangChain Runnable', () => {
     const { RunnableLambda } = await import('@langchain/core/runnables');
     const piped = structured.pipe(RunnableLambda.from((r: { score: number }) => r.score * 2));
     await expect(piped.invoke('a')).resolves.toBe(14);
+  });
+});
+
+describe('a key that is still ciphertext is never used', () => {
+  it('is unreadable: follows the tenant fallback choice and is never marked INVALID', async () => {
+    db.findFirst.mockImplementation(async ({ select }: { select: Record<string, boolean> }) =>
+      select['apiKey'] ? row({ apiKey: 'v1:aXY=:dGFn:Y2lwaGVy' }) : { allowFallback: false }
+    );
+    const err = await routeForTenant('tenant-a').catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ByokKeyError);
+    expect((err as ByokKeyError).keyStatus).toBe('UNREADABLE');
+    expect(db.updateMany).not.toHaveBeenCalled();
+    invalidateByok();
+    db.findFirst.mockImplementation(async ({ select }: { select: Record<string, boolean> }) =>
+      select['apiKey'] ? row({ apiKey: 'v1:aXY=:dGFn:Y2lwaGVy' }) : { allowFallback: true }
+    );
+    await expect(routeForTenant('tenant-a')).resolves.toEqual({ kind: 'platform' });
   });
 });

@@ -294,6 +294,9 @@ async function readCredential(tenantId: string): Promise<ByokCredential | null> 
     allowFallback: boolean;
   } | null;
   if (!row || !KNOWN_PROVIDERS.has(row.provider) || !KNOWN_STATUSES.has(row.status)) return null;
+  // Still ciphertext: this worker has no field-encryption key. It must never go to the provider
+  // as the key (it would be rejected and a valid key marked INVALID): treat as unreadable.
+  if (row.apiKey.startsWith('v1:')) throw new Error('BYOK key is still encrypted');
   return {
     tenantId,
     provider: row.provider as AIKeyProvider,
@@ -449,10 +452,7 @@ function httpStatusOf(err: unknown): number | undefined {
  * Which key problem an error is, or null when it is not one (a 5xx, a timeout, a refusal,
  * a schema failure): those are not the customer key's fault and are never marked.
  */
-export function classifyByokFailure(
-  err: unknown,
-  provider?: AIKeyProvider
-): Exclude<AIKeyStatus, 'ACTIVE'> | null {
+export function classifyByokFailure(err: unknown): Exclude<AIKeyStatus, 'ACTIVE'> | null {
   const status = httpStatusOf(err);
   const e = err as { code?: unknown; message?: unknown; type?: unknown; name?: unknown } | null;
   const text = `${String(e?.code ?? '')} ${String(e?.type ?? '')} ${String(e?.message ?? '')}`;
@@ -469,12 +469,8 @@ export function classifyByokFailure(
     return KEY_REJECTED_403.test(text) && !NOT_THE_KEY_403.test(text) ? 'INVALID' : null;
   if (status === 402) return 'QUOTA_EXCEEDED';
   if (status === 429) return 'RATE_LIMITED';
-  // Google answers a bad key at run time with 400 "API key not valid".
-  if (provider === 'google' && status === 400 && GOOGLE_BAD_KEY.test(text)) return 'INVALID';
   return null;
 }
-
-const GOOGLE_BAD_KEY = /api key not valid|API_KEY_INVALID/i;
 
 const STATUS_DETAIL: Record<Exclude<AIKeyStatus, 'ACTIVE'>, string> = {
   INVALID: 'The provider rejected the key. Replace it, or test it again.',
@@ -623,7 +619,7 @@ export function withByokFailureHandling(
       recordByokSuccess(credential);
       return result;
     } catch (err) {
-      const failure = classifyByokFailure(err, credential.provider);
+      const failure = classifyByokFailure(err);
       if (!failure) {
         markByokOrigin(err);
         throw err;

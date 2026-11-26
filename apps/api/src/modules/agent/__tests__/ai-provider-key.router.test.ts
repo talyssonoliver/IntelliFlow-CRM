@@ -282,8 +282,8 @@ describe('aiProviderKeyRouter (PG-199 BYOK)', () => {
 
   describe('test', () => {
     it('checks a typed key without storing it', async () => {
-      const result = await admin.test({ provider: 'google', apiKey: FAKE_KEY });
-      expect(checkProviderKey).toHaveBeenCalledWith('google', FAKE_KEY);
+      const result = await admin.test({ provider: 'openrouter', apiKey: FAKE_KEY });
+      expect(checkProviderKey).toHaveBeenCalledWith('openrouter', FAKE_KEY);
       expect(result).toMatchObject({ ok: true, key: null });
       expect(delegate().updateMany).not.toHaveBeenCalled();
       expect(delegate().upsert).not.toHaveBeenCalled();

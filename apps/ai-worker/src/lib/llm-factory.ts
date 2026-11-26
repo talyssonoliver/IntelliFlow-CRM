@@ -2,7 +2,7 @@ import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
 import { ChatOllama } from '@langchain/ollama';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { Embeddings } from '@langchain/core/embeddings';
-import { aiConfig, AIProviderSchema, MODEL_PRICING, type AIProvider } from '../config/ai.config.js';
+import { aiConfig, AIProviderSchema, type AIProvider } from '../config/ai.config.js';
 import { CircuitBreaker } from '../utils/circuit-breaker.js';
 import { resolveEffectiveTier } from './tenant-ai-config.js';
 import { assertWithinCeiling } from './purpose-ceiling.js';
@@ -664,28 +664,6 @@ interface ByokModelSpec {
  * (or an equally priced alias) so the tenant's usage is estimated, never priced as some other
  * model. Premium moves up one model where the provider has one we price.
  */
-/**
- * The Google model for a customer key: `BYOK_GOOGLE_MODEL` when ops names a Gemini model (Google
- * retires models for new API users; this avoids a deploy), else Gemini 2.5 Flash. A name that is
- * not a Gemini model is refused (Google's endpoint only serves Gemini). A Gemini model without
- * its own MODEL_PRICING entry is priced as Gemini 2.5 Flash, never as some other family.
- */
-function byokGoogleSpec(): ByokModelSpec {
-  const fallback = { model: 'gemini-2.5-flash', pricingKey: 'gemini-2.5-flash' };
-  const chosen = (process.env['BYOK_GOOGLE_MODEL'] || '').trim();
-  if (!chosen) return fallback;
-  if (!/^gemini-[\w.-]+$/.test(chosen)) {
-    console.error(
-      `[llm-factory] BYOK_GOOGLE_MODEL "${chosen}" is not a Gemini model; using gemini-2.5-flash`
-    );
-    return fallback;
-  }
-  return {
-    model: chosen,
-    pricingKey: Object.hasOwn(MODEL_PRICING, chosen) ? chosen : fallback.pricingKey,
-  };
-}
-
 export function byokModelSpec(provider: ByokCredential['provider'], tier: LLMTier): ByokModelSpec {
   switch (provider) {
     case 'anthropic': {
@@ -696,8 +674,6 @@ export function byokModelSpec(provider: ByokCredential['provider'], tier: LLMTie
       const model = tier === 'premium' ? 'gpt-4o' : 'gpt-4o-mini';
       return { model, pricingKey: model };
     }
-    case 'google':
-      return byokGoogleSpec();
     case 'openrouter': {
       const model = tier === 'premium' ? 'gpt-4o' : 'gpt-4o-mini';
       return { model: `openai/${model}`, pricingKey: model };
@@ -711,7 +687,6 @@ export function byokModelSpec(provider: ByokCredential['provider'], tier: LLMTie
  */
 const BYOK_BASE_URL = {
   openai: 'https://api.openai.com/v1',
-  google: 'https://generativelanguage.googleapis.com/v1beta/openai/',
   openrouter: 'https://openrouter.ai/api/v1',
 } as const;
 
@@ -761,7 +736,7 @@ export function createByokModel(
         fetch: bodySafeFetch,
       },
     });
-    // Google's and OpenRouter's OpenAI-compatible endpoints answer strict json_schema poorly;
+    // OpenRouter's OpenAI-compatible endpoint answers strict json_schema poorly;
     // tool calling is the path the platform already uses on OpenRouter.
     model = credential.provider === 'openai' ? chat : withFunctionCallingDefault(chat);
   }

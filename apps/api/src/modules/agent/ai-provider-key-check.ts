@@ -16,7 +16,7 @@ const CHECK_TIMEOUT_MS = 8_000;
 interface CheckRequest {
   url: string;
   headers: Record<string, string>;
-  /** HTTP statuses that mean "this key is not accepted" (Google answers 400 for a bad key). */
+  /** HTTP statuses that mean "this key is not accepted". */
   invalidStatuses: readonly number[];
 }
 
@@ -34,12 +34,6 @@ function requestFor(provider: AIKeyProvider, apiKey: string): CheckRequest {
         headers: { Authorization: `Bearer ${apiKey}` },
         // 403 is a restricted key without the models permission, not a wrong key.
         invalidStatuses: [401],
-      };
-    case 'google':
-      return {
-        url: 'https://generativelanguage.googleapis.com/v1beta/models?pageSize=1',
-        headers: { 'x-goog-api-key': apiKey },
-        invalidStatuses: [400, 401, 403],
       };
     case 'openrouter':
       // /models is public and accepts any key; /auth/key answers 401 to a key it does not know.
