@@ -540,6 +540,34 @@ describe('collectEvidence', () => {
     expect(admin).toContain('"tenantId":"tenant-a","role":"ADMIN"');
   });
 
+  it('measures MFA and admins over everyone with access, pinned staff included; terms over seats', async () => {
+    const db = fakeDb({ user: 3 });
+    await collectEvidence(db, 'tenant-a', NOW);
+    const calls = (db.user.count as ReturnType<typeof vi.fn>).mock.calls.map((c) =>
+      JSON.stringify(c[0])
+    );
+    const mfa = calls.filter((c) => c.includes('totpEnabled'));
+    expect(mfa.length).toBeGreaterThan(0);
+    for (const c of mfa) expect(c).not.toContain('"pinned":false');
+    const terms = calls.filter((c) => c.includes('termsAcceptances'));
+    expect(terms.length).toBe(1);
+    expect(terms[0]).toContain('"pinned":false');
+  });
+
+  it('dates the 12-month DSAR history by when it was answered, not received', async () => {
+    const db = fakeDb({ dsarRequest: 2 });
+    await collectEvidence(db, 'tenant-a', NOW);
+    const calls = (db.dsarRequest.count as ReturnType<typeof vi.fn>).mock.calls.map((c) =>
+      JSON.stringify(c[0])
+    );
+    const completed = calls.find((c) => c.includes('"status":"COMPLETED"'))!;
+    const breached = calls.find((c) => c.includes('"clockBreached":true'))!;
+    expect(completed).toContain('"completedAt":{"gte"');
+    expect(completed).not.toContain('receivedAt');
+    expect(breached).toContain('"completedAt":{"gte"');
+    expect(breached).not.toContain('receivedAt');
+  });
+
   it('leaves only the failing group unread', async () => {
     const e = await collectEvidence(fakeDb({}, ['dsarRequest']), 'tenant-a', NOW);
     expect(e.dsar).toBeNull();

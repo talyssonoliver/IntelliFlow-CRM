@@ -146,6 +146,22 @@ export function ComplianceDetailPanel({
     { enabled: open && framework !== null }
   );
   const points = historyQuery.data?.points ?? [];
+  const historyFailed = historyQuery.isError;
+
+  const historyError = (
+    <div role="alert" className="rounded-lg border border-border p-3">
+      <p className="text-sm text-foreground">
+        The stored history could not be loaded, so nothing is shown here.
+      </p>
+      <button
+        type="button"
+        onClick={() => void historyQuery.refetch()}
+        className="mt-2 text-sm font-medium text-primary hover:underline"
+      >
+        Try again
+      </button>
+    </div>
+  );
 
   const formatDay = (day: string) =>
     new Date(day).toLocaleDateString('en-GB', {
@@ -293,13 +309,16 @@ export function ComplianceDetailPanel({
                   {historyQuery.isLoading && (
                     <p className="text-sm text-muted-foreground">Loading history</p>
                   )}
-                  {!historyQuery.isLoading && points.filter((p) => p.score !== null).length < 2 && (
-                    <p className="text-sm text-muted-foreground">
-                      Trend starts tomorrow. A point is stored each day, so the line appears once
-                      two days exist.
-                    </p>
-                  )}
-                  <HistoryChart points={points} />
+                  {historyFailed && historyError}
+                  {!historyQuery.isLoading &&
+                    !historyFailed &&
+                    points.filter((p) => p.score !== null).length < 2 && (
+                      <p className="text-sm text-muted-foreground">
+                        Trend starts tomorrow. A point is stored each day, so the line appears once
+                        two days exist.
+                      </p>
+                    )}
+                  {!historyFailed && <HistoryChart points={points} />}
                   <div className="mt-4 space-y-2">
                     {points
                       .slice()
@@ -321,11 +340,13 @@ export function ComplianceDetailPanel({
 
               {activeTab === 'changes' && (
                 <div className="space-y-4">
-                  {describeChanges(points).length === 0 ? (
+                  {historyFailed && historyError}
+                  {!historyFailed && describeChanges(points).length === 0 && (
                     <p className="text-sm text-muted-foreground">
                       No change between stored days yet.
                     </p>
-                  ) : (
+                  )}
+                  {!historyFailed &&
                     describeChanges(points).map((change) => (
                       <div key={change.day} className="flex gap-3">
                         <div className="w-2 h-2 rounded-full bg-primary mt-2 shrink-0" />
@@ -336,8 +357,7 @@ export function ComplianceDetailPanel({
                           </p>
                         </div>
                       </div>
-                    ))
-                  )}
+                    ))}
                 </div>
               )}
             </div>

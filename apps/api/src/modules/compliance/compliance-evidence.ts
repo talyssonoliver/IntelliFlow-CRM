@@ -14,7 +14,7 @@
  * - These are internal readiness checks on what the product can see. They are not a certification
  *   and the page says so.
  */
-import { seatUserWhere } from '@intelliflow/db';
+import { liveMembershipWhere, seatUserWhere, tenantUserWhere } from '@intelliflow/db';
 import { PUBLISHED_TERMS_VERSION } from '@intelliflow/validators';
 
 export type ControlState = 'pass' | 'attention' | 'not_measured';
@@ -167,11 +167,18 @@ export async function collectEvidence(
   tenantId: string,
   now: Date = new Date()
 ): Promise<Evidence> {
+  // Terms are the firm's own users (people who take a seat). Security evidence (MFA, admins,
+  // verified email) covers everyone who can access the tenant, live pinned staff included.
   const seats = seatUserWhere(tenantId, now);
+  const people = tenantUserWhere(tenantId, now);
   const adminHere = {
     OR: [
       { tenantId, role: 'ADMIN' },
-      { memberships: { some: { tenantId, role: 'ADMIN', revokedAt: null } } },
+      {
+        memberships: {
+          some: { tenantId, role: 'ADMIN', ...liveMembershipWhere(now) },
+        },
+      },
     ],
   };
   const hasMfa = {
@@ -185,11 +192,11 @@ export async function collectEvidence(
 
   const users = await safely(async () => {
     const [seatCount, withMfa, admins, adminsWithMfa, unverified] = await Promise.all([
-      db.user.count({ where: seats }),
-      db.user.count({ where: { AND: [seats, hasMfa] } }),
-      db.user.count({ where: { AND: [seats, adminHere] } }),
-      db.user.count({ where: { AND: [seats, adminHere, hasMfa] } }),
-      db.user.count({ where: { AND: [seats, { emailVerified: false }] } }),
+      db.user.count({ where: people }),
+      db.user.count({ where: { AND: [people, hasMfa] } }),
+      db.user.count({ where: { AND: [people, adminHere] } }),
+      db.user.count({ where: { AND: [people, adminHere, hasMfa] } }),
+      db.user.count({ where: { AND: [people, { emailVerified: false }] } }),
     ]);
     return { seats: seatCount, withMfa, admins, adminsWithMfa, unverified };
   });
@@ -233,10 +240,10 @@ export async function collectEvidence(
         db.dsarRequest.count({ where: { tenantId, status: openStatuses } }),
         db.dsarRequest.count({ where: overdueOpen }),
         db.dsarRequest.count({
-          where: { tenantId, status: 'COMPLETED', receivedAt: { gte: since12m } },
+          where: { tenantId, status: 'COMPLETED', completedAt: { gte: since12m } },
         }),
         db.dsarRequest.count({
-          where: { tenantId, clockBreached: true, receivedAt: { gte: since12m } },
+          where: { tenantId, clockBreached: true, completedAt: { gte: since12m } },
         }),
         db.dsarRequest.count({ where: { tenantId, type: 'ERASURE', status: openStatuses } }),
         db.dsarRequest.count({

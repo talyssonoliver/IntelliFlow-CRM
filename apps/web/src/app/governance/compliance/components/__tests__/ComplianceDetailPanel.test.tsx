@@ -15,6 +15,8 @@ import type { FrameworkView } from '../compliance-view';
 const historyState = vi.hoisted(() => ({
   data: { points: [] as unknown[] } as { points: unknown[] } | undefined,
   isLoading: false,
+  isError: false,
+  refetch: vi.fn(),
 }));
 const historyUseQuery = vi.hoisted(() => vi.fn());
 
@@ -81,6 +83,8 @@ describe('ComplianceDetailPanel', () => {
   beforeEach(() => {
     historyState.data = { points: [] };
     historyState.isLoading = false;
+    historyState.isError = false;
+    historyState.refetch.mockClear();
     historyUseQuery.mockClear();
   });
 
@@ -165,6 +169,21 @@ describe('ComplianceDetailPanel', () => {
     render(<ComplianceDetailPanel framework={framework} open onClose={() => undefined} />);
     await user.click(screen.getByRole('button', { name: 'changes' }));
     expect(screen.getByText('No change between stored days yet.')).toBeInTheDocument();
+  });
+
+  it('reports a failed history request instead of claiming the history is empty', async () => {
+    historyState.data = undefined;
+    historyState.isError = true;
+    const user = userEvent.setup();
+    render(<ComplianceDetailPanel framework={framework} open onClose={() => undefined} />);
+    await user.click(screen.getByRole('button', { name: 'history' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('could not be loaded');
+    expect(screen.queryByText(/A point is stored each day/)).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(historyState.refetch).toHaveBeenCalledTimes(1);
+    await user.click(screen.getByRole('button', { name: 'changes' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('could not be loaded');
+    expect(screen.queryByText('No change between stored days yet.')).not.toBeInTheDocument();
   });
 
   it('labels a stored day as the same calendar date in any timezone', async () => {
