@@ -499,6 +499,36 @@ describe('PrismaTenantModuleRepository business type', () => {
     );
   });
 
+  it('writes the new type and the data protection in one transaction, protection computed for the new type', async () => {
+    // The stored type is still the OLD one (LAW_FIRM) when the change is requested.
+    mockPrisma.tenant.findUnique.mockResolvedValue({
+      plan: 'PROFESSIONAL',
+      businessType: 'LAW_FIRM',
+    });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+    mockPrisma.case.count.mockResolvedValue(4);
+    mockPrisma.tenantModule.upsert.mockResolvedValue({});
+    mockPrisma.$transaction.mockClear();
+
+    const protectedModules = await repo.setBusinessType(TENANT_ID, 'TRADES_HOME_SERVICES');
+
+    expect(protectedModules).toEqual(['LEGAL']);
+    expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+    expect((mockPrisma.$transaction.mock.calls[0][0] as unknown[]).length).toBe(2);
+  });
+
+  it('a failing read leaves the business type unchanged', async () => {
+    mockPrisma.tenant.findUnique.mockResolvedValue({ plan: 'PROFESSIONAL', businessType: null });
+    mockPrisma.tenantModule.findMany.mockResolvedValue([]);
+    mockPrisma.ticket.count.mockRejectedValue(new Error('pool timeout'));
+    mockPrisma.tenant.update.mockClear();
+
+    await expect(repo.setBusinessType(TENANT_ID, 'TRADES_HOME_SERVICES')).rejects.toThrow(
+      'pool timeout'
+    );
+    expect(mockPrisma.tenant.update).not.toHaveBeenCalled();
+  });
+
   it('legal documents alone (no cases) keep LEGAL on for a trades business', async () => {
     mockPrisma.tenant.findUnique.mockResolvedValue({
       plan: 'PROFESSIONAL',

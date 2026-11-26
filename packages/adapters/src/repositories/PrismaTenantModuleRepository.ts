@@ -25,7 +25,10 @@ import {
 export class PrismaTenantModuleRepository implements ModuleAccessPort {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async getEnabledModules(tenantId: string): Promise<ModuleId[]> {
+  async getEnabledModules(
+    tenantId: string,
+    businessTypeOverride?: TenantBusinessType
+  ): Promise<ModuleId[]> {
     // The single resolver (domain): (plan ∩ business type) ∪ explicit OVERRIDE rows − switched-off rows.
     const [{ plan, businessType }, overrides] = await Promise.all([
       this.getTenantProfile(tenantId),
@@ -34,7 +37,7 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
 
     return resolveEnabledModules({
       plan,
-      businessType,
+      businessType: businessTypeOverride ?? businessType,
       overrides: overrides.map((o) => ({
         moduleId: o.moduleId as ModuleId,
         enabled: o.enabled,
@@ -78,8 +81,14 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
   }
 
   async setBusinessType(tenantId: string, businessType: TenantBusinessType): Promise<ModuleId[]> {
-    await this.prisma.tenant.update({ where: { id: tenantId }, data: { businessType } });
-    return this.protectExistingData(tenantId);
+    // The protection is worked out for the NEW type first and written in the same transaction as the
+    // type itself, so a failure in between can never leave the type changed with data hidden.
+    const toProtect = await this.modulesToProtect(tenantId, businessType);
+    await this.prisma.$transaction([
+      this.prisma.tenant.update({ where: { id: tenantId }, data: { businessType } }),
+      ...this.protectionUpserts(tenantId, toProtect),
+    ]);
+    return toProtect;
   }
 
   /**
@@ -91,8 +100,18 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
    * Returns the modules protected.
    */
   async protectExistingData(tenantId: string): Promise<ModuleId[]> {
+    const toProtect = await this.modulesToProtect(tenantId);
+    await this.prisma.$transaction(this.protectionUpserts(tenantId, toProtect));
+    return toProtect;
+  }
+
+  /** The modules that hold data and would be hidden, for the workspace's type or the one about to be set. */
+  private async modulesToProtect(
+    tenantId: string,
+    businessType?: TenantBusinessType
+  ): Promise<ModuleId[]> {
     const [enabledList, plan, moduleRows] = await Promise.all([
-      this.getEnabledModules(tenantId),
+      this.getEnabledModules(tenantId, businessType),
       this.getTenantPlan(tenantId),
       this.prisma.tenantModule.findMany({ where: { tenantId } }),
     ]);
@@ -106,25 +125,27 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
       LEGAL: cases + documents,
       SUPPORT: tickets,
     };
+    return DATA_PROTECTED_MODULES.filter(
+      (moduleId) =>
+        dataProtectionFor({
+          moduleId,
+          plan,
+          hasData: rows[moduleId] > 0,
+          enabled: enabled.has(moduleId),
+          switchedOff: moduleRows.some((r) => r.moduleId === moduleId && !r.enabled),
+        }) === 'protect'
+    );
+  }
+
+  private protectionUpserts(tenantId: string, moduleIds: readonly ModuleId[]) {
     const now = new Date();
-    const protectedModules: ModuleId[] = [];
-    for (const moduleId of DATA_PROTECTED_MODULES) {
-      const verdict = dataProtectionFor({
-        moduleId,
-        plan,
-        hasData: rows[moduleId] > 0,
-        enabled: enabled.has(moduleId),
-        switchedOff: moduleRows.some((r) => r.moduleId === moduleId && !r.enabled),
-      });
-      if (verdict !== 'protect') continue;
-      await this.prisma.tenantModule.upsert({
+    return moduleIds.map((moduleId) =>
+      this.prisma.tenantModule.upsert({
         where: { tenantId_moduleId: { tenantId, moduleId } },
         create: { tenantId, moduleId, enabled: true, origin: 'EXISTING_DATA', enabledAt: now },
         update: { enabled: true, origin: 'EXISTING_DATA', enabledAt: now, disabledAt: null },
-      });
-      protectedModules.push(moduleId);
-    }
-    return protectedModules;
+      })
+    );
   }
 
   async enableModule(tenantId: string, moduleId: ModuleId): Promise<TenantModuleRecord> {
