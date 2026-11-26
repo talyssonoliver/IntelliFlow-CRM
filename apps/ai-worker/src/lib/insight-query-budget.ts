@@ -2,12 +2,14 @@
  * Query budget for one ai-insights job (ADR-053 background budget). The generic background
  * budget is 50; this job writes each flagged person under its own locked transaction (about 4
  * queries each, PG-203 #1002) for up to 20 leads and 20 contacts, plus a few queries per
- * insight, so a busy tenant legitimately needs more: the 06:00 run on 25/11/2026 tipped 50 at
- * its 51st query. 450 is the measured worst case (444: 20 leads, 20 contacts and 20 insights
- * all high priority), pinned by jobs/__tests__/insight-generation.query-budget.test.ts, not a
- * guess.
+ * insight (a batch-wide insight locks every address in the batch), so a busy tenant legitimately
+ * needs more: the 06:00 run on 25/11/2026 tipped 50 at its 51st query. 800 covers the measured
+ * worst case of 746 (20 leads and 20 contacts with their own addresses, 8 high-priority
+ * insights, 2 of them batch-wide, one audit row each), pinned by
+ * jobs/__tests__/insight-generation.query-budget.test.ts. The model's answer is not bounded in
+ * code, so the 8 insights are a stated assumption there, not a proof.
  */
-export const INSIGHT_JOB_QUERY_BUDGET = 450;
+export const INSIGHT_JOB_QUERY_BUDGET = 800;
 
 /**
  * The budget to seed for a background job: the insight queue's sized budget (never below the

@@ -27,7 +27,12 @@ vi.mock('../../chains/insight-generation.chain', () => {
   return { getInsightGenerationChain: () => new InsightGenerationChain(), InsightGenerationChain };
 });
 
-vi.mock('../../utils/audit-log', () => ({ logAIAgentAction: vi.fn(async () => undefined) }));
+// One audit row per created insight (DurableAuditLogAdapter writes a single auditLogEntry.create).
+vi.mock('../../utils/audit-log', () => ({
+  logAIAgentAction: vi.fn(async () => {
+    db.ops += 1;
+  }),
+}));
 
 vi.mock('@intelliflow/db', () => {
   const counted =
@@ -36,10 +41,17 @@ vi.mock('@intelliflow/db', () => {
       db.ops += 1;
       return value;
     };
-  const PERSON = 'person@example.invalid';
+  // Every person has their own address, so the batch-wide insights lock all of them (as in
+  // production); the row lock below returns the address of the row it is asked for.
+  const addressOf = (id: unknown) => `${String(id)}@example.invalid`;
   const tx: Record<string, any> = {
     // Row lock and address lock both come through here.
-    $queryRaw: counted([{ email: PERSON }]),
+    $queryRaw: async (strings: TemplateStringsArray, ...values: unknown[]) => {
+      db.ops += 1;
+      return strings[0]?.includes('SELECT email FROM')
+        ? [{ email: addressOf(values[0]) }]
+        : [{ locked: 1 }];
+    },
     processingRestriction: { findFirst: counted(null), findMany: counted([]) },
     dsarRequest: { findFirst: counted(null), findMany: counted([]) },
     aIInsight: { findFirst: counted(null), create: counted({ id: 'insight-row' }) },
@@ -62,7 +74,7 @@ vi.mock('@intelliflow/db', () => {
         db.ops += 1;
         return args.where.id.in.map((id) => ({
           id,
-          email: PERSON,
+          email: addressOf(id),
           firstName: 'A',
           lastName: 'B',
           company: 'Co',
@@ -73,7 +85,12 @@ vi.mock('@intelliflow/db', () => {
       findFirst: counted({ id: 'x' }),
       findMany: async (args: { where: { id: { in: string[] } } }) => {
         db.ops += 1;
-        return args.where.id.in.map((id) => ({ id, email: PERSON, firstName: 'C', lastName: 'D' }));
+        return args.where.id.in.map((id) => ({
+          id,
+          email: addressOf(id),
+          firstName: 'C',
+          lastName: 'D',
+        }));
       },
     },
     opportunity: {
@@ -114,13 +131,20 @@ function worstCaseJob() {
   } as any;
 }
 
-/** The most the model returns for those capped inputs: every one high or critical, about a person. */
+/**
+ * The sizing assumption: the model answers with up to 8 insights, all high or critical (the
+ * costliest kind: record, audit row, notification, activity and task, each under the person's
+ * locks): 6 about one person and 2 about the whole batch, which lock every address in it.
+ * The model's answer is not bounded in code, so this is a stated assumption, not a proof.
+ */
 function worstCaseInsights() {
-  const people = [
-    ...ids('lead', 10).map((id) => ({ entityType: 'lead', entityId: id })),
-    ...ids('contact', 10).map((id) => ({ entityType: 'contact', entityId: id })),
+  const about = [
+    ...ids('lead', 3).map((id) => ({ entityType: 'lead', entityId: id })),
+    ...ids('contact', 3).map((id) => ({ entityType: 'contact', entityId: id })),
+    { entityType: null, entityId: null },
+    { entityType: null, entityId: null },
   ];
-  return people.map((p, i) => ({
+  return about.map((p, i) => ({
     ...p,
     type: 'warning',
     title: `Insight ${i}`,
@@ -162,7 +186,7 @@ describe('ai-insights job query budget', () => {
     job.data.staleContacts = job.data.staleContacts.slice(0, 10);
     job.data.dealsAtRisk = [];
     db.ctx['generate'] = async () => ({
-      insights: worstCaseInsights().slice(0, 6),
+      insights: worstCaseInsights().slice(0, 4),
       source: 'llm',
       executionTimeMs: 5,
     });
