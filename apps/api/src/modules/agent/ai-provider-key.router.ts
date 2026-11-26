@@ -164,7 +164,6 @@ export const aiProviderKeyRouter = createTRPCRouter({
       last4: keyLast4(input.apiKey),
       status: 'ACTIVE',
       statusDetail: null,
-      allowFallback: input.allowFallback ?? before?.allowFallback ?? false,
       createdBy: ctx.tenant.userId ?? null,
       lastUsedAt: null,
       // The key's revision: a replacement is a new one, so a status written for the old key by
@@ -173,8 +172,13 @@ export const aiProviderKeyRouter = createTRPCRouter({
     };
     const row = (await ctx.prismaWithTenant.tenantAIProviderKey.upsert({
       where: { tenantId },
-      create: { tenantId, ...data },
-      update: data,
+      // A first key defaults to no fallback. A replacement without a choice leaves the stored
+      // value to the database, so a concurrent setOptions is never overwritten.
+      create: { tenantId, ...data, allowFallback: input.allowFallback ?? false },
+      update: {
+        ...data,
+        ...(input.allowFallback === undefined ? {} : { allowFallback: input.allowFallback }),
+      },
       select: { id: true, ...KEY_SELECT },
     })) as KeyRow & { id: string };
 

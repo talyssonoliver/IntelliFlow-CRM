@@ -184,7 +184,8 @@ describe('aiProviderKeyRouter (PG-199 BYOK)', () => {
       expect(delegate().upsert.mock.calls[1][0].create.allowFallback).toBe(false);
       delegate().findFirst.mockResolvedValue(keyRow({ allowFallback: true }));
       await admin.set({ provider: 'openai', apiKey: FAKE_KEY });
-      expect(delegate().upsert.mock.calls[2][0].update.allowFallback).toBe(true);
+      // Omitted on a replacement: the stored value is left to the database (no lost update).
+      expect('allowFallback' in delegate().upsert.mock.calls[2][0].update).toBe(false);
     });
 
     it('refuses a key the provider rejects and writes nothing', async () => {

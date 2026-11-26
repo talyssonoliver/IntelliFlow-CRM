@@ -2,7 +2,7 @@ import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
 import { ChatOllama } from '@langchain/ollama';
 import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { Embeddings } from '@langchain/core/embeddings';
-import { aiConfig, AIProviderSchema, type AIProvider } from '../config/ai.config.js';
+import { aiConfig, AIProviderSchema, MODEL_PRICING, type AIProvider } from '../config/ai.config.js';
 import { CircuitBreaker } from '../utils/circuit-breaker.js';
 import { resolveEffectiveTier } from './tenant-ai-config.js';
 import { assertWithinCeiling } from './purpose-ceiling.js';
@@ -663,6 +663,22 @@ interface ByokModelSpec {
  * (or an equally priced alias) so the tenant's usage is estimated, never priced as some other
  * model. Premium moves up one model where the provider has one we price.
  */
+/**
+ * The Google model for a customer key: `BYOK_GOOGLE_MODEL` when ops names one that has a price in
+ * MODEL_PRICING (Google retires models for new API users; this avoids a deploy), else Gemini 2.5
+ * Flash. An unpriced name is refused so usage is never priced as another model.
+ */
+function byokGoogleSpec(): ByokModelSpec {
+  const chosen = (process.env['BYOK_GOOGLE_MODEL'] || '').trim();
+  if (chosen && Object.hasOwn(MODEL_PRICING, chosen)) return { model: chosen, pricingKey: chosen };
+  if (chosen) {
+    console.error(
+      `[llm-factory] BYOK_GOOGLE_MODEL "${chosen}" has no MODEL_PRICING entry; using gemini-2.5-flash`
+    );
+  }
+  return { model: 'gemini-2.5-flash', pricingKey: 'gemini-2.5-flash' };
+}
+
 export function byokModelSpec(provider: ByokCredential['provider'], tier: LLMTier): ByokModelSpec {
   switch (provider) {
     case 'anthropic': {
@@ -674,7 +690,7 @@ export function byokModelSpec(provider: ByokCredential['provider'], tier: LLMTie
       return { model, pricingKey: model };
     }
     case 'google':
-      return { model: 'gemini-2.5-flash', pricingKey: 'gemini-2.5-flash' };
+      return byokGoogleSpec();
     case 'openrouter': {
       const model = tier === 'premium' ? 'gpt-4o' : 'gpt-4o-mini';
       return { model: `openai/${model}`, pricingKey: model };

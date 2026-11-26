@@ -302,3 +302,16 @@ describe('createLLMForTenant with BYOK', () => {
     });
   });
 });
+
+describe('Google BYOK model', () => {
+  it('BYOK_GOOGLE_MODEL picks a priced model; an unpriced name falls back to gemini-2.5-flash', async () => {
+    const { byokModelSpec } = await importFactory();
+    vi.stubEnv('BYOK_GOOGLE_MODEL', 'gpt-4o');
+    expect(byokModelSpec('google', 'free')).toEqual({ model: 'gpt-4o', pricingKey: 'gpt-4o' });
+    vi.stubEnv('BYOK_GOOGLE_MODEL', 'not-a-priced-model');
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    expect(byokModelSpec('google', 'free').model).toBe('gemini-2.5-flash');
+    spy.mockRestore();
+    vi.unstubAllEnvs();
+  });
+});
