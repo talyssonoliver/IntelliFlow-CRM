@@ -12,7 +12,15 @@ import {
 
 function db(tenants: string[], failFor?: string): ComplianceSnapshotJobDb {
   const zero = vi.fn(async () => 0);
+  const complianceSnapshot = {
+    upsert: vi.fn(async (args: unknown) => {
+      if (failFor && JSON.stringify(args).includes(failFor)) throw new Error('write failed');
+      return {};
+    }),
+    findMany: vi.fn(async () => []),
+  };
   return {
+    $transaction: async (fn) => fn({ complianceSnapshot }),
     tenant: { findMany: vi.fn(async () => tenants.map((id) => ({ id }))) },
     user: { count: zero },
     auditLogEntry: { count: zero },
@@ -25,13 +33,7 @@ function db(tenants: string[], failFor?: string): ComplianceSnapshotJobDb {
     documentRetentionPolicy: { count: zero },
     tenantMemoryPolicy: { findUnique: vi.fn(async () => null) },
     aIMonitoringEvent: { count: zero },
-    complianceSnapshot: {
-      upsert: vi.fn(async (args: unknown) => {
-        if (failFor && JSON.stringify(args).includes(failFor)) throw new Error('write failed');
-        return {};
-      }),
-      findMany: vi.fn(async () => []),
-    },
+    complianceSnapshot,
   };
 }
 

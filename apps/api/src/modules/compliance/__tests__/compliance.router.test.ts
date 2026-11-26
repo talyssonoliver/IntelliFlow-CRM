@@ -29,6 +29,10 @@ function zeroCounts() {
   prismaMock.tenantMemoryPolicy.findUnique.mockResolvedValue(null);
   prismaMock.aIMonitoringEvent.count.mockResolvedValue(0);
   prismaMock.complianceSnapshot.findMany.mockResolvedValue([]);
+  // the snapshot write runs in one transaction; the mock hands the same client to the callback
+  (
+    prismaMock.$transaction as unknown as { mockImplementation: (f: unknown) => void }
+  ).mockImplementation((fn: (tx: unknown) => Promise<unknown>) => fn(prismaMock));
 }
 
 describe('compliance router', () => {

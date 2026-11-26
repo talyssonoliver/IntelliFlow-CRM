@@ -15,9 +15,14 @@ import {
   type SnapshotPoint,
 } from './compliance-evidence';
 
-export interface SnapshotDb {
+export interface SnapshotWriter {
   complianceSnapshot: {
     upsert(args: unknown): Promise<unknown>;
+  };
+}
+
+export interface SnapshotDb extends SnapshotWriter {
+  complianceSnapshot: SnapshotWriter['complianceSnapshot'] & {
     findMany(args: unknown): Promise<
       Array<{
         frameworkId: string;
@@ -29,6 +34,8 @@ export interface SnapshotDb {
       }>
     >;
   };
+  /** Runs `fn` in one database transaction: it commits when `fn` resolves, rolls back when it throws. */
+  $transaction<T>(fn: (tx: SnapshotWriter) => Promise<T>): Promise<T>;
 }
 
 export async function recordSnapshot(
@@ -38,8 +45,8 @@ export async function recordSnapshot(
   now: Date = new Date()
 ): Promise<number> {
   const day = utcDay(now);
-  const write = (f: Overview['frameworks'][number]) =>
-    db.complianceSnapshot.upsert({
+  const write = (tx: SnapshotWriter, f: Overview['frameworks'][number]) =>
+    tx.complianceSnapshot.upsert({
       where: { tenantId_day_frameworkId: { tenantId, day, frameworkId: f.id } },
       create: {
         tenantId,
@@ -57,12 +64,17 @@ export async function recordSnapshot(
         notMeasured: f.counts.notMeasured,
       },
     });
-  // The last framework is written last and is the marker the daily job looks for, so a day with
-  // only some rows written is retried instead of being taken as done.
+  // The last framework is written last and is the marker the daily job looks for. Everything is
+  // in one transaction, so a failure part-way rolls back and an earlier snapshot of the day (and
+  // its marker) is never left mixed with newer rows.
   const last = FRAMEWORK_IDS[FRAMEWORK_IDS.length - 1]!;
-  await Promise.all(overview.frameworks.filter((f) => f.id !== last).map(write));
-  const marker = overview.frameworks.find((f) => f.id === last);
-  if (marker) await write(marker);
+  const ordered = [
+    ...overview.frameworks.filter((f) => f.id !== last),
+    ...overview.frameworks.filter((f) => f.id === last),
+  ];
+  await db.$transaction(async (tx) => {
+    for (const f of ordered) await write(tx, f);
+  });
   return overview.frameworks.length;
 }
 
