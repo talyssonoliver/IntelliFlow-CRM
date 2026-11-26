@@ -32,6 +32,11 @@ export function freshSyncState() {
     lookbackUntil: null,
     lookbackCursor: null,
     lookbackSentCursor: null,
+    lookbackNextAt: null,
+    lookbackBackoffCount: 0,
+    lookbackProgressAt: null,
+    lookbackImportTotal: null,
+    lookbackImportDone: 0,
     // MVP-013: a reconnect clears a calendar reconnect request and makes the calendar sync due now. Its sync
     // token is kept: for the same account it resumes where it stopped (Google reports what changed
     // meanwhile, or the token has expired and the sync reads everything again); the sync itself notices a

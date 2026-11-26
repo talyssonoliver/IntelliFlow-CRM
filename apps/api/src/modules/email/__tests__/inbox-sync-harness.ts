@@ -93,10 +93,12 @@ export function setup(
     contact: {
       findFirst: vi.fn(async () => ({ id: 'contact-1' })),
       findMany: vi.fn(async (..._args: unknown[]): Promise<unknown[]> => []),
+      count: vi.fn(async (..._args: unknown[]) => 0),
     },
     lead: {
       findFirst: vi.fn(async () => null),
       findMany: vi.fn(async (..._args: unknown[]): Promise<unknown[]> => []),
+      count: vi.fn(async (..._args: unknown[]) => 1),
     },
     emailRecord: {
       findFirst: vi.fn(async () => null),

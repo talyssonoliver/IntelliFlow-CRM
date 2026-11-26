@@ -280,7 +280,7 @@ export const MODEL_PRICING = {
   // checked 2026-10-19). Without this key calculateCost priced it as gpt-3.5-turbo.
   'gemini-embedding-001': { input: 0.00015, output: 0 },
   // Production embeddings since 2026-10-31 (EMBEDDING_PROVIDER=openrouter): free on OpenRouter.
-  'nvidia/nemotron-3-embed-1b:free': { input: 0, output: 0 },
+  'nvidia/nemotron-3.5-embed-1b:free': { input: 0, output: 0 },
 
   // AI_PROVIDER=anthropic (Anthropic first-party API list prices). Claude Haiku 5.5: $0.10 /
   // $0.50 per M for prompts up to 100K tokens; longer prompts are priced from

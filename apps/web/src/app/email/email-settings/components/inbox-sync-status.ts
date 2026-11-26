@@ -14,3 +14,25 @@ export function inboxSyncLine(syncedAt: string | null | undefined, locale?: stri
   const formatted = when.toLocaleString(locale, { dateStyle: 'medium', timeStyle: 'short' });
   return `${INBOX_SYNC_SCOPE_NOTE} Last synced ${formatted}.`;
 }
+
+const PROVIDER_NAME: Record<string, string> = {
+  GMAIL: 'Gmail',
+  MICROSOFT: 'Outlook',
+  ZOHO: 'Zoho Mail',
+};
+
+/**
+ * The history import's progress, from the real stored counts (no estimate): "Importing email
+ * history: 40 of 163 contacts." and, while the provider's rate limits hold it back, that it resumes
+ * by itself. Null when nothing is importing.
+ */
+export function historyImportLine(
+  progress: { done: number; total: number; paused: boolean } | null | undefined,
+  kind?: string | null
+): string | null {
+  if (!progress || progress.total <= 0) return null;
+  const line = `Importing email history: ${progress.done} of ${progress.total} contacts.`;
+  if (!progress.paused) return line;
+  const provider = (kind && PROVIDER_NAME[kind]) || 'your mail provider';
+  return `${line} Paused by ${provider}'s limits, resumes automatically.`;
+}

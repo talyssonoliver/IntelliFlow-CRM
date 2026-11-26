@@ -70,7 +70,7 @@ interface FixtureEvent {
 function makePrismaWithEvents(events: FixtureEvent[]) {
   const findMany = async (args: {
     distinct?: unknown;
-    where?: { tenantId?: string | null };
+    where?: { tenantId?: string | null; eventType?: { in?: string[] } };
   }): Promise<unknown> => {
     if (args?.distinct) {
       const seen = new Set<string | null>();
@@ -84,7 +84,8 @@ function makePrismaWithEvents(events: FixtureEvent[]) {
       return uniq;
     }
     const want = args?.where?.tenantId;
-    return events.filter((e) => e.tenantId === want);
+    const types = args?.where?.eventType?.in;
+    return events.filter((e) => e.tenantId === want && (!types || types.includes(e.eventType)));
   };
   return { aIMonitoringEvent: { findMany } };
 }

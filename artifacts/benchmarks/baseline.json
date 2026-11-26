@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-11-23T02:11:28.187Z",
+  "timestamp": "2026-11-26T07:38:08.560Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1528,7 +1528,7 @@
   },
   "database_inventory": {
     "total_tables": 218,
-    "total_fields": 3253,
+    "total_fields": 3259,
     "total_indexes": 967,
     "total_relations": 324,
     "tables_with_embeddings": 4,
@@ -1542,18 +1542,18 @@
         "hasEmbedding": false
       },
       {
+        "name": "EmailMailbox",
+        "fields": 60,
+        "indexes": 4,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "Lead",
         "fields": 56,
         "indexes": 16,
         "relations": 3,
         "hasEmbedding": true
-      },
-      {
-        "name": "EmailMailbox",
-        "fields": 55,
-        "indexes": 4,
-        "relations": 2,
-        "hasEmbedding": false
       },
       {
         "name": "User",
@@ -2375,6 +2375,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "EmailOAuthState",
+        "fields": 11,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "EmailSignature",
         "fields": 11,
         "indexes": 2,
@@ -2568,13 +2575,6 @@
         "fields": 10,
         "indexes": 3,
         "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "EmailOAuthState",
-        "fields": 10,
-        "indexes": 3,
-        "relations": 1,
         "hasEmbedding": false
       },
       {

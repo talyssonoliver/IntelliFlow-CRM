@@ -25,6 +25,7 @@ import {
   type SmtpEndpointRow,
   type SuppressionDto,
 } from '@intelliflow/validators';
+import { lookbackProgress } from './mail-sync-lookback';
 import { SYNC_READ_CHECKS, hasGoogleCalendar } from './mail-sync-scopes';
 
 /** A mailbox row; the SMTP columns come from SmtpEndpointRow and SmtpAccountRow (#1103). */
@@ -44,6 +45,11 @@ export interface MailboxRowLike extends SmtpEndpointRow, SmtpAccountRow {
   refreshToken: string | null;
   /** #1177 Outlook inbox sync: the last finished round (absent on rows read without it). */
   syncedAt?: Date | null;
+  /** The history look-back's stored progress (absent on rows read without it). */
+  lookbackImportTotal?: number | null;
+  lookbackImportDone?: number | null;
+  lookbackNextAt?: Date | null;
+  lookbackBackoffCount?: number | null;
   /** Scopes the provider granted (OAuth mailboxes). */
   grantedScopes?: string[];
   /** MVP-013: the calendar sync's state and last finished round (absent on rows read without them). */
@@ -125,6 +131,7 @@ export function toMailboxDto(
     bounceReadingEnabled: canReadBounces(row),
     accountAddress: row.accountAddress,
     inboxSyncedAt: row.syncedAt ? row.syncedAt.toISOString() : null,
+    historyImport: lookbackProgress(row, new Date()),
     replySync: replySyncState(row),
     calendarAccess: calendarAccessState(row),
     calendarSync: calendarSyncState(row),

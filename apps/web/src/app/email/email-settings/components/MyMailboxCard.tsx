@@ -13,13 +13,13 @@ import type { MailboxDto, OAuthProvidersAvailableDto } from '@intelliflow/valida
 import { trpc } from '@/lib/trpc';
 import { SectionHeader } from '@/components/shared/section-header';
 import { mailboxErrorMessage } from '@/components/email/send-errors';
-import { oauthProviderKey } from '../../oauth/oauth-session';
+import { oauthProviderKey, oauthSendOnlyKey } from '../../oauth/oauth-session';
 import { connectionFailureHelp } from './connection-help';
 import { oneClickNotYet, providerByServer } from './mailbox-providers';
 import { SmtpHostingNotice } from './SmtpHostingNotice';
 import { SendFromHint, type HintProvider } from './SendFromHint';
 import { calendarSyncLine } from './calendar-sync-status';
-import { inboxSyncLine } from './inbox-sync-status';
+import { historyImportLine, inboxSyncLine } from './inbox-sync-status';
 import { GoogleAdminTrust } from './GoogleAdminTrust';
 import { GoogleCalendarAccess } from './GoogleCalendarAccess';
 
@@ -142,7 +142,10 @@ export function MailboxConnection({
         ...(sendOnly ? { sendOnly: true } : {}),
       });
       const state = new URL(url).searchParams.get('state');
-      if (state) sessionStorage.setItem(oauthProviderKey(state), provider);
+      if (state) {
+        sessionStorage.setItem(oauthProviderKey(state), provider);
+        if (sendOnly) sessionStorage.setItem(oauthSendOnlyKey(state), '1');
+      }
       window.location.assign(url);
     } catch (e) {
       setError(errorText(e, `${PROVIDER_LABEL[provider]} sign-in could not start.`));
@@ -227,6 +230,11 @@ export function MailboxConnection({
       {connected && !broken && mailbox?.replySync === 'ON' && (
         <p className="text-xs text-muted-foreground" data-testid="inbox-sync-status">
           {inboxSyncLine(mailbox.inboxSyncedAt)}
+        </p>
+      )}
+      {connected && !broken && historyImportLine(mailbox?.historyImport, mailbox?.kind) && (
+        <p className="text-xs text-muted-foreground" data-testid="history-import-status">
+          {historyImportLine(mailbox?.historyImport, mailbox?.kind)}
         </p>
       )}
       {connected && !broken && mailbox?.replySync === 'NEEDS_RECONNECT' && (

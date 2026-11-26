@@ -35,6 +35,7 @@ import {
 } from '../lib/usage-metering.js';
 import { assertWithinMonthlyBudget } from '../lib/monthly-budget.js';
 import { assertWithinAiActions, recordAiAction } from '../lib/ai-actions-allowance.js';
+import { handledFallback, recordHandledFallback } from '../lib/handled-fallback.js';
 
 const tracer = trace.getTracer('intelliflow-ai-worker', '0.1.0');
 
@@ -46,6 +47,23 @@ function byokSafeError(err: unknown): Error {
   const safe = new Error(`BYOK call failed: ${name}${status}`);
   safe.name = name;
   return safe;
+}
+
+/**
+ * Ends an embed span for a failed call. When the caller recovers with a fallback
+ * (lib/handled-fallback.ts) the span keeps the evidence but is not an ERROR, so the error-span
+ * alert fires only on failures nobody handled.
+ */
+function markEmbedFailure(span: Span, err: unknown): void {
+  const handled = handledFallback();
+  if (handled) {
+    span.setAttribute('llm.fallback.handled', handled.name);
+    span.addEvent('llm.embed.failed_handled', { 'exception.message': String(err) });
+    recordHandledFallback(handled.name);
+    return;
+  }
+  span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
+  span.recordException(err as Error);
 }
 
 export interface LLMTracingMeta {
@@ -259,8 +277,7 @@ export function wrapEmbeddingsWithTracing(
             recordCall(jobTenantId, [text]);
             return result;
           } catch (err) {
-            span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
-            span.recordException(err as Error);
+            markEmbedFailure(span, err);
             throw err;
           } finally {
             span.end();
@@ -298,8 +315,7 @@ export function wrapEmbeddingsWithTracing(
             recordCall(jobTenantId, texts);
             return result;
           } catch (err) {
-            span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
-            span.recordException(err as Error);
+            markEmbedFailure(span, err);
             throw err;
           } finally {
             span.end();
