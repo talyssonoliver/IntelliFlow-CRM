@@ -181,6 +181,8 @@ describe('Compliance API Routes', () => {
 
       expect(data.success).toBe(true);
       expect(data.data.risks).toEqual([]);
+      // A missing register is flagged, never reported as a register with zero risks.
+      expect(data.data.registerAvailable).toBe(false);
     });
   });
 

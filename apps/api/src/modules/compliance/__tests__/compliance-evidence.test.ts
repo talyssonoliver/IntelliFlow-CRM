@@ -97,6 +97,30 @@ describe('evaluateFrameworks', () => {
       );
     });
 
+    it('agrees the verb with the count: "1 administrator has", "2 administrators have"', () => {
+      const one = evidence({
+        users: { seats: 1, withMfa: 0, admins: 1, adminsWithMfa: 0, unverified: 1 },
+      });
+      expect(control(one, 'iso-27001', 'A.9.2-admin-mfa').evidence).toBe(
+        '0 of 1 administrator has a second factor enabled.'
+      );
+      expect(control(one, 'iso-27001', 'A.9.4-mfa').evidence).toBe(
+        '0 of 1 user has a second factor enabled.'
+      );
+      expect(control(one, 'iso-27001', 'A.5.17-verified').evidence).toBe(
+        '1 of 1 user has not verified their email.'
+      );
+      const two = evidence({
+        users: { seats: 3, withMfa: 1, admins: 2, adminsWithMfa: 1, unverified: 0 },
+      });
+      expect(control(two, 'iso-27001', 'A.9.2-admin-mfa').evidence).toBe(
+        '1 of 2 administrators have a second factor enabled.'
+      );
+      expect(control(two, 'iso-27001', 'A.5.17-verified').evidence).toBe(
+        'All 3 users have a verified email.'
+      );
+    });
+
     it('does not measure MFA for a firm with no users', () => {
       const e = evidence({
         users: { seats: 0, withMfa: 0, admins: 0, adminsWithMfa: 0, unverified: 0 },

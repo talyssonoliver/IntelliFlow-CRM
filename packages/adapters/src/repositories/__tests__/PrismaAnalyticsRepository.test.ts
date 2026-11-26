@@ -530,16 +530,40 @@ describe('PrismaAnalyticsRepository', () => {
         );
       });
 
-      it('should format CREATE with default resourceType and name', async () => {
-        await testDescription('CREATE', {}, 'New item: Unknown');
+      it('should format CREATE without a name or record', async () => {
+        await testDescription('CREATE', {}, 'New item');
+      });
+
+      it('never writes "Unknown": a row without a name names the record by type and id', async () => {
+        mockPrisma.auditLogEntry.findMany.mockResolvedValue([
+          createMockAuditEntry({
+            action: 'UPDATE',
+            metadata: {},
+            resourceType: 'lead',
+            resourceId: 'lead-123',
+          }),
+          createMockAuditEntry({
+            id: 'audit-2',
+            action: 'CREATE',
+            metadata: {},
+            resourceType: 'contact',
+            resourceId: 'contact-9',
+          }),
+        ]);
+        const result = await repository.getRecentAuditLogs(tenantId, 10);
+        expect(result.map((r) => r.description)).toEqual([
+          'Updated: lead lead-123',
+          'New contact: contact contact-9',
+        ]);
+        expect(result.some((r) => /unknown/i.test(r.description))).toBe(false);
       });
 
       it('should format QUALIFY', async () => {
         await testDescription('QUALIFY', { name: 'Hot Lead' }, 'Qualified: Hot Lead');
       });
 
-      it('should format QUALIFY with fallback name', async () => {
-        await testDescription('QUALIFY', {}, 'Qualified: Unknown');
+      it('should format QUALIFY without a name or record', async () => {
+        await testDescription('QUALIFY', {}, 'Qualified');
       });
 
       it('should format CONVERT', async () => {
@@ -603,7 +627,7 @@ describe('PrismaAnalyticsRepository', () => {
       });
 
       it('should format task.completed with default title', async () => {
-        await testDescription('task.completed', {}, 'Task completed: Unknown');
+        await testDescription('task.completed', {}, 'Task completed');
       });
 
       it('should return action as description for unknown actions', async () => {
@@ -623,11 +647,11 @@ describe('PrismaAnalyticsRepository', () => {
       });
 
       it('should handle null metadata gracefully', async () => {
-        await testDescription('CREATE', null, 'New item: Unknown');
+        await testDescription('CREATE', null, 'New item');
       });
 
       it('should handle undefined metadata gracefully', async () => {
-        await testDescription('CREATE', undefined, 'New item: Unknown');
+        await testDescription('CREATE', undefined, 'New item');
       });
     });
   });

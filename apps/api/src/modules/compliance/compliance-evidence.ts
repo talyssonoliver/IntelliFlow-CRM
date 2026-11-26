@@ -332,6 +332,9 @@ export async function collectEvidence(
 // ---------------------------------------------------------------------------------------------
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+/** Verb agreeing with the thing counted: "1 administrator has", "2 administrators have". */
+const agree = (n: number, singular: string, pluralForm: string) =>
+  n === 1 ? singular : pluralForm;
 
 function unread(id: string, name: string, href?: string, label?: string): Control {
   return {
@@ -395,7 +398,7 @@ function mfaControl(u: Users): Control {
     'A.9.4-mfa',
     'MFA adoption',
     u.withMfa === u.seats ? 'pass' : 'attention',
-    `${u.withMfa} of ${plural(u.seats, 'user')} have a second factor enabled.`,
+    `${u.withMfa} of ${plural(u.seats, 'user')} ${agree(u.seats, 'has', 'have')} a second factor enabled.`,
     MFA
   );
 }
@@ -413,7 +416,7 @@ function adminMfaControl(u: Users): Control {
     'A.9.2-admin-mfa',
     'Administrators use MFA',
     u.adminsWithMfa === u.admins ? 'pass' : 'attention',
-    `${u.adminsWithMfa} of ${plural(u.admins, 'administrator')} have a second factor enabled.`,
+    `${u.adminsWithMfa} of ${plural(u.admins, 'administrator')} ${agree(u.admins, 'has', 'have')} a second factor enabled.`,
     TEAM
   );
 }
@@ -429,8 +432,8 @@ function verifiedControl(u: Users): Control {
   }
   const evidence =
     u.unverified === 0
-      ? `All ${plural(u.seats, 'user')} have a verified email.`
-      : `${u.unverified} of ${plural(u.seats, 'user')} have not verified their email.`;
+      ? `All ${plural(u.seats, 'user')} ${agree(u.seats, 'has', 'have')} a verified email.`
+      : `${u.unverified} of ${plural(u.seats, 'user')} ${agree(u.seats, 'has', 'have')} not verified their email.`;
   return control(
     'A.5.17-verified',
     'Verified sign-in email',
@@ -504,7 +507,7 @@ function apiKeyControl(k: NonNullable<Evidence['apiKeys']>): Control {
   const evidence =
     bad === 0
       ? `${plural(k.active, 'active API key')}, all expiring and under ${API_KEY_MAX_AGE_DAYS} days old.`
-      : `${plural(k.active, 'active API key')}: ${k.neverExpire} never expire and ${k.older} are older than ${API_KEY_MAX_AGE_DAYS} days.`;
+      : `${plural(k.active, 'active API key')}: ${k.neverExpire} ${agree(k.neverExpire, 'never expires', 'never expire')} and ${k.older} ${agree(k.older, 'is', 'are')} older than ${API_KEY_MAX_AGE_DAYS} days.`;
   return control(id, name, bad === 0 ? 'pass' : 'attention', evidence, API_KEYS);
 }
 
@@ -615,7 +618,7 @@ function consentControl(b: NonNullable<Evidence['bookings']>): Control {
     id,
     name,
     b.withoutConsent === 0 ? 'pass' : 'attention',
-    `${b.publicBookings - b.withoutConsent} of ${plural(b.publicBookings, 'public booking')} carry a consent timestamp.`,
+    `${b.publicBookings - b.withoutConsent} of ${plural(b.publicBookings, 'public booking')} ${agree(b.publicBookings, 'carries', 'carry')} a consent timestamp.`,
     { href: '/settings/appointments', label: 'Open booking settings' }
   );
 }

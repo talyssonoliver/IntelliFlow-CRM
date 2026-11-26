@@ -54,6 +54,8 @@ export interface RiskSummary {
 export interface RiskHeatMapResponse {
   risks: Risk[];
   summary: RiskSummary;
+  /** false when the platform risk register file could not be read (not the same as zero risks). */
+  registerAvailable?: boolean;
   lastUpdated: string;
 }
 
