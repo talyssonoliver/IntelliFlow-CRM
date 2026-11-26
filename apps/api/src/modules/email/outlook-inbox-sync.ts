@@ -33,6 +33,7 @@ import {
 } from './mail-sync-reader';
 import { learnThread, logOnLead, threadOf } from './mail-sync-links';
 import { alreadyLogged, anyoneRestricted, bodyOf, counterparty } from './mail-sync-match';
+import { assertIdentitiesAllowed } from './mailbox-connect-policy';
 import { runLookback, type LookbackState } from './mail-sync-lookback';
 import { messageIdHeader, recordData } from './mail-sync-record';
 import { queueReplyDraftForSyncedMail } from './mail-sync-reply-draft';
@@ -104,6 +105,16 @@ interface SyncMailbox extends TransportMailbox, LookbackState {
   syncCursor: string | null;
   syncSentCursor: string | null;
   syncFailureCount: number;
+}
+
+/** True unless the tenant has a mailbox allowlist that does not list this mailbox's address. */
+function mailboxAllowed(mailbox: SyncMailbox): boolean {
+  try {
+    assertIdentitiesAllowed(mailbox.tenantId, mailbox);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 interface Claim {
@@ -369,6 +380,17 @@ async function syncMailbox(
     });
     return;
   }
+  // A mailbox that is not on its tenant allowlist (connected before the list existed) is not read.
+  if (!mailboxAllowed(mailbox)) {
+    await release(deps, claim, mailbox.tokenVersion, {
+      nextSyncAt: new Date(now.getTime() + NO_SCOPE_RECHECK_MS),
+    });
+    console.warn('[email] inbox sync skipped: mailbox is not on the tenant allowlist', {
+      mailboxId: claim.id,
+      tenantId: mailbox.tenantId,
+    });
+    return;
+  }
   // No OAuth client for this kind in this process (its env lacks it): a setup gap, not a mailbox
   // failure. Checked again next interval, no failure counted, no backoff.
   if (!hasOAuthClient(deps.transports, mailbox.kind)) {
@@ -441,7 +463,7 @@ async function syncMailbox(
       syncFailureCount: failures,
       nextSyncAt: new Date(now.getTime() + backoff),
     });
-    logFailure(claim.id, error);
+    logFailure(claim.id, error, failures);
   }
 }
 

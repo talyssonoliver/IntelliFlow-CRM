@@ -41,6 +41,12 @@ import { createTRPCRouter, tenantProcedure, verifiedTenantProcedure } from '../.
 import { assertTenantContext } from '../../security/tenant-context';
 import { resolveSender } from './mailbox-sender';
 import {
+  assertIdentitiesAllowed,
+  assertMailboxAllowed,
+  assertPersonalConfirmed,
+  type MailboxIdentity,
+} from './mailbox-connect-policy';
+import {
   assertEmailAdmin,
   auditEmail,
   emailRuntimeDeps,
@@ -131,6 +137,10 @@ async function writeMailbox(
   written: Record<string, unknown>
 ): Promise<MailboxRow> {
   const data = written.status === 'ACTIVE' ? { ...written, ...freshScanState() } : written;
+  // The allowlist is enforced here too, the one place every connection is written.
+  if (written.status !== 'DISCONNECTED') {
+    assertIdentitiesAllowed(owner.tenantId, written as MailboxIdentity);
+  }
   try {
     if (existing) {
       // New credentials: cached access tokens of the old ones stop being valid,
@@ -310,6 +320,13 @@ export const emailMailboxRouter = createTRPCRouter({
       assertTenantContext(ctx);
       const c = ctx as unknown as EmailRouterCtx;
       assertScopeAllowed(c, input.scope, 'saveSmtp');
+      if (input.smtpPassword !== null) {
+        // The identity a mailbox sends and reads as: the from address and any address-shaped login.
+        assertIdentitiesAllowed(c.tenant.tenantId, input);
+        for (const address of [input.fromAddress, input.smtpUsername, input.imapUsername]) {
+          assertPersonalConfirmed(address, input.acceptPersonal, input.scope);
+        }
+      }
       const existing = await findMailbox(c, input.scope);
       const data = smtpMailboxData(input, existing);
       if (data.status === 'ACTIVE') {
@@ -385,6 +402,10 @@ export const emailMailboxRouter = createTRPCRouter({
       const { transports } = emailRuntimeDeps(c);
       const row = await findMailbox(c, input.scope);
       if (!row) throw mailboxNotFound();
+      // A mailbox connected before the tenant had an allowlist is not brought back by a passing test.
+      if (row.status !== 'DISCONNECTED') {
+        assertIdentitiesAllowed(c.tenant.tenantId, row);
+      }
 
       let code: MailboxErrorCode | null = null;
       // The credential version tested (an OAuth refresh may rotate it on).
@@ -447,6 +468,7 @@ export const emailMailboxRouter = createTRPCRouter({
           provider: input.provider,
           stateHash: stateHash(state),
           codeVerifier: verifier,
+          acceptPersonal: input.acceptPersonal === true,
           expiresAt: new Date(Date.now() + EMAIL_LIMITS.oauthStateTtlMinutes * 60_000),
         },
       });
@@ -477,6 +499,7 @@ export const emailMailboxRouter = createTRPCRouter({
         id: string;
         scope: MailboxScope;
         codeVerifier: string;
+        acceptPersonal: boolean;
         expiresAt: Date;
       } | null = await c.prismaWithTenant.emailOAuthState.findFirst({
         where: { stateHash: stateHash(input.state), ...where },
@@ -504,6 +527,14 @@ export const emailMailboxRouter = createTRPCRouter({
           code: 'BAD_REQUEST',
           message: `${code}: The mailbox could not be connected.`,
         });
+      }
+
+      try {
+        assertMailboxAllowed(c.tenant.tenantId, account.address);
+        assertPersonalConfirmed(account.address, saved.acceptPersonal, saved.scope);
+      } catch (refusal) {
+        await account.giveBack().catch(() => undefined);
+        throw refusal;
       }
 
       if (!hasRequiredScopes(input.provider, account.scopes)) {

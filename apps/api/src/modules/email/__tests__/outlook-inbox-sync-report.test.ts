@@ -144,4 +144,59 @@ describe('mailbox sync logs (MVP-001)', () => {
       code: 'AUTH_FAILED',
     });
   });
+  describe('a transient connect failure', () => {
+    it('is a warning, with a backoff, on the first failure: no error, nothing to alert on', async () => {
+      const { deps, prisma } = setup({ mailbox: { syncFailureCount: 0 } });
+      tokens.getOAuthAccess.mockRejectedValue(new MailboxTransportError('CONNECT_FAILED'));
+
+      const report = await runInboxSync(deps);
+
+      expect(error).not.toHaveBeenCalled();
+      expect(warn).toHaveBeenCalledWith('[email] inbox sync failed', {
+        mailboxId: 'mbx-1',
+        code: 'CONNECT_FAILED',
+        consecutiveFailures: 1,
+        retry: 'with backoff',
+      });
+      // Still counted and backed off: the next try waits 10 minutes.
+      expect(report.failures).toBe(1);
+      const data = released(prisma).data;
+      expect(data.syncFailureCount).toBe(1);
+      expect((data.nextSyncAt as Date).getTime()).toBe(NOW.getTime() + INBOX_SYNC_INTERVAL_MS * 2);
+    });
+
+    it('is still a warning on the second failure in a row', async () => {
+      const { deps } = setup({ mailbox: { syncFailureCount: 1 } });
+      tokens.getOAuthAccess.mockRejectedValue(new MailboxTransportError('CONNECT_FAILED'));
+
+      await runInboxSync(deps);
+
+      expect(error).not.toHaveBeenCalled();
+      expect(warn).toHaveBeenCalledWith(
+        '[email] inbox sync failed',
+        expect.objectContaining({ consecutiveFailures: 2 })
+      );
+    });
+
+    it('becomes an error once it repeats (third failure in a row)', async () => {
+      const { deps } = setup({ mailbox: { syncFailureCount: 2 } });
+      tokens.getOAuthAccess.mockRejectedValue(new MailboxTransportError('CONNECT_FAILED'));
+
+      await runInboxSync(deps);
+
+      expect(error).toHaveBeenCalledWith('[email] inbox sync failed', {
+        mailboxId: 'mbx-1',
+        code: 'CONNECT_FAILED',
+      });
+    });
+
+    it('does not soften other failures: a refused login is an error at once', async () => {
+      const { deps } = setup({ mailbox: { syncFailureCount: 0 } });
+      tokens.getOAuthAccess.mockRejectedValue(new MailboxTransportError('AUTH_FAILED'));
+
+      await runInboxSync(deps);
+
+      expect(error).toHaveBeenCalledTimes(1);
+    });
+  });
 });

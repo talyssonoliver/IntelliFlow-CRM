@@ -9,6 +9,8 @@ import {
   FOLDER_DONE,
   LOOKBACK_DAYS,
   PASS_ADDRESSES,
+  PASS_GAP_MS,
+  ROUND_GAP_MS,
   runLookback,
   type LookbackContext,
 } from '../mail-sync-lookback';
@@ -35,7 +37,14 @@ function fakePrisma(leads: Row[], contacts: Row[] = []) {
         .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
       return args.take ? out.slice(0, args.take) : out;
     });
-  return { lead: { findMany: find(leads) }, contact: { findMany: find(contacts) } };
+  const count = (rows: Row[]) => {
+    const findRows = find(rows);
+    return vi.fn(async (args: any) => (await findRows(args)).length);
+  };
+  return {
+    lead: { findMany: find(leads), count: count(leads) },
+    contact: { findMany: find(contacts), count: count(contacts) },
+  };
 }
 
 interface Setup {
@@ -160,8 +169,14 @@ describe('runLookback (MVP-011)', () => {
       lookbackUntil: null,
       lookbackCursor: null,
       lookbackSentCursor: null,
+      // Pacing: the next batch waits, and what was done is counted for the settings page.
+      lookbackNextAt: new Date(NOW.getTime() + PASS_GAP_MS),
+      lookbackBackoffCount: 0,
+      lookbackProgressAt: NOW,
+      lookbackImportTotal: 1,
+      lookbackImportDone: 1,
     });
-    expect(result.more).toBe(true);
+    expect(result.more).toBe(false);
   });
 
   it('matches the way the sync judges mail: a recipient (To or Cc) of sent mail, the sender of received mail, any case', async () => {
@@ -302,10 +317,12 @@ describe('runLookback (MVP-011)', () => {
     const result = await runLookback(ctx);
 
     expect(result.more).toBe(true);
-    expect(result.data).toEqual({
+    expect(result.data).toMatchObject({
       lookbackUntil: T1,
       lookbackCursor: 'inbox-page-2',
       lookbackSentCursor: 'sent-page-2',
+      lookbackNextAt: new Date(NOW.getTime() + ROUND_GAP_MS),
+      lookbackImportTotal: 1,
     });
     expect(result.data).not.toHaveProperty('lookbackWatermark');
   });
@@ -362,7 +379,11 @@ describe('runLookback (MVP-011)', () => {
 
     const last = new Date(T1.getTime() + (PASS_ADDRESSES - 1) * 1000);
     expect(result.data).toMatchObject({ lookbackWatermark: last, lookbackUntil: null });
-    expect(result.more).toBe(true);
+    // The next batch waits PASS_GAP_MS: it is not due on the very next tick.
+    expect(result.data.lookbackNextAt).toEqual(new Date(NOW.getTime() + PASS_GAP_MS));
+    expect(result.data.lookbackImportTotal).toBe(PASS_ADDRESSES + 5);
+    expect(result.data.lookbackImportDone).toBe(PASS_ADDRESSES);
+    expect(result.more).toBe(false);
   });
 
   it('starts the folder again when the provider no longer accepts its cursor', async () => {
@@ -392,7 +413,10 @@ describe('runLookback (MVP-011)', () => {
     const result = await runLookback(ctx);
 
     expect(stored).toEqual([]);
-    expect(result.data).toEqual({ lookbackSentCursor: FOLDER_DONE, lookbackCursor: 'page-3' });
+    expect(result.data).toMatchObject({
+      lookbackSentCursor: FOLDER_DONE,
+      lookbackCursor: 'page-3',
+    });
     expect(result.more).toBe(true);
   });
 
@@ -404,7 +428,7 @@ describe('runLookback (MVP-011)', () => {
     const result = await runLookback(ctx);
 
     expect(read).not.toHaveBeenCalled();
-    expect(result.data).toEqual({
+    expect(result.data).toMatchObject({
       lookbackUntil: T1,
       lookbackCursor: null,
       lookbackSentCursor: null,
