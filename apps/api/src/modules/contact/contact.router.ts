@@ -84,6 +84,7 @@ import { deriveContactInsights } from '../../shared/contact-insight-deriver';
 // IFC-255: fire-and-forget audit logging for contact mutations + single-record reads
 import { getAuditLogger } from '../../security/audit-logger';
 import { assertQuota, withQuotaLock } from '../../shared/quota-guard';
+import { isModuleEnabledForTenant } from '../../shared/module-enabled';
 
 /**
  * IFC-255: shared fire-and-forget audit-failure handler. Audit logging must
@@ -895,8 +896,10 @@ export const contactRouter = createTRPCRouter({
         },
       ],
     };
+    // Tickets belong to the SUPPORT module: a workspace without it gets no ticket data here either.
+    const ticketsAvailable = await isModuleEnabledForTenant(ctx, tenantId, 'SUPPORT');
     const [contactTickets, caseDocuments, ticketCount, documentCount] = await Promise.all([
-      ctx.services?.ticket
+      ctx.services?.ticket && ticketsAvailable
         ? ctx.services.ticket.listByContact({ tenantId, contactId: input.id, limit: 20 })
         : Promise.resolve([]),
       typedCtx.prismaWithTenant.caseDocument.findMany({
@@ -912,7 +915,7 @@ export const contactRouter = createTRPCRouter({
           createdAt: true,
         },
       }),
-      ctx.services?.ticket
+      ctx.services?.ticket && ticketsAvailable
         ? ctx.services.ticket.countByContact({ tenantId, contactId: input.id })
         : Promise.resolve(0),
       typedCtx.prismaWithTenant.caseDocument.count({ where: documentWhere }),

@@ -14,7 +14,7 @@ export default function SupportTicketsListLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <ModuleGate moduleId="SUPPORT">
+    <ModuleGate moduleId="SUPPORT" featureLabel="Tickets">
       <SidebarPortalProvider>
         <SidebarProvider>
           <div className="flex min-h-[calc(100vh-4rem)]">

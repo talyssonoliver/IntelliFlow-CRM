@@ -11,6 +11,8 @@
 
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
+import type { ModuleId } from '@intelliflow/domain';
+import { isModuleEnabledForTenant } from '../../shared/module-enabled';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { dealSearchSubtitle, leadSearchText, type LeadSearchRow } from './global-search-hits';
 
@@ -263,6 +265,37 @@ const SEARCH_DISPATCHERS: Record<
   TASK: searchTasks,
 };
 
+// ── Module gating ───────────────────────────────────────────────────────
+
+/** Entity types that belong to a vertical module (everything else is core CRM). */
+const ENTITY_TYPE_MODULE: Partial<Record<GlobalSearchEntityType, ModuleId>> = {
+  TICKET: 'SUPPORT',
+};
+
+/**
+ * Drops entity types whose module is not part of the workspace. Fails CLOSED: if the entitlement
+ * service is missing or throws, the gated types are left out (core types are still searched).
+ */
+export async function filterToEnabledModules(
+  ctx: { container?: { get: <T>(name: string) => T } | null },
+  tenantId: string,
+  types: readonly GlobalSearchEntityType[]
+): Promise<GlobalSearchEntityType[]> {
+  const gatedModules = new Set(
+    types.map((t) => ENTITY_TYPE_MODULE[t]).filter((m): m is ModuleId => m !== undefined)
+  );
+  if (gatedModules.size === 0) return [...types];
+
+  const allowed = new Set<ModuleId>();
+  for (const moduleId of gatedModules) {
+    if (await isModuleEnabledForTenant(ctx, tenantId, moduleId)) allowed.add(moduleId);
+  }
+  return types.filter((t) => {
+    const moduleId = ENTITY_TYPE_MODULE[t];
+    return moduleId === undefined || allowed.has(moduleId);
+  });
+}
+
 // ── Router ──────────────────────────────────────────────────────────────
 
 export const globalSearchRouter = createTRPCRouter({
@@ -280,7 +313,9 @@ export const globalSearchRouter = createTRPCRouter({
       }
 
       const startTime = performance.now();
-      const typesToSearch = input.entityTypes ?? [...GLOBAL_SEARCH_ENTITY_TYPES];
+      const requestedTypes = input.entityTypes ?? [...GLOBAL_SEARCH_ENTITY_TYPES];
+      // A module the workspace does not have is neither shown nor reachable: skip its entity type.
+      const typesToSearch = await filterToEnabledModules(ctx, tenantId, requestedTypes);
 
       // Fan out all entity searches in parallel
       const settled = await Promise.allSettled(

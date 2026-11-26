@@ -16,7 +16,7 @@ import {
   platformAdminProcedure,
   tenantProcedure,
 } from '../../trpc';
-import { toggleModuleInputSchema } from '@intelliflow/validators';
+import { toggleModuleInputSchema, setBusinessTypeInputSchema } from '@intelliflow/validators';
 import {
   CRM_MODULES,
   PLAN_TIERS,
@@ -59,13 +59,54 @@ export const moduleAccessRouter = createTRPCRouter({
       };
     }
 
-    const [modules, plan] = await Promise.all([
+    const [modules, plan, businessType] = await Promise.all([
       moduleAccess.getEnabledModules(tenantId),
       moduleAccess.getTenantPlan(tenantId),
+      moduleAccess.getBusinessType(tenantId),
     ]);
 
-    return { modules, plan };
+    // `businessType` null = not chosen yet: gated like OTHER, and the web prompts a tenant admin
+    // to choose (banner). Only an admin is asked; other roles cannot act on it.
+    return {
+      modules,
+      plan,
+      businessType,
+      needsBusinessType: businessType === null && ctx.user?.role === 'ADMIN',
+    };
   }),
+
+  /**
+   * Set the workspace's business type. A tenant ADMIN only (workspace settings and the onboarding
+   * question). This changes which vertical modules the workspace can have; it never deletes data,
+   * and explicit module overrides are kept.
+   */
+  setBusinessType: tenantProcedure
+    .input(setBusinessTypeInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      if (ctx.user?.role !== 'ADMIN') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Only a workspace admin can change the business type',
+        });
+      }
+      const tenantId = ctx.user.tenantId;
+      const moduleAccess =
+        ctx.container?.get<import('@intelliflow/application').ModuleAccessPort>('moduleAccess');
+      if (!moduleAccess) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Module access service not available',
+        });
+      }
+
+      await moduleAccess.setBusinessType(tenantId, input.businessType);
+
+      const [modules, plan] = await Promise.all([
+        moduleAccess.getEnabledModules(tenantId),
+        moduleAccess.getTenantPlan(tenantId),
+      ]);
+      return { modules, plan, businessType: input.businessType, needsBusinessType: false };
+    }),
 
   /**
    * Get all available plans with their included modules.

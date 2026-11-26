@@ -5,6 +5,8 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
+import { useEnabledModules } from '@/hooks/useEnabledModules';
+import { isEntityTypeAvailable, isHrefAvailable } from '@/lib/modules/module-visibility';
 import { PinnedSkeleton } from './PinnedSkeleton';
 import {
   ActivityFeed,
@@ -306,6 +308,7 @@ interface AuthenticatedHomePageProps {
 
 export function AuthenticatedHomePage({ initialWelcomeData }: AuthenticatedHomePageProps = {}) {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isModuleEnabled } = useEnabledModules();
   const hour = new Date().getUTCHours();
   const greetingIcon = getGreetingIcon(hour);
 
@@ -418,10 +421,15 @@ export function AuthenticatedHomePage({ initialWelcomeData }: AuthenticatedHomeP
       : allEnabledActions;
 
   // Compute enabled groups and filter pinned items by those groups
-  const enabledGroups = ALL_PINNED_NAV_GROUPS.filter((g) => pinnedGroupIds.has(g.id));
+  // A group whose page belongs to a module this workspace does not have (Tickets) is left out.
+  const enabledGroups = ALL_PINNED_NAV_GROUPS.filter(
+    (g) => pinnedGroupIds.has(g.id) && isHrefAvailable(g.href, isModuleEnabled)
+  );
   const enabledEntityTypes = new Set(enabledGroups.flatMap((g) => g.entityTypes));
-  const filteredPinnedItems = pinnedData?.items?.filter((item) =>
-    enabledEntityTypes.has(item.entityType)
+  const filteredPinnedItems = pinnedData?.items?.filter(
+    (item) =>
+      enabledEntityTypes.has(item.entityType) &&
+      isEntityTypeAvailable(item.entityType, isModuleEnabled)
   );
 
   const firstName = welcomeData?.userName || user?.name?.split(' ')[0] || 'there';

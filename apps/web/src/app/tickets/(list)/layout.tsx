@@ -32,7 +32,7 @@ export default function TicketsListLayout({ children }: Readonly<{ children: Rea
   }, [onSettingsPage]);
 
   return (
-    <ModuleGate moduleId="SUPPORT">
+    <ModuleGate moduleId="SUPPORT" featureLabel="Tickets">
       <SidebarPortalProvider>
         <SidebarProvider>
           <div className="flex min-h-[calc(100vh-4rem)]">

@@ -12,83 +12,156 @@ import type { ModuleAccessPort, TenantModuleRecord } from '@intelliflow/applicat
 import {
   type ModuleId,
   type PlanTier,
-  CRM_MODULES,
+  type TenantBusinessType,
+  type TenantModuleOrigin,
+  DATA_PROTECTED_MODULES,
   MODULE_PLAN_MAP,
+  dataProtectionFor,
   getModulesForPlan,
+  isTenantBusinessType,
+  resolveEnabledModules,
 } from '@intelliflow/domain';
 
 export class PrismaTenantModuleRepository implements ModuleAccessPort {
   constructor(private readonly prisma: PrismaClient) {}
 
-  async getEnabledModules(tenantId: string): Promise<ModuleId[]> {
-    // 1. Get plan tier for the tenant
-    const plan = await this.getTenantPlan(tenantId);
-    const planModules = new Set<ModuleId>(getModulesForPlan(plan));
+  async getEnabledModules(
+    tenantId: string,
+    businessTypeOverride?: TenantBusinessType
+  ): Promise<ModuleId[]> {
+    // The single resolver (domain): (plan ∩ business type) ∪ explicit OVERRIDE rows − switched-off rows.
+    const [{ plan, businessType }, overrides] = await Promise.all([
+      this.getTenantProfile(tenantId),
+      this.prisma.tenantModule.findMany({ where: { tenantId } }),
+    ]);
 
-    // 2. Get explicit overrides from TenantModule table
-    const overrides = await this.prisma.tenantModule.findMany({
-      where: { tenantId },
+    return resolveEnabledModules({
+      plan,
+      businessType: businessTypeOverride ?? businessType,
+      overrides: overrides.map((o) => ({
+        moduleId: o.moduleId as ModuleId,
+        enabled: o.enabled,
+        origin: (o.origin ?? 'PLAN') as TenantModuleOrigin,
+      })),
     });
-
-    // 3. Merge: start with plan defaults, then apply overrides
-    const enabledSet = new Set<ModuleId>(planModules);
-
-    for (const override of overrides) {
-      const moduleId = override.moduleId as ModuleId;
-      if (override.enabled) {
-        enabledSet.add(moduleId); // à la carte addition
-      } else if (moduleId !== 'CORE_CRM') {
-        // Only disable if it's not CORE_CRM (always on)
-        enabledSet.delete(moduleId);
-      }
-    }
-
-    // 4. Return in canonical order
-    return CRM_MODULES.filter((m) => enabledSet.has(m));
   }
 
   async isModuleEnabled(tenantId: string, moduleId: ModuleId): Promise<boolean> {
     // CORE_CRM is always enabled
     if (moduleId === 'CORE_CRM') return true;
-
-    // Check explicit override first
-    const override = await this.prisma.tenantModule.findUnique({
-      where: { tenantId_moduleId: { tenantId, moduleId } },
-    });
-
-    if (override) {
-      return override.enabled;
-    }
-
-    // Fall back to plan tier
-    const plan = await this.getTenantPlan(tenantId);
-    return MODULE_PLAN_MAP[plan].includes(moduleId);
+    return (await this.getEnabledModules(tenantId)).includes(moduleId);
   }
 
-  async getTenantPlan(tenantId: string): Promise<PlanTier> {
+  /** Plan and business type in one read. */
+  private async getTenantProfile(
+    tenantId: string
+  ): Promise<{ plan: PlanTier; businessType: TenantBusinessType | null }> {
     // ADR-070: the plan lives on Tenant (Workspace is deprecated and nothing populates it).
     const tenant = await this.prisma.tenant.findUnique({
       where: { id: tenantId },
-      select: { plan: true },
+      select: { plan: true, businessType: true },
     });
 
     // Fail-safe: an unknown or missing plan resolves to the smallest known tier,
     // never to an undefined MODULE_PLAN_MAP lookup.
     const plan = tenant?.plan;
-    return plan && plan in MODULE_PLAN_MAP ? (plan as PlanTier) : 'STARTER';
+    const businessType = tenant?.businessType;
+    return {
+      plan: plan && plan in MODULE_PLAN_MAP ? (plan as PlanTier) : 'STARTER',
+      businessType: isTenantBusinessType(businessType) ? businessType : null,
+    };
+  }
+
+  async getTenantPlan(tenantId: string): Promise<PlanTier> {
+    return (await this.getTenantProfile(tenantId)).plan;
+  }
+
+  async getBusinessType(tenantId: string): Promise<TenantBusinessType | null> {
+    return (await this.getTenantProfile(tenantId)).businessType;
+  }
+
+  async setBusinessType(tenantId: string, businessType: TenantBusinessType): Promise<ModuleId[]> {
+    // The protection is worked out for the NEW type first and written in the same transaction as the
+    // type itself, so a failure in between can never leave the type changed with data hidden.
+    const toProtect = await this.modulesToProtect(tenantId, businessType);
+    await this.prisma.$transaction([
+      this.prisma.tenant.update({ where: { id: tenantId }, data: { businessType } }),
+      ...this.protectionUpserts(tenantId, toProtect),
+    ]);
+    return toProtect;
+  }
+
+  /**
+   * Nobody loses sight of data they already have: for every vertical module the workspace holds rows in
+   * (cases and case documents for LEGAL, tickets for SUPPORT) that only the business type now hides, write an
+   * EXISTING_DATA override ON. The row is only written for a module the plan includes, so a later downgrade
+   * still switches it off like any other above-plan row. A module the plan does not include, or one someone
+   * deliberately switched off, is left alone for a human to decide (see `dataProtectionFor`).
+   * Returns the modules protected.
+   */
+  async protectExistingData(tenantId: string): Promise<ModuleId[]> {
+    const toProtect = await this.modulesToProtect(tenantId);
+    await this.prisma.$transaction(this.protectionUpserts(tenantId, toProtect));
+    return toProtect;
+  }
+
+  /** The modules that hold data and would be hidden, for the workspace's type or the one about to be set. */
+  private async modulesToProtect(
+    tenantId: string,
+    businessType?: TenantBusinessType
+  ): Promise<ModuleId[]> {
+    const [enabledList, plan, moduleRows] = await Promise.all([
+      this.getEnabledModules(tenantId, businessType),
+      this.getTenantPlan(tenantId),
+      this.prisma.tenantModule.findMany({ where: { tenantId } }),
+    ]);
+    const enabled = new Set(enabledList);
+    const [cases, documents, tickets] = await Promise.all([
+      this.prisma.case.count({ where: { tenantId } }),
+      this.prisma.caseDocument.count({ where: { tenantId, deletedAt: null } }),
+      this.prisma.ticket.count({ where: { tenantId } }),
+    ]);
+    const rows: Record<(typeof DATA_PROTECTED_MODULES)[number], number> = {
+      LEGAL: cases + documents,
+      SUPPORT: tickets,
+    };
+    return DATA_PROTECTED_MODULES.filter(
+      (moduleId) =>
+        dataProtectionFor({
+          moduleId,
+          plan,
+          hasData: rows[moduleId] > 0,
+          enabled: enabled.has(moduleId),
+          switchedOff: moduleRows.some((r) => r.moduleId === moduleId && !r.enabled),
+        }) === 'protect'
+    );
+  }
+
+  private protectionUpserts(tenantId: string, moduleIds: readonly ModuleId[]) {
+    const now = new Date();
+    return moduleIds.map((moduleId) =>
+      this.prisma.tenantModule.upsert({
+        where: { tenantId_moduleId: { tenantId, moduleId } },
+        create: { tenantId, moduleId, enabled: true, origin: 'EXISTING_DATA', enabledAt: now },
+        update: { enabled: true, origin: 'EXISTING_DATA', enabledAt: now, disabledAt: null },
+      })
+    );
   }
 
   async enableModule(tenantId: string, moduleId: ModuleId): Promise<TenantModuleRecord> {
+    // An explicit enable is an OVERRIDE: it can switch a module on outside the business type.
     const record = await this.prisma.tenantModule.upsert({
       where: { tenantId_moduleId: { tenantId, moduleId } },
       create: {
         tenantId,
         moduleId,
         enabled: true,
+        origin: 'OVERRIDE',
         enabledAt: new Date(),
       },
       update: {
         enabled: true,
+        origin: 'OVERRIDE',
         enabledAt: new Date(),
         disabledAt: null,
       },
@@ -127,6 +200,9 @@ export class PrismaTenantModuleRepository implements ModuleAccessPort {
       update: {
         enabled: false,
         disabledAt: new Date(),
+        // An off row belongs to the plan again: a later plan sync that re-enables it must not bring
+        // back an OVERRIDE or EXISTING_DATA grant that someone deliberately switched off.
+        origin: 'PLAN',
       },
     });
 
