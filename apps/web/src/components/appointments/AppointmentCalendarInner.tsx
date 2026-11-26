@@ -8,6 +8,7 @@ import { useNextCalendarApp, ScheduleXCalendar } from '@schedule-x/react';
 import { createViewDay, createViewWeek, createViewMonthGrid } from '@schedule-x/calendar';
 import { createEventsServicePlugin } from '@schedule-x/events-service';
 import { createCalendarControlsPlugin } from '@schedule-x/calendar-controls';
+import { desktopMonthGridOptions } from './month-grid-options';
 import {
   getTypeConfig,
   getStatusConfig,
@@ -364,18 +365,6 @@ function DateGridEvent({ calendarEvent }: Readonly<{ calendarEvent: Record<strin
 /** Fixed grid height (px) for week/day time grid — keeps container stable across views */
 const WEEK_GRID_HEIGHT = 660;
 
-/** Desktop month cells are taller but not unlimited: three chips plus "+N more" read cleanly. */
-const DESKTOP_MONTH_EVENTS_PER_DAY = 3;
-
-function monthGridOptionsFor(n: number | undefined) {
-  return n === undefined ? {} : { monthGridOptions: { nEventsPerDay: n } };
-}
-
-function monthEventsPerDay(): number | undefined {
-  const mq = globalThis.window?.matchMedia?.('(min-width: 1024px)');
-  return mq?.matches ? DESKTOP_MONTH_EVENTS_PER_DAY : undefined;
-}
-
 export function AppointmentCalendarInner({
   appointments,
   tasks = [],
@@ -424,7 +413,7 @@ export function AppointmentCalendarInner({
     events: [...mapAppointmentsToEvents(appointments), ...mapTasksToEvents(tasks)],
     plugins: [eventsService, calendarControls],
     dayBoundaries: { start: '07:00', end: '19:00' },
-    ...monthGridOptionsFor(monthEventsPerDay()),
+    ...desktopMonthGridOptions(),
     weekOptions: {
       gridHeight: WEEK_GRID_HEIGHT,
       nDays: 7,
