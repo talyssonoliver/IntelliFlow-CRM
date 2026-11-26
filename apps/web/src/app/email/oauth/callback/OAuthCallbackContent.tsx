@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { oauthProviderKey } from '../oauth-session';
+import { oauthProviderKey, oauthSendOnlyKey } from '../oauth-session';
 import { PERSONAL_MAILBOX_NOTICE, parsePersonalRefusal } from '../personal-mailbox';
 
 const SETTINGS_PATH = '/email/email-settings';
@@ -37,9 +37,11 @@ export default function OAuthCallbackContent() {
   const complete = trpc.emailMailbox.oauthComplete.useMutation();
   const restart = trpc.emailMailbox.oauthStart.useMutation();
   // A personal mailbox was signed in: ask once, then sign in again with the confirmation given.
-  const [personal, setPersonal] = useState<{ provider: Provider; scope: 'USER' | 'TENANT' } | null>(
-    null
-  );
+  const [personal, setPersonal] = useState<{
+    provider: Provider;
+    scope: 'USER' | 'TENANT';
+    sendOnly: boolean;
+  } | null>(null);
   const started = useRef(false);
   const alertRef = useRef<HTMLDivElement>(null);
   const [failure, setFailure] = useState<string | null>(null);
@@ -71,13 +73,17 @@ export default function OAuthCallbackContent() {
       .mutateAsync({ provider, code, state, ...(accountsServer ? { accountsServer } : {}) })
       .then(() => {
         sessionStorage.removeItem(oauthProviderKey(state));
+        sessionStorage.removeItem(oauthSendOnlyKey(state));
         router.replace(`${SETTINGS_PATH}?connected=${RETURN_NAME[provider]}`);
       })
       .catch((error: unknown) => {
+        // A restart after the confirmation keeps the original choice to sign in for sending only.
+        const sendOnly = sessionStorage.getItem(oauthSendOnlyKey(state)) === '1';
         sessionStorage.removeItem(oauthProviderKey(state));
+        sessionStorage.removeItem(oauthSendOnlyKey(state));
         const refusal = parsePersonalRefusal((error as { message?: unknown } | null)?.message);
         if (refusal) {
-          setPersonal({ provider, scope: refusal.scope });
+          setPersonal({ provider, scope: refusal.scope, sendOnly });
           return;
         }
         setFailure(
@@ -93,9 +99,13 @@ export default function OAuthCallbackContent() {
         provider: personal.provider,
         scope: personal.scope,
         acceptPersonal: true,
+        ...(personal.sendOnly ? { sendOnly: true } : {}),
       });
       const state = new URL(url).searchParams.get('state');
-      if (state) sessionStorage.setItem(oauthProviderKey(state), personal.provider);
+      if (state) {
+        sessionStorage.setItem(oauthProviderKey(state), personal.provider);
+        if (personal.sendOnly) sessionStorage.setItem(oauthSendOnlyKey(state), '1');
+      }
       window.location.assign(url);
     } catch {
       setPersonal(null);

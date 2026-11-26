@@ -26,7 +26,7 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 }));
 
 import OAuthCallbackContent from '../OAuthCallbackContent';
-import { oauthProviderKey } from '../../oauth-session';
+import { oauthProviderKey, oauthSendOnlyKey } from '../../oauth-session';
 
 const STATE = 's'.repeat(43);
 const CODE = 'c'.repeat(30);
@@ -173,6 +173,31 @@ describe('OAuthCallbackContent', () => {
       scope: 'USER',
       acceptPersonal: true,
     });
+    vi.unstubAllGlobals();
+  });
+
+  it('keeps a send-only sign-in send-only when it restarts after the confirmation', async () => {
+    sessionStorage.setItem(oauthProviderKey(STATE), 'GMAIL');
+    sessionStorage.setItem(oauthSendOnlyKey(STATE), '1');
+    complete.mutateAsync.mockRejectedValue(new Error('PERSONAL_MAILBOX:USER: confirm'));
+    const assign = vi.fn();
+    vi.stubGlobal('location', { ...window.location, assign });
+    const next = 'n'.repeat(43);
+    restart.mutateAsync.mockResolvedValue({
+      url: 'https://accounts.example.invalid/auth?state=' + next,
+    });
+    renderAt(`code=${CODE}&state=${STATE}`);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Continue' }));
+
+    await waitFor(() => expect(assign).toHaveBeenCalled());
+    expect(restart.mutateAsync).toHaveBeenCalledWith({
+      provider: 'GMAIL',
+      scope: 'USER',
+      acceptPersonal: true,
+      sendOnly: true,
+    });
+    expect(sessionStorage.getItem(oauthSendOnlyKey(next))).toBe('1');
     vi.unstubAllGlobals();
   });
 

@@ -13,7 +13,7 @@ import type { MailboxDto, OAuthProvidersAvailableDto } from '@intelliflow/valida
 import { trpc } from '@/lib/trpc';
 import { SectionHeader } from '@/components/shared/section-header';
 import { mailboxErrorMessage } from '@/components/email/send-errors';
-import { oauthProviderKey } from '../../oauth/oauth-session';
+import { oauthProviderKey, oauthSendOnlyKey } from '../../oauth/oauth-session';
 import { connectionFailureHelp } from './connection-help';
 import { oneClickNotYet, providerByServer } from './mailbox-providers';
 import { SmtpHostingNotice } from './SmtpHostingNotice';
@@ -142,7 +142,10 @@ export function MailboxConnection({
         ...(sendOnly ? { sendOnly: true } : {}),
       });
       const state = new URL(url).searchParams.get('state');
-      if (state) sessionStorage.setItem(oauthProviderKey(state), provider);
+      if (state) {
+        sessionStorage.setItem(oauthProviderKey(state), provider);
+        if (sendOnly) sessionStorage.setItem(oauthSendOnlyKey(state), '1');
+      }
       window.location.assign(url);
     } catch (e) {
       setError(errorText(e, `${PROVIDER_LABEL[provider]} sign-in could not start.`));
