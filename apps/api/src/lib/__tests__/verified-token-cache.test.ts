@@ -4,6 +4,7 @@ import {
   VERIFIED_TOKEN_TTL_MS,
   jwtExpiryMs,
   jwtSubject,
+  MAX_INVALIDATION_RECORDS,
 } from '../verified-token-cache';
 
 const user = (id: string) => ({ id, email: `${id}@example.invalid` }) as any;
@@ -217,5 +218,45 @@ describe('VerifiedTokenCache', () => {
     cache.set(token, user('user-1'), (cache as any).now() + 30_000);
     tick(60_000);
     expect(cache.get(token)).toBeNull();
+  });
+
+  it('keeps invalidation records bounded, however many distinct users are named', () => {
+    const { cache } = clockedCache();
+    for (let i = 0; i < 10_000; i++) cache.deleteUser(`attacker-chosen-${i}`);
+    expect((cache as any).invalidatedAt.size).toBeLessThanOrEqual(MAX_INVALIDATION_RECORDS);
+  });
+
+  it('a forgotten invalidation still refuses a check that began before it', () => {
+    const { cache, tick, nowSeconds } = clockedCache();
+    const token = tokenWithExp(nowSeconds() + 3600, 'victim', 'victim');
+    const checkStartedAt = (cache as any).now();
+    tick(5);
+    cache.deleteUser('victim'); // the sign-out that landed while the check was in flight
+    for (let i = 0; i < MAX_INVALIDATION_RECORDS + 10; i++) {
+      tick(1);
+      cache.deleteUser(`other-${i}`); // pushes the victim's record out of the bounded map
+    }
+    expect((cache as any).invalidatedAt.has('victim')).toBe(false);
+    cache.set(token, user('victim'), checkStartedAt);
+    expect(cache.size).toBe(0);
+  });
+
+  it('drops expired invalidation records from the front', () => {
+    const { cache, tick } = clockedCache();
+    cache.deleteUser('old');
+    tick(VERIFIED_TOKEN_TTL_MS);
+    cache.deleteUser('new');
+    expect((cache as any).invalidatedAt.has('old')).toBe(false);
+    expect((cache as any).invalidatedAt.has('new')).toBe(true);
+  });
+
+  it('invalidating the same user again moves its record to the end', () => {
+    const { cache, tick } = clockedCache();
+    cache.deleteUser('a');
+    tick(1);
+    cache.deleteUser('b');
+    tick(1);
+    cache.deleteUser('a');
+    expect([...(cache as any).invalidatedAt.keys()]).toEqual(['b', 'a']);
   });
 });

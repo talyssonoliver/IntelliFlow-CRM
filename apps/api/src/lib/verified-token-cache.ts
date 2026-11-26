@@ -36,6 +36,8 @@ import type { User } from '@supabase/supabase-js';
 
 export const VERIFIED_TOKEN_TTL_MS = 60_000;
 export const VERIFIED_TOKEN_MAX_ENTRIES = 500;
+/** Invalidation records kept (one per user, for at most one TTL). */
+export const MAX_INVALIDATION_RECORDS = 1_000;
 
 interface Entry {
   user: User;
@@ -80,6 +82,8 @@ export class VerifiedTokenCache {
   private readonly keysByUser = new Map<string, Set<string>>();
   /** userId -> time of the last invalidation, kept for one TTL (older ones cannot matter). */
   private readonly invalidatedAt = new Map<string, number>();
+  /** Newest invalidation time that was forgotten for lack of room; checks begun before it are refused. */
+  private invalidationFloor = 0;
 
   constructor(
     private readonly ttlMs: number = VERIFIED_TOKEN_TTL_MS,
@@ -112,6 +116,7 @@ export class VerifiedTokenCache {
     if (!user?.id) return;
     const now = this.now();
     if (checkStartedAt !== undefined) {
+      if (checkStartedAt <= this.invalidationFloor) return;
       const invalidated = this.invalidatedAt.get(user.id);
       if (invalidated !== undefined && invalidated >= checkStartedAt) return;
     }
@@ -153,13 +158,7 @@ export class VerifiedTokenCache {
 
   /** Drop every cached token of one user. Returns how many were removed. */
   deleteUser(userId: string): number {
-    const now = this.now();
-    this.invalidatedAt.set(userId, now);
-    if (this.invalidatedAt.size > this.maxEntries) {
-      for (const [id, at] of this.invalidatedAt) {
-        if (now - at >= VERIFIED_TOKEN_TTL_MS) this.invalidatedAt.delete(id);
-      }
-    }
+    this.recordInvalidation(userId, this.now());
     const keys = this.keysByUser.get(userId);
     if (!keys) return 0;
     const count = keys.size;
@@ -168,10 +167,38 @@ export class VerifiedTokenCache {
     return count;
   }
 
+  /**
+   * Note that `userId` was invalidated at `now`, in bounded memory and constant time per call.
+   *
+   * The map is kept in time order (an update moves the user to the end), so expired records are
+   * dropped from the front and stop at the first live one. If the map is still over capacity, the
+   * oldest records are forgotten, and the newest forgotten time becomes a floor: any check that
+   * began at or before it is refused by `set`. That keeps the guarantee (a check begun before an
+   * invalidation never repopulates the cache) even for records that had to be forgotten, at the
+   * cost of re-verifying a few more tokens. The subject of a sign-out token is read without
+   * verifying it, so a caller can name any user here; the worst that does is force that user's
+   * next request to ask Supabase again, which is what happens without the cache.
+   */
+  private recordInvalidation(userId: string, now: number): void {
+    this.invalidatedAt.delete(userId);
+    this.invalidatedAt.set(userId, now);
+    for (const [id, at] of this.invalidatedAt) {
+      if (now - at < VERIFIED_TOKEN_TTL_MS) break;
+      this.invalidatedAt.delete(id);
+    }
+    while (this.invalidatedAt.size > MAX_INVALIDATION_RECORDS) {
+      const oldest = this.invalidatedAt.entries().next().value;
+      if (!oldest) break;
+      this.invalidatedAt.delete(oldest[0]);
+      this.invalidationFloor = Math.max(this.invalidationFloor, oldest[1]);
+    }
+  }
+
   clear(): void {
     this.entries.clear();
     this.keysByUser.clear();
     this.invalidatedAt.clear();
+    this.invalidationFloor = 0;
   }
 
   get size(): number {
