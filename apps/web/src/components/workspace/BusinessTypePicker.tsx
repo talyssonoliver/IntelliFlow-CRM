@@ -18,12 +18,12 @@ export const BUSINESS_TYPE_HINTS: Record<TenantBusinessType, string> = {
   OTHER: 'Anything that is not one of the above',
 };
 
-/** The tools each type gets, in one line. Core CRM, AI and reports are in every type. */
+/** The tools each type gets, in one line. Core CRM, the AI assistant and reports are in every type. */
 export const BUSINESS_TYPE_TOOLS: Record<TenantBusinessType, string> = {
   TRADES_HOME_SERVICES: 'CRM, AI assistant and reports',
-  AGENCY: 'CRM, AI and reports, plus Tickets and Help Center',
-  LAW_FIRM: 'CRM, AI and reports, plus Cases',
-  SHOP_ECOMMERCE: 'CRM, AI and reports, plus Commerce',
+  AGENCY: 'CRM, AI assistant and reports, plus Tickets and Help Center',
+  LAW_FIRM: 'CRM, AI assistant and reports, plus Cases',
+  SHOP_ECOMMERCE: 'CRM, AI assistant and reports, plus Commerce',
   OTHER: 'CRM, AI assistant and reports',
 };
 

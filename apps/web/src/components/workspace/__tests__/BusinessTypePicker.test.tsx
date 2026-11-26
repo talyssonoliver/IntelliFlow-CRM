@@ -46,4 +46,18 @@ describe('BusinessTypePicker', () => {
     expect(BUSINESS_TYPE_TOOLS.SHOP_ECOMMERCE).toMatch(/Commerce/);
     expect(BUSINESS_TYPE_TOOLS.TRADES_HOME_SERVICES).not.toMatch(/Cases|Tickets|Commerce/);
   });
+
+  it('words the shared tools the same way on every card', () => {
+    const core = 'CRM, AI assistant and reports';
+    expect(BUSINESS_TYPE_TOOLS).toEqual({
+      TRADES_HOME_SERVICES: core,
+      AGENCY: `${core}, plus Tickets and Help Center`,
+      LAW_FIRM: `${core}, plus Cases`,
+      SHOP_ECOMMERCE: `${core}, plus Commerce`,
+      OTHER: core,
+    });
+    render(<BusinessTypePicker value={null} onChange={vi.fn()} />);
+    expect(document.body.textContent).not.toMatch(/AI and reports/);
+    expect(screen.getAllByText(new RegExp(`^Gets:.*${core}`))).toHaveLength(5);
+  });
 });
