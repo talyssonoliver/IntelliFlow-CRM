@@ -36,6 +36,7 @@ CREATE TABLE "workspace_export_requests" (
     "claimCount" INTEGER NOT NULL DEFAULT 0,
     "archivesRemovedAt" TIMESTAMP(3),
     "lastCleanupAttemptAt" TIMESTAMP(3),
+    "emailedToUserIds" TEXT[] DEFAULT ARRAY[]::TEXT[],
     "error" TEXT,
     "requestedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "startedAt" TIMESTAMP(3),

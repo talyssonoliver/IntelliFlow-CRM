@@ -146,6 +146,8 @@ function world(rows: any[]) {
     workspaceExportRequest: rows.map((r) => ({
       claimCount: r.attempts ?? 0,
       archivesRemovedAt: null,
+      lastCleanupAttemptAt: null,
+      emailedToUserIds: [],
       ...r,
     })),
     stripeSubscription: [],
@@ -355,7 +357,7 @@ describe('review follow-ups', () => {
     }
   });
 
-  it('stops retrying an email once someone has the link', async () => {
+  it('retries only the recipient whose email failed, never the ones that have the link', async () => {
     const { tables, db } = world([
       {
         id: 'r',
@@ -382,17 +384,23 @@ describe('review follow-ups', () => {
     });
     tables.workspaceExportRequest[0].requestedById = 'asker';
     const sent: string[] = [];
+    let bouncing = true;
     const { d, tmp } = deps(db, {
       sendEmail: async (m) => {
-        if (m.recipientUserId === 'asker') throw new Error('bounce');
+        if (bouncing && m.recipientUserId === 'asker') throw new Error('bounce');
         sent.push(m.recipientUserId);
       },
     });
     await sweepWorkspaceExports(d, async () => {});
     expect(sent).toEqual(['owner']);
-    expect(tables.workspaceExportRequest[0].emailedAt).toEqual(t0);
+    expect(tables.workspaceExportRequest[0].emailedAt).toBeNull();
+    expect(tables.workspaceExportRequest[0].emailedToUserIds).toEqual(['owner']);
     await sweepWorkspaceExports(d, async () => {});
-    expect(sent).toEqual(['owner']);
+    expect(sent).toEqual(['owner']); // the owner is not mailed again
+    bouncing = false;
+    await sweepWorkspaceExports(d, async () => {});
+    expect(sent).toEqual(['owner', 'asker']);
+    expect(tables.workspaceExportRequest[0].emailedAt).toEqual(t0);
     rmSync(tmp, { recursive: true, force: true });
   });
 
@@ -943,7 +951,8 @@ describe('review follow-ups: finalize, spreadsheet precision, expiry order', () 
     expect(csvCell('12.50')).toBe('12.50');
     expect(csvCell('0')).toBe('0');
     expect(csvCell('0.5')).toBe('0.5');
-    expect(csvCell(123456789012345678n)).toBe('123456789012345678'); // not text: left as is
+    expect(csvCell(123456789012345678n)).toBe("'123456789012345678");
+    expect(csvCell(12345n)).toBe('12345');
   });
 
   it('finalize rejects (does not hang) when the output fails', async () => {

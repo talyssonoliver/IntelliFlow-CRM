@@ -347,6 +347,8 @@ model WorkspaceExportRequest {
   archivesRemovedAt DateTime?
   /// Last time a cleanup of this FAILED request's archives was tried (the sweep goes oldest first).
   lastCleanupAttemptAt DateTime?
+  /// Users who have been sent the download link (a failed recipient is retried on its own).
+  emailedToUserIds String[] @default([])
   error           String?
   requestedAt     DateTime               @default(now())
   startedAt       DateTime?

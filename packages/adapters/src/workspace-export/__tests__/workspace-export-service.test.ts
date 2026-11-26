@@ -60,6 +60,7 @@ function world(extra: Record<string, any[]> = {}) {
   tables.workspaceExportRequest = tables.workspaceExportRequest!.map((r) => ({
     claimCount: r.attempts ?? 0,
     archivesRemovedAt: null,
+    emailedToUserIds: [],
     ...r,
   }));
   const db = makeDb(tables) as any;

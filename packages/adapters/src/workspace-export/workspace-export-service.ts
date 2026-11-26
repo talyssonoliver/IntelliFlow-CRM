@@ -496,6 +496,7 @@ async function deliverLink(
     tenantId: string;
     requestedById: string | null;
     subscriptionId: string | null;
+    emailedToUserIds?: string[];
   },
   info: {
     storagePath: string;
@@ -523,10 +524,13 @@ async function deliverLink(
       bytes: info.bytes,
       sha256: info.sha256,
     });
-    // Once anyone has the link the retries stop: a recipient who keeps failing must not make the
-    // others get the same email again every five minutes for 14 days.
-    let sent = 0;
+    // Delivery is tracked per recipient: one who already has the link is never mailed again,
+    // and one whose mail failed is retried on its own until every recipient has it.
+    const already = new Set(request.emailedToUserIds ?? []);
+    const delivered: string[] = [];
+    let failures = 0;
     for (const r of recipients) {
+      if (already.has(r.userId)) continue;
       try {
         await deps.sendEmail({
           recipientUserId: r.userId,
@@ -534,20 +538,24 @@ async function deliverLink(
           subject: mail.subject,
           body: mail.body,
         });
-        sent += 1;
+        delivered.push(r.userId);
       } catch (err) {
+        failures += 1;
         deps.log?.warn(
           { requestId: request.id, recipientUserId: r.userId, err: String(err) },
           'workspace export email not sent to one recipient'
         );
       }
     }
-    if (sent === 0) return false;
+    if (delivered.length === 0 && failures > 0) return false;
     await deps.prisma.workspaceExportRequest.update({
       where: { id: request.id },
-      data: { emailedAt: now() },
+      data: {
+        emailedToUserIds: [...already, ...delivered],
+        ...(failures === 0 ? { emailedAt: now() } : {}),
+      },
     });
-    return true;
+    return failures === 0;
   } catch (err) {
     deps.log?.warn({ requestId: request.id, err: String(err) }, 'workspace export email not sent');
     return false;

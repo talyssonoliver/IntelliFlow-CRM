@@ -69,7 +69,7 @@ export function csvCell(value: unknown): string {
   // Spreadsheet formula injection: text that other people typed (leads, bookings, tickets, chat)
   // must not run when an administrator opens the CSV. Numbers and booleans are not text.
   if (
-    typeof value === 'string' &&
+    (typeof value === 'string' || typeof value === 'bigint') &&
     ((/^[=+\-@\t\r\n]/.test(text) && !PLAIN_NEGATIVE_NUMBER.test(text)) ||
       losesPrecisionInSpreadsheet(text))
   ) {
