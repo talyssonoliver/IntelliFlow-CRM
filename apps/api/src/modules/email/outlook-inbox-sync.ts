@@ -441,7 +441,7 @@ async function syncMailbox(
       syncFailureCount: failures,
       nextSyncAt: new Date(now.getTime() + backoff),
     });
-    logFailure(claim.id, error);
+    logFailure(claim.id, error, failures);
   }
 }
 

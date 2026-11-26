@@ -288,7 +288,7 @@ export interface VectorSearchResult<T> {
 
 /**
  * Size of the embedding columns (leads, lead_notes, contacts, contact_notes): vector(2048),
- * the only size the free OpenRouter model nvidia/nemotron-3-embed-1b:free returns
+ * the only size the free OpenRouter model nvidia/nemotron-3.5-embed-1b:free returns
  * (migration 20261031120000_embeddings_vector_2048, gh #1108).
  */
 export const VECTOR_COLUMN_DIMENSIONS = 2048;
