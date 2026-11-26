@@ -153,13 +153,13 @@ decision: it needs Meta app review.
 
 ## 9. First demo
 
-The planner on the West London Handyman concept site opens WhatsApp with a
-prefilled job message to a **Leangency-owned demo number** (his own number is
-connected only after he has read the notice and chosen). The message reaches
-Aurora, creates the lead, and shows as **Received**; the owner replies from
-Aurora and it reaches the phone. Proven on A (Meta test number or the Leangency
-number) and on B (a throwaway number), with real provider responses recorded and
-the processing time measured.
+The planner on the Acme Handyman concept site opens WhatsApp with a prefilled
+job message to a **Leangency-owned demo number** (his own number is connected
+only after he has read the notice and chosen). The message reaches Aurora,
+creates the lead, and shows as **Received**; the owner replies from Aurora and
+it reaches the phone. Proven on A (Meta test number or the Leangency number) and
+on B (a throwaway number), with real provider responses recorded and the
+processing time measured.
 
 ## 10. Rows (sprints 24-25)
 
@@ -199,9 +199,8 @@ separately.
   WAHA container's hosting, a demo number or SIM, Meta's per-message charges)
   needs his yes. If he wants IFC-034 to gate the build too, it is one dependency
   on IFC-320 and IFC-322 and new dates.
-- The West London Handyman planner change (a prefilled link to the demo number)
-  is in the leangency-portal repository: a prerequisite of IFC-036, not a row
-  here.
+- The Acme Handyman planner change (a prefilled link to the demo number) is in
+  the leangency-portal repository: a prerequisite of IFC-036, not a row here.
 - Meta business verification, a Meta developer login, the QR scan and a phone
   are **his** steps (identity and codes); the rest is agent work.
 - The Settings notice wording and the legal reading of WhatsApp's terms are his

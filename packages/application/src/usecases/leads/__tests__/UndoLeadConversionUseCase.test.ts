@@ -15,7 +15,7 @@ const TX = { tx: true } as never;
 function convertedLead(tenantId = 'tenant-1'): Lead {
   const lead = Lead.create({
     email: 'owner@pilates.example.invalid',
-    company: 'Pilates Living',
+    company: 'Studio Pilates Demo',
     source: 'WEBSITE',
     ownerId: 'owner-1',
     tenantId,
