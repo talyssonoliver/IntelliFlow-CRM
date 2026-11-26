@@ -66,7 +66,10 @@ function domainOf(address: string): string {
 export function isConsumerMailAddress(address: string): boolean {
   const domain = domainOf(address);
   if (!domain) return false;
-  return CONSUMER_DOMAINS.has(domain) || /^yahoo\.(com|co\.[a-z]{2}|[a-z]{2,3})$/.test(domain);
+  return (
+    CONSUMER_DOMAINS.has(domain) ||
+    /^yahoo\.(com(\.[a-z]{2})?|co\.[a-z]{2}|[a-z]{2,3})$/.test(domain)
+  );
 }
 
 /** The tenant's allowlist: from the environment, else the built-in one, else none (null). */

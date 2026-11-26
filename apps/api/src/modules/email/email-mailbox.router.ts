@@ -320,7 +320,9 @@ export const emailMailboxRouter = createTRPCRouter({
         for (const address of [input.fromAddress, input.smtpUsername, input.imapUsername]) {
           if (address?.includes('@')) assertMailboxAllowed(c.tenant.tenantId, address);
         }
-        assertPersonalConfirmed(input.fromAddress, input.acceptPersonal, input.scope);
+        for (const address of [input.fromAddress, input.smtpUsername, input.imapUsername]) {
+          assertPersonalConfirmed(address, input.acceptPersonal, input.scope);
+        }
       }
       const existing = await findMailbox(c, input.scope);
       const data = smtpMailboxData(input, existing);

@@ -965,6 +965,17 @@ describe('mailbox connect policy (allowlist and personal mailbox)', () => {
     expect(prismaMock.emailMailbox.updateMany).not.toHaveBeenCalled();
   });
 
+  it('asks for the confirmation when a personal login hides behind a business from address', async () => {
+    await expect(
+      member().saveSmtp({
+        ...saveInput,
+        fromAddress: 'me@business.example.com',
+        ...smtpAccountFields('someone@gmail.com', secret),
+      })
+    ).rejects.toMatchObject({ message: expect.stringMatching(/^PERSONAL_MAILBOX:USER:/) });
+    expect(prismaMock.emailMailbox.create).not.toHaveBeenCalled();
+  });
+
   it('asks before saving an SMTP mailbox on a consumer domain', async () => {
     await expect(
       member().saveSmtp({ ...saveInput, fromAddress: 'someone@yahoo.co.uk' })

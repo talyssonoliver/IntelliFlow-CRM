@@ -17,6 +17,8 @@ describe('isConsumerMailAddress', () => {
     'a@live.com',
     'a@yahoo.com',
     'a@yahoo.co.uk',
+    'a@yahoo.com.au',
+    'a@yahoo.com.br',
     'a@icloud.com',
     'a@aol.com',
     'a@proton.me',
