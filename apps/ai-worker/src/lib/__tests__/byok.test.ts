@@ -293,6 +293,18 @@ describe('classifyByokFailure', () => {
     ).toBe('QUOTA_EXCEEDED');
   });
 
+  it('an Anthropic spend-limit 400 is QUOTA_EXCEEDED; an ordinary 400 is not', () => {
+    expect(
+      classifyByokFailure(
+        httpError(
+          400,
+          'You have reached your specified API usage limits. Access resumes on 2026-12-01.'
+        )
+      )
+    ).toBe('QUOTA_EXCEEDED');
+    expect(classifyByokFailure(httpError(400, 'messages: field required'))).toBeNull();
+  });
+
   it('an error with no HTTP status is never a key failure, whatever its text says', () => {
     expect(classifyByokFailure(new Error('You exceeded your current quota'))).toBeNull();
     expect(classifyByokFailure(new Error('Failed to parse. Text: billing'))).toBeNull();

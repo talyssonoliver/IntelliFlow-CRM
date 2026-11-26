@@ -425,7 +425,7 @@ export function getCachedByokModel(
 // ---------------------------------------------------------------------------
 
 const QUOTA_PATTERN =
-  /insufficient[_ ]quota|exceeded your current quota|credit balance is too low|out of credits/i;
+  /insufficient[_ ]quota|exceeded your current quota|credit balance is too low|out of credits|reached your specified api usage limits/i;
 
 const KEY_REJECTED_403 = /key|unauthori[sz]ed|authentication|permission|not allowed|access|denied/i;
 const NOT_THE_KEY_403 = /moderation|flagged|region|country|territory/i;
