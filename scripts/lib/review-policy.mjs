@@ -13,6 +13,8 @@
  * unit-tested without a model.
  */
 
+import { claudeReviewModel } from './review-commands.mjs';
+
 export const DEFAULT_MAX_WAIT_MIN = 20;
 /** Minutes added to Codex's stated reset time before retrying. */
 export const RESET_MARGIN_MIN = 1;
@@ -94,7 +96,7 @@ export function deferredMessage({ reason, resetAt, risky, claudeUsable }) {
  * @param {boolean} deps.claudeUsable
  * @param {(prompt: string, opts: {model: string|null, effort: string|null}) => object} deps.runCodex
  *   returns { raw, status, stderr, stdout, tokens? }
- * @param {(prompt: string) => object} deps.runClaude returns { text, tokens?, costUsd? }
+ * @param {(prompt: string, opts: {model: string}) => object} deps.runClaude returns { text, tokens?, costUsd? }
  * @param {(raw: string) => object|null} deps.extract
  * @param {{out: Function, err: Function}} deps.log
  * @param {(ms: number) => void} deps.sleep
@@ -213,7 +215,8 @@ export function makeReviewer({
       log.out(
         '[codex-review] Codex unavailable and the diff is risky: Claude review (lean flags).\n'
       );
-      const c = runClaude(prompt);
+      const claudeModel = claudeReviewModel(env);
+      const c = runClaude(prompt, { model: claudeModel });
       const raw = c.text || '';
       const parsed = extract(raw);
       if (parsed) {
@@ -221,7 +224,7 @@ export function makeReviewer({
           parsed,
           reviewer: 'claude',
           raw,
-          model: 'claude (account default)',
+          model: claudeModel,
           effort: null,
           tokens: c.tokens ?? null,
           costUsd: c.costUsd ?? null,
