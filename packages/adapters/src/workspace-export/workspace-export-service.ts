@@ -201,6 +201,11 @@ async function enqueueSafely(
 export interface ExportMail {
   recipientUserId: string;
   tenantId: string;
+  /**
+   * Identifies this mail for the queue: one request, one archive, one recipient. The sender uses it
+   * as a deterministic job id, so a retry finds the job it queued before instead of queuing a copy.
+   */
+  dedupeKey: string;
   subject: string;
   body: string;
 }
@@ -255,17 +260,28 @@ export async function resolveExportRecipients(
   now: Date = new Date()
 ): Promise<Array<{ userId: string; email: string }>> {
   const ids = new Set<string>();
+  // A live, non-operator membership: the same rule as the users file.
+  const liveMembership = (role?: 'ADMIN') => ({
+    tenantId: request.tenantId,
+    ...(role ? { role } : {}),
+    revokedAt: null,
+    source: { not: 'PORTAL_STAFF' as const },
+    OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+  });
   if (request.subscriptionId) {
     const sub = await prisma.stripeSubscription.findUnique({
       where: { stripeSubscriptionId: request.subscriptionId },
       select: { stripeCustomerId: true },
     });
     if (sub) {
+      // The payer may be a home user or a member whose home is another workspace.
       const payer = await prisma.user.findFirst({
         where: {
           stripeCustomerId: sub.stripeCustomerId,
-          tenantId: request.tenantId,
-          ...homeAccessNotRevoked(request.tenantId, now),
+          OR: [
+            { tenantId: request.tenantId, ...homeAccessNotRevoked(request.tenantId, now) },
+            { memberships: { some: liveMembership() } },
+          ],
         },
         select: { id: true },
       });
@@ -283,6 +299,17 @@ export async function resolveExportRecipients(
     select: { id: true },
   });
   if (owner) ids.add(owner.id);
+  // A workspace can be administered only through ADMIN memberships (their home workspace is
+  // elsewhere, ADR-071): with no home administrator the earliest of them is the owner, so a
+  // subscription-ended export (no asker) still reaches someone who administers the workspace.
+  if (!owner) {
+    const memberAdmin = await prisma.tenantMembership.findFirst({
+      where: liveMembership('ADMIN'),
+      orderBy: { createdAt: 'asc' },
+      select: { userId: true },
+    });
+    if (memberAdmin) ids.add(memberAdmin.userId);
+  }
   // The asker only counts while they are still an administrator of this workspace (home tenant or
   // an active membership): a removed or demoted admin must not get the link on a later retry.
   if (request.requestedById) {
@@ -297,15 +324,9 @@ export async function resolveExportRecipients(
           },
           {
             memberships: {
-              some: {
-                tenantId: request.tenantId,
-                role: 'ADMIN',
-                revokedAt: null,
-                // The same rule as the users file: the operator's staff are not the customer's
-                // people, and an expired grant is no longer access.
-                source: { not: 'PORTAL_STAFF' },
-                OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-              },
+              // The operator's staff are not the customer's people, and an expired grant is no
+              // longer access.
+              some: liveMembership('ADMIN'),
             },
           },
         ],
@@ -708,7 +729,14 @@ async function deliverLink(
       select: { emailedToUserIds: true },
     });
     const recipients = await resolveExportRecipients(deps.prisma, request, now());
-    if (recipients.length === 0) return false;
+    if (recipients.length === 0) {
+      // The customer is owed this export and nobody can be mailed: make it visible, every sweep.
+      deps.log?.error(
+        { requestId: request.id, tenantId: request.tenantId },
+        'workspace export has no recipient to email: someone must follow up'
+      );
+      return false;
+    }
     const { links, manifestUrl } = await signPartLinks(
       deps.archiveStorage,
       request.id,
@@ -734,6 +762,7 @@ async function deliverLink(
         await deps.sendEmail({
           recipientUserId: r.userId,
           tenantId: request.tenantId,
+          dedupeKey: `${request.id}-${info.sha256.slice(0, 16)}-${r.userId}`,
           subject: mail.subject,
           body: mail.body,
         });

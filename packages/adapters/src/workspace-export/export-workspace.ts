@@ -16,7 +16,7 @@
  * path is re-checked. Secrets: see ./deny-list.ts. Memory: rows are read in keyset pages and
  * written as they come; files are piped.
  */
-import { Prisma } from '@intelliflow/db';
+import { Prisma, emailTeamVisibleWhere } from '@intelliflow/db';
 import { createHash } from 'node:crypto';
 import { createReadStream, createWriteStream } from 'node:fs';
 import { rm, stat, writeFile } from 'node:fs/promises';
@@ -43,6 +43,24 @@ export const EXPORT_FORMAT_VERSION = 1;
 /** The slice of PrismaClient the export reads. Every call is a read. */
 export type ExportDb = Record<string, any>;
 
+/** A stored object that is confirmed not to exist (404 / not found): the only open failure skipped. */
+export class ExportFileMissingError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ExportFileMissingError';
+  }
+}
+
+/** Whether `err` says the object itself is gone, as opposed to a storage hiccup worth retrying. */
+export function isMissingObjectError(err: unknown): boolean {
+  if (err instanceof ExportFileMissingError) return true;
+  const e = err as { status?: unknown; statusCode?: unknown; code?: unknown } | null;
+  return (
+    !!e &&
+    (e.status === 404 || e.statusCode === 404 || e.statusCode === '404' || e.code === 'ENOENT')
+  );
+}
+
 export interface ExportFileStorage {
   /** Every object under `<tenantId>/` in `bucket`, paths relative to the bucket root. */
   listFiles(bucket: string, tenantId: string): AsyncIterable<{ path: string; size: number | null }>;
@@ -61,7 +79,12 @@ export interface RunWorkspaceExportOptions {
   pageSize?: number;
   /** A part is closed once it passes this size (default about 4 GB). Tests inject a small one. */
   maxPartBytes?: number;
+  /** Opening a stored file is retried with a growing delay before the export fails. */
+  fileRetry?: { attempts?: number; delayMs?: number };
 }
+
+/** The bucket whose objects are restricted to the attachments of the mail that is exported. */
+export const EMAIL_ATTACHMENTS_BUCKET = 'email-attachments';
 
 export interface ManifestFile {
   path: string;
@@ -121,9 +144,19 @@ interface Plan {
   description: string;
   columns: string[];
   urlColumns: readonly string[];
-  /** Extra predicate beyond `tenantId` (users only). */
+  /** Extra predicate beyond `tenantId` (users, and the team-visible mail). */
   where: (tenantId: string, now: Date) => Record<string, unknown>;
 }
+
+/**
+ * Personal mail is private (owner decision 26/11/2026, no admin override): the export carries only
+ * the mail the whole team may read (see emailTeamVisibleWhere), and the attachment rows of exactly
+ * that mail.
+ */
+const TEAM_MAIL_WHERE: Record<string, (tenantId: string) => Record<string, unknown>> = {
+  EmailRecord: (tenantId) => ({ tenantId, ...emailTeamVisibleWhere() }),
+  EmailAttachment: (tenantId) => ({ tenantId, email: { is: emailTeamVisibleWhere() } }),
+};
 
 const lowerFirst = (s: string): string => s.charAt(0).toLowerCase() + s.slice(1);
 
@@ -145,7 +178,7 @@ export function buildPlans(): Plan[] {
     description: e.description,
     columns: exportColumns(e.model),
     urlColumns: e.urlColumns ?? [],
-    where: (tenantId) => ({ tenantId }),
+    where: TEAM_MAIL_WHERE[e.model] ?? ((tenantId) => ({ tenantId })),
   }));
   plans.push({
     name: MEMBERSHIP_EXPORT.name,
@@ -394,6 +427,9 @@ export function renderReadme(
   lines.push('platform data and not your records: AI embeddings and derived scores, audit and');
   lines.push('security logs, API usage counters, and billing records (your invoices are in your');
   lines.push('payment provider account). Call recording links are not included.');
+  lines.push("Private email: mail in a person's own mailbox and unsent drafts are private to that");
+  lines.push('person and are excluded, with their attachments. Included: mail in the company');
+  lines.push('mailbox, inbound mail nobody owns, and mail logged to a lead or a contact.');
   lines.push('');
   lines.push('Checking the archive');
   lines.push('--------------------');
@@ -428,7 +464,24 @@ interface ExportRun {
   entities: WorkspaceExportManifest['entities'];
   warnings: string[];
   skippedFiles: WorkspaceExportManifest['skippedFiles'];
+  /** Storage paths of the exported email attachments: the only objects copied from that bucket. */
+  attachmentPaths: Set<string>;
+  /** Stored email attachments left out because their mail is private. */
+  privateAttachmentsLeftOut: number;
   track(info: PartedEntryInfo, extra: Omit<ManifestFile, 'bytes' | 'sha256' | 'part'>): void;
+}
+
+/** Passes the pages through, noting which stored files the exported attachment rows point at. */
+async function* rememberAttachmentPaths(
+  run: ExportRun,
+  pages: AsyncIterable<ExportRow[]>
+): AsyncGenerator<ExportRow[]> {
+  for await (const page of pages) {
+    for (const row of page) {
+      if (typeof row.fileUrl === 'string') run.attachmentPaths.add(row.fileUrl);
+    }
+    yield page;
+  }
 }
 
 /** One entity: its CSV, then its JSON, each from its own keyset read. */
@@ -447,10 +500,11 @@ async function writeEntityFiles(
   const spools: string[] = [];
   let total = 0;
   try {
+    const pages = readPages(ctx.db, plan, ctx.tenantId, ctx.now, ctx.pageSize);
     const chunks = spoolChunks(
       ctx.spoolBase,
       plan,
-      readPages(ctx.db, plan, ctx.tenantId, ctx.now, ctx.pageSize),
+      plan.model === 'EmailAttachment' ? rememberAttachmentPaths(run, pages) : pages,
       ctx.maxChunkBytes
     );
     for await (const chunk of chunks) {
@@ -481,40 +535,93 @@ async function writeEntityFiles(
   run.entities[plan.name] = { rows: total, description: plan.description };
 }
 
+const sleep = (ms: number): Promise<void> =>
+  ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
+
+/**
+ * Opens a stored object. A confirmed missing object is thrown at once (the caller skips and says
+ * so). Any other failure (5xx, rate limit, timeout) is retried with a doubling delay, then thrown:
+ * the job fails and BullMQ retries it, instead of an archive that silently lacks files.
+ */
+async function openWithRetry(
+  storage: ExportFileStorage,
+  bucket: string,
+  path: string,
+  retry: { attempts: number; delayMs: number }
+): Promise<Readable> {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await storage.openFile(bucket, path);
+    } catch (err) {
+      if (isMissingObjectError(err) || attempt >= retry.attempts) throw err;
+      await sleep(retry.delayMs * 2 ** (attempt - 1));
+    }
+  }
+}
+
+/** Why an object is not copied, or null when it is. Counts the private attachments left out. */
+function skipReason(
+  run: ExportRun,
+  bucket: string,
+  tenantId: string,
+  path: string
+): { reason: string; silent: boolean } | null {
+  if (!isTenantStoragePath(tenantId, path)) {
+    return { reason: 'path outside the workspace folder', silent: false };
+  }
+  // Email attachments leave only with their mail: an object that no exported attachment row
+  // points at belongs to private mail (a personal mailbox or a draft) and stays out.
+  if (bucket === EMAIL_ATTACHMENTS_BUCKET && !run.attachmentPaths.has(path)) {
+    run.privateAttachmentsLeftOut += 1;
+    return { reason: 'private mail', silent: true };
+  }
+  return null;
+}
+
+/** One stored object into the archive, or a recorded skip when it is confirmed gone. */
+async function copyStoredFile(
+  run: ExportRun,
+  storage: ExportFileStorage,
+  target: { bucket: string; tenantId: string; retry: { attempts: number; delayMs: number } },
+  obj: { path: string; size: number | null }
+): Promise<void> {
+  const { bucket, tenantId, retry } = target;
+  const skip = skipReason(run, bucket, tenantId, obj.path);
+  if (skip) {
+    if (!skip.silent) run.skippedFiles.push({ bucket, path: obj.path, reason: skip.reason });
+    return;
+  }
+  let stream: Readable;
+  try {
+    stream = await openWithRetry(storage, bucket, obj.path, retry);
+  } catch (err) {
+    if (!isMissingObjectError(err)) throw err;
+    // The object is confirmed gone: say so in the README and manifest, keep going.
+    const reason = err instanceof Error ? err.message : String(err);
+    run.skippedFiles.push({ bucket, path: obj.path, reason: reason.slice(0, 200) });
+    return;
+  }
+  const entryName = `files/${bucket}/${obj.path.slice(tenantId.length + 1)}`;
+  // An error while streaming corrupts the archive entry, so it fails the whole export.
+  run.track(await run.writer.addStream(entryName, stream, obj.size), {
+    path: entryName,
+    kind: 'stored-file',
+  });
+}
+
 /** The tenant's own objects from each bucket, streamed into files/<bucket>/. */
 async function copyStoredFiles(
   run: ExportRun,
   storage: ExportFileStorage,
   buckets: readonly string[],
-  tenantId: string
+  tenantId: string,
+  retry: { attempts: number; delayMs: number }
 ): Promise<void> {
   for (const bucket of buckets) {
     // A listing error is not swallowed: an export that silently lacks a bucket's files is
     // worse than a failed job that BullMQ retries. A bucket that does not exist lists empty.
     for await (const obj of storage.listFiles(bucket, tenantId)) {
-      if (!isTenantStoragePath(tenantId, obj.path)) {
-        run.skippedFiles.push({
-          bucket,
-          path: obj.path,
-          reason: 'path outside the workspace folder',
-        });
-        continue;
-      }
-      let stream: Readable;
-      try {
-        stream = await storage.openFile(bucket, obj.path);
-      } catch (err) {
-        // The object is gone or unreadable: say so in the README and manifest, keep going.
-        const reason = err instanceof Error ? err.message : String(err);
-        run.skippedFiles.push({ bucket, path: obj.path, reason: reason.slice(0, 200) });
-        continue;
-      }
-      const entryName = `files/${bucket}/${obj.path.slice(tenantId.length + 1)}`;
-      // An error while streaming corrupts the archive entry, so it fails the whole export.
-      run.track(await run.writer.addStream(entryName, stream, obj.size), {
-        path: entryName,
-        kind: 'stored-file',
-      });
+      await copyStoredFile(run, storage, { bucket, tenantId, retry }, obj);
     }
   }
 }
@@ -543,6 +650,8 @@ export async function runWorkspaceExport(
     entities: {},
     warnings: [],
     skippedFiles: [],
+    attachmentPaths: new Set<string>(),
+    privateAttachmentsLeftOut: 0,
     track(info, extra) {
       this.files.push({ ...extra, part: info.part, bytes: info.bytes, sha256: info.sha256 });
     },
@@ -569,7 +678,18 @@ export async function runWorkspaceExport(
         maxChunkBytes: opts.maxPartBytes ?? DEFAULT_MAX_PART_BYTES,
       });
     }
-    if (opts.files) await copyStoredFiles(run, opts.files, buckets, tenantId);
+    if (opts.files) {
+      await copyStoredFiles(run, opts.files, buckets, tenantId, {
+        attempts: opts.fileRetry?.attempts ?? 4,
+        delayMs: opts.fileRetry?.delayMs ?? 1000,
+      });
+    }
+    if (run.privateAttachmentsLeftOut > 0) {
+      run.warnings.push(
+        `${run.privateAttachmentsLeftOut} stored email attachment file(s) belong to private mail ` +
+          'and were left out.'
+      );
+    }
 
     // Every data part is closed first, so the manifest can list their sizes and checksums.
     const later = await writer.finalizeLaterParts();

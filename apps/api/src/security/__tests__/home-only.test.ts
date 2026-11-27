@@ -108,6 +108,9 @@ describe('home-only rules vs the real router', () => {
       'apiKey.create',
       'subscription.toggleModule',
       'queuesAdmin.pause',
+      'workspaceExport.request',
+      'workspaceExport.list',
+      'workspaceExport.downloadLink',
     ]) {
       expect(homeOnlyViolation(path, pinnedStaff), path).not.toBeNull();
     }
@@ -118,6 +121,22 @@ describe('home-only rules vs the real router', () => {
     expect(homeOnlyViolation('user.updateProfile', visitingMember)).not.toBeNull();
     expect(homeOnlyViolation('auth.getSessions', visitingMember)).not.toBeNull();
     expect(homeOnlyViolation('queuesAdmin.list', visitingMember)).toBeNull();
+  });
+
+  it('refuses a pinned Portal staff session every real workspaceExport procedure', async () => {
+    const paths = (await realProcedurePaths()).filter((p) => p.startsWith('workspaceExport.'));
+    expect(paths.sort()).toEqual([
+      'workspaceExport.downloadLink',
+      'workspaceExport.list',
+      'workspaceExport.request',
+    ]);
+    for (const path of paths) {
+      expect(homeOnlyViolation(path, pinnedStaff), path).toMatch(/Portal/);
+      // The workspace's own administrators (at home, or a member acting in it) still pass.
+      expect(homeOnlyViolation(path, atHome), path).toBeNull();
+      expect(homeOnlyViolation(path, visitingMember), path).toBeNull();
+    }
+    expect(findHomeOnlyRule('workspaceExport.request')?.profile).toBe(false);
   });
 
   it('allows an unauthenticated caller (nothing to refuse)', () => {

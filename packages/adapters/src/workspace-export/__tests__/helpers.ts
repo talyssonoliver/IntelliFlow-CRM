@@ -5,9 +5,21 @@
 import { unzipSync } from 'fflate';
 import { readFileSync } from 'node:fs';
 import { Readable } from 'node:stream';
-import type { ExportFileStorage } from '../export-workspace';
+import { Prisma } from '@intelliflow/db';
+import { ExportFileMissingError, type ExportFileStorage } from '../export-workspace';
 
 type Row = Record<string, any>;
+
+/** The Prisma JSON filter `{ path, equals | string_starts_with }` over a Json column value. */
+function jsonMatches(value: any, cond: any): boolean {
+  let at: any = value;
+  for (const key of cond.path) at = at && typeof at === 'object' ? at[key] : undefined;
+  if ('string_starts_with' in cond) {
+    return typeof at === 'string' && at.startsWith(cond.string_starts_with);
+  }
+  if (cond.equals === Prisma.AnyNull) return at === undefined || at === null;
+  return at === cond.equals;
+}
 
 function cmp(value: any, cond: any): boolean {
   if (cond === null || typeof cond !== 'object' || cond instanceof Date) {
@@ -37,6 +49,16 @@ export function matches(row: Row, where: Row | undefined, tables?: Record<string
     if (k === 'AND') return (Array.isArray(v) ? v : [v]).every((w: Row) => matches(row, w, tables));
     if (k === 'OR') return (v as Row[]).some((w) => matches(row, w, tables));
     if (k === 'NOT') return !matches(row, v as Row, tables);
+    // Relations the email predicate walks: the row's mailbox, and an attachment's email.
+    if (k === 'mailbox' && v?.is) {
+      const mailbox = (tables?.emailMailbox ?? []).find((m) => m.id === row.mailboxId);
+      return !!mailbox && matches(mailbox, v.is, tables);
+    }
+    if (k === 'email' && v?.is) {
+      const email = (tables?.emailRecord ?? []).find((m) => m.id === row.emailId);
+      return !!email && matches(email, v.is, tables);
+    }
+    if (v && typeof v === 'object' && Array.isArray(v.path)) return jsonMatches(row[k], v);
     if (k === 'memberships' && v?.some) {
       return (tables?.tenantMembership ?? []).some(
         (m) => m.userId === row.id && matches(m, v.some, tables)
@@ -143,7 +165,7 @@ export function makeDb(tables: Record<string, Row[]>) {
 /** In-memory bucket storage, keyed bucket -> path -> content. */
 export function memoryFiles(
   buckets: Record<string, Record<string, string>>,
-  opts: { failOpen?: string[] } = {}
+  opts: { failOpen?: string[]; failOpenOther?: string[]; flaky?: Record<string, number> } = {}
 ): ExportFileStorage & { listed: string[] } {
   const listed: string[] = [];
   return {
@@ -156,7 +178,12 @@ export function memoryFiles(
       }
     },
     async openFile(bucket, path) {
-      if (opts.failOpen?.includes(path)) throw new Error('object missing');
+      if (opts.failOpen?.includes(path)) throw new ExportFileMissingError('object missing');
+      if (opts.failOpenOther?.includes(path)) throw new Error('storage unavailable (503)');
+      if (opts.flaky?.[path]) {
+        opts.flaky[path] -= 1;
+        throw new Error('storage unavailable (503)');
+      }
       return Readable.from([Buffer.from(buckets[bucket]![path]!)]);
     },
   };

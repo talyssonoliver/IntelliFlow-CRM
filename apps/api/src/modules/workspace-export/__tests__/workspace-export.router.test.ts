@@ -4,6 +4,7 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { workspaceExportRouter } from '../workspace-export.router';
+import { router } from '../../../trpc';
 import {
   prismaMock,
   createAdminContext,
@@ -69,6 +70,42 @@ describe('permissions (administrators only)', () => {
   it('refuses a caller with no session', async () => {
     const c = workspaceExportRouter.createCaller(createTestContext({ user: null }));
     await expect(c.request()).rejects.toMatchObject({ code: 'UNAUTHORIZED' });
+  });
+});
+
+describe('pinned Portal staff session', () => {
+  // The home-only rule matches the full procedure path, so mount the router under its real name.
+  const mounted = router({ workspaceExport: workspaceExportRouter });
+  const adminContext = (pinned: boolean) => {
+    const base = createAdminContext();
+    return {
+      ...base,
+      user: { ...base.user!, homeTenantId: 'home_tenant_other', pinned },
+    } as never;
+  };
+
+  it('is refused every procedure with HOME_ONLY, before any export work', async () => {
+    const c = mounted.createCaller(adminContext(true));
+    for (const call of [
+      () => c.workspaceExport.request(),
+      () => c.workspaceExport.list(),
+      () => c.workspaceExport.downloadLink({ requestId: 'r1' }),
+    ]) {
+      await expect(call()).rejects.toMatchObject({
+        code: 'FORBIDDEN',
+        message: expect.stringMatching(/^HOME_ONLY:/),
+      });
+    }
+    expect(prismaMock.workspaceExportRequest.create).not.toHaveBeenCalled();
+    expect(prismaMock.workspaceExportRequest.findMany).not.toHaveBeenCalled();
+    expect(prismaMock.workspaceExportRequest.findFirst).not.toHaveBeenCalled();
+    expect(enqueue).not.toHaveBeenCalled();
+    expect(signedDownloadUrl).not.toHaveBeenCalled();
+  });
+
+  it("still lets the workspace's own administrator through", async () => {
+    const c = mounted.createCaller(adminContext(false));
+    await expect(c.workspaceExport.request()).resolves.toEqual({ requestId: 'req_1' });
   });
 });
 

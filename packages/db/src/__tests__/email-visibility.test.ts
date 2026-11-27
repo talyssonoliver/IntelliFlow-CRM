@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  emailTeamVisibleWhere,
   emailVisibilityWhere,
   emailVisibleSql,
   loggedPersonalMailIds,
@@ -141,5 +142,29 @@ describe('mailViewerOf', () => {
     expect(
       mailViewerOf({ tenantId: 't', userId: 'u', role: 'MANAGER', teamMemberIds: ['a'] })
     ).toEqual({ tenantId: 't', userId: 'u', role: 'MANAGER', teamMemberIds: ['a'] });
+  });
+});
+
+describe('emailTeamVisibleWhere (mail with no personal viewer)', () => {
+  const where = emailTeamVisibleWhere();
+  const [drafts, mailboxes] = where.AND as [{ OR: unknown[] }, { OR: Record<string, unknown>[] }];
+
+  it('never lets a draft through: no branch names a writer', () => {
+    expect(JSON.stringify(drafts)).not.toContain('userId');
+    expect(drafts.OR).toHaveLength(2);
+  });
+
+  it('opens the company mailbox, ownerless inbound mail and mail logged to a lead or contact', () => {
+    expect(mailboxes.OR).toContainEqual({ mailbox: { is: { scope: 'TENANT' } } });
+    expect(mailboxes.OR).toContainEqual(expect.objectContaining({ mailboxId: null, userId: null }));
+    expect(mailboxes.OR).toContainEqual({ contactId: { not: null } });
+    expect(mailboxes.OR).toContainEqual({ metadata: { path: ['leadId'], string_starts_with: '' } });
+  });
+
+  it('has no branch for a personal mailbox, a viewer or a role', () => {
+    const text = JSON.stringify(where);
+    expect(text).not.toContain('"USER"');
+    expect(text).not.toMatch(/ADMIN|role/);
+    expect(emailTeamVisibleWhere.length).toBe(0);
   });
 });

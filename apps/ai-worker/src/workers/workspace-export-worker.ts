@@ -65,28 +65,53 @@ export async function processWorkspaceExportJob(
 /** How long one export email may take from queue to provider (its own retries included). */
 export const MAIL_DELIVERY_TIMEOUT_MS = 2 * 60 * 1000;
 
+/** BullMQ custom ids may not contain ':'. */
+const mailJobId = (dedupeKey: string): string =>
+  `workspace-export-mail-${dedupeKey.replace(/[^A-Za-z0-9_-]/g, '_')}`;
+
+type MailResult = { delivered?: boolean; reason?: string } | undefined;
+
 /**
  * Queuing the mail is not delivering it: the recipient counts as mailed only once the
  * notification worker has finished the job (provider accepted it). A job that fails for good, or
  * is not finished in time, throws here, so the export sweep retries that recipient.
+ *
+ * The job id is deterministic (one request, one archive, one recipient) and looked up before
+ * anything is added: a wait that timed out leaves the job on the queue, and the retry waits on
+ * that same job instead of queuing a second copy of the email. A job that finished with delivery
+ * counts as sent; a failed or undelivered one is removed and queued afresh.
  */
 export function createExportMailSender(
-  mailQueue: Pick<Queue, 'add'>,
+  mailQueue: Pick<Queue, 'add' | 'getJob'>,
   mailEvents: QueueEvents,
   timeoutMs: number = MAIL_DELIVERY_TIMEOUT_MS
 ): (mail: ExportMail) => Promise<void> {
   return async (mail) => {
-    const job = await mailQueue.add('notification:email', {
-      type: 'workspace_export_ready',
-      recipientUserId: mail.recipientUserId,
-      tenantId: mail.tenantId,
-      subject: mail.subject,
-      body: mail.body,
-      entityType: 'workspace_export',
-    });
-    const result = (await job.waitUntilFinished(mailEvents, timeoutMs)) as
-      | { delivered?: boolean; reason?: string }
-      | undefined;
+    const jobId = mailJobId(mail.dedupeKey);
+    let job = await mailQueue.getJob(jobId);
+    if (job) {
+      const state = await job.getState();
+      if (state === 'completed' && (job.returnvalue as MailResult)?.delivered !== false) return;
+      if (state === 'completed' || state === 'failed' || state === 'unknown') {
+        // Failed for good, or finished undelivered: replace it with a fresh job.
+        await job.remove().catch(() => undefined);
+        job = undefined;
+      }
+      // Waiting, active or delayed: wait on that very job below.
+    }
+    job ??= await mailQueue.add(
+      'notification:email',
+      {
+        type: 'workspace_export_ready',
+        recipientUserId: mail.recipientUserId,
+        tenantId: mail.tenantId,
+        subject: mail.subject,
+        body: mail.body,
+        entityType: 'workspace_export',
+      },
+      { jobId }
+    );
+    const result = (await job.waitUntilFinished(mailEvents, timeoutMs)) as MailResult;
     if (result?.delivered === false) {
       throw new Error(`Export email not delivered: ${result.reason ?? 'unknown reason'}`);
     }

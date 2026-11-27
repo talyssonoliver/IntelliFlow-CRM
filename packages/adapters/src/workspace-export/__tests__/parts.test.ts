@@ -137,7 +137,11 @@ describe('split archives', () => {
     expect(split.manifest.entities.leads!.rows).toBe(rows.length);
 
     // Every entry stays under the limit, so every part after the first does too.
-    for (const p of split.parts.slice(1)) expect(p.bytes).toBeLessThanOrEqual(20_000 + 2_000);
+    // (A ZIP entry also costs about 300 bytes of headers, which the limit does not count.)
+    for (const p of split.parts.slice(1)) {
+      const entries = Object.keys(readZip(p.path)).length;
+      expect(p.bytes).toBeLessThanOrEqual(20_000 + 2_000 + 300 * entries);
+    }
   });
 
   it('a small export stays one part with the plain name', async () => {

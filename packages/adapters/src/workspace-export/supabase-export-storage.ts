@@ -10,13 +10,25 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { Readable } from 'node:stream';
-import type { ExportFileStorage } from './export-workspace';
+import { ExportFileMissingError, type ExportFileStorage } from './export-workspace';
 
 export const WORKSPACE_EXPORT_BUCKET = 'workspace-exports';
 /** Time allowed for a storage download to start answering. */
 const OPEN_FILE_HEADERS_TIMEOUT_MS = 60_000;
 /** The link and the archive live for 14 days (agreement clause 5). */
 export const EXPORT_LINK_TTL_SECONDS = 14 * 24 * 60 * 60;
+
+/** How many times a folder is listed at most while waiting for two passes to agree. */
+const LISTING_MAX_PASSES = 4;
+
+function sameListing(
+  a: Map<string, { size: number | null }>,
+  b: Map<string, { size: number | null }>
+): boolean {
+  if (a.size !== b.size) return false;
+  for (const [path, obj] of a) if (!b.has(path) || b.get(path)!.size !== obj.size) return false;
+  return true;
+}
 
 export interface ExportArchiveStorage {
   /** Create the private bucket on first use. */
@@ -58,11 +70,34 @@ export class SupabaseExportStorage implements ExportFileStorage, ExportArchiveSt
 
   // ---- reading the tenant's files ----------------------------------------------------------
 
+  /**
+   * The folder is listed in full BEFORE anything is yielded or downloaded, and again until two
+   * passes agree. Offset paging over a live folder can skip or repeat an object when an upload or
+   * a delete lands between two pages, and the walk used to be lazy (a page was read only after
+   * the previous 100 files had been downloaded), so that window could last minutes.
+   */
   async *listFiles(
     bucket: string,
     tenantId: string
   ): AsyncGenerator<{ path: string; size: number | null }> {
-    yield* this.walk(bucket, tenantId);
+    let previous = await this.snapshot(bucket, tenantId);
+    for (let pass = 1; pass < LISTING_MAX_PASSES; pass += 1) {
+      const next = await this.snapshot(bucket, tenantId);
+      const agreed = sameListing(previous, next);
+      previous = next;
+      if (agreed) break;
+    }
+    yield* previous.values();
+  }
+
+  /** Every object under `folder`, by path (so a repeat collapses into one entry). */
+  private async snapshot(
+    bucket: string,
+    folder: string
+  ): Promise<Map<string, { path: string; size: number | null }>> {
+    const found = new Map<string, { path: string; size: number | null }>();
+    for await (const obj of this.walk(bucket, folder)) found.set(obj.path, obj);
+    return found;
   }
 
   /** One page of a folder; a bucket the tenant never used may not exist: nothing to copy. */
@@ -103,13 +138,21 @@ export class SupabaseExportStorage implements ExportFileStorage, ExportArchiveSt
 
   async openFile(bucket: string, path: string): Promise<Readable> {
     const { data, error } = await this.client.storage.from(bucket).createSignedUrl(path, 300);
-    if (error || !data) throw new Error(`Link for ${bucket}/${path} failed`);
+    if (error || !data) {
+      // Only a confirmed missing object is skippable; anything else is a storage failure.
+      const status = (error as { statusCode?: string | number } | null)?.statusCode;
+      if (String(status) === '404' || /not.?found/i.test(error?.message ?? '')) {
+        throw new ExportFileMissingError(`${bucket}/${path} not found`);
+      }
+      throw new Error(`Link for ${bucket}/${path} failed: ${error?.message ?? 'no link'}`);
+    }
     // A hung connection must not stall the job: the timeout covers the response headers only, so
     // a large file is still allowed to stream for as long as it needs.
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), OPEN_FILE_HEADERS_TIMEOUT_MS);
     try {
       const res = await fetch(data.signedUrl, { signal: controller.signal });
+      if (res.status === 404) throw new ExportFileMissingError(`${bucket}/${path} not found`);
       if (!res.ok || !res.body) {
         throw new Error(`Download of ${bucket}/${path} failed (${res.status})`);
       }

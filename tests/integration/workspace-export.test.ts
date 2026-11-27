@@ -12,6 +12,7 @@
  * Skips (like the other DB suites) when there is no DATABASE_URL.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { Prisma } from '../../packages/db/generated/prisma/client';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -133,13 +134,67 @@ describeDb('workspace export (real database)', () => {
         },
       ],
     });
+
+    // Private mail (owner decision 26/11/2026): a personal mailbox, a draft, and the mail of a
+    // personal mailbox that is logged to a contact or a lead (which is team mail).
+    await prisma.emailMailbox.createMany({
+      data: [
+        { id: `${TAG}_mb_me`, tenantId: tA, scope: 'USER', userId: ownerA.id },
+        { id: `${TAG}_mb_co`, tenantId: tA, scope: 'TENANT', userId: null },
+      ].map((m) => ({
+        ...m,
+        kind: 'SMTP',
+        status: 'DISCONNECTED',
+        fromAddress: `${m.id}@example.invalid`,
+      })),
+    });
+    const contactA = await prisma.contact.findFirst({ where: { tenantId: tA } });
+    const mk = (key: string, over: Record<string, unknown>) =>
+      prisma.emailRecord.create({
+        data: {
+          tenantId: tA,
+          subject: `${TAG}-${key}`,
+          body: `BODY-${key}`,
+          fromEmail: 'x@example.invalid',
+          toEmail: 'y@example.invalid',
+          ...over,
+        },
+      });
+    await mk('company', { mailboxId: `${TAG}_mb_co` });
+    await mk('personal', { mailboxId: `${TAG}_mb_me`, userId: ownerA.id });
+    await mk('personalLoggedContact', {
+      mailboxId: `${TAG}_mb_me`,
+      userId: ownerA.id,
+      contactId: contactA.id,
+    });
+    await mk('personalLoggedLead', {
+      mailboxId: `${TAG}_mb_me`,
+      userId: ownerA.id,
+      metadata: { leadId: 'any-lead-id' },
+    });
+    await mk('draft', { mailboxId: `${TAG}_mb_co`, metadata: { isDraft: true } });
+    await mk('nullMetadata', { metadata: Prisma.DbNull });
+    const personal = await prisma.emailRecord.findFirst({
+      where: { tenantId: tA, subject: `${TAG}-personal` },
+    });
+    const company = await prisma.emailRecord.findFirst({
+      where: { tenantId: tA, subject: `${TAG}-company` },
+    });
+    await prisma.emailAttachment.createMany({
+      data: [
+        { emailId: personal.id, fileName: 'p.pdf', fileUrl: `${tA}/p.pdf` },
+        { emailId: company.id, fileName: 'c.pdf', fileUrl: `${tA}/c.pdf` },
+      ].map((a) => ({ ...a, tenantId: tA, fileSize: 1, fileType: 'application/pdf' })),
+    });
   });
 
   afterAll(async () => {
     if (!prisma) return;
     try {
       if (dir) rmSync(dir, { recursive: true, force: true });
+      await prisma.emailAttachment.deleteMany({ where: { tenantId: { in: [tA, tB] } } });
       await prisma.emailRecord.deleteMany({ where: { tenantId: { in: [tA, tB] } } });
+      await prisma.emailMailbox.deleteMany({ where: { tenantId: { in: [tA, tB] } } });
       await prisma.opportunity.deleteMany({ where: { tenantId: { in: [tA, tB] } } });
       await prisma.contact.deleteMany({ where: { tenantId: { in: [tA, tB] } } });
       await prisma.lead.deleteMany({ where: { tenantId: { in: [tA, tB] } } });
@@ -169,7 +224,7 @@ describeDb('workspace export (real database)', () => {
     const deals = JSON.parse(zip['data/deals.json']!);
     expect(deals).toHaveLength(1);
     expect(deals[0].value).toBe('100.5');
-    expect(JSON.parse(zip['data/emails.json']!)[0].body).toBe('body a');
+    expect(JSON.parse(zip['data/emails.json']!).map((r: any) => r.body)).toContain('body a');
 
     const everything = Object.values(zip).join('\n');
     expect(everything).not.toContain('SECRET-B');
@@ -179,6 +234,33 @@ describeDb('workspace export (real database)', () => {
     expect(result.rowCounts.leads).toBe(1);
     expect(result.rowCounts.deals).toBe(1);
     expect(JSON.parse(zip['manifest.json']!).workspace.id).toBe(tA);
+  });
+
+  it('exports only team-visible mail: no personal-mailbox mail, no drafts', async () => {
+    const out = join(dir, 'mail.zip');
+    await runWorkspaceExport({
+      db: createTenantReadGuard(prisma, tA),
+      tenantId: tA,
+      outputPath: out,
+    });
+    const zip = readZip(out);
+    const bodies = (JSON.parse(zip['data/emails.json']!) as Array<{ body: string }>)
+      .map((r) => r.body)
+      .sort();
+    expect(bodies).toEqual(
+      [
+        'BODY-company',
+        'BODY-nullMetadata',
+        'BODY-personalLoggedContact',
+        'BODY-personalLoggedLead',
+        'body a',
+      ].sort()
+    );
+    expect(Object.values(zip).join(' ')).not.toMatch(/BODY-personal\b|BODY-draft/);
+    const attachments = JSON.parse(zip['data/email_attachments.json']!) as Array<{
+      fileName: string;
+    }>;
+    expect(attachments.map((a) => a.fileName)).toEqual(['c.pdf']);
   });
 
   it('exports home users and live members of A, not a revoked member and not B users', async () => {

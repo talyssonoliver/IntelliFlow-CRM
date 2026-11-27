@@ -177,6 +177,46 @@ export function emailVisibilityWhere(viewerUserId: string, loggedIds: readonly s
   };
 }
 
+/**
+ * The mail EVERYONE in the tenant may read, with no personal viewer: the policy above with nobody
+ * signed in. For a read that has no single reader, such as the whole-workspace export that goes to
+ * the tenant's administrators, where a mail may leave only when no colleague's privacy rests on it:
+ *
+ *  - the company mailbox (`scope = 'TENANT'`) and inbound mail with no mailbox and no owner;
+ *  - mail logged to a lead or a contact (`contactId` set, or `metadata.leadId`), which is the
+ *    customer conversation and not personal;
+ *  - never a draft, and never mail that is only in a user's personal mailbox.
+ *
+ * There is no administrator branch (owner decision 26/11/2026): an administrator who exports the
+ * workspace gets exactly what any colleague could already read. `metadata.leadId` is matched as a
+ * string, like the SQL form; the lead is not looked up (a Prisma `where` cannot join it).
+ */
+export function emailTeamVisibleWhere() {
+  return {
+    AND: [
+      {
+        // A draft is its writer's alone.
+        OR: [
+          { metadata: { path: ['isDraft'], equals: Prisma.AnyNull } },
+          { metadata: { path: ['isDraft'], equals: false } },
+        ],
+      },
+      {
+        OR: [
+          { mailbox: { is: { scope: 'TENANT' } } },
+          {
+            mailboxId: null,
+            userId: null,
+            metadata: { path: ['mailboxOwnerId'], equals: Prisma.AnyNull },
+          },
+          { contactId: { not: null } },
+          { metadata: { path: ['leadId'], string_starts_with: '' } },
+        ],
+      },
+    ],
+  };
+}
+
 /** The viewer's full Prisma visibility fragment: looks up the logged-to-a-visible-person ids. */
 export async function visibleEmailWhere(
   db: MailVisibilityDb,

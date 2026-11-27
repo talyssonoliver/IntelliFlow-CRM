@@ -117,7 +117,7 @@ export function WorkspaceExportCard({ enabled = true }: Readonly<{ enabled?: boo
         title="Export all workspace data"
         titleId="workspace-export-title"
         headingLevel={2}
-        description="A ZIP with one CSV and one JSON file for every kind of record, your stored files, a README and a manifest with checksums. The owner is emailed a private link valid for 14 days. One export a day."
+        description="A ZIP with one CSV and one JSON file for every kind of record, your stored files, a README and a manifest with checksums. Email in a personal mailbox, and drafts, stay private and are not included. The owner is emailed a private link valid for 14 days. One export a day."
       />
       <div className="mt-4">
         <Button onClick={start} disabled={request.isPending || busy}>
