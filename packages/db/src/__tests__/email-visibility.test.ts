@@ -3,6 +3,7 @@ import {
   emailVisibilityWhere,
   emailVisibleSql,
   loggedPersonalMailIds,
+  LOGGED_PERSONAL_MAIL_ID_CAP,
   mailViewerOf,
 } from '../email-visibility';
 
@@ -70,6 +71,21 @@ describe('emailVisibleSql / loggedPersonalMailIds', () => {
       'm1',
     ]);
     expect(seen[0]).toContain('T');
+  });
+});
+
+describe('loggedPersonalMailIds bound', () => {
+  it('limits the id list to the cap, newest first', async () => {
+    const seen: { values: unknown[]; strings: string[] }[] = [];
+    const db = {
+      $queryRaw: async (query: { values: unknown[]; strings: string[] }) => {
+        seen.push(query);
+        return [];
+      },
+    };
+    await loggedPersonalMailIds(db as never, { tenantId: 'T', userId: 'U', role: 'ADMIN' });
+    expect(seen[0].values).toContain(LOGGED_PERSONAL_MAIL_ID_CAP);
+    expect(seen[0].strings.join(' ')).toContain('ORDER BY e."createdAt" DESC');
   });
 });
 

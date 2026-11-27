@@ -112,7 +112,7 @@ export function emailVisibleSql(
  * a colleague drops out of list views: the failure is closed (hidden), never open. A single-mail
  * read passes `only` and is never affected.
  */
-export const LOGGED_PERSONAL_MAIL_ID_CAP = 20000;
+export const LOGGED_PERSONAL_MAIL_ID_CAP = 5000;
 
 /**
  * Ids of mail in a personal mailbox (anyone's) that the viewer may read because it is logged to a

@@ -431,7 +431,8 @@ export const inboundEmailRouter = createTRPCRouter({
       if (input.contactId) where.contactId = input.contactId;
       if (input.threadId) where.metadata = { path: ['threadId'], equals: input.threadId };
 
-      // Register #64: the rows AND the total only count mail this user may read.
+      // Register #64: the rows AND the total only count mail this user may read. The logged-mail
+      // id list this adds is capped (LOGGED_PERSONAL_MAIL_ID_CAP, newest first, fails closed).
       where.AND = [...(where.AND ?? []), await visibleMail(ctx)];
 
       const [emails, total] = await Promise.all([
