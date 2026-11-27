@@ -57,6 +57,14 @@ export function gmailAttachmentMeta(payload: GmailApiPart | undefined): MailAtta
   return found;
 }
 
+/** An attached file: it has a filename or an attachment disposition. */
+function isAttachedPart(part: GmailApiPart): boolean {
+  return (
+    Boolean(part.filename?.trim()) ||
+    ATTACHMENT_DISPOSITION.test(partHeader(part, 'Content-Disposition') ?? '')
+  );
+}
+
 function contentTypeParam(part: GmailApiPart, name: string): string | null {
   const header = partHeader(part, 'Content-Type') ?? '';
   for (const piece of header.split(';').slice(1)) {
@@ -78,6 +86,8 @@ function contentTypeParam(part: GmailApiPart, name: string): string | null {
  */
 export function gmailHtmlPart(payload: GmailApiPart | undefined): GmailApiPart | null {
   const walk = (part: GmailApiPart): GmailApiPart | null => {
+    // An attached message (a forward) has its own body: it is never this mail's.
+    if (isAttachedPart(part)) return null;
     if ((part.mimeType ?? '').toLowerCase() === 'multipart/related') {
       const start = bareContentId(contentTypeParam(part, 'start'));
       const root = start

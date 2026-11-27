@@ -241,12 +241,9 @@ export const emailLogRouter = createTRPCRouter({
       const where = {
         tenantId,
         metadata: { path: ['leadId'], equals: input.leadId },
-        // Someone else's own mail is left out in the query, so it never uses up the limit.
-        ...(isEmailAdmin(c)
-          ? {}
-          : {
-              OR: [{ userId: null }, { userId: c.tenant.userId }, { mailbox: { scope: 'TENANT' } }],
-            }),
+        // The lead lookup above proves the caller can see this lead, and mail logged to a lead
+        // is visible to whoever can see it (register #64, email-read-access.ts): the whole
+        // conversation, both directions, whatever mailbox it went through. Drafts are left out below.
       };
       // The thread is ordered by sentAt ?? createdAt, so the newest 200 are cut by that same date:
       // mail with a sentAt and mail without one (not yet backfilled: createdAt is its date) are read
@@ -291,15 +288,7 @@ export const emailLogRouter = createTRPCRouter({
               id: input.emailRecordId,
               tenantId,
               metadata: { path: ['leadId'], equals: input.leadId },
-              ...(isEmailAdmin(c)
-                ? {}
-                : {
-                    OR: [
-                      { userId: null },
-                      { userId: c.tenant.userId },
-                      { mailbox: { scope: 'TENANT' } },
-                    ],
-                  }),
+              // Visible to whoever can see the lead (checked above); drafts are refused below.
             },
             include: { attachments: true },
           })

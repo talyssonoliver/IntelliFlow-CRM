@@ -269,6 +269,44 @@ describe('Gmail', () => {
     expect(gmailHtmlPart(noStart)?.partId).toBe('extra');
   });
 
+  it("does not take an attached message's HTML for the mail's own body", () => {
+    const html = (id: string, data: string) => ({
+      partId: id,
+      mimeType: 'text/html',
+      headers: [{ name: 'Content-ID', value: `<${id}@example.invalid>` }],
+      body: { data: b64(data), size: data.length },
+    });
+    const payload = {
+      mimeType: 'multipart/mixed',
+      parts: [
+        {
+          partId: '0',
+          mimeType: 'multipart/alternative',
+          parts: [
+            { partId: '0.0', mimeType: 'text/plain', body: { data: b64('own text'), size: 8 } },
+            html('own', '<p>own body</p>'),
+          ],
+        },
+        {
+          partId: '1',
+          mimeType: 'message/rfc822',
+          filename: 'fwd.eml',
+          parts: [
+            {
+              partId: '1.0',
+              mimeType: 'multipart/related',
+              headers: [
+                { name: 'Content-Type', value: 'multipart/related; start="<r@example.invalid>"' },
+              ],
+              parts: [html('r', '<p>forwarded</p>')],
+            },
+          ],
+        },
+      ],
+    };
+    expect(gmailHtmlPart(payload)?.partId).toBe('own');
+  });
+
   it('lists a binary part that has no filename, disposition or Content-ID', () => {
     expect(
       gmailAttachmentMeta({

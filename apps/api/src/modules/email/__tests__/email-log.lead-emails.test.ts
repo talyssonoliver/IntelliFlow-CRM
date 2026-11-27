@@ -65,7 +65,6 @@ describe('emailLog.leadEmails', () => {
     const base = {
       tenantId,
       metadata: { path: ['leadId'], equals: LEAD },
-      OR: [{ userId: null }, { userId: TEST_UUIDS.user1 }, { mailbox: { scope: 'TENANT' } }],
     };
     expect(calls[0][0].where).toEqual({ ...base, sentAt: { not: null } });
     expect(calls[1][0].where).toEqual({ ...base, sentAt: null });
@@ -124,19 +123,16 @@ describe('emailLog.leadEmails', () => {
     expect(emails.at(-1)!.id).toBe('u-149');
   });
 
-  it("leaves other users' own mail out in the query, except for an email admin", async () => {
-    serve([]);
-    await member().leadEmails({ leadId: LEAD });
-    // Company-mailbox mail is visible whoever sent it through the CRM.
-    expect(streamWhere(0).OR).toEqual([
-      { userId: null },
-      { userId: TEST_UUIDS.user1 },
-      { mailbox: { scope: 'TENANT' } },
+  it("shows both sides of a colleague's conversation logged to a lead the caller can see", async () => {
+    // Received in the colleague's own mailbox (no userId) and sent by the colleague (their userId):
+    // register #64 makes mail logged to a visible lead visible, so neither side is dropped.
+    serve([
+      row('in', { userId: null, mailbox: { scope: 'USER', userId: 'colleague' } }),
+      row('out', { userId: 'colleague', mailbox: { scope: 'USER', userId: 'colleague' } }),
     ]);
-    (prismaMock.emailRecord.findMany as any).mockClear();
-    serve([]);
-    await admin().leadEmails({ leadId: LEAD });
-    // An email admin's query has no per-user condition.
+    const { emails } = await member().leadEmails({ leadId: LEAD });
+    expect(emails.map((e) => e.id).sort()).toEqual(['in', 'out']);
+    // No per-user condition in the query, for a member or an admin.
     expect(streamWhere(0)).toEqual({
       tenantId,
       metadata: { path: ['leadId'], equals: LEAD },
@@ -229,7 +225,6 @@ describe('emailLog.leadEmail', () => {
       id: ID,
       tenantId,
       metadata: { path: ['leadId'], equals: LEAD },
-      OR: [{ userId: null }, { userId: TEST_UUIDS.user1 }, { mailbox: { scope: 'TENANT' } }],
     });
   });
 
