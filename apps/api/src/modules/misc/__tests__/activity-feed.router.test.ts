@@ -226,7 +226,8 @@ describe('activityFeedRouter', () => {
         'lead-123',
         20,
         undefined,
-        undefined
+        undefined,
+        expect.objectContaining({ userId: expect.anything() })
       );
     });
 
@@ -247,7 +248,8 @@ describe('activityFeedRouter', () => {
         'contact-1',
         10,
         cursor,
-        undefined
+        undefined,
+        expect.objectContaining({ userId: expect.anything() })
       );
     });
 
@@ -266,7 +268,8 @@ describe('activityFeedRouter', () => {
         'lead-1',
         20,
         undefined,
-        ['EMAIL', 'CALL']
+        ['EMAIL', 'CALL'],
+        expect.objectContaining({ userId: expect.anything() })
       );
     });
 

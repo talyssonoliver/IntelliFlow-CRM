@@ -10,6 +10,7 @@ import type {
   UnifiedActivityItem,
   ActivityFeedCursor,
   ActivityFeedFilters,
+  ActivityFeedViewer,
   ActivityFeedStats,
   ActivityFeedSource,
   ActivityFeedEntityType,
@@ -48,7 +49,8 @@ export interface ActivityFeedRepositoryPort {
     entityType: string,
     entityId: string,
     limit: number,
-    cursor: ActivityFeedCursor | null
+    cursor: ActivityFeedCursor | null,
+    viewer?: ActivityFeedViewer
   ): Promise<UnifiedActivityItem[]>;
 
   /**
@@ -83,6 +85,10 @@ export interface ActivityFeedRepositoryPort {
     tenantId: string,
     windowStart: Date | null,
     windowEnd: Date,
-    filters: { sources?: ActivityFeedSource[]; entityType?: ActivityFeedEntityType }
+    filters: {
+      sources?: ActivityFeedSource[];
+      entityType?: ActivityFeedEntityType;
+      viewer?: ActivityFeedViewer;
+    }
   ): Promise<ActivityFeedStats>;
 }
