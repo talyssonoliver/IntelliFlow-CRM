@@ -837,6 +837,14 @@ describe('DataTable additional features', () => {
       // Entity mode renders EmptyState component — just verify no crash and table renders
       expect(screen.getByRole('table')).toBeInTheDocument();
     });
+
+    it('says nothing matched, not "No X yet", when the emptiness comes from a filter', () => {
+      const { unmount } = render(<DataTable columns={basicColumns} data={[]} entity="deals" />);
+      const emptyTitle = screen.getByRole('table').textContent;
+      unmount();
+      render(<DataTable columns={basicColumns} data={[]} entity="deals" emptyVariant="filtered" />);
+      expect(screen.getByRole('table').textContent).not.toBe(emptyTitle);
+    });
   });
 
   describe('custom empty message and icon', () => {

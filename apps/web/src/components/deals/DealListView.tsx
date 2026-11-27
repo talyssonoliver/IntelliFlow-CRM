@@ -609,6 +609,7 @@ export const DealListView = React.memo(function DealListView() {
           data={deals}
           entity="deals"
           emptyMessage={emptyMessage}
+          emptyVariant={hasFilters ? 'filtered' : 'empty'}
           emptyIcon="handshake"
           onRowClick={handleRowClick}
           enableRowSelection

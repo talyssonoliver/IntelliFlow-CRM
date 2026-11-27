@@ -17,7 +17,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table';
 import { Button } from './button';
 import { EmptyState } from './empty-state';
-import type { EmptyStateEntity } from './entity-empty-state-config';
+import type { EmptyStateEntity, EmptyStateVariant } from './entity-empty-state-config';
 import { Checkbox } from './checkbox';
 import {
   DropdownMenu,
@@ -51,6 +51,11 @@ export interface DataTableProps<TData, TValue> {
   pageSize?: number;
   emptyMessage?: string;
   emptyIcon?: string;
+  /**
+   * `filtered` when the list is empty because of a search, filter or segment: the empty state says
+   * nothing matched instead of "No deals yet" (owner 27/11 review).
+   */
+  emptyVariant?: EmptyStateVariant;
   /** CRM entity type — renders rich illustrated empty state automatically */
   entity?: EmptyStateEntity;
   onRowClick?: (row: TData) => void;
@@ -353,6 +358,7 @@ export function DataTable<TData, TValue>({
   pageSize = 10,
   emptyMessage = 'No results found.',
   emptyIcon = 'search_off',
+  emptyVariant,
   entity,
   onRowClick,
   enableRowSelection,
@@ -529,6 +535,7 @@ export function DataTable<TData, TValue>({
                   {entity ? (
                     <EmptyState
                       entity={entity}
+                      variant={emptyVariant}
                       showCta={false}
                       description={emptyMessage !== 'No results found.' ? emptyMessage : undefined}
                     />
