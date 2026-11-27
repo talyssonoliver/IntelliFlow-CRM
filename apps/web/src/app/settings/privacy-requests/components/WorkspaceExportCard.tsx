@@ -52,6 +52,20 @@ function dateLabel(value: Date | string | null): string {
   }).format(new Date(value));
 }
 
+/** The server's rule: one administrator export per rolling 24 hours (a failed one does not count). */
+const COOLDOWN_MS = 24 * 60 * 60 * 1000;
+
+/** When the next export may start, or null when one may start now. */
+export function nextExportAt(
+  rows: ReadonlyArray<{ trigger: string; status: string; requestedAt: Date | string }>,
+  now: number = Date.now()
+): Date | null {
+  const latest = rows
+    .filter((r) => r.trigger === 'ADMIN' && r.status !== 'FAILED')
+    .reduce((max, r) => Math.max(max, new Date(r.requestedAt).getTime()), 0);
+  return latest > 0 && latest + COOLDOWN_MS > now ? new Date(latest + COOLDOWN_MS) : null;
+}
+
 function errorMessage(error: unknown): string {
   return error instanceof Error && error.message ? error.message : 'Please try again.';
 }
@@ -78,6 +92,7 @@ export function WorkspaceExportCard({ enabled = true }: Readonly<{ enabled?: boo
 
   const rows = list.data ?? [];
   const busy = rows.some((r) => r.status === 'QUEUED' || r.status === 'RUNNING');
+  const nextAt = nextExportAt(rows);
 
   const start = async () => {
     try {
@@ -117,12 +132,17 @@ export function WorkspaceExportCard({ enabled = true }: Readonly<{ enabled?: boo
         title="Export all workspace data"
         titleId="workspace-export-title"
         headingLevel={2}
-        description="A ZIP with one CSV and one JSON file for every kind of record, your stored files, a README and a manifest with checksums. Email in a personal mailbox, and drafts, stay private and are not included. The owner is emailed a private link valid for 14 days. One export a day."
+        description="A ZIP with one CSV and one JSON file for every kind of record, your stored files, a README and a manifest with checksums. Mail in personal mailboxes and drafts stays private and is not included. The owner is emailed a private link valid for 14 days. One export a day."
       />
       <div className="mt-4">
-        <Button onClick={start} disabled={request.isPending || busy}>
+        <Button onClick={start} disabled={request.isPending || busy || nextAt !== null}>
           {busy ? 'Export in progress' : 'Export all workspace data'}
         </Button>
+        {nextAt && !busy && (
+          <p className="mt-2 text-sm text-muted-foreground">
+            Next export available {dateLabel(nextAt)} UTC
+          </p>
+        )}
       </div>
 
       {list.isLoading && (

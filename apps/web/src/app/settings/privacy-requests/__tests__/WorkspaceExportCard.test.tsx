@@ -32,7 +32,7 @@ vi.mock('@/lib/trpc', () => ({
   },
 }));
 
-import { WorkspaceExportCard, formatBytes } from '../components/WorkspaceExportCard';
+import { WorkspaceExportCard, formatBytes, nextExportAt } from '../components/WorkspaceExportCard';
 
 const row = (over: Record<string, unknown> = {}) => ({
   id: 'r1',
@@ -128,6 +128,28 @@ describe('WorkspaceExportCard', () => {
     const part2 = await screen.findByRole('link', { name: 'Part 2 of 3' });
     expect(part2).toHaveAttribute('href', 'https://files.example.invalid/2');
     expect(screen.getAllByRole('link')).toHaveLength(3);
+  });
+
+  it('disables the button, and says when, while a recent export exists', () => {
+    const recent = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    h.list = { data: [row({ requestedAt: recent })], isLoading: false, isError: false };
+    render(<WorkspaceExportCard />);
+    expect(screen.getByRole('button', { name: 'Export all workspace data' })).toBeDisabled();
+    expect(screen.getByText(/Next export available .* UTC/)).toBeInTheDocument();
+  });
+
+  it('follows the server rule: ADMIN exports in the last 24 h that did not fail', () => {
+    const now = Date.parse('2026-11-27T12:00:00.000Z');
+    const at = (h: number) => new Date(now - h * 3_600_000).toISOString();
+    expect(nextExportAt([], now)).toBeNull();
+    expect(nextExportAt([row({ requestedAt: at(23) }) as never], now)?.toISOString()).toBe(
+      '2026-11-27T13:00:00.000Z'
+    );
+    expect(nextExportAt([row({ requestedAt: at(25) }) as never], now)).toBeNull();
+    expect(nextExportAt([row({ requestedAt: at(1), status: 'FAILED' }) as never], now)).toBeNull();
+    expect(
+      nextExportAt([row({ requestedAt: at(1), trigger: 'SUBSCRIPTION_ENDED' }) as never], now)
+    ).toBeNull();
   });
 
   it('formats sizes', () => {
