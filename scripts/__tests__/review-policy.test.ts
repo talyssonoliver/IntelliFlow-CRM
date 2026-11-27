@@ -32,7 +32,11 @@ function setup(over: Record<string, unknown> = {}) {
     stderr: '',
     stdout: '',
   }));
-  const runClaude = vi.fn((_p: string) => ({ text: GOOD, tokens: { total: 9 }, costUsd: 0.3 }));
+  const runClaude = vi.fn((_p: string, _o?: unknown) => ({
+    text: GOOD,
+    tokens: { total: 9 },
+    costUsd: 0.3,
+  }));
   const sleep = vi.fn();
   const deps = {
     plan: { tier: 'light', risky: false, model: 'light-m', effort: 'medium', why: 'small' },
@@ -148,6 +152,21 @@ describe('makeReviewer', () => {
     const r = review('P');
     expect(r).toMatchObject({ reviewer: 'claude', costUsd: 0.3, tokens: { total: 9 } });
     expect(runClaude).toHaveBeenCalledTimes(1);
+    // owner ruling 27/11/2026: Sonnet, recorded as the metrics `model`
+    expect(r.model).toBe('sonnet');
+    expect(runClaude).toHaveBeenCalledWith('P', { model: 'sonnet' });
+  });
+
+  it('runs Claude on CODEX_REVIEW_CLAUDE_MODEL when set, and records it', () => {
+    const runCodex = vi.fn(() => ({ raw: CAP, status: 1, stderr: CAP, stdout: '' }));
+    const { review, runClaude } = setup({
+      runCodex,
+      plan: { tier: 'strong', risky: true, model: 'strong-m', effort: 'high', why: 'auth' },
+      env: { CODEX_REVIEW_MAX_WAIT_MIN: '0', CODEX_REVIEW_CLAUDE_MODEL: 'claude-sonnet-5-5' },
+    });
+    const r = review('P');
+    expect(r.model).toBe('claude-sonnet-5-5');
+    expect(runClaude).toHaveBeenCalledWith('P', { model: 'claude-sonnet-5-5' });
   });
 
   it('defers a risky diff when Codex is down and Claude is missing or gives nothing', () => {
