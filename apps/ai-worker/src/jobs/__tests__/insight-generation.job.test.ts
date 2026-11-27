@@ -15,6 +15,7 @@ const mockGenerateInsightsWithMeta = vi.hoisted(() => vi.fn());
 const mockGenerateFallbackInsights = vi.hoisted(() => vi.fn());
 const mockCreate = vi.hoisted(() => vi.fn());
 const mockInsightUpdateMany = vi.hoisted(() => vi.fn());
+const mockExecuteRaw = vi.hoisted(() => vi.fn(async () => 1));
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
 const mockTaskCreate = vi.hoisted(() => vi.fn());
 const mockLeadAIInsightUpsert = vi.hoisted(() => vi.fn());
@@ -58,6 +59,7 @@ vi.mock('bullmq', () => {
 
 vi.mock('@intelliflow/db', () => ({
   prisma: {
+    $executeRaw: (...args: any[]) => mockExecuteRaw(...args),
     aIInsight: {
       create: (...args: any[]) => mockCreate(...args),
       findFirst: () => Promise.resolve(null),
@@ -242,6 +244,26 @@ describe('processInsightJob', () => {
     });
     expect(where).not.toHaveProperty('type');
     expect(data).toEqual({ status: 'EXPIRED' });
+  });
+
+  it('writes an insight about a record under that user and record lock (codex 27/11)', async () => {
+    mockExecuteRaw.mockClear();
+    const job = createMockJob({
+      dealsAtRisk: [{ id: 'deal-1', name: 'Enterprise Deal', daysSinceUpdate: 20 }],
+    });
+    await processInsightJob(job);
+
+    const lockCall = mockExecuteRaw.mock.calls.find((c: unknown[]) =>
+      String((c[0] as string[]).join('?')).includes('pg_advisory_xact_lock')
+    );
+    expect(lockCall).toBeDefined();
+    expect(lockCall?.[1]).toBe(
+      'insight:00000000-0000-4000-a000-000000000001:user-001:opportunity:deal-1'
+    );
+    // The lock comes before the duplicate check and the insert.
+    expect(mockExecuteRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      mockCreate.mock.invocationCallOrder[mockCreate.mock.invocationCallOrder.length - 1]
+    );
   });
 
   it('leaves exactly one of two same-millisecond insights open, whichever job runs last (codex 27/11)', () => {

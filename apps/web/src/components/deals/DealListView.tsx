@@ -30,6 +30,7 @@ import { type Deal, PIPELINE_STAGE_CONFIG, formatDealValue, transformDeals } fro
 import { DealAvatar, ProbabilityBar, StageBadge, formatDate } from './DealBadges';
 import { DealPhoneCards, usePhoneLayout } from './DealPhoneCards';
 import { dealSegmentFilter, parseDealSegment } from './deal-segments';
+import { useUtcDay } from '@/hooks/useUtcDay';
 
 // =============================================================================
 // Constants
@@ -251,9 +252,11 @@ export const DealListView = React.memo(function DealListView() {
   // The sidebar's segments (/deals?segment=hot|stalled) filter the list for real (owner 26/11).
   const searchParams = useSearchParams();
   const segment = parseDealSegment(searchParams.get('segment'));
+  // The Stalled cutoff follows the UTC day, also in a tab left open overnight (codex 27/11).
+  const utcDay = useUtcDay();
   const segmentFilter = useMemo(
-    () => (segment ? dealSegmentFilter(segment, new Date()) : null),
-    [segment]
+    () => (segment ? dealSegmentFilter(segment, new Date(`${utcDay}T12:00:00Z`)) : null),
+    [segment, utcDay]
   );
 
   const debouncedSearch = useDebounce(searchQuery, 300);

@@ -864,6 +864,16 @@ export function taskLinkFor(insight: Pick<GeneratedInsight, 'entityType' | 'enti
   }
 }
 
+/** The advisory-lock key for one user's insights about one record (deal and opportunity agree). */
+export function insightLockKey(
+  tenantId: string,
+  userId: string,
+  insight: Pick<GeneratedInsight, 'entityType' | 'entityId'>
+): string {
+  const type = insight.entityType === 'deal' ? 'opportunity' : insight.entityType;
+  return `insight:${tenantId}:${userId}:${type}:${insight.entityId}`;
+}
+
 /** Writes the insight; returns its id, or null when it was a duplicate or its entity is gone. */
 async function persistInsightRecord(
   prisma: any,
@@ -877,6 +887,18 @@ async function persistInsightRecord(
   fromFallback = false
 ): Promise<string | null> {
   const expiresAt = new Date(now.getTime() + getInsightTTL(insight.priority));
+
+  // One writer at a time per user and record (codex 27/11): this runs inside the subject's
+  // transaction, so the lock is held through the insert and the supersession below. Two jobs
+  // writing about one deal at once otherwise could not see each other's uncommitted insight and
+  // both would stay open. Lead and contact insights also hold the person's row lock.
+  if (insight.entityId && insight.entityType) {
+    await prisma.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${insightLockKey(
+      tenantId,
+      userId,
+      insight
+    )}, 0))`;
+  }
 
   const existingInsight = await prisma.aIInsight.findFirst({
     where: {

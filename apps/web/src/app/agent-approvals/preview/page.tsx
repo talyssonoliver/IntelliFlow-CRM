@@ -891,7 +891,9 @@ function AgentApprovalsPreviewContent() {
   // Loading & Error States
   // ==========================================================================
 
-  const isLoading = authLoading || pendingQuery.isLoading;
+  const isLoading = authLoading || pendingQuery.isLoading || draftsQuery.isLoading;
+  // Codex 27/11: a failed draft load is not an empty draft queue; the page says so.
+  const draftsFailed = draftsQuery.isError && !draftsQuery.data;
   const isMutating =
     approveMutation.isPending ||
     rejectMutation.isPending ||
@@ -974,6 +976,28 @@ function AgentApprovalsPreviewContent() {
           </p>
         )}
       </PageHeader>
+
+      {draftsFailed && (
+        <div
+          role="alert"
+          data-testid="drafts-error"
+          className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-200"
+        >
+          <span>
+            AI email drafts couldn&apos;t load, so they are missing from this list and the pending
+            count.
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              draftsQuery.refetch().catch(() => undefined);
+            }}
+            className="min-h-11 font-medium underline"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Metrics */}
       <MetricsSection actions={actions} pendingCount={pendingCount} isLoading={isLoading} />
