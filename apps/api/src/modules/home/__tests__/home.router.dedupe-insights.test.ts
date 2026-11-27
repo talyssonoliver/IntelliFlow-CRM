@@ -13,17 +13,17 @@ describe('deduplicateInsights (owner 21/11: same purpose, same lead)', () => {
   it('keeps one insight per record and type, the newest, whatever the wording', () => {
     // Newest first, as the queries order them.
     const rows = [
-      row('3', 'Pitshanger is engaged but still at CONTACTED stage', 'lead-p'),
-      row('2', 'Pitshanger has engaged but not yet qualified', 'lead-p'),
-      row('1', 'Pitshanger has a strong score but has not progressed', 'lead-p'),
-      row('5', 'West London Handyman is qualified and ready to move', 'lead-w'),
-      row('4', 'West London Handyman is a qualified lead close to hot', 'lead-w'),
+      row('3', 'Bramble Fitness is engaged but still at CONTACTED stage', 'lead-b'),
+      row('2', 'Bramble Fitness has engaged but not yet qualified', 'lead-b'),
+      row('1', 'Bramble Fitness has a strong score but has not progressed', 'lead-b'),
+      row('5', 'Northfield Plumbing is qualified and ready to move', 'lead-n'),
+      row('4', 'Northfield Plumbing is a qualified lead close to hot', 'lead-n'),
     ];
     expect(deduplicateInsights(rows).map((r) => r.id)).toEqual(['3', '5']);
   });
 
   it('keeps insights of different types about the same record', () => {
-    const rows = [row('2', 'Risk', 'lead-p', 'anomaly'), row('1', 'Opportunity', 'lead-p')];
+    const rows = [row('2', 'Risk', 'lead-b', 'anomaly'), row('1', 'Opportunity', 'lead-b')];
     expect(deduplicateInsights(rows)).toHaveLength(2);
   });
 
