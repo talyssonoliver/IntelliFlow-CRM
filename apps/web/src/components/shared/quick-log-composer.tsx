@@ -236,7 +236,7 @@ export function QuickLogComposer({
                 type="button"
                 onClick={handleSubmit}
                 disabled={!hasContent || isSubmitting}
-                className="bg-[#2a78f6] text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+                className="min-h-11 shrink-0 whitespace-nowrap bg-[#2a78f6] text-white text-sm font-semibold px-4 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
                 {isSubmitting ? submittingLabel : submitLabel}
               </button>

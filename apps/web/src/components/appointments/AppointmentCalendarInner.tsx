@@ -88,28 +88,46 @@ const TASK_DEFAULT_HOUR = 9;
 const TASK_DEFAULT_MINUTE = 0;
 const TASK_DEFAULT_DURATION_MIN = 30;
 
-function toTaskZonedRange(date: Readonly<Date>): {
-  start: Temporal.ZonedDateTime;
-  end: Temporal.ZonedDateTime;
-} {
+/** The hours the week and day grids show (dayBoundaries below). */
+export const CALENDAR_DAY_START_HOUR = 7;
+export const CALENDAR_DAY_END_HOUR = 19;
+
+/**
+ * A task's place on the calendar: its own time when it has one inside the visible hours, else the
+ * all-day row. Owner 26/11 ("on desktop ... haven't been polished"): AI tasks due at 23:59 were
+ * outside the 07:00-19:00 grid, so the week view showed nothing for them while the month view did.
+ */
+function toTaskRange(
+  date: Readonly<Date>
+):
+  | { start: Temporal.ZonedDateTime; end: Temporal.ZonedDateTime }
+  | { start: Temporal.PlainDate; end: Temporal.PlainDate } {
   const tz = Temporal.Now.timeZoneId();
   const plainDate = toTemporalPlainDate(date);
   // If the stored dueDate already carries a non-midnight time, honour it.
   const hasExplicitTime =
     date.getUTCHours() !== 0 || date.getUTCMinutes() !== 0 || date.getUTCSeconds() !== 0;
-  const startHour = hasExplicitTime ? date.getHours() : TASK_DEFAULT_HOUR;
-  const startMinute = hasExplicitTime ? date.getMinutes() : TASK_DEFAULT_MINUTE;
+  if (!hasExplicitTime) {
+    const start = plainDate
+      .toPlainDateTime({ hour: TASK_DEFAULT_HOUR, minute: TASK_DEFAULT_MINUTE })
+      .toZonedDateTime(tz);
+    return { start, end: start.add({ minutes: TASK_DEFAULT_DURATION_MIN }) };
+  }
+  const startMinutes = date.getHours() * 60 + date.getMinutes();
+  const lastStart = CALENDAR_DAY_END_HOUR * 60 - TASK_DEFAULT_DURATION_MIN;
+  if (startMinutes < CALENDAR_DAY_START_HOUR * 60 || startMinutes > lastStart) {
+    return { start: plainDate, end: plainDate };
+  }
   const start = plainDate
-    .toPlainDateTime({ hour: startHour, minute: startMinute })
+    .toPlainDateTime({ hour: date.getHours(), minute: date.getMinutes() })
     .toZonedDateTime(tz);
-  const end = start.add({ minutes: TASK_DEFAULT_DURATION_MIN });
-  return { start, end };
+  return { start, end: start.add({ minutes: TASK_DEFAULT_DURATION_MIN }) };
 }
 
-function mapTasksToEvents(tasks: CalendarTask[]) {
+export function mapTasksToEvents(tasks: CalendarTask[]) {
   return tasks.map((task) => {
     const d = typeof task.dueDate === 'string' ? new Date(task.dueDate) : task.dueDate;
-    const { start, end } = toTaskZonedRange(d);
+    const { start, end } = toTaskRange(d);
     return {
       id: `task--${task.id}`,
       title: task.title,
@@ -411,7 +429,10 @@ export function AppointmentCalendarInner({
     selectedDate: toTemporalPlainDate(currentDate),
     events: [...mapAppointmentsToEvents(appointments), ...mapTasksToEvents(tasks)],
     plugins: [eventsService, calendarControls],
-    dayBoundaries: { start: '07:00', end: '19:00' },
+    dayBoundaries: {
+      start: `${String(CALENDAR_DAY_START_HOUR).padStart(2, '0')}:00`,
+      end: `${CALENDAR_DAY_END_HOUR}:00`,
+    },
     weekOptions: {
       gridHeight: WEEK_GRID_HEIGHT,
       nDays: 7,
