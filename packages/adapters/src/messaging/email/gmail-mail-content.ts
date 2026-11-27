@@ -19,6 +19,8 @@ import type { GmailApiMessage, GmailApiPart } from './gmail-mail-reader';
 
 const GMAIL_API = 'https://gmail.googleapis.com/gmail/v1/users/me';
 const REQUEST_TIMEOUT_MS = 30_000;
+/** Gmail's 403 reasons that mean a quota, not a dead token (reconnecting cannot fix them). */
+const GMAIL_THROTTLED = /rateLimitExceeded|dailyLimitExceeded|userRateLimitExceeded/i;
 const ATTACHMENT_DISPOSITION = /^\s*attachment/i;
 
 function partHeader(part: GmailApiPart, name: string): string | null {
@@ -34,10 +36,10 @@ export function gmailAttachmentMeta(payload: GmailApiPart | undefined): MailAtta
     const mimeType = (part.mimeType ?? 'application/octet-stream').toLowerCase();
     const contentId = bareContentId(partHeader(part, 'Content-ID'));
     const asAttachment = ATTACHMENT_DISPOSITION.test(partHeader(part, 'Content-Disposition') ?? '');
-    // A Content-ID alone does not make the mail's own text or HTML part a file.
+    // The mail's own text and HTML parts are not files, even with a Content-ID; any other part
+    // with content is one, named or not (a filename, a disposition and a Content-ID are all optional).
     const bodyText = mimeType === 'text/plain' || mimeType === 'text/html';
-    const isFile =
-      Boolean(part.filename?.trim()) || asAttachment || (contentId !== null && !bodyText);
+    const isFile = Boolean(part.filename?.trim()) || asAttachment || !bodyText;
     const hasBytes = Boolean(part.body?.attachmentId || part.body?.data);
     if (isFile && part.partId && hasBytes && !mimeType.startsWith('multipart/')) {
       found.push({
@@ -79,9 +81,7 @@ async function get(fetchImpl: typeof fetch, accessToken: string, path: string): 
   if (response.ok) return response;
   if (response.status === 403) {
     const body = await response.text().catch(() => '');
-    throw new MailboxTransportError(
-      /rateLimitExceeded/i.test(body) ? 'RATE_LIMITED' : 'AUTH_FAILED'
-    );
+    throw new MailboxTransportError(GMAIL_THROTTLED.test(body) ? 'RATE_LIMITED' : 'AUTH_FAILED');
   }
   if (response.status === 401) throw new MailboxTransportError('AUTH_FAILED');
   if (response.status === 429) throw new MailboxTransportError('RATE_LIMITED');

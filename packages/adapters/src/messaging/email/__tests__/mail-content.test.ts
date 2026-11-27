@@ -93,6 +93,21 @@ describe('provider URL ids and capped reads', () => {
     expect(asTransportError(known)).toBe(known);
   });
 
+  it('cancels the body of a response whose declared size is over the cap', async () => {
+    let cancelled = false;
+    const body = new ReadableStream<Uint8Array>({
+      pull(controller) {
+        controller.enqueue(new Uint8Array(8));
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    const response = new Response(body, { headers: { 'content-length': '999999' } });
+    await expect(readCapped(response, 10)).rejects.toMatchObject({ code: 'REJECTED' });
+    expect(cancelled).toBe(true);
+  });
+
   it('refuses a declared size over the cap without reading, and returns a body within it', async () => {
     const declared = new Response('x', { headers: { 'content-length': '999999' } });
     await expect(readCapped(declared, 10)).rejects.toMatchObject({ code: 'REJECTED' });
@@ -231,6 +246,20 @@ describe('Gmail', () => {
     expect(fetchImpl).toHaveBeenCalledTimes(1);
   });
 
+  it('lists a binary part that has no filename, disposition or Content-ID', () => {
+    expect(
+      gmailAttachmentMeta({
+        mimeType: 'multipart/mixed',
+        parts: [
+          { partId: '0', mimeType: 'text/plain', body: { data: b64('hi'), size: 2 } },
+          { partId: '1', mimeType: 'application/pdf', body: { attachmentId: 'ATT-X', size: 900 } },
+        ],
+      })
+    ).toMatchObject([
+      { providerAttachmentId: '1', fileName: 'attachment-1', fileType: 'application/pdf' },
+    ]);
+  });
+
   it('does not list the mail body part as a file because it has a Content-ID', () => {
     expect(
       gmailAttachmentMeta({
@@ -271,6 +300,17 @@ describe('Gmail', () => {
 });
 
 describe('Gmail attachment errors', () => {
+  it('reads a daily quota 403 as throttling too, never as a dead token', async () => {
+    for (const reason of ['dailyLimitExceeded', 'userRateLimitExceeded']) {
+      const quota = vi.fn(
+        async () => new Response(`{"error":{"errors":[{"reason":"${reason}"}]}}`, { status: 403 })
+      );
+      await expect(
+        fetchGmailAttachment(TOKEN, { messageId: 'm1', partId: '1' }, quota as never)
+      ).rejects.toMatchObject({ code: 'RATE_LIMITED' });
+    }
+  });
+
   it('reads a 403 with a rate reason as throttling, any other 403 as a dead token', async () => {
     const rate = vi.fn(
       async () =>
@@ -504,6 +544,41 @@ describe('Microsoft Graph', () => {
     await expect(readGraphContent(TOKEN, 'g1', 't', fetchImpl as never)).resolves.toMatchObject({
       attachments: [],
     });
+  });
+
+  it('follows the next links of a paged attachments list, and only Graph ones', async () => {
+    const item = (id: string) => ({
+      '@odata.type': '#microsoft.graph.fileAttachment',
+      id,
+      name: `${id}.pdf`,
+      size: 1,
+    });
+    const next = 'https://graph.microsoft.com/v1.0/me/messages/g1/attachments?$skiptoken=2';
+    const calls: string[] = [];
+    const fetchImpl = vi.fn(async (input: RequestInfo | URL) => {
+      const url = String(input);
+      calls.push(url);
+      if (url.includes('/attachments?') && !url.includes('skiptoken')) {
+        return json({ value: [item('a1')], '@odata.nextLink': next });
+      }
+      if (url.includes('skiptoken')) return json({ value: [item('a2')] });
+      return json({ body: { contentType: 'html', content: '<p>x</p>' }, hasAttachments: true });
+    });
+    const content = await readGraphContent(TOKEN, 'g1', '', fetchImpl as never);
+    expect(content.attachments.map((a) => a.providerAttachmentId)).toEqual(['a1', 'a2']);
+    expect(calls.at(-1)).toBe(next);
+
+    // A next link on another host is never followed with the token.
+    const elsewhere = vi.fn(async (input: RequestInfo | URL) =>
+      String(input).includes('/attachments?')
+        ? json({ value: [item('b1')], '@odata.nextLink': 'https://evil.example.invalid/next' })
+        : json({ body: { contentType: 'html', content: '<p>x</p>' }, hasAttachments: true })
+    );
+    const only = await readGraphContent(TOKEN, 'g1', '', elsewhere as never);
+    expect(only.attachments).toHaveLength(1);
+    expect(elsewhere.mock.calls.map((c) => String(c[0])).some((u) => u.includes('evil'))).toBe(
+      false
+    );
   });
 
   it('names an attached item by what its raw content is (message, contact or event)', async () => {

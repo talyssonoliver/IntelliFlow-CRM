@@ -128,7 +128,9 @@ async function apiError(response: Response): Promise<Error> {
   if (response.status === 404) return new NotFound();
   if (response.status === 403) {
     const body = await response.text().catch(() => '');
-    if (/rateLimitExceeded/i.test(body)) return new MailboxTransportError('RATE_LIMITED');
+    if (/rateLimitExceeded|dailyLimitExceeded|userRateLimitExceeded/i.test(body)) {
+      return new MailboxTransportError('RATE_LIMITED');
+    }
     return new MailboxTransportError('AUTH_FAILED');
   }
   if (response.status === 401) return new MailboxTransportError('AUTH_FAILED');

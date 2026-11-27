@@ -78,7 +78,11 @@ export async function readJsonBody<T>(response: Response): Promise<T> {
  */
 export async function readCapped(response: Response, maxBytes: number): Promise<Buffer> {
   const declared = Number(response.headers.get('content-length'));
-  if (Number.isFinite(declared) && declared > maxBytes) throw new MailboxTransportError('REJECTED');
+  if (Number.isFinite(declared) && declared > maxBytes) {
+    // The body is never read: release the connection instead of leaving it open.
+    await response.body?.cancel().catch(() => undefined);
+    throw new MailboxTransportError('REJECTED');
+  }
   const reader = response.body?.getReader();
   try {
     if (!reader) {

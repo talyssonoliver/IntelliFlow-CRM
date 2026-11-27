@@ -19,7 +19,20 @@ import {
   type MailContent,
 } from './mail-content';
 
-const GRAPH_ME = 'https://graph.microsoft.com/v1.0/me';
+const GRAPH_HOST = 'graph.microsoft.com';
+const GRAPH_ME = `https://${GRAPH_HOST}/v1.0/me`;
+/** Pages of the attachments list followed at most. */
+const MAX_LIST_PAGES = 5;
+
+/** True for an https URL on Graph's own host: the only place the token may go. */
+function isGraphUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && parsed.hostname === GRAPH_HOST;
+  } catch {
+    return false;
+  }
+}
 const REQUEST_TIMEOUT_MS = 30_000;
 const IMMUTABLE = 'IdType="ImmutableId"';
 
@@ -44,9 +57,18 @@ async function graphGet(
   path: string,
   prefer: string
 ): Promise<Response> {
+  return graphGetUrl(fetchImpl, accessToken, `${GRAPH_ME}${path}`, prefer);
+}
+
+async function graphGetUrl(
+  fetchImpl: typeof fetch,
+  accessToken: string,
+  url: string,
+  prefer: string
+): Promise<Response> {
   let response: Response;
   try {
-    response = await fetchImpl(`${GRAPH_ME}${path}`, {
+    response = await fetchImpl(url, {
       headers: { Authorization: `Bearer ${accessToken}`, Prefer: prefer },
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
@@ -113,13 +135,21 @@ async function readAttachmentList(
   id: string
 ): Promise<MailAttachmentMeta[]> {
   const read = async (select: string): Promise<MailAttachmentMeta[]> => {
-    const list = await graphGet(
-      fetchImpl,
-      accessToken,
-      `/messages/${id}/attachments?$select=${select}&$top=${String(MAX_ATTACHMENTS_PER_MAIL)}`,
-      IMMUTABLE
-    );
-    return graphAttachmentMeta((await readJsonBody<{ value?: GraphAttachment[] }>(list)).value);
+    let url = `${GRAPH_ME}/messages/${id}/attachments?$select=${select}&$top=${String(MAX_ATTACHMENTS_PER_MAIL)}`;
+    const found: MailAttachmentMeta[] = [];
+    // Graph may split the list across pages: follow its own next links (and only those) until
+    // enough usable attachments are collected or the list ends.
+    for (let page = 0; page < MAX_LIST_PAGES && found.length < MAX_ATTACHMENTS_PER_MAIL; page++) {
+      const list = await graphGetUrl(fetchImpl, accessToken, url, IMMUTABLE);
+      const body = await readJsonBody<{ value?: GraphAttachment[]; '@odata.nextLink'?: string }>(
+        list
+      );
+      found.push(...graphAttachmentMeta(body.value));
+      const next = body['@odata.nextLink'];
+      if (!next || !isGraphUrl(next)) break;
+      url = next;
+    }
+    return found.slice(0, MAX_ATTACHMENTS_PER_MAIL);
   };
   try {
     return await read(LIST_SELECT);
