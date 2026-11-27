@@ -279,7 +279,8 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
           .map((l) => ({ id: l.id }))
           .sort((x, y) => (x.id < y.id ? -1 : 1));
       }
-      const [leaseUntil, scopes, now] = values as [Date, string[], Date];
+      // The claim's values, in the order the query uses them.
+      const [scopes, now, leaseUntil] = values as [string[], Date, Date];
       const row = tables.emailMailbox
         .filter(
           (m) =>

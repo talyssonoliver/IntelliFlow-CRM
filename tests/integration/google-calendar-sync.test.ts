@@ -528,6 +528,24 @@ describeDb('google calendar sync on a real database', () => {
   });
 
   describe('the lease and the reconnect card', () => {
+    it('claims one mailbox at a time: after a tick that found several due, none is left locked', async () => {
+      await addAppointment(tenantA, userA, 'A visit');
+      await addAppointment(tenantB, userB, 'B visit');
+
+      const report = await round();
+
+      // A claim that locked every due mailbox but synced only the first would leave the others locked for
+      // the lease (five minutes) with nothing synced: both must have been synced and released.
+      expect(report.mailboxesSynced).toBe(2);
+      const rows = await prisma.emailMailbox.findMany({
+        where: { id: { in: [mailboxA, mailboxB] } },
+      });
+      expect(rows.map((r) => r.calendarLockedUntil)).toEqual([null, null]);
+      expect(rows.every((r) => r.calendarSyncedAt !== null)).toBe(true);
+      expect([...googleA.events.values()].map((e) => e.title)).toEqual(['A visit']);
+      expect([...googleB.events.values()].map((e) => e.title)).toEqual(['B visit']);
+    });
+
     it('does not touch the mailboxes that are not part of the run', async () => {
       await addAppointment(tenantA, userA, 'Only mine');
 
