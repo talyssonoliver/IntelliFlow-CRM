@@ -22,6 +22,12 @@ vi.mock('../mailbox-transport', async (importOriginal) => ({
   ...transport,
 }));
 
+const access = vi.hoisted(() => ({ visibleMail: vi.fn() }));
+vi.mock('../email-access', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../email-access')>()),
+  visibleMail: access.visibleMail,
+}));
+
 import { MailboxTransportError } from '@intelliflow/adapters';
 import { createTestContext, prismaMock, TEST_UUIDS } from '../../../test/setup';
 import { emailAttachmentsRouter } from '../email-attachments.router';
@@ -71,6 +77,9 @@ function setRows(attachment: unknown, box: unknown = mailbox()) {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // By default the shared predicate shows the mail; a test says otherwise.
+  access.visibleMail.mockResolvedValue({ AND: [] });
+  (prismaMock as any).emailRecord.findFirst.mockResolvedValue({ id: 'email-1' });
   transport.getOAuthAccessToken.mockResolvedValue('access-for-tests');
   const file = { bytes: Buffer.from('%PDF-bytes'), contentType: 'application/pdf; charset=binary' };
   provider.fetchGraphAttachment.mockResolvedValue(file);
@@ -123,58 +132,26 @@ describe('emailAttachments.fetch', () => {
     expect(provider.fetchGraphAttachment).not.toHaveBeenCalled();
   });
 
-  const personal = (ownerId: string, over: Record<string, unknown> = {}) => ({
-    userId: null,
-    mailbox: { scope: 'USER', userId: ownerId },
-    metadata: {},
-    ...over,
-  });
-
-  it("does not serve user A's personal-mail attachment to user B", async () => {
-    setRows(row({}, personal('user-a')));
-    (prismaMock as any).lead.findFirst.mockResolvedValue(null);
-    (prismaMock as any).contact.findFirst.mockResolvedValue(null);
+  it("does not serve user A's personal-mail attachment to user B (the predicate hides it)", async () => {
+    setRows(row());
+    (prismaMock as any).emailRecord.findFirst.mockResolvedValue(null);
     await expect(caller().fetch(INPUT)).rejects.toMatchObject({ code: 'NOT_FOUND' });
     expect(transport.getOAuthAccessToken).not.toHaveBeenCalled();
     expect(provider.fetchGraphAttachment).not.toHaveBeenCalled();
-    // No admin override for personal mail.
+    // No admin override for personal mail: the same predicate, the same answer.
     const admin = { user: { ...createTestContext().user!, role: 'ADMIN' } };
     await expect(caller(admin).fetch(INPUT)).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 
-  it('serves a personal-mail attachment to its owner, whoever the lead is', async () => {
-    setRows(row({}, personal(OWNER)));
+  it('serves the attachment when the shared predicate shows the mail to the caller', async () => {
+    setRows(row());
+    (prismaMock as any).emailRecord.findFirst.mockResolvedValue({ id: 'email-1' });
     await expect(caller().fetch(INPUT)).resolves.toMatchObject({ fileName: 'quote.pdf' });
-  });
-
-  it('serves personal mail logged to a lead or contact the reader can see, not one they cannot', async () => {
-    setRows(row({}, personal('user-a', { metadata: { leadId: 'lead-1' } })));
-    (prismaMock as any).lead.findFirst.mockResolvedValue({ id: 'lead-1' });
-    await expect(caller().fetch(INPUT)).resolves.toMatchObject({ fileName: 'quote.pdf' });
-    expect((prismaMock as any).lead.findFirst.mock.calls[0][0].where).toMatchObject({
-      id: 'lead-1',
-      tenantId,
+    // Asked for this one mail, inside the caller's tenant, under the shared fragment.
+    expect(access.visibleMail).toHaveBeenCalledWith(expect.anything(), ['email-1']);
+    expect((prismaMock as any).emailRecord.findFirst.mock.calls[0][0]).toMatchObject({
+      where: { id: 'email-1', tenantId },
     });
-    (prismaMock as any).lead.findFirst.mockResolvedValue(null);
-    await expect(caller().fetch(INPUT)).rejects.toMatchObject({ code: 'NOT_FOUND' });
-
-    setRows(row({}, personal('user-a', { contactId: 'contact-1' })));
-    (prismaMock as any).contact.findFirst.mockResolvedValue({ id: 'contact-1' });
-    await expect(caller().fetch(INPUT)).resolves.toMatchObject({ fileName: 'quote.pdf' });
-  });
-
-  it('serves company-mailbox mail to the tenant, whoever sent it', async () => {
-    // Sent through the company mailbox by a colleague: the sender is not an owner.
-    setRows(row({}, { userId: 'someone-else', mailbox: { scope: 'TENANT', userId: null } }));
-    await expect(caller().fetch(INPUT)).resolves.toMatchObject({ fileName: 'quote.pdf' });
-  });
-
-  it('keeps a draft private to its writer', async () => {
-    const draft = { metadata: { isDraft: true }, userId: 'someone-else' };
-    setRows(row({}, draft));
-    await expect(caller().fetch(INPUT)).rejects.toMatchObject({ code: 'NOT_FOUND' });
-    setRows(row({}, { ...draft, userId: OWNER }));
-    await expect(caller().fetch(INPUT)).resolves.toMatchObject({ fileName: 'quote.pdf' });
   });
 
   it('limits how many provider reads one user has running at once', async () => {

@@ -94,6 +94,23 @@ describe('EmailThread', () => {
     expect(toggle).toHaveAttribute('aria-expanded', 'true');
   });
 
+  it("says an email isn't available instead of a blank pane when it cannot be read", () => {
+    // The thread came back with no readable mail (someone else's personal mail), or failed.
+    const { rerender } = render(
+      <EmailThread {...defaultProps} thread={{ ...defaultProps.thread, emails: [] }} />
+    );
+    expect(screen.getByTestId('email-unavailable')).toHaveTextContent(
+      "This email isn't available to you"
+    );
+    rerender(<EmailThread {...defaultProps} thread={null} unavailable />);
+    expect(screen.getByTestId('email-unavailable')).toBeInTheDocument();
+    // While it loads there is the skeleton, not the message; with no selection, the usual empty state.
+    rerender(<EmailThread {...defaultProps} thread={null} isLoading />);
+    expect(screen.queryByTestId('email-unavailable')).toBeNull();
+    rerender(<EmailThread {...defaultProps} thread={null} />);
+    expect(screen.queryByTestId('email-unavailable')).toBeNull();
+  });
+
   it('shows full body content in expanded message', () => {
     render(<EmailThread {...defaultProps} />);
     // Last message should show body

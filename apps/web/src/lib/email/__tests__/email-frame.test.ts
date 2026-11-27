@@ -61,6 +61,36 @@ describe('buildEmailFrame', () => {
     expect(shown.srcDoc).toContain('https://cdn.example.invalid/a.png');
   });
 
+  it('replaces a blocked image with an invisible spacer: no broken icon, no bordered box, no jump', () => {
+    const html =
+      '<img src="https://cdn.example.invalid/hero.png" width="600" height="200" alt="Hero">';
+    const blocked = buildEmailFrame({ html, showRemoteImages: false }).srcDoc;
+    expect(blocked).not.toContain('<img');
+    expect(blocked).toContain('data-hidden-image');
+    expect(blocked).toContain('width:600px;height:200px');
+    expect(blocked).not.toMatch(/\sborder\s*[:=]/i);
+    // Shown, the image takes the same room.
+    const shown = buildEmailFrame({ html, showRemoteImages: true }).srcDoc;
+    expect(shown).toContain('<img');
+    expect(shown).not.toContain('data-hidden-image');
+    // With no size given there is nothing to keep: the image is left out, never a broken icon.
+    const unsized = buildEmailFrame({
+      html: '<p>a</p><img src="https://cdn.example.invalid/x.png">',
+      showRemoteImages: false,
+    });
+    expect(unsized.srcDoc).not.toContain('<img');
+    expect(unsized.blockedImageCount).toBe(1);
+  });
+
+  it('also leaves no broken image for a cid: that could not be fetched', () => {
+    const { srcDoc } = buildEmailFrame({
+      html: '<img src="cid:gone" width="40" height="40">',
+      showRemoteImages: false,
+    });
+    expect(srcDoc).not.toContain('<img');
+    expect(srcDoc).toContain('width:40px;height:40px');
+  });
+
   it('puts the fetched inline image where its cid: was, and leaves an unfetched one blank', () => {
     const html = '<img src="cid:Logo%40mail" alt="a"><img src="cid:other" alt="b">';
     const { srcDoc, blockedImageCount } = buildEmailFrame({

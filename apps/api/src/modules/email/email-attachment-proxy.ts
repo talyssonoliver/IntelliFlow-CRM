@@ -18,7 +18,7 @@ import {
   type FetchedAttachment,
 } from '@intelliflow/adapters';
 import type { EmailRouterCtx } from './email-access';
-import { READABLE_EMAIL_SELECT, canReadEmailRecord, type ReadableEmail } from './email-read-access';
+import { canReadEmailRecord } from './email-read-access';
 import {
   forgetAccessToken,
   getOAuthAccessToken,
@@ -85,7 +85,7 @@ interface AttachmentRow {
     mailboxId: string | null;
     provider: string | null;
     providerMessageId: string | null;
-  } & ReadableEmail;
+  };
 }
 
 /** Most provider reads one user may have running at once (each buffers a file in memory). */
@@ -153,7 +153,6 @@ export async function fetchEmailAttachment(
           tenantId: true,
           provider: true,
           providerMessageId: true,
-          ...READABLE_EMAIL_SELECT,
         },
       },
     },
@@ -161,6 +160,7 @@ export async function fetchEmailAttachment(
   // Only synced attachments are served here; one with no provider locator is not on demand.
   if (!row?.providerAttachmentId || row.email.tenantId !== tenantId) throw notFound();
   // The same rule as the email view (getEmail): never stricter, never looser.
+  // Register #64: the shared visibility predicate, the same one the email view uses.
   if (!(await canReadEmailRecord(c, row.email))) throw notFound();
   if (!row.email.mailboxId || !row.email.providerMessageId) throw notFound();
   if (row.fileSize > MAX_ATTACHMENT_BYTES) {

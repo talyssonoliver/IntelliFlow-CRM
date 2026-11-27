@@ -110,6 +110,35 @@ function csp(showRemoteImages: boolean): string {
   ].join('; ');
 }
 
+/** A pixel size from an attribute (`width="600"`, `width="600px"`), or null (percentages and the like are not a size). */
+function pixelsOf(value: string | null): number | null {
+  const match = /^\s*(\d{1,5})(?:px)?\s*$/i.exec(value ?? '');
+  return match ? Number(match[1]) : null;
+}
+
+/**
+ * An image that is not shown (blocked until "Show images", or with no source to draw) is replaced
+ * by a neutral, invisible spacer of the size the mail gave it: no broken-image icon, no empty
+ * bordered box, and no jump in the layout when the image is later shown. With no size, it is
+ * simply left out.
+ */
+function hideImage(image: Element): void {
+  const width = pixelsOf(image.getAttribute('width'));
+  const height = pixelsOf(image.getAttribute('height'));
+  if (width === null || height === null) {
+    image.remove();
+    return;
+  }
+  const spacer = image.ownerDocument.createElement('span');
+  spacer.setAttribute('data-hidden-image', 'true');
+  spacer.setAttribute('aria-hidden', 'true');
+  spacer.setAttribute(
+    'style',
+    `display:inline-block;width:${width}px;height:${height}px;max-width:100%;vertical-align:top`
+  );
+  image.replaceWith(spacer);
+}
+
 export function buildEmailFrame(input: EmailFrameInput): EmailFrame {
   const inline = input.inlineImages ?? {};
   // cid: images become the fetched data URL, or lose their source (DOMPurify would drop `cid:` anyway).
@@ -149,11 +178,10 @@ export function buildEmailFrame(input: EmailFrameInput): EmailFrame {
   for (const image of Array.from(body.querySelectorAll('img'))) {
     const src = image.getAttribute('src') ?? '';
     if (/^https:/i.test(src) && !input.showRemoteImages) {
-      image.removeAttribute('src');
-      image.setAttribute('data-blocked', 'true');
+      hideImage(image);
       blocked += 1;
     } else if (!/^(https:|data:image\/(png|jpe?g|gif|webp);base64,)/i.test(src)) {
-      image.removeAttribute('src');
+      hideImage(image);
     }
   }
   for (const link of Array.from(body.querySelectorAll('a, area'))) {
