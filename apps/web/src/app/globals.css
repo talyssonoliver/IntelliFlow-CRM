@@ -776,6 +776,17 @@
   cursor: pointer !important;
 }
 
+/* All-day row (week/day): every day the same width; a long task title is cut with an
+   ellipsis instead of widening its day (it made a task due Wednesday start on Monday). */
+.sx-calendar-container .sx__date-grid-day {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+}
+.sx-calendar-container .sx__date-grid-event {
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
 /* Small top padding so first event doesn't touch the day header */
 .sx-calendar-container .sx__month-grid-day__events {
   padding-top: 2px !important;
