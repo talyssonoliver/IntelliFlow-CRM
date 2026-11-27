@@ -907,6 +907,8 @@ async function lockRecordForInsight(
         entityType: insight.entityType === 'deal' ? 'opportunity' : insight.entityType,
         entityId: insight.entityId,
         status: { in: ['NEW', 'VIEWED'] },
+        // Still shown on Home: a past-TTL insight is no longer open (codex 27/11).
+        expiresAt: { gt: new Date() },
         metadata: { path: ['userId'], equals: userId },
       },
       select: { id: true },

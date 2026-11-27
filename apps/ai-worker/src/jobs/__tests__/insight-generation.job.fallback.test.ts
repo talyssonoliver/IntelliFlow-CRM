@@ -234,7 +234,10 @@ describe('insight generation — provider fallback (#324)', () => {
       const aboutRecords = mockCreate.mock.calls.filter((c: any[]) => c[0].data.entityId);
       expect(aboutRecords).toHaveLength(0);
       expect(mockInsightFindFirst).toHaveBeenCalledWith(
-        expect.objectContaining({ select: { id: true } })
+        expect.objectContaining({
+          select: { id: true },
+          where: expect.objectContaining({ expiresAt: { gt: expect.any(Date) } }),
+        })
       );
     } finally {
       mockInsightFindFirst.mockImplementation(async () => null);
