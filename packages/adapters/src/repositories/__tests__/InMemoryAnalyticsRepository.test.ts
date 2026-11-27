@@ -267,6 +267,48 @@ describe('InMemoryAnalyticsRepository', () => {
   // ==========================================================
   // countOpportunitiesInRange()
   // ==========================================================
+  describe('countOpenOpportunities() and countOpenOpportunitiesAsOf()', () => {
+    const opp = (
+      id: string,
+      stage: string,
+      createdAt: string,
+      extra: Record<string, unknown> = {}
+    ) => ({
+      id,
+      tenantId: TENANT_ID,
+      stage,
+      value: 100,
+      createdAt: new Date(createdAt),
+      closedAt: null,
+      ...extra,
+    });
+
+    it('counts only deals that are not won, lost or archived', async () => {
+      repo.seedOpportunities([
+        opp('o1', 'PROPOSAL', '2026-01-10'),
+        opp('o2', 'CLOSED_WON', '2026-01-10', { closedAt: new Date('2026-01-20') }),
+        opp('o3', 'CLOSED_LOST', '2026-01-10', { closedAt: new Date('2026-01-20') }),
+        opp('o4', 'PROPOSAL', '2026-01-10', { deletedAt: new Date('2026-01-25') }),
+        { ...opp('o5', 'PROPOSAL', '2026-01-10'), tenantId: 'other' },
+      ]);
+      expect(await repo.countOpenOpportunities(TENANT_ID)).toBe(1);
+    });
+
+    it('counts the deals that were open at a past moment', async () => {
+      repo.seedOpportunities([
+        opp('o1', 'PROPOSAL', '2026-01-10'),
+        opp('o2', 'CLOSED_WON', '2026-01-10', { closedAt: new Date('2026-02-20') }),
+        opp('o3', 'CLOSED_WON', '2026-01-10', { closedAt: new Date('2026-01-20') }),
+        opp('o4', 'CLOSED_LOST', '2026-01-10'),
+        opp('o5', 'PROPOSAL', '2026-01-10', { deletedAt: new Date('2026-01-25') }),
+        opp('o6', 'PROPOSAL', '2026-02-05'),
+      ]);
+      // On 31 Jan: o1 and o2 (closed later). Not o3 (closed 20 Jan), o4 (no closedAt),
+      // o5 (archived 25 Jan) or o6 (not created yet).
+      expect(await repo.countOpenOpportunitiesAsOf(TENANT_ID, new Date('2026-01-31'))).toBe(2);
+    });
+  });
+
   describe('countOpportunitiesInRange()', () => {
     it('should return 0 when no opportunities exist', async () => {
       const count = await repo.countOpportunitiesInRange(TENANT_ID, {
@@ -551,7 +593,7 @@ describe('InMemoryAnalyticsRepository', () => {
 
       const [item] = await repo.getRecentAuditLogs(TENANT_ID, 10);
       expect(item.icon).toBe('celebration');
-      expect(item.description).toBe('Deal won: BigDeal ($50000)');
+      expect(item.description).toBe('Deal won: BigDeal (£50,000)');
     });
 
     it('should handle task.completed action', async () => {

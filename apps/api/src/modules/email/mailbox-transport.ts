@@ -1,7 +1,7 @@
 /**
  * Mailbox transports for user mail (PG-207, ADR-085).
  *
- * Wraps the adapters (SMTP, IMAP bounce reader, OAuth Gmail/Graph) with what
+ * Wraps the adapters (SMTP, IMAP bounce reader, OAuth Gmail/Graph, Zoho Mail API) with what
  * the API owns: OAuth client config from env, an in-memory access-token cache
  * (access tokens are never persisted), refresh-token rotation written with a
  * tokenVersion compare-and-set, a revoked grant moving the mailbox to ERROR,
@@ -12,6 +12,8 @@ import {
   MailboxTransportError,
   OAuthMailboxClient,
   SmtpMailboxTransport,
+  ZohoMailboxClient,
+  type BuildMimeInput,
   type OAuthClientConfig,
   type SmtpConnectionConfig,
   type SmtpEnvelope,
@@ -36,6 +38,17 @@ type OAuthClientLike = Pick<
   | 'accountAddress'
   | 'sendRaw'
   | 'listDsnSince'
+> & {
+  /** MVP-011: the public client id a Workspace admin trusts (absent on test doubles). */
+  readonly clientId?: string;
+  /** MVP-013: Google's immutable account id, kept so the calendar sync survives a renamed address. */
+  accountSubject?(accessToken: string): Promise<string | null>;
+};
+
+/** Zoho Mail (MVP-001): HTTPS API, its own shape (data centre host, JSON send). */
+export type ZohoClientLike = Pick<
+  ZohoMailboxClient,
+  'authorizationUrl' | 'exchangeCode' | 'refresh' | 'revoke' | 'identity' | 'sendMessage'
 >;
 
 export interface MailboxTransports {
@@ -43,12 +56,15 @@ export interface MailboxTransports {
   imap: Pick<ImapBounceReader, 'read' | 'verify'>;
   /** null when the provider's OAuth client is not configured in this environment. */
   oauth(provider: OAuthMailboxProvider): OAuthClientLike | null;
+  /** null when Zoho is not configured; Zoho is never returned by `oauth()`. */
+  zoho: ZohoClientLike | null;
   oauthConfigured: Record<OAuthMailboxProvider, boolean>;
 }
 
 const ENV_PREFIX: Record<OAuthMailboxProvider, string> = {
   GMAIL: 'EMAIL_OAUTH_GOOGLE',
   MICROSOFT: 'EMAIL_OAUTH_MICROSOFT',
+  ZOHO: 'EMAIL_OAUTH_ZOHO',
 };
 
 /**
@@ -64,7 +80,7 @@ export function oauthConfigFromEnv(
     const clientSecret = env[`${ENV_PREFIX[provider]}_CLIENT_SECRET`]?.trim();
     return clientId && clientSecret && redirectUri ? { clientId, clientSecret, redirectUri } : null;
   };
-  return { GMAIL: read('GMAIL'), MICROSOFT: read('MICROSOFT') };
+  return { GMAIL: read('GMAIL'), MICROSOFT: read('MICROSOFT'), ZOHO: read('ZOHO') };
 }
 
 export function createMailboxTransports(env: NodeJS.ProcessEnv = process.env): MailboxTransports {
@@ -72,12 +88,18 @@ export function createMailboxTransports(env: NodeJS.ProcessEnv = process.env): M
   const clients: Record<OAuthMailboxProvider, OAuthClientLike | null> = {
     GMAIL: configs.GMAIL ? new OAuthMailboxClient('GMAIL', configs.GMAIL) : null,
     MICROSOFT: configs.MICROSOFT ? new OAuthMailboxClient('MICROSOFT', configs.MICROSOFT) : null,
+    ZOHO: null,
   };
   return {
     smtp: new SmtpMailboxTransport(),
     imap: new ImapBounceReader(),
     oauth: (provider) => clients[provider],
-    oauthConfigured: { GMAIL: Boolean(configs.GMAIL), MICROSOFT: Boolean(configs.MICROSOFT) },
+    zoho: configs.ZOHO ? new ZohoMailboxClient(configs.ZOHO) : null,
+    oauthConfigured: {
+      GMAIL: Boolean(configs.GMAIL),
+      MICROSOFT: Boolean(configs.MICROSOFT),
+      ZOHO: Boolean(configs.ZOHO),
+    },
   };
 }
 
@@ -91,6 +113,9 @@ export interface TransportMailbox extends SmtpEndpointRow, SmtpAccountRow {
   kind: string;
   refreshToken: string | null;
   tokenVersion: number;
+  /** Zoho only: the Mail account id and its data centre's API host. */
+  oauthAccountId?: string | null;
+  oauthApiDomain?: string | null;
 }
 
 interface MailboxWriter {
@@ -123,6 +148,39 @@ function oauthProvider(kind: string): OAuthMailboxProvider {
   return kind === 'MICROSOFT' ? 'MICROSOFT' : 'GMAIL';
 }
 
+/**
+ * Whether this process can get access tokens for a mailbox kind: its OAuth client is configured
+ * here. Each process (the api, the combined worker) reads its own env, so one can lack a client
+ * the other has.
+ */
+export function hasOAuthClient(transports: MailboxTransports, kind: string): boolean {
+  return kind === 'ZOHO'
+    ? Boolean(transports.zoho)
+    : Boolean(transports.oauth(oauthProvider(kind)));
+}
+
+/** The env variable NAMES that configure a mailbox kind's OAuth client (never their values). */
+export function oauthClientEnvNames(kind: string): string[] {
+  const prefix = ENV_PREFIX[kind === 'ZOHO' ? 'ZOHO' : oauthProvider(kind)];
+  return [`${prefix}_CLIENT_ID`, `${prefix}_CLIENT_SECRET`, 'EMAIL_OAUTH_REDIRECT_URI'];
+}
+
+/** A fresh access token from the mailbox's provider (Zoho at the account's own data centre). */
+function refreshAccess(
+  mailbox: TransportMailbox,
+  transports: MailboxTransports,
+  refreshToken: string,
+  now: Date
+) {
+  if (mailbox.kind === 'ZOHO') {
+    if (!transports.zoho) throw new MailboxTransportError('CONNECT_FAILED');
+    return transports.zoho.refresh(refreshToken, now, mailbox.oauthApiDomain ?? '');
+  }
+  const client = transports.oauth(oauthProvider(mailbox.kind));
+  if (!client) throw new MailboxTransportError('CONNECT_FAILED');
+  return client.refresh(refreshToken, now);
+}
+
 /** A valid access token for an OAuth mailbox, refreshing (and rotating) when needed. */
 export async function getOAuthAccessToken(
   prisma: MailboxWriter,
@@ -131,6 +189,11 @@ export async function getOAuthAccessToken(
   now: Date
 ): Promise<string> {
   return (await getOAuthAccess(prisma, mailbox, transports, now)).accessToken;
+}
+
+/** Drops a cached access token, so the next request mints a fresh one (a 401 on a token that may just have run out). */
+export function forgetAccessToken(mailboxId: string): void {
+  accessTokens.delete(mailboxId);
 }
 
 /**
@@ -154,13 +217,16 @@ export async function getOAuthAccess(
     return { accessToken: cached.accessToken, tokenVersion: cached.tokenVersion };
   }
 
-  const client = transports.oauth(oauthProvider(mailbox.kind));
-  if (!client) throw new MailboxTransportError('CONNECT_FAILED');
+  if (mailbox.kind !== 'ZOHO' && !transports.oauth(oauthProvider(mailbox.kind))) {
+    throw new MailboxTransportError('CONNECT_FAILED');
+  }
+  if (mailbox.kind === 'ZOHO' && !transports.zoho)
+    throw new MailboxTransportError('CONNECT_FAILED');
   if (!mailbox.refreshToken) throw new MailboxTransportError('TOKEN_REVOKED');
 
   let refreshed;
   try {
-    refreshed = await client.refresh(mailbox.refreshToken, now);
+    refreshed = await refreshAccess(mailbox, transports, mailbox.refreshToken, now);
   } catch (error) {
     if (error instanceof MailboxTransportError && error.code === 'TOKEN_REVOKED') {
       // Only these credentials: a reconnect meanwhile moved tokenVersion on.
@@ -203,14 +269,18 @@ function smtpConfig(mailbox: TransportMailbox): SmtpConnectionConfig {
   return { ...smtpEndpointConfig(mailbox), ...smtpAccountConfig(mailbox) };
 }
 
-/** Sends one MIME message through the mailbox; failures are MailboxTransportError codes. */
+/**
+ * Sends one message through the mailbox; failures are MailboxTransportError codes. SMTP, Gmail
+ * and Graph take the MIME; Zoho takes `message`'s fields (its API has no raw MIME send).
+ */
 export async function sendThroughMailbox(
   prisma: MailboxWriter,
   mailbox: TransportMailbox,
   transports: MailboxTransports,
   envelope: SmtpEnvelope,
   raw: Buffer,
-  now: Date
+  now: Date,
+  message?: BuildMimeInput
 ): Promise<{
   provider: MailboxKind;
   providerMessageId: string | null;
@@ -226,6 +296,7 @@ export async function sendThroughMailbox(
       ...(result.rejectedTemporarily ? { rejectedTemporarily: result.rejectedTemporarily } : {}),
     };
   }
+  if (mailbox.kind === 'ZOHO') return sendThroughZoho(prisma, mailbox, transports, now, message);
   const provider = oauthProvider(mailbox.kind);
   const client = transports.oauth(provider);
   if (!client) throw new MailboxTransportError('CONNECT_FAILED');
@@ -234,6 +305,48 @@ export async function sendThroughMailbox(
     // Gmail and Graph accept the whole message; refusals come back as bounce reports.
     const result = await client.sendRaw(token, raw);
     return { provider, ...result, rejected: [] };
+  } catch (error) {
+    if (error instanceof MailboxTransportError && error.code === 'AUTH_FAILED') {
+      accessTokens.delete(mailbox.id);
+    }
+    throw error;
+  }
+}
+
+/**
+ * Zoho's send API (zoho.com/mail/help/api/post-send-an-email.html) takes the From address only
+ * and has no reply-to: the display name is the one set in Zoho, and the tenant's reply-to does
+ * not apply (Email Settings says so when a Zoho mailbox is connected). The body goes as HTML.
+ */
+async function sendThroughZoho(
+  prisma: MailboxWriter,
+  mailbox: TransportMailbox,
+  transports: MailboxTransports,
+  now: Date,
+  message: BuildMimeInput | undefined
+): Promise<{ provider: MailboxKind; providerMessageId: string | null; rejected: string[] }> {
+  const zoho = transports.zoho;
+  if (!zoho) throw new MailboxTransportError('CONNECT_FAILED');
+  if (!message) throw new MailboxTransportError('REJECTED');
+  if (!mailbox.oauthAccountId || !mailbox.oauthApiDomain) {
+    throw new MailboxTransportError('AUTH_FAILED');
+  }
+  const token = await getOAuthAccessToken(prisma, mailbox, transports, now);
+  try {
+    const result = await zoho.sendMessage(
+      token,
+      { mailHost: mailbox.oauthApiDomain, accountId: mailbox.oauthAccountId },
+      {
+        from: message.from.address,
+        to: message.to,
+        cc: message.cc,
+        bcc: message.bcc,
+        subject: message.subject,
+        html: message.html,
+        attachments: message.attachments,
+      }
+    );
+    return { provider: 'ZOHO', ...result, rejected: [] };
   } catch (error) {
     if (error instanceof MailboxTransportError && error.code === 'AUTH_FAILED') {
       accessTokens.delete(mailbox.id);

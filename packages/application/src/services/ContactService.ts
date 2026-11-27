@@ -132,7 +132,7 @@ export class ContactService {
       firstName?: string;
       lastName?: string;
       title?: string;
-      phone?: string;
+      phone?: string | null; // null removes the number (MVP-003 #28)
       department?: string;
       status?: ContactStatus;
       streetAddress?: string;

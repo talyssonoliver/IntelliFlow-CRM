@@ -40,6 +40,7 @@ import { AccountScoreBadge } from '@/components/accounts/AccountScoreBadge';
 import { InferredFieldBadge } from '@/components/shared/InferredFieldBadge';
 import { SuggestedTagsRow } from '@/components/shared/SuggestedTagsRow';
 import { isRecordId } from '@/lib/shared/record-id';
+import { websiteDisplay } from '@/lib/shared/website-display';
 
 interface AccountDetailProps {
   accountId: string;
@@ -85,23 +86,211 @@ export function formatAccountLocation(
   return parts.length > 0 ? parts.join(', ') : null;
 }
 
-function resolveWebsite(website: unknown): { href: string; display: string } | null {
-  if (!website) return null;
-  // API may return WebsiteUrl value object or a plain string
-  let raw: string | null;
-  if (typeof website === 'string') {
-    raw = website;
-  } else if (typeof website === 'object' && website !== null && 'normalized' in website) {
-    raw = (website as { normalized: string }).normalized;
-  } else if (typeof website === 'object' && website !== null && 'value' in website) {
-    raw = (website as { value: string }).value;
-  } else {
-    raw = null;
+const REVENUE_UNITS: ReadonlyArray<readonly [number, string]> = [
+  [1_000, 'K'],
+  [1_000_000, 'M'],
+  [1_000_000_000, 'B'],
+];
+
+/**
+ * Revenue in pounds, compact for the small metric tile: "£1.3M", "£850K". Built by hand
+ * rather than with Intl's compact notation, whose output differs between Node/ICU
+ * versions (CI and local disagreed).
+ */
+export function formatRevenueCompact(revenue: unknown): string {
+  const amount = Number(revenue);
+  if (revenue === null || revenue === undefined || !Number.isFinite(amount) || amount <= 0) {
+    return '—';
   }
-  if (!raw) return null;
-  const href = raw.startsWith('http') ? raw : `https://${raw}`;
-  const display = raw.replace(/^https?:\/\//, '');
-  return { href, display };
+  // Units smallest first. Move up a unit only while the current one would read 1000
+  // or more once rounded, so 999_950 reads "£1M" rather than "£1000K".
+  let shown = Math.round(amount);
+  let text = `£${shown}`;
+  for (const [size, unit] of REVENUE_UNITS) {
+    if (shown < 1000) break;
+    // One decimal, dropped when it is zero: 5_000_000 -> "5", 1_250_000 -> "1.3".
+    shown = Math.round((amount / size) * 10) / 10;
+    text = `£${Number.isInteger(shown) ? shown : shown.toFixed(1)}${unit}`;
+  }
+  return text;
+}
+
+const CHURN_RISK_LABELS: Record<string, string> = {
+  MINIMAL: 'Minimal',
+  LOW: 'Low',
+  MEDIUM: 'Medium',
+  HIGH: 'High',
+  CRITICAL: 'Critical',
+};
+
+interface InsightSignal {
+  label: string;
+  impact?: string;
+}
+
+/**
+ * Key signals as the insight chain stores them. Malformed items are dropped, and a
+ * label the model repeats is shown once (the first one wins), so list keys stay unique.
+ */
+export function readSignals(value: unknown): InsightSignal[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  return value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const { label, impact } = item as { label?: unknown; impact?: unknown };
+    if (typeof label !== 'string' || !label.trim() || seen.has(label)) return [];
+    seen.add(label);
+    return [{ label, impact: typeof impact === 'string' ? impact : undefined }];
+  });
+}
+
+/** Non-empty strings, each once, so a repeated recommendation is not listed twice. */
+export function readStrings(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  const strings = value.filter((v): v is string => typeof v === 'string' && v.trim().length > 0);
+  return [...new Set(strings)];
+}
+
+/**
+ * The account's score as the model wrote it, or null. When the model call fails
+ * the scoring job still writes a score of 0, with a single provenance factor
+ * named `fallback`: that 0 is not a score and is shown as "Not scored".
+ */
+export function modelScore(score: unknown, provenance: unknown): number | null {
+  if (typeof score !== 'number') return null;
+  const isFallback =
+    Array.isArray(provenance) &&
+    provenance.some(
+      (f) => f && typeof f === 'object' && (f as { name?: unknown }).name === 'fallback'
+    );
+  return isFallback ? null : score;
+}
+
+/** The factors behind a model-written score; none for a missing or fallback score. */
+function scoreFactors(
+  score: number | null,
+  provenance: unknown
+): Array<{ name: string; impact: number }> | null {
+  if (score === null || !Array.isArray(provenance)) return null;
+  return provenance as Array<{ name: string; impact: number }>;
+}
+
+/** Says so when the account has never been scored (the score badge then shows nothing). */
+function NotScoredNote({ score }: Readonly<{ score: number | null | undefined }>) {
+  if (typeof score === 'number') return null;
+  return (
+    <p className="text-sm text-slate-500" data-testid="account-not-scored">
+      Not scored
+    </p>
+  );
+}
+
+interface AccountInsight {
+  healthSummary: string | null;
+  nextBestAction: string | null;
+  keySignals?: unknown;
+  churnRisk: string;
+  sentimentTrend: string | null;
+  recommendations?: unknown;
+  generatedAt: Date | string;
+  source: string;
+}
+
+/**
+ * The stored AI insight, shown only when a model wrote it. When the model call
+ * fails the insight chain stores a fallback row (churn risk LOW, engagement 0)
+ * that was never analysed, so that row reads as "no analysis yet".
+ */
+export function AccountInsightPanel({
+  isLoading,
+  isError = false,
+  insight,
+}: Readonly<{ isLoading: boolean; isError?: boolean; insight: AccountInsight | null }>) {
+  if (isLoading) {
+    return <Skeleton className="h-24 w-full" />;
+  }
+  // A failed lookup says nothing about whether an analysis exists, so it is not "none".
+  if (isError && !insight) {
+    return (
+      <Card className="p-5" data-testid="account-insight-error">
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          The AI analysis could not be loaded. Try again later.
+        </p>
+      </Card>
+    );
+  }
+  if (!insight || insight.source !== 'llm') {
+    return (
+      <Card className="p-5" data-testid="account-insight-none">
+        <p className="text-sm text-slate-600 dark:text-slate-300">
+          No AI analysis for this account yet.
+        </p>
+        <Link
+          href="/accounts/account-settings"
+          className="mt-2 inline-block text-sm text-[#2a78f6] hover:underline"
+        >
+          AI settings for accounts
+        </Link>
+      </Card>
+    );
+  }
+  const signals = readSignals(insight.keySignals);
+  const recommendations = readStrings(insight.recommendations);
+  return (
+    <Card className="p-5 space-y-4" data-testid="account-insight">
+      {insight.healthSummary && (
+        <p className="text-sm text-slate-900 dark:text-white whitespace-pre-wrap">
+          {insight.healthSummary}
+        </p>
+      )}
+      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <dt className="text-xs text-slate-400 uppercase font-semibold mb-1">Churn risk</dt>
+          <dd className="text-sm text-slate-900 dark:text-white">
+            {CHURN_RISK_LABELS[insight.churnRisk] ?? insight.churnRisk}
+          </dd>
+        </div>
+        {insight.sentimentTrend && (
+          <div>
+            <dt className="text-xs text-slate-400 uppercase font-semibold mb-1">Sentiment</dt>
+            <dd className="text-sm text-slate-900 dark:text-white">{insight.sentimentTrend}</dd>
+          </div>
+        )}
+      </dl>
+      {insight.nextBestAction && (
+        <div>
+          <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Next best action</p>
+          <p className="text-sm text-slate-900 dark:text-white">{insight.nextBestAction}</p>
+        </div>
+      )}
+      {signals.length > 0 && (
+        <div>
+          <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Key signals</p>
+          <ul className="space-y-1">
+            {signals.map((signal) => (
+              <li key={signal.label} className="text-sm text-slate-700 dark:text-slate-300">
+                {signal.label}
+                {signal.impact && signal.impact !== 'neutral' ? ` (${signal.impact})` : ''}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {recommendations.length > 0 && (
+        <div>
+          <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Recommendations</p>
+          <ul className="list-disc pl-5 space-y-1">
+            {recommendations.map((rec) => (
+              <li key={rec} className="text-sm text-slate-700 dark:text-slate-300">
+                {rec}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <p className="text-xs text-slate-500">Analysed {formatDate(insight.generatedAt)}</p>
+    </Card>
+  );
 }
 
 function formatDate(date: string | Date, timezone: string = 'Europe/London'): string {
@@ -135,6 +324,11 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
   const oppsQuery = api.account.getOpportunities.useQuery(
     { accountId, limit: 100 },
     { enabled: activeTab === 'pipeline' && isAuthenticated }
+  );
+
+  const insightQuery = api.account.getAiInsight.useQuery(
+    { accountId },
+    { enabled: activeTab === 'ai-insights' && isValidId && isAuthenticated }
   );
 
   const utils = api.useUtils();
@@ -173,7 +367,8 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
   const tier = resolveTier(account?.revenue);
   const contactCount = account?._count?.contacts ?? 0;
   const opportunityCount = account?._count?.opportunities ?? 0;
-  const website = useMemo(() => resolveWebsite(account?.website), [account?.website]);
+  const shownScore = modelScore(account?.score, account?.scoreProvenance);
+  const website = useMemo(() => websiteDisplay(account?.website), [account?.website]);
   // PG-197: optional geography — "Region, POSTCODE, Country" when present.
   const location = formatAccountLocation(account);
 
@@ -312,26 +507,6 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
         }}
         extraActions={[
           {
-            label: 'Merge Account',
-            icon: 'merge',
-            onClick: () =>
-              toast({
-                title: 'Merge not available',
-                description:
-                  'Account merging with field reconciliation is tracked under IFC-044. Not yet implemented.',
-              }),
-          },
-          {
-            label: 'Archive',
-            icon: 'archive',
-            onClick: () =>
-              toast({
-                title: 'Archive not available',
-                description:
-                  'Account archival is tracked under IFC-044. Not yet implemented on the backend.',
-              }),
-          },
-          {
             label: 'Delete',
             icon: 'delete',
             onClick: () => {
@@ -428,7 +603,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                         rel="noopener noreferrer"
                         className="text-sm text-[#2a78f6] hover:underline break-all"
                       >
-                        {website.display}
+                        {website.domain}
                       </a>
                     </div>
                   </div>
@@ -473,9 +648,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
               <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
                 <div className="text-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
                   <p className="text-lg font-bold text-slate-900 dark:text-white">
-                    {account.revenue
-                      ? `$${(Number(account.revenue) / 1_000_000).toFixed(1)}M`
-                      : '—'}
+                    {formatRevenueCompact(account.revenue)}
                   </p>
                   <p className="text-xs text-slate-500">Revenue</p>
                 </div>
@@ -592,7 +765,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                       rel="noopener noreferrer"
                       className="text-sm text-[#2a78f6] hover:underline"
                     >
-                      {website.display}
+                      {website.domain}
                     </a>
                   ) : (
                     <p className="text-sm text-slate-500">—</p>
@@ -755,25 +928,18 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
               <div className="flex items-center gap-3">
                 <h3 className="text-lg font-semibold">Account AI Insights</h3>
                 <AccountScoreBadge
-                  score={account.score ?? null}
+                  score={shownScore}
                   modelVersion={account.scoreModelVersion}
                   scoredAt={account.scoredAt}
-                  factors={
-                    Array.isArray(account.scoreProvenance)
-                      ? (account.scoreProvenance as Array<{
-                          name: string;
-                          impact: number;
-                        }>)
-                      : null
-                  }
+                  factors={scoreFactors(shownScore, account.scoreProvenance)}
                 />
               </div>
-              <p className="text-sm text-slate-600 dark:text-slate-300">
-                Enable <strong>AI insight generation</strong> and{' '}
-                <strong>AI account scoring</strong> in account settings to populate this surface.
-                Data is written by the ai-worker pipeline and reflected here via the{' '}
-                <code>account.getAiInsight</code> query.
-              </p>
+              <NotScoredNote score={shownScore} />
+              <AccountInsightPanel
+                isLoading={insightQuery.isLoading}
+                isError={insightQuery.isError}
+                insight={insightQuery.data?.insight ?? null}
+              />
             </div>
           )}
         </section>

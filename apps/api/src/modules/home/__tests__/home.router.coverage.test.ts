@@ -360,6 +360,9 @@ describe('Home Router Coverage Tests (PG-163)', () => {
       expect(result.insights[0].source).toBe('heuristic');
       expect(result.insights[0].id).toBe('pipeline-summary');
       expect(result.insights[0].type).toBe('opportunity');
+      // The pipeline value reads in pounds, never dollars.
+      expect(result.insights[0].description).toContain('worth £5,000');
+      expect(result.insights[0].description).not.toContain('$');
     });
 
     it('falls back to tenant-scoped queries when an admin has no direct data', async () => {
@@ -654,7 +657,7 @@ describe('Home Router Coverage Tests (PG-163)', () => {
       expect(result.goal.currentValue).toBe(2500);
       expect(result.goal.targetValue).toBe(5000);
       expect(result.goal.progress).toBe(50);
-      expect(result.goal.remainingFormatted).toContain('$');
+      expect(result.goal.remainingFormatted).toContain('£');
     });
 
     it('calculates calls goal from callRecord count', async () => {

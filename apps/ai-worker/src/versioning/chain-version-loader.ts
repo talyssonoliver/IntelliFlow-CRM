@@ -6,14 +6,18 @@
  * ChainVersionService is available, or fall back to hardcoded defaults.
  *
  * Wiring pattern: module singleton (no DI framework).
- * The versionService can be injected at startup via `configureVersionLoader()`.
- * Until configured, all calls return default configs (safe fallback).
+ * The ai-worker configures it at startup with `configureVersionLoaderFromPrisma()` (ai-worker.ts,
+ * once Prisma is up), so a tenant's saved, active chain version is what its chains use. Until then,
+ * and when a tenant has no active version, calls return the built-in configs (safe fallback).
+ * Chains still keep their own prompt when a version's prompt has no slot for their input
+ * (usableVersionedPrompt).
  *
  * Task: H3 — ChainVersion state machine wiring
  */
 
 import { createVersionLoader, VersionLoader } from './version-loader';
 import type { ChainType } from '@intelliflow/domain';
+import type { EventBusPort } from '@intelliflow/application';
 
 // ---------------------------------------------------------------------------
 // Module-level singleton
@@ -37,6 +41,54 @@ export function configureVersionLoader(
  */
 export function getVersionLoader(): VersionLoader {
   return _versionLoader;
+}
+
+/** A tenant's prompt for a chain type and the saved version it came from. */
+export interface VersionedPrompt {
+  prompt: string | null;
+  /** The saved version's id, or null for the loader's built-in fallback. */
+  versionId: string | null;
+}
+
+/**
+ * The prompt a chain may use for this tenant, read once when the chain chooses its prompt, with
+ * the version it came from. The chain hands that id to recordedChainRun, so a run is attributed
+ * to the version whose prompt it actually sent, even if the cache changes before it is recorded.
+ */
+export async function loadVersionedPrompt(
+  chainType: ChainType,
+  tenantId: string
+): Promise<VersionedPrompt> {
+  const loaded = await _versionLoader.loadVersionedChain(chainType, { tenantId });
+  return {
+    prompt: loaded.config.prompt ?? null,
+    versionId: loaded.versionId.startsWith('fallback-') ? null : loaded.versionId,
+  };
+}
+
+/** The loader only reads versions; nothing on this path publishes events. */
+const READ_ONLY_EVENT_BUS: EventBusPort = {
+  publish: async () => {},
+  publishAll: async () => {},
+  subscribe: async () => {},
+};
+
+/**
+ * Point the shared loader at the database: a ChainVersionService over the Prisma chain-version
+ * repositories. Each lookup is by (chain type, tenant), so a tenant only ever reads its own
+ * versions. Feature flags are not wired here, so a percentage rollout serves the active version.
+ */
+export async function configureVersionLoaderFromPrisma(prisma: unknown): Promise<void> {
+  const { PrismaChainVersionRepository, PrismaChainVersionAuditRepository } =
+    await import('@intelliflow/adapters');
+  const { ChainVersionService } = await import('@intelliflow/application');
+  const service = new ChainVersionService(
+    new PrismaChainVersionRepository(prisma as never),
+    new PrismaChainVersionAuditRepository(prisma as never),
+    null,
+    READ_ONLY_EVENT_BUS
+  );
+  configureVersionLoader(service);
 }
 
 // ---------------------------------------------------------------------------

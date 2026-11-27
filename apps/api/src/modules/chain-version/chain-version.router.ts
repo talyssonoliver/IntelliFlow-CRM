@@ -25,6 +25,7 @@ import {
 } from '@intelliflow/validators';
 import type { Context } from '../../context';
 import { getTenantContext } from '../../security/tenant-context';
+import { chainUsageProcedures } from './chain-usage.router';
 
 /**
  * Helper to get chain version service from context.
@@ -56,6 +57,9 @@ async function scoped<T>(call: () => Promise<T>): Promise<T> {
 }
 
 export const chainVersionRouter = createTRPCRouter({
+  // getEffective and getUsageStats (the AI Chains settings page).
+  ...chainUsageProcedures,
+
   // ===========================================================================
   // Version Lifecycle
   // ===========================================================================

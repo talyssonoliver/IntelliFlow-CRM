@@ -221,6 +221,8 @@ async function claimNextMailbox(deps: BounceReaderDeps, now: Date): Promise<Mail
     WHERE id IN (
       SELECT id FROM email_mailboxes
       WHERE status = 'ACTIVE' AND "nextScanAt" <= ${now}
+        -- A Zoho mailbox may send only (MVP-001): nothing is read from it.
+        AND kind <> 'ZOHO'
         AND ("lockedUntil" IS NULL OR "lockedUntil" < ${now})
       ORDER BY "nextScanAt" ASC
       LIMIT 1

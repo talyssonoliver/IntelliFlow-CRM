@@ -8,6 +8,7 @@ import { TaskCreateSheet } from '@/components/tasks/TaskCreateSheet';
 import type { WidgetProps } from './index';
 import type { TaskStatus } from '@intelliflow/domain';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { WidgetHeader } from '../WidgetHeader';
 
 export function PendingTasksWidget(_props: Readonly<WidgetProps>) {
   const { timezone } = useTimezoneContext();
@@ -29,22 +30,25 @@ export function PendingTasksWidget(_props: Readonly<WidgetProps>) {
 
   return (
     <div className="p-5 flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="font-bold text-foreground flex items-center gap-2">
-          <span className="material-symbols-outlined text-muted-foreground">check_circle</span>{' '}
-          Pending Tasks
-        </h3>
-        <button
-          onClick={() => setCreateOpen(true)}
-          className="inline-flex items-center justify-center w-7 h-7 rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors"
-          title="Add new task"
-          aria-label="Add new task"
-        >
-          <span className="material-symbols-outlined text-lg" aria-hidden="true">
-            add
-          </span>
-        </button>
-      </div>
+      <WidgetHeader
+        title="Pending Tasks"
+        icon="check_circle"
+        titleClassName="font-bold text-foreground"
+        className="mb-4"
+        actions={
+          <button
+            type="button"
+            onClick={() => setCreateOpen(true)}
+            className="inline-flex size-11 items-center justify-center rounded-md text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            title="Add new task"
+            aria-label="Add new task"
+          >
+            <span className="material-symbols-outlined text-lg" aria-hidden="true">
+              add
+            </span>
+          </button>
+        }
+      />
 
       <div className="flex flex-col gap-3 overflow-y-auto max-h-[240px] pr-2 flex-1">
         {isLoading && (

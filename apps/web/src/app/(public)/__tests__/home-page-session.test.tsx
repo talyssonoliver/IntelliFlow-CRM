@@ -23,11 +23,11 @@ vi.mock('@/components/home/AuthenticatedHomePage', () => ({ AuthenticatedHomePag
 
 import { HomePagePublicWithAuthFallback } from '@/components/home/HomePagePublicWithAuthFallback';
 import { AuthenticatedHomePage } from '@/components/home/AuthenticatedHomePage';
-import HomePage from '../(home)/page';
+import HomePage from '../signed-in-home/page';
 
 const render = () => HomePage() as Promise<ReactElement<{ initialWelcomeData?: unknown }>>;
 
-describe('root page session check', () => {
+describe('signed-in home session check', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getAccessToken.mockResolvedValue('a-token');

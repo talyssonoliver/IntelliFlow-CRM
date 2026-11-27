@@ -193,7 +193,8 @@ describe('OnboardingFlow', () => {
     render(<OnboardingFlow currentStep={1} />);
 
     const profileLink = screen.getByRole('link', { name: /complete profile/i });
-    expect(profileLink).toHaveAttribute('href', '/settings/profile');
+    // /settings/profile never existed; profile settings are /settings/account.
+    expect(profileLink).toHaveAttribute('href', '/settings/account');
   });
 
   it('applies custom className', () => {

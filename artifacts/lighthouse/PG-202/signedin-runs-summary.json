@@ -1,0 +1,30 @@
+{
+  "task": "PG-202",
+  "command": "lhci collect (desktop preset, onlyCategories performance+accessibility, 3 runs, puppeteerScript tools/lighthouse/lhci-auth.js)",
+  "startedAt": "2026-11-22T15:23:09Z",
+  "finishedAt": "2026-11-22T15:23:59Z",
+  "exitCode": 0,
+  "target": "http://localhost:3400 (local production build, local Supabase, ephemeral DB)",
+  "runs": {
+    "http://localhost:3400/calendar/availability": [
+      {
+        "performance": 0.92,
+        "accessibility": 0.96,
+        "fetchTime": "2026-11-22T15:23:15.249Z"
+      },
+      {
+        "performance": 0.92,
+        "accessibility": 0.96,
+        "fetchTime": "2026-11-22T15:23:31.506Z"
+      },
+      {
+        "performance": 0.92,
+        "accessibility": 0.96,
+        "fetchTime": "2026-11-22T15:23:46.587Z"
+      }
+    ]
+  },
+  "median_reports": [
+    "calendar-availability-auth.report.json"
+  ]
+}

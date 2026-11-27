@@ -6,7 +6,15 @@
  * Test suite for encryption utilities, key rotation, and security compliance.
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+// timingSafeEqual is wrapped (real behaviour kept) so the constant-time test can prove the
+// comparison path itself instead of timing it on a possibly busy machine.
+vi.mock('node:crypto', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:crypto')>();
+  return { ...actual, timingSafeEqual: vi.fn(actual.timingSafeEqual) };
+});
+import { timingSafeEqual } from 'node:crypto';
 import {
   EncryptionService,
   EncryptionError,
@@ -185,27 +193,44 @@ describe('EncryptionService', () => {
       expect(hash1).not.toBe(hash2);
     });
 
+    // Load-independent: a matching and a non-matching password take the same path, a full
+    // PBKDF2 then one timingSafeEqual over two 64-byte buffers. The real-clock ratio below runs
+    // only with REAL_REPO_CHECKS=1 (nightly real-repo job): on a loaded machine it measures load.
     it('should use constant-time comparison', () => {
-      // This test ensures timing attacks are mitigated
-      // Using 10 iterations to keep test fast while still being meaningful
-      // Hash operations are intentionally slow (bcrypt/scrypt) so we minimize iterations
       const hash = service.hash('password');
-      const start1 = performance.now();
-      for (let i = 0; i < 10; i++) {
-        service.verifyHash('password', hash);
+      const compare = vi.mocked(timingSafeEqual);
+      compare.mockClear();
+      expect(service.verifyHash('password', hash)).toBe(true);
+      expect(service.verifyHash('completely-different-password', hash)).toBe(false);
+      expect(compare).toHaveBeenCalledTimes(2);
+      for (const [stored, computed] of compare.mock.calls) {
+        expect((stored as Buffer).length).toBe(64);
+        expect((computed as Buffer).length).toBe(64);
       }
-      const time1 = performance.now() - start1;
+    });
 
-      const start2 = performance.now();
-      for (let i = 0; i < 10; i++) {
-        service.verifyHash('completely-different-password', hash);
-      }
-      const time2 = performance.now() - start2;
+    it.runIf(process.env['REAL_REPO_CHECKS'] === '1')(
+      'should take similar real time for matching and non-matching passwords',
+      () => {
+        const hash = service.hash('password');
+        const start1 = performance.now();
+        for (let i = 0; i < 10; i++) {
+          service.verifyHash('password', hash);
+        }
+        const time1 = performance.now() - start1;
 
-      // Timing should be similar (within 100% variance for small sample)
-      const ratio = Math.max(time1, time2) / Math.min(time1, time2);
-      expect(ratio).toBeLessThan(3);
-    }, 30000); // Extended timeout for slow crypto operations
+        const start2 = performance.now();
+        for (let i = 0; i < 10; i++) {
+          service.verifyHash('completely-different-password', hash);
+        }
+        const time2 = performance.now() - start2;
+
+        // Timing should be similar (within 100% variance for small sample)
+        const ratio = Math.max(time1, time2) / Math.min(time1, time2);
+        expect(ratio).toBeLessThan(3);
+      },
+      30000
+    );
   });
 
   describe('Token Generation', () => {

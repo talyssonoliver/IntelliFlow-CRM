@@ -280,7 +280,7 @@ export const MODEL_PRICING = {
   // checked 2026-10-19). Without this key calculateCost priced it as gpt-3.5-turbo.
   'gemini-embedding-001': { input: 0.00015, output: 0 },
   // Production embeddings since 2026-10-31 (EMBEDDING_PROVIDER=openrouter): free on OpenRouter.
-  'nvidia/nemotron-3-embed-1b:free': { input: 0, output: 0 },
+  'nvidia/nemotron-3.5-embed-1b:free': { input: 0, output: 0 },
 
   // AI_PROVIDER=anthropic (Anthropic first-party API list prices). Claude Haiku 5.5: $0.10 /
   // $0.50 per M for prompts up to 100K tokens; longer prompts are priced from
@@ -341,6 +341,22 @@ export function servedPricingKey(served: string | undefined): string | undefined
   const name = served?.trim().toLowerCase();
   if (!name) return undefined;
   return matchServed(name) ?? matchServed(name.split('/').slice(1).join('/'));
+}
+
+/**
+ * The MODEL_PRICING key for a model name as a provider reports it: the name itself (with or
+ * without a `vendor/` prefix) when it is a key, else a known deployment it maps to (a dated
+ * snapshot, an OpenRouter id). Undefined when the model has no price here (a local Ollama model,
+ * an unknown deployment): callers must not price it as some other model.
+ */
+export function resolvePricingKey(served: string | undefined): string | undefined {
+  const name = served?.trim().toLowerCase();
+  if (!name) return undefined;
+  const direct = [name, name.split('/').slice(1).join('/')].find(
+    (candidate) => candidate !== '' && Object.hasOwn(MODEL_PRICING, candidate)
+  );
+  const key = direct ?? servedPricingKey(name);
+  return key && Object.hasOwn(MODEL_PRICING, key) ? key : undefined;
 }
 
 const unknownPricingWarned = new Set<string>();

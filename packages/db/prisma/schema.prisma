@@ -35,6 +35,9 @@ model Tenant {
   partnerId   String?
   externalRef String?
   plan        PlanTier     @default(STARTER)
+  /// Owner ruling 23/11/2026 — what kind of business this workspace is. Decides which vertical modules
+  /// (Cases, Tickets, Commerce) it can have. NULL = not chosen yet: gated like OTHER, admin is prompted.
+  businessType TenantBusinessType?
   /// #1220 — when this workspace's trial ends. NULL until set (new sign-ups) or backfilled; the API
   /// then falls back to createdAt + 14 days. Never derived from age once set.
   trialEndsAt DateTime?
@@ -173,6 +176,7 @@ model Tenant {
   emailSettings          TenantEmailSettings?     @ignore // PG-207
   emailSignatures        EmailSignature[]         @ignore // PG-207
   emailSuppressions      EmailSuppression[]       @ignore // PG-207
+  calendarEventLinks     CalendarEventLink[]      @ignore // MVP-013
   dealWinLossReasons     DealWinLossReason[]      @ignore
   dealScoringRules       DealScoringRule[]        @ignore
   dealDuplicateRules     DealDuplicateRule[]      @ignore
@@ -218,9 +222,12 @@ model Tenant {
   taskSettings              TaskSettings[]            @ignore
   toolEnablements           TenantToolEnablement[]    // H6: per-tenant tool on/off
   aiConfigs                 TenantAIConfig[]           // M8/M9: per-tenant LLM tier overrides
+  aiProviderKey             TenantAIProviderKey?       @ignore // PG-199 BYOK
+  chainRuns                 ChainRun[]                 // AI Chains page usage stats
   memoryPolicy              TenantMemoryPolicy?        // P2.7: per-tenant memory retention
   goalDefault               TenantGoalDefault?         // IFC-211: org-wide default daily goal
   termsAcceptances          TermsAcceptance[]          @relation("TenantTermsAcceptances") @ignore // IFC-309
+  complianceSnapshots       ComplianceSnapshot[]       // PG-194
 
   @@unique([partnerId, externalRef])
   @@index([partnerId])
@@ -277,6 +284,56 @@ model TenantAIConfig {
   @@index([tenantId])
   @@map("tenant_ai_config")
 }
+/// PG-199 BYOK: the workspace's own AI provider key (one per tenant). When an ACTIVE row
+/// exists the ai-worker runs that tenant's chat calls on this provider and key instead of the
+/// platform's. `apiKey` holds AES-256-GCM ciphertext written by the field-encryption
+/// extension (ENCRYPTED_FIELDS); the API refuses to write it without PRISMA_FIELD_ENCRYPTION_KEY
+/// and never returns it (only provider, last 4, dates and status). SQL adds CHECKs on provider
+/// and status and the RLS policy tenant_ai_provider_keys_tenant_isolation.
+model TenantAIProviderKey {
+  id            String    @id @default(cuid())
+  tenantId      String    @unique
+  tenant        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  provider      String    @db.VarChar(12) // anthropic | openai | google | openrouter (SQL CHECK)
+  /// @encrypted
+  apiKey        String    @db.Text
+  last4         String    @db.VarChar(4)
+  status        String    @default("ACTIVE") @db.VarChar(16) // ACTIVE | INVALID | RATE_LIMITED | QUOTA_EXCEEDED (SQL CHECK)
+  statusDetail  String?   @db.VarChar(200) // short provider-agnostic reason, never the key
+  allowFallback Boolean   @default(false) // true: fall back to platform providers when this key fails
+  createdBy     String?
+  lastUsedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("tenant_ai_provider_keys")
+}
+
+/// One model call made by an ai-worker chain, for the AI Chains page usage stats.
+/// chainType is the saved-version type the chain reads; workerChain is the chain itself.
+/// versionId is the saved version whose prompt was used, or null for the built-in prompt.
+/// Counting starts at deploy (no backfill).
+model ChainRun {
+  id           String   @id @default(cuid())
+  tenantId     String
+  chainType    String   @db.VarChar(20)
+  workerChain  String   @db.VarChar(40)
+  versionId    String?
+  model        String?  @db.VarChar(200)
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  costUsd      Decimal  @default(0) @db.Decimal(12, 6)
+  latencyMs    Int
+  success      Boolean
+  errorClass   String?  @db.VarChar(60)
+  createdAt    DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, chainType, createdAt])
+  @@map("chain_runs")
+}
+
 
 // P2.7 — Per-tenant retention policy for conversation/memory artifacts.
 // Absent row = platform default. Pruning job (memory-retention.job.ts) joins
@@ -482,6 +539,20 @@ enum CRMModule {
   COMMERCE
 }
 
+enum TenantBusinessType {
+  TRADES_HOME_SERVICES
+  AGENCY
+  LAW_FIRM
+  SHOP_ECOMMERCE
+  OTHER
+}
+
+enum TenantModuleOrigin {
+  PLAN
+  OVERRIDE
+  EXISTING_DATA
+}
+
 /// Tracks which modules are enabled for each tenant.
 /// Modules can be enabled via plan tier or à la carte purchase.
 model TenantModule {
@@ -489,6 +560,11 @@ model TenantModule {
   tenantId   String
   moduleId   CRMModule
   enabled    Boolean    @default(true)
+  /// PLAN = mirrors the plan (written by plan sync, never widens the business type's modules);
+  /// OVERRIDE = explicit decision (operator à-la-carte) that can switch a module on;
+  /// EXISTING_DATA = the workspace already has rows in the module's tables (backfill / business-type change):
+  /// on like OVERRIDE; only written for a module the plan includes, so a downgrade still switches it off.
+  origin     TenantModuleOrigin @default(PLAN)
   enabledAt  DateTime   @default(now())
   disabledAt DateTime?
 
@@ -566,6 +642,11 @@ model User {
   taskAutomationRulesCreated  TaskAutomationRule[] @relation("TaskAutomationRuleCreator") @ignore // PG-208
   emailMailboxes              EmailMailbox[]   // PG-207
   emailSignatures             EmailSignature[] // PG-207
+  hostedEventTypes            EventType[]      @relation("EventTypeHost")
+  dsarRequestsCreated         DsarRequest[]    @relation("DsarCreatedBy")
+  dsarRequestsResolved        DsarRequest[]    @relation("DsarResolvedBy")
+  restrictionsCreated         ProcessingRestriction[] @relation("RestrictionCreatedBy")
+  restrictionsLifted          ProcessingRestriction[] @relation("RestrictionLiftedBy")
 
   @@index([email])
   @@index([role])
@@ -646,6 +727,8 @@ model Lead {
   scoringStatus   LeadScoringStatus @default(NONE)
   /// #1218: when `score` was last set by a successful scoring.
   scoredAt        DateTime?
+  /// Confidence (0 to 1) of the score. NULL = unknown (scored before it was stored); set on the next scoring.
+  scoreConfidence Float?
   location        String?
   website         String?
   avatarUrl       String?
@@ -692,6 +775,7 @@ model Lead {
   files                   LeadFile[]
   experimentAssignments   ExperimentAssignment[]
   autoResponseDrafts      AutoResponseDraft[]
+  replyDrafts             ContactReplyDraft[] // MVP-012: replies Aurora drafted to the lead
 
   // Account association (IFC-227: Company-to-Account Navigation Link)
   accountId     String?
@@ -714,6 +798,7 @@ model Lead {
   @@index([tenantId, utmCampaign]) // ADR-070: campaign attribution reports
   @@index([tenantId, outreachSlug]) // COA outreach funnel: lead by concept-page slug
   @@index([accountId])
+  appointments            Appointment[] // PG-203: FK ("tenantId","leadId"), ON DELETE SET NULL ("leadId")
   // PG-203: composite target for appointments ("tenantId","leadId") (DBA-012); built CONCURRENTLY in
   // migrations/20261021120300_leads_tenant_id_key.
   @@unique([tenantId, id])
@@ -1236,6 +1321,9 @@ model Opportunity {
   contactId     String?
   contact       Contact?            @relation(fields: [contactId], references: [id])
   sourceLeadId  String?
+  // MVP-003: the contact this deal's lead conversion created. Null when the conversion linked an
+  // existing contact, created none, or predates this column. Undo deletes only this contact.
+  createdContactId String?
   tasks         Task[]
   products      DealProduct[]
   files         DealFile[]
@@ -2186,12 +2274,17 @@ model Appointment {
   calendar            Calendar?           @relation(fields: [calendarId], references: [id], onDelete: SetNull)
   attendees           AppointmentAttendee[]
   linkedCases         AppointmentCase[]
+  /// MVP-013: the Google Calendar events that stand for this appointment (one per connected calendar).
+  calendarLinks       CalendarEventLink[]
 
   // PG-203 — event type + public booking (ADR-083). All nullable; NULL for in-app bookings without a type.
-  /// FK ("tenantId","eventTypeId") -> event_types("tenantId","id") ON DELETE SET NULL ("eventTypeId") is SQL-only (see EventType).
+  /// The database FK is ON DELETE SET NULL ("eventTypeId") (PostgreSQL 15 column list: tenantId is
+  /// kept). Prisma cannot write the column list, so this relation only mirrors it (see EventType).
   eventTypeId           String?
-  /// FK ("tenantId","leadId") -> leads("tenantId","id") ON DELETE SET NULL ("leadId") is SQL-only (see EventType).
+  eventType             EventType?        @relation(fields: [tenantId, eventTypeId], references: [tenantId, id], onDelete: SetNull, onUpdate: Cascade)
+  /// As above: ON DELETE SET NULL ("leadId") in the database.
   leadId                String?
+  lead                  Lead?             @relation(fields: [tenantId, leadId], references: [tenantId, id], onDelete: SetNull, onUpdate: Cascade)
   bookerName            String?   @db.VarChar(200)
   bookerEmail           String?   @db.VarChar(320)
   /// Allowlisted keys only (phone, company, notes, phoneRejected); size CHECK in SQL.
@@ -2283,8 +2376,9 @@ model Case {
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
   /// PG-204 — case type applied at creation (ADR-076). Plain scalar: the tenant-consistent
-  /// FK ("tenantId","caseTypeId") -> case_types("tenantId","id") is SQL-only (see CaseType).
+  /// FK ("tenantId","caseTypeId") -> case_types("tenantId","id"), NO ACTION (see CaseType).
   caseTypeId   String?
+  caseType     CaseType?    @relation(fields: [tenantId, caseTypeId], references: [tenantId, id], onDelete: NoAction, onUpdate: NoAction)
 
   // Multi-tenancy
   tenantId    String
@@ -2408,9 +2502,7 @@ model CaseAutomationSetting {
 // tests/integration/case-types.test.ts — do not drop in a diff):
 //   - case_types_tenant_lower_name_key   UNIQUE ("tenantId", lower("name"))
 //   - case_types_one_default_key         UNIQUE ("tenantId") WHERE "isDefault"
-//   - cases_tenantId_caseTypeId_fkey     FOREIGN KEY ("tenantId","caseTypeId")
-//                                        REFERENCES case_types("tenantId","id") ON DELETE NO ACTION
-//     (Prisma cannot model an optional relation over the required tenantId)
+//   (cases_tenantId_caseTypeId_fkey is declared as a relation on Case, MVP-007.)
 //   - CHECKs on colorToken, defaultSlaDays, name, requiredFields, checklist title/sortOrder
 //   - RLS tenant policies on both tables
 
@@ -2433,6 +2525,7 @@ model CaseType {
   checklist CaseTypeChecklistItem[]
 
   // DBA-012: composite target for tenant-consistent child FKs
+  cases           Case[]
   @@unique([tenantId, id])
   @@index([tenantId, isActive])
   @@map("case_types")
@@ -2517,13 +2610,14 @@ model AvailabilityClosure {
 // migrations/20261021120100_event_types and 20261021120400_appointments_lead_fk,
 // asserted by tests/integration/event-types.test.ts — do not drop in a diff):
 //   - event_types_tenant_lower_name_key    UNIQUE ("tenantId", lower("name"))
-//   - event_types_hostUserId_fkey          FOREIGN KEY ("hostUserId") REFERENCES users("id") ON DELETE NO ACTION
-//   - appointments_tenantId_eventTypeId_fkey  FOREIGN KEY ("tenantId","eventTypeId")
-//                                         REFERENCES event_types("tenantId","id") ON DELETE SET NULL ("eventTypeId")
-//   - appointments_tenantId_leadId_fkey    FOREIGN KEY ("tenantId","leadId")
-//                                         REFERENCES leads("tenantId","id") ON DELETE SET NULL ("leadId")
-//   - booking_attempts_tenantId_eventTypeId_fkey  (column-list SET NULL, same reason)
-//     (Prisma cannot model optional relations over the required tenantId, nor SET NULL column lists)
+//   - the column-list form of the SET NULL foreign keys below (MVP-007, register #35). Their
+//     relations ARE declared (so a migration generated from this schema never drops them), but
+//     Prisma can only write plain ON DELETE SET NULL, which would also null the required tenantId.
+//     The database keeps the column list from the migrations; never regenerate these constraints:
+//       appointments_tenantId_eventTypeId_fkey   ("tenantId","eventTypeId") -> event_types, SET NULL ("eventTypeId")
+//       appointments_tenantId_leadId_fkey        ("tenantId","leadId") -> leads, SET NULL ("leadId")
+//       booking_attempts_tenantId_eventTypeId_fkey  ("tenantId","eventTypeId") -> event_types, SET NULL ("eventTypeId")
+//     prisma validate warns about SetNull over a required field for these three; that is expected.
 //   - CHECKs on event_types name/slug/description/duration/colorToken/locationDetails/requiredFields/leadSource,
 //     booking_attempts hashes, tenants bookingHandle/bookingPrivacyUrl, appointments bookedVia/bookingAnswers
 //   - RLS tenant policies on event_types and booking_attempts
@@ -2541,8 +2635,12 @@ model EventType {
   locationType    EventLocationType @default(VIDEO)
   locationDetails String?           @db.VarChar(500)
   appointmentType AppointmentType   @default(MEETING)
-  /// Host user (organizer of public bookings). FK to users is SQL-only (see block above).
+  /// Host user (organizer of public bookings). ON DELETE NO ACTION (checked at statement end), so a
+  /// tenant delete that cascades to both users and event types does not trip it mid-statement.
   hostUserId      String
+  hostUser        User              @relation("EventTypeHost", fields: [hostUserId], references: [id], onDelete: NoAction, onUpdate: Cascade)
+  appointments    Appointment[]
+  bookingAttempts BookingAttempt[]
   requiredFields  String[]          @default([])
   leadSource      LeadSource        @default(BOOKING)
   isActive        Boolean           @default(true)
@@ -2569,8 +2667,9 @@ model BookingAttempt {
   id          String   @id @default(cuid())
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  /// FK ("tenantId","eventTypeId") -> event_types ON DELETE SET NULL ("eventTypeId") is SQL-only.
+  /// The database FK is ON DELETE SET NULL ("eventTypeId"): column list, see Appointment.
   eventTypeId String?
+  eventType   EventType? @relation(fields: [tenantId, eventTypeId], references: [tenantId, id], onDelete: SetNull, onUpdate: Cascade)
   emailHash   String   @db.Char(64)
   ipHash      String   @db.Char(64)
   createdAt   DateTime @default(now())
@@ -2585,9 +2684,9 @@ model BookingAttempt {
 // PG-203 DSAR — data subject requests and processing restrictions
 // (spec Addendum A; migration 20261022120000_dsar_requests, Class A: new tables + enums only).
 // Replaces the never-applied raw-SQL data_subject_requests design (ADR-007 addendum).
-// SQL-only (documented here): named CHECKs, hash CHECKs, the createdById/resolvedById/
-// liftedById -> users FKs (ON DELETE SET NULL), the partial unique index on active
-// restrictions and the RLS policies. Do not drop in a diff. In full (all in
+// SQL-only (documented here): named CHECKs, hash CHECKs, the partial unique index on active
+// restrictions and the RLS policies. The createdById/resolvedById/liftedById -> users FKs (ON
+// DELETE SET NULL) are declared as relations (MVP-007). Do not drop in a diff. In full (all in
 // migrations/20261022120000_dsar_requests):
 //   - CHECKs on dsar_requests: dsar_requests_source_check, dsar_requests_capEmailHash_check,
 //     dsar_requests_ipHash_check, dsar_requests_details_check, dsar_requests_objectionScope_check,
@@ -2657,7 +2756,9 @@ model DsarRequest {
   exportDownloadedAt    DateTime?
   ipHash                String?           @db.Char(64)
   createdById           String?
+  createdBy             User?             @relation("DsarCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
   resolvedById          String?
+  resolvedBy            User?             @relation("DsarResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
   resolutionNote        String?
   noHoldConfirmedAt     DateTime?
   marketingStopMethod   String?           @db.VarChar(500)
@@ -2690,10 +2791,12 @@ model ProcessingRestriction {
   /// The DSAR requests that created or extended this restriction.
   dsarRequestIds  String[]  @default([])
   createdById     String?
+  createdBy       User?     @relation("RestrictionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull, onUpdate: Cascade)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   liftedAt        DateTime?
   liftedById      String?
+  liftedBy        User?     @relation("RestrictionLiftedBy", fields: [liftedById], references: [id], onDelete: SetNull, onUpdate: Cascade)
   liftNote        String?   @db.VarChar(500)
 
   @@unique([tenantId, id])
@@ -2896,6 +2999,7 @@ model ReportTemplate {
   // No @@unique here — Prisma does not support partial unique indexes.
   @@index([tenantId])
   @@index([createdBy])
+  @@index([tenantId, name]) // migrations/20260629000002_report_templates_partial_unique
   @@map("report_templates")
 }
 
@@ -3295,6 +3399,7 @@ model TicketActivity {
 
   // Author info
   authorName      String
+  authorId        String?               // MVP-012: user who wrote the entry (null: customer/system/legacy)
   authorRole      String?               // 'Customer', 'Support Agent', 'System'
   authorAvatar    String?
 
@@ -3323,6 +3428,7 @@ model TicketActivity {
   @@index([tenantId])
   // IFC-069: Composite index for unified activity feed
   @@index([tenantId, timestamp(sort: Desc)])
+  @@index([tenantId, authorId, timestamp(sort: Desc)])
   @@map("ticket_activities")
 }
 
@@ -3469,6 +3575,31 @@ model AIMonitoringEvent {
   @@index([eventType, model, recordedAt])
   @@index([eventType, severity])
   @@map("ai_monitoring_events")
+}
+
+/// Daily roll-up of AIMonitoringEvent rows older than the retention window (egress audit 1126).
+/// Written only by tools/scripts/ai-monitoring-retention.ts, which is not scheduled and needs the
+/// owner's yes before it deletes anything. tenantKey is the tenant id or '' for a global event;
+/// it is deliberately not a foreign key: a roll-up outlives the tenant row.
+model AIMonitoringDailySummary {
+  id           String   @id @default(cuid())
+  day          DateTime @db.Date
+  eventType    String
+  tenantKey    String   @default("")
+  model        String   @default("")
+  eventCount   Int
+  flaggedCount Int
+  valueSum     Float?
+  valueMin     Float?
+  valueMax     Float?
+  valueP50     Float?
+  valueP95     Float?
+  valueP99     Float?
+  createdAt    DateTime @default(now())
+
+  @@unique([day, eventType, tenantKey, model])
+  @@index([day])
+  @@map("ai_monitoring_daily_summaries")
 }
 
 /// Actor type enum
@@ -3843,10 +3974,14 @@ model CaseAIInsight {
 }
 
 /// IFC-312: AI-generated reply drafts for contact inbox. NEVER auto-sent (ADR-037).
+/// A reply Aurora drafted, for a contact or (MVP-012) a lead: exactly one of the two is set
+/// (CHECK contact_reply_drafts_one_subject_check, migration 20261118100000).
 model ContactReplyDraft {
   id            String   @id @default(cuid())
-  contactId     String
-  contact       Contact  @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  contactId     String?
+  contact       Contact? @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  leadId        String?
+  lead          Lead?    @relation(fields: [leadId], references: [id], onDelete: Cascade)
   tenantId      String
   tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   emailThreadId String?
@@ -3861,6 +3996,7 @@ model ContactReplyDraft {
   createdBy     String?
 
   @@index([contactId, status])
+  @@index([leadId, status])
   @@index([tenantId, status])
   @@map("contact_reply_drafts")
 }
@@ -4387,6 +4523,8 @@ model EmailRecord {
   @@index([sentAt])
   // IFC-069: Composite index for unified activity feed
   @@index([tenantId, createdAt(sort: Desc)])
+  // MVP-014: waiting reads of sent mail, newest first
+  @@index([tenantId, sentAt(sort: Desc)])
   @@index([tenantId, isRead])
   @@index([tenantId, messageIdHeader])
   @@index([mailboxId])
@@ -4441,7 +4579,7 @@ model EmailMailbox {
   scope           String    @db.VarChar(10) // USER | TENANT (SQL CHECK)
   userId          String?
   user            User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  kind            String    @db.VarChar(12) // SMTP | GMAIL | MICROSOFT (SQL CHECK)
+  kind            String    @db.VarChar(12) // SMTP | GMAIL | MICROSOFT | ZOHO (SQL CHECK)
   status          String    @default("ACTIVE") @db.VarChar(14) // ACTIVE | ERROR | DISCONNECTED
   lastErrorCode   String?   @db.VarChar(32)
   fromAddress     String    @db.VarChar(320)
@@ -4461,6 +4599,9 @@ model EmailMailbox {
   /// @encrypted
   refreshToken    String?   @db.Text
   grantedScopes   String[]  @default([])
+  /// MVP-001 Zoho: the Zoho Mail account id and its data centre's API host (not credentials).
+  oauthAccountId  String?   @db.VarChar(255)
+  oauthApiDomain  String?   @db.VarChar(64)
   tokenVersion    Int       @default(0)
   imapUidValidity BigInt?
   imapLastUid     BigInt?
@@ -4470,11 +4611,48 @@ model EmailMailbox {
   failureCount    Int       @default(0)
   sendWindowStart DateTime?
   sendWindowCount Int       @default(0)
+  /// #1177 Outlook two-way sync: Graph's delta link for the inbox (not a credential).
+  syncCursor       String?   @db.Text
+  /// The same for Sent Items, so mail sent from Outlook itself is logged too.
+  syncSentCursor   String?   @db.Text
+  syncedAt         DateTime?
+  /// null = due now; the sync tick claims a mailbox with syncLockedUntil as its lease.
+  nextSyncAt       DateTime?
+  syncLockedUntil  DateTime?
+  syncFailureCount Int       @default(0)
+  /// MVP-011 history look-back: leads and contacts created up to this time have had their mail
+  /// looked for in the mailbox's last 90 days (null: none has yet).
+  lookbackWatermark DateTime?
+  /// A look-back pass in progress covers leads and contacts created up to here (null: idle).
+  lookbackUntil     DateTime?
+  /// The pass's resume point in the Inbox and in Sent Items (provider cursors, not credentials).
+  lookbackCursor     String? @db.Text
+  lookbackSentCursor String? @db.Text
+  /// Pacing: no look-back round starts before this time (null: no wait). Set after each batch and
+  /// after a provider RATE_LIMITED (exponential with lookbackBackoffCount).
+  lookbackNextAt       DateTime?
+  lookbackBackoffCount Int       @default(0)
+  /// The last time the look-back made progress; no progress for 6 h or more with a backlog alerts.
+  lookbackProgressAt   DateTime?
+  /// Real counts for the settings page (null total: nothing is importing).
+  lookbackImportTotal  Int?
+  lookbackImportDone   Int       @default(0)
+  /// MVP-013 Google Calendar sync of a user's own Google mailbox: Google's incremental sync token for
+  /// the primary calendar (not a credential), the last finished round, the next due time and the
+  /// lease the sync tick claims a mailbox with (null nextSync = due now), and the backoff counter.
+  calendarSyncToken    String?   @db.Text
+  calendarSyncedAt     DateTime?
+  calendarNextSyncAt   DateTime?
+  calendarLockedUntil  DateTime?
+  calendarFailureCount Int       @default(0)
+  /// ACTIVE | NEEDS_RECONNECT (SQL CHECK): Google withdrew the calendar permission after it was granted.
+  calendarStatus       String    @default("ACTIVE") @db.VarChar(16)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
   emailRecords   EmailRecord[]
   bounceReceipts EmailBounceReceipt[]
+  calendarLinks  CalendarEventLink[]
 
   @@unique([tenantId, id])
   @@index([tenantId, scope])
@@ -4482,20 +4660,68 @@ model EmailMailbox {
   @@map("email_mailboxes")
 }
 
+/// MVP-013: which Google Calendar event stands for which Aurora appointment, per connected mailbox.
+/// It is what makes the sync idempotent (an event or appointment already linked is updated, never
+/// created twice) and what tells an echo of our own write from a change. The composite FK
+/// ("tenantId","mailboxId") -> email_mailboxes("tenantId","id") ON DELETE CASCADE and the CHECKs on
+/// origin are SQL-only (see the migration); "appointmentId" is SET NULL when the appointment is
+/// deleted, so the sync can then delete the Google event too.
+model CalendarEventLink {
+  id                String       @id @default(cuid())
+  tenantId          String
+  tenant            Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  mailboxId         String
+  mailbox           EmailMailbox @relation(fields: [tenantId, mailboxId], references: [tenantId, id], onDelete: Cascade)
+  appointmentId     String?
+  appointment       Appointment? @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+  googleEventId     String       @db.VarChar(1024)
+  /// The Google account (lower-case address) the link was made under. Links of another account are kept
+  /// when the mailbox is connected to a different one, and used again if that account returns. An event id
+  /// is unique per calendar, not across accounts, so it is unique per (mailbox, account).
+  googleAccount     String       @default("") @db.VarChar(320)
+  /// AURORA (created from an appointment) | GOOGLE (imported from an event) (SQL CHECK).
+  origin            String       @db.VarChar(10)
+  /// Google's etag of the event as last written or read by the sync: equal means nothing changed.
+  etag              String?      @db.VarChar(256)
+  /// The appointment's updatedAt as last synced: later means it changed in Aurora since.
+  localSyncedAt     DateTime?
+  /// Google's "updated" of the event as last applied.
+  remoteUpdatedAt   DateTime?
+  /// The event was cancelled or deleted in Google; kept so it is never created again.
+  remoteCancelledAt DateTime?
+  /// The link was written before the event was created in Google (it says whose event that id is); false
+  /// once the create has succeeded.
+  pending           Boolean      @default(false)
+  /// Failed attempts to write this link's event to Google (a create or a patch), since the last success.
+  pushAttempts      Int          @default(0)
+  /// Earliest time to try writing it again after a failure: a refused item waits, and does not hold up the rest.
+  nextPushAt        DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@unique([mailboxId, googleAccount, googleEventId])
+  @@unique([mailboxId, appointmentId])
+  @@index([tenantId])
+  @@index([appointmentId])
+  @@map("calendar_event_links")
+}
+
 /// Single-use OAuth connect state (PKCE). Only the sha256 of the state is
 /// stored; the verifier is encrypted. Expires after 10 minutes.
 model EmailOAuthState {
-  id           String   @id @default(cuid())
-  tenantId     String
-  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  userId       String
-  scope        String   @db.VarChar(10)
-  provider     String   @db.VarChar(12)
-  stateHash    String   @unique @db.VarChar(64)
+  id             String   @id @default(cuid())
+  tenantId       String
+  tenant         Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId         String
+  scope          String   @db.VarChar(10)
+  provider       String   @db.VarChar(12)
+  stateHash      String   @unique @db.VarChar(64)
   /// @encrypted
-  codeVerifier String   @db.Text
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
+  codeVerifier   String   @db.Text
+  expiresAt      DateTime
+  /// The user confirmed a personal (consumer-domain) mailbox before the sign-in started.
+  acceptPersonal Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
   @@index([expiresAt])
   @@map("email_oauth_states")
@@ -7075,7 +7301,7 @@ model PortalPmDelivery {
 /// Per-tenant override of a plan quota (QuotaRegistry key). `limit` null = unlimited.
 model TenantQuotaOverride {
   id        String   @id @default(cuid())
-  key       String   // QuotaKey: contacts | seats | emailsPerMonth | aiSpendCentsPerMonth | workflowsActive
+  key       String   // QuotaKey: contacts | seats | emailsPerMonth | aiSpendCentsPerMonth | aiActionsPerMonth | workflowsActive
   limit     Int?     // null = unlimited
   reason    String?
   createdAt DateTime @default(now())
@@ -7104,4 +7330,28 @@ model TenantUsageCounter {
   @@unique([tenantId, key, period])
   @@index([tenantId])
   @@map("tenant_usage_counters")
+}
+
+/// PG-194 - one row per tenant, UTC day and framework: what the compliance dashboard measured that day.
+/// The only source of the dashboard's trend; a framework with fewer than two days of rows has no trend.
+/// `score` is NULL when nothing about the framework could be measured. Written by the daily job and by
+/// the dashboard's Refresh; never edited by hand. RLS: the tenant-isolation policy in the migration.
+model ComplianceSnapshot {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  /// UTC calendar day the snapshot describes.
+  day          DateTime @db.Date
+  /// gdpr | iso-27001 | iso-42001 | iso-14001 | adr-registry
+  frameworkId  String   @db.VarChar(40)
+  score        Int?
+  passing      Int      @default(0)
+  attention    Int      @default(0)
+  notMeasured  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([tenantId, day, frameworkId])
+  @@index([tenantId, frameworkId, day])
+  @@map("compliance_snapshots")
 }

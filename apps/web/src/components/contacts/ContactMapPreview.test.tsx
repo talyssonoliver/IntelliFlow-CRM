@@ -5,41 +5,42 @@ import { ContactMapPreview } from './ContactMapPreview';
 
 afterEach(() => cleanup());
 
-describe('ContactMapPreview (IFC-257)', () => {
-  it('renders a "View Map" control', () => {
-    render(<ContactMapPreview location="London, UK" />);
-    expect(screen.getByRole('button', { name: /View Map/i })).toBeInTheDocument();
+describe('ContactMapPreview', () => {
+  it('shows the address and a real link to Google Maps for it', () => {
+    render(<ContactMapPreview location="1, 2 Shelford Pl, London N16 9HS" />);
+    expect(screen.getByText('1, 2 Shelford Pl, London N16 9HS')).toBeInTheDocument();
+    const link = screen.getByRole('link', { name: 'View Map' });
+    expect(link).toHaveAttribute(
+      'href',
+      'https://www.google.com/maps/search/?api=1&query=1%2C%202%20Shelford%20Pl%2C%20London%20N16%209HS'
+    );
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link.getAttribute('rel')).toContain('noopener');
   });
 
-  it('disables the View Map button when there is no location', () => {
-    render(<ContactMapPreview location="" />);
-    expect(screen.getByRole('button', { name: /View Map/i })).toBeDisabled();
-  });
-
-  it('treats null/undefined location as no location (disabled)', () => {
-    render(<ContactMapPreview location={null} />);
-    expect(screen.getByRole('button', { name: /View Map/i })).toBeDisabled();
-  });
-
-  it('does not open a window when disabled and clicked', () => {
+  it('is an anchor, so it needs no script: tapping it never goes through window.open', () => {
     const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-    render(<ContactMapPreview location="" />);
-    fireEvent.click(screen.getByRole('button', { name: /View Map/i }));
+    render(<ContactMapPreview location="London, UK" />);
+    expect(screen.getByRole('link', { name: 'View Map' }).tagName).toBe('A');
+    expect(screen.queryByRole('button', { name: /View Map/i })).toBeNull();
+    fireEvent.click(screen.getByRole('link', { name: 'View Map' }));
     expect(openSpy).not.toHaveBeenCalled();
     openSpy.mockRestore();
   });
 
-  it('opens Google Maps in a new tab when a location is present', () => {
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
-    render(<ContactMapPreview location="London, UK" />);
-    const btn = screen.getByRole('button', { name: /View Map/i });
-    expect(btn).not.toBeDisabled();
-    fireEvent.click(btn);
-    expect(openSpy).toHaveBeenCalledWith(
-      'https://www.google.com/maps/search/?api=1&query=London%2C%20UK',
-      '_blank',
-      'noopener,noreferrer'
-    );
-    openSpy.mockRestore();
+  it('with no location says so and disables the control (no live-looking no-op)', () => {
+    for (const location of ['', '   ', null, undefined]) {
+      cleanup();
+      render(<ContactMapPreview location={location} />);
+      expect(screen.getByText('No address on file')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /View Map/i })).toBeDisabled();
+      expect(screen.queryByRole('link', { name: /View Map/i })).toBeNull();
+    }
+  });
+
+  it('keeps a tap target of at least 44px and lets a long address wrap', () => {
+    render(<ContactMapPreview location={'A very long address '.repeat(8)} />);
+    expect(screen.getByRole('link', { name: 'View Map' }).className).toContain('min-h-11');
+    expect(screen.getByText(/A very long address/).className).toContain('break-words');
   });
 });

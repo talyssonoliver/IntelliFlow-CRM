@@ -41,7 +41,7 @@ describe('embeddings and the monthly AI budget', () => {
   it('never refuses a free embedding model', async () => {
     values.set(monthlyBudgetKey(), 60_000_000);
     await expect(
-      guardEmbeddingCall(undefined, 'free', 'nvidia/nemotron-3-embed-1b:free')
+      guardEmbeddingCall(undefined, 'free', 'nvidia/nemotron-3.5-embed-1b:free')
     ).resolves.toBeUndefined();
   });
 

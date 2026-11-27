@@ -53,6 +53,7 @@ export * from './PrismaNotificationAuditLogger';
 
 // Lead Conversion Repository (IFC-*)
 export * from './PrismaLeadConversionRepository';
+export * from './PrismaConversionUndoAdapter'; // MVP-003
 
 // Ticket Repositories
 export * from './PrismaTicketRepository';

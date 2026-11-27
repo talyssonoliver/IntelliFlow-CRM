@@ -73,6 +73,10 @@ vi.mock('@/lib/auth/AuthContext', () => ({
   }),
 }));
 
+const mockEmailEngagement = vi.hoisted(() => ({
+  current: undefined as { sent: number; opened: number } | undefined,
+}));
+
 vi.mock('@/lib/api', () => ({
   api: {
     useUtils: () => ({
@@ -81,6 +85,7 @@ vi.mock('@/lib/api', () => ({
       // "Create Task" action) and calls `api.useUtils().task.list.invalidate`.
       task: { list: { invalidate: vi.fn() } },
     }),
+    user: { list: { useQuery: () => ({ data: { users: [] } }) } },
     lead: {
       getById: {
         useQuery: () => ({
@@ -105,6 +110,12 @@ vi.mock('@/lib/api', () => ({
           return { mutate: mockConvertMutate, isPending: false };
         },
       },
+      qualify: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
+      convertToDeal: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
       scoreWithAI: {
         useMutation: () => ({ mutate: vi.fn(), isPending: false }),
       },
@@ -113,6 +124,12 @@ vi.mock('@/lib/api', () => ({
       },
       logActivity: {
         useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
+    },
+    // The profile card's open rate also reads the CRM's own email records for the lead.
+    emailLog: {
+      engagementForLead: {
+        useQuery: () => ({ data: mockEmailEngagement.current }),
       },
     },
     home: {
@@ -278,7 +295,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
   it('Convert button is enabled for QUALIFIED status', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
-    const btn = screen.getByRole('button', { name: /Convert Lead/i });
+    const btn = screen.getByRole('button', { name: /Convert to deal/i });
     expect(btn).not.toBeDisabled();
   });
 
@@ -288,7 +305,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
     (status) => {
       mockLeadData.status = status;
       render(<Lead360Page />);
-      const btn = screen.getByRole('button', { name: /Convert Lead/i });
+      const btn = screen.getByRole('button', { name: /Convert to deal/i });
       expect(btn).toBeDisabled();
     }
   );
@@ -297,7 +314,7 @@ describe('IFC-225: Convert Lead UX Fix', () => {
   it('Convert button is hidden for CONVERTED status', () => {
     mockLeadData.status = 'CONVERTED';
     render(<Lead360Page />);
-    expect(screen.queryByRole('button', { name: /Convert Lead/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Convert to deal/i })).not.toBeInTheDocument();
   });
 
   // T4: Tooltip guidance text for disabled button (AC-001)
@@ -311,9 +328,11 @@ describe('IFC-225: Convert Lead UX Fix', () => {
   it('clicking Convert on QUALIFIED lead opens confirmation dialog', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
-    const btn = screen.getByRole('button', { name: /Convert Lead/i });
+    const btn = screen.getByRole('button', { name: /Convert to deal/i });
     fireEvent.click(btn);
-    expect(screen.getByText('Convert Lead to Contact')).toBeInTheDocument();
+    // 'Convert to deal' opens on the deal form (MVP-003); contact-only stays one click away.
+    expect(screen.getByText('Convert Lead to Deal')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Contact and deal/i)).toBeChecked();
     expect(mockConvertMutate).not.toHaveBeenCalled();
   });
 
@@ -321,7 +340,8 @@ describe('IFC-225: Convert Lead UX Fix', () => {
   it('dialog contains createAccount checkbox and accountName input', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
-    fireEvent.click(screen.getByRole('button', { name: /Convert Lead/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Convert to deal/i }));
+    fireEvent.click(screen.getByLabelText(/Contact only/i));
 
     const checkbox = screen.getByLabelText(/Also create an Account record/i);
     expect(checkbox).toBeInTheDocument();
@@ -343,7 +363,8 @@ describe('IFC-225: Convert Lead UX Fix', () => {
   it('cancel closes dialog without calling mutation', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
-    fireEvent.click(screen.getByRole('button', { name: /Convert Lead/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Convert to deal/i }));
+    fireEvent.click(screen.getByLabelText(/Contact only/i));
     expect(screen.getByText('Convert Lead to Contact')).toBeInTheDocument();
 
     // Our mock AlertDialog renders null when open=false, but Cancel doesn't directly
@@ -357,7 +378,8 @@ describe('IFC-225: Convert Lead UX Fix', () => {
   it('confirm with createAccount=false sends correct params', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
-    fireEvent.click(screen.getByRole('button', { name: /Convert Lead/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Convert to deal/i }));
+    fireEvent.click(screen.getByLabelText(/Contact only/i));
 
     // Uncheck createAccount
     const checkbox = screen.getByLabelText(/Also create an Account record/i);
@@ -379,7 +401,8 @@ describe('IFC-225: Convert Lead UX Fix', () => {
   it('confirm with createAccount=true and accountName sends correct params', () => {
     mockLeadData.status = 'QUALIFIED';
     render(<Lead360Page />);
-    fireEvent.click(screen.getByRole('button', { name: /Convert Lead/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Convert to deal/i }));
+    fireEvent.click(screen.getByLabelText(/Contact only/i));
 
     const nameInput = screen.getByLabelText(/Account name/i);
     fireEvent.change(nameInput, { target: { value: 'Acme Corp' } });
@@ -422,4 +445,23 @@ describe('IFC-225: Convert Lead UX Fix', () => {
 
     expect(mockPush).toHaveBeenCalledWith('/contacts/contact-abc');
   });
+
+  // Qualify action: the way to unlock Convert from NEW or CONTACTED
+  it.each(['NEW', 'CONTACTED'])('shows a Qualify action for %s leads', (status) => {
+    mockLeadData.status = status;
+    render(<Lead360Page />);
+    const qualify = screen.getByRole('button', { name: 'Qualify lead' });
+    expect(qualify).toBeEnabled();
+    fireEvent.click(qualify);
+    expect(screen.getByText('Qualify Lead', { selector: 'h2' })).toBeInTheDocument();
+  });
+
+  it.each(['QUALIFIED', 'NEGOTIATING', 'UNQUALIFIED', 'LOST', 'CONVERTED'])(
+    'hides the Qualify action for %s leads',
+    (status) => {
+      mockLeadData.status = status;
+      render(<Lead360Page />);
+      expect(screen.queryByRole('button', { name: 'Qualify lead' })).not.toBeInTheDocument();
+    }
+  );
 });

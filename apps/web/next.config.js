@@ -1,5 +1,9 @@
 const path = require('path');
 const { withSentryConfig } = require('@sentry/nextjs');
+// The report-only CSP builder the proxy uses. Node strips the types of this import-free module.
+const { buildReportOnlyCsp, cspEnvFromProcess } = require('./src/lib/security/csp.ts');
+
+const CSP_REPORT_ONLY_HEADER = 'Content-Security-Policy-Report-Only';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -141,6 +145,19 @@ const nextConfig = {
           // Next.js's inline scripts first, including on prerendered pages.
         ],
       },
+      // A signed-out request for `/` does not run the proxy (see `config` in src/proxy.ts): it is
+      // the prerendered landing page, served from the CDN without a function. The same
+      // report-only policy is set here for that one response.
+      {
+        source: '/',
+        missing: [{ type: 'cookie', key: 'accessToken' }],
+        headers: [
+          {
+            key: CSP_REPORT_ONLY_HEADER,
+            value: buildReportOnlyCsp(cspEnvFromProcess()),
+          },
+        ],
+      },
       // PG-203 DSAR (spec sign-off D-AC-10): the confirm and download links carry a token in
       // the URL fragment. No Referer at all leaves these pages, and nothing they return (a
       // personal-data export included) may be stored by the browser or any cache. Listed after
@@ -150,6 +167,22 @@ const nextConfig = {
         headers: [
           { key: 'Referrer-Policy', value: 'no-referrer' },
           { key: 'Cache-Control', value: 'no-store' },
+        ],
+      },
+      // Vercel Hobby active-CPU budget (20/11): the public layout reads the auth cookie, so every
+      // marketing page renders in a function per request, crawlers and bots included. Signed-out
+      // requests (no access-token cookie: visitors, crawlers, monitors) may be cached at the edge
+      // for a few minutes, the same trade PERF-06 makes below for /login and /pricing. Signed-in
+      // requests keep the uncached per-request render. /status is live and stays uncached.
+      {
+        source:
+          '/(about|aup|blog|blog/:slug|careers|careers/:id|contact|cookies|dpa|features|partners|press|press/:id|privacy|security|terms)',
+        missing: [{ type: 'cookie', key: 'accessToken' }],
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, s-maxage=300, stale-while-revalidate=3600',
+          },
         ],
       },
       // PERF-06: bfcache / repeat-visit caching for the two confirmed
@@ -173,10 +206,24 @@ const nextConfig = {
   // Redirects
   async redirects() {
     return [
+      // Profile settings live at /settings/account (/profile forwards there too); signup and
+      // onboarding used to link /settings/profile, which did not exist (owner 21/11).
+      {
+        source: '/settings/profile',
+        destination: '/settings/account',
+        permanent: true,
+      },
       {
         source: '/home',
         destination: '/',
         permanent: true,
+      },
+      // /deals/pipeline was never a page: the deal page took "pipeline" for a deal id and sat on
+      // a skeleton while the failed lookup was retried. The board is /deals?view=pipeline.
+      {
+        source: '/deals/pipeline',
+        destination: '/deals?view=pipeline',
+        permanent: false,
       },
       // Legacy /calendar/new and /calendar/[id] → /appointments/... after the
       // appointments/calendar split migration. Settings sub-routes

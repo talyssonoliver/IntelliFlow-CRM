@@ -131,8 +131,10 @@ jobs:
         if: >-
           github.event_name == 'pull_request' &&
           github.event.pull_request.user.login != 'dependabot[bot]'
+        env:
+          BRANCH: ${{ github.head_ref }}
         run: |
-          branch="${{ github.head_ref }}"
+          branch="$BRANCH"
           if [[ ! "$branch" =~ ^(feat|fix|docs|refactor|test|chore|agent|ci|build|perf|style|revert)/.+ ]]; then
             echo "Branch name must follow pattern: feat/*, fix/*, docs/*, refactor/*, test/*, chore/*, agent/*, ci/*, build/*, perf/*, style/*, revert/*"
             exit 1
@@ -276,6 +278,11 @@ jobs:
     # `skipped` required checks as never-reported, which BLOCKS merge.
     # This job is a required-status SHIM — see comment above for rationale.
     if: github.event_name == 'merge_group' || github.event.pull_request.draft == false
+    # The Lighthouse jobs below read this output. The shim deploys nothing, so it is
+    # declared empty: those jobs skip, as they have since the preview deploy moved to
+    # deploy-preview.yml. Wiring that workflow's URL in here is a separate change.
+    outputs:
+      preview-url: ''
     steps:
       - name: Preview deploy is CI-gated (report-only)
         run: |

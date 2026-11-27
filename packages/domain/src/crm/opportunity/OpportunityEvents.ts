@@ -16,6 +16,21 @@ export const OPPORTUNITY_STAGES = [
 export type OpportunityStage = (typeof OPPORTUNITY_STAGES)[number];
 
 /**
+ * Stage transition rules: the stages a deal can move to from each stage. They live here, with the
+ * stages, so the API (OpportunityService.changeStage) and the deal page (which offers only these
+ * moves) read the same table.
+ */
+export const STAGE_TRANSITION_RULES: Record<OpportunityStage, OpportunityStage[]> = {
+  PROSPECTING: ['QUALIFICATION', 'CLOSED_LOST'],
+  QUALIFICATION: ['NEEDS_ANALYSIS', 'PROSPECTING', 'CLOSED_LOST'],
+  NEEDS_ANALYSIS: ['PROPOSAL', 'QUALIFICATION', 'CLOSED_LOST'],
+  PROPOSAL: ['NEGOTIATION', 'NEEDS_ANALYSIS', 'CLOSED_LOST'],
+  NEGOTIATION: ['CLOSED_WON', 'CLOSED_LOST', 'PROPOSAL'],
+  CLOSED_WON: [], // Terminal state
+  CLOSED_LOST: ['PROSPECTING'], // Can reopen
+};
+
+/**
  * Event: Opportunity was created
  */
 export class OpportunityCreatedEvent extends DomainEvent {

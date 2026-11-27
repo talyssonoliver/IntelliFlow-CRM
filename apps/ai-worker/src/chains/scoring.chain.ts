@@ -2,8 +2,10 @@ import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import type { LLMResult } from '@langchain/core/outputs';
 import { PromptTemplate } from '@langchain/core/prompts';
+import { BUILTIN_CHAIN_TEMPLATES } from '@intelliflow/application';
+import { recordedChainRun } from '../monitoring/chain-run-recorder.js';
 import { z } from 'zod';
-import { MODEL_PRICING, aiConfig, servedPricingKey, type AIProvider } from '../config/ai.config';
+import { aiConfig, resolvePricingKey, type AIProvider } from '../config/ai.config';
 import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
 import type { MonitoredResult, MonitoringContext, TokenUsage } from '../monitoring/chain-monitor';
 import { classifyError, recordInference } from '../monitoring/otel-ai-metrics';
@@ -12,7 +14,7 @@ import { requiresHumanReview } from '@intelliflow/domain';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { resolveRateLimit, resolveEffectiveTier } from '../lib/tenant-ai-config.js';
-import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
+import { loadVersionedPrompt, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
 import { usableVersionedPrompt } from '../versioning/versioned-prompt';
 import pino from 'pino';
 
@@ -99,15 +101,6 @@ export function scoringFailureShape(error: unknown): Record<string, unknown> {
  * compute a real tokenCost (IFC-215). Usage metadata lives in the callback
  * because withStructuredOutput().invoke() returns only the parsed output.
  */
-/** A served name that is itself a MODEL_PRICING key, with or without a `vendor/` prefix. */
-function directPricingKey(served: string | undefined): string | undefined {
-  const name = served?.trim().toLowerCase();
-  if (!name) return undefined;
-  return [name, name.split('/').slice(1).join('/')].find(
-    (candidate) => candidate !== '' && Object.hasOwn(MODEL_PRICING, candidate)
-  );
-}
-
 export class TokenUsageCallbackHandler extends BaseCallbackHandler {
   name = 'TokenUsageCallbackHandler';
   private captured: TokenUsage | null = null;
@@ -147,8 +140,8 @@ export class TokenUsageCallbackHandler extends BaseCallbackHandler {
       name?.trim().toLowerCase().endsWith(':free')
     );
     if (this.provider === 'ollama' || isFreeModel) return { model: this.modelName, free: true };
-    const key = directPricingKey(served) ?? servedPricingKey(served);
-    if (key && Object.hasOwn(MODEL_PRICING, key)) return { model: key, free: false };
+    const key = resolvePricingKey(served);
+    if (key) return { model: key, free: false };
     return { model: this.modelName, free: false };
   }
 
@@ -217,37 +210,7 @@ export class LeadScoringChain {
   private readonly recordDrift: boolean;
 
   /** Default prompt template used when no versioned config is available */
-  static readonly DEFAULT_PROMPT = `You are an expert lead scoring AI for a CRM system. Analyze the provided lead information and assign a score from 0-100 based on the lead's quality and conversion potential.
-
-Consider the following factors:
-1. Contact Information Completeness (0-25 points)
-   - Email quality and domain
-   - Phone number availability
-   - Professional title
-   - Company information
-
-2. Engagement Indicators (0-25 points)
-   - Replies from the lead: a reply, above all one asking about price or next steps, is the strongest signal
-   - Recent activity, pipeline stage and how recently the lead was contacted
-   - Source quality (direct website > referral > social > cold call)
-   - Email domain (corporate email > free email)
-
-3. Qualification Signals (0-25 points)
-   - Job title indicates decision-making authority
-   - Company size and industry indicators
-   - Professional email domain
-
-4. Data Quality (0-25 points)
-   - Completeness of profile
-   - Consistency of information
-   - Recency indicators
-
-Lead Information:
-{lead_info}
-
-Respond with a structured JSON object containing the score, confidence, factors, and modelVersion fields.
-List at least one factor, each with the points it adds or removes and the lead information behind it.
-Confidence is how sure you are that the score is right, above 0 and at most 1: near 1 when the lead information clearly supports the score, 0.5 or below when it is thin or mixed. Never answer confidence 0; when the information is thin, give your best score with a low confidence.`;
+  static readonly DEFAULT_PROMPT = BUILTIN_CHAIN_TEMPLATES.LEAD_SCORING;
 
   constructor(options?: { tenantId?: string; provider?: AIProvider; recordDrift?: boolean }) {
     this.tenantId = options?.tenantId;
@@ -276,14 +239,16 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
    * Falls back to the default prompt when no version exists, or when the loader's prompt has
    * no {lead_info} slot (the loader's own fallback has none: the model then saw no lead).
    */
-  private async resolveVersionedPrompt(): Promise<string | null> {
+  private async resolveVersionedPrompt(): Promise<{
+    text: string;
+    versionId: string | null;
+  } | null> {
     if (!this.tenantId) return null;
     try {
-      const loader = getVersionLoader();
-      const config = await loader.getChainConfig(CHAIN_TYPE_MAP.LEAD_SCORING, {
-        tenantId: this.tenantId,
-      });
-      return usableVersionedPrompt('LEAD_SCORING', config.prompt, ['lead_info']);
+      const chosen = await loadVersionedPrompt(CHAIN_TYPE_MAP.LEAD_SCORING, this.tenantId);
+      const text = usableVersionedPrompt('LEAD_SCORING', chosen.prompt, ['lead_info']);
+      // The version is kept with its prompt, so the recorded run names the version it sent.
+      return text ? { text, versionId: chosen.versionId } : null;
     } catch {
       logger.warn(
         {
@@ -330,7 +295,8 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
       const leadInfo = this.formatLeadInfo(lead);
 
       // Resolve tenant-versioned prompt if tenantId is available; fall back to default
-      const versionedPromptText = await this.resolveVersionedPrompt();
+      const chosen = await this.resolveVersionedPrompt();
+      const versionedPromptText = chosen?.text ?? null;
       const activePrompt = versionedPromptText
         ? new PromptTemplate({ template: versionedPromptText, inputVariables: ['lead_info'] })
         : this.prompt;
@@ -391,9 +357,15 @@ Confidence is how sure you are that the score is right, above 0 and at most 1: n
       const monitored: MonitoredResult<ScoringResult> = await withMonitoring(
         async () => {
           // Call the LLM with structured output; usageHandler captures token usage via callback
-          const result = (await this.structuredModel.invoke(formattedPrompt, {
-            callbacks: [usageHandler],
-          })) as unknown as Omit<ScoringResult, 'modelVersion'>;
+          const result = (await recordedChainRun(
+            'LEAD_SCORING',
+            this.tenantId,
+            chosen?.versionId ?? null,
+            (callbacks) =>
+              this.structuredModel.invoke(formattedPrompt, {
+                callbacks: [usageHandler, ...callbacks],
+              })
+          )) as unknown as Omit<ScoringResult, 'modelVersion'>;
 
           // #1218: a schema-valid answer can still be no score at all (the model answered
           // confidence 0, or gave no factors). That is a failed scoring, not a score of 0, and

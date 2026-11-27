@@ -1,17 +1,77 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
+  leadListSubtitle,
+  leadCompanyIfDistinct,
+  displayActivityText,
+  isSameName,
+  mergeEmailEngagement,
+  describeScoreChange,
   getActivityIcon,
   getActivityIconBg,
   formatRelativeTime,
   formatEstimatedValue,
   formatGBPCompact,
+  httpUrlOrNull,
   insightRecommendations,
   isSystemTag,
+  stripMachineIds,
+  isTouchpoint,
+  isTrackedEmailSend,
+  leadActivityMetrics,
   leadWebsite,
+  openRateLabel,
   visibleTags,
   leadDisplayName,
+  leadExportFields,
   type ActivityType,
 } from '../lead-format';
+
+describe('lead-format · profile card metrics (#1288)', () => {
+  it('counts only emails the CRM tracks opens for as sends', () => {
+    expect(isTrackedEmailSend({ type: 'email', metadata: { opened: false } })).toBe(true);
+    expect(isTrackedEmailSend({ type: 'email', metadata: { openCount: 0 } })).toBe(true);
+    // A logged or synced email (outreach send, inbound reply) has no tracking.
+    expect(isTrackedEmailSend({ type: 'email', metadata: { subject: 'Hi' } as never })).toBe(false);
+    expect(isTrackedEmailSend({ type: 'email', metadata: null })).toBe(false);
+    expect(isTrackedEmailSend({ type: 'email' })).toBe(false);
+    expect(isTrackedEmailSend({ type: 'call', metadata: { opened: true } })).toBe(false);
+  });
+
+  it('leaves score and status changes out of touchpoints', () => {
+    expect(isTouchpoint('score_update')).toBe(false);
+    expect(isTouchpoint('status_change')).toBe(false);
+    for (const type of ['email', 'call', 'note', 'meeting', 'web_form', 'qualification'] as const) {
+      expect(isTouchpoint(type)).toBe(true);
+    }
+  });
+
+  it('counts tracked sends, opens, meetings and touchpoints from activities', () => {
+    expect(
+      leadActivityMetrics([
+        { type: 'email', metadata: { opened: true } },
+        { type: 'email', metadata: { openCount: 2 } },
+        { type: 'email', metadata: { opened: false, openCount: 0 } },
+        { type: 'email', metadata: {} },
+        { type: 'meeting' },
+        { type: 'score_update' },
+        { type: 'status_change' },
+      ])
+    ).toEqual({ emailsSent: 3, emailsOpened: 2, meetings: 1, touchpoints: 5 });
+    expect(leadActivityMetrics([])).toEqual({
+      emailsSent: 0,
+      emailsOpened: 0,
+      meetings: 0,
+      touchpoints: 0,
+    });
+  });
+
+  it('shows a dash with no tracked sends, and a percentage once there are some', () => {
+    expect(openRateLabel(0, 0)).toBe('—');
+    expect(openRateLabel(3, 0)).toBe('0%');
+    expect(openRateLabel(3, 1)).toBe('33%');
+    expect(openRateLabel(4, 4)).toBe('100%');
+  });
+});
 
 const ALL_TYPES: ActivityType[] = [
   'web_form',
@@ -86,9 +146,9 @@ describe('lead-format · formatRelativeTime', () => {
 });
 
 describe('lead-format · formatEstimatedValue', () => {
-  it('formats values >= £1,000 as compact thousands (pence in)', () => {
+  it('formats values >= £1,000 as compact thousands, and millions as M (pence in)', () => {
     expect(formatEstimatedValue(5_000_000)).toBe('£50k');
-    expect(formatEstimatedValue(100_000_000)).toBe('£1000k');
+    expect(formatEstimatedValue(100_000_000)).toBe('£1.0M');
   });
 
   it('formats sub-£1,000 values as whole pounds (no 100x error)', () => {
@@ -152,9 +212,29 @@ describe('lead-format · system tags (UI-017)', () => {
   it('recognises the COA sync bookkeeping tags', () => {
     expect(isSystemTag('coa-pipeline')).toBe(true);
     expect(isSystemTag('coa-lead:abc123')).toBe(true);
+    // #42: every tag the COA sync writes, not only the two it used to.
+    expect(isSystemTag('coa-qualified')).toBe(true);
     expect(isSystemTag('vip')).toBe(false);
     expect(isSystemTag('coa-pipeline-old')).toBe(false);
     expect(isSystemTag('my-coa-lead:1')).toBe(false);
+    // A tag a person names "coa-..." themselves stays visible.
+    expect(isSystemTag('coa-follow-up')).toBe(false);
+    expect(isSystemTag('coa-greenleaf')).toBe(false);
+  });
+
+  it('hides the other sync tags and a bare machine id (register row 42)', () => {
+    const machineId = 'c' + 'mw5j72u40001p5ug01kf3vot';
+    expect(isSystemTag('coa-qualified')).toBe(true);
+    expect(isSystemTag('coa-won')).toBe(true);
+    expect(isSystemTag('portal-discover')).toBe(true);
+    expect(isSystemTag(machineId)).toBe(true);
+    expect(visibleTags(['portal-discover', 'coa-qualified', 'vip'])).toEqual(['vip']);
+  });
+
+  it('re-exports the activity text cleaner the lead page uses', () => {
+    expect(stripMachineIds('Sent. COA ledger row ' + 'c' + 'mw5j72u40001p5ug01kf3vot.')).toBe(
+      'Sent.'
+    );
   });
 
   it('keeps only the user tags, in order', () => {
@@ -177,8 +257,13 @@ describe('lead-format · formatGBPCompact rounding', () => {
 describe('lead-format · leadWebsite (#1277)', () => {
   it('shows the bare host for an ad-tracking URL and drops the tracking parameters', () => {
     expect(
-      leadWebsite('http://www.energym.co.uk/?utm_source=google&utm_medium=wix_google&gclid=abc')
-    ).toEqual({ href: 'http://www.energym.co.uk/', label: 'energym.co.uk' });
+      leadWebsite(
+        'http://www.northfield-fitness.example.invalid/?utm_source=google&utm_medium=wix_google&gclid=abc'
+      )
+    ).toEqual({
+      href: 'http://www.northfield-fitness.example.invalid/',
+      label: 'northfield-fitness.example.invalid',
+    });
   });
 
   it('adds https to a bare domain and keeps a real path and real parameters', () => {
@@ -292,5 +377,273 @@ describe('lead-format · insightRecommendations', () => {
     expect(insightRecommendations(null)).toEqual([]);
     expect(insightRecommendations(undefined)).toEqual([]);
     expect(insightRecommendations('text')).toEqual([]);
+  });
+});
+
+describe('httpUrlOrNull', () => {
+  it('keeps absolute http and https addresses', () => {
+    expect(httpUrlOrNull('https://files.example.invalid/a.pdf')).toBe(
+      'https://files.example.invalid/a.pdf'
+    );
+    expect(httpUrlOrNull('http://files.example.invalid/a.pdf')).toBe(
+      'http://files.example.invalid/a.pdf'
+    );
+  });
+
+  it('rejects missing, relative and non-http addresses', () => {
+    expect(httpUrlOrNull(undefined)).toBeNull();
+    expect(httpUrlOrNull(null)).toBeNull();
+    expect(httpUrlOrNull('')).toBeNull();
+    expect(httpUrlOrNull('/files/a.pdf')).toBeNull();
+    expect(httpUrlOrNull('javascript:alert(1)')).toBeNull();
+    expect(httpUrlOrNull('data:text/html,hi')).toBeNull();
+  });
+});
+
+describe('lead-format · leadExportFields', () => {
+  it('writes the stored fields with no display fallbacks', () => {
+    expect(
+      leadExportFields({
+        id: 'lead-1',
+        firstName: 'Ada',
+        lastName: null,
+        email: 'ada@example.invalid',
+        phone: null,
+        company: 'Analytical Engines',
+        title: undefined,
+        location: null,
+        website: 'example.invalid',
+        status: 'NEW',
+        source: 'WEBSITE',
+        score: 0,
+        estimatedValue: 5_000_000,
+        owner: { name: 'Grace' },
+        createdAt: '2026-11-01T09:00:00.000Z',
+        lastContactedAt: null,
+      })
+    ).toEqual({
+      id: 'lead-1',
+      firstName: 'Ada',
+      lastName: '',
+      email: 'ada@example.invalid',
+      phone: '',
+      company: 'Analytical Engines',
+      title: '',
+      location: '',
+      website: 'example.invalid',
+      status: 'NEW',
+      source: 'WEBSITE',
+      score: 0,
+      estimatedValuePence: 5_000_000,
+      owner: 'Grace',
+      createdAt: '2026-11-01T09:00:00.000Z',
+      lastContactedAt: '',
+    });
+  });
+
+  it('leaves out an unreadable date and a missing owner or value', () => {
+    const fields = leadExportFields({
+      id: 'lead-2',
+      email: 'b@example.invalid',
+      status: 'NEW',
+      source: 'OTHER',
+      score: 10,
+      createdAt: 'not a date',
+      lastContactedAt: new Date('2026-11-02T10:00:00.000Z'),
+    });
+    expect(fields.createdAt).toBe('');
+    expect(fields.lastContactedAt).toBe('2026-11-02T10:00:00.000Z');
+    expect(fields.owner).toBe('');
+    expect(fields.estimatedValuePence).toBe('');
+  });
+});
+
+describe('describeScoreChange (UI-021)', () => {
+  it('reads the scoring API shape: previousScore to newScore', () => {
+    expect(describeScoreChange({ previousScore: 30, newScore: 40 })).toEqual({ from: 30, to: 40 });
+  });
+
+  it('reads the events-worker shape, which stores the new value as score', () => {
+    expect(
+      describeScoreChange({
+        score: 52,
+        previousScore: 38,
+        scoringModel: 'm',
+        scoreLabel: 'l',
+      } as never)
+    ).toEqual({ from: 38, to: 52 });
+  });
+
+  it('reads the older oldScore name', () => {
+    expect(describeScoreChange({ oldScore: 20, newScore: 25 })).toEqual({ from: 20, to: 25 });
+  });
+
+  it('has no "from" for a first score, or a row with no prior value', () => {
+    expect(describeScoreChange({ previousScore: 0, newScore: 38, firstScore: true })).toEqual({
+      from: null,
+      to: 38,
+    });
+    expect(describeScoreChange({ score: 85, previousScore: undefined })).toEqual({
+      from: null,
+      to: 85,
+    });
+    expect(describeScoreChange({ newScore: 12 })).toEqual({ from: null, to: 12 });
+  });
+
+  it('prefers newScore over score', () => {
+    expect(describeScoreChange({ newScore: 60, score: 10, previousScore: 50 })).toEqual({
+      from: 50,
+      to: 60,
+    });
+  });
+
+  it('is null when there is no new score, as for a failed scoring', () => {
+    expect(describeScoreChange(null)).toBeNull();
+    expect(describeScoreChange(undefined)).toBeNull();
+    expect(describeScoreChange({})).toBeNull();
+    expect(describeScoreChange({ previousScore: 30, newScore: null, score: null })).toBeNull();
+  });
+
+  it('keeps a score of zero', () => {
+    expect(describeScoreChange({ previousScore: 5, newScore: 0 })).toEqual({ from: 5, to: 0 });
+  });
+});
+
+describe('isSameName (the profile card hides a company that repeats the name)', () => {
+  it('ignores case and runs of spaces', () => {
+    expect(isSameName('Acme Handyman Ltd', 'acme  handyman LTD ')).toBe(true);
+    expect(isSameName('Studio Pilates Demo East', 'Studio Pilates Demo East')).toBe(true);
+  });
+
+  it('is false for different names and never true for an empty one', () => {
+    expect(isSameName('Acme Ltd', 'Jane Doe')).toBe(false);
+    expect(isSameName('', '')).toBe(false);
+    expect(isSameName(null, undefined)).toBe(false);
+    expect(isSameName('Acme', '')).toBe(false);
+  });
+});
+
+describe('mergeEmailEngagement (open rate from the CRM email records too)', () => {
+  const metrics = { emailsSent: 1, emailsOpened: 0, meetings: 2, touchpoints: 5 };
+
+  it('leaves the activity counts alone when there is nothing from the records', () => {
+    expect(mergeEmailEngagement(metrics, undefined)).toBe(metrics);
+    expect(mergeEmailEngagement(metrics, null)).toBe(metrics);
+  });
+
+  it('takes the larger of the two per count, so the same mail is never counted twice', () => {
+    expect(mergeEmailEngagement(metrics, { sent: 4, opened: 3 })).toEqual({
+      emailsSent: 4,
+      emailsOpened: 3,
+      meetings: 2,
+      touchpoints: 5,
+    });
+    expect(
+      mergeEmailEngagement({ ...metrics, emailsSent: 3, emailsOpened: 2 }, { sent: 1, opened: 1 })
+    ).toMatchObject({ emailsSent: 3, emailsOpened: 2 });
+  });
+
+  it('never lets opened exceed sent', () => {
+    const merged = mergeEmailEngagement(
+      { ...metrics, emailsSent: 3, emailsOpened: 1 },
+      { sent: 5, opened: 2 }
+    );
+    expect(merged.emailsOpened).toBeLessThanOrEqual(merged.emailsSent);
+  });
+});
+
+describe('leadListSubtitle (the leads list no longer repeats the company under the name)', () => {
+  it('leaves the company out when the lead is named after it', () => {
+    expect(leadListSubtitle({ firstName: '', lastName: '', company: 'Acme Handyman Ltd' })).toBe(
+      ''
+    );
+    expect(
+      leadListSubtitle({
+        firstName: null,
+        lastName: null,
+        company: ' pilates  LIVING ',
+        email: 'a@x.invalid',
+      })
+    ).toBe('');
+  });
+
+  it('keeps the title when the company is the name', () => {
+    expect(leadListSubtitle({ company: 'Acme', title: 'Owner' })).toBe('Owner');
+  });
+
+  it('shows "title @ company" and the company alone for a person with a different company', () => {
+    expect(
+      leadListSubtitle({ firstName: 'Jane', lastName: 'Doe', company: 'Acme', title: 'CEO' })
+    ).toBe('CEO @ Acme');
+    expect(leadListSubtitle({ firstName: 'Jane', lastName: 'Doe', company: 'Acme' })).toBe('Acme');
+  });
+
+  it('is empty when there is neither a company nor a title', () => {
+    expect(leadListSubtitle({ firstName: 'Jane', lastName: 'Doe' })).toBe('');
+  });
+});
+
+describe('displayActivityText (no machine ids in what a person reads, #42)', () => {
+  it('takes out the COA ledger row id the sync wrote into the text', () => {
+    expect(
+      displayActivityText(
+        'Private proposal link to greenleaf.leangency.com. COA ledger row cmw5j72u40001p5ug01kf3vot.'
+      )
+    ).toBe('Private proposal link to greenleaf.leangency.com.');
+    expect(displayActivityText('Replied. COA ledger row cmw5j72u40001p5ug01kf3vot')).toBe(
+      'Replied.'
+    );
+  });
+
+  it('leaves everything else alone: ids a person typed, links, addresses, words and numbers', () => {
+    const same = [
+      'Moved cmw5j72u40001p5ug01kf3vot to Proposal',
+      'Order cloudflare2024reportfinal shipped',
+      'See https://app.example.invalid/leads/cmw5j72u40001p5ug01kf3vot',
+      'Mail from cmw5j72u40001p5ug01kf3vot@x.invalid',
+      'Call about the conversation, 25 minutes, ref 4412',
+      'Characteristically internationalisation',
+    ];
+    for (const text of same) expect(displayActivityText(text)).toBe(text);
+  });
+  it('removes more than one, in any case, and leaves a marker with no id after it', () => {
+    expect(
+      displayActivityText(
+        'A. coa LEDGER row cmw5j72u40001p5ug01kf3vot. B. COA ledger row cabcdefghij0123456789xyz'
+      )
+    ).toBe('A. B.');
+    expect(displayActivityText('See the COA ledger row for details')).toBe(
+      'See the COA ledger row for details'
+    );
+    expect(displayActivityText('COA ledger row 12345')).toBe('COA ledger row 12345');
+  });
+
+  it('only matches the marker at the start of a word, and survives text that changes length in lower case', () => {
+    expect(displayActivityText('xCOA ledger row cmw5j72u40001p5ug01kf3vot')).toBe(
+      'xCOA ledger row cmw5j72u40001p5ug01kf3vot'
+    );
+    expect(displayActivityText('İİİ note. COA ledger row cmw5j72u40001p5ug01kf3vot.')).toBe(
+      'İİİ note.'
+    );
+  });
+
+  it('is empty for no text', () => {
+    expect(displayActivityText(null)).toBe('');
+    expect(displayActivityText(undefined)).toBe('');
+  });
+});
+
+describe('leadCompanyIfDistinct (the pin and sheet subtitle)', () => {
+  it('is the company when it differs from the name, and nothing when it only repeats it', () => {
+    expect(leadCompanyIfDistinct({ firstName: 'Jane', lastName: 'Doe', company: ' Acme ' })).toBe(
+      'Acme'
+    );
+    expect(
+      leadCompanyIfDistinct({ firstName: '', lastName: '', company: 'Studio Pilates Demo' })
+    ).toBeUndefined();
+    expect(leadCompanyIfDistinct({ firstName: 'Jane', lastName: 'Doe' })).toBeUndefined();
+    expect(
+      leadCompanyIfDistinct({ firstName: 'Jane', lastName: 'Doe', company: '  ' })
+    ).toBeUndefined();
   });
 });

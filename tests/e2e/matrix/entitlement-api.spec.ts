@@ -27,7 +27,7 @@ async function trpc(ctx: APIRequestContext, proc: string, token: string, input: 
   const text = await res.text();
   return {
     status: res.status(),
-    forbidden: /FORBIDDEN|does not include the LEGAL/i.test(text),
+    forbidden: /FORBIDDEN|not part of your workspace/i.test(text),
     text,
   };
 }

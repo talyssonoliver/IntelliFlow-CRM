@@ -69,7 +69,7 @@ export const DEFAULT_ONBOARDING_STEPS: OnboardingStep[] = [
     icon: 'person',
     action: {
       label: 'Complete profile',
-      href: '/settings/profile',
+      href: '/settings/account',
     },
   },
   {

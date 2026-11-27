@@ -18,10 +18,14 @@
  * asserts the pricing contract independently instead of comparing the production
  * MODULE_PLAN_MAP to itself.
  *
- * Pricing contract (docs / pricing page):
+ * Pricing contract (docs / pricing page), bounded by the business type (owner ruling 23/11/2026:
+ * enabled = plan modules ∩ the business type's modules, plus explicit overrides):
  *   STARTER       → CORE_CRM, SUPPORT, AI_INTELLIGENCE, ANALYTICS
  *   PROFESSIONAL  → + LEGAL
  *   ENTERPRISE    → + COMMERCE
+ * Business types: LAW_FIRM may have LEGAL, AGENCY SUPPORT, SHOP_ECOMMERCE COMMERCE, everyone the core set.
+ * The plan tenants below are law firms, so the LEGAL boundary is exercised by plan; the vertical block at
+ * the end proves the business-type boundary.
  *
  * Relates to the tier-system work (IFC-208/209) and the entitlement-downgrade
  * leak fix (RACE-ENTIT-M1).
@@ -41,10 +45,11 @@ if (!DB_URL) {
 const TAG = `tiergate_${Date.now()}`;
 
 // The pricing contract, asserted independently of MODULE_PLAN_MAP.
+// Plan tenants are LAW_FIRM: SUPPORT and COMMERCE belong to other business types.
 const EXPECTED: Record<string, readonly string[]> = {
-  STARTER: ['CORE_CRM', 'SUPPORT', 'AI_INTELLIGENCE', 'ANALYTICS'],
-  PROFESSIONAL: ['CORE_CRM', 'SUPPORT', 'AI_INTELLIGENCE', 'ANALYTICS', 'LEGAL'],
-  ENTERPRISE: ['CORE_CRM', 'SUPPORT', 'AI_INTELLIGENCE', 'ANALYTICS', 'LEGAL', 'COMMERCE'],
+  STARTER: ['CORE_CRM', 'AI_INTELLIGENCE', 'ANALYTICS'],
+  PROFESSIONAL: ['CORE_CRM', 'AI_INTELLIGENCE', 'ANALYTICS', 'LEGAL'],
+  ENTERPRISE: ['CORE_CRM', 'AI_INTELLIGENCE', 'ANALYTICS', 'LEGAL'],
 };
 
 describeDb('Tier → module gating (DB-backed entitlement boundary)', () => {
@@ -55,12 +60,20 @@ describeDb('Tier → module gating (DB-backed entitlement boundary)', () => {
   // Monotonic suffix so every provisioned tenant gets unique slug/email.
   let seq = 0;
 
-  /** Provision a tenant on `plan` (Tenant.plan, ADR-070). */
-  async function provisionTenant(plan: string): Promise<string> {
+  /** Provision a tenant on `plan` (Tenant.plan, ADR-070) with a business type (default LAW_FIRM). */
+  async function provisionTenant(
+    plan: string,
+    businessType: string | null = 'LAW_FIRM'
+  ): Promise<string> {
     const n = seq++;
     const key = `${plan.toLowerCase()}-${n}`;
     const t = await prisma.tenant.create({
-      data: { name: `${TAG}-${plan}-${n}`, slug: `${TAG}-${key}`, plan: plan as any },
+      data: {
+        name: `${TAG}-${plan}-${n}`,
+        slug: `${TAG}-${key}`,
+        plan: plan as any,
+        businessType: businessType as any,
+      },
     });
     await prisma.user.create({
       data: { email: `${TAG}-${key}@example.com`, tenantId: t.id },
@@ -119,9 +132,9 @@ describeDb('Tier → module gating (DB-backed entitlement boundary)', () => {
       expect(await repo.isModuleEnabled(tenants.PROFESSIONAL, 'COMMERCE' as any)).toBe(false);
     });
 
-    it('ENTERPRISE is GRANTED both LEGAL and COMMERCE', async () => {
+    it('ENTERPRISE law firm is GRANTED LEGAL; COMMERCE belongs to shops', async () => {
       expect(await repo.isModuleEnabled(tenants.ENTERPRISE, 'LEGAL' as any)).toBe(true);
-      expect(await repo.isModuleEnabled(tenants.ENTERPRISE, 'COMMERCE' as any)).toBe(true);
+      expect(await repo.isModuleEnabled(tenants.ENTERPRISE, 'COMMERCE' as any)).toBe(false);
     });
 
     it('CORE_CRM is always enabled, even for an unknown/unprovisioned tenant', async () => {
@@ -131,9 +144,56 @@ describeDb('Tier → module gating (DB-backed entitlement boundary)', () => {
     });
   });
 
+  describe('business type bounds the plan (owner ruling 23/11/2026)', () => {
+    it('a trades business on ENTERPRISE never gets LEGAL, SUPPORT or COMMERCE', async () => {
+      const t = await provisionTenant('ENTERPRISE', 'TRADES_HOME_SERVICES');
+      try {
+        // Plan sync writes PLAN-origin rows for every plan module; they must not widen the vertical.
+        await repo.syncModulesToPlan(t, 'ENTERPRISE' as any);
+        expect([...(await repo.getEnabledModules(t))].sort()).toEqual(
+          ['AI_INTELLIGENCE', 'ANALYTICS', 'CORE_CRM'].sort()
+        );
+        for (const m of ['LEGAL', 'SUPPORT', 'COMMERCE']) {
+          expect(await repo.isModuleEnabled(t, m as any)).toBe(false);
+        }
+      } finally {
+        await prisma.tenantModule.deleteMany({ where: { tenantId: t } });
+      }
+    });
+
+    it('an agency gets SUPPORT but not LEGAL; a shop gets COMMERCE only on ENTERPRISE', async () => {
+      const agency = await provisionTenant('PROFESSIONAL', 'AGENCY');
+      const shopPro = await provisionTenant('PROFESSIONAL', 'SHOP_ECOMMERCE');
+      const shopEnt = await provisionTenant('ENTERPRISE', 'SHOP_ECOMMERCE');
+      expect(await repo.isModuleEnabled(agency, 'SUPPORT' as any)).toBe(true);
+      expect(await repo.isModuleEnabled(agency, 'LEGAL' as any)).toBe(false);
+      expect(await repo.isModuleEnabled(shopPro, 'COMMERCE' as any)).toBe(false);
+      expect(await repo.isModuleEnabled(shopEnt, 'COMMERCE' as any)).toBe(true);
+    });
+
+    it('no business type yet gates like OTHER; setBusinessType takes effect straight away', async () => {
+      const t = await provisionTenant('PROFESSIONAL', null);
+      expect(await repo.getBusinessType(t)).toBeNull();
+      expect(await repo.isModuleEnabled(t, 'LEGAL' as any)).toBe(false);
+      await repo.setBusinessType(t, 'LAW_FIRM' as any);
+      expect(await repo.isModuleEnabled(t, 'LEGAL' as any)).toBe(true);
+    });
+
+    it('an explicit OVERRIDE keeps a module for existing data despite the business type', async () => {
+      const t = await provisionTenant('PROFESSIONAL', 'TRADES_HOME_SERVICES');
+      try {
+        expect(await repo.isModuleEnabled(t, 'LEGAL' as any)).toBe(false);
+        await repo.enableModule(t, 'LEGAL' as any);
+        expect(await repo.isModuleEnabled(t, 'LEGAL' as any)).toBe(true);
+      } finally {
+        await prisma.tenantModule.deleteMany({ where: { tenantId: t } });
+      }
+    });
+  });
+
   describe('à-la-carte override adds a module above the plan', () => {
     it('enabling LEGAL on a STARTER tenant grants it without changing the plan', async () => {
-      const starter = await provisionTenant('STARTER');
+      const starter = await provisionTenant('STARTER', 'LAW_FIRM');
       try {
         expect(await repo.isModuleEnabled(starter, 'LEGAL' as any)).toBe(false);
         await repo.enableModule(starter, 'LEGAL' as any);

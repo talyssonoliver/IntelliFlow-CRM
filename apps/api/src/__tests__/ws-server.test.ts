@@ -3,16 +3,34 @@
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-const { mockOn, mockClose, mockBroadcast } = vi.hoisted(() => ({
-  mockOn: vi.fn(),
-  mockClose: vi.fn((cb?: () => void) => {
-    if (cb) cb();
-  }),
-  mockBroadcast: vi.fn(),
+const { mockOn, mockClose, mockBroadcast, mockWssOptions, fakeHttpServer, mockCreateServer } =
+  vi.hoisted(() => {
+    const fakeHttpServer = {
+      listen: vi.fn(),
+      close: vi.fn((cb?: () => void) => {
+        if (cb) cb();
+      }),
+    };
+    return {
+      mockOn: vi.fn(),
+      mockClose: vi.fn((cb?: () => void) => {
+        if (cb) cb();
+      }),
+      mockBroadcast: vi.fn(),
+      mockWssOptions: vi.fn(),
+      fakeHttpServer,
+      mockCreateServer: vi.fn(() => fakeHttpServer),
+    };
+  });
+
+vi.mock('node:http', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('node:http')>()),
+  createServer: mockCreateServer,
 }));
 
 vi.mock('ws', () => {
-  function FakeWebSocketServer(this: any) {
+  function FakeWebSocketServer(this: any, options: unknown) {
+    mockWssOptions(options);
     this.on = mockOn;
     this.close = mockClose;
     this.clients = new Set();
@@ -34,7 +52,12 @@ vi.mock('../context', () => ({
   }),
 }));
 
-import { createWebSocketServer, WS_PORT, getRealtimeCapacity } from '../ws-server';
+import {
+  createWebSocketServer,
+  WS_PORT,
+  getRealtimeCapacity,
+  handleHttpRequest,
+} from '../ws-server';
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { createWSContext } from '../context';
 
@@ -263,6 +286,72 @@ describe('realtime capacity (issue #318 caveat 3b)', () => {
     const connHandler = mockOn.mock.calls.find((c: any[]) => c[0] === 'connection')?.[1];
     connHandler!({ on: vi.fn() }, { headers: { 'sec-websocket-key': 'k' } });
     expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('status=warning'));
+    vi.restoreAllMocks();
+  });
+});
+
+describe('HTTP health route (MVP-004)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  function fakeResponse() {
+    return { writeHead: vi.fn(), end: vi.fn() };
+  }
+
+  it('serves the WebSocket server from one HTTP server listening on the port', () => {
+    createWebSocketServer(4000);
+    expect(mockCreateServer).toHaveBeenCalledWith(handleHttpRequest);
+    expect(mockWssOptions).toHaveBeenCalledWith({ server: fakeHttpServer });
+    expect(fakeHttpServer.listen).toHaveBeenCalledWith(4000);
+  });
+
+  it('answers GET /health with 200 and a JSON status', () => {
+    const res = fakeResponse();
+    handleHttpRequest({ method: 'GET', url: '/health' } as any, res as any);
+    expect(res.writeHead).toHaveBeenCalledWith(
+      200,
+      expect.objectContaining({ 'Cache-Control': 'no-store' })
+    );
+    expect(res.end).toHaveBeenCalledWith(JSON.stringify({ status: 'ok' }));
+  });
+
+  it('ignores a query string on /health', () => {
+    const res = fakeResponse();
+    handleHttpRequest({ method: 'GET', url: '/health?probe=1' } as any, res as any);
+    expect(res.writeHead).toHaveBeenCalledWith(200, expect.any(Object));
+  });
+
+  it('answers HEAD /health with 200 and no body', () => {
+    const res = fakeResponse();
+    handleHttpRequest({ method: 'HEAD', url: '/health' } as any, res as any);
+    expect(res.writeHead).toHaveBeenCalledWith(200, expect.any(Object));
+    expect(res.end).toHaveBeenCalledWith(undefined);
+  });
+
+  it.each([
+    ['GET', '/'],
+    ['GET', '/healthz'],
+    ['POST', '/health'],
+    ['GET', undefined],
+  ])('keeps 426 Upgrade Required for %s %s', (method, url) => {
+    const res = fakeResponse();
+    handleHttpRequest({ method, url } as any, res as any);
+    expect(res.writeHead).toHaveBeenCalledWith(426, { 'Content-Type': 'text/plain' });
+    expect(res.end).toHaveBeenCalledWith('Upgrade Required');
+  });
+
+  it('closes the WebSocket server and then the HTTP server on SIGTERM', () => {
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const onSpy = vi.spyOn(process, 'on');
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
+    createWebSocketServer(4000);
+    const sigterm = onSpy.mock.calls.filter((c) => c[0] === 'SIGTERM').at(-1)?.[1] as () => void;
+    sigterm();
+    expect(mockBroadcast).toHaveBeenCalled();
+    expect(mockClose).toHaveBeenCalled();
+    expect(fakeHttpServer.close).toHaveBeenCalled();
+    expect(exitSpy).toHaveBeenCalledWith(0);
     vi.restoreAllMocks();
   });
 });

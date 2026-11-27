@@ -8,6 +8,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AnalyticsAggregationService } from '../AnalyticsAggregationService';
+import { virtualElapsedMs } from '../../../../../tests/utils/virtual-clock';
 import type {
   AnalyticsRepository,
   OpportunityGroupByResult,
@@ -30,6 +31,8 @@ function createMockRepo(): Record<keyof AnalyticsRepository, ReturnType<typeof v
     getMonthlyRevenue: vi.fn().mockResolvedValue(0),
     countLeadsInRange: vi.fn().mockResolvedValue(0),
     countOpportunitiesInRange: vi.fn().mockResolvedValue(0),
+    countOpenOpportunities: vi.fn().mockResolvedValue(0),
+    countOpenOpportunitiesAsOf: vi.fn().mockResolvedValue(0),
     countContactsInRange: vi.fn().mockResolvedValue(0),
     getLeadsBySource: vi.fn().mockResolvedValue([]),
     getRecentAuditLogs: vi.fn().mockResolvedValue([]),
@@ -132,6 +135,29 @@ describe('AnalyticsAggregationService', () => {
   // getGrowthTrend
   // ============================================
 
+  describe('getOverview', () => {
+    it('reports open deals now, and the change since the previous period ended', async () => {
+      // getOverview reads more of the port than the shared mock declares.
+      Object.assign(mockRepo, {
+        getRevenueInRange: vi.fn().mockResolvedValue(0),
+        countClosedWonInRange: vi.fn().mockResolvedValue(0),
+        countClosedLostInRange: vi.fn().mockResolvedValue(0),
+      });
+      mockRepo.countOpenOpportunities.mockResolvedValue(14);
+      mockRepo.countOpenOpportunitiesAsOf.mockResolvedValue(9);
+      // Deals created are not what the tile reports; they must not feed it.
+      mockRepo.countOpportunitiesInRange.mockResolvedValue(27);
+
+      const result = await service.getOverview(TENANT_ID);
+
+      expect(result.openOpportunities).toBe(14);
+      expect(mockRepo.countOpenOpportunities).toHaveBeenCalledWith(TENANT_ID);
+      expect(result.openOpportunitiesDelta).toBe(5);
+      const asOf = mockRepo.countOpenOpportunitiesAsOf.mock.calls[0][1] as Date;
+      expect(asOf.getTime()).toBeLessThan(Date.now());
+    });
+  });
+
   describe('getGrowthTrend', () => {
     it('returns revenue growth trend for N months', async () => {
       mockRepo.getMonthlyRevenue.mockResolvedValue(50000);
@@ -213,11 +239,12 @@ describe('AnalyticsAggregationService', () => {
     });
 
     it('executes queries in parallel via Promise.all (AC-006)', async () => {
-      const startTime = Date.now();
-      await service.getGrowthTrend(TENANT_ID, 'revenue', 12);
-      const elapsed = Date.now() - startTime;
+      // Load-independent: on a fake clock, the 12 monthly queries must wait on no timer of 300ms or
+      // more, and each of the 12 months is queried once (not retried or serialised behind a delay).
+      const elapsed = await virtualElapsedMs(() =>
+        service.getGrowthTrend(TENANT_ID, 'revenue', 12)
+      );
 
-      // With mocked repo, parallel execution is near-instant
       expect(elapsed).toBeLessThan(300);
     });
   });
@@ -350,9 +377,7 @@ describe('AnalyticsAggregationService', () => {
     });
 
     it('calls both repository methods in parallel', async () => {
-      const startTime = Date.now();
-      await service.getLeadStats(TENANT_ID);
-      const elapsed = Date.now() - startTime;
+      const elapsed = await virtualElapsedMs(() => service.getLeadStats(TENANT_ID));
 
       expect(elapsed).toBeLessThan(100);
       expect(mockRepo.countTotalLeads).toHaveBeenCalledTimes(1);
@@ -543,9 +568,7 @@ describe('AnalyticsAggregationService', () => {
       ];
 
       for (const method of methods) {
-        const start = Date.now();
-        await method();
-        const elapsed = Date.now() - start;
+        const elapsed = await virtualElapsedMs(method);
         expect(elapsed).toBeLessThan(300);
       }
     });

@@ -54,7 +54,21 @@ export interface ActivityFeedCursor {
 }
 
 /** Filters for the activity feed query */
+/**
+ * Who the feed is read for (register #64). Email rows are read through the mail visibility policy:
+ * a colleague's personal-mailbox mail never appears. With no viewer, personal mail is left out.
+ */
+export interface ActivityFeedViewer {
+  userId: string;
+  /** Tenant role: ADMIN sees every lead and contact, so the mail logged to them. */
+  role?: string | null;
+  /** A manager's team. */
+  teamMemberIds?: readonly string[] | null;
+}
+
 export interface ActivityFeedFilters {
+  /** Who is reading (see ActivityFeedViewer). */
+  viewer?: ActivityFeedViewer;
   /** Filter by activity types */
   types?: ActivityFeedType[];
   /** Filter by source tables */

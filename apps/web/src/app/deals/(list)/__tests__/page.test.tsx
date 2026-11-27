@@ -5,7 +5,7 @@
  * The page delegates to extracted components in @/components/deals/*.
  * These tests verify data flow, auth, error handling, and composition.
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterEach } from 'vitest';
 import * as React from 'react';
 
 // CRITICAL: All vi.mock calls are hoisted before any imports
@@ -338,17 +338,23 @@ vi.mock('@/components/deals/LossReasonModal', async () => {
   return { LossReasonModal: barrel.LossReasonModal };
 });
 
-// Mock next/dynamic — prevent stale mock leak from other test files
+// Mock next/dynamic — prevent stale mock leak from other test files.
+// The loader starts when the page module calls dynamic(); beforeAll waits for every loader, so
+// each render already has the real component. React.lazy here made the charts appear only after
+// an import resolved, which under a loaded machine came after waitFor's timeout (and the SR-only
+// tables test did not wait at all).
+const dynamicLoads = vi.hoisted(() => [] as Promise<unknown>[]);
 vi.mock('next/dynamic', () => ({
   __esModule: true,
   default: (loader: () => Promise<{ default: React.ComponentType<Record<string, unknown>> }>) => {
-    const LazyComponent = React.lazy(loader);
+    let Loaded: React.ComponentType<Record<string, unknown>> | null = null;
+    dynamicLoads.push(
+      loader().then((m) => {
+        Loaded = m.default;
+      })
+    );
     function DynamicMock(props: Record<string, unknown>) {
-      return (
-        <React.Suspense fallback={null}>
-          <LazyComponent {...props} />
-        </React.Suspense>
-      );
+      return Loaded ? <Loaded {...props} /> : null;
     }
     DynamicMock.displayName = 'DynamicMock';
     return DynamicMock;
@@ -377,11 +383,17 @@ vi.mock('recharts', () => ({
 }));
 
 // NOW import after all mocks
-import { render, screen, act, cleanup, waitFor } from '@testing-library/react';
+import { render, screen, act, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import DealsPage from '../page';
 
 describe('DealsPage', { timeout: 10000 }, () => {
+  beforeAll(async () => {
+    // Every dynamic() component (pipeline board, charts) is loaded before the first render.
+    expect(dynamicLoads.length).toBeGreaterThan(0);
+    await Promise.all(dynamicLoads);
+  }, 60000);
+
   beforeEach(() => {
     vi.clearAllMocks();
     mockQueryState.data = mockOpportunityData;
@@ -449,11 +461,8 @@ describe('DealsPage', { timeout: 10000 }, () => {
         render(<DealsPage />);
       });
 
-      // DealsCharts is lazy-loaded via next/dynamic (React.lazy under the hood).
-      // waitFor flushes the async import Promise and waits for the Suspense boundary to resolve.
-      await waitFor(() => {
-        expect(screen.getByText('Deals by Stage')).toBeInTheDocument();
-      });
+      // DealsCharts comes through next/dynamic; the mock above loaded it in beforeAll.
+      expect(screen.getByText('Deals by Stage')).toBeInTheDocument();
       expect(screen.getByText('Revenue by Stage')).toBeInTheDocument();
       expect(screen.getByTestId('pie-chart')).toBeInTheDocument();
       expect(screen.getByTestId('bar-chart')).toBeInTheDocument();

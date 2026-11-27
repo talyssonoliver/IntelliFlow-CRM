@@ -18,6 +18,7 @@ import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 import { context as otelContext, propagation } from '@opentelemetry/api';
 import { createLLMForTenant } from '../lib/llm-factory.js';
+import { isAiActionsExhausted } from '../lib/ai-actions-allowance';
 
 const logger = pino({
   name: 'summarize-conversation-job',
@@ -134,6 +135,11 @@ export async function shouldSummarizeConversation(
   return effectiveTotalTokens >= SUMMARIZATION_TOKEN_THRESHOLD;
 }
 
+/** Dedupe key for a conversation's in-flight summarization (no ':' so it is also a valid job id). */
+export function summarizeDedupeId(conversationId: string): string {
+  return `summarize.${conversationId}`;
+}
+
 /**
  * Enqueue a summarization job if the conversation has hit either threshold.
  *
@@ -161,8 +167,11 @@ export async function enqueueSummarizationIfNeeded(
         _otelCarrier: _otelCarrierSummarize,
       } satisfies SummarizeConversationJobData,
       {
-        // De-duplicate: only one pending summarization per conversation at a time.
-        jobId: `summarize:${conversationId}`,
+        // One summarization in flight per conversation. A fixed jobId would also block every later
+        // summary while the finished job is retained, so dedupe only until the job completes or
+        // fails. (The old jobId `summarize:<id>` threw on every add: BullMQ rejects a colon id
+        // unless it has three parts, so no conversation was ever summarized. #1300.)
+        deduplication: { id: summarizeDedupeId(conversationId) },
         attempts: 3,
         backoff: { type: 'exponential', delay: 5000 },
         removeOnComplete: { count: 50 },
@@ -329,6 +338,8 @@ export async function processSummarizeJob(
       ),
     ]);
   } catch (error) {
+    // The plan's AI actions are used up: fail with that reason, never write a non-AI digest.
+    if (isAiActionsExhausted(error)) throw error;
     logger.warn(
       {
         jobId: job.id,

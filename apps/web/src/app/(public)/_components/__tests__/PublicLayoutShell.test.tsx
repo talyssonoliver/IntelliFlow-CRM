@@ -367,3 +367,53 @@ describe('Aurora site chrome', () => {
     expect(screen.queryByTestId('site-footer')).toBeNull();
   });
 });
+
+// ===========================================================================
+// Signed-in public pages keep the .aurora-site style scope
+// ===========================================================================
+describe('signed in, a public page keeps the .aurora-site scope', () => {
+  it.each(['/pricing', '/about', '/features', '/status', '/privacy'])(
+    'wraps %s in .aurora-site inside the app shell',
+    (pathname) => {
+      mockAuthLoading = false;
+      mockClientAuthenticated = false;
+      renderShell({ isAuthenticated: true, pathname });
+
+      const child = screen.getByTestId('child-content');
+      expect(child.closest('.aurora-site')).not.toBeNull();
+      expect(screen.queryByTestId('public-header')).toBeNull();
+    }
+  );
+
+  it('also applies when the session is only known on the client', () => {
+    mockAuthLoading = false;
+    mockClientAuthenticated = true;
+    renderShell({ isAuthenticated: false, pathname: '/pricing' });
+
+    expect(screen.getByTestId('child-content').closest('.aurora-site')).not.toBeNull();
+  });
+
+  it('leaves the signed-in home (/) outside the scope: it is the app itself', () => {
+    mockAuthLoading = false;
+    mockClientAuthenticated = false;
+    renderShell({ isAuthenticated: true, pathname: '/' });
+
+    expect(screen.getByTestId('child-content').closest('.aurora-site')).toBeNull();
+  });
+
+  it('treats the rewritten signed-in home path as the home page too', () => {
+    mockAuthLoading = false;
+    mockClientAuthenticated = false;
+    renderShell({ isAuthenticated: true, pathname: '/signed-in-home' });
+
+    expect(screen.getByTestId('child-content').closest('.aurora-site')).toBeNull();
+    expect(screen.queryByTestId('public-header')).toBeNull();
+  });
+
+  it('adds nothing around the landing page on the rewritten path when signed out', () => {
+    const { container } = renderShell({ isAuthenticated: false, pathname: '/signed-in-home' });
+
+    expect(screen.queryByTestId('public-header')).toBeNull();
+    expect(container.querySelector('.aurora-site')).toBeNull();
+  });
+});

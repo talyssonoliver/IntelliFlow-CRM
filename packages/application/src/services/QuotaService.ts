@@ -6,7 +6,7 @@
  *
  * Usage sources:
  * - contacts, seats, workflowsActive: live counts (always exact).
- * - emailsPerMonth, aiSpendCentsPerMonth: TenantUsageCounter rows for the current UTC month.
+ * - emailsPerMonth, aiSpendCentsPerMonth, aiActionsPerMonth: TenantUsageCounter rows for the current UTC month.
  *   The counters only move when a caller invokes `increment`, so a key is only as accurate
  *   as its recording call sites.
  */
@@ -52,6 +52,11 @@ export class QuotaService {
       QUOTA_KEYS.map(async (key) => [key, await this.getUsed(tenantId, key)] as const)
     );
     return Object.fromEntries(entries) as QuotaUsage;
+  }
+
+  /** Current usage of one key (a live count, or this month's counter). */
+  async getKeyUsage(tenantId: string, key: QuotaKey): Promise<number> {
+    return this.getUsed(tenantId, key);
   }
 
   /**
@@ -141,6 +146,7 @@ export class QuotaService {
         return this.repository.countActiveWorkflows(tenantId);
       case 'emailsPerMonth':
       case 'aiSpendCentsPerMonth':
+      case 'aiActionsPerMonth':
         return this.repository.getCounter(tenantId, key, getQuotaPeriod(key, this.now()));
     }
   }

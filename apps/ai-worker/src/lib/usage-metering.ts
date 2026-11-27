@@ -29,6 +29,12 @@ export interface ModelUsageMeta {
   modelId?: string;
   /** MODEL_PRICING key of the model the provider actually runs, when it is not the alias. */
   pricingKey?: string;
+  /**
+   * PG-199 BYOK: the call runs on the tenant's own provider key. It is still metered as the
+   * tenant's usage, but it never counts toward the worker-wide monthly budget or the daily
+   * cost limit, which cap what the PLATFORM pays for.
+   */
+  byok?: boolean;
 }
 
 export interface EmbeddingUsageMeta {
@@ -135,14 +141,23 @@ export function recordModelUsage(meta: ModelUsageMeta, input: unknown, result: u
   const usage = message?.usage_metadata;
   // The gateway may serve another (e.g. a paid fallback) model than the one asked for:
   // price what ran when the response names a known deployment (owner Q9).
-  const model = servedPricingKey(message?.response_metadata?.model_name) ?? chatPricingKey(meta);
+  // A tenant's own key runs the model it was built for: the gateway's served-model mapping
+  // (which prices a deployment alias) does not apply to it.
+  const model = meta.byok
+    ? chatPricingKey(meta)
+    : (servedPricingKey(message?.response_metadata?.model_name) ?? chatPricingKey(meta));
   recordSafely(() =>
     costTracker.recordUsage({
       model,
       inputTokens: usage?.input_tokens ?? countTokens(textOf(input), model),
       outputTokens: usage?.output_tokens ?? countTokens(textOf(result), model),
       operationType: `llm:${meta.purpose}`,
-      metadata: { purpose: meta.purpose, tier: meta.tier, modelId: meta.modelId ?? null },
+      metadata: {
+        purpose: meta.purpose,
+        tier: meta.tier,
+        modelId: meta.modelId ?? null,
+        ...(meta.byok ? { byok: true } : {}),
+      },
     })
   );
 }
@@ -156,6 +171,8 @@ export async function recordMonthlyModelSpend(
   meta: ModelUsageMeta,
   result: unknown
 ): Promise<void> {
+  // BYOK: the tenant pays the provider, not the platform (see ModelUsageMeta.byok).
+  if (meta.byok) return;
   const message = result as {
     usage_metadata?: { input_tokens?: number; output_tokens?: number };
     response_metadata?: { model_name?: string };

@@ -42,8 +42,11 @@ import {
   PLAN_TIERS,
   MODULE_PLAN_MAP,
   getModulesForPlan,
+  getModulesForBusinessType,
+  TENANT_BUSINESS_TYPES,
   type ModuleId,
   type PlanTier,
+  type TenantBusinessType,
 } from '@intelliflow/domain';
 import { propertyParams } from '../../support';
 
@@ -53,6 +56,18 @@ import { propertyParams } from '../../support';
 
 /** Any valid plan tier. */
 const arbPlanTier: fc.Arbitrary<PlanTier> = fc.constantFrom(...PLAN_TIERS);
+
+/** Any business type, or none chosen yet (owner ruling 23/11/2026: modules = plan ∩ business type). */
+const arbBusinessType: fc.Arbitrary<TenantBusinessType | null> = fc.constantFrom(
+  ...TENANT_BUSINESS_TYPES,
+  null
+);
+
+/** The modules a plan gives a business type: plan modules bounded by the business type's modules. */
+function modulesFor(plan: PlanTier, businessType: TenantBusinessType | null): ModuleId[] {
+  const vertical = new Set(getModulesForBusinessType(businessType));
+  return getModulesForPlan(plan).filter((m) => vertical.has(m));
+}
 
 /** Any non-CORE_CRM module id. */
 const arbNonCoreModuleId: fc.Arbitrary<ModuleId> = fc.constantFrom(
@@ -97,7 +112,8 @@ interface InMemoryModuleRow {
 
 function createMockPrisma(
   initialRows: InMemoryModuleRow[] = [],
-  planForTenant: PlanTier = 'STARTER'
+  planForTenant: PlanTier = 'STARTER',
+  businessType: TenantBusinessType | null = null
 ): Record<string, any> {
   // Mutable in-memory store keyed by `${tenantId}:${moduleId}`
   const store = new Map<string, InMemoryModuleRow>(
@@ -107,7 +123,7 @@ function createMockPrisma(
   return {
     $queryRaw: vi.fn().mockImplementation(async () => [{ plan: planForTenant }]),
     tenant: {
-      findUnique: vi.fn().mockImplementation(async () => ({ plan: planForTenant })),
+      findUnique: vi.fn().mockImplementation(async () => ({ plan: planForTenant, businessType })),
       update: vi.fn().mockImplementation(async ({ data }: { data: { plan: PlanTier } }) => ({
         plan: data.plan,
       })),
@@ -229,16 +245,16 @@ describe('syncModulesToPlan — downgrade invariant (RACE-ENTIT-M1)', () => {
 // ---------------------------------------------------------------------------
 
 describe('syncModulesToPlan — upgrade invariant', () => {
-  test.prop([arbUpgradePair], propertyParams())(
-    '2. after upgrade sync all new plan modules are present in getEnabledModules result',
-    async ([lowerPlan, higherPlan]) => {
-      const mockPrisma = createMockPrisma([], higherPlan);
+  test.prop([arbUpgradePair, arbBusinessType], propertyParams())(
+    '2. after upgrade sync all plan modules the business type can have are present in getEnabledModules result',
+    async ([lowerPlan, higherPlan], businessType) => {
+      const mockPrisma = createMockPrisma([], higherPlan, businessType);
       const repo = new PrismaTenantModuleRepository(mockPrisma as unknown as PrismaClient);
 
       const result = await repo.syncModulesToPlan(TENANT, higherPlan);
       const resultSet = new Set(result);
 
-      const expected = getModulesForPlan(higherPlan);
+      const expected = modulesFor(higherPlan, businessType);
       for (const m of expected) {
         expect(resultSet.has(m)).toBe(true);
       }
@@ -268,16 +284,16 @@ describe('syncModulesToPlan — CORE_CRM invariant', () => {
 // ---------------------------------------------------------------------------
 
 describe('syncModulesToPlan — result superset of plan modules', () => {
-  test.prop([arbPlanTier], propertyParams())(
-    '4. syncModulesToPlan result includes every module in the given plan (no à la carte adds)',
-    async (plan) => {
-      const mockPrisma = createMockPrisma([], plan);
+  test.prop([arbPlanTier, arbBusinessType], propertyParams())(
+    '4. syncModulesToPlan result includes every plan module the business type can have (no à la carte adds)',
+    async (plan, businessType) => {
+      const mockPrisma = createMockPrisma([], plan, businessType);
       const repo = new PrismaTenantModuleRepository(mockPrisma as unknown as PrismaClient);
 
       const result = await repo.syncModulesToPlan(TENANT, plan);
       const resultSet = new Set(result);
 
-      for (const m of getModulesForPlan(plan)) {
+      for (const m of modulesFor(plan, businessType)) {
         expect(resultSet.has(m)).toBe(true);
       }
     }
@@ -492,13 +508,13 @@ describe('isModuleEnabled — CORE_CRM short-circuit', () => {
 // ---------------------------------------------------------------------------
 
 describe('isModuleEnabled — falls back to plan-membership correctly', () => {
-  test.prop([arbNonCoreModuleId, arbPlanTier], propertyParams())(
-    '13. without override, isModuleEnabled matches MODULE_PLAN_MAP membership',
-    async (moduleId, plan) => {
+  test.prop([arbNonCoreModuleId, arbPlanTier, arbBusinessType], propertyParams())(
+    '13. without override, isModuleEnabled matches plan membership bounded by the business type',
+    async (moduleId, plan, businessType) => {
       const mockPrisma: Record<string, any> = {
         $queryRaw: vi.fn().mockResolvedValue([{ plan }]),
         tenant: {
-          findUnique: vi.fn().mockImplementation(async () => ({ plan: plan })),
+          findUnique: vi.fn().mockImplementation(async () => ({ plan: plan, businessType })),
           update: vi.fn().mockImplementation(async ({ data }: { data: { plan: PlanTier } }) => ({
             plan: data.plan,
           })),
@@ -512,7 +528,9 @@ describe('isModuleEnabled — falls back to plan-membership correctly', () => {
       const repo = new PrismaTenantModuleRepository(mockPrisma as unknown as PrismaClient);
 
       const result = await repo.isModuleEnabled(TENANT, moduleId);
-      const expected = MODULE_PLAN_MAP[plan].includes(moduleId);
+      const expected =
+        MODULE_PLAN_MAP[plan].includes(moduleId) &&
+        getModulesForBusinessType(businessType).includes(moduleId);
 
       expect(result).toBe(expected);
     }

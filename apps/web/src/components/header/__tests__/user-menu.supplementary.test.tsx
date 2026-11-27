@@ -71,6 +71,14 @@ describe('UserMenu', () => {
     expect(screen.getByText('John Doe')).toBeDefined();
   });
 
+  it('names the menu button with the user name (label in name), whatever the header width', () => {
+    render(<UserMenu user={{ name: 'John Doe', email: 'john@example.com', role: 'Admin' }} />);
+    expect(screen.getByRole('button', { name: 'John Doe, account menu' })).toHaveAttribute(
+      'aria-haspopup',
+      'true'
+    );
+  });
+
   it('renders initials when no avatar is provided', () => {
     render(<UserMenu user={{ name: 'John Doe', email: 'john@example.com' }} />);
 

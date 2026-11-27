@@ -6,15 +6,26 @@
  * @implements AC-11 (TicketForm with createTicketSchema validation)
  */
 
+import { Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, toast } from '@intelliflow/ui';
-import { TicketForm } from '@/components/tickets';
+import { NewTicketContactForm } from '@/components/tickets/NewTicketContactForm';
 import { api } from '@/lib/api';
 import { invalidateTicketsCache } from '@/app/tickets/actions';
 
 export default function NewTicketPage() {
+  // useSearchParams needs a Suspense boundary in the App Router.
+  return (
+    <Suspense fallback={null}>
+      <NewTicketPageContent />
+    </Suspense>
+  );
+}
+
+function NewTicketPageContent() {
   const router = useRouter();
+  const contactId = useSearchParams().get('contactId');
   const createMutation = api.ticket.create.useMutation({
     onSuccess: (data: { id: string }) => {
       // ticket.create has a contactEmail side-effect that writes to ContactActivity
@@ -81,8 +92,8 @@ export default function NewTicketPage() {
       {/* Form Card */}
       <Card className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
         <div className="p-6">
-          <TicketForm
-            mode="create"
+          <NewTicketContactForm
+            contactId={contactId}
             onSubmit={(data) => createMutation.mutateAsync(data as never).then(() => {})}
             onCancel={() => router.push('/tickets')}
             isSubmitting={createMutation.isPending}

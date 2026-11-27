@@ -11,6 +11,7 @@ import {
   EMAIL_SEND_ERROR_CODES,
   MAILBOX_ERROR_CODES,
   type EmailSendErrorCode,
+  type EmailSendPurpose,
   type MailboxErrorCode,
 } from '@intelliflow/domain';
 
@@ -95,6 +96,21 @@ export function getEmailSendError(error: unknown): EmailSendErrorView {
         message: `Every recipient is on the suppression list, so nothing was sent: ${data.skipped.join(', ')}.`,
         action: null,
       };
+    case 'ALL_OBJECTED':
+      return {
+        code: data.code,
+        title: 'Email not sent',
+        message: `This is a marketing email, and every recipient objected to marketing or is on the suppression list, so nothing was sent: ${data.skipped.join(', ')}.`,
+        action: null,
+      };
+    case 'PURPOSE_REQUIRED':
+      // IFC-315: nothing was sent. SendErrorAlert offers the two purposes with this code.
+      return {
+        code: data.code,
+        title: 'Is this email about their matter?',
+        message: `Not sent. These recipients objected to marketing email: ${data.skipped.join(', ')}. Send it to them only if it is about their matter, such as a reply or a notice. If it is marketing, send it as marketing and they are left out.`,
+        action: null,
+      };
     case 'SEND_FAILED': {
       const reason = data.mailboxErrorCode ? FAILURE_REASONS[data.mailboxErrorCode] : null;
       const needsSettings =
@@ -109,6 +125,13 @@ export function getEmailSendError(error: unknown): EmailSendErrorView {
   }
 }
 
+/** IFC-315: the `purpose` field of a send, left out when the sender named none. */
+export function purposeField(purpose: EmailSendPurpose | undefined): {
+  purpose?: EmailSendPurpose;
+} {
+  return purpose ? { purpose } : {};
+}
+
 /** What a coded mailbox failure means, for send errors and connection tests alike. */
 export function mailboxErrorMessage(code: MailboxErrorCode): string {
   return FAILURE_REASONS[code];
@@ -119,14 +142,33 @@ export function mailboxErrorMessage(code: MailboxErrorCode): string {
  * mail server refused (the rest were sent). Null when everyone was sent it.
  */
 export function partialSendNotice(
-  result: { skipped?: readonly string[]; rejected?: readonly string[] } | null | undefined
+  result:
+    | {
+        skipped?: readonly string[];
+        rejected?: readonly string[];
+        objected?: readonly string[];
+      }
+    | null
+    | undefined
 ): string | null {
   const parts = [
     skippedRecipientsNotice(result?.skipped),
+    objectedRecipientsNotice(result?.objected, (result?.skipped?.length ?? 0) > 0),
     refusedRecipientsNotice(result?.rejected),
   ];
   const notice = parts.filter(Boolean).join(' ');
   return notice || null;
+}
+
+/** IFC-315: marketing recipients left out because they objected to direct marketing. */
+function objectedRecipientsNotice(
+  objected: readonly string[] | undefined,
+  afterSkipped: boolean
+): string | null {
+  if (!objected || objected.length === 0) return null;
+  const who = objected.length === 1 ? '1 recipient was' : `${objected.length} recipients were`;
+  const lead = afterSkipped ? '' : 'Sent. ';
+  return `${lead}${who} left out because they objected to marketing email: ${objected.join(', ')}.`;
 }
 
 function refusedRecipientsNotice(rejected: readonly string[] | undefined): string | null {

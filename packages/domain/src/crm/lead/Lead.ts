@@ -45,6 +45,13 @@ export class LeadAlreadyConvertedError extends DomainError {
   }
 }
 
+export class LeadNotConvertedError extends DomainError {
+  readonly code = 'LEAD_NOT_CONVERTED';
+  constructor() {
+    super('Lead is not converted, so there is no conversion to undo');
+  }
+}
+
 export class LeadCannotBeQualifiedError extends DomainError {
   readonly code = 'LEAD_CANNOT_BE_QUALIFIED';
   constructor(status: LeadStatus) {
@@ -362,6 +369,23 @@ export class Lead extends AggregateRoot<LeadId> {
     this.props.updatedAt = new Date();
 
     this.addDomainEvent(new LeadConvertedEvent(this.id, contactId, accountId, convertedBy));
+
+    return Result.ok(undefined);
+  }
+
+  /**
+   * MVP-003: undo a conversion to a deal. A converted lead goes back to QUALIFIED, the only
+   * status a lead converts from. The caller removes what the conversion created.
+   */
+  undoConversion(undoneBy: string): Result<void, LeadNotConvertedError> {
+    if (!this.isConverted) {
+      return Result.fail(new LeadNotConvertedError());
+    }
+
+    this.props.status = 'QUALIFIED';
+    this.props.updatedAt = new Date();
+
+    this.addDomainEvent(new LeadStatusChangedEvent(this.id, 'CONVERTED', 'QUALIFIED', undoneBy));
 
     return Result.ok(undefined);
   }
