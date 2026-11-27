@@ -401,6 +401,8 @@ export const taskRouter = createTRPCRouter({
               email: true,
               firstName: true,
               lastName: true,
+              // A company-only lead is named by it on the Tasks page (owner 27/11).
+              company: true,
             },
           },
           contact: {
