@@ -48,8 +48,8 @@ export function classifyFile(file) {
 
 /** Risky path rules: the area a path belongs to, or null. Order is only for the label. */
 const RISK_RULES = [
-  ['prisma-schema', /(^|\/)schema\.prisma$|(^|\/)prisma\/schema\//],
-  ['migration', /(^|\/)migrations?\/|\.sql$/],
+  ['prisma-schema', /(?:(?:^|\/)schema\.prisma$|(?:^|\/)prisma\/schema\/)/],
+  ['migration', /(?:(?:^|\/)migrations?\/|\.sql$)/],
   [
     'auth',
     /auth(?!or)|(^|[/._-])(session|jwt|oauth|rbac|permissions?|login|middleware|proxy)([/._-]|$)/i,
