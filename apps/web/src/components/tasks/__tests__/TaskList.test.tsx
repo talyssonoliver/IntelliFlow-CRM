@@ -111,6 +111,20 @@ describe('TaskList', () => {
     vi.clearAllMocks();
   });
 
+  it('names a lead that has only a company by the company, not "Unknown Lead" (owner 27/11)', () => {
+    const task = {
+      ...defaultProps.tasks[0],
+      id: 'task-company-lead',
+      lead: { id: 'lead-c', firstName: null, lastName: null, company: 'Northfield Plumbing' },
+      contact: null,
+      opportunity: null,
+    };
+    render(<TaskList {...defaultProps} tasks={[task]} />);
+    const row = screen.getByTestId('task-row-task-company-lead');
+    expect(row).toHaveTextContent('Northfield Plumbing');
+    expect(row).not.toHaveTextContent('Unknown Lead');
+  });
+
   it('renders loading skeleton when isLoading', () => {
     render(<TaskList {...defaultProps} isLoading={true} tasks={[]} />);
 

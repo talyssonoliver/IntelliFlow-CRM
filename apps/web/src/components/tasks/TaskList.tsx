@@ -20,7 +20,13 @@ export interface TaskListItem {
   readonly status: TaskStatus;
   readonly ownerId: string;
   readonly owner: { id: string; email: string; name: string | null };
-  readonly lead: { id: string; firstName: string | null; lastName: string | null } | null;
+  readonly lead: {
+    id: string;
+    firstName: string | null;
+    lastName: string | null;
+    /** A lead with only a company is named by it (owner 27/11: AI tasks showed "Unknown Lead"). */
+    company?: string | null;
+  } | null;
   readonly contact: { id: string; firstName: string; lastName: string } | null;
   readonly opportunity: { id: string; name: string; stage: string } | null;
   /** A follow-up due on a lead (derived, not stored): see `follow-up-rows.ts`. */
@@ -89,7 +95,10 @@ function getEntityInfo(
   if (task.lead)
     return {
       type: 'lead',
-      name: `${task.lead.firstName ?? ''} ${task.lead.lastName ?? ''}`.trim() || 'Unknown Lead',
+      name:
+        `${task.lead.firstName ?? ''} ${task.lead.lastName ?? ''}`.trim() ||
+        task.lead.company?.trim() ||
+        'Unknown Lead',
       href: `/leads/${task.lead.id}`,
     };
   if (task.contact)

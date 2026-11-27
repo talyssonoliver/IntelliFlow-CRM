@@ -323,7 +323,7 @@ export const taskRouter = createTRPCRouter({
       where,
       include: {
         owner: { select: { id: true, email: true, name: true } },
-        lead: { select: { id: true, email: true, firstName: true, lastName: true } },
+        lead: { select: { id: true, email: true, firstName: true, lastName: true, company: true } },
         contact: { select: { id: true, email: true, firstName: true, lastName: true } },
         opportunity: { select: { id: true, name: true, stage: true } },
       },
@@ -986,7 +986,7 @@ export const taskRouter = createTRPCRouter({
       where,
       include: {
         owner: { select: { id: true, email: true, name: true } },
-        lead: { select: { id: true, email: true, firstName: true, lastName: true } },
+        lead: { select: { id: true, email: true, firstName: true, lastName: true, company: true } },
         contact: { select: { id: true, email: true, firstName: true, lastName: true } },
         opportunity: { select: { id: true, name: true, stage: true } },
       },
