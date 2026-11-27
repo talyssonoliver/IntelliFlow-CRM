@@ -563,7 +563,8 @@ export default function PrivacyRequestsContent() {
       <ManualFilesDialog
         request={manualFor}
         files={manualFiles.data ?? null}
-        pending={confirmManual.isPending}
+        // Busy while saving and while the next page loads: the old page cannot be confirmed twice.
+        pending={confirmManual.isPending || manualFiles.isFetching}
         error={manualError ?? (manualFiles.error ? errorMessage(manualFiles.error) : null)}
         onConfirm={(ids) => {
           runConfirmManual(ids).catch(() => setManualError('Please try again.'));

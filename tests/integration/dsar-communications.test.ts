@@ -576,6 +576,12 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       await outbox().settle(`${TENANT}_x`, requestId, [{ id: 'nope', deleted: true }], new Date());
       expect(await outbox().leftFor(`${TENANT}_x`, [requestId])).toEqual({});
       expect(await outbox().manual(`${TENANT}_x`, requestId)).toEqual([]);
+      // Nor another request's: the files must belong to the request named.
+      const mine = await prisma.dsarStoredObject.findFirst({
+        where: { tenantId: TENANT, requestId, state: 'MANUAL' },
+      });
+      expect(await outbox().markHandled(TENANT, 'another-request', [mine.id], new Date())).toBe(0);
+      expect(await outbox().manual(TENANT, 'another-request')).toEqual([]);
       expect(await outbox().markHandled(`${TENANT}_x`, requestId, ['nope'], new Date())).toBe(0);
     });
 
