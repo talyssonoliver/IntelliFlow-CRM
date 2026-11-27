@@ -4,6 +4,7 @@
  * The rule it enforces (#1274): a diff that was not reviewed whole is never a PASS.
  */
 import { chunkSections, collectScopedDiff, DiffInputError } from './codex-diff.mjs';
+import { parseNumstat } from './review-tier.mjs';
 
 const lines = (text) =>
   text
@@ -35,6 +36,36 @@ export function listChangedFiles(base, spawn) {
   const staged = spawn('git', stagedArgs, options);
   const stagedFiles = staged.status === 0 ? lines(staged.stdout || '') : [];
   return [...new Set([...lines(committed.stdout || ''), ...stagedFiles])];
+}
+
+/**
+ * `git diff --numstat` for the whole change (committed against the base plus staged), as
+ * { file, added, deleted }[]. Used to size the review (lib/review-tier.mjs). A failure throws
+ * like listChangedFiles: an unknown size must not read as a tiny one.
+ */
+export function collectNumstat(base, spawn) {
+  const options = { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true };
+  const quote = ['-c', 'core.quotePath=false'];
+  const run = (args) =>
+    spawn('git', [...quote, 'diff', '--numstat', '--no-renames', ...args], options);
+  const committed = run([`${base}...HEAD`]);
+  if (committed.error || committed.status !== 0) {
+    throw new DiffInputError('base-unresolved', `cannot size the change against ${base}`);
+  }
+  const staged = run(['--cached']);
+  const parse = (text) => parseNumstat(text || '');
+  const byFile = new Map();
+  for (const s of [
+    ...parse(committed.stdout),
+    ...(staged.status === 0 ? parse(staged.stdout) : []),
+  ]) {
+    const prev = byFile.get(s.file);
+    byFile.set(
+      s.file,
+      prev ? { ...prev, added: prev.added + s.added, deleted: prev.deleted + s.deleted } : s
+    );
+  }
+  return [...byFile.values()];
 }
 
 /**
@@ -79,6 +110,7 @@ export function reviewChunks(chunks, { buildPrompt, review, write, log }) {
   const findings = [];
   const reviewers = new Set();
   const unreviewed = [];
+  const runs = [];
   chunks.forEach((chunk, i) => {
     const many = chunks.length > 1;
     const suffix = many ? `-${i + 1}` : '';
@@ -96,6 +128,7 @@ export function reviewChunks(chunks, { buildPrompt, review, write, log }) {
     write(`codex-prompt${suffix}.txt`, prompt);
     const result = review(prompt);
     write(`codex-raw${suffix}.txt`, result.raw);
+    runs.push(result);
     if (result.parsed) {
       reviewers.add(result.reviewer);
       findings.push(...result.parsed.findings);
@@ -103,12 +136,13 @@ export function reviewChunks(chunks, { buildPrompt, review, write, log }) {
       unreviewed.push(i + 1);
     }
   });
-  return { findings, reviewers: [...reviewers], unreviewed };
+  return { findings, reviewers: [...reviewers], unreviewed, runs };
 }
 
 /**
  * What a chunked review adds up to:
- *   skip        no chunk got a parseable review (no reviewer worked; the old degrade path)
+ *   deferred    no chunk got a parseable review (Codex capped or failed and Claude was not
+ *               allowed or failed): FAIL with "REVIEW_DEFERRED", never a pass (owner ruling 2026-11-26)
  *   incomplete  some chunks were reviewed and some were not: FAIL, never a partial PASS
  *   reviewed    every chunk was reviewed; findings and waivers decide
  */
@@ -116,10 +150,10 @@ export function chunkOutcome(chunkCount, unreviewed) {
   if (unreviewed.length === 0) return { kind: 'reviewed' };
   if (unreviewed.length === chunkCount) {
     return {
-      kind: 'skip',
+      kind: 'deferred',
       message:
-        'SKIPPED_PRECONDITION: no semantic reviewer produced parseable output ' +
-        '(codex unavailable/capped AND claude unavailable/failed). ' +
+        'REVIEW_DEFERRED: no reviewer produced parseable output (codex unavailable or capped, ' +
+        'and Claude not allowed or failed). Gate FAIL - the diff was NOT reviewed. ' +
         'Review artifacts/codex-review/codex-raw*.txt.',
     };
   }
@@ -176,9 +210,9 @@ export function makeCodexRunner({
   verbose,
   log,
 }) {
-  return (prompt) => {
+  return (prompt, tier = {}) => {
     fs.rmSync(lastMsgPath, { force: true });
-    const r = runCodexReviewer(prompt, lastMsgPath, repoRoot, spawn);
+    const r = runCodexReviewer(prompt, lastMsgPath, repoRoot, spawn, tier);
     if (verbose) {
       log.err(`--- codex stdout ---\n${r.stdout || ''}\n`);
       log.err(`--- codex stderr ---\n${r.stderr || ''}\n`);
@@ -188,14 +222,16 @@ export function makeCodexRunner({
       r.stdout ||
       r.stderr ||
       '';
-    return { raw, status: r.status, stderr: r.stderr };
+    return { raw, status: r.status, stderr: r.stderr, stdout: r.stdout || '' };
   };
 }
 
 /**
- * Everything after the scope is known: collect the whole diff, split it, review each chunk and
- * add it up. Returns { kind: 'reviewed' | 'skip' | 'fail', message?, findings, reviewerUsed,
- * chunkCount }. A diff that cannot be collected whole, or a partly reviewed one, is 'fail'.
+ * Everything after the scope is known: collect the whole diff (or take the `sections` the caller
+ * already narrowed to the hunks unseen since the last round), split it, review each chunk and add
+ * it up. Returns { kind: 'reviewed' | 'deferred' | 'fail', message?, findings, reviewerUsed,
+ * chunkCount, runs }. A diff that cannot be collected whole, or a partly reviewed one, is 'fail';
+ * one no reviewer would take is 'deferred' (also a FAIL for the gate, never a pass).
  */
 export function runChunkedReview({
   baseRef,
@@ -207,17 +243,20 @@ export function runChunkedReview({
   write,
   clearStale,
   log,
+  sections = null,
 }) {
   let chunks;
   try {
-    chunks = chunkSections(collectScopedDiff({ baseRef, files: scopedFiles, repoRoot, spawn }));
+    chunks = chunkSections(
+      sections ?? collectScopedDiff({ baseRef, files: scopedFiles, repoRoot, spawn })
+    );
   } catch (err) {
-    return { kind: 'fail', message: diffInputMessage(err), findings: [], chunkCount: 0 };
+    return { kind: 'fail', message: diffInputMessage(err), findings: [], chunkCount: 0, runs: [] };
   }
   const chars = chunks.reduce((n, c) => n + c.text.length, 0);
   log.out(`[codex-review] diff     : ${chars} characters in ${chunks.length} chunk(s)\n`);
   clearStale();
-  const { findings, reviewers, unreviewed } = reviewChunks(chunks, {
+  const { findings, reviewers, unreviewed, runs } = reviewChunks(chunks, {
     buildPrompt,
     review,
     write,
@@ -230,5 +269,7 @@ export function runChunkedReview({
     findings,
     reviewerUsed: reviewers.join('+'),
     chunkCount: chunks.length,
+    chars,
+    runs,
   };
 }
