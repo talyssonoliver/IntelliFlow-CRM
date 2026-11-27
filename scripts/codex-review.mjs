@@ -156,12 +156,12 @@ function claudeAvailable() {
  * waiver + exit logic, so a Claude pass blocks/passes exactly like a codex pass.
  * Returns '' on failure (the caller then degrades to SKIPPED_PRECONDITION).
  */
-function runClaudeReview(fullPrompt) {
+function runClaudeReview(fullPrompt, { model } = {}) {
   // `claude -p` reads the prompt from stdin in print/headless mode and emits a
   // single-turn result. `--output-format json` wraps it as { result: "<text>" }.
   // Lean flags and no shell tools: the reviewer reads, and never starts processes
   // (lib/review-commands.mjs).
-  const r = runClaudeReviewer(fullPrompt, REPO_ROOT, spawnSync);
+  const r = runClaudeReviewer(fullPrompt, REPO_ROOT, spawnSync, { model });
   if (VERBOSE) {
     process.stderr.write('--- claude stdout ---\n' + (r.stdout || '') + '\n');
     process.stderr.write('--- claude stderr ---\n' + (r.stderr || '') + '\n');
