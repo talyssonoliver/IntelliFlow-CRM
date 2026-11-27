@@ -336,10 +336,21 @@ export const DealListView = React.memo(function DealListView() {
     onSuccess: refreshDealData,
   });
 
-  // Reset page on filter change
+  // Reset page on filter change (the sidebar segment included: review 27/11).
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, stageFilter, sortOrder]);
+  }, [debouncedSearch, stageFilter, sortOrder, segment]);
+
+  // A segment covers open deals only: a closed stage chosen before it no longer applies.
+  useEffect(() => {
+    if (
+      segmentFilter &&
+      stageFilter &&
+      !segmentFilter.stage.includes(stageFilter as OpportunityStage)
+    ) {
+      setStageFilter('');
+    }
+  }, [segmentFilter, stageFilter]);
 
   // Transform data
   const deals = useMemo(() => transformDeals(opportunitiesData), [opportunitiesData]);
@@ -350,11 +361,11 @@ export const DealListView = React.memo(function DealListView() {
   // Stage filter options
   const stageFilterOptions: FilterOption[] = useMemo(
     () =>
-      OPPORTUNITY_STAGES.map((s) => ({
+      (segmentFilter?.stage ?? OPPORTUNITY_STAGES).map((s) => ({
         value: s,
         label: PIPELINE_STAGE_CONFIG[s].label,
       })),
-    []
+    [segmentFilter]
   );
 
   // Handlers
@@ -499,7 +510,7 @@ export const DealListView = React.memo(function DealListView() {
     []
   );
 
-  const hasFilters = debouncedSearch || stageFilter;
+  const hasFilters = debouncedSearch || stageFilter || segment;
   const emptyMessage = hasFilters
     ? 'No deals match your search criteria'
     : 'No deals found. Create your first deal to get started.';

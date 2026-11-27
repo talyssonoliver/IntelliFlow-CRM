@@ -13,7 +13,7 @@
 import Link from 'next/link';
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Card, Button } from '@intelliflow/ui';
+import { Card, Button, toast } from '@intelliflow/ui';
 import { NoActionsEmptyState } from '../components/NoActionsEmptyState';
 import { KpiCard } from '@/components/dashboard/KpiCard';
 import { mapDraftToAction, type AutoResponseDraftFromAPI } from '@/lib/agent/auto-response-draft';
@@ -818,6 +818,10 @@ function AgentApprovalsPreviewContent() {
               decision: 'APPROVED',
               decidedBy: userId,
             });
+            toast({
+              title: 'Draft Approved',
+              description: 'The AI draft has been approved and will be sent.',
+            });
           }
           return;
         }
@@ -828,6 +832,11 @@ function AgentApprovalsPreviewContent() {
         }
       } catch (error) {
         console.error('Failed to approve:', error);
+        toast({
+          title: 'Approval Failed',
+          description: error instanceof Error ? error.message : 'Unknown error',
+          variant: 'destructive',
+        });
       }
     },
     [approveMutation, draftApproveMutation, isDraft, userId]
@@ -843,12 +852,18 @@ function AgentApprovalsPreviewContent() {
               decidedBy: userId,
               reason: feedback,
             });
+            toast({ title: 'Draft Rejected', description: 'The AI draft has been rejected.' });
           }
           return;
         }
         await rejectMutation.mutateAsync({ actionId, reason: feedback });
       } catch (error) {
         console.error('Failed to reject:', error);
+        toast({
+          title: 'Rejection Failed',
+          description: error instanceof Error ? error.message : 'Unknown error',
+          variant: 'destructive',
+        });
       }
     },
     [rejectMutation, draftRejectMutation, isDraft, userId]
@@ -863,7 +878,11 @@ function AgentApprovalsPreviewContent() {
   // ==========================================================================
 
   const isLoading = authLoading || pendingQuery.isLoading;
-  const isMutating = approveMutation.isPending || rejectMutation.isPending;
+  const isMutating =
+    approveMutation.isPending ||
+    rejectMutation.isPending ||
+    draftApproveMutation.isPending ||
+    draftRejectMutation.isPending;
 
   if (pendingQuery.error && !isLoading) {
     return (
