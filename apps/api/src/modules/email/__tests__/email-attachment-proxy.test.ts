@@ -25,6 +25,7 @@ vi.mock('../mailbox-transport', async (importOriginal) => ({
 import { MailboxTransportError } from '@intelliflow/adapters';
 import { createTestContext, prismaMock, TEST_UUIDS } from '../../../test/setup';
 import { emailAttachmentsRouter } from '../email-attachments.router';
+import { canReadEmailRecord } from '../email-read-access';
 
 const tenantId = TEST_UUIDS.tenant;
 const OWNER = TEST_UUIDS.user1;
@@ -50,7 +51,6 @@ function row(over: Record<string, unknown> = {}, email: Record<string, unknown> 
       mailboxId: 'mbx-1',
       provider: 'MICROSOFT',
       providerMessageId: 'msg-1',
-      contactId: null,
       metadata: { leadId: 'lead-1' },
       ...email,
     },
@@ -70,9 +70,6 @@ function setRows(attachment: unknown, box: unknown = mailbox()) {
 beforeEach(() => {
   vi.clearAllMocks();
   transport.getOAuthAccessToken.mockResolvedValue('access-for-tests');
-  // The caller can see the lead the mail is logged on, unless a test says otherwise.
-  (prismaMock as any).lead.findFirst.mockResolvedValue({ id: 'lead-1' });
-  (prismaMock as any).contact.findFirst.mockResolvedValue(null);
   const file = { bytes: Buffer.from('%PDF-bytes'), contentType: 'application/pdf; charset=binary' };
   provider.fetchGraphAttachment.mockResolvedValue(file);
   provider.fetchGmailAttachment.mockResolvedValue(file);
@@ -124,34 +121,35 @@ describe('emailAttachments.fetch', () => {
     expect(provider.fetchGraphAttachment).not.toHaveBeenCalled();
   });
 
-  it("hides another user's mail from a member, and shows it to an email admin", async () => {
-    setRows(row({}, { userId: 'someone-else' }));
-    await expect(caller().fetch(INPUT)).rejects.toMatchObject({ code: 'NOT_FOUND' });
-    expect(provider.fetchGraphAttachment).not.toHaveBeenCalled();
-
-    const admin = { user: { ...createTestContext().user!, role: 'ADMIN' } };
-    await expect(caller(admin).fetch(INPUT)).resolves.toMatchObject({ fileName: 'quote.pdf' });
+  it("serves other people's non-draft mail, exactly as the email view shows it", async () => {
+    // Shared inbound mail, company-mailbox mail and a colleague's sent mail are all readable by
+    // the tenant's members in the email view, so their attachments are served too.
+    for (const userId of [null, 'someone-else']) {
+      setRows(row({}, { userId, metadata: {} }));
+      await expect(caller().fetch(INPUT)).resolves.toMatchObject({ fileName: 'quote.pdf' });
+    }
+    // No lead or contact check: the link of the mail to a record decides nothing here.
+    expect((prismaMock as any).lead.findFirst).not.toHaveBeenCalled();
+    expect((prismaMock as any).contact.findFirst).not.toHaveBeenCalled();
   });
 
-  it('needs the caller to be able to see the lead or contact the mail is logged on', async () => {
-    setRows(row());
-    (prismaMock as any).lead.findFirst.mockResolvedValue(null);
+  it('keeps a draft private to its writer, like the email view', async () => {
+    setRows(row({}, { userId: 'someone-else', metadata: { isDraft: true } }));
     await expect(caller().fetch(INPUT)).rejects.toMatchObject({ code: 'NOT_FOUND' });
-    expect((prismaMock as any).lead.findFirst.mock.calls[0][0].where).toMatchObject({
-      id: 'lead-1',
-      tenantId,
-    });
     expect(provider.fetchGraphAttachment).not.toHaveBeenCalled();
-
-    // A mail logged on a contact instead: the contact must be visible.
-    setRows(row({}, { metadata: {}, contactId: 'contact-1' }));
-    await expect(caller().fetch(INPUT)).rejects.toMatchObject({ code: 'NOT_FOUND' });
-    (prismaMock as any).contact.findFirst.mockResolvedValue({ id: 'contact-1' });
+    setRows(row({}, { userId: OWNER, metadata: { isDraft: true } }));
     await expect(caller().fetch(INPUT)).resolves.toMatchObject({ fileName: 'quote.pdf' });
+  });
 
-    // Logged on nobody the caller can see: not served, even though it has no owner.
-    setRows(row({}, { metadata: {}, contactId: null }));
-    await expect(caller().fetch(INPUT)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+  it('authorises exactly when the email view does: both use canReadEmailRecord', () => {
+    const cases = [
+      { userId: null, metadata: null },
+      { userId: 'a', metadata: {} },
+      { userId: 'a', metadata: { isDraft: true } },
+      { userId: 'b', metadata: { isDraft: true } },
+      { userId: 'b', metadata: { isDraft: false } },
+    ];
+    expect(cases.map((c) => canReadEmailRecord('a', c))).toEqual([true, true, true, false, true]);
   });
 
   it('limits how many provider reads one user has running at once', async () => {

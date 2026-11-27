@@ -36,6 +36,7 @@ import { sendUserEmailInputSchema, type SendUserEmailResultDto } from '@intellif
 import * as adapters from '@intelliflow/adapters';
 import { emailAttachmentStorage, emailRuntimeDeps, type EmailRouterCtx } from './email-access';
 import { sanitizeEmailHtml } from './email-html-sanitizer';
+import { canReadEmailRecord } from './email-read-access';
 import { dispatchUserMail } from './mailbox-sender';
 import { sendComposedEmail } from '../contact/reply-draft-compose';
 const InboundEmailParser = (adapters as any).InboundEmailParser;
@@ -385,10 +386,11 @@ export const inboundEmailRouter = createTRPCRouter({
         include: { attachments: true },
       });
       if (!record) return null;
+      // One rule for the view and the attachment proxy (email-read-access.ts).
+      if (!canReadEmailRecord((ctx as any).user.userId, record)) return null;
       const email = mapEmailRecord(record);
-      if (!email.isDraft) return email;
       // A draft is private to the person writing it, and they need all of it back.
-      if (record.userId !== (ctx as any).user.userId) return null;
+      if (!email.isDraft) return email;
       return {
         ...email,
         bcc: record.bccEmails ? parseRecipients(record.bccEmails) : undefined,
