@@ -222,6 +222,13 @@ export function MailboxConnection({
             : 'Connect a shared address your team can send from.'}
         </p>
       )}
+      {/* A calendar belongs to a person: it is connected with the user's own Google mailbox, not the company's. */}
+      {!connected && scope === 'USER' && providersAvailable.GMAIL && (
+        <p className="text-sm text-muted-foreground" data-testid="calendar-with-google">
+          Connect with Google to also see your appointments in Google Calendar and your Google
+          events in Aurora.
+        </p>
+      )}
       {broken && mailbox?.lastErrorCode && (
         <p className="text-sm text-red-700 dark:text-red-300">
           {mailboxErrorMessage(mailbox.lastErrorCode)}

@@ -445,10 +445,41 @@ function isEdited(link: any): boolean {
   );
 }
 
+/**
+ * The ids of the links whose appointment was edited in Aurora since it was last synced and that may be
+ * written to now. The database does the comparing, so a round with nothing edited reads ids only: it
+ * never loads every linked appointment (an imported calendar is hundreds of them, every few minutes,
+ * which on its own would spend the egress budget). Same rules as `isEdited` and `eligible`.
+ */
+async function editedLinkIds(ctx: SyncContext, cutoff: Date): Promise<string[]> {
+  const { tenantId, id: mailboxId, userId } = ctx.mailbox;
+  const rows: Array<{ id: string }> = await ctx.prisma.$queryRaw`
+    SELECT l.id
+    FROM calendar_event_links l
+    JOIN appointments a ON a.id = l."appointmentId"
+    WHERE l."tenantId" = ${tenantId}
+      AND l."mailboxId" = ${mailboxId}
+      AND l."googleAccount" = ${ctx.mailbox.account}
+      AND l."remoteCancelledAt" IS NULL
+      AND l.pending = false
+      AND a."tenantId" = ${tenantId}
+      AND a."organizerId" = ${userId}
+      AND a.status::text = ANY(${[...ACTIVE_STATUSES]}::text[])
+      AND a."endTime" >= ${cutoff}
+      AND a.recurrence IS NULL
+      AND (l."localSyncedAt" IS NULL OR a."updatedAt" > l."localSyncedAt")
+      AND (l."nextPushAt" IS NULL OR l."nextPushAt" <= ${ctx.now} OR a."updatedAt" > l."updatedAt")
+    ORDER BY l.id`;
+  return rows.map((r) => r.id);
+}
+
 /** Events to change: linked live appointments of the user edited in Aurora since they were last synced. */
 async function patchEvents(ctx: SyncContext, cutoff: Date, budget: number): Promise<StepResult> {
   const { tenantId, userId } = ctx.mailbox;
+  const ids = await editedLinkIds(ctx, cutoff);
+  if (ids.length === 0) return { writes: 0, complete: true };
   const where = {
+    AND: [{ id: { in: ids } }],
     remoteCancelledAt: null,
     pending: false,
     appointment: {
@@ -459,6 +490,8 @@ async function patchEvents(ctx: SyncContext, cutoff: Date, budget: number): Prom
       recurrence: { equals: Prisma.DbNull },
     },
   };
+  // The rows are read again here with the full rules (and fresh): the query above only narrows what is
+  // loaded, it never decides alone what is written.
   return scanLinks(ctx, where, budget, isEdited, (link) => patchOne(ctx, link));
 }
 async function patchOne(

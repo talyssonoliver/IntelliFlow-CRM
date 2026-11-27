@@ -552,6 +552,54 @@ describe('Aurora to Google: the scan of edited appointments', () => {
     expect(report.pushedUpdated).toBe(1);
   });
 });
+describe('Aurora to Google: what a round reads (egress budget)', () => {
+  /** Reads of linked appointments by the edited-appointments scan (each loads rows with their appointment). */
+  function appointmentRowsRead(): number {
+    return h.db.calendarEventLink.findMany.mock.calls.filter(
+      ([args]: any[]) => args?.where?.pending === false
+    ).length;
+  }
+
+  it('loads no linked appointment when nothing was edited in Aurora', async () => {
+    const rows = Array.from({ length: 40 }, (_, n) =>
+      appointmentRow({ id: `a-${String(n).padStart(3, '0')}`, title: `Visit ${n}` })
+    );
+    const sync = h.setup({ appointment: rows });
+    await runCalendarSync(sync);
+    await h.nextRound(sync);
+    expect(h.links()).toHaveLength(40);
+    h.db.calendarEventLink.findMany.mockClear();
+
+    const report = await h.nextRound(sync);
+
+    expect(report.pushedUpdated).toBe(0);
+    expect(appointmentRowsRead()).toBe(0);
+  });
+
+  it('loads only the edited appointment among many', async () => {
+    const rows = Array.from({ length: 40 }, (_, n) =>
+      appointmentRow({ id: `a-${String(n).padStart(3, '0')}`, title: `Visit ${n}` })
+    );
+    const sync = h.setup({ appointment: rows });
+    await runCalendarSync(sync);
+    await h.nextRound(sync);
+    Object.assign(h.appointments()[7], {
+      title: 'Edited',
+      updatedAt: new Date(NOW.getTime() + 3_600_000),
+    });
+    h.db.calendarEventLink.findMany.mockClear();
+
+    const report = await h.nextRound(sync);
+
+    expect(report.pushedUpdated).toBe(1);
+    const loaded = new Set(
+      h.db.calendarEventLink.findMany.mock.calls
+        .filter(([args]: any[]) => args?.where?.pending === false)
+        .flatMap(([args]: any[]) => args.where.AND[0].id.in as string[])
+    );
+    expect(loaded.size).toBe(1);
+  });
+});
 describe('Aurora to Google: review cases', () => {
   const settled = async () => {
     const sync = h.setup({ appointment: [appointmentRow()] });

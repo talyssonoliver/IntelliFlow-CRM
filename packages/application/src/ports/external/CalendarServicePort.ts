@@ -30,6 +30,8 @@ export interface ExternalCalendarEvent {
   lastModified: Date;
   /** MVP-013: Google's event visibility; a private or confidential event is not copied into the CRM. */
   visibility?: 'default' | 'public' | 'private' | 'confidential';
+  /** MVP-013: the Aurora appointment that made this event (a private extended property Aurora wrote on it). */
+  auroraAppointmentId?: string;
 }
 
 export interface ExternalAttendee {

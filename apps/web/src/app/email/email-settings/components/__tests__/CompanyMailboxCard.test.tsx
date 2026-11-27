@@ -72,6 +72,8 @@ describe('CompanyMailboxCard', () => {
     expect(screen.getByRole('button', { name: 'Connect Google' })).toBeEnabled();
     expect(screen.getByText('Connect a shared address your team can send from.')).toBeVisible();
     expect(screen.queryByText('Connect your mailbox to send email.')).not.toBeInTheDocument();
+    // A calendar belongs to a person: the company mailbox never offers one.
+    expect(screen.queryByTestId('calendar-with-google')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Set Up Mailbox' }));
     expect(await screen.findByTestId('smtp-form')).toHaveTextContent('form for TENANT');
   });
