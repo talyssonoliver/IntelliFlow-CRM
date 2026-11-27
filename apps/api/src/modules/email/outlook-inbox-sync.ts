@@ -140,9 +140,12 @@ function prismaCode(error: unknown): string | undefined {
 
 async function claimNext(deps: InboxSyncDeps, now: Date, kinds: string[]): Promise<Claim | null> {
   const leaseUntil = new Date(now.getTime() + LEASE_MS);
+  // The mailbox is picked once, in a materialised CTE, and only that row is updated. The shorter
+  // `WHERE id IN (SELECT ... LIMIT 1 FOR UPDATE SKIP LOCKED)` form is run by Postgres as a join on
+  // some plans, and then updates (locks) every due mailbox while the caller uses only the first:
+  // the others would sit locked, unsynced, until their lease ran out (#1586).
   const rows: Array<{ id: string; syncLockedUntil: Date }> = await deps.prisma.$queryRaw`
-    UPDATE email_mailboxes SET "syncLockedUntil" = ${leaseUntil}
-    WHERE id IN (
+    WITH picked AS MATERIALIZED (
       SELECT id FROM email_mailboxes
       WHERE status = 'ACTIVE' AND kind = ANY(${kinds})
         AND ("nextSyncAt" IS NULL OR "nextSyncAt" <= ${now})
@@ -151,7 +154,10 @@ async function claimNext(deps: InboxSyncDeps, now: Date, kinds: string[]): Promi
       LIMIT 1
       FOR UPDATE SKIP LOCKED
     )
-    RETURNING id, "syncLockedUntil"`;
+    UPDATE email_mailboxes m SET "syncLockedUntil" = ${leaseUntil}
+    FROM picked
+    WHERE m.id = picked.id
+    RETURNING m.id, m."syncLockedUntil"`;
   const row = rows[0];
   return row ? { id: row.id, leaseUntil: row.syncLockedUntil } : null;
 }
