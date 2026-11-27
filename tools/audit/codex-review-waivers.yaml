@@ -1001,3 +1001,30 @@ waivers:
     author: ui-partner lane (MVP-012)
     date: '2026-11-26'
     expires: '2026-12-26'
+  - fingerprint: 08a54d85a16037ba3bf00b8aa638c8d2734fca9c6ecdb537504f02b0a084bff2
+    reason: >-
+      DealForm currency readiness. Fixed in 718f6dccf, not at the flagged line:
+      useTenantCurrencyForSave now reads analytics.reportSettings.currency, a plain
+      tenantProcedure (every plan, read-only, no row written), so PARTNER_FREE tenants get
+      the currency and the form enables. Report-settings get/update keep the ANALYTICS
+      entitlement. Tests: report-settings.router.test.ts (currency), useTenantCurrency.test.tsx.
+      The finding is carried forward only because its hunk in DealForm did not change.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-27'
+    expires: '2026-12-27'
+  - fingerprint: 023d40c8988e0c43572273b09bfa36a3938bf6185199f8bd3df3eb49fb44e7f6
+    reason: >-
+      OpportunityCreateSheet currency readiness: same root cause and fix as the DealForm
+      waiver above (718f6dccf, core reportSettings.currency query for every plan). The sheet
+      uses the same useTenantCurrencyForSave hook; its flagged hunk did not change.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-27'
+    expires: '2026-12-27'
+  - fingerprint: 559b57271fe5d5f01376ca7651d1008799e4239b0c68872ad63a8f023ec85f30
+    reason: >-
+      SavedReportView money cards. Fixed in 718f6dccf at the MetricCard call, below the
+      flagged line: every MetricCard gets currency={currency}. Test 'labels the money cards in
+      the tenant currency, like the charts' renders a USD tenant and asserts no GBP figure.
+    author: ui-partner lane (MVP-012)
+    date: '2026-11-27'
+    expires: '2026-12-27'

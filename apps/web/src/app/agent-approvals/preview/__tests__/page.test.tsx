@@ -16,7 +16,12 @@ const mutationResults = vi.hoisted(
 const stable = vi.hoisted(() => ({
   pending: { data: [] as unknown[], isLoading: false, error: null, refetch: null as unknown },
   count: { data: { count: 0 }, refetch: null as unknown },
-  drafts: { data: { drafts: [] as unknown[] }, refetch: vi.fn() },
+  drafts: {
+    data: { drafts: [] as unknown[] } as { drafts: unknown[] } | undefined,
+    isError: false,
+    isLoading: false,
+    refetch: vi.fn(async () => undefined),
+  },
 }));
 
 vi.mock('next/link', () => ({
@@ -232,5 +237,20 @@ describe('AgentApprovalsPreviewPage AI email drafts (owner 26/11)', () => {
     );
     expect(mutationResults.approve.mutateAsync).not.toHaveBeenCalled();
     stable.drafts.data = { drafts: [] };
+  });
+
+  it('says the AI drafts could not load instead of showing an empty queue (codex 27/11)', () => {
+    stable.drafts.data = undefined;
+    stable.drafts.isError = true;
+    try {
+      render(<AgentApprovalsPreviewPage />);
+      const alert = screen.getByTestId('drafts-error');
+      expect(alert).toHaveTextContent(/AI email drafts couldn.t load/);
+      within(alert).getByRole('button', { name: 'Retry' }).click();
+      expect(stable.drafts.refetch).toHaveBeenCalled();
+    } finally {
+      stable.drafts.data = { drafts: [] };
+      stable.drafts.isError = false;
+    }
   });
 });

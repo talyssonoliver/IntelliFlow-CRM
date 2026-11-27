@@ -52,6 +52,8 @@ vi.mock('@intelliflow/db', () => {
         ? [{ email: addressOf(values[0]) }]
         : [{ locked: 1 }];
     },
+    // The per-record insight lock (codex 27/11).
+    $executeRaw: counted(1),
     processingRestriction: { findFirst: counted(null), findMany: counted([]) },
     dsarRequest: { findFirst: counted(null), findMany: counted([]) },
     aIInsight: {
