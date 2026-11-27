@@ -10,11 +10,13 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 import { classifyDiff } from '../lib/review-tier.mjs';
+import { gitEnv } from '../lib/preship-git.mjs';
 
 const SCRIPT = path.resolve(__dirname, '../codex-review.mjs');
 
 function git(cwd: string, ...args: string[]) {
-  const r = spawnSync('git', args, { cwd, encoding: 'utf8' });
+  // GIT_* from the pre-push hook must not reach a temp repo (it set core.bare=true on the real one)
+  const r = spawnSync('git', args, { cwd, encoding: 'utf8', env: gitEnv(process.env) });
   if (r.status !== 0) throw new Error(`git ${args.join(' ')}: ${r.stderr}`);
   return r.stdout.trim();
 }
@@ -47,7 +49,7 @@ function gate(dir: string, env: Record<string, string> = {}) {
     encoding: 'utf8',
     // A PATH with no codex or claude on it: nothing could review even if the script tried.
     env: {
-      ...process.env,
+      ...gitEnv(process.env),
       PATH: path.dirname(process.execPath) + path.delimiter + gitDir(),
       ...env,
     },
