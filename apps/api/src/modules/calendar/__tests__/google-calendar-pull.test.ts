@@ -20,7 +20,7 @@ vi.mock('../../email/mailbox-transport', () => ({
   oauthClientEnvNames: () => ['EMAIL_OAUTH_GOOGLE_CLIENT_ID'],
 }));
 import { eventIdFor } from '../google-calendar-push';
-import { runCalendarSync } from '../google-calendar-sync';
+import { CALENDAR_SYNC_INTERVAL_MS, runCalendarSync } from '../google-calendar-sync';
 import {
   FakeGoogle,
   NOW,
@@ -72,7 +72,7 @@ describe('Google to Aurora: an event becomes an appointment', () => {
     });
   });
 
-  it('stores the sync token and is due again in five minutes', async () => {
+  it('stores the sync token and is due again after the sync interval', async () => {
     const sync = h.setup();
     h.google.put('ev-1');
 
@@ -81,7 +81,7 @@ describe('Google to Aurora: an event becomes an appointment', () => {
     const mailbox = h.db.tables.emailMailbox[0];
     expect(mailbox.calendarSyncToken).toContain('"t":"tok-1"');
     expect(mailbox.calendarSyncedAt).toEqual(NOW);
-    expect(mailbox.calendarNextSyncAt).toEqual(new Date(NOW.getTime() + 5 * 60_000));
+    expect(mailbox.calendarNextSyncAt).toEqual(new Date(NOW.getTime() + CALENDAR_SYNC_INTERVAL_MS));
   });
 
   it('makes nothing twice: a second round, and a restart after the token expired, add no copy', async () => {
@@ -892,5 +892,81 @@ describe('two tenants', () => {
     }
 
     expect(h.links().filter((l) => l.googleEventId === 'shared-event')).toHaveLength(2);
+  });
+});
+describe('Google to Aurora: an event Aurora made, whose link was lost', () => {
+  /** An appointment pushed to Google, then its link lost and the calendar read again from the start. */
+  async function lostLink(over: Record<string, unknown> = {}) {
+    const sync = h.setup({ appointment: [appointmentRow({ title: 'Site visit', ...over })] });
+    await runCalendarSync(sync);
+    const eventId = h.links()[0].googleEventId;
+    h.links().splice(0, h.links().length);
+    h.mailbox().calendarSyncToken = null;
+    return { sync, eventId };
+  }
+
+  it('is linked to its appointment again, not imported as a second one', async () => {
+    const { sync, eventId } = await lostLink();
+
+    const report = await h.nextRound(sync);
+
+    expect(h.appointments()).toHaveLength(1);
+    expect(report.imported).toBe(0);
+    expect(h.links()).toHaveLength(1);
+    expect(h.links()[0]).toMatchObject({
+      appointmentId: 'appt-1',
+      googleEventId: eventId,
+      origin: 'AURORA',
+      tenantId: TENANT,
+    });
+  });
+
+  it('keeps the newer side: Google’s edit is adopted, Aurora’s later edit is sent on', async () => {
+    const { sync, eventId } = await lostLink();
+    h.google.now = new Date(NOW.getTime() + 60 * 60_000);
+    h.google.put(eventId, { title: 'Site visit (Google)' });
+    await h.nextRound(sync);
+    expect(h.appointments()[0].title).toBe('Site visit (Google)');
+
+    h.links().splice(0, h.links().length);
+    h.mailbox().calendarSyncToken = null;
+    Object.assign(h.appointments()[0], {
+      title: 'Site visit (Aurora)',
+      updatedAt: new Date(NOW.getTime() + 3 * 3_600_000),
+    });
+    await h.nextRound(sync);
+    await h.nextRound(sync);
+
+    expect(h.appointments()).toHaveLength(1);
+    expect(h.google.events.get(eventId)?.title).toBe('Site visit (Aurora)');
+  });
+
+  it('imports a copy of the event as its own appointment when the original is still linked', async () => {
+    const sync = h.setup({ appointment: [appointmentRow()] });
+    await runCalendarSync(sync);
+    // The user duplicated the event in Google: the copy carries the same private property.
+    h.google.put('copy-1', { title: 'Copy', auroraAppointmentId: 'appt-1' });
+
+    const report = await h.nextRound(sync);
+
+    expect(report.imported).toBe(1);
+    expect(h.appointments()).toHaveLength(2);
+    expect(h.links().find((l) => l.googleEventId === 'copy-1')?.origin).toBe('GOOGLE');
+  });
+
+  it('never links an event to another tenant’s appointment, whatever its property says', async () => {
+    const sync = h.setup({
+      appointment: [
+        appointmentRow({ id: 'theirs', tenantId: OTHER_TENANT, organizerId: 'user-9' }),
+      ],
+    });
+    h.google.put('ev-x', { title: 'Looks like theirs', auroraAppointmentId: 'theirs' });
+
+    const report = await runCalendarSync(sync);
+
+    expect(report.imported).toBe(1);
+    expect(h.links()).toHaveLength(1);
+    expect(h.links()[0]).toMatchObject({ tenantId: TENANT, origin: 'GOOGLE' });
+    expect(h.links()[0].appointmentId).not.toBe('theirs');
   });
 });
