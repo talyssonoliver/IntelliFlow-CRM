@@ -10,10 +10,20 @@ afterEach(() => {
 
 const SOURCE = readFileSync(resolve(__dirname, '../route.ts'), 'utf8');
 // Code only: the comments above the route explain what must not be added.
-const CODE = SOURCE.slice(SOURCE.lastIndexOf('*/') + 2)
-  .split('\n')
-  .filter((line) => !line.trimStart().startsWith('//'))
-  .join('\n');
+function stripComments(source: string): string {
+  let out = '';
+  let rest = source;
+  for (let start = rest.indexOf('/*'); start !== -1; start = rest.indexOf('/*')) {
+    const end = rest.indexOf('*/', start + 2);
+    out += rest.slice(0, start);
+    rest = end === -1 ? '' : rest.slice(end + 2);
+  }
+  return (out + rest)
+    .split('\n')
+    .filter((line) => !line.trimStart().startsWith('//'))
+    .join('\n');
+}
+const CODE = stripComments(SOURCE);
 
 describe('GET /api/status', () => {
   it('returns checks for the three services', async () => {
