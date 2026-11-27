@@ -240,13 +240,47 @@ export function fakeDb(seed: Partial<Record<Table, Row[]>> = {}): FakeDb {
     emailMailbox: crud('emailMailbox'),
     appointment: crud('appointment', { status: 'SCHEDULED' }),
     calendarEventLink: crud('calendarEventLink', {
+      // Columns the database fills with NULL when a create leaves them out.
+      etag: null,
+      localSyncedAt: null,
+      remoteUpdatedAt: null,
+      remoteCancelledAt: null,
       pending: false,
       pushAttempts: 0,
       nextPushAt: null,
       googleAccount: DEFAULT_ACCOUNT,
     }),
     // The claim: the mailbox that is due, ACTIVE, a user's Google mailbox with the calendar scope.
-    $queryRaw: vi.fn(async (_sql: unknown, leaseUntil: Date, scopes: string[], now: Date) => {
+    $queryRaw: vi.fn(async (sql: TemplateStringsArray, ...values: any[]) => {
+      // The push's "which links were edited in Aurora" query: ids only, as the real one returns.
+      if (sql.join('?').includes('calendar_event_links')) {
+        const [tenantId, mailboxId, account, , userId, statuses, cutoff, now] = values;
+        return tables.calendarEventLink
+          .filter((l) => {
+            const a = tables.appointment.find((x) => x.id === l.appointmentId);
+            return (
+              !!a &&
+              l.tenantId === tenantId &&
+              l.mailboxId === mailboxId &&
+              l.googleAccount === account &&
+              !l.remoteCancelledAt &&
+              !l.pending &&
+              a.tenantId === tenantId &&
+              a.organizerId === userId &&
+              (statuses as string[]).includes(a.status) &&
+              a.endTime.getTime() >= cutoff.getTime() &&
+              (a.recurrence === null || a.recurrence === undefined) &&
+              (!l.localSyncedAt || a.updatedAt.getTime() > l.localSyncedAt.getTime()) &&
+              (!l.nextPushAt ||
+                l.nextPushAt.getTime() <= now.getTime() ||
+                a.updatedAt.getTime() > l.updatedAt.getTime())
+            );
+          })
+          .map((l) => ({ id: l.id }))
+          .sort((x, y) => (x.id < y.id ? -1 : 1));
+      }
+      // The claim's values, in the order the query uses them.
+      const [scopes, now, leaseUntil] = values as [string[], Date, Date];
       const row = tables.emailMailbox
         .filter(
           (m) =>
@@ -296,6 +330,8 @@ export interface FakeEvent {
   end: Date;
   status: 'confirmed' | 'cancelled';
   visibility?: 'default' | 'private' | 'confidential';
+  /** The private property Aurora writes on an event it makes (MVP-013). */
+  auroraAppointmentId?: string;
   etag: string;
   updated: Date;
   rev: number;
@@ -360,6 +396,7 @@ export class FakeGoogle implements CalendarGateway {
       etag: e.etag,
       lastModified: e.updated,
       visibility: e.visibility ?? 'default',
+      auroraAppointmentId: e.auroraAppointmentId,
     };
   }
 
@@ -392,7 +429,10 @@ export class FakeGoogle implements CalendarGateway {
     // hands back the event that is there.
     const existing = this.events.get(id);
     if (existing) return Result.ok<ExternalCalendarEvent, DomainError>(this.external(existing));
-    const event = this.put(id, this.fieldsOf(appointment));
+    const event = this.put(id, {
+      ...this.fieldsOf(appointment),
+      auroraAppointmentId: appointment.id.value,
+    });
     return Result.ok<ExternalCalendarEvent, DomainError>(this.external(event));
   }
 

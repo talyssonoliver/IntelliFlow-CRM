@@ -435,8 +435,45 @@ async function applyEvent(ctx: SyncContext, event: ExternalCalendarEvent): Promi
     return;
   }
   const link = await findLink(ctx, event.externalId);
-  if (!link) return importEvent(ctx, event);
-  return updateFromEvent(ctx, link, event);
+  if (link) return updateFromEvent(ctx, link, event);
+  const own = await adoptOwnEvent(ctx, event);
+  if (own) return updateFromEvent(ctx, own, event);
+  return importEvent(ctx, event);
+}
+
+/**
+ * An event Aurora made from one of this user's appointments (it says so in a private property) that has
+ * no link here: the link was lost (the mailbox row was rebuilt, say). It is linked again to its
+ * appointment, so the event is not imported as a second appointment, and then compared like any linked
+ * event (the newer side wins). An appointment that already has a link in this mailbox is not taken: the
+ * event is then a copy the user made in Google, and is imported on its own.
+ */
+async function adoptOwnEvent(ctx: SyncContext, event: ExternalCalendarEvent) {
+  if (!event.auroraAppointmentId) return null;
+  const { tenantId, id: mailboxId, userId } = ctx.mailbox;
+  const appointment = await ctx.prisma.appointment.findFirst({
+    where: { id: event.auroraAppointmentId, tenantId, organizerId: userId },
+  });
+  if (!appointment) return null;
+  const linked = await ctx.prisma.calendarEventLink.findFirst({
+    where: { tenantId, mailboxId, appointmentId: appointment.id },
+  });
+  if (linked) return null;
+  try {
+    return await ctx.prisma.calendarEventLink.create({
+      data: {
+        tenantId,
+        mailboxId,
+        googleAccount: ctx.mailbox.account,
+        appointmentId: appointment.id,
+        googleEventId: event.externalId,
+        origin: 'AURORA',
+      },
+    });
+  } catch (error) {
+    if (prismaCode(error) !== 'P2002') throw error;
+    return null;
+  }
 }
 
 async function importEvent(ctx: SyncContext, event: ExternalCalendarEvent): Promise<void> {
