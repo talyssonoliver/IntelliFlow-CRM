@@ -52,6 +52,7 @@ describeDb('google calendar sync on a real database', () => {
   const run = randomUUID().slice(0, 8);
   const tenantA = `gcal-a-${run}`;
   const tenantB = `gcal-b-${run}`;
+  const tenantC = `gcal-c-${run}`; // other due mailboxes that must stay untouched
   const userA = `${tenantA}-user`;
   const userB = `${tenantB}-user`;
   let prisma: PrismaClient;
@@ -103,13 +104,49 @@ describeDb('google calendar sync on a real database', () => {
     return runCalendarSync(sync);
   }
 
+  /**
+   * The sync claims any due mailbox in the database, and other integration files run beside this one
+   * against the same database: their Google mailboxes must neither use up this tick's claims nor be
+   * written to by it. The claim is narrowed to this file's two mailboxes; nothing else is changed.
+   */
+  function onlyMyMailboxes(): PrismaClient {
+    const claim = async (strings: TemplateStringsArray, ...values: unknown[]) => {
+      const text = strings.reduce(
+        (acc, part, i) => acc + part + (i < values.length ? `$${i + 1}` : ''),
+        ''
+      );
+      if (!text.includes('email_mailboxes')) return prisma.$queryRaw(strings, ...values);
+      const narrowed = text.replace(
+        'ORDER BY "calendarNextSyncAt"',
+        `AND id = ANY($${values.length + 1}::text[]) ORDER BY "calendarNextSyncAt"`
+      );
+      if (narrowed === text) throw new Error('the claim query changed: narrow it again here');
+      return prisma.$queryRawUnsafe(narrowed, ...values, [mailboxA, mailboxB]);
+    };
+    return new Proxy(prisma, {
+      get(target, prop) {
+        if (prop === '$queryRaw') return claim;
+        const value = Reflect.get(target, prop, target);
+        return typeof value === 'function' ? value.bind(target) : value;
+      },
+    });
+  }
+
   const linksOf = (mailboxId: string) =>
     prisma.calendarEventLink.findMany({ where: { mailboxId }, orderBy: { createdAt: 'asc' } });
 
   beforeAll(async () => {
     prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: DB_URL }) });
-    for (const id of [tenantA, tenantB]) {
+    for (const id of [tenantA, tenantB, tenantC]) {
       await prisma.tenant.create({ data: { id, name: id, slug: id } });
+    }
+    // More due Google mailboxes than one tick claims: they must neither starve nor be written by this run.
+    for (let n = 0; n < 12; n++) {
+      const userId = `${tenantC}-user-${n}`;
+      await prisma.user.create({
+        data: { id: userId, tenantId: tenantC, email: `c${n}-${run}@example.invalid` },
+      });
+      await addMailbox(tenantC, userId, `3${String(n).padStart(2, '0')}${run.replace(/\D/g, '0')}`);
     }
     await prisma.user.create({
       data: { id: userA, tenantId: tenantA, email: `a-${run}@example.invalid` },
@@ -122,7 +159,7 @@ describeDb('google calendar sync on a real database', () => {
   });
 
   afterAll(async () => {
-    const tenants = [tenantA, tenantB];
+    const tenants = [tenantA, tenantB, tenantC];
     await prisma.calendarEventLink.deleteMany({ where: { tenantId: { in: tenants } } });
     await prisma.appointment.deleteMany({ where: { tenantId: { in: tenants } } });
     await prisma.emailMailbox.deleteMany({ where: { tenantId: { in: tenants } } });
@@ -160,7 +197,7 @@ describeDb('google calendar sync on a real database', () => {
     calendars[mailboxA] = googleA;
     calendars[mailboxB] = googleB;
     sync = {
-      prisma,
+      prisma: onlyMyMailboxes(),
       transports: {} as never,
       now: () => new Date(),
       gatewayFor: (mailbox) => calendars[mailbox.id],
@@ -437,6 +474,24 @@ describeDb('google calendar sync on a real database', () => {
   });
 
   describe('the lease and the reconnect card', () => {
+    it('does not touch the mailboxes that are not part of the run', async () => {
+      await addAppointment(tenantA, userA, 'Only mine');
+
+      await round();
+
+      const others = await prisma.emailMailbox.findMany({ where: { tenantId: tenantC } });
+      expect(others).toHaveLength(12);
+      for (const other of others) {
+        expect(other).toMatchObject({
+          calendarStatus: 'ACTIVE',
+          calendarNextSyncAt: null,
+          calendarLockedUntil: null,
+          calendarSyncedAt: null,
+        });
+      }
+      expect([...googleA.events.values()].map((e) => e.title)).toEqual(['Only mine']);
+    });
+
     it('hands a due mailbox to one worker when two ticks run at once', async () => {
       googleA.put('ev-9', { title: 'Once', start: soon(30), end: soon(31) });
       await prisma.emailMailbox.update({
