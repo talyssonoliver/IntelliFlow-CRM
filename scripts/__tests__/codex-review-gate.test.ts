@@ -10,7 +10,10 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 import { classifyDiff } from '../lib/review-tier.mjs';
+import { guardSharedGitConfig } from './shared-git-config-guard';
 import { gitEnv } from '../lib/preship-git.mjs';
+
+guardSharedGitConfig();
 
 const SCRIPT = path.resolve(__dirname, '../codex-review.mjs');
 

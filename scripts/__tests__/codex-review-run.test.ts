@@ -14,8 +14,11 @@ import {
   sectionStats,
   summarizeRuns,
 } from '../lib/codex-review-run.mjs';
+import { guardSharedGitConfig } from './shared-git-config-guard';
 import { gitEnv } from '../lib/preship-git.mjs';
 import { collectNumstat } from '../lib/codex-chunk-review.mjs';
+
+guardSharedGitConfig();
 
 // The gate's git calls run in the process's working directory (the script chdirs to the repo
 // root); here each temp repo gets a spawn that defaults to it, without the hook's GIT_* variables.
