@@ -15,7 +15,8 @@ export const FOLLOW_UP_ROW_PREFIX = 'follow-up:';
 /**
  * Follow-ups due as rows of the Tasks table (owner 21/11: "use the same task table that already
  * exists"). A follow-up is derived from a lead, not stored, so the row is marked `followUp`: it
- * shows like any pending task (urgent: it is due), opens the lead, and offers no complete/edit/delete.
+ * shows like any pending task (urgent: it is due), opens the lead, and can be marked done (logs
+ * "Followed up" on the lead) one by one or in a bulk Mark Complete; no edit/delete.
  * Due date = last contact + 7 days (the rule the dashboard card uses); never contacted = no date.
  */
 export function followUpTaskRows(leads: readonly FollowUpLead[]): TaskListItem[] {
@@ -33,8 +34,9 @@ export function followUpTaskRows(leads: readonly FollowUpLead[]): TaskListItem[]
       // Owner 21/11: a due follow-up is priority one.
       priority: 'URGENT',
       status: 'PENDING',
-      ownerId: '',
-      owner: { id: '', email: '', name: null },
+      // The lead's owner owns its follow-up (owner 27/11: one model for every kind).
+      ownerId: lead.owner?.id ?? '',
+      owner: lead.owner ?? { id: '', email: '', name: null },
       // The table names a lead from first + last name; the display name already covers a lead
       // that has only a company.
       lead: { id: lead.id, firstName: name, lastName: null },

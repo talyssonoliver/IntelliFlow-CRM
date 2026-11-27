@@ -42,7 +42,7 @@ export default function TeamPage() {
       <div className="pb-10">
         <PageHeader
           breadcrumbs={[
-            { label: 'Home', href: '/' },
+            { label: 'Dashboard', href: '/dashboard' },
             { label: 'Settings', href: '/settings' },
             { label: 'Team' },
           ]}
@@ -67,7 +67,7 @@ export default function TeamPage() {
     <div className="pb-10">
       <PageHeader
         breadcrumbs={[
-          { label: 'Home', href: '/' },
+          { label: 'Dashboard', href: '/dashboard' },
           { label: 'Settings', href: '/settings' },
           { label: 'Team' },
         ]}

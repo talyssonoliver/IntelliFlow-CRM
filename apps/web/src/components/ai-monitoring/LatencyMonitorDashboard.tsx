@@ -41,6 +41,7 @@ import { KpiCard } from '@/components/dashboard/KpiCard';
 const LatencyTrendChart = lazy(() => import('./LatencyTrendChart'));
 
 const BREADCRUMBS = [
+  { label: 'Dashboard', href: '/dashboard' },
   { label: 'AI & Agents', href: '/agent-approvals' },
   { label: 'Latency Monitor' },
 ];

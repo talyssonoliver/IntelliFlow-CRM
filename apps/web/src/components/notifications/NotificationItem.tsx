@@ -98,10 +98,12 @@ export const NotificationItem = React.memo(function NotificationItem({
 
       {/* Content */}
       <div className="flex flex-1 flex-col gap-1">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        {/* Owner 26/11: on phones a long title squeezed the date onto two lines. The date keeps
+            one line at the right; the title wraps (up to two lines) beside it. */}
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <h3
-              className={`text-sm ${isUnread ? 'font-bold' : 'font-medium'} text-slate-900 dark:text-white`}
+              className={`min-w-0 line-clamp-2 text-sm ${isUnread ? 'font-bold' : 'font-medium'} text-slate-900 dark:text-white`}
             >
               {notification.title}
             </h3>
@@ -114,7 +116,7 @@ export const NotificationItem = React.memo(function NotificationItem({
             )}
             {isUnread && <div className="h-2 w-2 rounded-full bg-primary" />}
           </div>
-          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+          <span className="shrink-0 whitespace-nowrap pt-0.5 text-xs font-medium text-slate-500 dark:text-slate-400">
             {formatRelativeTime(notification.createdAt)}
           </span>
         </div>

@@ -7,7 +7,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 // ─── 1. next/navigation ────────────────────────────────────────────
 const mockPush = vi.fn();
@@ -108,6 +108,11 @@ const followUpsDue = {
 };
 vi.mock('@/components/dashboard/widgets/useFollowUpsDue', () => ({
   useFollowUpsDue: () => followUpsDue,
+}));
+
+const mockMarkFollowUpDone = vi.fn();
+vi.mock('@/components/dashboard/widgets/useTodoDone', () => ({
+  useFollowUpDone: () => ({ markDone: mockMarkFollowUpDone, pendingLeadId: undefined }),
 }));
 
 // ─── 5. tRPC/API mock ───────────────────────────────────────────
@@ -222,12 +227,23 @@ vi.mock('@/components/shared', () => ({
 }));
 
 vi.mock('@/components/tasks/TaskList', () => ({
-  TaskList: ({ tasks, isLoading }: { tasks: typeof mockTasks; isLoading: boolean }) => (
+  TaskList: ({
+    tasks,
+    isLoading,
+    onComplete,
+  }: {
+    tasks: typeof mockTasks;
+    isLoading: boolean;
+    onComplete: (id: string) => void;
+  }) => (
     <div data-testid="task-list">
       {isLoading && <span data-testid="list-loading">Loading...</span>}
       {tasks?.map((t: (typeof mockTasks)[0]) => (
         <div key={t.id} data-testid={`task-item-${t.id}`}>
           {t.title}
+          <button type="button" data-testid={`done-${t.id}`} onClick={() => onComplete(t.id)}>
+            done
+          </button>
         </div>
       ))}
     </div>
@@ -294,6 +310,33 @@ describe('TasksListPage', () => {
       expect(
         screen.getByRole('link', { name: 'See all leads needing a follow-up' })
       ).toHaveAttribute('href', '/leads?segment=followup');
+    } finally {
+      followUpsDue.leads = [];
+      followUpsDue.total = 0;
+    }
+  });
+
+  it('done on a follow-up row logs "Followed up" on the lead; done on a task completes the task', () => {
+    followUpsDue.leads = [
+      {
+        id: 'lead-1',
+        firstName: 'Jane',
+        lastName: 'Example',
+        company: null,
+        email: 'jane@example.invalid',
+        lastContactedAt: '2026-11-13T09:00:00.000Z',
+      },
+    ];
+    followUpsDue.total = 1;
+    try {
+      render(<TasksListPage />);
+      fireEvent.click(screen.getByTestId('done-follow-up:lead-1'));
+      expect(mockMarkFollowUpDone).toHaveBeenCalledWith('lead-1');
+      expect(mockMutate).not.toHaveBeenCalled();
+
+      fireEvent.click(screen.getByTestId('done-task-1'));
+      expect(mockMutate).toHaveBeenCalledWith({ taskId: 'task-1' });
+      expect(mockMarkFollowUpDone).toHaveBeenCalledTimes(1);
     } finally {
       followUpsDue.leads = [];
       followUpsDue.total = 0;

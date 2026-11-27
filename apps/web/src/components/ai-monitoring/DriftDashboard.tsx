@@ -36,6 +36,7 @@ const ModelPerformanceChart = lazy(() => import('./ModelPerformanceChart'));
 const DRIFT_SKELETON_KEYS = ['drift-0', 'drift-1', 'drift-2'] as const;
 
 const BREADCRUMBS = [
+  { label: 'Dashboard', href: '/dashboard' },
   { label: 'AI & Agents', href: '/agent-approvals' },
   { label: 'Drift Detection' },
 ];

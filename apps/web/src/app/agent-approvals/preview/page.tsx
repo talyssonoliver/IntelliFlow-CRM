@@ -13,8 +13,12 @@
 import Link from 'next/link';
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Card, Button } from '@intelliflow/ui';
+import { Card, Button, toast } from '@intelliflow/ui';
 import { NoActionsEmptyState } from '../components/NoActionsEmptyState';
+import { KpiCard } from '@/components/dashboard/KpiCard';
+import { PageHeader } from '@/components/shared/page-header';
+import { SearchFilterBar } from '@/components/shared/search-filter-bar';
+import { mapDraftToAction, type AutoResponseDraftFromAPI } from '@/lib/agent/auto-response-draft';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import type { AgentAction, ActionStatus } from '@/lib/agent';
@@ -68,6 +72,19 @@ type PreviewAction = AgentAction & {
   escalated: boolean;
   interrupted: boolean;
 };
+
+/** An AI email draft in this queue's shape: no tool impact, escalated when its status says so. */
+function draftToPreviewAction(draft: AutoResponseDraftFromAPI): PreviewAction {
+  return {
+    ...mapDraftToAction(draft),
+    confidenceReported: true,
+    impact: null,
+    escalated: draft.status === 'ESCALATED',
+    interrupted: false,
+  };
+}
+
+const PREVIEW_STATUS_FILTERS = ['all', 'pending', 'approved', 'rejected', 'expired'] as const;
 
 function formatToolName(toolName: string): string {
   return toolName
@@ -590,17 +607,63 @@ function ActionCard({
 // Metrics
 // =============================================================================
 
-function MetricsLoadingSkeleton() {
+/** Owner 26/11: "These kpis aren't following our shared components" - the shared KpiCard. */
+const METRICS = [
+  {
+    id: 'pending',
+    label: 'Pending Review',
+    icon: 'pending_actions',
+    tone: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  },
+  {
+    id: 'loaded',
+    label: 'Actions Loaded',
+    icon: 'list_alt',
+    tone: 'bg-ds-primary/10 text-ds-primary',
+  },
+  {
+    id: 'expiring',
+    label: 'Expiring Soon',
+    icon: 'timer',
+    tone: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  },
+  {
+    id: 'highimpact',
+    label: 'High Impact',
+    icon: 'bolt',
+    tone: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+  },
+] as const;
+
+function MetricsGrid({
+  values,
+  pending = false,
+}: Readonly<{ values?: Record<(typeof METRICS)[number]['id'], number>; pending?: boolean }>) {
   return (
-    <div className="grid gap-4 md:grid-cols-4" data-testid="metrics-dashboard">
-      {[1, 2, 3, 4].map((i) => (
-        <Card key={i} className="p-4 animate-pulse">
-          <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-20 mb-2" />
-          <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded w-12" />
-        </Card>
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4" data-testid="metrics-dashboard">
+      {METRICS.map((m) => (
+        <div key={m.id} data-testid={`metric-${m.id}`}>
+          <KpiCard
+            framed
+            label={m.label}
+            icon={m.icon}
+            iconClassName={m.tone}
+            pending={pending}
+            value={<span data-testid="metric-value">{values?.[m.id] ?? 0}</span>}
+            footer={
+              m.id === 'expiring' && !pending ? (
+                <p className="text-xs text-muted-foreground">Within 2 hours</p>
+              ) : undefined
+            }
+          />
+        </div>
       ))}
     </div>
   );
+}
+
+function MetricsLoadingSkeleton() {
+  return <MetricsGrid pending />;
 }
 
 interface MetricsSectionProps {
@@ -622,39 +685,14 @@ function MetricsSection({ actions, pendingCount, isLoading }: MetricsSectionProp
   const highImpact = actions.filter((a) => a.impact === 'HIGH').length;
 
   return (
-    <div className="grid gap-4 md:grid-cols-4" data-testid="metrics-dashboard">
-      <Card className="p-4" data-testid="metric-pending">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Pending Review</div>
-        <div className="text-2xl font-bold text-amber-600" data-testid="metric-value">
-          {pendingCount}
-        </div>
-      </Card>
-
-      <Card className="p-4" data-testid="metric-loaded">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Actions Loaded</div>
-        <div
-          className="text-2xl font-bold text-slate-900 dark:text-white"
-          data-testid="metric-value"
-        >
-          {actions.length}
-        </div>
-      </Card>
-
-      <Card className="p-4" data-testid="metric-expiring">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">Expiring Soon</div>
-        <div className="text-2xl font-bold text-red-600" data-testid="metric-value">
-          {expiringSoon}
-        </div>
-        <div className="text-xs text-slate-500 dark:text-slate-400">Within 2 hours</div>
-      </Card>
-
-      <Card className="p-4" data-testid="metric-highimpact">
-        <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">High Impact</div>
-        <div className="text-2xl font-bold text-[#2a78f6]" data-testid="metric-value">
-          {highImpact}
-        </div>
-      </Card>
-    </div>
+    <MetricsGrid
+      values={{
+        pending: pendingCount,
+        loaded: actions.length,
+        expiring: expiringSoon,
+        highimpact: highImpact,
+      }}
+    />
   );
 }
 
@@ -665,7 +703,8 @@ function MetricsSection({ actions, pendingCount, isLoading }: MetricsSectionProp
 function AgentApprovalsPreviewContent() {
   const searchParams = useSearchParams();
   const actionIdFromUrl = searchParams.get('actionId');
-  const { isAuthenticated, isLoading: authLoading } = useRequireAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useRequireAuth();
+  const userId = user?.id;
 
   const [expandedActionId, setExpandedActionId] = useState<string | null>(actionIdFromUrl);
   const [filterStatus, setFilterStatus] = useState<ActionStatus | 'all'>('all');
@@ -686,6 +725,13 @@ function AgentApprovalsPreviewContent() {
     refetchInterval: 30000,
   });
 
+  // Owner 26/11: "Why the AI feature aren't showing them here?" The preview read only the agent
+  // tool actions; the AI email drafts waiting for this user (shown on the hub) belong here too.
+  const draftsQuery = trpc.autoResponse.getPendingForApprover.useQuery(
+    { approverId: userId ?? '' },
+    { enabled: isAuthenticated && !authLoading && !!userId, refetchInterval: 30000 }
+  );
+
   // ==========================================================================
   // tRPC Mutations — WIRED TO BACKEND
   // ==========================================================================
@@ -698,22 +744,52 @@ function AgentApprovalsPreviewContent() {
     onSuccess: () => Promise.all([pendingQuery.refetch(), countQuery.refetch()]),
   });
 
+  // An AI email draft is decided through the auto-response API, as on the hub.
+  const draftApproveMutation = trpc.autoResponse.approve.useMutation({
+    onSuccess: () => draftsQuery.refetch(),
+  });
+  const draftRejectMutation = trpc.autoResponse.reject.useMutation({
+    onSuccess: () => draftsQuery.refetch(),
+  });
+
   // ==========================================================================
   // Transform API data → AgentAction[]
   // ==========================================================================
 
   const actions = useMemo(() => {
-    if (!pendingQuery.data) return [];
-    return (pendingQuery.data as PendingActionFromAPI[]).map(mapPendingToAction);
-  }, [pendingQuery.data]);
+    const toolActions = ((pendingQuery.data ?? []) as PendingActionFromAPI[]).map(
+      mapPendingToAction
+    );
+    const draftActions = ((draftsQuery.data?.drafts ?? []) as AutoResponseDraftFromAPI[]).map(
+      draftToPreviewAction
+    );
+    return [...toolActions, ...draftActions].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
+  }, [pendingQuery.data, draftsQuery.data]);
 
+  const [searchQuery, setSearchQuery] = useState('');
   const filteredActions = useMemo(() => {
-    if (filterStatus === 'all') return actions;
-    return actions.filter((action) => action.status === filterStatus);
-  }, [actions, filterStatus]);
+    const byStatus =
+      filterStatus === 'all' ? actions : actions.filter((action) => action.status === filterStatus);
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return byStatus;
+    return byStatus.filter((action) =>
+      [action.agentName, action.entityName, action.description].some((field) =>
+        String(field ?? '')
+          .toLowerCase()
+          .includes(q)
+      )
+    );
+  }, [actions, filterStatus, searchQuery]);
 
+  const pendingDrafts = actions.filter(
+    (a) => a.actionType === 'email_draft' && a.status === 'pending'
+  ).length;
   const pendingCount =
-    countQuery.data?.count ?? actions.filter((a) => a.status === 'pending').length;
+    (countQuery.data?.count ??
+      actions.filter((a) => a.actionType !== 'email_draft' && a.status === 'pending').length) +
+    pendingDrafts;
 
   // Auto-expand action if actionId is provided in URL (from timeline navigation)
   useEffect(() => {
@@ -740,10 +816,29 @@ function AgentApprovalsPreviewContent() {
   // Handlers — WIRED TO tRPC MUTATIONS
   // ==========================================================================
 
+  const isDraft = useCallback(
+    (actionId: string) => actions.some((a) => a.id === actionId && a.actionType === 'email_draft'),
+    [actions]
+  );
+
   const handleApprove = useCallback(
     async (actionId: string) => {
       setExecutionError(null);
       try {
+        if (isDraft(actionId)) {
+          if (userId) {
+            await draftApproveMutation.mutateAsync({
+              draftId: actionId,
+              decision: 'APPROVED',
+              decidedBy: userId,
+            });
+            toast({
+              title: 'Draft Approved',
+              description: 'The AI draft has been approved and will be sent.',
+            });
+          }
+          return;
+        }
         const result = await approveMutation.mutateAsync({ actionId });
         // PG-198 (RF-1): approval runs the action for real; surface a failed run.
         if (result && !result.success) {
@@ -751,32 +846,57 @@ function AgentApprovalsPreviewContent() {
         }
       } catch (error) {
         console.error('Failed to approve:', error);
+        toast({
+          title: 'Approval Failed',
+          description: error instanceof Error ? error.message : 'Unknown error',
+          variant: 'destructive',
+        });
       }
     },
-    [approveMutation]
+    [approveMutation, draftApproveMutation, isDraft, userId]
   );
 
   const handleReject = useCallback(
     async (actionId: string, feedback: string) => {
       try {
+        if (isDraft(actionId)) {
+          if (userId) {
+            await draftRejectMutation.mutateAsync({
+              draftId: actionId,
+              decidedBy: userId,
+              reason: feedback,
+            });
+            toast({ title: 'Draft Rejected', description: 'The AI draft has been rejected.' });
+          }
+          return;
+        }
         await rejectMutation.mutateAsync({ actionId, reason: feedback });
       } catch (error) {
         console.error('Failed to reject:', error);
+        toast({
+          title: 'Rejection Failed',
+          description: error instanceof Error ? error.message : 'Unknown error',
+          variant: 'destructive',
+        });
       }
     },
-    [rejectMutation]
+    [rejectMutation, draftRejectMutation, isDraft, userId]
   );
 
   const handleRefresh = useCallback(async () => {
-    await Promise.all([pendingQuery.refetch(), countQuery.refetch()]);
-  }, [pendingQuery, countQuery]);
+    await Promise.all([pendingQuery.refetch(), countQuery.refetch(), draftsQuery.refetch()]);
+  }, [pendingQuery, countQuery, draftsQuery]);
 
   // ==========================================================================
   // Loading & Error States
   // ==========================================================================
 
   const isLoading = authLoading || pendingQuery.isLoading;
-  const isMutating = approveMutation.isPending || rejectMutation.isPending;
+  const isMutating =
+    approveMutation.isPending ||
+    rejectMutation.isPending ||
+    draftApproveMutation.isPending ||
+    draftRejectMutation.isPending;
 
   if (pendingQuery.error && !isLoading) {
     return (
@@ -816,21 +936,6 @@ function AgentApprovalsPreviewContent() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
-        <Link href="/dashboard" className="hover:text-[#2a78f6]">
-          Dashboard
-        </Link>
-        <span>/</span>
-        <Link href="/agent-approvals" className="hover:text-[#2a78f6]">
-          Agent Approvals
-        </Link>
-        <span>/</span>
-        <span className="text-slate-900 dark:text-white font-medium">
-          {actionIdFromUrl ? 'Review Action' : 'Tool Actions Preview'}
-        </span>
-      </nav>
-
       {executionError && (
         <div
           role="alert"
@@ -841,58 +946,53 @@ function AgentApprovalsPreviewContent() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl md:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-            Agent Tool Actions
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-base">
-            Review and approve AI agent-initiated tool actions before they are applied
+      {/* Owner 27/11 review: the shared hero, like every page. */}
+      <PageHeader
+        breadcrumbs={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Agent Approvals', href: '/agent-approvals' },
+        ]}
+        title={actionIdFromUrl ? 'Review Action' : 'Agent Tool Actions'}
+        description="Review and approve AI agent actions and AI email drafts before they are applied"
+        actions={[
+          {
+            label: 'Refresh',
+            icon: 'refresh',
+            variant: 'secondary',
+            onClick: () => {
+              handleRefresh().catch(() => {});
+            },
+            disabled: isLoading,
+            loading: isLoading,
+          },
+        ]}
+      >
+        {pendingCount > 0 && (
+          <p className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-200">
+            <Icon name="schedule" className="text-base" />
+            {pendingCount} pending
           </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {pendingCount > 0 && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 text-sm font-medium">
-              <Icon name="schedule" className="text-base" />
-              {pendingCount} pending
-            </span>
-          )}
-          <Button variant="outline" onClick={handleRefresh} disabled={isLoading} className="gap-2">
-            <Icon name="refresh" className={`text-base ${isLoading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-        </div>
-      </div>
+        )}
+      </PageHeader>
 
       {/* Metrics */}
       <MetricsSection actions={actions} pendingCount={pendingCount} isLoading={isLoading} />
 
-      {/* Filters */}
-      <Card className="p-4">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Icon name="filter_list" className="text-base text-slate-400" />
-            <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Filter:</span>
-          </div>
-          <div className="flex flex-wrap gap-2" data-testid="filter-buttons">
-            {(['all', 'pending', 'approved', 'rejected', 'expired'] as const).map((status) => (
-              <button
-                key={status}
-                type="button"
-                onClick={() => setFilterStatus(status)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  filterStatus === status
-                    ? 'bg-[#2a78f6] text-white'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                {status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1)}
-              </button>
-            ))}
-          </div>
-        </div>
-      </Card>
+      {/* The shared toolbar: search plus the status chips. */}
+      <SearchFilterBar
+        searchValue={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search by agent, record or action..."
+        searchAriaLabel="Search actions"
+        filterChips={{
+          options: PREVIEW_STATUS_FILTERS.map((status) => ({
+            id: status,
+            label: status === 'all' ? 'All' : status.charAt(0).toUpperCase() + status.slice(1),
+          })),
+          value: filterStatus,
+          onChange: (id) => setFilterStatus(id as ActionStatus | 'all'),
+        }}
+      />
 
       {/* Actions List */}
       <div className="space-y-4">

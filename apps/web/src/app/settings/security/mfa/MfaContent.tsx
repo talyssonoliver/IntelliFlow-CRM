@@ -382,7 +382,7 @@ export default function MfaContent() {
             : 'Add an extra layer of security to your account.'
         }
         breadcrumbs={[
-          { label: 'Home', href: '/' },
+          { label: 'Dashboard', href: '/dashboard' },
           { label: 'Settings', href: '/settings' },
           { label: 'Account', href: '/settings/account' },
           { label: 'Two-Factor Authentication' },

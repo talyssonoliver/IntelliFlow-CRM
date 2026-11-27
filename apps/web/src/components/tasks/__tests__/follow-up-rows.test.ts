@@ -30,6 +30,14 @@ describe('followUpTaskRows (owner 21/11: follow-ups in the task table)', () => {
     expect(row.lead?.firstName).toBe('Example Corp');
   });
 
+  it("gives the follow-up to the lead's owner, and none when the lead has no owner", () => {
+    const owner = { id: 'user-3', email: 'owner@example.invalid', name: 'Sam Owner' };
+    const [row] = followUpTaskRows([{ ...base, owner }]);
+    expect(row.ownerId).toBe('user-3');
+    expect(row.owner).toEqual(owner);
+    expect(followUpTaskRows([base])[0].ownerId).toBe('');
+  });
+
   it('gives a never-contacted lead no due date', () => {
     const [row] = followUpTaskRows([{ ...base, lastContactedAt: null }]);
     expect(row.dueDate).toBeNull();

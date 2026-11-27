@@ -573,7 +573,7 @@ export default function AccountSettingsContent() {
   return (
     <ModuleSettingsShell
       breadcrumbs={[
-        { label: 'Home', href: '/' },
+        { label: 'Dashboard', href: '/dashboard' },
         { label: 'Accounts', href: '/accounts' },
         { label: 'Account Settings' },
       ]}

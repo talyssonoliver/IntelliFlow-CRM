@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
-import Link from 'next/link';
+import { Breadcrumbs } from '@/components/shared/page-header';
 import {
   Tabs,
   TabsList,
@@ -69,26 +69,14 @@ export function ModuleSettingsLayout({
   return (
     <div className="max-w-7xl">
       {/* Breadcrumbs */}
-      <nav aria-label="Breadcrumb" className="mb-4">
-        <ol className="flex items-center gap-1.5 text-sm text-muted-foreground">
-          {breadcrumbs.map((crumb, index) => (
-            <li key={crumb.label} className="flex items-center gap-1.5">
-              {index > 0 && (
-                <span className="material-symbols-outlined text-xs" aria-hidden="true">
-                  chevron_right
-                </span>
-              )}
-              {crumb.href ? (
-                <Link href={crumb.href} className="hover:text-foreground transition-colors">
-                  {crumb.label}
-                </Link>
-              ) : (
-                <span className="text-foreground font-medium">{crumb.label}</span>
-              )}
-            </li>
-          ))}
-        </ol>
-      </nav>
+      <Breadcrumbs
+        items={
+          breadcrumbs[0]?.label === 'Dashboard'
+            ? breadcrumbs
+            : [{ label: 'Dashboard', href: '/dashboard' }, ...breadcrumbs]
+        }
+        className="mb-4"
+      />
 
       {/* Header */}
       <div className="mb-6">

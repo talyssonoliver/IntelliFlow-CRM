@@ -11,18 +11,18 @@ const a = (id: string, type: string, title: string, user = 'Talysson Oliveira') 
 describe('foldRepeats (owner 21/11: same information, same lead)', () => {
   it('keeps the newest AI insight and folds the earlier ones of that type under it', () => {
     const list = [
-      a('3', 'qualification', 'West London Handyman is qualified and ready to move', 'AI Insights'),
+      a('3', 'qualification', 'Northfield Plumbing is qualified and ready to move', 'AI Insights'),
       a('call', 'call', 'Call with Robert'),
       a(
         '2',
         'qualification',
-        'West London Handyman is a qualified lead close to hot',
+        'Northfield Plumbing is a qualified lead close to hot',
         'AI Insights'
       ),
       a(
         '1',
         'qualification',
-        'West London Handyman is a qualified lead close to hot',
+        'Northfield Plumbing is a qualified lead close to hot',
         'AI Insights'
       ),
     ];
@@ -35,9 +35,9 @@ describe('foldRepeats (owner 21/11: same information, same lead)', () => {
 
   it('folds an email thread by subject, ignoring Re: and Fwd:', () => {
     const list = [
-      a('e3', 'email', 'Re: Re: Helping West London Handyman win more jobs'),
-      a('e2', 'email', 'RE: Helping West London Handyman win more jobs'),
-      a('e1', 'email', 'Helping West London Handyman win more jobs'),
+      a('e3', 'email', 'Re: Re: Helping Northfield Plumbing win more jobs'),
+      a('e2', 'email', 'RE: Helping Northfield Plumbing win more jobs'),
+      a('e1', 'email', 'Helping Northfield Plumbing win more jobs'),
       a('e0', 'email', 'Your launch brief'),
     ];
     expect(foldRepeats(list).map((g) => [g.head.id, g.previous.length])).toEqual([

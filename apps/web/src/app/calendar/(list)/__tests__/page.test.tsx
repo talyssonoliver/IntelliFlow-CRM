@@ -14,6 +14,7 @@ import * as React from 'react';
 // ─── 1. next/navigation ────────────────────────────────────────────
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
+const urlSearch = vi.hoisted(() => ({ value: '' }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({
     push: mockPush,
@@ -23,7 +24,7 @@ vi.mock('next/navigation', () => ({
     replace: mockReplace,
     prefetch: vi.fn(),
   }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => new URLSearchParams(urlSearch.value),
   usePathname: () => '/calendar',
   useParams: () => ({}),
 }));
@@ -283,6 +284,18 @@ describe('CalendarPage', { timeout: 10000 }, () => {
     const calendar = screen.getByTestId('appointment-calendar');
     expect(calendar).toBeInTheDocument();
     expect(calendar).toHaveAttribute('data-appointment-count', '1');
+  });
+
+  it('filters by the sidebar type, appointments only (owner 26/11: the links did nothing)', async () => {
+    urlSearch.value = 'type=MEETING';
+    const CalendarPage = await loadCalendarPage();
+    render(<CalendarPage />);
+    // The one appointment in the fixture is a CONSULTATION.
+    expect(screen.getByTestId('appointment-calendar')).toHaveAttribute(
+      'data-appointment-count',
+      '0'
+    );
+    urlSearch.value = '';
   });
 
   it('searches the calendar by title (owner 21/11: the calendar had no search)', async () => {

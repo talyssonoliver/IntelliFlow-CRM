@@ -208,7 +208,6 @@ function createColumns(
       header: 'Owner',
       size: 120,
       cell: ({ row }) => {
-        if (row.original.followUp) return <span className="text-sm text-muted-foreground">—</span>;
         const owner = row.original.owner;
         return (
           <span className="text-sm text-muted-foreground truncate">
@@ -228,6 +227,13 @@ function createColumns(
           return (
             <TableRowActions
               quickActions={[
+                // The same "done" as a task's Complete (owner 27/11): the page logs a
+                // "Followed up" note on the lead, which takes it off the due list.
+                {
+                  icon: 'check_circle',
+                  label: 'Mark done',
+                  onClick: () => handlers.onComplete(task.id),
+                },
                 {
                   icon: 'open_in_new',
                   label: 'Open lead',
@@ -324,7 +330,8 @@ export function TaskList({
       {
         label: 'Mark Complete',
         icon: 'check_circle',
-        onExecute: (selected) => onBulkComplete(stored(selected).map((t) => t.id)),
+        // Follow-ups too: the page marks each one "Followed up" (owner 27/11: one model).
+        onExecute: (selected) => onBulkComplete(selected.map((t) => t.id)),
       },
       {
         label: 'Archive',
@@ -390,7 +397,10 @@ export function TaskList({
       }
       enableRowSelection
       // Follow-ups are not stored tasks: nothing to complete, archive or delete in bulk.
-      canSelectRow={(row) => !row.followUp}
+      canSelectRow={() => true}
+      // Selection follows the row, not its index (codex 27/11: a completed follow-up left the
+      // list and its selection moved to the next lead).
+      getRowId={(row) => row.id}
       bulkActions={bulkActions}
     />
   );

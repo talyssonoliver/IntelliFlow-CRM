@@ -7,13 +7,13 @@
  */
 
 import { Suspense } from 'react';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, toast } from '@intelliflow/ui';
 import { NewTicketContactForm } from '@/components/tickets/NewTicketContactForm';
 import { api } from '@/lib/api';
 import { invalidateTicketsCache } from '@/app/tickets/actions';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 export default function NewTicketPage() {
   // useSearchParams needs a Suspense boundary in the App Router.
   return (
@@ -49,35 +49,13 @@ function NewTicketPageContent() {
     <div className="flex flex-col gap-5 p-2 sm:p-3 md:p-4">
       {/* Breadcrumbs + Title */}
       <div className="flex flex-col gap-2">
-        <nav aria-label="Breadcrumb" className="flex">
-          <ol className="flex items-center space-x-2">
-            <li>
-              <Link
-                href="/dashboard"
-                className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] text-sm font-medium transition-colors"
-              >
-                Dashboard
-              </Link>
-            </li>
-            <li>
-              <span className="text-slate-300 dark:text-slate-600">/</span>
-            </li>
-            <li>
-              <Link
-                href="/tickets"
-                className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] text-sm font-medium transition-colors"
-              >
-                Tickets
-              </Link>
-            </li>
-            <li>
-              <span className="text-slate-300 dark:text-slate-600">/</span>
-            </li>
-            <li>
-              <span className="text-slate-900 dark:text-white text-sm font-medium">New Ticket</span>
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumbs
+          endsWithCurrentPage={false}
+          items={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Tickets', href: '/tickets' },
+          ]}
+        />
 
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">

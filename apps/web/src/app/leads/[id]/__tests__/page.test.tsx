@@ -237,6 +237,7 @@ vi.mock('@/lib/api', () => ({
 }));
 
 vi.mock('@intelliflow/ui', () => ({
+  cn: (...a: unknown[]) => a.filter(Boolean).join(' '),
   Button: ({
     children,
     onClick,

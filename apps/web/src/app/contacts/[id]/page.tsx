@@ -78,6 +78,7 @@ import {
   buildChurnRiskData,
 } from '@/components/contacts/contact-insights';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 type ContactPageQueryError =
   | {
       data?: { code?: string } | null;
@@ -580,17 +581,13 @@ export default function Contact360Page() {
       {/* Header with breadcrumb and actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-            <Link href="/contacts" className="hover:text-[#2a78f6]">
-              Contacts
-            </Link>
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M8.025 22 6.25 20.225 14.475 12 6.25 3.775 8.025 2l10 10Z" />
-            </svg>
-            <span className="font-medium text-slate-900 dark:text-white">
-              {contact.firstName} {contact.lastName}
-            </span>
-          </div>
+          <Breadcrumbs
+            endsWithCurrentPage={false}
+            items={[
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Contacts', href: '/contacts' },
+            ]}
+          />
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
             {contact.firstName} {contact.lastName}
           </h1>

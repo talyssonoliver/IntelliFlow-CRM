@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
-import Link from 'next/link';
 import {
   BarChart,
   Bar,
@@ -29,6 +28,7 @@ import { useTenantCurrency } from '@/lib/format/useTenantCurrency';
 import { exportToPDF } from '@/lib/export/pdf';
 import type { ReportSection, PDFExportOptions } from '@/lib/export/pdf';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 // ============================================
 // Types
 // ============================================
@@ -236,22 +236,14 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
   return (
     <>
       {/* Breadcrumb */}
-      <nav
-        aria-label="Breadcrumb"
-        className="flex items-center gap-2 text-sm text-muted-foreground mb-4"
-      >
-        <Link href="/dashboard" className="hover:text-primary">
-          Dashboard
-        </Link>
-        <span aria-hidden="true">/</span>
-        <Link href="/analytics" className="hover:text-primary">
-          Analytics
-        </Link>
-        <span aria-hidden="true">/</span>
-        <span className="text-foreground font-medium" aria-current="page">
-          {config.breadcrumbLabel}
-        </span>
-      </nav>
+      <Breadcrumbs
+        endsWithCurrentPage={false}
+        items={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Analytics', href: '/analytics' },
+        ]}
+        className="mb-4"
+      />
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
@@ -354,6 +346,7 @@ export default function SavedReportView({ config }: Readonly<SavedReportViewProp
                 title={mc.title}
                 value={mc.value}
                 format={mc.format}
+                currency={currency}
                 icon={mc.icon}
                 change={mc.change}
                 isLoading={isLoading}

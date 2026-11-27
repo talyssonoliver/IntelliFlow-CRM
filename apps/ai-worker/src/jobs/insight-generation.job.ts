@@ -844,6 +844,26 @@ async function persistEntityActivity(
   }
 }
 
+/** The task field that links a task to the record an insight is about. */
+export function taskLinkFor(insight: Pick<GeneratedInsight, 'entityType' | 'entityId'>): {
+  leadId?: string;
+  contactId?: string;
+  opportunityId?: string;
+} {
+  if (!insight.entityId) return {};
+  switch (insight.entityType) {
+    case 'lead':
+      return { leadId: insight.entityId };
+    case 'contact':
+      return { contactId: insight.entityId };
+    case 'deal':
+    case 'opportunity':
+      return { opportunityId: insight.entityId };
+    default:
+      return {};
+  }
+}
+
 /** Writes the insight; returns its id, or null when it was a duplicate or its entity is gone. */
 async function persistInsightRecord(
   prisma: any,
@@ -916,11 +936,15 @@ async function persistInsightRecord(
         tenantId,
         entityType: insight.entityType === 'deal' ? 'opportunity' : insight.entityType,
         entityId: insight.entityId,
-        type: mapInsightTypeToDbType(insight.type),
-        id: { not: created.id },
+        // Any type: one open insight per record (owner 27/11).
         // Only insights older than this one: two jobs running at once then never expire each
-        // other's new insight, and the newest one stays open (codex review 26/11).
-        createdAt: { lt: created.createdAt },
+        // other's new insight, and the newest one stays open (codex review 26/11). Equal
+        // timestamps are ordered by id (codex 27/11), so exactly one of two same-millisecond
+        // insights stays open whichever job finishes last.
+        OR: [
+          { createdAt: { lt: created.createdAt } },
+          { createdAt: created.createdAt, id: { lt: created.id } },
+        ],
         status: { in: ['NEW', 'VIEWED'] },
         metadata: { path: ['userId'], equals: userId },
       },
@@ -1078,6 +1102,9 @@ async function persistHighPriorityInsightSideEffects(
           tenantId,
           ownerId: userId,
           dueDate: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000),
+          // Owner 27/11: the task is about the insight's record; without the link the Tasks
+          // table showed "—" under Linked entity for every AI task.
+          ...taskLinkFor(insight),
         },
       });
     } catch (taskError) {

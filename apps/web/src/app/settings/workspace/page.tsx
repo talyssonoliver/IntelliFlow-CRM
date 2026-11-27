@@ -47,7 +47,7 @@ export default function WorkspaceSettingsPage() {
     <div className="flex flex-col gap-6 pb-10">
       <PageHeader
         breadcrumbs={[
-          { label: 'Home', href: '/' },
+          { label: 'Dashboard', href: '/dashboard' },
           { label: 'Settings', href: '/settings' },
           { label: 'Workspace' },
         ]}

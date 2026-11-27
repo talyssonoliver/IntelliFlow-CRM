@@ -15,7 +15,7 @@ vi.mock('@/lib/trpc', () => ({
   trpc: {
     analytics: {
       reportSettings: {
-        get: { useQuery: (...args: unknown[]) => useQueryMock(...args) },
+        currency: { useQuery: (...args: unknown[]) => useQueryMock(...args) },
       },
     },
   },

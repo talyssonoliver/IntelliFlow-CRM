@@ -49,43 +49,19 @@ const VIEW_SECTIONS: SidebarConfig['sections'] = [
     ],
   },
   {
-    id: 'folders',
-    title: 'My Folders',
-    items: [
-      {
-        id: 'enterprise-q1',
-        label: 'Enterprise Q1',
-        icon: SEGMENT_ICONS.folder,
-        href: '/deals?folder=enterprise-q1',
-      },
-      {
-        id: 'smb-renewals',
-        label: 'SMB Renewals',
-        icon: SEGMENT_ICONS.folder,
-        href: '/deals?folder=smb-renewals',
-      },
-      {
-        id: 'at-risk',
-        label: 'At Risk',
-        icon: SEGMENT_ICONS.folder,
-        href: '/deals?folder=at-risk',
-      },
-    ],
-  },
-  {
     id: 'segments',
     title: 'Segments',
     items: [
       {
         id: 'hot',
-        label: 'Hot Deals (>70%)',
+        label: 'Hot Deals (over 70%)',
         icon: SEGMENT_ICONS.statusDot,
         color: 'text-success',
         href: '/deals?segment=hot',
       },
       {
         id: 'stalled',
-        label: 'Stalled (>30 days)',
+        label: 'Stalled (30+ days)',
         icon: SEGMENT_ICONS.statusDot,
         color: 'text-warning',
         href: '/deals?segment=stalled',

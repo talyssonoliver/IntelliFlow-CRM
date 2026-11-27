@@ -217,6 +217,7 @@ model Tenant {
   dsarRequests              DsarRequest[]             @ignore // PG-203 DSAR
   processingRestrictions    ProcessingRestriction[]   @ignore // PG-203 DSAR
   reportSettings            ReportSettings[]          @ignore
+  waitingDismissals         WaitingDismissal[]
   reportTemplates           ReportTemplate[]          @ignore
   reportScheduleTags        ReportScheduleTag[]       @ignore
   taskSettings              TaskSettings[]            @ignore
@@ -7364,4 +7365,24 @@ model ComplianceSnapshot {
   @@unique([tenantId, day, frameworkId])
   @@index([tenantId, frameworkId, day])
   @@map("compliance_snapshots")
+}
+
+/// MVP-012: "handled without a reply" for the dashboard's Waiting-for-reply rows. One row per
+/// (tenant, person) where personKey is `lead:<id>` or `contact:<id>`. It hides the wait it was
+/// made for: `since` and `unanswered` are the values when it was dismissed, so a newer inbound
+/// email (a later `since`, or more unanswered mails) brings the person back.
+model WaitingDismissal {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  personKey     String
+  since         DateTime
+  unanswered    Int
+  latestAt      DateTime
+  dismissedById String?
+  createdAt     DateTime @default(now())
+
+  @@unique([tenantId, personKey])
+  @@index([tenantId])
+  @@map("waiting_dismissals")
 }

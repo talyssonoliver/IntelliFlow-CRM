@@ -220,7 +220,7 @@ export default function AccountTiersContent() {
     <div className="w-full">
       <PageHeader
         breadcrumbs={[
-          { label: 'Home', href: '/' },
+          { label: 'Dashboard', href: '/dashboard' },
           { label: 'Accounts', href: '/accounts' },
           { label: 'Account Tiers' },
         ]}

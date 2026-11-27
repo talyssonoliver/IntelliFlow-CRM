@@ -216,7 +216,7 @@ describe('processInsightJob', () => {
     expect(firstCall.data.metadata).toHaveProperty('userId', 'user-001');
   });
 
-  it('supersedes older open insights of the same user of the same type for the same entity', async () => {
+  it('supersedes older open insights of the same user for the same entity, any type', async () => {
     // Owner 21/11: three "Opportunity" insights for one lead, each worded differently by the
     // model, so the old exact-title check never matched.
     const job = createMockJob({
@@ -230,15 +230,36 @@ describe('processInsightJob', () => {
       tenantId: '00000000-0000-4000-a000-000000000001',
       entityType: 'opportunity',
       entityId: 'deal-1',
-      type: mockCreate.mock.calls[0][0].data.type,
-      id: { not: 'insight-1' },
-      // Only older insights: two concurrent jobs never expire each other's new one.
-      createdAt: { lt: new Date('2026-11-26T12:00:00Z') },
+      // Only older insights: two concurrent jobs never expire each other's new one; equal
+      // timestamps are ordered by id (codex 27/11).
+      OR: [
+        { createdAt: { lt: new Date('2026-11-26T12:00:00Z') } },
+        { createdAt: new Date('2026-11-26T12:00:00Z'), id: { lt: 'insight-1' } },
+      ],
       // An insight the user ACTED_ON keeps that record (codex review 26/11).
       status: { in: ['NEW', 'VIEWED'] },
       metadata: { path: ['userId'], equals: 'user-001' },
     });
+    expect(where).not.toHaveProperty('type');
     expect(data).toEqual({ status: 'EXPIRED' });
+  });
+
+  it('leaves exactly one of two same-millisecond insights open, whichever job runs last (codex 27/11)', () => {
+    const at = new Date('2026-11-26T12:00:00Z');
+    // The supersession filter's ordering, applied to two rows created in the same millisecond.
+    const olderThan = (
+      row: { id: string; createdAt: Date },
+      created: { id: string; createdAt: Date }
+    ) =>
+      row.createdAt < created.createdAt ||
+      (row.createdAt.getTime() === created.createdAt.getTime() && row.id < created.id);
+    const a = { id: 'insight-a', createdAt: at };
+    const b = { id: 'insight-b', createdAt: at };
+    const expiredByA = olderThan(b, a);
+    const expiredByB = olderThan(a, b);
+    // Exactly one expires the other: never both open, never both expired.
+    expect([expiredByA, expiredByB].filter(Boolean)).toHaveLength(1);
+    expect(expiredByB).toBe(true);
   });
 
   it('supersedes nothing for an insight that is not about one entity', async () => {

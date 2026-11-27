@@ -193,7 +193,7 @@ export function BillingSettings() {
     <div className="w-full">
       <PageHeader
         breadcrumbs={[
-          { label: 'Home', href: '/' },
+          { label: 'Dashboard', href: '/dashboard' },
           { label: 'Billing', href: '/billing' },
           { label: 'Settings' },
         ]}

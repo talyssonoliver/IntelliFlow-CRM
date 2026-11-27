@@ -150,7 +150,7 @@ export default function EventTypesContent() {
     <div className="w-full">
       <PageHeader
         breadcrumbs={[
-          { label: 'Home', href: '/' },
+          { label: 'Dashboard', href: '/dashboard' },
           { label: 'Calendar', href: '/calendar' },
           { label: 'Event Types' },
         ]}

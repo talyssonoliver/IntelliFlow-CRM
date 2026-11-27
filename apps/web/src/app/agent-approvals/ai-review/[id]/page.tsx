@@ -9,7 +9,6 @@
 
 import { useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
 import {
   Card,
   CardHeader,
@@ -29,6 +28,7 @@ import { useReviewDetail } from '@/lib/ai-review/hooks';
 import { api } from '@/lib/api';
 import { formatSlaClock, formatTimeAgo } from '@/lib/shared/date-utils';
 
+import { Breadcrumbs } from '@/components/shared/page-header';
 // Output type display config (shared with ReviewCard)
 const OUTPUT_TYPE_LABELS: Record<string, string> = {
   AUTO_RESPONSE: 'Auto-Response',
@@ -168,20 +168,14 @@ export default function AIReviewDetailPage() {
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto">
       {/* Breadcrumb */}
-      <nav
-        className="flex items-center gap-2 text-sm text-muted-foreground"
-        aria-label="Breadcrumb"
-      >
-        <Link href="/agent-approvals" className="hover:text-foreground transition-colors">
-          AI & Agents
-        </Link>
-        <span aria-hidden="true">/</span>
-        <Link href="/agent-approvals/ai-review" className="hover:text-foreground transition-colors">
-          AI Review
-        </Link>
-        <span aria-hidden="true">/</span>
-        <span className="text-foreground font-medium">Review #{reviewId.slice(0, 8)}</span>
-      </nav>
+      <Breadcrumbs
+        endsWithCurrentPage={false}
+        items={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'AI & Agents', href: '/agent-approvals' },
+          { label: 'AI Review', href: '/agent-approvals/ai-review' },
+        ]}
+      />
 
       {/* Header */}
       <div className="flex flex-wrap items-center gap-3">
