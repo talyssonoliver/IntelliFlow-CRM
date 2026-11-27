@@ -666,12 +666,16 @@ so a double click or two admins cannot run it twice. It anonymises in place:
   and only an object no retained record still uses (decided on the full bucket
   and path, under a transaction advisory lock on the object, so two erasures
   sharing a file cannot both keep it). Anything else is queued `KEPT` (reason
-  `SHARED_KEPT` or `UNMANAGED`): never sent to storage, no locator stored,
-  read-only and resolved, with no delete or confirm action. Other people's data
-  is not erased; only the erased person's link to it is removed. Failed deletes
-  are retried least-tried first, so a stuck object cannot starve the rest. A
-  request with no queue rows (an erasure from before the queue) is shown without
-  any claim about its files. The cleanup never fails the erasure.
+  `SHARED_KEPT` or `UNMANAGED`): never sent to storage, read-only and resolved,
+  with no delete or confirm action. A shared file stores no locator. An
+  UNMANAGED file keeps its location on the erasure record so an administrator
+  can find it (read-only, administrators only); that location is cleared exactly
+  30 days after the erasure completes (never shown after, and removed the next
+  time an administrator opens the privacy requests page). Other people's data is
+  not erased; only the erased person's link to it is removed. Failed deletes are
+  retried least-tried first, so a stuck object cannot starve the rest. A request
+  with no queue rows (an erasure from before the queue) is shown without any
+  claim about its files. The cleanup never fails the erasure.
 - **Left on a counted checklist.** Deals and tasks (Q23) and, per source, the
   stored files the CRM owns and has not yet deleted (failed): the result and the
   request list count exactly what remains, 0 when all are gone. Kept files are

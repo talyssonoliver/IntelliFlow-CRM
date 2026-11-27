@@ -14,11 +14,11 @@
       },
       {
         "path": "packages/adapters/src/repositories/subject-stored-files.ts",
-        "sha256": "1259bdbefe9ac06ace94a2a2fc7b5768fbb87ab1ab56d33a696f2bd80d60dfa9"
+        "sha256": "580e4dc3f33fc9550853f2be61d810e37bba37fb3ab08b769a1624e620a00243"
       },
       {
         "path": "packages/application/src/services/ErasedFilesCleanupService.ts",
-        "sha256": "4aae3562250bd94e9067c1ee0d25c2d72db8df2ccc8985956095ca8311e20111"
+        "sha256": "ff4ce9f75ff6ed917093f82f1d19f99f143eca8336bcb04e3ccc8812a143d3bf"
       }
     ],
     "invariants_acknowledged": [
@@ -30,7 +30,7 @@
     "communication_types_erased": 9,
     "stored_file_sources_deleted": 4,
     "new_unit_tests": 58,
-    "real_db_tests": 52,
+    "real_db_tests": 53,
     "pr_communications": 1361,
     "pr_stored_files": 1588
   },
@@ -57,7 +57,7 @@
       "timestamp": "2026-11-27T14:30:00Z"
     },
     {
-      "name": "Real-DB DSAR suites (52 tests) through the test slot, migrations applied",
+      "name": "Real-DB DSAR suites (53 tests) through the test slot, migrations applied",
       "command": "node with-slot.mjs --exclusive intelliflow-db -- node scripts/test-db.mjs run --seed -- npx vitest run --project integration tests/integration/dsar-communications.test.ts tests/integration/dsar.test.ts",
       "exit_code": 0,
       "passed": true,
@@ -162,5 +162,5 @@
       "met": true
     }
   ],
-  "notes": "Two PRs: #1361 (communications in the erasure transaction) and #1588 (stored files). Adds the dsar_stored_objects table (additive migration 20261127110000). Lead, chat and ticket files have no CRM upload path today, so their locators are kept as unmanaged; only email attachments (the email-attachments bucket) are CRM objects. A future upload path must register its bucket. The CRM deletes only files it alone owns (in the email-attachments bucket, under the firm's prefix, used by no retained record). Everything else is kept, read-only and resolved: SHARED_KEPT (another retained record uses it) or UNMANAGED (outside the CRM's storage), with no locator stored and no delete or confirm action. An erasure from before the queue shows no claim about its files."
+  "notes": "Two PRs: #1361 (communications in the erasure transaction) and #1588 (stored files). Adds the dsar_stored_objects table (additive migration 20261127110000). Lead, chat and ticket files have no CRM upload path today, so their locators are kept as unmanaged; only email attachments (the email-attachments bucket) are CRM objects. A future upload path must register its bucket. The CRM deletes only files it alone owns (in the email-attachments bucket, under the firm's prefix, used by no retained record). Everything else is kept, read-only and resolved: SHARED_KEPT (another retained record uses it) or UNMANAGED (outside the CRM's storage), with no delete or confirm action (a shared file stores no locator; an unmanaged one keeps its location, read-only for administrators, cleared 30 days after the erasure completes). An erasure from before the queue shows no claim about its files."
 }

@@ -9,7 +9,9 @@
  * rows are touched, a delete of an object already gone is a success, and a second run with
  * nothing pending does nothing. It never throws: a failure here must not undo an erasure.
  */
+import { KEPT_FILES_LIST_LIMIT } from '@intelliflow/domain';
 import type {
+  KeptStoredObject,
   PendingStoredObject,
   StoredObjectOutboxPort,
   StoredObjectSettlement,
@@ -23,6 +25,10 @@ import type {
 export interface ErasedFilesPurger {
   /** Deletes what is queued for the request and returns what remains, per checklist key. */
   purge(tenantId: string, requestId: string, now: Date): Promise<ErasedFilesPurgeResult>;
+  /** The locations of the files kept outside the CRM's storage (read-only). */
+  keptFiles(tenantId: string, requestId: string): Promise<KeptStoredObject[]>;
+  /** Clears the kept locations whose erasure completed before `before`. */
+  expireLocators(tenantId: string, before: Date): Promise<number>;
   /** What is left, and what was kept, per request; a request that never queued a file is absent. */
   leftFor(tenantId: string, requestIds: string[]): Promise<Record<string, StoredObjectsLeft>>;
 }
@@ -72,10 +78,20 @@ export class ErasedFilesCleanupService implements ErasedFilesPurger {
     return this.outbox.leftFor(tenantId, requestIds);
   }
 
+  keptFiles(tenantId: string, requestId: string) {
+    return this.outbox.unmanaged(tenantId, requestId, KEPT_FILES_LIST_LIMIT);
+  }
+
+  expireLocators(tenantId: string, before: Date) {
+    return this.outbox.expireLocators(tenantId, before);
+  }
+
   async purge(tenantId: string, requestId: string, now: Date): Promise<ErasedFilesPurgeResult> {
-    let deleted = 0;
+    // The running total lives here, so what earlier passes deleted and recorded is still counted
+    // if a later step throws.
+    const progress = { deleted: 0 };
     try {
-      if (this.storage) deleted = await this.deleteQueued(this.storage, tenantId, requestId, now);
+      if (this.storage) await this.deleteQueued(this.storage, tenantId, requestId, now, progress);
     } catch (error) {
       // No personal data in the log: ids and the error class only.
       console.error('[privacy] Stored file cleanup stopped', {
@@ -84,29 +100,31 @@ export class ErasedFilesCleanupService implements ErasedFilesPurger {
         error: error instanceof Error ? error.name : 'unknown',
       });
     }
-    return { deleted, remaining: await this.outbox.remaining(tenantId, requestId) };
+    return {
+      deleted: progress.deleted,
+      remaining: await this.outbox.remaining(tenantId, requestId),
+    };
   }
 
   private async deleteQueued(
     storage: StoredObjectDeletionPort,
     tenantId: string,
     requestId: string,
-    now: Date
-  ): Promise<number> {
+    now: Date,
+    progress: { deleted: number }
+  ): Promise<void> {
     let todo: PendingStoredObject[] = await this.outbox.pending(
       tenantId,
       requestId,
       this.maxObjects
     );
-    let deleted = 0;
     for (let pass = 1; pass <= this.attempts && todo.length > 0; pass += 1) {
       if (pass > 1) await this.sleep(this.backoffMs(pass));
       const { settled, retry } = await this.deletePass(storage, tenantId, todo);
       await this.outbox.settle(tenantId, requestId, settled, now);
-      deleted += settled.filter((s) => s.deleted).length;
+      progress.deleted += settled.filter((s) => s.deleted).length;
       todo = retry;
     }
-    return deleted;
   }
 
   /**

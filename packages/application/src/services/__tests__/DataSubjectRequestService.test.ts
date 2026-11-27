@@ -1375,6 +1375,8 @@ describe('stored files after an erasure (IFC-316)', () => {
     erasedFiles: Partial<{
       purge: ReturnType<typeof vi.fn>;
       leftFor: ReturnType<typeof vi.fn>;
+      keptFiles: ReturnType<typeof vi.fn>;
+      expireLocators: ReturnType<typeof vi.fn>;
     }>
   ) {
     const withFiles = new DataSubjectRequestService({
@@ -1387,6 +1389,8 @@ describe('stored files after an erasure (IFC-316)', () => {
       erasedFiles: {
         purge: vi.fn(),
         leftFor: vi.fn(),
+        keptFiles: vi.fn(),
+        expireLocators: vi.fn(),
         ...erasedFiles,
       },
     });
@@ -1476,5 +1480,45 @@ describe('stored files after an erasure (IFC-316)', () => {
     leftFor.mockRejectedValueOnce(new Error('db down'));
     expect(await withFiles.storedFilesLeft('tenant-a', ['r1'])).toBeNull();
     expect(await service.storedFilesLeft('tenant-a', ['r1'])).toBeNull();
+  });
+
+  it('shows where kept files are, only for a completed erasure and only for 30 days', async () => {
+    const files = [{ id: 'k1', source: 'LEAD_FILE', locator: 'https://files.example.invalid/a' }];
+    const keptFiles = vi.fn().mockResolvedValue(files);
+    const { withFiles, id } = await erasureWith({ keptFiles });
+    const input = { tenantId: 'tenant-a', id, now: NOW };
+    // Still open: nothing to show.
+    expect(await withFiles.keptFiles(input)).toEqual({ outcome: 'INVALID', field: 'status' });
+    repo.rows.get(id)!.status = 'COMPLETED';
+    repo.rows.get(id)!.completedAt = NOW;
+    expect(await withFiles.keptFiles(input)).toEqual({ outcome: 'OK', files });
+    // The 29th day still shows; from the 30th day on the list is empty, whatever the database holds.
+    const day = 86_400_000;
+    expect(
+      await withFiles.keptFiles({ ...input, now: new Date(NOW.getTime() + 29 * day) })
+    ).toEqual({ outcome: 'OK', files });
+    keptFiles.mockClear();
+    expect(
+      await withFiles.keptFiles({ ...input, now: new Date(NOW.getTime() + 30 * day) })
+    ).toEqual({ outcome: 'OK', files: [] });
+    expect(keptFiles).not.toHaveBeenCalled();
+    // Another firm's request is not found; a service with no cleanup says so.
+    expect(await withFiles.keptFiles({ ...input, tenantId: 'tenant-b' })).toEqual({
+      outcome: 'NOT_FOUND',
+    });
+    expect(await service.keptFiles(input)).toEqual({ outcome: 'INVALID', field: 'storage' });
+  });
+
+  it('clears kept locations 30 days after completion, never throws', async () => {
+    const expireLocators = vi.fn().mockResolvedValue(3);
+    const { withFiles } = await erasureWith({ expireLocators });
+    await withFiles.expireKeptLocations('tenant-a', NOW);
+    expect(expireLocators).toHaveBeenCalledWith(
+      'tenant-a',
+      new Date(NOW.getTime() - 30 * 86_400_000)
+    );
+    expireLocators.mockRejectedValueOnce(new Error('db down'));
+    await expect(withFiles.expireKeptLocations('tenant-a', NOW)).resolves.toBeUndefined();
+    await expect(service.expireKeptLocations('tenant-a', NOW)).resolves.toBeUndefined();
   });
 });

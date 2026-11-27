@@ -263,8 +263,9 @@ stored-object configuration), or its files will be kept, not deleted, on an
 erasure.
 
 Every other file is **kept, read-only and resolved**. It is never sent to
-storage, no location is stored for it, and the request has no delete or confirm
-action on it. The request shows why, as a count per reason:
+storage and the request has no delete or confirm action on it. A shared file
+stores no location; a file outside the CRM's storage keeps its location, as
+described below. The request shows why, as a count per reason:
 
 - **Shared (`SHARED_KEPT`):** "N files kept because another record still uses
   them". Another person's retained data (one upload attached to someone else's
@@ -272,8 +273,15 @@ action on it. The request shows why, as a count per reason:
   lead file, attachment or chat row loses its location.
 - **Outside the CRM's storage (`UNMANAGED`):** "N files kept: outside the CRM's
   storage, delete where stored". Another host or bucket, or another firm's path.
-  The CRM never touches it. The firm deletes it where it lives; the CRM keeps no
-  location for it.
+  The CRM never touches it. The firm deletes it where it lives. So that the
+  admin can find it, the erasure record keeps the file's location (the original
+  record's own link to it is still removed). The request's **Where are they?**
+  button shows each file's source and location to administrators only,
+  read-only: no delete, confirm or mark-as-done action. **The locations are
+  cleared exactly 30 days after the erasure completes**: they are never shown
+  from that moment, and the stored copy is removed the next time an
+  administrator opens the privacy requests page. The row and its count stay
+  (resolved); only the location goes.
 
 A location that is not an object (empty, an inline `data:` URL, or the app's own
 download route) is simply cleared.

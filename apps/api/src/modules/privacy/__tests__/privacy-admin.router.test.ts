@@ -88,6 +88,8 @@ beforeEach(() => {
     liftRestriction: vi.fn().mockResolvedValue({ outcome: 'OK' }),
     revokeExport: vi.fn().mockResolvedValue({ outcome: 'OK' }),
     storedFilesLeft: vi.fn().mockResolvedValue({}),
+    expireKeptLocations: vi.fn().mockResolvedValue(undefined),
+    keptFiles: vi.fn(),
     retryFileCleanup: vi.fn(),
     exportData: vi.fn(),
     restrictionStatus: vi.fn(),
@@ -511,6 +513,32 @@ describe('the remaining admin actions', () => {
     await expect(adminCaller().retryFileCleanup({ id: ID })).rejects.toMatchObject({
       code: 'NOT_FOUND',
     });
+  });
+
+  it('opens the list by clearing expired kept locations, and keeps listing if that fails', async () => {
+    service.list.mockResolvedValue([]);
+    await adminCaller().list({});
+    expect(service.expireKeptLocations).toHaveBeenCalledWith(TENANT, expect.any(Date));
+  });
+
+  it('lists where kept files are, read-only, for administrators only', async () => {
+    const files = [{ id: 'k1', source: 'LEAD_FILE', locator: 'https://files.example.invalid/a' }];
+    service.keptFiles.mockResolvedValue({ outcome: 'OK', files });
+    await expect(adminCaller().keptFiles({ id: ID })).resolves.toEqual(files);
+    expect(service.keptFiles).toHaveBeenCalledWith(
+      expect.objectContaining({ tenantId: TENANT, id: ID })
+    );
+    // No audit row and no write: it is a read.
+    expect(auditLog).not.toHaveBeenCalled();
+    service.keptFiles.mockResolvedValue({ outcome: 'INVALID', field: 'status' });
+    await expect(adminCaller().keptFiles({ id: ID })).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+    });
+    await expect(
+      privacyAdminRouter
+        .createCaller(createManagerContext({ services: { dsar: service } as never }))
+        .keptFiles({ id: ID })
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 
   it('previews an erasure and exports staff-handled access requests', async () => {

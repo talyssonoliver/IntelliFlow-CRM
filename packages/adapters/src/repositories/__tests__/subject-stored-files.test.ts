@@ -59,7 +59,7 @@ const sharingQueries = (client: any) =>
   );
 
 describe('planStoredFiles (IFC-316)', () => {
-  it('queues the email attachments the CRM owns to delete; everything else is kept, with its reason and no location', async () => {
+  it('queues the email attachments the CRM owns to delete; everything else is kept, with its reason and its location', async () => {
     const client = db({
       leadFile: [
         { id: 'lf1', url: `${T}/lead/a.pdf` },
@@ -75,17 +75,17 @@ describe('planStoredFiles (IFC-316)', () => {
     const plan = await planStoredFiles(client, T, 'ada@example.invalid', IDS, config);
 
     // Only the email attachment is a CRM object (nothing uploads lead, chat or ticket files to
-    // storage); every other locator is kept as unmanaged, with no location.
-    const unmanaged = (source: string) => ({
+    // storage); every other locator is kept as unmanaged, with its location kept for the admin.
+    const unmanaged = (source: string, locator: string) => ({
       source,
       state: 'KEPT',
       reason: 'UNMANAGED',
       bucket: null,
-      locator: null,
+      locator,
     });
     expect(plan.queue).toEqual([
-      unmanaged('LEAD_FILE'),
-      unmanaged('LEAD_FILE'),
+      unmanaged('LEAD_FILE', `${T}/lead/a.pdf`),
+      unmanaged('LEAD_FILE', FOREIGN_URL),
       {
         source: 'EMAIL_ATTACHMENT',
         state: 'PENDING',
@@ -93,7 +93,7 @@ describe('planStoredFiles (IFC-316)', () => {
         bucket: 'email-attachments',
         locator: `${T}/1-c.pdf`,
       },
-      unmanaged('CHAT_ATTACHMENT'),
+      unmanaged('CHAT_ATTACHMENT', `${T}/d.png`),
     ]);
     // Every row with a locator or an attachment list is cleared, including inline content.
     expect(plan).toMatchObject({
@@ -130,8 +130,8 @@ describe('planStoredFiles (IFC-316)', () => {
       config
     );
     expect(plan.queue.map((q) => [q.state, q.reason, q.locator])).toEqual([
-      ['KEPT', 'UNMANAGED', null],
-      ['KEPT', 'UNMANAGED', null],
+      ['KEPT', 'UNMANAGED', 'tenant-b/secret.pdf'],
+      ['KEPT', 'UNMANAGED', `${T}/../tenant-b/secret.pdf`],
     ]);
   });
 
@@ -332,7 +332,7 @@ describe('queueStoredFiles', () => {
     expect(client.chatMessage.updateMany.mock.calls[0][0].where.tenantId).toBe(T);
   });
 
-  it('records a kept object with its reason and no location, and still removes the person’s link', async () => {
+  it('records an unmanaged file with its reason and its location, and still removes the person’s link', async () => {
     const client = db({ leadFile: [{ id: 'lf1', url: FOREIGN_URL }] });
     const plan = await planStoredFiles(client, T, 'a', IDS, config);
     await queueStoredFiles(client, T, 'req-1', plan);
@@ -344,7 +344,7 @@ describe('queueStoredFiles', () => {
         state: 'KEPT',
         reason: 'UNMANAGED',
         bucket: null,
-        locator: null,
+        locator: FOREIGN_URL,
       },
     ]);
     expect(client.leadFile.updateMany.mock.calls[0][0].data).toEqual({ url: null });

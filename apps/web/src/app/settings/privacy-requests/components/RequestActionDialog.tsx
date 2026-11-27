@@ -229,6 +229,20 @@ function actionProblem(input: {
   return null;
 }
 
+const KEPT_KEYS = ['storedFilesKeptShared', 'storedFilesKeptUnmanaged'] as const;
+
+/** What the erasure erases: the counts without the files it keeps. */
+function erasedCounts(counts: Record<string, number>): Record<string, number> {
+  return Object.fromEntries(
+    Object.entries(counts).filter(([key]) => !(KEPT_KEYS as readonly string[]).includes(key))
+  );
+}
+
+/** The files kept, not erased: they belong under "Left to handle by hand". */
+function keptCounts(counts: Record<string, number>): Record<string, number> {
+  return Object.fromEntries(KEPT_KEYS.map((key) => [key, counts[key] ?? 0]));
+}
+
 function CountList({
   counts,
   labels,
@@ -384,13 +398,16 @@ export function RequestActionDialog({
             <div className="space-y-2">
               <p className="text-sm font-medium text-foreground">This erases, in one step:</p>
               {erasurePreview ? (
-                <CountList counts={erasurePreview.counts} labels={CHECKLIST_LABELS} />
+                <CountList counts={erasedCounts(erasurePreview.counts)} labels={CHECKLIST_LABELS} />
               ) : (
                 <output className="text-sm text-muted-foreground">Counting records</output>
               )}
               <p className="text-sm font-medium text-foreground">Left to handle by hand:</p>
               {erasurePreview && (
-                <CountList counts={erasurePreview.checklist} labels={CHECKLIST_LABELS} />
+                <CountList
+                  counts={{ ...erasurePreview.checklist, ...keptCounts(erasurePreview.counts) }}
+                  labels={CHECKLIST_LABELS}
+                />
               )}
             </div>
           )}

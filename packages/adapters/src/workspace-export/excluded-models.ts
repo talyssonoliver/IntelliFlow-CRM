@@ -75,6 +75,8 @@ export const EXCLUDED_MODELS: Readonly<Record<string, string>> = {
   ReportExecution: AUDIT,
   ComplianceSnapshot: AUDIT,
   ProcessingRestriction: 'privacy-request processing flag of the platform',
+  DsarStoredObject:
+    'erasure bookkeeping (files queued for deletion or kept); it is about files that were erased, not customer content',
   WebhookDelivery: AUDIT,
 
   // Computed metrics and usage

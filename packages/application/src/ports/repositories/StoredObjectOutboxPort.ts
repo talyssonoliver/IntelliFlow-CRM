@@ -31,6 +31,13 @@ export interface StoredObjectsLeft {
   deleted: number;
 }
 
+/** A file kept outside the CRM's storage: where it is, read-only, for administrators. */
+export interface KeptStoredObject {
+  id: string;
+  source: StoredObjectSource;
+  locator: string;
+}
+
 export interface StoredObjectOutboxPort {
   /** PENDING objects of the request, oldest first, at most `limit`. */
   pending(tenantId: string, requestId: string, limit: number): Promise<PendingStoredObject[]>;
@@ -53,6 +60,15 @@ export interface StoredObjectOutboxPort {
    * before this queue existed, or one with no stored files) is ABSENT: no claim is made for it.
    */
   leftFor(tenantId: string, requestIds: string[]): Promise<Record<string, StoredObjectsLeft>>;
+
+  /** The locations of the files kept outside the CRM's storage, oldest first, at most `limit`. */
+  unmanaged(tenantId: string, requestId: string, limit: number): Promise<KeptStoredObject[]>;
+
+  /**
+   * Clears the location of every unmanaged kept file of this firm whose erasure completed before
+   * `before`. Returns how many were cleared.
+   */
+  expireLocators(tenantId: string, before: Date): Promise<number>;
 
   /** What is still left, counted per checklist key (storedLeadFiles ...): PENDING rows only. */
   remaining(tenantId: string, requestId: string): Promise<Record<string, number>>;

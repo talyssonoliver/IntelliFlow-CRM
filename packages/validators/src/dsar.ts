@@ -248,6 +248,13 @@ export interface DsarRequestDto {
   storedFilesDeleted?: number;
 }
 
+/** Where a file kept outside the CRM's storage is (IFC-316): read-only, administrators only. */
+export interface DsarKeptFileDto {
+  id: string;
+  source: 'LEAD_FILE' | 'EMAIL_ATTACHMENT' | 'CHAT_ATTACHMENT' | 'TICKET_ATTACHMENT';
+  locator: string;
+}
+
 export interface DsarErasureResultDto {
   counts: Record<string, number>;
   checklist: Record<string, number>;

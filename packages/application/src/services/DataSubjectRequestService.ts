@@ -12,6 +12,7 @@
 import {
   DSAR_LIMITS,
   STORED_OBJECT_CHECKLIST_KEYS,
+  UNMANAGED_LOCATION_DAYS,
   accessCompletesAtVerify,
   accessResolutionNote,
   addCalendarMonths,
@@ -35,7 +36,10 @@ import type {
   RestrictionStatus,
 } from '../ports/repositories/ProcessingRestrictionPort';
 import type { ErasedFilesPurger } from './ErasedFilesCleanupService';
-import type { StoredObjectsLeft } from '../ports/repositories/StoredObjectOutboxPort';
+import type {
+  KeptStoredObject,
+  StoredObjectsLeft,
+} from '../ports/repositories/StoredObjectOutboxPort';
 import type {
   DsarNotice,
   DsarNotificationPort,
@@ -732,6 +736,47 @@ export class DataSubjectRequestService {
       return await this.deps.erasedFiles.leftFor(tenantId, ids);
     } catch {
       return null;
+    }
+  }
+
+  /**
+   * Where the files kept outside the CRM's storage are, read-only, for administrators. Shown
+   * only within UNMANAGED_LOCATION_DAYS of the erasure completing; after that the list is empty
+   * (and the locations are cleared by expireKeptLocations).
+   */
+  async keptFiles(input: {
+    tenantId: string;
+    id: string;
+    now: Date;
+  }): Promise<Ok<{ files: KeptStoredObject[] }> | NotFound | Invalid> {
+    const record = await this.deps.repo.findForTenant(input.tenantId, input.id);
+    if (!record) return { outcome: 'NOT_FOUND' };
+    if (record.type !== 'ERASURE' || record.status !== 'COMPLETED') {
+      return { outcome: 'INVALID', field: 'status' };
+    }
+    if (!this.deps.erasedFiles) return { outcome: 'INVALID', field: 'storage' };
+    const expiresAt = (record.completedAt?.getTime() ?? 0) + UNMANAGED_LOCATION_DAYS * MS_PER_DAY;
+    if (input.now.getTime() >= expiresAt) return { outcome: 'OK', files: [] };
+    return {
+      outcome: 'OK',
+      files: await this.deps.erasedFiles.keptFiles(input.tenantId, record.id),
+    };
+  }
+
+  /**
+   * Clears the kept locations of this firm's erasures that completed more than
+   * UNMANAGED_LOCATION_DAYS ago. Called when an administrator opens the privacy requests page;
+   * never throws.
+   */
+  async expireKeptLocations(tenantId: string, now: Date): Promise<void> {
+    if (!this.deps.erasedFiles) return;
+    try {
+      await this.deps.erasedFiles.expireLocators(
+        tenantId,
+        new Date(now.getTime() - UNMANAGED_LOCATION_DAYS * MS_PER_DAY)
+      );
+    } catch {
+      // The next visit tries again; the list never shows an expired location anyway.
     }
   }
 

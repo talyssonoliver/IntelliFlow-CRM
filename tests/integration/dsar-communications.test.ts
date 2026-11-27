@@ -399,7 +399,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         .sort((x: unknown[], y: unknown[]) => byKey(x).localeCompare(byKey(y)))
     ).toEqual(
       [
-        ['CHAT_ATTACHMENT', 'KEPT', null, null, 'UNMANAGED'],
+        ['CHAT_ATTACHMENT', 'KEPT', null, `${TENANT}/chat/ada-photo.png`, 'UNMANAGED'],
         [
           'EMAIL_ATTACHMENT',
           'PENDING',
@@ -411,10 +411,10 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         ['EMAIL_ATTACHMENT', 'KEPT', null, null, 'SHARED_KEPT'],
         // Outside the CRM's storage (no CRM upload path writes these; another host, another
         // firm's prefix): kept, no location.
-        ['LEAD_FILE', 'KEPT', null, null, 'UNMANAGED'],
-        ['LEAD_FILE', 'KEPT', null, null, 'UNMANAGED'],
-        ['LEAD_FILE', 'KEPT', null, null, 'UNMANAGED'],
-        ['TICKET_ATTACHMENT', 'KEPT', null, null, 'UNMANAGED'],
+        ['LEAD_FILE', 'KEPT', null, `${TENANT}/leads/ada-cv.pdf`, 'UNMANAGED'],
+        ['LEAD_FILE', 'KEPT', null, FOREIGN, 'UNMANAGED'],
+        ['LEAD_FILE', 'KEPT', null, `${RUN}_b/leads/other.pdf`, 'UNMANAGED'],
+        ['TICKET_ATTACHMENT', 'KEPT', null, `${TENANT}/tickets/ada-scan.pdf`, 'UNMANAGED'],
       ].sort((x, y) => byKey(x).localeCompare(byKey(y)))
     );
     const rowsWithLocator = await Promise.all([
@@ -614,7 +614,7 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
       expect(result.remaining).toEqual({ storedLeadFiles: 1 });
     });
 
-    it('kept files are read-only: no location, and the cleanup never touches them', async () => {
+    it('kept files are read-only: a shared one has no location, an unmanaged one keeps its own, and the cleanup never touches them', async () => {
       const kept = await prisma.dsarStoredObject.findMany({
         where: { tenantId: TENANT, requestId, state: 'KEPT' },
       });
@@ -626,7 +626,27 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         'UNMANAGED',
         'UNMANAGED',
       ]);
-      expect(kept.every((k: any) => k.locator === null && k.bucket === null)).toBe(true);
+      expect(kept.every((k: any) => k.bucket === null)).toBe(true);
+      expect(kept.find((k: any) => k.reason === 'SHARED_KEPT').locator).toBeNull();
+      expect(
+        kept
+          .filter((k: any) => k.reason === 'UNMANAGED')
+          .map((k: any) => k.locator)
+          .sort()
+      ).toEqual(
+        [
+          `${TENANT}/chat/ada-photo.png`,
+          `${TENANT}/leads/ada-cv.pdf`,
+          FOREIGN,
+          `${RUN}_b/leads/other.pdf`,
+          `${TENANT}/tickets/ada-scan.pdf`,
+        ].sort()
+      );
+      // The admin's read lists only the unmanaged ones, with their locations, and no one can act on them.
+      const listed = await outbox().unmanaged(TENANT, requestId, 100);
+      expect(listed).toHaveLength(5);
+      expect(listed.map((l) => l.locator)).not.toContain(null);
+      expect(await outbox().unmanaged(`${TENANT}_x`, requestId, 100)).toEqual([]);
       // Not pending, so never sent to storage; settling them changes nothing.
       const pending = await outbox().pending(TENANT, requestId, 100);
       expect(pending.map((o) => o.id)).not.toEqual(
@@ -642,6 +662,34 @@ describeDb('IFC-316 erasure of communications (real DB)', () => {
         where: { tenantId: TENANT, requestId, state: 'KEPT' },
       });
       expect(after).toBe(6);
+    });
+
+    it('clears the kept locations 30 days after the erasure completes, and only then', async () => {
+      const day = 86_400_000;
+      const completed = (await prisma.dsarRequest.findUnique({ where: { id: requestId } }))
+        .completedAt;
+      // Day 29: nothing is cleared yet.
+      expect(
+        await outbox().expireLocators(
+          TENANT,
+          new Date(completed.getTime() - 29 * day + 29 * day - day)
+        )
+      ).toBe(0);
+      expect(await outbox().unmanaged(TENANT, requestId, 100)).toHaveLength(5);
+      // Another firm's expiry never touches this firm's rows.
+      expect(
+        await outbox().expireLocators(`${TENANT}_x`, new Date(completed.getTime() + 31 * day))
+      ).toBe(0);
+      expect(await outbox().unmanaged(TENANT, requestId, 100)).toHaveLength(5);
+      // Day 30 on: the five unmanaged locations are cleared; the shared row had none.
+      expect(await outbox().expireLocators(TENANT, new Date(completed.getTime() + 1))).toBe(5);
+      expect(await outbox().unmanaged(TENANT, requestId, 100)).toEqual([]);
+      // The rows and their counts stay (resolved), only the locations are gone; a second run is a no-op.
+      expect((await outbox().leftFor(TENANT, [requestId]))[requestId]).toMatchObject({
+        keptUnmanaged: 5,
+        keptShared: 1,
+      });
+      expect(await outbox().expireLocators(TENANT, new Date(completed.getTime() + 1))).toBe(0);
     });
 
     it('tries the least-tried objects first, so failures cannot starve the rest', async () => {

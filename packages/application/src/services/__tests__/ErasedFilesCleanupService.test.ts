@@ -62,6 +62,17 @@ class FakeOutbox implements StoredObjectOutboxPort {
       },
     };
   }
+  async unmanaged(_t: string, _r: string, limit: number) {
+    return [...this.rows.values()]
+      .filter((r) => r.state === 'KEPT')
+      .slice(0, limit)
+      .map((r) => ({ id: r.id, source: r.source, locator: r.path }));
+  }
+  expired: Array<[string, Date]> = [];
+  async expireLocators(t: string, before: Date) {
+    this.expired.push([t, before]);
+    return 2;
+  }
   async remaining() {
     const keys = {
       EMAIL_ATTACHMENT: 'storedEmailAttachments',
@@ -209,6 +220,32 @@ describe('ErasedFilesCleanupService (IFC-316)', () => {
     });
     expect(JSON.stringify(error.mock.calls)).not.toContain('db down');
     error.mockRestore();
+  });
+
+  it('keeps the count of what was deleted when a later pass fails to record', async () => {
+    const outbox = new FakeOutbox(['t/a', 't/b']);
+    const real = outbox.settle.bind(outbox);
+    let calls = 0;
+    vi.spyOn(outbox, 'settle').mockImplementation(async (...args) => {
+      calls += 1;
+      if (calls === 2) throw new Error('db down');
+      return real(...args);
+    });
+    // Pass 1 deletes t/a and records it; t/b fails and goes to pass 2, whose settle throws.
+    const { port } = storage((path) => (path === 't/b' ? 'STORAGE_ERROR' : null));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const result = await service(outbox, port, { attempts: 3 }).purge(T, R, NOW);
+    expect(result.deleted).toBe(1);
+    error.mockRestore();
+  });
+
+  it('lists the kept locations and clears the expired ones for a firm', async () => {
+    const outbox = new FakeOutbox([], 2);
+    const cleanup = service(outbox, null);
+    expect((await cleanup.keptFiles(T, R)).map((k) => k.id)).toEqual(['m0', 'm1']);
+    const before = new Date('2026-10-28T00:00:00Z');
+    expect(await cleanup.expireLocators(T, before)).toBe(2);
+    expect(outbox.expired).toEqual([[T, before]]);
   });
 
   it('reports what is left, and what was kept and why, for a list of requests', async () => {

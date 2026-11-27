@@ -2853,7 +2853,8 @@ model DsarRequest {
 /// be deleted after the commit. PENDING = delete it (the checklist while it is not done);
 /// KEPT = the CRM does not delete it, read-only and resolved: SHARED_KEPT (another retained record
 /// uses the object) or UNMANAGED (outside the CRM's own storage); DELETED = done.
-/// KEPT and DELETED rows hold no locator.
+/// A SHARED_KEPT or DELETED row holds no locator; an UNMANAGED row keeps its location, read-only,
+/// until 30 days after the erasure completes.
 model DsarStoredObject {
   id        String      @id @default(cuid())
   tenantId  String
@@ -2867,7 +2868,8 @@ model DsarStoredObject {
   /// KEPT: SHARED_KEPT | UNMANAGED. Otherwise null (CHECK).
   reason    String?     @db.VarChar(20)
   bucket    String?     @db.VarChar(100)
-  /// The storage path while PENDING; null once KEPT or DELETED.
+  /// The storage path while PENDING; the location of an UNMANAGED file until it is cleared;
+  /// null for SHARED_KEPT and DELETED.
   locator   String?
   attempts  Int         @default(0)
   /// An error code only, never a message that could carry a name.

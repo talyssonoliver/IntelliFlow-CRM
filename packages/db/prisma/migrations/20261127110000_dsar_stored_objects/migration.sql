@@ -43,9 +43,13 @@ CREATE TABLE "dsar_stored_objects" (
     CONSTRAINT "dsar_stored_objects_reason_check" CHECK (
         ("state" = 'KEPT' AND "reason" IN ('SHARED_KEPT', 'UNMANAGED'))
         OR ("state" IN ('PENDING', 'DELETED') AND "reason" IS NULL)),
-    -- A deletable row names its bucket and path; a kept or settled one keeps no locator.
+    -- A deletable row names its bucket and path. A file kept because another record uses it, and a
+    -- deleted one, keep no locator. A file kept outside the CRM's storage (UNMANAGED) keeps its
+    -- location, read-only, so an administrator can find it; it is cleared 30 days after the
+    -- erasure completes (NULL is allowed once cleared).
     CONSTRAINT "dsar_stored_objects_locator_check" CHECK (
         ("state" = 'PENDING' AND "bucket" IS NOT NULL AND "locator" IS NOT NULL)
+        OR ("state" = 'KEPT' AND "reason" = 'UNMANAGED')
         OR ("state" IN ('KEPT', 'DELETED') AND "locator" IS NULL))
 );
 

@@ -21,6 +21,17 @@ export const STORED_OBJECT_SOURCES = [
 ] as const;
 export type StoredObjectSource = (typeof STORED_OBJECT_SOURCES)[number];
 
+/**
+ * How long, after an erasure completes, the location of a file kept outside the CRM's storage
+ * (reason UNMANAGED) is shown to administrators. After that it is cleared from the database:
+ * exactly 30 days after the request's completion, at the next time an administrator opens the
+ * privacy requests page, and it is never shown once the 30 days have passed.
+ */
+export const UNMANAGED_LOCATION_DAYS = 30;
+
+/** The most kept-file locations one request lists. */
+export const KEPT_FILES_LIST_LIMIT = 500;
+
 /** The admin checklist key each source is counted under. */
 export const STORED_OBJECT_CHECKLIST_KEYS: Record<StoredObjectSource, string> = {
   LEAD_FILE: 'storedLeadFiles',

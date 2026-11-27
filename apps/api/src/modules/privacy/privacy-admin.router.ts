@@ -25,6 +25,7 @@ import {
   restrictionForSchema,
   type DsarErasureResultDto,
   type DsarExportDto,
+  type DsarKeptFileDto,
   type DsarRequestDto,
   type ProcessingRestrictionStatusDto,
 } from '@intelliflow/validators';
@@ -193,6 +194,8 @@ export const privacyAdminRouter = createTRPCRouter({
       const now = new Date();
       const rows = await dsarService(ctx).list(ctx.tenant.tenantId, input.status);
       // IFC-316: a completed erasure shows how many stored files are still not deleted.
+      // Locations kept outside the CRM's storage expire 30 days after the erasure (IFC-316).
+      await dsarService(ctx).expireKeptLocations(ctx.tenant.tenantId, now);
       // Said only when known: an erasure from before the queue, or a failed lookup, makes no
       // claim that the files are gone.
       const erased = rows.filter((r) => r.type === 'ERASURE' && r.status === 'COMPLETED');
@@ -342,6 +345,22 @@ export const privacyAdminRouter = createTRPCRouter({
         checklist: result.checklist,
       });
       return { deleted: result.deleted, checklist: result.checklist };
+    }),
+
+  /**
+   * IFC-316: where the files kept outside the CRM's storage are. Read-only, administrators
+   * only, no action; empty once 30 days have passed since the erasure completed.
+   */
+  keptFiles: adminTenantProcedure
+    .input(dsarIdInputSchema)
+    .query(async ({ ctx, input }): Promise<DsarKeptFileDto[]> => {
+      const result = await dsarService(ctx).keptFiles({
+        tenantId: ctx.tenant.tenantId,
+        id: input.id,
+        now: new Date(),
+      });
+      assertOk(result);
+      return result.files;
     }),
 
   completeAccess: adminTenantProcedure

@@ -16,6 +16,7 @@ const h = vi.hoisted(() => ({
   list: { data: undefined as unknown, isLoading: false, isError: false, error: null as unknown },
   restrictions: { data: undefined as unknown },
   preview: { data: undefined as unknown },
+  kept: { data: undefined as unknown, error: null as unknown },
   mutations: {} as Record<string, { mutateAsync: ReturnType<typeof vi.fn>; isPending: boolean }>,
   invalidate: vi.fn(),
   toast: vi.fn(),
@@ -53,6 +54,7 @@ vi.mock('@/lib/trpc', () => {
           liftRestriction: m('liftRestriction'),
           exportData: m('exportData'),
           retryFileCleanup: m('retryFileCleanup'),
+          keptFiles: { useQuery: () => h.kept },
         },
       },
     },
@@ -98,6 +100,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   h.list = { data: [request()], isLoading: false, isError: false, error: null };
   h.restrictions = { data: [] };
+  h.kept = { data: undefined, error: null };
   h.preview = { data: { counts: { leads: 1, contacts: 1 }, checklist: { tickets: 2 } } };
   h.mutations = Object.fromEntries(
     [
@@ -237,6 +240,84 @@ describe('PrivacyRequestsContent', () => {
     expect(screen.getByText('No stored files to delete')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Retry deleting stored files/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /by hand|Mark as deleted/ })).toBeNull();
+  });
+
+  it('shows where the files kept outside the CRM are, read-only, with no action', async () => {
+    h.list.data = [
+      request({
+        id: 'clhkept000000000',
+        status: 'COMPLETED',
+        storedFilesLeft: 0,
+        storedFilesDeleted: 0,
+        storedFilesKeptUnmanaged: 1,
+      }),
+    ];
+    h.kept = {
+      data: [{ id: 'k1', source: 'LEAD_FILE', locator: 'https://files.example.invalid/a.pdf' }],
+      error: null,
+    };
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Show where the kept files are/ }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Lead file')).toBeTruthy();
+    expect(within(dialog).getByText('https://files.example.invalid/a.pdf')).toBeTruthy();
+    // Reference only: the one button closes the dialog; nothing deletes, confirms or marks.
+    expect(
+      within(dialog)
+        .getAllByRole('button')
+        .map((b) => b.textContent)
+    ).not.toContain('Mark as deleted');
+    expect(within(dialog).queryByRole('checkbox')).toBeNull();
+    expect(within(dialog).getByText(/removed 30 days after the erasure/)).toBeTruthy();
+  });
+
+  it('says there is nothing to show once the locations have expired', async () => {
+    h.list.data = [
+      request({
+        id: 'clhkept000000000',
+        status: 'COMPLETED',
+        storedFilesLeft: 0,
+        storedFilesKeptUnmanaged: 1,
+      }),
+    ];
+    h.kept = { data: [], error: null };
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Show where the kept files are/ }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText(/cleared 30 days after the erasure/)).toBeTruthy();
+  });
+
+  it('puts the files an erasure keeps under "Left to handle by hand", not under "This erases"', async () => {
+    h.preview = {
+      data: {
+        counts: {
+          leads: 1,
+          storedFilesDeleted: 1,
+          storedFilesKeptShared: 2,
+          storedFilesKeptUnmanaged: 3,
+        },
+        checklist: { deals: 1 },
+      },
+    };
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Complete: Erasure/ }));
+    const dialog = await screen.findByRole('dialog');
+    const erases = within(dialog).getByText('This erases, in one step:').nextElementSibling!;
+    expect(
+      within(erases as HTMLElement).getByText('Stored files deleted from storage: 1')
+    ).toBeTruthy();
+    expect(within(erases as HTMLElement).queryByText(/kept/i)).toBeNull();
+    const byHand = within(dialog).getByText('Left to handle by hand:').nextElementSibling!;
+    expect(
+      within(byHand as HTMLElement).getByText(
+        'Files kept because another record still uses them: 2'
+      )
+    ).toBeTruthy();
+    expect(
+      within(byHand as HTMLElement).getByText(
+        "Files kept: outside the CRM's storage, delete them where they are stored: 3"
+      )
+    ).toBeTruthy();
   });
 
   it('keeps a server refusal inside the dialog', async () => {

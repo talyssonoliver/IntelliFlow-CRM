@@ -5,6 +5,7 @@
 import type { PrismaClient } from '@intelliflow/db';
 import { STORED_OBJECT_CHECKLIST_KEYS, type StoredObjectSource } from '@intelliflow/domain';
 import type {
+  KeptStoredObject,
   PendingStoredObject,
   StoredObjectOutboxPort,
   StoredObjectSettlement,
@@ -97,6 +98,32 @@ export class PrismaStoredObjectRepository implements StoredObjectOutboxPort {
       if (g.state === 'DELETED') entry.deleted = g._count._all;
     }
     return left;
+  }
+
+  async unmanaged(tenantId: string, requestId: string, limit: number): Promise<KeptStoredObject[]> {
+    const rows = await this.prisma.dsarStoredObject.findMany({
+      where: { tenantId, requestId, state: 'KEPT', reason: 'UNMANAGED', locator: { not: null } },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      take: limit,
+      select: { id: true, source: true, locator: true },
+    });
+    return rows.flatMap((r) =>
+      r.locator ? [{ id: r.id, source: r.source as StoredObjectSource, locator: r.locator }] : []
+    );
+  }
+
+  async expireLocators(tenantId: string, before: Date): Promise<number> {
+    const done = await this.prisma.dsarStoredObject.updateMany({
+      where: {
+        tenantId,
+        state: 'KEPT',
+        reason: 'UNMANAGED',
+        locator: { not: null },
+        request: { tenantId, completedAt: { lt: before } },
+      },
+      data: { locator: null },
+    });
+    return done.count;
   }
 
   async remaining(tenantId: string, requestId: string): Promise<Record<string, number>> {

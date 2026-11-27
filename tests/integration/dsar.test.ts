@@ -1236,7 +1236,8 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
       expect(contactActivity.description).toBe('Erased activity');
       const file = await prisma.leadFile.findFirst({ where: { leadId: leadA } });
       // The CRM does not own a file on another host: it is kept, resolved and read-only, with
-      // its reason and no location, and the person's own link to it leaves the row.
+      // its reason and its location (for the admin), and the person's own link to it leaves the
+      // row.
       expect(file).toMatchObject({ name: 'erased', url: null });
       await expect(
         prisma.dsarStoredObject.findMany({ where: { tenantId: TENANT_A, source: 'LEAD_FILE' } })
@@ -1245,7 +1246,7 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
           state: 'KEPT',
           reason: 'UNMANAGED',
           bucket: null,
-          locator: null,
+          locator: 'https://files.example.invalid/passport.pdf',
         }),
       ]);
       expect(await prisma.aIScore.count({ where: { leadId: leadA } })).toBe(0);

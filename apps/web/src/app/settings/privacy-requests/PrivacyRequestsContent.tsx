@@ -34,6 +34,7 @@ import {
   type ActionInput,
   type RequestAction,
 } from './components/RequestActionDialog';
+import { KeptFilesDialog } from './components/KeptFilesDialog';
 import { LogRequestDialog, TYPE_LABELS } from './components/LogRequestDialog';
 import { WorkspaceExportCard } from './components/WorkspaceExportCard';
 
@@ -121,12 +122,14 @@ function RequestRow({
   onAction,
   onExport,
   onRetryFiles,
+  onKeptFiles,
   retrying,
 }: Readonly<{
   request: DsarRequestDto;
   onAction: (action: RequestAction, request: DsarRequestDto) => void;
   onExport: (request: DsarRequestDto) => void;
   onRetryFiles: (request: DsarRequestDto) => void;
+  onKeptFiles: (request: DsarRequestDto) => void;
   retrying: boolean;
 }>) {
   const isExport = request.type === 'ACCESS' || request.type === 'PORTABILITY';
@@ -182,6 +185,17 @@ function RequestRow({
             aria-label={`Download data: ${TYPE_LABELS[request.type]} for ${request.subjectEmail}`}
           >
             Download data
+          </Button>
+        )}
+        {(request.storedFilesKeptUnmanaged ?? 0) > 0 && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onKeptFiles(request)}
+            aria-label={`Show where the kept files are: erasure for ${request.subjectEmail}`}
+          >
+            Where are they?
           </Button>
         )}
         {retryable > 0 && (
@@ -261,6 +275,12 @@ export default function PrivacyRequestsContent() {
   const liftRestriction = trpc.privacy.admin.liftRestriction.useMutation({ onSuccess: refresh });
   const exportData = trpc.privacy.admin.exportData.useMutation();
   const retryFiles = trpc.privacy.admin.retryFileCleanup.useMutation({ onSuccess: refresh });
+  // IFC-316: where the files kept outside the CRM's storage are. Read-only.
+  const [keptFor, setKeptFor] = useState<DsarRequestDto | null>(null);
+  const keptFiles = trpc.privacy.admin.keptFiles.useQuery(
+    { id: keptFor?.id ?? '' },
+    { enabled: keptFor !== null, retry: false }
+  );
 
   const pending =
     complete.isPending ||
@@ -434,6 +454,7 @@ export default function PrivacyRequestsContent() {
                 runExport(row).catch(() => undefined);
               }}
               onRetryFiles={() => undefined}
+              onKeptFiles={() => undefined}
               retrying={false}
             />
           ))}
@@ -514,6 +535,7 @@ export default function PrivacyRequestsContent() {
                 onRetryFiles={(row) => {
                   runRetryFiles(row).catch(() => undefined);
                 }}
+                onKeptFiles={(row) => setKeptFor(row)}
                 retrying={retryFiles.isPending}
               />
             ))}
@@ -532,6 +554,13 @@ export default function PrivacyRequestsContent() {
         }}
         onClose={() => setActive(null)}
         onCloseAutoFocus={onDialogCloseAutoFocus}
+      />
+
+      <KeptFilesDialog
+        request={keptFor}
+        files={keptFiles.data ?? null}
+        error={keptFiles.error ? errorMessage(keptFiles.error) : null}
+        onClose={() => setKeptFor(null)}
       />
 
       <LogRequestDialog

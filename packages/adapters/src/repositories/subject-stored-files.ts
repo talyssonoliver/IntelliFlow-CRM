@@ -32,8 +32,9 @@ interface QueuedObject {
   source: StoredObjectSource;
   /**
    * PENDING: the CRM owns the object and deletes it. KEPT: the CRM does not delete it, and the
-   * row is read-only and resolved: SHARED_KEPT (another retained record still uses it) or
-   * UNMANAGED (outside the CRM's own storage). A kept row stores no locator.
+   * row is read-only and resolved: SHARED_KEPT (another retained record still uses it; no
+   * location is stored) or UNMANAGED (outside the CRM's own storage; its location is kept,
+   * read-only, so an administrator can find it, until it is cleared).
    */
   state: 'PENDING' | 'KEPT';
   reason: StoredObjectReason | null;
@@ -125,6 +126,7 @@ export async function planStoredFiles(
   const seen = new Set<string>();
   const candidates: Array<{
     source: StoredObjectSource;
+    locator: string | null;
     found: ReturnType<typeof classifyStoredLocator>;
   }> = [];
   for (const [source, locator] of locators) {
@@ -134,17 +136,25 @@ export async function planStoredFiles(
     const key = `${source}|${where}`;
     if (seen.has(key)) continue;
     seen.add(key);
-    candidates.push({ source, found });
+    candidates.push({ source, locator, found });
   }
   const owned = candidates.flatMap((c) => (c.found.kind === 'OBJECT' ? [c.found.ref] : []));
   const shared = await sharedObjects(db, tenantId, owned, rowIds, config, lock);
 
   // The CRM deletes only an object it alone owns: in its bucket, under this firm's prefix, and
-  // used by no retained record. Everything else is kept, read-only and resolved, with its reason;
-  // no location is stored for it (the erased person's own link to it is removed with the rest).
-  const queue: QueuedObject[] = candidates.map(({ source, found }) => {
+  // used by no retained record. Everything else is kept and resolved, with its reason. A shared
+  // object stores no location; an unmanaged one keeps its location, read-only, for the
+  // administrator. The erased person's own link to either is removed with the rest.
+  const queue: QueuedObject[] = candidates.map(({ source, locator, found }) => {
     if (found.kind !== 'OBJECT') {
-      return { source, state: 'KEPT', reason: 'UNMANAGED', bucket: null, locator: null };
+      // The location stays on the record, so the file can still be found and deleted where it is.
+      return {
+        source,
+        state: 'KEPT',
+        reason: 'UNMANAGED',
+        bucket: null,
+        locator: String(locator).trim(),
+      };
     }
     return shared.has(objectKey(found.ref))
       ? { source, state: 'KEPT', reason: 'SHARED_KEPT', bucket: null, locator: null }
