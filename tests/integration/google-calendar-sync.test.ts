@@ -62,6 +62,9 @@ describeDb('google calendar sync on a real database', () => {
   let googleB: FakeGoogle;
   let sync: CalendarSyncDeps;
 
+  /** What the sync did to the mailbox rows, kept for a failing test's diagnostics. */
+  const trace: unknown[] = [];
+
   const soon = (hours: number) => new Date(Date.now() + hours * HOUR);
 
   const addMailbox = async (tenantId: string, userId: string, sub: string) =>
@@ -121,11 +124,35 @@ describeDb('google calendar sync on a real database', () => {
         `AND id = ANY($${values.length + 1}::text[]) ORDER BY "calendarNextSyncAt"`
       );
       if (narrowed === text) throw new Error('the claim query changed: narrow it again here');
-      return prisma.$queryRawUnsafe(narrowed, ...values, [mailboxA, mailboxB]);
+      const claimed = await prisma.$queryRawUnsafe(narrowed, ...values, [mailboxA, mailboxB]);
+      trace.push({ claimed });
+      return claimed;
     };
     return new Proxy(prisma, {
       get(target, prop) {
         if (prop === '$queryRaw') return claim;
+        if (prop === 'emailMailbox') {
+          const model = Reflect.get(target, prop, target);
+          return new Proxy(model, {
+            get(m, method) {
+              const fn = Reflect.get(m, method, m);
+              if (method !== 'update' && method !== 'findFirst') return fn;
+              return async (...args: unknown[]) => {
+                try {
+                  const result = await fn.apply(m, args);
+                  trace.push({ [String(method)]: result ? 'ok' : 'null', where: args[0] });
+                  return result;
+                } catch (error) {
+                  trace.push({
+                    [String(method)]: 'threw',
+                    code: (error as { code?: string }).code,
+                  });
+                  throw error;
+                }
+              };
+            },
+          });
+        }
         const value = Reflect.get(target, prop, target);
         return typeof value === 'function' ? value.bind(target) : value;
       },
@@ -177,6 +204,7 @@ describeDb('google calendar sync on a real database', () => {
       })
     );
     // Quiet, but kept: a failing test prints what the sync warned about and the state it left.
+    trace.length = 0;
     const warnings: unknown[][] = [];
     vi.spyOn(console, 'warn').mockImplementation((...args) => void warnings.push(args));
     onTestFailed(async () => {
@@ -191,7 +219,17 @@ describeDb('google calendar sync on a real database', () => {
           calendarSyncToken: true,
         },
       });
-      console.error('DIAG calendar sync', JSON.stringify({ warnings, mailboxes, now: new Date() }));
+      console.error(
+        'DIAG calendar sync',
+        JSON.stringify({
+          warnings,
+          mailboxes,
+          trace: trace.slice(-12),
+          tz: process.env.TZ,
+          node: process.version,
+          now: new Date(),
+        })
+      );
     });
     // A clean slate for each test: both calendars empty, both mailboxes healthy and unsynced.
     await prisma.calendarEventLink.deleteMany({ where: { tenantId: { in: [tenantA, tenantB] } } });
