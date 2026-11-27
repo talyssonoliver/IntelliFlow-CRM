@@ -36,4 +36,18 @@ describe('tasks on the calendar (owner 26/11: week view showed none)', () => {
     const [event] = mapTasksToEvents([task(new Date(Date.UTC(2026, 10, 25)))]);
     expect(String(event.start)).toContain('T09:00');
   });
+
+  it('puts a late task on its local day, not its UTC day (codex 27/11)', () => {
+    // 22:30 UTC on 25 Nov is 00:30 on 26 Nov two hours east of UTC: the local clock decides.
+    const d = new Date(Date.UTC(2026, 10, 25, 22, 30));
+    Object.assign(d, {
+      getFullYear: () => 2026,
+      getMonth: () => 10,
+      getDate: () => 26,
+      getHours: () => 0,
+      getMinutes: () => 30,
+    });
+    const [event] = mapTasksToEvents([task(d)]);
+    expect(String(event.start)).toBe('2026-11-26');
+  });
 });

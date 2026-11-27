@@ -30,8 +30,55 @@ interface MoneyProps {
  * Example: $12.50 is stored as { cents: 1250, currency: 'GBP' }
  */
 export class Money extends ValueObject<MoneyProps> {
-  private static readonly SUPPORTED_CURRENCIES = ['GBP', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'];
-  private static readonly ZERO_DECIMAL_CURRENCIES = ['JPY', 'KRW']; // No decimal places
+  /**
+   * Every currency a tenant can pick in Analytics -> Report settings (codex 27/11: the list held
+   * GBP twice and no USD, after an old find-and-replace, so a USD tenant could not save a deal).
+   * The web test `money-currencies.guard.test.ts` keeps it in step with the settings list.
+   */
+  static readonly SUPPORTED_CURRENCIES: readonly string[] = [
+    'USD',
+    'EUR',
+    'GBP',
+    'JPY',
+    'CNY',
+    'CAD',
+    'AUD',
+    'CHF',
+    'SEK',
+    'NOK',
+    'DKK',
+    'NZD',
+    'SGD',
+    'HKD',
+    'INR',
+    'BRL',
+    'MXN',
+    'ARS',
+    'CLP',
+    'COP',
+    'PEN',
+    'ZAR',
+    'RUB',
+    'TRY',
+    'AED',
+    'SAR',
+    'KRW',
+    'THB',
+    'IDR',
+    'MYR',
+    'PHP',
+    'VND',
+    'PLN',
+    'CZK',
+    'HUF',
+    'RON',
+    'ILS',
+    'EGP',
+    'NGN',
+    'KES',
+  ];
+  // ISO 4217 minor unit 0: no decimal places.
+  private static readonly ZERO_DECIMAL_CURRENCIES = ['JPY', 'KRW', 'CLP', 'VND'];
 
   private constructor(props: MoneyProps) {
     super(props);

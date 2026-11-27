@@ -275,6 +275,8 @@ interface Activity {
   timestamp: string;
   user: string;
   metadata?: {
+    // AI insight: its kind, which repeats fold by (codex 27/11)
+    insightType?: string;
     // Web form
     source?: string;
     message?: string;

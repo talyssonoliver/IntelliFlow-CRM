@@ -3,7 +3,7 @@
  * duplicating the same information and same lead ... show something like 'See previous'", and
  * "These are all same duplicated data" on an email thread).
  *
- * - AI insights (written by "AI Insights") of the same type are the AI's read on this one lead:
+ * - AI insights (written by "AI Insights") of the same insight kind are the AI's read on this lead:
  *   the newest stays, the earlier ones fold under it.
  * - Emails with the same subject (ignoring Re:/Fwd:) are one thread: the newest message stays.
  * - Everything else is shown as it is.
@@ -17,6 +17,8 @@ export interface FoldableActivity {
   type: string;
   title: string;
   user: string;
+  /** AI entries carry the insight kind here (the worker writes every one as SCORE_UPDATE). */
+  metadata?: { insightType?: unknown } | null;
 }
 
 export interface FoldedActivity<T> {
@@ -39,7 +41,14 @@ export function threadSubject(title: string): string {
 
 /** The key that makes two entries "the same information"; null when an entry never folds. */
 export function repeatKey(activity: FoldableActivity): string | null {
-  if (activity.user === AI_AUTHOR) return `ai:${activity.type}`;
+  if (activity.user === AI_AUTHOR) {
+    // Same kind of insight only (codex 27/11): every AI entry shares one activity type, so the
+    // type alone folded unrelated insights together. Without a kind, only the same title folds.
+    const kind = activity.metadata?.insightType;
+    return typeof kind === 'string' && kind
+      ? `ai:${activity.type}:${kind}`
+      : `ai:${activity.type}:title:${activity.title.trim().toLowerCase()}`;
+  }
   if (activity.type === 'email' && activity.title.trim()) {
     return `email:${threadSubject(activity.title)}`;
   }

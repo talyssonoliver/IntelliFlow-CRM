@@ -333,7 +333,11 @@ export class AnalyticsAggregationService {
     const prevMonthEnd = AnalyticsAggregationService.utcEndOfMonth(y, m - 1);
 
     const range = dateRange || { startDate: currentMonthStart, endDate: currentMonthEnd };
-    const prevRange = { startDate: prevMonthStart, endDate: prevMonthEnd };
+    // "vs previous period" (codex 27/11): a requested range compares with the period of the same
+    // length just before it, not with last calendar month. Without one, this month vs last.
+    const prevRange = dateRange
+      ? previousPeriod(dateRange)
+      : { startDate: prevMonthStart, endDate: prevMonthEnd };
 
     const [
       totalLeads,
@@ -754,17 +758,15 @@ export class AnalyticsAggregationService {
       if (data.length === 0) return '';
       const flat = data.map((item) => this.flattenObject(item));
       const headers = Object.keys(flat[0]);
-      const rows = flat.map((row) =>
-        headers.map((h) => (row[h] as string | null | undefined) ?? '').join(',')
-      );
-      return [headers.join(','), ...rows].join('\n');
+      const rows = flat.map((row) => headers.map((h) => csvField(row[h])).join(','));
+      return [headers.map(csvField).join(','), ...rows].join('\n');
     }
 
     if (typeof data === 'object' && data !== null) {
       const flat = this.flattenObject(data as Record<string, unknown>);
       const headers = Object.keys(flat);
-      const values = headers.map((h) => (flat[h] as string | null | undefined) ?? '');
-      return [headers.join(','), values.join(',')].join('\n');
+      const values = headers.map((h) => csvField(flat[h]));
+      return [headers.map(csvField).join(','), values.join(',')].join('\n');
     }
 
     return (data as string | null | undefined) ?? '';
@@ -789,4 +791,24 @@ export class AnalyticsAggregationService {
     }
     return result;
   }
+}
+
+/**
+ * One CSV field (RFC 4180). Codex 27/11: arrays are written as JSON, whose commas and quotes
+ * split the row, so the Lead Metrics export was malformed whenever a period had leads.
+ */
+export function csvField(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  const text = value instanceof Date ? value.toISOString() : String(value);
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+/** The period of the same length ending just before `range` starts. */
+export function previousPeriod(range: { startDate: Date; endDate: Date }): {
+  startDate: Date;
+  endDate: Date;
+} {
+  const start = new Date(range.startDate).getTime();
+  const end = new Date(range.endDate).getTime();
+  return { startDate: new Date(start - (end - start) - 1), endDate: new Date(start - 1) };
 }
