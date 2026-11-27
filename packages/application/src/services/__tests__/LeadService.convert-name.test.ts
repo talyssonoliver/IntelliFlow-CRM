@@ -53,8 +53,8 @@ async function convertAndGetContact(lead: Lead): Promise<Contact> {
 
 describe('LeadService.convertLead contact name', () => {
   it('names the contact after the company when the lead has no person name', async () => {
-    const contact = await convertAndGetContact(qualifiedLead({ company: 'Pilates Living' }));
-    expect(contact.firstName).toBe('Pilates Living');
+    const contact = await convertAndGetContact(qualifiedLead({ company: 'Studio Pilates Demo' }));
+    expect(contact.firstName).toBe('Studio Pilates Demo');
     expect(contact.lastName).toBe('');
   });
 
@@ -66,7 +66,7 @@ describe('LeadService.convertLead contact name', () => {
 
   it('keeps a real person name', async () => {
     const contact = await convertAndGetContact(
-      qualifiedLead({ firstName: 'Ana', lastName: 'Lima', company: 'Pilates Living' })
+      qualifiedLead({ firstName: 'Ana', lastName: 'Lima', company: 'Studio Pilates Demo' })
     );
     expect([contact.firstName, contact.lastName]).toEqual(['Ana', 'Lima']);
   });

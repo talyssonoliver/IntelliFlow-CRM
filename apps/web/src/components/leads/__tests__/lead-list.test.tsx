@@ -567,14 +567,14 @@ describe('LeadList — rendering', () => {
   it("shows a company-only lead's initials in its avatar, as the lead page does", () => {
     mockListQueryState.data = {
       data: [
-        { ...twoLeads[0], id: 'lead-coa', firstName: null, lastName: null, company: 'Energym' },
+        { ...twoLeads[0], id: 'lead-coa', firstName: null, lastName: null, company: 'Northfield' },
         { ...twoLeads[1], id: 'lead-two-words', firstName: '', lastName: '', company: 'Blue Fox' },
       ],
       total: 2,
       hasMore: false,
     };
     render(<LeadList />);
-    expect(screen.getByLabelText('Avatar for Energym').textContent).toBe('EN');
+    expect(screen.getByLabelText('Avatar for Northfield').textContent).toBe('NO');
     expect(screen.getByLabelText('Avatar for Blue Fox').textContent).toBe('BF');
   });
 

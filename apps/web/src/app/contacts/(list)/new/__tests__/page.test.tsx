@@ -220,7 +220,7 @@ describe('CreateNewContactPage - Step Validation (T-03)', () => {
 
   it('creates a contact with only a first name: the last name is optional (MVP-003)', async () => {
     render(<CreateNewContactPage />);
-    fillPersonalStep({ firstName: 'Pilates Living', lastName: '' });
+    fillPersonalStep({ firstName: 'Studio Pilates Demo', lastName: '' });
     clickNext();
     expect(screen.queryByText('Last name is required')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Company & Role' })).toBeInTheDocument();
@@ -229,7 +229,7 @@ describe('CreateNewContactPage - Step Validation (T-03)', () => {
 
     await waitFor(() => expect(mockCreateMutateAsync).toHaveBeenCalledTimes(1));
     expect(mockCreateMutateAsync.mock.calls[0][0]).toMatchObject({
-      firstName: 'Pilates Living',
+      firstName: 'Studio Pilates Demo',
       lastName: '',
       email: 'jane@example.com',
     });

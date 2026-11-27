@@ -359,6 +359,13 @@ type LeadActivityLogType =
 const ACTIVITY_CLOCK_SKEW_MS = 60_000;
 
 /**
+ * Most rows the score-band lists (getHotLeads, getReadyForQualification) return. They had no limit,
+ * so one call shipped every matching lead in full (egress audit 1126). Highest score first, so the
+ * cap drops only the lowest-scored leads of a band, and no tenant is near it today.
+ */
+const SCORE_LIST_CAP = 500;
+
+/**
  * Best-effort system activity logging for lead lifecycle actions.
  * Activity write failures must not block the primary business operation.
  */
@@ -1247,6 +1254,7 @@ export const leadRouter = createTRPCRouter({
     const leads = await typedCtx.prismaWithTenant.lead.findMany({
       where,
       orderBy: { score: 'desc' },
+      take: SCORE_LIST_CAP,
     });
     return leads.map(mapPrismaLeadToResponse);
   }),
@@ -1264,6 +1272,7 @@ export const leadRouter = createTRPCRouter({
     const leads = await typedCtx.prismaWithTenant.lead.findMany({
       where,
       orderBy: { score: 'desc' },
+      take: SCORE_LIST_CAP,
     });
     return leads.map(mapPrismaLeadToResponse);
   }),

@@ -12,6 +12,9 @@ export * from './tenant-models.generated';
 // elsewhere. Domain/application layers MUST NOT import this.
 export * from './query-budget';
 
+// Egress audit 1126: rows and bytes returned per job, behind EGRESS_LOG=1.
+export * from './egress-meter';
+
 // Prisma 7 generated client splits exports across files.
 // client.ts uses .js extensions in imports that webpack can't resolve,
 // so we import enums from the self-contained enums.ts instead.

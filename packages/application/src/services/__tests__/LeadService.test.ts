@@ -821,14 +821,14 @@ describe('LeadService', () => {
 
       const result = await leadService.updateLead(
         lead.id.value,
-        { status: 'LOST', company: 'Pitshanger Studio' },
+        { status: 'LOST', company: 'Greenleaf Gardens' },
         'sales-rep'
       );
 
       expect(result.isSuccess).toBe(true);
       const saved = await leadRepository.findById(lead.id);
       expect(saved?.status).toBe('LOST');
-      expect(saved?.company).toBe('Pitshanger Studio');
+      expect(saved?.company).toBe('Greenleaf Gardens');
     });
 
     // The production repository's compare-and-set save writes ONLY the status, and its plain
@@ -841,7 +841,7 @@ describe('LeadService', () => {
 
       const result = await leadService.updateLead(
         lead.id.value,
-        { status: 'LOST', company: 'Pitshanger Studio' },
+        { status: 'LOST', company: 'Greenleaf Gardens' },
         'sales-rep'
       );
 

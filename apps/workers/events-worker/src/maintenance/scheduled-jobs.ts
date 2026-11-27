@@ -17,6 +17,7 @@
 import type { Logger } from 'pino';
 import { writeStaleLeadDigests } from './stale-lead-digest';
 import type { PrismaClient, EncryptedPrismaClient } from '@intelliflow/db';
+import { runWithEgressJob } from '@intelliflow/db';
 
 // ============================================================================
 // Configuration
@@ -528,7 +529,8 @@ export class MaintenanceScheduler {
 
   private async runSafe(name: string, fn: () => Promise<void>): Promise<void> {
     try {
-      await fn();
+      // Egress audit 1126: name the job so EGRESS_LOG=1 can attribute the rows it reads.
+      await runWithEgressJob(`events-worker.${name}`, fn);
     } catch (error) {
       this.logger.error(
         { job: name, error: error instanceof Error ? error.message : String(error) },

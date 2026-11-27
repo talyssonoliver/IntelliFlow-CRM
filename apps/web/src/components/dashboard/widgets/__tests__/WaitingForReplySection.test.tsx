@@ -70,13 +70,11 @@ describe('WaitingForReplySection', () => {
         now={NOW}
         total={1}
         leadTotal={1}
-        people={[
-          person({ name: 'West London Handyman Ltd', company: ' west london HANDYMAN ltd ' }),
-        ]}
+        people={[person({ name: 'Acme Handyman Ltd', company: ' acme HANDYMAN ltd ' })]}
       />
     );
-    const name = screen.getByText('West London Handyman Ltd');
-    expect(name.textContent).toBe('West London Handyman Ltd');
+    const name = screen.getByText('Acme Handyman Ltd');
+    expect(name.textContent).toBe('Acme Handyman Ltd');
   });
 
   it('links to the Waiting for reply list when more are waiting than the card lists', () => {
