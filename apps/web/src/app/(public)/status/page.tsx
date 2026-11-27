@@ -14,7 +14,8 @@ import './status.css';
 
 export const metadata: Metadata = {
   title: 'System status',
-  description: "A live check of Aurora's web app, run from your browser when you open the page.",
+  description:
+    'The web app is checked from your browser; the API, AI agents and sign-in by our server at most every 5 minutes.',
   openGraph: {
     images: OG_IMAGES,
     title: 'Aurora system status',
@@ -38,8 +39,8 @@ export default function StatusPage() {
             <p className="as-eyebrow">Status</p>
             <h1 className="as-h1">System status</h1>
             <p className="as-lede">
-              A live check, run from your browser when you open this page. We only show what we can
-              measure.
+              The web app is checked from your browser. The API, AI agents and sign-in are checked
+              by our server at most every 5 minutes. We only show what we can measure.
             </p>
           </div>
         </section>

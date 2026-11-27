@@ -67,6 +67,20 @@ describe('/api/status cache window', () => {
     expect(CODE).not.toMatch(/export const (dynamic|runtime|fetchCache) /);
   });
 
+  it('stamps checkedAt when the checks run, inside the cached answer', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-11-27T18:24:10.000Z'));
+    try {
+      vi.stubGlobal('fetch', vi.fn());
+      const body = (await (await GET()).json()) as { checkedAt: string };
+      expect(body.checkedAt).toBe('2026-11-27T18:24:10.000Z');
+      // Set in the handler body (cached with the answer), never read from the request.
+      expect(CODE).toMatch(/checkedAt: new Date\(\)\.toISOString\(\)/);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('sets no Cache-Control of its own, so the revalidate window applies', async () => {
     vi.stubGlobal('fetch', vi.fn());
     const res = await GET();

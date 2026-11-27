@@ -27,7 +27,7 @@ export function describeService(check: ServiceCheck): string {
 
 type Load =
   | { state: 'loading' }
-  | { state: 'loaded'; services: ServiceCheck[] }
+  | { state: 'loaded'; services: ServiceCheck[]; checkedAt: Date | null }
   | { state: 'failed' };
 
 /**
@@ -44,10 +44,16 @@ export function StatusMonitor() {
       // visitors for 5 minutes (see the route), so "Try again" may return the same result.
       const res = await fetch('/api/status');
       if (!res.ok) throw new Error(String(res.status));
-      const body = (await res.json()) as { services?: ServiceCheck[] };
+      const body = (await res.json()) as { services?: ServiceCheck[]; checkedAt?: string };
+      // The time the server measured these rows (cached with them), not the time of this request.
+      const measured = body.checkedAt ? new Date(body.checkedAt) : null;
       setLoad(
         Array.isArray(body.services)
-          ? { state: 'loaded', services: body.services }
+          ? {
+              state: 'loaded',
+              services: body.services,
+              checkedAt: measured && !Number.isNaN(measured.getTime()) ? measured : null,
+            }
           : { state: 'failed' }
       );
     } catch {
@@ -79,17 +85,25 @@ export function StatusMonitor() {
   }
 
   return (
-    <ul className="ast-pending" data-testid="service-checks">
-      {load.services.map((check) => (
-        <li key={check.id} className="as-card">
-          <span className={`ast-dot ${DOT[check.state]}`} aria-hidden="true" />
-          <div>
-            <h2>{check.name}</h2>
-            <p>{check.detail}</p>
-          </div>
-          <span className="ast-tag">{describeService(check)}</span>
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className="ast-pending" data-testid="service-checks">
+        {load.services.map((check) => (
+          <li key={check.id} className="as-card">
+            <span className={`ast-dot ${DOT[check.state]}`} aria-hidden="true" />
+            <div>
+              <h2>{check.name}</h2>
+              <p>{check.detail}</p>
+            </div>
+            <span className="ast-tag">{describeService(check)}</span>
+          </li>
+        ))}
+      </ul>
+      {load.checkedAt && (
+        <p className="ast-checked" data-testid="server-checked-at">
+          Server checks at{' '}
+          {load.checkedAt.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+        </p>
+      )}
+    </>
   );
 }

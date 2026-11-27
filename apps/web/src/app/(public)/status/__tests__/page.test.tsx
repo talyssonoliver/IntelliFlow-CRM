@@ -83,6 +83,52 @@ describe('StatusPage (Aurora)', () => {
     );
   });
 
+  it('says which rows are checked where, and when the server checked', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) =>
+        url === '/api/status'
+          ? new Response(
+              JSON.stringify({
+                services: [{ id: 'api', name: 'API', detail: 'd', state: 'up', ms: 42 }],
+                checkedAt: '2026-11-27T18:24:10.000Z',
+              })
+            )
+          : new Response(JSON.stringify({ status: 'ok' }))
+      )
+    );
+    const { container } = render(<StatusPage />);
+    expect(container.textContent).toContain(
+      'The web app is checked from your browser. The API, AI agents and sign-in are checked by our server at most every 5 minutes. We only show what we can measure.'
+    );
+    expect(container.textContent).not.toMatch(/A live check, run from your browser/);
+    const expected = new Date('2026-11-27T18:24:10.000Z').toLocaleTimeString('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+    const line = await screen.findByTestId('server-checked-at');
+    expect(line.textContent).toBe(`Server checks at ${expected}`);
+    expect(screen.getAllByText(/Server checks at/)).toHaveLength(1);
+  });
+
+  it('shows no server time when the answer carries none', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) =>
+        url === '/api/status'
+          ? new Response(
+              JSON.stringify({
+                services: [{ id: 'api', name: 'API', detail: 'd', state: 'up', ms: 42 }],
+              })
+            )
+          : new Response(JSON.stringify({ status: 'ok' }))
+      )
+    );
+    render(<StatusPage />);
+    await screen.findByTestId('service-checks');
+    expect(screen.queryByTestId('server-checked-at')).toBeNull();
+  });
+
   it('says when the server checks could not run, and can try again', async () => {
     let statusCalls = 0;
     vi.stubGlobal(
